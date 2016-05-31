@@ -24,7 +24,7 @@
 #include <htiframe.h>
 #include <strsafe.h>
 
-#define USE_CUSTOM_EXPLORERBAND 1
+#define USE_CUSTOM_EXPLORERBAND 0
 
 extern HRESULT IUnknown_ShowDW(IUnknown * punk, BOOL fShow);
 
@@ -117,14 +117,6 @@ TODO:
     "publicKeyToken='6595b64144ccf1df' "\
     "language='*'\"")
 #endif // __GNUC__
-
-struct categoryCacheHeader
-{
-    long                dwSize;         // size of header only
-    long                version;        // currently 1
-    SYSTEMTIME          writeTime;      // time we were written to registry
-    long                classCount;     // number of classes following
-};
 
 static const unsigned int                   folderOptionsPageCountMax = 20;
 static const long                           BTP_DONT_UPDATE_HISTORY = 0;
@@ -258,6 +250,11 @@ Switch to a new bar when it receives an Exec(CGID_IDeskBand, 1, 1, vaIn, NULL);
     rebar
 */
 
+struct MenuBandInfo {
+    GUID barGuid;
+    BOOL fVertical;
+};
+
 class CShellBrowser :
     public CWindowImpl<CShellBrowser, CWindow, CFrameWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -304,6 +301,7 @@ private:
     IOleObject                              *fHistoryObject;
     IStream                                 *fHistoryStream;
     IBindCtx                                *fHistoryBindContext;
+    HDSA menuDsa;
     HACCEL m_hAccel;
 public:
 #if 0
@@ -328,11 +326,15 @@ public:
         FOLDERSETTINGS *folderSettings, long flags);
     HRESULT GetMenuBand(REFIID riid, void **shellMenu);
     HRESULT GetBaseBar(bool vertical, IUnknown **theBaseBar);
+    BOOL IsBandLoaded(const CLSID clsidBand, bool verticali, DWORD *pdwBandID);
     HRESULT ShowBand(const CLSID &classID, bool vertical);
     HRESULT NavigateToParent();
     HRESULT DoFolderOptions();
     static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void RepositionBars();
+    HRESULT BuildExplorerBandMenu();
+    HRESULT BuildExplorerBandCategory(HMENU hBandsMenu, CATID category, DWORD dwPos, UINT *nbFound);
+    BOOL IsBuiltinBand(CLSID &bandID);
     virtual WNDPROC GetWindowProc()
     {
         return WindowProc;
@@ -345,7 +347,6 @@ public:
     HRESULT UpdateUpState();
     void UpdateGotoMenu(HMENU theMenu);
     void UpdateViewMenu(HMENU theMenu);
-    HRESULT OnSearch();
 
 /*    // *** IDockingWindowFrame methods ***
     virtual HRESULT STDMETHODCALLTYPE AddToolbar(IUnknown *punkSrc, LPCWSTR pwszItem, DWORD dwAddFlags);
@@ -616,7 +617,9 @@ public:
     LRESULT OnToggleTextLabels(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToolbarCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnGoTravel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    HRESULT OnSearch();
 
     static ATL::CWndClassInfo& GetWndClassInfo()
     {
@@ -657,8 +660,13 @@ public:
         COMMAND_ID_HANDLER(IDM_TOOLBARS_LINKSBAR, OnToggleLinksBandVisible)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_TEXTLABELS, OnToggleTextLabels)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_CUSTOMIZE, OnToolbarCustomize)
+        COMMAND_ID_HANDLER(IDM_EXPLORERBAR_SEARCH, OnExplorerBar)
+        COMMAND_ID_HANDLER(IDM_EXPLORERBAR_FOLDERS, OnExplorerBar)
+        COMMAND_ID_HANDLER(IDM_EXPLORERBAR_HISTORY, OnExplorerBar)
+        COMMAND_ID_HANDLER(IDM_EXPLORERBAR_FAVORITES, OnExplorerBar)
         COMMAND_ID_HANDLER(IDM_BACKSPACE, OnBackspace)
         COMMAND_RANGE_HANDLER(IDM_GOTO_TRAVEL_FIRSTTARGET, IDM_GOTO_TRAVEL_LASTTARGET, OnGoTravel)
+        COMMAND_RANGE_HANDLER(IDM_EXPLORERBAND_BEGINCUSTOM, IDM_EXPLORERBAND_ENDCUSTOM, OnExplorerBar)
         MESSAGE_HANDLER(WM_COMMAND, RelayCommands)
     END_MSG_MAP()
 
@@ -706,6 +714,8 @@ CShellBrowser::CShellBrowser()
 
 CShellBrowser::~CShellBrowser()
 {
+    if (menuDsa)
+        DSA_Destroy(menuDsa);
 }
 
 HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, long b, long c, long d)
@@ -715,6 +725,10 @@ HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, long b, long c, long d)
     CComPtr<IUnknown> clientBar;
 
     _AtlInitialConstruct();
+
+    menuDsa = DSA_Create(sizeof(MenuBandInfo), 5);
+    if (!menuDsa)
+        return E_OUTOFMEMORY;
 
     fCabinetState.cLength = sizeof(fCabinetState);
     if (ReadCabinetState(&fCabinetState, sizeof(fCabinetState)) == FALSE)
@@ -1112,7 +1126,10 @@ HRESULT CShellBrowser::GetBaseBar(bool vertical, IUnknown **theBaseBar)
         hResult = CreateBaseBarSite(IID_PPV_ARG(IUnknown, &newBaseBarSite), vertical);
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
-
+    
+        // we have to store our basebar into cache now
+        *cache = newBaseBar;
+        
         // tell the new base bar about the shell browser
         hResult = IUnknown_SetSite(newBaseBar, static_cast<IDropTarget *>(this));
         if (FAILED_UNEXPECTEDLY(hResult))
@@ -1134,9 +1151,61 @@ HRESULT CShellBrowser::GetBaseBar(bool vertical, IUnknown **theBaseBar)
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
 
-        *cache = newBaseBar.Detach();
     }
     return (*cache)->QueryInterface(IID_PPV_ARG(IUnknown, theBaseBar));
+}
+
+BOOL CShellBrowser::IsBandLoaded(const CLSID clsidBand, bool vertical, DWORD *pdwBandID)
+{
+    HRESULT                                 hResult;
+    CComPtr<IUnknown>                       baseBar;
+    CComPtr<IDeskBar>                       deskBar;
+    CComPtr<IUnknown>                       baseBarSite;
+    CComPtr<IBandSite>                      bandSite;
+    CLSID                                   clsidTmp;
+    DWORD                                   numBands;
+    DWORD                                   dwBandID;
+    DWORD                                   i;
+
+    /* Get our basebarsite to be able to enumerate bands */
+    hResult = GetBaseBar(vertical, &baseBar);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return FALSE;
+    hResult = baseBar->QueryInterface(IID_PPV_ARG(IDeskBar, &deskBar));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return FALSE;
+    hResult = deskBar->GetClient(&baseBarSite);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return FALSE;
+    hResult = baseBarSite->QueryInterface(IID_PPV_ARG(IBandSite, &bandSite));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return FALSE;
+
+    hResult = bandSite->EnumBands(-1, &numBands);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return FALSE;
+
+    for(i = 0; i < numBands; i++)
+    {
+        CComPtr<IPersist> bandPersist;
+
+        hResult = bandSite->EnumBands(i, &dwBandID);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return FALSE;
+
+        hResult = bandSite->GetBandObject(dwBandID, IID_PPV_ARG(IPersist, &bandPersist));
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return FALSE;
+        hResult = bandPersist->GetClassID(&clsidTmp);
+        if (FAILED_UNEXPECTEDLY(hResult))
+            return FALSE;
+        if (IsEqualGUID(clsidBand, clsidTmp))
+        {
+            if (pdwBandID) *pdwBandID = dwBandID;
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
 HRESULT CShellBrowser::ShowBand(const CLSID &classID, bool vertical)
@@ -1148,42 +1217,59 @@ HRESULT CShellBrowser::ShowBand(const CLSID &classID, bool vertical)
     CComPtr<IDeskBar>                       deskBar;
     VARIANT                                 vaIn;
     HRESULT                                 hResult;
+    DWORD                                   dwBandID;
 
     hResult = GetBaseBar(vertical, (IUnknown **)&theBaseBar);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
+    
+    hResult = theBaseBar->QueryInterface(IID_PPV_ARG(IDeskBar, &deskBar));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
 
-#if USE_CUSTOM_EXPLORERBAND
-    TRACE("ShowBand called for CLSID %s, vertical=%d...\n", wine_dbgstr_guid(&classID), vertical);
-    if (IsEqualCLSID(CLSID_ExplorerBand, classID))
+    hResult = deskBar->GetClient(&baseBarSite);
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+
+    hResult = theBaseBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+    
+    if (!IsBandLoaded(classID, vertical, &dwBandID))
     {
-        TRACE("CLSID_ExplorerBand requested, building internal band.\n");
-        hResult = CExplorerBand_Constructor(IID_PPV_ARG(IUnknown, &newBand));
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-    }
-    else
-#endif
-    {
-        TRACE("A different CLSID requested, using CoCreateInstance.\n");
         hResult = CoCreateInstance(classID, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, &newBand));
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
     }
-    hResult = theBaseBar->QueryInterface(IID_PPV_ARG(IDeskBar, &deskBar));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-    hResult = deskBar->GetClient(&baseBarSite);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-    hResult = theBaseBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
+    else
+    {
+        CComPtr<IBandSite>                  pBandSite;
+
+        hResult = baseBarSite->QueryInterface(IID_PPV_ARG(IBandSite, &pBandSite));
+        if (!SUCCEEDED(hResult))
+        {
+            ERR("Can't get IBandSite interface\n");
+            return E_FAIL;
+        }
+        hResult = pBandSite->GetBandObject(dwBandID, IID_PPV_ARG(IUnknown, &newBand));
+        if (!SUCCEEDED(hResult))
+        {
+            ERR("Can't find band object\n");
+            return E_FAIL;
+        }
+
+        // It's hackish, but we should be able to show the wanted band until we
+        // find the proper way to do this (but it seems to work to add a new band)
+        // Here we'll just re-add the existing band to the site, causing it to display.
+    }
     V_VT(&vaIn) = VT_UNKNOWN;
     V_UNKNOWN(&vaIn) = newBand.p;
     hResult = IUnknown_Exec(baseBarSite, CGID_IDeskBand, 1, 1, &vaIn, NULL);
     if (FAILED_UNEXPECTEDLY(hResult))
+    {
         return hResult;
+    }
+
     hResult = dockingWindow->ShowDW(TRUE);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
@@ -1634,9 +1720,93 @@ void CShellBrowser::UpdateViewMenu(HMENU theMenu)
         SetMenuItemInfo(theMenu, IDM_VIEW_TOOLBARS, FALSE, &menuItemInfo);
     }
     SHCheckMenuItem(theMenu, IDM_VIEW_STATUSBAR, fStatusBarVisible ? TRUE : FALSE);
+}
 
-    // TODO: Implement
-    SHEnableMenuItem(theMenu, IDM_VIEW_EXPLORERBAR, FALSE);
+HRESULT CShellBrowser::BuildExplorerBandMenu()
+{
+    HMENU                                   hBandsMenu;
+    UINT                                    nbFound;
+
+    hBandsMenu = SHGetMenuFromID(fCurrentMenuBar, IDM_VIEW_EXPLORERBAR);
+    if (!hBandsMenu)
+    {
+        OutputDebugString(L"No menu !\n");
+        return E_FAIL;
+    }
+    DSA_DeleteAllItems(menuDsa);
+    BuildExplorerBandCategory(hBandsMenu, CATID_InfoBand, 4, NULL);
+    BuildExplorerBandCategory(hBandsMenu, CATID_CommBand, 20, &nbFound);
+    if (!nbFound)
+    {
+        // Remove separator
+        DeleteMenu(hBandsMenu, IDM_EXPLORERBAR_SEPARATOR, MF_BYCOMMAND); 
+    }
+    // Remove media menu since XP does it (according to API Monitor)
+    DeleteMenu(hBandsMenu, IDM_EXPLORERBAR_MEDIA, MF_BYCOMMAND);
+    return S_OK;
+}
+
+HRESULT CShellBrowser::BuildExplorerBandCategory(HMENU hBandsMenu, CATID category, DWORD dwPos, UINT *nbFound)
+{
+    HRESULT                                 hr;
+    CComPtr<IEnumGUID>                      pEnumGUID;
+    WCHAR                                   wszBandName[MAX_PATH];
+    WCHAR                                   wszBandGUID[MAX_PATH];
+    WCHAR                                   wRegKey[MAX_PATH];
+    UINT                                    cBands;
+    DWORD                                   dwRead;
+    DWORD                                   dwDataSize;
+    GUID                                    iter;
+    MenuBandInfo                            mbi;
+
+    mbi.fVertical = IsEqualGUID(category, CATID_InfoBand);
+    cBands = 0;
+    hr = SHEnumClassesOfCategories(1, &category, 0, NULL, &pEnumGUID);
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        return hr;
+    }
+    do
+    {
+        pEnumGUID->Next(1, &iter, &dwRead);
+        if (dwRead)
+        {
+            // Get the band name
+            if (IsBuiltinBand(iter))
+                continue;
+            if (!StringFromGUID2(iter, wszBandGUID, MAX_PATH))
+                continue;
+            StringCchPrintfW(wRegKey, MAX_PATH, L"CLSID\\%s", wszBandGUID);
+            dwDataSize = MAX_PATH;
+            SHGetValue(HKEY_CLASSES_ROOT, wRegKey, NULL, NULL, wszBandName, &dwDataSize);
+
+            mbi.barGuid = iter;
+            InsertMenu(hBandsMenu, dwPos + cBands, MF_BYPOSITION, IDM_EXPLORERBAND_BEGINCUSTOM + DSA_GetItemCount(menuDsa), wszBandName);
+            DSA_AppendItem(menuDsa, &mbi);
+            cBands++;
+        }
+    }
+    while (dwRead > 0);
+    if (nbFound)
+        *nbFound = cBands;
+    return S_OK;
+}
+
+BOOL CShellBrowser::IsBuiltinBand(CLSID &bandID)
+{
+    if (IsEqualCLSID(bandID, CLSID_ExplorerBand))
+        return TRUE;
+    if (IsEqualCLSID(bandID, CLSID_SH_SearchBand) || IsEqualCLSID(bandID, CLSID_SearchBand))
+        return TRUE;
+    if (IsEqualCLSID(bandID, CLSID_IE_SearchBand) || IsEqualCLSID(bandID, CLSID_FileSearchBand))
+        return TRUE;
+    if (IsEqualCLSID(bandID, CLSID_SH_HistBand))
+        return TRUE;
+    if (IsEqualCLSID(bandID, CLSID_SH_FavBand))
+        return TRUE;
+    if (IsEqualCLSID(bandID, CLSID_ChannelsBand))
+        return TRUE;
+    return FALSE;
 }
 
 HRESULT CShellBrowser::OnSearch()
@@ -1805,6 +1975,11 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
 {
     HRESULT                                 hResult;
 
+    if (!pguidCmdGroup)
+    {
+        TRACE("Unhandled null CGID %d %d %p %p\n", nCmdID, nCmdexecopt, pvaIn, pvaOut);
+        return E_NOTIMPL;
+    }
     if (IsEqualIID(*pguidCmdGroup, CGID_Explorer))
     {
         switch (nCmdID)
@@ -1867,6 +2042,9 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::Exec(const GUID *pguidCmdGroup, DWORD n
         {
             case 0x12:
                 // refresh on toolbar clicked
+                return S_OK;
+            case 0x26:
+                // called for unknown bands ?
                 return S_OK;
             case 0x4d:
                 // tell the view if it should hide the task pane or not
@@ -1960,20 +2138,22 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::SetMenuSB(HMENU hmenuShared, HOLEMENU h
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    if (hmenuShared)
+    if (!hmenuShared)
     {
-        // FIXME: Figure out the proper way to do this.
-        HMENU hMenuFavs = GetSubMenu(hmenuShared, 3);
-        if (hMenuFavs)
-        {
-            DeleteMenu(hMenuFavs, IDM_FAVORITES_EMPTY, MF_BYCOMMAND);
-        }
+        hmenuShared = LoadMenu(_AtlBaseModule.GetResourceInstance(), MAKEINTRESOURCE(IDM_CABINET_MAINMENU));
+    }
+    // FIXME: Figure out the proper way to do this.
+    HMENU hMenuFavs = GetSubMenu(hmenuShared, 3);
+    if (hMenuFavs)
+    {
+        DeleteMenu(hMenuFavs, IDM_FAVORITES_EMPTY, MF_BYCOMMAND);
     }
 
     hResult = shellMenu->SetMenu(hmenuShared, m_hWnd, SMSET_DONTOWN);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     fCurrentMenuBar = hmenuShared;
+    BuildExplorerBandMenu();
     return S_OK;
 }
 
@@ -1998,7 +2178,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::SetStatusTextSB(LPCOLESTR pszStatusText
     {
 
     }
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::EnableModelessSB(BOOL fEnable)
@@ -2028,7 +2208,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GetControlWindow(UINT id, HWND *lphwnd)
     if (lphwnd == NULL)
         return E_POINTER;
     *lphwnd = NULL;
-    switch(id)
+    switch (id)
     {
         case FCW_TOOLBAR:
             *lphwnd = fToolbarProxy.m_hWnd;
@@ -2054,7 +2234,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::SendControlMsg(
 
     if (pret != NULL)
         *pret = 0;
-    switch(id)
+    switch (id)
     {
         case FCW_TOOLBAR:
             result = fToolbarProxy.SendMessage(uMsg, wParam, lParam);
@@ -3172,15 +3352,39 @@ LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 
         for (int i = 0; i < 3; i++)
         {
+            CComPtr<IDockingWindow> pdw;
+            CComPtr<IDeskBar> bar;
+            CComPtr<IUnknown> pBarSite;
+            CComPtr<IDeskBarClient> pClient;
+ 
             if (fClientBars[i].clientBar == NULL)
                 continue;
-            IDockingWindow * pdw;
+
             hr = fClientBars[i].clientBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &pdw));
             if (FAILED_UNEXPECTEDLY(hr))
                 continue;
-            pdw->ShowDW(FALSE);
+            
+            /* We should destroy our basebarsite too */
+            hr = pdw->QueryInterface(IID_PPV_ARG(IDeskBar, &bar));
+            if (SUCCEEDED(hr))
+            {
+                hr = bar->GetClient(&pBarSite);
+                if (SUCCEEDED(hr) && pBarSite)
+                {
+                    hr = pBarSite->QueryInterface(IID_PPV_ARG(IDeskBarClient, &pClient));
+                    if (SUCCEEDED(hr))
+                        pClient->SetDeskBarSite(NULL);
+                }
+            }
             pdw->CloseDW(0);
-            pdw->Release();
+            pdw = NULL;
+            /* For some reasons, it's like we miss some AddRef in ATL when QueryInterface on
+             * same interface or inherited one, so we are removing already removed (!) object.
+             * TODO: check with MSVC's ATL to see if this behaviour happens too
+             */
+            bar.Detach();
+            pClient.Detach();
+            pBarSite.Detach();
             ReleaseCComPtrExpectZero(fClientBars[i].clientBar);
         }
         ReleaseCComPtrExpectZero(fTravelLog);
@@ -3469,6 +3673,40 @@ LRESULT CShellBrowser::OnToolbarCustomize(WORD wNotifyCode, WORD wID, HWND hWndC
 LRESULT CShellBrowser::OnGoTravel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     return 0;
+}
+
+LRESULT CShellBrowser::OnExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+{
+    // TODO: HACK ! use the proper mechanism to show the band (i.e. pass the BSTR to basebar)
+    if (wID >= IDM_EXPLORERBAND_BEGINCUSTOM && wID <= IDM_EXPLORERBAND_ENDCUSTOM)
+    {
+        MenuBandInfo *mbi;
+        mbi = (MenuBandInfo*)DSA_GetItemPtr(menuDsa, (wID - IDM_EXPLORERBAND_BEGINCUSTOM));
+        if (!mbi)
+            return 0;
+        ShowBand(mbi->barGuid, mbi->fVertical);
+        bHandled = TRUE;
+        return 1;
+    }
+    switch (wID)
+    {
+    case IDM_EXPLORERBAR_SEARCH:
+        Exec(&CLSID_CommonButtons, 0x123, 1, NULL, NULL);
+        break;
+    case IDM_EXPLORERBAR_FOLDERS:
+        ShowBand(CLSID_ExplorerBand, true);
+        break;
+    case IDM_EXPLORERBAR_HISTORY:
+        ShowBand(CLSID_SH_HistBand, true);
+        break;
+    case IDM_EXPLORERBAR_FAVORITES:
+        ShowBand(CLSID_SH_FavBand, true);
+        break;
+    default:
+        WARN("Unknown id %x\n", wID);
+    }
+    bHandled = TRUE;
+    return 1;
 }
 
 LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)

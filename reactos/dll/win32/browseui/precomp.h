@@ -13,6 +13,7 @@
 #include <wingdi.h>
 #include <shlobj.h>
 #include <tlogstg.h>
+#include <shellapi.h>
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 #include <shdeprecated.h>
