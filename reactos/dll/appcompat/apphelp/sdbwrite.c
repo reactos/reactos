@@ -18,24 +18,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#if !defined(SDBWRITE_HOSTTOOL)
+
 #define WIN32_NO_STATUS
 #include "windows.h"
 #include "ntndk.h"
 #include "apphelp.h"
-
 #include "wine/unicode.h"
 
+#else
 
-static void WINAPI SdbpFlush(PDB db)
-{
-    IO_STATUS_BLOCK io;
-    NTSTATUS Status = NtWriteFile(db->file, NULL, NULL, NULL, &io,
-        db->data, db->write_iter, NULL, NULL);
-    if( !NT_SUCCESS(Status))
-        SHIM_WARN("failed with 0x%lx\n", Status);
-}
+#include <typedefs.h>
+#include <guiddef.h>
 
-static void WINAPI SdbpWrite(PDB db, LPCVOID data, DWORD size)
+#include "sdbtypes.h"
+#include "sdbpapi.h"
+#include "sdbtagid.h"
+
+#endif
+
+
+static void WINAPI SdbpWrite(PDB db, const void* data, DWORD size)
 {
     if (db->write_iter + size > db->size)
     {
@@ -64,42 +67,11 @@ PDB WINAPI SdbCreateDatabase(LPCWSTR path, PATH_TYPE type)
 {
     static const DWORD version_major = 2, version_minor = 1;
     static const char* magic = "sdbf";
-    NTSTATUS Status;
-    IO_STATUS_BLOCK io;
-    OBJECT_ATTRIBUTES attr;
-    UNICODE_STRING str;
     PDB db;
 
-    if (type == DOS_PATH)
-    {
-        if (!RtlDosPathNameToNtPathName_U(path, &str, NULL, NULL))
-            return NULL;
-    }
-    else
-        RtlInitUnicodeString(&str, path);
-
-    db = SdbpCreate();
+    db = SdbpCreate(path, type, TRUE);
     if (!db)
-    {
-        SHIM_ERR("Failed to allocate memory for shim database\n");
         return NULL;
-    }
-
-    InitializeObjectAttributes(&attr, &str, OBJ_CASE_INSENSITIVE, NULL, NULL);
-
-    Status = NtCreateFile(&db->file, FILE_GENERIC_WRITE | SYNCHRONIZE,
-                          &attr, &io, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ,
-                          FILE_SUPERSEDE, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
-
-    if (type == DOS_PATH)
-        RtlFreeUnicodeString(&str);
-
-    if (!NT_SUCCESS(Status))
-    {
-        SdbCloseDatabase(db);
-        SHIM_ERR("Failed to create shim database file: %lx\n", Status);
-        return NULL;
-    }
 
     db->size = sizeof(DWORD) + sizeof(DWORD) + strlen(magic);
     db->data = SdbAlloc(db->size);
@@ -249,7 +221,7 @@ BOOL WINAPI SdbWriteStringRefTag(PDB db, TAG tag, TAGID tagid)
  *
  * @return  TRUE if it succeeds, FALSE if it fails.
  */
-BOOL WINAPI SdbWriteBinaryTag(PDB db, TAG tag, PBYTE data, DWORD size)
+BOOL WINAPI SdbWriteBinaryTag(PDB db, TAG tag, BYTE* data, DWORD size)
 {
     if (!SdbpCheckTagType(tag, TAG_TYPE_BINARY))
         return FALSE;
@@ -260,6 +232,7 @@ BOOL WINAPI SdbWriteBinaryTag(PDB db, TAG tag, PBYTE data, DWORD size)
     return TRUE;
 }
 
+#if !defined(SDBWRITE_HOSTTOOL)
 /**
  * Writes data from a file to the specified shim database.
  *
@@ -283,6 +256,7 @@ BOOL WINAPI SdbWriteBinaryTagFromFile(PDB db, TAG tag, LPCWSTR path)
     SdbpCloseMemMappedFile(&mapped);
     return TRUE;
 }
+#endif
 
 /**
  * Writes a list tag to specified database All subsequent SdbWrite* functions shall write to

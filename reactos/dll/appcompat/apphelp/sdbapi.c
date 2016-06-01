@@ -202,12 +202,61 @@ void SdbpFree(LPVOID mem
     HeapFree(SdbpHeap(), 0, mem);
 }
 
-PDB WINAPI SdbpCreate(void)
+PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
 {
-    PDB db = (PDB)SdbAlloc(sizeof(DB));
+    NTSTATUS Status;
+    IO_STATUS_BLOCK io;
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING str;
+    PDB db;
+
+    if (type == DOS_PATH)
+    {
+        if (!RtlDosPathNameToNtPathName_U(path, &str, NULL, NULL))
+            return NULL;
+    }
+    else
+        RtlInitUnicodeString(&str, path);
+
     /* SdbAlloc zeroes the memory. */
+    db = (PDB)SdbAlloc(sizeof(DB));
+    if (!db)
+    {
+        SHIM_ERR("Failed to allocate memory for shim database\n");
+        return NULL;
+    }
+
+    InitializeObjectAttributes(&attr, &str, OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+    //Status = NtCreateFile(&db->file, FILE_GENERIC_READ | SYNCHRONIZE,
+    //                      &attr, &io, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ,
+    //                      FILE_OPEN, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
+    Status = NtCreateFile(&db->file, (write ? FILE_GENERIC_WRITE : FILE_GENERIC_READ )| SYNCHRONIZE,
+                          &attr, &io, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ,
+                          write ? FILE_SUPERSEDE : FILE_OPEN, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
+
+    if (type == DOS_PATH)
+        RtlFreeUnicodeString(&str);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SdbCloseDatabase(db);
+        SHIM_ERR("Failed to create shim database file: %lx\n", Status);
+        return NULL;
+    }
+
     return db;
 }
+
+void WINAPI SdbpFlush(PDB db)
+{
+    IO_STATUS_BLOCK io;
+    NTSTATUS Status = NtWriteFile(db->file, NULL, NULL, NULL, &io,
+        db->data, db->write_iter, NULL, NULL);
+    if( !NT_SUCCESS(Status))
+        SHIM_WARN("failed with 0x%lx\n", Status);
+}
+
 DWORD SdbpStrlen(PCWSTR string)
 {
     return (lstrlenW(string) + 1) * sizeof(WCHAR);
@@ -315,43 +364,14 @@ BOOL WINAPI SdbpCheckTagIDType(PDB db, TAGID tagid, WORD type)
 
 PDB SdbpOpenDatabase(LPCWSTR path, PATH_TYPE type, PDWORD major, PDWORD minor)
 {
-    UNICODE_STRING str;
-    OBJECT_ATTRIBUTES attr;
     IO_STATUS_BLOCK io;
     PDB db;
     NTSTATUS Status;
     BYTE header[12];
 
-    if (type == DOS_PATH)
-    {
-        if (!RtlDosPathNameToNtPathName_U(path, &str, NULL, NULL))
-            return NULL;
-    }
-    else
-        RtlInitUnicodeString(&str, path);
-
-    db = SdbpCreate();
+    db = SdbpCreate(path, type, FALSE);
     if (!db)
-    {
-        SHIM_ERR("Failed to allocate memory for shim database\n");
         return NULL;
-    }
-
-    InitializeObjectAttributes(&attr, &str, OBJ_CASE_INSENSITIVE, NULL, NULL);
-
-    Status = NtCreateFile(&db->file, FILE_GENERIC_READ | SYNCHRONIZE,
-                          &attr, &io, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ,
-                          FILE_OPEN, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
-
-    if (type == DOS_PATH)
-        RtlFreeUnicodeString(&str);
-
-    if (!NT_SUCCESS(Status))
-    {
-        SdbCloseDatabase(db);
-        SHIM_ERR("Failed to open shim database file: 0x%lx\n", Status);
-        return NULL;
-    }
 
     db->size = GetFileSize(db->file, NULL);
     db->data = SdbAlloc(db->size);
