@@ -117,7 +117,7 @@ DWORD
 FASTCALL
 GreGetCharacterPlacementW(
     HDC hdc,
-    LPWSTR pwsz,
+    LPCWSTR pwsz,
     INT nCount,
     INT nMaxExtent,
     LPGCP_RESULTSW pgcpw,

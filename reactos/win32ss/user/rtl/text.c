@@ -120,7 +120,7 @@ LONG TEXT_TabbedTextOut( HDC hdc,
             if (lpstr[j] == '\t') break;
         /* get the extent of the normal character part */
 #ifdef _WIN32K_
-        GreGetTextExtentW( hdc, (LPWSTR)lpstr + i, j - i , &extent, 0 );
+        GreGetTextExtentW( hdc, lpstr + i, j - i , &extent, 0 );
 #else
         GetTextExtentPointW( hdc, lpstr + i, j - i , &extent );
 #endif
@@ -169,7 +169,7 @@ LONG TEXT_TabbedTextOut( HDC hdc,
             r.bottom = y + extent.cy;
 #ifdef _WIN32K_
             GreExtTextOutW( hdc, x0, y, GreGetBkMode(hdc) == OPAQUE ? ETO_OPAQUE : 0,
-                         &r, (LPWSTR)lpstr + i, j - i, NULL, 0 );
+                         &r, lpstr + i, j - i, NULL, 0 );
 #else
             ExtTextOutW( hdc, x0, y, GetBkMode(hdc) == OPAQUE ? ETO_OPAQUE : 0,
                          &r, lpstr + i, j - i, NULL );
@@ -1029,13 +1029,13 @@ static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int of
     HPEN hpen;
     HPEN oldPen;
 #ifdef _WIN32K_
-    GreGetTextExtentW (hdc, (LPWSTR)str, offset, &size, 0);
+    GreGetTextExtentW (hdc, str, offset, &size, 0);
 #else
     GetTextExtentPointW (hdc, str, offset, &size);
 #endif
     prefix_x = x + size.cx;
 #ifdef _WIN32K_
-    GreGetTextExtentW (hdc, (LPWSTR)str, offset+1, &size, 0);
+    GreGetTextExtentW (hdc, str, offset+1, &size, 0);
 #else
     GetTextExtentPointW (hdc, str, offset+1, &size);
 #endif
@@ -1276,7 +1276,7 @@ INT WINAPI DrawTextExWorker( HDC hdc,
                     len_seg = p - str;
                     if (len_seg != len &&
 #ifdef _WIN32K_
-                        !GreGetTextExtentW(hdc, (LPWSTR)str, len_seg, &size, 0))
+                        !GreGetTextExtentW(hdc, str, len_seg, &size, 0))
 #else
                         !GetTextExtentPointW(hdc, str, len_seg, &size))
 #endif
@@ -1295,7 +1295,7 @@ INT WINAPI DrawTextExWorker( HDC hdc,
                 if (!GreExtTextOutW( hdc, xseg, y,
                                     ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |
                                     ((flags & DT_RTLREADING) ? ETO_RTLREADING : 0),
-                                    rect, (LPWSTR)str, len_seg, NULL, 0 ))
+                                    rect, str, len_seg, NULL, 0 ))
 #else
                 if (!ExtTextOutW( hdc, xseg, y,
                                  ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |
