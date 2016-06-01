@@ -64,6 +64,7 @@ const HARDWARE_TABLE i8042HardwareTable[] =
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D531                   "}}, FL_INITHACK },
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D600                   "}}, FL_INITHACK },
     { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude D630                   "}}, FL_INITHACK },
+    { {{SYS_VENDOR, "Dell Inc."}, {SYS_PRODUCT, "Latitude E4300                  "}}, FL_INITHACK },
 
 };
 
