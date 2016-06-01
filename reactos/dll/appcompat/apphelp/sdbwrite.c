@@ -272,13 +272,14 @@ BOOL WINAPI SdbWriteBinaryTagFromFile(PDB db, TAG tag, LPCWSTR path)
 TAGID WINAPI SdbBeginWriteListTag(PDB db, TAG tag)
 {
     TAGID list_id;
+    DWORD dum = 0;
 
     if (!SdbpCheckTagType(tag, TAG_TYPE_LIST))
         return TAGID_NULL;
 
     list_id = db->write_iter;
     SdbpWrite(db, &tag, sizeof(TAG));
-    db->write_iter += sizeof(DWORD); /* reserve some memory for storing list size */
+    SdbpWrite(db, &dum, sizeof(dum)); /* reserve some memory for storing list size */
     return list_id;
 }
 
