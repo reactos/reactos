@@ -19,7 +19,7 @@
 #define PLACEMENT_STRETCH   1
 #define PLACEMENT_TILE      2
 
-/* The values in these macros are dependant on the
+/* The values in these macros are dependent on the
  * layout of the monitor image and they must be adjusted
  * if that image will be changed.
  */
@@ -348,12 +348,11 @@ AddListViewItems(HWND hwndDlg, PDATA pData)
                 if ((result == ERROR_SUCCESS) && (_tcslen(originalWallpaper) > 0))
                 {
                     hr = StringCbCopy(wallpaperFilename, sizeof(wallpaperFilename), originalWallpaper);
-                }
-
-                if (FAILED(hr))
-                {
-                    RegCloseKey(regKey);
-                    return;
+                    if (FAILED(hr))
+                    {
+                        RegCloseKey(regKey);
+                        return;
+                    }
                 }
             }
 
