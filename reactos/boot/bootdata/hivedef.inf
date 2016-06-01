@@ -57,7 +57,7 @@ HKCU,"Control Panel\Desktop","CursorBlinkRate",2,"530"
 HKCU,"Control Panel\Desktop","DragFullWindows",2,"1"
 HKCU,"Control Panel\Desktop","DragHeight",0x00000000,"4"
 HKCU,"Control Panel\Desktop","DragWidth",0x00000000,"4"
-HKCU,"Control Panel\Desktop","PaintDesktopVersion",0x00010001,"0"
+HKCU,"Control Panel\Desktop","PaintDesktopVersion",0x00010001,0x0
 HKCU,"Control Panel\Desktop","HungAppTimeout",2,"5000"
 HKCU,"Control Panel\Desktop","ScreenSaveActive",2,"0"
 HKCU,"Control Panel\Desktop","ScreenSaverIsSecure",2,"1"
