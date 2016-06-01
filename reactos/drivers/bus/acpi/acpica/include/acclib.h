@@ -118,17 +118,10 @@ strncpy (
     const char              *SrcString,
     ACPI_SIZE               Count);
 
-#ifdef __REACTOS__
-char *
-strstr (
-    const char              *String1,
-    const char              *String2);
-#else /* __REACTOS__ */
 char *
 strstr (
     char                    *String1,
     char                    *String2);
-#endif /* __REACTOS__ */
 
 
 /* Conversion */
@@ -142,19 +135,11 @@ strtoul (
 
 /* Memory */
 
-#ifdef __REACTOS__
-int
-memcmp (
-    const void              *Buffer1,
-    const void              *Buffer2,
-    ACPI_SIZE               Count);
-#else /* __REACTOS__ */
 int
 memcmp (
     void                    *Buffer1,
     void                    *Buffer2,
     ACPI_SIZE               Count);
-#endif /* __REACTOS__ */
 
 void *
 memcpy (
