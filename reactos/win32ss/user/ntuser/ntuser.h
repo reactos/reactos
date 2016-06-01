@@ -14,6 +14,7 @@ extern PTHREADINFO gptiCurrent;
 extern PPROCESSINFO gppiList;
 extern PPROCESSINFO ppiScrnSaver;
 extern PPROCESSINFO gppiInputProvider;
+extern BOOL g_AlwaysDisplayVersion;
 extern ATOM gaGuiConsoleWndClass;
 extern ATOM AtomDDETrack;
 extern ATOM AtomQOS;

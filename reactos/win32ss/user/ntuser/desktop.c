@@ -3,7 +3,7 @@
  *  PROJECT:          ReactOS Win32k subsystem
  *  PURPOSE:          Desktops
  *  FILE:             subsystems/win32/win32k/ntuser/desktop.c
- *  PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *  PROGRAMMER:       Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 /* INCLUDES ******************************************************************/
@@ -246,41 +246,201 @@ InitDesktopImpl(VOID)
     return STATUS_SUCCESS;
 }
 
-static INT GetSystemVersionString(PWSTR* buffer)
+static NTSTATUS
+GetSystemVersionString(OUT PWSTR pwszzVersion,
+                       IN SIZE_T cchDest,
+                       IN BOOLEAN InSafeMode,
+                       IN BOOLEAN AppendNtSystemRoot)
 {
-    static WCHAR wszVersion[256] = L"";
-    int len = 0;
+    NTSTATUS Status;
 
-    if (!*wszVersion)
-    {
-#if 0 // Disabled until versioning in win32k gets correctly implemented (hbelusca, r66750).
-        RTL_OSVERSIONINFOEXW versionInfo;
-
-        versionInfo.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
-
-        if (!NT_SUCCESS(RtlGetVersion((PRTL_OSVERSIONINFOW)&versionInfo)))
-            return 0;
-
-        if (versionInfo.dwMajorVersion <= 4)
-            len = swprintf(wszVersion,
-                           L"ReactOS Version %lu.%lu %s Build %lu",
-                           versionInfo.dwMajorVersion, versionInfo.dwMinorVersion,
-                           versionInfo.szCSDVersion, versionInfo.dwBuildNumber & 0xFFFF);
-        else
-            len = swprintf(wszVersion,
-                           L"ReactOS %s (Build %lu)",
-                           versionInfo.szCSDVersion, versionInfo.dwBuildNumber & 0xFFFF);
-#else
-        len = swprintf(wszVersion, L"ReactOS Version %S %S", KERNEL_VERSION_STR, KERNEL_VERSION_BUILD_STR);
+    RTL_OSVERSIONINFOEXW VerInfo;
+    UNICODE_STRING CSDVersionString;
+#if 0
+    UNICODE_STRING CurBuildNmString;
 #endif
+    RTL_QUERY_REGISTRY_TABLE VersionConfigurationTable[2] =
+    {
+        {
+            NULL,
+            RTL_QUERY_REGISTRY_DIRECT,
+            L"CSDVersion",
+            &CSDVersionString,
+            REG_NONE, NULL, 0
+        },
+
+#if 0
+        {
+            NULL,
+            RTL_QUERY_REGISTRY_DIRECT,
+            L"CurrentBuildNumber",
+            &CurBuildNmString,
+            REG_NONE, NULL, 0
+        },
+#endif
+
+        {0}
+    };
+
+    WCHAR VersionBuffer[256];
+    PWCHAR EndBuffer;
+
+    VerInfo.dwOSVersionInfoSize = sizeof(VerInfo);
+
+    /*
+     * This call is uniquely used to retrieve the current CSD numbers.
+     * All the rest (major, minor, ...) is either retrieved from the
+     * SharedUserData structure, or from the registry.
+     */
+    RtlGetVersion((PRTL_OSVERSIONINFOW)&VerInfo);
+
+    /*
+     * In kernel-mode, szCSDVersion is not initialized. Initialize it
+     * and query its value from the registry.
+     */
+    RtlZeroMemory(VerInfo.szCSDVersion, sizeof(VerInfo.szCSDVersion));
+    RtlInitEmptyUnicodeString(&CSDVersionString,
+                              VerInfo.szCSDVersion,
+                              sizeof(VerInfo.szCSDVersion));
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
+                                    L"",
+                                    VersionConfigurationTable,
+                                    NULL,
+                                    NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Indicate nothing is there */
+        CSDVersionString.Length = 0;
+    }
+    /* NULL-terminate */
+    CSDVersionString.Buffer[CSDVersionString.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    EndBuffer = VersionBuffer;
+    if ( /* VerInfo.wServicePackMajor != 0 && */ CSDVersionString.Length)
+    {
+        /* Print the version string */
+        Status = RtlStringCbPrintfExW(VersionBuffer,
+                                      sizeof(VersionBuffer),
+                                      &EndBuffer,
+                                      NULL,
+                                      0,
+                                      L": %wZ",
+                                      &CSDVersionString);
+        if (!NT_SUCCESS(Status))
+        {
+            /* No version, NULL-terminate the string */
+            *EndBuffer = UNICODE_NULL;
+        }
     }
     else
     {
-        len = wcslen(wszVersion);
+        /* No version, NULL-terminate the string */
+        *EndBuffer = UNICODE_NULL;
     }
 
-    *buffer = wszVersion;
-    return len;
+    if (InSafeMode)
+    {
+        /* String for Safe Mode */
+        Status = RtlStringCchPrintfW(pwszzVersion,
+                                     cchDest,
+                                     L"ReactOS Version %S %S (NT %u.%u Build %u%s)\n",
+                                     KERNEL_VERSION_STR,
+                                     KERNEL_VERSION_BUILD_STR, // Same as the "BuildLab" string in the registry
+                                     SharedUserData->NtMajorVersion,
+                                     SharedUserData->NtMinorVersion,
+                                     (VerInfo.dwBuildNumber & 0xFFFF),
+                                     VersionBuffer);
+
+        if (AppendNtSystemRoot && NT_SUCCESS(Status))
+        {
+            Status = RtlStringCbPrintfW(VersionBuffer,
+                                        sizeof(VersionBuffer),
+                                        L" - %s\n",
+                                        SharedUserData->NtSystemRoot);
+            if (NT_SUCCESS(Status))
+            {
+                /* Replace the last newline by a NULL, before concatenating */
+                EndBuffer = wcsrchr(pwszzVersion, L'\n');
+                if (EndBuffer) *EndBuffer = UNICODE_NULL;
+
+                /* The concatenated string has a terminating newline */
+                Status = RtlStringCchCatW(pwszzVersion,
+                                          cchDest,
+                                          VersionBuffer);
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Concatenation failed, put back the newline */
+                    if (EndBuffer) *EndBuffer = L'\n';
+                }
+            }
+
+            /* Override any failures as the NtSystemRoot string is optional */
+            Status = STATUS_SUCCESS;
+        }
+    }
+    else
+    {
+        /* Multi-string for Normal Mode */
+        Status = RtlStringCchPrintfW(pwszzVersion,
+                                     cchDest,
+                                     L"ReactOS Version %S\n"
+                                     L"Build %S\n"
+                                     L"Reporting NT %u.%u (Build %u%s)\n",
+                                     KERNEL_VERSION_STR,
+                                     KERNEL_VERSION_BUILD_STR, // Same as the "BuildLab" string in the registry
+                                     SharedUserData->NtMajorVersion,
+                                     SharedUserData->NtMinorVersion,
+                                     (VerInfo.dwBuildNumber & 0xFFFF),
+                                     VersionBuffer);
+
+        if (AppendNtSystemRoot && NT_SUCCESS(Status))
+        {
+            Status = RtlStringCbPrintfW(VersionBuffer,
+                                        sizeof(VersionBuffer),
+                                        L"%s\n",
+                                        SharedUserData->NtSystemRoot);
+            if (NT_SUCCESS(Status))
+            {
+                Status = RtlStringCchCatW(pwszzVersion,
+                                          cchDest,
+                                          VersionBuffer);
+            }
+
+            /* Override any failures as the NtSystemRoot string is optional */
+            Status = STATUS_SUCCESS;
+        }
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fall-back string */
+        Status = RtlStringCchPrintfW(pwszzVersion,
+                                     cchDest,
+                                     L"ReactOS Version %S %S\n",
+                                     KERNEL_VERSION_STR,
+                                     KERNEL_VERSION_BUILD_STR);
+        if (!NT_SUCCESS(Status))
+        {
+            /* General failure, NULL-terminate the string */
+            pwszzVersion[0] = UNICODE_NULL;
+        }
+    }
+
+    /*
+     * Convert the string separators (newlines) into NULLs
+     * and NULL-terminate the multi-string.
+     */
+    while (*pwszzVersion)
+    {
+        EndBuffer = wcschr(pwszzVersion, L'\n');
+        if (!EndBuffer) break;
+        pwszzVersion = EndBuffer;
+
+        *pwszzVersion++ = UNICODE_NULL;
+    }
+    *pwszzVersion = UNICODE_NULL;
+
+    return Status;
 }
 
 
@@ -1035,7 +1195,7 @@ IntPaintDesktop(HDC hDC)
         return FALSE;
 
     /* Retrieve the current SafeMode state */
-    InSafeMode = (UserGetSystemMetrics(SM_CLEANBOOT) != 0);
+    InSafeMode = (UserGetSystemMetrics(SM_CLEANBOOT) != 0); // gpsi->aiSysMet[SM_CLEANBOOT];
 
     if (!InSafeMode)
     {
@@ -1160,15 +1320,21 @@ IntPaintDesktop(HDC hDC)
     /*
      * Display the system version on the desktop background
      */
-    if (g_PaintDesktopVersion || InSafeMode)
+    if (InSafeMode || g_AlwaysDisplayVersion || g_PaintDesktopVersion)
     {
-        PWSTR pwszVersion;
+        NTSTATUS Status;
+        static WCHAR wszzVersion[1024] = L"\0";
+
+        /* Only used in normal mode */
+        // We expect at most 4 strings (3 for version, 1 for optional NtSystemRoot)
+        static POLYTEXTW VerStrs[4] = {{0},{0},{0},{0}};
+        INT i = 0;
         INT len;
-        NONCLIENTMETRICSW ncm;
-        HFONT hFont = NULL, hOldFont = NULL;
+
+        HFONT hFont1 = NULL, hFont2 = NULL, hOldFont = NULL;
         COLORREF crText, color_old;
         UINT align_old;
-        int mode_old;
+        INT mode_old;
         PDC pdc;
 
         if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &Rect, 0))
@@ -1177,18 +1343,22 @@ IntPaintDesktop(HDC hDC)
             Rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
         }
 
-        /* Set up the font (use default one otherwise) */
-        ncm.cbSize = sizeof(ncm);
-        if (UserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0))
-        {
-            hFont = GreCreateFontIndirectW(&ncm.lfCaptionFont);
-            if (hFont)
-                hOldFont = NtGdiSelectFont(hDC, hFont);
-        }
+        /*
+         * Set up the fonts (otherwise use default ones)
+         */
+
+        /* Font for the principal version string */
+        hFont1 = GreCreateFontIndirectW(&gspv.ncm.lfCaptionFont);
+        /* Font for the secondary version strings */
+        hFont2 = GreCreateFontIndirectW(&gspv.ncm.lfMenuFont);
+
+        if (hFont1)
+            hOldFont = NtGdiSelectFont(hDC, hFont1);
 
         if (gspv.hbmWallpaper == NULL)
         {
             /* Retrieve the brush fill colour */
+            // TODO: The following code constitutes "GreGetBrushColor".
             PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
             pdc = DC_LockDc(hDC);
             if (pdc)
@@ -1219,33 +1389,100 @@ IntPaintDesktop(HDC hDC)
         mode_old  = IntGdiSetBkMode(hDC, TRANSPARENT);
 
         /* Display the system version information */
-        // FIXME: We need different strings for Safe Mode and regular mode.
-        len = GetSystemVersionString(&pwszVersion); // , InSafeMode);
-        if (len)
+        if (!*wszzVersion)
+        {
+            Status = GetSystemVersionString(wszzVersion,
+                                            ARRAYSIZE(wszzVersion),
+                                            InSafeMode,
+                                            g_AlwaysDisplayVersion);
+            if (!InSafeMode && NT_SUCCESS(Status) && *wszzVersion)
+            {
+                PWCHAR pstr = wszzVersion;
+                for (i = 0; (i < ARRAYSIZE(VerStrs)) && *pstr; ++i)
+                {
+                    VerStrs[i].n = wcslen(pstr);
+                    VerStrs[i].lpstr = pstr;
+                    pstr += (VerStrs[i].n + 1);
+                }
+            }
+        }
+        else
+        {
+            Status = STATUS_SUCCESS;
+        }
+        if (NT_SUCCESS(Status) && *wszzVersion)
         {
             if (!InSafeMode)
             {
-                GreExtTextOutW(hDC, Rect.right - 16, Rect.bottom - 48, 0, NULL, pwszVersion, len, NULL, 0);
+                SIZE Size = {0, 0};
+                LONG TotalHeight = 0;
+
+                /* Normal Mode: multiple version information text separated by newlines */
+                IntGdiSetTextAlign(hDC, TA_RIGHT | TA_BOTTOM);
+
+                /* Compute the heights of the strings */
+                if (hFont1) NtGdiSelectFont(hDC, hFont1);
+                for (i = 0; i < ARRAYSIZE(VerStrs); ++i)
+                {
+                    if (!VerStrs[i].lpstr || !*VerStrs[i].lpstr || (VerStrs[i].n == 0))
+                        break;
+
+                    GreGetTextExtentW(hDC, VerStrs[i].lpstr, VerStrs[i].n, &Size, 1);
+                    VerStrs[i].y = Size.cy; // Store the string height
+                    TotalHeight += Size.cy;
+
+                    /* While the first string was using hFont1, all the others use hFont2 */
+                    if (hFont2) NtGdiSelectFont(hDC, hFont2);
+                }
+                /* The total height must not exceed the screen height */
+                TotalHeight = min(TotalHeight, Rect.bottom);
+
+                /* Display the strings */
+                if (hFont1) NtGdiSelectFont(hDC, hFont1);
+                for (i = 0; i < ARRAYSIZE(VerStrs); ++i)
+                {
+                    if (!VerStrs[i].lpstr || !*VerStrs[i].lpstr || (VerStrs[i].n == 0))
+                        break;
+
+                    TotalHeight -= VerStrs[i].y;
+                    GreExtTextOutW(hDC,
+                                   Rect.right - 5,
+                                   Rect.bottom - TotalHeight - 5,
+                                   0, NULL,
+                                   VerStrs[i].lpstr,
+                                   VerStrs[i].n,
+                                   NULL, 0);
+
+                    /* While the first string was using hFont1, all the others use hFont2 */
+                    if (hFont2) NtGdiSelectFont(hDC, hFont2);
+                }
             }
             else
             {
-                /* Safe Mode: version information text in top center */
+                if (hFont1) NtGdiSelectFont(hDC, hFont1);
+
+                /* Safe Mode: single version information text in top center */
+                len = wcslen(wszzVersion);
+
                 IntGdiSetTextAlign(hDC, TA_CENTER | TA_TOP);
-                GreExtTextOutW(hDC, (Rect.right + Rect.left)/2, Rect.top + 3, 0, NULL, pwszVersion, len, NULL, 0);
+                GreExtTextOutW(hDC, (Rect.right + Rect.left)/2, Rect.top + 3, 0, NULL, wszzVersion, len, NULL, 0);
             }
         }
 
         if (InSafeMode)
         {
+            if (hFont1) NtGdiSelectFont(hDC, hFont1);
+
             /* Print Safe Mode text in corners */
             len = wcslen(s_wszSafeMode);
+
             IntGdiSetTextAlign(hDC, TA_LEFT | TA_TOP);
             GreExtTextOutW(hDC, Rect.left, Rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
             IntGdiSetTextAlign(hDC, TA_RIGHT | TA_TOP);
             GreExtTextOutW(hDC, Rect.right, Rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
-            IntGdiSetTextAlign(hDC, TA_LEFT | TA_BASELINE);
+            IntGdiSetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
             GreExtTextOutW(hDC, Rect.left, Rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
-            IntGdiSetTextAlign(hDC, TA_RIGHT | TA_BASELINE);
+            IntGdiSetTextAlign(hDC, TA_RIGHT | TA_BOTTOM);
             GreExtTextOutW(hDC, Rect.right, Rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
         }
 
@@ -1253,10 +1490,13 @@ IntPaintDesktop(HDC hDC)
         IntGdiSetTextAlign(hDC, align_old);
         IntGdiSetTextColor(hDC, color_old);
 
-        if (hFont)
+        if (hFont2)
+            GreDeleteObject(hFont2);
+
+        if (hFont1)
         {
             NtGdiSelectFont(hDC, hOldFont);
-            GreDeleteObject(hFont);
+            GreDeleteObject(hFont1);
         }
     }
 
