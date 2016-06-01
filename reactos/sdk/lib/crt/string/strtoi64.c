@@ -7,7 +7,7 @@
 *
 * FIXME: locale parameter is ignored
 */
-__int64 CDECL strtoi64_l(const char *nptr, char **endptr, int base, _locale_t locale)
+__int64 CDECL _strtoi64_l(const char *nptr, char **endptr, int base, _locale_t locale)
 {
     const char *p = nptr;
     BOOL negative = FALSE;
@@ -87,7 +87,7 @@ __int64 CDECL strtoi64_l(const char *nptr, char **endptr, int base, _locale_t lo
 __int64
 _strtoi64(const char *nptr, char **endptr, int base)
 {
-    return  strtoi64_l(nptr, endptr, base, NULL);
+    return _strtoi64_l(nptr, endptr, base, NULL);
 }
 
 
