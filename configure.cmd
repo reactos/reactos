@@ -84,7 +84,7 @@ set NEW_STYLE_BUILD=1
 
 REM Parse command line parameters
 :repeat
-    if /I "%1%" == "-DNEW_STYLE_BUILD" (
+    if /I "%1" == "-DNEW_STYLE_BUILD" (
         set NEW_STYLE_BUILD=%2
     ) else if "%BUILD_ENVIRONMENT%" == "MinGW" (
         if /I "%1" == "Codeblocks" (
@@ -95,6 +95,13 @@ REM Parse command line parameters
             set CMAKE_GENERATOR="MinGW Makefiles"
         ) else if /I "%1" == "clang" (
             set MINGW_TOOCHAIN_FILE=toolchain-clang.cmake
+        ) else if /I "%1" == "VSSolution" (
+            echo. && echo Error: Creation of VS Solution files is not supported in a MinGW environment.
+            echo Please run this command in a [Developer] Command Prompt for Visual Studio.
+            endlocal
+            exit /b
+        ) else if /I "%1" == "RTC" (
+            echo. && echo 	Warning: RTC switch is ignored outside of a Visual Studio environment. && echo.
         ) else (
             goto continue
         )
@@ -167,13 +174,36 @@ if "!CMAKE_GENERATOR!" == "Ninja" (
 
 REM Create directories
 set REACTOS_OUTPUT_PATH=output-%BUILD_ENVIRONMENT%-%ARCH%
+
+if "%VS_SOLUTION%" == "1" (
+    set REACTOS_OUTPUT_PATH=%REACTOS_OUTPUT_PATH%-sln
+)
+
 if "%REACTOS_SOURCE_DIR%" == "%CD%\" (
+    set CD_SAME_AS_SOURCE=1
     echo Creating directories in %REACTOS_OUTPUT_PATH%
 
     if not exist %REACTOS_OUTPUT_PATH% (
         mkdir %REACTOS_OUTPUT_PATH%
     )
     cd %REACTOS_OUTPUT_PATH%
+)
+
+if "%VS_SOLUTION%" == "1" (
+
+    if exist build.ninja (
+        echo. && echo Error: This directory has already been configured for ninja.
+        echo An output folder configured for ninja can't be reconfigured for VSSolution.
+        echo Use an empty folder or delete the contents of this folder, then try again.
+        endlocal
+        exit /b
+    )
+) else if exist REACTOS.sln (
+    echo. && echo Error: This directory has already been configured for Visual Studio.
+    echo An output folder configured for VSSolution can't be reconfigured for ninja.
+    echo Use an empty folder or delete the contents of this folder, then try again. && echo.
+    endlocal
+    exit /b
 )
 
 if "%NEW_STYLE_BUILD%"=="0" (
@@ -231,7 +261,11 @@ if "%NEW_STYLE_BUILD%"=="0" (
     cd..
 )
 
-echo Configure script complete^^! Execute appropriate build commands (ex: ninja, make, nmake, etc...).
+if "%CD_SAME_AS_SOURCE%" == "1" (
+    echo Configure script complete^^! Execute appropriate build commands ^(ex: ninja, make, nmake, etc...^) from %REACTOS_OUTPUT_PATH%.
+) else (
+    echo Configure script complete^^! Execute appropriate build commands ^(ex: ninja, make, nmake, etc...^).
+)
 endlocal
 exit /b
 
