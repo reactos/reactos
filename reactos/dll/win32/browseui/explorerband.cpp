@@ -12,7 +12,8 @@ HRESULT WINAPI CExplorerBand_Constructor(REFIID riid, LPVOID *ppv)
     return ShellObjectCreator<CExplorerBand>(riid, ppv);
 }
 
-CExplorerBand::CExplorerBand()
+CExplorerBand::CExplorerBand() :
+    pSite(NULL), fVisible(FALSE), dwBandID(0)
 {
 }
 
@@ -20,11 +21,23 @@ CExplorerBand::~CExplorerBand()
 {
 }
 
+void CExplorerBand::InitializeExplorerBand()
+{
+
+}
+
+void CExplorerBand::DestroyExplorerBand()
+{
+
+}
+
 // *** IOleWindow methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetWindow(HWND *lphwnd)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    if (!lphwnd)
+        return E_INVALIDARG;
+    *lphwnd = m_hWnd;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::ContextSensitiveHelp(BOOL fEnterMode)
@@ -37,42 +50,135 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::ContextSensitiveHelp(BOOL fEnterMode)
 // *** IDockingWindow methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::CloseDW(DWORD dwReserved)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    // We do nothing, we don't have anything to save yet
+    TRACE("CloseDW called\n");
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::ResizeBorderDW(const RECT *prcBorder, IUnknown *punkToolbarSite, BOOL fReserved)
 {
-    UNIMPLEMENTED;
+    /* Must return E_NOTIMPL according to MSDN */
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::ShowDW(BOOL fShow)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    fVisible = fShow;
+    ShowWindow(fShow);
+    return S_OK;
 }
 
 
 // *** IDeskBand methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO *pdbi)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    if (!pdbi)
+    {
+        return E_INVALIDARG;
+    }
+    this->dwBandID = dwBandID;
+
+    if (pdbi->dwMask & DBIM_MINSIZE)
+    {
+        pdbi->ptMinSize.x = 200;
+        pdbi->ptMinSize.y = 30;
+    }
+
+    if (pdbi->dwMask & DBIM_MAXSIZE)
+    {
+        pdbi->ptMaxSize.y = -1;
+    }
+
+    if (pdbi->dwMask & DBIM_INTEGRAL)
+    {
+        pdbi->ptIntegral.y = 1;
+    }
+
+    if (pdbi->dwMask & DBIM_ACTUAL)
+    {
+        pdbi->ptActual.x = 200;
+        pdbi->ptActual.y = 30;
+    }
+
+    if (pdbi->dwMask & DBIM_TITLE)
+    {
+        lstrcpyW(pdbi->wszTitle, L"Explorer");
+    }
+
+    if (pdbi->dwMask & DBIM_MODEFLAGS)
+    {
+        pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT;
+    }
+
+    if (pdbi->dwMask & DBIM_BKCOLOR)
+    {
+        pdbi->dwMask &= ~DBIM_BKCOLOR;
+    }
+    return S_OK;
 }
 
 
 // *** IObjectWithSite methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::SetSite(IUnknown *pUnkSite)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    HRESULT hr;
+    HWND parentWnd;
+
+    if (pUnkSite == pSite)
+        return S_OK;
+
+    TRACE("SetSite called \n");
+    if (!pUnkSite)
+    {
+        DestroyExplorerBand();
+        DestroyWindow();
+        m_hWnd = NULL;
+    }
+
+    if (pUnkSite != pSite)
+    {
+        pSite = NULL;
+    }
+
+    if(!pUnkSite)
+        return S_OK;
+
+    hr = IUnknown_GetWindow(pUnkSite, &parentWnd);
+    if (!SUCCEEDED(hr))
+    {
+        ERR("Could not get parent's window ! Status: %08lx\n", hr);
+        return E_INVALIDARG;
+    }
+
+    pSite = pUnkSite;    
+
+    if (m_hWnd)
+    {
+        // Change its parent
+        SetParent(parentWnd);
+    }
+    else
+    {
+        HWND wnd = CreateWindow(WC_TREEVIEW, NULL,
+            WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_EDITLABELS /* | TVS_SINGLEEXPAND*/ , // remove TVS_SINGLEEXPAND for now since it has strange behaviour
+            0, 0, 0, 0, parentWnd, NULL, _AtlBaseModule.GetModuleInstance(), NULL);
+
+        // Subclass the window
+        SubclassWindow(wnd);
+
+        // Initialize our treeview now
+        InitializeExplorerBand();
+        RegisterDragDrop(m_hWnd, dynamic_cast<IDropTarget*>(this));
+    }
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetSite(REFIID riid, void **ppvSite)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    if (!ppvSite)
+        return E_POINTER;
+    *ppvSite = pSite;
+    return S_OK;
 }
 
 
@@ -101,28 +207,40 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::QueryService(REFGUID guidService, REFII
 // *** IInputObject methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    if (fActivate)
+    {
+        //SetFocus();
+        SetActiveWindow();
+    }
+    // TODO: handle message
+    if(lpMsg)
+    {
+        TranslateMessage(lpMsg);
+        DispatchMessage(lpMsg);
+    }
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::HasFocusIO()
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    return bFocused ? S_OK : S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    TranslateMessage(lpMsg);
+    DispatchMessage(lpMsg);
+    return S_OK;
 }
 
 
 // *** IPersist methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetClassID(CLSID *pClassID)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    if (!pClassID)
+        return E_POINTER;
+    memcpy(pClassID, &CLSID_ExplorerBand, sizeof(CLSID));
+    return S_OK;
 }
 
 
@@ -161,8 +279,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::IsWindowOwner(HWND hWnd)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    return (hWnd == m_hWnd) ? S_OK : S_FALSE;
 }
 
 // *** IBandNavigate methods ***

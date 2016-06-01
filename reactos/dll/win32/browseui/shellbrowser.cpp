@@ -24,7 +24,7 @@
 #include <htiframe.h>
 #include <strsafe.h>
 
-#define USE_CUSTOM_EXPLORERBAND 0
+#define USE_CUSTOM_EXPLORERBAND 1
 
 extern HRESULT IUnknown_ShowDW(IUnknown * punk, BOOL fShow);
 
@@ -1237,9 +1237,23 @@ HRESULT CShellBrowser::ShowBand(const CLSID &classID, bool vertical)
     
     if (!IsBandLoaded(classID, vertical, &dwBandID))
     {
-        hResult = CoCreateInstance(classID, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, &newBand));
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
+#if USE_CUSTOM_EXPLORERBAND
+        TRACE("ShowBand called for CLSID %s, vertical=%d...\n", wine_dbgstr_guid(&classID), vertical);
+        if (IsEqualCLSID(CLSID_ExplorerBand, classID))
+        {
+            TRACE("CLSID_ExplorerBand requested, building internal band.\n");
+            hResult = CExplorerBand_Constructor(IID_PPV_ARG(IUnknown, &newBand));
+            if (FAILED_UNEXPECTEDLY(hResult))
+                return hResult;
+        }
+        else
+#endif
+        {
+            TRACE("A different CLSID requested, using CoCreateInstance.\n");
+            hResult = CoCreateInstance(classID, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, &newBand));
+            if (FAILED_UNEXPECTEDLY(hResult))
+                return hResult;
+        }
     }
     else
     {

@@ -30,6 +30,17 @@ private:
         BOOL expanded;
     };
 
+    // *** BaseBarSite information ***
+    CComPtr<IUnknown> pSite;
+
+    // *** tree explorer band stuff ***
+    BOOL fVisible;
+    BOOL bFocused;
+    DWORD dwBandID;
+
+    void InitializeExplorerBand();
+    void DestroyExplorerBand();
+
 public:
     CExplorerBand();
     virtual ~CExplorerBand();
