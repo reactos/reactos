@@ -55,3 +55,14 @@ add_dependencies(memcmp psdk)
 add_library(getopt misc/getopt.c)
 add_target_compile_definitions(getopt _DLL __USE_CRTIMP)
 add_dependencies(getopt psdk)
+
+add_library(strtol
+    string/ctype.c
+    string/iswctype.c
+    string/strtoi64.c
+    string/strtol.c
+    string/strtoul.c
+    string/strtoull.c
+    string/wctype.c)
+add_target_compile_definitions(strtol _LIBCNT_)
+add_dependencies(strtol psdk)
