@@ -4769,7 +4769,7 @@ static UINT ACTION_RemoveIniValues( MSIPACKAGE *package )
 
 static void register_dll( const WCHAR *dll, BOOL unregister )
 {
-#ifdef __REACTOS_
+#ifdef __REACTOS__
     static const WCHAR regW[] =
         {'r','e','g','s','v','r','3','2','.','e','x','e',' ','/','s',' ','\"','%','s','\"',0};
     static const WCHAR unregW[] =
