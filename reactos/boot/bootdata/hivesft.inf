@@ -1388,6 +1388,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","AppInit_DLLs",0x00000000,""
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","DesktopHeapLogging",0x00010001,0x1
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","DeviceNotSelectedTimeout",0x00000000,"15"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","DisplayVersion",0x00010001,0x1
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","GDIProcessHandleQuota",0x00010001,0x2710
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","Spooler",0x00000000,"yes"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows","swapdisk",0x00000000,""

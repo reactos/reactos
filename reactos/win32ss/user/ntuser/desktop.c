@@ -343,9 +343,11 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
         /* String for Safe Mode */
         Status = RtlStringCchPrintfW(pwszzVersion,
                                      cchDest,
-                                     L"ReactOS Version %S %S (NT %u.%u Build %u%s)\n",
+                                     L"ReactOS Version %S %S.%S_%S (NT %u.%u Build %u%s)\n",
                                      KERNEL_VERSION_STR,
                                      KERNEL_VERSION_BUILD_STR, // Same as the "BuildLab" string in the registry
+                                     REACTOS_COMPILER_NAME,
+                                     REACTOS_COMPILER_VERSION,
                                      SharedUserData->NtMajorVersion,
                                      SharedUserData->NtMinorVersion,
                                      (VerInfo.dwBuildNumber & 0xFFFF),
@@ -384,10 +386,12 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
         Status = RtlStringCchPrintfW(pwszzVersion,
                                      cchDest,
                                      L"ReactOS Version %S\n"
-                                     L"Build %S\n"
+                                     L"Build %S.%S_%S\n"
                                      L"Reporting NT %u.%u (Build %u%s)\n",
                                      KERNEL_VERSION_STR,
                                      KERNEL_VERSION_BUILD_STR, // Same as the "BuildLab" string in the registry
+                                     REACTOS_COMPILER_NAME,
+                                     REACTOS_COMPILER_VERSION,
                                      SharedUserData->NtMajorVersion,
                                      SharedUserData->NtMinorVersion,
                                      (VerInfo.dwBuildNumber & 0xFFFF),
@@ -416,9 +420,11 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
         /* Fall-back string */
         Status = RtlStringCchPrintfW(pwszzVersion,
                                      cchDest,
-                                     L"ReactOS Version %S %S\n",
+                                     L"ReactOS Version %S %S.%S_%S\n",
                                      KERNEL_VERSION_STR,
-                                     KERNEL_VERSION_BUILD_STR);
+                                     KERNEL_VERSION_BUILD_STR, // Same as the "BuildLab" string in the registry
+                                     REACTOS_COMPILER_NAME,
+                                     REACTOS_COMPILER_VERSION);
         if (!NT_SUCCESS(Status))
         {
             /* General failure, NULL-terminate the string */
