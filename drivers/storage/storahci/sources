@@ -1,0 +1,8 @@
+TARGETNAME = storahci
+TARGETTYPE = MINIPORT
+
+TARGETLIBS=$(DDK_LIB_PATH)\storport.lib
+ 
+INCLUDES   = %BUILD%\inc
+LIBS       = %BUILD%\lib
+SOURCES    = storahci.c
