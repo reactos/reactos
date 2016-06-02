@@ -161,7 +161,6 @@ HRESULT CComCatCachedCategory::CacheDSA()
     SHSetValue(HKEY_CURRENT_USER, bufKey, IMPLEMENTING, REG_BINARY, buffer, bufferSize);
 
     guidArray = NULL;
-    CoTaskMemFree(buffer);
     return S_OK;
 }
 
