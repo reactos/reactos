@@ -37,6 +37,10 @@
 
 #endif
 
+BOOL WINAPI SdbWriteStringRefTag(PDB db, TAG tag, TAGID tagid);
+TAGID WINAPI SdbBeginWriteListTag(PDB db, TAG tag);
+BOOL WINAPI SdbEndWriteListTag(PDB db, TAGID tagid);
+
 
 static void WINAPI SdbpWrite(PDB db, const void* data, DWORD size)
 {
@@ -49,6 +53,23 @@ static void WINAPI SdbpWrite(PDB db, const void* data, DWORD size)
 
     memcpy(db->data + db->write_iter, data, size);
     db->write_iter += size;
+}
+
+static BOOL WINAPI SdbpGetOrAddStringRef(PDB db, LPCWSTR string, TAGID* tagid)
+{
+    /* TODO:
+    - Insert or find in stringtable
+    - return TAGID
+    */
+
+    return FALSE;
+}
+
+static void WINAPI SdbpWriteStringtable(PDB db)
+{
+    TAGID table = SdbBeginWriteListTag(db, TAG_STRINGTABLE);
+    /* TODO: Write out all strings*/
+    SdbEndWriteListTag(db, table);
 }
 
 /**
@@ -90,6 +111,7 @@ PDB WINAPI SdbCreateDatabase(LPCWSTR path, PATH_TYPE type)
  */
 void WINAPI SdbCloseDatabaseWrite(PDB db)
 {
+    SdbpWriteStringtable(db);
     SdbpFlush(db);
     SdbCloseDatabase(db);
 }
@@ -181,10 +203,19 @@ BOOL WINAPI SdbWriteStringTag(PDB db, TAG tag, LPCWSTR string)
 {
     DWORD size;
 
+    if (SdbpCheckTagType(tag, TAG_TYPE_STRINGREF))
+    {
+        TAGID tagid = 0;
+        if (!SdbpGetOrAddStringRef(db, string, &tagid))
+            return FALSE;
+
+        return SdbWriteStringRefTag(db, tag, tagid);
+    }
+
     if (!SdbpCheckTagType(tag, TAG_TYPE_STRING))
         return FALSE;
 
-    size = SdbpStrlen(string);
+    size = SdbpStrsize(string);
     SdbpWrite(db, &tag, sizeof(TAG));
     SdbpWrite(db, &size, sizeof(size));
     SdbpWrite(db, string, size);
@@ -297,7 +328,7 @@ BOOL WINAPI SdbEndWriteListTag(PDB db, TAGID tagid)
         return FALSE;
 
     /* Write size of list to list tag header */
-    *(DWORD*)&db->data[tagid + sizeof(TAG)] = db->write_iter - tagid - sizeof(TAG);
+    *(DWORD*)&db->data[tagid + sizeof(TAG)] = db->write_iter - tagid - sizeof(TAG) - sizeof(TAGID);
     return TRUE;
 }
 

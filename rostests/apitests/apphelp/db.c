@@ -313,6 +313,91 @@ static void test_Sdb(void)
     DeleteFileW(path1);
 }
 
+/*
+ - Show that a stringtable is automatically generated,
+ - validate multiple lists (for the length)
+*/
+static void test_write_ex(void)
+{
+    WCHAR path1[] = {'t','e','s','t','.','s','d','b',0};
+    WCHAR test1[] = {'T','E','S','T',0};
+    WCHAR test2[] = {'t','e','s','t',0};
+    PDB pdb;
+    TAGID tagdb, tagstr;
+    TAG tag;
+    DWORD size;
+    BOOL ret;
+
+    /* Write a small database */
+    pdb = pSdbCreateDatabase(path1, DOS_PATH);
+    ok(pdb != NULL, "Expected a valid database\n");
+    if (!pdb)
+        return;
+    tagdb = pSdbBeginWriteListTag(pdb, TAG_DATABASE);
+    ok(tagdb == 12, "Expected tag to be 12, was %u\n", tagdb);
+    ret = pSdbWriteStringTag(pdb, TAG_NAME, test1);
+    ok(ret, "Expected SdbWriteStringTag to succeed\n");
+    ret = pSdbEndWriteListTag(pdb, tagdb);
+    ok(ret, "Expected SdbEndWriteListTag to succeed\n");
+
+    tagdb = pSdbBeginWriteListTag(pdb, TAG_DATABASE);
+    ok(tagdb == 24, "Expected tag to be 24, was %u\n", tagdb);
+    ret = pSdbWriteStringTag(pdb, TAG_NAME, test2);
+    ok(ret, "Expected SdbWriteStringTag to succeed\n");
+    ret = pSdbEndWriteListTag(pdb, tagdb);
+    ok(ret, "Expected SdbEndWriteListTag to succeed\n");
+
+    pSdbCloseDatabaseWrite(pdb);
+
+    /* Now validate it's contents */
+    pdb = pSdbOpenDatabase(path1, DOS_PATH);
+    ok(pdb != NULL, "Expected a valid database\n");
+    if (!pdb)
+        return;
+    tagdb = pSdbFindFirstTag(pdb, TAGID_ROOT, TAG_DATABASE);
+    ok(tagdb == 12, "Expected tag to be 12, was %u\n", tagdb);
+    size = pSdbGetTagDataSize(pdb, tagdb);
+    ok(size == 6, "Expected size to be 6, was %u\n", size);
+    tagstr = pSdbFindFirstTag(pdb, tagdb, TAG_NAME);
+    ok(tagstr == 18, "Expected string tag to be 18, was %u\n", tagstr);
+    tag = pSdbGetTagFromTagID(pdb, tagstr);
+    ok(tag == TAG_NAME, "Expected tag to be TAG_NAME, was 0x%x\n", (DWORD)tag);
+    size = pSdbGetTagDataSize(pdb, tagstr);
+    ok(size == 4, "Expected size to be 4, was 0x%x\n", size);
+
+    tagdb = pSdbFindNextTag(pdb, TAGID_ROOT, tagdb);
+    ok(tagdb == 24, "Expected tag to be 24, was %u\n", tagdb);
+    size = pSdbGetTagDataSize(pdb, tagdb);
+    ok(size == 6, "Expected size to be 6, was %u\n", size);
+    tagstr = pSdbFindFirstTag(pdb, tagdb, TAG_NAME);
+    ok(tagstr == 30, "Expected string tag to be 30, was %u\n", tagstr);
+    tag = pSdbGetTagFromTagID(pdb, tagstr);
+    ok(tag == TAG_NAME, "Expected tag to be TAG_NAME, was 0x%x\n", (DWORD)tag);
+    size = pSdbGetTagDataSize(pdb, tagstr);
+    ok(size == 4, "Expected size to be 4, was %u\n", size);
+
+    tagdb = pSdbFindFirstTag(pdb, TAGID_ROOT, TAG_STRINGTABLE);
+    ok(tagdb == 36, "Expected tag to be 36, was %u\n", tagdb);
+    size = pSdbGetTagDataSize(pdb, tagdb);
+    ok(size == 32, "Expected size to be 32, was %u\n", size);
+    tagstr = pSdbGetFirstChild(pdb, tagdb);
+    ok(tagstr == 42, "Expected string tag to be 42, was %u\n", tagstr);
+    tag = pSdbGetTagFromTagID(pdb, tagstr);
+    ok(tag == TAG_STRINGTABLE_ITEM, "Expected tag to be TAG_STRINGTABLE_ITEM, was 0x%x\n", (DWORD)tag);
+    size = pSdbGetTagDataSize(pdb, tagstr);
+    ok(size == 10, "Expected size to be 10, was %u\n", size);
+
+    tagstr = pSdbGetNextChild(pdb, tagdb, tagstr);
+    ok(tagstr == 58, "Expected string tag to be 58, was %u\n", tagstr);
+    tag = pSdbGetTagFromTagID(pdb, tagstr);
+    ok(tag == TAG_STRINGTABLE_ITEM, "Expected tag to be TAG_STRINGTABLE_ITEM, was 0x%x\n", (DWORD)tag);
+    size = pSdbGetTagDataSize(pdb, tagstr);
+    ok(size == 10, "Expected size to be 10, was %u\n", size);
+
+    pSdbCloseDatabase(pdb);
+}
+
+
 static void match_str_attr_imp(PDB pdb, TAGID parent, TAG find, const char* compare)
 {
     TAGID attr = pSdbFindFirstTag(pdb, parent, find);
@@ -790,5 +875,6 @@ START_TEST(db)
     pSdbGUIDToString = (void *) GetProcAddress(hdll, "SdbGUIDToString");
 
     test_Sdb();
+    test_write_ex();
     test_CheckDatabaseManually();
 }

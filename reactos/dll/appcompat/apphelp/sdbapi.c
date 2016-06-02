@@ -259,12 +259,17 @@ void WINAPI SdbpFlush(PDB db)
 
 DWORD SdbpStrlen(PCWSTR string)
 {
-    return (lstrlenW(string) + 1) * sizeof(WCHAR);
+    return lstrlenW(string);
+}
+
+DWORD SdbpStrsize(PCWSTR string)
+{
+    return (SdbpStrlen(string) + 1) * sizeof(WCHAR);
 }
 
 PWSTR SdbpStrDup(LPCWSTR string)
 {
-    PWSTR ret = SdbpAlloc(SdbpStrlen(string));
+    PWSTR ret = SdbpAlloc(SdbpStrsize(string));
     lstrcpyW(ret, string);
     return ret;
 }

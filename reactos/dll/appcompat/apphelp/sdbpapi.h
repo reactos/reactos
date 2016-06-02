@@ -65,7 +65,8 @@ void WINAPI SdbpCloseMemMappedFile(PMEMMAPPED mapping);
 
 PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write);
 void WINAPI SdbpFlush(PDB db);
-DWORD SdbpStrlen(LPCWSTR string);
+DWORD SdbpStrlen(PCWSTR string);
+DWORD SdbpStrsize(PCWSTR string);
 
 
 #ifdef __cplusplus
