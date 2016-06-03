@@ -1,3 +1,23 @@
+/*
+ * ReactOS Explorer
+ *
+ * Copyright 2016 Sylvain Deverre <deverre dot sylv at gmail dot com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 #pragma once
 
 #define WM_USER_SHELLEVENT WM_USER+88
@@ -32,14 +52,28 @@ private:
 
     // *** BaseBarSite information ***
     CComPtr<IUnknown> pSite;
-
+    CComPtr<IShellFolder> pDesktop;
+    
     // *** tree explorer band stuff ***
     BOOL fVisible;
     BOOL bFocused;
     DWORD dwBandID;
-
+    HIMAGELIST hImageList;
+    HTREEITEM  hRoot;
+    
+    // *** notification cookies ***
+    DWORD adviseCookie;
+    ULONG shellRegID;
+    
     void InitializeExplorerBand();
     void DestroyExplorerBand();
+
+    BOOL OnTreeItemExpanding(LPNMTREEVIEW pnmtv);
+
+    // *** Helper functions ***
+    NodeInfo* GetNodeInfo(HTREEITEM hItem);
+    HTREEITEM InsertItem(HTREEITEM hParent, IShellFolder *psfParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort);
+    BOOL InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo); 
 
 public:
     CExplorerBand();
