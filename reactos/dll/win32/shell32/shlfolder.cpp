@@ -380,7 +380,7 @@ HRESULT HCR_GetClassName(REFIID riid, LPSTRRET strRet)
 {
     BOOL bRet;
     WCHAR wstrName[MAX_PATH+1];
-    bRet = HCR_GetClassNameW(CLSID_MyDocuments, wstrName, MAX_PATH);
+    bRet = HCR_GetClassNameW(riid, wstrName, MAX_PATH);
     if (!bRet)
         return E_FAIL;
 
