@@ -69,9 +69,11 @@ private:
     void DestroyExplorerBand();
 
     BOOL OnTreeItemExpanding(LPNMTREEVIEW pnmtv);
+    void OnSelectionChanged(LPNMTREEVIEW pnmtv);
 
     // *** Helper functions ***
     NodeInfo* GetNodeInfo(HTREEITEM hItem);
+    HRESULT UpdateBrowser(LPITEMIDLIST pidlGoto);
     HTREEITEM InsertItem(HTREEITEM hParent, IShellFolder *psfParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort);
     BOOL InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo); 
 

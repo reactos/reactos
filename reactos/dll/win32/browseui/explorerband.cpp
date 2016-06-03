@@ -142,6 +142,22 @@ CExplorerBand::NodeInfo* CExplorerBand::GetNodeInfo(HTREEITEM hItem)
     return reinterpret_cast<NodeInfo*>(tvItem.lParam);
 }
 
+HRESULT CExplorerBand::UpdateBrowser(LPITEMIDLIST pidlGoto)
+{
+    CComPtr<IShellBrowser>              pBrowserService;
+    HRESULT                             hr;
+
+    hr = IUnknown_QueryService(pSite, SID_STopLevelBrowser, IID_PPV_ARG(IShellBrowser, &pBrowserService));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pBrowserService->BrowseObject(pidlGoto, SBSP_SAMEBROWSER | SBSP_ABSOLUTE);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return hr;
+}
+
 // *** notifications handling ***
 BOOL CExplorerBand::OnTreeItemExpanding(LPNMTREEVIEW pnmtv)
 {
@@ -175,6 +191,16 @@ BOOL CExplorerBand::OnTreeItemExpanding(LPNMTREEVIEW pnmtv)
             }
     }
     return FALSE;
+}
+
+void CExplorerBand::OnSelectionChanged(LPNMTREEVIEW pnmtv)
+{
+    NodeInfo* pNodeInfo = GetNodeInfo(pnmtv->itemNew.hItem);
+
+    UpdateBrowser(pNodeInfo->absolutePidl);
+    SetFocus();
+    // Expand the node
+    //TreeView_Expand(m_hWnd, pnmtv->itemNew.hItem, TVE_EXPAND);
 }
 
 // *** Helper functions ***
@@ -557,6 +583,9 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
         {
             case TVN_ITEMEXPANDING:
                 *theResult = OnTreeItemExpanding((LPNMTREEVIEW)lParam);
+                break;
+            case TVN_SELCHANGED:
+                OnSelectionChanged((LPNMTREEVIEW)lParam);
                 break;
             default:
                 break;
