@@ -8,8 +8,135 @@
 #include "storahci.h"
 
 BOOLEAN AhciAdapterReset(
-    __in  PAHCI_ADAPTER_EXTENSION           adapterExtension
+  __in  PAHCI_ADAPTER_EXTENSION             adapterExtension
 );
+
+VOID AhciZeroMemory(
+  __in  PCHAR                               buffer,
+  __in  ULONG                               bufferSize
+);
+
+/**
+ * @name AhciPortInitialize
+ * @implemented
+ *
+ * Initialize port by setting up PxCLB & PxFB Registers
+ *
+ * @param portExtension
+ *
+ * @return
+ * Return true if intialization was successful
+ */
+BOOLEAN AhciPortInitialize(
+  __in  PAHCI_PORT_EXTENSION                portExtension
+)
+{
+    ULONG mappedLength;
+    PAHCI_MEMORY_REGISTERS abar;
+    PAHCI_ADAPTER_EXTENSION adapterExtension;
+    STOR_PHYSICAL_ADDRESS commandListPhysical, receivedFISPhysical;
+
+    adapterExtension = portExtension->AdapterExtension;
+    abar = adapterExtension->ABAR_Address;
+    portExtension->Port = &abar->PortList[portExtension->PortNumber];
+
+    commandListPhysical = StorPortGetPhysicalAddress(adapterExtension, NULL, portExtension->CommandList, &mappedLength);
+    if (mappedLength == 0 || (commandListPhysical.LowPart % 1024) != 0)
+        return FALSE;
+
+    receivedFISPhysical = StorPortGetPhysicalAddress(adapterExtension, NULL, portExtension->ReceivedFIS, &mappedLength);
+    if (mappedLength == 0 || (commandListPhysical.LowPart % 256) != 0)
+        return FALSE;
+
+    // 10.1.2 For each implemented port, system software shall allocate memory for and program:
+    //  PxCLB and PxCLBU (if CAP.S64A is set to ‘1’)
+    //  PxFB and PxFBU (if CAP.S64A is set to ‘1’)
+    //Note: Assuming 32bit support only
+    StorPortWriteRegisterUlong(adapterExtension, &portExtension->Port->CLB, commandListPhysical.LowPart);
+    StorPortWriteRegisterUlong(adapterExtension, &portExtension->Port->FB, receivedFISPhysical.LowPart);
+
+    return TRUE;
+}// -- AhciPortInitialize();
+
+/**
+ * @name AhciAllocateResourceForAdapter
+ * @implemented
+ *
+ * Allocate memory from poll for required pointers
+ *
+ * @param adapterExtension
+ * @param ConfigInfo
+ *
+ * @return
+ * return TRUE if allocation was successful
+ */
+BOOLEAN AhciAllocateResourceForAdapter(
+  __in  PAHCI_ADAPTER_EXTENSION             adapterExtension,
+  __in  PPORT_CONFIGURATION_INFORMATION     ConfigInfo
+)
+{
+    PVOID portsExtension = NULL;
+    PCHAR nonCachedExtension;
+    ULONG portCount, portImplemented, status, index, NCS, AlignedNCS, nonCachedExtensionSize, currentCount;
+
+    // 3.1.1 NCS = CAP[12:08] -> Align 
+    NCS = (adapterExtension->CAP & 0xF00) >> 8;
+    AlignedNCS = ((NCS/8) + 1) * 8;
+
+    // get port count -- Number of set bits in `adapterExtension->PortImplemented`
+    portCount = 0;
+    portImplemented = adapterExtension->PortImplemented;
+    while(portImplemented > 0)
+    {
+        portCount++;
+        portImplemented &= (portImplemented-1);
+    }
+
+    nonCachedExtensionSize =    sizeof(AHCI_COMMAND_HEADER) * AlignedNCS + //should be 1K aligned
+                                sizeof(AHCI_RECEIVED_FIS);
+    //align nonCachedExtensionSize to 1K
+    nonCachedExtensionSize = (((nonCachedExtensionSize - 1) / 0x400) + 1) * 0x400;
+    nonCachedExtensionSize *= portCount;
+
+    adapterExtension->NonCachedExtension = StorPortGetUncachedExtension(adapterExtension, ConfigInfo, nonCachedExtensionSize);
+    if (adapterExtension->NonCachedExtension == NULL)
+        return FALSE;
+
+    nonCachedExtension = (PCHAR)adapterExtension->NonCachedExtension;
+
+    AhciZeroMemory(nonCachedExtension, nonCachedExtensionSize);
+    
+
+    // allocate memory for port extension
+    status = StorPortAllocatePool(
+                    adapterExtension, 
+                    portCount * sizeof(AHCI_PORT_EXTENSION),
+                    AHCI_POOL_TAG, 
+                    (PVOID*)&portsExtension);
+
+    if (status != STOR_STATUS_SUCCESS)
+        return FALSE;
+
+    AhciZeroMemory((PCHAR)portsExtension, portCount * sizeof(AHCI_PORT_EXTENSION));
+
+    nonCachedExtensionSize /= portCount;
+    currentCount = 0;
+    for (index = 0; index < 32; index++)
+    {
+        if ((adapterExtension->PortImplemented & (1<<index)) != 0)
+        {
+            adapterExtension->PortExtension[index] = (PAHCI_PORT_EXTENSION)((PCHAR)portsExtension + sizeof(AHCI_PORT_EXTENSION) * currentCount);
+
+            adapterExtension->PortExtension[index]->PortNumber = index;
+            adapterExtension->PortExtension[index]->AdapterExtension = adapterExtension;
+            adapterExtension->PortExtension[index]->CommandList = (PAHCI_COMMAND_HEADER)(nonCachedExtension + (currentCount*nonCachedExtensionSize));
+            adapterExtension->PortExtension[index]->ReceivedFIS = (PAHCI_RECEIVED_FIS)((PCHAR)adapterExtension->PortExtension[index]->CommandList + sizeof(AHCI_COMMAND_HEADER) * AlignedNCS);
+            currentCount++;
+        }
+    }
+
+    return TRUE;
+}// -- AhciAllocateResourceForAdapter();
 
 /**
  * @name AhciFindAdapter
@@ -53,6 +180,7 @@ ULONG AhciFindAdapter(
 )
 {
     ULONG ghc;
+    ULONG index;
     ULONG portCount, portImplemented;
     ULONG pci_cfg_len;
     UCHAR pci_cfg_buf[0x30];
@@ -88,18 +216,17 @@ ULONG AhciFindAdapter(
     abar = NULL;
     if (ConfigInfo->NumberOfAccessRanges > 0)
     {
-        ULONG accessIndex;
-        for (accessIndex = 0; accessIndex < ConfigInfo->NumberOfAccessRanges; accessIndex++)
+        for (index = 0; index < ConfigInfo->NumberOfAccessRanges; index++)
         {
-            if ((*(ConfigInfo->AccessRanges))[accessIndex].RangeStart.QuadPart == adapterExtension->AhciBaseAddress)
+            if ((*(ConfigInfo->AccessRanges))[index].RangeStart.QuadPart == adapterExtension->AhciBaseAddress)
             {
                 abar = (PAHCI_MEMORY_REGISTERS)StorPortGetDeviceBase(
                                 adapterExtension,
                                 ConfigInfo->AdapterInterfaceType,
                                 ConfigInfo->SystemIoBusNumber,
-                                (*(ConfigInfo->AccessRanges))[accessIndex].RangeStart,
-                                (*(ConfigInfo->AccessRanges))[accessIndex].RangeLength,
-                                (BOOLEAN)!(*(ConfigInfo->AccessRanges))[accessIndex].RangeInMemory);
+                                (*(ConfigInfo->AccessRanges))[index].RangeStart,
+                                (*(ConfigInfo->AccessRanges))[index].RangeLength,
+                                (BOOLEAN)!(*(ConfigInfo->AccessRanges))[index].RangeInMemory);
                 break;
             }
         }
@@ -115,6 +242,7 @@ ULONG AhciFindAdapter(
 
     // 10.1.2
     // 1. Indicate that system software is AHCI aware by setting GHC.AE to ‘1’.
+    // 3.1.2 -- AE bit is read-write only if CAP.SAM is '0'
     ghc = StorPortReadRegisterUlong(adapterExtension, &abar->GHC);
     // AE := Highest Significant bit of GHC
     if ((ghc & (0x1<<31)) == 1)//Hmm, controller was already in power state
@@ -134,15 +262,6 @@ ULONG AhciFindAdapter(
     if (adapterExtension->PortImplemented == 0)
         return SP_RETURN_ERROR;
 
-    // get port count -- Number of set bits in `adapterExtension->PortImplemented`
-    portCount = 0;
-    portImplemented = adapterExtension->PortImplemented;
-    while(portImplemented > 0)
-    {
-        portCount++;
-        portImplemented &= (portImplemented - 1);// i love playing with bits :D
-    }
-
     ConfigInfo->MaximumTransferLength = 128 * 1024;//128 KB
     ConfigInfo->NumberOfPhysicalBreaks = 0x21;
     ConfigInfo->MaximumNumberOfTargets = 1;
@@ -152,11 +271,19 @@ ULONG AhciFindAdapter(
     ConfigInfo->SynchronizationModel = StorSynchronizeFullDuplex;
     ConfigInfo->ScatterGather = TRUE;
 
+    // allocate necessary resource for each port
+    if (!AhciAllocateResourceForAdapter(adapterExtension, ConfigInfo))
+        return SP_RETURN_ERROR;
+
+    for (index = 0; index < 32; index++)
+    {
+        if ((adapterExtension->PortImplemented & (1<<index)) != 0)
+            AhciPortInitialize(adapterExtension->PortExtension[index]);
+    }
+
     // Turn IE -- Interrupt Enabled
     ghc |= 0x2;
     StorPortWriteRegisterUlong(adapterExtension, &abar->GHC, ghc);
-
-
 
     return SP_RETURN_FOUND;
 }// -- AhciFindAdapter();
@@ -184,8 +311,7 @@ ULONG DriverEntry(
     DebugPrint("Storahci -> DriverEntry()\n");
 
     // initialize the hardware data structure
-    for (i = 0; i < sizeof(HW_INITIALIZATION_DATA); i++)
-        ((PUCHAR)&hwInitializationData)[i] = 0;
+    AhciZeroMemory((PCHAR)&hwInitializationData, sizeof(HW_INITIALIZATION_DATA));
 
     // set size of hardware initialization structure
     hwInitializationData.HwInitializationDataSize = sizeof(HW_INITIALIZATION_DATA);
@@ -261,3 +387,21 @@ BOOLEAN AhciAdapterReset(
 
      return TRUE;
 }// -- AhciAdapterReset();
+
+/**
+ * @name AhciZeroMemory
+ * @implemented
+ *
+ * Clear buffer by filling zeros
+ *
+ * @param buffer
+ */
+VOID AhciZeroMemory(
+  __in  PCHAR                               buffer,
+  __in  ULONG                               bufferSize
+)
+{
+    ULONG i;
+    for (i = 0; i < bufferSize; i++)
+        buffer[i] = 0;
+}// -- AhciZeroMemory();

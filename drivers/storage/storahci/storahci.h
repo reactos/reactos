@@ -1,5 +1,130 @@
+/*
+ * PROJECT:        ReactOS Kernel
+ * LICENSE:        GNU GPLv2 only as published by the Free Software Foundation
+ * PURPOSE:        To Implement AHCI Miniport driver targeting storport NT 5.2
+ * PROGRAMMERS:    Aman Priyadarshi (aman.eureka@gmail.com)
+ */
+ 
 #include "miniport.h"
 #include "storport.h"
+
+#define AHCI_POOL_TAG 'ahci'
+
+typedef struct _AHCI_FIS_DMA_SETUP
+{
+    ULONG ULONG0_1;         // FIS_TYPE_DMA_SETUP
+                            // Port multiplier
+                            // Reserved
+                            // Data transfer direction, 1 - device to host
+                            // Interrupt bit
+                            // Auto-activate. Specifies if DMA Activate FIS is needed
+    UCHAR Reserved[2];      // Reserved
+    ULONG DmaBufferLow;     // DMA Buffer Identifier. Used to Identify DMA buffer in host memory. SATA Spec says host specific and not in Spec. Trying AHCI spec might work.
+    ULONG DmaBufferHigh;
+    ULONG Reserved2;        //More reserved
+    ULONG DmaBufferOffset;  //Byte offset into buffer. First 2 bits must be 0
+    ULONG TranferCount;     //Number of bytes to transfer. Bit 0 must be 0
+    ULONG Reserved3;        //Reserved  
+} AHCI_FIS_DMA_SETUP;
+
+typedef struct _AHCI_PIO_SETUP_FIS
+{
+    UCHAR FisType;      //0x5F
+    UCHAR Reserved1 :5;
+    UCHAR D :1;         // 1 is write (device to host)
+    UCHAR I :1;
+    UCHAR Reserved2 :1;
+    UCHAR Status;
+    UCHAR Error;
+
+    UCHAR SectorNumber;
+    UCHAR CylLow;
+    UCHAR CylHigh;
+    UCHAR Dev_Head;
+
+    UCHAR SectorNumb_Exp;
+    UCHAR CylLow_Exp;
+    UCHAR CylHigh_Exp;
+    UCHAR Reserved3;
+
+    UCHAR SectorCount;
+    UCHAR SectorCount_Exp;
+    UCHAR Reserved4;
+    UCHAR E_Status;
+
+    USHORT TransferCount;
+    UCHAR Reserved5[2];
+
+}  AHCI_PIO_SETUP_FIS;
+
+typedef struct _AHCI_D2H_REGISTER_FIS
+{
+    UCHAR FisType;  // 0x34
+    UCHAR Reserved1 :6;
+    UCHAR I:1;
+    UCHAR Reserved2 :1;
+    UCHAR Status;
+    UCHAR Error;
+
+    UCHAR SectorNumber;
+    UCHAR CylLow;
+    UCHAR CylHigh;
+    UCHAR Dev_Head;
+
+    UCHAR SectorNum_Exp;
+    UCHAR CylLow_Exp;
+    UCHAR CylHigh_Exp;
+    UCHAR Reserved;
+
+    UCHAR SectorCount;
+    UCHAR SectorCount_Exp;
+    UCHAR Reserved3[2];
+
+    UCHAR Reserved4[4];
+} AHCI_D2H_REGISTER_FIS;
+
+typedef struct _AHCI_SET_DEVICE_BITS_FIS {
+
+    UCHAR FisType;   //0xA1
+
+    UCHAR PMPort: 4;
+    UCHAR Reserved1 :2;
+    UCHAR I :1;
+    UCHAR N :1;
+
+    UCHAR Status_Lo :3;
+    UCHAR Reserved2 :1;
+    UCHAR Status_Hi :3;
+    UCHAR Reserved3 :1;
+
+    UCHAR Error;
+
+    UCHAR Reserved5[4];
+}  AHCI_SET_DEVICE_BITS_FIS;
+
+// 4.2.2
+typedef struct _AHCI_COMMAND_HEADER
+{
+    ULONG HEADER_DESCRIPTION;   // DW 0
+    ULONG PRDBC;                // DW 1
+    ULONG CTBA0;                // DW 2
+    ULONG CTBA_U0;              // DW 3
+    ULONG Reserved[4];          // DW 4-7
+} AHCI_COMMAND_HEADER, *PAHCI_COMMAND_HEADER;
+
+// Received FIS
+typedef struct _AHCI_RECEIVED_FIS
+{
+    AHCI_FIS_DMA_SETUP          DmaSetupFIS;      // 0x00 -- DMA Setup FIS
+    ULONG                       pad0;             // 4 BYTE padding
+    AHCI_PIO_SETUP_FIS          PioSetupFIS;      // 0x20 -- PIO Setup FIS
+    ULONG                       pad1[3];          // 12 BYTE padding
+    AHCI_D2H_REGISTER_FIS       RegisterFIS;      // 0x40 -- Register – Device to Host FIS
+    ULONG                       pad2;             // 4 BYTE padding
+    AHCI_SET_DEVICE_BITS_FIS    SetDeviceFIS;     // 0x58 -- Set Device Bit FIS
+    ULONG                       UnknowFIS[16];    // 0x60 -- Unknown FIS
+    ULONG                       Reserved[24];     // 0xA0 -- Reserved
+} AHCI_RECEIVED_FIS, *PAHCI_RECEIVED_FIS;
 
 typedef struct _AHCI_PORT
 {
@@ -22,7 +147,7 @@ typedef struct _AHCI_PORT
     ULONG   FBS;        // 0x40, FIS-based switch control
     ULONG   RSV1[11];   // 0x44 ~ 0x6F, Reserved
     ULONG   Vendor[4];  // 0x70 ~ 0x7F, vendor specific
-} AHCI_PORT;
+} AHCI_PORT, *PAHCI_PORT;
 
 typedef struct _AHCI_MEMORY_REGISTERS
 {
@@ -49,6 +174,17 @@ typedef struct _AHCI_MEMORY_REGISTERS
 
 } AHCI_MEMORY_REGISTERS, *PAHCI_MEMORY_REGISTERS;
 
+struct _AHCI_ADAPTER_EXTENSION;
+
+typedef struct _AHCI_PORT_EXTENSION
+{
+    ULONG PortNumber;
+    struct _AHCI_ADAPTER_EXTENSION* AdapterExtension;
+    PAHCI_COMMAND_HEADER CommandList;
+    PAHCI_RECEIVED_FIS ReceivedFIS;
+    PAHCI_PORT Port;
+} AHCI_PORT_EXTENSION, *PAHCI_PORT_EXTENSION;
+
 typedef struct _AHCI_ADAPTER_EXTENSION
 {
     ULONG   AdapterNumber;
@@ -65,7 +201,11 @@ typedef struct _AHCI_ADAPTER_EXTENSION
     ULONG   Version;
     ULONG   CAP;
     ULONG   CAP2;
+
+    PVOID NonCachedExtension;
+
     PAHCI_MEMORY_REGISTERS ABAR_Address;
+    PAHCI_PORT_EXTENSION PortExtension[32];
 } AHCI_ADAPTER_EXTENSION, *PAHCI_ADAPTER_EXTENSION;
 
 typedef struct _AHCI_SRB_EXTENSION
