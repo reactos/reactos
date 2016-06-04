@@ -24,8 +24,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
 #define SHDESK_TAG 'KSED'
 
-static const WCHAR szProgmanClassName [] = L"Progman";
-static const WCHAR szProgmanWindowName [] = L"Program Manager";
+static const WCHAR szProgmanClassName[]  = L"Progman";
+static const WCHAR szProgmanWindowName[] = L"Program Manager";
 
 class CDesktopBrowser :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -39,10 +39,10 @@ public:
 private:
     HWND hWnd;
     HWND hWndShellView;
-    HWND hWndDesktopListView;
-    CComPtr<IShellDesktopTray>        ShellDesk;
-    CComPtr<IShellView>                DesktopView;
-    CComPtr<IShellBrowser> DefaultShellBrowser;
+    HWND hWndDesktopListView; // FIXME: Unused
+    CComPtr<IShellDesktopTray> ShellDesk;
+    CComPtr<IShellView>        DesktopView;
+    CComPtr<IShellBrowser>     DefaultShellBrowser;
     LPITEMIDLIST pidlDesktopDirectory;
     LPITEMIDLIST pidlDesktop;
 
@@ -52,7 +52,7 @@ public:
     CDesktopBrowser();
     ~CDesktopBrowser();
     HRESULT Initialize(HWND hWndx, IShellDesktopTray *ShellDeskx);
-    HWND FindDesktopListView ();
+    HWND FindDesktopListView();
     BOOL CreateDeskWnd();
     HWND DesktopGetWindowControl(IN UINT id);
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -186,7 +186,7 @@ static CDesktopBrowser *SHDESK_Create(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
     return pThis;
 }
 
-HWND CDesktopBrowser::FindDesktopListView ()
+HWND CDesktopBrowser::FindDesktopListView()
 {
     return FindWindowExW(hWndShellView, NULL, WC_LISTVIEW, NULL);
 }
@@ -203,7 +203,7 @@ BOOL CDesktopBrowser::CreateDeskWnd()
     }
 
     fs.ViewMode = FVM_ICON;
-    fs.fFlags = FWF_DESKTOP | FWF_NOCLIENTEDGE  | FWF_NOSCROLL | FWF_TRANSPARENT;
+    fs.fFlags = FWF_DESKTOP | FWF_NOCLIENTEDGE | FWF_NOSCROLL | FWF_TRANSPARENT;
     hRet = DesktopView->CreateViewWindow(NULL, &fs, (IShellBrowser *)this, &rcClient, &hWndShellView);
     if (!SUCCEEDED(hRet))
         return FALSE;
@@ -452,25 +452,26 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
                 break;
 
             case WM_SIZE:
+            {
                 if (wParam == SIZE_MINIMIZED)
                 {
                     /* Hey, we're the desktop!!! */
-                    ShowWindow(hwnd,
-                               SW_RESTORE);
+                    ShowWindow(hwnd, SW_RESTORE);
                 }
                 else
                 {
                     RECT rcDesktop;
 
-                    rcDesktop.left = GetSystemMetrics(SM_XVIRTUALSCREEN);
-                    rcDesktop.top = GetSystemMetrics(SM_YVIRTUALSCREEN);
-                    rcDesktop.right = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+                    rcDesktop.left   = GetSystemMetrics(SM_XVIRTUALSCREEN);
+                    rcDesktop.top    = GetSystemMetrics(SM_YVIRTUALSCREEN);
+                    rcDesktop.right  = GetSystemMetrics(SM_CXVIRTUALSCREEN);
                     rcDesktop.bottom = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
                     /* FIXME: Update work area */
                     DBG_UNREFERENCED_LOCAL_VARIABLE(rcDesktop);
                 }
                 break;
+            }
 
             case WM_SYSCOLORCHANGE:
             case WM_SETTINGCHANGE:
@@ -496,7 +497,7 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
                 if (!pThis->CreateDeskWnd())
                     WARN("Could not create the desktop view control!\n");
 
-                pThis->m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(3));
+                pThis->m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_DESKBROWSER));
 
                 break;
             }
@@ -511,9 +512,7 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
                     break;
                 }
 
-                SetWindowLongPtrW(hwnd,
-                                  0,
-                                  (LONG_PTR)pThis);
+                SetWindowLongPtrW(hwnd, 0, (LONG_PTR)pThis);
                 Ret = TRUE;
                 break;
             }
@@ -557,7 +556,7 @@ RegisterProgmanWindowClass(VOID)
     wcProgman.hInstance = shell32_hInstance;
     wcProgman.hIcon = NULL;
     wcProgman.hCursor = LoadCursorW(NULL, IDC_ARROW);
-    wcProgman.hbrBackground = NULL;
+    wcProgman.hbrBackground = (HBRUSH)(COLOR_DESKTOP + 1);
     wcProgman.lpszMenuName = NULL;
     wcProgman.lpszClassName = szProgmanClassName;
 
@@ -586,15 +585,15 @@ HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
         return NULL;
     }
 
-    rcDesk.left = GetSystemMetrics(SM_XVIRTUALSCREEN);
-    rcDesk.top = GetSystemMetrics(SM_YVIRTUALSCREEN);
-    rcDesk.right = rcDesk.left + GetSystemMetrics(SM_CXVIRTUALSCREEN);
-    rcDesk.bottom = rcDesk.top + GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    rcDesk.left   = GetSystemMetrics(SM_XVIRTUALSCREEN);
+    rcDesk.top    = GetSystemMetrics(SM_YVIRTUALSCREEN);
+    rcDesk.right  = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    rcDesk.bottom = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
     if (IsRectEmpty(&rcDesk))
     {
         rcDesk.left = rcDesk.top = 0;
-        rcDesk.right = GetSystemMetrics(SM_CXSCREEN);
+        rcDesk.right  = GetSystemMetrics(SM_CXSCREEN);
         rcDesk.bottom = GetSystemMetrics(SM_CYSCREEN);
     }
 
