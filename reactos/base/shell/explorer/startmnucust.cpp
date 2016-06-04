@@ -28,7 +28,7 @@ VOID OnAddStartMenuItems(HWND hDlg)
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_STARTMENU, NULL, 0, szPath)))
     {
         WCHAR szCommand[MAX_PATH] = L"appwiz.cpl,NewLinkHere ";
-        if (SUCCEEDED(StringCchCatW(szCommand, MAX_PATH, szPath)))
+        if (SUCCEEDED(StringCchCatW(szCommand, _countof(szCommand), szPath)))
             ShellExecuteW(hDlg, L"open", L"rundll32.exe", szCommand, NULL, SW_SHOWNORMAL);
     }
 }
@@ -51,11 +51,11 @@ VOID OnClearRecentItems()
 
     if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_RECENT, NULL, 0, szPath)))
     {
-        StringCchPrintfW(szFile,MAX_PATH, L"%s\\*.*", szPath);
+        StringCchPrintfW(szFile, _countof(szFile), L"%s\\*.*", szPath);
         hPath = FindFirstFileW(szFile, &info);
         do
         {
-            StringCchPrintfW(szFile,MAX_PATH, L"%s\\%s", szPath, info.cFileName);
+            StringCchPrintfW(szFile, _countof(szFile), L"%s\\%s", szPath, info.cFileName);
             DeleteFileW(szFile);
         }
         while (FindNextFileW(hPath, &info));
