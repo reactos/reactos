@@ -3531,7 +3531,7 @@ static void test_CreateDirectoryA(void)
                                   GENERIC_ALL, admin_sid);
     ok(bret, "Failed to add Administrator Group to ACL.\n");
     bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
-    ok(bret, "Failed to add ACL to security desciptor.\n");
+    ok(bret, "Failed to add ACL to security descriptor.\n");
 
     GetTempPathA(MAX_PATH, tmpdir);
     lstrcatA(tmpdir, "Please Remove Me");
@@ -3578,7 +3578,7 @@ static void test_CreateDirectoryA(void)
     bret = InitializeAcl(pDacl, sizeof(ACL), ACL_REVISION);
     ok(bret, "Failed to initialize ACL\n");
     bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
-    ok(bret, "Failed to add ACL to security desciptor\n");
+    ok(bret, "Failed to add ACL to security descriptor\n");
 
     strcpy(tmpfile, tmpdir);
     lstrcatA(tmpfile, "/tmpfile");
@@ -3646,7 +3646,7 @@ static void test_CreateDirectoryA(void)
     bret = InitializeAcl(pDacl, sizeof(ACL), ACL_REVISION);
     ok(bret, "Failed to initialize ACL\n");
     bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
-    ok(bret, "Failed to add ACL to security desciptor\n");
+    ok(bret, "Failed to add ACL to security descriptor\n");
 
     strcpy(tmpfile, tmpdir);
     lstrcatA(tmpfile, "/tmpfile");
@@ -3671,6 +3671,7 @@ static void test_CreateDirectoryA(void)
     ok(error == ERROR_SUCCESS, "GetNamedSecurityInfo failed with error %d\n", error);
     bret = pGetAclInformation(pDacl, &acl_size, sizeof(acl_size), AclSizeInformation);
     ok(bret, "GetAclInformation failed\n");
+    todo_wine
     ok(acl_size.AceCount == 0, "GetAclInformation returned unexpected entry count (%d != 0).\n",
                                acl_size.AceCount);
     LocalFree(pSD);
@@ -3729,7 +3730,6 @@ static void test_CreateDirectoryA(void)
     ok(error == ERROR_SUCCESS, "GetNamedSecurityInfo failed with error %d\n", error);
     bret = pGetAclInformation(pDacl, &acl_size, sizeof(acl_size), AclSizeInformation);
     ok(bret, "GetAclInformation failed\n");
-    todo_wine
     ok(acl_size.AceCount == 0, "GetAclInformation returned unexpected entry count (%d != 0).\n",
                                acl_size.AceCount);
     LocalFree(pSD);
@@ -3970,7 +3970,7 @@ static void test_GetNamedSecurityInfoA(void)
     bret = pAddAccessAllowedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, admin_sid);
     ok(bret, "Failed to add Administrator Group to ACL.\n");
     bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
-    ok(bret, "Failed to add ACL to security desciptor.\n");
+    ok(bret, "Failed to add ACL to security descriptor.\n");
     GetTempFileNameA(".", "foo", 0, tmpfile);
     hTemp = CreateFileA(tmpfile, WRITE_DAC|GENERIC_WRITE, FILE_SHARE_DELETE|FILE_SHARE_READ,
                         NULL, OPEN_EXISTING, FILE_FLAG_DELETE_ON_CLOSE, NULL);
@@ -4078,7 +4078,7 @@ static void test_GetNamedSecurityInfoA(void)
     bret = InitializeAcl(pDacl, sizeof(ACL), ACL_REVISION);
     ok(bret, "Failed to initialize ACL.\n");
     bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
-    ok(bret, "Failed to add ACL to security desciptor.\n");
+    ok(bret, "Failed to add ACL to security descriptor.\n");
     status = pNtSetSecurityObject(hTemp, DACL_SECURITY_INFORMATION, pSD);
     ok(status == ERROR_SUCCESS, "NtSetSecurityObject returned %x\n", status);
 
@@ -4114,7 +4114,7 @@ static void test_GetNamedSecurityInfoA(void)
     bret = pAddAccessDeniedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, user_sid);
     ok(bret, "Failed to add Current User to ACL.\n");
     bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
-    ok(bret, "Failed to add ACL to security desciptor.\n");
+    ok(bret, "Failed to add ACL to security descriptor.\n");
     status = pNtSetSecurityObject(hTemp, DACL_SECURITY_INFORMATION, pSD);
     ok(status == ERROR_SUCCESS, "NtSetSecurityObject returned %x\n", status);
 
@@ -4130,7 +4130,7 @@ static void test_GetNamedSecurityInfoA(void)
     bret = pAddAccessAllowedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, user_sid);
     ok(bret, "Failed to add Current User to ACL.\n");
     bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
-    ok(bret, "Failed to add ACL to security desciptor.\n");
+    ok(bret, "Failed to add ACL to security descriptor.\n");
     status = pNtSetSecurityObject(hTemp, DACL_SECURITY_INFORMATION, pSD);
     ok(status == ERROR_SUCCESS, "NtSetSecurityObject returned %x\n", status);
 
@@ -4787,7 +4787,7 @@ static void test_GetSecurityInfo(void)
     bret = pAddAccessAllowedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, admin_sid);
     ok(bret, "Failed to add Administrator Group to ACL.\n");
     bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
-    ok(bret, "Failed to add ACL to security desciptor.\n");
+    ok(bret, "Failed to add ACL to security descriptor.\n");
     ret = pSetSecurityInfo(obj, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
                           NULL, NULL, pDacl, NULL);
     ok(ret == ERROR_SUCCESS, "SetSecurityInfo returned %d\n", ret);
@@ -5835,17 +5835,23 @@ static void test_filemap_security(void)
     char temp_path[MAX_PATH];
     char file_name[MAX_PATH];
     DWORD ret, i, access;
-    HANDLE file, mapping, dup;
+    HANDLE file, mapping, dup, created_mapping;
     static const struct
     {
         int generic, mapped;
+        BOOL open_only;
     } map[] =
     {
         { 0, 0 },
         { GENERIC_READ, STANDARD_RIGHTS_READ | SECTION_QUERY | SECTION_MAP_READ },
         { GENERIC_WRITE, STANDARD_RIGHTS_WRITE | SECTION_MAP_WRITE },
         { GENERIC_EXECUTE, STANDARD_RIGHTS_EXECUTE | SECTION_MAP_EXECUTE },
-        { GENERIC_ALL, STANDARD_RIGHTS_REQUIRED | SECTION_ALL_ACCESS }
+        { GENERIC_ALL, STANDARD_RIGHTS_REQUIRED | SECTION_ALL_ACCESS },
+        { SECTION_MAP_READ | SECTION_MAP_WRITE, SECTION_MAP_READ | SECTION_MAP_WRITE },
+        { SECTION_MAP_WRITE, SECTION_MAP_WRITE },
+        { SECTION_MAP_READ | SECTION_QUERY, SECTION_MAP_READ | SECTION_QUERY },
+        { SECTION_QUERY, SECTION_MAP_READ, TRUE },
+        { SECTION_QUERY | SECTION_MAP_READ, SECTION_QUERY | SECTION_MAP_READ }
     };
     static const struct
     {
@@ -5874,6 +5880,8 @@ static void test_filemap_security(void)
 
     for (i = 0; i < sizeof(prot_map)/sizeof(prot_map[0]); i++)
     {
+        if (map[i].open_only) continue;
+
         SetLastError(0xdeadbeef);
         mapping = CreateFileMappingW(file, NULL, prot_map[i].prot, 0, 4096, NULL);
         if (prot_map[i].mapped)
@@ -5920,6 +5928,8 @@ static void test_filemap_security(void)
 
     for (i = 0; i < sizeof(map)/sizeof(map[0]); i++)
     {
+        if (map[i].open_only) continue;
+
         SetLastError( 0xdeadbeef );
         ret = DuplicateHandle(GetCurrentProcess(), mapping, GetCurrentProcess(), &dup,
                               map[i].generic, FALSE, 0);
@@ -5934,6 +5944,24 @@ static void test_filemap_security(void)
     CloseHandle(mapping);
     CloseHandle(file);
     DeleteFileA(file_name);
+
+    created_mapping = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, 0x1000,
+                                         "Wine Test Open Mapping");
+    ok(created_mapping != NULL, "CreateFileMapping failed with error %u\n", GetLastError());
+
+    for (i = 0; i < sizeof(map)/sizeof(map[0]); i++)
+    {
+        if (!map[i].generic) continue;
+
+        mapping = OpenFileMappingA(map[i].generic, FALSE, "Wine Test Open Mapping");
+        ok(mapping != NULL, "OpenFileMapping failed with error %d\n", GetLastError());
+        access = get_obj_access(mapping);
+        ok(access == map[i].mapped, "%d: unexpected access flags %#x, expected %#x\n",
+           i, access, map[i].mapped);
+        CloseHandle(mapping);
+    }
+
+    CloseHandle(created_mapping);
 }
 
 static void test_thread_security(void)
