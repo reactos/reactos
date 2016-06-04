@@ -210,5 +210,5 @@ typedef struct _AHCI_ADAPTER_EXTENSION
 
 typedef struct _AHCI_SRB_EXTENSION
 {
-    ULONG AdapterNumber;
+    ULONG Reserved[4];
 } AHCI_SRB_EXTENSION;

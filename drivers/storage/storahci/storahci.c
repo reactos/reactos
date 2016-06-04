@@ -8,12 +8,12 @@
 #include "storahci.h"
 
 BOOLEAN AhciAdapterReset(
-  __in  PAHCI_ADAPTER_EXTENSION             adapterExtension
+  __in      PAHCI_ADAPTER_EXTENSION             adapterExtension
 );
 
 VOID AhciZeroMemory(
-  __in  PCHAR                               buffer,
-  __in  ULONG                               bufferSize
+  __in      PCHAR                               buffer,
+  __in      ULONG                               bufferSize
 );
 
 /**
@@ -28,7 +28,7 @@ VOID AhciZeroMemory(
  * Return true if intialization was successful
  */
 BOOLEAN AhciPortInitialize(
-  __in  PAHCI_PORT_EXTENSION                portExtension
+  __in      PAHCI_PORT_EXTENSION                portExtension
 )
 {
     ULONG mappedLength;
@@ -36,17 +36,23 @@ BOOLEAN AhciPortInitialize(
     PAHCI_ADAPTER_EXTENSION adapterExtension;
     STOR_PHYSICAL_ADDRESS commandListPhysical, receivedFISPhysical;
 
+    StorPortDebugPrint(0, "AhciPortInitialize()\n");
+
     adapterExtension = portExtension->AdapterExtension;
     abar = adapterExtension->ABAR_Address;
     portExtension->Port = &abar->PortList[portExtension->PortNumber];
 
     commandListPhysical = StorPortGetPhysicalAddress(adapterExtension, NULL, portExtension->CommandList, &mappedLength);
-    if (mappedLength == 0 || (commandListPhysical.LowPart % 1024) != 0)
+    if (mappedLength == 0 || (commandListPhysical.LowPart % 1024) != 0){
+        StorPortDebugPrint(0, "\tcommandListPhysical mappedLength:%d\n", mappedLength);
         return FALSE;
+    }
 
     receivedFISPhysical = StorPortGetPhysicalAddress(adapterExtension, NULL, portExtension->ReceivedFIS, &mappedLength);
-    if (mappedLength == 0 || (commandListPhysical.LowPart % 256) != 0)
+    if (mappedLength == 0 || (receivedFISPhysical.LowPart % 256) != 0){
+        StorPortDebugPrint(0, "\treceivedFISPhysical mappedLength:%d\n", mappedLength);
         return FALSE;
+    }
 
     // 10.1.2 For each implemented port, system software shall allocate memory for and program:
     //  PxCLB and PxCLBU (if CAP.S64A is set to ‘1’)
@@ -71,13 +77,15 @@ BOOLEAN AhciPortInitialize(
  * return TRUE if allocation was successful
  */
 BOOLEAN AhciAllocateResourceForAdapter(
-  __in  PAHCI_ADAPTER_EXTENSION             adapterExtension,
-  __in  PPORT_CONFIGURATION_INFORMATION     ConfigInfo
+  __in      PAHCI_ADAPTER_EXTENSION             adapterExtension,
+  __in      PPORT_CONFIGURATION_INFORMATION     ConfigInfo
 )
 {
     PVOID portsExtension = NULL;
     PCHAR nonCachedExtension;
     ULONG portCount, portImplemented, status, index, NCS, AlignedNCS, nonCachedExtensionSize, currentCount;
+
+    StorPortDebugPrint(0, "AhciAllocateResourceForAdapter()\n");
 
     // 3.1.1 NCS = CAP[12:08] -> Align 
     NCS = (adapterExtension->CAP & 0xF00) >> 8;
@@ -99,8 +107,10 @@ BOOLEAN AhciAllocateResourceForAdapter(
     nonCachedExtensionSize *= portCount;
 
     adapterExtension->NonCachedExtension = StorPortGetUncachedExtension(adapterExtension, ConfigInfo, nonCachedExtensionSize);
-    if (adapterExtension->NonCachedExtension == NULL)
+    if (adapterExtension->NonCachedExtension == NULL) {
+        StorPortDebugPrint(0, "\tadapterExtension->NonCachedExtension == NULL\n");
         return FALSE;
+    }
 
     nonCachedExtension = (PCHAR)adapterExtension->NonCachedExtension;
 
@@ -114,8 +124,10 @@ BOOLEAN AhciAllocateResourceForAdapter(
                     AHCI_POOL_TAG, 
                     (PVOID*)&portsExtension);
 
-    if (status != STOR_STATUS_SUCCESS)
+    if (status != STOR_STATUS_SUCCESS){
+        StorPortDebugPrint(0, "\tstatus != STOR_STATUS_SUCCESS\n");
         return FALSE;
+    }
 
     AhciZeroMemory((PCHAR)portsExtension, portCount * sizeof(AHCI_PORT_EXTENSION));
 
@@ -139,7 +151,113 @@ BOOLEAN AhciAllocateResourceForAdapter(
 }// -- AhciAllocateResourceForAdapter();
 
 /**
- * @name AhciFindAdapter
+ * @name AhciHwInitialize
+ * @implemented
+ *
+ * initializes the HBA and finds all devices that are of interest to the miniport driver.
+ *
+ * @param adapterExtension
+ *
+ * @return
+ * return TRUE if intialization was successful
+ */
+BOOLEAN AhciHwInitialize(
+  __in      PVOID                               AdapterExtension
+)
+{
+    PAHCI_ADAPTER_EXTENSION adapterExtension;
+
+    StorPortDebugPrint(0, "AhciHwInitialize()\n");
+
+    adapterExtension = (PAHCI_ADAPTER_EXTENSION)AdapterExtension;
+
+    return TRUE;
+}// -- AhciHwInitialize();
+
+/**
+ * @name AhciHwInterrupt
+ * @implemented
+ *
+ * The Storport driver calls the HwStorInterrupt routine after the HBA generates an interrupt request.
+ *
+ * @param adapterExtension
+ *
+ * @return
+ * return TRUE Indicates that an interrupt was pending on adapter.
+ * return FALSE Indicates the interrupt was not ours.
+ */
+BOOLEAN AhciHwInterrupt(
+  __in      PVOID                               AdapterExtension
+)
+{
+    PAHCI_ADAPTER_EXTENSION adapterExtension;
+
+    StorPortDebugPrint(0, "AhciHwInterrupt()\n");
+
+    adapterExtension = (PAHCI_ADAPTER_EXTENSION)AdapterExtension;
+
+    return TRUE;
+}// -- AhciHwInterrupt();
+
+/**
+ * @name AhciHwStartIo
+ * @implemented
+ *
+ * The Storport driver calls the HwStorStartIo routine one time for each incoming I/O request.
+ *
+ * @param adapterExtension
+ * @param Srb
+ *
+ * @return
+ * return TRUE if the request was accepted
+ * return FALSE if the request must be submitted later
+ */
+BOOLEAN AhciHwStartIo(
+  __in      PVOID                               AdapterExtension,
+  __in      PSCSI_REQUEST_BLOCK                 Srb
+
+)
+{
+    UCHAR function;
+    PAHCI_ADAPTER_EXTENSION adapterExtension;
+
+    StorPortDebugPrint(0, "AhciHwStartIo()\n");
+
+    adapterExtension = (PAHCI_ADAPTER_EXTENSION)AdapterExtension;
+    function = Srb->Function;
+
+    return TRUE;
+}// -- AhciHwStartIo();
+
+/**
+ * @name AhciHwResetBus
+ * @implemented
+ *
+ * The HwStorResetBus routine is called by the port driver to clear error conditions.
+ *
+ * @param adapterExtension
+ * @param PathId
+ *
+ * @return
+ * return TRUE if bus was successfully reset
+ */
+BOOLEAN AhciHwResetBus(
+  __in      PVOID                               AdapterExtension,
+  __in      ULONG                               PathId
+
+)
+{
+    PAHCI_ADAPTER_EXTENSION adapterExtension;
+
+    StorPortDebugPrint(0, "AhciHwResetBus()\n");
+
+    adapterExtension = (PAHCI_ADAPTER_EXTENSION)AdapterExtension;
+
+    return TRUE;
+}// -- AhciHwResetBus();
+
+/**
+ * @name AhciHwFindAdapter
  * @implemented
  *
  * The HwStorFindAdapter routine uses the supplied configuration to determine whether a specific
@@ -170,13 +288,13 @@ BOOLEAN AhciAllocateResourceForAdapter(
  *
  * @remarks Called by Storport.
  */
-ULONG AhciFindAdapter(
-          IN PVOID                          DeviceExtension,
-  __in    PVOID                             HwContext,
-  __in    PVOID                             BusInformation,
-  __in    IN PVOID                          ArgumentString,
-  __inout PPORT_CONFIGURATION_INFORMATION   ConfigInfo,
-  __in    PBOOLEAN                          Reserved3
+ULONG AhciHwFindAdapter(
+  __in      PVOID                               AdapterExtension,
+  __in      PVOID                               HwContext,
+  __in      PVOID                               BusInformation,
+  __in      PVOID                               ArgumentString,
+  __inout   PPORT_CONFIGURATION_INFORMATION     ConfigInfo,
+  __in      PBOOLEAN                            Reserved3
 )
 {
     ULONG ghc;
@@ -189,7 +307,9 @@ ULONG AhciFindAdapter(
     PPCI_COMMON_CONFIG pciConfigData;
     PAHCI_ADAPTER_EXTENSION adapterExtension;
 
-    adapterExtension = (PAHCI_ADAPTER_EXTENSION)DeviceExtension;
+    StorPortDebugPrint(0, "AhciHwFindAdapter()\n");
+
+    adapterExtension = (PAHCI_ADAPTER_EXTENSION)AdapterExtension;
     adapterExtension->SlotNumber = ConfigInfo->SlotNumber;
     adapterExtension->SystemIoBusNumber = ConfigInfo->SystemIoBusNumber;
     
@@ -202,8 +322,10 @@ ULONG AhciFindAdapter(
                         (PVOID)pci_cfg_buf,
                         (ULONG)0x30);
 
-    if (pci_cfg_len != 0x30)
+    if (pci_cfg_len != 0x30){
+        StorPortDebugPrint(0, "\tpci_cfg_len != 0x30 :: %d", pci_cfg_len);
         return SP_RETURN_ERROR;//Not a valid device at the given bus number
+    }
 
     pciConfigData = (PPCI_COMMON_CONFIG)pci_cfg_buf;
     adapterExtension->VendorID = pciConfigData->VendorID;
@@ -211,6 +333,8 @@ ULONG AhciFindAdapter(
     adapterExtension->RevisionID = pciConfigData->RevisionID;
     // The last PCI base address register (BAR[5], header offset 0x24) points to the AHCI base memory, it’s called ABAR (AHCI Base Memory Register).
     adapterExtension->AhciBaseAddress = pciConfigData->u.type0.BaseAddresses[5] & (0xFFFFFFF0);
+
+    StorPortDebugPrint(0, "\tVendorID:%d  DeviceID:%d  RevisionID:%d\n", adapterExtension->VendorID, adapterExtension->DeviceID, adapterExtension->RevisionID);
 
     // 2.1.11
     abar = NULL;
@@ -232,8 +356,10 @@ ULONG AhciFindAdapter(
         }
     }
 
-    if (abar == NULL)
+    if (abar == NULL){
+        StorPortDebugPrint(0, "\tabar == NULL\n");
         return SP_RETURN_ERROR; // corrupted information supplied
+    }
 
     adapterExtension->ABAR_Address = abar;
     adapterExtension->CAP = StorPortReadRegisterUlong(adapterExtension, &abar->CAP);
@@ -248,9 +374,11 @@ ULONG AhciFindAdapter(
     if ((ghc & (0x1<<31)) == 1)//Hmm, controller was already in power state
     {
         // reset controller to have it in know state
-        DebugPrint("AhciFindAdapter -> AE Already set, Reset()\n");
-        if (!AhciAdapterReset(adapterExtension))
+        StorPortDebugPrint(0, "\tAE Already set, Reset()\n");
+        if (!AhciAdapterReset(adapterExtension)){
+            StorPortDebugPrint(0, "\tReset Failed!\n");
             return SP_RETURN_ERROR;// reset failed
+        }
     }
 
     ghc = 0x1<<31;// only AE=1
@@ -259,8 +387,10 @@ ULONG AhciFindAdapter(
     adapterExtension->IS = abar->IS;
     adapterExtension->PortImplemented = StorPortReadRegisterUlong(adapterExtension, &abar->PI);
 
-    if (adapterExtension->PortImplemented == 0)
+    if (adapterExtension->PortImplemented == 0){
+        StorPortDebugPrint(0, "\tadapterExtension->PortImplemented == 0\n");
         return SP_RETURN_ERROR;
+    }
 
     ConfigInfo->MaximumTransferLength = 128 * 1024;//128 KB
     ConfigInfo->NumberOfPhysicalBreaks = 0x21;
@@ -272,8 +402,10 @@ ULONG AhciFindAdapter(
     ConfigInfo->ScatterGather = TRUE;
 
     // allocate necessary resource for each port
-    if (!AhciAllocateResourceForAdapter(adapterExtension, ConfigInfo))
+    if (!AhciAllocateResourceForAdapter(adapterExtension, ConfigInfo)){
+        StorPortDebugPrint(0, "\tAhciAllocateResourceForAdapter() == FALSE\n");
         return SP_RETURN_ERROR;
+    }
 
     for (index = 0; index < 32; index++)
     {
@@ -286,7 +418,7 @@ ULONG AhciFindAdapter(
     StorPortWriteRegisterUlong(adapterExtension, &abar->GHC, ghc);
 
     return SP_RETURN_FOUND;
-}// -- AhciFindAdapter();
+}// -- AhciHwFindAdapter();
 
 /**
  * @name DriverEntry
@@ -301,14 +433,14 @@ ULONG AhciFindAdapter(
  * NT_STATUS in case of driver loaded successfully.
  */
 ULONG DriverEntry(
-            IN PVOID                        DriverObject,
-            IN PVOID                        RegistryPath
+  __in      PVOID                               DriverObject,
+  __in      PVOID                               RegistryPath
 )
 {
     HW_INITIALIZATION_DATA hwInitializationData;
     ULONG i, status;
 
-    DebugPrint("Storahci -> DriverEntry()\n");
+    StorPortDebugPrint(0, "Storahci Loaded 10023\n");
 
     // initialize the hardware data structure
     AhciZeroMemory((PCHAR)&hwInitializationData, sizeof(HW_INITIALIZATION_DATA));
@@ -317,7 +449,11 @@ ULONG DriverEntry(
     hwInitializationData.HwInitializationDataSize = sizeof(HW_INITIALIZATION_DATA);
 
     // identity required miniport entry point routines
-    hwInitializationData.HwFindAdapter = AhciFindAdapter;
+    hwInitializationData.HwStartIo = AhciHwStartIo;
+    hwInitializationData.HwResetBus = AhciHwResetBus;
+    hwInitializationData.HwInterrupt = AhciHwInterrupt;
+    hwInitializationData.HwInitialize = AhciHwInitialize;
+    hwInitializationData.HwFindAdapter = AhciHwFindAdapter;
 
     // adapter specific information
     hwInitializationData.NeedPhysicalAddresses = TRUE;
@@ -339,7 +475,7 @@ ULONG DriverEntry(
                     RegistryPath,
                     &hwInitializationData,
                     NULL);
-
+    StorPortDebugPrint(0, "\tstatus:%d\n", status);
     return status;
 }// -- DriverEntry();
 
@@ -363,29 +499,32 @@ ULONG DriverEntry(
  * TRUE in case AHCI Controller RESTARTED successfully. i.e GHC.HR == 0
  */
 BOOLEAN AhciAdapterReset(
-      PAHCI_ADAPTER_EXTENSION           adapterExtension    
+  __in      PAHCI_ADAPTER_EXTENSION             adapterExtension
 )
 {
-     ULONG ghc, ticks;
-     PAHCI_MEMORY_REGISTERS abar = NULL;
+    ULONG ghc, ticks;
+    PAHCI_MEMORY_REGISTERS abar = NULL;
 
-     abar = adapterExtension->ABAR_Address;
+    StorPortDebugPrint(0, "AhciAdapterReset()\n");
 
-     if (abar == NULL) // basic sanity
+    abar = adapterExtension->ABAR_Address;
+    if (abar == NULL) // basic sanity
         return FALSE;
 
-     // HR -- Very first bit (lowest significant)
-     ghc = 1;
-     StorPortWriteRegisterUlong(adapterExtension, &abar->GHC, ghc);
+    // HR -- Very first bit (lowest significant)
+    ghc = 1;
+    StorPortWriteRegisterUlong(adapterExtension, &abar->GHC, ghc);
 
-     for (ticks = 0; (ticks < 50) &&
-                     (StorPortReadRegisterUlong(adapterExtension, &abar->GHC) == 1);
-                     StorPortStallExecution(20000), ticks++);
+    for (ticks = 0; (ticks < 50) &&
+                    (StorPortReadRegisterUlong(adapterExtension, &abar->GHC) == 1);
+                    StorPortStallExecution(20000), ticks++);
 
-     if (ticks == 50)//1 second
+    if (ticks == 50) { //1 second
+        StorPortDebugPrint(0, "\tDevice Timeout\n");
         return FALSE;
+    }
 
-     return TRUE;
+    return TRUE;
 }// -- AhciAdapterReset();
 
 /**
@@ -397,8 +536,8 @@ BOOLEAN AhciAdapterReset(
  * @param buffer
  */
 VOID AhciZeroMemory(
-  __in  PCHAR                               buffer,
-  __in  ULONG                               bufferSize
+  __in      PCHAR                               buffer,
+  __in      ULONG                               bufferSize
 )
 {
     ULONG i;
