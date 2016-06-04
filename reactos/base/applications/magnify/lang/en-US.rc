@@ -33,23 +33,23 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "Magnifier Settings"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON "Ok", IDOK, 96, 161, 50, 14
-    PUSHBUTTON "Help", IDC_BUTTON_HELP, 38, 161, 50, 14
-    LTEXT "Magnification level:", IDC_STATIC, 6, 8, 68, 8
+    DEFPUSHBUTTON "OK", IDOK, 96, 161, 50, 14
+    PUSHBUTTON "&Help", IDC_BUTTON_HELP, 38, 161, 50, 14
+    LTEXT "Magnification &level:", IDC_STATIC, 6, 8, 68, 8
     COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Tracking", IDC_STATIC, 7, 25, 139, 59
     GROUPBOX "Presentation", IDC_STATIC, 7, 87, 139, 57
-    CONTROL "Follow mouse cursor", IDC_FOLLOWMOUSECHECK, "Button",
+    CONTROL "Follow &mouse cursor", IDC_FOLLOWMOUSECHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 114, 10
-    CONTROL "Follow keyboard focus", IDC_FOLLOWKEYBOARDCHECK, "Button",
+    CONTROL "Follow &keyboard focus", IDC_FOLLOWKEYBOARDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 54, 114, 10
-    CONTROL "Follow text editing", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
+    CONTROL "Follow &text editing", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 66, 114, 10
-    CONTROL "Invert colors", IDC_INVERTCOLORSCHECK, "Button",
+    CONTROL "&Invert colors", IDC_INVERTCOLORSCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 102, 114, 10
-    CONTROL "Start Minimized", IDC_STARTMINIMIZEDCHECK, "Button",
+    CONTROL "&Start Minimized", IDC_STARTMINIMIZEDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 114, 114, 10
-    CONTROL "Show Magnifier", IDC_SHOWMAGNIFIERCHECK, "Button",
+    CONTROL "Sh&ow Magnifier", IDC_SHOWMAGNIFIERCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 126, 114, 10
 END
 

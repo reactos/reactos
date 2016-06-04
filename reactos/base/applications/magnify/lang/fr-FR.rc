@@ -34,22 +34,22 @@ CAPTION "Paramètres de la loupe"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "Quitter", IDOK, 96, 161, 50, 14
-    PUSHBUTTON "Aide", IDC_BUTTON_HELP, 38, 161, 50, 14
-    LTEXT "Coefficient d'agrandissement:", IDC_STATIC, 6, 8, 68, 8
+    PUSHBUTTON "&Aide", IDC_BUTTON_HELP, 38, 161, 50, 14
+    LTEXT "Coefficient d'ag&randissement:", IDC_STATIC, 6, 8, 68, 8
     COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Poursuite", IDC_STATIC, 7, 25, 139, 59
     GROUPBOX "Présentation", IDC_STATIC, 7, 87, 139, 57
-    CONTROL "Suivre le curseur de la souris", IDC_FOLLOWMOUSECHECK, "Button",
+    CONTROL "Suivre le &curseur de la souris", IDC_FOLLOWMOUSECHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 114, 10
-    CONTROL "Suivre le focus du clavier", IDC_FOLLOWKEYBOARDCHECK, "Button",
+    CONTROL "Suivre le &focus du clavier", IDC_FOLLOWKEYBOARDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 54, 114, 10
-    CONTROL "Suivre l'édition de texte", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
+    CONTROL "Suivre l'édition de &texte", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 66, 114, 10
-    CONTROL "Inverser les couleurs", IDC_INVERTCOLORSCHECK, "Button",
+    CONTROL "&Inverser les couleurs", IDC_INVERTCOLORSCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 102, 114, 10
-    CONTROL "Démarrer réduit", IDC_STARTMINIMIZEDCHECK, "Button",
+    CONTROL "Dé&marrer réduit", IDC_STARTMINIMIZEDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 114, 114, 10
-    CONTROL "Montrer la loupe", IDC_SHOWMAGNIFIERCHECK, "Button",
+    CONTROL "Mo&ntrer la loupe", IDC_SHOWMAGNIFIERCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 126, 114, 10
 END
 
