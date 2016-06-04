@@ -476,16 +476,29 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
             case WM_SYSCOLORCHANGE:
             case WM_SETTINGCHANGE:
             {
-                if (uMsg == WM_SYSCOLORCHANGE || wParam == SPI_SETDESKWALLPAPER || wParam == 0)
+                if (pThis->hWndShellView != NULL)
                 {
-                    if (pThis->hWndShellView != NULL)
-                    {
-                        /* Forward the message */
-                        SendMessageW(pThis->hWndShellView,
-                                     uMsg,
-                                     wParam,
-                                     lParam);
-                    }
+                    /* Forward the message */
+                    SendMessageW(pThis->hWndShellView,
+                                 uMsg,
+                                 wParam,
+                                 lParam);
+                }
+
+                if (uMsg == WM_SETTINGCHANGE && wParam == SPI_SETWORKAREA &&
+                    pThis->hWndShellView != NULL)
+                {
+                    RECT rcWorkArea;
+
+                    // FIXME: Add support for multi-monitor!
+                    SystemParametersInfoW(SPI_GETWORKAREA,
+                                          0, &rcWorkArea, 0);
+
+                    SetWindowPos(pThis->hWndShellView, NULL,
+                                 rcWorkArea.left, rcWorkArea.top,
+                                 rcWorkArea.right - rcWorkArea.left,
+                                 rcWorkArea.bottom - rcWorkArea.top,
+                                 SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOOWNERZORDER);
                 }
                 break;
             }
