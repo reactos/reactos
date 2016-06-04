@@ -1325,15 +1325,14 @@ cleanup:
 */
 LRESULT CDefView::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    WORD                                wWidth;
-    WORD                                wHeight;
+    WORD wWidth, wHeight;
 
-    wWidth = LOWORD(lParam);
+    wWidth  = LOWORD(lParam);
     wHeight = HIWORD(lParam);
 
     TRACE("%p width=%u height=%u\n", this, wWidth, wHeight);
 
-    /*resize the ListView to fit our window*/
+    /* Resize the ListView to fit our window */
     if (m_ListView)
     {
         ::MoveWindow(m_ListView, 0, 0, wWidth, wHeight, TRUE);
