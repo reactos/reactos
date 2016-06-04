@@ -511,8 +511,7 @@ public:
         mi.cbSize = sizeof(mi);
         hMon = MonitorFromRect(pRect, dwFlags);
         if (hMon != NULL &&
-            GetMonitorInfo(hMon,
-            &mi))
+            GetMonitorInfo(hMon, &mi))
         {
             *pRect = mi.rcMonitor;
         }
@@ -539,8 +538,7 @@ public:
            now), minimize the risk that we determine a wrong monitor by
            using the center point of the tray window if we can't determine
            it using the rectangle. */
-        hMon = MonitorFromRect(pRect,
-                               MONITOR_DEFAULTTONULL);
+        hMon = MonitorFromRect(pRect, MONITOR_DEFAULTTONULL);
         if (hMon == NULL)
         {
             POINT pt;
@@ -549,8 +547,7 @@ public:
             pt.y = pRect->top + ((pRect->bottom - pRect->top) / 2);
 
             /* be less error-prone, find the nearest monitor */
-            hMon = MonitorFromPoint(pt,
-                                    MONITOR_DEFAULTTONEAREST);
+            hMon = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
         }
 
         return hMon;
@@ -571,11 +568,9 @@ public:
             {
                 /* Hm, the monitor is gone? Try to find a monitor where it
                    could be located now */
-                hMon = GetMonitorFromRect(
-                    pRect);
+                hMon = GetMonitorFromRect(pRect);
                 if (hMon == NULL ||
-                    !GetMonitorInfo(hMon,
-                    &mi))
+                    !GetMonitorInfo(hMon, &mi))
                 {
                     hMon = NULL;
                     goto GetPrimaryRect;
@@ -674,11 +669,10 @@ GetPrimaryRect:
 
         /* FIXME - calculate */
 
-        GetTrayRectFromScreenRect(
-            Position,
-            &rcScreen,
-            &szWnd,
-            pRect);
+        GetTrayRectFromScreenRect(Position,
+                                  &rcScreen,
+                                  &szWnd,
+                                  pRect);
 
         return hMon;
     }
@@ -716,9 +710,7 @@ GetPrimaryRect:
         rcScreen.top = 0;
 
         /* Determine the screen rectangle */
-        hMon = MonitorFromPoint(pt,
-                                MONITOR_DEFAULTTONULL);
-
+        hMon = MonitorFromPoint(pt, MONITOR_DEFAULTTONULL);
         if (hMon != NULL)
         {
             MONITORINFO mi;
@@ -868,9 +860,8 @@ GetPrimaryScreenRect:
                 //m_TrayRects[DraggingPosition] = rcTray;
             }
 
-            //Monitor = CalculateValidSize(
-            //                                                   DraggingPosition,
-            //                                                   &rcTray);
+            //Monitor = CalculateValidSize(DraggingPosition,
+            //                             &rcTray);
 
             m_Monitor = m_DraggingMonitor;
             m_Position = m_DraggingPosition;
@@ -991,9 +982,9 @@ ChangePos:
         {
             GetScreenRect(m_PreviousMonitor, &rcWorkArea);
             SystemParametersInfoW(SPI_SETWORKAREA,
-                                 1,
-                                 &rcWorkArea,
-                                 SPIF_SENDCHANGE);
+                                  1,
+                                  &rcWorkArea,
+                                  SPIF_SENDCHANGE);
         }
 
         rcTray = m_TrayRects[m_Position];
@@ -1001,8 +992,8 @@ ChangePos:
         GetScreenRect(m_Monitor, &rcWorkArea);
         m_PreviousMonitor = m_Monitor;
 
-        /* If AutoHide is false then change the workarea to exclude the area that
-           the taskbar covers. */
+        /* If AutoHide is false then change the workarea to exclude
+           the area that the taskbar covers. */
         if (!AutoHide)
         {
             switch (m_Position)
@@ -1022,10 +1013,14 @@ ChangePos:
             }
         }
 
+        /*
+         * Resize the current monitor work area. Win32k will also send
+         * a WM_SIZE message to automatically resize the desktop.
+         */
         SystemParametersInfoW(SPI_SETWORKAREA,
-                             1,
-                             &rcWorkArea,
-                             SPIF_SENDCHANGE);
+                              1,
+                              &rcWorkArea,
+                              SPIF_SENDCHANGE);
 #endif
     }
 
@@ -1167,12 +1162,11 @@ ChangePos:
            usable results */
         for (Pos = ABE_LEFT; Pos <= ABE_BOTTOM; Pos++)
         {
-            GetTrayRectFromScreenRect(
-                Pos,
-                &rcScreen,
-                &m_TraySize,
-                &m_TrayRects[Pos]);
-            //        TRACE("m_TrayRects[%d(%d)]: %d,%d,%d,%d\n", Pos, Position, m_TrayRects[Pos].left, m_TrayRects[Pos].top, m_TrayRects[Pos].right, m_TrayRects[Pos].bottom);
+            GetTrayRectFromScreenRect(Pos,
+                                      &rcScreen,
+                                      &m_TraySize,
+                                      &m_TrayRects[Pos]);
+            // TRACE("m_TrayRects[%d(%d)]: %d,%d,%d,%d\n", Pos, Position, m_TrayRects[Pos].left, m_TrayRects[Pos].top, m_TrayRects[Pos].right, m_TrayRects[Pos].bottom);
         }
 
         /* Determine which monitor we are on. It shouldn't matter which docked
