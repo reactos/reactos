@@ -26,4 +26,12 @@ STRINGTABLE
     STRING_DELETE_VALUE, """%1"" değer defteri değerini silmek istemekten emin misiniz?"
     STRING_DELETE_VALUEALL, "Tüm ""%1"" değer defteri değerlerini silmek istemekten emin misiniz?"
     STRING_DELETE_SUBKEY, """%1"" değer defteri dizinini silmek istemekten emin misiniz?"
+    STRING_INVALID_STRING, "reg: The option [/d] must be followed by a valid string\n"
+    STRING_VALUEALL_FAILED, "reg: Unable to delete all registry values in '%1'. An unexpected error occurred.\n"
+    STRING_GENERAL_FAILURE, "reg: Unable to complete the specified operation. An unexpected error occurred.\n"
+    STRING_MATCHES_FOUND, "Search complete. Number of matches found: %1!d!\n"
+    STRING_INVALID_SYNTAX, "reg: Invalid syntax. "
+    STRING_INVALID_OPTION, "reg: Invalid option [%1]. "
+    STRING_REG_HELP, "Type ""REG /?"" for help.\n"
+    STRING_FUNC_HELP, "Type ""REG %1 /?"" for help.\n"
 }
