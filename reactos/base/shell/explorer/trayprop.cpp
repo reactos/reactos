@@ -64,23 +64,23 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
         bHideInactive = (SendMessage(hwndHideInactive, BM_GETCHECK, 0, 0) == BST_CHECKED);
 
         if (bHide)
-            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_AUTOHIDE);
+            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_AUTOHIDE);
         else if (bLock  && bGroup  && bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_LOCK_GROUP_QL);
+            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_LOCK_GROUP_QL);
         else if (bLock  && !bGroup && !bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_LOCK_NOGROUP_NOQL);
+            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_LOCK_NOGROUP_NOQL);
         else if (bLock  && bGroup  && !bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_LOCK_GROUP_NOQL);
+            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_LOCK_GROUP_NOQL);
         else if (bLock  && !bGroup && bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_LOCK_NOGROUP_QL);
+            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_LOCK_NOGROUP_QL);
         else if (!bLock && !bGroup && !bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL);
+            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_NOLOCK_NOGROUP_NOQL);
         else if (!bLock && bGroup  && !bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_NOLOCK_GROUP_NOQL);
+            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_NOLOCK_GROUP_NOQL);
         else if (!bLock && !bGroup && bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_NOLOCK_NOGROUP_QL);
+            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_NOLOCK_NOGROUP_QL);
         else if (!bLock && bGroup  && bShowQL)
-            lpTaskBarImageName = MAKEINTRESOURCE(IDB_TASKBARPROP_NOLOCK_GROUP_QL);
+            lpTaskBarImageName = MAKEINTRESOURCEW(IDB_TASKBARPROP_NOLOCK_GROUP_QL);
 
         
         if (lpTaskBarImageName)
@@ -90,7 +90,7 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
                 DeleteObject(pPropInfo->hTaskbarBitmap);
             }
 
-            pPropInfo->hTaskbarBitmap = (HBITMAP)LoadImage(hExplorerInstance,
+            pPropInfo->hTaskbarBitmap = (HBITMAP)LoadImageW(hExplorerInstance,
                                                   lpTaskBarImageName,
                                                   IMAGE_BITMAP,
                                                   0,
@@ -113,48 +113,48 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
         if (bHideInactive)
         {
             EnableWindow(hwndAdvancedButton, TRUE);
-            if(bShowClock)
+            if (bShowClock)
             {
                 EnableWindow(hwndSeconds, TRUE);
-                if(bShowSeconds)
-                    lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_HIDE_SECONDS);
+                if (bShowSeconds)
+                    lpTrayImageName = MAKEINTRESOURCEW(IDB_SYSTRAYPROP_HIDE_SECONDS);
                 else
-                    lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_HIDE_CLOCK);
+                    lpTrayImageName = MAKEINTRESOURCEW(IDB_SYSTRAYPROP_HIDE_CLOCK);
             }
             else
             {
                 SendMessage(hwndSeconds, BM_SETCHECK, BST_UNCHECKED, 0);
                 EnableWindow(hwndSeconds, FALSE);
-                lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_HIDE_NOCLOCK);
+                lpTrayImageName = MAKEINTRESOURCEW(IDB_SYSTRAYPROP_HIDE_NOCLOCK);
             }
         }
         else
         {
             EnableWindow(hwndAdvancedButton, FALSE);
-            if(bShowClock)
+            if (bShowClock)
             {
                 EnableWindow(hwndSeconds, TRUE);
-                if(bShowSeconds)
-                    lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_SHOW_SECONDS);
+                if (bShowSeconds)
+                    lpTrayImageName = MAKEINTRESOURCEW(IDB_SYSTRAYPROP_SHOW_SECONDS);
                 else
-                    lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_SHOW_CLOCK);
+                    lpTrayImageName = MAKEINTRESOURCEW(IDB_SYSTRAYPROP_SHOW_CLOCK);
             }
             else
             {
                 SendMessage(hwndSeconds, BM_SETCHECK, BST_UNCHECKED, 0);
                 EnableWindow(hwndSeconds, FALSE);
-                lpTrayImageName = MAKEINTRESOURCE(IDB_SYSTRAYPROP_SHOW_NOCLOCK);
+                lpTrayImageName = MAKEINTRESOURCEW(IDB_SYSTRAYPROP_SHOW_NOCLOCK);
             }
         }
         
-        if(lpTrayImageName)
+        if (lpTrayImageName)
         {
             if (pPropInfo->hTrayBitmap)
             {
                 DeleteObject(pPropInfo->hTrayBitmap);
             }
 
-            pPropInfo->hTrayBitmap = (HBITMAP)LoadImage(hExplorerInstance,
+            pPropInfo->hTrayBitmap = (HBITMAP)LoadImageW(hExplorerInstance,
                                                   lpTrayImageName,
                                                   IMAGE_BITMAP,
                                                   0,
@@ -328,11 +328,11 @@ InitPropSheetPage(PROPSHEETPAGE *psp,
                   DLGPROC DlgProc,
                   LPARAM lParam)
 {
-    ZeroMemory(psp, sizeof(PROPSHEETPAGE));
-    psp->dwSize = sizeof(PROPSHEETPAGE);
+    ZeroMemory(psp, sizeof(*psp));
+    psp->dwSize = sizeof(*psp);
     psp->dwFlags = PSP_DEFAULT;
     psp->hInstance = hExplorerInstance;
-    psp->pszTemplate = MAKEINTRESOURCE(idDlg);
+    psp->pszTemplate = MAKEINTRESOURCEW(idDlg);
     psp->lParam = lParam;
     psp->pfnDlgProc = DlgProc;
 }
@@ -346,22 +346,22 @@ DisplayTrayProperties(IN HWND hwndOwner)
     PROPSHEETPAGE psp[2];
     WCHAR szCaption[256];
 
-    if (!LoadString(hExplorerInstance,
-                    IDS_TASKBAR_STARTMENU_PROP_CAPTION,
-                    szCaption,
-                    sizeof(szCaption) / sizeof(szCaption[0])))
+    if (!LoadStringW(hExplorerInstance,
+                     IDS_TASKBAR_STARTMENU_PROP_CAPTION,
+                     szCaption,
+                     _countof(szCaption)))
     {
         return;
     }
 
-    ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
-    psh.dwSize = sizeof(PROPSHEETHEADER);
+    ZeroMemory(&psh, sizeof(psh));
+    psh.dwSize = sizeof(psh);
     psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
     psh.hwndParent = hwndOwner;
     psh.hInstance = hExplorerInstance;
     psh.hIcon = NULL;
     psh.pszCaption = szCaption;
-    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
+    psh.nPages = _countof(psp);
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
