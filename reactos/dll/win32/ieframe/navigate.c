@@ -1228,9 +1228,152 @@ static const IHlinkFrameVtbl HlinkFrameVtbl = {
     HlinkFrame_UpdateHlink
 };
 
+static inline HlinkFrame *impl_from_ITargetFrame(ITargetFrame *iface)
+{
+    return CONTAINING_RECORD(iface, HlinkFrame, ITargetFrame_iface);
+}
+
+static HRESULT WINAPI TargetFrame_QueryInterface(ITargetFrame *iface, REFIID riid, void **ppv)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    return IUnknown_QueryInterface(This->outer, riid, ppv);
+}
+
+static ULONG WINAPI TargetFrame_AddRef(ITargetFrame *iface)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    return IUnknown_AddRef(This->outer);
+}
+
+static ULONG WINAPI TargetFrame_Release(ITargetFrame *iface)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    return IUnknown_Release(This->outer);
+}
+
+static HRESULT WINAPI TargetFrame_SetFrameName(ITargetFrame *iface, LPCWSTR pszFrameName)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_w(pszFrameName));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI TargetFrame_GetFrameName(ITargetFrame *iface, LPWSTR *ppszFrameName)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    FIXME("(%p)->(%p)\n", This, ppszFrameName);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI TargetFrame_GetParentFrame(ITargetFrame *iface, IUnknown **ppunkParent)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    FIXME("(%p)->(%p)\n", This, ppunkParent);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI TargetFrame_FindFrame(ITargetFrame *iface, LPCWSTR pszTargetName,
+        IUnknown *ppunkContextFrame, DWORD dwFlags, IUnknown **ppunkTargetFrame)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    FIXME("(%p)->(%s %p %x %p)\n", This, debugstr_w(pszTargetName),
+            ppunkContextFrame, dwFlags, ppunkTargetFrame);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI TargetFrame_SetFrameSrc(ITargetFrame *iface, LPCWSTR pszFrameSrc)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_w(pszFrameSrc));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI TargetFrame_GetFrameSrc(ITargetFrame *iface, LPWSTR *ppszFrameSrc)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    FIXME("(%p)->(%p)\n", This, ppszFrameSrc);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI TargetFrame_GetFramesContainer(ITargetFrame *iface, IOleContainer **ppContainer)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    FIXME("(%p)->(%p)\n", This, ppContainer);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI TargetFrame_SetFrameOptions(ITargetFrame *iface, DWORD dwFlags)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    FIXME("(%p)->(%x)\n", This, dwFlags);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI TargetFrame_GetFrameOptions(ITargetFrame *iface, DWORD *pdwFlags)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    FIXME("(%p)->(%p)\n", This, pdwFlags);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI TargetFrame_SetFrameMargins(ITargetFrame *iface, DWORD dwWidth, DWORD dwHeight)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    FIXME("(%p)->(%d %d)\n", This, dwWidth, dwHeight);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI TargetFrame_GetFrameMargins(ITargetFrame *iface, DWORD *pdwWidth, DWORD *pdwHeight)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    FIXME("(%p)->(%p %p)\n", This, pdwWidth, pdwHeight);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI TargetFrame_RemoteNavigate(ITargetFrame *iface, ULONG cLength, ULONG *pulData)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    FIXME("(%p)->(%u %p)\n", This, cLength, pulData);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI TargetFrame_OnChildFrameActivate(ITargetFrame *iface, IUnknown *pUnkChildFrame)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    FIXME("(%p)->(%p)\n", This, pUnkChildFrame);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI TargetFrame_OnChildFrameDeactivate(ITargetFrame *iface, IUnknown *pUnkChildFrame)
+{
+    HlinkFrame *This = impl_from_ITargetFrame(iface);
+    FIXME("(%p)->(%p)\n", This, pUnkChildFrame);
+    return E_NOTIMPL;
+}
+
+static const ITargetFrameVtbl TargetFrameVtbl = {
+    TargetFrame_QueryInterface,
+    TargetFrame_AddRef,
+    TargetFrame_Release,
+    TargetFrame_SetFrameName,
+    TargetFrame_GetFrameName,
+    TargetFrame_GetParentFrame,
+    TargetFrame_FindFrame,
+    TargetFrame_SetFrameSrc,
+    TargetFrame_GetFrameSrc,
+    TargetFrame_GetFramesContainer,
+    TargetFrame_SetFrameOptions,
+    TargetFrame_GetFrameOptions,
+    TargetFrame_SetFrameMargins,
+    TargetFrame_GetFrameMargins,
+    TargetFrame_RemoteNavigate,
+    TargetFrame_OnChildFrameActivate,
+    TargetFrame_OnChildFrameDeactivate
+};
+
 static inline HlinkFrame *impl_from_ITargetFrame2(ITargetFrame2 *iface)
 {
-    return CONTAINING_RECORD(iface, HlinkFrame, IHlinkFrame_iface);
+    return CONTAINING_RECORD(iface, HlinkFrame, ITargetFrame2_iface);
 }
 
 static HRESULT WINAPI TargetFrame2_QueryInterface(ITargetFrame2 *iface, REFIID riid, void **ppv)
@@ -1504,6 +1647,9 @@ BOOL HlinkFrame_QI(HlinkFrame *This, REFIID riid, void **ppv)
     if(IsEqualGUID(&IID_IHlinkFrame, riid)) {
         TRACE("(%p)->(IID_IHlinkFrame %p)\n", This, ppv);
         *ppv = &This->IHlinkFrame_iface;
+    }else if(IsEqualGUID(&IID_ITargetFrame, riid)) {
+        TRACE("(%p)->(IID_ITargetFrame %p)\n", This, ppv);
+        *ppv = &This->ITargetFrame_iface;
     }else if(IsEqualGUID(&IID_ITargetFrame2, riid)) {
         TRACE("(%p)->(IID_ITargetFrame2 %p)\n", This, ppv);
         *ppv = &This->ITargetFrame2_iface;
@@ -1526,7 +1672,8 @@ BOOL HlinkFrame_QI(HlinkFrame *This, REFIID riid, void **ppv)
 
 void HlinkFrame_Init(HlinkFrame *This, IUnknown *outer, DocHost *doc_host)
 {
-    This->IHlinkFrame_iface.lpVtbl   = &HlinkFrameVtbl;
+    This->IHlinkFrame_iface.lpVtbl = &HlinkFrameVtbl;
+    This->ITargetFrame_iface.lpVtbl = &TargetFrameVtbl;
     This->ITargetFrame2_iface.lpVtbl = &TargetFrame2Vtbl;
     This->ITargetFramePriv2_iface.lpVtbl = &TargetFramePriv2Vtbl;
     This->IWebBrowserPriv2IE9_iface.lpVtbl = &WebBrowserPriv2IE9Vtbl;
