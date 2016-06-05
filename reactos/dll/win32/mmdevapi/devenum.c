@@ -577,8 +577,9 @@ static HRESULT WINAPI MMDevice_Activate(IMMDevice *iface, REFIID riid, DWORD cls
 
     if (IsEqualIID(riid, &IID_IAudioClient)){
         hr = drvs.pGetAudioEndpoint(&This->devguid, iface, (IAudioClient**)ppv);
-    }else if (IsEqualIID(riid, &IID_IAudioEndpointVolume))
-        hr = AudioEndpointVolume_Create(This, (IAudioEndpointVolume**)ppv);
+    }else if (IsEqualIID(riid, &IID_IAudioEndpointVolume) ||
+            IsEqualIID(riid, &IID_IAudioEndpointVolumeEx))
+        hr = AudioEndpointVolume_Create(This, (IAudioEndpointVolumeEx**)ppv);
     else if (IsEqualIID(riid, &IID_IAudioSessionManager)
              || IsEqualIID(riid, &IID_IAudioSessionManager2))
     {
