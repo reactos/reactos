@@ -1361,9 +1361,9 @@ ChangePos:
 
         if (m_TrayNotify != NULL &&
             SendMessage(m_TrayNotify,
-            TNWM_GETMINIMUMSIZE,
-            (WPARAM) Horizontal,
-            (LPARAM) &TraySize))
+                        TNWM_GETMINIMUMSIZE,
+                        (WPARAM)Horizontal,
+                        (LPARAM)&TraySize))
         {
             /* Move the tray notification window to the desired location */
             if (Horizontal)
@@ -1542,7 +1542,7 @@ ChangePos:
         /* Align all controls on the tray window */
         AlignControls(NULL);
 
-        InitShellServices(&(m_ShellServices));
+        InitShellServices(&m_ShellServices);
 
         if (AutoHide)
         {
@@ -1625,8 +1625,7 @@ ChangePos:
                 (m_DesktopWnd != NULL && m_hWnd == m_DesktopWnd));
     }
 
-    BOOL STDMETHODCALLTYPE
-        IsHorizontal()
+    BOOL STDMETHODCALLTYPE IsHorizontal()
     {
         return IsPosHorizontal();
     }
