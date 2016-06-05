@@ -1014,14 +1014,16 @@ HRESULT WINAPI AVIBuildFilterW(LPWSTR szFilter, LONG cbFilter, BOOL fSaving)
     return AVIERR_ERROR;
   }
   for (n = 0;RegEnumKeyW(hKey, n, szFileExt, sizeof(szFileExt)/sizeof(szFileExt[0])) == ERROR_SUCCESS;n++) {
+    WCHAR clsidW[40];
+
     /* get CLSID to extension */
-    size = sizeof(szValue);
-    if (RegQueryValueW(hKey, szFileExt, szValue, &size) != ERROR_SUCCESS)
+    size = sizeof(clsidW);
+    if (RegQueryValueW(hKey, szFileExt, clsidW, &size) != ERROR_SUCCESS)
       break;
 
     /* search if the CLSID is already known */
     for (i = 1; i <= count; i++) {
-      if (lstrcmpW(lp[i].szClsid, szValue) == 0)
+      if (lstrcmpW(lp[i].szClsid, clsidW) == 0)
 	break; /* a new one */
     }
 
@@ -1036,7 +1038,7 @@ HRESULT WINAPI AVIBuildFilterW(LPWSTR szFilter, LONG cbFilter, BOOL fSaving)
 	break;
       }
 
-      lstrcpyW(lp[i].szClsid, szValue);
+      lstrcpyW(lp[i].szClsid, clsidW);
 
       count++;
     }
