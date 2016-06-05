@@ -87,7 +87,7 @@ static BOOL decode_dword(const WCHAR *p, DWORD *ret)
     DWORD i;
 
     for(i=0; i<6; i++) {
-        if(p[i] > sizeof(digits)/sizeof(*digits) || digits[p[i]] == 0xff)
+        if(p[i] >= sizeof(digits)/sizeof(*digits) || digits[p[i]] == 0xff)
             return FALSE;
     }
     if(p[6] != '=' || p[7] != '=')

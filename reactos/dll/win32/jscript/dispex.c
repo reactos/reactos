@@ -370,6 +370,8 @@ static HRESULT invoke_prop_func(jsdisp_t *This, IDispatch *jsthis, dispex_prop_t
         if(prop->name || This->builtin_info->class != JSCLASS_FUNCTION) {
             vdisp_t vthis;
 
+            if(This->builtin_info->class != JSCLASS_FUNCTION && prop->u.p->invoke != JSGlobal_eval)
+                flags &= ~DISPATCH_JSCRIPT_INTERNAL_MASK;
             if(jsthis)
                 set_disp(&vthis, jsthis);
             else
@@ -1053,7 +1055,7 @@ HRESULT jsdisp_call_value(jsdisp_t *jsfunc, IDispatch *jsthis, WORD flags, unsig
 {
     HRESULT hres;
 
-    assert(!(flags & ~(DISPATCH_METHOD|DISPATCH_CONSTRUCT)));
+    assert(!(flags & ~(DISPATCH_METHOD|DISPATCH_CONSTRUCT|DISPATCH_JSCRIPT_INTERNAL_MASK)));
 
     if(is_class(jsfunc, JSCLASS_FUNCTION)) {
         hres = Function_invoke(jsfunc, jsthis, flags, argc, argv, r);
@@ -1066,6 +1068,7 @@ HRESULT jsdisp_call_value(jsdisp_t *jsfunc, IDispatch *jsthis, WORD flags, unsig
         }
 
         set_disp(&vdisp, jsthis);
+        flags &= ~DISPATCH_JSCRIPT_INTERNAL_MASK;
         hres = jsfunc->builtin_info->value_prop.invoke(jsfunc->ctx, &vdisp, flags, argc, argv, r);
         vdisp_release(&vdisp);
     }
@@ -1116,6 +1119,7 @@ HRESULT disp_call(script_ctx_t *ctx, IDispatch *disp, DISPID id, WORD flags, uns
         return hres;
     }
 
+    flags &= ~DISPATCH_JSCRIPT_INTERNAL_MASK;
     if(ret && argc)
         flags |= DISPATCH_PROPERTYGET;
 
@@ -1180,6 +1184,7 @@ HRESULT disp_call(script_ctx_t *ctx, IDispatch *disp, DISPID id, WORD flags, uns
         hres = variant_to_jsval(&retv, ret);
         VariantClear(&retv);
     }
+
     return hres;
 }
 
@@ -1193,7 +1198,7 @@ HRESULT disp_call_value(script_ctx_t *ctx, IDispatch *disp, IDispatch *jsthis, W
     unsigned i;
     HRESULT hres;
 
-    assert(!(flags & ~(DISPATCH_METHOD|DISPATCH_CONSTRUCT)));
+    assert(!(flags & ~(DISPATCH_METHOD|DISPATCH_CONSTRUCT|DISPATCH_JSCRIPT_INTERNAL_MASK)));
 
     jsdisp = iface_to_jsdisp((IUnknown*)disp);
     if(jsdisp) {
@@ -1202,6 +1207,7 @@ HRESULT disp_call_value(script_ctx_t *ctx, IDispatch *disp, IDispatch *jsthis, W
         return hres;
     }
 
+    flags &= ~DISPATCH_JSCRIPT_INTERNAL_MASK;
     if(r && argc && flags == DISPATCH_METHOD)
         flags |= DISPATCH_PROPERTYGET;
 

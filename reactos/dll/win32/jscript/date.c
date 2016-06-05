@@ -2163,6 +2163,28 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
                 year = tmp;
             }
         }
+        else if(parse[i]=='+' || parse[i]=='-') {
+            /* Timezone offset */
+            BOOL positive = TRUE;
+
+            if(set_offset && set_hour_adjust) break;
+            set_offset = TRUE;
+            set_hour_adjust = FALSE;
+
+            if(parse[i] == '-')  positive = FALSE;
+
+            i++;
+            while(isspaceW(parse[i])) i++;
+            if(parse[i]<'0' || parse[i]>'9') break;
+            offset = atoiW(&parse[i]);
+            while(parse[i]>='0' && parse[i]<='9') i++;
+
+            if(offset<24) offset *= 60;
+            else offset = (offset/100)*60 + offset%100;
+
+            if(positive) offset = -offset;
+
+        }
         else {
             if(parse[i]<'A' || parse[i]>'Z') break;
             else if(parse[i]=='B' && (parse[i+1]=='C' ||
@@ -2219,27 +2241,11 @@ static inline HRESULT date_parse(jsstr_t *input_str, double *ret) {
             else if((parse[i]=='U' && parse[i+1]=='T' && parse[i+2]=='C')
                     || (parse[i]=='G' && parse[i+1]=='M' && parse[i+2]=='T')) {
                 /* Timezone */
-                BOOL positive = TRUE;
-
                 if(set_offset) break;
                 set_offset = TRUE;
                 set_hour_adjust = FALSE;
 
                 i += 3;
-                while(isspaceW(parse[i])) i++;
-                if(parse[i] == '-')  positive = FALSE;
-                else if(parse[i] != '+') continue;
-
-                i++;
-                while(isspaceW(parse[i])) i++;
-                if(parse[i]<'0' || parse[i]>'9') break;
-                offset = atoiW(&parse[i]);
-                while(parse[i]>='0' && parse[i]<='9') i++;
-
-                if(offset<24) offset *= 60;
-                else offset = (offset/100)*60 + offset%100;
-
-                if(positive) offset = -offset;
             }
             else {
                 /* Month or garbage */

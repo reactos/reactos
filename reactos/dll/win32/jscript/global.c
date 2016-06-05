@@ -175,9 +175,11 @@ static HRESULT JSGlobal_escape(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
 }
 
 /* ECMA-262 3rd Edition    15.1.2.1 */
-static HRESULT JSGlobal_eval(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
+HRESULT JSGlobal_eval(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
+    call_frame_t *frame;
+    DWORD exec_flags = 0;
     bytecode_t *code;
     const WCHAR *src;
     HRESULT hres;
@@ -196,7 +198,7 @@ static HRESULT JSGlobal_eval(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, uns
         return S_OK;
     }
 
-    if(!ctx->exec_ctx) {
+    if(!(frame = ctx->call_ctx)) {
         FIXME("No active exec_ctx\n");
         return E_UNEXPECTED;
     }
@@ -212,7 +214,12 @@ static HRESULT JSGlobal_eval(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, uns
         return throw_syntax_error(ctx, hres, NULL);
     }
 
-    hres = exec_source(ctx->exec_ctx, code, &code->global_code, TRUE, r);
+    if(frame->flags & EXEC_GLOBAL)
+        exec_flags |= EXEC_GLOBAL;
+    if(flags & DISPATCH_JSCRIPT_CALLEREXECSSOURCE)
+        exec_flags |= EXEC_RETURN_TO_INTERP;
+    hres = exec_source(ctx, exec_flags, code, &code->global_code, frame->scope,
+            frame->this_obj, NULL, frame->variable_obj, NULL, r);
     release_bytecode(code);
     return hres;
 }

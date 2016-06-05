@@ -66,6 +66,8 @@ void script_release(script_ctx_t *ctx)
     heap_pool_free(&ctx->tmp_heap);
     if(ctx->last_match)
         jsstr_release(ctx->last_match);
+    assert(!ctx->stack_top);
+    heap_free(ctx->stack);
 
     ctx->jscaller->ctx = NULL;
     IServiceProvider_Release(&ctx->jscaller->IServiceProvider_iface);
@@ -92,18 +94,12 @@ static inline BOOL is_started(script_ctx_t *ctx)
 
 static HRESULT exec_global_code(JScript *This, bytecode_t *code)
 {
-    exec_ctx_t *exec_ctx;
     HRESULT hres;
-
-    hres = create_exec_ctx(This->ctx, NULL, This->ctx->global, NULL, TRUE, &exec_ctx);
-    if(FAILED(hres))
-        return hres;
 
     IActiveScriptSite_OnEnterScript(This->site);
 
     clear_ei(This->ctx);
-    hres = exec_source(exec_ctx, code, &code->global_code, FALSE, NULL);
-    exec_release(exec_ctx);
+    hres = exec_source(This->ctx, EXEC_GLOBAL, code, &code->global_code, NULL, NULL, NULL, This->ctx->global, NULL, NULL);
 
     IActiveScriptSite_OnLeaveScript(This->site);
     return hres;
@@ -764,26 +760,19 @@ static HRESULT WINAPI JScriptParse_ParseScriptText(IActiveScriptParse *iface,
         return hres;
 
     if(dwFlags & SCRIPTTEXT_ISEXPRESSION) {
-        exec_ctx_t *exec_ctx;
+        jsval_t r;
 
-        hres = create_exec_ctx(This->ctx, NULL, This->ctx->global, NULL, TRUE, &exec_ctx);
+        IActiveScriptSite_OnEnterScript(This->site);
+
+        clear_ei(This->ctx);
+        hres = exec_source(This->ctx, EXEC_GLOBAL, code, &code->global_code, NULL, NULL, NULL, This->ctx->global, NULL, &r);
         if(SUCCEEDED(hres)) {
-            jsval_t r;
-
-            IActiveScriptSite_OnEnterScript(This->site);
-
-            clear_ei(This->ctx);
-            hres = exec_source(exec_ctx, code, &code->global_code, TRUE, &r);
-            if(SUCCEEDED(hres)) {
-                if(pvarResult)
-                    hres = jsval_to_variant(r, pvarResult);
-                jsval_release(r);
-            }
-            exec_release(exec_ctx);
-
-            IActiveScriptSite_OnLeaveScript(This->site);
+            if(pvarResult)
+                hres = jsval_to_variant(r, pvarResult);
+            jsval_release(r);
         }
 
+        IActiveScriptSite_OnLeaveScript(This->site);
         return hres;
     }
 
