@@ -10,6 +10,7 @@
 DBG_DEFAULT_CHANNEL(UserDisplay);
 
 BOOL gbBaseVideo = 0;
+static PPROCESSINFO gpFullscreen = NULL;
 
 static const PWCHAR KEY_VIDEO = L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO";
 
@@ -650,6 +651,16 @@ NtUserEnumDisplaySettings(
     return Status;
 }
 
+VOID
+UserUpdateFullscreen(
+    DWORD flags)
+{
+    if (flags & CDS_FULLSCREEN)
+        gpFullscreen = gptiCurrent->ppi;
+    else
+        gpFullscreen = NULL;
+}
+
 LONG
 APIENTRY
 UserChangeDisplaySettings(
@@ -774,6 +785,8 @@ UserChangeDisplaySettings(
             goto leave;
         }
 
+        UserUpdateFullscreen(flags);
+
         /* Update the system metrics */
         InitMetrics();
 
@@ -807,6 +820,18 @@ leave:
     PDEVOBJ_vRelease(ppdev);
 
     return lResult;
+}
+
+VOID
+UserDisplayNotifyShutdown(
+    PPROCESSINFO ppiCurrent)
+{
+    if (ppiCurrent == gpFullscreen)
+    {
+        UserChangeDisplaySettings(NULL, NULL, 0, NULL);
+        if (gpFullscreen)
+            ERR("Failed to restore display mode!\n");
+    }
 }
 
 LONG
