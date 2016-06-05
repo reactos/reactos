@@ -48,6 +48,23 @@ cpp_quote("#define MIME_E_INVALID_HANDLE         0x800cce09")
 cpp_quote("#define MIME_E_CHARSET_TRANSLATE      0x800cce0a")
 cpp_quote("#define MIME_E_NOT_INITIALIZED        0x800cce0b")
 
+cpp_quote("#define MIME_E_INVALID_OPTION_VALUE   0x800cce1f")
+cpp_quote("#define MIME_E_INVALID_OPTION_ID      0x800cce20")
+cpp_quote("#define MIME_E_INVALID_HEADER_NAME    0x800cce21")
+cpp_quote("#define MIME_E_NOT_BOUND              0x800cce22")
+cpp_quote("#define MIME_E_MAX_SIZE_TOO_SMALL     0x800cce23")
+cpp_quote("#define MIME_E_MULTIPART_HAS_CHILDREN 0x800cce25")
+cpp_quote("#define MIME_E_INVALID_PROP_FLAGS     0x800cce26")
+cpp_quote("#define MIME_E_INVALID_ADDRESS_TYPE   0x800cce27")
+cpp_quote("#define MIME_E_INVALID_OBJECT_IID     0x800cce28")
+cpp_quote("#define MIME_E_MLANG_DLL_NOT_FOUND    0x800cce29")
+cpp_quote("#define MIME_E_ROOT_NOT_EMPTY         0x800cce2a")
+cpp_quote("#define MIME_E_MLANG_BAD_DLL          0x800cce2b")
+cpp_quote("#define MIME_E_REG_OPEN_KEY           0x800cce2c")
+cpp_quote("#define MIME_E_INVALID_INET_DATE      0x800cce2d")
+cpp_quote("#define MIME_E_INVALID_BODYTYPE       0x800cce2e")
+cpp_quote("#define MIME_E_INVALID_DELETE_TYPE    0x800cce2f")
+cpp_quote("#define MIME_E_OPTION_HAS_NO_VALUE    0x800cce30")
 cpp_quote("#define MIME_E_INVALID_CHARSET_TYPE   0x800cce31")
 
 cpp_quote("#define MIME_E_INVALID_TEXT_TYPE      0x800cce38")
@@ -84,21 +101,85 @@ cpp_quote("    PID_HDR_PATH       = 26,")
 cpp_quote("    PID_HDR_FOLLOWUPTO = 27,")
 cpp_quote("    PID_HDR_EXPIRES    = 28,")
 cpp_quote("    PID_HDR_CC         = 29,")
-
+cpp_quote("    PID_HDR_CONTROL    = 30,")
+cpp_quote("    PID_HDR_DISTRIB    = 31,")
+cpp_quote("    PID_HDR_KEYWORDS   = 32,")
+cpp_quote("    PID_HDR_SUMMARY    = 33,")
+cpp_quote("    PID_HDR_APPROVED   = 34,")
+cpp_quote("    PID_HDR_LINES      = 35,")
+cpp_quote("    PID_HDR_XREF       = 36,")
+cpp_quote("    PID_HDR_ORG        = 37,")
+cpp_quote("    PID_HDR_XNEWSRDR   = 38,")
+cpp_quote("    PID_HDR_XPRI       = 39,")
+cpp_quote("    PID_HDR_XMSPRI     = 40,")
+cpp_quote("    PID_PAR_FILENAME   = 41,")
+cpp_quote("    PID_PAR_BOUNDARY   = 42,")
+cpp_quote("    PID_PAR_CHARSET    = 43,")
+cpp_quote("    PID_PAR_NAME       = 44,")
+cpp_quote("    PID_ATT_FILENAME   = 45,")
+cpp_quote("    PID_ATT_GENFNAME   = 46,")
+cpp_quote("    PID_ATT_PRITYPE    = 47,")
+cpp_quote("    PID_ATT_SUBTYPE    = 48,")
+cpp_quote("    PID_ATT_NORMSUBJ   = 49,")
+cpp_quote("    PID_ATT_ILLEGAL    = 50,")
+cpp_quote("    PID_ATT_RENDERED   = 51,")
+cpp_quote("    PID_ATT_SENTTIME   = 52,")
+cpp_quote("    PID_ATT_RECVTIME   = 53,")
+cpp_quote("    PID_ATT_PRIORITY   = 54,")
+cpp_quote("    PID_HDR_COMMENT    = 55,")
+cpp_quote("    PID_HDR_ENCODING   = 56,")
+cpp_quote("    PID_HDR_ENCRYPTED  = 57,")
+cpp_quote("    PID_HDR_OFFSETS    = 58,")
+cpp_quote("    PID_HDR_XUNSENT    = 59,")
+cpp_quote("    PID_HDR_ARTICLEID  = 60,")
 cpp_quote("    PID_HDR_SENDER     = 61,")
-
-cpp_quote("    PID_HDR_INREPLYTO  = 77,")
+cpp_quote("    PID_ATT_SERVER     = 62,")
+cpp_quote("    PID_ATT_ACCOUNT    = 63,")
+cpp_quote("    PID_ATT_UIDL       = 64,")
+cpp_quote("    PID_ATT_STOREMSGID = 65,")
+cpp_quote("    PID_ATT_USERNAME   = 66,")
+cpp_quote("    PID_ATT_FORWARDTO  = 67,")
+cpp_quote("    PID_ATT_STOREFOLDERID = 68,")
+cpp_quote("    PID_ATT_GHOSTED       = 69,")
+cpp_quote("    PID_ATT_UNCACHEDSIZE  = 70,")
+cpp_quote("    PID_ATT_COMBINED      = 71,")
+cpp_quote("    PID_ATT_AUTOINLINED   = 72,")
+cpp_quote("    PID_HDR_DISP_NOTIFICATION_TO = 73,")
+cpp_quote("    PID_PAR_REPLYTYPE     = 74,")
+cpp_quote("    PID_PAR_FORMAT        = 75,")
+cpp_quote("    PID_ATT_FORMAT        = 76,")
+cpp_quote("    PID_HDR_INREPLYTO     = 77,")
+cpp_quote("    PID_ATT_ACCOUNTNAME   = 78,")
+cpp_quote("    PID_LAST              = 79,")
 cpp_quote("} MIMEPROPID;")
 
+cpp_quote("#define TYPEDID_ID(_typedid)          (((ULONG)(_typedid))>>16)")
 cpp_quote("#define TYPEDID_MASK                  ((ULONG)0xffff)")
 cpp_quote("#define TYPEDID_TYPE(t)               ((VARTYPE)((t) & TYPEDID_MASK))")
 
+cpp_quote("#define OID_ALLOW_8BIT_HEADER         (0x00010000 | VT_BOOL)")
+cpp_quote("#define OID_CBMAX_HEADER_LINE         (0x00020000 | VT_UI4)")
+cpp_quote("#define OID_SAVE_FORMAT               (0x00030000 | VT_UI4)")
+cpp_quote("#define OID_WRAP_BODY_TEXT            (0x00040000 | VT_BOOL)")
+cpp_quote("#define OID_CBMAX_BODY_LINE           (0x00050000 | VT_UI4)")
+cpp_quote("#define OID_TRANSMIT_BODY_ENCODING    (0x00060000 | VT_UI4)")
+cpp_quote("#define OID_TRANSMIT_TEXT_ENCODING    (0x00070000 | VT_UI4)")
+cpp_quote("#define OID_GENERATE_MESSAGE_ID       (0x00080000 | VT_BOOL)")
 cpp_quote("#define OID_HIDE_TNEF_ATTACHMENTS     (0x000e0000 | VT_BOOL)")
+cpp_quote("#define OID_CLEANUP_TREE_ON_SAVE      (0x000f0000 | VT_BOOL)")
+cpp_quote("#define OID_BODY_REMOVE_NBSP          (0x00140000 | VT_BOOL)")
+cpp_quote("#define OID_DEFAULT_BODY_CHARSET      (0x00150000 | VT_UI4)")
+cpp_quote("#define OID_DEFAULT_HEADER_CHARSET    (0x00160000 | VT_UI4)")
+cpp_quote("#define OID_DBCS_ESCAPE_IS_8BIT       (0x00170000 | VT_BOOL)")
 cpp_quote("#define OID_SECURITY_TYPE             (0x00180000 | VT_UI4)")
 cpp_quote("#define OID_SECURITY_HWND_OWNER       (0x00320000 | VT_UI4)")
 cpp_quote("#define OID_HEADER_RELOAD_TYPE        (0x00370000 | VT_UI4)")
+cpp_quote("#define OID_CAN_INLINE_TEXT_BODIES    (0x00380000 | VT_BOOL)")
 cpp_quote("#define OID_SHOW_MACBINARY            (0x00390000 | VT_BOOL)")
+cpp_quote("#define OID_SAVEBODY_KEEPBOUNDARY     (0x00400000 | VT_BOOL)")
 
+cpp_quote("#define OID_SECURITY_2KEY_CERT_BAG    (0x00590000 | VT_VECTOR | VT_UI4)")
+cpp_quote("#define OID_SECURITY_2KEY_CERT_BAG_64 (0x00590000 | VT_VECTOR | VT_UI8)")
 
 [
     uuid(e4b28371-83b0-11d0-8259-00c04fd85ab4),
@@ -423,6 +504,8 @@ library MIMEOLE
     ]
     interface IMimePropertySchema : IUnknown
     {
+        typedef [unique] IMimePropertySchema *LPMIMEPROPERTYSCHEMA;
+
         typedef enum tagMIMEPROPFLAGS
         {
             MPF_INETCSET            = 0x01,
@@ -433,7 +516,30 @@ library MIMEOLE
             MPF_READONLY            = 0x20
         } MIMEPROPFLAGS;
 
-        /* FIXME: fill this in */
+        HRESULT RegisterProperty(
+                [in]  const char *name,
+                [in]  DWORD      flags,
+                [in]  DWORD      rownumber,
+                [in]  VARTYPE    vtdefault,
+                [out] DWORD      *propid);
+
+        HRESULT ModifyProperty(
+                [in] const char  *name,
+                [in] DWORD       flags,
+                [in] DWORD       rownumber,
+                [in] VARTYPE     vtdefault);
+
+        HRESULT GetPropertyId(
+                [in]  const char *name,
+                [out] DWORD      *propid);
+
+        HRESULT GetPropertyName(
+                [in]  DWORD      propid,
+                [out] char       **name);
+
+        HRESULT RegisterAddressType(
+                [in]  const char *name,
+                [out] DWORD      *adrtype);
     }
 
     [
@@ -1332,6 +1438,8 @@ cpp_quote("HRESULT WINAPI MimeEditCreateMimeDocument(IUnknown*,IMimeMessage*,DWO
 cpp_quote("HRESULT WINAPI MimeEditGetBackgroundImageUrl(IUnknown*,BSTR*);")
 cpp_quote("HRESULT WINAPI MimeEditDocumentFromStream(IStream*,REFIID,void**);")
 
+cpp_quote("HRESULT WINAPI MimeOleGetPropertySchema(IMimePropertySchema**);")
+cpp_quote("HRESULT WINAPI MimeGetAddressFormatW(REFIID,void*,DWORD,ADDRESSFORMAT,WCHAR**);")
 cpp_quote("#ifdef __cplusplus")
 cpp_quote("}")
 cpp_quote("#endif")
