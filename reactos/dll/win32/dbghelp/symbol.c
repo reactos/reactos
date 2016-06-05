@@ -68,7 +68,7 @@ DWORD             symt_ptr2index(struct module* module, const struct symt* sym)
 
     /* try to find the pointer in our ht */
     while ((ptr = hash_table_iter_up(&hti))) {
-        idx_to_ptr = GET_ENTRY(ptr, struct symt_idx_to_ptr, hash_elt);
+        idx_to_ptr = CONTAINING_RECORD(ptr, struct symt_idx_to_ptr, hash_elt);
         if (idx_to_ptr->sym == sym)
             return idx_to_ptr->idx;
     }
