@@ -97,6 +97,8 @@ interface ITfReadOnlyProperty;
 interface IEnumTfLanguageProfiles;
 interface ITfCompositionView;
 interface ITfKeyEventSink;
+interface ITfPersistentPropertyLoaderACP;
+interface ITfRangeACP;
 
 cpp_quote("#if 0")
 typedef [uuid(4f5d560f-5ab5-4dde-8c4d-404592857ab0)] UINT_PTR HKL;
@@ -348,6 +350,34 @@ interface ITfRangeBackup : IUnknown
     HRESULT Restore(
         [in] TfEditCookie cookie,
         [in] ITfRange *range);
+}
+
+[
+    object,
+    uuid(aa80e901-2021-11d2-93e0-0060b067b86e),
+    pointer_default(unique)
+]
+interface ITextStoreACPServices : IUnknown
+{
+    HRESULT Serialize(
+        [in] ITfProperty *prop,
+        [in] ITfRange *range,
+        [out] TF_PERSISTENT_PROPERTY_HEADER_ACP *header,
+        [in] IStream *stream);
+
+    HRESULT Unserialize(
+        [in] ITfProperty *prop,
+        [in] const TF_PERSISTENT_PROPERTY_HEADER_ACP *header,
+        [in] IStream *stream,
+        [in] ITfPersistentPropertyLoaderACP *loader);
+
+    HRESULT ForceLoadProperty(
+        [in] ITfProperty *prop);
+
+    HRESULT CreateRange(
+        [in] LONG start,
+        [in] LONG end,
+        [out] ITfRangeACP **range);
 }
 
 [
@@ -1814,4 +1844,20 @@ interface ITfMouseTrackerACP : IUnknown
         [out] DWORD *pdwCookie);
 
     HRESULT UnadviseMouseSink([in] DWORD dwCookie);
+}
+
+[
+    object,
+    local,
+    uuid(a615096f-1c57-4813-8a15-55ee6e5a839c),
+    pointer_default(unique)
+]
+interface ITfTransitoryExtensionSink : IUnknown
+{
+    HRESULT OnTransitoryExtensionUpdated(
+        [in] ITfContext *pic,
+        [in] TfEditCookie ecReadOnly,
+        [in] ITfRange *pResultRange,
+        [in] ITfRange *pCompositionRange,
+        [out] BOOL *pfDeleteResultRange);
 }
