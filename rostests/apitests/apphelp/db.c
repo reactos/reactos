@@ -315,6 +315,7 @@ static void test_Sdb(void)
 
 /*
  - Show that a stringtable is automatically generated,
+ - Show that entries in the stringtable are re-used,
  - validate multiple lists (for the length)
 */
 static void test_write_ex(void)
@@ -327,6 +328,7 @@ static void test_write_ex(void)
     TAG tag;
     DWORD size;
     BOOL ret;
+    LPWSTR ptr;
 
     /* Write a small database */
     pdb = pSdbCreateDatabase(path1, DOS_PATH);
@@ -336,12 +338,14 @@ static void test_write_ex(void)
     tagdb = pSdbBeginWriteListTag(pdb, TAG_DATABASE);
     ok(tagdb == 12, "Expected tag to be 12, was %u\n", tagdb);
     ret = pSdbWriteStringTag(pdb, TAG_NAME, test1);
+    ret = pSdbWriteStringTag(pdb, TAG_NAME, test2);
     ok(ret, "Expected SdbWriteStringTag to succeed\n");
     ret = pSdbEndWriteListTag(pdb, tagdb);
     ok(ret, "Expected SdbEndWriteListTag to succeed\n");
 
     tagdb = pSdbBeginWriteListTag(pdb, TAG_DATABASE);
-    ok(tagdb == 24, "Expected tag to be 24, was %u\n", tagdb);
+    ok(tagdb == 30, "Expected tag to be 24, was %u\n", tagdb);
+    ret = pSdbWriteStringTag(pdb, TAG_NAME, test1);
     ret = pSdbWriteStringTag(pdb, TAG_NAME, test2);
     ok(ret, "Expected SdbWriteStringTag to succeed\n");
     ret = pSdbEndWriteListTag(pdb, tagdb);
@@ -354,10 +358,12 @@ static void test_write_ex(void)
     ok(pdb != NULL, "Expected a valid database\n");
     if (!pdb)
         return;
+
     tagdb = pSdbFindFirstTag(pdb, TAGID_ROOT, TAG_DATABASE);
     ok(tagdb == 12, "Expected tag to be 12, was %u\n", tagdb);
     size = pSdbGetTagDataSize(pdb, tagdb);
-    ok(size == 6, "Expected size to be 6, was %u\n", size);
+    ok(size == 12, "Expected size to be 12, was %u\n", size);
+
     tagstr = pSdbFindFirstTag(pdb, tagdb, TAG_NAME);
     ok(tagstr == 18, "Expected string tag to be 18, was %u\n", tagstr);
     tag = pSdbGetTagFromTagID(pdb, tagstr);
@@ -365,38 +371,160 @@ static void test_write_ex(void)
     size = pSdbGetTagDataSize(pdb, tagstr);
     ok(size == 4, "Expected size to be 4, was 0x%x\n", size);
 
+    tagstr = pSdbFindNextTag(pdb, tagdb, tagstr);
+    ok(tagstr == 24, "Expected string tag to be 24, was %u\n", tagstr);
+    tag = pSdbGetTagFromTagID(pdb, tagstr);
+    ok(tag == TAG_NAME, "Expected tag to be TAG_NAME, was 0x%x\n", (DWORD)tag);
+    size = pSdbGetTagDataSize(pdb, tagstr);
+    ok(size == 4, "Expected size to be 4, was 0x%x\n", size);
+
     tagdb = pSdbFindNextTag(pdb, TAGID_ROOT, tagdb);
-    ok(tagdb == 24, "Expected tag to be 24, was %u\n", tagdb);
+    ok(tagdb == 30, "Expected tag to be 30, was %u\n", tagdb);
     size = pSdbGetTagDataSize(pdb, tagdb);
-    ok(size == 6, "Expected size to be 6, was %u\n", size);
+    ok(size == 12, "Expected size to be 12, was %u\n", size);
+
     tagstr = pSdbFindFirstTag(pdb, tagdb, TAG_NAME);
-    ok(tagstr == 30, "Expected string tag to be 30, was %u\n", tagstr);
+    ok(tagstr == 36, "Expected string tag to be 36, was %u\n", tagstr);
     tag = pSdbGetTagFromTagID(pdb, tagstr);
     ok(tag == TAG_NAME, "Expected tag to be TAG_NAME, was 0x%x\n", (DWORD)tag);
     size = pSdbGetTagDataSize(pdb, tagstr);
     ok(size == 4, "Expected size to be 4, was %u\n", size);
 
-    tagdb = pSdbFindFirstTag(pdb, TAGID_ROOT, TAG_STRINGTABLE);
-    ok(tagdb == 36, "Expected tag to be 36, was %u\n", tagdb);
-    size = pSdbGetTagDataSize(pdb, tagdb);
-    ok(size == 32, "Expected size to be 32, was %u\n", size);
-    tagstr = pSdbGetFirstChild(pdb, tagdb);
+    tagstr = pSdbFindNextTag(pdb, tagdb, tagstr);
     ok(tagstr == 42, "Expected string tag to be 42, was %u\n", tagstr);
     tag = pSdbGetTagFromTagID(pdb, tagstr);
-    ok(tag == TAG_STRINGTABLE_ITEM, "Expected tag to be TAG_STRINGTABLE_ITEM, was 0x%x\n", (DWORD)tag);
+    ok(tag == TAG_NAME, "Expected tag to be TAG_NAME, was 0x%x\n", (DWORD)tag);
     size = pSdbGetTagDataSize(pdb, tagstr);
-    ok(size == 10, "Expected size to be 10, was %u\n", size);
+    ok(size == 4, "Expected size to be 4, was 0x%x\n", size);
 
-    tagstr = pSdbGetNextChild(pdb, tagdb, tagstr);
-    ok(tagstr == 58, "Expected string tag to be 58, was %u\n", tagstr);
+    tagdb = pSdbFindFirstTag(pdb, TAGID_ROOT, TAG_STRINGTABLE);
+    ok(tagdb == 48, "Expected tag to be 48, was %u\n", tagdb);
+    size = pSdbGetTagDataSize(pdb, tagdb);
+    ok(size == 32, "Expected size to be 32, was %u\n", size);
+
+    tagstr = pSdbGetFirstChild(pdb, tagdb);
+    ok(tagstr == 54, "Expected string tag to be 54, was %u\n", tagstr);
     tag = pSdbGetTagFromTagID(pdb, tagstr);
     ok(tag == TAG_STRINGTABLE_ITEM, "Expected tag to be TAG_STRINGTABLE_ITEM, was 0x%x\n", (DWORD)tag);
     size = pSdbGetTagDataSize(pdb, tagstr);
     ok(size == 10, "Expected size to be 10, was %u\n", size);
+    ptr = pSdbGetStringTagPtr(pdb, tagstr);
+    ok(ptr != NULL, "Expected a valid pointer\n");
+    if (ptr)
+        ok(!wcscmp(ptr, test1), "Expected ptr to be %s, was %s\n", wine_dbgstr_w(test1), wine_dbgstr_w(ptr));
+
+    tagstr = pSdbGetNextChild(pdb, tagdb, tagstr);
+    ok(tagstr == 70, "Expected string tag to be 70, was %u\n", tagstr);
+    tag = pSdbGetTagFromTagID(pdb, tagstr);
+    ok(tag == TAG_STRINGTABLE_ITEM, "Expected tag to be TAG_STRINGTABLE_ITEM, was 0x%x\n", (DWORD)tag);
+    size = pSdbGetTagDataSize(pdb, tagstr);
+    ok(size == 10, "Expected size to be 10, was %u\n", size);
+    ptr = pSdbGetStringTagPtr(pdb, tagstr);
+    ok(ptr != NULL, "Expected a valid pointer\n");
+    if (ptr)
+        ok(!wcscmp(ptr, test2), "Expected ptr to be %s, was %s\n", wine_dbgstr_w(test2), wine_dbgstr_w(ptr));
 
     pSdbCloseDatabase(pdb);
 }
 
+
+static void write_db_strings(const WCHAR* name, const WCHAR* data[], size_t count)
+{
+    PDB pdb;
+    size_t n;
+    BOOL ret;
+
+    pdb = pSdbCreateDatabase(name, DOS_PATH);
+    ok(pdb != NULL, "Failed to create db for case %u\n", count);
+    for (n = 0; n < count; ++n)
+    {
+        ret = pSdbWriteStringTag(pdb, TAG_NAME, data[n]);
+        ok(ret, "Failed to write string %u/%u\n", n, count);
+    }
+    pSdbCloseDatabaseWrite(pdb);
+}
+
+static void test_stringtable()
+{
+    static const WCHAR path1[] = {'t','e','s','t','.','s','d','b',0};
+    static const WCHAR test1[] = {'t','e','s','t','1',0};
+    static const WCHAR test2[] = {'T','e','s','t','1',0};
+    static const WCHAR test3[] = {'T','E','s','t','1',0};
+    static const WCHAR test4[] = {'T','E','S','T','1',0};
+    static const WCHAR test5[] = {'T','E','S','T','2',0};
+    static const WCHAR lipsum[] = {'L','o','r','e','m',' ','i','p','s','u','m',' ','d','o','l','o','r',' ','s','i','t',' ','a','m','e','t',',',' ','c','o','n','s','e','c','t','e','t','u','r',' ','a','d','i','p','i','s','c','i','n','g',' ','e','l','i','t','.',' ','N','u','l','l','a',' ','a','n','t','e',' ','r','i','s','u','s',',',' ','m','a','l','e','s','u','a','d','a',' ','s','e','d',' ','i','a','c','u','l','i','s',' ','l','u','c','t','u','s',',',' ','o','r','n','a','r','e',' ','p','u','l','v','i','n','a','r',' ','v','e','l','i','t','.',' ','L','o','r','e','m',' ','i','p','s','u','m',' ','d','o','l','o','r',' ','s','i','t',' ','a','m','e','t',',',' ','c','o','n','s','e','c','t','e','t','u','r',' ','a','d','i','p','i','s','c','i','n','g',' ','e','l','i','t','.',' ','I','n','t','e','g','e','r',' ','q','u','i','s',' ','f','e','l','i','s',' ','u','t',' ','l','e','o',' ','e','l','e','i','f','e','n','d',' ','u','l','t','r','i','c','e','s',' ','f','i','n','i','b','u','s',' ','e','u',' ','d','o','l','o','r','.',' ','I','n',' ','b','i','b','e','n','d','u','m',',',' ','e','r','o','s',' ','e','u',' ','f','a','u','c','i','b','u','s',' ','c','o','n','s','e','q','u','a','t',',',' ','n','i','s','i',' ','m','a','g','n','a',' ','v','e','n','e','n','a','t','i','s',' ','j','u','s','t','o',',',' ','a','t',' ','t','r','i','s','t','i','q','u','e',' ','m','e','t','u','s',' ','d','o','l','o','r',' ','u','t',' ','r','i','s','u','s','.',' ','N','u','n','c',' ','e','u',' ','o','d','i','o',' ','d','i','g','n','i','s','s','i','m',',',' ','o','r','n','a','r','e',' ','a','n','t','e',' ','g','r','a','v','i','d','a',',',' ','l','o','b','o','r','t','i','s',' ','e','r','o','s','.',' ','C','r','a','s',' ','s','e','m',' ','e','x',',',' ','c','o','n','s','e','c','t','e','t','u','r',' ','p','u','l','v','i','n','a','r',' ','t','i','n','c','i','d','u','n','t',' ','e','u',',',' ','c','o','n','g','u','e',' ','a',' ','e','r','o','s','.',' ','C','u','r','a','b','i','t','u','r',' ','e','r','o','s',' ','e','r','a','t',',',' ','p','e','l','l','e','n','t','e','s','q','u','e',' ','e','t',' ','n','i','b','h',' ','q','u','i','s',',',' ','i','n','t','e','r','d','u','m',' ','t','e','m','p','o','r',' ','o','d','i','o','.',' ','E','t','i','a','m',' ','s','a','p','i','e','n',' ','s','a','p','i','e','n',',',' ','a','l','i','q','u','a','m',' ','u','t',' ','a','l','i','q','u','a','m',' ','a','t',',',' ','s','a','g','i','t','t','i','s',' ','e','u',' ','m','a','g','n','a','.',' ','M','a','e','c','e','n','a','s',' ','m','a','g','n','a',' ','m','a','g','n','a',',',' ','s','u','s','c','i','p','i','t',' ','u','t',' ','l','o','r','e','m',' ','u','t',',',' ','v','a','r','i','u','s',' ','p','r','e','t','i','u','m',' ','f','e','l','i','s','.',' ','I','n','t','e','g','e','r',' ','t','i','n','c','i','d','u','n','t',',',' ','m','e','t','u','s',' ','v','e','l',' ','s','o','l','l','i','c','i','t','u','d','i','n',' ','f','i','n','i','b','u','s',',',' ','f','e','l','i','s',' ','e','r','a','t',' ','m','o','l','e','s','t','i','e',' ','u','r','n','a',',',' ','a',' ','c','o','n','d','i','m','e','n','t','u','m',' ','a','u','g','u','e',' ','a','r','c','u',' ','v','i','t','a','e',' ','r','i','s','u','s','.',' ','E','t','i','a','m',' ','i','d',' ','s','a','g','i','t','t','i','s',' ','q','u','a','m','.',' ','M','o','r','b','i',' ','a',' ','u','l','t','r','i','c','i','e','s',' ','n','u','n','c','.',' ','P','h','a','s','e','l','l','u','s',' ','e','r','o','s',' ','r','i','s','u','s',',',' ','c','u','r','s','u','s',' ','u','l','l','a','m','c','o','r','p','e','r',' ','m','a','s','s','a',' ','s','e','d',',',' ','d','i','g','n','i','s','s','i','m',' ','c','o','n','s','e','q','u','a','t',' ','l','i','g','u','l','a','.',' ','A','l','i','q','u','a','m',' ','t','u','r','p','i','s',' ','a','r','c','u',',',' ','a','c','c','u','m','s','a','n',' ','q','u','i','s',' ','s','a','p','i','e','n',' ','v','i','t','a','e',',',' ','l','a','c','i','n','i','a',' ','e','u','i','s','m','o','d',' ','n','i','s','l','.',' ','M','a','u','r','i','s',' ','i','d',' ','f','e','l','i','s',' ','s','e','m','.',0};
+    /* Last char changed from '.' to '!' */
+    static const WCHAR lipsum2[] = {'L','o','r','e','m',' ','i','p','s','u','m',' ','d','o','l','o','r',' ','s','i','t',' ','a','m','e','t',',',' ','c','o','n','s','e','c','t','e','t','u','r',' ','a','d','i','p','i','s','c','i','n','g',' ','e','l','i','t','.',' ','N','u','l','l','a',' ','a','n','t','e',' ','r','i','s','u','s',',',' ','m','a','l','e','s','u','a','d','a',' ','s','e','d',' ','i','a','c','u','l','i','s',' ','l','u','c','t','u','s',',',' ','o','r','n','a','r','e',' ','p','u','l','v','i','n','a','r',' ','v','e','l','i','t','.',' ','L','o','r','e','m',' ','i','p','s','u','m',' ','d','o','l','o','r',' ','s','i','t',' ','a','m','e','t',',',' ','c','o','n','s','e','c','t','e','t','u','r',' ','a','d','i','p','i','s','c','i','n','g',' ','e','l','i','t','.',' ','I','n','t','e','g','e','r',' ','q','u','i','s',' ','f','e','l','i','s',' ','u','t',' ','l','e','o',' ','e','l','e','i','f','e','n','d',' ','u','l','t','r','i','c','e','s',' ','f','i','n','i','b','u','s',' ','e','u',' ','d','o','l','o','r','.',' ','I','n',' ','b','i','b','e','n','d','u','m',',',' ','e','r','o','s',' ','e','u',' ','f','a','u','c','i','b','u','s',' ','c','o','n','s','e','q','u','a','t',',',' ','n','i','s','i',' ','m','a','g','n','a',' ','v','e','n','e','n','a','t','i','s',' ','j','u','s','t','o',',',' ','a','t',' ','t','r','i','s','t','i','q','u','e',' ','m','e','t','u','s',' ','d','o','l','o','r',' ','u','t',' ','r','i','s','u','s','.',' ','N','u','n','c',' ','e','u',' ','o','d','i','o',' ','d','i','g','n','i','s','s','i','m',',',' ','o','r','n','a','r','e',' ','a','n','t','e',' ','g','r','a','v','i','d','a',',',' ','l','o','b','o','r','t','i','s',' ','e','r','o','s','.',' ','C','r','a','s',' ','s','e','m',' ','e','x',',',' ','c','o','n','s','e','c','t','e','t','u','r',' ','p','u','l','v','i','n','a','r',' ','t','i','n','c','i','d','u','n','t',' ','e','u',',',' ','c','o','n','g','u','e',' ','a',' ','e','r','o','s','.',' ','C','u','r','a','b','i','t','u','r',' ','e','r','o','s',' ','e','r','a','t',',',' ','p','e','l','l','e','n','t','e','s','q','u','e',' ','e','t',' ','n','i','b','h',' ','q','u','i','s',',',' ','i','n','t','e','r','d','u','m',' ','t','e','m','p','o','r',' ','o','d','i','o','.',' ','E','t','i','a','m',' ','s','a','p','i','e','n',' ','s','a','p','i','e','n',',',' ','a','l','i','q','u','a','m',' ','u','t',' ','a','l','i','q','u','a','m',' ','a','t',',',' ','s','a','g','i','t','t','i','s',' ','e','u',' ','m','a','g','n','a','.',' ','M','a','e','c','e','n','a','s',' ','m','a','g','n','a',' ','m','a','g','n','a',',',' ','s','u','s','c','i','p','i','t',' ','u','t',' ','l','o','r','e','m',' ','u','t',',',' ','v','a','r','i','u','s',' ','p','r','e','t','i','u','m',' ','f','e','l','i','s','.',' ','I','n','t','e','g','e','r',' ','t','i','n','c','i','d','u','n','t',',',' ','m','e','t','u','s',' ','v','e','l',' ','s','o','l','l','i','c','i','t','u','d','i','n',' ','f','i','n','i','b','u','s',',',' ','f','e','l','i','s',' ','e','r','a','t',' ','m','o','l','e','s','t','i','e',' ','u','r','n','a',',',' ','a',' ','c','o','n','d','i','m','e','n','t','u','m',' ','a','u','g','u','e',' ','a','r','c','u',' ','v','i','t','a','e',' ','r','i','s','u','s','.',' ','E','t','i','a','m',' ','i','d',' ','s','a','g','i','t','t','i','s',' ','q','u','a','m','.',' ','M','o','r','b','i',' ','a',' ','u','l','t','r','i','c','i','e','s',' ','n','u','n','c','.',' ','P','h','a','s','e','l','l','u','s',' ','e','r','o','s',' ','r','i','s','u','s',',',' ','c','u','r','s','u','s',' ','u','l','l','a','m','c','o','r','p','e','r',' ','m','a','s','s','a',' ','s','e','d',',',' ','d','i','g','n','i','s','s','i','m',' ','c','o','n','s','e','q','u','a','t',' ','l','i','g','u','l','a','.',' ','A','l','i','q','u','a','m',' ','t','u','r','p','i','s',' ','a','r','c','u',',',' ','a','c','c','u','m','s','a','n',' ','q','u','i','s',' ','s','a','p','i','e','n',' ','v','i','t','a','e',',',' ','l','a','c','i','n','i','a',' ','e','u','i','s','m','o','d',' ','n','i','s','l','.',' ','M','a','u','r','i','s',' ','i','d',' ','f','e','l','i','s',' ','s','e','m','!',0};
+    static const WCHAR empty[] = {0};
+    static const WCHAR* all[] = { test1, test2, test3, test4, test5, lipsum, lipsum2, empty };
+    static const TAGID expected_str[] = { 0xc, 0x12, 0x18, 0x1e, 0x24, 0x2a, 0x30, 0x36 };
+    static const TAGID expected_tab[] = { 6, 0x18, 0x2a, 0x3c, 0x4e, 0x60, 0x846, 0x102c };
+    size_t n, j;
+
+    for (n = 0; n < (sizeof(all) / sizeof(all[0])); ++n)
+    {
+        PDB pdb;
+        TAGID tagstr, table, expected_table;
+
+        write_db_strings(path1, all, n+1);
+
+        pdb = pSdbOpenDatabase(path1, DOS_PATH);
+        ok(pdb != NULL, "Expected a valid database\n");
+        if (!pdb)
+        {
+            DeleteFileW(path1);
+            continue;
+        }
+        tagstr = pSdbFindFirstTag(pdb, TAGID_ROOT, TAG_NAME);
+        for (j = 0; j <= n; ++j)
+        {
+            ok(tagstr == expected_str[j], "Expected tagstr to be 0x%x, was 0x%x for %u/%u\n", expected_str[j], tagstr, j, n);
+            if (tagstr)
+            {
+                LPWSTR data;
+                DWORD size;
+                TAG tag = pSdbGetTagFromTagID(pdb, tagstr);
+                ok(tag == TAG_NAME, "Expected tag to be TAG_NAME, was 0x%x for %u/%u\n", tag, j, n);
+                size = pSdbGetTagDataSize(pdb, tagstr);
+                ok(size == 4, "Expected datasize to be 4, was %u for %u/%u\n", size, j, n);
+                data = pSdbGetStringTagPtr(pdb, tagstr);
+                ok(data && !wcsicmp(data, all[j]), "Expected data to be %s was %s for %u/%u\n", wine_dbgstr_w(all[j]), wine_dbgstr_w(data), j, n);
+            }
+            tagstr = pSdbFindNextTag(pdb, TAGID_ROOT, tagstr);
+        }
+        ok(tagstr == TAGID_NULL, "Expected to be at the end for %u\n", n);
+
+
+        table = pSdbFindFirstTag(pdb, TAGID_ROOT, TAG_STRINGTABLE);
+        expected_table = 0xc + (n+1)*6;
+        ok(table == expected_table, "Expected to find a stringtable at 0x%x instead of 0x%x for %u\n", expected_table, table, n);
+        if (table)
+        {
+            tagstr = pSdbFindFirstTag(pdb, table, TAG_STRINGTABLE_ITEM);
+            for (j = 0; j <= n; ++j)
+            {
+                ok(tagstr == (expected_tab[j] + expected_table), "Expected tagstr to be 0x%x, was 0x%x for %u/%u\n", (expected_tab[j] + expected_table), tagstr, j, n);
+                if (tagstr)
+                {
+                    LPWSTR data;
+                    DWORD size, expected_size;
+                    TAG tag = pSdbGetTagFromTagID(pdb, tagstr);
+                    ok(tag == TAG_STRINGTABLE_ITEM, "Expected tag to be TAG_NAME, was 0x%x for %u/%u\n", tag, j, n);
+                    size = pSdbGetTagDataSize(pdb, tagstr);
+                    expected_size = (lstrlenW(all[j])+1) * 2;
+                    ok(size == expected_size, "Expected datasize to be %u, was %u for %u/%u\n", expected_size, size, j, n);
+                    data = pSdbGetStringTagPtr(pdb, tagstr);
+                    ok(data && !wcsicmp(data, all[j]), "Expected data to be %s was %s for %u/%u\n", wine_dbgstr_w(all[j]), wine_dbgstr_w(data), j, n);
+                }
+                tagstr = pSdbFindNextTag(pdb, TAGID_ROOT, tagstr);
+            }
+            ok(tagstr == TAGID_NULL, "Expected to be at the end for %u\n", n);
+        }
+
+        pSdbCloseDatabase(pdb);
+        DeleteFileW(path1);
+    }
+}
 
 static void match_str_attr_imp(PDB pdb, TAGID parent, TAG find, const char* compare)
 {
@@ -876,5 +1004,6 @@ START_TEST(db)
 
     test_Sdb();
     test_write_ex();
+    test_stringtable();
     test_CheckDatabaseManually();
 }
