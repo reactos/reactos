@@ -1156,9 +1156,7 @@ static LRESULT CFn_WMPaint(HWND hDlg, WPARAM wParam, LPARAM lParam, const CHOOSE
         MapWindowPoints( 0, hDlg, (LPPOINT) &info.rcWindow, 2);
         hdc = BeginPaint( hDlg, &ps );
 
-        TRACE("erase %d, rect=(%d,%d)-(%d,%d)\n", ps.fErase,
-              ps.rcPaint.left, ps.rcPaint.top,
-              ps.rcPaint.right, ps.rcPaint.bottom);
+        TRACE("erase %d, rect=%s\n", ps.fErase, wine_dbgstr_rect(&ps.rcPaint));
 
         /* Paint frame */
         DrawEdge( hdc, &info.rcWindow, EDGE_SUNKEN, BF_RECT|BF_ADJUST );
