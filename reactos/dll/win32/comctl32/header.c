@@ -70,6 +70,7 @@ typedef struct
     INT       iHotItem;		/* index of hot item (cursor is over this item) */
     INT       iHotDivider;      /* index of the hot divider (used while dragging an item or by HDM_SETHOTDIVIDER) */
     INT       iMargin;          /* width of the margin that surrounds a bitmap */
+    INT       filter_change_timeout; /* change timeout set with HDM_SETFILTERCHANGETIMEOUT */
 
     HIMAGELIST  himl;		/* handle to an image list (may be 0) */
     HEADER_ITEM *items;		/* pointer to array of HEADER_ITEM's */
@@ -991,7 +992,7 @@ HEADER_FreeCallbackItems(HEADER_ITEM *lpItem)
         lpItem->iImage = I_IMAGECALLBACK;
 }
 
-static LRESULT
+static HIMAGELIST
 HEADER_CreateDragImage (HEADER_INFO *infoPtr, INT iItem)
 {
     HEADER_ITEM *lpItem;
@@ -1005,7 +1006,7 @@ HEADER_CreateDragImage (HEADER_INFO *infoPtr, INT iItem)
     HFONT hFont;
     
     if (iItem >= infoPtr->uNumItem)
-        return FALSE;
+        return NULL;
 
     if (!infoPtr->bRectsValid)
         HEADER_SetItemBounds(infoPtr);
@@ -1033,12 +1034,12 @@ HEADER_CreateDragImage (HEADER_INFO *infoPtr, INT iItem)
     DeleteDC(hMemoryDC);
     
     if (hMemory == NULL)    /* if anything failed */
-        return FALSE;
-    
+        return NULL;
+
     himl = ImageList_Create(width, height, ILC_COLORDDB, 1, 1);
     ImageList_Add(himl, hMemory, NULL);
     DeleteObject(hMemory);
-    return (LRESULT)himl;
+    return himl;
 }
 
 static LRESULT
@@ -1526,6 +1527,7 @@ HEADER_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
     infoPtr->iMargin = 3*GetSystemMetrics(SM_CXEDGE);
     infoPtr->nNotifyFormat =
 	SendMessageW (infoPtr->hwndNotify, WM_NOTIFYFORMAT, (WPARAM)hwnd, NF_QUERY);
+    infoPtr->filter_change_timeout = 1000;
 
     hdc = GetDC (0);
     hOldFont = SelectObject (hdc, GetStockObject (SYSTEM_FONT));
@@ -1822,7 +1824,7 @@ HEADER_MouseMove (HEADER_INFO *infoPtr, LPARAM lParam)
 	{
             if (!HEADER_SendNotifyWithHDItemT(infoPtr, HDN_BEGINDRAG, infoPtr->iMoveItem, NULL))
 	    {
-		HIMAGELIST hDragItem = (HIMAGELIST)HEADER_CreateDragImage(infoPtr, infoPtr->iMoveItem);
+		HIMAGELIST hDragItem = HEADER_CreateDragImage(infoPtr, infoPtr->iMoveItem);
 		if (hDragItem != NULL)
 		{
 		    HEADER_ITEM *lpItem = &infoPtr->items[infoPtr->iMoveItem];
@@ -2040,6 +2042,14 @@ static LRESULT HEADER_ThemeChanged(const HEADER_INFO *infoPtr)
     return 0;
 }
 
+static INT HEADER_SetFilterChangeTimeout(HEADER_INFO *infoPtr, INT timeout)
+{
+    INT old_timeout = infoPtr->filter_change_timeout;
+
+    if (timeout != 0)
+        infoPtr->filter_change_timeout = timeout;
+    return old_timeout;
+}
 
 static LRESULT WINAPI
 HEADER_WindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -2053,7 +2063,7 @@ HEADER_WindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 /*	case HDM_CLEARFILTER: */
 
 	case HDM_CREATEDRAGIMAGE:
-	    return HEADER_CreateDragImage (infoPtr, (INT)wParam);
+	    return (LRESULT)HEADER_CreateDragImage (infoPtr, (INT)wParam);
 
 	case HDM_DELETEITEM:
 	    return HEADER_DeleteItem (infoPtr, (INT)wParam);
@@ -2098,7 +2108,8 @@ HEADER_WindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case HDM_SETBITMAPMARGIN:
 	    return HEADER_SetBitmapMargin(infoPtr, (INT)wParam);
 
-/*	case HDM_SETFILTERCHANGETIMEOUT: */
+        case HDM_SETFILTERCHANGETIMEOUT:
+            return HEADER_SetFilterChangeTimeout(infoPtr, (INT)lParam);
 
         case HDM_SETHOTDIVIDER:
             return HEADER_SetHotDivider(infoPtr, wParam, lParam);

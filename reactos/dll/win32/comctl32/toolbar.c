@@ -1290,9 +1290,7 @@ TOOLBAR_MeasureString(const TOOLBAR_INFO *infoPtr, const TBUTTON_INFO *btnPtr,
 	    GetTextExtentPoint32W (hdc, lpText, strlenW (lpText), lpSize);
 
 	    /* feed above size into the rectangle for DrawText */
-	    myrect.left = myrect.top = 0;
-	    myrect.right = lpSize->cx;
-	    myrect.bottom = lpSize->cy;
+            SetRect(&myrect, 0, 0, lpSize->cx, lpSize->cy);
 
 	    /* Use DrawText to get true size as drawn (less pesky "&") */
 	    DrawTextW (hdc, lpText, -1, &myrect, DT_VCENTER | DT_SINGLELINE |
@@ -7017,7 +7015,7 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_SYSCOLORCHANGE:
 	    return TOOLBAR_SysColorChange ();
             
-    case WM_THEMECHANGED:
+        case WM_THEMECHANGED:
 #ifdef __REACTOS__
         return TOOLBAR_ThemeChanged(hwnd);
 #else

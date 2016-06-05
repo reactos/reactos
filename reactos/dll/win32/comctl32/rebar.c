@@ -790,15 +790,11 @@ REBAR_CalcHorzBand (const REBAR_INFO *infoPtr, UINT rstart, UINT rend)
 
       /* flag if notify required and invalidate rectangle */
       if (lpBand->fDraw & NTF_INVALIDATE) {
-          TRACE("invalidating (%d,%d)-(%d,%d)\n",
-		lpBand->rcBand.left,
-		lpBand->rcBand.top,
-		lpBand->rcBand.right + SEP_WIDTH,
-		lpBand->rcBand.bottom + SEP_WIDTH);
 	  lpBand->fDraw &= ~NTF_INVALIDATE;
 	  work = lpBand->rcBand;
 	  work.right += SEP_WIDTH;
 	  work.bottom += SEP_WIDTH;
+	  TRACE("invalidating %s\n", wine_dbgstr_rect(&work));
 	  InvalidateRect(infoPtr->hwndSelf, &work, TRUE);
 	  if (lpBand->hwndChild) InvalidateRect(lpBand->hwndChild, NULL, TRUE);
       }
@@ -911,15 +907,11 @@ REBAR_CalcVertBand (const REBAR_INFO *infoPtr, UINT rstart, UINT rend)
 	}
 
 	if (lpBand->fDraw & NTF_INVALIDATE) {
-            TRACE("invalidating (%d,%d)-(%d,%d)\n",
-                  rcBand.left,
-                  rcBand.top,
-                  rcBand.right + SEP_WIDTH,
-                  rcBand.bottom + SEP_WIDTH);
 	    lpBand->fDraw &= ~NTF_INVALIDATE;
 	    work = rcBand;
 	    work.bottom += SEP_WIDTH;
 	    work.right += SEP_WIDTH;
+	    TRACE("invalidating %s\n", wine_dbgstr_rect(&work));
 	    InvalidateRect(infoPtr->hwndSelf, &work, TRUE);
 	    if (lpBand->hwndChild) InvalidateRect(lpBand->hwndChild, NULL, TRUE);
 	}
