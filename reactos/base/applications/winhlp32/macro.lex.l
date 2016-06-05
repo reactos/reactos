@@ -163,7 +163,7 @@ static int MACRO_CheckArgs(void* pa[], unsigned max, const char* args)
     int t;
     unsigned int len = 0, idx = 0;
 
-    WINE_TRACE("Checking %s\n", args);
+    WINE_TRACE("Checking %s\n", debugstr_a(args));
 
     if (yylex() != '(') {WINE_WARN("missing (\n");return -1;}
 
@@ -173,7 +173,7 @@ static int MACRO_CheckArgs(void* pa[], unsigned max, const char* args)
         for (;;)
         {
             t = yylex();
-            WINE_TRACE("Got %s <=> %c\n", ts(t), *args);
+            WINE_TRACE("Got %s <=> %c\n", debugstr_a(ts(t)), *args);
 
             switch (*args)
             {
@@ -195,7 +195,7 @@ static int MACRO_CheckArgs(void* pa[], unsigned max, const char* args)
                     return -1;
                 break;
             default: 
-                WINE_WARN("unexpected %s while args is %c\n", ts(t), *args);
+                WINE_WARN("unexpected %s while args is %c\n", debugstr_a(ts(t)), *args);
                 return -1;
             }
             idx++;
@@ -320,7 +320,7 @@ BOOL MACRO_ExecuteMacro(WINHELP_WINDOW* window, LPCSTR macro)
     BOOL ret = TRUE;
     int t;
 
-    WINE_TRACE("%s\n", wine_dbgstr_a(macro));
+    WINE_TRACE("%s\n", debugstr_a(macro));
 
     prev_lex_data = lex_data;
     lex_data = &curr_lex_data;
@@ -334,14 +334,14 @@ BOOL MACRO_ExecuteMacro(WINHELP_WINDOW* window, LPCSTR macro)
         switch (t)
         {
         case VOID_FUNCTION:
-            WINE_TRACE("got type void func(%s)\n", yylval.proto);
+            WINE_TRACE("got type void func(%s)\n", debugstr_a(yylval.proto));
             MACRO_CallVoidFunc(yylval.function, yylval.proto);
             break;
         case BOOL_FUNCTION:
-            WINE_WARN("got type bool func(%s)\n", yylval.proto);
+            WINE_WARN("got type bool func(%s)\n", debugstr_a(yylval.proto));
             break;
         default:
-            WINE_WARN("got unexpected type %s\n", ts(t));
+            WINE_WARN("got unexpected type %s\n", debugstr_a(ts(t)));
             YY_FLUSH_BUFFER;
             ret = FALSE;
             goto done;
