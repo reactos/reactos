@@ -584,7 +584,7 @@ RegisterProgmanWindowClass(VOID)
 HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
 {
     HWND hWndDesk;
-    RECT rcDesk;
+    DWORD x, y, cx, cy;
 
     if (ShellDesk == NULL)
     {
@@ -598,21 +598,21 @@ HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
         return NULL;
     }
 
-    rcDesk.left   = GetSystemMetrics(SM_XVIRTUALSCREEN);
-    rcDesk.top    = GetSystemMetrics(SM_YVIRTUALSCREEN);
-    rcDesk.right  = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-    rcDesk.bottom = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    x  = GetSystemMetrics(SM_XVIRTUALSCREEN);
+    y  = GetSystemMetrics(SM_YVIRTUALSCREEN);
+    cx = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    cy = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
     if (IsRectEmpty(&rcDesk))
     {
-        rcDesk.left = rcDesk.top = 0;
-        rcDesk.right  = GetSystemMetrics(SM_CXSCREEN);
-        rcDesk.bottom = GetSystemMetrics(SM_CYSCREEN);
+        x = rcDesk.top = 0;
+        cx = GetSystemMetrics(SM_CXSCREEN);
+        cy = GetSystemMetrics(SM_CYSCREEN);
     }
 
     hWndDesk = CreateWindowExW(WS_EX_TOOLWINDOW, szProgmanClassName, szProgmanWindowName,
         WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
-        rcDesk.left, rcDesk.top, rcDesk.right, rcDesk.bottom,
+        x, y, cx, cy,
         NULL, NULL, shell32_hInstance, (LPVOID)ShellDesk);
     if (hWndDesk != NULL)
         return (HANDLE)GetWindowLongPtrW(hWndDesk, 0);
