@@ -29,16 +29,14 @@
 
 #define COBJMACROS
 
-#ifdef STANDALONE
-#include "initguid.h"
-#endif
-
 #include "unknwn.h"
 #include "uuids.h"
 #include "mmdeviceapi.h"
 #include "mmsystem.h"
 #include "audioclient.h"
 #include "audiopolicy.h"
+#include "initguid.h"
+#include "endpointvolume.h"
 
 static const unsigned int win_formats[][4] = {
     { 8000,  8, 1},   { 8000,  8, 2},   { 8000, 16, 1},   { 8000, 16, 2},
@@ -729,7 +727,7 @@ static void test_padding(void)
     ok(defp == 100000 || broken(defp == 101587) || defp == 200000,
        "Expected 10ms default period: %u\n", (ULONG)defp);
     ok(minp != 0, "Minimum period is 0\n");
-    ok(minp <= defp, "Mininum period is greater than default period\n");
+    ok(minp <= defp, "Minimum period is greater than default period\n");
 
     hr = IAudioClient_GetService(ac, &IID_IAudioRenderClient, (void**)&arc);
     ok(hr == S_OK, "GetService failed: %08x\n", hr);
@@ -951,8 +949,9 @@ static void test_clock(int share)
     ok(gbsize == bufsize,
        "BufferSize %u at rate %u\n", gbsize, pwfx->nSamplesPerSec);
     else
-    ok(gbsize == parts * fragment || gbsize == MulDiv(bufsize, 1, 1024) * 1024,
-       "BufferSize %u misfits fragment size %u at rate %u\n", gbsize, fragment, pwfx->nSamplesPerSec);
+        todo_wine
+        ok(gbsize == parts * fragment || gbsize == MulDiv(bufsize, 1, 1024) * 1024,
+           "BufferSize %u misfits fragment size %u at rate %u\n", gbsize, fragment, pwfx->nSamplesPerSec);
 
     /* In shared mode, GetCurrentPadding decreases in multiples of
      * fragment size (i.e. updated only at period ticks), whereas
@@ -2242,6 +2241,44 @@ static void test_marshal(void)
 
 }
 
+static void test_endpointvolume(void)
+{
+    HRESULT hr;
+    IAudioEndpointVolume *aev;
+    float mindb, maxdb, increment, volume;
+    BOOL mute;
+
+    hr = IMMDevice_Activate(dev, &IID_IAudioEndpointVolume,
+            CLSCTX_INPROC_SERVER, NULL, (void**)&aev);
+    ok(hr == S_OK, "Activation failed with %08x\n", hr);
+    if(hr != S_OK)
+        return;
+
+    hr = IAudioEndpointVolume_GetVolumeRange(aev, &mindb, NULL, NULL);
+    ok(hr == E_POINTER, "GetVolumeRange should have failed with E_POINTER: 0x%08x\n", hr);
+
+    hr = IAudioEndpointVolume_GetVolumeRange(aev, &mindb, &maxdb, &increment);
+    ok(hr == S_OK, "GetVolumeRange failed: 0x%08x\n", hr);
+    trace("got range: [%f,%f]/%f\n", mindb, maxdb, increment);
+
+    hr = IAudioEndpointVolume_SetMasterVolumeLevel(aev, mindb - increment, NULL);
+    ok(hr == E_INVALIDARG, "SetMasterVolumeLevel failed: 0x%08x\n", hr);
+
+    hr = IAudioEndpointVolume_GetMasterVolumeLevel(aev, &volume);
+    ok(hr == S_OK, "GetMasterVolumeLevel failed: 0x%08x\n", hr);
+
+    hr = IAudioEndpointVolume_SetMasterVolumeLevel(aev, volume, NULL);
+    ok(hr == S_OK, "SetMasterVolumeLevel failed: 0x%08x\n", hr);
+
+    hr = IAudioEndpointVolume_GetMute(aev, &mute);
+    ok(hr == S_OK, "GetMute failed: %08x\n", hr);
+
+    hr = IAudioEndpointVolume_SetMute(aev, mute, NULL);
+    ok(hr == S_OK || hr == S_FALSE, "SetMute failed: %08x\n", hr);
+
+    IAudioEndpointVolume_Release(aev);
+}
+
 START_TEST(render)
 {
     HRESULT hr;
@@ -2283,6 +2320,7 @@ START_TEST(render)
     test_volume_dependence();
     test_session_creation();
     test_worst_case();
+    test_endpointvolume();
 
     IMMDevice_Release(dev);
 
