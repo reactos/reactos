@@ -462,10 +462,8 @@ static void test_image_load(void)
 
     if (img)
     {
-        todo_wine
         ok(!strcmp(img->ModuleName, temp_file),
            "unexpected ModuleName, got %s instead of %s\n", img->ModuleName, temp_file);
-        todo_wine
         ok(img->MappedAddress != NULL, "MappedAddress != NULL\n");
         if (img->MappedAddress)
         {
@@ -475,11 +473,9 @@ static void test_image_load(void)
         ok(img->FileHeader != NULL, "FileHeader != NULL\n");
         if (img->FileHeader)
         {
-            todo_wine
             ok(!memcmp(img->FileHeader, &bin.nt_headers, sizeof(bin.nt_headers)),
                 "FileHeader doesn't point to IMAGE_NT_HEADERS32\n");
         }
-        todo_wine
         ok(img->NumberOfSections == 3,
            "unexpected NumberOfSections, got %d instead of 3\n", img->NumberOfSections);
         if (img->NumberOfSections >= 3)
@@ -494,7 +490,6 @@ static void test_image_load(void)
                "unexpected name for section 2, expected .idata, got %s\n",
                (const char *)img->Sections[2].Name);
         }
-        todo_wine
         ok(img->Characteristics == 0x102,
            "unexpected Characteristics, got 0x%x instead of 0x102\n", img->Characteristics);
         ok(img->fSystemImage == 0,
@@ -507,7 +502,6 @@ static void test_image_load(void)
         todo_wine
         ok(img->Version == 1 || broken(!img->Version) /* <= WinXP */,
            "unexpected Version, got %d instead of 1\n", img->Version);
-        todo_wine
         ok(img->SizeOfImage == 0x600,
            "unexpected SizeOfImage, got 0x%x instead of 0x600\n", img->SizeOfImage);
 
