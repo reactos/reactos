@@ -2610,9 +2610,10 @@ HandleTrayContextMenu:
 
     LRESULT OnDoExitWindows(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        /* 
+        /*
          * TWM_DOEXITWINDOWS is send by the CDesktopBrowser to us
-         * to show the shutdown dialog.
+         * to show the shutdown dialog. Also a WM_CLOSE message sent
+         * by apps should show the dialog.
          */
         return DoExitWindows();
     }
@@ -2868,6 +2869,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_APP_TRAYDESTROY, OnAppTrayDestroy)
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
+        MESSAGE_HANDLER(WM_CLOSE, OnDoExitWindows)
         MESSAGE_HANDLER(WM_HOTKEY, OnHotkey)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
