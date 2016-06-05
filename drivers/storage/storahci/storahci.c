@@ -99,6 +99,7 @@ BOOLEAN AhciAllocateResourceForAdapter(
         portCount++;
         portImplemented &= (portImplemented-1);
     }
+    StorPortDebugPrint(0, "\tPort Count: %d\n", portCount);
 
     nonCachedExtensionSize =    sizeof(AHCI_COMMAND_HEADER) * AlignedNCS + //should be 1K aligned
                                 sizeof(AHCI_RECEIVED_FIS);
@@ -118,6 +119,8 @@ BOOLEAN AhciAllocateResourceForAdapter(
     
 
     // allocate memory for port extension
+    /* --> Allocate memory for port extension, but right now it is returning STOR_STATUS_NOT_IMPLEMENTED
+    so, for testing purpose, I allocated during driver entry itself.
     status = StorPortAllocatePool(
                     adapterExtension, 
                     portCount * sizeof(AHCI_PORT_EXTENSION),
@@ -125,24 +128,24 @@ BOOLEAN AhciAllocateResourceForAdapter(
                     (PVOID*)&portsExtension);
 
     if (status != STOR_STATUS_SUCCESS){
-        StorPortDebugPrint(0, "\tstatus != STOR_STATUS_SUCCESS\n");
+        StorPortDebugPrint(0, "\tstatus : %x\n", status);
         return FALSE;
     }
 
     AhciZeroMemory((PCHAR)portsExtension, portCount * sizeof(AHCI_PORT_EXTENSION));
-
+    */
     nonCachedExtensionSize /= portCount;
     currentCount = 0;
     for (index = 0; index < 32; index++)
     {
         if ((adapterExtension->PortImplemented & (1<<index)) != 0)
         {
-            adapterExtension->PortExtension[index] = (PAHCI_PORT_EXTENSION)((PCHAR)portsExtension + sizeof(AHCI_PORT_EXTENSION) * currentCount);
+            //adapterExtension->PortExtension[index] = (PAHCI_PORT_EXTENSION)((PCHAR)portsExtension + sizeof(AHCI_PORT_EXTENSION) * currentCount);
 
-            adapterExtension->PortExtension[index]->PortNumber = index;
-            adapterExtension->PortExtension[index]->AdapterExtension = adapterExtension;
-            adapterExtension->PortExtension[index]->CommandList = (PAHCI_COMMAND_HEADER)(nonCachedExtension + (currentCount*nonCachedExtensionSize));
-            adapterExtension->PortExtension[index]->ReceivedFIS = (PAHCI_RECEIVED_FIS)((PCHAR)adapterExtension->PortExtension[index]->CommandList + sizeof(AHCI_COMMAND_HEADER) * AlignedNCS);
+            adapterExtension->PortExtension[index].PortNumber = index;
+            adapterExtension->PortExtension[index].AdapterExtension = adapterExtension;
+            adapterExtension->PortExtension[index].CommandList = (PAHCI_COMMAND_HEADER)(nonCachedExtension + (currentCount*nonCachedExtensionSize));
+            adapterExtension->PortExtension[index].ReceivedFIS = (PAHCI_RECEIVED_FIS)((PCHAR)adapterExtension->PortExtension[index].CommandList + sizeof(AHCI_COMMAND_HEADER) * AlignedNCS);
             currentCount++;
         }
     }
@@ -401,6 +404,10 @@ ULONG AhciHwFindAdapter(
     ConfigInfo->SynchronizationModel = StorSynchronizeFullDuplex;
     ConfigInfo->ScatterGather = TRUE;
 
+    // Turn IE -- Interrupt Enabled
+    ghc |= 0x2;
+    StorPortWriteRegisterUlong(adapterExtension, &abar->GHC, ghc);
+    
     // allocate necessary resource for each port
     if (!AhciAllocateResourceForAdapter(adapterExtension, ConfigInfo)){
         StorPortDebugPrint(0, "\tAhciAllocateResourceForAdapter() == FALSE\n");
@@ -410,12 +417,8 @@ ULONG AhciHwFindAdapter(
     for (index = 0; index < 32; index++)
     {
         if ((adapterExtension->PortImplemented & (1<<index)) != 0)
-            AhciPortInitialize(adapterExtension->PortExtension[index]);
+            AhciPortInitialize(&adapterExtension->PortExtension[index]);
     }
-
-    // Turn IE -- Interrupt Enabled
-    ghc |= 0x2;
-    StorPortWriteRegisterUlong(adapterExtension, &abar->GHC, ghc);
 
     return SP_RETURN_FOUND;
 }// -- AhciHwFindAdapter();
@@ -475,7 +478,7 @@ ULONG DriverEntry(
                     RegistryPath,
                     &hwInitializationData,
                     NULL);
-    StorPortDebugPrint(0, "\tstatus:%d\n", status);
+    StorPortDebugPrint(0, "\tstatus:%x\n", status);
     return status;
 }// -- DriverEntry();
 
