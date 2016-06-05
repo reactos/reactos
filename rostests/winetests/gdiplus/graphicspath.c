@@ -1018,6 +1018,9 @@ static void test_flatten(void)
     status = GdipFlattenPath(path, NULL, 1.0);
     expect(Ok, status);
 
+    status = GdipTransformPath(path, 0);
+    expect(Ok, status);
+
     status = GdipAddPathEllipse(path, 0.0, 0.0, 100.0, 50.0);
     expect(Ok, status);
 
