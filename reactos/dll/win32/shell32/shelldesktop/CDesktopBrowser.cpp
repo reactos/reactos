@@ -498,7 +498,7 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
                                  rcWorkArea.left, rcWorkArea.top,
                                  rcWorkArea.right - rcWorkArea.left,
                                  rcWorkArea.bottom - rcWorkArea.top,
-                                 SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+                                 SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOOWNERZORDER);
                 }
                 break;
             }
