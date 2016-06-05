@@ -2098,6 +2098,8 @@ ok(Date.parse("Jan 20 2009 UTC") === 1232409600000, "Date.parse(\"Jan 20 2009 UT
 ok(Date.parse("Jan 20 2009 GMT") === 1232409600000, "Date.parse(\"Jan 20 2009 GMT\") = " + Date.parse("Jan 20 2009 GMT"));
 ok(Date.parse("Jan 20 2009 UTC-0") === 1232409600000, "Date.parse(\"Jan 20 2009 UTC-0\") = " + Date.parse("Jan 20 2009 UTC-0"));
 ok(Date.parse("Jan 20 2009 UTC+0000") === 1232409600000, "Date.parse(\"Jan 20 2009 UTC+0000\") = " + Date.parse("Jan 20 2009 UTC+0000"));
+ok(Date.parse("Jan 20 2009 UTC-1") === 1232413200000, "Date.parse(\"Jan 20 2009 UTC-1\") = " + Date.parse("Jan 20 2009 UTC-1"));
+ok(Date.parse("Jan 20 2009 UTC+1") === 1232406000000, "Date.parse(\"Jan 20 2009 UTC+1\") = " + Date.parse("Jan 20 2009 UTC+1"));
 ok(Date.parse("Ju 13 79 UTC") === 300672000000, "Date.parse(\"Ju 13 79 UTC\") = " + Date.parse("Ju 13 79 UTC"));
 ok(Date.parse("12Au91 UTC") === 681955200000, "Date.parse(\"12Au91 UTC\") = " + Date.parse("12Au91 UTC"));
 ok(Date.parse("7/02/17 UTC") === -1656806400000, "Date.parse(\"7/02/17 UTC\") = " + Date.parse("7/02/17 UTC"));
@@ -2108,6 +2110,10 @@ ok(Date.parse("71 11:32AM Dec 12 UTC BC ") === -64346358480000, "Date.parse(\"71
 ok(Date.parse("23/71/2000 11::32::UTC") === 1010662320000, "Date.parse(\"23/71/2000 11::32::UTC\") = " + Date.parse("23/71/2000 11::32::UTC"));
 ok(Date.parse("1970/01/01") === Date.parse("01/01/1970"), "Date.parse(\"1970/01/01\") = " + Date.parse("1970/01/01"));
 ok(Date.parse("71/12/14") === Date.parse("12/14/1971"), "Date.parse(\"71/12/14\") = " + Date.parse("71/12/14"));
+ok(Date.parse("Tue, 22 Mar 2016 09:57:55 -0300") === Date.parse("Tue, 22 Mar 2016 09:57:55 GMT-0300"),
+        "Date.parse(\"Tue, 22 Mar 2016 09:57:55 -0300\") = " + Date.parse("Tue, 22 Mar 2016 09:57:55 -0300"));
+ok(Date.parse("Tue, 22 Mar 2016 09:57:55 +0400") === Date.parse("Tue, 22 Mar 2016 09:57:55 UTC+0400"),
+        "Date.parse(\"Tue, 22 Mar 2016 09:57:55 +0400\") = " + Date.parse("Tue, 22 Mar 2016 09:57:55 +0400"));
 
 ok(typeof(Math.PI) === "number", "typeof(Math.PI) = " + typeof(Math.PI));
 ok(Math.floor(Math.PI*100) === 314, "Math.PI = " + Math.PI);

@@ -194,6 +194,27 @@ ok(testRecFunc.arguments === null, "testRecFunc.arguments = " + testRecFunc.argu
 testRecFunc(true);
 ok(testRecFunc.arguments === null, "testRecFunc.arguments = " + testRecFunc.arguments);
 
+function argumentsTest() {
+    var save = arguments;
+    with({arguments: 1}) {
+        ok(arguments === 1, "arguments = " + arguments);
+        (function() {
+            ok(argumentsTest.arguments === save, "unexpected argumentsTest.arguments");
+        })();
+    }
+    eval('ok(arguments === save, "unexpected arguments");');
+    [1,2].sort(function() {
+        ok(argumentsTest.arguments === save, "unexpected argumentsTest.arguments");
+        return 1;
+    });
+}
+
+argumentsTest();
+
+(function callAsExprTest() {
+    ok(callAsExprTest.arguments === null, "callAsExprTest.arguments = " + callAsExprTest.arguments);
+})(1,2);
+
 tmp = (function() {1;})();
 ok(tmp === undefined, "tmp = " + tmp);
 tmp = eval("1;");
@@ -213,6 +234,58 @@ testRes() && testRes();
 testNoRes(), testNoRes();
 
 tmp = (function(){ return testNoRes(), testRes();})();
+
+var f1, f2;
+
+ok(funcexpr() == 2, "funcexpr() = " + funcexpr());
+
+f1 = function funcexpr() { return 1; }
+ok(f1 != funcexpr, "f1 == funcexpr");
+ok(f1() === 1, "f1() = " + f1());
+
+f2 = function funcexpr() { return 2; }
+ok(f2 != funcexpr, "f2 != funcexpr");
+ok(f2() === 2, "f2() = " + f2());
+
+f1 = null;
+for(i = 0; i < 3; i++) {
+    f2 = function funcexpr2() {};
+    ok(f1 != f2, "f1 == f2");
+    f1 = f2;
+}
+
+f1 = null;
+for(i = 0; i < 3; i++) {
+    f2 = function() {};
+    ok(f1 != f2, "f1 == f2");
+    f1 = f2;
+}
+
+(function() {
+    ok(infuncexpr() == 2, "infuncexpr() = " + infuncexpr());
+
+    f1 = function infuncexpr() { return 1; }
+    ok(f1 != funcexpr, "f1 == funcexpr");
+    ok(f1() === 1, "f1() = " + f1());
+
+    f2 = function infuncexpr() { return 2; }
+    ok(f2 != funcexpr, "f2 != funcexpr");
+    ok(f2() === 2, "f2() = " + f2());
+
+    f1 = null;
+    for(i = 0; i < 3; i++) {
+        f2 = function infuncexpr2() {};
+        ok(f1 != f2, "f1 == f2");
+        f1 = f2;
+    }
+
+    f1 = null;
+    for(i = 0; i < 3; i++) {
+        f2 = function() {};
+        ok(f1 != f2, "f1 == f2");
+        f1 = f2;
+    }
+})();
 
 var obj1 = new Object();
 ok(typeof(obj1) === "object", "typeof(obj1) is not object");
@@ -388,6 +461,10 @@ tmp = 2.5*3.5;
 /* ok(tmp === 8.75, "2.5*3.5 !== 8.75"); */
 ok(tmp > 8.749999 && tmp < 8.750001, "2.5*3.5 !== 8.75");
 ok(getVT(tmp) === "VT_R8", "getVT(2.5*3.5) !== VT_R8");
+
+tmp = 2*.5;
+ok(tmp === 1, "2*.5 !== 1");
+ok(getVT(tmp) == "VT_I4", "getVT(2*.5) !== VT_I4");
 
 tmp = 4/2;
 ok(tmp === 2, "4/2 !== 2");
