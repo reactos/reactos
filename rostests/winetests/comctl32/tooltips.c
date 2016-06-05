@@ -292,13 +292,15 @@ static HWND create_parent_window(void)
 
 static void test_gettext(void)
 {
+    static const CHAR testtip2A[] = "testtip\ttest2";
+    static const CHAR testtipA[] = "testtip";
     HWND hwnd, notify;
     TTTOOLINFOA toolinfoA;
     TTTOOLINFOW toolinfoW;
     LRESULT r;
     CHAR bufA[10] = "";
     WCHAR bufW[10] = { 0 };
-    static const CHAR testtipA[] = "testtip";
+    DWORD length, style;
 
     notify = create_parent_window();
     ok(notify != NULL, "Expected notification window to be created\n");
@@ -320,49 +322,48 @@ static void test_gettext(void)
     toolinfoA.lParam = 0xdeadbeef;
     GetClientRect(hwnd, &toolinfoA.rect);
     r = SendMessageA(hwnd, TTM_ADDTOOLA, 0, (LPARAM)&toolinfoA);
-    if (r)
-    {
-        toolinfoA.hwnd = NULL;
-        toolinfoA.uId = 0x1234ABCD;
-        toolinfoA.lpszText = bufA;
-        SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
-        ok(strcmp(toolinfoA.lpszText, "") == 0, "lpszText should be an empty string\n");
+    ok(r, "got %ld\n", r);
 
-        toolinfoA.lpszText = bufA;
-        SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&toolinfoA);
-        ok(toolinfoA.lpszText == NULL,
-           "expected NULL, got %p\n", toolinfoA.lpszText);
+    toolinfoA.hwnd = NULL;
+    toolinfoA.uId = 0x1234abcd;
+    toolinfoA.lpszText = bufA;
+    r = SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
+    ok(!r, "got %ld\n", r);
+    ok(!*toolinfoA.lpszText, "lpszText should be empty, got %s\n", toolinfoA.lpszText);
 
-        /* NULL hinst, valid resource id for text */
-        toolinfoA.cbSize = sizeof(TTTOOLINFOA);
-        toolinfoA.hwnd = NULL;
-        toolinfoA.hinst = NULL;
-        toolinfoA.uFlags = 0;
-        toolinfoA.uId = 0x1233ABCD;
-        toolinfoA.lpszText = MAKEINTRESOURCEA(IDS_TBADD1);
-        toolinfoA.lParam = 0xdeadbeef;
-        GetClientRect(hwnd, &toolinfoA.rect);
-        r = SendMessageA(hwnd, TTM_ADDTOOLA, 0, (LPARAM)&toolinfoA);
-        ok(r, "failed to add a tool\n");
+    toolinfoA.lpszText = bufA;
+    r = SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&toolinfoA);
+todo_wine
+    ok(!r, "got %ld\n", r);
+    ok(toolinfoA.lpszText == NULL, "expected NULL, got %p\n", toolinfoA.lpszText);
 
-        toolinfoA.hwnd = NULL;
-        toolinfoA.uId = 0x1233ABCD;
-        toolinfoA.lpszText = bufA;
-        SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
-        ok(strcmp(toolinfoA.lpszText, "abc") == 0, "lpszText should be an empty string\n");
+    /* NULL hinst, valid resource id for text */
+    toolinfoA.cbSize = sizeof(TTTOOLINFOA);
+    toolinfoA.hwnd = NULL;
+    toolinfoA.hinst = NULL;
+    toolinfoA.uFlags = 0;
+    toolinfoA.uId = 0x1233abcd;
+    toolinfoA.lpszText = MAKEINTRESOURCEA(IDS_TBADD1);
+    toolinfoA.lParam = 0xdeadbeef;
+    GetClientRect(hwnd, &toolinfoA.rect);
+    r = SendMessageA(hwnd, TTM_ADDTOOLA, 0, (LPARAM)&toolinfoA);
+    ok(r, "failed to add a tool\n");
 
-        toolinfoA.hinst = (HINSTANCE)0xdeadbee;
-        SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&toolinfoA);
-        ok(toolinfoA.hinst == NULL, "expected NULL, got %p\n", toolinfoA.hinst);
+    toolinfoA.hwnd = NULL;
+    toolinfoA.uId = 0x1233abcd;
+    toolinfoA.lpszText = bufA;
+    r = SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
+    ok(!r, "got %ld\n", r);
+    ok(!strcmp(toolinfoA.lpszText, "abc"), "got wrong text, %s\n", toolinfoA.lpszText);
 
-        SendMessageA(hwnd, TTM_DELTOOLA, 0, (LPARAM)&toolinfoA);
-    }
-    else
-    {
-        win_skip( "Old comctl32, not testing NULL text\n" );
-        DestroyWindow( hwnd );
-        return;
-    }
+    toolinfoA.hinst = (HINSTANCE)0xdeadbee;
+    r = SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&toolinfoA);
+todo_wine
+    ok(!r, "got %ld\n", r);
+    ok(toolinfoA.hinst == NULL, "expected NULL, got %p\n", toolinfoA.hinst);
+
+    r = SendMessageA(hwnd, TTM_DELTOOLA, 0, (LPARAM)&toolinfoA);
+    ok(!r, "got %ld\n", r);
 
     /* add another tool with text */
     toolinfoA.cbSize = sizeof(TTTOOLINFOA);
@@ -376,28 +377,26 @@ static void test_gettext(void)
     GetClientRect(hwnd, &toolinfoA.rect);
     r = SendMessageA(hwnd, TTM_ADDTOOLA, 0, (LPARAM)&toolinfoA);
     ok(r, "Adding the tool to the tooltip failed\n");
-    if (r)
-    {
-        DWORD length;
 
-        length = SendMessageA(hwnd, WM_GETTEXTLENGTH, 0, 0);
-        ok(length == 0, "Expected 0, got %d\n", length);
+    length = SendMessageA(hwnd, WM_GETTEXTLENGTH, 0, 0);
+    ok(length == 0, "Expected 0, got %d\n", length);
 
-        toolinfoA.hwnd = NULL;
-        toolinfoA.uId = 0x1235ABCD;
-        toolinfoA.lpszText = bufA;
-        SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
-        ok(strcmp(toolinfoA.lpszText, testtipA) == 0, "lpszText should be an empty string\n");
+    toolinfoA.hwnd = NULL;
+    toolinfoA.uId = 0x1235abcd;
+    toolinfoA.lpszText = bufA;
+    r = SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
+    ok(!r, "got %ld\n", r);
+    ok(!strcmp(toolinfoA.lpszText, testtipA), "expected %s, got %p\n", testtipA, toolinfoA.lpszText);
 
-        memset(bufA, 0x1f, sizeof(bufA));
-        toolinfoA.lpszText = bufA;
-        SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&toolinfoA);
-        ok(strcmp(toolinfoA.lpszText, testtipA) == 0,
-           "expected %s, got %p\n", testtipA, toolinfoA.lpszText);
+    memset(bufA, 0x1f, sizeof(bufA));
+    toolinfoA.lpszText = bufA;
+    r = SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&toolinfoA);
+todo_wine
+    ok(!r, "got %ld\n", r);
+    ok(!strcmp(toolinfoA.lpszText, testtipA), "expected %s, got %p\n", testtipA, toolinfoA.lpszText);
 
-        length = SendMessageA(hwnd, WM_GETTEXTLENGTH, 0, 0);
-        ok(length == 0, "Expected 0, got %d\n", length);
-    }
+    length = SendMessageA(hwnd, WM_GETTEXTLENGTH, 0, 0);
+    ok(length == 0, "Expected 0, got %d\n", length);
 
     /* add another with callback text */
     toolinfoA.cbSize = sizeof(TTTOOLINFOA);
@@ -410,33 +409,26 @@ static void test_gettext(void)
     GetClientRect(hwnd, &toolinfoA.rect);
     r = SendMessageA(hwnd, TTM_ADDTOOLA, 0, (LPARAM)&toolinfoA);
     ok(r, "Adding the tool to the tooltip failed\n");
-    if (r)
-    {
-        toolinfoA.hwnd = notify;
-        toolinfoA.uId = 0x1236ABCD;
-        toolinfoA.lpszText = bufA;
-        SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
-        ok(strcmp(toolinfoA.lpszText, testcallbackA) == 0,
-           "lpszText should be an (%s) string\n", testcallbackA);
 
-        toolinfoA.lpszText = bufA;
-        SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&toolinfoA);
-        ok(toolinfoA.lpszText == LPSTR_TEXTCALLBACKA,
-           "expected LPSTR_TEXTCALLBACKA, got %p\n", toolinfoA.lpszText);
-    }
+    toolinfoA.hwnd = notify;
+    toolinfoA.uId = 0x1236abcd;
+    toolinfoA.lpszText = bufA;
+    r = SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
+    ok(!r, "got %ld\n", r);
+    ok(!strcmp(toolinfoA.lpszText, testcallbackA), "lpszText should be an (%s) string\n", testcallbackA);
+
+    toolinfoA.lpszText = bufA;
+    r = SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&toolinfoA);
+todo_wine
+    ok(!r, "got %ld\n", r);
+    ok(toolinfoA.lpszText == LPSTR_TEXTCALLBACKA, "expected LPSTR_TEXTCALLBACKA, got %p\n", toolinfoA.lpszText);
 
     DestroyWindow(hwnd);
     DestroyWindow(notify);
 
-    SetLastError(0xdeadbeef);
     hwnd = CreateWindowExW(0, TOOLTIPS_CLASSW, NULL, 0,
                            10, 10, 300, 100,
                            NULL, NULL, NULL, 0);
-
-    if (!hwnd && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) {
-        win_skip("CreateWindowExW is not implemented\n");
-        return;
-    }
     ok(hwnd != NULL, "failed to create tooltip wnd\n");
 
     toolinfoW.cbSize = sizeof(TTTOOLINFOW);
@@ -485,6 +477,37 @@ static void test_gettext(void)
         SendMessageW(hwnd, TTM_GETTEXTW, 0, (LPARAM)&toolinfoW);
         ok(toolinfoW.lpszText[0] == 0, "lpszText should be an empty string\n");
     }
+
+    /* text with embedded tabs */
+    toolinfoA.cbSize = sizeof(TTTOOLINFOA);
+    toolinfoA.hwnd = NULL;
+    toolinfoA.hinst = GetModuleHandleA(NULL);
+    toolinfoA.uFlags = 0;
+    toolinfoA.uId = 0x1235abce;
+    strcpy(bufA, testtip2A);
+    toolinfoA.lpszText = bufA;
+    toolinfoA.lParam = 0xdeadbeef;
+    GetClientRect(hwnd, &toolinfoA.rect);
+    r = SendMessageA(hwnd, TTM_ADDTOOLA, 0, (LPARAM)&toolinfoA);
+    ok(r, "got %ld\n", r);
+
+    toolinfoA.hwnd = NULL;
+    toolinfoA.uId = 0x1235abce;
+    toolinfoA.lpszText = bufA;
+    r = SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
+    ok(!r, "got %ld\n", r);
+    ok(!strcmp(toolinfoA.lpszText, testtipA), "expected %s, got %s\n", testtipA, toolinfoA.lpszText);
+
+    /* enable TTS_NOPREFIX, original text is retained */
+    style = GetWindowLongA(hwnd, GWL_STYLE);
+    SetWindowLongA(hwnd, GWL_STYLE, style | TTS_NOPREFIX);
+
+    toolinfoA.hwnd = NULL;
+    toolinfoA.uId = 0x1235abce;
+    toolinfoA.lpszText = bufA;
+    r = SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
+    ok(!r, "got %ld\n", r);
+    ok(!strcmp(toolinfoA.lpszText, testtip2A), "expected %s, got %s\n", testtip2A, toolinfoA.lpszText);
 
     DestroyWindow(hwnd);
 }

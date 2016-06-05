@@ -265,6 +265,7 @@ static void test_monthcal(void)
     SYSTEMTIME st[2], st1[2], today;
     int res, month_range;
     DWORD limits;
+    BOOL r;
 
     hwnd = CreateWindowA(MONTHCAL_CLASSA, "MonthCal", WS_POPUP | WS_VISIBLE, CW_USEDEFAULT,
                          0, 300, 300, 0, 0, NULL, NULL);
@@ -306,6 +307,9 @@ static void test_monthcal(void)
     expect(0, st[1].wMinute);
     expect(0, st[1].wSecond);
     expect(0, st[1].wMilliseconds);
+
+    limits = SendMessageA(hwnd, MCM_GETRANGE, 0, 0);
+    ok(limits == 0, "got %u\n", limits);
 
     GetSystemTime(&st[0]);
     st[1] = st[0];
@@ -452,6 +456,40 @@ static void test_monthcal(void)
     expect(0, st1[1].wMinute);
     expect(0, st1[1].wSecond);
     expect(0, st1[1].wMilliseconds);
+
+    /* 0 limit flags */
+    limits = SendMessageA(hwnd, MCM_GETRANGE, 0, (LPARAM)st1);
+    ok(limits == GDTR_MIN, "got 0x%08x\n", limits);
+
+    GetSystemTime(st);
+    st[1] = st[0];
+    st[1].wYear++;
+    r = SendMessageA(hwnd, MCM_SETRANGE, 0, (LPARAM)st);
+    ok(r, "got %d\n", r);
+
+    limits = SendMessageA(hwnd, MCM_GETRANGE, 0, (LPARAM)st);
+    ok(limits == 0, "got 0x%08x\n", limits);
+    ok(st[0].wYear == 0 && st[1].wYear == 0, "got %u, %u\n", st[0].wYear, st[1].wYear);
+
+    /* flags are 0, set min limit */
+    GetSystemTime(st);
+    st[1] = st[0];
+    st[1].wYear++;
+
+    r = SendMessageA(hwnd, MCM_SETRANGE, GDTR_MIN, (LPARAM)st);
+    ok(r, "got %d\n", r);
+
+    limits = SendMessageA(hwnd, MCM_GETRANGE, 0, (LPARAM)st1);
+    ok(limits == GDTR_MIN, "got 0x%08x\n", limits);
+    ok(st1[1].wYear == 0, "got %u\n", st1[1].wYear);
+
+    /* now set max limit, check flags */
+    r = SendMessageA(hwnd, MCM_SETRANGE, GDTR_MAX, (LPARAM)st);
+    ok(r, "got %d\n", r);
+
+    limits = SendMessageA(hwnd, MCM_GETRANGE, 0, (LPARAM)st1);
+    ok(limits == GDTR_MAX, "got 0x%08x\n", limits);
+    ok(st1[0].wYear == 0, "got %u\n", st1[0].wYear);
 
     DestroyWindow(hwnd);
 }
@@ -1860,7 +1898,7 @@ static void test_MCM_SIZERECTTOMIN(void)
     ret = SendMessageA(hwnd, MCM_SIZERECTTOMIN, 0, 0);
     ok(ret == 0, "got %d\n", ret);
 
-    r.left = r.right = r.top = r.bottom = 0;
+    SetRectEmpty(&r);
     ret = SendMessageA(hwnd, MCM_SIZERECTTOMIN, 0, (LPARAM)&r);
     if (ret == 0)
     {

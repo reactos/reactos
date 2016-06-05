@@ -399,7 +399,7 @@ static void basic_test(void)
     ok(SendMessageA(hToolbar, TB_ISBUTTONCHECKED, 1005, 0), "A6 pressed\n");
     ok(!SendMessageA(hToolbar, TB_ISBUTTONCHECKED, 1004, 0), "A5 not pressed anymore\n");
 
-    /* test for inter-group crosstalk, ie. two radio groups interfering with each other */
+    /* test for inter-group crosstalk, i.e. two radio groups interfering with each other */
     SendMessageA(hToolbar, TB_CHECKBUTTON, 1007, 1); /* press B2 */
     ok(SendMessageA(hToolbar, TB_ISBUTTONCHECKED, 1005, 0), "A6 still pressed, no inter-group crosstalk\n");
     ok(!SendMessageA(hToolbar, TB_ISBUTTONCHECKED, 1000, 0), "A1 still not pressed\n");

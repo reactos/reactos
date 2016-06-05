@@ -4,6 +4,7 @@ remove_definitions(-D_WIN32_WINNT=0x502 -D_WIN32_IE=0x600)
 add_definitions(-DUSE_WINE_TODOS)
 
 list(APPEND SOURCE
+    animate.c
     button.c
     comboex.c
     datetime.c

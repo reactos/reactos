@@ -365,9 +365,7 @@ static void test_dtm_set_and_get_range(void)
     r = SendMessageA(hWnd, DTM_SETRANGE, GDTR_MAX, (LPARAM)st);
     expect(1, r);
     r = SendMessageA(hWnd, DTM_GETRANGE, 0, (LPARAM)getSt);
-    todo_wine {
-        ok(r == GDTR_MAX, "Expected %x, not %x(GDTR_MIN) or %x(GDTR_MIN | GDTR_MAX), got %lx\n", GDTR_MAX, GDTR_MIN, GDTR_MIN | GDTR_MAX, r);
-    }
+    ok(r == GDTR_MAX, "Expected %x, not %x(GDTR_MIN) or %x(GDTR_MIN | GDTR_MAX), got %lx\n", GDTR_MAX, GDTR_MIN, GDTR_MIN | GDTR_MAX, r);
     expect_systime(&st[1], &getSt[1]);
 
     r = SendMessageA(hWnd, DTM_SETRANGE, GDTR_MIN, (LPARAM)st);
@@ -410,6 +408,13 @@ static void test_dtm_set_and_get_range(void)
     expect_systime(&st[1], &getSt[1]);
 
     ok_sequence(sequences, DATETIME_SEQ_INDEX, test_dtm_set_and_get_range_seq, "test_dtm_set_and_get_range", FALSE);
+
+    /* DTM_SETRANGE with 0 flags */
+    r = SendMessageA(hWnd, DTM_SETRANGE, 0, (LPARAM)st);
+    ok(r, "got %lu\n", r);
+    r = SendMessageA(hWnd, DTM_GETRANGE, 0, (LPARAM)getSt);
+    ok(r == 0, "got %lu\n", r);
+    ok(getSt[0].wYear == 0 && getSt[1].wYear == 0, "got %u, %u\n", getSt[0].wYear, getSt[1].wYear);
 
     DestroyWindow(hWnd);
 }
