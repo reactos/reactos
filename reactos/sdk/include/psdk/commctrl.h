@@ -4275,6 +4275,7 @@ typedef struct {
 #define MCS_NOTODAYCIRCLE      0x0008
 #define MCS_NOTODAY            0x0010
 #define MCS_NOTRAILINGDATES    0x0040
+#define MCS_SHORTDAYSOFWEEK    0x0080
 
 #define GMR_VISIBLE 0
 #define GMR_DAYSTATE 1
