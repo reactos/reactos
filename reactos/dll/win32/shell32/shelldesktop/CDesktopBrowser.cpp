@@ -584,7 +584,7 @@ RegisterProgmanWindowClass(VOID)
 HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
 {
     HWND hWndDesk;
-    DWORD x, y, cx, cy;
+    int x, y, cx, cy;
 
     if (ShellDesk == NULL)
     {
@@ -603,9 +603,9 @@ HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
     cx = GetSystemMetrics(SM_CXVIRTUALSCREEN);
     cy = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
-    if (IsRectEmpty(&rcDesk))
+    if (!cx || !cy)
     {
-        x = rcDesk.top = 0;
+        x = y = 0;
         cx = GetSystemMetrics(SM_CXSCREEN);
         cy = GetSystemMetrics(SM_CYSCREEN);
     }
