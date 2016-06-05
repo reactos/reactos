@@ -31,7 +31,7 @@ extern void func_updown(void);
 
 const struct test winetest_testlist[] =
 {
-    { "button", func_animate },
+    { "animate", func_animate },
     { "button", func_button },
     { "comboex", func_comboex },
     { "datetime", func_datetime },
