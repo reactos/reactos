@@ -558,7 +558,7 @@ BOOL CDefView::CreateList()
         dwExStyle &= ~WS_EX_CLIENTEDGE;
 
     RECT rcListView = {0,0,0,0};
-    m_ListView.Create(m_hWnd, rcListView, NULL,dwStyle, dwExStyle, ID_LISTVIEW);
+    m_ListView.Create(m_hWnd, rcListView, L"FolderView", dwStyle, dwExStyle, ID_LISTVIEW);
 
     if (!m_ListView)
         return FALSE;
