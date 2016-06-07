@@ -7,22 +7,6 @@
 
 #include "storahci.h"
 
-BOOLEAN AhciAdapterReset(
-  __in      PAHCI_ADAPTER_EXTENSION             adapterExtension
-);
-
-__inline
-VOID AhciZeroMemory(
-  __in      PCHAR                               buffer,
-  __in      ULONG                               bufferSize
-);
-
-__inline
-BOOLEAN IsPortValid(
-  __in      PAHCI_ADAPTER_EXTENSION             adapterExtension,
-  __in      UCHAR                               pathId
-);
-
 /**
  * @name AhciPortInitialize
  * @implemented
@@ -192,6 +176,24 @@ BOOLEAN AhciHwInitialize(
 }// -- AhciHwInitialize();
 
 /**
+ * @name AhciInterruptHandler
+ * @implemented
+ *
+ * Interrupt Handler for portExtension
+ *
+ * @param portExtension
+ *
+ */
+VOID AhciInterruptHandler(
+  __in      PAHCI_PORT_EXTENSION                portExtension
+)
+{
+    StorPortDebugPrint(0, "AhciInterruptHandler()\n");
+    StorPortDebugPrint(0, "\tPort Number: %d\n", portExtension->PortNumber);
+
+}// -- AhciInterruptHandler();
+
+/**
  * @name AhciHwInterrupt
  * @implemented
  *
@@ -207,11 +209,39 @@ BOOLEAN AhciHwInterrupt(
   __in      PVOID                               AdapterExtension
 )
 {
+    ULONG portPending, nextPort, i;
     PAHCI_ADAPTER_EXTENSION adapterExtension;
 
     StorPortDebugPrint(0, "AhciHwInterrupt()\n");
 
     adapterExtension = (PAHCI_ADAPTER_EXTENSION)AdapterExtension;
+
+    if (adapterExtension->StateFlags.Removed)
+        return FALSE;
+
+    portPending = StorPortReadRegisterUlong(adapterExtension, adapterExtension->IS);
+    // we process interrupt for implemented ports only
+    portPending = portPending & adapterExtension->PortImplemented;
+
+    if (portPending == 0)
+        return FALSE;
+
+    for (i = 1; i <= MAXIMUM_AHCI_PORT_COUNT; i++)
+    {
+        nextPort = (adapterExtension->LastInterruptPort + i) % MAXIMUM_AHCI_PORT_COUNT;
+
+        if ((portPending & (0x1 << nextPort)) == 0)
+            continue;
+
+        if (nextPort == adapterExtension->LastInterruptPort
+            || adapterExtension->PortExtension[nextPort].IsActive == FALSE)
+            return FALSE;
+
+        // we can assign this interrupt to this port
+        adapterExtension->LastInterruptPort = nextPort;
+        AhciInterruptHandler(nextPort);
+        return TRUE;
+    }
 
     return FALSE;
 }// -- AhciHwInterrupt();
@@ -302,7 +332,10 @@ BOOLEAN AhciHwStartIo(
             PCDB cdb = (PCDB)&Srb->Cdb;
             if (cdb->CDB10.OperationCode == SCSIOP_INQUIRY)
             {
-                StorPortDebugPrint(0, "\tINQUIRY Called!\n");
+                Srb->SrbStatus = DeviceInquiryRequest(adapterExtension, Srb, cdb);
+                StorPortNotification(RequestComplete, adapterExtension, Srb);
+
+                return TRUE;
             }
         }
         else
@@ -343,7 +376,7 @@ BOOLEAN AhciHwResetBus(
 
     adapterExtension = (PAHCI_ADAPTER_EXTENSION)AdapterExtension;
 
-    return TRUE;
+    return FALSE;
 }// -- AhciHwResetBus();
 
 /**
@@ -455,15 +488,16 @@ ULONG AhciHwFindAdapter(
     adapterExtension->CAP = StorPortReadRegisterUlong(adapterExtension, &abar->CAP);
     adapterExtension->CAP2 = StorPortReadRegisterUlong(adapterExtension, &abar->CAP2);
     adapterExtension->Version = StorPortReadRegisterUlong(adapterExtension, &abar->VS);
+    adapterExtension->LastInterruptPort = -1;
 
     // 10.1.2
     // 1. Indicate that system software is AHCI aware by setting GHC.AE to ‘1’.
     // 3.1.2 -- AE bit is read-write only if CAP.SAM is '0'
     ghc = StorPortReadRegisterUlong(adapterExtension, &abar->GHC);
     // AE := Highest Significant bit of GHC
-    if ((ghc & AHCI_Global_HBA_CONTROL_AE) == 1)//Hmm, controller was already in power state
+    if ((ghc & AHCI_Global_HBA_CONTROL_AE) != 0)//Hmm, controller was already in power state
     {
-        // reset controller to have it in know state
+        // reset controller to have it in known state
         StorPortDebugPrint(0, "\tAE Already set, Reset()\n");
         if (!AhciAdapterReset(adapterExtension)){
             StorPortDebugPrint(0, "\tReset Failed!\n");
@@ -603,7 +637,7 @@ BOOLEAN AhciAdapterReset(
         return FALSE;
 
     // HR -- Very first bit (lowest significant)
-    ghc = 1;
+    ghc = AHCI_Global_HBA_CONTROL_HR;
     StorPortWriteRegisterUlong(adapterExtension, &abar->GHC, ghc);
 
     for (ticks = 0; (ticks < 50) &&
@@ -647,7 +681,7 @@ VOID AhciZeroMemory(
  * @param PathId
  *
  * @return
- * return TRUE if bus was successfully reset
+ * return TRUE if provided port is valid (implemented) or not
  */
 __inline
 BOOLEAN IsPortValid(
@@ -657,5 +691,55 @@ BOOLEAN IsPortValid(
 {
     if (pathId >= MAXIMUM_AHCI_PORT_COUNT)
         return FALSE;
+
     return adapterExtension->PortExtension[pathId].IsActive;
 }// -- IsPortValid()
+
+/**
+ * @name DeviceInquiryRequest
+ * @implemented
+ *
+ * Tells wheather given port is implemented or not
+ *
+ * @param adapterExtension
+ * @param Srb
+ * @param Cdb
+ *
+ * @return
+ * return STOR status for DeviceInquiryRequest
+ *
+ * @remark
+ * http://www.seagate.com/staticfiles/support/disc/manuals/Interface%20manuals/100293068c.pdf
+ */
+ULONG DeviceInquiryRequest(
+  __in      PAHCI_ADAPTER_EXTENSION             adapterExtension,
+  __in      PSCSI_REQUEST_BLOCK                 Srb,
+  __in      PCDB                                Cdb
+)
+{
+    PVOID DataBuffer;
+    ULONG DataBufferLength;
+
+    StorPortDebugPrint(0, "DeviceInquiryRequest()\n");
+
+    // 3.6.1
+    // If the EVPD bit is set to zero, the device server shall return the standard INQUIRY data
+    if (Cdb->CDB6INQUIRY3.EnableVitalProductData == 0)
+    {
+        StorPortDebugPrint(0, "\tEVPD Inquired\n");
+    }
+    else
+    {
+        StorPortDebugPrint(0, "\tVPD Inquired\n");
+
+        DataBuffer = Srb->DataBuffer;
+        DataBufferLength = Srb->DataTransferLength;
+
+        if (DataBuffer == NULL)
+            return SRB_STATUS_INVALID_REQUEST;
+
+        AhciZeroMemory((PCHAR)DataBuffer, DataBufferLength);
+    }
+
+    return SRB_STATUS_BAD_FUNCTION;
+}// -- DeviceInquiryRequest();

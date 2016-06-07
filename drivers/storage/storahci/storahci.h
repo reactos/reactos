@@ -212,6 +212,7 @@ typedef struct _AHCI_ADAPTER_EXTENSION
     ULONG   Version;
     ULONG   CAP;
     ULONG   CAP2;
+    ULONG   LastInterruptPort;
 
     PVOID NonCachedExtension;// holds virtual address to noncached buffer allocated for Port Extension
 
@@ -231,3 +232,29 @@ typedef struct _AHCI_SRB_EXTENSION
 {
     ULONG Reserved[4];
 } AHCI_SRB_EXTENSION;
+
+//////////////////////////////////////////////////////////////
+//                       Declarations                       //
+//////////////////////////////////////////////////////////////
+
+BOOLEAN AhciAdapterReset(
+  __in      PAHCI_ADAPTER_EXTENSION             adapterExtension
+);
+
+__inline
+VOID AhciZeroMemory(
+  __in      PCHAR                               buffer,
+  __in      ULONG                               bufferSize
+);
+
+__inline
+BOOLEAN IsPortValid(
+  __in      PAHCI_ADAPTER_EXTENSION             adapterExtension,
+  __in      UCHAR                               pathId
+);
+
+ULONG DeviceInquiryRequest(
+  __in      PAHCI_ADAPTER_EXTENSION             adapterExtension,
+  __in      PSCSI_REQUEST_BLOCK                 Srb,
+  __in      PCDB                                Cdb
+);
