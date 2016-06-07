@@ -389,7 +389,7 @@ static void test_sharelists(HDC winhdc)
         res = wglMakeCurrent(winhdc, hglrc2);
         ok(res, "Make current failed\n");
         res = wglShareLists(hglrc1, hglrc2);
-        todo_wine ok(res, "Sharing display lists with a destination context which has been made current failed\n");
+        ok(res, "Sharing display lists with a destination context which has been made current failed\n");
         wglMakeCurrent(0, 0);
         wglDeleteContext(hglrc2);
     }
