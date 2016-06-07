@@ -2450,7 +2450,7 @@ HRESULT WINAPI CreateDataCache(
    * IUnknown pointer can be returned to the outside.
    */
   if ( pUnkOuter && !IsEqualIID(&IID_IUnknown, riid) )
-    return CLASS_E_NOAGGREGATION;
+    return E_INVALIDARG;
 
   /*
    * Try to construct a new instance of the class.

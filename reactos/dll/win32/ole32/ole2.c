@@ -25,6 +25,8 @@
 
 #include "precomp.h"
 
+#include "olestd.h"
+
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 WINE_DECLARE_DEBUG_CHANNEL(accel);
 
@@ -43,7 +45,6 @@ typedef struct tagTrackerWindowInfo
 
   BOOL       escPressed;
   HWND       curTargetHWND;	/* window the mouse is hovering over */
-  HWND       curDragTargetHWND; /* might be an ancestor of curTargetHWND */
   IDropTarget* curDragTarget;
   POINTL     curMousePos;       /* current position of the mouse in screen coordinates */
   DWORD      dwKeyState;        /* current state of the shift and ctrl keys and the mouse buttons */
@@ -745,7 +746,6 @@ HRESULT WINAPI DoDragDrop (
   trackerInfo.pdwEffect         = pdwEffect;
   trackerInfo.trackingDone      = FALSE;
   trackerInfo.escPressed        = FALSE;
-  trackerInfo.curDragTargetHWND = 0;
   trackerInfo.curTargetHWND     = 0;
   trackerInfo.curDragTarget     = 0;
 
@@ -2158,6 +2158,96 @@ static LRESULT WINAPI OLEDD_DragTrackerWindowProc(
   return DefWindowProcW (hwnd, uMsg, wParam, lParam);
 }
 
+static void drag_enter( TrackerWindowInfo *info, HWND new_target )
+{
+    HRESULT hr;
+
+    info->curTargetHWND = new_target;
+
+    while (new_target && !is_droptarget( new_target ))
+        new_target = GetParent( new_target );
+
+    info->curDragTarget = get_droptarget_pointer( new_target );
+
+    if (info->curDragTarget)
+    {
+        *info->pdwEffect = info->dwOKEffect;
+        hr = IDropTarget_DragEnter( info->curDragTarget, info->dataObject,
+                                    info->dwKeyState, info->curMousePos,
+                                    info->pdwEffect );
+        *info->pdwEffect &= info->dwOKEffect;
+
+        /* failed DragEnter() means invalid target */
+        if (hr != S_OK)
+        {
+            IDropTarget_Release( info->curDragTarget );
+            info->curDragTarget = NULL;
+            info->curTargetHWND = NULL;
+        }
+    }
+}
+
+static void drag_end( TrackerWindowInfo *info )
+{
+    HRESULT hr;
+
+    info->trackingDone = TRUE;
+    ReleaseCapture();
+
+    if (info->curDragTarget)
+    {
+        if (info->returnValue == DRAGDROP_S_DROP &&
+            *info->pdwEffect != DROPEFFECT_NONE)
+        {
+            *info->pdwEffect = info->dwOKEffect;
+            hr = IDropTarget_Drop( info->curDragTarget, info->dataObject, info->dwKeyState,
+                                   info->curMousePos, info->pdwEffect );
+            *info->pdwEffect &= info->dwOKEffect;
+
+            if (FAILED( hr ))
+                info->returnValue = hr;
+        }
+        else
+        {
+            IDropTarget_DragLeave( info->curDragTarget );
+            *info->pdwEffect = DROPEFFECT_NONE;
+        }
+        IDropTarget_Release( info->curDragTarget );
+        info->curDragTarget = NULL;
+    }
+    else
+        *info->pdwEffect = DROPEFFECT_NONE;
+}
+
+static HRESULT give_feedback( TrackerWindowInfo *info )
+{
+    HRESULT hr;
+    int res;
+    HCURSOR cur;
+
+    if (info->curDragTarget == NULL)
+        *info->pdwEffect = DROPEFFECT_NONE;
+
+    hr = IDropSource_GiveFeedback( info->dropSource, *info->pdwEffect );
+
+    if (hr == DRAGDROP_S_USEDEFAULTCURSORS)
+    {
+        if (*info->pdwEffect & DROPEFFECT_MOVE)
+            res = CURSOR_MOVE;
+        else if (*info->pdwEffect & DROPEFFECT_COPY)
+            res = CURSOR_COPY;
+        else if (*info->pdwEffect & DROPEFFECT_LINK)
+            res = CURSOR_LINK;
+        else
+            res = CURSOR_NODROP;
+
+        cur = LoadCursorW( hProxyDll, MAKEINTRESOURCEW( res ) );
+        SetCursor( cur );
+    }
+
+    return hr;
+}
+
 /***
  * OLEDD_TrackStateChange()
  *
@@ -2171,7 +2261,6 @@ static LRESULT WINAPI OLEDD_DragTrackerWindowProc(
 static void OLEDD_TrackStateChange(TrackerWindowInfo* trackerInfo)
 {
   HWND   hwndNewTarget = 0;
-  HRESULT  hr = S_OK;
   POINT pt;
 
   /*
@@ -2185,186 +2274,40 @@ static void OLEDD_TrackStateChange(TrackerWindowInfo* trackerInfo)
                                                            trackerInfo->escPressed,
                                                            trackerInfo->dwKeyState);
 
-  /*
-   * Every time, we re-initialize the effects passed to the
-   * IDropTarget to the effects allowed by the source.
-   */
-  *trackerInfo->pdwEffect = trackerInfo->dwOKEffect;
-
-  /*
-   * If we are hovering over the same target as before, send the
-   * DragOver notification
-   */
-  if ( (trackerInfo->curDragTarget != 0) &&
-       (trackerInfo->curTargetHWND == hwndNewTarget) )
+  if (trackerInfo->curTargetHWND != hwndNewTarget &&
+      (trackerInfo->returnValue == S_OK ||
+       trackerInfo->returnValue == DRAGDROP_S_DROP))
   {
-    IDropTarget_DragOver(trackerInfo->curDragTarget,
-                         trackerInfo->dwKeyState,
-                         trackerInfo->curMousePos,
-                         trackerInfo->pdwEffect);
-    *trackerInfo->pdwEffect &= trackerInfo->dwOKEffect;
+    if (trackerInfo->curDragTarget)
+    {
+      IDropTarget_DragLeave(trackerInfo->curDragTarget);
+      IDropTarget_Release(trackerInfo->curDragTarget);
+      trackerInfo->curDragTarget = NULL;
+      trackerInfo->curTargetHWND = NULL;
+    }
+
+    if (hwndNewTarget)
+      drag_enter( trackerInfo, hwndNewTarget );
+
+    give_feedback( trackerInfo );
+
+  }
+
+  if (trackerInfo->returnValue == S_OK)
+  {
+    if (trackerInfo->curDragTarget)
+    {
+      *trackerInfo->pdwEffect = trackerInfo->dwOKEffect;
+      IDropTarget_DragOver(trackerInfo->curDragTarget,
+                           trackerInfo->dwKeyState,
+                           trackerInfo->curMousePos,
+                           trackerInfo->pdwEffect);
+      *trackerInfo->pdwEffect &= trackerInfo->dwOKEffect;
+    }
+    give_feedback( trackerInfo );
   }
   else
-  {
-    /*
-     * If we changed window, we have to notify our old target and check for
-     * the new one.
-     */
-    if (trackerInfo->curDragTarget)
-      IDropTarget_DragLeave(trackerInfo->curDragTarget);
-
-    /*
-     * Make sure we're hovering over a window.
-     */
-    if (hwndNewTarget)
-    {
-      /*
-       * Find-out if there is a drag target under the mouse
-       */
-      HWND next_target_wnd = hwndNewTarget;
-
-      trackerInfo->curTargetHWND = hwndNewTarget;
-
-      while (next_target_wnd && !is_droptarget(next_target_wnd))
-          next_target_wnd = GetParent(next_target_wnd);
-
-      if (next_target_wnd) hwndNewTarget = next_target_wnd;
-
-      trackerInfo->curDragTargetHWND = hwndNewTarget;
-      if(trackerInfo->curDragTarget) IDropTarget_Release(trackerInfo->curDragTarget);
-      trackerInfo->curDragTarget     = get_droptarget_pointer(hwndNewTarget);
-
-      /*
-       * If there is, notify it that we just dragged-in
-       */
-      if (trackerInfo->curDragTarget)
-      {
-        hr = IDropTarget_DragEnter(trackerInfo->curDragTarget,
-                                   trackerInfo->dataObject,
-                                   trackerInfo->dwKeyState,
-                                   trackerInfo->curMousePos,
-                                   trackerInfo->pdwEffect);
-        *trackerInfo->pdwEffect &= trackerInfo->dwOKEffect;
-
-        /* failed DragEnter() means invalid target */
-        if (hr != S_OK)
-        {
-          trackerInfo->curDragTargetHWND = 0;
-          trackerInfo->curTargetHWND     = 0;
-          IDropTarget_Release(trackerInfo->curDragTarget);
-          trackerInfo->curDragTarget     = 0;
-        }
-      }
-    }
-    else
-    {
-      /*
-       * The mouse is not over a window so we don't track anything.
-       */
-      trackerInfo->curDragTargetHWND = 0;
-      trackerInfo->curTargetHWND     = 0;
-      if(trackerInfo->curDragTarget) IDropTarget_Release(trackerInfo->curDragTarget);
-      trackerInfo->curDragTarget     = 0;
-    }
-  }
-
-  /*
-   * Now that we have done that, we have to tell the source to give
-   * us feedback on the work being done by the target.  If we don't
-   * have a target, simulate no effect.
-   */
-  if (trackerInfo->curDragTarget==0)
-  {
-    *trackerInfo->pdwEffect = DROPEFFECT_NONE;
-  }
-
-  hr = IDropSource_GiveFeedback(trackerInfo->dropSource,
-  				*trackerInfo->pdwEffect);
-
-  /*
-   * When we ask for feedback from the drop source, sometimes it will
-   * do all the necessary work and sometimes it will not handle it
-   * when that's the case, we must display the standard drag and drop
-   * cursors.
-   */
-  if (hr == DRAGDROP_S_USEDEFAULTCURSORS)
-  {
-    HCURSOR hCur;
-
-    if (*trackerInfo->pdwEffect & DROPEFFECT_MOVE)
-    {
-      hCur = LoadCursorW(hProxyDll, MAKEINTRESOURCEW(2));
-    }
-    else if (*trackerInfo->pdwEffect & DROPEFFECT_COPY)
-    {
-      hCur = LoadCursorW(hProxyDll, MAKEINTRESOURCEW(3));
-    }
-    else if (*trackerInfo->pdwEffect & DROPEFFECT_LINK)
-    {
-      hCur = LoadCursorW(hProxyDll, MAKEINTRESOURCEW(4));
-    }
-    else
-    {
-      hCur = LoadCursorW(hProxyDll, MAKEINTRESOURCEW(1));
-    }
-
-    SetCursor(hCur);
-  }
-
-  /*
-   * All the return valued will stop the operation except the S_OK
-   * return value.
-   */
-  if (trackerInfo->returnValue!=S_OK)
-  {
-    /*
-     * Make sure the message loop in DoDragDrop stops
-     */
-    trackerInfo->trackingDone = TRUE;
-
-    /*
-     * Release the mouse in case the drop target decides to show a popup
-     * or a menu or something.
-     */
-    ReleaseCapture();
-
-    /*
-     * If we end-up over a target, drop the object in the target or
-     * inform the target that the operation was cancelled.
-     */
-    if (trackerInfo->curDragTarget)
-    {
-      switch (trackerInfo->returnValue)
-      {
-	/*
-	 * If the source wants us to complete the operation, we tell
-	 * the drop target that we just dropped the object in it.
-	 */
-        case DRAGDROP_S_DROP:
-          if (*trackerInfo->pdwEffect != DROPEFFECT_NONE)
-          {
-            hr = IDropTarget_Drop(trackerInfo->curDragTarget, trackerInfo->dataObject,
-                    trackerInfo->dwKeyState, trackerInfo->curMousePos, trackerInfo->pdwEffect);
-            if (FAILED(hr))
-              trackerInfo->returnValue = hr;
-          }
-          else
-            IDropTarget_DragLeave(trackerInfo->curDragTarget);
-          break;
-
-	/*
-	 * If the source told us that we should cancel, fool the drop
-         * target by telling it that the mouse left its window.
-	 * Also set the drop effect to "NONE" in case the application
-	 * ignores the result of DoDragDrop.
-	 */
-        case DRAGDROP_S_CANCEL:
-	  IDropTarget_DragLeave(trackerInfo->curDragTarget);
-	  *trackerInfo->pdwEffect = DROPEFFECT_NONE;
-	  break;
-      }
-    }
-  }
+    drag_end( trackerInfo );
 }
 
 /***
