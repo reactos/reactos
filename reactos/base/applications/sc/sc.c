@@ -179,6 +179,18 @@ ScControl(LPCTSTR Server,       // remote machine name
         else
             ControlUsage();
     }
+    else if (!lstrcmpi(Command, _T("sdshow")))
+    {
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            SdShow(ServiceName);
+        }
+        else
+            SdShowUsage();
+    }
     else
     {
         MainUsage();

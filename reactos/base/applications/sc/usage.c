@@ -41,8 +41,8 @@ VOID MainUsage(VOID)
 //    "\t  qfailure       : Queries the actions taken by a service upon failure.\n"
     _T("\t  delete         : Deletes a service (from the registry).\n")
     _T("\t  create         : Creates a service. (adds it to the registry).\n")
-    _T("\t  control        : Sends a control to a service.\n"));
-//    "\t  sdshow         : Displays a service's security descriptor.\n")
+    _T("\t  control        : Sends a control to a service.\n")
+    _T("\t  sdshow         : Displays a service's security descriptor.\n"));
 //    "\t  sdset          : Sets a service's security descriptor.\n")
 //    "\t  GetDisplayName : Gets the DisplayName for a service.\n")
 //    "\t  GetKeyName     : Gets the ServiceKeyName for a service.\n")
@@ -189,4 +189,12 @@ VOID ControlUsage(VOID)
                 _T("        Sends a CONTROL control request to a service.\n")
                 _T("USAGE:\n")
                 _T("        sc <server> control [service name] <value>\n"));
+}
+
+VOID SdShowUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+                _T("        Displays a service's security descriptor in SDDL format.\n")
+                _T("USAGE:\n")
+                _T("        sc <server> sdshow <service name>\n"));
 }

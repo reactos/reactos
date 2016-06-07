@@ -8,6 +8,7 @@ list(APPEND SOURCE
     print.c
     query.c
     sc.c
+    sdshow.c
     start.c
     usage.c
     sc.h)

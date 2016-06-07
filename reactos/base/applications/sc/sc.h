@@ -6,6 +6,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winsvc.h>
+#include <sddl.h>
 #include <tchar.h>
 
 #define SCDBG
@@ -18,6 +19,7 @@ BOOL Control(DWORD Control, LPCTSTR ServiceName, LPCTSTR *Args, INT ArgCount);
 BOOL Query(LPCTSTR *ServiceArgs, DWORD ArgCount, BOOL bExtended);
 
 LPSERVICE_STATUS_PROCESS QueryService(LPCTSTR ServiceName);
+BOOL SdShow(LPCTSTR ServiceName);
 
 /* print and error functions */
 VOID PrintService(LPCTSTR ServiceName, LPSERVICE_STATUS_PROCESS pStatus, BOOL bExtended);
@@ -35,5 +37,6 @@ VOID DescriptionUsage(VOID);
 VOID DeleteUsage(VOID);
 VOID CreateUsage(VOID);
 VOID ControlUsage(VOID);
+VOID SdShowUsage(VOID);
 
 #endif /* _SC_PCH_ */
