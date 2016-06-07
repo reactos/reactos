@@ -53,6 +53,7 @@ static HWND new_window(LPCSTR lpClassName, DWORD dwStyle, HWND parent)
   HWND hwnd = CreateWindowA(lpClassName, NULL,
                             dwStyle | WS_POPUP | WS_HSCROLL | WS_VSCROLL | WS_VISIBLE,
                             0, 0, 200, 60, parent, NULL, hmoduleRichEdit, NULL);
+  ok(hwnd != NULL, "class: %s, error: %d\n", lpClassName, (int) GetLastError());
   return hwnd;
 }
 
@@ -758,6 +759,65 @@ static void test_ITextRange_GetChar(void)
   hres = ITextRange_GetChar(txtRge, &pch);
   ok(hres == CO_E_RELEASED, "got 0x%08x\n", hres);
 
+  ITextRange_Release(txtRge);
+}
+
+/* Helper function for testing ITextRange_ScrollIntoView */
+static void check_range(HWND w, ITextDocument* doc, int first, int lim,
+                        LONG bStart, int expected_nonzero)
+{
+  SCROLLINFO si;
+  ITextRange *txtRge = NULL;
+  HRESULT hres;
+
+  si.cbSize = sizeof(SCROLLINFO);
+  si.fMask = SIF_POS | SIF_RANGE;
+
+  hres = ITextDocument_Range(doc, first, lim, &txtRge);
+  ok(hres == S_OK, "got 0x%08x\n", hres);
+  hres = ITextRange_ScrollIntoView(txtRge, bStart);
+  ok(hres == S_OK, "got 0x%08x\n", hres);
+  GetScrollInfo(w, SB_VERT, &si);
+  if (expected_nonzero) {
+    ok(si.nPos != 0,
+       "Scrollbar at 0, should be >0. (TextRange %d-%d, scroll range %d-%d.)\n",
+       first, lim, si.nMin, si.nMax);
+  } else {
+    ok(si.nPos == 0,
+       "Scrollbar at %d, should be 0. (TextRange %d-%d, scroll range %d-%d.)\n",
+       si.nPos, first, lim, si.nMin, si.nMax);
+  }
+}
+
+static void test_ITextRange_ScrollIntoView(void)
+{
+  HWND w;
+  IRichEditOle *reOle = NULL;
+  ITextDocument *txtDoc = NULL;
+  ITextRange *txtRge = NULL;
+  HRESULT hres;
+  static const CHAR test_text1[] = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10";
+
+  create_interfaces(&w, &reOle, &txtDoc, NULL);
+  SendMessageA(w, WM_SETTEXT, 0, (LPARAM)test_text1);
+
+  /* Scroll to the top. */
+  check_range(w, txtDoc, 0, 1, tomStart, 0);
+
+  /* Scroll to the bottom. */
+  check_range(w, txtDoc, 19, 20, tomStart, 1);
+
+  /* Back up to the top. */
+  check_range(w, txtDoc, 0, 1, tomStart, 0);
+
+  /* Large range */
+  check_range(w, txtDoc, 0, 20, tomStart, 0);
+
+  hres = ITextDocument_Range(txtDoc, 0, 0, &txtRge);
+  ok(hres == S_OK, "got 0x%08x\n", hres);
+  release_interfaces(&w, &reOle, &txtDoc, NULL);
+  hres = ITextRange_ScrollIntoView(txtRge, tomStart);
+  ok(hres == CO_E_RELEASED, "got 0x%08x\n", hres);
   ITextRange_Release(txtRge);
 }
 
@@ -3801,6 +3861,7 @@ START_TEST(richole)
   test_ITextSelection_GetStoryLength();
   test_ITextDocument_Range();
   test_ITextRange_GetChar();
+  test_ITextRange_ScrollIntoView();
   test_ITextRange_GetStart_GetEnd();
   test_ITextRange_GetDuplicate();
   test_ITextRange_SetStart();
