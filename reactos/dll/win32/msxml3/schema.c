@@ -789,7 +789,7 @@ static inline schema_cache* impl_from_IXMLDOMSchemaCollection2(IXMLDOMSchemaColl
 
 static inline schema_cache* impl_from_IXMLDOMSchemaCollection(IXMLDOMSchemaCollection* iface)
 {
-    return CONTAINING_RECORD(iface, schema_cache, IXMLDOMSchemaCollection2_iface);
+    return CONTAINING_RECORD((IXMLDOMSchemaCollection2 *)iface, schema_cache, IXMLDOMSchemaCollection2_iface);
 }
 
 static inline schema_cache* unsafe_impl_from_IXMLDOMSchemaCollection(IXMLDOMSchemaCollection *iface)
@@ -1085,6 +1085,18 @@ static HRESULT WINAPI schema_cache_QueryInterface(IXMLDOMSchemaCollection2* ifac
     {
         *ppvObject = iface;
     }
+    else if(This->version == MSXML6 && IsEqualIID(riid, &CLSID_XMLSchemaCache60))
+    {
+        /*
+         * Version 6 can be queried for an interface with IID equal to CLSID.
+         * There is no public interface with that IID and returned pointer
+         * is equal to returned IXMLDOMSchemaCollection2 iface. We assume
+         * that it's just another way for querying IXMLDOMSchemaCollection2
+         * interface. Office 2013 ClickToRun installer uses this.
+         */
+        WARN("riid CLSID_XMLSchemaCache60, returning IXMLDOMSchemaCollection2 interface.\n");
+        *ppvObject = iface;
+    }
     else if (dispex_query_interface(&This->dispex, riid, ppvObject))
     {
         return *ppvObject ? S_OK : E_NOINTERFACE;
@@ -1206,12 +1218,13 @@ static HRESULT WINAPI schema_cache_add(IXMLDOMSchemaCollection2* iface, BSTR uri
             break;
 
         case VT_DISPATCH:
+        case VT_UNKNOWN:
             {
                 xmlDocPtr doc = NULL;
                 cache_entry* entry;
                 CacheEntryType type;
                 IXMLDOMNode* domnode = NULL;
-                IDispatch_QueryInterface(V_DISPATCH(&var), &IID_IXMLDOMNode, (void**)&domnode);
+                IUnknown_QueryInterface(V_UNKNOWN(&var), &IID_IXMLDOMNode, (void**)&domnode);
 
                 if (domnode)
                     doc = xmlNodePtr_from_domnode(domnode, XML_DOCUMENT_NODE)->doc;
@@ -1255,10 +1268,9 @@ static HRESULT WINAPI schema_cache_add(IXMLDOMSchemaCollection2* iface, BSTR uri
             break;
 
         default:
-            {
-                heap_free(name);
-                return E_INVALIDARG;
-            }
+            FIXME("arg type is not supported, %s\n", debugstr_variant(&var));
+            heap_free(name);
+            return E_INVALIDARG;
     }
     heap_free(name);
     return S_OK;
