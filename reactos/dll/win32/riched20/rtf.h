@@ -1171,6 +1171,8 @@ struct _RTF_Info {
     int nestingLevel;
     BOOL canInheritInTbl;
     int borderType; /* value corresponds to the RTFBorder constants. */
+
+    PARAFORMAT2 fmt; /* Accumulated para fmt for current paragraph. */
 };
 
 
