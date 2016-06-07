@@ -121,7 +121,7 @@ reactos/dll/win32/msisip              # Synced to WineStaging-1.9.4
 reactos/dll/win32/msisys.ocx          # Synced to WineStaging-1.9.4
 reactos/dll/win32/msnet32             # Synced to WineStaging-1.9.4
 reactos/dll/win32/mspatcha            # Synced to WineStaging-1.9.4
-reactos/dll/win32/msrle32             # Synced to WineStaging-1.9.4
+reactos/dll/win32/msrle32             # Synced to WineStaging-1.9.11
 reactos/dll/win32/mssign32            # Synced to WineStaging-1.9.4
 reactos/dll/win32/mssip32             # Synced to WineStaging-1.9.4
 reactos/dll/win32/mstask              # Synced to WineStaging-1.9.4
