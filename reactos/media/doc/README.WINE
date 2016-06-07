@@ -128,7 +128,7 @@ reactos/dll/win32/mstask              # Synced to WineStaging-1.9.4
 reactos/dll/win32/msvcrt20            # Out of sync
 reactos/dll/win32/msvcrt40            # Out of sync
 reactos/dll/win32/msvfw32             # Synced to WineStaging-1.9.11
-reactos/dll/win32/msvidc32            # Synced to WineStaging-1.9.4
+reactos/dll/win32/msvidc32            # Synced to WineStaging-1.9.11
 reactos/dll/win32/msxml               # Synced to WineStaging-1.9.4
 reactos/dll/win32/msxml2              # Synced to WineStaging-1.9.4
 reactos/dll/win32/msxml3              # Synced to WineStaging-1.9.4
