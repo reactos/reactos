@@ -100,7 +100,7 @@ static inline size_t bstr_alloc_size(size_t size)
 
 static inline bstr_t *bstr_from_str(BSTR str)
 {
-    return CONTAINING_RECORD(str, bstr_t, u.str);
+    return CONTAINING_RECORD((void *)str, bstr_t, u.str);
 }
 
 static inline bstr_cache_entry_t *get_cache_entry_from_idx(unsigned cache_idx)
