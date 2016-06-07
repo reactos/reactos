@@ -11,9 +11,16 @@ BOOLEAN AhciAdapterReset(
   __in      PAHCI_ADAPTER_EXTENSION             adapterExtension
 );
 
+__inline
 VOID AhciZeroMemory(
   __in      PCHAR                               buffer,
   __in      ULONG                               bufferSize
+);
+
+__inline
+BOOLEAN IsPortValid(
+  __in      PAHCI_ADAPTER_EXTENSION             adapterExtension,
+  __in      UCHAR                               pathId
 );
 
 /**
@@ -40,6 +47,7 @@ BOOLEAN AhciPortInitialize(
 
     adapterExtension = portExtension->AdapterExtension;
     abar = adapterExtension->ABAR_Address;
+
     portExtension->Port = &abar->PortList[portExtension->PortNumber];
 
     commandListPhysical = StorPortGetPhysicalAddress(adapterExtension, NULL, portExtension->CommandList, &mappedLength);
@@ -60,6 +68,14 @@ BOOLEAN AhciPortInitialize(
     //Note: Assuming 32bit support only
     StorPortWriteRegisterUlong(adapterExtension, &portExtension->Port->CLB, commandListPhysical.LowPart);
     StorPortWriteRegisterUlong(adapterExtension, &portExtension->Port->FB, receivedFISPhysical.LowPart);
+
+    // set device power state flag to D0
+    portExtension->DevicePowerState = StorPowerDeviceD0;
+
+    // clear pending interrupts
+    StorPortWriteRegisterUlong(adapterExtension, &portExtension->Port->SERR, (ULONG)-1);
+    StorPortWriteRegisterUlong(adapterExtension, &portExtension->Port->IS, (ULONG)-1);
+    StorPortWriteRegisterUlong(adapterExtension, portExtension->AdapterExtension->IS, (1 << portExtension->PortNumber));
 
     return TRUE;
 }// -- AhciPortInitialize();
@@ -87,7 +103,7 @@ BOOLEAN AhciAllocateResourceForAdapter(
 
     StorPortDebugPrint(0, "AhciAllocateResourceForAdapter()\n");
 
-    // 3.1.1 NCS = CAP[12:08] -> Align 
+    // 3.1.1 NCS = CAP[12:08] -> Align
     NCS = (adapterExtension->CAP & 0xF00) >> 8;
     AlignedNCS = ((NCS/8) + 1) * 8;
 
@@ -116,33 +132,16 @@ BOOLEAN AhciAllocateResourceForAdapter(
     nonCachedExtension = (PCHAR)adapterExtension->NonCachedExtension;
 
     AhciZeroMemory(nonCachedExtension, nonCachedExtensionSize);
-    
 
-    // allocate memory for port extension
-    /* --> Allocate memory for port extension, but right now it is returning STOR_STATUS_NOT_IMPLEMENTED
-    so, for testing purpose, I allocated during driver entry itself.
-    status = StorPortAllocatePool(
-                    adapterExtension, 
-                    portCount * sizeof(AHCI_PORT_EXTENSION),
-                    AHCI_POOL_TAG, 
-                    (PVOID*)&portsExtension);
-
-    if (status != STOR_STATUS_SUCCESS){
-        StorPortDebugPrint(0, "\tstatus : %x\n", status);
-        return FALSE;
-    }
-
-    AhciZeroMemory((PCHAR)portsExtension, portCount * sizeof(AHCI_PORT_EXTENSION));
-    */
     nonCachedExtensionSize /= portCount;
     currentCount = 0;
-    for (index = 0; index < 32; index++)
+    for (index = 0; index < MAXIMUM_AHCI_PORT_COUNT; index++)
     {
+        adapterExtension->PortExtension[index].IsActive = FALSE;
         if ((adapterExtension->PortImplemented & (1<<index)) != 0)
         {
-            //adapterExtension->PortExtension[index] = (PAHCI_PORT_EXTENSION)((PCHAR)portsExtension + sizeof(AHCI_PORT_EXTENSION) * currentCount);
-
             adapterExtension->PortExtension[index].PortNumber = index;
+            adapterExtension->PortExtension[index].IsActive = TRUE;
             adapterExtension->PortExtension[index].AdapterExtension = adapterExtension;
             adapterExtension->PortExtension[index].CommandList = (PAHCI_COMMAND_HEADER)(nonCachedExtension + (currentCount*nonCachedExtensionSize));
             adapterExtension->PortExtension[index].ReceivedFIS = (PAHCI_RECEIVED_FIS)((PCHAR)adapterExtension->PortExtension[index].CommandList + sizeof(AHCI_COMMAND_HEADER) * AlignedNCS);
@@ -168,11 +167,26 @@ BOOLEAN AhciHwInitialize(
   __in      PVOID                               AdapterExtension
 )
 {
+    ULONG ghc, messageCount, status;
     PAHCI_ADAPTER_EXTENSION adapterExtension;
 
     StorPortDebugPrint(0, "AhciHwInitialize()\n");
 
     adapterExtension = (PAHCI_ADAPTER_EXTENSION)AdapterExtension;
+    adapterExtension->StateFlags.MessagePerPort = FALSE;
+
+    // First check what type of interrupt/synchronization device is using
+    ghc = StorPortReadRegisterUlong(adapterExtension, &adapterExtension->ABAR_Address->GHC);
+
+    //When set to ‘1’ by hardware, indicates that the HBA requested more than one MSI vector
+    //but has reverted to using the first vector only.  When this bit is cleared to ‘0’,
+    //the HBA has not reverted to single MSI mode (i.e. hardware is already in single MSI mode,
+    //software has allocated the number of messages requested
+    if ((ghc & AHCI_Global_HBA_CONTROL_MRSM) == 0)
+    {
+        adapterExtension->StateFlags.MessagePerPort = TRUE;
+        StorPortDebugPrint(0, "\tMultiple MSI based message not supported\n");
+    }
 
     return TRUE;
 }// -- AhciHwInitialize();
@@ -199,7 +213,7 @@ BOOLEAN AhciHwInterrupt(
 
     adapterExtension = (PAHCI_ADAPTER_EXTENSION)AdapterExtension;
 
-    return TRUE;
+    return FALSE;
 }// -- AhciHwInterrupt();
 
 /**
@@ -221,14 +235,87 @@ BOOLEAN AhciHwStartIo(
 
 )
 {
-    UCHAR function;
+    UCHAR function, pathId;
     PAHCI_ADAPTER_EXTENSION adapterExtension;
 
     StorPortDebugPrint(0, "AhciHwStartIo()\n");
 
-    adapterExtension = (PAHCI_ADAPTER_EXTENSION)AdapterExtension;
+    pathId = Srb->PathId;
     function = Srb->Function;
+    adapterExtension = (PAHCI_ADAPTER_EXTENSION)AdapterExtension;
 
+    if (!IsPortValid(adapterExtension, pathId))
+    {
+        Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
+        StorPortNotification(RequestComplete, adapterExtension, Srb);
+        return TRUE;
+    }
+
+    // https://msdn.microsoft.com/windows/hardware/drivers/storage/handling-srb-function-pnp
+    // If the function member of an SRB is set to SRB_FUNCTION_PNP,
+    // the SRB is a structure of type SCSI_PNP_REQUEST_BLOCK.
+    if (function == SRB_FUNCTION_PNP)
+    {
+        PSCSI_PNP_REQUEST_BLOCK pnpRequest;
+
+        pnpRequest = (PSCSI_PNP_REQUEST_BLOCK)Srb;
+        if ((pnpRequest->SrbPnPFlags & SRB_PNP_FLAGS_ADAPTER_REQUEST) != 0)
+        {
+            if (pnpRequest->PnPAction == StorRemoveDevice ||
+                pnpRequest->PnPAction == StorSurpriseRemoval)
+            {
+                Srb->SrbStatus = SRB_STATUS_SUCCESS;
+                adapterExtension->StateFlags.Removed = 1;
+                StorPortDebugPrint(0, "\tadapter removed\n");
+            }
+            else if (pnpRequest->PnPAction == StorStopDevice)
+            {
+                Srb->SrbStatus = SRB_STATUS_SUCCESS;
+                StorPortDebugPrint(0, "\tRequested to Stop the adapter\n");
+            }
+            else
+                Srb->SrbStatus = SRB_STATUS_INVALID_REQUEST;
+            StorPortNotification(RequestComplete, adapterExtension, Srb);
+            return TRUE;
+        }
+    }
+
+    if (function == SRB_FUNCTION_EXECUTE_SCSI)
+    {
+        // https://msdn.microsoft.com/en-us/windows/hardware/drivers/storage/handling-srb-function-execute-scsi
+        // On receipt of an SRB_FUNCTION_EXECUTE_SCSI request, a miniport driver's HwScsiStartIo
+        // routine does the following:
+        //
+        // - Gets and/or sets up whatever context the miniport driver maintains in its device,
+        //   logical unit, and/or SRB extensions
+        //   For example, a miniport driver might set up a logical unit extension with pointers
+        //   to the SRB itself and the SRB DataBuffer pointer, the SRB DataTransferLength value,
+        //   and a driver-defined value (or CDB SCSIOP_XXX value) indicating the operation to be
+        //   carried out on the HBA.
+        //
+        // - Calls an internal routine to program the HBA, as partially directed by the SrbFlags,
+        //   for the requested operation
+        //   For a device I/O operation, such an internal routine generally selects the target device
+        //   and sends the CDB over the bus to the target logical unit.
+        if (Srb->CdbLength > 0)
+        {
+            PCDB cdb = (PCDB)&Srb->Cdb;
+            if (cdb->CDB10.OperationCode == SCSIOP_INQUIRY)
+            {
+                StorPortDebugPrint(0, "\tINQUIRY Called!\n");
+            }
+        }
+        else
+        {
+            Srb->SrbStatus = SRB_STATUS_BAD_FUNCTION;
+            StorPortNotification(RequestComplete, adapterExtension, Srb);
+            return TRUE;
+        }
+    }
+
+    StorPortDebugPrint(0, "\tUnknow function code recieved: %x\n", function);
+    Srb->SrbStatus = SRB_STATUS_BAD_FUNCTION;
+    StorPortNotification(RequestComplete, adapterExtension, Srb);
     return TRUE;
 }// -- AhciHwStartIo();
 
@@ -305,7 +392,7 @@ ULONG AhciHwFindAdapter(
     ULONG portCount, portImplemented;
     ULONG pci_cfg_len;
     UCHAR pci_cfg_buf[0x30];
-    
+
     PAHCI_MEMORY_REGISTERS abar;
     PPCI_COMMON_CONFIG pciConfigData;
     PAHCI_ADAPTER_EXTENSION adapterExtension;
@@ -315,7 +402,7 @@ ULONG AhciHwFindAdapter(
     adapterExtension = (PAHCI_ADAPTER_EXTENSION)AdapterExtension;
     adapterExtension->SlotNumber = ConfigInfo->SlotNumber;
     adapterExtension->SystemIoBusNumber = ConfigInfo->SystemIoBusNumber;
-    
+
     // get PCI configuration header
     pci_cfg_len = StorPortGetBusData(
                         adapterExtension,
@@ -374,7 +461,7 @@ ULONG AhciHwFindAdapter(
     // 3.1.2 -- AE bit is read-write only if CAP.SAM is '0'
     ghc = StorPortReadRegisterUlong(adapterExtension, &abar->GHC);
     // AE := Highest Significant bit of GHC
-    if ((ghc & (0x1<<31)) == 1)//Hmm, controller was already in power state
+    if ((ghc & AHCI_Global_HBA_CONTROL_AE) == 1)//Hmm, controller was already in power state
     {
         // reset controller to have it in know state
         StorPortDebugPrint(0, "\tAE Already set, Reset()\n");
@@ -384,10 +471,10 @@ ULONG AhciHwFindAdapter(
         }
     }
 
-    ghc = 0x1<<31;// only AE=1
+    ghc = AHCI_Global_HBA_CONTROL_AE;// only AE=1
     StorPortWriteRegisterUlong(adapterExtension, &abar->GHC, ghc);
 
-    adapterExtension->IS = abar->IS;
+    adapterExtension->IS = &abar->IS;
     adapterExtension->PortImplemented = StorPortReadRegisterUlong(adapterExtension, &abar->PI);
 
     if (adapterExtension->PortImplemented == 0){
@@ -400,23 +487,23 @@ ULONG AhciHwFindAdapter(
     ConfigInfo->MaximumNumberOfTargets = 1;
     ConfigInfo->MaximumNumberOfLogicalUnits = 1;
     ConfigInfo->ResetTargetSupported = TRUE;
-    ConfigInfo->NumberOfBuses = 32;
+    ConfigInfo->NumberOfBuses = MAXIMUM_AHCI_PORT_COUNT;
     ConfigInfo->SynchronizationModel = StorSynchronizeFullDuplex;
     ConfigInfo->ScatterGather = TRUE;
 
     // Turn IE -- Interrupt Enabled
-    ghc |= 0x2;
+    ghc |= AHCI_Global_HBA_CONTROL_IE;
     StorPortWriteRegisterUlong(adapterExtension, &abar->GHC, ghc);
-    
+
     // allocate necessary resource for each port
     if (!AhciAllocateResourceForAdapter(adapterExtension, ConfigInfo)){
         StorPortDebugPrint(0, "\tAhciAllocateResourceForAdapter() == FALSE\n");
         return SP_RETURN_ERROR;
     }
 
-    for (index = 0; index < 32; index++)
+    for (index = 0; index < MAXIMUM_AHCI_PORT_COUNT; index++)
     {
-        if ((adapterExtension->PortImplemented & (1<<index)) != 0)
+        if ((adapterExtension->PortImplemented & (0x1<<index)) != 0)
             AhciPortInitialize(&adapterExtension->PortExtension[index]);
     }
 
@@ -443,7 +530,7 @@ ULONG DriverEntry(
     HW_INITIALIZATION_DATA hwInitializationData;
     ULONG i, status;
 
-    StorPortDebugPrint(0, "Storahci Loaded 10023\n");
+    StorPortDebugPrint(0, "Storahci Loaded\n");
 
     // initialize the hardware data structure
     AhciZeroMemory((PCHAR)&hwInitializationData, sizeof(HW_INITIALIZATION_DATA));
@@ -471,13 +558,14 @@ ULONG DriverEntry(
     // set required extension sizes
     hwInitializationData.SrbExtensionSize = sizeof(AHCI_SRB_EXTENSION);
     hwInitializationData.DeviceExtensionSize = sizeof(AHCI_ADAPTER_EXTENSION);
-    
+
     // register our hw init data
     status = StorPortInitialize(
                     DriverObject,
                     RegistryPath,
                     &hwInitializationData,
                     NULL);
+
     StorPortDebugPrint(0, "\tstatus:%x\n", status);
     return status;
 }// -- DriverEntry();
@@ -494,7 +582,7 @@ ULONG DriverEntry(
  * software sets GHC.HR to ‘1’ and may poll until this bit is read to be ‘0’, at which point software knows that
  * the HBA reset has completed.
  * If the HBA has not cleared GHC.HR to ‘0’ within 1 second of software setting GHC.HR to ‘1’, the HBA is in
- * a hung or locked state. 
+ * a hung or locked state.
  *
  * @param adapterExtension
  *
@@ -538,6 +626,7 @@ BOOLEAN AhciAdapterReset(
  *
  * @param buffer
  */
+__inline
 VOID AhciZeroMemory(
   __in      PCHAR                               buffer,
   __in      ULONG                               bufferSize
@@ -547,3 +636,26 @@ VOID AhciZeroMemory(
     for (i = 0; i < bufferSize; i++)
         buffer[i] = 0;
 }// -- AhciZeroMemory();
+
+/**
+ * @name IsPortValid
+ * @implemented
+ *
+ * Tells wheather given port is implemented or not
+ *
+ * @param adapterExtension
+ * @param PathId
+ *
+ * @return
+ * return TRUE if bus was successfully reset
+ */
+__inline
+BOOLEAN IsPortValid(
+  __in      PAHCI_ADAPTER_EXTENSION             adapterExtension,
+  __in      UCHAR                               pathId
+)
+{
+    if (pathId >= MAXIMUM_AHCI_PORT_COUNT)
+        return FALSE;
+    return adapterExtension->PortExtension[pathId].IsActive;
+}// -- IsPortValid()
