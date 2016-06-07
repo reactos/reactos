@@ -3533,6 +3533,9 @@ static void test_VarDateFromStr(void)
   DFS("1-2-1970");        EXPECT_DBL(25570.0);
   DFS("13-1-1970");       EXPECT_DBL(25581.0);
   DFS("1970-1-13");       EXPECT_DBL(25581.0);
+  DFS("6/30/2011 01:20:34");          EXPECT_DBL(40724.05594907407);
+  DFS("6/30/2011 01:20:34 AM");       EXPECT_DBL(40724.05594907407);
+  DFS("6/30/2011 01:20:34 PM");       EXPECT_DBL(40724.55594907407);
   /* Native fails "1999 January 3, 9AM". I consider that a bug in native */
 
   /* test a non-english data string */
