@@ -514,6 +514,7 @@ static void test_schema_refs(void)
     VARIANT_BOOL b;
     BSTR str;
     LONG len;
+    HRESULT hr;
 
     doc = create_document(&IID_IXMLDOMDocument2);
     if (!doc)
@@ -563,6 +564,24 @@ static void test_schema_refs(void)
     ole_check(IXMLDOMSchemaCollection_remove(cache, NULL));
     len = -1;
     ole_check(IXMLDOMSchemaCollection_get_length(cache, &len));
+    ok(len == 0, "got %d\n", len);
+
+    /* same, but with VT_UNKNOWN type */
+    V_VT(&v) = VT_UNKNOWN;
+    V_UNKNOWN(&v) = (IUnknown*)doc;
+    hr = IXMLDOMSchemaCollection_add(cache, NULL, v);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    len = -1;
+    hr = IXMLDOMSchemaCollection_get_length(cache, &len);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(len == 1, "got %d\n", len);
+
+    hr = IXMLDOMSchemaCollection_remove(cache, NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    len = -1;
+    hr = IXMLDOMSchemaCollection_get_length(cache, &len);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
     ok(len == 0, "got %d\n", len);
 
     str = SysAllocString(xdr_schema_uri);
@@ -1638,6 +1657,24 @@ static void test_remove(void)
     free_bstrs();
 }
 
+static void test_ifaces(void)
+{
+    IXMLDOMSchemaCollection2 *cache;
+    IUnknown *unk;
+    HRESULT hr;
+
+    cache = create_cache_version(60, &IID_IXMLDOMSchemaCollection2);
+    if (!cache) return;
+
+    /* CLSID_XMLSchemaCache60 is returned as an interface (the same as IXMLDOMSchemaCollection2). */
+    hr = IXMLDOMSchemaCollection2_QueryInterface(cache, &CLSID_XMLSchemaCache60, (void**)&unk);
+    ok (hr == S_OK, "Could not get CLSID_XMLSchemaCache60 iface: %08x\n", hr);
+    ok (unk == (IUnknown*)cache, "unk != cache\n");
+
+    IUnknown_Release(unk);
+    IXMLDOMSchemaCollection2_Release(cache);
+}
+
 START_TEST(schema)
 {
     HRESULT r;
@@ -1655,6 +1692,7 @@ START_TEST(schema)
     test_dispex();
     test_get();
     test_remove();
+    test_ifaces();
 
     CoUninitialize();
 }

@@ -520,7 +520,7 @@ static BOOL test_try_xmldoc(void)
                           &IID_IXMLDocument, (LPVOID*)&doc);
     if (FAILED(hr))
     {
-        skip("Failed to create XMLDocument instance\n");
+        win_skip("Failed to create XMLDocument instance\n");
         return FALSE;
     }
 

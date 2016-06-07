@@ -6742,9 +6742,9 @@ static void test_TransformWithLoadingLocalFile(void)
         BSTR sPart1 = _bstr_(szBasicTransformSSXMLPart1);
         BSTR sPart2 = _bstr_(szBasicTransformSSXMLPart2);
         BSTR sFileName = _bstr_(lpPathBuffer);
-        int nLegnth = lstrlenW(sPart1) + lstrlenW(sPart2) + lstrlenW(sFileName) + 1;
+        int nLength = lstrlenW(sPart1) + lstrlenW(sPart2) + lstrlenW(sFileName) + 1;
 
-        sXSL = SysAllocStringLen(NULL, nLegnth);
+        sXSL = SysAllocStringLen(NULL, nLength);
         lstrcpyW(sXSL, sPart1);
         lstrcatW(sXSL, sFileName);
         lstrcatW(sXSL, sPart2);
@@ -9297,10 +9297,12 @@ static void test_get_attributes(void)
 {
     const get_attributes_t *entry = get_attributes;
     IXMLDOMNamedNodeMap *map;
-    IXMLDOMDocument *doc;
+    IXMLDOMDocument *doc, *doc2;
     IXMLDOMNode *node, *node2;
+    IXMLDOMElement *elem;
     VARIANT_BOOL b;
     HRESULT hr;
+    VARIANT v;
     BSTR str;
     LONG length;
 
@@ -9469,6 +9471,39 @@ static void test_get_attributes(void)
     ok(hr == S_OK, "got %08x\n", hr);
     EXPECT_REF(node2, 1);
     IXMLDOMNode_Release(node2);
+
+    IXMLDOMNamedNodeMap_Release(map);
+
+    /* append created element a different document, map still works */
+    hr = IXMLDOMDocument_createElement(doc, _bstr_("test"), &elem);
+    ok(hr == S_OK, "createElement failed: %08x\n", hr);
+
+    V_VT(&v) = VT_I4;
+    V_I4(&v) = 1;
+    hr = IXMLDOMElement_setAttribute(elem, _bstr_("testattr"), v);
+    ok(hr == S_OK, "setAttribute failed: %08x\n", hr);
+
+    hr = IXMLDOMElement_get_attributes(elem, &map);
+    ok(hr == S_OK, "get_attributes failed: %08x\n", hr);
+
+    length = 0;
+    hr = IXMLDOMNamedNodeMap_get_length(map, &length);
+    ok(hr == S_OK, "got %08x\n", hr);
+    ok(length == 1, "got %d\n", length);
+
+    doc2 = create_document(&IID_IXMLDOMDocument);
+
+    hr = IXMLDOMDocument_appendChild(doc2, (IXMLDOMNode*)elem, &node);
+    ok(hr == S_OK, "appendChild failed: %08x\n", hr);
+    ok(node == (IXMLDOMNode*)elem, "node != elem\n");
+    IXMLDOMNode_Release(node);
+    IXMLDOMElement_Release(elem);
+    IXMLDOMDocument_Release(doc2);
+
+    length = 0;
+    hr = IXMLDOMNamedNodeMap_get_length(map, &length);
+    ok(hr == S_OK, "got %08x\n", hr);
+    ok(length == 1, "got %d\n", length);
 
     IXMLDOMNamedNodeMap_Release(map);
 
