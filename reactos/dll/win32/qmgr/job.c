@@ -364,6 +364,12 @@ static HRESULT WINAPI BackgroundCopyJob_Resume(
              && This->state != BG_JOB_STATE_TRANSFERRING)
     {
         This->state = BG_JOB_STATE_QUEUED;
+        This->error.context = This->error.code = 0;
+        if (This->error.file)
+        {
+            IBackgroundCopyFile2_Release(This->error.file);
+            This->error.file = NULL;
+        }
         SetEvent(globalMgr.jobEvent);
     }
     LeaveCriticalSection(&globalMgr.cs);
