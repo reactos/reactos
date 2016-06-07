@@ -1586,11 +1586,11 @@ static void test_item_moniker(void)
     IBindCtx *bindctx;
     IMoniker *inverse;
     IUnknown *unknown;
-    static const WCHAR wszDelimeter[] = {'!',0};
+    static const WCHAR wszDelimiter[] = {'!',0};
     static const WCHAR wszObjectName[] = {'T','e','s','t',0};
     static const WCHAR expected_display_name[] = { '!','T','e','s','t',0 };
 
-    hr = CreateItemMoniker(wszDelimeter, wszObjectName, &moniker);
+    hr = CreateItemMoniker(wszDelimiter, wszObjectName, &moniker);
     ok_ole_success(hr, CreateItemMoniker);
 
     test_moniker("item moniker", moniker, 
@@ -1715,15 +1715,15 @@ static void test_generic_composite_moniker(void)
     FILETIME filetime;
     IMoniker *inverse;
     IUnknown *unknown;
-    static const WCHAR wszDelimeter1[] = {'!',0};
+    static const WCHAR wszDelimiter1[] = {'!',0};
     static const WCHAR wszObjectName1[] = {'T','e','s','t',0};
-    static const WCHAR wszDelimeter2[] = {'#',0};
+    static const WCHAR wszDelimiter2[] = {'#',0};
     static const WCHAR wszObjectName2[] = {'W','i','n','e',0};
     static const WCHAR expected_display_name[] = { '!','T','e','s','t','#','W','i','n','e',0 };
 
-    hr = CreateItemMoniker(wszDelimeter1, wszObjectName1, &moniker1);
+    hr = CreateItemMoniker(wszDelimiter1, wszObjectName1, &moniker1);
     ok_ole_success(hr, CreateItemMoniker);
-    hr = CreateItemMoniker(wszDelimeter2, wszObjectName2, &moniker2);
+    hr = CreateItemMoniker(wszDelimiter2, wszObjectName2, &moniker2);
     ok_ole_success(hr, CreateItemMoniker);
     hr = CreateGenericComposite(moniker1, moniker2, &moniker);
     ok_ole_success(hr, CreateGenericComposite);

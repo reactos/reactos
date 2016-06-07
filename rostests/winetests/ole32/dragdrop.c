@@ -36,39 +36,233 @@
 
 #include <wine/test.h>
 
-#define DEFINE_EXPECT(func) \
-    static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
 
-#define SET_EXPECT(func) \
-    expect_ ## func = TRUE
+#define METHOD_LIST \
+    METHOD(DO_EnumFormatEtc), \
+    METHOD(DO_QueryGetData), \
+    METHOD(EnumFMT_Next), \
+    METHOD(EnumFMT_Reset), \
+    METHOD(EnumFMT_Skip), \
+    METHOD(DS_QueryContinueDrag), \
+    METHOD(DS_GiveFeedback), \
+    METHOD(DT_DragEnter), \
+    METHOD(DT_Drop), \
+    METHOD(DT_DragLeave), \
+    METHOD(DT_DragOver), \
+    METHOD(DoDragDrop_effect_in), \
+    METHOD(DoDragDrop_ret), \
+    METHOD(DoDragDrop_effect_out), \
+    METHOD(end_seq)
 
-#define CHECK_EXPECT2(func) \
-    do { \
-        ok(expect_ ##func, "unexpected call " #func "\n"); \
-        called_ ## func = TRUE; \
-    }while(0)
+#define METHOD(x) x
+enum method
+{
+    METHOD_LIST
+};
+#undef METHOD
 
-#define CHECK_EXPECT(func) \
-    do { \
-        CHECK_EXPECT2(func); \
-        expect_ ## func = FALSE; \
-    }while(0)
+#define METHOD(x) #x
+static const char *method_names[] =
+{
+    METHOD_LIST
+};
+#undef METHOD
+#undef METHOD_LIST
 
-#define CHECK_CALLED(func) \
-    do { \
-        ok(called_ ## func, "expected " #func "\n"); \
-        expect_ ## func = called_ ## func = FALSE; \
-    }while(0)
+struct method_call
+{
+    enum method method;
+    DWORD expect_param;
 
-DEFINE_EXPECT(DataObject_EnumFormatEtc);
-DEFINE_EXPECT(EnumFORMATETC_Next);
-DEFINE_EXPECT(EnumFORMATETC_Reset);
-DEFINE_EXPECT(DataObject_QueryGetData);
-DEFINE_EXPECT(DropSource_QueryContinueDrag);
-DEFINE_EXPECT(DropTarget_DragEnter);
-DEFINE_EXPECT(DropSource_GiveFeedback);
-DEFINE_EXPECT(DropTarget_Drop);
-DEFINE_EXPECT(DropTarget_DragLeave);
+    HRESULT set_ret;
+    DWORD set_param;
+
+    int called_todo : 1;
+};
+
+const struct method_call *call_ptr;
+
+static HRESULT check_expect_(enum method func, DWORD expect_param, DWORD *set_param, const char *file, int line )
+{
+    HRESULT hr;
+
+    do
+    {
+        todo_wine_if(call_ptr->called_todo)
+            ok_( file, line )( func == call_ptr->method, "unexpected call %s instead of %s\n",
+                               method_names[func], method_names[call_ptr->method] );
+        if (call_ptr->method == func) break;
+    } while ((++call_ptr)->method != end_seq);
+
+    ok_( file, line )( expect_param == call_ptr->expect_param, "%s: unexpected param %08x expected %08x\n",
+                       method_names[func], expect_param, call_ptr->expect_param );
+    if (set_param) *set_param = call_ptr->set_param;
+    hr = call_ptr->set_ret;
+    if (call_ptr->method != end_seq) call_ptr++;
+   return hr;
+}
+
+#define check_expect(func, expect_param, set_param) \
+    check_expect_((func), (expect_param), (set_param), __FILE__, __LINE__)
+
+
+struct method_call call_lists[][30] =
+{
+    { /* First QueryContinueDrag rets DRAGDROP_S_DROP */
+        { DoDragDrop_effect_in, 0, 0, DROPEFFECT_COPY, 0 },
+        { DO_EnumFormatEtc, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_FALSE, 0, 1 },
+        { EnumFMT_Reset, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_FALSE, 0, 1 },
+        { DO_QueryGetData, 0, S_OK, 0, 1 },
+
+        { DS_QueryContinueDrag, 0, DRAGDROP_S_DROP, 0, 0 },
+        { DT_DragEnter, DROPEFFECT_COPY, S_OK, DROPEFFECT_COPY, 0 },
+        { DS_GiveFeedback, DROPEFFECT_COPY, DRAGDROP_S_USEDEFAULTCURSORS, 0, 0 },
+        { DT_Drop, DROPEFFECT_COPY, 0xbeefbeef, DROPEFFECT_COPY, 0 },
+
+        { DoDragDrop_ret, 0xbeefbeef, 0, 0, 0, },
+        { DoDragDrop_effect_out, DROPEFFECT_COPY, 0, 0, 0 },
+        { end_seq, 0, 0, 0, 0 }
+    },
+    { /* As above, but initial effects == 0 */
+        { DoDragDrop_effect_in, 0, 0, 0, 0 },
+        { DO_EnumFormatEtc, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_FALSE, 0, 1 },
+        { EnumFMT_Reset, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_FALSE, 0, 1 },
+        { DO_QueryGetData, 0, S_OK, 0, 1 },
+
+        { DS_QueryContinueDrag, 0, DRAGDROP_S_DROP, 0, 0 },
+        { DT_DragEnter, 0, S_OK, DROPEFFECT_COPY, 0 },
+        { DS_GiveFeedback, 0, DRAGDROP_S_USEDEFAULTCURSORS, 0, 0 },
+        { DT_DragLeave, 0, 0, 0, 0 },
+
+        { DoDragDrop_ret, DRAGDROP_S_DROP, 0, 0, 0 },
+        { DoDragDrop_effect_out, 0, 0, 0, 0 },
+        { end_seq, 0, 0, 0, 0 }
+    },
+    { /* Multiple initial effects */
+        { DoDragDrop_effect_in, 0, 0, DROPEFFECT_COPY | DROPEFFECT_MOVE, 0 },
+        { DO_EnumFormatEtc, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_FALSE, 0, 1 },
+        { EnumFMT_Reset, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_FALSE, 0, 1 },
+        { DO_QueryGetData, 0, S_OK, 0, 1 },
+
+        { DS_QueryContinueDrag, 0, DRAGDROP_S_DROP, 0, 0 },
+        { DT_DragEnter, DROPEFFECT_COPY | DROPEFFECT_MOVE, S_OK, DROPEFFECT_COPY, 0 },
+        { DS_GiveFeedback, DROPEFFECT_COPY, DRAGDROP_S_USEDEFAULTCURSORS, 0, 0 },
+        { DT_Drop, DROPEFFECT_COPY | DROPEFFECT_MOVE, 0, 0, 0 },
+
+        { DoDragDrop_ret, DRAGDROP_S_DROP, 0, 0, 0 },
+        { DoDragDrop_effect_out, 0, 0, 0, 0 },
+        { end_seq, 0, 0, 0, 0 }
+    },
+    { /* First couple of QueryContinueDrag return S_OK followed by a drop */
+        { DoDragDrop_effect_in, 0, 0, DROPEFFECT_COPY | DROPEFFECT_MOVE, 0 },
+        { DO_EnumFormatEtc, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_FALSE, 0, 1 },
+        { EnumFMT_Reset, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_FALSE, 0, 1 },
+        { DO_QueryGetData, 0, S_OK, 0, 1 },
+
+        { DS_QueryContinueDrag, 0, S_OK, 0, 0 },
+        { DT_DragEnter, DROPEFFECT_COPY | DROPEFFECT_MOVE, S_OK, DROPEFFECT_COPY, 0 },
+        { DS_GiveFeedback, DROPEFFECT_COPY, DRAGDROP_S_USEDEFAULTCURSORS, 0, 0 },
+        { DT_DragOver, DROPEFFECT_COPY | DROPEFFECT_MOVE, S_OK, DROPEFFECT_COPY, 0 },
+        { DS_GiveFeedback, DROPEFFECT_COPY, DRAGDROP_S_USEDEFAULTCURSORS, 0, 0 },
+
+        { DS_QueryContinueDrag, 0, S_OK, 0, 0 },
+        { DT_DragOver, DROPEFFECT_COPY | DROPEFFECT_MOVE, S_OK, DROPEFFECT_COPY, 0 },
+        { DS_GiveFeedback, DROPEFFECT_COPY, DRAGDROP_S_USEDEFAULTCURSORS, 0, 0 },
+
+        { DS_QueryContinueDrag, 0, DRAGDROP_S_DROP, 0, 0 },
+        { DT_Drop, DROPEFFECT_COPY | DROPEFFECT_MOVE, 0, 0, 0 },
+
+        { DoDragDrop_ret, DRAGDROP_S_DROP, 0, 0, 0 },
+        { DoDragDrop_effect_out, 0, 0, 0, 0 },
+        { end_seq, 0, 0, 0, 0 }
+    },
+    { /* First QueryContinueDrag cancels */
+        { DoDragDrop_effect_in, 0, 0, DROPEFFECT_COPY | DROPEFFECT_MOVE, 0 },
+        { DO_EnumFormatEtc, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_FALSE, 0, 1 },
+        { EnumFMT_Reset, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_FALSE, 0, 1 },
+        { DO_QueryGetData, 0, S_OK, 0, 1 },
+
+        { DS_QueryContinueDrag, 0, DRAGDROP_S_CANCEL, 0, 0 },
+
+        { DoDragDrop_ret, DRAGDROP_S_CANCEL, 0, 0, 0 },
+        { DoDragDrop_effect_out, 0, 0, 0, 0 },
+        { end_seq, 0, 0, 0, 0 }
+    },
+    { /* First couple of QueryContinueDrag return S_OK followed by a cancel */
+        { DoDragDrop_effect_in, 0, 0, DROPEFFECT_COPY | DROPEFFECT_MOVE, 0 },
+        { DO_EnumFormatEtc, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_FALSE, 0, 1 },
+        { EnumFMT_Reset, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_FALSE, 0, 1 },
+        { DO_QueryGetData, 0, S_OK, 0, 1 },
+
+        { DS_QueryContinueDrag, 0, S_OK, 0, 0 },
+        { DT_DragEnter, DROPEFFECT_COPY | DROPEFFECT_MOVE, S_OK, DROPEFFECT_COPY, 0 },
+        { DS_GiveFeedback, DROPEFFECT_COPY, DRAGDROP_S_USEDEFAULTCURSORS, 0, 0 },
+        { DT_DragOver, DROPEFFECT_COPY | DROPEFFECT_MOVE, S_OK, DROPEFFECT_COPY, 0 },
+        { DS_GiveFeedback, DROPEFFECT_COPY, DRAGDROP_S_USEDEFAULTCURSORS, 0, 0 },
+
+        { DS_QueryContinueDrag, 0, S_OK, 0, 0 },
+        { DT_DragOver, DROPEFFECT_COPY | DROPEFFECT_MOVE, S_OK, DROPEFFECT_COPY, 0 },
+        { DS_GiveFeedback, DROPEFFECT_COPY, DRAGDROP_S_USEDEFAULTCURSORS, 0, 0 },
+
+        { DS_QueryContinueDrag, 0, DRAGDROP_S_CANCEL, 0, 0 },
+        { DT_DragLeave, 0, 0, 0, 0 },
+
+        { DoDragDrop_ret, DRAGDROP_S_CANCEL, 0, 0, 0 },
+        { DoDragDrop_effect_out, 0, 0, 0, 0 },
+        { end_seq, 0, 0, 0, 0 }
+    },
+    { /* First couple of QueryContinueDrag return S_OK followed by a E_FAIL */
+        { DoDragDrop_effect_in, 0, 0, DROPEFFECT_COPY | DROPEFFECT_MOVE, 0 },
+        { DO_EnumFormatEtc, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_FALSE, 0, 1 },
+        { EnumFMT_Reset, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_OK, 0, 1 },
+        { EnumFMT_Next, 0, S_FALSE, 0, 1 },
+        { DO_QueryGetData, 0, S_OK, 0, 1 },
+
+        { DS_QueryContinueDrag, 0, S_OK, 0, 0 },
+        { DT_DragEnter, DROPEFFECT_COPY | DROPEFFECT_MOVE, S_OK, DROPEFFECT_COPY, 0 },
+        { DS_GiveFeedback, DROPEFFECT_COPY, DRAGDROP_S_USEDEFAULTCURSORS, 0, 0 },
+        { DT_DragOver, DROPEFFECT_COPY | DROPEFFECT_MOVE, S_OK, DROPEFFECT_COPY, 0 },
+        { DS_GiveFeedback, DROPEFFECT_COPY, DRAGDROP_S_USEDEFAULTCURSORS, 0, 0 },
+
+        { DS_QueryContinueDrag, 0, S_OK, 0, 0 },
+        { DT_DragOver, DROPEFFECT_COPY | DROPEFFECT_MOVE, S_OK, DROPEFFECT_COPY, 0 },
+        { DS_GiveFeedback, DROPEFFECT_COPY, DRAGDROP_S_USEDEFAULTCURSORS, 0, 0 },
+
+        { DS_QueryContinueDrag, 0, E_FAIL, 0, 0 },
+        { DT_DragLeave, 0, 0, 0, 0 },
+
+        { DoDragDrop_ret, E_FAIL, 0, 0, 0 },
+        { DoDragDrop_effect_out, 0, 0, 0, 0 },
+        { end_seq, 0, 0, 0, 0 }
+    },
+};
 
 static int droptarget_refs;
 
@@ -107,9 +301,7 @@ static HRESULT WINAPI DropTarget_DragEnter(IDropTarget* iface,
                                            DWORD grfKeyState, POINTL pt,
                                            DWORD* pdwEffect)
 {
-    CHECK_EXPECT(DropTarget_DragEnter);
-    *pdwEffect = DROPEFFECT_COPY;
-    return S_OK;
+    return check_expect(DT_DragEnter, *pdwEffect, pdwEffect);
 }
 
 static HRESULT WINAPI DropTarget_DragOver(IDropTarget* iface,
@@ -117,23 +309,19 @@ static HRESULT WINAPI DropTarget_DragOver(IDropTarget* iface,
                                           POINTL pt,
                                           DWORD* pdwEffect)
 {
-    ok(0, "unexpected call\n");
-    *pdwEffect = DROPEFFECT_COPY;
-    return S_OK;
+    return check_expect(DT_DragOver, *pdwEffect, pdwEffect);
 }
 
 static HRESULT WINAPI DropTarget_DragLeave(IDropTarget* iface)
 {
-    CHECK_EXPECT(DropTarget_DragLeave);
-    return E_NOTIMPL;
+    return check_expect(DT_DragLeave, 0, NULL);
 }
 
 static HRESULT WINAPI DropTarget_Drop(IDropTarget* iface,
                                       IDataObject* pDataObj, DWORD grfKeyState,
                                       POINTL pt, DWORD* pdwEffect)
 {
-    CHECK_EXPECT(DropTarget_Drop);
-    return 0xbeefbeef;
+    return check_expect(DT_Drop, *pdwEffect, pdwEffect);
 }
 
 static const IDropTargetVtbl DropTarget_VTbl =
@@ -176,16 +364,14 @@ static HRESULT WINAPI DropSource_QueryContinueDrag(
     BOOL fEscapePressed,
     DWORD grfKeyState)
 {
-    CHECK_EXPECT(DropSource_QueryContinueDrag);
-    return DRAGDROP_S_DROP;
+    return check_expect(DS_QueryContinueDrag, 0, NULL);
 }
 
 static HRESULT WINAPI DropSource_GiveFeedback(
     IDropSource *iface,
     DWORD dwEffect)
 {
-    CHECK_EXPECT(DropSource_GiveFeedback);
-    return DRAGDROP_S_USEDEFAULTCURSORS;
+    return check_expect(DS_GiveFeedback, dwEffect, NULL);
 }
 
 static const IDropSourceVtbl dropsource_vtbl = {
@@ -215,37 +401,28 @@ static ULONG WINAPI EnumFORMATETC_Release(IEnumFORMATETC *iface)
     return 1;
 }
 
-static BOOL formats_enumerated;
 static HRESULT WINAPI EnumFORMATETC_Next(IEnumFORMATETC *iface,
         ULONG celt, FORMATETC *rgelt, ULONG *pceltFetched)
 {
     static FORMATETC format = { CF_TEXT, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-
-    CHECK_EXPECT2(EnumFORMATETC_Next);
+    HRESULT hr = check_expect(EnumFMT_Next, 0, NULL);
 
     ok(celt == 1, "celt = %d\n", celt);
     ok(rgelt != NULL, "rgelt == NULL\n");
     ok(pceltFetched == NULL, "pceltFetched != NULL\n");
 
-    if(formats_enumerated)
-        return S_FALSE;
-
     *rgelt = format;
-    formats_enumerated = TRUE;
-    return S_OK;
+    return hr;
 }
 
 static HRESULT WINAPI EnumFORMATETC_Skip(IEnumFORMATETC *iface, ULONG celt)
 {
-    ok(0, "unexpected call\n");
-    return E_NOTIMPL;
+    return check_expect(EnumFMT_Skip, 0, NULL);
 }
 
 static HRESULT WINAPI EnumFORMATETC_Reset(IEnumFORMATETC *iface)
 {
-    CHECK_EXPECT(EnumFORMATETC_Reset);
-    formats_enumerated = FALSE;
-    return S_OK;
+    return check_expect(EnumFMT_Reset, 0, NULL);
 }
 
 static HRESULT WINAPI EnumFORMATETC_Clone(IEnumFORMATETC *iface,
@@ -316,8 +493,7 @@ static HRESULT WINAPI DataObject_QueryGetData(
     IDataObject *iface,
     FORMATETC *pformatetc)
 {
-    CHECK_EXPECT(DataObject_QueryGetData);
-    return S_OK;
+    return check_expect(DO_QueryGetData, 0, NULL);
 }
 
 static HRESULT WINAPI DataObject_GetCanonicalFormatEtc(
@@ -344,10 +520,9 @@ static HRESULT WINAPI DataObject_EnumFormatEtc(
     DWORD dwDirection,
     IEnumFORMATETC **ppenumFormatEtc)
 {
-    CHECK_EXPECT(DataObject_EnumFormatEtc);
+    HRESULT hr = check_expect(DO_EnumFormatEtc, 0, NULL);
     *ppenumFormatEtc = &EnumFORMATETC;
-    formats_enumerated = FALSE;
-    return S_OK;
+    return hr;
 }
 
 static HRESULT WINAPI DataObject_DAdvise(
@@ -492,6 +667,7 @@ static void test_DoDragDrop(void)
     HRESULT hr;
     HWND hwnd;
     RECT rect;
+    int seq;
 
     hwnd = CreateWindowExA(WS_EX_TOPMOST, "WineOleTestClass", "Test", 0,
         CW_USEDEFAULT, CW_USEDEFAULT, 100, 100, NULL,
@@ -529,43 +705,19 @@ static void test_DoDragDrop(void)
     ShowWindow(hwnd, SW_SHOW);
     GetWindowRect(hwnd, &rect);
     ok(SetCursorPos(rect.left+50, rect.top+50), "SetCursorPos failed\n");
-    SET_EXPECT(DataObject_EnumFormatEtc);
-    SET_EXPECT(EnumFORMATETC_Next);
-    SET_EXPECT(EnumFORMATETC_Reset);
-    SET_EXPECT(DataObject_QueryGetData);
-    SET_EXPECT(DropSource_QueryContinueDrag);
-    SET_EXPECT(DropTarget_DragEnter);
-    SET_EXPECT(DropSource_GiveFeedback);
-    SET_EXPECT(DropTarget_Drop);
-    hr = DoDragDrop(&DataObject, &DropSource, DROPEFFECT_COPY, &effect);
-    ok(hr == 0xbeefbeef, "got 0x%08x\n", hr);
-    todo_wine CHECK_CALLED(DataObject_EnumFormatEtc);
-    todo_wine CHECK_CALLED(EnumFORMATETC_Next);
-    todo_wine CHECK_CALLED(EnumFORMATETC_Reset);
-    todo_wine CHECK_CALLED(DataObject_QueryGetData);
-    CHECK_CALLED(DropSource_QueryContinueDrag);
-    CHECK_CALLED(DropTarget_DragEnter);
-    CHECK_CALLED(DropSource_GiveFeedback);
-    CHECK_CALLED(DropTarget_Drop);
 
-    SET_EXPECT(DataObject_EnumFormatEtc);
-    SET_EXPECT(EnumFORMATETC_Next);
-    SET_EXPECT(EnumFORMATETC_Reset);
-    SET_EXPECT(DataObject_QueryGetData);
-    SET_EXPECT(DropSource_QueryContinueDrag);
-    SET_EXPECT(DropTarget_DragEnter);
-    SET_EXPECT(DropSource_GiveFeedback);
-    SET_EXPECT(DropTarget_DragLeave);
-    hr = DoDragDrop(&DataObject, &DropSource, 0, &effect);
-    ok(hr == DRAGDROP_S_DROP, "got 0x%08x\n", hr);
-    todo_wine CHECK_CALLED(DataObject_EnumFormatEtc);
-    todo_wine CHECK_CALLED(EnumFORMATETC_Next);
-    todo_wine CHECK_CALLED(EnumFORMATETC_Reset);
-    todo_wine CHECK_CALLED(DataObject_QueryGetData);
-    CHECK_CALLED(DropSource_QueryContinueDrag);
-    CHECK_CALLED(DropTarget_DragEnter);
-    CHECK_CALLED(DropSource_GiveFeedback);
-    CHECK_CALLED(DropTarget_DragLeave);
+    for (seq = 0; seq < sizeof(call_lists) / sizeof(call_lists[0]); seq++)
+    {
+        DWORD effect_in;
+        trace("%d\n", seq);
+        call_ptr = call_lists[seq];
+        effect_in = call_ptr->set_param;
+        call_ptr++;
+
+        hr = DoDragDrop(&DataObject, &DropSource, effect_in, &effect);
+        check_expect(DoDragDrop_ret, hr, NULL);
+        check_expect(DoDragDrop_effect_out, effect, NULL);
+    }
 
     OleUninitialize();
 

@@ -461,7 +461,7 @@ static HRESULT DataObjectImpl_CreateComplex(LPDATAOBJECT *lplpdataobj)
     return S_OK;
 }
 
-static void test_get_clipboard_unitialized(void)
+static void test_get_clipboard_uninitialized(void)
 {
     HRESULT hr;
     IDataObject *pDObj;
@@ -1609,7 +1609,7 @@ static void test_get_clipboard_locked(void)
 
 START_TEST(clipboard)
 {
-    test_get_clipboard_unitialized();
+    test_get_clipboard_uninitialized();
     test_set_clipboard();
     test_consumer_refs();
     test_flushed_getdata();
