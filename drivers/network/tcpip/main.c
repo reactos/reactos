@@ -7,7 +7,7 @@
 
 #include "precomp.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* DriverEntry, DriverUnload and dispatch routines declaration */
@@ -264,14 +264,30 @@ TcpIpCreate(
         }
 
         case TDI_CONNECTION_CONTEXT_LENGTH:
+		{
+			PTA_IP_ADDRESS Address;
+			
             if (strncmp(&FileInfo->EaName[0], TdiConnectionContext, TDI_CONNECTION_CONTEXT_LENGTH) != 0)
             {
                 DPRINT1("TCPIP: Should maybe open file %*s.\n", FileInfo->EaNameLength, &FileInfo->EaName[0]);
                 return STATUS_INVALID_PARAMETER;
             }
             DPRINT1("Should create a connection!\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+			
+			Address = (PTA_IP_ADDRESS)(&FileInfo->EaName[FileInfo->EaNameLength + 1]);
+			
+			/* Get the protocol this address will be created for. */
+            Protocol = ProtocolFromIrp(DeviceObject, IrpSp);
+			if (Protocol == (IPPROTO)-1)
+			{
+				Status = STATUS_INVALID_PARAMETER;
+				goto Quickie;
+			}
+			
+			/* All good. */
+			Status = TcpIpCreateAddress(Irp, &Address->Address[0].Address[0], Protocol);
             break;
+		}
 
         default:
             DPRINT1("TCPIP: Should open file %*s.\n", FileInfo->EaNameLength, &FileInfo->EaName[0]);
@@ -372,14 +388,14 @@ TcpIpDispatchInternal(
             break;
 
         case TDI_LISTEN:
-            DPRINT1("TCPIP: TDI_LISTEN!\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
+			DPRINT1("TCPIP: TDI_LISTEN!\n");
+            Status = TcpIpListen(Irp);
+			break;
 
         case TDI_CONNECT:
             DPRINT1("TCPIP: TDI_CONNECT!\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
+            Status =  TcpIpConnect(Irp);
+			break;
 
         case TDI_DISCONNECT:
             DPRINT1("TCPIP: TDI_DISCONNECT!\n");
@@ -387,13 +403,13 @@ TcpIpDispatchInternal(
             break;
 
         case TDI_ASSOCIATE_ADDRESS:
-            DPRINT1("TCPIP: TDI_ASSOCIATE_ADDRESS!\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
+			DPRINT1("TCPIP: TDI_ASSOCIATE_ADDRESS\n");
+            Status = TcpIpAssociateAddress(Irp);
+			break;
 
         case TDI_DISASSOCIATE_ADDRESS:
             DPRINT1("TCPIP: TDI_DISASSOCIATE_ADDRESS!\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = TcpIpDisassociateAddress(Irp);
             break;
 
         case TDI_QUERY_INFORMATION:
@@ -474,7 +490,7 @@ TcpIpDispatch(
         break;
     }
 
-    DPRINT("TCPIP dispatched with status 0x%08x.\n", Status);
+    //DPRINT("TCPIP dispatched with status 0x%08x.\n", Status);
 
     Irp->IoStatus.Status = Status;
     if (Status == STATUS_PENDING)

@@ -23,6 +23,7 @@ typedef unsigned short u_short;
 #include <lwip/raw.h>
 #include <lwip/snmp.h>
 #include <lwip/tcpip.h>
+#include <lwip/tcp.h>
 #include <lwip/udp.h>
 #include <netif/etharp.h>
 
