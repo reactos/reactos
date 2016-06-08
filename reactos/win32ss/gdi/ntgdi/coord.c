@@ -1359,7 +1359,7 @@ NtGdiGetDCPoint(
     UINT iPoint,
     PPOINTL Point)
 {
-    BOOL Ret = TRUE;
+    BOOL Ret;
     POINTL SafePoint;
 
     if (!Point)
