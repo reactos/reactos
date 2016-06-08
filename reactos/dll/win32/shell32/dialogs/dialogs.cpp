@@ -33,8 +33,8 @@ typedef struct
 typedef BOOL (WINAPI * LPFNOFN) (OPENFILENAMEW *) ;
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
-static INT_PTR CALLBACK RunDlgProc (HWND, UINT, WPARAM, LPARAM) ;
-static void FillList (HWND, char *, BOOL) ;
+static INT_PTR CALLBACK RunDlgProc(HWND, UINT, WPARAM, LPARAM);
+static void FillList(HWND, LPWSTR, BOOL);
 
 
 /*************************************************************************
@@ -393,26 +393,26 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             // SendMessageW(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)prfdp->hIcon);
             SendMessageW(GetDlgItem(hwnd, IDC_RUNDLG_ICON), STM_SETICON, (WPARAM)prfdp->hIcon, 0);
 
-            FillList (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), NULL, (prfdp->uFlags & RFF_NODEFAULT) == 0);
+            FillList(GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH), NULL, (prfdp->uFlags & RFF_NODEFAULT) == 0);
             EnableOkButtonFromEditContents(hwnd);
-            SetFocus (GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH));
+            SetFocus(GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH));
             return TRUE;
 
         case WM_COMMAND:
-            switch (LOWORD (wParam))
+            switch (LOWORD(wParam))
             {
                 case IDOK:
                 {
                     int ic;
-                    HWND htxt = GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH);
-                    if ((ic = GetWindowTextLengthW (htxt)))
+                    HWND htxt = GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH);
+                    if ((ic = GetWindowTextLengthW(htxt)))
                     {
                         WCHAR *psz, *parent = NULL;
                         SHELLEXECUTEINFOW sei;
 
-                        ZeroMemory (&sei, sizeof(sei));
+                        ZeroMemory(&sei, sizeof(sei));
                         sei.cbSize = sizeof(sei);
-                        psz = (WCHAR *)HeapAlloc(GetProcessHeap(), 0, (ic + 1)*sizeof(WCHAR));
+                        psz = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, (ic + 1)*sizeof(WCHAR));
 
                         if (psz)
                         {
@@ -438,19 +438,18 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                                 return TRUE;
                             }
 
-                            /* FillList is still ANSI */
-                            GetWindowTextA (htxt, (LPSTR)psz, ic + 1);
-                            FillList (htxt, (LPSTR)psz, FALSE);
+                            GetWindowTextW(htxt, psz, ic + 1);
+                            FillList(htxt, psz, FALSE);
 
                             HeapFree(GetProcessHeap(), 0, psz);
                             HeapFree(GetProcessHeap(), 0, parent);
-                            EndDialog (hwnd, 0);
+                            EndDialog(hwnd, 0);
                         }
                     }
                 }
 
                 case IDCANCEL:
-                    EndDialog (hwnd, 0);
+                    EndDialog(hwnd, 0);
                     return TRUE;
 
                 case IDC_RUNDLG_BROWSE:
@@ -466,17 +465,17 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     LoadStringW(shell32_hInstance, IDS_RUNDLG_BROWSE_CAPTION, szCaption, MAX_PATH);
 
                     ZeroMemory(&ofn, sizeof(ofn));
-                    ofn.lStructSize = sizeof(OPENFILENAMEW);
+                    ofn.lStructSize = sizeof(ofn);
                     ofn.hwndOwner = hwnd;
                     ofn.lpstrFilter = filter;
                     ofn.lpstrFile = szFName;
-                    ofn.nMaxFile = 1023;
+                    ofn.nMaxFile = _countof(szFName) - 1;
                     ofn.lpstrTitle = szCaption;
                     ofn.Flags = OFN_ENABLESIZING | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
                     ofn.lpstrInitialDir = prfdp->lpstrDirectory;
 
-                    if (NULL == (hComdlg = LoadLibraryExW (comdlg32W, NULL, 0)) ||
-                        NULL == (ofnProc = (LPFNOFN)GetProcAddress (hComdlg, "GetOpenFileNameW")))
+                    if (NULL == (hComdlg = LoadLibraryExW(comdlg32W, NULL, 0)) ||
+                        NULL == (ofnProc = (LPFNOFN)GetProcAddress(hComdlg, "GetOpenFileNameW")))
                     {
                         ERR("Couldn't get GetOpenFileName function entry (lib=%p, proc=%p)\n", hComdlg, ofnProc);
                         ShellMessageBoxW(shell32_hInstance, hwnd, MAKEINTRESOURCEW(IDS_RUNDLG_BROWSE_ERROR), NULL, MB_OK | MB_ICONERROR);
@@ -485,14 +484,14 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
                     if (ofnProc(&ofn))
                     {
-                        SetFocus(GetDlgItem (hwnd, IDOK));
-                        SetWindowTextW(GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), szFName);
-                        SendMessageW(GetDlgItem (hwnd, IDC_RUNDLG_EDITPATH), CB_SETEDITSEL, 0, MAKELPARAM (0, -1));
+                        SetFocus(GetDlgItem(hwnd, IDOK));
+                        SetWindowTextW(GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH), szFName);
+                        SendMessageW(GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH), CB_SETEDITSEL, 0, MAKELPARAM(0, -1));
                         EnableOkButtonFromEditContents(hwnd);
-                        SetFocus (GetDlgItem (hwnd, IDOK));
+                        SetFocus(GetDlgItem(hwnd, IDOK));
                     }
 
-                    FreeLibrary (hComdlg);
+                    FreeLibrary(hComdlg);
 
                     return TRUE;
                 }
@@ -510,145 +509,207 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
     return FALSE;
 }
 
-/* This grabs the MRU list from the registry and fills the combo for the "Run" dialog above */
-/* fShowDefault ignored if pszLatest != NULL */
-static void FillList(HWND hCb, char *pszLatest, BOOL fShowDefault)
+/*
+ * This function grabs the MRU list from the registry and fills the combo-list
+ * for the "Run" dialog above. fShowDefault is ignored if pszLatest != NULL.
+ */
+static void FillList(HWND hCb, LPWSTR pszLatest, BOOL fShowDefault)
 {
-    HKEY hkey ;
-/*    char szDbgMsg[256] = "" ; */
-    char *pszList = NULL, *pszCmd = NULL, cMatch = 0, cMax = 0x60, szIndex[2] = "-" ;
-    DWORD icList = 0, icCmd = 0 ;
-    UINT Nix ;
+    HKEY hkey;
+    WCHAR *pszList = NULL, *pszCmd = NULL, *pszTmp = NULL, cMatch = 0, cMax = 0x60;
+    WCHAR szIndex[2] = L"-";
+    DWORD dwType, icList = 0, icCmd = 0;
+    LRESULT lRet;
+    UINT Nix;
 
-    SendMessageA (hCb, CB_RESETCONTENT, 0, 0) ;
+    SendMessageW(hCb, CB_RESETCONTENT, 0, 0);
 
-    if (ERROR_SUCCESS != RegCreateKeyExA (
-        HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU",
-        0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hkey, NULL))
-        MessageBoxA (hCb, "Unable to open registry key !", "Nix", MB_OK) ;
-
-    RegQueryValueExA (hkey, "MRUList", NULL, NULL, NULL, &icList) ;
-
-    if (icList > 0)
+    lRet = RegCreateKeyExW(HKEY_CURRENT_USER,
+                           L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU",
+                           0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hkey, NULL);
+    if (lRet != ERROR_SUCCESS)
     {
-        pszList = (char *)HeapAlloc( GetProcessHeap(), 0, icList) ;
+        TRACE("Unable to open or create the RunMRU key, error %d\n", GetLastError());
+        return;
+    }
 
-        if (pszList)
-        {
-            if (ERROR_SUCCESS != RegQueryValueExA (hkey, "MRUList", NULL, NULL, (LPBYTE)pszList, &icList))
-                MessageBoxA (hCb, "Unable to grab MRUList !", "Nix", MB_OK);
-        }
-        else
+    lRet = RegQueryValueExW(hkey, L"MRUList", NULL, &dwType, NULL, &icList);
+    if (lRet == ERROR_SUCCESS && dwType == REG_SZ && icList > sizeof(WCHAR))
+    {
+        pszList = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, icList);
+        if (!pszList)
         {
             TRACE("HeapAlloc failed to allocate %d bytes\n", icList);
+            goto Continue;
+        }
+        pszList[0] = L'\0';
+
+        lRet = RegQueryValueExW(hkey, L"MRUList", NULL, NULL, (LPBYTE)pszList, &icList);
+        if (lRet != ERROR_SUCCESS)
+        {
+            TRACE("Unable to grab MRUList, error %d\n", GetLastError());
+            pszList[0] = L'\0';
         }
     }
     else
     {
-        icList = 1 ;
-        pszList = (char *)HeapAlloc( GetProcessHeap(), 0, icList) ;
-        pszList[0] = 0 ;
+Continue:
+        icList = sizeof(WCHAR);
+        pszList = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, icList);
+        if (!pszList)
+        {
+            TRACE("HeapAlloc failed to allocate %d bytes\n", icList);
+            RegCloseKey(hkey);
+            return;
+        }
+        pszList[0] = L'\0';
     }
 
-    for (Nix = 0 ; Nix < icList - 1 ; Nix++)
+    /* Convert the number of bytes from MRUList into number of characters (== number of indices) */
+    icList /= sizeof(WCHAR);
+
+    for (Nix = 0; Nix < icList - 1; Nix++)
     {
         if (pszList[Nix] > cMax)
-            cMax = pszList[Nix] ;
+            cMax = pszList[Nix];
 
-        szIndex[0] = pszList[Nix] ;
+        szIndex[0] = pszList[Nix];
 
-        if (ERROR_SUCCESS != RegQueryValueExA (hkey, szIndex, NULL, NULL, NULL, &icCmd))
-            MessageBoxA (hCb, "Unable to grab size of index", "Nix", MB_OK) ;
-        if( pszCmd )
-            pszCmd = (char *)HeapReAlloc(GetProcessHeap(), 0, pszCmd, icCmd) ;
-        else
-            pszCmd = (char *)HeapAlloc(GetProcessHeap(), 0, icCmd) ;
-        if (ERROR_SUCCESS != RegQueryValueExA (hkey, szIndex, NULL, NULL, (LPBYTE)pszCmd, &icCmd))
-            MessageBoxA (hCb, "Unable to grab index", "Nix", MB_OK) ;
-
-        if (NULL != pszLatest)
+        lRet = RegQueryValueExW(hkey, szIndex, NULL, &dwType, NULL, &icCmd);
+        if (lRet != ERROR_SUCCESS || dwType != REG_SZ)
         {
-            if (!lstrcmpiA(pszCmd, pszLatest))
-            {
-                /*
-                sprintf (szDbgMsg, "Found existing (%d).\n", Nix) ;
-                MessageBoxA (hCb, szDbgMsg, "Nix", MB_OK) ;
-                */
-                SendMessageA (hCb, CB_INSERTSTRING, 0, (LPARAM)pszCmd) ;
-                SetWindowTextA (hCb, pszCmd) ;
-                SendMessageA (hCb, CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
+            TRACE("Unable to grab size of index, error %d\n", GetLastError());
+            continue;
+        }
 
-                cMatch = pszList[Nix] ;
-                memmove (&pszList[1], pszList, Nix) ;
-                pszList[0] = cMatch ;
-                continue ;
+        if (pszCmd)
+        {
+            pszTmp = (WCHAR*)HeapReAlloc(GetProcessHeap(), 0, pszCmd, icCmd);
+            if (!pszTmp)
+            {
+                TRACE("HeapReAlloc failed to reallocate %d bytes\n", icCmd);
+                continue;
+            }
+            pszCmd = pszTmp;
+        }
+        else
+        {
+            pszCmd = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, icCmd);
+            if (!pszCmd)
+            {
+                TRACE("HeapAlloc failed to allocate %d bytes\n", icCmd);
+                continue;
             }
         }
 
-        if (26 != icList - 1 || icList - 2 != Nix || cMatch || NULL == pszLatest)
+        lRet = RegQueryValueExW(hkey, szIndex, NULL, NULL, (LPBYTE)pszCmd, &icCmd);
+        if (lRet != ERROR_SUCCESS)
         {
-            /*
-            sprintf (szDbgMsg, "Happily appending (%d).\n", Nix) ;
-            MessageBoxA (hCb, szDbgMsg, "Nix", MB_OK) ;
-            */
-            SendMessageA (hCb, CB_ADDSTRING, 0, (LPARAM)pszCmd) ;
+            TRACE("Unable to grab index, error %d\n", GetLastError());
+            continue;
+        }
+
+        /*
+         * Generally the command string will end up with "\\1".
+         * Find the last backslash in the string and NULL-terminate.
+         * Windows does not seem to check for what comes next, so that
+         * a command of the form:
+         *     c:\\my_dir\\myfile.exe
+         * will be cut just after "my_dir", whereas a command of the form:
+         *     c:\\my_dir\\myfile.exe\\1
+         * will be cut just after "myfile.exe".
+         */
+        pszTmp = wcsrchr(pszCmd, L'\\');
+        if (pszTmp)
+            *pszTmp = L'\0';
+
+        /*
+         * In the following we try to add pszLatest to the MRU list.
+         * We suppose that our caller has already correctly allocated
+         * the string with enough space for us to append a "\\1".
+         *
+         * FIXME: TODO! (At the moment we don't append it!)
+         */
+
+        if (pszLatest)
+        {
+            if (wcsicmp(pszCmd, pszLatest) == 0)
+            {
+                SendMessageW(hCb, CB_INSERTSTRING, 0, (LPARAM)pszCmd);
+                SetWindowTextW(hCb, pszCmd);
+                SendMessageW(hCb, CB_SETEDITSEL, 0, MAKELPARAM(0, -1));
+
+                cMatch = pszList[Nix];
+                memmove(&pszList[1], pszList, Nix * sizeof(WCHAR));
+                pszList[0] = cMatch;
+                continue;
+            }
+        }
+
+        if (icList - 1 != 26 || icList - 2 != Nix || cMatch || pszLatest == NULL)
+        {
+            SendMessageW(hCb, CB_ADDSTRING, 0, (LPARAM)pszCmd);
             if (!Nix && fShowDefault)
             {
-                SetWindowTextA (hCb, pszCmd) ;
-                SendMessageA (hCb, CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
+                SetWindowTextW(hCb, pszCmd);
+                SendMessageW(hCb, CB_SETEDITSEL, 0, MAKELPARAM(0, -1));
             }
         }
         else
         {
-            /*
-            sprintf (szDbgMsg, "Doing loop thing.\n") ;
-            MessageBoxA (hCb, szDbgMsg, "Nix", MB_OK) ;
-            */
-            SendMessageA (hCb, CB_INSERTSTRING, 0, (LPARAM)pszLatest) ;
-            SetWindowTextA (hCb, pszLatest) ;
-            SendMessageA (hCb, CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
+            SendMessageW(hCb, CB_INSERTSTRING, 0, (LPARAM)pszLatest);
+            SetWindowTextW(hCb, pszLatest);
+            SendMessageW(hCb, CB_SETEDITSEL, 0, MAKELPARAM(0, -1));
 
-            cMatch = pszList[Nix] ;
-            memmove (&pszList[1], pszList, Nix) ;
-            pszList[0] = cMatch ;
-            szIndex[0] = cMatch ;
-            RegSetValueExA (hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, strlen (pszLatest) + 1) ;
+            cMatch = pszList[Nix];
+            memmove(&pszList[1], pszList, Nix * sizeof(WCHAR));
+            pszList[0] = cMatch;
+            szIndex[0] = cMatch;
+            RegSetValueExW(hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, (wcslen(pszLatest) + 1) * sizeof(WCHAR));
         }
     }
 
-    if (!cMatch && NULL != pszLatest)
+    if (!cMatch && pszLatest != NULL)
     {
-        /*
-        sprintf (szDbgMsg, "Simply inserting (increasing list).\n") ;
-        MessageBoxA (hCb, szDbgMsg, "Nix", MB_OK) ;
-        */
-        SendMessageA (hCb, CB_INSERTSTRING, 0, (LPARAM)pszLatest) ;
-        SetWindowTextA (hCb, pszLatest) ;
-        SendMessageA (hCb, CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
+        SendMessageW(hCb, CB_INSERTSTRING, 0, (LPARAM)pszLatest);
+        SetWindowTextW(hCb, pszLatest);
+        SendMessageW(hCb, CB_SETEDITSEL, 0, MAKELPARAM (0, -1));
 
-        cMatch = ++cMax ;
-        if (pszList)
-            pszList = (char *)HeapReAlloc(GetProcessHeap(), 0, pszList, ++icList) ;
-        else
-            pszList = (char *)HeapAlloc(GetProcessHeap(), 0, ++icList) ;
+        cMatch = ++cMax;
 
         if (pszList)
         {
-            memmove (&pszList[1], pszList, icList - 1) ;
-            pszList[0] = cMatch ;
-            szIndex[0] = cMatch ;
-            RegSetValueExA (hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, strlen (pszLatest) + 1) ;
+            pszTmp = (WCHAR*)HeapReAlloc(GetProcessHeap(), 0, pszList, (++icList) * sizeof(WCHAR));
+            if (!pszTmp)
+            {
+                TRACE("HeapReAlloc failed to reallocate enough bytes\n");
+                goto Cleanup;
+            }
+            pszList = pszTmp;
         }
         else
         {
-            TRACE("HeapAlloc or HeapReAlloc failed to allocate enough bytes\n");
+            pszList = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, (++icList) * sizeof(WCHAR));
+            if (!pszList)
+            {
+                TRACE("HeapAlloc failed to allocate enough bytes\n");
+                goto Cleanup;
+            }
         }
+
+        memmove(&pszList[1], pszList, (icList - 1) * sizeof(WCHAR));
+        pszList[0] = cMatch;
+        szIndex[0] = cMatch;
+        RegSetValueExW(hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, (wcslen(pszLatest) + 1) * sizeof(WCHAR));
     }
 
-    RegSetValueExA (hkey, "MRUList", 0, REG_SZ, (LPBYTE)pszList, strlen (pszList) + 1) ;
+Cleanup:
+    RegSetValueExW(hkey, L"MRUList", 0, REG_SZ, (LPBYTE)pszList, (wcslen(pszList) + 1) * sizeof(WCHAR));
 
-    HeapFree( GetProcessHeap(), 0, pszCmd) ;
-    HeapFree( GetProcessHeap(), 0, pszList) ;
+    HeapFree(GetProcessHeap(), 0, pszCmd);
+    HeapFree(GetProcessHeap(), 0, pszList);
+
+    RegCloseKey(hkey);
 }
 
 
