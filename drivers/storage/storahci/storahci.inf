@@ -1,9 +1,9 @@
-/*
- * PROJECT:        ROS Kernel
- * LICENSE:        GNU GPLv2 only as published by the Free Software Foundation
- * PURPOSE:        Storahci Driver INF
- * PROGRAMMERS:    Aman Priyadarshi (aman.eureka@gmail.com)
- */
+;
+; PROJECT:        ROS Kernel
+; LICENSE:        GNU GPLv2 only as published by the Free Software Foundation
+; PURPOSE:        Storahci Driver INF
+; PROGRAMMERS:    Aman Priyadarshi (aman.eureka@gmail.com)
+;
 
 [version]
 signature="$Windows NT$"
@@ -21,7 +21,7 @@ storahci.sys = 1
 DefaultDestDir = 12 ; DIRID_DRIVERS
 
 [Manufacturer]
-%STORAHCI%=STORAHCI,NTx86
+%ROS%=STORAHCI,NTx86
 
 [STORAHCI]
 
@@ -65,7 +65,7 @@ HKR,,EventMessageFile,%REG_EXPAND_SZ%,"%%SystemRoot%%\System32\IoLogMsg.dll"
 HKR,,TypesSupported,%REG_DWORD%,7
 
 [Strings]
-ROS                     = "React OS"
+ROS                     = "ROS"
 DeviceDesc              = "AHCI SATA Driver"
 SATA_AHCI.DeviceDesc    = "Standard SATA AHCI Controller"
 

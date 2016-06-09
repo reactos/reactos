@@ -5,17 +5,28 @@
  * PROGRAMMERS:    Aman Priyadarshi (aman.eureka@gmail.com)
  */
 
-#include "miniport.h"
-#include "storport.h"
+#include <ntddk.h>
+#include <storport.h>
 
-#define AHCI_POOL_TAG 'ahci'
-#define MAXIMUM_AHCI_PORT_COUNT 12
+#define DEBUG 1
+
+#define MAXIMUM_AHCI_PORT_COUNT             12
+#define MAXIMUM_TRANSFER_LENGTH             (128*1024) // 128 KB
 
 // section 3.1.2
-#define AHCI_Global_HBA_CONTROL_HR          (0x1<<0)
-#define AHCI_Global_HBA_CONTROL_IE          (0x1<<1)
-#define AHCI_Global_HBA_CONTROL_MRSM        (0x1<<2)
-#define AHCI_Global_HBA_CONTROL_AE          (0x1<<31)
+#define AHCI_Global_HBA_CONTROL_HR          (1 << 0)
+#define AHCI_Global_HBA_CONTROL_IE          (1 << 1)
+#define AHCI_Global_HBA_CONTROL_MRSM        (1 << 2)
+#define AHCI_Global_HBA_CONTROL_AE          (1 << 31)
+#define AHCI_Global_HBA_CAP_S64A            (1 << 31)
+
+// 3.1.1 NCS = CAP[12:08] -> Align
+#define AHCI_Global_Port_CAP_NCS(x)            (((x) & 0xF00) >> 8)
+
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+#if DEBUG
+    #define DebugPrint(format, ...) StorPortDebugPrint(0, format, __VA_ARGS__)
+#endif
 
 //////////////////////////////////////////////////////////////
 //              ---- Support Structures ---                 //
@@ -32,17 +43,17 @@ typedef struct _AHCI_FIS_DMA_SETUP
     UCHAR Reserved[2];      // Reserved
     ULONG DmaBufferLow;     // DMA Buffer Identifier. Used to Identify DMA buffer in host memory. SATA Spec says host specific and not in Spec. Trying AHCI spec might work.
     ULONG DmaBufferHigh;
-    ULONG Reserved2;        //More reserved
-    ULONG DmaBufferOffset;  //Byte offset into buffer. First 2 bits must be 0
-    ULONG TranferCount;     //Number of bytes to transfer. Bit 0 must be 0
-    ULONG Reserved3;        //Reserved
+    ULONG Reserved2;        // More reserved
+    ULONG DmaBufferOffset;  // Byte offset into buffer. First 2 bits must be 0
+    ULONG TranferCount;     // Number of bytes to transfer. Bit 0 must be 0
+    ULONG Reserved3;        // Reserved
 } AHCI_FIS_DMA_SETUP;
 
 typedef struct _AHCI_PIO_SETUP_FIS
 {
-    UCHAR FisType;      //0x5F
+    UCHAR FisType;
     UCHAR Reserved1 :5;
-    UCHAR D :1;         // 1 is write (device to host)
+    UCHAR D :1;
     UCHAR I :1;
     UCHAR Reserved2 :1;
     UCHAR Status;
@@ -237,24 +248,28 @@ typedef struct _AHCI_SRB_EXTENSION
 //                       Declarations                       //
 //////////////////////////////////////////////////////////////
 
-BOOLEAN AhciAdapterReset(
-  __in      PAHCI_ADAPTER_EXTENSION             adapterExtension
-);
+BOOLEAN
+AhciAdapterReset (
+    __in      PAHCI_ADAPTER_EXTENSION             adapterExtension
+    );
 
 __inline
-VOID AhciZeroMemory(
-  __in      PCHAR                               buffer,
-  __in      ULONG                               bufferSize
-);
+VOID
+AhciZeroMemory (
+    __out     PCHAR                               buffer,
+    __in      ULONG                               bufferSize
+    );
 
 __inline
-BOOLEAN IsPortValid(
-  __in      PAHCI_ADAPTER_EXTENSION             adapterExtension,
-  __in      UCHAR                               pathId
-);
+BOOLEAN
+IsPortValid (
+    __in      PAHCI_ADAPTER_EXTENSION             adapterExtension,
+    __in      UCHAR                               pathId
+    );
 
-ULONG DeviceInquiryRequest(
-  __in      PAHCI_ADAPTER_EXTENSION             adapterExtension,
-  __in      PSCSI_REQUEST_BLOCK                 Srb,
-  __in      PCDB                                Cdb
-);
+ULONG
+DeviceInquiryRequest (
+    __in      PAHCI_ADAPTER_EXTENSION             adapterExtension,
+    __in      PSCSI_REQUEST_BLOCK                 Srb,
+    __in      PCDB                                Cdb
+    );
