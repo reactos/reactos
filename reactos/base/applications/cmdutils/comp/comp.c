@@ -22,9 +22,6 @@
  * FILE:        base/applications/cmdutils/comp/comp.c
  * PURPOSE:     Compares the contents of two files
  * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
- * REVISIONS:
- *   GM 25/09/05 Created
- *
  */
 
 #include <windows.h>
@@ -37,9 +34,9 @@
 #define STRBUF 1024
 
 /* getline:  read a line, return length */
-INT GetBuff(char *buff, FILE *in)
+INT GetBuff(PBYTE buff, FILE *in)
 {
-    return fread(buff, 1, STRBUF, in);
+    return fread(buff, sizeof(BYTE), STRBUF, in);
 }
 
 INT FileSize(FILE * fd)
@@ -74,8 +71,8 @@ int _tmain (int argc, TCHAR *argv[])
     FILE *fp2 = NULL;
 
     INT BufLen1, BufLen2;
-    PTCHAR Buff1 = NULL;
-    PTCHAR Buff2 = NULL;
+    PBYTE Buff1 = NULL;
+    PBYTE Buff2 = NULL;
     TCHAR File1[_MAX_PATH + 1], // File paths
           File2[_MAX_PATH + 1];
     BOOL bAscii = FALSE,        // /A switch
@@ -128,14 +125,15 @@ int _tmain (int argc, TCHAR *argv[])
         return EXIT_FAILURE;
     }
 
-    Buff1 = (TCHAR *)malloc(STRBUF * sizeof(TCHAR));
+    Buff1 = (PBYTE)malloc(STRBUF);
     if (Buff1 == NULL)
     {
         _tprintf(_T("Can't get free memory for Buff1\n"));
-        return EXIT_FAILURE;
+        Status = EXIT_FAILURE;
+        goto Cleanup;
     }
 
-    Buff2 = (TCHAR *)malloc(STRBUF * sizeof(TCHAR));
+    Buff2 = (PBYTE)malloc(STRBUF);
     if (Buff2 == NULL)
     {
         _tprintf(_T("Can't get free memory for Buff2\n"));
@@ -239,15 +237,15 @@ int _tmain (int argc, TCHAR *argv[])
         _tprintf(_T("Files compare OK\n"));
 
 Cleanup:
-    if (fp1)
-        fclose(fp1);
     if (fp2)
         fclose(fp2);
+    if (fp1)
+        fclose(fp1);
 
-    if (Buff1)
-        free(Buff1);
     if (Buff2)
         free(Buff2);
+    if (Buff1)
+        free(Buff1);
 
     return Status;
 }
