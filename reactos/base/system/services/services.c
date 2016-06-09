@@ -354,6 +354,8 @@ wWinMain(HINSTANCE hInstance,
 
 //    ScmInitThreadManager();
 
+    ScmInitializeSecurity();
+
     /* FIXME: more initialization */
 
     /* Read the control set values */
@@ -432,6 +434,8 @@ wWinMain(HINSTANCE hInstance,
     WaitForSingleObject(hScmShutdownEvent, INFINITE);
 
 done:
+    ScmShutdownSecurity();
+
     /* Delete our communication named pipe's critical section */
     if (bCanDeleteNamedPipeCriticalSection == TRUE)
         ScmDeleteNamedPipeCriticalSection();

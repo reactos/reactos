@@ -1364,9 +1364,6 @@ DWORD RQueryServiceObjectSecurity(
     DWORD dwBytesNeeded;
     DWORD dwError;
 
-
-    SECURITY_DESCRIPTOR ObjectDescriptor;
-
     DPRINT("RQueryServiceObjectSecurity() called\n");
 
     hSvc = ScmGetServiceFromHandle(hService);
@@ -1401,11 +1398,8 @@ DWORD RQueryServiceObjectSecurity(
     /* Lock the service database */
     ScmLockDatabaseShared();
 
-
-    /* hack */
-    Status = RtlCreateSecurityDescriptor(&ObjectDescriptor, SECURITY_DESCRIPTOR_REVISION);
-
-    Status = RtlQuerySecurityObject(&ObjectDescriptor  /* lpService->lpSecurityDescriptor */,
+    /* Retrieve the security descriptor */
+    Status = RtlQuerySecurityObject(lpService->pSecurityDescriptor,
                                     dwSecurityInformation,
                                     (PSECURITY_DESCRIPTOR)lpSecurityDescriptor,
                                     cbBufSize,
@@ -2258,6 +2252,12 @@ DWORD RCreateServiceW(
             goto done;
     }
 
+    /* Assign the default security descriptor */
+    if (dwServiceType & SERVICE_WIN32)
+    {
+        lpService->pSecurityDescriptor = pDefaultServiceSD;
+    }
+
     /* Write service data to the registry */
     /* Create the service key */
     dwError = ScmCreateServiceKey(lpServiceName,
@@ -2391,6 +2391,13 @@ DWORD RCreateServiceW(
             if (dwError != ERROR_SUCCESS)
                 goto done;
         }
+
+DPRINT1("\n");
+        /* Write the security descriptor */
+        dwError = ScmWriteSecurityDescriptor(hServiceKey,
+                                             lpService->pSecurityDescriptor);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
 
     dwError = ScmCreateServiceHandle(lpService,

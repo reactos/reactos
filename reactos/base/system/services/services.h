@@ -72,7 +72,7 @@ typedef struct _SERVICE
 
     ULONG Flags;
 
-    PSECURITY_DESCRIPTOR lpSecurityDescriptor;
+    PSECURITY_DESCRIPTOR pSecurityDescriptor;
 
     BOOLEAN ServiceVisited;
 
@@ -97,6 +97,8 @@ extern LIST_ENTRY GroupListHead;
 extern LIST_ENTRY ImageListHead;
 extern BOOL ScmInitialize;
 extern BOOL ScmShutdown;
+
+extern PSECURITY_DESCRIPTOR pDefaultServiceSD;
 
 
 /* FUNCTIONS ***************************************************************/
@@ -131,6 +133,12 @@ DWORD
 ScmSetServicePassword(
     IN PCWSTR pszServiceName,
     IN PCWSTR pszPassword);
+
+DWORD
+ScmWriteSecurityDescriptor(
+    _In_ HKEY hServiceKey,
+    _In_ PSECURITY_DESCRIPTOR pSecurityDescriptor);
+
 
 /* controlset.c */
 
@@ -195,6 +203,12 @@ VOID ScmQueryServiceLockStatusA(OUT LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus);
 /* rpcserver.c */
 
 VOID ScmStartRpcServer(VOID);
+
+
+/* security.c */
+
+DWORD ScmInitializeSecurity(VOID);
+VOID ScmShutdownSecurity(VOID);
 
 
 /* services.c */
