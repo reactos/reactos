@@ -31,7 +31,28 @@
 #include <string.h>
 #include <assert.h>
 
+#include "resource.h"
+
 #define STRBUF 1024
+
+VOID ResPrint(INT res_no, ...)
+{
+    TCHAR * res_string;
+    va_list vargs;
+
+    va_start(vargs, res_no);
+
+    if (LoadString(GetModuleHandle(NULL), res_no, (TCHAR*)&res_string, 0))
+    {
+        _vtprintf(res_string, vargs);
+    }
+    else
+    {
+        _tprintf(_T("Resource loading error!"));
+    }
+
+    va_end(vargs);
+}
 
 /* getline:  read a line, return length */
 INT GetBuff(PBYTE buff, FILE *in)
@@ -53,12 +74,7 @@ INT FileSize(FILE * fd)
 /* Print program usage */
 VOID Usage(VOID)
 {
-    _tprintf(_T("\nCompares the contents of two files or sets of files.\n\n"
-                "COMP [/L] [/A] [data1] [data2]\n\n"
-                "  data1      Specifies location and name of first file to compare.\n"
-                "  data2      Specifies location and name of second file to compare.\n"
-                "  /A         Display differences in ASCII characters.\n"
-                "  /L         Display line numbers for differences.\n"));
+    ResPrint(IDS_HELP);
 }
 
 
@@ -88,26 +104,26 @@ int _tmain (int argc, TCHAR *argv[])
     /* Parse command line for options */
     for (i = 1; i < argc; i++)
     {
-        if (argv[i][0] == '/')
+        if (argv[i][0] == _T('/'))
         {
             switch (argv[i][1])
             {
-                case 'A':
+                case _T('A'):
                     bAscii = TRUE;
                     NumberOfOptions++;
                     break;
 
-                case 'L':
+                case _T('L'):
                     bLineNos = TRUE;
                     NumberOfOptions++;
                     break;
 
-                case '?':
+                case _T('?'):
                     Usage();
                     return EXIT_SUCCESS;
 
                 default:
-                    _tprintf(_T("Invalid switch - /%c\n"), argv[i][1]);
+                    ResPrint(IDS_INVALIDSWITCH, argv[i][1]);
                     Usage();
                     return EXIT_FAILURE;
             }
@@ -121,7 +137,7 @@ int _tmain (int argc, TCHAR *argv[])
     }
     else
     {
-        _tprintf(_T("Bad command line syntax\n"));
+        ResPrint(IDS_BADSYNTAX);
         return EXIT_FAILURE;
     }
 
@@ -141,26 +157,26 @@ int _tmain (int argc, TCHAR *argv[])
         goto Cleanup;
     }
 
-    if ((fp1 = fopen(File1, "rb")) == NULL)
+    if ((fp1 = _tfopen(File1, _T("rb"))) == NULL)
     {
-        _tprintf(_T("Can't find/open file: %s\n"), File1);
+        ResPrint(IDS_FILEERROR, File1);
         Status = EXIT_FAILURE;
         goto Cleanup;
     }
-    if ((fp2 = fopen(File2, "rb")) == NULL)
+    if ((fp2 = _tfopen(File2, _T("rb"))) == NULL)
     {
-        _tprintf(_T("Can't find/open file: %s\n"), File2);
+        ResPrint(IDS_FILEERROR, File2);
         Status = EXIT_FAILURE;
         goto Cleanup;
     }
 
 
-    _tprintf(_T("Comparing %s and %s...\n"), File1, File2);
+    ResPrint(IDS_COMPARING, File1, File2);
 
     FileSizeFile1 = FileSize(fp1);
     if (FileSizeFile1 == -1)
     {
-        _tprintf(_T("Can't determine size of file: %s\n"), File1);
+        ResPrint(IDS_FILESIZEERROR, File1);
         Status = EXIT_FAILURE;
         goto Cleanup;
     }
@@ -168,14 +184,14 @@ int _tmain (int argc, TCHAR *argv[])
     FileSizeFile2 = FileSize(fp2);
     if (FileSizeFile2 == -1)
     {
-        _tprintf(_T("Can't determine size of file: %s\n"), File2);
+        ResPrint(IDS_FILESIZEERROR, File2);
         Status = EXIT_FAILURE;
         goto Cleanup;
     }
 
     if (FileSizeFile1 != FileSizeFile2)
     {
-        _tprintf(_T("Files are different sizes.\n"));
+        ResPrint(IDS_SIZEDIFFERS);
         Status = EXIT_FAILURE;
         goto Cleanup;
     }
@@ -189,7 +205,7 @@ int _tmain (int argc, TCHAR *argv[])
 
         if (ferror(fp1) || ferror(fp2))
         {
-            _tprintf(_T("Files read error.\n"));
+            ResPrint(IDS_READERROR);
             Status = EXIT_FAILURE;
             goto Cleanup;
         }
@@ -207,22 +223,22 @@ int _tmain (int argc, TCHAR *argv[])
                 /* Reporting here a mismatch */
                 if (bLineNos)
                 {
-                    _tprintf(_T("Compare error at LINE %d\n"), LineNumber);
+                    ResPrint(IDS_MISMATCHLINE, LineNumber);
                 }
                 else
                 {
-                    _tprintf(_T("Compare error at OFFSET %d\n"), Offset);
+                    ResPrint(IDS_MISMATCHOFFSET, Offset);
                 }
 
                 if (bAscii)
                 {
-                    _tprintf(_T("file1 = %c\n"), Buff1[i]);
-                    _tprintf(_T("file2 = %c\n"), Buff2[i]);
+                    ResPrint(IDS_ASCIIDIFF, 1, Buff1[i]);
+                    ResPrint(IDS_ASCIIDIFF, 2, Buff2[i]);
                 }
                 else
                 {
-                    _tprintf(_T("file1 = %X\n"), Buff1[i]);
-                    _tprintf(_T("file2 = %X\n"), Buff2[i]);
+                    ResPrint(IDS_HEXADECIMALDIFF, 1, Buff1[i]);
+                    ResPrint(IDS_HEXADECIMALDIFF, 2, Buff2[i]);
                 }
 
                 Offset++;
@@ -234,7 +250,7 @@ int _tmain (int argc, TCHAR *argv[])
     }
 
     if (FilesOK)
-        _tprintf(_T("Files compare OK\n"));
+        ResPrint(IDS_MATCH);
 
 Cleanup:
     if (fp2)
