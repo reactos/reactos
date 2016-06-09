@@ -238,7 +238,7 @@ void OnPaint(HWND hWnd)
 
       dcFont = SelectObject(dialogDC, dialogFont);
       SetTextColor(dialogDC, GetSysColor(COLOR_BTNTEXT));
-      SetBkColor(dialogDC, GetSysColor(COLOR_BTNFACE));
+      SetBkMode(dialogDC, TRANSPARENT);
 
       textRC.top = itemsH;
       textRC.left = 8;
