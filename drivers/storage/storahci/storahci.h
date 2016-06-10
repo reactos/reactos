@@ -250,26 +250,26 @@ typedef struct _AHCI_SRB_EXTENSION
 
 BOOLEAN
 AhciAdapterReset (
-    __in      PAHCI_ADAPTER_EXTENSION             adapterExtension
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension
     );
 
 __inline
 VOID
 AhciZeroMemory (
-    __out     PCHAR                               buffer,
-    __in      ULONG                               bufferSize
+    __out PCHAR Buffer,
+    __in ULONG BufferSize
     );
 
 __inline
 BOOLEAN
 IsPortValid (
-    __in      PAHCI_ADAPTER_EXTENSION             adapterExtension,
-    __in      UCHAR                               pathId
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
+    __in UCHAR pathId
     );
 
 ULONG
 DeviceInquiryRequest (
-    __in      PAHCI_ADAPTER_EXTENSION             adapterExtension,
-    __in      PSCSI_REQUEST_BLOCK                 Srb,
-    __in      PCDB                                Cdb
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
+    __in PSCSI_REQUEST_BLOCK Srb,
+    __in PCDB Cdb
     );
