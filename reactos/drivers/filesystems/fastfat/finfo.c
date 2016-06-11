@@ -1114,7 +1114,7 @@ UpdateFileSize(
 {
     if (Size > 0)
     {
-        Fcb->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, ClusterSize);
+        Fcb->RFCB.AllocationSize.QuadPart = ROUND_UP_64(Size, ClusterSize);
     }
     else
     {
