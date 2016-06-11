@@ -6,6 +6,9 @@ list(APPEND SOURCE
     create.c
     delete.c
     print.c
+    qc.c
+    qdescription.c
+    qfailure.c
     query.c
     sc.c
     sdset.c

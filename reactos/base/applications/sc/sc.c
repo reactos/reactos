@@ -208,6 +208,42 @@ ScControl(LPCTSTR Server,       // remote machine name
         else
             SdSetUsage();
     }
+    else if (!lstrcmpi(Command, _T("qc")))
+    {
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            QueryConfig(ServiceName);
+        }
+        else
+            QueryConfigUsage();
+    }
+    else if (!lstrcmpi(Command, _T("qdescription")))
+    {
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            QueryDescription(ServiceName);
+        }
+        else
+            QueryDescriptionUsage();
+    }
+    else if (!lstrcmpi(Command, _T("qfailure")))
+    {
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            QueryFailure(ServiceName);
+        }
+        else
+            QueryFailureUsage();
+    }
     else
     {
         MainUsage();

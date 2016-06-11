@@ -36,9 +36,9 @@ VOID MainUsage(VOID)
 //    "\t  config         : Changes the configuration of a service (persistant).\n"
 //    "\t  description    : Changes the description of a service.\n"
 //    "\t  failure        : Changes the actions taken by a service upon failure.\n"
-//    "\t  qc             : Queries the configuration information for a service.\n"
-//    "\t  qdescription   : Queries the description for a service.\n"
-//    "\t  qfailure       : Queries the actions taken by a service upon failure.\n"
+    _T("\t  qc             : Queries the configuration information for a service.\n")
+    _T("\t  qdescription   : Queries the description for a service.\n")
+    _T("\t  qfailure       : Queries the actions taken by a service upon failure.\n")
     _T("\t  delete         : Deletes a service (from the registry).\n")
     _T("\t  create         : Creates a service. (adds it to the registry).\n")
     _T("\t  control        : Sends a control to a service.\n")
@@ -194,15 +194,39 @@ VOID ControlUsage(VOID)
 VOID SdShowUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
-                _T("        Displays a service's security descriptor in SDDL format.\n")
-                _T("USAGE:\n")
-                _T("        sc <server> sdshow <service name>\n"));
+             _T("        Displays a service's security descriptor in SDDL format.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> sdshow <service name>\n"));
 }
 
 VOID SdSetUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
-                _T("        Sets a service's security descriptor.\n")
-                _T("USAGE:\n")
-                _T("        sc <server> sdset <service name> <SD in SDDL format>\n"));
+             _T("        Sets a service's security descriptor.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> sdset <service name> <SD in SDDL format>\n"));
+}
+
+VOID QueryConfigUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Queries the configuration information for a service.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> qc [service name] <bufferSize>\n"));
+}
+
+VOID QueryDescriptionUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Retrieves the description string of a service.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> qdescription [service name] <bufferSize>\n"));
+}
+
+VOID QueryFailureUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Retrieves the actions performed on service failure.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> qfailure [service name] <bufferSize>\n"));
 }
