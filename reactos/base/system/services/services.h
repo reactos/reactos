@@ -139,6 +139,11 @@ ScmWriteSecurityDescriptor(
     _In_ HKEY hServiceKey,
     _In_ PSECURITY_DESCRIPTOR pSecurityDescriptor);
 
+DWORD
+ScmReadSecurityDescriptor(
+    _In_ HKEY hServiceKey,
+    _Out_ PSECURITY_DESCRIPTOR *ppSecurityDescriptor);
+
 
 /* controlset.c */
 

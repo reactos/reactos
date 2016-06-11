@@ -586,10 +586,17 @@ ScmReadSecurityDescriptor(
     _Out_ PSECURITY_DESCRIPTOR *ppSecurityDescriptor)
 {
     PSECURITY_DESCRIPTOR pRelativeSD = NULL;
+    PSECURITY_DESCRIPTOR pResizedBuffer = NULL;
     HKEY hSecurityKey = NULL;
     DWORD dwBufferLength = 0;
+    DWORD dwAbsoluteSDSize = 0;
     DWORD dwType;
     DWORD dwError;
+    NTSTATUS Status;
+
+    DPRINT("ScmReadSecurityDescriptor()\n");
+
+    *ppSecurityDescriptor = NULL;
 
     dwError = RegOpenKeyExW(hServiceKey,
                             L"Security",
@@ -598,7 +605,11 @@ ScmReadSecurityDescriptor(
                             &hSecurityKey);
     if (dwError != ERROR_SUCCESS)
     {
-DPRINT1("\n");
+        DPRINT("RegOpenKeyExW() failed (Error %lu)\n", dwError);
+
+        /* Do not fail if the Security key does not exist */
+        if (dwError == ERROR_FILE_NOT_FOUND)
+            dwError = ERROR_SUCCESS;
         goto done;
     }
 
@@ -610,19 +621,24 @@ DPRINT1("\n");
                                &dwBufferLength);
     if (dwError != ERROR_SUCCESS)
     {
-DPRINT1("\n");
+        DPRINT("RegQueryValueExW() failed (Error %lu)\n", dwError);
+
+        /* Do not fail if the Security value does not exist */
+        if (dwError == ERROR_FILE_NOT_FOUND)
+            dwError = ERROR_SUCCESS;
         goto done;
     }
 
+    DPRINT("dwBufferLength: %lu\n", dwBufferLength);
     pRelativeSD = RtlAllocateHeap(RtlGetProcessHeap(),
                                   HEAP_ZERO_MEMORY,
                                   dwBufferLength);
     if (pRelativeSD == NULL)
     {
-DPRINT1("\n");
         return ERROR_OUTOFMEMORY;
     }
 
+    DPRINT("pRelativeSD: %lu\n", pRelativeSD);
     dwError = RegQueryValueExW(hSecurityKey,
                                L"Security",
                                0,
@@ -631,19 +647,47 @@ DPRINT1("\n");
                                &dwBufferLength);
     if (dwError != ERROR_SUCCESS)
     {
-DPRINT1("\n");
         goto done;
     }
 
+    Status = RtlSelfRelativeToAbsoluteSD2(pRelativeSD,
+                                          &dwAbsoluteSDSize);
+    if (Status == STATUS_BUFFER_TOO_SMALL)
+    {
+        pResizedBuffer = RtlReAllocateHeap(RtlGetProcessHeap(),
+                                           0,
+                                           pRelativeSD,
+                                           dwAbsoluteSDSize);
+        if (pResizedBuffer == NULL)
+        {
+            dwError = ERROR_OUTOFMEMORY;
+            goto done;
+        }
 
+        pRelativeSD = pResizedBuffer;
+        Status = RtlSelfRelativeToAbsoluteSD2(pRelativeSD,
+                                              &dwAbsoluteSDSize);
+        if (!NT_SUCCESS(Status))
+        {
+            dwError = RtlNtStatusToDosError(Status);
+            goto done;
+        }
+    }
+    else if (!NT_SUCCESS(Status))
+    {
+
+        dwError = RtlNtStatusToDosError(Status);
+        goto done;
+    }
+
+    *ppSecurityDescriptor = pRelativeSD;
 
 done:
-    if (pRelativeSD != NULL)
+    if (dwError != ERROR_SUCCESS && pRelativeSD != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, pRelativeSD);
 
     if (hSecurityKey != NULL)
         RegCloseKey(hSecurityKey);
-
 
     return dwError;
 }

@@ -554,8 +554,10 @@ ScmDeleteServiceRecord(PSERVICE lpService)
     /* Decrement the group reference counter */
     ScmSetServiceGroup(lpService, NULL);
 
-    /* FIXME: SecurityDescriptor */
-
+    /* Release the SecurityDescriptor */
+    if ((lpService->pSecurityDescriptor != NULL) &&
+        (lpService->pSecurityDescriptor != pDefaultServiceSD))
+        HeapFree(GetProcessHeap(), 0, lpService->pSecurityDescriptor);
 
     /* Remove the Service from the List */
     RemoveEntryList(&lpService->ServiceListEntry);
@@ -693,7 +695,27 @@ CreateServiceListEntry(LPCWSTR lpServiceName,
     if (ScmIsDeleteFlagSet(hServiceKey))
         lpService->bDeleted = TRUE;
 
-done:;
+    if (lpService->Status.dwServiceType & SERVICE_WIN32)
+    {
+        dwError = ScmReadSecurityDescriptor(hServiceKey,
+                                            &lpService->pSecurityDescriptor);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+
+        /* Assing the default security descriptor if the security descriptor cannot be read */
+        if (lpService->pSecurityDescriptor == NULL)
+        {
+            DPRINT("No security descriptor found! Assign default security descriptor!\n");
+            lpService->pSecurityDescriptor = pDefaultServiceSD;
+
+            dwError = ScmWriteSecurityDescriptor(hServiceKey,
+                                                 lpService->pSecurityDescriptor);
+            if (dwError != ERROR_SUCCESS)
+                goto done;
+        }
+    }
+
+done:
     if (lpGroup != NULL)
         HeapFree(GetProcessHeap(), 0, lpGroup);
 
