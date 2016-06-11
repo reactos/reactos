@@ -191,6 +191,23 @@ ScControl(LPCTSTR Server,       // remote machine name
         else
             SdShowUsage();
     }
+    else if (!lstrcmpi(Command, _T("sdset")))
+    {
+        LPCTSTR SecurityDescriptor;
+
+        if (ArgCount > 1)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            SecurityDescriptor = *ServiceArgs++;
+            ArgCount--;
+
+            SdSet(ServiceName, SecurityDescriptor);
+        }
+        else
+            SdSetUsage();
+    }
     else
     {
         MainUsage();

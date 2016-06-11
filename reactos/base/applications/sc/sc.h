@@ -20,6 +20,7 @@ BOOL Query(LPCTSTR *ServiceArgs, DWORD ArgCount, BOOL bExtended);
 
 LPSERVICE_STATUS_PROCESS QueryService(LPCTSTR ServiceName);
 BOOL SdShow(LPCTSTR ServiceName);
+BOOL SdSet(LPCTSTR ServiceName, LPCTSTR SecurityDescriptor);
 
 /* print and error functions */
 VOID PrintService(LPCTSTR ServiceName, LPSERVICE_STATUS_PROCESS pStatus, BOOL bExtended);
@@ -38,5 +39,6 @@ VOID DeleteUsage(VOID);
 VOID CreateUsage(VOID);
 VOID ControlUsage(VOID);
 VOID SdShowUsage(VOID);
+VOID SdSetUsage(VOID);
 
 #endif /* _SC_PCH_ */

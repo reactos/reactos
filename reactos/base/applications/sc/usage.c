@@ -42,8 +42,8 @@ VOID MainUsage(VOID)
     _T("\t  delete         : Deletes a service (from the registry).\n")
     _T("\t  create         : Creates a service. (adds it to the registry).\n")
     _T("\t  control        : Sends a control to a service.\n")
-    _T("\t  sdshow         : Displays a service's security descriptor.\n"));
-//    "\t  sdset          : Sets a service's security descriptor.\n")
+    _T("\t  sdshow         : Displays a service's security descriptor.\n")
+    _T("\t  sdset          : Sets a service's security descriptor.\n"));
 //    "\t  GetDisplayName : Gets the DisplayName for a service.\n")
 //    "\t  GetKeyName     : Gets the ServiceKeyName for a service.\n")
 //    "\t  EnumDepend     : Enumerates Service Dependencies.\n")
@@ -197,4 +197,12 @@ VOID SdShowUsage(VOID)
                 _T("        Displays a service's security descriptor in SDDL format.\n")
                 _T("USAGE:\n")
                 _T("        sc <server> sdshow <service name>\n"));
+}
+
+VOID SdSetUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+                _T("        Sets a service's security descriptor.\n")
+                _T("USAGE:\n")
+                _T("        sc <server> sdset <service name> <SD in SDDL format>\n"));
 }
