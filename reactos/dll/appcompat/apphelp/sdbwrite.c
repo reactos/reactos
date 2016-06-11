@@ -1,6 +1,6 @@
 /*
- * Copyright 2011 André Hentschel
- * Copyright 2013 Mislav Blaževic
+ * Copyright 2011 AndrÃ© Hentschel
+ * Copyright 2013 Mislav BlaÅ¾eviÄ‡
  * Copyright 2015,2016 Mark Jansen
  *
  * This library is free software; you can redistribute it and/or
@@ -19,27 +19,28 @@
  */
 
 #if !defined(SDBWRITE_HOSTTOOL)
-
 #define WIN32_NO_STATUS
 #include "windows.h"
 #include "ntndk.h"
-#include "apphelp.h"
-#include "wine/unicode.h"
-
 #else
-
 #include <typedefs.h>
 #include <guiddef.h>
+#endif
 
 #include "sdbtypes.h"
 #include "sdbpapi.h"
 #include "sdbtagid.h"
+#include "sdbstringtable.h"
 
-#endif
 
+/* Local functions */
 BOOL WINAPI SdbWriteStringRefTag(PDB db, TAG tag, TAGID tagid);
+BOOL WINAPI SdbWriteStringTag(PDB db, TAG tag, LPCWSTR string);
 TAGID WINAPI SdbBeginWriteListTag(PDB db, TAG tag);
 BOOL WINAPI SdbEndWriteListTag(PDB db, TAGID tagid);
+
+/* sdbapi.c */
+void WINAPI SdbCloseDatabase(PDB);
 
 
 static void WINAPI SdbpWrite(PDB db, const void* data, DWORD size)
@@ -57,19 +58,35 @@ static void WINAPI SdbpWrite(PDB db, const void* data, DWORD size)
 
 static BOOL WINAPI SdbpGetOrAddStringRef(PDB db, LPCWSTR string, TAGID* tagid)
 {
-    /* TODO:
-    - Insert or find in stringtable
-    - return TAGID
-    */
+    PDB buf = db->string_buffer;
+    if (db->string_buffer == NULL)
+    {
+        db->string_buffer = buf = SdbpAlloc(sizeof(DB));
+        if (buf == NULL)
+            return FALSE;
+        buf->size = 128;
+        buf->data = SdbAlloc(buf->size);
+        if (buf->data == NULL)
+            return FALSE;
+    }
 
-    return FALSE;
+   *tagid = buf->write_iter + sizeof(TAG) + sizeof(DWORD);
+   if (SdbpAddStringToTable(&db->string_lookup, string, tagid))
+       return SdbWriteStringTag(buf, TAG_STRINGTABLE_ITEM, string);
+
+    return db->string_lookup != NULL;
 }
 
-static void WINAPI SdbpWriteStringtable(PDB db)
+static BOOL WINAPI SdbpWriteStringtable(PDB db)
 {
-    TAGID table = SdbBeginWriteListTag(db, TAG_STRINGTABLE);
-    /* TODO: Write out all strings*/
-    SdbEndWriteListTag(db, table);
+    TAGID table;
+    PDB buf = db->string_buffer;
+    if (buf == NULL || db->string_lookup == NULL)
+        return FALSE;
+
+    table = SdbBeginWriteListTag(db, TAG_STRINGTABLE);
+    SdbpWrite(db, buf->data, buf->write_iter);
+    return SdbEndWriteListTag(db, table);
 }
 
 /**

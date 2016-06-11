@@ -68,6 +68,22 @@ void WINAPI SdbpFlush(PDB db);
 DWORD SdbpStrlen(PCWSTR string);
 DWORD SdbpStrsize(PCWSTR string);
 
+BOOL WINAPI SdbpCheckTagType(TAG tag, WORD type);
+BOOL WINAPI SdbpCheckTagIDType(PDB db, TAGID tagid, WORD type);
+
+
+typedef enum _SHIM_LOG_LEVEL {
+    SHIM_ERR = 1,
+    SHIM_WARN = 2,
+    SHIM_INFO = 3,
+} SHIM_LOG_LEVEL;
+
+BOOL WINAPIV ShimDbgPrint(SHIM_LOG_LEVEL Level, PCSTR FunctionName, PCSTR Format, ...);
+extern ULONG g_ShimDebugLevel;
+
+#define SHIM_ERR(fmt, ...)  do { if (g_ShimDebugLevel) ShimDbgPrint(SHIM_ERR, __FUNCTION__, fmt, ##__VA_ARGS__ ); } while (0)
+#define SHIM_WARN(fmt, ...)  do { if (g_ShimDebugLevel) ShimDbgPrint(SHIM_WARN, __FUNCTION__, fmt, ##__VA_ARGS__ ); } while (0)
+#define SHIM_INFO(fmt, ...)  do { if (g_ShimDebugLevel) ShimDbgPrint(SHIM_INFO, __FUNCTION__, fmt, ##__VA_ARGS__ ); } while (0)
 
 #ifdef __cplusplus
 } // extern "C"

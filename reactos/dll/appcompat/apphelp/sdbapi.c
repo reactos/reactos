@@ -23,6 +23,7 @@
 #include "ntndk.h"
 #include "strsafe.h"
 #include "apphelp.h"
+#include "sdbstringtable.h"
 
 #include "wine/unicode.h"
 
@@ -228,9 +229,6 @@ PDB WINAPI SdbpCreate(LPCWSTR path, PATH_TYPE type, BOOL write)
 
     InitializeObjectAttributes(&attr, &str, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
-    //Status = NtCreateFile(&db->file, FILE_GENERIC_READ | SYNCHRONIZE,
-    //                      &attr, &io, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ,
-    //                      FILE_OPEN, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
     Status = NtCreateFile(&db->file, (write ? FILE_GENERIC_WRITE : FILE_GENERIC_READ )| SYNCHRONIZE,
                           &attr, &io, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ,
                           write ? FILE_SUPERSEDE : FILE_OPEN, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
@@ -454,6 +452,10 @@ void WINAPI SdbCloseDatabase(PDB db)
 
     if (db->file)
         NtClose(db->file);
+    if (db->string_buffer)
+        SdbCloseDatabase(db->string_buffer);
+    if (db->string_lookup)
+        SdbpTableDestroy(&db->string_lookup);
     SdbFree(db->data);
     SdbFree(db);
 }

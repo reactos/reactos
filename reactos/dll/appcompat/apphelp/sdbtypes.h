@@ -39,6 +39,8 @@ typedef struct _DB {
     TAGID stringtable;
     DWORD write_iter;
     GUID database_id;
+    struct SdbStringHashTable* string_lookup;
+    struct _DB* string_buffer;
 } DB, *PDB;
 
 typedef enum _PATH_TYPE {
