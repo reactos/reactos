@@ -1,4 +1,4 @@
-﻿[Section]
+[Section]
 Name = Free Stopwatch
 Version = 4.0
 License = Freeware

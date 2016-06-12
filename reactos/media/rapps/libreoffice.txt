@@ -1,13 +1,13 @@
 [Section]
 Name = LibreOffice
-Version = 5.1.2
+Version = 5.1.3
 License = LGPL
 Description = A powerful and open source office suite. It has been forked from OpenOffice.
 Size = 211.4 MiB
 Category = 6
 URLSite = http://www.documentfoundation.org/
-URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.1.2/win/x86/LibreOffice_5.1.2_Win_x86.msi
-SHA1 = 145d2ff67904eebbaf7a119d1c43647fc9b7ad4b
+URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.1.3/win/x86/LibreOffice_5.1.3_Win_x86.msi
+SHA1 = 84b5c1274f229fdd78bab9f8bc69374c1fcb9ca6
 CDPath = none
 
 [Section.0407]
