@@ -5,6 +5,7 @@ list(APPEND SOURCE
     control.c
     create.c
     delete.c
+    description.c
     print.c
     qc.c
     qdescription.c

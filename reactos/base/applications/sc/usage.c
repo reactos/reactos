@@ -34,7 +34,7 @@ VOID MainUsage(VOID)
     _T("\t  continue       : Sends a CONTINUE control request to a service.\n")
     _T("\t  stop           : Sends a STOP request to a service.\n")
 //    "\t  config         : Changes the configuration of a service (persistant).\n"
-//    "\t  description    : Changes the description of a service.\n"
+    _T("\t  description    : Changes the description of a service.\n")
 //    "\t  failure        : Changes the actions taken by a service upon failure.\n"
     _T("\t  qc             : Queries the configuration information for a service.\n")
     _T("\t  qdescription   : Queries the description for a service.\n")
@@ -229,4 +229,12 @@ VOID QueryFailureUsage(VOID)
              _T("        Retrieves the actions performed on service failure.\n")
              _T("USAGE:\n")
              _T("        sc <server> qfailure [service name] <bufferSize>\n"));
+}
+
+VOID SetDescriptionUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Sets the description string of a service.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> description [service name] [description]\n"));
 }

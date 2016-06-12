@@ -244,6 +244,26 @@ ScControl(LPCTSTR Server,       // remote machine name
         else
             QueryFailureUsage();
     }
+    else if (!lstrcmpi(Command, _T("description")))
+    {
+        LPCTSTR Description = NULL;
+
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            if (ArgCount > 0)
+            {
+                Description = *ServiceArgs++;
+                ArgCount--;
+            }
+
+            SetDescription(ServiceName, Description);
+        }
+        else
+            SetDescriptionUsage();
+    }
     else
     {
         MainUsage();

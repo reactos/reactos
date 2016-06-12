@@ -23,6 +23,7 @@ BOOL SdShow(LPCTSTR ServiceName);
 BOOL SdSet(LPCTSTR ServiceName, LPCTSTR SecurityDescriptor);
 BOOL QueryConfig(LPCTSTR ServiceName);
 BOOL QueryDescription(LPCTSTR ServiceName);
+BOOL SetDescription(LPCTSTR ServiceName, LPCTSTR Description);
 BOOL QueryFailure(LPCTSTR ServiceName);
 
 /* print and error functions */
@@ -46,5 +47,6 @@ VOID SdSetUsage(VOID);
 VOID QueryConfigUsage(VOID);
 VOID QueryDescriptionUsage(VOID);
 VOID QueryFailureUsage(VOID);
+VOID SetDescriptionUsage(VOID);
 
 #endif /* _SC_PCH_ */

@@ -69,7 +69,8 @@ BOOL QueryDescription(LPCTSTR ServiceName)
     }
 
     _tprintf(_T("SERVICE_NAME: %s\n"), ServiceName);
-    _tprintf(_T("        DESCRIPTION        : %s\n"), pServiceDescription->lpDescription);
+    _tprintf(_T("        DESCRIPTION        : %s\n"),
+             (pServiceDescription->lpDescription) ? pServiceDescription->lpDescription : _T(""));
 
 done:
     if (bResult == FALSE)
