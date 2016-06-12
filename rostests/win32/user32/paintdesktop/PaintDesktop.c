@@ -46,7 +46,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASS wc;
 
-    wc.style          = CS_HREDRAW | CS_VREDRAW;
+    wc.style          = 0;
     wc.lpfnWndProc    = WndProc;
     wc.cbClsExtra     = 0;
     wc.cbWndExtra     = 0;
@@ -87,8 +87,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_ERASEBKGND:
-            PaintDesktop((HDC)wParam);
-            break;
+            return (LRESULT)PaintDesktop((HDC)wParam);
 
         case WM_DESTROY:
             PostQuitMessage(0);
