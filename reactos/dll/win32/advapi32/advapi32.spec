@@ -1,4 +1,4 @@
-1 stub I_ScGetCurrentGroupStateW
+1 stdcall I_ScGetCurrentGroupStateW(ptr wstr ptr)
 2 stdcall A_SHAFinal(ptr ptr)
 3 stdcall A_SHAInit(ptr)
 4 stdcall A_SHAUpdate(ptr ptr long)
