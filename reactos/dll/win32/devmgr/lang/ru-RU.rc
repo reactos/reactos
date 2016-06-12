@@ -76,8 +76,8 @@ BEGIN
     IDS_DEV_HARDWARE_DISABLED "This device is disabled because the BIOS for the device did not give it any resources."
     IDS_DEV_CANT_SHARE_IRQ "This device is using an Interrupt Request (IRQ) resource that is in use by another device and cannot be shared.\nYou must change the conflicting setting or remove the real-mode driver causing the conflict."
     IDS_DEV_FAILED_ADD "This device is not working properly because %1 is not working properly."
-    IDS_DEV_DISABLED_SERVICE "ReactOS cannot install the drivers for this device because it cannot access the drive or network location that has the setup files on it."
-    IDS_DEV_TRANSLATION_FAILED "This device isn't responding to its driver."
+    IDS_DEV_DISABLED_SERVICE "ReactOS не может установить драйвера для этого устройства, потому что не может получить доступ к месту расположения установочных файлов."
+    IDS_DEV_TRANSLATION_FAILED "Это устройство не отвечает своему драйверу."
     IDS_DEV_NO_SOFTCONFIG "ReactOS cannot determine the settings for this device. Consult the documentation that came with this device and use the Resource tab to set the configuration."
     IDS_DEV_BIOS_TABLE "Your computer's system firmware does not include enough information to properly configure and use this device. \nTo use this device, contact your computer manufacturer to obtain a firmware or BIOS update."
     IDS_DEV_IRQ_TRANSLATION_FAILED "This device is requesting a PCI interrupt but is configured for an ISA interrupt (or vice versa). \nPlease use the computer's system setup program to reconfigure the interrupt for this device."
@@ -85,16 +85,16 @@ BEGIN
     IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS cannot load the device driver for this hardware because a previous instance of the device driver is still in memory."
     IDS_DEV_DRIVER_FAILED_LOAD "ReactOS cannot load the device driver for this hardware. The driver may be corrupted or missing."
     IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS cannot access this hardware because its service key information in the registry is missing or recorded incorrectly."
-    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS successfully loaded the device driver for this hardware but cannot find the hardware device."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS успешно загрузил драйвер устройства, но не может найти соответсвующее ему оборудование."
     IDS_DEV_DUPLICATE_DEVICE "ReactOS cannot load the device driver for this hardware because there is a duplicate device already running in the system."
     IDS_DEV_FAILED_POST_START "ReactOS остановил данное устройство, так как в его работе обнаружились проблемы."
     IDS_DEV_HALTED "Приложение или служба отключили данное устройство."
     IDS_DEV_PHANTOM "В настоящее время данное устройство не подключено к компьютеру."
-    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS cannot gain access to this hardware device because the operating system is in the process of shutting down."
-    IDS_DEV_HELD_FOR_EJECT "ReactOS cannot use this hardware device because it has been prepared for safe removal, but it has not been removed from the computer"
+    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS не может получить доступа к устройству, потому что идет завершение работы системы."
+    IDS_DEV_HELD_FOR_EJECT "ReactOS не может использовать это устройство, потому что оно подготовлено для безопасного извлечения, но еще не было извлечено."
     IDS_DEV_DRIVER_BLOCKED "The software for this device has been blocked from starting because it is known to have problems with ReactOS. Contact the hardware vendor for a new driver."
     IDS_DEV_REGISTRY_TOO_LARGE "ReactOS cannot start new hardware devices because the system hive is too large (exceeds the Registry Size Limit)."
-    IDS_DEV_SETPROPERTIES_FAILED "ReactOS wasn't able to change the settings of this device."
+    IDS_DEV_SETPROPERTIES_FAILED "ReactOS не может изменить настройки этого устройства."
 END
 
 STRINGTABLE
@@ -246,12 +246,12 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&File"
+  POPUP "&Файл"
   BEGIN
-    MENUITEM "E&xit",                       IDC_EXIT
+    MENUITEM "В&ыход",                       IDC_EXIT
   END
-  MENUITEM "Action",                        IDC_ACTIONMENU
-  POPUP "View"
+  MENUITEM "&Действие",                        IDC_ACTIONMENU
+  POPUP "&Вид"
   BEGIN
     MENUITEM "&Устройства по типу",             IDC_DEVBYTYPE
     MENUITEM "Устройства по под&ключению",       IDC_DEVBYCONN
@@ -260,9 +260,9 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "Показать &скрытые устройства",         IDC_SHOWHIDDEN
   END
-  POPUP "Help"
+  POPUP "&Справка"
   BEGIN
-    MENUITEM "About",                       IDC_ABOUT
+    MENUITEM "О &программе...",                       IDC_ABOUT
   END
 END
 
@@ -305,7 +305,7 @@ BEGIN
   IDS_HINT_UPDATE       " Запуск мастера обновления драйверов для выделенного устройства."
   IDS_HINT_UNINSTALL    " Удаление драйвера для выбранного устройства."
   IDS_HINT_ADD          " Добавить старое (не Plug-and-Play) устройство на этот компьютер." 
-  IDS_HINT_ABOUT        " О программе Диспетчер устройств ReactOS."
+  IDS_HINT_ABOUT        " О программе \"Диспетчер устройств ReactOS\"."
   IDS_HINT_EXIT         " Выход из программы."
 
   IDS_HINT_DEV_BY_TYPE  " Показывает устройства, отсортированные по типу оборудования."
@@ -314,10 +314,10 @@ BEGIN
   IDS_HINT_RES_BY_CONN  " Показывает ресурсы, отсортированные по подключению."
   IDS_HINT_SHOW_HIDDEN  " Показывает удаленные из системы и устаревшие устройства."
 
-  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
-  IDS_HINT_SYS_MOVE     " Moves this window."
-  IDS_HINT_SYS_SIZE     " Resizes this window."
-  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
-  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
-  IDS_HINT_SYS_CLOSE    " Closes this window."
+  IDS_HINT_SYS_RESTORE  " Восстановить окно к его нормальному размеру."
+  IDS_HINT_SYS_MOVE     " Переместить окно."
+  IDS_HINT_SYS_SIZE     " Изменить размер этого окна."
+  IDS_HINT_SYS_MINIMIZE " Свернуть окно."
+  IDS_HINT_SYS_MAXIMIZE " Развернуть окно."
+  IDS_HINT_SYS_CLOSE    " Закрыть окно."
 END
