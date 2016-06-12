@@ -8,7 +8,6 @@ list(APPEND SOURCE
     description.c
     print.c
     qc.c
-    qdescription.c
     qfailure.c
     query.c
     sc.c
