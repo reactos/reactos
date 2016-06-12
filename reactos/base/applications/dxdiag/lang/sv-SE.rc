@@ -245,7 +245,7 @@ BEGIN
     IDS_DDFULLSCREEN_DESCRIPTION "Denna testen kommer att använda DirectDraw för att rita i fullskärmsläge. En animerad vit rektangel kommer att ritas. Fortsätta?"
     IDS_DDFULLSCREEN_RESULT "Såg du en vit animerad rektangel i fullskärmsläge?"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
-    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+    IDS_FORMAT_ADAPTER_MODE "%d x %d (%u bit)(%uHz)"
     IDS_OPTION_NO "Nej"
     IDS_D3DTEST_DESCRIPTION "Detta kommer att starta Direct3D enhetstest. Fortsätt?"
     IDS_D3DTEST_D3Dx "Detta testet kommer att använda hårdvaruaccellererad Direct3D %u enheten."

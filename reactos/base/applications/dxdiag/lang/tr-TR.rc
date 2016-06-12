@@ -240,7 +240,7 @@ BEGIN
     IDS_DDFULLSCREEN_DESCRIPTION "Bu sınama, ReactDraw'ı tüm görüntülükte çizmek için kullanacak. Devinen bir ak dikdörtgen göreceksiniz. Sürdürmek ister misiniz?"
     IDS_DDFULLSCREEN_RESULT "Tüm görüntülükte devinen bir ak dikdörtgen gördünüz mü?"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
-    IDS_FORMAT_ADAPTER_MODE "%d*%d (%u bitlik) (%uHz)"
+    IDS_FORMAT_ADAPTER_MODE "%d x %d (%u bitlik) (%uHz)"
     IDS_OPTION_NO "Hayır"
     IDS_D3DTEST_DESCRIPTION "Bu, React3D arayüz sınamasını başlatılacak. Sürdürmek ister misiniz?"
     IDS_D3DTEST_D3Dx "Bu sınama, donanım ivmeli React3D %u arayüzünü kullanacak."
