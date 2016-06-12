@@ -520,17 +520,6 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
         }
         else
             DataRunStartLCN = -1;
-
-        if (*DataRun == 0)
-        {
-            if (Length == 0)
-                return STATUS_SUCCESS;
-
-            // This code shouldn't execute, because we should have extended the allocation size
-            // or failed the request by now. It's just a sanity check.
-            DPRINT1("Encountered EOF before expected!\n");
-            return STATUS_END_OF_FILE;
-        }
     }
 
     // Do we have more data to write?
@@ -559,7 +548,7 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
 
         Length -= WriteLength;
         SourceBuffer += WriteLength;
-        RealLengthWritten += WriteLength;
+        *RealLengthWritten += WriteLength;
 
         // We finished this request, but there's still data in this data run. 
         if (Length == 0 && WriteLength != DataRunLength * Vcb->NtfsInfo.BytesPerCluster)
