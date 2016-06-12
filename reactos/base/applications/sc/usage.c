@@ -40,7 +40,7 @@ VOID MainUsage(VOID)
     _T("\t  qdescription   : Queries the description for a service.\n")
     _T("\t  qfailure       : Queries the actions taken by a service upon failure.\n")
     _T("\t  delete         : Deletes a service (from the registry).\n")
-    _T("\t  create         : Creates a service. (adds it to the registry).\n")
+    _T("\t  create         : Creates a service (adds it to the registry).\n")
     _T("\t  control        : Sends a control to a service.\n")
     _T("\t  sdshow         : Displays a service's security descriptor.\n")
     _T("\t  sdset          : Sets a service's security descriptor.\n"));
