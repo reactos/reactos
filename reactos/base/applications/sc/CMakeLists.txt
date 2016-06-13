@@ -9,7 +9,6 @@ list(APPEND SOURCE
     description.c
     misc.c
     print.c
-    qc.c
     qfailure.c
     query.c
     sc.c
