@@ -131,9 +131,9 @@ CDesktopBrowser::~CDesktopBrowser()
 
 HRESULT CDesktopBrowser::Initialize(HWND hWndx, IShellDesktopTray *ShellDeskx)
 {
-    CComPtr<IShellFolder>    psfDesktopFolder;
-    CSFV                    csfv;
-    HRESULT                    hRet;
+    CComPtr<IShellFolder> psfDesktopFolder;
+    CSFV    csfv;
+    HRESULT hRet;
 
     hWnd = hWndx;
     ShellDesk = ShellDeskx;
@@ -160,9 +160,9 @@ HRESULT CDesktopBrowser::Initialize(HWND hWndx, IShellDesktopTray *ShellDeskx)
 
 static CDesktopBrowser *SHDESK_Create(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
 {
-    CComPtr<IShellDesktopTray>       ShellDesk;
-    CComObject<CDesktopBrowser>        *pThis;
-    HRESULT                    hRet;
+    CComPtr<IShellDesktopTray>  ShellDesk;
+    CComObject<CDesktopBrowser> *pThis;
+    HRESULT hRet;
 
     ShellDesk = (IShellDesktopTray *)lpCreateStruct->lpCreateParams;
     if (ShellDesk == NULL)
@@ -316,7 +316,7 @@ HRESULT STDMETHODCALLTYPE CDesktopBrowser::GetControlWindow(UINT id, HWND *lphwn
 
 HRESULT STDMETHODCALLTYPE CDesktopBrowser::SendControlMsg(UINT id, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *pret)
 {
-    HWND                        hWnd;
+    HWND hWnd;
 
     if (pret == NULL)
         return E_POINTER;
@@ -396,13 +396,13 @@ BOOL CDesktopBrowser::MessageLoop()
 
 LRESULT CDesktopBrowser::_NotifyTray(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    HWND hwndTray;
-    HRESULT hres;
+    HWND hWndTray;
+    HRESULT hRet;
 
-    hres = this->ShellDesk->GetTrayWindow(&hwndTray);
+    hRet = ShellDesk->GetTrayWindow(&hWndTray);
 
-    if (SUCCEEDED(hres))
-        PostMessageW(hwndTray, uMsg, wParam, lParam);
+    if (SUCCEEDED(hRet))
+        PostMessageW(hWndTray, uMsg, wParam, lParam);
 
     return 0;
 }
@@ -550,6 +550,7 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
             case WM_SETFOCUS:
                 SetFocus(pThis->hWndShellView);
                 break;
+
             default:
 DefMsgHandler:
                 Ret = DefWindowProcW(hwnd, uMsg, wParam, lParam);

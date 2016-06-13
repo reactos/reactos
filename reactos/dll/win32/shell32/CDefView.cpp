@@ -91,17 +91,17 @@ class CDefView :
         PCUITEMID_CHILD          *m_apidl;
         PIDLIST_ABSOLUTE          m_pidlParent;
         LISTVIEW_SORT_INFO        m_sortInfo;
-        ULONG                     m_hNotify;            /* change notification handle */
+        ULONG                     m_hNotify;            /* Change notification handle */
         HACCEL                    m_hAccel;
         DWORD                     m_dwAspects;
         DWORD                     m_dwAdvf;
         CComPtr<IAdviseSink>      m_pAdvSink;
         // for drag and drop
-        CComPtr<IDropTarget>      m_pCurDropTarget;        /* The sub-item, which is currently dragged over */
-        CComPtr<IDataObject>      m_pCurDataObject;        /* The dragged data-object */
-        LONG                      m_iDragOverItem;        /* Dragged over item's index, iff m_pCurDropTarget != NULL */
-        UINT                      m_cScrollDelay;        /* Send a WM_*SCROLL msg every 250 ms during drag-scroll */
-        POINT                     m_ptLastMousePos;        /* Mouse position at last DragOver call */
+        CComPtr<IDropTarget>      m_pCurDropTarget;     /* The sub-item, which is currently dragged over */
+        CComPtr<IDataObject>      m_pCurDataObject;     /* The dragged data-object */
+        LONG                      m_iDragOverItem;      /* Dragged over item's index, iff m_pCurDropTarget != NULL */
+        UINT                      m_cScrollDelay;       /* Send a WM_*SCROLL msg every 250 ms during drag-scroll */
+        POINT                     m_ptLastMousePos;     /* Mouse position at last DragOver call */
         //
         CComPtr<IContextMenu>     m_pCM;
 
@@ -245,7 +245,7 @@ class CDefView :
         // *** IServiceProvider methods ***
         virtual HRESULT STDMETHODCALLTYPE QueryService(REFGUID guidService, REFIID riid, void **ppvObject);
 
-        // message handlers
+        // Message handlers
         LRESULT OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -287,10 +287,10 @@ class CDefView :
 
         static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
-            CDefView                        *pThis;
-            LRESULT                            result;
+            CDefView *pThis;
+            LRESULT  result;
 
-            // must hold a reference during message handling
+            // Must hold a reference during message handling
             pThis = reinterpret_cast<CDefView *>(hWnd);
             pThis->AddRef();
             result = CWindowImpl<CDefView, CWindow, CControlWinTraits>::WindowProc(hWnd, uMsg, wParam, lParam);
@@ -345,9 +345,9 @@ class CDefView :
 #define ID_LISTVIEW     1
 
 /*windowsx.h */
-#define GET_WM_COMMAND_ID(wp, lp)               LOWORD(wp)
-#define GET_WM_COMMAND_HWND(wp, lp)             (HWND)(lp)
-#define GET_WM_COMMAND_CMD(wp, lp)              HIWORD(wp)
+#define GET_WM_COMMAND_ID(wp, lp)       LOWORD(wp)
+#define GET_WM_COMMAND_HWND(wp, lp)     (HWND)(lp)
+#define GET_WM_COMMAND_CMD(wp, lp)      HIWORD(wp)
 
 typedef void (CALLBACK *PFNSHGETSETTINGSPROC)(LPSHELLFLAGSTATE lpsfs, DWORD dwMask);
 
@@ -509,7 +509,8 @@ void CDefView::SetStyle(DWORD dwAdd, DWORD dwRemove)
 * - creates the list view window
 */
 BOOL CDefView::CreateList()
-{   DWORD dwStyle, dwExStyle;
+{
+    DWORD dwStyle, dwExStyle;
 
     TRACE("%p\n", this);
 
@@ -618,8 +619,8 @@ void CDefView::UpdateListColors()
 */
 BOOL CDefView::InitList()
 {
-    SHELLDETAILS    sd;
-    WCHAR    szTemp[50];
+    SHELLDETAILS sd;
+    WCHAR szTemp[50];
     HIMAGELIST big_icons, small_icons;
 
     TRACE("%p\n", this);
@@ -715,7 +716,7 @@ int CDefView::LV_FindItemByPidl(PCUITEMID_CHILD pidl)
 */
 BOOLEAN CDefView::LV_AddItem(PCUITEMID_CHILD pidl)
 {
-    LVITEMW    lvItem;
+    LVITEMW lvItem;
 
     TRACE("(%p)(pidl=%p)\n", this, pidl);
 
@@ -792,7 +793,7 @@ BOOLEAN CDefView::LV_ProdItem(PCUITEMID_CHILD pidl)
 
     nItem = LV_FindItemByPidl(pidl);
 
-    if ( -1 != nItem )
+    if (-1 != nItem)
     {
         lvItem.mask = LVIF_IMAGE;
         lvItem.iItem = nItem;
@@ -813,7 +814,7 @@ BOOLEAN CDefView::LV_ProdItem(PCUITEMID_CHILD pidl)
 * - sorts the list
 * - fills the list into the view
 */
-INT CALLBACK CDefView::fill_list( LPVOID ptr, LPVOID arg )
+INT CALLBACK CDefView::fill_list(LPVOID ptr, LPVOID arg)
 {
     PITEMID_CHILD pidl = static_cast<PITEMID_CHILD>(ptr);
     CDefView *pThis = static_cast<CDefView *>(arg);
@@ -975,15 +976,15 @@ LRESULT CDefView::OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 */
 LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    CComPtr<IDropTarget>                pdt;
-    SHChangeNotifyEntry ntreg;
-    CComPtr<IPersistFolder2>            ppf2;
+    CComPtr<IDropTarget>     pdt;
+    SHChangeNotifyEntry      ntreg;
+    CComPtr<IPersistFolder2> ppf2;
 
     TRACE("%p\n", this);
 
-    if(CreateList())
+    if (CreateList())
     {
-        if(InitList())
+        if (InitList())
         {
             FillList();
         }
@@ -1029,7 +1030,7 @@ HMENU CDefView::BuildFileMenu()
 
     HMENU hmenu = CreatePopupMenu();
 
-    //FIXME: get proper numbers ?
+    // FIXME: get proper numbers ?
     const UINT first = 0x7800;
     const UINT last  = 0x7A00;
     hr = cm->QueryContextMenu(hmenu, 0, first, last, 0);
@@ -1237,11 +1238,10 @@ cleanup:
  */
 LRESULT CDefView::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    WORD                 x;
-    WORD                 y;
-    UINT                 uCommand;
-    HMENU                hMenu;
-    HRESULT              hResult;
+    WORD    x, y;
+    UINT    uCommand;
+    HMENU   hMenu;
+    HRESULT hResult;
 
     // for some reason I haven't figured out, we sometimes recurse into this method
     if (m_pCM != NULL)
@@ -1375,7 +1375,7 @@ void CDefView::DoActivate(UINT uState)
     }
     else
     {
-        if(m_hMenu)
+        if (m_hMenu)
         {
             if (!m_menusLoaded)
             {
@@ -2069,24 +2069,22 @@ HRESULT WINAPI CDefView::EnableModeless(BOOL fEnable)
 
 HRESULT WINAPI CDefView::UIActivate(UINT uState)
 {
-    /*
-        CHAR    szName[MAX_PATH];
-    */
-    LRESULT    lResult;
-    int    nPartArray[1] = { -1};
+    // CHAR szName[MAX_PATH];
+    LRESULT lResult;
+    int nPartArray[1] = { -1};
 
     TRACE("(%p)->(state=%x) stub\n", this, uState);
 
-    /*don't do anything if the state isn't really changing*/
+    /* don't do anything if the state isn't really changing */
     if (m_uState == uState)
     {
         return S_OK;
     }
 
-    /*OnActivate handles the menu merging and internal state*/
+    /* OnActivate handles the menu merging and internal state */
     DoActivate(uState);
 
-    /*only do This if we are active*/
+    /* only do This if we are active */
     if (uState != SVUIA_DEACTIVATE)
     {
 
@@ -2118,7 +2116,7 @@ HRESULT WINAPI CDefView::Refresh()
 
 HRESULT WINAPI CDefView::CreateViewWindow(IShellView *lpPrevView, LPCFOLDERSETTINGS lpfs, IShellBrowser *psb, RECT *prcView, HWND *phWnd)
 {
-    OLEMENUGROUPWIDTHS                    omw = { { 0, 0, 0, 0, 0, 0 } };
+    OLEMENUGROUPWIDTHS omw = { { 0, 0, 0, 0, 0, 0 } };
 
     *phWnd = 0;
 
@@ -2133,14 +2131,14 @@ HRESULT WINAPI CDefView::CreateViewWindow(IShellView *lpPrevView, LPCFOLDERSETTI
     if (psb == NULL || m_hWnd)
         return E_UNEXPECTED;
 
-    /*set up the member variables*/
+    /* Set up the member variables */
     m_pShellBrowser = psb;
     m_FolderSettings = *lpfs;
 
-    /*get our parent window*/
+    /* Get our parent window */
     m_pShellBrowser->GetWindow(&m_hWndParent);
 
-    /* try to get the ICommDlgBrowserInterface, adds a reference !!! */
+    /* Try to get the ICommDlgBrowserInterface, adds a reference !!! */
     m_pCommDlgBrowser = NULL;
     if (SUCCEEDED(m_pShellBrowser->QueryInterface(IID_PPV_ARG(ICommDlgBrowser, &m_pCommDlgBrowser))))
     {
@@ -2177,7 +2175,7 @@ HRESULT WINAPI CDefView::DestroyViewWindow()
 {
     TRACE("(%p)\n", this);
 
-    /*Make absolutely sure all our UI is cleaned up.*/
+    /* Make absolutely sure all our UI is cleaned up */
     UIActivate(SVUIA_DEACTIVATE);
 
     if (m_hAccel)
@@ -3048,8 +3046,7 @@ HRESULT STDMETHODCALLTYPE CDefView::QueryService(REFGUID guidService, REFIID rii
 
 HRESULT CDefView::_MergeToolbar()
 {
-    CComPtr<IExplorerToolbar> ptb; // [sp+8h] [bp-4h]@1
-
+    CComPtr<IExplorerToolbar> ptb;
     HRESULT hr = S_OK;
 
     hr = IUnknown_QueryService(m_pShellBrowser, IID_IExplorerToolbar, IID_PPV_ARG(IExplorerToolbar, &ptb));
