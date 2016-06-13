@@ -264,6 +264,10 @@ ScControl(LPCTSTR Server,       // remote machine name
         else
             SetDescriptionUsage();
     }
+    else if (!lstrcmpi(Command, _T("config")))
+    {
+        SetConfig(ServiceArgs, ArgCount);
+    }
     else
     {
         MainUsage();

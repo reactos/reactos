@@ -2,10 +2,12 @@
 add_definitions(-DDEFINE_GUID)
 
 list(APPEND SOURCE
+    config.c
     control.c
     create.c
     delete.c
     description.c
+    misc.c
     print.c
     qc.c
     qfailure.c

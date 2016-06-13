@@ -33,7 +33,7 @@ VOID MainUsage(VOID)
     _T("\t  interrogate    : Sends a INTERROGATE control request to a service.\n")
     _T("\t  continue       : Sends a CONTINUE control request to a service.\n")
     _T("\t  stop           : Sends a STOP request to a service.\n")
-//    "\t  config         : Changes the configuration of a service (persistant).\n"
+    _T("\t  config         : Changes the configuration of a service (persistant).\n")
     _T("\t  description    : Changes the description of a service.\n")
 //    "\t  failure        : Changes the actions taken by a service upon failure.\n"
     _T("\t  qc             : Queries the configuration information for a service.\n")
@@ -134,21 +134,6 @@ VOID ContinueUsage(VOID)
                 _T("        sc <server> continue [service name]\n"));
 }
 
-
-VOID ConfigUsage(VOID)
-{
-    _tprintf(_T("not yet implemented\n"));
-}
-
-
-VOID DescriptionUsage(VOID)
-{
-    _tprintf(_T("DESCRIPTION:\n")
-                _T("        Sets the description string for a service.\n")
-                _T("USAGE:\n")
-                _T("        sc <server> description [service name]\n"));
-}
-
 VOID DeleteUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
@@ -237,4 +222,24 @@ VOID SetDescriptionUsage(VOID)
              _T("        Sets the description string of a service.\n")
              _T("USAGE:\n")
              _T("        sc <server> description [service name] [description]\n"));
+}
+
+VOID SetConfigUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Modifies a service entry in the registry and Service Database.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> config [service name] <option1> <option2>...\n")
+             _T("CONFIG OPTIONS:\n")
+             _T("        NOTE: The option name includes the equal sign.\n")
+             _T("        type= <own|share|interact|kernel|filesys|rec>\n")
+             _T("        start= <boot|system|auto|demand|disabled>\n")
+             _T("        error= <normal|severe|critical|ignore>\n")
+             _T("        binPath= <BinaryPathName>\n")
+             _T("        group= <LoadOrderGroup>\n")
+             _T("        tag= <yes|no>\n")
+             _T("        depend= <Dependencies(separated by / (forward slash))>\n")
+             _T("        obj= <AccountName|ObjectName>\n")
+             _T("        DisplayName= <display name>\n")
+             _T("        password= <password>\n"));
 }
