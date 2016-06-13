@@ -271,7 +271,7 @@ class CDefView :
         {
             static ATL::CWndClassInfo wc =
             {
-                {   sizeof(WNDCLASSEX), 0, StartWindowProc,
+                {   sizeof(WNDCLASSEX), CS_PARENTDC, StartWindowProc,
                     0, 0, NULL, NULL,
                     LoadCursor(NULL, IDC_ARROW), (HBRUSH)(COLOR_WINDOW + 1), NULL, SV_CLASS_NAME, NULL
                 },
@@ -2145,7 +2145,7 @@ HRESULT WINAPI CDefView::CreateViewWindow(IShellView *lpPrevView, LPCFOLDERSETTI
         TRACE("-- CommDlgBrowser\n");
     }
 
-    Create(m_hWndParent, prcView, NULL, WS_CHILD | WS_TABSTOP, 0, 0U);
+    Create(m_hWndParent, prcView, NULL, WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP, 0, 0U);
     if (m_hWnd == NULL)
         return E_FAIL;
 

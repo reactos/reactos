@@ -194,17 +194,28 @@ HWND CDesktopBrowser::FindDesktopListView()
 BOOL CDesktopBrowser::CreateDeskWnd()
 {
     FOLDERSETTINGS fs;
-    RECT rcClient;
+    RECT rcWorkArea;
     HRESULT hRet;
 
-    if (!GetClientRect(hWnd, &rcClient))
-    {
-        return FALSE;
-    }
+    // FIXME: Add support for multi-monitor?
+    SystemParametersInfoW(SPI_GETWORKAREA,
+                          0, &rcWorkArea, 0);
+
+    // TODO: Call GetClientRect for the tray window and make small computation
+    // to be sure the tray window rect is removed from the work area!
+#if 0
+    RECT rcTray;
+    HWND hWndTray;
+
+    /* Get client rect of the taskbar */
+    hRet = ShellDesk->GetTrayWindow(&hWndTray);
+    if (SUCCEEDED(hRet))
+        GetClientRect(hWndTray, &rcTray);
+#endif
 
     fs.ViewMode = FVM_ICON;
     fs.fFlags = FWF_DESKTOP | FWF_NOCLIENTEDGE | FWF_NOSCROLL | FWF_TRANSPARENT;
-    hRet = DesktopView->CreateViewWindow(NULL, &fs, (IShellBrowser *)this, &rcClient, &hWndShellView);
+    hRet = DesktopView->CreateViewWindow(NULL, &fs, (IShellBrowser *)this, &rcWorkArea, &hWndShellView);
     if (!SUCCEEDED(hRet))
         return FALSE;
 
@@ -491,6 +502,8 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
                     RECT rcWorkArea;
 
                     // FIXME: Add support for multi-monitor!
+                    // FIXME: Maybe merge with the code that retrieves the
+                    //        work area in CDesktopBrowser::CreateDeskWnd ?
                     SystemParametersInfoW(SPI_GETWORKAREA,
                                           0, &rcWorkArea, 0);
 
@@ -518,6 +531,15 @@ LRESULT CALLBACK CDesktopBrowser::ProgmanWindowProc(IN HWND hwnd, IN UINT uMsg, 
             case WM_NCCREATE:
             {
                 LPCREATESTRUCT CreateStruct = (LPCREATESTRUCT)lParam;
+
+                // FIXME: This is a "hack" to enforce the window title
+                // to be set to what it should be *on Windows* only.
+                // I don't understand why it is reset to NULL whereas
+                // the creation of the progman window proper is done in
+                // the standard way... (05/06/2016, hbelusca).
+                //
+                ::SetWindowTextW(hwnd, CreateStruct->lpszName);
+
                 pThis = SHDESK_Create(hwnd, CreateStruct);
                 if (pThis == NULL)
                 {
@@ -614,12 +636,18 @@ HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
         cy = GetSystemMetrics(SM_CYSCREEN);
     }
 
-    hWndDesk = CreateWindowExW(WS_EX_TOOLWINDOW, szProgmanClassName, szProgmanWindowName,
-        WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+    hWndDesk = ::CreateWindowExW(WS_EX_TOOLWINDOW, szProgmanClassName, szProgmanWindowName,
+        WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
         x, y, cx, cy,
         NULL, NULL, shell32_hInstance, (LPVOID)ShellDesk);
+
     if (hWndDesk != NULL)
+    {
+        ::ShowWindow(hWndDesk, SW_SHOW);
+        ::UpdateWindow(hWndDesk);
+
         return (HANDLE)GetWindowLongPtrW(hWndDesk, 0);
+    }
 
     return NULL;
 }
