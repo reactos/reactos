@@ -158,3 +158,70 @@ ParseCreateConfigArguments(
 
     return (ArgCount == 0);
 }
+
+
+BOOL
+ParseFailureArguments(
+    IN LPCTSTR *ServiceArgs,
+    IN INT ArgCount,
+    OUT LPCTSTR *ppServiceName,
+    OUT LPSERVICE_FAILURE_ACTIONS pFailureActions)
+{
+    INT /*i,*/ ArgIndex = 1;
+    LPCTSTR lpActions = NULL;
+    LPCTSTR lpReset = NULL;
+
+    if (ArgCount < 1)
+        return FALSE;
+
+    ZeroMemory(pFailureActions, sizeof(SERVICE_FAILURE_ACTIONS));
+
+    *ppServiceName = ServiceArgs[0];
+
+    ArgCount--;
+
+    while (ArgCount > 1)
+    {
+        if (!lstrcmpi(ServiceArgs[ArgIndex], _T("actions=")))
+        {
+            lpActions = (LPTSTR)ServiceArgs[ArgIndex + 1];
+        }
+        else if (!lstrcmpi(ServiceArgs[ArgIndex], _T("command=")))
+        {
+            pFailureActions->lpCommand = (LPTSTR)ServiceArgs[ArgIndex + 1];
+        }
+        else if (!lstrcmpi(ServiceArgs[ArgIndex], _T("reboot=")))
+        {
+            pFailureActions->lpRebootMsg = (LPTSTR)ServiceArgs[ArgIndex + 1];
+        }
+        else if (!lstrcmpi(ServiceArgs[ArgIndex], _T("reset=")))
+        {
+            lpReset = (LPTSTR)ServiceArgs[ArgIndex + 1];
+        }
+
+        ArgIndex += 2;
+        ArgCount -= 2;
+    }
+
+    if ((lpReset == NULL && lpActions != NULL) ||
+        (lpReset != NULL && lpActions == NULL))
+    {
+        _tprintf(_T("ERROR:  The reset and actions options must be used simultaneously.\n\n"));
+        return FALSE;
+    }
+
+    if (lpReset != NULL)
+    {
+        if (!lstrcmpi(lpReset, _T("infinite")))
+            pFailureActions->dwResetPeriod = INFINITE;
+        else
+            pFailureActions->dwResetPeriod = _ttoi(lpReset);
+    }
+
+    if (lpActions != NULL)
+    {
+        /* FIXME */
+    }
+
+    return (ArgCount == 0);
+}

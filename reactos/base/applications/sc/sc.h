@@ -44,6 +44,7 @@ BOOL SetConfig(LPCTSTR *ServiceArgs, INT ArgCount);
 BOOL QueryDescription(LPCTSTR ServiceName);
 BOOL SetDescription(LPCTSTR ServiceName, LPCTSTR Description);
 BOOL QueryFailure(LPCTSTR ServiceName);
+BOOL SetFailure(LPCTSTR *ServiceArgs, INT ArgCount);
 
 /* print and error functions */
 VOID PrintService(LPCTSTR ServiceName, LPSERVICE_STATUS_PROCESS pStatus, BOOL bExtended);
@@ -56,6 +57,13 @@ ParseCreateConfigArguments(
     INT ArgCount,
     BOOL bChangeService,
     OUT LPSERVICE_CREATE_INFO lpServiceInfo);
+
+BOOL
+ParseFailureArguments(
+    LPCTSTR *ServiceArgs,
+    INT ArgCount,
+    OUT LPCTSTR *ppServiceName,
+    OUT LPSERVICE_FAILURE_ACTIONS pFailureActions);
 
 /* usage functions */
 VOID MainUsage(VOID);
@@ -74,5 +82,6 @@ VOID QueryDescriptionUsage(VOID);
 VOID QueryFailureUsage(VOID);
 VOID SetDescriptionUsage(VOID);
 VOID SetConfigUsage(VOID);
+VOID SetFailureUsage(VOID);
 
 #endif /* _SC_PCH_ */

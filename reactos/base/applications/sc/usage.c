@@ -243,3 +243,22 @@ VOID SetConfigUsage(VOID)
              _T("        DisplayName= <display name>\n")
              _T("        password= <password>\n"));
 }
+
+VOID SetFailureUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Changes the actions upon failure.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> failure [service name] <option1> <option2>...\n")
+             _T("\n")
+             _T("OPTIONS:\n")
+             _T("        reset= <Length of period of no failures (in seconds)\n")
+             _T("                after which to reset the failure count to 0 (may be INFINITE)>\n")
+             _T("               (Must be used in conjunction with actions= )\n")
+             _T("        reboot= <Message broadcast before rebooting on failure>\n")
+             _T("        command= <Command line to be run on failure>\n")
+             _T("        actions= <Failure actions and their delay time (in milliseconds),\n")
+             _T("                  separated by / (forward slash) -- e.g., run/5000/reboot/800\n")
+             _T("                  Valid actions are <run|restart|reboot> >\n")
+             _T("                 (Must be used in conjunction with the reset= option)\n"));
+}

@@ -268,6 +268,10 @@ ScControl(LPCTSTR Server,       // remote machine name
     {
         SetConfig(ServiceArgs, ArgCount);
     }
+    else if (!lstrcmpi(Command, _T("failure")))
+    {
+        SetFailure(ServiceArgs, ArgCount);
+    }
     else
     {
         MainUsage();

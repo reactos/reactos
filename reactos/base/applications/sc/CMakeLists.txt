@@ -7,6 +7,7 @@ list(APPEND SOURCE
     create.c
     delete.c
     description.c
+    failure.c
     misc.c
     print.c
     qfailure.c
