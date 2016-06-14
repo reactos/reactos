@@ -10,7 +10,6 @@ list(APPEND SOURCE
     failure.c
     misc.c
     print.c
-    qfailure.c
     query.c
     sc.c
     sdset.c
