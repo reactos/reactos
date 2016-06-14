@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/sc/config.c
- * PURPOSE:     Set the service configuration
+ * PURPOSE:     Query/Set the service configuration
  * COPYRIGHT:   Copyright 2016 Eric Kohl
  *
  */
@@ -28,6 +28,7 @@ BOOL QueryConfig(LPCTSTR ServiceName)
                              SC_MANAGER_CONNECT);
     if (hManager == NULL)
     {
+        _tprintf(_T("[SC] OpenSCManager FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
@@ -35,6 +36,7 @@ BOOL QueryConfig(LPCTSTR ServiceName)
     hService = OpenService(hManager, ServiceName, SERVICE_QUERY_CONFIG);
     if (hService == NULL)
     {
+        _tprintf(_T("[SC] OpenService FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
@@ -46,6 +48,7 @@ BOOL QueryConfig(LPCTSTR ServiceName)
     {
         if (cbBytesNeeded == 0)
         {
+            _tprintf(_T("[SC] QueryServiceConfig FAILED %lu:\n\n"), GetLastError());
             bResult = FALSE;
             goto done;
         }
@@ -55,6 +58,7 @@ BOOL QueryConfig(LPCTSTR ServiceName)
     if (pServiceConfig == NULL)
     {
         SetLastError(ERROR_OUTOFMEMORY);
+        _tprintf(_T("[SC] HeapAlloc FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
@@ -64,9 +68,12 @@ BOOL QueryConfig(LPCTSTR ServiceName)
                             cbBytesNeeded,
                             &cbBytesNeeded))
     {
+        _tprintf(_T("[SC] QueryServiceConfig FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
+
+    _tprintf(_T("[SC] QueryServiceConfig SUCCESS\n\n"));
 
     _tprintf(_T("SERVICE_NAME: %s\n"), ServiceName);
     _tprintf(_T("        TYPE               : %-3lx "), pServiceConfig->dwServiceType);

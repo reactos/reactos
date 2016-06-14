@@ -26,6 +26,7 @@ BOOL QueryDescription(LPCTSTR ServiceName)
                              SC_MANAGER_CONNECT);
     if (hManager == NULL)
     {
+        _tprintf(_T("[SC] OpenSCManager FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
@@ -33,6 +34,7 @@ BOOL QueryDescription(LPCTSTR ServiceName)
     hService = OpenService(hManager, ServiceName, SERVICE_QUERY_CONFIG);
     if (hService == NULL)
     {
+        _tprintf(_T("[SC] OpenService FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
@@ -45,6 +47,7 @@ BOOL QueryDescription(LPCTSTR ServiceName)
     {
         if (cbBytesNeeded == 0)
         {
+            _tprintf(_T("[SC] QueryServiceConfig2 FAILED %lu:\n\n"), GetLastError());
             bResult = FALSE;
             goto done;
         }
@@ -54,6 +57,7 @@ BOOL QueryDescription(LPCTSTR ServiceName)
     if (pServiceDescription == NULL)
     {
         SetLastError(ERROR_OUTOFMEMORY);
+        _tprintf(_T("[SC] HeapAlloc FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
@@ -64,9 +68,12 @@ BOOL QueryDescription(LPCTSTR ServiceName)
                              cbBytesNeeded,
                              &cbBytesNeeded))
     {
+        _tprintf(_T("[SC] QueryServiceConfig2 FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
+
+    _tprintf(_T("[SC] QueryServiceConfig2 SUCCESS\n\n"));
 
     _tprintf(_T("SERVICE_NAME: %s\n"), ServiceName);
     _tprintf(_T("        DESCRIPTION        : %s\n"),
@@ -105,6 +112,7 @@ BOOL SetDescription(LPCTSTR ServiceName, LPCTSTR Description)
                              SC_MANAGER_CONNECT);
     if (hManager == NULL)
     {
+        _tprintf(_T("[SC] OpenSCManager FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
@@ -112,6 +120,7 @@ BOOL SetDescription(LPCTSTR ServiceName, LPCTSTR Description)
     hService = OpenService(hManager, ServiceName, SERVICE_CHANGE_CONFIG);
     if (hService == NULL)
     {
+        _tprintf(_T("[SC] OpenService FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
@@ -122,9 +131,12 @@ BOOL SetDescription(LPCTSTR ServiceName, LPCTSTR Description)
                               SERVICE_CONFIG_DESCRIPTION,
                               (LPBYTE)&ServiceDescription))
     {
+        _tprintf(_T("[SC] ChangeServiceConfig2 FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
+
+    _tprintf(_T("[SC] ChangeServiceConfig2 SUCCESS\n\n"));
 
 done:
     if (bResult == FALSE)
