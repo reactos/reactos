@@ -233,7 +233,22 @@ TcpIpCreateAddress(
     ADDRESS_FILE *AddressFile;
     LIST_ENTRY* ListEntry;
     KIRQL OldIrql;
+	
+	ULONG *temp;
+	
     USHORT Port = 1;
+	
+	temp = (ULONG*)Address;
+	DPRINT1("\n TcpIpCreateAddress Input Dump\n  %08x %08x %08x %08x\n",
+		temp[3], temp[2],
+		temp[1], temp[0]);
+		
+	temp = IrpSp->FileObject->FsContext;
+	if (temp) {
+		DPRINT1("\n IrpSp Dump\n  %08x %08x %08x %08x\n  %08x %08x %08x %08x\n",
+			temp[7], temp[6], temp[5], temp[4],
+			temp[3], temp[2], temp[1], temp[0]);
+	}
 
     /* See if this port is already taken, and find a free one if needed. */
     KeAcquireSpinLock(&AddressListLock, &OldIrql);
@@ -327,9 +342,17 @@ TcpIpCreateAddress(
         case IPPROTO_TCP:
 		{
 			ip_addr_t IpAddr;
-			ip4_addr_set_u32(&IpAddr, AddressFile->Address.in_addr);
+            ip4_addr_set_u32(&IpAddr, AddressFile->Address.in_addr);
             InsertEntityInstance(CO_TL_ENTITY, &AddressFile->Instance);
-			AddressFile->lwip_tcp_pcb = tcp_new();
+			AddressFile->ConnectionContext = NULL;
+/*			tcp_bind(AddressFile->lwip_tcp_pcb, &IpAddr, lwip_ntohs(AddressFile->Address.sin_port));
+			DPRINT1("\n Attempt Bind to Address\n  Port: %04x\n  Address: %08x\n",
+				AddressFile->Address.sin_port,
+				IpAddr);*/
+			temp = (ULONG*)&AddressFile->Address;
+			DPRINT1("\n Dump: %08x %08x\n",
+				temp[1],
+				temp[0]);
             break;
 		}
         case IPPROTO_UDP:
@@ -378,6 +401,37 @@ Success:
 }
 
 NTSTATUS
+TcpIpCreateContext(
+	_Inout_ PIRP Irp,
+	_In_ IPPROTO Protocol
+)
+{
+	PIO_STACK_LOCATION IrpSp;
+	PTCP_CONTEXT Context;
+
+	Context = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Context), TAG_ADDRESS_FILE);
+	
+	if (Protocol != IPPROTO_TCP)
+	{
+		DPRINT1("Creating connection context for non-TCP protocoln");
+		return STATUS_INVALID_PARAMETER;
+	}
+	Context->Protocol = Protocol;
+	Context->lwip_tcp_pcb = tcp_new();
+	if (Context->lwip_tcp_pcb == NULL)
+	{
+		return STATUS_NO_MEMORY;
+	}
+	
+	IrpSp = IoGetCurrentIrpStackLocation(Irp);
+	
+	IrpSp->FileObject->FsContext = (PVOID)Context;
+	IrpSp->FileObject->FsContext2 = (PVOID)TDI_CONNECTION_FILE;
+	
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS
 TcpIpCloseAddress(
     _Inout_ ADDRESS_FILE* AddressFile
 )
@@ -397,7 +451,12 @@ TcpIpCloseAddress(
     /* remove the lwip pcb */
     if (AddressFile->Protocol == IPPROTO_UDP)
         udp_remove(AddressFile->lwip_udp_pcb);
-    else if (AddressFile->Protocol != IPPROTO_TCP)
+	else if (AddressFile->Protocol == IPPROTO_TCP && AddressFile->ConnectionContext)
+	{
+		tcp_close(AddressFile->ConnectionContext->lwip_tcp_pcb);
+		ExFreePoolWithTag(AddressFile->ConnectionContext, TAG_ADDRESS_FILE);
+    }
+	else
         raw_remove(AddressFile->lwip_raw_pcb);
 
     /* Remove from the list and free the structure */
@@ -407,7 +466,6 @@ TcpIpCloseAddress(
     RemoveEntityInstance(&AddressFile->Instance);
 
     ExFreePoolWithTag(AddressFile, TAG_ADDRESS_FILE);
-
 
     return STATUS_SUCCESS;
 }
@@ -525,10 +583,10 @@ TcpIpConnect(
 		SocketAddressInRemote->sin_addr.s_addr,
 		SocketAddressInRemote->sin_port);
 	DPRINT1("\n Local Address\n  Address: %08x\n  Port: %04x\n",
-		AddressFile->lwip_tcp_pcb->local_ip,
-		AddressFile->lwip_tcp_pcb->local_port);
+		AddressFile->ConnectionContext->lwip_tcp_pcb->local_ip,
+		AddressFile->ConnectionContext->lwip_tcp_pcb->local_port);
 	
-	lwip_err = tcp_connect(AddressFile->lwip_tcp_pcb,
+	lwip_err = tcp_connect(AddressFile->ConnectionContext->lwip_tcp_pcb,
 		(ip_addr_t *)&SocketAddressInRemote->sin_addr.s_addr,
 		SocketAddressInRemote->sin_port,
 		lwip_tcp_Connected_callback);
@@ -566,7 +624,7 @@ TcpIpConnect(
 		case (ERR_OK) :
 		{
 			DPRINT1("lwip ERR_OK\n");
-			tcp_arg(AddressFile->lwip_tcp_pcb, Irp);
+			tcp_arg(AddressFile->ConnectionContext->lwip_tcp_pcb, Irp);
 			break;
 		}
 		default :
@@ -586,8 +644,8 @@ TcpIpAssociateAddress(
 	_Inout_ PIRP Irp)
 {
 	PIO_STACK_LOCATION IrpSp;
-	ADDRESS_FILE *AddressFile;
-	ADDRESS_FILE *BindTo;
+	PTCP_CONTEXT Context;
+	PADDRESS_FILE AddressFile;
 	PTDI_REQUEST_KERNEL_ASSOCIATE RequestInfo;
 	PFILE_OBJECT FileObject;
 	
@@ -596,21 +654,15 @@ TcpIpAssociateAddress(
 	
 	IrpSp = IoGetCurrentIrpStackLocation(Irp);
 	
-	/* Check this is really an address file */
-	if ((ULONG_PTR)IrpSp->FileObject->FsContext2 != TDI_TRANSPORT_ADDRESS_FILE)
+	if (IrpSp->FileObject->FsContext2 != (PVOID)TDI_CONNECTION_FILE)
 	{
-		return STATUS_FILE_INVALID;
+		DPRINT1("Associating something that is not a TDI_CONNECTION_FILE\n");
+		Status = STATUS_INVALID_PARAMETER;
+		goto LEAVE;
 	}
+	Context = IrpSp->FileObject->FsContext;
 	
 	/* Get address file */
-	AddressFile = IrpSp->FileObject->FsContext;
-	
-	if (AddressFile->Protocol != IPPROTO_TCP)
-	{
-		DPRINT1("Received TDI_ASSOCIATE_ADDRESS for a non-TCP protocol\n");
-		return STATUS_INVALID_ADDRESS;
-	}
-	
 	RequestInfo = (PTDI_REQUEST_KERNEL_ASSOCIATE)&IrpSp->Parameters;
 	
 	Status = ObReferenceObjectByHandle(
@@ -632,59 +684,77 @@ TcpIpAssociateAddress(
 		ObDereferenceObject(FileObject);
 		return STATUS_INVALID_PARAMETER;
 	}
-	BindTo = FileObject->FsContext;
-	if (BindTo->Protocol != IPPROTO_TCP)
+	AddressFile = FileObject->FsContext;
+	if (AddressFile->Protocol != IPPROTO_TCP)
 	{
 		DPRINT1("TCP socket association with non-TCP handle\n");
 		ObDereferenceObject(FileObject);
 		return STATUS_INVALID_PARAMETER;
 	}
 
+	if (AddressFile->Address.in_addr == 0)
+	{
+		AddressFile->Address.in_addr = 0x0100007f;
+	}
+	
 	DPRINT1("\n TDI Address\n  Port: %04x\n  Address: %08x\n",
-		BindTo->Address.sin_port,
-		BindTo->Address.in_addr);
+		AddressFile->Address.sin_port,
+		AddressFile->Address.in_addr);
 	
 	/* Finally calling into lwip to perform socket bind */
 	lwip_err = tcp_bind(
-		AddressFile->lwip_tcp_pcb,
-		(ip_addr_t *)&BindTo->Address.in_addr,
-		BindTo->Address.sin_port);
-
+		Context->lwip_tcp_pcb,
+		(ip_addr_t *)&AddressFile->Address.in_addr,
+		AddressFile->Address.sin_port);
 	DPRINT1("lwip error %d\n TCP PCB:\n  Local Address: %08x\n  Local Port: %04x\n  Remote Address: %08x\n  Remote Port: %04x\n",
 		lwip_err,
-		AddressFile->lwip_tcp_pcb->local_ip,
-		AddressFile->lwip_tcp_pcb->local_port,
-		AddressFile->lwip_tcp_pcb->remote_ip,
-		AddressFile->lwip_tcp_pcb->remote_port);
+		Context->lwip_tcp_pcb->local_ip,
+		Context->lwip_tcp_pcb->local_port,
+		Context->lwip_tcp_pcb->remote_ip,
+		Context->lwip_tcp_pcb->remote_port);
+	
+	IrpSp->FileObject->FsContext = AddressFile;
+	IrpSp->FileObject->FsContext2 = (PVOID)TDI_TRANSPORT_ADDRESS_FILE;
+
 	if (lwip_err != ERR_OK)
 	{
 		switch (lwip_err)
 		{
 			case (ERR_BUF) :
 			{
-				/* Not actually sure which error I should return here
-					ERR_BUF means the port is already taken
-					fix when I figure out how to use NDIS errors */
-				Status = STATUS_ADDRESS_ALREADY_EXISTS;
+				DPRINT1("lwIP ERR_BUFF\n");
+				Status = STATUS_NO_MEMORY;
 				goto LEAVE;
 			}
 			case (ERR_VAL) :
 			{
+				DPRINT1("lwIP ERR_VAL\n");
 				Status = STATUS_INVALID_PARAMETER;
 				goto LEAVE;
 			}
 			case (ERR_USE) :
 			{
+				DPRINT1("lwIP ERR_USE\n");
 				Status = STATUS_ADDRESS_ALREADY_EXISTS;
 				goto LEAVE;
 			}
+			case (ERR_OK) :
+			{
+				DPRINT1("lwIP ERR_OK\n");
+				break;
+			}
 			default :
 			{
-				break;
+				DPRINT1("lwIP unexpected error\n");
+				Status = STATUS_NOT_IMPLEMENTED;
+				goto LEAVE;
 			}
 		}
 	}
-	ip_set_option(AddressFile->lwip_tcp_pcb, SOF_BROADCAST);
+	ip_set_option(Context->lwip_tcp_pcb, SOF_BROADCAST);
+
+	Context->AddressFile = AddressFile;
+	AddressFile->ConnectionContext = Context;
 	
 	Status = STATUS_SUCCESS;
 LEAVE:
@@ -700,8 +770,6 @@ TcpIpDisassociateAddress(
 	PIO_STACK_LOCATION IrpSp;
 	ADDRESS_FILE *AddressFile;
 	
-	err_t lwip_err;
-	
 	IrpSp = IoGetCurrentIrpStackLocation(Irp);
 	if ((ULONG)IrpSp->FileObject->FsContext2 != TDI_TRANSPORT_ADDRESS_FILE)
 	{
@@ -716,17 +784,7 @@ TcpIpDisassociateAddress(
 		return STATUS_INVALID_ADDRESS;
 	}
 	
-	lwip_err = tcp_close(AddressFile->lwip_tcp_pcb);
-	switch (lwip_err)
-	{
-		case ERR_MEM :
-			return STATUS_NO_MEMORY;
-		case ERR_OK :
-			break;
-		default :
-			DPRINT1("Unexpected lwIP error\n");
-			return STATUS_NOT_IMPLEMENTED;
-	}
+	/* NO-OP because we need the address to deallocate the port when the connection closes */
 	
 	return STATUS_SUCCESS;
 }
@@ -737,7 +795,8 @@ TcpIpListen(
 	_Inout_ PIRP Irp)
 {
 	PIO_STACK_LOCATION IrpSp;
-	ADDRESS_FILE *AddressFile;
+	PADDRESS_FILE AddressFile;
+	PTCP_CONTEXT ConnectionContext;
 	
 	struct tcp_pcb *lpcb;
 	
@@ -746,19 +805,21 @@ TcpIpListen(
 	/* Check this is really an address file */
 	if ((ULONG_PTR)IrpSp->FileObject->FsContext2 != TDI_TRANSPORT_ADDRESS_FILE)
 	{
+		DPRINT1("Not an address file\n");
 		return STATUS_FILE_INVALID;
 	}
 	
 	/* Get address file */
 	AddressFile = IrpSp->FileObject->FsContext;
-	if (AddressFile->Protocol != IPPROTO_TCP)
+	ConnectionContext = AddressFile->ConnectionContext;
+	if (ConnectionContext->Protocol != IPPROTO_TCP)
 	{
 		DPRINT1("Received TDI_LISTEN for a non-TCP protocol\n");
 		return STATUS_INVALID_ADDRESS;
 	}
 	
 	/* Call down into lwip to initiate a listen */
-	lpcb = tcp_listen(AddressFile->lwip_tcp_pcb);
+	lpcb = tcp_listen(ConnectionContext->lwip_tcp_pcb);
 	DPRINT1("lwip tcp_listen returned\n");
 	if (lpcb == NULL)
 	{
@@ -770,11 +831,11 @@ TcpIpListen(
 	}
 	else
 	{
-		AddressFile->lwip_tcp_pcb = lpcb;
+		ConnectionContext->lwip_tcp_pcb = lpcb;
 	}
 	
-	tcp_accept(AddressFile->lwip_tcp_pcb, lwip_tcp_accept_callback);
-	tcp_arg(AddressFile->lwip_tcp_pcb, Irp);
+	tcp_accept(ConnectionContext->lwip_tcp_pcb, lwip_tcp_accept_callback);
+	tcp_arg(ConnectionContext->lwip_tcp_pcb, Irp);
 	
 	return STATUS_PENDING;
 }

@@ -210,8 +210,12 @@ TcpIpCreate(
     NTSTATUS Status;
     PFILE_FULL_EA_INFORMATION FileInfo;
     IPPROTO Protocol;
+//	ADDRESS_FILE *AddressFile;
+	
+	ULONG *temp;
+	
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
-
+	
     /* Grab the info describing the file */
     FileInfo = Irp->AssociatedIrp.SystemBuffer;
 
@@ -223,13 +227,15 @@ TcpIpCreate(
         Status = STATUS_SUCCESS;
         goto Quickie;
     }
-
+	
     /* Validate it */
     switch (FileInfo->EaNameLength)
     {
         case TDI_TRANSPORT_ADDRESS_LENGTH:
         {
             PTA_IP_ADDRESS Address;
+			
+			DPRINT1("TCPIP Create Transport Address\n");
 
             if (strncmp(&FileInfo->EaName[0], TdiTransportAddress, TDI_TRANSPORT_ADDRESS_LENGTH) != 0)
             {
@@ -259,7 +265,23 @@ TcpIpCreate(
             }
 
             /* All good. */
-            Status = TcpIpCreateAddress(Irp, &Address->Address[0].Address[0], Protocol);
+			temp = (ULONG*)Address;
+			DPRINT1("\nPTA_IP_ADDRESS dump before\n %08x %08x %08x %08x\n %08x %08x %08x %08x\n",
+				temp[7], temp[6], temp[5], temp[4],
+				temp[3], temp[2], temp[1], temp[0]);
+			Status = TcpIpCreateAddress(Irp, &Address->Address[0].Address[0], Protocol);
+			if (Status != STATUS_SUCCESS)
+			{
+				goto Quickie;
+			}
+			
+/*			AddressFile = IrpSp->FileObject->FsContext;
+			tcp_bind(AddressFile->lwip_tcp_pcb,
+				(ip_addr_t*)&AddressFile->Address.in_addr,
+				AddressFile->Address.sin_port);*/
+			DPRINT1("\nPTA_IP_ADDRESS dump after\n %08x %08x %08x %08x\n %08x %08x %08x %08x\n",
+				temp[7], temp[6], temp[5], temp[4],
+				temp[3], temp[2], temp[1], temp[0]);
             break;
         }
 
@@ -267,12 +289,13 @@ TcpIpCreate(
 		{
 			PTA_IP_ADDRESS Address;
 			
+			DPRINT1("TCPIP Create connection Context\n");
+			
             if (strncmp(&FileInfo->EaName[0], TdiConnectionContext, TDI_CONNECTION_CONTEXT_LENGTH) != 0)
             {
                 DPRINT1("TCPIP: Should maybe open file %*s.\n", FileInfo->EaNameLength, &FileInfo->EaName[0]);
                 return STATUS_INVALID_PARAMETER;
             }
-            DPRINT1("Should create a connection!\n");
 			
 			Address = (PTA_IP_ADDRESS)(&FileInfo->EaName[FileInfo->EaNameLength + 1]);
 			
@@ -284,8 +307,19 @@ TcpIpCreate(
 				goto Quickie;
 			}
 			
+			temp = (ULONG*)Protocol;
+			DPRINT1("\n Protocol: %08x\n", temp);
+			
+			temp = (ULONG*)Address;
+			
 			/* All good. */
-			Status = TcpIpCreateAddress(Irp, &Address->Address[0].Address[0], Protocol);
+			DPRINT1("\n PTA_IP_ADDRESS dump before\n  %08x %08x %08x %08x\n  %08x %08x %08x %08x\n",
+				temp[7], temp[6], temp[5], temp[4],
+				temp[3], temp[2], temp[1], temp[0]);
+			Status = TcpIpCreateContext(Irp, Protocol);
+			DPRINT1("\n PTA_IP_ADDRESS dump after\n  %08x %08x %08x %08x\n  %08x %08x %08x %08x\n",
+				temp[7], temp[6], temp[5], temp[4],
+				temp[3], temp[2], temp[1], temp[0]);
             break;
 		}
 
@@ -319,7 +353,7 @@ TcpIpClose(
     PIO_STACK_LOCATION IrpSp;
     NTSTATUS Status;
     ULONG_PTR FileType;
-
+	
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     FileType = (ULONG_PTR)IrpSp->FileObject->FsContext2;
@@ -327,6 +361,8 @@ TcpIpClose(
     switch (FileType)
     {
         case TDI_TRANSPORT_ADDRESS_FILE:
+			DPRINT1("TCPIP Close Transport Address\n");
+		
             if (!IrpSp->FileObject->FsContext)
             {
                 DPRINT1("TCPIP: Got a close request without a file to close!\n");
@@ -362,6 +398,8 @@ TcpIpDispatchInternal(
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp;
 
+	DPRINT1("TcpIpDispatchInternal\n");
+	
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     switch (IrpSp->MinorFunction)
@@ -372,6 +410,7 @@ TcpIpDispatchInternal(
             break;
 
         case TDI_RECEIVE_DATAGRAM:
+			DPRINT1("TCPIP: TDI_RECEIVE_DATAGRAM!\n");
             return TcpIpReceiveDatagram(Irp);
 
         case TDI_SEND:
@@ -380,6 +419,7 @@ TcpIpDispatchInternal(
             break;
 
         case TDI_SEND_DATAGRAM:
+			DPRINT1("TCPIP: TDI_SEND_DATAGRAM!\n");
             return TcpIpSendDatagram(Irp);
 
         case TDI_ACCEPT:
@@ -394,7 +434,7 @@ TcpIpDispatchInternal(
 
         case TDI_CONNECT:
             DPRINT1("TCPIP: TDI_CONNECT!\n");
-            Status =  TcpIpConnect(Irp);
+            Status = TcpIpConnect(Irp);
 			break;
 
         case TDI_DISCONNECT:
@@ -413,6 +453,7 @@ TcpIpDispatchInternal(
             break;
 
         case TDI_QUERY_INFORMATION:
+			DPRINT1("TCPIP: TDI_QUERY_INFORMATION\n");
             return TcpIpQueryKernelInformation(Irp);
 
         case TDI_SET_INFORMATION:
@@ -459,7 +500,7 @@ TcpIpDispatch(
 {
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp;
-
+	
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     Irp->IoStatus.Information = 0;
@@ -468,26 +509,26 @@ TcpIpDispatch(
     {
         case IOCTL_TCP_QUERY_INFORMATION_EX:
             Status = TcpIpQueryInformation(Irp);
-        break;
+			break;
 
-      case IOCTL_TCP_SET_INFORMATION_EX:
-          Status = TcpIpSetInformation(Irp);
-      break;
+		case IOCTL_TCP_SET_INFORMATION_EX:
+			Status = TcpIpSetInformation(Irp);
+			break;
 
-      case IOCTL_SET_IP_ADDRESS:
-          DPRINT1("TCPIP: Should handle IOCTL_SET_IP_ADDRESS.\n");
-          Status = STATUS_NOT_IMPLEMENTED;
-      break;
+		case IOCTL_SET_IP_ADDRESS:
+			DPRINT1("TCPIP: Should handle IOCTL_SET_IP_ADDRESS.\n");
+			Status = STATUS_NOT_IMPLEMENTED;
+			break;
 
-      case IOCTL_DELETE_IP_ADDRESS:
-          DPRINT1("TCPIP: Should handle IOCTL_DELETE_IP_ADDRESS.\n");
-          Status = STATUS_NOT_IMPLEMENTED;
-      break;
+		case IOCTL_DELETE_IP_ADDRESS:
+			DPRINT1("TCPIP: Should handle IOCTL_DELETE_IP_ADDRESS.\n");
+			Status = STATUS_NOT_IMPLEMENTED;
+			break;
 
-      default:
-            DPRINT1("TCPIP: Unknown IOCTL 0x%#x\n", IrpSp->Parameters.DeviceIoControl.IoControlCode);
-            Status = STATUS_NOT_IMPLEMENTED;
-        break;
+		default:
+			DPRINT1("TCPIP: Unknown IOCTL 0x%#x\n", IrpSp->Parameters.DeviceIoControl.IoControlCode);
+			Status = STATUS_NOT_IMPLEMENTED;
+			break;
     }
 
     //DPRINT("TCPIP dispatched with status 0x%08x.\n", Status);
