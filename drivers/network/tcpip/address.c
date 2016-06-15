@@ -27,6 +27,100 @@ typedef struct
 static KSPIN_LOCK AddressListLock;
 static LIST_ENTRY AddressListHead;
 
+NTSTATUS
+PrepareIrpForCancel(
+	PIRP Irp,
+	PDRIVER_CANCEL CancelRoutine
+)
+{
+	KIRQL OldIrql;
+	
+	DPRINT1("Prepare for cancel\n");
+	
+	IoAcquireCancelSpinLock(&OldIrql);
+	
+	if (!Irp->Cancel)
+	{
+		IoSetCancelRoutine(Irp, CancelRoutine);
+		IoReleaseCancelSpinLock(OldIrql);
+		return STATUS_SUCCESS;
+	}
+	
+	IoReleaseCancelSpinLock(OldIrql);
+	
+	Irp->IoStatus.Status = STATUS_CANCELLED;
+	Irp->IoStatus.Information = 0;
+	
+	return Irp->IoStatus.Status;
+}
+
+VOID
+NTAPI
+CancelRequestRoutine(
+	_Inout_ struct _DEVICE_OBJECT *DeviceObject,
+	_Inout_ _IRQL_uses_cancel_ struct _IRP *Irp
+)
+{
+	PIO_STACK_LOCATION IrpSp;
+	PADDRESS_FILE AddressFile;
+	UCHAR MinorFunction;
+	KIRQL OldIrql;
+	
+	DPRINT1("IRP Cancel\n");
+	
+	IoReleaseCancelSpinLock(Irp->CancelIrql);
+	
+	IrpSp = IoGetCurrentIrpStackLocation(Irp);
+	AddressFile = (PADDRESS_FILE)IrpSp->FileObject->FsContext;
+	MinorFunction = IrpSp->MinorFunction;
+	
+	Irp->IoStatus.Status = STATUS_CANCELLED;
+	Irp->IoStatus.Information = 0;
+	
+	switch(MinorFunction)
+	{
+		case TDI_RECEIVE:
+			goto TCP_CANCEL;
+		case TDI_RECEIVE_DATAGRAM:
+			DPRINT1("TDI_RECEIVE_DATAGRAM cancelling is handled within TcpIpReceiveDatagram()\n");
+			goto DGRAM_CANCEL;
+			break;
+		case TDI_SEND:
+			goto TCP_CANCEL;
+		case TDI_SEND_DATAGRAM:
+			goto DGRAM_CANCEL;
+		case TDI_LISTEN:
+			goto TCP_CANCEL;
+		case TDI_CONNECT:
+			goto TCP_CANCEL;
+		case TDI_DISCONNECT:
+			goto TCP_CANCEL;
+		default:
+			DPRINT1("Invalid MinorFunction for cancelling IRP\n");
+			return;
+	}
+	
+TCP_CANCEL:
+	if (AddressFile->ConnectionContext)
+	{
+		tcp_close(AddressFile->ConnectionContext->lwip_tcp_pcb);
+		DPRINT1("TCP_CANCEL\n");
+		goto FINISH;
+	}
+DGRAM_CANCEL:
+	DPRINT1("DGRAM_CANCEL\n");
+	
+FINISH:
+	IoAcquireCancelSpinLock(&OldIrql);
+	IoSetCancelRoutine(Irp, NULL);
+	IoReleaseCancelSpinLock(OldIrql);
+	
+	IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+	
+	DPRINT1("\n  CancelRequestRoutine\n    Exiting\n");
+	return;
+}
+
 void
 TcpIpInitializeAddresses(void)
 {
@@ -149,10 +243,40 @@ lwip_tcp_accept_callback(
 	err_t err)
 {
 	PIRP Irp;
+	PIO_STACK_LOCATION IrpSp;
+	KIRQL OldIrql;
+	PADDRESS_FILE AddressFile;
 	
 	DPRINT1("lwIP TCP Accept Callback\n");
 	
 	Irp = (PIRP)arg;
+	IrpSp = IoGetCurrentIrpStackLocation(Irp);
+	AddressFile = (PADDRESS_FILE)IrpSp->FileObject->FsContext;
+	
+	IoAcquireCancelSpinLock(&OldIrql);
+	IoSetCancelRoutine(Irp, NULL);
+	Irp->Cancel = FALSE;
+	IoReleaseCancelSpinLock(OldIrql);
+	
+	DPRINT1("\nnewpcb %08x\n", newpcb);
+	if (AddressFile->ConnectionContext)
+	{
+		if (AddressFile->ConnectionContext->lwip_tcp_pcb)
+		{
+			DPRINT1("\nlwip_tcp_pcb %08x\n", AddressFile->ConnectionContext->lwip_tcp_pcb);
+		}
+		else
+		{
+			DPRINT1("\nlwip_tcp_pcb is NULL\n");
+		}
+	}
+	else
+	{
+		DPRINT1("ConnectionContext is NULL\n");
+	}
+	
+	AddressFile->ConnectionContext->lwip_tcp_pcb = newpcb;
+	
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 	
@@ -212,10 +336,38 @@ lwip_tcp_Connected_callback(
 	err_t err)
 {
 	PIRP Irp;
+	PIO_STACK_LOCATION IrpSp;
+	KIRQL OldIrql;
+	PADDRESS_FILE AddressFile;
 	
 	DPRINT1("lwIP TCP Connected Callback\n");
 	
 	Irp = (PIRP)arg;
+	IrpSp = IoGetCurrentIrpStackLocation(Irp);
+	AddressFile = (PADDRESS_FILE)IrpSp->FileObject->FsContext;
+	
+	IoAcquireCancelSpinLock(&OldIrql);
+	IoSetCancelRoutine(Irp, NULL);
+	Irp->Cancel = FALSE;
+	IoReleaseCancelSpinLock(OldIrql);
+	
+	DPRINT1("\ntpcb %08x\n", tpcb);
+	if (AddressFile->ConnectionContext)
+	{
+		if (AddressFile->ConnectionContext->lwip_tcp_pcb)
+		{
+			DPRINT1("\nlwip_tcp_pcb %08x\n", AddressFile->ConnectionContext->lwip_tcp_pcb);
+		}
+		else
+		{
+			DPRINT1("\nlwip_tcp_pcb is NULL\n");
+		}
+	}
+	else
+	{
+		DPRINT1("ConnectionContext is NULL\n");
+	}
+	
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 	
@@ -410,6 +562,10 @@ TcpIpCreateContext(
 	PTCP_CONTEXT Context;
 
 	Context = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Context), TAG_ADDRESS_FILE);
+	if (!Context)
+	{
+		return STATUS_NO_MEMORY;
+	}
 	
 	if (Protocol != IPPROTO_TCP)
 	{
@@ -456,7 +612,7 @@ TcpIpCloseAddress(
 		tcp_close(AddressFile->ConnectionContext->lwip_tcp_pcb);
 		ExFreePoolWithTag(AddressFile->ConnectionContext, TAG_ADDRESS_FILE);
     }
-	else
+	else if (AddressFile->Protocol == IPPROTO_RAW)
         raw_remove(AddressFile->lwip_raw_pcb);
 
     /* Remove from the list and free the structure */
@@ -585,6 +741,8 @@ TcpIpConnect(
 	DPRINT1("\n Local Address\n  Address: %08x\n  Port: %04x\n",
 		AddressFile->ConnectionContext->lwip_tcp_pcb->local_ip,
 		AddressFile->ConnectionContext->lwip_tcp_pcb->local_port);
+	
+	PrepareIrpForCancel(Irp, CancelRequestRoutine);
 	
 	lwip_err = tcp_connect(AddressFile->ConnectionContext->lwip_tcp_pcb,
 		(ip_addr_t *)&SocketAddressInRemote->sin_addr.s_addr,
@@ -768,7 +926,8 @@ TcpIpDisassociateAddress(
 	_Inout_ PIRP Irp)
 {
 	PIO_STACK_LOCATION IrpSp;
-	ADDRESS_FILE *AddressFile;
+	PTCP_CONTEXT Context;
+	PADDRESS_FILE AddressFile;
 	
 	IrpSp = IoGetCurrentIrpStackLocation(Irp);
 	if ((ULONG)IrpSp->FileObject->FsContext2 != TDI_TRANSPORT_ADDRESS_FILE)
@@ -777,14 +936,24 @@ TcpIpDisassociateAddress(
 	}
 	
 	AddressFile = IrpSp->FileObject->FsContext;
-	
 	if (AddressFile->Protocol != IPPROTO_TCP)
 	{
 		DPRINT1("Received TDI_DISASSOCIATE_ADDRESS for non-TCP protocol\n");
 		return STATUS_INVALID_ADDRESS;
 	}
 	
-	/* NO-OP because we need the address to deallocate the port when the connection closes */
+	Context = AddressFile->ConnectionContext;
+	if (!Context)
+	{
+		DPRINT1("No connection context\n");
+		return STATUS_INVALID_PARAMETER;
+	}
+	
+	if (Context->Protocol != IPPROTO_TCP)
+	{
+		DPRINT1("Address File and Context have mismatching protocols\n");
+		return STATUS_INVALID_ADDRESS;
+	}
 	
 	return STATUS_SUCCESS;
 }
@@ -833,6 +1002,8 @@ TcpIpListen(
 	{
 		ConnectionContext->lwip_tcp_pcb = lpcb;
 	}
+	
+	PrepareIrpForCancel(Irp, CancelRequestRoutine);
 	
 	tcp_accept(ConnectionContext->lwip_tcp_pcb, lwip_tcp_accept_callback);
 	tcp_arg(ConnectionContext->lwip_tcp_pcb, Irp);

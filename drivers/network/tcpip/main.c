@@ -384,7 +384,9 @@ TcpIpClose(
 Quickie:
     Irp->IoStatus.Status = Status;
 
-    return Irp->IoStatus.Status;
+	IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+	
+	return Irp->IoStatus.Status;
 }
 
 static
