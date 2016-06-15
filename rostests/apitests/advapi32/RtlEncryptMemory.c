@@ -15,7 +15,7 @@
 
 START_TEST(RtlEncryptMemory)
 {
-    static const CHAR const TestData[32] = "This is some test Message!!!";
+    static const CHAR TestData[32] = "This is some test Message!!!";
     CHAR Buffer[32];
     NTSTATUS Status;
 
