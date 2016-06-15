@@ -12,9 +12,9 @@
 
 BOOL Create(LPCTSTR *ServiceArgs, INT ArgCount)
 {
-    SC_HANDLE hSCManager;
-    SC_HANDLE hSc;
-    BOOL bRet = FALSE;
+    SC_HANDLE hSCManager = NULL;
+    SC_HANDLE hService = NULL;
+    BOOL bRet = TRUE;
 
     INT i;
     INT Length;
@@ -71,37 +71,44 @@ BOOL Create(LPCTSTR *ServiceArgs, INT ArgCount)
 #endif
 
     hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
-
-    if (hSCManager != NULL)
+    if (hSCManager == NULL)
     {
-        hSc = CreateService(hSCManager,
-                            ServiceInfo.lpServiceName,
-                            ServiceInfo.lpDisplayName,
-                            SERVICE_ALL_ACCESS,
-                            ServiceInfo.dwServiceType,
-                            ServiceInfo.dwStartType,
-                            ServiceInfo.dwErrorControl,
-                            ServiceInfo.lpBinaryPathName,
-                            ServiceInfo.lpLoadOrderGroup,
-                            ServiceInfo.bTagId ? &ServiceInfo.dwTagId : NULL,
-                            ServiceInfo.lpDependencies,
-                            ServiceInfo.lpServiceStartName,
-                            ServiceInfo.lpPassword);
-
-        if (hSc != NULL)
-        {
-            _tprintf(_T("[SC] CreateService SUCCESS\n"));
-
-            CloseServiceHandle(hSc);
-            bRet = TRUE;
-        }
-        else
-            ReportLastError();
-
-        CloseServiceHandle(hSCManager);
+        _tprintf(_T("[SC] OpenSCManager FAILED %lu:\n\n"), GetLastError());
+        bRet = FALSE;
+        goto done;
     }
-    else
+
+    hService = CreateService(hSCManager,
+                             ServiceInfo.lpServiceName,
+                             ServiceInfo.lpDisplayName,
+                             SERVICE_ALL_ACCESS,
+                             ServiceInfo.dwServiceType,
+                             ServiceInfo.dwStartType,
+                             ServiceInfo.dwErrorControl,
+                             ServiceInfo.lpBinaryPathName,
+                             ServiceInfo.lpLoadOrderGroup,
+                             ServiceInfo.bTagId ? &ServiceInfo.dwTagId : NULL,
+                             ServiceInfo.lpDependencies,
+                             ServiceInfo.lpServiceStartName,
+                             ServiceInfo.lpPassword);
+    if (hService == NULL)
+    {
+        _tprintf(_T("[SC] CreateService FAILED %lu:\n\n"), GetLastError());
+        bRet = FALSE;
+        goto done;
+    }
+
+    _tprintf(_T("[SC] CreateService SUCCESS\n\n"));
+
+done:
+    if (bRet == FALSE)
         ReportLastError();
+
+    if (hService)
+        CloseServiceHandle(hService);
+
+    if (hSCManager)
+        CloseServiceHandle(hSCManager);
 
     if (lpBuffer != NULL)
         HeapFree(GetProcessHeap(), 0, lpBuffer);

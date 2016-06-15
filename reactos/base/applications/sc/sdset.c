@@ -26,6 +26,7 @@ BOOL SdSet(LPCTSTR ServiceName, LPCTSTR StringSecurityDescriptor)
                              SC_MANAGER_CONNECT);
     if (hManager == NULL)
     {
+        _tprintf(_T("[SC] OpenSCManager FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
@@ -33,6 +34,7 @@ BOOL SdSet(LPCTSTR ServiceName, LPCTSTR StringSecurityDescriptor)
     hService = OpenService(hManager, ServiceName, WRITE_DAC);
     if (hService == NULL)
     {
+        _tprintf(_T("[SC] OpenService FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
@@ -42,6 +44,7 @@ BOOL SdSet(LPCTSTR ServiceName, LPCTSTR StringSecurityDescriptor)
                                                              &pSecurityDescriptor,
                                                              &ulSecurityDescriptorSize))
     {
+        _tprintf(_T("[SC] ConvertStringSecurityDescriptorToSecurityDescriptor FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
@@ -50,6 +53,7 @@ BOOL SdSet(LPCTSTR ServiceName, LPCTSTR StringSecurityDescriptor)
                                   DACL_SECURITY_INFORMATION,
                                   pSecurityDescriptor))
     {
+        _tprintf(_T("[SC] SetServiceObjectSecurity FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }

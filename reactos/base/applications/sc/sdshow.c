@@ -27,6 +27,7 @@ BOOL SdShow(LPCTSTR ServiceName)
                              SC_MANAGER_CONNECT);
     if (hManager == NULL)
     {
+        _tprintf(_T("[SC] OpenSCManager FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
@@ -34,6 +35,7 @@ BOOL SdShow(LPCTSTR ServiceName)
     hService = OpenService(hManager, ServiceName, READ_CONTROL);
     if (hService == NULL)
     {
+        _tprintf(_T("[SC] OpenService FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
@@ -46,6 +48,7 @@ BOOL SdShow(LPCTSTR ServiceName)
     {
         if (cbBytesNeeded == 0)
         {
+            _tprintf(_T("[SC] QueryServiceObjectSecurity FAILED %lu:\n\n"), GetLastError());
             bResult = FALSE;
             goto done;
         }
@@ -55,6 +58,7 @@ BOOL SdShow(LPCTSTR ServiceName)
     if (pSecurityDescriptor == NULL)
     {
         SetLastError(ERROR_OUTOFMEMORY);
+        _tprintf(_T("[SC] HeapAlloc FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
@@ -65,6 +69,7 @@ BOOL SdShow(LPCTSTR ServiceName)
                                     cbBytesNeeded,
                                     &cbBytesNeeded))
     {
+        _tprintf(_T("[SC] QueryServiceObjectSecurity FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
@@ -75,6 +80,7 @@ BOOL SdShow(LPCTSTR ServiceName)
                                                              &pStringBuffer,
                                                              NULL))
     {
+        _tprintf(_T("[SC] ConvertSecurityDescriptorToStringSecurityDescriptor FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }

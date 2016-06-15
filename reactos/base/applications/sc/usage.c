@@ -35,7 +35,7 @@ VOID MainUsage(VOID)
     _T("\t  stop           : Sends a STOP request to a service.\n")
     _T("\t  config         : Changes the configuration of a service (persistant).\n")
     _T("\t  description    : Changes the description of a service.\n")
-//    "\t  failure        : Changes the actions taken by a service upon failure.\n"
+    _T("\t  failure        : Changes the actions taken by a service upon failure.\n")
     _T("\t  qc             : Queries the configuration information for a service.\n")
     _T("\t  qdescription   : Queries the description for a service.\n")
     _T("\t  qfailure       : Queries the actions taken by a service upon failure.\n")
@@ -171,9 +171,9 @@ VOID CreateUsage(VOID)
 VOID ControlUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
-                _T("        Sends a CONTROL control request to a service.\n")
-                _T("USAGE:\n")
-                _T("        sc <server> control [service name] <value>\n"));
+             _T("        Sends a CONTROL control request to a service.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> control [service name] <value>\n"));
 }
 
 VOID SdShowUsage(VOID)
