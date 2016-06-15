@@ -477,15 +477,15 @@ BEGIN
     ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 
-IDD_LOG_OFF DIALOGEX 0, 0, 190, 60
+IDD_LOG_OFF DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Cerrar sesión de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
-    LTEXT "¿Esta seguro de que quiere cerrar la sesión?", -1, 43, 11, 140, 22
-    DEFPUSHBUTTON "&Cerrar sesión", IDOK, 57, 40, 60, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 122, 40, 60, 14
+    ICON IDI_SHELL_LOGOFF, IDC_STATIC, 7, 7, 20, 20
+    LTEXT "¿Esta seguro de que quiere cerrar la sesión?", -1, 35, 16, 146, 8
+    DEFPUSHBUTTON "&Cerrar sesión", IDOK, 41, 39, 50, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 95, 39, 50, 14
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 190, 60
@@ -711,8 +711,6 @@ BEGIN
     IDS_RESTART_PROMPT "¿Desea reiniciar el equipo?"
     IDS_SHUTDOWN_TITLE "Apagar"
     IDS_SHUTDOWN_PROMPT "¿Desea apagar el equipo?"
-    IDS_LOGOFF_TITLE "Cerrar sesión"
-    IDS_LOGOFF_PROMPT "¿Desea cerrar la sesión?"
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "No se pudo mostrar el diálogo Ejecutar (error interno)"

@@ -758,6 +758,40 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
     return 0;
 }
 
+/*************************************************************************
+ * LogOffDialogProc
+ *
+ * NOTES: Used to make the Log Off dialog work
+ *     
+ */
+INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+{
+    switch(Message)
+    {
+        case WM_INITDIALOG:
+        {
+            return TRUE;
+        }
+        case WM_CLOSE:
+            EndDialog(hwnd, IDCANCEL);
+            break;
+        case WM_COMMAND:
+            switch(LOWORD(wParam))
+            {
+                case IDOK:
+                    ExitWindowsEx(EWX_LOGOFF, 0);
+                break;
+                case IDCANCEL:
+                    EndDialog(hwnd, IDCANCEL);
+                break;
+            }
+            break;
+        default:
+            break;
+    }
+    return FALSE;
+}
+
 
 /*************************************************************************
  * LogoffWindowsDialog  [SHELL32.54]
@@ -765,9 +799,7 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 
 EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
 {
-    if (ConfirmDialog(hWndOwner, IDS_LOGOFF_PROMPT, IDS_LOGOFF_TITLE))
-        ExitWindowsEx(EWX_LOGOFF, 0);
-
+    DialogBox(shell32_hInstance, MAKEINTRESOURCE(IDD_LOG_OFF), hWndOwner, LogOffDialogProc);
     return 0;
 }
 
