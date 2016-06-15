@@ -61,18 +61,21 @@ AhciPortInitialize (
         return FALSE;
     }
 
-    if ((adapterExtension->CAP & AHCI_Global_HBA_CAP_S64A) != 0)
-    {
-        DebugPrint("\tCAP.S64A not supported\n");
-        return FALSE;
-    }
-
     // 10.1.2 For each implemented port, system software shall allocate memory for and program:
     //  PxCLB and PxCLBU (if CAP.S64A is set to ‘1’)
     //  PxFB and PxFBU (if CAP.S64A is set to ‘1’)
     // Note: Assuming 32bit support only
     StorPortWriteRegisterUlong(adapterExtension, &PortExtension->Port->CLB, commandListPhysical.LowPart);
+    if ((adapterExtension->CAP & AHCI_Global_HBA_CAP_S64A) != 0)
+    {
+        StorPortWriteRegisterUlong(adapterExtension, &PortExtension->Port->CLBU, commandListPhysical.HighPart);
+    }
+
     StorPortWriteRegisterUlong(adapterExtension, &PortExtension->Port->FB, receivedFISPhysical.LowPart);
+    if ((adapterExtension->CAP & AHCI_Global_HBA_CAP_S64A) != 0)
+    {
+        StorPortWriteRegisterUlong(adapterExtension, &PortExtension->Port->FBU, receivedFISPhysical.HighPart);
+    }
 
     // set device power state flag to D0
     PortExtension->DevicePowerState = StorPowerDeviceD0;
@@ -207,14 +210,17 @@ AhciHwInitialize (
 
 /**
  * @name AhciInterruptHandler
- * @implemented
+ * @not_implemented
  *
  * Interrupt Handler for PortExtension
  *
  * @param PortExtension
  *
+ * @return
+ * return TRUE Indicates the interrupt was handled correctly
+ * return FALSE Indicates something went wrong
  */
-VOID
+BOOLEAN
 AhciInterruptHandler (
     __in PAHCI_PORT_EXTENSION PortExtension
     )
@@ -222,6 +228,7 @@ AhciInterruptHandler (
     DebugPrint("AhciInterruptHandler()\n");
     DebugPrint("\tPort Number: %d\n", PortExtension->PortNumber);
 
+    return FALSE;
 }// -- AhciInterruptHandler();
 
 /**
@@ -277,11 +284,10 @@ AhciHwInterrupt(
 
         // we can assign this interrupt to this port
         adapterExtension->LastInterruptPort = nextPort;
-        AhciInterruptHandler(&adapterExtension->PortExtension[nextPort]);
-        return TRUE;
+        return AhciInterruptHandler(&adapterExtension->PortExtension[nextPort]);
     }
 
-    DebugPrint("\tSomething wrong");
+    DebugPrint("\tSomething went wrong");
     return FALSE;
 }// -- AhciHwInterrupt();
 
@@ -376,7 +382,6 @@ AhciHwStartIo (
             {
                 Srb->SrbStatus = DeviceInquiryRequest(adapterExtension, Srb, cdb);
                 StorPortNotification(RequestComplete, adapterExtension, Srb);
-
                 return TRUE;
             }
         }
@@ -417,6 +422,11 @@ AhciHwResetBus (
     DebugPrint("AhciHwResetBus()\n");
 
     adapterExtension = AdapterExtension;
+
+    if (IsPortValid(AdapterExtension, PathId))
+    {
+        // TODO: Reset Port
+    }
 
     return FALSE;
 }// -- AhciHwResetBus();
@@ -515,13 +525,12 @@ AhciHwFindAdapter (
             accessRange = *ConfigInfo->AccessRanges;
             if (accessRange[index].RangeStart.QuadPart == adapterExtension->AhciBaseAddress)
             {
-                abar = StorPortGetDeviceBase(
-                                adapterExtension,
-                                ConfigInfo->AdapterInterfaceType,
-                                ConfigInfo->SystemIoBusNumber,
-                                accessRange[index].RangeStart,
-                                accessRange[index].RangeLength,
-                                !accessRange[index].RangeInMemory);
+                abar = StorPortGetDeviceBase(adapterExtension,
+                                             ConfigInfo->AdapterInterfaceType,
+                                             ConfigInfo->SystemIoBusNumber,
+                                             accessRange[index].RangeStart,
+                                             accessRange[index].RangeLength,
+                                             !accessRange[index].RangeInMemory);
                 break;
             }
         }
@@ -647,11 +656,10 @@ DriverEntry (
     hwInitializationData.DeviceExtensionSize = sizeof(AHCI_ADAPTER_EXTENSION);
 
     // register our hw init data
-    status = StorPortInitialize(
-                    DriverObject,
-                    RegistryPath,
-                    &hwInitializationData,
-                    NULL);
+    status = StorPortInitialize(DriverObject,
+                                RegistryPath,
+                                &hwInitializationData,
+                                NULL);
 
     DebugPrint("\tstatus:%x\n", status);
     return status;
@@ -768,6 +776,63 @@ IsPortValid (
 }// -- IsPortValid()
 
 /**
+ * @name AhciProcessIO
+ * @not_implemented
+ *
+ * Acquire Exclusive lock to port, populate pending commands to command List
+ * program controller's port to process new commands in command list.
+ *
+ * @param AdapterExtension
+ * @param pathId
+ * @param Srb
+ *
+ */
+VOID
+AhciProcessIO (
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
+    __in UCHAR pathId
+    )
+{
+    STOR_LOCK_HANDLE lockhandle;
+    PAHCI_PORT_EXTENSION PortExtension;
+    ULONG commandSlotMask, occupiedSlots, slotIndex;
+
+    DebugPrint("AhciProcessIO()\n");
+    DebugPrint("\tPathId: %d\n", pathId);
+
+    PortExtension = &AdapterExtension->PortExtension[pathId];
+
+    NT_ASSERT(pathId < MAXIMUM_AHCI_PORT_COUNT);
+
+    if (PortExtension->IsActive == FALSE)
+        return; // we should wait for device to get active
+
+    AhciZeroMemory(&lockhandle, sizeof(lockhandle));
+
+    // Acquire Lock
+    StorPortAcquireSpinLock(AdapterExtension, InterruptLock, NULL, &lockhandle);
+
+    occupiedSlots = PortExtension->OccupiedSlots; // Busy command slots for given port
+    commandSlotMask = (1 << AHCI_Global_Port_CAP_NCS(AdapterExtension->CAP)) - 1; // available slots mask
+
+    commandSlotMask = (commandSlotMask & ~occupiedSlots);
+    if(commandSlotMask != 0)
+    {
+        for (slotIndex = 0; slotIndex <= AHCI_Global_Port_CAP_NCS(AdapterExtension->CAP); slotIndex++)
+        {
+            // find first free slot
+            if ((commandSlotMask & (1 << slotIndex)) != 0)
+            {
+                // TODO: remove from queue and process it
+            }
+        }
+    }
+
+    // Release Lock
+    StorPortReleaseSpinLock(AdapterExtension, &lockhandle);
+}// -- AhciProcessIO();
+
+/**
  * @name DeviceInquiryRequest
  * @implemented
  *
@@ -816,5 +881,6 @@ DeviceInquiryRequest (
         AhciZeroMemory(DataBuffer, DataBufferLength);
     }
 
-    return SRB_STATUS_BAD_FUNCTION;
+    AhciProcessIO(AdapterExtension, Srb->PathId, Srb);
+    return SRB_STATUS_SUCCESS;
 }// -- DeviceInquiryRequest();

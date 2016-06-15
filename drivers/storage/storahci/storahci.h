@@ -199,6 +199,7 @@ typedef struct _AHCI_MEMORY_REGISTERS
 typedef struct _AHCI_PORT_EXTENSION
 {
     ULONG PortNumber;
+    ULONG OccupiedSlots;                                // slots to which we have already assigned task
     BOOLEAN IsActive;
     PAHCI_PORT Port;                                    // AHCI Port Infomation
     PAHCI_RECEIVED_FIS ReceivedFIS;
