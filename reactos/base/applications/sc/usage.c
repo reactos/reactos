@@ -44,8 +44,8 @@ VOID MainUsage(VOID)
     _T("\t  control        : Sends a control to a service.\n")
     _T("\t  sdshow         : Displays a service's security descriptor.\n")
     _T("\t  sdset          : Sets a service's security descriptor.\n")
-    _T("\t  GetDisplayName : Gets the DisplayName for a service.\n"));
-//    "\t  GetKeyName     : Gets the ServiceKeyName for a service.\n")
+    _T("\t  GetDisplayName : Gets the DisplayName for a service.\n")
+    _T("\t  GetKeyName     : Gets the ServiceKeyName for a service.\n"));
 //    "\t  EnumDepend     : Enumerates Service Dependencies.\n")
 //    "\n")
 //    "\tService Name Independant Commands:\n")
@@ -266,7 +266,16 @@ VOID SetFailureUsage(VOID)
 VOID GetDisplayNameUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
-             _T("        Gets the display name associated with a particular service\n")
+             _T("        Gets the display name associated with a particular service.\n")
              _T("USAGE:\n")
              _T("        sc <server> GetDisplayName <service key name> <bufsize>\n"));
+}
+
+VOID GetKeyNameUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Gets the key name associated with a particular service, using the\n")
+             _T("        display name as input.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> GetKeyName <service display name> <bufsize>\n"));
 }

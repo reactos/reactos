@@ -284,6 +284,18 @@ ScControl(LPCTSTR Server,       // remote machine name
         else
             GetDisplayNameUsage();
     }
+    else if (!lstrcmpi(Command, _T("GetKeyName")))
+    {
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            GetKeyName(ServiceName);
+        }
+        else
+            GetKeyNameUsage();
+    }
     else
     {
         MainUsage();
