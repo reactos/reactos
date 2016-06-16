@@ -10,8 +10,6 @@ include_directories(
     src/include/ipv4)
 
 list(APPEND SOURCE
-    src/rosip.c
-    src/rostcp.c
     src/rosmem.c
     src/sys_arch.c
     src/api/api_lib.c
@@ -56,6 +54,7 @@ list(APPEND SOURCE
     src/core/snmp/mib2.c
     src/core/snmp/msg_in.c
     src/core/snmp/msg_out.c
+	src/netif/etharp.c
     precomp.h)
 
 add_library(lwip ${SOURCE})
@@ -66,4 +65,5 @@ if(NOT MSVC)
     if(LTCG)
         add_compile_flags("-fno-builtin-malloc -fno-builtin-free")
     endif()
+	add_compile_flags("-Wno-address")
 endif()

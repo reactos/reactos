@@ -14,7 +14,7 @@
 
 #define MEM_ALIGNMENT                   4
 
-#define LWIP_ARP                        0
+#define LWIP_ARP                        1
 
 #define ARP_QUEUEING                    0
 
@@ -30,21 +30,21 @@
 
 #define IP_SOF_BROADCAST_RECV           1
 
-#define LWIP_ICMP                       0
+#define LWIP_ICMP                       1
 
-#define LWIP_RAW                        0
+#define LWIP_RAW                        1
 
 #define LWIP_DHCP                       0
 
 #define LWIP_AUTOIP                     0
 
-#define LWIP_SNMP                       0
+#define LWIP_SNMP                       1
 
 #define LWIP_IGMP                       0
 
 #define LWIP_DNS                        0
 
-#define LWIP_UDP                        0
+#define LWIP_UDP                        1
 
 #define LWIP_UDPLITE                    0
 
@@ -95,6 +95,8 @@
 #define PPPOE_SUPPORT                   0
 
 #define PPPOS_SUPPORT                   0
+
+#define LWIP_NETIF_LOOPBACK             1
 
 /*
    ---------------------------------------
