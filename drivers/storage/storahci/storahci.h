@@ -10,7 +10,7 @@
 
 #define DEBUG 1
 
-#define MAXIMUM_AHCI_PORT_COUNT             12
+#define MAXIMUM_AHCI_PORT_COUNT             25
 #define MAXIMUM_QUEUE_BUFFER_SIZE           255
 #define MAXIMUM_TRANSFER_LENGTH             (128*1024) // 128 KB
 
@@ -20,6 +20,7 @@
 #define AHCI_Global_HBA_CONTROL_MRSM        (1 << 2)
 #define AHCI_Global_HBA_CONTROL_AE          (1 << 31)
 #define AHCI_Global_HBA_CAP_S64A            (1 << 31)
+#define AHCI_Global_Port_CMD_IDLE           ((1 << 0) | (1 << 4) | (1 << 14) | (1 << 15)) // PxCMD.ST, PxCMD.CR, PxCMD.FRE and PxCMD.FR
 
 // 3.1.1 NCS = CAP[12:08] -> Align
 #define AHCI_Global_Port_CAP_NCS(x)            (((x) & 0xF00) >> 8)
@@ -254,6 +255,7 @@ typedef struct _AHCI_ADAPTER_EXTENSION
     ULONG   AhciBaseAddress;
     PULONG  IS;// Interrupt Status, In case of MSIM == `1`
     ULONG   PortImplemented;// bit-mapping of ports which are implemented
+    ULONG   PortCount;
 
     USHORT  VendorID;
     USHORT  DeviceID;

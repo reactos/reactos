@@ -35,7 +35,7 @@ AhciPortInitialize (
     portNumber = PortExtension->PortNumber;
 
     NT_ASSERT(abar != NULL);
-    NT_ASSERT(portNumber < MAXIMUM_AHCI_PORT_COUNT);
+    NT_ASSERT(portNumber < adapterExtension->PortCount);
 
     PortExtension->Port = &abar->PortList[portNumber];
 
@@ -120,18 +120,15 @@ AhciAllocateResourceForAdapter (
     portCount = 0;
     portImplemented = AdapterExtension->PortImplemented;
 
-    // make sure we don't allocate too much memory for the ports we have not implemented
-    // LOGIC: AND with all MAXIMUM_AHCI_PORT_COUNT (low significant) bits set
-    portImplemented = portImplemented & ((1 << MAXIMUM_AHCI_PORT_COUNT) - 1);
-    while (portImplemented > 0)
-    {
-        portCount++;
-        portImplemented &= (portImplemented - 1);
-    }
+    NT_ASSERT(portImplemented != 0);
+    for (index = MAXIMUM_AHCI_PORT_COUNT - 1; index > 0; index--)
+        if ((portImplemented & (1 << index)) != 0)
+            break;
 
-    NT_ASSERT(portCount <= MAXIMUM_AHCI_PORT_COUNT);
+    portCount = index + 1;
     DebugPrint("\tPort Count: %d\n", portCount);
 
+    AdapterExtension->PortCount = portCount;
     nonCachedExtensionSize =    sizeof(AHCI_COMMAND_HEADER) * AlignedNCS + //should be 1K aligned
                                 sizeof(AHCI_RECEIVED_FIS);
 
@@ -151,7 +148,7 @@ AhciAllocateResourceForAdapter (
     nonCachedExtension = AdapterExtension->NonCachedExtension;
     AhciZeroMemory(nonCachedExtension, nonCachedExtensionSize * portCount);
 
-    for (index = 0; index < MAXIMUM_AHCI_PORT_COUNT; index++)
+    for (index = 0; index < portCount; index++)
     {
         AdapterExtension->PortExtension[index].IsActive = FALSE;
         if ((AdapterExtension->PortImplemented & (1 << index)) != 0)
@@ -298,7 +295,7 @@ AhciInterruptHandler (
  *
  * The Storport driver calls the HwStorInterrupt routine after the HBA generates an interrupt request.
  *
- * @param adapterExtension
+ * @param AdapterExtension
  *
  * @return
  * return TRUE Indicates that an interrupt was pending on adapter.
@@ -306,48 +303,46 @@ AhciInterruptHandler (
  */
 BOOLEAN
 AhciHwInterrupt(
-    __in PVOID AdapterExtension
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension
     )
 {
-    ULONG portPending, nextPort, i;
-    PAHCI_ADAPTER_EXTENSION adapterExtension;
+    ULONG portPending, nextPort, i, portCount;
 
     DebugPrint("AhciHwInterrupt()\n");
 
-    adapterExtension = AdapterExtension;
-
-    if (adapterExtension->StateFlags.Removed)
+    if (AdapterExtension->StateFlags.Removed)
     {
         return FALSE;
     }
 
-    portPending = StorPortReadRegisterUlong(adapterExtension, adapterExtension->IS);
+    portPending = StorPortReadRegisterUlong(AdapterExtension, AdapterExtension->IS);
     // we process interrupt for implemented ports only
-    portPending = portPending & adapterExtension->PortImplemented;
+    portCount = AdapterExtension->PortCount;
+    portPending = portPending & AdapterExtension->PortImplemented;
 
     if (portPending == 0)
     {
         return FALSE;
     }
 
-    for (i = 1; i <= MAXIMUM_AHCI_PORT_COUNT; i++)
+    for (i = 1; i <= portCount; i++)
     {
-        nextPort = (adapterExtension->LastInterruptPort + i) % MAXIMUM_AHCI_PORT_COUNT;
+        nextPort = (AdapterExtension->LastInterruptPort + i) % portCount;
 
         if ((portPending & (0x1 << nextPort)) == 0)
             continue;
 
         NT_ASSERT(IsPortValid(AdapterExtension, nextPort));
 
-        if ((nextPort == adapterExtension->LastInterruptPort) ||
-            (adapterExtension->PortExtension[nextPort].IsActive == FALSE))
+        if ((nextPort == AdapterExtension->LastInterruptPort) ||
+            (AdapterExtension->PortExtension[nextPort].IsActive == FALSE))
         {
             return FALSE;
         }
 
         // we can assign this interrupt to this port
-        adapterExtension->LastInterruptPort = nextPort;
-        AhciInterruptHandler(&adapterExtension->PortExtension[nextPort]);
+        AdapterExtension->LastInterruptPort = nextPort;
+        AhciInterruptHandler(&AdapterExtension->PortExtension[nextPort]);
 
         // interrupt belongs to this device
         // should always return TRUE
@@ -448,19 +443,22 @@ AhciHwStartIo (
             if (cdb->CDB10.OperationCode == SCSIOP_INQUIRY)
             {
                 Srb->SrbStatus = DeviceInquiryRequest(adapterExtension, Srb, cdb);
-                StorPortNotification(RequestComplete, adapterExtension, Srb);
-                return TRUE;
+            }
+            else
+            {
+                Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
             }
         }
         else
         {
             Srb->SrbStatus = SRB_STATUS_BAD_FUNCTION;
-            StorPortNotification(RequestComplete, adapterExtension, Srb);
-            return TRUE;
         }
+
+        StorPortNotification(RequestComplete, adapterExtension, Srb);
+        return TRUE;
     }
 
-    DebugPrint("\tUnknow function code recieved: %x\n", function);
+    DebugPrint("\tUnknown function code recieved: %x\n", function);
     Srb->SrbStatus = SRB_STATUS_BAD_FUNCTION;
     StorPortNotification(RequestComplete, adapterExtension, Srb);
     return TRUE;
@@ -672,7 +670,7 @@ AhciHwFindAdapter (
         return SP_RETURN_ERROR;
     }
 
-    for (index = 0; index < MAXIMUM_AHCI_PORT_COUNT; index++)
+    for (index = 0; index < adapterExtension->PortCount; index++)
     {
         if ((adapterExtension->PortImplemented & (0x1<<index)) != 0)
             AhciPortInitialize(&adapterExtension->PortExtension[index]);
@@ -812,7 +810,7 @@ AhciProcessIO (
 
     PortExtension = &AdapterExtension->PortExtension[PathId];
 
-    NT_ASSERT(PathId < MAXIMUM_AHCI_PORT_COUNT);
+    NT_ASSERT(PathId < AdapterExtension->PortCount);
 
     // add Srb to queue
     AddQueue(&PortExtension->SrbQueue, Srb);
@@ -1021,7 +1019,7 @@ IsPortValid (
 {
     NT_ASSERT(pathId >= 0);
 
-    if (pathId >= MAXIMUM_AHCI_PORT_COUNT)
+    if (pathId >= AdapterExtension->PortCount)
     {
         return FALSE;
     }
