@@ -45,6 +45,7 @@ BOOL QueryDescription(LPCTSTR ServiceName);
 BOOL SetDescription(LPCTSTR ServiceName, LPCTSTR Description);
 BOOL QueryFailure(LPCTSTR ServiceName);
 BOOL SetFailure(LPCTSTR *ServiceArgs, INT ArgCount);
+BOOL GetDisplayName(LPCTSTR ServiceName);
 
 /* print and error functions */
 VOID PrintService(LPCTSTR ServiceName, LPSERVICE_STATUS_PROCESS pStatus, BOOL bExtended);
@@ -83,5 +84,6 @@ VOID QueryFailureUsage(VOID);
 VOID SetDescriptionUsage(VOID);
 VOID SetConfigUsage(VOID);
 VOID SetFailureUsage(VOID);
+VOID GetDisplayNameUsage(VOID);
 
 #endif /* _SC_PCH_ */

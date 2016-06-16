@@ -9,6 +9,7 @@ list(APPEND SOURCE
     description.c
     failure.c
     misc.c
+    name.c
     print.c
     query.c
     sc.c

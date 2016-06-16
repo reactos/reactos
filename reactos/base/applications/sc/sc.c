@@ -272,6 +272,18 @@ ScControl(LPCTSTR Server,       // remote machine name
     {
         SetFailure(ServiceArgs, ArgCount);
     }
+    else if (!lstrcmpi(Command, _T("GetDisplayName")))
+    {
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            GetDisplayName(ServiceName);
+        }
+        else
+            GetDisplayNameUsage();
+    }
     else
     {
         MainUsage();

@@ -43,8 +43,8 @@ VOID MainUsage(VOID)
     _T("\t  create         : Creates a service (adds it to the registry).\n")
     _T("\t  control        : Sends a control to a service.\n")
     _T("\t  sdshow         : Displays a service's security descriptor.\n")
-    _T("\t  sdset          : Sets a service's security descriptor.\n"));
-//    "\t  GetDisplayName : Gets the DisplayName for a service.\n")
+    _T("\t  sdset          : Sets a service's security descriptor.\n")
+    _T("\t  GetDisplayName : Gets the DisplayName for a service.\n"));
 //    "\t  GetKeyName     : Gets the ServiceKeyName for a service.\n")
 //    "\t  EnumDepend     : Enumerates Service Dependencies.\n")
 //    "\n")
@@ -261,4 +261,12 @@ VOID SetFailureUsage(VOID)
              _T("                  separated by / (forward slash) -- e.g., run/5000/reboot/800\n")
              _T("                  Valid actions are <run|restart|reboot> >\n")
              _T("                 (Must be used in conjunction with the reset= option)\n"));
+}
+
+VOID GetDisplayNameUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Gets the display name associated with a particular service\n")
+             _T("USAGE:\n")
+             _T("        sc <server> GetDisplayName <service key name> <bufsize>\n"));
 }
