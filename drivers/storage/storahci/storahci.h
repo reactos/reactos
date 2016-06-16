@@ -11,6 +11,7 @@
 #define DEBUG 1
 
 #define MAXIMUM_AHCI_PORT_COUNT             12
+#define MAXIMUM_QUEUE_BUFFER_SIZE           255
 #define MAXIMUM_TRANSFER_LENGTH             (128*1024) // 128 KB
 
 // section 3.1.2
@@ -31,6 +32,35 @@
 //////////////////////////////////////////////////////////////
 //              ---- Support Structures ---                 //
 //////////////////////////////////////////////////////////////
+
+// section 3.3.5
+typedef union _AHCI_INTERRUPT_STATUS
+{
+    struct
+    {
+        ULONG DHRS:1;       //Device to Host Register FIS Interrupt
+        ULONG PSS :1;       //PIO Setup FIS Interrupt
+        ULONG DSS :1;       //DMA Setup FIS Interrupt
+        ULONG SDBS :1;      //Set Device Bits Interrupt
+        ULONG UFS :1;       //Unknown FIS Interrupt
+        ULONG DPS :1;       //Descriptor Processed
+        ULONG PCS :1;       //Port Connect Change Status
+        ULONG DMPS :1;      //Device Mechanical Presence Status (DMPS)
+        ULONG Reserved :14;
+        ULONG PRCS :1;      //PhyRdy Change Status
+        ULONG IPMS :1;      //Incorrect Port Multiplier Status
+        ULONG OFS :1;       //Overflow Status
+        ULONG Reserved2 :1;
+        ULONG INFS :1;      //Interface Non-fatal Error Status
+        ULONG IFS :1;       //Interface Fatal Error Status
+        ULONG HBDS :1;      //Host Bus Data Error Status
+        ULONG HBFS :1;      //Host Bus Fatal Error Status
+        ULONG TFES :1;      //Task File Error Status
+        ULONG CPDS :1;      //Cold Port Detect Status
+    };
+
+    ULONG Status;
+} AHCI_INTERRUPT_STATUS;
 
 typedef struct _AHCI_FIS_DMA_SETUP
 {
@@ -123,6 +153,13 @@ typedef struct _AHCI_SET_DEVICE_BITS_FIS
     UCHAR Reserved5[4];
 } AHCI_SET_DEVICE_BITS_FIS;
 
+typedef struct _AHCI_QUEUE
+{
+    PVOID Buffer[MAXIMUM_QUEUE_BUFFER_SIZE];  // because Storahci hold Srb queue of 255 size
+    ULONG Head;
+    ULONG Tail;
+} AHCI_QUEUE, *PAHCI_QUEUE;
+
 //////////////////////////////////////////////////////////////
 //              ---------------------------                 //
 //////////////////////////////////////////////////////////////
@@ -202,6 +239,7 @@ typedef struct _AHCI_PORT_EXTENSION
     ULONG OccupiedSlots;                                // slots to which we have already assigned task
     BOOLEAN IsActive;
     PAHCI_PORT Port;                                    // AHCI Port Infomation
+    AHCI_QUEUE SrbQueue;
     PAHCI_RECEIVED_FIS ReceivedFIS;
     PAHCI_COMMAND_HEADER CommandList;
     STOR_DEVICE_POWER_STATE DevicePowerState;           // Device Power State
@@ -273,4 +311,17 @@ DeviceInquiryRequest (
     __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
     __in PSCSI_REQUEST_BLOCK Srb,
     __in PCDB Cdb
+    );
+
+__inline
+BOOLEAN
+AddQueue (
+    __inout PAHCI_QUEUE Queue,
+    __in PVOID Srb
+    );
+
+__inline
+PVOID
+RemoveQueue (
+    __inout PAHCI_QUEUE Queue
     );

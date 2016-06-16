@@ -216,19 +216,80 @@ AhciHwInitialize (
  *
  * @param PortExtension
  *
- * @return
- * return TRUE Indicates the interrupt was handled correctly
- * return FALSE Indicates something went wrong
  */
-BOOLEAN
+VOID
 AhciInterruptHandler (
     __in PAHCI_PORT_EXTENSION PortExtension
     )
 {
+    ULONG IS;
+    AHCI_INTERRUPT_STATUS PxIS;
+    AHCI_INTERRUPT_STATUS PxISMasked;
+    PAHCI_ADAPTER_EXTENSION AdapterExtension;
+
     DebugPrint("AhciInterruptHandler()\n");
     DebugPrint("\tPort Number: %d\n", PortExtension->PortNumber);
 
-    return FALSE;
+    AdapterExtension = PortExtension->AdapterExtension;
+    NT_ASSERT(IsPortValid(AdapterExtension, PortExtension->PortNumber));
+
+    // 5.5.3
+    // 1. Software determines the cause of the interrupt by reading the PxIS register.
+    //    It is possible for multiple bits to be set
+    // 2. Software clears appropriate bits in the PxIS register corresponding to the cause of the interrupt.
+    // 3. Software clears the interrupt bit in IS.IPS corresponding to the port.
+    // 4. If executing non-queued commands, software reads the PxCI register, and compares the current value to
+    //    the list of commands previously issued by software that are still outstanding.
+    //    If executing native queued commands, software reads the PxSACT register and compares the current
+    //    value to the list of commands previously issued by software.
+    //    Software completes with success any outstanding command whose corresponding bit has been cleared in
+    //    the respective register. PxCI and PxSACT are volatile registers; software should only use their values
+    //    to determine commands that have completed, not to determine which commands have previously been issued.
+    // 5. If there were errors, noted in the PxIS register, software performs error recovery actions (see section 6.2.2).
+    PxISMasked.Status = 0;
+    PxIS.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->IS);
+
+    // 6.2.2
+    // Fatal Error
+    // signified by the setting of PxIS.HBFS, PxIS.HBDS, PxIS.IFS, or PxIS.TFES
+    if (PxIS.HBFS || PxIS.HBDS || PxIS.IFS || PxIS.TFES)
+    {
+        // In this state, the HBA shall not issue any new commands nor acknowledge DMA Setup FISes to process
+        // any native command queuing commands. To recover, the port must be restarted
+        // To detect an error that requires software recovery actions to be performed,
+        // software should check whether any of the following status bits are set on an interrupt:
+        // PxIS.HBFS, PxIS.HBDS, PxIS.IFS, and PxIS.TFES.  If any of these bits are set,
+        // software should perform the appropriate error recovery actions based on whether
+        // non-queued commands were being issued or native command queuing commands were being issued.
+
+        DebugPrint("\tFata Error: %x\n", PxIS.Status);
+    }
+
+    // Normal Command Completion
+    // 3.3.5
+    // A D2H Register FIS has been received with the ‘I’ bit set, and has been copied into system memory.
+    PxISMasked.DHRS = PxIS.DHRS;
+    // A PIO Setup FIS has been received with the ‘I’ bit set, it has been copied into system memory.
+    PxISMasked.PSS = PxIS.PSS;
+    // A DMA Setup FIS has been received with the ‘I’ bit set and has been copied into system memory.
+    PxISMasked.DSS = PxIS.DSS;
+    // A Set Device Bits FIS has been received with the ‘I’ bit set and has been copied into system memory/
+    PxISMasked.SDBS = PxIS.SDBS;
+    // A PRD with the ‘I’ bit set has transferred all of its data.
+    PxISMasked.DPS = PxIS.DPS;
+
+    if (PxISMasked.Status != 0)
+    {
+        StorPortWriteRegisterUlong(AdapterExtension, &PortExtension->Port->IS, PxISMasked.Status);
+    }
+
+    // 10.7.1.1
+    // Clear port interrupt
+    // It is set by the level of the virtual interrupt line being a set, and cleared by a write of ‘1’ from the software.
+    IS = (1 << PortExtension->PortNumber);
+    StorPortWriteRegisterUlong(AdapterExtension, AdapterExtension->IS, IS);
+
+    return;
 }// -- AhciInterruptHandler();
 
 /**
@@ -276,6 +337,8 @@ AhciHwInterrupt(
         if ((portPending & (0x1 << nextPort)) == 0)
             continue;
 
+        NT_ASSERT(IsPortValid(AdapterExtension, nextPort));
+
         if ((nextPort == adapterExtension->LastInterruptPort) ||
             (adapterExtension->PortExtension[nextPort].IsActive == FALSE))
         {
@@ -284,7 +347,11 @@ AhciHwInterrupt(
 
         // we can assign this interrupt to this port
         adapterExtension->LastInterruptPort = nextPort;
-        return AhciInterruptHandler(&adapterExtension->PortExtension[nextPort]);
+        AhciInterruptHandler(&adapterExtension->PortExtension[nextPort]);
+
+        // interrupt belongs to this device
+        // should always return TRUE
+        return TRUE;
     }
 
     DebugPrint("\tSomething went wrong");
@@ -341,7 +408,7 @@ AhciHwStartIo (
             {
                 Srb->SrbStatus = SRB_STATUS_SUCCESS;
                 adapterExtension->StateFlags.Removed = 1;
-                DebugPrint("\tadapter removed\n");
+                DebugPrint("\tAdapter removed\n");
             }
             else if (pnpRequest->PnPAction == StorStopDevice)
             {
@@ -417,6 +484,7 @@ AhciHwResetBus (
     __in ULONG PathId
     )
 {
+    STOR_LOCK_HANDLE lockhandle;
     PAHCI_ADAPTER_EXTENSION adapterExtension;
 
     DebugPrint("AhciHwResetBus()\n");
@@ -425,7 +493,15 @@ AhciHwResetBus (
 
     if (IsPortValid(AdapterExtension, PathId))
     {
-        // TODO: Reset Port
+        AhciZeroMemory(&lockhandle, sizeof(lockhandle));
+
+        // Acquire Lock
+        StorPortAcquireSpinLock(AdapterExtension, InterruptLock, NULL, &lockhandle);
+
+        // TODO: Perform port reset
+
+        // Release lock
+        StorPortReleaseSpinLock(AdapterExtension, &lockhandle);
     }
 
     return FALSE;
@@ -666,6 +742,182 @@ DriverEntry (
 }// -- DriverEntry();
 
 /**
+ * @name AhciProcessSrb
+ * @not_implemented
+ *
+ * Prepare Srb for IO processing
+ *
+ * @param PortExtension
+ * @param Srb
+ *
+ */
+VOID
+AhciProcessSrb (
+    __in PAHCI_PORT_EXTENSION PortExtension,
+    __in PSCSI_REQUEST_BLOCK Srb
+    )
+{
+    DebugPrint("AhciProcessSrb()\n");
+
+    NT_ASSERT(Srb->PathId == PortExtension->PortNumber);
+
+    return;
+}// -- AhciProcessSrb();
+
+/**
+ * @name AhciActivatePort
+ * @not_implemented
+ *
+ * Program Port and populate command list
+ *
+ * @param PortExtension
+ *
+ */
+VOID
+AhciActivatePort (
+    __in PAHCI_PORT_EXTENSION PortExtension
+    )
+{
+    DebugPrint("AhciActivatePort()\n");
+
+    return;
+}// -- AhciActivatePort();
+
+/**
+ * @name AhciProcessIO
+ * @implemented
+ *
+ * Acquire Exclusive lock to port, populate pending commands to command List
+ * program controller's port to process new commands in command list.
+ *
+ * @param AdapterExtension
+ * @param PathId
+ * @param Srb
+ *
+ */
+VOID
+AhciProcessIO (
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
+    __in UCHAR PathId,
+    __in PSCSI_REQUEST_BLOCK Srb
+    )
+{
+    STOR_LOCK_HANDLE lockhandle;
+    PSCSI_REQUEST_BLOCK tmpSrb;
+    PAHCI_PORT_EXTENSION PortExtension;
+    ULONG commandSlotMask, occupiedSlots, slotIndex;
+
+    DebugPrint("AhciProcessIO()\n");
+    DebugPrint("\tPathId: %d\n", PathId);
+
+    PortExtension = &AdapterExtension->PortExtension[PathId];
+
+    NT_ASSERT(PathId < MAXIMUM_AHCI_PORT_COUNT);
+
+    // add Srb to queue
+    AddQueue(&PortExtension->SrbQueue, Srb);
+
+    if (PortExtension->IsActive == FALSE)
+        return; // we should wait for device to get active
+
+    AhciZeroMemory(&lockhandle, sizeof(lockhandle));
+
+    // Acquire Lock
+    StorPortAcquireSpinLock(AdapterExtension, InterruptLock, NULL, &lockhandle);
+
+    occupiedSlots = PortExtension->OccupiedSlots; // Busy command slots for given port
+    commandSlotMask = (1 << AHCI_Global_Port_CAP_NCS(AdapterExtension->CAP)) - 1; // available slots mask
+
+    commandSlotMask = (commandSlotMask & ~occupiedSlots);
+    if(commandSlotMask != 0)
+    {
+        // iterate over HBA port slots
+        for (slotIndex = 0; slotIndex <= AHCI_Global_Port_CAP_NCS(AdapterExtension->CAP); slotIndex++)
+        {
+            // find first free slot
+            if ((commandSlotMask & (1 << slotIndex)) != 0)
+            {
+                tmpSrb = RemoveQueue(&PortExtension->SrbQueue);
+                if (tmpSrb != NULL)
+                {
+                    NT_ASSERT(Srb->PathId == PathId);
+                    AhciProcessSrb(PortExtension, tmpSrb);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    // program HBA port
+    AhciActivatePort(PortExtension);
+
+    // Release Lock
+    StorPortReleaseSpinLock(AdapterExtension, &lockhandle);
+
+    return;
+}// -- AhciProcessIO();
+
+/**
+ * @name DeviceInquiryRequest
+ * @implemented
+ *
+ * Tells wheather given port is implemented or not
+ *
+ * @param AdapterExtension
+ * @param Srb
+ * @param Cdb
+ *
+ * @return
+ * return STOR status for DeviceInquiryRequest
+ *
+ * @remark
+ * http://www.seagate.com/staticfiles/support/disc/manuals/Interface%20manuals/100293068c.pdf
+ */
+ULONG
+DeviceInquiryRequest (
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
+    __in PSCSI_REQUEST_BLOCK Srb,
+    __in PCDB Cdb
+    )
+{
+    PVOID DataBuffer;
+    ULONG DataBufferLength;
+
+    DebugPrint("DeviceInquiryRequest()\n");
+
+    // 3.6.1
+    // If the EVPD bit is set to zero, the device server shall return the standard INQUIRY data
+    if (Cdb->CDB6INQUIRY3.EnableVitalProductData == 0)
+    {
+        DebugPrint("\tEVPD Inquired\n");
+    }
+    else
+    {
+        DebugPrint("\tVPD Inquired\n");
+
+        DataBuffer = Srb->DataBuffer;
+        DataBufferLength = Srb->DataTransferLength;
+
+        if (DataBuffer == NULL)
+        {
+            return SRB_STATUS_INVALID_REQUEST;
+        }
+
+        AhciZeroMemory(DataBuffer, DataBufferLength);
+    }
+
+    AhciProcessIO(AdapterExtension, Srb->PathId, Srb);
+    return SRB_STATUS_SUCCESS;
+}// -- DeviceInquiryRequest();
+
+/**
  * @name AhciAdapterReset
  * @implemented
  *
@@ -744,6 +996,8 @@ AhciZeroMemory (
     {
         Buffer[i] = 0;
     }
+
+    return;
 }// -- AhciZeroMemory();
 
 /**
@@ -776,111 +1030,65 @@ IsPortValid (
 }// -- IsPortValid()
 
 /**
- * @name AhciProcessIO
- * @not_implemented
- *
- * Acquire Exclusive lock to port, populate pending commands to command List
- * program controller's port to process new commands in command list.
- *
- * @param AdapterExtension
- * @param pathId
- * @param Srb
- *
- */
-VOID
-AhciProcessIO (
-    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
-    __in UCHAR pathId
-    )
-{
-    STOR_LOCK_HANDLE lockhandle;
-    PAHCI_PORT_EXTENSION PortExtension;
-    ULONG commandSlotMask, occupiedSlots, slotIndex;
-
-    DebugPrint("AhciProcessIO()\n");
-    DebugPrint("\tPathId: %d\n", pathId);
-
-    PortExtension = &AdapterExtension->PortExtension[pathId];
-
-    NT_ASSERT(pathId < MAXIMUM_AHCI_PORT_COUNT);
-
-    if (PortExtension->IsActive == FALSE)
-        return; // we should wait for device to get active
-
-    AhciZeroMemory(&lockhandle, sizeof(lockhandle));
-
-    // Acquire Lock
-    StorPortAcquireSpinLock(AdapterExtension, InterruptLock, NULL, &lockhandle);
-
-    occupiedSlots = PortExtension->OccupiedSlots; // Busy command slots for given port
-    commandSlotMask = (1 << AHCI_Global_Port_CAP_NCS(AdapterExtension->CAP)) - 1; // available slots mask
-
-    commandSlotMask = (commandSlotMask & ~occupiedSlots);
-    if(commandSlotMask != 0)
-    {
-        for (slotIndex = 0; slotIndex <= AHCI_Global_Port_CAP_NCS(AdapterExtension->CAP); slotIndex++)
-        {
-            // find first free slot
-            if ((commandSlotMask & (1 << slotIndex)) != 0)
-            {
-                // TODO: remove from queue and process it
-            }
-        }
-    }
-
-    // Release Lock
-    StorPortReleaseSpinLock(AdapterExtension, &lockhandle);
-}// -- AhciProcessIO();
-
-/**
- * @name DeviceInquiryRequest
+ * @name AddQueue
  * @implemented
  *
- * Tells wheather given port is implemented or not
+ * Add Srb to Queue
  *
- * @param AdapterExtension
+ * @param Queue
  * @param Srb
- * @param Cdb
  *
  * @return
- * return STOR status for DeviceInquiryRequest
+ * return TRUE if Srb is successfully added to Queue
  *
- * @remark
- * http://www.seagate.com/staticfiles/support/disc/manuals/Interface%20manuals/100293068c.pdf
  */
-ULONG
-DeviceInquiryRequest (
-    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
-    __in PSCSI_REQUEST_BLOCK Srb,
-    __in PCDB Cdb
+__inline
+BOOLEAN
+AddQueue (
+    __inout PAHCI_QUEUE Queue,
+    __in PVOID Srb
     )
 {
-    PVOID DataBuffer;
-    ULONG DataBufferLength;
+    NT_ASSERT(Queue->Head < MAXIMUM_QUEUE_BUFFER_SIZE);
+    NT_ASSERT(Queue->Tail < MAXIMUM_QUEUE_BUFFER_SIZE);
 
-    DebugPrint("DeviceInquiryRequest()\n");
+    if (Queue->Head == ((Queue->Tail + 1) % MAXIMUM_QUEUE_BUFFER_SIZE))
+        return FALSE;
 
-    // 3.6.1
-    // If the EVPD bit is set to zero, the device server shall return the standard INQUIRY data
-    if (Cdb->CDB6INQUIRY3.EnableVitalProductData == 0)
-    {
-        DebugPrint("\tEVPD Inquired\n");
-    }
-    else
-    {
-        DebugPrint("\tVPD Inquired\n");
+    Queue->Buffer[Queue->Head++] = Srb;
+    Queue->Head %= MAXIMUM_QUEUE_BUFFER_SIZE;
 
-        DataBuffer = Srb->DataBuffer;
-        DataBufferLength = Srb->DataTransferLength;
+    return TRUE;
+}// -- AddQueue();
 
-        if (DataBuffer == NULL)
-        {
-            return SRB_STATUS_INVALID_REQUEST;
-        }
+/**
+ * @name RemoveQueue
+ * @implemented
+ *
+ * Remove and return Srb from Queue
+ *
+ * @param Queue
+ *
+ * @return
+ * return Srb
+ *
+ */
+__inline
+PVOID
+RemoveQueue (
+    __inout PAHCI_QUEUE Queue
+    )
+{
+    PVOID Srb;
 
-        AhciZeroMemory(DataBuffer, DataBufferLength);
-    }
+    NT_ASSERT(Queue->Head < MAXIMUM_QUEUE_BUFFER_SIZE);
+    NT_ASSERT(Queue->Tail < MAXIMUM_QUEUE_BUFFER_SIZE);
 
-    AhciProcessIO(AdapterExtension, Srb->PathId, Srb);
-    return SRB_STATUS_SUCCESS;
-}// -- DeviceInquiryRequest();
+    if (Queue->Head == Queue->Tail)
+        return NULL;
+
+    Srb = Queue->Buffer[Queue->Tail++];
+    Queue->Tail %= MAXIMUM_QUEUE_BUFFER_SIZE;
+
+    return Srb;
+}// -- RemoveQueue();
