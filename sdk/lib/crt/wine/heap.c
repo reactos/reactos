@@ -446,6 +446,14 @@ void CDECL MSVCRT_free(void* ptr)
 }
 
 /*********************************************************************
+ *		_free_base (UCRTBASE.@)
+ */
+void CDECL _free_base(void* ptr)
+{
+  msvcrt_heap_free(ptr);
+}
+
+/*********************************************************************
  *                  malloc (MSVCRT.@)
  */
 void* CDECL MSVCRT_malloc(MSVCRT_size_t size)
