@@ -484,6 +484,14 @@ void* CDECL MSVCRT_realloc(void* ptr, MSVCRT_size_t size)
 }
 
 /*********************************************************************
+ *		_realloc_base (UCRTBASE.@)
+ */
+void* CDECL _realloc_base(void* ptr, MSVCRT_size_t size)
+{
+  return MSVCRT_realloc(ptr, size);
+}
+
+/*********************************************************************
  * _recalloc (MSVCR100.@)
  */
 void* CDECL _recalloc(void *mem, MSVCRT_size_t num, MSVCRT_size_t size)
