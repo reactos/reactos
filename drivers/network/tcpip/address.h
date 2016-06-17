@@ -21,6 +21,7 @@ typedef struct _TCP_CONTEXT {
 	ADDRESS_FILE *AddressFile;
 	LIST_ENTRY ListEntry;
 	IPPROTO Protocol;
+	TDI_ADDRESS_IP RequestAddress;
 	LONG RefCount;
 	KSPIN_LOCK Lock;
 	KIRQL OldIrql;
@@ -40,6 +41,7 @@ TcpIpCreateAddress(
 NTSTATUS
 TcpIpCreateContext(
 	_Inout_ PIRP Irp,
+	_In_ PTDI_ADDRESS_IP Address,
 	_In_ IPPROTO Protocol
 );
 
@@ -65,12 +67,22 @@ TcpIpDisassociateAddress(
 
 NTSTATUS
 TcpIpListen(
-	_Inout_ PIRP Irp);
+	_Inout_ PIRP Irp
+);
+
+NTSTATUS
+TcpIpReceive(
+	_Inout_ PIRP Irp
+);
 
 NTSTATUS
 TcpIpReceiveDatagram(
     _Inout_ PIRP Irp);
 
+NTSTATUS
+TcpIpSend(
+	_Inout_ PIRP Irp);
+	
 NTSTATUS
 TcpIpSendDatagram(
     _Inout_ PIRP Irp);

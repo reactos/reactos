@@ -316,7 +316,7 @@ TcpIpCreate(
 			DPRINT1("\n PTA_IP_ADDRESS dump before\n  %08x %08x %08x %08x\n  %08x %08x %08x %08x\n",
 				temp[7], temp[6], temp[5], temp[4],
 				temp[3], temp[2], temp[1], temp[0]);
-			Status = TcpIpCreateContext(Irp, Protocol);
+			Status = TcpIpCreateContext(Irp, &Address->Address[0].Address[0], Protocol);
 			DPRINT1("\n PTA_IP_ADDRESS dump after\n  %08x %08x %08x %08x\n  %08x %08x %08x %08x\n",
 				temp[7], temp[6], temp[5], temp[4],
 				temp[3], temp[2], temp[1], temp[0]);
@@ -399,25 +399,62 @@ TcpIpDispatchInternal(
 {
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp;
+	PADDRESS_FILE AddressFile;
 
 	DPRINT1("TcpIpDispatchInternal\n");
 	
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
+	AddressFile = IrpSp->FileObject->FsContext;
+	
     switch (IrpSp->MinorFunction)
     {
         case TDI_RECEIVE:
             DPRINT1("TCPIP: TDI_RECEIVE!\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-
+			switch (AddressFile->Protocol)
+			{
+				case IPPROTO_TCP:
+					Status = TcpIpReceive(Irp);
+					break;
+				case IPPROTO_UDP:
+					Status = STATUS_NOT_IMPLEMENTED;
+					break;
+				case IPPROTO_RAW:
+					Status = STATUS_NOT_IMPLEMENTED;
+					break;
+				default:
+					Status = STATUS_NOT_IMPLEMENTED;
+			}
+            if (Status == STATUS_NOT_IMPLEMENTED)
+			{
+				DPRINT1("Received TDI_RECEIVE for non-TCP protocol\n");
+				
+			}
+			break;
         case TDI_RECEIVE_DATAGRAM:
 			DPRINT1("TCPIP: TDI_RECEIVE_DATAGRAM!\n");
             return TcpIpReceiveDatagram(Irp);
 
         case TDI_SEND:
             DPRINT1("TCPIP: TDI_SEND!\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+			switch (AddressFile->Protocol)
+			{
+				case IPPROTO_TCP:
+					Status = TcpIpSend(Irp);
+					break;
+				case IPPROTO_UDP:
+					Status = STATUS_NOT_IMPLEMENTED;
+					break;
+				case IPPROTO_RAW:
+					Status = STATUS_NOT_IMPLEMENTED;
+					break;
+				default:
+					Status = STATUS_NOT_IMPLEMENTED;
+			}
+            if (Status == STATUS_NOT_IMPLEMENTED)
+			{
+				DPRINT1("Received TDI_SEND for non-TCP protocol\n");
+			}
             break;
 
         case TDI_SEND_DATAGRAM:
