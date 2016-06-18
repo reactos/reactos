@@ -45,8 +45,8 @@ VOID MainUsage(VOID)
     _T("\t  sdshow         : Displays a service's security descriptor.\n")
     _T("\t  sdset          : Sets a service's security descriptor.\n")
     _T("\t  GetDisplayName : Gets the DisplayName for a service.\n")
-    _T("\t  GetKeyName     : Gets the ServiceKeyName for a service.\n"));
-//    "\t  EnumDepend     : Enumerates Service Dependencies.\n")
+    _T("\t  GetKeyName     : Gets the ServiceKeyName for a service.\n")
+    _T("\t  EnumDepend     : Enumerates Service Dependencies.\n"));
 //    "\n")
 //    "\tService Name Independant Commands:\n")
 //    "\t  boot           : (ok | bad) Indicates whether the last boot should\n")
@@ -278,4 +278,12 @@ VOID GetKeyNameUsage(VOID)
              _T("        display name as input.\n")
              _T("USAGE:\n")
              _T("        sc <server> GetKeyName <service display name> <bufsize>\n"));
+}
+
+VOID EnumDependUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+             _T("        Enumerates te Services that are dependent on this one.\n")
+             _T("USAGE:\n")
+             _T("        sc <server> EnumDepend <service display name> <bufsize>\n"));
 }

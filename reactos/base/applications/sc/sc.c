@@ -296,6 +296,18 @@ ScControl(LPCTSTR Server,       // remote machine name
         else
             GetKeyNameUsage();
     }
+    else if (!lstrcmpi(Command, _T("EnumDepend")))
+    {
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            EnumDepend(ServiceName);
+        }
+        else
+            EnumDependUsage();
+    }
     else
     {
         MainUsage();

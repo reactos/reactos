@@ -47,9 +47,11 @@ BOOL QueryFailure(LPCTSTR ServiceName);
 BOOL SetFailure(LPCTSTR *ServiceArgs, INT ArgCount);
 BOOL GetDisplayName(LPCTSTR ServiceName);
 BOOL GetKeyName(LPCTSTR ServiceName);
+BOOL EnumDepend(LPCTSTR ServiceName);
 
 /* print and error functions */
 VOID PrintService(LPCTSTR ServiceName, LPSERVICE_STATUS_PROCESS pStatus, BOOL bExtended);
+VOID PrintServiceStatus(LPSERVICE_STATUS pStatus);
 VOID ReportLastError(VOID);
 
 /* misc.c */
@@ -87,5 +89,6 @@ VOID SetConfigUsage(VOID);
 VOID SetFailureUsage(VOID);
 VOID GetDisplayNameUsage(VOID);
 VOID GetKeyNameUsage(VOID);
+VOID EnumDependUsage(VOID);
 
 #endif /* _SC_PCH_ */

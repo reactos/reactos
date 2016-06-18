@@ -6,6 +6,7 @@ list(APPEND SOURCE
     control.c
     create.c
     delete.c
+    depend.c
     description.c
     failure.c
     misc.c
