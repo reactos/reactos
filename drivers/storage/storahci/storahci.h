@@ -6,6 +6,7 @@
  */
 
 #include <ntddk.h>
+#include <ata.h>
 #include <storport.h>
 
 #define DEBUG 1
@@ -20,7 +21,22 @@
 #define AHCI_Global_HBA_CONTROL_MRSM        (1 << 2)
 #define AHCI_Global_HBA_CONTROL_AE          (1 << 31)
 #define AHCI_Global_HBA_CAP_S64A            (1 << 31)
-#define AHCI_Global_Port_CMD_IDLE           ((1 << 0) | (1 << 4) | (1 << 14) | (1 << 15)) // PxCMD.ST, PxCMD.CR, PxCMD.FRE and PxCMD.FR
+
+// ATA Functions
+#define ATA_FUNCTION_ATA_COMMAND            0x100
+#define ATA_FUNCTION_ATA_IDENTIFY           0x101
+
+// ATAPI Functions
+#define ATA_FUNCTION_ATAPI_COMMAND          0x200
+
+// ATA Flags
+#define ATA_FLAGS_DATA_IN                   (1 << 1)
+#define ATA_FLAGS_DATA_OUT                  (1 << 2)
+
+#define IsAtaCommand(AtaFunction)           (AtaFunction & ATA_FUNCTION_ATA_COMMAND)
+#define IsAtapiCommand(AtaFunction)         (AtaFunction & ATA_FUNCTION_ATAPI_COMMAND)
+#define IsDataTransferNeeded(SrbExtension)  (SrbExtension->Flags & (ATA_FLAGS_DATA_IN | ATA_FLAGS_DATA_OUT))
+#define IsAdapterCAPS64(CAP)                (CAP & AHCI_Global_HBA_CAP_S64A)
 
 // 3.1.1 NCS = CAP[12:08] -> Align
 #define AHCI_Global_Port_CAP_NCS(x)            (((x) & 0xF00) >> 8)
@@ -165,10 +181,31 @@ typedef struct _AHCI_QUEUE
 //              ---------------------------                 //
 //////////////////////////////////////////////////////////////
 
+typedef union _AHCI_COMMAND_HEADER_DESCRIPTION
+{
+    struct
+    {
+        ULONG CFL :5;       // Command FIS Length
+        ULONG A :1;         // IsATAPI
+        ULONG W :1;         // Write
+        ULONG P :1;         // Prefetchable
+
+        ULONG R :1;         // Reset
+        ULONG B :1;         // BIST
+        ULONG C :1;         //Clear Busy upon R_OK
+        ULONG DW0_Reserved :1;
+        ULONG PMP :4;       //Port Multiplier Port
+
+        ULONG PRDTL :16;    //Physical Region Descriptor Table Length
+    };
+
+    ULONG Status;
+} AHCI_COMMAND_HEADER_DESCRIPTION;
+
 // 4.2.2 Command Header
 typedef struct _AHCI_COMMAND_HEADER
 {
-    ULONG HEADER_DESCRIPTION;   // DW 0
+    AHCI_COMMAND_HEADER_DESCRIPTION DI;   // DW 0
     ULONG PRDBC;                // DW 1
     ULONG CTBA0;                // DW 2
     ULONG CTBA_U0;              // DW 3
@@ -265,6 +302,7 @@ typedef struct _AHCI_ADAPTER_EXTENSION
     ULONG   CAP;
     ULONG   CAP2;
     ULONG   LastInterruptPort;
+    ULONG   CurrentCommandSlot;
 
     PVOID NonCachedExtension;// holds virtual address to noncached buffer allocated for Port Extension
 
@@ -280,10 +318,20 @@ typedef struct _AHCI_ADAPTER_EXTENSION
     AHCI_PORT_EXTENSION PortExtension[MAXIMUM_AHCI_PORT_COUNT];
 } AHCI_ADAPTER_EXTENSION, *PAHCI_ADAPTER_EXTENSION;
 
+typedef struct _ATA_REGISTER
+{
+    UCHAR CommandReg;
+    ULONG Reserved;
+} ATA_REGISTER;
+
 typedef struct _AHCI_SRB_EXTENSION
 {
+    ULONG AtaFunction;
+    ULONG Flags;
+    ATA_REGISTER Task;
+    ULONG SlotIndex;
     ULONG Reserved[4];
-} AHCI_SRB_EXTENSION;
+} AHCI_SRB_EXTENSION, *PAHCI_SRB_EXTENSION;
 
 //////////////////////////////////////////////////////////////
 //                       Declarations                       //

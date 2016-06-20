@@ -66,13 +66,13 @@ AhciPortInitialize (
     //  PxFB and PxFBU (if CAP.S64A is set to ‘1’)
     // Note: Assuming 32bit support only
     StorPortWriteRegisterUlong(adapterExtension, &PortExtension->Port->CLB, commandListPhysical.LowPart);
-    if ((adapterExtension->CAP & AHCI_Global_HBA_CAP_S64A) != 0)
+    if (IsAdapterCAPS64(adapterExtension->CAP))
     {
         StorPortWriteRegisterUlong(adapterExtension, &PortExtension->Port->CLBU, commandListPhysical.HighPart);
     }
 
     StorPortWriteRegisterUlong(adapterExtension, &PortExtension->Port->FB, receivedFISPhysical.LowPart);
-    if ((adapterExtension->CAP & AHCI_Global_HBA_CAP_S64A) != 0)
+    if (IsAdapterCAPS64(adapterExtension->CAP))
     {
         StorPortWriteRegisterUlong(adapterExtension, &PortExtension->Port->FBU, receivedFISPhysical.HighPart);
     }
@@ -355,7 +355,7 @@ AhciHwInterrupt(
 
 /**
  * @name AhciHwStartIo
- * @implemented
+ * @not_implemented
  *
  * The Storport driver calls the HwStorStartIo routine one time for each incoming I/O request.
  *
@@ -627,7 +627,7 @@ AhciHwFindAdapter (
     // 3.1.2 -- AE bit is read-write only if CAP.SAM is '0'
     ghc = StorPortReadRegisterUlong(adapterExtension, &abar->GHC);
     // AE := Highest Significant bit of GHC
-    if ((ghc & AHCI_Global_HBA_CONTROL_AE) != 0)//Hmm, controller was already in power state
+    if ((ghc & AHCI_Global_HBA_CONTROL_AE) != 0)// Hmm, controller was already in power state
     {
         // reset controller to have it in known state
         DebugPrint("\tAE Already set, Reset()\n");
@@ -672,7 +672,7 @@ AhciHwFindAdapter (
 
     for (index = 0; index < adapterExtension->PortCount; index++)
     {
-        if ((adapterExtension->PortImplemented & (0x1<<index)) != 0)
+        if ((adapterExtension->PortImplemented & (0x1 << index)) != 0)
             AhciPortInitialize(&adapterExtension->PortExtension[index]);
     }
 
@@ -740,25 +740,178 @@ DriverEntry (
 }// -- DriverEntry();
 
 /**
- * @name AhciProcessSrb
+ * @name AhciATA_CFIS
  * @not_implemented
  *
- * Prepare Srb for IO processing
+ * create ATA CFIS from Srb
  *
  * @param PortExtension
  * @param Srb
  *
  */
 VOID
-AhciProcessSrb (
+AhciATA_CFIS (
     __in PAHCI_PORT_EXTENSION PortExtension,
-    __in PSCSI_REQUEST_BLOCK Srb
+    __in PAHCI_SRB_EXTENSION SrbExtension
     )
 {
+    DebugPrint("AhciATA_CFIS()\n");
+
+}// -- AhciATA_CFIS();
+
+/**
+ * @name AhciATAPI_CFIS
+ * @not_implemented
+ *
+ * create ATAPI CFIS from Srb
+ *
+ * @param PortExtension
+ * @param Srb
+ *
+ */
+VOID
+AhciATAPI_CFIS (
+    __in PAHCI_PORT_EXTENSION PortExtension,
+    __in PAHCI_SRB_EXTENSION SrbExtension
+    )
+{
+    DebugPrint("AhciATAPI_CFIS()\n");
+
+}// -- AhciATAPI_CFIS();
+
+/**
+ * @name AhciBuild_PRDT
+ * @not_implemented
+ *
+ * Build PRDT for data transfer
+ *
+ * @param PortExtension
+ * @param Srb
+ *
+ * @return
+ * Return number of entries in PRDT.
+ */
+ULONG
+AhciBuild_PRDT (
+    __in PAHCI_PORT_EXTENSION PortExtension,
+    __in PAHCI_SRB_EXTENSION SrbExtension
+    )
+{
+    DebugPrint("AhciBuild_PRDT()\n");
+
+    return -1;
+}// -- AhciBuild_PRDT();
+
+/**
+ * @name AhciProcessSrb
+ * @implemented
+ *
+ * Prepare Srb for IO processing
+ *
+ * @param PortExtension
+ * @param Srb
+ * @param SlotIndex
+ *
+ */
+VOID
+AhciProcessSrb (
+    __in PAHCI_PORT_EXTENSION PortExtension,
+    __in PSCSI_REQUEST_BLOCK Srb,
+    __in ULONG SlotIndex
+    )
+{
+    ULONG prdtlen, sig, length;
+    PAHCI_SRB_EXTENSION SrbExtension;
+    PAHCI_COMMAND_HEADER CommandHeader;
+    PAHCI_ADAPTER_EXTENSION AdapterExtension;
+    STOR_PHYSICAL_ADDRESS CommandTablePhysicalAddress;
+
     DebugPrint("AhciProcessSrb()\n");
 
     NT_ASSERT(Srb->PathId == PortExtension->PortNumber);
 
+    SrbExtension = Srb->SrbExtension;
+    AdapterExtension = PortExtension->AdapterExtension;
+
+    NT_ASSERT(SrbExtension != NULL);
+    NT_ASSERT(SrbExtension->AtaFunction != 0);
+
+    if ((SrbExtension->AtaFunction == ATA_FUNCTION_ATA_IDENTIFY) &&
+        (SrbExtension->Task.CommandReg == IDE_COMMAND_NOT_VALID))
+    {
+        // Here we are safe to check SIG register
+        sig = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->SIG);
+        if (sig == 0x101)
+        {
+            SrbExtension->Task.CommandReg = IDE_COMMAND_IDENTIFY;
+        }
+        else
+        {
+            SrbExtension->Task.CommandReg = IDE_COMMAND_ATAPI_IDENTIFY;
+        }
+    }
+
+    NT_ASSERT(SlotIndex < AHCI_Global_Port_CAP_NCS(AdapterExtension->CAP));
+    SrbExtension->SlotIndex = SlotIndex;
+
+    // program the CFIS in the CommandTable
+    CommandHeader = &PortExtension->CommandList[SlotIndex];
+
+    if (IsAtaCommand(SrbExtension->AtaFunction))
+    {
+        AhciATA_CFIS(PortExtension, SrbExtension);
+    }
+    else if (IsAtapiCommand(SrbExtension->AtaFunction))
+    {
+        AhciATAPI_CFIS(PortExtension, SrbExtension);
+    }
+
+    prdtlen = 0;
+    if (IsDataTransferNeeded(SrbExtension))
+    {
+        prdtlen = AhciBuild_PRDT(PortExtension, SrbExtension);
+        NT_ASSERT(prdtlen != -1);
+    }
+
+    // Program the command header
+    CommandHeader->DI.PRDTL = prdtlen; // number of entries in PRD table
+    CommandHeader->DI.CFL = 5;
+    CommandHeader->DI.W = (SrbExtension->Flags & ATA_FLAGS_DATA_OUT) ? 1 : 0;
+    CommandHeader->DI.P = 0;    // ATA Specifications says so
+    CommandHeader->DI.PMP = 0;  // Port Multiplier
+
+    // Reset -- Manual Configuation
+    CommandHeader->DI.R = 0;
+    CommandHeader->DI.B = 0;
+    CommandHeader->DI.C = 0;
+
+    CommandHeader->PRDBC = 0;
+
+    CommandHeader->Reserved[0] = 0;
+    CommandHeader->Reserved[1] = 0;
+    CommandHeader->Reserved[2] = 0;
+    CommandHeader->Reserved[3] = 0;
+
+    // set CommandHeader CTBA
+    // I am really not sure if SrbExtension is 128 byte aligned or not
+    // Command FIS will not work if it is not so.
+    CommandTablePhysicalAddress = StorPortGetPhysicalAddress(AdapterExtension,
+                                                             NULL,
+                                                             SrbExtension,
+                                                             &length);
+
+    // command table alignment
+    NT_ASSERT((CommandTablePhysicalAddress.LowPart % 128) == 0);
+
+    CommandHeader->CTBA0 = CommandTablePhysicalAddress.LowPart;
+
+    if (IsAdapterCAPS64(AdapterExtension->CAP))
+    {
+        CommandHeader->CTBA_U0 = CommandTablePhysicalAddress.HighPart;
+    }
+
+    // mark this slot
+    PortExtension->OccupiedSlots |= SlotIndex;
     return;
 }// -- AhciProcessSrb();
 
@@ -803,7 +956,7 @@ AhciProcessIO (
     STOR_LOCK_HANDLE lockhandle;
     PSCSI_REQUEST_BLOCK tmpSrb;
     PAHCI_PORT_EXTENSION PortExtension;
-    ULONG commandSlotMask, occupiedSlots, slotIndex;
+    ULONG commandSlotMask, occupiedSlots, slotIndex, NCS;
 
     DebugPrint("AhciProcessIO()\n");
     DebugPrint("\tPathId: %d\n", PathId);
@@ -824,13 +977,14 @@ AhciProcessIO (
     StorPortAcquireSpinLock(AdapterExtension, InterruptLock, NULL, &lockhandle);
 
     occupiedSlots = PortExtension->OccupiedSlots; // Busy command slots for given port
-    commandSlotMask = (1 << AHCI_Global_Port_CAP_NCS(AdapterExtension->CAP)) - 1; // available slots mask
+    NCS = AHCI_Global_Port_CAP_NCS(AdapterExtension->CAP);
+    commandSlotMask = (1 << NCS) - 1; // available slots mask
 
     commandSlotMask = (commandSlotMask & ~occupiedSlots);
     if(commandSlotMask != 0)
     {
         // iterate over HBA port slots
-        for (slotIndex = 0; slotIndex <= AHCI_Global_Port_CAP_NCS(AdapterExtension->CAP); slotIndex++)
+        for (slotIndex = 0; slotIndex < NCS; slotIndex++)
         {
             // find first free slot
             if ((commandSlotMask & (1 << slotIndex)) != 0)
@@ -839,7 +993,7 @@ AhciProcessIO (
                 if (tmpSrb != NULL)
                 {
                     NT_ASSERT(Srb->PathId == PathId);
-                    AhciProcessSrb(PortExtension, tmpSrb);
+                    AhciProcessSrb(PortExtension, tmpSrb, slotIndex);
                 }
                 else
                 {
@@ -887,14 +1041,21 @@ DeviceInquiryRequest (
 {
     PVOID DataBuffer;
     ULONG DataBufferLength;
+    PAHCI_SRB_EXTENSION SrbExtension;
 
     DebugPrint("DeviceInquiryRequest()\n");
+
+    SrbExtension = Srb->SrbExtension;
 
     // 3.6.1
     // If the EVPD bit is set to zero, the device server shall return the standard INQUIRY data
     if (Cdb->CDB6INQUIRY3.EnableVitalProductData == 0)
     {
         DebugPrint("\tEVPD Inquired\n");
+        NT_ASSERT(SrbExtension != NULL);
+
+        SrbExtension->AtaFunction = ATA_FUNCTION_ATA_IDENTIFY;
+        SrbExtension->Task.CommandReg = IDE_COMMAND_NOT_VALID;
     }
     else
     {
