@@ -212,7 +212,7 @@ TcpIpCreate(
     IPPROTO Protocol;
 //	ADDRESS_FILE *AddressFile;
 	
-	ULONG *temp;
+//	ULONG *temp;
 	
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
 	
@@ -265,23 +265,18 @@ TcpIpCreate(
             }
 
             /* All good. */
-			temp = (ULONG*)Address;
+/*			temp = (ULONG*)Address;
 			DPRINT1("\nPTA_IP_ADDRESS dump before\n %08x %08x %08x %08x\n %08x %08x %08x %08x\n",
 				temp[7], temp[6], temp[5], temp[4],
-				temp[3], temp[2], temp[1], temp[0]);
+				temp[3], temp[2], temp[1], temp[0]);*/
 			Status = TcpIpCreateAddress(Irp, &Address->Address[0].Address[0], Protocol);
 			if (Status != STATUS_SUCCESS)
 			{
 				goto Quickie;
 			}
-			
-/*			AddressFile = IrpSp->FileObject->FsContext;
-			tcp_bind(AddressFile->lwip_tcp_pcb,
-				(ip_addr_t*)&AddressFile->Address.in_addr,
-				AddressFile->Address.sin_port);*/
-			DPRINT1("\nPTA_IP_ADDRESS dump after\n %08x %08x %08x %08x\n %08x %08x %08x %08x\n",
+/*			DPRINT1("\nPTA_IP_ADDRESS dump after\n %08x %08x %08x %08x\n %08x %08x %08x %08x\n",
 				temp[7], temp[6], temp[5], temp[4],
-				temp[3], temp[2], temp[1], temp[0]);
+				temp[3], temp[2], temp[1], temp[0]);*/
             break;
         }
 
@@ -307,19 +302,19 @@ TcpIpCreate(
 				goto Quickie;
 			}
 			
-			temp = (ULONG*)Protocol;
+/*			temp = (ULONG*)Protocol;
 			DPRINT1("\n Protocol: %08x\n", temp);
 			
-			temp = (ULONG*)Address;
+			temp = (ULONG*)Address;*/
 			
 			/* All good. */
-			DPRINT1("\n PTA_IP_ADDRESS dump before\n  %08x %08x %08x %08x\n  %08x %08x %08x %08x\n",
+/*			DPRINT1("\n PTA_IP_ADDRESS dump before\n  %08x %08x %08x %08x\n  %08x %08x %08x %08x\n",
 				temp[7], temp[6], temp[5], temp[4],
-				temp[3], temp[2], temp[1], temp[0]);
+				temp[3], temp[2], temp[1], temp[0]);*/
 			Status = TcpIpCreateContext(Irp, &Address->Address[0].Address[0], Protocol);
-			DPRINT1("\n PTA_IP_ADDRESS dump after\n  %08x %08x %08x %08x\n  %08x %08x %08x %08x\n",
+/*			DPRINT1("\n PTA_IP_ADDRESS dump after\n  %08x %08x %08x %08x\n  %08x %08x %08x %08x\n",
 				temp[7], temp[6], temp[5], temp[4],
-				temp[3], temp[2], temp[1], temp[0]);
+				temp[3], temp[2], temp[1], temp[0]);*/
             break;
 		}
 
@@ -386,7 +381,7 @@ Quickie:
 
 	IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 	
-	return Irp->IoStatus.Status;
+	return Status;
 }
 
 static

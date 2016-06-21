@@ -4,6 +4,7 @@
 typedef struct _ADDRESS_FILE {
     LIST_ENTRY ListEntry;
     LONG RefCount;
+	LONG ContextCount;
     IPPROTO Protocol;
     TDI_ADDRESS_IP Address;
     TCPIP_INSTANCE Instance;
@@ -18,13 +19,11 @@ typedef struct _ADDRESS_FILE {
 } ADDRESS_FILE, *PADDRESS_FILE;
 
 typedef struct _TCP_CONTEXT {
-	ADDRESS_FILE *AddressFile;
 	LIST_ENTRY ListEntry;
+	PADDRESS_FILE AddressFile;
 	IPPROTO Protocol;
 	TDI_ADDRESS_IP RequestAddress;
-	LONG RefCount;
-	KSPIN_LOCK Lock;
-	KIRQL OldIrql;
+	PIRP PendingIrp;
 	struct tcp_pcb* lwip_tcp_pcb;
 } TCP_CONTEXT, *PTCP_CONTEXT;
 
