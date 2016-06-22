@@ -150,6 +150,8 @@ static
 PNTFS_ATTR_RECORD
 InternalGetNextAttribute(PFIND_ATTR_CONTXT Context)
 {
+    PNTFS_ATTR_RECORD NextAttribute;
+
     if (Context->CurrAttr == (PVOID)-1)
     {
         return NULL;
@@ -165,7 +167,10 @@ InternalGetNextAttribute(PFIND_ATTR_CONTXT Context)
             return NULL;
         }
 
-        Context->CurrAttr = (PNTFS_ATTR_RECORD)((ULONG_PTR)Context->CurrAttr + Context->CurrAttr->Length);
+        NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Context->CurrAttr + Context->CurrAttr->Length);
+        Context->Offset += ((ULONG_PTR)NextAttribute - (ULONG_PTR)Context->CurrAttr);
+        Context->CurrAttr = NextAttribute;
+
         if (Context->CurrAttr < Context->LastAttr &&
             Context->CurrAttr->Type != AttributeEnd)
         {
@@ -186,7 +191,9 @@ InternalGetNextAttribute(PFIND_ATTR_CONTXT Context)
     }
     else if (Context->CurrAttr->Length != 0)
     {
-        Context->CurrAttr = (PNTFS_ATTR_RECORD)((ULONG_PTR)Context->CurrAttr + Context->CurrAttr->Length);
+        NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Context->CurrAttr + Context->CurrAttr->Length);
+        Context->Offset += ((ULONG_PTR)NextAttribute - (ULONG_PTR)Context->CurrAttr);
+        Context->CurrAttr = NextAttribute;
     }
     else
     {
@@ -223,6 +230,7 @@ FindFirstAttribute(PFIND_ATTR_CONTXT Context,
     Context->LastAttr = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + FileRecord->BytesInUse);
     Context->NonResidentStart = NULL;
     Context->NonResidentEnd = NULL;
+    Context->Offset = FileRecord->AttributeOffset;
 
     if (Context->FirstAttr->Type == AttributeEnd)
     {
@@ -246,6 +254,7 @@ FindFirstAttribute(PFIND_ATTR_CONTXT Context,
     else
     {
         *Attribute = Context->CurrAttr;
+        Context->Offset = (UCHAR*)Context->CurrAttr - (UCHAR*)FileRecord;
     }
 
     return STATUS_SUCCESS;
@@ -307,7 +316,8 @@ NtfsDumpFileNameAttribute(PNTFS_ATTR_RECORD Attribute)
 
     FileNameAttr = (PFILENAME_ATTRIBUTE)((ULONG_PTR)Attribute + Attribute->Resident.ValueOffset);
     DbgPrint(" (%x) '%.*S' ", FileNameAttr->NameType, FileNameAttr->NameLength, FileNameAttr->Name);
-    DbgPrint(" '%x' ", FileNameAttr->FileAttributes);
+    DbgPrint(" '%x' \n", FileNameAttr->FileAttributes);
+    DbgPrint(" AllocatedSize: %I64u\nDataSize: %I64u\n", FileNameAttr->AllocatedSize, FileNameAttr->DataSize);
 }
 
 
@@ -481,8 +491,8 @@ NtfsDumpAttribute(PDEVICE_EXTENSION Vcb,
         {
             FindRun(Attribute,0,&lcn, &runcount);
 
-            DbgPrint("  AllocatedSize %I64u  DataSize %I64u\n",
-                     Attribute->NonResident.AllocatedSize, Attribute->NonResident.DataSize);
+            DbgPrint("  AllocatedSize %I64u  DataSize %I64u InitilizedSize %I64u\n",
+                     Attribute->NonResident.AllocatedSize, Attribute->NonResident.DataSize, Attribute->NonResident.InitializedSize);
             DbgPrint("  logical clusters: %I64u - %I64u\n",
                      lcn, lcn + runcount - 1);
         }

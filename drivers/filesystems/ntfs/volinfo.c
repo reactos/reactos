@@ -62,7 +62,7 @@ NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt)
         return 0;
     }
 
-    Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DataContext);
+    Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DataContext, NULL);
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(BitmapRecord, TAG_NTFS);

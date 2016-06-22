@@ -95,7 +95,7 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
     }
 
 
-    Status = FindAttribute(DeviceExt, FileRecord, AttributeData, Fcb->Stream, wcslen(Fcb->Stream), &DataContext);
+    Status = FindAttribute(DeviceExt, FileRecord, AttributeData, Fcb->Stream, wcslen(Fcb->Stream), &DataContext, NULL);
     if (!NT_SUCCESS(Status))
     {
         NTSTATUS BrowseStatus;
@@ -306,6 +306,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
     PNTFS_FCB Fcb;
     PFILE_RECORD_HEADER FileRecord;
     PNTFS_ATTR_CONTEXT DataContext;
+    ULONG AttributeOffset;
     ULONGLONG StreamSize;
 
     DPRINT("NtfsWriteFile(%p, %p, %p, %u, %u, %x, %p)\n", DeviceExt, FileObject, Buffer, Length, WriteOffset, IrpFlags, LengthWritten);
@@ -358,9 +359,10 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
 
     DPRINT("Found record for %wS\n", Fcb->ObjectName);
 
-    // Find the attribute (in the NTFS sense of the word) with the data stream for our file
+    // Find the attribute with the data stream for our file
     DPRINT("Finding Data Attribute...\n");
-    Status = FindAttribute(DeviceExt, FileRecord, AttributeData, Fcb->Stream, wcslen(Fcb->Stream), &DataContext);
+    Status = FindAttribute(DeviceExt, FileRecord, AttributeData, Fcb->Stream, wcslen(Fcb->Stream), &DataContext,
+                           &AttributeOffset);
 
     // Did we fail to find the attribute?
     if (!NT_SUCCESS(Status))
@@ -402,13 +404,39 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
     // Are we trying to write beyond the end of the stream?
     if (WriteOffset + Length > StreamSize)
     {
-        // TODO: allocate additional clusters as needed and expand stream
-        DPRINT1("WriteOffset: %lu\tLength: %lu\tStreamSize: %I64u\n", WriteOffset, Length, StreamSize);
-        DPRINT1("TODO: Stream embiggening (appending files) is not yet supported!\n");
-        ReleaseAttributeContext(DataContext);
-        ExFreePoolWithTag(FileRecord, TAG_NTFS);
-        *LengthWritten = 0;             // We didn't write anything
-        return STATUS_ACCESS_DENIED;    // temporarily; we don't change file sizes yet
+        // is increasing the stream size allowed?
+        if (!(Fcb->Flags & FCB_IS_VOLUME) &&
+            !(IrpFlags & IRP_PAGING_IO))
+        {
+            LARGE_INTEGER DataSize;
+            ULONGLONG AllocationSize;
+
+            DataSize.QuadPart = WriteOffset + Length;
+
+            AllocationSize = ROUND_UP(DataSize.QuadPart, Fcb->Vcb->NtfsInfo.BytesPerCluster);
+
+            // set the attribute data length
+            Status = SetAttributeDataLength(FileObject, Fcb, DataContext, AttributeOffset, FileRecord, DeviceExt, &DataSize);
+            
+            if (!NT_SUCCESS(Status))
+            {
+                ReleaseAttributeContext(DataContext);
+                ExFreePoolWithTag(FileRecord, TAG_NTFS);
+                *LengthWritten = 0;
+                return Status;
+            }
+
+            // now we need to update this file's size in every directory index entry that references it
+            // (saved for a later commit)
+        }
+        else
+        {
+            // TODO - just fail for now
+            ReleaseAttributeContext(DataContext);
+            ExFreePoolWithTag(FileRecord, TAG_NTFS);
+            *LengthWritten = 0;
+            return STATUS_ACCESS_DENIED;
+        }
     }
 
     DPRINT("Length: %lu\tWriteOffset: %lu\tStreamSize: %I64u\n", Length, WriteOffset, StreamSize);

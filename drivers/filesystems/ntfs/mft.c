@@ -81,13 +81,24 @@ ReleaseAttributeContext(PNTFS_ATTR_CONTEXT Context)
 }
 
 
+/**
+* @name FindAttribute
+* @implemented
+* 
+* Searches a file record for an attribute matching the given type and name.
+*
+* @param Offset
+* Optional pointer to a ULONG that will receive the offset of the found attribute
+* from the beginning of the record. Can be set to NULL.
+*/
 NTSTATUS
 FindAttribute(PDEVICE_EXTENSION Vcb,
               PFILE_RECORD_HEADER MftRecord,
               ULONG Type,
               PCWSTR Name,
               ULONG NameLength,
-              PNTFS_ATTR_CONTEXT * AttrCtx)
+              PNTFS_ATTR_CONTEXT * AttrCtx,
+              PULONG Offset)
 {
     BOOLEAN Found;
     NTSTATUS Status;
@@ -123,6 +134,10 @@ FindAttribute(PDEVICE_EXTENSION Vcb,
                 /* Found it, fill up the context and return. */
                 DPRINT("Found context\n");
                 *AttrCtx = PrepareAttributeContext(Attribute);
+
+                if (Offset != NULL)
+                    *Offset = Context.Offset;
+
                 FindCloseAttribute(&Context);
                 return STATUS_SUCCESS;
             }
@@ -155,6 +170,61 @@ AttributeDataLength(PNTFS_ATTR_RECORD AttrRecord)
         return AttrRecord->Resident.ValueLength;
 }
 
+
+NTSTATUS
+SetAttributeDataLength(PFILE_OBJECT FileObject,
+                       PNTFS_FCB Fcb,
+                       PNTFS_ATTR_CONTEXT AttrContext,
+                       ULONG AttrOffset,
+                       PFILE_RECORD_HEADER FileRecord,
+                       PDEVICE_EXTENSION DeviceExt,
+                       PLARGE_INTEGER DataSize)
+{
+    if (AttrContext->Record.IsNonResident)
+    {
+        // do we need to increase the allocation size?
+        if (AttrContext->Record.NonResident.AllocatedSize < DataSize->QuadPart)
+        {            
+            DPRINT1("FixMe: Increasing allocation size is unimplemented!\n");
+            return STATUS_NOT_IMPLEMENTED;
+        }
+
+        // TODO: is the file compressed, encrypted, or sparse?
+
+        // NOTE: we need to have acquired the main resource exclusively, as well as(?) the PagingIoResource
+
+        // TODO: update the allocated size on-disk
+        DPRINT("Allocated Size: %I64u\n", AttrContext->Record.NonResident.AllocatedSize);
+
+        AttrContext->Record.NonResident.DataSize = DataSize->QuadPart;
+        AttrContext->Record.NonResident.InitializedSize = DataSize->QuadPart;
+
+        Fcb->RFCB.FileSize = *DataSize;
+        Fcb->RFCB.ValidDataLength = *DataSize;
+
+        DPRINT("Data Size: %I64u\n", Fcb->RFCB.FileSize.QuadPart);
+
+        //NtfsDumpFileAttributes(Fcb->Vcb, FileRecord);
+
+        // copy the attribute back into the FileRecord
+        RtlCopyMemory((PCHAR)FileRecord + AttrOffset, &AttrContext->Record, AttrContext->Record.Length);
+
+        //NtfsDumpFileAttributes(Fcb->Vcb, FileRecord);
+
+        // write the updated file record back to disk
+        UpdateFileRecord(Fcb->Vcb, Fcb->MFTIndex, FileRecord);
+
+        CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
+    }
+    else
+    {
+        // we can't yet handle resident attributes
+        DPRINT1("FixMe: Can't handle increasing length of resident attribute\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    return STATUS_SUCCESS;
+}
 
 ULONG
 ReadAttribute(PDEVICE_EXTENSION Vcb,
@@ -615,8 +685,39 @@ ReadFileRecord(PDEVICE_EXTENSION Vcb,
     return FixupUpdateSequenceArray(Vcb, &file->Ntfs);
 }
 
+/**
+* UpdateFileRecord
+* @implemented
+* Writes a file record to the master file table, at a given index.
+*/
+NTSTATUS
+UpdateFileRecord(PDEVICE_EXTENSION Vcb,
+                 ULONGLONG index,
+                 PFILE_RECORD_HEADER file)
+{
+    ULONG BytesWritten;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-NTSTATUS 
+    DPRINT("UpdateFileRecord(%p, %I64x, %p)\n", Vcb, index, file);
+
+    // Add the fixup array to prepare the data for writing to disk
+    AddFixupArray(Vcb, file);
+
+    // write the file record to the master file table
+    Status = WriteAttribute(Vcb, Vcb->MFTContext, index * Vcb->NtfsInfo.BytesPerFileRecord, (const PUCHAR)file, Vcb->NtfsInfo.BytesPerFileRecord, &BytesWritten);
+
+    // TODO: Update MFT mirror
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("UpdateFileRecord failed: %I64u written, %u expected\n", BytesWritten, Vcb->NtfsInfo.BytesPerFileRecord);
+    }
+
+    return Status;
+}
+
+
+NTSTATUS
 FixupUpdateSequenceArray(PDEVICE_EXTENSION Vcb,
                          PNTFS_RECORD_HEADER Record)
 {
@@ -629,6 +730,8 @@ FixupUpdateSequenceArray(PDEVICE_EXTENSION Vcb,
     USANumber = *(USA++);
     USACount = Record->UsaCount - 1; /* Exclude the USA Number. */
     Block = (USHORT*)((PCHAR)Record + Vcb->NtfsInfo.BytesPerSector - 2);
+
+    DPRINT("FixupUpdateSequenceArray(%p, %p)\nUSANumber: %u\tUSACount: %u\n", Vcb, Record, USANumber, USACount);
 
     while (USACount)
     {
@@ -645,6 +748,36 @@ FixupUpdateSequenceArray(PDEVICE_EXTENSION Vcb,
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+AddFixupArray(PDEVICE_EXTENSION Vcb,
+              PFILE_RECORD_HEADER Record)
+{
+    USHORT *pShortToFixUp;
+    unsigned int ArrayEntryCount = Record->BytesAllocated / Vcb->NtfsInfo.BytesPerSector;
+    unsigned int Offset = Vcb->NtfsInfo.BytesPerSector - 2;
+    int i;
+
+    PFIXUP_ARRAY fixupArray = (PFIXUP_ARRAY)((UCHAR*)Record + Record->Ntfs.UsaOffset);
+
+    DPRINT("AddFixupArray(%p, %p)\n fixupArray->USN: %u, ArrayEntryCount: %u\n", Vcb, Record, fixupArray->USN, ArrayEntryCount);
+
+    if (Record->BytesAllocated % Vcb->NtfsInfo.BytesPerSector != 0)
+        ArrayEntryCount++;
+
+    fixupArray->USN++;
+
+    for (i = 0; i < ArrayEntryCount; i++)
+    {
+        DPRINT("USN: %u\tOffset: %u\n", fixupArray->USN, Offset);
+
+        pShortToFixUp = (USHORT*)((UCHAR*)Record + Offset);
+        fixupArray->Array[i] = *pShortToFixUp;
+        *pShortToFixUp = fixupArray->USN;
+        Offset += Vcb->NtfsInfo.BytesPerSector;
+    }
+
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 ReadLCN(PDEVICE_EXTENSION Vcb,
@@ -783,7 +916,7 @@ BrowseIndexEntries(PDEVICE_EXTENSION Vcb,
         return STATUS_OBJECT_PATH_NOT_FOUND; 
     }
 
-    Status = FindAttribute(Vcb, MftRecord, AttributeIndexAllocation, L"$I30", 4, &IndexAllocationCtx);
+    Status = FindAttribute(Vcb, MftRecord, AttributeIndexAllocation, L"$I30", 4, &IndexAllocationCtx, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("Corrupted filesystem!\n");
@@ -853,7 +986,7 @@ NtfsFindMftRecord(PDEVICE_EXTENSION Vcb,
     }
 
     ASSERT(MftRecord->Ntfs.Type == NRH_FILE_TYPE);
-    Status = FindAttribute(Vcb, MftRecord, AttributeIndexRoot, L"$I30", 4, &IndexRootCtx);
+    Status = FindAttribute(Vcb, MftRecord, AttributeIndexRoot, L"$I30", 4, &IndexRootCtx, NULL);
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(MftRecord, TAG_NTFS);
