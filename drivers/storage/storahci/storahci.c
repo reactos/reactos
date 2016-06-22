@@ -259,7 +259,7 @@ AhciInterruptHandler (
         // software should perform the appropriate error recovery actions based on whether
         // non-queued commands were being issued or native command queuing commands were being issued.
 
-        DebugPrint("\tFata Error: %x\n", PxIS.Status);
+        DebugPrint("\tFatal Error: %x\n", PxIS.Status);
     }
 
     // Normal Command Completion
@@ -781,7 +781,7 @@ AhciATAPI_CFIS (
 
 /**
  * @name AhciBuild_PRDT
- * @not_implemented
+ * @implemented
  *
  * Build PRDT for data transfer
  *
@@ -797,9 +797,32 @@ AhciBuild_PRDT (
     __in PAHCI_SRB_EXTENSION SrbExtension
     )
 {
+    ULONG index;
+    PAHCI_COMMAND_TABLE cmdTable;
+    PLOCAL_SCATTER_GATHER_LIST sgl;
+    PAHCI_ADAPTER_EXTENSION AdapterExtension;
+
     DebugPrint("AhciBuild_PRDT()\n");
 
-    return -1;
+    sgl = &SrbExtension->Sgl;
+    cmdTable = (PAHCI_COMMAND_TABLE)SrbExtension;
+    AdapterExtension = PortExtension->AdapterExtension;
+
+    NT_ASSERT(sgl != NULL);
+    NT_ASSERT(sgl->NumberOfElements < MAXIMUM_AHCI_PRDT_ENTRIES);
+
+    for (index = 0; index < sgl->NumberOfElements; index++)
+    {
+        NT_ASSERT(sgl->List[index].Length <= MAXIMUM_TRANSFER_LENGTH);
+
+        cmdTable->PRDT[index].DBA = sgl->List[index].PhysicalAddress.LowPart;
+        if (IsAdapterCAPS64(AdapterExtension->CAP))
+        {
+            cmdTable->PRDT[index].DBAU = sgl->List[index].PhysicalAddress.HighPart;
+        }
+    }
+
+    return sgl->NumberOfElements;
 }// -- AhciBuild_PRDT();
 
 /**
@@ -830,24 +853,24 @@ AhciProcessSrb (
 
     NT_ASSERT(Srb->PathId == PortExtension->PortNumber);
 
-    SrbExtension = Srb->SrbExtension;
+    SrbExtension = GetSrbExtension(Srb);
     AdapterExtension = PortExtension->AdapterExtension;
 
     NT_ASSERT(SrbExtension != NULL);
     NT_ASSERT(SrbExtension->AtaFunction != 0);
 
     if ((SrbExtension->AtaFunction == ATA_FUNCTION_ATA_IDENTIFY) &&
-        (SrbExtension->Task.CommandReg == IDE_COMMAND_NOT_VALID))
+        (SrbExtension->CommandReg == IDE_COMMAND_NOT_VALID))
     {
         // Here we are safe to check SIG register
         sig = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->SIG);
         if (sig == 0x101)
         {
-            SrbExtension->Task.CommandReg = IDE_COMMAND_IDENTIFY;
+            SrbExtension->CommandReg = IDE_COMMAND_IDENTIFY;
         }
         else
         {
-            SrbExtension->Task.CommandReg = IDE_COMMAND_ATAPI_IDENTIFY;
+            SrbExtension->CommandReg = IDE_COMMAND_ATAPI_IDENTIFY;
         }
     }
 
@@ -992,7 +1015,7 @@ AhciProcessIO (
                 tmpSrb = RemoveQueue(&PortExtension->SrbQueue);
                 if (tmpSrb != NULL)
                 {
-                    NT_ASSERT(Srb->PathId == PathId);
+                    NT_ASSERT(tmpSrb->PathId == PathId);
                     AhciProcessSrb(PortExtension, tmpSrb, slotIndex);
                 }
                 else
@@ -1045,7 +1068,7 @@ DeviceInquiryRequest (
 
     DebugPrint("DeviceInquiryRequest()\n");
 
-    SrbExtension = Srb->SrbExtension;
+    SrbExtension = GetSrbExtension(Srb);
 
     // 3.6.1
     // If the EVPD bit is set to zero, the device server shall return the standard INQUIRY data
@@ -1055,7 +1078,7 @@ DeviceInquiryRequest (
         NT_ASSERT(SrbExtension != NULL);
 
         SrbExtension->AtaFunction = ATA_FUNCTION_ATA_IDENTIFY;
-        SrbExtension->Task.CommandReg = IDE_COMMAND_NOT_VALID;
+        SrbExtension->CommandReg = IDE_COMMAND_NOT_VALID;
     }
     else
     {
@@ -1211,7 +1234,7 @@ AddQueue (
     NT_ASSERT(Queue->Head < MAXIMUM_QUEUE_BUFFER_SIZE);
     NT_ASSERT(Queue->Tail < MAXIMUM_QUEUE_BUFFER_SIZE);
 
-    if (Queue->Head == ((Queue->Tail + 1) % MAXIMUM_QUEUE_BUFFER_SIZE))
+    if (Queue->Tail == ((Queue->Head + 1) % MAXIMUM_QUEUE_BUFFER_SIZE))
         return FALSE;
 
     Queue->Buffer[Queue->Head++] = Srb;
@@ -1251,3 +1274,34 @@ RemoveQueue (
 
     return Srb;
 }// -- RemoveQueue();
+
+/**
+ * @name GetSrbExtension
+ * @implemented
+ *
+ * GetSrbExtension from Srb make sure It is properly aligned
+ *
+ * @param Srb
+ *
+ * @return
+ * return SrbExtension
+ *
+ */
+__inline
+PAHCI_SRB_EXTENSION
+GetSrbExtension (
+    __in PSCSI_REQUEST_BLOCK Srb
+    )
+{
+    ULONG Offset;
+    ULONG_PTR SrbExtension;
+
+    SrbExtension = Srb->SrbExtension;
+    Offset = SrbExtension % 128;
+
+    // CommandTable should be 128 byte aligned
+    if (Offset != 0)
+        Offset = 128 - Offset;
+
+    return (PAHCI_SRB_EXTENSION)(SrbExtension + Offset);
+}// -- PAHCI_SRB_EXTENSION();

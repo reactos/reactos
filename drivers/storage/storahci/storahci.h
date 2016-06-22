@@ -12,6 +12,7 @@
 #define DEBUG 1
 
 #define MAXIMUM_AHCI_PORT_COUNT             25
+#define MAXIMUM_AHCI_PRDT_ENTRIES           32
 #define MAXIMUM_QUEUE_BUFFER_SIZE           255
 #define MAXIMUM_TRANSFER_LENGTH             (128*1024) // 128 KB
 
@@ -202,6 +203,28 @@ typedef union _AHCI_COMMAND_HEADER_DESCRIPTION
     ULONG Status;
 } AHCI_COMMAND_HEADER_DESCRIPTION;
 
+typedef struct _AHCI_PRDT
+{
+    ULONG DBA;
+    ULONG DBAU;
+    ULONG RSV0;
+
+    ULONG DBC : 22;
+    ULONG RSV1 : 9;
+    ULONG I : 1;
+} AHCI_PRDT, *PAHCI_PRDT;
+
+// 4.2.3 Command Table
+typedef struct _AHCI_COMMAND_TABLE
+{
+    // (16 * 32) + 64 + 16 + 48 = 648
+    // 128 byte aligned :D
+    UCHAR CFIS[64];
+    UCHAR ACMD[16];
+    UCHAR RSV0[48];
+    AHCI_PRDT PRDT[MAXIMUM_AHCI_PRDT_ENTRIES];
+} AHCI_COMMAND_TABLE, *PAHCI_COMMAND_TABLE;
+
 // 4.2.2 Command Header
 typedef struct _AHCI_COMMAND_HEADER
 {
@@ -318,19 +341,21 @@ typedef struct _AHCI_ADAPTER_EXTENSION
     AHCI_PORT_EXTENSION PortExtension[MAXIMUM_AHCI_PORT_COUNT];
 } AHCI_ADAPTER_EXTENSION, *PAHCI_ADAPTER_EXTENSION;
 
-typedef struct _ATA_REGISTER
+typedef struct _LOCAL_SCATTER_GATHER_LIST
 {
-    UCHAR CommandReg;
-    ULONG Reserved;
-} ATA_REGISTER;
+    ULONG                       NumberOfElements;
+    ULONG_PTR                   Reserved;
+    STOR_SCATTER_GATHER_ELEMENT List[MAXIMUM_AHCI_PRDT_ENTRIES];
+} LOCAL_SCATTER_GATHER_LIST, *PLOCAL_SCATTER_GATHER_LIST;
 
 typedef struct _AHCI_SRB_EXTENSION
 {
+    AHCI_COMMAND_TABLE CommandTable;
     ULONG AtaFunction;
     ULONG Flags;
-    ATA_REGISTER Task;
+    ULONG CommandReg;
     ULONG SlotIndex;
-    ULONG Reserved[4];
+    LOCAL_SCATTER_GATHER_LIST Sgl;
 } AHCI_SRB_EXTENSION, *PAHCI_SRB_EXTENSION;
 
 //////////////////////////////////////////////////////////////
@@ -374,4 +399,10 @@ __inline
 PVOID
 RemoveQueue (
     __inout PAHCI_QUEUE Queue
+    );
+
+__inline
+PAHCI_SRB_EXTENSION
+GetSrbExtension(
+    __in PSCSI_REQUEST_BLOCK Srb
     );

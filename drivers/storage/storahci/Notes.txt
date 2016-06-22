@@ -82,9 +82,9 @@ AhciATAPI_CFIS
 
 AhciBuild_PRDT
     Flags
-        NOT_IMPLEMENTED
+        IMPLEMENTED
     Comment
-        Need to configure command table according to Srb function
+        NONE
 
 AhciProcessSrb
     Flags
