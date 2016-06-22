@@ -568,7 +568,7 @@ NtfsDirFindFile(PNTFS_VCB Vcb,
     }
     else if (Colon != 0)
     {
-        Status = FindAttribute(Vcb, FileRecord, AttributeData, Colon, wcslen(Colon), &DataContext);
+        Status = FindAttribute(Vcb, FileRecord, AttributeData, Colon, wcslen(Colon), &DataContext, NULL);
         if (!NT_SUCCESS(Status))
         {
             return STATUS_OBJECT_NAME_NOT_FOUND;
@@ -741,7 +741,7 @@ NtfsReadFCBAttribute(PNTFS_VCB Vcb,
         return Status;
     }
 
-    Status = FindAttribute(Vcb, FileRecord, Type, Name, NameLength, &AttrCtxt);
+    Status = FindAttribute(Vcb, FileRecord, Type, Name, NameLength, &AttrCtxt, NULL);
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(FileRecord, TAG_NTFS);

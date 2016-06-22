@@ -483,7 +483,14 @@ typedef struct _FIND_ATTR_CONTXT
     PNTFS_ATTR_RECORD LastAttr;
     PNTFS_ATTR_RECORD NonResidentStart;
     PNTFS_ATTR_RECORD NonResidentEnd;
+    ULONG Offset;
 } FIND_ATTR_CONTXT, *PFIND_ATTR_CONTXT;
+
+typedef struct
+{
+    USHORT USN;
+    USHORT Array[];
+} FIXUP_ARRAY, *PFIXUP_ARRAY;
 
 extern PNTFS_GLOBAL_DATA NtfsGlobalData;
 
@@ -555,7 +562,7 @@ NtfsWriteDisk(IN PDEVICE_OBJECT DeviceObject,
               IN LONGLONG StartingOffset,
               IN ULONG Length,
               IN ULONG SectorSize,
-              IN PUCHAR Buffer);
+              IN const PUCHAR Buffer);
 
 NTSTATUS
 NtfsReadSectors(IN PDEVICE_OBJECT DeviceObject,
@@ -759,6 +766,15 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
 ULONGLONG
 AttributeDataLength(PNTFS_ATTR_RECORD AttrRecord);
 
+NTSTATUS
+SetAttributeDataLength(PFILE_OBJECT FileObject,
+                       PNTFS_FCB Fcb,
+                       PNTFS_ATTR_CONTEXT AttrContext,
+                       ULONG AttrOffset,
+                       PFILE_RECORD_HEADER FileRecord,
+                       PDEVICE_EXTENSION DeviceExt,
+                       PLARGE_INTEGER DataSize);
+
 ULONG
 AttributeAllocatedLength(PNTFS_ATTR_RECORD AttrRecord);
 
@@ -768,12 +784,18 @@ ReadFileRecord(PDEVICE_EXTENSION Vcb,
                PFILE_RECORD_HEADER file);
 
 NTSTATUS
+UpdateFileRecord(PDEVICE_EXTENSION Vcb,
+                 ULONGLONG index,
+                 PFILE_RECORD_HEADER file);
+
+NTSTATUS
 FindAttribute(PDEVICE_EXTENSION Vcb,
               PFILE_RECORD_HEADER MftRecord,
               ULONG Type,
               PCWSTR Name,
               ULONG NameLength,
-              PNTFS_ATTR_CONTEXT * AttrCtx);
+              PNTFS_ATTR_CONTEXT * AttrCtx,
+              PULONG Offset);
 
 VOID
 ReadVCN(PDEVICE_EXTENSION Vcb,
@@ -786,6 +808,10 @@ ReadVCN(PDEVICE_EXTENSION Vcb,
 NTSTATUS 
 FixupUpdateSequenceArray(PDEVICE_EXTENSION Vcb,
                          PNTFS_RECORD_HEADER Record);
+
+NTSTATUS
+AddFixupArray(PDEVICE_EXTENSION Vcb,
+    PFILE_RECORD_HEADER Record);
 
 NTSTATUS
 ReadLCN(PDEVICE_EXTENSION Vcb,

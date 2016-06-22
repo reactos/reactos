@@ -47,7 +47,7 @@ NtfsGetFileSize(PDEVICE_EXTENSION DeviceExt,
     NTSTATUS Status;
     PNTFS_ATTR_CONTEXT DataContext;
 
-    Status = FindAttribute(DeviceExt, FileRecord, AttributeData, Stream, StreamLength, &DataContext);
+    Status = FindAttribute(DeviceExt, FileRecord, AttributeData, Stream, StreamLength, &DataContext, NULL);
     if (NT_SUCCESS(Status))
     {
         Size = AttributeDataLength(&DataContext->Record);

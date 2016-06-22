@@ -295,7 +295,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
         return Status;
     }
 
-    Status = FindAttribute(DeviceExt, DeviceExt->MasterFileTable, AttributeData, L"", 0, &DeviceExt->MFTContext);
+    Status = FindAttribute(DeviceExt, DeviceExt->MasterFileTable, AttributeData, L"", 0, &DeviceExt->MFTContext, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Can't find data attribute for Master File Table.\n");
@@ -333,7 +333,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     NtfsDumpFileAttributes(DeviceExt, VolumeRecord);
 
     /* Get volume name */
-    Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeName, L"", 0, &AttrCtxt);
+    Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeName, L"", 0, &AttrCtxt, NULL);
 
     if (NT_SUCCESS(Status) && AttrCtxt->Record.Resident.ValueLength != 0)
     {
@@ -374,7 +374,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     DeviceExt->VolumeFcb = VolumeFcb;
 
     /* Get volume information */
-    Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeInformation, L"", 0, &AttrCtxt);
+    Status = FindAttribute(DeviceExt, VolumeRecord, AttributeVolumeInformation, L"", 0, &AttrCtxt, NULL);
 
     if (NT_SUCCESS(Status) && AttrCtxt->Record.Resident.ValueLength != 0)
     {
@@ -804,7 +804,7 @@ GetVolumeBitmap(PDEVICE_EXTENSION DeviceExt,
         return Status;
     }
 
-    Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DataContext);
+    Status = FindAttribute(DeviceExt, BitmapRecord, AttributeData, L"", 0, &DataContext, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed find $DATA for bitmap: %lx\n", Status);
