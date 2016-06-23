@@ -413,6 +413,9 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
         {
             LARGE_INTEGER DataSize;
             ULONGLONG AllocationSize;
+            PFILENAME_ATTRIBUTE fileNameAttribute;
+            ULONGLONG ParentMFTId;
+            UNICODE_STRING filename;
 
             DataSize.QuadPart = WriteOffset + Length;
 
@@ -430,7 +433,19 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
             }
 
             // now we need to update this file's size in every directory index entry that references it
-            // (saved for a later commit)
+            // TODO: put this code in its own function and adapt it to work with every filename / hardlink
+            // stored in the file record.
+            fileNameAttribute = GetBestFileNameFromRecord(Fcb->Vcb, FileRecord);
+            ASSERT(fileNameAttribute);
+
+            ParentMFTId = fileNameAttribute->DirectoryFileReferenceNumber & NTFS_MFT_MASK;
+
+            filename.Buffer = fileNameAttribute->Name;
+            filename.Length = fileNameAttribute->NameLength * sizeof(WCHAR);
+            filename.MaximumLength = filename.Length;
+
+            Status = UpdateFileNameRecord(Fcb->Vcb, ParentMFTId, &filename, FALSE, DataSize.QuadPart, AllocationSize);
+
         }
         else
         {

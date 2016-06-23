@@ -682,6 +682,212 @@ ReadFileRecord(PDEVICE_EXTENSION Vcb,
     return FixupUpdateSequenceArray(Vcb, &file->Ntfs);
 }
 
+
+/**
+* Searches a file's parent directory (given the parent's index in the mft)
+* for the given file. Upon finding an index entry for that file, updates
+* Data Size and Allocated Size values in the $FILE_NAME attribute of that entry.
+* 
+* (Most of this code was copied from NtfsFindMftRecord)
+*/
+NTSTATUS
+UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
+                     ULONGLONG ParentMFTIndex,
+                     PUNICODE_STRING FileName,
+                     BOOLEAN DirSearch,
+                     ULONGLONG NewDataSize,
+                     ULONGLONG NewAllocationSize)
+{
+    PFILE_RECORD_HEADER MftRecord;
+    PNTFS_ATTR_CONTEXT IndexRootCtx;
+    PINDEX_ROOT_ATTRIBUTE IndexRoot;
+    PCHAR IndexRecord;
+    PINDEX_ENTRY_ATTRIBUTE IndexEntry, IndexEntryEnd;
+    NTSTATUS Status;
+    ULONG CurrentEntry = 0;
+
+    DPRINT("UpdateFileNameRecord(%p, %I64d, %wZ, %u, %I64u, %I64u)\n", Vcb, ParentMFTIndex, FileName, DirSearch, NewDataSize, NewAllocationSize);
+
+    MftRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                      Vcb->NtfsInfo.BytesPerFileRecord,
+                                      TAG_NTFS);
+    if (MftRecord == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = ReadFileRecord(Vcb, ParentMFTIndex, MftRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        return Status;
+    }
+
+    ASSERT(MftRecord->Ntfs.Type == NRH_FILE_TYPE);
+    Status = FindAttribute(Vcb, MftRecord, AttributeIndexRoot, L"$I30", 4, &IndexRootCtx, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        return Status;
+    }
+
+    IndexRecord = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerIndexRecord, TAG_NTFS);
+    if (IndexRecord == NULL)
+    {
+        ReleaseAttributeContext(IndexRootCtx);
+        ExFreePoolWithTag(MftRecord, TAG_NTFS);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    ReadAttribute(Vcb, IndexRootCtx, 0, IndexRecord, Vcb->NtfsInfo.BytesPerIndexRecord);
+    IndexRoot = (PINDEX_ROOT_ATTRIBUTE)IndexRecord;
+    IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)&IndexRoot->Header + IndexRoot->Header.FirstEntryOffset);
+    // Index root is always resident. 
+    IndexEntryEnd = (PINDEX_ENTRY_ATTRIBUTE)(IndexRecord + IndexRoot->Header.TotalSizeOfEntries);
+
+    DPRINT("IndexRecordSize: %x IndexBlockSize: %x\n", Vcb->NtfsInfo.BytesPerIndexRecord, IndexRoot->SizeOfEntry);
+
+    Status = UpdateIndexEntryFileNameSize(Vcb, 
+                                          MftRecord, 
+                                          IndexRecord, 
+                                          IndexRoot->SizeOfEntry, 
+                                          IndexEntry, 
+                                          IndexEntryEnd, 
+                                          FileName,
+                                          &CurrentEntry,
+                                          &CurrentEntry,
+                                          DirSearch,
+                                          NewDataSize,
+                                          NewAllocationSize);
+
+    ReleaseAttributeContext(IndexRootCtx);
+    ExFreePoolWithTag(IndexRecord, TAG_NTFS);
+    ExFreePoolWithTag(MftRecord, TAG_NTFS);
+
+    return Status;
+}
+
+/**
+* Recursively searches directory index and applies the size update to the $FILE_NAME attribute of the
+* proper index entry.
+* (Heavily based on BrowseIndexEntries)
+*/
+NTSTATUS
+UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
+                             PFILE_RECORD_HEADER MftRecord,
+                             PCHAR IndexRecord,
+                             ULONG IndexBlockSize,
+                             PINDEX_ENTRY_ATTRIBUTE FirstEntry,
+                             PINDEX_ENTRY_ATTRIBUTE LastEntry,
+                             PUNICODE_STRING FileName,
+                             PULONG StartEntry,
+                             PULONG CurrentEntry,
+                             BOOLEAN DirSearch,
+                             ULONGLONG NewDataSize,
+                             ULONGLONG NewAllocatedSize)
+{
+    NTSTATUS Status;
+    ULONG RecordOffset;
+    PINDEX_ENTRY_ATTRIBUTE IndexEntry;
+    PNTFS_ATTR_CONTEXT IndexAllocationCtx;
+    ULONGLONG IndexAllocationSize;
+    PINDEX_BUFFER IndexBuffer;
+
+    DPRINT("UpdateIndexEntrySize(%p, %p, %p, %u, %p, %p, %wZ, %u, %u, %u, %I64u, %I64u)\n", Vcb, MftRecord, IndexRecord, IndexBlockSize, FirstEntry, LastEntry, FileName, *StartEntry, *CurrentEntry, DirSearch, NewDataSize, NewAllocatedSize);
+
+    // find the index entry responsible for the file we're trying to update
+    IndexEntry = FirstEntry;
+    while (IndexEntry < LastEntry &&
+           !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
+    {
+        if ((IndexEntry->Data.Directory.IndexedFile & NTFS_MFT_MASK) > 0x10 &&
+            *CurrentEntry >= *StartEntry &&
+            IndexEntry->FileName.NameType != NTFS_FILE_NAME_DOS &&
+            CompareFileName(FileName, IndexEntry, DirSearch))
+        {
+            *StartEntry = *CurrentEntry;
+            IndexEntry->FileName.DataSize = NewDataSize;
+            IndexEntry->FileName.AllocatedSize = NewAllocatedSize;
+            // indicate that the caller will still need to write the structure to the disk
+            return STATUS_PENDING;
+        }
+
+        (*CurrentEntry) += 1;
+        ASSERT(IndexEntry->Length >= sizeof(INDEX_ENTRY_ATTRIBUTE));
+        IndexEntry = (PINDEX_ENTRY_ATTRIBUTE)((PCHAR)IndexEntry + IndexEntry->Length);
+    }
+
+    /* If we're already browsing a subnode */
+    if (IndexRecord == NULL)
+    {
+        return STATUS_OBJECT_PATH_NOT_FOUND;
+    }
+
+    /* If there's no subnode */
+    if (!(IndexEntry->Flags & NTFS_INDEX_ENTRY_NODE))
+    {
+        return STATUS_OBJECT_PATH_NOT_FOUND;
+    }
+
+    Status = FindAttribute(Vcb, MftRecord, AttributeIndexAllocation, L"$I30", 4, &IndexAllocationCtx, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Corrupted filesystem!\n");
+        return Status;
+    }
+
+    IndexAllocationSize = AttributeDataLength(&IndexAllocationCtx->Record);
+    Status = STATUS_OBJECT_PATH_NOT_FOUND;
+    for (RecordOffset = 0; RecordOffset < IndexAllocationSize; RecordOffset += IndexBlockSize)
+    {
+        ReadAttribute(Vcb, IndexAllocationCtx, RecordOffset, IndexRecord, IndexBlockSize);
+        Status = FixupUpdateSequenceArray(Vcb, &((PFILE_RECORD_HEADER)IndexRecord)->Ntfs);
+        if (!NT_SUCCESS(Status))
+        {
+            break;
+        }
+
+        IndexBuffer = (PINDEX_BUFFER)IndexRecord;
+        ASSERT(IndexBuffer->Ntfs.Type == NRH_INDX_TYPE);
+        ASSERT(IndexBuffer->Header.AllocatedSize + FIELD_OFFSET(INDEX_BUFFER, Header) == IndexBlockSize);
+        FirstEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.FirstEntryOffset);
+        LastEntry = (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)&IndexBuffer->Header + IndexBuffer->Header.TotalSizeOfEntries);
+        ASSERT(LastEntry <= (PINDEX_ENTRY_ATTRIBUTE)((ULONG_PTR)IndexBuffer + IndexBlockSize));
+
+        Status = UpdateIndexEntryFileNameSize(NULL, NULL, NULL, 0, FirstEntry, LastEntry, FileName, StartEntry, CurrentEntry, DirSearch, NewDataSize, NewAllocatedSize);
+        if (Status == STATUS_PENDING)
+        {
+            // write the index record back to disk
+            ULONG Written;
+
+            // first we need to update the fixup values for the index block
+            Status = AddFixupArray(Vcb, &((PFILE_RECORD_HEADER)IndexRecord)->Ntfs);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Error: Failed to update fixup sequence array!\n");
+                break;
+            }
+
+            Status = WriteAttribute(Vcb, IndexAllocationCtx, RecordOffset, (const PUCHAR)IndexRecord, IndexBlockSize, &Written);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("ERROR Performing write!\n");
+                break;
+            }
+
+            Status = STATUS_SUCCESS;
+            break;
+        }
+        if (NT_SUCCESS(Status))
+        {
+            break;
+        }
+    }
+
+    ReleaseAttributeContext(IndexAllocationCtx);
+    return Status;
+}
+
 /**
 * UpdateFileRecord
 * @implemented
