@@ -1023,7 +1023,7 @@
  * TCP_LISTEN_BACKLOG: Enable the backlog option for tcp listen pcb.
  */
 #ifndef TCP_LISTEN_BACKLOG
-#define TCP_LISTEN_BACKLOG              0
+#define TCP_LISTEN_BACKLOG              1
 #endif
 
 /**

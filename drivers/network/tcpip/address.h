@@ -1,6 +1,9 @@
 
 #pragma once
 
+#define TCP_REQUEST_CANCEL_MODE_ABORT 1
+#define TCP_REQUEST_CANCEL_MODE_CLOSE 2
+
 typedef struct _ADDRESS_FILE {
     LIST_ENTRY ListEntry;
     LONG RefCount;
@@ -23,9 +26,15 @@ typedef struct _TCP_CONTEXT {
 	PADDRESS_FILE AddressFile;
 	IPPROTO Protocol;
 	TDI_ADDRESS_IP RequestAddress;
-	PIRP PendingIrp;
+	LIST_ENTRY RequestListHead;
 	struct tcp_pcb* lwip_tcp_pcb;
 } TCP_CONTEXT, *PTCP_CONTEXT;
+
+typedef struct _TCP_REQUEST {
+	LIST_ENTRY ListEntry;
+	PIRP PendingIrp;
+	UCHAR CancelMode;
+} TCP_REQUEST, *PTCP_REQUEST;
 
 void
 TcpIpInitializeAddresses(void);

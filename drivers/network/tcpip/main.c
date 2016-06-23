@@ -346,6 +346,7 @@ TcpIpClose(
 )
 {
     PIO_STACK_LOCATION IrpSp;
+	PTCP_CONTEXT Context;
     NTSTATUS Status;
     ULONG_PTR FileType;
 	
@@ -366,6 +367,11 @@ TcpIpClose(
             }
             Status = TcpIpCloseAddress(IrpSp->FileObject->FsContext);
             break;
+		case TDI_CONNECTION_FILE:
+			DPRINT1("TCPIP Close Connection Context\n");
+			Context = IrpSp->FileObject->FsContext;
+			Status = TcpIpCloseAddress(Context->AddressFile);
+			break;
         case TDI_CONTROL_CHANNEL_FILE:
             /* We didn't allocate anything for this. */
             Status = STATUS_SUCCESS;
@@ -394,13 +400,26 @@ TcpIpDispatchInternal(
 {
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp;
+	PTCP_CONTEXT Context;
 	PADDRESS_FILE AddressFile;
 
 	DPRINT1("TcpIpDispatchInternal\n");
 	
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
-	AddressFile = IrpSp->FileObject->FsContext;
+	switch ((ULONG)IrpSp->FileObject->FsContext2)
+	{
+		case TDI_TRANSPORT_ADDRESS_FILE :
+			AddressFile = IrpSp->FileObject->FsContext;
+			break;
+		case TDI_CONNECTION_FILE :
+			Context = IrpSp->FileObject->FsContext;
+			AddressFile = Context->AddressFile;
+			break;
+		default :
+			DPRINT1("Unknown FileObject type\n");
+			break;
+	}
 	
     switch (IrpSp->MinorFunction)
     {
@@ -423,7 +442,6 @@ TcpIpDispatchInternal(
             if (Status == STATUS_NOT_IMPLEMENTED)
 			{
 				DPRINT1("Received TDI_RECEIVE for non-TCP protocol\n");
-				
 			}
 			break;
         case TDI_RECEIVE_DATAGRAM:
