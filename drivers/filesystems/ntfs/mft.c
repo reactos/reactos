@@ -698,7 +698,7 @@ UpdateFileRecord(PDEVICE_EXTENSION Vcb,
     DPRINT("UpdateFileRecord(%p, %I64x, %p)\n", Vcb, index, file);
 
     // Add the fixup array to prepare the data for writing to disk
-    AddFixupArray(Vcb, file);
+    AddFixupArray(Vcb, &file->Ntfs);
 
     // write the file record to the master file table
     Status = WriteAttribute(Vcb, Vcb->MFTContext, index * Vcb->NtfsInfo.BytesPerFileRecord, (const PUCHAR)file, Vcb->NtfsInfo.BytesPerFileRecord, &BytesWritten);
@@ -747,19 +747,16 @@ FixupUpdateSequenceArray(PDEVICE_EXTENSION Vcb,
 
 NTSTATUS
 AddFixupArray(PDEVICE_EXTENSION Vcb,
-              PFILE_RECORD_HEADER Record)
+              PNTFS_RECORD_HEADER Record)
 {
     USHORT *pShortToFixUp;
-    unsigned int ArrayEntryCount = Record->BytesAllocated / Vcb->NtfsInfo.BytesPerSector;
+    unsigned int ArrayEntryCount = Record->UsaCount - 1;
     unsigned int Offset = Vcb->NtfsInfo.BytesPerSector - 2;
     int i;
 
-    PFIXUP_ARRAY fixupArray = (PFIXUP_ARRAY)((UCHAR*)Record + Record->Ntfs.UsaOffset);
+    PFIXUP_ARRAY fixupArray = (PFIXUP_ARRAY)((UCHAR*)Record + Record->UsaOffset);
 
     DPRINT("AddFixupArray(%p, %p)\n fixupArray->USN: %u, ArrayEntryCount: %u\n", Vcb, Record, fixupArray->USN, ArrayEntryCount);
-
-    if (Record->BytesAllocated % Vcb->NtfsInfo.BytesPerSector != 0)
-        ArrayEntryCount++;
 
     fixupArray->USN++;
 
@@ -767,7 +764,7 @@ AddFixupArray(PDEVICE_EXTENSION Vcb,
     {
         DPRINT("USN: %u\tOffset: %u\n", fixupArray->USN, Offset);
 
-        pShortToFixUp = (USHORT*)((UCHAR*)Record + Offset);
+        pShortToFixUp = (USHORT*)((PCHAR)Record + Offset);
         fixupArray->Array[i] = *pShortToFixUp;
         *pShortToFixUp = fixupArray->USN;
         Offset += Vcb->NtfsInfo.BytesPerSector;
