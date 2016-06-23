@@ -778,10 +778,37 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
 ULONG
 AttributeAllocatedLength(PNTFS_ATTR_RECORD AttrRecord);
 
+BOOLEAN
+CompareFileName(PUNICODE_STRING FileName,
+                PINDEX_ENTRY_ATTRIBUTE IndexEntry,
+                BOOLEAN DirSearch);
+
 NTSTATUS
 ReadFileRecord(PDEVICE_EXTENSION Vcb,
                ULONGLONG index,
                PFILE_RECORD_HEADER file);
+
+NTSTATUS
+UpdateIndexEntryFileNameSize(PDEVICE_EXTENSION Vcb,
+                             PFILE_RECORD_HEADER MftRecord,
+                             PCHAR IndexRecord,
+                             ULONG IndexBlockSize,
+                             PINDEX_ENTRY_ATTRIBUTE FirstEntry,
+                             PINDEX_ENTRY_ATTRIBUTE LastEntry,
+                             PUNICODE_STRING FileName,
+                             PULONG StartEntry,
+                             PULONG CurrentEntry,
+                             BOOLEAN DirSearch,
+                             ULONGLONG NewDataSize,
+                             ULONGLONG NewAllocatedSize);
+
+NTSTATUS
+UpdateFileNameRecord(PDEVICE_EXTENSION Vcb,
+                     ULONGLONG ParentMFTIndex,
+                     PUNICODE_STRING FileName,
+                     BOOLEAN DirSearch,
+                     ULONGLONG NewDataSize,
+                     ULONGLONG NewAllocationSize);
 
 NTSTATUS
 UpdateFileRecord(PDEVICE_EXTENSION Vcb,
