@@ -4,6 +4,12 @@
 #define TCP_REQUEST_CANCEL_MODE_ABORT 1
 #define TCP_REQUEST_CANCEL_MODE_CLOSE 2
 
+#define TCP_STATE_CREATED    1  // created, unbound
+#define TCP_STATE_BOUND      2  // bound, not listening or trying to connect
+#define TCP_STATE_LISTENING  4  // listening, may or may not have connected clients
+#define TCP_STATE_CONNECTING 8  // trying to connect as a client
+#define TCP_STATE_CONNECTED  16 // connected as client
+
 typedef struct _ADDRESS_FILE {
     LIST_ENTRY ListEntry;
     LONG RefCount;
@@ -13,6 +19,7 @@ typedef struct _ADDRESS_FILE {
     TCPIP_INSTANCE Instance;
     KSPIN_LOCK RequestLock;
     LIST_ENTRY RequestListHead;
+	UCHAR TcpState;
     union
     {
         struct raw_pcb* lwip_raw_pcb;
@@ -26,6 +33,7 @@ typedef struct _TCP_CONTEXT {
 	PADDRESS_FILE AddressFile;
 	IPPROTO Protocol;
 	TDI_ADDRESS_IP RequestAddress;
+	KSPIN_LOCK RequestListLock; // TODO: implement
 	LIST_ENTRY RequestListHead;
 	struct tcp_pcb* lwip_tcp_pcb;
 } TCP_CONTEXT, *PTCP_CONTEXT;
@@ -56,6 +64,11 @@ TcpIpCreateContext(
 NTSTATUS
 TcpIpCloseAddress(
     _Inout_ ADDRESS_FILE* AddressFile
+);
+
+NTSTATUS
+TcpIpCloseContext(
+	_In_ PTCP_CONTEXT Context
 );
 
 NTSTATUS

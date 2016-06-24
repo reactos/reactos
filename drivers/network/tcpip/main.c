@@ -370,7 +370,7 @@ TcpIpClose(
 		case TDI_CONNECTION_FILE:
 			DPRINT1("TCPIP Close Connection Context\n");
 			Context = IrpSp->FileObject->FsContext;
-			Status = TcpIpCloseAddress(Context->AddressFile);
+			Status = TcpIpCloseContext(Context);
 			break;
         case TDI_CONTROL_CHANNEL_FILE:
             /* We didn't allocate anything for this. */
