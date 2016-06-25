@@ -569,7 +569,7 @@ QueryEventMessages(LPWSTR lpMachineName,
     HANDLE hEventLog;
     EVENTLOGRECORD *pevlr;
     DWORD dwRead, dwNeeded, dwThisRecord, dwTotalRecords = 0, dwCurrentRecord = 0, dwRecordsToRead = 0, dwFlags, dwMaxLength;
-    SIZE_T cchRemaining;
+    size_t cchRemaining;
     LPWSTR lpszSourceName;
     LPWSTR lpszComputerName;
     BOOL bResult = TRUE; /* Read succeeded */
