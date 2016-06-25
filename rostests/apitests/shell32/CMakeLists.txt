@@ -6,6 +6,7 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 add_executable(shell32_apitest
     CMyComputer.cpp
     CShellDesktop.cpp
+    CShellLink.cpp
     menu.cpp
     shelltest.cpp
     SHParseDisplayName.cpp
