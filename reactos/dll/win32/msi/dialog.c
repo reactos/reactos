@@ -3590,7 +3590,7 @@ static void msi_dialog_adjust_dialog_pos( msi_dialog *dialog, MSIRECORD *rec, LP
     dialog->size.cx = sz.cx;
     dialog->size.cy = sz.cy;
 
-    TRACE("%u %u %u %u\n", pos->left, pos->top, pos->right, pos->bottom);
+    TRACE("%s\n", wine_dbgstr_rect(pos));
 
     style = GetWindowLongPtrW( dialog->hwnd, GWL_STYLE );
     AdjustWindowRect( pos, style, FALSE );
