@@ -92,9 +92,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE "Visionneuse d'événements"
-    IDS_APP_TITLE_EX "%s - %s Log on \\\\"
-    IDS_STATUS_MSG "%s has %lu event(s)"
-    IDS_EVENTSTRINGIDNOTFOUND "La description pour l'événement d'ID ( %lu ) dans la source ( %s ) ne peut être trouvée. L'ordinateur local pourrait ne pas avoir les informations registres nécessaires ou les fichiers DLL de message pour afficher les messages depuis un ordinateur distant."
+    IDS_APP_TITLE_EX "%s - Journal %s sur \\\\"
+    IDS_STATUS_MSG "%s contient %lu événement(s)"
+    IDS_EVENTSTRINGIDNOTFOUND "La description pour l'événement d'ID ( %lu ) dans la source ( %s ) ne peut être trouvée. L'ordinateur local pourrait ne pas avoir les informations registres nécessaires ou les fichiers DLL de message pour afficher les messages depuis un ordinateur distant.\n\nLes informations suivantes font partie de l'événement :\n\n"
     IDS_EVENTLOG_ERROR_TYPE "Erreur"
     IDS_EVENTLOG_WARNING_TYPE "Avertissement"
     IDS_EVENTLOG_INFORMATION_TYPE "Informations"
@@ -102,8 +102,8 @@ BEGIN
     IDS_EVENTLOG_AUDIT_FAILURE "Échec de l'audit"
     IDS_EVENTLOG_SUCCESS "Succès"
     IDS_EVENTLOG_UNKNOWN_TYPE "Événement Inconnu"
-    IDS_CLEAREVENTS_MSG "Do you want to save this event log before clearing it?"
-    IDS_SAVE_FILTER "Event Log (*.evt)\0*.evt\0"
+    IDS_CLEAREVENTS_MSG "Voulez-vous enregistrer ce journal d'événements avant de l'effacer ?"
+    IDS_SAVE_FILTER "Journal d'événements (*.evt)\0*.evt\0"
 END
 
 STRINGTABLE
@@ -133,6 +133,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NONE "None"
+    IDS_NONE "Aucun"
     IDS_NOT_AVAILABLE "N/A"
 END

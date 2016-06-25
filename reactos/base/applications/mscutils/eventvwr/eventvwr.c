@@ -25,7 +25,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
@@ -80,8 +79,8 @@ PEVENTLOGRECORD *g_RecordPtrs = NULL;
 DWORD g_TotalRecords = 0;
 OPENFILENAMEW sfn;
 
-LPWSTR lpSourceLogName = NULL;
 LPWSTR lpComputerName  = NULL;
+LPWSTR lpSourceLogName = NULL;
 
 DWORD dwNumLogs  = 0;
 LPWSTR* LogNames = NULL;
@@ -211,7 +210,7 @@ BOOL
 GetEventMessageFileDLL(IN LPCWSTR lpLogName,
                        IN LPCWSTR SourceName,
                        IN LPCWSTR EntryName,
-                       OUT PWCHAR ExpandedName)
+                       OUT PWCHAR ExpandedName) // TODO: Add IN DWORD BufLen
 {
     DWORD dwSize;
     WCHAR szModuleName[MAX_PATH];
@@ -270,7 +269,7 @@ BOOL
 GetEventCategory(IN LPCWSTR KeyName,
                  IN LPCWSTR SourceName,
                  IN EVENTLOGRECORD *pevlr,
-                 OUT PWCHAR CategoryName)
+                 OUT PWCHAR CategoryName) // TODO: Add IN DWORD BufLen
 {
     BOOL Success = FALSE;
     HMODULE hLibrary = NULL;
@@ -300,24 +299,25 @@ GetEventCategory(IN LPCWSTR KeyName,
 
         /* Copy the category name */
         StringCchCopyW(CategoryName, MAX_PATH, lpMsgBuf);
-    }
-    else
-    {
-        LoadStringW(hInst, IDS_NONE, CategoryName, MAX_PATH);
+
+        /* The ID was found and the message was formatted */
+        Success = TRUE;
     }
 
     /* Free the buffer allocated by FormatMessage */
     if (lpMsgBuf)
         LocalFree(lpMsgBuf);
 
-    if (hLibrary != NULL)
-        FreeLibrary(hLibrary);
-
-    Success = TRUE;
+    FreeLibrary(hLibrary);
 
 Quit:
     if (!Success)
-        LoadStringW(hInst, IDS_NONE, CategoryName, MAX_PATH);
+    {
+        if (pevlr->EventCategory != 0)
+            StringCchPrintfW(CategoryName, MAX_PATH, L"(%lu)", pevlr->EventCategory);
+        else
+            LoadStringW(hInst, IDS_NONE, CategoryName, MAX_PATH);
+    }
 
     return Success;
 }
@@ -327,7 +327,7 @@ BOOL
 GetEventMessage(IN LPCWSTR KeyName,
                 IN LPCWSTR SourceName,
                 IN EVENTLOGRECORD *pevlr,
-                OUT PWCHAR EventText)
+                OUT PWCHAR EventText) // TODO: Add IN DWORD BufLen
 {
     BOOL Success = FALSE;
     DWORD i;
@@ -336,39 +336,36 @@ GetEventMessage(IN LPCWSTR KeyName,
     WCHAR ParameterModuleName[1000];
     BOOL IsParamModNameCached = FALSE;
     LPWSTR lpMsgBuf = NULL;
-    WCHAR szStringIDNotFound[MAX_LOADSTRING];
     LPWSTR szDll;
-    LPWSTR szMessage;
+    LPWSTR szStringArray, szMessage;
     LPWSTR *szArguments;
 
+    /* Get the event string array */
+    szStringArray = (LPWSTR)((LPBYTE)pevlr + pevlr->StringOffset);
+
     /* NOTE: GetEventMessageFileDLL can return a comma-separated list of DLLs */
-
     if (!GetEventMessageFileDLL(KeyName, SourceName, EVENT_MESSAGE_FILE, SourceModuleName))
-    {
-        // goto Quit;
-        return FALSE;
-    }
-
-    /* Get the event message */
-    szMessage = (LPWSTR)((LPBYTE)pevlr + pevlr->StringOffset);
+        goto Quit;
 
     /* Allocate space for parameters */
     szArguments = HeapAlloc(GetProcessHeap(), 0, pevlr->NumStrings * sizeof(LPVOID));
     if (!szArguments)
-    {
-        // goto Quit;
-        return FALSE;
-    }
+        goto Quit;
 
+    szMessage = szStringArray;
     for (i = 0; i < pevlr->NumStrings; i++)
     {
         if (wcsstr(szMessage, L"%%"))
         {
-            if (!IsParamModNameCached && GetEventMessageFileDLL(KeyName, SourceName, EVENT_PARAMETER_MESSAGE_FILE, ParameterModuleName))
+            if (!IsParamModNameCached)
             {
                 /* Now that the parameter file list is loaded, no need to reload it at the next run! */
-                IsParamModNameCached = TRUE;
+                IsParamModNameCached = GetEventMessageFileDLL(KeyName, SourceName, EVENT_PARAMETER_MESSAGE_FILE, ParameterModuleName);
+                // FIXME: If the string loading failed the first time, no need to retry it just after???
+            }
 
+            if (IsParamModNameCached)
+            {
                 /* Not yet support for reading messages from parameter message DLL */
             }
         }
@@ -379,7 +376,7 @@ GetEventMessage(IN LPCWSTR KeyName,
 
     /* Loop through the list of event message DLLs */
     szDll = wcstok(SourceModuleName, EVENT_DLL_SEPARATOR);
-    while ((szDll != NULL) && (!Success))
+    while ((szDll != NULL) && !Success)
     {
         hLibrary = LoadLibraryExW(szDll, NULL,
                                   LOAD_LIBRARY_AS_IMAGE_RESOURCE | LOAD_LIBRARY_AS_DATAFILE);
@@ -405,14 +402,14 @@ GetEventMessage(IN LPCWSTR KeyName,
         }
         else if (lpMsgBuf)
         {
-            /* The ID was found and the message was formated */
-            Success = TRUE;
-
             /* Trim the string */
             TrimNulls((LPWSTR)lpMsgBuf);
 
             /* Copy the event text */
             StringCchCopyW(EventText, EVENT_MESSAGE_EVENTTEXT_BUFFER, lpMsgBuf);
+
+            /* The ID was found and the message was formatted */
+            Success = TRUE;
         }
 
         /* Free the buffer allocated by FormatMessage */
@@ -424,11 +421,22 @@ GetEventMessage(IN LPCWSTR KeyName,
 
     HeapFree(GetProcessHeap(), 0, szArguments);
 
-// Quit:
+Quit:
     if (!Success)
     {
-        LoadStringW(hInst, IDS_EVENTSTRINGIDNOTFOUND, szStringIDNotFound, ARRAYSIZE(szStringIDNotFound));
-        StringCchPrintfW(EventText, EVENT_MESSAGE_EVENTTEXT_BUFFER, szStringIDNotFound, (pevlr->EventID & 0xFFFF), SourceName);
+        /* Get a read-only pointer to the "event-not-found" string */
+        lpMsgBuf = HeapAlloc(GetProcessHeap(), 0, EVENT_MESSAGE_EVENTTEXT_BUFFER * sizeof(WCHAR));
+        LoadStringW(hInst, IDS_EVENTSTRINGIDNOTFOUND, lpMsgBuf, EVENT_MESSAGE_EVENTTEXT_BUFFER);
+        StringCchPrintfW(EventText, EVENT_MESSAGE_EVENTTEXT_BUFFER, lpMsgBuf, (pevlr->EventID & 0xFFFF), SourceName);
+
+        /* Append the strings */
+        szMessage = szStringArray;
+        for (i = 0; i < pevlr->NumStrings; i++)
+        {
+            StringCchCatW(EventText, EVENT_MESSAGE_EVENTTEXT_BUFFER, szMessage);
+            StringCchCatW(EventText, EVENT_MESSAGE_EVENTTEXT_BUFFER, L"\n");
+            szMessage += wcslen(szMessage) + 1;
+        }
     }
 
     return Success;
@@ -437,7 +445,7 @@ GetEventMessage(IN LPCWSTR KeyName,
 
 VOID
 GetEventType(IN WORD dwEventType,
-             OUT PWCHAR eventTypeText)
+             OUT PWCHAR eventTypeText) // TODO: Add IN DWORD BufLen
 {
     switch (dwEventType)
     {
@@ -561,9 +569,9 @@ QueryEventMessages(LPWSTR lpMachineName,
     HANDLE hEventLog;
     EVENTLOGRECORD *pevlr;
     DWORD dwRead, dwNeeded, dwThisRecord, dwTotalRecords = 0, dwCurrentRecord = 0, dwRecordsToRead = 0, dwFlags, dwMaxLength;
-    size_t cchRemaining;
-    LPWSTR lpSourceName;
-    LPWSTR lpComputerName;
+    SIZE_T cchRemaining;
+    LPWSTR lpszSourceName;
+    LPWSTR lpszComputerName;
     BOOL bResult = TRUE; /* Read succeeded */
 
     WCHAR szWindowTitle[MAX_PATH];
@@ -590,8 +598,9 @@ QueryEventMessages(LPWSTR lpMachineName,
         return FALSE;
     }
 
+    /* Save the current computer name and log name globally */
+    lpComputerName  = lpMachineName;
     lpSourceLogName = lpLogName;
-    lpComputerName = lpMachineName;
 
     /* Disable list view redraw */
     SendMessageW(hwndListView, WM_SETREDRAW, FALSE, 0);
@@ -663,10 +672,10 @@ QueryEventMessages(LPWSTR lpMachineName,
             LoadStringW(hInst, IDS_NONE, szCategory, ARRAYSIZE(szCategory));
 
             /* Get the event source name */
-            lpSourceName = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD));
+            lpszSourceName = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD));
 
             /* Get the computer name */
-            lpComputerName = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD) + (wcslen(lpSourceName) + 1) * sizeof(WCHAR));
+            lpszComputerName = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD) + (wcslen(lpszSourceName) + 1) * sizeof(WCHAR));
 
             /* Compute the event type */
             EventTimeToSystemTime(pevlr->TimeWritten, &time);
@@ -678,7 +687,7 @@ QueryEventMessages(LPWSTR lpMachineName,
             GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &time, NULL, szLocalTime, ARRAYSIZE(szLocalTime));
 
             GetEventType(pevlr->EventType, szEventTypeText);
-            GetEventCategory(lpLogName, lpSourceName, pevlr, szCategory);
+            GetEventCategory(lpLogName, lpszSourceName, pevlr, szCategory);
 
             StringCbPrintfW(szEventID, sizeof(szEventID), L"%u", (pevlr->EventID & 0xFFFF));
             StringCbPrintfW(szCategoryID, sizeof(szCategoryID), L"%u", pevlr->EventCategory);
@@ -720,11 +729,11 @@ QueryEventMessages(LPWSTR lpMachineName,
 
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 1, szLocalDate);
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 2, szLocalTime);
-            ListView_SetItemText(hwndListView, lviEventItem.iItem, 3, lpSourceName);
+            ListView_SetItemText(hwndListView, lviEventItem.iItem, 3, lpszSourceName);
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 4, szCategory);
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 5, szEventID);
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 6, szUsername);
-            ListView_SetItemText(hwndListView, lviEventItem.iItem, 7, lpComputerName);
+            ListView_SetItemText(hwndListView, lviEventItem.iItem, 7, lpszComputerName);
 
             dwRead -= pevlr->Length;
             pevlr = (EVENTLOGRECORD *)((LPBYTE) pevlr + pevlr->Length);
@@ -744,12 +753,11 @@ QueryEventMessages(LPWSTR lpMachineName,
                        &cchRemaining,
                        0,
                        szTitleTemplate, szTitle, lpLogName); /* i = number of characters written */
-    /* lpComputerName can be NULL here if no records was read */
     dwMaxLength = (DWORD)cchRemaining;
-    if (!lpComputerName)
+    if (!lpMachineName)
         GetComputerNameW(lpTitleTemplateEnd, &dwMaxLength);
     else
-        StringCchCopyW(lpTitleTemplateEnd, dwMaxLength, lpComputerName);
+        StringCchCopyW(lpTitleTemplateEnd, dwMaxLength, lpMachineName);
 
     StringCbPrintfW(szStatusText, sizeof(szStatusText), szStatusBarTemplate, lpLogName, dwTotalRecords);
 
@@ -862,8 +870,7 @@ ClearEvents(VOID)
 VOID
 Refresh(VOID)
 {
-    QueryEventMessages(lpComputerName,
-                       lpSourceLogName);
+    QueryEventMessages(lpComputerName, lpSourceLogName);
 }
 
 
@@ -1087,7 +1094,7 @@ BuildLogList(VOID)
 
 
 VOID
-FreeLogList(void)
+FreeLogList(VOID)
 {
     DWORD dwIndex;
 
@@ -1111,6 +1118,9 @@ FreeLogList(void)
     HeapFree(GetProcessHeap(), 0, LogNames);
     LogNames  = NULL;
     dwNumLogs = 0;
+
+    lpComputerName  = NULL;
+    lpSourceLogName = NULL;
 
     return;
 }
@@ -1265,6 +1275,10 @@ InitInstance(HINSTANCE hInstance,
     ShowWindow(hwndMainWindow, nCmdShow);
     UpdateWindow(hwndMainWindow);
 
+    /* Retrieve the available event logs on this computer */
+    // TODO: Implement connection to remote computer (lpComputerName)
+    // At the moment we only support the user local computer.
+    lpComputerName = NULL;
     BuildLogList();
 
     QueryEventMessages(lpComputerName, LogNames[0]);

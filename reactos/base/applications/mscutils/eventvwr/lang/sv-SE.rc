@@ -94,7 +94,7 @@ BEGIN
     IDS_APP_TITLE "Händelselogg"
     IDS_APP_TITLE_EX "%s - %s Log on \\\\"
     IDS_STATUS_MSG "%s has %lu event(s)"
-    IDS_EVENTSTRINGIDNOTFOUND "Beskrivning av Händelse ID ( %lu ) i källan ( %s ) kan inte hittas. Lokal dator har inte nödvendig registerinformation eller meddelander DLL filer for å vise meddelander från en fjärr dator."
+    IDS_EVENTSTRINGIDNOTFOUND "Beskrivning av Händelse ID ( %lu ) i källan ( %s ) kan inte hittas. Lokal dator har inte nödvendig registerinformation eller meddelander DLL filer for å vise meddelander från en fjärr dator.\n\nThe following information is part of the event:\n\n"
     IDS_EVENTLOG_ERROR_TYPE "Fel"
     IDS_EVENTLOG_WARNING_TYPE "Varning"
     IDS_EVENTLOG_INFORMATION_TYPE "Information"
