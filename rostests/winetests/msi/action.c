@@ -21,6 +21,7 @@
 
 #define _WIN32_MSI 300
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <windows.h>
 #include <msiquery.h>
@@ -28,6 +29,9 @@
 #include <msi.h>
 #include <fci.h>
 #include <srrestoreptapi.h>
+#include <wtypes.h>
+#include <shellapi.h>
+#include <winsvc.h>
 
 #include "wine/test.h"
 
@@ -230,7 +234,7 @@ static const char service_install2_dat[] =
     "LoadOrderGroup\tDependencies\tStartName\tPassword\tArguments\tComponent_\tDescription\n"
     "s72\ts255\tL255\ti4\ti4\ti4\tS255\tS255\tS255\tS255\tS255\ts72\tL255\n"
     "ServiceInstall\tServiceInstall\n"
-    "TestService\tTestService\tTestService\t2\t3\t0\t\t\tTestService\t\t\tservice_comp\t\n"
+    "TestService\tTestService\tTestService\t2\t3\t32768\t\t\tTestService\t\t\tservice_comp\t\n"
     "TestService4\tTestService4\tTestService4\t2\t3\t0\t\t\tTestService4\t\t\tservice_comp3\t\n";
 
 static const char service_control_dat[] =
@@ -5423,6 +5427,30 @@ static void test_start_stop_services(void)
     DeleteFileA(msifile);
 }
 
+static void delete_TestService(void)
+{
+    BOOL ret;
+    SC_HANDLE manager, service;
+
+    manager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+    ok(manager != NULL, "can't open service manager\n");
+    if (!manager)
+        return;
+
+    service = OpenServiceA(manager, "TestService", GENERIC_ALL);
+    ok(service != NULL, "TestService doesn't exist\n");
+
+    if (service)
+    {
+        ret = DeleteService( service );
+        ok( ret, "failed to delete service %u\n", GetLastError() );
+
+        CloseServiceHandle(service);
+    }
+    CloseServiceHandle(manager);
+
+}
+
 static void test_delete_services(void)
 {
     UINT r;
@@ -5488,6 +5516,7 @@ static void test_delete_services(void)
     ok(delete_pf("msitest", FALSE), "Directory not created\n");
 
 error:
+    delete_TestService();
     delete_test_files();
     DeleteFileA(msifile);
 }
@@ -5496,7 +5525,9 @@ static void test_install_services(void)
 {
     UINT r;
     SC_HANDLE manager, service;
-    BOOL ret;
+    LONG res;
+    HKEY hKey;
+    DWORD err_control, err_controlsize, err_controltype;
 
     if (is_process_limited())
     {
@@ -5529,6 +5560,19 @@ static void test_install_services(void)
     ok(service == NULL, "TestService4 installed\n");
     CloseServiceHandle(manager);
 
+    res = RegOpenKeyA(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services\\TestService", &hKey);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    if (res == ERROR_SUCCESS)
+    {
+        err_control = 0xBEEF;
+        err_controltype = REG_DWORD;
+        err_controlsize = sizeof(err_control);
+        res = RegQueryValueExA(hKey, "ErrorControl", NULL, &err_controltype, (LPBYTE)&err_control, &err_controlsize);
+        ok(err_control == 0, "TestService.ErrorControl wrong, expected 0, got %u\n", err_control);
+        RegCloseKey(hKey);
+    }
+
     r = MsiInstallProductA(msifile, "REMOVE=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
 
@@ -5546,20 +5590,8 @@ static void test_install_services(void)
     ok(delete_pf("msitest\\service2.exe", TRUE), "File not installed\n");
     ok(delete_pf("msitest", FALSE), "Directory not created\n");
 
-    manager = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-    ok(manager != NULL, "can't open service manager\n");
-    if (!manager) goto error;
-
-    service = OpenServiceA(manager, "TestService", GENERIC_ALL);
-    ok(service != NULL, "TestService doesn't exist\n");
-
-    ret = DeleteService( service );
-    ok( ret, "failed to delete service %u\n", GetLastError() );
-
-    CloseServiceHandle(service);
-    CloseServiceHandle(manager);
-
 error:
+    delete_TestService();
     delete_test_files();
     DeleteFileA(msifile);
 }
@@ -5882,7 +5914,7 @@ static void test_publish_components(void)
     size = 0;
     r = MsiProvideQualifiedComponentA("{92AFCBC0-9CA6-4270-8454-47C5EE2B8FAA}",
             "english.txt", INSTALLMODE_DEFAULT, NULL, &size);
-    ok(r == ERROR_SUCCESS, "MsiProvideQualifiedCompontent returned %d\n", r);
+    ok(r == ERROR_SUCCESS, "MsiProvideQualifiedComponent returned %d\n", r);
 
     res = RegOpenKeyA(HKEY_CURRENT_USER, keypath, &key);
     ok(res == ERROR_SUCCESS, "components key not created %d\n", res);
@@ -5908,7 +5940,7 @@ static void test_publish_components(void)
     size = 0;
     r = MsiProvideQualifiedComponentA("{92AFCBC0-9CA6-4270-8454-47C5EE2B8FAA}",
             "english.txt", INSTALLMODE_DEFAULT, NULL, &size);
-    ok(r == ERROR_SUCCESS, "MsiProvideQualifiedCompontent returned %d\n", r);
+    ok(r == ERROR_SUCCESS, "MsiProvideQualifiedComponent returned %d\n", r);
 
     if (pRegDeleteKeyExA)
         res = pRegDeleteKeyExA(HKEY_LOCAL_MACHINE, keypath2, KEY_WOW64_64KEY, 0);
