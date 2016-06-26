@@ -704,6 +704,27 @@ VfatSetRenameInformation(
     vfatSplitPathName(&NewName, &NewPath, &NewFile);
     DPRINT("New dir: %wZ, New file: %wZ\n", &NewPath, &NewFile);
 
+    /* FIXME: Do it in a more efficient way, like linking FCBs to their parent FCB so that we browse less FCBs
+     * Note: The FIXME is the way MS FastFAT seems to do it
+     */
+    if (vfatFCBIsDirectory(FCB))
+    {
+        PLIST_ENTRY Entry;
+        PVFATFCB VolFCB;
+
+        for (Entry = DeviceExt->FcbListHead.Flink; Entry != &DeviceExt->FcbListHead; Entry = Entry->Flink)
+        {
+            VolFCB = CONTAINING_RECORD(Entry, VFATFCB, FcbListEntry);
+            if (VolFCB->parentFcb == FCB && VolFCB->OpenHandleCount != 0)
+            {
+                DPRINT1("At least one children file opened! %wZ (%u, %u)\n", &VolFCB->PathNameU, VolFCB->RefCount, VolFCB->OpenHandleCount);
+                Status = STATUS_ACCESS_DENIED;
+                ASSERT(OldReferences == FCB->parentFcb->RefCount);
+                goto Cleanup;
+            }
+        }
+    }
+
     /* Are we working in place? */
     if (FsRtlAreNamesEqual(&SourcePath, &NewPath, TRUE, NULL))
     {
