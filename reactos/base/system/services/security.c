@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-PSECURITY_DESCRIPTOR pDefaultServiceSD = NULL;
+PSECURITY_DESCRIPTOR pDefaultServiceSD = NULL; /* Self-relative SD */
 
 static PSID pNullSid = NULL;
 static PSID pLocalSystemSid = NULL;
@@ -110,6 +110,7 @@ ScmCreateDefaultServiceSD(VOID)
     PACL pDacl = NULL;
     PACL pSacl = NULL;
     ULONG ulLength;
+    DWORD dwBufferLength = 0;
     NTSTATUS Status;
     DWORD dwError = ERROR_SUCCESS;
 
@@ -166,14 +167,14 @@ ScmCreateDefaultServiceSD(VOID)
                          FALSE,
                          TRUE);
 
-
+    /* Create the absolute security descriptor */
     pServiceSD = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SECURITY_DESCRIPTOR));
     if (pServiceSD == NULL)
     {
         dwError = ERROR_OUTOFMEMORY;
         goto done;
     }
-DPRINT1("pServiceSD %p\n", pServiceSD);
+    DPRINT("pServiceSD %p\n", pServiceSD);
 
     Status = RtlCreateSecurityDescriptor(pServiceSD,
                                          SECURITY_DESCRIPTOR_REVISION);
@@ -221,22 +222,54 @@ DPRINT1("pServiceSD %p\n", pServiceSD);
         goto done;
     }
 
+    /* Convert the absolute SD to a self-relative SD */
+    Status = RtlAbsoluteToSelfRelativeSD(pServiceSD,
+                                         NULL,
+                                         &dwBufferLength);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        dwError = RtlNtStatusToDosError(Status);
+        goto done;
+    }
 
-    pDefaultServiceSD = pServiceSD;
-DPRINT1("pDefaultServiceSD %p\n", pDefaultServiceSD);
+    DPRINT("BufferLength %lu\n", dwBufferLength);
+
+    pDefaultServiceSD = RtlAllocateHeap(RtlGetProcessHeap(),
+                                        HEAP_ZERO_MEMORY,
+                                        dwBufferLength);
+    if (pDefaultServiceSD == NULL)
+    {
+        dwError = ERROR_OUTOFMEMORY;
+        goto done;
+    }
+    DPRINT("pDefaultServiceSD %p\n", pDefaultServiceSD);
+
+    Status = RtlAbsoluteToSelfRelativeSD(pServiceSD,
+                                         pDefaultServiceSD,
+                                         &dwBufferLength);
+    if (!NT_SUCCESS(Status))
+    {
+        dwError = RtlNtStatusToDosError(Status);
+    }
 
 done:
     if (dwError != ERROR_SUCCESS)
     {
-        if (pDacl != NULL)
-            RtlFreeHeap(RtlGetProcessHeap(), 0, pDacl);
-
-        if (pSacl != NULL)
-            RtlFreeHeap(RtlGetProcessHeap(), 0, pSacl);
-
-        if (pServiceSD != NULL)
-            RtlFreeHeap(RtlGetProcessHeap(), 0, pServiceSD);
+        if (pDefaultServiceSD != NULL)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, pDefaultServiceSD);
+            pDefaultServiceSD = NULL;
+        }
     }
+
+    if (pServiceSD != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pServiceSD);
+
+    if (pSacl != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pSacl);
+
+    if (pDacl != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pDacl);
 
     return dwError;
 }

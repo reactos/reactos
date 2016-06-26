@@ -15,6 +15,11 @@
 #define NDEBUG
 #include <debug.h>
 
+ULONG
+NTAPI
+RtlLengthSecurityDescriptor(
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor);
+
 /* FUNCTIONS *****************************************************************/
 
 
@@ -504,45 +509,11 @@ ScmWriteSecurityDescriptor(
     _In_ HKEY hServiceKey,
     _In_ PSECURITY_DESCRIPTOR pSecurityDescriptor)
 {
-    PSECURITY_DESCRIPTOR pRelativeSD = NULL;
     HKEY hSecurityKey = NULL;
-    DWORD dwBufferLength = 0;
     DWORD dwDisposition;
     DWORD dwError;
-    NTSTATUS Status;
 
     DPRINT1("ScmWriteSecurityDescriptor(%p %p)\n", hServiceKey, pSecurityDescriptor);
-
-    Status = RtlAbsoluteToSelfRelativeSD(pSecurityDescriptor,
-                                         NULL,
-                                         &dwBufferLength);
-    if (Status != STATUS_BUFFER_TOO_SMALL)
-    {
-DPRINT1("\n");
-        return RtlNtStatusToDosError(Status);
-    }
-
-    DPRINT1("BufferLength %lu\n", dwBufferLength);
-
-    pRelativeSD = RtlAllocateHeap(RtlGetProcessHeap(),
-                                  HEAP_ZERO_MEMORY,
-                                  dwBufferLength);
-    if (pRelativeSD == NULL)
-    {
-DPRINT1("\n");
-        return ERROR_OUTOFMEMORY;
-    }
-
-DPRINT1("\n");
-    Status = RtlAbsoluteToSelfRelativeSD(pSecurityDescriptor,
-                                         pRelativeSD,
-                                         &dwBufferLength);
-    if (!NT_SUCCESS(Status))
-    {
-DPRINT1("\n");
-        dwError = RtlNtStatusToDosError(Status);
-        goto done;
-    }
 
 DPRINT1("\n");
     dwError = RegCreateKeyExW(hServiceKey,
@@ -565,16 +536,13 @@ DPRINT1("\n");
                              L"Security",
                              0,
                              REG_BINARY,
-                             (LPBYTE)pRelativeSD,
-                             dwBufferLength);
+                             (LPBYTE)pSecurityDescriptor,
+                             RtlLengthSecurityDescriptor(pSecurityDescriptor));
 DPRINT1("\n");
 
 done:
     if (hSecurityKey != NULL)
         RegCloseKey(hSecurityKey);
-
-    if (pRelativeSD != NULL)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, pRelativeSD);
 
     return dwError;
 }
@@ -586,13 +554,10 @@ ScmReadSecurityDescriptor(
     _Out_ PSECURITY_DESCRIPTOR *ppSecurityDescriptor)
 {
     PSECURITY_DESCRIPTOR pRelativeSD = NULL;
-    PSECURITY_DESCRIPTOR pResizedBuffer = NULL;
     HKEY hSecurityKey = NULL;
     DWORD dwBufferLength = 0;
-    DWORD dwAbsoluteSDSize = 0;
     DWORD dwType;
     DWORD dwError;
-    NTSTATUS Status;
 
     DPRINT("ScmReadSecurityDescriptor()\n");
 
@@ -647,36 +612,6 @@ ScmReadSecurityDescriptor(
                                &dwBufferLength);
     if (dwError != ERROR_SUCCESS)
     {
-        goto done;
-    }
-
-    Status = RtlSelfRelativeToAbsoluteSD2(pRelativeSD,
-                                          &dwAbsoluteSDSize);
-    if (Status == STATUS_BUFFER_TOO_SMALL)
-    {
-        pResizedBuffer = RtlReAllocateHeap(RtlGetProcessHeap(),
-                                           0,
-                                           pRelativeSD,
-                                           dwAbsoluteSDSize);
-        if (pResizedBuffer == NULL)
-        {
-            dwError = ERROR_OUTOFMEMORY;
-            goto done;
-        }
-
-        pRelativeSD = pResizedBuffer;
-        Status = RtlSelfRelativeToAbsoluteSD2(pRelativeSD,
-                                              &dwAbsoluteSDSize);
-        if (!NT_SUCCESS(Status))
-        {
-            dwError = RtlNtStatusToDosError(Status);
-            goto done;
-        }
-    }
-    else if (!NT_SUCCESS(Status))
-    {
-
-        dwError = RtlNtStatusToDosError(Status);
         goto done;
     }
 
