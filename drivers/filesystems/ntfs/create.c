@@ -476,14 +476,66 @@ NtfsCreateFile(PDEVICE_OBJECT DeviceObject,
             return Status;
         }
 
-        /* HUGLY HACK: Can't overwrite or supersede a file yet... */
         if (RequestedDisposition == FILE_OVERWRITE ||
             RequestedDisposition == FILE_OVERWRITE_IF ||
             RequestedDisposition == FILE_SUPERSEDE)
         {
-            DPRINT1("Cannot yet perform an overwrite or supersede request on NTFS volume\n");
-            NtfsCloseFile(DeviceExt, FileObject);
-            return STATUS_ACCESS_DENIED;
+            PFILE_RECORD_HEADER fileRecord = NULL;
+            PNTFS_ATTR_CONTEXT dataContext = NULL;
+            ULONG DataAttributeOffset;
+            LARGE_INTEGER Zero;
+            Zero.QuadPart = 0;
+
+            // TODO: check for appropriate access
+           
+            ExAcquireResourceExclusiveLite(&(Fcb->MainResource), TRUE);
+
+            fileRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                               Fcb->Vcb->NtfsInfo.BytesPerFileRecord,
+                                               TAG_NTFS);
+            if (fileRecord)
+            {
+
+                Status = ReadFileRecord(Fcb->Vcb,
+                                        Fcb->MFTIndex,
+                                        fileRecord);
+                if (!NT_SUCCESS(Status))
+                    goto DoneOverwriting;
+
+                // find the data attribute and set it's length to 0 (TODO: Handle Alternate Data Streams)
+                Status = FindAttribute(Fcb->Vcb, fileRecord, AttributeData, L"", 0, &dataContext, &DataAttributeOffset);
+                if (!NT_SUCCESS(Status))
+                    goto DoneOverwriting;
+
+                Status = SetAttributeDataLength(FileObject, Fcb, dataContext, DataAttributeOffset, fileRecord, &Zero);
+            }
+            else
+            {
+                Status = STATUS_NO_MEMORY;
+            }            
+           
+        DoneOverwriting:
+            if (fileRecord)
+                ExFreePool(fileRecord);
+            if (dataContext)
+                ReleaseAttributeContext(dataContext);
+
+            ExReleaseResourceLite(&(Fcb->MainResource));
+
+            if (!NT_SUCCESS(Status))
+            {
+                NtfsCloseFile(DeviceExt, FileObject);
+                return Status;
+            }            
+
+            if (RequestedDisposition == FILE_SUPERSEDE)
+            {
+                Irp->IoStatus.Information = FILE_SUPERSEDED;
+            }
+            else
+            {
+                Irp->IoStatus.Information = FILE_OVERWRITTEN;
+            }
         }
     }
     else
