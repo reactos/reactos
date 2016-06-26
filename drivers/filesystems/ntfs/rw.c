@@ -422,7 +422,7 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
             AllocationSize = ROUND_UP(DataSize.QuadPart, Fcb->Vcb->NtfsInfo.BytesPerCluster);
 
             // set the attribute data length
-            Status = SetAttributeDataLength(FileObject, Fcb, DataContext, AttributeOffset, FileRecord, DeviceExt, &DataSize);
+            Status = SetAttributeDataLength(FileObject, Fcb, DataContext, AttributeOffset, FileRecord, &DataSize);
             
             if (!NT_SUCCESS(Status))
             {
