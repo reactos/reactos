@@ -555,8 +555,7 @@ ScmDeleteServiceRecord(PSERVICE lpService)
     ScmSetServiceGroup(lpService, NULL);
 
     /* Release the SecurityDescriptor */
-    if ((lpService->pSecurityDescriptor != NULL) &&
-        (lpService->pSecurityDescriptor != pDefaultServiceSD))
+    if (lpService->pSecurityDescriptor != NULL)
         HeapFree(GetProcessHeap(), 0, lpService->pSecurityDescriptor);
 
     /* Remove the Service from the List */
@@ -706,7 +705,9 @@ CreateServiceListEntry(LPCWSTR lpServiceName,
         if (lpService->pSecurityDescriptor == NULL)
         {
             DPRINT("No security descriptor found! Assign default security descriptor!\n");
-            lpService->pSecurityDescriptor = pDefaultServiceSD;
+            dwError = ScmCreateDefaultServiceSD(&lpService->pSecurityDescriptor);
+            if (dwError != ERROR_SUCCESS)
+                goto done;
 
             dwError = ScmWriteSecurityDescriptor(hServiceKey,
                                                  lpService->pSecurityDescriptor);

@@ -13,8 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-PSECURITY_DESCRIPTOR pDefaultServiceSD = NULL; /* Self-relative SD */
-
 static PSID pNullSid = NULL;
 static PSID pLocalSystemSid = NULL;
 static PSID pAuthenticatedUserSid = NULL;
@@ -102,11 +100,12 @@ ScmCreateSids(VOID)
 }
 
 
-static
 DWORD
-ScmCreateDefaultServiceSD(VOID)
+ScmCreateDefaultServiceSD(
+    PSECURITY_DESCRIPTOR *ppSecurityDescriptor)
 {
     PSECURITY_DESCRIPTOR pServiceSD = NULL;
+    PSECURITY_DESCRIPTOR pRelativeSD = NULL;
     PACL pDacl = NULL;
     PACL pSacl = NULL;
     ULONG ulLength;
@@ -234,32 +233,32 @@ ScmCreateDefaultServiceSD(VOID)
 
     DPRINT("BufferLength %lu\n", dwBufferLength);
 
-    pDefaultServiceSD = RtlAllocateHeap(RtlGetProcessHeap(),
-                                        HEAP_ZERO_MEMORY,
-                                        dwBufferLength);
-    if (pDefaultServiceSD == NULL)
+    pRelativeSD = RtlAllocateHeap(RtlGetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  dwBufferLength);
+    if (pRelativeSD == NULL)
     {
         dwError = ERROR_OUTOFMEMORY;
         goto done;
     }
-    DPRINT("pDefaultServiceSD %p\n", pDefaultServiceSD);
+    DPRINT("pRelativeSD %p\n", pRelativeSD);
 
     Status = RtlAbsoluteToSelfRelativeSD(pServiceSD,
-                                         pDefaultServiceSD,
+                                         pRelativeSD,
                                          &dwBufferLength);
     if (!NT_SUCCESS(Status))
     {
         dwError = RtlNtStatusToDosError(Status);
+        goto done;
     }
+
+    *ppSecurityDescriptor = pRelativeSD;
 
 done:
     if (dwError != ERROR_SUCCESS)
     {
-        if (pDefaultServiceSD != NULL)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, pDefaultServiceSD);
-            pDefaultServiceSD = NULL;
-        }
+        if (pRelativeSD != NULL)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, pRelativeSD);
     }
 
     if (pServiceSD != NULL)
@@ -281,10 +280,6 @@ ScmInitializeSecurity(VOID)
     DWORD dwError;
 
     dwError = ScmCreateSids();
-    if (dwError != ERROR_SUCCESS)
-        return dwError;
-
-    dwError = ScmCreateDefaultServiceSD();
     if (dwError != ERROR_SUCCESS)
         return dwError;
 

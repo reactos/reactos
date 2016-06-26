@@ -2255,7 +2255,9 @@ DWORD RCreateServiceW(
     /* Assign the default security descriptor */
     if (dwServiceType & SERVICE_WIN32)
     {
-        lpService->pSecurityDescriptor = pDefaultServiceSD;
+        dwError = ScmCreateDefaultServiceSD(&lpService->pSecurityDescriptor);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
 
     /* Write service data to the registry */

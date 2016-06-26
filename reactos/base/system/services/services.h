@@ -98,8 +98,6 @@ extern LIST_ENTRY ImageListHead;
 extern BOOL ScmInitialize;
 extern BOOL ScmShutdown;
 
-extern PSECURITY_DESCRIPTOR pDefaultServiceSD;
-
 
 /* FUNCTIONS ***************************************************************/
 
@@ -214,6 +212,10 @@ VOID ScmStartRpcServer(VOID);
 
 DWORD ScmInitializeSecurity(VOID);
 VOID ScmShutdownSecurity(VOID);
+
+DWORD
+ScmCreateDefaultServiceSD(
+    PSECURITY_DESCRIPTOR *ppSecurityDescriptor);
 
 
 /* services.c */

@@ -513,9 +513,8 @@ ScmWriteSecurityDescriptor(
     DWORD dwDisposition;
     DWORD dwError;
 
-    DPRINT1("ScmWriteSecurityDescriptor(%p %p)\n", hServiceKey, pSecurityDescriptor);
+    DPRINT("ScmWriteSecurityDescriptor(%p %p)\n", hServiceKey, pSecurityDescriptor);
 
-DPRINT1("\n");
     dwError = RegCreateKeyExW(hServiceKey,
                               L"Security",
                               0,
@@ -526,23 +525,16 @@ DPRINT1("\n");
                               &hSecurityKey,
                               &dwDisposition);
     if (dwError != ERROR_SUCCESS)
-    {
-DPRINT1("\n");
-        goto done;
-    }
+        return dwError;
 
-DPRINT1("\n");
     dwError = RegSetValueExW(hSecurityKey,
                              L"Security",
                              0,
                              REG_BINARY,
                              (LPBYTE)pSecurityDescriptor,
                              RtlLengthSecurityDescriptor(pSecurityDescriptor));
-DPRINT1("\n");
 
-done:
-    if (hSecurityKey != NULL)
-        RegCloseKey(hSecurityKey);
+    RegCloseKey(hSecurityKey);
 
     return dwError;
 }
@@ -559,7 +551,7 @@ ScmReadSecurityDescriptor(
     DWORD dwType;
     DWORD dwError;
 
-    DPRINT("ScmReadSecurityDescriptor()\n");
+    DPRINT("ScmReadSecurityDescriptor(%p %p)\n", hServiceKey, ppSecurityDescriptor);
 
     *ppSecurityDescriptor = NULL;
 
