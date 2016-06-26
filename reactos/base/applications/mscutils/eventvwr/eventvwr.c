@@ -226,40 +226,36 @@ GetEventMessageFileDLL(IN LPCWSTR lpLogName,
                       szKeyName,
                       0,
                       KEY_READ,
-                      &hAppKey) == ERROR_SUCCESS)
+                      &hAppKey) != ERROR_SUCCESS)
     {
-        if (RegOpenKeyExW(hAppKey,
-                          SourceName,
-                          0,
-                          KEY_READ,
-                          &hSourceKey) == ERROR_SUCCESS)
+        return FALSE;
+    }
+
+    if (RegOpenKeyExW(hAppKey,
+                      SourceName,
+                      0,
+                      KEY_READ,
+                      &hSourceKey) == ERROR_SUCCESS)
+    {
+        dwSize = sizeof(szModuleName);
+        if (RegQueryValueExW(hSourceKey,
+                             EntryName,
+                             NULL,
+                             NULL,
+                             (LPBYTE)szModuleName,
+                             &dwSize) == ERROR_SUCCESS)
         {
-            dwSize = sizeof(szModuleName);
-            if (RegQueryValueExW(hSourceKey,
-                                 EntryName,
-                                 NULL,
-                                 NULL,
-                                 (LPBYTE)szModuleName,
-                                 &dwSize) == ERROR_SUCCESS)
-            {
-                /* Returns a string containing the requested substituted environment variable */
-                ExpandEnvironmentStringsW(szModuleName, ExpandedName, MAX_PATH);
+            /* Returns a string containing the requested substituted environment variable */
+            ExpandEnvironmentStringsW(szModuleName, ExpandedName, MAX_PATH);
 
-                /* Successful */
-                bReturn = TRUE;
-            }
+            /* Successful */
+            bReturn = TRUE;
         }
-    }
-    else
-    {
-        ShowLastWin32Error();
-    }
 
-    if (hSourceKey != NULL)
         RegCloseKey(hSourceKey);
+    }
 
-    if (hAppKey != NULL)
-        RegCloseKey(hAppKey);
+    RegCloseKey(hAppKey);
 
     return bReturn;
 }
@@ -677,14 +673,13 @@ QueryEventMessages(LPWSTR lpMachineName,
             /* Get the computer name */
             lpszComputerName = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD) + (wcslen(lpszSourceName) + 1) * sizeof(WCHAR));
 
-            /* Compute the event type */
+            /* Compute the event time */
             EventTimeToSystemTime(pevlr->TimeWritten, &time);
+            GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &time, NULL, szLocalDate, ARRAYSIZE(szLocalDate));
+            GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &time, NULL, szLocalTime, ARRAYSIZE(szLocalTime));
 
             /* Get the username that generated the event */
             GetEventUserName(pevlr, szUsername);
-
-            GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &time, NULL, szLocalDate, ARRAYSIZE(szLocalDate));
-            GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &time, NULL, szLocalTime, ARRAYSIZE(szLocalTime));
 
             GetEventType(pevlr->EventType, szEventTypeText);
             GetEventCategory(lpLogName, lpszSourceName, pevlr, szCategory);
