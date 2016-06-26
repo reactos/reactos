@@ -177,7 +177,6 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
                        PNTFS_ATTR_CONTEXT AttrContext,
                        ULONG AttrOffset,
                        PFILE_RECORD_HEADER FileRecord,
-                       PDEVICE_EXTENSION DeviceExt,
                        PLARGE_INTEGER DataSize)
 {
     if (AttrContext->Record.IsNonResident)
