@@ -12,9 +12,9 @@ BEGIN
     IDS_USAGE "Substituie un director cu o unitate de stocare.\n\n\
 SUBST [unitate1: [unitate2:]cale]\n\
 SUBST unitate1: /D\n\n\
-  unitate1:        Unitatea virtuală ce va fi asociată directorului.\n\
-  [unitate:]cale   Unitatea fizică și calea directorului substituit\n\
-                   cu unitatea virtuală.\n\
-  /D               șterge o unitate (virtuală) de substituție.\n\n\
+  unitate1:       Unitatea virtuală ce va fi asociată directorului.\n\
+  [unitate:]cale  Unitatea fizică și calea directorului substituit\n\
+                  cu unitatea virtuală.\n\
+  /D              șterge o unitate (virtuală) de substituție.\n\n\
 Tastați SUBST fără argumente pentru a enumera unitățile virtuale curente.\n"
 END

@@ -10,8 +10,9 @@ BEGIN
     IDS_USAGE "Associa un percorso ad una lettera di unità.\n\n\
 SUBST [unità1: [unità2:]percorso]\n\
 SUBST unità1: /D\n\n\
-  unità1:           Specifica un'unità virtuale alla quale assegnare un percorso.\n\
-  [unità2:]percorso Specifica un'unità fisica e un percorso da assegnare ad una\n                  unità virtuale.\n\
-  /D                Elimina un'unità (virtuale) sostituita.\n\n\
+  unità1:            Specifica un'unità virtuale alla quale assegnare un percorso.\n\
+  [unità2:]percorso  Specifica un'unità fisica e un percorso da assegnare ad una\n\
+                     unità virtuale.\n\
+  /D                 Elimina un'unità (virtuale) sostituita.\n\n\
 Digitare SUBST senza parametri per mostrare un elenco delle unità virtuali attuali.\n"
 END

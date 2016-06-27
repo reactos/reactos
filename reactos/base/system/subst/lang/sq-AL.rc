@@ -15,7 +15,8 @@ BEGIN
 SUBST [drive1: [drive2:]path]\n\
 SUBST drive1: /D\n\n\
   drive1:        Përcakton një drive virtual për të cilën ju doni të caktojë një rrugë.\n\
-  [drive2:]path  Përcakton një drive fizik dhe rrugen qe doni te percaktoni\nnje driveri virtual.\n\
+  [drive2:]path  Përcakton një drive fizik dhe rrugen qe doni te percaktoni\n\
+                 një driveri virtual.\n\
   /D             Fshin një zëvendesus (virtual) drive.\n\n\
 Shkruaj SUBST pa parametra per te shfaqur një liste e drivera virtual aktual.\n"
 END
