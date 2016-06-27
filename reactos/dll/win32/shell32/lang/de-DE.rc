@@ -481,7 +481,7 @@ CAPTION "Abmelden"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_SHELL_LOGOFF, IDC_STATIC, 7, 7, 20, 20
-    LTEXT "Sind Sie sicher, dass Sie sich abmelden wollen?", -1, 35, 16, 146, 8
+    LTEXT "Sind Sie sicher, dass Sie sich abmelden wollen?", -1, 35, 16, 166, 8
     DEFPUSHBUTTON "&Abmelden", IDOK, 41, 39, 50, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 95, 39, 50, 14
 END
