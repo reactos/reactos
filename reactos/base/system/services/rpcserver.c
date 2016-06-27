@@ -1441,9 +1441,10 @@ DWORD RSetServiceObjectSecurity(
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;
     ULONG DesiredAccess = 0;
-    /* HANDLE hToken = NULL; */
-    HKEY hServiceKey;
-    /* NTSTATUS Status; */
+    HANDLE hToken = NULL;
+    HKEY hServiceKey = NULL;
+    BOOL bDatabaseLocked = FALSE;
+    NTSTATUS Status;
     DWORD dwError;
 
     DPRINT("RSetServiceObjectSecurity() called\n");
@@ -1483,14 +1484,14 @@ DWORD RSetServiceObjectSecurity(
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   DesiredAccess))
     {
-        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT("lpService == NULL!\n");
+        DPRINT1("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1510,13 +1511,10 @@ DWORD RSetServiceObjectSecurity(
     RpcRevertToSelf();
 #endif
 
-    /* Lock the service database exclusive */
-    ScmLockDatabaseExclusive();
-
-#if 0
+    /* Build the new security descriptor */
     Status = RtlSetSecurityObject(dwSecurityInformation,
                                   (PSECURITY_DESCRIPTOR)lpSecurityDescriptor,
-                                  &lpService->lpSecurityDescriptor,
+                                  &lpService->pSecurityDescriptor,
                                   &ScmServiceMapping,
                                   hToken);
     if (!NT_SUCCESS(Status))
@@ -1524,31 +1522,34 @@ DWORD RSetServiceObjectSecurity(
         dwError = RtlNtStatusToDosError(Status);
         goto Done;
     }
-#endif
 
+    /* Lock the service database exclusive */
+    ScmLockDatabaseExclusive();
+    bDatabaseLocked = TRUE;
+
+    /* Open the service key */
     dwError = ScmOpenServiceKey(lpService->lpServiceName,
                                 READ_CONTROL | KEY_CREATE_SUB_KEY | KEY_SET_VALUE,
                                 &hServiceKey);
     if (dwError != ERROR_SUCCESS)
         goto Done;
 
-    UNIMPLEMENTED;
-    dwError = ERROR_SUCCESS;
-//    dwError = ScmWriteSecurityDescriptor(hServiceKey,
-//                                         lpService->lpSecurityDescriptor);
+    /* Store the new security descriptor */
+    dwError = ScmWriteSecurityDescriptor(hServiceKey,
+                                         lpService->pSecurityDescriptor);
 
     RegFlushKey(hServiceKey);
-    RegCloseKey(hServiceKey);
 
 Done:
-
-#if 0
-    if (hToken != NULL)
-        NtClose(hToken);
-#endif
+    if (hServiceKey != NULL)
+        RegCloseKey(hServiceKey);
 
     /* Unlock service database */
-    ScmUnlockDatabase();
+    if (bDatabaseLocked == TRUE)
+        ScmUnlockDatabase();
+
+    if (hToken != NULL)
+        NtClose(hToken);
 
     DPRINT("RSetServiceObjectSecurity() done (Error %lu)\n", dwError);
 
