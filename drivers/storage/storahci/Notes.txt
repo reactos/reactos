@@ -24,11 +24,12 @@ AhciHwInitialize
 
 AhciInterruptHandler
     Flags
-        IMPLEMENTED
+        NOT_IMPLEMENTED
         TESTED
     Comment
         Fatal Error not supported
         Error Recovery not supported
+        Complete Request Routine
 
 AhciHwInterrupt
     Flags
@@ -70,9 +71,9 @@ DriverEntry
 
 AhciATA_CFIS
     Flags
-        NOT_IMPLEMENTED
+        IMPLEMENTED
     Comment
-        Need to configure command table according to Srb function
+        Need to implement NCQ
 
 AhciATAPI_CFIS
     Flags
@@ -95,9 +96,9 @@ AhciProcessSrb
 
 AhciActivatePort
     Flags
-        NOT_IMPLEMENTED
+        IMPLEMENTED
     Comment
-        NONE
+        NCQ not supported
 
 AhciProcessIO
     Flags

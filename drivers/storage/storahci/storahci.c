@@ -77,6 +77,13 @@ AhciPortInitialize (
         StorPortWriteRegisterUlong(adapterExtension, &PortExtension->Port->FBU, receivedFISPhysical.HighPart);
     }
 
+    PortExtension->IdentifyDeviceDataPhysicalAddress = StorPortGetPhysicalAddress(adapterExtension,
+                                                                                  NULL,
+                                                                                  PortExtension->IdentifyDeviceData,
+                                                                                  &mappedLength);
+
+    NT_ASSERT(mappedLength == sizeof(IDENTIFY_DEVICE_DATA));
+
     // set device power state flag to D0
     PortExtension->DevicePowerState = StorPowerDeviceD0;
 
@@ -107,7 +114,7 @@ AhciAllocateResourceForAdapter (
     )
 {
     PVOID portsExtension = NULL;
-    PCHAR nonCachedExtension;
+    PCHAR nonCachedExtension, tmp;
     ULONG status, index, NCS, AlignedNCS;
     ULONG portCount, portImplemented, nonCachedExtensionSize;
 
@@ -130,7 +137,8 @@ AhciAllocateResourceForAdapter (
 
     AdapterExtension->PortCount = portCount;
     nonCachedExtensionSize =    sizeof(AHCI_COMMAND_HEADER) * AlignedNCS + //should be 1K aligned
-                                sizeof(AHCI_RECEIVED_FIS);
+                                sizeof(AHCI_RECEIVED_FIS) +
+                                sizeof(IDENTIFY_DEVICE_DATA);
 
     // align nonCachedExtensionSize to 1024
     nonCachedExtensionSize = ROUND_UP(nonCachedExtensionSize, 1024);
@@ -157,7 +165,11 @@ AhciAllocateResourceForAdapter (
             AdapterExtension->PortExtension[index].IsActive = TRUE;
             AdapterExtension->PortExtension[index].AdapterExtension = AdapterExtension;
             AdapterExtension->PortExtension[index].CommandList = nonCachedExtension;
-            AdapterExtension->PortExtension[index].ReceivedFIS = (PAHCI_RECEIVED_FIS)(nonCachedExtension + sizeof(AHCI_COMMAND_HEADER) * AlignedNCS);
+
+            tmp = (PCHAR)(nonCachedExtension + sizeof(AHCI_COMMAND_HEADER) * AlignedNCS);
+
+            AdapterExtension->PortExtension[index].ReceivedFIS = (PAHCI_RECEIVED_FIS)tmp;
+            AdapterExtension->PortExtension[index].IdentifyDeviceData = (PIDENTIFY_DEVICE_DATA)(tmp + sizeof(AHCI_RECEIVED_FIS));
             nonCachedExtension += nonCachedExtensionSize;
         }
     }
@@ -219,7 +231,7 @@ AhciInterruptHandler (
     __in PAHCI_PORT_EXTENSION PortExtension
     )
 {
-    ULONG IS;
+    ULONG is, ci, sact, outstanding;
     AHCI_INTERRUPT_STATUS PxIS;
     AHCI_INTERRUPT_STATUS PxISMasked;
     PAHCI_ADAPTER_EXTENSION AdapterExtension;
@@ -283,8 +295,18 @@ AhciInterruptHandler (
     // 10.7.1.1
     // Clear port interrupt
     // It is set by the level of the virtual interrupt line being a set, and cleared by a write of ‘1’ from the software.
-    IS = (1 << PortExtension->PortNumber);
-    StorPortWriteRegisterUlong(AdapterExtension, AdapterExtension->IS, IS);
+    is = (1 << PortExtension->PortNumber);
+    StorPortWriteRegisterUlong(AdapterExtension, AdapterExtension->IS, is);
+
+    ci = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->CI);
+    sact = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->SACT);
+
+    outstanding = ci | sact; // NOTE: Including both non-NCQ and NCQ based commands
+    if ((PortExtension->CommandIssuedSlots & (~outstanding)) != 0)
+    {
+        DebugPrint("\tCompleted Commands: %d\n", (PortExtension->CommandIssuedSlots & (~outstanding)));
+        PortExtension->CommandIssuedSlots &= outstanding;
+    }
 
     return;
 }// -- AhciInterruptHandler();
@@ -741,7 +763,7 @@ DriverEntry (
 
 /**
  * @name AhciATA_CFIS
- * @not_implemented
+ * @implemented
  *
  * create ATA CFIS from Srb
  *
@@ -755,8 +777,33 @@ AhciATA_CFIS (
     __in PAHCI_SRB_EXTENSION SrbExtension
     )
 {
+    PAHCI_COMMAND_TABLE cmdTable;
+
     DebugPrint("AhciATA_CFIS()\n");
 
+    cmdTable = (PAHCI_COMMAND_TABLE)SrbExtension;
+
+    NT_ASSERT(sizeof(cmdTable->CFIS) == 64);
+
+    AhciZeroMemory(&cmdTable->CFIS, sizeof(cmdTable->CFIS));
+
+    cmdTable->CFIS[AHCI_ATA_CFIS_FisType] = 0x27;       // FIS Type
+    cmdTable->CFIS[AHCI_ATA_CFIS_PMPort_C] = (1 << 7);   // PM Port & C
+    cmdTable->CFIS[AHCI_ATA_CFIS_CommandReg] = SrbExtension->CommandReg;
+
+    cmdTable->CFIS[AHCI_ATA_CFIS_FeaturesLow] = SrbExtension->FeaturesLow;
+    cmdTable->CFIS[AHCI_ATA_CFIS_LBA0] = SrbExtension->LBA0;
+    cmdTable->CFIS[AHCI_ATA_CFIS_LBA1] = SrbExtension->LBA1;
+    cmdTable->CFIS[AHCI_ATA_CFIS_LBA2] = SrbExtension->LBA2;
+    cmdTable->CFIS[AHCI_ATA_CFIS_Device] = SrbExtension->Device;
+    cmdTable->CFIS[AHCI_ATA_CFIS_LBA3] = SrbExtension->LBA3;
+    cmdTable->CFIS[AHCI_ATA_CFIS_LBA4] = SrbExtension->LBA4;
+    cmdTable->CFIS[AHCI_ATA_CFIS_LBA5] = SrbExtension->LBA5;
+    cmdTable->CFIS[AHCI_ATA_CFIS_FeaturesHigh] = SrbExtension->FeaturesHigh;
+    cmdTable->CFIS[AHCI_ATA_CFIS_SectorCountLow] = SrbExtension->SectorCountLow;
+    cmdTable->CFIS[AHCI_ATA_CFIS_SectorCountHigh] = SrbExtension->SectorCountHigh;
+
+    return;
 }// -- AhciATA_CFIS();
 
 /**
@@ -934,13 +981,13 @@ AhciProcessSrb (
     }
 
     // mark this slot
-    PortExtension->OccupiedSlots |= SlotIndex;
+    PortExtension->QueueSlots |= SlotIndex;
     return;
 }// -- AhciProcessSrb();
 
 /**
  * @name AhciActivatePort
- * @not_implemented
+ * @implemented
  *
  * Program Port and populate command list
  *
@@ -952,7 +999,39 @@ AhciActivatePort (
     __in PAHCI_PORT_EXTENSION PortExtension
     )
 {
+    ULONG cmd, QueueSlots, slotToActivate, tmp;
+    PAHCI_ADAPTER_EXTENSION AdapterExtension;
+
     DebugPrint("AhciActivatePort()\n");
+
+    AdapterExtension = PortExtension->AdapterExtension;
+    QueueSlots = PortExtension->QueueSlots;
+
+    if (QueueSlots == 0)
+        return;
+
+    // section 3.3.14
+    // Bits in this field shall only be set to ‘1’ by software when PxCMD.ST is set to ‘1’
+    cmd = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->CMD);
+
+    if ((cmd&1) == 0) // PxCMD.ST == 0
+        return;
+
+    // get the lowest set bit
+    tmp = QueueSlots & (QueueSlots - 1);
+
+    if (tmp == 0)
+        slotToActivate = QueueSlots;
+    else
+        slotToActivate = (QueueSlots & (~tmp));
+
+    // mark that bit off in QueueSlots
+    PortExtension->QueueSlots &= ~slotToActivate;
+    // mark this CommandIssuedSlots
+    PortExtension->CommandIssuedSlots |= slotToActivate;
+
+    // tell the HBA to issue this Command Slot to the given port
+    StorPortWriteRegisterUlong(AdapterExtension, &PortExtension->Port->CI, slotToActivate);
 
     return;
 }// -- AhciActivatePort();
@@ -999,7 +1078,7 @@ AhciProcessIO (
     // Acquire Lock
     StorPortAcquireSpinLock(AdapterExtension, InterruptLock, NULL, &lockhandle);
 
-    occupiedSlots = PortExtension->OccupiedSlots; // Busy command slots for given port
+    occupiedSlots = (PortExtension->QueueSlots | PortExtension->CommandIssuedSlots); // Busy command slots for given port
     NCS = AHCI_Global_Port_CAP_NCS(AdapterExtension->CAP);
     commandSlotMask = (1 << NCS) - 1; // available slots mask
 
@@ -1064,11 +1143,15 @@ DeviceInquiryRequest (
 {
     PVOID DataBuffer;
     ULONG DataBufferLength;
+    PAHCI_PORT_EXTENSION PortExtension;
     PAHCI_SRB_EXTENSION SrbExtension;
 
     DebugPrint("DeviceInquiryRequest()\n");
 
+    NT_ASSERT(IsPortValid(AdapterExtension, Srb->PathId));
+
     SrbExtension = GetSrbExtension(Srb);
+    PortExtension = &AdapterExtension->PortExtension[Srb->PathId];
 
     // 3.6.1
     // If the EVPD bit is set to zero, the device server shall return the standard INQUIRY data
@@ -1078,7 +1161,25 @@ DeviceInquiryRequest (
         NT_ASSERT(SrbExtension != NULL);
 
         SrbExtension->AtaFunction = ATA_FUNCTION_ATA_IDENTIFY;
+        SrbExtension->Flags |= ATA_FLAGS_DATA_IN;
         SrbExtension->CommandReg = IDE_COMMAND_NOT_VALID;
+
+        SrbExtension->FeaturesLow = 0;
+        SrbExtension->LBA0 = 0;
+        SrbExtension->LBA1 = 0;
+        SrbExtension->LBA2 = 0;
+        SrbExtension->Device = 0;
+        SrbExtension->LBA3 = 0;
+        SrbExtension->LBA4 = 0;
+        SrbExtension->LBA5 = 0;
+        SrbExtension->FeaturesHigh = 0;
+        SrbExtension->SectorCountLow = 0;
+        SrbExtension->SectorCountHigh = 0;
+
+        SrbExtension->Sgl.NumberOfElements = 1;
+        SrbExtension->Sgl.List[0].PhysicalAddress.LowPart = PortExtension->IdentifyDeviceDataPhysicalAddress.LowPart;
+        SrbExtension->Sgl.List[0].PhysicalAddress.HighPart = PortExtension->IdentifyDeviceDataPhysicalAddress.HighPart;
+        SrbExtension->Sgl.List[0].Length = sizeof(IDENTIFY_DEVICE_DATA);
     }
     else
     {
@@ -1093,10 +1194,13 @@ DeviceInquiryRequest (
         }
 
         AhciZeroMemory(DataBuffer, DataBufferLength);
+
+        // not supported
+        return SRB_STATUS_BAD_FUNCTION;
     }
 
     AhciProcessIO(AdapterExtension, Srb->PathId, Srb);
-    return SRB_STATUS_SUCCESS;
+    return SRB_STATUS_PENDING;
 }// -- DeviceInquiryRequest();
 
 /**

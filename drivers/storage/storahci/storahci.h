@@ -23,6 +23,21 @@
 #define AHCI_Global_HBA_CONTROL_AE          (1 << 31)
 #define AHCI_Global_HBA_CAP_S64A            (1 << 31)
 
+#define AHCI_ATA_CFIS_FisType               0
+#define AHCI_ATA_CFIS_PMPort_C              1
+#define AHCI_ATA_CFIS_CommandReg            2
+#define AHCI_ATA_CFIS_FeaturesLow           3
+#define AHCI_ATA_CFIS_LBA0                  4
+#define AHCI_ATA_CFIS_LBA1                  5
+#define AHCI_ATA_CFIS_LBA2                  6
+#define AHCI_ATA_CFIS_Device                7
+#define AHCI_ATA_CFIS_LBA3                  8
+#define AHCI_ATA_CFIS_LBA4                  9
+#define AHCI_ATA_CFIS_LBA5                  10
+#define AHCI_ATA_CFIS_FeaturesHigh          11
+#define AHCI_ATA_CFIS_SectorCountLow        12
+#define AHCI_ATA_CFIS_SectorCountHigh       13
+
 // ATA Functions
 #define ATA_FUNCTION_ATA_COMMAND            0x100
 #define ATA_FUNCTION_ATA_IDENTIFY           0x101
@@ -297,13 +312,16 @@ typedef struct _AHCI_MEMORY_REGISTERS
 typedef struct _AHCI_PORT_EXTENSION
 {
     ULONG PortNumber;
-    ULONG OccupiedSlots;                                // slots to which we have already assigned task
+    ULONG QueueSlots;                                // slots to which we have already assigned task
+    ULONG CommandIssuedSlots;
     BOOLEAN IsActive;
     PAHCI_PORT Port;                                    // AHCI Port Infomation
     AHCI_QUEUE SrbQueue;
     PAHCI_RECEIVED_FIS ReceivedFIS;
     PAHCI_COMMAND_HEADER CommandList;
     STOR_DEVICE_POWER_STATE DevicePowerState;           // Device Power State
+    PIDENTIFY_DEVICE_DATA IdentifyDeviceData;
+    STOR_PHYSICAL_ADDRESS IdentifyDeviceDataPhysicalAddress;
     struct _AHCI_ADAPTER_EXTENSION* AdapterExtension;   // Port's Adapter Information
 } AHCI_PORT_EXTENSION, *PAHCI_PORT_EXTENSION;
 
@@ -353,7 +371,21 @@ typedef struct _AHCI_SRB_EXTENSION
     AHCI_COMMAND_TABLE CommandTable;
     ULONG AtaFunction;
     ULONG Flags;
-    ULONG CommandReg;
+
+    UCHAR CommandReg;
+    UCHAR FeaturesLow;
+    UCHAR LBA0;
+    UCHAR LBA1;
+    UCHAR LBA2;
+    UCHAR Device;
+    UCHAR LBA3;
+    UCHAR LBA4;
+    UCHAR LBA5;
+    UCHAR FeaturesHigh;
+
+    UCHAR SectorCountLow;
+    UCHAR SectorCountHigh;
+
     ULONG SlotIndex;
     LOCAL_SCATTER_GATHER_LIST Sgl;
 } AHCI_SRB_EXTENSION, *PAHCI_SRB_EXTENSION;
