@@ -679,12 +679,6 @@ IntIsScrollBarVisible(PWND pWnd, INT hBar)
   return !(sbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN);
 }
 
-BOOL
-UserHasMenu(PWND pWnd, ULONG Style)
-{
-   return (!(Style & WS_CHILD) && UlongToHandle(pWnd->IDMenu) != 0);
-}
-
 /*
  * FIXME:
  * - Cache bitmaps, then just bitblt instead of calling DFC() (and
@@ -951,7 +945,7 @@ VOID UserDrawCaptionBar(
    {
       PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu));
       /* Draw menu bar */
-      if (menu && !(Style & WS_CHILD))
+      if ( menu && (((Style) & (WS_CHILD | WS_POPUP)) != WS_CHILD) )
       {
           TempRect = CurrentRect;
           TempRect.bottom = TempRect.top + menu->cyMenu;
@@ -1120,7 +1114,7 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
    {
      PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu));
      /* Draw menu bar */
-     if (menu && !(Style & WS_CHILD))
+     if ( menu && (((Style) & (WS_CHILD | WS_POPUP)) != WS_CHILD) )
      {
          TempRect = CurrentRect;
          TempRect.bottom = TempRect.top + menu->cyMenu;
