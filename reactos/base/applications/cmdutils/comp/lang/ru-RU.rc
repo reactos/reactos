@@ -1,0 +1,23 @@
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "Сравнение содержимого двух файлов или наборов файлов.\n\n\
+COMP [/L] [/A] [данные1] [данные2]\n\n\
+  данные1    Расположение и имя первого файла для сравнения.\n\
+  данные2    Расположение и имя второго файла для сравнения.\n\
+  /A         Вывод различий в формате ASCII (по умолчанию: шестнадцатиричный).\n\
+  /L         Вывод номеров строк, в которых обнаружены различия.\n"
+    IDS_INVALIDSWITCH "Недопустимый ключ - /%c\n"
+    IDS_BADSYNTAX "Не верный формат командной строки\n"
+    IDS_FILEERROR "Не удалось найти/открыть файл: %s\n"
+    IDS_COMPARING "Сравнение %s и %s...\n"
+    IDS_FILESIZEERROR "Не удалось определить размер файла: %s\n"
+    IDS_SIZEDIFFERS "Файлы разных размеров.\n"
+    IDS_READERROR "Ошибка чтения файлов.\n"
+    IDS_MISMATCHLINE "Ошибка сравнения в СТРОКЕ %d\n"
+    IDS_MISMATCHOFFSET "Ошибка сравнения в ПОЗИЦИИ 0x%X\n"
+    IDS_ASCIIDIFF "файл%d = %c\n"
+    IDS_HEXADECIMALDIFF "файл%d = %X\n"
+    IDS_MATCH "Различия не найдены\n"
+END
