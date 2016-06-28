@@ -75,40 +75,37 @@ BOOLEAN IsSubstedDrive(TCHAR *Drive)
     if (_tcslen(Drive) > 2)
         return FALSE;
 
-    dwSize = sizeof(TCHAR) * MAX_PATH;
-    lpTargetPath = (LPTSTR) malloc(sizeof(TCHAR) * MAX_PATH);
-    if ( lpTargetPath)
-    {
-        CharCount = QueryDosDevice(Drive,
-                                   lpTargetPath,
-                                   dwSize / sizeof(TCHAR));
-        while (! CharCount &&
-               GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-        {
-            free(lpTargetPath);
-            dwSize *= 2;
-            lpTargetPath = (LPTSTR) malloc(dwSize);
-            if (lpTargetPath)
-            {
-                CharCount = QueryDosDevice(Drive,
-                                           lpTargetPath,
-                                           dwSize / sizeof(TCHAR));
-            }
-        }
+    dwSize = MAX_PATH;
+    lpTargetPath = (LPTSTR)malloc(sizeof(TCHAR) * dwSize);
+    if (!lpTargetPath)
+        return FALSE;
 
-        if (CharCount)
+    CharCount = QueryDosDevice(Drive,
+                               lpTargetPath,
+                               dwSize);
+    while (!CharCount &&
+           GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        lpTargetPath = (LPTSTR)realloc(lpTargetPath, sizeof(TCHAR) * dwSize);
+        if (lpTargetPath)
         {
-            if ( _tcsncmp(lpTargetPath, _T("\\??\\"), 4) == 0 &&
-                ( (lpTargetPath[4] >= _T('A') &&
-                lpTargetPath[4] <= _T('Z')) ||
-                 (lpTargetPath[4] >= _T('a') &&
-                lpTargetPath[4] <= _T('z')) ) )
-            {
-                Result = TRUE;
-            }
+            CharCount = QueryDosDevice(Drive,
+                                       lpTargetPath,
+                                       dwSize);
         }
-        free(lpTargetPath);
     }
+
+    if (CharCount)
+    {
+        Result = _tcsncmp(lpTargetPath, _T("\\??\\"), 4) == 0 &&
+            ( (lpTargetPath[4] >= _T('A') &&
+            lpTargetPath[4] <= _T('Z')) ||
+             (lpTargetPath[4] >= _T('a') &&
+            lpTargetPath[4] <= _T('z')) );
+    }
+
+    free(lpTargetPath);
+
     return Result;
 }
 
@@ -119,9 +116,9 @@ void DumpSubstedDrives(void)
     DWORD CharCount, dwSize;
     INT i = 0;
 
-    dwSize = sizeof(TCHAR) * MAX_PATH;
-    lpTargetPath = (LPTSTR) malloc(sizeof(TCHAR) * MAX_PATH);
-    if (! lpTargetPath)
+    dwSize = MAX_PATH;
+    lpTargetPath = (LPTSTR)malloc(sizeof(TCHAR) * dwSize);
+    if (!lpTargetPath)
         return;
 
     while (i < 26)
@@ -129,27 +126,20 @@ void DumpSubstedDrives(void)
         Drive[0] = _T('A') + i;
         CharCount = QueryDosDevice(Drive,
                                    lpTargetPath,
-                                   dwSize / sizeof(TCHAR));
-        while (! CharCount &&
+                                   dwSize);
+        while (!CharCount &&
                GetLastError() == ERROR_INSUFFICIENT_BUFFER)
         {
-            free(lpTargetPath);
-            dwSize *= 2;
-            lpTargetPath = (LPTSTR) malloc(dwSize);
+            lpTargetPath = (LPTSTR)realloc(lpTargetPath, sizeof(TCHAR) * dwSize);
             if (lpTargetPath)
             {
                 CharCount = QueryDosDevice(Drive,
                                            lpTargetPath,
-                                           dwSize / sizeof(TCHAR));
+                                           dwSize);
             }
         }
 
-        if (! CharCount)
-        {
-            i++;
-            continue;
-        }
-        else
+        if (CharCount)
         {
             if ( _tcsncmp(lpTargetPath, _T("\\??\\"), 4) == 0 &&
                 ( (lpTargetPath[4] >= _T('A') &&
@@ -162,8 +152,10 @@ void DumpSubstedDrives(void)
                          lpTargetPath + 4);
             }
         }
+
         i++;
     }
+
     free(lpTargetPath);
 }
 
