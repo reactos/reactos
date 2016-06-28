@@ -2706,7 +2706,13 @@ UINT MENU_DrawMenuBar( HDC hDC, LPRECT lprect, PWND pWnd, BOOL suppress_draw )
     HFONT hfontOld = 0;
     PMENU lppop = UserGetMenuObject(UlongToHandle(pWnd->IDMenu));
 
-    if (lppop == NULL || lprect == NULL)
+    if (lppop == NULL)
+    {
+        // No menu. Do not reserve any space
+        return 0;
+    }
+    
+    if (lprect == NULL)
     {
         return UserGetSystemMetrics(SM_CYMENU);
     }
