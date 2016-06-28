@@ -7,6 +7,7 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Невірна кількість параметрів - %s\n"
     IDS_INVALID_PARAMETER "Невірна кількість параметрів - %s\n"
     IDS_INVALID_PARAMETER2 "Невірний параметр - %s\n"
+    IDS_PATH_NOT_FOUND "Path not found - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "До диску вже застосовано SUBST\n"
     IDS_FAILED_WITH_ERRORCODE "Невдача з кодом помилки 0x%x: %s\n"
     IDS_USAGE "Асоціює шлях з буквою диску.\n\n\

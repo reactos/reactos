@@ -7,6 +7,7 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "參數個數不正確 - %s\n"
     IDS_INVALID_PARAMETER "參數個數不正確 - %s\n"
     IDS_INVALID_PARAMETER2 "無效參數 - %s\n"
+    IDS_PATH_NOT_FOUND "Path not found - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "驅動器已經運行過 SUBST\n"
     IDS_FAILED_WITH_ERRORCODE "操作失敗！錯誤碼 0x%x：%s\n"
     IDS_USAGE "將一個路徑用驅動器號關聯。\n\n\

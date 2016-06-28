@@ -5,6 +5,7 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Неправилен брой ключове - %s\n"
     IDS_INVALID_PARAMETER "Неправилен брой ключове - %s\n"
     IDS_INVALID_PARAMETER2 "Недопустим ключ - %s\n"
+    IDS_PATH_NOT_FOUND "Path not found - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "Устройството вече е подложено на SUBST\n"
     IDS_FAILED_WITH_ERRORCODE "Грешка номер: 0x%x: %s\n"
     IDS_USAGE "Обвързва път с име на устройство (дял).\n\n\

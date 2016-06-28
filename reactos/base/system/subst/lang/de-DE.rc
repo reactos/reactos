@@ -5,6 +5,7 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Falsche Anzahl an Parametern - %s\n"
     IDS_INVALID_PARAMETER "Falsche Anzahl an Parametern - %s\n"
     IDS_INVALID_PARAMETER2 "Falscher Parameter - %s\n"
+    IDS_PATH_NOT_FOUND "Path not found - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "SUBST wurde hier schon ausgeführt.\n"
     IDS_FAILED_WITH_ERRORCODE "Fehlgeschlagen - Code 0x%x: %s\n"
     IDS_USAGE "Weist einem Pfad einen Laufwerksbuchstaben zu.n\n\

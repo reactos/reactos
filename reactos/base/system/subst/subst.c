@@ -7,13 +7,14 @@
 
 /* INCLUDES *****************************************************************/
 
-#define WIN32_NO_STATUS
 #include <stdarg.h>
+#include <stdlib.h>
+#include <tchar.h>
+
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
-#include <stdlib.h>
-#include <tchar.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -22,7 +23,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-void PrintError(DWORD ErrCode)
+VOID PrintError(DWORD ErrCode)
 {
     TCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
     TCHAR *buffer = (TCHAR*) calloc(2048,
@@ -41,7 +42,7 @@ void PrintError(DWORD ErrCode)
         LoadString(GetModuleHandle(NULL),
                    IDS_FAILED_WITH_ERRORCODE,
                    szFmtString,
-                   sizeof(szFmtString) / sizeof(szFmtString[0]));
+                   ARRAYSIZE(szFmtString));
         _sntprintf(buffer,
                    2048,
                    szFmtString,
@@ -55,25 +56,25 @@ void PrintError(DWORD ErrCode)
     }
 }
 
-void DisplaySubstUsage(void)
+VOID DisplaySubstUsage(VOID)
 {
     TCHAR szHelp[RC_STRING_MAX_SIZE] = {0};
 
     LoadString(GetModuleHandle(NULL),
                 IDS_USAGE,
                 szHelp,
-                sizeof(szHelp) / sizeof(szHelp[0]));
+                ARRAYSIZE(szHelp));
     _tprintf(_T("%s"), szHelp);
 }
 
-BOOLEAN IsSubstedDrive(TCHAR *Drive)
+BOOLEAN IsSubstedDrive(TCHAR DriveLetter)
 {
     BOOLEAN Result = FALSE;
+    TCHAR Drive[3] = _T("A:");
     LPTSTR lpTargetPath = NULL;
     DWORD CharCount, dwSize;
 
-    if (_tcslen(Drive) > 2)
-        return FALSE;
+    Drive[0] = DriveLetter;
 
     dwSize = MAX_PATH;
     lpTargetPath = (LPTSTR)malloc(sizeof(TCHAR) * dwSize);
@@ -109,7 +110,7 @@ BOOLEAN IsSubstedDrive(TCHAR *Drive)
     return Result;
 }
 
-void DumpSubstedDrives(void)
+VOID DumpSubstedDrives(VOID)
 {
     TCHAR Drive[3] = _T("A:");
     LPTSTR lpTargetPath = NULL;
@@ -159,7 +160,7 @@ void DumpSubstedDrives(void)
     free(lpTargetPath);
 }
 
-int DeleteSubst(TCHAR* Drive)
+INT DeleteSubst(TCHAR* Drive)
 {
     BOOL Result;
     TCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
@@ -167,26 +168,24 @@ int DeleteSubst(TCHAR* Drive)
     LoadString(GetModuleHandle(NULL),
                 IDS_INVALID_PARAMETER2,
                 szFmtString,
-                sizeof(szFmtString) / sizeof(szFmtString[0]));
+                ARRAYSIZE(szFmtString));
 
-    if (_tcslen(Drive) > 2)
+    if ((_tcslen(Drive) != 2) || (Drive[1] != _T(':')))
     {
-        _tprintf(szFmtString,
-                 Drive);
+        _tprintf(szFmtString, Drive);
         return 1;
     }
 
-    if (! IsSubstedDrive(Drive))
+    if (!IsSubstedDrive(Drive[0]))
     {
-        _tprintf(szFmtString,
-                Drive);
+        _tprintf(szFmtString, Drive);
         return 1;
     }
 
     Result = DefineDosDevice(DDD_REMOVE_DEFINITION,
                              Drive,
                              NULL);
-    if (! Result)
+    if (!Result)
     {
         PrintError(GetLastError());
         return 1;
@@ -194,35 +193,47 @@ int DeleteSubst(TCHAR* Drive)
     return 0;
 }
 
-int AddSubst(TCHAR* Drive, TCHAR *Path)
+INT AddSubst(TCHAR* Drive, TCHAR *Path)
 {
     BOOL Result;
+    DWORD dwPathAttr;
     TCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
 
-    LoadString(GetModuleHandle(NULL),
-                IDS_INVALID_PARAMETER2,
-                szFmtString,
-                sizeof(szFmtString) / sizeof(szFmtString[0]));
-    if (_tcslen(Drive) != 2)
+    if ((_tcslen(Drive) != 2) || (Drive[1] != _T(':')))
     {
-        _tprintf(szFmtString,
-                 Drive);
+        LoadString(GetModuleHandle(NULL),
+                    IDS_INVALID_PARAMETER2,
+                    szFmtString,
+                    ARRAYSIZE(szFmtString));
+        _tprintf(szFmtString, Drive);
         return 1;
     }
 
-    if (Drive[1] != _T(':'))
+    /*
+     * Even if DefineDosDevice allows to map files to drive letters (yes yes!!)
+     * it is not the purpose of SUBST to allow that. Therefore check whether
+     * the given path exists and really is a path to a directory, and if not,
+     * just fail with an error.
+     */
+    dwPathAttr = GetFileAttributes(Path);
+    if ( (dwPathAttr == INVALID_FILE_ATTRIBUTES) ||
+        !(dwPathAttr & FILE_ATTRIBUTE_DIRECTORY) )
     {
-        _tprintf(szFmtString,
-                 Drive);
+        LoadString(GetModuleHandle(NULL),
+                    IDS_PATH_NOT_FOUND,
+                    szFmtString,
+                    ARRAYSIZE(szFmtString));
+        _tprintf(szFmtString, Path);
         return 1;
     }
 
-    if (IsSubstedDrive(Drive))
+    if (IsSubstedDrive(Drive[0]))
     {
+        // ERROR_IS_SUBSTED
         LoadString(GetModuleHandle(NULL),
                    IDS_DRIVE_ALREADY_SUBSTED,
                    szFmtString,
-                   sizeof(szFmtString) / sizeof(szFmtString[0]));
+                   ARRAYSIZE(szFmtString));
         _tprintf(szFmtString);
         return 1;
     }
@@ -230,7 +241,7 @@ int AddSubst(TCHAR* Drive, TCHAR *Path)
     Result = DefineDosDevice(0,
                              Drive,
                              Path);
-    if (! Result)
+    if (!Result)
     {
         PrintError(GetLastError());
         return 1;
@@ -259,9 +270,8 @@ int _tmain(int argc, TCHAR* argv[])
             LoadString(GetModuleHandle(NULL),
                        IDS_INVALID_PARAMETER,
                        szFmtString,
-                       sizeof(szFmtString) / sizeof(szFmtString[0]));
-            _tprintf(szFmtString,
-                     argv[1]);
+                       ARRAYSIZE(szFmtString));
+            _tprintf(szFmtString, argv[1]);
             return 1;
         }
         DumpSubstedDrives();
@@ -273,15 +283,14 @@ int _tmain(int argc, TCHAR* argv[])
         LoadString(GetModuleHandle(NULL),
                    IDS_INCORRECT_PARAMETER_COUNT,
                    szFmtString,
-                   sizeof(szFmtString) / sizeof(szFmtString[0]));
-        _tprintf(szFmtString,
-                 argv[3]);
+                   ARRAYSIZE(szFmtString));
+        _tprintf(szFmtString, argv[3]);
         return 1;
     }
 
-    if (! _tcsicmp(argv[1], _T("/D")))
+    if (!_tcsicmp(argv[1], _T("/D")))
         return DeleteSubst(argv[2]);
-    if (! _tcsicmp(argv[2], _T("/D")))
+    if (!_tcsicmp(argv[2], _T("/D")))
         return DeleteSubst(argv[1]);
     return AddSubst(argv[1], argv[2]);
 }
