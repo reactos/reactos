@@ -151,7 +151,7 @@ FindAttribute(PDEVICE_EXTENSION Vcb,
 }
 
 
-ULONG
+ULONGLONG
 AttributeAllocatedLength(PNTFS_ATTR_RECORD AttrRecord)
 {
     if (AttrRecord->IsNonResident)
@@ -181,9 +181,49 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
 {
     if (AttrContext->Record.IsNonResident)
     {
+        ULONG BytesPerCluster = Fcb->Vcb->NtfsInfo.BytesPerCluster;
+        ULONGLONG AllocationSize = ROUND_UP(DataSize->QuadPart, BytesPerCluster);
+
         // do we need to increase the allocation size?
-        if (AttrContext->Record.NonResident.AllocatedSize < DataSize->QuadPart)
-        {            
+        if (AttrContext->Record.NonResident.AllocatedSize < AllocationSize)
+        {              
+            ULONG ExistingClusters = AttrContext->Record.NonResident.AllocatedSize / BytesPerCluster;
+            ULONG ClustersNeeded = (AllocationSize / BytesPerCluster) - ExistingClusters;
+            LARGE_INTEGER LastClusterInDataRun;
+            ULONG NextAssignedCluster;
+            ULONG AssignedClusters;
+
+            NTSTATUS Status = GetLastClusterInDataRun(Fcb->Vcb, &AttrContext->Record, &LastClusterInDataRun.QuadPart);
+
+            DPRINT1("GetLastClusterInDataRun returned: %I64u\n", LastClusterInDataRun.QuadPart);
+            DPRINT1("Highest VCN of record: %I64u\n", AttrContext->Record.NonResident.HighestVCN);
+
+            while (ClustersNeeded > 0)
+            {
+                Status = NtfsAllocateClusters(Fcb->Vcb,
+                                              LastClusterInDataRun.LowPart + 1,
+                                              ClustersNeeded,
+                                              &NextAssignedCluster,
+                                              &AssignedClusters);
+                
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("Error: Unable to allocate requested clusters!\n");
+                    return Status;
+                }
+
+                // now we need to add the clusters we allocated to the data run
+                Status = AddRun(AttrContext, NextAssignedCluster, AssignedClusters);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("Error: Unable to add data run!\n");
+                    return Status;
+                }
+
+                ClustersNeeded -= AssignedClusters;
+                LastClusterInDataRun.LowPart = NextAssignedCluster + AssignedClusters - 1;
+            }
+
             DPRINT1("FixMe: Increasing allocation size is unimplemented!\n");
             return STATUS_NOT_IMPLEMENTED;
         }
@@ -459,7 +499,7 @@ WriteAttribute(PDEVICE_EXTENSION Vcb,
     PUCHAR SourceBuffer = Buffer;
     LONGLONG StartingOffset;
 
-    DPRINT("WriteAttribute(%p, %p, %I64U, %p, %lu)\n", Vcb, Context, Offset, Buffer, Length);
+    DPRINT("WriteAttribute(%p, %p, %I64u, %p, %lu, %p)\n", Vcb, Context, Offset, Buffer, Length, RealLengthWritten);
 
     // is this a resident attribute?
     if (!Context->Record.IsNonResident)

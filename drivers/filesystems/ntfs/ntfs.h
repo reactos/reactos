@@ -511,6 +511,11 @@ NtfsMarkIrpContextForQueue(PNTFS_IRP_CONTEXT IrpContext)
 //VOID
 //NtfsDumpAttribute(PATTRIBUTE Attribute);
 
+NTSTATUS
+AddRun(PNTFS_ATTR_CONTEXT AttrContext,
+       ULONGLONG NextAssignedCluster,
+       ULONG RunLength);
+
 PUCHAR
 DecodeRun(PUCHAR DataRun,
           LONGLONG *DataRunOffset,
@@ -528,6 +533,11 @@ PFILENAME_ATTRIBUTE
 GetFileNameFromRecord(PDEVICE_EXTENSION Vcb,
                       PFILE_RECORD_HEADER FileRecord,
                       UCHAR NameType);
+
+NTSTATUS
+GetLastClusterInDataRun(PDEVICE_EXTENSION Vcb,
+                        PNTFS_ATTR_RECORD Attribute,
+                        PULONGLONG LastCluster);
 
 PFILENAME_ATTRIBUTE
 GetBestFileNameFromRecord(PDEVICE_EXTENSION Vcb,
@@ -774,7 +784,7 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
                        PFILE_RECORD_HEADER FileRecord,
                        PLARGE_INTEGER DataSize);
 
-ULONG
+ULONGLONG
 AttributeAllocatedLength(PNTFS_ATTR_RECORD AttrRecord);
 
 BOOLEAN
@@ -914,6 +924,13 @@ NtfsWrite(PNTFS_IRP_CONTEXT IrpContext);
 
 
 /* volinfo.c */
+
+NTSTATUS
+NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
+                     ULONG FirstDesiredCluster,
+                     ULONG DesiredClusters,
+                     PULONG FirstAssignedCluster,
+                     PULONG AssignedClusters);
 
 ULONGLONG
 NtfsGetFreeClusters(PDEVICE_EXTENSION DeviceExt);
