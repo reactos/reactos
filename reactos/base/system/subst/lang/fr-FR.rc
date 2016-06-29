@@ -6,6 +6,7 @@ BEGIN
     IDS_INVALID_PARAMETER "Nombre incorrect de paramètres - %s\n"
     IDS_INVALID_PARAMETER2 "Paramètre incorrect - %s\n"
     IDS_PATH_NOT_FOUND "Chemin d'accès introuvable - %s\n"
+    IDS_ACCESS_DENIED "Accès refusé - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "Disque déjà substitué\n"
     IDS_FAILED_WITH_ERRORCODE "Échoue avec le code d'erreur 0x%x : %s\n"
     IDS_USAGE "Associe un chemin avec une lettre de lecteur.\n\n\

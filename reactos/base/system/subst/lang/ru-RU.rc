@@ -8,6 +8,7 @@ BEGIN
     IDS_INVALID_PARAMETER "Неверное число параметров - %s\n"
     IDS_INVALID_PARAMETER2 "Неверный параметр - %s\n"
     IDS_PATH_NOT_FOUND "Path not found - %s\n"
+    IDS_ACCESS_DENIED "Access denied - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "Диск уже сопоставлен\n"
     IDS_FAILED_WITH_ERRORCODE "Сбой с кодом ошибки 0x%x: %s\n"
     IDS_USAGE "Сопоставление имени диска указанному пути.\n\n\

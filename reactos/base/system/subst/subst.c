@@ -1,212 +1,254 @@
-/* PROJECT:         ReactOS Kernel
+/*
+ * PROJECT:         ReactOS Subst Command
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/system/subst/subst.c
- * PURPOSE:         Associates a path with a drive letter
+ * PURPOSE:         Maps a path with a drive letter
  * PROGRAMMERS:     Sam Arun Raj
+ *                  Peter Hater
+ *                  Hermes Belusca-Maito
  */
 
 /* INCLUDES *****************************************************************/
 
-#include <stdarg.h>
-#include <stdlib.h>
-#include <tchar.h>
+#include <stdio.h>
 
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
 
-#define NDEBUG
-#include <debug.h>
-
 #include "resource.h"
 
 /* FUNCTIONS ****************************************************************/
 
-VOID PrintError(DWORD ErrCode)
+VOID PrintError(IN DWORD ErrCode)
 {
-    TCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
-    TCHAR *buffer = (TCHAR*) calloc(2048,
-                                    sizeof(TCHAR));
-    TCHAR *msg = NULL;
+    WCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
+    PWSTR buffer, msg = NULL;
 
-    if (buffer)
+    buffer = (PWSTR)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 2048 * sizeof(WCHAR));
+    if (!buffer)
+        return;
+
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                   NULL,
+                   ErrCode,
+                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                   (PWSTR)&msg,
+                   0,
+                   NULL);
+    if (msg)
     {
-        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                      NULL,
-                      ErrCode,
-                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                      (TCHAR*)&msg,
-                      0,
-                      NULL);
-        LoadString(GetModuleHandle(NULL),
-                   IDS_FAILED_WITH_ERRORCODE,
-                   szFmtString,
-                   ARRAYSIZE(szFmtString));
-        _sntprintf(buffer,
+        LoadStringW(GetModuleHandleW(NULL),
+                    IDS_FAILED_WITH_ERRORCODE,
+                    szFmtString,
+                    ARRAYSIZE(szFmtString));
+        _snwprintf(buffer,
                    2048,
                    szFmtString,
                    ErrCode,
                    msg);
-        _tprintf(_T("%s"),
-                 buffer);
-        if (msg)
-            LocalFree(msg);
-        free(buffer);
+        wprintf(L"%s", buffer);
+
+        LocalFree(msg);
     }
+
+    HeapFree(GetProcessHeap(), 0, buffer);
 }
 
 VOID DisplaySubstUsage(VOID)
 {
-    TCHAR szHelp[RC_STRING_MAX_SIZE] = {0};
+    WCHAR szHelp[RC_STRING_MAX_SIZE] = {0};
 
-    LoadString(GetModuleHandle(NULL),
+    LoadStringW(GetModuleHandleW(NULL),
                 IDS_USAGE,
                 szHelp,
                 ARRAYSIZE(szHelp));
-    _tprintf(_T("%s"), szHelp);
+    wprintf(L"%s", szHelp);
 }
 
-BOOLEAN IsSubstedDrive(TCHAR DriveLetter)
+ULONG QuerySubstedDrive(IN WCHAR DriveLetter,
+                        IN OUT PWSTR* TargetPath OPTIONAL,
+                        IN OUT PULONG Size)
 {
-    BOOLEAN Result = FALSE;
-    TCHAR Drive[3] = _T("A:");
-    LPTSTR lpTargetPath = NULL;
-    DWORD CharCount, dwSize;
+    ULONG Result = ERROR_INVALID_DRIVE;
+    WCHAR Drive[] = L"A:";
+    DWORD dwSize, CharCount = 0;
+    PWSTR lpTargetPath = NULL, tmp;
 
     Drive[0] = DriveLetter;
 
-    dwSize = MAX_PATH;
-    lpTargetPath = (LPTSTR)malloc(sizeof(TCHAR) * dwSize);
-    if (!lpTargetPath)
-        return FALSE;
-
-    CharCount = QueryDosDevice(Drive,
-                               lpTargetPath,
-                               dwSize);
-    while (!CharCount &&
-           GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    /* Check whether the user has given a pointer to a target path buffer */
+    if (!TargetPath)
     {
-        lpTargetPath = (LPTSTR)realloc(lpTargetPath, sizeof(TCHAR) * dwSize);
-        if (lpTargetPath)
+        /* No, therefore use a local buffer */
+        dwSize = MAX_PATH;
+        lpTargetPath = (PWSTR)HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
+        if (!lpTargetPath)
+            return ERROR_NOT_ENOUGH_MEMORY;
+    }
+    else
+    {
+        /* Just use the user-given pointer to a buffer; Size should point to a valid ULONG */
+        if (!Size)
+            return ERROR_INVALID_PARAMETER;
+
+        lpTargetPath = *TargetPath;
+        dwSize = *Size;
+    }
+
+Retry:
+    /* Try querying DOS device information */
+    CharCount = QueryDosDeviceW(Drive, lpTargetPath, dwSize);
+    if (!CharCount)
+        Result = GetLastError();
+
+    if (!CharCount && (Result == ERROR_INSUFFICIENT_BUFFER))
+    {
+        /* Reallocate the buffer with double size */
+        dwSize *= 2;
+        tmp = (PWSTR)HeapReAlloc(GetProcessHeap(), 0, lpTargetPath, dwSize * sizeof(WCHAR));
+        if (!tmp)
         {
-            CharCount = QueryDosDevice(Drive,
-                                       lpTargetPath,
-                                       dwSize);
+            /* Memory problem, bail out */
+            CharCount = 0;
+            Result = ERROR_NOT_ENOUGH_MEMORY;
+        }
+        else
+        {
+            /* Retry again */
+            lpTargetPath = tmp;
+            goto Retry;
         }
     }
 
     if (CharCount)
     {
-        Result = _tcsncmp(lpTargetPath, _T("\\??\\"), 4) == 0 &&
-            ( (lpTargetPath[4] >= _T('A') &&
-            lpTargetPath[4] <= _T('Z')) ||
-             (lpTargetPath[4] >= _T('a') &&
-            lpTargetPath[4] <= _T('z')) );
+        if ( wcsncmp(lpTargetPath, L"\\??\\", 4) == 0 &&
+             ( (lpTargetPath[4] >= L'A' && lpTargetPath[4] <= L'Z') ||
+               (lpTargetPath[4] >= L'a' && lpTargetPath[4] <= L'z') ) )
+        {
+            /* The drive exists and is SUBSTed */
+            Result = ERROR_IS_SUBSTED;
+        }
+#if 0
+        else
+        {
+            /* The drive exists but is not SUBSTed */
+            Result = ERROR_INVALID_DRIVE;
+        }
+#endif
     }
 
-    free(lpTargetPath);
+    if (!TargetPath)
+    {
+        /* Free the local buffer */
+        HeapFree(GetProcessHeap(), 0, lpTargetPath);
+    }
+    else
+    {
+        /* Update the user-given pointers */
+        *TargetPath = lpTargetPath;
+        *Size = dwSize;
+    }
 
     return Result;
 }
 
 VOID DumpSubstedDrives(VOID)
 {
-    TCHAR Drive[3] = _T("A:");
-    LPTSTR lpTargetPath = NULL;
-    DWORD CharCount, dwSize;
-    INT i = 0;
+    WCHAR DriveLetter;
+    PWSTR lpTargetPath = NULL;
+    DWORD dwSize;
+    UCHAR i = 0;
 
     dwSize = MAX_PATH;
-    lpTargetPath = (LPTSTR)malloc(sizeof(TCHAR) * dwSize);
+    lpTargetPath = (PWSTR)HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
     if (!lpTargetPath)
         return;
 
     while (i < 26)
     {
-        Drive[0] = _T('A') + i;
-        CharCount = QueryDosDevice(Drive,
-                                   lpTargetPath,
-                                   dwSize);
-        while (!CharCount &&
-               GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        DriveLetter = L'A' + i;
+        if (QuerySubstedDrive(DriveLetter, &lpTargetPath, &dwSize) == ERROR_IS_SUBSTED)
         {
-            lpTargetPath = (LPTSTR)realloc(lpTargetPath, sizeof(TCHAR) * dwSize);
-            if (lpTargetPath)
-            {
-                CharCount = QueryDosDevice(Drive,
-                                           lpTargetPath,
-                                           dwSize);
-            }
-        }
-
-        if (CharCount)
-        {
-            if ( _tcsncmp(lpTargetPath, _T("\\??\\"), 4) == 0 &&
-                ( (lpTargetPath[4] >= _T('A') &&
-                lpTargetPath[4] <= _T('Z')) ||
-                 (lpTargetPath[4] >= _T('a') &&
-                lpTargetPath[4] <= _T('z')) ) )
-            {
-                _tprintf(_T("%s\\: => %s\n"),
-                         Drive,
-                         lpTargetPath + 4);
-            }
+            wprintf(L"%c:\\: => %s\n", DriveLetter, lpTargetPath + 4);
         }
 
         i++;
     }
 
-    free(lpTargetPath);
+    HeapFree(GetProcessHeap(), 0, lpTargetPath);
 }
 
-INT DeleteSubst(TCHAR* Drive)
+INT DeleteSubst(IN PWSTR Drive)
 {
-    BOOL Result;
-    TCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
+    DWORD dwResult;
+    WCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
 
-    LoadString(GetModuleHandle(NULL),
-                IDS_INVALID_PARAMETER2,
-                szFmtString,
-                ARRAYSIZE(szFmtString));
-
-    if ((_tcslen(Drive) != 2) || (Drive[1] != _T(':')))
+    if ((wcslen(Drive) != 2) || (Drive[1] != L':'))
     {
-        _tprintf(szFmtString, Drive);
-        return 1;
+        dwResult = ERROR_INVALID_PARAMETER;
+        goto Quit;
     }
 
-    if (!IsSubstedDrive(Drive[0]))
+    if (QuerySubstedDrive(Drive[0], NULL, NULL) != ERROR_IS_SUBSTED)
     {
-        _tprintf(szFmtString, Drive);
-        return 1;
+        dwResult = ERROR_INVALID_PARAMETER;
+        goto Quit;
     }
 
-    Result = DefineDosDevice(DDD_REMOVE_DEFINITION,
-                             Drive,
-                             NULL);
-    if (!Result)
+    if (!DefineDosDeviceW(DDD_REMOVE_DEFINITION, Drive, NULL))
+        dwResult = GetLastError();
+    else
+        dwResult = ERROR_SUCCESS;
+
+Quit:
+    switch (dwResult)
     {
-        PrintError(GetLastError());
-        return 1;
+        case ERROR_SUCCESS:
+            break;
+
+        // case ERROR_INVALID_DRIVE:
+        case ERROR_INVALID_PARAMETER:
+        {
+            LoadStringW(GetModuleHandleW(NULL),
+                        IDS_INVALID_PARAMETER2,
+                        szFmtString,
+                        ARRAYSIZE(szFmtString));
+            wprintf(szFmtString, Drive);
+            return 1;
+        }
+
+        case ERROR_ACCESS_DENIED:
+        {
+            LoadStringW(GetModuleHandleW(NULL),
+                        IDS_ACCESS_DENIED,
+                        szFmtString,
+                        ARRAYSIZE(szFmtString));
+            wprintf(szFmtString, Drive);
+            return 1;
+        }
+
+        default:
+        {
+            PrintError(GetLastError());
+            return 1;
+        }
     }
+
     return 0;
 }
 
-INT AddSubst(TCHAR* Drive, TCHAR *Path)
+INT AddSubst(IN PWSTR Drive, IN PWSTR Path)
 {
-    BOOL Result;
-    DWORD dwPathAttr;
-    TCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
+    DWORD dwResult, dwPathAttr;
+    WCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
 
-    if ((_tcslen(Drive) != 2) || (Drive[1] != _T(':')))
+    if ((wcslen(Drive) != 2) || (Drive[1] != L':'))
     {
-        LoadString(GetModuleHandle(NULL),
-                    IDS_INVALID_PARAMETER2,
-                    szFmtString,
-                    ARRAYSIZE(szFmtString));
-        _tprintf(szFmtString, Drive);
-        return 1;
+        dwResult = ERROR_INVALID_PARAMETER;
+        goto Quit;
     }
 
     /*
@@ -215,48 +257,95 @@ INT AddSubst(TCHAR* Drive, TCHAR *Path)
      * the given path exists and really is a path to a directory, and if not,
      * just fail with an error.
      */
-    dwPathAttr = GetFileAttributes(Path);
+    dwPathAttr = GetFileAttributesW(Path);
     if ( (dwPathAttr == INVALID_FILE_ATTRIBUTES) ||
         !(dwPathAttr & FILE_ATTRIBUTE_DIRECTORY) )
     {
-        LoadString(GetModuleHandle(NULL),
-                    IDS_PATH_NOT_FOUND,
-                    szFmtString,
-                    ARRAYSIZE(szFmtString));
-        _tprintf(szFmtString, Path);
-        return 1;
+        dwResult = ERROR_PATH_NOT_FOUND;
+        goto Quit;
     }
 
-    if (IsSubstedDrive(Drive[0]))
+    /*
+     * QuerySubstedDrive (via QueryDosDevice) returns ERROR_FILE_NOT_FOUND only
+     * if there is no already existing drive mapping. For all other results
+     * (existing drive, be it already subst'ed or not, or other errors...)
+     * no attempt at defining a drive mapping should be done.
+     */
+    dwResult = QuerySubstedDrive(Drive[0], NULL, NULL);
+    if (dwResult != ERROR_FILE_NOT_FOUND)
+        goto Quit;
+
+    if (!DefineDosDeviceW(0, Drive, Path))
+        dwResult = GetLastError();
+    else
+        dwResult = ERROR_SUCCESS;
+
+Quit:
+    switch (dwResult)
     {
-        // ERROR_IS_SUBSTED
-        LoadString(GetModuleHandle(NULL),
-                   IDS_DRIVE_ALREADY_SUBSTED,
-                   szFmtString,
-                   ARRAYSIZE(szFmtString));
-        _tprintf(szFmtString);
-        return 1;
+        case ERROR_SUCCESS:
+            break;
+
+        case ERROR_INVALID_DRIVE:
+        case ERROR_INVALID_PARAMETER:
+        {
+            LoadStringW(GetModuleHandleW(NULL),
+                        IDS_INVALID_PARAMETER2,
+                        szFmtString,
+                        ARRAYSIZE(szFmtString));
+            wprintf(szFmtString, Drive);
+            return 1;
+        }
+
+        case ERROR_IS_SUBSTED:
+        {
+            LoadStringW(GetModuleHandleW(NULL),
+                        IDS_DRIVE_ALREADY_SUBSTED,
+                        szFmtString,
+                        ARRAYSIZE(szFmtString));
+            wprintf(szFmtString);
+            return 1;
+        }
+
+        case ERROR_FILE_NOT_FOUND:
+        case ERROR_PATH_NOT_FOUND:
+        {
+            LoadStringW(GetModuleHandleW(NULL),
+                        IDS_PATH_NOT_FOUND,
+                        szFmtString,
+                        ARRAYSIZE(szFmtString));
+            wprintf(szFmtString, Path);
+            return 1;
+        }
+
+        case ERROR_ACCESS_DENIED:
+        {
+            LoadStringW(GetModuleHandleW(NULL),
+                        IDS_ACCESS_DENIED,
+                        szFmtString,
+                        ARRAYSIZE(szFmtString));
+            wprintf(szFmtString, Path);
+            return 1;
+        }
+
+        default:
+        {
+            PrintError(GetLastError());
+            return 1;
+        }
     }
 
-    Result = DefineDosDevice(0,
-                             Drive,
-                             Path);
-    if (!Result)
-    {
-        PrintError(GetLastError());
-        return 1;
-    }
     return 0;
 }
 
-int _tmain(int argc, TCHAR* argv[])
+int wmain(int argc, WCHAR* argv[])
 {
     INT i;
-    TCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
+    WCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
 
     for (i = 0; i < argc; i++)
     {
-        if (!_tcsicmp(argv[i], _T("/?")))
+        if (!_wcsicmp(argv[i], L"/?"))
         {
             DisplaySubstUsage();
             return 0;
@@ -267,11 +356,11 @@ int _tmain(int argc, TCHAR* argv[])
     {
         if (argc >= 2)
         {
-            LoadString(GetModuleHandle(NULL),
-                       IDS_INVALID_PARAMETER,
-                       szFmtString,
-                       ARRAYSIZE(szFmtString));
-            _tprintf(szFmtString, argv[1]);
+            LoadStringW(GetModuleHandleW(NULL),
+                        IDS_INVALID_PARAMETER,
+                        szFmtString,
+                        ARRAYSIZE(szFmtString));
+            wprintf(szFmtString, argv[1]);
             return 1;
         }
         DumpSubstedDrives();
@@ -280,17 +369,17 @@ int _tmain(int argc, TCHAR* argv[])
 
     if (argc > 3)
     {
-        LoadString(GetModuleHandle(NULL),
-                   IDS_INCORRECT_PARAMETER_COUNT,
-                   szFmtString,
-                   ARRAYSIZE(szFmtString));
-        _tprintf(szFmtString, argv[3]);
+        LoadStringW(GetModuleHandleW(NULL),
+                    IDS_INCORRECT_PARAMETER_COUNT,
+                    szFmtString,
+                    ARRAYSIZE(szFmtString));
+        wprintf(szFmtString, argv[3]);
         return 1;
     }
 
-    if (!_tcsicmp(argv[1], _T("/D")))
+    if (!_wcsicmp(argv[1], L"/D"))
         return DeleteSubst(argv[2]);
-    if (!_tcsicmp(argv[2], _T("/D")))
+    if (!_wcsicmp(argv[2], L"/D"))
         return DeleteSubst(argv[1]);
     return AddSubst(argv[1], argv[2]);
 }
