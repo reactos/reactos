@@ -72,7 +72,7 @@ COMMUNICATIONS=Communications
 GAMES=Games
 
 README_TITLE=Read Me
-README_DESC=ReactOS Read Me
+README_DESC=ReactOS Read-Me file
 
 CMD_TITLE=Command Prompt
 CMD_DESC=Open command prompt
@@ -263,6 +263,9 @@ ENTERTAINMENT=Unterhaltung
 COMMUNICATIONS=Kommunikation
 GAMES=Spiele
 
+README_TITLE=Lies Mich
+README_DESC=Lies-Mich Datei für ReactOS
+
 CMD_TITLE=Eingabeaufforderung
 CMD_DESC=Öffne Kommandozeilenfenster
 EXPLORER_TITLE=ReactOS Explorer
@@ -388,6 +391,9 @@ ACCESSIBILITY=Accesibilidad
 ENTERTAINMENT=Entretenimiento
 COMMUNICATIONS=Comunicaciones
 GAMES=Juegos
+
+README_TITLE=Léame
+README_DESC=Documento Léame de ReactOS
 
 CMD_TITLE=Consola
 CMD_DESC=Abre una consola de comandos.
@@ -770,6 +776,9 @@ ENTERTAINMENT=Divertimento
 COMMUNICATIONS=Comunicazioni
 GAMES=Giochi
 
+README_TITLE=Leggimi
+README_DESC=File Leggimi per ReactOS
+
 CMD_TITLE=Prompt dei comandi
 CMD_DESC=Apri la finestra dei comandi
 EXPLORER_TITLE=ReactOS Explorer
@@ -895,6 +904,9 @@ ACCESSIBILITY=Accessibility
 ENTERTAINMENT=Entertainment
 COMMUNICATIONS=Communications
 GAMES=Games
+
+README_TITLE=Lees Mij
+README_DESC=LeesMij bestand voor ReactOS
 
 CMD_TITLE=Command Prompt
 CMD_DESC=Open command prompt
@@ -1085,6 +1097,9 @@ ENTERTAINMENT=Entretenimento
 COMMUNICATIONS=Communications
 GAMES=Jogos
 
+README_TITLE=Leia-Me
+README_DESC=Arquivo de informações para ReactOS
+
 CMD_TITLE=Command Prompt
 CMD_DESC=Abrir prompt de comando
 EXPLORER_TITLE=ReactOS Explorer
@@ -1210,6 +1225,9 @@ ACCESSIBILITY=Специальные возможности
 ENTERTAINMENT=Развлечения
 COMMUNICATIONS=Communications
 GAMES=Игры
+
+README_TITLE=Прочти Меня
+README_DESC=файл ReadMe для ReactOS
 
 CMD_TITLE=Командная строка
 CMD_DESC=Используется для выполнения вводимых с клавиатуры команд.
@@ -1399,6 +1417,9 @@ ACCESSIBILITY=Спеціальні можливості
 ENTERTAINMENT=Розваги
 COMMUNICATIONS=Communications
 GAMES=Ігри
+
+README_TITLE=Прочитай Мене
+README_DESC=файл ReadMe для ReactOS
 
 CMD_TITLE=Командний рядок
 CMD_DESC=Відкрити командний рядок
