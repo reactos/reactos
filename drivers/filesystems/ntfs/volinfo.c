@@ -119,7 +119,7 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
     ULONG Read = 0;
     RTL_BITMAP Bitmap;
 
-    DPRINT1("NtfsAllocateClusters(%p, %lu, %lu, %p)\n", DeviceExt, DesiredClusters, FirstDesiredCluster, FirstAssignedCluster, AssignedClusters);
+    DPRINT1("NtfsAllocateClusters(%p, %lu, %lu, %p, %p)\n", DeviceExt, FirstDesiredCluster, DesiredClusters, FirstAssignedCluster, AssignedClusters);
 
     BitmapRecord = ExAllocatePoolWithTag(NonPagedPool,
                                          DeviceExt->NtfsInfo.BytesPerFileRecord,
