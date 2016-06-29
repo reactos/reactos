@@ -35,6 +35,19 @@
 
 /* FUNCTIONS ****************************************************************/
 
+NTSTATUS
+AddRun(PNTFS_ATTR_CONTEXT AttrContext,
+       ULONGLONG NextAssignedCluster,
+       ULONG RunLength)
+{
+    UNIMPLEMENTED;
+
+    if (!AttrContext->Record.IsNonResident)
+        return STATUS_INVALID_PARAMETER;
+
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 PUCHAR
 DecodeRun(PUCHAR DataRun,
           LONGLONG *DataRunOffset,
@@ -549,6 +562,50 @@ GetFileNameFromRecord(PDEVICE_EXTENSION Vcb,
 
     FindCloseAttribute(&Context);
     return NULL;
+}
+
+NTSTATUS
+GetLastClusterInDataRun(PDEVICE_EXTENSION Vcb, PNTFS_ATTR_RECORD Attribute, PULONGLONG LastCluster)
+{
+    LONGLONG DataRunOffset;
+    ULONGLONG DataRunLength;
+    LONGLONG DataRunStartLCN;
+
+    ULONGLONG LastLCN = 0;
+    PUCHAR DataRun = (PUCHAR)Attribute + Attribute->NonResident.MappingPairsOffset;
+
+    if (!Attribute->IsNonResident)
+        return STATUS_INVALID_PARAMETER;
+
+    while (1)
+    {
+        DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
+       
+        if (DataRunOffset == -1)
+        {
+            // sparse run
+            if (*DataRun == 0)
+            {
+                // if it's the last run, return the last cluster of the last run
+                *LastCluster = LastLCN + DataRunLength - 1;
+                break;
+            }
+        }
+        else
+        {
+            // Normal data run.
+            DataRunStartLCN = LastLCN + DataRunOffset;
+            LastLCN = DataRunStartLCN;
+        }             
+
+        if (*DataRun == 0)
+        {
+            *LastCluster = LastLCN + DataRunLength - 1;
+            break;
+        }
+    }
+
+    return STATUS_SUCCESS;
 }
 
 PSTANDARD_INFORMATION
