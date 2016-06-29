@@ -17,8 +17,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /*
+ * PROJECT:     ReactOS Comp utility
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS comp utility
  * FILE:        base/applications/cmdutils/comp/comp.c
  * PURPOSE:     Compares the contents of two files
  * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
