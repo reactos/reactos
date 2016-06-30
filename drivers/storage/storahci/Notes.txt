@@ -153,3 +153,16 @@ RemoveQueue
         TESTED
     Comment
         NONE
+
+AhciCompleteIssuedSrb
+    Flags
+        IMPLEMENTED
+        FULLY_SUPPORTED
+    Comment
+        NONE
+
+InquiryCompletion
+    Flags
+        NOT_IMPLEMENTED
+    Comment
+        NONE

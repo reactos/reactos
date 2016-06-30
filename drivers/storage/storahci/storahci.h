@@ -13,8 +13,14 @@
 
 #define MAXIMUM_AHCI_PORT_COUNT             25
 #define MAXIMUM_AHCI_PRDT_ENTRIES           32
+#define MAXIMUM_AHCI_PORT_NCS               30
 #define MAXIMUM_QUEUE_BUFFER_SIZE           255
 #define MAXIMUM_TRANSFER_LENGTH             (128*1024) // 128 KB
+
+// device type (DeviceParams)
+#define AHCI_DEVICE_TYPE_ATA                1
+#define AHCI_DEVICE_TYPE_ATAPI              2
+#define AHCI_DEVICE_TYPE_NODEVICE           3
 
 // section 3.1.2
 #define AHCI_Global_HBA_CONTROL_HR          (1 << 0)
@@ -61,6 +67,14 @@
 #if DEBUG
     #define DebugPrint(format, ...) StorPortDebugPrint(0, format, __VA_ARGS__)
 #endif
+
+typedef
+VOID
+(*PAHCI_COMPLETION_ROUTINE) (
+    __in PVOID AdapterExtension,
+    __in PVOID PortExtension,
+    __in PVOID Srb
+    );
 
 //////////////////////////////////////////////////////////////
 //              ---- Support Structures ---                 //
@@ -312,11 +326,12 @@ typedef struct _AHCI_MEMORY_REGISTERS
 typedef struct _AHCI_PORT_EXTENSION
 {
     ULONG PortNumber;
-    ULONG QueueSlots;                                // slots to which we have already assigned task
-    ULONG CommandIssuedSlots;
+    ULONG QueueSlots;                                   // slots which we have already assigned task (Slot)
+    ULONG CommandIssuedSlots;                           // slots which has been programmed
     BOOLEAN IsActive;
     PAHCI_PORT Port;                                    // AHCI Port Infomation
-    AHCI_QUEUE SrbQueue;
+    AHCI_QUEUE SrbQueue;                                // pending Srbs
+    PSCSI_REQUEST_BLOCK Slot[MAXIMUM_AHCI_PORT_NCS];    // Srbs which has been alloted a port
     PAHCI_RECEIVED_FIS ReceivedFIS;
     PAHCI_COMMAND_HEADER CommandList;
     STOR_DEVICE_POWER_STATE DevicePowerState;           // Device Power State
@@ -345,7 +360,12 @@ typedef struct _AHCI_ADAPTER_EXTENSION
     ULONG   LastInterruptPort;
     ULONG   CurrentCommandSlot;
 
-    PVOID NonCachedExtension;// holds virtual address to noncached buffer allocated for Port Extension
+    PVOID NonCachedExtension; // holds virtual address to noncached buffer allocated for Port Extension
+
+    struct
+    {
+        UCHAR DeviceType;
+    } DeviceParams;
 
     struct
     {
@@ -388,6 +408,7 @@ typedef struct _AHCI_SRB_EXTENSION
 
     ULONG SlotIndex;
     LOCAL_SCATTER_GATHER_LIST Sgl;
+    PAHCI_COMPLETION_ROUTINE CompletionRoutine;
 } AHCI_SRB_EXTENSION, *PAHCI_SRB_EXTENSION;
 
 //////////////////////////////////////////////////////////////

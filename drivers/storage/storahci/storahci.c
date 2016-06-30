@@ -218,6 +218,67 @@ AhciHwInitialize (
 }// -- AhciHwInitialize();
 
 /**
+ * @name AhciCompleteIssuedSrb
+ * @implemented
+ *
+ * Complete issued Srbs
+ *
+ * @param PortExtension
+ *
+ */
+VOID
+AhciCompleteIssuedSrb (
+    __in PAHCI_PORT_EXTENSION PortExtension,
+    __in ULONG CommandsToComplete
+    )
+{
+    ULONG NCS, i;
+    PSCSI_REQUEST_BLOCK Srb;
+    PAHCI_SRB_EXTENSION SrbExtension;
+    PAHCI_ADAPTER_EXTENSION AdapterExtension;
+    PAHCI_COMPLETION_ROUTINE CompletionRoutine;
+
+    DebugPrint("AhciCompleteIssuedSrb()\n");
+
+    NT_ASSERT(CommandsToComplete != 0);
+
+    DebugPrint("\tCompleted Commands: %d\n", CommandsToComplete);
+
+    AdapterExtension = PortExtension->AdapterExtension;
+    NCS = AHCI_Global_Port_CAP_NCS(AdapterExtension->CAP);
+
+    for (i = 0; i < NCS; i++)
+    {
+        if (((1 << i) & CommandsToComplete) != 0)
+        {
+            Srb = &PortExtension->Slot[i];
+            NT_ASSERT(Srb != NULL);
+
+            if (Srb->SrbStatus == SRB_STATUS_PENDING)
+            {
+                Srb->SrbStatus = SRB_STATUS_SUCCESS;
+            }
+
+            SrbExtension = GetSrbExtension(Srb);
+            CompletionRoutine = SrbExtension->CompletionRoutine;
+
+            if (CompletionRoutine != NULL)
+            {
+                // now it's completion routine responsibility to set SrbStatus
+                CompletionRoutine(AdapterExtension, PortExtension, Srb);
+            }
+            else
+            {
+                Srb->SrbStatus = SRB_STATUS_SUCCESS;
+                StorPortNotification(RequestComplete, AdapterExtension, Srb);
+            }
+        }
+    }
+
+    return;
+}// -- AhciCompleteIssuedSrb();
+
+/**
  * @name AhciInterruptHandler
  * @not_implemented
  *
@@ -304,7 +365,7 @@ AhciInterruptHandler (
     outstanding = ci | sact; // NOTE: Including both non-NCQ and NCQ based commands
     if ((PortExtension->CommandIssuedSlots & (~outstanding)) != 0)
     {
-        DebugPrint("\tCompleted Commands: %d\n", (PortExtension->CommandIssuedSlots & (~outstanding)));
+        AhciCompleteIssuedSrb(PortExtension, (PortExtension->CommandIssuedSlots & (~outstanding)));
         PortExtension->CommandIssuedSlots &= outstanding;
     }
 
@@ -981,6 +1042,7 @@ AhciProcessSrb (
     }
 
     // mark this slot
+    PortExtension->Slot[SlotIndex] = Srb;
     PortExtension->QueueSlots |= SlotIndex;
     return;
 }// -- AhciProcessSrb();
@@ -1026,8 +1088,10 @@ AhciActivatePort (
         slotToActivate = (QueueSlots & (~tmp));
 
     // mark that bit off in QueueSlots
+    // so we can know we it is really needed to activate port or not
     PortExtension->QueueSlots &= ~slotToActivate;
     // mark this CommandIssuedSlots
+    // to validate in completeIssuedCommand
     PortExtension->CommandIssuedSlots |= slotToActivate;
 
     // tell the HBA to issue this Command Slot to the given port
@@ -1119,6 +1183,59 @@ AhciProcessIO (
 }// -- AhciProcessIO();
 
 /**
+ * @name InquiryCompletion
+ * @not_implemented
+ *
+ * InquiryCompletion routine should be called after device signals
+ * for device inquiry request is completed (through interrupt)
+ *
+ * @param PortExtension
+ * @param Srb
+ *
+ */
+VOID
+InquiryCompletion (
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
+    __in PAHCI_PORT_EXTENSION PortExtension,
+    __in PSCSI_REQUEST_BLOCK Srb
+    )
+{
+    ULONG SrbStatus;
+    PAHCI_SRB_EXTENSION SrbExtension;
+
+    DebugPrint("InquiryCompletion()\n");
+
+    NT_ASSERT(PortExtension != NULL);
+    NT_ASSERT(Srb != NULL);
+
+    SrbStatus = Srb->SrbStatus;
+    SrbExtension = GetSrbExtension(Srb);
+
+    if (SrbStatus == SRB_STATUS_SUCCESS)
+    {
+        if (SrbExtension->CommandReg == IDE_COMMAND_IDENTIFY)
+        {
+            AdapterExtension->DeviceParams.DeviceType = AHCI_DEVICE_TYPE_ATA;
+        }
+        else
+        {
+            AdapterExtension->DeviceParams.DeviceType = AHCI_DEVICE_TYPE_ATAPI;
+        }
+        // TODO: Set Device Paramters
+    }
+    else if (SrbStatus == SRB_STATUS_NO_DEVICE)
+    {
+        AdapterExtension->DeviceParams.DeviceType = AHCI_DEVICE_TYPE_NODEVICE;
+    }
+    else
+    {
+        return;
+    }
+
+    return;
+}// -- InquiryCompletion();
+
+/**
  * @name DeviceInquiryRequest
  * @implemented
  *
@@ -1162,8 +1279,10 @@ DeviceInquiryRequest (
 
         SrbExtension->AtaFunction = ATA_FUNCTION_ATA_IDENTIFY;
         SrbExtension->Flags |= ATA_FLAGS_DATA_IN;
+        SrbExtension->CompletionRoutine = InquiryCompletion;
         SrbExtension->CommandReg = IDE_COMMAND_NOT_VALID;
 
+        // TODO: Should use AhciZeroMemory
         SrbExtension->FeaturesLow = 0;
         SrbExtension->LBA0 = 0;
         SrbExtension->LBA1 = 0;
