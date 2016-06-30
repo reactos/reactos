@@ -16,7 +16,7 @@ extern ATOM AtomFlashWndState;
 #define HAS_THINFRAME(Style, ExStyle) \
             (((Style) & WS_BORDER) || (!((Style) & (WS_CHILD | WS_POPUP))))
 
-#define HAS_MENU(pWnd,style)  ((((style) & (WS_CHILD | WS_POPUP)) != WS_CHILD) && pWnd->IDMenu)
+#define HAS_MENU(pWnd,style)  ((((style) & (WS_CHILD | WS_POPUP)) != WS_CHILD) && IntIsMenu(UlongToHandle(pWnd->IDMenu)))
 
 #define IntIsDesktopWindow(WndObj) \
   (WndObj->spwndParent == NULL)

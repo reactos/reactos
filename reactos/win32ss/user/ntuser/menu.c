@@ -242,6 +242,15 @@ PMENU FASTCALL VerifyMenu(PMENU pMenu)
    return pMenu;
 }
 
+BOOL
+FASTCALL
+IntIsMenu(HMENU Menu)
+{
+  if (UserGetMenuObject(Menu)) return TRUE;
+  return FALSE;
+}
+
+
 PMENU WINAPI
 IntGetMenu(HWND hWnd)
 {
