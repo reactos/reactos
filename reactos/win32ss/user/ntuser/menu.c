@@ -1336,7 +1336,7 @@ IntGetMenuDefaultItem(PMENU MenuObject, UINT fByPos, UINT gmdiFlags, DWORD *gism
    if ( (!(GMDI_USEDISABLED & gmdiFlags)) && (MenuItem->fState & MFS_DISABLED )) return -1;
 
    /* search rekursiv when needed */
-   if ( (MenuItem->fType & MF_POPUP) && (gmdiFlags & GMDI_GOINTOPOPUPS) && MenuItem->spSubMenu)
+   if ( (gmdiFlags & GMDI_GOINTOPOPUPS) && MenuItem->spSubMenu )
    {
       UINT ret;
       (*gismc)++;
