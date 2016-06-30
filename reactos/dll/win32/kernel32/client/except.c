@@ -85,7 +85,7 @@ PrintStackTrace(struct _EXCEPTION_POINTERS *ExceptionInfo)
     DbgPrint("Unhandled exception\n");
     DbgPrint("ExceptionCode:    %8x\n", ExceptionRecord->ExceptionCode);
 
-    if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
+    if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
         ExceptionRecord->NumberParameters == 2)
     {
         DbgPrint("Faulting Address: %8x\n", ExceptionRecord->ExceptionInformation[1]);
@@ -209,7 +209,7 @@ GetErrorMode(VOID)
     /* Query the current setting */
     Status = NtQueryInformationProcess(NtCurrentProcess(),
                                        ProcessDefaultHardErrorMode,
-                                       (PVOID)&ErrMode,
+                                       &ErrMode,
                                        sizeof(ErrMode),
                                        NULL);
     if (!NT_SUCCESS(Status))
@@ -238,97 +238,106 @@ GetErrorMode(VOID)
 /*
  * @implemented
  */
-LONG WINAPI
-UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
+LONG
+WINAPI
+UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
 {
-   LONG RetValue;
-   HANDLE DebugPort = NULL;
-   NTSTATUS ErrCode;
-   ULONG_PTR ErrorParameters[4];
-   ULONG ErrorResponse;
-   PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
-   LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
+    NTSTATUS Status;
+    LONG RetValue;
+    HANDLE DebugPort = NULL;
+    ULONG_PTR ErrorParameters[4];
+    ULONG ErrorResponse;
+    PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
+    LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
 
-   if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
-       ExceptionRecord->NumberParameters >= 2)
-   {
-      switch(ExceptionRecord->ExceptionInformation[0])
-      {
-      case EXCEPTION_WRITE_FAULT:
-         /* Change the protection on some write attempts, some InstallShield setups
-            have this bug */
-         RetValue = BasepCheckForReadOnlyResource(
-            (PVOID)ExceptionRecord->ExceptionInformation[1]);
-         if (RetValue == EXCEPTION_CONTINUE_EXECUTION)
-            return EXCEPTION_CONTINUE_EXECUTION;
-         break;
-      case EXCEPTION_EXECUTE_FAULT:
-         /* FIXME */
-         break;
-      }
-   }
+    if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
+        ExceptionRecord->NumberParameters >= 2)
+    {
+        switch(ExceptionRecord->ExceptionInformation[0])
+        {
+            case EXCEPTION_WRITE_FAULT:
+                /* Change the protection on some write attempts, some InstallShield setups
+                   have this bug */
+                RetValue = BasepCheckForReadOnlyResource(
+                    (PVOID)ExceptionRecord->ExceptionInformation[1]);
+                if (RetValue == EXCEPTION_CONTINUE_EXECUTION)
+                    return EXCEPTION_CONTINUE_EXECUTION;
+                break;
 
-   /* Is there a debugger running ? */
-   ErrCode = NtQueryInformationProcess(NtCurrentProcess(), ProcessDebugPort,
-                                       &DebugPort, sizeof(HANDLE), NULL);
-   if (!NT_SUCCESS(ErrCode) && ErrCode != STATUS_NOT_IMPLEMENTED)
-   {
-      BaseSetLastNTError(ErrCode);
-      return EXCEPTION_EXECUTE_HANDLER;
-   }
+            case EXCEPTION_EXECUTE_FAULT:
+                /* FIXME */
+                break;
+        }
+    }
 
-   if (DebugPort)
-   {
-      /* Pass the exception to debugger. */
-      DPRINT("Passing exception to debugger\n");
-      return EXCEPTION_CONTINUE_SEARCH;
-   }
+    /* Is there a debugger running? */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessDebugPort,
+                                       &DebugPort,
+                                       sizeof(DebugPort),
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return EXCEPTION_EXECUTE_HANDLER;
+    }
 
-   RealFilter = RtlDecodePointer(GlobalTopLevelExceptionFilter);
-   if (RealFilter)
-   {
-      LONG ret = RealFilter(ExceptionInfo);
-      if (ret != EXCEPTION_CONTINUE_SEARCH)
-         return ret;
-   }
+    if (DebugPort)
+    {
+        /* Pass the exception to debugger. */
+        DPRINT("Passing exception to debugger\n");
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
 
-   PrintStackTrace(ExceptionInfo);
+    RealFilter = RtlDecodePointer(GlobalTopLevelExceptionFilter);
+    if (RealFilter)
+    {
+        LONG ret = RealFilter(ExceptionInfo);
+        if (ret != EXCEPTION_CONTINUE_SEARCH)
+            return ret;
+    }
 
-   /* Save exception code and address */
-   ErrorParameters[0] = (ULONG)ExceptionRecord->ExceptionCode;
-   ErrorParameters[1] = (ULONG_PTR)ExceptionRecord->ExceptionAddress;
+    PrintStackTrace(ExceptionInfo);
 
-   if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
-   {
-       /* get the type of operation that caused the access violation */
-       ErrorParameters[2] = ExceptionRecord->ExceptionInformation[0];
-   }
-   else
-   {
-       ErrorParameters[2] = ExceptionRecord->ExceptionInformation[2];
-   }
+    /* Save exception code and address */
+    ErrorParameters[0] = (ULONG)ExceptionRecord->ExceptionCode;
+    ErrorParameters[1] = (ULONG_PTR)ExceptionRecord->ExceptionAddress;
 
-   /* Save faulting address */
-   ErrorParameters[3] = ExceptionRecord->ExceptionInformation[1];
+    if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
+    {
+        /* get the type of operation that caused the access violation */
+        ErrorParameters[2] = ExceptionRecord->ExceptionInformation[0];
+    }
+    else
+    {
+        ErrorParameters[2] = ExceptionRecord->ExceptionInformation[2];
+    }
 
-   /* Raise the harderror */
-   ErrCode = NtRaiseHardError(STATUS_UNHANDLED_EXCEPTION,
-       4, 0, ErrorParameters, OptionOkCancel, &ErrorResponse);
+    /* Save faulting address */
+    ErrorParameters[3] = ExceptionRecord->ExceptionInformation[1];
 
-   if (NT_SUCCESS(ErrCode) && (ErrorResponse == ResponseCancel))
-   {
-       /* FIXME: Check the result, if the "Cancel" button was
-                 clicked run a debugger */
-       DPRINT1("Debugging is not implemented yet\n");
-   }
+    /* Raise the harderror */
+    Status = NtRaiseHardError(STATUS_UNHANDLED_EXCEPTION,
+                              4,
+                              0,
+                              ErrorParameters,
+                              OptionOkCancel,
+                              &ErrorResponse);
 
-   /*
-    * Returning EXCEPTION_EXECUTE_HANDLER means that the code in
-    * the __except block will be executed. Normally this will end up in a
-    * Terminate process.
-    */
+    if (NT_SUCCESS(Status) && (ErrorResponse == ResponseCancel))
+    {
+        /* FIXME: Check the result, if the "Cancel" button was
+                  clicked run a debugger */
+        DPRINT1("Debugging is not implemented yet\n");
+    }
 
-   return EXCEPTION_EXECUTE_HANDLER;
+    /*
+     * Returning EXCEPTION_EXECUTE_HANDLER means that the code in
+     * the __except block will be executed. Normally this will end up in a
+     * Terminate process.
+     */
+
+    return EXCEPTION_EXECUTE_HANDLER;
 }
 
 /*

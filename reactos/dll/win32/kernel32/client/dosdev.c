@@ -442,7 +442,7 @@ QueryDosDeviceW(
                 if (Length + NameLength + 1 >= ucchMax)
                 {
                     Length = 0;
-                    BaseSetLastNTError (STATUS_BUFFER_TOO_SMALL);
+                    BaseSetLastNTError(STATUS_BUFFER_TOO_SMALL);
                     break;
                 }
 
