@@ -63,7 +63,7 @@ int wmain(int argc, LPWSTR argv[]) {
 			exit(1);
 		} else {
 			printf("Socket connection accepted\n");
-			ret = recv(accepted, &buff[0], 256, MSG_OOB);
+			ret = recv(accepted, &buff[0], 256, 0);
 			printf("Received %d bytes\n", ret);
 			printf("Message: %s", &buff[0]);
 		}
