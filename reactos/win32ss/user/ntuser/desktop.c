@@ -255,12 +255,17 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
     NTSTATUS Status;
 
     RTL_OSVERSIONINFOEXW VerInfo;
+    UNICODE_STRING BuildLabString;
     UNICODE_STRING CSDVersionString;
-#if 0
-    UNICODE_STRING CurBuildNmString;
-#endif
-    RTL_QUERY_REGISTRY_TABLE VersionConfigurationTable[2] =
+    RTL_QUERY_REGISTRY_TABLE VersionConfigurationTable[] =
     {
+        {
+            NULL,
+            RTL_QUERY_REGISTRY_DIRECT,
+            L"BuildLab",
+            &BuildLabString,
+            REG_NONE, NULL, 0
+        },
         {
             NULL,
             RTL_QUERY_REGISTRY_DIRECT,
@@ -269,19 +274,10 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
             REG_NONE, NULL, 0
         },
 
-#if 0
-        {
-            NULL,
-            RTL_QUERY_REGISTRY_DIRECT,
-            L"CurrentBuildNumber",
-            &CurBuildNmString,
-            REG_NONE, NULL, 0
-        },
-#endif
-
         {0}
     };
 
+    WCHAR BuildLabBuffer[256];
     WCHAR VersionBuffer[256];
     PWCHAR EndBuffer;
 
@@ -295,9 +291,14 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
     RtlGetVersion((PRTL_OSVERSIONINFOW)&VerInfo);
 
     /*
-     * In kernel-mode, szCSDVersion is not initialized. Initialize it
-     * and query its value from the registry.
+     * - Retrieve the BuildLab string from the registry (set by the kernel).
+     * - In kernel-mode, szCSDVersion is not initialized. Initialize it
+     *   and query its value from the registry.
      */
+    RtlZeroMemory(BuildLabBuffer, sizeof(BuildLabBuffer));
+    RtlInitEmptyUnicodeString(&BuildLabString,
+                              BuildLabBuffer,
+                              sizeof(BuildLabBuffer));
     RtlZeroMemory(VerInfo.szCSDVersion, sizeof(VerInfo.szCSDVersion));
     RtlInitEmptyUnicodeString(&CSDVersionString,
                               VerInfo.szCSDVersion,
@@ -310,9 +311,11 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
     if (!NT_SUCCESS(Status))
     {
         /* Indicate nothing is there */
+        BuildLabString.Length = 0;
         CSDVersionString.Length = 0;
     }
-    /* NULL-terminate */
+    /* NULL-terminate the strings */
+    BuildLabString.Buffer[BuildLabString.Length / sizeof(WCHAR)] = UNICODE_NULL;
     CSDVersionString.Buffer[CSDVersionString.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     EndBuffer = VersionBuffer;
@@ -343,11 +346,9 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
         /* String for Safe Mode */
         Status = RtlStringCchPrintfW(pwszzVersion,
                                      cchDest,
-                                     L"ReactOS Version %S %S.%S_%S (NT %u.%u Build %u%s)\n",
+                                     L"ReactOS Version %S %wZ (NT %u.%u Build %u%s)\n",
                                      KERNEL_VERSION_STR,
-                                     KERNEL_VERSION_BUILD_STR, // Same as the "BuildLab" string in the registry
-                                     REACTOS_COMPILER_NAME,
-                                     REACTOS_COMPILER_VERSION,
+                                     &BuildLabString,
                                      SharedUserData->NtMajorVersion,
                                      SharedUserData->NtMinorVersion,
                                      (VerInfo.dwBuildNumber & 0xFFFF),
@@ -386,12 +387,10 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
         Status = RtlStringCchPrintfW(pwszzVersion,
                                      cchDest,
                                      L"ReactOS Version %S\n"
-                                     L"Build %S.%S_%S\n"
+                                     L"Build %wZ\n"
                                      L"Reporting NT %u.%u (Build %u%s)\n",
                                      KERNEL_VERSION_STR,
-                                     KERNEL_VERSION_BUILD_STR, // Same as the "BuildLab" string in the registry
-                                     REACTOS_COMPILER_NAME,
-                                     REACTOS_COMPILER_VERSION,
+                                     &BuildLabString,
                                      SharedUserData->NtMajorVersion,
                                      SharedUserData->NtMinorVersion,
                                      (VerInfo.dwBuildNumber & 0xFFFF),
@@ -420,11 +419,9 @@ GetSystemVersionString(OUT PWSTR pwszzVersion,
         /* Fall-back string */
         Status = RtlStringCchPrintfW(pwszzVersion,
                                      cchDest,
-                                     L"ReactOS Version %S %S.%S_%S\n",
+                                     L"ReactOS Version %S %wZ\n",
                                      KERNEL_VERSION_STR,
-                                     KERNEL_VERSION_BUILD_STR, // Same as the "BuildLab" string in the registry
-                                     REACTOS_COMPILER_NAME,
-                                     REACTOS_COMPILER_VERSION);
+                                     &BuildLabString);
         if (!NT_SUCCESS(Status))
         {
             /* General failure, NULL-terminate the string */
