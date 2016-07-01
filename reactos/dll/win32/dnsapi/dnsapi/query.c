@@ -59,6 +59,9 @@ DnsQuery_A(LPCSTR Name,
     LPSTR CurrentName;
     unsigned i, CNameLoop;
 
+    if (Name == NULL)
+        return ERROR_INVALID_PARAMETER;
+
     *QueryResultSet = 0;
 
     switch(Type)
@@ -199,6 +202,9 @@ DnsQuery_W(LPCWSTR Name,
     DNS_STATUS Status;
     PDNS_RECORD QueryResultWide;
     PDNS_RECORD ConvertedRecord = 0, LastRecord = 0;
+
+    if (Name == NULL)
+        return ERROR_INVALID_PARAMETER;
 
     Buffer = DnsWToC(Name);
 
