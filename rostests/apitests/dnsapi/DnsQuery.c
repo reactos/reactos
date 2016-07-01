@@ -8,7 +8,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdio.h>
-#include <WinDNS.h>
+#include <windns.h>
 #include <apitest.h>
 
 
