@@ -829,13 +829,8 @@ todo_wine
     hr = IWICBitmap_CopyPixels(bitmap, NULL, 4, sizeof(data), data);
     ok(hr == S_OK, "IWICBitmap_CopyPixels error %#x\n", hr);
     for (i = 0; i < sizeof(data); i++)
-    {
-        if (data[i] != data_8bpp_pal_wic[i])
-todo_wine
+        todo_wine_if (data[i] != data_8bpp_pal_wic[i])
             ok(data[i] == data_8bpp_pal_wic[i], "%u: expected %#x, got %#x\n", i, data_8bpp_pal_wic[i], data[i]);
-        else
-            ok(data[i] == data_8bpp_pal_wic[i], "%u: expected %#x, got %#x\n", i, data_8bpp_pal_wic[i], data[i]);
-    }
 
     IWICBitmap_Release(bitmap);
     DeleteObject(hbmp);

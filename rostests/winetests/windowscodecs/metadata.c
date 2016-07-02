@@ -969,6 +969,8 @@ static void test_metadata_png(void)
     IWICBitmapFrameDecode *frame;
     IWICMetadataBlockReader *blockreader;
     IWICMetadataReader *reader;
+    IWICMetadataQueryReader *queryreader;
+    IWICComponentFactory *factory;
     GUID containerformat;
     HRESULT hr;
     UINT count=0xdeadbeef;
@@ -1039,7 +1041,32 @@ static void test_metadata_png(void)
         hr = IWICMetadataBlockReader_GetReaderByIndex(blockreader, 1, &reader);
         todo_wine ok(hr == WINCODEC_ERR_VALUEOUTOFRANGE, "GetReaderByIndex failed, hr=%x\n", hr);
 
+        hr = CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER,
+            &IID_IWICComponentFactory, (void**)&factory);
+        ok(hr == S_OK, "CoCreateInstance failed, hr=%x\n", hr);
+
+        hr = IWICComponentFactory_CreateQueryReaderFromBlockReader(factory, NULL, &queryreader);
+        ok(hr == E_INVALIDARG, "CreateQueryReaderFromBlockReader should have failed: %08x\n", hr);
+
+        hr = IWICComponentFactory_CreateQueryReaderFromBlockReader(factory, blockreader, NULL);
+        ok(hr == E_INVALIDARG, "CreateQueryReaderFromBlockReader should have failed: %08x\n", hr);
+
+        hr = IWICComponentFactory_CreateQueryReaderFromBlockReader(factory, blockreader, &queryreader);
+        ok(hr == S_OK, "CreateQueryReaderFromBlockReader failed: %08x\n", hr);
+
+        IWICMetadataQueryReader_Release(queryreader);
+
+        IWICComponentFactory_Release(factory);
+
         IWICMetadataBlockReader_Release(blockreader);
+    }
+
+    hr = IWICBitmapFrameDecode_GetMetadataQueryReader(frame, &queryreader);
+    ok(hr == S_OK, "GetMetadataQueryReader failed: %08x\n", hr);
+
+    if (SUCCEEDED(hr))
+    {
+        IWICMetadataQueryReader_Release(queryreader);
     }
 
     IWICBitmapFrameDecode_Release(frame);
@@ -1131,6 +1158,7 @@ static void test_metadata_gif(void)
     IWICBitmapFrameDecode *frame;
     IWICMetadataBlockReader *blockreader;
     IWICMetadataReader *reader;
+    IWICMetadataQueryReader *queryreader;
     GUID format;
     HRESULT hr;
     UINT count;
@@ -1451,6 +1479,16 @@ static void test_metadata_gif(void)
         ok(hr == E_INVALIDARG, "expected E_INVALIDARG, got %#x\n", hr);
 
         IWICMetadataBlockReader_Release(blockreader);
+    }
+
+    hr = IWICBitmapFrameDecode_GetMetadataQueryReader(frame, &queryreader);
+    ok(hr == S_OK ||
+            broken(hr == WINCODEC_ERR_UNSUPPORTEDOPERATION) /* before Vista */,
+            "GetMetadataQueryReader failed: %08x\n", hr);
+
+    if (SUCCEEDED(hr))
+    {
+        IWICMetadataQueryReader_Release(queryreader);
     }
 
     IWICBitmapFrameDecode_Release(frame);
