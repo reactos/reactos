@@ -287,6 +287,8 @@ DnsQuery_W(LPCWSTR Name,
         {
             LastRecord = *QueryResultSet = ConvertedRecord;
         }
+
+        QueryResultWide = QueryResultWide->pNext;
     }
 
     if (LastRecord)
