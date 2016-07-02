@@ -1150,8 +1150,14 @@ static HRESULT WINAPI TiffFrameDecode_CopyPixels(IWICBitmapFrameDecode *iface,
 static HRESULT WINAPI TiffFrameDecode_GetMetadataQueryReader(IWICBitmapFrameDecode *iface,
     IWICMetadataQueryReader **ppIMetadataQueryReader)
 {
-    FIXME("(%p,%p): stub\n", iface, ppIMetadataQueryReader);
-    return E_NOTIMPL;
+    TiffFrameDecode *This = impl_from_IWICBitmapFrameDecode(iface);
+
+    TRACE("(%p,%p)\n", iface, ppIMetadataQueryReader);
+
+    if (!ppIMetadataQueryReader)
+        return E_INVALIDARG;
+
+    return MetadataQueryReader_CreateInstance(&This->IWICMetadataBlockReader_iface, ppIMetadataQueryReader);
 }
 
 static HRESULT WINAPI TiffFrameDecode_GetColorContexts(IWICBitmapFrameDecode *iface,

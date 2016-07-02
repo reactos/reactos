@@ -23,7 +23,6 @@ spec2def(windowscodecs.dll windowscodecs.spec ADD_IMPORTLIB)
 add_rpcproxy_files(windowscodecs_wincodec.idl)
 
 list(APPEND SOURCE
-    bitmap.c
     bmpdecode.c
     bmpencode.c
     clipper.c
@@ -40,6 +39,7 @@ list(APPEND SOURCE
     jpegformat.c
     main.c
     metadatahandler.c
+    metadataquery.c
     palette.c
     pngformat.c
     propertybag.c
@@ -52,14 +52,27 @@ list(APPEND SOURCE
     ungif.c
     wincodecs_private.h)
 
-add_library(windowscodecs SHARED
-    ${SOURCE}
+if(MSVC)
+    if(ARCH STREQUAL "i386")
+        list(APPEND SOURCE msvc-thiscall.c)
+    endif()
+    set_source_files_properties(bitmap.c PROPERTIES COMPILE_FLAGS "/FImsvc.h")
+    list(APPEND ADDITIONAL_SOURCE bitmap.c)
+else()
+    list(APPEND SOURCE bitmap.c)
+endif()
+
+list(APPEND ADDITIONAL_SOURCE
     guid.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs_wincodec_p.c)
+
+add_library(windowscodecs SHARED
+    ${SOURCE}
+    ${ADDITIONAL_SOURCE})
 
 set_module_type(windowscodecs win32dll)
 target_link_libraries(windowscodecs wine uuid ${PSEH_LIB})

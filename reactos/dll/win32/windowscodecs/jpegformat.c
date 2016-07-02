@@ -121,6 +121,7 @@ static void emit_message_fn(j_common_ptr cinfo, int msg_level)
 typedef struct {
     IWICBitmapDecoder IWICBitmapDecoder_iface;
     IWICBitmapFrameDecode IWICBitmapFrameDecode_iface;
+    IWICMetadataBlockReader IWICMetadataBlockReader_iface;
     LONG ref;
     BOOL initialized;
     BOOL cinfo_initialized;
@@ -146,6 +147,11 @@ static inline JpegDecoder *impl_from_IWICBitmapFrameDecode(IWICBitmapFrameDecode
 static inline JpegDecoder *decoder_from_decompress(j_decompress_ptr decompress)
 {
     return CONTAINING_RECORD(decompress, JpegDecoder, cinfo);
+}
+
+static inline JpegDecoder *impl_from_IWICMetadataBlockReader(IWICMetadataBlockReader *iface)
+{
+    return CONTAINING_RECORD(iface, JpegDecoder, IWICMetadataBlockReader_iface);
 }
 
 static HRESULT WINAPI JpegDecoder_QueryInterface(IWICBitmapDecoder *iface, REFIID iid,
@@ -664,8 +670,14 @@ static HRESULT WINAPI JpegDecoder_Frame_CopyPixels(IWICBitmapFrameDecode *iface,
 static HRESULT WINAPI JpegDecoder_Frame_GetMetadataQueryReader(IWICBitmapFrameDecode *iface,
     IWICMetadataQueryReader **ppIMetadataQueryReader)
 {
-    FIXME("(%p,%p): stub\n", iface, ppIMetadataQueryReader);
-    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
+    JpegDecoder *This = impl_from_IWICBitmapFrameDecode(iface);
+
+    TRACE("(%p,%p)\n", iface, ppIMetadataQueryReader);
+
+    if (!ppIMetadataQueryReader)
+        return E_INVALIDARG;
+
+    return MetadataQueryReader_CreateInstance(&This->IWICMetadataBlockReader_iface, ppIMetadataQueryReader);
 }
 
 static HRESULT WINAPI JpegDecoder_Frame_GetColorContexts(IWICBitmapFrameDecode *iface,
@@ -696,6 +708,73 @@ static const IWICBitmapFrameDecodeVtbl JpegDecoder_Frame_Vtbl = {
     JpegDecoder_Frame_GetThumbnail
 };
 
+static HRESULT WINAPI JpegDecoder_Block_QueryInterface(IWICMetadataBlockReader *iface, REFIID iid,
+    void **ppv)
+{
+    JpegDecoder *This = impl_from_IWICMetadataBlockReader(iface);
+    return IWICBitmapFrameDecode_QueryInterface(&This->IWICBitmapFrameDecode_iface, iid, ppv);
+}
+
+static ULONG WINAPI JpegDecoder_Block_AddRef(IWICMetadataBlockReader *iface)
+{
+    JpegDecoder *This = impl_from_IWICMetadataBlockReader(iface);
+    return IWICBitmapDecoder_AddRef(&This->IWICBitmapDecoder_iface);
+}
+
+static ULONG WINAPI JpegDecoder_Block_Release(IWICMetadataBlockReader *iface)
+{
+    JpegDecoder *This = impl_from_IWICMetadataBlockReader(iface);
+    return IWICBitmapDecoder_Release(&This->IWICBitmapDecoder_iface);
+}
+
+static HRESULT WINAPI JpegDecoder_Block_GetContainerFormat(IWICMetadataBlockReader *iface,
+    GUID *pguidContainerFormat)
+{
+    TRACE("%p,%p\n", iface, pguidContainerFormat);
+
+    if (!pguidContainerFormat) return E_INVALIDARG;
+
+    memcpy(pguidContainerFormat, &GUID_ContainerFormatJpeg, sizeof(GUID));
+
+    return S_OK;
+}
+
+static HRESULT WINAPI JpegDecoder_Block_GetCount(IWICMetadataBlockReader *iface,
+    UINT *pcCount)
+{
+    FIXME("%p,%p\n", iface, pcCount);
+
+    if (!pcCount) return E_INVALIDARG;
+
+    *pcCount = 0;
+
+    return S_OK;
+}
+
+static HRESULT WINAPI JpegDecoder_Block_GetReaderByIndex(IWICMetadataBlockReader *iface,
+    UINT nIndex, IWICMetadataReader **ppIMetadataReader)
+{
+    FIXME("%p,%d,%p\n", iface, nIndex, ppIMetadataReader);
+    return E_INVALIDARG;
+}
+
+static HRESULT WINAPI JpegDecoder_Block_GetEnumerator(IWICMetadataBlockReader *iface,
+    IEnumUnknown **ppIEnumMetadata)
+{
+    FIXME("%p,%p\n", iface, ppIEnumMetadata);
+    return E_NOTIMPL;
+}
+
+static const IWICMetadataBlockReaderVtbl JpegDecoder_Block_Vtbl = {
+    JpegDecoder_Block_QueryInterface,
+    JpegDecoder_Block_AddRef,
+    JpegDecoder_Block_Release,
+    JpegDecoder_Block_GetContainerFormat,
+    JpegDecoder_Block_GetCount,
+    JpegDecoder_Block_GetReaderByIndex,
+    JpegDecoder_Block_GetEnumerator,
+};
+
 HRESULT JpegDecoder_CreateInstance(REFIID iid, void** ppv)
 {
     JpegDecoder *This;
@@ -716,6 +795,7 @@ HRESULT JpegDecoder_CreateInstance(REFIID iid, void** ppv)
 
     This->IWICBitmapDecoder_iface.lpVtbl = &JpegDecoder_Vtbl;
     This->IWICBitmapFrameDecode_iface.lpVtbl = &JpegDecoder_Frame_Vtbl;
+    This->IWICMetadataBlockReader_iface.lpVtbl = &JpegDecoder_Block_Vtbl;
     This->ref = 1;
     This->initialized = FALSE;
     This->cinfo_initialized = FALSE;

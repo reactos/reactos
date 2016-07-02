@@ -579,12 +579,36 @@ static HRESULT WINAPI ComponentFactory_CreateBitmapFromMemory(IWICComponentFacto
     UINT width, UINT height, REFWICPixelFormatGUID format, UINT stride,
     UINT size, BYTE *buffer, IWICBitmap **bitmap)
 {
+    HRESULT hr;
+
     TRACE("(%p,%u,%u,%s,%u,%u,%p,%p\n", iface, width, height,
         debugstr_guid(format), stride, size, buffer, bitmap);
 
     if (!stride || !size || !buffer || !bitmap) return E_INVALIDARG;
 
-    return BitmapImpl_Create(width, height, stride, size, buffer, format, WICBitmapCacheOnLoad, bitmap);
+    hr = BitmapImpl_Create(width, height, stride, size, NULL, format, WICBitmapCacheOnLoad, bitmap);
+    if (SUCCEEDED(hr))
+    {
+        IWICBitmapLock *lock;
+
+        hr = IWICBitmap_Lock(*bitmap, NULL, WICBitmapLockWrite, &lock);
+        if (SUCCEEDED(hr))
+        {
+            UINT buffersize;
+            BYTE *data;
+
+            IWICBitmapLock_GetDataPointer(lock, &buffersize, &data);
+            memcpy(data, buffer, buffersize);
+
+            IWICBitmapLock_Release(lock);
+        }
+        else
+        {
+            IWICBitmap_Release(*bitmap);
+            *bitmap = NULL;
+        }
+    }
+    return hr;
 }
 
 static BOOL get_16bpp_format(HBITMAP hbm, WICPixelFormatGUID *format)
@@ -1080,8 +1104,12 @@ static HRESULT WINAPI ComponentFactory_CreateMetadataWriterFromReader(IWICCompon
 static HRESULT WINAPI ComponentFactory_CreateQueryReaderFromBlockReader(IWICComponentFactory *iface,
         IWICMetadataBlockReader *block_reader, IWICMetadataQueryReader **query_reader)
 {
-    FIXME("%p,%p,%p: stub\n", iface, block_reader, query_reader);
-    return E_NOTIMPL;
+    TRACE("%p,%p,%p\n", iface, block_reader, query_reader);
+
+    if (!block_reader || !query_reader)
+        return E_INVALIDARG;
+
+    return MetadataQueryReader_CreateInstance(block_reader, query_reader);
 }
 
 static HRESULT WINAPI ComponentFactory_CreateQueryWriterFromBlockWriter(IWICComponentFactory *iface,
@@ -1155,4 +1183,51 @@ HRESULT ComponentFactory_CreateInstance(REFIID iid, void** ppv)
     IWICComponentFactory_Release(&This->IWICComponentFactory_iface);
 
     return ret;
+}
+
+HRESULT WINAPI WICCreateBitmapFromSectionEx(UINT width, UINT height,
+        REFWICPixelFormatGUID format, HANDLE section, UINT stride,
+        UINT offset, WICSectionAccessLevel wicaccess, IWICBitmap **bitmap)
+{
+    DWORD access;
+    void *buffer;
+    HRESULT hr;
+
+    TRACE("%u,%u,%s,%p,%u,%#x,%#x,%p\n", width, height, debugstr_guid(format),
+        section, stride, offset, wicaccess, bitmap);
+
+    if (!width || !height || !section || !bitmap) return E_INVALIDARG;
+
+    switch (wicaccess)
+    {
+    case WICSectionAccessLevelReadWrite:
+        access = FILE_MAP_READ | FILE_MAP_WRITE;
+        break;
+
+    case WICSectionAccessLevelRead:
+        access = FILE_MAP_READ;
+        break;
+
+    default:
+        FIXME("unsupported access %#x\n", wicaccess);
+        return E_INVALIDARG;
+    }
+
+    buffer = MapViewOfFile(section, access, 0, offset, 0);
+    if (!buffer) return HRESULT_FROM_WIN32(GetLastError());
+
+    hr = BitmapImpl_Create(width, height, stride, 0, buffer, format, WICBitmapCacheOnLoad, bitmap);
+    if (FAILED(hr)) UnmapViewOfFile(buffer);
+    return hr;
+}
+
+HRESULT WINAPI WICCreateBitmapFromSection(UINT width, UINT height,
+        REFWICPixelFormatGUID format, HANDLE section,
+        UINT stride, UINT offset, IWICBitmap **bitmap)
+{
+    TRACE("%u,%u,%s,%p,%u,%u,%p\n", width, height, debugstr_guid(format),
+        section, stride, offset, bitmap);
+
+    return WICCreateBitmapFromSectionEx(width, height, format, section,
+        stride, offset, WICSectionAccessLevelRead, bitmap);
 }
