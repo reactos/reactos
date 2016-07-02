@@ -36,9 +36,10 @@
 #define EXPECT_REF(obj,ref) _expect_ref((IUnknown*)obj, ref, __LINE__)
 static void _expect_ref(IUnknown* obj, ULONG ref, int line)
 {
-    ULONG rc = IUnknown_AddRef(obj);
-    IUnknown_Release(obj);
-    ok_(__FILE__,line)(rc-1 == ref, "expected refcount %d, got %d\n", ref, rc-1);
+    ULONG rc;
+    IUnknown_AddRef(obj);
+    rc = IUnknown_Release(obj);
+    ok_(__FILE__,line)(rc == ref, "expected refcount %d, got %d\n", ref, rc);
 }
 
 static const WCHAR filenameW[] = {'t','e','s','t','.','a','v','i',0};
@@ -260,6 +261,7 @@ static void test_media_streams(void)
     if (video_stream)
     {
         IAMMediaStream* am_media_stream;
+        IMultiMediaStream *multi_media_stream;
         IAudioMediaStream* audio_media_stream;
         IDirectDrawMediaStream *ddraw_stream = NULL;
         IDirectDrawStreamSample *ddraw_sample = NULL;
@@ -267,8 +269,17 @@ static void test_media_streams(void)
         hr = IMediaStream_QueryInterface(video_stream, &IID_IAMMediaStream, (LPVOID*)&am_media_stream);
         ok(hr == S_OK, "IMediaStream_QueryInterface returned: %x\n", hr);
         ok((void*)am_media_stream == (void*)video_stream, "Not same interface, got %p expected %p\n", am_media_stream, video_stream);
-        if (hr == S_OK)
-            IAMMediaStream_Release(am_media_stream);
+
+        hr = IAMMediaStream_GetMultiMediaStream(am_media_stream, NULL);
+        ok(hr == E_POINTER, "Expected E_POINTER, got %x\n", hr);
+
+        multi_media_stream = (void *)0xdeadbeef;
+        hr = IAMMediaStream_GetMultiMediaStream(am_media_stream, &multi_media_stream);
+        ok(hr == S_OK, "IAMMediaStream_GetMultiMediaStream returned: %x\n", hr);
+        ok((void *)multi_media_stream == (void *)pams, "Expected %p, got %p\n", pams, multi_media_stream);
+        IMultiMediaStream_Release(multi_media_stream);
+
+        IAMMediaStream_Release(am_media_stream);
 
         hr = IMediaStream_QueryInterface(video_stream, &IID_IAudioMediaStream, (LPVOID*)&audio_media_stream);
         ok(hr == E_NOINTERFACE, "IMediaStream_QueryInterface returned: %x\n", hr);
@@ -287,6 +298,15 @@ static void test_media_streams(void)
 
             hr = IDirectDrawMediaStream_CreateSample(ddraw_stream, NULL, NULL, 0, &ddraw_sample);
             ok(hr == S_OK, "IDirectDrawMediaStream_CreateSample returned: %x\n", hr);
+
+            hr = IDirectDrawMediaStream_GetMultiMediaStream(ddraw_stream, NULL);
+            ok(hr == E_POINTER, "Expected E_POINTER, got %x\n", hr);
+
+            multi_media_stream = (void *)0xdeadbeef;
+            hr = IDirectDrawMediaStream_GetMultiMediaStream(ddraw_stream, &multi_media_stream);
+            ok(hr == S_OK, "IDirectDrawMediaStream_GetMultiMediaStream returned: %x\n", hr);
+            ok((void *)multi_media_stream == (void *)pams, "Expected %p, got %p\n", pams, multi_media_stream);
+            IMultiMediaStream_Release(multi_media_stream);
         }
 
         if (ddraw_sample)
@@ -351,6 +371,7 @@ static void test_media_streams(void)
     if (audio_stream)
     {
         IAMMediaStream* am_media_stream;
+        IMultiMediaStream *multi_media_stream;
         IDirectDrawMediaStream* ddraw_stream = NULL;
         IAudioMediaStream* audio_media_stream = NULL;
         IAudioStreamSample *audio_sample = NULL;
@@ -358,8 +379,17 @@ static void test_media_streams(void)
         hr = IMediaStream_QueryInterface(audio_stream, &IID_IAMMediaStream, (LPVOID*)&am_media_stream);
         ok(hr == S_OK, "IMediaStream_QueryInterface returned: %x\n", hr);
         ok((void*)am_media_stream == (void*)audio_stream, "Not same interface, got %p expected %p\n", am_media_stream, audio_stream);
-        if (hr == S_OK)
-            IAMMediaStream_Release(am_media_stream);
+
+        hr = IAMMediaStream_GetMultiMediaStream(am_media_stream, NULL);
+        ok(hr == E_POINTER, "Expected E_POINTER, got %x\n", hr);
+
+        multi_media_stream = (void *)0xdeadbeef;
+        hr = IAMMediaStream_GetMultiMediaStream(am_media_stream, &multi_media_stream);
+        ok(hr == S_OK, "IAMMediaStream_GetMultiMediaStream returned: %x\n", hr);
+        ok((void *)multi_media_stream == (void *)pams, "Expected %p, got %p\n", pams, multi_media_stream);
+        IMultiMediaStream_Release(multi_media_stream);
+
+        IAMMediaStream_Release(am_media_stream);
 
         hr = IMediaStream_QueryInterface(audio_stream, &IID_IDirectDrawMediaStream, (LPVOID*)&ddraw_stream);
         ok(hr == E_NOINTERFACE, "IMediaStream_QueryInterface returned: %x\n", hr);
@@ -384,6 +414,15 @@ static void test_media_streams(void)
             ok(hr == E_POINTER, "IAudioMediaStream_CreateSample returned: %x\n", hr);
             hr = IAudioMediaStream_CreateSample(audio_media_stream, audio_data, 0, &audio_sample);
             ok(hr == S_OK, "IAudioMediaStream_CreateSample returned: %x\n", hr);
+
+            hr = IAudioMediaStream_GetMultiMediaStream(audio_media_stream, NULL);
+            ok(hr == E_POINTER, "Expected E_POINTER, got %x\n", hr);
+
+            multi_media_stream = (void *)0xdeadbeef;
+            hr = IAudioMediaStream_GetMultiMediaStream(audio_media_stream, &multi_media_stream);
+            ok(hr == S_OK, "IAudioMediaStream_GetMultiMediaStream returned: %x\n", hr);
+            ok((void *)multi_media_stream == (void *)pams, "Expected %p, got %p\n", pams, multi_media_stream);
+            IMultiMediaStream_Release(multi_media_stream);
 
             if (audio_data)
                 IAudioData_Release(audio_data);
