@@ -3,8 +3,8 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/client/except.c
  * PURPOSE:         Exception functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- *                  modified from WINE [ Onno Hovers, (onno@stack.urc.tue.nl) ]
+ * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
+ *                  Modified from WINE [ Onno Hovers, (onno@stack.urc.tue.nl) ]
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -24,18 +24,18 @@ static const char*
 _module_name_from_addr(const void* addr, void **module_start_addr,
                        char* psz, size_t nChars)
 {
-   MEMORY_BASIC_INFORMATION mbi;
-   if (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi) ||
-       !GetModuleFileNameA((HMODULE)mbi.AllocationBase, psz, nChars))
-   {
-      psz[0] = '\0';
-      *module_start_addr = 0;
-   }
-   else
-   {
-      *module_start_addr = (void *)mbi.AllocationBase;
-   }
-   return psz;
+    MEMORY_BASIC_INFORMATION mbi;
+    if (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi) ||
+        !GetModuleFileNameA((HMODULE)mbi.AllocationBase, psz, nChars))
+    {
+        psz[0] = '\0';
+        *module_start_addr = 0;
+    }
+    else
+    {
+        *module_start_addr = (void *)mbi.AllocationBase;
+    }
+    return psz;
 }
 
 
@@ -43,45 +43,45 @@ static VOID
 _dump_context(PCONTEXT pc)
 {
 #ifdef _M_IX86
-   /*
-    * Print out the CPU registers
-    */
-   DbgPrint("CS:EIP %x:%x\n", pc->SegCs&0xffff, pc->Eip );
-   DbgPrint("DS %x ES %x FS %x GS %x\n", pc->SegDs&0xffff, pc->SegEs&0xffff,
-	    pc->SegFs&0xffff, pc->SegGs&0xfff);
-   DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", pc->Eax, pc->Ebx, pc->Ecx);
-   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x   ESP: %.8x\n", pc->Edx,
-	    pc->Ebp, pc->Esi, pc->Esp);
-   DbgPrint("EDI: %.8x   EFLAGS: %.8x\n", pc->Edi, pc->EFlags);
+    /*
+     * Print out the CPU registers
+     */
+    DbgPrint("CS:EIP %x:%x\n", pc->SegCs&0xffff, pc->Eip );
+    DbgPrint("DS %x ES %x FS %x GS %x\n", pc->SegDs&0xffff, pc->SegEs&0xffff,
+             pc->SegFs&0xffff, pc->SegGs&0xfff);
+    DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", pc->Eax, pc->Ebx, pc->Ecx);
+    DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x   ESP: %.8x\n", pc->Edx,
+             pc->Ebp, pc->Esi, pc->Esp);
+    DbgPrint("EDI: %.8x   EFLAGS: %.8x\n", pc->Edi, pc->EFlags);
 #elif defined(_M_AMD64)
-   DbgPrint("CS:RIP %x:%I64x\n", pc->SegCs&0xffff, pc->Rip );
-   DbgPrint("DS %x ES %x FS %x GS %x\n", pc->SegDs&0xffff, pc->SegEs&0xffff,
-	    pc->SegFs&0xffff, pc->SegGs&0xfff);
-   DbgPrint("RAX: %I64x   RBX: %I64x   RCX: %I64x RDI: %I64x\n", pc->Rax, pc->Rbx, pc->Rcx, pc->Rdi);
-   DbgPrint("RDX: %I64x   RBP: %I64x   RSI: %I64x   RSP: %I64x\n", pc->Rdx, pc->Rbp, pc->Rsi, pc->Rsp);
-   DbgPrint("R8: %I64x   R9: %I64x   R10: %I64x   R11: %I64x\n", pc->R8, pc->R9, pc->R10, pc->R11);
-   DbgPrint("R12: %I64x   R13: %I64x   R14: %I64x   R15: %I64x\n", pc->R12, pc->R13, pc->R14, pc->R15);
-   DbgPrint("EFLAGS: %.8x\n", pc->EFlags);
+    DbgPrint("CS:RIP %x:%I64x\n", pc->SegCs&0xffff, pc->Rip );
+    DbgPrint("DS %x ES %x FS %x GS %x\n", pc->SegDs&0xffff, pc->SegEs&0xffff,
+             pc->SegFs&0xffff, pc->SegGs&0xfff);
+    DbgPrint("RAX: %I64x   RBX: %I64x   RCX: %I64x RDI: %I64x\n", pc->Rax, pc->Rbx, pc->Rcx, pc->Rdi);
+    DbgPrint("RDX: %I64x   RBP: %I64x   RSI: %I64x   RSP: %I64x\n", pc->Rdx, pc->Rbp, pc->Rsi, pc->Rsp);
+    DbgPrint("R8: %I64x   R9: %I64x   R10: %I64x   R11: %I64x\n", pc->R8, pc->R9, pc->R10, pc->R11);
+    DbgPrint("R12: %I64x   R13: %I64x   R14: %I64x   R15: %I64x\n", pc->R12, pc->R13, pc->R14, pc->R15);
+    DbgPrint("EFLAGS: %.8x\n", pc->EFlags);
 #elif defined(_M_ARM)
-   DbgPrint("PC:  %08lx   LR:  %08lx   SP:  %08lx\n", pc->Pc);
-   DbgPrint("R0:  %08lx   R1:  %08lx   R2:  %08lx   R3:  %08lx\n", pc->R0, pc->R1, pc->R2, pc->R3);
-   DbgPrint("R4:  %08lx   R5:  %08lx   R6:  %08lx   R7:  %08lx\n", pc->R4, pc->R5, pc->R6, pc->R7);
-   DbgPrint("R8:  %08lx   R9:  %08lx   R10: %08lx   R11: %08lx\n", pc->R8, pc->R9, pc->R10, pc->R11);
-   DbgPrint("R12: %08lx   CPSR: %08lx  FPSCR: %08lx\n", pc->R12, pc->Cpsr, pc->R1, pc->Fpscr, pc->R3);
+    DbgPrint("PC:  %08lx   LR:  %08lx   SP:  %08lx\n", pc->Pc);
+    DbgPrint("R0:  %08lx   R1:  %08lx   R2:  %08lx   R3:  %08lx\n", pc->R0, pc->R1, pc->R2, pc->R3);
+    DbgPrint("R4:  %08lx   R5:  %08lx   R6:  %08lx   R7:  %08lx\n", pc->R4, pc->R5, pc->R6, pc->R7);
+    DbgPrint("R8:  %08lx   R9:  %08lx   R10: %08lx   R11: %08lx\n", pc->R8, pc->R9, pc->R10, pc->R11);
+    DbgPrint("R12: %08lx   CPSR: %08lx  FPSCR: %08lx\n", pc->R12, pc->Cpsr, pc->R1, pc->Fpscr, pc->R3);
 #else
-#error "Unknown architecture"
+    #error "Unknown architecture"
 #endif
 }
 
 static VOID
-PrintStackTrace(struct _EXCEPTION_POINTERS *ExceptionInfo)
+PrintStackTrace(IN PEXCEPTION_POINTERS ExceptionInfo)
 {
     PVOID StartAddr;
     CHAR szMod[128] = "";
     PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
     PCONTEXT ContextRecord = ExceptionInfo->ContextRecord;
 
-    /* Print a stack trace. */
+    /* Print a stack trace */
     DbgPrint("Unhandled exception\n");
     DbgPrint("ExceptionCode:    %8x\n", ExceptionRecord->ExceptionCode);
 
@@ -91,7 +91,7 @@ PrintStackTrace(struct _EXCEPTION_POINTERS *ExceptionInfo)
         DbgPrint("Faulting Address: %8x\n", ExceptionRecord->ExceptionInformation[1]);
     }
 
-    _dump_context (ContextRecord);
+    _dump_context(ContextRecord);
     _module_name_from_addr(ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod));
     DbgPrint("Address:\n   %8x+%-8x   %s\n",
              (PVOID)StartAddr,
@@ -368,9 +368,7 @@ RaiseException(IN DWORD dwExceptionCode,
     {
         /* We do, normalize the count */
         if (nNumberOfArguments > EXCEPTION_MAXIMUM_PARAMETERS)
-        {
             nNumberOfArguments = EXCEPTION_MAXIMUM_PARAMETERS;
-        }
 
         /* Set the count of parameters and copy them */
         ExceptionRecord.NumberParameters = nNumberOfArguments;
@@ -388,14 +386,14 @@ RaiseException(IN DWORD dwExceptionCode,
     }
 
     /* Trace the wine special error and show the modulename and functionname */
-    if (dwExceptionCode == 0x80000100 /*EXCEPTION_WINE_STUB*/)
+    if (dwExceptionCode == 0x80000100 /* EXCEPTION_WINE_STUB */)
     {
-       /* Numbers of parameter must be equal to two */
-       if (ExceptionRecord.NumberParameters == 2)
-       {
-          DPRINT1("Missing function in   : %s\n", ExceptionRecord.ExceptionInformation[0]);
-          DPRINT1("with the functionname : %s\n", ExceptionRecord.ExceptionInformation[1]);
-       }
+        /* Numbers of parameter must be equal to two */
+        if (ExceptionRecord.NumberParameters == 2)
+        {
+            DPRINT1("Missing function in   : %s\n", ExceptionRecord.ExceptionInformation[0]);
+            DPRINT1("with the functionname : %s\n", ExceptionRecord.ExceptionInformation[1]);
+        }
     }
 
     /* Raise the exception */
