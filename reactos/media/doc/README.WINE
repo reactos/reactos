@@ -224,7 +224,7 @@ reactos/dll/win32/xinput1_3           # Synced to WineStaging-1.9.4
 reactos/dll/win32/xinput9_1_0         # Synced to WineStaging-1.9.4
 reactos/dll/win32/xmllite             # Synced to WineStaging-1.9.11
 
-reactos/dll/cpl/inetcpl               # Synced to WineStaging-1.9.4
+reactos/dll/cpl/inetcpl               # Synced to WineStaging-1.9.11
 
 ReactOS shares the following programs with Winehq.
 
