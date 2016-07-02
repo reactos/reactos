@@ -2109,7 +2109,7 @@ static BOOL urlcache_entry_get_file(const char *url, void *entry_info, DWORD *si
 
     if (!urlcache_find_hash_entry(header, url, &hash_entry)) {
         cache_container_unlock_index(container, header);
-        TRACE("entry %s not found!\n", url);
+        TRACE("entry %s not found!\n", debugstr_a(url));
         SetLastError(ERROR_FILE_NOT_FOUND);
         return FALSE;
     }
