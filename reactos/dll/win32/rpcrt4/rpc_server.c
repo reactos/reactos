@@ -1079,7 +1079,7 @@ void RPCRT4_destroy_all_protseqs(void)
 RPC_STATUS WINAPI RpcServerRegisterIf( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid, RPC_MGR_EPV* MgrEpv )
 {
   TRACE("(%p,%s,%p)\n", IfSpec, debugstr_guid(MgrTypeUuid), MgrEpv);
-  return RpcServerRegisterIf2( IfSpec, MgrTypeUuid, MgrEpv, 0, RPC_C_LISTEN_MAX_CALLS_DEFAULT, (UINT)-1, NULL );
+  return RpcServerRegisterIf3( IfSpec, MgrTypeUuid, MgrEpv, 0, RPC_C_LISTEN_MAX_CALLS_DEFAULT, (UINT)-1, NULL, NULL );
 }
 
 /***********************************************************************
@@ -1089,7 +1089,7 @@ RPC_STATUS WINAPI RpcServerRegisterIfEx( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid
                        UINT Flags, UINT MaxCalls, RPC_IF_CALLBACK_FN* IfCallbackFn )
 {
   TRACE("(%p,%s,%p,%u,%u,%p)\n", IfSpec, debugstr_guid(MgrTypeUuid), MgrEpv, Flags, MaxCalls, IfCallbackFn);
-  return RpcServerRegisterIf2( IfSpec, MgrTypeUuid, MgrEpv, Flags, MaxCalls, (UINT)-1, IfCallbackFn );
+  return RpcServerRegisterIf3( IfSpec, MgrTypeUuid, MgrEpv, Flags, MaxCalls, (UINT)-1, IfCallbackFn, NULL );
 }
 
 /***********************************************************************
@@ -1098,12 +1098,25 @@ RPC_STATUS WINAPI RpcServerRegisterIfEx( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid
 RPC_STATUS WINAPI RpcServerRegisterIf2( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid, RPC_MGR_EPV* MgrEpv,
                       UINT Flags, UINT MaxCalls, UINT MaxRpcSize, RPC_IF_CALLBACK_FN* IfCallbackFn )
 {
+  return RpcServerRegisterIf3( IfSpec, MgrTypeUuid, MgrEpv, Flags, MaxCalls, MaxRpcSize, IfCallbackFn, NULL );
+}
+
+/***********************************************************************
+ *             RpcServerRegisterIf3 (RPCRT4.@)
+ */
+RPC_STATUS WINAPI RpcServerRegisterIf3( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid, RPC_MGR_EPV* MgrEpv,
+    UINT Flags, UINT MaxCalls, UINT MaxRpcSize, RPC_IF_CALLBACK_FN* IfCallbackFn, void* SecurityDescriptor)
+{
   PRPC_SERVER_INTERFACE If = IfSpec;
   RpcServerInterface* sif;
   unsigned int i;
 
-  TRACE("(%p,%s,%p,%u,%u,%u,%p)\n", IfSpec, debugstr_guid(MgrTypeUuid), MgrEpv, Flags, MaxCalls,
-         MaxRpcSize, IfCallbackFn);
+  TRACE("(%p,%s,%p,%u,%u,%u,%p,%p)\n", IfSpec, debugstr_guid(MgrTypeUuid), MgrEpv, Flags, MaxCalls,
+        MaxRpcSize, IfCallbackFn, SecurityDescriptor);
+
+  if (SecurityDescriptor)
+      FIXME("Unsupported SecurityDescriptor argument.\n");
+
   TRACE(" interface id: %s %d.%d\n", debugstr_guid(&If->InterfaceId.SyntaxGUID),
                                      If->InterfaceId.SyntaxVersion.MajorVersion,
                                      If->InterfaceId.SyntaxVersion.MinorVersion);
