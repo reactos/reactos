@@ -365,7 +365,7 @@ const unsigned short /* DECLSPEC_HIDDEN */ wine_shaping_table[2848] =
     0x0000, 0x0001, 0x0001, 0x0001, 0x0000, 0x0000, 0x0000, 0x0000
 };
 
-const unsigned short DECLSPEC_HIDDEN wine_shaping_forms[256][4] =
+const unsigned short /* DECLSPEC_HIDDEN */ wine_shaping_forms[256][4] =
 {
     { 0x0600, 0x0600, 0x0600, 0x0600 },
     { 0x0601, 0x0601, 0x0601, 0x0601 },
