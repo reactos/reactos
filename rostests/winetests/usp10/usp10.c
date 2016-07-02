@@ -566,6 +566,11 @@ static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
                                 {{0,0,0,0,0,0},2,0,1,0,1,0,FALSE},
                                 {{0,0,0,0,0,0},8,0,0,0,0,-1,FALSE}};
 
+    /* ZWNJ */
+    static const WCHAR test56[] = {0x0645, 0x06cc, 0x200c, 0x06a9, 0x0646, 0x0645}; /* می‌کنم */
+    static const itemTest t561[] = {{{0,0,0,0,0,0},0,1,1,1,0,arab_tag,FALSE},{{0,0,0,0,0,0},6,0,0,0,0,-1,FALSE}};
+    static const itemTest t562[] = {{{0,0,0,0,0,0},0,0,0,0,1,arab_tag,FALSE},{{0,0,0,0,0,0},6,0,0,0,0,-1,FALSE}};
+
     SCRIPT_ITEM items[15];
     SCRIPT_CONTROL  Control;
     SCRIPT_STATE    State;
@@ -646,6 +651,7 @@ static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
     test_items_ok(test45,24,NULL,NULL,1,t451,FALSE,0);
     test_items_ok(test46,16,NULL,NULL,1,t461,FALSE,0);
     test_items_ok(test47,26,NULL,NULL,1,t471,FALSE,0);
+    test_items_ok(test56,6,NULL,NULL,1,t561,FALSE,0);
 
     State.uBidiLevel = 0;
     test_items_ok(test1,4,&Control,&State,1,t11,FALSE,0);
@@ -708,6 +714,7 @@ static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
     test_items_ok(test53,8,&Control,&State,4,t531,FALSE,0);
     test_items_ok(test54,7,&Control,&State,2,t541,FALSE,0);
     test_items_ok(test55,8,&Control,&State,2,t551,FALSE,0);
+    test_items_ok(test56,6,&Control,&State,1,t561,FALSE,0);
 
     State.uBidiLevel = 1;
     test_items_ok(test1,4,&Control,&State,1,t12,FALSE,0);
@@ -762,6 +769,7 @@ static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
     test_items_ok(test45,24,&Control,&State,1,t452,FALSE,0);
     test_items_ok(test46,16,&Control,&State,1,t462,FALSE,0);
     test_items_ok(test47,26,&Control,&State,1,t472,FALSE,0);
+    test_items_ok(test56,6,&Control,&State,1,t561,FALSE,0);
 
     State.uBidiLevel = 1;
     Control.fMergeNeutralItems = TRUE;
@@ -817,6 +825,7 @@ static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
     test_items_ok(test45,24,&Control,&State,1,t452,FALSE,0);
     test_items_ok(test46,16,&Control,&State,1,t462,FALSE,0);
     test_items_ok(test47,26,&Control,&State,1,t472,FALSE,0);
+    test_items_ok(test56,6,&Control,&State,1,t561,FALSE,0);
 
     State.uBidiLevel = 0;
     Control.fMergeNeutralItems = FALSE;
@@ -881,6 +890,7 @@ static const itemTest t74[4] = {{{0,0,0,0,0,0},0,0,0,0,1,latn_tag,FALSE},
     test_items_ok(test53,8,&Control,&State,4,t532,FALSE,0);
     test_items_ok(test54,7,&Control,&State,2,t542,FALSE,0);
     test_items_ok(test55,8,&Control,&State,2,t552,FALSE,0);
+    test_items_ok(test56,6,&Control,&State,1,t562,FALSE,0);
 }
 
 static inline void _test_shape_ok(int valid, HDC hdc, LPCWSTR string,
