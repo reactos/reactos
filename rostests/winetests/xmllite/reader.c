@@ -38,14 +38,6 @@
 
 DEFINE_GUID(IID_IXmlReaderInput, 0x0b3ccc9b, 0x9214, 0x428b, 0xa2, 0xae, 0xef, 0x3a, 0xa8, 0x71, 0xaf, 0xda);
 
-static HRESULT (WINAPI *pCreateXmlReader)(REFIID riid, void **ppvObject, IMalloc *pMalloc);
-static HRESULT (WINAPI *pCreateXmlReaderInputWithEncodingName)(IUnknown *stream,
-                                                        IMalloc *pMalloc,
-                                                        LPCWSTR encoding,
-                                                        BOOL hint,
-                                                        LPCWSTR base_uri,
-                                                        IXmlReaderInput **ppInput);
-
 static WCHAR *a2w(const char *str)
 {
     int len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
@@ -372,27 +364,51 @@ static const ISequentialStreamVtbl teststreamvtbl =
     teststream_Write
 };
 
-static BOOL init_pointers(void)
+static HRESULT WINAPI resolver_QI(IXmlResolver *iface, REFIID riid, void **obj)
 {
-    /* don't free module here, it's to be unloaded on exit */
-    HMODULE mod = LoadLibraryA("xmllite.dll");
+    ok(0, "unexpected call, riid %s\n", wine_dbgstr_guid(riid));
 
-    if (!mod)
+    if (IsEqualIID(riid, &IID_IXmlResolver) || IsEqualIID(riid, &IID_IUnknown))
     {
-        win_skip("xmllite library not available\n");
-        return FALSE;
+        *obj = iface;
+        IXmlResolver_AddRef(iface);
+        return S_OK;
     }
 
-#define MAKEFUNC(f) if (!(p##f = (void*)GetProcAddress(mod, #f))) return FALSE;
-    MAKEFUNC(CreateXmlReader);
-    MAKEFUNC(CreateXmlReaderInputWithEncodingName);
-#undef MAKEFUNC
-
-    return TRUE;
+    *obj = NULL;
+    return E_NOINTERFACE;
 }
+
+static ULONG WINAPI resolver_AddRef(IXmlResolver *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI resolver_Release(IXmlResolver *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI resolver_ResolveUri(IXmlResolver *iface, const WCHAR *base_uri,
+    const WCHAR *public_id, const WCHAR *system_id, IUnknown **input)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static const IXmlResolverVtbl resolvervtbl =
+{
+    resolver_QI,
+    resolver_AddRef,
+    resolver_Release,
+    resolver_ResolveUri
+};
+
+static IXmlResolver testresolver = { &resolvervtbl };
 
 static void test_reader_create(void)
 {
+    IXmlResolver *resolver;
     HRESULT hr;
     IXmlReader *reader;
     IUnknown *input;
@@ -402,11 +418,11 @@ static void test_reader_create(void)
     /* crashes native */
     if (0)
     {
-        pCreateXmlReader(&IID_IXmlReader, NULL, NULL);
-        pCreateXmlReader(NULL, (void**)&reader, NULL);
+        CreateXmlReader(&IID_IXmlReader, NULL, NULL);
+        CreateXmlReader(NULL, (void**)&reader, NULL);
     }
 
-    hr = pCreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
 
     test_read_state(reader, XmlReadState_Closed, -1, FALSE);
@@ -415,6 +431,26 @@ static void test_reader_create(void)
     hr = IXmlReader_GetNodeType(reader, &nodetype);
     ok(hr == S_FALSE, "got %08x\n", hr);
     ok(nodetype == XmlNodeType_None, "got %d\n", nodetype);
+
+    resolver = (void*)0xdeadbeef;
+    hr = IXmlReader_GetProperty(reader, XmlReaderProperty_XmlResolver, (LONG_PTR*)&resolver);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(resolver == NULL, "got %p\n", resolver);
+
+    hr = IXmlReader_SetProperty(reader, XmlReaderProperty_XmlResolver, 0);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IXmlReader_SetProperty(reader, XmlReaderProperty_XmlResolver, (LONG_PTR)&testresolver);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    resolver = NULL;
+    hr = IXmlReader_GetProperty(reader, XmlReaderProperty_XmlResolver, (LONG_PTR*)&resolver);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(resolver == &testresolver, "got %p\n", resolver);
+    IXmlResolver_Release(resolver);
+
+    hr = IXmlReader_SetProperty(reader, XmlReaderProperty_XmlResolver, 0);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
 
     dtd = 2;
     hr = IXmlReader_GetProperty(reader, XmlReaderProperty_DtdProcessing, (LONG_PTR*)&dtd);
@@ -459,9 +495,9 @@ static void test_readerinput(void)
     HRESULT hr;
     LONG ref;
 
-    hr = pCreateXmlReaderInputWithEncodingName(NULL, NULL, NULL, FALSE, NULL, NULL);
+    hr = CreateXmlReaderInputWithEncodingName(NULL, NULL, NULL, FALSE, NULL, NULL);
     ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08x\n", hr);
-    hr = pCreateXmlReaderInputWithEncodingName(NULL, NULL, NULL, FALSE, NULL, &reader_input);
+    hr = CreateXmlReaderInputWithEncodingName(NULL, NULL, NULL, FALSE, NULL, &reader_input);
     ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08x\n", hr);
 
     hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
@@ -470,7 +506,7 @@ static void test_readerinput(void)
     ref = IStream_AddRef(stream);
     ok(ref == 2, "Expected 2, got %d\n", ref);
     IStream_Release(stream);
-    hr = pCreateXmlReaderInputWithEncodingName((IUnknown*)stream, NULL, NULL, FALSE, NULL, &reader_input);
+    hr = CreateXmlReaderInputWithEncodingName((IUnknown*)stream, NULL, NULL, FALSE, NULL, &reader_input);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
 
     hr = IUnknown_QueryInterface(reader_input, &IID_IStream, (void**)&stream2);
@@ -485,7 +521,7 @@ static void test_readerinput(void)
     IStream_Release(stream);
 
     /* try ::SetInput() with valid IXmlReaderInput */
-    hr = pCreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
 
     ref = IUnknown_AddRef(reader_input);
@@ -551,7 +587,7 @@ static void test_readerinput(void)
     ref = IUnknown_AddRef(input);
     ok(ref == 2, "Expected 2, got %d\n", ref);
     IUnknown_Release(input);
-    hr = pCreateXmlReaderInputWithEncodingName(input, NULL, NULL, FALSE, NULL, &reader_input);
+    hr = CreateXmlReaderInputWithEncodingName(input, NULL, NULL, FALSE, NULL, &reader_input);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
     ok_iids(&input_iids, empty_seq, NULL, FALSE);
     /* IXmlReaderInput stores stream interface as IUnknown */
@@ -559,7 +595,7 @@ static void test_readerinput(void)
     ok(ref == 3, "Expected 3, got %d\n", ref);
     IUnknown_Release(input);
 
-    hr = pCreateXmlReader(&IID_IXmlReader, (LPVOID*)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (LPVOID*)&reader, NULL);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
 
     input_iids.count = 0;
@@ -590,7 +626,7 @@ static void test_readerinput(void)
     ok_iids(&input_iids, setinput_readerinput, NULL, FALSE);
 
     /* another reader */
-    hr = pCreateXmlReader(&IID_IXmlReader, (LPVOID*)&reader2, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (LPVOID*)&reader2, NULL);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
 
     /* resolving from IXmlReaderInput to IStream/ISequentialStream is done at
@@ -613,7 +649,7 @@ static void test_reader_state(void)
     XmlNodeType nodetype;
     HRESULT hr;
 
-    hr = pCreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
 
     /* invalid arguments */
@@ -653,7 +689,7 @@ static void test_read_xmldeclaration(void)
     BOOL ret;
     const WCHAR *val;
 
-    hr = pCreateXmlReader(&IID_IXmlReader, (LPVOID*)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (LPVOID*)&reader, NULL);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
 
     /* position methods with Null args */
@@ -874,7 +910,7 @@ static void test_read_comment(void)
     IXmlReader *reader;
     HRESULT hr;
 
-    hr = pCreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "S_OK, got %08x\n", hr);
 
     while (test->xml)
@@ -956,7 +992,7 @@ static void test_read_pi(void)
     IXmlReader *reader;
     HRESULT hr;
 
-    hr = pCreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "S_OK, got %08x\n", hr);
 
     while (test->xml)
@@ -1072,7 +1108,7 @@ static void test_read_full(void)
     HRESULT hr;
     int i;
 
-    hr = pCreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "S_OK, got %08x\n", hr);
 
     stream = create_stream_on_data(test->xml, strlen(test->xml)+1);
@@ -1121,7 +1157,7 @@ static void test_read_dtd(void)
     UINT len, count;
     HRESULT hr;
 
-    hr = pCreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "S_OK, got %08x\n", hr);
 
     hr = IXmlReader_SetProperty(reader, XmlReaderProperty_DtdProcessing, DtdProcessing_Parse);
@@ -1214,7 +1250,7 @@ static void test_read_element(void)
     UINT depth;
     HRESULT hr;
 
-    hr = pCreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "S_OK, got %08x\n", hr);
 
     while (test->xml)
@@ -1345,7 +1381,7 @@ static void test_read_pending(void)
     HRESULT hr;
     int c;
 
-    hr = pCreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "S_OK, got 0x%08x\n", hr);
 
     hr = IXmlReader_SetInput(reader, (IUnknown*)&teststream);
@@ -1383,7 +1419,7 @@ static void test_readvaluechunk(void)
     HRESULT hr;
     UINT c;
 
-    hr = pCreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "S_OK, got %08x\n", hr);
 
     stream = create_stream_on_data(testA, sizeof(testA));
@@ -1438,7 +1474,7 @@ static void test_read_cdata(void)
     IXmlReader *reader;
     HRESULT hr;
 
-    hr = pCreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "S_OK, got %08x\n", hr);
 
     while (test->xml)
@@ -1531,7 +1567,7 @@ static void test_read_text(void)
     IXmlReader *reader;
     HRESULT hr;
 
-    hr = pCreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "S_OK, got %08x\n", hr);
 
     while (test->xml)
@@ -1629,7 +1665,7 @@ static void test_isemptyelement(void)
     IXmlReader *reader;
     HRESULT hr;
 
-    hr = pCreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "S_OK, got %08x\n", hr);
 
     while (test->xml)
@@ -1687,7 +1723,7 @@ static void test_read_attribute(void)
     IXmlReader *reader;
     HRESULT hr;
 
-    hr = pCreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
+    hr = CreateXmlReader(&IID_IXmlReader, (void**)&reader, NULL);
     ok(hr == S_OK, "S_OK, got %08x\n", hr);
 
     while (test->xml)
@@ -1756,9 +1792,6 @@ static void test_read_attribute(void)
 
 START_TEST(reader)
 {
-    if (!init_pointers())
-       return;
-
     test_reader_create();
     test_readerinput();
     test_reader_state();
