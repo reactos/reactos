@@ -353,6 +353,174 @@ static void test_mediadet(void)
     DeleteFileW(test_sound_avi_filename);
 }
 
+static HRESULT WINAPI ms_QueryInterface(IMediaSample *iface, REFIID riid,
+        void **ppvObject)
+{
+    return E_NOTIMPL;
+}
+
+static ULONG WINAPI ms_AddRef(IMediaSample *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI ms_Release(IMediaSample *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI ms_GetPointer(IMediaSample *iface, BYTE **ppBuffer)
+{
+    return E_NOTIMPL;
+}
+
+static LONG WINAPI ms_GetSize(IMediaSample *iface)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ms_GetTime(IMediaSample *iface, REFERENCE_TIME *pTimeStart,
+        REFERENCE_TIME *pTimeEnd)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ms_SetTime(IMediaSample *iface, REFERENCE_TIME *pTimeStart,
+        REFERENCE_TIME *pTimeEnd)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ms_IsSyncPoint(IMediaSample *iface)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ms_SetSyncPoint(IMediaSample *iface, BOOL bIsSyncPoint)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ms_IsPreroll(IMediaSample *iface)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ms_SetPreroll(IMediaSample *iface, BOOL bIsPreroll)
+{
+    return E_NOTIMPL;
+}
+
+static LONG WINAPI ms_GetActualDataLength(IMediaSample *iface)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ms_SetActualDataLength(IMediaSample *iface, LONG length)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ms_GetMediaType(IMediaSample *iface, AM_MEDIA_TYPE
+        **ppMediaType)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ms_SetMediaType(IMediaSample *iface, AM_MEDIA_TYPE *pMediaType)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ms_IsDiscontinuity(IMediaSample *iface)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ms_SetDiscontinuity(IMediaSample *iface, BOOL bDiscontinuity)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ms_GetMediaTime(IMediaSample *iface, LONGLONG *pTimeStart,
+        LONGLONG *pTimeEnd)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ms_SetMediaTime(IMediaSample *iface, LONGLONG *pTimeStart,
+        LONGLONG *pTimeEnd)
+{
+    return E_NOTIMPL;
+}
+
+static const IMediaSampleVtbl my_sample_vt = {
+    ms_QueryInterface,
+    ms_AddRef,
+    ms_Release,
+    ms_GetPointer,
+    ms_GetSize,
+    ms_GetTime,
+    ms_SetTime,
+    ms_IsSyncPoint,
+    ms_SetSyncPoint,
+    ms_IsPreroll,
+    ms_SetPreroll,
+    ms_GetActualDataLength,
+    ms_SetActualDataLength,
+    ms_GetMediaType,
+    ms_SetMediaType,
+    ms_IsDiscontinuity,
+    ms_SetDiscontinuity,
+    ms_GetMediaTime,
+    ms_SetMediaTime
+};
+
+static IMediaSample my_sample = { &my_sample_vt };
+
+static BOOL samplecb_called = FALSE;
+
+static HRESULT WINAPI sgcb_QueryInterface(ISampleGrabberCB *iface, REFIID riid,
+        void **ppvObject)
+{
+    return E_NOTIMPL;
+}
+
+static ULONG WINAPI sgcb_AddRef(ISampleGrabberCB *iface)
+{
+    return E_NOTIMPL;
+}
+
+static ULONG WINAPI sgcb_Release(ISampleGrabberCB *iface)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI sgcb_SampleCB(ISampleGrabberCB *iface, double SampleTime,
+        IMediaSample *pSample)
+{
+    ok(pSample == &my_sample, "Got wrong IMediaSample: %p, expected %p\n", pSample, &my_sample);
+    samplecb_called = TRUE;
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI sgcb_BufferCB(ISampleGrabberCB *iface, double SampleTime,
+        BYTE *pBuffer, LONG BufferLen)
+{
+    ok(0, "BufferCB should not have been called\n");
+    return E_NOTIMPL;
+}
+
+static const ISampleGrabberCBVtbl sgcb_vt = {
+    sgcb_QueryInterface,
+    sgcb_AddRef,
+    sgcb_Release,
+    sgcb_SampleCB,
+    sgcb_BufferCB
+};
+
+static ISampleGrabberCB my_sg_cb = { &sgcb_vt };
+
 static void test_samplegrabber(void)
 {
     struct unk_impl unk_obj = {{&unk_vtbl}, 19, NULL};
@@ -361,8 +529,12 @@ static void test_samplegrabber(void)
     IMediaFilter *mf;
     IPersist *persist;
     IUnknown *unk;
+    IPin *pin;
+    IMemInputPin *inpin;
+    IEnumPins *pins;
     ULONG refcount;
     HRESULT hr;
+    FILTER_STATE fstate;
 
     /* COM aggregation */
     hr = CoCreateInstance(&CLSID_SampleGrabber, &unk_obj.IUnknown_iface, CLSCTX_INPROC_SERVER,
@@ -414,6 +586,31 @@ static void test_samplegrabber(void)
     refcount = IUnknown_AddRef(unk);
     ok(refcount == 7, "refcount == %u, expected 7\n", refcount);
     refcount = IUnknown_Release(unk);
+
+    hr = ISampleGrabber_SetCallback(sg, &my_sg_cb, 0);
+    ok(hr == S_OK, "SetCallback failed: %08x\n", hr);
+
+    hr = IBaseFilter_GetState(bf, 100, &fstate);
+    ok(hr == S_OK, "Failed to get filter state: %08x\n", hr);
+    ok(fstate == State_Stopped, "Got wrong filter state: %u\n", fstate);
+
+    hr = IBaseFilter_EnumPins(bf, &pins);
+    ok(hr == S_OK, "EnumPins create failed: %08x, expected S_OK\n", hr);
+
+    hr = IEnumPins_Next(pins, 1, &pin, NULL);
+    ok(hr == S_OK, "Next failed: %08x\n", hr);
+
+    IEnumPins_Release(pins);
+
+    hr = IPin_QueryInterface(pin, &IID_IMemInputPin, (void**)&inpin);
+    ok(hr == S_OK, "QueryInterface(IMemInputPin) failed: %08x\n", hr);
+
+    hr = IMemInputPin_Receive(inpin, &my_sample);
+    ok(hr == S_OK, "Receive failed: %08x\n", hr);
+    ok(samplecb_called == TRUE, "SampleCB should have been called\n");
+
+    IMemInputPin_Release(inpin);
+    IPin_Release(pin);
 
     /* Interfaces that native does not support */
     hr = ISampleGrabber_QueryInterface(sg, &IID_IMediaPosition, (void**)&unk);
