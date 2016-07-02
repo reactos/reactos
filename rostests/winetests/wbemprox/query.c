@@ -147,6 +147,29 @@ static void test_select( IWbemServices *services )
     SysFreeString( query );
 }
 
+static void test_associators( IWbemServices *services )
+{
+    static const WCHAR query1[] =
+        {'A','S','S','O','C','I','A','T','O','R','S',' ','O','F',' ','{','W','i','n','3','2','_',
+         'L','o','g','i','c','a','l','D','i','s','k','.','D','e','v','i','c','e','I','D','=','"','C',':','"','}',0};
+    static const WCHAR query2[] =
+        {'A','S','S','O','C','I','A','T','O','R','S',' ','O','F',' ','{','W','i','n','3','2','_',
+         'L','o','g','i','c','a','l','D','i','s','k','.','D','e','v','i','c','e','I','D','=','"','C',':','"','}',' ',
+         'W','H','E','R','E',' ','A','s','s','o','c','C','l','a','s','s',' ','=',' ','W','i','n','3','2','_',
+         'L','o','g','i','c','a','l','D','i','s','k','T','o','P','a','r','t','i','t','i','o','n',0};
+    static const WCHAR *test[] = { query1, query2 };
+    HRESULT hr;
+    IEnumWbemClassObject *result;
+    UINT i;
+
+    for (i = 0; i < sizeof(test)/sizeof(test[0]); i++)
+    {
+        hr = exec_query( services, test[i], &result );
+        todo_wine ok( hr == S_OK, "query %u failed: %08x\n", i, hr );
+        if (result) IEnumWbemClassObject_Release( result );
+    }
+}
+
 static void test_Win32_Service( IWbemServices *services )
 {
     static const WCHAR returnvalueW[] = {'R','e','t','u','r','n','V','a','l','u','e',0};
@@ -1054,6 +1077,7 @@ START_TEST(query)
     ok( hr == S_OK, "failed to set proxy blanket %08x\n", hr );
 
     test_select( services );
+    test_associators( services );
     test_Win32_Bios( services );
     test_Win32_Process( services );
     test_Win32_Service( services );

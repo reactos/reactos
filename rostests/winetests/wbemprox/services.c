@@ -168,10 +168,7 @@ static void test_IWbemLocator(void)
     {
         resource = SysAllocString( test[i].path );
         hr = IWbemLocator_ConnectServer( locator, resource, NULL, NULL, NULL, 0, NULL, NULL, &services );
-        if (test[i].todo) todo_wine
-            ok( hr == test[i].result || broken(hr == test[i].result_broken),
-                "%u: expected %08x got %08x\n", i, test[i].result, hr );
-        else
+        todo_wine_if (test[i].todo)
             ok( hr == test[i].result || broken(hr == test[i].result_broken),
                 "%u: expected %08x got %08x\n", i, test[i].result, hr );
         SysFreeString( resource );
