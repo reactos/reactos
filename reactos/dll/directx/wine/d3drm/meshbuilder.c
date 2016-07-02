@@ -1056,7 +1056,7 @@ HRESULT load_mesh_data(IDirect3DRMMeshBuilder3 *iface, IDirectXFileData *pData,
             return hr;
     }
 
-    TRACE("Mesh name is '%s'\n", This->name ? This->name : "");
+    TRACE("Mesh name is %s\n", debugstr_a(This->name));
 
     This->nb_normals = 0;
 
@@ -1149,6 +1149,7 @@ HRESULT load_mesh_data(IDirect3DRMMeshBuilder3 *iface, IDirectXFileData *pData,
             IDirectXFileObject *child;
             DWORD i = 0;
             float* values;
+            struct d3drm_texture *texture_object;
 
             TRACE("Process MeshMaterialList\n");
 
@@ -1286,13 +1287,12 @@ HRESULT load_mesh_data(IDirect3DRMMeshBuilder3 *iface, IDirectXFileData *pData,
                             if (file != INVALID_HANDLE_VALUE)
                             {
                                 CloseHandle(file);
-
-                                hr = Direct3DRMTexture_create(&IID_IDirect3DRMTexture3, (IUnknown**)&This->materials[i].texture);
-                                if (FAILED(hr))
+                                if (FAILED(hr = d3drm_texture_create(&texture_object, NULL)))
                                 {
                                     IDirectXFileData_Release(data);
                                     goto end;
                                 }
+                                This->materials[i].texture = &texture_object->IDirect3DRMTexture3_iface;
                             }
                         }
                     }
