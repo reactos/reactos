@@ -102,7 +102,7 @@ static HRESULT WINAPI DirectDrawMediaStreamImpl_IAMMediaStream_GetMultiMediaStre
 {
     DirectDrawMediaStreamImpl *This = impl_from_DirectDrawMediaStream_IAMMediaStream(iface);
 
-    TRACE("(%p/%p)->(%p) stub!\n", This, iface, multi_media_stream);
+    TRACE("(%p/%p)->(%p)\n", This, iface, multi_media_stream);
 
     if (!multi_media_stream)
         return E_POINTER;
@@ -265,17 +265,17 @@ static ULONG WINAPI DirectDrawMediaStreamImpl_IDirectDrawMediaStream_Release(IDi
 
 /*** IMediaStream methods ***/
 static HRESULT WINAPI DirectDrawMediaStreamImpl_IDirectDrawMediaStream_GetMultiMediaStream(IDirectDrawMediaStream *iface,
-        IMultiMediaStream** ppMultiMediaStream)
+        IMultiMediaStream **multi_media_stream)
 {
     DirectDrawMediaStreamImpl *This = impl_from_IDirectDrawMediaStream(iface);
 
-    TRACE("(%p/%p)->(%p) stub!\n", This, iface, ppMultiMediaStream);
+    TRACE("(%p/%p)->(%p)\n", This, iface, multi_media_stream);
 
-    if (!ppMultiMediaStream)
+    if (!multi_media_stream)
         return E_POINTER;
 
     IMultiMediaStream_AddRef(This->parent);
-    *ppMultiMediaStream = This->parent;
+    *multi_media_stream = This->parent;
 
     return S_OK;
 }
@@ -678,17 +678,17 @@ static ULONG WINAPI AudioMediaStreamImpl_IAudioMediaStream_Release(IAudioMediaSt
 
 /*** IMediaStream methods ***/
 static HRESULT WINAPI AudioMediaStreamImpl_IAudioMediaStream_GetMultiMediaStream(IAudioMediaStream *iface,
-        IMultiMediaStream** multimedia_stream)
+        IMultiMediaStream **multi_media_stream)
 {
     AudioMediaStreamImpl *This = impl_from_IAudioMediaStream(iface);
 
-    TRACE("(%p/%p)->(%p)\n", iface, This, multimedia_stream);
+    TRACE("(%p/%p)->(%p)\n", iface, This, multi_media_stream);
 
-    if (!multimedia_stream)
+    if (!multi_media_stream)
         return E_POINTER;
 
     IMultiMediaStream_AddRef(This->parent);
-    *multimedia_stream = This->parent;
+    *multi_media_stream = This->parent;
 
     return S_OK;
 }
