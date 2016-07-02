@@ -593,7 +593,7 @@ static void test_aggregate_filter_mapper(void)
     ok(pmapper != &unk_outer.IUnknown_iface, "pmapper = %p, expected not %p\n", pmapper, &unk_outer.IUnknown_iface);
 
     hr = IUnknown_QueryInterface(pmapper, &IID_IUnknown, (void **)&punk);
-    ok(hr == S_OK, "CoCreateInstance returned %x\n", hr);
+    ok(hr == S_OK, "IUnknown_QueryInterface returned %x\n", hr);
     ok(punk != &unk_outer.IUnknown_iface, "punk = %p, expected not %p\n", punk, &unk_outer.IUnknown_iface);
     IUnknown_Release(punk);
 
@@ -603,7 +603,7 @@ static void test_aggregate_filter_mapper(void)
     unk_outer.Release_called = 0;
 
     hr = IUnknown_QueryInterface(pmapper, &IID_IFilterMapper, (void **)&punk);
-    ok(hr == S_OK, "CoCreateInstance returned %x\n", hr);
+    ok(hr == S_OK, "IUnknown_QueryInterface returned %x\n", hr);
     ok(punk != &unk_outer.IUnknown_iface, "punk = %p, expected not %p\n", punk, &unk_outer.IUnknown_iface);
     IUnknown_Release(punk);
 
@@ -613,7 +613,7 @@ static void test_aggregate_filter_mapper(void)
     unk_outer.Release_called = 0;
 
     hr = IUnknown_QueryInterface(pmapper, &IID_IFilterMapper2, (void **)&punk);
-    ok(hr == S_OK, "CoCreateInstance returned %x\n", hr);
+    ok(hr == S_OK, "IUnknown_QueryInterface returned %x\n", hr);
     ok(punk != &unk_outer.IUnknown_iface, "punk = %p, expected not %p\n", punk, &unk_outer.IUnknown_iface);
     IUnknown_Release(punk);
 
@@ -623,7 +623,7 @@ static void test_aggregate_filter_mapper(void)
     unk_outer.Release_called = 0;
 
     hr = IUnknown_QueryInterface(pmapper, &IID_IFilterMapper3, (void **)&punk);
-    ok(hr == S_OK, "CoCreateInstance returned %x\n", hr);
+    ok(hr == S_OK, "IUnknown_QueryInterface returned %x\n", hr);
     ok(punk != &unk_outer.IUnknown_iface, "punk = %p, expected not %p\n", punk, &unk_outer.IUnknown_iface);
     IUnknown_Release(punk);
 
