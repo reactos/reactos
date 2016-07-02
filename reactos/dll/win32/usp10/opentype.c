@@ -1178,7 +1178,7 @@ static void GPOS_convert_design_units_to_device(LPOUTLINETEXTMETRICW lpotm, LPLO
     *devX = (desX * emHeight) / (double)lpotm->otmEMSquare;
     *devY = (desY * emHeight) / (double)lpotm->otmEMSquare;
     if (lplogfont->lfWidth)
-        FIXME("Font with lfWidth set no handled properly\n");
+        FIXME("Font with lfWidth set not handled properly\n");
 }
 
 static INT GPOS_get_value_record(WORD ValueFormat, const WORD data[], GPOS_ValueRecord *record)
@@ -1481,7 +1481,7 @@ static int GPOS_apply_MarkToBase(ScriptCache *psc, const OT_LookupTable *look, c
                     ma = (const GPOS_MarkArray*)((const BYTE*)mbpf1 + offset);
                     if (mark_index > GET_BE_WORD(ma->MarkCount))
                     {
-                        ERR("Mark index exeeded mark count\n");
+                        ERR("Mark index exceeded mark count\n");
                         return -1;
                     }
                     mr = &ma->MarkRecord[mark_index];
@@ -1551,7 +1551,7 @@ static VOID GPOS_apply_MarkToLigature(const OT_LookupTable *look, const SCRIPT_A
                     ma = (const GPOS_MarkArray*)((const BYTE*)mlpf1 + offset);
                     if (mark_index > GET_BE_WORD(ma->MarkCount))
                     {
-                        ERR("Mark index exeeded mark count\n");
+                        ERR("Mark index exceeded mark count\n");
                         return;
                     }
                     mr = &ma->MarkRecord[mark_index];
@@ -1561,7 +1561,7 @@ static VOID GPOS_apply_MarkToLigature(const OT_LookupTable *look, const SCRIPT_A
                     la = (const GPOS_LigatureArray*)((const BYTE*)mlpf1 + offset);
                     if (ligature_index > GET_BE_WORD(la->LigatureCount))
                     {
-                        ERR("Ligature index exeeded ligature count\n");
+                        ERR("Ligature index exceeded ligature count\n");
                         return;
                     }
                     offset = GET_BE_WORD(la->LigatureAttach[ligature_index]);
