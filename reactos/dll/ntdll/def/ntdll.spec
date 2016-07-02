@@ -771,7 +771,7 @@
 @ stdcall -arch=x86_64 RtlLookupFunctionEntry(long ptr ptr)
 767 stdcall RtlMakeSelfRelativeSD(ptr ptr ptr)
 768 stdcall RtlMapGenericMask(long ptr)
-# stdcall RtlMapSecurityErrorToNtStatus
+769 stdcall RtlMapSecurityErrorToNtStatus(long)
 770 stdcall RtlMoveMemory(ptr ptr long)
 771 stdcall RtlMultiAppendUnicodeStringBuffer(ptr long ptr)
 772 stdcall RtlMultiByteToUnicodeN(ptr long ptr ptr long)
