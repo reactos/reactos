@@ -291,9 +291,7 @@ static void test_PathCreateFromUrl(void)
     for(i = 0; i < sizeof(TEST_PATHFROMURL) / sizeof(TEST_PATHFROMURL[0]); i++) {
         len = INTERNET_MAX_URL_LENGTH;
         ret = pPathCreateFromUrlA(TEST_PATHFROMURL[i].url, ret_path, &len, 0);
-        if (!(TEST_PATHFROMURL[i].todo & 0x1))
-            ok(ret == TEST_PATHFROMURL[i].ret, "ret %08x from url %s\n", ret, TEST_PATHFROMURL[i].url);
-        else todo_wine
+        todo_wine_if (TEST_PATHFROMURL[i].todo & 0x1)
             ok(ret == TEST_PATHFROMURL[i].ret, "ret %08x from url %s\n", ret, TEST_PATHFROMURL[i].url);
         if(SUCCEEDED(ret) && TEST_PATHFROMURL[i].path) {
             if(!(TEST_PATHFROMURL[i].todo & 0x2)) {
@@ -310,9 +308,7 @@ static void test_PathCreateFromUrl(void)
             urlW = GetWideString(TEST_PATHFROMURL[i].url);
             ret = pPathCreateFromUrlW(urlW, ret_pathW, &len, 0);
             WideCharToMultiByte(CP_ACP, 0, ret_pathW, -1, ret_path, sizeof(ret_path),NULL,NULL);
-            if (!(TEST_PATHFROMURL[i].todo & 0x1))
-                ok(ret == TEST_PATHFROMURL[i].ret, "ret %08x from url L\"%s\"\n", ret, TEST_PATHFROMURL[i].url);
-            else todo_wine
+            todo_wine_if (TEST_PATHFROMURL[i].todo & 0x1)
                 ok(ret == TEST_PATHFROMURL[i].ret, "ret %08x from url L\"%s\"\n", ret, TEST_PATHFROMURL[i].url);
             if(SUCCEEDED(ret) && TEST_PATHFROMURL[i].path) {
                 if(!(TEST_PATHFROMURL[i].todo & 0x2)) {
@@ -331,9 +327,7 @@ static void test_PathCreateFromUrl(void)
                 len2 = 2;
                 ret = pPathCreateFromUrlW(urlW, ret_pathW, &len2, 0);
                 ok(ret == E_POINTER, "ret %08x, expected E_POINTER from url %s\n", ret, TEST_PATHFROMURL[i].url);
-                if(!(TEST_PATHFROMURL[i].todo & 0x4))
-                    ok(len2 == len + 1, "got len = %d expected %d from url %s\n", len2, len + 1, TEST_PATHFROMURL[i].url);
-                else todo_wine
+                todo_wine_if (TEST_PATHFROMURL[i].todo & 0x4)
                     ok(len2 == len + 1, "got len = %d expected %d from url %s\n", len2, len + 1, TEST_PATHFROMURL[i].url);
             }
 

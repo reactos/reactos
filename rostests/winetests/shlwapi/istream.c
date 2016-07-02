@@ -253,11 +253,24 @@ static void test_stream_read_write(IStream *stream, DWORD mode)
     }
     else
     {
-todo_wine
         ok(ret == S_FALSE, "expected S_FALSE, got %#x (access %#x, written %u)\n", ret, mode, written);
         ok(count == 0, "expected 0, got %u\n", count);
     }
 
+    ret = stream->lpVtbl->Seek(stream, start, STREAM_SEEK_SET, NULL);
+    ok(ret == S_OK, "Seek error %#x\n", ret);
+
+    count = 0xdeadbeaf;
+    ret = stream->lpVtbl->Read(stream, buf, 0, &count);
+    ok(ret == S_OK, "IStream_Read error %#x (access %#x, written %u)\n", ret, mode, written);
+    ok(count == 0, "expected 0, got %u\n", count);
+
+    count = 0xdeadbeaf;
+    ret = stream->lpVtbl->Read(stream, buf, sizeof(buf), &count);
+    ok(ret == S_FALSE, "expected S_FALSE, got %#x (access %#x, written %u)\n", ret, mode, written);
+    ok(count == written, "expected %u, got %u\n", written, count);
+    if (count)
+        ok(buf[0] == 0x5e && buf[1] == 0xa7, "expected 5ea7, got %02x%02x\n", buf[0], buf[1]);
 }
 
 static void test_SHCreateStreamOnFileA(DWORD mode, DWORD stgm)

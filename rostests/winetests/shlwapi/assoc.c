@@ -108,9 +108,11 @@ static void test_getstring_bad(void)
     hr = pAssocQueryStringW(0, ASSOCSTR_FRIENDLYAPPNAME, dotBad, open, NULL, &len);
     ok(hr == E_FAIL ||
        hr == HRESULT_FROM_WIN32(ERROR_NO_ASSOCIATION) /* Win9x/WinMe/NT4/W2K/Vista/W2K8 */ ||
-       hr == HRESULT_FROM_WIN32(ERROR_NOT_FOUND), /* Win8 */
+       hr == HRESULT_FROM_WIN32(ERROR_NOT_FOUND) /* Win8 */ ||
+       hr == S_FALSE, /* Win10 */
        "Unexpected result : %08x\n", hr);
-    ok(len == 0xdeadbeef, "got %u\n", len);
+    ok((hr == S_FALSE && len < sizeof(buf)/sizeof(buf[0])) || len == 0xdeadbeef,
+       "got hr=%08x and len=%u\n", hr, len);
 
     len = 0xdeadbeef;
     hr = pAssocQueryStringW(0, ASSOCSTR_FRIENDLYAPPNAME, dotHtml, invalid, NULL, &len);

@@ -861,10 +861,7 @@ static void test_url_canonicalize(int index, const char *szUrl, DWORD dwFlags, H
     ok(ret == dwExpectReturn || ret == dwExpectReturnAlt,
        "UrlCanonicalizeA failed: expected=0x%08x or 0x%08x, got=0x%08x, index %d\n",
        dwExpectReturn, dwExpectReturnAlt, ret, index);
-    if (todo)
-        todo_wine
-        ok(strcmp(szReturnUrl,szExpectUrl)==0, "UrlCanonicalizeA dwFlags 0x%08x url '%s' Expected \"%s\", but got \"%s\", index %d\n", dwFlags, szUrl, szExpectUrl, szReturnUrl, index);
-    else
+    todo_wine_if (todo)
         ok(strcmp(szReturnUrl,szExpectUrl)==0, "UrlCanonicalizeA dwFlags 0x%08x url '%s' Expected \"%s\", but got \"%s\", index %d\n", dwFlags, szUrl, szExpectUrl, szReturnUrl, index);
 
     if (pUrlCanonicalizeW) {
