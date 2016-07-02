@@ -5775,7 +5775,7 @@ static const uri_builder_test uri_builder_tests[] = {
         0,INET_E_INVALID_URL,FALSE,
         0,0,0,INET_E_INVALID_URL,FALSE
     },
-    /* UserName can't contain any character that is a delimeter for another
+    /* UserName can't contain any character that is a delimiter for another
      * component that appears after it in a normal URI.
      */
     {   "http://google.com/",0,S_OK,FALSE,
