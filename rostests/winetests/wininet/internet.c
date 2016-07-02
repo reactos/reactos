@@ -615,6 +615,7 @@ static void test_cookie_attrs(void)
 
 static void test_cookie_url(void)
 {
+    char long_url[5000] = "http://long.url.test.com/", *p;
     WCHAR bufw[512];
     char buf[512];
     DWORD len;
@@ -641,6 +642,23 @@ static void test_cookie_url(void)
     res = pInternetGetCookieExW(about_blankW, NULL, bufw, &len, 0, NULL);
     ok(!res && GetLastError() == ERROR_INVALID_PARAMETER,
        "InternetGetCookeExW failed: %u, expected ERROR_INVALID_PARAMETER\n", GetLastError());
+
+    p = long_url + strlen(long_url);
+    memset(p, 'x', long_url+sizeof(long_url)-p);
+    p += (long_url+sizeof(long_url)-p) - 3;
+    p[0] = '/';
+    p[2] = 0;
+    res = InternetSetCookieA(long_url, NULL, "A=B");
+    ok(res, "InternetSetCookieA failed: %u\n", GetLastError());
+
+    len = sizeof(buf);
+    res = InternetGetCookieA(long_url, NULL, buf, &len);
+    ok(res, "InternetGetCookieA failed: %u\n", GetLastError());
+    ok(!strcmp(buf, "A=B"), "buf = %s\n", buf);
+
+    len = sizeof(buf);
+    res = InternetGetCookieA("http://long.url.test.com/", NULL, buf, &len);
+    ok(!res && GetLastError() == ERROR_NO_MORE_ITEMS, "InternetGetCookieA failed: %u\n", GetLastError());
 }
 
 static void test_null(void)
@@ -1514,6 +1532,10 @@ static void test_InternetErrorDlg(void)
                 win_skip("Skipping some tests for %d\n", i);
                 continue;
             }
+            break;
+        case ERROR_INTERNET_CHG_POST_IS_NON_SECURE:
+            if(res == ERROR_SUCCESS) /* win10 returns ERROR_SUCCESS */
+                expected = ERROR_SUCCESS;
             break;
         default: break;
         }
