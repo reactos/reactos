@@ -23,6 +23,7 @@
 #include <stdio.h>
 
 #include "windows.h"
+#include "wincrypt.h"
 #include "mscat.h"
 
 #include "wine/test.h"
@@ -1232,21 +1233,21 @@ static void test_sip(void)
     ok(ret, "CryptSIPRetrieveSubjectGuid failed (%x)\n", GetLastError());
 
     ret = pPutSignedDataMsg(&info, X509_ASN_ENCODING, &index, 4, (BYTE*)"test");
-    ok(!ret, "CryptSIPPutSignedDataMsg succeedded\n");
+    ok(!ret, "CryptSIPPutSignedDataMsg succeeded\n");
     index = GetLastError();
     ok(index == ERROR_PATH_NOT_FOUND, "GetLastError returned %x\n", index);
 
     info.hFile = file;
     info.pwsFileName = nameW;
     ret = pPutSignedDataMsg(&info, X509_ASN_ENCODING, &index, 4, (BYTE*)"test");
-    ok(!ret, "CryptSIPPutSignedDataMsg succeedded\n");
+    ok(!ret, "CryptSIPPutSignedDataMsg succeeded\n");
     index = GetLastError();
     todo_wine ok(index == ERROR_INVALID_PARAMETER, "GetLastError returned %x\n", index);
 
     info.hFile = INVALID_HANDLE_VALUE;
     info.pwsFileName = nameW;
     ret = pPutSignedDataMsg(&info, X509_ASN_ENCODING, &index, 4, (BYTE*)"test");
-    ok(!ret, "CryptSIPPutSignedDataMsg succeedded\n");
+    ok(!ret, "CryptSIPPutSignedDataMsg succeeded\n");
     index = GetLastError();
     ok(index == ERROR_SHARING_VIOLATION, "GetLastError returned %x\n", index);
 
