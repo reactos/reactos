@@ -15,9 +15,9 @@
 void TestHostName(void)
 {
 
-    DNS_STATUS dns_status = NO_ERROR;
+    DNS_STATUS dns_status;
     char host_name[255];
-    PDNS_RECORD dp = NULL;
+    PDNS_RECORD dp;
     WCHAR host_nameW[255];
 
     gethostname(host_name, sizeof(host_name));
@@ -33,25 +33,25 @@ void TestHostName(void)
     //Testing HostName 
     dns_status = DnsQuery_A(host_name, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_A failed with error %lu\n", dns_status);
-    DnsRecordListFree(dp, DnsFreeRecordList);
+    if (dp != InvalidPointer) DnsRecordListFree(dp, DnsFreeRecordList);
     
     //127.0.0.1
     dns_status = DnsQuery_A("127.0.0.1", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_A failed with error %lu\n", dns_status);
-    DnsRecordListFree(dp, DnsFreeRecordList);
+    if (dp != InvalidPointer) DnsRecordListFree(dp, DnsFreeRecordList);
 
     //Localhost strings
     dns_status = DnsQuery_A("LocalHost", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_A failed with error %lu\n", dns_status);
-    DnsRecordListFree(dp, DnsFreeRecordList);
+    if (dp != InvalidPointer) DnsRecordListFree(dp, DnsFreeRecordList);
 
     dns_status = DnsQuery_A("Localhost", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_A failed with error %lu\n", dns_status);
-    DnsRecordListFree(dp, DnsFreeRecordList);
+    if (dp != InvalidPointer) DnsRecordListFree(dp, DnsFreeRecordList);
 
     dns_status = DnsQuery_A("localhost", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_A failed with error %lu\n", dns_status);
-    DnsRecordListFree(dp, DnsFreeRecordList);
+    if (dp != InvalidPointer) DnsRecordListFree(dp, DnsFreeRecordList);
 
     //DnsQuery_W:
     //NULL
@@ -74,25 +74,25 @@ void TestHostName(void)
     //Testing HostName 
     dns_status = DnsQuery_W(host_nameW, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_W failed with error %lu\n", dns_status);
-    DnsRecordListFree(dp, DnsFreeRecordList);
+    if (dp != InvalidPointer) DnsRecordListFree(dp, DnsFreeRecordList);
     
     //127.0.0.1
     dns_status = DnsQuery_W(L"127.0.0.1", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_W failed with error %lu\n", dns_status);
-    DnsRecordListFree(dp, DnsFreeRecordList);
+    if (dp != InvalidPointer) DnsRecordListFree(dp, DnsFreeRecordList);
 
     //Localhost strings
     dns_status = DnsQuery_W(L"LocalHost", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_W failed with error %lu\n", dns_status);
-    DnsRecordListFree(dp, DnsFreeRecordList);
+    if (dp != InvalidPointer) DnsRecordListFree(dp, DnsFreeRecordList);
 
     dns_status = DnsQuery_W(L"Localhost", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_W failed with error %lu\n", dns_status);
-    DnsRecordListFree(dp, DnsFreeRecordList);
+    if (dp != InvalidPointer) DnsRecordListFree(dp, DnsFreeRecordList);
 
     dns_status = DnsQuery_W(L"localhost", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_W failed with error %lu\n", dns_status);
-    DnsRecordListFree(dp, DnsFreeRecordList);
+    if (dp != InvalidPointer) DnsRecordListFree(dp, DnsFreeRecordList);
 }
 
 START_TEST(DnsQuery)
