@@ -1474,7 +1474,7 @@ static HRESULT WINAPI effect_QueryInterface(IDirectInputEffect *iface,
 
     TRACE("%p %s %p\n", This, debugstr_guid(guid), out);
 
-    if(IsEqualIID(guid, &IID_IDirectInputEffect)){
+    if(IsEqualIID(guid, &IID_IUnknown) || IsEqualIID(guid, &IID_IDirectInputEffect)){
         *out = iface;
         IDirectInputEffect_AddRef(iface);
         return S_OK;
