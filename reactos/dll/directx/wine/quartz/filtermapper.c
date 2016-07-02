@@ -1141,7 +1141,8 @@ static HRESULT WINAPI FilterMapper_EnumMatchingFilters(
     HRESULT hr;
 
     TRACE("(%p/%p)->(%p, %x, %s, %s, %s, %s, %s, %s, %s) stub!\n",
-        iface,This,
+        This,
+        iface,
         ppEnum,
         dwMerit,
         bInputNeeded ? "true" : "false",

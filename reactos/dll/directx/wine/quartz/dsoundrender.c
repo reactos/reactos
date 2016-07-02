@@ -387,7 +387,7 @@ static HRESULT WINAPI DSoundRender_DoRenderSample(BaseRenderer *iface, IMediaSam
         else if (jitter < 0)
             jitter = 0;
         q.Type = (jitter > 0 ? Famine : Flood);
-        q.Proportion = 1.;
+        q.Proportion = 1000;
         q.Late = jitter;
         q.TimeStamp = tStart;
         IQualityControl_Notify((IQualityControl *)This->renderer.qcimpl, (IBaseFilter*)This, q);

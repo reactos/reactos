@@ -34,7 +34,7 @@ static const IBaseFilterVtbl AVIDec_Vtbl;
 
 static inline AVIDecImpl *impl_from_TransformFilter( TransformFilter *iface )
 {
-    return CONTAINING_RECORD(iface, AVIDecImpl, tf.filter);
+    return CONTAINING_RECORD(iface, AVIDecImpl, tf);
 }
 
 static HRESULT WINAPI AVIDec_StartStreaming(TransformFilter* pTransformFilter)
