@@ -376,8 +376,10 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             }
             if (prfdp->uFlags & RFF_NOLABEL)
                 ShowWindow(GetDlgItem(hwnd, IDC_RUNDLG_LABEL), SW_HIDE);
-            if (prfdp->uFlags & RFF_CALCDIRECTORY)
-                FIXME("RFF_CALCDIRECTORY not supported\n");
+            if (prfdp->uFlags & RFF_NOSEPARATEMEM)
+            {
+                FIXME("RFF_NOSEPARATEMEM not supported\n");
+            }
 
             /* Use the default Shell Run icon if no one is specified */
             if (prfdp->hIcon == NULL)
@@ -403,53 +405,101 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             {
                 case IDOK:
                 {
-                    int ic;
+                    LRESULT lRet;
                     HWND htxt = GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH);
-                    if ((ic = GetWindowTextLengthW(htxt)))
+                    INT ic;
+                    WCHAR *psz, *parent = NULL;
+                    SHELLEXECUTEINFOW sei;
+                    NMRUNFILEDLGW nmrfd;
+
+                    ic = GetWindowTextLengthW(htxt);
+                    if (ic == 0)
                     {
-                        WCHAR *psz, *parent = NULL;
-                        SHELLEXECUTEINFOW sei;
+                        EndDialog(hwnd, IDCANCEL);
+                        return TRUE;
+                    }
 
-                        ZeroMemory(&sei, sizeof(sei));
-                        sei.cbSize = sizeof(sei);
-                        psz = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, (ic + 1)*sizeof(WCHAR));
+                    ZeroMemory(&sei, sizeof(sei));
+                    sei.cbSize = sizeof(sei);
+                    psz = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, (ic + 1)*sizeof(WCHAR));
+                    if (!psz)
+                    {
+                        EndDialog(hwnd, IDCANCEL);
+                        return TRUE;
+                    }
 
-                        if (psz)
-                        {
-                            GetWindowTextW(htxt, psz, ic + 1);
+                    GetWindowTextW(htxt, psz, ic + 1);
 
-                            /* according to http://www.codeproject.com/KB/shell/runfiledlg.aspx we should send a
-                             * WM_NOTIFY before execution */
+                    sei.hwnd = hwnd;
+                    sei.nShow = SW_SHOWNORMAL;
+                    sei.lpFile = psz;
 
-                            sei.hwnd = hwnd;
-                            sei.nShow = SW_SHOWNORMAL;
-                            sei.lpFile = psz;
+                    /*
+                     * The precedence is the following: first the user-given
+                     * current directory is used; if there is none, a current
+                     * directory is computed if the RFF_CALCDIRECTORY is set,
+                     * otherwise no current directory is defined.
+                     */
+                    if (prfdp->lpstrDirectory)
+                        sei.lpDirectory = prfdp->lpstrDirectory;
+                    else if (prfdp->uFlags & RFF_CALCDIRECTORY)
+                        sei.lpDirectory = parent = RunDlg_GetParentDir(sei.lpFile);
+                    else
+                        sei.lpDirectory = NULL;
 
-                            if (prfdp->lpstrDirectory)
-                                sei.lpDirectory = prfdp->lpstrDirectory;
-                            else
-                                sei.lpDirectory = parent = RunDlg_GetParentDir(sei.lpFile);
+                    /* Hide the dialog for now on, we will show it up in case of retry */
+                    ShowWindow(hwnd, SW_HIDE);
 
-                            if (!ShellExecuteExW(&sei))
+                    /*
+                     * As shown by manual tests on Windows, modifying the contents
+                     * of the notification structure will not modify what the
+                     * Run-Dialog will use for the nShow parameter. However the
+                     * lpFile and lpDirectory pointers are set to the buffers used
+                     * by the Run-Dialog, as a consequence they can be modified by
+                     * the notification receiver, as long as it respects the lengths
+                     * of the buffers (to avoid buffer overflows).
+                     */
+                    nmrfd.hdr.code = RFN_VALIDATE;
+                    nmrfd.hdr.hwndFrom = hwnd;
+                    nmrfd.hdr.idFrom = 0;
+                    nmrfd.lpFile = sei.lpFile;
+                    nmrfd.lpDirectory = sei.lpDirectory;
+                    nmrfd.nShow = sei.nShow;
+
+                    lRet = SendMessageW(prfdp->hwndOwner, WM_NOTIFY, 0, (LPARAM)&nmrfd.hdr);
+
+                    switch (lRet)
+                    {
+                        case RF_CANCEL:
+                            EndDialog(hwnd, IDCANCEL);
+                            break;
+
+                        case RF_OK:
+                            if (ShellExecuteExW(&sei))
                             {
-                                HeapFree(GetProcessHeap(), 0, psz);
-                                HeapFree(GetProcessHeap(), 0, parent);
-                                SendMessageW(htxt, CB_SETEDITSEL, 0, MAKELPARAM (0, -1));
-                                return TRUE;
+                                /* Call again GetWindowText in case the contents of the edit box has changed? */
+                                GetWindowTextW(htxt, psz, ic + 1);
+                                FillList(htxt, psz, FALSE);
+                                EndDialog(hwnd, IDOK);
+                                break;
                             }
 
-                            GetWindowTextW(htxt, psz, ic + 1);
-                            FillList(htxt, psz, FALSE);
-
-                            HeapFree(GetProcessHeap(), 0, psz);
-                            HeapFree(GetProcessHeap(), 0, parent);
-                            EndDialog(hwnd, 0);
-                        }
+                        /* Fall-back */
+                        case RF_RETRY:
+                        default:
+                            SendMessageW(htxt, CB_SETEDITSEL, 0, MAKELPARAM (0, -1));
+                            /* Show back the dialog */
+                            ShowWindow(hwnd, SW_SHOW);
+                            break;
                     }
+
+                    HeapFree(GetProcessHeap(), 0, parent);
+                    HeapFree(GetProcessHeap(), 0, psz);
+                    return TRUE;
                 }
 
                 case IDCANCEL:
-                    EndDialog(hwnd, 0);
+                    EndDialog(hwnd, IDCANCEL);
                     return TRUE;
 
                 case IDC_RUNDLG_BROWSE:

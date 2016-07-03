@@ -98,17 +98,28 @@ BOOL WINAPI StrRetToStrNW(LPWSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 #define RFF_NOLABEL         0x08    /* Removes the edit box label */
 #define RFF_NOSEPARATEMEM   0x20    /* Removes the Separate Memory Space check box (Windows NT only) */
 
-#define DE_SAMEFILE     0x71
-#define DE_DESTSAMETREE 0x7D
-
-/* RunFileFlg notification structure */
-typedef struct
+/* RunFileFlg notification value and structure */
+#define RFN_VALIDATE    (-510)
+#if 0 // Deprecated ANSI structure
+typedef struct _NMRUNFILEDLGA
 {
-  NMHDR   hdr;
-  LPCSTR  lpFile;
-  LPCSTR  lpDirectory;
-  int     nShow;
-} NM_RUNFILEDLG, * LPNM_RUNFILEDLG;
+    NMHDR   hdr;
+    LPCSTR  lpFile;
+    LPCSTR  lpDirectory;
+    UINT    nShow;
+} NMRUNFILEDLGA, *PNMRUNFILEDLGA, *LPNMRUNFILEDLGA;
+#endif
+typedef struct _NMRUNFILEDLGW
+{
+    NMHDR   hdr;
+    LPCWSTR lpFile;
+    LPCWSTR lpDirectory;
+    UINT    nShow;
+} NMRUNFILEDLGW, *PNMRUNFILEDLGW, *LPNMRUNFILEDLGW;
+
+typedef NMRUNFILEDLGW NMRUNFILEDLG;
+typedef PNMRUNFILEDLGW PNMRUNFILEDLG;
+typedef LPNMRUNFILEDLGW LPNMRUNFILEDLG;
 
 /* RunFileDlg notification return values */
 #define RF_OK      0x00
