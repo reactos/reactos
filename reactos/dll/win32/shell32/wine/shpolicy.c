@@ -860,7 +860,15 @@ DWORD WINAPI SHRestricted (RESTRICTIONS policy)
 
 	/* return 0 and don't set the cache if any registry errors occur */
 	retval = 0;
+#ifndef __REACTOS__
 	if (RegOpenKeyA(HKEY_CURRENT_USER, regstr, &xhkey) == ERROR_SUCCESS)
+#else // FIXME: Actually this *MUST* use shlwapi!SHRestrictionLookup()
+      // See http://www.geoffchappell.com/studies/windows/shell/shell32/api/util/shrestricted.htm
+	retval = RegOpenKeyA(HKEY_LOCAL_MACHINE, regstr, &xhkey);
+        if (retval != ERROR_SUCCESS)
+	  retval = RegOpenKeyA(HKEY_CURRENT_USER, regstr, &xhkey);
+	if (retval == ERROR_SUCCESS)
+#endif
 	{
 	  if (RegQueryValueExA(xhkey, p->keystr, NULL, NULL, (LPBYTE)&retval, &datsize) == ERROR_SUCCESS)
 	  {
