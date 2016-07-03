@@ -105,8 +105,8 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Bildirimleri Husûsileştir"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT            "ReactOS, etkin ve evgin bildirimler için simgeleri görüntüler ve edilginleri gizler. Aşağıdaki dizelgede öğeler için bu davranışı değiştirebilirsiniz.", IDC_STATIC, 6, 6, 220, 30
-    LTEXT            "Bir öğe seçiniz, sonra onun bildirim davranışını seçiniz:", IDC_STATIC, 6, 40, 220, 10
+    LTEXT            "ReactOS, etkin ve evgin bildirimler için simgeleri görüntüler ve edilginleri gizler. Aşağıdaki dizelgede ögeler için bu davranışı değiştirebilirsiniz.", IDC_STATIC, 6, 6, 220, 30
+    LTEXT            "Bir öge seçiniz, sonra onun bildirim davranışını seçiniz:", IDC_STATIC, 6, 40, 220, 10
     CONTROL          "", IDC_NOTIFICATION_LIST, "SysListView32", WS_CLIPSIBLINGS | WS_BORDER | 0x00008005, 6, 50, 220, 128
     COMBOBOX         IDC_NOTIFICATION_BEHAVIOUR, 103, 178, 78, 200, CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_CLIPSIBLINGS
     PUSHBUTTON       "&Ön Tanımlıları Geri Getir", IDC_TASKBARPROP_NOTIREST, 164, 188, 62, 14
@@ -121,7 +121,7 @@ FONT 8, "MS Shell Dlg"
 {
     GROUPBOX         "Başlat Seçkesi", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
-    LTEXT            "Öğeleri eklemeyle veyâ kaldırmayla Başlat seçkenizi husûsileştirebilirsiniz.", IDC_STATIC, 48, 17, 108, 39
+    LTEXT            "Ögeleri eklemeyle veyâ kaldırmayla Başlat seçkenizi husûsileştirebilirsiniz.", IDC_STATIC, 48, 17, 108, 39
     PUSHBUTTON       "&Ekle...", IDC_CLASSICSTART_ADD, 162, 18, 53, 14
     PUSHBUTTON       "&Sil...", IDC_CLASSICSTART_REMOVE, 162, 33, 53, 14
     PUSHBUTTON       "&Gelişmiş", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
@@ -183,7 +183,7 @@ FONT 8, "MS Shell Dlg"
     GROUPBOX         "Başlat Seçkesinde Göster", IDC_STATIC, 7, 126, 238, 63
     AUTOCHECKBOX     "&Umûmî Ağ:", IDC_SHOWINTERNET, 14, 140, 42, 10
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-    AUTOCHECKBOX     "&Posta:", IDC_SHOWEMAIL, 14, 157, 37, 10
+    AUTOCHECKBOX     "&Mektup:", IDC_SHOWEMAIL, 14, 157, 37, 10
     COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
 }
 

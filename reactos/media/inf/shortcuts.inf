@@ -1358,6 +1358,9 @@ ENTERTAINMENT=Eğlence
 COMMUNICATIONS=İletişim
 GAMES=Oyunlar
 
+README_TITLE=Benioku
+README_DESC=ReactOS Benioku
+
 CMD_TITLE=Komut İstemi
 CMD_DESC=Komut İstemi'ni aç
 EXPLORER_TITLE=ReactOS Gezgini
