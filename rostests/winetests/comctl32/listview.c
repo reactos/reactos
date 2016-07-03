@@ -1849,6 +1849,7 @@ static void test_customdraw(void)
 {
     HWND hwnd;
     WNDPROC oldwndproc;
+    LVITEMA item;
 
     hwnd = create_listview_control(LVS_REPORT);
 
@@ -1867,6 +1868,18 @@ static void test_customdraw(void)
     InvalidateRect(hwnd, NULL, TRUE);
     UpdateWindow(hwnd);
     ok_sequence(sequences, PARENT_CD_SEQ_INDEX, parent_report_cd_seq, "parent customdraw, LVS_REPORT", FALSE);
+
+    /* check colors when item is selected */
+    SetWindowLongW(hwnd, GWL_STYLE, GetWindowLongW(hwnd, GWL_STYLE) | LVS_SHOWSELALWAYS);
+    item.mask = LVIF_STATE;
+    item.stateMask = LVIS_SELECTED;
+    item.state = LVIS_SELECTED;
+    SendMessageA(hwnd, LVM_SETITEMSTATE, 0, (LPARAM)&item);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    InvalidateRect(hwnd, NULL, TRUE);
+    UpdateWindow(hwnd);
+    ok_sequence(sequences, PARENT_CD_SEQ_INDEX, parent_report_cd_seq, "parent customdraw, LVS_REPORT, selection", FALSE);
 
     DestroyWindow(hwnd);
 
