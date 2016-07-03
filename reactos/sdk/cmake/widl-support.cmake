@@ -12,6 +12,9 @@ function(add_typelib)
     get_includes(INCLUDES)
     get_defines(DEFINES)
     foreach(FILE ${ARGN})
+        if(${FILE} STREQUAL "std_ole_v1.idl")
+            set(IDL_FLAGS ${IDL_FLAGS} --oldtlb)
+        endif()
         get_filename_component(NAME ${FILE} NAME_WE)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.tlb
