@@ -34,7 +34,7 @@ typedef BOOL (WINAPI * LPFNOFN) (OPENFILENAMEW *);
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 static INT_PTR CALLBACK RunDlgProc(HWND, UINT, WPARAM, LPARAM);
-static void FillList(HWND, LPWSTR, BOOL);
+static void FillList(HWND, LPWSTR, UINT, BOOL);
 
 
 /*************************************************************************
@@ -395,7 +395,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             // SendMessageW(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)prfdp->hIcon);
             SendMessageW(GetDlgItem(hwnd, IDC_RUNDLG_ICON), STM_SETICON, (WPARAM)prfdp->hIcon, 0);
 
-            FillList(GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH), NULL, (prfdp->uFlags & RFF_NODEFAULT) == 0);
+            FillList(GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH), NULL, 0, (prfdp->uFlags & RFF_NODEFAULT) == 0);
             EnableOkButtonFromEditContents(hwnd);
             SetFocus(GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH));
             return TRUE;
@@ -421,7 +421,12 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
                     ZeroMemory(&sei, sizeof(sei));
                     sei.cbSize = sizeof(sei);
-                    psz = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, (ic + 1)*sizeof(WCHAR));
+
+                    /*
+                     * Allocate a new MRU entry, we need to add two characters
+                     * for the terminating "\\1" part, then the NULL character.
+                     */
+                    psz = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, (ic + 2 + 1)*sizeof(WCHAR));
                     if (!psz)
                     {
                         EndDialog(hwnd, IDCANCEL);
@@ -479,7 +484,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                             {
                                 /* Call again GetWindowText in case the contents of the edit box has changed? */
                                 GetWindowTextW(htxt, psz, ic + 1);
-                                FillList(htxt, psz, FALSE);
+                                FillList(htxt, psz, ic + 2 + 1, FALSE);
                                 EndDialog(hwnd, IDOK);
                                 break;
                             }
@@ -562,14 +567,36 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
  * This function grabs the MRU list from the registry and fills the combo-list
  * for the "Run" dialog above. fShowDefault is ignored if pszLatest != NULL.
  */
-static void FillList(HWND hCb, LPWSTR pszLatest, BOOL fShowDefault)
+// FIXME: Part of this code should be part of some MRUList API,
+// that is scattered amongst shell32, comctl32 (?!) and comdlg32.
+static void FillList(HWND hCb, LPWSTR pszLatest, UINT cchStr, BOOL fShowDefault)
 {
     HKEY hkey;
     WCHAR *pszList = NULL, *pszCmd = NULL, *pszTmp = NULL, cMatch = 0, cMax = 0x60;
     WCHAR szIndex[2] = L"-";
+    UINT cchLatest;
     DWORD dwType, icList = 0, icCmd = 0;
     LRESULT lRet;
     UINT Nix;
+
+    /*
+     * Retrieve the string length of pszLatest and check whether its buffer size
+     * (cchStr in number of characters) is large enough to add the terminating "\\1"
+     * (and the NULL character).
+     */
+    if (pszLatest)
+    {
+        cchLatest = wcslen(pszLatest);
+        if (cchStr < cchLatest + 2 + 1)
+        {
+            TRACE("pszLatest buffer is not large enough (%d) to hold the MRU terminator.\n", cchStr);
+            return;
+        }
+    }
+    else
+    {
+        cchStr = 0;
+    }
 
     SendMessageW(hCb, CB_RESETCONTENT, 0, 0);
 
@@ -714,7 +741,10 @@ Continue:
             memmove(&pszList[1], pszList, Nix * sizeof(WCHAR));
             pszList[0] = cMatch;
             szIndex[0] = cMatch;
-            RegSetValueExW(hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, (wcslen(pszLatest) + 1) * sizeof(WCHAR));
+
+            wcscpy(&pszLatest[cchLatest], L"\\1");
+            RegSetValueExW(hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, (cchLatest + 2 + 1) * sizeof(WCHAR));
+            pszLatest[cchLatest] = L'\0';
         }
     }
 
@@ -749,7 +779,10 @@ Continue:
         memmove(&pszList[1], pszList, (icList - 1) * sizeof(WCHAR));
         pszList[0] = cMatch;
         szIndex[0] = cMatch;
-        RegSetValueExW(hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, (wcslen(pszLatest) + 1) * sizeof(WCHAR));
+
+        wcscpy(&pszLatest[cchLatest], L"\\1");
+        RegSetValueExW(hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, (cchLatest + 2 + 1) * sizeof(WCHAR));
+        pszLatest[cchLatest] = L'\0';
     }
 
 Cleanup:
