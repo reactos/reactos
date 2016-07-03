@@ -7,7 +7,7 @@ BEGIN
 COMP [/L] [/A] [data1] [data2]\n\n\
   data1      Calea și numele primului fișier de comparat.\n\
   data2      Calea și numele celui de-al doilea fișier de comparat.\n\
-  /A         Afișează diferențele în caractere ASCII (default: hexadecimal).\n\
+  /A         Afișează diferențele în caractere ASCII (implicit: hexazecimal).\n\
   /L         Afișează numărul liniei pentru diferențe.\n"
     IDS_INVALIDSWITCH "Parametru nevalid - /%c\n"
     IDS_BADSYNTAX "Sintaxă eronată\n"

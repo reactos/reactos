@@ -684,7 +684,7 @@ BEGIN
     IDS_RENAME "Rede&numește"
     IDS_PASTE "&Lipește"
 
-    IDS_CREATEFOLDER_DENIED "Nu s-a putut crea dosar nou: Eroare de permisiune."
+    IDS_CREATEFOLDER_DENIED "Nu s-a putut crea dosar nou: Acces respins."
     IDS_CREATEFOLDER_CAPTION "Eroare la crearea unui nou dosar"
     IDS_DELETEITEM_CAPTION "Confirmarea ștergerii fișierului"
     IDS_DELETEFOLDER_CAPTION "Confirmarea ștergerii dosarului"

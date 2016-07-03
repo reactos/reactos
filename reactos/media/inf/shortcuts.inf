@@ -1163,6 +1163,9 @@ ENTERTAINMENT=Divertisment
 COMMUNICATIONS=Communicații
 GAMES=Jocuri
 
+README_TITLE=De citit
+README_DESC=Fișier de informare ReactOS
+
 CMD_TITLE=Linie de comandă
 CMD_DESC=Mediu textual cu operații lansate de la linia de comandă.
 EXPLORER_TITLE=Explorator ReactOS

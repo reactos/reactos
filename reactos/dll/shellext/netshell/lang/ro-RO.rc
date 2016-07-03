@@ -83,44 +83,44 @@ END
 
 IDD_NETWORKSETTINGSPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_NET_SETUP, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Choose whether to use typical or custom settings:", IDC_STATIC, 53, 7, 240, 20
-    AUTORADIOBUTTON "Typical Settings", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Custom Settings", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
-    LTEXT "Creates network connetions using the Client for ReactOS Networks, File and Print Sharing for ReactOS Networks, and the TCP/IP transport protocol with automatic addressing.", IDC_STATIC, 65, 45, 240, 30
-    LTEXT "Allows you to manually configure network components.", IDC_STATIC, 65, 90, 243, 20
+    LTEXT "Alegeți o configurație tipică sau una particularizată:", IDC_STATIC, 53, 7, 240, 20
+    AUTORADIOBUTTON "Configurație tipică", IDC_NETWORK_TYPICAL, 53, 27, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Configurație particularizată", IDC_NETWORK_CUSTOM, 53, 72, 253, 20, WS_TABSTOP
+    LTEXT "Crează conexiuni de rețea utilizând Clientela de rețele ReactOS, Partajarea de fișiere și imprimante pentru rețele ReactOS, și (protocolul) TCP/IP pentru adresare automată.", IDC_STATIC, 65, 45, 240, 30
+    LTEXT "Permite configurarea manuală a componentelor de rețea.", IDC_STATIC, 65, 90, 243, 20
 END
 
 IDD_NETWORKCOMPONENTPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "For Device:", IDC_STATIC, 33, 2, 100, 20
-    LTEXT "n/a", IDC_NETWORK_DEVICE, 75, 2, 253, 20
-    LTEXT "Components checked are used by this connection:", IDC_STATIC, 33, 12, 253, 20
+    LTEXT "Pentru dispozitiv:", IDC_STATIC, 33, 2, 160, 20
+    LTEXT "nespecificat", IDC_NETWORK_DEVICE, 135, 2, 253, 20
+    LTEXT "Această conexiune utilizează următoarele componente bifate:", IDC_STATIC, 33, 12, 253, 20
     CONTROL "", IDC_COMPONENT_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 33, 22, 250, 50
-    PUSHBUTTON "&Install...", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Uninstall", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
-    PUSHBUTTON "&Properties", IDC_NETWORK_PROPERTIES, 232, 75, 50, 14, WS_DISABLED | WS_TABSTOP
-    GROUPBOX "Description", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
+    PUSHBUTTON "&Instalare…", IDC_NETWORK_INSTALL, 122, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Dezinstalează", IDC_NETWORK_UNINSTALL, 177, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Proprietăți", IDC_NETWORK_PROPERTIES, 232, 75, 50, 14, WS_DISABLED | WS_TABSTOP
+    GROUPBOX "Descriere", IDC_STATIC, 33, 90, 250, 50, BS_GROUPBOX
 END
 
 IDD_NETWORKDOMAINPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Asistent de instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Do you want this computer to be a member of a domain?\n\
-(You can obtain this information from your network administator.)", IDC_STATIC, 33, 2, 263, 50
-    AUTORADIOBUTTON "No, this computer will be part of a workgroup.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Yes, this computer will be part of a domain.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
-    LTEXT "Workgroup or Domain Name:", IDC_STATIC, 33, 72, 126, 14
+    LTEXT "Doriți ca acest calculator să fie membru al unui domeniu?\n\
+(Puteți afla această informație de la administratorul de rețea.)", IDC_STATIC, 33, 2, 263, 50
+    AUTORADIOBUTTON "Nu, acest calculator va fi parte a unui grup de lucru.", IDC_SELECT_WORKGROUP, 33, 32, 253, 20, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Da, acest calculator va fi parte a unui domeniu.", IDC_SELECT_DOMAIN, 33, 47, 253, 20, WS_TABSTOP
+    LTEXT "Grup de Lucru sau Nume de Domeniu:", IDC_STATIC, 33, 72, 126, 14
     EDITTEXT IDC_DOMAIN_NAME, 33, 82, 126, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "NOTE: If this computer isn't going to be part of a network, you don't have sufficient rights to join a domain, or you don't know what to enter, then just choose workgroup for now. These options can be changed at a later time.", IDC_STATIC, 33, 107, 263, 50
+    LTEXT "NOTĂ: Dacă acest calculator nu va fi parte a unei rețele, nu sunt disponibile privelegiile necesare apartenenței la un domeniu, sau nu cunoașteți ce să specificați, lăsați valoarea implicită. Veți putea modifica această opțiune mai târziu.", IDC_STATIC, 33, 107, 263, 50
 END
 
 STRINGTABLE
@@ -170,12 +170,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NETWORKSETTINGSTITLE "Network Settings"
-    IDS_NETWORKSETTINGSSUBTITLE "Installs network software used to connect to other networks, computers, and the Internet."
-    IDS_NETWORKCOMPONENTTITLE "Network Components"
-    IDS_NETWORKCOMPONENTSUBTITLE "Determine which networking components are used on your computer. To add new components, click on Install."
-    IDS_NETWORKDOMAINTITLE "Workgroup or Computer Domain"
-    IDS_NETWORKDOMAINSUBTITLE "A domain is a group of computers defined by a network administator. A workgroup is a group of computers sharing the same workgroup name."
-    IDS_REACTOS_SETUP "ReactOS Setup"
-    IDS_WZD_DOMAIN_NAME "Setup cannot continue until you\nenter the name of your domain\nor workgroup."
+    IDS_NETWORKSETTINGSTITLE "Configurație de rețea"
+    IDS_NETWORKSETTINGSSUBTITLE "Instalare și configurare rețea pentru conectarea la alte rețele, calculatoare și Internet."
+    IDS_NETWORKCOMPONENTTITLE "Componente de rețea"
+    IDS_NETWORKCOMPONENTSUBTITLE "Determinare componente de rețea necesare calculatorului. Pentru adăugare de noi componente, apăsați „Instalare”."
+    IDS_NETWORKDOMAINTITLE "Grup de lucru sau domeniu de calculator"
+    IDS_NETWORKDOMAINSUBTITLE "Un domeniu sau un grup de calculatoare definit de administratorul de rețea. Un grup de lucru este un grup de calculatoare având același nume de grup."
+    IDS_REACTOS_SETUP "Asistent de instalare ReactOS"
+    IDS_WZD_DOMAIN_NAME "Asistentul nu poate continua până\nnu veți introduce un nume de domeniu\nsau grup de lucru."
 END
