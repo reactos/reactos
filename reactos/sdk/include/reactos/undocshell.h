@@ -39,11 +39,11 @@ extern "C" {
 
 
 /****************************************************************************
- *	IDList Functions
+ *  IDList Functions
  */
 BOOL WINAPI ILGetDisplayName(
-	LPCITEMIDLIST pidl,
-	LPVOID path);
+    LPCITEMIDLIST pidl,
+    LPVOID path);
 
 /* type parameter for ILGetDisplayNameEx() */
 #define ILGDN_FORPARSING  0
@@ -51,10 +51,10 @@ BOOL WINAPI ILGetDisplayName(
 #define ILGDN_INFOLDER    2
 
 BOOL WINAPI ILGetDisplayNameEx(
-	LPSHELLFOLDER psf,
-	LPCITEMIDLIST pidl,
-	LPVOID path,
-	DWORD type);
+    LPSHELLFOLDER psf,
+    LPCITEMIDLIST pidl,
+    LPVOID path,
+    DWORD type);
 
 LPITEMIDLIST WINAPI ILGlobalClone(LPCITEMIDLIST pidl);
 void WINAPI ILGlobalFree(LPITEMIDLIST pidl);
@@ -62,17 +62,17 @@ LPITEMIDLIST WINAPI SHSimpleIDListFromPathA (LPCSTR lpszPath); //FIXME
 LPITEMIDLIST WINAPI SHSimpleIDListFromPathW (LPCWSTR lpszPath);
 
 HRESULT WINAPI SHILCreateFromPathA (
-	LPCSTR path,
-	LPITEMIDLIST * ppidl,
-	DWORD *attributes);
+    LPCSTR path,
+    LPITEMIDLIST * ppidl,
+    DWORD *attributes);
 
 HRESULT WINAPI SHILCreateFromPathW (
-	LPCWSTR path,
-	LPITEMIDLIST * ppidl,
-	DWORD *attributes);
+    LPCWSTR path,
+    LPITEMIDLIST * ppidl,
+    DWORD *attributes);
 
 /*
-	string functions
+    string functions
 */
 BOOL WINAPI StrRetToStrNA(LPSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 BOOL WINAPI StrRetToStrNW(LPWSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
@@ -81,10 +81,10 @@ BOOL WINAPI StrRetToStrNW(LPWSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 /****************************************************************************
 * SHChangeNotifyRegister API
 */
-#define SHCNRF_InterruptLevel		0x0001
-#define SHCNRF_ShellLevel		0x0002
-#define SHCNRF_RecursiveInterrupt	0x1000	/* Must be combined with SHCNRF_InterruptLevel */
-#define SHCNRF_NewDelivery		0x8000	/* Messages use shared memory */
+#define SHCNRF_InterruptLevel       0x0001
+#define SHCNRF_ShellLevel           0x0002
+#define SHCNRF_RecursiveInterrupt   0x1000  /* Must be combined with SHCNRF_InterruptLevel */
+#define SHCNRF_NewDelivery          0x8000  /* Messages use shared memory */
 
 
 /****************************************************************************
@@ -116,39 +116,39 @@ typedef struct
 #define RF_RETRY   0x02
 
 void WINAPI RunFileDlg(
-	HWND hwndOwner,
-	HICON hIcon,
-	LPCWSTR lpstrDirectory,
-	LPCWSTR lpstrTitle,
-	LPCWSTR lpstrDescription,
-	UINT uFlags);
+    HWND hWndOwner,
+    HICON hIcon,
+    LPCWSTR lpstrDirectory,
+    LPCWSTR lpstrTitle,
+    LPCWSTR lpstrDescription,
+    UINT uFlags);
 
-int WINAPI LogoffWindowsDialog(HWND hwndOwner);
-void WINAPI ExitWindowsDialog(HWND hwndOwner);
+int WINAPI LogoffWindowsDialog(HWND hWndOwner);
+void WINAPI ExitWindowsDialog(HWND hWndOwner);
 
 BOOL WINAPI SHFindComputer(
-	LPCITEMIDLIST pidlRoot,
-	LPCITEMIDLIST pidlSavedSearch);
+    LPCITEMIDLIST pidlRoot,
+    LPCITEMIDLIST pidlSavedSearch);
 
 void WINAPI SHHandleDiskFull(HWND hwndOwner,
-	UINT uDrive);
+    UINT uDrive);
 
 int  WINAPI SHOutOfMemoryMessageBox(
-	HWND hwndOwner,
-	LPCSTR lpCaption,
-	UINT uType);
+    HWND hwndOwner,
+    LPCSTR lpCaption,
+    UINT uType);
 
 DWORD WINAPI SHNetConnectionDialog(
-	HWND hwndOwner,
-	LPCWSTR lpstrRemoteName,
-	DWORD dwType);
+    HWND hwndOwner,
+    LPCWSTR lpstrRemoteName,
+    DWORD dwType);
 
 /****************************************************************************
  * Cabinet Window Messages
  */
 
 #define CWM_SETPATH           (WM_USER + 2)
-#define CWM_WANTIDLE	      (WM_USER + 3)
+#define CWM_WANTIDLE          (WM_USER + 3)
 #define CWM_GETSETCURRENTINFO (WM_USER + 4)
 #define CWM_SELECTITEM        (WM_USER + 5)
 #define CWM_SELECTITEMSTR     (WM_USER + 6)
@@ -166,8 +166,8 @@ DWORD WINAPI SHNetConnectionDialog(
 /* CWM_TESTPATH structure */
 typedef struct
 {
-	DWORD dwType;
-	ITEMIDLIST idl;
+    DWORD dwType;
+    ITEMIDLIST idl;
 } CWTESTPATHSTRUCT,* LPCWTESTPATHSTRUCT;
 
 /****************************************************************************
@@ -175,19 +175,19 @@ typedef struct
  */
 
 int WINAPI Shell_GetCachedImageIndexA(
-	LPCSTR lpszFileName,
-	int nIconIndex,
-	UINT bSimulateDoc);
+    LPCSTR lpszFileName,
+    int nIconIndex,
+    UINT bSimulateDoc);
 
 BOOL WINAPI Shell_GetImageLists(
-	HIMAGELIST *lphimlLarge,
-	HIMAGELIST *lphimlSmall);
+    HIMAGELIST *lphimlLarge,
+    HIMAGELIST *lphimlSmall);
 
 HICON WINAPI SHGetFileIcon(
-	DWORD dwReserved,
-	LPCSTR lpszPath,
-	DWORD dwFileAttributes,
-	UINT uFlags);
+    DWORD dwReserved,
+    LPCSTR lpszPath,
+    DWORD dwFileAttributes,
+    UINT uFlags);
 
 BOOL WINAPI FileIconInit(BOOL bFullInit);
 
@@ -204,11 +204,11 @@ BOOL WINAPI FileIconInit(BOOL bFullInit);
 #define FMF_NO_COLUMN_BREAK  0x10
 
 HMENU WINAPI FileMenu_Create(
-	COLORREF crBorderColor,
-	int nBorderWidth,
-	HBITMAP hBorderBmp,
-	int nSelHeight,
-	UINT uFlags);
+    COLORREF crBorderColor,
+    int nBorderWidth,
+    HBITMAP hBorderBmp,
+    int nSelHeight,
+    UINT uFlags);
 
 void WINAPI FileMenu_Destroy(HMENU hMenu);
 
@@ -218,12 +218,12 @@ void WINAPI FileMenu_Destroy(HMENU hMenu);
 #define FM_DEFAULT_HEIGHT  0
 
 BOOL WINAPI FileMenu_AppendItem(
-	HMENU hMenu,
-	LPCSTR lpszText,
-	UINT uID,
-	int iIcon,
-	HMENU hMenuPopup,
-	int nItemHeight);
+    HMENU hMenu,
+    LPCSTR lpszText,
+    UINT uID,
+    int iIcon,
+    HMENU hMenuPopup,
+    int nItemHeight);
 
 /* FileMenu_InsertUsingPidl flags */
 #define FMF_NO_EMPTY_ITEM      0x01
@@ -233,109 +233,109 @@ BOOL WINAPI FileMenu_AppendItem(
 typedef void (CALLBACK *LPFNFMCALLBACK)(LPCITEMIDLIST pidlFolder, LPCITEMIDLIST pidlFile);
 
 int WINAPI FileMenu_InsertUsingPidl(
-	HMENU hMenu,
-	UINT uID,
-	LPCITEMIDLIST pidl,
-	UINT uFlags,
-	UINT uEnumFlags,
-	LPFNFMCALLBACK lpfnCallback);
+    HMENU hMenu,
+    UINT uID,
+    LPCITEMIDLIST pidl,
+    UINT uFlags,
+    UINT uEnumFlags,
+    LPFNFMCALLBACK lpfnCallback);
 
 int WINAPI FileMenu_ReplaceUsingPidl(
-	HMENU hMenu,
-	UINT uID,
-	LPCITEMIDLIST pidl,
-	UINT uEnumFlags,
-	LPFNFMCALLBACK lpfnCallback);
+    HMENU hMenu,
+    UINT uID,
+    LPCITEMIDLIST pidl,
+    UINT uEnumFlags,
+    LPFNFMCALLBACK lpfnCallback);
 
 void WINAPI FileMenu_Invalidate(HMENU hMenu);
 
 HMENU WINAPI FileMenu_FindSubMenuByPidl(
-	HMENU hMenu,
-	LPCITEMIDLIST pidl);
+    HMENU hMenu,
+    LPCITEMIDLIST pidl);
 
 BOOL WINAPI FileMenu_TrackPopupMenuEx(
-	HMENU hMenu,
-	UINT uFlags,
-	int x,
-	int y,
-	HWND hWnd,
-	LPTPMPARAMS lptpm);
+    HMENU hMenu,
+    UINT uFlags,
+    int x,
+    int y,
+    HWND hWnd,
+    LPTPMPARAMS lptpm);
 
 BOOL WINAPI FileMenu_GetLastSelectedItemPidls(
-	UINT uReserved,
-	LPCITEMIDLIST *ppidlFolder,
-	LPCITEMIDLIST *ppidlItem);
+    UINT uReserved,
+    LPCITEMIDLIST *ppidlFolder,
+    LPCITEMIDLIST *ppidlItem);
 
 LRESULT WINAPI FileMenu_MeasureItem(
-	HWND hWnd,
-	LPMEASUREITEMSTRUCT lpmis);
+    HWND hWnd,
+    LPMEASUREITEMSTRUCT lpmis);
 
 LRESULT WINAPI FileMenu_DrawItem(
-	HWND hWnd,
-	LPDRAWITEMSTRUCT lpdis);
+    HWND hWnd,
+    LPDRAWITEMSTRUCT lpdis);
 
 BOOL WINAPI FileMenu_InitMenuPopup(HMENU hMenu);
 
 void WINAPI FileMenu_AbortInitMenu(void);
 
 LRESULT WINAPI FileMenu_HandleMenuChar(
-	HMENU hMenu,
-	WPARAM wParam);
+    HMENU hMenu,
+    WPARAM wParam);
 
 BOOL WINAPI FileMenu_DeleteAllItems(HMENU hMenu);
 
 BOOL WINAPI FileMenu_DeleteItemByCmd(
-	HMENU hMenu,
-	UINT uID);
+    HMENU hMenu,
+    UINT uID);
 
 BOOL WINAPI FileMenu_DeleteItemByIndex(
-	HMENU hMenu,
-	UINT uPos);
+    HMENU hMenu,
+    UINT uPos);
 
 BOOL WINAPI FileMenu_DeleteMenuItemByFirstID(
-	HMENU hMenu,
-	UINT uID);
+    HMENU hMenu,
+    UINT uID);
 
 BOOL WINAPI FileMenu_DeleteSeparator(HMENU hMenu);
 
 BOOL WINAPI FileMenu_EnableItemByCmd(
-	HMENU hMenu,
-	UINT uID,
-	BOOL bEnable);
+    HMENU hMenu,
+    UINT uID,
+    BOOL bEnable);
 
 DWORD WINAPI FileMenu_GetItemExtent(
-	HMENU hMenu,
-	UINT uPos);
+    HMENU hMenu,
+    UINT uPos);
 
 int WINAPI FileMenu_AppendFilesForPidl(
-	HMENU hMenu,
-	LPCITEMIDLIST pidl,
-	BOOL bAddSeparator);
+    HMENU hMenu,
+    LPCITEMIDLIST pidl,
+    BOOL bAddSeparator);
 
 int WINAPI FileMenu_AddFilesForPidl(
-	HMENU hMenu,
-	UINT uReserved,
-	UINT uID,
-	LPCITEMIDLIST pidl,
-	UINT uFlags,
-	UINT uEnumFlags,
-	LPFNFMCALLBACK lpfnCallback);
+    HMENU hMenu,
+    UINT uReserved,
+    UINT uID,
+    LPCITEMIDLIST pidl,
+    UINT uFlags,
+    UINT uEnumFlags,
+    LPFNFMCALLBACK lpfnCallback);
 
 /****************************************************************************
  * Drag And Drop Routines
  */
 
 HRESULT WINAPI SHRegisterDragDrop(
-	HWND hWnd,
-	LPDROPTARGET lpDropTarget);
+    HWND hWnd,
+    LPDROPTARGET lpDropTarget);
 
 HRESULT WINAPI SHRevokeDragDrop(HWND hWnd);
 
 BOOL WINAPI DAD_DragEnter(HWND hWnd);
 
 BOOL WINAPI DAD_SetDragImageFromListView(
-	HWND hWnd,
-	POINT pt);
+    HWND hWnd,
+    POINT pt);
 
 BOOL WINAPI DAD_ShowDragImage(BOOL bShow);
 
@@ -382,17 +382,17 @@ BOOL WINAPI PathFileExistsAW(LPCVOID lpszPath);
 BOOL WINAPI PathMatchSpecAW(LPVOID lpszPath, LPVOID lpszSpec);
 
 BOOL WINAPI PathMakeUniqueNameAW(
-	LPVOID lpszBuffer,
-	DWORD dwBuffSize,
-	LPCVOID lpszShortName,
-	LPCVOID lpszLongName,
-	LPCVOID lpszPathName);
+    LPVOID lpszBuffer,
+    DWORD dwBuffSize,
+    LPCVOID lpszShortName,
+    LPCVOID lpszLongName,
+    LPCVOID lpszPathName);
 
 BOOL WINAPI PathYetAnotherMakeUniqueName(
-	LPWSTR lpszBuffer,
-	LPCWSTR lpszPathName,
-	LPCWSTR lpszShortName,
-	LPCWSTR lpszLongName);
+    LPWSTR lpszBuffer,
+    LPCWSTR lpszPathName,
+    LPCWSTR lpszShortName,
+    LPCWSTR lpszLongName);
 
 BOOL  WINAPI PathQualifyAW(LPCVOID path);
 
@@ -415,7 +415,7 @@ VOID WINAPI PathSetDlgItemPathAW(HWND hDlg, int nIDDlgItem, LPCVOID lpszPath);
 #define PPCF_PATHISRELATIVE   0x40
 
 HRESULT WINAPI PathProcessCommandAW(LPCVOID lpszPath, LPVOID lpszBuff,
-				DWORD dwBuffSize, DWORD dwFlags);
+                                    DWORD dwBuffSize, DWORD dwFlags);
 
 void WINAPI PathStripPathAW(LPVOID lpszPath);
 
@@ -430,6 +430,21 @@ int WINAPI PathParseIconLocationAW(LPVOID lpszPath);
 BOOL WINAPI PathIsSameRootAW(LPCVOID lpszPath1, LPCVOID lpszPath2);
 
 BOOL WINAPI PathFindOnPathAW(LPVOID sFile, LPCVOID *sOtherDirs);
+
+/****************************************************************************
+ * Shell File Operations error codes
+ */
+
+/* Error codes could be pre-Win32 */
+#define DE_SAMEFILE      0x71
+#define DE_MANYSRC1DEST  0x72
+#define DE_DIFFDIR       0x73
+#define DE_OPCANCELLED   0x75
+#define DE_DESTSUBTREE   0x76
+#define DE_INVALIDFILES  0x7C
+#define DE_DESTSAMETREE  0x7D
+#define DE_FLDDESTISFILE 0x7E
+#define DE_FILEDESTISFLD 0x80
 
 /****************************************************************************
  * Shell Namespace Routines
@@ -487,16 +502,16 @@ typedef struct
 #define SHWFF_WAIT    0x04
 
 BOOL WINAPI SHWaitForFileToOpen(
-	LPCITEMIDLIST pidl,
-	DWORD dwFlags,
-	DWORD dwTimeout);
+    LPCITEMIDLIST pidl,
+    DWORD dwFlags,
+    DWORD dwTimeout);
 
 WORD WINAPI ArrangeWindows(
-	HWND hwndParent,
-	DWORD dwReserved,
-	LPCRECT lpRect,
-	WORD cKids,
-	CONST HWND * lpKids);
+    HWND hwndParent,
+    DWORD dwReserved,
+    LPCRECT lpRect,
+    WORD cKids,
+    CONST HWND * lpKids);
 
 /* RegisterShellHook types */
 #define RSH_DEREGISTER        0
@@ -505,21 +520,21 @@ WORD WINAPI ArrangeWindows(
 #define RSH_REGISTER_TASKMAN  3
 
 BOOL WINAPI RegisterShellHook(
-	HWND hWnd,
-	DWORD dwType);
+    HWND hWnd,
+    DWORD dwType);
 
 /* SHCreateDefClassObject callback function */
 typedef HRESULT (CALLBACK *LPFNCDCOCALLBACK)(
-	LPUNKNOWN pUnkOuter,
-	REFIID riidObject,
-	LPVOID *ppvObject);
+    LPUNKNOWN pUnkOuter,
+    REFIID riidObject,
+    LPVOID *ppvObject);
 
 HRESULT WINAPI SHCreateDefClassObject(
-	REFIID riidFactory,
-	LPVOID *ppvFactory,
-	LPFNCDCOCALLBACK lpfnCallback,
-	LPDWORD lpdwUsage,
-	REFIID riidObject);
+    REFIID riidFactory,
+    LPVOID *ppvFactory,
+    LPFNCDCOCALLBACK lpfnCallback,
+    LPDWORD lpdwUsage,
+    REFIID riidObject);
 
 void WINAPI SHFreeUnusedLibraries(void);
 
@@ -528,11 +543,11 @@ void WINAPI SHFreeUnusedLibraries(void);
 #define SHCLF_CREATEONDESKTOP  0x02
 
 HRESULT WINAPI SHCreateLinks(
-	HWND hWnd,
-	LPCSTR lpszDir,
-	LPDATAOBJECT lpDataObject,
-	UINT uFlags,
-	LPITEMIDLIST *lppidlLinks);
+    HWND hWnd,
+    LPCSTR lpszDir,
+    LPDATAOBJECT lpDataObject,
+    UINT uFlags,
+    LPITEMIDLIST *lppidlLinks);
 
 DWORD WINAPI CheckEscapesA(LPSTR string, DWORD len);
 DWORD WINAPI CheckEscapesW(LPWSTR string, DWORD len);
@@ -540,7 +555,7 @@ DWORD WINAPI CheckEscapesW(LPWSTR string, DWORD len);
 /* policy functions */
 BOOL WINAPI SHInitRestricted(LPCVOID unused, LPCVOID inpRegKey);
 
-#define CSIDL_FOLDER_MASK	0x00ff
+#define CSIDL_FOLDER_MASK   0x00ff
 
 /* Utility functions */
 #include <stdio.h>
@@ -693,34 +708,34 @@ void DumpIdList(LPCITEMIDLIST pcidl)
  * Shell32 resources
  */
 // these resources are in shell32.dll
-#define IDB_GOBUTTON_NORMAL			0x0e6
-#define IDB_GOBUTTON_HOT			0x0e7
+#define IDB_GOBUTTON_NORMAL         0x0e6
+#define IDB_GOBUTTON_HOT            0x0e7
 
 // band ids in internet toolbar
-#define ITBBID_MENUBAND				1
-#define ITBBID_BRANDBAND			5
-#define ITBBID_TOOLSBAND			2
-#define ITBBID_ADDRESSBAND			4
+#define ITBBID_MENUBAND             1
+#define ITBBID_BRANDBAND            5
+#define ITBBID_TOOLSBAND            2
+#define ITBBID_ADDRESSBAND          4
 
 // commands in the CGID_PrivCITCommands command group handled by the internet toolbar
 // there seems to be some support for hiding the menubar and an auto hide feature that are
 // unavailable in the UI
-#define ITID_TEXTLABELS				3
-#define ITID_TOOLBARBANDSHOWN		4
-#define ITID_ADDRESSBANDSHOWN		5
-#define ITID_LINKSBANDSHOWN			6
-#define ITID_MENUBANDSHOWN			12
-#define ITID_AUTOHIDEENABLED		13
-#define ITID_CUSTOMIZEENABLED		20
-#define ITID_TOOLBARLOCKED			27
+#define ITID_TEXTLABELS             3
+#define ITID_TOOLBARBANDSHOWN       4
+#define ITID_ADDRESSBANDSHOWN       5
+#define ITID_LINKSBANDSHOWN         6
+#define ITID_MENUBANDSHOWN          12
+#define ITID_AUTOHIDEENABLED        13
+#define ITID_CUSTOMIZEENABLED       20
+#define ITID_TOOLBARLOCKED          27
 
 // commands in the CGID_BrandCmdGroup command group handled by the brand band
-#define BBID_STARTANIMATION			1
-#define BBID_STOPANIMATION			2
+#define BBID_STARTANIMATION         1
+#define BBID_STOPANIMATION          2
 
 // undocumented flags for IShellMenu::SetShellFolder
-#define SMSET_UNKNOWN08				0x08
-#define SMSET_UNKNOWN10				0x10
+#define SMSET_UNKNOWN08             0x08
+#define SMSET_UNKNOWN10             0x10
 
 void WINAPI ShellDDEInit(BOOL bInit);
 DWORD WINAPI WinList_Init(void);

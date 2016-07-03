@@ -22,15 +22,15 @@
 
 typedef struct
 {
-    HWND hwndOwner ;
-    HICON hIcon ;
-    LPCWSTR lpstrDirectory ;
-    LPCWSTR lpstrTitle ;
-    LPCWSTR lpstrDescription ;
-    UINT uFlags ;
-} RUNFILEDLGPARAMS ;
+    HWND hwndOwner;
+    HICON hIcon;
+    LPCWSTR lpstrDirectory;
+    LPCWSTR lpstrTitle;
+    LPCWSTR lpstrDescription;
+    UINT uFlags;
+} RUNFILEDLGPARAMS;
 
-typedef BOOL (WINAPI * LPFNOFN) (OPENFILENAMEW *) ;
+typedef BOOL (WINAPI * LPFNOFN) (OPENFILENAMEW *);
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 static INT_PTR CALLBACK RunDlgProc(HWND, UINT, WPARAM, LPARAM);
@@ -221,7 +221,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
 }
 
 BOOL WINAPI PickIconDlg(
-    HWND hwndOwner,
+    HWND hWndOwner,
     LPWSTR lpstrFile,
     UINT nMaxFile,
     INT* lpdwIconIndex)
@@ -235,7 +235,7 @@ BOOL WINAPI PickIconDlg(
     IconContext.Index = *lpdwIconIndex;
     StringCchCopyNW(IconContext.szName, _countof(IconContext.szName), lpstrFile, nMaxFile);
 
-    res = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_PICK_ICON), hwndOwner, PickIconProc, (LPARAM)&IconContext);
+    res = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_PICK_ICON), hWndOwner, PickIconProc, (LPARAM)&IconContext);
     if (res)
     {
         StringCchCopyNW(lpstrFile, nMaxFile, IconContext.szName, _countof(IconContext.szName));
@@ -252,7 +252,7 @@ BOOL WINAPI PickIconDlg(
  * The Unicode function that is available as ordinal 61 on Windows NT/2000/XP/...
  */
 void WINAPI RunFileDlg(
-    HWND hwndOwner,
+    HWND hWndOwner,
     HICON hIcon,
     LPCWSTR lpstrDirectory,
     LPCWSTR lpstrTitle,
@@ -262,14 +262,14 @@ void WINAPI RunFileDlg(
     TRACE("\n");
 
     RUNFILEDLGPARAMS rfdp;
-    rfdp.hwndOwner        = hwndOwner;
+    rfdp.hwndOwner        = hWndOwner;
     rfdp.hIcon            = hIcon;
     rfdp.lpstrDirectory   = lpstrDirectory;
     rfdp.lpstrTitle       = lpstrTitle;
     rfdp.lpstrDescription = lpstrDescription;
     rfdp.uFlags           = uFlags;
 
-    DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_RUN), hwndOwner, RunDlgProc, (LPARAM)&rfdp);
+    DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_RUN), hWndOwner, RunDlgProc, (LPARAM)&rfdp);
 }
 
 
@@ -361,7 +361,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
     switch (message)
     {
         case WM_INITDIALOG:
-            prfdp = (RUNFILEDLGPARAMS *)lParam ;
+            prfdp = (RUNFILEDLGPARAMS *)lParam;
             SetWindowLongPtrW(hwnd, DWLP_USER, (LONG_PTR)prfdp);
 
             if (prfdp->lpstrTitle)
@@ -456,7 +456,6 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                 {
                     HMODULE hComdlg = NULL;
                     LPFNOFN ofnProc = NULL;
-                    static const WCHAR comdlg32W[] = L"comdlg32";
                     WCHAR szFName[1024] = {0};
                     WCHAR filter[MAX_PATH], szCaption[MAX_PATH];
                     OPENFILENAMEW ofn;
@@ -474,7 +473,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     ofn.Flags = OFN_ENABLESIZING | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
                     ofn.lpstrInitialDir = prfdp->lpstrDirectory;
 
-                    if (NULL == (hComdlg = LoadLibraryExW(comdlg32W, NULL, 0)) ||
+                    if (NULL == (hComdlg = LoadLibraryExW(L"comdlg32", NULL, 0)) ||
                         NULL == (ofnProc = (LPFNOFN)GetProcAddress(hComdlg, "GetOpenFileNameW")))
                     {
                         ERR("Couldn't get GetOpenFileName function entry (lib=%p, proc=%p)\n", hComdlg, ofnProc);
