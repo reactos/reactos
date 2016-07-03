@@ -100,9 +100,13 @@ typedef struct _VBE_MODE
     PSVGA_REGISTERS Registers; // NULL means "forward to VGABIOS"
 } VBE_MODE, *PVBE_MODE;
 
+typedef const struct _VBE_MODE *PCVBE_MODE;
+
 /* FUNCTIONS ******************************************************************/
 
 VOID WINAPI VbeService(LPWORD Stack);
+VOID WINAPI VbeResetExtendedRegisters(VOID);
+BOOLEAN WINAPI VbeSetExtendedVideoMode(BYTE ModeNumber);
 BOOLEAN VbeInitialize(VOID);
 
 #endif // _VBE_H_

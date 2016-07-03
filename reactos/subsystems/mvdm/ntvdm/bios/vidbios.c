@@ -36,16 +36,6 @@
 #include "../console/video.h"
 /**/
 
-/* MACROS *********************************************************************/
-
-//
-// These macros are defined for ease-of-use of some VGA I/O ports
-// whose addresses depend whether we are in Monochrome or Colour mode.
-//
-#define VGA_INSTAT1_READ    Bda->CrtBasePort + 6    // VGA_INSTAT1_READ_MONO or VGA_INSTAT1_READ_COLOR
-#define VGA_CRTC_INDEX      Bda->CrtBasePort        // VGA_CRTC_INDEX_MONO   or VGA_CRTC_INDEX_COLOR
-#define VGA_CRTC_DATA       Bda->CrtBasePort + 1    // VGA_CRTC_DATA_MONO    or VGA_CRTC_DATA_COLOR
-
 /* PRIVATE VARIABLES **********************************************************/
 
 /*
@@ -2470,16 +2460,25 @@ static BOOLEAN VidBiosSetVideoMode(BYTE ModeNumber)
     /* Retrieve the real mode number and check its validity */
     ModeNumber &= 0x7F;
     // if (ModeNumber >= ARRAYSIZE(VideoModes))
-    if (ModeNumber > BIOS_MAX_VIDEO_MODE)
-    {
-        DPRINT1("VidBiosSetVideoMode -- Mode %02Xh invalid\n", ModeNumber);
-        return FALSE;
-    }
 
     DPRINT1("Switching to mode %02Xh (%02Xh) %s clearing the screen; VgaRegisters = 0x%p\n",
             ModeNumber, OrgModeNumber, (DoNotClear ? "without" : "and"), VideoModes[ModeNumber].VgaRegisters);
 
+    if (ModeNumber > BIOS_MAX_VIDEO_MODE)
+    {
+        /* This could be an extended video mode, so call the VBE BIOS */
+        return VbeSetExtendedVideoMode(ModeNumber);
+    }
+
     if (!VgaSetRegisters(VideoModes[ModeNumber].VgaRegisters)) return FALSE;
+    if (VbeInitialized && Bda->VideoMode > BIOS_MAX_VIDEO_MODE)
+    {
+        /*
+         * Since we're switching from an extended video mode to a standard VGA
+         * mode, tell the VBE BIOS to reset the extended registers.
+         */
+        VbeResetExtendedRegisters();
+    }
 
     VgaChangePalette(ModeNumber);
 
