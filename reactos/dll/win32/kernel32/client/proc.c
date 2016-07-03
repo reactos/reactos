@@ -915,8 +915,8 @@ GetProcessAffinityMask(IN HANDLE hProcess,
     /* Query information on the process from the kernel */
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessBasicInformation,
-                                       (PVOID)&ProcessInfo,
-                                       sizeof(PROCESS_BASIC_INFORMATION),
+                                       &ProcessInfo,
+                                       sizeof(ProcessInfo),
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -1032,7 +1032,7 @@ GetProcessWorkingSetSizeEx(IN HANDLE hProcess,
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessQuotaLimits,
                                        &QuotaLimits,
-                                       sizeof(QUOTA_LIMITS_EX),
+                                       sizeof(QuotaLimits),
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -1220,7 +1220,7 @@ GetExitCodeProcess(IN HANDLE hProcess,
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessBasicInformation,
                                        &ProcessBasic,
-                                       sizeof(PROCESS_BASIC_INFORMATION),
+                                       sizeof(ProcessBasic),
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -1251,7 +1251,7 @@ GetProcessId(IN HANDLE Process)
     Status = NtQueryInformationProcess(Process,
                                        ProcessBasicInformation,
                                        &ProcessBasic,
-                                       sizeof(PROCESS_BASIC_INFORMATION),
+                                       sizeof(ProcessBasic),
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -1615,7 +1615,7 @@ FatalAppExitA(UINT uAction,
     MessageTextU = &NtCurrentTeb()->StaticUnicodeString;
     RtlInitAnsiString(&MessageText, (LPSTR)lpMessageText);
 
-    /* Convert to unicode and just exit normally if this failed */
+    /* Convert to unicode, or just exit normally if this failed */
     Status = RtlAnsiStringToUnicodeString(MessageTextU, &MessageText, FALSE);
     if (!NT_SUCCESS(Status)) ExitProcess(0);
 
@@ -1643,11 +1643,18 @@ FatalAppExitW(IN UINT uAction,
                               1,
                               1,
                               (PULONG_PTR)&UnicodeString,
+#if DBG
+    /* On Checked builds, Windows allows the user to cancel the operation */
                               OptionOkCancel,
+#else
+                              OptionOk,
+#endif
                               &Response);
 
+#if DBG
     /* Give the user a chance to abort */
     if ((NT_SUCCESS(Status)) && (Response == ResponseCancel)) return;
+#endif
 
     /* Otherwise kill the process */
     ExitProcess(0);
@@ -1661,7 +1668,7 @@ WINAPI
 FatalExit(IN int ExitCode)
 {
 #if DBG
-    /* On Checked builds, Windows gives you a nice little debugger UI */
+    /* On Checked builds, Windows gives the user a nice little debugger UI */
     CHAR ch[2];
     DbgPrint("FatalExit...\n");
     DbgPrint("\n");
@@ -1701,7 +1708,7 @@ GetPriorityClass(IN HANDLE hProcess)
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessPriorityClass,
                                        &PriorityClass,
-                                       sizeof(PROCESS_PRIORITY_CLASS),
+                                       sizeof(PriorityClass),
                                        NULL);
     if (NT_SUCCESS(Status))
     {
@@ -1933,7 +1940,7 @@ GetProcessPriorityBoost(IN HANDLE hProcess,
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessPriorityBoost,
                                        &PriorityBoost,
-                                       sizeof(ULONG),
+                                       sizeof(PriorityBoost),
                                        NULL);
     if (NT_SUCCESS(Status))
     {
@@ -1990,7 +1997,7 @@ GetProcessHandleCount(IN HANDLE hProcess,
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessHandleCount,
                                        &phc,
-                                       sizeof(ULONG),
+                                       sizeof(phc),
                                        NULL);
     if (NT_SUCCESS(Status))
     {
