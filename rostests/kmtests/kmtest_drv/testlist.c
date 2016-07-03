@@ -54,6 +54,7 @@ KMT_TESTFUNC Test_NpfsReadWrite;
 KMT_TESTFUNC Test_NpfsVolumeInfo;
 KMT_TESTFUNC Test_ObHandle;
 KMT_TESTFUNC Test_ObReference;
+KMT_TESTFUNC Test_ObSymbolicLink;
 KMT_TESTFUNC Test_ObType;
 KMT_TESTFUNC Test_ObTypeClean;
 KMT_TESTFUNC Test_ObTypeNoClean;
@@ -122,6 +123,7 @@ const KMT_TEST TestList[] =
     { "NpfsVolumeInfo",                     Test_NpfsVolumeInfo },
     { "ObHandle",                           Test_ObHandle },
     { "ObReference",                        Test_ObReference },
+    { "ObSymbolicLink",                     Test_ObSymbolicLink },
     { "ObType",                             Test_ObType },
     { "-ObTypeClean",                       Test_ObTypeClean },
     { "-ObTypeNoClean",                     Test_ObTypeNoClean },
