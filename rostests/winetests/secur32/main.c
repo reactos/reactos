@@ -162,30 +162,35 @@ static void testEnumerateSecurityPackages(void)
     for(i = 0; i < num_packages; ++i){
         trace("%d: Package \"%s\"\n", i, pkg_info[i].Name);
         trace("Supported flags:\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_INTEGRITY)
-            trace("\tSECPKG_FLAG_INTEGRITY\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_PRIVACY)
-            trace("\tSECPKG_FLAG_PRIVACY\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_TOKEN_ONLY)
-            trace("\tSECPKG_FLAG_TOKEN_ONLY\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_DATAGRAM)
-            trace("\tSECPKG_FLAG_DATAGRAM\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_CONNECTION)
-            trace("\tSECPKG_FLAG_CONNECTION\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_MULTI_REQUIRED)
-            trace("\tSECPKG_FLAG_MULTI_REQUIRED\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_CLIENT_ONLY)
-            trace("\tSECPKG_FLAG_CLIENT_ONLY\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_EXTENDED_ERROR)
-            trace("\tSECPKG_FLAG_EXTENDED_ERROR\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_IMPERSONATION)
-            trace("\tSECPKG_FLAG_IMPERSONATION\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_ACCEPT_WIN32_NAME)
-            trace("\tSECPKG_FLAG_ACCEPT_WIN32_NAME\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_STREAM)
-            trace("\tSECPKG_FLAG_STREAM\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_READONLY_WITH_CHECKSUM)
-            trace("\tSECPKG_FLAG_READONLY_WITH_CHECKSUM\n");
+#define X(flag) \
+        if(pkg_info[i].fCapabilities & flag) \
+            trace("\t" #flag "\n")
+
+        X(SECPKG_FLAG_INTEGRITY);
+        X(SECPKG_FLAG_PRIVACY);
+        X(SECPKG_FLAG_TOKEN_ONLY);
+        X(SECPKG_FLAG_DATAGRAM);
+        X(SECPKG_FLAG_CONNECTION);
+        X(SECPKG_FLAG_MULTI_REQUIRED);
+        X(SECPKG_FLAG_CLIENT_ONLY);
+        X(SECPKG_FLAG_EXTENDED_ERROR);
+        X(SECPKG_FLAG_IMPERSONATION);
+        X(SECPKG_FLAG_ACCEPT_WIN32_NAME);
+        X(SECPKG_FLAG_STREAM);
+        X(SECPKG_FLAG_NEGOTIABLE);
+        X(SECPKG_FLAG_GSS_COMPATIBLE);
+        X(SECPKG_FLAG_LOGON);
+        X(SECPKG_FLAG_ASCII_BUFFERS);
+        X(SECPKG_FLAG_FRAGMENT);
+        X(SECPKG_FLAG_MUTUAL_AUTH);
+        X(SECPKG_FLAG_DELEGATION);
+        X(SECPKG_FLAG_READONLY_WITH_CHECKSUM);
+        X(SECPKG_FLAG_RESTRICTED_TOKENS);
+        X(SECPKG_FLAG_NEGO_EXTENDER);
+        X(SECPKG_FLAG_NEGOTIABLE2);
+        X(SECPKG_FLAG_APPCONTAINER_PASSTHROUGH);
+        X(SECPKG_FLAG_APPCONTAINER_CHECKS);
+#undef X
         trace("Comment: %s\n", pkg_info[i].Comment);
         trace("\n");
     }
