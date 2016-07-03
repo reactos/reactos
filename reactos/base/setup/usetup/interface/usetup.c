@@ -2558,6 +2558,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     PCHAR DiskUnit;
     PCHAR PartUnit;
     CHAR PartTypeString[32];
+    FORMATMACHINESTATE PreviousFormatState;
 
     DPRINT("SelectFileSystemPage()\n");
 
@@ -2592,6 +2593,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
+    PreviousFormatState = PartitionList->FormatState;
     switch (PartitionList->FormatState)
     {
         case Start:
@@ -2827,6 +2829,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
         {
+            PartitionList->FormatState = Start;
             return SELECT_PARTITION_PAGE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -2852,6 +2855,8 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
             }
         }
     }
+
+    PartitionList->FormatState = PreviousFormatState;
 
     return SELECT_FILE_SYSTEM_PAGE;
 }
