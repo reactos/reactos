@@ -1038,7 +1038,7 @@ static void prepaint_setup (const LISTVIEW_INFO *infoPtr, HDC hdc, NMLVCUSTOMDRA
     COLORREF backcolor, textcolor;
 
     /* apparently, for selected items, we have to override the returned values */
-    if (!SubItem)
+    if (!SubItem || (infoPtr->dwLvExStyle & LVS_EX_FULLROWSELECT))
     {
         if (lpnmlvcd->nmcd.uItemState & CDIS_SELECTED)
         {
@@ -4772,6 +4772,7 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, ITERAT
         while (iterator_next(subitems))
         {
             DWORD subitemstage = CDRF_DODEFAULT;
+            NMLVCUSTOMDRAW temp_nmlvcd;
 
             /* We need to query for each subitem, item's data (subitem == 0) is already here at this point */
             if (subitems->nItem)
@@ -4799,13 +4800,15 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, ITERAT
             if (cdsubitemmode & CDRF_NOTIFYSUBITEMDRAW)
                 subitemstage = notify_customdraw(infoPtr, CDDS_SUBITEM | CDDS_ITEMPREPAINT, &nmlvcd);
 
-            if (subitems->nItem == 0 || (cdmode & CDRF_NOTIFYITEMDRAW))
-                prepaint_setup(infoPtr, hdc, &nmlvcd, FALSE);
-            else if (!(infoPtr->dwLvExStyle & LVS_EX_FULLROWSELECT))
-                prepaint_setup(infoPtr, hdc, &nmlvcd, TRUE);
+            /*
+             * A selection should neither affect the colors in the post paint notification nor
+             * affect the colors of the next drawn subitem. Copy the structure to prevent this.
+             */
+            temp_nmlvcd = nmlvcd;
+            prepaint_setup(infoPtr, hdc, &temp_nmlvcd, subitems->nItem);
 
             if (!(subitemstage & CDRF_SKIPDEFAULT))
-                LISTVIEW_DrawItemPart(infoPtr, &lvItem, &nmlvcd, &pos);
+                LISTVIEW_DrawItemPart(infoPtr, &lvItem, &temp_nmlvcd, &pos);
 
             if (subitemstage & CDRF_NOTIFYPOSTPAINT)
                 subitemstage = notify_customdraw(infoPtr, CDDS_SUBITEM | CDDS_ITEMPOSTPAINT, &nmlvcd);
