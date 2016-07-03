@@ -180,13 +180,9 @@ static void test_I10_OUTPUT(void)
         ok(!strcmp(out.str, I10_OUTPUT_tests[i].out.str), "%d: out.str = %s\n", i, out.str);
 
         j = strlen(I10_OUTPUT_tests[i].remain);
-        if(j && I10_OUTPUT_tests[i].remain[j-1]=='9')
-            todo_wine ok(!strncmp(out.str+out.len+1, I10_OUTPUT_tests[i].remain, j),
-                    "%d: &out.str[%d] = %.25s...\n", i, out.len+1, out.str+out.len+1);
-        else
+        todo_wine_if(j && I10_OUTPUT_tests[i].remain[j-1]=='9')
             ok(!strncmp(out.str+out.len+1, I10_OUTPUT_tests[i].remain, j),
                     "%d: &out.str[%d] = %.25s...\n", i, out.len+1, out.str+out.len+1);
-
 
         for(j=out.len+strlen(I10_OUTPUT_tests[i].remain)+1; j<sizeof(out.str); j++)
             if(out.str[j] != '#')

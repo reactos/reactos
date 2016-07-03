@@ -456,6 +456,29 @@ static void test_sbheap(void)
     free(mem);
 }
 
+static void test_calloc(void)
+{
+    void *ptr;
+
+    ptr = calloc(1, 0);
+    ok(ptr != NULL, "got %p\n", ptr);
+    free(ptr);
+
+    ptr = calloc(0, 0);
+    ok(ptr != NULL, "got %p\n", ptr);
+    free(ptr);
+
+    ptr = calloc(0, 1);
+    ok(ptr != NULL, "got %p\n", ptr);
+    free(ptr);
+
+    errno = 0;
+    ptr = calloc(~(size_t)0 / 2, ~(size_t)0 / 2);
+    ok(ptr == NULL || broken(ptr != NULL) /* winxp sp0 */, "got %p\n", ptr);
+    ok(errno == ENOMEM || broken(errno == 0) /* winxp, win2k3 */, "got errno %d\n", errno);
+    free(ptr);
+}
+
 START_TEST(heap)
 {
     void *mem;
@@ -480,4 +503,5 @@ START_TEST(heap)
 
     test_aligned();
     test_sbheap();
+    test_calloc();
 }

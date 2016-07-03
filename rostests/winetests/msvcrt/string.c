@@ -74,6 +74,7 @@ static unsigned __int64 (__cdecl *p_wcstoui64)(const wchar_t *, wchar_t **, int)
 static int (__cdecl *pwcstombs_s)(size_t*,char*,size_t,const wchar_t*,size_t);
 static int (__cdecl *pmbstowcs_s)(size_t*,wchar_t*,size_t,const char*,size_t);
 static size_t (__cdecl *p_mbsrtowcs)(wchar_t*, const char**, size_t, mbstate_t*);
+static int (__cdecl *p_mbsrtowcs_s)(size_t*,wchar_t*,size_t,const char**,size_t,mbstate_t*);
 static size_t (__cdecl *pwcsrtombs)(char*, const wchar_t**, size_t, int*);
 static errno_t (__cdecl *p_gcvt_s)(char*,size_t,double,int);
 static errno_t (__cdecl *p_itoa_s)(int,char*,size_t,int);
@@ -1947,6 +1948,11 @@ static void test_mbstowcs(void)
     }
 
     pmbstr = mHiragana;
+    ret = p_mbsrtowcs(NULL, &pmbstr, 6, NULL);
+    ok(ret == 2, "mbsrtowcs did not return 2\n");
+    ok(pmbstr == mHiragana, "pmbstr = %p, expected %p\n", pmbstr, mHiragana);
+
+    pmbstr = mHiragana;
     ret = p_mbsrtowcs(wOut, &pmbstr, 6, NULL);
     ok(ret == 2, "mbsrtowcs did not return 2\n");
     ok(!memcmp(wOut, wHiragana, sizeof(wHiragana)), "wOut = %s\n", wine_dbgstr_w(wOut));
@@ -1965,6 +1971,54 @@ static void test_mbstowcs(void)
     ret = p_mbsrtowcs(wOut, NULL, 6, &state);
     ok(ret == -1, "mbsrtowcs did not return -1\n");
     ok(errno == EINVAL, "Expected errno to be EINVAL, got %d\n", errno);
+
+    if(!p_mbsrtowcs_s) {
+        setlocale(LC_ALL, "C");
+        win_skip("mbsrtowcs_s not available\n");
+        return;
+    }
+
+    pmbstr = mHiragana;
+    err = p_mbsrtowcs_s(&ret, NULL, 0, NULL, 6, NULL);
+    ok(ret == -1, "mbsrtowcs_s did not return -1\n");
+    ok(err == EINVAL, "err = %d\n", err);
+    err = p_mbsrtowcs_s(&ret, NULL, 1, &pmbstr, 6, NULL);
+    ok(ret == -1, "mbsrtowcs_s did not return -1\n");
+    ok(err == EINVAL, "err = %d\n", err);
+    err = p_mbsrtowcs_s(&ret, wOut, 0, &pmbstr, 6, NULL);
+    ok(ret == -1, "mbsrtowcs_s did not return -1\n");
+    ok(err == EINVAL, "err = %d\n", err);
+
+    pmbstr = mHiragana;
+    errno = 0;
+    err = p_mbsrtowcs_s(&ret, NULL, 0, &pmbstr, 6, NULL);
+    ok(ret == 3, "mbsrtowcs_s did not return 3\n");
+    ok(err == 0, "err = %d\n", err);
+    ok(pmbstr == mHiragana, "pmbstr = %p, expected %p\n", pmbstr, mHiragana);
+    ok(errno == 0, "errno = %d\n", errno);
+
+    pmbstr = mHiragana;
+    err = p_mbsrtowcs_s(&ret, wOut, 1, &pmbstr, 6, NULL);
+    ok(ret == 2, "mbsrtowcs_s did not return 2\n");
+    ok(err == 0, "err = %d\n", err);
+    ok(!wOut[0], "wOut[0] = '%c'\n", wOut[0]);
+    ok(pmbstr == mHiragana+2, "pmbstr = %p, expected %p\n", pmbstr, mHiragana+2);
+    ok(errno == 0, "errno = %d\n", errno);
+
+    pmbstr = mHiragana;
+    err = p_mbsrtowcs_s(&ret, wOut, 2, &pmbstr, 6, NULL);
+    ok(ret == 3, "mbsrtowcs_s did not return 3\n");
+    ok(err == 0, "err = %d\n", err);
+    ok(!wOut[0], "wOut[0] = '%c'\n", wOut[0]);
+    ok(pmbstr == mHiragana+4, "pmbstr = %p, expected %p\n", pmbstr, mHiragana+4);
+    ok(errno == 0, "errno = %d\n", errno);
+
+    pmbstr = mHiragana;
+    err = p_mbsrtowcs_s(&ret, wOut, 3, &pmbstr, 6, NULL);
+    ok(ret == 3, "mbsrtowcs_s did not return 3\n");
+    ok(err == 0, "err = %d\n", err);
+    ok(!pmbstr, "pmbstr != NULL\n");
+    ok(errno == 0, "errno = %d\n", errno);
 
     setlocale(LC_ALL, "C");
 }
@@ -3106,6 +3160,7 @@ START_TEST(string)
     p_mbrlen = (void*)GetProcAddress(hMsvcrt, "mbrlen");
     p_mbrtowc = (void*)GetProcAddress(hMsvcrt, "mbrtowc");
     p_mbsrtowcs = (void*)GetProcAddress(hMsvcrt, "mbsrtowcs");
+    p_mbsrtowcs_s = (void*)GetProcAddress(hMsvcrt, "mbsrtowcs_s");
     p__atodbl_l = (void*)GetProcAddress(hMsvcrt, "_atodbl_l");
     p__atof_l = (void*)GetProcAddress(hMsvcrt, "_atof_l");
     p__strtod_l = (void*)GetProcAddress(hMsvcrt, "_strtod_l");
