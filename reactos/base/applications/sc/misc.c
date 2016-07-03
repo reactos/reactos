@@ -161,6 +161,101 @@ ParseCreateConfigArguments(
 
 
 BOOL
+ParseFailureActions(
+    IN LPCTSTR lpActions,
+    OUT DWORD *pcActions,
+    OUT SC_ACTION **ppActions)
+{
+    SC_ACTION *pActions = NULL;
+    LPTSTR pStringBuffer = NULL;
+    LPTSTR p;
+    INT nLength;
+    INT nCount = 0;
+
+    *pcActions = 0;
+    *ppActions = NULL;
+
+    nLength = _tcslen(lpActions);
+
+    /* Allocate the string buffer */
+    pStringBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (nLength + 2) * sizeof(TCHAR));
+    if (pStringBuffer == NULL)
+    {
+        return FALSE;
+    }
+
+    /* Copy the actions string into the string buffer */
+    CopyMemory(pStringBuffer, lpActions, nLength * sizeof(TCHAR));
+
+    /* Replace all slashes by null characters */
+    p = pStringBuffer;
+    while (*p != 0 /*_T('\0')*/)
+    {
+        if (*p == _T('/'))
+            *p = 0; //_T('\0');
+        p++;
+    }
+
+    /* Count the arguments in the buffer */
+    p = pStringBuffer;
+    while (*p != 0 /*_T('\0')*/)
+    {
+        nCount++;
+
+        nLength = _tcslen(p);
+        p = (LPTSTR)((LONG_PTR)p + ((nLength + 1) * sizeof(TCHAR)));
+    }
+
+    /* Allocate the actions buffer */
+    pActions = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nCount / 2 * sizeof(SC_ACTION));
+    if (pActions == NULL)
+    {
+        HeapFree(GetProcessHeap(), 0, pStringBuffer);
+        return FALSE;
+    }
+
+    /* Parse the string buffer */
+    nCount = 0;
+    p = pStringBuffer;
+    while (*p != _T('\0'))
+    {
+        nLength = _tcslen(p);
+
+        if (nCount % 2 == 0)
+        {
+            /* Action */
+            if (_tcsicmp(p, _T("reboot")))
+                pActions[nCount / 2].Type = SC_ACTION_REBOOT;
+            else if (_tcsicmp(p, _T("restart")))
+                pActions[nCount / 2].Type = SC_ACTION_RESTART;
+            else if (_tcsicmp(p, _T("run")))
+                pActions[nCount / 2].Type = SC_ACTION_RUN_COMMAND;
+            else
+                break;
+        }
+        else
+        {
+             /* Delay */
+             pActions[nCount / 2].Delay = _tcstoul(p, NULL, 10);
+             if (pActions[nCount / 2].Delay == 0 && errno == ERANGE)
+                 break;
+        }
+
+        p = (LPTSTR)((LONG_PTR)p + ((nLength + 1) * sizeof(TCHAR)));
+        nCount++;
+    }
+
+    /* Free the string buffer */
+    HeapFree(GetProcessHeap(), 0, pStringBuffer);
+
+    *pcActions = nCount / 2;
+    *ppActions = pActions;
+
+    return TRUE;
+}
+
+
+BOOL
 ParseFailureArguments(
     IN LPCTSTR *ServiceArgs,
     IN INT ArgCount,
@@ -220,7 +315,12 @@ ParseFailureArguments(
 
     if (lpActions != NULL)
     {
-        /* FIXME */
+        if (!ParseFailureActions(lpActions,
+                                 &pFailureActions->cActions,
+                                 &pFailureActions->lpsaActions))
+        {
+            return FALSE;
+        }
     }
 
     return (ArgCount == 0);

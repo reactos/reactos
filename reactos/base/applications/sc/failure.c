@@ -126,6 +126,9 @@ SetFailure(
     BOOL bResult = TRUE;
     SERVICE_FAILURE_ACTIONS FailureActions;
     LPCTSTR lpServiceName = NULL;
+    BOOLEAN Old = FALSE;
+
+    ZeroMemory(&FailureActions, sizeof(SERVICE_FAILURE_ACTIONS));
 
     if (!ParseFailureArguments(ServiceArgs, ArgCount, &lpServiceName, &FailureActions))
     {
@@ -145,13 +148,15 @@ SetFailure(
 
     hService = OpenService(hManager,
                            lpServiceName,
-                           SERVICE_CHANGE_CONFIG);
+                           SERVICE_CHANGE_CONFIG | SERVICE_START);
     if (hService == NULL)
     {
         _tprintf(_T("[SC] OpenService FAILED %lu:\n\n"), GetLastError());
         bResult = FALSE;
         goto done;
     }
+
+    RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, TRUE, FALSE, &Old);
 
     if (!ChangeServiceConfig2(hService,
                               SERVICE_CONFIG_FAILURE_ACTIONS,
@@ -165,8 +170,13 @@ SetFailure(
     _tprintf(_T("[SC] ChangeServiceConfig2 SUCCESS\n\n"));
 
 done:
+    RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE, Old, FALSE, &Old);
+
     if (bResult == FALSE)
         ReportLastError();
+
+    if (FailureActions.lpsaActions != NULL)
+        HeapFree(GetProcessHeap(), 0, FailureActions.lpsaActions);
 
     if (hService)
         CloseServiceHandle(hService);

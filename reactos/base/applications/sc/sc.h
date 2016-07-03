@@ -3,11 +3,16 @@
 
 #include <stdarg.h>
 
+#define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <winsvc.h>
 #include <sddl.h>
 #include <tchar.h>
+
+#include <ndk/rtlfuncs.h>
+#include <ndk/setypes.h>
+
 
 #define SCDBG
 
