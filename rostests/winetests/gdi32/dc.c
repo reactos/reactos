@@ -2,7 +2,7 @@
  * Unit tests for dc functions
  *
  * Copyright (c) 2005 Huw Davies
- * Copyright (c) 2005 Dmitry Timoshkov
+ * Copyright (c) 2005,2016 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -812,7 +812,6 @@ static void test_DeleteDC(void)
     ok(ret, "UnregisterClassA failed\n");
 
     ret = GetObjectType(hdc_test);
-todo_wine
     ok(!ret, "GetObjectType should fail for a deleted DC\n");
 
     /* CS_OWNDC */
@@ -891,7 +890,7 @@ static void test_boundsrect(void)
     ret = GetBoundsRect(hdc, &rect, 0);
     ok(ret == DCB_RESET,
        "Expected GetBoundsRect to return DCB_RESET, got %u\n", ret);
-    SetRect(&expect, 0, 0, 0, 0);
+    SetRectEmpty(&expect);
     ok(EqualRect(&rect, &expect) ||
        broken(EqualRect(&rect, &set_rect)), /* nt4 sp1-5 */
        "Expected output rectangle (0,0)-(0,0), got (%d,%d)-(%d,%d)\n",
@@ -986,7 +985,7 @@ static void test_boundsrect(void)
        "GetBoundsRect returned %x\n", ret);
     if (ret == DCB_RESET)
     {
-        SetRect(&expect, 0, 0, 0, 0);
+        SetRectEmpty(&expect);
         ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
            rect.left, rect.top, rect.right, rect.bottom);
 
@@ -995,7 +994,7 @@ static void test_boundsrect(void)
         ok(ret == (DCB_RESET | DCB_DISABLE), "SetBoundsRect returned %x\n", ret);
         ret = GetBoundsRect(hdc, &rect, 0);
         ok(ret == DCB_RESET, "GetBoundsRect returned %x\n", ret);
-        SetRect(&expect, 0, 0, 0, 0);
+        SetRectEmpty(&expect);
         ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
            rect.left, rect.top, rect.right, rect.bottom);
     }
@@ -1386,6 +1385,119 @@ static void test_printer_dc(void)
     DeleteObject( bmp );
 }
 
+static void print_something(HDC hdc)
+{
+    static const char psadobe[10] = "%!PS-Adobe";
+    char buf[1024], *p;
+    char temp_path[MAX_PATH], file_name[MAX_PATH];
+    DOCINFOA di;
+    DWORD ret;
+    HANDLE hfile;
+
+    GetTempPathA(sizeof(temp_path), temp_path);
+    GetTempFileNameA(temp_path, "ps", 0, file_name);
+
+    di.cbSize = sizeof(di);
+    di.lpszDocName = "Let's dance";
+    di.lpszOutput = file_name;
+    di.lpszDatatype = NULL;
+    di.fwType = 0;
+    ret = StartDocA(hdc, &di);
+    ok(ret > 0, "StartDoc failed: %d\n", ret);
+
+    strcpy(buf + 2, "\n% ===> before DOWNLOADHEADER <===\n");
+    *(WORD *)buf = strlen(buf + 2);
+    ret = Escape(hdc, POSTSCRIPT_PASSTHROUGH, 0, buf, NULL);
+    ok(ret == *(WORD *)buf, "POSTSCRIPT_PASSTHROUGH failed: %d\n", ret);
+
+    strcpy(buf, "deadbeef");
+    ret = ExtEscape(hdc, DOWNLOADHEADER, 0, NULL, sizeof(buf), buf );
+    ok(ret == 1, "DOWNLOADHEADER failed\n");
+    ok(strcmp(buf, "deadbeef") != 0, "DOWNLOADHEADER failed\n");
+
+    strcpy(buf + 2, "\n% ===> after DOWNLOADHEADER <===\n");
+    *(WORD *)buf = strlen(buf + 2);
+    ret = Escape(hdc, POSTSCRIPT_PASSTHROUGH, 0, buf, NULL);
+    ok(ret == *(WORD *)buf, "POSTSCRIPT_PASSTHROUGH failed: %d\n", ret);
+
+    ret = EndDoc(hdc);
+    ok(ret == 1, "EndDoc failed\n");
+
+    hfile = CreateFileA(file_name, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, 0);
+    ok(hfile != INVALID_HANDLE_VALUE, "CreateFile failed\n");
+    memset(buf, 0, sizeof(buf));
+    ret = ReadFile(hfile, buf, sizeof(buf), &ret, NULL);
+    ok(ret, "ReadFile failed\n");
+    CloseHandle(hfile);
+
+    /* skip the HP PCL language selector */
+    buf[sizeof(buf) - 1] = 0;
+    p = buf;
+    while (*p)
+    {
+        if (!(p[0] == 0x1b && p[1] == '%') && memcmp(p, "@PJL", 4) != 0)
+            break;
+
+        p = strchr(p, '\n');
+        if (!p) break;
+
+        while (*p == '\r' || *p == '\n') p++;
+    }
+    ok(p && !memcmp(p, psadobe, sizeof(psadobe)), "wrong signature: %.14s\n", p ? p : buf);
+
+    DeleteFileA(file_name);
+}
+
+static void test_pscript_printer_dc(void)
+{
+    HDC hdc;
+    char buf[256];
+    DWORD query, ret;
+
+    hdc = create_printer_dc(100, FALSE);
+
+    if (!hdc) return;
+
+    if (!is_postscript_printer(hdc))
+    {
+        skip("Default printer is not a PostScript device\n");
+        DeleteDC( hdc );
+        return;
+    }
+
+    query = GETFACENAME;
+    ret = Escape(hdc, QUERYESCSUPPORT, sizeof(query), (LPCSTR)&query, NULL);
+    ok(!ret, "GETFACENAME is supported\n");
+
+    query = DOWNLOADFACE;
+    ret = Escape(hdc, QUERYESCSUPPORT, sizeof(query), (LPCSTR)&query, NULL);
+    ok(ret == 1, "DOWNLOADFACE is not supported\n");
+
+    query = OPENCHANNEL;
+    ret = Escape(hdc, QUERYESCSUPPORT, sizeof(query), (LPCSTR)&query, NULL);
+    ok(ret == 1, "OPENCHANNEL is not supported\n");
+
+    query = DOWNLOADHEADER;
+    ret = Escape(hdc, QUERYESCSUPPORT, sizeof(query), (LPCSTR)&query, NULL);
+    ok(ret == 1, "DOWNLOADHEADER is not supported\n");
+
+    query = CLOSECHANNEL;
+    ret = Escape(hdc, QUERYESCSUPPORT, sizeof(query), (LPCSTR)&query, NULL);
+    ok(ret == 1, "CLOSECHANNEL is not supported\n");
+
+    query = POSTSCRIPT_PASSTHROUGH;
+    ret = Escape(hdc, QUERYESCSUPPORT, sizeof(query), (LPCSTR)&query, NULL);
+    ok(ret == 1, "POSTSCRIPT_PASSTHROUGH is not supported\n");
+
+    ret = ExtEscape(hdc, GETFACENAME, 0, NULL, sizeof(buf), buf);
+    ok(ret == 1, "GETFACENAME failed\n");
+    trace("face name: %s\n", buf);
+
+    print_something(hdc);
+
+    DeleteDC(hdc);
+}
+
 START_TEST(dc)
 {
     pSetLayout = (void *)GetProcAddress( GetModuleHandleA("gdi32.dll"), "SetLayout");
@@ -1400,4 +1512,5 @@ START_TEST(dc)
     test_desktop_colorres();
     test_gamma();
     test_printer_dc();
+    test_pscript_printer_dc();
 }

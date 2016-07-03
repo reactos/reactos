@@ -107,6 +107,22 @@ static void init(void)
     system_lang_id = PRIMARYLANGID(GetSystemDefaultLangID());
 }
 
+static void *heap_alloc( size_t len )
+{
+    return HeapAlloc( GetProcessHeap(), 0, len );
+}
+
+static void *heap_realloc( void *p, size_t len )
+{
+    if (!p) return heap_alloc( len );
+    return HeapReAlloc( GetProcessHeap(), 0, p, len );
+}
+
+static void heap_free( void *p )
+{
+    HeapFree( GetProcessHeap(), 0, p );
+}
+
 static INT CALLBACK is_truetype_font_installed_proc(const LOGFONTA *elf, const TEXTMETRICA *ntm, DWORD type, LPARAM lParam)
 {
     if (type != TRUETYPE_FONTTYPE) return 1;
@@ -1016,7 +1032,7 @@ static void test_bitmap_font_metrics(void)
                 ok(ret == expected_cs, "got charset %d, expected %d\n", ret, expected_cs);
 
             trace("created %s, height %d charset %x dpi %d\n", face_name, tm.tmHeight, tm.tmCharSet, tm.tmDigitizedAspectX);
-            trace("expected %s, height %d scaled_hight %d, dpi %d\n", fd[i].face_name, height, fd[i].scaled_height, fd[i].dpi);
+            trace("expected %s, height %d scaled_height %d, dpi %d\n", fd[i].face_name, height, fd[i].scaled_height, fd[i].dpi);
 
             if(fd[i].dpi == tm.tmDigitizedAspectX)
             {
@@ -2736,24 +2752,22 @@ static void test_GetFontUnicodeRanges(void)
     ReleaseDC(NULL, hdc);
 }
 
-#define MAX_ENUM_FONTS 4096
-
 struct enum_font_data
 {
-    int total;
-    LOGFONTA lf[MAX_ENUM_FONTS];
+    int total, size;
+    LOGFONTA *lf;
 };
 
 struct enum_fullname_data
 {
-    int total;
-    ENUMLOGFONTA elf[MAX_ENUM_FONTS];
+    int total, size;
+    ENUMLOGFONTA *elf;
 };
 
 struct enum_font_dataW
 {
-    int total;
-    LOGFONTW lf[MAX_ENUM_FONTS];
+    int total, size;
+    LOGFONTW *lf;
 };
 
 static INT CALLBACK arial_enum_proc(const LOGFONTA *lf, const TEXTMETRICA *tm, DWORD type, LPARAM lParam)
@@ -2771,10 +2785,13 @@ static INT CALLBACK arial_enum_proc(const LOGFONTA *lf, const TEXTMETRICA *tm, D
     if (0) /* Disabled to limit console spam */
         trace("enumed font \"%s\", charset %d, height %d, weight %d, italic %d\n",
               lf->lfFaceName, lf->lfCharSet, lf->lfHeight, lf->lfWeight, lf->lfItalic);
-    if (efd->total < MAX_ENUM_FONTS)
-        efd->lf[efd->total++] = *lf;
-    else
-        trace("enum tests invalid; you have more than %d fonts\n", MAX_ENUM_FONTS);
+    if (efd->total >= efd->size)
+    {
+        efd->size = max( (efd->total + 1) * 2, 256 );
+        efd->lf = heap_realloc( efd->lf, efd->size * sizeof(*efd->lf) );
+        if (!efd->lf) return 0;
+    }
+    efd->lf[efd->total++] = *lf;
 
     return 1;
 }
@@ -2794,10 +2811,13 @@ static INT CALLBACK arial_enum_procw(const LOGFONTW *lf, const TEXTMETRICW *tm, 
     if (0) /* Disabled to limit console spam */
         trace("enumed font %s, charset %d, height %d, weight %d, italic %d\n",
               wine_dbgstr_w(lf->lfFaceName), lf->lfCharSet, lf->lfHeight, lf->lfWeight, lf->lfItalic);
-    if (efd->total < MAX_ENUM_FONTS)
-        efd->lf[efd->total++] = *lf;
-    else
-        trace("enum tests invalid; you have more than %d fonts\n", MAX_ENUM_FONTS);
+    if (efd->total >= efd->size)
+    {
+        efd->size = max( (efd->total + 1) * 2, 256 );
+        efd->lf = heap_realloc( efd->lf, efd->size * sizeof(*efd->lf) );
+        if (!efd->lf) return 0;
+    }
+    efd->lf[efd->total++] = *lf;
 
     return 1;
 }
@@ -2871,6 +2891,8 @@ static void test_EnumFontFamilies(const char *font_name, INT font_charset)
         skip("%s is not installed\n", font_name);
         return;
     }
+    memset( &efd, 0, sizeof(efd) );
+    memset( &efdw, 0, sizeof(efdw) );
 
     hdc = GetDC(0);
 
@@ -3064,6 +3086,9 @@ else
     }
 
     ReleaseDC(0, hdc);
+
+    heap_free( efd.lf );
+    heap_free( efdw.lf );
 }
 
 static INT CALLBACK enum_multi_charset_font_proc(const LOGFONTA *lf, const TEXTMETRICA *tm, DWORD type, LPARAM lParam)
@@ -3093,10 +3118,13 @@ static INT CALLBACK enum_font_data_proc(const LOGFONTA *lf, const TEXTMETRICA *n
 
     if (type != TRUETYPE_FONTTYPE) return 1;
 
-    if (efd->total < MAX_ENUM_FONTS)
-        efd->lf[efd->total++] = *lf;
-    else
-        trace("enum tests invalid; you have more than %d fonts\n", MAX_ENUM_FONTS);
+    if (efd->total >= efd->size)
+    {
+        efd->size = max( (efd->total + 1) * 2, 256 );
+        efd->lf = heap_realloc( efd->lf, efd->size * sizeof(*efd->lf) );
+        if (!efd->lf) return 0;
+    }
+    efd->lf[efd->total++] = *lf;
 
     return 1;
 }
@@ -3107,10 +3135,13 @@ static INT CALLBACK enum_fullname_data_proc(const LOGFONTA *lf, const TEXTMETRIC
 
     if (type != TRUETYPE_FONTTYPE) return 1;
 
-    if (efnd->total < MAX_ENUM_FONTS)
-        efnd->elf[efnd->total++] = *(ENUMLOGFONTA *)lf;
-    else
-        trace("enum tests invalid; you have more than %d fonts\n", MAX_ENUM_FONTS);
+    if (efnd->total >= efnd->size)
+    {
+        efnd->size = max( (efnd->total + 1) * 2, 256 );
+        efnd->elf = heap_realloc( efnd->elf, efnd->size * sizeof(*efnd->elf) );
+        if (!efnd->elf) return 0;
+    }
+    efnd->elf[efnd->total++] = *(ENUMLOGFONTA *)lf;
 
     return 1;
 }
@@ -3144,7 +3175,7 @@ static void test_EnumFontFamiliesEx_default_charset(void)
         target.lfCharSet = ANSI_CHARSET;
     }
 
-    efd.total = 0;
+    memset(&efd, 0, sizeof(efd));
     memset(&enum_font, 0, sizeof(enum_font));
     strcpy(enum_font.lfFaceName, target.lfFaceName);
     enum_font.lfCharSet = DEFAULT_CHARSET;
@@ -3152,15 +3183,14 @@ static void test_EnumFontFamiliesEx_default_charset(void)
     ReleaseDC(0, hdc);
 
     trace("'%s' has %d charsets.\n", target.lfFaceName, efd.total);
-    if (efd.total < 2) {
+    if (efd.total < 2)
         ok(0, "EnumFontFamilies is broken. Expected >= 2, got %d.\n", efd.total);
-        return;
-    }
+    else
+        ok(efd.lf[0].lfCharSet == target.lfCharSet,
+           "(%s) got charset %d expected %d\n",
+           efd.lf[0].lfFaceName, efd.lf[0].lfCharSet, target.lfCharSet);
 
-    ok(efd.lf[0].lfCharSet == target.lfCharSet,
-       "(%s) got charset %d expected %d\n",
-       efd.lf[0].lfFaceName, efd.lf[0].lfCharSet, target.lfCharSet);
-
+    heap_free(efd.lf);
     return;
 }
 
@@ -5215,6 +5245,12 @@ if (0) /* Disabled to limit console spam */
     if (type != TRUETYPE_FONTTYPE) return 1;
     if (strcmp(lf->lfFaceName, "MS Shell Dlg") != 0) return 1;
 
+    if (efnd->total >= efnd->size)
+    {
+        efnd->size = max( (efnd->total + 1) * 2, 256 );
+        efnd->elf = heap_realloc( efnd->elf, efnd->size * sizeof(*efnd->elf) );
+        if (!efnd->elf) return 0;
+    }
     efnd->elf[efnd->total++] = *(ENUMLOGFONTA *)lf;
     return 0;
 }
@@ -5230,6 +5266,12 @@ if (0) /* Disabled to limit console spam */
     if (type != TRUETYPE_FONTTYPE) return 1;
     if (strcmp(lf->lfFaceName, "MS Shell Dlg 2") != 0) return 1;
 
+    if (efnd->total >= efnd->size)
+    {
+        efnd->size = max( (efnd->total + 1) * 2, 256 );
+        efnd->elf = heap_realloc( efnd->elf, efnd->size * sizeof(*efnd->elf) );
+        if (!efnd->elf) return 0;
+    }
     efnd->elf[efnd->total++] = *(ENUMLOGFONTA *)lf;
     return 0;
 }
@@ -5261,7 +5303,7 @@ static void test_EnumFonts_subst(void)
     memset(&lf, 0, sizeof(lf));
     lf.lfCharSet = DEFAULT_CHARSET;
 
-    memset(&efnd, 0, sizeof(efnd));
+    efnd.total = 0;
     strcpy(lf.lfFaceName, "MS Shell Dlg");
     ret = EnumFontFamiliesExA(hdc, &lf, enum_ms_shell_dlg_proc, (LPARAM)&efnd, 0);
     ok(!ret, "MS Shell Dlg should be enumerated\n");
@@ -5271,12 +5313,12 @@ static void test_EnumFonts_subst(void)
     ret = strcmp((const char *)efnd.elf[0].elfFullName, "MS Shell Dlg");
     ok(ret, "did not expect MS Shell Dlg\n");
 
-    memset(&efnd, 0, sizeof(efnd));
+    efnd.total = 0;
     ret = EnumFontFamiliesExA(hdc, NULL, enum_ms_shell_dlg2_proc, (LPARAM)&efnd, 0);
     ok(ret, "MS Shell Dlg 2 should not be enumerated\n");
     ok(!efnd.total, "MS Shell Dlg 2 should not be enumerated\n");
 
-    memset(&efnd, 0, sizeof(efnd));
+    efnd.total = 0;
     strcpy(lf.lfFaceName, "MS Shell Dlg 2");
     ret = EnumFontFamiliesExA(hdc, &lf, enum_ms_shell_dlg2_proc, (LPARAM)&efnd, 0);
     ok(!ret, "MS Shell Dlg 2 should be enumerated\n");
@@ -5286,6 +5328,7 @@ static void test_EnumFonts_subst(void)
     ret = strcmp((const char *)efnd.elf[0].elfFullName, "MS Shell Dlg 2");
     ok(ret, "did not expect MS Shell Dlg 2\n");
 
+    heap_free(efnd.elf);
     DeleteDC(hdc);
 }
 
@@ -5396,7 +5439,7 @@ static void test_fullname2_helper(const char *Family)
     lf.lfItalic = FALSE;
     lf.lfWeight = FW_DONTCARE;
     strcpy(lf.lfFaceName, Family);
-    efnd.total = 0;
+    memset(&efnd, 0, sizeof(efnd));
     EnumFontFamiliesExA(hdc, &lf, enum_fullname_data_proc, (LPARAM)&efnd, 0);
     if (efnd.total == 0)
         skip("%s is not installed\n", lf.lfFaceName);
@@ -5477,6 +5520,7 @@ static void test_fullname2_helper(const char *Family)
         HeapFree(GetProcessHeap(), 0, bufW);
         HeapFree(GetProcessHeap(), 0, bufA);
     }
+    heap_free(efnd.elf);
     DeleteDC(hdc);
 }
 
@@ -6225,7 +6269,7 @@ static void test_vertical_order(void)
     lf.lfQuality = DEFAULT_QUALITY;
     lf.lfItalic = FALSE;
     lf.lfWeight = FW_DONTCARE;
-    efd.total = 0;
+    memset( &efd, 0, sizeof(efd) );
     EnumFontFamiliesExA(hdc, &lf, enum_font_data_proc, (LPARAM)&efd, 0);
     for (i = 0; i < efd.total; i++)
     {
@@ -6239,6 +6283,7 @@ static void test_vertical_order(void)
             }
         }
     }
+    heap_free( efd.lf );
     DeleteDC( hdc );
 }
 
