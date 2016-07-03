@@ -802,11 +802,9 @@ static void test_midi_outfns(HWND hwnd)
         ok(rc==MMSYSERR_BADDEVICEID || broken(rc==MMSYSERR_NODRIVER /*nt,w2k*/), "midiOutGetDevCaps MAPPER with no MIDI rc=%s\n", mmsys_error(rc));
 
         rc = midiOutOpen(&hm, MIDIMAPPER, 0, 0, CALLBACK_NULL);
-        if (rc==MIDIERR_INVALIDSETUP) todo_wine /* Wine without snd-seq */
-        ok(rc==MMSYSERR_BADDEVICEID || broken(rc==MMSYSERR_NODRIVER /*w2k*/), "midiOutOpen MAPPER with no MIDI rc=%s\n", mmsys_error(rc));
-        else
-        ok(rc==MMSYSERR_BADDEVICEID || broken(rc==MMSYSERR_NODRIVER /*w2k sound disabled*/),
-           "midiOutOpen MAPPER with no MIDI rc=%s\n", mmsys_error(rc));
+        todo_wine_if (rc == MIDIERR_INVALIDSETUP) /* Wine without snd-seq */
+            ok(rc == MMSYSERR_BADDEVICEID || broken(rc == MMSYSERR_NODRIVER /*w2k sound disabled*/),
+               "midiOutOpen MAPPER with no MIDI rc=%s\n", mmsys_error(rc));
         if (!rc) {
             rc = midiOutClose(hm);
             ok(!rc, "midiOutClose rc=%s\n", mmsys_error(rc));

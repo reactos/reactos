@@ -721,10 +721,8 @@ static void test_recordWAVE(HWND hwnd)
     /* A few ME machines pass all tests except set format tag pcm! */
     err = mciSendStringA("record x to 2000 wait", NULL, 0, hwnd);
     ok(err || !ok_pcm,"can record yet set wave format pcm returned %s\n", dbg_mcierr(ok_pcm));
-    if(!ndevs) todo_wine /* with sound disabled */
-    ok(ndevs>0 ? !err : err==MCIERR_WAVE_INPUTSUNSUITABLE,"mci record to 2000 returned %s\n", dbg_mcierr(err));
-    else
-    ok(ndevs>0 ? !err : err==MCIERR_WAVE_INPUTSUNSUITABLE,"mci record to 2000 returned %s\n", dbg_mcierr(err));
+    todo_wine_if (!ndevs) /* with sound disabled */
+        ok(ndevs > 0 ? !err : err == MCIERR_WAVE_INPUTSUNSUITABLE, "mci record to 2000 returned %s\n", dbg_mcierr(err));
     if(err) {
         if (err==MCIERR_WAVE_INPUTSUNSUITABLE)
              skip("Please install audio driver. Everything is skipped.\n");
@@ -1165,10 +1163,8 @@ static void test_AutoOpenWAVE(HWND hwnd)
     test_notification(hwnd, "-prior to auto-open-", 0);
 
     err = mciSendStringA("play tempfile.wav notify", buf, sizeof(buf), hwnd);
-    if(ok_saved==MCIERR_FILE_NOT_FOUND) todo_wine /* same as above */
-    ok(err==MCIERR_NOTIFY_ON_AUTO_OPEN,"mci auto-open play notify returned %s\n", dbg_mcierr(err));
-    else
-    ok(err==MCIERR_NOTIFY_ON_AUTO_OPEN,"mci auto-open play notify returned %s\n", dbg_mcierr(err));
+    todo_wine_if (ok_saved == MCIERR_FILE_NOT_FOUND) /* same as above */
+        ok(err==MCIERR_NOTIFY_ON_AUTO_OPEN,"mci auto-open play notify returned %s\n", dbg_mcierr(err));
 
     if(err) /* FIXME: don't open twice yet, it confuses Wine. */
     err = mciSendStringA("play tempfile.wav", buf, sizeof(buf), hwnd);
@@ -1395,6 +1391,46 @@ static void test_asyncWaveTypeMpegvideo(HWND hwnd)
     test_notification(hwnd,"play (aborted by close)",MCI_NOTIFY_ABORTED);
 }
 
+static DWORD CALLBACK thread_cb(void *p)
+{
+    HANDLE evt = p;
+    MCIERROR mr;
+
+    mr = mciSendStringA("play x", NULL, 0, NULL);
+    ok(mr == MCIERR_INVALID_DEVICE_NAME, "play gave: 0x%x\n", mr);
+
+    mr = mciSendStringA("close x", NULL, 0, NULL);
+    ok(mr == MCIERR_INVALID_DEVICE_NAME, "close gave: 0x%x\n", mr);
+
+    SetEvent(evt);
+
+    return 0;
+}
+
+static void test_threads(void)
+{
+    MCIERROR mr;
+    HANDLE evt;
+
+    mr = mciSendStringA("open tempfile.wav alias x", NULL, 0, NULL);
+    ok(mr == 0 || mr == ok_saved, "open gave: 0x%x\n", mr);
+    if(mr){
+        skip("Cannot open tempfile.wav for playing (%s), skipping\n", dbg_mcierr(mr));
+        return;
+    }
+
+    evt = CreateEventW( NULL, TRUE, FALSE, NULL );
+
+    CloseHandle(CreateThread(NULL, 0, &thread_cb, evt, 0, NULL));
+
+    WaitForSingleObject(evt, INFINITE);
+
+    CloseHandle(evt);
+
+    mr = mciSendStringA("close x", NULL, 0, NULL);
+    ok(mr == 0, "close gave: 0x%x\n", mr);
+}
+
 START_TEST(mci)
 {
     char curdir[MAX_PATH], tmpdir[MAX_PATH];
@@ -1411,6 +1447,7 @@ START_TEST(mci)
     test_openCloseWAVE(hwnd);
     test_recordWAVE(hwnd);
     if(waveOutGetNumDevs()){
+        test_threads();
         test_playWAVE(hwnd);
         test_asyncWAVE(hwnd);
         test_AutoOpenWAVE(hwnd);
