@@ -1011,11 +1011,13 @@ static void test_secure_connection(void)
     ok(ret, "failed to send request %u\n", GetLastError());
 
     ret = WinHttpReceiveResponse(req, NULL);
-    ok(!ret || proxy_active(), "succeeded unexpectedly\n");
+    ok(ret, "failed to receive response %u\n", GetLastError());
 
-    size = 0;
-    ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_RAW_HEADERS_CRLF, NULL, NULL, &size, NULL);
-    ok(!ret, "succeeded unexpectedly\n");
+    status = 0xdeadbeef;
+    size = sizeof(status);
+    ret = WinHttpQueryHeaders(req, WINHTTP_QUERY_STATUS_CODE|WINHTTP_QUERY_FLAG_NUMBER, NULL, &status, &size, NULL);
+    ok(ret, "header query failed %u\n", GetLastError());
+    ok(status == HTTP_STATUS_BAD_REQUEST, "got %u\n", status);
 
     WinHttpCloseHandle(req);
 
