@@ -100,13 +100,84 @@ static struct assoc_getstring_test getstring_tests[] =
     { NULL }
 };
 
+static void getstring_test(LPCWSTR assocName, HKEY progIdKey, ASSOCSTR str, LPCWSTR expected_string, int line)
+{
+    IQueryAssociations *assoc;
+    HRESULT hr;
+    WCHAR *buffer;
+    DWORD len;
+
+    hr = CoCreateInstance(&CLSID_QueryAssociations, NULL, CLSCTX_INPROC_SERVER, &IID_IQueryAssociations, (void*)&assoc);
+    ok_(__FILE__, line)(hr == S_OK, "failed to create IQueryAssociations, 0x%x\n", hr);
+    hr = IQueryAssociations_Init(assoc, 0, assocName, progIdKey, NULL);
+    ok_(__FILE__, line)(hr == S_OK, "IQueryAssociations::Init failed, 0x%x\n", hr);
+
+    hr = IQueryAssociations_GetString(assoc, 0, str, NULL, NULL, &len);
+    if (hr != S_FALSE) {
+        if (expected_string) {
+            ok_(__FILE__, line)(SUCCEEDED(hr), "GetString returned 0x%x, expected success\n", hr);
+        } else {
+            ok_(__FILE__, line)(FAILED(hr), "GetString returned 0x%x, expected failure\n", hr);
+        }
+    }
+
+    buffer = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    ok_(__FILE__, line)(buffer != NULL, "out of memory\n");
+    hr = IQueryAssociations_GetString(assoc, 0, str, NULL, buffer, &len);
+
+    if (expected_string) {
+        ok_(__FILE__, line)(lstrcmpW(buffer, expected_string) == 0, "GetString returned %s, expected %s\n",
+                wine_dbgstr_w(buffer), wine_dbgstr_w(expected_string));
+    }
+}
+
 static void test_IQueryAssociations_GetString(void)
 {
+    static WCHAR test_extensionW[] = {'.','t','e','s','t',0};
+    static WCHAR test_progidW[] = {'t','e','s','t','f','i','l','e',0};
+    static WCHAR DefaultIconW[] = {'D','e','f','a','u','l','t','I','c','o','n',0};
+    /* folder.ico, why not */
+    static WCHAR test_iconW[] = {'s','h','e','l','l','3','2','.','d','l','l',',','1',0};
+    HKEY test_extension_key;
+    HKEY test_progid_key;
+    HKEY test_defaulticon_key;
+    LRESULT r;
+
     struct assoc_getstring_test *ptr = getstring_tests;
     IQueryAssociations *assoc;
     HRESULT hr;
     DWORD len;
     int i = 0;
+
+    r = RegCreateKeyExW(HKEY_CLASSES_ROOT, test_extensionW, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &test_extension_key, NULL);
+    if (r == ERROR_ACCESS_DENIED)
+    {
+        win_skip("Not enough permissions to create a test key.\n");
+        return;
+    }
+
+    ok(r == ERROR_SUCCESS, "RegCreateKeyExW(HKCR, \".test\") failed: 0x%lx\n", r);
+    r = RegSetValueExW(test_extension_key, NULL, 0, REG_SZ, (PBYTE)test_progidW, sizeof(test_progidW));
+    ok(r == ERROR_SUCCESS, "RegSetValueExW(HKCR\\.test, NULL, \"testfile\") failed: 0x%lx\n", r);
+
+    /* adding progid key with no information should fail to return information */
+    r = RegCreateKeyExW(HKEY_CLASSES_ROOT, test_progidW, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &test_progid_key, NULL);
+    ok(r == ERROR_SUCCESS, "RegCreateKeyExW(HKCR, \"testfile\") failed: 0x%lx\n", r);
+    getstring_test(test_extensionW, NULL, ASSOCSTR_DEFAULTICON, NULL, __LINE__);
+    getstring_test(test_progidW, NULL, ASSOCSTR_DEFAULTICON, NULL, __LINE__);
+    getstring_test(NULL, test_progid_key, ASSOCSTR_DEFAULTICON, NULL, __LINE__);
+
+    /* adding information to the progid should return that information */
+    r = RegCreateKeyExW(test_progid_key, DefaultIconW, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &test_defaulticon_key, NULL);
+    ok(r == ERROR_SUCCESS, "RegCreateKeyExW(HKCR\\testfile\\DefaultIcon) failed: 0x%lx\n", r);
+    r = RegSetValueExW(test_defaulticon_key, NULL, 0, REG_SZ, (PBYTE)test_iconW, sizeof(test_iconW));
+    ok(r == ERROR_SUCCESS, "RegSetValueExW(HKCR\\testfile\\DefaultIcon, NULL, \"folder.ico\") failed: 0x%lx\n", r);
+    getstring_test(test_extensionW, NULL, ASSOCSTR_DEFAULTICON, test_iconW, __LINE__);
+    getstring_test(test_progidW, NULL, ASSOCSTR_DEFAULTICON, test_iconW, __LINE__);
+    getstring_test(NULL, test_progid_key, ASSOCSTR_DEFAULTICON, test_iconW, __LINE__);
+
+    RegDeleteKeyW(HKEY_CLASSES_ROOT, test_extensionW);
+    RegDeleteKeyW(HKEY_CLASSES_ROOT, test_progidW);
 
     hr = CoCreateInstance(&CLSID_QueryAssociations, NULL, CLSCTX_INPROC_SERVER, &IID_IQueryAssociations, (void*)&assoc);
     ok(hr == S_OK, "failed to create object, 0x%x\n", hr);

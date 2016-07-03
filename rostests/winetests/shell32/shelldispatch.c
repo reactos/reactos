@@ -884,7 +884,6 @@ START_TEST(shelldispatch)
     test_ShellWindows();
     test_ParseName();
     test_Verbs();
-
     test_ShellExecute();
 
     CoUninitialize();

@@ -365,7 +365,7 @@ static void WINETEST_PRINTF_ATTR(2,3) _okShell(int condition, const char *msg, .
 #define okShell okShell_(__FILE__, __LINE__)
 
 static char assoc_desc[2048];
-void reset_association_description(void)
+static void reset_association_description(void)
 {
     *assoc_desc = '\0';
 }
@@ -650,7 +650,7 @@ static INT_PTR shell_execute_ex_(const char* file, int line,
      * functions know about it
      */
     WritePrivateProfileStringA(NULL, NULL, NULL, child_file);
-    if (GetFileAttributesA(child_file) != INVALID_FILE_ATTRIBUTES)
+    if (rc > 32 && GetFileAttributesA(child_file) != INVALID_FILE_ATTRIBUTES)
     {
         int c;
         dump_child_(file, line);
@@ -684,9 +684,37 @@ static INT_PTR shell_execute_ex_(const char* file, int line,
  *
  ***/
 
-static BOOL create_test_association(const char* extension)
+static BOOL create_test_class(const char* class, BOOL protocol)
 {
     HKEY hkey, hkey_shell;
+    LONG rc;
+
+    rc = RegCreateKeyExA(HKEY_CLASSES_ROOT, class, 0, NULL, 0,
+                         KEY_CREATE_SUB_KEY | KEY_SET_VALUE, NULL,
+                         &hkey, NULL);
+    ok(rc == ERROR_SUCCESS || rc == ERROR_ACCESS_DENIED,
+       "could not create class %s (rc=%d)\n", class, rc);
+    if (rc != ERROR_SUCCESS)
+        return FALSE;
+
+    if (protocol)
+    {
+        rc = RegSetValueExA(hkey, "URL Protocol", 0, REG_SZ, (LPBYTE)"", 1);
+        ok(rc == ERROR_SUCCESS, "RegSetValueEx '%s' failed, expected ERROR_SUCCESS, got %d\n", class, rc);
+    }
+
+    rc = RegCreateKeyExA(hkey, "shell", 0, NULL, 0,
+                         KEY_CREATE_SUB_KEY, NULL, &hkey_shell, NULL);
+    ok(rc == ERROR_SUCCESS, "RegCreateKeyEx 'shell' failed, expected ERROR_SUCCESS, got %d\n", rc);
+
+    CloseHandle(hkey);
+    CloseHandle(hkey_shell);
+    return TRUE;
+}
+
+static BOOL create_test_association(const char* extension)
+{
+    HKEY hkey;
     char class[MAX_PATH];
     LONG rc;
 
@@ -702,18 +730,7 @@ static BOOL create_test_association(const char* extension)
     ok(rc==ERROR_SUCCESS, "RegSetValueEx '%s' failed, expected ERROR_SUCCESS, got %d\n", class, rc);
     CloseHandle(hkey);
 
-    rc=RegCreateKeyExA(HKEY_CLASSES_ROOT, class, 0, NULL, 0,
-                       KEY_CREATE_SUB_KEY | KEY_ENUMERATE_SUB_KEYS, NULL, &hkey, NULL);
-    ok(rc==ERROR_SUCCESS, "RegCreateKeyEx '%s' failed, expected ERROR_SUCCESS, got %d\n", class, rc);
-
-    rc=RegCreateKeyExA(hkey, "shell", 0, NULL, 0,
-                       KEY_CREATE_SUB_KEY, NULL, &hkey_shell, NULL);
-    ok(rc==ERROR_SUCCESS, "RegCreateKeyEx 'shell' failed, expected ERROR_SUCCESS, got %d\n", rc);
-
-    CloseHandle(hkey);
-    CloseHandle(hkey_shell);
-
-    return TRUE;
+    return create_test_class(class, FALSE);
 }
 
 /* Based on RegDeleteTreeW from dlls/advapi32/registry.c */
@@ -783,16 +800,21 @@ cleanup:
     return ret;
 }
 
+static void delete_test_class(const char* classname)
+{
+    myRegDeleteTreeA(HKEY_CLASSES_ROOT, classname);
+}
+
 static void delete_test_association(const char* extension)
 {
-    char class[MAX_PATH];
+    char classname[MAX_PATH];
 
-    sprintf(class, "shlexec%s", extension);
-    myRegDeleteTreeA(HKEY_CLASSES_ROOT, class);
+    sprintf(classname, "shlexec%s", extension);
+    delete_test_class(classname);
     myRegDeleteTreeA(HKEY_CLASSES_ROOT, extension);
 }
 
-static void create_test_verb_dde(const char* extension, const char* verb,
+static void create_test_verb_dde(const char* classname, const char* verb,
                                  int rawcmd, const char* cmdtail, const char *ddeexec,
                                  const char *application, const char *topic,
                                  const char *ifexec)
@@ -803,7 +825,7 @@ static void create_test_verb_dde(const char* extension, const char* verb,
     LONG rc;
 
     strcpy(assoc_desc, " Assoc ");
-    strcat_param(assoc_desc, "ext", extension);
+    strcat_param(assoc_desc, "class", classname);
     strcat_param(assoc_desc, "verb", verb);
     sprintf(shell, "%d", rawcmd);
     strcat_param(assoc_desc, "rawcmd", shell);
@@ -813,7 +835,7 @@ static void create_test_verb_dde(const char* extension, const char* verb,
     strcat_param(assoc_desc, "topic", topic);
     strcat_param(assoc_desc, "ifexec", ifexec);
 
-    sprintf(shell, "shlexec%s\\shell", extension);
+    sprintf(shell, "%s\\shell", classname);
     rc=RegOpenKeyExA(HKEY_CLASSES_ROOT, shell, 0,
                      KEY_CREATE_SUB_KEY, &hkey_shell);
     ok(rc == ERROR_SUCCESS, "%s key creation failed with %d\n", shell, rc);
@@ -893,10 +915,10 @@ static void create_test_verb_dde(const char* extension, const char* verb,
  * This function is meant to be used to create long term test verbs and thus
  * does not trace them.
  */
-static void create_test_verb(const char* extension, const char* verb,
+static void create_test_verb(const char* classname, const char* verb,
                              int rawcmd, const char* cmdtail)
 {
-    create_test_verb_dde(extension, verb, rawcmd, cmdtail, NULL, NULL,
+    create_test_verb_dde(classname, verb, rawcmd, cmdtail, NULL, NULL,
                          NULL, NULL);
     reset_association_description();
 }
@@ -994,7 +1016,9 @@ static const char* testfiles[]=
     "%s\\test_shortcut_exe.lnk",
     "%s\\test file.shl",
     "%s\\test file.shlfoo",
+    "%s\\test file.sha",
     "%s\\test file.sfe",
+    "%s\\test file.shlproto",
     "%s\\masked file.shlexec",
     "%s\\masked",
     "%s\\test file.sde",
@@ -1043,12 +1067,17 @@ static filename_tests_t filename_tests[]=
 
     {"notaverb",     "%s\\test file.shlexec",   0x10, SE_ERR_NOASSOC},
 
+    {"averb",        "%s\\test file.sha",       0x10, 33},
+
     /* Test file masked due to space */
     {NULL,           "%s\\masked file.shlexec",   0x0, 33},
     /* Test if quoting prevents the masking */
     {NULL,           "%s\\masked file.shlexec",   0x40, 33},
     /* Test with incorrect quote */
     {NULL,           "\"%s\\masked file.shlexec",   0x0, SE_ERR_FNF},
+
+    /* Test extension / URI protocol collision */
+    {NULL,           "%s\\test file.shlproto",   0x0, SE_ERR_NOASSOC},
 
     {NULL, NULL, 0}
 };
@@ -1570,13 +1599,13 @@ static void test_argify(void)
         return;
     }
 
-    create_test_verb(".shlexec", "Params232S", 0, "Params232S %2 %3 \"%2\" \"%*\"");
-    create_test_verb(".shlexec", "Params23456", 0, "Params23456 \"%2\" \"%3\" \"%4\" \"%5\" \"%6\"");
-    create_test_verb(".shlexec", "Params23456789", 0, "Params23456789 \"%2\" \"%3\" \"%4\" \"%5\" \"%6\" \"%7\" \"%8\" \"%9\"");
-    create_test_verb(".shlexec", "Params2345Etc", 0, "Params2345Etc ~2=\"%~2\" ~3=\"%~3\" ~4=\"%~4\" ~5=%~5");
-    create_test_verb(".shlexec", "Params9Etc", 0, "Params9Etc ~9=\"%~9\"");
-    create_test_verb(".shlexec", "Params20", 0, "Params20 \"%20\"");
-    create_test_verb(".shlexec", "ParamsBad", 0, "ParamsBad \"%% %- %~ %~0 %~1 %~a %~* %a %b %c %TMPDIR%\"");
+    create_test_verb("shlexec.shlexec", "Params232S", 0, "Params232S %2 %3 \"%2\" \"%*\"");
+    create_test_verb("shlexec.shlexec", "Params23456", 0, "Params23456 \"%2\" \"%3\" \"%4\" \"%5\" \"%6\"");
+    create_test_verb("shlexec.shlexec", "Params23456789", 0, "Params23456789 \"%2\" \"%3\" \"%4\" \"%5\" \"%6\" \"%7\" \"%8\" \"%9\"");
+    create_test_verb("shlexec.shlexec", "Params2345Etc", 0, "Params2345Etc ~2=\"%~2\" ~3=\"%~3\" ~4=\"%~4\" ~5=%~5");
+    create_test_verb("shlexec.shlexec", "Params9Etc", 0, "Params9Etc ~9=\"%~9\"");
+    create_test_verb("shlexec.shlexec", "Params20", 0, "Params20 \"%20\"");
+    create_test_verb("shlexec.shlexec", "ParamsBad", 0, "ParamsBad \"%% %- %~ %~0 %~1 %~a %~* %a %b %c %TMPDIR%\"");
 
     sprintf(fileA, "%s\\test file.shlexec", tmpdir);
 
@@ -1748,6 +1777,14 @@ static void test_filename(void)
         sprintf(filename, "%s\\test file.shlexec", tmpdir);
         okChildPath("argvA4", filename);
     }
+
+    sprintf(filename, "\"%s\\test file.sha\"", tmpdir);
+    rc=shell_execute(NULL, filename, NULL, NULL);
+    todo_wine okShell(rc > 32, "failed: rc=%ld err=%u\n", rc, GetLastError());
+    okChildInt("argcA", 5);
+    todo_wine okChildString("argvA3", "averb");
+    sprintf(filename, "%s\\test file.sha", tmpdir);
+    todo_wine okChildPath("argvA4", filename);
 }
 
 typedef struct
@@ -1791,6 +1828,9 @@ static fileurl_tests_t fileurl_tests[]=
 
     /* Test shortcuts vs. URLs */
     {"file://///", "%s\\test_shortcut_shlexec.lnk", 0, 0x1d},
+
+    /* Confuse things by mixing protocols */
+    {"file://", "shlproto://foo/bar", USE_COLON, 0},
 
     {NULL, NULL, 0, 0}
 };
@@ -1878,6 +1918,100 @@ static void test_fileurls(void)
     SetEnvironmentVariableA("urlprefix", NULL);
 }
 
+static void test_urls(void)
+{
+    char url[MAX_PATH];
+    INT_PTR rc;
+
+    if (!create_test_class("fakeproto", FALSE))
+    {
+        skip("Unable to create 'fakeproto' class for URL tests\n");
+        return;
+    }
+    create_test_verb("fakeproto", "open", 0, "URL %1");
+
+    create_test_class("shlpaverb", TRUE);
+    create_test_verb("shlpaverb", "averb", 0, "PAVerb \"%1\"");
+
+    /* Protocols must be properly declared */
+    rc = shell_execute(NULL, "notaproto://foo", NULL, NULL);
+    ok(rc == SE_ERR_NOASSOC || broken(rc == SE_ERR_ACCESSDENIED),
+       "%s returned %lu\n", shell_call, rc);
+
+    rc = shell_execute(NULL, "fakeproto://foo/bar", NULL, NULL);
+    todo_wine ok(rc == SE_ERR_NOASSOC || broken(rc == SE_ERR_ACCESSDENIED),
+                 "%s returned %lu\n", shell_call, rc);
+
+    /* Here's a real live one */
+    rc = shell_execute(NULL, "shlproto://foo/bar", NULL, NULL);
+    ok(rc > 32, "%s failed: rc=%lu\n", shell_call, rc);
+    okChildInt("argcA", 5);
+    okChildString("argvA3", "URL");
+    okChildString("argvA4", "shlproto://foo/bar");
+
+    /* Check default verb detection */
+    rc = shell_execute(NULL, "shlpaverb://foo/bar", NULL, NULL);
+    todo_wine ok(rc > 32 || /* XP+IE7 - Win10 */
+                 broken(rc == SE_ERR_NOASSOC), /* XP+IE6 */
+                 "%s failed: rc=%lu\n", shell_call, rc);
+    if (rc > 32)
+    {
+        okChildInt("argcA", 5);
+        todo_wine okChildString("argvA3", "PAVerb");
+        todo_wine okChildString("argvA4", "shlpaverb://foo/bar");
+    }
+
+    /* But alternative verbs are a recent feature! */
+    rc = shell_execute("averb", "shlproto://foo/bar", NULL, NULL);
+    ok(rc > 32 || /* Win8 - Win10 */
+       broken(rc == SE_ERR_ACCESSDENIED), /* XP - Win7 */
+       "%s failed: rc=%lu\n", shell_call, rc);
+    if (rc > 32)
+    {
+        okChildString("argvA3", "AVerb");
+        okChildString("argvA4", "shlproto://foo/bar");
+    }
+
+    /* A .lnk ending does not turn a URL into a shortcut */
+    todo_wait rc = shell_execute(NULL, "shlproto://foo/bar.lnk", NULL, NULL);
+    ok(rc > 32, "%s failed: rc=%lu\n", shell_call, rc);
+    okChildInt("argcA", 5);
+    todo_wine okChildString("argvA3", "URL");
+    todo_wine okChildString("argvA4", "shlproto://foo/bar.lnk");
+
+    /* Neither does a .exe extension */
+    rc = shell_execute(NULL, "shlproto://foo/bar.exe", NULL, NULL);
+    ok(rc > 32, "%s failed: rc=%lu\n", shell_call, rc);
+    okChildInt("argcA", 5);
+    okChildString("argvA3", "URL");
+    okChildString("argvA4", "shlproto://foo/bar.exe");
+
+    /* But a class name overrides it */
+    rc = shell_execute(NULL, "shlproto://foo/bar", "shlexec.shlexec", NULL);
+    ok(rc > 32, "%s failed: rc=%lu\n", shell_call, rc);
+    okChildInt("argcA", 5);
+    okChildString("argvA3", "URL");
+    okChildString("argvA4", "shlproto://foo/bar");
+
+    /* Environment variables are expanded in URLs (but not in file URLs!) */
+    rc = shell_execute_ex(SEE_MASK_DOENVSUBST | SEE_MASK_FLAG_NO_UI,
+                          NULL, "shlproto://%TMPDIR%/bar", NULL, NULL, NULL);
+    okShell(rc > 32, "failed: rc=%lu\n", rc);
+    okChildInt("argcA", 5);
+    sprintf(url, "shlproto://%s/bar", tmpdir);
+    okChildString("argvA3", "URL");
+    okChildStringBroken("argvA4", url, "shlproto://%TMPDIR%/bar");
+
+    /* But only after the path has been identified as a URL */
+    SetEnvironmentVariableA("urlprefix", "shlproto:///");
+    rc = shell_execute(NULL, "%urlprefix%foo", NULL, NULL);
+    todo_wine ok(rc == SE_ERR_FNF, "%s returned %lu\n", shell_call, rc);
+    SetEnvironmentVariableA("urlprefix", NULL);
+
+    delete_test_class("fakeproto");
+    delete_test_class("shlpaverb");
+}
+
 static void test_find_executable(void)
 {
     char notepad_path[MAX_PATH];
@@ -1891,7 +2025,7 @@ static void test_find_executable(void)
         skip("Unable to create association for '.sfe'\n");
         return;
     }
-    create_test_verb(".sfe", "Open", 1, "%1");
+    create_test_verb("shlexec.sfe", "Open", 1, "%1");
 
     /* Don't test FindExecutable(..., NULL), it always crashes */
 
@@ -1941,7 +2075,7 @@ static void test_find_executable(void)
         skip("Unable to create association for '.shl'\n");
         return;
     }
-    create_test_verb(".shl", "Open", 0, "Open");
+    create_test_verb("shlexec.shl", "Open", 0, "Open");
 
     sprintf(filename, "%s\\test file.shl", tmpdir);
     rc=(INT_PTR)FindExecutableA(filename, NULL, command);
@@ -2328,7 +2462,7 @@ static void test_dde(void)
             skip("Unable to create association for '.sde'\n");
             return;
         }
-        create_test_verb_dde(".sde", "Open", 0, test->command, test->ddeexec,
+        create_test_verb_dde("shlexec.sde", "Open", 0, test->command, test->ddeexec,
                              test->application, test->topic, test->ifexec);
 
         if (test->application != NULL || test->topic != NULL)
@@ -2506,7 +2640,7 @@ static void test_dde_default_app(void)
             return;
         }
         sprintf(params, test->command, tmpdir);
-        create_test_verb_dde(".sde", "Open", 1, params, "[test]", NULL,
+        create_test_verb_dde("shlexec.sde", "Open", 1, params, "[test]", NULL,
                              "shlexec", NULL);
         ddeApplication[0] = 0;
 
@@ -2677,12 +2811,19 @@ static void init_test(void)
         skip("Unable to create association for '.shlexec'\n");
         return;
     }
-    create_test_verb(".shlexec", "Open", 0, "Open \"%1\"");
-    create_test_verb(".shlexec", "NoQuotes", 0, "NoQuotes %1");
-    create_test_verb(".shlexec", "LowerL", 0, "LowerL %l");
-    create_test_verb(".shlexec", "QuotedLowerL", 0, "QuotedLowerL \"%l\"");
-    create_test_verb(".shlexec", "UpperL", 0, "UpperL %L");
-    create_test_verb(".shlexec", "QuotedUpperL", 0, "QuotedUpperL \"%L\"");
+    create_test_verb("shlexec.shlexec", "Open", 0, "Open \"%1\"");
+    create_test_verb("shlexec.shlexec", "NoQuotes", 0, "NoQuotes %1");
+    create_test_verb("shlexec.shlexec", "LowerL", 0, "LowerL %l");
+    create_test_verb("shlexec.shlexec", "QuotedLowerL", 0, "QuotedLowerL \"%l\"");
+    create_test_verb("shlexec.shlexec", "UpperL", 0, "UpperL %L");
+    create_test_verb("shlexec.shlexec", "QuotedUpperL", 0, "QuotedUpperL \"%L\"");
+
+    create_test_association(".sha");
+    create_test_verb("shlexec.sha", "averb", 0, "AVerb \"%1\"");
+
+    create_test_class("shlproto", TRUE);
+    create_test_verb("shlproto", "open", 0, "URL \"%1\"");
+    create_test_verb("shlproto", "averb", 0, "AVerb \"%1\"");
 
     /* Set an environment variable to see if it is inherited */
     SetEnvironmentVariableA("ShlexecVar", "Present");
@@ -2708,6 +2849,8 @@ static void cleanup_test(void)
 
     /* Delete the test association */
     delete_test_association(".shlexec");
+    delete_test_association(".sha");
+    delete_test_class("shlproto");
 
     CloseHandle(hEvent);
 
@@ -2785,6 +2928,7 @@ START_TEST(shlexec)
     test_lpFile_parsed();
     test_filename();
     test_fileurls();
+    test_urls();
     test_find_executable();
     test_lnks();
     test_exes();

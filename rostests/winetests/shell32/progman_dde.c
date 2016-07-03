@@ -486,19 +486,10 @@ static HWND ShowGroupTest(DWORD instance, HCONV hConv, const char *command, UINT
     DdeExecuteCommand(instance, hConv, command, &hData, &error, testParams);
 /* todo_wine...  Is expected to fail, wine stubbed functions DO fail */
 /* TODO REMOVE THIS CODE!!! */
-    if (expected_result == DMLERR_NOTPROCESSED)
-    {
+    todo_wine_if (expected_result != DMLERR_NOTPROCESSED)
         ok (expected_result == error, "ShowGroup %s: Expected Error %s, received %s.%s\n",
             groupName, GetStringFromError(expected_result), GetStringFromError(error),
             GetStringFromTestParams(testParams));
-    } else {
-        todo_wine
-        {
-            ok (expected_result == error, "ShowGroup %s: Expected Error %s, received %s.%s\n",
-                groupName, GetStringFromError(expected_result), GetStringFromError(error),
-                GetStringFromTestParams(testParams));
-        }
-    }
 
     if (error == DMLERR_NO_ERROR)
     {

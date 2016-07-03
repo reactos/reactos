@@ -761,8 +761,7 @@ if (0)
     settings.ViewMode = FVM_ICON;
     settings.fFlags = 0;
     hwnd_view = (HWND)0xdeadbeef;
-    r.left = r.top = 0;
-    r.right = r.bottom = 100;
+    SetRect(&r, 0, 0, 100, 100);
     hr = IShellView_CreateViewWindow(view, NULL, &settings, browser, &r, &hwnd_view);
     ok(hr == S_OK, "got (0x%08x)\n", hr);
     ok(IsWindow(hwnd_view), "got %p\n", hwnd_view);

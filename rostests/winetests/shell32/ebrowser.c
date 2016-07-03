@@ -98,7 +98,7 @@ static HRESULT ebrowser_instantiate(IExplorerBrowser **peb)
 static HRESULT ebrowser_initialize(IExplorerBrowser *peb)
 {
     RECT rc;
-    rc.top = rc.left = 0; rc.bottom = rc.right = 500;
+    SetRect(&rc, 0, 0, 500, 500);
     return IExplorerBrowser_Initialize(peb, hwnd, &rc, NULL);
 }
 
@@ -802,7 +802,7 @@ static void test_initialization(void)
     /* Initialize with a few different rectangles */
     peb = NULL;
     ebrowser_instantiate(&peb);
-    rc.left = 50; rc.top = 20; rc.right = 100; rc.bottom = 80;
+    SetRect(&rc, 50, 20, 100, 80);
     hr = IExplorerBrowser_Initialize(peb, hwnd, &rc, NULL);
     ok(hr == S_OK, "got (0x%08x)\n", hr);
     hr = IExplorerBrowser_QueryInterface(peb, &IID_IShellBrowser, (void**)&psb);
@@ -861,7 +861,7 @@ static void test_initialization(void)
     ebrowser_instantiate(&peb);
     hr = IExplorerBrowser_SetOptions(peb, EBO_NOBORDER);
     ok(hr == S_OK, "got 0x%08x\n", hr);
-    rc.left = 50; rc.top = 20; rc.right = 100; rc.bottom = 80;
+    SetRect(&rc, 50, 20, 100, 80);
 
     hr = IExplorerBrowser_Initialize(peb, hwnd, &rc, NULL);
     ok(hr == S_OK, "got (0x%08x)\n", hr);
@@ -881,7 +881,7 @@ static void test_initialization(void)
 
     /* empty rectangle */
     ebrowser_instantiate(&peb);
-    rc.left = 0; rc.top = 0; rc.right = 0; rc.bottom = 0;
+    SetRectEmpty(&rc);
     hr = IExplorerBrowser_Initialize(peb, hwnd, &rc, NULL);
     ok(hr == S_OK, "got (0x%08x)\n", hr);
     IExplorerBrowser_Destroy(peb);
@@ -889,7 +889,7 @@ static void test_initialization(void)
     ok(lres == 0, "Got refcount %d\n", lres);
 
     ebrowser_instantiate(&peb);
-    rc.left = -1; rc.top = -1; rc.right = 1; rc.bottom = 1;
+    SetRect(&rc, -1, -1, 1, 1);
     hr = IExplorerBrowser_Initialize(peb, hwnd, &rc, NULL);
     ok(hr == S_OK, "got (0x%08x)\n", hr);
     IExplorerBrowser_Destroy(peb);
@@ -897,7 +897,7 @@ static void test_initialization(void)
     ok(lres == 0, "Got refcount %d\n", lres);
 
     ebrowser_instantiate(&peb);
-    rc.left = 10; rc.top = 10; rc.right = 5; rc.bottom = 5;
+    SetRect(&rc, 10, 10, 5, 5);
     hr = IExplorerBrowser_Initialize(peb, hwnd, &rc, NULL);
     ok(hr == S_OK, "got (0x%08x)\n", hr);
     IExplorerBrowser_Destroy(peb);
@@ -905,7 +905,7 @@ static void test_initialization(void)
     ok(lres == 0, "Got refcount %d\n", lres);
 
     ebrowser_instantiate(&peb);
-    rc.left = 10; rc.top = 10; rc.right = 5; rc.bottom = 5;
+    SetRect(&rc, 10, 10, 5, 5);
     hr = IExplorerBrowser_Initialize(peb, hwnd, &rc, NULL);
     ok(hr == S_OK, "got (0x%08x)\n", hr);
     IExplorerBrowser_Destroy(peb);
@@ -1101,16 +1101,16 @@ static void test_basics(void)
     ebrowser_initialize(peb);
 
     /* SetRect */
-    rc.left = 0; rc.top = 0; rc.right = 0; rc.bottom = 0;
+    SetRectEmpty(&rc);
     hr = IExplorerBrowser_SetRect(peb, NULL, rc);
     ok(hr == S_OK, "got (0x%08x)\n", hr);
 
-    rc.left = 100; rc.top = 100; rc.right = 10; rc.bottom = 10;
+    SetRect(&rc, 100, 100, 10, 10);
     hr = IExplorerBrowser_SetRect(peb, NULL, rc);
     ok(hr == S_OK, "got (0x%08x)\n", hr);
 
     /* SetRect with DeferWindowPos */
-    rc.left = rc.top = 0; rc.right = rc.bottom = 10;
+    SetRect(&rc, 0, 0, 10, 10);
     hdwp = BeginDeferWindowPos(1);
     hr = IExplorerBrowser_SetRect(peb, &hdwp, rc);
     ok(hr == S_OK, "got (0x%08x)\n", hr);
@@ -1125,7 +1125,7 @@ static void test_basics(void)
     ok(!lres, "EndDeferWindowPos succeeded unexpectedly.\n");
 
     /* Test positioning */
-    rc.left = 10; rc.top = 20; rc.right = 50; rc.bottom = 50;
+    SetRect(&rc, 10, 20, 50, 50);
     hr = IExplorerBrowser_SetRect(peb, NULL, rc);
     ok(hr == S_OK, "got (0x%08x)\n", hr);
     hr = IExplorerBrowser_QueryInterface(peb, &IID_IShellBrowser, (void**)&psb);
@@ -1715,7 +1715,7 @@ static void test_InputObject(void)
     hr = IInputObject_TranslateAcceleratorIO(pio, &msg_a);
     todo_wine ok(hr == E_FAIL, "Got 0x%08x\n", hr);
 
-    rc.left = 0; rc.top = 0; rc.right = 100; rc.bottom = 100;
+    SetRect(&rc, 0, 0, 100, 100);
     hr = IExplorerBrowser_Initialize(peb, hwnd, &rc, NULL);
     ok(hr == S_OK, "Got 0x%08x\n", hr);
 

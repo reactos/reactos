@@ -2283,7 +2283,7 @@ static void test_knownFolders(void)
                             /* remove newly created directory */
                             RemoveDirectoryW(sSubFolder2Path);
 
-                            /* verify sub folder. It still succeedes, so Windows does not check folder presence each time */
+                            /* verify subfolder. It still succeeds, so Windows does not check folder presence each time */
                             hr = IKnownFolder_GetPath(subFolder, 0, &folderPath);
                             todo_wine
                             ok(hr == S_OK, "failed to get known folder path: 0x%08x\n", hr);

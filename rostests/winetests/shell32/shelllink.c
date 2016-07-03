@@ -351,12 +351,6 @@ static void test_get_set(void)
  */
 
 #define lok                   ok_(__FILE__, line)
-#define lok_todo_4(todo_flag,a,b,c,d) \
-    if ((todo & todo_flag) == 0) lok((a), (b), (c), (d)); \
-    else todo_wine lok((a), (b), (c), (d));
-#define lok_todo_2(todo_flag,a,b) \
-    if ((todo & todo_flag) == 0) lok((a), (b)); \
-    else todo_wine lok((a), (b));
 #define check_lnk(a,b,c)        check_lnk_(__LINE__, (a), (b), (c))
 
 void create_lnk_(int line, const WCHAR* path, lnk_desc_t* desc, int save_fails)
@@ -433,16 +427,8 @@ void create_lnk_(int line, const WCHAR* path, lnk_desc_t* desc, int save_fails)
         lok(str == NULL, "got %p\n", str);
 
         r = IPersistFile_Save(pf, path, TRUE);
-        if (save_fails)
-        {
-            todo_wine {
+        todo_wine_if (save_fails)
             lok(r == S_OK, "save failed (0x%08x)\n", r);
-            }
-        }
-        else
-        {
-            lok(r == S_OK, "save failed (0x%08x)\n", r);
-        }
 
         /* test GetCurFile after ::Save */
         r = IPersistFile_GetCurFile(pf, &str);
@@ -533,44 +519,44 @@ static void check_lnk_(int line, const WCHAR* path, lnk_desc_t* desc, int todo)
         strcpy(buffer,"garbage");
         r = IShellLinkA_GetDescription(sl, buffer, sizeof(buffer));
         lok(r == S_OK, "GetDescription failed (0x%08x)\n", r);
-        lok_todo_4(0x1, strcmp(buffer, desc->description)==0,
-           "GetDescription returned '%s' instead of '%s'\n",
-           buffer, desc->description);
+        todo_wine_if ((todo & 0x1) != 0)
+            lok(strcmp(buffer, desc->description)==0, "GetDescription returned '%s' instead of '%s'\n",
+                buffer, desc->description);
     }
     if (desc->workdir)
     {
         strcpy(buffer,"garbage");
         r = IShellLinkA_GetWorkingDirectory(sl, buffer, sizeof(buffer));
         lok(r == S_OK, "GetWorkingDirectory failed (0x%08x)\n", r);
-        lok_todo_4(0x2, lstrcmpiA(buffer, desc->workdir)==0,
-           "GetWorkingDirectory returned '%s' instead of '%s'\n",
-           buffer, desc->workdir);
+        todo_wine_if ((todo & 0x2) != 0)
+            lok(lstrcmpiA(buffer, desc->workdir)==0, "GetWorkingDirectory returned '%s' instead of '%s'\n",
+                buffer, desc->workdir);
     }
     if (desc->path)
     {
         strcpy(buffer,"garbage");
         r = IShellLinkA_GetPath(sl, buffer, sizeof(buffer), NULL, SLGP_RAWPATH);
         lok(SUCCEEDED(r), "GetPath failed (0x%08x)\n", r);
-        lok_todo_4(0x4, lstrcmpiA(buffer, desc->path)==0,
-           "GetPath returned '%s' instead of '%s'\n",
-           buffer, desc->path);
+        todo_wine_if ((todo & 0x4) != 0)
+            lok(lstrcmpiA(buffer, desc->path)==0, "GetPath returned '%s' instead of '%s'\n",
+                buffer, desc->path);
     }
     if (desc->pidl)
     {
         LPITEMIDLIST pidl=NULL;
         r = IShellLinkA_GetIDList(sl, &pidl);
         lok(r == S_OK, "GetIDList failed (0x%08x)\n", r);
-        lok_todo_2(0x8, pILIsEqual(pidl, desc->pidl),
-           "GetIDList returned an incorrect pidl\n");
+        todo_wine_if ((todo & 0x8) != 0)
+            lok(pILIsEqual(pidl, desc->pidl), "GetIDList returned an incorrect pidl\n");
     }
     if (desc->showcmd)
     {
         int i=0xdeadbeef;
         r = IShellLinkA_GetShowCmd(sl, &i);
         lok(r == S_OK, "GetShowCmd failed (0x%08x)\n", r);
-        lok_todo_4(0x10, i==desc->showcmd,
-           "GetShowCmd returned 0x%0x instead of 0x%0x\n",
-           i, desc->showcmd);
+        todo_wine_if ((todo & 0x10) != 0)
+            lok(i==desc->showcmd, "GetShowCmd returned 0x%0x instead of 0x%0x\n",
+                i, desc->showcmd);
     }
     if (desc->icon)
     {
@@ -578,21 +564,21 @@ static void check_lnk_(int line, const WCHAR* path, lnk_desc_t* desc, int todo)
         strcpy(buffer,"garbage");
         r = IShellLinkA_GetIconLocation(sl, buffer, sizeof(buffer), &i);
         lok(r == S_OK, "GetIconLocation failed (0x%08x)\n", r);
-        lok_todo_4(0x20, lstrcmpiA(buffer, desc->icon)==0,
-           "GetIconLocation returned '%s' instead of '%s'\n",
-           buffer, desc->icon);
-        lok_todo_4(0x20, i==desc->icon_id,
-           "GetIconLocation returned 0x%0x instead of 0x%0x\n",
-           i, desc->icon_id);
+        todo_wine_if ((todo & 0x20) != 0) {
+            lok(lstrcmpiA(buffer, desc->icon)==0, "GetIconLocation returned '%s' instead of '%s'\n",
+                buffer, desc->icon);
+            lok(i==desc->icon_id, "GetIconLocation returned 0x%0x instead of 0x%0x\n",
+                i, desc->icon_id);
+        }
     }
     if (desc->hotkey)
     {
         WORD i=0xbeef;
         r = IShellLinkA_GetHotkey(sl, &i);
         lok(r == S_OK, "GetHotkey failed (0x%08x)\n", r);
-        lok_todo_4(0x40, i==desc->hotkey,
-           "GetHotkey returned 0x%04x instead of 0x%04x\n",
-           i, desc->hotkey);
+        todo_wine_if ((todo & 0x40) != 0)
+            lok(i==desc->hotkey, "GetHotkey returned 0x%04x instead of 0x%04x\n",
+                i, desc->hotkey);
     }
 
     IShellLinkA_Release(sl);
