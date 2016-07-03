@@ -21,6 +21,11 @@
 #include <winreg.h>
 #include <wincon.h>
 #include <winuser.h>
+
+#undef TEXT
+#define TEXT(s) L##s
+#include <regstr.h>
+
 #include <tlhelp32.h>
 
 /* Redefine NTDDI_VERSION to 2K3 SP1 to get correct NDK definitions */
@@ -40,7 +45,7 @@
 #include <ndk/setypes.h>
 #include <ndk/umfuncs.h>
 
-/* CSRSS Header */
+/* CSRSS Headers */
 #include <csr/csr.h>
 #include <win/base.h>
 #include <win/basemsg.h>

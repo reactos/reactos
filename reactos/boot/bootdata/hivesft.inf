@@ -161,6 +161,11 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","RegisteredOrganization",2,"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","RegisteredOwner",2,""
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","SoftwareType",2,"System"
 
+; Auto-Execute (AE) Debugger
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug","Auto",2,"1"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug","Debugger",2,"drwtsn32 -p %ld -e %ld -g"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug","UserDebuggerHotKey",0x00010001,0x00000000
+
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Accessibility",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Compatibility",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Compatibility32",,0x00000012
