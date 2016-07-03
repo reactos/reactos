@@ -76,6 +76,8 @@ static int cbufalloc = 0;
 static int kw_token(const char *kw);
 static int attr_token(const char *kw);
 
+static warning_list_t *disabled_warnings = NULL;
+
 #define MAX_IMPORT_DEPTH 10
 struct {
   YY_BUFFER_STATE state;
@@ -164,6 +166,7 @@ UUID *parse_uuid(const char *u)
                             yy_pop_state();
                         }
 <PP_PRAGMA>[^\n]*       parser_lval.str = xstrdup(yytext); yy_pop_state(); return aPRAGMA;
+<INITIAL>^{ws}*midl_pragma{ws}+warning return tPRAGMA_WARNING;
 <INITIAL,ATTR>\"	yy_push_state(QUOTE); cbufidx = 0;
 <QUOTE>\"		{
 				yy_pop_state();
@@ -554,4 +557,62 @@ void abort_import(void)
 
 	for (ptr=0; ptr<import_stack_ptr; ptr++)
 		unlink(import_stack[ptr].temp_name);
+}
+
+static void warning_disable(int warning)
+{
+    warning_t *warning_entry;
+    LIST_FOR_EACH_ENTRY(warning_entry, disabled_warnings, warning_t, entry)
+        if(warning_entry->num == warning)
+            return;
+    warning_entry = xmalloc( sizeof(*warning_entry) );
+    warning_entry->num = warning;
+    list_add_tail(disabled_warnings, &warning_entry->entry);
+}
+
+static void warning_enable(int warning)
+{
+    warning_t *warning_entry;
+    LIST_FOR_EACH_ENTRY(warning_entry, disabled_warnings, warning_t, entry)
+        if(warning_entry->num == warning)
+        {
+            list_remove(&warning_entry->entry);
+            free(warning_entry);
+            break;
+        }
+}
+
+int do_warning(char *toggle, warning_list_t *wnum)
+{
+    warning_t *warning, *next;
+    int ret = 1;
+    if(!disabled_warnings)
+    {
+        disabled_warnings = xmalloc( sizeof(*disabled_warnings) );
+        list_init( disabled_warnings );
+    }
+
+    if(!strcmp(toggle, "disable"))
+        LIST_FOR_EACH_ENTRY(warning, wnum, warning_t, entry)
+            warning_disable(warning->num);
+    else if(!strcmp(toggle, "enable"))
+        LIST_FOR_EACH_ENTRY(warning, wnum, warning_t, entry)
+            warning_enable(warning->num);
+    else
+        ret = 0;
+
+    LIST_FOR_EACH_ENTRY_SAFE(warning, next, wnum, warning_t, entry)
+        free(warning);
+    return ret;
+}
+
+int is_warning_enabled(int warning)
+{
+    warning_t *warning_entry;
+    if(!disabled_warnings)
+        return 1;
+    LIST_FOR_EACH_ENTRY(warning_entry, disabled_warnings, warning_t, entry)
+        if(warning_entry->num == warning)
+            return 0;
+    return 1;
 }
