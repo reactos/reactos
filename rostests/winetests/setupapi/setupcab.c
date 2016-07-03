@@ -115,19 +115,10 @@ static void test_invalid_parametersA(void)
         ret = SetupIterateCabinetA(invalid_parameters[i].CabinetFile, 0,
                                    invalid_parameters[i].MsgHandler, NULL);
         ok(!ret, "[%d] Expected SetupIterateCabinetA to return 0, got %d\n", i, ret);
-        if (invalid_parameters[i].todo_lasterror)
-        {
-            todo_wine
+        todo_wine_if (invalid_parameters[i].todo_lasterror)
             ok(GetLastError() == invalid_parameters[i].expected_lasterror,
                "[%d] Expected GetLastError() to return %u, got %u\n",
                i, invalid_parameters[i].expected_lasterror, GetLastError());
-        }
-        else
-        {
-            ok(GetLastError() == invalid_parameters[i].expected_lasterror,
-               "[%d] Expected GetLastError() to return %u, got %u\n",
-               i, invalid_parameters[i].expected_lasterror, GetLastError());
-        }
     }
 
     SetLastError(0xdeadbeef);
@@ -190,19 +181,10 @@ static void test_invalid_parametersW(void)
         ret = SetupIterateCabinetW(invalid_parameters[i].CabinetFile, 0,
                                    invalid_parameters[i].MsgHandler, NULL);
         ok(!ret, "[%d] Expected SetupIterateCabinetW to return 0, got %d\n", i, ret);
-        if (invalid_parameters[i].todo_lasterror)
-        {
-            todo_wine
+        todo_wine_if (invalid_parameters[i].todo_lasterror)
             ok(GetLastError() == invalid_parameters[i].expected_lasterror,
                "[%d] Expected GetLastError() to return %u, got %u\n",
                i, invalid_parameters[i].expected_lasterror, GetLastError());
-        }
-        else
-        {
-            ok(GetLastError() == invalid_parameters[i].expected_lasterror,
-               "[%d] Expected GetLastError() to return %u, got %u\n",
-               i, invalid_parameters[i].expected_lasterror, GetLastError());
-        }
     }
 
     SetLastError(0xdeadbeef);

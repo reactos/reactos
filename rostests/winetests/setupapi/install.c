@@ -174,7 +174,6 @@ static void test_registry(void)
 
     /* Check if the registry key is recursively deleted */
     res = RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest", &key);
-    todo_wine
     ok(res == ERROR_FILE_NOT_FOUND, "Didn't expect the registry key to exist\n");
     /* Just in case */
     if (res == ERROR_SUCCESS)

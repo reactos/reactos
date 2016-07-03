@@ -133,6 +133,18 @@ static const struct
     { STD_HEADER " [Test\x00Section]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
     { STD_HEADER " [TestSection\x00]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
     { STD_HEADER " [Test\x00Section]\n",                     ERROR_BAD_SECTION_NAME_LINE, 3,    FALSE },
+    { "garbage1\ngarbage2\n[abc]\n" STD_HEADER,              ERROR_EXPECTED_SECTION_NAME, 1,    FALSE },
+    { "garbage1\ngarbage2\n[Strings]\n" STD_HEADER,          0,                           0,    FALSE },
+    { ";comment\ngarbage1\ngarbage2\n[abc]\n" STD_HEADER,    ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
+    { ";comment\ngarbage1\ngarbage2\n[Strings]\n" STD_HEADER, 0,                          0,    FALSE },
+    { " \t\ngarbage1\ngarbage2\n[abc]\n" STD_HEADER,         ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
+    { " \t\ngarbage1\ngarbage2\n[Strings]\n" STD_HEADER,     0,                           0,    FALSE },
+    { "garbage1\ngarbage2\n" STD_HEADER "[abc]\n",           ERROR_EXPECTED_SECTION_NAME, 1,    FALSE },
+    { "garbage1\ngarbage2\n" STD_HEADER "[Strings]\n",       0,                           0,    FALSE },
+    { ";comment\ngarbage1\ngarbage2\n" STD_HEADER "[abc]\n", ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
+    { ";comment\ngarbage1\ngarbage2\n" STD_HEADER "[Strings]\n", 0,                       0,    FALSE },
+    { " \t\ngarbage1\ngarbage2\n" STD_HEADER "[abc]\n",      ERROR_EXPECTED_SECTION_NAME, 2,    FALSE },
+    { " \t\ngarbage1\ngarbage2\n" STD_HEADER "[Strings]\n",  0,                           0,    FALSE },
 };
 
 static void test_invalid_files(void)
@@ -152,14 +164,7 @@ static void test_invalid_files(void)
         if (invalid_files[i].error)  /* should fail */
         {
             ok( hinf == INVALID_HANDLE_VALUE, "file %u: Open succeeded\n", i );
-            if (invalid_files[i].todo) todo_wine
-            {
-                ok( err == invalid_files[i].error, "file %u: Bad error %u/%u\n",
-                    i, err, invalid_files[i].error );
-                ok( err_line == invalid_files[i].err_line, "file %u: Bad error line %d/%d\n",
-                    i, err_line, invalid_files[i].err_line );
-            }
-            else
+            todo_wine_if (invalid_files[i].todo)
             {
                 ok( err == invalid_files[i].error, "file %u: Bad error %u/%u\n",
                     i, err, invalid_files[i].error );

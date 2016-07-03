@@ -11,7 +11,7 @@ list(APPEND SOURCE
     stringtable.c
     testlist.c)
 
-add_executable(setupapi_winetest ${SOURCE})
+add_executable(setupapi_winetest ${SOURCE} setupapi.rc)
 set_module_type(setupapi_winetest win32cui)
-add_importlibs(setupapi_winetest advapi32 setupapi user32 msvcrt kernel32)
+add_importlibs(setupapi_winetest advapi32 setupapi user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET setupapi_winetest DESTINATION reactos/bin FOR all)
