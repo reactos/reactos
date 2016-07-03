@@ -37,6 +37,7 @@
 #include <objbase.h>
 #include <dmusici.h>
 #include <dmusics.h>
+#include <dmksctrl.h>
 
 #include <wine/debug.h>
 #include <wine/list.h>
@@ -171,6 +172,7 @@ struct SynthPortImpl {
     IDirectMusicPort IDirectMusicPort_iface;
     IDirectMusicPortDownload IDirectMusicPortDownload_iface;
     IDirectMusicThru IDirectMusicThru_iface;
+    IKsControl IKsControl_iface;
     LONG ref;
 
     /* IDirectMusicPort fields */

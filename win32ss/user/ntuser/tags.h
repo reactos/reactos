@@ -1,6 +1,7 @@
 #pragma once
 
 #define TAG_STRING         ' RTS' /* String */
+#define TAG_USTR           'RTSU' /* Unicode String */
 #define TAG_HOOK           'ohsU' /* Hook */
 #define TAG_MENUITEM       'emsU' /* Menu item */
 #define TAG_MSG            'GSEM' /* Message */

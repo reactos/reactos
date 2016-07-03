@@ -389,6 +389,7 @@ void free_netconn(netconn_t *netconn)
             DeleteSecurityContext(&netconn->ssl_ctx);
     }
 
+    close_netconn(netconn);
     heap_free(netconn);
 }
 

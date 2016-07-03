@@ -137,8 +137,7 @@ public:
 
         /* Read the current position of the stream, we'll have to reset it everytime
            we read a CLSID that's not the task band... */
-        ZeroMemory(&liPosZero,
-            sizeof(liPosZero));
+        ZeroMemory(&liPosZero, sizeof(liPosZero));
         hRet = pStm->Seek(liPosZero, STREAM_SEEK_CUR, &liCurrent);
 
         if (SUCCEEDED(hRet))
@@ -564,14 +563,14 @@ public:
         HKEY hkStreams;
         IStream *Stream = NULL;
 
-        if (RegCreateKey(hkExplorer,
-            TEXT("Streams"),
-            &hkStreams) == ERROR_SUCCESS)
+        if (RegCreateKeyW(hkExplorer,
+                          L"Streams",
+                          &hkStreams) == ERROR_SUCCESS)
         {
-            Stream = SHOpenRegStream(hkStreams,
-                TEXT("Desktop"),
-                TEXT("TaskbarWinXP"),
-                grfMode);
+            Stream = SHOpenRegStreamW(hkStreams,
+                                      L"Desktop",
+                                      L"TaskbarWinXP",
+                                      grfMode);
 
             RegCloseKey(hkStreams);
         }
@@ -584,14 +583,14 @@ public:
         HKEY hkStreams;
         IStream *Stream = NULL;
 
-        if (RegCreateKey(HKEY_LOCAL_MACHINE,
-            TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Streams"),
+        if (RegCreateKeyW(HKEY_LOCAL_MACHINE,
+            L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Streams",
             &hkStreams) == ERROR_SUCCESS)
         {
-            Stream = SHOpenRegStream(hkStreams,
-                TEXT("Desktop"),
-                TEXT("Default Taskbar"),
-                grfMode);
+            Stream = SHOpenRegStreamW(hkStreams,
+                                      L"Desktop",
+                                      L"Default Taskbar",
+                                      grfMode);
 
             RegCloseKey(hkStreams);
         }
@@ -752,10 +751,10 @@ public:
         };
 /*******************************************************************/
 
-ITrayBandSite *
+ITrayBandSite*
 CreateTrayBandSite(IN OUT ITrayWindow *Tray,
-OUT HWND *phWndRebar,
-OUT HWND *phWndTaskSwitch)
+                   OUT HWND *phWndRebar,
+                   OUT HWND *phWndTaskSwitch)
 {
     HRESULT hr;
 

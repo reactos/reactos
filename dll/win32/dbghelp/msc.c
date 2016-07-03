@@ -1005,7 +1005,7 @@ static struct symt* codeview_add_type_struct(struct codeview_type_parse* ctp,
         hash_table_iter_init(&ctp->module->ht_types, &hti, name);
         while ((ptr = hash_table_iter_up(&hti)))
         {
-            type = GET_ENTRY(ptr, struct symt_ht, hash_elt);
+            type = CONTAINING_RECORD(ptr, struct symt_ht, hash_elt);
 
             if (type->symt.tag == SymTagUDT &&
                 type->hash_elt.name && !strcmp(type->hash_elt.name, name))
@@ -2962,9 +2962,9 @@ static BOOL  pev_get_val(struct pevaluator* pev, const char* str, DWORD_PTR* val
         hash_table_iter_init(&pev->values, &hti, str);
         while ((ptr = hash_table_iter_up(&hti)))
         {
-            if (!strcmp(GET_ENTRY(ptr, struct zvalue, elt)->elt.name, str))
+            if (!strcmp(CONTAINING_RECORD(ptr, struct zvalue, elt)->elt.name, str))
             {
-                *val = GET_ENTRY(ptr, struct zvalue, elt)->value;
+                *val = CONTAINING_RECORD(ptr, struct zvalue, elt)->value;
                 return TRUE;
             }
         }
@@ -3017,9 +3017,9 @@ static BOOL  pev_set_value(struct pevaluator* pev, const char* name, DWORD_PTR v
     hash_table_iter_init(&pev->values, &hti, name);
     while ((ptr = hash_table_iter_up(&hti)))
     {
-        if (!strcmp(GET_ENTRY(ptr, struct zvalue, elt)->elt.name, name))
+        if (!strcmp(CONTAINING_RECORD(ptr, struct zvalue, elt)->elt.name, name))
         {
-            GET_ENTRY(ptr, struct zvalue, elt)->value = val;
+            CONTAINING_RECORD(ptr, struct zvalue, elt)->value = val;
             break;
         }
     }

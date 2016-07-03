@@ -475,15 +475,15 @@ BEGIN
     ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 
-IDD_LOG_OFF DIALOGEX 0, 0, 190, 60
+IDD_LOG_OFF DIALOGEX 0, 0, 188, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Odhlásiť ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
-    LTEXT "Ste si istý, že sa chcete odhlásiť?", -1, 43, 11, 140, 22
-    DEFPUSHBUTTON "O&dhlásiť", IDOK, 57, 40, 60, 14
-    PUSHBUTTON "Zrušiť", IDCANCEL, 122, 40, 60, 14
+    ICON IDI_SHELL_LOGOFF, IDC_STATIC, 8, 6, 21, 20
+    LTEXT "Ste si istý, že sa chcete odhlásiť?", -1, 49, 15, 131, 8
+    DEFPUSHBUTTON "O&dhlásiť", IDOK, 49, 38, 43, 14
+    PUSHBUTTON "Zrušiť", IDCANCEL, 99, 38, 43, 14
 END
 
 IDD_DISCONNECT DIALOGEX 0, 0, 190, 60
@@ -709,8 +709,6 @@ BEGIN
     IDS_RESTART_PROMPT "Naozaj chcete reštartovať systém?"
     IDS_SHUTDOWN_TITLE "Vypnúť"
     IDS_SHUTDOWN_PROMPT "Naozaj chcete vypnúť počítač?"
-    IDS_LOGOFF_TITLE "Odhlásiť"
-    IDS_LOGOFF_PROMPT "Naozaj sa chcete odhlásiť?"
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Nemožno zobraziť dialogové okno Spustiť súbor (vnútorná chyba)"

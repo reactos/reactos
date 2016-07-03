@@ -162,7 +162,7 @@ IntGetMenuDefaultItem(PMENU Menu, BOOL fByPos, UINT gmdiFlags, DWORD *gismc)
    if ( (!(GMDI_USEDISABLED & gmdiFlags)) && (Item->fState & MFS_DISABLED )) return -1;
 
    /* search rekursiv when needed */
-   if ( (Item->fType & MF_POPUP) &&  (gmdiFlags & GMDI_GOINTOPOPUPS) && Item->spSubMenu)
+   if ( (gmdiFlags & GMDI_GOINTOPOPUPS) && Item->spSubMenu )
    {
       UINT ret;
       (*gismc)++;
@@ -509,6 +509,7 @@ static LPCSTR MENUEX_ParseResource(LPCSTR res, HMENU hMenu)
                 return NULL;
             }
             mii.fMask |= MIIM_SUBMENU;
+            mii.fType |= MF_POPUP;
         }
         else if (!mii.dwTypeData[0] && !(mii.fType & MF_SEPARATOR))
         {

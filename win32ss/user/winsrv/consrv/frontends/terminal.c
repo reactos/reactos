@@ -330,7 +330,13 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
         {
             /* Start a new line */
             Console->LineMaxSize = max(256, NumCharsToRead);
-            ASSERT(ReadControl->nInitialChars <= Console->LineMaxSize);
+
+            /*
+             * Fixup ReadControl->nInitialChars in case the number of initial
+             * characters is bigger than the number of characters to be read.
+             * It will always be, lesser than or equal to Console->LineMaxSize.
+             */
+            ReadControl->nInitialChars = min(ReadControl->nInitialChars, NumCharsToRead);
 
             Console->LineBuffer = ConsoleAllocHeap(0, Console->LineMaxSize * sizeof(WCHAR));
             if (Console->LineBuffer == NULL) return STATUS_NO_MEMORY;
@@ -346,7 +352,7 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
              * worry about ANSI <-> Unicode conversion.
              */
             memcpy(Console->LineBuffer, Buffer, Console->LineSize * sizeof(WCHAR));
-            if (Console->LineSize == Console->LineMaxSize)
+            if (Console->LineSize >= Console->LineMaxSize)
             {
                 Console->LineComplete = TRUE;
                 Console->LinePos = 0;
@@ -356,7 +362,7 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
         /* If we don't have a complete line yet, process the pending input */
         while (!Console->LineComplete && !IsListEmpty(&InputBuffer->InputEvents))
         {
-            /* Remove input event from queue */
+            /* Remove an input event from the queue */
             CurrentEntry = RemoveHeadList(&InputBuffer->InputEvents);
             if (IsListEmpty(&InputBuffer->InputEvents))
             {
@@ -378,12 +384,14 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
         /* Check if we have a complete line to read from */
         if (Console->LineComplete)
         {
-            // NOTE: I want to check whether we always set LinePos to zero
-            // when LineComplete is set to TRUE.
-            // Basically, we are going to use LinePos as 'i'.
-            ASSERT(Console->LinePos == 0);
+            /*
+             * Console->LinePos keeps the next position of the character to read
+             * in the line buffer across the different calls of the function,
+             * so that the line buffer can be read by chunks after all the input
+             * has been buffered.
+             */
 
-            while (i < NumCharsToRead && Console->LinePos != Console->LineSize)
+            while (i < NumCharsToRead && Console->LinePos < Console->LineSize)
             {
                 WCHAR Char = Console->LineBuffer[Console->LinePos++];
 
@@ -398,11 +406,14 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
                 ++i;
             }
 
-            if (Console->LinePos == Console->LineSize)
+            if (Console->LinePos >= Console->LineSize)
             {
-                /* Entire line has been read */
+                /* The entire line has been read */
                 ConsoleFreeHeap(Console->LineBuffer);
                 Console->LineBuffer = NULL;
+                Console->LinePos = Console->LineMaxSize = Console->LineSize = 0;
+                // Console->LineComplete = Console->LineUpPressed = FALSE;
+                Console->LineComplete = FALSE;
             }
 
             Status = STATUS_SUCCESS;
@@ -415,7 +426,7 @@ ConSrvTermReadStream(IN OUT PTERMINAL This,
         /* Character input */
         while (i < NumCharsToRead && !IsListEmpty(&InputBuffer->InputEvents))
         {
-            /* Remove input event from queue */
+            /* Remove an input event from the queue */
             CurrentEntry = RemoveHeadList(&InputBuffer->InputEvents);
             if (IsListEmpty(&InputBuffer->InputEvents))
             {

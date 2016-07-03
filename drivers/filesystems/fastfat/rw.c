@@ -150,7 +150,7 @@ VfatReadFileData(
     BytesPerSector = DeviceExt->FatInfo.BytesPerSector;
     BytesPerCluster = DeviceExt->FatInfo.BytesPerCluster;
 
-    ASSERT(ReadOffset.QuadPart + Length <= ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector));
+    ASSERT(ReadOffset.QuadPart + Length <= ROUND_UP_64(Fcb->RFCB.FileSize.QuadPart, BytesPerSector));
     ASSERT(ReadOffset.u.LowPart % BytesPerSector == 0);
     ASSERT(Length % BytesPerSector == 0);
 
@@ -711,9 +711,9 @@ VfatRead(
     else
     {
         // non cached read
-        if (ByteOffset.QuadPart + Length > ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector))
+        if (ByteOffset.QuadPart + Length > ROUND_UP_64(Fcb->RFCB.FileSize.QuadPart, BytesPerSector))
         {
-            Length = (ULONG)(ROUND_UP(Fcb->RFCB.FileSize.QuadPart, BytesPerSector) - ByteOffset.QuadPart);
+            Length = (ULONG)(ROUND_UP_64(Fcb->RFCB.FileSize.QuadPart, BytesPerSector) - ByteOffset.QuadPart);
         }
 
         Status = VfatReadFileData(IrpContext, Length, ByteOffset, &ReturnedLength);

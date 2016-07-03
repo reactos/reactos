@@ -151,9 +151,6 @@ void     hash_table_iter_init(const struct hash_table* ht,
                               struct hash_table_iter* hti, const char* name) DECLSPEC_HIDDEN;
 void*    hash_table_iter_up(struct hash_table_iter* hti) DECLSPEC_HIDDEN;
 
-#define GET_ENTRY(__i, __t, __f) \
-    ((__t*)((char*)(__i) - FIELD_OFFSET(__t,__f)))
-
 
 extern unsigned dbghelp_options DECLSPEC_HIDDEN;
 /* some more Wine extensions */

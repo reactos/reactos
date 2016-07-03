@@ -92,7 +92,7 @@ BEGIN
     IDS_APP_TITLE "Prohlížeč událostí"
     IDS_APP_TITLE_EX "%s - Protkol %s na \\\\"
     IDS_STATUS_MSG "Počet událostí v protokolu %s: %lu"
-    IDS_EVENTSTRINGIDNOTFOUND "Popis ID události ( %lu ) zdroj ( %s ) nebyl nalezen. Místní počítač neobsahuje potřebné informace v registru nebo chybí DLL soubory pro zobrazení zpráv ze vzdáleného počítače."
+    IDS_EVENTSTRINGIDNOTFOUND "Popis ID události ( %lu ) zdroj ( %s ) nebyl nalezen. Místní počítač neobsahuje potřebné informace v registru nebo chybí DLL soubory pro zobrazení zpráv ze vzdáleného počítače.\n\nThe following information is part of the event:\n\n"
     IDS_EVENTLOG_ERROR_TYPE "Chyba"
     IDS_EVENTLOG_WARNING_TYPE "Upozornění"
     IDS_EVENTLOG_INFORMATION_TYPE "Informace"

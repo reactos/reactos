@@ -177,7 +177,7 @@ DECLSPEC_HOTPATCH
 LoadLibraryW(LPCWSTR lpLibFileName)
 {
     /* Call Ex version of the API */
-    return LoadLibraryExW (lpLibFileName, 0, 0);
+    return LoadLibraryExW(lpLibFileName, 0, 0);
 }
 
 

@@ -677,6 +677,9 @@ error:
     return Status;
 }
 
+VOID
+UserDisplayNotifyShutdown(PPROCESSINFO ppiCurrent);
+
 NTSTATUS
 NTAPI
 ExitThreadCallback(PETHREAD Thread)
@@ -805,6 +808,11 @@ ExitThreadCallback(PETHREAD Thread)
 
        gptiForeground = NULL;
     }
+
+    /* Restore display mode when we are the last thread, and we changed the display mode */
+    if (ppiCurrent->cThreads == 0)
+        UserDisplayNotifyShutdown(ppiCurrent);
+
 
     // Fixes CORE-6384 & CORE-7030.
 /*    if (ptiLastInput == ptiCurrent)

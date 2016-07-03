@@ -30,4 +30,12 @@ STRINGTABLE
     STRING_DELETE_VALUE, "Sigur doriți ștergerea valorii de registru «%1»?"
     STRING_DELETE_VALUEALL, "Sigur doriți ștergerea tuturor valorilor de registru din «%1»?"
     STRING_DELETE_SUBKEY, "Sigur doriți ștergerea cheii de registru «%1»?"
+    STRING_INVALID_STRING, "reg: Opțiunea [/d] trebuie urmată de un șir valid\n"
+    STRING_VALUEALL_FAILED, "reg: Nu se pot șterge toate valorile de registru din «%1». A survenit o eroare neașteptată.\n"
+    STRING_GENERAL_FAILURE, "reg: Nu se poate completa operația specificată. A survenit o eroare neașteptată.\n"
+    STRING_MATCHES_FOUND, "Căutare efectuată. Numărul de potriviri găsite: %1!d!\n"
+    STRING_INVALID_SYNTAX, "reg: Sintaxă nerespectată. "
+    STRING_INVALID_OPTION, "reg: Opțiune nevalidă [%1]. "
+    STRING_REG_HELP, "Tastați «REG /?» pentru mai multe informații.\n"
+    STRING_FUNC_HELP, "Tastați «REG %1 /?» pentru mai multe informații.\n"
 }

@@ -162,7 +162,7 @@ static int output_message( int msg )
     return output_string( fmtW, buffer );
 }
 
-static int query_prop( const WCHAR *alias, const WCHAR *propname )
+static int query_prop( const WCHAR *class, const WCHAR *propname )
 {
     static const WCHAR select_allW[] = {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',0};
     static const WCHAR cimv2W[] = {'R','O','O','T','\\','C','I','M','V','2',0};
@@ -175,18 +175,12 @@ static int query_prop( const WCHAR *alias, const WCHAR *propname )
     IEnumWbemClassObject *result = NULL;
     LONG flags = WBEM_FLAG_RETURN_IMMEDIATELY | WBEM_FLAG_FORWARD_ONLY;
     BSTR path = NULL, wql = NULL, query = NULL;
-    const WCHAR *class;
     WCHAR *prop = NULL;
     BOOL first = TRUE;
     int len, ret = -1;
 
-    WINE_TRACE("%s, %s\n", debugstr_w(alias), debugstr_w(propname));
+    WINE_TRACE("%s, %s\n", debugstr_w(class), debugstr_w(propname));
 
-    if (!(class = find_class( alias )))
-    {
-        output_message( STRING_ALIAS_NOT_FOUND );
-        return -1;
-    }
     CoInitialize( NULL );
     CoInitializeSecurity( NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT,
                           RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL );
@@ -253,11 +247,67 @@ done:
 int wmain(int argc, WCHAR *argv[])
 {
     static const WCHAR getW[] = {'g','e','t',0};
+    static const WCHAR quitW[] = {'q','u','i','t',0};
+    static const WCHAR exitW[] = {'e','x','i','t',0};
+    static const WCHAR pathW[] = {'p','a','t','h',0};
+    static const WCHAR classW[] = {'c','l','a','s','s',0};
+    static const WCHAR contextW[] = {'c','o','n','t','e','x','t',0};
 
-    if (argc != 4 || strcmpiW( argv[2], getW ))
+    const WCHAR *class;
+    const WCHAR *value;
+    int i;
+
+    if (argc == 1)
+        goto not_supported;
+
+    for (i = 1; i < argc && argv[i][0] == '/'; i++)
+        WINE_FIXME("command line switch %s not supported\n", debugstr_w(argv[i]));
+
+    if (i >= argc)
+        goto not_supported;
+
+    if (!strcmpiW( argv[i], quitW ) ||
+        !strcmpiW( argv[i], exitW ))
     {
-        output_message( STRING_CMDLINE_NOT_SUPPORTED );
-        return -1;
+        return 0;
     }
-    return query_prop( argv[1], argv[3] );
+    else if (!strcmpiW( argv[i], classW) ||
+             !strcmpiW( argv[i], contextW))
+    {
+        WINE_FIXME("command %s not supported\n", debugstr_w(argv[i]));
+        goto not_supported;
+    }
+    else if (!strcmpiW( argv[i], pathW))
+    {
+        if (++i >= argc)
+        {
+            output_message( STRING_INVALID_PATH );
+            return 1;
+        }
+        class = argv[i];
+    }
+    else
+    {
+        class = find_class( argv[i] );
+        if (!class)
+        {
+            output_message( STRING_ALIAS_NOT_FOUND );
+            return 1;
+        }
+    }
+
+    if (++i >= argc)
+        goto not_supported;
+
+    if (!strcmpiW( argv[i], getW))
+    {
+        if (++i >= argc)
+            goto not_supported;
+        value = argv[i];
+        return query_prop( class, value );
+    }
+
+not_supported:
+    output_message( STRING_CMDLINE_NOT_SUPPORTED );
+    return 1;
 }

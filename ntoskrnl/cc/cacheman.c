@@ -122,9 +122,13 @@ CcSetBcbOwnerPointer (
     CCTRACE(CC_API_DEBUG, "Bcb=%p Owner=%p\n",
         Bcb, Owner);
 
-    if (iBcb->OwnerPointer)
-        DPRINT1("OwnerPointer was already set?! Old: %p, New: %p\n", iBcb->OwnerPointer, Owner);
-    iBcb->OwnerPointer = Owner;
+    if (!ExIsResourceAcquiredExclusiveLite(&iBcb->Lock) && !ExIsResourceAcquiredSharedLite(&iBcb->Lock))
+    {
+        DPRINT1("Current thread doesn't own resource!\n");
+        return;
+    }
+
+    ExSetResourceOwnerPointer(&iBcb->Lock, Owner);
 }
 
 /*

@@ -60,7 +60,7 @@ static VOID
 LineInputSetPos(PCONSRV_CONSOLE Console,
                 UINT Pos)
 {
-    if (Pos != Console->LinePos && GetConsoleInputBufferMode(Console) & ENABLE_ECHO_INPUT)
+    if (Pos != Console->LinePos && (GetConsoleInputBufferMode(Console) & ENABLE_ECHO_INPUT))
     {
         PCONSOLE_SCREEN_BUFFER Buffer = Console->ActiveBuffer;
         SHORT OldCursorX = Buffer->CursorPosition.X;
@@ -95,7 +95,7 @@ LineInputEdit(PCONSRV_CONSOLE Console,
     if (GetType(Console->ActiveBuffer) != TEXTMODE_BUFFER) return;
     ActiveBuffer = (PTEXTMODE_SCREEN_BUFFER)Console->ActiveBuffer;
 
-    /* Make sure there's always enough room for ending \r\n */
+    /* Make sure there is always enough room for ending \r\n */
     if (NewSize + 2 > Console->LineMaxSize)
         return;
 
@@ -182,7 +182,7 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
     {
         case VK_ESCAPE:
         {
-            /* Clear entire line */
+            /* Clear the entire line */
             LineInputSetPos(Console, 0);
             LineInputEdit(Console, Console->LineSize, 0, NULL);
 
@@ -197,7 +197,7 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
 
         case VK_HOME:
         {
-            /* Move to start of line. With CTRL, erase everything left of cursor */
+            /* Move to start of line. With CTRL, erase everything left of cursor. */
             LineInputSetPos(Console, 0);
             if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
                 LineInputEdit(Console, Pos, 0, NULL);
@@ -206,7 +206,7 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
 
         case VK_END:
         {
-            /* Move to end of line. With CTRL, erase everything right of cursor */
+            /* Move to end of line. With CTRL, erase everything right of cursor. */
             if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
                 LineInputEdit(Console, Console->LineSize - Pos, 0, NULL);
             else
@@ -216,7 +216,7 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
 
         case VK_LEFT:
         {
-            /* Move left. With CTRL, move to beginning of previous word */
+            /* Move to the left. With CTRL, move to beginning of previous word. */
             if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
             {
                 while (Pos > 0 && Console->LineBuffer[Pos - 1] == L' ') Pos--;
@@ -233,7 +233,7 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
         case VK_RIGHT:
         case VK_F1:
         {
-            /* Move right. With CTRL, move to beginning of next word */
+            /* Move to the right. With CTRL, move to beginning of next word. */
             if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
             {
                 while (Pos < Console->LineSize && Console->LineBuffer[Pos] != L' ') Pos++;
@@ -262,7 +262,7 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
 
         case VK_DELETE:
         {
-            /* Remove character to right of cursor */
+            /* Remove one character to right of cursor */
             if (Pos != Console->LineSize)
                 LineInputEdit(Console, 1, 0, NULL);
             return;
@@ -270,14 +270,14 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
 
         case VK_PRIOR:
         {
-            /* Recall first history entry */
+            /* Recall the first history entry */
             LineInputRecallHistory(Console, ExeName, -((WORD)-1));
             return;
         }
 
         case VK_NEXT:
         {
-            /* Recall last history entry */
+            /* Recall the last history entry */
             LineInputRecallHistory(Console, ExeName, +((WORD)-1));
             return;
         }
@@ -286,8 +286,8 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
         case VK_F5:
         {
             /*
-             * Recall previous history entry. On first time, actually recall the
-             * current (usually last) entry; on subsequent times go back.
+             * Recall the previous history entry. On first time, actually recall
+             * the current (usually last) entry; on subsequent times go back.
              */
             LineInputRecallHistory(Console, ExeName, Console->LineUpPressed ? -1 : 0);
             Console->LineUpPressed = TRUE;
@@ -296,14 +296,14 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
 
         case VK_DOWN:
         {
-            /* Recall next history entry */
+            /* Recall the next history entry */
             LineInputRecallHistory(Console, ExeName, +1);
             return;
         }
 
         case VK_F3:
         {
-            /* Recall remainder of current history entry */
+            /* Recall the remainder of the current history entry */
             HistoryGetCurrentEntry(Console, ExeName, &Entry);
             if (Pos * sizeof(WCHAR) < Entry.Length)
             {
@@ -356,7 +356,7 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
             PHISTORY_BUFFER Hist;
             INT HistPos;
 
-            /* Search for history entries starting with input. */
+            /* Search for history entries starting with input */
             Hist = HistoryCurrentBuffer(Console, ExeName);
             if (!Hist || Hist->NumEntries == 0) return;
 
@@ -403,10 +403,12 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
      * OK, we deal with normal keys, we can continue...
      */
 
-    if (KeyEvent->uChar.UnicodeChar == L'\b' && GetConsoleInputBufferMode(Console) & ENABLE_PROCESSED_INPUT)
+    if (KeyEvent->uChar.UnicodeChar == L'\b' && (GetConsoleInputBufferMode(Console) & ENABLE_PROCESSED_INPUT))
     {
-        /* backspace handling - if processed input enabled then we handle it here
-         * otherwise we treat it like a normal char. */
+        /*
+         * Backspace handling - if processed input enabled then we handle it
+         * here, otherwise we treat it like a normal character.
+         */
         if (Pos > 0)
         {
             LineInputSetPos(Console, Pos - 1);
@@ -415,9 +417,18 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
     }
     else if (KeyEvent->uChar.UnicodeChar == L'\r')
     {
-        Entry.Length = Entry.MaximumLength = Console->LineSize * sizeof(WCHAR);
-        Entry.Buffer = Console->LineBuffer;
-        HistoryAddEntry(Console, ExeName, &Entry);
+        /*
+         * Only add a history entry if console echo is enabled. This ensures
+         * that anything sent to the console when echo is disabled (e.g.
+         * binary data, or secrets like passwords...) does not remain stored
+         * in memory.
+         */
+        if (GetConsoleInputBufferMode(Console) & ENABLE_ECHO_INPUT)
+        {
+            Entry.Length = Entry.MaximumLength = Console->LineSize * sizeof(WCHAR);
+            Entry.Buffer = Console->LineBuffer;
+            HistoryAddEntry(Console, ExeName, &Entry);
+        }
 
         /* TODO: Expand aliases */
         DPRINT1("TODO: Expand aliases\n");
@@ -434,10 +445,10 @@ LineInputKeyDown(PCONSRV_CONSOLE Console,
 
         /*
          * Add \n if processed input. There should usually be room for it,
-         * but an exception to the rule exists: the buffer could have been 
+         * but an exception to the rule exists: the buffer could have been
          * pre-filled with LineMaxSize - 1 characters.
          */
-        if (GetConsoleInputBufferMode(Console) & ENABLE_PROCESSED_INPUT &&
+        if ((GetConsoleInputBufferMode(Console) & ENABLE_PROCESSED_INPUT) &&
             Console->LineSize < Console->LineMaxSize)
         {
             Console->LineBuffer[Console->LineSize++] = L'\n';

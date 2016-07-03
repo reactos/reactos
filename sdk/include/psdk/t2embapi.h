@@ -233,7 +233,7 @@ TTIsEmbeddingEnabled(HDC hDC,
 
 LONG
 WINAPI
-TTIsEmbeddingEnabledForFacename(LPSTR lpszFacename,
+TTIsEmbeddingEnabledForFacename(LPCSTR lpszFacename,
                                 BOOL* pbEnabled);
 
 LONG

@@ -1675,6 +1675,42 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
 
 
 /**********************************************************************
+ *  I_ScGetCurrentGroupStateW
+ *
+ * @implemented
+ */
+DWORD WINAPI
+I_ScGetCurrentGroupStateW(SC_HANDLE hSCManager,
+                          LPWSTR pszGroupName,
+                          LPDWORD pdwGroupState)
+{
+    DWORD dwError;
+
+    TRACE("I_ScGetCurrentGroupStateW() called\n");
+
+    RpcTryExcept
+    {
+        dwError = RI_ScGetCurrentGroupStateW((SC_RPC_HANDLE)hSCManager,
+                                             pszGroupName,
+                                             pdwGroupState);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    RpcEndExcept
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        TRACE("RI_ScGetCurrentGroupStateW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+    }
+
+    return dwError;
+}
+
+
+/**********************************************************************
  *  LockServiceDatabase
  *
  * @implemented

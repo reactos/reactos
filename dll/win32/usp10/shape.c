@@ -72,9 +72,9 @@ static void ShapeCharGlyphProp_Kannada( HDC hdc, ScriptCache *psc, SCRIPT_ANALYS
 static void ShapeCharGlyphProp_Malayalam( HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, const WCHAR* pwcChars, const INT cChars, const WORD* pwGlyphs, const INT cGlyphs, WORD *pwLogClust, SCRIPT_CHARPROP *pCharProp, SCRIPT_GLYPHPROP *pGlyphProp );
 static void ShapeCharGlyphProp_Khmer( HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, const WCHAR* pwcChars, const INT cChars, const WORD* pwGlyphs, const INT cGlyphs, WORD *pwLogClust, SCRIPT_CHARPROP *pCharProp, SCRIPT_GLYPHPROP *pGlyphProp );
 
-extern const unsigned short indic_syllabic_table[];
-extern const unsigned short wine_shaping_table[];
-extern const unsigned short wine_shaping_forms[LAST_ARABIC_CHAR - FIRST_ARABIC_CHAR + 1][4];
+extern const unsigned short indic_syllabic_table[] DECLSPEC_HIDDEN;
+extern const unsigned short wine_shaping_table[] DECLSPEC_HIDDEN;
+extern const unsigned short wine_shaping_forms[LAST_ARABIC_CHAR - FIRST_ARABIC_CHAR + 1][4] DECLSPEC_HIDDEN;
 
 enum joining_types {
     jtU,

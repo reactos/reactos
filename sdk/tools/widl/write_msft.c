@@ -50,6 +50,12 @@
 #include "hash.h"
 #include "typetree.h"
 
+#ifdef __REACTOS__
+#define S_OK           0
+#define S_FALSE        1
+#define E_OUTOFMEMORY  ((HRESULT)0x8007000EL)
+#endif
+
 enum MSFT_segment_index {
     MSFT_SEG_TYPEINFO = 0,  /* type information */
     MSFT_SEG_IMPORTINFO,    /* import information */
@@ -502,7 +508,7 @@ static int ctl2_alloc_guid(
     offset = ctl2_find_guid(typelib, hash_key, &guid->guid);
     if (offset != -1)
     {
-        if (pedantic)
+        if (is_warning_enabled(2368))
             warning("duplicate uuid {%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\n",
                     guid->guid.Data1, guid->guid.Data2, guid->guid.Data3,
                     guid->guid.Data4[0], guid->guid.Data4[1], guid->guid.Data4[2], guid->guid.Data4[3],

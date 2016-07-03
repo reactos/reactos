@@ -917,11 +917,7 @@ ImageList_DragEnter (HWND hwndLock, INT x, INT y)
     InternalDrag.y = y;
 
     /* draw the drag image and save the background */
-    if (!ImageList_DragShowNolock(TRUE)) {
-	return FALSE;
-    }
-
-    return TRUE;
+    return ImageList_DragShowNolock(TRUE);
 }
 
 

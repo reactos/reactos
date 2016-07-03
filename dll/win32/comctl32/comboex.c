@@ -1301,7 +1301,7 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT const *di
 		RECT exrc, cbrc, edrc;
 		GetWindowRect (infoPtr->hwndSelf, &exrc);
 		GetWindowRect (infoPtr->hwndCombo, &cbrc);
-		edrc.left = edrc.top = edrc.right = edrc.bottom = -1;
+                SetRect(&edrc, -1, -1, -1, -1);
 		if (infoPtr->hwndEdit) GetWindowRect (infoPtr->hwndEdit, &edrc);
                 TRACE("window rects ex=(%s), cb=(%s), ed=(%s)\n",
                       wine_dbgstr_rect(&exrc), wine_dbgstr_rect(&cbrc),
@@ -1456,10 +1456,7 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT const *di
 	    x = xbase + xioff;
 	    y = dis->rcItem.top +
 	        (dis->rcItem.bottom - dis->rcItem.top - txtsize.cy) / 2;
-	    rect.left = x;
-	    rect.right = x + txtsize.cx;
-	    rect.top = dis->rcItem.top + 1;
-	    rect.bottom = dis->rcItem.bottom - 1;
+            SetRect(&rect, x, dis->rcItem.top + 1, x + txtsize.cx, dis->rcItem.bottom - 1);
             TRACE("drawing item %d text, rect=(%s)\n",
                   dis->itemID, wine_dbgstr_rect(&rect));
 	    ExtTextOutW (dis->hDC, x, y, ETO_OPAQUE | ETO_CLIPPED,

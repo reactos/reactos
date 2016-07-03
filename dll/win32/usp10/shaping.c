@@ -2,7 +2,7 @@
 /* generated from http://www.unicode.org/Public/8.0.0/ucd/ArabicShaping.txt */
 /* DO NOT EDIT!! */
 
-const unsigned short wine_shaping_table[2848] =
+const unsigned short /* DECLSPEC_HIDDEN */ wine_shaping_table[2848] =
 {
     /* level 1 offsets */
     0x0100, 0x0110, 0x0110, 0x0120, 0x0130, 0x0140, 0x0150, 0x0160,
@@ -365,7 +365,7 @@ const unsigned short wine_shaping_table[2848] =
     0x0000, 0x0001, 0x0001, 0x0001, 0x0000, 0x0000, 0x0000, 0x0000
 };
 
-const unsigned short wine_shaping_forms[256][4] =
+const unsigned short /* DECLSPEC_HIDDEN */ wine_shaping_forms[256][4] =
 {
     { 0x0600, 0x0600, 0x0600, 0x0600 },
     { 0x0601, 0x0601, 0x0601, 0x0601 },

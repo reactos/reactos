@@ -23,7 +23,7 @@ GreTextOutW(
     LPCWSTR  lpString,
     int  cchString)
 {
-    return GreExtTextOutW(hdc, nXStart, nYStart, 0, NULL, (LPWSTR)lpString, cchString, NULL, 0);
+    return GreExtTextOutW(hdc, nXStart, nYStart, 0, NULL, lpString, cchString, NULL, 0);
 }
 
 /*
@@ -35,7 +35,7 @@ BOOL
 FASTCALL
 GreGetTextExtentW(
     HDC hDC,
-    LPWSTR lpwsz,
+    LPCWSTR lpwsz,
     INT cwc,
     LPSIZE psize,
     UINT flOpts)
@@ -92,7 +92,7 @@ BOOL
 FASTCALL
 GreGetTextExtentExW(
     HDC hDC,
-    LPWSTR String,
+    LPCWSTR String,
     ULONG Count,
     ULONG MaxExtent,
     PULONG Fit,

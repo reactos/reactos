@@ -16,9 +16,11 @@ Control(DWORD Control,
         INT ArgCount)
 {
     SC_HANDLE hSCManager = NULL;
-    SC_HANDLE hSc = NULL;
+    SC_HANDLE hService = NULL;
     SERVICE_STATUS Status;
     DWORD dwDesiredAccess = 0;
+    BOOL bResult = TRUE;
+    SERVICE_STATUS_PROCESS StatusEx;
 
 #ifdef SCDBG
     LPCTSTR *TmpArgs = Args;
@@ -62,40 +64,50 @@ Control(DWORD Control,
     hSCManager = OpenSCManager(NULL,
                                NULL,
                                SC_MANAGER_CONNECT);
-    if (hSCManager != NULL)
+    if (hSCManager == NULL)
     {
-        hSc = OpenService(hSCManager,
-                          ServiceName,
-                          dwDesiredAccess);
-        if (hSc != NULL)
-        {
-            if (ControlService(hSc,
-                               Control,
-                               &Status))
-            {
-                SERVICE_STATUS_PROCESS StatusEx;
-
-                /* FIXME: lazy hack ;) */
-                CopyMemory(&StatusEx, &Status, sizeof(Status));
-                StatusEx.dwProcessId = 0;
-                StatusEx.dwServiceFlags = 0;
-
-                PrintService(ServiceName,
-                             &StatusEx,
-                             FALSE);
-
-                CloseServiceHandle(hSc);
-                CloseServiceHandle(hSCManager);
-
-                return TRUE;
-            }
-        }
-        else
-            _tprintf(_T("[SC] OpenService FAILED %lu:\n\n"), GetLastError());
+        _tprintf(_T("[SC] OpenSCManager FAILED %lu:\n\n"), GetLastError());
+        bResult = FALSE;
+        goto done;
     }
 
-    ReportLastError();
-    if (hSc) CloseServiceHandle(hSc);
-    if (hSCManager) CloseServiceHandle(hSCManager);
-    return FALSE;
+    hService = OpenService(hSCManager,
+                           ServiceName,
+                           dwDesiredAccess);
+    if (hService == NULL)
+    {
+        _tprintf(_T("[SC] OpenService FAILED %lu:\n\n"), GetLastError());
+        bResult = FALSE;
+        goto done;
+    }
+
+    if (!ControlService(hService,
+                        Control,
+                        &Status))
+    {
+        _tprintf(_T("[SC] ControlService FAILED %lu:\n\n"), GetLastError());
+        bResult = FALSE;
+        goto done;
+    }
+
+    /* FIXME: lazy hack ;) */
+    CopyMemory(&StatusEx, &Status, sizeof(Status));
+    StatusEx.dwProcessId = 0;
+    StatusEx.dwServiceFlags = 0;
+
+    PrintService(ServiceName,
+                 &StatusEx,
+                 FALSE);
+
+done:
+    if (!bResult)
+        ReportLastError();
+
+    if (hService)
+        CloseServiceHandle(hService);
+
+    if (hSCManager)
+        CloseServiceHandle(hSCManager);
+
+    return bResult;
 }

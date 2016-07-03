@@ -19,6 +19,7 @@
  */
 
 #include <assert.h>
+#include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 
@@ -164,6 +165,7 @@ long int strtolW( const WCHAR *nptr, WCHAR **endptr, int base )
 
   if (overflow)
     {
+      errno = ERANGE;
       return negative ? LONG_MIN : LONG_MAX;
     }
 
@@ -276,6 +278,7 @@ unsigned long int strtoulW( const WCHAR *nptr, WCHAR **endptr, int base )
 
   if (overflow)
     {
+      errno = ERANGE;
       return ULONG_MAX;
     }
 

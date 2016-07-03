@@ -72,6 +72,7 @@ typedef struct {
 
 typedef struct {
     IHlinkFrame    IHlinkFrame_iface;
+    ITargetFrame   ITargetFrame_iface;
     ITargetFrame2  ITargetFrame2_iface;
     ITargetFramePriv2 ITargetFramePriv2_iface;
     IWebBrowserPriv2IE9 IWebBrowserPriv2IE9_iface;
@@ -206,6 +207,7 @@ struct WebBrowser {
     INT version;
 
     IOleClientSite *client;
+    IOleClientSite *client_closed;
     IOleContainer *container;
     IOleInPlaceSiteEx *inplace;
 

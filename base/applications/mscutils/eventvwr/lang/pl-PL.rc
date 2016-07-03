@@ -96,7 +96,7 @@ BEGIN
     IDS_APP_TITLE "Podgląd zdarzeń"
     IDS_APP_TITLE_EX "%s - %s Log na \\\\"
     IDS_STATUS_MSG "%s posiada %lu zdarzeń"
-    IDS_EVENTSTRINGIDNOTFOUND "Opis zdarzenia dla danego numeru ID: ( %lu ) nie został odnaleziony w źródle: ( %s ). Ten komputer może nie miec wystarczających informacji w rejestrze, albo bibliotek DLL, aby wyświetlić wiadomości z komputera zdalnego."
+    IDS_EVENTSTRINGIDNOTFOUND "Opis zdarzenia dla danego numeru ID ( %lu ) nie został odnaleziony w źródle ( %s ). Ten komputer może nie miec wystarczających informacji w rejestrze, albo bibliotek DLL, aby wyświetlić wiadomości z komputera zdalnego.\n\nThe following information is part of the event:\n\n"
     IDS_EVENTLOG_ERROR_TYPE "Błąd"
     IDS_EVENTLOG_WARNING_TYPE "Ostrzeżenie"
     IDS_EVENTLOG_INFORMATION_TYPE "Informacja"

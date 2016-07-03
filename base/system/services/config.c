@@ -15,6 +15,11 @@
 #define NDEBUG
 #include <debug.h>
 
+ULONG
+NTAPI
+RtlLengthSecurityDescriptor(
+  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor);
+
 /* FUNCTIONS *****************************************************************/
 
 
@@ -494,6 +499,122 @@ done:
 
     if (PolicyHandle != NULL)
         LsaClose(PolicyHandle);
+
+    return dwError;
+}
+
+
+DWORD
+ScmWriteSecurityDescriptor(
+    _In_ HKEY hServiceKey,
+    _In_ PSECURITY_DESCRIPTOR pSecurityDescriptor)
+{
+    HKEY hSecurityKey = NULL;
+    DWORD dwDisposition;
+    DWORD dwError;
+
+    DPRINT("ScmWriteSecurityDescriptor(%p %p)\n", hServiceKey, pSecurityDescriptor);
+
+    dwError = RegCreateKeyExW(hServiceKey,
+                              L"Security",
+                              0,
+                              NULL,
+                              REG_OPTION_NON_VOLATILE,
+                              KEY_SET_VALUE,
+                              NULL,
+                              &hSecurityKey,
+                              &dwDisposition);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    dwError = RegSetValueExW(hSecurityKey,
+                             L"Security",
+                             0,
+                             REG_BINARY,
+                             (LPBYTE)pSecurityDescriptor,
+                             RtlLengthSecurityDescriptor(pSecurityDescriptor));
+
+    RegCloseKey(hSecurityKey);
+
+    return dwError;
+}
+
+
+DWORD
+ScmReadSecurityDescriptor(
+    _In_ HKEY hServiceKey,
+    _Out_ PSECURITY_DESCRIPTOR *ppSecurityDescriptor)
+{
+    PSECURITY_DESCRIPTOR pRelativeSD = NULL;
+    HKEY hSecurityKey = NULL;
+    DWORD dwBufferLength = 0;
+    DWORD dwType;
+    DWORD dwError;
+
+    DPRINT("ScmReadSecurityDescriptor(%p %p)\n", hServiceKey, ppSecurityDescriptor);
+
+    *ppSecurityDescriptor = NULL;
+
+    dwError = RegOpenKeyExW(hServiceKey,
+                            L"Security",
+                            0,
+                            KEY_QUERY_VALUE,
+                            &hSecurityKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("RegOpenKeyExW() failed (Error %lu)\n", dwError);
+
+        /* Do not fail if the Security key does not exist */
+        if (dwError == ERROR_FILE_NOT_FOUND)
+            dwError = ERROR_SUCCESS;
+        goto done;
+    }
+
+    dwError = RegQueryValueExW(hSecurityKey,
+                               L"Security",
+                               0,
+                               &dwType,
+                               NULL,
+                               &dwBufferLength);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT("RegQueryValueExW() failed (Error %lu)\n", dwError);
+
+        /* Do not fail if the Security value does not exist */
+        if (dwError == ERROR_FILE_NOT_FOUND)
+            dwError = ERROR_SUCCESS;
+        goto done;
+    }
+
+    DPRINT("dwBufferLength: %lu\n", dwBufferLength);
+    pRelativeSD = RtlAllocateHeap(RtlGetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  dwBufferLength);
+    if (pRelativeSD == NULL)
+    {
+        return ERROR_OUTOFMEMORY;
+    }
+
+    DPRINT("pRelativeSD: %lu\n", pRelativeSD);
+    dwError = RegQueryValueExW(hSecurityKey,
+                               L"Security",
+                               0,
+                               &dwType,
+                               (LPBYTE)pRelativeSD,
+                               &dwBufferLength);
+    if (dwError != ERROR_SUCCESS)
+    {
+        goto done;
+    }
+
+    *ppSecurityDescriptor = pRelativeSD;
+
+done:
+    if (dwError != ERROR_SUCCESS && pRelativeSD != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pRelativeSD);
+
+    if (hSecurityKey != NULL)
+        RegCloseKey(hSecurityKey);
 
     return dwError;
 }

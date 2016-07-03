@@ -2893,23 +2893,7 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
     srcheight = units_to_pixels(srcheight, srcUnit, image->yres);
     TRACE("src pixels: %f,%f %fx%f\n", srcx, srcy, srcwidth, srcheight);
 
-    if (image->picture)
-    {
-        if (!graphics->hdc)
-        {
-            FIXME("graphics object has no HDC\n");
-        }
-
-        if(IPicture_Render(image->picture, graphics->hdc,
-            pti[0].x, pti[0].y, pti[1].x - pti[0].x, pti[2].y - pti[0].y,
-            srcx, srcy, srcwidth, srcheight, NULL) != S_OK)
-        {
-            if(callback)
-                callback(callbackData);
-            return GenericError;
-        }
-    }
-    else if (image->type == ImageTypeBitmap)
+    if (image->type == ImageTypeBitmap)
     {
         GpBitmap* bitmap = (GpBitmap*)image;
         BOOL do_resampling = FALSE;
@@ -6430,13 +6414,6 @@ GpStatus WINGDIPAPI GdipDrawDriverString(GpGraphics *graphics, GDIPCONST UINT16 
 
     return draw_driver_string(graphics, text, length, font, NULL,
                               brush, positions, flags, matrix);
-}
-
-GpStatus WINGDIPAPI GdipRecordMetafileStream(IStream *stream, HDC hdc, EmfType type, GDIPCONST GpRect *frameRect,
-                                        MetafileFrameUnit frameUnit, GDIPCONST WCHAR *desc, GpMetafile **metafile)
-{
-    FIXME("(%p %p %d %p %d %p %p): stub\n", stream, hdc, type, frameRect, frameUnit, desc, metafile);
-    return NotImplemented;
 }
 
 /*****************************************************************************

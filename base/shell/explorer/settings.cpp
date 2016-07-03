@@ -21,7 +21,7 @@
 #include "precomp.h"
 
 ADVANCED_SETTINGS AdvancedSettings;
-const WCHAR szAdvancedSettingsKey[] = TEXT("Software\\ReactOS\\Features\\Explorer");
+const WCHAR szAdvancedSettingsKey[] = L"Software\\ReactOS\\Features\\Explorer";
 
 VOID
 LoadAdvancedSettings(VOID)
@@ -32,12 +32,12 @@ LoadAdvancedSettings(VOID)
     AdvancedSettings.bShowSeconds = FALSE;
 
     /* Check registry */
-    if (RegOpenKey(HKEY_CURRENT_USER, szAdvancedSettingsKey, &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyW(HKEY_CURRENT_USER, szAdvancedSettingsKey, &hKey) == ERROR_SUCCESS)
     {
         DWORD dwValue, dwValueLength, dwType;
 
         dwValueLength = sizeof(dwValue);
-        if (RegQueryValueEx(hKey, TEXT("ShowSeconds"), NULL, &dwType, (PBYTE)&dwValue, &dwValueLength) == ERROR_SUCCESS && dwType == REG_DWORD)
+        if (RegQueryValueExW(hKey, L"ShowSeconds", NULL, &dwType, (PBYTE)&dwValue, &dwValueLength) == ERROR_SUCCESS && dwType == REG_DWORD)
             AdvancedSettings.bShowSeconds = dwValue != 0;
 
         RegCloseKey(hKey);
@@ -45,16 +45,16 @@ LoadAdvancedSettings(VOID)
 }
 
 BOOL
-SaveSettingDword(IN PCTSTR pszKeyName,
-                 IN PCTSTR pszValueName,
+SaveSettingDword(IN LPCWSTR pszKeyName,
+                 IN LPCWSTR pszValueName,
                  IN DWORD dwValue)
 {
     BOOL ret = FALSE;
     HKEY hKey;
 
-    if (RegCreateKey(HKEY_CURRENT_USER, pszKeyName, &hKey) == ERROR_SUCCESS)
+    if (RegCreateKeyW(HKEY_CURRENT_USER, pszKeyName, &hKey) == ERROR_SUCCESS)
     {
-        ret = RegSetValueEx(hKey, pszValueName, 0, REG_DWORD, (PBYTE)&dwValue, sizeof(dwValue)) == ERROR_SUCCESS;
+        ret = RegSetValueExW(hKey, pszValueName, 0, REG_DWORD, (PBYTE)&dwValue, sizeof(dwValue)) == ERROR_SUCCESS;
 
         RegCloseKey(hKey);
     }

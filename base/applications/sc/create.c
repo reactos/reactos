@@ -10,175 +10,18 @@
 
 #include "sc.h"
 
-typedef struct
-{
-    LPCTSTR lpOption;
-    DWORD dwValue;
-} OPTION_INFO;
-
-typedef struct
-{
-    LPCTSTR lpServiceName;
-    LPCTSTR lpDisplayName;
-    DWORD dwServiceType;
-    DWORD dwStartType;
-    DWORD dwErrorControl;
-    LPCTSTR lpBinaryPathName;
-    LPCTSTR lpLoadOrderGroup;
-    DWORD dwTagId;
-    LPCTSTR lpDependencies;
-    LPCTSTR lpServiceStartName;
-    LPCTSTR lpPassword;
-
-    BOOL bTagId;
-} SERVICE_CREATE_INFO, *LPSERVICE_CREATE_INFO;
-
-
-static const OPTION_INFO TypeOpts[] =
-{
-    { _T("own"),      SERVICE_WIN32_OWN_PROCESS   },
-    { _T("share"),    SERVICE_WIN32_SHARE_PROCESS },
-    { _T("interact"), SERVICE_INTERACTIVE_PROCESS },
-    { _T("kernel"),   SERVICE_KERNEL_DRIVER       },
-    { _T("filesys"),  SERVICE_FILE_SYSTEM_DRIVER  },
-    { _T("rec"),      SERVICE_RECOGNIZER_DRIVER   }
-};
-
-static const OPTION_INFO StartOpts[] =
-{
-    { _T("boot"),     SERVICE_BOOT_START   },
-    { _T("system"),   SERVICE_SYSTEM_START },
-    { _T("auto"),     SERVICE_AUTO_START   },
-    { _T("demand"),   SERVICE_DEMAND_START },
-    { _T("disabled"), SERVICE_DISABLED     }
-};
-
-static const OPTION_INFO ErrorOpts[] =
-{
-    { _T("normal"),   SERVICE_ERROR_NORMAL   },
-    { _T("severe"),   SERVICE_ERROR_SEVERE   },
-    { _T("critical"), SERVICE_ERROR_CRITICAL },
-    { _T("ignore"),   SERVICE_ERROR_IGNORE   }
-};
-
-static const OPTION_INFO TagOpts[] =
-{
-    { _T("yes"), TRUE  },
-    { _T("no"),  FALSE }
-};
-
-
-static BOOL ParseCreateArguments(
-    LPCTSTR *ServiceArgs,
-    INT ArgCount,
-    OUT LPSERVICE_CREATE_INFO lpServiceInfo
-)
-{
-    INT i, ArgIndex = 1;
-
-    if (ArgCount < 1)
-        return FALSE;
-
-    ZeroMemory(lpServiceInfo, sizeof(SERVICE_CREATE_INFO));
-
-    lpServiceInfo->lpServiceName = ServiceArgs[0];
-
-    ArgCount--;
-
-    while (ArgCount > 1)
-    {
-        if (!lstrcmpi(ServiceArgs[ArgIndex], _T("type=")))
-        {
-            for (i = 0; i < sizeof(TypeOpts) / sizeof(TypeOpts[0]); i++)
-                if (!lstrcmpi(ServiceArgs[ArgIndex + 1], TypeOpts[i].lpOption))
-                {
-                    lpServiceInfo->dwServiceType |= TypeOpts[i].dwValue;
-                    break;
-                }
-
-            if (i == sizeof(TypeOpts) / sizeof(TypeOpts[0]))
-                break;
-        }
-        else if (!lstrcmpi(ServiceArgs[ArgIndex], _T("start=")))
-        {
-            for (i = 0; i < sizeof(StartOpts) / sizeof(StartOpts[0]); i++)
-                if (!lstrcmpi(ServiceArgs[ArgIndex + 1], StartOpts[i].lpOption))
-                {
-                    lpServiceInfo->dwStartType = StartOpts[i].dwValue;
-                    break;
-                }
-
-            if (i == sizeof(StartOpts) / sizeof(StartOpts[0]))
-                break;
-        }
-        else if (!lstrcmpi(ServiceArgs[ArgIndex], _T("error=")))
-        {
-            for (i = 0; i < sizeof(ErrorOpts) / sizeof(ErrorOpts[0]); i++)
-                if (!lstrcmpi(ServiceArgs[ArgIndex + 1], ErrorOpts[i].lpOption))
-                {
-                    lpServiceInfo->dwErrorControl = ErrorOpts[i].dwValue;
-                    break;
-                }
-
-            if (i == sizeof(ErrorOpts) / sizeof(ErrorOpts[0]))
-                break;
-        }
-        else if (!lstrcmpi(ServiceArgs[ArgIndex], _T("tag=")))
-        {
-            for (i = 0; i < sizeof(TagOpts) / sizeof(TagOpts[0]); i++)
-                if (!lstrcmpi(ServiceArgs[ArgIndex + 1], TagOpts[i].lpOption))
-                {
-                    lpServiceInfo->bTagId = TagOpts[i].dwValue;
-                    break;
-                }
-
-            if (i == sizeof(TagOpts) / sizeof(TagOpts[0]))
-                break;
-        }
-        else if (!lstrcmpi(ServiceArgs[ArgIndex], _T("binpath=")))
-        {
-            lpServiceInfo->lpBinaryPathName = ServiceArgs[ArgIndex + 1];
-        }
-        else if (!lstrcmpi(ServiceArgs[ArgIndex], _T("group=")))
-        {
-            lpServiceInfo->lpLoadOrderGroup = ServiceArgs[ArgIndex + 1];
-        }
-        else if (!lstrcmpi(ServiceArgs[ArgIndex], _T("depend=")))
-        {
-            lpServiceInfo->lpDependencies = ServiceArgs[ArgIndex + 1];
-        }
-        else if (!lstrcmpi(ServiceArgs[ArgIndex], _T("obj=")))
-        {
-            lpServiceInfo->lpServiceStartName = ServiceArgs[ArgIndex + 1];
-        }
-        else if (!lstrcmpi(ServiceArgs[ArgIndex], _T("displayname=")))
-        {
-            lpServiceInfo->lpDisplayName = ServiceArgs[ArgIndex + 1];
-        }
-        else if (!lstrcmpi(ServiceArgs[ArgIndex], _T("password=")))
-        {
-            lpServiceInfo->lpPassword = ServiceArgs[ArgIndex + 1];
-        }
-
-        ArgIndex += 2;
-        ArgCount -= 2;
-    }
-
-    return (ArgCount == 0);
-}
-
 BOOL Create(LPCTSTR *ServiceArgs, INT ArgCount)
 {
-    SC_HANDLE hSCManager;
-    SC_HANDLE hSc;
-    BOOL bRet = FALSE;
+    SC_HANDLE hSCManager = NULL;
+    SC_HANDLE hService = NULL;
+    BOOL bRet = TRUE;
 
     INT i;
     INT Length;
     LPTSTR lpBuffer = NULL;
     SERVICE_CREATE_INFO ServiceInfo;
 
-    if (!ParseCreateArguments(ServiceArgs, ArgCount, &ServiceInfo))
+    if (!ParseCreateConfigArguments(ServiceArgs, ArgCount, FALSE, &ServiceInfo))
     {
         CreateUsage();
         return FALSE;
@@ -228,37 +71,44 @@ BOOL Create(LPCTSTR *ServiceArgs, INT ArgCount)
 #endif
 
     hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
-
-    if (hSCManager != NULL)
+    if (hSCManager == NULL)
     {
-        hSc = CreateService(hSCManager,
-                            ServiceInfo.lpServiceName,
-                            ServiceInfo.lpDisplayName,
-                            SERVICE_ALL_ACCESS,
-                            ServiceInfo.dwServiceType,
-                            ServiceInfo.dwStartType,
-                            ServiceInfo.dwErrorControl,
-                            ServiceInfo.lpBinaryPathName,
-                            ServiceInfo.lpLoadOrderGroup,
-                            ServiceInfo.bTagId ? &ServiceInfo.dwTagId : NULL,
-                            ServiceInfo.lpDependencies,
-                            ServiceInfo.lpServiceStartName,
-                            ServiceInfo.lpPassword);
-
-        if (hSc != NULL)
-        {
-            _tprintf(_T("[SC] CreateService SUCCESS\n"));
-
-            CloseServiceHandle(hSc);
-            bRet = TRUE;
-        }
-        else
-            ReportLastError();
-
-        CloseServiceHandle(hSCManager);
+        _tprintf(_T("[SC] OpenSCManager FAILED %lu:\n\n"), GetLastError());
+        bRet = FALSE;
+        goto done;
     }
-    else
+
+    hService = CreateService(hSCManager,
+                             ServiceInfo.lpServiceName,
+                             ServiceInfo.lpDisplayName,
+                             SERVICE_ALL_ACCESS,
+                             ServiceInfo.dwServiceType,
+                             ServiceInfo.dwStartType,
+                             ServiceInfo.dwErrorControl,
+                             ServiceInfo.lpBinaryPathName,
+                             ServiceInfo.lpLoadOrderGroup,
+                             ServiceInfo.bTagId ? &ServiceInfo.dwTagId : NULL,
+                             ServiceInfo.lpDependencies,
+                             ServiceInfo.lpServiceStartName,
+                             ServiceInfo.lpPassword);
+    if (hService == NULL)
+    {
+        _tprintf(_T("[SC] CreateService FAILED %lu:\n\n"), GetLastError());
+        bRet = FALSE;
+        goto done;
+    }
+
+    _tprintf(_T("[SC] CreateService SUCCESS\n\n"));
+
+done:
+    if (bRet == FALSE)
         ReportLastError();
+
+    if (hService)
+        CloseServiceHandle(hService);
+
+    if (hSCManager)
+        CloseServiceHandle(hSCManager);
 
     if (lpBuffer != NULL)
         HeapFree(GetProcessHeap(), 0, lpBuffer);

@@ -1986,6 +1986,22 @@ HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","ImagePath",0x00020000,"system32\
 HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\btrfs","Type",0x00010001,0x00000002
 
+; REISER Filesystem driver
+HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs","Group",0x00000000,"Boot File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs","ImagePath",0x00020000,"system32\drivers\reiserfs.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs","Type",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs\Parameters","CodePage",0x00000000,"default"
+HKLM,"SYSTEM\CurrentControlSet\Services\Reiserfs\Parameters","WritingSupport",0x00010001,0x00000001
+
+; FFS Filesystem driver
+HKLM,"SYSTEM\CurrentControlSet\Services\ffs","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Group",0x00000000,"Boot File System"
+HKLM,"SYSTEM\CurrentControlSet\Services\ffs","ImagePath",0x00020000,"system32\drivers\ffs.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Type",0x00010001,0x00000002
+
 ; Filesystem Filter Manager driver
 HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","ErrorControl",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","Group",0x00000000,"Boot File System"

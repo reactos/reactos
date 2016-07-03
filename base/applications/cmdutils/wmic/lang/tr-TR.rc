@@ -7,4 +7,5 @@ STRINGTABLE
     STRING_CMDLINE_NOT_SUPPORTED, "Yanlışlık: Komut yatacı desteklenmiyor\n"
     STRING_ALIAS_NOT_FOUND, "Yanlışlık: Başka ad bulunamadı\n"
     STRING_INVALID_QUERY, "Yanlışlık: Geçersiz sorgu\n"
+    STRING_INVALID_PATH, "Invalid syntax for PATH\n"
 }

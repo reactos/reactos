@@ -327,7 +327,6 @@ struct GpAdustableArrowCap{
 };
 
 struct GpImage{
-    IPicture *picture;
     IWICBitmapDecoder *decoder;
     ImageType type;
     GUID format;
@@ -351,6 +350,7 @@ struct GpMetafile{
     BYTE *comment_data;
     DWORD comment_data_size;
     DWORD comment_data_length;
+    IStream *record_stream;
 
     /* playback */
     GpGraphics *playback_graphics;

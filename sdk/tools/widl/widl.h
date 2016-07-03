@@ -38,6 +38,7 @@ extern int pedantic;
 extern int do_everything;
 extern int do_header;
 extern int do_typelib;
+extern int do_old_typelib;
 extern int do_proxies;
 extern int do_client;
 extern int do_server;

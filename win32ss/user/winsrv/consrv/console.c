@@ -24,8 +24,6 @@
 #define NDEBUG
 #include <debug.h>
 
-// FIXME: Add this prototype to winternl.h / rtlfuncs.h / ...
-NTSTATUS NTAPI RtlGetLastNtStatus(VOID);
 
 /* GLOBALS ********************************************************************/
 

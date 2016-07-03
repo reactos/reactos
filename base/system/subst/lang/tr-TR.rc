@@ -7,6 +7,8 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Değişken sayısı yanlış - %s\n"
     IDS_INVALID_PARAMETER "Değişken sayısı yanlış - %s\n"
     IDS_INVALID_PARAMETER2 "Geçersiz değişken - %s\n"
+    IDS_PATH_NOT_FOUND "Path not found - %s\n"
+    IDS_ACCESS_DENIED "Access denied - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "Sürücü önceden SUBST edilmiş.\n"
     IDS_FAILED_WITH_ERRORCODE "Yanlışlık kodu ile başarısız oldu 0x%x: %s\n"
     IDS_USAGE "Bir sürücü harfiyle bir yolu ilişkilendirir.\n\n\

@@ -5,9 +5,10 @@ list(APPEND SOURCE
     apphelp.c
     layer.c
     sdbapi.c
-    sdbread.c
-    sdbwrite.c
     sdbfileattr.c
+    sdbread.c
+    sdbstringtable.c
+    sdbwrite.c
     apphelp.spec
     apphelp.h
     ${CMAKE_CURRENT_BINARY_DIR}/apphelp_stubs.c)

@@ -515,7 +515,7 @@ static HRESULT WINAPI PngDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
     }
 
     This->end_info = ppng_create_info_struct(This->png_ptr);
-    if (!This->info_ptr)
+    if (!This->end_info)
     {
         ppng_destroy_read_struct(&This->png_ptr, &This->info_ptr, NULL);
         This->png_ptr = NULL;
@@ -647,7 +647,7 @@ static HRESULT WINAPI PngDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
     /* read the image data */
     This->width = ppng_get_image_width(This->png_ptr, This->info_ptr);
     This->height = ppng_get_image_height(This->png_ptr, This->info_ptr);
-    This->stride = This->width * This->bpp;
+    This->stride = (This->width * This->bpp + 7) / 8;
     image_size = This->stride * This->height;
 
     This->image_bits = HeapAlloc(GetProcessHeap(), 0, image_size);
@@ -1001,8 +1001,14 @@ static HRESULT WINAPI PngDecoder_Frame_CopyPixels(IWICBitmapFrameDecode *iface,
 static HRESULT WINAPI PngDecoder_Frame_GetMetadataQueryReader(IWICBitmapFrameDecode *iface,
     IWICMetadataQueryReader **ppIMetadataQueryReader)
 {
-    FIXME("(%p,%p): stub\n", iface, ppIMetadataQueryReader);
-    return E_NOTIMPL;
+    PngDecoder *This = impl_from_IWICBitmapFrameDecode(iface);
+
+    TRACE("(%p,%p)\n", iface, ppIMetadataQueryReader);
+
+    if (!ppIMetadataQueryReader)
+        return E_INVALIDARG;
+
+    return MetadataQueryReader_CreateInstance(&This->IWICMetadataBlockReader_iface, ppIMetadataQueryReader);
 }
 
 static HRESULT WINAPI PngDecoder_Frame_GetColorContexts(IWICBitmapFrameDecode *iface,

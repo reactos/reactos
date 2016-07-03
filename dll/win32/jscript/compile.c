@@ -550,12 +550,20 @@ static HRESULT compile_new_expression(compiler_ctx_t *ctx, call_expression_t *ex
         arg_cnt++;
     }
 
-    return push_instr_uint(ctx, OP_new, arg_cnt);
+    hres = push_instr_uint(ctx, OP_new, arg_cnt);
+    if(FAILED(hres))
+        return hres;
+
+    hres = push_instr_uint(ctx, OP_pop, arg_cnt+1);
+    if(FAILED(hres))
+        return hres;
+
+    return push_instr(ctx, OP_push_ret) ? S_OK : E_OUTOFMEMORY;
 }
 
 static HRESULT compile_call_expression(compiler_ctx_t *ctx, call_expression_t *expr, BOOL emit_ret)
 {
-    unsigned arg_cnt = 0;
+    unsigned arg_cnt = 0, extra_args;
     argument_t *arg;
     unsigned instr;
     jsop_t op;
@@ -563,9 +571,11 @@ static HRESULT compile_call_expression(compiler_ctx_t *ctx, call_expression_t *e
 
     if(is_memberid_expr(expr->expression->type)) {
         op = OP_call_member;
+        extra_args = 2;
         hres = compile_memberid_expression(ctx, expr->expression, 0);
     }else {
         op = OP_call;
+        extra_args = 1;
         hres = compile_expression(ctx, expr->expression, TRUE);
     }
 
@@ -585,7 +595,12 @@ static HRESULT compile_call_expression(compiler_ctx_t *ctx, call_expression_t *e
 
     instr_ptr(ctx, instr)->u.arg[0].uint = arg_cnt;
     instr_ptr(ctx, instr)->u.arg[1].lng = emit_ret;
-    return S_OK;
+
+    hres = push_instr_uint(ctx, OP_pop, arg_cnt + extra_args);
+    if(FAILED(hres))
+        return hres;
+
+    return !emit_ret || push_instr(ctx, OP_push_ret) ? S_OK : E_OUTOFMEMORY;
 }
 
 static HRESULT compile_delete_expression(compiler_ctx_t *ctx, unary_expression_t *expr)
@@ -849,17 +864,11 @@ static HRESULT compile_object_literal(compiler_ctx_t *ctx, property_value_expres
     return S_OK;
 }
 
-static HRESULT compile_function_expression(compiler_ctx_t *ctx, function_expression_t *expr)
+static HRESULT compile_function_expression(compiler_ctx_t *ctx, function_expression_t *expr, BOOL emit_ret)
 {
+    unsigned func_id = ctx->func->func_cnt++;
     ctx->func_tail = ctx->func_tail ? (ctx->func_tail->next = expr) : (ctx->func_head = expr);
-
-    /* FIXME: not exactly right */
-    if(expr->identifier && !expr->event_target) {
-        ctx->func->func_cnt++;
-        return push_instr_bstr(ctx, OP_ident, expr->identifier);
-    }
-
-    return push_instr_uint(ctx, OP_func, ctx->func->func_cnt++);
+    return emit_ret ? push_instr_uint(ctx, OP_func, func_id) : S_OK;
 }
 
 static HRESULT compile_expression(compiler_ctx_t *ctx, expression_t *expr, BOOL emit_ret)
@@ -944,8 +953,7 @@ static HRESULT compile_expression(compiler_ctx_t *ctx, expression_t *expr, BOOL 
         hres = compile_binary_expression(ctx, (binary_expression_t*)expr, OP_eq2);
         break;
     case EXPR_FUNC:
-        hres = compile_function_expression(ctx, (function_expression_t*)expr);
-        break;
+        return compile_function_expression(ctx, (function_expression_t*)expr, emit_ret);
     case EXPR_GREATER:
         hres = compile_binary_expression(ctx, (binary_expression_t*)expr, OP_gt);
         break;
@@ -1471,7 +1479,7 @@ static HRESULT compile_return_statement(compiler_ctx_t *ctx, expression_statemen
     if(FAILED(hres))
         return hres;
 
-    return push_instr(ctx, OP_ret) ? S_OK : E_OUTOFMEMORY;
+    return push_instr_uint(ctx, OP_ret, !stat->expr);
 }
 
 /* ECMA-262 3rd Edition    12.10 */
@@ -1849,8 +1857,9 @@ static HRESULT compile_function(compiler_ctx_t *ctx, source_elements_t *source, 
 
     resolve_labels(ctx, off);
 
-    if(!push_instr(ctx, OP_ret))
-        return E_OUTOFMEMORY;
+    hres = push_instr_uint(ctx, OP_ret, !from_eval);
+    if(FAILED(hres))
+        return hres;
 
     if(TRACE_ON(jscript_disas))
         dump_code(ctx, off);

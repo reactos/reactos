@@ -239,7 +239,7 @@ BEGIN
     IDS_DDFULLSCREEN_DESCRIPTION "הבדיקה הבאה תשתמש ב- DirectDraw כדי לצייר במצב מסך מלא. אתה אמור לראות תיבה לבנה קופצת."
     IDS_DDFULLSCREEN_RESULT "האם ראית תיבה לבנה קופצת במסך מלא?"
     IDS_FORMAT_ADAPTER_MEM "%u MB"
-    IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
+    IDS_FORMAT_ADAPTER_MODE "%d x %d (%u bit)(%uHz)"
     IDS_OPTION_NO "לא"
     IDS_D3DTEST_DESCRIPTION "פעולה זו תבדוק Direct3D בהתקן זה. האם להמשיך?"
     IDS_D3DTEST_D3Dx "בדיקה זו תשתמש בממשקי Direct3D %u המואצים באמצעות חומרה."

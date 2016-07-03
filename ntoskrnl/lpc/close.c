@@ -432,20 +432,20 @@ LpcpDeletePort(IN PVOID ObjectBody)
 
         /* Dereference the object unless it's the same port */
         if (ConnectionPort != Port) ObDereferenceObject(ConnectionPort);
+
+        /* Check if this is a connection port with a server process */
+        if (((Port->Flags & LPCP_PORT_TYPE_MASK) == LPCP_CONNECTION_PORT) &&
+            (ConnectionPort->ServerProcess))
+        {
+            /* Dereference the server process */
+            ObDereferenceObject(ConnectionPort->ServerProcess);
+            ConnectionPort->ServerProcess = NULL;
+        }
     }
     else
     {
         /* Release the lock */
         KeReleaseGuardedMutex(&LpcpLock);
-    }
-
-    /* Check if this is a connection port with a server process */
-    if (((Port->Flags & LPCP_PORT_TYPE_MASK) == LPCP_CONNECTION_PORT) &&
-        (ConnectionPort->ServerProcess))
-    {
-        /* Dereference the server process */
-        ObDereferenceObject(ConnectionPort->ServerProcess);
-        ConnectionPort->ServerProcess = NULL;
     }
 
     /* Free client security */

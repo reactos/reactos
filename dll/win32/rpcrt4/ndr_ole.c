@@ -19,7 +19,6 @@
  *
  * TODO:
  *  - fix the wire-protocol to match MS/RPC
- *  - finish RpcStream_Vtbl
  */
 
 #include "precomp.h"

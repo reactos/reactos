@@ -2,7 +2,7 @@
 /* generated from http://www.unicode.org/Public/8.0.0/ucd/BidiBrackets.txt */
 /* DO NOT EDIT!! */
 
-const unsigned short bidi_bracket_table[768] =
+const unsigned short /* DECLSPEC_HIDDEN */ bidi_bracket_table[768] =
 {
     /* level 1 offsets */
     0x0100, 0x0110, 0x0110, 0x0110, 0x0110, 0x0110, 0x0110, 0x0110,

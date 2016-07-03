@@ -94,7 +94,7 @@ BEGIN
     IDS_APP_TITLE "Visor de eventos"
     IDS_APP_TITLE_EX "%s - Registro de %s en \\\\"
     IDS_STATUS_MSG "%s tiene %lu evento(s)"
-    IDS_EVENTSTRINGIDNOTFOUND "No se pudo recuperar la descripción para el evento con ID (%lu) y origen (%s). El equipo local puede no tener la información necesaria en el registro o las DLLs necesarias para mostrar los mensajes de un equipo remoto."
+    IDS_EVENTSTRINGIDNOTFOUND "No se pudo recuperar la descripción para el evento con ID (%lu) y origen (%s). El equipo local puede no tener la información necesaria en el registro o las DLLs necesarias para mostrar los mensajes de un equipo remoto.\n\nThe following information is part of the event:\n\n"
     IDS_EVENTLOG_ERROR_TYPE "Error"
     IDS_EVENTLOG_WARNING_TYPE "Advertencia"
     IDS_EVENTLOG_INFORMATION_TYPE "Información"

@@ -165,8 +165,6 @@ typedef struct _ROS_VACB
     PVOID BaseAddress;
     /* Memory area representing the region where the view's data is mapped. */
     struct _MEMORY_AREA* MemoryArea;
-    /* Lock */
-    ERESOURCE Lock;
     /* Are the contents of the view valid. */
     BOOLEAN Valid;
     /* Are the contents of the view newer than those on disk. */
@@ -182,8 +180,12 @@ typedef struct _ROS_VACB
     LIST_ENTRY VacbLruListEntry;
     /* Offset in the file which this view maps. */
     LARGE_INTEGER FileOffset;
+    /* Mutex */
+    KMUTEX Mutex;
     /* Number of references. */
     ULONG ReferenceCount;
+    /* How many times was it pinned? */
+    volatile LONG PinCount;
     /* Pointer to the shared cache map for the file which this view maps data for. */
     PROS_SHARED_CACHE_MAP SharedCacheMap;
     /* Pointer to the next VACB in a chain. */
@@ -191,11 +193,13 @@ typedef struct _ROS_VACB
 
 typedef struct _INTERNAL_BCB
 {
+    /* Lock */
+    ERESOURCE Lock;
     PUBLIC_BCB PFCB;
     PROS_VACB Vacb;
     BOOLEAN Dirty;
+    BOOLEAN Pinned;
     CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
-    PVOID OwnerPointer;
 } INTERNAL_BCB, *PINTERNAL_BCB;
 
 VOID

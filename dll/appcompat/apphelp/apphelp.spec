@@ -52,7 +52,7 @@
 @ stub SdbFreeFileInfo
 @ stub SdbFreeFlagInfo
 @ stub SdbGetAppCompatDataSize
-@ stub SdbGetAppPatchDir
+@ stdcall SdbGetAppPatchDir(ptr wstr long)
 @ stdcall SdbGetBinaryTagData(ptr long)
 @ stdcall SdbGetDatabaseID(ptr ptr)
 @ stub SdbGetDatabaseInformation

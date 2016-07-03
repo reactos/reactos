@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.0.2.  */
+/* A Bison parser, made by GNU Bison 3.0.  */
 
 /* Bison interface for Yacc-like parsers in C
 
@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_PARSER_PARSER_TAB_H_INCLUDED
-# define YY_PARSER_PARSER_TAB_H_INCLUDED
+#ifndef YY_PARSER_E_REACTOS_SYNC_GCC_HOST_TOOLS_SDK_TOOLS_WIDL_PARSER_TAB_H_INCLUDED
+# define YY_PARSER_E_REACTOS_SYNC_GCC_HOST_TOOLS_SDK_TOOLS_WIDL_PARSER_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -169,65 +169,66 @@ extern int parser_debug;
     tPARTIALIGNORE = 379,
     tPASCAL = 380,
     tPOINTERDEFAULT = 381,
-    tPROGID = 382,
-    tPROPERTIES = 383,
-    tPROPGET = 384,
-    tPROPPUT = 385,
-    tPROPPUTREF = 386,
-    tPROXY = 387,
-    tPTR = 388,
-    tPUBLIC = 389,
-    tRANGE = 390,
-    tREADONLY = 391,
-    tREF = 392,
-    tREGISTER = 393,
-    tREPRESENTAS = 394,
-    tREQUESTEDIT = 395,
-    tRESTRICTED = 396,
-    tRETVAL = 397,
-    tSAFEARRAY = 398,
-    tSHORT = 399,
-    tSIGNED = 400,
-    tSIZEIS = 401,
-    tSIZEOF = 402,
-    tSMALL = 403,
-    tSOURCE = 404,
-    tSTATIC = 405,
-    tSTDCALL = 406,
-    tSTRICTCONTEXTHANDLE = 407,
-    tSTRING = 408,
-    tSTRUCT = 409,
-    tSWITCH = 410,
-    tSWITCHIS = 411,
-    tSWITCHTYPE = 412,
-    tTHREADING = 413,
-    tTRANSMITAS = 414,
-    tTRUE = 415,
-    tTYPEDEF = 416,
-    tUIDEFAULT = 417,
-    tUNION = 418,
-    tUNIQUE = 419,
-    tUNSIGNED = 420,
-    tUSESGETLASTERROR = 421,
-    tUSERMARSHAL = 422,
-    tUUID = 423,
-    tV1ENUM = 424,
-    tVARARG = 425,
-    tVERSION = 426,
-    tVIPROGID = 427,
-    tVOID = 428,
-    tWCHAR = 429,
-    tWIREMARSHAL = 430,
-    tAPARTMENT = 431,
-    tNEUTRAL = 432,
-    tSINGLE = 433,
-    tFREE = 434,
-    tBOTH = 435,
-    CAST = 436,
-    PPTR = 437,
-    POS = 438,
-    NEG = 439,
-    ADDRESSOF = 440
+    tPRAGMA_WARNING = 382,
+    tPROGID = 383,
+    tPROPERTIES = 384,
+    tPROPGET = 385,
+    tPROPPUT = 386,
+    tPROPPUTREF = 387,
+    tPROXY = 388,
+    tPTR = 389,
+    tPUBLIC = 390,
+    tRANGE = 391,
+    tREADONLY = 392,
+    tREF = 393,
+    tREGISTER = 394,
+    tREPRESENTAS = 395,
+    tREQUESTEDIT = 396,
+    tRESTRICTED = 397,
+    tRETVAL = 398,
+    tSAFEARRAY = 399,
+    tSHORT = 400,
+    tSIGNED = 401,
+    tSIZEIS = 402,
+    tSIZEOF = 403,
+    tSMALL = 404,
+    tSOURCE = 405,
+    tSTATIC = 406,
+    tSTDCALL = 407,
+    tSTRICTCONTEXTHANDLE = 408,
+    tSTRING = 409,
+    tSTRUCT = 410,
+    tSWITCH = 411,
+    tSWITCHIS = 412,
+    tSWITCHTYPE = 413,
+    tTHREADING = 414,
+    tTRANSMITAS = 415,
+    tTRUE = 416,
+    tTYPEDEF = 417,
+    tUIDEFAULT = 418,
+    tUNION = 419,
+    tUNIQUE = 420,
+    tUNSIGNED = 421,
+    tUSESGETLASTERROR = 422,
+    tUSERMARSHAL = 423,
+    tUUID = 424,
+    tV1ENUM = 425,
+    tVARARG = 426,
+    tVERSION = 427,
+    tVIPROGID = 428,
+    tVOID = 429,
+    tWCHAR = 430,
+    tWIREMARSHAL = 431,
+    tAPARTMENT = 432,
+    tNEUTRAL = 433,
+    tSINGLE = 434,
+    tFREE = 435,
+    tBOTH = 436,
+    CAST = 437,
+    PPTR = 438,
+    POS = 439,
+    NEG = 440,
+    ADDRESSOF = 441
   };
 #endif
 
@@ -236,7 +237,7 @@ extern int parser_debug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 137 "parser.y" /* yacc.c:1909  */
+#line 138 "parser.y" /* yacc.c:1909  */
 
 	attr_t *attr;
 	attr_list_t *attr_list;
@@ -251,6 +252,8 @@ union YYSTYPE
 	declarator_list_t *declarator_list;
 	statement_t *statement;
 	statement_list_t *stmt_list;
+	warning_t *warning;
+	warning_list_t *warning_list;
 	ifref_t *ifref;
 	ifref_list_t *ifref_list;
 	char *str;
@@ -263,7 +266,7 @@ union YYSTYPE
 	struct _decl_spec_t *declspec;
 	enum storage_class stgclass;
 
-#line 267 "parser.tab.h" /* yacc.c:1909  */
+#line 270 "parser.tab.h" /* yacc.c:1909  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
@@ -274,4 +277,4 @@ extern YYSTYPE parser_lval;
 
 int parser_parse (void);
 
-#endif /* !YY_PARSER_PARSER_TAB_H_INCLUDED  */
+#endif /* !YY_PARSER_E_REACTOS_SYNC_GCC_HOST_TOOLS_SDK_TOOLS_WIDL_PARSER_TAB_H_INCLUDED  */

@@ -764,7 +764,6 @@ HRESULT _build_action_map(LPDIRECTINPUTDEVICE8W iface, LPDIACTIONFORMATW lpdiaf,
 
 HRESULT _set_action_map(LPDIRECTINPUTDEVICE8W iface, LPDIACTIONFORMATW lpdiaf, LPCWSTR lpszUserName, DWORD dwFlags, LPCDIDATAFORMAT df)
 {
-    static const WCHAR emptyW[] = { 0 };
     IDirectInputDeviceImpl *This = impl_from_IDirectInputDevice8W(iface);
     DIDATAFORMAT data_format;
     DIOBJECTDATAFORMAT *obj_df = NULL;
@@ -855,7 +854,10 @@ HRESULT _set_action_map(LPDIRECTINPUTDEVICE8W iface, LPDIACTIONFORMATW lpdiaf, L
     dps.diph.dwHeaderSize = sizeof(DIPROPHEADER);
     dps.diph.dwObj = 0;
     dps.diph.dwHow = DIPH_DEVICE;
-    lstrcpynW(dps.wsz, (dwFlags & DIDSAM_NOUSER) ? emptyW : username, sizeof(dps.wsz)/sizeof(WCHAR));
+    if (dwFlags & DIDSAM_NOUSER)
+        dps.wsz[0] = '\0';
+    else
+        lstrcpynW(dps.wsz, username, sizeof(dps.wsz)/sizeof(WCHAR));
     IDirectInputDevice8_SetProperty(iface, DIPROP_USERNAME, &dps.diph);
 
     /* Save the settings to disk */
@@ -1095,9 +1097,6 @@ ULONG WINAPI IDirectInputDevice2WImpl_Release(LPDIRECTINPUTDEVICE8W iface)
     /* Free action mapping */
     HeapFree(GetProcessHeap(), 0, This->action_map);
 
-    /* Free username */
-    HeapFree(GetProcessHeap(), 0, This->username);
-
     EnterCriticalSection( &This->dinput->crit );
     list_remove( &This->entry );
     LeaveCriticalSection( &This->dinput->crit );
@@ -1255,9 +1254,7 @@ HRESULT WINAPI IDirectInputDevice2WImpl_GetProperty(LPDIRECTINPUTDEVICE8W iface,
 
             if (pdiph->dwSize != sizeof(DIPROPSTRING)) return DIERR_INVALIDPARAM;
 
-            ps->wsz[0] = 0;
-            if (This->username)
-                lstrcpynW(ps->wsz, This->username, sizeof(ps->wsz)/sizeof(WCHAR));
+            lstrcpynW(ps->wsz, This->username, sizeof(ps->wsz)/sizeof(WCHAR));
             break;
         }
         case (DWORD_PTR) DIPROP_VIDPID:
@@ -1339,14 +1336,7 @@ HRESULT WINAPI IDirectInputDevice2WImpl_SetProperty(
 
             if (pdiph->dwSize != sizeof(DIPROPSTRING)) return DIERR_INVALIDPARAM;
 
-            if (!This->username)
-                This->username = HeapAlloc(GetProcessHeap(), 0, sizeof(ps->wsz));
-            if (!This->username)
-                return DIERR_OUTOFMEMORY;
-
-            This->username[0] = 0;
-            if (ps->wsz)
-                lstrcpynW(This->username, ps->wsz, sizeof(ps->wsz)/sizeof(WCHAR));
+            lstrcpynW(This->username, ps->wsz, sizeof(This->username)/sizeof(WCHAR));
             break;
         }
         default:

@@ -404,135 +404,119 @@ static HRESULT WINAPI PersistFile_IsDirty(IPersistFile *pFile)
     return This->isDirty ? S_OK : S_FALSE;
 }
 
-/* A helper function:  Allocate and fill rString.  Return number of bytes read. */
-static DWORD get_profile_string(LPCWSTR lpAppName, LPCWSTR lpKeyName,
+/* Returns allocated profile string and a standard return code. */
+static HRESULT get_profile_string(LPCWSTR lpAppName, LPCWSTR lpKeyName,
                                 LPCWSTR lpFileName, WCHAR **rString )
 {
     DWORD r = 0;
     DWORD len = 128;
     WCHAR *buffer;
 
+    *rString = NULL;
     buffer = CoTaskMemAlloc(len * sizeof(*buffer));
-    if (buffer != NULL)
+    if (!buffer)
+        return E_OUTOFMEMORY;
+
+    r = GetPrivateProfileStringW(lpAppName, lpKeyName, NULL, buffer, len, lpFileName);
+    while (r == len-1)
     {
-        r = GetPrivateProfileStringW(lpAppName, lpKeyName, NULL, buffer, len, lpFileName);
-        while (r == len-1)
+        WCHAR *realloc_buf;
+
+        len *= 2;
+        realloc_buf = CoTaskMemRealloc(buffer, len * sizeof(*buffer));
+        if (realloc_buf == NULL)
         {
-            WCHAR *realloc_buf;
-
-            len *= 2;
-            realloc_buf = CoTaskMemRealloc(buffer, len * sizeof(*buffer));
-            if (realloc_buf == NULL)
-            {
-                CoTaskMemFree(buffer);
-                *rString = NULL;
-                return 0;
-            }
-            buffer = realloc_buf;
-
-            r = GetPrivateProfileStringW(lpAppName, lpKeyName, NULL, buffer, len, lpFileName);
+            CoTaskMemFree(buffer);
+            return E_OUTOFMEMORY;
         }
+        buffer = realloc_buf;
+
+        r = GetPrivateProfileStringW(lpAppName, lpKeyName, NULL, buffer, len, lpFileName);
     }
 
     *rString = buffer;
-    return r;
+    return r ? S_OK : E_FAIL;
 }
 
 static HRESULT WINAPI PersistFile_Load(IPersistFile *pFile, LPCOLESTR pszFileName, DWORD dwMode)
 {
-    WCHAR str_header[] = {'I','n','t','e','r','n','e','t','S','h','o','r','t','c','u','t',0};
-    WCHAR str_URL[] = {'U','R','L',0};
-    WCHAR str_iconfile[] = {'i','c','o','n','f','i','l','e',0};
-    WCHAR str_iconindex[] = {'i','c','o','n','i','n','d','e','x',0};
-    WCHAR *filename = NULL;
-    HRESULT hr;
     InternetShortcut *This = impl_from_IPersistFile(pFile);
+    static WCHAR str_header[] = {'I','n','t','e','r','n','e','t','S','h','o','r','t','c','u','t',0};
+    static WCHAR str_URL[] = {'U','R','L',0};
+    static WCHAR str_iconfile[] = {'i','c','o','n','f','i','l','e',0};
+    static WCHAR str_iconindex[] = {'i','c','o','n','i','n','d','e','x',0};
+    WCHAR *filename = NULL;
+    WCHAR *url;
+    HRESULT hr;
+    IPropertyStorage *pPropStg;
+    WCHAR *iconfile;
+    WCHAR *iconindexstring;
+
     TRACE("(%p, %s, 0x%x)\n", pFile, debugstr_w(pszFileName), dwMode);
+
     if (dwMode != 0)
         FIXME("ignoring unimplemented mode 0x%x\n", dwMode);
+
     filename = co_strdupW(pszFileName);
-    if (filename != NULL)
+    if (!filename)
+        return E_OUTOFMEMORY;
+
+    if (FAILED(hr = get_profile_string(str_header, str_URL, pszFileName, &url)))
     {
-        DWORD r;
-        WCHAR *url;
-
-        r = get_profile_string(str_header, str_URL, pszFileName, &url);
-
-        if (url == NULL)
-        {
-            hr = E_OUTOFMEMORY;
-            CoTaskMemFree(filename);
-        }
-        else if (r == 0)
-        {
-            hr = E_FAIL;
-            CoTaskMemFree(filename);
-        }
-        else
-        {
-            hr = S_OK;
-            CoTaskMemFree(This->currentFile);
-            This->currentFile = filename;
-            CoTaskMemFree(This->url);
-            This->url = url;
-            This->isDirty = FALSE;
-        }
-
-        /* Now we're going to read in the iconfile and iconindex.
-           If we don't find them, that's not a failure case -- it's possible
-           that they just aren't in there. */
-        if (SUCCEEDED(hr))
-        {
-            IPropertyStorage *pPropStg;
-            WCHAR *iconfile;
-            WCHAR *iconindexstring;
-            hr = IPropertySetStorage_Open(This->property_set_storage, &FMTID_Intshcut,
-                                          STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
-                                          &pPropStg);
-
-            if (get_profile_string(str_header, str_iconfile, pszFileName, &iconfile))
-            {
-                PROPSPEC ps;
-                PROPVARIANT pv;
-                ps.ulKind = PRSPEC_PROPID;
-                ps.u.propid = PID_IS_ICONFILE;
-                pv.vt = VT_LPWSTR;
-                pv.u.pwszVal = iconfile;
-                hr = IPropertyStorage_WriteMultiple(pPropStg, 1, &ps, &pv, 0);
-                if (FAILED(hr))
-                {
-                    TRACE("Failed to store the iconfile to our property storage.  hr = 0x%x\n", hr);
-                }
-            }
-            CoTaskMemFree(iconfile);
-
-            if (get_profile_string(str_header, str_iconindex, pszFileName, &iconindexstring))
-            {
-                int iconindex;
-                PROPSPEC ps;
-                PROPVARIANT pv;
-                char *iconindexastring = co_strdupWtoA(iconindexstring);
-                sscanf(iconindexastring, "%d", &iconindex);
-                CoTaskMemFree(iconindexastring);
-                ps.ulKind = PRSPEC_PROPID;
-                ps.u.propid = PID_IS_ICONINDEX;
-                pv.vt = VT_I4;
-                pv.u.iVal = iconindex;
-                hr = IPropertyStorage_WriteMultiple(pPropStg, 1, &ps, &pv, 0);
-                if (FAILED(hr))
-                {
-                    TRACE("Failed to store the iconindex to our property storage.  hr = 0x%x\n", hr);
-                }
-            }
-            CoTaskMemFree(iconindexstring);
-
-            IPropertyStorage_Release(pPropStg);
-        }
-        else
-            hr = E_OUTOFMEMORY;
+        CoTaskMemFree(filename);
+        return hr;
     }
-    else
-        hr = E_OUTOFMEMORY;
+
+    hr = IPropertySetStorage_Open(This->property_set_storage, &FMTID_Intshcut,
+                STGM_READWRITE | STGM_SHARE_EXCLUSIVE, &pPropStg);
+    if (FAILED(hr))
+    {
+        CoTaskMemFree(filename);
+        CoTaskMemFree(url);
+        return hr;
+    }
+
+    CoTaskMemFree(This->currentFile);
+    This->currentFile = filename;
+    CoTaskMemFree(This->url);
+    This->url = url;
+    This->isDirty = FALSE;
+
+    /* Now we're going to read in the iconfile and iconindex.
+       If we don't find them, that's not a failure case -- it's possible
+       that they just aren't in there. */
+
+    if (get_profile_string(str_header, str_iconfile, pszFileName, &iconfile) == S_OK)
+    {
+        PROPSPEC ps;
+        PROPVARIANT pv;
+        ps.ulKind = PRSPEC_PROPID;
+        ps.u.propid = PID_IS_ICONFILE;
+        pv.vt = VT_LPWSTR;
+        pv.u.pwszVal = iconfile;
+        hr = IPropertyStorage_WriteMultiple(pPropStg, 1, &ps, &pv, 0);
+        if (FAILED(hr))
+            TRACE("Failed to store the iconfile to our property storage.  hr = 0x%x\n", hr);
+    }
+    CoTaskMemFree(iconfile);
+
+    if (get_profile_string(str_header, str_iconindex, pszFileName, &iconindexstring) == S_OK)
+    {
+        int iconindex;
+        PROPSPEC ps;
+        PROPVARIANT pv;
+        iconindex = strtolW(iconindexstring, NULL, 10);
+        ps.ulKind = PRSPEC_PROPID;
+        ps.u.propid = PID_IS_ICONINDEX;
+        pv.vt = VT_I4;
+        pv.u.iVal = iconindex;
+        hr = IPropertyStorage_WriteMultiple(pPropStg, 1, &ps, &pv, 0);
+        if (FAILED(hr))
+           TRACE("Failed to store the iconindex to our property storage.  hr = 0x%x\n", hr);
+    }
+    CoTaskMemFree(iconindexstring);
+
+    IPropertyStorage_Release(pPropStg);
     return hr;
 }
 

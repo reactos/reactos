@@ -43,6 +43,11 @@ static inline SynthPortImpl *impl_from_SynthPortImpl_IDirectMusicThru(IDirectMus
     return CONTAINING_RECORD(iface, SynthPortImpl, IDirectMusicThru_iface);
 }
 
+static inline SynthPortImpl *impl_from_SynthPortImpl_IKsControl(IKsControl *iface)
+{
+    return CONTAINING_RECORD(iface, SynthPortImpl, IKsControl_iface);
+}
+
 /* IDirectMusicDownloadedInstrument IUnknown part follows: */
 static HRESULT WINAPI IDirectMusicDownloadedInstrumentImpl_QueryInterface(IDirectMusicDownloadedInstrument *iface, REFIID riid, VOID **ret_iface)
 {
@@ -140,6 +145,10 @@ static HRESULT WINAPI SynthPortImpl_IDirectMusicPort_QueryInterface(LPDIRECTMUSI
     } else if (IsEqualGUID(riid, &IID_IDirectMusicThru)) {
         *ret_iface = &This->IDirectMusicThru_iface;
         IDirectMusicThru_AddRef((LPDIRECTMUSICTHRU)*ret_iface);
+        return S_OK;
+    } else if (IsEqualGUID(riid, &IID_IKsControl)) {
+        *ret_iface = &This->IKsControl_iface;
+        IKsControl_AddRef((IKsControl*)*ret_iface);
         return S_OK;
     }
 
@@ -671,6 +680,75 @@ static const IDirectMusicThruVtbl SynthPortImpl_DirectMusicThru_Vtbl = {
     SynthPortImpl_IDirectMusicThru_ThruChannel
 };
 
+static HRESULT WINAPI SynthPortImpl_IKsControl_QueryInterface(IKsControl* iface, REFIID riid, LPVOID *ppobj)
+{
+    SynthPortImpl *This = impl_from_SynthPortImpl_IKsControl(iface);
+
+    return IDirectMusicPort_QueryInterface(&This->IDirectMusicPort_iface, riid, ppobj);
+}
+
+static ULONG WINAPI SynthPortImpl_IKsControl_AddRef(IKsControl* iface)
+{
+    SynthPortImpl *This = impl_from_SynthPortImpl_IKsControl(iface);
+
+    return IDirectMusicPort_AddRef(&This->IDirectMusicPort_iface);
+}
+
+static ULONG WINAPI SynthPortImpl_IKsControl_Release(IKsControl* iface)
+{
+    SynthPortImpl *This = impl_from_SynthPortImpl_IKsControl(iface);
+
+    return IDirectMusicPort_Release(&This->IDirectMusicPort_iface);
+}
+
+static HRESULT WINAPI SynthPortImpl_IKsControl_KsProperty(IKsControl* iface, PKSPROPERTY Property, ULONG PropertyLength, LPVOID PropertyData,
+                                                          ULONG DataLength, ULONG* BytesReturned)
+{
+    TRACE("(%p)->(%p, %u, %p, %u, %p)\n", iface, Property, PropertyLength, PropertyData, DataLength, BytesReturned);
+
+    TRACE("Property = %s - %u - %u\n", debugstr_guid(&Property->Set), Property->Id, Property->Flags);
+
+    if (Property->Flags != KSPROPERTY_TYPE_GET)
+    {
+        FIXME("Property flags %u not yet supported\n", Property->Flags);
+        return S_FALSE;
+    }
+
+    if (DataLength <  sizeof(DWORD))
+        return E_NOT_SUFFICIENT_BUFFER;
+
+    FIXME("Unknown property %s\n", debugstr_guid(&Property->Set));
+    *(DWORD*)PropertyData = FALSE;
+    *BytesReturned = sizeof(DWORD);
+
+    return S_OK;
+}
+
+static HRESULT WINAPI SynthPortImpl_IKsControl_KsMethod(IKsControl* iface, PKSMETHOD Method, ULONG MethodLength, LPVOID MethodData,
+                                                        ULONG DataLength, ULONG* BytesReturned)
+{
+    FIXME("(%p)->(%p, %u, %p, %u, %p): stub\n", iface, Method, MethodLength, MethodData, DataLength, BytesReturned);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI SynthPortImpl_IKsControl_KsEvent(IKsControl* iface, PKSEVENT Event, ULONG EventLength, LPVOID EventData,
+                                                       ULONG DataLength, ULONG* BytesReturned)
+{
+    FIXME("(%p)->(%p, %u, %p, %u, %p): stub\n", iface, Event, EventLength, EventData, DataLength, BytesReturned);
+
+    return E_NOTIMPL;
+}
+
+static const IKsControlVtbl SynthPortImpl_IKsControl_Vtbl = {
+    SynthPortImpl_IKsControl_QueryInterface,
+    SynthPortImpl_IKsControl_AddRef,
+    SynthPortImpl_IKsControl_Release,
+    SynthPortImpl_IKsControl_KsProperty,
+    SynthPortImpl_IKsControl_KsMethod,
+    SynthPortImpl_IKsControl_KsEvent
+};
+
 HRESULT DMUSIC_CreateSynthPortImpl(LPCGUID guid, LPVOID *object, LPUNKNOWN unkouter, LPDMUS_PORTPARAMS port_params, LPDMUS_PORTCAPS port_caps, DWORD device)
 {
     SynthPortImpl *obj;
@@ -688,6 +766,7 @@ HRESULT DMUSIC_CreateSynthPortImpl(LPCGUID guid, LPVOID *object, LPUNKNOWN unkou
     obj->IDirectMusicPort_iface.lpVtbl = &SynthPortImpl_DirectMusicPort_Vtbl;
     obj->IDirectMusicPortDownload_iface.lpVtbl = &SynthPortImpl_DirectMusicPortDownload_Vtbl;
     obj->IDirectMusicThru_iface.lpVtbl = &SynthPortImpl_DirectMusicThru_Vtbl;
+    obj->IKsControl_iface.lpVtbl = &SynthPortImpl_IKsControl_Vtbl;
     obj->ref = 0;  /* Will be inited by QueryInterface */
     obj->fActive = FALSE;
     obj->params = *port_params;

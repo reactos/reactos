@@ -67,6 +67,11 @@ static inline LinuxInputEffectImpl *impl_from_IDirectInputEffect(IDirectInputEff
     return CONTAINING_RECORD(iface, LinuxInputEffectImpl, IDirectInputEffect_iface);
 }
 
+static double ff_effect_direction_to_rad(unsigned int dir)
+{
+    return (dir & 0xffff) * M_PI / 0x8000;
+}
+
 /******************************************************************************
  *      LinuxInputEffectImpl 
  */
@@ -172,8 +177,10 @@ static HRESULT WINAPI LinuxInputEffectImpl_GetParameters(
             return diErr;
         else {
 	    if (peff->dwFlags & DIEFF_CARTESIAN) {
-		peff->rglDirection[0] = sin(M_PI * 3 * This->effect.direction / 0x7FFF) * 1000;
-		peff->rglDirection[1] = cos(M_PI * 3 * This->effect.direction / 0x7FFF) * 1000;
+		/* rotate so 0 points right */
+		double angle = ff_effect_direction_to_rad(This->effect.direction + 0xc000);
+		peff->rglDirection[0] = sin(angle) * 1000;
+		peff->rglDirection[1] = -cos(angle) * 1000;
 	    } else {
 		/* Polar and spherical coordinates are the same for two or less
 		 * axes.
@@ -505,9 +512,11 @@ static HRESULT WINAPI LinuxInputEffectImpl_SetParameters(
 		/* One condition block.  This needs to be rotated to direction,
 		 * and expanded to separate x and y conditions. */
 		int i;
-		double factor[2];
-		factor[0] = asin((This->effect.direction * 3.0 * M_PI) / 0x7FFF);
-		factor[1] = acos((This->effect.direction * 3.0 * M_PI) / 0x7FFF);
+		double factor[2], angle;
+		/* rotate so 0 points right */
+		angle = ff_effect_direction_to_rad(This->effect.direction + 0xc000);
+		factor[0] = sin(angle);
+		factor[1] = -cos(angle);
                 for (i = 0; i < 2; ++i) {
                     This->effect.u.condition[i].center = (int)(factor[i] * (tsp->lOffset / 10) * 32);
                     This->effect.u.condition[i].right_coeff = (int)(factor[i] * (tsp->lPositiveCoefficient / 10) * 32);

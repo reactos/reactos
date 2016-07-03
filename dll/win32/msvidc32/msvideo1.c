@@ -71,8 +71,13 @@ typedef BYTE uint8_t;
 
 typedef struct Msvideo1Context {
     DWORD dwMagic;
-    BOOL mode_8bit;  /* if it's not 8-bit, it's 16-bit */
+    int depth;
 } Msvideo1Context;
+
+static inline int get_stride(int width, int depth)
+{
+    return ((depth * width + 31) >> 3) & ~3;
+}
 
 static void 
 msvideo1_decode_8bit( int width, int height, const unsigned char *buf, int buf_size,
@@ -331,8 +336,15 @@ CRAM_DecompressQuery( Msvideo1Context *info, LPBITMAPINFO in, LPBITMAPINFO out )
         TRACE("out->bpp    = %d\n", out->bmiHeader.biBitCount );
         TRACE("out->height = %d\n", out->bmiHeader.biHeight );
         TRACE("out->width  = %d\n", out->bmiHeader.biWidth );
-        if(( in->bmiHeader.biBitCount != out->bmiHeader.biBitCount ) ||
-          ( in->bmiHeader.biPlanes != out->bmiHeader.biPlanes ) ||
+
+        if ((in->bmiHeader.biBitCount != out->bmiHeader.biBitCount) &&
+            (in->bmiHeader.biBitCount != 16 || out->bmiHeader.biBitCount != 24))
+        {
+            TRACE("incompatible depth requested\n");
+            return ICERR_BADFORMAT;
+        }
+
+        if(( in->bmiHeader.biPlanes != out->bmiHeader.biPlanes ) ||
           ( in->bmiHeader.biHeight != out->bmiHeader.biHeight ) ||
           ( in->bmiHeader.biWidth != out->bmiHeader.biWidth ))
         {
@@ -359,12 +371,17 @@ CRAM_DecompressGetFormat( Msvideo1Context *info, LPBITMAPINFO in, LPBITMAPINFO o
     if (in->bmiHeader.biBitCount <= 8)
         size += in->bmiHeader.biClrUsed * sizeof(RGBQUAD);
 
+    if (in->bmiHeader.biBitCount != 8 && in->bmiHeader.biBitCount != 16)
+        return ICERR_BADFORMAT;
+
     if( out )
     {
         memcpy( out, in, size );
+        out->bmiHeader.biWidth = in->bmiHeader.biWidth & ~1;
+        out->bmiHeader.biHeight = in->bmiHeader.biHeight & ~1;
         out->bmiHeader.biCompression = BI_RGB;
-        out->bmiHeader.biSizeImage = in->bmiHeader.biHeight
-                                   * in->bmiHeader.biWidth *4;
+        out->bmiHeader.biSizeImage = in->bmiHeader.biHeight *
+                                     get_stride(out->bmiHeader.biWidth, out->bmiHeader.biBitCount);
         return ICERR_OK;
     }
 
@@ -380,21 +397,56 @@ static LRESULT CRAM_DecompressBegin( Msvideo1Context *info, LPBITMAPINFO in, LPB
 
     TRACE("bitmap is %d bpp\n", in->bmiHeader.biBitCount);
     if( in->bmiHeader.biBitCount == 8 )
-        info->mode_8bit = TRUE;
+        info->depth = 8;
     else if( in->bmiHeader.biBitCount == 16 )
-        info->mode_8bit = FALSE;
+        info->depth = 16;
     else
     {
-        info->mode_8bit = FALSE;
+        info->depth = 0;
         FIXME("Unsupported output format %i\n", in->bmiHeader.biBitCount);
     }
 
     return ICERR_OK;
 }
 
+static void convert_depth(char *input, int depth_in, char *output, BITMAPINFOHEADER *out_hdr)
+{
+    int x, y;
+    int stride_in  = get_stride(out_hdr->biWidth, depth_in);
+    int stride_out = get_stride(out_hdr->biWidth, out_hdr->biBitCount);
+
+    if (depth_in == 16 && out_hdr->biBitCount == 24)
+    {
+        static const unsigned char convert_5to8[] =
+        {
+            0x00, 0x08, 0x10, 0x19, 0x21, 0x29, 0x31, 0x3a,
+            0x42, 0x4a, 0x52, 0x5a, 0x63, 0x6b, 0x73, 0x7b,
+            0x84, 0x8c, 0x94, 0x9c, 0xa5, 0xad, 0xb5, 0xbd,
+            0xc5, 0xce, 0xd6, 0xde, 0xe6, 0xef, 0xf7, 0xff,
+        };
+
+        for (y = 0; y < out_hdr->biHeight; y++)
+        {
+            WORD *src_row = (WORD *)(input + y * stride_in);
+            char *out_row = output + y * stride_out;
+
+            for (x = 0; x < out_hdr->biWidth; x++)
+            {
+                WORD pixel = *src_row++;
+                *out_row++ = convert_5to8[(pixel & 0x7c00u) >> 10];
+                *out_row++ = convert_5to8[(pixel & 0x03e0u) >> 5];
+                *out_row++ = convert_5to8[(pixel & 0x001fu)];
+            }
+        }
+    }
+    else
+        FIXME("Conversion from %d to %d bit unimplemented\n", depth_in, out_hdr->biBitCount);
+}
+
 static LRESULT CRAM_Decompress( Msvideo1Context *info, ICDECOMPRESS *icd, DWORD size )
 {
     LONG width, height, stride, sz;
+    void *output;
 
     TRACE("ICM_DECOMPRESS %p %p %d\n", info, icd, size);
 
@@ -405,18 +457,33 @@ static LRESULT CRAM_Decompress( Msvideo1Context *info, ICDECOMPRESS *icd, DWORD 
 
     width  = icd->lpbiInput->biWidth;
     height = icd->lpbiInput->biHeight;
-    stride = width; /* in bytes or 16bit words */
     sz = icd->lpbiInput->biSizeImage;
 
-    if (info->mode_8bit)
+    output = icd->lpOutput;
+
+    if (icd->lpbiOutput->biBitCount != info->depth)
     {
+        output = HeapAlloc(GetProcessHeap(), 0, icd->lpbiOutput->biWidth * icd->lpbiOutput->biHeight * info->depth / 8);
+        if (!output) return ICERR_MEMORY;
+    }
+
+    if (info->depth == 8)
+    {
+        stride = get_stride(width, 8);
         msvideo1_decode_8bit( width, height, icd->lpInput, sz,
-                              icd->lpOutput, stride);
+                              output, stride );
     }
     else
     {
+        stride = get_stride(width, 16) / 2;
         msvideo1_decode_16bit( width, height, icd->lpInput, sz,
-                               icd->lpOutput, stride);
+                               output, stride );
+    }
+
+    if (icd->lpbiOutput->biBitCount != info->depth)
+    {
+        convert_depth(output, info->depth, icd->lpOutput, icd->lpbiOutput);
+        HeapFree(GetProcessHeap(), 0, output);
     }
 
     return ICERR_OK;
@@ -425,6 +492,7 @@ static LRESULT CRAM_Decompress( Msvideo1Context *info, ICDECOMPRESS *icd, DWORD 
 static LRESULT CRAM_DecompressEx( Msvideo1Context *info, ICDECOMPRESSEX *icd, DWORD size )
 {
     LONG width, height, stride, sz;
+    void *output;
 
     TRACE("ICM_DECOMPRESSEX %p %p %d\n", info, icd, size);
 
@@ -435,18 +503,33 @@ static LRESULT CRAM_DecompressEx( Msvideo1Context *info, ICDECOMPRESSEX *icd, DW
 
     width  = icd->lpbiSrc->biWidth;
     height = icd->lpbiSrc->biHeight;
-    stride = width;
     sz = icd->lpbiSrc->biSizeImage;
 
-    if (info->mode_8bit)
+    output = icd->lpDst;
+
+    if (icd->lpbiDst->biBitCount != info->depth)
     {
+        output = HeapAlloc(GetProcessHeap(), 0, icd->lpbiDst->biWidth * icd->lpbiDst->biHeight * info->depth / 8);
+        if (!output) return ICERR_MEMORY;
+    }
+
+    if (info->depth == 8)
+    {
+        stride = get_stride(width, 8);
         msvideo1_decode_8bit( width, height, icd->lpSrc, sz, 
-                             icd->lpDst, stride);
+                              output, stride );
     }
     else
     {
+        stride = get_stride(width, 16) / 2;
         msvideo1_decode_16bit( width, height, icd->lpSrc, sz,
-                              icd->lpDst, stride);
+                               output, stride );
+    }
+
+    if (icd->lpbiDst->biBitCount != info->depth)
+    {
+        convert_depth(output, info->depth, icd->lpDst, icd->lpbiDst);
+        HeapFree(GetProcessHeap(), 0, output);
     }
 
     return ICERR_OK;

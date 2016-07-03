@@ -20,8 +20,6 @@
 
 #include "quartz_private.h"
 
-static const IPinVtbl PullPin_Vtbl;
-
 #define ALIGNDOWN(value,boundary) ((value)/(boundary)*(boundary))
 #define ALIGNUP(value,boundary) (ALIGNDOWN((value)+(boundary)-1, (boundary)))
 

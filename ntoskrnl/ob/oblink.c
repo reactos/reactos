@@ -589,8 +589,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
 
         /* Setup the target name */
         SymbolicLink->LinkTarget.Length = CapturedLinkTarget.Length;
-        SymbolicLink->LinkTarget.MaximumLength = CapturedLinkTarget.Length +
-                                                 sizeof(WCHAR);
+        SymbolicLink->LinkTarget.MaximumLength = CapturedLinkTarget.MaximumLength;
         SymbolicLink->LinkTarget.Buffer =
             ExAllocatePoolWithTag(PagedPool,
                                   CapturedLinkTarget.MaximumLength,
@@ -603,9 +602,18 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
         }
 
         /* Copy it */
-        RtlCopyMemory(SymbolicLink->LinkTarget.Buffer,
-                      CapturedLinkTarget.Buffer,
-                      CapturedLinkTarget.MaximumLength);
+        _SEH2_TRY
+        {
+            RtlCopyMemory(SymbolicLink->LinkTarget.Buffer,
+                          CapturedLinkTarget.Buffer,
+                          CapturedLinkTarget.MaximumLength);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ObDereferenceObject(SymbolicLink);
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
 
         /* Initialize the remaining name, dos drive index and target object */
         SymbolicLink->LinkTargetObject = NULL;

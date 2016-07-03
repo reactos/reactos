@@ -152,10 +152,7 @@ typedef void (*ProgressDrawProc)(const ProgressDrawInfo* di, int start, int end)
 static void draw_solid_bar_H (const ProgressDrawInfo* di, int start, int end)
 {
     RECT r;
-    r.left = di->rect.left + start;
-    r.top = di->rect.top;
-    r.right = di->rect.left + end;
-    r.bottom = di->rect.bottom;
+    SetRect(&r, di->rect.left + start, di->rect.top, di->rect.left + end, di->rect.bottom);
     FillRect (di->hdc, &r, di->hbrBar);
 }
 
@@ -163,10 +160,7 @@ static void draw_solid_bar_H (const ProgressDrawInfo* di, int start, int end)
 static void draw_solid_bkg_H (const ProgressDrawInfo* di, int start, int end)
 {
     RECT r;
-    r.left = di->rect.left + start;
-    r.top = di->rect.top;
-    r.right = di->rect.left + end;
-    r.bottom = di->rect.bottom;
+    SetRect(&r, di->rect.left + start, di->rect.top, di->rect.left + end, di->rect.bottom);
     FillRect (di->hdc, &r, di->hbrBk);
 }
 
@@ -174,10 +168,7 @@ static void draw_solid_bkg_H (const ProgressDrawInfo* di, int start, int end)
 static void draw_solid_bar_V (const ProgressDrawInfo* di, int start, int end)
 {
     RECT r;
-    r.left = di->rect.left;
-    r.top = di->rect.bottom - end;
-    r.right = di->rect.right;
-    r.bottom = di->rect.bottom - start;
+    SetRect(&r, di->rect.left, di->rect.bottom - end, di->rect.right, di->rect.bottom - start);
     FillRect (di->hdc, &r, di->hbrBar);
 }
 
@@ -185,10 +176,7 @@ static void draw_solid_bar_V (const ProgressDrawInfo* di, int start, int end)
 static void draw_solid_bkg_V (const ProgressDrawInfo* di, int start, int end)
 {
     RECT r;
-    r.left = di->rect.left;
-    r.top = di->rect.bottom - end;
-    r.right = di->rect.right;
-    r.bottom = di->rect.bottom - start;
+    SetRect(&r, di->rect.left, di->rect.bottom - end, di->rect.right, di->rect.bottom - start);
     FillRect (di->hdc, &r, di->hbrBk);
 }
 
@@ -271,11 +259,7 @@ static void draw_theme_bkg_H (const ProgressDrawInfo* di, int start, int end)
 {
     RECT bgrect, r;
 
-    r.left = di->rect.left + start;
-    r.top = di->rect.top;
-    r.right = di->rect.left + end;
-    r.bottom = di->rect.bottom;
-
+    SetRect(&r, di->rect.left + start, di->rect.top, di->rect.left + end, di->rect.bottom);
     bgrect = di->bgRect;
     OffsetRect(&bgrect, -bgrect.left, -bgrect.top);
 
@@ -287,11 +271,7 @@ static void draw_theme_bkg_V (const ProgressDrawInfo* di, int start, int end)
 {
     RECT bgrect, r;
 
-    r.left = di->rect.left;
-    r.top = di->rect.bottom - end;
-    r.right = di->rect.right;
-    r.bottom = di->rect.bottom - start;
-
+    SetRect(&r, di->rect.left, di->rect.bottom - end, di->rect.right, di->rect.bottom - start);
     bgrect = di->bgRect;
     OffsetRect(&bgrect, -bgrect.left, -bgrect.top);
 

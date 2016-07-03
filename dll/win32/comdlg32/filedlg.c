@@ -434,6 +434,13 @@ static BOOL GetFileDialog95A(LPOPENFILENAMEA ofn,UINT iDlgType)
       ret = FALSE;
   }
 
+  /* set the lpstrFileTitle */
+  if (ret && ofn->lpstrFile && ofn->lpstrFileTitle)
+  {
+      LPSTR lpstrFileTitle = PathFindFileNameA(ofn->lpstrFile);
+      lstrcpynA(ofn->lpstrFileTitle, lpstrFileTitle, ofn->nMaxFileTitle);
+  }
+
   if (lpstrSavDir)
   {
       SetCurrentDirectoryA(lpstrSavDir);
@@ -524,6 +531,13 @@ static BOOL GetFileDialog95W(LPOPENFILENAMEW ofn,UINT iDlgType)
       break;
   default :
       ret = FALSE;
+  }
+
+  /* set the lpstrFileTitle */
+  if (ret && ofn->lpstrFile && ofn->lpstrFileTitle)
+  {
+      LPWSTR lpstrFileTitle = PathFindFileNameW(ofn->lpstrFile);
+      lstrcpynW(ofn->lpstrFileTitle, lpstrFileTitle, ofn->nMaxFileTitle);
   }
 
   if (lpstrSavDir)
@@ -2705,23 +2719,6 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
               lpszTemp = PathFindExtensionA(tempFileA);
               fodInfos->ofnInfos->nFileExtension = (*lpszTemp) ? (lpszTemp - tempFileA) + 1 : 0;
           }
-
-          /* set the lpstrFileTitle */
-          if(fodInfos->ofnInfos->lpstrFileTitle)
-	  {
-            LPWSTR lpstrFileTitle = PathFindFileNameW(lpstrPathAndFile);
-            if(fodInfos->unicode)
-            {
-              LPOPENFILENAMEW ofn = fodInfos->ofnInfos;
-	      lstrcpynW(ofn->lpstrFileTitle, lpstrFileTitle, ofn->nMaxFileTitle);
-            }
-            else
-            {
-              LPOPENFILENAMEA ofn = (LPOPENFILENAMEA)fodInfos->ofnInfos;
-              WideCharToMultiByte(CP_ACP, 0, lpstrFileTitle, -1,
-                    ofn->lpstrFileTitle, ofn->nMaxFileTitle, NULL, NULL);
-            }
-	  }
 
           /* copy currently selected filter to lpstrCustomFilter */
           if (fodInfos->ofnInfos->lpstrCustomFilter)

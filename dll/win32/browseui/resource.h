@@ -56,11 +56,17 @@
 #define IDM_TOOLS_FOLDEROPTIONS          0xA123
 #define IDM_HELP_ISTHISCOPYLEGAL         0xA104
 #define IDM_HELP_ABOUT                   0xA102
-
 #define IDM_TASKBAR_TOOLBARS                268
 #define IDM_TASKBAR_TOOLBARS_DESKTOP          3
 #define IDM_TASKBAR_TOOLBARS_QUICKLAUNCH      4
 #define IDM_TASKBAR_TOOLBARS_NEW              1
+
+/* Random id for band close button, feel free to change it */
+#define IDM_BASEBAR_CLOSE                0xA200
+
+/* User-installed explorer band IDs according to API Monitor traces */
+#define IDM_EXPLORERBAND_BEGINCUSTOM     0xA240
+#define IDM_EXPLORERBAND_ENDCUSTOM       0xA25C
 
 #define IDM_GOTO_TRAVEL_FIRST       0xA141
 #define IDM_GOTO_TRAVEL_LAST        0xA151
@@ -118,3 +124,5 @@
 
 #define IDC_TEXTOPTIONS 4096
 #define IDC_ICONOPTIONS 4097
+
+#define IDB_BANDBUTTONS 545

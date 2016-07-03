@@ -304,8 +304,14 @@ GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
         VkKey = VkKeyScanW(CurChar);
         if (VkKey == 0xFFFF)
         {
-            DPRINT1("VkKeyScanW failed - Should simulate the key...\n");
-            continue;
+            DPRINT1("FIXME: TODO: VkKeyScanW failed - Should simulate the key!\n");
+            /*
+             * We don't really need the scan/key code because we actually only
+             * use the UnicodeChar for output purposes. It may pose few problems
+             * later on but it's not of big importance. One trick would be to
+             * convert the character to OEM / multibyte and use MapVirtualKey
+             * on each byte (simulating an Alt-0xxx OEM keyboard press).
+             */
         }
 
         /* Pressing some control keys */

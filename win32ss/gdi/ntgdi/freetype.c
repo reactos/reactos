@@ -3316,7 +3316,7 @@ GreExtTextOutW(
     IN INT YStart,
     IN UINT fuOptions,
     IN OPTIONAL PRECTL lprc,
-    IN LPWSTR String,
+    IN LPCWSTR String,
     IN INT Count,
     IN OPTIONAL LPINT Dx,
     IN DWORD dwCodePage)
@@ -3885,7 +3885,7 @@ NtGdiExtTextOutW(
     RECTL SafeRect;
     BYTE LocalBuffer[STACK_TEXT_BUFFER_SIZE];
     PVOID Buffer = LocalBuffer;
-    LPWSTR SafeString = NULL;
+    LPCWSTR SafeString = NULL;
     LPINT SafeDx = NULL;
     ULONG BufSize, StringSize, DxSize = 0;
 
@@ -3922,7 +3922,7 @@ NtGdiExtTextOutW(
         _SEH2_TRY
         {
             /* Put the Dx before the String to assure alignment of 4 */
-            SafeString = (LPWSTR)(((ULONG_PTR)Buffer) + DxSize);
+            SafeString = (LPCWSTR)(((ULONG_PTR)Buffer) + DxSize);
 
             /* Probe and copy the string */
             ProbeForRead(UnsafeString, StringSize, 1);

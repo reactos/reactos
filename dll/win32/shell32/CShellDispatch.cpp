@@ -23,27 +23,27 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 
-CShell::CShell()
+CShellDispatch::CShellDispatch()
 {
 }
 
-CShell::~CShell()
+CShellDispatch::~CShellDispatch()
 {
 }
 
-HRESULT CShell::Initialize()
+HRESULT CShellDispatch::Initialize()
 {
     return S_OK;
 }
 
 // *** IShellDispatch methods ***
-HRESULT STDMETHODCALLTYPE CShell::get_Application(IDispatch **ppid)
+HRESULT STDMETHODCALLTYPE CShellDispatch::get_Application(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::get_Parent(IDispatch **ppid)
+HRESULT STDMETHODCALLTYPE CShellDispatch::get_Parent(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
     return E_NOTIMPL;
@@ -63,7 +63,7 @@ HRESULT VariantToIdlist(VARIANT* var, LPITEMIDLIST* idlist)
     return hr;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::NameSpace(VARIANT vDir, Folder **ppsdf)
+HRESULT STDMETHODCALLTYPE CShellDispatch::NameSpace(VARIANT vDir, Folder **ppsdf)
 {
     TRACE("(%p, %s, %p)\n", this, debugstr_variant(&vDir), ppsdf);
     if (!ppsdf)
@@ -80,121 +80,121 @@ HRESULT STDMETHODCALLTYPE CShell::NameSpace(VARIANT vDir, Folder **ppsdf)
     return hr;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::BrowseForFolder(LONG Hwnd, BSTR Title, LONG Options, VARIANT RootFolder, Folder **ppsdf)
+HRESULT STDMETHODCALLTYPE CShellDispatch::BrowseForFolder(LONG Hwnd, BSTR Title, LONG Options, VARIANT RootFolder, Folder **ppsdf)
 {
     TRACE("(%p, %lu, %ls, %lu, %s, %p)\n", this, Hwnd, Title, Options, debugstr_variant(&RootFolder), ppsdf);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::Windows(IDispatch **ppid)
+HRESULT STDMETHODCALLTYPE CShellDispatch::Windows(IDispatch **ppid)
 {
     TRACE("(%p, %p)\n", this, ppid);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::Open(VARIANT vDir)
+HRESULT STDMETHODCALLTYPE CShellDispatch::Open(VARIANT vDir)
 {
     TRACE("(%p, %s)\n", this, debugstr_variant(&vDir));
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::Explore(VARIANT vDir)
+HRESULT STDMETHODCALLTYPE CShellDispatch::Explore(VARIANT vDir)
 {
     TRACE("(%p, %s)\n", this, debugstr_variant(&vDir));
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::MinimizeAll()
+HRESULT STDMETHODCALLTYPE CShellDispatch::MinimizeAll()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::UndoMinimizeALL()
+HRESULT STDMETHODCALLTYPE CShellDispatch::UndoMinimizeALL()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::FileRun()
+HRESULT STDMETHODCALLTYPE CShellDispatch::FileRun()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::CascadeWindows()
+HRESULT STDMETHODCALLTYPE CShellDispatch::CascadeWindows()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::TileVertically()
+HRESULT STDMETHODCALLTYPE CShellDispatch::TileVertically()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::TileHorizontally()
+HRESULT STDMETHODCALLTYPE CShellDispatch::TileHorizontally()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::ShutdownWindows()
+HRESULT STDMETHODCALLTYPE CShellDispatch::ShutdownWindows()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::Suspend()
+HRESULT STDMETHODCALLTYPE CShellDispatch::Suspend()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::EjectPC()
+HRESULT STDMETHODCALLTYPE CShellDispatch::EjectPC()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::SetTime()
+HRESULT STDMETHODCALLTYPE CShellDispatch::SetTime()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::TrayProperties()
+HRESULT STDMETHODCALLTYPE CShellDispatch::TrayProperties()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::Help()
+HRESULT STDMETHODCALLTYPE CShellDispatch::Help()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::FindFiles()
+HRESULT STDMETHODCALLTYPE CShellDispatch::FindFiles()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::FindComputer()
+HRESULT STDMETHODCALLTYPE CShellDispatch::FindComputer()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::RefreshMenu()
+HRESULT STDMETHODCALLTYPE CShellDispatch::RefreshMenu()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::ControlPanelItem(BSTR szDir)
+HRESULT STDMETHODCALLTYPE CShellDispatch::ControlPanelItem(BSTR szDir)
 {
     TRACE("(%p, %ls)\n", this, szDir);
     return E_NOTIMPL;
@@ -202,55 +202,55 @@ HRESULT STDMETHODCALLTYPE CShell::ControlPanelItem(BSTR szDir)
 
 
 // *** IShellDispatch2 methods ***
-HRESULT STDMETHODCALLTYPE CShell::IsRestricted(BSTR group, BSTR restriction, LONG *value)
+HRESULT STDMETHODCALLTYPE CShellDispatch::IsRestricted(BSTR group, BSTR restriction, LONG *value)
 {
     TRACE("(%p, %ls, %ls, %p)\n", this, group, restriction, value);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::ShellExecute(BSTR file, VARIANT args, VARIANT dir, VARIANT op, VARIANT show)
+HRESULT STDMETHODCALLTYPE CShellDispatch::ShellExecute(BSTR file, VARIANT args, VARIANT dir, VARIANT op, VARIANT show)
 {
     TRACE("(%p, %ls, %s, %s, %s, %s)\n", this, file, debugstr_variant(&args), debugstr_variant(&dir), debugstr_variant(&op), debugstr_variant(&show));
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::FindPrinter(BSTR name, BSTR location, BSTR model)
+HRESULT STDMETHODCALLTYPE CShellDispatch::FindPrinter(BSTR name, BSTR location, BSTR model)
 {
     TRACE("(%p, %ls, %ls, %ls)\n", this, name, location, model);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::GetSystemInformation(BSTR name, VARIANT *ret)
+HRESULT STDMETHODCALLTYPE CShellDispatch::GetSystemInformation(BSTR name, VARIANT *ret)
 {
     TRACE("(%p, %ls, %p)\n", this, name, ret);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::ServiceStart(BSTR service, VARIANT persistent, VARIANT *ret)
+HRESULT STDMETHODCALLTYPE CShellDispatch::ServiceStart(BSTR service, VARIANT persistent, VARIANT *ret)
 {
     TRACE("(%p, %ls, %s, %p)\n", this, service, wine_dbgstr_variant(&persistent), ret);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::ServiceStop(BSTR service, VARIANT persistent, VARIANT *ret)
+HRESULT STDMETHODCALLTYPE CShellDispatch::ServiceStop(BSTR service, VARIANT persistent, VARIANT *ret)
 {
     TRACE("(%p, %ls, %s, %p)\n", this, service, wine_dbgstr_variant(&persistent), ret);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::IsServiceRunning(BSTR service, VARIANT *running)
+HRESULT STDMETHODCALLTYPE CShellDispatch::IsServiceRunning(BSTR service, VARIANT *running)
 {
     TRACE("(%p, %ls, %p)\n", this, service, running);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::CanStartStopService(BSTR service, VARIANT *ret)
+HRESULT STDMETHODCALLTYPE CShellDispatch::CanStartStopService(BSTR service, VARIANT *ret)
 {
     TRACE("(%p, %ls, %p)\n", this, service, ret);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::ShowBrowserBar(BSTR clsid, VARIANT show, VARIANT *ret)
+HRESULT STDMETHODCALLTYPE CShellDispatch::ShowBrowserBar(BSTR clsid, VARIANT show, VARIANT *ret)
 {
     TRACE("(%p, %ls, %s, %p)\n", this, clsid, wine_dbgstr_variant(&show), ret);
     return E_NOTIMPL;
@@ -258,7 +258,7 @@ HRESULT STDMETHODCALLTYPE CShell::ShowBrowserBar(BSTR clsid, VARIANT show, VARIA
 
 
 // *** IShellDispatch3 methods ***
-HRESULT STDMETHODCALLTYPE CShell::AddToRecent(VARIANT file, BSTR category)
+HRESULT STDMETHODCALLTYPE CShellDispatch::AddToRecent(VARIANT file, BSTR category)
 {
     TRACE("(%p, %s, %ls)\n", this, wine_dbgstr_variant(&file), category);
     return E_NOTIMPL;
@@ -266,25 +266,25 @@ HRESULT STDMETHODCALLTYPE CShell::AddToRecent(VARIANT file, BSTR category)
 
 
 // *** IShellDispatch4 methods ***
-HRESULT STDMETHODCALLTYPE CShell::WindowsSecurity()
+HRESULT STDMETHODCALLTYPE CShellDispatch::WindowsSecurity()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::ToggleDesktop()
+HRESULT STDMETHODCALLTYPE CShellDispatch::ToggleDesktop()
 {
     TRACE("(%p)\n", this);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::ExplorerPolicy(BSTR policy, VARIANT *value)
+HRESULT STDMETHODCALLTYPE CShellDispatch::ExplorerPolicy(BSTR policy, VARIANT *value)
 {
     TRACE("(%p, %ls, %p)\n", this, policy, value);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::GetSetting(LONG setting, VARIANT_BOOL *result)
+HRESULT STDMETHODCALLTYPE CShellDispatch::GetSetting(LONG setting, VARIANT_BOOL *result)
 {
     TRACE("(%p, %lu, %p)\n", this, setting, result);
     return E_NOTIMPL;
@@ -292,13 +292,13 @@ HRESULT STDMETHODCALLTYPE CShell::GetSetting(LONG setting, VARIANT_BOOL *result)
 
 
 // *** IObjectSafety methods ***
-HRESULT STDMETHODCALLTYPE CShell::GetInterfaceSafetyOptions(REFIID riid, DWORD *pdwSupportedOptions, DWORD *pdwEnabledOptions)
+HRESULT STDMETHODCALLTYPE CShellDispatch::GetInterfaceSafetyOptions(REFIID riid, DWORD *pdwSupportedOptions, DWORD *pdwEnabledOptions)
 {
     TRACE("(%p, %s, %p, %p)\n", this, wine_dbgstr_guid(&riid), pdwSupportedOptions, pdwEnabledOptions);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::SetInterfaceSafetyOptions(REFIID riid, DWORD dwOptionSetMask, DWORD dwEnabledOptions)
+HRESULT STDMETHODCALLTYPE CShellDispatch::SetInterfaceSafetyOptions(REFIID riid, DWORD dwOptionSetMask, DWORD dwEnabledOptions)
 {
     TRACE("(%p, %s, %lu, %lu)\n", this, wine_dbgstr_guid(&riid), dwOptionSetMask, dwEnabledOptions);
     return E_NOTIMPL;
@@ -306,20 +306,20 @@ HRESULT STDMETHODCALLTYPE CShell::SetInterfaceSafetyOptions(REFIID riid, DWORD d
 
 
 // *** IObjectWithSite methods ***
-HRESULT STDMETHODCALLTYPE CShell::SetSite(IUnknown *pUnkSite)
+HRESULT STDMETHODCALLTYPE CShellDispatch::SetSite(IUnknown *pUnkSite)
 {
     TRACE("(%p, %p)\n", this, pUnkSite);
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE CShell::GetSite(REFIID riid, PVOID *ppvSite)
+HRESULT STDMETHODCALLTYPE CShellDispatch::GetSite(REFIID riid, PVOID *ppvSite)
 {
     TRACE("(%p, %s, %p)\n", this, wine_dbgstr_guid(&riid), ppvSite);
     return E_NOTIMPL;
 }
 
-HRESULT WINAPI CShell_Constructor(REFIID riid, LPVOID * ppvOut)
+HRESULT WINAPI CShellDispatch_Constructor(REFIID riid, LPVOID * ppvOut)
 {
-    return ShellObjectCreatorInit<CShell>(riid, ppvOut);
+    return ShellObjectCreatorInit<CShellDispatch>(riid, ppvOut);
 }
 

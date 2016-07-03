@@ -27,7 +27,6 @@ typedef struct {
     bytecode_t *code;
     function_code_t *func_code;
     DWORD length;
-    jsdisp_t *arguments;
 } FunctionInstance;
 
 typedef struct {
@@ -196,10 +195,9 @@ static HRESULT create_var_disp(script_ctx_t *ctx, FunctionInstance *function, un
 }
 
 static HRESULT invoke_source(script_ctx_t *ctx, FunctionInstance *function, IDispatch *this_obj, unsigned argc, jsval_t *argv,
-        jsval_t *r)
+        BOOL is_constructor, BOOL caller_execs_source, jsval_t *r)
 {
     jsdisp_t *var_disp, *arg_disp;
-    exec_ctx_t *exec_ctx;
     scope_chain_t *scope;
     HRESULT hres;
 
@@ -232,55 +230,21 @@ static HRESULT invoke_source(script_ctx_t *ctx, FunctionInstance *function, IDis
 
     hres = scope_push(function->scope_chain, var_disp, to_disp(var_disp), &scope);
     if(SUCCEEDED(hres)) {
-        hres = create_exec_ctx(ctx, this_obj, var_disp, scope, FALSE, &exec_ctx);
+        DWORD exec_flags = 0;
+
+        if(caller_execs_source)
+            exec_flags |= EXEC_RETURN_TO_INTERP;
+        if(is_constructor)
+            exec_flags |= EXEC_CONSTRUCTOR;
+        hres = exec_source(ctx, exec_flags, function->code, function->func_code, scope, this_obj,
+                &function->dispex, var_disp, arg_disp, r);
+
         scope_release(scope);
-
-        if(SUCCEEDED(hres)) {
-            jsdisp_t *prev_args;
-
-            prev_args = function->arguments;
-            function->arguments = arg_disp;
-            hres = exec_source(exec_ctx, function->code, function->func_code, FALSE, r);
-            function->arguments = prev_args;
-
-            exec_release(exec_ctx);
-        }
     }
-
-    /* Reset arguments value to cut the reference cycle. Note that since all activation contexts have
-     * their own arguments property, it's impossible to use prototype's one during name lookup */
-    jsdisp_propput_name(var_disp, argumentsW, jsval_undefined());
 
     jsdisp_release(arg_disp);
     jsdisp_release(var_disp);
     return hres;
-}
-
-static HRESULT invoke_constructor(script_ctx_t *ctx, FunctionInstance *function, unsigned argc, jsval_t *argv,
-        jsval_t *r)
-{
-    jsdisp_t *this_obj;
-    jsval_t var;
-    HRESULT hres;
-
-    hres = create_object(ctx, &function->dispex, &this_obj);
-    if(FAILED(hres))
-        return hres;
-
-    hres = invoke_source(ctx, function, to_disp(this_obj), argc, argv, &var);
-    if(FAILED(hres)) {
-        jsdisp_release(this_obj);
-        return hres;
-    }
-
-    if(is_object_instance(var)) {
-        jsdisp_release(this_obj);
-        *r = var;
-    }else {
-        jsval_release(var);
-        *r = jsval_obj(this_obj);
-    }
-    return S_OK;
 }
 
 static HRESULT invoke_value_proc(script_ctx_t *ctx, FunctionInstance *function, IDispatch *this_disp, WORD flags,
@@ -303,12 +267,12 @@ static HRESULT invoke_value_proc(script_ctx_t *ctx, FunctionInstance *function, 
 }
 
 static HRESULT call_function(script_ctx_t *ctx, FunctionInstance *function, IDispatch *this_obj,
-        unsigned argc, jsval_t *argv, jsval_t *r)
+        unsigned argc, jsval_t *argv, BOOL caller_execs_source, jsval_t *r)
 {
     if(function->value_proc)
         return invoke_value_proc(ctx, function, this_obj, DISPATCH_METHOD, argc, argv, r);
 
-    return invoke_source(ctx, function, this_obj, argc, argv, r);
+    return invoke_source(ctx, function, this_obj, argc, argv, FALSE, caller_execs_source, r);
 }
 
 static HRESULT function_to_string(FunctionInstance *function, jsstr_t **ret)
@@ -343,6 +307,7 @@ static HRESULT function_to_string(FunctionInstance *function, jsstr_t **ret)
 
 HRESULT Function_invoke(jsdisp_t *func_this, IDispatch *jsthis, WORD flags, unsigned argc, jsval_t *argv, jsval_t *r)
 {
+    const BOOL caller_execs_source = (flags & DISPATCH_JSCRIPT_CALLEREXECSSOURCE) != 0;
     FunctionInstance *function;
 
     TRACE("func %p this %p\n", func_this, jsthis);
@@ -350,14 +315,25 @@ HRESULT Function_invoke(jsdisp_t *func_this, IDispatch *jsthis, WORD flags, unsi
     assert(is_class(func_this, JSCLASS_FUNCTION));
     function = (FunctionInstance*)func_this;
 
+    flags &= ~DISPATCH_JSCRIPT_INTERNAL_MASK;
     if(function->value_proc)
         return invoke_value_proc(function->dispex.ctx, function, jsthis, flags, argc, argv, r);
 
-    if(flags == DISPATCH_CONSTRUCT)
-        return invoke_constructor(function->dispex.ctx, function, argc, argv, r);
+    if(flags == DISPATCH_CONSTRUCT) {
+        jsdisp_t *this_obj;
+        HRESULT hres;
+
+        hres = create_object(function->dispex.ctx, &function->dispex, &this_obj);
+        if(FAILED(hres))
+            return hres;
+
+        hres = invoke_source(function->dispex.ctx, function, to_disp(this_obj), argc, argv, TRUE, caller_execs_source, r);
+        jsdisp_release(this_obj);
+        return hres;
+    }
 
     assert(flags == DISPATCH_METHOD);
-    return invoke_source(function->dispex.ctx, function, jsthis, argc, argv, r);
+    return invoke_source(function->dispex.ctx, function, jsthis, argc, argv, FALSE, caller_execs_source, r);
 }
 
 static HRESULT Function_get_length(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
@@ -476,7 +452,7 @@ static HRESULT Function_apply(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, un
     }
 
     if(SUCCEEDED(hres))
-        hres = call_function(ctx, function, this_obj, cnt, args, r);
+        hres = call_function(ctx, function, this_obj, cnt, args, (flags & DISPATCH_JSCRIPT_CALLEREXECSSOURCE) != 0, r);
 
     if(this_obj)
         IDispatch_Release(this_obj);
@@ -509,7 +485,7 @@ static HRESULT Function_call(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, uns
         cnt = argc-1;
     }
 
-    hres = call_function(ctx, function, this_obj, cnt, argv+1, r);
+    hres = call_function(ctx, function, this_obj, cnt, argv+1, (flags & DISPATCH_JSCRIPT_CALLEREXECSSOURCE) != 0, r);
 
     if(this_obj)
         IDispatch_Release(this_obj);
@@ -552,10 +528,18 @@ HRESULT Function_get_value(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 static HRESULT Function_get_arguments(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
     FunctionInstance *function = function_from_jsdisp(jsthis);
+    call_frame_t *frame;
 
     TRACE("\n");
 
-    *r = function->arguments ? jsval_obj(jsdisp_addref(function->arguments)) : jsval_null();
+    for(frame = ctx->call_ctx; frame; frame = frame->prev_frame) {
+        if(frame->function_instance == &function->dispex) {
+            *r = jsval_obj(jsdisp_addref(frame->arguments_obj));
+            return S_OK;
+        }
+    }
+
+    *r = jsval_null();
     return S_OK;
 }
 

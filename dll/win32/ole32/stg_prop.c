@@ -2053,12 +2053,12 @@ static HRESULT PropertyStorage_BaseConstruct(IStream *stm,
     hr = PropertyStorage_CreateDictionaries(*pps);
     if (FAILED(hr))
     {
-        IStream_Release(stm);
         (*pps)->cs.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&(*pps)->cs);
         HeapFree(GetProcessHeap(), 0, *pps);
         *pps = NULL;
     }
+    else IStream_AddRef( stm );
 
     return hr;
 }
@@ -2080,11 +2080,7 @@ static HRESULT PropertyStorage_ConstructFromStream(IStream *stm,
             TRACE("PropertyStorage %p constructed\n", ps);
             hr = S_OK;
         }
-        else
-        {
-            PropertyStorage_DestroyDictionaries(ps);
-            HeapFree(GetProcessHeap(), 0, ps);
-        }
+        else IPropertyStorage_Release( &ps->IPropertyStorage_iface );
     }
     return hr;
 }
@@ -2212,6 +2208,8 @@ static HRESULT WINAPI IPropertySetStorage_fnCreate(
 
     r = PropertyStorage_ConstructEmpty(stm, rfmtid, grfFlags, grfMode, ppprstg);
 
+    IStream_Release( stm );
+
 end:
     TRACE("returning 0x%08x\n", r);
     return r;
@@ -2256,6 +2254,8 @@ static HRESULT WINAPI IPropertySetStorage_fnOpen(
         goto end;
 
     r = PropertyStorage_ConstructFromStream(stm, rfmtid, grfMode, ppprstg);
+
+    IStream_Release( stm );
 
 end:
     TRACE("returning 0x%08x\n", r);
@@ -2756,4 +2756,94 @@ SERIALIZEDPROPERTYVALUE* WINAPI StgConvertVariantToProperty(const PROPVARIANT *p
     FIXME("%p,%d,%p,%p,%d,%d,%p\n", pvar, CodePage, pprop, pcb, pid, fReserved, pcIndirect);
 
     return NULL;
+}
+
+HRESULT WINAPI StgCreatePropStg(IUnknown *unk, REFFMTID fmt, const CLSID *clsid,
+                                DWORD flags, DWORD reserved, IPropertyStorage **prop_stg)
+{
+    IStorage *stg;
+    IStream *stm;
+    HRESULT r;
+
+    TRACE("%p %s %s %08x %d %p\n", unk, debugstr_guid(fmt), debugstr_guid(clsid), flags, reserved, prop_stg);
+
+    if (!fmt || reserved)
+    {
+        r = E_INVALIDARG;
+        goto end;
+    }
+
+    if (flags & PROPSETFLAG_NONSIMPLE)
+    {
+        r = IUnknown_QueryInterface(unk, &IID_IStorage, (void **)&stg);
+        if (FAILED(r))
+            goto end;
+
+        /* FIXME: if (flags & PROPSETFLAG_NONSIMPLE), we need to create a
+         * storage, not a stream.  For now, disallow it.
+         */
+        FIXME("PROPSETFLAG_NONSIMPLE not supported\n");
+        IStorage_Release(stg);
+        r = STG_E_INVALIDFLAG;
+    }
+    else
+    {
+        r = IUnknown_QueryInterface(unk, &IID_IStream, (void **)&stm);
+        if (FAILED(r))
+            goto end;
+
+        r = PropertyStorage_ConstructEmpty(stm, fmt, flags,
+                STGM_CREATE|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, prop_stg);
+
+        IStream_Release( stm );
+    }
+
+end:
+    TRACE("returning 0x%08x\n", r);
+    return r;
+}
+
+HRESULT WINAPI StgOpenPropStg(IUnknown *unk, REFFMTID fmt, DWORD flags,
+                              DWORD reserved, IPropertyStorage **prop_stg)
+{
+    IStorage *stg;
+    IStream *stm;
+    HRESULT r;
+
+    TRACE("%p %s %08x %d %p\n", unk, debugstr_guid(fmt), flags, reserved, prop_stg);
+
+    if (!fmt || reserved)
+    {
+        r = E_INVALIDARG;
+        goto end;
+    }
+
+    if (flags & PROPSETFLAG_NONSIMPLE)
+    {
+        r = IUnknown_QueryInterface(unk, &IID_IStorage, (void **)&stg);
+        if (FAILED(r))
+            goto end;
+
+        /* FIXME: if (flags & PROPSETFLAG_NONSIMPLE), we need to open a
+         * storage, not a stream.  For now, disallow it.
+         */
+        FIXME("PROPSETFLAG_NONSIMPLE not supported\n");
+        IStorage_Release(stg);
+        r = STG_E_INVALIDFLAG;
+    }
+    else
+    {
+        r = IUnknown_QueryInterface(unk, &IID_IStream, (void **)&stm);
+        if (FAILED(r))
+            goto end;
+
+        r = PropertyStorage_ConstructFromStream(stm, fmt,
+                STGM_READWRITE|STGM_SHARE_EXCLUSIVE, prop_stg);
+
+        IStream_Release( stm );
+    }
+
+end:
+    TRACE("returning 0x%08x\n", r);
+    return r;
 }

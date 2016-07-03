@@ -24,11 +24,11 @@ LANGUAGE LANG_ESPERANTO, SUBLANG_DEFAULT
 STRINGTABLE
 {
     IDS_FILENOTFOUND        "Dosiero ne estis trovita"
-    IDS_VERIFYFILE          "Kontrolu la øustecon je havigita dosiernomo."
+    IDS_VERIFYFILE          "Kontrolu la ĝustecon je havigita dosiernomo."
     IDS_CREATEFILE          "Dosiero estas neekzistanta\n\
-Æu vi volas krei dosieron?"
+Ĉu vi volas krei dosieron?"
     IDS_OVERWRITEFILE       "Dosiero estas jam ekzistanta.\n\
-Æu vi volas superskribi øin?"
+Ĉu vi volas superskribi ĝin?"
     IDS_INVALID_FILENAME_TITLE "Nekorekta(j) tipo(j) en vojo"
     IDS_INVALID_FILENAME    "La dosiernomo ne povas enhavi la jenajn tipojn:\n\
                           / : < > |"
@@ -51,35 +51,35 @@ STRINGTABLE
     PD32_PRINT_TITLE       "Presu"
 
     PD32_VALUE_UREADABLE                  "Nelegebla Entry"
-    PD32_INVALID_PAGE_RANGE "Æi tiu valoro ne estas en la paøo.\n\
+    PD32_INVALID_PAGE_RANGE "Ĉi tiu valoro ne estas en la paĝo.\n\
 Enigu valoron inter %d kaj %d."
-    PD32_FROM_NOT_ABOVE_TO                "La 'de:' valoro ne povas superi la 'øis:' valoron."
-    PD32_MARGINS_OVERLAP                  "Marøenoj surmetiøas inter si aý estas ekster paperfolio.\n\
-Difinu denove la marøenojn."
+    PD32_FROM_NOT_ABOVE_TO                "La 'de:' valoro ne povas superi la 'ĝis:' valoron."
+    PD32_MARGINS_OVERLAP                  "Marĝenoj surmetiĝas inter si aŭ estas ekster paperfolio.\n\
+Difinu denove la marĝenojn."
     PD32_NR_OF_COPIES_EMPTY               "La nombrvaloro je 'Nombro da &ekzempleroj' ne povas esti malplena."
     PD32_TOO_LARGE_COPIES                 "La via printilo ne povas presi tiel granda nombro da ekzempleroj\n\
 Enigu valoron inter 1 kaj %d."
     PD32_PRINT_ERROR                      "Okazis printila eroro."
-    PD32_NO_DEFAULT_PRINTER               "Ne estas defaýlta printilo."
+    PD32_NO_DEFAULT_PRINTER               "Ne estas defaŭlta printilo."
     PD32_CANT_FIND_PRINTER                "Mi ne povas trovi la printilon."
-    PD32_OUT_OF_MEMORY                    "La memoro estas elæerpita."
+    PD32_OUT_OF_MEMORY                    "La memoro estas elĉerpita."
     PD32_GENERIC_ERROR                    "Okazis eroro."
     PD32_DRIVER_UNKNOWN                   "Nekonata printilzorgilo."
-    PD32_NO_DEVICES                       "Antaý ol vi povos plenumi printiltaskojn kvazaý impozi paøon aý presi dokumenton, estas necese ke vi instalu printilon. Oni konsilas instali øin kaj reprovi."
+    PD32_NO_DEVICES                       "Antaŭ ol vi povos plenumi printiltaskojn kvazaŭ impozi paĝon aŭ presi dokumenton, estas necese ke vi instalu printilon. Oni konsilas instali ĝin kaj reprovi."
 
-    PD32_DEFAULT_PRINTER                  "Defaýlta Printilo; "
+    PD32_DEFAULT_PRINTER                  "Defaŭlta Printilo; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d dokumento(j) estas en presvico"
-    PD32_MARGINS_IN_INCHES                "Marøenoj [inches]"
-    PD32_MARGINS_IN_MILLIMETERS           "Marøenoj [mm]"
+    PD32_MARGINS_IN_INCHES                "Marĝenoj [inches]"
+    PD32_MARGINS_IN_MILLIMETERS           "Marĝenoj [mm]"
     PD32_MILLIMETERS                      "mm"
 
     PD32_PRINTER_STATUS_READY             "Preta"
-    PD32_PRINTER_STATUS_PAUSED            "Paýse; "
+    PD32_PRINTER_STATUS_PAUSED            "Paŭse; "
     PD32_PRINTER_STATUS_ERROR             "Eroro; "
     PD32_PRINTER_STATUS_PENDING_DELETION  "Nuliga atendado; "
     PD32_PRINTER_STATUS_PAPER_JAM         "Blokita papero; "
-    PD32_PRINTER_STATUS_PAPER_OUT         "Elæerpita papero; "
-    PD32_PRINTER_STATUS_MANUAL_FEED       "Mane enþovo de papero; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "Elĉerpita papero; "
+    PD32_PRINTER_STATUS_MANUAL_FEED       "Mane enŝovo de papero; "
     PD32_PRINTER_STATUS_PAPER_PROBLEM     "Papera problemo; "
     PD32_PRINTER_STATUS_OFFLINE           "Nekonektita printilo; "
     PD32_PRINTER_STATUS_IO_ACTIVE         "I/O Aktiva; "
@@ -93,12 +93,12 @@ Enigu valoron inter 1 kaj %d."
     PD32_PRINTER_STATUS_WARMING_UP        "Varmigo de la printilo; "
     PD32_PRINTER_STATUS_TONER_LOW         "Kseroprintila nivelo estas basa; "
     PD32_PRINTER_STATUS_NO_TONER          "Neniu kseroprintilo; "
-    PD32_PRINTER_STATUS_PAGE_PUNT         "Paøa 'punt'; "
+    PD32_PRINTER_STATUS_PAGE_PUNT         "Paĝa 'punt'; "
     PD32_PRINTER_STATUS_USER_INTERVENTION "Interrompita far uzanto; "
-    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Elæerpita memoro; "
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Elĉerpita memoro; "
     PD32_PRINTER_STATUS_DOOR_OPEN         "La printila pordo estas malfermita; "
     PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Nekonata pres-servanto; "
-    PD32_PRINTER_STATUS_POWER_SAVE        "Energiþpare; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "Energiŝpare; "
 }
 
 STRINGTABLE /* Font styles */
@@ -112,15 +112,15 @@ STRINGTABLE /* Font styles */
 STRINGTABLE /* Color names */
 {
     IDS_COLOR_BLACK     "Nigro"
-    IDS_COLOR_MAROON    "Duonruøbruna koloro"
+    IDS_COLOR_MAROON    "Duonruĝbruna koloro"
     IDS_COLOR_GREEN     "Verdo"
     IDS_COLOR_OLIVE     "Olivverdo"
     IDS_COLOR_NAVY      "Ultramara bluo"
-    IDS_COLOR_PURPLE    "Purpurruøo"
+    IDS_COLOR_PURPLE    "Purpurruĝo"
     IDS_COLOR_TEAL      "Kreka koloro"
     IDS_COLOR_GRAY      "Grizo"
-    IDS_COLOR_SILVER    "Arøento"
-    IDS_COLOR_RED       "Ruøo"
+    IDS_COLOR_SILVER    "Arĝento"
+    IDS_COLOR_RED       "Ruĝo"
     IDS_COLOR_LIME      "Limeta koloro"
     IDS_COLOR_YELLOW    "Flavo"
     IDS_COLOR_BLUE      "Bluo"
@@ -196,19 +196,19 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "Printilo:", stc1, 6, 6, 40, 9
  LTEXT "", stc2, 60, 6, 150, 9
- GROUPBOX "Etendiøon", grp1, 6, 30, 160, 65, BS_GROUPBOX
- RADIOBUTTON "æ&iujn", rad1, 16, 45, 60, 12
+ GROUPBOX "Etendiĝon", grp1, 6, 30, 160, 65, BS_GROUPBOX
+ RADIOBUTTON "ĉ&iujn", rad1, 16, 45, 60, 12
  RADIOBUTTON "&elekton", rad2, 16, 60, 60, 12
- RADIOBUTTON "&paøojn", rad3, 16, 75, 60, 12
+ RADIOBUTTON "&paĝojn", rad3, 16, 75, 60, 12
  DEFPUSHBUTTON "Presu", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Rezigni", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Aranøu", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Aranĝu", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  LTEXT "de:", stc3, 60, 80, 30, 9
- LTEXT "øis:", stc4, 120, 80, 30, 9
+ LTEXT "ĝis:", stc4, 120, 80, 30, 9
  LTEXT "&Kvalito:", stc5, 6, 100, 76, 9
  COMBOBOX cmb1, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  CHECKBOX "Presu &dosieren", chx1, 20, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "Mallarøtipe", chx2, 160, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Mallarĝtipe", chx2, 160, 120, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
@@ -224,7 +224,7 @@ FONT 8, "MS Shell Dlg"
  COMBOBOX cmb1, 35, 58, 145, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "Bone", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Rezigni", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Aranøu", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Aranĝu", psh1, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  GROUPBOX "Formato", grp2, 6, 82, 100, 50, BS_GROUPBOX
  RADIOBUTTON "&Vertikala", rad3, 50, 95, 50, 12
  RADIOBUTTON "&Horizontala", rad4, 50, 110, 50, 12
@@ -278,7 +278,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "&Normala koloraro:",   stc1, 4,    4,  140, 10
  LTEXT "&Persona koloraro:",  stc2, 4,   106, 140, 10
  LTEXT "Sol&idkoloro",  stc3, 150, 151,  48, 10
- LTEXT   "&Ruøo", IDC_COLOR_RL /*1094*/,247,126,27,10
+ LTEXT   "&Ruĝo", IDC_COLOR_RL /*1094*/,247,126,27,10
  EDITTEXT IDC_COLOR_EDIT_R, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT   "&Verdo", IDC_COLOR_GL /*1095*/,247,140,27,10
  EDITTEXT IDC_COLOR_EDIT_G, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
@@ -299,17 +299,17 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "Rezigni", IDCANCEL, 58, 167, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Helpo", pshHelp,100,166, 44, 14
  PUSHBUTTON "&Aldonu al Koloraro",    IDC_COLOR_ADD /*1024*/, 152, 167, 144, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Forv&iþu Koloraron >>", IDC_COLOR_DEFINE /*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Forv&iŝu Koloraron >>", IDC_COLOR_DEFINE /*1025*/,   4, 149, 142, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Sol&idkoloro", IDC_COLOR_RES, 300,200,4,14   /* just a dummy */
 }
 
 
 FINDDLGORD DIALOG 36, 24, 276, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Seræu"
+CAPTION "Serĉu"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Seræu:", -1, 4, 8, 52, 8
+ LTEXT "&Serĉu:", -1, 4, 8, 52, 8
  EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "Nur tutan &vorton", chx1, 4, 26, 140, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "Atentu &Usklecon", chx2, 4, 42, 140, 12, BS_AUTOCHECKBOX | WS_TABSTOP
@@ -317,7 +317,7 @@ FONT 8, "MS Shell Dlg"
  CONTROL "&Supre", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 151, 30, 48, 12
  CONTROL "&Sube", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 151, 44, 48, 12
 
- DEFPUSHBUTTON "&Pluseræu", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ DEFPUSHBUTTON "&Pluserĉu", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Rezigni", IDCANCEL	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Helpo", pshHelp	 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
 }
@@ -325,19 +325,19 @@ FONT 8, "MS Shell Dlg"
 
 REPLACEDLGORD DIALOG 36, 24, 276, 94
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Anstataýigu"
+CAPTION "Anstataŭigu"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Seræu:", -1, 4, 8, 52, 8
+ LTEXT "&Serĉu:", -1, 4, 8, 52, 8
  EDITTEXT edt1, 57, 7, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT "&per:", -1, 4, 26, 52, 8
  EDITTEXT edt2, 57, 24, 148, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "Nur tutan &vorton", chx1, 5, 46, 120, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "Atentu &Usklecon", chx2, 5, 62, 120, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 
- DEFPUSHBUTTON "&Pluseræu", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "&Anstataýigu", psh1	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Anstataýigu æ&iujn", psh2 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "&Pluserĉu", IDOK, 212,  6, 60, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "&Anstataŭigu", psh1	 , 212, 24, 60, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Anstataŭigu ĉ&iujn", psh2 , 212, 42, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Rezigni", IDCANCEL	 , 212, 60, 60, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Helpo", pshHelp	 , 212, 78, 60, 14, WS_GROUP | WS_TABSTOP
 }
@@ -370,17 +370,17 @@ FONT 8, "MS Shell Dlg"
     GROUPBOX        "Ekzempleroj",         grp2, 160, 92, 120,64, WS_GROUP
     LTEXT           "Nombro da &ekzempleroj:",stc5,168,105,68,8
     ICON            "",               ico3, 170,131,  76,24, WS_GROUP | SS_CENTERIMAGE
-    CONTROL         "Laý&kajere",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
+    CONTROL         "Laŭ&kajere",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,168,118,100,12
     EDITTEXT                          edt3, 240,103,  32,12, WS_GROUP | ES_NUMBER
 
-    GROUPBOX        "Etendiøon",    grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "æ&iujn",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
-    CONTROL         "&paøojn",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
+    GROUPBOX        "Etendiĝon",    grp1,   8,92,  144,64, WS_GROUP
+    CONTROL         "ĉ&iujn",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "&paĝojn",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
     CONTROL         "&elekton",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
     EDITTEXT                          edt1,  73,122,  26,12, WS_GROUP | ES_NUMBER
     EDITTEXT                          edt2, 120,122,  26,12, WS_GROUP | ES_NUMBER
     RTEXT           "de:",         stc2,  52,124,  20,8
-    RTEXT           "øis:",           stc3,  99,124,  20,8
+    RTEXT           "ĝis:",           stc3,  99,124,  20,8
 }
 
 PRINT32_SETUP DIALOG  32, 32, 288, 178
@@ -419,7 +419,7 @@ END
 
 PAGESETUPDLGORD DIALOG 32, 32, 240, 240
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Impozu Paøon"
+CAPTION "Impozu Paĝon"
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
@@ -433,7 +433,7 @@ BEGIN
   GROUPBOX "Formato", grp1, 8, 156, 64, 56, BS_GROUPBOX
   AUTORADIOBUTTON "&Vertikala", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "&Horizontala", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
-  GROUPBOX "Marøenoj", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  GROUPBOX "Marĝenoj", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "&Dekstra:", stc15, 88, 172, 30, 8
   EDITTEXT edt4, 119, 170, 36, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Dekstra:", stc16, 159, 172, 30, 8
@@ -452,7 +452,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS
 CAPTION "Malfermu"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT	"Seræu &en:",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    LTEXT	"Serĉu &en:",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
     COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
 
     LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE

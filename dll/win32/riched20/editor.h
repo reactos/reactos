@@ -227,6 +227,7 @@ BOOL ME_InternalDeleteText(ME_TextEditor *editor, ME_Cursor *start, int nChars, 
 int ME_GetTextLength(ME_TextEditor *editor) DECLSPEC_HIDDEN;
 int ME_GetTextLengthEx(ME_TextEditor *editor, const GETTEXTLENGTHEX *how) DECLSPEC_HIDDEN;
 ME_Style *ME_GetSelectionInsertStyle(ME_TextEditor *editor) DECLSPEC_HIDDEN;
+void ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor, int *x, int *y, int *height) DECLSPEC_HIDDEN;
 
 /* context.c */
 void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC) DECLSPEC_HIDDEN;

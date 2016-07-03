@@ -668,7 +668,7 @@ vfatMakeFCBFromDirEntry(
     }
     rcFCB->RFCB.FileSize.QuadPart = Size;
     rcFCB->RFCB.ValidDataLength.QuadPart = Size;
-    rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, vcb->FatInfo.BytesPerCluster);
+    rcFCB->RFCB.AllocationSize.QuadPart = ROUND_UP_64(Size, vcb->FatInfo.BytesPerCluster);
     rcFCB->RefCount = 1;
     if (vfatFCBIsDirectory(rcFCB))
     {

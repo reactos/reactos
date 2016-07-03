@@ -181,6 +181,25 @@ static inline void  W16(unsigned char* dst, short s)
     dst[1] = HIBYTE(s);
 }
 
+/***********************************************************************
+ *           W8
+ *
+ * Write a 8 bit sample
+ */
+static inline void W8(unsigned char* dst, short s)
+{
+    dst[0] = (unsigned char)((s + 32768) >> 8);
+}
+
+
+static inline void W8_16(unsigned char* dst, short s, int bytes)
+{
+    if(bytes == 1)
+        W8(dst, s);
+    else
+        W16(dst, s);
+}
+
 /* IMA (or DVI) APDCM codec routines */
 
 static const unsigned IMA_StepTable[89] =
@@ -341,43 +360,43 @@ static	void cvtSSima16K(PACMDRVSTREAMINSTANCE adsi,
     }
 }
 
-static	void cvtMMima16K(PACMDRVSTREAMINSTANCE adsi,
-                         const unsigned char* src, LPDWORD nsrc,
-                         unsigned char* dst, LPDWORD ndst)
+static void cvtMMimaK(PACMDRVSTREAMINSTANCE adsi,
+                    const unsigned char* src, LPDWORD nsrc,
+                    unsigned char* dst, LPDWORD ndst)
 {
-    int	 	sample;
-    int		stepIndex;
-    int		nsamp_blk = ((LPIMAADPCMWAVEFORMAT)adsi->pwfxSrc)->wSamplesPerBlock;
-    int		nsamp;
+    int sample;
+    int stepIndex;
+    int nsamp_blk = ((LPIMAADPCMWAVEFORMAT)adsi->pwfxSrc)->wSamplesPerBlock;
+    int nsamp;
+    int bytesPerSample = adsi->pwfxDst->wBitsPerSample / 8;
     /* compute the number of entire blocks we can decode...
      * it's the min of the number of entire blocks in source buffer and the number
      * of entire blocks in destination buffer
      */
-    DWORD	nblock = min(*nsrc / adsi->pwfxSrc->nBlockAlign,
-                             *ndst / (nsamp_blk * 2));
+    DWORD nblock = min(*nsrc / adsi->pwfxSrc->nBlockAlign, *ndst / (nsamp_blk * bytesPerSample));
 
     *nsrc = nblock * adsi->pwfxSrc->nBlockAlign;
-    *ndst = nblock * nsamp_blk * 2;
+    *ndst = nblock * nsamp_blk * bytesPerSample;
 
     nsamp_blk--; /* remove the sample in block header */
     for (; nblock > 0; nblock--)
     {
-        const unsigned char*    in_src = src;
+        const unsigned char* in_src = src;
 
-	/* handle header first */
-	sample = R16(src);
-	stepIndex = (unsigned)*(src + 2);
+        /* handle header first */
+        sample = R16(src);
+        stepIndex = (unsigned)*(src + 2);
         clamp_step_index(&stepIndex);
-	src += 4;
-	W16(dst, sample);	dst += 2;
+        src += 4;
+        W8_16(dst, sample, bytesPerSample); dst += bytesPerSample;
 
-	for (nsamp = nsamp_blk; nsamp > 0; nsamp -= 2)
+        for (nsamp = nsamp_blk; nsamp > 0; nsamp -= 2)
         {
             process_nibble(*src, &stepIndex, &sample);
-	    W16(dst, sample); dst += 2;
+            W8_16(dst, sample, bytesPerSample); dst += bytesPerSample;
             process_nibble(*src++ >> 4, &stepIndex, &sample);
-	    W16(dst, sample); dst += 2;
-	}
+            W8_16(dst, sample, bytesPerSample); dst += bytesPerSample;
+        }
         /* we have now to realign the source pointer on block */
         src = in_src + adsi->pwfxSrc->nBlockAlign;
     }
@@ -735,13 +754,14 @@ static	LRESULT	ADPCM_StreamOpen(PACMDRVSTREAMINSTANCE adsi)
     else if (adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_IMA_ADPCM &&
              adsi->pwfxDst->wFormatTag == WAVE_FORMAT_PCM)
     {
-	/* resampling or mono <=> stereo not available
+        /* resampling or mono <=> stereo not available
          * ADPCM algo only define 16 bit per sample output
+         * (The API seems to still allow 8 bit per sample output)
          */
-	if (adsi->pwfxSrc->nSamplesPerSec != adsi->pwfxDst->nSamplesPerSec ||
-	    adsi->pwfxSrc->nChannels != adsi->pwfxDst->nChannels ||
-            adsi->pwfxDst->wBitsPerSample != 16)
-	    goto theEnd;
+        if (adsi->pwfxSrc->nSamplesPerSec != adsi->pwfxDst->nSamplesPerSec ||
+            adsi->pwfxSrc->nChannels != adsi->pwfxDst->nChannels ||
+            (adsi->pwfxDst->wBitsPerSample != 16 && adsi->pwfxDst->wBitsPerSample != 8))
+            goto theEnd;
 
         nspb = ((LPIMAADPCMWAVEFORMAT)adsi->pwfxSrc)->wSamplesPerBlock;
         TRACE("spb=%u\n", nspb);
@@ -754,11 +774,16 @@ static	LRESULT	ADPCM_StreamOpen(PACMDRVSTREAMINSTANCE adsi)
         if ((((nspb - 1) / 2) + 4) * adsi->pwfxSrc->nChannels < adsi->pwfxSrc->nBlockAlign)
             goto theEnd;
 
-	/* adpcm decoding... */
-	if (adsi->pwfxDst->wBitsPerSample == 16 && adsi->pwfxDst->nChannels == 2)
-	    aad->convert = cvtSSima16K;
-	if (adsi->pwfxDst->wBitsPerSample == 16 && adsi->pwfxDst->nChannels == 1)
-	    aad->convert = cvtMMima16K;
+        /* adpcm decoding... */
+        if (adsi->pwfxDst->wBitsPerSample == 16 && adsi->pwfxDst->nChannels == 2)
+            aad->convert = cvtSSima16K;
+        if (adsi->pwfxDst->wBitsPerSample == 16 && adsi->pwfxDst->nChannels == 1)
+            aad->convert = cvtMMimaK;
+        if (adsi->pwfxDst->wBitsPerSample == 8 && adsi->pwfxDst->nChannels == 1)
+            aad->convert = cvtMMimaK;
+        /* FIXME: Stereo support for 8bit samples*/
+        if (adsi->pwfxDst->wBitsPerSample == 8 && adsi->pwfxDst->nChannels == 2)
+            goto theEnd;
     }
     else if (adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_PCM &&
              adsi->pwfxDst->wFormatTag == WAVE_FORMAT_IMA_ADPCM)

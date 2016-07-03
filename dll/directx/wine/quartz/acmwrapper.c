@@ -36,7 +36,7 @@ static const IBaseFilterVtbl ACMWrapper_Vtbl;
 
 static inline ACMWrapperImpl *impl_from_TransformFilter( TransformFilter *iface )
 {
-    return CONTAINING_RECORD(iface, ACMWrapperImpl, tf.filter);
+    return CONTAINING_RECORD(iface, ACMWrapperImpl, tf);
 }
 
 static HRESULT WINAPI ACMWrapper_Receive(TransformFilter *tf, IMediaSample *pSample)

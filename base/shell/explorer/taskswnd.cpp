@@ -32,8 +32,8 @@
 #define MAX_TASKS_COUNT (0x7FFF)
 #define TASK_ITEM_ARRAY_ALLOC   64
 
-const WCHAR szTaskSwitchWndClass [] = TEXT("MSTaskSwWClass");
-const WCHAR szRunningApps [] = TEXT("Running Applications");
+const WCHAR szTaskSwitchWndClass[] = L"MSTaskSwWClass";
+const WCHAR szRunningApps[] = L"Running Applications";
 
 #if DEBUG_SHELL_HOOK
 const struct {
@@ -420,7 +420,7 @@ public:
 
         icon = GetWndIcon(TaskItem->hWnd);
         if (!icon)
-            icon = static_cast<HICON>(LoadImage(NULL, MAKEINTRESOURCE(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
+            icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
         TaskItem->IconIndex = ImageList_ReplaceIcon(m_ImageList, TaskItem->IconIndex, icon);
         tbbi.iImage = TaskItem->IconIndex;
 
@@ -565,7 +565,7 @@ public:
 
         icon = GetWndIcon(TaskItem->hWnd);
         if (!icon)
-            icon = static_cast<HICON>(LoadImage(NULL, MAKEINTRESOURCE(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
+            icon = static_cast<HICON>(LoadImageW(NULL, MAKEINTRESOURCEW(OIC_SAMPLE), IMAGE_ICON, 0, 0, LR_SHARED | LR_DEFAULTSIZE));
         TaskItem->IconIndex = ImageList_ReplaceIcon(m_ImageList, -1, icon);
 
         tbBtn.iBitmap = TaskItem->IconIndex;
@@ -977,8 +977,7 @@ public:
             TaskItem = AllocTaskItem();
             if (TaskItem != NULL)
             {
-                ZeroMemory(TaskItem,
-                    sizeof(*TaskItem));
+                ZeroMemory(TaskItem, sizeof(*TaskItem));
                 TaskItem->hWnd = hWnd;
                 TaskItem->Index = -1;
                 TaskItem->Group = AddToTaskGroup(hWnd);
@@ -1304,7 +1303,7 @@ public:
         m_TaskBar.UpdateTbButtonSpacing(m_Tray->IsHorizontal(), m_Theme != NULL);
 
         /* Register the shell hook */
-        m_ShellHookMsg = RegisterWindowMessage(TEXT("SHELLHOOK"));
+        m_ShellHookMsg = RegisterWindowMessageW(L"SHELLHOOK");
 
         TRACE("ShellHookMsg got assigned number %d\n", m_ShellHookMsg);
 
@@ -1420,7 +1419,7 @@ public:
         {
 #if DEBUG_SHELL_HOOK
             int i, found;
-            for (i = 0, found = 0; i != sizeof(hshell_msg) / sizeof(hshell_msg[0]); i++)
+            for (i = 0, found = 0; i != _countof(hshell_msg); i++)
             {
                 if (hshell_msg[i].msg == (INT) wParam)
                 {

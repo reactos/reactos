@@ -18,13 +18,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef _SHELL_H_
-#define _SHELL_H_
+#ifndef _SHELLDISPATCH_H_
+#define _SHELLDISPATCH_H_
 
 #undef ShellExecute
 
-class CShell:
-    public CComCoClass<CShell, &CLSID_Shell>,
+class CShellDispatch:
+    public CComCoClass<CShellDispatch, &CLSID_Shell>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDispatchImpl<IShellDispatch4, &IID_IShellDispatch4>,
     public IObjectSafety,
@@ -33,8 +33,8 @@ class CShell:
 private:
 
 public:
-    CShell();
-    ~CShell();
+    CShellDispatch();
+    ~CShellDispatch();
 
     HRESULT Initialize();
 
@@ -93,11 +93,11 @@ public:
 
 
 DECLARE_REGISTRY_RESOURCEID(IDR_SHELL)
-DECLARE_NOT_AGGREGATABLE(CShell)
+DECLARE_NOT_AGGREGATABLE(CShellDispatch)
 
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-BEGIN_COM_MAP(CShell)
+BEGIN_COM_MAP(CShellDispatch)
     COM_INTERFACE_ENTRY_IID(IID_IShellDispatch4, IShellDispatch4)
     COM_INTERFACE_ENTRY_IID(IID_IShellDispatch3, IShellDispatch3)
     COM_INTERFACE_ENTRY_IID(IID_IShellDispatch2, IShellDispatch2)
@@ -108,4 +108,4 @@ BEGIN_COM_MAP(CShell)
 END_COM_MAP()
 };
 
-#endif /* _SHELL_H_ */
+#endif /* _SHELLDISPATCH_H_ */

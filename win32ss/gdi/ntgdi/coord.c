@@ -1341,7 +1341,7 @@ GreGetWindowExtEx(
     _In_ HDC hdc,
     _Out_ LPSIZE lpSize)
 {
-   return GreGetDCPoint(hdc, GdiGetWindowExt, (PPOINTL)lpSize);
+    return GreGetDCPoint(hdc, GdiGetWindowExt, (PPOINTL)lpSize);
 }
 
 BOOL
@@ -1350,7 +1350,7 @@ GreGetViewportExtEx(
     _In_ HDC hdc,
     _Out_ LPSIZE lpSize)
 {
-   return GreGetDCPoint(hdc, GdiGetViewPortExt, (PPOINTL)lpSize);
+    return GreGetDCPoint(hdc, GdiGetViewPortExt, (PPOINTL)lpSize);
 }
 
 BOOL APIENTRY
@@ -1359,11 +1359,8 @@ NtGdiGetDCPoint(
     UINT iPoint,
     PPOINTL Point)
 {
-    BOOL Ret = TRUE;
-    DC *pdc;
+    BOOL Ret;
     POINTL SafePoint;
-    SIZE Size;
-    PSIZEL pszlViewportExt;
 
     if (!Point)
     {
@@ -1371,50 +1368,7 @@ NtGdiGetDCPoint(
         return FALSE;
     }
 
-    pdc = DC_LockDc(hDC);
-    if (!pdc)
-    {
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-
-    switch (iPoint)
-    {
-        case GdiGetViewPortExt:
-            pszlViewportExt = DC_pszlViewportExt(pdc);
-            SafePoint.x = pszlViewportExt->cx;
-            SafePoint.y = pszlViewportExt->cy;
-            break;
-
-        case GdiGetWindowExt:
-            SafePoint.x = pdc->pdcattr->szlWindowExt.cx;
-            SafePoint.y = pdc->pdcattr->szlWindowExt.cy;
-            break;
-
-        case GdiGetViewPortOrg:
-            SafePoint = pdc->pdcattr->ptlViewportOrg;
-            break;
-
-        case GdiGetWindowOrg:
-            SafePoint = pdc->pdcattr->ptlWindowOrg;
-            break;
-
-        case GdiGetDCOrg:
-            SafePoint = pdc->ptlDCOrig;
-            break;
-
-        case GdiGetAspectRatioFilter:
-            DC_vGetAspectRatioFilter(pdc, &Size);
-            SafePoint.x = Size.cx;
-            SafePoint.y = Size.cy;
-            break;
-
-        default:
-            EngSetLastError(ERROR_INVALID_PARAMETER);
-            Ret = FALSE;
-            break;
-    }
-
+    Ret = GreGetDCPoint(hDC, iPoint, &SafePoint);
     if (Ret)
     {
         _SEH2_TRY
@@ -1429,7 +1383,6 @@ NtGdiGetDCPoint(
         _SEH2_END;
     }
 
-    DC_UnlockDc(pdc);
     return Ret;
 }
 

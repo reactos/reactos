@@ -34,7 +34,7 @@ HRESULT WINAPI _CStartMenu_Constructor(REFIID riid, void **ppv)
     if (hRShell)
     {
         PSTARTMENU_CONSTRUCTOR func = (PSTARTMENU_CONSTRUCTOR)GetProcAddress(hRShell, "CStartMenu_Constructor");
-        if(func)
+        if (func)
         {
             return func(riid, ppv);
         }

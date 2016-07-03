@@ -1421,7 +1421,8 @@ Ext2GetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
     
     _SEH2_TRY {
 
-        if (!Mcb || !IsInodeSymLink(&Mcb->Inode)) {
+        if (!Mcb || !IsInodeSymLink(&Mcb->Inode) ||
+            !IsFlagOn(Ccb->Flags, CCB_OPEN_REPARSE_POINT)) {
             Status = STATUS_NOT_A_REPARSE_POINT;
             _SEH2_LEAVE;
         }
@@ -1566,7 +1567,6 @@ out:
     return Status;
 }
 
-
 NTSTATUS
 Ext2SetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
 {
@@ -1672,15 +1672,31 @@ Ext2SetReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
             }
         }
 
+        /* free all data blocks of the inode (to be set as symlink) */
+        {
+            LARGE_INTEGER zero = {0};
+            Status = Ext2TruncateFile(IrpContext, Vcb, Mcb, &zero);
+        }
+
+        /* decrease dir count of group desc and vcb stat */
+        if (S_ISDIR(Mcb->Inode.i_mode)) {
+
+            ULONG group = (Mcb->Inode.i_ino - 1) / INODES_PER_GROUP;
+            Ext2UpdateGroupDirStat(IrpContext, Vcb, group);
+
+            /* drop extra reference for dir inode */
+            ext3_dec_count(&Mcb->Inode);
+        }
+
         /* overwrite inode mode as type SYMLINK */
-        Mcb->Inode.i_mode = S_IFLNK | S_IRWXUGO;
         Ext2SaveInode(IrpContext, Vcb, &Mcb->Inode);
         SetFlag(Mcb->FileAttr, FILE_ATTRIBUTE_REPARSE_POINT);
 
         Status = Ext2WriteSymlink(IrpContext, Vcb, Mcb, OemNameBuffer,
                                   OemNameLength, &BytesWritten);
         if (NT_SUCCESS(Status)) {
-            Status = Ext2SetFileType(IrpContext, Vcb, ParentDcb, Mcb);
+            Ext2SetFileType(IrpContext, Vcb, ParentDcb, Mcb,
+                            S_IFLNK | S_IRWXUGO);
         }
 
     } _SEH2_FINALLY {
@@ -1798,7 +1814,8 @@ Ext2DeleteReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
             }
         }
 
-        if (!Mcb) {
+        if (!Mcb || !IsInodeSymLink(&Mcb->Inode) ||
+            !IsFlagOn(Ccb->Flags, CCB_OPEN_REPARSE_POINT)) {
             Status = STATUS_NOT_A_REPARSE_POINT;
             _SEH2_LEAVE;
         }
@@ -1824,15 +1841,9 @@ Ext2DeleteReparsePoint (IN PEXT2_IRP_CONTEXT IrpContext)
         if (!NT_SUCCESS(Status)) {
             _SEH2_LEAVE;
         }
-        if (IsFlagOn(SUPER_BLOCK->s_feature_incompat, EXT4_FEATURE_INCOMPAT_EXTENTS)) {
-            SetFlag(Mcb->Inode.i_flags, EXT4_EXTENTS_FL);
-        }
-        ClearFlag(Mcb->FileAttr, FILE_ATTRIBUTE_REPARSE_POINT);
-        ClearFlag(Mcb->Inode.i_flags, S_IFLNK);
-        Ext2SaveInode(IrpContext, Vcb, &Mcb->Inode);
-        if (NT_SUCCESS(Status)) {
-            Status = Ext2SetFileType(IrpContext, Vcb, ParentDcb, Mcb);
-        }
+
+        /* inode is to be removed */
+        SetFlag(Ccb->Flags, CCB_DELETE_ON_CLOSE);
 
     } _SEH2_FINALLY {
 
@@ -2700,6 +2711,9 @@ Ext2PurgeVolume (IN PEXT2_VCB Vcb,
         if (IsVcbReadOnly(Vcb)) {
             FlushBeforePurge = FALSE;
         }
+
+        /* discard buffer_headers for group_desc */
+        Ext2DropGroup(Vcb);
 
         FcbListEntry= NULL;
         InitializeListHead(&FcbList);

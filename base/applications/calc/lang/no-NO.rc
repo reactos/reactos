@@ -290,22 +290,6 @@ BEGIN
     DEFPUSHBUTTON "", IDC_BUTTON_FOCUS, 0, 0, 5, 5, NOT WS_VISIBLE
 END
 
-IDD_DIALOG_ABOUT DIALOGEX 0, 0, 264, 169
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Om ReactOS Kalkulator"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 105, 148, 52, 16
-    CONTROL IDB_BITMAP_ROS, IDC_STATIC, "Static", SS_BITMAP | SS_CENTERIMAGE |
-            SS_REALSIZEIMAGE | WS_BORDER, 4, 4, 104, 48
-    LTEXT "ReactOS Kalkulator", IDC_STATIC, 120, 12, 132, 8, SS_CENTERIMAGE
-    LTEXT "Versjon ", IDC_TEXT_VERSION, 120, 20, 132, 8, SS_CENTERIMAGE
-    LTEXT "Laget av Carlo Bramini", IDC_STATIC, 120, 32, 132, 8, SS_CENTERIMAGE
-    GROUPBOX "", IDC_STATIC, 112, 0, 148, 52
-    GROUPBOX "", IDC_STATIC, 5, 56, 256, 88
-    EDITTEXT IDC_EDIT_LICENSE, 12, 68, 240, 68, ES_MULTILINE | ES_READONLY | WS_VSCROLL
-END
-
 IDD_DIALOG_STAT DIALOGEX 0, 0, 163, 85
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "statistikk boks"
@@ -413,9 +397,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_STRING_LICENSE "ReactOS Kalkulator er gratis programvare utgitt under GNU GPL lisensen.\r\n\r\nDu kan få en kopi av GNU GPL lisensen her:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nDu kan også få en oversettelse av GNU GPL lisensen her:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR "Feil"
     IDS_QUICKHELP "Rask hjelp"
+END
+
+/* About */
+STRINGTABLE
+BEGIN
+    IDS_CALC_NAME "ReactOS Kalkulator"
+    IDS_AUTHOR "Laget av Carlo Bramini"
 END
 
 /* Types of conversion */

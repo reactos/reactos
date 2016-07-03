@@ -506,7 +506,7 @@ void ME_DumpParaStyleToBuf(const PARAFORMAT2 *pFmt, char buf[2048])
   DUMP(PFM_STYLE,          "Text style:",        "%d", sStyle);
   DUMP(PFM_LINESPACING,    "Line spacing rule:", "%u", bLineSpacingRule);
   /* bOutlineLevel should be 0 */
-  DUMP(PFM_SHADING,        "Shading Weigth:",    "%u", wShadingWeight);
+  DUMP(PFM_SHADING,        "Shading Weight:",    "%u", wShadingWeight);
   DUMP(PFM_SHADING,        "Shading Style:",     "%u", wShadingStyle);
   DUMP(PFM_NUMBERINGSTART, "Numbering Start:",   "%u", wNumberingStart);
   DUMP(PFM_NUMBERINGSTYLE, "Numbering Style:",   "0x%x", wNumberingStyle);

@@ -34,3 +34,67 @@ BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, void *reserved)
     }
     return TRUE;
 }
+
+void d3drm_object_init(struct d3drm_object *object)
+{
+    object->ref = 1;
+    object->appdata = 0;
+    list_init(&object->destroy_callbacks);
+}
+
+struct destroy_callback
+{
+    struct list entry;
+    D3DRMOBJECTCALLBACK cb;
+    void *ctx;
+};
+
+HRESULT d3drm_object_add_destroy_callback(struct d3drm_object *object, D3DRMOBJECTCALLBACK cb, void *ctx)
+{
+    struct destroy_callback *callback;
+
+    if (!cb)
+        return D3DRMERR_BADVALUE;
+
+    callback = HeapAlloc(GetProcessHeap(), 0, sizeof(*callback));
+    if (!callback)
+        return E_OUTOFMEMORY;
+
+    callback->cb = cb;
+    callback->ctx = ctx;
+
+    list_add_head(&object->destroy_callbacks, &callback->entry);
+    return D3DRM_OK;
+}
+
+HRESULT d3drm_object_delete_destroy_callback(struct d3drm_object *object, D3DRMOBJECTCALLBACK cb, void *ctx)
+{
+    struct destroy_callback *callback;
+
+    if (!cb)
+        return D3DRMERR_BADVALUE;
+
+    LIST_FOR_EACH_ENTRY(callback, &object->destroy_callbacks, struct destroy_callback, entry)
+    {
+        if (callback->cb == cb && callback->ctx == ctx)
+        {
+            list_remove(&callback->entry);
+            HeapFree(GetProcessHeap(), 0, callback);
+            break;
+        }
+    }
+
+    return D3DRM_OK;
+}
+
+void d3drm_object_cleanup(IDirect3DRMObject *iface, struct d3drm_object *object)
+{
+    struct destroy_callback *callback, *callback2;
+
+    LIST_FOR_EACH_ENTRY_SAFE(callback, callback2, &object->destroy_callbacks, struct destroy_callback, entry)
+    {
+        callback->cb(iface, callback->ctx);
+        list_remove(&callback->entry);
+        HeapFree(GetProcessHeap(), 0, callback);
+    }
+}

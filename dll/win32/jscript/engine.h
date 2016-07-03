@@ -72,6 +72,7 @@
     X(postinc,    1, ARG_INT,    0)        \
     X(preinc,     1, ARG_INT,    0)        \
     X(push_except,1, ARG_ADDR,   ARG_BSTR) \
+    X(push_ret,   1, 0,0)                  \
     X(push_scope, 1, 0,0)                  \
     X(regexp,     1, ARG_STR,    ARG_UINT) \
     X(rshift,     1, 0,0)                  \
@@ -169,9 +170,10 @@ typedef struct _bytecode_t {
 HRESULT compile_script(script_ctx_t*,const WCHAR*,const WCHAR*,const WCHAR*,BOOL,BOOL,bytecode_t**) DECLSPEC_HIDDEN;
 void release_bytecode(bytecode_t*) DECLSPEC_HIDDEN;
 
-static inline void bytecode_addref(bytecode_t *code)
+static inline bytecode_t *bytecode_addref(bytecode_t *code)
 {
     code->ref++;
+    return code;
 }
 
 typedef struct _scope_chain_t {
@@ -184,41 +186,41 @@ typedef struct _scope_chain_t {
 HRESULT scope_push(scope_chain_t*,jsdisp_t*,IDispatch*,scope_chain_t**) DECLSPEC_HIDDEN;
 void scope_release(scope_chain_t*) DECLSPEC_HIDDEN;
 
-static inline void scope_addref(scope_chain_t *scope)
+static inline scope_chain_t *scope_addref(scope_chain_t *scope)
 {
     scope->ref++;
+    return scope;
 }
 
 typedef struct _except_frame_t except_frame_t;
 struct _parser_ctx_t;
 
-struct _exec_ctx_t {
-    LONG ref;
-
-    struct _parser_ctx_t *parser;
-    bytecode_t *code;
-    script_ctx_t *script;
-    scope_chain_t *scope_chain;
-    jsdisp_t *var_disp;
-    IDispatch *this_obj;
-    function_code_t *func_code;
-    BOOL is_global;
-
-    jsval_t *stack;
-    unsigned stack_size;
-    unsigned top;
+typedef struct _call_frame_t {
+    unsigned ip;
     except_frame_t *except_frame;
+    unsigned stack_base;
+    scope_chain_t *scope;
+    scope_chain_t *base_scope;
+
     jsval_t ret;
 
-    unsigned ip;
-};
+    IDispatch *this_obj;
+    jsdisp_t *function_instance;
+    jsdisp_t *variable_obj;
+    jsdisp_t *arguments_obj;
+    DWORD flags;
 
-static inline void exec_addref(exec_ctx_t *ctx)
-{
-    ctx->ref++;
-}
+    bytecode_t *bytecode;
+    function_code_t *function;
 
-void exec_release(exec_ctx_t*) DECLSPEC_HIDDEN;
-HRESULT create_exec_ctx(script_ctx_t*,IDispatch*,jsdisp_t*,scope_chain_t*,BOOL,exec_ctx_t**) DECLSPEC_HIDDEN;
-HRESULT exec_source(exec_ctx_t*,bytecode_t*,function_code_t*,BOOL,jsval_t*) DECLSPEC_HIDDEN;
+    struct _call_frame_t *prev_frame;
+} call_frame_t;
+
+#define EXEC_GLOBAL            0x0001
+#define EXEC_CONSTRUCTOR       0x0002
+#define EXEC_RETURN_TO_INTERP  0x0004
+
+HRESULT exec_source(script_ctx_t*,DWORD,bytecode_t*,function_code_t*,scope_chain_t*,IDispatch*,
+        jsdisp_t*,jsdisp_t*,jsdisp_t*,jsval_t*) DECLSPEC_HIDDEN;
+
 HRESULT create_source_function(script_ctx_t*,bytecode_t*,function_code_t*,scope_chain_t*,jsdisp_t**) DECLSPEC_HIDDEN;

@@ -36,22 +36,22 @@ CAPTION "הגדרות זכוכית מגדלת"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "יציאה", IDOK, 96, 161, 50, 14
-    PUSHBUTTON "עזרה", IDC_BUTTON_HELP, 38, 161, 50, 14
-    LTEXT "רמת הגדלה:", IDC_STATIC, 6, 8, 68, 8
+    PUSHBUTTON "עז&רה", IDC_BUTTON_HELP, 38, 161, 50, 14
+    LTEXT "ר&מת הגדלה:", IDC_STATIC, 6, 8, 68, 8
     COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "מעקב", IDC_STATIC, 7, 25, 139, 59
     GROUPBOX "תצוגה", IDC_STATIC, 7, 87, 139, 57
-    CONTROL "עקוב אחר סמן העכבר", IDC_FOLLOWMOUSECHECK, "Button",
+    CONTROL "עקוב אחר סמן& העכבר", IDC_FOLLOWMOUSECHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 114, 10
-    CONTROL "עקוב אחר מוקד לוח מקשים", IDC_FOLLOWKEYBOARDCHECK, "Button",
+    CONTROL "עקוב אחר מוקד לוח& מקשים", IDC_FOLLOWKEYBOARDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 54, 114, 10
-    CONTROL "עקוב אחר עריכת טקסט", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
+    CONTROL "עקוב אחר עריכ&ת טקסט", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 66, 114, 10
-    CONTROL "הפוך צבעים", IDC_INVERTCOLORSCHECK, "Button",
+    CONTROL "הפוך צ&בעים", IDC_INVERTCOLORSCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 102, 114, 10
-    CONTROL "הפעל ממוזער", IDC_STARTMINIMIZEDCHECK, "Button",
+    CONTROL "הפעל& ממוזער", IDC_STARTMINIMIZEDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 114, 114, 10
-    CONTROL "הראה זכוכית מגדלת", IDC_SHOWMAGNIFIERCHECK, "Button",
+    CONTROL "הראה זכוכית מג&דלת", IDC_SHOWMAGNIFIERCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 126, 114, 10
 END
 

@@ -1110,7 +1110,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
          * filesystems do because it is safe for us to use an offset with an
          * alignment less than the file system block size.
          */
-        KeEnterCriticalRegion();
         Status = CcRosGetVacb(SharedCacheMap,
                               FileOffset,
                               &BaseOffset,
@@ -1119,7 +1118,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
                               &Vacb);
         if (!NT_SUCCESS(Status))
         {
-            KeLeaveCriticalRegion();
             return(Status);
         }
         if (!UptoDate)
@@ -1132,7 +1130,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
             if (!NT_SUCCESS(Status))
             {
                 CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
-                KeLeaveCriticalRegion();
                 return Status;
             }
         }
@@ -1147,7 +1144,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
                                        FileOffset - BaseOffset).LowPart >> PAGE_SHIFT;
 
         CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, TRUE);
-        KeLeaveCriticalRegion();
     }
     else
     {
@@ -1167,7 +1163,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
         {
             return(Status);
         }
-        KeEnterCriticalRegion();
         Status = CcRosGetVacb(SharedCacheMap,
                               FileOffset,
                               &BaseOffset,
@@ -1176,7 +1171,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
                               &Vacb);
         if (!NT_SUCCESS(Status))
         {
-            KeLeaveCriticalRegion();
             return(Status);
         }
         if (!UptoDate)
@@ -1189,7 +1183,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
             if (!NT_SUCCESS(Status))
             {
                 CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
-                KeLeaveCriticalRegion();
                 return Status;
             }
         }
@@ -1219,7 +1212,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
                                   &Vacb);
             if (!NT_SUCCESS(Status))
             {
-                KeLeaveCriticalRegion();
                 return(Status);
             }
             if (!UptoDate)
@@ -1232,7 +1224,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
                 if (!NT_SUCCESS(Status))
                 {
                     CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
-                    KeLeaveCriticalRegion();
                     return Status;
                 }
             }
@@ -1248,7 +1239,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
         }
         MiUnmapPageInHyperSpace(Process, PageAddr, Irql);
         CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
-        KeLeaveCriticalRegion();
     }
     return(STATUS_SUCCESS);
 }
@@ -3242,12 +3232,10 @@ ExeFmtpReadFile(IN PVOID File,
     BufferSize = PAGE_ROUND_UP(BufferSize);
 
     /* Flush data since we're about to perform a non-cached read */
-    KeEnterCriticalRegion();
     CcFlushCache(FileObject->SectionObjectPointer,
                  &FileOffset,
                  BufferSize,
                  &Iosb);
-    KeLeaveCriticalRegion();
 
     /*
      * It's ok to use paged pool, because this is a temporary buffer only used in

@@ -484,7 +484,22 @@ NTSTATUS
 NTAPI
 ObpValidateAccessMask(IN PACCESS_STATE AccessState)
 {
-    /* TODO */
+    PISECURITY_DESCRIPTOR SecurityDescriptor;
+
+    /* We're only interested if the object for this access state has an SD */
+    SecurityDescriptor = AccessState->SecurityDescriptor;
+    if (SecurityDescriptor)
+    {
+        /* Check if the SD has a system ACL but hasn't been granted access to get/set it */
+        if ((SecurityDescriptor->Control & SE_SACL_PRESENT) &&
+            !(AccessState->PreviouslyGrantedAccess & ACCESS_SYSTEM_SECURITY))
+        {
+            /* We're gonna need access */
+            AccessState->RemainingDesiredAccess |= ACCESS_SYSTEM_SECURITY;
+        }
+    }
+
+    /* This can't fail */
     return STATUS_SUCCESS;
 }
 

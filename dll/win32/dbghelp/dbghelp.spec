@@ -7,8 +7,8 @@
 @ stdcall EnumDirTreeW(long wstr wstr ptr ptr ptr)
 @ stdcall EnumerateLoadedModules(long ptr ptr)
 @ stdcall EnumerateLoadedModules64(long ptr ptr)
-@ stdcall EnumerateLoadedModulesEx(ptr ptr ptr)
-@ stdcall EnumerateLoadedModulesExW(ptr ptr ptr)
+@ stdcall EnumerateLoadedModulesEx(long ptr ptr) EnumerateLoadedModules64
+@ stdcall EnumerateLoadedModulesExW(long ptr ptr) EnumerateLoadedModulesW64
 @ stdcall EnumerateLoadedModulesW64(long ptr ptr)
 @ stdcall ExtensionApiVersion()
 @ stdcall FindDebugInfoFile(str str ptr)

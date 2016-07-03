@@ -172,6 +172,7 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::Update(IUnknown *punk, BOOL fIsLocalAnch
     GetToolTipText(punk, wch);
     TRACE("Updating entry with display name: %S\n", wch);
 
+    ZeroMemory(&windowData, sizeof(WINDOWDATA));
     ILFree(fPIDL);
     fPIDL = NULL;
     GlobalFree(fPersistState);

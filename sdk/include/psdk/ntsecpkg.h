@@ -37,6 +37,7 @@ extern "C" {
 #define SECPKG_INTERFACE_VERSION_4                   0x80000
 #define SECPKG_INTERFACE_VERSION_5                  0x100000
 #define SECPKG_INTERFACE_VERSION_6                  0x200000
+#define SECPKG_INTERFACE_VERSION_7                  0x400000
 
 /* enum definitions for Secure Service Provider/Authentication Packages */
 typedef enum _LSA_TOKEN_INFORMATION_TYPE {
@@ -164,10 +165,16 @@ typedef struct _SECPKG_EXTENDED_INFORMATION {
     } Info;
 } SECPKG_EXTENDED_INFORMATION, *PSECPKG_EXTENDED_INFORMATION;
 
-typedef struct  _SECPKG_TARGETINFO {
+typedef struct _SECPKG_TARGETINFO {
     PSID DomainSid;
     PCWSTR ComputerName;
 } SECPKG_TARGETINFO, *PSECPKG_TARGETINFO;
+
+typedef struct _SECPKG_POST_LOGON_USER_INFO {
+    ULONG Flags;
+    LUID LogonId;
+    LUID LinkedLogonId;
+} SECPKG_POST_LOGON_USER_INFO, *PSECPKG_POST_LOGON_USER_INFO;
 
 /* callbacks implemented by SSP/AP dlls and called by the LSA */
 typedef VOID (NTAPI *PLSA_CALLBACK_FUNCTION)(ULONG_PTR, ULONG_PTR, PSecBuffer,
@@ -382,6 +389,7 @@ typedef NTSTATUS (NTAPI SpUpdateCredentialsFn)(LSA_SEC_HANDLE, GUID *, ULONG,
  PUCHAR);
 typedef NTSTATUS (NTAPI SpValidateTargetInfoFn)(PLSA_CLIENT_REQUEST, PVOID,
  PVOID, ULONG, PSECPKG_TARGETINFO);
+typedef NTSTATUS (NTAPI LSA_AP_POST_LOGON_USER)(PSECPKG_POST_LOGON_USER_INFO);
 
 /* User-mode functions implemented by SSP/AP obtainable by a dispatch table */
 typedef NTSTATUS (NTAPI SpInstanceInitFn)(ULONG, PSECPKG_DLL_FUNCTIONS,
@@ -452,6 +460,8 @@ typedef struct SECPKG_FUNCTION_TABLE {
     /* Packages with version SECPKG_INTERFACE_VERSION_5 end here */
     SpValidateTargetInfoFn *ValidateTargetInfo;
     /* Packages with version SECPKG_INTERFACE_VERSION_6 end here */
+    LSA_AP_POST_LOGON_USER* PostLogonUser;
+    /* Packages with version SECPKG_INTERFACE_VERSION_7 end here */
 } SECPKG_FUNCTION_TABLE,
  *PSECPKG_FUNCTION_TABLE;
 

@@ -381,8 +381,10 @@ static HRESULT WINAPI OleDocumentSite_ActivateMe(IOleDocumentSite *iface,
     if(FAILED(hres))
         return hres;
 
-    IOleDocument_CreateView(oledoc, (IOleInPlaceSite*) &This->IOleInPlaceSiteEx_iface, NULL, 0, &This->view);
+    hres = IOleDocument_CreateView(oledoc, (IOleInPlaceSite*) &This->IOleInPlaceSiteEx_iface, NULL, 0, &This->view);
     IOleDocument_Release(oledoc);
+    if(FAILED(hres))
+        return hres;
 
     GetClientRect(This->hwnd, &rect);
     IOleDocumentView_SetRect(This->view, &rect);
@@ -654,6 +656,11 @@ static HRESULT WINAPI ClServiceProvider_QueryService(IServiceProvider *iface, RE
 
     if(IsEqualGUID(&IID_IHlinkFrame, guidService)) {
         TRACE("(%p)->(IID_IHlinkFrame %s %p)\n", This, debugstr_guid(riid), ppv);
+        return IWebBrowser2_QueryInterface(This->wb, riid, ppv);
+    }
+
+    if(IsEqualGUID(&IID_ITargetFrame, guidService)) {
+        TRACE("(%p)->(IID_ITargetFrame %s %p)\n", This, debugstr_guid(riid), ppv);
         return IWebBrowser2_QueryInterface(This->wb, riid, ppv);
     }
 

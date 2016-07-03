@@ -303,7 +303,7 @@
 303 stdcall GdipGetMetafileHeaderFromFile(wstr ptr)
 304 stdcall GdipGetMetafileHeaderFromMetafile(ptr ptr)
 305 stdcall GdipGetMetafileHeaderFromStream(ptr ptr)
-306 stub GdipGetMetafileHeaderFromWmf
+306 stdcall GdipGetMetafileHeaderFromWmf(ptr ptr ptr)
 307 stdcall GdipGetNearestColor(ptr ptr)
 308 stdcall GdipGetPageScale(ptr ptr)
 309 stdcall GdipGetPageUnit(ptr ptr)

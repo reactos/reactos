@@ -68,15 +68,6 @@ TTGetEmbeddedFontInfo(ULONG ulFlags,
 
 LONG
 WINAPI
-TTIsEmbeddingEnabledForFacename(LPSTR lpszFacename,
-                                BOOL* pbEnabled)
-{
-    UNIMPLEMENTED;
-    return E_NONE;
-}
-
-LONG
-WINAPI
 TTRunValidationTests(HDC hDC,
                      TTVALIDATIONTESTPARAMS* pTestParam)
 {

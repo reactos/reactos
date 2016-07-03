@@ -50,7 +50,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 typedef struct _jsval_t jsval_t;
 typedef struct _jsstr_t jsstr_t;
 typedef struct _script_ctx_t script_ctx_t;
-typedef struct _exec_ctx_t exec_ctx_t;
 typedef struct _dispex_prop_t dispex_prop_t;
 
 typedef struct {
@@ -115,6 +114,14 @@ extern HINSTANCE jscript_hinstance DECLSPEC_HIDDEN;
 #define PROPF_CONSTR      0x0400
 #define PROPF_CONST       0x0800
 #define PROPF_DONTDELETE  0x1000
+
+/*
+ * This is our internal dispatch flag informing calee that it's called directly from interpreter.
+ * If calee is executed as interpreted function, we may let already running interpreter to take
+ * of execution.
+ */
+#define DISPATCH_JSCRIPT_CALLEREXECSSOURCE  0x8000
+#define DISPATCH_JSCRIPT_INTERNAL_MASK      DISPATCH_JSCRIPT_CALLEREXECSSOURCE
 
 /* NOTE: Keep in sync with names in Object.toString implementation */
 typedef enum {
@@ -399,7 +406,7 @@ struct _script_ctx_t {
     SCRIPTSTATE state;
     IActiveScript *active_script;
 
-    exec_ctx_t *exec_ctx;
+    struct _call_frame_t *call_ctx;
     named_item_t *named_items;
     IActiveScriptSite *site;
     IInternetHostSecurityManager *secmgr;
@@ -413,6 +420,10 @@ struct _script_ctx_t {
     heap_pool_t tmp_heap;
 
     IDispatch *host_global;
+
+    jsval_t *stack;
+    unsigned stack_size;
+    unsigned stack_top;
 
     jsstr_t *last_match;
     match_result_t match_parens[9];
@@ -477,6 +488,8 @@ HRESULT regexp_string_match(script_ctx_t*,jsdisp_t*,jsstr_t*,jsval_t*) DECLSPEC_
 
 BOOL bool_obj_value(jsdisp_t*) DECLSPEC_HIDDEN;
 unsigned array_get_length(jsdisp_t*) DECLSPEC_HIDDEN;
+
+HRESULT JSGlobal_eval(script_ctx_t*,vdisp_t*,WORD,unsigned,jsval_t*,jsval_t*) DECLSPEC_HIDDEN;
 
 static inline BOOL is_class(jsdisp_t *jsdisp, jsclass_t class)
 {
