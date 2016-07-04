@@ -130,7 +130,7 @@ AhciAllocateResourceForAdapter (
     )
 {
     PCHAR nonCachedExtension, tmp;
-    ULONG status, index, NCS, AlignedNCS;
+    ULONG index, NCS, AlignedNCS;
     ULONG portCount, portImplemented, nonCachedExtensionSize;
 
     DebugPrint("AhciAllocateResourceForAdapter()\n");
@@ -179,7 +179,7 @@ AhciAllocateResourceForAdapter (
             AdapterExtension->PortExtension[index].PortNumber = index;
             AdapterExtension->PortExtension[index].IsActive = TRUE;
             AdapterExtension->PortExtension[index].AdapterExtension = AdapterExtension;
-            AdapterExtension->PortExtension[index].CommandList = nonCachedExtension;
+            AdapterExtension->PortExtension[index].CommandList = (PAHCI_COMMAND_HEADER)nonCachedExtension;
 
             tmp = (PCHAR)(nonCachedExtension + sizeof(AHCI_COMMAND_HEADER) * AlignedNCS);
 
@@ -274,7 +274,7 @@ AhciStartPort (
         return FALSE;
     }
 
-    DebugPrint("\tDET: %d %x %x\n", ssts.DET, PortExtension->Port->CMD, PortExtension->Port->SSTS);
+    DebugPrint("\tDET: %d %d\n", ssts.DET, cmd.ST);
     return FALSE;
 }// -- AhciStartPort();
 
@@ -294,10 +294,9 @@ AhciHwInitialize (
     __in PVOID AdapterExtension
     )
 {
-    ULONG ghc, messageCount, status, cmd, index;
+    ULONG ghc, index;
     PAHCI_PORT_EXTENSION PortExtension;
     PAHCI_ADAPTER_EXTENSION adapterExtension;
-    AHCI_SERIAL_ATA_STATUS ssts;
 
     DebugPrint("AhciHwInitialize()\n");
 
@@ -750,10 +749,7 @@ AhciHwFindAdapter (
     __in PBOOLEAN Reserved3
     )
 {
-    ULONG ghc;
-    ULONG index;
-    ULONG portCount, portImplemented;
-    ULONG pci_cfg_len;
+    ULONG ghc, index, pci_cfg_len;
     UCHAR pci_cfg_buf[sizeof(PCI_COMMON_CONFIG)];
     PACCESS_RANGE accessRange;
 
@@ -762,6 +758,11 @@ AhciHwFindAdapter (
     PAHCI_ADAPTER_EXTENSION adapterExtension;
 
     DebugPrint("AhciHwFindAdapter()\n");
+
+    UNREFERENCED_PARAMETER(HwContext);
+    UNREFERENCED_PARAMETER(BusInformation);
+    UNREFERENCED_PARAMETER(ArgumentString);
+    UNREFERENCED_PARAMETER(Reserved3);
 
     adapterExtension = AdapterExtension;
     adapterExtension->SlotNumber = ConfigInfo->SlotNumber;
@@ -797,9 +798,9 @@ AhciHwFindAdapter (
     abar = NULL;
     if (ConfigInfo->NumberOfAccessRanges > 0)
     {
+        accessRange = *(ConfigInfo->AccessRanges);
         for (index = 0; index < ConfigInfo->NumberOfAccessRanges; index++)
         {
-            accessRange = *ConfigInfo->AccessRanges;
             if (accessRange[index].RangeStart.QuadPart == adapterExtension->AhciBaseAddress)
             {
                 abar = StorPortGetDeviceBase(adapterExtension,
@@ -902,8 +903,8 @@ DriverEntry (
     __in PVOID RegistryPath
     )
 {
+    ULONG status;
     HW_INITIALIZATION_DATA hwInitializationData;
-    ULONG i, status;
 
     DebugPrint("Storahci Loaded\n");
 
@@ -962,6 +963,8 @@ AhciATA_CFIS (
 {
     PAHCI_COMMAND_TABLE cmdTable;
 
+    UNREFERENCED_PARAMETER(PortExtension);
+
     DebugPrint("AhciATA_CFIS()\n");
 
     cmdTable = (PAHCI_COMMAND_TABLE)SrbExtension;
@@ -1005,8 +1008,12 @@ AhciATAPI_CFIS (
     __in PAHCI_SRB_EXTENSION SrbExtension
     )
 {
+    UNREFERENCED_PARAMETER(PortExtension);
+    UNREFERENCED_PARAMETER(SrbExtension);
+
     DebugPrint("AhciATAPI_CFIS()\n");
 
+    return;
 }// -- AhciATAPI_CFIS();
 
 /**
@@ -1377,7 +1384,7 @@ InquiryCompletion (
  * @remark
  * http://www.seagate.com/staticfiles/support/disc/manuals/Interface%20manuals/100293068c.pdf
  */
-ULONG
+UCHAR
 DeviceInquiryRequest (
     __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
     __in PSCSI_REQUEST_BLOCK Srb,
@@ -1547,10 +1554,10 @@ __inline
 BOOLEAN
 IsPortValid (
     __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
-    __in UCHAR pathId
+    __in ULONG pathId
     )
 {
-    NT_ASSERT(pathId >= 0);
+    NT_ASSERT(pathId < MAXIMUM_AHCI_PORT_COUNT);
 
     if (pathId >= AdapterExtension->PortCount)
     {
@@ -1645,7 +1652,7 @@ GetSrbExtension (
     ULONG Offset;
     ULONG_PTR SrbExtension;
 
-    SrbExtension = Srb->SrbExtension;
+    SrbExtension = (ULONG_PTR)Srb->SrbExtension;
     Offset = SrbExtension % 128;
 
     // CommandTable should be 128 byte aligned

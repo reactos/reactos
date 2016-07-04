@@ -10,8 +10,10 @@
 #include <storport.h>
 
 #define DEBUG 1
+#pragma warning(disable:4214) // bit field types other than int
+#pragma warning(disable:4201) // nameless struct/union
 
-#define MAXIMUM_AHCI_PORT_COUNT             25
+#define MAXIMUM_AHCI_PORT_COUNT             32
 #define MAXIMUM_AHCI_PRDT_ENTRIES           32
 #define MAXIMUM_AHCI_PORT_NCS               30
 #define MAXIMUM_QUEUE_BUFFER_SIZE           255
@@ -363,6 +365,28 @@ typedef struct _AHCI_PORT
     ULONG   Vendor[4];                          // 0x70 ~ 0x7F, vendor specific
 } AHCI_PORT, *PAHCI_PORT;
 
+#ifdef DEBUG
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, CLB) == 0x00);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, CLBU) == 0x04);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, FB) == 0x08);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, FBU) == 0x0C);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, IS) == 0x10);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, IE) == 0x14);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, CMD) == 0x18);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, RSV0) == 0x1C);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, TFD) == 0x20);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, SIG) == 0x24);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, SSTS) == 0x28);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, SCTL) == 0x2C);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, SERR) == 0x30);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, SACT) == 0x34);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, CI) == 0x38);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, SNTF) == 0x3C);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, FBS) == 0x40);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, RSV1) == 0x44);
+    C_ASSERT(FIELD_OFFSET(AHCI_PORT, Vendor) == 0x70);
+#endif
+
 typedef struct _AHCI_MEMORY_REGISTERS
 {
     // 0x00 - 0x2B, Generic Host Control
@@ -377,11 +401,26 @@ typedef struct _AHCI_MEMORY_REGISTERS
     ULONG EM_CTL;                               // 0x20, Enclosure management control
     ULONG CAP2;                                 // 0x24, Host capabilities extended
     ULONG BOHC;                                 // 0x28, BIOS/OS handoff control and status
-    ULONG Reserved[0xA0-0x2C];                  // 0x2C - 0x9F, Reserved
-    ULONG VendorSpecific[0x100-0xA0];           // 0xA0 - 0xFF, Vendor specific registers
+    ULONG Reserved[0x1d];                       // 0x2C - 0x9F, Reserved
+    ULONG VendorSpecific[0x18];                 // 0xA0 - 0xFF, Vendor specific registers
     AHCI_PORT PortList[MAXIMUM_AHCI_PORT_COUNT];
-
 } AHCI_MEMORY_REGISTERS, *PAHCI_MEMORY_REGISTERS;
+
+#ifdef DEBUG
+    C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, CAP) == 0x00);
+    C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, GHC) == 0x04);
+    C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, IS) == 0x08);
+    C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, PI) == 0x0C);
+    C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, VS) == 0x10);
+    C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, CCC_CTL) == 0x14);
+    C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, CCC_PTS) == 0x18);
+    C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, EM_LOC) == 0x1C);
+    C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, EM_CTL) == 0x20);
+    C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, CAP2) == 0x24);
+    C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, BOHC) == 0x28);
+    C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, Reserved) == 0x2C);
+    C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, VendorSpecific) == 0xA0);
+#endif
 
 // Holds information for each attached attached port to a given adapter.
 typedef struct _AHCI_PORT_EXTENSION
@@ -492,10 +531,10 @@ __inline
 BOOLEAN
 IsPortValid (
     __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
-    __in UCHAR pathId
+    __in ULONG pathId
     );
 
-ULONG
+UCHAR
 DeviceInquiryRequest (
     __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
     __in PSCSI_REQUEST_BLOCK Srb,
