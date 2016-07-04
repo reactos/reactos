@@ -384,9 +384,6 @@ ReadAttribute(PDEVICE_EXTENSION Vcb,
             }
             else
                 DataRunStartLCN = -1;
-
-            if (*DataRun == 0)
-                return AlreadyRead;
         }
 
         while (Length > 0)

@@ -320,9 +320,6 @@ static ULONG NtfsReadAttribute(PNTFS_VOLUME_INFO Volume, PNTFS_ATTR_CONTEXT Cont
             }
             else
                 DataRunStartLCN = -1;
-
-            if (*DataRun == 0)
-                return AlreadyRead;
         }
 
         while (Length > 0)
