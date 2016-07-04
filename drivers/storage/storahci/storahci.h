@@ -215,22 +215,83 @@ typedef union _AHCI_COMMAND_HEADER_DESCRIPTION
 {
     struct
     {
-        ULONG CFL :5;       // Command FIS Length
-        ULONG A :1;         // IsATAPI
-        ULONG W :1;         // Write
-        ULONG P :1;         // Prefetchable
+        ULONG CFL : 5;       // Command FIS Length
+        ULONG A : 1;         // IsATAPI
+        ULONG W : 1;         // Write
+        ULONG P : 1;         // Prefetchable
 
-        ULONG R :1;         // Reset
-        ULONG B :1;         // BIST
-        ULONG C :1;         //Clear Busy upon R_OK
-        ULONG DW0_Reserved :1;
-        ULONG PMP :4;       //Port Multiplier Port
+        ULONG R : 1;         // Reset
+        ULONG B : 1;         // BIST
+        ULONG C : 1;         //Clear Busy upon R_OK
+        ULONG DW0_Reserved : 1;
+        ULONG PMP : 4;       //Port Multiplier Port
 
-        ULONG PRDTL :16;    //Physical Region Descriptor Table Length
+        ULONG PRDTL : 16;    //Physical Region Descriptor Table Length
     };
 
     ULONG Status;
 } AHCI_COMMAND_HEADER_DESCRIPTION;
+
+// section 3.3.7
+typedef union _AHCI_PORT_CMD
+{
+    struct
+    {
+        ULONG ST : 1;
+        ULONG SUD : 1;
+        ULONG POD : 1;
+        ULONG CLO : 1;
+        ULONG FRE : 1;
+        ULONG RSV0 : 3;
+        ULONG CCS : 5;
+        ULONG MPSS : 1;
+        ULONG FR : 1;
+        ULONG CR : 1;
+        ULONG CPS : 1;
+        ULONG PMA : 1;
+        ULONG HPCP : 1;
+        ULONG MPSP : 1;
+        ULONG CPD : 1;
+        ULONG ESP : 1;
+        ULONG FBSCP : 1;
+        ULONG APSTE : 1;
+        ULONG ATAPI : 1;
+        ULONG DLAE : 1;
+        ULONG ALPE : 1;
+        ULONG ASP : 1;
+        ULONG ICC : 4;
+    };
+
+    ULONG Status;
+} AHCI_PORT_CMD;
+
+typedef union _AHCI_SERIAL_ATA_CONTROL
+{
+    struct
+    {
+        ULONG DET :4;
+        ULONG SPD :4;
+        ULONG IPM :4;
+        ULONG SPM :4;
+        ULONG PMP :4;
+        ULONG DW11_Reserved :12;
+    };
+
+    ULONG Status;
+}  AHCI_SERIAL_ATA_CONTROL;
+
+typedef union _AHCI_SERIAL_ATA_STATUS
+{
+    struct
+    {
+        ULONG DET :4;
+        ULONG SPD :4;
+        ULONG IPM :4;
+        ULONG RSV0 :20;
+    };
+
+    ULONG Status;
+}  AHCI_SERIAL_ATA_STATUS;
 
 typedef struct _AHCI_PRDT
 {

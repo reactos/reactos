@@ -23,6 +23,7 @@ AhciPortInitialize (
     __in PAHCI_PORT_EXTENSION PortExtension
     )
 {
+    AHCI_PORT_CMD cmd;
     ULONG mappedLength, portNumber;
     PAHCI_MEMORY_REGISTERS abar;
     PAHCI_ADAPTER_EXTENSION adapterExtension;
@@ -61,6 +62,23 @@ AhciPortInitialize (
         return FALSE;
     }
 
+    // Ensure that the controller is not in the running state by reading and examining each
+    // implemented port’s PxCMD register. If PxCMD.ST, PxCMD.CR, PxCMD.FRE and
+    // PxCMD.FR are all cleared, the port is in an idle state. Otherwise, the port is not idle and
+    // should be placed in the idle state prior to manipulating HBA and port specific registers.
+    // System software places a port into the idle state by clearing PxCMD.ST and waiting for
+    // PxCMD.CR to return ‘0’ when read. Software should wait at least 500 milliseconds for
+    // this to occur. If PxCMD.FRE is set to ‘1’, software should clear it to ‘0’ and wait at least
+    // 500 milliseconds for PxCMD.FR to return ‘0’ when read. If PxCMD.CR or PxCMD.FR do
+    // not clear to ‘0’ correctly, then software may attempt a port reset or a full HBA reset to recove
+
+    // TODO: Check if port is in idle state or not, if not then restart port
+    cmd.Status = StorPortReadRegisterUlong(adapterExtension, &PortExtension->Port->CMD);
+    if ((cmd.FR != 0) || (cmd.CR != 0) || (cmd.FRE != 0) || (cmd.ST != 0))
+    {
+        DebugPrint("\tPort is not idle: %x\n", cmd);
+    }
+
     // 10.1.2 For each implemented port, system software shall allocate memory for and program:
     //  PxCLB and PxCLBU (if CAP.S64A is set to ‘1’)
     //  PxFB and PxFBU (if CAP.S64A is set to ‘1’)
@@ -82,15 +100,13 @@ AhciPortInitialize (
                                                                                   PortExtension->IdentifyDeviceData,
                                                                                   &mappedLength);
 
-    NT_ASSERT(mappedLength == sizeof(IDENTIFY_DEVICE_DATA));
-
     // set device power state flag to D0
     PortExtension->DevicePowerState = StorPowerDeviceD0;
 
     // clear pending interrupts
-    StorPortWriteRegisterUlong(adapterExtension, &PortExtension->Port->SERR, (ULONG)-1);
-    StorPortWriteRegisterUlong(adapterExtension, &PortExtension->Port->IS, (ULONG)-1);
-    StorPortWriteRegisterUlong(adapterExtension, PortExtension->AdapterExtension->IS, (1 << PortExtension->PortNumber));
+    StorPortWriteRegisterUlong(adapterExtension, &PortExtension->Port->SERR, (ULONG)~0);
+    StorPortWriteRegisterUlong(adapterExtension, &PortExtension->Port->IS, (ULONG)~0);
+    StorPortWriteRegisterUlong(adapterExtension, adapterExtension->IS, (1 << PortExtension->PortNumber));
 
     return TRUE;
 }// -- AhciPortInitialize();
@@ -113,7 +129,6 @@ AhciAllocateResourceForAdapter (
     __in PPORT_CONFIGURATION_INFORMATION ConfigInfo
     )
 {
-    PVOID portsExtension = NULL;
     PCHAR nonCachedExtension, tmp;
     ULONG status, index, NCS, AlignedNCS;
     ULONG portCount, portImplemented, nonCachedExtensionSize;
@@ -178,6 +193,92 @@ AhciAllocateResourceForAdapter (
 }// -- AhciAllocateResourceForAdapter();
 
 /**
+ * @name AhciStartPort
+ * @implemented
+ *
+ * Try to start the port device
+ *
+ * @param AdapterExtension
+ * @param PortExtension
+ *
+ */
+BOOLEAN
+AhciStartPort (
+    __in PAHCI_PORT_EXTENSION PortExtension
+    )
+{
+    ULONG index;
+    AHCI_PORT_CMD cmd;
+    AHCI_SERIAL_ATA_STATUS ssts;
+    AHCI_SERIAL_ATA_CONTROL sctl;
+    PAHCI_ADAPTER_EXTENSION AdapterExtension;
+
+    DebugPrint("AhciStartPort()\n");
+
+    AdapterExtension = PortExtension->AdapterExtension;
+    cmd.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->CMD);
+
+    if ((cmd.FR == 1) && (cmd.CR == 1) && (cmd.FRE == 1) && (cmd.ST == 1))
+    {
+        // Already Running
+        return TRUE;
+    }
+
+    cmd.SUD = 1;
+    StorPortWriteRegisterUlong(AdapterExtension, &PortExtension->Port->CMD, cmd.Status);
+
+    if (((cmd.FR == 1) && (cmd.FRE == 0)) ||
+        ((cmd.CR == 1) && (cmd.ST == 0)))
+    {
+        DebugPrint("\tCOMRESET\n");
+        // perform COMRESET
+        // section 10.4.2
+
+        // Software causes a port reset (COMRESET) by writing 1h to the PxSCTL.DET field to invoke a
+        // COMRESET on the interface and start a re-establishment of Phy layer communications. Software shall
+        // wait at least 1 millisecond before clearing PxSCTL.DET to 0h; this ensures that at least one COMRESET
+        // signal is sent over the interface. After clearing PxSCTL.DET to 0h, software should wait for
+        // communication to be re-established as indicated by PxSSTS.DET being set to 3h. Then software should
+        // write all 1s to the PxSERR register to clear any bits that were set as part of the port reset.
+
+        sctl.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->SCTL);
+        sctl.DET = 1;
+        StorPortWriteRegisterUlong(AdapterExtension, &PortExtension->Port->SCTL, sctl.Status);
+
+        StorPortStallExecution(1000);
+
+        sctl.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->SCTL);
+        sctl.DET = 0;
+        StorPortWriteRegisterUlong(AdapterExtension, &PortExtension->Port->SCTL, sctl.Status);
+
+        // Poll DET to verify if a device is attached to the port
+        index = 0;
+        do
+        {
+            StorPortStallExecution(1000);
+            ssts.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->SSTS);
+
+            index++;
+            if (ssts.DET != 0)
+            {
+                break;
+            }
+        }
+        while(index < 30);
+    }
+
+    ssts.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->SSTS);
+    if (ssts.DET == 0x4)
+    {
+        // no device found
+        return FALSE;
+    }
+
+    DebugPrint("\tDET: %d %x %x\n", ssts.DET, PortExtension->Port->CMD, PortExtension->Port->SSTS);
+    return FALSE;
+}// -- AhciStartPort();
+
+/**
  * @name AhciHwInitialize
  * @implemented
  *
@@ -193,8 +294,10 @@ AhciHwInitialize (
     __in PVOID AdapterExtension
     )
 {
-    ULONG ghc, messageCount, status;
+    ULONG ghc, messageCount, status, cmd, index;
+    PAHCI_PORT_EXTENSION PortExtension;
     PAHCI_ADAPTER_EXTENSION adapterExtension;
+    AHCI_SERIAL_ATA_STATUS ssts;
 
     DebugPrint("AhciHwInitialize()\n");
 
@@ -212,6 +315,19 @@ AhciHwInitialize (
     {
         adapterExtension->StateFlags.MessagePerPort = TRUE;
         DebugPrint("\tMultiple MSI based message not supported\n");
+    }
+
+    for (index = 0; index < adapterExtension->PortCount; index++)
+    {
+        if ((adapterExtension->PortImplemented & (0x1 << index)) != 0)
+        {
+            PortExtension = &adapterExtension->PortExtension[index];
+            PortExtension->IsActive = AhciStartPort(PortExtension);
+            if (PortExtension->IsActive == FALSE)
+            {
+                DebugPrint("\tPort Disabled: %d\n", index);
+            }
+        }
     }
 
     return TRUE;
@@ -251,7 +367,7 @@ AhciCompleteIssuedSrb (
     {
         if (((1 << i) & CommandsToComplete) != 0)
         {
-            Srb = &PortExtension->Slot[i];
+            Srb = PortExtension->Slot[i];
             NT_ASSERT(Srb != NULL);
 
             if (Srb->SrbStatus == SRB_STATUS_PENDING)
@@ -417,10 +533,14 @@ AhciHwInterrupt(
 
         NT_ASSERT(IsPortValid(AdapterExtension, nextPort));
 
-        if ((nextPort == AdapterExtension->LastInterruptPort) ||
-            (AdapterExtension->PortExtension[nextPort].IsActive == FALSE))
+        if (nextPort == AdapterExtension->LastInterruptPort)
         {
             return FALSE;
+        }
+
+        if (AdapterExtension->PortExtension[nextPort].IsActive == FALSE)
+        {
+            continue;
         }
 
         // we can assign this interrupt to this port
@@ -722,6 +842,7 @@ AhciHwFindAdapter (
     }
 
     ghc = AHCI_Global_HBA_CONTROL_AE;// only AE=1
+    // tell the controller that we know about AHCI
     StorPortWriteRegisterUlong(adapterExtension, &abar->GHC, ghc);
 
     adapterExtension->IS = &abar->IS;
@@ -742,10 +863,6 @@ AhciHwFindAdapter (
     ConfigInfo->SynchronizationModel = StorSynchronizeFullDuplex;
     ConfigInfo->ScatterGather = TRUE;
 
-    // Turn IE -- Interrupt Enabled
-    ghc |= AHCI_Global_HBA_CONTROL_IE;
-    StorPortWriteRegisterUlong(adapterExtension, &abar->GHC, ghc);
-
     // allocate necessary resource for each port
     if (!AhciAllocateResourceForAdapter(adapterExtension, ConfigInfo))
     {
@@ -758,6 +875,11 @@ AhciHwFindAdapter (
         if ((adapterExtension->PortImplemented & (0x1 << index)) != 0)
             AhciPortInitialize(&adapterExtension->PortExtension[index]);
     }
+
+    // Turn IE -- Interrupt Enabled
+    ghc = StorPortReadRegisterUlong(adapterExtension, &abar->GHC);
+    ghc |= AHCI_Global_HBA_CONTROL_IE;
+    StorPortWriteRegisterUlong(adapterExtension, &abar->GHC, ghc);
 
     return SP_RETURN_FOUND;
 }// -- AhciHwFindAdapter();
@@ -818,7 +940,7 @@ DriverEntry (
                                 &hwInitializationData,
                                 NULL);
 
-    DebugPrint("\tstatus:%x\n", status);
+    DebugPrint("\tstatus: %x\n", status);
     return status;
 }// -- DriverEntry();
 
@@ -1043,7 +1165,7 @@ AhciProcessSrb (
 
     // mark this slot
     PortExtension->Slot[SlotIndex] = Srb;
-    PortExtension->QueueSlots |= SlotIndex;
+    PortExtension->QueueSlots |= 1 << SlotIndex;
     return;
 }// -- AhciProcessSrb();
 
@@ -1061,7 +1183,8 @@ AhciActivatePort (
     __in PAHCI_PORT_EXTENSION PortExtension
     )
 {
-    ULONG cmd, QueueSlots, slotToActivate, tmp;
+    AHCI_PORT_CMD cmd;
+    ULONG QueueSlots, slotToActivate, tmp;
     PAHCI_ADAPTER_EXTENSION AdapterExtension;
 
     DebugPrint("AhciActivatePort()\n");
@@ -1074,9 +1197,9 @@ AhciActivatePort (
 
     // section 3.3.14
     // Bits in this field shall only be set to ‘1’ by software when PxCMD.ST is set to ‘1’
-    cmd = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->CMD);
+    cmd.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->CMD);
 
-    if ((cmd&1) == 0) // PxCMD.ST == 0
+    if (cmd.ST == 0) // PxCMD.ST == 0
         return;
 
     // get the lowest set bit
@@ -1215,16 +1338,19 @@ InquiryCompletion (
     {
         if (SrbExtension->CommandReg == IDE_COMMAND_IDENTIFY)
         {
+            DebugPrint("Device: ATA\n");
             AdapterExtension->DeviceParams.DeviceType = AHCI_DEVICE_TYPE_ATA;
         }
         else
         {
+            DebugPrint("Device: ATAPI\n");
             AdapterExtension->DeviceParams.DeviceType = AHCI_DEVICE_TYPE_ATAPI;
         }
         // TODO: Set Device Paramters
     }
     else if (SrbStatus == SRB_STATUS_NO_DEVICE)
     {
+        DebugPrint("Device: No Device\n");
         AdapterExtension->DeviceParams.DeviceType = AHCI_DEVICE_TYPE_NODEVICE;
     }
     else
