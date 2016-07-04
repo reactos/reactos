@@ -25,21 +25,6 @@
 /* PRIVATE VARIABLES **********************************************************/
 
 static const VBE_MODE Modes[VBE_MODE_COUNT] = {
-    { 0x00, 0x00,   NULL /* TODO */, NULL /* VGA */  },
-    { 0x01, 0x01,   NULL /* TODO */, NULL /* VGA */  },
-    { 0x02, 0x02,   NULL /* TODO */, NULL /* VGA */  },
-    { 0x03, 0x03,   NULL /* TODO */, NULL /* VGA */  },
-    { 0x04, 0x04,   NULL /* TODO */, NULL /* VGA */  },
-    { 0x05, 0x05,   NULL /* TODO */, NULL /* VGA */  },
-    { 0x06, 0x06,   NULL /* TODO */, NULL /* VGA */  },
-    { 0x07, 0x07,   NULL /* TODO */, NULL /* VGA */  },
-    { 0x0D, 0x0D,   NULL /* TODO */, NULL /* VGA */  },
-    { 0x0E, 0x0E,   NULL /* TODO */, NULL /* VGA */  },
-    { 0x0F, 0x0F,   NULL /* TODO */, NULL /* VGA */  },
-    { 0x10, 0x10,   NULL /* TODO */, NULL /* VGA */  },
-    { 0x11, 0x11,   NULL /* TODO */, NULL /* VGA */  },
-    { 0x12, 0x12,   NULL /* TODO */, NULL /* VGA */  },
-    { 0x13, 0x13,   NULL /* TODO */, NULL /* VGA */  },
     { 0x14, 0xFFFF, NULL /* TODO */, NULL            },
     { 0x54, 0x10A,  NULL /* TODO */, NULL /* TODO */ },
     { 0x55, 0x109,  NULL /* TODO */, NULL /* TODO */ },
@@ -368,23 +353,25 @@ VOID WINAPI VbeService(LPWORD Stack)
         /* Set VBE Mode */
         case 0x02:
         {
-            PCVBE_MODE Mode = VbeGetModeByNumber(getBX());
+            WORD VesaNumber = getBX();
+            setAL(0x4F);
 
-            if (Mode->Registers == NULL)
+            if (getBX() <= BIOS_MAX_VIDEO_MODE)
             {
                 /* Call the VGA BIOS */
                 setAH(0x00);
-                setAL(Mode->Number);
+                setAL(VesaNumber);
                 Int32Call(&BiosContext, BIOS_VIDEO_INTERRUPT);
 
-                setAL(0x4F);
-                setAH(Bda->VideoMode == Mode->Number);
+                setAH(Bda->VideoMode != VesaNumber);
             }
             else
             {
                 /* This is an extended video mode */
-                setAL(0x4F);
-                setAH(VbeSetExtendedVideoMode(Mode->Number));
+                PCVBE_MODE Mode = VbeGetModeByNumber(VesaNumber);
+
+                if (Mode) setAH(!VbeSetExtendedVideoMode(Mode->Number));
+                else setAH(1);
             }
 
             break;

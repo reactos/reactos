@@ -97,7 +97,7 @@ typedef struct _VBE_MODE
     BYTE Number;
     WORD VesaNumber;
     PVBE_MODE_INFO Info;
-    PSVGA_REGISTERS Registers; // NULL means "forward to VGABIOS"
+    PSVGA_REGISTERS Registers;
 } VBE_MODE, *PVBE_MODE;
 
 typedef const struct _VBE_MODE *PCVBE_MODE;
