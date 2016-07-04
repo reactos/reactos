@@ -385,13 +385,13 @@ typedef struct _FLTMGR_DEVICE_EXTENSION
 
 } FLTMGR_DEVICE_EXTENSION, *PFLTMGR_DEVICE_EXTENSION;
 
-typedef struct _DETATCH_DEVICE_WORK_ITEM
+typedef struct _DETACH_DEVICE_WORK_ITEM
 {
     WORK_QUEUE_ITEM WorkItem;
     PDEVICE_OBJECT SourceDevice;
     PDEVICE_OBJECT TargetDevice;
 
-} DETATCH_DEVICE_WORK_ITEM, *PDETATCH_DEVICE_WORK_ITEM;
+} DETACH_DEVICE_WORK_ITEM, *PDETACH_DEVICE_WORK_ITEM;
 
 
 /* DISPATCH ROUTINES **********************************************/
@@ -975,21 +975,21 @@ FltpFastIoDeviceControl(_In_ PFILE_OBJECT FileObject,
 
 VOID
 NTAPI
-FltpFastIoDetatchDeviceWorker(_In_ PVOID Parameter)
+FltpFastIoDetachDeviceWorker(_In_ PVOID Parameter)
 {
-    PDETATCH_DEVICE_WORK_ITEM DetatchDeviceWorkItem = Parameter;
+    PDETACH_DEVICE_WORK_ITEM DetachDeviceWorkItem = Parameter;
 
     /* Run any cleanup routines */
-    FltpCleanupDeviceObject(DetatchDeviceWorkItem->SourceDevice);
+    FltpCleanupDeviceObject(DetachDeviceWorkItem->SourceDevice);
 
-    /* Detatch from the target device */
-    IoDetachDevice(DetatchDeviceWorkItem->TargetDevice);
+    /* Detach from the target device */
+    IoDetachDevice(DetachDeviceWorkItem->TargetDevice);
 
     /* Delete the source */
-    IoDeleteDevice(DetatchDeviceWorkItem->SourceDevice);
+    IoDeleteDevice(DetachDeviceWorkItem->SourceDevice);
 
     /* Free the pool we allocated in FltpFastIoDetachDevice */
-    ExFreePoolWithTag(DetatchDeviceWorkItem, 0x1234);
+    ExFreePoolWithTag(DetachDeviceWorkItem, 0x1234);
 }
 
 VOID
@@ -997,29 +997,29 @@ NTAPI
 FltpFastIoDetachDevice(_In_ PDEVICE_OBJECT SourceDevice,
                      _In_ PDEVICE_OBJECT TargetDevice)
 {
-    PDETATCH_DEVICE_WORK_ITEM DetatchDeviceWorkItem;
+    PDETACH_DEVICE_WORK_ITEM DetachDeviceWorkItem;
 
     PAGED_CODE();
 
     /*
-     * Detatching and deleting devices is a lot of work and takes too long
+     * Detaching and deleting devices is a lot of work and takes too long
      * to be a worthwhile FastIo candidate, so we defer this call to speed
      * it up. There's no return value so we're okay to do this.
      */
 
     /* Allocate the work item and it's corresponding data */
-    DetatchDeviceWorkItem = ExAllocatePoolWithTag(NonPagedPool,
-                                                  sizeof(DETATCH_DEVICE_WORK_ITEM),
-                                                  0x1234);
-    if (DetatchDeviceWorkItem)
+    DetachDeviceWorkItem = ExAllocatePoolWithTag(NonPagedPool,
+                                                 sizeof(DETACH_DEVICE_WORK_ITEM),
+                                                 0x1234);
+    if (DetachDeviceWorkItem)
     {
         /* Initialize the work item */
-        ExInitializeWorkItem(&DetatchDeviceWorkItem->WorkItem,
-                             FltpFastIoDetatchDeviceWorker,
-                             DetatchDeviceWorkItem);
+        ExInitializeWorkItem(&DetachDeviceWorkItem->WorkItem,
+                             FltpFastIoDetachDeviceWorker,
+                             DetachDeviceWorkItem);
 
         /* Queue the work item and return the call */
-        ExQueueWorkItem(&DetatchDeviceWorkItem->WorkItem,
+        ExQueueWorkItem(&DetachDeviceWorkItem->WorkItem,
                         DelayedWorkQueue);
     }
     else
@@ -1948,7 +1948,7 @@ FltpFsNotification(_In_ PDEVICE_OBJECT DeviceObject,
         }
         else
         {
-            /* Run the detatch routine */
+            /* Run the detach routine */
             FltpDetachFromFileSystemDevice(DeviceObject);
         }
 
