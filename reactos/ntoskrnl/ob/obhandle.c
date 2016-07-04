@@ -2066,15 +2066,17 @@ ObClearProcessHandleTable(IN PEPROCESS Process)
 /*++
 * @name ObInitProcess
 *
-*     The ObInitProcess routine <FILLMEIN>
+*     The ObInitProcess routine initializes the handle table for the process
+*     to be initialized, by either creating a new one or duplicating it from
+*     the parent process.
 *
 * @param Parent
-*        <FILLMEIN>.
+*        A parent process (optional).
 *
 * @param Process
-*        <FILLMEIN>.
+*        The process to initialize.
 *
-* @return <FILLMEIN>.
+* @return Success or failure.
 *
 * @remarks None.
 *
