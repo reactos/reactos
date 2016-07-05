@@ -116,7 +116,6 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
     ULONGLONG BitmapDataSize;
     PCHAR BitmapData;
     ULONGLONG FreeClusters = 0;
-    ULONG Read = 0;
     RTL_BITMAP Bitmap;
 
     DPRINT1("NtfsAllocateClusters(%p, %lu, %lu, %p, %p)\n", DeviceExt, FirstDesiredCluster, DesiredClusters, FirstAssignedCluster, AssignedClusters);
@@ -158,7 +157,7 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
     DPRINT1("Total clusters in bitmap: %I64x\n", BitmapDataSize * 8);
     DPRINT1("Diff in size: %I64d B\n", ((BitmapDataSize * 8) - DeviceExt->NtfsInfo.ClusterCount) * DeviceExt->NtfsInfo.SectorsPerCluster * DeviceExt->NtfsInfo.BytesPerSector);
 
-    ReadAttribute(DeviceExt, DataContext, Read, (PCHAR)((ULONG_PTR)BitmapData + Read), (ULONG)BitmapDataSize);
+    ReadAttribute(DeviceExt, DataContext, 0, (PCHAR)BitmapData, (ULONG)BitmapDataSize);
 
     RtlInitializeBitMap(&Bitmap, (PULONG)BitmapData, DeviceExt->NtfsInfo.ClusterCount);
     FreeClusters = RtlNumberOfClearBits(&Bitmap);
