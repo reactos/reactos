@@ -106,11 +106,10 @@ CancelRequestRoutine(
 	PTCP_REQUEST Request;
 	KIRQL OldIrql;
 	
-	DPRINT1("IRP Cancel on IRP at %08x\n", Irp);
-	
 	IoReleaseCancelSpinLock(Irp->CancelIrql);
 	
 	IrpSp = IoGetCurrentIrpStackLocation(Irp);
+	DPRINT1("IRP Cancel on IRP at %08x, with MinorFunction %08x\n", Irp, IrpSp->MinorFunction);
 	switch ((ULONG)IrpSp->FileObject->FsContext2)
 	{
 		case TDI_TRANSPORT_ADDRESS_FILE :
@@ -357,15 +356,15 @@ lwip_tcp_err_callback(
 			
 			KeReleaseSpinLockFromDpcLevel(&Context->RequestListLock);
 			
-			if (Context->lwip_tcp_pcb != Context->AddressFile->lwip_tcp_pcb)
+			if (Context->lwip_tcp_pcb == Context->AddressFile->lwip_tcp_pcb);
 			{
-				tcp_close(Context->lwip_tcp_pcb);
+				Context->AddressFile->lwip_tcp_pcb = NULL;
 			}
 			Context->lwip_tcp_pcb = NULL;
 			
 			return;
 		default :
-			DPRINT1("Invalid argument\n");
+			DPRINT1("Invalid argument: %08x\n", arg);
 			return;
 	}
 }
@@ -520,7 +519,9 @@ lwip_tcp_accept_callback(
 				ExFreePoolWithTag(Request, TAG_TCP_REQUEST);
 				return ERR_ABRT;
 			}
-		
+			
+			Request->PendingIrp = NULL;
+			
 			IoSetCancelRoutine(Irp, NULL);
 			Irp->Cancel = FALSE;
 			
@@ -667,6 +668,7 @@ lwip_tcp_receive_callback(
 	UCHAR *CurrentSrceLocation;
 	PLIST_ENTRY Head;
 	PLIST_ENTRY Entry;
+	NTSTATUS Status;
 	
 	DPRINT1("lwIP TCP Receive Callback\n");
 	
@@ -719,6 +721,7 @@ lwip_tcp_receive_callback(
 	DPRINT1("IRP at %08x\n", Irp);
 	
 	IrpSp = IoGetCurrentIrpStackLocation(Irp);
+	DPRINT1("IrpSp: %08x\n", IrpSp);
 	
 	IoSetCancelRoutine(Irp, NULL);
 	Irp->Cancel = FALSE;
@@ -769,15 +772,30 @@ lwip_tcp_receive_callback(
 	RemainingDestBytes = Buffer->ByteCount;
 //	NdisQueryBuffer(Buffer, &CurrentDestLocation, &RemainingDestBytes);
 	
-	DPRINT1("\n  PTDI_REQUEST_KERNEL_RECEIVE->ReceiveLength = %d\n  NDIS_BUFFER length = %d\n  pbuf->tot_len = %d\n",
-		ReceiveInfo->ReceiveLength,
-		RemainingDestBytes,
-		p->tot_len);
+	if (p)
+	{
+		DPRINT1("\n  PTDI_REQUEST_KERNEL_RECEIVE->ReceiveLength = %d\n  NDIS_BUFFER length = %d\n  pbuf->tot_len = %d\n",
+			ReceiveInfo->ReceiveLength,
+			RemainingDestBytes,
+			p->tot_len);
+	}
+	else
+	{
+		DPRINT1("\n  The pbuf pointer p is NULL\n");
+	}
+	
+	if (!p)
+	{
+		CopiedLength = 0;
+		Status = STATUS_ADDRESS_CLOSED;
+		goto BAD;
+	}
 	
 	if (RemainingDestBytes <= p->len)
 	{
 		RtlCopyMemory(CurrentDestLocation, p->payload, RemainingDestBytes);
 		CopiedLength = RemainingDestBytes;
+		Status = STATUS_SUCCESS;
 		goto RETURN;
 	}
 	else
@@ -808,6 +826,7 @@ lwip_tcp_receive_callback(
 				}
 				else
 				{
+					Status = STATUS_SUCCESS;
 					goto RETURN;
 				}
 			}
@@ -816,6 +835,7 @@ lwip_tcp_receive_callback(
 				RtlCopyMemory(CurrentDestLocation, CurrentSrceLocation, RemainingDestBytes);
 				CopiedLength += RemainingDestBytes;
 				
+				Status = STATUS_SUCCESS;
 				goto RETURN;
 			}
 		}
@@ -825,9 +845,6 @@ RETURN:
 	DPRINT1("Receive CopiedLength = %d\n", CopiedLength);
 	
 	tcp_recved(tpcb, CopiedLength);
-	
-	RemoveEntryList(&Request->ListEntry);
-	ExFreePoolWithTag(Request, TAG_TCP_REQUEST);
 	
 	while (Entry != Head)
 	{
@@ -839,10 +856,14 @@ RETURN:
 		}
 	}
 	
+BAD:
+	RemoveEntryList(&Request->ListEntry);
+	ExFreePoolWithTag(Request, TAG_TCP_REQUEST);
+	
 	KeReleaseSpinLockFromDpcLevel(&Context->RequestListLock);
 	IoReleaseCancelSpinLock(OldIrql);
-
-	Irp->IoStatus.Status = STATUS_SUCCESS;
+	
+	Irp->IoStatus.Status = Status;
 	Irp->IoStatus.Information = CopiedLength;
 	IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 	
@@ -1613,11 +1634,11 @@ TcpIpAssociateAddress(
 	
 	DPRINT1("TcpIpAssociateAddress Exiting\n");
 	
-	KeReleaseSpinLock(&AddressFile->ContextListLock, OldIrql);
-	
 	Context->TcpState = TCP_STATE_BOUND;
 	
 LEAVE:
+	KeReleaseSpinLock(&AddressFile->ContextListLock, OldIrql);
+	
 	return Status;
 }
 
@@ -1631,6 +1652,9 @@ TcpIpDisassociateAddress(
 	PADDRESS_FILE AddressFile;
 	
 	KIRQL OldIrql;
+	PLIST_ENTRY Head;
+	PLIST_ENTRY Entry;
+	PTCP_REQUEST Request;
 	
 	IrpSp = IoGetCurrentIrpStackLocation(Irp);
 	if ((ULONG)IrpSp->FileObject->FsContext2 != TDI_CONNECTION_FILE)
@@ -1666,6 +1690,21 @@ TcpIpDisassociateAddress(
 	if (!(IsListEmpty(&Context->RequestListHead)))
 	{
 		DPRINT1("Disassociating context with outstanding requests\n");
+		Head = &Context->RequestListHead;
+		Entry = Head->Flink;
+		while (Entry != Head)
+		{
+			Request = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
+			if (Request->PendingIrp)
+			{
+				IrpSp = IoGetCurrentIrpStackLocation(Request->PendingIrp);
+				DPRINT1("Pending IRP Control Code: %08x\n", IrpSp->MinorFunction);
+			}
+			else
+			{
+				DPRINT1("IRP is NULL\n");
+			}
+		}
 	}
 	KeReleaseSpinLockFromDpcLevel(&Context->RequestListLock);
 	
@@ -1737,7 +1776,7 @@ TcpIpListen(
 	PrepareIrpForCancel(
 		Irp,
 		CancelRequestRoutine,
-		TCP_REQUEST_CANCEL_MODE_ABORT,
+		TCP_REQUEST_CANCEL_MODE_CLOSE,
 		TCP_REQUEST_PENDING_GENERAL);
 	Context->TcpState = TCP_STATE_LISTENING;
 	return STATUS_PENDING;
