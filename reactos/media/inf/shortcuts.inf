@@ -44,6 +44,7 @@ GamesShortcuts=2, %GAMES%
 %SystemRoot%\system32\clipbrd.exe, %CLIPBRD_TITLE%, %CLIPBRD_DESC%, 0
 %SystemRoot%\system32\kbswitch.exe, %KBSWITCH_TITLE%, %KBSWITCH_DESC%, 0
 %SystemRoot%\regedit.exe, %REGEDIT_TITLE%, %REGEDIT_DESC%, 0
+%SystemRoot%\system32\taskmgr.exe, %TASKMGR_TITLE%, %TASKMGR_DESC%, 0
 %SystemRoot%\system32\dxdiag.exe, %DXDIAG_TITLE%, %DXDIAG_DESC%, 0
 
 [AccessibilityShortcuts]
@@ -109,6 +110,8 @@ KBSWITCH_TITLE=Keyboard Layout Switcher
 KBSWITCH_DESC=Keyboard Layout Switcher
 REGEDIT_TITLE=Registry Editor
 REGEDIT_DESC=Launch Registry Editor
+TASKMGR_TITLE=Task Manager
+TASKMGR_DESC=Launch the Task Manager
 DXDIAG_TITLE=ReactX Diagnostic
 DXDIAG_DESC=Launch ReactX-Diagnostic program
 MAGNIFY_TITLE=Magnify
@@ -559,6 +562,8 @@ KBSWITCH_TITLE=Sélecteur de configuration clavier
 KBSWITCH_DESC=Sélecteur de configuration clavier
 REGEDIT_TITLE=Éditeur de Registre
 REGEDIT_DESC=Lancer l'Éditeur de Registre
+TASKMGR_TITLE=Gestionnaire des tâches
+TASKMGR_DESC=Lancer le Gestionnaire des tâches
 DXDIAG_TITLE=Diagnostic ReactX
 DXDIAG_DESC=Lancer le prorgramme de diagnostic ReactX
 MAGNIFY_TITLE=Loupe
