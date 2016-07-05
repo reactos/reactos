@@ -40,7 +40,7 @@ extern LPCWSTR get_root_key_name(HKEY hRootKey)
 
 extern void ResizeWnd(int cx, int cy)
 {
-    HDWP hdwp = BeginDeferWindowPos(3);
+    HDWP hdwp = BeginDeferWindowPos(4);
     RECT rt, rs, rb;
     const int tHeight = 22;
     SetRect(&rt, 0, 0, cx, cy);
