@@ -167,7 +167,7 @@ reactos/dll/win32/rpcrt4              # Synced to WineStaging-1.9.11
 reactos/dll/win32/rsabase             # Synced to WineStaging-1.9.11
 reactos/dll/win32/rsaenh              # Synced to WineStaging-1.9.11
 reactos/dll/win32/sccbase             # Synced to WineStaging-1.9.11
-reactos/dll/win32/schannel            # Synced to WineStaging-1.9.4
+reactos/dll/win32/schannel            # Synced to WineStaging-1.9.11
 reactos/dll/win32/scrrun              # Synced to WineStaging-1.9.11
 reactos/dll/win32/secur32             # Forked
 reactos/dll/win32/security            # Forked (different .spec)
