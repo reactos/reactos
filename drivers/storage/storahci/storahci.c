@@ -209,6 +209,8 @@ AhciStartPort (
 {
     ULONG index;
     AHCI_PORT_CMD cmd;
+    AHCI_TASK_FILE_DATA tfd;
+    AHCI_INTERRUPT_ENABLE ie;
     AHCI_SERIAL_ATA_STATUS ssts;
     AHCI_SERIAL_ATA_CONTROL sctl;
     PAHCI_ADAPTER_EXTENSION AdapterExtension;
@@ -268,13 +270,104 @@ AhciStartPort (
     }
 
     ssts.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->SSTS);
-    if (ssts.DET == 0x4)
+    switch (ssts.DET)
     {
-        // no device found
-        return FALSE;
+        case 0x0:
+        case 0x1:
+        case 0x2:
+        default:
+            // unhandled case
+            DebugPrint("\tDET == %x Unsupported\n", ssts.DET);
+            return FALSE;
+        case 0x3:
+            {
+                NT_ASSERT(cmd.ST == 0);
+
+                // make sure FIS Recieve is enabled (cmd.FRE)
+                index = 0;
+                do
+                {
+                    StorPortStallExecution(10000);
+                    cmd.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->CMD);
+                    cmd.FRE = 1;
+                    StorPortWriteRegisterUlong(AdapterExtension, &PortExtension->Port->CMD, cmd.Status);
+                    index++;
+                }
+                while((cmd.FR != 1) && (index < 3));
+
+                if (cmd.FR != 1)
+                {
+                    // failed to start FIS DMA engine
+                    // it can crash the driver later
+                    return FALSE;
+                }
+
+                // start port channel
+                // set cmd.ST
+
+                NT_ASSERT(cmd.FRE == 1);
+                NT_ASSERT(cmd.CR == 0);
+
+                // why assert? well If we face such condition on DET = 0x3
+                // then we don't have port in idle state and hence before executing this part of code
+                // we must have restarted it.
+                tfd.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->TFD);
+
+                if ((tfd.STS.BSY) || (tfd.STS.DRQ))
+                {
+                    DebugPrint("\tUnhandled Case BSY-DRQ\n");
+                }
+
+                // clear pending interrupts
+                StorPortWriteRegisterUlong(AdapterExtension, &PortExtension->Port->SERR, (ULONG)~0);
+                StorPortWriteRegisterUlong(AdapterExtension, &PortExtension->Port->IS, (ULONG)~0);
+                StorPortWriteRegisterUlong(AdapterExtension, AdapterExtension->IS, (1 << PortExtension->PortNumber));
+
+                // set IE
+                ie.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->IE);
+                ie.DHRE = 1;
+                ie.PSE = 1;
+                ie.DSE = 1;
+                ie.SDBE = 1;
+
+                ie.UFE = 0;
+                ie.DPE = 0;
+                ie.PCE = 1;
+
+                ie.DMPE = 0;
+
+                ie.PRCE = 1;
+                ie.IPME = 0;
+                ie.OFE = 1;
+                ie.INFE = 1;
+                ie.IFE = 1;
+                ie.HBDE = 1;
+                ie.HBFE = 1;
+                ie.TFEE = 1;
+
+                cmd.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->CMD);
+                ie.CPDE = cmd.CPD;
+
+                StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->IE, ie.Status);
+
+                cmd.ST = 1;
+                StorPortWriteRegisterUlong(AdapterExtension, &PortExtension->Port->CMD, cmd.Status);
+                cmd.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->CMD);
+
+                if (cmd.ST != 1)
+                {
+                    DebugPrint("\tFailed to start Port\n");
+                    return FALSE;
+                }
+
+                return TRUE;
+            }
+        case 0x4:
+            // no device found
+            return FALSE;
     }
 
-    DebugPrint("\tDET: %d %d\n", ssts.DET, cmd.ST);
+    DebugPrint("\tInvalid DET value: %x\n", ssts.DET);
     return FALSE;
 }// -- AhciStartPort();
 
@@ -322,10 +415,6 @@ AhciHwInitialize (
         {
             PortExtension = &adapterExtension->PortExtension[index];
             PortExtension->IsActive = AhciStartPort(PortExtension);
-            if (PortExtension->IsActive == FALSE)
-            {
-                DebugPrint("\tPort Disabled: %d\n", index);
-            }
         }
     }
 
@@ -516,6 +605,7 @@ AhciHwInterrupt(
     portPending = StorPortReadRegisterUlong(AdapterExtension, AdapterExtension->IS);
     // we process interrupt for implemented ports only
     portCount = AdapterExtension->PortCount;
+    DebugPrint("\tPortPending: %d\n", portPending);
     portPending = portPending & AdapterExtension->PortImplemented;
 
     if (portPending == 0)
@@ -1207,7 +1297,9 @@ AhciActivatePort (
     cmd.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->CMD);
 
     if (cmd.ST == 0) // PxCMD.ST == 0
+    {
         return;
+    }
 
     // get the lowest set bit
     tmp = QueueSlots & (QueueSlots - 1);
@@ -1223,6 +1315,8 @@ AhciActivatePort (
     // mark this CommandIssuedSlots
     // to validate in completeIssuedCommand
     PortExtension->CommandIssuedSlots |= slotToActivate;
+
+    DebugPrint("\tslotToActivate: %d\n", slotToActivate);
 
     // tell the HBA to issue this Command Slot to the given port
     StorPortWriteRegisterUlong(AdapterExtension, &PortExtension->Port->CI, slotToActivate);
