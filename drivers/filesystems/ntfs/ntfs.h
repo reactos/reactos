@@ -175,6 +175,10 @@ typedef enum
     AttributeEnd = 0xFFFFFFFF
 } ATTRIBUTE_TYPE, *PATTRIBUTE_TYPE;
 
+// FILE_RECORD_END seems to follow AttributeEnd in every file record starting with $Quota.
+// No clue what data is being represented here.
+#define FILE_RECORD_END              0x11477982 
+
 #define NTFS_FILE_MFT                0
 #define NTFS_FILE_MFTMIRR            1
 #define NTFS_FILE_LOGFILE            2
@@ -433,6 +437,7 @@ typedef struct _NTFS_ATTR_CONTEXT
     ULONGLONG            CacheRunLength;
     LONGLONG            CacheRunLastLCN;
     ULONGLONG            CacheRunCurrentOffset;
+    ULONGLONG           FileMFTIndex;
     NTFS_ATTR_RECORD    Record;
 } NTFS_ATTR_CONTEXT, *PNTFS_ATTR_CONTEXT;
 

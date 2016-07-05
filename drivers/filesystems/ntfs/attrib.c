@@ -509,6 +509,8 @@ NtfsDumpAttribute(PDEVICE_EXTENSION Vcb,
             DbgPrint("  logical clusters: %I64u - %I64u\n",
                      lcn, lcn + runcount - 1);
         }
+        else
+            DbgPrint("    %u bytes of data\n", Attribute->Resident.ValueLength);
     }
 }
 
