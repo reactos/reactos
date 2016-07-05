@@ -517,24 +517,26 @@ MainWndOnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
      */
 
     /* Size vertical splitter bar */
-    DeferWindowPos(hdwp,
-                   hVSplitter,
-                   0,
-                   (VSplitterPos = GetWindowWidth(hTreeView)),
-                   GetWindowHeight(hToolBar),
-                   SPLIT_WIDTH,
-                   HIWORD(lParam) - GetWindowHeight(hToolBar) - GetWindowHeight(hStatusBar),
-                   SWP_NOZORDER|SWP_NOACTIVATE);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp,
+                              hVSplitter,
+                              0,
+                              (VSplitterPos = GetWindowWidth(hTreeView)),
+                              GetWindowHeight(hToolBar),
+                              SPLIT_WIDTH,
+                              HIWORD(lParam) - GetWindowHeight(hToolBar) - GetWindowHeight(hStatusBar),
+                              SWP_NOZORDER|SWP_NOACTIVATE);
 
     /* Size TreeView */
-    DeferWindowPos(hdwp,
-                   hTreeView,
-                   0,
-                   0,
-                   GetWindowHeight(hToolBar),
-                   VSplitterPos,
-                   HIWORD(lParam) - GetWindowHeight(hToolBar) - GetWindowHeight(hStatusBar),
-                   SWP_NOZORDER|SWP_NOACTIVATE);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp,
+                              hTreeView,
+                              0,
+                              0,
+                              GetWindowHeight(hToolBar),
+                              VSplitterPos,
+                              HIWORD(lParam) - GetWindowHeight(hToolBar) - GetWindowHeight(hStatusBar),
+                              SWP_NOZORDER|SWP_NOACTIVATE);
 
     if(wParam != SIZE_MINIMIZED)
     {
@@ -548,36 +550,40 @@ MainWndOnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     SetHSplitterPos(NewPos);
 
     /* Size ListView */
-    DeferWindowPos(hdwp,
-                   hListView,
-                   0,
-                   VSplitterPos + SPLIT_WIDTH,
-                   GetWindowHeight(hToolBar),
-                   LOWORD(lParam) - (VSplitterPos + SPLIT_WIDTH),
-                   GetHSplitterPos() - GetWindowHeight(hToolBar),
-                   SWP_NOZORDER|SWP_NOACTIVATE);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp,
+                              hListView,
+                              0,
+                              VSplitterPos + SPLIT_WIDTH,
+                              GetWindowHeight(hToolBar),
+                              LOWORD(lParam) - (VSplitterPos + SPLIT_WIDTH),
+                              GetHSplitterPos() - GetWindowHeight(hToolBar),
+                              SWP_NOZORDER|SWP_NOACTIVATE);
 
     /* Size RichEdit */
-    DeferWindowPos(hdwp,
-                   hRichEdit,
-                   0,
-                   VSplitterPos + SPLIT_WIDTH,
-                   GetHSplitterPos() + SPLIT_WIDTH,
-                   LOWORD(lParam) - (VSplitterPos + SPLIT_WIDTH),
-                   RichPos,
-                   SWP_NOZORDER|SWP_NOACTIVATE);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp,
+                              hRichEdit,
+                              0,
+                              VSplitterPos + SPLIT_WIDTH,
+                              GetHSplitterPos() + SPLIT_WIDTH,
+                              LOWORD(lParam) - (VSplitterPos + SPLIT_WIDTH),
+                              RichPos,
+                              SWP_NOZORDER|SWP_NOACTIVATE);
 
     /* Size horizontal splitter bar */
-    DeferWindowPos(hdwp,
-                   hHSplitter,
-                   0,
-                   VSplitterPos + SPLIT_WIDTH,
-                   GetHSplitterPos(),
-                   LOWORD(lParam) - (VSplitterPos + SPLIT_WIDTH),
-                   SPLIT_WIDTH,
-                   SWP_NOZORDER|SWP_NOACTIVATE);
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp,
+                              hHSplitter,
+                              0,
+                              VSplitterPos + SPLIT_WIDTH,
+                              GetHSplitterPos(),
+                              LOWORD(lParam) - (VSplitterPos + SPLIT_WIDTH),
+                              SPLIT_WIDTH,
+                              SWP_NOZORDER|SWP_NOACTIVATE);
 
-    EndDeferWindowPos(hdwp);
+    if (hdwp)
+        EndDeferWindowPos(hdwp);
 }
 
 BOOL IsSelectedNodeInstalled(void)

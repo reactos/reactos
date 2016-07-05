@@ -769,8 +769,8 @@ public:
 
         HDWP hdwp = NULL;
         hdwp = BeginDeferWindowPos(count);
-        hdwp = OnParentSize(m_LastRect, hdwp);
-        EndDeferWindowPos(hdwp);
+        if (hdwp) hdwp = OnParentSize(m_LastRect, hdwp);
+        if (hdwp) EndDeferWindowPos(hdwp);
     }
 
 public:
