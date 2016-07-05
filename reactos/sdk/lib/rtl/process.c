@@ -75,7 +75,7 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
     PVOID BaseAddress = NULL;
     SIZE_T EnviroSize;
     SIZE_T Size;
-    PWCHAR Environment = 0;
+    PWCHAR Environment = NULL;
     DPRINT("RtlpInitEnvironment(ProcessHandle: %p, Peb: %p Params: %p)\n",
             ProcessHandle, Peb, ProcessParameters);
 
@@ -301,7 +301,9 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
                                        DUPLICATE_SAME_ACCESS |
                                        DUPLICATE_SAME_ATTRIBUTES);
             if (!NT_SUCCESS(Status))
+            {
                 _SEH2_LEAVE;
+            }
         }
 
         if (ProcessParameters->StandardOutput)
@@ -315,7 +317,9 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
                                        DUPLICATE_SAME_ACCESS |
                                        DUPLICATE_SAME_ATTRIBUTES);
             if (!NT_SUCCESS(Status))
+            {
                 _SEH2_LEAVE;
+            }
         }
 
         if (ProcessParameters->StandardError)
@@ -329,7 +333,9 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
                                        DUPLICATE_SAME_ACCESS |
                                        DUPLICATE_SAME_ATTRIBUTES);
             if (!NT_SUCCESS(Status))
+            {
                 _SEH2_LEAVE;
+            }
         }
     }
     _SEH2_FINALLY
