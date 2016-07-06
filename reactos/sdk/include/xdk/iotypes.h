@@ -2209,13 +2209,23 @@ typedef VOID
 typedef DRIVER_UNLOAD *PDRIVER_UNLOAD;
 
 _Function_class_(DRIVER_DISPATCH)
-_IRQL_requires_(PASSIVE_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 _IRQL_requires_same_
 typedef NTSTATUS
 (NTAPI DRIVER_DISPATCH)(
   _In_ struct _DEVICE_OBJECT *DeviceObject,
   _Inout_ struct _IRP *Irp);
 typedef DRIVER_DISPATCH *PDRIVER_DISPATCH;
+typedef DRIVER_DISPATCH DRIVER_DISPATCH_RAISED;
+
+_Function_class_(DRIVER_DISPATCH)
+_IRQL_requires_(PASSIVE_LEVEL)
+_IRQL_requires_same_
+typedef NTSTATUS
+(NTAPI DRIVER_DISPATCH_PAGED)(
+  _In_ struct _DEVICE_OBJECT *DeviceObject,
+  _Inout_ struct _IRP *Irp);
+typedef DRIVER_DISPATCH_PAGED *PDRIVER_DISPATCH_PAGED;
 
 typedef struct _DRIVER_OBJECT {
   CSHORT Type;
