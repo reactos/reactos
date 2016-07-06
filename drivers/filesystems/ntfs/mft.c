@@ -228,9 +228,9 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
     NTSTATUS Status = STATUS_SUCCESS;
 
     // are we truncating the file?
-    if (DataSize->QuadPart < AttributeDataLength(&AttrContext->Record)
+    if (DataSize->QuadPart < AttributeDataLength(&AttrContext->Record))
     {
-        if (!MmCanFileBeTruncated(FileObject->SectionObjectPointer, (PLARGE_INTEGER)&AllocationSize))
+        if (!MmCanFileBeTruncated(FileObject->SectionObjectPointer, DataSize))
         {
             DPRINT1("Can't truncate a memory-mapped file!\n");
             return STATUS_USER_MAPPED_FILE;
