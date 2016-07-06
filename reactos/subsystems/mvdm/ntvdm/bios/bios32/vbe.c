@@ -24,32 +24,114 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
-static const VBE_MODE Modes[VBE_MODE_COUNT] = {
-    { 0x14, 0xFFFF, NULL /* TODO */, NULL            },
-    { 0x54, 0x10A,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x55, 0x109,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x58, 0x102,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x5C, 0x103,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x5D, 0x104,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x5E, 0x100,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x5F, 0x101,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x60, 0x105,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x64, 0x111,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x65, 0x114,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x66, 0x110,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x67, 0x113,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x68, 0x116,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x69, 0x119,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x6C, 0x106,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x6D, 0x107,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x71, 0x112,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x72, 0xFFFF, NULL /* TODO */, NULL            },
-    { 0x73, 0xFFFF, NULL /* TODO */, NULL            },
-    { 0x74, 0x117,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x75, 0x11A,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x76, 0xFFFF, NULL /* TODO */, NULL            },
-    { 0x78, 0x115,  NULL /* TODO */, NULL /* TODO */ },
-    { 0x79, 0x118,  NULL /* TODO */, NULL /* TODO */ },
+static const VBE_MODE_INFO VbeMode_800x600x256_Info =
+{
+    /* Attributes */
+    VBE_MODE_SUPPORTED
+    | VBE_MODE_OPTIONAL_INFO
+    // | VBE_MODE_BIOS_SUPPORT
+    | VBE_MODE_COLOR
+    | VBE_MODE_GRAPHICS,
+
+    /* Window A attributes */
+    VBE_WINDOW_EXISTS | VBE_WINDOW_READABLE | VBE_WINDOW_WRITABLE,
+    /* Window B attributes */
+    0,
+
+    16,                   /* Window granularity, in KB */
+    64,                   /* Window size, in KB */
+    0xA000,               /* Window A segment, or zero if not supported */
+    0x0000,               /* Window B segment, or zero if not supported */
+    0x00000000,           /* Window position function pointer */
+    800,                  /* Bytes per scanline */
+    800,                  /* Width */
+    600,                  /* Height */
+    8,                    /* Character cell width */
+    16,                   /* Character cell height */
+    1,                    /* Number of memory planes */
+    8,                    /* Bits per pixel */
+    1,                    /* Number of banks */
+    VBE_MODEL_PACKED,     /* Memory model */
+    0,                    /* Bank size */
+    7,                    /* Number of image pages */
+    0,                    /* Reserved field */
+    0,                    /* Red mask size */
+    0,                    /* Red field position */
+    0,                    /* Green mask size */
+    0,                    /* Green field position */
+    0,                    /* Blue mask size */
+    0,                    /* Blue field position */
+    0,                    /* Reserved mask size */
+    0,                    /* Reserved field position */
+    0,                    /* Direct color info */
+};
+
+static SVGA_REGISTERS VbeMode_800x600x256_Registers =
+{
+    /* Miscellaneous Register */
+    0x63,
+
+    /* Hidden Register */
+    0x00,
+
+    /* Sequencer Registers */
+    {
+        0x03, 0x21, 0x0F, 0x00, 0x0E, 0x00, 0x12, 0x11, 0x00, 0x00, 0x18, 0x23,
+        0x23, 0x23, 0x23, 0x98, 0x00, 0x00, 0x04, 0x00, 0x00, 0x04, 0x00, 0x20,
+        0x00, 0x00, 0x00, 0x14, 0x14, 0x14, 0x14, 0x2D
+    },
+
+    /* CRTC Registers */
+    {
+        0x7D, 0x63, 0x63, 0x80, 0x6B, 0x1A, 0x98, 0xF0, 0x00, 0x60, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x7D, 0x23, 0x57, 0x64, 0x40, 0x57, 0x98, 0xC3,
+        0xFF, 0x00, 0x00, 0x22, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF,
+        0x80, 0x00, 0x20, 0xB8
+    },
+
+    /* GC Registers */
+    {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0xFF, 0x00, 0x00, 0x20,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00
+    },
+
+    /* AC Registers */
+    {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B,
+        0x0C, 0x0D, 0x0E, 0x0F, 0x41, 0x00, 0x0F, 0x00, 0x00
+    }
+};
+
+static const VBE_MODE Modes[VBE_MODE_COUNT] =
+{
+    { 0x14, 0xFFFF, NULL                     , NULL /* TODO */                },
+    { 0x54, 0x10A , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x55, 0x109 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x58, 0x102 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x5C, 0x103 , &VbeMode_800x600x256_Info, &VbeMode_800x600x256_Registers },
+    { 0x5D, 0x104 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x5E, 0x100 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x5F, 0x101 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x60, 0x105 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x64, 0x111 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x65, 0x114 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x66, 0x110 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x67, 0x113 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x68, 0x116 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x69, 0x119 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x6C, 0x106 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x6D, 0x107 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x71, 0x112 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x72, 0xFFFF, NULL                     , NULL /* TODO */                },
+    { 0x73, 0xFFFF, NULL                     , NULL /* TODO */                },
+    { 0x74, 0x117 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x75, 0x11A , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x76, 0xFFFF, NULL                     , NULL /* TODO */                },
+    { 0x78, 0x115 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x79, 0x118 , NULL /* TODO */          , NULL /* TODO */                },
 };
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -207,6 +289,9 @@ BOOLEAN WINAPI VbeSetExtendedVideoMode(BYTE ModeNumber)
     /* Update the current video mode in the BDA */
     Bda->VideoMode = ModeNumber;
 
+    /* Clear the screen */
+    VgaClearMemory();
+
     return TRUE;
 }
 
@@ -218,15 +303,53 @@ VOID WINAPI VbeResetExtendedRegisters(VOID)
     BOOLEAN Interrupts = getIF();
     setIF(0);
 
-    /* Reset the extended sequencer registers */
-    for (i = SVGA_SEQ_EXT_MODE_REG; i < SVGA_SEQ_MAX_REG; i++)
+    /* Turn the video off */
+    IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_CLOCK_REG);
+    IOWriteB(VGA_SEQ_DATA , IOReadB(VGA_SEQ_DATA) | VGA_SEQ_CLOCK_SD);
+
+    /* Synchronous reset on */
+    IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_RESET_REG);
+    IOWriteB(VGA_SEQ_DATA , VGA_SEQ_RESET_AR );
+
+    /* Clear the extended sequencer registers, except for the VCLKs and MCLK */
+    for (i = SVGA_SEQ_EXT_MODE_REG; i < SVGA_SEQ_VCLK0_DENOMINATOR_REG; i++)
     {
-        if (i != VGA_SEQ_MAX_REG && i != SVGA_SEQ_UNLOCK_REG)
+        if (i != VGA_SEQ_MAX_REG && i != SVGA_SEQ_UNLOCK_REG
+            && (i < SVGA_SEQ_VCLK0_NUMERATOR_REG || i > SVGA_SEQ_VCLK3_NUMERATOR_REG))
         {
             IOWriteB(VGA_SEQ_INDEX, i);
             IOWriteB(VGA_SEQ_DATA, 0x00);
         }
     }
+
+    /* Reset the VCLKs */
+    IOWriteB(VGA_SEQ_INDEX, SVGA_SEQ_VCLK0_NUMERATOR_REG);
+    IOWriteB(VGA_SEQ_DATA, 0x66);
+    IOWriteB(VGA_SEQ_INDEX, SVGA_SEQ_VCLK0_DENOMINATOR_REG);
+    IOWriteB(VGA_SEQ_DATA, 0x3B);
+
+    IOWriteB(VGA_SEQ_INDEX, SVGA_SEQ_VCLK1_NUMERATOR_REG);
+    IOWriteB(VGA_SEQ_DATA, 0x5B);
+    IOWriteB(VGA_SEQ_INDEX, SVGA_SEQ_VCLK1_DENOMINATOR_REG);
+    IOWriteB(VGA_SEQ_DATA, 0x2F);
+
+    IOWriteB(VGA_SEQ_INDEX, SVGA_SEQ_VCLK2_NUMERATOR_REG);
+    IOWriteB(VGA_SEQ_DATA, 0x45);
+    IOWriteB(VGA_SEQ_INDEX, SVGA_SEQ_VCLK2_DENOMINATOR_REG);
+    IOWriteB(VGA_SEQ_DATA, 0x30);
+
+    IOWriteB(VGA_SEQ_INDEX, SVGA_SEQ_VCLK3_NUMERATOR_REG);
+    IOWriteB(VGA_SEQ_DATA, 0x7E);
+    IOWriteB(VGA_SEQ_INDEX, SVGA_SEQ_VCLK3_DENOMINATOR_REG);
+    IOWriteB(VGA_SEQ_DATA, 0x33);
+
+    /* Reset the MCLK */
+    IOWriteB(VGA_SEQ_INDEX, SVGA_SEQ_MCLK_REG);
+    IOWriteB(VGA_SEQ_DATA, 0x1C);
+
+    /* Synchronous reset off */
+    IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_RESET_REG);
+    IOWriteB(VGA_SEQ_DATA , VGA_SEQ_RESET_SR | VGA_SEQ_RESET_AR);
 
     /* Reset the extended CRTC registers */
     for (i = SVGA_CRTC_INTERLACE_END_REG; i < SVGA_CRTC_MAX_REG; i++)
@@ -255,6 +378,10 @@ VOID WINAPI VbeResetExtendedRegisters(VOID)
      */
     for (i = 0; i < 4; i++) IOReadB(VGA_DAC_MASK);
     IOWriteB(VGA_DAC_MASK, 0x00);
+
+    /* Turn the video on */
+    IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_CLOCK_REG);
+    IOWriteB(VGA_SEQ_DATA , IOReadB(VGA_SEQ_DATA) & ~VGA_SEQ_CLOCK_SD);
 
     /* Restore interrupts */
     setIF(Interrupts);
@@ -356,7 +483,7 @@ VOID WINAPI VbeService(LPWORD Stack)
             WORD VesaNumber = getBX();
             setAL(0x4F);
 
-            if (getBX() <= BIOS_MAX_VIDEO_MODE)
+            if (VesaNumber <= BIOS_MAX_VIDEO_MODE)
             {
                 /* Call the VGA BIOS */
                 setAH(0x00);

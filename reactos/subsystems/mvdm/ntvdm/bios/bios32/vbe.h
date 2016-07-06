@@ -90,13 +90,15 @@ typedef struct _VBE_MODE_INFO
 
 C_ASSERT(sizeof(VBE_MODE_INFO) % sizeof(WORD) == 0);
 
+typedef const struct _VBE_MODE_INFO *PCVBE_MODE_INFO;
+
 #pragma pack(pop)
 
 typedef struct _VBE_MODE
 {
     BYTE Number;
     WORD VesaNumber;
-    PVBE_MODE_INFO Info;
+    PCVBE_MODE_INFO Info;
     PSVGA_REGISTERS Registers;
 } VBE_MODE, *PVBE_MODE;
 
