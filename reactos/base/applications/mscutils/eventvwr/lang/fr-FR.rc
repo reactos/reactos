@@ -29,17 +29,7 @@ IDA_EVENTVWR ACCELERATORS
 BEGIN
     "?", IDM_ABOUT, ASCII, ALT
     "/", IDM_ABOUT, ASCII, ALT
-END
-
-IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
-CAPTION "À propos"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    ICON IDI_EVENTVWR, IDC_MYICON, 14, 9, 21, 20
-    LTEXT "Visionneuse des événements ReactOS Version 1.0", IDC_STATIC, 49, 10, 119, 8, SS_NOPREFIX
-    LTEXT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)", IDC_STATIC, 49, 20, 119, 22
-    DEFPUSHBUTTON "OK", IDOK, 90, 48, 42, 16, WS_GROUP
+    VK_F5, IDM_REFRESH, VIRTKEY
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
@@ -91,9 +81,12 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_COPYRIGHT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "Visionneuse d'événements"
     IDS_APP_TITLE_EX "%s - Journal %s sur \\\\"
     IDS_STATUS_MSG "%s contient %lu événement(s)"
+    IDS_EVENTLOG_SYSTEM "Journaux système"
+    IDS_EVENTLOG_USER "Journaux de l'utilisateur"
     IDS_EVENTSTRINGIDNOTFOUND "La description pour l'événement d'ID ( %lu ) dans la source ( %s ) ne peut être trouvée. L'ordinateur local pourrait ne pas avoir les informations registres nécessaires ou les fichiers DLL de message pour afficher les messages depuis un ordinateur distant.\n\nLes informations suivantes font partie de l'événement :\n\n"
     IDS_EVENTLOG_ERROR_TYPE "Erreur"
     IDS_EVENTLOG_WARNING_TYPE "Avertissement"

@@ -29,17 +29,7 @@ IDA_EVENTVWR ACCELERATORS
 BEGIN
     "?", IDM_ABOUT, ASCII, ALT
     "/", IDM_ABOUT, ASCII, ALT
-END
-
-IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
-CAPTION "Acerca de"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    ICON IDI_EVENTVWR, IDC_MYICON, 14, 9, 21, 20
-    LTEXT "Visor de eventos de ReactOS. Versión 1.0", IDC_STATIC, 49, 10, 124, 8, SS_NOPREFIX
-    LTEXT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)", IDC_STATIC, 49, 20, 119, 22
-    DEFPUSHBUTTON "Aceptar", IDOK, 90, 48, 42, 16, WS_GROUP
+    VK_F5, IDM_REFRESH, VIRTKEY
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
@@ -91,9 +81,12 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_COPYRIGHT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "Visor de eventos"
     IDS_APP_TITLE_EX "%s - Registro de %s en \\\\"
     IDS_STATUS_MSG "%s tiene %lu evento(s)"
+    IDS_EVENTLOG_SYSTEM "System Logs"
+    IDS_EVENTLOG_USER "User Logs"
     IDS_EVENTSTRINGIDNOTFOUND "No se pudo recuperar la descripción para el evento con ID (%lu) y origen (%s). El equipo local puede no tener la información necesaria en el registro o las DLLs necesarias para mostrar los mensajes de un equipo remoto.\n\nThe following information is part of the event:\n\n"
     IDS_EVENTLOG_ERROR_TYPE "Error"
     IDS_EVENTLOG_WARNING_TYPE "Advertencia"

@@ -32,17 +32,7 @@ IDA_EVENTVWR ACCELERATORS
 BEGIN
     "?", IDM_ABOUT, ASCII, ALT
     "/", IDM_ABOUT, ASCII, ALT
-END
-
-IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
-CAPTION "Despre Observator de evenimente"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    ICON IDI_EVENTVWR, IDC_MYICON, 14, 9, 21, 20
-    LTEXT "Observator de Evenimente ReactOS Versiunea 1.0", IDC_STATIC, 49, 10, 119, 8, SS_NOPREFIX
-    LTEXT "Drept de autor (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)", IDC_STATIC, 49, 20, 150, 22
-    DEFPUSHBUTTON "Î&nchide", IDOK, 90, 48, 42, 16, WS_GROUP
+    VK_F5, IDM_REFRESH, VIRTKEY
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
@@ -94,9 +84,12 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_COPYRIGHT "Drept de autor (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "Observator de evenimente"
     IDS_APP_TITLE_EX "%s - %s autentificat pe \\\\"
     IDS_STATUS_MSG "%s are %lu eveniment(e)"
+    IDS_EVENTLOG_SYSTEM "System Logs"
+    IDS_EVENTLOG_USER "User Logs"
     IDS_EVENTSTRINGIDNOTFOUND "Nu se poate găsi descrierea evenimentului cu ID-ul ( %lu ) în sursa ( %s ). Este posibil ca în calculatorul local să nu existe informațiile de registru necesare sau fișierele dll de mesaje să afișeze mesaje de la un calculator din rețea.\n\nInformații aferente evenimentului:\n\n"
     IDS_EVENTLOG_ERROR_TYPE "Eroare"
     IDS_EVENTLOG_WARNING_TYPE "Avertisment"

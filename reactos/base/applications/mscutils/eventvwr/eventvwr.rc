@@ -15,6 +15,10 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* Shared icons */
 IDI_EVENTVWR ICON "res/eventvwr.ico"
+IDI_EVENTLOG ICON "res/eventlog.ico"
+IDI_CLOSED_CATEGORY ICON "res/folder.ico"
+IDI_OPENED_CATEGORY ICON "res/folderopen.ico"
+
 IDI_WARNINGICON ICON "res/warning.ico"
 IDI_INFORMATIONICON ICON "res/info.ico"
 IDI_ERRORICON ICON "res/error.ico"

@@ -25,15 +25,20 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <winuser.h>
 #include <wingdi.h>
 #include <winnls.h>
 #include <winreg.h>
+#include <shellapi.h>
+
+#include <windowsx.h>
 #include <commctrl.h>
 #include <richedit.h>
 #include <commdlg.h>
+
 #include <strsafe.h>
 
 /* Missing RichEdit flags in our richedit.h */
@@ -65,16 +70,23 @@ static const WCHAR EVENTLOG_BASE_KEY[]  = L"SYSTEM\\CurrentControlSet\\Services\
 #define MAX_LOADSTRING 255
 #define ENTRY_SIZE 2056
 
+#define SPLIT_WIDTH 4
+
 /* Globals */
 HINSTANCE hInst;                            /* current instance */
 WCHAR szTitle[MAX_LOADSTRING];              /* The title bar text */
 WCHAR szTitleTemplate[MAX_LOADSTRING];      /* The logged-on title bar text */
 WCHAR szSaveFilter[MAX_LOADSTRING];         /* Filter Mask for the save Dialog */
+INT  nSplitPos;                             /* Splitter position */
 HWND hwndMainWindow;                        /* Main window */
+HWND hwndTreeView;                          /* TreeView control */
 HWND hwndListView;                          /* ListView control */
 HWND hwndStatus;                            /* Status bar */
 HMENU hMainMenu;                            /* The application's main menu */
 WCHAR szStatusBarTemplate[MAX_LOADSTRING];  /* The status bar text */
+
+HTREEITEM htiSystemLogs = NULL, htiUserLogs = NULL;
+
 PEVENTLOGRECORD *g_RecordPtrs = NULL;
 DWORD g_TotalRecords = 0;
 OPENFILENAMEW sfn;
@@ -89,16 +101,15 @@ LPWSTR* LogNames = NULL;
 ATOM MyRegisterClass(HINSTANCE hInstance);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK EventDetails(HWND, UINT, WPARAM, LPARAM);
 static INT_PTR CALLBACK StatusMessageWindowProc (HWND, UINT, WPARAM, LPARAM);
 
 
 int APIENTRY
 wWinMain(HINSTANCE hInstance,
-          HINSTANCE hPrevInstance,
-          LPWSTR    lpCmdLine,
-          int       nCmdShow)
+         HINSTANCE hPrevInstance,
+         LPWSTR    lpCmdLine,
+         int       nCmdShow)
 {
     MSG msg;
     HACCEL hAccelTable;
@@ -700,7 +711,7 @@ QueryEventMessages(LPWSTR lpMachineName,
                     break;
 
                 case EVENTLOG_AUDIT_FAILURE:
-                    lviEventItem.iImage = 2;
+                    lviEventItem.iImage = 2; // FIXME!
                     break;
 
                 case EVENTLOG_WARNING_TYPE:
@@ -712,7 +723,7 @@ QueryEventMessages(LPWSTR lpMachineName,
                     break;
 
                 case EVENTLOG_AUDIT_SUCCESS:
-                    lviEventItem.iImage = 0;
+                    lviEventItem.iImage = 0; // FIXME!
                     break;
 
                 case EVENTLOG_SUCCESS:
@@ -882,7 +893,7 @@ MyRegisterClass(HINSTANCE hInstance)
     wcex.hInstance = hInstance;
     wcex.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_EVENTVWR));
     wcex.hCursor = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
-    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wcex.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1); // COLOR_WINDOW + 1
     wcex.lpszMenuName = MAKEINTRESOURCEW(IDM_EVENTVWR);
     wcex.lpszClassName = szWindowClass;
     wcex.hIconSm = (HICON)LoadImageW(hInstance,
@@ -970,6 +981,28 @@ GetDisplayNameID(IN LPCWSTR lpLogName)
 }
 
 
+
+
+HTREEITEM
+TreeViewAddItem(HWND hTreeView, HTREEITEM hParent, LPWSTR lpText, INT Image, INT SelectedImage, LPARAM lParam)
+{
+    TV_INSERTSTRUCTW Insert;
+
+    ZeroMemory(&Insert, sizeof(Insert));
+
+    Insert.item.mask = TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
+    Insert.hInsertAfter = TVI_LAST;
+    Insert.hParent = hParent;
+    Insert.item.pszText = lpText;
+    Insert.item.iImage = Image;
+    Insert.item.iSelectedImage = SelectedImage;
+    Insert.item.lParam = lParam;
+
+    return TreeView_InsertItem(hTreeView, &Insert);
+}
+
+
+
 VOID
 BuildLogList(VOID)
 {
@@ -982,6 +1015,7 @@ BuildLogList(VOID)
     DWORD dwMessageID;
     LPWSTR lpDisplayName;
     HMODULE hLibrary = NULL;
+    HTREEITEM hItem = NULL, hItemDefault = NULL;
 
     /* Open the EventLog key */
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, EVENTLOG_BASE_KEY, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
@@ -1065,13 +1099,14 @@ BuildLogList(VOID)
             }
         }
 
-        if (lpDisplayName)
+        hItem = TreeViewAddItem(hwndTreeView, htiSystemLogs,
+                                (lpDisplayName ? lpDisplayName : LogNames[dwIndex]),
+                                2, 3, dwIndex);
+
+        /* Try to get the default event log: "Application" */
+        if ((hItemDefault == NULL) && (wcsicmp(LogNames[dwIndex], L"Application") == 0))
         {
-            InsertMenuW(hMainMenu, IDM_SAVE_EVENTLOG, MF_BYCOMMAND | MF_STRING, ID_FIRST_LOG + dwIndex, lpDisplayName);
-        }
-        else
-        {
-            InsertMenuW(hMainMenu, IDM_SAVE_EVENTLOG, MF_BYCOMMAND | MF_STRING, ID_FIRST_LOG + dwIndex, LogNames[dwIndex]);
+            hItemDefault = hItem;
         }
 
         /* Free the buffer allocated by FormatMessage */
@@ -1079,10 +1114,14 @@ BuildLogList(VOID)
             LocalFree(lpDisplayName);
     }
 
-    InsertMenuW(hMainMenu, IDM_SAVE_EVENTLOG, MF_BYCOMMAND | MF_SEPARATOR, ID_FIRST_LOG + dwIndex + 1, NULL);
-
     HeapFree(GetProcessHeap(), 0, LogName);
     RegCloseKey(hKey);
+
+    /* Select the default event log */
+    TreeView_Expand(hwndTreeView, htiSystemLogs, TVE_EXPAND);
+    TreeView_SelectItem(hwndTreeView, hItemDefault);
+    TreeView_EnsureVisible(hwndTreeView, hItemDefault);
+    SetFocus(hwndTreeView);
 
     return;
 }
@@ -1104,11 +1143,7 @@ FreeLogList(VOID)
         {
             HeapFree(GetProcessHeap(), 0, LogNames[dwIndex]);
         }
-
-        DeleteMenu(hMainMenu, ID_FIRST_LOG + dwIndex, MF_BYCOMMAND);
     }
-
-    DeleteMenu(hMainMenu, ID_FIRST_LOG + dwIndex + 1, MF_BYCOMMAND);
 
     HeapFree(GetProcessHeap(), 0, LogNames);
     LogNames  = NULL;
@@ -1125,6 +1160,8 @@ BOOL
 InitInstance(HINSTANCE hInstance,
              int nCmdShow)
 {
+    RECT rcClient, rs;
+    LONG StatusHeight;
     HIMAGELIST hSmall;
     LVCOLUMNW lvc = {0};
     WCHAR szTemp[256];
@@ -1154,24 +1191,25 @@ InitInstance(HINSTANCE hInstance,
                                  hInstance,                          // instance
                                  NULL);                              // window data
 
-    // Create our listview child window.  Note that I use WS_EX_CLIENTEDGE
-    // and WS_BORDER to create the normal "sunken" look.  Also note that
-    // LVS_EX_ styles cannot be set in CreateWindowEx().
-    hwndListView = CreateWindowExW(WS_EX_CLIENTEDGE,
-                                   WC_LISTVIEWW,
+    nSplitPos = 250;
+
+    GetClientRect(hwndMainWindow, &rcClient);
+    GetWindowRect(hwndStatus, &rs);
+    StatusHeight = rs.bottom - rs.top - 3 /* hack */;
+
+    hwndTreeView = CreateWindowExW(WS_EX_CLIENTEDGE,
+                                   WC_TREEVIEWW,
                                    L"",
-                                   LVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | LVS_REPORT,
+                                   // WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_SHOWSELALWAYS,
+                                   WS_CHILD | WS_VISIBLE | /* WS_TABSTOP | */ TVS_HASLINES | TVS_HASBUTTONS | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS,
                                    0,
                                    0,
-                                   243,
-                                   200,
+                                   nSplitPos - SPLIT_WIDTH/2,
+                                   (rcClient.bottom - rcClient.top) - StatusHeight,
                                    hwndMainWindow,
                                    NULL,
                                    hInstance,
                                    NULL);
-
-    /* After the ListView is created, we can add extended list view styles */
-    (void)ListView_SetExtendedListViewStyle (hwndListView, LVS_EX_FULLROWSELECT);
 
     /* Create the ImageList */
     hSmall = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
@@ -1179,12 +1217,54 @@ InitInstance(HINSTANCE hInstance,
                               ILC_COLOR32 | ILC_MASK, // ILC_COLOR24
                               1, 1);
 
-    /* Add event type icons to ImageList */
+    /* Add event type icons to the ImageList: closed/opened folder, event log (normal/viewed) */
+    ImageList_AddIcon(hSmall, LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_CLOSED_CATEGORY)));
+    ImageList_AddIcon(hSmall, LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_OPENED_CATEGORY)));
+    ImageList_AddIcon(hSmall, LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_EVENTLOG)));
+    ImageList_AddIcon(hSmall, LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_EVENTVWR)));
+
+    /* Assign the ImageList to the Tree View */
+    TreeView_SetImageList(hwndTreeView, hSmall, TVSIL_NORMAL);
+
+    /* Add the event logs nodes */
+    // "System Logs"
+    LoadStringW(hInstance, IDS_EVENTLOG_SYSTEM, szTemp, ARRAYSIZE(szTemp));
+    htiSystemLogs = TreeViewAddItem(hwndTreeView, NULL, szTemp, 0, 1, (LPARAM)-1);
+    // "User Logs"
+    LoadStringW(hInstance, IDS_EVENTLOG_USER, szTemp, ARRAYSIZE(szTemp));
+    htiUserLogs   = TreeViewAddItem(hwndTreeView, NULL, szTemp, 0, 1, (LPARAM)-1);
+
+    // Create our listview child window.  Note that I use WS_EX_CLIENTEDGE
+    // and WS_BORDER to create the normal "sunken" look.  Also note that
+    // LVS_EX_ styles cannot be set in CreateWindowEx().
+    hwndListView = CreateWindowExW(WS_EX_CLIENTEDGE,
+                                   WC_LISTVIEWW,
+                                   L"",
+                                   WS_CHILD | WS_VISIBLE | LVS_SHOWSELALWAYS | LVS_REPORT,
+                                   nSplitPos + SPLIT_WIDTH/2,
+                                   0,
+                                   (rcClient.right - rcClient.left) - nSplitPos - SPLIT_WIDTH/2,
+                                   (rcClient.bottom - rcClient.top) - StatusHeight,
+                                   hwndMainWindow,
+                                   NULL,
+                                   hInstance,
+                                   NULL);
+
+    /* After the ListView is created, we can add extended list view styles */
+    (void)ListView_SetExtendedListViewStyle(hwndListView, LVS_EX_FULLROWSELECT);
+
+    /* Create the ImageList */
+    hSmall = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
+                              GetSystemMetrics(SM_CYSMICON),
+                              ILC_COLOR32 | ILC_MASK, // ILC_COLOR24
+                              1, 1);
+
+    /* Add event type icons to the ImageList */
     ImageList_AddIcon(hSmall, LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_INFORMATIONICON)));
     ImageList_AddIcon(hSmall, LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_WARNINGICON)));
     ImageList_AddIcon(hSmall, LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ERRORICON)));
 
-    /* Assign ImageList to List View */
+    /* Assign the ImageList to the List View */
     (void)ListView_SetImageList(hwndListView, hSmall, LVSIL_SMALL);
 
     /* Now set up the listview with its columns */
@@ -1275,20 +1355,50 @@ InitInstance(HINSTANCE hInstance,
     // At the moment we only support the user local computer.
     lpComputerName = NULL;
     BuildLogList();
-
-    QueryEventMessages(lpComputerName, LogNames[0]);
-
-    CheckMenuRadioItem(GetMenu(hwndMainWindow), ID_FIRST_LOG, ID_FIRST_LOG + dwNumLogs, ID_FIRST_LOG, MF_BYCOMMAND);
+    // QueryEventMessages(lpComputerName, LogNames[0]);
 
     return TRUE;
 }
 
+VOID ResizeWnd(INT cx, INT cy)
+{
+    HDWP hdwp;
+    RECT rs;
+    LONG StatusHeight;
+
+    /* Size status bar */
+    SendMessage(hwndStatus, WM_SIZE, 0, 0);
+    GetWindowRect(hwndStatus, &rs);
+    StatusHeight = rs.bottom - rs.top - 3 /* hack */;
+
+    nSplitPos = min(max(nSplitPos, SPLIT_WIDTH/2), cx - SPLIT_WIDTH/2);
+
+    hdwp = BeginDeferWindowPos(2);
+
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp,
+                              hwndTreeView,
+                              0,
+                              0, 0,
+                              nSplitPos - SPLIT_WIDTH/2, cy - StatusHeight,
+                              SWP_NOZORDER | SWP_NOACTIVATE);
+
+    if (hdwp)
+        hdwp = DeferWindowPos(hdwp,
+                              hwndListView,
+                              0,
+                              nSplitPos + SPLIT_WIDTH/2, 0,
+                              cx - nSplitPos - SPLIT_WIDTH/2, cy - StatusHeight,
+                              SWP_NOZORDER | SWP_NOACTIVATE);
+
+    if (hdwp)
+        EndDeferWindowPos(hdwp);
+}
 
 LRESULT CALLBACK
 WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     RECT rect;
-    NMHDR *hdr;
 
     switch (message)
     {
@@ -1305,14 +1415,16 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
 
         case WM_NOTIFY:
-            switch (((LPNMHDR)lParam)->code)
+        {
+            LPNMHDR hdr = (LPNMHDR)lParam;
+
+            if (hdr->hwndFrom == hwndListView)
             {
-                case NM_DBLCLK:
-                    hdr = (NMHDR FAR*)lParam;
-                    if (hdr->hwndFrom == hwndListView)
+                switch (hdr->code)
+                {
+                    case NM_DBLCLK:
                     {
                         LPNMITEMACTIVATE lpnmitem = (LPNMITEMACTIVATE)lParam;
-
                         if (lpnmitem->iItem != -1)
                         {
                             DialogBoxW(hInst,
@@ -1320,26 +1432,33 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                                        hWnd,
                                        EventDetails);
                         }
+                        break;
                     }
-                    break;
+                }
+            }
+            else if (hdr->hwndFrom == hwndTreeView)
+            {
+                switch (hdr->code)
+                {
+                    case TVN_SELCHANGED:
+                    {
+                        DWORD dwIndex = ((LPNMTREEVIEW)lParam)->itemNew.lParam;
+
+                        if ((dwIndex <= dwNumLogs) && LogNames[dwIndex])
+                        {
+                            QueryEventMessages(lpComputerName, LogNames[dwIndex]);
+                        }
+
+                        break;
+                    }
+                }
             }
             break;
+        }
 
         case WM_COMMAND:
         {
             /* Parse the menu selections */
-            if ((LOWORD(wParam) >= ID_FIRST_LOG) && (LOWORD(wParam) <= ID_FIRST_LOG + dwNumLogs))
-            {
-                if (LogNames[LOWORD(wParam) - ID_FIRST_LOG])
-                {
-                    if (QueryEventMessages(lpComputerName, LogNames[LOWORD(wParam) - ID_FIRST_LOG]))
-                    {
-                        CheckMenuRadioItem(GetMenu(hWnd), ID_FIRST_LOG, ID_FIRST_LOG + dwNumLogs, LOWORD(wParam), MF_BYCOMMAND);
-                    }
-                }
-            }
-            else
-
             switch (LOWORD(wParam))
             {
                 case IDM_SAVE_EVENTLOG:
@@ -1358,8 +1477,16 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDM_ABOUT:
-                    DialogBoxW(hInst, MAKEINTRESOURCEW(IDD_ABOUTBOX), hWnd, About);
+                {
+                    HICON hIcon;
+                    WCHAR szCopyright[MAX_LOADSTRING];
+
+                    hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_EVENTVWR));
+                    LoadStringW(hInst, IDS_COPYRIGHT, szCopyright, ARRAYSIZE(szCopyright));
+                    ShellAboutW(hWnd, szTitle, szCopyright, hIcon);
+                    DeleteObject(hIcon);
                     break;
+                }
 
                 case IDM_HELP:
                     MessageBoxW(hwndMainWindow,
@@ -1378,52 +1505,77 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         }
 
-        case WM_SIZE:
+        case WM_SETCURSOR:
+            if (LOWORD(lParam) == HTCLIENT)
+            {
+                POINT pt;
+                GetCursorPos(&pt);
+                ScreenToClient(hWnd, &pt);
+                if (pt.x >= nSplitPos - SPLIT_WIDTH/2 && pt.x < nSplitPos + SPLIT_WIDTH/2 + 1)
+                {
+                    SetCursor(LoadCursorW(NULL, IDC_SIZEWE));
+                    return TRUE;
+                }
+            }
+            goto Default;
+
+        case WM_LBUTTONDOWN:
         {
+            INT x = GET_X_LPARAM(lParam);
             GetClientRect(hWnd, &rect);
-
-            MoveWindow(hwndListView,
-                       0,
-                       0,
-                       rect.right,
-                       rect.bottom - 20,
-                       1);
-
-            SendMessageW(hwndStatus, message, wParam, lParam);
+            if (x >= nSplitPos - SPLIT_WIDTH/2 && x < nSplitPos + SPLIT_WIDTH/2 + 1)
+            {
+                SetCapture(hWnd);
+            }
             break;
         }
 
-        default:
+        case WM_LBUTTONUP:
+        case WM_RBUTTONDOWN:
+            if (GetCapture() == hWnd)
+            {
+                GetClientRect(hWnd, &rect);
+                nSplitPos = GET_X_LPARAM(lParam);
+                ResizeWnd(rect.right, rect.bottom);
+                ReleaseCapture();
+            }
+            break;
+
+        // case WM_CAPTURECHANGED:
+            // if (GetCapture() == hWnd && last_split>=0)
+                // draw_splitbar(hWnd, last_split);
+            // break;
+
+        case WM_MOUSEMOVE:
+            if (GetCapture() == hWnd)
+            {
+                INT x = GET_X_LPARAM(lParam);
+
+                GetClientRect(hWnd, &rect);
+
+                x = min(max(x, SPLIT_WIDTH/2), rect.right - rect.left - SPLIT_WIDTH/2);
+                if (nSplitPos != x)
+                {
+                    nSplitPos = x;
+                    ResizeWnd(rect.right - rect.left, rect.bottom - rect.top);
+                }
+            }
+            break;
+
+        case WM_SIZE:
+        {
+            // GetClientRect(hWnd, &rect);
+            ResizeWnd(LOWORD(lParam), HIWORD(lParam));
+            break;
+        }
+
+        default: Default:
             return DefWindowProcW(hWnd, message, wParam, lParam);
     }
 
     return 0;
 }
 
-
-/* Message handler for About box */
-INT_PTR CALLBACK
-About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    UNREFERENCED_PARAMETER(lParam);
-    switch (message)
-    {
-        case WM_INITDIALOG:
-        {
-            return (INT_PTR)TRUE;
-        }
-
-        case WM_COMMAND:
-            if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-            {
-                EndDialog(hDlg, LOWORD(wParam));
-                return (INT_PTR)TRUE;
-            }
-            break;
-    }
-
-    return (INT_PTR)FALSE;
-}
 
 VOID
 DisplayEvent(HWND hDlg)

@@ -29,17 +29,7 @@ IDA_EVENTVWR ACCELERATORS
 BEGIN
     "?", IDM_ABOUT, ASCII, ALT
     "/", IDM_ABOUT, ASCII, ALT
-END
-
-IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
-CAPTION "关于"
-FONT 9, "MS Shell Dlg", 0, 0, 0x0
-BEGIN
-    ICON IDI_EVENTVWR, IDC_MYICON, 14, 9, 21, 20
-    LTEXT "ReactOS 事件查看器 版本 1.0", IDC_STATIC, 49, 10, 119, 8, SS_NOPREFIX
-    LTEXT "版权所有 (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)", IDC_STATIC, 49, 20, 119, 22
-    DEFPUSHBUTTON "确定", IDOK, 90, 48, 42, 16, WS_GROUP
+    VK_F5, IDM_REFRESH, VIRTKEY
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
@@ -91,9 +81,12 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_COPYRIGHT "版权所有 (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "事件查看器"
     IDS_APP_TITLE_EX "%s - %s Log on \\\\"
     IDS_STATUS_MSG "%s has %lu event(s)"
+    IDS_EVENTLOG_SYSTEM "System Logs"
+    IDS_EVENTLOG_USER "User Logs"
     IDS_EVENTSTRINGIDNOTFOUND "来源 ( %s ) 中的事件 ID ( %lu ) 的描述无法找到。本地计算机可能没有显示来自远程计算机消息所必需的注册表信息或消息 DLL 文件。\n\nThe following information is part of the event:\n\n"
     IDS_EVENTLOG_ERROR_TYPE "错误"
     IDS_EVENTLOG_WARNING_TYPE "警告"
