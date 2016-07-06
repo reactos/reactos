@@ -366,8 +366,8 @@ DisablePasteOptions(HMENU hMenu)
     mii.fMask = MIIM_STATE;
     mii.fState = MFS_DISABLED;
 
-    TRACE("result %d\n", SetMenuItemInfoW(hMenu, FCIDM_SHVIEW_INSERT, FALSE, &mii));
-    TRACE("result %d\n", SetMenuItemInfoW(hMenu, FCIDM_SHVIEW_INSERTLINK, FALSE, &mii));
+    SetMenuItemInfoW(hMenu, FCIDM_SHVIEW_INSERT, FALSE, &mii);
+    SetMenuItemInfoW(hMenu, FCIDM_SHVIEW_INSERTLINK, FALSE, &mii);
 }
 
 BOOL
