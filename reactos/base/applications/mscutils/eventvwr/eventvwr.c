@@ -896,7 +896,7 @@ MyRegisterClass(HINSTANCE hInstance)
     wcex.hInstance = hInstance;
     wcex.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_EVENTVWR));
     wcex.hCursor = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
-    wcex.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1); // COLOR_WINDOW + 1
+    wcex.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1); // COLOR_WINDOW + 1
     wcex.lpszMenuName = MAKEINTRESOURCEW(IDM_EVENTVWR);
     wcex.lpszClassName = szWindowClass;
     wcex.hIconSm = (HICON)LoadImageW(hInstance,
@@ -1171,6 +1171,7 @@ InitInstance(HINSTANCE hInstance,
 
     hInst = hInstance; // Store instance handle in our global variable
 
+    /* Create the main window */
     hwndMainWindow = CreateWindowW(szWindowClass,
                                    szTitle,
                                    WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
@@ -1184,10 +1185,11 @@ InitInstance(HINSTANCE hInstance,
         return FALSE;
     }
 
+    /* Create the status bar */
     hwndStatus = CreateWindowExW(0,                                  // no extended styles
                                  STATUSCLASSNAMEW,                   // status bar
                                  L"",                                // no text
-                                 WS_CHILD | WS_BORDER | WS_VISIBLE,  // styles
+                                 WS_CHILD | WS_VISIBLE | CCS_BOTTOM | SBARS_SIZEGRIP, // styles
                                  0, 0, 0, 0,                         // x, y, cx, cy
                                  hwndMainWindow,                     // parent window
                                  (HMENU)100,                         // window ID
@@ -1198,8 +1200,9 @@ InitInstance(HINSTANCE hInstance,
 
     GetClientRect(hwndMainWindow, &rcClient);
     GetWindowRect(hwndStatus, &rs);
-    StatusHeight = rs.bottom - rs.top - 3 /* hack */;
+    StatusHeight = rs.bottom - rs.top;
 
+    /* Create the TreeView */
     hwndTreeView = CreateWindowExW(WS_EX_CLIENTEDGE,
                                    WC_TREEVIEWW,
                                    L"",
@@ -1237,9 +1240,7 @@ InitInstance(HINSTANCE hInstance,
     LoadStringW(hInstance, IDS_EVENTLOG_USER, szTemp, ARRAYSIZE(szTemp));
     htiUserLogs   = TreeViewAddItem(hwndTreeView, NULL, szTemp, 0, 1, (LPARAM)-1);
 
-    // Create our listview child window.  Note that I use WS_EX_CLIENTEDGE
-    // and WS_BORDER to create the normal "sunken" look.  Also note that
-    // LVS_EX_ styles cannot be set in CreateWindowEx().
+    /* Create the ListView */
     hwndListView = CreateWindowExW(WS_EX_CLIENTEDGE,
                                    WC_LISTVIEWW,
                                    L"",
@@ -1253,7 +1254,7 @@ InitInstance(HINSTANCE hInstance,
                                    hInstance,
                                    NULL);
 
-    /* After the ListView is created, we can add extended list view styles */
+    /* Add the extended ListView styles */
     (void)ListView_SetExtendedListViewStyle(hwndListView, LVS_EX_FULLROWSELECT);
 
     /* Create the ImageList */
@@ -1372,7 +1373,7 @@ VOID ResizeWnd(INT cx, INT cy)
     /* Size status bar */
     SendMessage(hwndStatus, WM_SIZE, 0, 0);
     GetWindowRect(hwndStatus, &rs);
-    StatusHeight = rs.bottom - rs.top - 3 /* hack */;
+    StatusHeight = rs.bottom - rs.top;
 
     nSplitPos = min(max(nSplitPos, SPLIT_WIDTH/2), cx - SPLIT_WIDTH/2);
 
