@@ -114,6 +114,8 @@ static void test_handles(void)
     DWORD id, flags, le;
     ATOM atom;
     char buffer[20];
+    DWORD size;
+    BOOL ret;
 
     /* win stations */
 
@@ -215,6 +217,12 @@ static void test_handles(void)
     w2 = CreateWindowStationA( "", 0, WINSTA_ALL_ACCESS, NULL );
     ok( w2 != 0, "create station failed err %u\n", GetLastError() );
 
+    memset( buffer, 0, sizeof(buffer) );
+    ret = GetUserObjectInformationA( w2, UOI_NAME, buffer, sizeof(buffer), &size );
+    ok( ret, "GetUserObjectInformationA failed with error %u\n", GetLastError() );
+    ok( !memcmp(buffer, "Service-0x0-", 12), "unexpected window station name '%s'\n", buffer );
+    ok( buffer[strlen(buffer) - 1] == '$', "unexpected window station name '%s'\n", buffer );
+
     SetLastError( 0xdeadbeef );
     w3 = OpenWindowStationA( "", TRUE, WINSTA_ALL_ACCESS );
     todo_wine
@@ -276,7 +284,7 @@ static void test_handles(void)
 
     SetLastError( 0xdeadbeef );
     d2 = OpenDesktopA( "", 0, TRUE, DESKTOP_ALL_ACCESS );
-    ok( !d2, "open mepty desktop succeeded\n" );
+    ok( !d2, "open empty desktop succeeded\n" );
     ok( GetLastError() == ERROR_INVALID_HANDLE, "wrong error %u\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
