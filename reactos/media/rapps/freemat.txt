@@ -1,0 +1,14 @@
+; UTF-8
+
+[Section]
+Name = FreeMat
+Version = 4.2
+License = GPLv2
+Description = A free environment for rapid engineering and scientific prototyping and data processing.
+Size = 49.8 MB
+Category = 11
+URLSite = http://freemat.sf.net
+URLDownload = http://downloads.sourceforge.net/project/freemat/FreeMat4/FreeMat-4.2-setup-32bit-xpcompat.exe
+
+[Section.0407]
+Description = Eine freie Umgebung für schnelle technische und wissenschaftliche Prototyping und Datenverarbeitung.
