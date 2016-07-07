@@ -42,14 +42,16 @@
 
 
 /* Menu IDs */
-#define IDM_EVENTVWR       32771
-#define IDM_CLEAR_EVENTS   32772
-#define IDM_SAVE_EVENTLOG  32773
-#define IDM_EXIT           32774
-#define IDM_REFRESH        32775
-#define IDM_OPTIONS        32776
-#define IDM_HELP           32777
-#define IDM_ABOUT          32778
+#define IDM_EVENTVWR            32770
+#define IDM_OPEN_EVENTLOG       32771
+#define IDM_SAVE_EVENTLOG       32772
+#define IDM_CLEAR_EVENTS        32773
+#define IDM_EVENTLOG_SETTINGS   32774
+#define IDM_EXIT                32775
+#define IDM_REFRESH             32776
+#define IDM_OPTIONS             32777
+#define IDM_HELP                32778
+#define IDM_ABOUT               32779
 
 
 /* String IDs */

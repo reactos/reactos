@@ -6,9 +6,11 @@ IDM_EVENTVWR MENU
 BEGIN
     POPUP "מציג האירועים (מקומי)"
     BEGIN
+        MENUITEM "&Open...", IDM_OPEN_EVENTLOG
         MENUITEM "Save &Event Log as...", IDM_SAVE_EVENTLOG, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "C&lear all Events", IDM_CLEAR_EVENTS, GRAYED
+        MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "יציאה", IDM_EXIT
     END
