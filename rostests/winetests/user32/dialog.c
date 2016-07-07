@@ -539,6 +539,26 @@ static LRESULT CALLBACK testDlgWinProc (HWND hwnd, UINT uiMsg, WPARAM wParam,
     return DefDlgProcA (hwnd, uiMsg, wParam, lParam);
 }
 
+static LRESULT CALLBACK test_control_procA(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    switch(msg)
+    {
+        case WM_CREATE:
+        {
+            static const short sample[] = { 10,1,2,3,4,5 };
+            CREATESTRUCTA *cs = (CREATESTRUCTA *)lparam;
+            short *data = cs->lpCreateParams;
+            ok(!memcmp(data, sample, sizeof(sample)), "data mismatch: %d,%d,%d,%d,%d\n", data[0], data[1], data[2], data[3], data[4]);
+        }
+        return 0;
+
+    default:
+        break;
+    }
+
+    return DefWindowProcA(hwnd, msg, wparam, lparam);
+}
+
 static BOOL RegisterWindowClasses (void)
 {
     WNDCLASSA cls;
@@ -558,7 +578,10 @@ static BOOL RegisterWindowClasses (void)
 
     cls.lpfnWndProc = main_window_procA;
     cls.lpszClassName = "IsDialogMessageWindowClass";
+    if (!RegisterClassA (&cls)) return FALSE;
 
+    cls.lpfnWndProc = test_control_procA;
+    cls.lpszClassName = "TESTCONTROL";
     if (!RegisterClassA (&cls)) return FALSE;
 
     GetClassInfoA(0, "#32770", &cls);
@@ -1222,6 +1245,11 @@ static void test_DialogBoxParamA(void)
        "got %d, expected ERROR_RESOURCE_NAME_NOT_FOUND\n",GetLastError());
 
     SetLastError(0xdeadbeef);
+    ret = DialogBoxParamA(GetModuleHandleA(NULL), "TEST_DIALOG_INVALID_CLASS", 0, DestroyDlgWinProc, 0);
+    ok(ret == -1, "DialogBoxParamA returned %ld, expected -1\n", ret);
+    ok(GetLastError() == 0, "got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
     ret = DefDlgProcA(0, WM_ERASEBKGND, 0, 0);
     ok(ret == 0, "DefDlgProcA returned %ld, expected 0\n", ret);
     ok(GetLastError() == ERROR_INVALID_WINDOW_HANDLE ||
@@ -1472,6 +1500,19 @@ static void test_timer_message(void)
     DialogBoxA(g_hinst, "RADIO_TEST_DIALOG", NULL, timer_message_dlg_proc);
 }
 
+static INT_PTR CALLBACK custom_test_dialog_proc(HWND hdlg, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    if (msg == WM_INITDIALOG)
+        EndDialog(hdlg, 0);
+
+    return FALSE;
+}
+
+static void test_dialog_custom_data(void)
+{
+    DialogBoxA(g_hinst, "CUSTOM_TEST_DIALOG", NULL, custom_test_dialog_proc);
+}
+
 struct create_window_params
 {
     BOOL owner;
@@ -1516,6 +1557,7 @@ static HWND wait_for_window(const char *caption)
         }
     }
 
+    Sleep(50);
     return hwnd;
 }
 
@@ -1551,7 +1593,7 @@ static void test_MessageBox(void)
 
         hwnd = wait_for_window(params.caption);
         ex_style = GetWindowLongA(hwnd, GWL_EXSTYLE);
-        ok((ex_style & test[i].ex_style) == test[i].ex_style, "%d: got window ex_style %#x\n", i, ex_style);
+        ok((ex_style & WS_EX_TOPMOST) == test[i].ex_style, "%d: got window ex_style %#x\n", i, ex_style);
 
         PostMessageA(hwnd, WM_COMMAND, IDCANCEL, 0);
 
@@ -1572,7 +1614,7 @@ static void test_MessageBox(void)
 
         hwnd = wait_for_window(params.caption);
         ex_style = GetWindowLongA(hwnd, GWL_EXSTYLE);
-        ok((ex_style & test[i].ex_style) == test[i].ex_style, "%d: got window ex_style %#x\n", i, ex_style);
+        ok((ex_style & WS_EX_TOPMOST) == test[i].ex_style, "%d: got window ex_style %#x\n", i, ex_style);
 
         PostMessageA(hwnd, WM_COMMAND, IDCANCEL, 0);
 
@@ -1588,6 +1630,7 @@ START_TEST(dialog)
     if (!RegisterWindowClasses()) assert(0);
 
     test_MessageBox();
+    test_dialog_custom_data();
     test_GetNextDlgItem();
     test_IsDialogMessage();
     test_WM_NEXTDLGCTL();
