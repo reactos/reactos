@@ -1,4 +1,4 @@
-﻿[Section]
+[Section]
 Name = Adobe AIR
 Version = 21.0
 License = Adobe Software Licensing Agreement

@@ -1,14 +1,16 @@
 [Section]
 Name = Far Manager
-Version = 3.0 build 4700 
+Version = 3.0 build 4700
 License = rBSD
 Description = An open source, console based file manager with two panels side by side.
 Size = 10.2 MiB
 Category = 12
 URLSite = http://www.farmanager.com/
 URLDownload = http://www.farmanager.com/files/Far30b4700.x86.20160611.msi
-SHA1 =
+SHA1 = 9ccfb6bbfaa770b51f6dd5f6e8fa5237a06c91c0
 CDPath = none
 
 [Section.0407]
 Description = Quelloffener, konsolenbasierter Dateimanager mit zwei nebeneinander liegenden Panels.
+Size = 10,2 MiB
+
