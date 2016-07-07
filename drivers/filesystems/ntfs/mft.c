@@ -178,43 +178,37 @@ InternalSetResidentAttributeLength(PNTFS_ATTR_CONTEXT AttrContext,
                                    ULONG AttrOffset,
                                    ULONG DataSize)
 {
-    ULONG EndMarker = AttributeEnd;
-    ULONG FinalMarker = FILE_RECORD_END;
+    PNTFS_ATTR_RECORD Destination = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttrOffset);
     ULONG NextAttributeOffset;
-    ULONG Offset;
-    USHORT Padding;
 
     DPRINT("InternalSetResidentAttributeLength( %p, %p, %lu, %lu )\n", AttrContext, FileRecord, AttrOffset, DataSize);
 
     // update ValueLength Field
-    AttrContext->Record.Resident.ValueLength = DataSize;
-    Offset = AttrOffset + FIELD_OFFSET(NTFS_ATTR_RECORD, Resident.ValueLength);
-    RtlCopyMemory((PCHAR)FileRecord + Offset, &DataSize, sizeof(ULONG));
+    AttrContext->Record.Resident.ValueLength =
+    Destination->Resident.ValueLength = DataSize;
 
     // calculate the record length and end marker offset
-    AttrContext->Record.Length = DataSize + AttrContext->Record.Resident.ValueOffset;
+    AttrContext->Record.Length =
+    Destination->Length = DataSize + AttrContext->Record.Resident.ValueOffset;
     NextAttributeOffset = AttrOffset + AttrContext->Record.Length;
 
     // Ensure NextAttributeOffset is aligned to an 8-byte boundary
     if (NextAttributeOffset % 8 != 0)
     {
-        Padding = 8 - (NextAttributeOffset % 8);
+        USHORT Padding = 8 - (NextAttributeOffset % 8);
         NextAttributeOffset += Padding;
         AttrContext->Record.Length += Padding;
+        Destination->Length += Padding;
     }
+    
+    // advance Destination to the final "attribute" and write the end type
+    (ULONG_PTR)Destination += Destination->Length;
+    Destination->Type = AttributeEnd;
 
-    // update the record length
-    Offset = AttrOffset + FIELD_OFFSET(NTFS_ATTR_RECORD, Length);
-    RtlCopyMemory((PCHAR)FileRecord + Offset, &AttrContext->Record.Length, sizeof(ULONG));
+    // write the final marker (which shares the same offset and type as the Length field)
+    Destination->Length = FILE_RECORD_END;
 
-    // write the end marker 
-    RtlCopyMemory((PCHAR)FileRecord + NextAttributeOffset, &EndMarker, sizeof(ULONG));
-
-    // write the final marker
-    Offset = NextAttributeOffset + sizeof(ULONG);
-    RtlCopyMemory((PCHAR)FileRecord + Offset, &FinalMarker, sizeof(ULONG));
-
-    FileRecord->BytesInUse = Offset + sizeof(ULONG);
+    FileRecord->BytesInUse = NextAttributeOffset + (sizeof(ULONG) * 2);
 }
 
 NTSTATUS
