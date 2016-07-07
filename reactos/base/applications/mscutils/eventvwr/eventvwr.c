@@ -87,6 +87,7 @@ WCHAR szStatusBarTemplate[MAX_LOADSTRING];  /* The status bar text */
 
 HTREEITEM htiSystemLogs = NULL, htiUserLogs = NULL;
 
+BOOL NewestEventsFirst = TRUE;
 PEVENTLOGRECORD *g_RecordPtrs = NULL;
 DWORD g_TotalRecords = 0;
 OPENFILENAMEW sfn;
@@ -595,7 +596,9 @@ QueryEventMessages(LPWSTR lpMachineName,
     SYSTEMTIME time;
     LVITEMW lviEventItem;
 
-    dwFlags = EVENTLOG_FORWARDS_READ | EVENTLOG_SEQUENTIAL_READ;
+    dwFlags = EVENTLOG_SEQUENTIAL_READ |
+             (NewestEventsFirst ? EVENTLOG_FORWARDS_READ
+                                : EVENTLOG_BACKWARDS_READ);
 
     /* Open the event log */
     hEventLog = OpenEventLogW(lpMachineName, lpLogName);
@@ -1468,6 +1471,24 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 case IDM_CLEAR_EVENTS:
                     if (ClearEvents())
                     {
+                        Refresh();
+                    }
+                    break;
+
+                case IDM_LIST_NEWEST:
+                    if (!NewestEventsFirst)
+                    {
+                        NewestEventsFirst = TRUE;
+                        CheckMenuRadioItem(hMainMenu, IDM_LIST_NEWEST, IDM_LIST_OLDEST, IDM_LIST_NEWEST, MF_BYCOMMAND);
+                        Refresh();
+                    }
+                    break;
+
+                case IDM_LIST_OLDEST:
+                    if (NewestEventsFirst)
+                    {
+                        NewestEventsFirst = FALSE;
+                        CheckMenuRadioItem(hMainMenu, IDM_LIST_NEWEST, IDM_LIST_OLDEST, IDM_LIST_OLDEST, MF_BYCOMMAND);
                         Refresh();
                     }
                     break;

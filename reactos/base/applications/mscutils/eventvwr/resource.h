@@ -48,10 +48,12 @@
 #define IDM_CLEAR_EVENTS        32773
 #define IDM_EVENTLOG_SETTINGS   32774
 #define IDM_EXIT                32775
-#define IDM_REFRESH             32776
-#define IDM_OPTIONS             32777
-#define IDM_HELP                32778
-#define IDM_ABOUT               32779
+#define IDM_LIST_NEWEST         32776
+#define IDM_LIST_OLDEST         32777
+#define IDM_REFRESH             32778
+#define IDM_OPTIONS             32779
+#define IDM_HELP                32780
+#define IDM_ABOUT               32781
 
 
 /* String IDs */

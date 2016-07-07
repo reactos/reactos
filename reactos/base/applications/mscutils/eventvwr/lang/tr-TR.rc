@@ -22,7 +22,10 @@ BEGIN
     END
     POPUP "&Görünüm"
     BEGIN
-        MENUITEM "&Yenile", IDM_REFRESH
+        MENUITEM "&Newest first", IDM_LIST_NEWEST
+        MENUITEM "&Oldest first", IDM_LIST_OLDEST
+        MENUITEM SEPARATOR
+        MENUITEM "&Yenile\tF5", IDM_REFRESH
     END
     MENUITEM "&Seçenekler", IDM_OPTIONS
     POPUP "&Yardım"

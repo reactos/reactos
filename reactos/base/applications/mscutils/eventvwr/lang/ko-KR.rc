@@ -6,8 +6,8 @@ IDM_EVENTVWR MENU
 BEGIN
     POPUP "로그(&L)"
     BEGIN
-        MENUITEM "&Open...", IDM_OPEN_EVENTLOG
-        MENUITEM "Save &Event Log as...", IDM_SAVE_EVENTLOG, GRAYED
+        MENUITEM "Open...(&O)", IDM_OPEN_EVENTLOG
+        MENUITEM "Save Event Log as...(&E)", IDM_SAVE_EVENTLOG, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "C&lear all Events", IDM_CLEAR_EVENTS, GRAYED
         MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS, GRAYED
@@ -16,7 +16,10 @@ BEGIN
     END
     POPUP "보기(&V)"
     BEGIN
-        MENUITEM "새로 고침(&R)", IDM_REFRESH
+        MENUITEM "Newest first (&N)", IDM_LIST_NEWEST
+        MENUITEM "Oldest first (&O)", IDM_LIST_OLDEST
+        MENUITEM SEPARATOR
+        MENUITEM "새로 고침(&R)\tF5", IDM_REFRESH
     END
     MENUITEM "옵션(&O)", IDM_OPTIONS
     POPUP "도움말(&H)"

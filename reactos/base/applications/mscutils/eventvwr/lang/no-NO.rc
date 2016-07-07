@@ -14,7 +14,10 @@ BEGIN
     END
     POPUP "&Vis"
     BEGIN
-        MENUITEM "&Oppdater", IDM_REFRESH
+        MENUITEM "&Newest first", IDM_LIST_NEWEST
+        MENUITEM "&Oldest first", IDM_LIST_OLDEST
+        MENUITEM SEPARATOR
+        MENUITEM "&Oppdater\tF5", IDM_REFRESH
     END
     MENUITEM "&Handling", IDM_OPTIONS
     POPUP "&Hjelp"

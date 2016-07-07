@@ -16,7 +16,10 @@ BEGIN
     END
     POPUP "查看(&V)"
     BEGIN
-        MENUITEM "刷新(&R)", IDM_REFRESH
+        MENUITEM "Newest first (&N)", IDM_LIST_NEWEST
+        MENUITEM "Oldest first (&O)", IDM_LIST_OLDEST
+        MENUITEM SEPARATOR
+        MENUITEM "刷新(&R)\tF5", IDM_REFRESH
     END
     MENUITEM "选项(&O)", IDM_OPTIONS
     POPUP "帮助(&H)"

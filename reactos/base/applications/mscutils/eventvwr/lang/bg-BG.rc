@@ -14,7 +14,10 @@ BEGIN
     END
     POPUP "Из&глед"
     BEGIN
-        MENUITEM "О&пресняване", IDM_REFRESH
+        MENUITEM "&Newest first", IDM_LIST_NEWEST
+        MENUITEM "&Oldest first", IDM_LIST_OLDEST
+        MENUITEM SEPARATOR
+        MENUITEM "О&пресняване\tF5", IDM_REFRESH
     END
     MENUITEM "На&стройки", IDM_OPTIONS
     POPUP "Помо&щ"

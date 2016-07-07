@@ -14,7 +14,10 @@ BEGIN
     END
     POPUP "&Zobrazit"
     BEGIN
-        MENUITEM "&Obnovit", IDM_REFRESH
+        MENUITEM "&Newest first", IDM_LIST_NEWEST
+        MENUITEM "&Oldest first", IDM_LIST_OLDEST
+        MENUITEM SEPARATOR
+        MENUITEM "&Obnovit\tF5", IDM_REFRESH
     END
     MENUITEM "&Možnosti", IDM_OPTIONS
     POPUP "&Nápověda"

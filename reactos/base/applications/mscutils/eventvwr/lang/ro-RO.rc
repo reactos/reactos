@@ -19,7 +19,10 @@ BEGIN
     END
     POPUP "&Afișare"
     BEGIN
-        MENUITEM "Împ&rospătare", IDM_REFRESH
+        MENUITEM "&Newest first", IDM_LIST_NEWEST
+        MENUITEM "&Oldest first", IDM_LIST_OLDEST
+        MENUITEM SEPARATOR
+        MENUITEM "Împ&rospătare\tF5", IDM_REFRESH
     END
     MENUITEM "&Opțiuni", IDM_OPTIONS
     POPUP "Aj&utor"

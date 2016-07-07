@@ -18,7 +18,10 @@ BEGIN
     END
     POPUP "&Podgląd"
     BEGIN
-        MENUITEM "&Odśwież", IDM_REFRESH
+        MENUITEM "&Newest first", IDM_LIST_NEWEST
+        MENUITEM "&Oldest first", IDM_LIST_OLDEST
+        MENUITEM SEPARATOR
+        MENUITEM "&Odśwież\tF5", IDM_REFRESH
     END
     MENUITEM "Op&cje", IDM_OPTIONS
     POPUP "Po&moc"
