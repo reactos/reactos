@@ -125,8 +125,7 @@ keypress (HWND handle, WPARAM keycode, BYTE scancode, BOOL extended)
       t.s.f, got.f)
 
 #define listbox_todo_field_ok(t, s, f, got) \
-  if (t.s##_todo.f) todo_wine { listbox_field_ok(t, s, f, got); } \
-  else listbox_field_ok(t, s, f, got)
+  todo_wine_if (t.s##_todo.f) { listbox_field_ok(t, s, f, got); }
 
 #define listbox_ok(t, s, got) \
   listbox_todo_field_ok(t, s, selected, got); \
