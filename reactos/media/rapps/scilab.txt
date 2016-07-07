@@ -1,0 +1,57 @@
+; UTF-8
+; Turkish translation might not be accurate.
+
+[Section]
+Name = Scilab
+Version = 5.5.2
+License = CeCILL
+Description = A software for numerical computation in engineering and scientific applications. 
+Size = 128 MB
+Category = 9
+URLSite = http://www.scilab.org/
+URLDownload = http://www.scilab.org/download/5.5.2/scilab-5.5.2.exe
+SHA1 = 9F6EEABE4A90A4A3C84889EED1A82C866B02A1DE
+CDPath = none
+
+[Section.0407]
+Description = Eine Software für die numerische Berechnung in technischen und wissenschaftlichen Anwendungen.
+
+[Section.0a]
+Description = Un software para computación numérica en ingeniería y aplicaciones científicas.
+
+[Section.040c]
+Description = Un logiciel de calcul numérique dans l'ingénierie et les applications scientifiques.
+Size = 128 Mo
+URLSite = http://www.scilab.org/fr
+
+[Section.0410]
+Description = Un software per il calcolo numerico in applicazioni tecniche e scientifiche.
+
+[Section.0413]
+Description = Een software voor numerieke berekeningen in engineering en wetenschappelijke toepassingen.
+
+[Section.0415]
+Description = Oprogramowanie do obliczeń numerycznych w inżynierii i zastosowań naukowych.
+
+[Section.0418]
+Description = Un software de calcul numeric în inginerie și aplicații științifice.
+Size = 128 Mo
+
+[Section.0419]
+Description = Программное обеспечение для численных вычислений в инженерных и научных приложений.
+
+[Section.041b]
+Description = Softvér pre numerické výpočty v strojárstve a vedeckých aplikáciách.
+
+[Section.041f]
+Description = mühendislik ve bilimsel uygulamalarda sayısal hesaplama için bir yazılım.
+Size = 128 MB
+
+[Section.0422]
+Description = Програмне забезпечення для чисельних обчислень в інженерних і наукових додатків.
+
+[Section.0804]
+Description = 一种用于工程和科学应用数值计算软件。
+
+[Section.0813]
+Description = Een software voor numerieke berekeningen in engineering en wetenschappelijke toepassingen.
