@@ -502,14 +502,15 @@ int mbedtls_x509_crl_parse( mbedtls_x509_crl *chain, const unsigned char *buf, s
     {
         mbedtls_pem_init( &pem );
 
-    /* Avoid calling mbedtls_pem_read_buffer() on non-null-terminated string */
-    if( buflen == 0 || buf[buflen - 1] != '\0' )
-        ret = MBEDTLS_ERR_PEM_NO_HEADER_FOOTER_PRESENT;
-    else
-        ret = mbedtls_pem_read_buffer( &pem,
-                               "-----BEGIN X509 CRL-----",
-                               "-----END X509 CRL-----",
-                               buf, NULL, 0, &use_len );
+        // Avoid calling mbedtls_pem_read_buffer() on non-null-terminated
+        // string
+        if( buflen == 0 || buf[buflen - 1] != '\0' )
+            ret = MBEDTLS_ERR_PEM_NO_HEADER_FOOTER_PRESENT;
+        else
+            ret = mbedtls_pem_read_buffer( &pem,
+                                           "-----BEGIN X509 CRL-----",
+                                           "-----END X509 CRL-----",
+                                            buf, NULL, 0, &use_len );
 
         if( ret == 0 )
         {

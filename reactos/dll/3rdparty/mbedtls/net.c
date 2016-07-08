@@ -27,6 +27,18 @@
 
 #if defined(MBEDTLS_NET_C)
 
+#if !defined(unix) && !defined(__unix__) && !defined(__unix) && \
+    !defined(__APPLE__) && !defined(_WIN32)
+#error "This module only works on Unix and Windows, see MBEDTLS_NET_C in config.h"
+#endif
+
+#if defined(MBEDTLS_PLATFORM_C)
+#include "mbedtls/platform.h"
+#else
+#include <stdlib.h>
+#define mbedtls_time_t    time_t
+#endif
+
 #include "mbedtls/net.h"
 
 #include <string.h>
@@ -81,7 +93,6 @@ static int wsa_init_done = 0;
 #define MSVC_INT_CAST
 #endif
 
-#include <stdlib.h>
 #include <stdio.h>
 
 #include <time.h>

@@ -83,6 +83,8 @@ mbedtls_x509write_csr;
 /**
  * \brief          Load a Certificate Signing Request (CSR) in DER format
  *
+ * \note           CSR attributes (if any) are currently silently ignored.
+ *
  * \param csr      CSR context to fill
  * \param buf      buffer holding the CRL data
  * \param buflen   size of the buffer
@@ -94,6 +96,8 @@ int mbedtls_x509_csr_parse_der( mbedtls_x509_csr *csr,
 
 /**
  * \brief          Load a Certificate Signing Request (CSR), DER or PEM format
+ *
+ * \note           See notes for \c mbedtls_x509_csr_parse_der()
  *
  * \param csr      CSR context to fill
  * \param buf      buffer holding the CRL data
@@ -107,6 +111,8 @@ int mbedtls_x509_csr_parse( mbedtls_x509_csr *csr, const unsigned char *buf, siz
 #if defined(MBEDTLS_FS_IO)
 /**
  * \brief          Load a Certificate Signing Request (CSR)
+ *
+ * \note           See notes for \c mbedtls_x509_csr_parse()
  *
  * \param csr      CSR context to fill
  * \param path     filename to read the CSR from

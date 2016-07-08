@@ -93,7 +93,7 @@ static int pkcs12_pbe_derive_key_iv( mbedtls_asn1_buf *pbe_params, mbedtls_md_ty
                                      unsigned char *key, size_t keylen,
                                      unsigned char *iv,  size_t ivlen )
 {
-    int ret, iterations;
+    int ret, iterations = 0;
     mbedtls_asn1_buf salt;
     size_t i;
     unsigned char unipwd[PKCS12_MAX_PWDLEN * 2 + 2];

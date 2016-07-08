@@ -31,15 +31,17 @@
 
 #if defined(MBEDTLS_SSL_COOKIE_C)
 
-#include "mbedtls/ssl_cookie.h"
-#include "mbedtls/ssl_internal.h"
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
 #define mbedtls_calloc    calloc
-#define mbedtls_free       free
+#define mbedtls_free      free
+#define mbedtls_time      time
+#define mbedtls_time_t    time_t
 #endif
+
+#include "mbedtls/ssl_cookie.h"
+#include "mbedtls/ssl_internal.h"
 
 #include <string.h>
 
@@ -172,7 +174,7 @@ int mbedtls_ssl_cookie_write( void *p_ctx,
         return( MBEDTLS_ERR_SSL_BUFFER_TOO_SMALL );
 
 #if defined(MBEDTLS_HAVE_TIME)
-    t = (unsigned long) time( NULL );
+    t = (unsigned long) mbedtls_time( NULL );
 #else
     t = ctx->serial++;
 #endif
@@ -242,7 +244,7 @@ int mbedtls_ssl_cookie_check( void *p_ctx,
         return( -1 );
 
 #if defined(MBEDTLS_HAVE_TIME)
-    cur_time = (unsigned long) time( NULL );
+    cur_time = (unsigned long) mbedtls_time( NULL );
 #else
     cur_time = ctx->serial;
 #endif
