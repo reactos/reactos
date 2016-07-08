@@ -162,8 +162,14 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
     RtlInitializeBitMap(&Bitmap, (PULONG)BitmapData, DeviceExt->NtfsInfo.ClusterCount);
     FreeClusters = RtlNumberOfClearBits(&Bitmap);
 
-    if( FreeClusters < DesiredClusters )
-        Status = STATUS_DISK_FULL;
+    if (FreeClusters < DesiredClusters)
+    {
+        ReleaseAttributeContext(DataContext);
+
+        ExFreePoolWithTag(BitmapData, TAG_NTFS);
+        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        return STATUS_DISK_FULL;
+    }
     
     // TODO: Observe MFT reservation zone
 
