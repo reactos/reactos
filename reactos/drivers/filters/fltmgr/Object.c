@@ -36,11 +36,11 @@ FltObjectReference(_Inout_ PFLT_OBJECT Object)
     return STATUS_SUCCESS;
 }
 
-BOOLEAN
+VOID
 NTAPI
 FltObjectDereference(_Inout_ PFLT_OBJECT Object)
 {
-    return FltpExReleaseRundownProtection(&Object->RundownRef);
+    FltpExReleaseRundownProtection(&Object->RundownRef);
 }
 
 
