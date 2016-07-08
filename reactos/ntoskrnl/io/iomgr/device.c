@@ -1349,9 +1349,18 @@ IoGetRelatedDeviceObject(IN PFILE_OBJECT FileObject)
             /* Check if the extension is really present */
             if (FileObject->FileObjectExtension)
             {
-                /* FIXME: Unhandled yet */
-                DPRINT1("FOEs not supported\n");
+                PFILE_OBJECT_EXTENSION FileObjectExtension;
                 ASSERT(FALSE);
+
+                /* The extension buffer comes directly after the file object */
+                FileObjectExtension = (PFILE_OBJECT_EXTENSION)(FileObject + 1);
+
+                /* Check if have a replacement top level device */
+                if (FileObjectExtension->TopDeviceObjectHint)
+                {
+                    /* Use this instead of returning the top level device */
+                    return FileObjectExtension->TopDeviceObjectHint;
+                }
             }
         }
 

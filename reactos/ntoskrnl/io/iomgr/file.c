@@ -586,13 +586,16 @@ IopParseDevice(IN PVOID ParseObject,
 
                 /* Reference it */
                 InterlockedIncrement((PLONG)&Vpb->ReferenceCount);
+
+                /* Check if we were given a specific top level device to use */
+                if (OpenPacket->InternalFlags & IOP_USE_TOP_LEVEL_DEVICE_HINT)
+                {
+                    DeviceObject = Vpb->DeviceObject;
+                }
             }
         }
         else
         {
-            /* The device object is the one we were given */
-            DeviceObject = OriginalDeviceObject;
-
             /* Check if it has a VPB */
             if ((OriginalDeviceObject->Vpb) && !(DirectOpen))
             {
@@ -606,13 +609,25 @@ IopParseDevice(IN PVOID ParseObject,
                 /* Get the VPB's device object */
                 DeviceObject = Vpb->DeviceObject;
             }
+            else
+            {
+                /* The device object is the one we were given */
+                DeviceObject = OriginalDeviceObject;
+            }
 
-            /* Check if there's an attached device */
-            if (DeviceObject->AttachedDevice)
+            /* If we weren't given a specific top level device, look for an attached device */
+            if (!(OpenPacket->InternalFlags & IOP_USE_TOP_LEVEL_DEVICE_HINT) &&
+                DeviceObject->AttachedDevice)
             {
                 /* Get the attached device */
                 DeviceObject = IoGetAttachedDevice(DeviceObject);
             }
+        }
+
+        if (OpenPacket->InternalFlags & IOP_USE_TOP_LEVEL_DEVICE_HINT)
+        {
+            // FIXME: Verify our device object is good to use
+            ASSERT(DirectOpen == FALSE);
         }
 
         /* If we traversed a mount point, reset the information */
@@ -706,6 +721,12 @@ IopParseDevice(IN PVOID ParseObject,
         /* Check if we really need to create an object */
         if (!UseDummyFile)
         {
+            ULONG ObjectSize = sizeof(FILE_OBJECT);
+
+            /* Tag on space for a file object extension */
+            if (OpenPacket->InternalFlags & IOP_CREATE_FILE_OBJECT_EXTENSION)
+                ObjectSize += sizeof(FILE_OBJECT_EXTENSION);
+
             /* Create the actual file object */
             InitializeObjectAttributes(&ObjectAttributes,
                                        NULL,
@@ -717,7 +738,7 @@ IopParseDevice(IN PVOID ParseObject,
                                     &ObjectAttributes,
                                     AccessMode,
                                     NULL,
-                                    sizeof(FILE_OBJECT),
+                                    ObjectSize,
                                     0,
                                     0,
                                     (PVOID*)&FileObject);
@@ -786,6 +807,23 @@ IopParseDevice(IN PVOID ParseObject,
             {
                 /* Set the correct flag for the FSD to read */
                 FileObject->Flags |= FO_RANDOM_ACCESS;
+            }
+
+            /* Check if we were asked to setup a file object extension */
+            if (OpenPacket->InternalFlags & IOP_CREATE_FILE_OBJECT_EXTENSION)
+            {
+                PFILE_OBJECT_EXTENSION FileObjectExtension;
+
+                /* Make sure the file object knows it has an extension */
+                FileObject->Flags |= FO_FILE_OBJECT_HAS_EXTENSION;
+
+                FileObjectExtension = (PFILE_OBJECT_EXTENSION)(FileObject + 1);
+
+                /* Add the top level device which we'll send the request to */
+                if (OpenPacket->InternalFlags & IOP_USE_TOP_LEVEL_DEVICE_HINT)
+                {
+                    FileObjectExtension->TopDeviceObjectHint = DeviceObject;
+                }
             }
         }
         else
@@ -2116,53 +2154,24 @@ IoChangeFileObjectFilterContext(IN PFILE_OBJECT FileObject,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/* FUNCTIONS *****************************************************************/
-
-/*
- * @unimplemented
- */
 NTSTATUS
 NTAPI
-IoCheckQuerySetFileInformation(IN FILE_INFORMATION_CLASS FileInformationClass,
-                               IN ULONG Length,
-                               IN BOOLEAN SetOperation)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-IoCheckQuotaBufferValidity(IN PFILE_QUOTA_INFORMATION QuotaBuffer,
-                           IN ULONG QuotaLength,
-                           OUT PULONG ErrorOffset)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @implemented
- */
-NTSTATUS
-NTAPI
-IoCreateFile(OUT PHANDLE FileHandle,
-             IN ACCESS_MASK DesiredAccess,
-             IN POBJECT_ATTRIBUTES ObjectAttributes,
-             OUT PIO_STATUS_BLOCK IoStatusBlock,
-             IN PLARGE_INTEGER AllocationSize OPTIONAL,
-             IN ULONG FileAttributes,
-             IN ULONG ShareAccess,
-             IN ULONG Disposition,
-             IN ULONG CreateOptions,
-             IN PVOID EaBuffer OPTIONAL,
-             IN ULONG EaLength,
-             IN CREATE_FILE_TYPE CreateFileType,
-             IN PVOID ExtraCreateParameters OPTIONAL,
-             IN ULONG Options)
+IopCreateFile(OUT PHANDLE FileHandle,
+              IN ACCESS_MASK DesiredAccess,
+              IN POBJECT_ATTRIBUTES ObjectAttributes,
+              OUT PIO_STATUS_BLOCK IoStatusBlock,
+              IN PLARGE_INTEGER AllocationSize OPTIONAL,
+              IN ULONG FileAttributes,
+              IN ULONG ShareAccess,
+              IN ULONG Disposition,
+              IN ULONG CreateOptions,
+              IN PVOID EaBuffer OPTIONAL,
+              IN ULONG EaLength,
+              IN CREATE_FILE_TYPE CreateFileType,
+              IN PVOID ExtraCreateParameters OPTIONAL,
+              IN ULONG Options,
+              IN ULONG Flags,
+              IN PDEVICE_OBJECT DeviceObject OPTIONAL)
 {
     KPROCESSOR_MODE AccessMode;
     HANDLE LocalHandle = 0;
@@ -2171,7 +2180,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
     PNAMED_PIPE_CREATE_PARAMETERS NamedPipeCreateParameters;
     POPEN_PACKET OpenPacket;
     ULONG EaErrorOffset;
-    PAGED_CODE();
+
     IOTRACE(IO_FILE_DEBUG, "FileName: %wZ\n", ObjectAttributes->ObjectName);
 
 
@@ -2451,6 +2460,8 @@ IoCreateFile(OUT PHANDLE FileHandle,
     OpenPacket->Disposition = Disposition;
     OpenPacket->CreateFileType = CreateFileType;
     OpenPacket->ExtraCreateParameters = ExtraCreateParameters;
+    OpenPacket->InternalFlags = Flags;
+    OpenPacket->TopDeviceObjectHint = DeviceObject;
 
     /* Update the operation count */
     IopUpdateOperationCount(IopOtherTransfer);
@@ -2567,6 +2578,74 @@ IoCreateFile(OUT PHANDLE FileHandle,
     return Status;
 }
 
+/* FUNCTIONS *****************************************************************/
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+IoCheckQuerySetFileInformation(IN FILE_INFORMATION_CLASS FileInformationClass,
+                               IN ULONG Length,
+                               IN BOOLEAN SetOperation)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+IoCheckQuotaBufferValidity(IN PFILE_QUOTA_INFORMATION QuotaBuffer,
+                           IN ULONG QuotaLength,
+                           OUT PULONG ErrorOffset)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+IoCreateFile(OUT PHANDLE FileHandle,
+             IN ACCESS_MASK DesiredAccess,
+             IN POBJECT_ATTRIBUTES ObjectAttributes,
+             OUT PIO_STATUS_BLOCK IoStatusBlock,
+             IN PLARGE_INTEGER AllocationSize OPTIONAL,
+             IN ULONG FileAttributes,
+             IN ULONG ShareAccess,
+             IN ULONG Disposition,
+             IN ULONG CreateOptions,
+             IN PVOID EaBuffer OPTIONAL,
+             IN ULONG EaLength,
+             IN CREATE_FILE_TYPE CreateFileType,
+             IN PVOID ExtraCreateParameters OPTIONAL,
+             IN ULONG Options)
+{
+    PAGED_CODE();
+
+    return IopCreateFile(FileHandle,
+                         DesiredAccess,
+                         ObjectAttributes,
+                         IoStatusBlock,
+                         AllocationSize,
+                         FileAttributes,
+                         ShareAccess,
+                         Disposition,
+                         CreateOptions,
+                         EaBuffer,
+                         EaLength,
+                         CreateFileType,
+                         ExtraCreateParameters,
+                         Options,
+                         0,
+                         NULL);
+}
+
 /*
  * @unimplemented
  */
@@ -2588,8 +2667,31 @@ IoCreateFileSpecifyDeviceObjectHint(OUT PHANDLE FileHandle,
                                     IN ULONG Options,
                                     IN PVOID DeviceObject)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG Flags = 0;
+
+    /* Check if we were passed a device to send the create request to*/
+    if (DeviceObject)
+    {
+        /* We'll tag this request into a file object extension */
+        Flags = (IOP_CREATE_FILE_OBJECT_EXTENSION | IOP_USE_TOP_LEVEL_DEVICE_HINT);
+    }
+
+    return IopCreateFile(FileHandle,
+                         DesiredAccess,
+                         ObjectAttributes,
+                         IoStatusBlock,
+                         AllocationSize,
+                         FileAttributes,
+                         ShareAccess,
+                         Disposition,
+                         CreateOptions,
+                         EaBuffer,
+                         EaLength,
+                         CreateFileType,
+                         ExtraCreateParameters,
+                         Options | IO_NO_PARAMETER_CHECKING,
+                         Flags,
+                         DeviceObject);
 }
 
 /*
