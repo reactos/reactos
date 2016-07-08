@@ -818,6 +818,7 @@ IopParseDevice(IN PVOID ParseObject,
                 FileObject->Flags |= FO_FILE_OBJECT_HAS_EXTENSION;
 
                 FileObjectExtension = (PFILE_OBJECT_EXTENSION)(FileObject + 1);
+                FileObject->FileObjectExtension = FileObjectExtension;
 
                 /* Add the top level device which we'll send the request to */
                 if (OpenPacket->InternalFlags & IOP_USE_TOP_LEVEL_DEVICE_HINT)
@@ -2668,6 +2669,8 @@ IoCreateFileSpecifyDeviceObjectHint(OUT PHANDLE FileHandle,
                                     IN PVOID DeviceObject)
 {
     ULONG Flags = 0;
+
+    PAGED_CODE();
 
     /* Check if we were passed a device to send the create request to*/
     if (DeviceObject)

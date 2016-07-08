@@ -1352,8 +1352,8 @@ IoGetRelatedDeviceObject(IN PFILE_OBJECT FileObject)
                 PFILE_OBJECT_EXTENSION FileObjectExtension;
                 ASSERT(FALSE);
 
-                /* The extension buffer comes directly after the file object */
-                FileObjectExtension = (PFILE_OBJECT_EXTENSION)(FileObject + 1);
+                /* Cast the buffer to something we understand */
+                FileObjectExtension = FileObject->FileObjectExtension;
 
                 /* Check if have a replacement top level device */
                 if (FileObjectExtension->TopDeviceObjectHint)
