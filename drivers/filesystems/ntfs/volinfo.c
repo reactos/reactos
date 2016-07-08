@@ -162,38 +162,35 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
     RtlInitializeBitMap(&Bitmap, (PULONG)BitmapData, DeviceExt->NtfsInfo.ClusterCount);
     FreeClusters = RtlNumberOfClearBits(&Bitmap);
 
-    if (FreeClusters >= DesiredClusters)
+    if( FreeClusters < DesiredClusters )
+        Status = STATUS_DISK_FULL;
+    
+    // TODO: Observe MFT reservation zone
+
+    // Can we get one contiguous run?
+    ULONG AssignedRun = RtlFindClearBitsAndSet(&Bitmap, DesiredClusters, FirstDesiredCluster);
+    ULONG LengthWritten;
+
+    if (AssignedRun != 0xFFFFFFFF)
     {
-        // TODO: Observe MFT reservation zone
-
-        // Can we get one contiguous run?
-        ULONG AssignedRun = RtlFindClearBitsAndSet(&Bitmap, DesiredClusters, FirstDesiredCluster);
-        ULONG LengthWritten;
-
-        if (AssignedRun != 0xFFFFFFFF)
-        {
-            *FirstAssignedCluster = AssignedRun;
-            *AssignedClusters = DesiredClusters;
-        }
-        else
-        {
-            // we can't get one contiguous run
-            *AssignedClusters = RtlFindNextForwardRunClear(&Bitmap, FirstDesiredCluster, FirstAssignedCluster);
-        
-            if (*AssignedClusters == 0)
-            {
-                // we couldn't find any runs starting at DesiredFirstCluster
-                *AssignedClusters = RtlFindLongestRunClear(&Bitmap, FirstAssignedCluster);
-            }
-            
-        }
-                
-        Status = WriteAttribute(DeviceExt, DataContext, 0, BitmapData, (ULONG)BitmapDataSize, &LengthWritten);
+        *FirstAssignedCluster = AssignedRun;
+        *AssignedClusters = DesiredClusters;
     }
     else
-        Status = STATUS_DISK_FULL;
-
-
+    {
+        // we can't get one contiguous run
+        *AssignedClusters = RtlFindNextForwardRunClear(&Bitmap, FirstDesiredCluster, FirstAssignedCluster);
+        
+        if (*AssignedClusters == 0)
+        {
+            // we couldn't find any runs starting at DesiredFirstCluster
+            *AssignedClusters = RtlFindLongestRunClear(&Bitmap, FirstAssignedCluster);
+        }
+            
+    }
+                
+    Status = WriteAttribute(DeviceExt, DataContext, 0, BitmapData, (ULONG)BitmapDataSize, &LengthWritten);
+    
     ReleaseAttributeContext(DataContext);
 
     ExFreePoolWithTag(BitmapData, TAG_NTFS);
