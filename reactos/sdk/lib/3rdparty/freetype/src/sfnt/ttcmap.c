@@ -1245,7 +1245,7 @@
             mid = max + 1;
 
           /* search in segments before the current segment */
-          for ( i = max ; i > 0; i-- )
+          for ( i = max; i > 0; i-- )
           {
             FT_UInt   prev_end;
             FT_Byte*  old_p;
@@ -3104,7 +3104,7 @@
 
       if ( char_code < start )
         max = mid;
-      else if ( char_code > start+cnt )
+      else if ( char_code > start + cnt )
         min = mid + 1;
       else
         return TRUE;

@@ -778,7 +778,7 @@
 
       case ft_frame_short_be:
       case ft_frame_ushort_be:  /* read a 2-byte big-endian short */
-        value = FT_NEXT_USHORT( cursor) ;
+        value = FT_NEXT_USHORT( cursor );
         sign_shift = 16;
         break;
 

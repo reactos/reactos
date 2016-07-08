@@ -72,12 +72,17 @@
       FT_UInt*  interpreter_version = (FT_UInt*)value;
 
 
-#ifndef TT_CONFIG_OPTION_SUBPIXEL_HINTING
-      if ( *interpreter_version != TT_INTERPRETER_VERSION_35 )
-        error = FT_ERR( Unimplemented_Feature );
-      else
+      if ( *interpreter_version == TT_INTERPRETER_VERSION_35
+#ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
+           || *interpreter_version == TT_INTERPRETER_VERSION_38
 #endif
+#ifdef TT_SUPPORT_SUBPIXEL_HINTING_MINIMAL
+           || *interpreter_version == TT_INTERPRETER_VERSION_40
+#endif
+         )
         driver->interpreter_version = *interpreter_version;
+      else
+        error = FT_ERR( Unimplemented_Feature );
 
       return error;
     }

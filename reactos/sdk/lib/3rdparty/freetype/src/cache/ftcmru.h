@@ -185,7 +185,7 @@ FT_BEGIN_HEADER
         }                                                                   \
         _node = _node->next;                                                \
                                                                             \
-      } while ( _node != _first) ;                                          \
+      } while ( _node != _first);                                           \
     }                                                                       \
                                                                             \
     error = FTC_MruList_New( (list), (key), (FTC_MruNode*)(void*)&(node) ); \

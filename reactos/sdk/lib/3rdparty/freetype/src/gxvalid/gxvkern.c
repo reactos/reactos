@@ -693,7 +693,7 @@
 
     GXV_NAME_ENTER( "validating coverage" );
 
-    GXV_TRACE(( "interprete coverage 0x%04x by Apple style\n", coverage ));
+    GXV_TRACE(( "interpret coverage 0x%04x by Apple style\n", coverage ));
 
     if ( KERN_IS_NEW( gxvalid ) )
     {
@@ -728,7 +728,7 @@
       }
     }
 
-    GXV_TRACE(( "cannot interprete coverage, broken kern subtable\n" ));
+    GXV_TRACE(( "cannot interpret coverage, broken kern subtable\n" ));
 
   Exit:
     GXV_EXIT;

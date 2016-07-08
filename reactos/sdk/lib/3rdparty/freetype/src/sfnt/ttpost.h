@@ -2,7 +2,7 @@
 /*                                                                         */
 /*  ttpost.h                                                               */
 /*                                                                         */
-/*    Postcript name table processing for TrueType and OpenType fonts      */
+/*    PostScript name table processing for TrueType and OpenType fonts     */
 /*    (specification).                                                     */
 /*                                                                         */
 /*  Copyright 1996-2016 by                                                 */

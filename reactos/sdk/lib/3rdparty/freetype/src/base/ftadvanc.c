@@ -159,8 +159,8 @@
 
       /* scale from 26.6 to 16.16 */
       padvances[nn] = ( flags & FT_LOAD_VERTICAL_LAYOUT )
-                      ? face->glyph->advance.y << 10
-                      : face->glyph->advance.x << 10;
+                      ? face->glyph->advance.y * 1024
+                      : face->glyph->advance.x * 1024;
     }
 
     return error;

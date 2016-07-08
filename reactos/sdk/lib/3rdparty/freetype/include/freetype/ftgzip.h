@@ -117,11 +117,11 @@ FT_BEGIN_HEADER
   *
   * @inout:
   *   output_len ::
-  *     Before calling the function, this is the the total size of the
-  *     output buffer, which must be large enough to hold the entire
-  *     uncompressed data (so the size of the uncompressed data must be
-  *     known in advance).  After calling the function, `output_len' is the
-  *     size of the used data in `output'.
+  *     Before calling the function, this is the total size of the output
+  *     buffer, which must be large enough to hold the entire uncompressed
+  *     data (so the size of the uncompressed data must be known in
+  *     advance).  After calling the function, `output_len' is the size of
+  *     the used data in `output'.
   *
   * @return:
   *   FreeType error code.  0~means success.

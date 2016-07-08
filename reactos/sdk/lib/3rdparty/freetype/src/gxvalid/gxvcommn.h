@@ -338,7 +338,7 @@ FT_BEGIN_HEADER
                                                         \
                                                         \
               for ( b = p; b < (FT_Bytes)p + len; b++ ) \
-                FT_TRACE1(("\\x%02x", *b)) ;            \
+                FT_TRACE1(("\\x%02x", *b));             \
             }                                           \
           FT_END_STMNT
 
@@ -350,9 +350,9 @@ FT_BEGIN_HEADER
                                                         \
               for ( b = p; b < (FT_Bytes)p + len; b++ ) \
                 if ( 0x40 < *b && *b < 0x7E )           \
-                  FT_TRACE1(("%c", *b)) ;               \
+                  FT_TRACE1(("%c", *b));                \
                 else                                    \
-                  FT_TRACE1(("\\x%02x", *b)) ;          \
+                  FT_TRACE1(("\\x%02x", *b));           \
             }                                           \
           FT_END_STMNT
 

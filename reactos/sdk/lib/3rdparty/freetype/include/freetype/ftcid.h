@@ -97,8 +97,8 @@ FT_BEGIN_HEADER
    *
    * @description:
    *    Retrieve the type of the input face, CID keyed or not.  In
-   *    constrast to the @FT_IS_CID_KEYED macro this function returns
-   *    successfully also for CID-keyed fonts in an SNFT wrapper.
+   *    contrast to the @FT_IS_CID_KEYED macro this function returns
+   *    successfully also for CID-keyed fonts in an SFNT wrapper.
    *
    * @input:
    *    face ::

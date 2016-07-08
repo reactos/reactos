@@ -111,7 +111,7 @@
 
     GXV_LIMIT_CHECK( nTracks * ( 4 + 2 + 2 ) );
 
-    for ( i = 0; i < nTracks; i ++ )
+    for ( i = 0; i < nTracks; i++ )
     {
       p = table + i * ( 4 + 2 + 2 );
       track     = FT_NEXT_LONG( p );
@@ -125,7 +125,7 @@
 
       gxv_sfntName_validate( nameIndex, 256, 32767, gxvalid );
 
-      for ( j = i; j < nTracks; j ++ )
+      for ( j = i; j < nTracks; j++ )
       {
          p = table + j * ( 4 + 2 + 2 );
          t = FT_NEXT_LONG( p );

@@ -27,7 +27,7 @@
 FT_BEGIN_HEADER
 
 
-#ifdef TT_CONFIG_OPTION_SUBPIXEL_HINTING
+#ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
 
   /*************************************************************************/
   /*                                                                       */
@@ -100,7 +100,7 @@ FT_BEGIN_HEADER
 #define SPH_OPTION_SET_COMPATIBLE_WIDTHS   FALSE
 #define SPH_OPTION_SET_RASTERIZER_VERSION  38
 
-#endif /* TT_CONFIG_OPTION_SUBPIXEL_HINTING */
+#endif /* TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY */
 
 
 FT_END_HEADER

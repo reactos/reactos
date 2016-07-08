@@ -42,7 +42,7 @@
 
 
   static
-  const FT_Outline  null_outline = { 0, 0, 0, 0, 0, 0 };
+  const FT_Outline  null_outline = { 0, 0, NULL, NULL, NULL, 0 };
 
 
   /* documentation is in ftoutln.h */
