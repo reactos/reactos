@@ -583,28 +583,16 @@ GetLastClusterInDataRun(PDEVICE_EXTENSION Vcb, PNTFS_ATTR_RECORD Attribute, PULO
     {
         DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
        
-        if (DataRunOffset == -1)
-        {
-            // sparse run
-            if (*DataRun == 0)
-            {
-                // if it's the last run, return the last cluster of the last run
-                *LastCluster = LastLCN + DataRunLength - 1;
-                break;
-            }
-        }
-        else
+        if (DataRunOffset != -1)
         {
             // Normal data run.
             DataRunStartLCN = LastLCN + DataRunOffset;
             LastLCN = DataRunStartLCN;
+            *LastCluster = LastLCN + DataRunLength - 1;
         }             
 
-        if (*DataRun == 0)
-        {
-            *LastCluster = LastLCN + DataRunLength - 1;
+        if (*DataRun == 0)            
             break;
-        }
     }
 
     return STATUS_SUCCESS;
