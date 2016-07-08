@@ -370,6 +370,7 @@ FltpFastIoQueryOpen(
 
 DRIVER_DATA DriverData;
 
+
 typedef struct _FLTMGR_DEVICE_EXTENSION
 {
     /* The file system we're attached to */
@@ -425,11 +426,18 @@ FltpDispatch(_In_ PDEVICE_OBJECT DeviceObject,
              _Inout_ PIRP Irp)
 {
     PFLTMGR_DEVICE_EXTENSION DeviceExtension;
+    PIO_STACK_LOCATION StackPtr;
 
     DeviceExtension = DeviceObject->DeviceExtension;
     __debugbreak();
     FLT_ASSERT(DeviceExtension &&
                DeviceExtension->AttachedToDeviceObject);
+
+    StackPtr = IoGetCurrentIrpStackLocation(Irp);
+    if (StackPtr->MajorFunction == IRP_MJ_SHUTDOWN)
+    {
+        //FltpProcessShutdownRequest(DeviceObject);
+    }
 
     /* Just pass the IRP down the stack */
     IoSkipCurrentIrpStackLocation(Irp);
