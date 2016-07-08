@@ -360,7 +360,6 @@ TcpIpClose(
     {
         case TDI_TRANSPORT_ADDRESS_FILE:
 			DPRINT1("TCPIP Close Transport Address\n");
-		
             if (!IrpSp->FileObject->FsContext)
             {
                 DPRINT1("TCPIP: Got a close request without a file to close!\n");

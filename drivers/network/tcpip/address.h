@@ -9,18 +9,19 @@
 #define TCP_REQUEST_PENDING_SEND    1
 #define TCP_REQUEST_PENDING_RECEIVE 2
 
-#define TCP_STATE_CREATED    0x1 << 0
-#define TCP_STATE_BOUND      0x1 << 1
-#define TCP_STATE_LISTENING  0x1 << 2
-#define TCP_STATE_ACCEPTED   0x1 << 3
-#define TCP_STATE_RECEIVING  0x1 << 4
-#define TCP_STATE_ABORTED    0x1 << 5
-#define TCP_STATE_CONNECTING 0x1 << 6
-#define TCP_STATE_CONNECTED  0x1 << 7
-#define TCP_STATE_SENDING    0x1 << 8
+#define TCP_STATE_CREATED       0x1 << 0
+#define TCP_STATE_BOUND         0x1 << 1
+#define TCP_STATE_LISTENING     0x1 << 2
+#define TCP_STATE_ACCEPTED      0x1 << 3
+#define TCP_STATE_RECEIVING     0x1 << 4
+#define TCP_STATE_ABORTED       0x1 << 5
+#define TCP_STATE_CONNECTING    0x1 << 6
+#define TCP_STATE_CONNECTED     0x1 << 7
+#define TCP_STATE_SENDING       0x1 << 8
+#define TCP_STATE_DISASSOCIATED 0x1 << 9
 
 typedef struct _ADDRESS_FILE {
-	UCHAR Type;
+	UCHAR Type; // must be the first member
     LIST_ENTRY ListEntry;
     LONG RefCount;
 	LONG ContextCount;
@@ -46,7 +47,7 @@ typedef struct _ADDRESS_FILE {
 } ADDRESS_FILE, *PADDRESS_FILE;
 
 typedef struct _TCP_CONTEXT {
-	UCHAR Type;
+	UCHAR Type; // must be the first member
 	LIST_ENTRY ListEntry;
 	PADDRESS_FILE AddressFile;
 	IPPROTO Protocol;
