@@ -545,7 +545,7 @@
 @ stub pSetupDestroyRunOnceNodeList
 @ stub pSetupDiGetDeviceInfoContext
 @ stub pSetupDiSetDeviceInfoContext
-@ stub pSetupDoesUserHavePrivilege
+@ stdcall -stub pSetupDoesUserHavePrivilege(ptr)
 @ stdcall pSetupDuplicateString(wstr)
 @ stdcall pSetupEnablePrivilege(wstr long)
 @ stub pSetupFree
