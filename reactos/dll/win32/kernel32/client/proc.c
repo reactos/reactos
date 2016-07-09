@@ -2329,7 +2329,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     PCHAR pcScan;
     SIZE_T n;
     WCHAR SaveChar;
-    ULONG Length, CurdirLength, CmdQuoteLength;
+    ULONG Length, FileAttribs, CmdQuoteLength;
     ULONG CmdLineLength, ResultSize;
     PWCHAR QuotedCmdLine, AnsiCmdCommand, ExtBuffer, CurrentDirectory;
     PWCHAR NullBuffer, ScanString, NameBuffer, SearchPath, DebuggerCmdLine;
@@ -2734,9 +2734,9 @@ StartScan:
         if ((Length) && (Length < MAX_PATH))
         {
             /* Get file attributes */
-            CurdirLength = GetFileAttributesW(NameBuffer);
-            if ((CurdirLength != 0xFFFFFFFF) &&
-                (CurdirLength & FILE_ATTRIBUTE_DIRECTORY))
+            FileAttribs = GetFileAttributesW(NameBuffer);
+            if ((FileAttribs != INVALID_FILE_ATTRIBUTES) &&
+                (FileAttribs & FILE_ATTRIBUTE_DIRECTORY))
             {
                 /* This was a directory, fail later on */
                 Length = 0;
@@ -4066,9 +4066,9 @@ StartScan:
         }
 
         /* Make sure the directory is actually valid */
-        CurdirLength = GetFileAttributesW(CurrentDirectory);
-        if ((CurdirLength == 0xffffffff) ||
-           !(CurdirLength & FILE_ATTRIBUTE_DIRECTORY))
+        FileAttribs = GetFileAttributesW(CurrentDirectory);
+        if ((FileAttribs == INVALID_FILE_ATTRIBUTES) ||
+           !(FileAttribs & FILE_ATTRIBUTE_DIRECTORY))
         {
             /* It isn't, so bail out */
             DPRINT1("Current directory is invalid\n");
