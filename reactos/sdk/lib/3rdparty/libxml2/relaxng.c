@@ -2088,6 +2088,7 @@ xmlRelaxNGGetErrorString(xmlRelaxNGValidErr err, const xmlChar * arg1,
                          const xmlChar * arg2)
 {
     char msg[1000];
+    xmlChar *result;
 
     if (arg1 == NULL)
         arg1 = BAD_CAST "";
@@ -2215,7 +2216,7 @@ xmlRelaxNGGetErrorString(xmlRelaxNGValidErr err, const xmlChar * arg1,
         snprintf(msg, 1000, "Unknown error code %d\n", err);
     }
     msg[1000 - 1] = 0;
-    xmlChar *result = xmlCharStrdup(msg);
+    result = xmlCharStrdup(msg);
     return (xmlEscapeFormatString(&result));
 }
 

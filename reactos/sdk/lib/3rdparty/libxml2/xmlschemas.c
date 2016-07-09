@@ -3168,8 +3168,8 @@ xmlSchemaPSimpleTypeErr(xmlSchemaParserCtxtPtr ctxt,
 		"valid.");
 	}
 	if (expected) {
-	    msg = xmlStrcat(msg, BAD_CAST " Expected is '");
 	    xmlChar *expectedEscaped = xmlCharStrdup(expected);
+	    msg = xmlStrcat(msg, BAD_CAST " Expected is '");
 	    msg = xmlStrcat(msg, xmlEscapeFormatString(&expectedEscaped));
 	    FREE_AND_NULL(expectedEscaped);
 	    msg = xmlStrcat(msg, BAD_CAST "'.\n");
