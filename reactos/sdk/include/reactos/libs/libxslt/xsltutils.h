@@ -165,7 +165,7 @@ XSLTPUBFUN void XSLTCALL
 						 xsltStylesheetPtr style,
 						 xmlNodePtr node,
 						 const char *msg,
-						 ...);
+						 ...) LIBXSLT_ATTR_FORMAT(4,5);
 
 XSLTPUBFUN int XSLTCALL
 		xsltSetCtxtParseOptions		(xsltTransformContextPtr ctxt,
