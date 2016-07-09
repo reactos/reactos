@@ -462,8 +462,6 @@ Bus_InitializePdo (
     pdoData->Common.DevicePowerState = ntState;
     pdoData->Common.SystemPowerState = FdoData->Common.SystemPowerState;
 
-    Pdo->Flags |= DO_POWER_PAGABLE;
-
     ExAcquireFastMutex (&FdoData->Mutex);
     InsertTailList(&FdoData->ListOfPDOs, &pdoData->Link);
     FdoData->NumPDOs++;
