@@ -171,6 +171,14 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg,
                                  UINT uMsg,
                                  WPARAM wParam,
                                  LPARAM lParam);
+INT_PTR CALLBACK LogonPageProc(HWND hwndDlg,
+                               UINT uMsg,
+                               WPARAM wParam,
+                               LPARAM lParam);
+INT_PTR CALLBACK RecoveryPageProc(HWND hwndDlg,
+                                  UINT uMsg,
+                                  WPARAM wParam,
+                                  LPARAM lParam);
 
 /* export.c */
 VOID ExportFile(PMAIN_WND_INFO Info);
