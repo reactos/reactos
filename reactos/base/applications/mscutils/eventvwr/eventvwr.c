@@ -56,8 +56,16 @@ typedef struct _DETAILDATA
     HFONT hMonospaceFont;
 } DETAILDATA, *PDETAILDATA;
 
-static const WCHAR szWindowClass[]      = L"EVENTVWR"; /* the main window class name */
-static const WCHAR EVENTLOG_BASE_KEY[]  = L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\";
+static const LPCWSTR szWindowClass       = L"EVENTVWR"; /* The main window class name */
+static const WCHAR   EVENTLOG_BASE_KEY[] = L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\";
+
+/* The 3 system logs that should always exist in the user's system */
+static const LPCWSTR SystemLogs[] =
+{
+    L"Application",
+    L"Security",
+    L"System"
+};
 
 /* MessageFile message buffer size */
 #define EVENT_MESSAGE_EVENTTEXT_BUFFER  1024*10
@@ -73,7 +81,7 @@ static const WCHAR EVENTLOG_BASE_KEY[]  = L"SYSTEM\\CurrentControlSet\\Services\
 #define SPLIT_WIDTH 4
 
 /* Globals */
-HINSTANCE hInst;                            /* current instance */
+HINSTANCE hInst;                            /* Current instance */
 WCHAR szTitle[MAX_LOADSTRING];              /* The title bar text */
 WCHAR szTitleTemplate[MAX_LOADSTRING];      /* The logged-on title bar text */
 WCHAR szSaveFilter[MAX_LOADSTRING];         /* Filter Mask for the save Dialog */
@@ -85,7 +93,7 @@ HWND hwndStatus;                            /* Status bar */
 HMENU hMainMenu;                            /* The application's main menu */
 WCHAR szStatusBarTemplate[MAX_LOADSTRING];  /* The status bar text */
 
-HTREEITEM htiSystemLogs = NULL, htiUserLogs = NULL;
+HTREEITEM htiSystemLogs = NULL, htiAppLogs = NULL, htiUserLogs = NULL;
 
 BOOL NewestEventsFirst = TRUE;
 PEVENTLOGRECORD *g_RecordPtrs = NULL;
@@ -98,7 +106,7 @@ LPWSTR lpSourceLogName = NULL;
 DWORD dwNumLogs  = 0;
 LPWSTR* LogNames = NULL;
 
-/* Forward declarations of functions included in this code module: */
+/* Forward declarations of functions included in this code module */
 ATOM MyRegisterClass(HINSTANCE hInstance);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -276,7 +284,7 @@ GetEventMessageFileDLL(IN LPCWSTR lpLogName,
 BOOL
 GetEventCategory(IN LPCWSTR KeyName,
                  IN LPCWSTR SourceName,
-                 IN EVENTLOGRECORD *pevlr,
+                 IN PEVENTLOGRECORD pevlr,
                  OUT PWCHAR CategoryName) // TODO: Add IN DWORD BufLen
 {
     BOOL Success = FALSE;
@@ -334,7 +342,7 @@ Quit:
 BOOL
 GetEventMessage(IN LPCWSTR KeyName,
                 IN LPCWSTR SourceName,
-                IN EVENTLOGRECORD *pevlr,
+                IN PEVENTLOGRECORD pevlr,
                 OUT PWCHAR EventText) // TODO: Add IN DWORD BufLen
 {
     BOOL Success = FALSE;
@@ -390,7 +398,7 @@ GetEventMessage(IN LPCWSTR KeyName,
                                   LOAD_LIBRARY_AS_IMAGE_RESOURCE | LOAD_LIBRARY_AS_DATAFILE);
         if (hLibrary == NULL)
         {
-            /* The DLL could not be loaded try the next one (if any) */
+            /* The DLL could not be loaded, try the next one (if any) */
             szDll = wcstok(NULL, EVENT_DLL_SEPARATOR);
             continue;
         }
@@ -482,15 +490,15 @@ GetEventType(IN WORD dwEventType,
 }
 
 BOOL
-GetEventUserName(EVENTLOGRECORD *pelr,
+GetEventUserName(PEVENTLOGRECORD pelr,
                  OUT PWCHAR pszUser)
 {
     PSID lpSid;
     WCHAR szName[1024];
     WCHAR szDomain[1024];
     SID_NAME_USE peUse;
-    DWORD cbName = 1024;
-    DWORD cbDomain = 1024;
+    DWORD cchName = ARRAYSIZE(szName);
+    DWORD cchDomain = ARRAYSIZE(szDomain);
 
     /* Point to the SID */
     lpSid = (PSID)((LPBYTE)pelr + pelr->UserSidOffset);
@@ -501,9 +509,9 @@ GetEventUserName(EVENTLOGRECORD *pelr,
         if (LookupAccountSidW(NULL,
                               lpSid,
                               szName,
-                              &cbName,
+                              &cchName,
                               szDomain,
-                              &cbDomain,
+                              &cchDomain,
                               &peUse))
         {
             StringCchCopyW(pszUser, MAX_PATH, szName);
@@ -745,7 +753,7 @@ QueryEventMessages(LPWSTR lpMachineName,
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 7, lpszComputerName);
 
             dwRead -= pevlr->Length;
-            pevlr = (EVENTLOGRECORD *)((LPBYTE) pevlr + pevlr->Length);
+            pevlr = (PEVENTLOGRECORD)((LPBYTE) pevlr + pevlr->Length);
         }
 
         dwRecordsToRead--;
@@ -911,14 +919,18 @@ MyRegisterClass(HINSTANCE hInstance)
 
 
 BOOL
-GetDisplayNameFile(IN LPCWSTR lpLogName,
-                   OUT PWCHAR lpModuleName)
+GetDisplayNameFileAndID(IN LPCWSTR lpLogName,
+                        OUT PWCHAR lpModuleName,
+                        OUT PDWORD pdwMessageID)
 {
     HKEY hKey;
     WCHAR *KeyPath;
-    WCHAR szModuleName[MAX_PATH];
     DWORD cbData;
     SIZE_T cbKeyPath;
+    DWORD dwMessageID = 0;
+    WCHAR szModuleName[MAX_PATH];
+
+    *pdwMessageID = 0;
 
     cbKeyPath = (wcslen(EVENTLOG_BASE_KEY) + wcslen(lpLogName) + 1) * sizeof(WCHAR);
     KeyPath = HeapAlloc(GetProcessHeap(), 0, cbKeyPath);
@@ -930,7 +942,7 @@ GetDisplayNameFile(IN LPCWSTR lpLogName,
     StringCbCopyW(KeyPath, cbKeyPath, EVENTLOG_BASE_KEY);
     StringCbCatW(KeyPath, cbKeyPath, lpLogName);
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, KeyPath, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, KeyPath, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, KeyPath);
         return FALSE;
@@ -942,45 +954,15 @@ GetDisplayNameFile(IN LPCWSTR lpLogName,
         ExpandEnvironmentStringsW(szModuleName, lpModuleName, MAX_PATH);
     }
 
-    RegCloseKey(hKey);
-    HeapFree(GetProcessHeap(), 0, KeyPath);
-
-    return TRUE;
-}
-
-
-DWORD
-GetDisplayNameID(IN LPCWSTR lpLogName)
-{
-    HKEY hKey;
-    WCHAR *KeyPath;
-    DWORD dwMessageID = 0;
-    DWORD cbData;
-    SIZE_T cbKeyPath;
-
-    cbKeyPath = (wcslen(EVENTLOG_BASE_KEY) + wcslen(lpLogName) + 1) * sizeof(WCHAR);
-    KeyPath = HeapAlloc(GetProcessHeap(), 0, cbKeyPath);
-    if (!KeyPath)
-    {
-        return 0;
-    }
-
-    StringCbCopyW(KeyPath, cbKeyPath, EVENTLOG_BASE_KEY);
-    StringCbCatW(KeyPath, cbKeyPath, lpLogName);
-
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, KeyPath, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
-    {
-        HeapFree(GetProcessHeap(), 0, KeyPath);
-        return 0;
-    }
-
     cbData = sizeof(dwMessageID);
     RegQueryValueExW(hKey, L"DisplayNameID", NULL, NULL, (LPBYTE)&dwMessageID, &cbData);
 
     RegCloseKey(hKey);
     HeapFree(GetProcessHeap(), 0, KeyPath);
 
-    return dwMessageID;
+    *pdwMessageID = dwMessageID;
+
+    return TRUE;
 }
 
 
@@ -1018,7 +1000,7 @@ BuildLogList(VOID)
     DWORD dwMessageID;
     LPWSTR lpDisplayName;
     HMODULE hLibrary = NULL;
-    HTREEITEM hItem = NULL, hItemDefault = NULL;
+    HTREEITEM hRootNode = NULL, hItem = NULL, hItemDefault = NULL;
 
     /* Open the EventLog key */
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, EVENTLOG_BASE_KEY, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
@@ -1082,10 +1064,8 @@ BuildLogList(VOID)
         lpDisplayName = NULL;
 
         ZeroMemory(szModuleName, sizeof(szModuleName));
-        if (GetDisplayNameFile(LogNames[dwIndex], szModuleName))
+        if (GetDisplayNameFileAndID(LogNames[dwIndex], szModuleName, &dwMessageID))
         {
-            dwMessageID = GetDisplayNameID(LogNames[dwIndex]);
-
             hLibrary = LoadLibraryExW(szModuleName, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE | LOAD_LIBRARY_AS_DATAFILE);
             if (hLibrary != NULL)
             {
@@ -1102,12 +1082,27 @@ BuildLogList(VOID)
             }
         }
 
-        hItem = TreeViewAddItem(hwndTreeView, htiSystemLogs,
+        /*
+         * Select the correct tree root node, whether the log is a System
+         * or an Application log. Default to Application log otherwise.
+         */
+        hRootNode = htiAppLogs;
+        for (lpcName = 0; lpcName < ARRAYSIZE(SystemLogs); ++lpcName)
+        {
+            /* Check whether the log name is part of the system logs */
+            if (wcsicmp(LogNames[dwIndex], SystemLogs[lpcName]) == 0)
+            {
+                hRootNode = htiSystemLogs;
+                break;
+            }
+        }
+
+        hItem = TreeViewAddItem(hwndTreeView, hRootNode,
                                 (lpDisplayName ? lpDisplayName : LogNames[dwIndex]),
                                 2, 3, dwIndex);
 
         /* Try to get the default event log: "Application" */
-        if ((hItemDefault == NULL) && (wcsicmp(LogNames[dwIndex], L"Application") == 0))
+        if ((hItemDefault == NULL) && (wcsicmp(LogNames[dwIndex], SystemLogs[0]) == 0))
         {
             hItemDefault = hItem;
         }
@@ -1121,9 +1116,12 @@ BuildLogList(VOID)
     RegCloseKey(hKey);
 
     /* Select the default event log */
-    TreeView_Expand(hwndTreeView, htiSystemLogs, TVE_EXPAND);
-    TreeView_SelectItem(hwndTreeView, hItemDefault);
-    TreeView_EnsureVisible(hwndTreeView, hItemDefault);
+    if (hItemDefault)
+    {
+        // TreeView_Expand(hwndTreeView, hRootNode, TVE_EXPAND);
+        TreeView_SelectItem(hwndTreeView, hItemDefault);
+        TreeView_EnsureVisible(hwndTreeView, hItemDefault);
+    }
     SetFocus(hwndTreeView);
 
     return;
@@ -1236,9 +1234,12 @@ InitInstance(HINSTANCE hInstance,
     // "System Logs"
     LoadStringW(hInstance, IDS_EVENTLOG_SYSTEM, szTemp, ARRAYSIZE(szTemp));
     htiSystemLogs = TreeViewAddItem(hwndTreeView, NULL, szTemp, 0, 1, (LPARAM)-1);
+    // "Application Logs"
+    LoadStringW(hInstance, IDS_EVENTLOG_APP, szTemp, ARRAYSIZE(szTemp));
+    htiAppLogs = TreeViewAddItem(hwndTreeView, NULL, szTemp, 0, 1, (LPARAM)-1);
     // "User Logs"
     LoadStringW(hInstance, IDS_EVENTLOG_USER, szTemp, ARRAYSIZE(szTemp));
-    htiUserLogs   = TreeViewAddItem(hwndTreeView, NULL, szTemp, 0, 1, (LPARAM)-1);
+    htiUserLogs = TreeViewAddItem(hwndTreeView, NULL, szTemp, 0, 1, (LPARAM)-1);
 
     /* Create the ListView */
     hwndListView = CreateWindowExW(WS_EX_CLIENTEDGE,
@@ -1370,8 +1371,8 @@ VOID ResizeWnd(INT cx, INT cy)
     RECT rs;
     LONG StatusHeight;
 
-    /* Size status bar */
-    SendMessage(hwndStatus, WM_SIZE, 0, 0);
+    /* Resize the status bar -- now done in WM_SIZE */
+    // SendMessage(hwndStatus, WM_SIZE, 0, 0);
     GetWindowRect(hwndStatus, &rs);
     StatusHeight = rs.bottom - rs.top;
 
@@ -1444,6 +1445,16 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 switch (hdr->code)
                 {
+                    case TVN_BEGINLABELEDIT:
+                    {
+                        HTREEITEM hItem = ((LPNMTVDISPINFO)lParam)->item.hItem;
+
+                        /* Disable label editing for root nodes */
+                        return ((hItem == htiSystemLogs) ||
+                                (hItem == htiAppLogs)    ||
+                                (hItem == htiUserLogs));
+                    }
+
                     case TVN_SELCHANGED:
                     {
                         DWORD dwIndex = ((LPNMTREEVIEW)lParam)->itemNew.lParam;
@@ -1535,8 +1546,14 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 ScreenToClient(hWnd, &pt);
                 if (pt.x >= nSplitPos - SPLIT_WIDTH/2 && pt.x < nSplitPos + SPLIT_WIDTH/2 + 1)
                 {
-                    SetCursor(LoadCursorW(NULL, IDC_SIZEWE));
-                    return TRUE;
+                    RECT rs;
+                    GetClientRect(hWnd, &rect);
+                    GetWindowRect(hwndStatus, &rs);
+                    if (pt.y >= rect.top && pt.y < rect.bottom - (rs.bottom - rs.top))
+                    {
+                        SetCursor(LoadCursorW(NULL, IDC_SIZEWE));
+                        return TRUE;
+                    }
                 }
             }
             goto Default;
@@ -1544,7 +1561,6 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_LBUTTONDOWN:
         {
             INT x = GET_X_LPARAM(lParam);
-            GetClientRect(hWnd, &rect);
             if (x >= nSplitPos - SPLIT_WIDTH/2 && x < nSplitPos + SPLIT_WIDTH/2 + 1)
             {
                 SetCapture(hWnd);
@@ -1562,11 +1578,6 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 ReleaseCapture();
             }
             break;
-
-        // case WM_CAPTURECHANGED:
-            // if (GetCapture() == hWnd && last_split>=0)
-                // draw_splitbar(hWnd, last_split);
-            // break;
 
         case WM_MOUSEMOVE:
             if (GetCapture() == hWnd)
@@ -1586,7 +1597,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         case WM_SIZE:
         {
-            // GetClientRect(hWnd, &rect);
+            SendMessage(hwndStatus, WM_SIZE, 0, 0);
             ResizeWnd(LOWORD(lParam), HIWORD(lParam));
             break;
         }

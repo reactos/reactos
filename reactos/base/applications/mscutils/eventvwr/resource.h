@@ -62,7 +62,8 @@
 #define IDS_APP_TITLE_EX              104
 #define IDS_STATUS_MSG                106
 #define IDS_EVENTLOG_SYSTEM           107
-#define IDS_EVENTLOG_USER             108
+#define IDS_EVENTLOG_APP              108
+#define IDS_EVENTLOG_USER             109
 #define IDS_EVENTSTRINGIDNOTFOUND     209
 #define IDS_EVENTLOG_ERROR_TYPE       251
 #define IDS_EVENTLOG_WARNING_TYPE     252

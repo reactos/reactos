@@ -94,6 +94,7 @@ BEGIN
     IDS_APP_TITLE_EX "%s - %s autentificat pe \\\\"
     IDS_STATUS_MSG "%s are %lu eveniment(e)"
     IDS_EVENTLOG_SYSTEM "System Logs"
+    IDS_EVENTLOG_APP "Application Logs"
     IDS_EVENTLOG_USER "User Logs"
     IDS_EVENTSTRINGIDNOTFOUND "Nu se poate găsi descrierea evenimentului cu ID-ul ( %lu ) în sursa ( %s ). Este posibil ca în calculatorul local să nu existe informațiile de registru necesare sau fișierele dll de mesaje să afișeze mesaje de la un calculator din rețea.\n\nInformații aferente evenimentului:\n\n"
     IDS_EVENTLOG_ERROR_TYPE "Eroare"

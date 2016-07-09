@@ -89,6 +89,7 @@ BEGIN
     IDS_APP_TITLE_EX "%s - %s Log on \\\\"
     IDS_STATUS_MSG "%s has %lu event(s)"
     IDS_EVENTLOG_SYSTEM "System Logs"
+    IDS_EVENTLOG_APP "Application Logs"
     IDS_EVENTLOG_USER "User Logs"
     IDS_EVENTSTRINGIDNOTFOUND "Не е намерено описанието на събитие ( %lu ) в източник ( %s ). Възможно е местият компютър да няма нужните сведения в регистъра или DLL файловет, нужни за показване на съобщения от отдалечен компютър.\n\nThe following information is part of the event:\n\n"
     IDS_EVENTLOG_ERROR_TYPE "Error"
