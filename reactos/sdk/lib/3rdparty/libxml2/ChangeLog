@@ -593,7 +593,7 @@ Thu Apr 24 13:56:53 CEST 2008 Daniel Veillard <daniel@veillard.com>
 
 Tue Apr 22 10:27:17 CEST 2008 Daniel Veillard <daniel@veillard.com>
 
-	* dict.c: improvement on the hashing of the dictionnary, with visible
+	* dict.c: improvement on the hashing of the dictionary, with visible
 	  speed up as the number of strings in the hash increases, work from
 	  Stefan Behnel
 
@@ -5017,7 +5017,7 @@ Mon Jan 24 00:47:41 CET 2005 Daniel Veillard <daniel@veillard.com>
 Sun Jan 23 23:54:39 CET 2005 Daniel Veillard <daniel@veillard.com>
 
 	* hash.c include/libxml/hash.h: added xmlHashCreateDict where
-	  the hash reuses the dictionnary for internal strings
+	  the hash reuses the dictionary for internal strings
 	* entities.c valid.c parser.c: reuse that new API, leads to a decent
 	  speedup when parsing for example DocBook documents.
 
@@ -5371,7 +5371,7 @@ Fri Nov 26 11:44:36 CET 2004 Daniel Veillard <daniel@veillard.com>
 Wed Nov 24 13:41:52 CET 2004 Daniel Veillard <daniel@veillard.com>
 
 	* dict.c include/libxml/dict.h: added xmlDictExists() to the 
-	  dictionnary interface.
+	  dictionary interface.
 	* xmlreader.c: applying xmlTextReaderHasAttributes fix for namespaces
 	  from Rob Richards
 
@@ -5697,7 +5697,7 @@ Tue Oct 26 23:57:02 CEST 2004 Daniel Veillard <daniel@veillard.com>
 Tue Oct 26 18:09:59 CEST 2004 Daniel Veillard <daniel@veillard.com>
 
 	* debugXML.c include/libxml/xmlerror.h: added checking for names
-	  values and dictionnaries generates a tons of errors
+	  values and dictionaries generates a tons of errors
 	* SAX2.ccatalog.c parser.c relaxng.c tree.c xinclude.c xmlwriter.c
 	  include/libxml/tree.h: fixing the errors in the regression tests
 
@@ -7746,14 +7746,14 @@ Fri Jan 23 14:03:21 CET 2004 Daniel Veillard <daniel@veillard.com>
 	  make tests
 	* xpath.c include/libxml/xpath.h: added xmlXPathCtxtCompile() to
 	  compile an XPath expression within a context, currently the goal
-	  is to be able to reuse the XSLT stylesheet dictionnary, but this
+	  is to be able to reuse the XSLT stylesheet dictionary, but this
 	  opens the door to others possible optimizations.
 	* dict.c include/libxml/dict.h: added xmlDictCreateSub() which allows
-	  to build a new dictionnary based on another read-only dictionnary.
-	  This is needed for XSLT to keep the stylesheet dictionnary read-only
+	  to build a new dictionary based on another read-only dictionary.
+	  This is needed for XSLT to keep the stylesheet dictionary read-only
 	  while being able to reuse the strings for the transformation
-	  dictionnary.
-	* xinclude.c: fixed a dictionnar reference counting problem occuring
+	  dictionary.
+	* xinclude.c: fixed a dictionary reference counting problem occuring
 	  when document parsing failed.
 	* testSAX.c: adding option --repeat for timing 100times the parsing
 	* doc/* : rebuilt all the docs
@@ -7806,7 +7806,7 @@ Mon Jan 12 17:22:57 CET 2004 Daniel Veillard <daniel@veillard.com>
 Thu Jan  8 17:57:50 CET 2004 Daniel Veillard <daniel@veillard.com>
 
 	* xmlschemas.c: removed a memory leak remaining from the switch
-	  to a dictionnary for string allocations c.f. #130891
+	  to a dictionary for string allocations c.f. #130891
 
 Thu Jan  8 17:48:46 CET 2004 Daniel Veillard <daniel@veillard.com>
 
@@ -7928,7 +7928,7 @@ Fri Jan  2 22:58:29 HKT 2004 William Brack <wbrack@mmm.com.hk>
 Fri Jan  2 11:40:06 CET 2004 Daniel Veillard <daniel@veillard.com>
 
 	* SAX2.c: found and fixed a bug misallocating some non
-	  blank text node strings from the dictionnary.
+	  blank text node strings from the dictionary.
 	* xmlmemory.c: fixed a problem with the memory debug mutex
 	  release.
 
@@ -9386,7 +9386,7 @@ Sat Sep 27 01:25:39 CEST 2003 Daniel Veillard <daniel@veillard.com>
 
 	* parser.c: William's change allowed to spot a nasty bug in xmlDoRead
 	  if the result is not well formed that ctxt->myDoc is not NULL
-	  and uses the context dictionnary.
+	  and uses the context dictionary.
 
 Fri Sep 26 21:09:34 CEST 2003 Daniel Veillard <daniel@veillard.com>
 

@@ -109,6 +109,7 @@ typedef struct memnod {
 #define RESERVE_SIZE (((HDR_SIZE + (ALIGN_SIZE-1)) \
 		      / ALIGN_SIZE ) * ALIGN_SIZE)
 
+#define MAX_SIZE_T ((size_t)-1)
 
 #define CLIENT_2_HDR(a) ((MEMHDR *) (((char *) (a)) - RESERVE_SIZE))
 #define HDR_2_CLIENT(a)    ((void *) (((char *) (a)) + RESERVE_SIZE))
@@ -217,7 +218,7 @@ xmlMallocLoc(size_t size, const char * file, int line)
 
 /**
  * xmlMallocAtomicLoc:
- * @size:  an int specifying the size in byte to allocate.
+ * @size:  an unsigned int specifying the size in byte to allocate.
  * @file:  the file name or NULL
  * @line:  the line number
  *
@@ -240,11 +241,18 @@ xmlMallocAtomicLoc(size_t size, const char * file, int line)
 
     TEST_POINT
 
+    if (size > (MAX_SIZE_T - RESERVE_SIZE)) {
+	xmlGenericError(xmlGenericErrorContext,
+		"xmlMallocAtomicLoc : Unsigned overflow prevented\n");
+	xmlMemoryDump();
+	return(NULL);
+    }
+
     p = (MEMHDR *) malloc(RESERVE_SIZE+size);
 
     if (!p) {
 	xmlGenericError(xmlGenericErrorContext,
-		"xmlMallocLoc : Out of free space\n");
+		"xmlMallocAtomicLoc : Out of free space\n");
 	xmlMemoryDump();
 	return(NULL);
     }

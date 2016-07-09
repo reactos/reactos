@@ -229,7 +229,7 @@ XMLPUBFUN void * XMLCALL
  * Empties a node-set.
  */
 #define xmlXPathEmptyNodeSet(ns)					\
-    { while ((ns)->nodeNr > 0) (ns)->nodeTab[(ns)->nodeNr--] = NULL; }
+    { while ((ns)->nodeNr > 0) (ns)->nodeTab[--(ns)->nodeNr] = NULL; }
 
 /**
  * CHECK_ERROR:

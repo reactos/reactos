@@ -351,7 +351,7 @@ XMLPUBFUN void XMLCALL
 						 xmlParserErrors xmlerr,
 						 const char *msg,
 						 const xmlChar * str1,
-						 const xmlChar * str2);
+						 const xmlChar * str2) LIBXML_ATTR_FORMAT(3,0);
 #endif
 
 /**
