@@ -25,10 +25,10 @@
 
 
 NTSTATUS
-NTAPI
-FltObjectReference(_Inout_ PFLT_OBJECT Object)
+FLTAPI
+FltObjectReference(_Inout_ PVOID Object)
 {
-    if (!FltpExAcquireRundownProtection(&Object->RundownRef))
+    if (!FltpExAcquireRundownProtection(&((PFLT_OBJECT)Object)->RundownRef))
     {
         return STATUS_FLT_DELETING_OBJECT;
     }
@@ -37,10 +37,10 @@ FltObjectReference(_Inout_ PFLT_OBJECT Object)
 }
 
 VOID
-NTAPI
-FltObjectDereference(_Inout_ PFLT_OBJECT Object)
+FLTAPI
+FltObjectDereference(_Inout_ PVOID Object)
 {
-    FltpExReleaseRundownProtection(&Object->RundownRef);
+    FltpExReleaseRundownProtection(&((PFLT_OBJECT)Object)->RundownRef);
 }
 
 

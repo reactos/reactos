@@ -205,6 +205,7 @@ FltUnregisterFilter(_In_ PFLT_FILTER Filter)
         Instance = CONTAINING_RECORD(CurrentEntry, FLT_INSTANCE, FilterLink);
 
         // FIXME: implement
+        (void)Instance;
 
         /* Reset the pointer and move to next entry */
         Instance = NULL;
