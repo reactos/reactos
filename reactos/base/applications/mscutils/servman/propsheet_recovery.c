@@ -168,8 +168,9 @@ ShowFailureActions(
     HWND hwndDlg,
     PRECOVERYDATA pRecoveryData)
 {
-    WCHAR szBuffer[32];
-    INT i, index, id;
+    WCHAR szBuffer[256];
+    PWSTR startPtr, endPtr;
+    INT i, index, id, length;
 
     for (i = 0; i < min(pRecoveryData->pServiceFailure->cActions, 3); i++)
     {
@@ -225,6 +226,71 @@ ShowFailureActions(
                         WM_SETTEXT,
                         0,
                         (LPARAM)szBuffer);
+
+    if (pRecoveryData->pServiceFailure->lpCommand != NULL)
+    {
+        ZeroMemory(szBuffer, sizeof(szBuffer));
+
+        startPtr = pRecoveryData->pServiceFailure->lpCommand;
+        if (*startPtr == L'\"')
+            startPtr++;
+
+        endPtr = wcschr(startPtr, L'\"');
+        if (endPtr != NULL)
+        {
+            length = (INT)((LONG_PTR)endPtr - (LONG_PTR)startPtr);
+            CopyMemory(szBuffer, startPtr, length);
+        }
+        else
+        {
+            wcscpy(szBuffer, startPtr);
+        }
+
+        SendDlgItemMessageW(hwndDlg,
+                            IDC_PROGRAM,
+                            WM_SETTEXT,
+                            0,
+                            (LPARAM)szBuffer);
+
+        ZeroMemory(szBuffer, sizeof(szBuffer));
+
+        if (endPtr != NULL)
+        {
+            startPtr = endPtr + 1;
+            while (iswspace(*startPtr))
+                startPtr++;
+
+            endPtr = wcsstr(pRecoveryData->pServiceFailure->lpCommand, L"/fail=%1%");
+            if (endPtr != NULL)
+            {
+                while (iswspace(*(endPtr - 1)))
+                    endPtr--;
+
+                length = (INT)((LONG_PTR)endPtr - (LONG_PTR)startPtr);
+                CopyMemory(szBuffer, startPtr, length);
+            }
+            else
+            {
+                wcscpy(szBuffer, startPtr);
+            }
+
+            SendDlgItemMessageW(hwndDlg,
+                                IDC_PARAMETERS,
+                                WM_SETTEXT,
+                                0,
+                                (LPARAM)szBuffer);
+
+            endPtr = wcsstr(pRecoveryData->pServiceFailure->lpCommand, L"/fail=%1%");
+            if (endPtr != NULL)
+            {
+                SendDlgItemMessageW(hwndDlg,
+                                    IDC_ADD_FAILCOUNT,
+                                    BM_SETCHECK,
+                                    BST_CHECKED,
+                                    0);
+            }
+        }
+    }
 }
 
 
@@ -269,6 +335,35 @@ UpdateFailureActions(
          EnableWindow(GetDlgItem(hwndDlg, id), bRunProgram);
 
     EnableWindow(GetDlgItem(hwndDlg, IDC_RESTART_OPTIONS), bRebootComputer);
+}
+
+
+static
+VOID
+BrowseFile(
+    HWND hwndDlg)
+{
+    WCHAR szFile[MAX_PATH] = {'\0'};
+    PWCHAR pszFilter = L"Executable Files (*.exe;*.com;*.cmd;*.bat)\0*.exe;*.com;*.cmd;*.bat\0";
+    OPENFILENAME ofn;
+
+    ZeroMemory(&ofn, sizeof(ofn));
+
+    ofn.lStructSize = sizeof(ofn);
+    ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_ENABLESIZING;
+    ofn.hwndOwner = hwndDlg;
+    ofn.lpstrFilter = pszFilter;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = MAX_PATH;
+
+    if (GetOpenFileName(&ofn))
+    {
+        SendDlgItemMessageW(hwndDlg,
+                            IDC_PROGRAM,
+                            WM_SETTEXT,
+                            0,
+                            (LPARAM)szFile);
+    }
 }
 
 
@@ -330,6 +425,10 @@ RecoveryPageProc(
                         UpdateFailureActions(hwndDlg, pRecoveryData);
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
+                    break;
+
+                case IDC_BROWSE_PROGRAM:
+                    BrowseFile(hwndDlg);
                     break;
             }
             break;
