@@ -111,6 +111,7 @@ ReadVolumeLabel(
     ULONG SizeDirEntry;
     ULONG EntriesPerPage;
     OEM_STRING StringO;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     NameU.Buffer = Vpb->VolumeLabel;
     NameU.Length = 0;
@@ -134,7 +135,16 @@ ReadVolumeLabel(
     ExReleaseResourceLite(&DeviceExt->DirResource);
 
     FileOffset.QuadPart = 0;
-    if (CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, TRUE, &Context, (PVOID*)&Entry))
+    _SEH2_TRY
+    {
+        CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, TRUE, &Context, (PVOID*)&Entry);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+    if (NT_SUCCESS(Status))
     {
         while (TRUE)
         {
@@ -164,7 +174,16 @@ ReadVolumeLabel(
             {
                 CcUnpinData(Context);
                 FileOffset.u.LowPart += PAGE_SIZE;
-                if (!CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, TRUE, &Context, (PVOID*)&Entry))
+                _SEH2_TRY
+                {
+                    CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, TRUE, &Context, (PVOID*)&Entry);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+                if (!NT_SUCCESS(Status))
                 {
                     Context = NULL;
                     break;
