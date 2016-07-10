@@ -16,6 +16,8 @@
 
 /* GLOBALS *******************************************************************/
 
+//#define RAISE_FROM_CC_MAP_DATA
+
 extern NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 
 /* FUNCTIONS *****************************************************************/
@@ -62,7 +64,11 @@ CcMapData (
     {
         CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
             FileObject, FileOffset, Length, Flags);
+#ifdef RAISE_FROM_CC_MAP_DATA
+        ExRaiseStatus(STATUS_INVALID_PARAMETER);
+#else
         return FALSE;
+#endif
     }
 
     ROffset = ROUND_DOWN(ReadOffset, VACB_MAPPING_GRANULARITY);
@@ -75,7 +81,11 @@ CcMapData (
     {
         CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
             FileObject, FileOffset, Length, Flags);
+#ifdef RAISE_FROM_CC_MAP_DATA
+        ExRaiseStatus(Status);
+#else
         return FALSE;
+#endif
     }
 
     if (!Valid)
@@ -88,12 +98,17 @@ CcMapData (
             return FALSE;
         }
 
-        if (!NT_SUCCESS(CcReadVirtualAddress(Vacb)))
+        Status = CcReadVirtualAddress(Vacb);
+        if (!NT_SUCCESS(Status))
         {
             CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
             CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
                 FileObject, FileOffset, Length, Flags);
+#ifdef RAISE_FROM_CC_MAP_DATA
+            ExRaiseStatus(Status);
+#else
             return FALSE;
+#endif
         }
     }
 
@@ -104,7 +119,11 @@ CcMapData (
         CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
         CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
             FileObject, FileOffset, Length, Flags);
+#ifdef RAISE_FROM_CC_MAP_DATA
+        ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
+#else
         return FALSE;
+#endif
     }
 
     RtlZeroMemory(iBcb, sizeof(*iBcb));
