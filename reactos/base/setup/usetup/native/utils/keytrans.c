@@ -173,83 +173,84 @@ typedef struct _SCANTOASCII {
 	UCHAR Normal;
 	UCHAR Shift;
 	UCHAR NumLock;
+	UCHAR bCAPS;
 } SCANTOASCII, *PSCANTOASCII;
 
 SCANTOASCII ScanToAscii[] = {
-{	0x1e,	0,	'a',	'A',	0	},
-{	0x30,	0,	'b',	'B',	0	},
-{	0x2e,	0,	'c',	'C',	0	},
-{	0x20,	0,	'd',	'D',	0	},
-{	0x12,	0,	'e',	'E',	0	},
-{	0x21,	0,	'f',	'F',	0	},
-{	0x22,	0,	'g',	'G',	0	},
-{	0x23,	0,	'h',	'H',	0	},
-{	0x17,	0,	'i',	'I',	0	},
-{	0x24,	0,	'j',	'J',	0	},
-{	0x25,	0,	'k',	'K',	0	},
-{	0x26,	0,	'l',	'L',	0	},
-{	0x32,	0,	'm',	'M',	0	},
-{	0x31,	0,	'n',	'N',	0	},
-{	0x18,	0,	'o',	'O',	0	},
-{	0x19,	0,	'p',	'P',	0	},
-{	0x10,	0,	'q',	'Q',	0	},
-{	0x13,	0,	'r',	'R',	0	},
-{	0x1f,	0,	's',	'S',	0	},
-{	0x14,	0,	't',	'T',	0	},
-{	0x16,	0,	'u',	'U',	0	},
-{	0x2f,	0,	'v',	'V',	0	},
-{	0x11,	0,	'w',	'W',	0	},
-{	0x2d,	0,	'x',	'X',	0	},
-{	0x15,	0,	'y',	'Y',	0	},
-{	0x2c,	0,	'z',	'Z',	0	},
+{	0x1e,	0,	'a',	'A',	0, TRUE  },
+{	0x30,	0,	'b',	'B',	0, TRUE  },
+{	0x2e,	0,	'c',	'C',	0, TRUE  },
+{	0x20,	0,	'd',	'D',	0, TRUE  },
+{	0x12,	0,	'e',	'E',	0, TRUE  },
+{	0x21,	0,	'f',	'F',	0, TRUE  },
+{	0x22,	0,	'g',	'G',	0, TRUE  },
+{	0x23,	0,	'h',	'H',	0, TRUE  },
+{	0x17,	0,	'i',	'I',	0, TRUE  },
+{	0x24,	0,	'j',	'J',	0, TRUE  },
+{	0x25,	0,	'k',	'K',	0, TRUE  },
+{	0x26,	0,	'l',	'L',	0, TRUE  },
+{	0x32,	0,	'm',	'M',	0, TRUE  },
+{	0x31,	0,	'n',	'N',	0, TRUE  },
+{	0x18,	0,	'o',	'O',	0, TRUE  },
+{	0x19,	0,	'p',	'P',	0, TRUE  },
+{	0x10,	0,	'q',	'Q',	0, TRUE  },
+{	0x13,	0,	'r',	'R',	0, TRUE  },
+{	0x1f,	0,	's',	'S',	0, TRUE  },
+{	0x14,	0,	't',	'T',	0, TRUE  },
+{	0x16,	0,	'u',	'U',	0, TRUE  },
+{	0x2f,	0,	'v',	'V',	0, TRUE  },
+{	0x11,	0,	'w',	'W',	0, TRUE  },
+{	0x2d,	0,	'x',	'X',	0, TRUE  },
+{	0x15,	0,	'y',	'Y',	0, TRUE  },
+{	0x2c,	0,	'z',	'Z',	0, TRUE  },
 
-{	0x02,	0,	'1',	'!',	0	},
-{	0x03,	0,	'2',	'@',	0	},
-{	0x04,	0,	'3',	'#',	0	},
-{	0x05,	0,	'4',	'$',	0	},
-{	0x06,	0,	'5',	'%',	0	},
-{	0x07,	0,	'6',	'^',	0	},
-{	0x08,	0,	'7',	'&',	0	},
-{	0x09,	0,	'8',	'*',	0	},
-{	0x0a,	0,	'9',	'(',	0	},
-{	0x0b,	0,	'0',	')',	0	},
+{	0x02,	0,	'1',	'!',	0, FALSE },
+{	0x03,	0,	'2',	'@',	0, FALSE },
+{	0x04,	0,	'3',	'#',	0, FALSE },
+{	0x05,	0,	'4',	'$',	0, FALSE },
+{	0x06,	0,	'5',	'%',	0, FALSE },
+{	0x07,	0,	'6',	'^',	0, FALSE },
+{	0x08,	0,	'7',	'&',	0, FALSE },
+{	0x09,	0,	'8',	'*',	0, FALSE },
+{	0x0a,	0,	'9',	'(',	0, FALSE },
+{	0x0b,	0,	'0',	')',	0, FALSE },
 
-{	0x29,	0,	'\'',	'~',	0	},
-{	0x0c,	0,	'-',	'_',	0	},
-{	0x0d,	0,	'=',	'+',	0	},
-{	0x1a,	0,	'[',	'{',	0	},
-{	0x1b,	0,	']',	'}',	0	},
-{	0x2b,	0,	'\\',	'|',	0	},
-{	0x27,	0,	';',	':',	0	},
-{	0x28,	0,	'\'',	'"',	0	},
-{	0x33,	0,	',',	'<',	0	},
-{	0x34,	0,	'.',	'>',	0	},
-{	0x35,	0,	'/',	'?',	0	},
+{	0x29,	0,	'\'',	'~',	0, FALSE },
+{	0x0c,	0,	'-',	'_',	0, FALSE },
+{	0x0d,	0,	'=',	'+',	0, FALSE },
+{	0x1a,	0,	'[',	'{',	0, FALSE },
+{	0x1b,	0,	']',	'}',	0, FALSE },
+{	0x2b,	0,	'\\',	'|',	0, FALSE },
+{	0x27,	0,	';',	':',	0, FALSE },
+{	0x28,	0,	'\'',	'"',	0, FALSE },
+{	0x33,	0,	',',	'<',	0, FALSE },
+{	0x34,	0,	'.',	'>',	0, FALSE },
+{	0x35,	0,	'/',	'?',	0, FALSE },
 
-{	0x4f,	0,	0,	0,	'1'	},
-{	0x50,	0,	0,	0,	'2'	},
-{	0x51,	0,	0,	0,	'3'	},
-{	0x4b,	0,	0,	0,	'4'	},
-{	0x4c,	0,	0,	0,	'5'	},
-{	0x4d,	0,	0,	0,	'6'	},
-{	0x47,	0,	0,	0,	'7'	},
-{	0x48,	0,	0,	0,	'8'	},
-{	0x49,	0,	0,	0,	'9'	},
-{	0x52,	0,	0,	0,	'0'	},
+{	0x4f,	0,	0,	0,	'1', FALSE },
+{	0x50,	0,	0,	0,	'2', FALSE },
+{	0x51,	0,	0,	0,	'3', FALSE },
+{	0x4b,	0,	0,	0,	'4', FALSE },
+{	0x4c,	0,	0,	0,	'5', FALSE },
+{	0x4d,	0,	0,	0,	'6', FALSE },
+{	0x47,	0,	0,	0,	'7', FALSE },
+{	0x48,	0,	0,	0,	'8', FALSE },
+{	0x49,	0,	0,	0,	'9', FALSE },
+{	0x52,	0,	0,	0,	'0', FALSE },
 
-{	0x4a,	0,	'-',	'-',	0	},
-{	0x4e,	0,	'+',	'+',	0	},
-{	0x37,	0,	'*',	'*',	0	},
-{	0x35,	1,	'/',	'/',	0	},
-{	0x53,	0,	0,	0,	'.'	},
+{	0x4a,	0,	'-',	'-',	0, FALSE },
+{	0x4e,	0,	'+',	'+',	0, FALSE },
+{	0x37,	0,	'*',	'*',	0, FALSE },
+{	0x35,	1,	'/',	'/',	0, FALSE },
+{	0x53,	0,	0,	0,	'.', FALSE },
 
-{	0x39,	0,	' ',	' ',	0	},
+{	0x39,	0,	' ',	' ',	0, FALSE },
 
-{	0x1c,	0,	'\r',	'\r',	0	},
-{	0x1c,	1,	'\r',	'\r',	0	},
-{	0x0e,	0,	0x08,	0x08,	0	}, /* backspace */
+{	0x1c,	0,	'\r',	'\r',	0, FALSE },
+{	0x1c,	1,	'\r',	'\r',	0, FALSE },
+{	0x0e,	0,	0x08,	0x08,	0, FALSE }, /* backspace */
 
-{	0,	0,	0,	0,	0	}
+{	0,	0,	0,	0,	0, FALSE }
 };
 
 
@@ -276,11 +277,24 @@ IntUpdateControlKeyState(LPDWORD State, PKEYBOARD_INPUT_DATA InputData)
 				Value = LEFT_ALT_PRESSED;
 				break;
 
+			case 0x3A:
+				Value = CAPSLOCK_ON;
+				if (!(InputData->Flags & KEY_BREAK))
+					*State ^= Value;
+				return;
+
 			case 0x45:
 				Value = NUMLOCK_ON;
 				if (!(InputData->Flags & KEY_BREAK))
 					*State ^= Value;
 				return;
+
+			case 0x46:
+				Value = SCROLLLOCK_ON;
+				if (!(InputData->Flags & KEY_BREAK))
+					*State ^= Value;
+				return;
+
 			default:
 				return;
 		}
@@ -342,6 +356,10 @@ IntAsciiFromInput(PKEYBOARD_INPUT_DATA InputData, DWORD KeyState)
 					return ScanToAscii[Counter].Normal;
 				}
 			}
+
+			if ((KeyState & CAPSLOCK_ON) && ScanToAscii[Counter].bCAPS)
+				KeyState ^= SHIFT_PRESSED;
+
 			if (KeyState & SHIFT_PRESSED)
 				return ScanToAscii[Counter].Shift;
 
