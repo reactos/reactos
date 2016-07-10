@@ -77,7 +77,7 @@ CdfsGetEntryName(PDEVICE_EXTENSION DeviceExt,
                 *CurrentOffset = ROUND_UP(*CurrentOffset, BLOCKSIZE);
                 _SEH2_TRY
                 {
-                    CcMapData(DeviceExt->StreamFileObject, StreamOffset, BLOCKSIZE, TRUE, Context, Block);
+                    CcMapData(DeviceExt->StreamFileObject, StreamOffset, BLOCKSIZE, MAP_WAIT, Context, Block);
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -103,7 +103,7 @@ CdfsGetEntryName(PDEVICE_EXTENSION DeviceExt,
         *CurrentOffset = ROUND_UP(*CurrentOffset, BLOCKSIZE);
         _SEH2_TRY
         {
-            CcMapData(DeviceExt->StreamFileObject, StreamOffset, BLOCKSIZE, TRUE, Context, Block);
+            CcMapData(DeviceExt->StreamFileObject, StreamOffset, BLOCKSIZE, MAP_WAIT, Context, Block);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -237,7 +237,7 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
 
     _SEH2_TRY
     {
-        CcMapData(DeviceExt->StreamFileObject, &StreamOffset, BLOCKSIZE, TRUE, &Context, &Block);
+        CcMapData(DeviceExt->StreamFileObject, &StreamOffset, BLOCKSIZE, MAP_WAIT, &Context, &Block);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
