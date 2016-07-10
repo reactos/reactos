@@ -178,7 +178,7 @@ LPVOID SdbpAlloc(SIZE_T size
     return mem;
 }
 
-LPVOID SdbpReAlloc(LPVOID mem, SIZE_T size
+LPVOID SdbpReAlloc(LPVOID mem, SIZE_T size, SIZE_T oldSize
 #if SDBAPI_DEBUG_ALLOC
     , int line, const char* file
 #endif
