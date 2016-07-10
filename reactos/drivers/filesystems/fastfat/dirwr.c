@@ -55,7 +55,7 @@ VfatUpdateEntry(
     Offset.u.LowPart = dirIndex * SizeDirEntry;
     _SEH2_TRY
     {
-        CcPinRead(pFcb->parentFcb->FileObject, &Offset, SizeDirEntry, TRUE, &Context, (PVOID*)&PinEntry);
+        CcPinRead(pFcb->parentFcb->FileObject, &Offset, SizeDirEntry, PIN_WAIT, &Context, (PVOID*)&PinEntry);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -100,7 +100,7 @@ vfatRenameEntry(
         Offset.u.LowPart = (StartIndex * sizeof(FATX_DIR_ENTRY) / PAGE_SIZE) * PAGE_SIZE;
         _SEH2_TRY
         {
-            CcPinRead(pFcb->parentFcb->FileObject, &Offset, sizeof(FATX_DIR_ENTRY), TRUE, &Context, (PVOID*)&pDirEntry);
+            CcPinRead(pFcb->parentFcb->FileObject, &Offset, sizeof(FATX_DIR_ENTRY), PIN_WAIT, &Context, (PVOID*)&pDirEntry);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -178,7 +178,7 @@ vfatFindDirSpace(
             }
             _SEH2_TRY
             {
-                CcPinRead(pDirFcb->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster, TRUE, &Context, (PVOID*)&pFatEntry);
+                CcPinRead(pDirFcb->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster, PIN_WAIT, &Context, (PVOID*)&pFatEntry);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -239,7 +239,7 @@ vfatFindDirSpace(
                                            DeviceExt->FatInfo.BytesPerCluster);
             _SEH2_TRY
             {
-                CcPinRead(pDirFcb->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster, TRUE, &Context, (PVOID*)&pFatEntry);
+                CcPinRead(pDirFcb->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster, PIN_WAIT, &Context, (PVOID*)&pFatEntry);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -258,7 +258,7 @@ vfatFindDirSpace(
             FileOffset.u.LowPart = (*start + nbSlots) * SizeDirEntry;
             _SEH2_TRY
             {
-                CcPinRead(pDirFcb->FileObject, &FileOffset, SizeDirEntry, TRUE, &Context, (PVOID*)&pFatEntry);
+                CcPinRead(pDirFcb->FileObject, &FileOffset, SizeDirEntry, PIN_WAIT, &Context, (PVOID*)&pFatEntry);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -579,7 +579,7 @@ FATAddEntry(
         /* one cluster */
         _SEH2_TRY
         {
-            CcPinRead(ParentFcb->FileObject, &FileOffset, nbSlots * sizeof(FAT_DIR_ENTRY), TRUE, &Context, (PVOID*)&pFatEntry);
+            CcPinRead(ParentFcb->FileObject, &FileOffset, nbSlots * sizeof(FAT_DIR_ENTRY), PIN_WAIT, &Context, (PVOID*)&pFatEntry);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -602,7 +602,7 @@ FATAddEntry(
         i = size / sizeof(FAT_DIR_ENTRY);
         _SEH2_TRY
         {
-            CcPinRead(ParentFcb->FileObject, &FileOffset, size, TRUE, &Context, (PVOID*)&pFatEntry);
+            CcPinRead(ParentFcb->FileObject, &FileOffset, size, PIN_WAIT, &Context, (PVOID*)&pFatEntry);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -616,7 +616,7 @@ FATAddEntry(
         FileOffset.u.LowPart += size;
         _SEH2_TRY
         {
-            CcPinRead(ParentFcb->FileObject, &FileOffset, nbSlots * sizeof(FAT_DIR_ENTRY) - size, TRUE, &Context, (PVOID*)&pFatEntry);
+            CcPinRead(ParentFcb->FileObject, &FileOffset, nbSlots * sizeof(FAT_DIR_ENTRY) - size, PIN_WAIT, &Context, (PVOID*)&pFatEntry);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -658,7 +658,7 @@ FATAddEntry(
         FileOffset.QuadPart = 0;
         _SEH2_TRY
         {
-            CcPinRead((*Fcb)->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster, TRUE, &Context, (PVOID*)&pFatEntry);
+            CcPinRead((*Fcb)->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster, PIN_WAIT, &Context, (PVOID*)&pFatEntry);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -785,7 +785,7 @@ FATXAddEntry(
     FileOffset.u.LowPart = Index * sizeof(FATX_DIR_ENTRY);
     _SEH2_TRY
     {
-        CcPinRead(ParentFcb->FileObject, &FileOffset, sizeof(FATX_DIR_ENTRY), TRUE, &Context, (PVOID*)&pFatXDirEntry);
+        CcPinRead(ParentFcb->FileObject, &FileOffset, sizeof(FATX_DIR_ENTRY), PIN_WAIT, &Context, (PVOID*)&pFatXDirEntry);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -862,7 +862,7 @@ FATDelEntry(
             Offset.u.LowPart = (i * sizeof(FAT_DIR_ENTRY) / PAGE_SIZE) * PAGE_SIZE;
             _SEH2_TRY
             {
-                CcPinRead(pFcb->parentFcb->FileObject, &Offset, sizeof(FAT_DIR_ENTRY), TRUE, &Context, (PVOID*)&pDirEntry);
+                CcPinRead(pFcb->parentFcb->FileObject, &Offset, sizeof(FAT_DIR_ENTRY), PIN_WAIT, &Context, (PVOID*)&pDirEntry);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -934,7 +934,7 @@ FATXDelEntry(
     Offset.u.LowPart = (StartIndex * sizeof(FATX_DIR_ENTRY) / PAGE_SIZE) * PAGE_SIZE;
     _SEH2_TRY
     {
-        CcPinRead(pFcb->parentFcb->FileObject, &Offset, sizeof(FATX_DIR_ENTRY), TRUE, &Context, (PVOID*)&pDirEntry);
+        CcPinRead(pFcb->parentFcb->FileObject, &Offset, sizeof(FATX_DIR_ENTRY), PIN_WAIT, &Context, (PVOID*)&pDirEntry);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {

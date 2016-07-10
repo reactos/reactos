@@ -72,7 +72,7 @@ FATIsDirectoryEmpty(
 
             _SEH2_TRY
             {
-                CcMapData(Fcb->FileObject, &FileOffset, sizeof(FAT_DIR_ENTRY), TRUE, &Context, (PVOID*)&FatDirEntry);
+                CcMapData(Fcb->FileObject, &FileOffset, sizeof(FAT_DIR_ENTRY), MAP_WAIT, &Context, (PVOID*)&FatDirEntry);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -132,7 +132,7 @@ FATXIsDirectoryEmpty(
 
             _SEH2_TRY
             {
-                CcMapData(Fcb->FileObject, &FileOffset, sizeof(FATX_DIR_ENTRY), TRUE, &Context, (PVOID*)&FatXDirEntry);
+                CcMapData(Fcb->FileObject, &FileOffset, sizeof(FATX_DIR_ENTRY), MAP_WAIT, &Context, (PVOID*)&FatXDirEntry);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -219,7 +219,7 @@ FATGetNextDirEntry(
 
         _SEH2_TRY
         {
-            CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage);
+            CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, MAP_WAIT, pContext, pPage);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -260,7 +260,7 @@ FATGetNextDirEntry(
 
                 _SEH2_TRY
                 {
-                    CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage);
+                    CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, MAP_WAIT, pContext, pPage);
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -297,7 +297,7 @@ FATGetNextDirEntry(
 
                 _SEH2_TRY
                 {
-                    CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage);
+                    CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, MAP_WAIT, pContext, pPage);
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
@@ -427,7 +427,7 @@ FATGetNextDirEntry(
 
             _SEH2_TRY
             {
-                CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage);
+                CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, MAP_WAIT, pContext, pPage);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -525,7 +525,7 @@ FATXGetNextDirEntry(
 
         _SEH2_TRY
         {
-            CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage);
+            CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, MAP_WAIT, pContext, pPage);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -568,7 +568,7 @@ FATXGetNextDirEntry(
 
             _SEH2_TRY
             {
-                CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, pPage);
+                CcMapData(pDirFcb->FileObject, &FileOffset, PAGE_SIZE, MAP_WAIT, pContext, pPage);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {

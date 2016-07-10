@@ -137,7 +137,7 @@ ReadVolumeLabel(
     FileOffset.QuadPart = 0;
     _SEH2_TRY
     {
-        CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, TRUE, &Context, (PVOID*)&Entry);
+        CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, MAP_WAIT, &Context, (PVOID*)&Entry);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -176,7 +176,7 @@ ReadVolumeLabel(
                 FileOffset.u.LowPart += PAGE_SIZE;
                 _SEH2_TRY
                 {
-                    CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, TRUE, &Context, (PVOID*)&Entry);
+                    CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, MAP_WAIT, &Context, (PVOID*)&Entry);
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
