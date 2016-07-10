@@ -50,7 +50,7 @@ License = Невідома
 Description = Пакет шрифтів Tahoma, що необхідні деяким програмам (Steam). включає: Tahoma.ttf, Tahomabd.ttf.
 
 [Section.0804]
-Licence = 未知
+License = 未知
 Description = Tahoma 字体包所需的一些应用程序 (Steam)。包含: Tahoma.ttf，Tahomabd.ttf。
 
 [Section.0813]

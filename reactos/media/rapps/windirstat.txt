@@ -1,7 +1,7 @@
 [Section]
 Name = WinDirStat
 Version = 1.1.2
-Licence = GPL
+License = GPL
 Description = Program for analyzing disk usage and his cleanup.
 Size = 630.6 KiB
 Category = 12

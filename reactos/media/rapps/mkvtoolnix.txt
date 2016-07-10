@@ -1,7 +1,7 @@
 [Section]
 Name = MkvToolnix
 Version = 3.1.0
-Licence = GPL
+License = GPL
 Description = Set of tools for working with files mkv format.
 Size = 5.3 MiB
 Category = 2

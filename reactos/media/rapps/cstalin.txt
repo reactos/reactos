@@ -1,7 +1,7 @@
 [Section]
 Name = Commander Stalin
 Version = 0.9.5
-Licence = GPL
+License = GPL
 Description = A Soviet-themed real time strategy game (RTS) based on Boswars. You will need a tool like 7-Zip to extract it.
 Size = 261.0 MiB
 Category = 4

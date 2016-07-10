@@ -1,7 +1,7 @@
 [Section]
 Name = Scratch
 Version = 1.4
-Licence = GPL
+License = GPL
 Description = Visual object-oriented programming enviroment for children.
 Size = 33.0 MiB
 Category = 8

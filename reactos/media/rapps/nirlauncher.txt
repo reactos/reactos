@@ -19,11 +19,11 @@ Description = Un ensemble de plus de 180 utilitaires pour Windows.
 Size = 23,1 Mio
 
 [Section.0a]
-Licence = Gratuita
+License = Gratuita
 Description = Un paquete con más de 180 utilidades.
 
 [Section.0418]
-Licence = Gratuită
+License = Gratuită
 Description = Pachet cu peste 180 de utilitare.
 Size = 23,1 Mio
 
