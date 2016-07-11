@@ -34,6 +34,10 @@ Description = Potęży i dynamiczny język programowania.
 Description = Limbaj de programare dinamic și puternic.
 Size = 27,4 Mio
 
+[Section.0419]
+Description = Удивительно мощный динамический язык программирования.
+Size = 27,4 МБ
+
 [Section.041f]
 Description = Dikkat çekici, güçlü ve devingen bir izlenceleme dili.
 Size = 27,4 MiB

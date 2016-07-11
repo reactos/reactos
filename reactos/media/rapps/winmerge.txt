@@ -18,6 +18,10 @@ Size = 6,1 MiB
 Description = Un instrument pentru inspecția vizuală a diferențelor și unificarea de fișiere și dosare.
 Size = 6,1 Mio
 
+[Section.0419]
+Description = Инструмент для сравнения и синхронизации файлов и директорий.
+Size = 6,1 МБ
+
 [Section.041f]
 License = GPL sürüm 2
 Description = Kütükler ve dizinler için, görmelik ayrım görüntüleme ve birleştirme için bir araç.

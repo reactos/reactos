@@ -41,6 +41,12 @@ Description = Platformă populară de distribuție a jocurilor și rețea de soc
 URLSite = http://store.steampowered.com/?l=romanian
 Size = 1,4 Mio
 
+[Section.0419]
+License = Бесплатно
+Description = Сервис цифрового распространения компьютерных игр и программ.
+URLSite = http://store.steampowered.com/?l=russian
+Size = 1,3 МБ
+
 [Section.041f]
 License = Ücretsiz
 Description = Tutulan Umûmî Ağ oyun dağıtım platformu ve toplumluk ağ. DRM içerir.

@@ -27,6 +27,10 @@ Description = IndiFTPD to samodzielny serwer FTP składający sie z jednego plik
 Description = Server FTP de sine stătător, într-un singur executabil. Este adresat situațiilor în care nu este posibilă sau nu se dorește instalarea/configurarea unui server în sistem, însă este necesară obținerea rapidă a unui server funcțional.
 Size = 556,0 Kio
 
+[Section.0419]
+Description = Отдельный FTP-сервер, который работает как единый исполняемый файл. Он предназначен для ситуаций, когда пользователь не хочет устанавливать/настраивать сервер в системе (или не имеет прав, чтобы это сделать), но хочет быстро поднять сервер.
+Size = 556,0 КБ
+
 [Section.041f]
 Version = 1.0.9 Gelişme
 Description = Bir tek çalıştırılabilir kütükten çalışan tek başına bir FTP sunucusudur. Bir kullanıcının, çabucak, çalışan bir sunucuya iye olmak istediği ve dizgesinde bir sunucu kurmak/yapılandırmak istemediği (veyâ bunu yapmaya izni olmadığı) durumlar için tasarlanmıştır.

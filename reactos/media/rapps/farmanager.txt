@@ -14,3 +14,6 @@ CDPath = none
 Description = Quelloffener, konsolenbasierter Dateimanager mit zwei nebeneinander liegenden Panels.
 Size = 10,2 MiB
 
+[Section.0419]
+Description = Двух панельный консольный менеджер файлов
+Size = 10,2 МБ

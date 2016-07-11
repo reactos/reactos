@@ -27,6 +27,12 @@ License = Gratuită
 Description = Pachet cu peste 180 de utilitare.
 Size = 23,1 Mio
 
+[Section.0419]
+License = Бесплатно
+Description = Пакет из более чем 180 утилит для Windows.
+Size = 23,1 МБ
+
+
 [Section.041f]
 License = Ücretsiz
 Description = Windows için 180 araçtan daha çoğunun bir paketi.

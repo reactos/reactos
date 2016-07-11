@@ -19,6 +19,11 @@ License = Gratuită
 Description = Aplicație flexibilă de cronometru digital.
 Size = 1,5 Mio
 
+[Section.0419]
+License = Бесплатно
+Description = Цифровой секундомер. 
+Size = 1,5 МБ
+
 [Section.041f]
 Name = Ücretsiz Süreölçer
 License = Ücretsiz

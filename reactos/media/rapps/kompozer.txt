@@ -18,6 +18,10 @@ Size = 7,6 MiB
 Description = Sistem complet de autorizare web care combină gestiunea fișierelor web și modul de editare directă a paginilor. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
 Size = 7,6 Mio
 
+[Section.0419]
+Description = Визуальный HTML-редактор, основанный на Nvu. Одна из лучших бесплатных альтернатив Adobe CS3. Вам потребуется программа распаковки ZIP, чтобы запустить его.
+Size = 7,6 МБ
+
 [Section.041f]
 Description = Umûmî Ağ kütük yönetimiyle kullanımı kolay WYSIWYG Umûmî Ağ sayfası düzenlemesini birleştiren eksiksiz bir Umûmî Ağ yazarlık dizgesidir. Çalıştırmak için bir ZIP çıkartma izlencesi gerekir.
 Size = 7,6 MiB

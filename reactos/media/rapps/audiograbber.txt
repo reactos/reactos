@@ -35,6 +35,10 @@ License = Gratuită
 Description = Program de extragere conținuturi CD audio și de conversie a fișierelor de sunet.
 Size = 3,4 Mio
 
+[Section.0419]
+Description = Программа, предназначенная для копирования аудиотреков в цифровой формат. 
+Size = 3,4 МБ
+
 [Section.041f]
 License = Ücretsiz
 Description = Çok iyi bir CD ripleyicisi ve ses kütüğü dönüştürücüsü.

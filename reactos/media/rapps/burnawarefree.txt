@@ -23,6 +23,11 @@ License = Gratuit pentru uz necomercial
 Description = Program de inscripționare gratuit, complet, pentru discuri CD, DVD și Blue-ray de toate tipurile.
 Size = 9,4 Mio
 
+[Section.0419]
+License = Бесплатно для не коммерческого использования
+Description = Полнофункциональная и бесплатная программа записи CD, DVD и Blu-ray дисков всех типов.
+Size = 9,4 МБ
+
 [Section.041f]
 Name = BurnAware Ücretsiz
 License = Tecimlik olmayan kullanımlar için ücretsiz

@@ -41,7 +41,8 @@ Description = Un program cu surse deschise care aduce aspectul paginii profesion
 Size = 78,2 Mio
 
 [Section.0419]
-Description = Открытым исходным кодом программы, которая приносит профессиональных макет страницы для ReactOS.
+Description = Приложение для визуальной вёрстки документов с открытым исходным кодом.
+Size = 78,2 МБ
 
 [Section.041b]
 Description = Open-source program, ktorý prináša profesionálnej stránke rozloženie na ReactOS.

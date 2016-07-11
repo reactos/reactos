@@ -39,6 +39,12 @@ License = Nespecificată
 Description = Pachetul Tahoma Font, necesar unor aplicații (Steam). Conține: Tahoma.ttf, Tahomabd.ttf.
 Size = 305,1 Kio
 
+[Section.0419]
+License = Неизвестно
+Description = Пакет Tahoma шрифтов. Необходим для некоторых приложений. Содержит: Tahoma.ttf, Tahomabd.ttf.
+Size = 305,1 КБ
+
+
 [Section.041f]
 Name = Microsoft Tahoma Yazı Tipi
 License = Bilinmiyor

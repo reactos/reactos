@@ -21,6 +21,10 @@ Description = Programa libre, gratuito y multiplataforma para grabar y editar au
 Description = Un program gratuit, multiplatformă, cu surse deschise pentru înregistrarea și editarea de sunete.
 Size = 25,3 Mio
 
+[Section.0419]
+Description = Программа для записи и редактирования звуковых файлов, ориентированная на работу с несколькими дорожками.
+Size = 25,3 МБ
+
 [Section.041f]
 Description = Sesleri kaydetme ve düzenleme için özgür, açık kaynak ve çapraz platform yazılımdır.
 Size = 25,3 MiB
