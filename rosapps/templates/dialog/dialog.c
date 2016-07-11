@@ -196,8 +196,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     instData.hWnd = CreateDialogParam(hInst, MAKEINTRESOURCE(IDD_TABBED_DIALOG), NULL, (DLGPROC)DlgProc, (LPARAM)&instData);
     ShowWindow(instData.hWnd, SW_SHOW);
     hAccel = LoadAccelerators(hInst, (LPCTSTR)IDR_ACCELERATOR);
-    while (GetMessage(&msg, (HWND)NULL, 0, 0)) {
-        if (!TranslateAccelerator(msg.hwnd, hAccel, &msg)) {
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        if (!TranslateAccelerator(instData.hWnd, hAccel, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
