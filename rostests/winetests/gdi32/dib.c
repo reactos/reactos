@@ -1275,14 +1275,12 @@ static void compare_bounds( HDC hdc, const char *info )
         current_bounds->right == -1 &&
         current_bounds->bottom == -1)
     {
-        ok( 0, "missing bounds, got { %d, %d, %d, %d },\n", rect.left, rect.top, rect.right, rect.bottom );
+        ok( 0, "missing bounds, got %s,\n", wine_dbgstr_rect( &rect ));
         return;
     }
 
-    ok( !memcmp( current_bounds, &rect, sizeof(RECT) ),
-        "%s: %s: expected bounds %d,%d,%d,%d got %d,%d,%d,%d\n", dst_format, info,
-        current_bounds->left, current_bounds->top, current_bounds->right, current_bounds->bottom,
-        rect.left, rect.top, rect.right, rect.bottom );
+    ok( EqualRect( current_bounds, &rect ), "%s: %s: expected bounds %s got %s\n", dst_format, info,
+        wine_dbgstr_rect( current_bounds ), wine_dbgstr_rect( &rect ));
     current_bounds++;
 }
 

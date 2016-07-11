@@ -309,27 +309,22 @@ static void test_dc_layout(void)
     hrgn = CreateRectRgn( 0, 0, 0, 0 );
     GetClipRgn( hdc, hrgn );
     GetRgnBox( hrgn, &ret_rc );
-    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %d,%d - %d,%d\n",
-        ret_rc.left, ret_rc.top, ret_rc.right, ret_rc.bottom );
+    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %s\n", wine_dbgstr_rect( &ret_rc ));
     pSetLayout( hdc, LAYOUT_LTR );
     SetRect( &rc, 80, 10, 90, 20 );
     GetClipRgn( hdc, hrgn );
     GetRgnBox( hrgn, &ret_rc );
-    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %d,%d - %d,%d\n",
-        ret_rc.left, ret_rc.top, ret_rc.right, ret_rc.bottom );
+    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %s\n", wine_dbgstr_rect( &ret_rc ));
     GetClipBox( hdc, &ret_rc );
-    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %d,%d - %d,%d\n",
-        ret_rc.left, ret_rc.top, ret_rc.right, ret_rc.bottom );
+    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %s\n", wine_dbgstr_rect( &ret_rc ));
     IntersectClipRect( hdc, 80, 10, 85, 20 );
     pSetLayout( hdc, LAYOUT_RTL );
     SetRect( &rc, 15, 10, 20, 20 );
     GetClipRgn( hdc, hrgn );
     GetRgnBox( hrgn, &ret_rc );
-    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %d,%d - %d,%d\n",
-        ret_rc.left, ret_rc.top, ret_rc.right, ret_rc.bottom );
+    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %s\n", wine_dbgstr_rect( &ret_rc ));
     GetClipBox( hdc, &ret_rc );
-    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %d,%d - %d,%d\n",
-        ret_rc.left, ret_rc.top, ret_rc.right, ret_rc.bottom );
+    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %s\n", wine_dbgstr_rect( &ret_rc ));
     SetRectRgn( hrgn, 60, 10, 80, 20 );
     pSetLayout( hdc, LAYOUT_LTR );
     ExtSelectClipRgn( hdc, hrgn, RGN_OR );
@@ -337,19 +332,16 @@ static void test_dc_layout(void)
     SetRect( &rc, 15, 10, 40, 20 );
     GetClipRgn( hdc, hrgn );
     GetRgnBox( hrgn, &ret_rc );
-    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %d,%d - %d,%d\n",
-        ret_rc.left, ret_rc.top, ret_rc.right, ret_rc.bottom );
+    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %s\n", wine_dbgstr_rect( &ret_rc ));
     GetClipBox( hdc, &ret_rc );
-    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %d,%d - %d,%d\n",
-        ret_rc.left, ret_rc.top, ret_rc.right, ret_rc.bottom );
+    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %s\n", wine_dbgstr_rect( &ret_rc ));
 
     /* OffsetClipRgn mirrors too */
     OffsetClipRgn( hdc, 5, 5 );
     OffsetRect( &rc, 5, 5 );
     GetClipRgn( hdc, hrgn );
     GetRgnBox( hrgn, &ret_rc );
-    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %d,%d - %d,%d\n",
-        ret_rc.left, ret_rc.top, ret_rc.right, ret_rc.bottom );
+    ok( EqualRect( &rc, &ret_rc ), "wrong clip box %s\n", wine_dbgstr_rect( &ret_rc ));
 
     /* GetRandomRgn returns the raw region */
     if (pGetRandomRgn)
@@ -357,8 +349,7 @@ static void test_dc_layout(void)
         SetRect( &rc, 55, 15, 80, 25 );
         pGetRandomRgn( hdc, hrgn, 1 );
         GetRgnBox( hrgn, &ret_rc );
-        ok( EqualRect( &rc, &ret_rc ), "wrong clip box %d,%d - %d,%d\n",
-            ret_rc.left, ret_rc.top, ret_rc.right, ret_rc.bottom );
+        ok( EqualRect( &rc, &ret_rc ), "wrong clip box %s\n", wine_dbgstr_rect( &ret_rc ));
     }
 
     SetMapMode(hdc, MM_LOMETRIC);

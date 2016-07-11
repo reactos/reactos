@@ -134,14 +134,12 @@ static void test_savedc_2(void)
     ret = GetClipRgn(hdc, hrgn);
     ok(ret == 0, "GetClipRgn returned %d instead of 0\n", ret);
     ret = GetRgnBox(hrgn, &rc);
-    ok(ret == NULLREGION, "GetRgnBox returned %d (%d,%d-%d,%d) instead of NULLREGION\n",
-       ret, rc.left, rc.top, rc.right, rc.bottom);
+    ok(ret == NULLREGION, "GetRgnBox returned %d %s instead of NULLREGION\n",
+       ret, wine_dbgstr_rect(&rc));
     /*dump_region(hrgn);*/
     SetRect(&rc, 0, 0, 100, 100);
-    ok(EqualRect(&rc, &rc_clip),
-       "rects are not equal: (%d,%d-%d,%d) - (%d,%d-%d,%d)\n",
-       rc.left, rc.top, rc.right, rc.bottom,
-       rc_clip.left, rc_clip.top, rc_clip.right, rc_clip.bottom);
+    ok(EqualRect(&rc, &rc_clip), "rects are not equal: %s - %s\n", wine_dbgstr_rect(&rc),
+       wine_dbgstr_rect(&rc_clip));
 
     ret = SaveDC(hdc);
     ok(ret == 1, "ret = %d\n", ret);
@@ -162,10 +160,8 @@ static void test_savedc_2(void)
     ret = GetClipBox(hdc, &rc_clip);
     ok(ret == SIMPLEREGION || broken(ret == COMPLEXREGION), "GetClipBox returned %d instead of SIMPLEREGION\n", ret);
     SetRect(&rc, 0, 0, 50, 50);
-    ok(EqualRect(&rc, &rc_clip),
-       "rects are not equal: (%d,%d-%d,%d) - (%d,%d-%d,%d)\n",
-       rc.left, rc.top, rc.right, rc.bottom,
-       rc_clip.left, rc_clip.top, rc_clip.right, rc_clip.bottom);
+    ok(EqualRect(&rc, &rc_clip), "rects are not equal: %s - %s\n", wine_dbgstr_rect(&rc),
+       wine_dbgstr_rect(&rc_clip));
 
     ret = RestoreDC(hdc, 1);
     ok(ret, "ret = %d\n", ret);
@@ -173,10 +169,8 @@ static void test_savedc_2(void)
     ret = GetClipBox(hdc, &rc_clip);
     ok(ret == SIMPLEREGION || broken(ret == COMPLEXREGION), "GetClipBox returned %d instead of SIMPLEREGION\n", ret);
     SetRect(&rc, 0, 0, 100, 100);
-    ok(EqualRect(&rc, &rc_clip),
-       "rects are not equal: (%d,%d-%d,%d) - (%d,%d-%d,%d)\n",
-       rc.left, rc.top, rc.right, rc.bottom,
-       rc_clip.left, rc_clip.top, rc_clip.right, rc_clip.bottom);
+    ok(EqualRect(&rc, &rc_clip), "rects are not equal: %s - %s\n", wine_dbgstr_rect(&rc),
+       wine_dbgstr_rect(&rc_clip));
 
     DeleteObject(hrgn);
     ReleaseDC(hwnd, hdc);
@@ -432,8 +426,8 @@ static void test_device_caps( HDC hdc, HDC ref_dc, const char *descr, int scale 
             "GetBoundsRect returned type %x for %s\n", type, descr );
         if (type == DCB_RESET)
             ok( rect.left == 0 && rect.top == 0 && rect.right == 0 && rect.bottom == 0,
-                "GetBoundsRect returned %d,%d,%d,%d type %x for %s\n",
-                rect.left, rect.top, rect.right, rect.bottom, type, descr );
+                "GetBoundsRect returned %s type %x for %s\n", wine_dbgstr_rect( &rect ),
+                type, descr );
         type = SetBoundsRect( hdc, NULL, DCB_RESET | DCB_ENABLE );
         ok( type == (DCB_RESET | DCB_DISABLE) || broken(type == (DCB_SET | DCB_ENABLE)) /* XP */,
             "SetBoundsRect returned %x for %s (hdc type %d)\n", type, descr, GetObjectType( hdc ) );
@@ -443,8 +437,8 @@ static void test_device_caps( HDC hdc, HDC ref_dc, const char *descr, int scale 
         type = GetBoundsRect( hdc, &rect, DCB_RESET );
         todo_wine_if (GetObjectType( hdc ) == OBJ_ENHMETADC || (GetObjectType( hdc ) == OBJ_DC && GetDeviceCaps( hdc, TECHNOLOGY ) == DT_RASPRINTER))
             ok( rect.left == 2 && rect.top == 2 && rect.right == 4 && rect.bottom == 4 && type == DCB_SET,
-                "GetBoundsRect returned %d,%d,%d,%d type %x for %s\n",
-                rect.left, rect.top, rect.right, rect.bottom, type, descr );
+                "GetBoundsRect returned %s type %x for %s\n", wine_dbgstr_rect( &rect ),
+                type, descr );
     }
 
     type = GetClipBox( ref_dc, &rect );
@@ -477,8 +471,8 @@ static void test_device_caps( HDC hdc, HDC ref_dc, const char *descr, int scale 
 
         todo_wine_if (GetDeviceCaps( ref_dc, TECHNOLOGY ) == DT_RASDISPLAY && GetObjectType( hdc ) != OBJ_ENHMETADC &&
             (GetSystemMetrics( SM_XVIRTUALSCREEN ) || GetSystemMetrics( SM_YVIRTUALSCREEN )))
-            ok( EqualRect( &rect, &ref_rect ), "GetClipBox returned %d,%d,%d,%d on %s\n",
-                rect.left, rect.top, rect.right, rect.bottom, descr );
+            ok( EqualRect( &rect, &ref_rect ), "GetClipBox returned %s on %s\n",
+                wine_dbgstr_rect( &rect ), descr );
     }
 
     SetBoundsRect( ref_dc, NULL, DCB_RESET | DCB_ACCUMULATE );
@@ -488,8 +482,7 @@ static void test_device_caps( HDC hdc, HDC ref_dc, const char *descr, int scale 
     /* it may or may not work on non-memory DCs */
     ok( (rect.left == 0 && rect.top == 0 && rect.right == 0 && rect.bottom == 0 && type == DCB_RESET) ||
         (rect.left == 3 && rect.top == 3 && rect.right == 5 && rect.bottom == 5 && type == DCB_SET),
-        "GetBoundsRect returned %d,%d,%d,%d type %x on %s\n",
-        rect.left, rect.top, rect.right, rect.bottom, type, descr );
+        "GetBoundsRect returned %s type %x on %s\n", wine_dbgstr_rect( &rect ), type, descr );
 
     if (GetObjectType( hdc ) == OBJ_MEMDC)
     {
@@ -521,16 +514,15 @@ static void test_device_caps( HDC hdc, HDC ref_dc, const char *descr, int scale 
         type = GetClipBox( hdc, &rect );
         ok( type == SIMPLEREGION, "GetClipBox returned %d on memdc for %s\n", type, descr );
         ok( rect.left == 0 && rect.top == 0 && rect.right == 16 && rect.bottom == 16,
-            "GetClipBox returned %d,%d,%d,%d on memdc for %s\n",
-            rect.left, rect.top, rect.right, rect.bottom, descr );
+            "GetClipBox returned %s on memdc for %s\n", wine_dbgstr_rect( &rect ), descr );
 
         SetBoundsRect( hdc, NULL, DCB_RESET | DCB_ENABLE );
         SetMapMode( hdc, MM_TEXT );
         Rectangle( hdc, 5, 5, 12, 14 );
         type = GetBoundsRect( hdc, &rect, DCB_RESET );
         ok( rect.left == 5 && rect.top == 5 && rect.right == 12 && rect.bottom == 14 && type == DCB_SET,
-            "GetBoundsRect returned %d,%d,%d,%d type %x on memdc for %s\n",
-            rect.left, rect.top, rect.right, rect.bottom, type, descr );
+            "GetBoundsRect returned %s type %x on memdc for %s\n", wine_dbgstr_rect( &rect ),
+            type, descr );
 
         SelectObject( hdc, old );
         DeleteObject( dib );
@@ -891,10 +883,8 @@ static void test_boundsrect(void)
     ok(ret == DCB_RESET,
        "Expected GetBoundsRect to return DCB_RESET, got %u\n", ret);
     SetRectEmpty(&expect);
-    ok(EqualRect(&rect, &expect) ||
-       broken(EqualRect(&rect, &set_rect)), /* nt4 sp1-5 */
-       "Expected output rectangle (0,0)-(0,0), got (%d,%d)-(%d,%d)\n",
-       rect.left, rect.top, rect.right, rect.bottom);
+    ok(EqualRect(&rect, &expect), "Expected output rectangle (0,0)-(0,0), got %s\n",
+       wine_dbgstr_rect(&rect));
 
     ret = GetBoundsRect(NULL, NULL, 0);
     ok(ret == 0, "Expected GetBoundsRect to return 0, got %u\n", ret);
@@ -915,23 +905,20 @@ static void test_boundsrect(void)
     ret = GetBoundsRect(hdc, &rect, 0);
     ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
     SetRect(&expect, 10, 20, 40, 50);
-    ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
-       rect.left, rect.top, rect.right, rect.bottom);
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
 
     SetMapMode( hdc, MM_ANISOTROPIC );
     SetViewportExtEx( hdc, 2, 2, NULL );
     ret = GetBoundsRect(hdc, &rect, 0);
     ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
     SetRect(&expect, 5, 10, 20, 25);
-    ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
-       rect.left, rect.top, rect.right, rect.bottom);
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
 
     SetViewportOrgEx( hdc, 20, 30, NULL );
     ret = GetBoundsRect(hdc, &rect, 0);
     ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
     SetRect(&expect, -5, -5, 10, 10);
-    ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
-       rect.left, rect.top, rect.right, rect.bottom);
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
 
     SetRect(&set_rect, 10, 20, 40, 50);
     ret = SetBoundsRect(hdc, &set_rect, DCB_SET);
@@ -940,16 +927,14 @@ static void test_boundsrect(void)
     ret = GetBoundsRect(hdc, &rect, 0);
     ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
     SetRect(&expect, 10, 20, 40, 50);
-    ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
-       rect.left, rect.top, rect.right, rect.bottom);
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
 
     SetMapMode( hdc, MM_TEXT );
     SetViewportOrgEx( hdc, 0, 0, NULL );
     ret = GetBoundsRect(hdc, &rect, 0);
     ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
     SetRect(&expect, 40, 70, 100, 130);
-    ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
-       rect.left, rect.top, rect.right, rect.bottom);
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
 
     if (pSetLayout)
     {
@@ -957,23 +942,20 @@ static void test_boundsrect(void)
         ret = GetBoundsRect(hdc, &rect, 0);
         ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
         SetRect(&expect, 159, 70, 99, 130);
-        ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
-           rect.left, rect.top, rect.right, rect.bottom);
+        ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
         SetRect(&set_rect, 50, 25, 30, 35);
         ret = SetBoundsRect(hdc, &set_rect, DCB_SET);
         ok(ret == (DCB_SET | DCB_DISABLE), "SetBoundsRect returned %x\n", ret);
         ret = GetBoundsRect(hdc, &rect, 0);
         ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
         SetRect(&expect, 50, 25, 30, 35);
-        ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
-           rect.left, rect.top, rect.right, rect.bottom);
+        ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
 
         pSetLayout( hdc, LAYOUT_LTR );
         ret = GetBoundsRect(hdc, &rect, 0);
         ok(ret == DCB_SET, "GetBoundsRect returned %x\n", ret);
         SetRect(&expect, 149, 25, 169, 35);
-        ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
-           rect.left, rect.top, rect.right, rect.bottom);
+        ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
     }
 
     /* empty rect resets, except on nt4 */
@@ -986,8 +968,7 @@ static void test_boundsrect(void)
     if (ret == DCB_RESET)
     {
         SetRectEmpty(&expect);
-        ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
-           rect.left, rect.top, rect.right, rect.bottom);
+        ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
 
         SetRect(&expect, 20, 20, 20, 20);
         ret = SetBoundsRect(hdc, &set_rect, DCB_SET);
@@ -995,8 +976,7 @@ static void test_boundsrect(void)
         ret = GetBoundsRect(hdc, &rect, 0);
         ok(ret == DCB_RESET, "GetBoundsRect returned %x\n", ret);
         SetRectEmpty(&expect);
-        ok(EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n",
-           rect.left, rect.top, rect.right, rect.bottom);
+        ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
     }
 
     SetBoundsRect( hdc, NULL, DCB_RESET | DCB_ENABLE );
@@ -1005,47 +985,47 @@ static void test_boundsrect(void)
     ret = GetBoundsRect( hdc, &rect, 0 );
     ok( ret == DCB_SET, "GetBoundsRect returned %x\n", ret );
     SetRect( &expect, 10, 10, 21, 21 );
-    ok( EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok( EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
     SetRect( &rect, 8, 8, 23, 23 );
     expect = rect;
     SetBoundsRect( hdc, &rect, DCB_ACCUMULATE );
     ret = GetBoundsRect( hdc, &rect, 0 );
     ok( ret == DCB_SET, "GetBoundsRect returned %x\n", ret );
-    ok( EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
 
     level = SaveDC( hdc );
     LineTo( hdc, 30, 25 );
     ret = GetBoundsRect( hdc, &rect, 0 );
     ok( ret == DCB_SET, "GetBoundsRect returned %x\n", ret );
     SetRect( &expect, 8, 8, 31, 26 );
-    ok( EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
     SetBoundsRect( hdc, NULL, DCB_DISABLE );
     LineTo( hdc, 40, 40 );
     ret = GetBoundsRect( hdc, &rect, 0 );
     ok( ret == DCB_SET, "GetBoundsRect returned %x\n", ret );
     SetRect( &expect, 8, 8, 31, 26 );
-    ok( EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
     SetRect( &rect, 6, 6, 30, 30 );
     SetBoundsRect( hdc, &rect, DCB_ACCUMULATE );
     ret = GetBoundsRect( hdc, &rect, 0 );
     ok( ret == DCB_SET, "GetBoundsRect returned %x\n", ret );
     SetRect( &expect, 6, 6, 31, 30 );
-    ok( EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
 
     RestoreDC( hdc, level );
     ret = GetBoundsRect( hdc, &rect, 0 );
     ok( ret == DCB_SET, "GetBoundsRect returned %x\n", ret );
-    ok( EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
     LineTo( hdc, 40, 40 );
     ret = GetBoundsRect( hdc, &rect, 0 );
     ok( ret == DCB_SET, "GetBoundsRect returned %x\n", ret );
-    ok( EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
 
     SelectObject( hdc, old );
     ret = GetBoundsRect( hdc, &rect, 0 );
     ok( ret == DCB_SET, "GetBoundsRect returned %x\n", ret );
     SetRect( &expect, 6, 6, 1, 1 );
-    ok( EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
     SetBoundsRect( hdc, NULL, DCB_ENABLE );
     LineTo( hdc, 50, 40 );
 
@@ -1053,13 +1033,13 @@ static void test_boundsrect(void)
     ret = GetBoundsRect( hdc, &rect, 0 );
     ok( ret == DCB_SET, "GetBoundsRect returned %x\n", ret );
     SetRect( &expect, 6, 6, 51, 41 );
-    ok( EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
     SelectObject( hdc, GetStockObject( NULL_PEN ));
     LineTo( hdc, 50, 50 );
     ret = GetBoundsRect( hdc, &rect, 0 );
     ok( ret == DCB_SET, "GetBoundsRect returned %x\n", ret );
     SetRect( &expect, 6, 6, 51, 51 );
-    ok( EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
 
     memset( buffer, 0, sizeof(buffer) );
     info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -1074,22 +1054,22 @@ static void test_boundsrect(void)
     ret = GetBoundsRect( hdc, &rect, 0 );
     ok( ret == DCB_SET, "GetBoundsRect returned %x\n", ret );
     SetRect( &expect, 6, 6, 51, 51 );
-    ok( EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
     LineTo( hdc, 55, 30 );
     ret = GetBoundsRect( hdc, &rect, 0 );
     ok( ret == DCB_SET, "GetBoundsRect returned %x\n", ret );
     SetRect( &expect, 6, 6, 56, 51 );
-    ok( EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
     LineTo( hdc, 300, 30 );
     ret = GetBoundsRect( hdc, &rect, 0 );
     ok( ret == DCB_SET, "GetBoundsRect returned %x\n", ret );
     SetRect( &expect, 6, 6, 256, 51 );
-    ok( EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
     LineTo( hdc, -300, -300 );
     ret = GetBoundsRect( hdc, &rect, 0 );
     ok( ret == DCB_SET, "GetBoundsRect returned %x\n", ret );
     SetRect( &expect, 0, 0, 256, 51 );
-    ok( EqualRect(&rect, &expect), "Got (%d,%d)-(%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(EqualRect(&rect, &expect), "Got %s\n", wine_dbgstr_rect(&rect));
 
     /* test the wide pen heuristics */
     SetBoundsRect( hdc, NULL, DCB_ENABLE | DCB_RESET );
@@ -1130,10 +1110,8 @@ static void test_boundsrect(void)
         expect.top    = max( expect.top, 0 );
         expect.right  = min( expect.right, 256 );
         expect.bottom = min( expect.bottom, 256 );
-        ok( EqualRect(&rect, &expect),
-            "Got %d,%d,%d,%d expected %d,%d,%d,%d %u/%x/%x\n",
-            rect.left, rect.top, rect.right, rect.bottom,
-            expect.left, expect.top, expect.right, expect.bottom, width, endcap, join );
+        ok(EqualRect(&rect, &expect), "Got %s expected %s %u/%x/%x\n", wine_dbgstr_rect(&rect),
+           wine_dbgstr_rect(&expect), width, endcap, join);
         DeleteObject( SelectObject( hdc, old ));
     }
 
