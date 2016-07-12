@@ -248,10 +248,8 @@ static void test_click_make_new_folder_button(void)
     shfileop.fFlags = FOF_NOCONFIRMATION|FOF_NOERRORUI|FOF_SILENT;
     SHFileOperationA(&shfileop);
 
-    if (pidl)
-        CoTaskMemFree(pidl);
-    if (test_folder_pidl)
-        CoTaskMemFree(test_folder_pidl);
+    CoTaskMemFree(pidl);
+    CoTaskMemFree(test_folder_pidl);
     test_folder_object->lpVtbl->Release(test_folder_object);
 
     CoUninitialize();
@@ -346,16 +344,12 @@ static void test_selection(void)
     /* test without flags */
     bi.ulFlags = 0;
     pidl = SHBrowseForFolderA(&bi);
-
-    if (pidl)
-        CoTaskMemFree(pidl);
+    CoTaskMemFree(pidl);
 
     /* test with flag */
     bi.ulFlags = BIF_NEWDIALOGSTYLE;
     pidl = SHBrowseForFolderA(&bi);
-
-    if (pidl)
-        CoTaskMemFree(pidl);
+    CoTaskMemFree(pidl);
 
     IShellFolder_Release(desktop_object);
 

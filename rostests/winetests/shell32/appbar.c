@@ -196,9 +196,8 @@ static void register_testwindow_class(void)
 
 #define test_window_rects(a, b) \
     ok(!IntersectRect(&rc, &windows[a].allocated_rect, &windows[b].allocated_rect), \
-        "rectangles intersect (%i,%i,%i,%i)/(%i,%i,%i,%i)\n", \
-        windows[a].allocated_rect.left, windows[a].allocated_rect.top, windows[a].allocated_rect.right, windows[a].allocated_rect.bottom, \
-        windows[b].allocated_rect.left, windows[b].allocated_rect.top, windows[b].allocated_rect.right, windows[b].allocated_rect.bottom)
+        "rectangles intersect %s / %s\n", wine_dbgstr_rect(&windows[a].allocated_rect), \
+        wine_dbgstr_rect(&windows[b].allocated_rect))
 
 static void test_setpos(void)
 {

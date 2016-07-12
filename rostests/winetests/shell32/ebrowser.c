@@ -818,8 +818,7 @@ static void test_initialization(void)
         ok(hr == S_OK, "Got 0x%08x\n", hr);
 
         GetClientRect(eb_hwnd, &eb_rc);
-        ok(EqualRect(&eb_rc, &exp_rc), "Got client rect (%d, %d)-(%d, %d)\n",
-           eb_rc.left, eb_rc.top, eb_rc.right, eb_rc.bottom);
+        ok(EqualRect(&eb_rc, &exp_rc), "Got client rect %s\n", wine_dbgstr_rect(&eb_rc));
 
         GetWindowRect(eb_hwnd, &eb_rc);
         ok(eb_rc.right - eb_rc.left == 50, "Got window width %d\n", eb_rc.right - eb_rc.left);
@@ -1142,8 +1141,7 @@ static void test_basics(void)
 
         GetClientRect(eb_hwnd, &eb_rc);
         MapWindowPoints(eb_hwnd, hwnd, (POINT*)&eb_rc, 2);
-        ok(EqualRect(&eb_rc, &exp_rc), "Got rect (%d, %d) - (%d, %d)\n",
-           eb_rc.left, eb_rc.top, eb_rc.right, eb_rc.bottom);
+        ok(EqualRect(&eb_rc, &exp_rc), "Got rect %s\n", wine_dbgstr_rect(&eb_rc));
 
         /* Try resizing with invalid hdwp */
         rc.bottom = 25;
@@ -1152,16 +1150,14 @@ static void test_basics(void)
         ok(hr == E_FAIL, "Got 0x%08x\n", hr);
         GetClientRect(eb_hwnd, &eb_rc);
         MapWindowPoints(eb_hwnd, hwnd, (POINT*)&eb_rc, 2);
-        ok(EqualRect(&eb_rc, &exp_rc), "Got rect (%d, %d) - (%d, %d)\n",
-           eb_rc.left, eb_rc.top, eb_rc.right, eb_rc.bottom);
+        ok(EqualRect(&eb_rc, &exp_rc), "Got rect %s\n", wine_dbgstr_rect(&eb_rc));
 
         hdwp = NULL;
         hr = IExplorerBrowser_SetRect(peb, &hdwp, rc);
         ok(hr == S_OK, "Got 0x%08x\n", hr);
         GetClientRect(eb_hwnd, &eb_rc);
         MapWindowPoints(eb_hwnd, hwnd, (POINT*)&eb_rc, 2);
-        ok(EqualRect(&eb_rc, &exp_rc2), "Got rect (%d, %d) - (%d, %d)\n",
-           eb_rc.left, eb_rc.top, eb_rc.right, eb_rc.bottom);
+        ok(EqualRect(&eb_rc, &exp_rc2), "Got rect %s\n", wine_dbgstr_rect(&eb_rc));
 
         IShellBrowser_Release(psb);
     }

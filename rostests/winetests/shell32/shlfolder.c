@@ -3088,7 +3088,7 @@ static void test_SHGetIDListFromObject(void)
     punkimpl->ifaces = ifaces;
     punkimpl->unknown = 0;
 
-    hres = pSHGetIDListFromObject((IUnknown*)punkimpl, &pidl);
+    hres = pSHGetIDListFromObject(&punkimpl->IUnknown_iface, &pidl);
     ok(hres == E_NOINTERFACE, "Got %x\n", hres);
     ok(ifaces[0].count, "interface not requested.\n");
     ok(ifaces[1].count, "interface not requested.\n");
@@ -3260,7 +3260,7 @@ static void test_SHGetItemFromObject(void)
     punkimpl->unknown = 0;
 
     /* The same as SHGetIDListFromObject */
-    hres = pSHGetIDListFromObject((IUnknown*)punkimpl, &pidl);
+    hres = pSHGetIDListFromObject(&punkimpl->IUnknown_iface, &pidl);
     ok(hres == E_NOINTERFACE, "Got %x\n", hres);
     ok(ifaces[0].count, "interface not requested.\n");
     ok(ifaces[1].count, "interface not requested.\n");
