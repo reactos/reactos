@@ -64,7 +64,7 @@ BOOL CALLBACK EnumPickIconResourceProc(HMODULE hModule,
     if (IS_INTRESOURCE(lpszName))
         swprintf(szName, L"%u", (DWORD)lpszName);
     else
-        wcscpy(szName, (WCHAR*)lpszName);
+        StringCbCopyW(szName, sizeof(szName), lpszName);
 
     hIcon = LoadIconW(hModule, lpszName);
     if (hIcon == NULL)
