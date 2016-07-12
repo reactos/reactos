@@ -41,6 +41,8 @@ static NTSTATUS (WINAPI *pRtlAppendStringToString)(STRING *, const STRING *);
 static NTSTATUS (WINAPI *pRtlAppendUnicodeStringToString)(UNICODE_STRING *, const UNICODE_STRING *);
 static NTSTATUS (WINAPI *pRtlAppendUnicodeToString)(UNICODE_STRING *, LPCWSTR);
 static NTSTATUS (WINAPI *pRtlCharToInteger)(PCSZ, ULONG, int *);
+static LONG     (WINAPI *pRtlCompareUnicodeString)(const UNICODE_STRING*, const UNICODE_STRING*, BOOLEAN);
+static LONG     (WINAPI *pRtlCompareUnicodeStrings)(const WCHAR *,SIZE_T,const WCHAR *,SIZE_T,BOOLEAN);
 static VOID     (WINAPI *pRtlCopyString)(STRING *, const STRING *);
 static BOOLEAN  (WINAPI *pRtlCreateUnicodeString)(PUNICODE_STRING, LPCWSTR);
 static BOOLEAN  (WINAPI *pRtlCreateUnicodeStringFromAsciiz)(PUNICODE_STRING, LPCSTR);
@@ -75,7 +77,6 @@ static NTSTATUS (WINAPI *pRtlUTF8ToUnicodeN)(WCHAR *, ULONG, ULONG *, const CHAR
 /*static VOID (WINAPI *pRtlCopyUnicodeString)(UNICODE_STRING *, const UNICODE_STRING *);*/
 /*static VOID (WINAPI *pRtlEraseUnicodeString)(UNICODE_STRING *);*/
 /*static LONG (WINAPI *pRtlCompareString)(const STRING *,const STRING *,BOOLEAN);*/
-/*static LONG (WINAPI *pRtlCompareUnicodeString)(const UNICODE_STRING *,const UNICODE_STRING *,BOOLEAN);*/
 /*static BOOLEAN (WINAPI *pRtlEqualString)(const STRING *,const STRING *,BOOLEAN);*/
 /*static BOOLEAN (WINAPI *pRtlPrefixString)(const STRING *, const STRING *, BOOLEAN);*/
 /*static BOOLEAN (WINAPI *pRtlPrefixUnicodeString)(const UNICODE_STRING *, const UNICODE_STRING *, BOOLEAN);*/
@@ -112,6 +113,8 @@ static void InitFunctionPtrs(void)
 	pRtlAppendUnicodeStringToString = (void *)GetProcAddress(hntdll, "RtlAppendUnicodeStringToString");
 	pRtlAppendUnicodeToString = (void *)GetProcAddress(hntdll, "RtlAppendUnicodeToString");
 	pRtlCharToInteger = (void *)GetProcAddress(hntdll, "RtlCharToInteger");
+	pRtlCompareUnicodeString = (void *)GetProcAddress(hntdll, "RtlCompareUnicodeString");
+	pRtlCompareUnicodeStrings = (void *)GetProcAddress(hntdll, "RtlCompareUnicodeStrings");
 	pRtlCopyString = (void *)GetProcAddress(hntdll, "RtlCopyString");
 	pRtlCreateUnicodeString = (void *)GetProcAddress(hntdll, "RtlCreateUnicodeString");
 	pRtlCreateUnicodeStringFromAsciiz = (void *)GetProcAddress(hntdll, "RtlCreateUnicodeStringFromAsciiz");
@@ -1856,6 +1859,36 @@ static void test_RtlIsTextUnicode(void)
     HeapFree(GetProcessHeap(), 0, be_unicode_no_controls);
 }
 
+static void test_RtlCompareUnicodeString(void)
+{
+    WCHAR ch1, ch2;
+    UNICODE_STRING str1, str2;
+
+    str1.Buffer = &ch1;
+    str1.Length = str1.MaximumLength = sizeof(WCHAR);
+    str2.Buffer = &ch2;
+    str2.Length = str2.MaximumLength = sizeof(WCHAR);
+    for (ch1 = 0; ch1 < 512; ch1++)
+    {
+        for (ch2 = 0; ch2 < 1024; ch2++)
+        {
+            LONG res = pRtlCompareUnicodeString( &str1, &str2, FALSE );
+            ok( res == (ch1 - ch2), "wrong result %d %04x %04x\n", res, ch1, ch2 );
+            res = pRtlCompareUnicodeString( &str1, &str2, TRUE );
+            ok( res == (pRtlUpcaseUnicodeChar(ch1) - pRtlUpcaseUnicodeChar(ch2)),
+                "wrong result %d %04x %04x\n", res, ch1, ch2 );
+            if (pRtlCompareUnicodeStrings)
+            {
+                res = pRtlCompareUnicodeStrings( &ch1, 1, &ch2, 1, FALSE );
+                ok( res == (ch1 - ch2), "wrong result %d %04x %04x\n", res, ch1, ch2 );
+                res = pRtlCompareUnicodeStrings( &ch1, 1, &ch2, 1, TRUE );
+                ok( res == (pRtlUpcaseUnicodeChar(ch1) - pRtlUpcaseUnicodeChar(ch2)),
+                    "wrong result %d %04x %04x\n", res, ch1, ch2 );
+            }
+        }
+    }
+}
+
 static const WCHAR szGuid[] = { '{','0','1','0','2','0','3','0','4','-',
   '0','5','0','6','-'  ,'0','7','0','8','-','0','9','0','A','-',
   '0','B','0','C','0','D','0','E','0','F','0','A','}','\0' };
@@ -2522,6 +2555,7 @@ START_TEST(rtlstr)
     test_RtlGUIDFromString();
     test_RtlStringFromGUID();
     test_RtlIsTextUnicode();
+    test_RtlCompareUnicodeString();
     if(0)
     {
 	test_RtlUpcaseUnicodeChar();

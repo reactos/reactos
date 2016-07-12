@@ -26,6 +26,9 @@
 #include "ntdll_test.h"
 #include "inaddr.h"
 #include "in6addr.h"
+#include "initguid.h"
+#define COBJMACROS
+#include "shobjidl.h"
 
 #ifndef __WINE_WINTERNL_H
 
@@ -63,9 +66,6 @@ static inline USHORT __my_ushort_swap(USHORT s)
 
 /* Function ptrs for ntdll calls */
 static HMODULE hntdll = 0;
-static PVOID     (WINAPI *pWinSqmStartSession)(PVOID unknown1, DWORD unknown2, DWORD unknown3);
-static BOOL      (WINAPI *pWinSqmIsOptedIn)(void);
-static NTSTATUS  (WINAPI *pWinSqmEndSession)(PVOID unknown1);
 static SIZE_T    (WINAPI  *pRtlCompareMemory)(LPCVOID,LPCVOID,SIZE_T);
 static SIZE_T    (WINAPI  *pRtlCompareMemoryUlong)(PULONG, SIZE_T, ULONG);
 static NTSTATUS  (WINAPI  *pRtlDeleteTimer)(HANDLE, HANDLE, HANDLE);
@@ -110,6 +110,8 @@ static NTSTATUS  (WINAPI *pRtlDecompressFragment)(USHORT, PUCHAR, ULONG, const U
 static NTSTATUS  (WINAPI *pRtlCompressBuffer)(USHORT, const UCHAR*, ULONG, PUCHAR, ULONG, ULONG, PULONG, PVOID);
 static BOOL      (WINAPI *pRtlIsCriticalSectionLocked)(CRITICAL_SECTION *);
 static BOOL      (WINAPI *pRtlIsCriticalSectionLockedByThread)(CRITICAL_SECTION *);
+static NTSTATUS  (WINAPI *pRtlInitializeCriticalSectionEx)(CRITICAL_SECTION *, ULONG, ULONG);
+static NTSTATUS  (WINAPI *pRtlQueryPackageIdentity)(HANDLE, WCHAR*, SIZE_T*, WCHAR*, SIZE_T*, BOOLEAN*);
 
 static HMODULE hkernel32 = 0;
 static BOOL      (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
@@ -127,9 +129,6 @@ static void InitFunctionPtrs(void)
     hntdll = LoadLibraryA("ntdll.dll");
     ok(hntdll != 0, "LoadLibrary failed\n");
     if (hntdll) {
-        pWinSqmStartSession = (void *)GetProcAddress(hntdll, "WinSqmStartSession");
-        pWinSqmIsOptedIn = (void *)GetProcAddress(hntdll, "WinSqmIsOptedIn");
-        pWinSqmEndSession = (void *)GetProcAddress(hntdll, "WinSqmEndSession");
 	pRtlCompareMemory = (void *)GetProcAddress(hntdll, "RtlCompareMemory");
 	pRtlCompareMemoryUlong = (void *)GetProcAddress(hntdll, "RtlCompareMemoryUlong");
         pRtlDeleteTimer = (void *)GetProcAddress(hntdll, "RtlDeleteTimer");
@@ -174,6 +173,8 @@ static void InitFunctionPtrs(void)
         pRtlCompressBuffer = (void *)GetProcAddress(hntdll, "RtlCompressBuffer");
         pRtlIsCriticalSectionLocked = (void *)GetProcAddress(hntdll, "RtlIsCriticalSectionLocked");
         pRtlIsCriticalSectionLockedByThread = (void *)GetProcAddress(hntdll, "RtlIsCriticalSectionLockedByThread");
+        pRtlInitializeCriticalSectionEx = (void *)GetProcAddress(hntdll, "RtlInitializeCriticalSectionEx");
+        pRtlQueryPackageIdentity = (void *)GetProcAddress(hntdll, "RtlQueryPackageIdentity");
     }
     hkernel32 = LoadLibraryA("kernel32.dll");
     ok(hkernel32 != 0, "LoadLibrary failed\n");
@@ -183,48 +184,6 @@ static void InitFunctionPtrs(void)
     strcpy((char*)src_aligned_block, src_src);
     ok(strlen(src) == 15, "Source must be 16 bytes long!\n");
 }
-
-#ifdef __i386__
-const char stdcall3_thunk[] =
-    "\x56"              /* push %esi */
-    "\x89\xE6"          /* mov %esp, %esi */
-    "\xFF\x74\x24\x14"  /* pushl 20(%esp) */
-    "\xFF\x74\x24\x14"  /* pushl 20(%esp) */
-    "\xFF\x74\x24\x14"  /* pushl 20(%esp) */
-    "\xFF\x54\x24\x14"  /* calll 20(%esp) */
-    "\x89\xF0"          /* mov %esi, %eax */
-    "\x29\xE0"          /* sub %esp, %eax */
-    "\x89\xF4"          /* mov %esi, %esp */
-    "\x5E"              /* pop %esi */
-    "\xC2\x10\x00"      /* ret $16 */
-;
-
-static INT (WINAPI *call_stdcall_func3)(PVOID func, PVOID arg0, DWORD arg1, DWORD arg2) = NULL;
-
-static void test_WinSqm(void)
-{
-    INT args;
-
-    if (!pWinSqmStartSession)
-    {
-        win_skip("WinSqmStartSession() is not available\n");
-        return;
-    }
-
-    call_stdcall_func3 = (void*) VirtualAlloc( NULL, sizeof(stdcall3_thunk) - 1, MEM_COMMIT,
-                                               PAGE_EXECUTE_READWRITE );
-    memcpy( call_stdcall_func3, stdcall3_thunk, sizeof(stdcall3_thunk) - 1 );
-
-    args = 3 - call_stdcall_func3( pWinSqmStartSession, NULL, 0, 0 ) / 4;
-    ok(args == 3, "WinSqmStartSession expected to take %d arguments instead of 3\n", args);
-    args = 3 - call_stdcall_func3( pWinSqmIsOptedIn, NULL, 0, 0 ) / 4;
-    ok(args == 0, "WinSqmIsOptedIn expected to take %d arguments instead of 0\n", args);
-    args = 3 - call_stdcall_func3( pWinSqmEndSession, NULL, 0, 0 ) / 4;
-    ok(args == 1, "WinSqmEndSession expected to take %d arguments instead of 1\n", args);
-
-    VirtualFree( call_stdcall_func3, 0, MEM_RELEASE );
-}
-#endif
 
 #define COMP(str1,str2,cmplen,len) size = pRtlCompareMemory(str1, str2, cmplen); \
   ok(size == len, "Expected %ld, got %ld\n", size, (SIZE_T)len)
@@ -2010,7 +1969,7 @@ static void test_RtlIpv6AddressToStringEx(void)
 
         ok(res == STATUS_SUCCESS, "[validate] res = 0x%08x, expected STATUS_SUCCESS\n", res);
         ok(len == (strlen(tests[i].address) + 1) && !strcmp(buffer, tests[i].address),
-           "got len %d with '%s' (expected %d with '%s')\n", len, buffer, strlen(tests[i].address), tests[i].address);
+           "got len %d with '%s' (expected %d with '%s')\n", len, buffer, (int)strlen(tests[i].address), tests[i].address);
     }
 }
 
@@ -3165,15 +3124,113 @@ static void test_RtlIsCriticalSectionLocked(void)
     DeleteCriticalSection(&info.crit);
 }
 
+static void test_RtlInitializeCriticalSectionEx(void)
+{
+    static const CRITICAL_SECTION_DEBUG *no_debug = (void *)~(ULONG_PTR)0;
+    CRITICAL_SECTION cs;
+
+    if (!pRtlInitializeCriticalSectionEx)
+    {
+        win_skip("RtlInitializeCriticalSectionEx is not available\n");
+        return;
+    }
+
+    memset(&cs, 0x11, sizeof(cs));
+    pRtlInitializeCriticalSectionEx(&cs, 0, 0);
+    ok((cs.DebugInfo != NULL && cs.DebugInfo != no_debug) || broken(cs.DebugInfo == no_debug) /* >= Win 8 */,
+       "expected DebugInfo != NULL and DebugInfo != ~0, got %p\n", cs.DebugInfo);
+    ok(cs.LockCount == -1, "expected LockCount == -1, got %d\n", cs.LockCount);
+    ok(cs.RecursionCount == 0, "expected RecursionCount == 0, got %d\n", cs.RecursionCount);
+    ok(cs.LockSemaphore == NULL, "expected LockSemaphore == NULL, got %p\n", cs.LockSemaphore);
+    ok(cs.SpinCount == 0 || broken(cs.SpinCount != 0) /* >= Win 8 */,
+       "expected SpinCount == 0, got %ld\n", cs.SpinCount);
+    RtlDeleteCriticalSection((PRTL_CRITICAL_SECTION)&cs);
+
+    memset(&cs, 0x11, sizeof(cs));
+    pRtlInitializeCriticalSectionEx(&cs, 0, RTL_CRITICAL_SECTION_FLAG_NO_DEBUG_INFO);
+    todo_wine
+    ok(cs.DebugInfo == no_debug, "expected DebugInfo == ~0, got %p\n", cs.DebugInfo);
+    ok(cs.LockCount == -1, "expected LockCount == -1, got %d\n", cs.LockCount);
+    ok(cs.RecursionCount == 0, "expected RecursionCount == 0, got %d\n", cs.RecursionCount);
+    ok(cs.LockSemaphore == NULL, "expected LockSemaphore == NULL, got %p\n", cs.LockSemaphore);
+    ok(cs.SpinCount == 0 || broken(cs.SpinCount != 0) /* >= Win 8 */,
+       "expected SpinCount == 0, got %ld\n", cs.SpinCount);
+    RtlDeleteCriticalSection((PRTL_CRITICAL_SECTION)&cs);
+}
+
+static void test_RtlQueryPackageIdentity(void)
+{
+    const WCHAR programW[] = {'M','i','c','r','o','s','o','f','t','.','W','i','n','d','o','w','s','.',
+                              'P','h','o','t','o','s','_','8','w','e','k','y','b','3','d','8','b','b','w','e','!','A','p','p',0};
+    const WCHAR fullnameW[] = {'M','i','c','r','o','s','o','f','t','.','W','i','n','d','o','w','s','.',
+                               'P','h','o','t','o','s', 0};
+    const WCHAR appidW[] = {'A','p','p',0};
+    IApplicationActivationManager *manager;
+    WCHAR buf1[MAX_PATH], buf2[MAX_PATH];
+    HANDLE process, token;
+    SIZE_T size1, size2;
+    NTSTATUS status;
+    DWORD processid;
+    HRESULT hr;
+    BOOL ret;
+
+    if (!pRtlQueryPackageIdentity)
+    {
+        win_skip("RtlQueryPackageIdentity not available\n");
+        return;
+    }
+
+    size1 = size2 = MAX_PATH * sizeof(WCHAR);
+    status = pRtlQueryPackageIdentity((HANDLE)~(ULONG_PTR)3, buf1, &size1, buf2, &size2, NULL);
+    ok(status == STATUS_NOT_FOUND, "expected STATUS_NOT_FOUND, got %08x\n", status);
+
+    CoInitializeEx(0, COINIT_APARTMENTTHREADED);
+    hr = CoCreateInstance(&CLSID_ApplicationActivationManager, NULL, CLSCTX_LOCAL_SERVER,
+                          &IID_IApplicationActivationManager, (void **)&manager);
+    if (FAILED(hr))
+    {
+        todo_wine win_skip("Failed to create ApplicationActivationManager (%x)\n", hr);
+        goto done;
+    }
+
+    hr = IApplicationActivationManager_ActivateApplication(manager, programW, NULL,
+                                                           AO_NOERRORUI, &processid);
+    if (FAILED(hr))
+    {
+        todo_wine win_skip("Failed to start program (%x)\n", hr);
+        IApplicationActivationManager_Release(manager);
+        goto done;
+    }
+
+    process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_TERMINATE, FALSE, processid);
+    ok(process != NULL, "OpenProcess failed with %u\n", GetLastError());
+    ret = OpenProcessToken(process, TOKEN_QUERY, &token);
+    ok(ret, "OpenProcessToken failed with error %u\n", GetLastError());
+
+    size1 = size2 = MAX_PATH * sizeof(WCHAR);
+    status = pRtlQueryPackageIdentity(token, buf1, &size1, buf2, &size2, NULL);
+    ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+
+    ok(!memcmp(buf1, fullnameW, sizeof(fullnameW) - sizeof(WCHAR)),
+       "Expected buf1 to begin with %s, got %s\n", wine_dbgstr_w(fullnameW), wine_dbgstr_w(buf1));
+    ok(size1 >= sizeof(WCHAR) && !(size1 % sizeof(WCHAR)), "Unexpected size1 = %lu\n", size1);
+    ok(buf1[size1 / sizeof(WCHAR) - 1] == 0, "Expected buf1[%lu] == 0\n", size1 / sizeof(WCHAR) - 1);
+
+    ok(!lstrcmpW(buf2, appidW), "Expected buf2 to be %s, got %s\n", wine_dbgstr_w(appidW), wine_dbgstr_w(buf2));
+    ok(size2 >= sizeof(WCHAR) && !(size2 % sizeof(WCHAR)), "Unexpected size2 = %lu\n", size2);
+    ok(buf2[size2 / sizeof(WCHAR) - 1] == 0, "Expected buf2[%lu] == 0\n", size2 / sizeof(WCHAR) - 1);
+
+    CloseHandle(token);
+    TerminateProcess(process, 0);
+    CloseHandle(process);
+
+done:
+    CoUninitialize();
+}
+
 START_TEST(rtl)
 {
     InitFunctionPtrs();
-
-#ifdef __i386__
-    test_WinSqm();
-#else
-    skip("stdcall-style parameter checks are not supported on this platform.\n");
-#endif
 
     test_RtlCompareMemory();
     test_RtlCompareMemoryUlong();
@@ -3206,4 +3263,6 @@ START_TEST(rtl)
     test_RtlGetCompressionWorkSpaceSize();
     test_RtlDecompressBuffer();
     test_RtlIsCriticalSectionLocked();
+    test_RtlInitializeCriticalSectionEx();
+    test_RtlQueryPackageIdentity();
 }
