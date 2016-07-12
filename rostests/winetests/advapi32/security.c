@@ -3844,8 +3844,9 @@ static void test_GetNamedSecurityInfoA(void)
     char admin_ptr[sizeof(SID)+sizeof(ULONG)*SID_MAX_SUB_AUTHORITIES], *user;
     char system_ptr[sizeof(SID)+sizeof(ULONG)*SID_MAX_SUB_AUTHORITIES];
     char users_ptr[sizeof(SID)+sizeof(ULONG)*SID_MAX_SUB_AUTHORITIES];
+    SID_IDENTIFIER_AUTHORITY SIDAuthNT = { SECURITY_NT_AUTHORITY };
     PSID admin_sid = (PSID) admin_ptr, users_sid = (PSID) users_ptr;
-    PSID system_sid = (PSID) system_ptr, user_sid;
+    PSID system_sid = (PSID) system_ptr, user_sid, localsys_sid;
     DWORD sid_size = sizeof(admin_ptr), user_size;
     char invalid_path[] = "/an invalid file path";
     int users_ace_id = -1, admins_ace_id = -1, i;
@@ -4149,10 +4150,15 @@ static void test_GetNamedSecurityInfoA(void)
                                    NULL, NULL, NULL, NULL, &pSD);
     ok(!error, "GetNamedSecurityInfo failed with error %d\n", error);
 
+    bret = AllocateAndInitializeSid(&SIDAuthNT, 1, SECURITY_LOCAL_SYSTEM_RID, 0, 0, 0, 0, 0, 0, 0, &localsys_sid);
+    ok(bret, "AllocateAndInitializeSid failed with error %d\n", GetLastError());
+
     bret = GetSecurityDescriptorOwner(pSD, &owner, &owner_defaulted);
     ok(bret, "GetSecurityDescriptorOwner failed with error %d\n", GetLastError());
     ok(owner != NULL, "owner should not be NULL\n");
-    ok(EqualSid(owner, admin_sid), "MACHINE\\Software owner SID (%s) != Administrators SID (%s).\n", debugstr_sid(owner), debugstr_sid(admin_sid));
+    ok(EqualSid(owner, admin_sid) || EqualSid(owner, localsys_sid),
+                "MACHINE\\Software owner SID (%s) != Administrators SID (%s) or Local System Sid (%s).\n",
+                debugstr_sid(owner), debugstr_sid(admin_sid), debugstr_sid(localsys_sid));
 
     bret = GetSecurityDescriptorGroup(pSD, &group, &group_defaulted);
     ok(bret, "GetSecurityDescriptorGroup failed with error %d\n", GetLastError());
@@ -4208,11 +4214,14 @@ static void test_GetNamedSecurityInfoA(void)
         flags = ((ACE_HEADER *)ace)->AceFlags;
         ok(flags == 0x0
            || broken(flags == (INHERIT_ONLY_ACE|CONTAINER_INHERIT_ACE|INHERITED_ACE)) /* w2k8 */
-           || broken(flags == (OBJECT_INHERIT_ACE|CONTAINER_INHERIT_ACE)), /* win7 */
+           || broken(flags == (OBJECT_INHERIT_ACE|CONTAINER_INHERIT_ACE)) /* win7 */
+           || broken(flags == (INHERIT_ONLY_ACE|CONTAINER_INHERIT_ACE)), /* win8+ */
            "Builtin Admins ACE has unexpected flags (0x%x != 0x0)\n", flags);
         ok(ace->Mask == KEY_ALL_ACCESS || broken(ace->Mask == GENERIC_ALL) /* w2k8 */,
            "Builtin Admins ACE has unexpected mask (0x%x != 0x%x)\n", ace->Mask, KEY_ALL_ACCESS);
     }
+
+    FreeSid(localsys_sid);
     LocalFree(pSD);
 }
 
