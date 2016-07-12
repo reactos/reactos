@@ -417,6 +417,10 @@ TcpIpDispatchInternal(
 			Context = IrpSp->FileObject->FsContext;
 			AddressFile = Context->AddressFile;
 			break;
+		case TCP_REQUEST_STRUCT :
+			/* Deallocation already performed by the driver */
+			Status = STATUS_SUCCESS;
+			goto FINISH;
 		default :
 			DPRINT1("Unknown FileObject type\n");
 			break;
@@ -529,7 +533,8 @@ TcpIpDispatchInternal(
             DPRINT1("TCPIP: Unknown internal IOCTL: 0x%x.\n", IrpSp->MinorFunction);
             Status = STATUS_NOT_IMPLEMENTED;
     }
-
+	
+FINISH:
     Irp->IoStatus.Status = Status;
     if (Status == STATUS_PENDING)
     {
