@@ -181,6 +181,14 @@ InternalGetNextAttribute(PFIND_ATTR_CONTXT Context)
         }
 
         NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)Context->CurrAttr + Context->CurrAttr->Length);
+
+        if (NextAttribute > Context->LastAttr || NextAttribute < Context->FirstAttr)
+        {
+            DPRINT1("Broken length: 0x%lx!\n", Context->CurrAttr->Length);
+            Context->CurrAttr = (PVOID)-1;
+            return NULL;
+        }
+        
         Context->Offset += ((ULONG_PTR)NextAttribute - (ULONG_PTR)Context->CurrAttr);
         Context->CurrAttr = NextAttribute;
 
