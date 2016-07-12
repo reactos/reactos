@@ -1139,8 +1139,8 @@ static void test_threadcp(void)
 static void test_dbcs_to_widechar(void)
 {
     int i, count, count2;
-    WCHAR wbuf[2];
-    unsigned char buf[] = {0xbf, 0xb4, 0xc7};
+    WCHAR wbuf[5];
+    unsigned char buf[] = {0xbf, 0xb4, 0xc7, '\0', 'x'};
     static const DWORD flags[] = {
         MB_PRECOMPOSED,
         MB_COMPOSITE,
@@ -1157,8 +1157,7 @@ static void test_dbcs_to_widechar(void)
 
     for (i = 0; i < sizeof(flags)/sizeof(DWORD); ++i)
     {
-        wbuf[0] = 0xffff;
-        wbuf[1] = 0xffff;
+        memset(wbuf, 0xff, sizeof(wbuf));
         count = MultiByteToWideChar(936, flags[i], (char*)&buf[0], 2, NULL, 0);
         count2 = MultiByteToWideChar(936, flags[i], (char*)&buf[0], 2, wbuf, count);
 
@@ -1170,8 +1169,7 @@ static void test_dbcs_to_widechar(void)
 
     for (i = 0; i < sizeof(flags)/sizeof(DWORD); ++i)
     {
-        wbuf[0] = 0xffff;
-        wbuf[1] = 0xffff;
+        memset(wbuf, 0xff, sizeof(wbuf));
         count = MultiByteToWideChar(936, flags[i], (char*)&buf[0], 3, NULL, 0);
         SetLastError( 0xdeadbeef );
         count2 = MultiByteToWideChar(936, flags[i], (char*)&buf[0], 3, wbuf, count);
@@ -1190,6 +1188,65 @@ static void test_dbcs_to_widechar(void)
             ok(wbuf[0] == 0x770b, "%04x: returned %04x (expected 770b)\n", flags[i], wbuf[0]);
             ok(wbuf[1] == 0x003f || broken(wbuf[1] == 0), /*windows xp*/
                "%04x: wrong wide char: %04x\n", flags[i], wbuf[1]);
+            ok(wbuf[2] == 0xffff, "%04x: returned %04x (expected ffff)\n", flags[i], wbuf[2]);
+        }
+    }
+
+    /* src ends with null character */
+    for (i = 0; i < sizeof(flags)/sizeof(DWORD); ++i)
+    {
+        memset(wbuf, 0xff, sizeof(wbuf));
+        count = MultiByteToWideChar(936, flags[i], (char*)&buf[0], 4, NULL, 0);
+        SetLastError( 0xdeadbeef );
+        count2 = MultiByteToWideChar(936, flags[i], (char*)&buf[0], 4, wbuf, count);
+        ok(count == count2, "%04x: returned %d (expected %d)\n", flags[i], count2, count);
+
+        if (flags[i] & MB_ERR_INVALID_CHARS)
+        {
+            ok(count == 0, "%04x: returned %d (expected 0)\n", flags[i], count);
+            ok(GetLastError() == ERROR_NO_UNICODE_TRANSLATION, "%04x: returned %d (expected %d)\n",
+               flags[i], GetLastError(), ERROR_NO_UNICODE_TRANSLATION);
+        }
+        else
+        {
+            WCHAR wbuf_ok[]     = { 0x770b, 0x003f, '\0', 0xffff };
+            WCHAR wbuf_broken[] = { 0x770b, '\0', 0xffff, 0xffff };
+            ok(count == 3 || broken(count == 2 /*windows xp*/),
+               "%04x: returned %d (expected 3)\n", flags[i], count);
+            ok(!memcmp(wbuf, wbuf_ok, sizeof(wbuf_ok))
+               || broken(!memcmp(wbuf, wbuf_broken, sizeof(wbuf_broken))),
+               "%04x: returned %04x %04x %04x %04x (expected %04x %04x %04x %04x)\n",
+               flags[i], wbuf[0], wbuf[1], wbuf[2], wbuf[3],
+               wbuf_ok[0], wbuf_ok[1], wbuf_ok[2], wbuf_ok[3]);
+        }
+    }
+
+    /* src has null character, but not ends with it */
+    for (i = 0; i < sizeof(flags)/sizeof(DWORD); ++i)
+    {
+        memset(wbuf, 0xff, sizeof(wbuf));
+        count = MultiByteToWideChar(936, flags[i], (char*)&buf[0], 5, NULL, 0);
+        SetLastError( 0xdeadbeef );
+        count2 = MultiByteToWideChar(936, flags[i], (char*)&buf[0], 5, wbuf, count);
+        ok(count == count2, "%04x: returned %d (expected %d)\n", flags[i], count2, count);
+
+        if (flags[i] & MB_ERR_INVALID_CHARS)
+        {
+            ok(count == 0, "%04x: returned %d (expected 0)\n", flags[i], count);
+            ok(GetLastError() == ERROR_NO_UNICODE_TRANSLATION, "%04x: returned %d (expected %d)\n",
+               flags[i], GetLastError(), ERROR_NO_UNICODE_TRANSLATION);
+        }
+        else
+        {
+            WCHAR wbuf_ok[]     = { 0x770b, 0x003f, '\0', 'x', 0xffff };
+            WCHAR wbuf_broken[] = { 0x770b, '\0', 'x', 0xffff, 0xffff };
+            ok(count == 4 || broken(count == 3),
+               "%04x: returned %d (expected 4)\n", flags[i], count);
+            ok(!memcmp(wbuf, wbuf_ok, sizeof(wbuf_ok))
+               || broken(!memcmp(wbuf, wbuf_broken, sizeof(wbuf_broken))),
+               "%04x: returned %04x %04x %04x %04x %04x (expected %04x %04x %04x %04x %04x)\n",
+               flags[i], wbuf[0], wbuf[1], wbuf[2], wbuf[3], wbuf[4],
+               wbuf_ok[0], wbuf_ok[1], wbuf_ok[2], wbuf_ok[3], wbuf_ok[4]);
         }
     }
 }

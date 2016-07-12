@@ -2750,6 +2750,24 @@ static void test_ResolveDelayLoadedAPI(void)
     DeleteFileA(dll_name);
 }
 
+static void test_InMemoryOrderModuleList(void)
+{
+    LIST_ENTRY *entry1, *mark1 = &NtCurrentTeb()->Peb->LdrData->InLoadOrderModuleList;
+    LIST_ENTRY *entry2, *mark2 = &NtCurrentTeb()->Peb->LdrData->InMemoryOrderModuleList;
+    LDR_MODULE *module1, *module2;
+
+    for (entry1 = mark1->Flink, entry2 = mark2->Flink;
+         entry1 != mark1 && entry2 != mark2;
+         entry1 = entry1->Flink, entry2 = entry2->Flink)
+    {
+        module1 = CONTAINING_RECORD(entry1, LDR_MODULE, InLoadOrderModuleList);
+        module2 = CONTAINING_RECORD(entry2, LDR_MODULE, InMemoryOrderModuleList);
+        ok(module1 == module2, "expected module1 == module2, got %p and %p\n", module1, module2);
+    }
+    ok(entry1 == mark1, "expected entry1 == mark1, got %p and %p\n", entry1, mark1);
+    ok(entry2 == mark2, "expected entry2 == mark2, got %p and %p\n", entry2, mark2);
+}
+
 START_TEST(loader)
 {
     int argc;
@@ -2804,4 +2822,5 @@ START_TEST(loader)
     test_section_access();
     test_import_resolution();
     test_ExitProcess();
+    test_InMemoryOrderModuleList();
 }

@@ -1740,9 +1740,9 @@ static SRWLOCK condvar_srwlock;
 
 /* Sequence of wake/sleep to check boundary conditions:
  * 0: init
- * 1: producer emits a WakeConditionVaribale without consumer waiting.
+ * 1: producer emits a WakeConditionVariable without consumer waiting.
  * 2: consumer sleeps without a wake expecting timeout
- * 3: producer emits a WakeAllConditionVaribale without consumer waiting.
+ * 3: producer emits a WakeAllConditionVariable without consumer waiting.
  * 4: consumer sleeps without a wake expecting timeout
  * 5: a wake is handed to a SleepConditionVariableCS
  * 6: a wakeall is handed to a SleepConditionVariableCS

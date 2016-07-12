@@ -2571,6 +2571,64 @@ static void test_overlapped(void)
     CloseHandle(thread);
 }
 
+static void test_overlapped_error(void)
+{
+    HANDLE pipe, file, event;
+    DWORD err, numbytes;
+    OVERLAPPED overlapped;
+    BOOL ret;
+
+    event = CreateEventA(NULL, TRUE, FALSE, NULL);
+    ok(event != NULL, "CreateEventA failed with %u\n", GetLastError());
+
+    pipe = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
+                            PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+                            1, 1024, 1024, NMPWAIT_WAIT_FOREVER, NULL);
+    ok(pipe != INVALID_HANDLE_VALUE, "CreateNamedPipe failed with %u\n", GetLastError());
+
+    memset(&overlapped, 0, sizeof(overlapped));
+    overlapped.hEvent = event;
+    ret = ConnectNamedPipe(pipe, &overlapped);
+    err = GetLastError();
+    ok(ret == FALSE, "ConnectNamedPipe succeeded\n");
+    ok(err == ERROR_IO_PENDING, "expected ERROR_IO_PENDING, got %u\n", err);
+
+    file = CreateFileA(PIPENAME, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+                       OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
+    ok(file != INVALID_HANDLE_VALUE, "CreateFile failed with %u\n", GetLastError());
+
+    numbytes = 0xdeadbeef;
+    ret = GetOverlappedResult(pipe, &overlapped, &numbytes, TRUE);
+    ok(ret == TRUE, "GetOverlappedResult failed\n");
+    ok(numbytes == 0, "expected 0, got %u\n", numbytes);
+    ok(overlapped.Internal == STATUS_SUCCESS, "expected STATUS_SUCCESS, got %08lx\n", overlapped.Internal);
+
+    CloseHandle(file);
+    CloseHandle(pipe);
+
+    pipe = CreateNamedPipeA(PIPENAME, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
+                            PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+                            1, 1024, 1024, NMPWAIT_WAIT_FOREVER, NULL);
+    ok(pipe != INVALID_HANDLE_VALUE, "CreateNamedPipe failed with %u\n", GetLastError());
+
+    file = CreateFileA(PIPENAME, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+                       OPEN_EXISTING, FILE_FLAG_OVERLAPPED, 0);
+    ok(file != INVALID_HANDLE_VALUE, "CreateFile failed with %u\n", GetLastError());
+
+    memset(&overlapped, 0, sizeof(overlapped));
+    overlapped.hEvent = event;
+    ret = ConnectNamedPipe(pipe, &overlapped);
+    err = GetLastError();
+    ok(ret == FALSE, "ConnectNamedPipe succeeded\n");
+    ok(err == ERROR_PIPE_CONNECTED, "expected ERROR_PIPE_CONNECTED, got %u\n", err);
+    ok(overlapped.Internal == STATUS_PENDING, "expected STATUS_PENDING, got %08lx\n", overlapped.Internal);
+
+    CloseHandle(file);
+    CloseHandle(pipe);
+
+    CloseHandle(event);
+}
+
 static void test_nowait(int pipemode)
 {
     HANDLE hnp;
@@ -3400,6 +3458,7 @@ START_TEST(pipe)
     test_CloseHandle();
     test_impersonation();
     test_overlapped();
+    test_overlapped_error();
     test_nowait(PIPE_TYPE_BYTE);
     test_nowait(PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE);
     test_NamedPipeHandleState();

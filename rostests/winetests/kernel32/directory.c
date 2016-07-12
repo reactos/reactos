@@ -157,6 +157,7 @@ static void test_GetSystemDirectoryW(void)
 static void test_CreateDirectoryA(void)
 {
     char tmpdir[MAX_PATH];
+    WCHAR curdir[MAX_PATH];
     BOOL ret;
 
     ret = CreateDirectoryA(NULL, NULL);
@@ -172,6 +173,7 @@ static void test_CreateDirectoryA(void)
     ret = GetSystemDirectoryA(tmpdir, MAX_PATH);
     ok(ret < MAX_PATH, "System directory should fit into MAX_PATH\n");
 
+    GetCurrentDirectoryW(MAX_PATH, curdir);
     ret = SetCurrentDirectoryA(tmpdir);
     ok(ret == TRUE, "could not chdir to the System directory\n");
 
@@ -329,6 +331,7 @@ static void test_CreateDirectoryA(void)
     ret = RemoveDirectoryA(tmpdir);
     ok(ret == TRUE,
        "RemoveDirectoryA(%s) failed err=%d\n", tmpdir, GetLastError());
+    SetCurrentDirectoryW(curdir);
 }
 
 static void test_CreateDirectoryW(void)
@@ -341,6 +344,7 @@ static void test_CreateDirectoryW(void)
     static const WCHAR slashW[] = {'/',0};
     static const WCHAR dotdotW[] = {'.','.',0};
     static const WCHAR questionW[] = {'?',0};
+    WCHAR curdir[MAX_PATH];
 
     ret = CreateDirectoryW(NULL, NULL);
     if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
@@ -358,6 +362,7 @@ static void test_CreateDirectoryW(void)
     ret = GetSystemDirectoryW(tmpdir, MAX_PATH);
     ok(ret < MAX_PATH, "System directory should fit into MAX_PATH\n");
 
+    GetCurrentDirectoryW(MAX_PATH, curdir);
     ret = SetCurrentDirectoryW(tmpdir);
     ok(ret == TRUE, "could not chdir to the System directory ret %u err %u\n", ret, GetLastError());
 
@@ -413,6 +418,8 @@ static void test_CreateDirectoryW(void)
        ret, GetLastError());
     ret = RemoveDirectoryW(tmpdir);
     ok(ret == FALSE, "RemoveDirectoryW should have failed\n");
+
+    SetCurrentDirectoryW(curdir);
 }
 
 static void test_RemoveDirectoryA(void)

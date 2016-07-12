@@ -1116,10 +1116,9 @@ static void test_GetTempPath(void)
 {
     char save_TMP[MAX_PATH];
     char windir[MAX_PATH];
-    char origdir[MAX_PATH];
     char buf[MAX_PATH];
+    WCHAR curdir[MAX_PATH];
 
-    GetCurrentDirectoryA(sizeof(origdir), origdir);
     if (!GetEnvironmentVariableA("TMP", save_TMP, sizeof(save_TMP))) save_TMP[0] = 0;
 
     /* test default configuration */
@@ -1151,6 +1150,7 @@ static void test_GetTempPath(void)
     test_GetTempPathA(windir);
     test_GetTempPathW(windir);
 
+    GetCurrentDirectoryW(MAX_PATH, curdir);
     /* TMP=C: i.e. use current working directory of the specified drive */
     GetWindowsDirectoryA(windir, sizeof(windir));
     SetCurrentDirectoryA(windir);
@@ -1164,13 +1164,13 @@ static void test_GetTempPath(void)
     test_GetTempPathW(windir);
 
     SetEnvironmentVariableA("TMP", save_TMP);
-    SetCurrentDirectoryA(origdir);
+    SetCurrentDirectoryW(curdir);
 }
 
 static void test_GetLongPathNameA(void)
 {
     DWORD length, explength, hostsize;
-    char tempfile[MAX_PATH];
+    char tempfile[MAX_PATH], *name;
     char longpath[MAX_PATH];
     char unc_prefix[MAX_PATH];
     char unc_short[MAX_PATH], unc_long[MAX_PATH];
@@ -1181,7 +1181,15 @@ static void test_GetLongPathNameA(void)
         return;
 
     GetTempPathA(MAX_PATH, tempfile);
-    lstrcatA(tempfile, "longfilename.longext");
+    name = tempfile + strlen(tempfile);
+
+    strcpy(name, "*");
+    SetLastError(0xdeadbeef);
+    length = pGetLongPathNameA(tempfile, temppath, MAX_PATH);
+    ok(!length, "GetLongPathNameA should fail\n");
+    ok(GetLastError() == ERROR_INVALID_NAME, "wrong error %d\n", GetLastError());
+
+    strcpy(name, "longfilename.longext");
 
     file = CreateFileA(tempfile, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     CloseHandle(file);
@@ -1385,6 +1393,7 @@ static void test_GetShortPathNameW(void)
     static const WCHAR name[] = { 't', 'e', 's', 't', 0 };
     static const WCHAR backSlash[] = { '\\', 0 };
     static const WCHAR a_bcdeW[] = {'a','.','b','c','d','e',0};
+    static const WCHAR wildW[] = { '*',0 };
     WCHAR path[MAX_PATH], tmppath[MAX_PATH], *ptr;
     WCHAR short_path[MAX_PATH];
     DWORD length;
@@ -1447,6 +1456,13 @@ static void test_GetShortPathNameW(void)
     length = GetShortPathNameW( path, short_path, sizeof(short_path)/sizeof(*short_path) );
     ok( length, "GetShortPathNameW failed: %u.\n", GetLastError() );
 
+    lstrcpyW(ptr, wildW);
+    SetLastError(0xdeadbeef);
+    length = GetShortPathNameW( path, short_path, sizeof(short_path)/sizeof(*short_path) );
+    ok(!length, "GetShortPathNameW should fail\n");
+    ok(GetLastError() == ERROR_INVALID_NAME, "wrong error %d\n", GetLastError());
+
+    lstrcpyW(ptr, a_bcdeW);
     ret = DeleteFileW( path );
     ok( ret, "Cannot delete file.\n" );
     *ptr = 0;
@@ -2142,9 +2158,11 @@ static void test_relative_path(void)
     char path[MAX_PATH], buf[MAX_PATH];
     HANDLE file;
     int ret;
+    WCHAR curdir[MAX_PATH];
 
     if (!pGetLongPathNameA) return;
 
+    GetCurrentDirectoryW(MAX_PATH, curdir);
     GetTempPathA(MAX_PATH, path);
     ret = SetCurrentDirectoryA(path);
     ok(ret, "SetCurrentDirectory error %d\n", GetLastError());
@@ -2202,6 +2220,7 @@ static void test_relative_path(void)
     DeleteFileA("foo\\file");
     RemoveDirectoryA("foo");
     RemoveDirectoryA("bar");
+    SetCurrentDirectoryW(curdir);
 }
 
 static void test_CheckNameLegalDOS8Dot3(void)

@@ -43,7 +43,6 @@ static UINT   (WINAPI *pResetWriteWatch)(LPVOID,SIZE_T);
 static NTSTATUS (WINAPI *pNtAreMappedFilesTheSame)(PVOID,PVOID);
 static NTSTATUS (WINAPI *pNtMapViewOfSection)(HANDLE, HANDLE, PVOID *, ULONG, SIZE_T, const LARGE_INTEGER *, SIZE_T *, ULONG, ULONG, ULONG);
 static DWORD (WINAPI *pNtUnmapViewOfSection)(HANDLE, PVOID);
-static struct _TEB * (WINAPI *pNtCurrentTeb)(void);
 static PVOID  (WINAPI *pRtlAddVectoredExceptionHandler)(ULONG, PVECTORED_EXCEPTION_HANDLER);
 static ULONG  (WINAPI *pRtlRemoveVectoredExceptionHandler)(PVOID);
 static BOOL   (WINAPI *pGetProcessDEPPolicy)(HANDLE, LPDWORD, PBOOL);
@@ -454,7 +453,7 @@ static void test_MapViewOfFile(void)
     SetLastError(0xdeadbeef);
     file = CreateFileA( testfile, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0 );
     ok( file != INVALID_HANDLE_VALUE, "CreateFile error %u\n", GetLastError() );
-    SetFilePointer( file, 4096, NULL, FILE_BEGIN );
+    SetFilePointer( file, 12288, NULL, FILE_BEGIN );
     SetEndOfFile( file );
 
     /* read/write mapping */
@@ -1013,6 +1012,31 @@ static void test_MapViewOfFile(void)
     ok(info.State == MEM_FREE, "%#x != MEM_FREE\n", info.State);
     ok(info.Type == 0, "%#x != 0\n", info.Type);
 
+    mapping = CreateFileMappingA( file, NULL, PAGE_READONLY, 0, 12288, NULL );
+    ok( mapping != 0, "CreateFileMappingA failed with error %u\n", GetLastError() );
+
+    ptr = MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, 12288 );
+    ok( ptr != NULL, "MapViewOfFile failed with error %u\n", GetLastError() );
+
+    ret = UnmapViewOfFile( (char *)ptr + 100 );
+    ok( ret, "UnmapViewOfFile failed with error %u\n", GetLastError() );
+    if (!ret) UnmapViewOfFile( ptr );
+
+    ptr = MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, 12288 );
+    ok( ptr != NULL, "MapViewOfFile failed with error %u\n", GetLastError() );
+
+    ret = UnmapViewOfFile( (char *)ptr + 4096 );
+    ok( ret, "UnmapViewOfFile failed with error %u\n", GetLastError() );
+    if (!ret) UnmapViewOfFile( ptr );
+
+    ptr = MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, 12288 );
+    ok( ptr != NULL, "MapViewOfFile failed with error %u\n", GetLastError() );
+
+    ret = UnmapViewOfFile( (char *)ptr + 4096 + 100 );
+    ok( ret, "UnmapViewOfFile failed with error %u\n", GetLastError() );
+    if (!ret) UnmapViewOfFile( ptr );
+
+    CloseHandle(mapping);
     CloseHandle(file);
     DeleteFileA(testfile);
 }
@@ -1824,9 +1848,96 @@ static void test_write_watch(void)
     VirtualFree( base, 0, MEM_RELEASE );
 }
 
+#if defined(__i386__) || defined(__x86_64__)
+
+static DWORD WINAPI stack_commit_func( void *arg )
+{
+    volatile char *p = (char *)&p;
+
+    /* trigger all guard pages, to ensure that the pages are committed */
+    while (p >= (char *)NtCurrentTeb()->DeallocationStack + 4 * 0x1000)
+    {
+        p[0] |= 0;
+        p -= 0x1000;
+    }
+
+    ok( arg == (void *)0xdeadbeef, "expected 0xdeadbeef, got %p\n", arg );
+    return 42;
+}
+
+static void test_stack_commit(void)
+{
+#ifdef __i386__
+    static const char code_call_on_stack[] = {
+        0x55,                   /* pushl %ebp */
+        0x56,                   /* pushl %esi */
+        0x89, 0xe6,             /* movl %esp,%esi */
+        0x8b, 0x4c, 0x24, 0x0c, /* movl 12(%esp),%ecx - func */
+        0x8b, 0x54, 0x24, 0x10, /* movl 16(%esp),%edx - arg */
+        0x8b, 0x44, 0x24, 0x14, /* movl 20(%esp),%eax - stack */
+        0x83, 0xe0, 0xf0,       /* andl $~15,%eax */
+        0x83, 0xe8, 0x0c,       /* subl $12,%eax */
+        0x89, 0xc4,             /* movl %eax,%esp */
+        0x52,                   /* pushl %edx */
+        0x31, 0xed,             /* xorl %ebp,%ebp */
+        0xff, 0xd1,             /* call *%ecx */
+        0x89, 0xf4,             /* movl %esi,%esp */
+        0x5e,                   /* popl %esi */
+        0x5d,                   /* popl %ebp */
+        0xc2, 0x0c, 0x00 };     /* ret $12 */
+#else
+    static const char code_call_on_stack[] = {
+        0x55,                   /* pushq %rbp */
+        0x48, 0x89, 0xe5,       /* movq %rsp,%rbp */
+                                /* %rcx - func, %rdx - arg, %r8 - stack */
+        0x48, 0x87, 0xca,       /* xchgq %rcx,%rdx */
+        0x49, 0x83, 0xe0, 0xf0, /* andq $~15,%r8 */
+        0x49, 0x83, 0xe8, 0x20, /* subq $0x20,%r8 */
+        0x4c, 0x89, 0xc4,       /* movq %r8,%rsp */
+        0xff, 0xd2,             /* callq *%rdx */
+        0x48, 0x89, 0xec,       /* movq %rbp,%rsp */
+        0x5d,                   /* popq %rbp */
+        0xc3 };                 /* ret */
+#endif
+    DWORD (WINAPI *call_on_stack)( DWORD (WINAPI *func)(void *), void *arg, void *stack );
+    void *old_stack, *old_stack_base, *old_stack_limit;
+    void *new_stack, *new_stack_base;
+    DWORD result;
+
+    call_on_stack = VirtualAlloc( 0, 0x1000, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE );
+    ok( call_on_stack != NULL, "VirtualAlloc failed %u\n", GetLastError() );
+    memcpy( call_on_stack, code_call_on_stack, sizeof(code_call_on_stack) );
+
+    /* allocate a new stack, only the first guard page is committed */
+    new_stack = VirtualAlloc( 0, 0x400000, MEM_RESERVE, PAGE_READWRITE );
+    ok( new_stack != NULL, "VirtualAlloc failed %u\n", GetLastError() );
+    new_stack_base = (char *)new_stack + 0x400000;
+    VirtualAlloc( (char *)new_stack_base - 0x1000, 0x1000, MEM_COMMIT, PAGE_READWRITE | PAGE_GUARD );
+
+    old_stack       = NtCurrentTeb()->DeallocationStack;
+    old_stack_base  = NtCurrentTeb()->Tib.StackBase;
+    old_stack_limit = NtCurrentTeb()->Tib.StackLimit;
+
+    NtCurrentTeb()->DeallocationStack  = new_stack;
+    NtCurrentTeb()->Tib.StackBase      = new_stack_base;
+    NtCurrentTeb()->Tib.StackLimit     = new_stack_base;
+
+    result = call_on_stack( stack_commit_func, (void *)0xdeadbeef, new_stack_base );
+
+    NtCurrentTeb()->DeallocationStack  = old_stack;
+    NtCurrentTeb()->Tib.StackBase      = old_stack_base;
+    NtCurrentTeb()->Tib.StackLimit     = old_stack_limit;
+
+    ok( result == 42, "expected 42, got %u\n", result );
+
+    VirtualFree( new_stack, 0, MEM_RELEASE );
+    VirtualFree( call_on_stack, 0, MEM_RELEASE );
+}
+
+#endif  /* defined(__i386__) || defined(__x86_64__) */
 #ifdef __i386__
 
-static DWORD num_guard_page_calls;
+static LONG num_guard_page_calls;
 
 static DWORD guard_page_handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTRATION_RECORD *frame,
                                  CONTEXT *context, EXCEPTION_REGISTRATION_RECORD **dispatcher )
@@ -1838,7 +1949,7 @@ static DWORD guard_page_handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTRATION_R
     ok( rec->ExceptionCode == STATUS_GUARD_PAGE_VIOLATION, "ExceptionCode is %08x instead of %08x\n",
         rec->ExceptionCode, STATUS_GUARD_PAGE_VIOLATION );
 
-    num_guard_page_calls++;
+    InterlockedIncrement( &num_guard_page_calls );
     *(int *)rec->ExceptionInformation[1] += 0x100;
 
     return ExceptionContinueExecution;
@@ -1855,12 +1966,6 @@ static void test_guard_page(void)
     ULONG pagesize;
     BOOL success;
     char *base;
-
-    if (!pNtCurrentTeb)
-    {
-        win_skip( "NtCurrentTeb not supported\n" );
-        return;
-    }
 
     size = 0x1000;
     base = VirtualAlloc( 0, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE | PAGE_GUARD );
@@ -1924,16 +2029,16 @@ static void test_guard_page(void)
 
     /* test directly accessing the memory - we need to setup an exception handler first */
     frame.Handler = guard_page_handler;
-    frame.Prev = pNtCurrentTeb()->Tib.ExceptionList;
-    pNtCurrentTeb()->Tib.ExceptionList = &frame;
+    frame.Prev = NtCurrentTeb()->Tib.ExceptionList;
+    NtCurrentTeb()->Tib.ExceptionList = &frame;
 
-    num_guard_page_calls = 0;
-    old_value = *value; /* exception handler increments value by 0x100 */
+    InterlockedExchange( &num_guard_page_calls, 0 );
+    InterlockedExchange( &old_value, *value ); /* exception handler increments value by 0x100 */
     *value = 2;
     ok( old_value == 0x101, "memory block contains wrong value, expected 0x101, got 0x%x\n", old_value );
     ok( num_guard_page_calls == 1, "expected one callback of guard page handler, got %d calls\n", num_guard_page_calls );
 
-    pNtCurrentTeb()->Tib.ExceptionList = frame.Prev;
+    NtCurrentTeb()->Tib.ExceptionList = frame.Prev;
 
     /* check info structure again, PAGE_GUARD should be removed now */
     ret = VirtualQuery( base, &info, sizeof(info) );
@@ -1946,16 +2051,16 @@ static void test_guard_page(void)
 
     /* test accessing second integer in memory */
     frame.Handler = guard_page_handler;
-    frame.Prev = pNtCurrentTeb()->Tib.ExceptionList;
-    pNtCurrentTeb()->Tib.ExceptionList = &frame;
+    frame.Prev = NtCurrentTeb()->Tib.ExceptionList;
+    NtCurrentTeb()->Tib.ExceptionList = &frame;
 
-    num_guard_page_calls = 0;
+    InterlockedExchange( &num_guard_page_calls, 0 );
     old_value = *(value + 1);
     ok( old_value == 0x102, "memory block contains wrong value, expected 0x102, got 0x%x\n", old_value );
     ok( *value == 2, "memory block contains wrong value, expected 2, got 0x%x\n", *value );
     ok( num_guard_page_calls == 1, "expected one callback of guard page handler, got %d calls\n", num_guard_page_calls );
 
-    pNtCurrentTeb()->Tib.ExceptionList = frame.Prev;
+    NtCurrentTeb()->Tib.ExceptionList = frame.Prev;
 
     success = VirtualLock( base, size );
     ok( success, "VirtualLock failed %u\n", GetLastError() );
@@ -2000,15 +2105,15 @@ static void test_guard_page(void)
 
     /* writing to a page should trigger should trigger guard page, even if write watch is set */
     frame.Handler = guard_page_handler;
-    frame.Prev = pNtCurrentTeb()->Tib.ExceptionList;
-    pNtCurrentTeb()->Tib.ExceptionList = &frame;
+    frame.Prev = NtCurrentTeb()->Tib.ExceptionList;
+    NtCurrentTeb()->Tib.ExceptionList = &frame;
 
-    num_guard_page_calls = 0;
+    InterlockedExchange( &num_guard_page_calls, 0 );
     *value       = 1;
     *(value + 1) = 2;
     ok( num_guard_page_calls == 1, "expected one callback of guard page handler, got %d calls\n", num_guard_page_calls );
 
-    pNtCurrentTeb()->Tib.ExceptionList = frame.Prev;
+    NtCurrentTeb()->Tib.ExceptionList = frame.Prev;
 
     count = 64;
     ret = pGetWriteWatch( WRITE_WATCH_FLAG_RESET, base, size, results, &count, &pagesize );
@@ -2021,16 +2126,16 @@ static void test_guard_page(void)
 
     /* write watch is triggered from inside of the guard page handler */
     frame.Handler = guard_page_handler;
-    frame.Prev = pNtCurrentTeb()->Tib.ExceptionList;
-    pNtCurrentTeb()->Tib.ExceptionList = &frame;
+    frame.Prev = NtCurrentTeb()->Tib.ExceptionList;
+    NtCurrentTeb()->Tib.ExceptionList = &frame;
 
-    num_guard_page_calls = 0;
+    InterlockedExchange( &num_guard_page_calls, 0 );
     old_value = *(value + 1); /* doesn't trigger write watch */
     ok( old_value == 0x102, "memory block contains wrong value, expected 0x102, got 0x%x\n", old_value );
     ok( *value == 1, "memory block contains wrong value, expected 1, got 0x%x\n", *value );
     ok( num_guard_page_calls == 1, "expected one callback of guard page handler, got %d calls\n", num_guard_page_calls );
 
-    pNtCurrentTeb()->Tib.ExceptionList = frame.Prev;
+    NtCurrentTeb()->Tib.ExceptionList = frame.Prev;
 
     count = 64;
     ret = pGetWriteWatch( WRITE_WATCH_FLAG_RESET, base, size, results, &count, &pagesize );
@@ -2075,82 +2180,7 @@ static void test_guard_page(void)
     VirtualFree( base, 0, MEM_RELEASE );
 }
 
-static DWORD WINAPI stack_commit_func( void *arg )
-{
-    volatile char *p = (char *)&p;
-
-    /* trigger all guard pages, to ensure that the pages are committed */
-    while (p >= (char *)pNtCurrentTeb()->DeallocationStack + 3 * 0x1000)
-    {
-        p[0] |= 0;
-        p -= 0x1000;
-    }
-
-    ok( arg == (void *)0xdeadbeef, "expected 0xdeadbeef, got %p\n", arg );
-    return 42;
-}
-
-static void test_stack_commit(void)
-{
-    static const char code_call_on_stack[] = {
-        0x55,                   /* pushl %ebp */
-        0x56,                   /* pushl %esi */
-        0x89, 0xe6,             /* movl %esp,%esi */
-        0x8b, 0x4c, 0x24, 0x0c, /* movl 12(%esp),%ecx - func */
-        0x8b, 0x54, 0x24, 0x10, /* movl 16(%esp),%edx - arg */
-        0x8b, 0x44, 0x24, 0x14, /* movl 20(%esp),%eax - stack */
-        0x83, 0xe0, 0xf0,       /* andl $~15,%eax */
-        0x83, 0xe8, 0x0c,       /* subl $12,%eax */
-        0x89, 0xc4,             /* movl %eax,%esp */
-        0x52,                   /* pushl %edx */
-        0x31, 0xed,             /* xorl %ebp,%ebp */
-        0xff, 0xd1,             /* call *%ecx */
-        0x89, 0xf4,             /* movl %esi,%esp */
-        0x5e,                   /* popl %esi */
-        0x5d,                   /* popl %ebp */
-        0xc2, 0x0c, 0x00 };     /* ret $12 */
-
-    DWORD (WINAPI *call_on_stack)( DWORD (WINAPI *func)(void *), void *arg, void *stack );
-    void *old_stack, *old_stack_base, *old_stack_limit;
-    void *new_stack, *new_stack_base;
-    DWORD result;
-
-    if (!pNtCurrentTeb)
-    {
-        win_skip( "NtCurrentTeb not supported\n" );
-        return;
-    }
-
-    call_on_stack = VirtualAlloc( 0, 0x1000, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE );
-    ok( call_on_stack != NULL, "VirtualAlloc failed %u\n", GetLastError() );
-    memcpy( call_on_stack, code_call_on_stack, sizeof(code_call_on_stack) );
-
-    /* allocate a new stack, only the first guard page is committed */
-    new_stack = VirtualAlloc( 0, 0x400000, MEM_RESERVE, PAGE_READWRITE );
-    ok( new_stack != NULL, "VirtualAlloc failed %u\n", GetLastError() );
-    new_stack_base = (char *)new_stack + 0x400000;
-    VirtualAlloc( (char *)new_stack_base - 0x1000, 0x1000, MEM_COMMIT, PAGE_READWRITE | PAGE_GUARD );
-
-    old_stack       = pNtCurrentTeb()->DeallocationStack;
-    old_stack_base  = pNtCurrentTeb()->Tib.StackBase;
-    old_stack_limit = pNtCurrentTeb()->Tib.StackLimit;
-
-    pNtCurrentTeb()->DeallocationStack  = new_stack;
-    pNtCurrentTeb()->Tib.StackBase      = new_stack_base;
-    pNtCurrentTeb()->Tib.StackLimit     = new_stack_base;
-
-    result = call_on_stack( stack_commit_func, (void *)0xdeadbeef, new_stack_base );
-    ok( result == 42, "expected 42, got %u\n", result );
-
-    pNtCurrentTeb()->DeallocationStack  = old_stack;
-    pNtCurrentTeb()->Tib.StackBase      = old_stack_base;
-    pNtCurrentTeb()->Tib.StackLimit     = old_stack_limit;
-
-    VirtualFree( new_stack, 0, MEM_RELEASE );
-    VirtualFree( call_on_stack, 0, MEM_RELEASE );
-}
-
-DWORD num_execute_fault_calls;
+static LONG num_execute_fault_calls;
 
 static DWORD execute_fault_seh_handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTRATION_RECORD *frame,
                                         CONTEXT *context, EXCEPTION_REGISTRATION_RECORD **dispatcher )
@@ -2175,7 +2205,7 @@ static DWORD execute_fault_seh_handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTR
         ok( rec->ExceptionInformation[0] == err, "ExceptionInformation[0] is %d instead of %d\n",
             (DWORD)rec->ExceptionInformation[0], err );
 
-        num_guard_page_calls++;
+        InterlockedIncrement( &num_guard_page_calls );
     }
     else if (rec->ExceptionCode == STATUS_ACCESS_VIOLATION)
     {
@@ -2190,7 +2220,7 @@ static DWORD execute_fault_seh_handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTR
         ok( success, "VirtualProtect failed %u\n", GetLastError() );
         ok( old_prot == PAGE_READWRITE, "wrong old prot %x\n", old_prot );
 
-        num_execute_fault_calls++;
+        InterlockedIncrement( &num_execute_fault_calls );
     }
 
     return ExceptionContinueExecution;
@@ -2211,7 +2241,7 @@ static LONG CALLBACK execute_fault_vec_handler( EXCEPTION_POINTERS *ExceptionInf
         "ExceptionCode is %08x instead of STATUS_ACCESS_VIOLATION\n", rec->ExceptionCode );
 
     if (rec->ExceptionCode == STATUS_ACCESS_VIOLATION)
-        num_execute_fault_calls++;
+        InterlockedIncrement( &num_execute_fault_calls );
 
     if (rec->ExceptionInformation[0] == EXCEPTION_READ_FAULT)
         return EXCEPTION_CONTINUE_SEARCH;
@@ -2229,13 +2259,14 @@ static inline DWORD send_message_excpt( HWND hWnd, UINT uMsg, WPARAM wParam, LPA
     DWORD ret;
 
     frame.Handler = execute_fault_seh_handler;
-    frame.Prev = pNtCurrentTeb()->Tib.ExceptionList;
-    pNtCurrentTeb()->Tib.ExceptionList = &frame;
+    frame.Prev = NtCurrentTeb()->Tib.ExceptionList;
+    NtCurrentTeb()->Tib.ExceptionList = &frame;
 
-    num_guard_page_calls = num_execute_fault_calls = 0;
+    InterlockedExchange( &num_guard_page_calls, 0 );
+    InterlockedExchange( &num_execute_fault_calls, 0 );
     ret = SendMessageA( hWnd, uMsg, wParam, lParam );
 
-    pNtCurrentTeb()->Tib.ExceptionList = frame.Prev;
+    NtCurrentTeb()->Tib.ExceptionList = frame.Prev;
 
     return ret;
 }
@@ -2246,13 +2277,14 @@ static inline DWORD call_proc_excpt( DWORD (CALLBACK *code)(void *), void *arg )
     DWORD ret;
 
     frame.Handler = execute_fault_seh_handler;
-    frame.Prev = pNtCurrentTeb()->Tib.ExceptionList;
-    pNtCurrentTeb()->Tib.ExceptionList = &frame;
+    frame.Prev = NtCurrentTeb()->Tib.ExceptionList;
+    NtCurrentTeb()->Tib.ExceptionList = &frame;
 
-    num_guard_page_calls = num_execute_fault_calls = 0;
+    InterlockedExchange( &num_guard_page_calls, 0 );
+    InterlockedExchange( &num_execute_fault_calls, 0 );
     ret = code( arg );
 
-    pNtCurrentTeb()->Tib.ExceptionList = frame.Prev;
+    NtCurrentTeb()->Tib.ExceptionList = frame.Prev;
 
     return ret;
 }
@@ -2298,12 +2330,6 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
     WNDCLASSEXA wc;
     char *base;
     HWND hWnd;
-
-    if (!pNtCurrentTeb)
-    {
-        win_skip( "NtCurrentTeb not supported\n" );
-        return;
-    }
 
     trace( "Running DEP tests with ProcessExecuteFlags = %d\n", dep_flags );
 
@@ -2608,7 +2634,7 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
     ok( count == 1, "wrong count %lu\n", count );
     ok( results[0] == base, "wrong result %p\n", results[0] );
 
-    /* Create a new window class and associcated Window (see above) */
+    /* Create a new window class and associated Window (see above) */
 
     success = VirtualProtect( base, size, PAGE_EXECUTE_READWRITE, &old_prot );
     ok( success, "VirtualProtect failed %u\n", GetLastError() );
@@ -3296,7 +3322,9 @@ static void test_CreateFileMapping_protection(void)
                 SetLastError(0xdeadbeef);
                 ret = VirtualQuery(base, &info, sizeof(info));
                 ok(ret, "VirtualQuery failed %d\n", GetLastError());
-                ok(info.Protect == td[i].prot_after_write, "%d: got %#x != expected %#x\n", i, info.Protect, td[i].prot_after_write);
+                /* FIXME: remove the condition below once Wine is fixed */
+                todo_wine_if (td[i].prot == PAGE_WRITECOPY || td[i].prot == PAGE_EXECUTE_WRITECOPY)
+                    ok(info.Protect == td[i].prot_after_write, "%d: got %#x != expected %#x\n", i, info.Protect, td[i].prot_after_write);
             }
         }
         else
@@ -3310,7 +3338,9 @@ static void test_CreateFileMapping_protection(void)
         SetLastError(0xdeadbeef);
         ret = VirtualProtect(base, si.dwPageSize, PAGE_NOACCESS, &old_prot);
         ok(ret, "%d: VirtualProtect error %d\n", i, GetLastError());
-        ok(old_prot == td[i].prot_after_write, "%d: got %#x != expected %#x\n", i, old_prot, td[i].prot_after_write);
+        /* FIXME: remove the condition below once Wine is fixed */
+        todo_wine_if (td[i].prot == PAGE_WRITECOPY || td[i].prot == PAGE_EXECUTE_WRITECOPY)
+            ok(old_prot == td[i].prot_after_write, "%d: got %#x != expected %#x\n", i, old_prot, td[i].prot_after_write);
     }
 
     UnmapViewOfFile(base);
@@ -3840,7 +3870,6 @@ static void test_NtQuerySection(void)
     ok(info.basic.BaseAddress == NULL, "expected NULL, got %p\n", info.basic.BaseAddress);
 todo_wine
     ok(info.basic.Attributes == SEC_FILE, "expected SEC_FILE, got %#x\n", info.basic.Attributes);
-todo_wine
     ok(info.basic.Size.QuadPart == fsize, "expected %#lx, got %#x/%08x\n", fsize, info.basic.Size.HighPart, info.basic.Size.LowPart);
 
     status = pNtQuerySection(mapping, SectionImageInformation, &info, sizeof(info.basic), &ret);
@@ -3864,7 +3893,6 @@ todo_wine
     ok(info.basic.BaseAddress == NULL, "expected NULL, got %p\n", info.basic.BaseAddress);
 todo_wine
     ok(info.basic.Attributes == SEC_FILE, "expected SEC_FILE, got %#x\n", info.basic.Attributes);
-todo_wine
     ok(info.basic.Size.QuadPart == fsize, "expected %#lx, got %#x/%08x\n", fsize, info.basic.Size.HighPart, info.basic.Size.LowPart);
 
     UnmapViewOfFile(p);
@@ -3950,16 +3978,13 @@ todo_wine
     ok(info.basic.BaseAddress == NULL, "expected NULL, got %p\n", info.basic.BaseAddress);
 todo_wine
     ok(info.basic.Attributes == SEC_FILE, "expected SEC_FILE, got %#x\n", info.basic.Attributes);
-todo_wine
     ok(info.basic.Size.QuadPart == fsize, "expected %#lx, got %#x/%08x\n", fsize, info.basic.Size.HighPart, info.basic.Size.LowPart);
 
     CloseHandle(mapping);
 
     SetLastError(0xdeadbef);
     mapping = CreateFileMappingA(file, NULL, PAGE_READONLY|SEC_RESERVE, 0, 0, NULL);
-todo_wine
     ok(mapping != 0, "CreateFileMapping error %u\n", GetLastError());
-    if (!mapping) goto skip1;
 
     memset(&info, 0x55, sizeof(info));
     ret = 0xdeadbeef;
@@ -3967,11 +3992,11 @@ todo_wine
     ok(status == STATUS_SUCCESS, "NtQuerySection error %#x\n", status);
     ok(ret == sizeof(info.basic), "wrong returned size %u\n", ret);
     ok(info.basic.BaseAddress == NULL, "expected NULL, got %p\n", info.basic.BaseAddress);
+todo_wine
     ok(info.basic.Attributes == SEC_FILE, "expected SEC_FILE, got %#x\n", info.basic.Attributes);
     ok(info.basic.Size.QuadPart == fsize, "expected %#lx, got %#x/%08x\n", fsize, info.basic.Size.HighPart, info.basic.Size.LowPart);
 
     CloseHandle(mapping);
-skip1:
     CloseHandle(file);
 
     SetLastError(0xdeadbef);
@@ -4076,7 +4101,6 @@ START_TEST(virtual)
     pNtAreMappedFilesTheSame = (void *)GetProcAddress( hntdll, "NtAreMappedFilesTheSame" );
     pNtMapViewOfSection = (void *)GetProcAddress( hntdll, "NtMapViewOfSection" );
     pNtUnmapViewOfSection = (void *)GetProcAddress( hntdll, "NtUnmapViewOfSection" );
-    pNtCurrentTeb = (void *)GetProcAddress( hntdll, "NtCurrentTeb" );
     pRtlAddVectoredExceptionHandler = (void *)GetProcAddress( hntdll, "RtlAddVectoredExceptionHandler" );
     pRtlRemoveVectoredExceptionHandler = (void *)GetProcAddress( hntdll, "RtlRemoveVectoredExceptionHandler" );
     pNtQuerySection = (void *)GetProcAddress( hntdll, "NtQuerySection" );
@@ -4103,7 +4127,9 @@ START_TEST(virtual)
     test_IsBadWritePtr();
     test_IsBadCodePtr();
     test_write_watch();
+#if defined(__i386__) || defined(__x86_64__)
     test_stack_commit();
+#endif
 #ifdef __i386__
     if (!winetest_interactive)
     {
