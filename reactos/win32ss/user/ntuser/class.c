@@ -1283,11 +1283,7 @@ IntGetAtomFromStringOrAtom(
         }
         else
         {
-            if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
-            {
-                EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
-            }
-            else
+            if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
             {
                 SetLastNtError(Status);
             }
@@ -1362,7 +1358,6 @@ IntGetClassAtom(
                              Link);
         if (Class == NULL)
         {
-            EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
             return (RTL_ATOM)0;
         }else{TRACE("Step 4: 0x%p\n",Class );}
 
@@ -1415,7 +1410,6 @@ IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance, BOOL bDe
          ERR("Class \"%wZ\" not found\n", ClassName);
       }
 
-      EngSetLastError(ERROR_CANNOT_FIND_WND_CLASS);
       return NULL;
    }
 
@@ -1539,6 +1533,7 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
                                 &Link);
     if (ClassAtom == (RTL_ATOM)0)
     {
+        EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
         TRACE("UserUnregisterClass: No Class found.\n");
         return FALSE;
     }

@@ -308,7 +308,7 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
 
     if (GET_WORD(p))
     {
-        info->data = p + 1;
+        info->data = p;
         p += GET_WORD(p) / sizeof(WORD);
     }
     else info->data = NULL;
@@ -931,7 +931,10 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         {
             pos.x += MulDiv(template.x, xBaseUnit, 4);
             pos.y += MulDiv(template.y, yBaseUnit, 8);
-            if (!(template.style & (WS_CHILD|DS_ABSALIGN))) ClientToScreen( owner, &pos );
+            //
+            // REACTOS : Need an owner to be passed!!!
+            //
+            if (!(template.style & (WS_CHILD|DS_ABSALIGN)) && owner ) ClientToScreen( owner, &pos );
         }
         if ( !(template.style & WS_CHILD) )
         {
@@ -1067,6 +1070,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         if (template.style & WS_VISIBLE && !(GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_VISIBLE))
         {
            ShowWindow( hwnd, SW_SHOWNORMAL );   /* SW_SHOW doesn't always work */
+           UpdateWindow( hwnd );
            IntNotifyWinEvent(EVENT_SYSTEM_DIALOGSTART, hwnd, OBJID_WINDOW, CHILDID_SELF, 0);
         }
         return hwnd;
@@ -1674,7 +1678,7 @@ DefDlgProcA(
     BOOL result = FALSE;
 
     /* Perform DIALOGINFO initialization if not done */
-    if(!(dlgInfo = DIALOG_get_info( hDlg, TRUE ))) return 0;
+    if(!(dlgInfo = DIALOG_get_info( hDlg, Msg == WM_NCCREATE ))) return 0;
 
     SetWindowLongPtrW( hDlg, DWLP_MSGRESULT, 0 );
 
@@ -1734,7 +1738,7 @@ DefDlgProcW(
     BOOL result = FALSE;
 
     /* Perform DIALOGINFO initialization if not done */
-    if(!(dlgInfo = DIALOG_get_info( hDlg, TRUE ))) return 0;
+    if(!(dlgInfo = DIALOG_get_info( hDlg, Msg == WM_NCCREATE ))) return 0;
 
     SetWindowLongPtrW( hDlg, DWLP_MSGRESULT, 0 );
 
