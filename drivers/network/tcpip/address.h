@@ -5,6 +5,8 @@
 #define TCP_REQUEST_CANCEL_MODE_CLOSE    2
 #define TCP_REQUEST_CANCEL_MODE_PRESERVE 3
 
+#define TCP_REQUEST_STRUCT                255
+
 #define TCP_REQUEST_PENDING_GENERAL 0
 #define TCP_REQUEST_PENDING_SEND    1
 #define TCP_REQUEST_PENDING_RECEIVE 2
@@ -49,13 +51,13 @@ typedef struct _ADDRESS_FILE {
 typedef struct _TCP_CONTEXT {
 	UCHAR Type; // must be the first member
 	LIST_ENTRY ListEntry;
-	PADDRESS_FILE AddressFile;
+	ULONG TcpState;
 	IPPROTO Protocol;
 	TDI_ADDRESS_IP RequestAddress;
+	PADDRESS_FILE AddressFile;
 	KSPIN_LOCK RequestListLock;
 	LIST_ENTRY RequestListHead;
 	struct tcp_pcb* lwip_tcp_pcb;
-	ULONG TcpState;
 } TCP_CONTEXT, *PTCP_CONTEXT;
 
 typedef struct _TCP_REQUEST {

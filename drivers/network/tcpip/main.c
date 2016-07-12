@@ -269,9 +269,9 @@ TcpIpCreate(
 			DPRINT1("\nPTA_IP_ADDRESS dump before\n %08x %08x %08x %08x\n %08x %08x %08x %08x\n",
 				temp[7], temp[6], temp[5], temp[4],
 				temp[3], temp[2], temp[1], temp[0]);*/
-			DPRINT1("Call into TcpIpCreateAddress\n");
+			// DPRINT1("Call into TcpIpCreateAddress\n");
 			Status = TcpIpCreateAddress(Irp, &Address->Address[0].Address[0], Protocol);
-			DPRINT1("Returned from TcpIpCreateAddress\n");
+			// DPRINT1("Returned from TcpIpCreateAddress\n");
 			if (Status != STATUS_SUCCESS)
 			{
 				goto Quickie;
