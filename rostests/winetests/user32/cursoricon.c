@@ -1130,14 +1130,76 @@ static void test_LoadImageFile(const char * test_desc, const unsigned char * ima
     DeleteFileA(filename);
 }
 
+typedef struct {
+    unsigned width;
+    unsigned height;
+    BOOL invalid_offset;
+} test_icon_entries_t;
+
+static void create_ico_file(const char *filename, const test_icon_entries_t *test_icon_entries, unsigned entry_cnt)
+{
+    CURSORICONFILEDIRENTRY *icon_entry;
+    BITMAPINFOHEADER *icon_header;
+    CURSORICONFILEDIR *dir;
+    BYTE *buf, *bitmap_ptr;
+    DWORD bytes_written;
+    size_t icon_size;
+    HANDLE file;
+    unsigned i;
+    BOOL ret;
+
+    const unsigned icon_bpp = 32;
+
+    icon_size = FIELD_OFFSET(CURSORICONFILEDIR, idEntries[entry_cnt]) + sizeof(BITMAPINFOHEADER)*entry_cnt;
+    for(i=0; i<entry_cnt; i++)
+        icon_size += icon_bpp * test_icon_entries[i].width * test_icon_entries[i].height / 8;
+
+    buf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, icon_size);
+    dir = (CURSORICONFILEDIR*)buf;
+
+    dir->idReserved = 0;
+    dir->idType = 1;
+    dir->idCount = entry_cnt;
+
+    bitmap_ptr = buf + FIELD_OFFSET(CURSORICONFILEDIR, idEntries[entry_cnt]);
+    for(i=0; i<entry_cnt; i++) {
+        icon_entry = dir->idEntries+i;
+        icon_entry->bWidth = test_icon_entries[i].width;
+        icon_entry->bHeight = test_icon_entries[i].height;
+        icon_entry->bColorCount = 0;
+        icon_entry->bReserved = 0;
+        icon_entry->xHotspot = 1;
+        icon_entry->yHotspot = 1;
+        icon_entry->dwDIBSize = sizeof(BITMAPINFOHEADER) + icon_entry->bWidth * icon_entry->bHeight * icon_bpp / 8;
+        icon_entry->dwDIBOffset = test_icon_entries[i].invalid_offset ? 0xffffffff : bitmap_ptr - buf;
+
+        icon_header = (BITMAPINFOHEADER*)bitmap_ptr;
+        bitmap_ptr += icon_entry->dwDIBSize;
+
+        icon_header->biSize = sizeof(BITMAPINFOHEADER);
+        icon_header->biWidth = icon_entry->bWidth;
+        icon_header->biHeight = icon_entry->bHeight;
+        icon_header->biPlanes = 1;
+        icon_header->biBitCount = icon_bpp;
+        icon_header->biSizeImage = 0; /* Uncompressed bitmap. */
+    }
+
+    memset(bitmap_ptr, 0xf0, buf+icon_size-bitmap_ptr);
+
+    /* Create the icon. */
+    file = CreateFileA(filename, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "CreateFileA failed. %u\n", GetLastError());
+    ret = WriteFile(file, buf, icon_size, &bytes_written, NULL);
+    ok(ret && bytes_written == icon_size, "icon.ico created improperly.\n");
+    CloseHandle(file);
+}
+
 static void test_LoadImage(void)
 {
     HANDLE handle;
     BOOL ret;
-    DWORD error, bytes_written;
-    CURSORICONFILEDIR *icon_data;
-    CURSORICONFILEDIRENTRY *icon_entry;
-    BITMAPINFOHEADER *icon_header, *bitmap_header;
+    DWORD error;
+    BITMAPINFOHEADER *bitmap_header;
     ICONINFO icon_info;
     int i;
 
@@ -1149,37 +1211,9 @@ static void test_LoadImage(void)
     (sizeof(CURSORICONFILEDIR) + sizeof(BITMAPINFOHEADER) \
     + ICON_AND_SIZE + ICON_AND_SIZE*ICON_BPP)
 
-    /* Set icon data. */
-    icon_data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ICON_SIZE);
-    icon_data->idReserved = 0;
-    icon_data->idType = 1;
-    icon_data->idCount = 1;
+    static const test_icon_entries_t icon_desc = {32, 32};
 
-    icon_entry = icon_data->idEntries;
-    icon_entry->bWidth = ICON_WIDTH;
-    icon_entry->bHeight = ICON_HEIGHT;
-    icon_entry->bColorCount = 0;
-    icon_entry->bReserved = 0;
-    icon_entry->xHotspot = 1;
-    icon_entry->yHotspot = 1;
-    icon_entry->dwDIBSize = ICON_SIZE - sizeof(CURSORICONFILEDIR);
-    icon_entry->dwDIBOffset = sizeof(CURSORICONFILEDIR);
-
-    icon_header = (BITMAPINFOHEADER *) ((BYTE *) icon_data + icon_entry->dwDIBOffset);
-    icon_header->biSize = sizeof(BITMAPINFOHEADER);
-    icon_header->biWidth = ICON_WIDTH;
-    icon_header->biHeight = ICON_HEIGHT*2;
-    icon_header->biPlanes = 1;
-    icon_header->biBitCount = ICON_BPP;
-    icon_header->biSizeImage = 0; /* Uncompressed bitmap. */
-
-    /* Create the icon. */
-    handle = CreateFileA("icon.ico", GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_NEW,
-        FILE_ATTRIBUTE_NORMAL, NULL);
-    ok(handle != INVALID_HANDLE_VALUE, "CreateFileA failed. %u\n", GetLastError());
-    ret = WriteFile(handle, icon_data, ICON_SIZE, &bytes_written, NULL);
-    ok(ret && bytes_written == ICON_SIZE, "icon.ico created improperly.\n");
-    CloseHandle(handle);
+    create_ico_file("icon.ico", &icon_desc, 1);
 
     /* Test loading an icon as a cursor. */
     SetLastError(0xdeadbeef);
@@ -1227,7 +1261,6 @@ static void test_LoadImage(void)
     error = GetLastError();
     ok(error == 0xdeadbeef, "Last error: %u\n", error);
 
-    HeapFree(GetProcessHeap(), 0, icon_data);
     DeleteFileA("icon.ico");
 
     /* Test a system icon */
@@ -2484,6 +2517,140 @@ static void test_DestroyCursor(void)
     ok(cursor2 != cursor, "cursor == %p, cursor2 == %p\n", cursor, cursor2);
 }
 
+static void test_PrivateExtractIcons(void)
+{
+    HICON icon;
+    UINT ret;
+
+    static const test_icon_entries_t icon_desc[] = {{0,0,TRUE}, {16,16,TRUE}, {32,32}, {64,64,TRUE}};
+
+    create_ico_file("extract.ico", icon_desc, sizeof(icon_desc)/sizeof(*icon_desc));
+
+    ret = PrivateExtractIconsA("extract.ico", 0, 32, 32, &icon, NULL, 1, 0);
+    ok(ret == 1, "PrivateExtractIconsA returned %u\n", ret);
+    ok(icon != NULL, "icon == NULL\n");
+
+    test_icon_info(icon, 32, 32, 32, 32);
+    DestroyIcon(icon);
+
+    DeleteFileA("extract.ico");
+}
+
+static void test_monochrome_icon(void)
+{
+    HANDLE handle;
+    BOOL ret;
+    DWORD bytes_written;
+    CURSORICONFILEDIR *icon_data;
+    CURSORICONFILEDIRENTRY *icon_entry;
+    BITMAPINFO *bitmap_info;
+    BITMAPCOREINFO *core_info;
+    ICONINFO icon_info;
+    ULONG icon_size;
+    BOOL monochrome, use_core_info;
+
+    icon_data = HeapAlloc(GetProcessHeap(), 0, sizeof(CURSORICONFILEDIR) + sizeof(BITMAPINFOHEADER) +
+                                               2 * sizeof(RGBQUAD) + sizeof(ULONG));
+
+    for (monochrome = FALSE; monochrome <= TRUE; monochrome++)
+    for (use_core_info = FALSE; use_core_info <= TRUE; use_core_info++)
+    {
+        trace("%s, %s\n",
+              monochrome ? "monochrome" : "colored",
+              use_core_info ? "core info" : "bitmap info");
+
+        icon_size = sizeof(CURSORICONFILEDIR) +
+                    (use_core_info ? sizeof(BITMAPCOREHEADER) : sizeof(BITMAPINFOHEADER)) +
+                    /* 2 * sizeof(RGBTRIPLE) + padding comes out the same */
+                    2 * sizeof(RGBQUAD) +
+                    sizeof(ULONG);
+        ZeroMemory(icon_data, icon_size);
+        icon_data->idReserved = 0;
+        icon_data->idType = 1;
+        icon_data->idCount = 1;
+
+        icon_entry = icon_data->idEntries;
+        icon_entry->bWidth = 1;
+        icon_entry->bHeight = 1;
+        icon_entry->bColorCount = 0;
+        icon_entry->bReserved = 0;
+        icon_entry->xHotspot = 0;
+        icon_entry->yHotspot = 0;
+        icon_entry->dwDIBSize = icon_size - sizeof(CURSORICONFILEDIR);
+        icon_entry->dwDIBOffset = sizeof(CURSORICONFILEDIR);
+
+        if (use_core_info)
+        {
+            core_info = (BITMAPCOREINFO *) ((BYTE *) icon_data + icon_entry->dwDIBOffset);
+            core_info->bmciHeader.bcSize = sizeof(BITMAPCOREHEADER);
+            core_info->bmciHeader.bcWidth = 1;
+            core_info->bmciHeader.bcHeight = 2;
+            core_info->bmciHeader.bcPlanes = 1;
+            core_info->bmciHeader.bcBitCount = 1;
+            core_info->bmciColors[0].rgbtBlue = monochrome ? 0x00 : 0xff;
+            core_info->bmciColors[0].rgbtGreen = 0x00;
+            core_info->bmciColors[0].rgbtRed = 0x00;
+            core_info->bmciColors[1].rgbtBlue = 0xff;
+            core_info->bmciColors[1].rgbtGreen = 0xff;
+            core_info->bmciColors[1].rgbtRed = 0xff;
+        }
+        else
+        {
+            bitmap_info = (BITMAPINFO *) ((BYTE *) icon_data + icon_entry->dwDIBOffset);
+            bitmap_info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+            bitmap_info->bmiHeader.biWidth = 1;
+            bitmap_info->bmiHeader.biHeight = 2;
+            bitmap_info->bmiHeader.biPlanes = 1;
+            bitmap_info->bmiHeader.biBitCount = 1;
+            bitmap_info->bmiHeader.biSizeImage = 0; /* Uncompressed bitmap. */
+            bitmap_info->bmiColors[0].rgbBlue = monochrome ? 0x00 : 0xff;
+            bitmap_info->bmiColors[0].rgbGreen = 0x00;
+            bitmap_info->bmiColors[0].rgbRed = 0x00;
+            bitmap_info->bmiColors[1].rgbBlue = 0xff;
+            bitmap_info->bmiColors[1].rgbGreen = 0xff;
+            bitmap_info->bmiColors[1].rgbRed = 0xff;
+        }
+
+        handle = CreateFileA("icon.ico", GENERIC_WRITE, 0, NULL, CREATE_NEW,
+            FILE_ATTRIBUTE_NORMAL, NULL);
+        ok(handle != INVALID_HANDLE_VALUE, "CreateFileA failed. %u\n", GetLastError());
+        ret = WriteFile(handle, icon_data, icon_size, &bytes_written, NULL);
+        ok(ret && bytes_written == icon_size, "icon.ico created improperly.\n");
+        CloseHandle(handle);
+
+        handle = LoadImageA(NULL, "icon.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
+        ok(handle != NULL, "LoadImage() failed with %u.\n", GetLastError());
+        if (handle == NULL)
+        {
+            skip("Icon failed to load: %s, %s\n",
+                 monochrome ? "monochrome" : "colored",
+                 use_core_info ? "core info" : "bitmap info");
+            DeleteFileA("icon.ico");
+            continue;
+        }
+
+        ret = GetIconInfo(handle, &icon_info);
+        ok(ret, "GetIconInfo() failed with %u.\n", GetLastError());
+        if (ret)
+        {
+            ok(icon_info.fIcon == TRUE, "fIcon is %u.\n", icon_info.fIcon);
+            ok(icon_info.xHotspot == 0, "xHotspot is %u.\n", icon_info.xHotspot);
+            ok(icon_info.yHotspot == 0, "yHotspot is %u.\n", icon_info.yHotspot);
+            if (monochrome)
+                ok(icon_info.hbmColor == NULL, "Got hbmColor %p!\n", icon_info.hbmColor);
+            else
+                ok(icon_info.hbmColor != NULL, "No hbmColor!\n");
+            ok(icon_info.hbmMask != NULL, "No hbmMask!\n");
+        }
+
+        ret = DestroyIcon(handle);
+        ok(ret, "DestroyIcon() failed with %u.\n", GetLastError());
+        DeleteFileA("icon.ico");
+    }
+
+    HeapFree(GetProcessHeap(), 0, icon_data);
+}
+
 START_TEST(cursoricon)
 {
     pGetCursorInfo = (void *)GetProcAddress( GetModuleHandleA("user32.dll"), "GetCursorInfo" );
@@ -2522,6 +2689,8 @@ START_TEST(cursoricon)
     test_SetCursor();
     test_ShowCursor();
     test_DestroyCursor();
+    test_PrivateExtractIcons();
+    test_monochrome_icon();
     do_parent();
     test_child_process();
     finish_child_process();

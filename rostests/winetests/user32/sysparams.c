@@ -1836,10 +1836,7 @@ static void test_SPI_SETWORKAREA( void )               /*     47 */
      * Changing the work area by just one pixel should make this occurrence
      * reasonably unlikely.
      */
-    curr_val.left = old_area.left;
-    curr_val.top = old_area.top;
-    curr_val.right = old_area.right-1;
-    curr_val.bottom = old_area.bottom-1;
+    SetRect(&curr_val, old_area.left, old_area.top, old_area.right - 1, old_area.bottom - 1);
     rc=SystemParametersInfoA( SPI_SETWORKAREA, 0, &curr_val,
                               SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
     if (!test_error_msg(rc,"SPI_SETWORKAREA")) return;

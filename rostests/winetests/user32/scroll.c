@@ -114,6 +114,15 @@ static void test_EnableScrollBar(void)
     ok( ret, "The scrollbar should be enabled.\n" );
     ok( IsWindowEnabled( hScroll ), "The scrollbar window should be enabled.\n" );
 
+    /* disable window, try to re-enable */
+    ret = EnableWindow( hScroll, FALSE );
+    ok( !ret, "got %d\n", ret );
+    ok( !IsWindowEnabled( hScroll ), "The scrollbar window should be disabled.\n" );
+
+    ret = EnableScrollBar( hScroll, SB_CTL, ESB_ENABLE_BOTH );
+    ok( ret, "got %d\n", ret );
+    ok( IsWindowEnabled( hScroll ), "The scrollbar window should be disabled.\n" );
+
     DestroyWindow(hScroll);
     DestroyWindow(mainwnd);
 }
@@ -539,7 +548,7 @@ static void test_SetScrollInfo(void)
     EnableScrollBar(hScroll, SB_CTL, ESB_DISABLE_BOTH);
 
     ret = IsWindowEnabled(hScroll);
-    ok(!ret, "scroll bar disabled\n");
+    ok(!ret, "scroll bar enabled\n");
 
     memset(&si, 0, sizeof(si));
     si.cbSize = sizeof(si);
@@ -551,9 +560,10 @@ static void test_SetScrollInfo(void)
     memset(&si, 0, sizeof(si));
     si.cbSize = sizeof(si);
     ret = IsWindowEnabled(hScroll);
-    ok(!ret, "scroll bar disabled\n");
+    ok(!ret, "scroll bar enabled\n");
     si.fMask = SIF_POS|SIF_RANGE|SIF_PAGE|SIF_DISABLENOSCROLL;
     si.nMax = 100;
+    si.nMin = 10;
     si.nPos = 0;
     si.nPage = 100;
     SetScrollInfo(hScroll, SB_CTL, &si, TRUE);
@@ -563,6 +573,18 @@ static void test_SetScrollInfo(void)
     si.fMask = 0xf;
     ret = GetScrollInfo(hScroll, SB_CTL, &si);
     ok(ret, "got %d\n", ret);
+
+    EnableScrollBar(hScroll, SB_CTL, ESB_ENABLE_BOTH);
+    ok(IsWindowEnabled(hScroll), "expected enabled scrollbar\n");
+
+    si.fMask = SIF_POS|SIF_RANGE|SIF_PAGE|SIF_DISABLENOSCROLL;
+    si.nMax = 10;
+    si.nMin = 100;
+    si.nPos = 0;
+    si.nPage = 100;
+    SetScrollInfo(hScroll, SB_CTL, &si, TRUE);
+    ret = IsWindowEnabled(hScroll);
+    ok(ret, "scroll bar disabled\n");
 
     DestroyWindow(hScroll);
     DestroyWindow(mainwnd);
