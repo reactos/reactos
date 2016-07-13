@@ -579,7 +579,7 @@ BcdDeleteElement (
         else
         {
             /* Open the element specifically */
-            Status = BiOpenKey(ElementHandle, TypeString, &ElementHandle);
+            Status = BiOpenKey(ElementsHandle, TypeString, &ElementHandle);
             if (NT_SUCCESS(Status))
             {
                 /* Delete it */
@@ -874,7 +874,7 @@ BiEnumerateElements (
         {
             EfiPrintf(L"Value invalid\r\n");
             BiCloseKey(ElementHandle);
-            ElementHandle = 0;
+            ElementHandle = NULL;
             continue;
         }
 
