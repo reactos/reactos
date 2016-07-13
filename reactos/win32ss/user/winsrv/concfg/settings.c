@@ -102,13 +102,12 @@ TranslateConsoleName(OUT LPWSTR DestString,
     wLength = GetWindowsDirectoryW(DestString, MaxStrLen);
     if ((wLength > 0) && (_wcsnicmp(ConsoleName, DestString, wLength) == 0))
     {
-        wcsncpy(DestString, L"%SystemRoot%", MaxStrLen);
-        // FIXME: Fix possible buffer overflows there !!!!!
-        wcsncat(DestString, ConsoleName + wLength, MaxStrLen);
+        StringCchCopyW(DestString, MaxStrLen, L"%SystemRoot%");
+        StringCchCatW(DestString, MaxStrLen, ConsoleName + wLength);
     }
     else
     {
-        wcsncpy(DestString, ConsoleName, MaxStrLen);
+        StringCchCopyW(DestString, MaxStrLen, ConsoleName);
     }
 
     /* Replace path separators (backslashes) by underscores */
@@ -155,10 +154,10 @@ ConCfgOpenUserSettings(LPCWSTR ConsoleTitle,
      * to make the registry happy, replace all the
      * backslashes by underscores.
      */
-    TranslateConsoleName(szBuffer2, ConsoleTitle, MAX_PATH);
+    TranslateConsoleName(szBuffer2, ConsoleTitle, ARRAYSIZE(szBuffer2));
 
     /* Create the registry path */
-    wcsncat(szBuffer, szBuffer2, MAX_PATH - wcslen(szBuffer) - 1);
+    StringCchCatW(szBuffer, MAX_PATH - wcslen(szBuffer) - 1, szBuffer2);
 
     /* Create or open the registry key */
     if (Create)

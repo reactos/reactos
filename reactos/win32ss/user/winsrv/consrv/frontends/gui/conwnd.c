@@ -1455,24 +1455,22 @@ OnNcDestroy(HWND hWnd)
 {
     PGUI_CONSOLE_DATA GuiData = GuiGetGuiData(hWnd);
 
-    if (GuiData->IsWindowVisible)
-    {
-        KillTimer(hWnd, CONGUI_UPDATE_TIMER);
-    }
+    /* Free the GuiData registration */
+    SetWindowLongPtrW(hWnd, GWLP_USERDATA, (DWORD_PTR)NULL);
 
     GetSystemMenu(hWnd, TRUE);
 
     if (GuiData)
     {
+        if (GuiData->IsWindowVisible)
+            KillTimer(hWnd, CONGUI_UPDATE_TIMER);
+
         /* Free the terminal framebuffer */
         if (GuiData->hMemDC ) DeleteDC(GuiData->hMemDC);
         if (GuiData->hBitmap) DeleteObject(GuiData->hBitmap);
         // if (GuiData->hSysPalette) DeleteObject(GuiData->hSysPalette);
         DeleteFonts(GuiData);
     }
-
-    /* Free the GuiData registration */
-    SetWindowLongPtrW(hWnd, GWLP_USERDATA, (DWORD_PTR)NULL);
 
     return DefWindowProcW(hWnd, WM_NCDESTROY, 0, 0);
 }
