@@ -38,7 +38,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 /* MACROS/DEFINITIONS ********************************************************/
 
 #define DF_END  0x0001
-#define DF_OWNERENABLED 0x0002
 #define DF_DIALOGACTIVE 0x4000 // ReactOS
 #define DWLP_ROS_DIALOGINFO (DWLP_USER+sizeof(ULONG_PTR))
 #define GETDLGINFO(hwnd) DIALOG_get_info(hwnd, FALSE)
@@ -170,43 +169,6 @@ DIALOGINFO *DIALOG_get_info( HWND hWnd, BOOL create )
         }
     }
     return dlgInfo;
-}
-
-/***********************************************************************
- *           DIALOG_EnableOwner
- *
- * Helper function for modal dialogs to enable again the
- * owner of the dialog box.
- */
-void DIALOG_EnableOwner( HWND hOwner )
-{
-    /* Owner must be a top-level window */
-    if (hOwner)
-        hOwner = GetAncestor( hOwner, GA_ROOT );
-    if (!hOwner) return;
-    EnableWindow( hOwner, TRUE );
-}
-
-
-/***********************************************************************
- *           DIALOG_DisableOwner
- *
- * Helper function for modal dialogs to disable the
- * owner of the dialog box. Returns TRUE if owner was enabled.
- */
-BOOL DIALOG_DisableOwner( HWND hOwner )
-{
-    /* Owner must be a top-level window */
-    if (hOwner)
-        hOwner = GetAncestor( hOwner, GA_ROOT );
-    if (!hOwner) return FALSE;
-    if (IsWindowEnabled( hOwner ))
-    {
-        EnableWindow( hOwner, FALSE );
-        return TRUE;
-    }
-    else
-        return FALSE;
 }
 
 /***********************************************************************
@@ -546,7 +508,6 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
     DIALOGINFO * dlgInfo;
     MSG msg;
     INT retval;
-    HWND ownerMsg = GetAncestor( owner, GA_ROOT );
     BOOL bFirstEmpty;
     PWND pWnd;
 
@@ -571,7 +532,7 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
                 if (!(GetWindowLongPtrW( hwnd, GWL_STYLE ) & DS_NOIDLEMSG))
                {
                     /* No message present -> send ENTERIDLE and wait */
-                    if (ownerMsg) SendMessageW( ownerMsg, WM_ENTERIDLE, MSGF_DIALOGBOX, (LPARAM)hwnd );
+                    if (owner) SendMessageW( owner, WM_ENTERIDLE, MSGF_DIALOGBOX, (LPARAM)hwnd );
                 }
                 GetMessageW( &msg, 0, 0, 0 );
             }
@@ -611,7 +572,6 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
             }
         }
     }
-    if (dlgInfo->flags & DF_OWNERENABLED) DIALOG_EnableOwner( owner );
     retval = dlgInfo->idResult;
     DestroyWindow( hwnd );
     return retval;
@@ -815,7 +775,7 @@ static void DEFDLG_RestoreFocus( HWND hwnd, BOOL justActivate )
  */
 static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
                                    HWND owner, DLGPROC dlgProc, LPARAM param,
-                                   BOOL unicode, BOOL modal )
+                                   BOOL unicode, HWND *modal_owner )
 {
     HWND hwnd;
     RECT rect;
@@ -824,7 +784,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     DLG_TEMPLATE template;
     DIALOGINFO * dlgInfo = NULL;
     DWORD units = GetDialogBaseUnits();
-    BOOL ownerEnabled = TRUE;
+    HWND disabled_owner = NULL;
     HMENU hMenu = 0;
     HFONT hUserFont = 0;
     UINT flags = 0;
@@ -957,10 +917,27 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         }
     }
 
-    if (modal)
+    if (modal_owner && owner)
     {
-        ownerEnabled = DIALOG_DisableOwner( owner );
-        if (ownerEnabled) flags |= DF_OWNERENABLED;
+        HWND parent;
+        /*
+         * Owner needs to be top level window. We need to duplicate the logic from server,
+         * because we need to disable it before creating dialog window. Note that we do that
+         * even if dialog has WS_CHILD, but only for modal dialogs, which matched what
+         * Windows does.
+         */
+        while ((GetWindowLongW( owner, GWL_STYLE ) & (WS_POPUP|WS_CHILD)) == WS_CHILD)
+        {
+            parent = GetParent( owner );
+            if (!parent || parent == GetDesktopWindow()) break;
+            owner = parent;
+        }
+        *modal_owner = owner;
+        if (IsWindowEnabled( owner ))
+        {
+            disabled_owner = owner;
+            EnableWindow( disabled_owner, FALSE );
+        }
     }
 
     if (unicode)
@@ -1001,7 +978,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     {
         if (hUserFont) DeleteObject( hUserFont );
         if (hMenu) DestroyMenu( hMenu );
-        if (modal && (flags & DF_OWNERENABLED)) DIALOG_EnableOwner(owner);
+        if (disabled_owner) EnableWindow( disabled_owner, TRUE );
         return 0;
     }
 
@@ -1014,7 +991,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     {
         if (hUserFont) DeleteObject( hUserFont );
         if (hMenu) DestroyMenu( hMenu );
-        if (modal && (flags & DF_OWNERENABLED)) DIALOG_EnableOwner(owner);
+        if (disabled_owner) EnableWindow( disabled_owner, TRUE );
         return 0;
     }
     //
@@ -1075,7 +1052,8 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         }
         return hwnd;
     }
-    if (modal && ownerEnabled) DIALOG_EnableOwner(owner);
+    //if (modal && ownerEnabled) DIALOG_EnableOwner(owner);
+    if (disabled_owner) EnableWindow( disabled_owner, TRUE );
     IntNotifyWinEvent(EVENT_SYSTEM_DIALOGEND, hwnd, OBJID_WINDOW, CHILDID_SELF, 0);
     if( IsWindow(hwnd) )
     {
@@ -1584,7 +1562,7 @@ CreateDialogIndirectParamAorW(
  *   Also wine has one more parameter identifying weather it should call
  *   the function with unicode or not
  */
-  return DIALOG_CreateIndirect( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit , Flags == DLG_ISANSI ? FALSE : TRUE, FALSE );
+  return DIALOG_CreateIndirect( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit , Flags == DLG_ISANSI ? FALSE : TRUE, NULL );
 }
 
 
@@ -1800,7 +1778,7 @@ DialogBoxIndirectParamAorW(
  *  Also wine has one more parameter identifying weather it should call
  *  the function with unicode or not
  */
-  HWND hWnd = DIALOG_CreateIndirect( hInstance, hDialogTemplate, hWndParent, lpDialogFunc, dwInitParam, Flags == DLG_ISANSI ? FALSE : TRUE, TRUE );
+  HWND hWnd = DIALOG_CreateIndirect( hInstance, hDialogTemplate, hWndParent, lpDialogFunc, dwInitParam, Flags == DLG_ISANSI ? FALSE : TRUE, &hWndParent );
   if (hWnd) return DIALOG_DoDialogBox( hWnd, hWndParent );
   return -1;
 }
@@ -1865,7 +1843,7 @@ DialogBoxParamA(
         SetLastError(ERROR_INVALID_WINDOW_HANDLE);
         return 0;
     }
-    hwnd = DIALOG_CreateIndirect(hInstance, ptr, hWndParent, lpDialogFunc, dwInitParam, FALSE, TRUE);
+    hwnd = DIALOG_CreateIndirect(hInstance, ptr, hWndParent, lpDialogFunc, dwInitParam, FALSE, &hWndParent );
     if (hwnd) return DIALOG_DoDialogBox(hwnd, hWndParent);
     return -1;
 }
@@ -1898,7 +1876,7 @@ DialogBoxParamW(
         SetLastError(ERROR_INVALID_WINDOW_HANDLE);
         return 0;
     }
-    hwnd = DIALOG_CreateIndirect(hInstance, ptr, hWndParent, lpDialogFunc, dwInitParam, TRUE, TRUE);
+    hwnd = DIALOG_CreateIndirect(hInstance, ptr, hWndParent, lpDialogFunc, dwInitParam, TRUE, &hWndParent );
     if (hwnd) return DIALOG_DoDialogBox(hwnd, hWndParent);
     return -1;
 }
@@ -2037,7 +2015,6 @@ EndDialog(
   HWND hwnd,
   INT_PTR retval)
 {
-    BOOL wasEnabled = TRUE;
     DIALOGINFO * dlgInfo;
     HWND owner;
     BOOL wasActive;
@@ -2052,11 +2029,15 @@ EndDialog(
     wasActive = (hwnd == GetActiveWindow());
     dlgInfo->idResult = retval;
     dlgInfo->flags |= DF_END;
-    wasEnabled = (dlgInfo->flags & DF_OWNERENABLED);
 
-    owner = GetWindow( hwnd, GW_OWNER );
-    if (wasEnabled && owner)
-        DIALOG_EnableOwner( owner );
+    if ((GetWindowLongW( hwnd, GWL_STYLE ) & (WS_POPUP|WS_CHILD)) == WS_CHILD)
+    {
+       owner = GetAncestor( hwnd, GA_PARENT);
+    }
+    else
+       owner = GetWindow( hwnd, GW_OWNER );    
+    if (owner)
+        EnableWindow( owner, TRUE );
 
     /* Windows sets the focus to the dialog itself in EndDialog */
 
@@ -2071,9 +2052,7 @@ EndDialog(
 
     if (wasActive && owner)
     {
-        /* If this dialog was given an owner then set the focus to that owner
-           even when the owner is disabled (normally when a window closes any
-           disabled windows cannot receive the focus). */
+        /* If this dialog was given an owner then set the focus to that owner. */
         SetActiveWindow(owner);
     }
     else if (hwnd == GetActiveWindow()) // Check it again!
