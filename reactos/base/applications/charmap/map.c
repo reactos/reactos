@@ -107,8 +107,9 @@ FillGrid(PMAP infoPtr,
     i = XCELLS * infoPtr->iYStart;
 
     added = 0;
-    x = y = 0;
-    while ((y <= YCELLS) && (x <= XCELLS))
+
+    for (y = 0; y < YCELLS; y++)
+    for (x = 0; x < XCELLS; x++)
     {
         ch = (WCHAR)infoPtr->ValidGlyphs[i];
 
@@ -131,14 +132,6 @@ FillGrid(PMAP infoPtr,
 
         i++;
         ch = (WCHAR)i;
-
-        // move to the next cell
-        x++;
-        if (x > XCELLS - 1)
-        {
-            x = 0;
-            y++;
-        }
     }
     SelectObject(ps->hdc,
                  hOldFont);
