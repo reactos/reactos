@@ -1085,7 +1085,7 @@ UpdateFileRecord(PDEVICE_EXTENSION Vcb,
     }
 
     // remove the fixup array (so the file record pointer can still be used)
-    FixupUpdateSequenceArray(Vcb, file);
+    FixupUpdateSequenceArray(Vcb, &file->Ntfs);
 
     return Status;
 }

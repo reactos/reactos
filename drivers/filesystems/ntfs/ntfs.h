@@ -527,6 +527,10 @@ DecodeRun(PUCHAR DataRun,
           ULONGLONG *DataRunLength);
 
 VOID
+NtfsDumpDataRuns(PVOID StartOfRun,
+                 ULONGLONG CurrentLCN);
+
+VOID
 NtfsDumpFileAttributes(PDEVICE_EXTENSION Vcb,
                        PFILE_RECORD_HEADER FileRecord);
 
@@ -538,6 +542,10 @@ PFILENAME_ATTRIBUTE
 GetFileNameFromRecord(PDEVICE_EXTENSION Vcb,
                       PFILE_RECORD_HEADER FileRecord,
                       UCHAR NameType);
+
+UCHAR
+GetPackedByteCount(LONGLONG NumberToPack,
+                   BOOLEAN IsSigned);
 
 NTSTATUS
 GetLastClusterInDataRun(PDEVICE_EXTENSION Vcb,
