@@ -1678,7 +1678,7 @@ DefDlgProcA(
     BOOL result = FALSE;
 
     /* Perform DIALOGINFO initialization if not done */
-    if(!(dlgInfo = DIALOG_get_info( hDlg, Msg == WM_NCCREATE ))) return 0;
+    if(!(dlgInfo = DIALOG_get_info( hDlg, TRUE ))) return 0; //// REACTOS : Always TRUE! See RealGetWindowClass.
 
     SetWindowLongPtrW( hDlg, DWLP_MSGRESULT, 0 );
 
@@ -1738,7 +1738,7 @@ DefDlgProcW(
     BOOL result = FALSE;
 
     /* Perform DIALOGINFO initialization if not done */
-    if(!(dlgInfo = DIALOG_get_info( hDlg, Msg == WM_NCCREATE ))) return 0;
+    if(!(dlgInfo = DIALOG_get_info( hDlg, TRUE ))) return 0; //// REACTOS : Always TRUE! See RealGetWindowClass.
 
     SetWindowLongPtrW( hDlg, DWLP_MSGRESULT, 0 );
 
