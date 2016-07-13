@@ -114,9 +114,11 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
     PFILE_RECORD_HEADER BitmapRecord;
     PNTFS_ATTR_CONTEXT DataContext;
     ULONGLONG BitmapDataSize;
-    PCHAR BitmapData;
+    PUCHAR BitmapData;
     ULONGLONG FreeClusters = 0;
     RTL_BITMAP Bitmap;
+    ULONG AssignedRun;
+    ULONG LengthWritten;
 
     DPRINT1("NtfsAllocateClusters(%p, %lu, %lu, %p, %p)\n", DeviceExt, FirstDesiredCluster, DesiredClusters, FirstAssignedCluster, AssignedClusters);
 
@@ -174,8 +176,7 @@ NtfsAllocateClusters(PDEVICE_EXTENSION DeviceExt,
     // TODO: Observe MFT reservation zone
 
     // Can we get one contiguous run?
-    ULONG AssignedRun = RtlFindClearBitsAndSet(&Bitmap, DesiredClusters, FirstDesiredCluster);
-    ULONG LengthWritten;
+    AssignedRun = RtlFindClearBitsAndSet(&Bitmap, DesiredClusters, FirstDesiredCluster);
 
     if (AssignedRun != 0xFFFFFFFF)
     {
