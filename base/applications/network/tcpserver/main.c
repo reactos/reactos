@@ -1,73 +1,105 @@
 #include <stdio.h>
 #include <WinSock2.h>
 
+#define backlog 4
+#define LENGTH 256
+
 int wmain(int argc, LPWSTR argv[]) {
 	WSADATA wsa;
-	SOCKET sock;
-	SOCKET accepted;
-	struct sockaddr_in server;
-	struct sockaddr_in client;
+    SOCKET ListenSock;
+    SOCKET ClientSock;
 
-	int c;
+    struct sockaddr_in ListenAddr;
+    struct sockaddr_in ClientAddr;
+
+    char buff[LENGTH];
+
 	int ret;
-	
-	char buff[256];
+    int addrSize;
+    int count;
 
-	memset(&server, 0, sizeof(struct sockaddr_in));
-	memset(&client, 0, sizeof(struct sockaddr_in));
+    printf("Server startup\n");
 
 	ret = WSAStartup(MAKEWORD(2, 2), &wsa);
 	if (ret != 0) {
-		printf("Windows Socket API Startup Failed: %d", WSAGetLastError());
-		exit(1);
+		printf("Windows Socket API Startup Failed: %d\n", WSAGetLastError());
+        fgets(buff, LENGTH, stdin);
+		return 1;
 	}
 
-	printf("Attempt socket creation\n");
-	fgets(&buff[0], 255, stdin);
-	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (sock == INVALID_SOCKET) {
-		printf("Socket Creation Failed: %d", WSAGetLastError());
-		exit(1);
-	}
+    memset(&ListenAddr, 0, sizeof(struct sockaddr_in));
+    ListenAddr.sin_family = AF_INET;
+    ListenAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    ListenAddr.sin_port = htons(10000);
 
-	server.sin_family = AF_INET;
-	server.sin_addr.s_addr = inet_addr("127.0.0.1");
-	server.sin_port = htons(10000);
-	
-	printf("Attempt bind\n");
-	fgets(&buff[0], 255, stdin);
-	ret = bind(sock, (struct sockaddr *)&server, sizeof(server));
-	if (ret == SOCKET_ERROR) {
-		printf("Socket Bind Failed: %d", WSAGetLastError());
-		exit(1);
-	}
+    ListenSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (ListenSock == INVALID_SOCKET) {
+        printf("Socket creation failed: %d\n", WSAGetLastError());
+        WSACleanup();
+        fgets(buff, LENGTH, stdin);
+        return 1;
+    }
+    printf("Server listening socket created\n");
 
-	printf("Attempt listen\n");
-	fgets(&buff[0], 255, stdin);
-	ret = listen(sock, 3);
-	if (ret != 0) {
-		printf("Socket Listen Failed: %d", WSAGetLastError());
-		exit(1);
-	}
+    ret = bind(ListenSock, (struct sockaddr *)&ListenAddr, sizeof(ListenAddr));
+    if (ret == SOCKET_ERROR) {
+        printf("Bind failed: %d\n", WSAGetLastError());
+        closesocket(ListenSock);
+        WSACleanup();
+        fgets(buff, LENGTH, stdin);
+        return 1;
+    }
+    printf("Server listening socket bound\n");
 
-	printf("Listening for connections on LOOPBACK port 10000\n");
-	
-	c = sizeof(struct sockaddr_in);
+    ret = listen(ListenSock, backlog);
+    if (ret == SOCKET_ERROR) {
+        printf("Listen failed: %d\n", WSAGetLastError());
+        closesocket(ListenSock);
+        WSACleanup();
+        fgets(buff, LENGTH, stdin);
+        return 1;
+    }
+    printf("Server listening socket is now listening\n");
 
-	printf("Enter accept loop\n");
-	fgets(&buff[0], 255, stdin);
-	while(1) {
-		accepted = accept(sock, (struct sockaddr *)&client, &c);
-		if (accepted == INVALID_SOCKET) {
-			printf("Socket Connection Acceptance Failed: %d", WSAGetLastError());
-			exit(1);
-		} else {
-			printf("Socket connection accepted\n");
-			ret = recv(accepted, &buff[0], 256, 0);
-			printf("Received %d bytes\n", ret);
-			printf("Message: %s", &buff[0]);
-		}
-	}
+    count = 0;
+    // Only a single server handler for now.
+    while (1) {
+        addrSize = sizeof(struct sockaddr_in);
+        memset(buff, 0, sizeof(buff));
+        printf("\nWaiting to accept connection %d\n", count);
+        ClientSock = accept(ListenSock, (struct sockaddr *)&ClientAddr, &addrSize);
+        if (ClientSock == INVALID_SOCKET) {
+            printf("Accept failed: %d\n", WSAGetLastError());
+            closesocket(ListenSock);
+            WSACleanup();
+            fgets(buff, LENGTH, stdin);
+            return 1;
+        }
+        printf("Connection established to client %d\n", count);
 
-	exit(1);
+        ret = recv(ClientSock, buff, LENGTH, 0);
+        buff[LENGTH - 1] = '\0';
+        printf("  Received %d-byte message from client %d: %s\n", ret, count, buff);
+
+        ret = send(ClientSock, buff, ret, 0);
+        if (ret == SOCKET_ERROR) {
+            printf("Send failed: %d\n", WSAGetLastError());
+            closesocket(ListenSock);
+            closesocket(ClientSock);
+            WSACleanup();
+            fgets(buff, LENGTH, stdin);
+            return 1;
+        }
+        printf("Message echoed\n");
+
+        closesocket(ClientSock);
+
+        count++;
+    }
+
+    printf("Server exit\n");
+
+    fgets(buff, LENGTH, stdin);
+
+	return 0;
 }
