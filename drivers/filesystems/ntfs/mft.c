@@ -202,7 +202,7 @@ InternalSetResidentAttributeLength(PNTFS_ATTR_CONTEXT AttrContext,
     }
     
     // advance Destination to the final "attribute" and write the end type
-    (ULONG_PTR)Destination += Destination->Length;
+    Destination = (PNTFS_ATTR_RECORD)((ULONG_PTR)Destination + Destination->Length);
     Destination->Type = AttributeEnd;
 
     // write the final marker (which shares the same offset and type as the Length field)
@@ -245,7 +245,7 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
             ULONG NextAssignedCluster;
             ULONG AssignedClusters;
 
-            NTSTATUS Status = GetLastClusterInDataRun(Fcb->Vcb, &AttrContext->Record, &LastClusterInDataRun.QuadPart);
+            NTSTATUS Status = GetLastClusterInDataRun(Fcb->Vcb, &AttrContext->Record, (PULONGLONG)&LastClusterInDataRun.QuadPart);
 
             DPRINT1("GetLastClusterInDataRun returned: %I64u\n", LastClusterInDataRun.QuadPart);
             DPRINT1("Highest VCN of record: %I64u\n", AttrContext->Record.NonResident.HighestVCN);
