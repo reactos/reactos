@@ -726,6 +726,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE);
                 ReleaseCapture();
             }
+            break;
 
         case WM_SIZE:
             if(AppBarConfig.uEdge>=0) DoAppBarStuff(ABM_SETPOS);
@@ -814,6 +815,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         ShowWindow(hMainWnd, SW_HIDE);
                     else
                         ShowWindow(hMainWnd, SW_SHOW);
+                    break;
             }
             return 0;
         }
