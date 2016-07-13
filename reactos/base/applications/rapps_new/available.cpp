@@ -18,11 +18,11 @@
     } \
 
 #define GET_STRING1(a, b)  \
-    if (!ParserGetString(a, b, MAX_PATH, FindFileData.cFileName)) \
+    if (!ParserGetString(a, b, _countof(b), FindFileData.cFileName)) \
         continue;
 
 #define GET_STRING2(a, b)  \
-    if (!ParserGetString(a, b, MAX_PATH, FindFileData.cFileName)) \
+    if (!ParserGetString(a, b, _countof(b), FindFileData.cFileName)) \
         b[0] = '\0';
 
 LIST_ENTRY CachedEntriesHead = { &CachedEntriesHead, &CachedEntriesHead };
