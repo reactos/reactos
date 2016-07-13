@@ -36,6 +36,7 @@
 #include "settings.h"
 
 #include <stdio.h> // for swprintf
+#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>
