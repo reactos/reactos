@@ -18,6 +18,9 @@ struct tcp_pcb *PCBList[128];
 PADDRESS_FILE AddrFileList[128];
 PTCP_CONTEXT ContextList[128];
 
+KSPIN_LOCK PCBListLock;
+KSPIN_LOCK AddrFileListLock;
+KSPIN_LOCK ContextListLock;
 
 typedef struct
 {
@@ -101,6 +104,7 @@ CancelRequestRoutine(
 	PLIST_ENTRY Entry;
 	PTCP_REQUEST Request;
 	KIRQL OldIrql;
+	int i;
 	
 	IoReleaseCancelSpinLock(Irp->CancelIrql);
 	
@@ -141,8 +145,19 @@ TCP_CANCEL:
 					}
 					tcp_arg(Context->lwip_tcp_pcb, NULL);
 					tcp_abort(Context->lwip_tcp_pcb);
-					InterlockedDecrement(&PcbCount);
-					DPRINT1("\n    PCB Count: %d\n", PcbCount);
+					KeAcquireSpinLockAtDpcLevel(&PCBListLock);
+					DPRINT1("Deleting PCB at %p\n", Context->lwip_tcp_pcb);
+					for (i=0; i<PcbCount; i++) {
+						if (PCBList[i] == Context->lwip_tcp_pcb) {
+							PCBList[i] = PCBList[i+1];
+							PCBList[i+1] = NULL;
+						} else if (PCBList[i] == NULL) {
+							PCBList[i] = PCBList[i+1];
+							PCBList[i+1] = NULL;
+						}
+					}
+					PcbCount--;
+					KeReleaseSpinLockFromDpcLevel(&PCBListLock);
 					Context->lwip_tcp_pcb = NULL;
 					
 					RemoveEntryList(Entry);
@@ -160,8 +175,19 @@ TCP_CANCEL:
 						AddressFile->lwip_tcp_pcb = NULL;
 					}
 					tcp_close(Context->lwip_tcp_pcb);
-					InterlockedDecrement(&PcbCount);
-					DPRINT1("\n    PCB Count: %d\n", PcbCount);
+					KeAcquireSpinLockAtDpcLevel(&PCBListLock);
+					DPRINT1("Deleting PCB at %p\n", Context->lwip_tcp_pcb);
+					for (i=0; i<PcbCount; i++) {
+						if (PCBList[i] == Context->lwip_tcp_pcb) {
+							PCBList[i] = PCBList[i+1];
+							PCBList[i+1] = NULL;
+						} else if (PCBList[i] == NULL) {
+							PCBList[i] = PCBList[i+1];
+							PCBList[i+1] = NULL;
+						}
+					}
+					PcbCount--;
+					KeReleaseSpinLockFromDpcLevel(&PCBListLock);
 					Context->lwip_tcp_pcb = NULL;
 					
 					RemoveEntryList(Entry);
@@ -210,6 +236,10 @@ TcpIpInitializeAddresses(void)
 	RtlZeroMemory(PCBList, sizeof(PCBList));
 	RtlZeroMemory(AddrFileList, sizeof(AddrFileList));
 	RtlZeroMemory(ContextList, sizeof(ContextList));
+	
+	KeInitializeSpinLock(&PCBListLock);
+	KeInitializeSpinLock(&AddrFileListLock);
+	KeInitializeSpinLock(&ContextListLock);
 }
 
 static
@@ -239,6 +269,7 @@ lwip_tcp_err_callback(
 	PIO_STACK_LOCATION IrpSp;
 	
 	NTSTATUS Status;
+	int i;
 	
 	switch (err)
 	{
@@ -314,8 +345,19 @@ lwip_tcp_err_callback(
 				{
 					tcp_arg(Context->lwip_tcp_pcb, NULL);
 					tcp_abort(Context->lwip_tcp_pcb);
-					InterlockedDecrement(&PcbCount);
-					DPRINT1("\n    PCB Count\n", PcbCount);
+					KeAcquireSpinLockAtDpcLevel(&PCBListLock);
+					DPRINT1("Deleting PCB at %p\n", Context->lwip_tcp_pcb);
+					for (i=0; i<PcbCount; i++) {
+						if (PCBList[i] == Context->lwip_tcp_pcb) {
+							PCBList[i] = PCBList[i+1];
+							PCBList[i+1] = NULL;
+						} else if (PCBList[i] == NULL) {
+							PCBList[i] = PCBList[i+1];
+							PCBList[i+1] = NULL;
+						}
+					}
+					PcbCount--;
+					KeReleaseSpinLockFromDpcLevel(&PCBListLock);
 				}
 				Context->lwip_tcp_pcb = NULL;
 				
@@ -495,7 +537,10 @@ lwip_tcp_accept_callback(
 			
 			Context->lwip_tcp_pcb = newpcb;
 			tcp_err(Context->lwip_tcp_pcb, lwip_tcp_err_callback);
-			InterlockedIncrement(&PcbCount);
+			KeAcquireSpinLockAtDpcLevel(&PCBListLock);
+			PCBList[PcbCount] = newpcb;
+			PcbCount++;
+			KeReleaseSpinLockFromDpcLevel(&PCBListLock);
 			DPRINT1("\n    PCB Count: %d\n", PcbCount);
 			Context->TcpState = TCP_STATE_ACCEPTED;
 			tcp_accepted(AddressFile->lwip_tcp_pcb);
@@ -679,6 +724,7 @@ lwip_tcp_receive_callback(
 	PLIST_ENTRY Entry;
 	NTSTATUS Status;
 	err_t lwip_err;
+	int i;
 	
 	/* This error is currently unimplemented in lwIP */
 /*	if (err != ERR_OK)
@@ -728,8 +774,19 @@ lwip_tcp_receive_callback(
 		DPRINT1("Receive tcp_pcb mismatch\nAborting PCB at %p\n", tpcb);
 		tcp_arg(tpcb, NULL);
 		tcp_abort(tpcb);
-		InterlockedDecrement(&PcbCount);
-		DPRINT1("\n    PCB Count\n", PcbCount);
+		KeAcquireSpinLockAtDpcLevel(&PCBListLock);
+		DPRINT1("Deleting PCB at %p\n", tpcb);
+		for (i=0; i<PcbCount; i++) {
+			if (PCBList[i] == tpcb) {
+				PCBList[i] = PCBList[i+1];
+				PCBList[i+1] = NULL;
+			} else if (PCBList[i] == NULL) {
+				PCBList[i] = PCBList[i+1];
+				PCBList[i+1] = NULL;
+			}
+		}
+		PcbCount--;
+		KeReleaseSpinLockFromDpcLevel(&PCBListLock);
 		
 		// TODO: better return code
 		Status = STATUS_UNSUCCESSFUL;
@@ -1013,6 +1070,10 @@ TcpIpCreateAddress(
 	
 	/* Allocate our new address file */
 	AddressFile = ExAllocatePoolWithTag(NonPagedPool, sizeof(*AddressFile), TAG_ADDRESS_FILE);
+	KeAcquireSpinLockAtDpcLevel(&AddrFileListLock);
+	AddrFileList[AddrFileCount] = AddressFile;
+	AddrFileCount++;
+	KeReleaseSpinLockFromDpcLevel(&AddrFileListLock);
 	if (!AddressFile)
 	{
 		KeReleaseSpinLock(&AddressListLock, OldIrql);
@@ -1041,7 +1102,10 @@ TcpIpCreateAddress(
 			InsertEntityInstance(CO_TL_ENTITY, &AddressFile->Instance);
 			AddressFile->ContextCount = 0;
 			AddressFile->lwip_tcp_pcb = tcp_new();
-			InterlockedIncrement(&PcbCount);
+			KeAcquireSpinLockAtDpcLevel(&PCBListLock);
+			PCBList[PcbCount] = AddressFile->lwip_tcp_pcb;
+			PcbCount++;
+			KeReleaseSpinLockFromDpcLevel(&PCBListLock);
 			DPRINT1("\n    PCB Count: %d\n", PcbCount);
 			tcp_arg(AddressFile->lwip_tcp_pcb, AddressFile);
 			tcp_err(AddressFile->lwip_tcp_pcb, lwip_tcp_err_callback);
@@ -1103,6 +1167,7 @@ TcpIpCreateContext(
 {
 	PIO_STACK_LOCATION IrpSp;
 	PTCP_CONTEXT Context;
+	KIRQL OldIrql;
 	
 	IrpSp = IoGetCurrentIrpStackLocation(Irp);
 	
@@ -1113,6 +1178,10 @@ TcpIpCreateContext(
 	}
 	
 	Context = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Context), TAG_TCP_CONTEXT);
+	KeAcquireSpinLock(&ContextListLock, &OldIrql);
+	ContextList[ContextCount] = Context;
+	ContextCount++;
+	KeReleaseSpinLock(&ContextListLock, OldIrql);
 	if (!Context)
 	{
 		return STATUS_NO_MEMORY;
@@ -1142,6 +1211,7 @@ TcpIpCloseAddress(
 	NTSTATUS Status;
 	
 	err_t lwip_err;
+	int i;
 
 	/* Lock the global address list */
 	KeAcquireSpinLock(&AddressListLock, &OldIrql);
@@ -1183,8 +1253,19 @@ TcpIpCloseAddress(
 					tcp_abort(AddressFile->lwip_tcp_pcb);
 					lwip_err = ERR_OK;
 				}
-				InterlockedDecrement(&PcbCount);
-				DPRINT1("\n    PCB Count: %d\n", PcbCount);
+				KeAcquireSpinLockAtDpcLevel(&PCBListLock);
+				DPRINT1("Deleting PCB at %p\n", AddressFile->lwip_tcp_pcb);
+				for (i=0; i<PcbCount; i++) {
+					if (PCBList[i] == AddressFile->lwip_tcp_pcb) {
+						PCBList[i] = PCBList[i+1];
+						PCBList[i+1] = NULL;
+					} else if (PCBList[i] == NULL) {
+						PCBList[i] = PCBList[i+1];
+						PCBList[i+1] = NULL;
+					}
+				}
+				PcbCount--;
+				KeReleaseSpinLockFromDpcLevel(&PCBListLock);
 				if (lwip_err != ERR_OK)
 				{
 					DPRINT1("lwIP tcp_close error: %d", lwip_err);
@@ -1215,6 +1296,18 @@ TcpIpCloseAddress(
 	KeReleaseSpinLockFromDpcLevel(&AddressFile->ContextListLock);
 
 	ExFreePoolWithTag(AddressFile, TAG_ADDRESS_FILE);
+	KeAcquireSpinLockAtDpcLevel(&AddrFileListLock);
+	for (i=0; i<AddrFileCount; i++) {
+		if (AddrFileList[i] == NULL) {
+			AddrFileList[i] = AddrFileList[i+1];
+			AddrFileList[i+1] = NULL;
+		} else if (AddrFileList[i] == AddressFile) {
+			AddrFileList[i] = AddrFileList[i+1];
+			AddrFileList[i+1] = NULL;
+		}
+	}
+	AddrFileCount--;
+	KeReleaseSpinLockFromDpcLevel(&AddrFileListLock);
 	
 	KeReleaseSpinLock(&AddressListLock, OldIrql);
 
@@ -1236,6 +1329,7 @@ TcpIpCloseContext(
 	
 	KIRQL OldIrql;
 	NTSTATUS Status;
+	int i;
 	
 	AddressFile = Context->AddressFile;
 	
@@ -1278,9 +1372,20 @@ TcpIpCloseContext(
 			tcp_abort(Context->lwip_tcp_pcb);
 			lwip_err = ERR_OK;
 		}
+		KeAcquireSpinLockAtDpcLevel(&PCBListLock);
+		DPRINT1("Deleting PCB at %p\n", Context->lwip_tcp_pcb);
+		for (i=0; i<PcbCount; i++) {
+			if (PCBList[i] == Context->lwip_tcp_pcb) {
+				PCBList[i] = PCBList[i+1];
+				PCBList[i+1] = NULL;
+			} else if (PCBList[i] == NULL) {
+				PCBList[i] = PCBList[i+1];
+				PCBList[i+1] = NULL;
+			}
+		}
+		PcbCount--;
+		KeReleaseSpinLockFromDpcLevel(&PCBListLock);
 		Context->lwip_tcp_pcb = NULL;
-		InterlockedDecrement(&PcbCount);
-		DPRINT1("\n    PCB Count: %d\n", PcbCount);
 		if (lwip_err != ERR_OK)
 		{
 			DPRINT1("lwIP tcp_close error: %d", lwip_err);
@@ -1319,17 +1424,32 @@ TcpIpCloseContext(
 	KeReleaseSpinLockFromDpcLevel(&Context->RequestListLock);
 	
 	ExFreePoolWithTag(Context, TAG_TCP_CONTEXT);
+	KeAcquireSpinLockAtDpcLevel(&ContextListLock);
+	for (i=0; i<ContextCount; i++) {
+		if (ContextList[i] == NULL) {
+			ContextList[i] = ContextList[i+1];
+			ContextList[i+1] = NULL;
+		} else if (ContextList[i] == Context) {
+			ContextList[i] = ContextList[i+1];
+			ContextList[i+1] = NULL;
+		}
+	}
+	ContextCount--;
+	KeReleaseSpinLockFromDpcLevel(&ContextListLock);
 	
 	if (AddressFile->ContextCount == 0)
 	{
+		DPRINT1("Closing Address File at %p from TcpIpCloseContext on Context at %p",
+			AddressFile, Context);
+	
+		KeReleaseSpinLock(&AddressFile->ContextListLock, OldIrql);
 		Status = TcpIpCloseAddress(AddressFile);
 	}
 	else
 	{
+		KeReleaseSpinLock(&AddressFile->ContextListLock, OldIrql);
 		Status = STATUS_SUCCESS;
 	}
-	
-	KeReleaseSpinLock(&AddressFile->ContextListLock, OldIrql);
 	
 	return Status;
 }
