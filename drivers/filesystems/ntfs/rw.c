@@ -432,6 +432,22 @@ NTSTATUS NtfsWriteFile(PDEVICE_EXTENSION DeviceExt,
                 return Status;
             }
 
+            // at this point the record in DataContext may be stale, so we need to refresh it
+            ReleaseAttributeContext(DataContext);
+
+            Status = FindAttribute(DeviceExt,
+                                   FileRecord,
+                                   AttributeData,
+                                   Fcb->Stream,
+                                   wcslen(Fcb->Stream),
+                                   &DataContext,
+                                   &AttributeOffset);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("DRIVER ERROR: Couldn't find $DATA attribute after setting size!\n");
+                return Status;
+            }
+
             // now we need to update this file's size in every directory index entry that references it
             // TODO: put this code in its own function and adapt it to work with every filename / hardlink
             // stored in the file record.

@@ -517,9 +517,23 @@ NtfsMarkIrpContextForQueue(PNTFS_IRP_CONTEXT IrpContext)
 //NtfsDumpAttribute(PATTRIBUTE Attribute);
 
 NTSTATUS
-AddRun(PNTFS_ATTR_CONTEXT AttrContext,
+AddRun(PNTFS_VCB Vcb,
+       PNTFS_ATTR_CONTEXT AttrContext,
+       ULONG AttrOffset,
+       PFILE_RECORD_HEADER FileRecord,
        ULONGLONG NextAssignedCluster,
        ULONG RunLength);
+
+NTSTATUS
+ConvertDataRunsToLargeMCB(PUCHAR DataRun,
+                          PLARGE_MCB DataRunsMCB,
+                          PULONGLONG pNextVBN);
+
+NTSTATUS
+ConvertLargeMCBToDataRuns(PLARGE_MCB DataRunsMCB,
+                          PUCHAR RunBuffer,
+                          ULONG MaxBufferSize,
+                          PULONG UsedBufferSize);
 
 PUCHAR
 DecodeRun(PUCHAR DataRun,

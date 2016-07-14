@@ -35,17 +35,309 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/**
+* @name AddRun
+* @implemented
+*
+* Adds a run of allocated clusters to a non-resident attribute.
+*
+* @param Vcb
+* Pointer to an NTFS_VCB for the destination volume.
+*
+* @param AttrContext
+* Pointer to an NTFS_ATTR_CONTEXT describing the destination attribute.
+*
+* @param AttrOffset
+* Byte offset of the destination attribute relative to its file record.
+*
+* @param FileRecord
+* Pointer to a complete copy of the file record containing the destination attribute. Must be at least
+* Vcb->NtfsInfo.BytesPerFileRecord bytes long.
+*
+* @param NextAssignedCluster
+* Logical cluster number of the start of the data run being added.
+*
+* @param RunLength
+* How many clusters are in the data run being added. Can't be 0.
+*
+* @return
+* STATUS_SUCCESS on success. STATUS_INVALID_PARAMETER if AttrContext describes a resident attribute.
+* STATUS_INSUFFICIENT_RESOURCES if ConvertDataRunsToLargeMCB() fails.
+* STATUS_BUFFER_TOO_SMALL if ConvertLargeMCBToDataRuns() fails.
+* STATUS_NOT_IMPLEMENTED if we need to migrate the attribute to an attribute list (TODO).
+*
+* @remarks
+* Clusters should have been allocated previously with NtfsAllocateClusters().
+* 
+*
+*/
 NTSTATUS
-AddRun(PNTFS_ATTR_CONTEXT AttrContext,
+AddRun(PNTFS_VCB Vcb,
+       PNTFS_ATTR_CONTEXT AttrContext,
+       ULONG AttrOffset,
+       PFILE_RECORD_HEADER FileRecord,
        ULONGLONG NextAssignedCluster,
        ULONG RunLength)
 {
-    UNIMPLEMENTED;
+    NTSTATUS Status;
+    PUCHAR DataRun = (PUCHAR)&AttrContext->Record + AttrContext->Record.NonResident.MappingPairsOffset;
+    int DataRunMaxLength;
+    PNTFS_ATTR_RECORD DestinationAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttrOffset);
+    LARGE_MCB DataRunsMCB;
+    ULONG NextAttributeOffset = AttrOffset + AttrContext->Record.Length;
+    ULONGLONG NextVBN = AttrContext->Record.NonResident.LowestVCN;
+
+    // Allocate some memory for the RunBuffer
+    PUCHAR RunBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    int RunBufferOffset = 0;
 
     if (!AttrContext->Record.IsNonResident)
         return STATUS_INVALID_PARAMETER;
 
-    return STATUS_NOT_IMPLEMENTED;
+    // Convert the data runs to a map control block
+    Status = ConvertDataRunsToLargeMCB(DataRun, &DataRunsMCB, &NextVBN);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Unable to convert data runs to MCB (probably ran out of memory)!\n");
+        return Status;
+    }
+
+    // Add newly-assigned clusters to mcb
+    FsRtlAddLargeMcbEntry(&DataRunsMCB,
+                          NextVBN,
+                          NextAssignedCluster,
+                          RunLength);
+
+    // Convert the map control block back to encoded data runs
+    ConvertLargeMCBToDataRuns(&DataRunsMCB, RunBuffer, Vcb->NtfsInfo.BytesPerCluster, &RunBufferOffset);
+
+    // Get the amount of free space between the start of the of the first data run and the attribute end
+    DataRunMaxLength = AttrContext->Record.Length - AttrContext->Record.NonResident.MappingPairsOffset;
+
+    // Do we need to extend the attribute (or convert to attribute list)?
+    if (DataRunMaxLength < RunBufferOffset)
+    {
+        PNTFS_ATTR_RECORD NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + NextAttributeOffset);
+        DataRunMaxLength += Vcb->NtfsInfo.BytesPerFileRecord - NextAttributeOffset - (sizeof(ULONG) * 2);
+
+        // Can we move the end of the attribute?
+        if (NextAttribute->Type != AttributeEnd || DataRunMaxLength < RunBufferOffset - 1)
+        {
+            DPRINT1("FIXME: Need to create attribute list! Max Data Run Length available: %d\n", DataRunMaxLength);
+            if (NextAttribute->Type != AttributeEnd)
+                DPRINT1("There's another attribute after this one with type %0xlx\n", NextAttribute->Type);
+            ExFreePoolWithTag(RunBuffer, TAG_NTFS);
+            FsRtlUninitializeLargeMcb(&DataRunsMCB);
+            return STATUS_NOT_IMPLEMENTED;
+        }
+
+        // calculate position of end markers
+        NextAttributeOffset = AttrOffset + AttrContext->Record.NonResident.MappingPairsOffset + RunBufferOffset;
+        NextAttributeOffset = ALIGN_UP_BY(NextAttributeOffset, 8);
+
+        // Write the end markers
+        NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + NextAttributeOffset);
+        NextAttribute->Type = AttributeEnd;
+        NextAttribute->Length = FILE_RECORD_END;
+
+        // Update the length
+        DestinationAttribute->Length = NextAttributeOffset - AttrOffset;
+        AttrContext->Record.Length = DestinationAttribute->Length;
+
+        // We need to increase the FileRecord size
+        FileRecord->BytesInUse = NextAttributeOffset + (sizeof(ULONG) * 2);
+    }
+
+    // NOTE: from this point on the original attribute record will contain invalid data in it's runbuffer
+    // TODO: Elegant fix? Could we free the old Record and allocate a new one without issue?
+
+    // Update HighestVCN
+    DestinationAttribute->NonResident.HighestVCN =
+    AttrContext->Record.NonResident.HighestVCN = max(NextVBN - 1 + RunLength, 
+                                                     AttrContext->Record.NonResident.HighestVCN);
+
+    // Write data runs to destination attribute
+    RtlCopyMemory((PVOID)((ULONG_PTR)DestinationAttribute + DestinationAttribute->NonResident.MappingPairsOffset), 
+                  RunBuffer, 
+                  RunBufferOffset);
+
+    // Update the file record
+    Status = UpdateFileRecord(Vcb, AttrContext->FileMFTIndex, FileRecord);
+
+    ExFreePoolWithTag(RunBuffer, TAG_NTFS);
+    FsRtlUninitializeLargeMcb(&DataRunsMCB);
+
+    NtfsDumpDataRuns((PUCHAR)((ULONG_PTR)DestinationAttribute + DestinationAttribute->NonResident.MappingPairsOffset), 0);
+
+    return Status;
+}
+
+/**
+* @name ConvertDataRunsToLargeMCB
+* @implemented
+*
+* Converts binary data runs to a map control block.
+*
+* @param DataRun
+* Pointer to the run data
+*
+* @param DataRunsMCB
+* Pointer to an unitialized LARGE_MCB structure.
+*
+* @return
+* STATUS_SUCCESS on success, STATUS_INSUFFICIENT_RESOURCES if we fail to
+* initialize the mcb or add an entry.
+*
+* @remarks
+* Initializes the LARGE_MCB pointed to by DataRunsMCB. If this function succeeds, you
+* need to call FsRtlUninitializeLargeMcb() when you're done with DataRunsMCB. This
+* function will ensure the LargeMCB has been unitialized in case of failure.
+*
+*/
+NTSTATUS
+ConvertDataRunsToLargeMCB(PUCHAR DataRun,
+                          PLARGE_MCB DataRunsMCB,
+                          PULONGLONG pNextVBN)
+{
+    LONGLONG  DataRunOffset;
+    ULONGLONG DataRunLength;
+    LONGLONG  DataRunStartLCN;
+    ULONGLONG NextCluster;
+
+    ULONGLONG LastLCN = 0;
+
+    // Initialize the MCB, potentially catch an exception
+    _SEH2_TRY{
+        FsRtlInitializeLargeMcb(DataRunsMCB, NonPagedPool);
+    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+        _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
+    } _SEH2_END;
+
+    while (*DataRun != 0)
+    {
+        DataRun = DecodeRun(DataRun, &DataRunOffset, &DataRunLength);
+
+        if (DataRunOffset != -1)
+        {
+            // Normal data run.
+            DataRunStartLCN = LastLCN + DataRunOffset;
+            LastLCN = DataRunStartLCN;
+            NextCluster = LastLCN + DataRunLength;
+
+
+            _SEH2_TRY{
+                if (!FsRtlAddLargeMcbEntry(DataRunsMCB,
+                                           *pNextVBN,
+                                           DataRunStartLCN,
+                                           DataRunLength))
+                {
+                    FsRtlUninitializeLargeMcb(DataRunsMCB);
+                    return STATUS_INSUFFICIENT_RESOURCES;
+                }
+            } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+                FsRtlUninitializeLargeMcb(DataRunsMCB);
+                _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
+            } _SEH2_END;
+
+        }
+
+        *pNextVBN += DataRunLength;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/**
+* @name ConvertLargeMCBToDataRuns
+* @implemented
+*
+* Converts a map control block to a series of encoded data runs (used by non-resident attributes).
+*
+* @param DataRunsMCB
+* Pointer to a LARGE_MCB structure describing the data runs.
+*
+* @param RunBuffer
+* Pointer to the buffer that will receive the encoded data runs.
+*
+* @param MaxBufferSize
+* Size of RunBuffer, in bytes.
+*
+* @param UsedBufferSize
+* Pointer to a ULONG that will receive the size of the data runs in bytes. Can't be NULL.
+*
+* @return
+* STATUS_SUCCESS on success, STATUS_BUFFER_TOO_SMALL if RunBuffer is too small to contain the
+* complete output.
+*
+*/
+NTSTATUS
+ConvertLargeMCBToDataRuns(PLARGE_MCB DataRunsMCB,
+                          PUCHAR RunBuffer,
+                          ULONG MaxBufferSize,
+                          PULONG UsedBufferSize)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG RunBufferOffset = 0;
+    LONGLONG  DataRunOffset;
+    ULONGLONG LastLCN = 0;
+
+    LONGLONG Vbn, Lbn, Count;
+
+
+    DPRINT("\t[Vbn, Lbn, Count]\n");
+
+    // convert each mcb entry to a data run
+    for (int i = 0; FsRtlGetNextLargeMcbEntry(DataRunsMCB, i, &Vbn, &Lbn, &Count); i++)
+    {
+        UCHAR DataRunOffsetSize = 0;
+        UCHAR DataRunLengthSize = 0;
+        UCHAR ControlByte = 0;
+
+        // [vbn, lbn, count]
+        DPRINT("\t[%I64d, %I64d,%I64d]\n", Vbn, Lbn, Count);
+
+        // TODO: check for holes and convert to sparse runs
+        DataRunOffset = Lbn - LastLCN;
+        LastLCN = Lbn;
+
+        // now we need to determine how to represent DataRunOffset with the minimum number of bytes
+        DPRINT("Determining how many bytes needed to represent %I64x\n", DataRunOffset);
+        DataRunOffsetSize = GetPackedByteCount(DataRunOffset, TRUE);
+        DPRINT("%d bytes needed.\n", DataRunOffsetSize);
+
+        // determine how to represent DataRunLengthSize with the minimum number of bytes
+        DPRINT("Determining how many bytes needed to represent %I64x\n", Count);
+        DataRunLengthSize = GetPackedByteCount(Count, TRUE);
+        DPRINT("%d bytes needed.\n", DataRunLengthSize);
+
+        // ensure the next data run + end marker would be > Max buffer size
+        if (RunBufferOffset + 2 + DataRunLengthSize + DataRunOffsetSize > MaxBufferSize)
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+            DPRINT1("FIXME: Ran out of room in buffer for data runs!\n");
+            break;
+        }
+
+        // pack and copy the control byte
+        ControlByte = (DataRunOffsetSize << 4) + DataRunLengthSize;
+        RunBuffer[RunBufferOffset++] = ControlByte;
+
+        // copy DataRunLength
+        RtlCopyMemory(RunBuffer + RunBufferOffset, &Count, DataRunLengthSize);
+        RunBufferOffset += DataRunLengthSize;
+
+        // copy DataRunOffset
+        RtlCopyMemory(RunBuffer + RunBufferOffset, &DataRunOffset, DataRunOffsetSize);
+        RunBufferOffset += DataRunOffsetSize;
+    }
+
+    // End of data runs
+    RunBuffer[RunBufferOffset++] = 0;
+
+    *UsedBufferSize = RunBufferOffset;
+    DPRINT("New Size of DataRuns: %ld\n", *UsedBufferSize);
+
+    return Status;
 }
 
 PUCHAR
