@@ -1470,7 +1470,7 @@ BmGetBootSequence (
     )
 {
     PBL_LOADED_APPLICATION_ENTRY* Sequence;
-    ULONG Count;
+    ULONG Count = SequenceListCount;
     NTSTATUS Status;
 
     /* Allocate the sequence list */
