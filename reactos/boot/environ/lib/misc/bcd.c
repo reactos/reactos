@@ -778,8 +778,7 @@ BiEnumerateSubObjectElements (
                           (&SubObjectList[i])->Data4[4],
                           (&SubObjectList[i])->Data4[5],
                           (&SubObjectList[i])->Data4[6],
-                          (&SubObjectList[i])->Data4[7],
-                          (&SubObjectList[i])->Data4[8]);
+                          (&SubObjectList[i])->Data4[7]);
             Status = STATUS_SUCCESS;
         }
     }
