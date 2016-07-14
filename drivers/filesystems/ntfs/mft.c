@@ -211,6 +211,11 @@ InternalSetResidentAttributeLength(PNTFS_ATTR_CONTEXT AttrContext,
     FileRecord->BytesInUse = NextAttributeOffset + (sizeof(ULONG) * 2);
 }
 
+/**
+*   @parameter FileRecord
+*   Pointer to a file record. Must be a full record at least 
+*   Fcb->Vcb->NtfsInfo.BytesPerFileRecord bytes large, not just the header.
+*/
 NTSTATUS
 SetAttributeDataLength(PFILE_OBJECT FileObject,
                        PNTFS_FCB Fcb,
@@ -235,6 +240,7 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
     {
         ULONG BytesPerCluster = Fcb->Vcb->NtfsInfo.BytesPerCluster;
         ULONGLONG AllocationSize = ROUND_UP(DataSize->QuadPart, BytesPerCluster);
+        PNTFS_ATTR_RECORD DestinationAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttrOffset);
 
         // do we need to increase the allocation size?
         if (AttrContext->Record.NonResident.AllocatedSize < AllocationSize)
@@ -265,7 +271,7 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
                 }
 
                 // now we need to add the clusters we allocated to the data run
-                Status = AddRun(AttrContext, NextAssignedCluster, AssignedClusters);
+                Status = AddRun(Fcb->Vcb, AttrContext, AttrOffset, FileRecord, NextAssignedCluster, AssignedClusters);
                 if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("Error: Unable to add data run!\n");
@@ -275,23 +281,34 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
                 ClustersNeeded -= AssignedClusters;
                 LastClusterInDataRun.LowPart = NextAssignedCluster + AssignedClusters - 1;
             }
-
-            DPRINT1("FixMe: Increasing allocation size is unimplemented!\n");
-            return STATUS_NOT_IMPLEMENTED;
+        }
+        else if (AttrContext->Record.NonResident.AllocatedSize > AllocationSize)
+        {
+            // shrink allocation size (TODO)
+            if (AllocationSize == 0)
+            {
+                // hack for notepad.exe
+                PUCHAR DataRuns = (PUCHAR)((ULONG_PTR)DestinationAttribute + DestinationAttribute->NonResident.MappingPairsOffset);
+                *DataRuns = 0;
+                DestinationAttribute->NonResident.HighestVCN = 
+                AttrContext->Record.NonResident.HighestVCN = 0;
+            }
         }
 
         // TODO: is the file compressed, encrypted, or sparse?
 
         // NOTE: we need to have acquired the main resource exclusively, as well as(?) the PagingIoResource
 
-        // TODO: update the allocated size on-disk
-        DPRINT("Allocated Size: %I64u\n", AttrContext->Record.NonResident.AllocatedSize);
-
+        Fcb->RFCB.AllocationSize.QuadPart = AllocationSize;
+        AttrContext->Record.NonResident.AllocatedSize = AllocationSize;
         AttrContext->Record.NonResident.DataSize = DataSize->QuadPart;
         AttrContext->Record.NonResident.InitializedSize = DataSize->QuadPart;
 
-        // copy the attribute record back into the FileRecord
-        RtlCopyMemory((PCHAR)FileRecord + AttrOffset, &AttrContext->Record, AttrContext->Record.Length);
+        DestinationAttribute->NonResident.AllocatedSize = AllocationSize;
+        DestinationAttribute->NonResident.DataSize = DataSize->QuadPart;
+        DestinationAttribute->NonResident.InitializedSize = DataSize->QuadPart;
+
+        DPRINT("Allocated Size: %I64u\n", DestinationAttribute->NonResident.AllocatedSize);
     }
     else
     {
