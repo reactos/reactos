@@ -334,6 +334,13 @@ public:
             bsi.dwStyle = (Locked ? BSIS_LOCKED | BSIS_NOGRIPPER : BSIS_AUTOGRIPPER);
 
             hRet = m_BandSite->SetBandSiteInfo(&bsi);
+
+            /* HACK for CORE-9809 ! */
+            if (hRet == E_NOTIMPL)
+                hRet = S_OK;
+            else
+                ERR("HACK for CORE-9809 no longer needed!\n");
+
             if (SUCCEEDED(hRet))
             {
                 hRet = Update();
