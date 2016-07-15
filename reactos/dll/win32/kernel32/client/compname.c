@@ -263,8 +263,15 @@ GetComputerNameExA(COMPUTER_NAME_FORMAT NameType,
     UNICODE_STRING UnicodeString;
     ANSI_STRING AnsiString;
     BOOL Result;
-    PWCHAR TempBuffer = RtlAllocateHeap( RtlGetProcessHeap(), 0, *nSize * sizeof(WCHAR) );
+    PWCHAR TempBuffer;
 
+    if (!lpBuffer)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    TempBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, *nSize * sizeof(WCHAR));
     if (!TempBuffer)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
