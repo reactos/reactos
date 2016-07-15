@@ -88,25 +88,40 @@ AddRun(PNTFS_VCB Vcb,
     ULONGLONG NextVBN = AttrContext->Record.NonResident.LowestVCN;
 
     // Allocate some memory for the RunBuffer
-    PUCHAR RunBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    PUCHAR RunBuffer;
     int RunBufferOffset = 0;
 
     if (!AttrContext->Record.IsNonResident)
         return STATUS_INVALID_PARAMETER;
+
+    RunBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
 
     // Convert the data runs to a map control block
     Status = ConvertDataRunsToLargeMCB(DataRun, &DataRunsMCB, &NextVBN);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Unable to convert data runs to MCB (probably ran out of memory)!\n");
+        ExFreePoolWithTag(RunBuffer, TAG_NTFS);
         return Status;
     }
 
     // Add newly-assigned clusters to mcb
-    FsRtlAddLargeMcbEntry(&DataRunsMCB,
-                          NextVBN,
-                          NextAssignedCluster,
-                          RunLength);
+    _SEH2_TRY{
+        if (!FsRtlAddLargeMcbEntry(&DataRunsMCB,
+        NextVBN,
+                                   NextAssignedCluster,
+                                   RunLength))
+        {
+            FsRtlUninitializeLargeMcb(&DataRunsMCB);
+            ExFreePoolWithTag(RunBuffer, TAG_NTFS);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+        FsRtlUninitializeLargeMcb(&DataRunsMCB);
+        ExFreePoolWithTag(RunBuffer, TAG_NTFS);
+        _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
+    } _SEH2_END;
+
 
     // Convert the map control block back to encoded data runs
     ConvertLargeMCBToDataRuns(&DataRunsMCB, RunBuffer, Vcb->NtfsInfo.BytesPerCluster, &RunBufferOffset);
