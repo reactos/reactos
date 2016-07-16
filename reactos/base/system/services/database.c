@@ -202,9 +202,9 @@ ScmLogonService(
     PWSTR ptr;
     DWORD dwError = ERROR_SUCCESS;
 
-    DPRINT1("ScmLogonService()\n");
+    DPRINT("ScmLogonService()\n");
 
-    DPRINT1("Service %S\n", pService->lpServiceName);
+    DPRINT("Service %S\n", pService->lpServiceName);
 
     if (ScmIsLocalSystemAccount(pImage->pszAccountName))
         return ERROR_SUCCESS;
@@ -228,10 +228,10 @@ ScmLogonService(
         // pDomainName = computer name
     }
 
-    DPRINT1("Domain: %S  User: %S\n", pDomainName, pUserName);
+    DPRINT("Domain: %S  User: %S\n", pDomainName, pUserName);
 
     /* FIXME */
-#if 1
+#if 0
     if (!LogonUserW(pUserName,
                     pDomainName,
                     L"", // lpszPassword,
