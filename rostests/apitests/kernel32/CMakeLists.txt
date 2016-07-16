@@ -2,6 +2,7 @@
 list(APPEND SOURCE
     dosdev.c
     FindFiles.c
+    GetComputerNameEx.c
     GetCurrentDirectory.c
     GetDriveType.c
     GetModuleFileName.c

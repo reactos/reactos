@@ -5,6 +5,7 @@
 
 extern void func_dosdev(void);
 extern void func_FindFiles(void);
+extern void func_GetComputerNameEx(void);
 extern void func_GetCurrentDirectory(void);
 extern void func_GetDriveType(void);
 extern void func_GetModuleFileName(void);
@@ -22,6 +23,7 @@ const struct test winetest_testlist[] =
 {
     { "dosdev",                      func_dosdev },
     { "FindFiles",                   func_FindFiles },
+    { "GetComputerNameEx",           func_GetComputerNameEx },
     { "GetCurrentDirectory",         func_GetCurrentDirectory },
     { "GetDriveType",                func_GetDriveType },
     { "GetModuleFileName",           func_GetModuleFileName },
