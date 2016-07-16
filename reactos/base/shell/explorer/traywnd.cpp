@@ -1704,9 +1704,9 @@ ChangePos:
         {
             ShellExecute(hWndOwner,
                          lpOperation,
-                         NULL,
-                         NULL,
                          szDir,
+                         NULL,
+                         NULL,
                          SW_SHOWNORMAL);
         }
     }
