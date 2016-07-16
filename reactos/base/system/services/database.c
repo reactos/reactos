@@ -162,10 +162,16 @@ ScmIsSameServiceAccount(
     IN PWSTR pszAccountName1,
     IN PWSTR pszAccountName2)
 {
-    if ((pszAccountName1 == NULL && pszAccountName2 == NULL) ||
-        (pszAccountName1 == NULL && wcscmp(pszAccountName2, L"LocalSystem") == 0) ||
-        (pszAccountName2 == NULL && wcscmp(pszAccountName1, L"LocalSystem") == 0) ||
-        (wcscmp(pszAccountName1, pszAccountName2) == 0))
+    if (pszAccountName1 == NULL && pszAccountName2 == NULL)
+        return TRUE;
+
+    if (pszAccountName1 == NULL && pszAccountName2 && wcscmp(pszAccountName2, L"LocalSystem") == 0)
+        return TRUE;
+
+    if (pszAccountName2 == NULL && pszAccountName1 && wcscmp(pszAccountName1, L"LocalSystem") == 0)
+        return TRUE;
+
+    if (pszAccountName1 && pszAccountName2 && wcscmp(pszAccountName1, pszAccountName2) == 0)
         return TRUE;
 
     return FALSE;
@@ -196,9 +202,9 @@ ScmLogonService(
     PWSTR ptr;
     DWORD dwError = ERROR_SUCCESS;
 
-    DPRINT("ScmLogonService()\n");
+    DPRINT1("ScmLogonService()\n");
 
-    DPRINT("Service %S\n", pService->lpServiceName);
+    DPRINT1("Service %S\n", pService->lpServiceName);
 
     if (ScmIsLocalSystemAccount(pImage->pszAccountName))
         return ERROR_SUCCESS;
@@ -222,10 +228,10 @@ ScmLogonService(
         // pDomainName = computer name
     }
 
-    DPRINT("Domain: %S  User: %S\n", pDomainName, pUserName);
+    DPRINT1("Domain: %S  User: %S\n", pDomainName, pUserName);
 
     /* FIXME */
-#if 0
+#if 1
     if (!LogonUserW(pUserName,
                     pDomainName,
                     L"", // lpszPassword,
