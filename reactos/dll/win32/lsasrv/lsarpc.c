@@ -2625,10 +2625,10 @@ done:
 
         if (EncCurrentValue != NULL)
             midl_user_free(EncCurrentValue);
-
-        if (SecretObject != NULL)
-            LsapCloseDbObject(SecretObject);
     }
+
+    if (SecretObject != NULL)
+        LsapCloseDbObject(SecretObject);
 
     return Status;
 }
