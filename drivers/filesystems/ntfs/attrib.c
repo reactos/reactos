@@ -89,7 +89,7 @@ AddRun(PNTFS_VCB Vcb,
 
     // Allocate some memory for the RunBuffer
     PUCHAR RunBuffer;
-    int RunBufferOffset = 0;
+    ULONG RunBufferOffset = 0;
 
     if (!AttrContext->Record.IsNonResident)
         return STATUS_INVALID_PARAMETER;
@@ -108,7 +108,7 @@ AddRun(PNTFS_VCB Vcb,
     // Add newly-assigned clusters to mcb
     _SEH2_TRY{
         if (!FsRtlAddLargeMcbEntry(&DataRunsMCB,
-        NextVBN,
+                                   NextVBN,
                                    NextAssignedCluster,
                                    RunLength))
         {
@@ -217,8 +217,6 @@ ConvertDataRunsToLargeMCB(PUCHAR DataRun,
     LONGLONG  DataRunOffset;
     ULONGLONG DataRunLength;
     LONGLONG  DataRunStartLCN;
-    ULONGLONG NextCluster;
-
     ULONGLONG LastLCN = 0;
 
     // Initialize the MCB, potentially catch an exception
@@ -237,8 +235,6 @@ ConvertDataRunsToLargeMCB(PUCHAR DataRun,
             // Normal data run.
             DataRunStartLCN = LastLCN + DataRunOffset;
             LastLCN = DataRunStartLCN;
-            NextCluster = LastLCN + DataRunLength;
-
 
             _SEH2_TRY{
                 if (!FsRtlAddLargeMcbEntry(DataRunsMCB,
@@ -295,14 +291,14 @@ ConvertLargeMCBToDataRuns(PLARGE_MCB DataRunsMCB,
     ULONG RunBufferOffset = 0;
     LONGLONG  DataRunOffset;
     ULONGLONG LastLCN = 0;
-
     LONGLONG Vbn, Lbn, Count;
+    int i;
 
 
     DPRINT("\t[Vbn, Lbn, Count]\n");
 
     // convert each mcb entry to a data run
-    for (int i = 0; FsRtlGetNextLargeMcbEntry(DataRunsMCB, i, &Vbn, &Lbn, &Count); i++)
+    for (i = 0; FsRtlGetNextLargeMcbEntry(DataRunsMCB, i, &Vbn, &Lbn, &Count); i++)
     {
         UCHAR DataRunOffsetSize = 0;
         UCHAR DataRunLengthSize = 0;
