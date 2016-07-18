@@ -159,11 +159,15 @@ SetRect(LPRECT lprc,
         int xRight,
         int yBottom)
 {
+    if (!lprc)
+        return FALSE;
+
     lprc->left = xLeft;
     lprc->top = yTop;
     lprc->right = xRight;
     lprc->bottom = yBottom;
-    return(TRUE);
+
+    return TRUE;
 }
 
 
