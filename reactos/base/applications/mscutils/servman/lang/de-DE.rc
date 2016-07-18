@@ -331,8 +331,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ACTION "Take no action"
-    IDS_RESTART_SERVICE "Restart the Service"
-    IDS_RUN_PROGRAM "Run a Program"
-    IDS_RESTART_COMPUTER "Restart the Computer"
+    IDS_NO_ACTION "Keine Aktion durchführen"
+    IDS_RESTART_SERVICE "Dienst neu starten"
+    IDS_RUN_PROGRAM "Ein Programm ausführen"
+    IDS_RESTART_COMPUTER "Computer neu starten"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_NOT_SAME_PASSWORD "Die Kennwörter stimmen nicht überein!"
+    IDS_INVALID_PASSWORD "Geben Sie ein gültiges Kennwort ein!"
 END

@@ -336,3 +336,10 @@ BEGIN
     IDS_RUN_PROGRAM "Run a Program"
     IDS_RESTART_COMPUTER "Restart the Computer"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_NOT_SAME_PASSWORD "The Passwords are not the same!"
+    IDS_INVALID_PASSWORD "Enter a valid Password!"
+END
+

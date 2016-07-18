@@ -210,5 +210,12 @@ HIMAGELIST InitImageList(UINT StartResource,
                          UINT Width,
                          UINT Height,
                          ULONG type);
+VOID
+ResourceMessageBox(
+    HINSTANCE hInstance,
+    HWND hwnd,
+    UINT uType,
+    UINT uCaptionId,
+    UINT uMessageId);
 
 #endif /* __SERVMAN_PRECOMP_H */
