@@ -532,7 +532,7 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
                 if (!(GetWindowLongPtrW( hwnd, GWL_STYLE ) & DS_NOIDLEMSG))
                {
                     /* No message present -> send ENTERIDLE and wait */
-                    if (owner) SendMessageW( owner, WM_ENTERIDLE, MSGF_DIALOGBOX, (LPARAM)hwnd );
+                    SendMessageW( owner, WM_ENTERIDLE, MSGF_DIALOGBOX, (LPARAM)hwnd );
                 }
                 GetMessageW( &msg, 0, 0, 0 );
             }
@@ -919,25 +919,42 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
 
     if (modal_owner && owner)
     {
-        HWND parent;
+        HWND parent = NULL;
         /*
          * Owner needs to be top level window. We need to duplicate the logic from server,
          * because we need to disable it before creating dialog window. Note that we do that
          * even if dialog has WS_CHILD, but only for modal dialogs, which matched what
          * Windows does.
          */
-        while ((GetWindowLongW( owner, GWL_STYLE ) & (WS_POPUP|WS_CHILD)) == WS_CHILD)
+
+        ////// Wine'ie babies need to fix your code!!!! CORE-11633
+        if ((GetWindowLongW( owner, GWL_STYLE ) & (WS_POPUP|WS_CHILD)) == WS_CHILD)
         {
-            parent = GetParent( owner );
-            if (!parent || parent == GetDesktopWindow()) break;
-            owner = parent;
+           parent = owner;
+           while ((GetWindowLongW( parent, GWL_STYLE ) & (WS_POPUP|WS_CHILD)) == WS_CHILD)
+           {
+               parent = GetParent( owner );
+               if (!parent || parent == GetDesktopWindow())
+               {
+                  parent = NULL;
+                  break;
+               } 
+           }
+        }
+        else
+           parent = GetAncestor( owner, GA_ROOT );
+
+        if (parent)
+        {
+           owner = parent;
+
+           if (IsWindowEnabled( owner ))
+           {
+               disabled_owner = owner;
+               EnableWindow( disabled_owner, FALSE );
+           }
         }
         *modal_owner = owner;
-        if (IsWindowEnabled( owner ))
-        {
-            disabled_owner = owner;
-            EnableWindow( disabled_owner, FALSE );
-        }
     }
 
     if (unicode)
@@ -1052,7 +1069,6 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         }
         return hwnd;
     }
-    //if (modal && ownerEnabled) DIALOG_EnableOwner(owner);
     if (disabled_owner) EnableWindow( disabled_owner, TRUE );
     IntNotifyWinEvent(EVENT_SYSTEM_DIALOGEND, hwnd, OBJID_WINDOW, CHILDID_SELF, 0);
     if( IsWindow(hwnd) )
@@ -2036,6 +2052,7 @@ EndDialog(
     }
     else
        owner = GetWindow( hwnd, GW_OWNER );    
+
     if (owner)
         EnableWindow( owner, TRUE );
 
