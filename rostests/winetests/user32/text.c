@@ -115,15 +115,14 @@ static void test_DrawTextCalcRect(void)
 
     SetRect( &rect, 10,10, 100, 100);
     heightcheck = textheight = DrawTextExA(hdc, text, 0, &rect, DT_CALCRECT, NULL );
-    ok( !EMPTY(rect) && !MODIFIED(rect),
-        "rectangle should NOT be empty got %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+        "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
     ok(textheight==0,"Got textheight from DrawTextExA\n");
 
     SetRect( &rect, 10,10, 100, 100);
     textheight = DrawTextA(hdc, text, 0, &rect, DT_CALCRECT);
-    ok( !EMPTY(rect) && !MODIFIED(rect),
-        "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n",
-        rect.left, rect.top, rect.right, rect.bottom );
+    ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+        "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
     if (conform_xp)
         ok(textheight==0,"Got textheight from DrawTextA\n");
     ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
@@ -131,23 +130,19 @@ static void test_DrawTextCalcRect(void)
     SetRect( &rect, 10,10, 100, 100);
     SetLastError( 0);
     heightcheck = textheight = DrawTextExA(hdc, emptystring, -1, &rect, DT_CALCRECT, NULL );
-    ok( EMPTY(rect),
-        "rectangle should be empty got %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(EMPTY(rect), "rectangle should be empty got %s\n", wine_dbgstr_rect(&rect));
     ok(textheight!=0,"Failed to get textheight from DrawTextExA\n");
 
     SetRect( &rect, 10,10, 100, 100);
     textheight = DrawTextA(hdc, emptystring, -1, &rect, DT_CALCRECT);
-    ok( EMPTY(rect),
-        "rectangle should be empty got %d,%d-%d,%d\n",
-        rect.left, rect.top, rect.right, rect.bottom );
+    ok(EMPTY(rect), "rectangle should be empty got %s\n", wine_dbgstr_rect(&rect));
     ok(textheight!=0,"Failed to get textheight from DrawTextA\n");
     ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
 
     SetRect( &rect, 10,10, 100, 100);
     SetLastError( 0);
     heightcheck = textheight = DrawTextExA(hdc, NULL, -1, &rect, DT_CALCRECT, NULL );
-    ok( EMPTY(rect) || !MODIFIED(rect),
-        "rectangle should be empty or not modified got %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(EMPTY(rect), "rectangle should be empty got %s\n", wine_dbgstr_rect(&rect));
     if (!textheight) /* Windows NT 4 */
     {
         if (conform_xp)
@@ -159,25 +154,22 @@ static void test_DrawTextCalcRect(void)
 
     SetRect( &rect, 10,10, 100, 100);
     textheight = DrawTextA(hdc, NULL, -1, &rect, DT_CALCRECT);
-    ok( EMPTY(rect) || !MODIFIED(rect),
-        "rectangle should be empty or NOT modified got %d,%d-%d,%d\n",
-        rect.left, rect.top, rect.right, rect.bottom );
+    ok(EMPTY(rect), "rectangle should be empty got %s\n", wine_dbgstr_rect(&rect));
     if (conform_xp)
         ok(textheight!=0,"Failed to get textheight from DrawTextA\n");
     ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
 
     SetRect( &rect, 10,10, 100, 100);
     heightcheck = textheight = DrawTextExA(hdc, NULL, 0, &rect, DT_CALCRECT, NULL );
-    ok( !EMPTY(rect) && !MODIFIED(rect),
-        "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+        "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
     if (conform_xp)
         ok(textheight==0,"Got textheight from DrawTextExA\n");
 
     SetRect( &rect, 10,10, 100, 100);
     textheight = DrawTextA(hdc, NULL, 0, &rect, DT_CALCRECT);
-    ok( !EMPTY(rect) && !MODIFIED(rect),
-        "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n",
-        rect.left, rect.top, rect.right, rect.bottom );
+    ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+        "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
     if (conform_xp)
         ok(textheight==0,"Got textheight from DrawTextA\n");
     ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
@@ -186,16 +178,15 @@ static void test_DrawTextCalcRect(void)
 
     SetRect( &rect, 10,10, 100, 100);
     heightcheck = textheight = DrawTextExA(hdc, text, 0, &rect, DT_CALCRECT|DT_SINGLELINE, NULL );
-    ok( !EMPTY(rect) && !MODIFIED(rect),
-        "rectangle should NOT be empty got %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+        "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
     if (conform_xp)
         ok(textheight==0,"Got textheight from DrawTextExA\n");
 
     SetRect( &rect, 10,10, 100, 100);
     textheight = DrawTextA(hdc, text, 0, &rect, DT_CALCRECT|DT_SINGLELINE);
-    ok( !EMPTY(rect) && !MODIFIED(rect),
-        "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n",
-        rect.left, rect.top, rect.right, rect.bottom );
+    ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+        "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
     if (conform_xp)
         ok(textheight==0,"Got textheight from DrawTextA\n");
     ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
@@ -203,47 +194,44 @@ static void test_DrawTextCalcRect(void)
     SetRect( &rect, 10,10, 100, 100);
     SetLastError( 0);
     heightcheck = textheight = DrawTextExA(hdc, emptystring, -1, &rect, DT_CALCRECT|DT_SINGLELINE, NULL );
-    ok( !EMPTY(rect) && MODIFIED(rect),
-        "rectangle should be modified got %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(!EMPTY(rect) && MODIFIED(rect), "rectangle should be modified got %s\n",
+       wine_dbgstr_rect(&rect));
     ok(textheight!=0,"Failed to get textheight from DrawTextExA\n");
 
     SetRect( &rect, 10,10, 100, 100);
     textheight = DrawTextA(hdc, emptystring, -1, &rect, DT_CALCRECT|DT_SINGLELINE);
-    ok( !EMPTY(rect) && MODIFIED (rect),
-        "rectangle should be modified got %d,%d-%d,%d\n",
-        rect.left, rect.top, rect.right, rect.bottom );
+    ok(!EMPTY(rect) && MODIFIED (rect), "rectangle should be modified got %s\n",
+       wine_dbgstr_rect(&rect));
     ok(textheight!=0,"Failed to get textheight from DrawTextA\n");
     ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
 
     SetRect( &rect, 10,10, 100, 100);
     SetLastError( 0);
     heightcheck = textheight = DrawTextExA(hdc, NULL, -1, &rect, DT_CALCRECT|DT_SINGLELINE, NULL );
-    ok( (!EMPTY(rect) && MODIFIED(rect)) || !MODIFIED(rect),
-        "rectangle should be modified got %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(!EMPTY(rect) && MODIFIED(rect), "rectangle should be modified got %s\n",
+       wine_dbgstr_rect(&rect));
     if (conform_xp)
         ok(textheight!=0,"Failed to get textheight from DrawTextExA\n");
 
     SetRect( &rect, 10,10, 100, 100);
     textheight = DrawTextA(hdc, NULL, -1, &rect, DT_CALCRECT|DT_SINGLELINE);
-    ok( (!EMPTY(rect) && MODIFIED(rect)) || !MODIFIED(rect),
-        "rectangle should be modified got %d,%d-%d,%d\n",
-        rect.left, rect.top, rect.right, rect.bottom );
+    ok(!EMPTY(rect) && MODIFIED(rect), "rectangle should be modified got %s\n",
+       wine_dbgstr_rect(&rect));
     if (conform_xp)
         ok(textheight!=0,"Failed to get textheight from DrawTextA\n");
     ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
 
     SetRect( &rect, 10,10, 100, 100);
     heightcheck = textheight = DrawTextExA(hdc, NULL, 0, &rect, DT_CALCRECT|DT_SINGLELINE, NULL );
-    ok( !EMPTY(rect) && !MODIFIED(rect),
-        "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+        "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
     if (conform_xp)
         ok(textheight==0,"Got textheight from DrawTextExA\n");
 
     SetRect( &rect, 10,10, 100, 100);
     textheight = DrawTextA(hdc, NULL, 0, &rect, DT_CALCRECT|DT_SINGLELINE);
-    ok( !EMPTY(rect) && !MODIFIED(rect),
-        "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n",
-        rect.left, rect.top, rect.right, rect.bottom );
+    ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+        "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
     if (conform_xp)
         ok(textheight==0,"Got textheight from DrawTextA\n");
     ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
@@ -334,39 +322,32 @@ static void test_DrawTextCalcRect(void)
     SetLastError( 0);
     heightcheck = textheight = DrawTextExW(hdc, textW, 0, &rect, DT_CALCRECT, NULL );
     if( GetLastError() != ERROR_CALL_NOT_IMPLEMENTED) {
-        ok( !EMPTY(rect) && !MODIFIED(rect),
-            "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n",
-            rect.left, rect.top, rect.right, rect.bottom );
+        ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+            "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
         ok(textheight!=0,"Failed to get textheight from DrawTextExW\n");
 
         SetRect( &rect, 10,10, 100, 100);
         textheight = DrawTextW(hdc, textW, 0, &rect, DT_CALCRECT);
-        ok( !EMPTY(rect) && !MODIFIED(rect),
-            "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n",
-            rect.left, rect.top, rect.right, rect.bottom );
+        ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+            "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
         ok(textheight!=0,"Failed to get textheight from DrawTextW\n");
         ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
 
         SetRect( &rect, 10,10, 100, 100);
         heightcheck = textheight = DrawTextExW(hdc, emptystringW, -1, &rect, DT_CALCRECT, NULL );
-        ok( EMPTY(rect),
-            "rectangle should be empty got %d,%d-%d,%d\n",
-            rect.left, rect.top, rect.right, rect.bottom );
+        ok(EMPTY(rect), "rectangle should be empty got %s\n", wine_dbgstr_rect(&rect));
         ok(textheight!=0,"Failed to get textheight from DrawTextExW\n");
 
         SetRect( &rect, 10,10, 100, 100);
         textheight = DrawTextW(hdc, emptystringW, -1, &rect, DT_CALCRECT);
-        ok( EMPTY(rect),
-            "rectangle should be empty got %d,%d-%d,%d\n",
-            rect.left, rect.top, rect.right, rect.bottom );
+        ok(EMPTY(rect), "rectangle should be empty got %s\n", wine_dbgstr_rect(&rect));
         ok(textheight!=0,"Failed to get textheight from DrawTextW\n");
         ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
 
         SetRect( &rect, 10,10, 100, 100);
         heightcheck = textheight = DrawTextExW(hdc, NULL, 0, &rect, DT_CALCRECT, NULL );
-        ok( !EMPTY(rect) && !MODIFIED(rect),
-            "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n",
-            rect.left, rect.top, rect.right, rect.bottom );
+        ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+            "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
         if (textheight) /* windows 2000 */
         {
             if (conform_xp)
@@ -378,9 +359,8 @@ static void test_DrawTextCalcRect(void)
 
         SetRect( &rect, 10,10, 100, 100);
         textheight = DrawTextW(hdc, NULL, 0, &rect, DT_CALCRECT);
-        ok( !EMPTY(rect) && !MODIFIED(rect),
-            "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n",
-            rect.left, rect.top, rect.right, rect.bottom );
+        ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+            "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
         if (conform_xp)
             ok(textheight==0,"Got textheight from DrawTextW\n");
         ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
@@ -389,16 +369,14 @@ static void test_DrawTextCalcRect(void)
             /* Crashes on NT4 */
             SetRect( &rect, 10,10, 100, 100);
             heightcheck = textheight = DrawTextExW(hdc, NULL, -1, &rect, DT_CALCRECT, NULL );
-            ok( !EMPTY(rect) && !MODIFIED(rect),
-                "rectangle should NOT be empty  and NOT modified got %d,%d-%d,%d\n",
-                rect.left, rect.top, rect.right, rect.bottom );
+            ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+                "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
             ok(textheight==0,"Got textheight from DrawTextExW\n");
 
             SetRect( &rect, 10,10, 100, 100);
             textheight = DrawTextW(hdc, NULL, -1, &rect, DT_CALCRECT);
-            ok( !EMPTY(rect) && !MODIFIED(rect),
-                "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n",
-                rect.left, rect.top, rect.right, rect.bottom );
+            ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+                "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
             ok(textheight==0,"Got textheight from DrawTextW\n");
             ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
         }
@@ -407,31 +385,27 @@ static void test_DrawTextCalcRect(void)
         /* DT_SINGLELINE tests */
 
         heightcheck = textheight = DrawTextExW(hdc, textW, 0, &rect, DT_CALCRECT|DT_SINGLELINE, NULL );
-        ok( !EMPTY(rect) && !MODIFIED(rect),
-            "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n",
-            rect.left, rect.top, rect.right, rect.bottom );
+        ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+            "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
         ok(textheight!=0,"Failed to get textheight from DrawTextExW\n");
 
         SetRect( &rect, 10,10, 100, 100);
         textheight = DrawTextW(hdc, textW, 0, &rect, DT_CALCRECT|DT_SINGLELINE);
-        ok( !EMPTY(rect) && !MODIFIED(rect),
-            "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n",
-            rect.left, rect.top, rect.right, rect.bottom );
+        ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+            "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
         ok(textheight!=0,"Failed to get textheight from DrawTextW\n");
         ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
 
         SetRect( &rect, 10,10, 100, 100);
         heightcheck = textheight = DrawTextExW(hdc, emptystringW, -1, &rect, DT_CALCRECT|DT_SINGLELINE, NULL );
-        ok( !EMPTY(rect) && MODIFIED(rect),
-            "rectangle should be modified got %d,%d-%d,%d\n",
-            rect.left, rect.top, rect.right, rect.bottom );
+        ok(!EMPTY(rect) && MODIFIED(rect), "rectangle should be modified got %s\n",
+           wine_dbgstr_rect(&rect));
         ok(textheight!=0,"Failed to get textheight from DrawTextExW\n");
 
         SetRect( &rect, 10,10, 100, 100);
         textheight = DrawTextW(hdc, emptystringW, -1, &rect, DT_CALCRECT|DT_SINGLELINE);
-        ok( !EMPTY(rect) && MODIFIED(rect),
-            "rectangle should be modified got %d,%d-%d,%d\n",
-            rect.left, rect.top, rect.right, rect.bottom );
+        ok(!EMPTY(rect) && MODIFIED(rect), "rectangle should be modified got %s\n",
+           wine_dbgstr_rect(&rect));
         ok(textheight!=0,"Failed to get textheight from DrawTextW\n");
         ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
 
@@ -439,33 +413,29 @@ static void test_DrawTextCalcRect(void)
             /* Crashes on NT4 */
             SetRect( &rect, 10,10, 100, 100);
             heightcheck = textheight = DrawTextExW(hdc, NULL, -1, &rect, DT_CALCRECT|DT_SINGLELINE, NULL );
-            ok( !EMPTY(rect) && !MODIFIED(rect),
-                "rectangle should NOT be empty  and NOT modified got %d,%d-%d,%d\n",
-                rect.left, rect.top, rect.right, rect.bottom );
+            ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+                "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
             ok(textheight==0,"Got textheight from DrawTextExW\n");
 
             SetRect( &rect, 10,10, 100, 100);
             textheight = DrawTextW(hdc, NULL, -1, &rect, DT_CALCRECT|DT_SINGLELINE);
-            ok( !EMPTY(rect) && !MODIFIED(rect),
-                "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n",
-                rect.left, rect.top, rect.right, rect.bottom );
+            ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+                "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
             ok(textheight==0,"Got textheight from DrawTextW\n");
             ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
         }
 
         SetRect( &rect, 10,10, 100, 100);
         heightcheck = textheight = DrawTextExW(hdc, NULL, 0, &rect, DT_CALCRECT|DT_SINGLELINE, NULL );
-        ok( !EMPTY(rect) && !MODIFIED(rect),
-            "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n",
-            rect.left, rect.top, rect.right, rect.bottom );
+        ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+            "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
         if (conform_xp)
             ok(textheight==0,"Got textheight from DrawTextExW\n");
 
         SetRect( &rect, 10,10, 100, 100);
         textheight = DrawTextW(hdc, NULL, 0, &rect, DT_CALCRECT|DT_SINGLELINE);
-        ok( !EMPTY(rect) && !MODIFIED(rect),
-            "rectangle should NOT be empty and NOT modified got %d,%d-%d,%d\n",
-            rect.left, rect.top, rect.right, rect.bottom );
+        ok(!IsRectEmpty(&rect) && !MODIFIED(rect),
+            "rectangle should NOT be empty and NOT modified got %s\n", wine_dbgstr_rect(&rect));
         if (conform_xp)
             ok(textheight==0,"Got textheight from DrawTextW\n");
         ok(textheight == heightcheck,"DrawTextEx and DrawText differ in return\n");
@@ -600,8 +570,7 @@ static void test_DrawTextCalcRect(void)
     ok(textheight >= heightcheck, "Got unexpected textheight %d\n", textheight);
     ok(dtp.iTabLength == 0, "invalid dtp.iTabLength = %i\n",dtp.iTabLength);
     ok(rect.left == rect2.left && rect.right != rect2.right && rect.top == rect2.top && rect.bottom == rect2.bottom,
-        "incorrect rect %d,%d-%d,%d rect2 %d,%d-%d,%d\n",
-        rect.left, rect.top, rect.right, rect.bottom, rect2.left, rect2.top, rect2.right, rect2.bottom );
+       "incorrect rect %s rect2 %s\n", wine_dbgstr_rect(&rect), wine_dbgstr_rect(&rect2));
 
     SetRect( &rect, 0,0, 10, 10);
     memset(&dtp, 0, sizeof(dtp));
@@ -759,37 +728,84 @@ static void test_DrawState(void)
     DestroyWindow(hwnd);
 }
 
-static void test_string_conversions(void)
+static void test_CharToOem_OemToChar(void)
 {
-    char buf[64] = "string";
-    int i;
-    BOOL ret;
-    struct
+    static const WCHAR helloWorldW[] = {'H','e','l','l','o',' ','W','o','r','l','d',0};
+    static const WCHAR emptyW[] = {0};
+    static const char helloWorld[] = "Hello World";
+    static const struct
     {
-        char *src, *dst;
-        unsigned len;
-        BOOL ret;
-    } test[] =
+        BOOL src, dst, ret;
+    }
+    tests[] =
     {
-        { NULL, NULL, 1, FALSE },
-        { buf, NULL, 1, FALSE },
-        { NULL, buf, 1, FALSE },
-        { buf, buf, 1, TRUE }
+        { FALSE, FALSE, FALSE },
+        { TRUE,  FALSE, FALSE },
+        { FALSE, TRUE,  FALSE },
+        { TRUE,  TRUE,  TRUE  },
     };
+    BOOL ret;
+    int i;
 
-    for (i = 0; i < sizeof(test)/sizeof(test[0]); i++)
+    for (i = 0; i < sizeof(tests)/sizeof(tests[0]); i++)
     {
-        ret = CharToOemA(test[i].src, test[i].dst);
-        ok(ret == test[i].ret, "%d: expected %d, got %d\n", i, test[i].ret, ret);
+        const char *expected = tests[i].ret ? helloWorld : "";
+        const char *src = tests[i].src ? helloWorld : NULL;
+        char buf[64], *dst = tests[i].dst ? buf : NULL;
 
-        ret = CharToOemBuffA(test[i].src, test[i].dst, test[i].len);
-        ok(ret == test[i].ret, "%d: expected %d, got %d\n", i, test[i].ret, ret);
+        memset(buf, 0, sizeof(buf));
+        ret = CharToOemA(src, dst);
+        ok(ret == tests[i].ret, "test %d: expected %d, got %d\n", i, tests[i].ret, ret);
+        ok(!strcmp(buf, expected), "test %d: got '%s'\n", i, buf);
 
-        ret = OemToCharA(test[i].src, test[i].dst);
-        ok(ret == test[i].ret, "%d: expected %d, got %d\n", i, test[i].ret, ret);
+        memset(buf, 0, sizeof(buf));
+        ret = CharToOemBuffA(src, dst, sizeof(helloWorld));
+        ok(ret == tests[i].ret, "test %d: expected %d, got %d\n", i, tests[i].ret, ret);
+        ok(!strcmp(buf, expected), "test %d: got '%s'\n", i, buf);
 
-        ret = OemToCharBuffA(test[i].src, test[i].dst, test[i].len);
-        ok(ret == test[i].ret, "%d: expected %d, got %d\n", i, test[i].ret, ret);
+        memset(buf, 0, sizeof(buf));
+        ret = OemToCharA(src, dst);
+        ok(ret == tests[i].ret, "test %d: expected %d, got %d\n", i, tests[i].ret, ret);
+        ok(!strcmp(buf, expected), "test %d: got '%s'\n", i, buf);
+
+        memset(buf, 0, sizeof(buf));
+        ret = OemToCharBuffA(src, dst, sizeof(helloWorld));
+        ok(ret == tests[i].ret, "test %d: expected %d, got %d\n", i, tests[i].ret, ret);
+        ok(!strcmp(buf, expected), "test %d: got '%s'\n", i, buf);
+    }
+
+    for (i = 0; i < sizeof(tests)/sizeof(tests[0]); i++)
+    {
+        const char *expected = tests[i].ret ? helloWorld : "";
+        const WCHAR *src = tests[i].src ? helloWorldW : NULL;
+        char buf[64], *dst = tests[i].dst ? buf : NULL;
+
+        memset(buf, 0, sizeof(buf));
+        ret = CharToOemW(src, dst);
+        ok(ret == tests[i].ret, "test %d: expected %d, got %d\n", i, tests[i].ret, ret);
+        ok(!strcmp(buf, expected), "test %d: got '%s'\n", i, buf);
+
+        memset(buf, 0, sizeof(buf));
+        ret = CharToOemBuffW(src, dst, sizeof(helloWorldW)/sizeof(WCHAR));
+        ok(ret == tests[i].ret, "test %d: expected %d, got %d\n", i, tests[i].ret, ret);
+        ok(!strcmp(buf, expected), "test %d: got '%s'\n", i, buf);
+    }
+
+    for (i = 0; i < sizeof(tests)/sizeof(tests[0]); i++)
+    {
+        const WCHAR *expected = tests[i].ret ? helloWorldW : emptyW;
+        const char *src = tests[i].src ? helloWorld : NULL;
+        WCHAR buf[64], *dst = tests[i].dst ? buf : NULL;
+
+        memset(buf, 0, sizeof(buf));
+        ret = OemToCharW(src, dst);
+        ok(ret == tests[i].ret, "test %d: expected %d, got %d\n", i, tests[i].ret, ret);
+        ok(!lstrcmpW(buf, expected), "test %d: got '%s'\n", i, wine_dbgstr_w(buf));
+
+        memset(buf, 0, sizeof(buf));
+        ret = OemToCharBuffW(src, dst, sizeof(helloWorld));
+        ok(ret == tests[i].ret, "test %d: expected %d, got %d\n", i, tests[i].ret, ret);
+        ok(!lstrcmpW(buf, expected), "test %d: got '%s'\n", i, wine_dbgstr_w(buf));
     }
 }
 
@@ -798,5 +814,5 @@ START_TEST(text)
     test_TabbedText();
     test_DrawTextCalcRect();
     test_DrawState();
-    test_string_conversions();
+    test_CharToOem_OemToChar();
 }

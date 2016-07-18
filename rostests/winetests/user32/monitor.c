@@ -262,21 +262,21 @@ static void test_ChangeDisplaySettingsEx(void)
 
             /* Resolution change resets clip rect */
             ok(GetClipCursor(&r), "GetClipCursor() failed\n");
-            ok(EqualRect(&r, &virt), "Invalid clip rect: (%d %d) x (%d %d)\n", r.left, r.top, r.right, r.bottom);
+            ok(EqualRect(&r, &virt), "Invalid clip rect: %s\n", wine_dbgstr_rect(&r));
 
             if (!ClipCursor(NULL)) continue;
             ok(GetClipCursor(&r), "GetClipCursor() failed\n");
-            ok(EqualRect(&r, &virt), "Invalid clip rect: (%d %d) x (%d %d)\n", r.left, r.top, r.right, r.bottom);
+            ok(EqualRect(&r, &virt), "Invalid clip rect: %s\n", wine_dbgstr_rect(&r));
 
             /* This should always work. Primary monitor is at (0,0) */
             SetRect(&r1, 10, 10, 20, 20);
             ok(ClipCursor(&r1), "ClipCursor() failed\n");
             ok(GetClipCursor(&r), "GetClipCursor() failed\n");
-            ok(EqualRect(&r, &r1), "Invalid clip rect: (%d %d) x (%d %d)\n", r.left, r.top, r.right, r.bottom);
+            ok(EqualRect(&r, &r1), "Invalid clip rect: %s\n", wine_dbgstr_rect(&r));
             SetRect(&r1, 10, 10, 10, 10);
             ok(ClipCursor(&r1), "ClipCursor() failed\n");
             ok(GetClipCursor(&r), "GetClipCursor() failed\n");
-            ok(EqualRect(&r, &r1), "Invalid clip rect: (%d %d) x (%d %d)\n", r.left, r.top, r.right, r.bottom);
+            ok(EqualRect(&r, &r1), "Invalid clip rect: %s\n", wine_dbgstr_rect(&r));
             SetRect(&r1, 10, 10, 10, 9);
             ok(!ClipCursor(&r1), "ClipCursor() succeeded\n");
             /* Windows bug: further clipping fails once an empty rect is set, so we have to reset it */
@@ -285,9 +285,8 @@ static void test_ChangeDisplaySettingsEx(void)
             SetRect(&r1, virt.left - 10, virt.top - 10, virt.right + 20, virt.bottom + 20);
             ok(ClipCursor(&r1), "ClipCursor() failed\n");
             ok(GetClipCursor(&r), "GetClipCursor() failed\n");
-            ok(EqualRect(&r, &virt) ||
-               broken(EqualRect(&r, &r1)) /* win9x */,
-               "Invalid clip rect: (%d %d) x (%d %d)\n", r.left, r.top, r.right, r.bottom);
+            ok(EqualRect(&r, &virt) || broken(EqualRect(&r, &r1)) /* win9x */,
+               "Invalid clip rect: %s\n", wine_dbgstr_rect(&r));
             ClipCursor(&virt);
         }
     }
@@ -499,13 +498,12 @@ static void test_work_area(void)
     ret = pGetMonitorInfoA(hmon, &mi);
     ok(ret, "GetMonitorInfo error %u\n", GetLastError());
     ok(mi.dwFlags & MONITORINFOF_PRIMARY, "not a primary monitor\n");
-    trace("primary monitor (%d,%d-%d,%d)\n",
-        mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right, mi.rcMonitor.bottom);
+    trace("primary monitor %s\n", wine_dbgstr_rect(&mi.rcMonitor));
 
     SetLastError(0xdeadbeef);
     ret = SystemParametersInfoA(SPI_GETWORKAREA, 0, &rc_work, 0);
     ok(ret, "SystemParametersInfo error %u\n", GetLastError());
-    trace("work area (%d,%d-%d,%d)\n", rc_work.left, rc_work.top, rc_work.right, rc_work.bottom);
+    trace("work area %s\n", wine_dbgstr_rect(&rc_work));
     ok(EqualRect(&rc_work, &mi.rcWork), "work area is different\n");
 
     hwnd = CreateWindowExA(0, "static", NULL, WS_OVERLAPPEDWINDOW|WS_VISIBLE,100,100,10,10,0,0,0,NULL);
@@ -513,16 +511,13 @@ static void test_work_area(void)
 
     ret = GetWindowRect(hwnd, &rc_normal);
     ok(ret, "GetWindowRect failed\n");
-    trace("normal (%d,%d-%d,%d)\n", rc_normal.left, rc_normal.top, rc_normal.right, rc_normal.bottom);
+    trace("normal %s\n", wine_dbgstr_rect(&rc_normal));
 
     wp.length = sizeof(wp);
     ret = GetWindowPlacement(hwnd, &wp);
     ok(ret, "GetWindowPlacement failed\n");
-    trace("min: %d,%d max %d,%d normal %d,%d-%d,%d\n",
-          wp.ptMinPosition.x, wp.ptMinPosition.y,
-          wp.ptMaxPosition.x, wp.ptMaxPosition.y,
-          wp.rcNormalPosition.left, wp.rcNormalPosition.top,
-          wp.rcNormalPosition.right, wp.rcNormalPosition.bottom);
+    trace("min: %d,%d max %d,%d normal %s\n", wp.ptMinPosition.x, wp.ptMinPosition.y,
+          wp.ptMaxPosition.x, wp.ptMaxPosition.y, wine_dbgstr_rect(&wp.rcNormalPosition));
     OffsetRect(&wp.rcNormalPosition, rc_work.left, rc_work.top);
     todo_wine_if (mi.rcMonitor.left != mi.rcWork.left ||
         mi.rcMonitor.top != mi.rcWork.top)  /* FIXME: remove once Wine is fixed */
@@ -535,11 +530,8 @@ static void test_work_area(void)
     wp.length = sizeof(wp);
     ret = GetWindowPlacement(hwnd, &wp);
     ok(ret, "GetWindowPlacement failed\n");
-    trace("min: %d,%d max %d,%d normal %d,%d-%d,%d\n",
-          wp.ptMinPosition.x, wp.ptMinPosition.y,
-          wp.ptMaxPosition.x, wp.ptMaxPosition.y,
-          wp.rcNormalPosition.left, wp.rcNormalPosition.top,
-          wp.rcNormalPosition.right, wp.rcNormalPosition.bottom);
+    trace("min: %d,%d max %d,%d normal %s\n", wp.ptMinPosition.x, wp.ptMinPosition.y,
+          wp.ptMaxPosition.x, wp.ptMaxPosition.y, wine_dbgstr_rect(&wp.rcNormalPosition));
     ok(EqualRect(&rc_normal, &wp.rcNormalPosition), "normal pos is different\n");
 
     DestroyWindow(hwnd);

@@ -17,6 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WINE_NO_INLINE_RECT
 #include "wine/test.h"
 #include "winbase.h"
 #include "wingdi.h"
@@ -75,8 +76,8 @@ static void test_SubtractRect(void)
     result = SubtractRect(&rectr, &rect1, &rect2);
     ok(result, "SubtractRect returned FALSE but subtraction should not be empty\n");
     ok(result && rectr.left == 50 && rectr.top == 50 && rectr.right ==150
-        && rectr.bottom == 100, "wrong rect subtraction of SubtractRect "
-        "(dest rect={%d, %d, %d, %d})\n", rectr.left, rectr.top, rectr.right, rectr.bottom);
+       && rectr.bottom == 100, "wrong rect subtraction of SubtractRect (dest rect=%s)\n",
+       wine_dbgstr_rect(&rectr));
 
     /* source rect 2 partially overlaps rect 1 */
     SetRect(&rect1, 2431, 626, 3427, 1608);
@@ -84,8 +85,8 @@ static void test_SubtractRect(void)
     result = SubtractRect(&rectr, &rect1, &rect2);
     ok(result, "SubtractRect returned FALSE but subtraction should not be empty\n");
     ok(result && rectr.left == 2431 && rectr.top == 626 && rectr.right == 2499
-        && rectr.bottom == 1608, "wrong rect subtraction of SubtractRect "
-        "(dest rect={%d, %d, %d, %d})\n", rectr.left, rectr.top, rectr.right, rectr.bottom);
+       && rectr.bottom == 1608, "wrong rect subtraction of SubtractRect (dest rect=%s)\n",
+       wine_dbgstr_rect(&rectr));
 
     /* source rect 2 partially overlaps rect 1 - dest is src rect 2 */
     SetRect(&rect1, 2431, 626, 3427, 1608);
@@ -93,26 +94,118 @@ static void test_SubtractRect(void)
     result = SubtractRect(&rect2, &rect1, &rect2);
     ok(result, "SubtractRect returned FALSE but subtraction should not be empty\n");
     ok(result && rectr.left == 2431 && rectr.top == 626 && rectr.right == 2499
-        && rectr.bottom == 1608, "wrong rect subtraction of SubtractRect "
-        "(dest rect={%d, %d, %d, %d})\n", rectr.left, rectr.top, rectr.right, rectr.bottom);
+       && rectr.bottom == 1608, "wrong rect subtraction of SubtractRect (dest rect=%s)\n",
+       wine_dbgstr_rect(&rectr));
 
     /* source rect 2 completely overlaps rect 1 */
     SetRect(&rect1, 250, 250, 400, 500);
     SetRect(&rect2, 50, 50, 1500, 1000);
     result = SubtractRect(&rectr, &rect1, &rect2);
-    ok(!result, "SubtractRect returned TRUE but subtraction should be empty "
-        "(dest rect={%d, %d, %d, %d})\n", rectr.left, rectr.top, rectr.right, rectr.bottom);
+    ok(!result, "SubtractRect returned TRUE but subtraction should be empty (dest rect=%s)\n",
+       wine_dbgstr_rect(&rectr));
 
     /* source rect 2 completely overlaps rect 1 - dest is src rect 2 */
     SetRect(&rect1, 250, 250, 400, 500);
     SetRect(&rect2, 50, 50, 1500, 1000);
     result = SubtractRect(&rect2, &rect1, &rect2);
-    ok(!result, "SubtractRect returned TRUE but subtraction should be empty "
-        "(dest rect={%d, %d, %d, %d})\n", rect2.left, rect2.top, rect2.right, rect2.bottom);
+    ok(!result, "SubtractRect returned TRUE but subtraction should be empty (dest rect=%s)\n",
+       wine_dbgstr_rect(&rect2));
+}
+
+static void test_EqualRect(void)
+{
+    RECT rect1, rect2;
+    BOOL ret;
+
+    SetRect(&rect1, 0, 0, 0, 0);
+    SetRect(&rect2, 1, 1, 1, 1);
+
+    ret = EqualRect(NULL, NULL);
+    ok(!ret, "got %d\n", ret);
+
+    ret = EqualRect(&rect1, NULL);
+    ok(!ret, "got %d\n", ret);
+
+    ret = EqualRect(NULL, &rect2);
+    ok(!ret, "got %d\n", ret);
+
+    ret = EqualRect(&rect1, &rect2);
+    ok(!ret, "got %d\n", ret);
+
+    SetRect(&rect1, 0, 0, 10, 10);
+    SetRect(&rect2, 10, 10, 0, 0);
+
+    ret = EqualRect(&rect1, &rect2);
+    ok(!ret, "got %d\n", ret);
+
+    ret = EqualRect(&rect1, &rect1);
+    ok(ret, "got %d\n", ret);
+
+    rect2 = rect1;
+    ret = EqualRect(&rect1, &rect2);
+    ok(ret, "got %d\n", ret);
+}
+
+static void test_IsRectEmpty(void)
+{
+    BOOL ret;
+    unsigned int i;
+    static const struct {
+        RECT rect;
+        BOOL ret;
+    } rtest[] = {
+        {{0, 0, 0, 0}, TRUE},
+        {{127, 131, 127, 131}, TRUE},
+        {{MAXLONG, MAXLONG, MAXLONG, MAXLONG}, TRUE},
+        {{-1, -1, -1, -1}, TRUE},
+        {{-2011, -2017, -2011, -2017}, TRUE},
+        {{MINLONG, MINLONG, MINLONG, MINLONG}, TRUE},
+        /* Only width or height are 0 */
+        {{31, 37, 31, 41}, TRUE},
+        {{881, 883, 887, 883}, TRUE},
+        {{-1721, 1723, -1721, 7213}, TRUE},
+        /* Negative width and/or height */
+        {{11, 13, 5, 7}, TRUE},
+        {{-11, -13, -19, -23}, TRUE},
+        {{11, 13, -17, 19}, TRUE},
+        {{11, 13, 17, 11}, TRUE},
+        /* Non emty rects */
+        {{101, 103, 107, 109}, FALSE},
+        {{1, -9, 7, 3}, FALSE},
+        {{-109, -107, -103, -101}, FALSE},
+    };
+
+    for (i = 0; i < sizeof(rtest)/sizeof(rtest[0]); i++) {
+        ret = IsRectEmpty(&rtest[i].rect);
+        ok(ret == rtest[i].ret, "Test %d: IsRectEmpty returned %s for %s\n", i,
+           ret ? "TRUE" : "FALSE", wine_dbgstr_rect(&rtest[i].rect));
+    }
+}
+
+static void test_SetRect(void)
+{
+    RECT rect;
+    BOOL ret;
+
+    ret = SetRect(NULL, 0, 0, 0, 0);
+    ok(!ret, "got %d\n", ret);
+
+    ret = SetRect(&rect, 1, 2, 3, 4);
+    ok(ret, "got %d\n", ret);
+    ok(rect.left == 1 && rect.top == 2 && rect.right == 3 && rect.bottom == 4,
+        "got wrong rectangle\n");
+
+    ret = SetRect(&rect, 10, 10, 5, 5);
+    ok(ret, "got %d\n", ret);
+    ok(rect.left == 10 && rect.top == 10 && rect.right == 5 && rect.bottom == 5,
+        "got wrong rectangle\n");
 }
 
 START_TEST(uitools)
 {
     test_FillRect();
     test_SubtractRect();
+    test_EqualRect();
+    test_IsRectEmpty();
+    test_SetRect();
 }

@@ -194,11 +194,9 @@ static LRESULT WINAPI menu_ownerdraw_wnd_proc(HWND hwnd, UINT msg,
                 if (winetest_debug > 1) {
                     RECT rc;
                     GetMenuItemRect( hwnd, (HMENU)pdis->hwndItem, pdis->itemData ,&rc);
-                    trace("WM_DRAWITEM received hwnd %p hmenu %p itemdata %ld item %d rc %d,%d-%d,%d itemrc:  %d,%d-%d,%d\n",
+                    trace("WM_DRAWITEM received hwnd %p hmenu %p itemdata %ld item %d rc %s itemrc:  %s\n",
                             hwnd, pdis->hwndItem, pdis->itemData, pdis->itemID,
-                            pdis->rcItem.left, pdis->rcItem.top,
-                            pdis->rcItem.right,pdis->rcItem.bottom,
-                            rc.left,rc.top,rc.right,rc.bottom);
+                            wine_dbgstr_rect(&pdis->rcItem), wine_dbgstr_rect(&rc));
                     oldpen=SelectObject( pdis->hDC, GetStockObject(
                                 pdis->itemState & ODS_SELECTED ? WHITE_PEN :BLACK_PEN));
                     Rectangle( pdis->hDC, pdis->rcItem.left,pdis->rcItem.top,
@@ -347,10 +345,8 @@ static void test_getmenubarinfo(void)
     ret = pGetMenuBarInfo(hwnd, OBJID_MENU, 0, &mbi);
     ok(ret, "GetMenuBarInfo failed with error %d\n", GetLastError());
 
-    ok(mbi.rcBar.left == 0 && mbi.rcBar.top == 0 &&
-            mbi.rcBar.bottom == 0 && mbi.rcBar.right == 0,
-            "rcBar: Expected 0,0-0,0, got: %d,%d-%d,%d\n",
-            mbi.rcBar.left, mbi.rcBar.top, mbi.rcBar.right, mbi.rcBar.bottom);
+    ok(mbi.rcBar.left == 0 && mbi.rcBar.top == 0 && mbi.rcBar.bottom == 0 && mbi.rcBar.right == 0,
+            "rcBar: Expected (0,0)-(0,0), got: %s\n", wine_dbgstr_rect(&mbi.rcBar));
     ok(mbi.hMenu == hmenu, "hMenu: Got %p instead of %p\n",
             mbi.hMenu, hmenu);
     ok(mbi.fBarFocused == 0, "fBarFocused: Got %d instead of 0.\n", mbi.fBarFocused);
@@ -381,8 +377,7 @@ static void test_getmenubarinfo(void)
     ok(ret, "GetMenuItemRect failed.\n");
     todo_wine ok(mbi.rcBar.left == rci.left && mbi.rcBar.top == rci.top &&
             mbi.rcBar.bottom == rci.bottom && mbi.rcBar.right == rcw.right - rci.left + rcw.left,
-            "rcBar: Got %d,%d-%d,%d instead of %d,%d-%d,%d\n",
-            mbi.rcBar.left, mbi.rcBar.top, mbi.rcBar.right, mbi.rcBar.bottom,
+            "rcBar: Got %s instead of (%d,%d)-(%d,%d)\n", wine_dbgstr_rect(&mbi.rcBar),
             rci.left, rci.top, rcw.right - rci.left + rcw.left, rci.bottom);
     ok(mbi.hMenu == hmenu, "hMenu: Got %p instead of %p\n", mbi.hMenu, hmenu);
     ok(mbi.fBarFocused == 0, "fBarFocused: got %d instead of 0\n", mbi.fBarFocused);
@@ -393,11 +388,8 @@ static void test_getmenubarinfo(void)
     ok(ret, "GetMenuBarInfo failed with error %d\n", GetLastError());
     ret = GetMenuItemRect(hwnd, hmenu, 1, &rci);
     ok(ret, "GetMenuItemRect failed.\n");
-    ok(mbi.rcBar.left == rci.left && mbi.rcBar.top == rci.top &&
-            mbi.rcBar.bottom == rci.bottom && mbi.rcBar.right == rci.right,
-            "rcBar: Got %d,%d-%d,%d instead of %d,%d-%d,%d\n",
-            mbi.rcBar.left, mbi.rcBar.top, mbi.rcBar.right, mbi.rcBar.bottom,
-            rci.left, rci.top, rci.right, rci.bottom);
+    ok(EqualRect(&mbi.rcBar, &rci), "rcBar: Got %s instead of %s\n", wine_dbgstr_rect(&mbi.rcBar),
+            wine_dbgstr_rect(&rci));
     ok(mbi.hMenu == hmenu, "hMenu: Got %p instead of %p\n", mbi.hMenu, hmenu);
     ok(mbi.fBarFocused == 0, "fBarFocused: got %d instead of 0\n", mbi.fBarFocused);
     ok(mbi.fFocused == 0, "fFocused: got %d instead of 0\n", mbi.fFocused);
@@ -977,9 +969,7 @@ static void test_mbs_help( int ispop, int hassub, int mnuopt,
                 GetSystemMetrics(SM_CXMENUCHECK ),
                 GetSystemMetrics(SM_CYMENUCHECK ),arrowwidth, MOD_avec);
         if( hbmp == HBMMENU_CALLBACK)
-            trace( "    rc %d,%d-%d,%d bmp.rc %d,%d-%d,%d\n",
-                rc.left, rc.top, rc.top, rc.bottom, MOD_rc[0].left,
-                MOD_rc[0].top,MOD_rc[0].right, MOD_rc[0].bottom);
+            trace( "    rc %s bmp.rc %s\n", wine_dbgstr_rect(&rc), wine_dbgstr_rect(&MOD_rc[0]));
     }
     /* clean up */
     ret = DestroyMenu(submenu);

@@ -3,7 +3,7 @@
  *
  * Copyright 1999 Ove Kaaven
  * Copyright 2003 Dimitrie O. Paun
- * Copyright 2004, 2005 Dmitry Timoshkov
+ * Copyright 2004,2005,2016 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -96,6 +96,22 @@ typedef struct
         LPARAM lp;
     } u;
 } DRAW_ITEM_STRUCT;
+
+/* encoded MEASUREITEMSTRUCT into a WPARAM */
+typedef struct
+{
+    union
+    {
+        struct
+        {
+            UINT CtlType : 4;
+            UINT CtlID   : 4;
+            UINT itemID  : 4;
+            UINT wParam  : 20;
+        } item;
+        WPARAM wp;
+    } u;
+} MEASURE_ITEM_STRUCT;
 
 static BOOL test_DestroyWindow_flag;
 static HWINEVENTHOOK hEvent_hook;
@@ -1393,6 +1409,33 @@ static const struct message WmModalDialogSeq[] = {
     { WM_NCDESTROY, sent },
     { 0 }
 };
+static const struct message WmModalDialogSeq_2[] = {
+    { WM_CANCELMODE, sent },
+    { HCBT_SETFOCUS, hook },
+    { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { WM_KILLFOCUS, sent },
+    { WM_IME_SETCONTEXT, sent|parent|wparam|optional, 0 },
+    { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_ENABLE, sent|wparam, 0 },
+    { HCBT_CREATEWND, hook },
+    { EVENT_OBJECT_REORDER, winevent_hook|wparam|lparam, 0, 0 },
+    { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_SETFONT, sent },
+    { WM_INITDIALOG, sent },
+    { WM_CHANGEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { WM_ENABLE, sent|wparam, 1 },
+    { WM_WINDOWPOSCHANGING, sent|wparam, SWP_HIDEWINDOW|SWP_NOSIZE|SWP_NOMOVE|SWP_NOACTIVATE },
+    { EVENT_OBJECT_HIDE, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_CHANGEUISTATE, sent|optional },
+    { WM_UPDATEUISTATE, sent|optional },
+    { HCBT_DESTROYWND, hook },
+    { 0x0090, sent|optional },
+    { EVENT_OBJECT_DESTROY, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_DESTROY, sent },
+    { WM_NCDESTROY, sent },
+    { 0 }
+};
 /* SetMenu for NonVisible windows with size change*/
 static const struct message WmSetMenuNonVisibleSizeChangeSeq[] = {
     { WM_WINDOWPOSCHANGING, sent|wparam, SWP_FRAMECHANGED|SWP_NOACTIVATE|SWP_NOSIZE|SWP_NOMOVE },
@@ -1715,6 +1758,7 @@ static HMONITOR (WINAPI *pMonitorFromPoint)(POINT,DWORD);
 static BOOL (WINAPI *pUpdateLayeredWindow)(HWND,HDC,POINT*,SIZE*,HDC,POINT*,COLORREF,BLENDFUNCTION*,DWORD);
 static UINT_PTR (WINAPI *pSetSystemTimer)(HWND, UINT_PTR, UINT, TIMERPROC);
 static UINT_PTR (WINAPI *pKillSystemTimer)(HWND, UINT_PTR);
+static UINT_PTR (WINAPI *pSetCoalescableTimer)(HWND, UINT_PTR, UINT, TIMERPROC, ULONG);
 /* kernel32 functions */
 static BOOL (WINAPI *pGetCPInfoExA)(UINT, DWORD, LPCPINFOEXA);
 
@@ -1741,6 +1785,7 @@ static void init_procs(void)
     GET_PROC(user32, UpdateLayeredWindow)
     GET_PROC(user32, SetSystemTimer)
     GET_PROC(user32, KillSystemTimer)
+    GET_PROC(user32, SetCoalescableTimer)
 
     GET_PROC(kernel32, GetCPInfoExA)
 
@@ -1785,6 +1830,25 @@ static BOOL ignore_message( UINT message )
             message == WM_DWMNCRENDERINGCHANGED);
 }
 
+static unsigned hash_Ly_W(const WCHAR *str)
+{
+    unsigned hash = 0;
+
+    for (; *str; str++)
+        hash = hash * 1664525u + (unsigned char)(*str) + 1013904223u;
+
+    return hash;
+}
+
+static unsigned hash_Ly(const char *str)
+{
+    unsigned hash = 0;
+
+    for (; *str; str++)
+        hash = hash * 1664525u + (unsigned char)(*str) + 1013904223u;
+
+    return hash;
+}
 
 #define add_message(msg) add_message_(__LINE__,msg);
 static void add_message_(int line, const struct recvd_message *msg)
@@ -1889,6 +1953,26 @@ static void add_message_(int line, const struct recvd_message *msg)
                 seq->lParam = di.u.lp;
                 break;
             }
+
+            case WM_MEASUREITEM:
+            {
+                MEASURE_ITEM_STRUCT mi;
+                MEASUREITEMSTRUCT *mis = (MEASUREITEMSTRUCT *)msg->lParam;
+
+                sprintf( seq->output, "%s: %p WM_MEASUREITEM: CtlType %#x, CtlID %#x, itemID %#x, itemData %#lx",
+                         msg->descr, msg->hwnd, mis->CtlType, mis->CtlID,
+                         mis->itemID, mis->itemData);
+
+                mi.u.wp = 0;
+                mi.u.item.CtlType = mis->CtlType;
+                mi.u.item.CtlID = mis->CtlID;
+                mi.u.item.itemID = mis->itemID;
+                mi.u.item.wParam = msg->wParam;
+                seq->wParam = mi.u.wp;
+                seq->lParam = mis->itemData ? hash_Ly_W((const WCHAR *)mis->itemData) : 0;
+                break;
+            }
+
             default:
                 if (msg->message >= 0xc000) return;  /* ignore registered messages */
                 sprintf( seq->output, "%s: %p %04x wp %08lx lp %08lx",
@@ -2338,6 +2422,28 @@ static const struct message WmCreateMDIchildVisibleSeq[] = {
     { WM_IME_SETCONTEXT, sent|wparam|optional, 0 }, /* in MDI client */
     { WM_IME_SETCONTEXT, sent|wparam|defwinproc|optional, 1 },
     { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { WM_SETFOCUS, sent|defwinproc },
+    { WM_MDIACTIVATE, sent|defwinproc },
+    { 0 }
+};
+/* WM_CHILDACTIVATE sent to disabled window */
+static const struct message WmChildActivateDisabledWindowSeq[] = {
+    { WM_CHILDACTIVATE, sent|wparam|lparam, 0, 0 },
+    { 0 }
+};
+/* WM_CHILDACTIVATE sent to enabled window */
+static const struct message WmChildActivateWindowSeq[] = {
+    { WM_CHILDACTIVATE, sent|wparam|lparam, 0, 0 },
+    { WM_NCACTIVATE, sent|wparam|defwinproc, 0 },
+    { WM_MDIACTIVATE, sent|defwinproc },
+    { WM_WINDOWPOSCHANGING, sent|wparam|defwinproc, SWP_NOACTIVATE|SWP_NOSIZE|SWP_NOMOVE },
+    { WM_WINDOWPOSCHANGED, sent|wparam|defwinproc, SWP_NOACTIVATE|SWP_NOSIZE|SWP_NOMOVE|SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE },
+    { WM_NCACTIVATE, sent|wparam|defwinproc, 1 },
+    { HCBT_SETFOCUS, hook },
+    { WM_KILLFOCUS, sent|defwinproc },
+    { WM_SETFOCUS, sent },
+    { HCBT_SETFOCUS, hook },
+    { WM_KILLFOCUS, sent },
     { WM_SETFOCUS, sent|defwinproc },
     { WM_MDIACTIVATE, sent|defwinproc },
     { 0 }
@@ -3379,7 +3485,7 @@ static void test_mdi_messages(void)
     BOOL zoomed;
     RECT rc;
     HMENU hMenu = CreateMenu();
-    DWORD val;
+    LONG val;
 
     if (!mdi_RegisterWindowClasses()) assert(0);
 
@@ -3616,6 +3722,50 @@ static void test_mdi_messages(void)
 
     ok(GetActiveWindow() == mdi_frame, "wrong active window %p\n", GetActiveWindow());
     ok(GetFocus() == 0, "wrong focus window %p\n", GetFocus());
+
+    trace("Testing WM_CHILDACTIVATE\n");
+
+    mdi_child = CreateWindowExA(WS_EX_MDICHILD, "MDI_child_class", "MDI child",
+                                WS_CHILD | WS_VISIBLE | WS_MAXIMIZEBOX | WS_DISABLED,
+                                0, 0, CW_USEDEFAULT, CW_USEDEFAULT,
+                                mdi_client, 0, GetModuleHandleA(0), NULL);
+
+    mdi_child2 = CreateWindowExA(WS_EX_MDICHILD, "MDI_child_class", "MDI child",
+                                 WS_CHILD | WS_VISIBLE | WS_MAXIMIZEBOX,
+                                 0, 0, CW_USEDEFAULT, CW_USEDEFAULT,
+                                 mdi_client, 0, GetModuleHandleA(0), NULL);
+
+    active_child = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, (LPARAM)&zoomed);
+    ok(active_child == mdi_child2, "wrong active MDI child %p\n", active_child);
+    ok(!zoomed, "wrong zoomed state %d\n", zoomed);
+
+    flush_sequence();
+    SendMessageW(mdi_child, WM_CHILDACTIVATE, 0, 0);
+    ok_sequence(WmChildActivateDisabledWindowSeq, "WM_CHILDACTIVATE sent to disabled window", FALSE);
+
+    active_child = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, (LPARAM)&zoomed);
+    ok(active_child == mdi_child2, "wrong active MDI child %p\n", active_child);
+    ok(!zoomed, "wrong zoomed state %d\n", zoomed);
+    flush_sequence();
+
+    EnableWindow(mdi_child, TRUE);
+
+    active_child = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, (LPARAM)&zoomed);
+    ok(active_child == mdi_child2, "wrong active MDI child %p\n", active_child);
+    ok(!zoomed, "wrong zoomed state %d\n", zoomed);
+
+    flush_sequence();
+    SendMessageW(mdi_child, WM_CHILDACTIVATE, 0, 0);
+    ok_sequence(WmChildActivateWindowSeq, "WM_CHILDACTIVATE sent to enabled window", FALSE);
+
+    active_child = (HWND)SendMessageA(mdi_client, WM_MDIGETACTIVE, 0, (LPARAM)&zoomed);
+    ok(active_child == mdi_child, "wrong active MDI child %p\n", active_child);
+    ok(!zoomed, "wrong zoomed state %d\n", zoomed);
+    flush_sequence();
+
+    DestroyWindow(mdi_child);
+    DestroyWindow(mdi_child2);
+    flush_sequence();
 
     /* test for maximized MDI children */
     trace("creating maximized visible MDI child window 1\n");
@@ -3869,7 +4019,7 @@ static void test_mdi_messages(void)
     flush_sequence();
 
     val = GetWindowLongA(mdi_client, 0);
-    ok(val == 0xdeadbeef || broken(val == 0) /* >= Win 2003 */, "Expected 0xdeadbeef, got 0x%x\n", val);
+    ok(val == 0xdeadbeef || broken(val == 0) /* >= Win Vista */, "Expected 0xdeadbeef, got 0x%x\n", val);
     DestroyWindow(mdi_client);
     ok_sequence(WmDestroyMDIclientSeq, "Destroy MDI client window", FALSE);
 
@@ -3967,6 +4117,36 @@ static INT_PTR CALLBACK TestModalDlgProcA(HWND hwnd, UINT message, WPARAM wParam
 
     if (message == WM_INITDIALOG) SetTimer( hwnd, 1, 100, NULL );
     if (message == WM_TIMER) EndDialog( hwnd, 0 );
+    return 0;
+}
+
+static INT_PTR CALLBACK TestModalDlgProc2(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    struct recvd_message msg;
+
+    if (ignore_message( message )) return 0;
+
+    switch (message)
+    {
+	/* ignore */
+	case WM_MOUSEMOVE:
+	case WM_NCMOUSEMOVE:
+	case WM_NCMOUSELEAVE:
+	case WM_SETCURSOR:
+            return 0;
+        case WM_NCHITTEST:
+            return HTCLIENT;
+    }
+
+    msg.hwnd = hwnd;
+    msg.message = message;
+    msg.flags = sent|wparam|lparam;
+    msg.wParam = wParam;
+    msg.lParam = lParam;
+    msg.descr = "dialog";
+    add_message(&msg);
+
+    if (message == WM_INITDIALOG) EndDialog( hwnd, 0 );
     return 0;
 }
 
@@ -4228,8 +4408,7 @@ static void test_showwindow(void)
     GetWindowRect(hwnd, &rc);
     ok( rc.right-rc.left == GetSystemMetrics(SM_CXSCREEN) &&
         rc.bottom-rc.top == GetSystemMetrics(SM_CYSCREEN),
-        "Invalid maximized size before ShowWindow (%d,%d)-(%d,%d)\n",
-        rc.left, rc.top, rc.right, rc.bottom);
+        "Invalid maximized size before ShowWindow %s\n", wine_dbgstr_rect( &rc ));
     /* Reset window's size & position */
     SetWindowPos(hwnd, 0, 10, 10, 200, 200, SWP_NOZORDER | SWP_NOACTIVATE);
     ok(IsZoomed(hwnd), "window should be maximized\n");
@@ -4243,8 +4422,7 @@ static void test_showwindow(void)
     GetWindowRect(hwnd, &rc);
     ok( rc.right-rc.left == GetSystemMetrics(SM_CXSCREEN) &&
         rc.bottom-rc.top == GetSystemMetrics(SM_CYSCREEN),
-        "Invalid maximized size after ShowWindow (%d,%d)-(%d,%d)\n",
-        rc.left, rc.top, rc.right, rc.bottom);
+        "Invalid maximized size after ShowWindow %s\n", wine_dbgstr_rect( &rc ));
     DestroyWindow(hwnd);
     flush_sequence();
 
@@ -5416,6 +5594,35 @@ static const struct message WmSetFontStaticSeq[] =
     { WM_CTLCOLORSTATIC, sent|defwinproc },
     { 0 }
 };
+static const struct message WmSetTextButtonSeq[] =
+{
+    { WM_SETTEXT, sent },
+    { WM_CTLCOLORBTN, sent|parent },
+    { WM_CTLCOLORBTN, sent|parent },
+    { WM_COMMAND, sent|parent|optional },
+    { WM_DRAWITEM, sent|parent|optional },
+    { 0 }
+};
+static const struct message WmSetTextStaticSeq[] =
+{
+    { WM_SETTEXT, sent },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { 0 }
+};
+static const struct message WmSetTextGroupSeq[] =
+{
+    { WM_SETTEXT, sent },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { WM_CTLCOLORSTATIC, sent|parent|optional }, /* FIXME: Missing in Wine */
+    { WM_CTLCOLORSTATIC, sent|parent|optional }, /* FIXME: Missing in Wine */
+    { 0 }
+};
+static const struct message WmSetTextInvisibleSeq[] =
+{
+    { WM_SETTEXT, sent },
+    { 0 }
+};
 static const struct message WmSetStyleButtonSeq[] =
 {
     { BM_SETSTYLE, sent },
@@ -5585,51 +5792,63 @@ static void test_button_messages(void)
         const struct message *lbuttondown;
         const struct message *lbuttonup;
         const struct message *setfont;
+        const struct message *settext;
     } button[] = {
         { BS_PUSHBUTTON, DLGC_BUTTON | DLGC_UNDEFPUSHBUTTON,
           WmSetFocusButtonSeq, WmKillFocusButtonSeq, WmSetStyleButtonSeq,
           WmSetStateButtonSeq, WmSetStateButtonSeq, WmSetCheckIgnoredSeq,
-          WmLButtonDownSeq, WmLButtonUpSeq, WmSetFontButtonSeq },
+          WmLButtonDownSeq, WmLButtonUpSeq, WmSetFontButtonSeq,
+          WmSetTextButtonSeq },
         { BS_DEFPUSHBUTTON, DLGC_BUTTON | DLGC_DEFPUSHBUTTON,
           WmSetFocusButtonSeq, WmKillFocusButtonSeq, WmSetStyleButtonSeq,
           WmSetStateButtonSeq, WmSetStateButtonSeq, WmSetCheckIgnoredSeq,
-          WmLButtonDownSeq, WmLButtonUpSeq, WmSetFontButtonSeq },
+          WmLButtonDownSeq, WmLButtonUpSeq, WmSetFontButtonSeq,
+          WmSetTextButtonSeq },
         { BS_CHECKBOX, DLGC_BUTTON,
           WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq,
           WmSetStateStaticSeq, WmSetStateStaticSeq, WmSetCheckStaticSeq,
-          WmLButtonDownStaticSeq, WmLButtonUpStaticSeq, WmSetFontStaticSeq },
+          WmLButtonDownStaticSeq, WmLButtonUpStaticSeq, WmSetFontStaticSeq,
+          WmSetTextStaticSeq },
         { BS_AUTOCHECKBOX, DLGC_BUTTON,
           WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq,
           WmSetStateStaticSeq, WmSetStateStaticSeq, WmSetCheckStaticSeq,
-          WmLButtonDownStaticSeq, WmLButtonUpAutoSeq, WmSetFontStaticSeq },
+          WmLButtonDownStaticSeq, WmLButtonUpAutoSeq, WmSetFontStaticSeq,
+          WmSetTextStaticSeq },
         { BS_RADIOBUTTON, DLGC_BUTTON | DLGC_RADIOBUTTON,
           WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq,
           WmSetStateStaticSeq, WmSetStateStaticSeq, WmSetCheckStaticSeq,
-          WmLButtonDownStaticSeq, WmLButtonUpStaticSeq, WmSetFontStaticSeq },
+          WmLButtonDownStaticSeq, WmLButtonUpStaticSeq, WmSetFontStaticSeq,
+          WmSetTextStaticSeq },
         { BS_3STATE, DLGC_BUTTON,
           WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq,
           WmSetStateStaticSeq, WmSetStateStaticSeq, WmSetCheckStaticSeq,
-          WmLButtonDownStaticSeq, WmLButtonUpStaticSeq, WmSetFontStaticSeq },
+          WmLButtonDownStaticSeq, WmLButtonUpStaticSeq, WmSetFontStaticSeq,
+          WmSetTextStaticSeq },
         { BS_AUTO3STATE, DLGC_BUTTON,
           WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq,
           WmSetStateStaticSeq, WmSetStateStaticSeq, WmSetCheckStaticSeq,
-          WmLButtonDownStaticSeq, WmLButtonUpAutoSeq, WmSetFontStaticSeq },
+          WmLButtonDownStaticSeq, WmLButtonUpAutoSeq, WmSetFontStaticSeq,
+          WmSetTextStaticSeq },
         { BS_GROUPBOX, DLGC_STATIC,
           WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq,
           WmSetStateStaticSeq, WmSetStateStaticSeq, WmSetCheckIgnoredSeq,
-          WmLButtonDownStaticSeq, WmLButtonUpStaticSeq, WmSetFontStaticSeq },
+          WmLButtonDownStaticSeq, WmLButtonUpStaticSeq, WmSetFontStaticSeq,
+          WmSetTextGroupSeq },
         { BS_USERBUTTON, DLGC_BUTTON | DLGC_UNDEFPUSHBUTTON,
           WmSetFocusButtonSeq, WmKillFocusButtonSeq, WmSetStyleUserSeq,
           WmSetStateUserSeq, WmClearStateButtonSeq, WmSetCheckIgnoredSeq,
-          WmLButtonDownSeq, WmLButtonUpSeq, WmSetFontButtonSeq },
+          WmLButtonDownSeq, WmLButtonUpSeq, WmSetFontButtonSeq,
+          WmSetTextButtonSeq },
         { BS_AUTORADIOBUTTON, DLGC_BUTTON | DLGC_RADIOBUTTON,
           WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq,
           WmSetStateStaticSeq, WmSetStateStaticSeq, WmSetCheckStaticSeq,
-          NULL /* avoid infinite loop */, WmLButtonUpBrokenSeq, WmSetFontStaticSeq },
+          NULL /* avoid infinite loop */, WmLButtonUpBrokenSeq, WmSetFontStaticSeq,
+          WmSetTextStaticSeq },
         { BS_OWNERDRAW, DLGC_BUTTON,
           WmSetFocusOwnerdrawSeq, WmKillFocusOwnerdrawSeq, WmSetStyleOwnerdrawSeq,
           WmSetStateOwnerdrawSeq, WmClearStateOwnerdrawSeq, WmSetCheckIgnoredSeq,
-          WmLButtonDownSeq, WmLButtonUpSeq, WmSetFontButtonSeq },
+          WmLButtonDownSeq, WmLButtonUpSeq, WmSetFontButtonSeq,
+          WmSetTextButtonSeq },
     };
     unsigned int i;
     HWND hwnd, parent;
@@ -5762,6 +5981,30 @@ static void test_button_messages(void)
         SendMessageA(hwnd, WM_APP, 0, 0); /* place a separator mark here */
         while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
         ok_sequence(button[i].setcheck, "BM_SETCHECK on a button", FALSE);
+
+        SendMessageA(hwnd, WM_SETTEXT, 0, (LPARAM)"Text 1");
+        sprintf(desc, "button[%i]: WM_SETTEXT on a visible button", i);
+        ok_sequence(button[i].settext, desc, FALSE);
+
+        ShowWindow(hwnd, SW_HIDE);
+        flush_events();
+        flush_sequence();
+
+        SendMessageA(hwnd, WM_SETTEXT, 0, (LPARAM)"Text 2");
+        sprintf(desc, "button[%i]: WM_SETTEXT on an invisible button", i);
+        ok_sequence(WmSetTextInvisibleSeq, desc, FALSE);
+
+        ShowWindow(hwnd, SW_SHOW);
+        ShowWindow(parent, SW_HIDE);
+        flush_events();
+        flush_sequence();
+
+        SendMessageA(hwnd, WM_SETTEXT, 0, (LPARAM)"Text 3");
+        sprintf(desc, "button[%i]: WM_SETTEXT on an invisible button", i);
+        ok_sequence(WmSetTextInvisibleSeq, desc, FALSE);
+
+        ShowWindow(parent, SW_SHOW);
+        flush_events();
 
         state = SendMessageA(hwnd, BM_GETCHECK, 0, 0);
         if (button[i].style == BS_PUSHBUTTON ||
@@ -6308,9 +6551,8 @@ static void check_update_rgn( HWND hwnd, HRGN hrgn )
     }
     GetRgnBox( update, &r1 );
     GetUpdateRect( hwnd, &r2, FALSE );
-    ok( r1.left == r2.left && r1.top == r2.top && r1.right == r2.right && r1.bottom == r2.bottom,
-        "Rectangles are different: %d,%d-%d,%d / %d,%d-%d,%d\n",
-        r1.left, r1.top, r1.right, r1.bottom, r2.left, r2.top, r2.right, r2.bottom );
+    ok( EqualRect( &r1, &r2 ), "Rectangles are different: %s / %s\n", wine_dbgstr_rect( &r1 ),
+        wine_dbgstr_rect( &r2 ));
 
     DeleteObject( tmp );
     DeleteObject( update );
@@ -7266,7 +7508,7 @@ static void test_interthread_messages(void)
 
     handle = (void*)0xdeadbeef;
     ret = pGetCurrentActCtx(&handle);
-    ok(ret, "GetCurentActCtx failed: %u\n", GetLastError());
+    ok(ret, "GetCurrentActCtx failed: %u\n", GetLastError());
     ok(handle == 0, "active context %p\n", handle);
 
     wnd_event.start_event = CreateEventW(NULL, 0, 0, NULL);
@@ -7281,7 +7523,7 @@ static void test_interthread_messages(void)
 
     handle = 0;
     ret = pGetCurrentActCtx(&handle);
-    ok(ret, "GetCurentActCtx failed: %u\n", GetLastError());
+    ok(ret, "GetCurrentActCtx failed: %u\n", GetLastError());
     ok(handle != 0, "active context %p\n", handle);
     pReleaseActCtx(handle);
 
@@ -7806,8 +8048,7 @@ static void test_accelerators(void)
     keybd_event(VK_MENU, 0, 0, 0);
     keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0);
     pump_msg_loop(hwnd, 0);
-    /* this test doesn't pass in Wine for managed windows */
-    ok_sequence(WmAltPressRelease, "Alt press/release", TRUE);
+    ok_sequence(WmAltPressRelease, "Alt press/release", FALSE);
 
     trace("testing VK_F1 press/release\n");
     keybd_event(VK_F1, 0, 0, 0);
@@ -7827,7 +8068,7 @@ static void test_accelerators(void)
     keybd_event(VK_F10, 0, 0, 0);
     keybd_event(VK_F10, 0, KEYEVENTF_KEYUP, 0);
     pump_msg_loop(hwnd, 0);
-    ok_sequence(WmVkF10Seq, "VK_F10 press/release", TRUE);
+    ok_sequence(WmVkF10Seq, "VK_F10 press/release", FALSE);
 
     trace("testing SHIFT+F10 press/release\n");
     keybd_event(VK_SHIFT, 0, 0, 0);
@@ -8080,8 +8321,8 @@ static LRESULT WINAPI ParentMsgCheckProcA(HWND hwnd, UINT message, WPARAM wParam
         message == WM_PARENTNOTIFY || message == WM_CANCELMODE ||
 	message == WM_SETFOCUS || message == WM_KILLFOCUS ||
 	message == WM_ENABLE ||	message == WM_ENTERIDLE ||
-	message == WM_DRAWITEM || message == WM_COMMAND ||
-	message == WM_IME_SETCONTEXT)
+	message == WM_DRAWITEM || message == WM_MEASUREITEM ||
+	message == WM_COMMAND || message == WM_IME_SETCONTEXT)
     {
         switch (message)
         {
@@ -8098,8 +8339,7 @@ static LRESULT WINAPI ParentMsgCheckProcA(HWND hwnd, UINT message, WPARAM wParam
                 RECT rc;
                 INT ret = GetClipBox((HDC)wParam, &rc);
 
-                trace("WM_ERASEBKGND: GetClipBox()=%d, (%d,%d-%d,%d)\n",
-                       ret, rc.left, rc.top, rc.right, rc.bottom);
+                trace("WM_ERASEBKGND: GetClipBox()=%d, %s\n", ret, wine_dbgstr_rect(&rc));
                 break;
             }
         }
@@ -8807,6 +9047,20 @@ todo_wine
        count, TIMER_COUNT_EXPECTED);
     KillTimer(NULL, id);
     /* Note: SetSystemTimer doesn't support a NULL window, see test_timers */
+
+    if (pSetCoalescableTimer)
+    {
+        count = 0;
+        id = pSetCoalescableTimer(NULL, 0, 0, callback_count, 0);
+        ok(id != 0, "SetCoalescableTimer failed with %u.\n", GetLastError());
+        start = GetTickCount();
+        while (GetTickCount()-start < 100 && GetMessageA(&msg, NULL, 0, 0))
+            DispatchMessageA(&msg);
+        ok(count > 1, "expected count > 1, got %d.\n", count);
+        KillTimer(NULL, id);
+    }
+    else
+        win_skip("SetCoalescableTimer not available.\n");
 
     /* Check what happens when we're running out of timers */
     for (i=0; i<sizeof(ids)/sizeof(ids[0]); i++)
@@ -11076,6 +11330,70 @@ static void test_quit_message(void)
     ok_sequence(WmStopQuitSeq, "WmStopQuitSeq", FALSE);
 }
 
+static const struct message WmNotifySeq[] = {
+    { WM_NOTIFY, sent|wparam|lparam, 0x1234, 0xdeadbeef },
+    { 0 }
+};
+
+static void test_notify_message(void)
+{
+    HWND hwnd;
+    BOOL ret;
+    MSG msg;
+
+    hwnd = CreateWindowExA(0, "TestWindowClass", NULL, WS_OVERLAPPEDWINDOW,
+                           CW_USEDEFAULT, CW_USEDEFAULT, 300, 300, 0, NULL, NULL, 0);
+    ok(hwnd != 0, "Failed to create window\n");
+    flush_events();
+    flush_sequence();
+
+    ret = SendNotifyMessageA(hwnd, WM_NOTIFY, 0x1234, 0xdeadbeef);
+    ok(ret == TRUE, "SendNotifyMessageA failed with error %u\n", GetLastError());
+    ok_sequence(WmNotifySeq, "WmNotifySeq", FALSE);
+
+    ret = SendNotifyMessageW(hwnd, WM_NOTIFY, 0x1234, 0xdeadbeef);
+    ok(ret == TRUE, "SendNotifyMessageW failed with error %u\n", GetLastError());
+    ok_sequence(WmNotifySeq, "WmNotifySeq", FALSE);
+
+    ret = SendMessageCallbackA(hwnd, WM_NOTIFY, 0x1234, 0xdeadbeef, NULL, 0);
+    ok(ret == TRUE, "SendMessageCallbackA failed with error %u\n", GetLastError());
+    ok_sequence(WmNotifySeq, "WmNotifySeq", FALSE);
+
+    ret = SendMessageCallbackW(hwnd, WM_NOTIFY, 0x1234, 0xdeadbeef, NULL, 0);
+    ok(ret == TRUE, "SendMessageCallbackW failed with error %u\n", GetLastError());
+    ok_sequence(WmNotifySeq, "WmNotifySeq", FALSE);
+
+    ret = PostMessageA(hwnd, WM_NOTIFY, 0x1234, 0xdeadbeef);
+    ok(ret == TRUE, "PostMessageA failed with error %u\n", GetLastError());
+    flush_events();
+    ok_sequence(WmNotifySeq, "WmNotifySeq", FALSE);
+
+    ret = PostMessageW(hwnd, WM_NOTIFY, 0x1234, 0xdeadbeef);
+    ok(ret == TRUE, "PostMessageW failed with error %u\n", GetLastError());
+    flush_events();
+    ok_sequence(WmNotifySeq, "WmNotifySeq", FALSE);
+
+    ret = PostThreadMessageA(GetCurrentThreadId(), WM_NOTIFY, 0x1234, 0xdeadbeef);
+    ok(ret == TRUE, "PostThreadMessageA failed with error %u\n", GetLastError());
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
+    {
+        msg.hwnd = hwnd;
+        DispatchMessageA(&msg);
+    }
+    ok_sequence(WmNotifySeq, "WmNotifySeq", FALSE);
+
+    ret = PostThreadMessageW(GetCurrentThreadId(), WM_NOTIFY, 0x1234, 0xdeadbeef);
+    ok(ret == TRUE, "PostThreadMessageW failed with error %u\n", GetLastError());
+    while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
+    {
+        msg.hwnd = hwnd;
+        DispatchMessageA(&msg);
+    }
+    ok_sequence(WmNotifySeq, "WmNotifySeq", FALSE);
+
+    DestroyWindow(hwnd);
+}
+
 static const struct message WmMouseHoverSeq[] = {
     { WM_MOUSEACTIVATE, sent|optional },  /* we can get those when moving the mouse in focus-follow-mouse mode under X11 */
     { WM_MOUSEACTIVATE, sent|optional },
@@ -12106,7 +12424,7 @@ static const struct message WmCreateDialogParamSeq_4[] = {
 static void test_dialog_messages(void)
 {
     WNDCLASSA cls;
-    HWND hdlg, hedit1, hedit2, hfocus;
+    HWND hdlg, hedit1, hedit2, hfocus, parent, child, child2;
     LRESULT ret;
 
 #define set_selection(hctl, start, end) \
@@ -12223,11 +12541,88 @@ static void test_dialog_messages(void)
     flush_sequence();
 
     UnregisterClassA(cls.lpszClassName, cls.hInstance);
+
+    parent = CreateWindowExA(0, "TestParentClass", "Test parent",
+                             WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                             100, 100, 200, 200, 0, 0, 0, NULL);
+    ok (parent != 0, "Failed to create parent window\n");
+
+    /* This child has no parent set. We will later call SetParent on it,
+     * so that it will have a parent set, but no WS_CHILD style. */
+    child = CreateWindowExA(0, "TestWindowClass", "Test child",
+                            WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                            100, 100, 200, 200, 0, 0, 0, NULL);
+    ok (child != 0, "Failed to create child window\n");
+
+    /* This is a regular child window. When used as an owner, the other
+     * child window will be used. */
+    child2 = CreateWindowExA(0, "SimpleWindowClass", "Test child2",
+                             WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CHILD,
+                             100, 100, 200, 200, child, 0, 0, NULL);
+    ok (child2 != 0, "Failed to create child window\n");
+
+    SetParent(child, parent);
+    SetFocus(child);
+
+    flush_sequence();
+    DialogBoxA( 0, "TEST_DIALOG", child2, TestModalDlgProc2 );
+    ok_sequence(WmModalDialogSeq_2, "ModalDialog2", TRUE);
+
+    DestroyWindow(child2);
+    DestroyWindow(child);
+    DestroyWindow(parent);
+    flush_sequence();
+}
+
+static void test_enddialog_seq(HWND dialog, HWND owner)
+{
+    const struct message seq[] = {
+        { WM_ENABLE, sent },
+        { WM_WINDOWPOSCHANGING, sent|wparam, SWP_HIDEWINDOW|SWP_NOACTIVATE|SWP_NOSIZE|SWP_NOMOVE },
+        { HCBT_ACTIVATE, hook|wparam, (WPARAM)owner },
+        { WM_NCACTIVATE, sent|wparam|lparam, WA_INACTIVE, (LPARAM)owner },
+        { WM_ACTIVATE, sent|wparam|lparam, WA_INACTIVE, (LPARAM)owner },
+        /* FIXME: Following two are optional because Wine sends WM_QUERYNEWPALETTE instead of WM_WINDOWPOSCHANGING */
+        { WM_WINDOWPOSCHANGING, sent|wparam|optional, SWP_NOSIZE|SWP_NOMOVE },
+        { WM_QUERYNEWPALETTE, sent|optional },
+        { WM_NCACTIVATE, sent|wparam|lparam, WA_ACTIVE, (LPARAM)dialog },
+        { WM_GETTEXT, sent|optional|defwinproc },
+        { WM_ACTIVATE, sent|wparam|lparam, WA_ACTIVE, (LPARAM)dialog },
+        { HCBT_SETFOCUS, hook|wparam, (WPARAM)owner },
+        { WM_KILLFOCUS, sent|wparam, (WPARAM)owner },
+        { WM_SETFOCUS, sent|defwinproc|wparam, (WPARAM)dialog },
+        { 0 }
+    };
+
+    flush_sequence();
+    EndDialog(dialog, 0);
+    ok_sequence(seq, "EndDialog", FALSE);
+}
+
+static void test_enddialog_seq2(HWND dialog, HWND owner)
+{
+    const struct message seq[] = {
+        { WM_ENABLE, parent|sent },
+        { WM_WINDOWPOSCHANGING, sent|wparam, SWP_HIDEWINDOW|SWP_NOACTIVATE|SWP_NOSIZE|SWP_NOMOVE },
+        { HCBT_ACTIVATE, hook|wparam, (WPARAM)owner },
+        { WM_NCACTIVATE, sent|wparam|lparam, WA_INACTIVE, (LPARAM)owner },
+        { WM_ACTIVATE, sent|wparam|lparam, WA_INACTIVE, (LPARAM)owner },
+        { WM_WINDOWPOSCHANGING, sent|optional|wparam, SWP_NOACTIVATE|SWP_NOSIZE|SWP_NOMOVE },
+        { WM_WINDOWPOSCHANGING, sent|optional|wparam, SWP_NOACTIVATE|SWP_NOSIZE|SWP_NOMOVE },
+        { HCBT_SETFOCUS, hook|wparam, (WPARAM)owner },
+        { WM_KILLFOCUS, sent|wparam, (WPARAM)owner },
+        { WM_SETFOCUS, sent|parent|defwinproc|wparam, (WPARAM)dialog },
+        { 0 }
+    };
+
+    flush_sequence();
+    EndDialog(dialog, 0);
+    ok_sequence(seq, "EndDialog2", FALSE);
 }
 
 static void test_EndDialog(void)
 {
-    HWND hparent, hother, hactive, hdlg;
+    HWND hparent, hother, hactive, hdlg, hchild;
     WNDCLASSA cls;
 
     hparent = CreateWindowExA(0, "TestParentClass", "Test parent",
@@ -12237,7 +12632,7 @@ static void test_EndDialog(void)
 
     hother = CreateWindowExA(0, "TestParentClass", "Test parent 2",
                               WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-                              100, 100, 200, 200, 0, 0, 0, NULL);
+                              200, 100, 200, 200, 0, 0, 0, NULL);
     ok (hother != 0, "Failed to create parent window\n");
 
     ok(GetClassInfoA(0, "#32770", &cls), "GetClassInfo failed\n");
@@ -12251,22 +12646,91 @@ static void test_EndDialog(void)
     hactive = GetForegroundWindow();
     ok(hother == hactive, "Wrong window has focus (%p != %p)\n", hother, hactive);
 
-    /* create a dialog where the parent is disabled, this parent should still
-       receive the focus when the dialog exits (even though "normally" a
-       disabled window should not receive the focus) */
+    /* create a dialog where the parent is disabled, this parent should be
+     * enabled and receive focus when dialog exits */
     hdlg = CreateDialogParamA(0, "CLASS_TEST_DIALOG_2", hparent, test_dlg_proc, 0);
     ok(IsWindow(hdlg), "CreateDialogParam failed\n");
     SetForegroundWindow(hdlg);
     hactive = GetForegroundWindow();
     ok(hdlg == hactive, "Wrong window has focus (%p != %p)\n", hdlg, hactive);
     EndDialog(hdlg, 0);
+    ok(IsWindowEnabled(hparent), "parent is not enabled\n");
     hactive = GetForegroundWindow();
     ok(hparent == hactive, "Wrong window has focus (parent != active) (active: %p, parent: %p, dlg: %p, other: %p)\n", hactive, hparent, hdlg, hother);
     DestroyWindow(hdlg);
     flush_sequence();
 
-    DestroyWindow( hother );
+    /* create a dialog where the parent is disabled and set active window to other window before calling EndDialog */
+    EnableWindow(hparent, FALSE);
+    hdlg = CreateWindowExA(0, "TestDialogClass", NULL,
+                          WS_VISIBLE|WS_CAPTION|WS_SYSMENU|WS_DLGFRAME,
+                          0, 0, 100, 100, hparent, 0, 0, NULL);
+    ok(IsWindow(hdlg), "CreateDialogParam failed\n");
+    flush_sequence();
+    SetForegroundWindow(hother);
+    flush_sequence();
+    hactive = GetForegroundWindow();
+    ok(hactive == hother, "Wrong foreground (%p != %p)\n", hactive, hother);
+    hactive = GetActiveWindow();
+    ok(hactive == hother, "Wrong active window (%p != %p)\n", hactive, hother);
+    EndDialog(hdlg, 0);
+    ok(IsWindowEnabled(hparent), "parent is not enabled\n");
+    hactive = GetForegroundWindow();
+    ok(hother == hactive, "Wrong window has focus (other != active) (active: %p, parent: %p, dlg: %p, other: %p)\n", hactive, hparent, hdlg, hother);
+    DestroyWindow(hdlg);
+    flush_sequence();
+
     DestroyWindow( hparent );
+
+    hparent = CreateWindowExA(0, "TestParentClass", "Test parent",
+                              WS_POPUP | WS_VISIBLE | WS_DISABLED,
+                              100, 100, 200, 200, 0, 0, 0, NULL);
+    ok (hparent != 0, "Failed to create parent window\n");
+
+    hchild = CreateWindowExA(0, "TestWindowClass", "Test child",
+                             WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_DISABLED,
+                             0, 0, 0, 0, 0, 0, 0, NULL);
+    ok (hchild != 0, "Failed to create child window\n");
+
+    SetParent(hchild, hparent);
+
+    flush_sequence();
+    SetForegroundWindow(hother);
+    hactive = GetForegroundWindow();
+    ok(hother == hactive, "Wrong foreground window (%p != %p)\n", hother, hactive);
+
+    hdlg = CreateDialogParamA(0, "CLASS_TEST_DIALOG_2", hchild, test_dlg_proc, 0);
+    ok(IsWindow(hdlg), "CreateDialogParam failed\n");
+
+    SetForegroundWindow(hdlg);
+    test_enddialog_seq(hdlg, hchild);
+
+    hactive = GetForegroundWindow();
+    ok(hactive == hchild, "Wrong foreground window (active: %p, parent: %p, dlg: %p, other: %p child: %p)\n", hactive, hparent, hdlg, hother, hchild);
+
+    DestroyWindow(hdlg);
+
+    /* Now set WS_CHILD style flag so that it's a real child and its parent will be dialog's owner. */
+    SetWindowLongW(hchild, GWL_STYLE, GetWindowLongW(hchild, GWL_STYLE) | WS_CHILD);
+
+    SetForegroundWindow(hother);
+    hactive = GetForegroundWindow();
+    ok(hother == hactive, "Wrong foreground window (%p != %p)\n", hother, hactive);
+
+    hdlg = CreateDialogParamA(0, "CLASS_TEST_DIALOG_2", hchild, test_dlg_proc, 0);
+    ok(IsWindow(hdlg), "CreateDialogParam failed\n");
+
+    SetForegroundWindow(hdlg);
+    test_enddialog_seq2(hdlg, hparent);
+
+    hactive = GetForegroundWindow();
+    ok(hactive == hparent, "Wrong foreground window (active: %p, parent: %p, dlg: %p, other: %p child: %p)\n", hactive, hparent, hdlg, hother, hchild);
+    DestroyWindow(hdlg);
+    DestroyWindow(hchild);
+    DestroyWindow(hparent);
+    DestroyWindow(hother);
+    flush_sequence();
+
     UnregisterClassA(cls.lpszClassName, cls.hInstance);
 }
 
@@ -12985,6 +13449,16 @@ static const struct message wm_lb_deletestring_reset[] =
     { WM_DRAWITEM, sent|wparam|parent|optional, ID_LISTBOX },
     { 0 }
 };
+static const struct message wm_lb_addstring[] =
+{
+    { LB_ADDSTRING, sent|wparam|lparam, 0, 0xf30604ed },
+    { WM_MEASUREITEM, sent|wparam|lparam|parent, 0xf0f2, 0xf30604ed },
+    { LB_ADDSTRING, sent|wparam|lparam, 0, 0xf30604ee },
+    { WM_MEASUREITEM, sent|wparam|lparam|parent, 0xf1f2, 0xf30604ee },
+    { LB_ADDSTRING, sent|wparam|lparam, 0, 0xf30604ef },
+    { WM_MEASUREITEM, sent|wparam|lparam|parent, 0xf2f2, 0xf30604ef },
+    { 0 }
+};
 
 #define check_lb_state(a1, a2, a3, a4, a5) check_lb_state_dbg(a1, a2, a3, a4, a5, __LINE__)
 
@@ -13010,7 +13484,10 @@ static LRESULT WINAPI listbox_hook_proc(HWND hwnd, UINT message, WPARAM wp, LPAR
         msg.flags = sent|wparam|lparam;
         if (defwndproc_counter) msg.flags |= defwinproc;
         msg.wParam = wp;
-        msg.lParam = lp;
+        if (message == LB_ADDSTRING)
+            msg.lParam = lp ? hash_Ly((const char *)lp) : 0;
+        else
+            msg.lParam = lp;
         msg.descr = "listbox";
         add_message(&msg);
     }
@@ -13054,6 +13531,8 @@ static void test_listbox_messages(void)
 
     check_lb_state(listbox, 0, LB_ERR, 0, 0);
 
+    flush_sequence();
+
     ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 0");
     ok(ret == 0, "expected 0, got %ld\n", ret);
     ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 1");
@@ -13061,6 +13540,7 @@ static void test_listbox_messages(void)
     ret = SendMessageA(listbox, LB_ADDSTRING, 0, (LPARAM)"item 2");
     ok(ret == 2, "expected 2, got %ld\n", ret);
 
+    ok_sequence(wm_lb_addstring, "LB_ADDSTRING", FALSE);
     check_lb_state(listbox, 3, LB_ERR, 0, 0);
 
     flush_sequence();
@@ -13733,6 +14213,123 @@ static void test_PostMessage(void)
     flush_events();
 }
 
+static LPARAM g_broadcast_lparam;
+static LRESULT WINAPI broadcast_test_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    WNDPROC oldproc = (WNDPROC)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+
+    if (wParam == 0xbaadbeef)
+        g_broadcast_lparam = wParam;
+    else
+        g_broadcast_lparam = 0;
+
+    return CallWindowProcA(oldproc, hwnd, message, wParam, lParam);
+}
+
+static void test_broadcast(void)
+{
+    static const UINT messages[] =
+    {
+        WM_USER-1,
+        WM_USER,
+        WM_USER+1,
+        0xc000-1,
+        0xc000, /* lowest possible atom returned by RegisterWindowMessage */
+        0xffff,
+    };
+    WNDPROC oldproc;
+    unsigned int i;
+    HWND hwnd;
+
+    hwnd = CreateWindowExA(0, "static", NULL, WS_POPUP, 0, 0, 0, 0, 0, 0, 0, NULL);
+    ok(hwnd != NULL, "got %p\n", hwnd);
+
+    oldproc = (WNDPROC)SetWindowLongPtrA(hwnd, GWLP_WNDPROC, (LONG_PTR)broadcast_test_proc);
+    SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)oldproc);
+
+    for (i = 0; i < sizeof(messages)/sizeof(messages[0]); i++)
+    {
+        BOOL ret;
+        MSG msg;
+
+        flush_events();
+        while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
+            ;
+
+        /* post, broadcast */
+        ret = PostMessageA(HWND_BROADCAST, messages[i], 0, 0);
+        ok(ret, "%d: got %d, error %d\n", i, ret, GetLastError());
+
+        memset(&msg, 0xab, sizeof(msg));
+        ret = PeekMessageA(&msg, 0, 0, 0, PM_REMOVE);
+        if (messages[i] < WM_USER || messages[i] >= 0xc000)
+        {
+            ok(ret, "%d: message %04x, got %d, error %d\n", i, messages[i], ret, GetLastError());
+            ok(msg.hwnd == hwnd, "%d: got %p\n", i, msg.hwnd);
+        }
+        else
+        {
+            ok(!ret, "%d: message %04x, got %d, error %d\n", i, messages[i], ret, GetLastError());
+        }
+
+        /* post, topmost */
+        ret = PostMessageA(HWND_TOPMOST, messages[i], 0, 0);
+        ok(ret, "%d: got %d, error %d\n", i, ret, GetLastError());
+
+        memset(&msg, 0xab, sizeof(msg));
+        ret = PeekMessageA(&msg, 0, 0, 0, PM_REMOVE);
+        if (messages[i] < WM_USER || messages[i] >= 0xc000)
+        {
+            ok(ret, "%d: message %04x, got %d, error %d\n", i, messages[i], ret, GetLastError());
+            ok(msg.hwnd == hwnd, "%d: got %p\n", i, msg.hwnd);
+        }
+        else
+        {
+            ok(!ret, "%d: got %d, error %d\n", i, ret, GetLastError());
+        }
+
+        /* send, broadcast */
+        g_broadcast_lparam = 0xdead;
+        ret = SendMessageTimeoutA(HWND_BROADCAST, messages[i], 0xbaadbeef, 0, SMTO_NORMAL, 2000, NULL);
+        if (!ret && GetLastError() == ERROR_TIMEOUT)
+            win_skip("broadcasting test %d, timeout\n", i);
+        else
+        {
+            if (messages[i] < WM_USER || messages[i] >= 0xc000)
+            {
+                ok(g_broadcast_lparam == 0xbaadbeef, "%d: message %04x, got %#lx, error %d\n", i, messages[i],
+                    g_broadcast_lparam, GetLastError());
+            }
+            else
+            {
+                ok(g_broadcast_lparam == 0xdead, "%d: message %04x, got %#lx, error %d\n", i, messages[i],
+                    g_broadcast_lparam, GetLastError());
+            }
+        }
+
+        /* send, topmost */
+        g_broadcast_lparam = 0xdead;
+        ret = SendMessageTimeoutA(HWND_TOPMOST, messages[i], 0xbaadbeef, 0, SMTO_NORMAL, 2000, NULL);
+        if (!ret && GetLastError() == ERROR_TIMEOUT)
+            win_skip("broadcasting test %d, timeout\n", i);
+        else
+        {
+            if (messages[i] < WM_USER || messages[i] >= 0xc000)
+            {
+                ok(g_broadcast_lparam == 0xbaadbeef, "%d: message %04x, got %#lx, error %d\n", i, messages[i],
+                    g_broadcast_lparam, GetLastError());
+            }
+            else
+            {
+                ok(g_broadcast_lparam == 0xdead, "%d: message %04x, got %#lx, error %d\n", i, messages[i],
+                    g_broadcast_lparam, GetLastError());
+            }
+        }
+    }
+
+    DestroyWindow(hwnd);
+}
+
 static const struct
 {
     DWORD exp, broken;
@@ -14004,12 +14601,7 @@ static void test_WaitForInputIdle( char *argv0 )
                         broken(ret == wait_idle_expect[i].broken),
                         "%u: WaitForInputIdle error %08x expected %08x\n",
                         i, ret, wait_idle_expect[i].exp );
-                else if (wait_idle_expect[i].todo)
-                    todo_wine
-                    ok( ret == wait_idle_expect[i].exp || broken(ret == wait_idle_expect[i].broken),
-                        "%u: WaitForInputIdle error %08x expected %08x\n",
-                        i, ret, wait_idle_expect[i].exp );
-                else
+                else todo_wine_if (wait_idle_expect[i].todo)
                     ok( ret == wait_idle_expect[i].exp || broken(ret == wait_idle_expect[i].broken),
                         "%u: WaitForInputIdle error %08x expected %08x\n",
                         i, ret, wait_idle_expect[i].exp );
@@ -14092,10 +14684,10 @@ static void test_SetParent(void)
     ok(child != 0, "Failed to create child window\n");
 
     GetWindowRect(parent1, &rc);
-    trace("parent1 (%d,%d)-(%d,%d)\n", rc.left, rc.top, rc.right, rc.bottom);
+    trace("parent1 %s\n", wine_dbgstr_rect(&rc));
     GetWindowRect(child, &rc_old);
     MapWindowPoints(0, parent1, (POINT *)&rc_old, 2);
-    trace("child (%d,%d)-(%d,%d)\n", rc_old.left, rc_old.top, rc_old.right, rc_old.bottom);
+    trace("child %s\n", wine_dbgstr_rect(&rc_old));
 
     flush_sequence();
 
@@ -14107,14 +14699,13 @@ static void test_SetParent(void)
     ok(!IsWindowVisible(child), "IsWindowVisible() should return FALSE\n");
 
     GetWindowRect(parent2, &rc);
-    trace("parent2 (%d,%d)-(%d,%d)\n", rc.left, rc.top, rc.right, rc.bottom);
+    trace("parent2 %s\n", wine_dbgstr_rect(&rc));
     GetWindowRect(child, &rc);
     MapWindowPoints(0, parent2, (POINT *)&rc, 2);
-    trace("child (%d,%d)-(%d,%d)\n", rc.left, rc.top, rc.right, rc.bottom);
+    trace("child %s\n", wine_dbgstr_rect(&rc));
 
-    ok(EqualRect(&rc_old, &rc), "rects do not match (%d,%d-%d,%d) / (%d,%d-%d,%d)\n",
-       rc_old.left, rc_old.top, rc_old.right, rc_old.bottom,
-       rc.left, rc.top, rc.right, rc.bottom );
+    ok(EqualRect(&rc_old, &rc), "rects do not match %s / %s\n", wine_dbgstr_rect(&rc_old),
+       wine_dbgstr_rect(&rc));
 
     /* WS_POPUP window */
     popup = CreateWindowExA(0, "TestWindowClass", NULL, WS_POPUP | WS_VISIBLE,
@@ -14122,7 +14713,7 @@ static void test_SetParent(void)
     ok(popup != 0, "Failed to create popup window\n");
 
     GetWindowRect(popup, &rc_old);
-    trace("popup (%d,%d)-(%d,%d)\n", rc_old.left, rc_old.top, rc_old.right, rc_old.bottom);
+    trace("popup %s\n", wine_dbgstr_rect(&rc_old));
 
     flush_sequence();
 
@@ -14134,14 +14725,13 @@ static void test_SetParent(void)
     ok(!IsWindowVisible(popup), "IsWindowVisible() should return FALSE\n");
 
     GetWindowRect(child, &rc);
-    trace("parent2 (%d,%d)-(%d,%d)\n", rc.left, rc.top, rc.right, rc.bottom);
+    trace("parent2 %s\n", wine_dbgstr_rect(&rc));
     GetWindowRect(popup, &rc);
     MapWindowPoints(0, child, (POINT *)&rc, 2);
-    trace("popup (%d,%d)-(%d,%d)\n", rc.left, rc.top, rc.right, rc.bottom);
+    trace("popup %s\n", wine_dbgstr_rect(&rc));
 
-    ok(EqualRect(&rc_old, &rc), "rects do not match (%d,%d-%d,%d) / (%d,%d-%d,%d)\n",
-       rc_old.left, rc_old.top, rc_old.right, rc_old.bottom,
-       rc.left, rc.top, rc.right, rc.bottom );
+    ok(EqualRect(&rc_old, &rc), "rects do not match %s / %s\n", wine_dbgstr_rect(&rc_old),
+       wine_dbgstr_rect(&rc));
 
     DestroyWindow(popup);
     DestroyWindow(child);
@@ -14942,10 +15532,10 @@ static void test_layered_window(void)
     ok_sequence( WmEmptySeq, "UpdateLayeredWindow", FALSE );
     GetWindowRect( hwnd, &rect );
     ok( rect.left == 300 && rect.top == 300 && rect.right == 550 && rect.bottom == 550,
-        "wrong window rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+        "wrong window rect %s\n", wine_dbgstr_rect( &rect ));
     GetClientRect( hwnd, &rect );
     ok( rect.right == client.right - 50 && rect.bottom == client.bottom - 50,
-        "wrong client rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+        "wrong client rect %s\n", wine_dbgstr_rect( &rect ));
 
     size.cx = 150;
     pos.y = 200;
@@ -14954,10 +15544,10 @@ static void test_layered_window(void)
     ok_sequence( WmEmptySeq, "UpdateLayeredWindow", FALSE );
     GetWindowRect( hwnd, &rect );
     ok( rect.left == 300 && rect.top == 200 && rect.right == 450 && rect.bottom == 450,
-        "wrong window rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+        "wrong window rect %s\n", wine_dbgstr_rect( &rect ));
     GetClientRect( hwnd, &rect );
     ok( rect.right == client.right - 150 && rect.bottom == client.bottom - 50,
-        "wrong client rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+        "wrong client rect %s\n", wine_dbgstr_rect( &rect ));
 
     SetWindowLongA( hwnd, GWL_STYLE,
                    GetWindowLongA(hwnd, GWL_STYLE) & ~(WS_CAPTION | WS_THICKFRAME | WS_SYSMENU) );
@@ -14970,11 +15560,11 @@ static void test_layered_window(void)
     ok_sequence( WmEmptySeq, "UpdateLayeredWindow", FALSE );
     GetWindowRect( hwnd, &rect );
     ok( rect.left == 200 && rect.top == 200 && rect.right == 400 && rect.bottom == 450,
-        "wrong window rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+        "wrong window rect %s\n", wine_dbgstr_rect( &rect ));
     GetClientRect( hwnd, &rect );
     ok( (rect.right == 200 && rect.bottom == 250) ||
         broken(rect.right == client.right - 100 && rect.bottom == client.bottom - 50),
-        "wrong client rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+        "wrong client rect %s\n", wine_dbgstr_rect( &rect ));
 
     size.cx = 0;
     ret = pUpdateLayeredWindow( hwnd, 0, &pos, &size, hdc, &src, 0, NULL, ULW_OPAQUE );
@@ -14991,11 +15581,11 @@ static void test_layered_window(void)
     ok_sequence( WmSetLayeredStyle, "WmSetLayeredStyle", FALSE );
     GetWindowRect( hwnd, &rect );
     ok( rect.left == 200 && rect.top == 200 && rect.right == 400 && rect.bottom == 450,
-        "wrong window rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+        "wrong window rect %s\n", wine_dbgstr_rect( &rect ));
     GetClientRect( hwnd, &rect );
     ok( (rect.right == 200 && rect.bottom == 250) ||
         broken(rect.right == client.right - 100 && rect.bottom == client.bottom - 50),
-        "wrong client rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+        "wrong client rect %s\n", wine_dbgstr_rect( &rect ));
 
     SetWindowLongA( hwnd, GWL_EXSTYLE, GetWindowLongA(hwnd, GWL_EXSTYLE) | WS_EX_LAYERED );
     info.hwnd = hwnd;
@@ -15011,11 +15601,11 @@ static void test_layered_window(void)
     CloseHandle( thread );
     GetWindowRect( hwnd, &rect );
     ok( rect.left == 200 && rect.top == 200 && rect.right == 450 && rect.bottom == 500,
-        "wrong window rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+        "wrong window rect %s\n", wine_dbgstr_rect( &rect ));
     GetClientRect( hwnd, &rect );
     ok( (rect.right == 250 && rect.bottom == 300) ||
         broken(rect.right == client.right - 50 && rect.bottom == client.bottom),
-        "wrong client rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+        "wrong client rect %s\n", wine_dbgstr_rect( &rect ));
 
     DestroyWindow( hwnd );
     DeleteDC( hdc );
@@ -15124,7 +15714,7 @@ static void test_TrackPopupMenuEmpty(void)
     flush_sequence();
     ret = TrackPopupMenu(hpopupmenu, 0, 100,100, 0, hwnd, NULL);
     ok_sequence(WmTrackPopupMenuEmpty, "TrackPopupMenuEmpty", TRUE);
-    todo_wine ok(ret == 0, "TrackPopupMenu succeeded\n");
+    ok(ret == 0, "TrackPopupMenu succeeded\n");
 
     DestroyMenu(hpopupmenu);
     DestroyWindow(hwnd);
@@ -15394,6 +15984,7 @@ START_TEST(msg)
     test_SetFocus();
     test_SetParent();
     test_PostMessage();
+    test_broadcast();
     test_ShowWindow();
     test_PeekMessage();
     test_PeekMessage2();
@@ -15427,6 +16018,7 @@ START_TEST(msg)
     test_SendMessageTimeout();
     test_edit_messages();
     test_quit_message();
+    test_notify_message();
     test_SetActiveWindow();
 
     if (!pTrackMouseEvent)
@@ -15538,6 +16130,7 @@ START_TEST(msg_queue)
     test_SendMessage_other_thread(1);
     test_SendMessage_other_thread(2);
     test_PostMessage();
+    test_broadcast();
     test_PeekMessage();
     test_PeekMessage2();
     test_PeekMessage3();
@@ -15545,6 +16138,7 @@ START_TEST(msg_queue)
     test_DispatchMessage();
     test_SendMessageTimeout();
     test_quit_message();
+    test_notify_message();
     test_WaitForInputIdle( test_argv[0] );
     test_DestroyWindow();
     cleanup_tests();

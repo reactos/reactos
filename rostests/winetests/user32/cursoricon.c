@@ -1192,6 +1192,8 @@ static void create_ico_file(const char *filename, const test_icon_entries_t *tes
     ret = WriteFile(file, buf, icon_size, &bytes_written, NULL);
     ok(ret && bytes_written == icon_size, "icon.ico created improperly.\n");
     CloseHandle(file);
+
+    HeapFree(GetProcessHeap(), 0, buf);
 }
 
 static void test_LoadImage(void)

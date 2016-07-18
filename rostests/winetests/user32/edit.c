@@ -1284,8 +1284,7 @@ static void test_edit_control_5(void)
     assert(hWnd);
     GetClientRect( hWnd, &rc);
     ok( rc.right == rc1.right - rc1.left && rc.bottom == rc1.bottom - rc1.top,
-            "Client rectangle not the expected size (%d,%d,%d,%d)\n",
-            rc.left, rc.top, rc.right, rc.bottom);
+            "Client rectangle not the expected size %s\n", wine_dbgstr_rect( &rc ));
     len = SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0);
     ok(lstrlenA(str) == len, "text shouldn't have been truncated\n");
     DestroyWindow(hWnd);
@@ -1299,8 +1298,7 @@ static void test_edit_control_5(void)
     assert(hWnd);
     GetClientRect( hWnd, &rc);
     ok( rc.right == rc1.right - rc1.left && rc.bottom == rc1.bottom - rc1.top,
-            "Client rectangle not the expected size (%d,%d,%d,%d)\n",
-            rc.left, rc.top, rc.right, rc.bottom);
+            "Client rectangle not the expected size %s\n", wine_dbgstr_rect( &rc ));
     len = SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0);
     ok(lstrlenA(str) == len, "text shouldn't have been truncated\n");
     DestroyWindow(hWnd);
@@ -1502,7 +1500,7 @@ static void test_margins(void)
     hwEdit = CreateWindowExA(0, "Edit", "A", WS_POPUP, 0, 0, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, NULL, NULL);
     ok(hwEdit != NULL, "got %p\n", hwEdit);
     GetClientRect(hwEdit, &old_rect);
-    ok(IsRectEmpty(&old_rect), "got rect %d,%d-%d,%d\n", old_rect.left, old_rect.top, old_rect.right, old_rect.bottom);
+    ok(IsRectEmpty(&old_rect), "got rect %s\n", wine_dbgstr_rect(&old_rect));
 
     old_margins = SendMessageA(hwEdit, EM_GETMARGINS, 0, 0);
     ok(old_margins == 0, "got %x\n", old_margins);
@@ -1517,7 +1515,7 @@ static void test_margins(void)
     hwEdit = CreateWindowExA(0, "Edit", "A", WS_POPUP, 0, 0, 2, 2, NULL, NULL, NULL, NULL);
     ok(hwEdit != NULL, "got %p\n", hwEdit);
     GetClientRect(hwEdit, &old_rect);
-    ok(!IsRectEmpty(&old_rect), "got rect %d,%d-%d,%d\n", old_rect.left, old_rect.top, old_rect.right, old_rect.bottom);
+    ok(!IsRectEmpty(&old_rect), "got rect %s\n", wine_dbgstr_rect(&old_rect));
 
     old_margins = SendMessageA(hwEdit, EM_GETMARGINS, 0, 0);
     ok(old_margins == 0, "got %x\n", old_margins);

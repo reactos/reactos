@@ -222,11 +222,8 @@ static void test_GetScrollBarInfo(void)
     ok( ret, "The GetWindowRect() call should not fail.\n" );
     ok( !(sbi.rgstate[0] & (STATE_SYSTEM_INVISIBLE|STATE_SYSTEM_OFFSCREEN)),
         "unexpected rgstate(0x%x)\n", sbi.rgstate[0]);
-    ok( EqualRect(&rect, &sbi.rcScrollBar),
-        "WindowRect(%d, %d, %d, %d) != rcScrollBar(%d, %d, %d, %d)\n",
-        rect.top, rect.left, rect.bottom, rect.right,
-        sbi.rcScrollBar.top, sbi.rcScrollBar.left,
-        sbi.rcScrollBar.bottom, sbi.rcScrollBar.right );
+    ok(EqualRect(&rect, &sbi.rcScrollBar), "WindowRect %s != rcScrollBar %s\n",
+       wine_dbgstr_rect(&rect), wine_dbgstr_rect(&sbi.rcScrollBar));
 
     /* Test windows horizontal and vertical scrollbar to make sure rcScrollBar
      * is still returned in screen coordinates by moving the window, and
@@ -243,11 +240,8 @@ static void test_GetScrollBarInfo(void)
     OffsetRect(&rect, 5, 5);
     ret = pGetScrollBarInfo( hMainWnd, OBJID_HSCROLL, &sbi);
     ok( ret, "The GetScrollBarInfo() call should not fail.\n" );
-    ok( EqualRect(&rect, &sbi.rcScrollBar),
-        "PreviousRect(%d, %d, %d, %d) != CurrentRect(%d, %d, %d, %d)\n",
-        rect.top, rect.left, rect.bottom, rect.right,
-        sbi.rcScrollBar.top, sbi.rcScrollBar.left,
-        sbi.rcScrollBar.bottom, sbi.rcScrollBar.right );
+    ok(EqualRect(&rect, &sbi.rcScrollBar), "PreviousRect %s != CurrentRect %s\n",
+       wine_dbgstr_rect(&rect), wine_dbgstr_rect(&sbi.rcScrollBar));
 
     sbi.cbSize = sizeof(sbi);
     ret = pGetScrollBarInfo( hMainWnd, OBJID_VSCROLL, &sbi);
@@ -260,11 +254,8 @@ static void test_GetScrollBarInfo(void)
     OffsetRect(&rect, 5, 5);
     ret = pGetScrollBarInfo( hMainWnd, OBJID_VSCROLL, &sbi);
     ok( ret, "The GetScrollBarInfo() call should not fail.\n" );
-    ok( EqualRect(&rect, &sbi.rcScrollBar),
-        "PreviousRect(%d, %d, %d, %d) != CurrentRect(%d, %d, %d, %d)\n",
-        rect.top, rect.left, rect.bottom, rect.right,
-        sbi.rcScrollBar.top, sbi.rcScrollBar.left,
-        sbi.rcScrollBar.bottom, sbi.rcScrollBar.right );
+    ok(EqualRect(&rect, &sbi.rcScrollBar), "PreviousRect %s != CurrentRect %s\n",
+       wine_dbgstr_rect(&rect), wine_dbgstr_rect(&sbi.rcScrollBar));
 
     DestroyWindow(hScroll);
     DestroyWindow(hMainWnd);

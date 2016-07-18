@@ -251,18 +251,16 @@ static LRESULT WINAPI main_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARA
         ok(dis->CtlType == ODT_LISTBOX, "wrong CtlType %04x\n", dis->CtlType);
 
         GetClientRect(dis->hwndItem, &rc_client);
-        trace("hwndItem %p client rect (%d,%d-%d,%d)\n", dis->hwndItem,
-               rc_client.left, rc_client.top, rc_client.right, rc_client.bottom);
+        trace("hwndItem %p client rect %s\n", dis->hwndItem, wine_dbgstr_rect(&rc_client));
         GetClipBox(dis->hDC, &rc_clip);
-        trace("clip rect (%d,%d-%d,%d)\n", rc_clip.left, rc_clip.top, rc_clip.right, rc_clip.bottom);
+        trace("clip rect %s\n", wine_dbgstr_rect(&rc_clip));
         ok(EqualRect(&rc_client, &rc_clip) || IsRectEmpty(&rc_clip),
            "client rect of the listbox should be equal to the clip box,"
            "or the clip box should be empty\n");
 
-        trace("rcItem (%d,%d-%d,%d)\n", dis->rcItem.left, dis->rcItem.top,
-               dis->rcItem.right, dis->rcItem.bottom);
+        trace("rcItem %s\n", wine_dbgstr_rect(&dis->rcItem));
         SendMessageA(dis->hwndItem, LB_GETITEMRECT, dis->itemID, (LPARAM)&rc_item);
-        trace("item rect (%d,%d-%d,%d)\n", rc_item.left, rc_item.top, rc_item.right, rc_item.bottom);
+        trace("item rect %s\n", wine_dbgstr_rect(&rc_item));
         ok(EqualRect(&dis->rcItem, &rc_item), "item rects are not equal\n");
 
         break;
@@ -334,7 +332,7 @@ static void test_ownerdraw(void)
     ok(ret == 1, "wrong top index %d\n", ret);
 
     SendMessageA(hLB, LB_GETITEMRECT, 0, (LPARAM)&rc);
-    trace("item 0 rect (%d,%d-%d,%d)\n", rc.left, rc.top, rc.right, rc.bottom);
+    trace("item 0 rect %s\n", wine_dbgstr_rect(&rc));
     ok(!IsRectEmpty(&rc), "empty item rect\n");
     ok(rc.top < 0, "rc.top is not negative (%d)\n", rc.top);
 
