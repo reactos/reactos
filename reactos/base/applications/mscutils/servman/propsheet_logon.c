@@ -20,6 +20,7 @@ typedef struct _LOGONDATA
     WCHAR szAccountName[64];
     WCHAR szPassword1[64];
     WCHAR szPassword2[64];
+    INT nInteractive;
     BOOL bInitialized;
     BOOL bLocalSystem;
     BOOL bAccountChanged;
@@ -43,6 +44,8 @@ SetControlStates(
 
     if (bLocalSystem)
     {
+        SendDlgItemMessageW(hwndDlg, IDC_LOGON_INTERACTIVE, BM_SETCHECK, (WPARAM)pLogonData->nInteractive, 0);
+
         if (pLogonData->bInitialized == TRUE)
         {
             GetDlgItemText(hwndDlg, IDC_LOGON_ACCOUNTNAME, pLogonData->szAccountName, 64);
@@ -56,6 +59,10 @@ SetControlStates(
     }
     else
     {
+        if (pLogonData->bInitialized == TRUE)
+            pLogonData->nInteractive = SendDlgItemMessageW(hwndDlg, IDC_LOGON_INTERACTIVE, BM_GETCHECK, 0, 0);
+        SendDlgItemMessageW(hwndDlg, IDC_LOGON_INTERACTIVE, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
+
         SetDlgItemText(hwndDlg, IDC_LOGON_ACCOUNTNAME, pLogonData->szAccountName);
         SetDlgItemText(hwndDlg, IDC_LOGON_PASSWORD1, pLogonData->szPassword1);
         SetDlgItemText(hwndDlg, IDC_LOGON_PASSWORD2, pLogonData->szPassword2);
@@ -65,10 +72,11 @@ SetControlStates(
 }
 
 
-#if 0
+static
 BOOL
 SetServiceAccount(
     LPWSTR lpServiceName,
+    DWORD dwServiceType,
     LPWSTR lpStartName,
     LPWSTR lpPassword)
 {
@@ -91,7 +99,7 @@ SetServiceAccount(
             if (hSc)
             {
                 if (ChangeServiceConfigW(hSc,
-                                         SERVICE_NO_CHANGE,
+                                         dwServiceType,
                                          SERVICE_NO_CHANGE,
                                          SERVICE_NO_CHANGE,
                                          NULL,
@@ -119,7 +127,6 @@ SetServiceAccount(
 
     return bRet;
 }
-#endif
 
 
 static
@@ -145,6 +152,7 @@ OnApply(
     WCHAR szAccountName[64];
     WCHAR szPassword1[64];
     WCHAR szPassword2[64];
+    DWORD dwServiceType = SERVICE_NO_CHANGE;
     BOOL bRet = TRUE;
 
     if (!pLogonData->bAccountChanged)
@@ -156,6 +164,13 @@ OnApply(
         wcscpy(szAccountName, L"LocalSystem");
         wcscpy(szPassword1, L"");
         wcscpy(szPassword2, L"");
+
+        /* Handle the interactive flag */
+        dwServiceType = pLogonData->pServiceConfig->dwServiceType;
+        if (SendDlgItemMessageW(hwndDlg, IDC_LOGON_INTERACTIVE, BM_GETCHECK, 0, 0) == BST_CHECKED)
+            dwServiceType |= SERVICE_INTERACTIVE_PROCESS;
+        else
+            dwServiceType &= ~SERVICE_INTERACTIVE_PROCESS;
     }
     else
     {
@@ -175,22 +190,23 @@ OnApply(
             ResourceMessageBox(GetModuleHandle(NULL), hwndDlg, MB_OK | MB_ICONWARNING, IDS_APPNAME, IDS_INVALID_PASSWORD);
             return FALSE;
         }
-
-
     }
 
-#if 0
+
     bRet = SetServiceAccount(pLogonData->pService->lpServiceName,
+                             dwServiceType,
                              szAccountName,
                              szPassword1);
     if (bRet == FALSE)
     {
 
     }
-#endif
 
     if (bRet == TRUE)
+    {
         pLogonData->bAccountChanged = FALSE;
+
+    }
 
     return bRet;
 }
@@ -240,13 +256,17 @@ LogonPageProc(
                     if (pLogonData->pServiceConfig->lpServiceStartName == NULL ||
                         _wcsicmp(pLogonData->pServiceConfig->lpServiceStartName, L"LocalSystem") == 0)
                     {
-                        SendMessageW(GetDlgItem(hwndDlg, IDC_LOGON_SYSTEMACCOUNT), BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+                        SendDlgItemMessageW(hwndDlg, IDC_LOGON_SYSTEMACCOUNT, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+                        if (pLogonData->pServiceConfig->dwServiceType & SERVICE_INTERACTIVE_PROCESS) {
+                            pLogonData->nInteractive = BST_CHECKED;
+                            SendDlgItemMessageW(hwndDlg, IDC_LOGON_INTERACTIVE, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+                        }
                         SetControlStates(hwndDlg, pLogonData, TRUE);
                     }
                     else
                     {
                         wcscpy(pLogonData->szAccountName, pLogonData->pServiceConfig->lpServiceStartName);
-                        SendMessageW(GetDlgItem(hwndDlg, IDC_LOGON_THISACCOUNT), BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
+                        SendDlgItemMessageW(hwndDlg, IDC_LOGON_THISACCOUNT, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
                         SetControlStates(hwndDlg, pLogonData, FALSE);
                     }
                 }
@@ -291,6 +311,17 @@ LogonPageProc(
                     }
                     break;
 
+                case IDC_LOGON_INTERACTIVE:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        if (pLogonData->bInitialized && pLogonData->bInitialized)
+                        {
+                            pLogonData->bAccountChanged = TRUE;
+                            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                        }
+                    }
+                    break;
+
                 case IDC_LOGON_ACCOUNTNAME:
                 case IDC_LOGON_PASSWORD1:
                 case IDC_LOGON_PASSWORD2:
@@ -306,7 +337,7 @@ LogonPageProc(
         case WM_NOTIFY:
             switch (((LPNMHDR)lParam)->code)
             {
-                case PSN_QUERYINITIALFOCUS :
+                case PSN_QUERYINITIALFOCUS:
                     return OnQueryInitialFocus(hwndDlg, pLogonData);
 
                 case PSN_APPLY:
