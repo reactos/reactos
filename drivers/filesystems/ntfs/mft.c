@@ -225,6 +225,7 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
                        PLARGE_INTEGER DataSize)
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    ULONG BytesPerCluster = Fcb->Vcb->NtfsInfo.BytesPerCluster;
 
     // are we truncating the file?
     if (DataSize->QuadPart < AttributeDataLength(&AttrContext->Record))
@@ -238,14 +239,13 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
 
     if (AttrContext->Record.IsNonResident)
     {
-        ULONG BytesPerCluster = Fcb->Vcb->NtfsInfo.BytesPerCluster;
         ULONGLONG AllocationSize = ROUND_UP(DataSize->QuadPart, BytesPerCluster);
         PNTFS_ATTR_RECORD DestinationAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttrOffset);
+        ULONG ExistingClusters = AttrContext->Record.NonResident.AllocatedSize / BytesPerCluster;
 
         // do we need to increase the allocation size?
         if (AttrContext->Record.NonResident.AllocatedSize < AllocationSize)
         {              
-            ULONG ExistingClusters = AttrContext->Record.NonResident.AllocatedSize / BytesPerCluster;
             ULONG ClustersNeeded = (AllocationSize / BytesPerCluster) - ExistingClusters;
             LARGE_INTEGER LastClusterInDataRun;
             ULONG NextAssignedCluster;
@@ -284,15 +284,9 @@ SetAttributeDataLength(PFILE_OBJECT FileObject,
         }
         else if (AttrContext->Record.NonResident.AllocatedSize > AllocationSize)
         {
-            // shrink allocation size (TODO)
-            if (AllocationSize == 0)
-            {
-                // hack for notepad.exe
-                PUCHAR DataRuns = (PUCHAR)((ULONG_PTR)DestinationAttribute + DestinationAttribute->NonResident.MappingPairsOffset);
-                *DataRuns = 0;
-                DestinationAttribute->NonResident.HighestVCN = 
-                AttrContext->Record.NonResident.HighestVCN = 0;
-            }
+            // shrink allocation size
+            ULONG ClustersToFree = ExistingClusters - (AllocationSize / BytesPerCluster);
+            Status = FreeClusters(Fcb->Vcb, AttrContext, AttrOffset, FileRecord, ClustersToFree);
         }
 
         // TODO: is the file compressed, encrypted, or sparse?
@@ -1098,7 +1092,7 @@ UpdateFileRecord(PDEVICE_EXTENSION Vcb,
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("UpdateFileRecord failed: %I64u written, %u expected\n", BytesWritten, Vcb->NtfsInfo.BytesPerFileRecord);
+        DPRINT1("UpdateFileRecord failed: %I64u written, %lu expected\n", BytesWritten, Vcb->NtfsInfo.BytesPerFileRecord);
     }
 
     // remove the fixup array (so the file record pointer can still be used)

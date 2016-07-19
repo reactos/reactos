@@ -409,6 +409,208 @@ FindRun(PNTFS_ATTR_RECORD NresAttr,
     return TRUE;
 }
 
+/**
+* @name FreeClusters
+* @implemented
+*
+* Shrinks the allocation size of a non-resident attribute by a given number of clusters.
+* Frees the clusters from the volume's $BITMAP file as well as the attribute's data runs.
+*
+* @param Vcb
+* Pointer to an NTFS_VCB for the destination volume.
+*
+* @param AttrContext
+* Pointer to an NTFS_ATTR_CONTEXT describing the attribute from which the clusters will be freed.
+*
+* @param AttrOffset
+* Byte offset of the destination attribute relative to its file record.
+*
+* @param FileRecord
+* Pointer to a complete copy of the file record containing the attribute. Must be at least
+* Vcb->NtfsInfo.BytesPerFileRecord bytes long.
+*
+* @param ClustersToFree
+* Number of clusters that should be freed from the end of the data stream. Must be no more
+* Than the number of clusters assigned to the attribute (HighestVCN + 1).
+*
+* @return
+* STATUS_SUCCESS on success. STATUS_INVALID_PARAMETER if AttrContext describes a resident attribute,
+* or if the caller requested more clusters be freed than the attribute has been allocated.
+* STATUS_INSUFFICIENT_RESOURCES if ConvertDataRunsToLargeMCB() fails.
+* STATUS_BUFFER_TOO_SMALL if ConvertLargeMCBToDataRuns() fails.
+*
+*
+*/
+NTSTATUS
+FreeClusters(PNTFS_VCB Vcb,
+             PNTFS_ATTR_CONTEXT AttrContext,
+             ULONG AttrOffset,
+             PFILE_RECORD_HEADER FileRecord,
+             ULONG ClustersToFree)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG ClustersLeftToFree = ClustersToFree;
+
+    // convert data runs to mcb
+    PUCHAR DataRun = (PUCHAR)&AttrContext->Record + AttrContext->Record.NonResident.MappingPairsOffset;
+    PNTFS_ATTR_RECORD DestinationAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + AttrOffset);
+    LARGE_MCB DataRunsMCB;
+    ULONG NextAttributeOffset = AttrOffset + AttrContext->Record.Length;
+    PNTFS_ATTR_RECORD NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)FileRecord + NextAttributeOffset);
+    ULONGLONG NextVBN = AttrContext->Record.NonResident.LowestVCN;
+
+    // Allocate some memory for the RunBuffer
+    PUCHAR RunBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    ULONG RunBufferOffset = 0;
+
+    PFILE_RECORD_HEADER BitmapRecord;
+    PNTFS_ATTR_CONTEXT DataContext;
+    ULONGLONG BitmapDataSize;
+    PUCHAR BitmapData;
+    RTL_BITMAP Bitmap;
+    ULONG LengthWritten;
+
+    if (!AttrContext->Record.IsNonResident)
+    {
+        ExFreePoolWithTag(RunBuffer, TAG_NTFS);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    // Convert the data runs to a map control block
+    Status = ConvertDataRunsToLargeMCB(DataRun, &DataRunsMCB, &NextVBN);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Unable to convert data runs to MCB (probably ran out of memory)!\n");
+        ExFreePoolWithTag(RunBuffer, TAG_NTFS);
+        return Status;
+    }
+
+    BitmapRecord = ExAllocatePoolWithTag(NonPagedPool,
+                                         Vcb->NtfsInfo.BytesPerFileRecord,
+                                         TAG_NTFS);
+    if (BitmapRecord == NULL)
+    {
+        DPRINT1("Error: Unable to allocate memory for bitmap file record!\n");
+        FsRtlUninitializeLargeMcb(&DataRunsMCB);
+        ExFreePoolWithTag(RunBuffer, TAG_NTFS);
+        return STATUS_NO_MEMORY;
+    }
+
+    Status = ReadFileRecord(Vcb, NTFS_FILE_BITMAP, BitmapRecord);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Error: Unable to read file record for bitmap!\n");
+        FsRtlUninitializeLargeMcb(&DataRunsMCB);
+        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreePoolWithTag(RunBuffer, TAG_NTFS);
+        return 0;
+    }
+
+    Status = FindAttribute(Vcb, BitmapRecord, AttributeData, L"", 0, &DataContext, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Error: Unable to find data attribute for bitmap file!\n");
+        FsRtlUninitializeLargeMcb(&DataRunsMCB);
+        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreePoolWithTag(RunBuffer, TAG_NTFS);
+        return 0;
+    }
+
+    BitmapDataSize = AttributeDataLength(&DataContext->Record);
+    BitmapDataSize = min(BitmapDataSize, 0xffffffff);
+    ASSERT((BitmapDataSize * 8) >= Vcb->NtfsInfo.ClusterCount);
+    BitmapData = ExAllocatePoolWithTag(NonPagedPool, ROUND_UP(BitmapDataSize, Vcb->NtfsInfo.BytesPerSector), TAG_NTFS);
+    if (BitmapData == NULL)
+    {
+        DPRINT1("Error: Unable to allocate memory for bitmap file data!\n");
+        ReleaseAttributeContext(DataContext);
+        FsRtlUninitializeLargeMcb(&DataRunsMCB);
+        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreePoolWithTag(RunBuffer, TAG_NTFS);
+        return 0;
+    }
+
+    ReadAttribute(Vcb, DataContext, 0, (PCHAR)BitmapData, (ULONG)BitmapDataSize);
+
+    RtlInitializeBitMap(&Bitmap, (PULONG)BitmapData, Vcb->NtfsInfo.ClusterCount);
+    
+    // free clusters in $BITMAP file
+    while (ClustersLeftToFree > 0)
+    {
+        LONGLONG LargeVbn, LargeLbn;
+
+        if (!FsRtlLookupLastLargeMcbEntry(&DataRunsMCB, &LargeVbn, &LargeLbn))
+        {
+            Status = STATUS_INVALID_PARAMETER;
+            DPRINT1("DRIVER ERROR: FreeClusters called to free %lu clusters, which is %lu more clusters than are assigned to attribute!",
+                    ClustersToFree,
+                    ClustersLeftToFree);
+            break;
+        }
+
+        if( LargeLbn != -1)
+        {
+            // deallocate this cluster
+            RtlClearBits(&Bitmap, LargeLbn, 1);
+        }
+        FsRtlTruncateLargeMcb(&DataRunsMCB, AttrContext->Record.NonResident.HighestVCN);
+        AttrContext->Record.NonResident.HighestVCN = min(AttrContext->Record.NonResident.HighestVCN, AttrContext->Record.NonResident.HighestVCN - 1);
+        ClustersLeftToFree--;
+    }
+
+    // update $BITMAP file on disk
+    Status = WriteAttribute(Vcb, DataContext, 0, BitmapData, (ULONG)BitmapDataSize, &LengthWritten);
+    if (!NT_SUCCESS(Status))
+    {
+        ReleaseAttributeContext(DataContext);
+        FsRtlUninitializeLargeMcb(&DataRunsMCB);
+        ExFreePoolWithTag(BitmapData, TAG_NTFS);
+        ExFreePoolWithTag(BitmapRecord, TAG_NTFS);
+        ExFreePoolWithTag(RunBuffer, TAG_NTFS);
+        return Status;
+    }
+
+    ReleaseAttributeContext(DataContext);
+    ExFreePoolWithTag(BitmapData, TAG_NTFS);
+    ExFreePoolWithTag(BitmapRecord, TAG_NTFS);    
+
+    // Convert the map control block back to encoded data runs
+    ConvertLargeMCBToDataRuns(&DataRunsMCB, RunBuffer, Vcb->NtfsInfo.BytesPerCluster, &RunBufferOffset);
+
+    // Update HighestVCN
+    DestinationAttribute->NonResident.HighestVCN = AttrContext->Record.NonResident.HighestVCN;
+
+    // Write data runs to destination attribute
+    RtlCopyMemory((PVOID)((ULONG_PTR)DestinationAttribute + DestinationAttribute->NonResident.MappingPairsOffset),
+                  RunBuffer,
+                  RunBufferOffset);
+
+    if (NextAttribute->Type == AttributeEnd)
+    {
+        // update attribute length
+        AttrContext->Record.Length = ALIGN_UP_BY(AttrContext->Record.NonResident.MappingPairsOffset + RunBufferOffset, 8);
+        DestinationAttribute->Length = AttrContext->Record.Length;
+
+        // write end markers
+        NextAttribute = (PNTFS_ATTR_RECORD)((ULONG_PTR)DestinationAttribute + DestinationAttribute->Length);
+        NextAttribute->Type = AttributeEnd;
+        NextAttribute->Length = FILE_RECORD_END;
+
+        // update file record length
+        FileRecord->BytesInUse = AttrOffset + DestinationAttribute->Length + (sizeof(ULONG) * 2);
+    }
+
+    // Update the file record
+    Status = UpdateFileRecord(Vcb, AttrContext->FileMFTIndex, FileRecord);
+
+    FsRtlUninitializeLargeMcb(&DataRunsMCB);
+    ExFreePoolWithTag(RunBuffer, TAG_NTFS);
+
+    NtfsDumpDataRuns((PUCHAR)((ULONG_PTR)DestinationAttribute + DestinationAttribute->NonResident.MappingPairsOffset), 0);
+
+    return Status;
+}
+
 static
 NTSTATUS
 InternalReadNonResidentAttributes(PFIND_ATTR_CONTXT Context)
