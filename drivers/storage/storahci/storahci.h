@@ -25,11 +25,16 @@
 #define AHCI_DEVICE_TYPE_NODEVICE           3
 
 // section 3.1.2
-#define AHCI_Global_HBA_CONTROL_HR          (1 << 0)
-#define AHCI_Global_HBA_CONTROL_IE          (1 << 1)
-#define AHCI_Global_HBA_CONTROL_MRSM        (1 << 2)
-#define AHCI_Global_HBA_CONTROL_AE          (1 << 31)
 #define AHCI_Global_HBA_CAP_S64A            (1 << 31)
+
+// FIS Types : http://wiki.osdev.org/AHCI
+#define FIS_TYPE_REG_H2D        0x27 // Register FIS - host to device
+#define FIS_TYPE_REG_D2H        0x34 // Register FIS - device to host
+#define FIS_TYPE_DMA_ACT        0x39 // DMA activate FIS - device to host
+#define FIS_TYPE_DMA_SETUP      0x41 // DMA setup FIS - bidirectional
+#define FIS_TYPE_BIST           0x58 // BIST activate FIS - bidirectional
+#define FIS_TYPE_PIO_SETUP      0x5F // PIO setup FIS - device to host
+#define FIS_TYPE_DEV_BITS       0xA1 // Set device bits FIS - device to host
 
 #define AHCI_ATA_CFIS_FisType               0
 #define AHCI_ATA_CFIS_PMPort_C              1
@@ -73,7 +78,6 @@
 typedef
 VOID
 (*PAHCI_COMPLETION_ROUTINE) (
-    __in PVOID AdapterExtension,
     __in PVOID PortExtension,
     __in PVOID Srb
     );
@@ -225,7 +229,7 @@ typedef union _AHCI_COMMAND_HEADER_DESCRIPTION
         ULONG R : 1;         // Reset
         ULONG B : 1;         // BIST
         ULONG C : 1;         //Clear Busy upon R_OK
-        ULONG DW0_Reserved : 1;
+        ULONG RSV : 1;
         ULONG PMP : 4;       //Port Multiplier Port
 
         ULONG PRDTL : 16;    //Physical Region Descriptor Table Length
@@ -233,6 +237,20 @@ typedef union _AHCI_COMMAND_HEADER_DESCRIPTION
 
     ULONG Status;
 } AHCI_COMMAND_HEADER_DESCRIPTION;
+
+typedef union _AHCI_GHC
+{
+    struct
+    {
+        ULONG HR : 1;
+        ULONG IE : 1;
+        ULONG MRSM : 1;
+        ULONG RSV0 : 28;
+        ULONG AE : 1;
+    };
+
+    ULONG Status;
+} AHCI_GHC;
 
 // section 3.3.7
 typedef union _AHCI_PORT_CMD
@@ -340,10 +358,10 @@ typedef struct _AHCI_COMMAND_TABLE
 typedef struct _AHCI_COMMAND_HEADER
 {
     AHCI_COMMAND_HEADER_DESCRIPTION DI;   // DW 0
-    ULONG PRDBC;                // DW 1
-    ULONG CTBA0;                // DW 2
-    ULONG CTBA_U0;              // DW 3
-    ULONG Reserved[4];          // DW 4-7
+    ULONG PRDBC;                          // DW 1
+    ULONG CTBA;                           // DW 2
+    ULONG CTBA_U;                         // DW 3
+    ULONG Reserved[4];                    // DW 4-7
 } AHCI_COMMAND_HEADER, *PAHCI_COMMAND_HEADER;
 
 // Received FIS
@@ -384,7 +402,7 @@ typedef struct _AHCI_PORT
     ULONG   Vendor[4];                          // 0x70 ~ 0x7F, vendor specific
 } AHCI_PORT, *PAHCI_PORT;
 
-typedef struct _AHCI_INTERRUPT_ENABLE
+typedef union _AHCI_INTERRUPT_ENABLE
 {
     struct
     {
@@ -408,6 +426,7 @@ typedef struct _AHCI_INTERRUPT_ENABLE
         ULONG TFEE :1;
         ULONG CPDE :1;
     };
+
     ULONG Status;
 } AHCI_INTERRUPT_ENABLE;
 
@@ -436,9 +455,21 @@ typedef struct _AHCI_PORT_EXTENSION
     ULONG PortNumber;
     ULONG QueueSlots;                                   // slots which we have already assigned task (Slot)
     ULONG CommandIssuedSlots;                           // slots which has been programmed
-    BOOLEAN IsActive;
+    ULONG MaxPortQueueDepth;
+
+    struct
+    {
+        UCHAR RemovableDevice;
+        UCHAR Lba48BitMode;
+        UCHAR AccessType;
+        UCHAR DeviceType;
+        UCHAR IsActive;
+    } DeviceParams;
+
+    STOR_DPC CommandCompletion;
     PAHCI_PORT Port;                                    // AHCI Port Infomation
     AHCI_QUEUE SrbQueue;                                // pending Srbs
+    AHCI_QUEUE CompletionQueue;
     PSCSI_REQUEST_BLOCK Slot[MAXIMUM_AHCI_PORT_NCS];    // Srbs which has been alloted a port
     PAHCI_RECEIVED_FIS ReceivedFIS;
     PAHCI_COMMAND_HEADER CommandList;
@@ -469,11 +500,6 @@ typedef struct _AHCI_ADAPTER_EXTENSION
     ULONG   CurrentCommandSlot;
 
     PVOID NonCachedExtension; // holds virtual address to noncached buffer allocated for Port Extension
-
-    struct
-    {
-        UCHAR DeviceType;
-    } DeviceParams;
 
     struct
     {
@@ -546,7 +572,8 @@ UCHAR
 DeviceInquiryRequest (
     __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
     __in PSCSI_REQUEST_BLOCK Srb,
-    __in PCDB Cdb
+    __in PCDB Cdb,
+    __in BOOLEAN HasProductDataRequest
     );
 
 __inline
@@ -572,37 +599,56 @@ GetSrbExtension(
 //                       Assertions                         //
 //////////////////////////////////////////////////////////////
 
-C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, CAP) == 0x00);
-C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, GHC) == 0x04);
-C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, IS) == 0x08);
-C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, PI) == 0x0C);
-C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, VS) == 0x10);
-C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, CCC_CTL) == 0x14);
-C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, CCC_PTS) == 0x18);
-C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, EM_LOC) == 0x1C);
-C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, EM_CTL) == 0x20);
-C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, CAP2) == 0x24);
-C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, BOHC) == 0x28);
-C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, Reserved) == 0x2C);
-C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, VendorSpecific) == 0xA0);
-C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, PortList) == 0x100);
+// I assert every silly mistake I can do while coding
+// because god never help me debugging the code
+// but these asserts do :')
 
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, CLB) == 0x00);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, CLBU) == 0x04);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, FB) == 0x08);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, FBU) == 0x0C);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, IS) == 0x10);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, IE) == 0x14);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, CMD) == 0x18);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, RSV0) == 0x1C);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, TFD) == 0x20);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, SIG) == 0x24);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, SSTS) == 0x28);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, SCTL) == 0x2C);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, SERR) == 0x30);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, SACT) == 0x34);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, CI) == 0x38);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, SNTF) == 0x3C);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, FBS) == 0x40);
-C_ASSERT(FIELD_OFFSET(AHCI_PORT, RSV1) == 0x44);
+C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, CAP)            == 0x00);
+C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, GHC)            == 0x04);
+C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, IS)             == 0x08);
+C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, PI)             == 0x0C);
+C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, VS)             == 0x10);
+C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, CCC_CTL)        == 0x14);
+C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, CCC_PTS)        == 0x18);
+C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, EM_LOC)         == 0x1C);
+C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, EM_CTL)         == 0x20);
+C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, CAP2)           == 0x24);
+C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, BOHC)           == 0x28);
+C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, Reserved)       == 0x2C);
+C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, VendorSpecific) == 0xA0);
+C_ASSERT(FIELD_OFFSET(AHCI_MEMORY_REGISTERS, PortList)       == 0x100);
+
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, CLB)    == 0x00);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, CLBU)   == 0x04);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, FB)     == 0x08);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, FBU)    == 0x0C);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, IS)     == 0x10);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, IE)     == 0x14);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, CMD)    == 0x18);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, RSV0)   == 0x1C);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, TFD)    == 0x20);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, SIG)    == 0x24);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, SSTS)   == 0x28);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, SCTL)   == 0x2C);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, SERR)   == 0x30);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, SACT)   == 0x34);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, CI)     == 0x38);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, SNTF)   == 0x3C);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, FBS)    == 0x40);
+C_ASSERT(FIELD_OFFSET(AHCI_PORT, RSV1)   == 0x44);
 C_ASSERT(FIELD_OFFSET(AHCI_PORT, Vendor) == 0x70);
+
+C_ASSERT((sizeof(AHCI_COMMAND_TABLE) % 128) == 0);
+
+C_ASSERT(sizeof(AHCI_GHC)                        == sizeof(ULONG));
+C_ASSERT(sizeof(AHCI_PORT_CMD)                   == sizeof(ULONG));
+C_ASSERT(sizeof(AHCI_TASK_FILE_DATA)             == sizeof(ULONG));
+C_ASSERT(sizeof(AHCI_INTERRUPT_ENABLE)           == sizeof(ULONG));
+C_ASSERT(sizeof(AHCI_SERIAL_ATA_STATUS)          == sizeof(ULONG));
+C_ASSERT(sizeof(AHCI_SERIAL_ATA_CONTROL)         == sizeof(ULONG));
+C_ASSERT(sizeof(AHCI_COMMAND_HEADER_DESCRIPTION) == sizeof(ULONG));
+
+C_ASSERT(FIELD_OFFSET(AHCI_COMMAND_TABLE, CFIS) == 0x00);
+C_ASSERT(FIELD_OFFSET(AHCI_COMMAND_TABLE, ACMD) == 0x40);
+C_ASSERT(FIELD_OFFSET(AHCI_COMMAND_TABLE, RSV0) == 0x50);
+C_ASSERT(FIELD_OFFSET(AHCI_COMMAND_TABLE, PRDT) == 0x80);
