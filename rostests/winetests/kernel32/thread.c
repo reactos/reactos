@@ -102,6 +102,7 @@ static NTSTATUS (WINAPI *pNtQueryInformationThread)(HANDLE,THREADINFOCLASS,PVOID
 static BOOL (WINAPI *pGetThreadGroupAffinity)(HANDLE,GROUP_AFFINITY*);
 static BOOL (WINAPI *pSetThreadGroupAffinity)(HANDLE,const GROUP_AFFINITY*,GROUP_AFFINITY*);
 static NTSTATUS (WINAPI *pNtSetInformationThread)(HANDLE,THREADINFOCLASS,LPCVOID,ULONG);
+static NTSTATUS (WINAPI *pNtSetLdtEntries)(ULONG,ULONG,ULONG,ULONG,ULONG,ULONG);
 
 static HANDLE create_target_process(const char *arg)
 {
@@ -1100,6 +1101,118 @@ static void test_SetThreadContext(void)
     CloseHandle( thread );
 }
 
+static void test_GetThreadSelectorEntry(void)
+{
+    TEB *teb = NtCurrentTeb();
+    LDT_ENTRY entry;
+    CONTEXT ctx;
+    TEB *teb_fs;
+    DWORD ret;
+
+    memset(&ctx, 0x11, sizeof(ctx));
+    ctx.ContextFlags = CONTEXT_SEGMENTS | CONTEXT_CONTROL;
+    ret = GetThreadContext(GetCurrentThread(), &ctx);
+    ok(ret, "GetThreadContext error %u\n", GetLastError());
+    ok(!HIWORD(ctx.SegCs) && !HIWORD(ctx.SegDs) && !HIWORD(ctx.SegEs) && !HIWORD(ctx.SegFs) && !HIWORD(ctx.SegGs),
+       "cs %08x, ds %08x, es %08x, fs %08x, gs %08x\n", ctx.SegCs, ctx.SegDs, ctx.SegEs, ctx.SegFs, ctx.SegGs);
+
+    ret = GetThreadSelectorEntry(GetCurrentThread(), ctx.SegCs, &entry);
+    ok(ret, "GetThreadSelectorEntry(SegCs) error %u\n", GetLastError());
+
+    ret = GetThreadSelectorEntry(GetCurrentThread(), ctx.SegDs, &entry);
+    ok(ret, "GetThreadSelectorEntry(SegDs) error %u\n", GetLastError());
+
+    memset(&entry, 0x11, sizeof(entry));
+    ret = GetThreadSelectorEntry(GetCurrentThread(), ctx.SegFs, &entry);
+    ok(ret, "GetThreadSelectorEntry(SegFs) error %u\n", GetLastError());
+
+    teb_fs = (TEB *)((entry.HighWord.Bits.BaseHi << 24) | (entry.HighWord.Bits.BaseMid << 16) | entry.BaseLow);
+    ok(teb_fs == teb, "teb_fs %p != teb %p\n", teb_fs, teb);
+
+    ret = (entry.HighWord.Bits.LimitHi << 16) | entry.LimitLow;
+    ok(ret == 0x0fff || ret == 0x4000 /* testbot win7u */, "got %#x\n", ret);
+
+    ok(entry.HighWord.Bits.Dpl == 3, "got %#x\n", entry.HighWord.Bits.Dpl);
+    ok(entry.HighWord.Bits.Sys == 0, "got %#x\n", entry.HighWord.Bits.Sys);
+    ok(entry.HighWord.Bits.Pres == 1, "got %#x\n", entry.HighWord.Bits.Pres);
+    ok(entry.HighWord.Bits.Granularity == 0, "got %#x\n", entry.HighWord.Bits.Granularity);
+    ok(entry.HighWord.Bits.Default_Big == 1, "got %#x\n", entry.HighWord.Bits.Default_Big);
+    ok(entry.HighWord.Bits.Type == 0x13, "got %#x\n", entry.HighWord.Bits.Type);
+    ok(entry.HighWord.Bits.Reserved_0 == 0, "got %#x\n", entry.HighWord.Bits.Reserved_0);
+}
+
+static void test_NtSetLdtEntries(void)
+{
+    THREAD_DESCRIPTOR_INFORMATION tdi;
+    LDT_ENTRY ds_entry;
+    CONTEXT ctx;
+    DWORD ret;
+    union
+    {
+        LDT_ENTRY entry;
+        DWORD dw[2];
+    } sel;
+
+    if (!pNtSetLdtEntries)
+    {
+        win_skip("NtSetLdtEntries is not available on this platform\n");
+        return;
+    }
+
+    if (pNtSetLdtEntries(0, 0, 0, 0, 0, 0) == STATUS_NOT_IMPLEMENTED) /* WoW64 */
+    {
+        win_skip("NtSetLdtEntries is not implemented on this platform\n");
+        return;
+    }
+
+    ret = pNtSetLdtEntries(0, 0, 0, 0, 0, 0);
+    ok(!ret, "NtSetLdtEntries failed: %08x\n", ret);
+
+    ctx.ContextFlags = CONTEXT_SEGMENTS;
+    ret = GetThreadContext(GetCurrentThread(), &ctx);
+    ok(ret, "GetThreadContext failed\n");
+
+    tdi.Selector = ctx.SegDs;
+    ret = pNtQueryInformationThread(GetCurrentThread(), ThreadDescriptorTableEntry, &tdi, sizeof(tdi), &ret);
+    ok(!ret, "NtQueryInformationThread failed: %08x\n", ret);
+    ds_entry = tdi.Entry;
+
+    tdi.Selector = 0x000f;
+    ret = pNtQueryInformationThread(GetCurrentThread(), ThreadDescriptorTableEntry, &tdi, sizeof(tdi), &ret);
+    ok(ret == STATUS_ACCESS_VIOLATION, "got %08x\n", ret);
+
+    tdi.Selector = 0x001f;
+    ret = pNtQueryInformationThread(GetCurrentThread(), ThreadDescriptorTableEntry, &tdi, sizeof(tdi), &ret);
+    ok(ret == STATUS_ACCESS_VIOLATION, "NtQueryInformationThread returned %08x\n", ret);
+
+    ret = GetThreadSelectorEntry(GetCurrentThread(), 0x000f, &sel.entry);
+    ok(!ret, "GetThreadSelectorEntry should fail\n");
+
+    ret = GetThreadSelectorEntry(GetCurrentThread(), 0x001f, &sel.entry);
+    ok(!ret, "GetThreadSelectorEntry should fail\n");
+
+    memset(&sel.entry, 0x9a, sizeof(sel.entry));
+    ret = GetThreadSelectorEntry(GetCurrentThread(), ctx.SegDs, &sel.entry);
+    ok(ret, "GetThreadSelectorEntry failed\n");
+    ok(!memcmp(&ds_entry, &sel.entry, sizeof(ds_entry)), "entries do not match\n");
+
+    ret = pNtSetLdtEntries(0x000f, sel.dw[0], sel.dw[1], 0x001f, sel.dw[0], sel.dw[1]);
+    ok(!ret || broken(ret == STATUS_INVALID_LDT_DESCRIPTOR) /*XP*/, "NtSetLdtEntries failed: %08x\n", ret);
+
+    if (!ret)
+    {
+        memset(&sel.entry, 0x9a, sizeof(sel.entry));
+        ret = GetThreadSelectorEntry(GetCurrentThread(), 0x000f, &sel.entry);
+        ok(ret, "GetThreadSelectorEntry failed\n");
+        ok(!memcmp(&ds_entry, &sel.entry, sizeof(ds_entry)), "entries do not match\n");
+
+        memset(&sel.entry, 0x9a, sizeof(sel.entry));
+        ret = GetThreadSelectorEntry(GetCurrentThread(), 0x001f, &sel.entry);
+        ok(ret, "GetThreadSelectorEntry failed\n");
+        ok(!memcmp(&ds_entry, &sel.entry, sizeof(ds_entry)), "entries do not match\n");
+    }
+}
+
 #endif  /* __i386__ */
 
 static HANDLE finish_event;
@@ -1644,7 +1757,7 @@ static void test_thread_actctx(void)
 
     handle = (void*)0xdeadbeef;
     b = pGetCurrentActCtx(&handle);
-    ok(b, "GetCurentActCtx failed: %u\n", GetLastError());
+    ok(b, "GetCurrentActCtx failed: %u\n", GetLastError());
     ok(handle == 0, "active context %p\n", handle);
 
     /* without active context */
@@ -1663,7 +1776,7 @@ static void test_thread_actctx(void)
 
     handle = 0;
     b = pGetCurrentActCtx(&handle);
-    ok(b, "GetCurentActCtx failed: %u\n", GetLastError());
+    ok(b, "GetCurrentActCtx failed: %u\n", GetLastError());
     ok(handle != 0, "no active context\n");
     pReleaseActCtx(handle);
 
@@ -1913,6 +2026,7 @@ static void init_funcs(void)
        X(NtQueryInformationThread);
        X(RtlGetThreadErrorMode);
        X(NtSetInformationThread);
+       X(NtSetLdtEntries);
    }
 #undef X
 }
@@ -1965,6 +2079,8 @@ START_TEST(thread)
    test_GetThreadExitCode();
 #ifdef __i386__
    test_SetThreadContext();
+   test_GetThreadSelectorEntry();
+   test_NtSetLdtEntries();
 #endif
    test_QueueUserWorkItem();
    test_RegisterWaitForSingleObject();
