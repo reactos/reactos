@@ -34,9 +34,17 @@ KiSwapProcess(IN PKPROCESS NewProcess,
     /* Check for new LDT */
     if (NewProcess->LdtDescriptor.LimitLow != OldProcess->LdtDescriptor.LimitLow)
     {
-        /* Not handled yet */
-        UNIMPLEMENTED_DBGBREAK();
-        return;
+        if (NewProcess->LdtDescriptor.LimitLow)
+        {
+            KeSetGdtSelector(KGDT_LDT,
+                             ((PULONG)&NewProcess->LdtDescriptor)[0],
+                             ((PULONG)&NewProcess->LdtDescriptor)[1]);
+            Ke386SetLocalDescriptorTable(KGDT_LDT);
+        }
+        else
+        {
+            Ke386SetLocalDescriptorTable(0);
+        }
     }
 
     /* Update CR3 */
