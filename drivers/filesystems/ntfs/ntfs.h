@@ -584,6 +584,13 @@ FindNextAttribute(PFIND_ATTR_CONTXT Context,
 VOID
 FindCloseAttribute(PFIND_ATTR_CONTXT Context);
 
+NTSTATUS
+FreeClusters(PNTFS_VCB Vcb,
+             PNTFS_ATTR_CONTEXT AttrContext,
+             ULONG AttrOffset,
+             PFILE_RECORD_HEADER FileRecord,
+             ULONG ClustersToFree);
+
 /* blockdev.c */
 
 NTSTATUS
