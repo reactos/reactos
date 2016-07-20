@@ -16,9 +16,12 @@ SerialPower(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
+	PSERIAL_DEVICE_EXTENSION DeviceExtension;
+
 	TRACE_(SERIAL, "IRP_MJ_POWER dispatch\n");
-	Irp->IoStatus.Information = 0;
-	Irp->IoStatus.Status = STATUS_SUCCESS;
-	IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	return STATUS_SUCCESS;
+
+	DeviceExtension = DeviceObject->DeviceExtension;
+	PoStartNextPowerIrp(Irp);
+	IoSkipCurrentIrpStackLocation(Irp);
+	return PoCallDriver(DeviceExtension->LowerDevice, Irp);
 }
