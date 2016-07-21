@@ -117,13 +117,6 @@ static WORD KeyTableEnhanced[] = {
 	0,		0,		0,		0
 };
 
-/*
- * Note how the keyboard lights are not handled, so while NUMLOCK_ON can
- * be on, the light will never be. If this starts to be a problem it can be
- * fixed, but it's too much work for too little gain to do now.
- * Look in win32k/ntuser/input.c for an example.
- */
-
 static WORD KeyTableNumlock[] = {
 /* 0x00 */
 	0,		0,		0,		0,
@@ -255,12 +248,15 @@ SCANTOASCII ScanToAscii[] = {
 
 
 static void
-IntUpdateControlKeyState(LPDWORD State, PKEYBOARD_INPUT_DATA InputData)
+IntUpdateControlKeyState(HANDLE hConsoleInput, LPDWORD State, PKEYBOARD_INPUT_DATA InputData)
 {
 	DWORD Value = 0;
+    DWORD oldState, newState;
 
 	if (InputData->Flags & KEY_E1) /* Only the pause key has E1 */
 		return;
+
+    oldState = newState = *State;
 
 	if (!(InputData->Flags & KEY_E0)) {
 		switch (InputData->MakeCode) {
@@ -278,22 +274,19 @@ IntUpdateControlKeyState(LPDWORD State, PKEYBOARD_INPUT_DATA InputData)
 				break;
 
 			case 0x3A:
-				Value = CAPSLOCK_ON;
 				if (!(InputData->Flags & KEY_BREAK))
-					*State ^= Value;
-				return;
+					newState ^= CAPSLOCK_ON;
+				break;
 
 			case 0x45:
-				Value = NUMLOCK_ON;
 				if (!(InputData->Flags & KEY_BREAK))
-					*State ^= Value;
-				return;
+					newState ^= NUMLOCK_ON;
+				break;
 
 			case 0x46:
-				Value = SCROLLLOCK_ON;
 				if (!(InputData->Flags & KEY_BREAK))
-					*State ^= Value;
-				return;
+					newState ^= SCROLLLOCK_ON;
+				break;
 
 			default:
 				return;
@@ -313,10 +306,52 @@ IntUpdateControlKeyState(LPDWORD State, PKEYBOARD_INPUT_DATA InputData)
 		}
 	}
 
+    /* Check if the state of the indicators has been changed */
+    if ((oldState ^ newState) & (NUMLOCK_ON | CAPSLOCK_ON | SCROLLLOCK_ON))
+    {
+        IO_STATUS_BLOCK               IoStatusBlock;
+        NTSTATUS                      Status;
+        KEYBOARD_INDICATOR_PARAMETERS kip;
+
+        kip.LedFlags = 0;
+        kip.UnitId   = 0;
+
+        if ((newState & NUMLOCK_ON))
+            kip.LedFlags |= KEYBOARD_NUM_LOCK_ON;
+
+        if ((newState & CAPSLOCK_ON))
+            kip.LedFlags |= KEYBOARD_CAPS_LOCK_ON;
+
+        if ((newState & SCROLLLOCK_ON))
+            kip.LedFlags |= KEYBOARD_SCROLL_LOCK_ON;
+
+        /* Update the state of the leds on primary keyboard */
+        DPRINT("NtDeviceIoControlFile dwLeds=%x\n", kip.LedFlags);
+
+        Status = NtDeviceIoControlFile(
+              hConsoleInput,
+              NULL,
+              NULL,
+              NULL,
+              &IoStatusBlock,
+              IOCTL_KEYBOARD_SET_INDICATORS,
+		      &kip,
+              sizeof(kip),
+		      NULL,
+              0);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtDeviceIoControlFile(IOCTL_KEYBOARD_SET_INDICATORS) failed (Status %lx)\n", Status);
+        }
+    } else
+    /* Normal press/release state handling */
 	if (InputData->Flags & KEY_BREAK)
-		*State &= ~Value;
+		newState &= ~Value;
 	else
-		*State |= Value;
+		newState |= Value;
+
+    *State = newState;
 }
 
 static DWORD
@@ -379,7 +414,7 @@ IntAsciiFromInput(PKEYBOARD_INPUT_DATA InputData, DWORD KeyState)
  * in the app so I'll just fill the others with somewhat sane values
  */
 NTSTATUS
-IntTranslateKey(PKEYBOARD_INPUT_DATA InputData, KEY_EVENT_RECORD *Event)
+IntTranslateKey(HANDLE hConsoleInput, PKEYBOARD_INPUT_DATA InputData, KEY_EVENT_RECORD *Event)
 {
 	static DWORD dwControlKeyState;
 
@@ -395,7 +430,7 @@ IntTranslateKey(PKEYBOARD_INPUT_DATA InputData, KEY_EVENT_RECORD *Event)
 
 	DPRINT("Translating: %x\n", InputData->MakeCode);
 
-	IntUpdateControlKeyState(&dwControlKeyState, InputData);
+	IntUpdateControlKeyState(hConsoleInput, &dwControlKeyState, InputData);
 	Event->dwControlKeyState = dwControlKeyState;
 
 	if (InputData->Flags & KEY_E0)

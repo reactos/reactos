@@ -28,6 +28,6 @@
 #include <ntddkbd.h>
 
 NTSTATUS
-IntTranslateKey(PKEYBOARD_INPUT_DATA InputData, KEY_EVENT_RECORD *Event);
+IntTranslateKey(HANDLE hConsoleInput, PKEYBOARD_INPUT_DATA InputData, KEY_EVENT_RECORD *Event);
 
 /* EOF */
