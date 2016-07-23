@@ -48,6 +48,9 @@ typedef struct _WNetProvider
     PF_NPGetResourceInformation getResourceInformation;
     PF_NPAddConnection addConnection;
     PF_NPAddConnection3 addConnection3;
+#ifdef __REACTOS__
+    PF_NPGetConnection getConnection;
+#endif
 } WNetProvider, *PWNetProvider;
 
 typedef struct _WNetProviderTable
@@ -196,6 +199,9 @@ static void _tryLoadProvider(PCWSTR provider)
                         }
                         provider->addConnection = MPR_GETPROC(NPAddConnection);
                         provider->addConnection3 = MPR_GETPROC(NPAddConnection3);
+#ifdef __REACTOS__
+                        provider->getConnection = MPR_GETPROC(NPGetConnection);
+#endif
                         TRACE("NPAddConnection %p\n", provider->addConnection);
                         TRACE("NPAddConnection3 %p\n", provider->addConnection3);
                         providerTable->numProviders++;
@@ -1949,6 +1955,7 @@ DWORD WINAPI WNetGetConnectionA( LPCSTR lpLocalName,
 /* find the network connection for a given drive; helper for WNetGetConnection */
 static DWORD get_drive_connection( WCHAR letter, LPWSTR remote, LPDWORD size )
 {
+#ifndef __REACTOS__
     char buffer[1024];
     struct mountmgr_unix_drive *data = (struct mountmgr_unix_drive *)buffer;
     HANDLE mgr;
@@ -1991,6 +1998,32 @@ static DWORD get_drive_connection( WCHAR letter, LPWSTR remote, LPDWORD size )
     }
     CloseHandle( mgr );
     return ret;
+#else
+    DWORD ret = WN_NO_NETWORK;
+    DWORD index;
+    WCHAR local[3] = {letter, ':', 0};
+
+    if (providerTable != NULL)
+    {
+        for (index = 0; index < providerTable->numProviders; index++)
+        {
+            if(providerTable->table[index].getCaps(WNNC_CONNECTION) &
+                WNNC_CON_GETCONNECTIONS)
+            {
+                if (providerTable->table[index].getConnection)
+                    ret = providerTable->table[index].getConnection(
+                        local, remote, size);
+                else
+                    ret = WN_NO_NETWORK;
+                if (ret == WN_SUCCESS || ret == WN_MORE_DATA)
+                    break;
+            }
+        }
+    }
+    if (ret)
+        SetLastError(ret);
+    return ret;
+#endif
 }
 
 /**************************************************************************
