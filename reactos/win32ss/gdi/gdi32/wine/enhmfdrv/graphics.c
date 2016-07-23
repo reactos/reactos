@@ -33,6 +33,69 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(enhmetafile);
 
+static const RECTL empty_bounds = { 0, 0, -1, -1 };
+
+/* determine if we can use 16-bit points to store all the input points */
+static BOOL can_use_short_points( const POINT *pts, UINT count )
+{
+    UINT i;
+
+    for (i = 0; i < count; i++)
+        if (((pts[i].x + 0x8000) & ~0xffff) || ((pts[i].y + 0x8000) & ~0xffff))
+            return FALSE;
+    return TRUE;
+}
+
+/* store points in either long or short format; return a pointer to the end of the stored data */
+static void *store_points( POINTL *dest, const POINT *pts, UINT count, BOOL short_points )
+{
+    if (short_points)
+    {
+        UINT i;
+        POINTS *dest_short = (POINTS *)dest;
+
+        for (i = 0; i < count; i++)
+        {
+            dest_short[i].x = pts[i].x;
+            dest_short[i].y = pts[i].y;
+        }
+        return dest_short + count;
+    }
+    else
+    {
+        memcpy( dest, pts, count * sizeof(*dest) );
+        return dest + count;
+    }
+}
+
+/* compute the bounds of an array of points, optionally including the current position */
+static void get_points_bounds( RECTL *bounds, const POINT *pts, UINT count, HDC hdc )
+{
+    UINT i;
+
+    if (hdc)
+    {
+        POINT cur_pt;
+        GetCurrentPositionEx( hdc, &cur_pt );
+        bounds->left = bounds->right = cur_pt.x;
+        bounds->top = bounds->bottom = cur_pt.y;
+    }
+    else if (count)
+    {
+        bounds->left = bounds->right = pts[0].x;
+        bounds->top = bounds->bottom = pts[0].y;
+    }
+    else *bounds = empty_bounds;
+
+    for (i = 0; i < count; i++)
+    {
+        bounds->left   = min( bounds->left, pts[i].x );
+        bounds->right  = max( bounds->right, pts[i].x );
+        bounds->top    = min( bounds->top, pts[i].y );
+        bounds->bottom = max( bounds->bottom, pts[i].y );
+    }
+}
+
 /**********************************************************************
  *	     EMFDRV_MoveTo
  */
@@ -481,42 +544,50 @@ static BOOL
 EMFDRV_PolyPolylinegon( PHYSDEV dev, const POINT* pt, const INT* counts, UINT polys,
 			DWORD iType)
 {
+    EMFDRV_PDEVICE *physDev = get_emf_physdev( dev );
     EMRPOLYPOLYLINE *emr;
     DWORD cptl = 0, poly, size;
-    INT point;
-    RECTL bounds;
-    const POINT *pts;
-    BOOL ret;
+    BOOL ret, use_small_emr, bounds_valid = TRUE;
 
-    bounds.left = bounds.right = pt[0].x;
-    bounds.top = bounds.bottom = pt[0].y;
-
-    pts = pt;
     for(poly = 0; poly < polys; poly++) {
         cptl += counts[poly];
-	for(point = 0; point < counts[poly]; point++) {
-	    if(bounds.left > pts->x) bounds.left = pts->x;
-	    else if(bounds.right < pts->x) bounds.right = pts->x;
-	    if(bounds.top > pts->y) bounds.top = pts->y;
-	    else if(bounds.bottom < pts->y) bounds.bottom = pts->y;
-	    pts++;
-	}
+        if(counts[poly] < 2) bounds_valid = FALSE;
     }
+    if(!cptl) bounds_valid = FALSE;
+    use_small_emr = can_use_short_points( pt, cptl );
 
-    size = sizeof(EMRPOLYPOLYLINE) + (polys - 1) * sizeof(DWORD) +
-      (cptl - 1) * sizeof(POINTL);
+    size = FIELD_OFFSET(EMRPOLYPOLYLINE, aPolyCounts[polys]);
+    if(use_small_emr)
+        size += cptl * sizeof(POINTS);
+    else
+        size += cptl * sizeof(POINTL);
 
     emr = HeapAlloc( GetProcessHeap(), 0, size );
 
     emr->emr.iType = iType;
+    if(use_small_emr) emr->emr.iType += EMR_POLYPOLYLINE16 - EMR_POLYPOLYLINE;
+
     emr->emr.nSize = size;
-    emr->rclBounds = bounds;
+    if(bounds_valid && !physDev->path)
+        get_points_bounds( &emr->rclBounds, pt, cptl, 0 );
+    else
+        emr->rclBounds = empty_bounds;
     emr->nPolys = polys;
     emr->cptl = cptl;
-    memcpy(emr->aPolyCounts, counts, polys * sizeof(DWORD));
-    memcpy(emr->aPolyCounts + polys, pt, cptl * sizeof(POINTL));
+
+    if(polys)
+    {
+        memcpy( emr->aPolyCounts, counts, polys * sizeof(DWORD) );
+        store_points( (POINTL *)(emr->aPolyCounts + polys), pt, cptl, use_small_emr );
+    }
+
     ret = EMFDRV_WriteRecord( dev, &emr->emr );
-    if(ret)
+    if(ret && !bounds_valid)
+    {
+        ret = FALSE;
+        SetLastError( ERROR_INVALID_PARAMETER );
+    }
+    if(ret && !physDev->path)
         EMFDRV_UpdateBBox( dev, &emr->rclBounds );
     HeapFree( GetProcessHeap(), 0, emr );
     return ret;
