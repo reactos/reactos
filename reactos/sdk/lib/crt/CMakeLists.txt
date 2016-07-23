@@ -66,3 +66,19 @@ add_library(strtol
     string/wctype.c)
 add_target_compile_definitions(strtol _LIBCNT_)
 add_dependencies(strtol psdk)
+
+
+if(ARCH STREQUAL "i386")
+    list(APPEND ATAN2_ASM_SOURCE math/i386/atan2_asm.s)
+elseif(ARCH STREQUAL "amd64")
+    list(APPEND ATAN2_ASM_SOURCE math/amd64/atan2.S)
+elseif(ARCH STREQUAL "arm")
+    list(APPEND ATAN2_ASM_SOURCE math/arm/atan2.s)
+endif()
+
+add_asm_files(atan2_asm ${ATAN2_ASM_SOURCE})
+add_library(atan2 ${atan2_asm})
+set_target_properties(atan2 PROPERTIES LINKER_LANGUAGE "C")
+add_dependencies(atan2 asm)
+
+
