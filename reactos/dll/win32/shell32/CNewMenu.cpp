@@ -203,8 +203,8 @@ CNewMenu::CacheItems()
         }
     }
     
-	dwSize++;
-	
+    dwSize++;
+    
     lpValues = (LPWSTR) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize * sizeof(WCHAR));
     if (!lpValues)
         return FALSE;
@@ -227,6 +227,7 @@ CNewMenu::CacheItems()
     if (RegSetValueExW(hKey, L"Classes", NULL, REG_MULTI_SZ, (LPBYTE)lpValues, dwSize * sizeof(WCHAR)) != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, lpValues);
+        RegCloseKey(hKey);
         return FALSE;
     }
     
