@@ -224,7 +224,7 @@ CNewMenu::CacheItems()
         return FALSE;
     }
     
-    if (RegSetValueExW(hKey, L"Classes", NULL, REG_MULTI_SZ, (LPBYTE)lpValues, dwSize) != ERROR_SUCCESS)
+    if (RegSetValueExW(hKey, L"Classes", NULL, REG_MULTI_SZ, (LPBYTE)lpValues, dwSize * sizeof(WCHAR)) != ERROR_SUCCESS)
     {
         HeapFree(GetProcessHeap(), 0, lpValues);
         return FALSE;
