@@ -19,6 +19,8 @@
 #define MAXIMUM_QUEUE_BUFFER_SIZE           255
 #define MAXIMUM_TRANSFER_LENGTH             (128*1024) // 128 KB
 
+#define DEVICE_ATA_BLOCK_SIZE               512
+
 // device type (DeviceParams)
 #define AHCI_DEVICE_TYPE_ATA                1
 #define AHCI_DEVICE_TYPE_ATAPI              2
@@ -54,6 +56,7 @@
 // ATA Functions
 #define ATA_FUNCTION_ATA_COMMAND            0x100
 #define ATA_FUNCTION_ATA_IDENTIFY           0x101
+#define ATA_FUNCTION_ATA_READ               0x102
 
 // ATAPI Functions
 #define ATA_FUNCTION_ATAPI_COMMAND          0x200
@@ -61,6 +64,8 @@
 // ATA Flags
 #define ATA_FLAGS_DATA_IN                   (1 << 1)
 #define ATA_FLAGS_DATA_OUT                  (1 << 2)
+#define ATA_FLAGS_48BIT_COMMAND             (1 << 3)
+#define ATA_FLAGS_USE_DMA                   (1 << 4)
 
 #define IsAtaCommand(AtaFunction)           (AtaFunction & ATA_FUNCTION_ATA_COMMAND)
 #define IsAtapiCommand(AtaFunction)         (AtaFunction & ATA_FUNCTION_ATAPI_COMMAND)
@@ -68,11 +73,11 @@
 #define IsAdapterCAPS64(CAP)                (CAP & AHCI_Global_HBA_CAP_S64A)
 
 // 3.1.1 NCS = CAP[12:08] -> Align
-#define AHCI_Global_Port_CAP_NCS(x)            (((x) & 0xF00) >> 8)
+#define AHCI_Global_Port_CAP_NCS(x)         (((x) & 0xF00) >> 8)
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #ifdef DBG
-    #define DebugPrint(format, ...) StorPortDebugPrint(0, format, __VA_ARGS__)
+    #define AhciDebugPrint(format, ...) StorPortDebugPrint(0, format, __VA_ARGS__)
 #endif
 
 typedef
@@ -464,6 +469,12 @@ typedef struct _AHCI_PORT_EXTENSION
         UCHAR AccessType;
         UCHAR DeviceType;
         UCHAR IsActive;
+        LARGE_INTEGER MaxLba;
+        ULONG BytesPerLogicalSector;
+        ULONG BytesPerPhysicalSector;
+        // UCHAR VendorId[41];
+        // UCHAR RevisionID[9];
+        // UCHAR SerialNumber[21];
     } DeviceParams;
 
     STOR_DPC CommandCompletion;
@@ -542,7 +553,12 @@ typedef struct _AHCI_SRB_EXTENSION
 
     ULONG SlotIndex;
     LOCAL_SCATTER_GATHER_LIST Sgl;
+    PLOCAL_SCATTER_GATHER_LIST pSgl;
     PAHCI_COMPLETION_ROUTINE CompletionRoutine;
+
+    // for alignment purpose -- 128 byte alignment
+    // do not try to access (R/W) this field
+    UCHAR Reserved[128];
 } AHCI_SRB_EXTENSION, *PAHCI_SRB_EXTENSION;
 
 //////////////////////////////////////////////////////////////
@@ -568,12 +584,29 @@ IsPortValid (
     __in ULONG pathId
     );
 
+UCHAR DeviceRequestReadWrite (
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
+    __in PSCSI_REQUEST_BLOCK Srb,
+    __in PCDB Cdb
+    );
+
+UCHAR DeviceRequestCapacity (
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
+    __in PSCSI_REQUEST_BLOCK Srb,
+    __in PCDB Cdb
+    );
+
 UCHAR
 DeviceInquiryRequest (
     __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
     __in PSCSI_REQUEST_BLOCK Srb,
-    __in PCDB Cdb,
-    __in BOOLEAN HasProductDataRequest
+    __in PCDB Cdb
+    );
+
+UCHAR DeviceReportLuns (
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
+    __in PSCSI_REQUEST_BLOCK Srb,
+    __in PCDB Cdb
     );
 
 __inline
@@ -593,6 +626,12 @@ __inline
 PAHCI_SRB_EXTENSION
 GetSrbExtension(
     __in PSCSI_REQUEST_BLOCK Srb
+    );
+
+__inline
+ULONG64
+AhciGetLba (
+    __in PCDB Cdb
     );
 
 //////////////////////////////////////////////////////////////
