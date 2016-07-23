@@ -23,33 +23,35 @@
 #ifndef _SHV_ITEM_NEW_H_
 #define _SHV_ITEM_NEW_H_
 
+const WCHAR ShellNewKey[] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Discardable\\PostSetup\\ShellNew";
+
 class CNewMenu :
-	public CComCoClass<CNewMenu, &CLSID_NewMenu>,
-	public CComObjectRootEx<CComMultiThreadModelNoCS>,
-	public IObjectWithSite,
-	public IContextMenu3,
-	public IShellExtInit
+    public CComCoClass<CNewMenu, &CLSID_NewMenu>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IObjectWithSite,
+    public IContextMenu3,
+    public IShellExtInit
 {
 private:
-	enum SHELLNEW_TYPE
-	{
-		SHELLNEW_TYPE_INVALID = -1,
-		SHELLNEW_TYPE_COMMAND = 1,
-		SHELLNEW_TYPE_DATA = 2,
-		SHELLNEW_TYPE_FILENAME = 4,
-		SHELLNEW_TYPE_NULLFILE = 8
-	};
+    enum SHELLNEW_TYPE
+    {
+        SHELLNEW_TYPE_INVALID = -1,
+        SHELLNEW_TYPE_COMMAND = 1,
+        SHELLNEW_TYPE_DATA = 2,
+        SHELLNEW_TYPE_FILENAME = 4,
+        SHELLNEW_TYPE_NULLFILE = 8
+    };
 
-	struct SHELLNEW_ITEM
-	{
-		SHELLNEW_TYPE Type;
-		LPWSTR pwszExt;
-		PBYTE pData;
-		ULONG cbData;
-		LPWSTR pwszDesc;
-		HICON hIcon;
-		SHELLNEW_ITEM *pNext;
-	};
+    struct SHELLNEW_ITEM
+    {
+        SHELLNEW_TYPE Type;
+        LPWSTR pwszExt;
+        PBYTE pData;
+        ULONG cbData;
+        LPWSTR pwszDesc;
+        HICON hIcon;
+        SHELLNEW_ITEM *pNext;
+    };
 
     LPITEMIDLIST m_pidlFolder;
     LPWSTR m_wszPath;
@@ -62,35 +64,37 @@ private:
 
     SHELLNEW_ITEM *LoadItem(LPCWSTR pwszExt);
     void UnloadItem(SHELLNEW_ITEM *pItem);
-	void UnloadAllItems();
-	BOOL LoadAllItems();
-	UINT InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu);
-	SHELLNEW_ITEM *FindItemFromIdOffset(UINT IdOffset);
-	HRESULT CreateNewFolder(LPCMINVOKECOMMANDINFO lpici);
-	HRESULT CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcmi);
+    void UnloadAllItems();
+    BOOL CacheItems();
+    BOOL LoadCachedItems();
+    BOOL LoadAllItems();
+    UINT InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu);
+    SHELLNEW_ITEM *FindItemFromIdOffset(UINT IdOffset);
+    HRESULT CreateNewFolder(LPCMINVOKECOMMANDINFO lpici);
+    HRESULT CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcmi);
     HRESULT SelectNewItem(LPCMINVOKECOMMANDINFO lpici, LONG wEventId, UINT uFlags, LPWSTR pszName);
 
 public:
-	CNewMenu();
-	~CNewMenu();
+    CNewMenu();
+    ~CNewMenu();
 
-	// IObjectWithSite
-	virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
-	virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+    // IObjectWithSite
+    virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
+    virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
 
-	// IContextMenu
-	virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-	virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
-	virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
+    // IContextMenu
+    virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
+    virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi);
+    virtual HRESULT WINAPI GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen);
 
-	// IContextMenu3
-	virtual HRESULT WINAPI HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
+    // IContextMenu3
+    virtual HRESULT WINAPI HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
 
-	// IContextMenu2
-	virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    // IContextMenu2
+    virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	// IShellExtInit
-	virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
+    // IShellExtInit
+    virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
 
 DECLARE_REGISTRY_RESOURCEID(IDR_NEWMENU)
 DECLARE_NOT_AGGREGATABLE(CNewMenu)
@@ -98,11 +102,11 @@ DECLARE_NOT_AGGREGATABLE(CNewMenu)
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(CNewMenu)
-	COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
-	COM_INTERFACE_ENTRY_IID(IID_IContextMenu3, IContextMenu3)
-	COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
-	COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
-	COM_INTERFACE_ENTRY_IID(IID_IShellExtInit, IShellExtInit)
+    COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
+    COM_INTERFACE_ENTRY_IID(IID_IContextMenu3, IContextMenu3)
+    COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
+    COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
+    COM_INTERFACE_ENTRY_IID(IID_IShellExtInit, IShellExtInit)
 END_COM_MAP()
 };
 
