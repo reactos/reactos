@@ -3241,6 +3241,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
 
                     /* Set the overscan register */
                     // VgaSetSinglePaletteRegister(VGA_AC_OVERSCAN_REG, Buffer[VGA_AC_PAL_F_REG + 1]);
+                    IOReadB(VGA_INSTAT1_READ);
                     IOWriteB(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
                     IOWriteB(VGA_AC_WRITE, Buffer[VGA_AC_PAL_F_REG + 1]);
 
@@ -3255,6 +3256,8 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 {
                     /* Read the old AC mode control register value */
                     BYTE VgaAcControlReg;
+
+                    IOReadB(VGA_INSTAT1_READ);
                     IOWriteB(VGA_AC_INDEX, VGA_AC_CONTROL_REG);
                     VgaAcControlReg = IOReadB(VGA_AC_READ);
 
@@ -3270,6 +3273,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                         Bda->CrtModeControl &= ~(1 << 5);
                     }
 
+                    IOReadB(VGA_INSTAT1_READ);
                     IOWriteB(VGA_AC_INDEX, VGA_AC_CONTROL_REG);
                     IOWriteB(VGA_AC_WRITE, VgaAcControlReg);
 
@@ -3329,6 +3333,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                     }
 
                     /* Get the overscan register */
+                    IOReadB(VGA_INSTAT1_READ);
                     IOWriteB(VGA_AC_INDEX, VGA_AC_OVERSCAN_REG);
                     Buffer[VGA_AC_PAL_F_REG + 1] = IOReadB(VGA_AC_READ);
 
