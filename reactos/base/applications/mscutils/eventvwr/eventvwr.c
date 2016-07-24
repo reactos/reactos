@@ -57,6 +57,21 @@
 #define EnableDlgItem(hDlg, nID, bEnable)   \
     EnableWindow(GetDlgItem((hDlg), (nID)), (bEnable))
 
+#define ProgressBar_SetPos(hwndCtl,pos)    \
+    ((int)SNDMSG((hwndCtl),PBM_SETPOS,(WPARAM)(int)(pos),(LPARAM)0))
+#define ProgressBar_SetRange(hwndCtl,range)    \
+    ((int)SNDMSG((hwndCtl),PBM_SETRANGE,(WPARAM)0,(LPARAM)(range)))
+#define ProgressBar_SetStep(hwndCtl,inc)    \
+    ((int)SNDMSG((hwndCtl),PBM_SETSTEP,(WPARAM)(int)(inc),(LPARAM)0))
+#define ProgressBar_StepIt(hwndCtl)         \
+    ((int)SNDMSG((hwndCtl),PBM_STEPIT,(WPARAM)0,(LPARAM)0))
+
+#define StatusBar_GetItemRect(hwndCtl,index,lprc)   \
+    ((BOOL)SNDMSG((hwndCtl),SB_GETRECT,(WPARAM)(int)(index),(LPARAM)(RECT*)(lprc)))
+#define StatusBar_SetText(hwndCtl,index,data)   \
+    ((BOOL)SNDMSG((hwndCtl),SB_SETTEXT,(WPARAM)(index),(LPARAM)(data)))
+
+
 #include <strsafe.h>
 
 /* Missing RichEdit flags in our richedit.h */
@@ -71,14 +86,8 @@
 #ifndef WM_APP
     #define WM_APP 0x8000
 #endif
-#define PM_PROGRESS_DLG     (WM_APP + 1)
+#define LVM_PROGRESS    (WM_APP + 1)
 
-
-typedef struct _DETAILDATA
-{
-    BOOL bDisplayWords;
-    HFONT hMonospaceFont;
-} DETAILDATA, *PDETAILDATA;
 
 static const LPCWSTR szWindowClass       = L"EVENTVWR"; /* The main window class name */
 static const WCHAR   EVENTLOG_BASE_KEY[] = L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\";
@@ -117,8 +126,8 @@ HWND hwndMainWindow;                        /* Main window */
 HWND hwndTreeView;                          /* TreeView control */
 HWND hwndListView;                          /* ListView control */
 HWND hwndStatus;                            /* Status bar */
+HWND hwndStatusProgress;                    /* Progress bar in the status bar */
 HMENU hMainMenu;                            /* The application's main menu */
-HWND hProgressDlg = NULL;                   /* A progress dialog that pops up */
 
 HTREEITEM htiSystemLogs = NULL, htiAppLogs = NULL, htiUserLogs = NULL;
 
@@ -150,6 +159,8 @@ typedef struct _EVENTLOG
 typedef struct _EVENTLOGFILTER
 {
     LIST_ENTRY ListEntry;
+
+    LONG ReferenceCount;
 
     // HANDLE hEnumEventsThread;
     // HANDLE hStopEnumEvent;
@@ -195,20 +206,22 @@ HANDLE hEnumEventsThread = NULL;
 HANDLE hStopEnumEvent    = NULL;
 
 /*
- * Event-enumerator command structures.
+ * Setting EnumFilter to a valid pointer and raising the hStartEnumEvent event
+ * triggers the event-enumerator thread to perform a new enumeration.
  */
-typedef struct _ENUM_COMMAND_PARAM
-{
-    BOOL Start;
-    PEVENTLOGFILTER EventLogFilter;
-} ENUM_COMMAND_PARAM, *PENUM_COMMAND_PARAM;
-
-ENUM_COMMAND_PARAM EnumCommand;
+PEVENTLOGFILTER EnumFilter = NULL;
 HANDLE hStartStopEnumEvent = NULL;  // End-of-application event
 HANDLE hStartEnumEvent     = NULL;  // Command event
 
 /* Default Open/Save-As dialog box */
 OPENFILENAMEW sfn;
+
+typedef struct _DETAILDATA
+{
+    PEVENTLOGFILTER EventLogFilter;
+    BOOL bDisplayWords;
+    HFONT hMonospaceFont;
+} DETAILDATA, *PDETAILDATA;
 
 
 /* Forward declarations of functions included in this code module */
@@ -222,10 +235,9 @@ VOID FreeLogFilterList(VOID);
 
 ATOM MyRegisterClass(HINSTANCE);
 BOOL InitInstance(HINSTANCE, int);
-VOID CleanupInstance(HINSTANCE);
+VOID ExitInstance(HINSTANCE);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-static INT_PTR CALLBACK StatusMessageWindowProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR EventLogProperties(HINSTANCE, HWND);
+INT_PTR EventLogProperties(HINSTANCE, HWND, PEVENTLOGFILTER);
 INT_PTR CALLBACK EventDetails(HWND, UINT, WPARAM, LPARAM);
 
 
@@ -326,7 +338,7 @@ Cleanup:
     if (hStartStopEnumEvent)
         CloseHandle(hStartStopEnumEvent);
 
-    CleanupInstance(hInstance);
+    ExitInstance(hInstance);
 
 Quit:
     FreeLibrary(hRichEdit);
@@ -949,7 +961,7 @@ AllocEventLog(IN PCWSTR ComputerName OPTIONAL,
 }
 
 VOID
-FreeEventLog(IN PEVENTLOG EventLog)
+EventLog_Free(IN PEVENTLOG EventLog)
 {
     if (EventLog->LogName)
         HeapFree(GetProcessHeap(), 0, EventLog->LogName);
@@ -1019,11 +1031,14 @@ AllocEventLogFilter(// IN PCWSTR FilterName,
     EventLogFilter->NumOfEventLogs = NumOfEventLogs;
     RtlCopyMemory(EventLogFilter->EventLogs, EventLogs, NumOfEventLogs * sizeof(PEVENTLOG));
 
+    /* Initialize the filter reference count */
+    EventLogFilter->ReferenceCount = 1;
+
     return EventLogFilter;
 }
 
 VOID
-FreeEventLogFilter(IN PEVENTLOGFILTER EventLogFilter)
+EventLogFilter_Free(IN PEVENTLOGFILTER EventLogFilter)
 {
     if (EventLogFilter->Sources)
         HeapFree(GetProcessHeap(), 0, EventLogFilter->Sources);
@@ -1037,6 +1052,29 @@ FreeEventLogFilter(IN PEVENTLOGFILTER EventLogFilter)
     HeapFree(GetProcessHeap(), 0, EventLogFilter);
 }
 
+LONG EventLogFilter_AddRef(IN PEVENTLOGFILTER EventLogFilter)
+{
+    ASSERT(EventLogFilter);
+    return InterlockedIncrement(&EventLogFilter->ReferenceCount);
+}
+
+LONG EventLogFilter_Release(IN PEVENTLOGFILTER EventLogFilter)
+{
+    LONG RefCount;
+
+    ASSERT(EventLogFilter);
+
+    /* When the reference count reaches zero, delete the filter */
+    RefCount = InterlockedDecrement(&EventLogFilter->ReferenceCount);
+    if (RefCount <= 0)
+    {
+        /* Remove the filter from the list */
+        /** RemoveEntryList(&EventLogFilter->ListEntry); **/
+        EventLogFilter_Free(EventLogFilter);
+    }
+
+    return RefCount;
+}
 
 void
 TrimNulls(LPWSTR s)
@@ -1324,7 +1362,7 @@ GetEventType(IN WORD dwEventType,
 }
 
 BOOL
-GetEventUserName(PEVENTLOGRECORD pelr,
+GetEventUserName(IN PEVENTLOGRECORD pelr,
                  OUT PWCHAR pszUser) // TODO: Add IN DWORD BufLen
 {
     PSID lpSid;
@@ -1374,6 +1412,76 @@ static VOID FreeRecords(VOID)
     g_TotalRecords = 0;
 }
 
+BOOL
+FilterByType(IN PEVENTLOGFILTER EventLogFilter,
+             IN PEVENTLOGRECORD pevlr)
+{
+    if ((pevlr->EventType == EVENTLOG_SUCCESS          && !EventLogFilter->Information ) ||
+        (pevlr->EventType == EVENTLOG_INFORMATION_TYPE && !EventLogFilter->Information ) ||
+        (pevlr->EventType == EVENTLOG_WARNING_TYPE     && !EventLogFilter->Warning     ) ||
+        (pevlr->EventType == EVENTLOG_ERROR_TYPE       && !EventLogFilter->Error       ) ||
+        (pevlr->EventType == EVENTLOG_AUDIT_SUCCESS    && !EventLogFilter->AuditSuccess) ||
+        (pevlr->EventType == EVENTLOG_AUDIT_FAILURE    && !EventLogFilter->AuditFailure))
+    {
+        return FALSE;
+    }
+    return TRUE;
+}
+
+BOOL
+FilterByString(IN PCWSTR FilterString, // This is a multi-string
+               IN PWSTR  String)
+{
+    PCWSTR pStr;
+
+    /* The filter string is NULL so it does not filter anything */
+    if (!FilterString)
+        return TRUE;
+
+    /*
+     * If the filter string filters for an empty string AND the source string
+     * is an empty string, we have a match (particular case of the last one).
+     */
+    if (!*FilterString && !*String)
+        return TRUE;
+
+    // if (*FilterString || *String)
+
+    /*
+     * If the filter string is empty BUT the source string is not empty,
+     * OR vice-versa, we cannot have a match.
+     */
+    if ( (!*FilterString && *String) || (*FilterString && !*String) )
+        return FALSE;
+
+    /*
+     * If the filter string filters for at least a non-empty string,
+     * browse it and search for a string that matches the source string.
+     */
+    // else if (*FilterString && *String)
+    {
+        pStr = FilterString;
+        while (*pStr)
+        {
+            if (wcsicmp(pStr, String) == 0)
+            {
+                /* We have a match, break the loop */
+                break;
+            }
+
+            pStr += (wcslen(pStr) + 1);
+        }
+        if (!*pStr) // && *String
+        {
+            /* We do not have a match */
+            return FALSE;
+        }
+    }
+
+    /* We have a match */
+    return TRUE;
+}
+
 /*
  * The events enumerator thread.
  */
@@ -1383,9 +1491,6 @@ EnumEventsThread(IN LPVOID lpParameter)
     PEVENTLOGFILTER EventLogFilter = (PEVENTLOGFILTER)lpParameter;
     LPWSTR lpMachineName = NULL; // EventLogFilter->ComputerName;
     PEVENTLOG EventLog;
-    PWSTR pStr;
-
-    BOOL ProgressDlg = FALSE;
 
     ULONG LogIndex;
     HANDLE hEventLog;
@@ -1397,6 +1502,8 @@ EnumEventsThread(IN LPVOID lpParameter)
     LPWSTR lpszSourceName;
     LPWSTR lpszComputerName;
     BOOL bResult = TRUE; /* Read succeeded */
+
+    UINT uStep = 0, uStepAt = 0, uPos = 0;
 
     WCHAR szWindowTitle[MAX_PATH];
     WCHAR szStatusText[MAX_PATH];
@@ -1413,16 +1520,20 @@ EnumEventsThread(IN LPVOID lpParameter)
     LVITEMW lviEventItem;
 
     /* Save the current event log filter globally */
+    EventLogFilter_AddRef(EventLogFilter);
     ActiveFilter = EventLogFilter;
 
     /* Disable list view redraw */
     SendMessageW(hwndListView, WM_SETREDRAW, FALSE, 0);
 
-    /* Clear the list view */
-    (void)ListView_DeleteAllItems(hwndListView);
+    /* Clear the list view and free the cached records */
+    ListView_DeleteAllItems(hwndListView);
     FreeRecords();
 
-    SendMessage(hwndListView, PM_PROGRESS_DLG, 0, TRUE);
+    SendMessageW(hwndListView, LVM_PROGRESS, 0, TRUE);
+    ProgressBar_SetRange(hwndStatusProgress, 0);
+    StatusBar_SetText(hwndStatus, 0, NULL);
+    ShowWindow(hwndStatusProgress, SW_SHOW);
 
     /* Do a loop over the logs enumerated in the filter */
     // FIXME: For now we only support 1 event log per filter!
@@ -1469,14 +1580,11 @@ EnumEventsThread(IN LPVOID lpParameter)
     }
     g_TotalRecords = dwTotalRecords;
 
-    /* If we have at least 1000 records show the waiting dialog */
-    if (dwTotalRecords > 1000)
-    {
-        ProgressDlg = SendMessage(hwndMainWindow, PM_PROGRESS_DLG, 0, TRUE);
-    }
-
     if (WaitForSingleObject(hStopEnumEvent, 0) == WAIT_OBJECT_0)
         goto Quit;
+
+    ProgressBar_SetRange(hwndStatusProgress, MAKELPARAM(0, 100));
+    uStepAt = (dwTotalRecords / 100) + 1;
 
     dwFlags = EVENTLOG_SEQUENTIAL_READ |
              (NewestEventsFirst ? EVENTLOG_FORWARDS_READ
@@ -1536,67 +1644,30 @@ EnumEventsThread(IN LPVOID lpParameter)
 
         while (dwRead > 0)
         {
+            // ProgressBar_StepIt(hwndStatusProgress);
+            uStep++;
+            if(uStep % uStepAt == 0)
+            {
+                ++uPos;
+                ProgressBar_SetPos(hwndStatusProgress, uPos);
+            }
+
             if (WaitForSingleObject(hStopEnumEvent, 0) == WAIT_OBJECT_0)
                 goto Quit;
 
             /* Filter by event type */
-            if ((pevlr->EventType == EVENTLOG_SUCCESS          && !EventLogFilter->Information ) ||
-                (pevlr->EventType == EVENTLOG_INFORMATION_TYPE && !EventLogFilter->Information ) ||
-                (pevlr->EventType == EVENTLOG_WARNING_TYPE     && !EventLogFilter->Warning     ) ||
-                (pevlr->EventType == EVENTLOG_ERROR_TYPE       && !EventLogFilter->Error       ) ||
-                (pevlr->EventType == EVENTLOG_AUDIT_SUCCESS    && !EventLogFilter->AuditSuccess) ||
-                (pevlr->EventType == EVENTLOG_AUDIT_FAILURE    && !EventLogFilter->AuditFailure))
-            {
+            if (!FilterByType(EventLogFilter, pevlr))
                 goto SkipEvent;
-            }
 
-            /* Get the event source name */
+            /* Get the event source name and filter it */
             lpszSourceName = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD));
-            if (EventLogFilter->Sources)
-            {
-                if (!*EventLogFilter->Sources && !*lpszSourceName)
-                {
-                    // Sources filters for NO-source, and SourceName == NO-source
-                    // so it's ok
-                }
-                else if ( (!*EventLogFilter->Sources && *lpszSourceName) ||
-                          (*EventLogFilter->Sources && !*lpszSourceName) )
-                {
-                    // Sources filters for NO-source, and SourceName == some-source,
-                    // or,
-                    // Sources filters for SOME-source, and SourceName == NO-source,
-                    // so skip the event
-                    goto SkipEvent;
-                }
-                else if (*EventLogFilter->Sources && *lpszSourceName)
-                {
-                    // Sources filters for SOME-source, and SourceName == SOME-source
-                    // so it's ok
+            if (!FilterByString(EventLogFilter->Sources, lpszSourceName))
+                goto SkipEvent;
 
-                // if (*EventLogFilter->Sources || *lpszSourceName)
-
-                    pStr = EventLogFilter->Sources;
-                    while (*pStr)
-                    {
-                        if (wcsicmp(pStr, lpszSourceName) == 0)
-                        {
-                            /* We have a match, break the loop */
-                            break;
-                        }
-
-                        pStr += (wcslen(pStr) + 1);
-                    }
-                    if (!*pStr) // && *lpszSourceName
-                    {
-                        /* No match, skip the event */
-                        goto SkipEvent;
-                    }
-                }
-            }
-
-            /* Get the computer name */
+            /* Get the computer name and filter it */
             lpszComputerName = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD) + (wcslen(lpszSourceName) + 1) * sizeof(WCHAR));
-            // if (EventLogFilter->ComputerNames) { ... }
+            if (!FilterByString(EventLogFilter->ComputerNames, lpszComputerName))
+                goto SkipEvent;
 
             /* Compute the event time */
             EventTimeToSystemTime(pevlr->TimeWritten, &time);
@@ -1606,9 +1677,12 @@ EnumEventsThread(IN LPVOID lpParameter)
             LoadStringW(hInst, IDS_NOT_AVAILABLE, szUsername, ARRAYSIZE(szUsername));
             LoadStringW(hInst, IDS_NONE, szCategory, ARRAYSIZE(szCategory));
 
-            /* Get the username that generated the event */
+            /* Get the username that generated the event, and filter it */
             GetEventUserName(pevlr, szUsername);
-            // if (EventLogFilter->Users) { ... }
+            if (!FilterByString(EventLogFilter->Users, szUsername))
+                goto SkipEvent;
+
+            // TODO: Filter by event ID and category
 
             GetEventType(pevlr->EventType, szEventTypeText);
             GetEventCategory(EventLog->LogName, lpszSourceName, pevlr, szCategory);
@@ -1672,12 +1746,11 @@ Quit:
     } // end-for (LogIndex)
 
     /* All events loaded */
-    if (ProgressDlg)
-        SendMessage(hwndMainWindow, PM_PROGRESS_DLG, 0, FALSE);
 
 Cleanup:
 
-    SendMessage(hwndListView, PM_PROGRESS_DLG, 0, FALSE);
+    ShowWindow(hwndStatusProgress, SW_HIDE);
+    SendMessageW(hwndListView, LVM_PROGRESS, 0, FALSE);
 
     // FIXME: Use something else instead of EventLog->LogName !!
 
@@ -1716,13 +1789,15 @@ Cleanup:
     }
 
     /* Update the status bar */
-    SendMessageW(hwndStatus, SB_SETTEXT, (WPARAM)0, (LPARAM)szStatusText);
+    StatusBar_SetText(hwndStatus, 0, szStatusText);
 
     /* Set the window title */
     SetWindowTextW(hwndMainWindow, szWindowTitle);
 
     /* Resume list view redraw */
     SendMessageW(hwndListView, WM_SETREDRAW, TRUE, 0);
+
+    EventLogFilter_Release(EventLogFilter);
 
     CloseHandle(hStopEnumEvent);
     InterlockedExchangePointer((PVOID*)&hStopEnumEvent, NULL);
@@ -1771,7 +1846,12 @@ StartStopEnumEventsThread(IN LPVOID lpParameter)
                     hEnumEventsThread = NULL;
                 }
 
+                /* Clear the list view and free the cached records */
+                ListView_DeleteAllItems(hwndListView);
                 FreeRecords();
+
+                /* Reset the active filter */
+                ActiveFilter = NULL;
 
                 return 0;
             }
@@ -1779,7 +1859,7 @@ StartStopEnumEventsThread(IN LPVOID lpParameter)
             case WAIT_OBJECT_0 + 1:
             {
                 /* Restart a new enumeration if needed */
-                PEVENTLOGFILTER EventLogFilter = EnumCommand.EventLogFilter;
+                PEVENTLOGFILTER EventLogFilter;
 
                 /* Stop the previous enumeration */
                 if (hEnumEventsThread)
@@ -1796,9 +1876,15 @@ StartStopEnumEventsThread(IN LPVOID lpParameter)
                     hEnumEventsThread = NULL;
                 }
 
-                // FreeRecords();
+                /* Clear the list view and free the cached records */
+                ListView_DeleteAllItems(hwndListView);
+                FreeRecords();
 
-                if (!EnumCommand.Start)
+                /* Reset the active filter */
+                ActiveFilter = NULL;
+
+                EventLogFilter = InterlockedExchangePointer((PVOID*)&EnumFilter, NULL);
+                if (!EventLogFilter)
                     break;
 
                 // Manual-reset event
@@ -1839,10 +1925,35 @@ VOID
 EnumEvents(IN PEVENTLOGFILTER EventLogFilter)
 {
     /* Signal the enumerator thread we want to enumerate events */
-    EnumCommand.Start = TRUE;
-    EnumCommand.EventLogFilter = EventLogFilter;
+    InterlockedExchangePointer((PVOID*)&EnumFilter, EventLogFilter);
     SetEvent(hStartEnumEvent);
     return;
+}
+
+
+PEVENTLOGFILTER
+GetSelectedFilter(OUT HTREEITEM* phti OPTIONAL)
+{
+    TVITEMEXW tvItemEx;
+    HTREEITEM hti;
+
+    if (phti)
+        *phti = NULL;
+
+    /* Get index of selected item */
+    hti = TreeView_GetSelection(hwndTreeView);
+    if (hti == NULL)
+        return NULL; // No filter
+
+    tvItemEx.mask = TVIF_PARAM;
+    tvItemEx.hItem = hti;
+
+    TreeView_GetItem(hwndTreeView, &tvItemEx);
+
+    if (phti)
+        *phti = tvItemEx.hItem;
+
+    return (PEVENTLOGFILTER)tvItemEx.lParam;
 }
 
 
@@ -1903,11 +2014,15 @@ OpenUserEventLog(VOID)
 }
 
 VOID
-SaveEventLog(VOID)
+SaveEventLog(IN PEVENTLOGFILTER EventLogFilter)
 {
     PEVENTLOG EventLog;
     HANDLE hEventLog;
     WCHAR szFileName[MAX_PATH];
+
+    /* Bail out if there is no available filter */
+    if (!EventLogFilter)
+        return;
 
     ZeroMemory(szFileName, sizeof(szFileName));
 
@@ -1917,8 +2032,13 @@ SaveEventLog(VOID)
     if (!GetSaveFileNameW(&sfn))
         return;
 
-    EventLog = ActiveFilter->EventLogs[0];
+    EventLogFilter_AddRef(EventLogFilter);
+
+    EventLog = EventLogFilter->EventLogs[0];
     hEventLog = OpenEventLogW(EventLog->ComputerName, EventLog->LogName);
+
+    EventLogFilter_Release(EventLogFilter);
+
     if (!hEventLog)
     {
         ShowLastWin32Error();
@@ -1926,35 +2046,25 @@ SaveEventLog(VOID)
     }
 
     if (!BackupEventLogW(hEventLog, szFileName))
-    {
         ShowLastWin32Error();
-    }
 
     CloseEventLog(hEventLog);
 }
 
 VOID
-CloseUserEventLog(VOID)
+CloseUserEventLog(IN PEVENTLOGFILTER EventLogFilter, IN HTREEITEM hti)
 {
-    PEVENTLOGFILTER EventLogFilter = NULL;
-
-    TVITEMEXW tvItemEx;
-    HTREEITEM hti;
-
-    /* Get index of selected item */
-    hti = TreeView_GetSelection(hwndTreeView);
-    if (hti != NULL)
-    {
-        tvItemEx.mask = TVIF_PARAM;
-        tvItemEx.hItem = hti;
-
-        TreeView_GetItem(hwndTreeView, &tvItemEx);
-        EventLogFilter = (PEVENTLOGFILTER)tvItemEx.lParam;
-    }
-
     /* Bail out if there is no available filter */
     if (!EventLogFilter)
         return;
+
+    if (InterlockedCompareExchangePointer((PVOID*)&ActiveFilter, NULL, NULL) == EventLogFilter)
+    {
+        /* Signal the enumerator thread we want to stop enumerating events */
+        // EnumEvents(NULL);
+        InterlockedExchangePointer((PVOID*)&EnumFilter, NULL);
+        SetEvent(hStartEnumEvent);
+    }
 
     /*
      * The deletion of the item automatically triggers a TVN_SELCHANGED
@@ -1963,12 +2073,9 @@ CloseUserEventLog(VOID)
      */
     TreeView_DeleteItem(hwndTreeView, hti);
 
-    if (ActiveFilter == EventLogFilter)
-        ActiveFilter = NULL;
-
     /* Remove the filter from the list */
     RemoveEntryList(&EventLogFilter->ListEntry);
-    FreeEventLogFilter(EventLogFilter);
+    EventLogFilter_Release(EventLogFilter);
 
     // /* Select the default event log */
     // // TreeView_Expand(hwndTreeView, htiUserLogs, TVE_EXPAND);
@@ -1979,12 +2086,17 @@ CloseUserEventLog(VOID)
 
 
 BOOL
-ClearEvents(VOID)
+ClearEvents(IN PEVENTLOGFILTER EventLogFilter)
 {
+    BOOL Success;
     PEVENTLOG EventLog;
     HANDLE hEventLog;
     WCHAR szFileName[MAX_PATH];
     WCHAR szMessage[MAX_LOADSTRING];
+
+    /* Bail out if there is no available filter */
+    if (!EventLogFilter)
+        return FALSE;
 
     ZeroMemory(szFileName, sizeof(szFileName));
     ZeroMemory(szMessage, sizeof(szMessage));
@@ -1997,52 +2109,49 @@ ClearEvents(VOID)
     switch (MessageBoxW(hwndMainWindow, szMessage, szTitle, MB_YESNOCANCEL | MB_ICONINFORMATION))
     {
         case IDCANCEL:
-        {
             return FALSE;
-        }
 
         case IDNO:
-        {
             sfn.lpstrFile = NULL;
             break;
-        }
 
         case IDYES:
-        {
             if (!GetSaveFileNameW(&sfn))
-            {
                 return FALSE;
-            }
             break;
-        }
     }
 
-    EventLog = ActiveFilter->EventLogs[0];
+    EventLogFilter_AddRef(EventLogFilter);
+
+    EventLog = EventLogFilter->EventLogs[0];
     hEventLog = OpenEventLogW(EventLog->ComputerName, EventLog->LogName);
+
+    EventLogFilter_Release(EventLogFilter);
+
     if (!hEventLog)
     {
         ShowLastWin32Error();
         return FALSE;
     }
 
-    if (!ClearEventLogW(hEventLog, sfn.lpstrFile))
-    {
+    Success = ClearEventLogW(hEventLog, sfn.lpstrFile);
+    if (!Success)
         ShowLastWin32Error();
-        CloseEventLog(hEventLog);
-        return FALSE;
-    }
 
     CloseEventLog(hEventLog);
-
-    return TRUE;
+    return Success;
 }
 
 
 VOID
-Refresh(VOID)
+Refresh(IN PEVENTLOGFILTER EventLogFilter)
 {
-    /* Reenumerate the events through the active filter */
-    EnumEvents(ActiveFilter);
+    /* Bail out if there is no available filter */
+    if (!EventLogFilter)
+        return;
+
+    /* Reenumerate the events through the filter */
+    EnumEvents(EventLogFilter);
 }
 
 
@@ -2343,7 +2452,7 @@ FreeLogList(VOID)
     {
         Entry = RemoveHeadList(&EventLogList);
         EventLog = (PEVENTLOG)CONTAINING_RECORD(Entry, EVENTLOG, ListEntry);
-        FreeEventLog(EventLog);
+        EventLog_Free(EventLog);
     }
 
     return;
@@ -2359,7 +2468,7 @@ FreeLogFilterList(VOID)
     {
         Entry = RemoveHeadList(&EventLogFilterList);
         EventLogFilter = (PEVENTLOGFILTER)CONTAINING_RECORD(Entry, EVENTLOGFILTER, ListEntry);
-        FreeEventLogFilter(EventLogFilter);
+        EventLogFilter_Free(EventLogFilter);
     }
 
     ActiveFilter = NULL;
@@ -2382,11 +2491,11 @@ ListViewWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
-        case PM_PROGRESS_DLG:
+        case LVM_PROGRESS:
         {
             /* TRUE: Create the dialog; FALSE: Destroy the dialog */
             IsLoading = !!(BOOL)lParam;
-            break;
+            return IsLoading;
         }
 
         case WM_PAINT:
@@ -2402,6 +2511,7 @@ ListViewWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             COLORREF crTextOld, crTextBkOld;
             NONCLIENTMETRICSW ncm;
             HFONT hFont, hFontOld;
+            LPWSTR lpszString;
 
             nItemCount = ListView_GetItemCount(hWnd);
             if (!IsLoading && nItemCount > 0)
@@ -2464,21 +2574,15 @@ ListViewWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             FillRect(hDC, &rc, GetSysColorBrush(COLOR_WINDOW));
 
             if (nItemCount <= 0)
-            {
-                DrawTextW(hDC,
-                          szEmptyList,
-                          -1,
-                          &rc,
-                          DT_CENTER | DT_WORDBREAK | DT_NOPREFIX | DT_NOCLIP);
-            }
+                lpszString = szEmptyList;
             else // if (IsLoading)
-            {
-                DrawTextW(hDC,
-                          szLoadingWait,
-                          -1,
-                          &rc,
-                          DT_CENTER | DT_WORDBREAK | DT_NOPREFIX | DT_NOCLIP);
-            }
+                lpszString = szLoadingWait;
+
+            DrawTextW(hDC,
+                      lpszString,
+                      -1,
+                      &rc,
+                      DT_CENTER | DT_WORDBREAK | DT_NOPREFIX | DT_NOCLIP);
 
             SelectObject(hDC, hFontOld);
             if (hFont)
@@ -2535,12 +2639,24 @@ InitInstance(HINSTANCE hInstance,
                                  (HMENU)100,                         // window ID
                                  hInstance,                          // instance
                                  NULL);                              // window data
-
     nSplitPos = 250;
 
     GetClientRect(hwndMainWindow, &rcClient);
     GetWindowRect(hwndStatus, &rs);
     StatusHeight = rs.bottom - rs.top;
+
+    /* Create a progress bar in the status bar (hidden by default) */
+    StatusBar_GetItemRect(hwndStatus, 0, &rs);
+    hwndStatusProgress = CreateWindowExW(0,                          // no extended styles
+                                         PROGRESS_CLASSW,            // status bar
+                                         L"",                        // no text
+                                         WS_CHILD | PBS_SMOOTH,      // styles
+                                         rs.left, rs.top, rs.right-rs.left, rs.bottom-rs.top, // x, y, cx, cy
+                                         hwndStatus,                 // parent window
+                                         NULL,                       // window ID
+                                         hInstance,                  // instance
+                                         NULL);                      // window data
+    ProgressBar_SetStep(hwndStatusProgress, 1);
 
     /* Create the TreeView */
     hwndTreeView = CreateWindowExW(WS_EX_CLIENTEDGE,
@@ -2598,7 +2714,7 @@ InitInstance(HINSTANCE hInstance,
                                    NULL);
 
     /* Add the extended ListView styles */
-    (void)ListView_SetExtendedListViewStyle(hwndListView, LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT |LVS_EX_LABELTIP);
+    ListView_SetExtendedListViewStyle(hwndListView, LVS_EX_HEADERDRAGDROP | LVS_EX_FULLROWSELECT |LVS_EX_LABELTIP);
 
     /* Create the ImageList */
     hSmall = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
@@ -2614,7 +2730,7 @@ InitInstance(HINSTANCE hInstance,
     ImageList_AddIcon(hSmall, LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_AUDITFAILUREICON)));
 
     /* Assign the ImageList to the List View */
-    (void)ListView_SetImageList(hwndListView, hSmall, LVSIL_SMALL);
+    ListView_SetImageList(hwndListView, hSmall, LVSIL_SMALL);
 
     /* Now set up the listview with its columns */
     lvc.mask = LVCF_TEXT | LVCF_WIDTH;
@@ -2624,7 +2740,7 @@ InitInstance(HINSTANCE hInstance,
                 szTemp,
                 ARRAYSIZE(szTemp));
     lvc.pszText = szTemp;
-    (void)ListView_InsertColumn(hwndListView, 0, &lvc);
+    ListView_InsertColumn(hwndListView, 0, &lvc);
 
     lvc.cx = 70;
     LoadStringW(hInstance,
@@ -2632,7 +2748,7 @@ InitInstance(HINSTANCE hInstance,
                 szTemp,
                 ARRAYSIZE(szTemp));
     lvc.pszText = szTemp;
-    (void)ListView_InsertColumn(hwndListView, 1, &lvc);
+    ListView_InsertColumn(hwndListView, 1, &lvc);
 
     lvc.cx = 70;
     LoadStringW(hInstance,
@@ -2640,7 +2756,7 @@ InitInstance(HINSTANCE hInstance,
                 szTemp,
                 ARRAYSIZE(szTemp));
     lvc.pszText = szTemp;
-    (void)ListView_InsertColumn(hwndListView, 2, &lvc);
+    ListView_InsertColumn(hwndListView, 2, &lvc);
 
     lvc.cx = 150;
     LoadStringW(hInstance,
@@ -2648,7 +2764,7 @@ InitInstance(HINSTANCE hInstance,
                 szTemp,
                 ARRAYSIZE(szTemp));
     lvc.pszText = szTemp;
-    (void)ListView_InsertColumn(hwndListView, 3, &lvc);
+    ListView_InsertColumn(hwndListView, 3, &lvc);
 
     lvc.cx = 100;
     LoadStringW(hInstance,
@@ -2656,7 +2772,7 @@ InitInstance(HINSTANCE hInstance,
                 szTemp,
                 ARRAYSIZE(szTemp));
     lvc.pszText = szTemp;
-    (void)ListView_InsertColumn(hwndListView, 4, &lvc);
+    ListView_InsertColumn(hwndListView, 4, &lvc);
 
     lvc.cx = 60;
     LoadStringW(hInstance,
@@ -2664,7 +2780,7 @@ InitInstance(HINSTANCE hInstance,
                 szTemp,
                 ARRAYSIZE(szTemp));
     lvc.pszText = szTemp;
-    (void)ListView_InsertColumn(hwndListView, 5, &lvc);
+    ListView_InsertColumn(hwndListView, 5, &lvc);
 
     lvc.cx = 120;
     LoadStringW(hInstance,
@@ -2672,7 +2788,7 @@ InitInstance(HINSTANCE hInstance,
                 szTemp,
                 ARRAYSIZE(szTemp));
     lvc.pszText = szTemp;
-    (void)ListView_InsertColumn(hwndListView, 6, &lvc);
+    ListView_InsertColumn(hwndListView, 6, &lvc);
 
     lvc.cx = 100;
     LoadStringW(hInstance,
@@ -2680,7 +2796,7 @@ InitInstance(HINSTANCE hInstance,
                 szTemp,
                 ARRAYSIZE(szTemp));
     lvc.pszText = szTemp;
-    (void)ListView_InsertColumn(hwndListView, 7, &lvc);
+    ListView_InsertColumn(hwndListView, 7, &lvc);
 
     /* Subclass the ListView */
     // orgListViewWndProc = SubclassWindow(hwndListView, ListViewWndProc);
@@ -2708,7 +2824,7 @@ InitInstance(HINSTANCE hInstance,
 }
 
 VOID
-CleanupInstance(HINSTANCE hInstance)
+ExitInstance(HINSTANCE hInstance)
 {
     /* Restore the original ListView WndProc */
     // SubclassWindow(hwndListView, orgListViewWndProc);
@@ -2726,6 +2842,12 @@ VOID ResizeWnd(INT cx, INT cy)
     // SendMessageW(hwndStatus, WM_SIZE, 0, 0);
     GetWindowRect(hwndStatus, &rs);
     StatusHeight = rs.bottom - rs.top;
+
+    /* Move the progress bar */
+    StatusBar_GetItemRect(hwndStatus, 0, &rs);
+    MoveWindow(hwndStatusProgress,
+               rs.left, rs.top, rs.right-rs.left, rs.bottom-rs.top,
+               IsWindowVisible(hwndStatusProgress) ? TRUE : FALSE);
 
     nSplitPos = min(max(nSplitPos, SPLIT_WIDTH/2), cx - SPLIT_WIDTH/2);
 
@@ -2778,12 +2900,16 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     case NM_DBLCLK:
                     {
                         LPNMITEMACTIVATE lpnmitem = (LPNMITEMACTIVATE)lParam;
-                        if (lpnmitem->iItem != -1)
+                        PEVENTLOGFILTER EventLogFilter = GetSelectedFilter(NULL);
+                        if (lpnmitem->iItem != -1 && EventLogFilter)
                         {
-                            DialogBoxW(hInst,
-                                       MAKEINTRESOURCEW(IDD_EVENTPROPERTIES),
-                                       hWnd,
-                                       EventDetails);
+                            EventLogFilter_AddRef(EventLogFilter);
+                            DialogBoxParamW(hInst,
+                                            MAKEINTRESOURCEW(IDD_EVENTPROPERTIES),
+                                            hWnd,
+                                            EventDetails,
+                                            (LPARAM)EventLogFilter);
+                            EventLogFilter_Release(EventLogFilter);
                         }
                         break;
                     }
@@ -2842,9 +2968,31 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                         if (EventLogFilter)
                         {
-                            ActiveFilter = EventLogFilter;
-                            EnumEvents(EventLogFilter);
+                            /*
+                             * If we have selected a filter, enable the menu commands;
+                             * they will possibly be updated after events enumeration.
+                             */
+                            EnableMenuItem(hMainMenu, IDM_SAVE_EVENTLOG, MF_BYCOMMAND | MF_ENABLED);
+                            EnableMenuItem(hMainMenu, IDM_CLOSE_EVENTLOG, MF_BYCOMMAND | MF_ENABLED);
+                            EnableMenuItem(hMainMenu, IDM_CLEAR_EVENTS, MF_BYCOMMAND | MF_ENABLED);
+                            EnableMenuItem(hMainMenu, IDM_RENAME_EVENTLOG, MF_BYCOMMAND | MF_ENABLED);
+                            EnableMenuItem(hMainMenu, IDM_EVENTLOG_SETTINGS, MF_BYCOMMAND | MF_ENABLED);
                         }
+                        else
+                        {
+                            EnableMenuItem(hMainMenu, IDM_SAVE_EVENTLOG, MF_BYCOMMAND | MF_GRAYED);
+                            EnableMenuItem(hMainMenu, IDM_CLOSE_EVENTLOG, MF_BYCOMMAND | MF_GRAYED);
+                            EnableMenuItem(hMainMenu, IDM_CLEAR_EVENTS, MF_BYCOMMAND | MF_GRAYED);
+                            EnableMenuItem(hMainMenu, IDM_RENAME_EVENTLOG, MF_BYCOMMAND | MF_GRAYED);
+                            EnableMenuItem(hMainMenu, IDM_EVENTLOG_SETTINGS, MF_BYCOMMAND | MF_GRAYED);
+                        }
+
+                        /*
+                         * The enumeration thread that is triggered by EnumEvents
+                         * will set a new value for the 'ActiveFilter'.
+                         */
+                        if (EventLogFilter)
+                            EnumEvents(EventLogFilter);
 
                         break;
                     }
@@ -2863,17 +3011,24 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDM_SAVE_EVENTLOG:
-                    SaveEventLog();
+                    SaveEventLog(GetSelectedFilter(NULL));
                     break;
 
                 case IDM_CLOSE_EVENTLOG:
-                    CloseUserEventLog();
+                {
+                    HTREEITEM hti;
+                    PEVENTLOGFILTER EventLogFilter = GetSelectedFilter(&hti);
+                    CloseUserEventLog(EventLogFilter, hti);
                     break;
+                }
 
                 case IDM_CLEAR_EVENTS:
-                    if (ClearEvents())
-                        Refresh();
+                {
+                    PEVENTLOGFILTER EventLogFilter = GetSelectedFilter(NULL);
+                    if (EventLogFilter && ClearEvents(EventLogFilter))
+                        Refresh(EventLogFilter);
                     break;
+                }
 
                 case IDM_RENAME_EVENTLOG:
                     if (GetFocus() == hwndTreeView)
@@ -2882,31 +3037,37 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 case IDM_EVENTLOG_SETTINGS:
                 {
+                    PEVENTLOGFILTER EventLogFilter = GetSelectedFilter(NULL);
                     // TODO: Check the returned value?
-                    EventLogProperties(hInst, hWnd);
+                    if (EventLogFilter)
+                        EventLogProperties(hInst, hWnd, EventLogFilter);
                     break;
                 }
 
                 case IDM_LIST_NEWEST:
+                {
+                    CheckMenuRadioItem(hMainMenu, IDM_LIST_NEWEST, IDM_LIST_OLDEST, IDM_LIST_NEWEST, MF_BYCOMMAND);
                     if (!NewestEventsFirst)
                     {
                         NewestEventsFirst = TRUE;
-                        CheckMenuRadioItem(hMainMenu, IDM_LIST_NEWEST, IDM_LIST_OLDEST, IDM_LIST_NEWEST, MF_BYCOMMAND);
-                        Refresh();
+                        Refresh(GetSelectedFilter(NULL));
                     }
                     break;
+                }
 
                 case IDM_LIST_OLDEST:
+                {
+                    CheckMenuRadioItem(hMainMenu, IDM_LIST_NEWEST, IDM_LIST_OLDEST, IDM_LIST_OLDEST, MF_BYCOMMAND);
                     if (NewestEventsFirst)
                     {
                         NewestEventsFirst = FALSE;
-                        CheckMenuRadioItem(hMainMenu, IDM_LIST_NEWEST, IDM_LIST_OLDEST, IDM_LIST_OLDEST, MF_BYCOMMAND);
-                        Refresh();
+                        Refresh(GetSelectedFilter(NULL));
                     }
                     break;
+                }
 
                 case IDM_REFRESH:
-                    Refresh();
+                    Refresh(GetSelectedFilter(NULL));
                     break;
 
                 case IDM_ABOUT:
@@ -3000,35 +3161,6 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             SendMessageW(hwndStatus, WM_SIZE, 0, 0);
             ResizeWnd(LOWORD(lParam), HIWORD(lParam));
             break;
-        }
-
-        case PM_PROGRESS_DLG:
-        {
-            /* TRUE: Create the dialog; FALSE: Destroy the dialog */
-            BOOL Create = !!(BOOL)lParam;
-            if (Create)
-            {
-                if (!IsWindow(hProgressDlg))
-                {
-                    hProgressDlg = CreateDialogW(hInst,
-                                            MAKEINTRESOURCEW(IDD_PROGRESSBOX),
-                                            hwndMainWindow,
-                                            StatusMessageWindowProc);
-                    if (hProgressDlg)
-                        ShowWindow(hProgressDlg, SW_SHOW);
-                }
-                return (!!hProgressDlg);
-            }
-            else
-            {
-                if (IsWindow(hProgressDlg))
-                {
-                    // EndDialog(hProgressDlg, 0);
-                    DestroyWindow(hProgressDlg);
-                    hProgressDlg = NULL;
-                }
-                return TRUE;
-            }
         }
 
         default: Default:
@@ -3222,23 +3354,20 @@ Quit:
 INT_PTR CALLBACK
 EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    PEVENTLOGFILTER EventLogFilter;
+    PEVENTLOG EventLog;
 
-    UNREFERENCED_PARAMETER(lParam);
-
-    EventLogFilter = (PEVENTLOGFILTER)GetWindowLongPtrW(hDlg, DWLP_USER);
+    EventLog = (PEVENTLOG)GetWindowLongPtrW(hDlg, DWLP_USER);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
-            EventLogFilter = (PEVENTLOGFILTER)((LPPROPSHEETPAGE)lParam)->lParam;
-            SetWindowLongPtrW(hDlg, DWLP_USER, (LONG_PTR)EventLogFilter);
+            EventLog = (PEVENTLOG)((LPPROPSHEETPAGE)lParam)->lParam;
+            SetWindowLongPtrW(hDlg, DWLP_USER, (LONG_PTR)EventLog);
+
+            InitPropertiesDlg(hDlg, EventLog);
 
             PropSheet_UnChanged(GetParent(hDlg), hDlg);
-
-            InitPropertiesDlg(hDlg, EventLogFilter->EventLogs[0]);
-
             return (INT_PTR)TRUE;
         }
 
@@ -3294,35 +3423,25 @@ EventLogPropProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 INT_PTR
-EventLogProperties(HINSTANCE hInstance, HWND hWndParent)
+EventLogProperties(HINSTANCE hInstance, HWND hWndParent, PEVENTLOGFILTER EventLogFilter)
 {
+    INT_PTR ret = 0;
     PROPSHEETHEADERW psh;
     PROPSHEETPAGEW   psp[1]; // 2
-
-    PEVENTLOGFILTER EventLogFilter = NULL;
-
-    TVITEMEXW tvItemEx;
-    HTREEITEM hti;
-
-    /* Get index of selected item */
-    hti = TreeView_GetSelection(hwndTreeView);
-    if (hti != NULL)
-    {
-        tvItemEx.mask = TVIF_PARAM;
-        tvItemEx.hItem = hti;
-
-        TreeView_GetItem(hwndTreeView, &tvItemEx);
-        EventLogFilter = (PEVENTLOGFILTER)tvItemEx.lParam;
-    }
 
     /*
      * Bail out if there is no available filter, or if the filter
      * contains more than one log.
      */
-    if (!EventLogFilter || EventLogFilter->NumOfEventLogs > 1 ||
+    if (!EventLogFilter)
+        return 0;
+
+    EventLogFilter_AddRef(EventLogFilter);
+
+    if (EventLogFilter->NumOfEventLogs > 1 ||
         EventLogFilter->EventLogs[0] == NULL)
     {
-        return 0;
+        goto Quit;
     }
 
     /* Header */
@@ -3343,7 +3462,7 @@ EventLogProperties(HINSTANCE hInstance, HWND hWndParent)
     psp[0].hInstance   = hInstance;
     psp[0].pszTemplate = MAKEINTRESOURCEW(IDD_LOGPROPERTIES_GENERAL);
     psp[0].pfnDlgProc  = EventLogPropProc;
-    psp[0].lParam      = (LPARAM)EventLogFilter;
+    psp[0].lParam      = (LPARAM)EventLogFilter->EventLogs[0];
 
 #if 0
     /* TODO: Log sources page */
@@ -3352,17 +3471,21 @@ EventLogProperties(HINSTANCE hInstance, HWND hWndParent)
     psp[1].hInstance   = hInstance;
     psp[1].pszTemplate = MAKEINTRESOURCEW(IDD_GENERAL_PAGE);
     psp[1].pfnDlgProc  = GeneralPageWndProc;
-    psp[0].lParam      = (LPARAM)EventLogFilter;
+    psp[0].lParam      = (LPARAM)EventLogFilter->EventLogs[0];
 #endif
 
     /* Create the property sheet */
-    return PropertySheetW(&psh);
+    ret = PropertySheetW(&psh);
+
+Quit:
+    EventLogFilter_Release(EventLogFilter);
+    return ret;
 }
 
 
 
 VOID
-DisplayEvent(HWND hDlg)
+DisplayEvent(HWND hDlg, PEVENTLOGFILTER EventLogFilter)
 {
     WCHAR szEventType[MAX_PATH];
     WCHAR szTime[MAX_PATH];
@@ -3393,7 +3516,7 @@ DisplayEvent(HWND hDlg)
     li.iItem = iIndex;
     li.iSubItem = 0;
 
-    (void)ListView_GetItem(hwndListView, &li);
+    ListView_GetItem(hwndListView, &li);
 
     pevlr = (PEVENTLOGRECORD)li.lParam;
 
@@ -3419,7 +3542,8 @@ DisplayEvent(HWND hDlg)
     EnableDlgItem(hDlg, IDC_BYTESRADIO, bEventData);
     EnableDlgItem(hDlg, IDC_WORDRADIO, bEventData);
 
-    GetEventMessage(ActiveFilter->EventLogs[0]->LogName, szSource, pevlr, szEventText);
+    // FIXME: At the moment we support only one event log in the filter
+    GetEventMessage(EventLogFilter->EventLogs[0]->LogName, szSource, pevlr, szEventText);
     SetDlgItemTextW(hDlg, IDC_EVENTTEXTEDIT, szEventText);
 }
 
@@ -3528,7 +3652,7 @@ DisplayEventData(HWND hDlg, BOOL bDisplayWords)
     li.iItem = iIndex;
     li.iSubItem = 0;
 
-    (void)ListView_GetItem(hwndListView, &li);
+    ListView_GetItem(hwndListView, &li);
 
     pevlr = (PEVENTLOGRECORD)li.lParam;
     if (pevlr->DataLength == 0)
@@ -3648,25 +3772,6 @@ CopyEventEntry(HWND hWnd)
 }
 
 static
-INT_PTR CALLBACK
-StatusMessageWindowProc(IN HWND hwndDlg,
-                        IN UINT uMsg,
-                        IN WPARAM wParam,
-                        IN LPARAM lParam)
-{
-    UNREFERENCED_PARAMETER(hwndDlg);
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(lParam);
-
-    switch (uMsg)
-    {
-        case WM_INITDIALOG:
-            return TRUE;
-    }
-    return FALSE;
-}
-
-static
 VOID
 InitDetailsDlg(HWND hDlg, PDETAILDATA pData)
 {
@@ -3707,8 +3812,6 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PDETAILDATA pData;
 
-    UNREFERENCED_PARAMETER(lParam);
-
     pData = (PDETAILDATA)GetWindowLongPtrW(hDlg, DWLP_USER);
 
     switch (uMsg)
@@ -3719,13 +3822,14 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 SetWindowLongPtrW(hDlg, DWLP_USER, (LONG_PTR)pData);
 
+                pData->EventLogFilter = (PEVENTLOGFILTER)lParam;
                 pData->bDisplayWords = FALSE;
                 pData->hMonospaceFont = CreateMonospaceFont();
 
                 InitDetailsDlg(hDlg, pData);
 
                 /* Show event info on dialog box */
-                DisplayEvent(hDlg);
+                DisplayEvent(hDlg, pData->EventLogFilter);
                 DisplayEventData(hDlg, pData->bDisplayWords);
             }
             return (INT_PTR)TRUE;
@@ -3750,7 +3854,7 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     /* Show event info on dialog box */
                     if (pData)
                     {
-                        DisplayEvent(hDlg);
+                        DisplayEvent(hDlg, pData->EventLogFilter);
                         DisplayEventData(hDlg, pData->bDisplayWords);
                     }
                     return (INT_PTR)TRUE;
@@ -3761,7 +3865,7 @@ EventDetails(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     /* Show event info on dialog box */
                     if (pData)
                     {
-                        DisplayEvent(hDlg);
+                        DisplayEvent(hDlg, pData->EventLogFilter);
                         DisplayEventData(hDlg, pData->bDisplayWords);
                     }
                     return (INT_PTR)TRUE;

@@ -20,9 +20,8 @@
 
 
 /* Dialog IDs */
-#define IDD_PROGRESSBOX       101
-#define IDD_EVENTPROPERTIES   102
-#define IDD_LOGPROPERTIES_GENERAL 103
+#define IDD_EVENTPROPERTIES   101
+#define IDD_LOGPROPERTIES_GENERAL 102
 
 
 /* Control IDs */
