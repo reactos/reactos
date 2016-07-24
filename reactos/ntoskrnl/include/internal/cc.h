@@ -341,6 +341,29 @@ NTAPI
 CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
 
 FORCEINLINE
+NTSTATUS
+CcRosAcquireVacbLock(
+    _Inout_ PROS_VACB Vacb,
+    _In_ PLARGE_INTEGER Timeout)
+{
+    NTSTATUS Status;
+    Status = KeWaitForSingleObject(&Vacb->Mutex,
+                                   Executive,
+                                   KernelMode,
+                                   FALSE,
+                                   Timeout);
+    return Status;
+}
+
+FORCEINLINE
+VOID
+CcRosReleaseVacbLock(
+    _Inout_ PROS_VACB Vacb)
+{
+    KeReleaseMutex(&Vacb->Mutex, FALSE);
+}
+
+FORCEINLINE
 BOOLEAN
 DoRangesIntersect(
     _In_ LONGLONG Offset1,
