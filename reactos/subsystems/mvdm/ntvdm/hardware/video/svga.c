@@ -946,8 +946,26 @@ static VOID VgaUpdateFramebuffer(VOID)
                      * if external palette access is disabled, otherwise (in case
                      * of palette loading) it is a blank pixel.
                      */
-                    PixelData = (VgaAcPalDisable ? VgaAcRegisters[PixelData & 0x0F]
-                                                 : 0);
+
+                    if (VgaAcPalDisable)
+                    {
+                        if (!(VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_P54S))
+                        {
+                            /* Bits 4 and 5 are taken from the palette register */
+                            PixelData = ((VgaAcRegisters[VGA_AC_COLOR_SEL_REG] << 4) & 0xC0)
+                                        | (VgaAcRegisters[PixelData & 0x0F] & 0x3F);
+                        }
+                        else
+                        {
+                            /* Bits 4 and 5 are taken from the color select register */
+                            PixelData = (VgaAcRegisters[VGA_AC_COLOR_SEL_REG] << 4)
+                                        | (VgaAcRegisters[PixelData & 0x0F] & 0x0F);
+                        }
+                    }
+                    else
+                    {
+                        PixelData = 0;
+                    }
                 }
 
                 /* Take into account DoubleVision mode when checking for pixel updates */

@@ -3379,6 +3379,31 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                     break;
                 }
 
+                /* Set Video DAC Color Page */
+                case 0x13:
+                {
+                    if (getBL() == 0)
+                    {
+                        /* Set the highest bit of the AC Mode Control register to BH */
+                        IOReadB(VGA_INSTAT1_READ);
+                        IOWriteB(VGA_AC_INDEX, VGA_AC_CONTROL_REG);
+                        IOWriteB(VGA_AC_WRITE, (IOReadB(VGA_AC_READ) & 0x7F) | (getBH() << 7));
+                    }
+                    else if (getBL() == 1)
+                    {
+                        /* Set the AC Color Select register to BH */
+                        IOReadB(VGA_INSTAT1_READ);
+                        IOWriteB(VGA_AC_INDEX, VGA_AC_COLOR_SEL_REG);
+                        IOWriteB(VGA_AC_WRITE, getBH());
+                    }
+                    else
+                    {
+                        DPRINT1("BIOS Palette Control Sub-sub-command BL = 0x%02X INVALID\n", getBL());
+                    }
+
+                    break;
+                }
+
                 /* Get Individual DAC Register */
                 case 0x15:
                 {
