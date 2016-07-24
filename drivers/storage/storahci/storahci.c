@@ -420,6 +420,7 @@ AhciCommandCompletionDpcRoutine (
 
     StorPortAcquireSpinLock(AdapterExtension, InterruptLock, NULL, &lockhandle);
     Srb = RemoveQueue(&PortExtension->CompletionQueue);
+    StorPortReleaseSpinLock(AdapterExtension, &lockhandle);
 
     NT_ASSERT(Srb != NULL);
 
@@ -427,22 +428,21 @@ AhciCommandCompletionDpcRoutine (
     {
         Srb->SrbStatus = SRB_STATUS_SUCCESS;
     }
-
-    SrbExtension = GetSrbExtension(Srb);
-    CompletionRoutine = SrbExtension->CompletionRoutine;
-
-    if (CompletionRoutine != NULL)
-    {
-        // now it's completion routine responsibility to set SrbStatus
-        CompletionRoutine(PortExtension, Srb);
-    }
     else
     {
-        Srb->SrbStatus = SRB_STATUS_SUCCESS;
-        //StorPortNotification(RequestComplete, AdapterExtension, Srb);
+        return;
     }
 
-    StorPortReleaseSpinLock(AdapterExtension, &lockhandle);
+    SrbExtension = GetSrbExtension(Srb);
+
+    CompletionRoutine = SrbExtension->CompletionRoutine;
+    NT_ASSERT(CompletionRoutine != NULL);
+
+    // now it's completion routine responsibility to set SrbStatus
+    CompletionRoutine(PortExtension, Srb);
+
+    StorPortNotification(RequestComplete, AdapterExtension, Srb);
+
     return;
 }// -- AhciCommandCompletionDpcRoutine();
 
@@ -537,6 +537,7 @@ AhciCompleteIssuedSrb (
 {
     ULONG NCS, i;
     PSCSI_REQUEST_BLOCK Srb;
+    PAHCI_SRB_EXTENSION SrbExtension;
     PAHCI_ADAPTER_EXTENSION AdapterExtension;
 
     AhciDebugPrint("AhciCompleteIssuedSrb()\n");
@@ -553,10 +554,25 @@ AhciCompleteIssuedSrb (
         if (((1 << i) & CommandsToComplete) != 0)
         {
             Srb = PortExtension->Slot[i];
-            NT_ASSERT(Srb != NULL);
 
-            AddQueue(&PortExtension->CompletionQueue, Srb);
-            StorPortIssueDpc(AdapterExtension, &PortExtension->CommandCompletion, PortExtension, Srb);
+            if (Srb == NULL)
+            {
+                continue;
+            }
+
+            SrbExtension = GetSrbExtension(Srb);
+            NT_ASSERT(SrbExtension != NULL);
+
+            if (SrbExtension->CompletionRoutine != NULL)
+            {
+                AddQueue(&PortExtension->CompletionQueue, Srb);
+                StorPortIssueDpc(AdapterExtension, &PortExtension->CommandCompletion, PortExtension, Srb);
+            }
+            else
+            {
+                Srb->SrbStatus = SRB_STATUS_SUCCESS;
+                StorPortNotification(RequestComplete, AdapterExtension, Srb);
+            }
         }
     }
 
@@ -748,7 +764,6 @@ AhciHwStartIo (
         return TRUE;
     }
 
-    AhciDebugPrint("\tPathId: %d Function: %x\n", Srb->PathId, Srb->Function);
     switch(Srb->Function)
     {
         case SRB_FUNCTION_PNP:
@@ -844,7 +859,10 @@ AhciHwStartIo (
             break;
     }
 
-    StorPortNotification(RequestComplete, AdapterExtension, Srb);
+    if (Srb->SrbStatus != SRB_STATUS_PENDING)
+    {
+        StorPortNotification(RequestComplete, AdapterExtension, Srb);
+    }
     return TRUE;
 }// -- AhciHwStartIo();
 
@@ -1054,7 +1072,6 @@ AhciHwFindAdapter (
     ConfigInfo->NumberOfPhysicalBreaks = 0x21;
     ConfigInfo->MaximumNumberOfLogicalUnits = 1;
     ConfigInfo->NumberOfBuses = MAXIMUM_AHCI_PORT_COUNT;
-    ConfigInfo->MapBuffers = STOR_MAP_NON_READ_WRITE_BUFFERS;
     ConfigInfo->MaximumTransferLength = MAXIMUM_TRANSFER_LENGTH;
     ConfigInfo->SynchronizationModel = StorSynchronizeFullDuplex;
 
@@ -1396,7 +1413,6 @@ AhciActivatePort (
     )
 {
     AHCI_PORT_CMD cmd;
-    ULONG sact, ci;
     ULONG QueueSlots, slotToActivate, tmp;
     PAHCI_ADAPTER_EXTENSION AdapterExtension;
 
@@ -1418,9 +1434,6 @@ AhciActivatePort (
     {
         return;
     }
-
-    sact = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->SACT);
-    ci = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->CI);
 
     // get the lowest set bit
     tmp = QueueSlots & (QueueSlots - 1);
@@ -1703,6 +1716,8 @@ UCHAR DeviceRequestReadWrite (
     DataTransferLength = Srb->DataTransferLength;
     BytesPerSector = PortExtension->DeviceParams.BytesPerLogicalSector;
 
+    NT_ASSERT(BytesPerSector > 0);
+
     ROUND_UP(DataTransferLength, BytesPerSector);
 
     SectorCount = DataTransferLength / BytesPerSector;
@@ -1712,7 +1727,7 @@ UCHAR DeviceRequestReadWrite (
     NT_ASSERT(SectorCount > 0);
 
     SrbExtension->AtaFunction = ATA_FUNCTION_ATA_READ;
-    SrbExtension->Flags = ATA_FLAGS_USE_DMA;
+    SrbExtension->Flags |= ATA_FLAGS_USE_DMA;
     SrbExtension->CompletionRoutine = NULL;
 
     if (IsReading)
