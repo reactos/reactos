@@ -846,7 +846,7 @@ VOID UserDrawCaptionBar(
 
    if (!(Flags & DC_NOVISIBLE) && !IntIsWindowVisible(pWnd)) return;
 
-   ERR("UserDrawCaptionBar: pWnd %p, hDc %p, Flags 0x%x.\n", pWnd, hDC, Flags);
+   TRACE("UserDrawCaptionBar: pWnd %p, hDc %p, Flags 0x%x.\n", pWnd, hDC, Flags);
 
    Style = pWnd->style;
    ExStyle = pWnd->ExStyle;
