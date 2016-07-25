@@ -845,6 +845,9 @@ AhciHwStartIo (
                     case SCSIOP_TEST_UNIT_READY:
                         Srb->SrbStatus = DeviceRequestComplete(AdapterExtension, Srb, cdb);
                         break;
+                    case SCSIOP_MODE_SENSE:
+                        Srb->SrbStatus = DeviceRequestSense(AdapterExtension, Srb, cdb);
+                        break;
                     case SCSIOP_READ:
                     //case SCSIOP_WRITE:
                         Srb->SrbStatus = DeviceRequestReadWrite(AdapterExtension, Srb, cdb);
@@ -1688,6 +1691,54 @@ InquiryCompletion (
 }// -- InquiryCompletion();
 
 /**
+ * @name DeviceRequestSense
+ * @implemented
+ *
+ * Handle SCSIOP_MODE_SENSE OperationCode
+ *
+ * @param AdapterExtension
+ * @param Srb
+ * @param Cdb
+ *
+ * @return
+ * return STOR status for DeviceRequestSense
+ */
+UCHAR DeviceRequestSense (
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
+    __in PSCSI_REQUEST_BLOCK Srb,
+    __in PCDB Cdb
+    )
+{
+    PMODE_PARAMETER_HEADER ModeHeader;
+
+    AhciDebugPrint("DeviceRequestSense()\n");
+
+    UNREFERENCED_PARAMETER(AdapterExtension);
+
+    NT_ASSERT(IsPortValid(AdapterExtension, Srb->PathId));
+    NT_ASSERT(Cdb->CDB10.OperationCode == SCSIOP_MODE_SENSE);
+
+    ModeHeader = (PMODE_PARAMETER_HEADER)Srb->DataBuffer;
+
+    NT_ASSERT(ModeHeader != NULL);
+
+    AhciZeroMemory((PCHAR)ModeHeader, Srb->DataTransferLength);
+
+    ModeHeader->ModeDataLength = sizeof(MODE_PARAMETER_HEADER);
+    ModeHeader->MediumType = 0;
+    ModeHeader->DeviceSpecificParameter = MODE_DSP_WRITE_PROTECT;
+    ModeHeader->BlockDescriptorLength = 0;
+
+    if (Cdb->MODE_SENSE.PageCode == MODE_SENSE_CURRENT_VALUES)
+    {
+        ModeHeader->ModeDataLength = sizeof(MODE_PARAMETER_HEADER) + sizeof(MODE_PARAMETER_BLOCK);
+        ModeHeader->BlockDescriptorLength = sizeof(MODE_PARAMETER_BLOCK);
+    }
+
+    return SRB_STATUS_SUCCESS;
+}// -- DeviceRequestSense();
+
+/**
  * @name DeviceRequestReadWrite
  * @implemented
  *
@@ -1817,9 +1868,8 @@ UCHAR DeviceRequestCapacity (
     {
         ReadCapacity = (PREAD_CAPACITY_DATA)Srb->DataBuffer;
 
-
         BytesPerLogicalSector = PortExtension->DeviceParams.BytesPerLogicalSector;
-        MaxLba = (ULONG)PortExtension->DeviceParams.MaxLba.QuadPart;
+        MaxLba = (ULONG)PortExtension->DeviceParams.MaxLba.QuadPart - 1;
 
         // I trust you windows :D
         NT_ASSERT(Srb->DataTransferLength >= sizeof(READ_CAPACITY_DATA));

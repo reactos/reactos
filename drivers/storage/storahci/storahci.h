@@ -591,6 +591,12 @@ IsPortValid (
     __in ULONG pathId
     );
 
+UCHAR DeviceRequestSense (
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
+    __in PSCSI_REQUEST_BLOCK Srb,
+    __in PCDB Cdb
+    );
+
 UCHAR DeviceRequestReadWrite (
     __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
     __in PSCSI_REQUEST_BLOCK Srb,
