@@ -570,6 +570,7 @@ AhciCompleteIssuedSrb (
             }
             else
             {
+                NT_ASSERT(Srb->SrbStatus == SRB_STATUS_PENDING);
                 Srb->SrbStatus = SRB_STATUS_SUCCESS;
                 StorPortNotification(RequestComplete, AdapterExtension, Srb);
             }
@@ -839,8 +840,10 @@ AhciHwStartIo (
                         Srb->SrbStatus = DeviceReportLuns(AdapterExtension, Srb, cdb);
                         break;
                     case SCSIOP_READ_CAPACITY:
-                    case SCSIOP_READ_CAPACITY16:
                         Srb->SrbStatus = DeviceRequestCapacity(AdapterExtension, Srb, cdb);
+                        break;
+                    case SCSIOP_TEST_UNIT_READY:
+                        Srb->SrbStatus = DeviceRequestComplete(AdapterExtension, Srb, cdb);
                         break;
                     case SCSIOP_READ:
                     //case SCSIOP_WRITE:
@@ -848,7 +851,7 @@ AhciHwStartIo (
                         break;
                     default:
                         AhciDebugPrint("\tOperationCode: %d\n", cdb->CDB10.OperationCode);
-                        Srb->SrbStatus = SRB_STATUS_BAD_FUNCTION;
+                        Srb->SrbStatus = SRB_STATUS_INVALID_REQUEST;
                         break;
                 }
             }
@@ -862,6 +865,10 @@ AhciHwStartIo (
     if (Srb->SrbStatus != SRB_STATUS_PENDING)
     {
         StorPortNotification(RequestComplete, AdapterExtension, Srb);
+    }
+    else
+    {
+        AhciProcessIO(AdapterExtension, Srb->PathId, Srb);
     }
     return TRUE;
 }// -- AhciHwStartIo();
@@ -1598,7 +1605,7 @@ InquiryCompletion (
             PortExtension->DeviceParams.RemovableDevice = 1;
         }
 
-        if (IdentifyDeviceData->CommandSetSupport.BigLba && IdentifyDeviceData->CommandSetActive.BigLba)
+        if ((IdentifyDeviceData->CommandSetSupport.BigLba) && (IdentifyDeviceData->CommandSetActive.BigLba))
         {
             PortExtension->DeviceParams.Lba48BitMode = 1;
         }
@@ -1699,8 +1706,8 @@ UCHAR DeviceRequestReadWrite (
     __in PCDB Cdb
     )
 {
-    ULONG64 SectorNo;
     BOOLEAN IsReading;
+    ULONG64 StartOffset;
     PAHCI_SRB_EXTENSION SrbExtension;
     PAHCI_PORT_EXTENSION PortExtension;
     ULONG DataTransferLength, BytesPerSector, SectorCount;
@@ -1721,7 +1728,7 @@ UCHAR DeviceRequestReadWrite (
     ROUND_UP(DataTransferLength, BytesPerSector);
 
     SectorCount = DataTransferLength / BytesPerSector;
-    SectorNo = AhciGetLba(Cdb);
+    StartOffset = AhciGetLba(Cdb, Srb->CdbLength);
     IsReading = (Cdb->CDB10.OperationCode == SCSIOP_READ);
 
     NT_ASSERT(SectorCount > 0);
@@ -1742,9 +1749,9 @@ UCHAR DeviceRequestReadWrite (
     }
 
     SrbExtension->FeaturesLow = 0;
-    SrbExtension->LBA0 = (SectorNo >> 0) & 0xFF;
-    SrbExtension->LBA1 = (SectorNo >> 8) & 0xFF;
-    SrbExtension->LBA2 = (SectorNo >> 16) & 0xFF;
+    SrbExtension->LBA0 = (StartOffset >> 0) & 0xFF;
+    SrbExtension->LBA1 = (StartOffset >> 8) & 0xFF;
+    SrbExtension->LBA2 = (StartOffset >> 16) & 0xFF;
 
     SrbExtension->Device = (0xA0 | IDE_LBA_MODE);
 
@@ -1753,9 +1760,9 @@ UCHAR DeviceRequestReadWrite (
         SrbExtension->Flags |= ATA_FLAGS_48BIT_COMMAND;
         SrbExtension->CommandReg = IDE_COMMAND_READ_DMA_EXT;
 
-        SrbExtension->LBA3 = (SectorNo >> 24) & 0xFF;
-        SrbExtension->LBA4 = (SectorNo >> 32) & 0xFF;
-        SrbExtension->LBA5 = (SectorNo >> 40) & 0xFF;
+        SrbExtension->LBA3 = (StartOffset >> 24) & 0xFF;
+        SrbExtension->LBA4 = (StartOffset >> 32) & 0xFF;
+        SrbExtension->LBA5 = (StartOffset >> 40) & 0xFF;
     }
     else
     {
@@ -1770,7 +1777,6 @@ UCHAR DeviceRequestReadWrite (
 
     SrbExtension->pSgl = (PLOCAL_SCATTER_GATHER_LIST)StorPortGetScatterGatherList(AdapterExtension, Srb);
 
-    AhciProcessIO(AdapterExtension, Srb->PathId, Srb);
     return SRB_STATUS_PENDING;
 }// -- DeviceRequestReadWrite();
 
@@ -1835,6 +1841,35 @@ UCHAR DeviceRequestCapacity (
 
     return SRB_STATUS_SUCCESS;
 }// -- DeviceRequestCapacity();
+
+/**
+ * @name DeviceRequestComplete
+ * @implemented
+ *
+ * Handle UnHandled Requests
+ *
+ * @param AdapterExtension
+ * @param Srb
+ * @param Cdb
+ *
+ * @return
+ * return STOR status for DeviceRequestComplete
+ */
+UCHAR DeviceRequestComplete (
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
+    __in PSCSI_REQUEST_BLOCK Srb,
+    __in PCDB Cdb
+    )
+{
+    AhciDebugPrint("DeviceRequestComplete()\n");
+
+    UNREFERENCED_PARAMETER(AdapterExtension);
+    UNREFERENCED_PARAMETER(Cdb);
+
+    Srb->ScsiStatus = SCSISTAT_GOOD;
+
+    return SRB_STATUS_SUCCESS;
+}// -- DeviceRequestComplete();
 
 /**
  * @name DeviceReportLuns
@@ -1951,8 +1986,6 @@ DeviceInquiryRequest (
         SrbExtension->Sgl.List[0].Length = sizeof(IDENTIFY_DEVICE_DATA);
 
         SrbExtension->pSgl = &SrbExtension->Sgl;
-
-        AhciProcessIO(AdapterExtension, Srb->PathId, Srb);
         return SRB_STATUS_PENDING;
     }
     else
@@ -2224,21 +2257,41 @@ GetSrbExtension (
     return (PAHCI_SRB_EXTENSION)(SrbExtension + Offset);
 }// -- PAHCI_SRB_EXTENSION();
 
-
+/**
+ * @name AhciGetLba
+ * @implemented
+ *
+ * Find the logical address of demand block from Cdb
+ *
+ * @param Srb
+ *
+ * @return
+ * return Logical Address of the block
+ *
+ */
 __inline
 ULONG64
 AhciGetLba (
-    __in PCDB Cdb
+    __in PCDB Cdb,
+    __in ULONG CdbLength
     )
 {
     ULONG64 lba = 0;
 
     NT_ASSERT(Cdb != NULL);
+    NT_ASSERT(CdbLength != 0);
 
-    lba |= Cdb->CDB10.LogicalBlockByte3 << 0;
-    lba |= Cdb->CDB10.LogicalBlockByte2 << 8;
-    lba |= Cdb->CDB10.LogicalBlockByte1 << 16;
-    lba |= Cdb->CDB10.LogicalBlockByte0 << 24;
+    if (CdbLength == 0x10)
+    {
+        REVERSE_BYTES_QUAD(&lba, Cdb->CDB16.LogicalBlock);
+    }
+    else
+    {
+        lba |= Cdb->CDB10.LogicalBlockByte3 << 0;
+        lba |= Cdb->CDB10.LogicalBlockByte2 << 8;
+        lba |= Cdb->CDB10.LogicalBlockByte1 << 16;
+        lba |= Cdb->CDB10.LogicalBlockByte0 << 24;
+    }
 
     return lba;
 }// -- AhciGetLba();

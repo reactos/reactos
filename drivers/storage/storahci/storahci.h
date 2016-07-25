@@ -565,6 +565,13 @@ typedef struct _AHCI_SRB_EXTENSION
 //                       Declarations                       //
 //////////////////////////////////////////////////////////////
 
+VOID
+AhciProcessIO (
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
+    __in UCHAR PathId,
+    __in PSCSI_REQUEST_BLOCK Srb
+    );
+
 BOOLEAN
 AhciAdapterReset (
     __in PAHCI_ADAPTER_EXTENSION AdapterExtension
@@ -603,6 +610,12 @@ DeviceInquiryRequest (
     __in PCDB Cdb
     );
 
+UCHAR DeviceRequestComplete (
+    __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
+    __in PSCSI_REQUEST_BLOCK Srb,
+    __in PCDB Cdb
+    );
+
 UCHAR DeviceReportLuns (
     __in PAHCI_ADAPTER_EXTENSION AdapterExtension,
     __in PSCSI_REQUEST_BLOCK Srb,
@@ -631,7 +644,8 @@ GetSrbExtension(
 __inline
 ULONG64
 AhciGetLba (
-    __in PCDB Cdb
+    __in PCDB Cdb,
+    __in ULONG CdbLength
     );
 
 //////////////////////////////////////////////////////////////
