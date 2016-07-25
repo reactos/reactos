@@ -422,10 +422,7 @@ CcRosReleaseVacb (
 
     KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
     KeReleaseGuardedMutex(&ViewLock);
-    if (InterlockedCompareExchange(&Vacb->PinCount, 0, 0) == 0)
-    {
-        CcRosReleaseVacbLock(Vacb);
-    }
+    CcRosReleaseVacbLock(Vacb);
 
     return STATUS_SUCCESS;
 }
@@ -462,10 +459,7 @@ CcRosLookupVacb (
             CcRosVacbIncRefCount(current);
             KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldIrql);
             KeReleaseGuardedMutex(&ViewLock);
-            if (InterlockedCompareExchange(&current->PinCount, 0, 0) == 0)
-            {
-                CcRosAcquireVacbLock(current, NULL);
-            }
+            CcRosAcquireVacbLock(current, NULL);
             return current;
         }
         if (current->FileOffset.QuadPart > FileOffset)
@@ -712,10 +706,7 @@ CcRosCreateVacb (
             KeReleaseGuardedMutex(&ViewLock);
             ExFreeToNPagedLookasideList(&VacbLookasideList, *Vacb);
             *Vacb = current;
-            if (InterlockedCompareExchange(&current->PinCount, 0, 0) == 0)
-            {
-                CcRosAcquireVacbLock(current, NULL);
-            }
+            CcRosAcquireVacbLock(current, NULL);
             return STATUS_SUCCESS;
         }
         if (current->FileOffset.QuadPart < FileOffset)
@@ -945,10 +936,7 @@ CcFlushCache (
                     }
                 }
 
-                if (InterlockedCompareExchange(&current->PinCount, 0, 0) == 0)
-                {
-                    CcRosReleaseVacbLock(current);
-                }
+                CcRosReleaseVacbLock(current);
 
                 KeAcquireGuardedMutex(&ViewLock);
                 KeAcquireSpinLock(&SharedCacheMap->CacheMapLock, &oldIrql);

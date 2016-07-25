@@ -185,10 +185,8 @@ CcPinRead (
             ASSERT(iBcb->Pinned == FALSE);
 
             iBcb->Pinned = TRUE;
-            if (InterlockedIncrement(&iBcb->Vacb->PinCount) == 1)
-            {
-                CcRosReleaseVacbLock(iBcb->Vacb);
-            }
+            iBcb->Vacb->PinCount++;
+            CcRosReleaseVacbLock(iBcb->Vacb);
 
             if (Flags & PIN_EXCLUSIVE)
             {
@@ -281,10 +279,8 @@ CcUnpinDataForThread (
     {
         ExReleaseResourceForThreadLite(&iBcb->Lock, ResourceThreadId);
         iBcb->Pinned = FALSE;
-        if (InterlockedDecrement(&iBcb->Vacb->PinCount) == 0)
-        {
-            CcRosAcquireVacbLock(iBcb->Vacb, NULL);
-        }
+        CcRosAcquireVacbLock(iBcb->Vacb, NULL);
+        iBcb->Vacb->PinCount--;
     }
 
     CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
@@ -355,10 +351,8 @@ CcUnpinRepinnedBcb (
         {
             ExReleaseResourceLite(&iBcb->Lock);
             iBcb->Pinned = FALSE;
-            if (InterlockedDecrement(&iBcb->Vacb->PinCount) == 0)
-            {
-                CcRosAcquireVacbLock(iBcb->Vacb, NULL);
-            }
+            CcRosAcquireVacbLock(iBcb->Vacb, NULL);
+            iBcb->Vacb->PinCount--;
         }
         ExDeleteResourceLite(&iBcb->Lock);
         ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
