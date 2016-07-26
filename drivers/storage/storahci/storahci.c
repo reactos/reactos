@@ -1800,7 +1800,6 @@ UCHAR DeviceRequestReadWrite (
     {
         SrbExtension->Flags |= ATA_FLAGS_DATA_OUT;
         SrbExtension->CommandReg = IDE_COMMAND_WRITE_DMA;
-        //NT_ASSERT(FALSE);
     }
 
     SrbExtension->FeaturesLow = 0;
@@ -1813,7 +1812,15 @@ UCHAR DeviceRequestReadWrite (
     if (PortExtension->DeviceParams.Lba48BitMode)
     {
         SrbExtension->Flags |= ATA_FLAGS_48BIT_COMMAND;
-        SrbExtension->CommandReg = IDE_COMMAND_READ_DMA_EXT;
+
+        if (IsReading)
+        {
+            SrbExtension->CommandReg = IDE_COMMAND_READ_DMA_EXT;
+        }
+        else
+        {
+            SrbExtension->CommandReg = IDE_COMMAND_WRITE_DMA_EXT;
+        }
 
         SrbExtension->LBA3 = (StartOffset >> 24) & 0xFF;
         SrbExtension->LBA4 = (StartOffset >> 32) & 0xFF;
