@@ -56,6 +56,7 @@ private:
     
     // *** tree explorer band stuff ***
     BOOL fVisible;
+    BOOL bNavigating;
     BOOL bFocused;
     DWORD dwBandID;
     HIMAGELIST hImageList;
@@ -75,7 +76,10 @@ private:
     NodeInfo* GetNodeInfo(HTREEITEM hItem);
     HRESULT UpdateBrowser(LPITEMIDLIST pidlGoto);
     HTREEITEM InsertItem(HTREEITEM hParent, IShellFolder *psfParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort);
+    HTREEITEM InsertItem(HTREEITEM hParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort);
     BOOL InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo); 
+    BOOL NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert, BOOL bSelect);
+    BOOL NavigateToCurrentFolder();
 
 public:
     CExplorerBand();

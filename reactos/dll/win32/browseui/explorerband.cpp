@@ -35,7 +35,7 @@ HRESULT WINAPI CExplorerBand_Constructor(REFIID riid, LPVOID *ppv)
 }
 
 CExplorerBand::CExplorerBand() :
-    pSite(NULL), fVisible(FALSE), dwBandID(0)
+    pSite(NULL), fVisible(FALSE), bNavigating(FALSE), dwBandID(0)
 {
 }
 
@@ -67,21 +67,21 @@ void CExplorerBand::InitializeExplorerBand()
     TreeView_SetImageList(m_hWnd, (HIMAGELIST)piml, TVSIL_NORMAL);
 
     // Insert the root node
-    HTREEITEM hItem = InsertItem(0, pDesktop, pidl, pidl, FALSE);
-    if (!hItem)
+    hRoot = InsertItem(0, pDesktop, pidl, pidl, FALSE);
+    if (!hRoot)
     {
         ERR("Failed to create root item\n");
         return;
     }
 
-    NodeInfo* pNodeInfo = GetNodeInfo(hItem);
+    NodeInfo* pNodeInfo = GetNodeInfo(hRoot);
 
     // Insert child nodes
-    InsertSubitems(hItem, pNodeInfo);
-    TreeView_Expand(m_hWnd, hItem, TVE_EXPAND);
+    InsertSubitems(hRoot, pNodeInfo);
+    TreeView_Expand(m_hWnd, hRoot, TVE_EXPAND);
 
     // Navigate to current folder position
-    //NavigateToCurrentFolder();
+    NavigateToCurrentFolder();
 
     // Register shell notification
     shcne.pidl = pidl;
@@ -198,6 +198,11 @@ void CExplorerBand::OnSelectionChanged(LPNMTREEVIEW pnmtv)
     NodeInfo* pNodeInfo = GetNodeInfo(pnmtv->itemNew.hItem);
 
     UpdateBrowser(pNodeInfo->absolutePidl);
+
+    /* Prevents navigation if selection is initiated inside the band */
+    if (bNavigating)
+        return;
+
     SetFocus();
     // Expand the node
     //TreeView_Expand(m_hWnd, pnmtv->itemNew.hItem, TVE_EXPAND);
@@ -258,6 +263,17 @@ HTREEITEM CExplorerBand::InsertItem(HTREEITEM hParent, IShellFolder *psfParent, 
     htiCreated = TreeView_InsertItem(m_hWnd, &tvInsert);
 
     return htiCreated;
+}
+
+/* This is the slow version of the above method */
+HTREEITEM CExplorerBand::InsertItem(HTREEITEM hParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort)
+{
+    CComPtr<IShellFolder> psfFolder;
+    HRESULT hr = SHBindToParent(pElt, IID_PPV_ARG(IShellFolder, &psfFolder), NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return NULL;
+
+    return InsertItem(hParent, psfFolder, pElt, pEltRelative, bSort);
 }
 
 BOOL CExplorerBand::InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo)
@@ -332,6 +348,137 @@ BOOL CExplorerBand::InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo)
     SendMessage(WM_SETREDRAW, TRUE, 0);
 
     return (uItemCount > 0) ? TRUE : FALSE;
+}
+
+/**
+ * Navigate to a given PIDL in the treeview, and return matching tree item handle
+ *  - dest: The absolute PIDL we should navigate in the treeview
+ *  - item: Handle of the tree item matching the PIDL
+ *  - bExpand: expand collapsed nodes in order to find the right element
+ *  - bInsert: insert the element at the right place if we don't find it
+ *  - bSelect: select the item after we found it
+ */
+BOOL CExplorerBand::NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert,
+        BOOL bSelect)
+{
+    HTREEITEM                           current;
+    HTREEITEM                           tmp;
+    HTREEITEM                           parent;
+    BOOL                                found;
+    NodeInfo                            *nodeData;
+    LPITEMIDLIST                        relativeChild;
+    TVITEM                              tvItem;
+
+    if (!item)
+        return FALSE;
+
+    found = FALSE;
+    current = hRoot;
+    parent = NULL;
+    while(!found)
+    {
+        nodeData = GetNodeInfo(current);
+        if (!nodeData)
+        {
+            ERR("Something has gone wrong, no data associated to node !\n");
+            *item = NULL;
+            return FALSE;
+        }
+        // If we found our node, give it back
+        if (!pDesktop->CompareIDs(0, nodeData->absolutePidl, dest))
+        {
+            if (bSelect)
+                TreeView_SelectItem(m_hWnd, current);
+            *item = current;
+            return TRUE;
+        }
+
+        // Check if we are a parent of the requested item
+        relativeChild = ILFindChild(nodeData->absolutePidl, dest);
+        if (relativeChild != 0)
+        {
+            // Notify treeview we have children
+            tvItem.mask = TVIF_CHILDREN;
+            tvItem.hItem = current;
+            tvItem.cChildren = 1;
+            TreeView_SetItem(m_hWnd, &tvItem);
+
+            // If we can expand and the node isn't expanded yet, do it
+            if (bExpand)
+            {
+                if (!nodeData->expanded)
+                    InsertSubitems(current, nodeData);
+                TreeView_Expand(m_hWnd, current, TVE_EXPAND);
+            }
+
+            // Try to get a child
+            tmp = TreeView_GetChild(m_hWnd, current);
+            if (tmp)
+            { 
+                // We have a child, let's continue with it
+                parent = current;
+                current = tmp;
+                continue;
+            }
+
+            if (bInsert && nodeData->expanded)
+            {
+                // Happens when we have to create a subchild inside a child
+                current = InsertItem(current, dest, relativeChild, TRUE);
+            }
+            // We end up here, without any children, so we found nothing
+            // Tell the parent node it has children
+            ZeroMemory(&tvItem, sizeof(tvItem));
+            *item = NULL;
+            return FALSE;
+        }
+
+        // Find sibling
+        tmp = TreeView_GetNextSibling(m_hWnd, current);
+        if (tmp)
+        {
+            current = tmp;
+            continue;
+        }
+        if (bInsert)
+        {
+            current = InsertItem(parent, dest, ILFindLastID(dest), TRUE);
+            *item = current;
+            return TRUE;
+        }
+        *item = NULL;
+        return FALSE;
+    }
+    return FALSE;
+}
+
+BOOL CExplorerBand::NavigateToCurrentFolder()
+{
+    LPITEMIDLIST                        explorerPidl;
+    CComPtr<IBrowserService>            pBrowserService;
+    HRESULT                             hr;
+    HTREEITEM                           dummy;
+    BOOL                                result; 
+    explorerPidl = NULL;
+
+    hr = IUnknown_QueryService(pSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &pBrowserService));
+    if (!SUCCEEDED(hr))
+    {
+        ERR("Can't get IBrowserService !\n");
+        return FALSE;
+    }
+
+    hr = pBrowserService->GetPidl(&explorerPidl);
+    if (!SUCCEEDED(hr) || !explorerPidl)
+    {
+        ERR("Unable to get browser PIDL !\n");
+        return FALSE;
+    }
+    bNavigating = TRUE;
+    /* find PIDL into our explorer */
+    result = NavigateToPIDL(explorerPidl, &dummy, TRUE, FALSE, TRUE);
+    bNavigating = FALSE;
+    return result;
 }
 
 // *** IOleWindow methods ***
@@ -658,8 +805,16 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::GetIDsOfNames(REFIID riid, LPOLESTR *rg
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    switch (dispIdMember)
+    {
+        case DISPID_DOWNLOADCOMPLETE:
+        case DISPID_NAVIGATECOMPLETE2:
+           TRACE("DISPID_NAVIGATECOMPLETE2 received\n");
+           NavigateToCurrentFolder();
+           return S_OK;
+    }
+    TRACE("Unknown dispid requested: %08x\n", dispIdMember);
+    return E_INVALIDARG;
 }
 
 // *** IDropTarget methods ***
