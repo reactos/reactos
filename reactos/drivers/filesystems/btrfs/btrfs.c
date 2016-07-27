@@ -1935,7 +1935,9 @@ void STDCALL uninit(device_extension* Vcb, BOOL flush) {
     LIST_ENTRY* le;
     LARGE_INTEGER time;
     
+#ifndef __REACTOS__
     RemoveEntryList(&Vcb->list_entry);
+#endif
     
     Status = registry_mark_volume_unmounted(&Vcb->superblock.uuid);
     if (!NT_SUCCESS(Status))
@@ -3762,12 +3764,27 @@ static NTSTATUS STDCALL mount_vol(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     
     Vcb->root_file = IoCreateStreamFileObject(NULL, DeviceToMount);
     Vcb->root_file->FsContext = root_fcb;
+#ifdef __REACTOS__
+    Vcb->root_file->SectionObjectPointer = &root_fcb->nonpaged->segment_object;
+    Vcb->root_file->Vpb = DeviceObject->Vpb;
+#endif
     
     RtlZeroMemory(root_ccb, sizeof(ccb));
     root_ccb->NodeType = BTRFS_NODE_TYPE_CCB;
     root_ccb->NodeSize = sizeof(ccb);
     
+#ifndef __REACTOS__
     Vcb->root_file->FsContext = root_ccb;
+#else
+    Vcb->root_file->FsContext2 = root_ccb;
+    
+    _SEH2_TRY {
+        CcInitializeCacheMap(Vcb->root_file, (PCC_FILE_SIZES)(&root_fcb->Header.AllocationSize), FALSE, cache_callbacks, Vcb->root_file);
+    } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
+        Status = _SEH2_GetExceptionCode();
+        goto exit;
+    } _SEH2_END;
+#endif
     
     for (i = 0; i < Vcb->superblock.num_devices; i++) {
         Status = find_disk_holes(Vcb, &Vcb->devices[i]);
