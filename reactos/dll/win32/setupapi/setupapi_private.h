@@ -281,7 +281,15 @@ UINT CALLBACK QUEUE_callback_WtoA( void *context, UINT notification, UINT_PTR, U
 #define _S_IREAD  0x0100
 
 extern HINSTANCE hInstance;
-extern OSVERSIONINFOW OsVersionInfo;
+extern OSVERSIONINFOEXW OsVersionInfo;
+
+/*
+ * See: https://msdn.microsoft.com/en-us/library/bb432397(v=vs.85).aspx
+ * for more information.
+ */
+extern DWORD GlobalSetupFlags;
+#define PSPGF_NO_BACKUP         0x0002
+#define PSPGF_NONINTERACTIVE    0x0004
 
 /* devinst.c */
 

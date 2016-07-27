@@ -23,8 +23,6 @@
 
 /* Unicode constants */
 static const WCHAR BackSlash[] = {'\\',0};
-static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
-static const WCHAR Class[]  = {'C','l','a','s','s',0};
 static const WCHAR DateFormat[]  = {'%','u','-','%','u','-','%','u',0};
 static const WCHAR DotCoInstallers[]  = {'.','C','o','I','n','s','t','a','l','l','e','r','s',0};
 static const WCHAR DotHW[]  = {'.','H','W',0};
@@ -459,21 +457,16 @@ SetupDiGetActualSectionToInstallExW(
             if (CurrentPlatform.cbSize != sizeof(SP_ALTPLATFORM_INFO))
             {
                 /* That's the first time we go here. We need to fill in the structure */
-                OSVERSIONINFOEX VersionInfo;
                 SYSTEM_INFO SystemInfo;
-                VersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-                ret = GetVersionExW((OSVERSIONINFO*)&VersionInfo);
-                if (!ret)
-                    goto done;
                 GetSystemInfo(&SystemInfo);
                 CurrentPlatform.cbSize = sizeof(SP_ALTPLATFORM_INFO);
-                CurrentPlatform.Platform = VersionInfo.dwPlatformId;
-                CurrentPlatform.MajorVersion = VersionInfo.dwMajorVersion;
-                CurrentPlatform.MinorVersion = VersionInfo.dwMinorVersion;
+                CurrentPlatform.Platform = OsVersionInfo.dwPlatformId;
+                CurrentPlatform.MajorVersion = OsVersionInfo.dwMajorVersion;
+                CurrentPlatform.MinorVersion = OsVersionInfo.dwMinorVersion;
                 CurrentPlatform.ProcessorArchitecture = SystemInfo.wProcessorArchitecture;
                 CurrentPlatform.Reserved = 0;
-                CurrentProductType = VersionInfo.wProductType;
-                CurrentSuiteMask = VersionInfo.wSuiteMask;
+                CurrentProductType = OsVersionInfo.wProductType;
+                CurrentSuiteMask = OsVersionInfo.wSuiteMask;
             }
             ProductType = CurrentProductType;
             SuiteMask = CurrentSuiteMask;
@@ -489,6 +482,7 @@ SetupDiGetActualSectionToInstallExW(
         CallbackInfo.BestScore4 = ULONG_MAX;
         CallbackInfo.BestScore5 = ULONG_MAX;
         strcpyW(CallbackInfo.BestSection, InfSectionName);
+        TRACE("EnumerateSectionsStartingWith(InfSectionName = %S)\n", InfSectionName);
         if (!EnumerateSectionsStartingWith(
             InfHandle,
             InfSectionName,
@@ -498,6 +492,7 @@ SetupDiGetActualSectionToInstallExW(
             SetLastError(ERROR_GEN_FAILURE);
             goto done;
         }
+        TRACE("CallbackInfo.BestSection = %S\n", CallbackInfo.BestSection);
 
         dwFullLength = lstrlenW(CallbackInfo.BestSection);
         if (RequiredSize != NULL)
@@ -1011,7 +1006,7 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
 
             dwLength = MAX_CLASS_NAME_LEN * sizeof(WCHAR);
             if (!RegQueryValueExW(hClassKey,
-                                  Class,
+                                  REGSTR_VAL_CLASS,
                                   NULL,
                                   NULL,
                                   (LPBYTE)szClassName,
@@ -1163,7 +1158,7 @@ BOOL WINAPI SetupDiClassNameFromGuidExW(
         return FALSE;
 
     /* Retrieve the class name data and close the key */
-    rc = QueryRegistryValue(hKey, Class, (LPBYTE *) &Buffer, &dwRegType, &dwLength);
+    rc = QueryRegistryValue(hKey, REGSTR_VAL_CLASS, (LPBYTE *) &Buffer, &dwRegType, &dwLength);
     RegCloseKey(hKey);
 
     /* Make sure we got the data */
@@ -3613,7 +3608,7 @@ HKEY SETUP_CreateClassKey(HINF hInf)
     if (!SetupGetLineTextW(NULL,
                            hInf,
                            Version,
-                           ClassGUID,
+                           REGSTR_VAL_CLASSGUID,
                            Buffer,
                            MAX_PATH,
                            &RequiredSize))
@@ -3634,7 +3629,7 @@ HKEY SETUP_CreateClassKey(HINF hInf)
         if (!SetupGetLineTextW(NULL,
                                hInf,
                                Version,
-                               Class,
+                               REGSTR_VAL_CLASS,
                                Buffer,
                                MAX_PATH,
                                &RequiredSize))
@@ -3657,7 +3652,7 @@ HKEY SETUP_CreateClassKey(HINF hInf)
     }
 
     if (RegSetValueExW(hClassKey,
-                       Class,
+                       REGSTR_VAL_CLASS,
                        0,
                        REG_SZ,
                        (LPBYTE)Buffer,

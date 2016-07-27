@@ -569,7 +569,7 @@
 @ stdcall pSetupIsUserAdmin()
 @ stub pSetupMakeSurePathExists
 @ stub pSetupMalloc
-@ stub pSetupModifyGlobalFlags
+@ stdcall pSetupModifyGlobalFlags(long long)
 @ stdcall pSetupMultiByteToUnicode(str long)
 @ stdcall pSetupOpenAndMapFileForRead(wstr ptr ptr ptr ptr)
 @ stub pSetupOutOfMemory
