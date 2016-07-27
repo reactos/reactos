@@ -1177,7 +1177,7 @@ BOOL CFSFolder::QueryDrop(DWORD dwKeyState, LPDWORD pdwEffect)
 
     if (fAcceptFmt) { /* Does our interpretation of the keystate ... */
         *pdwEffect = KeyStateToDropEffect (dwKeyState);
-
+        
         if (*pdwEffect == DROPEFFECT_NONE)
             *pdwEffect = dwEffect;
 
@@ -1236,6 +1236,11 @@ HRESULT WINAPI CFSFolder::Drop(IDataObject *pDataObject,
 {
     TRACE("(%p) object dropped, effect %u\n", this, *pdwEffect);
     
+    if (!pdwEffect)
+        return E_INVALIDARG;
+
+    QueryDrop(dwKeyState, pdwEffect);
+
     BOOL fIsOpAsync = FALSE;
     CComPtr<IAsyncOperation> pAsyncOperation;
 
