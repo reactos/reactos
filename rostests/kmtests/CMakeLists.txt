@@ -152,7 +152,8 @@ add_dependencies(kmtest_drivers
     iohelper_drv
     ioreadwrite_drv
     poirp_drv
-    tcpip_drv)
+    tcpip_drv
+    cccopyread_drv)
 
 add_custom_target(kmtest_all)
 add_dependencies(kmtest_all kmtest_drivers kmtest)
