@@ -32,7 +32,12 @@
 
 static void test_SetupPromptForDiskA(void)
 {
-    char path[] = "C:\\windows\\system32";
+#ifndef ROSTESTS_234_IS_FIXED
+    // char path[] = "C:\\windows\\system32";
+    char path[] = "C:\\ReactOS\\system32";
+#else
+    #error "path should use GetSystemDirectoryA()"
+#endif
     char file[] = "kernel32.dll";
     char buffer[MAX_PATH];
     UINT ret;
@@ -66,7 +71,12 @@ static void test_SetupPromptForDiskA(void)
 
 static void test_SetupPromptForDiskW(void)
 {
-    WCHAR path[] = {'C',':','\\','w','i','n','d','o','w','s','\\','s','y','s','t','e','m','3','2','\0'};
+#ifndef ROSTESTS_234_IS_FIXED
+    // WCHAR path[] = {'C',':','\\','w','i','n','d','o','w','s','\\','s','y','s','t','e','m','3','2','\0'};
+    WCHAR path[] = {'C',':','\\','R','e','a','c','t','O','S','\\','s','y','s','t','e','m','3','2','\0'};
+#else
+    #error "path should use GetSystemDirectoryW()"
+#endif
     WCHAR file[] = {'k','e','r','n','e','l','3','2','.','d','l','l','\0'};
     WCHAR title[] = {'T','e','s','t','\0'};
     WCHAR disk[] = {'T','e','s','t','d','i','s','k','\0'};
