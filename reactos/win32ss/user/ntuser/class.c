@@ -267,8 +267,11 @@ IntDestroyClass(IN OUT PCLS Class)
 
     if (Class->spicn)
         UserDereferenceObject(Class->spicn);
-    if (Class->spcur)
+    if (Class->spcur && !UserObjectInDestroy(Class->spcur))
+    {
         UserDereferenceObject(Class->spcur);
+        Class->spcur = NULL;
+    }
     if (Class->spicnSm)
     {
         UserDereferenceObject(Class->spicnSm);

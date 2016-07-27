@@ -1086,11 +1086,14 @@ NtUserSetCursor(
            goto leave;
         }
 
+        pcurOld->CURSORF_flags &= ~CURSORF_CURRENT;
+
         /* See if it was destroyed in the meantime */
         if (UserObjectInDestroy(hOldCursor))
-            hOldCursor = NULL;
-        pcurOld->CURSORF_flags &= ~CURSORF_CURRENT;
-        UserDereferenceObject(pcurOld);
+        {
+            UserDereferenceObject(pcurOld);
+            pcurOld = NULL;
+        }
     }
 
 leave:
