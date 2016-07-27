@@ -1577,11 +1577,15 @@ cleanup:
     if ( hinf != INVALID_HANDLE_VALUE )
         SetupCloseInfFile( hinf );
 
+#ifdef CORE_11689_IS_FIXED
     // TODO: Localize the error string.
     if (!ret && !(GlobalSetupFlags & PSPGF_NONINTERACTIVE))
     {
         MessageBoxW(hwnd, section, L"setupapi.dll: An error happened...", MB_ICONERROR | MB_OK);
     }
+#else
+    #pragma message("We need to understand why setupapi_winetest fails before reenabling the error popup in InstallHinfSectionW. CORE-11689")
+#endif
 }
 
 
