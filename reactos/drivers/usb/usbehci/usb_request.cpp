@@ -601,6 +601,7 @@ CUSBRequest::InitDescriptor(
         //
         // get address
         //
+        *(volatile char *)TransferBuffer; // HACK for CORE-9224
         Address = MmGetPhysicalAddress(TransferBuffer);
 
         //

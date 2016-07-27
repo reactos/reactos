@@ -771,6 +771,7 @@ CUSBRequest::BuildIsochronousEndpoint(
         //
         // get physical page
         //
+        *(volatile char *)Buffer; // HACK for CORE-9224
         Page = MmGetPhysicalAddress(Buffer).LowPart;
 
         //
@@ -1087,6 +1088,7 @@ CUSBRequest::InitDescriptor(
     //
     // store physical address of buffer
     //
+    *(volatile char *)TransferBuffer; // HACK for CORE-9224
     CurrentDescriptor->BufferPhysical = MmGetPhysicalAddress(TransferBuffer).LowPart;
     CurrentDescriptor->LastPhysicalByteAddress = CurrentDescriptor->BufferPhysical + TransferBufferLength - 1; 
 
@@ -1503,6 +1505,7 @@ CUSBRequest::BuildControlTransferDescriptor(
         //
         // store physical address of buffer
         //
+        *(volatile char *)MmGetMdlVirtualAddress(m_TransferBufferMDL); // HACK for CORE-9224
         DataDescriptor->BufferPhysical = MmGetPhysicalAddress(MmGetMdlVirtualAddress(m_TransferBufferMDL)).LowPart;
         DataDescriptor->LastPhysicalByteAddress = DataDescriptor->BufferPhysical + m_TransferBufferLength - 1;
 
