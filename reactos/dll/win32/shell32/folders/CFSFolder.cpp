@@ -1236,6 +1236,11 @@ HRESULT WINAPI CFSFolder::Drop(IDataObject *pDataObject,
 {
     TRACE("(%p) object dropped, effect %u\n", this, *pdwEffect);
     
+    if (!pdwEffect)
+        return E_INVALIDARG;
+
+    QueryDrop(dwKeyState, pdwEffect);
+
     BOOL fIsOpAsync = FALSE;
     CComPtr<IAsyncOperation> pAsyncOperation;
 
