@@ -21,6 +21,10 @@
 #define PM_CONSOLE_BEEP         (WM_APP + 4)
 #define PM_CONSOLE_SET_TITLE    (WM_APP + 5)
 
+/* Flags for GetKeyState */
+#define KEY_TOGGLED 0x0001
+#define KEY_PRESSED 0x8000
+
 /*
 typedef struct _CONSOLE_FONT
 {

@@ -44,7 +44,7 @@ CopyBlock(PTEXTMODE_SCREEN_BUFFER Buffer,
      * Pressing the Shift key while copying text, allows us to copy
      * text without newline characters (inline-text copy mode).
      */
-    BOOL InlineCopyMode = !!(GetKeyState(VK_SHIFT) & 0x8000);
+    BOOL InlineCopyMode = !!(GetKeyState(VK_SHIFT) & KEY_PRESSED);
 
     HANDLE hData;
     PCHAR_INFO ptr;
