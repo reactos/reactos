@@ -1583,8 +1583,6 @@ cleanup:
     {
         MessageBoxW(hwnd, section, L"setupapi.dll: An error happened...", MB_ICONERROR | MB_OK);
     }
-#else
-    #pragma message("We need to understand why setupapi_winetest fails before reenabling the error popup in InstallHinfSectionW. CORE-11689")
 #endif
 }
 
