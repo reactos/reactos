@@ -1332,12 +1332,17 @@ HRESULT WINAPI CShellLink::SetDescription(LPCWSTR pszName)
     TRACE("(%p)->(desc=%s)\n", this, debugstr_w(pszName));
 
     HeapFree(GetProcessHeap(), 0, sDescription);
-    sDescription = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
-                                     (wcslen(pszName) + 1) * sizeof(WCHAR));
-    if (!sDescription)
-        return E_OUTOFMEMORY;
+    if (pszName)
+    {
+        sDescription = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
+                                         (wcslen(pszName) + 1) * sizeof(WCHAR));
+        if (!sDescription)
+            return E_OUTOFMEMORY;
 
-    wcscpy(sDescription, pszName);
+        wcscpy(sDescription, pszName);
+    }
+    else
+        sDescription = NULL;    
     bDirty = TRUE;
 
     return S_OK;
