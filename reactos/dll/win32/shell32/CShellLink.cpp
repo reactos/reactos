@@ -1332,12 +1332,18 @@ HRESULT WINAPI CShellLink::SetDescription(LPCWSTR pszName)
     TRACE("(%p)->(desc=%s)\n", this, debugstr_w(pszName));
 
     HeapFree(GetProcessHeap(), 0, sDescription);
-    sDescription = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
-                                     (wcslen(pszName) + 1) * sizeof(WCHAR));
-    if (!sDescription)
-        return E_OUTOFMEMORY;
+    if (pszName)
+    {
+        sDescription = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
+                                         (wcslen(pszName) + 1) * sizeof(WCHAR));
+        if (!sDescription)
+            return E_OUTOFMEMORY;
 
-    wcscpy(sDescription, pszName);
+        wcscpy(sDescription, pszName);
+    }
+    else
+        sDescription = NULL;
+
     bDirty = TRUE;
 
     return S_OK;
@@ -1360,11 +1366,17 @@ HRESULT WINAPI CShellLink::SetWorkingDirectory(LPCWSTR pszDir)
     TRACE("(%p)->(dir=%s)\n", this, debugstr_w(pszDir));
 
     HeapFree(GetProcessHeap(), 0, sWorkDir);
-    sWorkDir = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
-                                 (wcslen(pszDir) + 1) * sizeof (WCHAR));
-    if (!sWorkDir)
-        return E_OUTOFMEMORY;
-    wcscpy(sWorkDir, pszDir);
+    if (pszDir)
+    {
+        sWorkDir = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
+                                     (wcslen(pszDir) + 1) * sizeof (WCHAR));
+        if (!sWorkDir)
+            return E_OUTOFMEMORY;
+        wcscpy(sWorkDir, pszDir);
+    }
+    else
+        sWorkDir = NULL;
+
     bDirty = TRUE;
 
     return S_OK;
@@ -1387,12 +1399,18 @@ HRESULT WINAPI CShellLink::SetArguments(LPCWSTR pszArgs)
     TRACE("(%p)->(args=%s)\n", this, debugstr_w(pszArgs));
 
     HeapFree(GetProcessHeap(), 0, sArgs);
-    sArgs = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
-                              (wcslen(pszArgs) + 1) * sizeof (WCHAR));
-    if (!sArgs)
-        return E_OUTOFMEMORY;
+    if (pszArgs)
+    {
+        sArgs = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
+                                  (wcslen(pszArgs) + 1) * sizeof (WCHAR));
+        if (!sArgs)
+            return E_OUTOFMEMORY;
 
-    wcscpy(sArgs, pszArgs);
+        wcscpy(sArgs, pszArgs);
+    }
+    else
+        sArgs = NULL;
+
     bDirty = TRUE;
 
     return S_OK;
@@ -1473,11 +1491,16 @@ HRESULT WINAPI CShellLink::SetIconLocation(LPCWSTR pszIconPath, INT iIcon)
     TRACE("(%p)->(path=%s iicon=%u)\n", this, debugstr_w(pszIconPath), iIcon);
 
     HeapFree(GetProcessHeap(), 0, sIcoPath);
-    sIcoPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
-                                  (wcslen(pszIconPath) + 1) * sizeof (WCHAR));
-    if (!sIcoPath)
-        return E_OUTOFMEMORY;
-    wcscpy(sIcoPath, pszIconPath);
+    if (pszIconPath)
+    {
+        sIcoPath = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
+                                      (wcslen(pszIconPath) + 1) * sizeof (WCHAR));
+        if (!sIcoPath)
+            return E_OUTOFMEMORY;
+        wcscpy(sIcoPath, pszIconPath);
+    }
+    else
+        sIcoPath = NULL;
 
     iIcoNdx = iIcon;
     bDirty = TRUE;
@@ -1490,11 +1513,17 @@ HRESULT WINAPI CShellLink::SetRelativePath(LPCWSTR pszPathRel, DWORD dwReserved)
     TRACE("(%p)->(path=%s %x)\n", this, debugstr_w(pszPathRel), dwReserved);
 
     HeapFree(GetProcessHeap(), 0, sPathRel);
-    sPathRel = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
-                                  (wcslen(pszPathRel) + 1) * sizeof (WCHAR));
-    if (!sPathRel)
-        return E_OUTOFMEMORY;
-    wcscpy(sPathRel, pszPathRel);
+    if (pszPathRel)
+    {
+        sPathRel = (LPWSTR)HeapAlloc(GetProcessHeap(), 0,
+                                      (wcslen(pszPathRel) + 1) * sizeof (WCHAR));
+        if (!sPathRel)
+            return E_OUTOFMEMORY;
+        wcscpy(sPathRel, pszPathRel);
+    }
+    else
+        sPathRel = NULL;
+
     bDirty = TRUE;
 
     return ShellLink_UpdatePath(sPathRel, sPath, sWorkDir, &sPath);
