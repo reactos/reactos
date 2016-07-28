@@ -157,6 +157,53 @@ test_checklinkpath(TestShellLinkDef* testDef)
 
 static
 VOID
+TestDescription(void)
+{
+    HRESULT hr;
+    IShellLinkW *psl;
+    WCHAR buffer[64];
+    PCWSTR testDescription = L"This is a test description";
+
+    /* Test SetDescription */
+    hr = CoCreateInstance(CLSID_ShellLink,
+                          NULL,
+                          CLSCTX_INPROC_SERVER,
+                          IID_PPV_ARG(IShellLinkW, &psl));
+    ok(hr == S_OK, "CoCreateInstance, hr = %lx\n", hr);
+    if (FAILED(hr))
+    {
+        skip("Could not instantiate CShellLink\n");
+        return;
+    }
+
+    memset(buffer, 0x55, sizeof(buffer));
+    hr = psl->GetDescription(buffer, RTL_NUMBER_OF(buffer));
+    ok(hr == S_OK, "IShellLink::GetDescription returned hr = %lx\n", hr);
+    ok(buffer[0] == 0, "buffer[0] = %x\n", buffer[0]);
+    ok(buffer[1] == 0x5555, "buffer[1] = %x\n", buffer[1]);
+
+    hr = psl->SetDescription(testDescription);
+    ok(hr == S_OK, "IShellLink::SetDescription returned hr = %lx\n", hr);
+
+    memset(buffer, 0x55, sizeof(buffer));
+    hr = psl->GetDescription(buffer, RTL_NUMBER_OF(buffer));
+    ok(hr == S_OK, "IShellLink::GetDescription returned hr = %lx\n", hr);
+    ok(buffer[wcslen(testDescription)] == 0, "buffer[n] = %x\n", buffer[wcslen(testDescription)]);
+    ok(buffer[wcslen(testDescription) + 1] == 0x5555, "buffer[n+1] = %x\n", buffer[wcslen(testDescription) + 1]);
+    ok(!wcscmp(buffer, testDescription), "buffer = '%ls'\n", buffer);
+
+    hr = psl->SetDescription(NULL);
+    ok(hr == S_OK, "IShellLink::SetDescription returned hr = %lx\n", hr);
+
+    memset(buffer, 0x55, sizeof(buffer));
+    hr = psl->GetDescription(buffer, RTL_NUMBER_OF(buffer));
+    ok(hr == S_OK, "IShellLink::GetDescription returned hr = %lx\n", hr);
+    ok(buffer[0] == 0, "buffer[0] = %x\n", buffer[0]);
+    ok(buffer[1] == 0x5555, "buffer[1] = %x\n", buffer[1]);
+}
+
+static
+VOID
 TestShellLink(void)
 {
     TestShellLinkDef *testDef;
@@ -176,6 +223,8 @@ TestShellLink(void)
     }
 
     SetEnvironmentVariableW(L"shell",NULL);
+
+    TestDescription();
 }
 
 START_TEST(CShellLink)
