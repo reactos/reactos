@@ -130,7 +130,7 @@ HRESULT CCPLExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, R
     PIDLCPanelStruct *pData = _ILGetCPanelPointer(pidl);
     if (!pData)
     {
-        return GenericExtractIcon_CreateInstance(psf, pidl, riid, ppvOut);
+        return CGuidItemExtractIcon_CreateInstance(psf, pidl, riid, ppvOut);
     }
 
     CComPtr<IDefaultExtractIconInit> initIcon;
