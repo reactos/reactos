@@ -3,7 +3,7 @@
 #include <winsock2.h>
 
 #define LENGTH 255
-#define NUM_CLIENTS 4
+#define NUM_CLIENTS 1
 
 DWORD WINAPI ClientThreadMain(LPVOID lpParam) {
     SOCKET Sock;
@@ -30,6 +30,7 @@ DWORD WINAPI ClientThreadMain(LPVOID lpParam) {
     ServerAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
     ServerAddr.sin_port = htons(10000);
 
+	printf("Client %d attempting to connect\n", self);
     ret = connect(Sock, (struct sockaddr *)&ServerAddr, sizeof(struct sockaddr_in));
     if (ret == SOCKET_ERROR) {
         printf("Client %d failed to connect: %d\n", self, WSAGetLastError());
@@ -39,6 +40,7 @@ DWORD WINAPI ClientThreadMain(LPVOID lpParam) {
 
     sprintf(buff, "Client %d pinging server", self);
     len = strlen(buff);
+	printf("Client %d attempting to send\n", self);
     ret = send(Sock, buff, len, 0);
     if (ret != len) {
         printf("Client %d failed to send properly. Should send %d bytes, send() returned %d\n  WSA Error: %d\n",
@@ -47,6 +49,7 @@ DWORD WINAPI ClientThreadMain(LPVOID lpParam) {
         return 1;
     }
 
+	printf("Client %d attempting to receive\n", self);
     ret = recv(Sock, buff, LENGTH, 0);
     buff[LENGTH - 1] = '\0';
     if (ret <= 0) {

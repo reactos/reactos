@@ -95,7 +95,7 @@ udp_init(void)
  *
  * @return a new (free) local UDP port number
  */
-static u16_t
+u16_t
 udp_new_port(void)
 {
   u16_t n = 0;

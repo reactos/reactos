@@ -136,6 +136,8 @@ err_t            udp_sendto     (struct udp_pcb *pcb, struct pbuf *p,
                                  ip_addr_t *dst_ip, u16_t dst_port);
 err_t            udp_send       (struct udp_pcb *pcb, struct pbuf *p);
 
+u16_t udp_new_port(void);
+
 #if LWIP_CHECKSUM_ON_COPY
 err_t            udp_sendto_if_chksum(struct udp_pcb *pcb, struct pbuf *p,
                                  ip_addr_t *dst_ip, u16_t dst_port,

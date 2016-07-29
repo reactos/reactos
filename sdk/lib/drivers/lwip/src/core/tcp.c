@@ -121,7 +121,6 @@ u8_t tcp_active_pcbs_changed;
 /** Timer counter to handle calling slow-timer from tcp_tmr() */ 
 static u8_t tcp_timer;
 static u8_t tcp_timer_ctr;
-static u16_t tcp_new_port(void);
 
 /**
  * Initialize this module.
@@ -643,7 +642,7 @@ tcp_recved(struct tcp_pcb *pcb, u16_t len)
  *
  * @return a new (free) local TCP port number
  */
-static u16_t
+u16_t
 tcp_new_port(void)
 {
   u8_t i;
