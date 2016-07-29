@@ -2315,7 +2315,13 @@ HRESULT WINAPI CDefView::GetItemObject(UINT uItem, REFIID riid, LPVOID *ppvOut)
             else if (IsEqualIID(riid, IID_IDispatch))
             {
                 if (m_pShellFolderViewDual == NULL)
+                {
                     hr = CDefViewDual_Constructor(riid, (LPVOID*)&m_pShellFolderViewDual);
+                    if (FAILED_UNEXPECTEDLY(hr))
+                    {
+                        return hr;
+                    }
+                }
                 hr = m_pShellFolderViewDual->QueryInterface(riid, ppvOut);
             }
             break;
