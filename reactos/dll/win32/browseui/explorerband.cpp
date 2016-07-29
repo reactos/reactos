@@ -673,7 +673,8 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::GetBandInfo(DWORD dwBandID, DWORD dwVie
 
     if (pdbi->dwMask & DBIM_TITLE)
     {
-        lstrcpyW(pdbi->wszTitle, L"Explorer");
+        if (!LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_FOLDERSLABEL, pdbi->wszTitle, _countof(pdbi->wszTitle)))
+            return HRESULT_FROM_WIN32(GetLastError());
     }
 
     if (pdbi->dwMask & DBIM_MODEFLAGS)
