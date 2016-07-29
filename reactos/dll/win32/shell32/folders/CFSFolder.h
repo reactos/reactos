@@ -97,15 +97,6 @@ class CFSFolder :
         END_COM_MAP()
 };
 
-struct _DoDropData {
-    CFSDropTarget *This;
-    IStream *pStream;
-    DWORD dwKeyState;
-    POINTL pt; 
-    DWORD pdwEffect;
-};
-
-
 class CFSDropTarget :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDropTarget
@@ -140,6 +131,14 @@ class CFSDropTarget :
         COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
         END_COM_MAP()
 
+};
+
+struct _DoDropData {
+    CFSDropTarget *This;
+    IStream *pStream;
+    DWORD dwKeyState;
+    POINTL pt; 
+    DWORD pdwEffect;
 };
 
 #endif /* _CFSFOLDER_H_ */
