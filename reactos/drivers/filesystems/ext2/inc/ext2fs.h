@@ -1399,13 +1399,7 @@ Ext2SupersedeOrOverWriteFile(
 #define DL_PNP 0x00010000   /* pnp */
 #define DL_IO  0x00020000   /* file i/o */
 
-#define DL_ALL (DL_ERR|DL_VIT|DL_DBG|DL_INF|DL_FUN|DL_LOW|DL_REN|DL_RES|DL_BLK|DL_CP|DL_EXT|DL_MAP|DL_JNL|DL_HTI|DL_WRN|DL_BH|DL_PNP|DL_IO)
-
-#if EXT2_DEBUG && defined(__REACTOS__)
-  #define DL_DEFAULT (DL_ERR|DL_VIT|DL_DBG|DL_INF|DL_FUN|DL_LOW|DL_WRN)
-#else
-  #define DL_DEFAULT (DL_ERR|DL_VIT)
-#endif
+#define DL_DEFAULT (DL_ERR|DL_VIT)
 
 #if EXT2_DEBUG
 extern  ULONG DebugFilter;
