@@ -799,11 +799,15 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::HasFocusIO()
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    TranslateMessage(lpMsg);
-    DispatchMessage(lpMsg);
-    return S_OK;
-}
+    if (lpMsg->hwnd == m_hWnd)
+    {
+        TranslateMessage(lpMsg);
+        DispatchMessage(lpMsg);
+        return S_OK;
+    }
 
+    return S_FALSE;
+}
 
 // *** IPersist methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetClassID(CLSID *pClassID)
