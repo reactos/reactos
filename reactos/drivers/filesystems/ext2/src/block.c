@@ -351,7 +351,7 @@ Ext2ReadWriteBlocks(
 
                 IoBuildPartialMdl( MasterIrp->MdlAddress,
                                    Mdl,
-                                   (PCHAR)MasterIrp->UserBuffer +Extent->Offset,
+                                   (PCHAR)MasterIrp->UserBuffer+Extent->Offset,
                                    Extent->Length );
 
                 IoSetNextIrpStackLocation(Irp);
@@ -568,8 +568,7 @@ Ext2ReadDisk(
                             FALSE );
 
     if (!NT_SUCCESS(Status)) {
-        DEBUG(DL_ERR, ( "Ext2ReadDisk: disk device error.\n"));
-
+        DEBUG(DL_ERR, ("Ext2ReadDisk: disk i/o error: %xh.\n", Status));
         goto errorout;
     }
 

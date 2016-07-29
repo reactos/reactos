@@ -197,7 +197,7 @@ Ext2QueryGlobalParameters(IN PUNICODE_STRING RegistryPath)
      * 1 writing support
      */
     QueryTable[i].Flags = 0;
-    QueryTable[0].Name = WRITING_SUPPORT;
+    QueryTable[i].Name = WRITING_SUPPORT;
     QueryTable[i].DefaultType = REG_NONE;
     QueryTable[i].DefaultLength = 0;
     QueryTable[i].DefaultData = NULL;
@@ -431,6 +431,7 @@ Ext2EresourceAlignmentChecking()
     CL_ASSERT((FIELD_OFFSET(EXT2_VCB, MetaInode) & 7) == 0);
     CL_ASSERT((FIELD_OFFSET(EXT2_VCB, MetaBlock) & 7) == 0);
     CL_ASSERT((FIELD_OFFSET(EXT2_VCB, McbLock) & 7) == 0);
+    CL_ASSERT((FIELD_OFFSET(EXT2_VCB, FcbLock) & 7) == 0);
     CL_ASSERT((FIELD_OFFSET(EXT2_VCB, bd.bd_bh_lock) & 7) == 0);
     CL_ASSERT((FIELD_OFFSET(EXT2_VCB, sbi.s_gd_lock) & 7) == 0);
     CL_ASSERT((FIELD_OFFSET(EXT2_FCBVCB, MainResource) & 7) == 0);
@@ -555,11 +556,19 @@ DriverEntry (
         goto errorout;
     }
 
+    Status= Ext2StartReaper(
+                &Ext2Global->FcbReaper,
+                Ext2FcbReaperThread);
+    if (!NT_SUCCESS(Status)) {
+        goto errorout;
+    }
+
     /* start resource reaper thread */
     Status= Ext2StartReaper(
                 &Ext2Global->McbReaper,
                 Ext2McbReaperThread);
     if (!NT_SUCCESS(Status)) {
+        Ext2StopReaper(&Ext2Global->FcbReaper);
         goto errorout;
     }
 
@@ -567,6 +576,7 @@ DriverEntry (
                 &Ext2Global->bhReaper,
                 Ext2bhReaperThread);
     if (!NT_SUCCESS(Status)) {
+        Ext2StopReaper(&Ext2Global->FcbReaper);
         Ext2StopReaper(&Ext2Global->McbReaper);
         goto errorout;
     }

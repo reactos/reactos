@@ -81,13 +81,20 @@ Ext2FlushVolume (
 
     DEBUG(DL_INF, ( "Ext2FlushVolume: Flushing Vcb ...\n"));
 
-    /* discard buffer_headers for group_desc */
-    Ext2DropGroup(Vcb);
-
     ExAcquireSharedStarveExclusive(&Vcb->PagingIoResource, TRUE);
     ExReleaseResourceLite(&Vcb->PagingIoResource);
 
+    /* acquire gd lock to avoid gd/bh creation */
+    ExAcquireResourceExclusiveLite(&Vcb->sbi.s_gd_lock, TRUE);
+
+    /* discard buffer_headers for group_desc */
+    Ext2DropBH(Vcb);
+
+    /* do flushing */
     CcFlushCache(&(Vcb->SectionObject), NULL, 0, &IoStatus);
+
+    /* release gd lock */
+    ExReleaseResourceLite(&Vcb->sbi.s_gd_lock);
 
     return IoStatus.Status;
 }
