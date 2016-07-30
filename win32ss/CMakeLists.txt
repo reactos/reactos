@@ -196,19 +196,19 @@ list(APPEND SOURCE
     gdi/eng/stubs.c
     gdi/eng/umpdstubs.c
 
-    font/dcfont.c
-    font/enumfont.c
-    font/fntdrvsup.c
-    font/fontdata.c
-    font/fontrsrc.c
-    font/glyphcache.c
-    font/lfont.c
-    font/rfont.c
-    font/strobj.c
-    font/textmetric.c
-    font/textout.c
-    font/ufi.c
-    font/misc.c
+    gdi/font/dcfont.c
+    gdi/font/enumfont.c
+    gdi/font/fntdrvsup.c
+    gdi/font/fontdata.c
+    gdi/font/fontrsrc.c
+    #gdi/font/glyphcache.c
+    gdi/font/lfont.c
+    gdi/font/rfont.c
+    gdi/font/strobj.c
+    gdi/font/textmetric.c
+    gdi/font/textout.c
+    gdi/font/ufi.c
+    gdi/font/misc.c
 
     pch.h)
 
