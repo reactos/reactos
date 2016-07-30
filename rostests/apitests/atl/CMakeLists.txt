@@ -1,11 +1,12 @@
 
-set_cpp(WITH_RUNTIME)
+set_cpp(WITH_RUNTIME WITH_EXCEPTIONS)
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 add_executable(atl_apitest
     CComBSTR.cpp
     CComHeapPtr.cpp
+    CString.cpp
     testlist.c
     atl_apitest.rc)
 
