@@ -1891,6 +1891,16 @@ filter_contains_hw_range( UINT first, UINT last )
     return 1;
 }
 
+/* check whether message is in the range of mouse messages */
+static inline BOOL is_mouse_message( UINT message )
+{
+    return ( //( message >= WM_NCMOUSEFIRST && message <= WM_NCMOUSELAST )   || This seems to break tests...
+             ( message >= WM_MOUSEFIRST   && message <= WM_MOUSELAST )     ||
+             ( message >= WM_XBUTTONDOWN  && message <= WM_XBUTTONDBLCLK ) ||
+             ( message >= WM_MBUTTONDOWN  && message <= WM_MBUTTONDBLCLK ) ||
+             ( message >= WM_LBUTTONDOWN  && message <= WM_RBUTTONDBLCLK ) );
+}
+
 BOOL APIENTRY
 co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
                          IN BOOL Remove,
@@ -1946,7 +1956,7 @@ co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
       if ( ( !Window || // 1
             ( Window == PWND_BOTTOM && CurrentMessage->Msg.hwnd == NULL ) || // 2
             ( Window != PWND_BOTTOM && Window->head.h == CurrentMessage->Msg.hwnd ) || // 3
-            ( CurrentMessage->Msg.message == WM_MOUSEMOVE ) ) && // Null window for mouse moves.
+            ( is_mouse_message(CurrentMessage->Msg.message) ) ) && // Null window for anything mouse.
             ( ( ( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && CurrentMessage->QS_Flags & QSflags ) ||
               ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
       {
