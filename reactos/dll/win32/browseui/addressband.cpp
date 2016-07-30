@@ -27,8 +27,6 @@ Implements the navigation band of the cabinet window
 #include <shlwapi_undoc.h>
 #include <shellapi.h>
 
-HRESULT CreateAddressEditBox(REFIID riid, void **ppv);
-
 /*
 TODO:
 ****Add command handler for show/hide Go button to OnWinEvent
@@ -155,19 +153,9 @@ HRESULT STDMETHODCALLTYPE CAddressBand::SetSite(IUnknown *pUnkSite)
 
     fEditControl = reinterpret_cast<HWND>(SendMessage(CBEM_GETEDITCONTROL, 0, 0));
     fComboBox = reinterpret_cast<HWND>(SendMessage(CBEM_GETCOMBOCONTROL, 0, 0));
-#if 1
-    hResult = CoCreateInstance(CLSID_AddressEditBox, NULL, CLSCTX_INPROC_SERVER,
-        IID_PPV_ARG(IAddressEditBox, &fAddressEditBox));
-#else
-    hResult = E_FAIL;
-#endif
+    hResult = CAddressEditBox_CreateInstance(IID_PPV_ARG(IAddressEditBox, &fAddressEditBox));
     if (FAILED_UNEXPECTEDLY(hResult))
-    {
-        // instantiate new version
-        hResult = CreateAddressEditBox(IID_PPV_ARG(IAddressEditBox, &fAddressEditBox));
-        if (FAILED_UNEXPECTEDLY(hResult))
-            return hResult;
-    }
+        return hResult;
 
     hResult = fAddressEditBox->QueryInterface(IID_PPV_ARG(IShellService, &shellService));
     if (FAILED_UNEXPECTEDLY(hResult))
@@ -640,11 +628,6 @@ LRESULT CAddressBand::OnWindowPosChanging(UINT uMsg, WPARAM wParam, LPARAM lPara
 
     SendMessage(fComboBox, CB_SETDROPPEDWIDTH, 200, 0);
     return 0;
-}
-
-HRESULT CreateAddressBand(REFIID riid, void **ppv)
-{
-    return ShellObjectCreator<CAddressBand>(riid, ppv);
 }
 
 void CAddressBand::CreateGoButton()

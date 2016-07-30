@@ -28,12 +28,6 @@
 #define UNIMPLEMENTED DbgPrint("%s is UNIMPLEMENTED!\n", __FUNCTION__)
 #endif
 
-extern "C"
-HRESULT WINAPI CExplorerBand_Constructor(REFIID riid, LPVOID *ppv)
-{
-    return ShellObjectCreator<CExplorerBand>(riid, ppv);
-}
-
 CExplorerBand::CExplorerBand() :
     pSite(NULL), fVisible(FALSE), bNavigating(FALSE), dwBandID(0)
 {

@@ -24,8 +24,6 @@
 #include <htiframe.h>
 #include <strsafe.h>
 
-#define USE_CUSTOM_EXPLORERBAND 1
-
 extern HRESULT IUnknown_ShowDW(IUnknown * punk, BOOL fShow);
 
 #include "newatlinterfaces.h"
@@ -128,14 +126,6 @@ BOOL                                        createNewStuff = false;
 
 // this class is private to browseui.dll and is not registered externally?
 //DEFINE_GUID(CLSID_ShellFldSetExt, 0x6D5313C0, 0x8C62, 0x11D1, 0xB2, 0xCD, 0x00, 0x60, 0x97, 0xDF, 0x8C, 0x11);
-
-
-extern HRESULT CreateTravelLog(REFIID riid, void **ppv);
-extern HRESULT CreateBaseBar(REFIID riid, void **ppv, BOOL vertical);
-extern HRESULT CreateBaseBarSite(REFIID riid, void **ppv, BOOL vertical);
-
-// temporary
-extern HRESULT CreateInternetToolbar(REFIID riid, void **ppv);
 
 void DeleteMenuItems(HMENU theMenu, unsigned int firstIDToDelete, unsigned int lastIDToDelete)
 {
@@ -325,7 +315,7 @@ public:
     HRESULT BrowseToPath(IShellFolder *newShellFolder, LPCITEMIDLIST absolutePIDL,
         FOLDERSETTINGS *folderSettings, long flags);
     HRESULT GetMenuBand(REFIID riid, void **shellMenu);
-    HRESULT GetBaseBar(bool vertical, IUnknown **theBaseBar);
+    HRESULT GetBaseBar(bool vertical, REFIID riid, void **theBaseBar);
     BOOL IsBandLoaded(const CLSID clsidBand, bool verticali, DWORD *pdwBandID);
     HRESULT ShowBand(const CLSID &classID, bool vertical);
     HRESULT NavigateToParent();
@@ -740,15 +730,9 @@ HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, long b, long c, long d)
     if (m_hWnd == NULL)
         return E_FAIL;
 
-#if 0
-    hResult = CoCreateInstance(CLSID_InternetToolbar, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, &fClientBars[BIInternetToolbar].clientBar));
+    hResult = CInternetToolbar_CreateInstance(IID_PPV_ARG(IUnknown, &clientBar));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
-#else
-    hResult = CreateInternetToolbar(IID_PPV_ARG(IUnknown, &clientBar));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-#endif
 
     fClientBars[BIInternetToolbar].clientBar = clientBar;
 
@@ -1105,7 +1089,7 @@ HRESULT CShellBrowser::GetMenuBand(REFIID riid, void **shellMenu)
     return deskBand->QueryInterface(riid, shellMenu);
 }
 
-HRESULT CShellBrowser::GetBaseBar(bool vertical, IUnknown **theBaseBar)
+HRESULT CShellBrowser::GetBaseBar(bool vertical, REFIID riid, void **theBaseBar)
 {
     CComPtr<IUnknown>                       newBaseBar;
     CComPtr<IDeskBar>                       deskBar;
@@ -1120,10 +1104,10 @@ HRESULT CShellBrowser::GetBaseBar(bool vertical, IUnknown **theBaseBar)
         cache = &fClientBars[BIHorizontalBaseBar].clientBar.p;
     if (*cache == NULL)
     {
-        hResult = CreateBaseBar(IID_PPV_ARG(IUnknown, &newBaseBar), vertical);
+        hResult = CBaseBar_CreateInstance(IID_PPV_ARG(IUnknown, &newBaseBar), vertical);
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
-        hResult = CreateBaseBarSite(IID_PPV_ARG(IUnknown, &newBaseBarSite), vertical);
+        hResult = CBaseBarSite_CreateInstance(IID_PPV_ARG(IUnknown, &newBaseBarSite), vertical);
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
     
@@ -1152,13 +1136,12 @@ HRESULT CShellBrowser::GetBaseBar(bool vertical, IUnknown **theBaseBar)
             return hResult;
 
     }
-    return (*cache)->QueryInterface(IID_PPV_ARG(IUnknown, theBaseBar));
+    return (*cache)->QueryInterface(riid, theBaseBar);
 }
 
 BOOL CShellBrowser::IsBandLoaded(const CLSID clsidBand, bool vertical, DWORD *pdwBandID)
 {
     HRESULT                                 hResult;
-    CComPtr<IUnknown>                       baseBar;
     CComPtr<IDeskBar>                       deskBar;
     CComPtr<IUnknown>                       baseBarSite;
     CComPtr<IBandSite>                      bandSite;
@@ -1168,10 +1151,7 @@ BOOL CShellBrowser::IsBandLoaded(const CLSID clsidBand, bool vertical, DWORD *pd
     DWORD                                   i;
 
     /* Get our basebarsite to be able to enumerate bands */
-    hResult = GetBaseBar(vertical, &baseBar);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return FALSE;
-    hResult = baseBar->QueryInterface(IID_PPV_ARG(IDeskBar, &deskBar));
+    hResult = GetBaseBar(vertical, IID_PPV_ARG(IDeskBar, &deskBar));
     if (FAILED_UNEXPECTEDLY(hResult))
         return FALSE;
     hResult = deskBar->GetClient(&baseBarSite);
@@ -1213,41 +1193,34 @@ HRESULT CShellBrowser::ShowBand(const CLSID &classID, bool vertical)
     CComPtr<IDockingWindow>                 dockingWindow;
     CComPtr<IUnknown>                       baseBarSite;
     CComPtr<IUnknown>                       newBand;
-    CComPtr<IUnknown>                       theBaseBar;
     CComPtr<IDeskBar>                       deskBar;
     VARIANT                                 vaIn;
     HRESULT                                 hResult;
     DWORD                                   dwBandID;
 
-    hResult = GetBaseBar(vertical, (IUnknown **)&theBaseBar);
+    hResult = GetBaseBar(vertical, IID_PPV_ARG(IDeskBar, &deskBar));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     
-    hResult = theBaseBar->QueryInterface(IID_PPV_ARG(IDeskBar, &deskBar));
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return hResult;
-
     hResult = deskBar->GetClient(&baseBarSite);
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    hResult = theBaseBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
+    hResult = deskBar->QueryInterface(IID_PPV_ARG(IDockingWindow, &dockingWindow));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
     
     if (!IsBandLoaded(classID, vertical, &dwBandID))
     {
-#if USE_CUSTOM_EXPLORERBAND
         TRACE("ShowBand called for CLSID %s, vertical=%d...\n", wine_dbgstr_guid(&classID), vertical);
         if (IsEqualCLSID(CLSID_ExplorerBand, classID))
         {
             TRACE("CLSID_ExplorerBand requested, building internal band.\n");
-            hResult = CExplorerBand_Constructor(IID_PPV_ARG(IUnknown, &newBand));
+            hResult = CExplorerBand_CreateInstance(IID_PPV_ARG(IUnknown, &newBand));
             if (FAILED_UNEXPECTEDLY(hResult))
                 return hResult;
         }
         else
-#endif
         {
             TRACE("A different CLSID requested, using CoCreateInstance.\n");
             hResult = CoCreateInstance(classID, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, &newBand));
@@ -2388,7 +2361,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::GetTravelLog(ITravelLog **pptl)
     *pptl = NULL;
     if (fTravelLog.p == NULL)
     {
-        hResult = CreateTravelLog(IID_PPV_ARG(ITravelLog, &fTravelLog));
+        hResult = CTravelLog_CreateInstance(IID_PPV_ARG(ITravelLog, &fTravelLog));
         if (FAILED_UNEXPECTEDLY(hResult))
             return hResult;
     }

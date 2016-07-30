@@ -330,8 +330,3 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::GetSizeMax(ULARGE_INTEGER *pcbSize)
 {
     return E_NOTIMPL;
 }
-
-HRESULT CreateAddressEditBox(REFIID riid, void **ppv)
-{
-    return ShellObjectCreator<CAddressEditBox>(riid, ppv);
-}
