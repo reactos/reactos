@@ -91,6 +91,13 @@ StdMfg = "(ecrane de tip standard)"
 DefaultMonitor.DeviceDesc = "Ecran implicit"
 PnPMonitor.DeviceDesc = "Ecran cuplare dinamică (PnP)"
 
+[Strings.0419]
+ReactOS = "Команда ReactOS"
+MonitorClassName = "Мониторы"
+StdMfg = "(Стандартные мониторы)"
+DefaultMonitor.DeviceDesc = "Модуль подключения монитора"
+PnPMonitor.DeviceDesc = "Монитор Plug and Play"
+
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
 MonitorClassName = "Göstergeçler"

@@ -129,6 +129,7 @@ StdMfg = "(adaptoare grafice standard)"
 VGA.DeviceDesc = "Placă grafică compatibilă VGA"
 
 [Strings.0419]
+ReactOS = "Команда ReactOS"
 DisplayClassName = "Графические адаптеры"
 
 StdMfg = "(Стандартные графические адаптеры)"

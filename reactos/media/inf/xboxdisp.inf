@@ -61,6 +61,12 @@ ReactOS = "Echipa ReactOS"
 nVidiaMfg = "Corporația nVidia"
 PCI\VEN_10DE&DEV_02A0.DeviceDesc = "Unitate de procesare grafică Xbox NV2A"
 
+[Strings.0419]
+ReactOS = "Команда ReactOS"
+
+nVidiaMfg = "Корпорация nVidia"
+PCI\VEN_10DE&DEV_02A0.DeviceDesc = "Графический процессор NV2A Xbox"
+
 [Strings.041f]
 ReactOS = "ReactOS Takımı"
 

@@ -227,6 +227,7 @@ PCI\VEN_8086&DEV_7020&CC_0C0300.DeviceDesc = "Dispozitiv de control USB Intel 82
 PCI\VEN_8086&DEV_7112&CC_0C0300.DeviceDesc = "Dispozitiv de contorl USB Intel 82371AB/EB/MB PIIX4"
 
 [Strings.0419]
+ReactOS = "Команда ReactOS"
 USBClassName = "Контроллеры USB"
 
 GenericMfg = "(Стандартные устройства USB)"
