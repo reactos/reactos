@@ -302,7 +302,7 @@ typedef struct _RFONT
     POINTL ptlSim;
 } RFONT;
 
-typedef struct _LFONT
+struct _LFONT
 {
     BASEOBJECT baseobj;
     LFTYPE lft;
@@ -312,7 +312,7 @@ typedef struct _LFONT
     ULONG iNameHash;
     WCHAR awchFace[LF_FACESIZE];
     ENUMLOGFONTEXDVW elfexw;
-} LFONT, *PLFONT;
+};// LFONT, *PLFONT;
 
 enum _ESTROBJ_FLAGS
 {
