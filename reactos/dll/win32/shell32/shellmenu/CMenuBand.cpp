@@ -67,11 +67,8 @@ CMenuBand::~CMenuBand()
 {
     CMenuFocusManager::ReleaseManager(m_focusManager);
 
-    if (m_staticToolbar)
-        delete m_staticToolbar;
-
-    if (m_SFToolbar)
-        delete m_SFToolbar;
+    delete m_staticToolbar;
+    delete m_SFToolbar;
 
     if (m_hmenu)
         DestroyMenu(m_hmenu);

@@ -172,8 +172,7 @@ static CDesktopBrowser *SHDESK_Create(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
     }
 
     pThis = new CComObject<CDesktopBrowser>;
-    if (pThis == NULL)
-        return NULL;
+
     pThis->AddRef();
 
     hRet = pThis->Initialize(hWnd, ShellDesk);

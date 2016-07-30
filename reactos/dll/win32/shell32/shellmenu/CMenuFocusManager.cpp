@@ -680,7 +680,7 @@ LRESULT CMenuFocusManager::GetMsgHook(INT nCode, WPARAM hookWParam, LPARAM hookL
 
 HRESULT CMenuFocusManager::PlaceHooks()
 {
-    if (m_hMsgFilterHook)
+    if (m_hGetMsgHook)
     {
         WARN("GETMESSAGE hook already placed!\n");
         return S_OK;

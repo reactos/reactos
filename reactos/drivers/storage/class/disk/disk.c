@@ -505,7 +505,6 @@ Return Value:
     // SRB zone elements to allocate.
     //
 
-    adapterDisk = 0;
     adapterInfo = (PVOID) buffer;
 
     adapterDisk = ScsiClassFindUnclaimedDevices(InitializationData, adapterInfo);

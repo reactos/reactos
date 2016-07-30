@@ -650,7 +650,7 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
     }
 
     /* Append a backslash if needed */
-    if ((strlen(BootPath) == 0) || BootPath[strlen(BootPath) - 1] != '\\')
+    if ((BootPath[0] == 0) || BootPath[strlen(BootPath) - 1] != '\\')
         strcat(BootPath, "\\");
 
     /* Read booting options */

@@ -607,7 +607,6 @@ ScsiPortGetPhysicalAddress(
     else
     {
         /* Nothing */
-        *Length = 0;
         PhysicalAddress.QuadPart = (LONGLONG)(SP_UNINITIALIZED_VALUE);
     }
 

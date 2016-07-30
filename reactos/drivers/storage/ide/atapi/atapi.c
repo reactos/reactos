@@ -5483,7 +5483,6 @@ Return Value:
                 //
 
                 deviceExtension->ExpectingInterrupt = FALSE;
-                status = SRB_STATUS_SUCCESS;
 
             } else {
 
@@ -5495,7 +5494,6 @@ Return Value:
 
                 GetBaseStatus(baseIoAddress1, statusByte);
                 deviceExtension->ExpectingInterrupt = FALSE;
-                status = SRB_STATUS_SUCCESS;
 
                 if (errorByte & IDE_ERROR_DATA_ERROR) {
 
