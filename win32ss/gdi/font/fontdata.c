@@ -147,8 +147,7 @@ RFONT_vXlateGlpyhs(
     PRFONT prfnt,
     ULONG cwc,
     WCHAR *pwc,
-    HGLYPH *phg,
-    HGLYPH hgDefault)
+    HGLYPH *phg)
 {
     FD_GLYPHSET *pfdg = prfnt->ppfe->pfdg;
     WCRUN *pwcrun;
@@ -160,7 +159,7 @@ RFONT_vXlateGlpyhs(
     while (cwc--)
     {
         wc = *pwc++;
-        hg = hgDefault;
+        hg = prfnt->hgDefault;
 
         /* Loop all WCHAR runs */
         for (pwcrun = &pfdg->awcrun[0];

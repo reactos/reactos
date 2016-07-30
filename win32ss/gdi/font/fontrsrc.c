@@ -305,6 +305,30 @@ PFE_ulPenalty(
     return ulPenalty;
 }
 
+PPFE
+NTAPI
+PFF_ppfeFindBestMatch(
+    PPFF ppff,
+    LOGFONTW *plf,
+    ULONG *pulPenalty)
+{
+    ULONG ulPenalty, ulBestMatch = *pulPenalty;
+    PPFE ppfeBestMatch;
+    ULONG i;
+
+    /* Loop all PFEs */
+    for (i = 0; i < ppff->cFonts; i++)
+    {
+        ulPenalty = PFE_ulPenalty(&ppff->apfe[i], plf, ulBestMatch);
+        if (ulPenalty < ulBestMatch)
+        {
+            ppfeBestMatch = &ppff->apfe[i];
+            ulBestMatch = ulPenalty;
+        }
+    }
+
+    return ppfeBestMatch;
+}
 
 static
 PPFE
@@ -507,7 +531,9 @@ PFT_ppfeFindBestMatch(
     PHASHBUCKET pbkt;
     ULONG ulPenalty = *pulPenalty;
     PFONTSUBSTITUTE pfs = NULL;
+    PPFF ppff;
     PPFE ppfe;
+    ULONG iListIndex;
 
     /* Acquire PFT lock for reading */
     EngAcquireSemaphoreShared(ppft->hsem);
@@ -538,7 +564,26 @@ PFT_ppfeFindBestMatch(
     else
     {
         TRACE("Font with face name '%ls' was not found!\n", pwszCapName);
-        ulPenalty = PENALTY_FaceName;
+
+        /* Loop all slots in the font table */
+        for (iListIndex = 0; iListIndex < ppft->cBuckets; iListIndex++)
+        {
+            /* Loop all font files (PFFs) in the slot */
+            for (ppff = ppft->apPFF[iListIndex]; ppff; ppff = ppff->pPFFNext)
+            {
+                /* Find the best match in this PFF */
+                ppfe = PFF_ppfeFindBestMatch(ppff, plf, &ulPenalty);
+
+                /* Bail out on an exact match */
+                if (ulPenalty == 0) break;
+            }
+
+            /* Bail out on an exact match */
+            if (ulPenalty == 0) break;
+        }
+
+
+        ulPenalty += PENALTY_FaceName;
     }
 
 

@@ -84,10 +84,14 @@ LFONT_ppfe(PLFONT plfnt)
 
 PRFONT
 NTAPI
-LFONT_prfntFindRFONT(
-    IN PLFONT plfnt)
+LFONT_prfntFindLinkedRFONT(
+    _In_ PLFONT plfnt,
+    _In_ PMATRIX pmxWorldToDevice)
 {
-
+    // share lock plfnt->hsemRFONTList
+    // loop plfnt->leRFONTList
+    // compare each RFONT's world-to-device transformation
+    // unlock plfnt->hsemRFONTList
     __debugbreak();
 
     return NULL;

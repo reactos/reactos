@@ -260,7 +260,7 @@ typedef struct _RFONT
     POINTFX ptfxMaxDescent;
     TEXTMETRICW *ptmw;
     FD_GLYPHSET *pfdg;
-    HGLYPH *phg;
+    HGLYPH hgDefault;
     HGLYPH hgBreak;
     FIX fxBreak;
     void *wcgp;
@@ -268,7 +268,7 @@ typedef struct _RFONT
 
     MATRIX mxWorldToDevice;
     MATRIX mxForDDI;
-    //EXFORMOBJ xoForDDI;
+    EXFORMOBJ xoForDDI;
 
     POINTEF pteUnitAscent;
     FLOATOBJ efWtoDAscent;
@@ -390,6 +390,25 @@ NTAPI
 LFONT_prfntFindLinkedRFONT(
     _In_ PLFONT plfnt,
     _In_ PMATRIX pmxWorldToDevice);
+
+VOID
+NTAPI
+RFONT_vXlateGlpyhs(
+    PRFONT prfnt,
+    ULONG cwc,
+    WCHAR *pwc,
+    HGLYPH *phg);
+
+FORCEINLINE
+HGLYPH
+RFONT_hgXlate(
+    PRFONT prfnt,
+    WCHAR wc)
+{
+    HGLYPH hg;
+    RFONT_vXlateGlpyhs(prfnt, 1, &wc, &hg);
+    return hg;
+}
 
 VOID
 NTAPI
