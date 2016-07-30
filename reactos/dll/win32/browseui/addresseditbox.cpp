@@ -26,17 +26,10 @@ This class handles the combo box of the address band.
 
 /*
 TODO:
-    Add auto completion support
-    Subclass windows in Init method
-    Connect to browser connection point
-    Handle navigation complete messages to set edit box text
     Handle listbox dropdown message and fill contents
     Add drag and drop of icon in edit box
-    Handle enter in edit box to browse to typed path
     Handle change notifies to update appropriately
-    Add handling of enter in edit box
     Fix so selection in combo listbox navigates
-    Fix so editing text and typing enter navigates
 */
 
 CAddressEditBox::CAddressEditBox() :
@@ -291,6 +284,18 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::GetIDsOfNames(
 HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
     WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
+    CComPtr<IBrowserService> isb;
+    CComPtr<IShellFolder> sf;
+    HRESULT hr;
+    INT indexClosed, indexOpen, itemExists, oldIndex;
+    DWORD result;
+    COMBOBOXEXITEMW item;
+    PIDLIST_ABSOLUTE absolutePIDL;
+    LPCITEMIDLIST pidlChild;
+    LPITEMIDLIST pidlPrevious;
+    STRRET ret;
+    WCHAR buf[4096];
+
     if (pDispParams == NULL)
         return E_INVALIDARG;
 
@@ -299,6 +304,64 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID ri
     case DISPID_NAVIGATECOMPLETE2:
     case DISPID_DOCUMENTCOMPLETE:
         pidlLastParsed = NULL;
+
+        oldIndex = fCombobox.SendMessage(CB_GETCURSEL, 0, 0);
+
+        itemExists = FALSE;
+        pidlPrevious = NULL;
+
+        ZeroMemory(&item, sizeof(item));
+        item.mask = CBEIF_LPARAM;
+        item.iItem = 0;
+        if (fCombobox.SendMessage(CBEM_GETITEM, 0, reinterpret_cast<LPARAM>(&item)))
+        {
+            pidlPrevious = reinterpret_cast<LPITEMIDLIST>(item.lParam);
+            if (pidlPrevious)
+                itemExists = TRUE;
+        }
+
+        hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+        isb->GetPidl(&absolutePIDL);
+
+        SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
+
+        sf->GetDisplayNameOf(pidlChild, SHGDN_FORADDRESSBAR | SHGDN_FORPARSING, &ret);
+
+        StrRetToBufW(&ret, pidlChild, buf, 4095);
+
+        indexClosed = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
+
+        item.mask = CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_TEXT | CBEIF_LPARAM;
+        item.iItem = 0;
+        item.iImage = indexClosed;
+        item.iSelectedImage = indexOpen;
+        item.pszText = buf;
+        item.lParam = reinterpret_cast<LPARAM>(absolutePIDL);
+
+        if (itemExists)
+        {
+            result = fCombobox.SendMessage(CBEM_SETITEM, 0, reinterpret_cast<LPARAM>(&item));
+            oldIndex = 0;
+
+            if (result)
+            {
+                ILFree(pidlPrevious);
+            }
+        }
+        else
+        {
+            oldIndex = fCombobox.SendMessage(CBEM_INSERTITEM, 0, reinterpret_cast<LPARAM>(&item));
+
+            if (oldIndex < 0)
+                DbgPrint("ERROR %d\n", GetLastError());
+        }
+
+        fCombobox.SendMessage(CB_SETCURSEL, -1, 0);
+        fCombobox.SendMessage(CB_SETCURSEL, oldIndex, 0);
+
+        //fAddressEditBox->SetCurrentDir(index);
     }
     return S_OK;
 }

@@ -32,8 +32,7 @@ class CAddressBand :
     public IServiceProvider,
     public IWinEventHandler,
     public IAddressBand,
-    public IInputObjectSite,
-    public IDispatch
+    public IInputObjectSite
 {
 private:
     CComPtr<IDockingWindowSite>             fSite;
@@ -42,7 +41,6 @@ private:
     HWND                                    fGoButton;
     HWND                                    fComboBox;
     bool                                    fGoButtonShown;
-    DWORD                                   fAdviseCookie;
 public:
     CAddressBand();
     virtual ~CAddressBand();
@@ -98,12 +96,6 @@ public:
     virtual HRESULT STDMETHODCALLTYPE Save(IStream *pStm, BOOL fClearDirty);
     virtual HRESULT STDMETHODCALLTYPE GetSizeMax(ULARGE_INTEGER *pcbSize);
 
-    // *** IDispatch methods ***
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
-    virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
-    virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
-    virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
-
     // message handlers
     LRESULT OnNotifyClick(WPARAM wParam, NMHDR *notifyHeader, BOOL &bHandled);
     LRESULT OnTipText(UINT idControl, NMHDR *notifyHeader, BOOL &bHandled);
@@ -137,6 +129,5 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IInputObjectSite, IInputObjectSite)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
         COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
-        COM_INTERFACE_ENTRY_IID(IID_IDispatch, IDispatch)
     END_COM_MAP()
 };
