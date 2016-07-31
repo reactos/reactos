@@ -3592,26 +3592,34 @@ LRESULT CShellBrowser::OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWnd
 
 LRESULT CShellBrowser::OnIsThisLegal(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-    /* TODO: Implement properly */
+    WCHAR wszSite[256];
+    HINSTANCE hResourceInstance = _AtlBaseModule.GetResourceInstance();
 
-    LPCWSTR strSite = L"https://www.reactos.org/user-faq";
+    if (!LoadStringW(hResourceInstance, IDS_LEGAL_URL, wszSite, _countof(wszSite)))
+        StringCchCopyW(wszSite, _countof(wszSite), L"https://www.reactos.org/joining/faqs");
 
-    /* TODO: Make localizable */
-    LPCWSTR strCaption = L"Sorry";
-    LPCWSTR strMessage = L"ReactOS could not browse to '%s' (error %d). Please make sure there is a web browser installed.";
-    WCHAR tmpMessage[512];
+    SHELLEXECUTEINFOW execInfo = { sizeof(execInfo), 0 };
+    execInfo.lpVerb = L"open";
+    execInfo.lpFile = wszSite;
+    execInfo.hwnd = m_hWnd;
+    execInfo.nShow = SW_SHOWNORMAL;
 
-    /* TODO: Read from the registry */
-    LPCWSTR strVerb = NULL; /* default */
-    LPCWSTR strPath = strSite;
-    LPCWSTR strParams = NULL;
-
-    /* The return value is defined as HINSTANCE for backwards compatibility only, the cast is needed */
-    int result = (int) ShellExecuteW(m_hWnd, strVerb, strPath, strParams, NULL, SW_SHOWNORMAL);
-    if (result <= 32)
+    if (!ShellExecuteExW(&execInfo))
     {
-        StringCchPrintfW(tmpMessage, 512, strMessage, strSite, result);
-        MessageBoxExW(m_hWnd, tmpMessage, strCaption, MB_OK, 0);
+        WCHAR wszCaption[256];
+        WCHAR wszMessage[512];
+
+        DWORD error = GetLastError();
+
+        if (!LoadStringW(hResourceInstance, IDS_SORRY_MESSAGE, wszCaption, _countof(wszCaption)))
+            StringCchCopyW(wszCaption, _countof(wszCaption), L"ReactOS could not browse to '%s' (error 0x%lx). Please make sure there is a web browser installed.");
+
+        StringCchPrintfW(wszMessage, _countof(wszMessage), wszCaption, wszSite, error);
+
+        if (!LoadStringW(hResourceInstance, IDS_SORRY_CAPTION, wszCaption, _countof(wszCaption)))
+            StringCchCopyW(wszCaption, _countof(wszCaption), L"Sorry");
+
+        MessageBoxW(wszMessage, wszCaption, MB_OK);
     }
 
     return 0;
