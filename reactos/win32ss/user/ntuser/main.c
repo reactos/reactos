@@ -134,7 +134,6 @@ UserProcessCreate(PEPROCESS Process)
     InitializeListHead(&ppiCurrent->DriverObjListHead);
     ExInitializeFastMutex(&ppiCurrent->DriverObjListLock);
 
-    ppiCurrent->KeyboardLayout = W32kGetDefaultKeyLayout();
     {
         PKEVENT Event;
 
