@@ -85,7 +85,7 @@
 139 stub -noname CreateLinkFileExW                                    #stdcall -noname CreateLinkFileExW(48)
 140 stub -noname InitializeUserProfile                                #stdcall -noname InitializeUserProfile()
 #141 cdecl -noname RsopSidsFromToken@@YGJPAXPAPAU_TOKEN_GROUPS@@@Z
-142 stub -noname GetUserSid                                           #stdcall -noname GetUserSid(4)
+142 stdcall -noname GetUserSid(ptr)
 143 stub -noname SecureUserProfiles                                   #stdcall -noname SecureUserProfiles()
 144 stub -noname EnterUserProfileLock                                 #stdcall -noname EnterUserProfileLock(4)
 145 stub -noname LeaveUserProfileLock                                 #stdcall -noname LeaveUserProfileLock(4)
