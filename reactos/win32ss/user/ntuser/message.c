@@ -1078,6 +1078,10 @@ co_IntGetPeekMessage( PMSG pMsg,
 
            if (pMsg->message != WM_PAINT && pMsg->message != WM_QUIT)
            {
+              if (!RtlEqualMemory(&pti->ptLast, &pMsg->pt, sizeof(POINT)))
+              {
+                 pti->TIF_flags |= TIF_MSGPOSCHANGED;
+              }
               pti->timeLast = pMsg->time;
               pti->ptLast   = pMsg->pt;
            }
@@ -1278,6 +1282,7 @@ co_IntSendMessage( HWND hWnd,
                    LPARAM lParam )
 {
     ULONG_PTR Result = 0;
+
     if (co_IntSendMessageTimeout(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result))
     {
         return (LRESULT)Result;
