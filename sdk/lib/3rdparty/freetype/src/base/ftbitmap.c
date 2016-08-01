@@ -351,7 +351,7 @@
     }
 
     /* for each row */
-    for ( y = 0; y < bitmap->rows ; y++ )
+    for ( y = 0; y < bitmap->rows; y++ )
     {
       /*
        * Horizontally:

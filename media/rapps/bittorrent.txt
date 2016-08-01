@@ -30,6 +30,11 @@ License = Gratuită pentru uz necomercial
 Description = Originalul client BitTorrent.
 Size = 1,9 Mio
 
+[Section.0419]
+License = Бесплатно, для не коммерческого использования
+Description = Оригинальный клиент BitTorrent 
+Size = 1,9 МБ
+
 [Section.041f]
 License = Tecimlik olmayan kullanımlar için ücretsiz.
 Description = Özgün BitTorrent istemcisi.

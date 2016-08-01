@@ -211,7 +211,7 @@ _tWinMain(HINSTANCE hInstance,
     /* Starts main loop */
     while (GetMessage(&msg, NULL, 0, 0))
     {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+        if (!TranslateAccelerator(main_win, hAccelTable, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessage(&msg);

@@ -1,6 +1,8 @@
 
 list(APPEND SOURCE
     Interface.c
+    Registration.c
+    Object.c
     Lib.c
     fltmgr.h)
 

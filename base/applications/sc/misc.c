@@ -189,16 +189,16 @@ ParseFailureActions(
 
     /* Replace all slashes by null characters */
     p = pStringBuffer;
-    while (*p != 0 /*_T('\0')*/)
+    while (*p != _T('\0'))
     {
         if (*p == _T('/'))
-            *p = 0; //_T('\0');
+            *p = _T('\0');
         p++;
     }
 
     /* Count the arguments in the buffer */
     p = pStringBuffer;
-    while (*p != 0 /*_T('\0')*/)
+    while (*p != _T('\0'))
     {
         nCount++;
 
@@ -224,11 +224,11 @@ ParseFailureActions(
         if (nCount % 2 == 0)
         {
             /* Action */
-            if (_tcsicmp(p, _T("reboot")))
+            if (!lstrcmpi(p, _T("reboot")))
                 pActions[nCount / 2].Type = SC_ACTION_REBOOT;
-            else if (_tcsicmp(p, _T("restart")))
+            else if (!lstrcmpi(p, _T("restart")))
                 pActions[nCount / 2].Type = SC_ACTION_RESTART;
-            else if (_tcsicmp(p, _T("run")))
+            else if (!lstrcmpi(p, _T("run")))
                 pActions[nCount / 2].Type = SC_ACTION_RUN_COMMAND;
             else
                 break;
@@ -262,7 +262,7 @@ ParseFailureArguments(
     OUT LPCTSTR *ppServiceName,
     OUT LPSERVICE_FAILURE_ACTIONS pFailureActions)
 {
-    INT /*i,*/ ArgIndex = 1;
+    INT ArgIndex = 1;
     LPCTSTR lpActions = NULL;
     LPCTSTR lpReset = NULL;
 

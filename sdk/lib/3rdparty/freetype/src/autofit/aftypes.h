@@ -22,7 +22,7 @@
    *  Its main feature is the ability to differentiate between different
    *  writing systems and scripts in order to apply specific rules.
    *
-   *  The code has also been compartmentized into several entities that
+   *  The code has also been compartmentalized into several entities that
    *  should make algorithmic experimentation easier than with the old
    *  code.
    *

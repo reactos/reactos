@@ -97,6 +97,7 @@ class CDefView :
         DWORD                     m_dwAdvf;
         CComPtr<IAdviseSink>      m_pAdvSink;
         // for drag and drop
+        CComPtr<IDataObject>      m_pSourceDataObject;
         CComPtr<IDropTarget>      m_pCurDropTarget;     /* The sub-item, which is currently dragged over */
         CComPtr<IDataObject>      m_pCurDataObject;     /* The dragged data-object */
         LONG                      m_iDragOverItem;      /* Dragged over item's index, iff m_pCurDropTarget != NULL */
@@ -1786,7 +1787,12 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     }
 
                     DWORD dwEffect2;
+
+                    m_pSourceDataObject = pda;
+
                     DoDragDrop(pda, this, dwEffect, &dwEffect2);
+
+                    m_pSourceDataObject.Release();
                 }
             }
             break;
@@ -2309,7 +2315,13 @@ HRESULT WINAPI CDefView::GetItemObject(UINT uItem, REFIID riid, LPVOID *ppvOut)
             else if (IsEqualIID(riid, IID_IDispatch))
             {
                 if (m_pShellFolderViewDual == NULL)
+                {
                     hr = CDefViewDual_Constructor(riid, (LPVOID*)&m_pShellFolderViewDual);
+                    if (FAILED_UNEXPECTEDLY(hr))
+                    {
+                        return hr;
+                    }
+                }
                 hr = m_pShellFolderViewDual->QueryInterface(riid, ppvOut);
             }
             break;
@@ -2937,7 +2949,23 @@ HRESULT WINAPI CDefView::DragLeave()
 
 HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 {
-    if (m_pCurDropTarget)
+    ERR("GetKeyState(VK_LBUTTON): %d\n", GetKeyState(VK_LBUTTON));
+
+    if ((m_iDragOverItem == -1) && 
+        (*pdwEffect & DROPEFFECT_MOVE) && 
+        (GetKeyState(VK_LBUTTON) != 0) &&
+        (m_pSourceDataObject.p) && 
+        (SHIsSameObject(pDataObject, m_pSourceDataObject)))
+    {
+        ERR("Should implement moving items here!\n");
+
+        if (m_pCurDropTarget)
+        {
+            m_pCurDropTarget->DragLeave();
+            m_pCurDropTarget.Release();
+        }
+    }
+    else if (m_pCurDropTarget)
     {
         m_pCurDropTarget->Drop(pDataObject, grfKeyState, pt, pdwEffect);
         m_pCurDropTarget.Release();

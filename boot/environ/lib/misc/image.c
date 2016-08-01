@@ -1309,6 +1309,7 @@ BlImgLoadBootApplication (
     DeviceId = -1;
     Device = NULL;
     ImageAppEntry = NULL;
+    AppEntry = NULL;
     Path = NULL;
     ImageSize = 0;
     ImageBase = NULL;

@@ -702,20 +702,18 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
                                 DesiredAccess,
                                 NULL,
                                 &hLink);
-    if (NT_SUCCESS(Status))
+
+    _SEH2_TRY
     {
-        _SEH2_TRY
-        {
-            /* Return the handle to caller */
-            *LinkHandle = hLink;
-        }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
-        {
-            /* Get exception code */
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
+        /* Return the handle to caller */
+        *LinkHandle = hLink;
     }
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
+    {
+        /* Get exception code */
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
 
     /* Return status to caller */
     return Status;

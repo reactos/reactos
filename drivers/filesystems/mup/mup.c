@@ -1385,9 +1385,9 @@ NTSTATUS
 BroadcastOpen(PIRP Irp)
 {
     PMUP_FCB Fcb;
-    PMUP_CCB Ccb;
     HANDLE Handle;
     PLIST_ENTRY Entry;
+    PMUP_CCB Ccb = NULL;
     PMUP_UNC UncProvider;
     UNICODE_STRING FullPath;
     PFILE_OBJECT FileObject;

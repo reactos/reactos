@@ -27,6 +27,10 @@ Description = Pingus to darmowa gra logiczna podobna do gry Lemmings
 Description = Joc-enigmă asemănător cu „Lemmings”.
 Size = 15,8 Mio
 
+[Section.0419]
+Description = Бесплатная игра-головоломка.
+Size = 15,8 МБ
+
 [Section.041f]
 Description = Ücretsiz, Lemmings gibi bir bulmaca oyunudur.
 Size = 15,8 MiB

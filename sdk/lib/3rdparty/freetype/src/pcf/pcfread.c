@@ -442,7 +442,7 @@ THE SOFTWARE.
     int           i;
 
 
-    for ( i = 0 ; i < face->nprops && !found; i++ )
+    for ( i = 0; i < face->nprops && !found; i++ )
     {
       if ( !ft_strcmp( properties[i].name, prop ) )
         found = 1;
@@ -849,7 +849,7 @@ THE SOFTWARE.
     int           firstCol, lastCol;
     int           firstRow, lastRow;
     FT_ULong      nencoding;
-    int           encodingOffset;
+    FT_UShort     encodingOffset;
     int           i, j;
     FT_ULong      k;
     PCF_Encoding  encoding = NULL;
@@ -921,15 +921,19 @@ THE SOFTWARE.
     {
       for ( j = firstCol; j <= lastCol; j++ )
       {
+        /* X11's reference implementation uses the equivalent to  */
+        /* `FT_GET_SHORT', however PCF fonts with more than 32768 */
+        /* characters (e.g. `unifont.pcf') clearly show that an   */
+        /* unsigned value is needed.                              */
         if ( PCF_BYTE_ORDER( format ) == MSBFirst )
-          encodingOffset = FT_GET_SHORT();
+          encodingOffset = FT_GET_USHORT();
         else
-          encodingOffset = FT_GET_SHORT_LE();
+          encodingOffset = FT_GET_USHORT_LE();
 
-        if ( encodingOffset > -1 )
+        if ( encodingOffset != 0xFFFFU )
         {
           encoding[k].enc   = i * 256 + j;
-          encoding[k].glyph = (FT_UShort)encodingOffset;
+          encoding[k].glyph = encodingOffset;
 
           FT_TRACE5(( "  code %d (0x%04X): idx %d\n",
                       encoding[k].enc, encoding[k].enc, encoding[k].glyph ));

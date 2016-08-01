@@ -23,11 +23,20 @@
 #include "sdbpapi.h"
 #else /* !defined(SDBWRITE_HOSTTOOL) */
 #include <typedefs.h>
+#include <guiddef.h>
 #include "sdbtypes.h"
 #include "sdbpapi.h"
 #endif /* !defined(SDBWRITE_HOSTTOOL) */
 
 #include "sdbstringtable.h"
+
+#if !defined(offsetof)
+#if defined(__GNUC__)
+#define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
+#else
+#define offsetof(TYPE, MEMBER) ((size_t)&(((TYPE *)0)->MEMBER))
+#endif
+#endif // !defined(offsetof)
 
 #define DEFAULT_TABLE_SIZE    0x100
 
@@ -98,13 +107,48 @@ static DWORD StringHash(const WCHAR* str)
     return hash;
 }
 
+int Sdbwcscmp(const WCHAR* s1, const WCHAR* s2)
+{
+    while (*s1 == *s2)
+    {
+        if (*s1 == 0)
+            return 0;
+        s1++;
+        s2++;
+    }
+    return *s1 - *s2;
+}
+
+
+// implementation taken from reactos/sdk/lib/crt/string/wcs.c
+INT Sdbwcscpy(WCHAR* wcDest, size_t numElement, const WCHAR *wcSrc)
+{
+    size_t size = 0;
+    if(!wcDest || !numElement)
+        return 22;  /* EINVAL */
+
+    wcDest[0] = 0;
+
+    if(!wcSrc)
+        return 22;  /* EINVAL */
+
+    size = SdbpStrlen(wcSrc) + 1;
+
+    if(size > numElement)
+        return 34;  /* ERANGE */
+
+    memcpy(wcDest, wcSrc, size * sizeof(WCHAR));
+
+    return 0;
+}
+
 static struct SdbHashEntry** TableFindPtr(struct SdbStringHashTable* table, const WCHAR* str)
 {
     DWORD hash = StringHash(str);
     struct SdbHashEntry** entry = &table->Entries[hash % table->Size];
     while (*entry)
     {
-        if (!wcscmp((*entry)->Name, str))
+        if (!Sdbwcscmp((*entry)->Name, str))
             return entry;
         entry = &(*entry)->Next;
     }
@@ -114,12 +158,13 @@ static struct SdbHashEntry** TableFindPtr(struct SdbStringHashTable* table, cons
 static BOOL HashAddString(struct SdbStringHashTable* table, struct SdbHashEntry** position, const WCHAR* str, TAGID tagid)
 {
     struct SdbHashEntry* entry;
-    SIZE_T size;
+    SIZE_T size, len;
 
     if (!position)
         position = TableFindPtr(table, str);
 
-    size = offsetof(struct SdbHashEntry, Name[SdbpStrlen(str) + 2]);
+    len = SdbpStrlen(str) + 1;
+    size = offsetof(struct SdbHashEntry, Name[len]);
     entry = (*position) = SdbAlloc(size);
     if (!entry)
     {
@@ -127,7 +172,7 @@ static BOOL HashAddString(struct SdbStringHashTable* table, struct SdbHashEntry*
         return FALSE;
     }
     entry->Tagid = tagid;
-    wcscpy(entry->Name, str);
+    Sdbwcscpy(entry->Name, len, str);
     return TRUE;
 }
 

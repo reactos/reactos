@@ -221,7 +221,7 @@ int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
  * \param ctx      DHM context
  * \param x_size   private value size in bytes
  * \param output   destination buffer
- * \param olen     must be equal to ctx->P.len
+ * \param olen     must be at least equal to the size of P, ctx->len
  * \param f_rng    RNG function
  * \param p_rng    RNG parameter
  *

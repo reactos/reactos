@@ -1,0 +1,25 @@
+/* TRANSLATOR: 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "İki kütüğün ya da iki kütük öbeğinin içeriklerini karşılaştırır.\n\n\
+COMP [/L] [/A] [veri1] [veri2]\n\n\
+  veri1      Karşılaştırılacak birinci kütüğün adını ve konumunu belirtir.\n\
+  veri2      Karşılaştırılacak ikinci kütüğün adını ve konumunu belirtir.\n\
+  /A         ASCII damgalarındaki ayrımları görüntüle. (Ön tanımlı: On altılık.)\n\
+  /L         Ayrımlar için yataç numaraları görüntüle.\n"
+    IDS_INVALIDSWITCH "Geçersiz seçenek - /%c\n"
+    IDS_BADSYNTAX "Geçersiz komut yatacı söz dizimi.\n"
+    IDS_FILEERROR "Kütük açılamıyor ya da aranamıyor: %s\n"
+    IDS_COMPARING "%s ve %s karşılaştırılıyor...\n"
+    IDS_FILESIZEERROR "Kütüğün büyüklüğü saptanamıyor: %s\n"
+    IDS_SIZEDIFFERS "Kütükler ayrı büyüklüklerde.\n"
+    IDS_READERROR "Kütükleri okuma yanlışlığı.\n"
+    IDS_MISMATCHLINE "%d. yataçta karşılaştırma yanlışlığı.\n"
+    IDS_MISMATCHOFFSET "0x%X ofsetinde karşılaştırma yanlışlığı.\n"
+    IDS_ASCIIDIFF "kütük%d = %c\n"
+    IDS_HEXADECIMALDIFF "kütük%d = %X\n"
+    IDS_MATCH "Kütükleri karşılaştırma bitti.\n"
+END

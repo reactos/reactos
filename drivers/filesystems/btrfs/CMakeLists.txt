@@ -16,10 +16,12 @@ list(APPEND SOURCE
     fsctl.c
     pnp.c
     read.c
+    registry.c
     reparse.c
     search.c
     security.c
     treefuncs.c
+    worker-thread.c
     write.c
     btrfs_drv.h)
 

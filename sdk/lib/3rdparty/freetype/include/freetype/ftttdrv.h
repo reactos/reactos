@@ -138,31 +138,37 @@ FT_BEGIN_HEADER
    *   interpreter-version
    *
    * @description:
-   *   Currently, two versions are available, representing the bytecode
-   *   interpreter with and without subpixel hinting support,
-   *   respectively.  The default is subpixel support if
-   *   TT_CONFIG_OPTION_SUBPIXEL_HINTING is defined, and no subpixel
-   *   support otherwise (since it isn't available then).
+
+   *   Currently, three versions are available, two representing the
+   *   bytecode interpreter with subpixel hinting support (old `Infinality'
+   *   code and new stripped-down and higher performance `minimal' code) and
+   *   one without, respectively.  The default is subpixel support if
+   *   TT_CONFIG_OPTION_SUBPIXEL_HINTING is defined, and no subpixel support
+   *   otherwise (since it isn't available then).
    *
    *   If subpixel hinting is on, many TrueType bytecode instructions behave
    *   differently compared to B/W or grayscale rendering (except if `native
-   *   ClearType' is selected by the font).  The main idea is to render at a
-   *   much increased horizontal resolution, then sampling down the created
-   *   output to subpixel precision.  However, many older fonts are not
-   *   suited to this and must be specially taken care of by applying
-   *   (hardcoded) font-specific tweaks.
+   *   ClearType' is selected by the font).  Microsoft's main idea is to
+   *   render at a much increased horizontal resolution, then sampling down
+   *   the created output to subpixel precision.  However, many older fonts
+   *   are not suited to this and must be specially taken care of by
+   *   applying (hardcoded) tweaks in Microsoft's interpreter.
    *
    *   Details on subpixel hinting and some of the necessary tweaks can be
    *   found in Greg Hitchcock's whitepaper at
-   *   `http://www.microsoft.com/typography/cleartype/truetypecleartype.aspx'.
+   *   `http://www.microsoft.com/typography/cleartype/truetypecleartype.aspx'. 
+   *   Note that FreeType currently doesn't really `subpixel hint' (6x1, 6x2,
+   *   or 6x5 supersampling) like discussed in the paper.  Depending on the
+   *   chosen interpreter, it simply ignores instructions on vertical stems
+   *   to arrive at very similar results.
    *
-   *   The following example code demonstrates how to activate subpixel
+   *   The following example code demonstrates how to deactivate subpixel
    *   hinting (omitting the error handling).
    *
    *   {
    *     FT_Library  library;
    *     FT_Face     face;
-   *     FT_UInt     interpreter_version = TT_INTERPRETER_VERSION_38;
+   *     FT_UInt     interpreter_version = TT_INTERPRETER_VERSION_35;
    *
    *
    *     FT_Init_FreeType( &library );
@@ -197,9 +203,19 @@ FT_BEGIN_HEADER
    *
    *   TT_INTERPRETER_VERSION_38 ::
    *     Version~38 corresponds to MS rasterizer v.1.9; it is roughly
-   *     equivalent to the hinting provided by DirectWrite ClearType (as
-   *     can be found, for example, in the Internet Explorer~9 running on
-   *     Windows~7).
+   *     equivalent to the hinting provided by DirectWrite ClearType (as can
+   *     be found, for example, in the Internet Explorer~9 running on
+   *     Windows~7).  It is used in FreeType to select the `Infinality'
+   *     subpixel hinting code.  The code may be removed in a future
+   *     version.
+   *
+   *   TT_INTERPRETER_VERSION_40 ::
+   *     Version~40 corresponds to MS rasterizer v.2.1; it is roughly
+   *     equivalent to the hinting provided by DirectWrite ClearType (as can
+   *     be found, for example, in Microsoft's Edge Browser on Windows~10). 
+   *     It is used in FreeType to select the `minimal' subpixel hinting
+   *     code, a stripped-down and higher performance version of the
+   *     `Infinality' code.
    *
    * @note:
    *   This property controls the behaviour of the bytecode interpreter
@@ -207,9 +223,9 @@ FT_BEGIN_HEADER
    *   get rasterized!  In particular, it does not control subpixel color
    *   filtering.
    *
-   *   If FreeType has not been compiled with configuration option
-   *   FT_CONFIG_OPTION_SUBPIXEL_HINTING, selecting version~38 causes an
-   *   `FT_Err_Unimplemented_Feature' error.
+   *   If FreeType has not been compiled with the configuration option
+   *   FT_CONFIG_OPTION_SUBPIXEL_HINTING, selecting version~38 or~40 causes
+   *   an `FT_Err_Unimplemented_Feature' error.
    *
    *   Depending on the graphics framework, Microsoft uses different
    *   bytecode and rendering engines.  As a consequence, the version
@@ -290,13 +306,14 @@ FT_BEGIN_HEADER
    *   the version~1 gasp table exclusively (like Color ClearType), while
    *   v1.6 only respects the values of version~0 (bits 0 and~1).
    *
-   *   FreeType doesn't provide all capabilities of the most recent
-   *   ClearType incarnation, thus we identify our subpixel support as
-   *   version~38.
+   *   Keep in mind that the features of the above interpreter versions
+   *   might not map exactly to FreeType features or behavior because it is
+   *   a fundamentally different library with different internals.
    *
    */
 #define TT_INTERPRETER_VERSION_35  35
 #define TT_INTERPRETER_VERSION_38  38
+#define TT_INTERPRETER_VERSION_40  40
 
  /* */
 

@@ -19,6 +19,11 @@ License = Gratuită
 Description = Un editor hexazecimal de fișiere pentru Windows.
 Size = 146,3 Kio
 
+[Section.0419]
+License = Бесплатно
+Description = Шестнадцатеричный редактор файлов для  Windows.
+Size = 146,3 КБ
+
 [Section.041f]
 License = Ücretsiz
 Description = Windows için bir onaltılık kütük düzenleyicisi.

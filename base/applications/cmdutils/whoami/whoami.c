@@ -753,7 +753,7 @@ int wmain(int argc, WCHAR* argv[])
         {
             NoHeaderArgCount++;
 
-            if (NoHeader != TRUE)
+            if (NoHeader == FALSE)
             {
                 NoHeader = TRUE;
                 // wprintf(L"Headers disabled!\n");
@@ -788,7 +788,7 @@ int wmain(int argc, WCHAR* argv[])
 
                     /* looks like you can't use the "/fo list /nh" options together
                        for some stupid reason */
-                    if (PrintFormat == list && NoHeader == TRUE)
+                    if (PrintFormat == list && NoHeader != FALSE)
                     {
                         wprintf(WhoamiLoadRcString(IDS_ERROR_NH_LIST));
                         return 1;

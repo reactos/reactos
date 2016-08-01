@@ -76,6 +76,7 @@ add_livecd_shortcut("Clipboard Viewer" clipbrd.exe "Profiles/All Users/Start Men
 add_livecd_shortcut("Keyboard Layout Switcher" kbswitch.exe "Profiles/All Users/Start Menu/Programs/System Tools")
 add_livecd_shortcut("ReactX Diagnostic" dxdiag.exe "Profiles/All Users/Start Menu/Programs/System Tools")
 add_livecd_shortcut("Regedit" regedit.exe "Profiles/All Users/Start Menu/Programs/System Tools")
+add_livecd_shortcut("Task Manager" taskmgr.exe "Profiles/All Users/Start Menu/Programs/System Tools")
 add_livecd_shortcut("ReactOS Explorer" explorer.exe "Profiles/All Users/Start Menu/Programs")
 
 add_custom_target(livecd_links DEPENDS ${LIVECD_SHORTCUTS})

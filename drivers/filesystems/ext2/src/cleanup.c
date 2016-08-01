@@ -73,13 +73,11 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
             _SEH2_LEAVE;
         }
 
-        VcbResourceAcquired =
-            ExAcquireResourceExclusiveLite(
-                &Vcb->MainResource,
-                TRUE
-            );
-
         if (Fcb->Identifier.Type == EXT2VCB) {
+
+            ExAcquireResourceExclusiveLite(
+                    &Vcb->MainResource, TRUE);
+            VcbResourceAcquired = TRUE;
 
             if (FlagOn(Vcb->Flags, VCB_VOLUME_LOCKED) &&
                 Vcb->LockFile == FileObject ){
@@ -102,6 +100,12 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
 
         ASSERT((Fcb->Identifier.Type == EXT2FCB) &&
                (Fcb->Identifier.Size == sizeof(EXT2_FCB)));
+
+        FcbResourceAcquired =
+            ExAcquireResourceExclusiveLite(
+                &Fcb->MainResource,
+                TRUE
+            );
 
         if (IsFlagOn(FileObject->Flags, FO_CLEANUP_COMPLETE)) {
             if (IsFlagOn(FileObject->Flags, FO_FILE_MODIFIED) &&
@@ -135,17 +139,7 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
             }
 
             FsRtlNotifyCleanup(Vcb->NotifySync, &Vcb->NotifyList, Ccb);
-
         }
-
-        ExReleaseResourceLite(&Vcb->MainResource);
-        VcbResourceAcquired = FALSE;
-
-        FcbResourceAcquired =
-            ExAcquireResourceExclusiveLite(
-                &Fcb->MainResource,
-                TRUE
-            );
 
         ASSERT((Ccb->Identifier.Type == EXT2CCB) &&
                (Ccb->Identifier.Size == sizeof(EXT2_CCB)));
@@ -284,6 +278,37 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
             }
         }
 
+        IoRemoveShareAccess(FileObject, &Fcb->ShareAccess);
+
+        if (!IsDirectory(Fcb)) {
+
+            if ( IsFlagOn(FileObject->Flags, FO_CACHE_SUPPORTED) &&
+                    (Fcb->NonCachedOpenCount == Fcb->OpenHandleCount) &&
+                    (Fcb->SectionObject.DataSectionObject != NULL)) {
+
+                if (!IsVcbReadOnly(Vcb)) {
+                    CcFlushCache(&Fcb->SectionObject, NULL, 0, NULL);
+                    ClearLongFlag(Fcb->Flags, FCB_FILE_MODIFIED);
+                }
+
+                /* purge cache if all remaining openings are non-cached */
+                if (Fcb->NonCachedOpenCount > 0 ||
+                    IsFlagOn(Fcb->Flags, FCB_DELETE_PENDING)) {
+                    if (ExAcquireResourceExclusiveLite(&(Fcb->PagingIoResource), TRUE)) {
+                        ExReleaseResourceLite(&(Fcb->PagingIoResource));
+                    }
+
+                    /* CcPurge could generate recursive IRP_MJ_CLOSE request */
+                    CcPurgeCacheSection( &Fcb->SectionObject,
+                                         NULL,
+                                         0,
+                                         FALSE );
+                }
+            }
+
+            CcUninitializeCacheMap(FileObject, NULL, NULL);
+        }
+
         if (SymLinkDelete ||
             (IsFlagOn(Fcb->Flags, FCB_DELETE_PENDING) &&
              Fcb->OpenHandleCount == 0) ) {
@@ -336,35 +361,6 @@ Ext2Cleanup (IN PEXT2_IRP_CONTEXT IrpContext)
                 }
             }
         }
-
-        if (!IsDirectory(Fcb)) {
-
-            if ( IsFlagOn(FileObject->Flags, FO_CACHE_SUPPORTED) &&
-                    (Fcb->NonCachedOpenCount == Fcb->OpenHandleCount) &&
-                    (Fcb->SectionObject.DataSectionObject != NULL)) {
-
-                if (!IsVcbReadOnly(Vcb)) {
-                    CcFlushCache(&Fcb->SectionObject, NULL, 0, NULL);
-                    ClearLongFlag(Fcb->Flags, FCB_FILE_MODIFIED);
-                }
-
-                /* purge cache if all remaining openings are non-cached */
-                if (Fcb->NonCachedOpenCount > 0) {
-                    if (ExAcquireResourceExclusiveLite(&(Fcb->PagingIoResource), TRUE)) {
-                        ExReleaseResourceLite(&(Fcb->PagingIoResource));
-                    }
-
-                    CcPurgeCacheSection( &Fcb->SectionObject,
-                                         NULL,
-                                         0,
-                                         FALSE );
-                }
-            }
-
-            CcUninitializeCacheMap(FileObject, NULL, NULL);
-        }
-
-        IoRemoveShareAccess(FileObject, &Fcb->ShareAccess);
 
         DEBUG(DL_INF, ( "Ext2Cleanup: OpenCount=%u ReferCount=%u NonCahcedCount=%xh %wZ\n",
                         Fcb->OpenHandleCount, Fcb->ReferenceCount, Fcb->NonCachedOpenCount, &Fcb->Mcb->FullName));

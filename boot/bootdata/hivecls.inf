@@ -341,6 +341,14 @@ HKCR,"regfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.e
 HKCR,"regfile\shell\open","",0x00000000,%MERGE%
 HKCR,"regfile\shell\open\command","",0x00000000,"regedit.exe ""%1"""
 
+; Remote Desktop File
+HKCR,".rdp","",0x00000000,"rdpfile"
+HKCR,"rdpfile","",0x00000000,"Remote Desktop Connection"
+;HKCR,"rdpfile","FriendlyTypeName",0x00020000,"%SystemRoot%\mstsc.exe,-4004"
+HKCR,"rdpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\mstsc.exe,0"
+HKCR,"rdpfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mstsc.exe %1"
+;HKCR,"rdpfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mstsc.exe -edit %1"
+
 ; Screen Savers
 HKCR,".scr","",0x00000000,"scrfile"
 HKCR,"scrfile","",0x00000000,"Screen Saver"

@@ -1605,20 +1605,17 @@ getaddrinfo(const char FAR * nodename,
     struct sockaddr_in *sin;
     INT error;
 
-    if (res == NULL)
-    {
-        error = WSAEINVAL;
-        goto End;
-    }
-    if (nodename == NULL && servname == NULL)
-    {
-        error = WSAHOST_NOT_FOUND;
-        goto End;
-    }
-
     if (!WSAINITIALIZED)
     {
         error = WSANOTINITIALISED;
+        goto End;
+    }
+
+    *res = NULL;
+
+    if (nodename == NULL && servname == NULL)
+    {
+        error = WSAHOST_NOT_FOUND;
         goto End;
     }
 

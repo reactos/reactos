@@ -200,6 +200,28 @@ public:
         return *this;
     }
 
+    CSimpleStringT& operator=(_In_ const CSimpleStringT& strSrc)
+    {
+        CStringData* pData = GetData();
+        CStringData* pNewData = strSrc.GetData();
+
+        if (pNewData != pData)
+        {
+            if (!pData->IsLocked() && (pNewData->pStringMgr == pData->pStringMgr))
+            {
+                pNewData = CloneData(pNewData);
+                pData->Release();
+                Attach(pNewData);
+            }
+            else
+            {
+                SetString(strSrc.GetString(), strSrc.GetLength());
+            }
+        }
+
+        return *this;
+    }
+
     CSimpleStringT& operator+=(_In_ const CSimpleStringT& strSrc)
     {
         Append(strSrc);
@@ -495,7 +517,7 @@ private:
         if (pOldData->IsShared())
         {
             Fork(nLength);
-            ATLASSERT(FALSE);
+            //ATLASSERT(FALSE);
         }
         else if (pOldData->nAllocLength < nLength)
         {

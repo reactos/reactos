@@ -757,7 +757,12 @@ MmCreateTeb(IN PEPROCESS Process,
     // Allocate the TEB
     //
     Status = MiCreatePebOrTeb(Process, sizeof(TEB), (PULONG_PTR)&Teb);
-    ASSERT(NT_SUCCESS(Status));
+    if (!NT_SUCCESS(Status))
+    {
+        /* Cleanup and exit */
+        KeDetachProcess();
+        return Status;
+    }
 
     //
     // Use SEH in case we can't load the TEB

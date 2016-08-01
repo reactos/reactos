@@ -53,7 +53,6 @@ public:
 
 protected:
     CComBSTR m_Filename;
-    HWND m_Wnd;
     BOOL m_IsSfcProtected;
     BOOL m_AllowPermLayer;
     DWORD m_LayerQueryFlags;

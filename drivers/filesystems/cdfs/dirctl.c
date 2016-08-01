@@ -75,14 +75,16 @@ CdfsGetEntryName(PDEVICE_EXTENSION DeviceExt,
                 CcUnpinData(*Context);
                 StreamOffset->QuadPart += BLOCKSIZE;
                 *CurrentOffset = ROUND_UP(*CurrentOffset, BLOCKSIZE);
-                if (!CcMapData(DeviceExt->StreamFileObject,
-                    StreamOffset,
-                    BLOCKSIZE, TRUE,
-                    Context, Block))
+                _SEH2_TRY
+                {
+                    CcMapData(DeviceExt->StreamFileObject, StreamOffset, BLOCKSIZE, MAP_WAIT, Context, Block);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     DPRINT("CcMapData() failed\n");
-                    return(STATUS_UNSUCCESSFUL);
+                    _SEH2_YIELD(return _SEH2_GetExceptionCode());
                 }
+                _SEH2_END;
                 *Ptr = *Block;
                 Record = (PDIR_RECORD)*Ptr;
             }
@@ -99,14 +101,16 @@ CdfsGetEntryName(PDEVICE_EXTENSION DeviceExt,
         CcUnpinData(*Context);
         StreamOffset->QuadPart += BLOCKSIZE;
         *CurrentOffset = ROUND_UP(*CurrentOffset, BLOCKSIZE);
-        if (!CcMapData(DeviceExt->StreamFileObject,
-            StreamOffset,
-            BLOCKSIZE, TRUE,
-            Context, Block))
+        _SEH2_TRY
+        {
+            CcMapData(DeviceExt->StreamFileObject, StreamOffset, BLOCKSIZE, MAP_WAIT, Context, Block);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             DPRINT("CcMapData() failed\n");
-            return(STATUS_UNSUCCESSFUL);
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
+        _SEH2_END;
         *Ptr = *Block;
         Record = (PDIR_RECORD)*Ptr;
     }
@@ -231,12 +235,16 @@ CdfsFindFile(PDEVICE_EXTENSION DeviceExt,
         StreamOffset.QuadPart += ROUND_DOWN(Offset, BLOCKSIZE);
     }
 
-    if (!CcMapData(DeviceExt->StreamFileObject, &StreamOffset,
-        BLOCKSIZE, TRUE, &Context, &Block))
+    _SEH2_TRY
+    {
+        CcMapData(DeviceExt->StreamFileObject, &StreamOffset, BLOCKSIZE, MAP_WAIT, &Context, &Block);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         DPRINT("CcMapData() failed\n");
-        return STATUS_UNSUCCESSFUL;
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
+    _SEH2_END;
 
     Record = (PDIR_RECORD) ((ULONG_PTR)Block + Offset % BLOCKSIZE);
     if (Offset)

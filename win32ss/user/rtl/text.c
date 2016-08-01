@@ -1189,7 +1189,7 @@ INT WINAPI DrawTextExWorker( HDC hdc,
 
     if (flags & DT_EXPANDTABS)
     {
-        int tabstop = ((flags & DT_TABSTOP) && dtp) ? dtp->iTabLength : 8;
+        int tabstop = ((flags & DT_TABSTOP) && dtp && dtp->iTabLength) ? dtp->iTabLength : 8;
 	tabwidth = tm.tmAveCharWidth * tabstop;
     }
 

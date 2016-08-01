@@ -741,6 +741,7 @@ fprintf(stderr, "xsltInitCtxtKey %s : %d\n", keyDef->name, ctxt->keyInitLevel);
 	cur = matchList->nodeTab[i];
 	if (! IS_XSLT_REAL_NODE(cur))
 	    continue;
+        ctxt->node = cur;
 	xpctxt->node = cur;
 	/*
 	* Process the 'use' of the xsl:key.

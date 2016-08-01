@@ -651,11 +651,11 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    FT_ENCODING_SJIS ::                                                */
   /*      Corresponds to Japanese SJIS encoding.  More info at             */
-  /*      at `http://en.wikipedia.org/wiki/Shift_JIS'.                     */
+  /*      `http://en.wikipedia.org/wiki/Shift_JIS'.                        */
   /*      See note on multi-byte encodings below.                          */
   /*                                                                       */
   /*    FT_ENCODING_GB2312 ::                                              */
-  /*      Corresponds to an encoding system for Simplified Chinese as used */
+  /*      Corresponds to an encoding system for Simplified Chinese as      */
   /*      used in mainland China.                                          */
   /*                                                                       */
   /*    FT_ENCODING_BIG5 ::                                                */
@@ -1103,7 +1103,7 @@ FT_BEGIN_HEADER
   /*    FT_FACE_FLAG_SCALABLE ::                                           */
   /*      Indicates that the face contains outline glyphs.  This doesn't   */
   /*      prevent bitmap strikes, i.e., a face can have both this and      */
-  /*      and @FT_FACE_FLAG_FIXED_SIZES set.                               */
+  /*      @FT_FACE_FLAG_FIXED_SIZES set.                                   */
   /*                                                                       */
   /*    FT_FACE_FLAG_FIXED_SIZES ::                                        */
   /*      Indicates that the face contains bitmap strikes.  See also the   */
@@ -1222,7 +1222,7 @@ FT_BEGIN_HEADER
    *
    */
 #define FT_HAS_HORIZONTAL( face ) \
-          ( face->face_flags & FT_FACE_FLAG_HORIZONTAL )
+          ( (face)->face_flags & FT_FACE_FLAG_HORIZONTAL )
 
 
   /*************************************************************************
@@ -1236,7 +1236,7 @@ FT_BEGIN_HEADER
    *
    */
 #define FT_HAS_VERTICAL( face ) \
-          ( face->face_flags & FT_FACE_FLAG_VERTICAL )
+          ( (face)->face_flags & FT_FACE_FLAG_VERTICAL )
 
 
   /*************************************************************************
@@ -1250,7 +1250,7 @@ FT_BEGIN_HEADER
    *
    */
 #define FT_HAS_KERNING( face ) \
-          ( face->face_flags & FT_FACE_FLAG_KERNING )
+          ( (face)->face_flags & FT_FACE_FLAG_KERNING )
 
 
   /*************************************************************************
@@ -1265,7 +1265,7 @@ FT_BEGIN_HEADER
    *
    */
 #define FT_IS_SCALABLE( face ) \
-          ( face->face_flags & FT_FACE_FLAG_SCALABLE )
+          ( (face)->face_flags & FT_FACE_FLAG_SCALABLE )
 
 
   /*************************************************************************
@@ -1284,7 +1284,7 @@ FT_BEGIN_HEADER
    *
    */
 #define FT_IS_SFNT( face ) \
-          ( face->face_flags & FT_FACE_FLAG_SFNT )
+          ( (face)->face_flags & FT_FACE_FLAG_SFNT )
 
 
   /*************************************************************************
@@ -1299,7 +1299,7 @@ FT_BEGIN_HEADER
    *
    */
 #define FT_IS_FIXED_WIDTH( face ) \
-          ( face->face_flags & FT_FACE_FLAG_FIXED_WIDTH )
+          ( (face)->face_flags & FT_FACE_FLAG_FIXED_WIDTH )
 
 
   /*************************************************************************
@@ -1314,7 +1314,7 @@ FT_BEGIN_HEADER
    *
    */
 #define FT_HAS_FIXED_SIZES( face ) \
-          ( face->face_flags & FT_FACE_FLAG_FIXED_SIZES )
+          ( (face)->face_flags & FT_FACE_FLAG_FIXED_SIZES )
 
 
   /*************************************************************************
@@ -1340,7 +1340,7 @@ FT_BEGIN_HEADER
    *
    */
 #define FT_HAS_GLYPH_NAMES( face ) \
-          ( face->face_flags & FT_FACE_FLAG_GLYPH_NAMES )
+          ( (face)->face_flags & FT_FACE_FLAG_GLYPH_NAMES )
 
 
   /*************************************************************************
@@ -1355,7 +1355,7 @@ FT_BEGIN_HEADER
    *
    */
 #define FT_HAS_MULTIPLE_MASTERS( face ) \
-          ( face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS )
+          ( (face)->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS )
 
 
   /*************************************************************************
@@ -1373,7 +1373,7 @@ FT_BEGIN_HEADER
    *
    */
 #define FT_IS_CID_KEYED( face ) \
-          ( face->face_flags & FT_FACE_FLAG_CID_KEYED )
+          ( (face)->face_flags & FT_FACE_FLAG_CID_KEYED )
 
 
   /*************************************************************************
@@ -1387,7 +1387,7 @@ FT_BEGIN_HEADER
    *
    */
 #define FT_IS_TRICKY( face ) \
-          ( face->face_flags & FT_FACE_FLAG_TRICKY )
+          ( (face)->face_flags & FT_FACE_FLAG_TRICKY )
 
 
   /*************************************************************************
@@ -1401,7 +1401,7 @@ FT_BEGIN_HEADER
    *
    */
 #define FT_HAS_COLOR( face ) \
-          ( face->face_flags & FT_FACE_FLAG_COLOR )
+          ( (face)->face_flags & FT_FACE_FLAG_COLOR )
 
 
   /*************************************************************************/
@@ -1941,7 +1941,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    If the @FT_OPEN_MEMORY bit is set, assume that this is a           */
   /*    memory file of `memory_size' bytes, located at `memory_address'.   */
-  /*    The data are are not copied, and the client is responsible for     */
+  /*    The data are not copied, and the client is responsible for         */
   /*    releasing and destroying them _after_ the corresponding call to    */
   /*    @FT_Done_Face.                                                     */
   /*                                                                       */
@@ -2339,9 +2339,9 @@ FT_BEGIN_HEADER
   /*      used to determine both scaling values.                           */
   /*                                                                       */
   /*    FT_SIZE_REQUEST_TYPE_REAL_DIM ::                                   */
-  /*      The real dimension.  The sum of the the `ascender' and (minus    */
-  /*      of) the `descender' fields of @FT_FaceRec are used to determine  */
-  /*      both scaling values.                                             */
+  /*      The real dimension.  The sum of the `ascender' and (minus of)    */
+  /*      the `descender' fields of @FT_FaceRec are used to determine both */
+  /*      scaling values.                                                  */
   /*                                                                       */
   /*    FT_SIZE_REQUEST_TYPE_BBOX ::                                       */
   /*      The font bounding box.  The width and height of the `bbox' field */
@@ -2577,6 +2577,10 @@ FT_BEGIN_HEADER
   /*    returned for invalid CID values (this is, for CID values that      */
   /*    don't have a corresponding glyph in the font).  See the discussion */
   /*    of the @FT_FACE_FLAG_CID_KEYED flag for more details.              */
+  /*                                                                       */
+  /*    If you receive `FT_Err_Glyph_Too_Big', try getting the glyph       */
+  /*    outline at EM size, then scale it manually and fill it as a        */
+  /*    graphics operation.                                                */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Load_Glyph( FT_Face   face,
@@ -2855,7 +2859,7 @@ FT_BEGIN_HEADER
    *
    *   If @FT_LOAD_RENDER is also set, the glyph is rendered in the
    *   corresponding mode (i.e., the mode that matches the used algorithm
-   *   best).  An exeption is FT_LOAD_TARGET_MONO since it implies
+   *   best).  An exception is FT_LOAD_TARGET_MONO since it implies
    *   @FT_LOAD_MONOCHROME.
    *
    *   You can use a hinting algorithm that doesn't correspond to the same
@@ -3273,7 +3277,7 @@ FT_BEGIN_HEADER
   /*    `.notdef').                                                        */
   /*                                                                       */
   /*    This function always returns an error if the config macro          */
-  /*    `FT_CONFIG_OPTION_NO_GLYPH_NAMES' is not defined in `ftoptions.h'. */
+  /*    `FT_CONFIG_OPTION_NO_GLYPH_NAMES' is not defined in `ftoption.h'.  */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Get_Glyph_Name( FT_Face     face,
@@ -4172,7 +4176,7 @@ FT_BEGIN_HEADER
    */
 #define FREETYPE_MAJOR  2
 #define FREETYPE_MINOR  6
-#define FREETYPE_PATCH  3
+#define FREETYPE_PATCH  4
 
 
   /*************************************************************************/

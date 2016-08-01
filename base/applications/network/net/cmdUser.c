@@ -70,11 +70,8 @@ EnumerateUsers(VOID)
                 PrintToConsole(L"%s\n", pBuffer[i].usri0_name);
         }
 
-        if (pBuffer != NULL)
-        {
-            NetApiBufferFree(pBuffer);
-            pBuffer = NULL;
-        }
+        NetApiBufferFree(pBuffer);
+        pBuffer = NULL;
     }
     while (Status == ERROR_MORE_DATA);
 

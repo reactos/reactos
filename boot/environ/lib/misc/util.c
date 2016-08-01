@@ -749,7 +749,7 @@ BlUtlCheckSum (
             }
         }
 
-        if (Length != Length)
+        if (i != Length)
         {
             PartialSum += (unsigned __int8)Buffer[Length];
             if (Flags & BL_UTL_CHECKSUM_COMPLEMENT)

@@ -47,9 +47,10 @@ static void WINAPI SdbpWrite(PDB db, const void* data, DWORD size)
 {
     if (db->write_iter + size > db->size)
     {
+        DWORD oldSize = db->size;
         /* Round to powers of two to prevent too many reallocations */
         while (db->size < db->write_iter + size) db->size <<= 1;
-        db->data = SdbReAlloc(db->data, db->size);
+        db->data = SdbReAlloc(db->data, db->size, oldSize);
     }
 
     memcpy(db->data + db->write_iter, data, size);

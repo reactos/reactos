@@ -12,6 +12,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <k32.h>
+#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -242,27 +243,66 @@ LONG
 WINAPI
 UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
 {
+    static UNICODE_STRING AeDebugKey =
+        RTL_CONSTANT_STRING(L"\\Registry\\Machine\\" REGSTR_PATH_AEDEBUG);
+
+    static BOOLEAN IsSecondChance = FALSE;
+
+    /* Exception data */
     NTSTATUS Status;
-    LONG RetValue;
-    HANDLE DebugPort = NULL;
-    ULONG_PTR ErrorParameters[4];
-    ULONG ErrorResponse;
     PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
     LPTOP_LEVEL_EXCEPTION_FILTER RealFilter;
+    LONG RetValue;
 
-    if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
-        ExceptionRecord->NumberParameters >= 2)
+    /* Debugger and hard error parameters */
+    HANDLE DebugPort = NULL;
+    ULONG_PTR ErrorParameters[4];
+    ULONG DebugResponse, ErrorResponse;
+
+    /* Post-Mortem "Auto-Execute" (AE) Debugger registry data */
+    HANDLE KeyHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING ValueString;
+    ULONG Length;
+    UCHAR Buffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + MAX_PATH * sizeof(WCHAR)];
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PVOID)Buffer;
+    BOOLEAN AeDebugAuto = FALSE;
+    PWCHAR AeDebugPath = NULL;
+    WCHAR AeDebugCmdLine[MAX_PATH];
+
+    /* Debugger process data */
+    BOOL Success;
+    HRESULT hr;
+    ULONG PrependLength;
+    HANDLE hDebugEvent;
+    HANDLE WaitHandles[2];
+    STARTUPINFOW StartupInfo;
+    PROCESS_INFORMATION ProcessInfo;
+
+    /* In case this is a nested exception, just kill the process */
+    if (ExceptionRecord->ExceptionFlags & EXCEPTION_NESTED_CALL)
     {
-        switch(ExceptionRecord->ExceptionInformation[0])
+        NtTerminateProcess(NtCurrentProcess(), ExceptionRecord->ExceptionCode);
+        return EXCEPTION_EXECUTE_HANDLER;
+    }
+
+    if ((ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) &&
+        (ExceptionRecord->NumberParameters >= 2))
+    {
+        switch (ExceptionRecord->ExceptionInformation[0])
         {
             case EXCEPTION_WRITE_FAULT:
-                /* Change the protection on some write attempts, some InstallShield setups
-                   have this bug */
+            {
+                /*
+                 * Change the protection on some write attempts,
+                 * some InstallShield setups have this bug.
+                 */
                 RetValue = BasepCheckForReadOnlyResource(
                     (PVOID)ExceptionRecord->ExceptionInformation[1]);
                 if (RetValue == EXCEPTION_CONTINUE_EXECUTION)
                     return EXCEPTION_CONTINUE_EXECUTION;
                 break;
+            }
 
             case EXCEPTION_EXECUTE_FAULT:
                 /* FIXME */
@@ -270,66 +310,353 @@ UnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
         }
     }
 
-    /* Is there a debugger running? */
+    /* If the process is being debugged, pass the exception to the debugger */
     Status = NtQueryInformationProcess(NtCurrentProcess(),
                                        ProcessDebugPort,
                                        &DebugPort,
                                        sizeof(DebugPort),
                                        NULL);
-    if (!NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status) && DebugPort)
     {
-        BaseSetLastNTError(Status);
-        return EXCEPTION_EXECUTE_HANDLER;
-    }
-
-    if (DebugPort)
-    {
-        /* Pass the exception to debugger. */
         DPRINT("Passing exception to debugger\n");
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
+    /* No debugger present, let's continue... */
+
     RealFilter = RtlDecodePointer(GlobalTopLevelExceptionFilter);
     if (RealFilter)
     {
-        LONG ret = RealFilter(ExceptionInfo);
-        if (ret != EXCEPTION_CONTINUE_SEARCH)
-            return ret;
+        RetValue = RealFilter(ExceptionInfo);
+        if (RetValue != EXCEPTION_CONTINUE_SEARCH)
+            return RetValue;
     }
 
+    /* ReactOS-specific: DPRINT a stack trace */
     PrintStackTrace(ExceptionInfo);
 
+    /*
+     * Now pop up an error if needed. Check both the process-wide (Win32)
+     * and per-thread error-mode flags (NT).
+     */
+    if ((GetErrorMode() & SEM_NOGPFAULTERRORBOX) ||
+        (RtlGetThreadErrorMode() & RTL_SEM_NOGPFAULTERRORBOX))
+    {
+        /* Do not display the pop-up error box, just transfer control to the exception handler */
+        return EXCEPTION_EXECUTE_HANDLER;
+    }
+
     /* Save exception code and address */
-    ErrorParameters[0] = (ULONG)ExceptionRecord->ExceptionCode;
+    ErrorParameters[0] = (ULONG_PTR)ExceptionRecord->ExceptionCode;
     ErrorParameters[1] = (ULONG_PTR)ExceptionRecord->ExceptionAddress;
 
-    if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
+    if (ExceptionRecord->ExceptionCode == STATUS_IN_PAGE_ERROR)
     {
-        /* get the type of operation that caused the access violation */
-        ErrorParameters[2] = ExceptionRecord->ExceptionInformation[0];
-    }
-    else
-    {
+        /*
+         * Get the underlying status code that resulted in the exception,
+         * and just forget about the type of operation (read/write).
+         */
         ErrorParameters[2] = ExceptionRecord->ExceptionInformation[2];
+    }
+    else // if (ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) or others...
+    {
+        /* Get the type of operation that caused the access violation */
+        ErrorParameters[2] = ExceptionRecord->ExceptionInformation[0];
     }
 
     /* Save faulting address */
     ErrorParameters[3] = ExceptionRecord->ExceptionInformation[1];
 
-    /* Raise the harderror */
-    Status = NtRaiseHardError(STATUS_UNHANDLED_EXCEPTION,
-                              4,
-                              0,
-                              ErrorParameters,
-                              OptionOkCancel,
-                              &ErrorResponse);
+    /*
+     * Prepare the hard error dialog: default to only OK
+     * in case we do not have any debugger at our disposal.
+     */
+    DebugResponse = OptionOk;
+    AeDebugAuto = FALSE;
 
-    if (NT_SUCCESS(Status) && (ErrorResponse == ResponseCancel))
+    /*
+     * Retrieve Post-Mortem Debugger settings from the registry, under:
+     * HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug
+     * (REGSTR_PATH_AEDEBUG).
+     */
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &AeDebugKey,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenKey(&KeyHandle, KEY_QUERY_VALUE, &ObjectAttributes);
+    if (NT_SUCCESS(Status))
     {
-        /* FIXME: Check the result, if the "Cancel" button was
-                  clicked run a debugger */
-        DPRINT1("Debugging is not implemented yet\n");
+        /*
+         * Read the 'Auto' REG_SZ value:
+         * "0" (or any other value): Prompt the user for starting the debugger.
+         * "1": Start the debugger without prompting.
+         */
+        RtlInitUnicodeString(&ValueString, REGSTR_VAL_AEDEBUG_AUTO);
+        Status = NtQueryValueKey(KeyHandle,
+                                 &ValueString,
+                                 KeyValuePartialInformation,
+                                 PartialInfo,
+                                 sizeof(Buffer),
+                                 &Length);
+        if (NT_SUCCESS(Status) && (PartialInfo->Type == REG_SZ))
+        {
+            AeDebugAuto = (*(PWCHAR)PartialInfo->Data == L'1');
+        }
+        else
+        {
+            AeDebugAuto = FALSE;
+        }
+
+        /*
+         * Read and store the 'Debugger' REG_SZ value. Its usual format is:
+         *    C:\dbgtools\ntsd.exe -p %ld -e %ld -g
+         * with the first and second parameters being respectively
+         * the process ID and a notification event handle.
+         */
+        RtlInitUnicodeString(&ValueString, REGSTR_VAL_AEDEBUG_DEBUGGER);
+        Status = NtQueryValueKey(KeyHandle,
+                                 &ValueString,
+                                 KeyValuePartialInformation,
+                                 PartialInfo,
+                                 sizeof(Buffer),
+                                 &Length);
+        if (NT_SUCCESS(Status) && (PartialInfo->Type == REG_SZ))
+        {
+            /* We hope the string is NULL-terminated */
+            AeDebugPath = (PWCHAR)PartialInfo->Data;
+
+            /* Skip any prepended whitespace */
+            while (  *AeDebugPath &&
+                   ((*AeDebugPath == L' ') ||
+                    (*AeDebugPath == L'\t')) ) // iswspace(*AeDebugPath)
+            {
+                ++AeDebugPath;
+            }
+
+            if (*AeDebugPath)
+            {
+                /* We have a debugger path, we can prompt the user to debug the program */
+                DebugResponse = OptionOkCancel;
+            }
+            else
+            {
+                /* We actually do not have anything, reset the pointer */
+                AeDebugPath = NULL;
+            }
+        }
+        else
+        {
+            AeDebugPath = NULL;
+        }
+
+        NtClose(KeyHandle);
     }
+
+    // TODO: Start a ReactOS Fault Reporter (unimplemented!)
+    //
+    // For now we are doing the "old way" (aka Win2k), that is also the fallback
+    // case for Windows XP/2003 in case it does not find faultrep.dll to display
+    // the nice "Application Error" dialog box: We use a hard error to communicate
+    // the problem and prompt the user to continue debugging the application or
+    // to terminate it.
+    //
+    // Since Windows XP/2003, we have the ReportFault API available.
+    // See http://www.clausbrod.de/twiki/pub/Blog/DefinePrivatePublic20070616/reportfault.cpp
+    // and https://msdn.microsoft.com/en-us/library/windows/desktop/bb513616(v=vs.85).aspx
+    // and the legacy ReportFault API: https://msdn.microsoft.com/en-us/library/windows/desktop/bb513615(v=vs.85).aspx
+    //
+    // NOTE: Starting Vista+, the fault API is constituted of the WerXXX functions.
+    //
+    // Also see Vostokov's book "Memory Dump Analysis Anthology Collector's Edition, Volume 1"
+    // at: https://books.google.fr/books?id=9w2x6NHljg4C&pg=PA115&lpg=PA115
+
+    if (!(AeDebugPath && AeDebugAuto))
+    {
+        /*
+         * Either there is no debugger specified, or the debugger should
+         * not start automatically: display the hard error no matter what.
+         * For a first chance exception, allow continuing or debugging;
+         * for a second chance exception, just debug or kill the process.
+         */
+        Status = NtRaiseHardError(STATUS_UNHANDLED_EXCEPTION | HARDERROR_OVERRIDE_ERRORMODE,
+                                  4,
+                                  0,
+                                  ErrorParameters,
+                                  (!IsSecondChance ? DebugResponse : OptionOk),
+                                  &ErrorResponse);
+    }
+    else
+    {
+        Status = STATUS_SUCCESS;
+        ErrorResponse = (AeDebugPath ? ResponseCancel : ResponseOk);
+    }
+
+    /*
+     * If the user has chosen not to debug the process, or
+     * if this is a second chance exception, kill the process.
+     */
+    if (!NT_SUCCESS(Status) || (ErrorResponse != ResponseCancel) || IsSecondChance)
+        goto Quit;
+
+    /* If the exception comes from a CSR Server, kill it (this will lead to ReactOS shutdown) */
+    if (BaseRunningInServerProcess)
+    {
+        IsSecondChance = TRUE;
+        goto Quit;
+    }
+
+    /*
+     * Attach a debugger to this process. The debugger process is given
+     * the process ID of the current process to be debugged, as well as
+     * a notification event handle. After being spawned, the debugger
+     * initializes and attaches to the process by calling DebugActiveProcess.
+     * When the debugger is ready, it signals the notification event,
+     * so that we can give it control over the process being debugged,
+     * by passing it the exception.
+     *
+     * See https://msdn.microsoft.com/en-us/library/ms809754.aspx
+     * and http://www.debuginfo.com/articles/ntsdwatson.html
+     * and https://sourceware.org/ml/gdb-patches/2012-08/msg00893.html
+     * for more details.
+     */
+
+    /* Create an inheritable notification debug event for the debugger */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               OBJ_INHERIT,
+                               NULL,
+                               NULL);
+    Status = NtCreateEvent(&hDebugEvent,
+                           EVENT_ALL_ACCESS,
+                           &ObjectAttributes,
+                           NotificationEvent,
+                           FALSE);
+    if (!NT_SUCCESS(Status))
+        hDebugEvent = NULL;
+
+    /* Build the debugger command line */
+
+    Success = FALSE;
+
+    /*
+     * We will add two longs (process ID and event handle) to the command
+     * line. The biggest 32-bit unsigned int (0xFFFFFFFF == 4.294.967.295)
+     * takes 10 decimal digits. We then count the terminating NULL.
+     */
+    Length = wcslen(AeDebugPath) + 2*10 + 1;
+
+    /* Check whether the debugger path may be a relative path */
+    if ((*AeDebugPath != L'"') &&
+        (RtlDetermineDosPathNameType_U(AeDebugPath) == RtlPathTypeRelative))
+    {
+        /* Relative path, prepend SystemRoot\System32 */
+        PrependLength = wcslen(SharedUserData->NtSystemRoot) + 10 /* == wcslen(L"\\System32\\") */;
+        if (PrependLength + Length <= ARRAYSIZE(AeDebugCmdLine))
+        {
+            hr = StringCchPrintfW(AeDebugCmdLine,
+                                  PrependLength + 1,
+                                  L"%s\\System32\\",
+                                  SharedUserData->NtSystemRoot);
+            Success = SUCCEEDED(hr);
+        }
+    }
+    else
+    {
+        /* Full path */
+        PrependLength = 0;
+        if (Length <= ARRAYSIZE(AeDebugCmdLine))
+            Success = TRUE;
+    }
+
+    /* Format the command line */
+    if (Success)
+    {
+        hr = StringCchPrintfW(&AeDebugCmdLine[PrependLength],
+                              Length,
+                              AeDebugPath,
+                              HandleToUlong(NtCurrentTeb()->ClientId.UniqueProcess), // GetCurrentProcessId()
+                              hDebugEvent);
+        Success = SUCCEEDED(hr);
+    }
+
+    /* Start the debugger */
+    if (Success)
+    {
+        DPRINT1("\nStarting debugger: '%S'\n", AeDebugCmdLine);
+
+        RtlZeroMemory(&StartupInfo, sizeof(StartupInfo));
+        RtlZeroMemory(&ProcessInfo, sizeof(ProcessInfo));
+
+        StartupInfo.cb = sizeof(StartupInfo);
+        StartupInfo.lpDesktop = L"WinSta0\\Default";
+
+        Success = CreateProcessW(NULL,
+                                 AeDebugCmdLine,
+                                 NULL, NULL,
+                                 TRUE, 0,
+                                 NULL, NULL,
+                                 &StartupInfo, &ProcessInfo);
+    }
+
+    if (Success)
+    {
+        WaitHandles[0] = hDebugEvent;
+        WaitHandles[1] = ProcessInfo.hProcess;
+
+        /* Loop until the debugger gets ready or terminates unexpectedly */
+        do
+        {
+            /* Alertable wait */
+            Status = NtWaitForMultipleObjects(ARRAYSIZE(WaitHandles),
+                                              WaitHandles,
+                                              WaitAny,
+                                              TRUE, NULL);
+        } while ((Status == STATUS_ALERTED) || (Status == STATUS_USER_APC));
+
+        /*
+         * The debugger terminated unexpectedly and we cannot attach to it.
+         * Kill the process being debugged.
+         */
+        if (Status == STATUS_WAIT_1)
+        {
+            /* Be sure there is no other debugger attached */
+            Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                               ProcessDebugPort,
+                                               &DebugPort,
+                                               sizeof(DebugPort),
+                                               NULL);
+            if (!NT_SUCCESS(Status) || !DebugPort)
+            {
+                /* No debugger is attached, kill the process at next round */
+                IsSecondChance = TRUE;
+            }
+        }
+
+        CloseHandle(ProcessInfo.hThread);
+        CloseHandle(ProcessInfo.hProcess);
+
+        if (hDebugEvent)
+            NtClose(hDebugEvent);
+
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
+    /* We failed starting the debugger, close the event handle and kill the process */
+
+    if (hDebugEvent)
+        NtClose(hDebugEvent);
+
+    IsSecondChance = TRUE;
+
+
+Quit:
+    /* If this is a second chance exception, kill the process */
+    if (IsSecondChance)
+        NtTerminateProcess(NtCurrentProcess(), ExceptionRecord->ExceptionCode);
+
+    /* Otherwise allow handling exceptions in first chance */
 
     /*
      * Returning EXCEPTION_EXECUTE_HANDLER means that the code in

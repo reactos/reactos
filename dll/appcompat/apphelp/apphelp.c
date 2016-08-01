@@ -102,7 +102,8 @@ BOOL WINAPIV ShimDbgPrint(SHIM_LOG_LEVEL Level, PCSTR FunctionName, PCSTR Format
 {
     char Buffer[512];
     va_list ArgList;
-    char* Current = Buffer, *LevelStr;
+    char* Current = Buffer;
+    const char* LevelStr;
     size_t Length = sizeof(Buffer);
 
     if (g_ShimDebugLevel == 0xffffffff)

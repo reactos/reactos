@@ -185,7 +185,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    CompLength :: Compressed table length (in bytes).                  */
   /*                                                                       */
-  /*    OrigLength :: Unompressed table length (in bytes).                 */
+  /*    OrigLength :: Uncompressed table length (in bytes).                */
   /*                                                                       */
   /*    CheckSum   :: The table checksum.  This value can be ignored.      */
   /*                                                                       */
@@ -1386,12 +1386,12 @@ FT_BEGIN_HEADER
     FT_ULong              horz_metrics_offset;
     FT_ULong              vert_metrics_offset;
 
-#ifdef TT_CONFIG_OPTION_SUBPIXEL_HINTING
+#ifdef TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY
     /* since 2.4.12 */
     FT_ULong              sph_found_func_flags; /* special functions found */
                                                 /* for this face           */
     FT_Bool               sph_compatibility_mode;
-#endif /* TT_CONFIG_OPTION_SUBPIXEL_HINTING */
+#endif /* TT_SUPPORT_SUBPIXEL_HINTING_INFINALITY */
 
   } TT_FaceRec;
 

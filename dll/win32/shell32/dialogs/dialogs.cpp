@@ -22,19 +22,19 @@
 
 typedef struct
 {
-    HWND hwndOwner ;
-    HICON hIcon ;
-    LPCWSTR lpstrDirectory ;
-    LPCWSTR lpstrTitle ;
-    LPCWSTR lpstrDescription ;
-    UINT uFlags ;
-} RUNFILEDLGPARAMS ;
+    HWND hwndOwner;
+    HICON hIcon;
+    LPCWSTR lpstrDirectory;
+    LPCWSTR lpstrTitle;
+    LPCWSTR lpstrDescription;
+    UINT uFlags;
+} RUNFILEDLGPARAMS;
 
-typedef BOOL (WINAPI * LPFNOFN) (OPENFILENAMEW *) ;
+typedef BOOL (WINAPI * LPFNOFN) (OPENFILENAMEW *);
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 static INT_PTR CALLBACK RunDlgProc(HWND, UINT, WPARAM, LPARAM);
-static void FillList(HWND, LPWSTR, BOOL);
+static void FillList(HWND, LPWSTR, UINT, BOOL);
 
 
 /*************************************************************************
@@ -64,7 +64,7 @@ BOOL CALLBACK EnumPickIconResourceProc(HMODULE hModule,
     if (IS_INTRESOURCE(lpszName))
         swprintf(szName, L"%u", (DWORD)lpszName);
     else
-        wcscpy(szName, (WCHAR*)lpszName);
+        StringCbCopyW(szName, sizeof(szName), lpszName);
 
     hIcon = LoadIconW(hModule, lpszName);
     if (hIcon == NULL)
@@ -221,7 +221,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
 }
 
 BOOL WINAPI PickIconDlg(
-    HWND hwndOwner,
+    HWND hWndOwner,
     LPWSTR lpstrFile,
     UINT nMaxFile,
     INT* lpdwIconIndex)
@@ -235,7 +235,7 @@ BOOL WINAPI PickIconDlg(
     IconContext.Index = *lpdwIconIndex;
     StringCchCopyNW(IconContext.szName, _countof(IconContext.szName), lpstrFile, nMaxFile);
 
-    res = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_PICK_ICON), hwndOwner, PickIconProc, (LPARAM)&IconContext);
+    res = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_PICK_ICON), hWndOwner, PickIconProc, (LPARAM)&IconContext);
     if (res)
     {
         StringCchCopyNW(lpstrFile, nMaxFile, IconContext.szName, _countof(IconContext.szName));
@@ -252,7 +252,7 @@ BOOL WINAPI PickIconDlg(
  * The Unicode function that is available as ordinal 61 on Windows NT/2000/XP/...
  */
 void WINAPI RunFileDlg(
-    HWND hwndOwner,
+    HWND hWndOwner,
     HICON hIcon,
     LPCWSTR lpstrDirectory,
     LPCWSTR lpstrTitle,
@@ -262,14 +262,14 @@ void WINAPI RunFileDlg(
     TRACE("\n");
 
     RUNFILEDLGPARAMS rfdp;
-    rfdp.hwndOwner        = hwndOwner;
+    rfdp.hwndOwner        = hWndOwner;
     rfdp.hIcon            = hIcon;
     rfdp.lpstrDirectory   = lpstrDirectory;
     rfdp.lpstrTitle       = lpstrTitle;
     rfdp.lpstrDescription = lpstrDescription;
     rfdp.uFlags           = uFlags;
 
-    DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_RUN), hwndOwner, RunDlgProc, (LPARAM)&rfdp);
+    DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_RUN), hWndOwner, RunDlgProc, (LPARAM)&rfdp);
 }
 
 
@@ -361,7 +361,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
     switch (message)
     {
         case WM_INITDIALOG:
-            prfdp = (RUNFILEDLGPARAMS *)lParam ;
+            prfdp = (RUNFILEDLGPARAMS *)lParam;
             SetWindowLongPtrW(hwnd, DWLP_USER, (LONG_PTR)prfdp);
 
             if (prfdp->lpstrTitle)
@@ -376,8 +376,10 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             }
             if (prfdp->uFlags & RFF_NOLABEL)
                 ShowWindow(GetDlgItem(hwnd, IDC_RUNDLG_LABEL), SW_HIDE);
-            if (prfdp->uFlags & RFF_CALCDIRECTORY)
-                FIXME("RFF_CALCDIRECTORY not supported\n");
+            if (prfdp->uFlags & RFF_NOSEPARATEMEM)
+            {
+                FIXME("RFF_NOSEPARATEMEM not supported\n");
+            }
 
             /* Use the default Shell Run icon if no one is specified */
             if (prfdp->hIcon == NULL)
@@ -393,7 +395,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             // SendMessageW(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)prfdp->hIcon);
             SendMessageW(GetDlgItem(hwnd, IDC_RUNDLG_ICON), STM_SETICON, (WPARAM)prfdp->hIcon, 0);
 
-            FillList(GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH), NULL, (prfdp->uFlags & RFF_NODEFAULT) == 0);
+            FillList(GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH), NULL, 0, (prfdp->uFlags & RFF_NODEFAULT) == 0);
             EnableOkButtonFromEditContents(hwnd);
             SetFocus(GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH));
             return TRUE;
@@ -403,60 +405,112 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             {
                 case IDOK:
                 {
-                    int ic;
+                    LRESULT lRet;
                     HWND htxt = GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH);
-                    if ((ic = GetWindowTextLengthW(htxt)))
+                    INT ic;
+                    WCHAR *psz, *parent = NULL;
+                    SHELLEXECUTEINFOW sei;
+                    NMRUNFILEDLGW nmrfd;
+
+                    ic = GetWindowTextLengthW(htxt);
+                    if (ic == 0)
                     {
-                        WCHAR *psz, *parent = NULL;
-                        SHELLEXECUTEINFOW sei;
+                        EndDialog(hwnd, IDCANCEL);
+                        return TRUE;
+                    }
 
-                        ZeroMemory(&sei, sizeof(sei));
-                        sei.cbSize = sizeof(sei);
-                        psz = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, (ic + 1)*sizeof(WCHAR));
+                    ZeroMemory(&sei, sizeof(sei));
+                    sei.cbSize = sizeof(sei);
 
-                        if (psz)
-                        {
-                            GetWindowTextW(htxt, psz, ic + 1);
+                    /*
+                     * Allocate a new MRU entry, we need to add two characters
+                     * for the terminating "\\1" part, then the NULL character.
+                     */
+                    psz = (WCHAR*)HeapAlloc(GetProcessHeap(), 0, (ic + 2 + 1)*sizeof(WCHAR));
+                    if (!psz)
+                    {
+                        EndDialog(hwnd, IDCANCEL);
+                        return TRUE;
+                    }
 
-                            /* according to http://www.codeproject.com/KB/shell/runfiledlg.aspx we should send a
-                             * WM_NOTIFY before execution */
+                    GetWindowTextW(htxt, psz, ic + 1);
 
-                            sei.hwnd = hwnd;
-                            sei.nShow = SW_SHOWNORMAL;
-                            sei.lpFile = psz;
+                    sei.hwnd = hwnd;
+                    sei.nShow = SW_SHOWNORMAL;
+                    sei.lpFile = psz;
 
-                            if (prfdp->lpstrDirectory)
-                                sei.lpDirectory = prfdp->lpstrDirectory;
-                            else
-                                sei.lpDirectory = parent = RunDlg_GetParentDir(sei.lpFile);
+                    /*
+                     * The precedence is the following: first the user-given
+                     * current directory is used; if there is none, a current
+                     * directory is computed if the RFF_CALCDIRECTORY is set,
+                     * otherwise no current directory is defined.
+                     */
+                    if (prfdp->lpstrDirectory)
+                        sei.lpDirectory = prfdp->lpstrDirectory;
+                    else if (prfdp->uFlags & RFF_CALCDIRECTORY)
+                        sei.lpDirectory = parent = RunDlg_GetParentDir(sei.lpFile);
+                    else
+                        sei.lpDirectory = NULL;
 
-                            if (!ShellExecuteExW(&sei))
+                    /* Hide the dialog for now on, we will show it up in case of retry */
+                    ShowWindow(hwnd, SW_HIDE);
+
+                    /*
+                     * As shown by manual tests on Windows, modifying the contents
+                     * of the notification structure will not modify what the
+                     * Run-Dialog will use for the nShow parameter. However the
+                     * lpFile and lpDirectory pointers are set to the buffers used
+                     * by the Run-Dialog, as a consequence they can be modified by
+                     * the notification receiver, as long as it respects the lengths
+                     * of the buffers (to avoid buffer overflows).
+                     */
+                    nmrfd.hdr.code = RFN_VALIDATE;
+                    nmrfd.hdr.hwndFrom = hwnd;
+                    nmrfd.hdr.idFrom = 0;
+                    nmrfd.lpFile = sei.lpFile;
+                    nmrfd.lpDirectory = sei.lpDirectory;
+                    nmrfd.nShow = sei.nShow;
+
+                    lRet = SendMessageW(prfdp->hwndOwner, WM_NOTIFY, 0, (LPARAM)&nmrfd.hdr);
+
+                    switch (lRet)
+                    {
+                        case RF_CANCEL:
+                            EndDialog(hwnd, IDCANCEL);
+                            break;
+
+                        case RF_OK:
+                            if (ShellExecuteExW(&sei))
                             {
-                                HeapFree(GetProcessHeap(), 0, psz);
-                                HeapFree(GetProcessHeap(), 0, parent);
-                                SendMessageW(htxt, CB_SETEDITSEL, 0, MAKELPARAM (0, -1));
-                                return TRUE;
+                                /* Call again GetWindowText in case the contents of the edit box has changed? */
+                                GetWindowTextW(htxt, psz, ic + 1);
+                                FillList(htxt, psz, ic + 2 + 1, FALSE);
+                                EndDialog(hwnd, IDOK);
+                                break;
                             }
 
-                            GetWindowTextW(htxt, psz, ic + 1);
-                            FillList(htxt, psz, FALSE);
-
-                            HeapFree(GetProcessHeap(), 0, psz);
-                            HeapFree(GetProcessHeap(), 0, parent);
-                            EndDialog(hwnd, 0);
-                        }
+                        /* Fall-back */
+                        case RF_RETRY:
+                        default:
+                            SendMessageW(htxt, CB_SETEDITSEL, 0, MAKELPARAM (0, -1));
+                            /* Show back the dialog */
+                            ShowWindow(hwnd, SW_SHOW);
+                            break;
                     }
+
+                    HeapFree(GetProcessHeap(), 0, parent);
+                    HeapFree(GetProcessHeap(), 0, psz);
+                    return TRUE;
                 }
 
                 case IDCANCEL:
-                    EndDialog(hwnd, 0);
+                    EndDialog(hwnd, IDCANCEL);
                     return TRUE;
 
                 case IDC_RUNDLG_BROWSE:
                 {
                     HMODULE hComdlg = NULL;
                     LPFNOFN ofnProc = NULL;
-                    static const WCHAR comdlg32W[] = L"comdlg32";
                     WCHAR szFName[1024] = {0};
                     WCHAR filter[MAX_PATH], szCaption[MAX_PATH];
                     OPENFILENAMEW ofn;
@@ -474,7 +528,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     ofn.Flags = OFN_ENABLESIZING | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
                     ofn.lpstrInitialDir = prfdp->lpstrDirectory;
 
-                    if (NULL == (hComdlg = LoadLibraryExW(comdlg32W, NULL, 0)) ||
+                    if (NULL == (hComdlg = LoadLibraryExW(L"comdlg32", NULL, 0)) ||
                         NULL == (ofnProc = (LPFNOFN)GetProcAddress(hComdlg, "GetOpenFileNameW")))
                     {
                         ERR("Couldn't get GetOpenFileName function entry (lib=%p, proc=%p)\n", hComdlg, ofnProc);
@@ -513,14 +567,36 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
  * This function grabs the MRU list from the registry and fills the combo-list
  * for the "Run" dialog above. fShowDefault is ignored if pszLatest != NULL.
  */
-static void FillList(HWND hCb, LPWSTR pszLatest, BOOL fShowDefault)
+// FIXME: Part of this code should be part of some MRUList API,
+// that is scattered amongst shell32, comctl32 (?!) and comdlg32.
+static void FillList(HWND hCb, LPWSTR pszLatest, UINT cchStr, BOOL fShowDefault)
 {
     HKEY hkey;
     WCHAR *pszList = NULL, *pszCmd = NULL, *pszTmp = NULL, cMatch = 0, cMax = 0x60;
     WCHAR szIndex[2] = L"-";
+    UINT cchLatest;
     DWORD dwType, icList = 0, icCmd = 0;
     LRESULT lRet;
     UINT Nix;
+
+    /*
+     * Retrieve the string length of pszLatest and check whether its buffer size
+     * (cchStr in number of characters) is large enough to add the terminating "\\1"
+     * (and the NULL character).
+     */
+    if (pszLatest)
+    {
+        cchLatest = wcslen(pszLatest);
+        if (cchStr < cchLatest + 2 + 1)
+        {
+            TRACE("pszLatest buffer is not large enough (%d) to hold the MRU terminator.\n", cchStr);
+            return;
+        }
+    }
+    else
+    {
+        cchStr = 0;
+    }
 
     SendMessageW(hCb, CB_RESETCONTENT, 0, 0);
 
@@ -665,7 +741,10 @@ Continue:
             memmove(&pszList[1], pszList, Nix * sizeof(WCHAR));
             pszList[0] = cMatch;
             szIndex[0] = cMatch;
-            RegSetValueExW(hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, (wcslen(pszLatest) + 1) * sizeof(WCHAR));
+
+            wcscpy(&pszLatest[cchLatest], L"\\1");
+            RegSetValueExW(hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, (cchLatest + 2 + 1) * sizeof(WCHAR));
+            pszLatest[cchLatest] = L'\0';
         }
     }
 
@@ -700,7 +779,10 @@ Continue:
         memmove(&pszList[1], pszList, (icList - 1) * sizeof(WCHAR));
         pszList[0] = cMatch;
         szIndex[0] = cMatch;
-        RegSetValueExW(hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, (wcslen(pszLatest) + 1) * sizeof(WCHAR));
+
+        wcscpy(&pszLatest[cchLatest], L"\\1");
+        RegSetValueExW(hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, (cchLatest + 2 + 1) * sizeof(WCHAR));
+        pszLatest[cchLatest] = L'\0';
     }
 
 Cleanup:

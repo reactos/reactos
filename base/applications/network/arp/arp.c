@@ -464,7 +464,7 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
         pDelHost->dwIndex = pIpNetTable->table[0].dwIndex;
     }
 
-    if (bFlushTable == TRUE)
+    if (bFlushTable != FALSE)
     {
         /* delete arp cache */
         if (FlushIpNetTable(pDelHost->dwIndex) != NO_ERROR)

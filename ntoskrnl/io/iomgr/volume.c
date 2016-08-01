@@ -554,6 +554,7 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
                 (ListEntry->Flink != FsList))
             {
                 /* Then skip this entry */
+                ListEntry = ListEntry->Flink;
                 continue;
             }
 

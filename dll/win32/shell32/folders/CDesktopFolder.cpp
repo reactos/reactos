@@ -642,7 +642,7 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
     }
     else if ((IsEqualIID (riid, IID_IExtractIconA) || IsEqualIID (riid, IID_IExtractIconW)) && (cidl == 1))
     {
-        hr = GenericExtractIcon_CreateInstance(this, apidl[0], riid, &pObj);
+        hr = CGuidItemExtractIcon_CreateInstance(this, apidl[0], riid, &pObj);
     }
     else
         hr = E_NOINTERFACE;

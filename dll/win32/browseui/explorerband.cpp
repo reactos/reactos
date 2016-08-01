@@ -28,14 +28,8 @@
 #define UNIMPLEMENTED DbgPrint("%s is UNIMPLEMENTED!\n", __FUNCTION__)
 #endif
 
-extern "C"
-HRESULT WINAPI CExplorerBand_Constructor(REFIID riid, LPVOID *ppv)
-{
-    return ShellObjectCreator<CExplorerBand>(riid, ppv);
-}
-
 CExplorerBand::CExplorerBand() :
-    pSite(NULL), fVisible(FALSE), dwBandID(0)
+    pSite(NULL), fVisible(FALSE), bNavigating(FALSE), dwBandID(0)
 {
 }
 
@@ -67,21 +61,21 @@ void CExplorerBand::InitializeExplorerBand()
     TreeView_SetImageList(m_hWnd, (HIMAGELIST)piml, TVSIL_NORMAL);
 
     // Insert the root node
-    HTREEITEM hItem = InsertItem(0, pDesktop, pidl, pidl, FALSE);
-    if (!hItem)
+    hRoot = InsertItem(0, pDesktop, pidl, pidl, FALSE);
+    if (!hRoot)
     {
         ERR("Failed to create root item\n");
         return;
     }
 
-    NodeInfo* pNodeInfo = GetNodeInfo(hItem);
+    NodeInfo* pNodeInfo = GetNodeInfo(hRoot);
 
     // Insert child nodes
-    InsertSubitems(hItem, pNodeInfo);
-    TreeView_Expand(m_hWnd, hItem, TVE_EXPAND);
+    InsertSubitems(hRoot, pNodeInfo);
+    TreeView_Expand(m_hWnd, hRoot, TVE_EXPAND);
 
     // Navigate to current folder position
-    //NavigateToCurrentFolder();
+    NavigateToCurrentFolder();
 
     // Register shell notification
     shcne.pidl = pidl;
@@ -142,6 +136,33 @@ CExplorerBand::NodeInfo* CExplorerBand::GetNodeInfo(HTREEITEM hItem)
     return reinterpret_cast<NodeInfo*>(tvItem.lParam);
 }
 
+HRESULT CExplorerBand::ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd)
+{
+    CComPtr<IOleWindow>                 pBrowserOleWnd;
+    CMINVOKECOMMANDINFO                 cmi;
+    HWND                                browserWnd;
+    HRESULT                             hr;
+
+    hr = IUnknown_QueryService(pSite, SID_SShellBrowser, IID_PPV_ARG(IOleWindow, &pBrowserOleWnd));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pBrowserOleWnd->GetWindow(&browserWnd);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    ZeroMemory(&cmi, sizeof(cmi));
+    cmi.cbSize = sizeof(cmi);
+    cmi.lpVerb = MAKEINTRESOURCEA(nCmd);
+    cmi.hwnd = browserWnd;
+    if (GetKeyState(VK_SHIFT) & 0x8000)
+        cmi.fMask |= CMIC_MASK_SHIFT_DOWN;
+    if (GetKeyState(VK_CONTROL) & 0x8000)
+        cmi.fMask |= CMIC_MASK_CONTROL_DOWN;
+
+    return menu->InvokeCommand(&cmi);
+}
+
 HRESULT CExplorerBand::UpdateBrowser(LPITEMIDLIST pidlGoto)
 {
     CComPtr<IShellBrowser>              pBrowserService;
@@ -197,12 +218,111 @@ void CExplorerBand::OnSelectionChanged(LPNMTREEVIEW pnmtv)
 {
     NodeInfo* pNodeInfo = GetNodeInfo(pnmtv->itemNew.hItem);
 
+    /* Prevents navigation if selection is initiated inside the band */
+    if (bNavigating)
+        return;
+
     UpdateBrowser(pNodeInfo->absolutePidl);
+
     SetFocus();
     // Expand the node
     //TreeView_Expand(m_hWnd, pnmtv->itemNew.hItem, TVE_EXPAND);
 }
 
+
+// *** ATL event handlers ***
+LRESULT CExplorerBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    HTREEITEM                           item;
+    NodeInfo                            *info;
+    HMENU                               treeMenu;
+    WORD                                x;
+    WORD                                y;
+    CComPtr<IShellFolder>               pFolder;
+    CComPtr<IContextMenu>               contextMenu;
+    HRESULT                             hr;
+    UINT                                uCommand;
+    LPITEMIDLIST                        pidlChild;
+
+    treeMenu = NULL;
+    item = TreeView_GetSelection(m_hWnd);
+    bHandled = TRUE;
+    if (!item)
+    {
+        goto Cleanup;
+    }
+
+    x = LOWORD(lParam);
+    y = HIWORD(lParam);
+    if (x == -1 && y == -1)
+    {
+        // TODO: grab position of tree item and position it correctly
+    }
+
+    info = GetNodeInfo(item);
+    if (!info)
+    {
+        ERR("No node data, something has gone wrong !\n");
+        goto Cleanup;
+    }
+    hr = SHBindToParent(info->absolutePidl, IID_PPV_ARG(IShellFolder, &pFolder),
+        (LPCITEMIDLIST*)&pidlChild);
+    if (!SUCCEEDED(hr))
+    {
+        ERR("Can't bind to folder!\n");
+        goto Cleanup;
+    }
+    hr = pFolder->GetUIObjectOf(m_hWnd, 1, (LPCITEMIDLIST*)&pidlChild, IID_IContextMenu,
+        NULL, reinterpret_cast<void**>(&contextMenu));
+    if (!SUCCEEDED(hr))
+    {
+        ERR("Can't get IContextMenu interface\n");
+        goto Cleanup;
+    }
+    treeMenu = CreatePopupMenu();
+    hr = contextMenu->QueryContextMenu(treeMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST,
+        CMF_EXPLORE);
+    if (!SUCCEEDED(hr))
+    {
+        WARN("Can't get context menu for item\n");
+        DestroyMenu(treeMenu);
+        goto Cleanup;
+    }
+    uCommand = TrackPopupMenu(treeMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
+        x, y, 0, m_hWnd, NULL);
+
+    ExecuteCommand(contextMenu, uCommand);
+Cleanup:
+    if (treeMenu)
+        DestroyMenu(treeMenu);
+    bNavigating = TRUE;
+    TreeView_SelectItem(m_hWnd, oldSelected);
+    bNavigating = FALSE;
+    return TRUE;
+}
+
+LRESULT CExplorerBand::ContextMenuHack(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    bHandled = FALSE;
+    if (uMsg == WM_RBUTTONDOWN)
+    {
+        TVHITTESTINFO info;
+        info.pt.x = LOWORD(lParam);
+        info.pt.y = HIWORD(lParam);
+        info.flags = TVHT_ONITEM;
+        info.hItem = NULL;
+
+        // Save the current location
+        oldSelected = TreeView_GetSelection(m_hWnd);
+
+        // Move to the item selected by the treeview (don't change right pane)
+        TreeView_HitTest(m_hWnd, &info);
+        bNavigating = TRUE;
+        TreeView_SelectItem(m_hWnd, info.hItem);
+        bNavigating = FALSE;
+    }
+    return FALSE; /* let the wndproc process the message */
+}
 // *** Helper functions ***
 HTREEITEM CExplorerBand::InsertItem(HTREEITEM hParent, IShellFolder *psfParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort)
 {
@@ -258,6 +378,17 @@ HTREEITEM CExplorerBand::InsertItem(HTREEITEM hParent, IShellFolder *psfParent, 
     htiCreated = TreeView_InsertItem(m_hWnd, &tvInsert);
 
     return htiCreated;
+}
+
+/* This is the slow version of the above method */
+HTREEITEM CExplorerBand::InsertItem(HTREEITEM hParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort)
+{
+    CComPtr<IShellFolder> psfFolder;
+    HRESULT hr = SHBindToParent(pElt, IID_PPV_ARG(IShellFolder, &psfFolder), NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return NULL;
+
+    return InsertItem(hParent, psfFolder, pElt, pEltRelative, bSort);
 }
 
 BOOL CExplorerBand::InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo)
@@ -334,6 +465,137 @@ BOOL CExplorerBand::InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo)
     return (uItemCount > 0) ? TRUE : FALSE;
 }
 
+/**
+ * Navigate to a given PIDL in the treeview, and return matching tree item handle
+ *  - dest: The absolute PIDL we should navigate in the treeview
+ *  - item: Handle of the tree item matching the PIDL
+ *  - bExpand: expand collapsed nodes in order to find the right element
+ *  - bInsert: insert the element at the right place if we don't find it
+ *  - bSelect: select the item after we found it
+ */
+BOOL CExplorerBand::NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert,
+        BOOL bSelect)
+{
+    HTREEITEM                           current;
+    HTREEITEM                           tmp;
+    HTREEITEM                           parent;
+    BOOL                                found;
+    NodeInfo                            *nodeData;
+    LPITEMIDLIST                        relativeChild;
+    TVITEM                              tvItem;
+
+    if (!item)
+        return FALSE;
+
+    found = FALSE;
+    current = hRoot;
+    parent = NULL;
+    while(!found)
+    {
+        nodeData = GetNodeInfo(current);
+        if (!nodeData)
+        {
+            ERR("Something has gone wrong, no data associated to node !\n");
+            *item = NULL;
+            return FALSE;
+        }
+        // If we found our node, give it back
+        if (!pDesktop->CompareIDs(0, nodeData->absolutePidl, dest))
+        {
+            if (bSelect)
+                TreeView_SelectItem(m_hWnd, current);
+            *item = current;
+            return TRUE;
+        }
+
+        // Check if we are a parent of the requested item
+        relativeChild = ILFindChild(nodeData->absolutePidl, dest);
+        if (relativeChild != 0)
+        {
+            // Notify treeview we have children
+            tvItem.mask = TVIF_CHILDREN;
+            tvItem.hItem = current;
+            tvItem.cChildren = 1;
+            TreeView_SetItem(m_hWnd, &tvItem);
+
+            // If we can expand and the node isn't expanded yet, do it
+            if (bExpand)
+            {
+                if (!nodeData->expanded)
+                    InsertSubitems(current, nodeData);
+                TreeView_Expand(m_hWnd, current, TVE_EXPAND);
+            }
+
+            // Try to get a child
+            tmp = TreeView_GetChild(m_hWnd, current);
+            if (tmp)
+            { 
+                // We have a child, let's continue with it
+                parent = current;
+                current = tmp;
+                continue;
+            }
+
+            if (bInsert && nodeData->expanded)
+            {
+                // Happens when we have to create a subchild inside a child
+                current = InsertItem(current, dest, relativeChild, TRUE);
+            }
+            // We end up here, without any children, so we found nothing
+            // Tell the parent node it has children
+            ZeroMemory(&tvItem, sizeof(tvItem));
+            *item = NULL;
+            return FALSE;
+        }
+
+        // Find sibling
+        tmp = TreeView_GetNextSibling(m_hWnd, current);
+        if (tmp)
+        {
+            current = tmp;
+            continue;
+        }
+        if (bInsert)
+        {
+            current = InsertItem(parent, dest, ILFindLastID(dest), TRUE);
+            *item = current;
+            return TRUE;
+        }
+        *item = NULL;
+        return FALSE;
+    }
+    return FALSE;
+}
+
+BOOL CExplorerBand::NavigateToCurrentFolder()
+{
+    LPITEMIDLIST                        explorerPidl;
+    CComPtr<IBrowserService>            pBrowserService;
+    HRESULT                             hr;
+    HTREEITEM                           dummy;
+    BOOL                                result; 
+    explorerPidl = NULL;
+
+    hr = IUnknown_QueryService(pSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &pBrowserService));
+    if (!SUCCEEDED(hr))
+    {
+        ERR("Can't get IBrowserService !\n");
+        return FALSE;
+    }
+
+    hr = pBrowserService->GetPidl(&explorerPidl);
+    if (!SUCCEEDED(hr) || !explorerPidl)
+    {
+        ERR("Unable to get browser PIDL !\n");
+        return FALSE;
+    }
+    bNavigating = TRUE;
+    /* find PIDL into our explorer */
+    result = NavigateToPIDL(explorerPidl, &dummy, TRUE, FALSE, TRUE);
+    bNavigating = FALSE;
+    return result;
+}
+
 // *** IOleWindow methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetWindow(HWND *lphwnd)
 {
@@ -405,7 +667,8 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::GetBandInfo(DWORD dwBandID, DWORD dwVie
 
     if (pdbi->dwMask & DBIM_TITLE)
     {
-        lstrcpyW(pdbi->wszTitle, L"Explorer");
+        if (!LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_FOLDERSLABEL, pdbi->wszTitle, _countof(pdbi->wszTitle)))
+            return HRESULT_FROM_WIN32(GetLastError());
     }
 
     if (pdbi->dwMask & DBIM_MODEFLAGS)
@@ -531,11 +794,15 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::HasFocusIO()
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    TranslateMessage(lpMsg);
-    DispatchMessage(lpMsg);
-    return S_OK;
-}
+    if (lpMsg->hwnd == m_hWnd)
+    {
+        TranslateMessage(lpMsg);
+        DispatchMessage(lpMsg);
+        return S_OK;
+    }
 
+    return S_FALSE;
+}
 
 // *** IPersist methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetClassID(CLSID *pClassID)
@@ -576,6 +843,7 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::GetSizeMax(ULARGE_INTEGER *pcbSize)
 // *** IWinEventHandler methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
+    BOOL bHandled;
     if (uMsg == WM_NOTIFY)
     {
         NMHDR *pNotifyHeader = (NMHDR*)lParam;
@@ -587,6 +855,74 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM
             case TVN_SELCHANGED:
                 OnSelectionChanged((LPNMTREEVIEW)lParam);
                 break;
+            case NM_RCLICK:
+                OnContextMenu(WM_CONTEXTMENU, (WPARAM)m_hWnd, GetMessagePos(), bHandled);
+                *theResult = 1;
+                break;
+            case TVN_BEGINLABELEDITW:
+            {
+                // TODO: put this in a function ? (mostly copypasta from CDefView)
+                DWORD dwAttr = SFGAO_CANRENAME;
+                LPNMTVDISPINFO dispInfo = (LPNMTVDISPINFO)lParam;
+                CComPtr<IShellFolder> pParent;
+                LPCITEMIDLIST pChild;
+                HRESULT hr;
+
+                *theResult = 1;
+                NodeInfo *info = GetNodeInfo(dispInfo->item.hItem);
+                if (!info)
+                    return E_FAIL;
+                hr = SHBindToParent(info->absolutePidl, IID_PPV_ARG(IShellFolder, &pParent), &pChild);
+                if (!SUCCEEDED(hr) || !pParent.p)
+                    return E_FAIL;
+
+                hr = pParent->GetAttributesOf(1, &pChild, &dwAttr);
+                if (SUCCEEDED(hr) && (dwAttr & SFGAO_CANRENAME))
+                    *theResult = 0;
+                return S_OK;
+            }
+            case TVN_ENDLABELEDITW:
+            {
+                LPNMTVDISPINFO dispInfo = (LPNMTVDISPINFO)lParam;
+                NodeInfo *info = GetNodeInfo(dispInfo->item.hItem);
+                HRESULT hr;
+
+                *theResult = 0;
+                if (dispInfo->item.pszText)
+                {
+                    LPITEMIDLIST pidlNew;
+                    CComPtr<IShellFolder> pParent;
+                    LPCITEMIDLIST pidlChild;
+
+                    hr = SHBindToParent(info->absolutePidl, IID_PPV_ARG(IShellFolder, &pParent), &pidlChild);
+                if (!SUCCEEDED(hr) || !pParent.p)
+                    return E_FAIL;
+
+                    hr = pParent->SetNameOf(0, pidlChild, dispInfo->item.pszText, SHGDN_INFOLDER, &pidlNew);
+                    if(SUCCEEDED(hr) && pidlNew)
+                    {
+                        CComPtr<IPersistFolder2> pPersist;
+                        LPITEMIDLIST pidlParent, pidlNewAbs;
+
+                        hr = pParent->QueryInterface(IID_PPV_ARG(IPersistFolder2, &pPersist));
+                        if(!SUCCEEDED(hr))
+                            return E_FAIL;
+
+                        hr = pPersist->GetCurFolder(&pidlParent);
+                        if(!SUCCEEDED(hr))
+                            return E_FAIL;
+                        pidlNewAbs = ILCombine(pidlParent, pidlNew);
+
+                        // Navigate to our new location
+                        UpdateBrowser(pidlNewAbs);
+
+                        ILFree(pidlNewAbs);
+                        ILFree(pidlNew);
+                        *theResult = 1;
+                    }
+                    return S_OK;
+                }
+            }
             default:
                 break;
         }
@@ -658,8 +994,16 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::GetIDsOfNames(REFIID riid, LPOLESTR *rg
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    switch (dispIdMember)
+    {
+        case DISPID_DOWNLOADCOMPLETE:
+        case DISPID_NAVIGATECOMPLETE2:
+           TRACE("DISPID_NAVIGATECOMPLETE2 received\n");
+           NavigateToCurrentFolder();
+           return S_OK;
+    }
+    TRACE("Unknown dispid requested: %08x\n", dispIdMember);
+    return E_INVALIDARG;
 }
 
 // *** IDropTarget methods ***

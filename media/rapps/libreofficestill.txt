@@ -34,6 +34,10 @@ Description = Otwarty pakiet biurowy.
 Description = O suită completă de aplicații de birotică, cu surse deschise. Reprezintă o bifurcare a dezvoltării OpenOffice.
 Size = 213,9 Mio
 
+[Section.0419]
+Description = Кросплатформенный, свободно распространяемый офисный пакет с открытым исходным кодом, созданный как ответвление OpenOffice.
+Size = 213,9 МБ
+
 [Section.041f]
 Description = Güçlü ve açık kaynak bir ofis paketi. OpenOffice'ten çatallanılmıştır.
 Size = 213,9 MiB

@@ -40,9 +40,13 @@
 
 
 #define IDI_ROSLOGO         20000
-#define IDI_SHELL_SHUTDOWN  20001
 
-#define IDI_LOCKICON 21
+#define IDI_NOT_CONNECTED 13
+#define IDI_LOGOFF        21
+#define IDI_SHUTDOWN      22
+#define IDI_KEYBOARD      109
+#define IDI_HARDWARE      110
+#define IDI_LOCKICON      115
 
 #define IDS_LOGGEDOUTSAS         40000
 #define IDS_LOCKEDSAS            40001

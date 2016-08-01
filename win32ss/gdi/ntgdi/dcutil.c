@@ -105,10 +105,15 @@ IntGdiSetBkColor(HDC hDC, COLORREF color)
         return CLR_INVALID;
     }
     pdcattr = dc->pdcattr;
-    oldColor = pdcattr->crBackgroundClr;
-    pdcattr->crBackgroundClr = color;
-    pdcattr->ulBackgroundClr = (ULONG)color;
-    pdcattr->ulDirty_ |= DIRTY_BACKGROUND|DIRTY_LINE|DIRTY_FILL; // Clear Flag if set.
+
+    oldColor = pdcattr->ulBackgroundClr;
+    pdcattr->ulBackgroundClr = color;
+
+    if (pdcattr->crBackgroundClr != color)
+    {
+        pdcattr->ulDirty_ |= (DIRTY_BACKGROUND|DIRTY_LINE|DIRTY_FILL); // Clear Flag if set.
+        pdcattr->crBackgroundClr = color;
+    }
     hBrush = pdcattr->hbrush;
     DC_UnlockDc(dc);
     NtGdiSelectBrush(hDC, hBrush);
@@ -184,6 +189,8 @@ IntGdiSetTextColor(HDC hDC,
     }
 
     DC_vUpdateTextBrush(pdc);
+//    DC_vUpdateLineBrush(pdc);
+//    DC_vUpdateFillBrush(pdc);
 
     DC_UnlockDc(pdc);
 

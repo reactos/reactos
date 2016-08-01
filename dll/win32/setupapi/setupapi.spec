@@ -545,7 +545,7 @@
 @ stub pSetupDestroyRunOnceNodeList
 @ stub pSetupDiGetDeviceInfoContext
 @ stub pSetupDiSetDeviceInfoContext
-@ stub pSetupDoesUserHavePrivilege
+@ stdcall pSetupDoesUserHavePrivilege(wstr) DoesUserHavePrivilege
 @ stdcall pSetupDuplicateString(wstr)
 @ stdcall pSetupEnablePrivilege(wstr long)
 @ stub pSetupFree
@@ -569,7 +569,7 @@
 @ stdcall pSetupIsUserAdmin()
 @ stub pSetupMakeSurePathExists
 @ stub pSetupMalloc
-@ stub pSetupModifyGlobalFlags
+@ stdcall pSetupModifyGlobalFlags(long long)
 @ stdcall pSetupMultiByteToUnicode(str long)
 @ stdcall pSetupOpenAndMapFileForRead(wstr ptr ptr ptr ptr)
 @ stub pSetupOutOfMemory

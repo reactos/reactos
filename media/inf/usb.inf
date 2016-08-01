@@ -107,7 +107,9 @@ USB\COMPOSITE.DeviceDesc = "Dispozitiv USB compus"
 USB\CLASS_09.DeviceDesc = "Cuplator USB generic"
 
 [Strings.0419]
+ReactOS = "Команда ReactOS"
 GenericMfg = "(Стандартный USB хаб)"
+USB\COMPOSITE.DeviceDesc = "USB составное устройство"
 USB\CLASS_09.DeviceDesc = "Стандартный USB хаб"
 
 [Strings.041B]

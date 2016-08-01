@@ -152,7 +152,7 @@
                                         FT_Bytes       limit,
                                         GXV_Validator  gxvalid )
   {
-    FT_Bytes  p         = table ;
+    FT_Bytes  p         = table;
     FT_Bytes  wdc_end   = table + GXV_JUST_DATA( wdc_offset_max );
     FT_UInt   i;
 

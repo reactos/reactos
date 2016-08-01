@@ -1418,7 +1418,7 @@
 
   /* Type 1 and CID-keyed font drivers should recognize sfnt-wrapped */
   /* format too.  Here, since we can't expect that the TrueType font */
-  /* driver is loaded unconditially, we must parse the font by       */
+  /* driver is loaded unconditionally, we must parse the font by     */
   /* ourselves.  We are only interested in the name of the table and */
   /* the offset.                                                     */
 
@@ -1483,6 +1483,7 @@
       if ( face_index >= 0 && pstable_index == face_index )
         return FT_Err_Ok;
     }
+
     return FT_THROW( Table_Missing );
   }
 
@@ -1520,6 +1521,19 @@
     if ( error )
       goto Exit;
 
+    if ( offset > stream->size )
+    {
+      FT_TRACE2(( "open_face_PS_from_sfnt_stream: invalid table offset\n" ));
+      error = FT_THROW( Invalid_Table );
+      goto Exit;
+    }
+    else if ( length > stream->size - offset )
+    {
+      FT_TRACE2(( "open_face_PS_from_sfnt_stream: invalid table length\n" ));
+      error = FT_THROW( Invalid_Table );
+      goto Exit;
+    }
+
     error = FT_Stream_Seek( stream, pos + offset );
     if ( error )
       goto Exit;
@@ -1528,7 +1542,8 @@
       goto Exit;
 
     error = FT_Stream_Read( stream, (FT_Byte *)sfnt_ps, length );
-    if ( error ) {
+    if ( error )
+    {
       FT_FREE( sfnt_ps );
       goto Exit;
     }
@@ -1776,8 +1791,8 @@
     FT_Long    face_index_in_resource = 0;
 
 
-    if ( face_index == -1 )
-      face_index = 0;
+    if ( face_index < 0 )
+      face_index = -face_index - 1;
     if ( face_index >= resource_cnt )
       return FT_THROW( Cannot_Open_Resource );
 
@@ -4308,7 +4323,7 @@
   {
     FT_Error   error;
     FT_Memory  memory;
-    FT_Module  module;
+    FT_Module  module = NULL;
     FT_UInt    nn;
 
 

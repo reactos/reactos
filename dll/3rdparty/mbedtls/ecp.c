@@ -1827,7 +1827,9 @@ int mbedtls_ecp_gen_keypair_base( mbedtls_ecp_group *grp,
         /* [M225] page 5 */
         size_t b;
 
-        MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( d, n_size, f_rng, p_rng ) );
+        do {
+            MBEDTLS_MPI_CHK( mbedtls_mpi_fill_random( d, n_size, f_rng, p_rng ) );
+        } while( mbedtls_mpi_bitlen( d ) == 0);
 
         /* Make sure the most significant bit is nbits */
         b = mbedtls_mpi_bitlen( d ) - 1; /* mbedtls_mpi_bitlen is one-based */

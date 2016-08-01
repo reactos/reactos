@@ -946,8 +946,26 @@ static VOID VgaUpdateFramebuffer(VOID)
                      * if external palette access is disabled, otherwise (in case
                      * of palette loading) it is a blank pixel.
                      */
-                    PixelData = (VgaAcPalDisable ? VgaAcRegisters[PixelData & 0x0F]
-                                                 : 0);
+
+                    if (VgaAcPalDisable)
+                    {
+                        if (!(VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_P54S))
+                        {
+                            /* Bits 4 and 5 are taken from the palette register */
+                            PixelData = ((VgaAcRegisters[VGA_AC_COLOR_SEL_REG] << 4) & 0xC0)
+                                        | (VgaAcRegisters[PixelData & 0x0F] & 0x3F);
+                        }
+                        else
+                        {
+                            /* Bits 4 and 5 are taken from the color select register */
+                            PixelData = (VgaAcRegisters[VGA_AC_COLOR_SEL_REG] << 4)
+                                        | (VgaAcRegisters[PixelData & 0x0F] & 0x0F);
+                        }
+                    }
+                    else
+                    {
+                        PixelData = 0;
+                    }
                 }
 
                 /* Take into account DoubleVision mode when checking for pixel updates */
@@ -1674,12 +1692,20 @@ COORD VgaGetDisplayResolution(VOID)
 
     if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
     {
-        /* Multiply the horizontal resolution by the 9/8 dot mode */
-        Resolution.X *= (VgaSeqRegisters[VGA_SEQ_CLOCK_REG] & VGA_SEQ_CLOCK_98DM)
-                        ? 8 : 9;
+        /* In "High Resolution" mode, the width of a character is always 8 pixels */
+        if (VgaSeqRegisters[SVGA_SEQ_EXT_MODE_REG] & SVGA_SEQ_EXT_MODE_HIGH_RES)
+        {
+            Resolution.X *= 8;
+        }
+        else
+        {
+            /* Multiply the horizontal resolution by the 9/8 dot mode */
+            Resolution.X *= (VgaSeqRegisters[VGA_SEQ_CLOCK_REG] & VGA_SEQ_CLOCK_98DM)
+                            ? 8 : 9;
 
-        /* The horizontal resolution is halved in 8-bit mode */
-        if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT) Resolution.X /= 2;
+            /* The horizontal resolution is halved in 8-bit mode */
+            if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT) Resolution.X /= 2;
+        }
     }
 
     if (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & VGA_CRTC_MAXSCANLINE_DOUBLE)

@@ -1921,6 +1921,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Class = IntGetAndReferenceClass(ClassName, Cs->hInstance, FALSE);
    if(!Class)
    {
+       EngSetLastError(ERROR_CANNOT_FIND_WND_CLASS);
        ERR("Failed to find class %wZ\n", ClassName);
        goto cleanup;
    }
@@ -2856,6 +2857,7 @@ NtUserFindWindowEx(HWND hwndParent,
                if (!IntGetAtomFromStringOrAtom(&ClassName,
                                                &ClassAtom))
                {
+                   EngSetLastError(ERROR_CANNOT_FIND_WND_CLASS);
                    _SEH2_LEAVE;
                }
            }

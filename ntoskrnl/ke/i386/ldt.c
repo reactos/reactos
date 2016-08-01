@@ -167,7 +167,7 @@ BOOLEAN PspIsDescriptorValid(PLDT_ENTRY ldt_entry)
   if ((Base + SegLimit > (ULONG_PTR) MmHighestUserAddress) ||
       (Base > Base+SegLimit))
   {
-    DPRINT1("WARNING: Windows would mark this descriptor invalid!");
+    DPRINT1("WARNING: Windows would mark this descriptor invalid!\n");
   }
 
   /*

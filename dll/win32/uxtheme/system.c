@@ -878,7 +878,7 @@ void WINAPI SetThemeAppProperties(DWORD dwFlags)
 HRESULT WINAPI CloseThemeData(HTHEME hTheme)
 {
     TRACE("(%p)\n", hTheme);
-    if(!hTheme)
+    if(!hTheme || hTheme == INVALID_HANDLE_VALUE)
         return E_HANDLE;
     return MSSTYLES_CloseThemeClass(hTheme);
 }

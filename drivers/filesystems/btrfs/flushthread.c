@@ -26,16 +26,16 @@ static void do_flush(device_extension* Vcb) {
     
     FsRtlEnterFileSystem();
 
-    acquire_tree_lock(Vcb, TRUE);
+    ExAcquireResourceExclusiveLite(&Vcb->tree_lock, TRUE);
 
-    if (Vcb->write_trees > 0)
+    if (Vcb->need_write)
         do_write(Vcb, &rollback);
     
     free_trees(Vcb);
     
     clear_rollback(&rollback);
 
-    release_tree_lock(Vcb, TRUE);
+    ExReleaseResourceLite(&Vcb->tree_lock);
 
     FsRtlExitFileSystem();
 }
@@ -44,28 +44,30 @@ void STDCALL flush_thread(void* context) {
     DEVICE_OBJECT* devobj = context;
     device_extension* Vcb = devobj->DeviceExtension;
     LARGE_INTEGER due_time;
-    KTIMER flush_thread_timer;
     
     ObReferenceObject(devobj);
     
-    KeInitializeTimer(&flush_thread_timer);
+    KeInitializeTimer(&Vcb->flush_thread_timer);
     
     due_time.QuadPart = -INTERVAL * 10000;
     
-    KeSetTimer(&flush_thread_timer, due_time, NULL);
+    KeSetTimer(&Vcb->flush_thread_timer, due_time, NULL);
     
     while (TRUE) {
-        KeWaitForSingleObject(&flush_thread_timer, Executive, KernelMode, FALSE, NULL);
+        KeWaitForSingleObject(&Vcb->flush_thread_timer, Executive, KernelMode, FALSE, NULL);
 
-        if (!(devobj->Vpb->Flags & VPB_MOUNTED))
+        if (!(devobj->Vpb->Flags & VPB_MOUNTED) || Vcb->removing)
             break;
             
         do_flush(Vcb);
         
-        KeSetTimer(&flush_thread_timer, due_time, NULL);
+        KeSetTimer(&Vcb->flush_thread_timer, due_time, NULL);
     }
     
     ObDereferenceObject(devobj);
-    KeCancelTimer(&flush_thread_timer);
+    KeCancelTimer(&Vcb->flush_thread_timer);
+    
+    KeSetEvent(&Vcb->flush_thread_finished, 0, FALSE);
+    
     PsTerminateSystemThread(STATUS_SUCCESS);
 }

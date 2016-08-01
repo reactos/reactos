@@ -281,3 +281,10 @@ STRINGTABLE
 BEGIN
     IDS_STANDARD_TOOLBAR, "|Wstecz|Dalej|W górę|Wyszukaj|Foldery|Przemieść do|Kopiuj do|Usuń|Cofnij|Widoki|Stop|Odśwież|Strona główna|Mapa dysków|Rozłącz|Ulubione|Historia|Pełny ekran|Właściwości|Wytnij|Kopiuj|Wklej|Opcje folderów||"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_LEGAL_URL, "https://www.reactos.org/joining/faqs"
+    IDS_SORRY_CAPTION, "Sorry"
+    IDS_SORRY_MESSAGE, "ReactOS could not browse to '%s' (error 0x%lx).\nPlease make sure there is a web browser installed."
+END

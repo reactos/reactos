@@ -28,6 +28,11 @@ License = Gratuită
 Description = Utilitar gratuit pentru inspectarea, modificarea, redenumirea, adăugarea, ștergerea și extragerea resurselor din fișierele resursă (*.res) și fișierele executabile pe 32 și 64 de biți pentru Windows.
 Size = 2,7 Mio
 
+[Section.0419]
+License = Бесплатно
+Description = Редактор ресурсов, программа, предназначенная для просмотра, извлечения и замены ресурсов в исполняемых файлах.
+Size = 2,7 МБ
+
 [Section.041f]
 License = Ücretsiz
 Description = 32 ve 64 bitlik Windows çaılştırılabilirlerindeki ve kaynak kütüklerindeki (*.res) kaynakları görüntülemek, değiştirmek, yeniden adlandırmak, eklemek, silmek ve çıkartmak için ücretsiz bir araçtır.

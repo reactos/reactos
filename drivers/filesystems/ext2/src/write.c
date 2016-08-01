@@ -91,7 +91,10 @@ Ext2FloppyFlush(IN PVOID Parameter)
         ExAcquireSharedStarveExclusive(&Vcb->PagingIoResource, TRUE);
         ExReleaseResourceLite(&Vcb->PagingIoResource);
 
+        ExAcquireResourceExclusiveLite(&Vcb->sbi.s_gd_lock, TRUE);
+        Ext2DropBH(Vcb);
         CcFlushCache(&(Vcb->SectionObject), NULL, 0, NULL);
+        ExReleaseResourceLite(&Vcb->sbi.s_gd_lock);
     }
 
     IoSetTopLevelIrp(NULL);

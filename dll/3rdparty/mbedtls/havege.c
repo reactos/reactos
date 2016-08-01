@@ -174,6 +174,8 @@ static void havege_fill( mbedtls_havege_state *hs )
     PTX  = U1 = 0;
     PTY  = U2 = 0;
 
+    (void)PTX;
+
     memset( RES, 0, sizeof( RES ) );
 
     while( n < MBEDTLS_HAVEGE_COLLECT_SIZE * 4 )

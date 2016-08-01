@@ -28,7 +28,7 @@ LONG APIENTRY
 OpenPropSheet(PMAIN_WND_INFO Info)
 {
     PROPSHEETHEADER psh;
-    PROPSHEETPAGE psp[2];
+    PROPSHEETPAGE psp[4];
     PSERVICEPROPSHEET pServicePropSheet;
     LONG Ret = 0;
 
@@ -49,14 +49,14 @@ OpenPropSheet(PMAIN_WND_INFO Info)
                                   sizeof(*pServicePropSheet));
     if (pServicePropSheet)
     {
-        /* save current service, as it could change while the dialog is open */
+        /* Save current service, as it could change while the dialog is open */
         pServicePropSheet->pService = Info->pCurrentService;
         pServicePropSheet->Info = Info;
 
         InitPropSheetPage(&psp[0], pServicePropSheet, IDD_DLG_GENERAL, GeneralPageProc);
-        //InitPropSheetPage(&psp[1], Info, IDD_DLG_GENERAL, LogonPageProc);
-        //InitPropSheetPage(&psp[2], Info, IDD_DLG_GENERAL, RecoveryPageProc);
-        InitPropSheetPage(&psp[1], pServicePropSheet, IDD_DLG_DEPEND, DependenciesPageProc);
+        InitPropSheetPage(&psp[1], pServicePropSheet, IDD_LOGON, LogonPageProc);
+        InitPropSheetPage(&psp[2], pServicePropSheet, IDD_RECOVERY, RecoveryPageProc);
+        InitPropSheetPage(&psp[3], pServicePropSheet, IDD_DLG_DEPEND, DependenciesPageProc);
 
         Ret = (LONG)(PropertySheet(&psh) != -1);
 

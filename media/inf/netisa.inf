@@ -91,6 +91,7 @@ GenericMfg = "(placă de rețea generică)"
 *PNP80D6.DeviceDesc = "Compatibile cu NE2000"
 
 [Strings.0419]
+ReactOS = "Команда ReactOS"
 GenericMfg = "(Стандартные сетевые адаптеры)"
 *PNP80D6.DeviceDesc = "NE2000-совместимые"
 

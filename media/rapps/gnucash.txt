@@ -18,6 +18,10 @@ Size = 97,7 MiB
 Description = Program de contabilitate financiară pentru uz personal și întreprinderi mici, oferit sub licența gratuită GNU GPL. Este disponibil pentru GNU/Linux, BSD, Solaris, Mac OS X și Windows.
 Size = 97,7 Mio
 
+[Section.0419]
+Description = Программа финансового учёта. Существуют версии для GNU/Linux, BSD, Solaris, Mac OS X и Microsoft Windows.
+Size = 97,7 МБ
+
 [Section.041f]
 Description = GNU GPL altında özgürce ruhsatlanmış, GNU/Linux, BSD, Solaris, Mac OS X ve Microsoft Windows için kullanılabilir, bir şahsî ve küçük iş mâlî muhâsebe yazılımı.
 Size = 97,7 MiB

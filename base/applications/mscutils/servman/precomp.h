@@ -171,6 +171,14 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg,
                                  UINT uMsg,
                                  WPARAM wParam,
                                  LPARAM lParam);
+INT_PTR CALLBACK LogonPageProc(HWND hwndDlg,
+                               UINT uMsg,
+                               WPARAM wParam,
+                               LPARAM lParam);
+INT_PTR CALLBACK RecoveryPageProc(HWND hwndDlg,
+                                  UINT uMsg,
+                                  WPARAM wParam,
+                                  LPARAM lParam);
 
 /* export.c */
 VOID ExportFile(PMAIN_WND_INFO Info);
@@ -202,5 +210,12 @@ HIMAGELIST InitImageList(UINT StartResource,
                          UINT Width,
                          UINT Height,
                          ULONG type);
+VOID
+ResourceMessageBox(
+    HINSTANCE hInstance,
+    HWND hwnd,
+    UINT uType,
+    UINT uCaptionId,
+    UINT uMessageId);
 
 #endif /* __SERVMAN_PRECOMP_H */

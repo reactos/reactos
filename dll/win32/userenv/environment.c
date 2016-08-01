@@ -82,17 +82,15 @@ SetUserEnvironmentVariable(LPVOID *Environment,
 
     if (!_wcsicmp(lpName, L"temp") || !_wcsicmp(lpName, L"tmp"))
     {
-        if (!GetShortPathNameW(DstValue.Buffer, ShortName, MAX_PATH))
+        if (GetShortPathNameW(DstValue.Buffer, ShortName, MAX_PATH))
         {
-            DPRINT1("GetShortPathNameW() failed for %S (Error %lu)\n", DstValue.Buffer, GetLastError());
-            if (Buffer)
-                LocalFree(Buffer);
-            return FALSE;
+            DPRINT("GetShortPathNameW() failed for %S (Error %lu)\n", DstValue.Buffer, GetLastError());
+
+            RtlInitUnicodeString(&DstValue,
+                                 ShortName);
         }
 
         DPRINT("Buffer: %S\n", ShortName);
-        RtlInitUnicodeString(&DstValue,
-                             ShortName);
     }
 
     RtlInitUnicodeString(&Name,
@@ -214,10 +212,10 @@ GetUserAndDomainName(IN HANDLE hToken,
     SID_NAME_USE SidNameUse;
     BOOL bRet = TRUE;
 
-    if (!GetUserSidFromToken(hToken,
-                             &Sid))
+    Sid = GetUserSid(hToken);
+    if (Sid == NULL)
     {
-        DPRINT1("GetUserSidFromToken() failed\n");
+        DPRINT1("GetUserSid() failed\n");
         return FALSE;
     }
 
@@ -363,29 +361,40 @@ SetUserEnvironment(LPVOID *lpEnvironment,
     {
         dwValueNameLength = dwMaxValueNameLength;
         dwValueDataLength = dwMaxValueDataLength;
-        RegEnumValueW(hEnvKey,
-                      i,
-                      lpValueName,
-                      &dwValueNameLength,
-                      NULL,
-                      &dwType,
-                      (LPBYTE)lpValueData,
-                      &dwValueDataLength);
 
-        if (!_wcsicmp (lpValueName, L"path"))
+        Error = RegEnumValueW(hEnvKey,
+                              i,
+                              lpValueName,
+                              &dwValueNameLength,
+                              NULL,
+                              &dwType,
+                              (LPBYTE)lpValueData,
+                              &dwValueDataLength);
+        if (Error == ERROR_SUCCESS)
         {
-            /* Append 'Path' environment variable */
-            AppendUserEnvironmentVariable(lpEnvironment,
-                                          lpValueName,
-                                          lpValueData);
+            if (!_wcsicmp (lpValueName, L"path"))
+            {
+                /* Append 'Path' environment variable */
+                AppendUserEnvironmentVariable(lpEnvironment,
+                                              lpValueName,
+                                              lpValueData);
+            }
+            else
+            {
+                /* Set environment variable */
+                SetUserEnvironmentVariable(lpEnvironment,
+                                           lpValueName,
+                                           lpValueData,
+                                           (dwType == REG_EXPAND_SZ));
+            }
         }
         else
         {
-            /* Set environment variable */
-            SetUserEnvironmentVariable(lpEnvironment,
-                                       lpValueName,
-                                       lpValueData,
-                                       (dwType == REG_EXPAND_SZ));
+            LocalFree(lpValueData);
+            LocalFree(lpValueName);
+            RegCloseKey(hEnvKey);
+
+            return FALSE;
         }
     }
 
@@ -453,6 +462,11 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                                    Buffer,
                                    FALSE);
     }
+
+    /* Set variables from System Manager */
+    SetUserEnvironment(lpEnvironment,
+                       HKEY_LOCAL_MACHINE,
+                       L"System\\CurrentControlSet\\Control\\Session Manager\\Environment");
 
     /* Set 'COMPUTERNAME' variable */
     Length = MAX_PATH;

@@ -30,21 +30,21 @@ void SdbpHeapDeinit(void);
 #if SDBAPI_DEBUG_ALLOC
 
 LPVOID SdbpAlloc(SIZE_T size, int line, const char* file);
-LPVOID SdbpReAlloc(LPVOID mem, SIZE_T size, int line, const char* file);
+LPVOID SdbpReAlloc(LPVOID mem, SIZE_T size, SIZE_T oldSize, int line, const char* file);
 void SdbpFree(LPVOID mem, int line, const char* file);
 
 #define SdbAlloc(size) SdbpAlloc(size, __LINE__, __FILE__)
-#define SdbReAlloc(mem, size) SdbpReAlloc(mem, size, __LINE__, __FILE__)
+#define SdbReAlloc(mem, size, oldSize) SdbpReAlloc(mem, size, oldSize, __LINE__, __FILE__)
 #define SdbFree(mem) SdbpFree(mem, __LINE__, __FILE__)
 
 #else
 
 LPVOID SdbpAlloc(SIZE_T size);
-LPVOID SdbpReAlloc(LPVOID mem, SIZE_T size);
+LPVOID SdbpReAlloc(LPVOID mem, SIZE_T size, SIZE_T oldSize);
 void SdbpFree(LPVOID mem);
 
 #define SdbAlloc(size) SdbpAlloc(size)
-#define SdbReAlloc(mem, size) SdbpReAlloc(mem, size)
+#define SdbReAlloc(mem, size, oldSize) SdbpReAlloc(mem, size, oldSize)
 #define SdbFree(mem) SdbpFree(mem)
 
 #endif
@@ -71,6 +71,9 @@ DWORD SdbpStrsize(PCWSTR string);
 BOOL WINAPI SdbpCheckTagType(TAG tag, WORD type);
 BOOL WINAPI SdbpCheckTagIDType(PDB db, TAGID tagid, WORD type);
 
+#ifndef WINAPIV
+#define WINAPIV
+#endif
 
 typedef enum _SHIM_LOG_LEVEL {
     SHIM_ERR = 1,

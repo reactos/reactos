@@ -256,7 +256,7 @@ ConsoleCreateLocalInputConsole (
 
     /* Construct it */
     Status = ConsoleInputBaseConstruct(InputConsole);
-    if (!NT_SUCCESS(Status));
+    if (!NT_SUCCESS(Status))
     {
         /* Tear down on failure */
         BlMmFreeHeap(InputConsole);

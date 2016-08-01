@@ -65,7 +65,7 @@ intEnableReactXDriver(HDC hdc)
     if  ( ( pDev->DriverFunctions.DisableDirectDraw == NULL) ||
           ( pDev->DriverFunctions.EnableDirectDraw == NULL))
     {
-        DPRINT1("Waring : DisableDirectDraw and EnableDirectDraw are NULL, no dx driver \n");
+        DPRINT1("Warning : DisableDirectDraw and EnableDirectDraw are NULL, no dx driver \n");
     }
     else
     {

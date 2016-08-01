@@ -125,8 +125,3 @@ HRESULT STDMETHODCALLTYPE CBandProxy::NavigateToURL(long paramC, long param10)
 {
     return E_NOTIMPL;
 }
-
-HRESULT CreateBandProxy(REFIID riid, void **ppv)
-{
-    return ShellObjectCreator<CBandProxy>(riid, ppv);
-}

@@ -548,7 +548,7 @@ LRESULT CBaseBar::OnCaptureChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
     return 0;
 }
 
-HRESULT CreateBaseBar(REFIID riid, void **ppv, BOOL vertical)
+HRESULT CBaseBar_CreateInstance(REFIID riid, void **ppv, BOOL vertical)
 {
     return ShellObjectCreatorInit<CBaseBar, BOOL>(vertical, riid, ppv);
 }

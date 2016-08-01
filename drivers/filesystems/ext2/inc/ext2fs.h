@@ -47,7 +47,7 @@
 
 /* STRUCTS & CONSTS******************************************************/
 
-#define EXT2FSD_VERSION                 "0.66"
+#define EXT2FSD_VERSION                 "0.68"
 
 
 /* WDK DEFINITIONS ******************************************************/
@@ -491,6 +491,7 @@ typedef PVOID   PBCB;
 typedef VOID (NTAPI *EXT2_REAPER_RELEASE)(PVOID);
 
 typedef struct _EXT2_REAPER {
+        PETHREAD                Thread;
         KEVENT                  Engine;
         KEVENT                  Wait;
         EXT2_REAPER_RELEASE     Free;
@@ -534,6 +535,7 @@ typedef struct _EXT2_GLOBAL {
     LIST_ENTRY                  VcbList;
 
     /* Cleaning thread related: resource cleaner */
+    EXT2_REAPER                 FcbReaper;
     EXT2_REAPER                 McbReaper;
     EXT2_REAPER                 bhReaper;
 
@@ -647,12 +649,17 @@ typedef struct _EXT2_VCB {
     // Resource for Mcb (Meta data control block)
     ERESOURCE                   McbLock;
 
-    // Entry of Mcb Tree (Root Node)
-    PEXT2_MCB                   McbTree;
+    // List of FCBs for open files on this volume
+    ERESOURCE                   FcbLock;
+    LIST_ENTRY                  FcbList;
+    ULONG                       FcbCount;
 
     // Mcb list
-    LIST_ENTRY                  McbList;
     ULONG                       NumOfMcb;
+    LIST_ENTRY                  McbList;
+
+    // Entry of Mcb Tree (Root Node)
+    PEXT2_MCB                   McbTree;
 
     // Link list to Global
     LIST_ENTRY                  Next;
@@ -663,10 +670,6 @@ typedef struct _EXT2_VCB {
     // Dirty Mcbs of modifications for volume stream
     LARGE_MCB                   Extents;
 
-    // List of FCBs for open files on this volume
-    ULONG                       FcbCount;
-    LIST_ENTRY                  FcbList;
-    KSPIN_LOCK                  FcbLock;
 
     // Share Access for the file object
     SHARE_ACCESS                ShareAccess;
@@ -817,6 +820,7 @@ typedef struct _EXT2_FCB {
 
     // List of FCBs for this volume
     LIST_ENTRY                      Next;
+    LARGE_INTEGER                   TsDrop; /* drop time */
 
     SECTION_OBJECT_POINTERS         SectionObject;
 
@@ -863,7 +867,7 @@ typedef struct _EXT2_FCB {
 #define FCB_FROM_POOL               0x00000001
 #define FCB_PAGE_FILE               0x00000002
 #define FCB_FILE_MODIFIED           0x00000020
-#define FCB_STATE_BUSY              0x00000040
+
 #define FCB_ALLOC_IN_CREATE         0x00000080
 #define FCB_ALLOC_IN_WRITE          0x00000100
 #define FCB_ALLOC_IN_SETINFO        0x00000200
@@ -961,12 +965,10 @@ struct _EXT2_MCB {
 static
 #endif
 __inline ULONG DEC_OBJ_CNT(PULONG _C) {
-    if (*_C > 0) {
-        return InterlockedDecrement(_C);
-    } else {
+    if (*_C <= 0) {
         DbgBreak();
     }
-    return 0;
+    return InterlockedDecrement(_C);
 }
 
 #if EXT2_DEBUG
@@ -1397,13 +1399,7 @@ Ext2SupersedeOrOverWriteFile(
 #define DL_PNP 0x00010000   /* pnp */
 #define DL_IO  0x00020000   /* file i/o */
 
-#define DL_ALL (DL_ERR|DL_VIT|DL_DBG|DL_INF|DL_FUN|DL_LOW|DL_REN|DL_RES|DL_BLK|DL_CP|DL_EXT|DL_MAP|DL_JNL|DL_HTI|DL_WRN|DL_BH|DL_PNP|DL_IO)
-
-#if EXT2_DEBUG && defined(__REACTOS__)
-  #define DL_DEFAULT (DL_ERR|DL_VIT|DL_DBG|DL_INF|DL_FUN|DL_LOW|DL_WRN)
-#else
-  #define DL_DEFAULT (DL_ERR|DL_VIT)
-#endif
+#define DL_DEFAULT (DL_ERR|DL_VIT)
 
 #if EXT2_DEBUG
 extern  ULONG DebugFilter;
@@ -1774,7 +1770,7 @@ VOID
 Ext2PutGroup(IN PEXT2_VCB Vcb);
 
 VOID
-Ext2DropGroup(IN PEXT2_VCB Vcb);
+Ext2DropBH(IN PEXT2_VCB Vcb);
 
 BOOLEAN
 Ext2SaveGroup(
@@ -2438,7 +2434,6 @@ struct buffer_head *ext3_bread(struct ext2_icb *icb, struct inode *inode,
 int add_dirent_to_buf(struct ext2_icb *icb, struct dentry *dentry,
                       struct inode *inode, struct ext3_dir_entry_2 *de,
                       struct buffer_head *bh);
-
 #if !defined(__REACTOS__) || defined(_MSC_VER)
 struct ext3_dir_entry_2 *
             do_split(struct ext2_icb *icb, struct inode *dir,
@@ -2525,6 +2520,12 @@ Ext2LockControl (IN PEXT2_IRP_CONTEXT IrpContext);
 
 VOID
 NTAPI
+Ext2FcbReaperThread(
+    PVOID   Context
+);
+
+VOID
+NTAPI
 Ext2McbReaperThread(
     PVOID   Context
 );
@@ -2551,13 +2552,15 @@ Ext2AllocateFcb (
 );
 
 VOID
+Ext2UnlinkFcb(IN PEXT2_FCB Fcb);
+
+VOID
 Ext2FreeFcb (IN PEXT2_FCB Fcb);
+VOID
+Ext2ReleaseFcb (IN PEXT2_FCB Fcb);
 
 VOID
 Ext2InsertFcb(PEXT2_VCB Vcb, PEXT2_FCB Fcb);
-
-VOID
-Ext2RemoveFcb(PEXT2_VCB Vcb, PEXT2_FCB Fcb);
 
 PEXT2_CCB
 Ext2AllocateCcb (ULONG Flags, PEXT2_MCB SymLink);

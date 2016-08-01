@@ -31,11 +31,10 @@ Ext2Close (IN PEXT2_IRP_CONTEXT IrpContext)
     PFILE_OBJECT    FileObject;
     PEXT2_FCB       Fcb = NULL;
     PEXT2_CCB       Ccb = NULL;
+
     BOOLEAN         VcbResourceAcquired = FALSE;
     BOOLEAN         FcbResourceAcquired = FALSE;
-    BOOLEAN         bDeleteVcb = FALSE;
-    BOOLEAN         bBeingClosed = FALSE;
-    BOOLEAN         bSkipLeave = FALSE;
+    BOOLEAN         FcbDerefDeferred = FALSE;
 
     _SEH2_TRY {
 
@@ -55,25 +54,6 @@ Ext2Close (IN PEXT2_IRP_CONTEXT IrpContext)
         ASSERT((Vcb->Identifier.Type == EXT2VCB) &&
                (Vcb->Identifier.Size == sizeof(EXT2_VCB)));
 
-        if (!ExAcquireResourceExclusiveLite(
-                    &Vcb->MainResource,
-                    TRUE )) {
-            DEBUG(DL_INF, ("Ext2Close: PENDING ... Vcb: %xh/%xh\n",
-                           Vcb->OpenHandleCount, Vcb->ReferenceCount));
-
-            Status = STATUS_PENDING;
-            _SEH2_LEAVE;
-        }
-        VcbResourceAcquired = TRUE;
-
-        bSkipLeave = TRUE;
-        if (IsFlagOn(Vcb->Flags, VCB_BEING_CLOSED)) {
-            bBeingClosed = TRUE;
-        } else {
-            SetLongFlag(Vcb->Flags, VCB_BEING_CLOSED);
-            bBeingClosed = FALSE;
-        }
-
         if (IsFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_DELAY_CLOSE)) {
 
             FileObject = NULL;
@@ -92,10 +72,29 @@ Ext2Close (IN PEXT2_IRP_CONTEXT IrpContext)
             Ccb = (PEXT2_CCB) FileObject->FsContext2;
         }
 
-        DEBUG(DL_INF, ( "Ext2Close: (VCB) bBeingClosed = %d Vcb = %p ReferCount = %d\n",
-                        bBeingClosed, Vcb, Vcb->ReferenceCount));
+        DEBUG(DL_INF, ( "Ext2Close: (VCB) Vcb = %p ReferCount = %d\n",
+                         Vcb, Vcb->ReferenceCount));
+
+        /*
+         * WARNING: don't release Vcb resource lock here.
+         *
+         *  CcPurgeCacheSection will lead a recursive irp: IRP_MJ_CLOSE
+         *  which would cause revrese order of lock acquirision:
+         *  1) IRP_MJ_CLEANUP: a) Vcb lock -> b) Fcb lock
+         *  2) IRP_MJ_CLOSE:   c) Vcb lock -> d) Fcb lock
+         */
 
         if (Fcb->Identifier.Type == EXT2VCB) {
+
+            if (!ExAcquireResourceExclusiveLite(
+                            &Vcb->MainResource,
+                            TRUE )) {
+                DEBUG(DL_INF, ("Ext2Close: PENDING ... Vcb: %xh/%xh\n",
+                                   Vcb->OpenHandleCount, Vcb->ReferenceCount));
+                Status = STATUS_PENDING;
+                _SEH2_LEAVE;
+            }
+            VcbResourceAcquired = TRUE;
 
             if (Ccb) {
 
@@ -112,7 +111,7 @@ Ext2Close (IN PEXT2_IRP_CONTEXT IrpContext)
         }
 
         if ( Fcb->Identifier.Type != EXT2FCB ||
-                Fcb->Identifier.Size != sizeof(EXT2_FCB)) {
+             Fcb->Identifier.Size != sizeof(EXT2_FCB)) {
             _SEH2_LEAVE;
         }
 
@@ -126,67 +125,39 @@ Ext2Close (IN PEXT2_IRP_CONTEXT IrpContext)
 
         Fcb->Header.IsFastIoPossible = FastIoIsNotPossible;
 
-        if (!Ccb) {
+        if (Ccb == NULL ||
+            Ccb->Identifier.Type != EXT2CCB ||
+            Ccb->Identifier.Size != sizeof(EXT2_CCB)) {
             Status = STATUS_SUCCESS;
-            _SEH2_LEAVE;
-        }
-
-        ASSERT((Ccb->Identifier.Type == EXT2CCB) &&
-               (Ccb->Identifier.Size == sizeof(EXT2_CCB)));
-
-        if (IsFlagOn(Fcb->Flags, FCB_STATE_BUSY)) {
-            SetFlag(IrpContext->Flags, IRP_CONTEXT_FLAG_FILE_BUSY);
-            DEBUG(DL_WRN, ( "Ext2Close: busy bit set: %wZ\n", &Fcb->Mcb->FullName ));
-            Status = STATUS_PENDING;
             _SEH2_LEAVE;
         }
 
         DEBUG(DL_INF, ( "Ext2Close: Fcb = %p OpenHandleCount= %u ReferenceCount=%u NonCachedCount=%u %wZ\n",
                         Fcb, Fcb->OpenHandleCount, Fcb->ReferenceCount, Fcb->NonCachedOpenCount, &Fcb->Mcb->FullName ));
 
-        if (Ccb) {
-
-            Ext2FreeCcb(Vcb, Ccb);
-
-            if (FileObject) {
-                FileObject->FsContext2 = Ccb = NULL;
-            }
+        Ext2FreeCcb(Vcb, Ccb);
+        if (FileObject) {
+            FileObject->FsContext2 = Ccb = NULL;
         }
 
-        if (0 == Ext2DerefXcb(&Fcb->ReferenceCount)) {
-
-            //
-            // Remove Fcb from Vcb->FcbList ...
-            //
-
-            if (FcbResourceAcquired) {
-                ExReleaseResourceLite(&Fcb->MainResource);
-                FcbResourceAcquired = FALSE;
-            }
-
-            Ext2FreeFcb(Fcb);
-
-            if (FileObject) {
-                FileObject->FsContext = Fcb = NULL;
-            }
+        /* only deref fcb, Ext2ReleaseFcb might lead deadlock */
+        FcbDerefDeferred = TRUE;
+        if (IsFlagOn(Fcb->Flags, FCB_DELETE_PENDING) ||
+            NULL == Fcb->Mcb ||
+            IsFileDeleted(Fcb->Mcb)) {
+            Fcb->TsDrop.QuadPart = 0;
+        } else {
+            KeQuerySystemTime(&Fcb->TsDrop);
         }
-
         Ext2DerefXcb(&Vcb->ReferenceCount);
+
+        if (FileObject) {
+            FileObject->FsContext = NULL;
+        }
+
         Status = STATUS_SUCCESS;
 
     } _SEH2_FINALLY {
-
-        if (NT_SUCCESS(Status) && Vcb != NULL && IsVcbInited(Vcb)) {
-            /* for Ext2Fsd driver open/close, Vcb is NULL */
-            if ((!bBeingClosed) && (Vcb->ReferenceCount == 0) &&
-                (!IsMounted(Vcb) || IsDispending(Vcb))) {
-                bDeleteVcb = TRUE;
-            }
-        }
-
-        if (bSkipLeave && !bBeingClosed) {
-            ClearFlag(Vcb->Flags, VCB_BEING_CLOSED);
-        }
 
         if (FcbResourceAcquired) {
             ExReleaseResourceLite(&Fcb->MainResource);
@@ -205,17 +176,11 @@ Ext2Close (IN PEXT2_IRP_CONTEXT IrpContext)
             } else {
 
                 Ext2CompleteIrpContext(IrpContext, Status);
-
-                if (bDeleteVcb) {
-
-                    PVPB Vpb = Vcb->Vpb;
-                    DEBUG(DL_DBG, ( "Ext2Close: Try to free Vcb %p and Vpb %p\n",
-                                    Vcb, Vpb));
-
-                    Ext2CheckDismount(IrpContext, Vcb, FALSE);
-                }
             }
         }
+
+        if (FcbDerefDeferred)
+            Ext2DerefXcb(&Fcb->ReferenceCount);
     } _SEH2_END;
 
     return Status;

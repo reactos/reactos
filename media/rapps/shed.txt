@@ -19,6 +19,11 @@ License = Gratuită
 Description = Un joc de cărți pentru Windows. Este bazat pe popularul joc de cărți studențesc „Shit-head”.
 Size = 65,8 Kio
 
+[Section.0419]
+License = Бесплатно
+Description = Карточная игра для одного игрока.
+Size = 65,8 КБ
+
 [Section.041f]
 License = Ücretsiz
 Description = Windows için bir tekli oyunculu kart oyunu. "Shit-head" tutulan öğrenci kart oyunu tabanlıdır.

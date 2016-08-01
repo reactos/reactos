@@ -830,7 +830,7 @@ HRESULT CBaseBarSite::ShowBand(DWORD dwBandID)
     return S_OK;
 }
 
-HRESULT CreateBaseBarSite(REFIID riid, void **ppv, BOOL bVertical)
+HRESULT CBaseBarSite_CreateInstance(REFIID riid, void **ppv, BOOL bVertical)
 {
     return ShellObjectCreatorInit<CBaseBarSite, BOOL>(bVertical, riid, ppv);
 }

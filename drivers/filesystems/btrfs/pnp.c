@@ -174,14 +174,14 @@ static NTSTATUS pnp_query_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     
     InitializeListHead(&rollback);
     
-    acquire_tree_lock(Vcb, TRUE);
+    ExAcquireResourceExclusiveLite(&Vcb->tree_lock, TRUE);
 
-    if (Vcb->write_trees > 0)
+    if (Vcb->need_write)
         do_write(Vcb, &rollback);
     
     clear_rollback(&rollback);
 
-    release_tree_lock(Vcb, TRUE);
+    ExReleaseResourceLite(&Vcb->tree_lock);
 
     Status = STATUS_SUCCESS;
 end:
@@ -200,8 +200,13 @@ static NTSTATUS pnp_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     }
     
     if (DeviceObject->Vpb->Flags & VPB_MOUNTED) {
+        Status = FsRtlNotifyVolumeEvent(Vcb->root_file, FSRTL_VOLUME_DISMOUNT);
+        if (!NT_SUCCESS(Status)) {
+            WARN("FsRtlNotifyVolumeEvent returned %08x\n", Status);
+        }
+        
         uninit(Vcb, FALSE);
-        DeviceObject->Vpb->Flags &= ~VPB_MOUNTED;
+        Vcb->Vpb->Flags &= ~VPB_MOUNTED;
     }
 
     return STATUS_SUCCESS;
@@ -228,6 +233,11 @@ NTSTATUS STDCALL drv_pnp(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     FsRtlEnterFileSystem();
 
     top_level = is_top_level(Irp);
+    
+    if (Vcb && Vcb->type == VCB_TYPE_PARTITION0) {
+        Status = part0_passthrough(DeviceObject, Irp);
+        goto end;
+    }
     
     Status = STATUS_NOT_IMPLEMENTED;
     

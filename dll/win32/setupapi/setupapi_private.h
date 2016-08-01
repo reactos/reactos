@@ -30,10 +30,14 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <winreg.h>
+#include <winuser.h>
 #include <wingdi.h>
+#include <winreg.h>
 #include <winspool.h>
 #include <wincon.h>
+
+#include <commdlg.h>
+
 #include <objbase.h>
 #include <cfgmgr32.h>
 #include <regstr.h>
@@ -53,6 +57,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 #ifdef __REACTOS__
 #undef __WINESRC__
 #endif
+
+#include "resource.h"
 
 #define SETUP_DEVICE_INFO_SET_MAGIC 0xd00ff057
 #define SETUP_CLASS_IMAGE_LIST_MAGIC 0xd00ff058
@@ -240,6 +246,16 @@ struct FileLog /* HSPFILELOG */
 };
 
 extern HINSTANCE hInstance;
+extern OSVERSIONINFOEXW OsVersionInfo;
+
+/*
+ * See: https://msdn.microsoft.com/en-us/library/bb432397(v=vs.85).aspx
+ * for more information.
+ */
+extern DWORD GlobalSetupFlags;
+#define PSPGF_NO_BACKUP         0x0002
+#define PSPGF_NONINTERACTIVE    0x0004
+
 #define RC_STRING_MAX_SIZE 256
 
 #define REG_INSTALLEDFILES "System\\CurrentControlSet\\Control\\InstalledFiles"
@@ -279,9 +295,6 @@ UINT CALLBACK QUEUE_callback_WtoA( void *context, UINT notification, UINT_PTR, U
 /* from msvcrt/sys/stat.h */
 #define _S_IWRITE 0x0080
 #define _S_IREAD  0x0100
-
-extern HINSTANCE hInstance;
-extern OSVERSIONINFOW OsVersionInfo;
 
 /* devinst.c */
 

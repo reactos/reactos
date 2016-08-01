@@ -52,7 +52,7 @@ BOOL WINAPI SHIM_OBJ_NAME(Notify)(DWORD fdwReason)
             "Service Pack %u", VERSION_INFO.wServicePackMajor);
         if (FAILED(hr))
             return FALSE;
-        StringCbPrintfW(VERSION_INFO.szCSDVersionW, sizeof(VERSION_INFO.szCSDVersionW),
+        hr = StringCbPrintfW(VERSION_INFO.szCSDVersionW, sizeof(VERSION_INFO.szCSDVersionW),
             szServicePack, VERSION_INFO.wServicePackMajor);
         if (FAILED(hr))
             return FALSE;

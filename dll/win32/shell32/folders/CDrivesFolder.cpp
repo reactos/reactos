@@ -39,6 +39,58 @@ CDrivesFolderEnum is only responsible for returning the physical items.
 *   IShellFolder implementation
 */
 
+HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
+{
+    if (!_ILIsDrive(pidl))
+    {
+        return CGuidItemExtractIcon_CreateInstance(psf, pidl, riid, ppvOut);
+    }
+
+    CComPtr<IDefaultExtractIconInit> initIcon;
+    HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &initIcon));
+    if (FAILED(hr))
+        return NULL;
+
+    CHAR* pszDrive = _ILGetDataPointer(pidl)->u.drive.szDriveName;
+    WCHAR wTemp[MAX_PATH];
+    int icon_idx = -1;
+
+    if (pszDrive)
+    {
+        switch(GetDriveTypeA(pszDrive))
+        {
+            case DRIVE_REMOVABLE:
+                icon_idx = IDI_SHELL_3_14_FLOPPY;
+                break;
+            case DRIVE_CDROM:
+                icon_idx = IDI_SHELL_CDROM;
+                break;
+            case DRIVE_REMOTE:
+                icon_idx = IDI_SHELL_NETDRIVE;
+                break;
+            case DRIVE_RAMDISK:
+                icon_idx = IDI_SHELL_RAMDISK;
+                break;
+            case DRIVE_NO_ROOT_DIR:
+                icon_idx = IDI_SHELL_CDROM;
+                break;
+        }
+    }
+
+    if (icon_idx != -1)
+    {
+        initIcon->SetNormalIcon(swShell32Name, -icon_idx);
+    }
+    else
+    {
+        if (HCR_GetIconW(L"Drive", wTemp, NULL, MAX_PATH, &icon_idx))
+            initIcon->SetNormalIcon(wTemp, icon_idx);
+        else
+            initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_DRIVE);
+    }
+
+    return initIcon->QueryInterface(riid, ppvOut);
+}
 class CDrivesFolderEnum :
     public CEnumIDListBase
 {
@@ -457,7 +509,7 @@ HRESULT WINAPI CDrivesFolder::GetUIObjectOf(HWND hwndOwner,
     }
     else if ((IsEqualIID (riid, IID_IExtractIconA) || IsEqualIID (riid, IID_IExtractIconW)) && (cidl == 1))
     {
-        hr = GenericExtractIcon_CreateInstance(this, apidl[0], riid, &pObj);
+        hr = CDrivesExtractIcon_CreateInstance(this, apidl[0], riid, &pObj);
     }
     else if (IsEqualIID (riid, IID_IDropTarget) && (cidl >= 1))
     {

@@ -56,10 +56,12 @@ private:
     
     // *** tree explorer band stuff ***
     BOOL fVisible;
+    BOOL bNavigating;
     BOOL bFocused;
     DWORD dwBandID;
     HIMAGELIST hImageList;
     HTREEITEM  hRoot;
+    HTREEITEM  oldSelected;
     
     // *** notification cookies ***
     DWORD adviseCookie;
@@ -67,15 +69,23 @@ private:
     
     void InitializeExplorerBand();
     void DestroyExplorerBand();
+    HRESULT ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd);
 
     BOOL OnTreeItemExpanding(LPNMTREEVIEW pnmtv);
     void OnSelectionChanged(LPNMTREEVIEW pnmtv);
+
+    // *** ATL event handlers ***
+    LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT ContextMenuHack(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     // *** Helper functions ***
     NodeInfo* GetNodeInfo(HTREEITEM hItem);
     HRESULT UpdateBrowser(LPITEMIDLIST pidlGoto);
     HTREEITEM InsertItem(HTREEITEM hParent, IShellFolder *psfParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort);
+    HTREEITEM InsertItem(HTREEITEM hParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort);
     BOOL InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo); 
+    BOOL NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert, BOOL bSelect);
+    BOOL NavigateToCurrentFolder();
 
 public:
     CExplorerBand();
@@ -137,7 +147,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
     virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId);
     virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
-    
+
     // *** IDropTarget methods ***
     virtual HRESULT STDMETHODCALLTYPE DragEnter(IDataObject *pObj, DWORD glfKeyState, POINTL pt, DWORD *pdwEffect);
     virtual HRESULT STDMETHODCALLTYPE DragOver(DWORD glfKeyState, POINTL pt, DWORD *pdwEffect);
@@ -170,8 +180,7 @@ public:
     END_COM_MAP()
 
     BEGIN_MSG_MAP(CExplorerBand)
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
+        MESSAGE_HANDLER(WM_RBUTTONDOWN, ContextMenuHack)
     END_MSG_MAP()
 };
-
-extern "C"
-HRESULT WINAPI CExplorerBand_Constructor(REFIID riid, LPVOID *ppv);

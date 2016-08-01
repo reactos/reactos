@@ -749,7 +749,7 @@ FT_BEGIN_HEADER
   /*    aglyph :: The corresponding @FT_Glyph object.  0~in case of        */
   /*              failure.                                                 */
   /*                                                                       */
-  /*    anode  :: Used to return the address of of the corresponding cache */
+  /*    anode  :: Used to return the address of the corresponding cache    */
   /*              node after incrementing its reference count (see note    */
   /*              below).                                                  */
   /*                                                                       */
@@ -802,7 +802,7 @@ FT_BEGIN_HEADER
   /*    aglyph     :: The corresponding @FT_Glyph object.  0~in case of    */
   /*                  failure.                                             */
   /*                                                                       */
-  /*    anode      :: Used to return the address of of the corresponding   */
+  /*    anode      :: Used to return the address of the corresponding      */
   /*                  cache node after incrementing its reference count    */
   /*                  (see note below).                                    */
   /*                                                                       */
@@ -957,7 +957,7 @@ FT_BEGIN_HEADER
   /* <Output>                                                              */
   /*    sbit   :: A handle to a small bitmap descriptor.                   */
   /*                                                                       */
-  /*    anode  :: Used to return the address of of the corresponding cache */
+  /*    anode  :: Used to return the address of the corresponding cache    */
   /*              node after incrementing its reference count (see note    */
   /*              below).                                                  */
   /*                                                                       */
@@ -1012,7 +1012,7 @@ FT_BEGIN_HEADER
   /* <Output>                                                              */
   /*    sbit       :: A handle to a small bitmap descriptor.               */
   /*                                                                       */
-  /*    anode      :: Used to return the address of of the corresponding   */
+  /*    anode      :: Used to return the address of the corresponding      */
   /*                  cache node after incrementing its reference count    */
   /*                  (see note below).                                    */
   /*                                                                       */
