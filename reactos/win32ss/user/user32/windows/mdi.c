@@ -87,9 +87,11 @@
 WINE_DEFAULT_DEBUG_CHANNEL(mdi);
 
 #define MDI_MAXTITLELENGTH      0xa1
-
+#ifdef __REACTOS__
+#define WM_MDICALCCHILDSCROLL   0x003F // ReactOS: Uses correct value.
+#else                                  // Really? ---v win:test_mdi looks for the above value.
 #define WM_MDICALCCHILDSCROLL   0x10ac /* this is exactly what Windows uses */
-
+#endif
 /* "More Windows..." definitions */
 #define MDI_MOREWINDOWSLIMIT    9       /* after this number of windows, a "More Windows..."
                                            option will appear under the Windows menu */
@@ -1236,7 +1238,11 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 	ci->mdiFlags |= MDIF_NEEDUPDATE;
         ArrangeIconicWindows( hwnd );
 	ci->sbRecalc = SB_BOTH+1;
+#ifdef __REACTOS__
+	PostMessageA( hwnd, WM_MDICALCCHILDSCROLL, 0, 0 ); //// ReactOS: Post not send!
+#else
         SendMessageW( hwnd, WM_MDICALCCHILDSCROLL, 0, 0 );
+#endif
         return 0;
 
       case WM_MDIMAXIMIZE:
@@ -1872,6 +1878,7 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
     /* set common info values */
     info.cbSize = sizeof(info);
     info.fMask = SIF_POS | SIF_RANGE | SIF_PAGE;
+    info.nPos = 0;
 
     /* set the specific values and apply but only if window style allows */
     /* Note how we set nPos to 0 because we scroll the clients instead of
@@ -1888,11 +1895,11 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
                         {
                             info.nMin = childRect.left;
                             info.nMax = childRect.right;
-                            info.nPos = 0;
                             info.nPage = 1 + clientRect.right - clientRect.left;
                             //info.nMax = childRect.right - clientRect.right;
                             //info.nPos = clientRect.left - childRect.left;
                             SetScrollInfo(hwnd, SB_HORZ, &info, TRUE);
+                            ERR("CalcChildScroll H\n");
                         }
 			if (scroll == SB_HORZ) break;
 			/* fall through */
@@ -1901,7 +1908,6 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
                         {
                             info.nMin = childRect.top;
                             info.nMax = childRect.bottom;
-                            info.nPos = 0;
                             info.nPage = 1 + clientRect.bottom - clientRect.top;
                             //info.nMax = childRect.bottom - clientRect.bottom;
                             //info.nPos = clientRect.top - childRect.top;
