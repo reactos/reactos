@@ -93,6 +93,7 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
             case ESP:
             case EBP:
             case EIP:
+                KDDBGPRINT("Returning NULL for register %d.\n", reg_name);
                 *size = 4;
                 return &NullValue;
             default:
@@ -143,12 +144,8 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
     return NULL;
 }
 
-KDSTATUS
-gdb_send_registers(
-    _Out_ DBGKD_MANIPULATE_STATE64* State,
-    _Out_ PSTRING MessageData,
-    _Out_ PULONG MessageLength,
-    _Inout_ PKD_CONTEXT KdContext)
+void
+gdb_send_registers(void)
 {
     CHAR Registers[16*8 + 1];
     UCHAR* RegisterPtr;
@@ -184,7 +181,7 @@ gdb_send_registers(
         {
             /* Thread is dead */
             send_gdb_packet("E03");
-            return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
+            return;
         }
 
         for(i=0; i < 16; i++)
@@ -209,15 +206,10 @@ gdb_send_registers(
     }
     *ptr = '\0';
     send_gdb_packet(Registers);
-    return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
 }
 
-KDSTATUS
-gdb_send_register(
-    _Out_ DBGKD_MANIPULATE_STATE64* State,
-    _Out_ PSTRING MessageData,
-    _Out_ PULONG MessageLength,
-    _Inout_ PKD_CONTEXT KdContext)
+void
+gdb_send_register(void)
 {
     enum reg_name reg_name;
     void *ptr;
@@ -242,7 +234,7 @@ gdb_send_register(
         {
             /* Thread is dead */
             send_gdb_packet("E03");
-            return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
+            return;
         }
 
         ptr = thread_to_reg(DbgThread, reg_name, &size);
@@ -257,6 +249,30 @@ gdb_send_register(
     {
         send_gdb_memory(ptr, size);
     }
-
-    return gdb_receive_and_interpret_packet(State, MessageData, MessageLength, KdContext);
 }
+
+char*
+gdb_append_pc_to_exception(
+    _In_ PETHREAD Thread,
+    _Inout_ char* ptr)
+{
+    /* Get EIP */
+    unsigned short ptrSize;
+    unsigned char* EipPtr = thread_to_reg(Thread, EIP, &ptrSize);
+
+    /* Print it */
+    ptr += sprintf(ptr, "08:");
+    *ptr++ = hex_chars[EipPtr[0] >> 4];
+    *ptr++ = hex_chars[EipPtr[0] & 0xF];
+    *ptr++ = hex_chars[EipPtr[1] >> 4];
+    *ptr++ = hex_chars[EipPtr[1] & 0xF];
+    *ptr++ = hex_chars[EipPtr[2] >> 4];
+    *ptr++ = hex_chars[EipPtr[2] & 0xF];
+    *ptr++ = hex_chars[EipPtr[3] >> 4];
+    *ptr++ = hex_chars[EipPtr[3] & 0xF];
+    *ptr++ = ';';
+    *ptr++ = '\0';
+    
+    return ptr;
+}
+

@@ -42,6 +42,7 @@ gdb_receive_packet(_Inout_ PKD_CONTEXT KdContext)
             return Status;
         if (Byte == 0x03)
         {
+            KDDBGPRINT("BREAK!");
             KdContext->KdpControlCPending = TRUE;
             return KdPacketNeedsResend;
         }

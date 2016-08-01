@@ -94,6 +94,7 @@ SetContextSendHandler(
             || (State->ReturnStatus != STATUS_SUCCESS))
     {
         /* Should we bugcheck ? */
+        KDDBGPRINT("BAD BAD BAD not manipulating state for sending context.\n");
         while (1);
     }
 
@@ -116,6 +117,7 @@ SetContextManipulateHandler(
 
     if (MessageData->MaximumLength < sizeof(CurrentContext))
     {
+        KDDBGPRINT("Wrong message length %u.\n", MessageData->MaximumLength);
         while (1);
     }
 
@@ -153,14 +155,18 @@ send_kd_state_change(DBGKD_ANY_WAIT_STATE_CHANGE* StateChange)
             PsGetThreadId(Thread));
         /* Set the current debugged process/thread accordingly */
         gdb_dbg_tid = handle_to_gdb_tid(PsGetThreadId(Thread));
+#if MONOPROCESS
+        gdb_dbg_pid = 0;
+#else
         gdb_dbg_pid = handle_to_gdb_pid(PsGetThreadProcessId(Thread));
-        gdb_send_exception();
+#endif
+        gdb_send_exception(FALSE);
         /* Next receive call will ask for the context */
         KdpManipulateStateHandler = GetContextManipulateHandler;
         break;
     }
     default:
-        /* FIXME */
+        KDDBGPRINT("Unknown StateChange %u.\n", StateChange->NewState);
         while (1);
     }
 }
@@ -177,10 +183,10 @@ send_kd_debug_io(
     switch (DebugIO->ApiNumber)
     {
     case DbgKdPrintStringApi:
-        gdb_send_debug_io(String);
+        gdb_send_debug_io(String, TRUE);
         break;
     default:
-        /* FIXME */
+        KDDBGPRINT("Unknown ApiNumber %u.\n", DebugIO->ApiNumber);
         while (1);
     }
 }
@@ -200,7 +206,7 @@ send_kd_state_manipulate(
         return;
 #endif
     default:
-        /* FIXME */
+        KDDBGPRINT("Unknown ApiNumber %u.\n", State->ApiNumber);
         while (1);
     }
 }
@@ -314,7 +320,11 @@ FirstSendHandler(
     /* Set up the current state */
     CurrentStateChange = *StateChange;
     gdb_dbg_tid = handle_to_gdb_tid(PsGetThreadId(Thread));
+#if MONOPROCESS
+    gdb_dbg_pid = 0;
+#else
     gdb_dbg_pid = handle_to_gdb_pid(PsGetThreadProcessId(Thread));
+#endif
     /* This is the idle process. Save it! */
     TheIdleThread = Thread;
     TheIdleProcess = (PEPROCESS)Thread->Tcb.ApcState.Process;
@@ -352,7 +362,6 @@ KdReceivePacket(
     _Out_ PULONG DataLength,
     _Inout_ PKD_CONTEXT KdContext)
 {
-    KDSTATUS Status;
     DBGKD_MANIPULATE_STATE64* State;
 
     /* Special handling for breakin packet */
@@ -373,13 +382,8 @@ KdReceivePacket(
     if (KdpManipulateStateHandler != NULL)
         return KdpManipulateStateHandler(State, MessageData, DataLength, KdContext);
 
-    /* Receive data from GDB */
-    Status = gdb_receive_packet(KdContext);
-    if (Status != KdPacketReceived)
-        return Status;
-
-    /* Interpret it */
-    return gdb_interpret_input(State, MessageData, DataLength, KdContext);
+    /* Receive data from GDB  and interpret it */
+    return gdb_receive_and_interpret_packet(State, MessageData, DataLength, KdContext);
 }
 
 VOID
@@ -409,7 +413,7 @@ KdSendPacket(
         send_kd_state_manipulate((DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer, MessageData);
         break;
     default:
-        /* FIXME */
+        KDDBGPRINT("Unknown packet type %u.\n", PacketType);
         while (1);
     }
 }

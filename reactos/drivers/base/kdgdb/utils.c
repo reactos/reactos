@@ -21,7 +21,7 @@ find_process(
     PEPROCESS Process;
 
     /* Special case for idle process */
-    if (Pid == 1)
+    if (ProcessId == NULL)
         return TheIdleProcess;
 
     for (ProcessEntry = ProcessListHead->Flink;
@@ -46,14 +46,43 @@ find_thread(
     PETHREAD Thread;
     PEPROCESS Process;
     LIST_ENTRY* ThreadEntry;
+#if MONOPROCESS
+    LIST_ENTRY* ProcessEntry;
+#endif
+
+    if (
+#if !MONOPROCESS
+    (Pid == 0) && 
+#endif
+    (Tid == 0))
+    {
+        /* Zero means any, so use the current one */
+        return (PETHREAD)(ULONG_PTR)CurrentStateChange.Thread;
+    }
+
+#if MONOPROCESS
 
     /* Special case for the idle thread */
-    if ((Pid == 1) && (Tid == 1))
+    if (Tid == 1)
         return TheIdleThread;
 
+    for (ProcessEntry = ProcessListHead->Flink;
+        ProcessEntry != ProcessListHead;
+        ProcessEntry = ProcessEntry->Flink)
+    {
+        Process = CONTAINING_RECORD(ProcessEntry, EPROCESS, ActiveProcessLinks);
+#else
+
     Process = find_process(Pid);
+
+    /* Special case for the idle thread */
+    if ((Process == TheIdleProcess) && (Tid == 1))
+        return TheIdleThread;
+
     if (!Process)
         return NULL;
+
+#endif
 
     for (ThreadEntry = Process->ThreadListHead.Flink;
             ThreadEntry != &Process->ThreadListHead;
@@ -66,6 +95,10 @@ find_thread(
             return Thread;
         }
     }
+
+#if MONOPROCESS
+    }
+#endif
 
     return NULL;
 }
