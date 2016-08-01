@@ -699,7 +699,6 @@ HRESULT WINAPI CDrivesFolder::GetDetailsEx(PCUITEMID_CHILD pidl, const SHCOLUMNI
     return E_NOTIMPL;
 }
 
-/* FIXME: drive size >4GB is rolling over */
 HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *psd)
 {
     HRESULT hr;
