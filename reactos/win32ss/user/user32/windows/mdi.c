@@ -1899,7 +1899,6 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
                             //info.nMax = childRect.right - clientRect.right;
                             //info.nPos = clientRect.left - childRect.left;
                             SetScrollInfo(hwnd, SB_HORZ, &info, TRUE);
-                            ERR("CalcChildScroll H\n");
                         }
 			if (scroll == SB_HORZ) break;
 			/* fall through */
