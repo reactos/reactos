@@ -179,6 +179,7 @@ static CDesktopBrowser *SHDESK_Create(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
     if (FAILED(hRet))
     {
         pThis->Release();
+        delete pThis;
         return NULL;
     }
 

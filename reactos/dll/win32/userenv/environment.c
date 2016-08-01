@@ -463,7 +463,7 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                                    FALSE);
     }
 
-    /* Set variables from System Manager */
+    /* Set variables from Session Manager */
     SetUserEnvironment(lpEnvironment,
                        HKEY_LOCAL_MACHINE,
                        L"System\\CurrentControlSet\\Control\\Session Manager\\Environment");
