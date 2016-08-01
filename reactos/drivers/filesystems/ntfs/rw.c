@@ -147,7 +147,10 @@ NtfsReadFile(PDEVICE_EXTENSION DeviceExt,
         RealLength = ROUND_UP(ToRead, DeviceExt->NtfsInfo.BytesPerSector);
         /* do we need to extend RealLength by one sector? */
         if (RealLength + RealReadOffset < ReadOffset + Length)
-            RealLength += DeviceExt->NtfsInfo.BytesPerSector;
+        {
+            if (RealReadOffset + RealLength + DeviceExt->NtfsInfo.BytesPerSector <= AttributeAllocatedLength(&DataContext->Record))
+                RealLength += DeviceExt->NtfsInfo.BytesPerSector;
+        }
 
 
         ReadBuffer = ExAllocatePoolWithTag(NonPagedPool, RealLength, TAG_NTFS);
