@@ -48,6 +48,7 @@ typedef struct _WNetProvider
     PF_NPGetResourceInformation getResourceInformation;
     PF_NPAddConnection addConnection;
     PF_NPAddConnection3 addConnection3;
+    PF_NPCancelConnection cancelConnection;
 #ifdef __REACTOS__
     PF_NPGetConnection getConnection;
 #endif
@@ -199,11 +200,13 @@ static void _tryLoadProvider(PCWSTR provider)
                         }
                         provider->addConnection = MPR_GETPROC(NPAddConnection);
                         provider->addConnection3 = MPR_GETPROC(NPAddConnection3);
+                        provider->cancelConnection = MPR_GETPROC(NPCancelConnection);
 #ifdef __REACTOS__
                         provider->getConnection = MPR_GETPROC(NPGetConnection);
 #endif
                         TRACE("NPAddConnection %p\n", provider->addConnection);
                         TRACE("NPAddConnection3 %p\n", provider->addConnection3);
+                        TRACE("NPCancelConnection %p\n", provider->cancelConnection);
                         providerTable->numProviders++;
                     }
                     else
@@ -1913,9 +1916,26 @@ DWORD WINAPI WNetCancelConnection2A( LPCSTR lpName, DWORD dwFlags, BOOL fForce )
  */
 DWORD WINAPI WNetCancelConnection2W( LPCWSTR lpName, DWORD dwFlags, BOOL fForce )
 {
-    FIXME( "(%s, %08X, %d), stub\n", debugstr_w(lpName), dwFlags, fForce );
+    DWORD ret = WN_NO_NETWORK;
+    DWORD index;
 
-    return WN_SUCCESS;
+    if (providerTable != NULL)
+    {
+        for (index = 0; index < providerTable->numProviders; index++)
+        {
+            if(providerTable->table[index].getCaps(WNNC_CONNECTION) &
+                WNNC_CON_GETCONNECTIONS)
+            {
+                if (providerTable->table[index].cancelConnection)
+                    ret = providerTable->table[index].cancelConnection((LPWSTR)lpName, fForce);
+                else
+                    ret = WN_NO_NETWORK;
+                if (ret == WN_SUCCESS || ret == WN_OPEN_FILES)
+                    break;
+            }
+        }
+    }
+    return ret;
 }
 
 /*****************************************************************
