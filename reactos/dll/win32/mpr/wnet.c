@@ -1612,6 +1612,8 @@ static void use_connection_set_accessnameW(struct use_connection_context *ctxt)
     WCHAR *accessname = ctxt->accessname;
     if (ctxt->resource->lpLocalName)
         strcpyW(accessname, ctxt->resource->lpLocalName);
+        if (ctxt->result)
+            *ctxt->result = CONNECT_LOCALDRIVE;
     else
         strcpyW(accessname, ctxt->resource->lpRemoteName);
 }
@@ -1808,6 +1810,8 @@ static void use_connection_set_accessnameA(struct use_connection_context *ctxt)
     char *accessname = ctxt->accessname;
     if (ctxt->resourceA->lpLocalName)
         strcpy(accessname, ctxt->resourceA->lpLocalName);
+        if (ctxt->result)
+            *ctxt->result = CONNECT_LOCALDRIVE;
     else
         strcpy(accessname, ctxt->resourceA->lpRemoteName);
 }
