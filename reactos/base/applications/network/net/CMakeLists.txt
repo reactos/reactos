@@ -10,12 +10,13 @@ list(APPEND SOURCE
     cmdPause.c
     cmdStart.c
     cmdStop.c
+    cmdUse.c
     cmdUser.c
     help.c
     net.h)
 
 add_executable(net ${SOURCE} net.rc)
 set_module_type(net win32cui UNICODE)
-add_importlibs(net advapi32 netapi32 msvcrt kernel32 user32 ntdll)
+add_importlibs(net advapi32 netapi32 msvcrt kernel32 user32 ntdll mpr)
 add_pch(net net.h SOURCE)
 add_cd_file(TARGET net DESTINATION reactos/system32 FOR all)

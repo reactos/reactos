@@ -39,7 +39,7 @@ COMMAND cmds[] =
     {L"statistics", unimplemented},
     {L"stop",       cmdStop},
     {L"time",       unimplemented},
-    {L"use",        unimplemented},
+    {L"use",        cmdUse},
     {L"user",       cmdUser},
     {L"view",       unimplemented},
     {NULL,          NULL}
