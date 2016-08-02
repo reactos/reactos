@@ -1617,6 +1617,8 @@ static DWORD wnet_use_connection( struct use_connection_context *ctxt )
 {
     WNetProvider *provider;
     DWORD index, ret, caps;
+    BOOLEAN redirect = FALSE;
+    WCHAR letter[3] = {'z', ':', 0};
 
     if (!providerTable || providerTable->numProviders == 0)
         return WN_NO_NETWORK;
@@ -1624,41 +1626,74 @@ static DWORD wnet_use_connection( struct use_connection_context *ctxt )
     if (!ctxt->resource)
         return ERROR_INVALID_PARAMETER;
 
+    if (!ctxt->resource->lpLocalName && (ctxt->flags & CONNECT_REDIRECT))
+    {
+        if (ctxt->resource->dwType != RESOURCETYPE_DISK && ctxt->resource->dwType != RESOURCETYPE_PRINT)
+        {
+            return ERROR_BAD_DEV_TYPE;
+        }
+
+        if (ctxt->resource->dwType == RESOURCETYPE_PRINT)
+        {
+            FIXME("Locale device selection is not implemented for printers.\n");
+            return WN_NO_NETWORK;
+        }
+
+        redirect = TRUE;
+        ctxt->resource->lpLocalName = letter;
+    }
+
     if (!ctxt->resource->lpProvider)
     {
         FIXME("Networking provider selection is not implemented.\n");
-        return WN_NO_NETWORK;
-    }
-
-    if (!ctxt->resource->lpLocalName && (ctxt->flags & CONNECT_REDIRECT))
-    {
-        FIXME("Locale device selection is not implemented.\n");
-        return WN_NO_NETWORK;
+        ret = WN_NO_NETWORK;
+        goto done;
     }
 
     if (ctxt->flags & CONNECT_INTERACTIVE)
-        return ERROR_BAD_NET_NAME;
+    {
+        ret = ERROR_BAD_NET_NAME;
+        goto done;
+    }
 
     index = _findProviderIndexW(ctxt->resource->lpProvider);
     if (index == BAD_PROVIDER_INDEX)
-        return ERROR_BAD_PROVIDER;
+    {
+        ret = ERROR_BAD_PROVIDER;
+        goto done;
+    }
 
     provider = &providerTable->table[index];
     caps = provider->getCaps(WNNC_CONNECTION);
     if (!(caps & (WNNC_CON_ADDCONNECTION | WNNC_CON_ADDCONNECTION3)))
-        return ERROR_BAD_PROVIDER;
+    {
+        ret = ERROR_BAD_PROVIDER;
+        goto done;
+    }
 
     if ((ret = ctxt->pre_set_accessname(ctxt)))
-        return ret;
+    {
+        goto done;
+    }
 
     ret = WN_ACCESS_DENIED;
-    if ((caps & WNNC_CON_ADDCONNECTION3) && provider->addConnection3)
-        ret = provider->addConnection3(ctxt->hwndOwner, ctxt->resource, ctxt->password, ctxt->userid, ctxt->flags);
-    else if ((caps & WNNC_CON_ADDCONNECTION) && provider->addConnection)
-        ret = provider->addConnection(ctxt->resource, ctxt->password, ctxt->userid);
+    do
+    {
+        if ((caps & WNNC_CON_ADDCONNECTION3) && provider->addConnection3)
+            ret = provider->addConnection3(ctxt->hwndOwner, ctxt->resource, ctxt->password, ctxt->userid, ctxt->flags);
+        else if ((caps & WNNC_CON_ADDCONNECTION) && provider->addConnection)
+            ret = provider->addConnection(ctxt->resource, ctxt->password, ctxt->userid);
+
+        if (redirect)
+            letter[0] -= 1;
+    } while (redirect && ret == WN_ALREADY_CONNECTED && letter[0] >= 'c');
 
     if (ret == WN_SUCCESS && ctxt->accessname)
         ctxt->set_accessname(ctxt);
+
+done:
+    if (redirect)
+        ctxt->resource->lpLocalName = NULL;
 
     return ret;
 }
