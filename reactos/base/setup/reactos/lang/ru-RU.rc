@@ -16,9 +16,9 @@ CAPTION "Установка ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Установка ReactOS", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25
+    LTEXT "Установить новую копию системы ReactOS. Эта опция НЕ сохраняет файлы, настройки и программы. Вы можете изменять диски и разделы.", IDC_INSTALLTEXT, 18, 18, 269, 25
     AUTORADIOBUTTON "Восстановить или изменить установленный ранее ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 18, 61, 269, 30
+    LTEXT "Обновить или посстановить установленную копию системы ReactOS. Эта опция СОХРАНЯЕТ файлы, настройки и программы. Доступно только при наличии уже установленной на компьютере системы ReactOS.", IDC_UPDATETEXT, 18, 61, 269, 30
     LTEXT "Для установки устройств нажмите ""Далее"".", IDC_STATIC, 7, 128, 297, 8
 END
 

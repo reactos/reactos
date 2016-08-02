@@ -224,7 +224,7 @@ BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
     LTEXT "Настройки ресурсов:", -1, 7, 36, 204, 8
-    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
+    CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
 END
@@ -250,19 +250,19 @@ BEGIN
   BEGIN
     MENUITEM "В&ыход",                       IDC_EXIT
   END
-  MENUITEM "&Действие",                        IDC_ACTIONMENU
+  MENUITEM "&Действие",                      IDC_ACTIONMENU
   POPUP "&Вид"
   BEGIN
-    MENUITEM "&Устройства по типу",             IDC_DEVBYTYPE
-    MENUITEM "Устройства по под&ключению",       IDC_DEVBYCONN
-    MENUITEM "&Ресурсы по типу",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "Ресурсы по подк&лючению",     IDC_RESBYCONN, GRAYED
+    MENUITEM "&Устройства по типу",          IDC_DEVBYTYPE
+    MENUITEM "Устройства по под&ключению",   IDC_DEVBYCONN
+    MENUITEM "&Ресурсы по типу",             IDC_RESBYTYPE, GRAYED
+    MENUITEM "Ресурсы по подк&лючению",      IDC_RESBYCONN, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Показать &скрытые устройства",         IDC_SHOWHIDDEN
+    MENUITEM "Показать &скрытые устройства", IDC_SHOWHIDDEN
   END
   POPUP "&Справка"
   BEGIN
-    MENUITEM "О &программе...",                       IDC_ABOUT
+    MENUITEM "О &программе...",              IDC_ABOUT
   END
 END
 
@@ -304,7 +304,7 @@ BEGIN
   IDS_HINT_DISABLE      " Отключение выбранного устройства."
   IDS_HINT_UPDATE       " Запуск мастера обновления драйверов для выделенного устройства."
   IDS_HINT_UNINSTALL    " Удаление драйвера для выбранного устройства."
-  IDS_HINT_ADD          " Добавить старое (не Plug-and-Play) устройство на этот компьютер." 
+  IDS_HINT_ADD          " Добавить старое (не Plug-and-Play) устройство на этот компьютер."
   IDS_HINT_ABOUT        " О программе ""Диспетчер устройств ReactOS""."
   IDS_HINT_EXIT         " Выход из программы."
 

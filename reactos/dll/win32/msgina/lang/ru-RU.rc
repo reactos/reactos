@@ -171,7 +171,7 @@ BEGIN
     IDS_CHANGEPWDTITLE "Сменить пароль"
     IDS_NONMATCHINGPASSWORDS "Введенные пароли не совпадают. Введите одинаковый пароль в оба поля"
     IDS_PASSWORDCHANGED "Ваш пароль был изменен."
-    IDS_LOGONTITLE "Logon Message"
+    IDS_LOGONTITLE "Сообщение входа в систему"
     IDS_LOGONWRONGUSERORPWD "Системе не удается войти. Проверьте правильность имени пользователя и домена и повторите ввод. Пароли вводятся с учетом регистра"
     IDS_LOGONUSERDISABLED "Ваш аккаунт отключен. Пожалуйста, обратитесь к системному администратору."
     IDS_PASSWORDMUSTCHANGE "Вы должны сменить пароль при следующем входе."

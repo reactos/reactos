@@ -44,11 +44,11 @@ MAIN_MENU MENU
  POPUP "&Настройки" {
   MENUITEM "Всегда &сверху", MNID_HELP_HELPTOP
   MENUITEM "История",		MNID_OPTS_HISTORY
-  POPUP    "Шрифт"
+  POPUP    "&Шрифт"
   BEGIN
-    MENUITEM "Мелкий",		MNID_OPTS_FONTS_SMALL
-    MENUITEM "Обычный",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Крупный",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "&Мелкий",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "&Обычный",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "&Крупный",     	MNID_OPTS_FONTS_LARGE
   END
  }
  POPUP "&Справка" {

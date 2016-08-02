@@ -753,7 +753,7 @@ BEGIN
     IDS_DRIVE_FIXED "Локальный диск"
     IDS_DRIVE_CDROM "CD-дисковод"
     IDS_DRIVE_NETWORK "Сетевой диск"
-    IDS_DRIVE_FLOPPY "3.5 Floppy"
+    IDS_DRIVE_FLOPPY "Дисковод 3.5"
     IDS_DRIVE_REMOVABLE "Съемный диск"
     IDS_FS_UNKNOWN "Неизвестно"
 
@@ -821,7 +821,7 @@ BEGIN
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s File"
+    IDS_FILE_EXT_TYPE "Файл %s"
 
     IDS_BYTES_FORMAT "байт"
     IDS_UNKNOWN_APP "Неизвестное приложение"
