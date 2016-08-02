@@ -344,7 +344,7 @@ HTREEITEM CExplorerBand::InsertItem(HTREEITEM hParent, IShellFolder *psfParent, 
 
     /* Get the name of the node */
     WCHAR wszDisplayName[MAX_PATH];
-    if (!ILGetDisplayNameEx(psfParent, pEltRelative, wszDisplayName, ILGDN_INFOLDER))
+    if (!ILGetDisplayNameEx(psfParent, pElt, wszDisplayName, ILGDN_INFOLDER))
     {
         ERR("Failed to get node name\n");
         return NULL;
