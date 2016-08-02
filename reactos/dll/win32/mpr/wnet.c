@@ -1757,11 +1757,11 @@ struct use_connection_context
     void *accessname;
     DWORD *buffer_size;
     DWORD *result;
-    DWORD (*pre_set_accessname)(struct use_connection_context*, void *);
-    void  (*set_accessname)(struct use_connection_context*, void *);
+    DWORD (*pre_set_accessname)(struct use_connection_context*, WCHAR *);
+    void  (*set_accessname)(struct use_connection_context*, WCHAR *);
 };
 
-static DWORD use_connection_pre_set_accessnameW(struct use_connection_context *ctxt, void *local_name)
+static DWORD use_connection_pre_set_accessnameW(struct use_connection_context *ctxt, WCHAR *local_name)
 {
     if (ctxt->accessname && ctxt->buffer_size && *ctxt->buffer_size)
     {
@@ -1784,7 +1784,7 @@ static DWORD use_connection_pre_set_accessnameW(struct use_connection_context *c
     return ERROR_SUCCESS;
 }
 
-static void use_connection_set_accessnameW(struct use_connection_context *ctxt, void *local_name)
+static void use_connection_set_accessnameW(struct use_connection_context *ctxt, WCHAR *local_name)
 {
     WCHAR *accessname = ctxt->accessname;
     if (local_name)
@@ -1959,14 +1959,14 @@ DWORD WINAPI WNetUseConnectionW( HWND hwndOwner, NETRESOURCEW *resource, LPCWSTR
     return wnet_use_connection(&ctxt);
 }
 
-static DWORD use_connection_pre_set_accessnameA(struct use_connection_context *ctxt, void *local_name)
+static DWORD use_connection_pre_set_accessnameA(struct use_connection_context *ctxt, WCHAR *local_name)
 {
     if (ctxt->accessname && ctxt->buffer_size && *ctxt->buffer_size)
     {
         DWORD len;
 
         if (local_name)
-            len = strlen(local_name);
+            len = WideCharToMultiByte(CP_ACP, 0, local_name, -1, NULL, 0, NULL, NULL) - 1;
         else
             len = strlen(ctxt->resourceA->lpRemoteName);
 
@@ -1982,12 +1982,12 @@ static DWORD use_connection_pre_set_accessnameA(struct use_connection_context *c
     return ERROR_SUCCESS;
 }
 
-static void use_connection_set_accessnameA(struct use_connection_context *ctxt, void *local_name)
+static void use_connection_set_accessnameA(struct use_connection_context *ctxt, WCHAR *local_name)
 {
     char *accessname = ctxt->accessname;
     if (local_name)
     {
-        strcpy(accessname, local_name);
+        WideCharToMultiByte(CP_ACP, 0, local_name, -1, accessname, *ctxt->buffer_size, NULL, NULL);
         if (ctxt->result)
             *ctxt->result = CONNECT_LOCALDRIVE;
     }
