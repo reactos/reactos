@@ -1613,11 +1613,52 @@ static void use_connection_set_accessnameW(struct use_connection_context *ctxt)
         strcpyW(accessname, ctxt->resource->lpRemoteName);
 }
 
+static WCHAR * select_provider(struct use_connection_context *ctxt)
+{
+    DWORD ret, prov_size = 0x1000, len;
+    LPNETRESOURCEW provider;
+    WCHAR * system;
+
+    provider = HeapAlloc(GetProcessHeap(), 0, prov_size);
+    if (!provider)
+    {
+        return NULL;
+    }
+
+    ret = WNetGetResourceInformationW(ctxt->resource, provider, &prov_size, &system);
+    if (ret == ERROR_MORE_DATA)
+    {
+        HeapFree(GetProcessHeap(), 0, provider);
+        provider = HeapAlloc(GetProcessHeap(), 0, prov_size);
+        if (!provider)
+        {
+            return NULL;
+        }
+
+        ret = WNetGetResourceInformationW(ctxt->resource, provider, &prov_size, &system);
+    }
+
+    if (ret != NO_ERROR)
+    {
+        HeapFree(GetProcessHeap(), 0, provider);
+        return NULL;
+    }
+
+    len = WideCharToMultiByte(CP_ACP, 0, provider->lpProvider, -1, NULL, 0, NULL, NULL);
+    ctxt->resource->lpProvider = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (ctxt->resource->lpProvider)
+        memcpy(ctxt->resource->lpProvider, provider->lpProvider, len * sizeof(WCHAR));
+
+    HeapFree(GetProcessHeap(), 0, provider);
+
+    return ctxt->resource->lpProvider;
+}
+
 static DWORD wnet_use_connection( struct use_connection_context *ctxt )
 {
     WNetProvider *provider;
     DWORD index, ret, caps;
-    BOOLEAN redirect = FALSE;
+    BOOLEAN redirect = FALSE, prov = FALSE;
     WCHAR letter[3] = {'z', ':', 0};
 
     if (!providerTable || providerTable->numProviders == 0)
@@ -1643,17 +1684,22 @@ static DWORD wnet_use_connection( struct use_connection_context *ctxt )
         ctxt->resource->lpLocalName = letter;
     }
 
-    if (!ctxt->resource->lpProvider)
-    {
-        FIXME("Networking provider selection is not implemented.\n");
-        ret = WN_NO_NETWORK;
-        goto done;
-    }
-
     if (ctxt->flags & CONNECT_INTERACTIVE)
     {
         ret = ERROR_BAD_NET_NAME;
         goto done;
+    }
+
+    if (!ctxt->resource->lpProvider)
+    {
+        ctxt->resource->lpProvider = select_provider(ctxt);
+        if (!ctxt->resource->lpProvider)
+        {
+            ret = ERROR_NO_NET_OR_BAD_PATH;
+            goto done;
+        }
+
+        prov = TRUE;
     }
 
     index = _findProviderIndexW(ctxt->resource->lpProvider);
@@ -1692,6 +1738,12 @@ static DWORD wnet_use_connection( struct use_connection_context *ctxt )
         ctxt->set_accessname(ctxt);
 
 done:
+    if (prov)
+    {
+        HeapFree(GetProcessHeap(), 0, ctxt->resource->lpProvider);
+        ctxt->resource->lpProvider = NULL;
+    }
+
     if (redirect)
         ctxt->resource->lpLocalName = NULL;
 
