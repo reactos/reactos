@@ -62,10 +62,11 @@ typedef struct _WNetProviderTable
     WNetProvider     table[1];
 } WNetProviderTable, *PWNetProviderTable;
 
-#define WNET_ENUMERATOR_TYPE_NULL     0
-#define WNET_ENUMERATOR_TYPE_GLOBAL   1
-#define WNET_ENUMERATOR_TYPE_PROVIDER 2
-#define WNET_ENUMERATOR_TYPE_CONTEXT  3
+#define WNET_ENUMERATOR_TYPE_NULL      0
+#define WNET_ENUMERATOR_TYPE_GLOBAL    1
+#define WNET_ENUMERATOR_TYPE_PROVIDER  2
+#define WNET_ENUMERATOR_TYPE_CONTEXT   3
+#define WNET_ENUMERATOR_TYPE_CONNECTED 4
 
 /* An WNet enumerator.  Note that the type doesn't correspond to the scope of
  * the enumeration; it represents one of the following types:
@@ -1756,18 +1757,18 @@ struct use_connection_context
     void *accessname;
     DWORD *buffer_size;
     DWORD *result;
-    DWORD (*pre_set_accessname)(struct use_connection_context*);
-    void  (*set_accessname)(struct use_connection_context*);
+    DWORD (*pre_set_accessname)(struct use_connection_context*, void *);
+    void  (*set_accessname)(struct use_connection_context*, void *);
 };
 
-static DWORD use_connection_pre_set_accessnameW(struct use_connection_context *ctxt)
+static DWORD use_connection_pre_set_accessnameW(struct use_connection_context *ctxt, void *local_name)
 {
     if (ctxt->accessname && ctxt->buffer_size && *ctxt->buffer_size)
     {
         DWORD len;
 
-        if (ctxt->resource->lpLocalName)
-            len = strlenW(ctxt->resource->lpLocalName);
+        if (local_name)
+            len = strlenW(local_name);
         else
             len = strlenW(ctxt->resource->lpRemoteName);
 
@@ -1783,13 +1784,15 @@ static DWORD use_connection_pre_set_accessnameW(struct use_connection_context *c
     return ERROR_SUCCESS;
 }
 
-static void use_connection_set_accessnameW(struct use_connection_context *ctxt)
+static void use_connection_set_accessnameW(struct use_connection_context *ctxt, void *local_name)
 {
     WCHAR *accessname = ctxt->accessname;
-    if (ctxt->resource->lpLocalName)
-        strcpyW(accessname, ctxt->resource->lpLocalName);
+    if (local_name)
+    {
+        strcpyW(accessname, local_name);
         if (ctxt->result)
             *ctxt->result = CONNECT_LOCALDRIVE;
+    }
     else
         strcpyW(accessname, ctxt->resource->lpRemoteName);
 }
@@ -1799,6 +1802,7 @@ static WCHAR * select_provider(struct use_connection_context *ctxt)
     DWORD ret, prov_size = 0x1000, len;
     LPNETRESOURCEW provider;
     WCHAR * system;
+    WCHAR * provider_name;
 
     provider = HeapAlloc(GetProcessHeap(), 0, prov_size);
     if (!provider)
@@ -1826,13 +1830,13 @@ static WCHAR * select_provider(struct use_connection_context *ctxt)
     }
 
     len = WideCharToMultiByte(CP_ACP, 0, provider->lpProvider, -1, NULL, 0, NULL, NULL);
-    ctxt->resource->lpProvider = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-    if (ctxt->resource->lpProvider)
-        memcpy(ctxt->resource->lpProvider, provider->lpProvider, len * sizeof(WCHAR));
+    provider_name = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (provider_name)
+        memcpy(provider_name, provider->lpProvider, len * sizeof(WCHAR));
 
     HeapFree(GetProcessHeap(), 0, provider);
 
-    return ctxt->resource->lpProvider;
+    return provider_name;
 }
 
 static DWORD wnet_use_connection( struct use_connection_context *ctxt )
@@ -1841,49 +1845,52 @@ static DWORD wnet_use_connection( struct use_connection_context *ctxt )
     DWORD index, ret, caps;
     BOOLEAN redirect = FALSE, prov = FALSE;
     WCHAR letter[3] = {'z', ':', 0};
+    NETRESOURCEW netres;
 
     if (!providerTable || providerTable->numProviders == 0)
         return WN_NO_NETWORK;
 
     if (!ctxt->resource)
         return ERROR_INVALID_PARAMETER;
+    netres = *ctxt->resource;
 
-    if (!ctxt->resource->lpLocalName && (ctxt->flags & CONNECT_REDIRECT))
+    if (!netres.lpLocalName && (ctxt->flags & CONNECT_REDIRECT))
     {
-        if (ctxt->resource->dwType != RESOURCETYPE_DISK && ctxt->resource->dwType != RESOURCETYPE_PRINT)
+        if (netres.dwType != RESOURCETYPE_DISK && netres.dwType != RESOURCETYPE_PRINT)
         {
             return ERROR_BAD_DEV_TYPE;
         }
 
-        if (ctxt->resource->dwType == RESOURCETYPE_PRINT)
+        if (netres.dwType == RESOURCETYPE_PRINT)
         {
             FIXME("Locale device selection is not implemented for printers.\n");
             return WN_NO_NETWORK;
         }
 
         redirect = TRUE;
-        ctxt->resource->lpLocalName = letter;
+        netres.lpLocalName = letter;
     }
 
     if (ctxt->flags & CONNECT_INTERACTIVE)
     {
-        ret = ERROR_BAD_NET_NAME;
-        goto done;
+        return ERROR_BAD_NET_NAME;
     }
 
-    if (!ctxt->resource->lpProvider)
+    if (ctxt->flags & CONNECT_UPDATE_PROFILE)
+        FIXME("Connection saving is not implemented\n");
+
+    if (!netres.lpProvider)
     {
-        ctxt->resource->lpProvider = select_provider(ctxt);
-        if (!ctxt->resource->lpProvider)
+        netres.lpProvider = select_provider(ctxt);
+        if (!netres.lpProvider)
         {
-            ret = ERROR_NO_NET_OR_BAD_PATH;
-            goto done;
+            return ERROR_NO_NET_OR_BAD_PATH;
         }
 
         prov = TRUE;
     }
 
-    index = _findProviderIndexW(ctxt->resource->lpProvider);
+    index = _findProviderIndexW(netres.lpProvider);
     if (index == BAD_PROVIDER_INDEX)
     {
         ret = ERROR_BAD_PROVIDER;
@@ -1898,7 +1905,7 @@ static DWORD wnet_use_connection( struct use_connection_context *ctxt )
         goto done;
     }
 
-    if ((ret = ctxt->pre_set_accessname(ctxt)))
+    if ((ret = ctxt->pre_set_accessname(ctxt, netres.lpLocalName)))
     {
         goto done;
     }
@@ -1907,26 +1914,20 @@ static DWORD wnet_use_connection( struct use_connection_context *ctxt )
     do
     {
         if ((caps & WNNC_CON_ADDCONNECTION3) && provider->addConnection3)
-            ret = provider->addConnection3(ctxt->hwndOwner, ctxt->resource, ctxt->password, ctxt->userid, ctxt->flags);
+            ret = provider->addConnection3(ctxt->hwndOwner, &netres, ctxt->password, ctxt->userid, ctxt->flags);
         else if ((caps & WNNC_CON_ADDCONNECTION) && provider->addConnection)
-            ret = provider->addConnection(ctxt->resource, ctxt->password, ctxt->userid);
+            ret = provider->addConnection(&netres, ctxt->password, ctxt->userid);
 
         if (redirect)
             letter[0] -= 1;
     } while (redirect && ret == WN_ALREADY_CONNECTED && letter[0] >= 'c');
 
     if (ret == WN_SUCCESS && ctxt->accessname)
-        ctxt->set_accessname(ctxt);
+        ctxt->set_accessname(ctxt, netres.lpLocalName);
 
 done:
     if (prov)
-    {
-        HeapFree(GetProcessHeap(), 0, ctxt->resource->lpProvider);
-        ctxt->resource->lpProvider = NULL;
-    }
-
-    if (redirect)
-        ctxt->resource->lpLocalName = NULL;
+        HeapFree(GetProcessHeap(), 0, netres.lpProvider);
 
     return ret;
 }
@@ -1958,14 +1959,14 @@ DWORD WINAPI WNetUseConnectionW( HWND hwndOwner, NETRESOURCEW *resource, LPCWSTR
     return wnet_use_connection(&ctxt);
 }
 
-static DWORD use_connection_pre_set_accessnameA(struct use_connection_context *ctxt)
+static DWORD use_connection_pre_set_accessnameA(struct use_connection_context *ctxt, void *local_name)
 {
     if (ctxt->accessname && ctxt->buffer_size && *ctxt->buffer_size)
     {
         DWORD len;
 
-        if (ctxt->resourceA->lpLocalName)
-            len = strlen(ctxt->resourceA->lpLocalName);
+        if (local_name)
+            len = strlen(local_name);
         else
             len = strlen(ctxt->resourceA->lpRemoteName);
 
@@ -1981,13 +1982,15 @@ static DWORD use_connection_pre_set_accessnameA(struct use_connection_context *c
     return ERROR_SUCCESS;
 }
 
-static void use_connection_set_accessnameA(struct use_connection_context *ctxt)
+static void use_connection_set_accessnameA(struct use_connection_context *ctxt, void *local_name)
 {
     char *accessname = ctxt->accessname;
-    if (ctxt->resourceA->lpLocalName)
-        strcpy(accessname, ctxt->resourceA->lpLocalName);
+    if (local_name)
+    {
+        strcpy(accessname, local_name);
         if (ctxt->result)
             *ctxt->result = CONNECT_LOCALDRIVE;
+    }
     else
         strcpy(accessname, ctxt->resourceA->lpRemoteName);
 }
