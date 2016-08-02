@@ -1516,7 +1516,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, BOOL* NotForUs, L
     if (pwndMsg == NULL || pwndMsg->head.pti->MessageQueue != MessageQueue)
     {
         // Crossing a boundary, so set cursor. See default message queue cursor.
-        UserSetCursor(SYSTEMCUR(ARROW), FALSE);
+        IntSystemSetCursor(SYSTEMCUR(ARROW));
         /* Remove and ignore the message */
         *RemoveMessages = TRUE;
         return FALSE;
