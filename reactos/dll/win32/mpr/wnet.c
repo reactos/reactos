@@ -90,7 +90,7 @@ typedef struct _WNetEnumerator
     DWORD          dwScope;
     DWORD          dwType;
     DWORD          dwUsage;
-    LPNETRESOURCEW lpNet;
+    LPVOID         lpBuffer;
 } WNetEnumerator, *PWNetEnumerator;
 
 #define BAD_PROVIDER_INDEX (DWORD)0xffffffff
@@ -416,7 +416,7 @@ static PWNetEnumerator _createGlobalEnumeratorW(DWORD dwScope, DWORD dwType,
         ret->dwScope = dwScope;
         ret->dwType  = dwType;
         ret->dwUsage = dwUsage;
-        ret->lpNet   = _copyNetResourceForEnumW(lpNet);
+        ret->lpBuffer = _copyNetResourceForEnumW(lpNet);
     }
     return ret;
 }
@@ -456,6 +456,28 @@ static PWNetEnumerator _createContextEnumerator(DWORD dwScope, DWORD dwType,
         ret->dwScope = dwScope;
         ret->dwType  = dwType;
         ret->dwUsage = dwUsage;
+    }
+    return ret;
+}
+
+static PWNetEnumerator _createConnectedEnumerator(DWORD dwScope, DWORD dwType,
+ DWORD dwUsage)
+{
+    PWNetEnumerator ret = HeapAlloc(GetProcessHeap(),
+     HEAP_ZERO_MEMORY, sizeof(WNetEnumerator));
+
+    if (ret)
+    {
+        ret->enumType = WNET_ENUMERATOR_TYPE_CONNECTED;
+        ret->dwScope = dwScope;
+        ret->dwType  = dwType;
+        ret->dwUsage = dwUsage;
+        ret->lpBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(HANDLE) * providerTable->numProviders);
+        if (!ret->lpBuffer)
+        {
+            HeapFree(GetProcessHeap(), 0, ret);
+            ret = NULL;
+        }
     }
     return ret;
 }
@@ -821,8 +843,11 @@ DWORD WINAPI WNetOpenEnumW( DWORD dwScope, DWORD dwType, DWORD dwUsage,
                 ret = *lphEnum ? WN_SUCCESS : WN_OUT_OF_MEMORY;
                 break;
             case RESOURCE_REMEMBERED:
-            case RESOURCE_CONNECTED:
                 *lphEnum = _createNullEnumerator();
+                ret = *lphEnum ? WN_SUCCESS : WN_OUT_OF_MEMORY;
+                break;
+            case RESOURCE_CONNECTED:
+                *lphEnum = _createConnectedEnumerator(dwScope, dwType, dwUsage);
                 ret = *lphEnum ? WN_SUCCESS : WN_OUT_OF_MEMORY;
                 break;
             default:
@@ -1048,7 +1073,7 @@ static DWORD _enumerateGlobalPassthroughW(PWNetEnumerator enumerator,
     {
         ret = providerTable->table[enumerator->providerIndex].
          openEnum(enumerator->dwScope, enumerator->dwType,
-         enumerator->dwUsage, enumerator->lpNet,
+         enumerator->dwUsage, enumerator->lpBuffer,
          &enumerator->handle);
         if (ret == WN_SUCCESS)
         {
@@ -1086,7 +1111,7 @@ static DWORD _enumerateGlobalW(PWNetEnumerator enumerator, LPDWORD lpcCount,
     switch (enumerator->dwScope)
     {
         case RESOURCE_GLOBALNET:
-            if (enumerator->lpNet)
+            if (enumerator->lpBuffer)
                 ret = _enumerateGlobalPassthroughW(enumerator, lpcCount,
                  lpBuffer, lpBufferSize);
             else
@@ -1207,6 +1232,143 @@ static DWORD _enumerateContextW(PWNetEnumerator enumerator, LPDWORD lpcCount,
     return ret;
 }
 
+static DWORD _enumerateConnectedW(PWNetEnumerator enumerator, LPDWORD lpcCount,
+ LPVOID lpBuffer, LPDWORD lpBufferSize)
+{
+    DWORD ret, index, count, size, i, len, left;
+    PVOID end;
+    LPNETRESOURCEW curr, buffer;
+    PHANDLE handles;
+
+    if (!enumerator)
+        return WN_BAD_POINTER;
+    if (enumerator->enumType != WNET_ENUMERATOR_TYPE_CONNECTED)
+        return WN_BAD_VALUE;
+    if (!lpcCount)
+        return WN_BAD_POINTER;
+    if (!lpBuffer)
+        return WN_BAD_POINTER;
+    if (!lpBufferSize)
+        return WN_BAD_POINTER;
+    if (!providerTable)
+        return WN_NO_NETWORK;
+
+    handles = enumerator->lpBuffer;
+    left = *lpBufferSize;
+    size = *lpBufferSize;
+    buffer = HeapAlloc(GetProcessHeap(), 0, *lpBufferSize);
+    if (!buffer)
+        return WN_NO_NETWORK;
+
+    curr = lpBuffer;
+    end = (PVOID)((ULONG_PTR)lpBuffer + size);
+    count = *lpcCount;
+
+
+    for (index = 0; index < providerTable->numProviders; index++)
+    {
+        if (providerTable->table[index].dwEnumScopes)
+        {
+            if (handles[index] == 0)
+            {
+                ret = providerTable->table[index].openEnum(enumerator->dwScope,
+                                                           enumerator->dwType,
+                                                           enumerator->dwUsage,
+                                                           NULL, &handles[index]);
+                if (ret != WN_SUCCESS)
+                    continue;
+            }
+
+            ret = providerTable->table[index].enumResource(handles[index],
+                                                           &count,
+                                                           buffer,
+                                                           &size);
+
+            if (ret == WN_MORE_DATA)
+            {
+
+                break;
+            }
+
+            if (ret == WN_SUCCESS)
+            {
+                for (i = 0; i < count; ++i)
+                {
+                    if (left < sizeof(NETRESOURCEW))
+                    {
+                        ret = WN_MORE_DATA;
+                        break;
+                    }
+
+                    memcpy(curr, &buffer[i], sizeof(NETRESOURCEW));
+                    left -= sizeof(NETRESOURCEW);
+
+                    len = WideCharToMultiByte(CP_ACP, 0, buffer[i].lpLocalName, -1, NULL, 0, NULL, NULL);
+                    len *= sizeof(WCHAR);
+                    if (left < len)
+                    {
+                        ret = WN_MORE_DATA;
+                        break;
+                    }
+
+                    end = (PVOID)((ULONG_PTR)end - len);
+                    curr->lpLocalName = end;
+                    memcpy(end, buffer[i].lpLocalName, len);
+                    left -= len;
+
+                    len = WideCharToMultiByte(CP_ACP, 0, buffer[i].lpRemoteName, -1, NULL, 0, NULL, NULL);
+                    len *= sizeof(WCHAR);
+                    if (left < len)
+                    {
+                        ret = WN_MORE_DATA;
+                        break;
+                    }
+
+                    end = (PVOID)((ULONG_PTR)end - len);
+                    curr->lpRemoteName = end;
+                    memcpy(end, buffer[i].lpRemoteName, len);
+                    left -= len;
+
+                    len = WideCharToMultiByte(CP_ACP, 0, buffer[i].lpProvider, -1, NULL, 0, NULL, NULL);
+                    len *= sizeof(WCHAR);
+                    if (left < len)
+                    {
+                        ret = WN_MORE_DATA;
+                        break;
+                    }
+
+                    end = (PVOID)((ULONG_PTR)end - len);
+                    curr->lpProvider = end;
+                    memcpy(end, buffer[i].lpProvider, len);
+                    left -= len;
+
+                    ++curr;
+                }
+
+                count = *lpcCount - count;
+                size = left;
+            }
+
+            if (ret != WN_SUCCESS || count == 0)
+            {
+                break;
+            }
+        }
+    }
+
+    if (count == 0)
+        ret = WN_NO_MORE_ENTRIES;
+
+    *lpcCount = *lpcCount - count;
+    if (ret != WN_MORE_DATA && ret != WN_NO_MORE_ENTRIES)
+        ret = WN_SUCCESS;
+
+    HeapFree(GetProcessHeap(), 0, buffer);
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
 /*********************************************************************
  * WNetEnumResourceW [MPR.@]
  */
@@ -1251,6 +1413,10 @@ DWORD WINAPI WNetEnumResourceW( HANDLE hEnum, LPDWORD lpcCount,
                 ret = _enumerateContextW(enumerator, lpcCount, lpBuffer,
                  lpBufferSize);
                 break;
+            case WNET_ENUMERATOR_TYPE_CONNECTED:
+                ret = _enumerateConnectedW(enumerator, lpcCount, lpBuffer,
+                 lpBufferSize);
+                break;
             default:
                 WARN("bogus enumerator type!\n");
                 ret = WN_NO_NETWORK;
@@ -1267,7 +1433,8 @@ DWORD WINAPI WNetEnumResourceW( HANDLE hEnum, LPDWORD lpcCount,
  */
 DWORD WINAPI WNetCloseEnum( HANDLE hEnum )
 {
-    DWORD ret;
+    DWORD ret, index;
+    PHANDLE handles;
 
     TRACE( "(%p)\n", hEnum );
 
@@ -1277,12 +1444,21 @@ DWORD WINAPI WNetCloseEnum( HANDLE hEnum )
 
         switch (enumerator->enumType)
         {
+            case WNET_ENUMERATOR_TYPE_CONNECTED:
+                handles = enumerator->lpBuffer;
+                for (index = 0; index < providerTable->numProviders; index++)
+                {
+                    if (providerTable->table[index].dwEnumScopes && handles[index] != 0)
+                        providerTable->table[index].closeEnum(handles[index]);
+                }
+                HeapFree(GetProcessHeap(), 0, handles);
+                ret = WN_SUCCESS;
             case WNET_ENUMERATOR_TYPE_NULL:
                 ret = WN_SUCCESS;
                 break;
             case WNET_ENUMERATOR_TYPE_GLOBAL:
-                if (enumerator->lpNet)
-                    _freeEnumNetResource(enumerator->lpNet);
+                if (enumerator->lpBuffer)
+                    _freeEnumNetResource(enumerator->lpBuffer);
                 if (enumerator->handle)
                     providerTable->table[enumerator->providerIndex].
                      closeEnum(enumerator->handle);
