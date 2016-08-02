@@ -1886,9 +1886,7 @@ DWORD WINAPI WNetUseConnectionA( HWND hwndOwner, NETRESOURCEA *resource,
  */
 DWORD WINAPI WNetCancelConnectionA( LPCSTR lpName, BOOL fForce )
 {
-    FIXME( "(%s, %d), stub\n", debugstr_a(lpName), fForce );
-
-    return WN_SUCCESS;
+    return WNetCancelConnection2A(lpName, 0, fForce);
 }
 
 /*********************************************************************
@@ -1896,9 +1894,7 @@ DWORD WINAPI WNetCancelConnectionA( LPCSTR lpName, BOOL fForce )
  */
 DWORD WINAPI WNetCancelConnectionW( LPCWSTR lpName, BOOL fForce )
 {
-    FIXME( "(%s, %d), stub\n", debugstr_w(lpName), fForce );
-
-    return WN_SUCCESS;
+    return WNetCancelConnection2W(lpName, 0, fForce);
 }
 
 /*********************************************************************
@@ -1906,9 +1902,15 @@ DWORD WINAPI WNetCancelConnectionW( LPCWSTR lpName, BOOL fForce )
  */
 DWORD WINAPI WNetCancelConnection2A( LPCSTR lpName, DWORD dwFlags, BOOL fForce )
 {
-    FIXME( "(%s, %08X, %d), stub\n", debugstr_a(lpName), dwFlags, fForce );
+    DWORD ret;
+    WCHAR * name = strdupAtoW(lpName);
+    if (!name)
+        return ERROR_NOT_CONNECTED;
 
-    return WN_SUCCESS;
+    ret = WNetCancelConnection2W(name, dwFlags, fForce);
+    HeapFree(GetProcessHeap(), 0, name);
+
+    return ret;
 }
 
 /*********************************************************************
