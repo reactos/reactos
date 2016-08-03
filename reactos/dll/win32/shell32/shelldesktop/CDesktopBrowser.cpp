@@ -119,7 +119,7 @@ HRESULT CDesktopBrowser::Initialize(IShellDesktopTray *ShellDesk)
 
     /* Calculate the size and pos of the window */
     RECT rect;
-    if (!GetSystemMetrics(SM_CXVIRTUALSCREEN) || GetSystemMetrics(SM_CYVIRTUALSCREEN))
+    if (!GetSystemMetrics(SM_CXVIRTUALSCREEN) || !GetSystemMetrics(SM_CYVIRTUALSCREEN))
     {
         SetRect(&rect, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
     }
