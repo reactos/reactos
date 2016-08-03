@@ -100,7 +100,7 @@ vfatRenameEntry(
         Offset.u.LowPart = (StartIndex * sizeof(FATX_DIR_ENTRY) / PAGE_SIZE) * PAGE_SIZE;
         _SEH2_TRY
         {
-            CcPinRead(pFcb->parentFcb->FileObject, &Offset, sizeof(FATX_DIR_ENTRY), PIN_WAIT, &Context, (PVOID*)&pDirEntry);
+            CcPinRead(pFcb->parentFcb->FileObject, &Offset, PAGE_SIZE, PIN_WAIT, &Context, (PVOID*)&pDirEntry);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -118,15 +118,16 @@ vfatRenameEntry(
         RtlUnicodeStringToOemString(&NameA, FileName, FALSE);
         pDirEntry->FilenameLength = (unsigned char)NameA.Length;
 
-        CcSetDirtyPinnedData(Context, NULL);
-        CcUnpinData(Context);
-
         /* Update FCB */
         DirContext.ShortNameU.Length = 0;
         DirContext.ShortNameU.MaximumLength = 0;
         DirContext.ShortNameU.Buffer = NULL;
         DirContext.LongNameU = *FileName;
         DirContext.DirEntry.FatX = *pDirEntry;
+
+        CcSetDirtyPinnedData(Context, NULL);
+        CcUnpinData(Context);
+
         Status = vfatUpdateFCB(DeviceExt, pFcb, &DirContext, pFcb->parentFcb);
         if (NT_SUCCESS(Status))
         {
@@ -862,7 +863,7 @@ FATDelEntry(
             Offset.u.LowPart = (i * sizeof(FAT_DIR_ENTRY) / PAGE_SIZE) * PAGE_SIZE;
             _SEH2_TRY
             {
-                CcPinRead(pFcb->parentFcb->FileObject, &Offset, sizeof(FAT_DIR_ENTRY), PIN_WAIT, &Context, (PVOID*)&pDirEntry);
+                CcPinRead(pFcb->parentFcb->FileObject, &Offset, PAGE_SIZE, PIN_WAIT, &Context, (PVOID*)&pDirEntry);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -878,13 +879,8 @@ FATDelEntry(
                                         (PDIR_ENTRY)&pDirEntry[i % (PAGE_SIZE / sizeof(FAT_DIR_ENTRY))]);
         }
     }
-    if (Context)
-    {
-        CcSetDirtyPinnedData(Context, NULL);
-        CcUnpinData(Context);
-    }
 
-    /* In case of moving, don't delete data */
+    /* In case of moving, save properties */
     if (MoveContext != NULL)
     {
         pDirEntry = &pDirEntry[pFcb->dirIndex % (PAGE_SIZE / sizeof(FAT_DIR_ENTRY))];
@@ -893,7 +889,15 @@ FATDelEntry(
         MoveContext->CreationTime = pDirEntry->CreationTime;
         MoveContext->CreationDate = pDirEntry->CreationDate;
     }
-    else
+
+    if (Context)
+    {
+        CcSetDirtyPinnedData(Context, NULL);
+        CcUnpinData(Context);
+    }
+
+    /* In case of moving, don't delete data */
+    if (MoveContext == NULL)
     {
         while (CurrentCluster && CurrentCluster != 0xffffffff)
         {
@@ -934,7 +938,7 @@ FATXDelEntry(
     Offset.u.LowPart = (StartIndex * sizeof(FATX_DIR_ENTRY) / PAGE_SIZE) * PAGE_SIZE;
     _SEH2_TRY
     {
-        CcPinRead(pFcb->parentFcb->FileObject, &Offset, sizeof(FATX_DIR_ENTRY), PIN_WAIT, &Context, (PVOID*)&pDirEntry);
+        CcPinRead(pFcb->parentFcb->FileObject, &Offset, PAGE_SIZE, PIN_WAIT, &Context, (PVOID*)&pDirEntry);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -946,10 +950,8 @@ FATXDelEntry(
     pDirEntry->FilenameLength = 0xe5;
     CurrentCluster = vfatDirEntryGetFirstCluster(DeviceExt,
                                                  (PDIR_ENTRY)pDirEntry);
-    CcSetDirtyPinnedData(Context, NULL);
-    CcUnpinData(Context);
 
-    /* In case of moving, don't delete data */
+    /* In case of moving, save properties */
     if (MoveContext != NULL)
     {
         MoveContext->FirstCluster = CurrentCluster;
@@ -957,7 +959,12 @@ FATXDelEntry(
         MoveContext->CreationTime = pDirEntry->CreationTime;
         MoveContext->CreationDate = pDirEntry->CreationDate;
     }
-    else
+
+    CcSetDirtyPinnedData(Context, NULL);
+    CcUnpinData(Context);
+
+    /* In case of moving, don't delete data */
+    if (MoveContext == NULL)
     {
         while (CurrentCluster && CurrentCluster != 0xffffffff)
         {
