@@ -373,7 +373,7 @@ SepDuplicateToken(PTOKEN Token,
     ULONG uLength;
     ULONG i;
     PVOID EndMem;
-    PTOKEN AccessToken = NULL;
+    PTOKEN AccessToken;
     NTSTATUS Status;
 
     PAGED_CODE();
@@ -400,9 +400,12 @@ SepDuplicateToken(PTOKEN Token,
 
     AccessToken->TokenLock = &SepTokenLock;
 
+    /* Copy and reference the logon session */
+    RtlCopyLuid(&AccessToken->AuthenticationId, &Token->AuthenticationId);
+    SepRmReferenceLogonSession(&AccessToken->AuthenticationId);
+
     AccessToken->TokenType  = TokenType;
     AccessToken->ImpersonationLevel = Level;
-    RtlCopyLuid(&AccessToken->AuthenticationId, &Token->AuthenticationId);
     RtlCopyLuid(&AccessToken->ModifiedId, &Token->ModifiedId);
 
     AccessToken->TokenSource.SourceIdentifier.LowPart = Token->TokenSource.SourceIdentifier.LowPart;
@@ -483,25 +486,11 @@ SepDuplicateToken(PTOKEN Token,
 
     *NewAccessToken = AccessToken;
 
-    /* Reference the logon session */
-    SepRmReferenceLogonSession(&AccessToken->AuthenticationId);
-
 done:
     if (!NT_SUCCESS(Status))
     {
-        if (AccessToken)
-        {
-            if (AccessToken->UserAndGroups)
-                ExFreePoolWithTag(AccessToken->UserAndGroups, TAG_TOKEN_USERS);
-
-            if (AccessToken->Privileges)
-                ExFreePoolWithTag(AccessToken->Privileges, TAG_TOKEN_PRIVILAGES);
-
-            if (AccessToken->DefaultDacl)
-                ExFreePoolWithTag(AccessToken->DefaultDacl, TAG_TOKEN_ACL);
-
-            ObDereferenceObject(AccessToken);
-        }
+        /* Dereference the token, the delete procedure will clean up */
+        ObDereferenceObject(AccessToken);
     }
 
     return Status;
@@ -759,8 +748,11 @@ SepCreateToken(OUT PHANDLE TokenHandle,
            TokenSource->SourceName,
            sizeof(TokenSource->SourceName));
 
-    RtlCopyLuid(&AccessToken->TokenId, &TokenId);
+    /* Copy and reference the logon session */
     RtlCopyLuid(&AccessToken->AuthenticationId, AuthenticationId);
+    SepRmReferenceLogonSession(&AccessToken->AuthenticationId);
+
+    RtlCopyLuid(&AccessToken->TokenId, &TokenId);
     AccessToken->ExpirationTime = *ExpirationTime;
     RtlCopyLuid(&AccessToken->ModifiedId, &ModifiedId);
 
@@ -899,17 +891,11 @@ SepCreateToken(OUT PHANDLE TokenHandle,
         *TokenHandle = (HANDLE)AccessToken;
     }
 
-    /* Reference the logon session */
-    SepRmReferenceLogonSession(AuthenticationId);
-
 done:
     if (!NT_SUCCESS(Status))
     {
-        if (AccessToken)
-        {
-            /* Dereference the token, the delete procedure will clean up */
-            ObDereferenceObject(AccessToken);
-        }
+        /* Dereference the token, the delete procedure will clean up */
+        ObDereferenceObject(AccessToken);
     }
 
     return Status;
@@ -1091,7 +1077,7 @@ SeQueryInformationToken(IN PACCESS_TOKEN Token,
         DPRINT1("SeQueryInformationToken(%d) invalid information class\n", TokenInformationClass);
         return STATUS_INVALID_INFO_CLASS;
     }
-    
+
     switch (TokenInformationClass)
     {
         case TokenImpersonationLevel:
