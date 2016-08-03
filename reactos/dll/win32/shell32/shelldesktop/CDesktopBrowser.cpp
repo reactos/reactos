@@ -96,8 +96,8 @@ END_COM_MAP()
 };
 
 CDesktopBrowser::CDesktopBrowser():
-    m_hWndShellView(NULL),
-    m_hAccel(NULL)    
+    m_hAccel(NULL),    
+    m_hWndShellView(NULL)
 {
 }
 
