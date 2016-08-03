@@ -1918,7 +1918,7 @@ static DWORD wnet_use_connection( struct use_connection_context *ctxt )
         else if ((caps & WNNC_CON_ADDCONNECTION) && provider->addConnection)
             ret = provider->addConnection(&netres, ctxt->password, ctxt->userid);
 
-        if (redirect)
+        if (ret != NO_ERROR && redirect)
             letter[0] -= 1;
     } while (redirect && ret == WN_ALREADY_CONNECTED && letter[0] >= 'c');
 
