@@ -66,7 +66,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::GetBandInfo(DWORD dwBandID, DWORD dwView
 {
     if (pdbi->dwMask & DBIM_MINSIZE)
     {
-        pdbi->ptMinSize.x = 400;
+        pdbi->ptMinSize.x = 100;
         pdbi->ptMinSize.y = 22;
     }
     if (pdbi->dwMask & DBIM_MAXSIZE)
@@ -81,7 +81,7 @@ HRESULT STDMETHODCALLTYPE CAddressBand::GetBandInfo(DWORD dwBandID, DWORD dwView
     }
     if (pdbi->dwMask & DBIM_ACTUAL)
     {
-        pdbi->ptActual.x = 400;
+        pdbi->ptActual.x = 100;
         pdbi->ptActual.y = 22;
     }
     if (pdbi->dwMask & DBIM_TITLE)
