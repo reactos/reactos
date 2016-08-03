@@ -203,6 +203,7 @@ TcpIpCreateLoopbackInterface(void)
     IP4_ADDR(&GatewayAddr, 127,0,0,1);
     IP4_ADDR(&IpAddr, 127,0,0,1);
     IP4_ADDR(&SubnetMask, 255,0,0,0);
+    ACQUIRE_SERIAL_MUTEX();
     lwip_error = netifapi_netif_add(
         &LoopbackInterface->lwip_netif,
         &IpAddr,
@@ -214,10 +215,12 @@ TcpIpCreateLoopbackInterface(void)
     if (lwip_error != ERR_OK)
     {
         ExFreePoolWithTag(LoopbackInterface, TAG_INTERFACE);
+        RELEASE_SERIAL_MUTEX();
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     netifapi_netif_set_up(&LoopbackInterface->lwip_netif);
+    RELEASE_SERIAL_MUTEX();
 
     /* Add this interface into the entities DB */
     InsertEntityInstance(CL_NL_ENTITY, &LoopbackInterface->ClNlInstance);

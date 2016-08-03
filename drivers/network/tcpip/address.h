@@ -28,13 +28,116 @@
 #define TCP_STATE_DISASSOCIATED 0x1 << 8
 #define TCP_STATE_CLOSED        0x1 << 9
 
+//#define TCPIP_NDEBUG
+#ifndef TCPIP_NDEBUG
+KSPIN_LOCK IRPArrayLock;
+PIRP IRPArray[16];
+volatile long int IRPCount;
+
+#define ADD_IRP(Irp) \
+    KeAcquireSpinLock(&IRPArrayLock, &OldIrql); \
+    IRPArray[IRPCount] = Irp; \
+    IRPCount++; \
+    KeReleaseSpinLock(&IRPArrayLock, OldIrql)
+
+#define ADD_IRP_DPC(Irp) \
+    KeAcquireSpinLockAtDpcLevel(&IRPArrayLock); \
+    IRPArray[IRPCount] = Irp; \
+    IRPCount++; \
+    KeReleaseSpinLockFromDpcLevel(&IRPArrayLock)
+
+#define REMOVE_IRP(Irp) \
+    KeAcquireSpinLock(&IRPArrayLock, &OldIrql); \
+    for (i = 0; i < IRPCount; i++) \
+    { \
+        if (Irp == IRPArray[i]) \
+        { \
+            IRPArray[i] = NULL; \
+        } \
+        if (IRPArray[i] == NULL) \
+        { \
+            IRPArray[i] = IRPArray[i+1]; \
+            IRPArray[i+1] = NULL; \
+        } \
+    } \
+    IRPCount--; \
+    KeReleaseSpinLock(&IRPArrayLock, OldIrql)
+
+#define REMOVE_IRP_DPC(Irp) \
+    KeAcquireSpinLockAtDpcLevel(&IRPArrayLock); \
+    for (i = 0; i < IRPCount; i++) \
+    { \
+        if (Irp == IRPArray[i]) \
+        { \
+            IRPArray[i] = NULL; \
+        } \
+        if (IRPArray[i] == NULL) \
+        { \
+            IRPArray[i] = IRPArray[i+1]; \
+            IRPArray[i+1] = NULL; \
+        } \
+    } \
+    IRPCount--; \
+    KeReleaseSpinLockFromDpcLevel(&IRPArrayLock)
+
+KSPIN_LOCK IRPSPArrayLock;
+PIO_STACK_LOCATION IRPSPArray[16];
+volatile long int IRPSPCount;
+
+#define ADD_IRPSP(IrpSp) \
+    KeAcquireSpinLock(&IRPSPArrayLock, &OldIrql); \
+    IRPSPArray[IRPSPCount] = IrpSp; \
+    IRPSPCount++; \
+    KeReleaseSpinLock(&IRPSPArrayLock, OldIrql)
+
+#define ADD_IRPSP_DPC(IrpSp) \
+    KeAcquireSpinLockAtDpcLevel(&IRPSPArrayLock); \
+    IRPSPArray[IRPSPCount] = IrpSp; \
+    IRPSPCount++; \
+    KeReleaseSpinLockFromDpcLevel(&IRPSPArrayLock)
+
+#define REMOVE_IRPSP(IrpSp) \
+    KeAcquireSpinLock(&IRPSPArrayLock, &OldIrql); \
+    for (i = 0; i < IRPSPCount; i++) \
+    { \
+        if (IrpSp == IRPSPArray[i]) \
+        { \
+            IRPSPArray[i] = NULL; \
+        } \
+        if (IRPSPArray[i] == NULL) \
+        { \
+            IRPSPArray[i] = IRPSPArray[i+1]; \
+            IRPSPArray[i+1] = NULL; \
+        } \
+    } \
+    IRPSPCount--; \
+    KeReleaseSpinLock(&IRPSPArrayLock, OldIrql)
+
+#define REMOVE_IRPSP_DPC(IrpSp) \
+    KeAcquireSpinLockAtDpcLevel(&IRPSPArrayLock); \
+    for (i = 0; i < IRPSPCount; i++) \
+    { \
+        if (IrpSp == IRPSPArray[i]) \
+        { \
+            IRPSPArray[i] = NULL; \
+        } \
+        if (IRPSPArray[i] == NULL) \
+        { \
+            IRPSPArray[i] = IRPSPArray[i+1]; \
+            IRPSPArray[i+1] = NULL; \
+        } \
+    } \
+    IRPSPCount--; \
+    KeReleaseSpinLockFromDpcLevel(&IRPSPArrayLock)
+#endif
+
 struct _TCP_CONTEXT;
 typedef struct _TCP_CONTEXT TCP_CONTEXT, *PTCP_CONTEXT;
 
 typedef struct _ADDRESS_FILE {
     LIST_ENTRY ListEntry;
     LONG RefCount;
-    LONG ContextCount;
+    volatile long ContextCount;
     IPPROTO Protocol;
     TDI_ADDRESS_IP Address;
     struct netif *NetInterface;
@@ -56,9 +159,9 @@ struct _TCP_CONTEXT {
     PADDRESS_FILE AddressFile;
     LIST_ENTRY RequestListHead;
     struct tcp_pcb* lwip_tcp_pcb;
-    BOOLEAN CreatedWithoutRequest;
+    BOOLEAN ReferencedByUpperLayer;
     HANDLE MutexOwner;
-    volatile long int MutexDepth;
+    volatile long MutexDepth;
 };
 
 typedef struct _TCP_REQUEST {
@@ -106,6 +209,11 @@ TcpIpConnect(
 );
 
 NTSTATUS
+TcpIpDisconnect(
+    _Inout_ PIRP Irp
+);
+
+NTSTATUS
 TcpIpAssociateAddress(
     _Inout_ PIRP Irp
 );
@@ -132,7 +240,7 @@ TcpIpReceiveDatagram(
 NTSTATUS
 TcpIpSend(
     _Inout_ PIRP Irp);
-    
+
 NTSTATUS
 TcpIpSendDatagram(
     _Inout_ PIRP Irp);

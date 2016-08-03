@@ -158,6 +158,8 @@ struct tcpip_msg {
   } msg;
 };
 
+extern KMUTEX MTSerialMutex;
+
 #ifdef __cplusplus
 }
 #endif

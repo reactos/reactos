@@ -38,7 +38,8 @@ PDEVICE_OBJECT RawIpDeviceObject = NULL;
 #define DD_IP_DEVICE_NAME       L"\\Device\\Ip"
 #define DD_RAWIP_DEVICE_NAME    L"\\Device\\RawIp"
 
-/* This is a small utility which get the IPPROTO_* constant from the device object this driver was passed */
+/* This is a small utility which get the IPPROTO_* constant from the device object this driver was
+ * passed */
 static
 IPPROTO
 ProtocolFromIrp(
@@ -98,6 +99,7 @@ DriverEntry(
 
     /* Initialize the lwip library */
     tcpip_init(NULL, NULL);
+    RELEASE_SERIAL_MUTEX();
 
     /* Create the device objects */
     Status = IoCreateDevice(
@@ -207,14 +209,23 @@ TcpIpCreate(
     _Inout_  struct _IRP *Irp
 )
 {
+#ifndef NDEBUG
+    KIRQL OldIrql;
+    INT i;
+#endif
     NTSTATUS Status;
     PFILE_FULL_EA_INFORMATION FileInfo;
     IPPROTO Protocol;
 //  ADDRESS_FILE *AddressFile;
-    
+
 //  ULONG *temp;
-    
+
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+#ifndef NDEBUG
+    ADD_IRP(Irp);
+    ADD_IRPSP(IrpSp);
+#endif
     
     /* Grab the info describing the file */
     FileInfo = Irp->AssociatedIrp.SystemBuffer;
@@ -227,14 +238,14 @@ TcpIpCreate(
         Status = STATUS_SUCCESS;
         goto Quickie;
     }
-    
+
     /* Validate it */
     switch (FileInfo->EaNameLength)
     {
         case TDI_TRANSPORT_ADDRESS_LENGTH:
         {
             PTA_IP_ADDRESS Address;
-            
+
             DPRINT1("TCPIP Create Transport Address\n");
 
             if (strncmp(&FileInfo->EaName[0], TdiTransportAddress, TDI_TRANSPORT_ADDRESS_LENGTH) != 0)
@@ -284,17 +295,17 @@ TcpIpCreate(
         case TDI_CONNECTION_CONTEXT_LENGTH:
         {
             PTA_IP_ADDRESS Address;
-            
+
             DPRINT1("TCPIP Create connection Context\n");
-            
+
             if (strncmp(&FileInfo->EaName[0], TdiConnectionContext, TDI_CONNECTION_CONTEXT_LENGTH) != 0)
             {
                 DPRINT1("TCPIP: Should maybe open file %*s.\n", FileInfo->EaNameLength, &FileInfo->EaName[0]);
                 return STATUS_INVALID_PARAMETER;
             }
-            
+
             Address = (PTA_IP_ADDRESS)(&FileInfo->EaName[FileInfo->EaNameLength + 1]);
-            
+
             /* Get the protocol this address will be created for. */
             Protocol = ProtocolFromIrp(DeviceObject, IrpSp);
             if (Protocol == (IPPROTO)-1)
@@ -302,12 +313,12 @@ TcpIpCreate(
                 Status = STATUS_INVALID_PARAMETER;
                 goto Quickie;
             }
-            
+
 /*          temp = (ULONG*)Protocol;
             DPRINT1("\n Protocol: %08x\n", temp);
-            
+
             temp = (ULONG*)Address;*/
-            
+
             /* All good. */
 /*          DPRINT1("\n PTA_IP_ADDRESS dump before\n  %08x %08x %08x %08x\n  %08x %08x %08x %08x\n",
                 temp[7], temp[6], temp[5], temp[4],
@@ -332,6 +343,10 @@ Quickie:
     }
     else
     {
+#ifndef NDEBUG
+        REMOVE_IRP(Irp);
+        REMOVE_IRPSP(IrpSp);
+#endif
         IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
     }
 
@@ -346,11 +361,20 @@ TcpIpClose(
     _Inout_  struct _IRP *Irp
 )
 {
+#ifndef NDEBUG
+    KIRQL OldIrql;
+    INT i;
+#endif
     PIO_STACK_LOCATION IrpSp;
     NTSTATUS Status;
     ULONG_PTR FileType;
-    
+
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+#ifndef NDEBUG
+    ADD_IRP(Irp);
+    ADD_IRPSP(IrpSp);
+#endif
 
     FileType = (ULONG_PTR)IrpSp->FileObject->FsContext2;
 
@@ -367,7 +391,7 @@ TcpIpClose(
             Status = TcpIpCloseAddress(IrpSp->FileObject->FsContext);
             break;
         case TDI_CONNECTION_FILE:
-            DPRINT1("TCPIP Close Transport Address\n");
+            DPRINT1("TCPIP Close Connection File\n");
             if (!IrpSp->FileObject->FsContext)
             {
                 DPRINT1("TCPIP: Got a close request without a file to close!\n");
@@ -390,8 +414,12 @@ TcpIpClose(
 Quickie:
     Irp->IoStatus.Status = Status;
 
+#ifndef NDEBUG
+    REMOVE_IRP(Irp);
+    REMOVE_IRPSP(IrpSp);
+#endif
     IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-    
+
     return Status;
 }
 
@@ -403,14 +431,23 @@ TcpIpDispatchInternal(
     _Inout_  struct _IRP *Irp
 )
 {
+#ifndef NDEBUG
+    KIRQL OldIrql;
+    INT i;
+#endif
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp;
     PTCP_CONTEXT Context;
     PADDRESS_FILE AddressFile;
 
     DPRINT1("TcpIpDispatchInternal\n");
-    
+
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+#ifndef NDEBUG
+    ADD_IRP(Irp);
+    ADD_IRPSP(IrpSp);
+#endif
 
     switch ((ULONG)IrpSp->FileObject->FsContext2)
     {
@@ -425,7 +462,7 @@ TcpIpDispatchInternal(
             DPRINT1("Unknown FileObject type\n");
             break;
     }
-    
+
     switch (IrpSp->MinorFunction)
     {
         case TDI_RECEIVE:
@@ -496,7 +533,8 @@ TcpIpDispatchInternal(
 
         case TDI_DISCONNECT:
             DPRINT1("TCPIP: TDI_DISCONNECT!\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = TcpIpDisconnect(Irp);
+            DPRINT("TcpIpDisconnect() Returned\n");
             break;
 
         case TDI_ASSOCIATE_ADDRESS:
@@ -533,7 +571,7 @@ TcpIpDispatchInternal(
             DPRINT1("TCPIP: Unknown internal IOCTL: 0x%x.\n", IrpSp->MinorFunction);
             Status = STATUS_NOT_IMPLEMENTED;
     }
-    
+
 FINISH:
     Irp->IoStatus.Status = Status;
     if (Status == STATUS_PENDING)
@@ -542,6 +580,10 @@ FINISH:
     }
     else
     {
+#ifndef NDEBUG
+        REMOVE_IRP(Irp);
+        REMOVE_IRPSP(IrpSp);
+#endif
         IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
     }
 
@@ -558,7 +600,7 @@ TcpIpDispatch(
 {
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp;
-    
+
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     Irp->IoStatus.Information = 0;

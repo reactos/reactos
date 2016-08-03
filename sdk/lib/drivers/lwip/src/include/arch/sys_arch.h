@@ -40,4 +40,3 @@ sys_arch_unprotect(sys_prot_t lev);
 
 void
 sys_shutdown(void);
-

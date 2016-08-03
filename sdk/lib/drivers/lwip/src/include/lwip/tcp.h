@@ -368,9 +368,23 @@ void             tcp_setprio (struct tcp_pcb *pcb, u8_t prio);
 
 err_t            tcp_output  (struct tcp_pcb *pcb);
 
+/**
+ * REACT_OS Global Mutex
+ * Serializes all kernel network activity to circumvent lwIP core's lack of thread-safety.
+ */
+KMUTEX MTSerialMutex;
+
+#define ACQUIRE_SERIAL_MUTEX() \
+    DPRINT("Acquiring MTSerialMutex on thread %p\n", PsGetCurrentThreadId()); \
+    KeWaitForMutexObject(&MTSerialMutex, Executive, KernelMode, FALSE, NULL); \
+    DPRINT("MTSerialMutex acquired on thread %p\n", PsGetCurrentThreadId())
+
+#define RELEASE_SERIAL_MUTEX() \
+    DPRINT("Releasing MTSerialMutex on thread %p\n", PsGetCurrentThreadId()); \
+    KeReleaseMutex(&MTSerialMutex, FALSE); \
+    DPRINT("MTSerialMutex released on thread %p\n", PsGetCurrentThreadId())
 
 const char* tcp_debug_state_str(enum tcp_state s);
-
 
 #ifdef __cplusplus
 }

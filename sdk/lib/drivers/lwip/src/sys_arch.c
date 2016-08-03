@@ -1,3 +1,5 @@
+#include <ntifs.h>
+
 #include "lwip/sys.h"
 
 #include "lwip/tcp.h"
@@ -95,6 +97,7 @@ sys_arch_sem_wait(sys_sem_t* sem, u32_t timeout)
     
     KeQuerySystemTime(&PreWaitTime);
 
+    RELEASE_SERIAL_MUTEX();
     Status = KeWaitForMultipleObjects(2,
                                       WaitObjects,
                                       WaitAny,
@@ -103,6 +106,7 @@ sys_arch_sem_wait(sys_sem_t* sem, u32_t timeout)
                                       FALSE,
                                       timeout != 0 ? &LargeTimeout : NULL,
                                       NULL);
+    ACQUIRE_SERIAL_MUTEX();
     if (Status == STATUS_WAIT_0)
     {
         KeQuerySystemTime(&PostWaitTime);
@@ -190,6 +194,7 @@ sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
     
     KeQuerySystemTime(&PreWaitTime);
 
+    RELEASE_SERIAL_MUTEX();
     Status = KeWaitForMultipleObjects(2,
                                       WaitObjects,
                                       WaitAny,
@@ -198,6 +203,7 @@ sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
                                       FALSE,
                                       timeout != 0 ? &LargeTimeout : NULL,
                                       NULL);
+    ACQUIRE_SERIAL_MUTEX();
 
     if (Status == STATUS_WAIT_0)
     {
@@ -261,7 +267,9 @@ LwipThreadMain(PVOID Context)
     
     ExInterlockedInsertHeadList(&ThreadListHead, &Container->ListEntry, &ThreadListLock);
     
+    ACQUIRE_SERIAL_MUTEX();
     Container->ThreadFunction(Container->ThreadContext);
+    RELEASE_SERIAL_MUTEX();
     
     KeAcquireSpinLock(&ThreadListLock, &OldIrql);
     RemoveEntryList(&Container->ListEntry);
@@ -311,6 +319,9 @@ sys_init(void)
     KeQuerySystemTime(&StartTime);
     
     KeInitializeEvent(&TerminationEvent, NotificationEvent, FALSE);
+    KeInitializeMutex(&MTSerialMutex, 0);
+    
+    ACQUIRE_SERIAL_MUTEX();
 }
 
 void
@@ -329,11 +340,13 @@ sys_shutdown(void)
         
         if (Container->ThreadFunction)
         {
+            RELEASE_SERIAL_MUTEX();
             KeWaitForSingleObject(Container->Handle,
                                   Executive,
                                   KernelMode,
                                   FALSE,
                                   NULL);
+            ACQUIRE_SERIAL_MUTEX();
             
             ZwClose(Container->Handle);
         }
