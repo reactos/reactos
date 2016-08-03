@@ -373,7 +373,12 @@ err_t            tcp_output  (struct tcp_pcb *pcb);
  * Serializes all kernel network activity to circumvent lwIP core's lack of thread-safety.
  */
 KMUTEX MTSerialMutex;
+#define ACQUIRE_SERIAL_MUTEX() \
+    KeWaitForMutexObject(&MTSerialMutex, Executive, KernelMode, FALSE, NULL)
 
+#define RELEASE_SERIAL_MUTEX() \
+    KeReleaseMutex(&MTSerialMutex, FALSE)
+/*
 #define ACQUIRE_SERIAL_MUTEX() \
     DPRINT("Acquiring MTSerialMutex on thread %p\n", PsGetCurrentThreadId()); \
     KeWaitForMutexObject(&MTSerialMutex, Executive, KernelMode, FALSE, NULL); \
@@ -383,7 +388,7 @@ KMUTEX MTSerialMutex;
     DPRINT("Releasing MTSerialMutex on thread %p\n", PsGetCurrentThreadId()); \
     KeReleaseMutex(&MTSerialMutex, FALSE); \
     DPRINT("MTSerialMutex released on thread %p\n", PsGetCurrentThreadId())
-
+*/
 const char* tcp_debug_state_str(enum tcp_state s);
 
 #ifdef __cplusplus

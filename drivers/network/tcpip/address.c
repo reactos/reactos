@@ -16,9 +16,9 @@ volatile long int AddrFileCount;
 volatile long int GlContextCount;
 volatile long int PcbCount;
 
-PADDRESS_FILE AddrFileArray[16];
-PTCP_CONTEXT ContextArray[16];
-struct tcp_pcb *PCBArray[16];
+PADDRESS_FILE AddrFileArray[128];
+PTCP_CONTEXT ContextArray[128];
+struct tcp_pcb *PCBArray[128];
 
 KSPIN_LOCK AddrFileArrayLock;
 KSPIN_LOCK ContextArrayLock;
@@ -237,7 +237,7 @@ NTSTATUS DisassociateAddress(PTCP_CONTEXT Context);
  * ADDRESS_FILE. This mutex guards against concurrent access from multiple execution contexts if and
  * only if the Context is associated with an Address File. If TcpIpAssociateAddress has been called
  * on a TCP_CONTEXT struct, this mutex should be held when reading from or writing to any and all
- * fields in the struct until TcpIpDisassociateAddress is call on the same struct. 
+ * fields in the struct until TcpIpDisassociateAddress is called on the same struct. 
  * 
  * Mutex acquisition returns TRUE if the mutex has been acquired. Returns FALSE if the mutex could
  * not be acquired due to the Context having no association to any Address File.
@@ -374,10 +374,10 @@ PrepareIrpForCancel(
 {
     NTSTATUS Status;
 
-    /* Check that the IRP was not already cancelled */
+    /* Check that the IRP was not already canceled */
     if (Irp->Cancel)
     {
-        DPRINT("IRP already cancelled\n");
+        DPRINT("IRP already canceled\n");
         Irp->IoStatus.Status = STATUS_CANCELLED;
         Irp->IoStatus.Information = 0;
         return STATUS_CANCELLED;
@@ -495,7 +495,7 @@ CLEANUP_PCB:
             }
             goto COMPLETE_IRP;
         case TCP_REQUEST_CANCEL_MODE_PRESERVE :
-            /* For requests that do not deallocate the PCB when cancelled, determine and clear the
+            /* For requests that do not deallocate the PCB when canceled, determine and clear the
              * appropriate TCP State bit */
             switch (Request->PendingMode)
             {
@@ -549,7 +549,15 @@ CancelRequestRoutine(
     PTCP_CONTEXT Context;
     PTCP_REQUEST Request;
 
+    /* Check that the IRP isn't already being canceled */
+    if (Irp->Cancel == TRUE)
+    {
+        IoReleaseCancelSpinLock(Irp->CancelIrql);
+        return;
+    }
+    
     /* Block potential repeated cancellations */
+    Irp->Cancel = TRUE;
     IoSetCancelRoutine(Irp, NULL);
 
     /* This function is always called with the Cancel lock held */
@@ -2085,6 +2093,7 @@ ProcessPCBError(
 
         /* Block potential cancellations */
         Irp = Request->Payload.PendingIrp;
+        Irp->Cancel = TRUE;
         IoSetCancelRoutine(Irp, NULL);
 
         /* Dequeue Request and increment list walk */
@@ -2199,6 +2208,7 @@ lwip_tcp_connected_callback(
     Irp = Request->Payload.PendingIrp;
 
     /* Block cancellations */
+    Irp->Cancel = TRUE;
     IoSetCancelRoutine(Irp, NULL);
 
     /* One last sanity check */
@@ -2448,6 +2458,7 @@ lwip_tcp_receive_callback(
             /* Found a matching request. Block cancellations, dequeue,
              * and break out of the list walk. */
             Irp = Request->Payload.PendingIrp;
+            Irp->Cancel = TRUE;
             IoSetCancelRoutine(Irp, NULL);
             RemoveEntryList(&Request->ListEntry);
             goto FOUND;
@@ -2563,6 +2574,7 @@ lwip_tcp_sent_callback(
         {
             /* Immediately block any cancellations */
             Irp = Request->Payload.PendingIrp;
+            Irp->Cancel = TRUE;
             IoSetCancelRoutine(Irp, NULL);
 
             /* Dequeue the entry and jump to handler */

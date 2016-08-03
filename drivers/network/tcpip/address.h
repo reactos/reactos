@@ -31,7 +31,7 @@
 //#define TCPIP_NDEBUG
 #ifndef TCPIP_NDEBUG
 KSPIN_LOCK IRPArrayLock;
-PIRP IRPArray[16];
+PIRP IRPArray[256];
 volatile long int IRPCount;
 
 #define ADD_IRP(Irp) \
@@ -81,7 +81,7 @@ volatile long int IRPCount;
     KeReleaseSpinLockFromDpcLevel(&IRPArrayLock)
 
 KSPIN_LOCK IRPSPArrayLock;
-PIO_STACK_LOCATION IRPSPArray[16];
+PIO_STACK_LOCATION IRPSPArray[256];
 volatile long int IRPSPCount;
 
 #define ADD_IRPSP(IrpSp) \

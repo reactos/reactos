@@ -59,6 +59,7 @@ AllocateTcpPort(
     else
         *PortNumber = Bit;
     PortNumberHint = *PortNumber;
+	KeReleaseSpinLock(&PortBitmapSpinlock, OldIrql);
     return FALSE;
 }
 
