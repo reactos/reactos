@@ -9,6 +9,8 @@
 
 #include "net.h"
 
+#define COUNT_OF(a) (sizeof(a) / sizeof(a[0]))
+
 static
 DWORD
 EnumerateConnections(LPCWSTR Local)
@@ -130,6 +132,8 @@ cmdUse(
     {
         BOOL Persist = FALSE;
         NETRESOURCE lpNet;
+        WCHAR Access[256];
+        DWORD OutFlags = 0, Size = COUNT_OF(Access);
 
         Len = wcslen(argv[3]);
         if (Len < 4)
@@ -186,6 +190,10 @@ cmdUse(
         lpNet.lpRemoteName = argv[3];
         lpNet.lpProvider = NULL;
 
-        return  WNetAddConnection2(&lpNet, NULL, NULL, CONNECT_REDIRECT | (Persist ? CONNECT_UPDATE_PROFILE : 0));
+        Status = WNetUseConnection(NULL, &lpNet, NULL, NULL, CONNECT_REDIRECT | (Persist ? CONNECT_UPDATE_PROFILE : 0), Access, &Size, &OutFlags);
+        if (argv[2][0] == L'*' && Status == NO_ERROR && OutFlags == CONNECT_LOCALDRIVE)
+            printf("%S is now connected to %S\n", argv[3], Access);
+
+        return Status;
     }
 }
