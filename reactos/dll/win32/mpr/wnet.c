@@ -2110,7 +2110,7 @@ DWORD WINAPI WNetCancelConnection2W( LPCWSTR lpName, DWORD dwFlags, BOOL fForce 
         for (index = 0; index < providerTable->numProviders; index++)
         {
             if(providerTable->table[index].getCaps(WNNC_CONNECTION) &
-                WNNC_CON_GETCONNECTIONS)
+                WNNC_CON_CANCELCONNECTION)
             {
                 if (providerTable->table[index].cancelConnection)
                     ret = providerTable->table[index].cancelConnection((LPWSTR)lpName, fForce);
