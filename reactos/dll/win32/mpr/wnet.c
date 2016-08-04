@@ -1454,6 +1454,7 @@ DWORD WINAPI WNetCloseEnum( HANDLE hEnum )
                 }
                 HeapFree(GetProcessHeap(), 0, handles);
                 ret = WN_SUCCESS;
+                break;
             case WNET_ENUMERATOR_TYPE_NULL:
                 ret = WN_SUCCESS;
                 break;
