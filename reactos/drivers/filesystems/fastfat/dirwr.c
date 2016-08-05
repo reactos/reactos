@@ -638,8 +638,6 @@ FATAddEntry(
     {
         /* We're modifying an existing FCB - likely rename/move */
         Status = vfatUpdateFCB(DeviceExt, *Fcb, &DirContext, ParentFcb);
-        (*Fcb)->dirIndex = DirContext.DirIndex;
-        (*Fcb)->startIndex = DirContext.StartIndex;
     }
     else
     {
@@ -802,8 +800,6 @@ FATXAddEntry(
         /* We're modifying an existing FCB - likely rename/move */
         /* FIXME: check status */
         vfatUpdateFCB(DeviceExt, *Fcb, &DirContext, ParentFcb);
-        (*Fcb)->dirIndex = DirContext.DirIndex;
-        (*Fcb)->startIndex = DirContext.StartIndex;
     }
     else
     {
