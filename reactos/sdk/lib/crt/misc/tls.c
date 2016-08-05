@@ -6,7 +6,7 @@
 /* Index to TLS */
 static DWORD msvcrt_tls_index;
 
-inline BOOL msvcrt_init_tls(void)
+BOOL msvcrt_init_tls(void)
 {
   msvcrt_tls_index = TlsAlloc();
 
@@ -18,7 +18,7 @@ inline BOOL msvcrt_init_tls(void)
   return TRUE;
 }
 
-inline BOOL msvcrt_free_tls(void)
+BOOL msvcrt_free_tls(void)
 {
   if (!TlsFree(msvcrt_tls_index))
   {
@@ -48,7 +48,7 @@ thread_data_t *msvcrt_get_thread_data(void)
     return ptr;
 }
 
-inline void msvcrt_free_tls_mem(void)
+void msvcrt_free_tls_mem(void)
 {
   thread_data_t *tls = TlsGetValue(msvcrt_tls_index);
 
