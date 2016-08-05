@@ -3378,7 +3378,7 @@ REBAR_NCHitTest (const REBAR_INFO *infoPtr, LPARAM lParam)
 			   (INT *)&nmmouse.dwItemSpec);
     nmmouse.dwItemData = 0;
     nmmouse.pt = clpt;
-    nmmouse.dwHitInfo = 0;
+    nmmouse.dwHitInfo = scrap;
     if ((i = REBAR_Notify((NMHDR *) &nmmouse, infoPtr, NM_NCHITTEST))) {
 	TRACE("notify changed return value from %ld to %d\n",
 	      ret, i);
@@ -3450,6 +3450,7 @@ REBAR_Paint (const REBAR_INFO *infoPtr, HDC hdc)
 {
     if (hdc) {
         TRACE("painting\n");
+        REBAR_EraseBkGnd (infoPtr, hdc);
         REBAR_Refresh (infoPtr, hdc);
     } else {
         PAINTSTRUCT ps;
