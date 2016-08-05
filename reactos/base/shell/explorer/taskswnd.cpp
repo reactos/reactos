@@ -160,8 +160,29 @@ public:
         return SetButtonInfo(iButtonIndex, &tbbi) != 0;
     }
 
+    LRESULT OnNcHitTestToolbar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        POINT pt;
+
+        /* See if the mouse is on a button */
+        pt.x = GET_X_LPARAM(lParam);
+        pt.y = GET_Y_LPARAM(lParam);
+        ScreenToClient(&pt);
+
+        INT index = HitTest(&pt);
+        if (index < 0)
+        {
+            /* Make the control appear to be transparent outside of any buttons */
+            return HTTRANSPARENT;
+        }
+
+        bHandled = FALSE;
+        return 0;
+    }
+
 public:
     BEGIN_MSG_MAP(CNotifyToolbar)
+        MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTestToolbar)
     END_MSG_MAP()
 
     BOOL Initialize(HWND hWndParent)
@@ -1683,26 +1704,6 @@ public:
         return TRUE;
     }
 
-    LRESULT OnNcHitTestToolbar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        POINT pt;
-
-        /* See if the mouse is on a button */
-        pt.x = GET_X_LPARAM(lParam);
-        pt.y = GET_Y_LPARAM(lParam);
-        ScreenToClient(&pt);
-
-        INT index = m_TaskBar.HitTest(&pt);
-        if (index < 0)
-        {
-            /* Make the control appear to be transparent outside of any buttons */
-            return HTTRANSPARENT;
-        }
-
-        bHandled = FALSE;
-        return 0;
-    }
-
     LRESULT OnNcHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         LRESULT Ret = TRUE;
@@ -1828,8 +1829,6 @@ public:
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
         MESSAGE_HANDLER(m_ShellHookMsg, HandleShellHookMsg)
-    ALT_MSG_MAP(1)
-        MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTestToolbar)
     END_MSG_MAP()
 
     HWND _Init(IN HWND hWndParent, IN OUT ITrayWindow *tray)
