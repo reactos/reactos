@@ -126,7 +126,7 @@ cmdUse(
             return 1;
         }
 
-        return WNetCancelConnection(argv[2], FALSE);
+        return WNetCancelConnection2(argv[2], CONNECT_UPDATE_PROFILE, FALSE);
     }
     else
     {
