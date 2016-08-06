@@ -315,9 +315,9 @@ LsarpLookupPrivilegeDisplayName(PRPC_UNICODE_STRING Name,
                                 PRPC_UNICODE_STRING *DisplayName,
                                 USHORT *LanguageReturned);
 
-NTSTATUS
-LsarpLookupPrivilegeValue(PRPC_UNICODE_STRING Name,
-                          PLUID Value);
+PLUID
+LsarpLookupPrivilegeValue(
+    IN PRPC_UNICODE_STRING Name);
 
 NTSTATUS
 LsarpEnumeratePrivileges(DWORD *EnumerationContext,
@@ -327,6 +327,11 @@ LsarpEnumeratePrivileges(DWORD *EnumerationContext,
 NTSTATUS
 LsapLookupAccountRightName(ULONG RightValue,
                            PRPC_UNICODE_STRING *Name);
+
+NTSTATUS
+LsapLookupAccountRightValue(
+    IN PRPC_UNICODE_STRING Name,
+    OUT PULONG Value OPTIONAL);
 
 /* registry.h */
 NTSTATUS
