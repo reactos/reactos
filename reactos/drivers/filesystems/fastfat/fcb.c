@@ -268,11 +268,15 @@ vfatDestroyFCB(
     PVFATFCB pFCB)
 {
     FsRtlUninitializeFileLock(&pFCB->FileLock);
+    if (!vfatFCBIsRoot(pFCB) &&
+        !BooleanFlagOn(pFCB->Flags, FCB_IS_FAT) && !BooleanFlagOn(pFCB->Flags, FCB_IS_VOLUME))
+    {
+        RemoveEntryList(&pFCB->ParentListEntry);
+    }
     ExFreePool(pFCB->PathNameBuffer);
     ExDeleteResourceLite(&pFCB->PagingIoResource);
     ExDeleteResourceLite(&pFCB->MainResource);
     ExFreeToNPagedLookasideList(&VfatGlobalData->FcbLookasideList, pFCB);
-    RemoveEntryList(&pFCB->ParentListEntry);
     ASSERT(IsListEmpty(&pFCB->ParentListHead));
 }
 
