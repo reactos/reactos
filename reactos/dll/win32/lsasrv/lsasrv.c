@@ -208,14 +208,6 @@ LsapInitLsa(VOID)
 }
 
 
-NTSTATUS WINAPI
-ServiceInit(VOID)
-{
-    TRACE("ServiceInit() called\n");
-    return STATUS_SUCCESS;
-}
-
-
 void __RPC_FAR * __RPC_USER midl_user_allocate(SIZE_T len)
 {
     return RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, len);
