@@ -208,6 +208,7 @@ NTSTATUS NTAPI PeFmtCreateSection(IN CONST VOID * FileHeader,
     SIZE_T nPrevVirtualEndOfSegment = 0;
     ULONG nFileSizeOfHeaders = 0;
     ULONG i;
+    ULONG AlignedLength;
 
     ASSERT(FileHeader);
     ASSERT(FileHeaderSize > 0);
@@ -755,10 +756,11 @@ l_ReadHeaderFromFile:
         else
             pssSegments[i].Length.QuadPart = pishSectionHeaders[i].Misc.VirtualSize;
 
-        pssSegments[i].Length.LowPart = ALIGN_UP_BY(pssSegments[i].Length.LowPart, nSectionAlignment);
-        /* FIXME: always false */
-        if (pssSegments[i].Length.QuadPart < pssSegments[i].Length.QuadPart)
+        AlignedLength = ALIGN_UP_BY(pssSegments[i].Length.LowPart, nSectionAlignment);
+        if(AlignedLength < pssSegments[i].Length.LowPart)
             DIE(("Cannot align the virtual size of section %u\n", i));
+
+        pssSegments[i].Length.LowPart = AlignedLength;
 
         if(pssSegments[i].Length.QuadPart == 0)
             DIE(("Virtual size of section %u is null\n", i));
