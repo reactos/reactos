@@ -70,7 +70,7 @@ typedef struct _MI_FREED_SPECIAL_POOL
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-VOID NTAPI MiTestSpecialPool();
+VOID NTAPI MiTestSpecialPool(VOID);
 
 BOOLEAN
 NTAPI

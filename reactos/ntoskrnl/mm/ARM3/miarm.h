@@ -1663,7 +1663,7 @@ MmArmInitSystem(
 
 VOID
 NTAPI
-MiInitializeSessionSpaceLayout();
+MiInitializeSessionSpaceLayout(VOID);
 
 NTSTATUS
 NTAPI
