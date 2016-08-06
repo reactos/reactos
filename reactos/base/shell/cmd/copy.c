@@ -481,13 +481,15 @@ INT cmd_copy(LPTSTR param)
 
                     case _T('-'):
                         if (_tcslen(arg[i]) >= 3)
+                        {
                             if (_totupper(arg[i][2]) == _T('Y'))
                             {
                                 dwFlags &= ~COPY_NO_PROMPT;
                                 dwFlags |= COPY_PROMPT;
                             }
+                        }
 
-                            break;
+                        break;
 
                     case _T('Z'):
                         dwFlags |= COPY_RESTART;

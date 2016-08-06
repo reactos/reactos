@@ -797,7 +797,7 @@ HTHEME WINAPI GetWindowTheme(HWND hwnd)
 HRESULT WINAPI SetWindowTheme(HWND hwnd, LPCWSTR pszSubAppName,
                               LPCWSTR pszSubIdList)
 {
-	HRESULT hr;
+    HRESULT hr;
     TRACE("(%p,%s,%s)\n", hwnd, debugstr_w(pszSubAppName),
         debugstr_w(pszSubIdList));
     
@@ -812,7 +812,7 @@ HRESULT WINAPI SetWindowTheme(HWND hwnd, LPCWSTR pszSubAppName,
     if (!SUCCEEDED(hr))
         return hr;
 
-	UXTHEME_broadcast_msg (hwnd, WM_THEMECHANGED);
+    UXTHEME_broadcast_msg (hwnd, WM_THEMECHANGED);
     return hr;
 }
 
