@@ -30,6 +30,8 @@
 #define ROUND_DOWN(n, align) (((ULONG)n) & ~((align) - 1l))
 #define ROUND_UP(n, align) ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
+#include <strsafe.h>
+
 #include <commctrl.h>
 #include <commdlg.h>
 

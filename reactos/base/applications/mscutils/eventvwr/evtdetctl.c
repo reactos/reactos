@@ -11,8 +11,6 @@
 #include "eventvwr.h"
 #include "evtdetctl.h"
 
-#define ENTRY_SIZE  2056
-
 // FIXME:
 #define EVENT_MESSAGE_EVENTTEXT_BUFFER  1024*10
 extern HWND hwndListView;
@@ -262,17 +260,17 @@ CreateMonospaceFont(VOID)
 {
     LOGFONTW tmpFont = {0};
     HFONT hFont;
-    HDC hDc;
+    HDC hDC;
 
-    hDc = GetDC(NULL);
+    hDC = GetDC(NULL);
 
-    tmpFont.lfHeight = -MulDiv(8, GetDeviceCaps(hDc, LOGPIXELSY), 72);
+    tmpFont.lfHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
     tmpFont.lfWeight = FW_NORMAL;
     wcscpy(tmpFont.lfFaceName, L"Courier New");
 
     hFont = CreateFontIndirectW(&tmpFont);
 
-    ReleaseDC(NULL, hDc);
+    ReleaseDC(NULL, hDC);
 
     return hFont;
 }
@@ -281,7 +279,7 @@ static
 VOID
 CopyEventEntry(HWND hWnd)
 {
-    WCHAR output[4130], tmpHeader[512];
+    WCHAR tmpHeader[512];
     WCHAR szEventType[MAX_PATH];
     WCHAR szSource[MAX_PATH];
     WCHAR szCategory[MAX_PATH];
@@ -290,41 +288,58 @@ CopyEventEntry(HWND hWnd)
     WCHAR szTime[MAX_PATH];
     WCHAR szUser[MAX_PATH];
     WCHAR szComputer[MAX_PATH];
-    WCHAR evtDesc[ENTRY_SIZE];
+    WCHAR evtDesc[EVENT_MESSAGE_EVENTTEXT_BUFFER];
+    ULONG size = 0;
+    LPWSTR output;
     HGLOBAL hMem;
 
+    /* Try to open the clipboard */
     if (!OpenClipboard(hWnd))
         return;
 
-    /* First, empty the clipboard before we begin to use it */
-    EmptyClipboard();
-
     /* Get the formatted text needed to place the content into */
-    LoadStringW(hInst, IDS_COPY, tmpHeader, ARRAYSIZE(tmpHeader));
+    size += LoadStringW(hInst, IDS_COPY, tmpHeader, ARRAYSIZE(tmpHeader));
 
     /* Grab all the information and get it ready for the clipboard */
-    GetDlgItemTextW(hWnd, IDC_EVENTTYPESTATIC, szEventType, ARRAYSIZE(szEventType));
-    GetDlgItemTextW(hWnd, IDC_EVENTSOURCESTATIC, szSource, ARRAYSIZE(szSource));
-    GetDlgItemTextW(hWnd, IDC_EVENTCATEGORYSTATIC, szCategory, ARRAYSIZE(szCategory));
-    GetDlgItemTextW(hWnd, IDC_EVENTIDSTATIC, szEventID, ARRAYSIZE(szEventID));
-    GetDlgItemTextW(hWnd, IDC_EVENTDATESTATIC, szDate, ARRAYSIZE(szDate));
-    GetDlgItemTextW(hWnd, IDC_EVENTTIMESTATIC, szTime, ARRAYSIZE(szTime));
-    GetDlgItemTextW(hWnd, IDC_EVENTUSERSTATIC, szUser, ARRAYSIZE(szUser));
-    GetDlgItemTextW(hWnd, IDC_EVENTCOMPUTERSTATIC, szComputer, ARRAYSIZE(szComputer));
-    GetDlgItemTextW(hWnd, IDC_EVENTTEXTEDIT, evtDesc, ARRAYSIZE(evtDesc));
+    size += GetDlgItemTextW(hWnd, IDC_EVENTTYPESTATIC, szEventType, ARRAYSIZE(szEventType));
+    size += GetDlgItemTextW(hWnd, IDC_EVENTSOURCESTATIC, szSource, ARRAYSIZE(szSource));
+    size += GetDlgItemTextW(hWnd, IDC_EVENTCATEGORYSTATIC, szCategory, ARRAYSIZE(szCategory));
+    size += GetDlgItemTextW(hWnd, IDC_EVENTIDSTATIC, szEventID, ARRAYSIZE(szEventID));
+    size += GetDlgItemTextW(hWnd, IDC_EVENTDATESTATIC, szDate, ARRAYSIZE(szDate));
+    size += GetDlgItemTextW(hWnd, IDC_EVENTTIMESTATIC, szTime, ARRAYSIZE(szTime));
+    size += GetDlgItemTextW(hWnd, IDC_EVENTUSERSTATIC, szUser, ARRAYSIZE(szUser));
+    size += GetDlgItemTextW(hWnd, IDC_EVENTCOMPUTERSTATIC, szComputer, ARRAYSIZE(szComputer));
+    size += GetDlgItemTextW(hWnd, IDC_EVENTTEXTEDIT, evtDesc, ARRAYSIZE(evtDesc));
 
-    /* Consolidate the information into on big piece */
-    wsprintfW(output, tmpHeader, szEventType, szSource, szCategory, szEventID, szDate, szTime, szUser, szComputer, evtDesc);
+    size++; /* Null-termination */
+    size *= sizeof(WCHAR);
 
-    /* Sort out the memory needed to write to the clipboard */
-    hMem = GlobalAlloc(GMEM_MOVEABLE, ENTRY_SIZE);
-    memcpy(GlobalLock(hMem), output, ENTRY_SIZE);
+    /*
+     * Consolidate the information into one big piece and
+     * sort out the memory needed to write to the clipboard.
+     */
+    hMem = GlobalAlloc(GMEM_MOVEABLE, size);
+    if (hMem == NULL) goto Quit;
+
+    output = GlobalLock(hMem);
+    if (output == NULL)
+    {
+        GlobalFree(hMem);
+        goto Quit;
+    }
+
+    StringCbPrintfW(output, size,
+                    tmpHeader, szEventType, szSource, szCategory, szEventID,
+                    szDate, szTime, szUser, szComputer, evtDesc);
+
     GlobalUnlock(hMem);
 
-    /* Write the final content to the clipboard */
+    /* We succeeded, empty the clipboard and write the data in it */
+    EmptyClipboard();
     SetClipboardData(CF_UNICODETEXT, hMem);
 
-    /* Close the clipboard once we're done with it */
+Quit:
+    /* Close the clipboard once we are done with it */
     CloseClipboard();
 }
 
