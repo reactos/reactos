@@ -1,7 +1,7 @@
 #pragma once
 
 #if defined(__GNUC__)
-#define EXTINLINE extern inline __attribute__((always_inline))
+#define EXTINLINE extern inline __attribute__((always_inline)) __attribute__((gnu_inline))
 #elif defined(_MSC_VER)
 #define EXTINLINE extern __forceinline
 #else
