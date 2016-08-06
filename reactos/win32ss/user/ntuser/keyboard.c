@@ -922,6 +922,22 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
            }
         }
 
+        // TODO: When initializing win32k: Reading from the registry hotkey combination
+        // to switch the keyboard layout and store it to global variable.
+        // Using this combination of hotkeys in this function
+        if (wVk == VK_LSHIFT && IS_KEY_DOWN(gafAsyncKeyState, VK_LMENU))
+        {
+            PKL pkl = pti->KeyboardLayout;
+
+            if (pkl != NULL)
+            {
+                UserPostMessage(UserHMGetHandle(Wnd),
+                                WM_INPUTLANGCHANGEREQUEST,
+                                INPUTLANGCHANGE_FORWARD,
+                                (LPARAM)pkl->hkl);
+            }
+        }
+
         /* If it is VK_PACKET, high word of wParam is used for wchar */
         if (!bPacket)
         {
