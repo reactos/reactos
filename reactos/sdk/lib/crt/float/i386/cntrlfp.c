@@ -42,7 +42,7 @@ unsigned int CDECL _controlfp(unsigned int newval, unsigned int mask)
  */
 unsigned int CDECL _control87(unsigned int newval, unsigned int mask)
 {
-  unsigned int fpword = 0;
+  unsigned short fpword = 0;
   unsigned int flags = 0;
 
   TRACE("(%08x, %08x): Called\n", newval, mask);
