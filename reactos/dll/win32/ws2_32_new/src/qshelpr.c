@@ -201,14 +201,14 @@ ComputeQuerySetSize(IN LPWSAQUERYSETA AnsiSet,
         for (i = 0; i < AnsiSet->dwNumberOfCsAddrs; i++)
         {
             /* Check for local sockaddr */
-            if (&AnsiSet->lpcsaBuffer[i].LocalAddr)
+            if (AnsiSet->lpcsaBuffer[i].LocalAddr.lpSockaddr)
             {
                 /* Align the current size and add the sockaddr's length */
                 Size = (Size + 3) & ~3; 
                 Size += AnsiSet->lpcsaBuffer[i].LocalAddr.iSockaddrLength;
             }
             /* Check for remote sockaddr */
-            if (&AnsiSet->lpcsaBuffer[i].RemoteAddr)
+            if (AnsiSet->lpcsaBuffer[i].RemoteAddr.lpSockaddr)
             {
                 /* Align the current size and add the sockaddr's length */
                 Size = (Size + 3) & ~3; 
