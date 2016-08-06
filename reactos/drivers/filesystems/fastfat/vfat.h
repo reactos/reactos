@@ -386,8 +386,14 @@ typedef struct _VFATFCB
     /* List of FCB's for this volume */
     LIST_ENTRY FcbListEntry;
 
+    /* List of FCB's for the parent */ 
+    LIST_ENTRY ParentListEntry;
+
     /* pointer to the parent fcb */
     struct _VFATFCB *parentFcb;
+
+    /* List for the children */
+    LIST_ENTRY ParentListHead;
 
     /* Flags for the fcb */
     ULONG Flags;
