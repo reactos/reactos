@@ -458,6 +458,35 @@ vfatPrepareTargetForRename(
     return Status;
 }
 
+static
+BOOLEAN
+IsThereAChildOpened(PVFATFCB FCB)
+{
+    PLIST_ENTRY Entry;
+    PVFATFCB VolFCB;
+
+    for (Entry = FCB->ParentListHead.Flink; Entry != &FCB->ParentListHead; Entry = Entry->Flink)
+    {
+        VolFCB = CONTAINING_RECORD(Entry, VFATFCB, ParentListEntry);
+        if (VolFCB->OpenHandleCount != 0)
+        {
+            ASSERT(VolFCB->parentFcb == FCB);
+            DPRINT1("At least one children file opened! %wZ (%u, %u)\n", &VolFCB->PathNameU, VolFCB->RefCount, VolFCB->OpenHandleCount);
+            return TRUE;
+        }
+
+        if (vfatFCBIsDirectory(VolFCB) && !IsListEmpty(&VolFCB->ParentListHead))
+        {
+            if (IsThereAChildOpened(VolFCB))
+            {
+                return TRUE;
+            }
+        }
+    }
+
+    return FALSE;
+}
+
 /*
  * FUNCTION: Set the file name information
  */
@@ -706,20 +735,11 @@ VfatSetRenameInformation(
 
     if (vfatFCBIsDirectory(FCB) && !IsListEmpty(&FCB->ParentListHead))
     {
-        PLIST_ENTRY Entry;
-        PVFATFCB VolFCB;
-
-        for (Entry = FCB->ParentListHead.Flink; Entry != &FCB->ParentListHead; Entry = Entry->Flink)
+        if (IsThereAChildOpened(FCB))
         {
-            VolFCB = CONTAINING_RECORD(Entry, VFATFCB, ParentListEntry);
-            if (VolFCB->OpenHandleCount != 0)
-            {
-                ASSERT(VolFCB->parentFCB == FCB);
-                DPRINT1("At least one children file opened! %wZ (%u, %u)\n", &VolFCB->PathNameU, VolFCB->RefCount, VolFCB->OpenHandleCount);
-                Status = STATUS_ACCESS_DENIED;
-                ASSERT(OldReferences == FCB->parentFcb->RefCount);
-                goto Cleanup;
-            }
+            Status = STATUS_ACCESS_DENIED;
+            ASSERT(OldReferences == FCB->parentFcb->RefCount);
+            goto Cleanup;
         }
     }
 
