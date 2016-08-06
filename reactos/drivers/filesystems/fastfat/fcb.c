@@ -153,6 +153,7 @@ vfatNewFCB(
     rcFCB->RFCB.PagingIoResource = &rcFCB->PagingIoResource;
     rcFCB->RFCB.Resource = &rcFCB->MainResource;
     rcFCB->RFCB.IsFastIoPossible = FastIoIsNotPossible;
+    InitializeListHead(&rcFCB->ParentListHead);
 
     return  rcFCB;
 }
@@ -271,6 +272,8 @@ vfatDestroyFCB(
     ExDeleteResourceLite(&pFCB->PagingIoResource);
     ExDeleteResourceLite(&pFCB->MainResource);
     ExFreeToNPagedLookasideList(&VfatGlobalData->FcbLookasideList, pFCB);
+    RemoveEntryList(&pFCB->ParentListEntry);
+    ASSERT(IsListEmpty(&pFCB->ParentListHead));
 }
 
 BOOLEAN
@@ -455,6 +458,7 @@ vfatUpdateFCB(
 
     /* Save old parent */
     OldParent = Fcb->parentFcb;
+    RemoveEntryList(&Fcb->ParentListEntry);
 
     /* Reinit FCB */
     vfatInitFCBFromDirEntry(pVCB, Fcb, DirContext);
@@ -464,6 +468,7 @@ vfatUpdateFCB(
         CcFlushCache(&Fcb->SectionObjectPointers, NULL, 0, NULL);
     }
     Fcb->parentFcb = ParentFcb;
+    InsertTailList(&ParentFcb->ParentListHead, &Fcb->ParentListEntry);
     vfatAddFCBToTable(pVCB, Fcb);
 
     /* If we moved across directories, dereference our old parent
@@ -673,6 +678,7 @@ vfatMakeFCBFromDirEntry(
         vfatFCBInitializeCacheFromVolume(vcb, rcFCB);
     }
     rcFCB->parentFcb = directoryFCB;
+    InsertTailList(&directoryFCB->ParentListHead, &rcFCB->ParentListEntry);
     vfatAddFCBToTable(vcb, rcFCB);
     *fileFCB = rcFCB;
 
