@@ -8,7 +8,6 @@
  *      19990322 EA created
  *      19990515 EA stubs
  *      20030202 KJK compressed stubs
- *
  */
 
 #include <advapi32.h>
