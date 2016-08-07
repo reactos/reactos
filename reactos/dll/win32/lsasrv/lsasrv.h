@@ -328,10 +328,9 @@ NTSTATUS
 LsapLookupAccountRightName(ULONG RightValue,
                            PRPC_UNICODE_STRING *Name);
 
-NTSTATUS
+ACCESS_MASK
 LsapLookupAccountRightValue(
-    IN PRPC_UNICODE_STRING Name,
-    OUT PULONG Value OPTIONAL);
+    IN PRPC_UNICODE_STRING Name);
 
 /* registry.h */
 NTSTATUS

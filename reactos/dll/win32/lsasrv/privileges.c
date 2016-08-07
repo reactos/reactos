@@ -306,27 +306,22 @@ LsapLookupAccountRightName(ULONG RightValue,
 }
 
 
-NTSTATUS
+ACCESS_MASK
 LsapLookupAccountRightValue(
-    IN PRPC_UNICODE_STRING Name,
-    OUT PULONG Value OPTIONAL)
+    IN PRPC_UNICODE_STRING Name)
 {
     ULONG i;
 
     if (Name->Length == 0 || Name->Buffer == NULL)
-        return STATUS_NO_SUCH_PRIVILEGE;
+        return 0;
 
     for (i = 0; i < sizeof(WellKnownRights) / sizeof(WellKnownRights[0]); i++)
     {
         if (_wcsicmp(Name->Buffer, WellKnownRights[i].Name) == 0)
-        {
-            if (Value != NULL)
-                *Value = WellKnownRights[i].Flag;
-            return STATUS_SUCCESS;
-        }
+            return WellKnownRights[i].Flag;
     }
 
-    return STATUS_NO_SUCH_PRIVILEGE;
+    return 0;
 }
 
 /* EOF */

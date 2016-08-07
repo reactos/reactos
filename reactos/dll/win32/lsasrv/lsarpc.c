@@ -2368,6 +2368,33 @@ NTSTATUS WINAPI LsarAddAccountRights(
     TRACE("LsarAddAccountRights(%p %p %p)\n",
           PolicyHandle, AccountSid, UserRights);
 
+    /* Validate the AccountSid */
+    if (!RtlValidSid(AccountSid))
+        return STATUS_INVALID_PARAMETER;
+
+    /* Validate the UserRights */
+    if (UserRights == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Validate the privilege and account right names */
+    for (i = 0; i < UserRights->Entries; i++)
+    {
+        if (LsarpLookupPrivilegeValue(&UserRights->UserRights[i]) != NULL)
+        {
+            ulNewPrivileges++;
+        }
+        else
+        {
+            if (LsapLookupAccountRightValue(&UserRights->UserRights[i]) == 0)
+                return STATUS_NO_SUCH_PRIVILEGE;
+
+            ulNewRights++;
+        }
+    }
+
+    TRACE("ulNewPrivileges: %lu\n", ulNewPrivileges);
+    TRACE("ulNewRights: %lu\n", ulNewRights);
+
     /* Validate the PolicyHandle */
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
@@ -2378,41 +2405,6 @@ NTSTATUS WINAPI LsarAddAccountRights(
         WARN("LsapValidateDbObject returned 0x%08lx\n", Status);
         return Status;
     }
-
-    /* Validate the AccountSid */
-    if (!RtlValidSid(AccountSid))
-    {
-        Status = STATUS_INVALID_PARAMETER;
-        goto done;
-    }
-
-    /* Validate the UserRights */
-    if (UserRights == NULL)
-    {
-        Status = STATUS_INVALID_PARAMETER;
-        goto done;
-    }
-
-    /* Validate the privilege and account right names */
-    for (i = 0; i < UserRights->Entries; i++)
-    {
-        pLuid = LsarpLookupPrivilegeValue(&UserRights->UserRights[i]);
-        if (pLuid != NULL)
-        {
-            ulNewPrivileges++;
-        }
-        else
-        {
-            Status = LsapLookupAccountRightValue(&UserRights->UserRights[i], NULL);
-            if (Status == STATUS_SUCCESS)
-                ulNewRights++;
-            else
-                goto done;
-        }
-    }
-
-    TRACE("ulNewPrivileges: %lu\n", ulNewPrivileges);
-    TRACE("ulNewRights: %lu\n", ulNewRights);
 
     /* Open the account */
     Status = LsarpOpenAccount(PolicyObject,
@@ -2541,9 +2533,8 @@ NTSTATUS WINAPI LsarAddAccountRights(
         /* Set the new access rights */
         for (i = 0; i < UserRights->Entries; i++)
         {
-            Status = LsapLookupAccountRightValue(&UserRights->UserRights[i],
-                                                 &Value);
-            if (Status == STATUS_SUCCESS)
+            Value = LsapLookupAccountRightValue(&UserRights->UserRights[i]);
+            if (Value != 0)
                 SystemAccess |= Value;
         }
 
@@ -2572,8 +2563,190 @@ NTSTATUS WINAPI LsarRemoveAccountRights(
     BOOL AllRights,
     PLSAPR_USER_RIGHT_SET UserRights)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT PolicyObject;
+    PLSA_DB_OBJECT AccountObject = NULL;
+    ULONG PrivilegesToRemove = 0, RightsToRemove = 0;
+    ACCESS_MASK SystemAccess = 0;
+    ULONG Size, Value, i, j, Index;
+    PPRIVILEGE_SET PrivilegeSet = NULL;
+    ULONG PrivilegeCount;
+    PLUID pLuid;
+    NTSTATUS Status;
+
+    TRACE("LsarRemoveAccountRights(%p %p %lu %p)\n",
+          PolicyHandle, AccountSid, AllRights, UserRights);
+
+    /* Validate the AccountSid */
+    if (!RtlValidSid(AccountSid))
+        return STATUS_INVALID_PARAMETER;
+
+    /* Validate the UserRights */
+    if (UserRights == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Validate the privilege and account right names */
+    for (i = 0; i < UserRights->Entries; i++)
+    {
+        if (LsarpLookupPrivilegeValue(&UserRights->UserRights[i]) != NULL)
+        {
+            PrivilegesToRemove++;
+        }
+        else
+        {
+            if (LsapLookupAccountRightValue(&UserRights->UserRights[i]) == 0)
+                return STATUS_NO_SUCH_PRIVILEGE;
+
+            RightsToRemove++;
+        }
+    }
+
+    /* Validate the PolicyHandle */
+    Status = LsapValidateDbObject(PolicyHandle,
+                                  LsaDbPolicyObject,
+                                  POLICY_LOOKUP_NAMES,
+                                  &PolicyObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Open the account */
+    Status = LsarpOpenAccount(PolicyObject,
+                              AccountSid,
+                              0,
+                              &AccountObject);
+    if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        ERR("LsarpOpenAccount returned 0x%08lx\n", Status);
+        goto done;
+    }
+
+    if (AllRights == FALSE)
+    {
+        /* Get the size of the Privilgs attribute */
+        Size = 0;
+        Status = LsapGetObjectAttribute(AccountObject,
+                                        L"Privilgs",
+                                        NULL,
+                                        &Size);
+        if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
+            goto done;
+
+        if ((Size != 0) && (PrivilegesToRemove != 0))
+        {
+            /* Allocate the privilege set buffer */
+            PrivilegeSet = RtlAllocateHeap(RtlGetProcessHeap(),
+                                           HEAP_ZERO_MEMORY,
+                                           Size);
+            if (PrivilegeSet == NULL)
+                return STATUS_NO_MEMORY;
+
+            /* Get the privilege set */
+            Status = LsapGetObjectAttribute(AccountObject,
+                                            L"Privilgs",
+                                            PrivilegeSet,
+                                            &Size);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("LsapGetObjectAttribute() failed (Status 0x%08lx)\n", Status);
+                goto done;
+            }
+
+            PrivilegeCount = PrivilegeSet->PrivilegeCount;
+
+            for (i = 0; i < UserRights->Entries; i++)
+            {
+                pLuid = LsarpLookupPrivilegeValue(&UserRights->UserRights[i]);
+                if (pLuid == NULL)
+                    continue;
+
+                Index = -1;
+                for (j = 0; j < PrivilegeSet->PrivilegeCount; j++)
+                {
+                    if (RtlEqualLuid(&(PrivilegeSet->Privilege[j].Luid), pLuid))
+                    {
+                        Index = j;
+                        break;
+                    }
+                }
+
+                if (Index != -1)
+                {
+                    /* Remove the privilege */
+                    if ((PrivilegeSet->PrivilegeCount > 1) &&
+                        (Index < PrivilegeSet->PrivilegeCount - 1))
+                        RtlMoveMemory(&(PrivilegeSet->Privilege[Index]),
+                                      &(PrivilegeSet->Privilege[Index + 1]),
+                                      (Index - PrivilegeSet->PrivilegeCount - 1) * sizeof(LUID));
+
+                    /* Wipe the last entry */
+                    RtlZeroMemory(&(PrivilegeSet->Privilege[PrivilegeSet->PrivilegeCount - 1]),
+                                  sizeof(LUID));
+
+                    PrivilegeSet->PrivilegeCount--;
+                }
+            }
+
+            /* Store the extended privilege set */
+            if (PrivilegeCount != PrivilegeSet->PrivilegeCount)
+            {
+                Size = sizeof(PRIVILEGE_SET) +
+                       (PrivilegeSet->PrivilegeCount - 1) * sizeof(LUID_AND_ATTRIBUTES);
+
+                Status = LsapSetObjectAttribute(AccountObject,
+                                                L"Privilgs",
+                                                PrivilegeSet,
+                                                Size);
+                if (!NT_SUCCESS(Status))
+                {
+                    ERR("LsapSetObjectAttribute() failed (Status 0x%08lx)\n", Status);
+                    goto done;
+                }
+            }
+        }
+
+        /* Get the system access flags, if the attribute exists */
+        Size = 0;
+        Status = LsapGetObjectAttribute(AccountObject,
+                                        L"ActSysAc",
+                                        &SystemAccess,
+                                        &Size);
+        if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
+            goto done;
+
+        if ((Size != 0) && (RightsToRemove != 0))
+        {
+            ERR("Rights: 0x%lx\n", SystemAccess);
+
+            /* Set the new access rights */
+            for (i = 0; i < UserRights->Entries; i++)
+            {
+                Value = LsapLookupAccountRightValue(&UserRights->UserRights[i]);
+                if (Value != 0)
+                    SystemAccess &= ~Value;
+            }
+            ERR("New Rights: 0x%lx\n", SystemAccess);
+
+            /* Set the system access flags */
+            Status = LsapSetObjectAttribute(AccountObject,
+                                            L"ActSysAc",
+                                            &SystemAccess,
+                                            sizeof(ACCESS_MASK));
+        }
+    }
+    else
+    {
+    }
+
+done:
+    if (PrivilegeSet != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PrivilegeSet);
+
+    if (AccountObject != NULL)
+        LsapCloseDbObject(AccountObject);
+
+    return Status;
 }
 
 
