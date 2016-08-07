@@ -313,7 +313,7 @@
 313 stdcall InitiateSystemShutdownExW(wstr wstr long long long long)
 314 stdcall InitiateSystemShutdownW(str str long long long)
 315 stub InstallApplication
-316 stdcall IsTextUnicode(ptr long ptr) ntdll.RtlIsTextUnicode
+316 stdcall IsTextUnicode(ptr long ptr)
 317 stdcall IsTokenRestricted(long)
 318 stub IsTokenUntrusted
 319 stdcall IsValidAcl(ptr)
