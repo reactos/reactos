@@ -1,0 +1,256 @@
+/* FILE:       dll/cpl/input/lang/cs-CZ.rc
+ * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:    2015-04-12
+ */
+
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+IDD_PROPPAGESETTINGS DIALOGEX 0, 0, 254, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Nastavení"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Zvolte služby pro každý vstupní jazyk v seznamu.\nSeznam lze měnit pomocí tlačítek Přidat a Odebrat.", -1, 9, 6, 238, 25
+    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
+    PUSHBUTTON "Nas&tavit výchozí", IDC_SET_DEFAULT, 101, 159, 144, 14
+    PUSHBUTTON "&Přidat...", IDC_ADD_BUTTON, 27, 142, 70, 14
+    PUSHBUTTON "&Odebrat...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "&Vlastnosti...", IDC_PROP_BUTTON, 175, 142, 70, 14
+    GROUPBOX "Předvolby", -1, 7, 185, 240, 36
+    PUSHBUTTON "&Nastavení kláves...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+END
+
+IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Rozšířená nastavení"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Nastavení systému", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "&Vypnout rozšířené textové služby", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
+    LTEXT "Vybráním tohoto políčka se vypnou rozšířené textové služby ve všech\nprogramech. Toto není doporučeno pro uživatele východoasijských\njazyků, protože se zavře panel jazyků.\n", -1, 14, 40, 230, 35
+END
+
+IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Pokročilé nastavení kláves"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Caps Lock vypnout", -1, 7, 7, 258, 26
+    AUTORADIOBUTTON "Stisknutím klávesy &CAPS LOCK", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
+    AUTORADIOBUTTON "Stisknutím klávesy &SHIFT", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
+    GROUPBOX "Klávesové zkratky pro vstupní jazyky", -1, 7, 37, 258, 95
+    LTEXT "Akce", -1, 14, 47, 60, 9
+    RTEXT "&Posloupnost kláves", -1, 177, 47, 79, 9
+    CONTROL "", IDC_KEY_LISTVIEW, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_AUTOARRANGE | LVS_SINGLESEL, 14, 57, 244, 52, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&Změnit posloupnost kláves...", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
+    DEFPUSHBUTTON "OK", IDOK, 66, 140, 70, 14
+    PUSHBUTTON "Storno", IDCANCEL, 146, 140, 70, 14
+END
+
+IDD_ADD DIALOGEX 20, 20, 227, 90
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Přidat vstupní jazyk"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Vstupní jazyk:", -1, 7, 7, 61, 10
+    COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "&Rozložení kláves/IME:", -1, 7, 36, 110, 10
+    COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 116, 68, 50, 14
+    PUSHBUTTON "Storno", IDCANCEL, 169, 68, 50, 14
+END
+
+IDD_CHANGE_KEY_SEQ DIALOGEX 5, 100, 230, 125
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Změnit posloupnost kláves"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "", -1, 9, 5, 155, 110
+    AUTOCHECKBOX "&Přepnout vstupní jazyky", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
+    LTEXT "Shift", -1, 73, 37, 27, 12
+    CTEXT "+", -1, 62, 37, 8, 9
+    AUTORADIOBUTTON "&CTRL", IDC_CTRL_LANG, 29, 31, 30, 11
+    AUTORADIOBUTTON "Levý &ALT", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
+    AUTOCHECKBOX "Přepnout &rozložení kláves", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
+    LTEXT "Shift", -1, 74, 87, 27, 12
+    CTEXT "+", -1, 63, 87, 8, 9
+    AUTORADIOBUTTON "C&TRL", IDC_CTRL_LAYOUT, 30, 81, 30, 11
+    AUTORADIOBUTTON "Levý A&LT", IDC_LEFT_ALT_LAYOUT, 30, 95, 44, 12
+    DEFPUSHBUTTON "OK", IDOK, 172, 9, 50, 14
+    PUSHBUTTON "Storno", IDCANCEL, 172, 27, 50, 14
+END
+
+IDD_INPUT_LANG_PROP DIALOGEX 20, 20, 227, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Vlastnosti vstupních jazyků"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Vstupní jazyk:", -1, 7, 7, 61, 8
+    LTEXT "", IDC_INPUT_LANG_STR, 73, 7, 129, 8
+    LTEXT "&Rozložení kláves/IME:", -1, 7, 21, 110, 10
+    COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 116, 53, 52, 14
+    PUSHBUTTON "Storno", IDCANCEL, 169, 53, 52, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLSYSTEMNAME "Služby textu a vstupní jazyky"
+    IDS_CPLSYSTEMDESCRIPTION "Upravuje nastavení pro textový vstup jazyků."
+    IDS_KEYBOARD "Klávesnice"
+    IDS_NONE "(Žádné)"
+    IDS_UNKNOWN "(Neznámé)"
+    IDS_RESTART "Restartovat počítač nyní?"
+    IDS_WHATS_THIS "Co je tohle?"
+    IDS_LANGUAGE "Jazyk"
+    IDS_LAYOUT "Rozložení kláves"
+    IDS_REM_QUESTION "Odebrat zvolené rozložení kláves?"
+    IDS_CONFIRMATION "Potvrzení"
+    IDS_LAYOUT_EXISTS "Toto rozložení již existuje."
+    IDS_LAYOUT_EXISTS2 "Toto rozložení již existuje a nemůže být přidáno."
+    IDS_CTRL_SHIFT "Ctrl+Shift"
+    IDS_LEFT_ALT_SHIFT "Levý Alt+Shift"
+    IDS_SWITCH_BET_INLANG "Přepnout mezi vstupními jazyky"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ALBANIAN_LAYOUT "Albánština"
+    IDS_ARABIC_101_LAYOUT "Arabština (101)"
+    IDS_ARABIC_102_LAYOUT "Arabština (102)"
+    IDS_ARABIC_102_AZERTY_LAYOUT "Arabština (102) AZERTY"
+    IDS_ARMENIAN_EASTERN_LAYOUT "Arménština (Východní)"
+    IDS_ARMENIAN_WESTERN_LAYOUT "Arménština (Západní)"
+    IDS_ASSAMESE_LAYOUT "Ásámština"
+    IDS_AZERI_CYRILLIC_LAYOUT "Azerština (Cyrilice)"
+    IDS_AZERI_LATIN_LAYOUT "Azerština (Latinka)"
+    IDS_BELARUSIAN_LAYOUT "Běloruština"
+    IDS_BELGIAN_COMMA_LAYOUT "Belgická (Čárka)"
+    IDS_BELGIAN_FRENCH_LAYOUT "Belgická (Francouzština)"
+    IDS_BELGIAN_LAYOUT "Belgická (Tečka)"
+    IDS_BENGALI_LAYOUT "Bengálština"
+    IDS_BULGARIAN_LAYOUT "Bulharština"
+    IDS_BULGARIAN_BDS_LAYOUT "Bulharština (BDS 5237-1978)"
+    IDS_BULGARIAN_LATIN_LAYOUT "Bulharština (Latinka)"
+    IDS_BULGARIAN_PHONETIC_BDS_LAYOUT "Bulharština (Fonetická) (BDS 5237-1978)"
+    IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT "Bulharština (Fonetická) (Klasická)"
+    IDS_BURMESE_LAYOUT "Barmština"
+    IDS_CANADIAN_FRENCH_LAYOUT "Kanadské (Francouzština)"
+    IDS_CANADIAN_FRENCH_LEGACY_LAYOUT "Kanadské (Francouzština) (Staré)"
+    IDS_CANADIAN_MULTILINGUAL_STD_LAYOUT "Kanadské (Vícejazyčné standardní)"
+    IDS_CANTONESE_PHONETIC_LAYOUT "Kantonština (Fonetická)"
+    IDS_CHINESE_SIMPLIFIED_MSPINYINIME30_LAYOUT "Čínština (Zjednodušená) - Microsoft Pinyin IME 3.0"
+    IDS_CHINESE_SIMPLIFIED_NEIMA_LAYOUT "Čínština (Zjednodušená) - NeiMa"
+    IDS_CHINESE_SIMPLIFIED_QUANPIN_LAYOUT "Čínština (Zjednodušená) - QuanPin"
+    IDS_CHINESE_SIMPLIFIED_SHUANGPIN_LAYOUT "Čínština (Zjednodušená) - ShuangPin"
+    IDS_CHINESE_SIMPLIFIED_USKEYBOARD_LAYOUT "Čínština (Zjednodušená) - US klávesnice"
+    IDS_CHINESE_SIMPLIFIED_ZHENGMA_LAYOUT "Čínština (Zjednodušená) - ZhengMa"
+    IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT "Čínština (Tradiční) - Alfanumerická"
+    IDS_CHINESE_TRADITIONAL_ARRAY_LAYOUT "Čínština (Tradiční) - Array"
+    IDS_CHINESE_TRADITIONAL_BIG5CODE_LAYOUT "Čínština (Tradiční) - Big5 Code"
+    IDS_CHINESE_TRADITIONAL_CHANGJIE_LAYOUT "Čínština (Tradiční) - ChangJie"
+    IDS_CHINESE_TRADITIONAL_DAYI_LAYOUT "Čínština (Tradiční) - DaYi"
+    IDS_CHINESE_TRADITIONAL_NEWCHANGJIE_LAYOUT "Čínština (Tradiční) - Nová ChangJie"
+    IDS_CHINESE_TRADITIONAL_NEWPHONETIC_LAYOUT "Čínština (Tradiční) - Nová fonetická"
+    IDS_CHINESE_TRADITIONAL_PHONETIC_LAYOUT "Čínština (Tradiční) - Fonetická"
+    IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT "Čínština (Tradiční) - Rychlá"
+    IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT "Čínština (Tradiční) - Unicode"
+    IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT "Čínština (Tradiční) - US Klávesnice"
+    IDS_CROATIAN_LAYOUT "Chorvatština"
+    IDS_CZECH_LAYOUT "Čeština"
+    IDS_CZECH_PROGRAMMERS_LAYOUT "Čeština (Programátorská)"
+    IDS_CZECH_QWERTY_LAYOUT "Čeština (QWERTY)"
+    IDS_DANISH_LAYOUT "Dánština"
+    IDS_DEVANAGARI_INSCRIPT_LAYOUT "Dévanágarí - INSCRIPT"
+    IDS_DIVEHI_PHONETIC_LAYOUT "Divehština (Fonetická)"
+    IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehština (Psací stroj)"
+    IDS_DUTCH_LAYOUT "Holandština"
+    IDS_ESTONIAN_LAYOUT "Estonština"
+    IDS_FAEROESE_LAYOUT "Faerština"
+    IDS_FARSI_LAYOUT "Fársí"
+    IDS_FINNISH_LAYOUT "Finština"
+    IDS_FRENCH_LAYOUT "Francouzština"
+    IDS_GAELIC_LAYOUT "Galicijština"
+    IDS_GEORGIAN_LAYOUT "Gruzínština"
+    IDS_GERMAN_LAYOUT "Němčima"
+    IDS_GERMAN_DE_ERGO_LAYOUT "Němčima (de_ergo)"
+    IDS_GERMAN_IBM_LAYOUT "Němčima (IBM)"
+    IDS_GERMAN_NEO_11_LAYOUT "Němčima (NEO-1.1)"
+    IDS_GERMAN_RISTOME_LAYOUT "Němčima (RISTOME)"
+    IDS_GREEK_LAYOUT "Řečtina"
+    IDS_GREEK_220_LAYOUT "Řečtina (220)"
+    IDS_GREEK_220_LATIN_LAYOUT "Řečtina (220) (Latinka)"
+    IDS_GREEK_319_LAYOUT "Řečtina (319)"
+    IDS_GREEK_319_LATIN_LAYOUT "Řečtina (319) (Latinka)"
+    IDS_GREEK_LATIN_LAYOUT "Řečtina (Latinka)"
+    IDS_GREEK_POLYTONIC_LAYOUT "Řečtina (Polytonická)"
+    IDS_GUJARATI_LAYOUT "Gudžarátština"
+    IDS_HEBREW_LAYOUT "Hebrejština"
+    IDS_HINDI_TRADITIONAL_LAYOUT "Hindština (Tradiční)"
+    IDS_HUNGARIAN_LAYOUT "Maďarština"
+    IDS_HUNGARIAN_101_KEY_LAYOUT "Maďarština (101 kláves)"
+    IDS_ICELANDIC_LAYOUT "Islandština"
+    IDS_IRISH_LAYOUT "Irština"
+    IDS_ITALIAN_LAYOUT "Italština"
+    IDS_ITALIAN_142_LAYOUT "Italština (142)"
+    IDS_JAPANESE_LAYOUT "Japonština"
+    IDS_JAPANESE_INPUT_SYSTEM_MSIME2002_LAYOUT "Japonský vstupní systém (MS-IME2002)"
+    IDS_KANNADA_LAYOUT "Kannadština"
+    IDS_KAZAKH_LAYOUT "Kazaština"
+    IDS_KOREAN_LAYOUT "Korejština"
+    IDS_KOREAN_INPUT_SYSTEM_MSIME2002_LAYOUT "Korjský vstupní systém (MS-IME2002)"
+    IDS_KYRGYZ_CYRILLIC_LAYOUT "Kyrgyzština (Cyrilice)"
+    IDS_LATIN_AMERICAN_LAYOUT "Latinská Amerika"
+    IDS_LATVIAN_LAYOUT "Lotyština"
+    IDS_LATVIAN_QWERTY_LAYOUT "Lotyština (QWERTY)"
+    IDS_LITHUANIAN_LAYOUT "Litevština"
+    IDS_LITHUANIAN_IBM_LAYOUT "Litevština (IBM)"
+    IDS_FYRO_MACEDONIAN_LAYOUT "FYRO Makedonština"
+    IDS_MALAYALAM_LAYOUT "Malajámština"
+    IDS_MARATHI_LAYOUT "Maráthština"
+    IDS_MONGOLIAN_CYRILLIC_LAYOUT "Mongolština (Cyrilice)"
+    IDS_NORWEGIAN_LAYOUT "Norština"
+    IDS_ORIYA_LAYOUT "Orijština"
+    IDS_POLISH_214_LAYOUT "Polština (214)"
+    IDS_POLISH_LAYOUT "Polština (Programátorská)"
+    IDS_PORTUGUESE_LAYOUT "Portugalština"
+    IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT "Portugalština (Brazilská ABNT)"
+    IDS_PORTUGUESE_BRAZIL_ABNT2_LAYOUT "Portugalština (Brazilská ABNT2)"
+    IDS_PUNJABI_LAYOUT "Paňdžábština"
+    IDS_ROMANIAN_LAYOUT "Rumunština"
+    IDS_RUSSIAN_LAYOUT "Ruština"
+    IDS_RUSSIAN_TYPEWRITER_LAYOUT "Ruština (Psací stroj)"
+    IDS_SERBIAN_CYRILLIC_LAYOUT "Srbština (Cyrilice)"
+    IDS_SERBIAN_LATIN_LAYOUT "Srbština (Latinka)"
+    IDS_SLOVAK_LAYOUT "Slovenština"
+    IDS_SLOVAK_QWERTY_LAYOUT "Slovenština (QWERTY)"
+    IDS_SLOVENIAN_LAYOUT "Slovinština"
+    IDS_SPANISH_LAYOUT "Španělština"
+    IDS_SPANISH_VARIANTION_LAYOUT "Španělština (Variace)"
+    IDS_SWEDISH_LAYOUT "Švédština"
+    IDS_SWISS_FRENCH_LAYOUT "Švýcarská francouzština"
+    IDS_SWISS_GERMAN_LAYOUT "Švýcarská němčina"
+    IDS_SYRIAC_LAYOUT "Syrština"
+    IDS_SYRIAC_PHONETIC_LAYOUT "Syrština (Fonetická)"
+    IDS_TAMIL_LAYOUT "Tamilština"
+    IDS_TATAR_LAYOUT "Tatarština"
+    IDS_TELUGU_LAYOUT "Telugština"
+    IDS_THAI_KEDMANEE_LAYOUT "Thajština Kedmanee"
+    IDS_THAI_KEDMANEE_NONSHIFTLOCK_LAYOUT "Thajština Kedmanee (non-ShiftLock)"
+    IDS_THAI_PATTACHOTE_LAYOUT "Thajština Pattachote"
+    IDS_THAI_PATTACHOTE_NONSHIFTLOCK_LAYOUT "Thajština Pattachote (non-ShiftLock)"
+    IDS_TURKISH_F_LAYOUT "Turečtina F"
+    IDS_TURKISH_Q_LAYOUT "Turečtina Q"
+    IDS_UKRAINIAN_LAYOUT "Ukrajinština"
+    IDS_UKRAINIAN_STUDENT_LAYOUT "Ukrajinština (Student)"
+    IDS_UNITED_KINGDOM_LAYOUT "Spojené království"
+    IDS_UNITED_STATES_DVIRAK_LAYOUT "Spojené státy-Dvorak"
+    IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT "Spojené státy-Dvorak pro levou ruku"
+    IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT "Spojené státy-Dvorak pro pravou ruku"
+    IDS_UNITED_STATES_INTERNATIONAL_LAYOUT "Spojené státy-Mezinárodní"
+    IDS_URDU_LAYOUT "Urdština"
+    IDS_US_LAYOUT "US"
+    IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT "US anglická tabulka pro IBM arabštinu 238_L"
+    IDS_UZBEK_CYRILLIC_LAYOUT "Uzbečtina (Cyrilice)"
+    IDS_VIETNAMESE_LAYOUT "Vietnamština"
+END

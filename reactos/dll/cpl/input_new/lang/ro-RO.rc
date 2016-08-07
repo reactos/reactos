@@ -1,0 +1,253 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDD_PROPPAGESETTINGS DIALOGEX 0, 0, 254, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Configurare"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Gestionați serviciile aferente limbilor de intrare utilizate în sistem. Utilizați butoanele pentru a aduce modificări listei.", -1, 9, 6, 238, 25
+    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
+    PUSHBUTTON "&Restabilește opțiunile implicite", IDC_SET_DEFAULT, 101, 159, 144, 14
+    PUSHBUTTON "A&dăugare…", IDC_ADD_BUTTON, 27, 142, 70, 14
+    PUSHBUTTON "&Elimină", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "&Proprietăți…", IDC_PROP_BUTTON, 175, 142, 70, 14
+    GROUPBOX "Preferințe", -1, 7, 185, 240, 36
+    PUSHBUTTON "&Combinații de taste…", IDC_KEY_SET_BTN, 14, 198, 110, 14
+END
+
+IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Configurație avansată"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Configurație de sistem", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "&Dezactivează serviciile avansate de text", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
+    LTEXT "Selectați această bifă pentru a dezactiva serviciile avansate de text în toate programele.\nAceasta nu se recomandă pentru utilizatorii de limbi est-asiatice, deoarece va duce la închiderea barei de limbi.", -1, 14, 40, 230, 35
+END
+
+IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Preferințe pentru combinații de taste"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Pentru a anula Caps Lock", -1, 7, 7, 258, 26
+    AUTORADIOBUTTON "Voi apăsa din nou CAPS &LOCK", IDC_PRESS_CL_KEY_RB, 14, 17, 125, 11, WS_GROUP
+    AUTORADIOBUTTON "Voi apăsa tasta S&HIFT", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
+    GROUPBOX "Combinații de taste", -1, 7, 37, 258, 95
+    LTEXT "Acțiune", -1, 14, 47, 60, 9
+    RTEXT "Combinație de taste", -1, 177, 47, 79, 9
+    CONTROL "", IDC_KEY_LISTVIEW, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_AUTOARRANGE | LVS_SINGLESEL, 14, 57, 244, 52, WS_EX_CLIENTEDGE
+    PUSHBUTTON "&Modificare combinație…", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
+    DEFPUSHBUTTON "Con&firmă", IDOK, 66, 140, 70, 14
+    PUSHBUTTON "A&nulează", IDCANCEL, 146, 140, 70, 14
+END
+
+IDD_ADD DIALOGEX 20, 20, 227, 90
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Adăguare limbă de intrare"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "&Limbă:", -1, 7, 7, 61, 10
+    COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "&Aranjament de tastatură/IME:", -1, 7, 36, 110, 10
+    COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    DEFPUSHBUTTON "Con&firmă", IDOK, 116, 68, 50, 14
+    PUSHBUTTON "A&nulează", IDCANCEL, 169, 68, 50, 14
+END
+
+IDD_CHANGE_KEY_SEQ DIALOGEX 5, 100, 240, 125
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Modificare combinație de taste"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "", -1, 9, 5, 165, 110
+    AUTOCHECKBOX "Permite combinație de co&mutare limbă", IDC_SWITCH_INPUT_LANG_CB, 16, 15, 155, 12
+    LTEXT "«Shift»", -1, 93, 37, 27, 12
+    CTEXT "+", -1, 82, 37, 8, 9
+    AUTORADIOBUTTON "«&Ctrl»", IDC_CTRL_LANG, 29, 31, 35, 11
+    AUTORADIOBUTTON "«&Alt» (stâng)", IDC_LEFT_ALT_LANG, 29, 45, 66, 12
+    AUTOCHECKBOX "Permite combinație de c&omutare șabloane", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 155, 12
+    LTEXT "«Shift»", -1, 94, 87, 27, 12
+    CTEXT "+", -1, 83, 87, 8, 9
+    AUTORADIOBUTTON "«Ct&rl»", IDC_CTRL_LAYOUT, 30, 81, 35, 11
+    AUTORADIOBUTTON "«A&lt» (stâng)", IDC_LEFT_ALT_LAYOUT, 30, 95, 66, 12
+    DEFPUSHBUTTON "Con&firmă", IDOK, 182, 9, 50, 14
+    PUSHBUTTON "A&nulează", IDCANCEL, 182, 27, 50, 14
+END
+
+IDD_INPUT_LANG_PROP DIALOGEX 20, 20, 227, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Proprietăți limbă de introducere"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Limbă:", -1, 7, 7, 37, 8
+    LTEXT "", IDC_INPUT_LANG_STR, 30, 7, 129, 8
+    LTEXT "&Aranjament de tastatură/IME:", -1, 7, 21, 110, 10
+    COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    DEFPUSHBUTTON "Con&firmă", IDOK, 116, 53, 52, 14
+    PUSHBUTTON "A&nulează", IDCANCEL, 169, 53, 52, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLSYSTEMNAME "Limbi de introducere și servicii de text"
+    IDS_CPLSYSTEMDESCRIPTION "Particularizarea configurației limbilor de introducere a textului."
+    IDS_KEYBOARD "Tastatură"
+    IDS_NONE "(nespecificat)"
+    IDS_UNKNOWN "(necunoscut)"
+    IDS_RESTART "Doriți să reporniți calculatorul acum?"
+    IDS_WHATS_THIS "Aceasta ce este?"
+    IDS_LANGUAGE "Limbă"
+    IDS_LAYOUT "Aranjament de tastatură"
+    IDS_REM_QUESTION "Doriți eliminarea aranjamentului de tastatură selectat?"
+    IDS_CONFIRMATION "Confirmare"
+    IDS_LAYOUT_EXISTS "Aranjamentul de tastatură există deja."
+    IDS_LAYOUT_EXISTS2 "Un asemenea aranjament de tastatură deja există și nu poate fi readăugat."
+    IDS_CTRL_SHIFT "«Ctrl» + «Shift»"
+    IDS_LEFT_ALT_SHIFT "«Alt» (stâng) + «Shift»"
+    IDS_SWITCH_BET_INLANG "Comutarea între limbile de intrare"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ALBANIAN_LAYOUT "Albaneză"
+    IDS_ARABIC_101_LAYOUT "Arabă (101)"
+    IDS_ARABIC_102_LAYOUT "Arabă (102)"
+    IDS_ARABIC_102_AZERTY_LAYOUT "Arabă (102) AZERTY"
+    IDS_ARMENIAN_EASTERN_LAYOUT "Armeană (de est)"
+    IDS_ARMENIAN_WESTERN_LAYOUT "Armeană (de vest)"
+    IDS_ASSAMESE_LAYOUT "Assameză"
+    IDS_AZERI_CYRILLIC_LAYOUT "Azeră (grafie chirilică)"
+    IDS_AZERI_LATIN_LAYOUT "Azeră (grafie latină)"
+    IDS_BELARUSIAN_LAYOUT "Belarusă"
+    IDS_BELGIAN_COMMA_LAYOUT "Belgiană (virgulă)"
+    IDS_BELGIAN_FRENCH_LAYOUT "Belgiană Franceză"
+    IDS_BELGIAN_LAYOUT "Belgiană (punct)"
+    IDS_BENGALI_LAYOUT "Bengali"
+    IDS_BULGARIAN_LAYOUT "Bulgară"
+    IDS_BULGARIAN_BDS_LAYOUT "Bulgară BDS 5237-1978"
+    IDS_BULGARIAN_LATIN_LAYOUT "Bulgară (grafie latină)"
+    IDS_BULGARIAN_PHONETIC_BDS_LAYOUT "Bulgară fonetică (BDS 5237-1978)"
+    IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT "Bulgară fonetică (clasică)"
+    IDS_BURMESE_LAYOUT "Burmeză"
+    IDS_CANADIAN_FRENCH_LAYOUT "Canadiană Franceză"
+    IDS_CANADIAN_FRENCH_LEGACY_LAYOUT "Canadiană Franceză (moștenire)"
+    IDS_CANADIAN_MULTILINGUAL_STD_LAYOUT "Canadiană multilingvă standard"
+    IDS_CANTONESE_PHONETIC_LAYOUT "Cantoneză fonetică"
+    IDS_CHINESE_SIMPLIFIED_MSPINYINIME30_LAYOUT "Chineză (Simplificată) - Microsoft Pinyin IME 3.0"
+    IDS_CHINESE_SIMPLIFIED_NEIMA_LAYOUT "Chineză (Simplificată) - NeiMa"
+    IDS_CHINESE_SIMPLIFIED_QUANPIN_LAYOUT "Chineză (Simplificată) - QuanPin"
+    IDS_CHINESE_SIMPLIFIED_SHUANGPIN_LAYOUT "Chineză (Simplificată) - ShuangPin"
+    IDS_CHINESE_SIMPLIFIED_USKEYBOARD_LAYOUT "Chineză (Simplificată) - Tastatură SUA"
+    IDS_CHINESE_SIMPLIFIED_ZHENGMA_LAYOUT "Chineză (Simplificată) - ZhengMa"
+    IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT "Chineză (Traditională) - Alphanumerică"
+    IDS_CHINESE_TRADITIONAL_ARRAY_LAYOUT "Chineză (Traditională) - Matrice"
+    IDS_CHINESE_TRADITIONAL_BIG5CODE_LAYOUT "Chineză (Traditională) - Cod Big5"
+    IDS_CHINESE_TRADITIONAL_CHANGJIE_LAYOUT "Chineză (Traditională) - ChangJie"
+    IDS_CHINESE_TRADITIONAL_DAYI_LAYOUT "Chineză (Traditională) - DaYi"
+    IDS_CHINESE_TRADITIONAL_NEWCHANGJIE_LAYOUT "Chineză (Traditională) - Noua ChangJie"
+    IDS_CHINESE_TRADITIONAL_NEWPHONETIC_LAYOUT "Chineză (Traditională) - Noua Phonetic"
+    IDS_CHINESE_TRADITIONAL_PHONETIC_LAYOUT "Chineză (Traditională) - Fonetică"
+    IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT "Chineză (Traditională) - Rapidă"
+    IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT "Chineză (Traditională) - Unicod"
+    IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT "Chineză (Traditională) - Tastatură SUA"
+    IDS_CROATIAN_LAYOUT "Croată"
+    IDS_CZECH_LAYOUT "Cehă"
+    IDS_CZECH_PROGRAMMERS_LAYOUT "Cehă (de programare)"
+    IDS_CZECH_QWERTY_LAYOUT "Cehă (QWERTY)"
+    IDS_DANISH_LAYOUT "Daneză"
+    IDS_DEVANAGARI_INSCRIPT_LAYOUT "Devanagari - INSCRIPT"
+    IDS_DIVEHI_PHONETIC_LAYOUT "Divehi (fonetică)"
+    IDS_DIVEHI_TYPEWRITER_LAYOUT "Divehi (dactilografică)"
+    IDS_DUTCH_LAYOUT "Olandeză"
+    IDS_ESTONIAN_LAYOUT "Estonă"
+    IDS_FAEROESE_LAYOUT "Feroeză"
+    IDS_FARSI_LAYOUT "Persană"
+    IDS_FINNISH_LAYOUT "Finlandeză"
+    IDS_FRENCH_LAYOUT "Franceză"
+    IDS_GAELIC_LAYOUT "Goedelică"
+    IDS_GEORGIAN_LAYOUT "Georgiană"
+    IDS_GERMAN_LAYOUT "Germană"
+    IDS_GERMAN_DE_ERGO_LAYOUT "Germană (de_ergo)"
+    IDS_GERMAN_IBM_LAYOUT "Germană (IBM)"
+    IDS_GERMAN_NEO_11_LAYOUT "Germană (NEO-1.1)"
+    IDS_GERMAN_RISTOME_LAYOUT "Germană (RISTOME)"
+    IDS_GREEK_LAYOUT "Greacă"
+    IDS_GREEK_220_LAYOUT "Greacă (220)"
+    IDS_GREEK_220_LATIN_LAYOUT "Greacă (220 grafie latină)"
+    IDS_GREEK_319_LAYOUT "Greacă (319)"
+    IDS_GREEK_319_LATIN_LAYOUT "Greacă (319 grafie latină)"
+    IDS_GREEK_LATIN_LAYOUT "Greacă (grafie latină)"
+    IDS_GREEK_POLYTONIC_LAYOUT "Greacă (politonic)"
+    IDS_GUJARATI_LAYOUT "Gujarati"
+    IDS_HEBREW_LAYOUT "Ebraică"
+    IDS_HINDI_TRADITIONAL_LAYOUT "Hindi Traditională"
+    IDS_HUNGARIAN_LAYOUT "Maghiară"
+    IDS_HUNGARIAN_101_KEY_LAYOUT "Maghiară 101-key"
+    IDS_ICELANDIC_LAYOUT "Islandeză"
+    IDS_IRISH_LAYOUT "Irlandeză"
+    IDS_ITALIAN_LAYOUT "Italiană"
+    IDS_ITALIAN_142_LAYOUT "Italiană (142)"
+    IDS_JAPANESE_LAYOUT "Japoneză"
+    IDS_JAPANESE_INPUT_SYSTEM_MSIME2002_LAYOUT "Japoneză, sistem de intrare (MS-IME2002)"
+    IDS_KANNADA_LAYOUT "Kannada"
+    IDS_KAZAKH_LAYOUT "Kazahă"
+    IDS_KOREAN_LAYOUT "Coreeană"
+    IDS_KOREAN_INPUT_SYSTEM_MSIME2002_LAYOUT "Coreeană, sistem de intrare (MS-IME2002)"
+    IDS_KYRGYZ_CYRILLIC_LAYOUT "Chirghiză (grafie chirilică)"
+    IDS_LATIN_AMERICAN_LAYOUT "Latin American"
+    IDS_LATVIAN_LAYOUT "Letonă"
+    IDS_LATVIAN_QWERTY_LAYOUT "Letonă (QWERTY)"
+    IDS_LITHUANIAN_LAYOUT "Lituaniană"
+    IDS_LITHUANIAN_IBM_LAYOUT "Lituaniană IBM"
+    IDS_FYRO_MACEDONIAN_LAYOUT "FYRO Macedonă"
+    IDS_MALAYALAM_LAYOUT "Malabarică"
+    IDS_MARATHI_LAYOUT "Marathi"
+    IDS_MONGOLIAN_CYRILLIC_LAYOUT "Mongolă (grafie chirilică)"
+    IDS_NORWEGIAN_LAYOUT "Norvegiană"
+    IDS_ORIYA_LAYOUT "Orisseneză"
+    IDS_POLISH_214_LAYOUT "Poloneză (214)"
+    IDS_POLISH_LAYOUT "Poloneză (de programare)"
+    IDS_PORTUGUESE_LAYOUT "Portugheză"
+    IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT "Portugheză (Braziliană ABNT)"
+    IDS_PORTUGUESE_BRAZIL_ABNT2_LAYOUT "Portuguese (Braziliană ABNT2)"
+    IDS_PUNJABI_LAYOUT "Punjabi"
+    IDS_ROMANIAN_LAYOUT "Română"
+    IDS_RUSSIAN_LAYOUT "Rusă"
+    IDS_RUSSIAN_TYPEWRITER_LAYOUT "Rusă (dactilografică)"
+    IDS_SERBIAN_CYRILLIC_LAYOUT "Sârbă (grafie chirilică)"
+    IDS_SERBIAN_LATIN_LAYOUT "Sârbă (grafie latină)"
+    IDS_SLOVAK_LAYOUT "Slovacă"
+    IDS_SLOVAK_QWERTY_LAYOUT "Slovacă (QWERTY)"
+    IDS_SLOVENIAN_LAYOUT "Slovenă"
+    IDS_SPANISH_LAYOUT "Spaniolă"
+    IDS_SPANISH_VARIANTION_LAYOUT "Spaniolă variată"
+    IDS_SWEDISH_LAYOUT "Suedeză"
+    IDS_SWISS_FRENCH_LAYOUT "Elvețiană Franceză"
+    IDS_SWISS_GERMAN_LAYOUT "Elvețiană Germană"
+    IDS_SYRIAC_LAYOUT "Siriacă"
+    IDS_SYRIAC_PHONETIC_LAYOUT "Siriacă (fonetică)"
+    IDS_TAMIL_LAYOUT "Tamil"
+    IDS_TATAR_LAYOUT "Tătară"
+    IDS_TELUGU_LAYOUT "Telugu"
+    IDS_THAI_KEDMANEE_LAYOUT "Thai Kedmanee"
+    IDS_THAI_KEDMANEE_NONSHIFTLOCK_LAYOUT "Thai Kedmanee (non-ShiftLock)"
+    IDS_THAI_PATTACHOTE_LAYOUT "Thai Pattachote"
+    IDS_THAI_PATTACHOTE_NONSHIFTLOCK_LAYOUT "Thai Pattachote (non-ShiftLock)"
+    IDS_TURKISH_F_LAYOUT "Turcă (tip F)"
+    IDS_TURKISH_Q_LAYOUT "Turcă (tip Q)"
+    IDS_UKRAINIAN_LAYOUT "Ucraineană"
+    IDS_UKRAINIAN_STUDENT_LAYOUT "Ucraineană (student)"
+    IDS_UNITED_KINGDOM_LAYOUT "Britanică"
+    IDS_UNITED_STATES_DVIRAK_LAYOUT "Statele Unite-Dvorak"
+    IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT "Statele Unite-Dvorak pentru mâna stângă"
+    IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT "Statele Unite-Dvorak pentru mâna dreaptă"
+    IDS_UNITED_STATES_INTERNATIONAL_LAYOUT "Statele Unite-Internațională"
+    IDS_URDU_LAYOUT "Urdu"
+    IDS_US_LAYOUT "SUA"
+    IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT "Tabelă Engleză SUA pentru IBM Arabă 238_L"
+    IDS_UZBEK_CYRILLIC_LAYOUT "Uzbek (grafie chirilică)"
+    IDS_VIETNAMESE_LAYOUT "Vietnameză"
+END
