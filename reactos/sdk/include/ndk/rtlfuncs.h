@@ -2199,9 +2199,9 @@ NTSYSAPI
 BOOLEAN
 NTAPI
 RtlIsTextUnicode(
-    PVOID Buffer,
-    INT Length,
-    INT *Flags
+    _In_ CONST VOID* Buffer,
+    _In_ INT Size,
+    _Inout_opt_ INT* Flags
 );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)

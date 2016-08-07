@@ -2515,7 +2515,7 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
                                                       : ACTIVATION_CONTEXT_PATH_TYPE_NONE;
 
     unicode_tests = IS_TEXT_UNICODE_SIGNATURE | IS_TEXT_UNICODE_REVERSE_SIGNATURE;
-    if (RtlIsTextUnicode((PVOID)buffer, (ULONG)size, &unicode_tests ))
+    if (RtlIsTextUnicode(buffer, size, &unicode_tests ))
     {
         xmlbuf.ptr = buffer;
         xmlbuf.end = xmlbuf.ptr + size / sizeof(WCHAR);
