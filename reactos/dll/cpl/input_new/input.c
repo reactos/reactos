@@ -15,73 +15,66 @@
 #define NUM_APPLETS    (1)
 
 LONG CALLBACK SystemApplet(VOID);
-HINSTANCE hApplet = 0;
-HANDLE hProcessHeap;
+HINSTANCE hApplet = NULL;
 HWND hCPLWindow;
 
 /* Applets */
-APPLET Applets[NUM_APPLETS] =
+static APPLET Applets[NUM_APPLETS] =
 {
     {IDI_CPLSYSTEM, IDS_CPLSYSTEMNAME, IDS_CPLSYSTEMDESCRIPTION, SystemApplet}
 };
 
 
 VOID
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
+InitPropSheetPage(PROPSHEETPAGE *page, WORD idDlg, DLGPROC DlgProc)
 {
-    ZeroMemory(psp, sizeof(PROPSHEETPAGE));
-    psp->dwSize = sizeof(PROPSHEETPAGE);
-    psp->dwFlags = PSP_DEFAULT;
-    psp->hInstance = hApplet;
-    psp->pszTemplate = MAKEINTRESOURCE(idDlg);
-    psp->pfnDlgProc = DlgProc;
-}
+    memset(page, 0, sizeof(PROPSHEETPAGE));
 
-
-INT_PTR CALLBACK
-SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	return FALSE;
+    page->dwSize      = sizeof(PROPSHEETPAGE);
+    page->dwFlags     = PSP_DEFAULT;
+    page->hInstance   = hApplet;
+    page->pszTemplate = MAKEINTRESOURCE(idDlg);
+    page->pfnDlgProc  = DlgProc;
 }
 
 
 INT_PTR CALLBACK
 AdvancedSettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	return FALSE;
+    return FALSE;
 }
 
 
 /* First Applet */
-
 LONG CALLBACK
 SystemApplet(VOID)
 {
-    PROPSHEETPAGE psp[2];
-    PROPSHEETHEADER psh;
-    TCHAR Caption[1024];
+    PROPSHEETPAGE page[2];
+    PROPSHEETHEADER header;
+    WCHAR szCaption[MAX_STR_LEN];
 
-    LoadString(hApplet, IDS_CPLSYSTEMNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
+    LoadString(hApplet, IDS_CPLSYSTEMNAME, szCaption, ARRAYSIZE(szCaption));
 
-    ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
-    psh.dwSize = sizeof(PROPSHEETHEADER);
-    psh.dwFlags =  PSH_PROPSHEETPAGE;
-    psh.hwndParent = hCPLWindow;
-    psh.hInstance = hApplet;
-    psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
-    psh.pszCaption = Caption;
-    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
-    psh.nStartPage = 0;
-    psh.ppsp = psp;
-    psh.pfnCallback = NULL;
+    memset(&header, 0, sizeof(PROPSHEETHEADER));
+
+    header.dwSize      = sizeof(PROPSHEETHEADER);
+    header.dwFlags     = PSH_PROPSHEETPAGE;
+    header.hwndParent  = hCPLWindow;
+    header.hInstance   = hApplet;
+    header.hIcon       = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
+    header.pszCaption  = szCaption;
+    header.nPages      = ARRAYSIZE(page);
+    header.nStartPage  = 0;
+    header.ppsp        = page;
+    header.pfnCallback = NULL;
 
     /* Settings */
-    InitPropSheetPage(&psp[0], IDD_PROPPAGESETTINGS, (DLGPROC)SettingsPageProc);
+    InitPropSheetPage(&page[0], IDD_PROPPAGESETTINGS, SettingsPageProc);
 
     /* Advanced Settings */
-    InitPropSheetPage(&psp[1], IDD_PROPPAGEADVANCEDSETTINGS, (DLGPROC)AdvancedSettingsPageProc);
+    InitPropSheetPage(&page[1], IDD_PROPPAGEADVANCEDSETTINGS, AdvancedSettingsPageProc);
 
-    return (LONG)(PropertySheet(&psh) != -1);
+    return (LONG)(PropertySheet(&header) != -1);
 }
 
 
@@ -93,6 +86,7 @@ CPlApplet(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
     DWORD i;
 
     i = (DWORD)lParam1;
+
     switch (uMsg)
     {
         case CPL_INIT:
@@ -129,7 +123,6 @@ DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
         case DLL_PROCESS_ATTACH:
         case DLL_THREAD_ATTACH:
             hApplet = hinstDLL;
-            hProcessHeap = GetProcessHeap();
             break;
     }
 

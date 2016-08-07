@@ -3,7 +3,12 @@ spec2def(input_new.dll input.spec)
 
 list(APPEND SOURCE
     input.c
-    input.h)
+    input.h
+    layout_list.c
+    layout_list.h
+    locale_list.c
+    locale_list.h
+    settings_page.c)
 
 add_rc_deps(input.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/keyboard-shortcuts.ico)
 

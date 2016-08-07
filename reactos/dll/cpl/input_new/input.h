@@ -9,8 +9,11 @@
 #include <winnls.h>
 #include <winreg.h>
 #include <winuser.h>
+#include <wingdi.h>
 #include <commctrl.h>
-#include <tchar.h>
+#include <wchar.h>
+#include <strsafe.h>
+#include <stdlib.h>
 
 #include "resource.h"
 
@@ -25,7 +28,6 @@ typedef struct
 } APPLET, *PAPPLET;
 
 extern HINSTANCE hApplet;
-extern HANDLE hProcessHeap;
 
 // Character Count of a layout ID like "00000409"
 #define CCH_LAYOUT_ID    8
@@ -33,44 +35,33 @@ extern HANDLE hProcessHeap;
 // Maximum Character Count of a ULONG in decimal
 #define CCH_ULONG_DEC    10
 
+#define MAX_STR_LEN      256
+
 /* input.c */
 VOID
-InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);
+InitPropSheetPage(PROPSHEETPAGE *page, WORD idDlg, DLGPROC DlgProc);
 
-/* settings.c */
+/* settings_dialog.c */
 INT_PTR CALLBACK
-SettingsPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
-BOOL
-GetLayoutName(LPCTSTR szLCID, LPTSTR szName);
-VOID
-UpdateLayoutsList(VOID);
-BOOL
-IsLayoutExists(LPTSTR szLayoutID, LPTSTR szLangID);
-
-/* advsettings.c */
-INT_PTR CALLBACK
-AdvancedSettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-/* keysettings.c */
-INT_PTR CALLBACK
-KeySettingsDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
-VOID
-UpdateKeySettingsList(VOID);
-
-/* add.c */
-INT_PTR CALLBACK
-AddDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
-VOID
-CreateKeyboardLayoutList(HWND hItemsList);
-INT
-GetLayoutCount(LPTSTR szLang);
-
-/* changekeyseq.c */
-INT_PTR CALLBACK
-ChangeKeySeqDlgProc(HWND hDlg,UINT message,WPARAM wParam,LPARAM lParam);
-BOOL
-GetHotkeys(LPTSTR szHotkey, LPTSTR szLangHotkey, LPTSTR szLayoutHotkey);
+SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void ShowLastWin32Error(HWND hWndOwner);
+
+static inline WCHAR*
+DublicateString(const WCHAR *pszString)
+{
+    WCHAR *pszDublicate;
+    size_t size;
+
+    size = (wcslen(pszString) + 1) * sizeof(WCHAR);
+
+    pszDublicate = (WCHAR*) malloc(size);
+    if (pszDublicate != NULL)
+    {
+        StringCbCopyW(pszDublicate, size, pszString);
+    }
+
+    return pszDublicate;
+}
 
 #endif /* _INPUT_H */
