@@ -818,6 +818,12 @@ vfatNewFCB(
     PUNICODE_STRING pFileNameU);
 
 NTSTATUS
+vfatSetFCBNewDirName(
+    PDEVICE_EXTENSION pVCB,
+    PVFATFCB Fcb,
+    PVFATFCB ParentFcb);
+
+NTSTATUS
 vfatUpdateFCB(
     PDEVICE_EXTENSION pVCB,
     PVFATFCB Fcb,

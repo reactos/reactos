@@ -428,6 +428,53 @@ vfatInitFCBFromDirEntry(
 }
 
 NTSTATUS
+vfatSetFCBNewDirName(
+    PDEVICE_EXTENSION pVCB,
+    PVFATFCB Fcb,
+    PVFATFCB ParentFcb)
+{
+    NTSTATUS Status;
+    UNICODE_STRING NewNameU;
+
+    /* Get full path name */
+    Status = vfatMakeFullName(ParentFcb, &Fcb->LongNameU, &Fcb->ShortNameU, &NewNameU);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Delete old name */
+    if (Fcb->PathNameBuffer)
+    {
+        ExFreePoolWithTag(Fcb->PathNameBuffer, TAG_FCB);
+    }
+    Fcb->PathNameU = NewNameU;
+
+    /* Delete from table */
+    vfatDelFCBFromTable(pVCB, Fcb);
+
+    /* Split it properly */
+    Fcb->PathNameBuffer = Fcb->PathNameU.Buffer;
+    Fcb->DirNameU.Buffer = Fcb->PathNameU.Buffer;
+    vfatSplitPathName(&Fcb->PathNameU, &Fcb->DirNameU, &Fcb->LongNameU);
+
+    if (pVCB->Flags & VCB_IS_FATX)
+    {
+        Fcb->ShortHash.Hash = Fcb->Hash.Hash;
+    }
+    else
+    {
+        Fcb->ShortHash.Hash = vfatNameHash(0, &Fcb->DirNameU);
+        Fcb->ShortHash.Hash = vfatNameHash(Fcb->ShortHash.Hash, &Fcb->ShortNameU);
+    }
+
+    vfatAddFCBToTable(pVCB, Fcb);
+    vfatReleaseFCB(pVCB, ParentFcb);
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 vfatUpdateFCB(
     PDEVICE_EXTENSION pVCB,
     PVFATFCB Fcb,

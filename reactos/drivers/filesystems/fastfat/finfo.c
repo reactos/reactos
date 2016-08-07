@@ -487,6 +487,36 @@ IsThereAChildOpened(PVFATFCB FCB)
     return FALSE;
 }
 
+static
+VOID
+VfatRenameChildFCB(
+    PDEVICE_EXTENSION DeviceExt,
+    PVFATFCB FCB)
+{
+    PLIST_ENTRY Entry;
+    PVFATFCB Child;
+
+    if (IsListEmpty(&FCB->ParentListHead))
+        return;
+
+    for (Entry = FCB->ParentListHead.Flink; Entry != &FCB->ParentListHead; Entry = Entry->Flink)
+    {
+        NTSTATUS Status;
+
+        Child = CONTAINING_RECORD(Entry, VFATFCB, ParentListEntry);
+        DPRINT("Found %wZ with still %lu references (parent: %lu)!\n", &Child->PathNameU, Child->RefCount, FCB->RefCount);
+
+        Status = vfatSetFCBNewDirName(DeviceExt, Child, FCB);
+        if (!NT_SUCCESS(Status))
+            continue;
+
+        if (vfatFCBIsDirectory(Child))
+        {
+            VfatRenameChildFCB(DeviceExt, Child);
+        }
+    }
+}
+
 /*
  * FUNCTION: Set the file name information
  */
@@ -909,6 +939,11 @@ VfatSetRenameInformation(
                                             NULL);
             }
         }
+    }
+
+    if (NT_SUCCESS(Status) && vfatFCBIsDirectory(FCB))
+    {
+        VfatRenameChildFCB(DeviceExt, FCB);
     }
 
     ASSERT(OldReferences == OldParent->RefCount + 1); // removed file
