@@ -347,6 +347,7 @@ vfatAddFCBToTable(
     ULONG Index;
     ULONG ShortIndex;
 
+    ASSERT(pFCB->Hash.Hash == vfatNameHash(0, &pFCB->PathNameU));
     Index = pFCB->Hash.Hash % pVCB->HashTableSize;
     ShortIndex = pFCB->ShortHash.Hash % pVCB->HashTableSize;
 
@@ -376,6 +377,7 @@ vfatInitFCBFromDirEntry(
 
     RtlCopyMemory(&Fcb->entry, &DirContext->DirEntry, sizeof (DIR_ENTRY));
     RtlCopyUnicodeString(&Fcb->ShortNameU, &DirContext->ShortNameU);
+    Fcb->Hash.Hash = vfatNameHash(0, &Fcb->PathNameU);
     if (Vcb->Flags & VCB_IS_FATX)
     {
         Fcb->ShortHash.Hash = Fcb->Hash.Hash;
@@ -457,7 +459,7 @@ vfatSetFCBNewDirName(
     Fcb->PathNameBuffer = Fcb->PathNameU.Buffer;
     Fcb->DirNameU.Buffer = Fcb->PathNameU.Buffer;
     vfatSplitPathName(&Fcb->PathNameU, &Fcb->DirNameU, &Fcb->LongNameU);
-
+    Fcb->Hash.Hash = vfatNameHash(0, &Fcb->PathNameU);
     if (pVCB->Flags & VCB_IS_FATX)
     {
         Fcb->ShortHash.Hash = Fcb->Hash.Hash;
