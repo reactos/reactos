@@ -30,7 +30,7 @@ IsTextUnicode(IN CONST VOID* lpv,
               IN INT iSize,
               IN OUT LPINT lpiResult OPTIONAL)
 {
-    return (RtlIsTextUnicode(lpv, iSize, lpiResult) == TRUE);
+    return (RtlIsTextUnicode(lpv, iSize, lpiResult) != FALSE);
 }
 
 /* EOF */
