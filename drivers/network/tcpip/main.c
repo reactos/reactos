@@ -347,7 +347,7 @@ Quickie:
         REMOVE_IRP(Irp);
         REMOVE_IRPSP(IrpSp);
 #endif
-        IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+        _IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
     }
 
     return Status;
@@ -418,7 +418,7 @@ Quickie:
     REMOVE_IRP(Irp);
     REMOVE_IRPSP(IrpSp);
 #endif
-    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+    _IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
     return Status;
 }
@@ -572,7 +572,6 @@ TcpIpDispatchInternal(
             Status = STATUS_NOT_IMPLEMENTED;
     }
 
-FINISH:
     Irp->IoStatus.Status = Status;
     if (Status == STATUS_PENDING)
     {
@@ -584,7 +583,7 @@ FINISH:
         REMOVE_IRP(Irp);
         REMOVE_IRPSP(IrpSp);
 #endif
-        IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+        _IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
     }
 
     return Status;

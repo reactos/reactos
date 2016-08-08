@@ -131,6 +131,10 @@ volatile long int IRPSPCount;
     KeReleaseSpinLockFromDpcLevel(&IRPSPArrayLock)
 #endif
 
+#define _IoCompleteRequest(Irp,Mode) \
+    DPRINT("Complete IRP %p with IO Status %08X\n", Irp, Irp->IoStatus.Status); \
+    IoCompleteRequest(Irp, Mode)
+
 struct _TCP_CONTEXT;
 typedef struct _TCP_CONTEXT TCP_CONTEXT, *PTCP_CONTEXT;
 
@@ -151,7 +155,6 @@ typedef struct _ADDRESS_FILE {
         struct udp_pcb* lwip_udp_pcb;
         PTCP_CONTEXT Listener;
     };
-    KSPIN_LOCK AssociatedContextsLock;
 } ADDRESS_FILE, *PADDRESS_FILE;
 
 struct _TCP_CONTEXT {
@@ -160,8 +163,7 @@ struct _TCP_CONTEXT {
     LIST_ENTRY RequestListHead;
     struct tcp_pcb* lwip_tcp_pcb;
     BOOLEAN ReferencedByUpperLayer;
-    HANDLE MutexOwner;
-    volatile long MutexDepth;
+    KMUTEX Mutex;
 };
 
 typedef struct _TCP_REQUEST {
