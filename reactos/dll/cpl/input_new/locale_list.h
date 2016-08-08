@@ -18,4 +18,7 @@ VOID
 LocaleList_Destroy(VOID);
 
 LOCALE_LIST_NODE*
+LocaleList_GetByHkl(HKL hkl);
+
+LOCALE_LIST_NODE*
 LocaleList_Get(VOID);

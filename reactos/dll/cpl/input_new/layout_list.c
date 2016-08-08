@@ -22,7 +22,7 @@ LayoutList_Append(DWORD dwId, DWORD dwSpecialId, const WCHAR *pszName, const WCH
 
     pCurrent = _LayoutList;
 
-    pNew = (LAYOUT_LIST_NODE*)malloc(sizeof(LAYOUT_LIST_NODE));
+    pNew = (LAYOUT_LIST_NODE*) malloc(sizeof(LAYOUT_LIST_NODE));
     if (pNew == NULL)
         return NULL;
 
@@ -99,7 +99,10 @@ LayoutList_Create(VOID)
     DWORD dwSize;
     HKEY hKey;
 
-    GetSystemDirectoryW(szSystemDirectory, ARRAYSIZE(szSystemDirectory));
+    if (!GetSystemDirectoryW(szSystemDirectory, ARRAYSIZE(szSystemDirectory)))
+    {
+        return;
+    }
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                       L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts",
@@ -137,10 +140,9 @@ LayoutList_Create(VOID)
                 StringCchPrintfW(szFilePath, ARRAYSIZE(szFilePath),
                                  L"%s\\%s", szSystemDirectory, szBuffer);
 
-                if (GetFileAttributes(szFilePath) != INVALID_FILE_ATTRIBUTES)
+                if (GetFileAttributesW(szFilePath) != INVALID_FILE_ATTRIBUTES)
                 {
                     DWORD dwSpecialId = 0;
-                    WCHAR *pszEnd;
 
                     dwSize = sizeof(szBuffer);
 
@@ -149,7 +151,7 @@ LayoutList_Create(VOID)
                                          NULL, NULL,
                                          (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS)
                     {
-                        dwSpecialId = wcstoul(szBuffer, &pszEnd, 16);
+                        dwSpecialId = DWORDfromString(szBuffer);
                     }
 
                     dwSize = sizeof(szBuffer);
@@ -159,9 +161,7 @@ LayoutList_Create(VOID)
                                          NULL, NULL,
                                          (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS)
                     {
-                        DWORD dwLayoutId;
-
-                        dwLayoutId = wcstoul(szLayoutId, &pszEnd, 16);
+                        DWORD dwLayoutId = DWORDfromString(szLayoutId);
 
                         LayoutList_Append(dwLayoutId,
                                           dwSpecialId,
@@ -182,8 +182,8 @@ LayoutList_Create(VOID)
 }
 
 
-WCHAR*
-LayoutList_GetNameByHkl(HKL hkl)
+LAYOUT_LIST_NODE*
+LayoutList_GetByHkl(HKL hkl)
 {
     LAYOUT_LIST_NODE *pCurrent;
 
@@ -195,7 +195,7 @@ LayoutList_GetNameByHkl(HKL hkl)
         {
             if (dwSpecialId == pCurrent->dwSpecialId)
             {
-                return pCurrent->pszName;
+                return pCurrent;
             }
         }
     }
@@ -205,7 +205,7 @@ LayoutList_GetNameByHkl(HKL hkl)
         {
             if (HIWORD(hkl) == LOWORD(pCurrent->dwId))
             {
-                return pCurrent->pszName;
+                return pCurrent;
             }
         }
     }

@@ -14,9 +14,10 @@
 
 #define NUM_APPLETS    (1)
 
-LONG CALLBACK SystemApplet(VOID);
+static LONG CALLBACK SystemApplet(VOID);
+
 HINSTANCE hApplet = NULL;
-HWND hCPLWindow;
+static HWND hCPLWindow;
 
 /* Applets */
 static APPLET Applets[NUM_APPLETS] =
@@ -25,35 +26,28 @@ static APPLET Applets[NUM_APPLETS] =
 };
 
 
-VOID
-InitPropSheetPage(PROPSHEETPAGE *page, WORD idDlg, DLGPROC DlgProc)
+static VOID
+InitPropSheetPage(PROPSHEETPAGEW *page, WORD idDlg, DLGPROC DlgProc)
 {
-    memset(page, 0, sizeof(PROPSHEETPAGE));
+    memset(page, 0, sizeof(PROPSHEETPAGEW));
 
-    page->dwSize      = sizeof(PROPSHEETPAGE);
+    page->dwSize      = sizeof(PROPSHEETPAGEW);
     page->dwFlags     = PSP_DEFAULT;
     page->hInstance   = hApplet;
-    page->pszTemplate = MAKEINTRESOURCE(idDlg);
+    page->pszTemplate = MAKEINTRESOURCEW(idDlg);
     page->pfnDlgProc  = DlgProc;
 }
 
 
-INT_PTR CALLBACK
-AdvancedSettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    return FALSE;
-}
-
-
 /* First Applet */
-LONG CALLBACK
+static LONG CALLBACK
 SystemApplet(VOID)
 {
-    PROPSHEETPAGE page[2];
-    PROPSHEETHEADER header;
+    PROPSHEETPAGEW page[2];
+    PROPSHEETHEADERW header;
     WCHAR szCaption[MAX_STR_LEN];
 
-    LoadString(hApplet, IDS_CPLSYSTEMNAME, szCaption, ARRAYSIZE(szCaption));
+    LoadStringW(hApplet, IDS_CPLSYSTEMNAME, szCaption, ARRAYSIZE(szCaption));
 
     memset(&header, 0, sizeof(PROPSHEETHEADER));
 
@@ -61,7 +55,7 @@ SystemApplet(VOID)
     header.dwFlags     = PSH_PROPSHEETPAGE;
     header.hwndParent  = hCPLWindow;
     header.hInstance   = hApplet;
-    header.hIcon       = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
+    header.hIcon       = LoadIconW(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
     header.pszCaption  = szCaption;
     header.nPages      = ARRAYSIZE(page);
     header.nStartPage  = 0;
@@ -74,7 +68,7 @@ SystemApplet(VOID)
     /* Advanced Settings */
     InitPropSheetPage(&page[1], IDD_PROPPAGEADVANCEDSETTINGS, AdvancedSettingsPageProc);
 
-    return (LONG)(PropertySheet(&header) != -1);
+    return (LONG)(PropertySheetW(&header) != -1);
 }
 
 

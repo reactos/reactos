@@ -11,6 +11,8 @@
 #include <winuser.h>
 #include <wingdi.h>
 #include <commctrl.h>
+#include <windowsx.h>
+#include <setupapi.h>
 #include <wchar.h>
 #include <strsafe.h>
 #include <stdlib.h>
@@ -37,15 +39,17 @@ extern HINSTANCE hApplet;
 
 #define MAX_STR_LEN      256
 
-/* input.c */
-VOID
-InitPropSheetPage(PROPSHEETPAGE *page, WORD idDlg, DLGPROC DlgProc);
-
-/* settings_dialog.c */
+/* settings_page.c */
 INT_PTR CALLBACK
 SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-void ShowLastWin32Error(HWND hWndOwner);
+/* advanced_settings_page.c */
+INT_PTR CALLBACK
+AdvancedSettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+/* add_dialog.c */
+INT_PTR CALLBACK
+AddDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 static inline WCHAR*
 DublicateString(const WCHAR *pszString)
@@ -62,6 +66,14 @@ DublicateString(const WCHAR *pszString)
     }
 
     return pszDublicate;
+}
+
+static inline DWORD
+DWORDfromString(const WCHAR *pszString)
+{
+    WCHAR *pszEnd;
+
+    return wcstoul(pszString, &pszEnd, 16);
 }
 
 #endif /* _INPUT_H */

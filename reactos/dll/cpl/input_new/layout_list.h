@@ -18,8 +18,8 @@ LayoutList_Create(VOID);
 VOID
 LayoutList_Destroy(VOID);
 
-WCHAR*
-LayoutList_GetNameByHkl(HKL hkl);
+LAYOUT_LIST_NODE*
+LayoutList_GetByHkl(HKL hkl);
 
 LAYOUT_LIST_NODE*
 LayoutList_Get(VOID);

@@ -12,7 +12,7 @@ static LOCALE_LIST_NODE *_LocaleList = NULL;
 
 
 static LOCALE_LIST_NODE*
-LocaleList_Append(DWORD dwId, WCHAR *pszName, WCHAR *pszIndicator)
+LocaleList_Append(DWORD dwId, const WCHAR *pszName, const WCHAR *pszIndicator)
 {
     LOCALE_LIST_NODE *pCurrent;
     LOCALE_LIST_NODE *pNew;
@@ -79,6 +79,7 @@ LocaleList_Destroy(VOID)
         LOCALE_LIST_NODE *pNext = pCurrent->pNext;
 
         free(pCurrent->pszName);
+        free(pCurrent->pszIndicator);
         free(pCurrent);
 
         pCurrent = pNext;
@@ -112,16 +113,15 @@ LocaleList_Create(VOID)
                          NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
     {
         WCHAR szName[MAX_STR_LEN];
-        WCHAR *End;
         DWORD dwId;
 
-        dwId = wcstoul(szValue, &End, 16);
+        dwId = DWORDfromString(szValue);
 
         if (GetLocaleInfoW(LOWORD(dwId),
                            LOCALE_SLANGUAGE,
                            szName, ARRAYSIZE(szName)))
         {
-            WCHAR szIndicator[MAX_STR_LEN];
+            WCHAR szIndicator[MAX_STR_LEN] = { 0 };
 
             if (GetLocaleInfoW(LOWORD(dwId),
                                LOCALE_SABBREVLANGNAME | LOCALE_NOUSEROVERRIDE,
@@ -144,6 +144,23 @@ LocaleList_Create(VOID)
     }
 
     return _LocaleList;
+}
+
+
+LOCALE_LIST_NODE*
+LocaleList_GetByHkl(HKL hkl)
+{
+    LOCALE_LIST_NODE *pCurrent;
+
+    for (pCurrent = _LocaleList; pCurrent != NULL; pCurrent = pCurrent->pNext)
+    {
+        if (LOWORD(pCurrent->dwId) == LOWORD(hkl))
+        {
+            return pCurrent;
+        }
+    }
+
+    return NULL;
 }
 
 

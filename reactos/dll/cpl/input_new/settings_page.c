@@ -8,16 +8,15 @@
 #include "input.h"
 #include "layout_list.h"
 #include "locale_list.h"
+#include "input_list.h"
 
 
 static HICON
 CreateLayoutIcon(LPWSTR szLayout)
 {
-    HDC hdc, hdcsrc;
-    HBITMAP hBitmap, hBmpNew, hBmpOld;
-    RECT rect;
-    HFONT hFont = NULL;
-    ICONINFO IconInfo;
+    HDC hdc;
+    HDC hdcsrc;
+    HBITMAP hBitmap;
     HICON hIcon = NULL;
 
     hdcsrc = GetDC(NULL);
@@ -29,11 +28,18 @@ CreateLayoutIcon(LPWSTR szLayout)
 
     if (hdc && hBitmap)
     {
+        HBITMAP hBmpNew;
+
         hBmpNew = CreateBitmap(GetSystemMetrics(SM_CXSMICON),
                                GetSystemMetrics(SM_CYSMICON),
                                1, 1, NULL);
         if (hBmpNew)
         {
+            ICONINFO IconInfo;
+            HBITMAP hBmpOld;
+            HFONT hFont;
+            RECT rect;
+
             hBmpOld = SelectObject(hdc, hBitmap);
             rect.right = GetSystemMetrics(SM_CXSMICON);
             rect.left = 0;
@@ -45,12 +51,12 @@ CreateLayoutIcon(LPWSTR szLayout)
 
             ExtTextOut(hdc, rect.left, rect.top, ETO_OPAQUE, &rect, L"", 0, NULL);
 
-            hFont = CreateFont(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-                               OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                               DEFAULT_QUALITY, FF_DONTCARE, L"Tahoma");
+            hFont = CreateFontW(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                DEFAULT_QUALITY, FF_DONTCARE, L"Tahoma");
 
             SelectObject(hdc, hFont);
-            DrawText(hdc, szLayout, 2, &rect, DT_SINGLELINE|DT_CENTER|DT_VCENTER);
+            DrawTextW(hdc, szLayout, 2, &rect, DT_SINGLELINE|DT_CENTER|DT_VCENTER);
             SelectObject(hdc, hBmpNew);
 
             PatBlt(hdc, 0, 0,
@@ -80,10 +86,7 @@ CreateLayoutIcon(LPWSTR szLayout)
 
 
 static VOID
-AddToLayoutListView(HWND hwndList,
-                    WCHAR *pszLanguageName,
-                    WCHAR *pszLayoutName,
-                    WCHAR *pszIndicatorTitle)
+AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
 {
     INT ItemIndex = -1;
     INT ImageIndex = -1;
@@ -91,11 +94,13 @@ AddToLayoutListView(HWND hwndList,
     HIMAGELIST hImageList;
 
     hImageList = ListView_GetImageList(hwndList, LVSIL_SMALL);
+
     if (hImageList != NULL)
     {
         HICON hLayoutIcon;
 
-        hLayoutIcon = CreateLayoutIcon(pszIndicatorTitle);
+        hLayoutIcon = CreateLayoutIcon(pInputNode->pLocale->pszIndicator);
+
         if (hLayoutIcon != NULL)
         {
             ImageIndex = ImageList_AddIcon(hImageList, hLayoutIcon);
@@ -106,88 +111,92 @@ AddToLayoutListView(HWND hwndList,
     memset(&item, 0, sizeof(LV_ITEM));
 
     item.mask    = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-    item.pszText = pszLanguageName;
+    item.pszText = pInputNode->pLocale->pszName;
     item.iItem   = -1;
-    item.lParam  = (LPARAM)NULL;
+    item.lParam  = (LPARAM)pInputNode;
     item.iImage  = ImageIndex;
 
     ItemIndex = ListView_InsertItem(hwndList, &item);
 
-    ListView_SetItemText(hwndList, ItemIndex, 1, pszLayoutName);
+    ListView_SetItemText(hwndList, ItemIndex, 1, pInputNode->pLayout->pszName);
+}
+
+
+static VOID
+UpdateInputListView(HWND hwndList)
+{
+    INPUT_LIST_NODE *pCurrentInputNode;
+    HIMAGELIST hImageList;
+
+    hImageList = ListView_GetImageList(hwndList, LVSIL_SMALL);
+    if (hImageList != NULL)
+    {
+        ImageList_RemoveAll(hImageList);
+    }
+
+    ListView_DeleteAllItems(hwndList);
+
+    for (pCurrentInputNode = InputList_Get();
+         pCurrentInputNode != NULL;
+         pCurrentInputNode = pCurrentInputNode->pNext)
+    {
+        AddToInputListView(hwndList, pCurrentInputNode);
+    }
 }
 
 
 static VOID
 OnInitSettingsPage(HWND hwndDlg)
 {
-    WCHAR szBuffer[MAX_STR_LEN];
-    LV_COLUMN column;
-    HWND hLayoutList;
-    HIMAGELIST hLayoutImageList;
-    INT iLayoutCount;
-    HKL *pActiveLayoutList;
-
-    hLayoutList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
-
-    ListView_SetExtendedListViewStyle(hLayoutList, LVS_EX_FULLROWSELECT);
-
-    memset(&column, 0, sizeof(LV_COLUMN));
-
-    column.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
-
-    LoadString(hApplet, IDS_LANGUAGE, szBuffer, ARRAYSIZE(szBuffer));
-    column.fmt      = LVCFMT_LEFT;
-    column.iSubItem = 0;
-    column.pszText  = szBuffer;
-    column.cx       = 175;
-    ListView_InsertColumn(hLayoutList, 0, &column);
-
-    LoadString(hApplet, IDS_LAYOUT, szBuffer, ARRAYSIZE(szBuffer));
-    column.fmt      = LVCFMT_RIGHT;
-    column.cx       = 155;
-    column.iSubItem = 1;
-    column.pszText  = szBuffer;
-    ListView_InsertColumn(hLayoutList, 1, &column);
-
-    hLayoutImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
-                                        GetSystemMetrics(SM_CYSMICON),
-                                        ILC_COLOR8 | ILC_MASK, 0, 0);
-    if (hLayoutImageList != NULL)
-    {
-        ListView_SetImageList(hLayoutList, hLayoutImageList, LVSIL_SMALL);
-    }
+    HWND hwndInputList;
 
     LayoutList_Create();
     LocaleList_Create();
+    InputList_Create();
 
-    iLayoutCount = GetKeyboardLayoutList(0, NULL);
-    pActiveLayoutList = (HKL*) malloc(iLayoutCount * sizeof(HKL));
-    if (pActiveLayoutList != NULL)
+    hwndInputList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
+
+    if (hwndInputList != NULL)
     {
-        if (GetKeyboardLayoutList(iLayoutCount, pActiveLayoutList) > 0)
+        INPUT_LIST_NODE *pCurrentInputNode;
+        WCHAR szBuffer[MAX_STR_LEN];
+        HIMAGELIST hLayoutImageList;
+        LV_COLUMN column;
+
+        ListView_SetExtendedListViewStyle(hwndInputList, LVS_EX_FULLROWSELECT);
+
+        memset(&column, 0, sizeof(LV_COLUMN));
+
+        column.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+
+        LoadStringW(hApplet, IDS_LANGUAGE, szBuffer, ARRAYSIZE(szBuffer));
+        column.fmt      = LVCFMT_LEFT;
+        column.iSubItem = 0;
+        column.pszText  = szBuffer;
+        column.cx       = 175;
+        ListView_InsertColumn(hwndInputList, 0, &column);
+
+        LoadStringW(hApplet, IDS_LAYOUT, szBuffer, ARRAYSIZE(szBuffer));
+        column.fmt      = LVCFMT_RIGHT;
+        column.cx       = 155;
+        column.iSubItem = 1;
+        column.pszText  = szBuffer;
+        ListView_InsertColumn(hwndInputList, 1, &column);
+
+        hLayoutImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
+                                            GetSystemMetrics(SM_CYSMICON),
+                                            ILC_COLOR8 | ILC_MASK, 0, 0);
+        if (hLayoutImageList != NULL)
         {
-            INT iIndex;
-
-            for (iIndex = 0; iIndex < iLayoutCount; iIndex++)
-            {
-                LOCALE_LIST_NODE *CurrentLocale;
-
-                for (CurrentLocale = LocaleList_Get();
-                     CurrentLocale != NULL;
-                     CurrentLocale = CurrentLocale->pNext)
-                {
-                    if (LOWORD(CurrentLocale->dwId) == LOWORD(pActiveLayoutList[iIndex]))
-                    {
-                        AddToLayoutListView(hLayoutList,
-                                            CurrentLocale->pszName,
-                                            LayoutList_GetNameByHkl(pActiveLayoutList[iIndex]),
-                                            CurrentLocale->pszIndicator);
-                    }
-                }
-            }
+            ListView_SetImageList(hwndInputList, hLayoutImageList, LVSIL_SMALL);
         }
 
-        free(pActiveLayoutList);
+        for (pCurrentInputNode = InputList_Get();
+             pCurrentInputNode != NULL;
+             pCurrentInputNode = pCurrentInputNode->pNext)
+        {
+            AddToInputListView(hwndInputList, pCurrentInputNode);
+        }
     }
 }
 
@@ -199,12 +208,68 @@ OnDestroySettingsPage(HWND hwndDlg)
 
     LayoutList_Destroy();
     LocaleList_Destroy();
+    InputList_Destroy();
 
     hImageList = ListView_GetImageList(GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST),
                                        LVSIL_SMALL);
     if (hImageList != NULL)
     {
         ImageList_Destroy(hImageList);
+    }
+}
+
+
+VOID
+OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
+{
+    switch (LOWORD(wParam))
+    {
+        case IDC_ADD_BUTTON:
+        {
+            if (DialogBoxW(hApplet,
+                           MAKEINTRESOURCEW(IDD_ADD),
+                           hwndDlg,
+                           AddDialogProc) == IDOK)
+            {
+                UpdateInputListView(GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST));
+                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            }
+        }
+        break;
+
+        case IDC_REMOVE_BUTTON:
+        {
+            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+        }
+        break;
+
+        case IDC_PROP_BUTTON:
+        {
+
+        }
+        break;
+
+        case IDC_SET_DEFAULT:
+        {
+            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+        }
+        break;
+
+        case IDC_KEY_SET_BTN:
+        {
+
+        }
+        break;
+    }
+}
+
+
+static VOID
+OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
+{
+    if (((LPPSHNOTIFY)lParam)->hdr.code == PSN_APPLY)
+    {
+        InputList_Process();
     }
 }
 
@@ -223,10 +288,12 @@ SettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_COMMAND:
-        {
-            
-        }
-        break;
+            OnCommandSettingsPage(hwndDlg, wParam);
+            break;
+
+        case WM_NOTIFY:
+            OnNotifySettingsPage(hwndDlg, lParam);
+            break;
     }
 
     return FALSE;
