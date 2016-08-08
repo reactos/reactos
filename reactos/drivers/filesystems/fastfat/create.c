@@ -502,6 +502,11 @@ VfatCreateFile(
     FileObject = Stack->FileObject;
     DeviceExt = DeviceObject->DeviceExtension;
 
+    if (Stack->Parameters.Create.Options & FILE_OPEN_BY_FILE_ID)
+    {
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
     /* Check their validity. */
     if (RequestedOptions & FILE_DIRECTORY_FILE &&
         RequestedDisposition == FILE_SUPERSEDE)
