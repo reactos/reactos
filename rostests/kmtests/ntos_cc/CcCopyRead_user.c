@@ -64,6 +64,11 @@ START_TEST(CcCopyRead)
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_hex(((USHORT *)Buffer)[0], 0xBABA);
 
+    ByteOffset.QuadPart = 999990;
+    Status = NtReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock, Buffer, 10, &ByteOffset, NULL);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_hex(((USHORT *)Buffer)[0], 0xBABA);
+
     ByteOffset.QuadPart = 1000;
     Status = NtReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock, Buffer, 2, &ByteOffset, NULL);
     ok_eq_hex(Status, STATUS_SUCCESS);

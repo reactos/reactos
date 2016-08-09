@@ -191,9 +191,9 @@ TestIrpHandler(
         else if (IoStack->FileObject->FileName.Length >= 2 * sizeof(WCHAR) &&
                  IoStack->FileObject->FileName.Buffer[1] == 'S')
         {
-            Fcb->Header.AllocationSize.QuadPart = 3000;
-            Fcb->Header.FileSize.QuadPart = 3000;
-            Fcb->Header.ValidDataLength.QuadPart = 3000;
+            Fcb->Header.AllocationSize.QuadPart = 1004;
+            Fcb->Header.FileSize.QuadPart = 1004;
+            Fcb->Header.ValidDataLength.QuadPart = 1004;
         }
         else
         {
