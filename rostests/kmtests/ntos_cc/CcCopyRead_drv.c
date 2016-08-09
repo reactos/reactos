@@ -228,8 +228,8 @@ TestIrpHandler(
 
         if (!FlagOn(Irp->Flags, IRP_NOCACHE))
         {
-            ok(Offset.QuadPart % 512 != 0, "Offset is aligned: %I64i\n", Offset.QuadPart);
-            ok(Length % 512 != 0, "Length is aligned: %I64i\n", Length);
+            ok(Offset.QuadPart % PAGE_SIZE != 0, "Offset is aligned: %I64i\n", Offset.QuadPart);
+            ok(Length % PAGE_SIZE != 0, "Length is aligned: %I64i\n", Length);
 
             Buffer = Irp->AssociatedIrp.SystemBuffer;
             ok(Buffer != NULL, "Null pointer!\n");
@@ -262,8 +262,8 @@ TestIrpHandler(
         }
         else
         {
-            ok(Offset.QuadPart % 512 == 0, "Offset is not aligned: %I64i\n", Offset.QuadPart);
-            ok(Length % 512 == 0, "Length is not aligned: %I64i\n", Length);
+            ok(Offset.QuadPart % PAGE_SIZE == 0, "Offset is not aligned: %I64i\n", Offset.QuadPart);
+            ok(Length % PAGE_SIZE == 0, "Length is not aligned: %I64i\n", Length);
 
             ok(Irp->AssociatedIrp.SystemBuffer == NULL, "A SystemBuffer was allocated!\n");
             Buffer = MapAndLockUserBuffer(Irp, Length);
