@@ -312,7 +312,31 @@ HRESULT WINAPI CDrivesFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcRese
     if (_ILIsSpecialFolder(pidl))
         return SHELL32_BindToGuidItem(pidlRoot, pidl, pbcReserved, riid, ppvOut);
 
-    return SHELL32_BindToFS(pidlRoot, NULL, pidl, riid, ppvOut);
+    LPITEMIDLIST pidlChild = ILCloneFirst (pidl);
+    if (!pidlChild)
+        return E_OUTOFMEMORY;
+
+    CComPtr<IShellFolder> psf;
+    HRESULT hr = SHELL32_CoCreateInitSF(pidlRoot, 
+                                        NULL, 
+                                        pidlChild, 
+                                        &CLSID_ShellFSFolder, 
+                                        -1, 
+                                        IID_PPV_ARG(IShellFolder, &psf));
+
+    ILFree(pidlChild);
+
+    if (FAILED(hr))
+        return hr;
+
+    if (_ILIsPidlSimple (pidl))
+    {
+        return psf->QueryInterface(riid, ppvOut);
+    }
+    else
+    {
+        return psf->BindToObject(ILGetNext (pidl), pbcReserved, riid, ppvOut);
+    }
 }
 
 /**************************************************************************

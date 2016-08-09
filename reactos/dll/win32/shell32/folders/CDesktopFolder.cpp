@@ -258,43 +258,42 @@ CDesktopFolder::~CDesktopFolder()
 
 HRESULT WINAPI CDesktopFolder::FinalConstruct()
 {
-    WCHAR                                szMyPath[MAX_PATH];
-    HRESULT hr;
-    CComPtr<IPersistFolder3> ppf3;
+    WCHAR szMyPath[MAX_PATH];    HRESULT hr;
 
     /* Create the root pidl */
     pidlRoot = _ILCreateDesktop();
+    if (!pidlRoot)
+        return E_OUTOFMEMORY;
 
     /* Create the inner fs folder */
-    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IShellFolder2, &m_DesktopFSFolder));
-    if (FAILED(hr))
+    hr = SHELL32_CoCreateInitSF(pidlRoot, 
+                                NULL,
+                                NULL,
+                                &CLSID_ShellFSFolder,
+                                CSIDL_DESKTOPDIRECTORY,
+                                IID_PPV_ARG(IShellFolder2, &m_DesktopFSFolder));
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = m_DesktopFSFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3));
-    if (FAILED(hr))
+    /* Create the inner shared fs folder. Dont fail on failure. */
+    hr = SHELL32_CoCreateInitSF(pidlRoot, 
+                                NULL,
+                                NULL,
+                                &CLSID_ShellFSFolder,
+                                CSIDL_COMMON_DESKTOPDIRECTORY,
+                                IID_PPV_ARG(IShellFolder2, &m_SharedDesktopFSFolder));
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    PERSIST_FOLDER_TARGET_INFO info;
-    ZeroMemory(&info, sizeof(PERSIST_FOLDER_TARGET_INFO));
-    info.csidl = CSIDL_DESKTOPDIRECTORY;
-    hr = ppf3->InitializeEx(NULL, pidlRoot, &info);
 
-    /* Create the inner shared fs folder */
-    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IShellFolder2, &m_SharedDesktopFSFolder));
-    if (FAILED(hr))
-        return hr;
-
-    hr = m_SharedDesktopFSFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3));
-    if (FAILED(hr))
-        return hr;
-
-    info.csidl = CSIDL_COMMON_DESKTOPDIRECTORY;
-    hr = ppf3->InitializeEx(NULL, pidlRoot, &info);
-
+    /* Cache the path to the user desktop directory */
     if (!SHGetSpecialFolderPathW( 0, szMyPath, CSIDL_DESKTOPDIRECTORY, TRUE ))
         return E_UNEXPECTED;
 
     sPathTarget = (LPWSTR)SHAlloc((wcslen(szMyPath) + 1) * sizeof(WCHAR));
+    if (!sPathTarget)
+        return E_OUTOFMEMORY;
+
     wcscpy(sPathTarget, szMyPath);
     return S_OK;
 }

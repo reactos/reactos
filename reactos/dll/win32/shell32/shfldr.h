@@ -77,6 +77,9 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
 
 HRESULT SHELL32_CompareGuidItems(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2);
 
+HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
+                LPCITEMIDLIST pidlChild, const GUID* clsid, int csidl, REFIID riid, LPVOID *ppvOut);
+                
 extern "C"
 BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey);
 

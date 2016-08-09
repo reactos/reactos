@@ -204,16 +204,8 @@ CNetFolder::CNetFolder()
 
 CNetFolder::~CNetFolder()
 {
-    TRACE("-- destroying IShellFolder(%p)\n", this);
-    SHFree(pidlRoot);
-}
-
-HRESULT WINAPI CNetFolder::FinalConstruct()
-{
-    pidlRoot = _ILCreateGuid(PT_GUID, CLSID_NetworkPlaces); /* my qualified pidl */
-    if (pidlRoot == NULL)
-        return E_OUTOFMEMORY;
-    return S_OK;
+    if (pidlRoot)
+        SHFree(pidlRoot);
 }
 
 /**************************************************************************
@@ -272,36 +264,31 @@ HRESULT WINAPI CNetFolder::EnumObjects(HWND hwndOwner, DWORD dwFlags, LPENUMIDLI
 HRESULT WINAPI CNetFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcReserved, REFIID riid, LPVOID *ppvOut)
 {
 #ifdef HACKY_UNC_PATHS
-    HRESULT hr;
-    CComPtr<IPersistFolder3> ppf3;
-    hr = SHCoCreateInstance(NULL, &CLSID_ShellFSFolder, NULL, IID_PPV_ARG(IPersistFolder3, &ppf3));
-    if (FAILED(hr))
-        return hr;
+    PITEMID_CHILD pidlChild = ILCloneFirst (pidl);
+    if (!pidlChild)
+        return E_FAIL;
 
-    PERSIST_FOLDER_TARGET_INFO pfti = {0};
-    pfti.csidl = -1;
-    wcscpy(pfti.szTargetParsingName, (WCHAR*)pidl->mkid.abID);
+    PIDLIST_ABSOLUTE pidlAbsolute = ILCombine(pidlRoot,pidlChild);
+    if (!pidlAbsolute)
+        return E_FAIL;
 
-    PCUIDLIST_RELATIVE pidlChild = ILCloneFirst (pidl);
+    CComPtr<IShellFolder> psf;
+    HRESULT hr = SHELL32_CoCreateInitSF(pidlAbsolute, 
+                                        (WCHAR*)pidl->mkid.abID, 
+                                        NULL, 
+                                        &CLSID_ShellFSFolder, 
+                                        -1, 
+                                        IID_PPV_ARG(IShellFolder, &psf));
+    ILFree(pidlChild);
+    ILFree(pidlAbsolute);
 
-    hr = ppf3->InitializeEx(NULL, ILCombine(pidlRoot,pidlChild), &pfti);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (_ILIsPidlSimple (pidl))
-    {
-        return ppf3->QueryInterface(riid, ppvOut);
-    }
+        return psf->QueryInterface(riid, ppvOut);
     else
-    {
-        CComPtr<IShellFolder> psf;
-        hr = ppf3->QueryInterface(IID_PPV_ARG(IShellFolder, &psf));
-        if (FAILED(hr))
-            return hr;
-
         return psf->BindToObject(ILGetNext (pidl), pbcReserved, riid, ppvOut);
-    }
-
 #else
     return E_NOTIMPL;
 #endif
@@ -584,8 +571,10 @@ HRESULT WINAPI CNetFolder::GetClassID(CLSID *lpClassId)
  */
 HRESULT WINAPI CNetFolder::Initialize(LPCITEMIDLIST pidl)
 {
-    TRACE("(%p)->(%p)\n", this, pidl);
+    if (pidlRoot)
+        SHFree((LPVOID)pidlRoot);
 
+    pidlRoot = ILClone(pidl);
     return S_OK;
 }
 

@@ -192,14 +192,6 @@ CPrinterFolder::~CPrinterFolder()
         SHFree(pidlRoot);
 }
 
-HRESULT WINAPI CPrinterFolder::FinalConstruct()
-{
-    pidlRoot = _ILCreatePrinters();    /* my qualified pidl */
-    if (pidlRoot == NULL)
-        return E_OUTOFMEMORY;
-    return S_OK;
-}
-
 /**************************************************************************
  *    CPrinterFolder::ParseDisplayName
  *

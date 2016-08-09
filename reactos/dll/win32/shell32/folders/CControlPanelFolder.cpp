@@ -293,14 +293,6 @@ CControlPanelFolder::~CControlPanelFolder()
     SHFree(pidlRoot);
 }
 
-HRESULT WINAPI CControlPanelFolder::FinalConstruct()
-{
-    pidlRoot = _ILCreateControlPanel();    /* my qualified pidl */
-    if (pidlRoot == NULL)
-        return E_OUTOFMEMORY;
-    return S_OK;
-}
-
 /**************************************************************************
 *    CControlPanelFolder::ParseDisplayName
 */

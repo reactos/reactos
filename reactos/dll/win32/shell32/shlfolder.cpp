@@ -148,60 +148,56 @@ HRESULT SHELL32_ParseNextElement (IShellFolder2 * psf, HWND hwndOwner, LPBC pbc,
  *   pathRoot can be NULL for Folders being a drive.
  *   In this case the absolute path is built from pidlChild (eg. C:)
  */
-static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
-                LPCITEMIDLIST pidlChild, REFCLSID clsid, IShellFolder** ppsfOut)
+HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
+                LPCITEMIDLIST pidlChild, const GUID* clsid, int csidl, REFIID riid, LPVOID *ppvOut)
 {
     HRESULT hr;
     CComPtr<IShellFolder> pShellFolder;
 
     TRACE ("%p %s %p\n", pidlRoot, debugstr_w(pathRoot), pidlChild);
 
-    hr = SHCoCreateInstance(NULL, &clsid, NULL, IID_PPV_ARG(IShellFolder, &pShellFolder));
-    if (SUCCEEDED (hr))
+    hr = SHCoCreateInstance(NULL, clsid, NULL, IID_PPV_ARG(IShellFolder, &pShellFolder));
+    if (FAILED(hr))
+        return hr;
+
+    LPITEMIDLIST pidlAbsolute = ILCombine (pidlRoot, pidlChild);
+    CComPtr<IPersistFolder> ppf;
+    CComPtr<IPersistFolder3> ppf3;
+
+    if (SUCCEEDED(pShellFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3))))
     {
-        LPITEMIDLIST pidlAbsolute = ILCombine (pidlRoot, pidlChild);
-        CComPtr<IPersistFolder> ppf;
-        CComPtr<IPersistFolder3> ppf3;
+        PERSIST_FOLDER_TARGET_INFO ppfti;
 
-        if (SUCCEEDED(pShellFolder->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3))))
+        ZeroMemory (&ppfti, sizeof (ppfti));
+
+        /* fill the PERSIST_FOLDER_TARGET_INFO */
+        ppfti.dwAttributes = -1;
+        ppfti.csidl = csidl;
+
+        /* build path */
+        if (pathRoot)
         {
-            PERSIST_FOLDER_TARGET_INFO ppfti;
-
-            ZeroMemory (&ppfti, sizeof (ppfti));
-
-            /* fill the PERSIST_FOLDER_TARGET_INFO */
-            ppfti.dwAttributes = -1;
-            ppfti.csidl = -1;
-
-            /* build path */
-            if (pathRoot)
-            {
-                lstrcpynW (ppfti.szTargetParsingName, pathRoot, MAX_PATH - 1);
-                PathAddBackslashW(ppfti.szTargetParsingName); /* FIXME: why have drives a backslash here ? */
-            }
-
-            if (pidlChild)
-            {
-                int len = wcslen(ppfti.szTargetParsingName);
-
-                if (!_ILSimpleGetTextW(pidlChild, ppfti.szTargetParsingName + len, MAX_PATH - len))
-                    hr = E_INVALIDARG;
-            }
-
-            ppf3->InitializeEx(NULL, pidlAbsolute, &ppfti);
+            lstrcpynW (ppfti.szTargetParsingName, pathRoot, MAX_PATH - 1);
+            PathAddBackslashW(ppfti.szTargetParsingName); /* FIXME: why have drives a backslash here ? */
         }
-        else if (SUCCEEDED((hr = pShellFolder->QueryInterface(IID_PPV_ARG(IPersistFolder, &ppf)))))
+
+        if (pidlChild)
         {
-            ppf->Initialize(pidlAbsolute);
+            int len = wcslen(ppfti.szTargetParsingName);
+
+            if (!_ILSimpleGetTextW(pidlChild, ppfti.szTargetParsingName + len, MAX_PATH - len))
+                hr = E_INVALIDARG;
         }
-        ILFree (pidlAbsolute);
+
+        ppf3->InitializeEx(NULL, pidlAbsolute, &ppfti);
     }
+    else if (SUCCEEDED(pShellFolder->QueryInterface(IID_PPV_ARG(IPersistFolder, &ppf))))
+    {
+        ppf->Initialize(pidlAbsolute);
+    }
+    ILFree (pidlAbsolute);
 
-    *ppsfOut = pShellFolder.Detach();
-
-    TRACE ("-- (%p) ret=0x%08x\n", *ppsfOut, hr);
-
-    return hr;
+    return pShellFolder->QueryInterface(riid, ppvOut);
 }
 
 void SHELL32_GetCLSIDForDirectory(LPCWSTR pathRoot, LPCITEMIDLIST pidl, CLSID* pclsidFolder)
@@ -271,7 +267,7 @@ HRESULT SHELL32_BindToFS (LPCITEMIDLIST pidlRoot,
     if ((attributes & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) != 0)
         SHELL32_GetCLSIDForDirectory(pathRoot, pidlChild, &clsidFolder);
 
-    hr = SHELL32_CoCreateInitSF (pidlRoot, pathRoot, pidlChild, clsidFolder, &pSF);
+    hr = SHELL32_CoCreateInitSF (pidlRoot, pathRoot, pidlChild, &clsidFolder, -1, IID_PPV_ARG(IShellFolder, &pSF));
 
     if (pidlChild != pidlComplete)
         ILFree ((LPITEMIDLIST)pidlChild);
@@ -312,34 +308,22 @@ HRESULT SHELL32_BindToGuidItem(LPCITEMIDLIST pidlRoot,
         return E_INVALIDARG;
     }
 
-    hr = SHCoCreateInstance(NULL, pGUID, NULL, IID_PPV_ARG(IPersistFolder, &pFolder));
+    LPITEMIDLIST pidlChild = ILCloneFirst (pidl);
+    if (!pidlChild)
+        return E_OUTOFMEMORY;
+
+    CComPtr<IShellFolder> psf;
+    hr = SHELL32_CoCreateInitSF(pidlRoot, NULL, pidlChild, pGUID, -1, IID_PPV_ARG(IShellFolder, &psf));
+    ILFree(pidlChild);
     if (FAILED(hr))
         return hr;
 
     if (_ILIsPidlSimple (pidl))
     {
-        hr = pFolder->Initialize(ILCombine(pidlRoot, pidl));
-        if (FAILED(hr))
-            return hr;
-
-        return pFolder->QueryInterface(riid, ppvOut);
+        return psf->QueryInterface(riid, ppvOut);
     }
     else
     {
-        LPITEMIDLIST pidlChild = ILCloneFirst (pidl);
-        if (!pidlChild)
-            return E_OUTOFMEMORY;
-
-        hr = pFolder->Initialize(ILCombine(pidlRoot, pidlChild));
-        ILFree(pidlChild);
-        if (FAILED(hr))
-            return hr;
-
-        CComPtr<IShellFolder> psf;
-        hr = pFolder->QueryInterface(IID_PPV_ARG(IShellFolder, &psf));
-        if (FAILED(hr))
-            return hr;
-
         return psf->BindToObject(ILGetNext (pidl), pbcReserved, riid, ppvOut);
     }
 }
