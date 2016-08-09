@@ -12,6 +12,7 @@
 
 PKBSWITCHSETHOOKS KbSwitchSetHooks    = NULL;
 PKBSWITCHDELETEHOOKS KbSwitchDeleteHooks = NULL;
+UINT ShellHookMessage = 0;
 
 
 static BOOL
@@ -524,6 +525,12 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             break;
     }
 
+    if (Message == ShellHookMessage && wParam == HSHELL_LANGUAGE)
+    {
+        PostMessage(hwnd, WM_LANG_CHANGED, wParam, lParam);
+        return 0;
+    }
+
     return DefWindowProc(hwnd, Message, wParam, lParam);
 }
 
@@ -533,6 +540,7 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
     WNDCLASS WndClass = {0};
     MSG msg;
     HANDLE hMutex;
+    HWND hwnd;
 
     switch (GetUserDefaultUILanguage())
     {
@@ -573,7 +581,9 @@ _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdSh
         return 1;
     }
 
-    CreateWindow(szKbSwitcherName, NULL, 0, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
+    hwnd = CreateWindow(szKbSwitcherName, NULL, 0, 0, 0, 1, 1, HWND_DESKTOP, NULL, hInstance, NULL);
+    ShellHookMessage = RegisterWindowMessage(L"SHELLHOOK");
+    RegisterShellHookWindow(hwnd);
 
     while(GetMessage(&msg,NULL,0,0))
     {
