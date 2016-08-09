@@ -6,7 +6,6 @@ add_subdirectory(desk)
 add_subdirectory(hdwwiz)
 add_subdirectory(inetcpl)
 add_subdirectory(input)
-#add_subdirectory(input_new)
 add_subdirectory(intl)
 add_subdirectory(joy)
 #add_subdirectory(liccpa)#disabled in trunk
