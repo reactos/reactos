@@ -118,17 +118,34 @@ static CACHE_MANAGER_CALLBACKS Callbacks = {
 
 static
 PVOID
-MapUserBuffer(
-    _In_ _Out_ PIRP Irp)
+MapAndLockUserBuffer(
+    _In_ _Out_ PIRP Irp,
+    _In_ ULONG BufferLength)
 {
+    PMDL Mdl;
+
     if (Irp->MdlAddress == NULL)
     {
-        return Irp->UserBuffer;
+        Mdl = IoAllocateMdl(Irp->UserBuffer, BufferLength, FALSE, FALSE, Irp);
+        if (Mdl == NULL)
+        {
+            return NULL;
+        }
+
+        _SEH2_TRY
+        {
+            MmProbeAndLockPages(Mdl, Irp->RequestorMode, IoWriteAccess);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            IoFreeMdl(Mdl);
+            Irp->MdlAddress = NULL;
+            _SEH2_YIELD(return NULL);
+        }
+        _SEH2_END;
     }
-    else
-    {
-        return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
-    }
+
+    return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
 }
 
 
@@ -184,7 +201,7 @@ TestIrpHandler(
             Fcb->Header.FileSize.QuadPart = 512;
             Fcb->Header.ValidDataLength.QuadPart = 512;
         }
-        Fcb->Header.IsFastIoPossible = FALSE;
+        Fcb->Header.IsFastIoPossible = FastIoIsNotPossible;
         IoStack->FileObject->FsContext = Fcb;
         IoStack->FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
 
@@ -214,7 +231,7 @@ TestIrpHandler(
             ok(Offset.QuadPart % 512 != 0, "Offset is aligned: %I64i\n", Offset.QuadPart);
             ok(Length % 512 != 0, "Length is aligned: %I64i\n", Length);
 
-            Buffer = MapUserBuffer(Irp);
+            Buffer = Irp->AssociatedIrp.SystemBuffer;
             ok(Buffer != NULL, "Null pointer!\n");
 
             _SEH2_TRY
@@ -230,13 +247,34 @@ TestIrpHandler(
             _SEH2_END;
 
             Status = Irp->IoStatus.Status;
+
+            if (NT_SUCCESS(Status))
+            {
+                if (Offset.QuadPart <= 1000LL && Offset.QuadPart + Length > 1000LL)
+                {
+                    ok_eq_hex(*(PUSHORT)((ULONG_PTR)Buffer + (ULONG_PTR)(1000LL - Offset.QuadPart)), 0xFFFF);
+                }
+                else
+                {
+                    ok_eq_hex(*(PUSHORT)Buffer, 0xBABA);
+                }
+            }
         }
         else
         {
             ok(Offset.QuadPart % 512 == 0, "Offset is not aligned: %I64i\n", Offset.QuadPart);
             ok(Length % 512 == 0, "Length is not aligned: %I64i\n", Length);
 
+            ok(Irp->AssociatedIrp.SystemBuffer == NULL, "A SystemBuffer was allocated!\n");
+            Buffer = MapAndLockUserBuffer(Irp, Length);
+            ok(Buffer != NULL, "Null pointer!\n");
+            RtlFillMemory(Buffer, Length, 0xBA);
+
             Status = STATUS_SUCCESS;
+            if (Offset.QuadPart <= 1000LL && Offset.QuadPart + Length > 1000LL)
+            {
+                *(PUSHORT)((ULONG_PTR)Buffer + (ULONG_PTR)(1000LL - Offset.QuadPart)) = 0xFFFF;
+            }
         }
 
         if (NT_SUCCESS(Status))

@@ -28,10 +28,19 @@ START_TEST(CcCopyRead)
     ByteOffset.QuadPart = 3;
     Status = NtReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock, Buffer, 3, &ByteOffset, NULL);
     ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_hex(((USHORT *)Buffer)[0], 0xBABA);
 
     ByteOffset.QuadPart = 514;
     Status = NtReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock, Buffer, 514, &ByteOffset, NULL);
     ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_hex(((USHORT *)Buffer)[242], 0xBABA);
+    ok_eq_hex(((USHORT *)Buffer)[243], 0xFFFF);
+
+    ByteOffset.QuadPart = 1000;
+    Status = NtReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock, Buffer, 2, &ByteOffset, NULL);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_hex(((USHORT *)Buffer)[0], 0xFFFF);
+    ok_eq_hex(((USHORT *)Buffer)[1], 0xBABA);
 
     NtClose(Handle);
 
@@ -42,14 +51,24 @@ START_TEST(CcCopyRead)
     ByteOffset.QuadPart = 3;
     Status = NtReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock, Buffer, 3, &ByteOffset, NULL);
     ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_hex(((USHORT *)Buffer)[0], 0xBABA);
 
     ByteOffset.QuadPart = 514;
     Status = NtReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock, Buffer, 514, &ByteOffset, NULL);
     ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_hex(((USHORT *)Buffer)[242], 0xBABA);
+    ok_eq_hex(((USHORT *)Buffer)[243], 0xFFFF);
 
     ByteOffset.QuadPart = 300000;
     Status = NtReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock, Buffer, 10, &ByteOffset, NULL);
     ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_hex(((USHORT *)Buffer)[0], 0xBABA);
+
+    ByteOffset.QuadPart = 1000;
+    Status = NtReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock, Buffer, 2, &ByteOffset, NULL);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_hex(((USHORT *)Buffer)[0], 0xFFFF);
+    ok_eq_hex(((USHORT *)Buffer)[1], 0xBABA);
 
     NtClose(Handle);
 
