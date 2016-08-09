@@ -66,7 +66,6 @@ reactos/dll/win32/cryptui             # Synced to WineStaging-1.9.11
 reactos/dll/win32/dbghelp             # Synced to WineStaging-1.9.11
 reactos/dll/win32/dciman32            # Synced to WineStaging-1.9.11
 reactos/dll/win32/faultrep            # Synced to WineStaging-1.9.11
-reactos/dll/win32/fltlib              # Synced to WineStaging-1.9.11
 reactos/dll/win32/fontsub             # Synced to WineStaging-1.9.13
 reactos/dll/win32/fusion              # Synced to WineStaging-1.9.11
 reactos/dll/win32/gdiplus             # Synced to WineStaging-1.9.11
