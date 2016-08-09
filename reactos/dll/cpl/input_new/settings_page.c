@@ -348,13 +348,10 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
 
         case IDC_KEY_SET_BTN:
         {
-            if (DialogBoxW(hApplet,
-                           MAKEINTRESOURCEW(IDD_KEYSETTINGS),
-                           hwndDlg,
-                           KeySettingsDialogProc) == IDOK)
-            {
-                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-            }
+            DialogBoxW(hApplet,
+                       MAKEINTRESOURCEW(IDD_KEYSETTINGS),
+                       hwndDlg,
+                       KeySettingsDialogProc);
         }
         break;
     }
@@ -374,9 +371,28 @@ OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
         {
             if (header->idFrom == IDC_KEYLAYOUT_LIST)
             {
-                if (ListView_GetNextItem(header->hwndFrom, -1, LVNI_SELECTED) != -1)
+                INT iSelected = ListView_GetNextItem(header->hwndFrom, -1, LVNI_SELECTED);
+
+                if (iSelected != -1)
                 {
+                    LVITEM item = { 0 };
+
                     SetControlsState(hwndDlg, TRUE);
+
+                    item.mask = LVIF_PARAM;
+                    item.iItem = iSelected;
+
+                    if (ListView_GetItem(header->hwndFrom, &item) != FALSE)
+                    {
+                        INPUT_LIST_NODE *pInput;
+
+                        pInput = (INPUT_LIST_NODE*) item.lParam;
+
+                        if (pInput != NULL && pInput->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
+                        {
+                            EnableWindow(GetDlgItem(hwndDlg, IDC_SET_DEFAULT), FALSE);
+                        }
+                    }
                 }
                 else
                 {
@@ -388,6 +404,7 @@ OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
 
         case PSN_APPLY:
         {
+            /* Write Input Methods list to registry */
             InputList_Process();
         }
         break;

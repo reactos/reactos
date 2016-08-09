@@ -110,11 +110,8 @@ InputList_PrepareUserRegistry(VOID)
     {
         RegDeleteKeyW(hKey, L"Preload");
         RegDeleteKeyW(hKey, L"Substitutes");
-        //RegDeleteKeyW(hKey, L"Toggle");
 
         RegCloseKey(hKey);
-
-        RegDeleteKeyW(HKEY_CURRENT_USER, L"Keyboard Layout");
     }
 
     if (RegCreateKeyW(HKEY_CURRENT_USER, L"Keyboard Layout", &hKey) != ERROR_SUCCESS)
@@ -130,13 +127,6 @@ InputList_PrepareUserRegistry(VOID)
     RegCloseKey(hTempKey);
 
     if (RegCreateKeyW(hKey, L"Substitutes", &hTempKey) != ERROR_SUCCESS)
-    {
-        goto Cleanup;
-    }
-
-    RegCloseKey(hTempKey);
-
-    if (RegCreateKeyW(hKey, L"Toggle", &hTempKey) != ERROR_SUCCESS)
     {
         goto Cleanup;
     }

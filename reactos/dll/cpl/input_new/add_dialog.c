@@ -17,7 +17,7 @@ GetDefaultLayoutForLocale(DWORD dwLocaleId)
     DWORD dwResult = 0;
     HINF hIntlInf;
 
-    hIntlInf = SetupOpenInfFileW(L"intl.inf", NULL, INF_STYLE_WIN4, NULL);
+    hIntlInf = SetupOpenInfFileW(L"G:\\Projects\\_ReactOS\\reactos\\output-MinGW-i386\\dll\\cpl\\input_new\\intl.inf", NULL, INF_STYLE_WIN4, NULL);
     if (hIntlInf != INVALID_HANDLE_VALUE)
     {
         WCHAR szLangID[MAX_STR_LEN];

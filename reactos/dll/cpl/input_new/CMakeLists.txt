@@ -15,7 +15,8 @@ list(APPEND SOURCE
     advanced_settings_page.c
     add_dialog.c
     edit_dialog.c
-    key_settings_dialog.c)
+    key_settings_dialog.c
+    key_sequence_dialog.c)
 
 add_rc_deps(input.rc ${CMAKE_CURRENT_SOURCE_DIR}/resources/keyboard-shortcuts.ico)
 

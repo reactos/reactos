@@ -56,8 +56,20 @@ INT_PTR CALLBACK
 EditDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /* key_settings_dialog.c */
+
+typedef struct
+{
+    DWORD dwAttributes;
+    DWORD dwLanguage;
+    DWORD dwLayout;
+} KEY_SETTINGS;
+
 INT_PTR CALLBACK
 KeySettingsDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+/* key_sequence_dialog.c */
+INT_PTR CALLBACK
+ChangeKeySeqDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 
 static inline WCHAR*
