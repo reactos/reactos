@@ -8,7 +8,7 @@ CAPTION "Configurare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Gestionați serviciile aferente limbilor de intrare utilizate în sistem. Utilizați butoanele pentru a aduce modificări listei.", -1, 9, 6, 238, 25
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
+    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
     PUSHBUTTON "&Restabilește opțiunile implicite", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "A&dăugare…", IDC_ADD_BUTTON, 27, 142, 70, 14
     PUSHBUTTON "&Elimină", IDC_REMOVE_BUTTON, 101, 142, 70, 14

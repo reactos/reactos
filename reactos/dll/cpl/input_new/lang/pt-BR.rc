@@ -6,7 +6,7 @@ CAPTION "Configurações"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Selecione os serviços desejados para cada idioma de entrada mostrado na lista. Use os botões 'Adicionar' e 'Remover' para modificar essa lista.", -1, 9, 6, 238, 25
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
+    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
     PUSHBUTTON "De&finir padrão", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "&Adicionar...", IDC_ADD_BUTTON, 27, 142, 70, 14
     PUSHBUTTON "&Remover", IDC_REMOVE_BUTTON, 101, 142, 70, 14

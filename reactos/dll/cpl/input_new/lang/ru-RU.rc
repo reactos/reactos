@@ -6,10 +6,10 @@ CAPTION "Параметры"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Выберите нужные раскладки для каждого языка ввода из списка. Для изменения списка служат кнопки ""Добавить"" и ""Удалить"".", -1, 9, 6, 238, 17
-    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 28, 237, 109
+    CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 28, 237, 109
     PUSHBUTTON "Ус&тановить по умолчанию", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "&Добавить...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "&Удалить...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "&Удалить", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "&Свойства...", IDC_PROP_BUTTON, 175, 142, 70, 14
     GROUPBOX "Параметры", -1, 7, 185, 240, 36
     PUSHBUTTON "&Параметры клавиатуры...", IDC_KEY_SET_BTN, 14, 198, 110, 14

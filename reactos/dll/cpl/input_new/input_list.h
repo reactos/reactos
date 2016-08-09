@@ -5,20 +5,20 @@
 #include "layout_list.h"
 
 
-#define INPUT_LIST_NODE_FLAG_EDITED    0x00000001
-#define INPUT_LIST_NODE_FLAG_ADDED     0x00000002
-#define INPUT_LIST_NODE_FLAG_DELETED   0x00000004
-#define INPUT_LIST_NODE_FLAG_DEFAULT   0x00000008
+#define INPUT_LIST_NODE_FLAG_EDITED    0x0001
+#define INPUT_LIST_NODE_FLAG_ADDED     0x0002
+#define INPUT_LIST_NODE_FLAG_DELETED   0x0004
+#define INPUT_LIST_NODE_FLAG_DEFAULT   0x0008
 
 
 typedef struct _INPUT_LIST_NODE
 {
-    DWORD dwFlags;
+    WORD wFlags;
 
     LOCALE_LIST_NODE *pLocale;
     LAYOUT_LIST_NODE *pLayout;
 
-    HKL hkl;
+    HKL hkl; /* Only for loaded input methods */
 
     WCHAR *pszIndicator;
 
@@ -33,7 +33,7 @@ InputList_Create(VOID);
 VOID
 InputList_Process(VOID);
 
-VOID
+BOOL
 InputList_Add(LOCALE_LIST_NODE *pLocale, LAYOUT_LIST_NODE *pLayout);
 
 VOID

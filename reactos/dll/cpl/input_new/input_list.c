@@ -215,28 +215,37 @@ InputList_AddInputMethodToUserRegistry(DWORD dwIndex, INPUT_LIST_NODE *pNode)
         }
     }
 
-    if (pNode->dwFlags & INPUT_LIST_NODE_FLAG_ADDED)
+    if ((pNode->wFlags & INPUT_LIST_NODE_FLAG_ADDED) ||
+        (pNode->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
     {
         pNode->hkl = LoadKeyboardLayoutW(szPreload, KLF_SUBSTITUTE_OK | KLF_NOTELLSHELL);
     }
 }
 
 
+/*
+ * Writes any changes in input methods to the registry
+ */
 VOID
 InputList_Process(VOID)
 {
     INPUT_LIST_NODE *pCurrent;
     DWORD dwIndex;
 
-    /* Process deleted input methods */
+    /* Process deleted and edited input methods */
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
-        if (!(pCurrent->dwFlags & INPUT_LIST_NODE_FLAG_DELETED))
-            continue;
-
-        if (UnloadKeyboardLayout(pCurrent->hkl))
+        if ((pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DELETED) ||
+            (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
         {
-            InputList_RemoveNode(pCurrent);
+            if (UnloadKeyboardLayout(pCurrent->hkl))
+            {
+                /* Only unload the edited input method, but does not delete it from the list */
+                if (!(pCurrent->wFlags & INPUT_LIST_NODE_FLAG_EDITED))
+                {
+                    InputList_RemoveNode(pCurrent);
+                }
+            }
         }
     }
 
@@ -245,7 +254,7 @@ InputList_Process(VOID)
     /* Find default input method */
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
-        if (pCurrent->dwFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
+        if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
         {
             InputList_AddInputMethodToUserRegistry(1, pCurrent);
             break;
@@ -273,7 +282,7 @@ InputList_Process(VOID)
 
     for (pCurrent = _InputList; pCurrent != NULL; pCurrent = pCurrent->pNext)
     {
-        if (pCurrent->dwFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
+        if (pCurrent->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
             continue;
 
         InputList_AddInputMethodToUserRegistry(dwIndex, pCurrent);
@@ -283,7 +292,7 @@ InputList_Process(VOID)
 }
 
 
-VOID
+BOOL
 InputList_Add(LOCALE_LIST_NODE *pLocale, LAYOUT_LIST_NODE *pLayout)
 {
     WCHAR szIndicator[MAX_STR_LEN];
@@ -291,12 +300,20 @@ InputList_Add(LOCALE_LIST_NODE *pLocale, LAYOUT_LIST_NODE *pLayout)
 
     if (pLocale == NULL || pLayout == NULL)
     {
-        return;
+        return FALSE;
+    }
+
+    for (pInput = _InputList; pInput != NULL; pInput = pInput->pNext)
+    {
+        if (pInput->pLocale == pLocale && pInput->pLayout == pLayout)
+        {
+            return FALSE;
+        }
     }
 
     pInput = InputList_AppendNode();
 
-    pInput->dwFlags |= INPUT_LIST_NODE_FLAG_ADDED;
+    pInput->wFlags = INPUT_LIST_NODE_FLAG_ADDED;
 
     pInput->pLocale = pLocale;
     pInput->pLayout = pLayout;
@@ -314,6 +331,8 @@ InputList_Add(LOCALE_LIST_NODE *pLocale, LAYOUT_LIST_NODE *pLayout)
             pInput->pszIndicator = DublicateString(szIndicator);
         }
     }
+
+    return TRUE;
 }
 
 
@@ -329,34 +348,56 @@ InputList_SetDefault(INPUT_LIST_NODE *pNode)
     {
         if (pCurrent == pNode)
         {
-            pCurrent->dwFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
+            pCurrent->wFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
         }
         else
         {
-            pCurrent->dwFlags &= ~INPUT_LIST_NODE_FLAG_DEFAULT;
+            pCurrent->wFlags &= ~INPUT_LIST_NODE_FLAG_DEFAULT;
         }
     }
 }
 
 
+/*
+ * It marks the input method for deletion, but does not delete it directly.
+ * To apply the changes using InputList_Process()
+ */
 VOID
 InputList_Remove(INPUT_LIST_NODE *pNode)
 {
+    BOOL bRemoveNode = FALSE;
+
     if (pNode == NULL)
         return;
 
-    pNode->dwFlags |= INPUT_LIST_NODE_FLAG_DELETED;
+    if (pNode->wFlags & INPUT_LIST_NODE_FLAG_ADDED)
+    {
+        /*
+         * If the input method has been added to the list, but not yet written
+         * in the registry, then simply remove it from the list
+         */
+        bRemoveNode = TRUE;
+    }
+    else
+    {
+        pNode->wFlags = INPUT_LIST_NODE_FLAG_DELETED;
+    }
 
-    if (pNode->dwFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
+    if (pNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT)
     {
         if (pNode->pNext != NULL)
         {
-            pNode->pNext->dwFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
+            pNode->pNext->wFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
         }
         else if (pNode->pPrev != NULL)
         {
-            pNode->pPrev->dwFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
+            pNode->pPrev->wFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
         }
+    }
+
+    if (bRemoveNode != FALSE)
+    {
+        InputList_RemoveNode(pNode);
     }
 }
 
@@ -368,7 +409,7 @@ InputList_Create(VOID)
     HKL *pLayoutList;
 
     iLayoutCount = GetKeyboardLayoutList(0, NULL);
-    pLayoutList = (HKL*)malloc(iLayoutCount * sizeof(HKL));
+    pLayoutList = (HKL*) malloc(iLayoutCount * sizeof(HKL));
 
     if (pLayoutList != NULL)
     {
@@ -403,7 +444,7 @@ InputList_Create(VOID)
 
                     if (pInput->hkl == hklDefault)
                     {
-                        pInput->dwFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
+                        pInput->wFlags |= INPUT_LIST_NODE_FLAG_DEFAULT;
                     }
 
                     if (GetLocaleInfoW(LOWORD(pInput->pLocale->dwId),

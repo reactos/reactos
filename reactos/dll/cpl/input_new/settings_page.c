@@ -12,8 +12,10 @@
 
 
 static HICON
-CreateLayoutIcon(LPWSTR szLayout)
+CreateLayoutIcon(LPWSTR szLayout, BOOL bIsDefault)
 {
+    INT width = GetSystemMetrics(SM_CXSMICON) * 2;
+    INT height = GetSystemMetrics(SM_CYSMICON);
     HDC hdc;
     HDC hdcsrc;
     HBITMAP hBitmap;
@@ -21,60 +23,83 @@ CreateLayoutIcon(LPWSTR szLayout)
 
     hdcsrc = GetDC(NULL);
     hdc = CreateCompatibleDC(hdcsrc);
-    hBitmap = CreateCompatibleBitmap(hdcsrc,
-                                     GetSystemMetrics(SM_CXSMICON),
-                                     GetSystemMetrics(SM_CYSMICON));
+    hBitmap = CreateCompatibleBitmap(hdcsrc, width, height);
+
     ReleaseDC(NULL, hdcsrc);
 
     if (hdc && hBitmap)
     {
         HBITMAP hBmpNew;
 
-        hBmpNew = CreateBitmap(GetSystemMetrics(SM_CXSMICON),
-                               GetSystemMetrics(SM_CYSMICON),
-                               1, 1, NULL);
+        hBmpNew = CreateBitmap(width, height, 1, 1, NULL);
         if (hBmpNew)
         {
-            ICONINFO IconInfo;
-            HBITMAP hBmpOld;
-            HFONT hFont;
-            RECT rect;
+            LOGFONT lf;
 
-            hBmpOld = SelectObject(hdc, hBitmap);
-            rect.right = GetSystemMetrics(SM_CXSMICON);
-            rect.left = 0;
-            rect.bottom = GetSystemMetrics(SM_CYSMICON);
-            rect.top = 0;
+            if (SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(LOGFONT), &lf, 0))
+            {
+                ICONINFO IconInfo;
+                HFONT hFont;
 
-            SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
-            SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+                hFont = CreateFontIndirectW(&lf);
 
-            ExtTextOut(hdc, rect.left, rect.top, ETO_OPAQUE, &rect, L"", 0, NULL);
+                if (hFont != NULL)
+                {
+                    HBITMAP hBmpOld;
 
-            hFont = CreateFontW(-11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
-                                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                DEFAULT_QUALITY, FF_DONTCARE, L"Tahoma");
+                    hBmpOld = SelectObject(hdc, hBitmap);
 
-            SelectObject(hdc, hFont);
-            DrawTextW(hdc, szLayout, 2, &rect, DT_SINGLELINE|DT_CENTER|DT_VCENTER);
-            SelectObject(hdc, hBmpNew);
+                    if (hBmpOld != NULL)
+                    {
+                        RECT rect;
 
-            PatBlt(hdc, 0, 0,
-                   GetSystemMetrics(SM_CXSMICON),
-                   GetSystemMetrics(SM_CYSMICON),
-                   BLACKNESS);
+                        SetRect(&rect, 0, 0, width / 2, height);
 
-            SelectObject(hdc, hBmpOld);
+                        if (bIsDefault != FALSE)
+                        {
+                            SetBkColor(hdc, GetSysColor(COLOR_WINDOW));
+                            SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
 
-            IconInfo.hbmColor = hBitmap;
-            IconInfo.hbmMask = hBmpNew;
-            IconInfo.fIcon = TRUE;
+                            ExtTextOutW(hdc, rect.left, rect.top, ETO_OPAQUE, &rect, L"", 0, NULL);
 
-            hIcon = CreateIconIndirect(&IconInfo);
+                            SelectObject(hdc, hFont);
+                            DrawTextW(hdc, L"\x25CF", 1, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+                        }
+                        else
+                        {
+                            FillRect(hdc, &rect, GetSysColorBrush(COLOR_WINDOW));
+                        }
+
+                        SetRect(&rect, width / 2, 0, width, height);
+
+                        SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
+                        SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+
+                        ExtTextOutW(hdc, rect.left, rect.top, ETO_OPAQUE, &rect, L"", 0, NULL);
+
+                        SelectObject(hdc, hFont);
+                        DrawTextW(hdc, szLayout, 2, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+
+                        SelectObject(hdc, hBmpNew);
+
+                        PatBlt(hdc, 0, 0, width, height, BLACKNESS);
+
+                        SelectObject(hdc, hBmpOld);
+
+                        IconInfo.hbmColor = hBitmap;
+                        IconInfo.hbmMask = hBmpNew;
+                        IconInfo.fIcon = TRUE;
+
+                        hIcon = CreateIconIndirect(&IconInfo);
+
+                        DeleteObject(hBmpOld);
+                    }
+
+                    DeleteObject(hFont);
+                }
+            }
 
             DeleteObject(hBmpNew);
-            DeleteObject(hBmpOld);
-            DeleteObject(hFont);
         }
     }
 
@@ -82,6 +107,15 @@ CreateLayoutIcon(LPWSTR szLayout)
     DeleteObject(hBitmap);
 
     return hIcon;
+}
+
+
+static VOID
+SetControlsState(HWND hwndDlg, BOOL bIsEnabled)
+{
+    EnableWindow(GetDlgItem(hwndDlg, IDC_REMOVE_BUTTON), bIsEnabled);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_PROP_BUTTON), bIsEnabled);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_SET_DEFAULT), bIsEnabled);
 }
 
 
@@ -99,7 +133,8 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
     {
         HICON hLayoutIcon;
 
-        hLayoutIcon = CreateLayoutIcon(pInputNode->pszIndicator);
+        hLayoutIcon = CreateLayoutIcon(pInputNode->pszIndicator,
+                                       (pInputNode->wFlags & INPUT_LIST_NODE_FLAG_DEFAULT));
 
         if (hLayoutIcon != NULL)
         {
@@ -110,9 +145,9 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
 
     memset(&item, 0, sizeof(LV_ITEM));
 
-    item.mask    = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
+    item.mask    = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
     item.pszText = pInputNode->pLocale->pszName;
-    item.iItem   = -1;
+    item.iItem   = ListView_GetItemCount(hwndList) + 1;
     item.lParam  = (LPARAM)pInputNode;
     item.iImage  = ImageIndex;
 
@@ -140,7 +175,7 @@ UpdateInputListView(HWND hwndList)
          pCurrentInputNode != NULL;
          pCurrentInputNode = pCurrentInputNode->pNext)
     {
-        if (!(pCurrentInputNode->dwFlags & INPUT_LIST_NODE_FLAG_DELETED))
+        if (!(pCurrentInputNode->wFlags & INPUT_LIST_NODE_FLAG_DELETED))
         {
             AddToInputListView(hwndList, pCurrentInputNode);
         }
@@ -185,7 +220,7 @@ OnInitSettingsPage(HWND hwndDlg)
         column.pszText  = szBuffer;
         ListView_InsertColumn(hwndInputList, 1, &column);
 
-        hLayoutImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
+        hLayoutImageList = ImageList_Create(GetSystemMetrics(SM_CXSMICON) * 2,
                                             GetSystemMetrics(SM_CYSMICON),
                                             ILC_COLOR8 | ILC_MASK, 0, 0);
         if (hLayoutImageList != NULL)
@@ -195,6 +230,8 @@ OnInitSettingsPage(HWND hwndDlg)
 
         UpdateInputListView(hwndInputList);
     }
+
+    SetControlsState(hwndDlg, FALSE);
 }
 
 
@@ -236,7 +273,9 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
 
         case IDC_REMOVE_BUTTON:
         {
-            HWND hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
+            HWND hwndList;
+            
+            hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
 
             if (hwndList != NULL)
             {
@@ -247,8 +286,8 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
 
                 if (ListView_GetItem(hwndList, &item) != FALSE)
                 {
-                    InputList_Remove((INPUT_LIST_NODE*)item.lParam);
-                    UpdateInputListView(GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST));
+                    InputList_Remove((INPUT_LIST_NODE*) item.lParam);
+                    UpdateInputListView(hwndList);
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                 }
             }
@@ -257,20 +296,9 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
 
         case IDC_PROP_BUTTON:
         {
-            if (DialogBoxW(hApplet,
-                           MAKEINTRESOURCEW(IDD_INPUT_LANG_PROP),
-                           hwndDlg,
-                           EditDialogProc) == IDOK)
-            {
-                UpdateInputListView(GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST));
-                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-            }
-        }
-        break;
-
-        case IDC_SET_DEFAULT:
-        {
-            HWND hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
+            HWND hwndList;
+            
+            hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
 
             if (hwndList != NULL)
             {
@@ -281,14 +309,37 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
 
                 if (ListView_GetItem(hwndList, &item) != FALSE)
                 {
-                    INPUT_LIST_NODE *pSelected;
-
-                    pSelected = (INPUT_LIST_NODE*) item.lParam;
-                    if (pSelected != NULL)
+                    if (DialogBoxParamW(hApplet,
+                                        MAKEINTRESOURCEW(IDD_INPUT_LANG_PROP),
+                                        hwndDlg,
+                                        EditDialogProc,
+                                        item.lParam) == IDOK)
                     {
-                        InputList_SetDefault(pSelected);
+                        UpdateInputListView(hwndList);
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     }
+                }
+            }
+        }
+        break;
 
+        case IDC_SET_DEFAULT:
+        {
+            HWND hwndList;
+            
+            hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
+
+            if (hwndList != NULL)
+            {
+                LVITEM item = { 0 };
+
+                item.mask = LVIF_PARAM;
+                item.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+
+                if (ListView_GetItem(hwndList, &item) != FALSE)
+                {
+                    InputList_SetDefault((INPUT_LIST_NODE*) item.lParam);
+                    UpdateInputListView(hwndList);
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                 }
             }
@@ -313,9 +364,33 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
 static VOID
 OnNotifySettingsPage(HWND hwndDlg, LPARAM lParam)
 {
-    if (((LPPSHNOTIFY)lParam)->hdr.code == PSN_APPLY)
+    LPNMHDR header;
+
+    header = (LPNMHDR)lParam;
+
+    switch (header->code)
     {
-        InputList_Process();
+        case NM_CLICK:
+        {
+            if (header->idFrom == IDC_KEYLAYOUT_LIST)
+            {
+                if (ListView_GetNextItem(header->hwndFrom, -1, LVNI_SELECTED) != -1)
+                {
+                    SetControlsState(hwndDlg, TRUE);
+                }
+                else
+                {
+                    SetControlsState(hwndDlg, FALSE);
+                }
+            }
+        }
+        break;
+
+        case PSN_APPLY:
+        {
+            InputList_Process();
+        }
+        break;
     }
 }
 
