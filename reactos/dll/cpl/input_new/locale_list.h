@@ -5,8 +5,9 @@
 typedef struct _LOCALE_LIST_NODE
 {
     WCHAR *pszName;
-    WCHAR *pszIndicator;
+
     DWORD dwId;
+
     struct _LOCALE_LIST_NODE *pPrev;
     struct _LOCALE_LIST_NODE *pNext;
 } LOCALE_LIST_NODE;
@@ -21,4 +22,4 @@ LOCALE_LIST_NODE*
 LocaleList_GetByHkl(HKL hkl);
 
 LOCALE_LIST_NODE*
-LocaleList_Get(VOID);
+LocaleList_GetFirst(VOID);

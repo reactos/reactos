@@ -20,6 +20,8 @@ typedef struct _INPUT_LIST_NODE
 
     HKL hkl;
 
+    WCHAR *pszIndicator;
+
     struct _INPUT_LIST_NODE *pPrev;
     struct _INPUT_LIST_NODE *pNext;
 } INPUT_LIST_NODE;
@@ -35,10 +37,13 @@ VOID
 InputList_Add(LOCALE_LIST_NODE *pLocale, LAYOUT_LIST_NODE *pLayout);
 
 VOID
+InputList_SetDefault(INPUT_LIST_NODE *pNode);
+
+VOID
 InputList_Remove(INPUT_LIST_NODE *pNode);
 
 VOID
 InputList_Destroy(VOID);
 
 INPUT_LIST_NODE*
-InputList_Get(VOID);
+InputList_GetFirst(VOID);

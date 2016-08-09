@@ -71,7 +71,7 @@ OnInitAddDialog(HWND hwndDlg)
 
     dwDefaultLocaleId = GetSystemDefaultLCID();
 
-    for (pCurrentLocale = LocaleList_Get();
+    for (pCurrentLocale = LocaleList_GetFirst();
          pCurrentLocale != NULL;
          pCurrentLocale = pCurrentLocale->pNext)
     {
@@ -86,7 +86,7 @@ OnInitAddDialog(HWND hwndDlg)
 
     dwDefaultLayoutId = GetDefaultLayoutForLocale(dwDefaultLocaleId);
 
-    for (pCurrentLayout = LayoutList_Get();
+    for (pCurrentLayout = LayoutList_GetFirst();
          pCurrentLayout != NULL;
          pCurrentLayout = pCurrentLayout->pNext)
     {
@@ -158,9 +158,11 @@ OnCommandAddDialog(HWND hwndDlg, WPARAM wParam)
                         LAYOUT_LIST_NODE *pCurrentLayout;
 
                         pCurrentLayout = (LAYOUT_LIST_NODE*)ComboBox_GetItemData(hwndLayoutCombo, iIndex);
+
                         if (pCurrentLayout != NULL && pCurrentLayout->dwId == dwLayoutId)
                         {
                             ComboBox_SetCurSel(hwndLayoutCombo, iIndex);
+                            break;
                         }
                     }
                 }

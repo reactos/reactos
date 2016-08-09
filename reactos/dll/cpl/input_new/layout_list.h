@@ -5,9 +5,10 @@
 typedef struct _LAYOUT_LIST_NODE
 {
     WCHAR *pszName;
-    WCHAR *pszFile;
+
     DWORD dwId;
     DWORD dwSpecialId;
+
     struct _LAYOUT_LIST_NODE *pPrev;
     struct _LAYOUT_LIST_NODE *pNext;
 } LAYOUT_LIST_NODE;
@@ -22,4 +23,4 @@ LAYOUT_LIST_NODE*
 LayoutList_GetByHkl(HKL hkl);
 
 LAYOUT_LIST_NODE*
-LayoutList_Get(VOID);
+LayoutList_GetFirst(VOID);

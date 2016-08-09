@@ -51,6 +51,15 @@ AdvancedSettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK
 AddDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
+/* edit_dialog.c */
+INT_PTR CALLBACK
+EditDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+/* key_settings_dialog.c */
+INT_PTR CALLBACK
+KeySettingsDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+
 static inline WCHAR*
 DublicateString(const WCHAR *pszString)
 {

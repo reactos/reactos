@@ -99,7 +99,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
     {
         HICON hLayoutIcon;
 
-        hLayoutIcon = CreateLayoutIcon(pInputNode->pLocale->pszIndicator);
+        hLayoutIcon = CreateLayoutIcon(pInputNode->pszIndicator);
 
         if (hLayoutIcon != NULL)
         {
@@ -136,11 +136,14 @@ UpdateInputListView(HWND hwndList)
 
     ListView_DeleteAllItems(hwndList);
 
-    for (pCurrentInputNode = InputList_Get();
+    for (pCurrentInputNode = InputList_GetFirst();
          pCurrentInputNode != NULL;
          pCurrentInputNode = pCurrentInputNode->pNext)
     {
-        AddToInputListView(hwndList, pCurrentInputNode);
+        if (!(pCurrentInputNode->dwFlags & INPUT_LIST_NODE_FLAG_DELETED))
+        {
+            AddToInputListView(hwndList, pCurrentInputNode);
+        }
     }
 }
 
@@ -158,7 +161,6 @@ OnInitSettingsPage(HWND hwndDlg)
 
     if (hwndInputList != NULL)
     {
-        INPUT_LIST_NODE *pCurrentInputNode;
         WCHAR szBuffer[MAX_STR_LEN];
         HIMAGELIST hLayoutImageList;
         LV_COLUMN column;
@@ -191,12 +193,7 @@ OnInitSettingsPage(HWND hwndDlg)
             ListView_SetImageList(hwndInputList, hLayoutImageList, LVSIL_SMALL);
         }
 
-        for (pCurrentInputNode = InputList_Get();
-             pCurrentInputNode != NULL;
-             pCurrentInputNode = pCurrentInputNode->pNext)
-        {
-            AddToInputListView(hwndInputList, pCurrentInputNode);
-        }
+        UpdateInputListView(hwndInputList);
     }
 }
 
@@ -239,25 +236,74 @@ OnCommandSettingsPage(HWND hwndDlg, WPARAM wParam)
 
         case IDC_REMOVE_BUTTON:
         {
-            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            HWND hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
+
+            if (hwndList != NULL)
+            {
+                LVITEM item = { 0 };
+
+                item.mask = LVIF_PARAM;
+                item.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+
+                if (ListView_GetItem(hwndList, &item) != FALSE)
+                {
+                    InputList_Remove((INPUT_LIST_NODE*)item.lParam);
+                    UpdateInputListView(GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST));
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                }
+            }
         }
         break;
 
         case IDC_PROP_BUTTON:
         {
-
+            if (DialogBoxW(hApplet,
+                           MAKEINTRESOURCEW(IDD_INPUT_LANG_PROP),
+                           hwndDlg,
+                           EditDialogProc) == IDOK)
+            {
+                UpdateInputListView(GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST));
+                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            }
         }
         break;
 
         case IDC_SET_DEFAULT:
         {
-            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            HWND hwndList = GetDlgItem(hwndDlg, IDC_KEYLAYOUT_LIST);
+
+            if (hwndList != NULL)
+            {
+                LVITEM item = { 0 };
+
+                item.mask = LVIF_PARAM;
+                item.iItem = ListView_GetNextItem(hwndList, -1, LVNI_SELECTED);
+
+                if (ListView_GetItem(hwndList, &item) != FALSE)
+                {
+                    INPUT_LIST_NODE *pSelected;
+
+                    pSelected = (INPUT_LIST_NODE*) item.lParam;
+                    if (pSelected != NULL)
+                    {
+                        InputList_SetDefault(pSelected);
+                    }
+
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                }
+            }
         }
         break;
 
         case IDC_KEY_SET_BTN:
         {
-
+            if (DialogBoxW(hApplet,
+                           MAKEINTRESOURCEW(IDD_KEYSETTINGS),
+                           hwndDlg,
+                           KeySettingsDialogProc) == IDOK)
+            {
+                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+            }
         }
         break;
     }

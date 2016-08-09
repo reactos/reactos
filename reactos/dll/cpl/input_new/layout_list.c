@@ -12,12 +12,12 @@ static LAYOUT_LIST_NODE *_LayoutList = NULL;
 
 
 static LAYOUT_LIST_NODE*
-LayoutList_Append(DWORD dwId, DWORD dwSpecialId, const WCHAR *pszName, const WCHAR *pszFile)
+LayoutList_AppendNode(DWORD dwId, DWORD dwSpecialId, const WCHAR *pszName)
 {
     LAYOUT_LIST_NODE *pCurrent;
     LAYOUT_LIST_NODE *pNew;
 
-    if (pszName == NULL || pszFile == NULL)
+    if (pszName == NULL)
         return NULL;
 
     pCurrent = _LayoutList;
@@ -31,14 +31,6 @@ LayoutList_Append(DWORD dwId, DWORD dwSpecialId, const WCHAR *pszName, const WCH
     pNew->pszName = DublicateString(pszName);
     if (pNew->pszName == NULL)
     {
-        free(pNew);
-        return NULL;
-    }
-
-    pNew->pszFile = DublicateString(pszFile);
-    if (pNew->pszFile == NULL)
-    {
-        free(pNew->pszName);
         free(pNew);
         return NULL;
     }
@@ -80,7 +72,6 @@ LayoutList_Destroy(VOID)
         LAYOUT_LIST_NODE *pNext = pCurrent->pNext;
 
         free(pCurrent->pszName);
-        free(pCurrent->pszFile);
         free(pCurrent);
 
         pCurrent = pNext;
@@ -163,10 +154,7 @@ LayoutList_Create(VOID)
                     {
                         DWORD dwLayoutId = DWORDfromString(szLayoutId);
 
-                        LayoutList_Append(dwLayoutId,
-                                          dwSpecialId,
-                                          szBuffer,
-                                          szFilePath);
+                        LayoutList_AppendNode(dwLayoutId, dwSpecialId, szBuffer);
                     }
                 }
             }
@@ -215,7 +203,7 @@ LayoutList_GetByHkl(HKL hkl)
 
 
 LAYOUT_LIST_NODE*
-LayoutList_Get(VOID)
+LayoutList_GetFirst(VOID)
 {
     return _LayoutList;
 }
