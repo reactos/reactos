@@ -378,6 +378,9 @@ MmFreeMemoryArea(
         }
     }
 
+#if DBG
+    MemoryArea->Magic = 'daeD';
+#endif
     ExFreePoolWithTag(MemoryArea, TAG_MAREA);
 
     DPRINT("MmFreeMemoryAreaByNode() succeeded\n");
