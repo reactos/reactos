@@ -10,9 +10,10 @@
 static KEY_SETTINGS _KeySettings = { 0 };
 
 
-static VOID
-ReadKeysSettings(VOID)
+DWORD
+ReadAttributes(VOID)
 {
+    DWORD dwAttributes = 0;
     HKEY hKey;
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
@@ -25,17 +26,24 @@ ReadKeysSettings(VOID)
 
         dwSize = sizeof(dwSize);
 
-        if (RegQueryValueExW(hKey,
-                             L"Attributes",
-                             NULL, NULL,
-                             (LPBYTE)&_KeySettings.dwAttributes,
-                             &dwSize) != ERROR_SUCCESS)
-        {
-            _KeySettings.dwAttributes = (DWORD) -1;
-        }
+        RegQueryValueExW(hKey,
+                         L"Attributes",
+                         NULL, NULL,
+                         (LPBYTE)&dwAttributes,
+                         &dwSize);
 
         RegCloseKey(hKey);
     }
+
+    return dwAttributes;
+}
+
+static VOID
+ReadKeysSettings(VOID)
+{
+    HKEY hKey;
+
+    _KeySettings.dwAttributes = ReadAttributes();
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
                       L"Keyboard Layout\\Toggle",
@@ -126,10 +134,13 @@ WriteKeysSettings(VOID)
                        (wcslen(szBuffer) + 1) * sizeof(WCHAR));
 
         RegCloseKey(hKey);
-
-        /* Notice system of change of parameters */
-        SystemParametersInfoW(SPI_SETLANGTOGGLE, 0, NULL, 0);
     }
+
+    /* Notice system of change hotkeys parameters */
+    SystemParametersInfoW(SPI_SETLANGTOGGLE, 0, NULL, 0);
+
+    /* Notice system of change CapsLock mode parameters */
+    ActivateKeyboardLayout(GetKeyboardLayout(0), KLF_RESET | _KeySettings.dwAttributes);
 }
 
 
@@ -178,20 +189,20 @@ OnInitKeySettingsDialog(HWND hwndDlg)
 
     if (_KeySettings.dwAttributes & KLF_SHIFTLOCK)
     {
-        CheckDlgButton(hwndDlg, IDC_PRESS_SHIFT_KEY_RB, BST_UNCHECKED);
-        CheckDlgButton(hwndDlg, IDC_PRESS_CL_KEY_RB, BST_CHECKED);
+        CheckDlgButton(hwndDlg, IDC_PRESS_SHIFT_KEY_RB, BST_CHECKED);
+        CheckDlgButton(hwndDlg, IDC_PRESS_CL_KEY_RB, BST_UNCHECKED);
     }
     else
     {
-        CheckDlgButton(hwndDlg, IDC_PRESS_SHIFT_KEY_RB, BST_CHECKED);
-        CheckDlgButton(hwndDlg, IDC_PRESS_CL_KEY_RB, BST_UNCHECKED);
+        CheckDlgButton(hwndDlg, IDC_PRESS_SHIFT_KEY_RB, BST_UNCHECKED);
+        CheckDlgButton(hwndDlg, IDC_PRESS_CL_KEY_RB, BST_CHECKED);
     }
 
     hwndList = GetDlgItem(hwndDlg, IDC_KEY_LISTVIEW);
 
     ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT);
 
-   ZeroMemory(&column, sizeof(column));
+    ZeroMemory(&column, sizeof(column));
 
     column.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
 
@@ -243,7 +254,7 @@ KeySettingsDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 case IDOK:
                 {
-                    if (IsDlgButtonChecked(hwndDlg, IDC_PRESS_CL_KEY_RB) == BST_UNCHECKED)
+                    if (IsDlgButtonChecked(hwndDlg, IDC_PRESS_CL_KEY_RB) == BST_CHECKED)
                     {
                         _KeySettings.dwAttributes &= ~KLF_SHIFTLOCK;
                     }

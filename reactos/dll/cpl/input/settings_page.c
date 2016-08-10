@@ -63,7 +63,7 @@ CreateLayoutIcon(LPWSTR szLayout, BOOL bIsDefault)
                             ExtTextOutW(hdc, rect.left, rect.top, ETO_OPAQUE, &rect, L"", 0, NULL);
 
                             SelectObject(hdc, hFont);
-                            DrawTextW(hdc, L"\x25CF", 1, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
+                            DrawTextW(hdc, L"\x2022", 1, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
                         }
                         else
                         {

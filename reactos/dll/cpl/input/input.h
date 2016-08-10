@@ -67,6 +67,9 @@ typedef struct
 INT_PTR CALLBACK
 KeySettingsDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+DWORD
+ReadAttributes(VOID);
+
 /* key_sequence_dialog.c */
 INT_PTR CALLBACK
 ChangeKeySeqDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
