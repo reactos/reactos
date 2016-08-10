@@ -23,7 +23,7 @@ ReadKeysSettings(VOID)
     {
         DWORD dwSize;
 
-        dwSize = sizeof(DWORD);
+        dwSize = sizeof(dwSize);
 
         if (RegQueryValueExW(hKey,
                              L"Attributes",
@@ -142,7 +142,7 @@ UpdateKeySettingsListView(HWND hwndList)
 
     ListView_DeleteAllItems(hwndList);
 
-    memset(&item, 0, sizeof(LV_ITEM));
+    ZeroMemory(&item, sizeof(item));
 
     LoadStringW(hApplet, IDS_SWITCH_BET_INLANG, szBuffer, ARRAYSIZE(szBuffer));
     item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
@@ -191,7 +191,7 @@ OnInitKeySettingsDialog(HWND hwndDlg)
 
     ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT);
 
-    memset(&column, 0, sizeof(LV_COLUMN));
+   ZeroMemory(&column, sizeof(column));
 
     column.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
 

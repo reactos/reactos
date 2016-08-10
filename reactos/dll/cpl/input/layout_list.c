@@ -22,13 +22,13 @@ LayoutList_AppendNode(DWORD dwId, DWORD dwSpecialId, const WCHAR *pszName)
 
     pCurrent = _LayoutList;
 
-    pNew = (LAYOUT_LIST_NODE*) malloc(sizeof(LAYOUT_LIST_NODE));
+    pNew = (LAYOUT_LIST_NODE*)malloc(sizeof(LAYOUT_LIST_NODE));
     if (pNew == NULL)
         return NULL;
 
-    memset(pNew, 0, sizeof(LAYOUT_LIST_NODE));
+    ZeroMemory(pNew, sizeof(LAYOUT_LIST_NODE));
 
-    pNew->pszName = DublicateString(pszName);
+    pNew->pszName = DuplicateString(pszName);
     if (pNew->pszName == NULL)
     {
         free(pNew);

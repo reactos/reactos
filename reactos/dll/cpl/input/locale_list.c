@@ -22,13 +22,13 @@ LocaleList_Append(DWORD dwId, const WCHAR *pszName)
 
     pCurrent = _LocaleList;
 
-    pNew = (LOCALE_LIST_NODE*) malloc(sizeof(LOCALE_LIST_NODE));
+    pNew = (LOCALE_LIST_NODE*)malloc(sizeof(LOCALE_LIST_NODE));
     if (pNew == NULL)
         return NULL;
 
-    memset(pNew, 0, sizeof(LOCALE_LIST_NODE));
+    ZeroMemory(pNew, sizeof(LOCALE_LIST_NODE));
 
-    pNew->pszName = DublicateString(pszName);
+    pNew->pszName = DuplicateString(pszName);
     if (pNew->pszName == NULL)
     {
         free(pNew);

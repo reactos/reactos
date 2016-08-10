@@ -73,20 +73,20 @@ ChangeKeySeqDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 
 static inline WCHAR*
-DublicateString(const WCHAR *pszString)
+DuplicateString(const WCHAR *pszString)
 {
-    WCHAR *pszDublicate;
+    WCHAR *pszDuplicate;
     size_t size;
 
     size = (wcslen(pszString) + 1) * sizeof(WCHAR);
 
-    pszDublicate = (WCHAR*) malloc(size);
-    if (pszDublicate != NULL)
+    pszDuplicate = (WCHAR*) malloc(size);
+    if (pszDuplicate != NULL)
     {
-        StringCbCopyW(pszDublicate, size, pszString);
+        StringCbCopyW(pszDuplicate, size, pszString);
     }
 
-    return pszDublicate;
+    return pszDuplicate;
 }
 
 static inline DWORD

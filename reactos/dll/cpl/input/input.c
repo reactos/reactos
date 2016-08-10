@@ -29,9 +29,9 @@ static APPLET Applets[NUM_APPLETS] =
 static VOID
 InitPropSheetPage(PROPSHEETPAGEW *page, WORD idDlg, DLGPROC DlgProc)
 {
-    memset(page, 0, sizeof(PROPSHEETPAGEW));
+    ZeroMemory(page, sizeof(*page));
 
-    page->dwSize      = sizeof(PROPSHEETPAGEW);
+    page->dwSize      = sizeof(*page);
     page->dwFlags     = PSP_DEFAULT;
     page->hInstance   = hApplet;
     page->pszTemplate = MAKEINTRESOURCEW(idDlg);
@@ -49,13 +49,13 @@ SystemApplet(VOID)
 
     LoadStringW(hApplet, IDS_CPLSYSTEMNAME, szCaption, ARRAYSIZE(szCaption));
 
-    memset(&header, 0, sizeof(PROPSHEETHEADER));
+    ZeroMemory(&header, sizeof(header));
 
-    header.dwSize      = sizeof(PROPSHEETHEADER);
+    header.dwSize      = sizeof(header);
     header.dwFlags     = PSH_PROPSHEETPAGE;
     header.hwndParent  = hCPLWindow;
     header.hInstance   = hApplet;
-    header.hIcon       = LoadIconW(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
+    header.hIcon       = LoadIconW(hApplet, MAKEINTRESOURCEW(IDI_CPLSYSTEM));
     header.pszCaption  = szCaption;
     header.nPages      = ARRAYSIZE(page);
     header.nStartPage  = 0;

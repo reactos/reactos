@@ -34,9 +34,9 @@ CreateLayoutIcon(LPWSTR szLayout, BOOL bIsDefault)
         hBmpNew = CreateBitmap(width, height, 1, 1, NULL);
         if (hBmpNew)
         {
-            LOGFONT lf;
+            LOGFONTW lf;
 
-            if (SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(LOGFONT), &lf, 0))
+            if (SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(lf), &lf, 0))
             {
                 ICONINFO IconInfo;
                 HFONT hFont;
@@ -143,7 +143,7 @@ AddToInputListView(HWND hwndList, INPUT_LIST_NODE *pInputNode)
         }
     }
 
-    memset(&item, 0, sizeof(LV_ITEM));
+    ZeroMemory(&item, sizeof(item));
 
     item.mask    = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
     item.pszText = pInputNode->pLocale->pszName;
@@ -202,7 +202,7 @@ OnInitSettingsPage(HWND hwndDlg)
 
         ListView_SetExtendedListViewStyle(hwndInputList, LVS_EX_FULLROWSELECT);
 
-        memset(&column, 0, sizeof(LV_COLUMN));
+        ZeroMemory(&column, sizeof(column));
 
         column.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
 

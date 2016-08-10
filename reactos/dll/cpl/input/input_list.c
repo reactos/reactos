@@ -23,7 +23,7 @@ InputList_AppendNode(VOID)
     if (pNew == NULL)
         return NULL;
 
-    memset(pNew, 0, sizeof(INPUT_LIST_NODE));
+    ZeroMemory(pNew, sizeof(INPUT_LIST_NODE));
 
     if (pCurrent == NULL)
     {
@@ -318,7 +318,7 @@ InputList_Add(LOCALE_LIST_NODE *pLocale, LAYOUT_LIST_NODE *pLayout)
         if (len > 0)
         {
             szIndicator[len - 1] = 0;
-            pInput->pszIndicator = DublicateString(szIndicator);
+            pInput->pszIndicator = DuplicateString(szIndicator);
         }
     }
 
@@ -447,7 +447,7 @@ InputList_Create(VOID)
                         if (len > 0)
                         {
                             szIndicator[len - 1] = 0;
-                            pInput->pszIndicator = DublicateString(szIndicator);
+                            pInput->pszIndicator = DuplicateString(szIndicator);
                         }
                     }
                 }
