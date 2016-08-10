@@ -17,6 +17,7 @@ START_TEST(CcCopyRead)
     PVOID Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, 1024);
     UNICODE_STRING BigAlignmentTest = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-CcCopyRead\\BigAlignmentTest");
     UNICODE_STRING SmallAlignmentTest = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-CcCopyRead\\SmallAlignmentTest");
+    UNICODE_STRING ReallySmallAlignmentTest = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-CcCopyRead\\ReallySmallAlignmentTest");
     
     KmtLoadDriver(L"CcCopyRead", FALSE);
     KmtOpenDriver();
@@ -74,6 +75,17 @@ START_TEST(CcCopyRead)
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_hex(((USHORT *)Buffer)[0], 0xFFFF);
     ok_eq_hex(((USHORT *)Buffer)[1], 0xBABA);
+
+    NtClose(Handle);
+
+    InitializeObjectAttributes(&ObjectAttributes, &ReallySmallAlignmentTest, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenFile(&Handle, FILE_ALL_ACCESS, &ObjectAttributes, &IoStatusBlock, 0, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+
+    ByteOffset.QuadPart = 1;
+    Status = NtReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock, Buffer, 61, &ByteOffset, NULL);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    ok_eq_hex(((USHORT *)Buffer)[0], 0xBABA);
 
     NtClose(Handle);
 

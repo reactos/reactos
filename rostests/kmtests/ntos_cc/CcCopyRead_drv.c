@@ -195,6 +195,13 @@ TestIrpHandler(
             Fcb->Header.FileSize.QuadPart = 1004;
             Fcb->Header.ValidDataLength.QuadPart = 1004;
         }
+        else if (IoStack->FileObject->FileName.Length >= 2 * sizeof(WCHAR) &&
+                 IoStack->FileObject->FileName.Buffer[1] == 'R')
+        {
+            Fcb->Header.AllocationSize.QuadPart = 62;
+            Fcb->Header.FileSize.QuadPart = 62;
+            Fcb->Header.ValidDataLength.QuadPart = 62;
+        }
         else
         {
             Fcb->Header.AllocationSize.QuadPart = 512;
@@ -262,7 +269,7 @@ TestIrpHandler(
         }
         else
         {
-            ok(Offset.QuadPart % PAGE_SIZE == 0, "Offset is not aligned: %I64i\n", Offset.QuadPart);
+            ok((Offset.QuadPart % PAGE_SIZE == 0 || Offset.QuadPart == 0), "Offset is not aligned: %I64i\n", Offset.QuadPart);
             ok(Length % PAGE_SIZE == 0, "Length is not aligned: %I64i\n", Length);
 
             ok(Irp->AssociatedIrp.SystemBuffer == NULL, "A SystemBuffer was allocated!\n");
