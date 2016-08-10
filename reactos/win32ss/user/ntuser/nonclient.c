@@ -944,7 +944,7 @@ VOID UserDrawCaptionBar(
    if (!(Style & WS_MINIMIZE))
    {
       /* Draw menu bar */
-      if (pWnd->state & WNDS_HASMENU)
+      if (pWnd->state & WNDS_HASMENU && pWnd->IDMenu) // Should be pWnd->spmenu
       {
           PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu)); // FIXME!
           TempRect = CurrentRect;
@@ -1113,7 +1113,7 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
    if (!(Style & WS_MINIMIZE))
    {
      /* Draw menu bar */
-     if (pWnd->state & WNDS_HASMENU)
+     if (pWnd->state & WNDS_HASMENU && pWnd->IDMenu) // Should be pWnd->spmenu
      {
          if (!(Flags & DC_NOSENDMSG))
          {
