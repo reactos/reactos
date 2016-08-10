@@ -345,6 +345,11 @@ TCPAcceptEventHandler(void *arg, PTCP_PCB newpcb)
         DereferenceObject(Bucket->AssociatedEndpoint);
         
         CompleteBucket(Connection, Bucket, FALSE);
+
+        if (Status == STATUS_SUCCESS)
+        {
+            break;
+        }
     }
     
     DereferenceObject(Connection);
