@@ -3595,6 +3595,30 @@ co_IntSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi, BOOL bAlte
             else
                Window->ExStyle &= ~WS_EX_WINDOWEDGE;
 
+            if ((OldValue & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+            {
+               if ((NewValue & (WS_CHILD | WS_POPUP)) != WS_CHILD)
+               {
+                  //// From child to non-child it should be null already.
+                  ERR("IDMenu going null! %d\n",Window->IDMenu);
+                  Window->IDMenu = 0; // Window->spmenu = 0;
+               }
+            }
+            else
+            {
+               if ((NewValue & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+               {
+                  PMENU pMenu = UserGetMenuObject(UlongToHandle(Window->IDMenu));
+                  Window->state &= ~WNDS_HASMENU;
+                  if (pMenu)
+                  {
+                     ERR("IDMenu released 0x%p\n",pMenu);
+                     // ROS may not hold a lock after setting menu to window. But it should!
+                     //IntReleaseMenuObject(pMenu);
+                  }
+               }
+            }
+
             if ((Style.styleOld ^ Style.styleNew) & WS_VISIBLE)
             {
                if (Style.styleOld & WS_VISIBLE) Window->head.pti->cVisWindows--;

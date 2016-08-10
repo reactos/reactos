@@ -944,9 +944,12 @@ VOID UserDrawCaptionBar(
    if (!(Style & WS_MINIMIZE))
    {
       /* Draw menu bar */
-      if (HAS_MENU(pWnd, Style))
+      if (pWnd->state & WNDS_HASMENU)
       {
-          CurrentRect.top += MENU_DrawMenuBar(hDC, &CurrentRect, pWnd, FALSE);
+          PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu)); // FIXME!
+          TempRect = CurrentRect;
+          TempRect.bottom = TempRect.top + menu->cyMenu; // Should be pWnd->spmenu->cyMenu;
+          CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
       }
 
       if (ExStyle & WS_EX_CLIENTEDGE)
@@ -1110,11 +1113,14 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
    if (!(Style & WS_MINIMIZE))
    {
      /* Draw menu bar */
-     if (HAS_MENU(pWnd, Style))
+     if (pWnd->state & WNDS_HASMENU)
      {
          if (!(Flags & DC_NOSENDMSG))
          {
-             CurrentRect.top += MENU_DrawMenuBar(hDC, &CurrentRect, pWnd, FALSE);
+             PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu)); // FIXME!
+             TempRect = CurrentRect;
+             TempRect.bottom = TempRect.top + menu->cyMenu; // Should be pWnd->spmenu->cyMenu;
+             CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
          }
      }
 
