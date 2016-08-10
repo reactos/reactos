@@ -4,7 +4,7 @@ add_subdirectory(shelldesktop)
 add_subdirectory(shellmenu)
 add_subdirectory(shellrecyclebin)
 
-set_cpp(WITH_RUNTIME)
+set_cpp(WITH_RUNTIME WITH_EXCEPTIONS)
 spec2def(shell32.dll shell32.spec ADD_IMPORTLIB)
 
 if(NOT MSVC)
@@ -53,6 +53,7 @@ list(APPEND SOURCE
     folders/CFontsFolder.cpp
     folders/CControlPanelFolder.cpp
     folders/CRecycleBin.cpp
+    folders/CRegFolder.cpp
     droptargets/CexeDropHandler.cpp
     shlexec.cpp
     shlfileop.cpp

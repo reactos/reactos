@@ -41,11 +41,6 @@ CDrivesFolderEnum is only responsible for returning the physical items.
 
 HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
 {
-    if (!_ILIsDrive(pidl))
-    {
-        return CGuidItemExtractIcon_CreateInstance(psf, pidl, riid, ppvOut);
-    }
-
     CComPtr<IDefaultExtractIconInit> initIcon;
     HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &initIcon));
     if (FAILED(hr))
@@ -91,6 +86,7 @@ HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
 
     return initIcon->QueryInterface(riid, ppvOut);
 }
+
 class CDrivesFolderEnum :
     public CEnumIDListBase
 {
@@ -230,7 +226,12 @@ HRESULT WINAPI CDrivesFolder::FinalConstruct()
     if (pidlRoot == NULL)
         return E_OUTOFMEMORY;
 
-    return S_OK;
+    HRESULT hr = CRegFolder_CreateInstance(&CLSID_MyComputer, 
+                                           pidlRoot, 
+                                           L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 
+                                           IID_PPV_ARG(IShellFolder2, &m_regFolder));
+
+    return hr;
 }
 
 /**************************************************************************
@@ -253,7 +254,7 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
 
     /* handle CLSID paths */
     if (lpszDisplayName[0] == ':' && lpszDisplayName[1] == ':')
-        return SH_ParseGuidDisplayName(this, hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
+        return m_regFolder->ParseDisplayName(hwndOwner, pbc, lpszDisplayName, pchEaten, ppidl, pdwAttributes);
 
     if (PathGetDriveNumberW(lpszDisplayName) < 0)
         return E_INVALIDARG;
@@ -280,7 +281,7 @@ HRESULT WINAPI CDrivesFolder::ParseDisplayName(HWND hwndOwner, LPBC pbc, LPOLEST
             if (_ILIsDrive(pidlTemp))
                 *pdwAttributes &= dwDriveAttributes;
             else if (_ILIsSpecialFolder(pidlTemp))
-                SHELL32_GetGuidItemAttributes(this, pidlTemp, pdwAttributes);
+                m_regFolder->GetAttributesOf(1, &pidlTemp, pdwAttributes);
             else
                 ERR("Got an unkown pidl here!\n");
         }
@@ -310,7 +311,7 @@ HRESULT WINAPI CDrivesFolder::BindToObject(PCUIDLIST_RELATIVE pidl, LPBC pbcRese
           pidl, pbcReserved, shdebugstr_guid(&riid), ppvOut);
 
     if (_ILIsSpecialFolder(pidl))
-        return SHELL32_BindToGuidItem(pidlRoot, pidl, pbcReserved, riid, ppvOut);
+        return m_regFolder->BindToObject(pidl, pbcReserved, riid, ppvOut);
 
     LPITEMIDLIST pidlChild = ILCloneFirst (pidl);
     if (!pidlChild)
@@ -364,7 +365,7 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
     }
 
     if (_ILIsSpecialFolder(pidl1) || _ILIsSpecialFolder(pidl2))
-        return SHELL32_CompareGuidItems(this, lParam, pidl1, pidl2);
+        m_regFolder->CompareIDs(lParam, pidl1, pidl2);
 
     if (!_ILIsDrive(pidl1) || !_ILIsDrive(pidl2) || LOWORD(lParam) >= MYCOMPUTERSHELLVIEWCOLUMNS)
         return E_INVALIDARG;
@@ -482,7 +483,7 @@ HRESULT WINAPI CDrivesFolder::GetAttributesOf(UINT cidl, PCUITEMID_CHILD_ARRAY a
             else if (_ILIsControlPanel(apidl[i]))
                 *rgfInOut &= dwControlPanelAttributes;
             else if (_ILIsSpecialFolder(*apidl))
-                SHELL32_GetGuidItemAttributes(this, apidl[i], rgfInOut);
+                m_regFolder->GetAttributesOf(1, &apidl[i], rgfInOut);
             else
                 ERR("Got unknown pidl type!\n");
         }
@@ -533,7 +534,10 @@ HRESULT WINAPI CDrivesFolder::GetUIObjectOf(HWND hwndOwner,
     }
     else if ((IsEqualIID (riid, IID_IExtractIconA) || IsEqualIID (riid, IID_IExtractIconW)) && (cidl == 1))
     {
-        hr = CDrivesExtractIcon_CreateInstance(this, apidl[0], riid, &pObj);
+        if (_ILIsDrive(apidl[0]))
+            hr = CDrivesExtractIcon_CreateInstance(this, apidl[0], riid, &pObj);
+        else
+            hr = m_regFolder->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, &pObj);
     }
     else if (IsEqualIID (riid, IID_IDropTarget) && (cidl >= 1))
     {
@@ -570,11 +574,11 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
     {
         return SHELL32_GetDisplayNameOfChild(this, pidl, dwFlags, strRet);
     }
-    else if (!_ILIsDesktop(pidl) && _ILIsSpecialFolder(pidl))
+    else if (_ILIsSpecialFolder(pidl))
     {
-        return SHELL32_GetDisplayNameOfGUIDItem(this, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", pidl, dwFlags, strRet);
+        return m_regFolder->GetDisplayNameOf(pidl, dwFlags, strRet);
     }
-    else if (pidl->mkid.cb && !_ILIsDrive(pidl))
+    else if (!_ILIsDrive(pidl))
     {
         ERR("Wrong pidl type\n");
         return E_INVALIDARG;
@@ -586,61 +590,51 @@ HRESULT WINAPI CDrivesFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
 
     pszPath[0] = 0;
 
-    if (!pidl->mkid.cb)
+    _ILSimpleGetTextW(pidl, pszPath, MAX_PATH);    /* append my own path */
+    /* long view "lw_name (C:)" */
+    if (!(dwFlags & SHGDN_FORPARSING))
     {
-        /* parsing name like ::{...} */
-        pszPath[0] = ':';
-        pszPath[1] = ':';
-        SHELL32_GUIDToStringW(CLSID_MyComputer, &pszPath[2]);
-    }
-    else
-    {
-        _ILSimpleGetTextW(pidl, pszPath, MAX_PATH);    /* append my own path */
-        /* long view "lw_name (C:)" */
-        if (!(dwFlags & SHGDN_FORPARSING))
-        {
-            WCHAR wszDrive[18] = {0};
-            DWORD dwVolumeSerialNumber, dwMaximumComponentLength, dwFileSystemFlags;
-            static const WCHAR wszOpenBracket[] = {' ', '(', 0};
-            static const WCHAR wszCloseBracket[] = {')', 0};
+        WCHAR wszDrive[18] = {0};
+        DWORD dwVolumeSerialNumber, dwMaximumComponentLength, dwFileSystemFlags;
+        static const WCHAR wszOpenBracket[] = {' ', '(', 0};
+        static const WCHAR wszCloseBracket[] = {')', 0};
 
-            lstrcpynW(wszDrive, pszPath, 4);
-            pszPath[0] = L'\0';
-            GetVolumeInformationW(wszDrive, pszPath,
-                                  MAX_PATH - 7,
-                                  &dwVolumeSerialNumber,
-                                  &dwMaximumComponentLength, &dwFileSystemFlags, NULL, 0);
-            pszPath[MAX_PATH-1] = L'\0';
-            if (!wcslen(pszPath))
+        lstrcpynW(wszDrive, pszPath, 4);
+        pszPath[0] = L'\0';
+        GetVolumeInformationW(wszDrive, pszPath,
+                                MAX_PATH - 7,
+                                &dwVolumeSerialNumber,
+                                &dwMaximumComponentLength, &dwFileSystemFlags, NULL, 0);
+        pszPath[MAX_PATH-1] = L'\0';
+        if (!wcslen(pszPath))
+        {
+            UINT DriveType, ResourceId;
+            DriveType = GetDriveTypeW(wszDrive);
+            switch(DriveType)
             {
-                UINT DriveType, ResourceId;
-                DriveType = GetDriveTypeW(wszDrive);
-                switch(DriveType)
-                {
-                    case DRIVE_FIXED:
-                        ResourceId = IDS_DRIVE_FIXED;
-                        break;
-                    case DRIVE_REMOTE:
-                        ResourceId = IDS_DRIVE_NETWORK;
-                        break;
-                    case DRIVE_CDROM:
-                        ResourceId = IDS_DRIVE_CDROM;
-                        break;
-                    default:
-                        ResourceId = 0;
-                }
-                if (ResourceId)
-                {
-                    dwFileSystemFlags = LoadStringW(shell32_hInstance, ResourceId, pszPath, MAX_PATH);
-                    if (dwFileSystemFlags > MAX_PATH - 7)
-                        pszPath[MAX_PATH-7] = L'\0';
-                }
+                case DRIVE_FIXED:
+                    ResourceId = IDS_DRIVE_FIXED;
+                    break;
+                case DRIVE_REMOTE:
+                    ResourceId = IDS_DRIVE_NETWORK;
+                    break;
+                case DRIVE_CDROM:
+                    ResourceId = IDS_DRIVE_CDROM;
+                    break;
+                default:
+                    ResourceId = 0;
             }
-            wcscat (pszPath, wszOpenBracket);
-            wszDrive[2] = L'\0';
-            wcscat (pszPath, wszDrive);
-            wcscat (pszPath, wszCloseBracket);
+            if (ResourceId)
+            {
+                dwFileSystemFlags = LoadStringW(shell32_hInstance, ResourceId, pszPath, MAX_PATH);
+                if (dwFileSystemFlags > MAX_PATH - 7)
+                    pszPath[MAX_PATH-7] = L'\0';
+            }
         }
+        wcscat (pszPath, wszOpenBracket);
+        wszDrive[2] = L'\0';
+        wcscat (pszPath, wszDrive);
+        wcscat (pszPath, wszCloseBracket);
     }
 
     if (SUCCEEDED(hr))
@@ -681,7 +675,7 @@ HRESULT WINAPI CDrivesFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,
         return S_OK;
     }
 
-    return SHELL32_SetNameOfGuidItem(pidl, lpName, dwFlags, pPidlOut);
+    return m_regFolder->SetNameOf(hwndOwner, pidl, lpName, dwFlags, pPidlOut);
 }
 
 HRESULT WINAPI CDrivesFolder::GetDefaultSearchGUID(GUID * pguid)
@@ -740,7 +734,7 @@ HRESULT WINAPI CDrivesFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, S
     }
     else if (_ILIsSpecialFolder(pidl))
     {
-        return SHELL32_GetDetailsOfGuidItem(this, pidl, iColumn, psd);
+        return m_regFolder->GetDetailsOf(pidl, iColumn, psd);
     }
     else
     {
