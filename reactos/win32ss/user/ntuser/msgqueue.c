@@ -1880,6 +1880,7 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
         {
             if ( Msg->wParam == VK_SHIFT && !(IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT)))
             {
+                WPARAM wParamILR;
                 PKL pkl = pti->KeyboardLayout;
 
                 if (pWnd) UserDerefObjectCo(pWnd);
@@ -1894,10 +1895,18 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
                 if (pkl != NULL && gLanguageToggleKeyState)
                 {
                     TRACE("Posting WM_INPUTLANGCHANGEREQUEST KeyState %d\n", gLanguageToggleKeyState );
-                    UserPostMessage(UserHMGetHandle(pWnd),
-                                    WM_INPUTLANGCHANGEREQUEST,
-                                    gLanguageToggleKeyState,
-                                    (LPARAM)pkl->hkl);
+
+                    wParamILR = gLanguageToggleKeyState;
+                    // If system character set and font signature send flag.
+                    if ( gSystemFS & pkl->dwFontSigs )
+                    {
+                       wParamILR |= INPUTLANGCHANGE_SYSCHARSET;
+                    }
+
+                    UserPostMessage( UserHMGetHandle(pWnd),
+                                     WM_INPUTLANGCHANGEREQUEST,
+                                     wParamILR,
+                                    (LPARAM)pkl->hkl );
 
                     gLanguageToggleKeyState = 0;
                     //// Keep looping.
