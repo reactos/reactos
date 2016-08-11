@@ -474,7 +474,7 @@ int _tmain(int argc, _TCHAR* argv[])
             ROSEaBuffer->EaValueLength = (UCHAR)strlen(ROSEaBuffer->EaName);
             ulROSError = RANDOM_INIT_ERROR;
             ROSEaBuffer->Flags = TestEaBufferFlags;
-            ROSEaBuffer->NextEntryOffset = ((ROSEaBuffer->EaNameLength+ROSEaBuffer->EaNameLength+9)+3)&0xFFFFFFFC;;
+            ROSEaBuffer->NextEntryOffset = ((ROSEaBuffer->EaNameLength+ROSEaBuffer->EaNameLength+9)+3)&0xFFFFFFFC;
             ROSStatus = IoCheckEaBufferValidityROS(ROSEaBuffer,TestEaLength,&ulROSError);
 
             printf("%i-",ROSEaBuffer->NextEntryOffset);

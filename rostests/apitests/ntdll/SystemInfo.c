@@ -259,7 +259,7 @@ Test_TimeAdjustment(void)
 
     /* Restore original values */
     SetTimeInfo.TimeAdjustment = TimeInfoOrg.TimeAdjustment;
-    SetTimeInfo.Enable = TimeInfoOrg.Enable;;
+    SetTimeInfo.Enable = TimeInfoOrg.Enable;
     Status = NtSetSystemInformation(SystemTimeAdjustmentInformation,
                                     &SetTimeInfo,
                                     sizeof(SetTimeInfo));

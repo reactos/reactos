@@ -1209,7 +1209,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         }
 
         case SPI_SETLANGTOGGLE:
-            gdwLanguageToggleKey = UserGetLanguageToggle();;
+            gdwLanguageToggleKey = UserGetLanguageToggle();
             return gdwLanguageToggleKey;
             break;
 

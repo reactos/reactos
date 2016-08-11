@@ -607,7 +607,7 @@ FdoPower(IN PDEVICE_OBJECT DeviceObject,
     LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
     PoStartNextPowerIrp(Irp);
     IoSkipCurrentIrpStackLocation(Irp);
-    return PoCallDriver(LowerDevice, Irp);;
+    return PoCallDriver(LowerDevice, Irp);
 }
 
 /* EOF */

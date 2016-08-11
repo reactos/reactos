@@ -50,7 +50,7 @@ static void Test_Dim()
     ok(wnd != ((HWND)0xdeadbeef), "Expected a valid window ptr\n");
     ok(IsWindow(wnd), "Expected a valid window\n");
     ok(IsWindowVisible(wnd), "Expected the window to be visible\n");
-    char classname[100] = {0};;
+    char classname[100] = {0};
     int nRet = GetClassNameA(wnd, classname, 100);
     ok(nRet == 17, "Expected GetClassName to return 3 was %i\n", nRet);
     ok(!strcmp(classname, "DimmedWindowClass"), "Expected classname to be DimmedWindowClass, was %s\n", classname);

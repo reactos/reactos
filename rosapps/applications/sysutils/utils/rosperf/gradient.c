@@ -36,7 +36,7 @@ GradientProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps)
   vert[0].Green = 0;
   vert[0].Blue = 0;
   vert[0].Alpha = 0;
-  vert[1].x = PerfInfo->WndWidth;;
+  vert[1].x = PerfInfo->WndWidth;
   vert[1].y = 0;
   vert[1].Red = 0;
   vert[1].Green = 0xff00;
