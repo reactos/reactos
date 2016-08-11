@@ -15,6 +15,8 @@ static BYTE gafAsyncKeyStateRecentDown[256 / 8]; // 1 bit per key
 static PKEYBOARD_INDICATOR_TRANSLATION gpKeyboardIndicatorTrans = NULL;
 static KEYBOARD_INDICATOR_PARAMETERS gIndicators = {0, 0};
 KEYBOARD_ATTRIBUTES gKeyboardInfo;
+int gLanguageToggleKeyState = 0;
+DWORD gdwLanguageToggleKey = 0;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -819,7 +821,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     }
 
     /* Check if this is a hotkey */
-    if (co_UserProcessHotKeys(wSimpleVk, bIsDown))
+    if (co_UserProcessHotKeys(wSimpleVk, bIsDown)) //// Check if this is correct, refer to hotkey sequence message tests.
     {
         TRACE("HotKey Processed\n");
         bPostMsg = FALSE;
@@ -920,22 +922,6 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
               ERR("Set last input\n");
               //ptiLastInput = pti;
            }
-        }
-
-        // TODO: When initializing win32k: Reading from the registry hotkey combination
-        // to switch the keyboard layout and store it to global variable.
-        // Using this combination of hotkeys in this function
-        if (wVk == VK_LSHIFT && IS_KEY_DOWN(gafAsyncKeyState, VK_LMENU))
-        {
-            PKL pkl = pti->KeyboardLayout;
-
-            if (pkl != NULL)
-            {
-                UserPostMessage(UserHMGetHandle(Wnd),
-                                WM_INPUTLANGCHANGEREQUEST,
-                                INPUTLANGCHANGE_FORWARD,
-                                (LPARAM)pkl->hkl);
-            }
         }
 
         /* If it is VK_PACKET, high word of wParam is used for wchar */

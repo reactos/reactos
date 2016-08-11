@@ -1773,6 +1773,7 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
     PWND pWnd;
     UINT ImmRet;
     BOOL Ret = TRUE;
+    WPARAM wParam = Msg->wParam;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
     if (Msg->message == VK_PACKET)
@@ -1833,6 +1834,81 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
         }
     }
 
+    //// Key Down!
+    if ( *RemoveMessages && Msg->message == WM_SYSKEYDOWN )
+    {
+        if ( HIWORD(Msg->lParam) & KF_ALTDOWN )
+        {
+            if ( Msg->wParam == VK_ESCAPE || Msg->wParam == VK_TAB ) // Alt-Tab/ESC Alt-Shift-Tab/ESC
+            {
+                WPARAM wParamTmp;
+
+                wParamTmp = UserGetKeyState(VK_SHIFT) & 0x8000 ? SC_PREVWINDOW : SC_NEXTWINDOW;
+                TRACE("Send WM_SYSCOMMAND Alt-Tab/ESC Alt-Shift-Tab/ESC\n");
+                co_IntSendMessage( Msg->hwnd, WM_SYSCOMMAND, wParamTmp, Msg->wParam );
+
+                //// Keep looping.
+                Ret = FALSE;
+                //// Skip the rest.
+                goto Exit;
+            }
+        }
+    }
+
+    if ( *RemoveMessages && (Msg->message == WM_SYSKEYDOWN || Msg->message == WM_KEYDOWN) )
+    {
+        if (gdwLanguageToggleKey < 3)
+        {
+            if (IS_KEY_DOWN(gafAsyncKeyState, gdwLanguageToggleKey == 1 ? VK_LMENU : VK_CONTROL)) // L Alt 1 or Ctrl 2 .
+            {
+                if ( wParam == VK_LSHIFT ) gLanguageToggleKeyState = INPUTLANGCHANGE_FORWARD;  // Left Alt - Left Shift, Next
+                //// FIXME : It seems to always be VK_LSHIFT.
+                if ( wParam == VK_RSHIFT ) gLanguageToggleKeyState = INPUTLANGCHANGE_BACKWARD; // Left Alt - Right Shift, Previous
+            }
+         }
+    }
+
+    //// Key Up!                             Alt Key                        Ctrl Key
+    if ( *RemoveMessages && (Msg->message == WM_SYSKEYUP || Msg->message == WM_KEYUP) )
+    {
+        // When initializing win32k: Reading from the registry hotkey combination
+        // to switch the keyboard layout and store it to global variable.
+        // Using this combination of hotkeys in this function
+
+        if ( gdwLanguageToggleKey < 3 &&
+             IS_KEY_DOWN(gafAsyncKeyState, gdwLanguageToggleKey == 1 ? VK_LMENU : VK_CONTROL) )
+        {
+            if ( Msg->wParam == VK_SHIFT && !(IS_KEY_DOWN(gafAsyncKeyState, VK_SHIFT)))
+            {
+                PKL pkl = pti->KeyboardLayout;
+
+                if (pWnd) UserDerefObjectCo(pWnd);
+
+                //// Seems to override message window.
+                if (!(pWnd = pti->MessageQueue->spwndFocus))
+                {
+                     pWnd = pti->MessageQueue->spwndActive;
+                }
+                if (pWnd) UserRefObjectCo(pWnd, &Ref);
+
+                if (pkl != NULL && gLanguageToggleKeyState)
+                {
+                    TRACE("Posting WM_INPUTLANGCHANGEREQUEST KeyState %d\n", gLanguageToggleKeyState );
+                    UserPostMessage(UserHMGetHandle(pWnd),
+                                    WM_INPUTLANGCHANGEREQUEST,
+                                    gLanguageToggleKeyState,
+                                    (LPARAM)pkl->hkl);
+
+                    gLanguageToggleKeyState = 0;
+                    //// Keep looping.
+                    Ret = FALSE;
+                    //// Skip the rest.
+                    goto Exit;
+                }
+            }
+        }
+    }
+
     if (co_HOOK_CallHooks( WH_KEYBOARD,
                           *RemoveMessages ? HC_ACTION : HC_NOREMOVE,
                            LOWORD(Msg->wParam),
@@ -1865,7 +1941,7 @@ BOOL co_IntProcessKeyboardMessage(MSG* Msg, BOOL* RemoveMessages)
             }
         }
     }
-
+Exit:
     if (pWnd) UserDerefObjectCo(pWnd);
     return Ret;
 }

@@ -26,5 +26,6 @@ VOID FASTCALL UserEnterExclusive(VOID);
 VOID FASTCALL UserLeave(VOID);
 BOOL FASTCALL UserIsEntered(VOID);
 BOOL FASTCALL UserIsEnteredExclusive(VOID);
+DWORD FASTCALL UserGetLanguageToggle(VOID);
 
 /* EOF */
