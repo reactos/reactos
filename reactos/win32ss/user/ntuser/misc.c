@@ -62,7 +62,7 @@ UserGetLanguageToggle(VOID)
     if (NT_SUCCESS(Status))
     {
         dwValue = atoi((char *)&dwValue);
-        ERR("Layout Hotkey %d\n",dwValue);
+        TRACE("Layout Hotkey %d\n",dwValue);
     }
     return dwValue;
 }

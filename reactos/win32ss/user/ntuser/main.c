@@ -1004,8 +1004,6 @@ DriverEntry(
         return Status;
     }
 
-    gdwLanguageToggleKey = UserGetLanguageToggle();
-
     gusLanguageID = UserGetLanguageID();
 
     return STATUS_SUCCESS;

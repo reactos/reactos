@@ -317,6 +317,7 @@ SpiUpdatePerUserSystemParameters(VOID)
        if (SPITESTPREF(UPM_COMBOBOXANIMATION)) gpsi->PUSIFlags |= PUSIF_COMBOBOXANIMATION;
        if (SPITESTPREF(UPM_LISTBOXSMOOTHSCROLLING)) gpsi->PUSIFlags |= PUSIF_LISTBOXSMOOTHSCROLLING;
     }
+    gdwLanguageToggleKey = UserGetLanguageToggle();
 }
 
 BOOL
