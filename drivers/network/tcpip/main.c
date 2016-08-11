@@ -7,7 +7,9 @@
 
 #include "precomp.h"
 
-//#define NDEBUG
+#ifdef TCPIP_NDEBUG
+#define NDEBUG
+#endif
 #include <debug.h>
 
 /* DriverEntry, DriverUnload and dispatch routines declaration */
@@ -224,7 +226,6 @@ TcpIpCreate(
 
 #ifndef NDEBUG
     ADD_IRP(Irp);
-    ADD_IRPSP(IrpSp);
 #endif
     
     /* Grab the info describing the file */
@@ -343,11 +344,10 @@ Quickie:
     }
     else
     {
+        IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 #ifndef NDEBUG
         REMOVE_IRP(Irp);
-        REMOVE_IRPSP(IrpSp);
 #endif
-        _IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
     }
 
     return Status;
@@ -373,7 +373,6 @@ TcpIpClose(
 
 #ifndef NDEBUG
     ADD_IRP(Irp);
-    ADD_IRPSP(IrpSp);
 #endif
 
     FileType = (ULONG_PTR)IrpSp->FileObject->FsContext2;
@@ -414,11 +413,10 @@ TcpIpClose(
 Quickie:
     Irp->IoStatus.Status = Status;
 
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 #ifndef NDEBUG
     REMOVE_IRP(Irp);
-    REMOVE_IRPSP(IrpSp);
 #endif
-    _IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
     return Status;
 }
@@ -446,7 +444,6 @@ TcpIpDispatchInternal(
 
 #ifndef NDEBUG
     ADD_IRP(Irp);
-    ADD_IRPSP(IrpSp);
 #endif
 
     switch ((ULONG)IrpSp->FileObject->FsContext2)
@@ -579,11 +576,10 @@ TcpIpDispatchInternal(
     }
     else
     {
+        IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 #ifndef NDEBUG
         REMOVE_IRP(Irp);
-        REMOVE_IRPSP(IrpSp);
 #endif
-        _IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
     }
 
     return Status;
@@ -600,6 +596,12 @@ TcpIpDispatch(
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp;
 
+#ifndef NDEBUG
+    INT i;
+    KIRQL OldIrql;
+    ADD_IRP(Irp);
+#endif
+    
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
     Irp->IoStatus.Information = 0;
@@ -640,6 +642,9 @@ TcpIpDispatch(
     else
     {
         IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+#ifndef NDEBUG
+        REMOVE_IRP(Irp);
+#endif
     }
 
     return Status;

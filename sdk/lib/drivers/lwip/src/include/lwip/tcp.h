@@ -373,14 +373,32 @@ err_t            tcp_output  (struct tcp_pcb *pcb);
  * Serializes all kernel network activity to circumvent lwIP core's lack of thread-safety.
  **/
 KMUTEX MTSerialMutex;
-/*
-#define ACQUIRE_SERIAL_MUTEX() \
+
+#define ACQUIRE_SERIAL_MUTEX(RelatedMutex,Timeout) \
+    while (KeWaitForMutexObject(&MTSerialMutex, Executive, KernelMode, FALSE, Timeout) \
+        == STATUS_TIMEOUT) \
+    { \
+        KeReleaseMutex(RelatedMutex, TRUE); \
+        KeWaitForMutexObject(RelatedMutex, Executive, KernelMode, FALSE, NULL); \
+    } do {} while(0)
+    
+#define ACQUIRE_SERIAL_MUTEX_NO_TO() \
     KeWaitForMutexObject(&MTSerialMutex, Executive, KernelMode, FALSE, NULL)
 
 #define RELEASE_SERIAL_MUTEX() \
     KeReleaseMutex(&MTSerialMutex, FALSE)
-*/
-#define ACQUIRE_SERIAL_MUTEX() \
+/*
+#define ACQUIRE_SERIAL_MUTEX(RelatedMutex,Timeout) \
+    DPRINT("Acquiring MTSerialMutex on thread %p\n", KeGetCurrentThread()); \
+    while (KeWaitForMutexObject(&MTSerialMutex, Executive, KernelMode, FALSE, Timeout) \
+        == STATUS_TIMEOUT) \
+    { \
+        KeReleaseMutex(RelatedMutex, TRUE); \
+        KeWaitForMutexObject(RelatedMutex, Executive, KernelMode, FALSE, NULL); \
+    } \
+    DPRINT("MTSerialMutex acquired on thread %p\n", KeGetCurrentThread())
+
+#define ACQUIRE_SERIAL_MUTEX_NO_TO() \
     DPRINT("Acquiring MTSerialMutex on thread %p\n", KeGetCurrentThread()); \
     KeWaitForMutexObject(&MTSerialMutex, Executive, KernelMode, FALSE, NULL); \
     DPRINT("MTSerialMutex acquired on thread %p\n", KeGetCurrentThread())
@@ -389,7 +407,7 @@ KMUTEX MTSerialMutex;
     DPRINT("Releasing MTSerialMutex on thread %p\n", KeGetCurrentThread()); \
     KeReleaseMutex(&MTSerialMutex, FALSE); \
     DPRINT("MTSerialMutex released on thread %p\n", KeGetCurrentThread())
-
+*/
 const char* tcp_debug_state_str(enum tcp_state s);
 
 #ifdef __cplusplus

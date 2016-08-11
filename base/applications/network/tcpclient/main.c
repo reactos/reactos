@@ -3,7 +3,7 @@
 #include <winsock2.h>
 
 #define LENGTH 255
-#define NUM_CLIENTS 16
+#define NUM_CLIENTS 1
 
 DWORD WINAPI ClientThreadMain(LPVOID lpParam) {
     SOCKET Sock;

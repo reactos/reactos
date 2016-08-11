@@ -106,7 +106,7 @@ sys_arch_sem_wait(sys_sem_t* sem, u32_t timeout)
                                       FALSE,
                                       timeout != 0 ? &LargeTimeout : NULL,
                                       NULL);
-    ACQUIRE_SERIAL_MUTEX();
+    ACQUIRE_SERIAL_MUTEX_NO_TO();
     if (Status == STATUS_WAIT_0)
     {
         KeQuerySystemTime(&PostWaitTime);
@@ -118,6 +118,7 @@ sys_arch_sem_wait(sys_sem_t* sem, u32_t timeout)
     else if (Status == STATUS_WAIT_1)
     {
         /* DON'T remove ourselves from the thread list! */
+        RELEASE_SERIAL_MUTEX();
         PsTerminateSystemThread(STATUS_SUCCESS);
         
         /* We should never get here! */
@@ -203,7 +204,7 @@ sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
                                       FALSE,
                                       timeout != 0 ? &LargeTimeout : NULL,
                                       NULL);
-    ACQUIRE_SERIAL_MUTEX();
+    ACQUIRE_SERIAL_MUTEX_NO_TO();
 
     if (Status == STATUS_WAIT_0)
     {
@@ -230,6 +231,7 @@ sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
     else if (Status == STATUS_WAIT_1)
     {
         /* DON'T remove ourselves from the thread list! */
+        RELEASE_SERIAL_MUTEX();
         PsTerminateSystemThread(STATUS_SUCCESS);
         
         /* We should never get here! */
@@ -267,7 +269,7 @@ LwipThreadMain(PVOID Context)
     
     ExInterlockedInsertHeadList(&ThreadListHead, &Container->ListEntry, &ThreadListLock);
     
-    ACQUIRE_SERIAL_MUTEX();
+    ACQUIRE_SERIAL_MUTEX_NO_TO();
     Container->ThreadFunction(Container->ThreadContext);
     RELEASE_SERIAL_MUTEX();
     
@@ -321,7 +323,7 @@ sys_init(void)
     KeInitializeEvent(&TerminationEvent, NotificationEvent, FALSE);
     KeInitializeMutex(&MTSerialMutex, 0);
     
-    ACQUIRE_SERIAL_MUTEX();
+    ACQUIRE_SERIAL_MUTEX_NO_TO();
 }
 
 void
@@ -346,9 +348,11 @@ sys_shutdown(void)
                                   KernelMode,
                                   FALSE,
                                   NULL);
-            ACQUIRE_SERIAL_MUTEX();
+            ACQUIRE_SERIAL_MUTEX_NO_TO();
             
             ZwClose(Container->Handle);
         }
     }
+    
+    RELEASE_SERIAL_MUTEX();
 }

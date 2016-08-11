@@ -203,7 +203,7 @@ TcpIpCreateLoopbackInterface(void)
     IP4_ADDR(&GatewayAddr, 127,0,0,1);
     IP4_ADDR(&IpAddr, 127,0,0,1);
     IP4_ADDR(&SubnetMask, 255,0,0,0);
-    ACQUIRE_SERIAL_MUTEX();
+    ACQUIRE_SERIAL_MUTEX_NO_TO();
     lwip_error = netifapi_netif_add(
         &LoopbackInterface->lwip_netif,
         &IpAddr,

@@ -1,22 +1,19 @@
-
 #pragma once
 
 #define TCP_REQUEST_CANCEL_MODE_ABORT    1
 #define TCP_REQUEST_CANCEL_MODE_CLOSE    2
 #define TCP_REQUEST_CANCEL_MODE_PRESERVE 3
 
-#define TCP_REQUEST_PENDING_GENERAL             0
 #define TCP_REQUEST_PENDING_SEND                1
 #define TCP_REQUEST_PENDING_RECEIVE             2
 #define TCP_REQUEST_PENDING_CONNECT             3
 #define TCP_REQUEST_PENDING_LISTEN              4
 #define TCP_REQUEST_PENDING_ACCEPTED_CONNECTION 5
-#define TCP_REQUEST_PENDING_LISTEN_POLL         6
 
-#define TCP_REQUEST_PAYLOAD_IRP     1
-#define TCP_REQUEST_PAYLOAD_CONTEXT 2
+#define TCP_REQUEST_PAYLOAD_IRP  1
+#define TCP_REQUEST_PAYLOAD_PCB  2
 
-// TODO: simplify state machine
+// TODO: simplify states
 #define TCP_STATE_CREATED       0x1 << 0
 #define TCP_STATE_BOUND         0x1 << 1
 #define TCP_STATE_LISTENING     0x1 << 2
@@ -25,8 +22,7 @@
 #define TCP_STATE_CONNECTING    0x1 << 5
 #define TCP_STATE_CONNECTED     0x1 << 6
 #define TCP_STATE_SENDING       0x1 << 7
-#define TCP_STATE_DISASSOCIATED 0x1 << 8
-#define TCP_STATE_CLOSED        0x1 << 9
+#define TCP_STATE_CLOSED        0x1 << 8
 
 //#define TCPIP_NDEBUG
 #ifndef TCPIP_NDEBUG
@@ -79,56 +75,6 @@ volatile long int IRPCount;
     } \
     IRPCount--; \
     KeReleaseSpinLockFromDpcLevel(&IRPArrayLock)
-
-KSPIN_LOCK IRPSPArrayLock;
-PIO_STACK_LOCATION IRPSPArray[256];
-volatile long int IRPSPCount;
-
-#define ADD_IRPSP(IrpSp) \
-    KeAcquireSpinLock(&IRPSPArrayLock, &OldIrql); \
-    IRPSPArray[IRPSPCount] = IrpSp; \
-    IRPSPCount++; \
-    KeReleaseSpinLock(&IRPSPArrayLock, OldIrql)
-
-#define ADD_IRPSP_DPC(IrpSp) \
-    KeAcquireSpinLockAtDpcLevel(&IRPSPArrayLock); \
-    IRPSPArray[IRPSPCount] = IrpSp; \
-    IRPSPCount++; \
-    KeReleaseSpinLockFromDpcLevel(&IRPSPArrayLock)
-
-#define REMOVE_IRPSP(IrpSp) \
-    KeAcquireSpinLock(&IRPSPArrayLock, &OldIrql); \
-    for (i = 0; i < IRPSPCount; i++) \
-    { \
-        if (IrpSp == IRPSPArray[i]) \
-        { \
-            IRPSPArray[i] = NULL; \
-        } \
-        if (IRPSPArray[i] == NULL) \
-        { \
-            IRPSPArray[i] = IRPSPArray[i+1]; \
-            IRPSPArray[i+1] = NULL; \
-        } \
-    } \
-    IRPSPCount--; \
-    KeReleaseSpinLock(&IRPSPArrayLock, OldIrql)
-
-#define REMOVE_IRPSP_DPC(IrpSp) \
-    KeAcquireSpinLockAtDpcLevel(&IRPSPArrayLock); \
-    for (i = 0; i < IRPSPCount; i++) \
-    { \
-        if (IrpSp == IRPSPArray[i]) \
-        { \
-            IRPSPArray[i] = NULL; \
-        } \
-        if (IRPSPArray[i] == NULL) \
-        { \
-            IRPSPArray[i] = IRPSPArray[i+1]; \
-            IRPSPArray[i+1] = NULL; \
-        } \
-    } \
-    IRPSPCount--; \
-    KeReleaseSpinLockFromDpcLevel(&IRPSPArrayLock)
 #endif
 
 #define _IoCompleteRequest(Irp,Mode) \
@@ -171,7 +117,8 @@ typedef struct _TCP_REQUEST {
     union
     {
         PIRP PendingIrp;
-        PTCP_CONTEXT Context;
+        struct tcp_pcb *apcb;
+        struct pbuf *p;
     } Payload;
     UCHAR CancelMode;
     UCHAR PendingMode;

@@ -7,7 +7,9 @@
 
 #include "precomp.h"
 
-//#define NDEBUG
+#ifdef TCPIP_NDEBUG
+#define NDEBUG
+#endif
 #include <debug.h>
 
 #ifndef NDEBUG
@@ -210,16 +212,20 @@ static KSPIN_LOCK AddressListLock;
 static LIST_ENTRY AddressListHead;
 
 /* Forward-declare lwIP callback functions */
-void lwip_tcp_err_callback(void *arg, err_t err);
-static err_t lwip_tcp_connected_callback(void *arg, struct tcp_pcb *tpcb, err_t err);
 static err_t lwip_tcp_accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err);
-static err_t lwip_tcp_receive_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
+static err_t lwip_tcp_recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
 static err_t lwip_tcp_sent_callback(void *arg, struct tcp_pcb *tpcb, u16_t len);
+static void lwip_tcp_err_callback(void *arg, err_t err);
+static err_t lwip_tcp_connected_callback(void *arg, struct tcp_pcb *tpcb, err_t err);
 
-/* Forward-declare helper function */
-VOID CloseAddress(PADDRESS_FILE AddressFile);
-NTSTATUS DisassociateAddress(PTCP_CONTEXT Context);
-NTSTATUS DoSend(PIRP Irp, PTCP_CONTEXT Context);
+/* Forward-declare helper functions */
+static VOID CloseAddress(PADDRESS_FILE AddressFile);
+static NTSTATUS CreateAddressAndEnlist(struct netif *lwip_netif, PTDI_ADDRESS_IP Address,
+    IPPROTO Protocol, USHORT ShareAccess, PADDRESS_FILE *AddressFile);
+static NTSTATUS DoSend(PIRP Irp, PTCP_CONTEXT Context);
+static NTSTATUS EnqueueIRP(PIRP Irp, PTCP_CONTEXT Context, PDRIVER_CANCEL CancelRoutine,
+    UCHAR CancelMode, UCHAR PendingMode);
+static NTSTATUS ExtractAddressFromList(PTRANSPORT_ADDRESS AddressList, PTDI_ADDRESS_IP Address);
 
 #define AddrIsUnspecified(Address) ((Address->in_addr == 0) || (Address->in_addr == 0xFFFFFFFF))
 
@@ -231,313 +237,39 @@ NTSTATUS DoSend(PIRP Irp, PTCP_CONTEXT Context);
     Context->TcpState |= State
 #define TCP_RMV_STATE(State,Context) \
     DPRINT("Removing State %s from Context %p\n", #State, Context); \
-    Context->TcpState &= ~State
+    Context->TcpState &= ~(State)
 
 /**
- * TODO: distributed mutex discription
+ * Context mutex functions
  **/
+
 VOID
-InitializeContextMutex(
+ContextMutexInit(
     PTCP_CONTEXT Context
 )
 {
     KeInitializeMutex(&Context->Mutex, 0);
 }
 
-BOOLEAN
-GetExclusiveContextAccess(
+VOID
+ContextMutexAcquire(
     PTCP_CONTEXT Context
 )
 {
-    PADDRESS_FILE AddressFile;
-
-#ifndef NDEBUG
-    PKTHREAD Thread;
-    Thread = KeGetCurrentThread();
-    DPRINT("Thread %p acquiring lock on Context %p\n", Thread, Context);
-#endif
-    
     KeWaitForMutexObject(&Context->Mutex, Executive, KernelMode, FALSE, NULL);
-    AddressFile = Context->AddressFile;
-    if (AddressFile == NULL)
-    {
-        /* Context has been disassociated. Do not continue. */
-        return FALSE;
-    }
-    if (Context->AddressFile == NULL)
-    {
-        /* Context was disassociated while we tried to acquire lock. IRP processing should stop. */
-        return FALSE;
-    }
-
-#ifndef NDEBUG
-    DPRINT("Thread %p acquired lock on Context %p\n", Thread, Context);
-#endif
-    return TRUE;
 }
 
 VOID
-ReleaseExclusiveContextAccess(
+ContextMutexRelease(
     PTCP_CONTEXT Context
 )
 {
-#ifndef NDEBUG
-    PKTHREAD Thread;
-    Thread = KeGetCurrentThread();
-    DPRINT("Thread %p releasing lock on Context %p\n", Thread, Context);
-#endif
-
     KeReleaseMutex(&Context->Mutex, FALSE);
-    
-#ifndef NDEBUG
-    DPRINT("Thread %p released lock on Context %p\n", Thread, Context);
-#endif
 }
 
-/* Get exclusive access to the corresponding TCP Context before calling */
-NTSTATUS
-EnqueueRequest(
-    PVOID Payload,
-    PTCP_CONTEXT Context,
-    UCHAR CancelMode,
-    UCHAR PendingMode,
-    UCHAR PayloadType
-)
-{
-    PTCP_REQUEST Request;
-
-    /* Allocate and initialize TCP Request */
-    Request = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Request), TAG_TCP_REQUEST);
-    if (Request == NULL)
-    {
-        DPRINT1("Not enough resources\n");
-        return STATUS_NO_MEMORY;
-    }
-    Request->Payload.PendingIrp = Payload;
-    Request->CancelMode = CancelMode;
-    Request->PendingMode = PendingMode;
-    Request->PayloadType = PayloadType;
-
-    /* Enqueue request into Context's request list */
-    InsertTailList(&Context->RequestListHead, &Request->ListEntry);
-
-    return STATUS_PENDING;
-}
-
-/* Get exclusive access to the corresponding TCP Context before calling */
-NTSTATUS
-PrepareIrpForCancel(
-    PIRP Irp,
-    PTCP_CONTEXT Context,
-    PDRIVER_CANCEL CancelRoutine,
-    UCHAR CancelMode,
-    UCHAR PendingMode
-)
-{
-    NTSTATUS Status;
-
-    /* Check that the IRP was not already canceled */
-    if (Irp->Cancel == TRUE)
-    {
-        DPRINT("IRP already canceled\n");
-        Irp->IoStatus.Status = STATUS_CANCELLED;
-        Irp->IoStatus.Information = 0;
-        return STATUS_CANCELLED;
-    }
-
-    /* Create and enqueue TCP Request */
-    Status = EnqueueRequest(Irp, Context, CancelMode, PendingMode, TCP_REQUEST_PAYLOAD_IRP);
-
-    /* Set the IRP's Cancel routine */
-    IoSetCancelRoutine(Irp, CancelRoutine);
-
-    return Status;
-}
-
-/* Dequeue Request, set Irp->CancelRoutine to NULL, get exclusive access to the Context, and set
- * Irp->IoStatus.Information if needed before calling. This function deallocates the Request struct
- * and completes the IRP. This function may also deallocate the lwIP PCB and set the PCB pointer in
- * the Context struct to NULL. */
-VOID
-CleanupRequest(
-    PTCP_REQUEST Request,
-    NTSTATUS Status,
-    PTCP_CONTEXT Context
-)
-{
-#ifndef NDEBUG
-    INT i;
-    KIRQL OldIrql;
-    PIO_STACK_LOCATION IrpSp;
-#endif
-    LONG ContextCount;
-
-    PIRP Irp;
-    PIRP PendingIrp;
-    PLIST_ENTRY Entry;
-    PLIST_ENTRY Head;
-    PTCP_CONTEXT AcceptingContext;
-    PTCP_REQUEST TemporaryRequest;
-
-    /* If this was just a request completion, skip lwIP PCB cleanup and go straight to IRP
-     * completion */
-    if (Status == STATUS_SUCCESS)
-    {
-        goto COMPLETE_IRP;
-    }
-
-    /* This is not a simple completion. Perform cleanup depending on Request payload type. */
-    switch (Request->PayloadType)
-    {
-        case TCP_REQUEST_PAYLOAD_IRP :
-            /* The Request holds a pending IRP */
-            goto CLEANUP_PCB;
-        case TCP_REQUEST_PAYLOAD_CONTEXT :
-            /* The Request holds a dummy Context meant for incomming newly accepted connections */
-            AcceptingContext = Request->Payload.Context;
-
-            /* If an incomming connection has already been accepted, terminate it. */
-            if (Request->PendingMode == TCP_REQUEST_PENDING_ACCEPTED_CONNECTION)
-            {
-#ifndef NDEBUG
-                REMOVE_PCB(AcceptingContext->lwip_tcp_pcb);
-#endif
-                ACQUIRE_SERIAL_MUTEX();
-                tcp_close(AcceptingContext->lwip_tcp_pcb);
-                RELEASE_SERIAL_MUTEX();
-            }
-
-            /* If the Context does not have an upper-level reference, deallocate it. */
-            if (AcceptingContext->ReferencedByUpperLayer == FALSE)
-            {
-                /* If removing this Context removes the last reference to its Address File, also
-                 * deallocate the Address File. */
-                ContextCount = InterlockedDecrement(&AcceptingContext->AddressFile->ContextCount);
-                if (ContextCount < 1)
-                {
-                    CloseAddress(AcceptingContext->AddressFile);
-                }
-#ifndef NDEBUG
-                REMOVE_CONTEXT(AcceptingContext);
-#endif
-                ExFreePoolWithTag(AcceptingContext, TAG_TCP_CONTEXT);
-            }
-
-            /* Skip IRP completion, because there is no IRP to complete. */
-            goto FINISH;
-        default :
-            DPRINT1("We should never reach here. Something is wrong.\n");
-            goto FINISH;
-    }
-
-CLEANUP_PCB:
-    /* If cancelling, clean up the lwIP PCB according to request type */
-    switch (Request->CancelMode)
-    {
-        case TCP_REQUEST_CANCEL_MODE_CLOSE :
-            TCP_SET_STATE(TCP_STATE_CLOSED, Context);
-            if (Context->lwip_tcp_pcb != NULL)
-            {
-#ifndef NDEBUG
-                REMOVE_PCB(Context->lwip_tcp_pcb);
-#endif
-                ACQUIRE_SERIAL_MUTEX();
-                tcp_close(Context->lwip_tcp_pcb);
-                RELEASE_SERIAL_MUTEX();
-                Context->lwip_tcp_pcb = NULL;
-            }
-            goto COMPLETE_IRP;
-        case TCP_REQUEST_CANCEL_MODE_ABORT :
-            TCP_SET_STATE(TCP_STATE_ABORTED, Context);
-            if (Context->lwip_tcp_pcb != NULL)
-            {
-#ifndef NDEBUG
-                REMOVE_PCB(Context->lwip_tcp_pcb);
-#endif
-                ACQUIRE_SERIAL_MUTEX();
-                tcp_abort(Context->lwip_tcp_pcb);
-                RELEASE_SERIAL_MUTEX();
-                Context->lwip_tcp_pcb = NULL;
-            }
-            goto COMPLETE_IRP;
-        case TCP_REQUEST_CANCEL_MODE_PRESERVE :
-            /* For requests that do not deallocate the PCB when canceled, determine and clear the
-             * appropriate TCP State bit only if there are no more Requests of that type. */
-            Head = &Context->RequestListHead;
-            Entry = Head->Flink;
-            switch (Request->PendingMode)
-            {
-                case TCP_REQUEST_PENDING_SEND :
-                    /* If there is another Send request, execute it. */
-                    while (Entry != Head)
-                    {
-                        TemporaryRequest = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
-                        if (TemporaryRequest->PendingMode == TCP_REQUEST_PENDING_SEND)
-                        {
-                            PendingIrp = TemporaryRequest->Payload.PendingIrp;
-                            if (DoSend(PendingIrp, Context) == STATUS_SUCCESS)
-                            {
-                                /* We successfully initiated another Send with lwIP */
-                                goto COMPLETE_IRP;
-                            }
-                            else
-                            {
-                                /* If the send failed, cancel the pending IRP and continue
-                                 * walking the list for another Send. */
-                                Entry = Entry->Flink;
-                                RemoveEntryList(&TemporaryRequest->ListEntry);
-                                PendingIrp->Cancel = TRUE;
-                                IoSetCancelRoutine(PendingIrp, NULL);
-                                PendingIrp->IoStatus.Information = 0;
-                                CleanupRequest(TemporaryRequest, STATUS_CANCELLED, Context);
-                                continue;
-                            }
-                        }
-                        Entry = Entry->Flink;
-                    }
-                    /* We walked the entire list without finding and successfully doing a send, so
-                     * remote the SENDING state bit. */
-                    TCP_RMV_STATE(TCP_STATE_SENDING, Context);
-                    break;
-                case TCP_REQUEST_PENDING_RECEIVE :
-                    /* If there is another Receive request, we don't need to do anything but keep
-                     * waiting for a callback. */
-                    while (Entry != Head)
-                    {
-                        TemporaryRequest = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
-                        if (TemporaryRequest->PendingMode == TCP_REQUEST_PENDING_RECEIVE)
-                        {
-                            goto COMPLETE_IRP;
-                        }
-                        Entry = Entry->Flink;
-                    }
-                    TCP_RMV_STATE(TCP_STATE_RECEIVING, Context);
-                    break;
-                default :
-                    DPRINT1("We should never reach here. Something is wrong.\n");
-                    goto FINISH;
-            }
-            goto COMPLETE_IRP;
-        default :
-            DPRINT1("We should never reach here. Something is wrong.\n");
-            goto FINISH;
-    }
-
-COMPLETE_IRP:
-    /* Complete the IRP */
-    Irp = Request->Payload.PendingIrp;
-    Irp->IoStatus.Status = Status;
-#ifndef NDEBUG
-    IrpSp = IoGetCurrentIrpStackLocation(Irp);
-    REMOVE_IRP(Irp);
-    REMOVE_IRPSP(IrpSp);
-#endif
-    _IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-
-FINISH:
-    /* Deallocate the TCP Request */
-    ExFreePoolWithTag(Request, TAG_TCP_REQUEST);
-}
+/**
+ * TCP Cancel Routine
+ **/
 
 VOID
 NTAPI
@@ -550,110 +282,233 @@ CancelRequestRoutine(
     INT i;
     KIRQL OldIrql;
 #endif
+    LARGE_INTEGER Timeout;
     
+    PADDRESS_FILE AddressFile;
     PIO_STACK_LOCATION IrpSp;
+    PIRP PendingIrp;
     PLIST_ENTRY Entry;
     PLIST_ENTRY Head;
     PTCP_CONTEXT Context;
-    PTCP_CONTEXT OldContext;
+    PTCP_CONTEXT CurrentContext;
+    PTCP_CONTEXT ListenContext;
+    PTCP_REQUEST ListWalkRequest;
     PTCP_REQUEST Request;
-
+    
     /* This function is always called with the Cancel lock held, Irp->Cancel set to TRUE, and
      * Irp->CancelRoutine set to NULL. */
     IoReleaseCancelSpinLock(Irp->CancelIrql);
-
-    /* The file types distinguishes between some protocols */
-    IrpSp = IoGetCurrentIrpStackLocation(Irp);
-    switch ((ULONG)IrpSp->FileObject->FsContext2)
-    {
-        case TDI_TRANSPORT_ADDRESS_FILE :
-            goto DGRAM_CANCEL;
-        case TDI_CONNECTION_FILE :
-            goto TCP_CANCEL;
-        default :
-            DPRINT1("IRP does not contain a valid FileObject\n");
-            goto FINISH;
-    }
-
-DGRAM_CANCEL:
-    DPRINT1("Datagram cancel not yet implemented\n");
-    goto FINISH;
-
-TCP_CANCEL:
-    Context = IrpSp->FileObject->FsContext;
-    GetExclusiveContextAccess(Context);
     
-    /* If this is a cancellation on a TDI_LISTEN request, we need to disassociate and close the
-     * Context. AFD does not know about the extra Context we keep for listening sockets. AFD only
-     * cares about actual connection endpoints. */
-    if (IrpSp->MinorFunction == TDI_LISTEN)
+    /* This routine currently only handles TCP requests */
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    if (IrpSp->FileObject->FsContext2 != (PVOID)TDI_CONNECTION_FILE)
     {
-        /* Disassociate the listening Context, which we grab from the AddressFile. */
-        OldContext = Context;
-        Context = Context->AddressFile->Listener;
-        ReleaseExclusiveContextAccess(OldContext);
-        DisassociateAddress(Context);
-        
-        /* If the lwIP PCB still exists, close it. Since we are deallocating the PCB's associated
-         * Context, we also need to clear the Context pointer in the PCB. */
-        if (Context->lwip_tcp_pcb)
-        {
-#ifndef NDEBUG
-            REMOVE_PCB(Context->lwip_tcp_pcb);
-#endif
-            ACQUIRE_SERIAL_MUTEX();
-            tcp_arg(Context->lwip_tcp_pcb, NULL);
-            tcp_close(Context->lwip_tcp_pcb);
-            RELEASE_SERIAL_MUTEX();
-        }
-
-        /* Deallocate the Context. The corresponding Address File's ContextCount should have been
-         * decremented when the Context was disassociated. */
-#ifndef NDEBUG
-        REMOVE_CONTEXT(Context);
-#endif
-        ExFreePoolWithTag(Context, TAG_TCP_CONTEXT);
-        
-        DPRINT("Return for TDI_LISTEN cancel\n");
-        return;
+        DPRINT("Invalid file type %08x for TCP cancel\n", IrpSp->FileObject->FsContext2);
+        goto FINISH;
     }
-
-    /* Walk the TCP Context's list of requests to find one with this IRP */
+    
+    Context = IrpSp->FileObject->FsContext;
+    ContextMutexAcquire(Context);
+    
+    /* Walk the Context's Request list to find the TCP_REQUEST containing this IRP */
     Head = &Context->RequestListHead;
     Entry = Head->Flink;
     while (Entry != Head)
     {
         Request = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
-
         if (Request->Payload.PendingIrp == Irp)
         {
-            /* Immediately remove the request from the queue before processing */
             RemoveEntryList(&Request->ListEntry);
-            Irp->IoStatus.Information = 0;
-            CleanupRequest(Request, STATUS_CANCELLED, Context);
-            ReleaseExclusiveContextAccess(Context);
-            DPRINT("Return after IRP completion\n");
-            return;
+            CurrentContext = Context;
+            goto FOUND_REQUEST;
         }
-
         Entry = Entry->Flink;
     }
-
-    ReleaseExclusiveContextAccess(Context);
-
-    DPRINT1("Did not find a matching TCP Request, we may leave a dead IRP pointer somewhere\n");
-
+    
+    /* If we could not find a matching IRP, check in the Listener's Request list if it exists. */
+    if ((Context->AddressFile != NULL)
+        && (Context->AddressFile->HasListener == TRUE)
+        && (Context->AddressFile->Listener != Context))
+    {
+        ContextMutexRelease(Context);
+        ListenContext = Context->AddressFile->Listener;
+        ContextMutexAcquire(ListenContext);
+        Head = &ListenContext->RequestListHead;
+        Entry = Head->Flink;
+        while (Entry != Head)
+        {
+            Request = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
+            if (Request->Payload.PendingIrp == Irp)
+            {
+                RemoveEntryList(&Request->ListEntry);
+                CurrentContext = ListenContext;
+                goto FOUND_REQUEST;
+            }
+            Entry = Entry->Flink;
+        }
+        ContextMutexRelease(ListenContext);
+    }
+    else
+    {
+        ContextMutexRelease(Context);
+    }
+    
+    /* We should never go through both lists without finding a match */
+    DPRINT1("Cancelling unknow IRP %p\n", Irp);
+    goto FINISH;
+    
+FOUND_REQUEST:
+    /* Handle PCB deallocation */
+    switch (Request->CancelMode)
+    {
+        case TCP_REQUEST_CANCEL_MODE_ABORT :
+            Timeout.QuadPart = -1;
+            ACQUIRE_SERIAL_MUTEX(&CurrentContext->Mutex, &Timeout);
+            if (CurrentContext->lwip_tcp_pcb != NULL)
+            {
+                tcp_arg(CurrentContext->lwip_tcp_pcb, NULL);
+                tcp_abort(CurrentContext->lwip_tcp_pcb);
+                CurrentContext->lwip_tcp_pcb = NULL;
+            }
+            RELEASE_SERIAL_MUTEX();
+            break;
+        case TCP_REQUEST_CANCEL_MODE_CLOSE :
+            Timeout.QuadPart = -1;
+            ACQUIRE_SERIAL_MUTEX(&CurrentContext->Mutex, &Timeout);
+            if (CurrentContext->lwip_tcp_pcb != NULL)
+            {
+                tcp_arg(CurrentContext->lwip_tcp_pcb, NULL);
+                tcp_close(CurrentContext->lwip_tcp_pcb);
+                CurrentContext->lwip_tcp_pcb = NULL;
+            }
+            RELEASE_SERIAL_MUTEX();
+            break;
+        case TCP_REQUEST_CANCEL_MODE_PRESERVE :
+            break;
+        default :
+            DPRINT1("Invalid cancel mode %08x\n", Request->CancelMode);
+            break;
+    }
+    
+    /* Handle TCP State bitmap modification and Listener deallocation */
+    switch (Request->PendingMode)
+    {
+        case TCP_REQUEST_PENDING_SEND :
+            Head = &CurrentContext->RequestListHead;
+            Entry = Head->Flink;
+            while (Entry != Head)
+            {
+                ListWalkRequest = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
+                if (ListWalkRequest->PendingMode == TCP_REQUEST_PENDING_SEND)
+                {
+                    goto PRESERVE_STATE_SEND;
+                }
+                Entry = Entry->Flink;
+            }
+            TCP_RMV_STATE(TCP_STATE_SENDING, CurrentContext);
+PRESERVE_STATE_SEND:
+            ContextMutexRelease(CurrentContext);
+            break;
+        case TCP_REQUEST_PENDING_RECEIVE :
+            Head = &CurrentContext->RequestListHead;
+            Entry = Head->Flink;
+            while (Entry != Head)
+            {
+                ListWalkRequest = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
+                if (ListWalkRequest->PendingMode == TCP_REQUEST_PENDING_RECEIVE)
+                {
+                    goto PRESERVE_STATE_RECEIVE;
+                }
+                Entry = Entry->Flink;
+            }
+            TCP_RMV_STATE(TCP_STATE_RECEIVING, CurrentContext);
+PRESERVE_STATE_RECEIVE:
+            ContextMutexRelease(CurrentContext);
+            break;
+        case TCP_REQUEST_PENDING_CONNECT :
+            TCP_SET_STATE(TCP_STATE_CLOSED, CurrentContext);
+            ContextMutexRelease(CurrentContext);
+            break;
+        case TCP_REQUEST_PENDING_LISTEN :
+            /* When cancelling a Listen Request, we need to deallocate the Listen Context that was
+             * allocated on the first Listen IRP on a particular address. */
+            Timeout.QuadPart = -1;
+            /* Acquire the MTSerialMutex to block pending accepted connections from being processed
+             * and dying, leaving dead pointers in the Request list. */
+            ACQUIRE_SERIAL_MUTEX(&CurrentContext->Mutex, &Timeout);
+            /* Walk the Request list to complete IRPs and kill pending accepted connections */
+            Head = &CurrentContext->RequestListHead;
+            Entry = Entry->Flink;
+            while (Entry != Head)
+            {
+                ListWalkRequest = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
+                Entry = Entry->Flink;
+                switch (ListWalkRequest->PayloadType)
+                {
+                    case TCP_REQUEST_PAYLOAD_IRP :
+                        PendingIrp = ListWalkRequest->Payload.PendingIrp;
+                        PendingIrp->Cancel = TRUE;
+                        IoSetCancelRoutine(PendingIrp, NULL);
+                        PendingIrp->IoStatus.Status = STATUS_CANCELLED;
+                        PendingIrp->IoStatus.Information = 0;
+                        IoCompleteRequest(PendingIrp, IO_NETWORK_INCREMENT);
+#ifndef NDEBUG
+                        REMOVE_IRP(Irp);
+#endif
+                    case TCP_REQUEST_PAYLOAD_PCB :
+                        tcp_arg(ListWalkRequest->Payload.apcb, NULL);
+                        tcp_close(ListWalkRequest->Payload.apcb);
+                    default :
+                        DPRINT1("Invalid payload type on Context %p\n", CurrentContext);
+                        break;
+                }
+                ExFreePoolWithTag(ListWalkRequest, TAG_TCP_REQUEST);
+            }
+            RELEASE_SERIAL_MUTEX();
+            /* Disassociate this Listen context from its Address File, and mark the Address File as
+             * no longer having a Listener. */
+            AddressFile = CurrentContext->AddressFile;
+            if (AddressFile != NULL)
+            {
+                AddressFile->HasListener = FALSE;
+                AddressFile->Listener = NULL;
+                if ((InterlockedDecrement(&AddressFile->ContextCount) < 1)
+                    && (AddressFile->RefCount < 1))
+                {
+                    CloseAddress(AddressFile);
+                }
+            }
+            else
+            {
+                DPRINT1("Listener %p should have an associated address\n", CurrentContext);
+            }
+            ContextMutexRelease(CurrentContext);
+            ExFreePoolWithTag(CurrentContext, TAG_TCP_CONTEXT);
+#ifndef NDEBUG
+            REMOVE_CONTEXT(CurrentContext);
+#endif
+            break;
+        default :
+            ContextMutexRelease(CurrentContext);
+            DPRINT1("Invalid pending mode for cancel\n");
+            break;
+    }
+    ExFreePoolWithTag(Request, TAG_TCP_REQUEST);
+    
 FINISH:
+    Irp->IoStatus.Status = STATUS_CANCELLED;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 #ifndef NDEBUG
     REMOVE_IRP(Irp);
-    REMOVE_IRPSP(IrpSp);
 #endif
-    _IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-    DPRINT("Return after skipping most things\n");
-    return;
 }
 
-void
+/**
+ * Creation and initialization handlers
+ **/
+
+VOID
 TcpIpInitializeAddresses(void)
 {
     KeInitializeSpinLock(&AddressListLock);
@@ -663,106 +518,13 @@ TcpIpInitializeAddresses(void)
     AddrFileCount = 0;
     GlContextCount = 0;
     PcbCount = 0;
+    IRPCount = 0;
 
     KeInitializeSpinLock(&AddrFileArrayLock);
     KeInitializeSpinLock(&ContextArrayLock);
     KeInitializeSpinLock(&PCBArrayLock);
+    KeInitializeSpinLock(&IRPArrayLock);
 #endif
-}
-
-/* Acquire AddressListLock before calling */
-NTSTATUS
-CreateAddressAndEnlist(
-    _In_ struct netif *lwip_netif,
-    _In_ PTDI_ADDRESS_IP Address,
-    _In_ IPPROTO Protocol,
-    _In_ USHORT ShareAccess,
-    _Out_ PADDRESS_FILE *_AddressFile
-)
-{
-    PADDRESS_FILE AddressFile;
-    PLIST_ENTRY Entry;
-
-    /* If a netif is specified, check for AddressFile with matching netif and port in order to
-     * detect duplicates */
-    if (lwip_netif != NULL)
-    {
-        Entry = AddressListHead.Flink;
-        while (Entry != &AddressListHead)
-        {
-            AddressFile = CONTAINING_RECORD(Entry, ADDRESS_FILE, ListEntry);
-            /* If the requested address' lwIP netif, protocol, and port match that of an existing
-             * Address File, then check if we are creating a shared address. */
-            if ((AddressFile->NetInterface == lwip_netif) &&
-                (AddressFile->Protocol == Protocol) &&
-                (AddressFile->Address.sin_port == Address->sin_port))
-            {
-                /* Matching address file found. */
-                if (ShareAccess)
-                {
-                    /* If shared, increment reference count */
-                    InterlockedIncrement(&AddressFile->RefCount);
-                    goto FINISH;
-                }
-                else
-                {
-                    /* If not shared, return error */
-                    return STATUS_ADDRESS_ALREADY_EXISTS;
-                }
-            }
-        }
-    }
-
-    /* If no match was found in the Address File list or the netif is not specified,
-     * then create a new one */
-    AddressFile = ExAllocatePoolWithTag(NonPagedPool, sizeof(*AddressFile), TAG_ADDRESS_FILE);
-    if (AddressFile == NULL)
-    {
-        DPRINT1("Not enough resources\n");
-        return STATUS_NO_MEMORY;
-    }
-#ifndef NDEBUG
-    ADD_ADDR_FILE_DPC(AddressFile);
-#endif
-
-    /* Initialize Address File fields */
-    AddressFile->RefCount = 0;
-    AddressFile->ContextCount = 0;
-    AddressFile->Protocol = Protocol;
-    RtlCopyMemory(&AddressFile->Address, Address, sizeof(*Address));
-    AddressFile->NetInterface = lwip_netif;
-
-    /* Entity ID */
-    switch (Protocol)
-    {
-        case IPPROTO_TCP :
-            InsertEntityInstance(CO_TL_ENTITY, &AddressFile->Instance);
-            break;
-        case IPPROTO_ICMP :
-            InsertEntityInstance(ER_ENTITY, &AddressFile->Instance);
-            break;
-        default :
-            /* UDP, RAW */
-            InsertEntityInstance(CL_TL_ENTITY, &AddressFile->Instance);
-            break;
-    }
-
-    /* TCP variables */
-    AddressFile->HasListener = FALSE;
-
-    /* UDP and RAW variables */
-    KeInitializeSpinLock(&AddressFile->RequestLock);
-    InitializeListHead(&AddressFile->RequestListHead);
-    AddressFile->lwip_raw_pcb = NULL;
-
-    /* Add to master list */
-    InsertTailList(&AddressListHead, &AddressFile->ListEntry);
-
-FINISH:
-    /* Output the Address File */
-    *_AddressFile = AddressFile;
-
-    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -806,7 +568,7 @@ TcpIpCreateAddress(
             switch (Protocol)
             {
                 case IPPROTO_TCP :
-                    ACQUIRE_SERIAL_MUTEX();
+                    ACQUIRE_SERIAL_MUTEX_NO_TO();
                     Address->sin_port = (USHORT)tcp_new_port();
                     RELEASE_SERIAL_MUTEX();
                     break;
@@ -862,76 +624,6 @@ FAIL:
     return Status;
 }
 
-VOID
-CloseAddress(
-    PADDRESS_FILE AddressFile
-)
-{
-#ifndef NDEBUG
-    INT i;
-#endif
-    KIRQL OldIrql;
-
-    /* Remove the Address File from global lists before further processing */
-    KeAcquireSpinLock(&AddressListLock, &OldIrql);
-    RemoveEntryList(&AddressFile->ListEntry);
-    KeReleaseSpinLock(&AddressListLock, OldIrql);
-    RemoveEntityInstance(&AddressFile->Instance);
-
-    /* For ICMP, RAW, UDP addresses, we need to deallocate the lwIP PCB */
-    switch (AddressFile->Protocol)
-    {
-        case IPPROTO_ICMP :
-        case IPPROTO_RAW :
-            raw_remove(AddressFile->lwip_raw_pcb);
-            break;
-        case IPPROTO_UDP :
-            udp_remove(AddressFile->lwip_udp_pcb);
-            break;
-        case IPPROTO_TCP :
-            /* Nothing to deallocate for TCP */
-            goto NO_REQUESTS;
-        default :
-            /* We should never reach here */
-            DPRINT1("Closing Address File with unknown protocol, %d. This should never happen.\n",
-                AddressFile->Protocol);
-            break;
-    }
-
-    /* Finish pending requests for RAW and UDP addresses */
-
-NO_REQUESTS:
-    /* Deallocate the Address File */
-    ExFreePoolWithTag(AddressFile, TAG_ADDRESS_FILE);
-#ifndef NDEBUG
-    REMOVE_ADDR_FILE(AddressFile);
-#endif
-}
-
-NTSTATUS
-TcpIpCloseAddress(
-    _In_ PADDRESS_FILE AddressFile
-)
-{
-    /* Check if there are still references to this Address File */
-    if (InterlockedDecrement(&AddressFile->RefCount) > 0)
-    {
-        DPRINT("Closing address with %d open handles\n", AddressFile->RefCount);
-        return STATUS_SUCCESS;
-    }
-    if (AddressFile->ContextCount > 0)
-    {
-        /* This should not happen if the upper level drivers work correctly */
-        DPRINT("Closing address with %d context references\n", AddressFile->ContextCount);
-        // TODO: better return code
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    CloseAddress(AddressFile);
-
-    return STATUS_SUCCESS;
-}
-
 NTSTATUS
 TcpIpCreateContext(
     _Inout_ PIRP Irp,
@@ -968,7 +660,7 @@ TcpIpCreateContext(
     Context->AddressFile = NULL;
     InitializeListHead(&Context->RequestListHead);
     Context->ReferencedByUpperLayer = TRUE;
-    InitializeContextMutex(Context);
+    ContextMutexInit(Context);
 
     /* We defer PCB creation until TcpIpAssociateAddress(), since this Context could be a dummy
      * connection endpoint used to poll/wait for new accepted connections */
@@ -978,50 +670,6 @@ TcpIpCreateContext(
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
     IrpSp->FileObject->FsContext = Context;
     IrpSp->FileObject->FsContext2 = (PVOID)TDI_CONNECTION_FILE;
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-TcpIpCloseContext(
-    _In_ PTCP_CONTEXT Context
-)
-{
-#ifndef NDEBUG
-    INT i;
-    KIRQL OldIrql;
-#endif
-
-    /* Sanity check */
-    if (GetExclusiveContextAccess(Context) == TRUE)
-    {
-        ReleaseExclusiveContextAccess(Context);
-        DPRINT1("Context retains address association\n");
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* If the lwIP PCB still exists, close it. Since we are deallocating the PCB's associated
-     * Context, we also need to clear the Context pointer in the PCB. */
-    ReleaseExclusiveContextAccess(Context);
-    ACQUIRE_SERIAL_MUTEX();
-    GetExclusiveContextAccess(Context);
-    if (Context->lwip_tcp_pcb)
-    {
-#ifndef NDEBUG
-        REMOVE_PCB(Context->lwip_tcp_pcb);
-#endif
-        tcp_arg(Context->lwip_tcp_pcb, NULL);
-        tcp_close(Context->lwip_tcp_pcb);
-    }
-    RELEASE_SERIAL_MUTEX();
-
-    /* Deallocate the Context. The corresponding Address File's ContextCount should have been
-     * decremented when the Context was disassociated. */
-    ReleaseExclusiveContextAccess(Context);
-#ifndef NDEBUG
-    REMOVE_CONTEXT(Context);
-#endif
-    ExFreePoolWithTag(Context, TAG_TCP_CONTEXT);
 
     return STATUS_SUCCESS;
 }
@@ -1096,11 +744,11 @@ TcpIpAssociateAddress(
 #ifndef NDEBUG
     ADD_PCB(Context->lwip_tcp_pcb);
 #endif
-    ACQUIRE_SERIAL_MUTEX();
     tcp_arg(Context->lwip_tcp_pcb, Context);
     tcp_err(Context->lwip_tcp_pcb, lwip_tcp_err_callback);
 
     /* Attempt to bind the PCB. lwIP internally handles INADDR_ANY. */
+    ACQUIRE_SERIAL_MUTEX_NO_TO();
     lwip_err = tcp_bind(
         Context->lwip_tcp_pcb,
         (ip_addr_t *)&AddressFile->Address.in_addr,
@@ -1156,145 +804,54 @@ FINISH:
     return Status;
 }
 
-/* This function does not require the Context mutex to be held. Holding the mutex while calling will
- * succeed but will decrease performance, since the mutex will be acquired recursively. */
-NTSTATUS
-DisassociateAddress(
-    PTCP_CONTEXT Context
-)
-{
-    LONG ContextCount;
+/**
+ * TCP server-side handlers
+ **/
 
-    PADDRESS_FILE AddressFile;
-    PIRP PendingIrp;
-    PLIST_ENTRY Entry;
-    PLIST_ENTRY Head;
-    PTCP_REQUEST Request;
-    
-    /* Immediately remove the Context's association with its Address File */
-    if (GetExclusiveContextAccess(Context) == FALSE)
-    {
-        ReleaseExclusiveContextAccess(Context);
-        return STATUS_SUCCESS;
-    }
-    AddressFile = Context->AddressFile;
-    Context->AddressFile = NULL;
-    
-    /* Walk the Context's Request list to finish all outstanding IRPs. */
-    Head = &Context->RequestListHead;
-    Entry = Head->Flink;
-    while (Entry != Head)
-    {
-        /* Remove the Request from the list and increment list walk */
-        Request = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
-        Entry = Entry->Flink;
-        RemoveEntryList(&Request->ListEntry);
-
-        /* If this is an IRP, block potential cancellations. */
-        if (Request->PayloadType == TCP_REQUEST_PAYLOAD_IRP)
-        {
-            PendingIrp = Request->Payload.PendingIrp;
-            IoSetCancelRoutine(PendingIrp, NULL);
-        }
-
-        /* Clean up the Request */
-        CleanupRequest(Request, STATUS_CANCELLED, Context);
-    }
-
-    /* Decrement the corresponding Address File's ContextCount, remove the Address File if needed */
-    if (AddressFile != NULL)
-    {
-        ContextCount = InterlockedDecrement(&AddressFile->ContextCount);
-        if (ContextCount < 1)
-        {
-            CloseAddress(AddressFile);
-        }
-    }
-    
-    ReleaseExclusiveContextAccess(Context);
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-TcpIpDisassociateAddress(
-    _Inout_ PIRP Irp
-)
-{
-    PIO_STACK_LOCATION IrpSp;
-    PTCP_CONTEXT Context;
-
-    IrpSp = IoGetCurrentIrpStackLocation(Irp);
-
-    /* Sanity checks */
-    if (IrpSp->FileObject->FsContext2 != (PVOID)TDI_CONNECTION_FILE)
-    {
-        DPRINT1("Disassociating something that is not a TCP Context\n");
-        return STATUS_INVALID_PARAMETER;
-    }
-    Context = IrpSp->FileObject->FsContext;
-
-    return DisassociateAddress(Context);
-}
-
+/* This handler never acquires the mutex for the incoming Context because the IRP sender should be
+ * the only reference holder for that Context */
 NTSTATUS
 TcpIpListen(
     _Inout_ PIRP Irp
 )
 {
 #ifndef NDEBUG
-    INT i;
     KIRQL OldIrql;
 #endif
+    LARGE_INTEGER Timeout;
     NTSTATUS Status;
-    LONG ContextCount;
-
+    
     PADDRESS_FILE AddressFile;
+    PIO_STACK_LOCATION IrpSp;
     PLIST_ENTRY Entry;
     PLIST_ENTRY Head;
-    PIO_STACK_LOCATION IrpSp;
     PTCP_CONTEXT Context;
     PTCP_CONTEXT ListenContext;
     PTCP_REQUEST Request;
-
+    
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
-
-    /* Grab TCP Context from IRP */
+    
+    /* Sanity check the incoming TCP Context */
     if (IrpSp->FileObject->FsContext2 != (PVOID)TDI_CONNECTION_FILE)
     {
         DPRINT1("Not a connection context\n");
         return STATUS_INVALID_PARAMETER;
     }
     Context = IrpSp->FileObject->FsContext;
-    if (GetExclusiveContextAccess(Context) == FALSE)
-    {
-        ReleaseExclusiveContextAccess(Context);
-        DPRINT("Context has been disassociated\n");
-        return STATUS_ADDRESS_CLOSED;
-    }
     if (Context->TcpState != TCP_STATE_BOUND)
     {
         DPRINT1("Context is not a bound context\n");
-        ReleaseExclusiveContextAccess(Context);
         return STATUS_INVALID_PARAMETER;
     }
-
+    
+    /* If there is already a listener on the address, this context is a dummy endpoint used to poll
+     * and wait for new accepted connections. */
     AddressFile = Context->AddressFile;
-    /* If there is already a listener on the address, this context is a dummy connection endpoint
-     * used to poll/wait for new accepted connections. Check for queued accepted connections. If
-     * there are none, queue the new Context and the Listen Request. */
     if (AddressFile->HasListener == TRUE)
     {
         ListenContext = AddressFile->Listener;
-        if (GetExclusiveContextAccess(ListenContext) == FALSE)
-        {
-            ReleaseExclusiveContextAccess(ListenContext);
-            DPRINT1("TDI_LISTEN on disassociated Listen Context? SNAFU.\n");
-            ReleaseExclusiveContextAccess(Context);
-            return STATUS_ADDRESS_CLOSED;
-        }
-
-        /* Check for queued accepted connections in the listener's Request queue */
+        ContextMutexAcquire(ListenContext);
+        
         Head = &ListenContext->RequestListHead;
         Entry = Head->Flink;
         while (Entry != Head)
@@ -1302,352 +859,214 @@ TcpIpListen(
             Request = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
             if (Request->PendingMode == TCP_REQUEST_PENDING_ACCEPTED_CONNECTION)
             {
+                /* If there is an established PCB available, immediately take ownership of it from
+                 * the Listening Context so we can release the mutex on the Listening Context. */
                 RemoveEntryList(&Request->ListEntry);
-                ReleaseExclusiveContextAccess(ListenContext);
-                goto CONNECTION_AVAILABLE;
+                Timeout.QuadPart = -1;
+                
+                /* This macro releases &ListenContext->Mutex on timeout to prevent deadlocks. 
+                 * We need to make sure the ListenContext was not disassociated during wait. */
+                ACQUIRE_SERIAL_MUTEX(&ListenContext->Mutex, &Timeout);
+                if (ListenContext->AddressFile == NULL)
+                {
+                    RELEASE_SERIAL_MUTEX();
+                    ContextMutexRelease(ListenContext);
+                    return STATUS_ADDRESS_CLOSED;
+                }
+                
+                /* Inform lwIP we accepted the connection */
+                tcp_accepted(ListenContext->lwip_tcp_pcb);
+                
+                RELEASE_SERIAL_MUTEX();
+                ContextMutexRelease(ListenContext);
+                
+                /* Set Context fields */
+                Context->lwip_tcp_pcb = Request->Payload.apcb;
+                TCP_SET_STATE(TCP_STATE_CONNECTED, Context);
+                
+                ExFreePoolWithTag(Request, TAG_TCP_REQUEST);
+                
+                return STATUS_SUCCESS;
             }
+            Entry = Entry->Flink;
         }
-
-        /* If there is no queued accepted connection, enqueue a Request with the new Context as the
-         * payload, then enqueue the IRP. Finding a queued accepted connection jumps beyond here. */
-        EnqueueRequest(
-            Context,
-            ListenContext,
-            TCP_REQUEST_CANCEL_MODE_PRESERVE,
-            TCP_REQUEST_PENDING_LISTEN_POLL,
-            TCP_REQUEST_PAYLOAD_CONTEXT);
-
-        /* Enqueue the IRP */
-        Status = PrepareIrpForCancel(
+        
+        /* We walked the entire Request list without finding a connection waiting to be accepted. 
+         * Now we must enquque a Request and wait for an incomming connection request. */
+        DPRINT("Walked entire Request list without finding a connection\n");
+        
+        Status = EnqueueIRP(
             Irp,
             ListenContext,
             CancelRequestRoutine,
             TCP_REQUEST_CANCEL_MODE_CLOSE,
             TCP_REQUEST_PENDING_LISTEN);
-
-        ReleaseExclusiveContextAccess(ListenContext);
-        ReleaseExclusiveContextAccess(Context);
+            
+        ContextMutexRelease(ListenContext);
+        
         return Status;
-
-CONNECTION_AVAILABLE:
-        /* If there is a queued accepted connection, deallocate the Context that came with the IRP
-         * and return the Context that is in the queue with IRP. */
-#ifndef NDEBUG
-        REMOVE_CONTEXT(Context);
-#endif
-        ContextCount = InterlockedDecrement(&Context->AddressFile->ContextCount);
-        if (ContextCount < 1)
+    }
+    else
+    {
+        /* If there is not already a Listener on the address, create one and initiate a Listen in
+         * lwIP. */
+        ListenContext = ExAllocatePoolWithTag(
+            NonPagedPool,
+            sizeof(*ListenContext),
+            TAG_TCP_CONTEXT);
+        if (ListenContext == NULL)
         {
-            CloseAddress(Context->AddressFile);
+            DPRINT1("Not enough resources\n");
+            return STATUS_NO_MEMORY;
         }
-        Context->AddressFile = NULL;
-        ReleaseExclusiveContextAccess(Context);
-        ExFreePoolWithTag(Context, TAG_TCP_CONTEXT);
-
-        /* Set the IRP's FileObject to point to the queued Context. We also need to mark this
-         * Context as created through a request by an upper level driver, since it replaces one that
-         * actually was created that way. */
-        Context = Request->Payload.Context;
-        TCP_SET_STATE(TCP_STATE_CONNECTED, Context);
-        IrpSp->FileObject->FsContext = Context;
-        Context->ReferencedByUpperLayer = TRUE;
-
-        /* Inform lwIP that we accepted the connection */
-        ACQUIRE_SERIAL_MUTEX();
-        tcp_accepted(ListenContext->lwip_tcp_pcb);
+#ifndef NDEBUG
+        ADD_CONTEXT(ListenContext);
+#endif
+        
+        InterlockedIncrement(&AddressFile->ContextCount);
+        
+        /* Initialize the Listener */
+        ListenContext->AddressFile = AddressFile;
+        InitializeListHead(&ListenContext->RequestListHead);
+        ListenContext->ReferencedByUpperLayer = FALSE;
+        ContextMutexInit(ListenContext);
+        
+        /* Initiate lwIP listen */
+        ACQUIRE_SERIAL_MUTEX_NO_TO();
+        ListenContext->lwip_tcp_pcb = tcp_listen(Context->lwip_tcp_pcb);
+        if (ListenContext->lwip_tcp_pcb == NULL)
+        {
+            RELEASE_SERIAL_MUTEX();
+            DPRINT1("Listen failed\n");
+            return STATUS_INVALID_ADDRESS;
+        }
+#ifndef NDEBUG
+        ADD_PCB(ListenContext->lwip_tcp_pcb);
+#endif
+        
+        /* Set lwIP callback information */
+        tcp_arg(ListenContext->lwip_tcp_pcb, ListenContext);
+        tcp_accept(ListenContext->lwip_tcp_pcb, lwip_tcp_accept_callback);
+        
+        Context->lwip_tcp_pcb = NULL;
+        
+        /* Mark Address File as having a Listener */
+        AddressFile->HasListener = TRUE;
+        AddressFile->Listener = ListenContext;
+        
+        Status = EnqueueIRP(
+            Irp,
+            ListenContext,
+            CancelRequestRoutine,
+            TCP_REQUEST_CANCEL_MODE_CLOSE,
+            TCP_REQUEST_PENDING_LISTEN);
+        
         RELEASE_SERIAL_MUTEX();
-
-        ExFreePoolWithTag(Request, TAG_TCP_REQUEST);
-
-        /* main.c will call _IoCompleteRequest() on this IRP */
-        return STATUS_SUCCESS;
+        
+        return Status;
     }
-
-    /* If there is not already a listener on the address, create a Listen Context and enqueue the
-     * existing Context as a dummy Context. We will later perform our own disassociation and closure
-     * on the Listen Context. */
-    /* Create context */
-    ListenContext = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ListenContext), TAG_TCP_CONTEXT);
-    if (ListenContext == NULL)
-    {
-        DPRINT1("Not enough resources\n");
-        ReleaseExclusiveContextAccess(Context);
-        return STATUS_NO_MEMORY;
-    }
-#ifndef NDEBUG
-    ADD_CONTEXT(ListenContext);
-#endif
-
-    /* Set initial values */
-    ListenContext->AddressFile = AddressFile;
-    InitializeListHead(&ListenContext->RequestListHead);
-    ListenContext->ReferencedByUpperLayer = FALSE;
-    InitializeContextMutex(ListenContext);
-    InterlockedIncrement(&AddressFile->ContextCount);
-    
-    /* Call into lwIP to initiate Listen */
-#ifndef NDEBUG
-    REMOVE_PCB(Context->lwip_tcp_pcb);
-#endif
-    ACQUIRE_SERIAL_MUTEX();
-    ListenContext->lwip_tcp_pcb = tcp_listen(Context->lwip_tcp_pcb);
-    RELEASE_SERIAL_MUTEX();
-    if (ListenContext->lwip_tcp_pcb == NULL)
-    {
-        DPRINT("Bind failed\n");
-        ReleaseExclusiveContextAccess(Context);
-        return STATUS_INVALID_ADDRESS;
-    }
-    Context->lwip_tcp_pcb = NULL;
-#ifndef NDEBUG
-    ADD_PCB(ListenContext->lwip_tcp_pcb);
-#endif
-
-    /* Set lwIP callback information for new PCB */
-    ACQUIRE_SERIAL_MUTEX();
-    tcp_arg(ListenContext->lwip_tcp_pcb, ListenContext);
-    tcp_accept(ListenContext->lwip_tcp_pcb, lwip_tcp_accept_callback);
-    RELEASE_SERIAL_MUTEX();
-
-    /* Mark the Address File as having a listener */
-    AddressFile->HasListener = TRUE;
-    AddressFile->Listener = ListenContext;
-    
-    /* Enqueue the dummy Context to receive new connections */
-    EnqueueRequest(
-        Context,
-        ListenContext,
-        TCP_REQUEST_CANCEL_MODE_PRESERVE,
-        TCP_REQUEST_PENDING_LISTEN_POLL,
-        TCP_REQUEST_PAYLOAD_CONTEXT);
-    
-    /* Mark IRP as pending and enqueue the Listen Request on the Listen Context */
-    Status = PrepareIrpForCancel(
-        Irp,
-        ListenContext,
-        CancelRequestRoutine,
-        TCP_REQUEST_CANCEL_MODE_CLOSE,
-        TCP_REQUEST_PENDING_LISTEN);
-    TCP_SET_STATE(TCP_STATE_LISTENING, ListenContext);
-
-    ReleaseExclusiveContextAccess(Context);
-    return Status;
 }
 
+/**
+ * TCP client-side handlers
+ **/
+
+/* This handler never acquires the mutex for the incoming Context because the IRP sender should be
+ * the only reference holder for that Context */
 NTSTATUS
 TcpIpConnect(
     _Inout_ PIRP Irp
 )
 {
     NTSTATUS Status;
-
+    
     PIO_STACK_LOCATION IrpSp;
     PTCP_CONTEXT Context;
     PTDI_REQUEST_KERNEL_CONNECT RequestInfo;
     PTRANSPORT_ADDRESS RemoteTransportAddress;
-
+    
     struct sockaddr *SocketAddressRemote;
     struct sockaddr_in * SocketAddressInRemote;
-
+    
     err_t lwip_err;
-
+    
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
-
-    /* Sanity checks */
+    
+    /* Sanity check the given Context */
     if (IrpSp->FileObject->FsContext2 != (PVOID)TDI_CONNECTION_FILE)
     {
         DPRINT1("File object is not a connection context\n");
         return STATUS_INVALID_PARAMETER;
     }
     Context = IrpSp->FileObject->FsContext;
-    if (GetExclusiveContextAccess(Context) == FALSE)
-    {
-        ReleaseExclusiveContextAccess(Context);
-        DPRINT1("Context has been disassociated\n");
-        return STATUS_ADDRESS_CLOSED;
-    }
     if (Context->TcpState != TCP_STATE_BOUND)
     {
         DPRINT1("Connecting from unbound socket\n");
-        ReleaseExclusiveContextAccess(Context);
         return STATUS_INVALID_PARAMETER;
     }
-
+    
     /* Extract remote address to connect to */
     RequestInfo = (PTDI_REQUEST_KERNEL_CONNECT)&IrpSp->Parameters;
     RemoteTransportAddress = RequestInfo->RequestConnectionInformation->RemoteAddress;
     SocketAddressRemote = (struct sockaddr *)&RemoteTransportAddress->Address[0];
     SocketAddressInRemote = (struct sockaddr_in *)&SocketAddressRemote->sa_data;
-
+    
     /* Call into lwIP to initiate Connect */
-    ACQUIRE_SERIAL_MUTEX();
+    ACQUIRE_SERIAL_MUTEX_NO_TO();
     lwip_err = tcp_connect(Context->lwip_tcp_pcb,
         (ip_addr_t*)&SocketAddressInRemote->sin_addr.s_addr,
         SocketAddressInRemote->sin_port,
         lwip_tcp_connected_callback);
-    RELEASE_SERIAL_MUTEX();
     switch (lwip_err)
     {
         case ERR_OK :
             /* If successful, enqueue the IRP, set the TCP State variable, and return */
-            Status = PrepareIrpForCancel(
+            Status = EnqueueIRP(
                 Irp,
                 Context,
                 CancelRequestRoutine,
                 TCP_REQUEST_CANCEL_MODE_ABORT,
                 TCP_REQUEST_PENDING_CONNECT);
             TCP_SET_STATE(TCP_STATE_CONNECTING, Context);
-            goto FINISH;
+            RELEASE_SERIAL_MUTEX();
+            return Status;
         case ERR_VAL :
+            RELEASE_SERIAL_MUTEX();
             DPRINT1("lwip ERR_VAL\n");
-            Status = STATUS_INVALID_PARAMETER;
-            goto FINISH;
+            return STATUS_INVALID_PARAMETER;
         case ERR_ISCONN :
+            RELEASE_SERIAL_MUTEX();
             DPRINT1("lwip ERR_ISCONN\n");
-            Status = STATUS_CONNECTION_ACTIVE;
-            goto FINISH;
+            return STATUS_CONNECTION_ACTIVE;
         case ERR_RTE :
+            RELEASE_SERIAL_MUTEX();
             DPRINT1("lwip ERR_RTE\n");
-            Status = STATUS_NETWORK_UNREACHABLE;
-            goto FINISH;
+            return STATUS_NETWORK_UNREACHABLE;
         case ERR_BUF :
             /* Use correct error once NDIS errors are included.
              * This return value means local port unavailable. */
+            RELEASE_SERIAL_MUTEX();
             DPRINT1("lwip ERR_BUF\n");
-            Status = STATUS_ADDRESS_ALREADY_EXISTS;
-            goto FINISH;
+            return STATUS_ADDRESS_ALREADY_EXISTS;
         case ERR_USE :
+            RELEASE_SERIAL_MUTEX();
             DPRINT1("lwip ERR_USE\n");
-            Status = STATUS_CONNECTION_ACTIVE;
-            goto FINISH;
+            return STATUS_CONNECTION_ACTIVE;
         case ERR_MEM :
+            RELEASE_SERIAL_MUTEX();
             DPRINT1("lwip ERR_MEM\n");
-            Status = STATUS_NO_MEMORY;
-            goto FINISH;
+            return STATUS_NO_MEMORY;
         default :
             /* unknown return value */
+            RELEASE_SERIAL_MUTEX();
             DPRINT1("lwip unknown return code\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            goto FINISH;
-    }
-
-FINISH:
-    ReleaseExclusiveContextAccess(Context);
-    return Status;
-}
-
-NTSTATUS
-TcpIpDisconnect(
-    _Inout_ PIRP Irp
-)
-{
-    PIO_STACK_LOCATION IrpSp;
-    PTCP_CONTEXT Context;
-    
-    IrpSp = IoGetCurrentIrpStackLocation(Irp);
-    
-    /* Sanity checks. We do not acquire the Context mutex because TDI_DISCONNECT results from an
-     * _IoCompleteRequest() called with the Context mutex held. */
-    if (IrpSp->FileObject->FsContext2 != (PVOID)TDI_CONNECTION_FILE)
-    {
-        DPRINT1("Disconnection on something that is not a TCP Context\n");
-        return STATUS_INVALID_PARAMETER;
-    }
-    
-    /* Mark the Context for disconnect. Do not shut down the PCB, because this function is called
-     * while another thread context holds the global MTSerialMutex. */
-    Context = IrpSp->FileObject->FsContext;
-    TCP_SET_STATE(TCP_STATE_CLOSED, Context);
-    
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-TcpIpReceive(
-    _Inout_ PIRP Irp
-)
-{
-    PIO_STACK_LOCATION IrpSp;
-    PTCP_CONTEXT Context;
-
-    IrpSp = IoGetCurrentIrpStackLocation(Irp);
-
-    /* Sanity checks */
-    if (IrpSp->FileObject->FsContext2 != (PVOID)TDI_CONNECTION_FILE)
-    {
-        DPRINT1("Received TDI_RECEIVE for something that is not a TCP Context\n");
-        return STATUS_INVALID_PARAMETER;
-    }
-    Context = IrpSp->FileObject->FsContext;
-    if (GetExclusiveContextAccess(Context) == FALSE)
-    {
-        ReleaseExclusiveContextAccess(Context);
-        DPRINT("Context has been disassociated\n");
-        return STATUS_ADDRESS_CLOSED;
-    }
-    if (!(Context->TcpState & TCP_STATE_CONNECTED))
-    {
-        DPRINT1("TCP Context %p is in the wrong state for receiving data: %08x\n",
-            Context,
-            Context->TcpState);
-        ReleaseExclusiveContextAccess(Context);
-        return STATUS_ADDRESS_CLOSED;
-    }
-
-    /* No need to call into lwIP. The Receive callback should have been set when the connection was
-     * established. */
-
-    /* Mark IRP as pending, and the TCP Context as Receiving */
-    PrepareIrpForCancel(
-        Irp,
-        Context,
-        CancelRequestRoutine,
-        TCP_REQUEST_CANCEL_MODE_PRESERVE,
-        TCP_REQUEST_PENDING_RECEIVE);
-    TCP_ADD_STATE(TCP_STATE_RECEIVING, Context);
-
-    ReleaseExclusiveContextAccess(Context);
-    return STATUS_PENDING;
-}
-
-NTSTATUS
-DoSend(
-    _In_ PIRP Irp,
-    _In_ PTCP_CONTEXT Context
-)
-{
-    UINT SendBytes;
-    
-    PVOID Buffer;
-    
-    err_t lwip_err;
-    
-    /* Get send buffer and length */
-    NdisQueryBuffer(Irp->MdlAddress, &Buffer, &SendBytes);
-    
-    /* Call into lwIP to initiate send */
-    ACQUIRE_SERIAL_MUTEX();
-    lwip_err = tcp_write(Context->lwip_tcp_pcb, Buffer, SendBytes, 0);
-    RELEASE_SERIAL_MUTEX();
-    switch (lwip_err)
-    {
-        case ERR_OK:
-            /* If the lwIP call succeeded, set the TCP State variable */
-            return STATUS_SUCCESS;
-        case ERR_MEM:
-            DPRINT1("lwIP ERR_MEM\n");
-            return STATUS_NO_MEMORY;
-        case ERR_ARG:
-            DPRINT1("lwIP ERR_ARG\n");
-            return STATUS_INVALID_PARAMETER;
-        case ERR_CONN:
-            DPRINT1("lwIP ERR_CONN\n");
-            return STATUS_CONNECTION_ACTIVE;
-        default:
-            DPRINT1("Unknwon lwIP Error: %d\n", lwip_err);
             return STATUS_NOT_IMPLEMENTED;
     }
 }
+
+/**
+ * TCP established connection operations handlers
+ **/
 
 NTSTATUS
 TcpIpSend(
@@ -1655,40 +1074,37 @@ TcpIpSend(
 )
 {
     NTSTATUS Status;
-
+    
     PIO_STACK_LOCATION IrpSp;
     PTCP_CONTEXT Context;
-
+    
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
-
-    /* Sanity checks */
+    
+    /* Sanity check the incoming Context */
     if (IrpSp->FileObject->FsContext2 != (PVOID)TDI_CONNECTION_FILE)
     {
         DPRINT1("Received TDI_SEND for something that is not a TCP Context\n");
         return STATUS_INVALID_PARAMETER;
     }
     Context = IrpSp->FileObject->FsContext;
-    if (GetExclusiveContextAccess(Context) == FALSE)
-    {
-        ReleaseExclusiveContextAccess(Context);
-        DPRINT1("Context has been disassociated\n");
-        return STATUS_ADDRESS_CLOSED;
-    }
+    ACQUIRE_SERIAL_MUTEX_NO_TO();
+    ContextMutexAcquire(Context);
     if (!(Context->TcpState & TCP_STATE_CONNECTED))
     {
+        ContextMutexRelease(Context);
+        RELEASE_SERIAL_MUTEX();
         DPRINT1("Attempting to send on Context at %p without an established connection\n", Context);
-        ReleaseExclusiveContextAccess(Context);
         return STATUS_ONLY_IF_CONNECTED;
     }
-
-    /* If the Context is already servicing a Send request, do not initiate another one right now */
+    
+    /* If the Context is already servicing a Send, queue this one to be handled when that is done */
     if (Context->TcpState & TCP_STATE_SENDING)
     {
         goto WAIT_TO_SEND;
     }
     
-    /* Perform lwIP call */
     Status = DoSend(Irp, Context);
+    RELEASE_SERIAL_MUTEX();
     if (Status == STATUS_SUCCESS)
     {
         TCP_ADD_STATE(TCP_STATE_SENDING, Context);
@@ -1699,100 +1115,247 @@ TcpIpSend(
     }
     
 WAIT_TO_SEND:
-    Status = PrepareIrpForCancel(
+    Status = EnqueueIRP(
         Irp,
         Context,
         CancelRequestRoutine,
         TCP_REQUEST_CANCEL_MODE_PRESERVE,
         TCP_REQUEST_PENDING_SEND);
-
 FINISH:
-    ReleaseExclusiveContextAccess(Context);
+    ContextMutexRelease(Context);
     return Status;
 }
 
 NTSTATUS
-AddressSetIpDontFragment(
-    _In_ TDIEntityID ID,
-    _In_ PVOID InBuffer,
-    _In_ ULONG BufferSize)
+TcpIpReceive(
+    _Inout_ PIRP Irp
+)
 {
-    /* Silently ignore.
-     * lwip doesn't have such thing, and already tries to fragment data as less as possible */
+    NTSTATUS Status;
+    
+    PIO_STACK_LOCATION IrpSp;
+    PTCP_CONTEXT Context;
+    
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    
+    /* Sanity check incoming Context */
+    if (IrpSp->FileObject->FsContext2 != (PVOID)TDI_CONNECTION_FILE)
+    {
+        DPRINT1("Receiving not on a connection endpoint\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+    Context = IrpSp->FileObject->FsContext;
+    ContextMutexAcquire(Context);
+    if (!(Context->TcpState & TCP_STATE_CONNECTED))
+    {
+        DPRINT1("Receiving on TCP Context %p in state %08x\n", Context, Context->TcpState);
+        ContextMutexRelease(Context);
+        return STATUS_ADDRESS_CLOSED;
+    }
+    
+    /* Do not handle pending received data like we do pending accepted connections. lwIP handles
+     * refused data for us. Simply enqueue the Request. */
+    Status = EnqueueIRP(
+        Irp,
+        Context,
+        CancelRequestRoutine,
+        TCP_REQUEST_CANCEL_MODE_PRESERVE,
+        TCP_REQUEST_PENDING_RECEIVE);
+    TCP_ADD_STATE(TCP_STATE_RECEIVING, Context);
+    ContextMutexRelease(Context);
+    return Status;
+}
+
+/**
+ * TCP shutdown handlers
+ **/
+
+NTSTATUS
+TcpIpDisassociateAddress(
+    _Inout_ PIRP Irp
+)
+{
+#ifndef NDEBUG
+    INT i;
+    KIRQL OldIrql;
+#endif
+    LARGE_INTEGER Timeout;
+    
+    PADDRESS_FILE AddressFile;
+    PIO_STACK_LOCATION IrpSp;
+    PIRP PendingIrp;
+    PLIST_ENTRY Entry;
+    PLIST_ENTRY Head;
+    PTCP_CONTEXT Context;
+    PTCP_REQUEST Request;
+    
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    
+    /* Obligatory sanity check */
+    if (IrpSp->FileObject->FsContext2 != (PVOID)TDI_CONNECTION_FILE)
+    {
+        DPRINT1("Disassociating invalid object\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+    
+    Context = IrpSp->FileObject->FsContext;
+    ContextMutexAcquire(Context);
+    
+    /* Check if the address association is already broken */
+    AddressFile = Context->AddressFile;
+    if (AddressFile == NULL)
+    {
+        goto BREAK_LWIP_ASSOCIATION;
+    }
+    Context->AddressFile = NULL;
+    
+    /* If the address association remains, break it. */
+    if ((InterlockedDecrement(&AddressFile->ContextCount) < 1) && (AddressFile->RefCount < 1))
+    {
+        CloseAddress(AddressFile);
+    }
+    
+BREAK_LWIP_ASSOCIATION:
+    /* If the lwIP association remains, break it. */
+    Timeout.QuadPart = -1;
+    ACQUIRE_SERIAL_MUTEX(&Context->Mutex, &Timeout);
+    if (Context->lwip_tcp_pcb != NULL)
+    {
+        tcp_arg(Context->lwip_tcp_pcb, NULL);
+        tcp_close(Context->lwip_tcp_pcb);
+        Context->lwip_tcp_pcb = NULL;
+    }
+    RELEASE_SERIAL_MUTEX();
+    
+    /* Clean up remaining pending requests */
+    Head = &Context->RequestListHead;
+    Entry = Head->Flink;
+    while (Entry != Head)
+    {
+        Request = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
+        Entry = Entry->Flink;
+        
+        /* Immediately block cancellations. We do not have to worry about other payload types, since
+         * they only appear on Listening Contexts, which we create and destroy ourselves without
+         * IRPs to tell us when to do so. */
+        PendingIrp = Request->Payload.PendingIrp;
+        PendingIrp->Cancel = TRUE;
+        IoSetCancelRoutine(PendingIrp, NULL);
+        /* Set completion information and complete */
+        PendingIrp->IoStatus.Status = STATUS_CANCELLED;
+        PendingIrp->IoStatus.Information = 0;
+        IoCompleteRequest(PendingIrp, IO_NETWORK_INCREMENT);
+#ifndef NDEBUG
+        REMOVE_IRP(PendingIrp);
+#endif
+
+        ExFreePoolWithTag(Request, TAG_TCP_REQUEST);
+    }
+    
+    /* Pending accepted connections have been dealt with, we can release the MTSerialMutex. */
+    ContextMutexRelease(Context);
+    
     return STATUS_SUCCESS;
 }
 
 NTSTATUS
-AddressSetTtl(
-    _In_ TDIEntityID ID,
-    _In_ PVOID InBuffer,
-    _In_ ULONG BufferSize)
+TcpIpDisconnect(
+    _Inout_ PIRP Irp
+)
 {
-    ADDRESS_FILE* AddressFile;
-    TCPIP_INSTANCE* Instance;
-    NTSTATUS Status;
-    ULONG Value;
-
-    if (BufferSize < sizeof(ULONG))
-        return STATUS_BUFFER_TOO_SMALL;
-
-    /* Get the address file */
-    Status = GetInstance(ID, &Instance);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    AddressFile = CONTAINING_RECORD(Instance, ADDRESS_FILE, Instance);
-
-    /* Get the value */
-    Value = *((ULONG*)InBuffer);
-
-    switch (AddressFile->Protocol)
+    LARGE_INTEGER Timeout;
+    
+    PIO_STACK_LOCATION IrpSp;
+    PTCP_CONTEXT Context;
+    
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    
+    /* Sanity check incoming Context */
+    if (IrpSp->FileObject->FsContext2 != (PVOID)TDI_CONNECTION_FILE)
     {
-        case IPPROTO_TCP:
-            DPRINT("TCP not supported yet.\n");
-            break;
-        case IPPROTO_UDP:
-            AddressFile->lwip_udp_pcb->ttl = Value;
-            break;
-        default:
-            AddressFile->lwip_raw_pcb->ttl = Value;
-            break;
+        DPRINT1("Not disconnecting a valid connection\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+    
+    Context = IrpSp->FileObject->FsContext;
+    ContextMutexAcquire(Context);
+    
+    Timeout.QuadPart = -1;
+    ACQUIRE_SERIAL_MUTEX(&Context->Mutex, &Timeout);
+    
+    /* Shut down the connection, if it is still alive. */
+    if (Context->lwip_tcp_pcb != NULL)
+    {
+        tcp_arg(Context->lwip_tcp_pcb, NULL);
+        tcp_close(Context->lwip_tcp_pcb);
+        Context->lwip_tcp_pcb = NULL;
     }
 
+    RELEASE_SERIAL_MUTEX();
+    
+    TCP_SET_STATE(TCP_STATE_CLOSED, Context);
+    
+    ContextMutexRelease(Context);
+    
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+TcpIpCloseAddress(
+    _In_ PADDRESS_FILE AddressFile
+)
+{
+    /* Check if there are still references to this Address File */
+    if (InterlockedDecrement(&AddressFile->RefCount) > 0)
+    {
+        DPRINT("Closing address with %d open handles\n", AddressFile->RefCount);
+        return STATUS_SUCCESS;
+    }
+    if (AddressFile->ContextCount > 0)
+    {
+        /* This should not happen if the upper level drivers work correctly */
+        DPRINT("Closing address with %d context references\n", AddressFile->ContextCount);
+        // TODO: better return code
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    CloseAddress(AddressFile);
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+TcpIpCloseContext(
+    _In_ PTCP_CONTEXT Context
+)
+{
+#ifndef NDEBUG
+    INT i;
+    KIRQL OldIrql;
+#endif
+    
+    ContextMutexAcquire(Context);
+    
+    if ((Context->AddressFile != NULL) || (Context->lwip_tcp_pcb != NULL)) {
+        DPRINT1("Context retains association. AddressFile %p, tcp_pcb %p\n",
+            Context->AddressFile,
+            Context->lwip_tcp_pcb);
+        return STATUS_CONNECTION_ACTIVE;
+    }
+    
+    ContextMutexRelease(Context);
+    
+    ExFreePoolWithTag(Context, TAG_TCP_CONTEXT);
+#ifndef NDEBUG
+    REMOVE_CONTEXT(Context);
+#endif
+    
     return STATUS_SUCCESS;
 }
 
 /**
- * Datagram Functions
- */
-
-static
-NTSTATUS
-ExtractAddressFromList(
-    _In_ PTRANSPORT_ADDRESS AddressList,
-    _Out_ PTDI_ADDRESS_IP Address)
-{
-    PTA_ADDRESS CurrentAddress;
-    INT i;
-
-    CurrentAddress = &AddressList->Address[0];
-
-    /* We can only use IP addresses. Search the list until we find one */
-    for (i = 0; i < AddressList->TAAddressCount; i++)
-    {
-        if (CurrentAddress->AddressType == TDI_ADDRESS_TYPE_IP)
-        {
-            if (CurrentAddress->AddressLength == TDI_ADDRESS_LENGTH_IP)
-            {
-                /* This is an IPv4 address */
-                RtlCopyMemory(Address, &CurrentAddress->Address[0], CurrentAddress->AddressLength);
-                return STATUS_SUCCESS;
-            }
-        }
-        CurrentAddress = (PTA_ADDRESS)&CurrentAddress->Address[CurrentAddress->AddressLength];
-    }
-    return STATUS_INVALID_ADDRESS;
-}
+ * UDP Fuctions
+ **/
 
 static
 VOID
@@ -1836,11 +1399,10 @@ CancelReceiveDatagram(
     Irp->IoStatus.Status = STATUS_CANCELLED;
     Irp->IoStatus.Information = 0;
 
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 #ifndef NDEBUG
     REMOVE_IRP(Irp);
-    REMOVE_IRPSP(IrpSp);
 #endif
-    _IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 
     ExFreePoolWithTag(Request, TAG_DGRAM_REQST);
 }
@@ -1926,11 +1488,10 @@ Failure:
     if (Request)
         ExFreePoolWithTag(Request, TAG_DGRAM_REQST);
     Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 #ifndef NDEBUG
     REMOVE_IRP(Irp);
-    REMOVE_IRPSP(IrpSp);
 #endif
-    _IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
     return Status;
 }
 
@@ -2076,174 +1637,309 @@ Finish:
     if (p)
         pbuf_free(p);
     Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
 #ifndef NDEBUG
     REMOVE_IRP(Irp);
-    REMOVE_IRPSP(IrpSp);
 #endif
-    _IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
     return Status;
 }
 
-/* Acquire Context mutex before calling. If the PCB is deallocated, also set the PCB pointer to NULL
- * before calling. */
-VOID
-ProcessPCBError(
-    PTCP_CONTEXT Context,
-    ULONG TcpState)
+/**
+ * TCP/IP Stack Functions
+ **/
+
+NTSTATUS
+AddressSetIpDontFragment(
+    _In_ TDIEntityID ID,
+    _In_ PVOID InBuffer,
+    _In_ ULONG BufferSize)
 {
-    PIRP Irp;
-    PLIST_ENTRY Entry;
-    PLIST_ENTRY Head;
-    PTCP_REQUEST Request;
-
-    /* Set the Context's State to indicate it is no longer active */
-    TCP_SET_STATE(TcpState, Context);
-
-    /* Walk the Context's list of pending requests and finish them */
-    Head = &Context->RequestListHead;
-    Entry = Head->Flink;
-    while (Entry != Head)
-    {
-        /* Extract Request */
-        Request = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
-
-        /* Block potential cancellations */
-        Irp = Request->Payload.PendingIrp;
-        Irp->Cancel = TRUE;
-        IoSetCancelRoutine(Irp, NULL);
-
-        /* Dequeue Request and increment list walk */
-        Entry = Entry->Flink;
-        RemoveEntryList(&Request->ListEntry);
-
-        /* Complete the IRP, deallocate the Request, and deallocate the lwIP PCB if necessary */
-        Irp->IoStatus.Information = 0;
-        CleanupRequest(Request, STATUS_CANCELLED, Context);
-    }
+    /* Silently ignore.
+     * lwip doesn't have such thing, and already tries to fragment data as less as possible */
+    return STATUS_SUCCESS;
 }
 
-void
-lwip_tcp_err_callback(
-    void *arg,
-    err_t err
+NTSTATUS
+AddressSetTtl(
+    _In_ TDIEntityID ID,
+    _In_ PVOID InBuffer,
+    _In_ ULONG BufferSize)
+{
+    ADDRESS_FILE* AddressFile;
+    TCPIP_INSTANCE* Instance;
+    NTSTATUS Status;
+    ULONG Value;
+
+    if (BufferSize < sizeof(ULONG))
+        return STATUS_BUFFER_TOO_SMALL;
+
+    /* Get the address file */
+    Status = GetInstance(ID, &Instance);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    AddressFile = CONTAINING_RECORD(Instance, ADDRESS_FILE, Instance);
+
+    /* Get the value */
+    Value = *((ULONG*)InBuffer);
+
+    switch (AddressFile->Protocol)
+    {
+        case IPPROTO_TCP:
+            DPRINT("TCP not supported yet.\n");
+            break;
+        case IPPROTO_UDP:
+            AddressFile->lwip_udp_pcb->ttl = Value;
+            break;
+        default:
+            AddressFile->lwip_raw_pcb->ttl = Value;
+            break;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/**
+ * Helper Functions
+ **/
+
+/* Check AddressFile->ContextCount and AddressFile->RefCount before calling */
+static
+VOID
+CloseAddress(
+    PADDRESS_FILE AddressFile
 )
 {
-    ULONG TcpState;
-
-    PTCP_CONTEXT Context;
-
-    /* Interpret lwIP error */
-    // TODO: detailed NTSTATUS codes
-    switch (err)
+#ifndef NDEBUG
+    INT i;
+#endif
+    KIRQL OldIrql;
+    
+    /* Remove the Address File from global lists */
+    KeAcquireSpinLock(&AddressListLock, &OldIrql);
+    RemoveEntryList(&AddressFile->ListEntry);
+    KeReleaseSpinLock(&AddressListLock, OldIrql);
+    RemoveEntityInstance(&AddressFile->Instance);
+    
+    /* ICMP, RAW, and UDP addresses store a local PCB */
+    switch (AddressFile->Protocol)
     {
-        case ERR_ABRT :
-            DPRINT1("lwIP socket aborted\n");
-            TcpState = TCP_STATE_ABORTED;
+        case IPPROTO_ICMP :
+        case IPPROTO_RAW :
+            raw_remove(AddressFile->lwip_raw_pcb);
             break;
-        case ERR_RST :
-            DPRINT1("lwIP socket reset\n");
-            TcpState = TCP_STATE_CLOSED;
+        case IPPROTO_UDP :
+            udp_remove(AddressFile->lwip_udp_pcb);
             break;
-        case ERR_CLSD :
-            DPRINT1("lwIP socket closed\n");
-            TcpState = TCP_STATE_CLOSED;
-            break;
-        case ERR_CONN :
-            DPRINT1("lwIP connection failed\n");
-            TcpState = TCP_STATE_CLOSED;
-            break;
-        case ERR_ARG :
-            DPRINT1("lwIP invalid arguments\n");
-            TcpState = TCP_STATE_ABORTED;
-            break;
-        case ERR_IF :
-            DPRINT1("Low-level error\n");
-            TcpState = TCP_STATE_ABORTED;
-            break;
+        case IPPROTO_TCP :
+            /* Nothing to deallocate for TCP */
+            goto NO_REQUESTS;
         default :
-            DPRINT1("Unsupported lwIP error code: %d\n", err);
-            TcpState = TCP_STATE_ABORTED;
+            /* We should never reach here */
+            DPRINT1("Closing Address File with unknown protocol, %d. This should never happen.\n",
+                AddressFile->Protocol);
             break;
     }
+    
+    /* Finish pending requests for RAW and UDP addresses */
 
-    Context = (PTCP_CONTEXT)arg;
-    if (Context == NULL)
-    {
-        return;
-    }
-
-    GetExclusiveContextAccess(Context);
-    Context->lwip_tcp_pcb = NULL;
-    ProcessPCBError(Context, TcpState);
-    ReleaseExclusiveContextAccess(Context);
+NO_REQUESTS:
+    /* Deallocate the Address File */
+    ExFreePoolWithTag(AddressFile, TAG_ADDRESS_FILE);
+#ifndef NDEBUG
+    REMOVE_ADDR_FILE(AddressFile);
+#endif
 }
 
 static
-err_t
-lwip_tcp_connected_callback(
-    void *arg,
-    struct tcp_pcb *tpcb,
-    err_t err
+NTSTATUS
+CreateAddressAndEnlist(
+    struct netif *lwip_netif,
+    PTDI_ADDRESS_IP Address,
+    IPPROTO Protocol,
+    USHORT ShareAccess,
+    PADDRESS_FILE *_AddressFile
 )
 {
-    PIRP Irp;
+    PADDRESS_FILE AddressFile;
     PLIST_ENTRY Entry;
-    PTCP_CONTEXT Context;
-    PTCP_REQUEST Request;
 
-    /* lwIP currently never sends anything other than ERR_OK here */
-
-    Context = (PTCP_CONTEXT)arg;
-    GetExclusiveContextAccess(Context);
-
-    /* Sanity checks */
-    if (Context->TcpState != TCP_STATE_CONNECTING)
+    /* If a netif is specified, check for AddressFile with matching netif and port in order to
+     * detect duplicates */
+    if (lwip_netif != NULL)
     {
-        DPRINT1("Callback on a context that did not initiate a connection\n");
-        ReleaseExclusiveContextAccess(Context);
-        return ERR_ARG;
-    }
-    if (Context->lwip_tcp_pcb != tpcb)
-    {
-        DPRINT1("Connected PCB mismatch\n");
-        ReleaseExclusiveContextAccess(Context);
-        return ERR_ARG;
-    }
-    /* The Connect request should be the first request */
-    Entry = RemoveHeadList(&Context->RequestListHead);
-    if (Entry == &Context->RequestListHead)
-    {
-        DPRINT1("No matching Connect Request found\n");
-        ReleaseExclusiveContextAccess(Context);
-        return ERR_ARG;
-    }
-
-    Request = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
-    Irp = Request->Payload.PendingIrp;
-
-    /* Block cancellations */
-    Irp->Cancel = TRUE;
-    IoSetCancelRoutine(Irp, NULL);
-
-    /* One last sanity check */
-    if (Request->PendingMode != TCP_REQUEST_PENDING_CONNECT)
-    {
-        DPRINT1("Pending Request is not a Connect request. This should never happen.\n");
-        Irp->IoStatus.Information = 0;
-        CleanupRequest(Request, STATUS_CANCELLED, Context);
-        ReleaseExclusiveContextAccess(Context);
-        return ERR_CONN;
+        Entry = AddressListHead.Flink;
+        while (Entry != &AddressListHead)
+        {
+            AddressFile = CONTAINING_RECORD(Entry, ADDRESS_FILE, ListEntry);
+            /* If the requested address' lwIP netif, protocol, and port match that of an existing
+             * Address File, then check if we are creating a shared address. */
+            if ((AddressFile->NetInterface == lwip_netif) &&
+                (AddressFile->Protocol == Protocol) &&
+                (AddressFile->Address.sin_port == Address->sin_port))
+            {
+                /* Matching address file found. */
+                if (ShareAccess)
+                {
+                    /* If shared, increment reference count */
+                    InterlockedIncrement(&AddressFile->RefCount);
+                    goto FINISH;
+                }
+                else
+                {
+                    /* If not shared, return error */
+                    return STATUS_ADDRESS_ALREADY_EXISTS;
+                }
+            }
+        }
     }
 
-    /* Complete the Request, set TCP State variable, and set callback information */
-    TCP_SET_STATE(TCP_STATE_CONNECTED, Context);
-    tcp_sent(Context->lwip_tcp_pcb, lwip_tcp_sent_callback);
-    tcp_recv(Context->lwip_tcp_pcb, lwip_tcp_receive_callback);
-    CleanupRequest(Request, STATUS_SUCCESS, Context);
+    /* If no match was found in the Address File list or the netif is not specified,
+     * then create a new one */
+    AddressFile = ExAllocatePoolWithTag(NonPagedPool, sizeof(*AddressFile), TAG_ADDRESS_FILE);
+    if (AddressFile == NULL)
+    {
+        DPRINT1("Not enough resources\n");
+        return STATUS_NO_MEMORY;
+    }
+#ifndef NDEBUG
+    ADD_ADDR_FILE_DPC(AddressFile);
+#endif
 
-    ReleaseExclusiveContextAccess(Context);
-    return ERR_OK;
+    /* Initialize Address File fields */
+    AddressFile->RefCount = 0;
+    AddressFile->ContextCount = 0;
+    AddressFile->Protocol = Protocol;
+    RtlCopyMemory(&AddressFile->Address, Address, sizeof(*Address));
+    AddressFile->NetInterface = lwip_netif;
+
+    /* Entity ID */
+    switch (Protocol)
+    {
+        case IPPROTO_TCP :
+            InsertEntityInstance(CO_TL_ENTITY, &AddressFile->Instance);
+            break;
+        case IPPROTO_ICMP :
+            InsertEntityInstance(ER_ENTITY, &AddressFile->Instance);
+            break;
+        default :
+            /* UDP, RAW */
+            InsertEntityInstance(CL_TL_ENTITY, &AddressFile->Instance);
+            break;
+    }
+
+    /* TCP variables */
+    AddressFile->HasListener = FALSE;
+
+    /* UDP and RAW variables */
+    KeInitializeSpinLock(&AddressFile->RequestLock);
+    InitializeListHead(&AddressFile->RequestListHead);
+    AddressFile->lwip_raw_pcb = NULL;
+
+    /* Add to master list */
+    InsertTailList(&AddressListHead, &AddressFile->ListEntry);
+
+FINISH:
+    /* Output the Address File */
+    *_AddressFile = AddressFile;
+
+    return STATUS_SUCCESS;
 }
+
+static
+NTSTATUS
+DoSend(
+    PIRP Irp,
+    PTCP_CONTEXT Context
+)
+{
+    UINT SendBytes;
+    PVOID Buffer;
+    err_t lwip_err;
+    
+    /* Get send buffer and length */
+    NdisQueryBuffer(Irp->MdlAddress, &Buffer, &SendBytes);
+    
+    /* Call into lwIP to initiate send */
+    lwip_err = tcp_write(Context->lwip_tcp_pcb, Buffer, SendBytes, 0);
+    switch (lwip_err)
+    {
+        case ERR_OK:
+            return STATUS_SUCCESS;
+        case ERR_MEM:
+            DPRINT1("lwIP ERR_MEM\n");
+            return STATUS_NO_MEMORY;
+        case ERR_ARG:
+            DPRINT1("lwIP ERR_ARG\n");
+            return STATUS_INVALID_PARAMETER;
+        case ERR_CONN:
+            DPRINT1("lwIP ERR_CONN\n");
+            return STATUS_CONNECTION_ACTIVE;
+        default:
+            DPRINT1("Unknwon lwIP Error: %d\n", lwip_err);
+            return STATUS_NOT_IMPLEMENTED;
+    }
+}
+
+static
+NTSTATUS
+EnqueueIRP(
+    PIRP Irp,
+    PTCP_CONTEXT Context,
+    PDRIVER_CANCEL CancelRoutine,
+    UCHAR CancelMode,
+    UCHAR PendingMode
+)
+{
+    PTCP_REQUEST Request;
+    
+    Request = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Request), TAG_TCP_REQUEST);
+    if (Request == NULL)
+    {
+        return STATUS_NO_MEMORY;
+    }
+    
+    Request->Payload.PendingIrp = Irp;
+    Request->CancelMode = CancelMode;
+    Request->PendingMode = PendingMode;
+    Request->PayloadType = TCP_REQUEST_PAYLOAD_IRP;
+    
+    InsertTailList(&Context->RequestListHead, &Request->ListEntry);
+    
+    return STATUS_PENDING;
+}
+
+static
+NTSTATUS
+ExtractAddressFromList(
+    _In_ PTRANSPORT_ADDRESS AddressList,
+    _Out_ PTDI_ADDRESS_IP Address)
+{
+    PTA_ADDRESS CurrentAddress;
+    INT i;
+
+    CurrentAddress = &AddressList->Address[0];
+
+    /* We can only use IP addresses. Search the list until we find one */
+    for (i = 0; i < AddressList->TAAddressCount; i++)
+    {
+        if (CurrentAddress->AddressType == TDI_ADDRESS_TYPE_IP)
+        {
+            if (CurrentAddress->AddressLength == TDI_ADDRESS_LENGTH_IP)
+            {
+                /* This is an IPv4 address */
+                RtlCopyMemory(Address, &CurrentAddress->Address[0], CurrentAddress->AddressLength);
+                return STATUS_SUCCESS;
+            }
+        }
+        CurrentAddress = (PTA_ADDRESS)&CurrentAddress->Address[CurrentAddress->AddressLength];
+    }
+    return STATUS_INVALID_ADDRESS;
+}
+
+/**
+ * lwIP Callback Functions
+ **/
 
 static
 err_t
@@ -2257,235 +1953,178 @@ lwip_tcp_accept_callback(
     INT i;
     KIRQL OldIrql;
 #endif
-    NTSTATUS Status;
-
+    
     PIO_STACK_LOCATION IrpSp;
     PIRP Irp;
     PLIST_ENTRY Entry;
     PLIST_ENTRY Head;
     PTCP_CONTEXT Context;
-    PTCP_CONTEXT NewContext;
-    PTCP_REQUEST CurrentRequest;
-    PTCP_REQUEST DummyRequest;
+    PTCP_CONTEXT ListenContext;
     PTCP_REQUEST Request;
-
+    
     /* lwIP currently never sends anything other than ERR_OK here */
-
-    Context = (PTCP_CONTEXT)arg;
-    GetExclusiveContextAccess(Context);
-
-    /* Sanity check */
-    if (!(Context->TcpState & TCP_STATE_LISTENING))
+    
+    ListenContext = (PTCP_CONTEXT)arg;
+    if (ListenContext == NULL)
     {
-        DPRINT1("lwIP sending Accept event to non-listening TCP Context\n");
-#ifndef NDEBUG
-        REMOVE_PCB(Context->lwip_tcp_pcb);
-#endif
-        tcp_close(Context->lwip_tcp_pcb);
-        Context->lwip_tcp_pcb = NULL;
-        ReleaseExclusiveContextAccess(Context);
+        DPRINT("No listener\n");
         return ERR_CLSD;
     }
 
-    /* Look for a Listen request and an available dummy Context */
-    Head = &Context->RequestListHead;
-    NewContext = NULL;
-    Request = NULL;
+    /* Do non-dependent PCB setup */
+    tcp_err(newpcb, lwip_tcp_err_callback);
+    tcp_recv(newpcb, lwip_tcp_recv_callback);
+    tcp_sent(newpcb, lwip_tcp_sent_callback);
+    
+    ContextMutexAcquire(ListenContext);
+    
+    /* Walk the listener's Request list for a TDI_LISTEN to complete */
+    Head = &ListenContext->RequestListHead;
     Entry = Head->Flink;
     while (Entry != Head)
     {
-        // TODO: optimize checking logic
-
-        CurrentRequest = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
-        if ((CurrentRequest->PendingMode == TCP_REQUEST_PENDING_LISTEN) && (Request == NULL))
+        Request = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
+        if (Request->PendingMode == TCP_REQUEST_PENDING_LISTEN)
         {
-            /* This is the Listen request we are looking for. Immediately block cancellations, then
-             * dequeue the Request. */
-            Irp = CurrentRequest->Payload.PendingIrp;
+            /* Immediately block cancellation and remove the Request from the list so we can release
+             * the Context mutex */
+            Irp = Request->Payload.PendingIrp;
+            Irp->Cancel = TRUE;
             IoSetCancelRoutine(Irp, NULL);
-            RemoveEntryList(&CurrentRequest->ListEntry);
-            Request = CurrentRequest;
-
-            /* If we have already found a dummy Context, associate it with the Established PCB. */
-            if (NewContext != NULL)
-            {
-                RemoveEntryList(&DummyRequest->ListEntry);
-                ExFreePoolWithTag(DummyRequest, TAG_TCP_REQUEST);
-                goto CONTEXT_FOUND;
-            }
-        }
-        else if ((CurrentRequest->PendingMode == TCP_REQUEST_PENDING_LISTEN_POLL)
-            && (NewContext == NULL))
-        {
-            /* This is a dummy Context we can use instead of creating a new one. Store a reference
-             * to it. No need to acquire exclusive access to this Context because this is the only
-             * existing pointer to it at this moment. */
-            NewContext = CurrentRequest->Payload.Context;
-            DummyRequest = CurrentRequest;
-
-            /* If we have already found a Listen request, we still must associate this Context with
-             * the Established PCB before completing the Request. */
-            if (Request != NULL)
-            {
-                RemoveEntryList(&DummyRequest->ListEntry);
-                ExFreePoolWithTag(DummyRequest, TAG_TCP_REQUEST);
-                goto CONTEXT_FOUND;
-            }
+            RemoveEntryList(&Request->ListEntry);
+            ContextMutexRelease(ListenContext);
+            
+            /* Extract container Context */
+            IrpSp = IoGetCurrentIrpStackLocation(Irp);
+            Context = IrpSp->FileObject->FsContext;
+            
+            /* Set Context and PCB fields */
+            TCP_SET_STATE(TCP_STATE_CONNECTED, Context);
+            Context->lwip_tcp_pcb = newpcb;
+            tcp_arg(newpcb, Context);
+            
+            /* Complete the IRP */
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+#ifndef NDEBUG
+            REMOVE_IRP(Irp);
+#endif
+            
+            ExFreePoolWithTag(Request, TAG_TCP_REQUEST);
+            
+            return ERR_OK;
         }
         Entry = Entry->Flink;
     }
-
-    /* We need a Context to store the Established PCB in. If the list does not contain a dummy
-     * Context, we need to create a new one. */
-    if (NewContext == NULL)
+    
+    /* If the list walk did not find a valid IRP, we need to enqueue the newpcb for the next
+     * TDI_LISTEN to find. */
+    Request = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Request), TAG_TCP_REQUEST);
+    if (Request == NULL)
     {
-        NewContext = ExAllocatePoolWithTag(NonPagedPool, sizeof(*NewContext), TAG_TCP_CONTEXT);
-        if (NewContext == NULL)
-        {
-            DPRINT1("Not enough resources\n");
-            ReleaseExclusiveContextAccess(Context);
-            return ERR_MEM;
-        }
-#ifndef NDEBUG
-        ADD_CONTEXT(NewContext);
-#endif
-        NewContext->AddressFile = Context->AddressFile;
-        InitializeListHead(&NewContext->RequestListHead);
-        NewContext->ReferencedByUpperLayer = FALSE;
-        InitializeContextMutex(NewContext);
-
-        /* Increment the Address File's Context reference count */
-        InterlockedIncrement(&NewContext->AddressFile->ContextCount);
-    }
-
-CONTEXT_FOUND:
-    /* Associate the new Context and the Established PCB with each other  */
-#ifndef NDEBUG
-    ADD_PCB(newpcb);
-#endif
-    NewContext->lwip_tcp_pcb = newpcb;
-    tcp_arg(NewContext->lwip_tcp_pcb, NewContext);
-    tcp_err(NewContext->lwip_tcp_pcb, lwip_tcp_err_callback);
-    tcp_sent(NewContext->lwip_tcp_pcb, lwip_tcp_sent_callback);
-    tcp_recv(NewContext->lwip_tcp_pcb, lwip_tcp_receive_callback);
-
-    /* If we found a Listen request, complete it. */
-    if (Request != NULL)
-    {
-        /* Store new Context information */
-        TCP_SET_STATE(TCP_STATE_CONNECTED, NewContext);
-        IrpSp = IoGetCurrentIrpStackLocation(Irp);
-        IrpSp->FileObject->FsContext = NewContext;
-        IrpSp->FileObject->FsContext2 = (PVOID)TDI_CONNECTION_FILE;
-
-        /* Finish the Request */
-        NewContext->ReferencedByUpperLayer = TRUE;
-        CleanupRequest(Request, STATUS_SUCCESS, Context);
-
-        /* Notify the listening lwIP PCB that we accepted the connection */
-        tcp_accepted(Context->lwip_tcp_pcb);
-
-        ReleaseExclusiveContextAccess(Context);
-        return ERR_OK;
-    }
-
-    /* If we did not find a Listen request, we need to enqueue the new Context. The next TDI_LISTEN
-     * will find it and complete without pending. */
-    TCP_SET_STATE(TCP_STATE_BOUND, NewContext);
-    Status = EnqueueRequest(
-        NewContext,
-        Context,
-        TCP_REQUEST_CANCEL_MODE_PRESERVE,
-        TCP_REQUEST_PENDING_ACCEPTED_CONNECTION,
-        TCP_REQUEST_PAYLOAD_CONTEXT);
-    if (Status != STATUS_SUCCESS)
-    {
-        DPRINT1("Ran out of resources trying to enqueue a connected Context\n");
-        ReleaseExclusiveContextAccess(Context);
+        ContextMutexRelease(ListenContext);
+        DPRINT("Out of resources\n");
         return ERR_MEM;
     }
-
-    ReleaseExclusiveContextAccess(Context);
+    
+    Request->Payload.apcb = newpcb;
+    Request->CancelMode = TCP_REQUEST_CANCEL_MODE_PRESERVE;
+    Request->PendingMode = TCP_REQUEST_PENDING_ACCEPTED_CONNECTION;
+    Request->PayloadType = TCP_REQUEST_PAYLOAD_PCB;
+    
+    InsertTailList(&ListenContext->RequestListHead, &Request->ListEntry);
+    tcp_arg(newpcb, ListenContext);
+    
     return ERR_OK;
 }
 
 static
 err_t
-lwip_tcp_receive_callback(
+lwip_tcp_recv_callback(
     void *arg,
     struct tcp_pcb *tpcb,
     struct pbuf *p,
     err_t err
 )
 {
-    BOOLEAN Acquired;
+#ifndef NDEBUG
+    INT i;
+    KIRQL OldIrql;
+#endif
     INT CopiedLength;
     INT RemainingDestBytes;
     UCHAR *CurrentDestLocation;
-
+    
     PIRP Irp;
-    PLIST_ENTRY Head;
     PLIST_ENTRY Entry;
+    PLIST_ENTRY Head;
     PNDIS_BUFFER Buffer;
     PTCP_CONTEXT Context;
     PTCP_REQUEST Request;
-
+    
     struct pbuf *next;
-
+    
     /* lwIP currently never sends anything other than ERR_OK here */
-
+    
     Context = (PTCP_CONTEXT)arg;
-
-    /* Get exclusive access to the Context */
-    GetExclusiveContextAccess(Context);
-
-    /* If the buffer is NULL, the PCB has been closed */
+    if (Context == NULL)
+    {
+        DPRINT("No receiving Context\n");
+        return ERR_CLSD;
+    }
+    ContextMutexAcquire(Context);
+    
+    /* A null buffer means the connection has been closed */
     if (p == NULL)
     {
         Context->lwip_tcp_pcb = NULL;
-        ProcessPCBError(Context, TCP_STATE_CLOSED);
-        ReleaseExclusiveContextAccess(Context);
+        TCP_SET_STATE(TCP_STATE_CLOSED, Context);
+        ContextMutexRelease(Context);
         return ERR_OK;
     }
-
-    /* Sanity checks */
-    if (!(Context->TcpState & TCP_STATE_CONNECTED))
+    
+    /* Sanity check the Context */
+    if (!(Context->TcpState & (TCP_STATE_CONNECTED|TCP_STATE_RECEIVING)))
     {
-        DPRINT1("Receive callback on Context that is not currently connected\n");
-        ReleaseExclusiveContextAccess(Context);
+        ContextMutexRelease(Context);
+        DPRINT("Receiving on unconnected Context %p\n", Context);
         return ERR_ARG;
     }
     if (Context->lwip_tcp_pcb != tpcb)
     {
+        ContextMutexRelease(Context);
         DPRINT1("Receive PCB mismatch\n");
-        ReleaseExclusiveContextAccess(Context);
         return ERR_ARG;
     }
-
-    /* Walk the Request list for the matching Receive request */
+    
+    /* Walk the Request list for a matching TDI_RECEIVE */
     Head = &Context->RequestListHead;
     Entry = Head->Flink;
     while (Entry != Head)
     {
         Request = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
+        Entry = Entry->Flink;
         if (Request->PendingMode == TCP_REQUEST_PENDING_RECEIVE)
         {
-            /* Found a matching request. Block cancellations, dequeue,
-             * and break out of the list walk. */
+            /* Found a TDI_RECEIVE. Block cancellations, dequeue, and proceed to data copy. */
             Irp = Request->Payload.PendingIrp;
             Irp->Cancel = TRUE;
             IoSetCancelRoutine(Irp, NULL);
+            
             RemoveEntryList(&Request->ListEntry);
-            goto FOUND;
+            ExFreePoolWithTag(Request, TAG_TCP_REQUEST);
+            
+            goto COPY_DATA;
         }
-        Entry = Entry->Flink;
     }
-    DPRINT1("Failed to find a pending Receive\n");
+    
+    /* If we did not find a TDI_RECEIVE, simply return an error. lwIP will save the refused data. */
     TCP_RMV_STATE(TCP_STATE_RECEIVING, Context);
-    ReleaseExclusiveContextAccess(Context);
-    return ERR_ARG;
-
-FOUND:
+    ContextMutexRelease(Context);
+    DPRINT("Did not find a TDI_RECEIVE on Context %p marked as Receiving\n", Context);
+    return ERR_MEM;
+    
+COPY_DATA:
     /* Get buffer pointers to write to */
     Buffer = (PNDIS_BUFFER)Irp->MdlAddress;
     NdisQueryBuffer(Buffer, &CurrentDestLocation, &RemainingDestBytes);
@@ -2527,8 +2166,7 @@ COPY_DONE:
     tcp_recved(Context->lwip_tcp_pcb, CopiedLength);
 
     /* Check for other pending Receive requests. If there are none, clear the Receive TCP State bit.
-     * Otherwise, leave the state variable alone. */
-    Entry = Head->Flink;
+     * Otherwise, leave the state variable alone. We continue from where we left off in the list. */
     while (Entry != Head)
     {
         Request = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
@@ -2540,13 +2178,18 @@ COPY_DONE:
         }
     }
     TCP_RMV_STATE(TCP_STATE_RECEIVING, Context);
-
+    
 STILL_PENDING:
+    ContextMutexRelease(Context);
+    
     /* Clean up the Request struct and the IRP */
+    Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = CopiedLength;
-    CleanupRequest(Request, STATUS_SUCCESS, Context);
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+#ifndef NDEBUG
+    REMOVE_IRP(Irp);
+#endif
 
-    ReleaseExclusiveContextAccess(Context);
     return ERR_OK;
 }
 
@@ -2558,60 +2201,210 @@ lwip_tcp_sent_callback(
     u16_t len
 )
 {
+#ifndef NDEBUG
+    INT i;
+    KIRQL OldIrql;
+#endif
+    NTSTATUS Status;
+    
     PIRP Irp;
     PLIST_ENTRY Entry;
     PLIST_ENTRY Head;
     PTCP_CONTEXT Context;
     PTCP_REQUEST Request;
-
+    
+    /* Sanity check the Context */
     Context = (PTCP_CONTEXT)arg;
-
-    /* Get exclusive access to the Context */
-    GetExclusiveContextAccess(Context);
-
-    /* Sanity check */
+    if (Context == NULL)
+    {
+        DPRINT("Callack on closed Context\n");
+        return ERR_CLSD;
+    }
+    ContextMutexAcquire(Context);
     if (!(Context->TcpState & TCP_STATE_SENDING))
     {
-        DPRINT1("Callback on a connection that is not sending anything\n");
-        ReleaseExclusiveContextAccess(Context);
+        ContextMutexRelease(Context);
+        DPRINT("Callback on Context %p that is not sending\n", Context);
         return ERR_ARG;
     }
-
-    /* Walk Request list for the first Send request */
+    if (Context->lwip_tcp_pcb != tpcb)
+    {
+        ContextMutexRelease(Context);
+        DPRINT("Sent PCB mismatch\n");
+        return ERR_ARG;
+    }
+    
+    /* Grab the first TDI_SEND */
     Head = &Context->RequestListHead;
     Entry = Head->Flink;
     while (Entry != Head)
     {
         Request = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
-
-        /* Jump to handler when Request found */
+        Entry = Entry->Flink;
         if (Request->PendingMode == TCP_REQUEST_PENDING_SEND)
         {
-            /* Immediately block any cancellations */
+            /* Block cancellation and finish request */
             Irp = Request->Payload.PendingIrp;
             Irp->Cancel = TRUE;
             IoSetCancelRoutine(Irp, NULL);
-
-            /* Dequeue the entry and jump to handler */
+            
             RemoveEntryList(&Request->ListEntry);
-            goto FOUND;
-        }
+            
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = len;
+            IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+#ifndef NDEBUG
+            REMOVE_IRP(Irp);
+#endif
 
+            ExFreePoolWithTag(Request, TAG_TCP_REQUEST);
+            
+            goto CHECK_FOR_NEXT_REQUEST;
+        }
+    }
+    
+    /* If we didn't find a TDI_SEND, something is wrong. */
+    ContextMutexRelease(Context);
+    DPRINT("No TDI_SEND on Context %p marked as SENDING\n", Context);
+    return ERR_ARG;
+    
+CHECK_FOR_NEXT_REQUEST:
+    /* Walk the rest of the list to see if we need to service the next TDI_SEND */
+    while (Entry != Head)
+    {
+        Request = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
+        if (Request->PendingMode == TCP_REQUEST_PENDING_SEND)
+        {
+            Status = DoSend(Request->Payload.PendingIrp, Context);
+            ContextMutexRelease(Context);
+            if (Status == STATUS_SUCCESS)
+            {
+                return ERR_OK;
+            }
+            else
+            {
+                DPRINT1("Not enough resources\n");
+                return ERR_MEM;
+            }
+        }
         Entry = Entry->Flink;
     }
-
-    /* Being here means we walked the entire list without finding a Send request. We should clear
-     * the TCP State variable SENDING bit. */
-    DPRINT1("Callback on Context with no outstanding Send requests\n");
+    
+    /* If we walk the entirety of the list without finding another TDI_SEND, clear the state bit. */
     TCP_RMV_STATE(TCP_STATE_SENDING, Context);
-    ReleaseExclusiveContextAccess(Context);
-    return ERR_ARG;
-
-FOUND:
-    /* Complete the Request */
-    Irp->IoStatus.Information = len;
-    CleanupRequest(Request, STATUS_SUCCESS, Context);
-
-    ReleaseExclusiveContextAccess(Context);
+    ContextMutexRelease(Context);
     return ERR_OK;
 }
+
+static
+void
+lwip_tcp_err_callback(
+    void *arg,
+    err_t err
+)
+{
+    PTCP_CONTEXT Context;
+    
+    DPRINT("lwIP closed a socket: %d\n", err);
+    
+    Context = (PTCP_CONTEXT)arg;
+    if (Context == NULL)
+    {
+        return;
+    }
+    
+    ContextMutexAcquire(Context);
+    Context->lwip_tcp_pcb = NULL;
+    ContextMutexRelease(Context);
+}
+
+static
+err_t
+lwip_tcp_connected_callback(
+    void *arg,
+    struct tcp_pcb *tpcb,
+    err_t err
+)
+{
+#ifndef NDEBUG
+    INT i;
+    KIRQL OldIrql;
+#endif
+    
+    PIRP Irp;
+    PLIST_ENTRY Entry;
+    PTCP_CONTEXT Context;
+    PTCP_REQUEST Request;
+    
+    /* lwIP currently never sends anything other than ERR_OK here */
+    
+    /* Sanity check the Context */
+    Context = (PTCP_CONTEXT)arg;
+    if (Context == NULL)
+    {
+        DPRINT("No callback Context\n");
+        return ERR_CLSD;
+    }
+    ContextMutexAcquire(Context);
+    if (Context->TcpState != TCP_STATE_CONNECTING)
+    {
+        ContextMutexRelease(Context);
+        DPRINT("Connection established for Context %p in state %08x\n", Context, Context->TcpState);
+        return ERR_ARG;
+    }
+    if (Context->lwip_tcp_pcb != tpcb)
+    {
+        ContextMutexRelease(Context);
+        DPRINT("Connected PCB mismatch\n");
+        return ERR_ARG;
+    }
+    
+    /* The Connect request should be the first and only Request */
+    Entry = RemoveHeadList(&Context->RequestListHead);
+    if (Entry == &Context->RequestListHead)
+    {
+        ContextMutexRelease(Context);
+        DPRINT("No Connect request\n");
+        return ERR_ARG;
+    }
+    
+    Request = CONTAINING_RECORD(Entry, TCP_REQUEST, ListEntry);
+    Irp = Request->Payload.PendingIrp;
+    
+    /* Block cancellations */
+    Irp->Cancel = TRUE;
+    IoSetCancelRoutine(Irp, NULL);
+    
+    /* One last sanity check */
+    if (Request->PendingMode != TCP_REQUEST_PENDING_CONNECT)
+    {
+        ContextMutexRelease(Context);
+        DPRINT("Pending Request on Connecting Context %p is not a Connect\n", Context);
+        ExFreePoolWithTag(Request, TAG_TCP_REQUEST);
+        Irp->IoStatus.Status = STATUS_CANCELLED;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+#ifndef NDEBUG
+        REMOVE_IRP(Irp);
+#endif
+        return ERR_ARG;
+    }
+    
+    ExFreePoolWithTag(Request, TAG_TCP_REQUEST);
+    
+    /* Set Context fields and callback information */
+    TCP_SET_STATE(TCP_STATE_CONNECTED, Context);
+    tcp_sent(Context->lwip_tcp_pcb, lwip_tcp_sent_callback);
+    tcp_recv(Context->lwip_tcp_pcb, lwip_tcp_recv_callback);
+    
+    ContextMutexRelease(Context);
+    
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+#ifndef NDEBUG
+    REMOVE_IRP(Irp);
+#endif
+    
+    return ERR_OK;
+}
+
