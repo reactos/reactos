@@ -1798,54 +1798,38 @@ static void use_connection_set_accessnameW(struct use_connection_context *ctxt, 
         strcpyW(accessname, ctxt->resource->lpRemoteName);
 }
 
-static WCHAR * select_provider(struct use_connection_context *ctxt)
+static DWORD wnet_use_provider( struct use_connection_context *ctxt, NETRESOURCEW * netres, WNetProvider *provider, BOOLEAN redirect )
 {
-    DWORD ret, prov_size = 0x1000, len;
-    LPNETRESOURCEW provider;
-    WCHAR * system;
-    WCHAR * provider_name;
+    DWORD caps, ret;
 
-    provider = HeapAlloc(GetProcessHeap(), 0, prov_size);
-    if (!provider)
+    caps = provider->getCaps(WNNC_CONNECTION);
+    if (!(caps & (WNNC_CON_ADDCONNECTION | WNNC_CON_ADDCONNECTION3)))
+        return ERROR_BAD_PROVIDER;
+
+    ret = WN_ACCESS_DENIED;
+    do
     {
-        return NULL;
-    }
+        if ((caps & WNNC_CON_ADDCONNECTION3) && provider->addConnection3)
+            ret = provider->addConnection3(ctxt->hwndOwner, netres, ctxt->password, ctxt->userid, ctxt->flags);
+        else if ((caps & WNNC_CON_ADDCONNECTION) && provider->addConnection)
+            ret = provider->addConnection(netres, ctxt->password, ctxt->userid);
 
-    ret = WNetGetResourceInformationW(ctxt->resource, provider, &prov_size, &system);
-    if (ret == ERROR_MORE_DATA)
-    {
-        HeapFree(GetProcessHeap(), 0, provider);
-        provider = HeapAlloc(GetProcessHeap(), 0, prov_size);
-        if (!provider)
-        {
-            return NULL;
-        }
+        if (ret == WN_ALREADY_CONNECTED && redirect)
+            netres->lpLocalName[0] -= 1;
+    } while (redirect && ret == WN_ALREADY_CONNECTED && netres->lpLocalName[0] >= 'C');
 
-        ret = WNetGetResourceInformationW(ctxt->resource, provider, &prov_size, &system);
-    }
+    if (ret == WN_SUCCESS && ctxt->accessname)
+        ctxt->set_accessname(ctxt, netres->lpLocalName);
 
-    if (ret != NO_ERROR)
-    {
-        HeapFree(GetProcessHeap(), 0, provider);
-        return NULL;
-    }
-
-    len = WideCharToMultiByte(CP_ACP, 0, provider->lpProvider, -1, NULL, 0, NULL, NULL);
-    provider_name = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-    if (provider_name)
-        memcpy(provider_name, provider->lpProvider, len * sizeof(WCHAR));
-
-    HeapFree(GetProcessHeap(), 0, provider);
-
-    return provider_name;
+    return ret;
 }
 
 static DWORD wnet_use_connection( struct use_connection_context *ctxt )
 {
     WNetProvider *provider;
-    DWORD index, ret, caps;
-    BOOLEAN redirect = FALSE, prov = FALSE;
-    WCHAR letter[3] = {'z', ':', 0};
+    DWORD index, ret = WN_NO_NETWORK;
+    BOOL redirect = FALSE;
+    WCHAR letter[3] = {'Z', ':', 0};
     NETRESOURCEW netres;
 
     if (!providerTable || providerTable->numProviders == 0)
@@ -1858,13 +1842,11 @@ static DWORD wnet_use_connection( struct use_connection_context *ctxt )
     if (!netres.lpLocalName && (ctxt->flags & CONNECT_REDIRECT))
     {
         if (netres.dwType != RESOURCETYPE_DISK && netres.dwType != RESOURCETYPE_PRINT)
-        {
             return ERROR_BAD_DEV_TYPE;
-        }
 
         if (netres.dwType == RESOURCETYPE_PRINT)
         {
-            FIXME("Locale device selection is not implemented for printers.\n");
+            FIXME("Local device selection is not implemented for printers.\n");
             return WN_NO_NETWORK;
         }
 
@@ -1873,62 +1855,30 @@ static DWORD wnet_use_connection( struct use_connection_context *ctxt )
     }
 
     if (ctxt->flags & CONNECT_INTERACTIVE)
-    {
         return ERROR_BAD_NET_NAME;
-    }
-
-    if (ctxt->flags & CONNECT_UPDATE_PROFILE)
-        FIXME("Connection saving is not implemented\n");
-
-    if (!netres.lpProvider)
-    {
-        netres.lpProvider = select_provider(ctxt);
-        if (!netres.lpProvider)
-        {
-            return ERROR_NO_NET_OR_BAD_PATH;
-        }
-
-        prov = TRUE;
-    }
-
-    index = _findProviderIndexW(netres.lpProvider);
-    if (index == BAD_PROVIDER_INDEX)
-    {
-        ret = ERROR_BAD_PROVIDER;
-        goto done;
-    }
-
-    provider = &providerTable->table[index];
-    caps = provider->getCaps(WNNC_CONNECTION);
-    if (!(caps & (WNNC_CON_ADDCONNECTION | WNNC_CON_ADDCONNECTION3)))
-    {
-        ret = ERROR_BAD_PROVIDER;
-        goto done;
-    }
 
     if ((ret = ctxt->pre_set_accessname(ctxt, netres.lpLocalName)))
+        return ret;
+
+    if (netres.lpProvider)
     {
-        goto done;
+        index = _findProviderIndexW(netres.lpProvider);
+        if (index == BAD_PROVIDER_INDEX)
+            return ERROR_BAD_PROVIDER;
+
+        provider = &providerTable->table[index];
+        ret = wnet_use_provider(ctxt, &netres, provider, redirect);
     }
-
-    ret = WN_ACCESS_DENIED;
-    do
+    else
     {
-        if ((caps & WNNC_CON_ADDCONNECTION3) && provider->addConnection3)
-            ret = provider->addConnection3(ctxt->hwndOwner, &netres, ctxt->password, ctxt->userid, ctxt->flags);
-        else if ((caps & WNNC_CON_ADDCONNECTION) && provider->addConnection)
-            ret = provider->addConnection(&netres, ctxt->password, ctxt->userid);
-
-        if (ret != NO_ERROR && redirect)
-            letter[0] -= 1;
-    } while (redirect && ret == WN_ALREADY_CONNECTED && letter[0] >= 'c');
-
-    if (ret == WN_SUCCESS && ctxt->accessname)
-        ctxt->set_accessname(ctxt, netres.lpLocalName);
-
-done:
-    if (prov)
-        HeapFree(GetProcessHeap(), 0, netres.lpProvider);
+        for (index = 0; index < providerTable->numProviders; index++)
+        {
+            provider = &providerTable->table[index];
+            ret = wnet_use_provider(ctxt, &netres, provider, redirect);
+            if (ret == WN_SUCCESS || ret == WN_ALREADY_CONNECTED)
+                break;
+        }
+    }
 
     return ret;
 }
