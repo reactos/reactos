@@ -410,6 +410,7 @@ static PKL
 co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
 {
     PKL pklPrev;
+    PWND pWnd;
 
     pklPrev = pti->KeyboardLayout;
     if (pklPrev)
@@ -424,8 +425,13 @@ co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
         // FIXME
     }
 
+    if (!(pWnd = pti->MessageQueue->spwndFocus))
+    {
+         pWnd = pti->MessageQueue->spwndActive;
+    }
+
     // Send WM_INPUTLANGCHANGE to thread's focus window
-    co_IntSendMessage(pti->MessageQueue->spwndFocus ? UserHMGetHandle(pti->MessageQueue->spwndFocus) : 0,
+    co_IntSendMessage( pWnd ? UserHMGetHandle(pWnd) : 0,
                       WM_INPUTLANGCHANGE,
                       (WPARAM)pKl->iBaseCharset, // FIXME: How to set it?
                       (LPARAM)pKl->hkl); // hkl
