@@ -4,24 +4,253 @@
  * FILE:             base/services/eventlog/file.c
  * PURPOSE:          Event logging service
  * COPYRIGHT:        Copyright 2005 Saveliy Tretiakov
-                     Michael Martin
+ *                   Michael Martin
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include "eventlog.h"
 
 #include <ndk/iofuncs.h>
+#include <ndk/kefuncs.h>
 
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS ******************************************************************/
+/* LOG FILE LIST - GLOBALS ***************************************************/
 
 static LIST_ENTRY LogFileListHead;
 static CRITICAL_SECTION LogFileListCs;
 
-/* FUNCTIONS ****************************************************************/
+/* LOG FILE LIST - FUNCTIONS *************************************************/
+
+VOID LogfCloseAll(VOID)
+{
+    EnterCriticalSection(&LogFileListCs);
+
+    while (!IsListEmpty(&LogFileListHead))
+    {
+        LogfClose(CONTAINING_RECORD(LogFileListHead.Flink, LOGFILE, ListEntry), TRUE);
+    }
+
+    LeaveCriticalSection(&LogFileListCs);
+
+    DeleteCriticalSection(&LogFileListCs);
+}
+
+VOID LogfListInitialize(VOID)
+{
+    InitializeCriticalSection(&LogFileListCs);
+    InitializeListHead(&LogFileListHead);
+}
+
+PLOGFILE LogfListItemByName(LPCWSTR Name)
+{
+    PLIST_ENTRY CurrentEntry;
+    PLOGFILE Item, Result = NULL;
+
+    EnterCriticalSection(&LogFileListCs);
+
+    CurrentEntry = LogFileListHead.Flink;
+    while (CurrentEntry != &LogFileListHead)
+    {
+        Item = CONTAINING_RECORD(CurrentEntry,
+                                 LOGFILE,
+                                 ListEntry);
+
+        if (Item->LogName && !lstrcmpi(Item->LogName, Name))
+        {
+            Result = Item;
+            break;
+        }
+
+        CurrentEntry = CurrentEntry->Flink;
+    }
+
+    LeaveCriticalSection(&LogFileListCs);
+    return Result;
+}
+
+#if 0
+/* Index starting from 1 */
+DWORD LogfListItemIndexByName(WCHAR * Name)
+{
+    PLIST_ENTRY CurrentEntry;
+    DWORD Result = 0;
+    DWORD i = 1;
+
+    EnterCriticalSection(&LogFileListCs);
+
+    CurrentEntry = LogFileListHead.Flink;
+    while (CurrentEntry != &LogFileListHead)
+    {
+        PLOGFILE Item = CONTAINING_RECORD(CurrentEntry,
+                                          LOGFILE,
+                                          ListEntry);
+
+        if (Item->LogName && !lstrcmpi(Item->LogName, Name))
+        {
+            Result = i;
+            break;
+        }
+
+        CurrentEntry = CurrentEntry->Flink;
+        i++;
+    }
+
+    LeaveCriticalSection(&LogFileListCs);
+    return Result;
+}
+#endif
+
+/* Index starting from 1 */
+PLOGFILE LogfListItemByIndex(DWORD Index)
+{
+    PLIST_ENTRY CurrentEntry;
+    PLOGFILE Result = NULL;
+    DWORD i = 1;
+
+    EnterCriticalSection(&LogFileListCs);
+
+    CurrentEntry = LogFileListHead.Flink;
+    while (CurrentEntry != &LogFileListHead)
+    {
+        if (i == Index)
+        {
+            Result = CONTAINING_RECORD(CurrentEntry, LOGFILE, ListEntry);
+            break;
+        }
+
+        CurrentEntry = CurrentEntry->Flink;
+        i++;
+    }
+
+    LeaveCriticalSection(&LogFileListCs);
+    return Result;
+}
+
+DWORD LogfListItemCount(VOID)
+{
+    PLIST_ENTRY CurrentEntry;
+    DWORD i = 0;
+
+    EnterCriticalSection(&LogFileListCs);
+
+    CurrentEntry = LogFileListHead.Flink;
+    while (CurrentEntry != &LogFileListHead)
+    {
+        CurrentEntry = CurrentEntry->Flink;
+        i++;
+    }
+
+    LeaveCriticalSection(&LogFileListCs);
+    return i;
+}
+
+static VOID
+LogfListAddItem(PLOGFILE Item)
+{
+    EnterCriticalSection(&LogFileListCs);
+    InsertTailList(&LogFileListHead, &Item->ListEntry);
+    LeaveCriticalSection(&LogFileListCs);
+}
+
+static VOID
+LogfListRemoveItem(PLOGFILE Item)
+{
+    EnterCriticalSection(&LogFileListCs);
+    RemoveEntryList(&Item->ListEntry);
+    LeaveCriticalSection(&LogFileListCs);
+}
+
+
+/* FUNCTIONS *****************************************************************/
+
+/* Returns 0 if nothing is found */
+static ULONG
+LogfOffsetByNumber(PLOGFILE LogFile,
+                   DWORD RecordNumber)
+{
+    DWORD i;
+
+    for (i = 0; i < LogFile->OffsetInfoNext; i++)
+    {
+        if (LogFile->OffsetInfo[i].EventNumber == RecordNumber)
+            return LogFile->OffsetInfo[i].EventOffset;
+    }
+    return 0;
+}
+
+DWORD LogfGetOldestRecord(PLOGFILE LogFile)
+{
+    return LogFile->Header.OldestRecordNumber;
+}
+
+DWORD LogfGetCurrentRecord(PLOGFILE LogFile)
+{
+    return LogFile->Header.CurrentRecordNumber;
+}
+
+static BOOL
+LogfAddOffsetInformation(PLOGFILE LogFile,
+                         ULONG ulNumber,
+                         ULONG ulOffset)
+{
+    LPVOID NewOffsetInfo;
+
+    if (LogFile->OffsetInfoNext == LogFile->OffsetInfoSize)
+    {
+        NewOffsetInfo = HeapReAlloc(MyHeap,
+                                    HEAP_ZERO_MEMORY,
+                                    LogFile->OffsetInfo,
+                                    (LogFile->OffsetInfoSize + 64) *
+                                        sizeof(EVENT_OFFSET_INFO));
+
+        if (!NewOffsetInfo)
+        {
+            DPRINT1("Cannot reallocate heap.\n");
+            return FALSE;
+        }
+
+        LogFile->OffsetInfo = (PEVENT_OFFSET_INFO)NewOffsetInfo;
+        LogFile->OffsetInfoSize += 64;
+    }
+
+    LogFile->OffsetInfo[LogFile->OffsetInfoNext].EventNumber = ulNumber;
+    LogFile->OffsetInfo[LogFile->OffsetInfoNext].EventOffset = ulOffset;
+    LogFile->OffsetInfoNext++;
+
+    return TRUE;
+}
+
+static BOOL
+LogfDeleteOffsetInformation(PLOGFILE LogFile,
+                            ULONG ulNumber)
+{
+    DWORD i;
+
+    /*
+     * As the offset information is listed in increasing order, and we want
+     * to keep the list without holes, we demand that ulNumber is the first
+     * element in the list.
+     */
+    if (ulNumber != LogFile->OffsetInfo[0].EventNumber)
+        return FALSE;
+
+    /*
+     * RtlMoveMemory(&LogFile->OffsetInfo[0],
+     *               &LogFile->OffsetInfo[1],
+     *               sizeof(EVENT_OFFSET_INFO) * (LogFile->OffsetInfoNext - 1));
+     */
+    for (i = 0; i < LogFile->OffsetInfoNext - 1; i++)
+    {
+        LogFile->OffsetInfo[i].EventNumber = LogFile->OffsetInfo[i + 1].EventNumber;
+        LogFile->OffsetInfo[i].EventOffset = LogFile->OffsetInfo[i + 1].EventOffset;
+    }
+    LogFile->OffsetInfoNext--;
+
+    return TRUE;
+}
 
 static NTSTATUS
 LogfInitializeNew(PLOGFILE LogFile,
@@ -466,141 +695,6 @@ LogfClose(PLOGFILE LogFile,
     return;
 }
 
-VOID LogfCloseAll(VOID)
-{
-    while (!IsListEmpty(&LogFileListHead))
-    {
-        LogfClose(LogfListHead(), TRUE);
-    }
-
-    DeleteCriticalSection(&LogFileListCs);
-}
-
-VOID LogfListInitialize(VOID)
-{
-    InitializeCriticalSection(&LogFileListCs);
-    InitializeListHead(&LogFileListHead);
-}
-
-PLOGFILE LogfListHead(VOID)
-{
-    return CONTAINING_RECORD(LogFileListHead.Flink, LOGFILE, ListEntry);
-}
-
-PLOGFILE LogfListItemByName(WCHAR * Name)
-{
-    PLIST_ENTRY CurrentEntry;
-    PLOGFILE Result = NULL;
-
-    EnterCriticalSection(&LogFileListCs);
-
-    CurrentEntry = LogFileListHead.Flink;
-    while (CurrentEntry != &LogFileListHead)
-    {
-        PLOGFILE Item = CONTAINING_RECORD(CurrentEntry,
-                                          LOGFILE,
-                                          ListEntry);
-
-        if (Item->LogName && !lstrcmpi(Item->LogName, Name))
-        {
-            Result = Item;
-            break;
-        }
-
-        CurrentEntry = CurrentEntry->Flink;
-    }
-
-    LeaveCriticalSection(&LogFileListCs);
-    return Result;
-}
-
-/* Index starting from 1 */
-INT LogfListItemIndexByName(WCHAR * Name)
-{
-    PLIST_ENTRY CurrentEntry;
-    INT Result = 0;
-    INT i = 1;
-
-    EnterCriticalSection(&LogFileListCs);
-
-    CurrentEntry = LogFileListHead.Flink;
-    while (CurrentEntry != &LogFileListHead)
-    {
-        PLOGFILE Item = CONTAINING_RECORD(CurrentEntry,
-                                          LOGFILE,
-                                          ListEntry);
-
-        if (Item->LogName && !lstrcmpi(Item->LogName, Name))
-        {
-            Result = i;
-            break;
-        }
-
-        CurrentEntry = CurrentEntry->Flink;
-        i++;
-    }
-
-    LeaveCriticalSection(&LogFileListCs);
-    return Result;
-}
-
-/* Index starting from 1 */
-PLOGFILE LogfListItemByIndex(INT Index)
-{
-    PLIST_ENTRY CurrentEntry;
-    PLOGFILE Result = NULL;
-    INT i = 1;
-
-    EnterCriticalSection(&LogFileListCs);
-
-    CurrentEntry = LogFileListHead.Flink;
-    while (CurrentEntry != &LogFileListHead)
-    {
-        if (i == Index)
-        {
-            Result = CONTAINING_RECORD(CurrentEntry, LOGFILE, ListEntry);
-            break;
-        }
-
-        CurrentEntry = CurrentEntry->Flink;
-        i++;
-    }
-
-    LeaveCriticalSection(&LogFileListCs);
-    return Result;
-}
-
-INT LogfListItemCount(VOID)
-{
-    PLIST_ENTRY CurrentEntry;
-    INT i = 0;
-
-    EnterCriticalSection(&LogFileListCs);
-
-    CurrentEntry = LogFileListHead.Flink;
-    while (CurrentEntry != &LogFileListHead)
-    {
-        CurrentEntry = CurrentEntry->Flink;
-        i++;
-    }
-
-    LeaveCriticalSection(&LogFileListCs);
-    return i;
-}
-
-VOID LogfListAddItem(PLOGFILE Item)
-{
-    EnterCriticalSection(&LogFileListCs);
-    InsertTailList(&LogFileListHead, &Item->ListEntry);
-    LeaveCriticalSection(&LogFileListCs);
-}
-
-VOID LogfListRemoveItem(PLOGFILE Item)
-{
-    EnterCriticalSection(&LogFileListCs);
-    RemoveEntryList(&Item->ListEntry);
-    LeaveCriticalSection(&LogFileListCs);
-}
 
 static BOOL
 ReadAnsiLogEntry(HANDLE hFile,
@@ -930,7 +1024,7 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
 {
     DWORD dwWritten;
     DWORD dwRead;
-    SYSTEMTIME st;
+    LARGE_INTEGER SystemTime;
     EVENTLOGEOF EofRec;
     PEVENTLOGRECORD RecBuf;
     LARGE_INTEGER logFileSize;
@@ -940,10 +1034,10 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
     if (!Buffer)
         return FALSE;
 
-    GetSystemTime(&st);
-    SystemTimeToEventTime(&st, &((PEVENTLOGRECORD) Buffer)->TimeWritten);
-
     RtlAcquireResourceExclusive(&LogFile->Lock, TRUE);
+
+    NtQuerySystemTime(&SystemTime);
+    RtlTimeToSecondsSince1970(&SystemTime, &((PEVENTLOGRECORD)Buffer)->TimeWritten);
 
     if (!GetFileSizeEx(LogFile->hFile, &logFileSize))
     {
@@ -1111,7 +1205,6 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
     return TRUE;
 }
 
-
 NTSTATUS
 LogfClearFile(PLOGFILE LogFile,
               PUNICODE_STRING BackupFileName)
@@ -1123,12 +1216,11 @@ LogfClearFile(PLOGFILE LogFile,
     if (BackupFileName->Length > 0)
     {
         /* Write a backup file */
-        Status = LogfBackupFile(LogFile,
-                                BackupFileName);
+        Status = LogfBackupFile(LogFile, BackupFileName);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("LogfBackupFile failed (Status: 0x%08lx)\n", Status);
-            return Status;
+            goto Quit;
         }
     }
 
@@ -1140,11 +1232,10 @@ LogfClearFile(PLOGFILE LogFile,
         DPRINT1("LogfInitializeNew failed (Status: 0x%08lx)\n", Status);
     }
 
+Quit:
     RtlReleaseResource(&LogFile->Lock);
-
     return Status;
 }
-
 
 NTSTATUS
 LogfBackupFile(PLOGFILE LogFile,
@@ -1347,134 +1438,84 @@ Done:
 }
 
 
-/* Returns 0 if nothing found. */
-ULONG LogfOffsetByNumber(PLOGFILE LogFile, DWORD RecordNumber)
-{
-    DWORD i;
-
-    for (i = 0; i < LogFile->OffsetInfoNext; i++)
-    {
-        if (LogFile->OffsetInfo[i].EventNumber == RecordNumber)
-            return LogFile->OffsetInfo[i].EventOffset;
-    }
-    return 0;
-}
-
-DWORD LogfGetOldestRecord(PLOGFILE LogFile)
-{
-    return LogFile->Header.OldestRecordNumber;
-}
-
-DWORD LogfGetCurrentRecord(PLOGFILE LogFile)
-{
-    return LogFile->Header.CurrentRecordNumber;
-}
-
-BOOL LogfDeleteOffsetInformation(PLOGFILE LogFile, ULONG ulNumber)
-{
-    DWORD i;
-
-    if (ulNumber != LogFile->OffsetInfo[0].EventNumber)
-    {
-        return FALSE;
-    }
-
-    for (i = 0; i < LogFile->OffsetInfoNext - 1; i++)
-    {
-        LogFile->OffsetInfo[i].EventNumber = LogFile->OffsetInfo[i + 1].EventNumber;
-        LogFile->OffsetInfo[i].EventOffset = LogFile->OffsetInfo[i + 1].EventOffset;
-    }
-    LogFile->OffsetInfoNext--;
-    return TRUE;
-}
-
-BOOL LogfAddOffsetInformation(PLOGFILE LogFile, ULONG ulNumber, ULONG ulOffset)
-{
-    LPVOID NewOffsetInfo;
-
-    if (LogFile->OffsetInfoNext == LogFile->OffsetInfoSize)
-    {
-        NewOffsetInfo = HeapReAlloc(MyHeap,
-                                    HEAP_ZERO_MEMORY,
-                                    LogFile->OffsetInfo,
-                                    (LogFile->OffsetInfoSize + 64) *
-                                        sizeof(EVENT_OFFSET_INFO));
-
-        if (!NewOffsetInfo)
-        {
-            DPRINT1("Can't reallocate heap.\n");
-            return FALSE;
-        }
-
-        LogFile->OffsetInfo = (PEVENT_OFFSET_INFO) NewOffsetInfo;
-        LogFile->OffsetInfoSize += 64;
-    }
-
-    LogFile->OffsetInfo[LogFile->OffsetInfoNext].EventNumber = ulNumber;
-    LogFile->OffsetInfo[LogFile->OffsetInfoNext].EventOffset = ulOffset;
-    LogFile->OffsetInfoNext++;
-
-    return TRUE;
-}
-
-PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
-                                 DWORD   dwRecordNumber,
-                                 WORD    wType,
-                                 WORD    wCategory,
-                                 DWORD   dwEventId,
-                                 LPCWSTR SourceName,
-                                 LPCWSTR ComputerName,
-                                 DWORD   dwSidLength,
-                                 PSID    lpUserSid,
-                                 WORD    wNumStrings,
-                                 WCHAR   * lpStrings,
-                                 DWORD   dwDataSize,
-                                 LPVOID  lpRawData)
+PBYTE
+LogfAllocAndBuildNewRecord(PULONG lpRecSize,
+                           ULONG  dwRecordNumber, // FIXME!
+                           USHORT wType,
+                           USHORT wCategory,
+                           ULONG  dwEventId,
+                           PCWSTR SourceName,
+                           PCWSTR ComputerName,
+                           ULONG  dwSidLength,
+                           PSID   lpUserSid,
+                           USHORT wNumStrings,
+                           WCHAR* lpStrings,
+                           ULONG  dwDataSize,
+                           PVOID  lpRawData)
 {
     DWORD dwRecSize;
     PEVENTLOGRECORD pRec;
-    SYSTEMTIME SysTime;
+    LARGE_INTEGER SystemTime;
     WCHAR *str;
     UINT i, pos;
     PBYTE Buffer;
 
     dwRecSize =
-        sizeof(EVENTLOGRECORD) + (lstrlenW(ComputerName) +
-                                  lstrlenW(SourceName) + 2) * sizeof(WCHAR);
+        sizeof(EVENTLOGRECORD) + (lstrlenW(SourceName) +
+                                  lstrlenW(ComputerName) + 2) * sizeof(WCHAR);
 
-    if (dwRecSize % 4 != 0)
-        dwRecSize += 4 - (dwRecSize % 4);
+    /* Align on DWORD boundary for the SID */
+    dwRecSize = ROUND_UP(dwRecSize, sizeof(ULONG));
 
     dwRecSize += dwSidLength;
 
+    /* Add the sizes for the strings array */
     for (i = 0, str = lpStrings; i < wNumStrings; i++)
     {
         dwRecSize += (lstrlenW(str) + 1) * sizeof(WCHAR);
         str += lstrlenW(str) + 1;
     }
 
+    /* Add the data size */
     dwRecSize += dwDataSize;
-    if (dwRecSize % 4 != 0)
-        dwRecSize += 4 - (dwRecSize % 4);
 
-    dwRecSize += 4;
+    /* Align on DWORD boundary for the full structure */
+    dwRecSize = ROUND_UP(dwRecSize, sizeof(ULONG));
+
+    /* Size of the trailing 'Length' member */
+    dwRecSize += sizeof(ULONG);
 
     Buffer = HeapAlloc(MyHeap, HEAP_ZERO_MEMORY, dwRecSize);
-
     if (!Buffer)
     {
-        DPRINT1("Can't allocate heap!\n");
+        DPRINT1("Cannot allocate heap!\n");
         return NULL;
     }
 
-    pRec = (PEVENTLOGRECORD) Buffer;
+    pRec = (PEVENTLOGRECORD)Buffer;
     pRec->Length = dwRecSize;
     pRec->Reserved = LOGFILE_SIGNATURE;
+
+    // FIXME: The problem with this technique is that it is possible
+    // to allocate different records with the same number. Suppose that
+    // two concurrent events writes happen for the same log, and the
+    // execution goes inside this function. The callers of this function
+    // have normally retrieved the 'CurrentRecordNumber' of this log, where
+    // the access to the log was non locked and no write operation happened
+    // in between. Then we have two different records for the same log with
+    // the very same record number, that will be written later. It is only in
+    // 'LogfWriteRecord' that the 'CurrentRecordNumber' is incremented!!
+    //
+    // Therefore we need to rewrite those functions. This function must
+    // not take any "precomputed" record number. It should attribute a new
+    // record number under lock, and then increment it atomically, so that
+    // all event records have unique record numbers.
     pRec->RecordNumber = dwRecordNumber;
 
-    GetSystemTime(&SysTime);
-    SystemTimeToEventTime(&SysTime, &pRec->TimeGenerated);
-    SystemTimeToEventTime(&SysTime, &pRec->TimeWritten);
+    NtQuerySystemTime(&SystemTime);
+    RtlTimeToSecondsSince1970(&SystemTime, &pRec->TimeGenerated);
+    // FIXME: Already done in LogfWriteRecord. Is it needed to do that here first??
+    RtlTimeToSecondsSince1970(&SystemTime, &pRec->TimeWritten);
 
     pRec->EventID = dwEventId;
     pRec->EventType = wType;
@@ -1487,11 +1528,10 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
     lstrcpyW((WCHAR *) (Buffer + pos), ComputerName);
     pos += (lstrlenW(ComputerName) + 1) * sizeof(WCHAR);
 
+    /* Align on DWORD boundary for the SID */
+    pos = ROUND_UP(pos, sizeof(ULONG));
+
     pRec->UserSidOffset = pos;
-
-    if (pos % 4 != 0)
-        pos += 4 - (pos % 4);
-
     if (dwSidLength)
     {
         CopyMemory(Buffer + pos, lpUserSid, dwSidLength);
@@ -1517,53 +1557,49 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
         pos += dwDataSize;
     }
 
-    if (pos % 4 != 0)
-        pos += 4 - (pos % 4);
+    /* Align on DWORD boundary for the full structure */
+    pos = ROUND_UP(pos, sizeof(ULONG));
 
+    /* Initialize the trailing 'Length' member */
     *((PDWORD) (Buffer + pos)) = dwRecSize;
 
     *lpRecSize = dwRecSize;
     return Buffer;
 }
 
-
 VOID
-LogfReportEvent(WORD wType,
-                WORD wCategory,
-                DWORD dwEventId,
-                WORD wNumStrings,
-                WCHAR *lpStrings,
-                DWORD dwDataSize,
-                LPVOID lpRawData)
+LogfReportEvent(USHORT wType,
+                USHORT wCategory,
+                ULONG  dwEventId,
+                USHORT wNumStrings,
+                WCHAR* lpStrings,
+                ULONG  dwDataSize,
+                PVOID  lpRawData)
 {
     WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
     DWORD dwComputerNameLength = MAX_COMPUTERNAME_LENGTH + 1;
-    PEVENTSOURCE pEventSource = NULL;
     PBYTE logBuffer;
     DWORD lastRec;
     DWORD recSize;
     DWORD dwError;
 
+    if (!EventLogSource)
+        return;
+
     if (!GetComputerNameW(szComputerName, &dwComputerNameLength))
     {
-        szComputerName[0] = 0;
+        szComputerName[0] = L'\0';
     }
 
-    pEventSource = GetEventSourceByName(L"EventLog");
-    if (pEventSource == NULL)
-    {
-        return;
-    }
-
-    lastRec = LogfGetCurrentRecord(pEventSource->LogFile);
+    lastRec = LogfGetCurrentRecord(EventLogSource->LogFile);
 
     logBuffer = LogfAllocAndBuildNewRecord(&recSize,
-                                           lastRec,
+                                           lastRec, // FIXME!
                                            wType,
                                            wCategory,
                                            dwEventId,
-                                           pEventSource->szName,
-                                           (LPCWSTR)szComputerName,
+                                           EventLogSource->szName,
+                                           szComputerName,
                                            0,
                                            NULL,
                                            wNumStrings,
@@ -1571,10 +1607,10 @@ LogfReportEvent(WORD wType,
                                            dwDataSize,
                                            lpRawData);
 
-    dwError = LogfWriteData(pEventSource->LogFile, recSize, logBuffer);
+    dwError = LogfWriteData(EventLogSource->LogFile, recSize, logBuffer);
     if (!dwError)
     {
-        DPRINT1("ERROR WRITING TO EventLog %S\n", pEventSource->LogFile->FileName);
+        DPRINT1("ERROR WRITING TO EventLog %S\n", EventLogSource->LogFile->FileName);
     }
 
     LogfFreeRecord(logBuffer);

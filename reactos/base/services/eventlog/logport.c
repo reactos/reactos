@@ -18,8 +18,8 @@
 
 /* GLOBALS ******************************************************************/
 
-HANDLE ConnectPortHandle = NULL;
-HANDLE MessagePortHandle = NULL;
+static HANDLE ConnectPortHandle = NULL;
+static HANDLE MessagePortHandle = NULL;
 extern BOOL onLiveCD;
 
 /* FUNCTIONS ****************************************************************/
@@ -70,7 +70,6 @@ NTSTATUS InitLogPort(VOID)
     }
 
     Status = NtListenPort(ConnectPortHandle, &Request);
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtListenPort() failed (Status %lx)\n", Status);
@@ -79,7 +78,6 @@ NTSTATUS InitLogPort(VOID)
 
     Status = NtAcceptConnectPort(&MessagePortHandle, ConnectPortHandle,
                                  NULL, TRUE, NULL, NULL);
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtAcceptConnectPort() failed (Status %lx)\n", Status);
@@ -93,7 +91,7 @@ NTSTATUS InitLogPort(VOID)
         goto ByeBye;
     }
 
-  ByeBye:
+ByeBye:
     if (!NT_SUCCESS(Status))
     {
         if (ConnectPortHandle != NULL)
@@ -114,6 +112,8 @@ NTSTATUS ProcessPortMessage(VOID)
     DWORD dwRecSize;
     NTSTATUS Status;
     PLOGFILE SystemLog = NULL;
+    WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD dwComputerNameLength = MAX_COMPUTERNAME_LENGTH + 1;
 
     DPRINT("ProcessPortMessage() called\n");
 
@@ -150,18 +150,27 @@ NTSTATUS ProcessPortMessage(VOID)
             Message = (PIO_ERROR_LOG_MESSAGE) & Request.Message;
             ulRecNum = SystemLog ? SystemLog->Header.CurrentRecordNumber : 0;
 
-            pRec = (PEVENTLOGRECORD) LogfAllocAndBuildNewRecord(&dwRecSize,
-                    ulRecNum, Message->Type, Message->EntryData.EventCategory,
-                    Message->EntryData.ErrorCode,
-                    (WCHAR *) (((PBYTE) Message) + Message->DriverNameOffset),
-                    L"MyComputer",  /* FIXME */
-                    0,
-                    NULL,
-                    Message->EntryData.NumberOfStrings,
-                    (WCHAR *) (((PBYTE) Message) + Message->EntryData.StringOffset),
-                    Message->EntryData.DumpDataSize,
-                    (LPVOID) (((PBYTE) Message) + sizeof(IO_ERROR_LOG_PACKET) -
-                        sizeof(ULONG)));
+            if (!GetComputerNameW(szComputerName, &dwComputerNameLength))
+            {
+                szComputerName[0] = L'\0';
+            }
+
+            // TODO: Log more information??
+
+            pRec = (PEVENTLOGRECORD) LogfAllocAndBuildNewRecord(
+                        &dwRecSize,
+                        ulRecNum, // FIXME!
+                        Message->Type,
+                        Message->EntryData.EventCategory,
+                        Message->EntryData.ErrorCode,
+                        (WCHAR *) ((ULONG_PTR)Message + Message->DriverNameOffset), // FIXME: Use DriverNameLength too!
+                        szComputerName,
+                        0,
+                        NULL,
+                        Message->EntryData.NumberOfStrings,
+                        (WCHAR *) ((ULONG_PTR)Message + Message->EntryData.StringOffset),
+                        Message->EntryData.DumpDataSize,
+                        (LPVOID) ((ULONG_PTR)Message + FIELD_OFFSET(IO_ERROR_LOG_PACKET, DumpData)));
 
             if (pRec == NULL)
             {

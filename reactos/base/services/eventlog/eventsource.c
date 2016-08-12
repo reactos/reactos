@@ -70,7 +70,7 @@ LoadEventSources(HKEY hKey,
                               NULL, NULL, NULL, NULL, NULL);
     if (Result != ERROR_SUCCESS)
     {
-        DPRINT1("RegQueryInfoKey failed: %lu\n", Result);
+        DPRINT1("RegQueryInfoKeyW failed: %lu\n", Result);
         return FALSE;
     }
 
@@ -81,12 +81,11 @@ LoadEventSources(HKEY hKey,
     Buf = HeapAlloc(MyHeap, 0, dwMaxSubKeyLength * sizeof(WCHAR));
     if (!Buf)
     {
-        DPRINT1("Error: can't allocate heap!\n");
+        DPRINT1("Error: cannot allocate heap!\n");
         return FALSE;
     }
 
     dwEventSourceNameLength = dwMaxSubKeyLength;
-
     dwIndex = 0;
     while (RegEnumKeyExW(hKey,
                          dwIndex,
@@ -127,7 +126,7 @@ PEVENTSOURCE
 GetEventSourceByName(LPCWSTR Name)
 {
     PLIST_ENTRY CurrentEntry;
-    PEVENTSOURCE Result = NULL;
+    PEVENTSOURCE Item, Result = NULL;
 
     DPRINT("GetEventSourceByName(%S)\n", Name);
     EnterCriticalSection(&EventSourceListCs);
@@ -135,9 +134,9 @@ GetEventSourceByName(LPCWSTR Name)
     CurrentEntry = EventSourceListHead.Flink;
     while (CurrentEntry != &EventSourceListHead)
     {
-        PEVENTSOURCE Item = CONTAINING_RECORD(CurrentEntry,
-                                              EVENTSOURCE,
-                                              EventSourceListEntry);
+        Item = CONTAINING_RECORD(CurrentEntry,
+                                 EVENTSOURCE,
+                                 EventSourceListEntry);
 
         DPRINT("Item->szName: %S\n", Item->szName);
 //        if ((*(Item->szName) != 0) && !_wcsicmp(Item->szName, Name))

@@ -11,12 +11,18 @@
 
 #include <stdarg.h>
 
+/* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
-
 #include <windef.h>
 #include <winbase.h>
+
+#define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 #include <ndk/obfuncs.h>
+
+#define ROUND_DOWN(n, align) (((ULONG)n) & ~((align) - 1l))
+#define ROUND_UP(n, align) ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
+
 #include <eventlogrpc_s.h>
 #include <strsafe.h>
 
@@ -26,21 +32,21 @@ typedef struct _IO_ERROR_LPC
     IO_ERROR_LOG_MESSAGE Message;
 } IO_ERROR_LPC, *PIO_ERROR_LPC;
 
-#define MAJORVER 1
-#define MINORVER 1
 
 /*
  *  Our file format will be compatible with NT's
  */
+#define MAJORVER 1
+#define MINORVER 1
 #define LOGFILE_SIGNATURE 0x654c664c
 
 /*
  *  Flags used in logfile header
  */
-#define ELF_LOGFILE_HEADER_DIRTY 1
-#define ELF_LOGFILE_HEADER_WRAP 2
+#define ELF_LOGFILE_HEADER_DIRTY    1
+#define ELF_LOGFILE_HEADER_WRAP     2
 #define ELF_LOGFILE_LOGFULL_WRITTEN 4
-#define ELF_LOGFILE_ARCHIVE_SET 8
+#define ELF_LOGFILE_ARCHIVE_SET     8
 
 /* FIXME: MSDN reads that the following two structs are in winnt.h. Are they? */
 typedef struct _EVENTLOGHEADER
@@ -114,22 +120,38 @@ typedef struct _LOGHANDLE
     WCHAR szName[1];
 } LOGHANDLE, *PLOGHANDLE;
 
+
+/* eventlog.c */
+extern HANDLE MyHeap;
+extern PEVENTSOURCE EventLogSource;
+
+VOID PRINT_HEADER(PEVENTLOGHEADER header);
+VOID PRINT_RECORD(PEVENTLOGRECORD pRec);
+
+
+/* eventsource.c */
+VOID InitEventSourceList(VOID);
+
+BOOL
+LoadEventSources(HKEY hKey,
+                 PLOGFILE pLogFile);
+
+PEVENTSOURCE
+GetEventSourceByName(LPCWSTR Name);
+
+
 /* file.c */
 VOID LogfListInitialize(VOID);
 
-PLOGFILE LogfListHead(VOID);
+DWORD LogfListItemCount(VOID);
 
-INT LogfListItemCount(VOID);
+PLOGFILE LogfListItemByIndex(DWORD Index);
 
-PLOGFILE LogfListItemByIndex(INT Index);
+PLOGFILE LogfListItemByName(LPCWSTR Name);
 
-PLOGFILE LogfListItemByName(WCHAR * Name);
+// DWORD LogfListItemIndexByName(WCHAR * Name);
 
-INT LogfListItemIndexByName(WCHAR * Name);
 
-VOID LogfListAddItem(PLOGFILE Item);
-
-VOID LogfListRemoveItem(PLOGFILE Item);
 
 DWORD LogfReadEvent(PLOGFILE LogFile,
                    DWORD Flags,
@@ -171,61 +193,34 @@ DWORD LogfGetOldestRecord(PLOGFILE LogFile);
 
 DWORD LogfGetCurrentRecord(PLOGFILE LogFile);
 
-ULONG LogfOffsetByNumber(PLOGFILE LogFile,
-                         DWORD RecordNumber);
+PBYTE
+LogfAllocAndBuildNewRecord(PULONG lpRecSize,
+                           ULONG dwRecordNumber, // FIXME!
+                           USHORT wType,
+                           USHORT wCategory,
+                           ULONG  dwEventId,
+                           PCWSTR SourceName,
+                           PCWSTR ComputerName,
+                           ULONG  dwSidLength,
+                           PSID   lpUserSid,
+                           USHORT wNumStrings,
+                           WCHAR* lpStrings,
+                           ULONG  dwDataSize,
+                           PVOID  lpRawData);
 
-BOOL LogfAddOffsetInformation(PLOGFILE LogFile,
-                              ULONG ulNumber,
-                              ULONG ulOffset);
-
-BOOL LogfDeleteOffsetInformation(PLOGFILE LogFile,
-                              ULONG ulNumber);
-
-PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
-                                 DWORD dwRecordNumber,
-                                 WORD wType,
-                                 WORD wCategory,
-                                 DWORD dwEventId,
-                                 LPCWSTR SourceName,
-                                 LPCWSTR ComputerName,
-                                 DWORD dwSidLength,
-                                 PSID lpUserSid,
-                                 WORD wNumStrings,
-                                 WCHAR * lpStrings,
-                                 DWORD dwDataSize,
-                                 LPVOID lpRawData);
+static __inline void LogfFreeRecord(LPVOID Rec)
+{
+    HeapFree(MyHeap, 0, Rec);
+}
 
 VOID
-LogfReportEvent(WORD wType,
-                WORD wCategory,
-                DWORD dwEventId,
-                WORD wNumStrings,
-                WCHAR *lpStrings,
-                DWORD dwDataSize,
-                LPVOID lpRawData);
-
-/* eventlog.c */
-extern HANDLE MyHeap;
-
-VOID PRINT_HEADER(PEVENTLOGHEADER header);
-
-VOID PRINT_RECORD(PEVENTLOGRECORD pRec);
-
-VOID EventTimeToSystemTime(DWORD EventTime,
-                           SYSTEMTIME * SystemTime);
-
-VOID SystemTimeToEventTime(SYSTEMTIME * pSystemTime,
-                           DWORD * pEventTime);
-
-/* eventsource.c */
-VOID InitEventSourceList(VOID);
-
-BOOL
-LoadEventSources(HKEY hKey,
-                 PLOGFILE pLogFile);
-
-PEVENTSOURCE
-GetEventSourceByName(LPCWSTR Name);
+LogfReportEvent(USHORT wType,
+                USHORT wCategory,
+                ULONG  dwEventId,
+                USHORT wNumStrings,
+                WCHAR* lpStrings,
+                ULONG  dwDataSize,
+                PVOID  lpRawData);
 
 
 /* logport.c */
@@ -237,10 +232,5 @@ NTSTATUS ProcessPortMessage(VOID);
 
 /* rpc.c */
 DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter);
-
-static __inline void LogfFreeRecord(LPVOID Rec)
-{
-    HeapFree(MyHeap, 0, Rec);
-}
 
 #endif  /* __EVENTLOG_H__ */

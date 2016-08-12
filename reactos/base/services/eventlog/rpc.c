@@ -5,6 +5,7 @@
  * PURPOSE:          Event logging service
  * COPYRIGHT:        Copyright 2005 Saveliy Tretiakov
  *                   Copyright 2008 Michael Martin
+ *                   Copyright 2010-2011 Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
@@ -49,27 +50,31 @@ DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter)
 
 
 static NTSTATUS
-ElfCreateEventLogHandle(PLOGHANDLE *LogHandle,
-                        LPCWSTR Name,
-                        BOOL Create)
+ElfCreateEventLogHandle(PLOGHANDLE* LogHandle,
+                        PUNICODE_STRING LogName,
+                        BOOLEAN Create)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
     PLOGHANDLE lpLogHandle;
     PLOGFILE currentLogFile = NULL;
-    INT i, LogsActive;
+    DWORD i, LogsActive;
     PEVENTSOURCE pEventSource;
-    NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("ElfCreateEventLogHandle(Name: %S)\n", Name);
+    DPRINT("ElfCreateEventLogHandle(Name: %wZ)\n", LogName);
 
-    lpLogHandle = HeapAlloc(GetProcessHeap(), 0, sizeof(LOGHANDLE)
-                                  + ((wcslen(Name) + 1) * sizeof(WCHAR)));
+    *LogHandle = NULL;
+
+    i = (LogName->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR);
+    lpLogHandle = HeapAlloc(GetProcessHeap(),
+                            HEAP_ZERO_MEMORY,
+                            FIELD_OFFSET(LOGHANDLE, szName[i]));
     if (!lpLogHandle)
     {
         DPRINT1("Failed to allocate Heap!\n");
         return STATUS_NO_MEMORY;
     }
 
-    wcscpy(lpLogHandle->szName, Name);
+    StringCchCopy(lpLogHandle->szName, i, LogName->Buffer);
 
     /* Get the number of Log Files the EventLog service found */
     LogsActive = LogfListItemCount();
@@ -81,9 +86,9 @@ ElfCreateEventLogHandle(PLOGHANDLE *LogHandle,
     }
 
     /* If Creating, default to the Application Log in case we fail, as documented on MSDN */
-    if (Create == TRUE)
+    if (Create)
     {
-        pEventSource = GetEventSourceByName(Name);
+        pEventSource = GetEventSourceByName(LogName->Buffer);
         DPRINT("EventSource: %p\n", pEventSource);
         if (pEventSource)
         {
@@ -106,9 +111,9 @@ ElfCreateEventLogHandle(PLOGHANDLE *LogHandle,
         {
             currentLogFile = LogfListItemByIndex(i);
 
-            if (_wcsicmp(Name, currentLogFile->LogName) == 0)
+            if (_wcsicmp(LogName->Buffer, currentLogFile->LogName) == 0)
             {
-                lpLogHandle->LogFile = LogfListItemByIndex(i);
+                lpLogHandle->LogFile = currentLogFile;
                 lpLogHandle->CurrentRecord = LogfGetOldestRecord(lpLogHandle->LogFile);
                 break;
             }
@@ -150,14 +155,15 @@ Done:
 
 
 static NTSTATUS
-ElfCreateBackupLogHandle(PLOGHANDLE *LogHandle,
+ElfCreateBackupLogHandle(PLOGHANDLE* LogHandle,
                          PUNICODE_STRING FileName)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
     PLOGHANDLE lpLogHandle;
 
-    NTSTATUS Status = STATUS_SUCCESS;
-
     DPRINT("ElfCreateBackupLogHandle(FileName: %wZ)\n", FileName);
+
+    *LogHandle = NULL;
 
     lpLogHandle = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LOGHANDLE));
     if (lpLogHandle == NULL)
@@ -202,7 +208,8 @@ Done:
 }
 
 
-PLOGHANDLE ElfGetLogHandleEntryByHandle(IELF_HANDLE EventLogHandle)
+static PLOGHANDLE
+ElfGetLogHandleEntryByHandle(IELF_HANDLE EventLogHandle)
 {
     PLIST_ENTRY CurrentEntry;
     PLOGHANDLE lpLogHandle;
@@ -224,26 +231,28 @@ PLOGHANDLE ElfGetLogHandleEntryByHandle(IELF_HANDLE EventLogHandle)
 
 
 static NTSTATUS
-ElfDeleteEventLogHandle(IELF_HANDLE LogHandle)
+ElfDeleteEventLogHandle(PIELF_HANDLE LogHandle)
 {
     PLOGHANDLE lpLogHandle;
 
-    lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
+    lpLogHandle = ElfGetLogHandleEntryByHandle(*LogHandle);
     if (!lpLogHandle)
-    {
         return STATUS_INVALID_HANDLE;
-    }
 
     RemoveEntryList(&lpLogHandle->LogHandleListEntry);
     LogfClose(lpLogHandle->LogFile, FALSE);
 
     HeapFree(GetProcessHeap(), 0, lpLogHandle);
 
+    *LogHandle = NULL;
+
     return STATUS_SUCCESS;
 }
 
+
 /* Function 0 */
-NTSTATUS ElfrClearELFW(
+NTSTATUS
+ElfrClearELFW(
     IELF_HANDLE LogHandle,
     PRPC_UNICODE_STRING BackupFileName)
 {
@@ -253,9 +262,7 @@ NTSTATUS ElfrClearELFW(
 
     lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!lpLogHandle)
-    {
         return STATUS_INVALID_HANDLE;
-    }
 
     /* Fail, if the log file is a backup file */
     if (lpLogHandle->Flags & LOG_HANDLE_BACKUP_FILE)
@@ -267,7 +274,8 @@ NTSTATUS ElfrClearELFW(
 
 
 /* Function 1 */
-NTSTATUS ElfrBackupELFW(
+NTSTATUS
+ElfrBackupELFW(
     IELF_HANDLE LogHandle,
     PRPC_UNICODE_STRING BackupFileName)
 {
@@ -277,9 +285,7 @@ NTSTATUS ElfrBackupELFW(
 
     lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!lpLogHandle)
-    {
         return STATUS_INVALID_HANDLE;
-    }
 
     return LogfBackupFile(lpLogHandle->LogFile,
                           (PUNICODE_STRING)BackupFileName);
@@ -287,25 +293,28 @@ NTSTATUS ElfrBackupELFW(
 
 
 /* Function 2 */
-NTSTATUS ElfrCloseEL(
-    IELF_HANDLE *LogHandle)
+NTSTATUS
+ElfrCloseEL(
+    PIELF_HANDLE LogHandle)
 {
-    return ElfDeleteEventLogHandle(*LogHandle);
+    return ElfDeleteEventLogHandle(LogHandle);
 }
 
 
 /* Function 3 */
-NTSTATUS ElfrDeregisterEventSource(
-    IELF_HANDLE *LogHandle)
+NTSTATUS
+ElfrDeregisterEventSource(
+    PIELF_HANDLE LogHandle)
 {
-    return ElfDeleteEventLogHandle(*LogHandle);
+    return ElfDeleteEventLogHandle(LogHandle);
 }
 
 
 /* Function 4 */
-NTSTATUS ElfrNumberOfRecords(
+NTSTATUS
+ElfrNumberOfRecords(
     IELF_HANDLE LogHandle,
-    DWORD *NumberOfRecords)
+    PULONG NumberOfRecords)
 {
     PLOGHANDLE lpLogHandle;
     PLOGFILE lpLogFile;
@@ -314,9 +323,10 @@ NTSTATUS ElfrNumberOfRecords(
 
     lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!lpLogHandle)
-    {
         return STATUS_INVALID_HANDLE;
-    }
+
+    if (!NumberOfRecords)
+        return STATUS_INVALID_PARAMETER;
 
     lpLogFile = lpLogHandle->LogFile;
 
@@ -332,22 +342,19 @@ NTSTATUS ElfrNumberOfRecords(
 
 
 /* Function 5 */
-NTSTATUS ElfrOldestRecord(
+NTSTATUS
+ElfrOldestRecord(
     IELF_HANDLE LogHandle,
-    DWORD *OldestRecordNumber)
+    PULONG OldestRecordNumber)
 {
     PLOGHANDLE lpLogHandle;
 
     lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!lpLogHandle)
-    {
         return STATUS_INVALID_HANDLE;
-    }
 
     if (!OldestRecordNumber)
-    {
         return STATUS_INVALID_PARAMETER;
-    }
 
     *OldestRecordNumber = LogfGetOldestRecord(lpLogHandle->LogFile);
 
@@ -356,26 +363,26 @@ NTSTATUS ElfrOldestRecord(
 
 
 /* Function 6 */
-NTSTATUS ElfrChangeNotify(
+NTSTATUS
+ElfrChangeNotify(
     IELF_HANDLE LogHandle,
     RPC_CLIENT_ID ClientId,
-    DWORD Event)
+    ULONG Event)
 {
-    DPRINT("ElfrChangeNotify()");
-
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
 
 /* Function 7 */
-NTSTATUS ElfrOpenELW(
+NTSTATUS
+ElfrOpenELW(
     EVENTLOG_HANDLE_W UNCServerName,
     PRPC_UNICODE_STRING ModuleName,
     PRPC_UNICODE_STRING RegModuleName,
-    DWORD MajorVersion,
-    DWORD MinorVersion,
-    IELF_HANDLE *LogHandle)
+    ULONG MajorVersion,
+    ULONG MinorVersion,
+    PIELF_HANDLE LogHandle)
 {
     if ((MajorVersion != 1) || (MinorVersion != 1))
         return STATUS_INVALID_PARAMETER;
@@ -384,24 +391,25 @@ NTSTATUS ElfrOpenELW(
     if (RegModuleName->Length > 0)
         return STATUS_INVALID_PARAMETER;
 
-    /*FIXME: UNCServerName must specify the server */
+    /* FIXME: UNCServerName must specify the server */
 
-    /*FIXME: Must verify that caller has read access */
+    /* FIXME: Must verify that caller has read access */
 
-    return ElfCreateEventLogHandle((PLOGHANDLE *)LogHandle,
-                                   ModuleName->Buffer,
+    return ElfCreateEventLogHandle((PLOGHANDLE*)LogHandle,
+                                   (PUNICODE_STRING)ModuleName,
                                    FALSE);
 }
 
 
 /* Function 8 */
-NTSTATUS ElfrRegisterEventSourceW(
+NTSTATUS
+ElfrRegisterEventSourceW(
     EVENTLOG_HANDLE_W UNCServerName,
     PRPC_UNICODE_STRING ModuleName,
     PRPC_UNICODE_STRING RegModuleName,
-    DWORD MajorVersion,
-    DWORD MinorVersion,
-    IELF_HANDLE *LogHandle)
+    ULONG MajorVersion,
+    ULONG MinorVersion,
+    PIELF_HANDLE LogHandle)
 {
     DPRINT("ElfrRegisterEventSourceW()\n");
 
@@ -412,49 +420,51 @@ NTSTATUS ElfrRegisterEventSourceW(
     if (RegModuleName->Length > 0)
         return STATUS_INVALID_PARAMETER;
 
-    DPRINT("ModuleName: %S\n", ModuleName->Buffer);
+    DPRINT("ModuleName: %wZ\n", ModuleName);
 
-    /*FIXME: UNCServerName must specify the server or empty for local */
+    /* FIXME: UNCServerName must specify the server or empty for local */
 
-    /*FIXME: Must verify that caller has write access */
+    /* FIXME: Must verify that caller has write access */
 
-    return ElfCreateEventLogHandle((PLOGHANDLE *)LogHandle,
-                                   ModuleName->Buffer,
+    return ElfCreateEventLogHandle((PLOGHANDLE*)LogHandle,
+                                   (PUNICODE_STRING)ModuleName,
                                    TRUE);
 }
 
 
 /* Function 9 */
-NTSTATUS ElfrOpenBELW(
+NTSTATUS
+ElfrOpenBELW(
     EVENTLOG_HANDLE_W UNCServerName,
     PRPC_UNICODE_STRING BackupFileName,
-    DWORD MajorVersion,
-    DWORD MinorVersion,
-    IELF_HANDLE *LogHandle)
+    ULONG MajorVersion,
+    ULONG MinorVersion,
+    PIELF_HANDLE LogHandle)
 {
     DPRINT("ElfrOpenBELW(%wZ)\n", BackupFileName);
 
     if ((MajorVersion != 1) || (MinorVersion != 1))
         return STATUS_INVALID_PARAMETER;
 
-    /*FIXME: UNCServerName must specify the server */
+    /* FIXME: UNCServerName must specify the server */
 
-    /*FIXME: Must verify that caller has read access */
+    /* FIXME: Must verify that caller has read access */
 
-    return ElfCreateBackupLogHandle((PLOGHANDLE *)LogHandle,
+    return ElfCreateBackupLogHandle((PLOGHANDLE*)LogHandle,
                                     (PUNICODE_STRING)BackupFileName);
 }
 
 
 /* Function 10 */
-NTSTATUS ElfrReadELW(
+NTSTATUS
+ElfrReadELW(
     IELF_HANDLE LogHandle,
-    DWORD ReadFlags,
-    DWORD RecordOffset,
+    ULONG ReadFlags,
+    ULONG RecordOffset,
     RULONG NumberOfBytesToRead,
-    BYTE *Buffer,
-    DWORD *NumberOfBytesRead,
-    DWORD *MinNumberOfBytesNeeded)
+    PBYTE Buffer,
+    PULONG NumberOfBytesRead,
+    PULONG MinNumberOfBytesNeeded)
 {
     PLOGHANDLE lpLogHandle;
     DWORD dwError;
@@ -462,9 +472,7 @@ NTSTATUS ElfrReadELW(
 
     lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!lpLogHandle)
-    {
         return STATUS_INVALID_HANDLE;
-    }
 
     if (!Buffer)
         return STATUS_INVALID_PARAMETER;
@@ -479,11 +487,16 @@ NTSTATUS ElfrReadELW(
         RecordNumber = RecordOffset;
     }
 
-    dwError = LogfReadEvent(lpLogHandle->LogFile, ReadFlags, &RecordNumber,
-                            NumberOfBytesToRead, Buffer, NumberOfBytesRead, MinNumberOfBytesNeeded,
+    dwError = LogfReadEvent(lpLogHandle->LogFile,
+                            ReadFlags,
+                            &RecordNumber,
+                            NumberOfBytesToRead,
+                            Buffer,
+                            NumberOfBytesRead,
+                            MinNumberOfBytesNeeded,
                             FALSE);
 
-    /* Update the handles CurrentRecord if success*/
+    /* Update the handle's CurrentRecord if success */
     if (dwError == ERROR_SUCCESS)
     {
         lpLogHandle->CurrentRecord = RecordNumber;
@@ -498,21 +511,22 @@ NTSTATUS ElfrReadELW(
 
 
 /* Function 11 */
-NTSTATUS ElfrReportEventW(
+NTSTATUS
+ElfrReportEventW(
     IELF_HANDLE LogHandle,
-    DWORD Time,
+    ULONG Time,
     USHORT EventType,
     USHORT EventCategory,
-    DWORD EventID,
+    ULONG EventID,
     USHORT NumStrings,
-    DWORD DataSize,
+    ULONG DataSize,
     PRPC_UNICODE_STRING ComputerName,
     PRPC_SID UserSID,
     PRPC_UNICODE_STRING Strings[],
-    BYTE *Data,
+    PBYTE Data,
     USHORT Flags,
-    DWORD *RecordNumber,
-    DWORD *TimeWritten)
+    PULONG RecordNumber,
+    PULONG TimeWritten)
 {
     USHORT i;
     PBYTE LogBuffer;
@@ -527,15 +541,11 @@ NTSTATUS ElfrReportEventW(
 
     lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!lpLogHandle)
-    {
         return STATUS_INVALID_HANDLE;
-    }
 
     /* Flags must be 0 */
     if (Flags)
-    {
         return STATUS_INVALID_PARAMETER;
-    }
 
     lastRec = LogfGetCurrentRecord(lpLogHandle->LogFile);
 
@@ -571,7 +581,7 @@ NTSTATUS ElfrReportEventW(
                 DPRINT1("Type %hu: %wZ\n", EventType, Strings[i]);
                 break;
         }
-        dwStringsSize += Strings[i]->Length + sizeof UNICODE_NULL;
+        dwStringsSize += Strings[i]->Length + sizeof(UNICODE_NULL);
     }
 
     lpStrings = HeapAlloc(GetProcessHeap(), 0, dwStringsSize);
@@ -583,16 +593,16 @@ NTSTATUS ElfrReportEventW(
 
     for (i = 0; i < NumStrings; i++)
     {
-        CopyMemory(lpStrings + pos, Strings[i]->Buffer, Strings[i]->Length);
+        RtlCopyMemory(lpStrings + pos, Strings[i]->Buffer, Strings[i]->Length);
         pos += Strings[i]->Length / sizeof(WCHAR);
         lpStrings[pos] = UNICODE_NULL;
-        pos += sizeof UNICODE_NULL / sizeof(WCHAR);
+        pos += sizeof(UNICODE_NULL) / sizeof(WCHAR);
     }
 
     if (UserSID)
         dwUserSidLength = FIELD_OFFSET(SID, SubAuthority[UserSID->SubAuthorityCount]);
     LogBuffer = LogfAllocAndBuildNewRecord(&recSize,
-                                           lastRec,
+                                           lastRec, // FIXME!
                                            EventType,
                                            EventCategory,
                                            EventID,
@@ -620,7 +630,8 @@ NTSTATUS ElfrReportEventW(
 
 
 /* Function 12 */
-NTSTATUS ElfrClearELFA(
+NTSTATUS
+ElfrClearELFA(
     IELF_HANDLE LogHandle,
     PRPC_STRING BackupFileName)
 {
@@ -643,7 +654,8 @@ NTSTATUS ElfrClearELFA(
 
 
 /* Function 13 */
-NTSTATUS ElfrBackupELFA(
+NTSTATUS
+ElfrBackupELFA(
     IELF_HANDLE LogHandle,
     PRPC_STRING BackupFileName)
 {
@@ -666,13 +678,14 @@ NTSTATUS ElfrBackupELFA(
 
 
 /* Function 14 */
-NTSTATUS ElfrOpenELA(
+NTSTATUS
+ElfrOpenELA(
     EVENTLOG_HANDLE_A UNCServerName,
     PRPC_STRING ModuleName,
     PRPC_STRING RegModuleName,
-    DWORD MajorVersion,
-    DWORD MinorVersion,
-    IELF_HANDLE *LogHandle)
+    ULONG MajorVersion,
+    ULONG MinorVersion,
+    PIELF_HANDLE LogHandle)
 {
     UNICODE_STRING ModuleNameW;
     NTSTATUS Status;
@@ -690,8 +703,8 @@ NTSTATUS ElfrOpenELA(
 
     /* FIXME: Must verify that caller has read access */
 
-    Status = ElfCreateEventLogHandle((PLOGHANDLE *)LogHandle,
-                                     ModuleNameW.Buffer,
+    Status = ElfCreateEventLogHandle((PLOGHANDLE*)LogHandle,
+                                     &ModuleNameW,
                                      FALSE);
 
     RtlFreeUnicodeString(&ModuleNameW);
@@ -701,13 +714,14 @@ NTSTATUS ElfrOpenELA(
 
 
 /* Function 15 */
-NTSTATUS ElfrRegisterEventSourceA(
+NTSTATUS
+ElfrRegisterEventSourceA(
     EVENTLOG_HANDLE_A UNCServerName,
     PRPC_STRING ModuleName,
     PRPC_STRING RegModuleName,
-    DWORD MajorVersion,
-    DWORD MinorVersion,
-    IELF_HANDLE *LogHandle)
+    ULONG MajorVersion,
+    ULONG MinorVersion,
+    PIELF_HANDLE LogHandle)
 {
     UNICODE_STRING ModuleNameW;
     NTSTATUS Status;
@@ -736,8 +750,8 @@ NTSTATUS ElfrRegisterEventSourceA(
 
     /* FIXME: Must verify that caller has write access */
 
-    Status = ElfCreateEventLogHandle((PLOGHANDLE *)LogHandle,
-                                     ModuleNameW.Buffer,
+    Status = ElfCreateEventLogHandle((PLOGHANDLE*)LogHandle,
+                                     &ModuleNameW,
                                      TRUE);
 
     RtlFreeUnicodeString(&ModuleNameW);
@@ -747,12 +761,13 @@ NTSTATUS ElfrRegisterEventSourceA(
 
 
 /* Function 16 */
-NTSTATUS ElfrOpenBELA(
+NTSTATUS
+ElfrOpenBELA(
     EVENTLOG_HANDLE_A UNCServerName,
     PRPC_STRING BackupFileName,
-    DWORD MajorVersion,
-    DWORD MinorVersion,
-    IELF_HANDLE *LogHandle)
+    ULONG MajorVersion,
+    ULONG MinorVersion,
+    PIELF_HANDLE LogHandle)
 {
     UNICODE_STRING BackupFileNameW;
     NTSTATUS Status;
@@ -774,11 +789,11 @@ NTSTATUS ElfrOpenBELA(
         return STATUS_INVALID_PARAMETER;
     }
 
-    /*FIXME: UNCServerName must specify the server */
+    /* FIXME: UNCServerName must specify the server */
 
-    /*FIXME: Must verify that caller has read access */
+    /* FIXME: Must verify that caller has read access */
 
-    Status = ElfCreateBackupLogHandle((PLOGHANDLE *)LogHandle,
+    Status = ElfCreateBackupLogHandle((PLOGHANDLE*)LogHandle,
                                       &BackupFileNameW);
 
     RtlFreeUnicodeString(&BackupFileNameW);
@@ -788,14 +803,15 @@ NTSTATUS ElfrOpenBELA(
 
 
 /* Function 17 */
-NTSTATUS ElfrReadELA(
+NTSTATUS
+ElfrReadELA(
     IELF_HANDLE LogHandle,
-    DWORD ReadFlags,
-    DWORD RecordOffset,
+    ULONG ReadFlags,
+    ULONG RecordOffset,
     RULONG NumberOfBytesToRead,
-    BYTE *Buffer,
-    DWORD *NumberOfBytesRead,
-    DWORD *MinNumberOfBytesNeeded)
+    PBYTE Buffer,
+    PULONG NumberOfBytesRead,
+    PULONG MinNumberOfBytesNeeded)
 {
     PLOGHANDLE lpLogHandle;
     DWORD dwError;
@@ -803,9 +819,7 @@ NTSTATUS ElfrReadELA(
 
     lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!lpLogHandle)
-    {
         return STATUS_INVALID_HANDLE;
-    }
 
     if (!Buffer)
         return STATUS_INVALID_PARAMETER;
@@ -829,7 +843,7 @@ NTSTATUS ElfrReadELA(
                             MinNumberOfBytesNeeded,
                             TRUE);
 
-    /* Update the handles CurrentRecord if success*/
+    /* Update the handle's CurrentRecord if success */
     if (dwError == ERROR_SUCCESS)
     {
         lpLogHandle->CurrentRecord = RecordNumber;
@@ -844,21 +858,22 @@ NTSTATUS ElfrReadELA(
 
 
 /* Function 18 */
-NTSTATUS ElfrReportEventA(
+NTSTATUS
+ElfrReportEventA(
     IELF_HANDLE LogHandle,
-    DWORD Time,
+    ULONG Time,
     USHORT EventType,
     USHORT EventCategory,
-    DWORD EventID,
+    ULONG EventID,
     USHORT NumStrings,
-    DWORD DataSize,
+    ULONG DataSize,
     PRPC_STRING ComputerName,
     PRPC_SID UserSID,
     PRPC_STRING Strings[],
-    BYTE *Data,
+    PBYTE Data,
     USHORT Flags,
-    DWORD *RecordNumber,
-    DWORD *TimeWritten)
+    PULONG RecordNumber,
+    PULONG TimeWritten)
 {
     UNICODE_STRING ComputerNameW;
     PUNICODE_STRING *StringsArrayW = NULL;
@@ -891,7 +906,7 @@ NTSTATUS ElfrReportEventA(
     {
         StringsArrayW = HeapAlloc(MyHeap,
                                   HEAP_ZERO_MEMORY,
-                                  NumStrings * sizeof (PUNICODE_STRING));
+                                  NumStrings * sizeof(PUNICODE_STRING));
         if (StringsArrayW == NULL)
         {
             Status = STATUS_NO_MEMORY;
@@ -964,7 +979,8 @@ Done:
 
 
 /* Function 19 */
-NTSTATUS ElfrRegisterClusterSvc(
+NTSTATUS
+ElfrRegisterClusterSvc(
     handle_t BindingHandle)
 {
     UNIMPLEMENTED;
@@ -973,7 +989,8 @@ NTSTATUS ElfrRegisterClusterSvc(
 
 
 /* Function 20 */
-NTSTATUS ElfrDeregisterClusterSvc(
+NTSTATUS
+ElfrDeregisterClusterSvc(
     handle_t BindingHandle)
 {
     UNIMPLEMENTED;
@@ -982,7 +999,8 @@ NTSTATUS ElfrDeregisterClusterSvc(
 
 
 /* Function 21 */
-NTSTATUS ElfrWriteClusterEvents(
+NTSTATUS
+ElfrWriteClusterEvents(
     handle_t BindingHandle)
 {
     UNIMPLEMENTED;
@@ -991,16 +1009,20 @@ NTSTATUS ElfrWriteClusterEvents(
 
 
 /* Function 22 */
-NTSTATUS ElfrGetLogInformation(
+NTSTATUS
+ElfrGetLogInformation(
     IELF_HANDLE LogHandle,
-    DWORD InfoLevel,
-    BYTE *Buffer,
-    DWORD cbBufSize,
-    DWORD *pcbBytesNeeded)
+    ULONG InfoLevel,
+    PBYTE Buffer,
+    ULONG cbBufSize,
+    PULONG pcbBytesNeeded)
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    PLOGHANDLE lpLogHandle;
 
-    /* FIXME: check handle first */
+    lpLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
+    if (!lpLogHandle)
+        return STATUS_INVALID_HANDLE;
 
     switch (InfoLevel)
     {
@@ -1011,10 +1033,16 @@ NTSTATUS ElfrGetLogInformation(
                 *pcbBytesNeeded = sizeof(EVENTLOG_FULL_INFORMATION);
                 if (cbBufSize < sizeof(EVENTLOG_FULL_INFORMATION))
                 {
-                    return STATUS_BUFFER_TOO_SMALL;
+                    Status = STATUS_BUFFER_TOO_SMALL;
+                    break;
                 }
 
-                efi->dwFull = 0; /* FIXME */
+                /*
+                 * FIXME. To check whether an event log is "full" one needs
+                 * to compare its current size with respect to the maximum
+                 * size threshold "MaxSize" contained in its header.
+                 */
+                efi->dwFull = 0;
             }
             break;
 
@@ -1028,7 +1056,8 @@ NTSTATUS ElfrGetLogInformation(
 
 
 /* Function 23 */
-NTSTATUS ElfrFlushEL(
+NTSTATUS
+ElfrFlushEL(
     IELF_HANDLE LogHandle)
 {
     UNIMPLEMENTED;
@@ -1037,22 +1066,23 @@ NTSTATUS ElfrFlushEL(
 
 
 /* Function 24 */
-NTSTATUS ElfrReportEventAndSourceW(
+NTSTATUS
+ElfrReportEventAndSourceW(
     IELF_HANDLE LogHandle,
-    DWORD Time,
+    ULONG Time,
     USHORT EventType,
     USHORT EventCategory,
     ULONG EventID,
     PRPC_UNICODE_STRING SourceName,
     USHORT NumStrings,
-    DWORD DataSize,
+    ULONG DataSize,
     PRPC_UNICODE_STRING ComputerName,
     PRPC_SID UserSID,
     PRPC_UNICODE_STRING Strings[],
-    BYTE *Data,
+    PBYTE Data,
     USHORT Flags,
-    DWORD *RecordNumber,
-    DWORD *TimeWritten)
+    PULONG RecordNumber,
+    PULONG TimeWritten)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -1073,4 +1103,6 @@ void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 
 void __RPC_USER IELF_HANDLE_rundown(IELF_HANDLE LogHandle)
 {
+    /* Close the handle */
+    ElfDeleteEventLogHandle(&LogHandle); // ElfrCloseEL(&LogHandle);
 }
