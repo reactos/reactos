@@ -29,7 +29,7 @@ Size = 15,8 Mio
 
 [Section.0419]
 Description = Бесплатная игра-головоломка.
-Size = 15,8 МБ
+Size = 15,8 MiB
 
 [Section.041f]
 Description = Ücretsiz, Lemmings gibi bir bulmaca oyunudur.

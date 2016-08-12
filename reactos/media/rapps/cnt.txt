@@ -33,7 +33,7 @@ Size = 1,3 Mio
 [Section.0419]
 License = Бесплатно
 Description = Виртуальная клавиатура
-Size = 1,3 МБ
+Size = 1,3 MiB
 
 [Section.041f]
 Name = Click-N-Type Farazî Düğme Takımı

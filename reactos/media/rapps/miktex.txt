@@ -26,7 +26,7 @@ Size = 181,7 Mio
 [Section.0419]
 License = Бесплатно
 Description = Открытый дистрибутив TeX/LaTeX для платформы Windows.
-Size = 181,3 МБ
+Size = 181,7 MiB
 
 [Section.041f]
 License = Ücretsiz

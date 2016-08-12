@@ -19,8 +19,8 @@ Description = Un instrument gratuit, cu surse deschise, multiplatformă, pentru 
 Size = 15,8 Mio
 
 [Section.0419]
-Description = Инструмент, предназначенный для выполнения разделения, слияния и других операций с документами PDF. 
-Size = 15,8 МБ
+Description = Инструмент, предназначенный для выполнения разделения, слияния и других операций с документами PDF.
+Size = 15,8 MiB
 
 [Section.041f]
 License = GPL sürüm 2

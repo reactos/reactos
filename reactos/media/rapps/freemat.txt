@@ -6,7 +6,7 @@ Description = A free environment for rapid engineering and scientific prototypin
 Size = 49.8 MiB
 Category = 11
 URLSite = http://freemat.sf.net
-URLDownload = http://downloads.sourceforge.net/project/freemat/FreeMat4/FreeMat-4.2-setup-32bit-xpcompat.exe
+URLDownload = http://download.sourceforge.net/project/freemat/FreeMat4/FreeMat-4.2-setup-32bit-xpcompat.exe
 SHA1 = 0f3dce8d6109e0da87f1851f4f4b8fec5f0e8943
 
 [Section.0407]
@@ -15,4 +15,5 @@ Size = 49,8 MiB
 
 [Section.0419]
 Description = Бесплатная среда для быстрой инженерной и научной обработки данных.
-Size = 49,8 МБ
+Size = 49,8 MiB
+

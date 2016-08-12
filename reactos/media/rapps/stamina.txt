@@ -30,7 +30,7 @@ Size = 4,9 Mio
 [Section.0419]
 License = Бесплатно
 Description = Бесплатный клавиатурный тренажер.
-Size = 4,9 МБ
+Size = 4,9 MiB
 
 [Section.041f]
 License = Ücretsiz

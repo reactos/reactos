@@ -1,18 +1,19 @@
-﻿[Section]
+[Section]
 Name = BitTorrent
-Version = 7.9.6
+Version = CURRENT
 License = Freeware for non-commercial uses
 Description = The original BitTorrent client.
-Size = 1.9 MiB
+Size = 2.4 MiB
 Category = 5
 URLSite = http://www.bittorrent.com/
 URLDownload = http://download-new.utorrent.com/endpoint/bittorrent/os/windows/track/stable/BitTorrent.exe
 CDPath = none
+SHA1 = 57604231fc875cebd9dfdb06ba41f2e6611ffa32
 
 [Section.0407]
 License = Freeware für nichtkommerzielle Nutzung
 Description = Der Original BitTorrent Client.
-Size = 1,9 MiB
+Size = 2,4 MiB
 
 [Section.0a]
 License = Gratuito para uso no comercial
@@ -28,17 +29,17 @@ Description = Oryginalny klient BitTorrent.
 [Section.0418]
 License = Gratuită pentru uz necomercial
 Description = Originalul client BitTorrent.
-Size = 1,9 Mio
+Size = 2,4 Mio
 
 [Section.0419]
 License = Бесплатно, для не коммерческого использования
-Description = Оригинальный клиент BitTorrent 
-Size = 1,9 МБ
+Description = Оригинальный клиент BitTorrent
+Size = 2,4 MiB
 
 [Section.041f]
 License = Tecimlik olmayan kullanımlar için ücretsiz.
 Description = Özgün BitTorrent istemcisi.
-Size = 1,9 MiB
+Size = 2,4 MiB
 
 [Section.0804]
 Description = 原本的 BitTorrent 客户端。
