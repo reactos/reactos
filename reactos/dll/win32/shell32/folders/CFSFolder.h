@@ -23,8 +23,6 @@
 #ifndef _CFSFOLDER_H_
 #define _CFSFOLDER_H_
 
-WCHAR *BuildPathsList(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls);
-
 class CFSFolder :
     public CComCoClass<CFSFolder, &CLSID_ShellFSFolder>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -95,50 +93,6 @@ class CFSFolder :
         COM_INTERFACE_ENTRY_IID(IID_IPersistFolder3, IPersistFolder3)
         COM_INTERFACE_ENTRY_IID(IID_IPersist, IPersist)
         END_COM_MAP()
-};
-
-class CFSDropTarget :
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IDropTarget
-{
-    private:
-        UINT cfShellIDList;    /* clipboardformat for IDropTarget */
-        BOOL fAcceptFmt;       /* flag for pending Drop */
-        LPWSTR sPathTarget;
-
-        BOOL QueryDrop (DWORD dwKeyState, LPDWORD pdwEffect);
-        virtual HRESULT WINAPI _DoDrop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-        virtual HRESULT WINAPI CopyItems(IShellFolder *pSFFrom, UINT cidl, LPCITEMIDLIST *apidl, BOOL bCopy);
-        BOOL GetUniqueFileName(LPWSTR pwszBasePath, LPCWSTR pwszExt, LPWSTR pwszTarget, BOOL bShortcut);
-        static DWORD WINAPI _DoDropThreadProc(LPVOID lpParameter);
-
-    public:
-        CFSDropTarget();
-        ~CFSDropTarget();
-        HRESULT WINAPI Initialize(LPWSTR PathTarget);
-
-        // IDropTarget
-        virtual HRESULT WINAPI DragEnter(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-        virtual HRESULT WINAPI DragOver(DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-        virtual HRESULT WINAPI DragLeave();
-        virtual HRESULT WINAPI Drop(IDataObject *pDataObject, DWORD dwKeyState, POINTL pt, DWORD *pdwEffect);
-
-        DECLARE_NOT_AGGREGATABLE(CFSDropTarget)
-
-        DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-        BEGIN_COM_MAP(CFSDropTarget)
-        COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
-        END_COM_MAP()
-
-};
-
-struct _DoDropData {
-    CFSDropTarget *This;
-    IStream *pStream;
-    DWORD dwKeyState;
-    POINTL pt; 
-    DWORD pdwEffect;
 };
 
 #endif /* _CFSFOLDER_H_ */

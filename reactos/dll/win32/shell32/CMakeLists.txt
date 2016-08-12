@@ -55,6 +55,7 @@ list(APPEND SOURCE
     folders/CRecycleBin.cpp
     folders/CRegFolder.cpp
     droptargets/CexeDropHandler.cpp
+    droptargets/CFSDropTarget.cpp
     shlexec.cpp
     shlfileop.cpp
     shlfolder.cpp

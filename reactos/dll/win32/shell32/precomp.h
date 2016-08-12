@@ -68,6 +68,7 @@
 #include "folders/CAdminToolsFolder.h"
 #include "folders/CRecycleBin.h"
 #include "droptargets/CexeDropHandler.h"
+#include "droptargets/CFSDropTarget.h"
 #include "COpenWithMenu.h"
 #include "CNewMenu.h"
 #include "dialogs/filedefext.h"
