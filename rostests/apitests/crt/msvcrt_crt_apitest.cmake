@@ -66,7 +66,7 @@ list(APPEND SOURCE_MSVCRT
 #    __doserrno.c
 #    __fpecode.c
 #    __get_app_type.c
-#    __getmainargs.c
+    __getmainargs.c
 #    __initenv
 #    __iob_func.c
 #    __isascii.c
