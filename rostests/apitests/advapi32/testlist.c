@@ -5,6 +5,7 @@
 
 extern void func_CreateService(void);
 extern void func_DuplicateTokenEx(void);
+extern void func_eventlog(void);
 extern void func_HKEY_CLASSES_ROOT(void);
 extern void func_IsTextUnicode(void);
 extern void func_LockDatabase(void);
@@ -18,6 +19,7 @@ const struct test winetest_testlist[] =
 {
     { "CreateService", func_CreateService },
     { "DuplicateTokenEx", func_DuplicateTokenEx },
+    { "eventlog", func_eventlog },
     { "HKEY_CLASSES_ROOT", func_HKEY_CLASSES_ROOT },
     { "IsTextUnicode" , func_IsTextUnicode },
     { "LockDatabase" , func_LockDatabase },
