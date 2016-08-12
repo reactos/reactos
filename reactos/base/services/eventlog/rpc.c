@@ -357,7 +357,7 @@ NTSTATUS ElfrOldestRecord(
 
 /* Function 6 */
 NTSTATUS ElfrChangeNotify(
-    IELF_HANDLE *LogHandle,
+    IELF_HANDLE LogHandle,
     RPC_CLIENT_ID ClientId,
     DWORD Event)
 {
