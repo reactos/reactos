@@ -2543,24 +2543,49 @@ typedef LONG
     struct _EXCEPTION_POINTERS *ExceptionInfo
 );
 
+
+#define EVENTLOG_SEQUENTIAL_READ    1
+#define EVENTLOG_SEEK_READ          2
+#define EVENTLOG_FORWARDS_READ      4
+#define EVENTLOG_BACKWARDS_READ     8
+
+#define EVENTLOG_SUCCESS            0
+#define EVENTLOG_ERROR_TYPE         1
+#define EVENTLOG_WARNING_TYPE       2
+#define EVENTLOG_INFORMATION_TYPE   4
+#define EVENTLOG_AUDIT_SUCCESS      8
+#define EVENTLOG_AUDIT_FAILURE      16
+
 typedef struct _EVENTLOGRECORD {
-  DWORD Length;
+  DWORD Length;             /* Length of full record, including the data portion */
   DWORD Reserved;
   DWORD RecordNumber;
   DWORD TimeGenerated;
   DWORD TimeWritten;
   DWORD EventID;
   WORD EventType;
-  WORD NumStrings;
+  WORD NumStrings;          /* Number of strings in the 'Strings' array */
   WORD EventCategory;
   WORD ReservedFlags;
   DWORD ClosingRecordNumber;
   DWORD StringOffset;
   DWORD UserSidLength;
   DWORD UserSidOffset;
-  DWORD DataLength;
-  DWORD DataOffset;
+  DWORD DataLength;         /* Length of the data portion */
+  DWORD DataOffset;         /* Offset from beginning of record */
+/*
+ * Length-varying data:
+ *
+ * WCHAR SourceName[];
+ * WCHAR ComputerName[];
+ * SID   UserSid;           // Must be aligned on a DWORD boundary
+ * WCHAR Strings[];
+ * BYTE  Data[];
+ * CHAR  Pad[];             // Padding for DWORD boundary
+ * DWORD Length;            // Same as the first 'Length' member at the beginning
+ */
 } EVENTLOGRECORD, *PEVENTLOGRECORD;
+
 
 typedef struct _OSVERSIONINFOA {
   DWORD dwOSVersionInfoSize;
