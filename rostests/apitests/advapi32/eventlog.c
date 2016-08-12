@@ -17,7 +17,7 @@ START_TEST(eventlog)
         /* Input */
         ULONG MaxDataSize;
 
-        /* Output for Windows <= 2k3 / Windows Vista+ */
+        /* Output for Windows <= 2k3 | Windows Vista+ (or "old" ReactOS) */
         struct
         {
             BOOL  Success;
@@ -39,8 +39,8 @@ START_TEST(eventlog)
         { 0x3FF68, { {TRUE, ERROR_SUCCESS}, {FALSE, RPC_S_INVALID_BOUND} } },
 
         /* Show that the maximum data size for an event can be as big as 0x3FFFF */
-        { 0x3FFFE, { {TRUE, ERROR_SUCCESS /* or ERROR_INVALID_PARAMETER on Win2k3 */}, {FALSE, RPC_S_INVALID_BOUND} } },
-        { 0x3FFFF, { {TRUE, ERROR_SUCCESS /* or ERROR_INVALID_PARAMETER on Win2k3 */}, {FALSE, RPC_S_INVALID_BOUND} } },
+        { 0x3FFFE, { {TRUE, ERROR_SUCCESS /* or FALSE, ERROR_INVALID_PARAMETER on Win2k3 */}, {FALSE, RPC_S_INVALID_BOUND} } },
+        { 0x3FFFF, { {TRUE, ERROR_SUCCESS /* or FALSE, ERROR_INVALID_PARAMETER on Win2k3 */}, {FALSE, RPC_S_INVALID_BOUND} } },
         { 0x40000, { {FALSE, RPC_X_BAD_STUB_DATA}, {FALSE, RPC_S_INVALID_BOUND} } },
     };
 
@@ -73,13 +73,12 @@ START_TEST(eventlog)
             if (LastError == ERROR_ENVVAR_NOT_FOUND)
                 LastError = ERROR_SUCCESS;
 
-            ok((LastError == Tests[i].Result[0].LastError) ||
-                broken(LastError == ERROR_INVALID_PARAMETER /* For Win2k3, see above */) ||
-                broken(LastError == Tests[i].Result[1].LastError /* For Vista+ */),
-               "ReportEventW(%u) last error was %lu, expected %lu\n", i, LastError, Tests[i].Result[0].LastError);
-
-            ok((Success == Tests[i].Result[0].Success) || broken(Success == Tests[i].Result[1].Success /* For Vista+ */),
-               "ReportEventW(%u) returned 0x%x, expected %s\n", i, Success, (Tests[i].Result[0].Success ? "TRUE" : "FALSE"));
+            ok( ( (Success == Tests[i].Result[0].Success) && (LastError == Tests[i].Result[0].LastError) ) ||
+                broken( (Success == FALSE) && (LastError == ERROR_INVALID_PARAMETER) /* For Win2k3, see above */) // ||
+                // broken( (Success == Tests[i].Result[1].Success) && (LastError == Tests[i].Result[1].LastError) /* For Vista+ */)
+                ,
+               "ReportEventW(%u) returned 0x%x with last error %lu, expected %s with last error %lu\n",
+               i, Success, LastError, (Tests[i].Result[0].Success ? "TRUE" : "FALSE"), Tests[i].Result[0].LastError);
 
             HeapFree(GetProcessHeap(), 0, Data);
         }

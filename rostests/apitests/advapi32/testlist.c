@@ -19,7 +19,7 @@ const struct test winetest_testlist[] =
 {
     { "CreateService", func_CreateService },
     { "DuplicateTokenEx", func_DuplicateTokenEx },
-    { "eventlog", func_eventlog },
+    { "eventlog_supp", func_eventlog },
     { "HKEY_CLASSES_ROOT", func_HKEY_CLASSES_ROOT },
     { "IsTextUnicode" , func_IsTextUnicode },
     { "LockDatabase" , func_LockDatabase },
