@@ -1090,8 +1090,17 @@ UserProcessKeyboardInput(
         KbdInput.dwFlags = 0;
         if (pKbdInputData->Flags & KEY_BREAK)
             KbdInput.dwFlags |= KEYEVENTF_KEYUP;
+
         if (wVk & KBDEXT)
             KbdInput.dwFlags |= KEYEVENTF_EXTENDEDKEY;
+        //
+        // Based on wine input:test_Input_blackbox this is okay. It seems the 
+        // bit did not get set and more research is needed. Now the right
+        // shift works.
+        //
+        if (wVk == VK_RSHIFT)
+            KbdInput.dwFlags |= KEYEVENTF_EXTENDEDKEY;
+
         KbdInput.time = 0;
         KbdInput.dwExtraInfo = pKbdInputData->ExtraInformation;
         UserSendKeyboardInput(&KbdInput, FALSE);
