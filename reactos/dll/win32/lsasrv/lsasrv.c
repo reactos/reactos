@@ -14,6 +14,28 @@
 
 VOID
 NTAPI
+LsaIFree_LSAPR_ACCOUNT_ENUM_BUFFER(
+    IN PLSAPR_ACCOUNT_ENUM_BUFFER Ptr)
+{
+    ULONG i;
+
+    if (Ptr == NULL)
+        return;
+
+    if (Ptr->Information != NULL)
+    {
+        for (i = 0; i < Ptr->EntriesRead; i++)
+            midl_user_free(Ptr->Information[i].Sid);
+
+        midl_user_free(Ptr->Information);
+    }
+
+    midl_user_free(Ptr);
+}
+
+
+VOID
+NTAPI
 LsaIFree_LSAPR_POLICY_INFORMATION(IN POLICY_INFORMATION_CLASS InformationClass,
                                   IN PLSAPR_POLICY_INFORMATION PolicyInformation)
 {
