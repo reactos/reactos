@@ -654,10 +654,11 @@ NTSTATUS WINAPI LsarEnumerateAccounts(
 {
     LSAPR_ACCOUNT_ENUM_BUFFER EnumBuffer = {0, NULL};
     PLSA_DB_OBJECT PolicyObject = NULL;
-    WCHAR AccountKeyName[64];
+    PWSTR AccountKeyBuffer = NULL;
     HANDLE AccountsKeyHandle = NULL;
     HANDLE AccountKeyHandle;
     HANDLE SidKeyHandle;
+    ULONG AccountKeyBufferSize;
     ULONG EnumIndex;
     ULONG EnumCount;
     ULONG RequiredLength;
@@ -693,6 +694,23 @@ NTSTATUS WINAPI LsarEnumerateAccounts(
     if (!NT_SUCCESS(Status))
         return Status;
 
+    Status = LsapRegQueryKeyInfo(AccountsKeyHandle,
+                                 NULL,
+                                 &AccountKeyBufferSize,
+                                 NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapRegQueryKeyInfo returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    AccountKeyBufferSize += sizeof(WCHAR);
+    AccountKeyBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, AccountKeyBufferSize);
+    if (AccountKeyBuffer == NULL)
+    {
+        return STATUS_NO_MEMORY;
+    }
+
     EnumIndex = *EnumerationContext;
     EnumCount = 0;
     RequiredLength = 0;
@@ -701,16 +719,16 @@ NTSTATUS WINAPI LsarEnumerateAccounts(
     {
         Status = LsapRegEnumerateSubKey(AccountsKeyHandle,
                                         EnumIndex,
-                                        64 * sizeof(WCHAR),
-                                        AccountKeyName);
+                                        AccountKeyBufferSize,
+                                        AccountKeyBuffer);
         if (!NT_SUCCESS(Status))
             break;
 
         TRACE("EnumIndex: %lu\n", EnumIndex);
-        TRACE("Account key name: %S\n", AccountKeyName);
+        TRACE("Account key name: %S\n", AccountKeyBuffer);
 
         Status = LsapRegOpenKey(AccountsKeyHandle,
-                                AccountKeyName,
+                                AccountKeyBuffer,
                                 KEY_READ,
                                 &AccountKeyHandle);
         TRACE("LsapRegOpenKey returned %08lX\n", Status);
@@ -766,16 +784,16 @@ NTSTATUS WINAPI LsarEnumerateAccounts(
     {
         Status = LsapRegEnumerateSubKey(AccountsKeyHandle,
                                         EnumIndex,
-                                        64 * sizeof(WCHAR),
-                                        AccountKeyName);
+                                        AccountKeyBufferSize,
+                                        AccountKeyBuffer);
         if (!NT_SUCCESS(Status))
             break;
 
         TRACE("EnumIndex: %lu\n", EnumIndex);
-        TRACE("Account key name: %S\n", AccountKeyName);
+        TRACE("Account key name: %S\n", AccountKeyBuffer);
 
         Status = LsapRegOpenKey(AccountsKeyHandle,
-                                AccountKeyName,
+                                AccountKeyBuffer,
                                 KEY_READ,
                                 &AccountKeyHandle);
         TRACE("LsapRegOpenKey returned %08lX\n", Status);
@@ -844,6 +862,9 @@ done:
             midl_user_free(EnumBuffer.Information);
         }
     }
+
+    if (AccountKeyBuffer != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AccountKeyBuffer);
 
     if (AccountsKeyHandle != NULL)
         LsapRegCloseKey(AccountsKeyHandle);
@@ -2520,7 +2541,7 @@ NTSTATUS WINAPI LsarAddAccountRights(
 
     if (ulNewRights > 0)
     {
-        Size = 0;
+        Size = sizeof(ACCESS_MASK);
 
         /* Get the system access flags, if the attribute exists */
         Status = LsapGetObjectAttribute(AccountObject,

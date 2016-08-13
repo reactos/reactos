@@ -364,6 +364,7 @@ LsapRegOpenKey(IN HANDLE ParentKeyHandle,
 NTSTATUS
 LsapRegQueryKeyInfo(IN HANDLE KeyHandle,
                     OUT PULONG SubKeyCount,
+                    OUT PULONG MaxSubKeyNameLength,
                     OUT PULONG ValueCount);
 
 NTSTATUS

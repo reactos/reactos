@@ -175,6 +175,7 @@ LsapRegOpenKey(IN HANDLE ParentKeyHandle,
 NTSTATUS
 LsapRegQueryKeyInfo(IN HANDLE KeyHandle,
                     OUT PULONG SubKeyCount,
+                    OUT PULONG MaxSubKeyNameLength,
                     OUT PULONG ValueCount)
 {
     KEY_FULL_INFORMATION FullInfoBuffer;
@@ -195,6 +196,9 @@ LsapRegQueryKeyInfo(IN HANDLE KeyHandle,
 
     if (SubKeyCount != NULL)
         *SubKeyCount = FullInfoBuffer.SubKeys;
+
+    if (MaxSubKeyNameLength != NULL)
+        *MaxSubKeyNameLength = FullInfoBuffer.MaxNameLen;
 
     if (ValueCount != NULL)
         *ValueCount = FullInfoBuffer.Values;
