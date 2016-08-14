@@ -70,7 +70,7 @@ NTSTATUS WINAPI LsarClose(
     PLSA_DB_OBJECT DbObject;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    TRACE("0x%p\n", ObjectHandle);
+    TRACE("LsarClose(%p)\n", ObjectHandle);
 
 //    RtlEnterCriticalSection(&PolicyHandleTableLock);
 
@@ -94,6 +94,8 @@ NTSTATUS WINAPI LsarClose(
 NTSTATUS WINAPI LsarDelete(
     LSAPR_HANDLE ObjectHandle)
 {
+    TRACE("LsarDelete(%p)\n", ObjectHandle);
+
     return LsarDeleteObject(&ObjectHandle);
 }
 
@@ -286,7 +288,8 @@ NTSTATUS WINAPI LsarOpenPolicy(
     PLSA_DB_OBJECT PolicyObject;
     NTSTATUS Status;
 
-    TRACE("LsarOpenPolicy called!\n");
+    TRACE("LsarOpenPolicy(%S %p %lx %p)\n",
+          SystemName, ObjectAttributes, DesiredAccess, PolicyHandle);
 
     RtlEnterCriticalSection(&PolicyHandleTableLock);
 
@@ -656,6 +659,9 @@ NTSTATUS WINAPI LsarCreateAccount(
     PLSA_DB_OBJECT AccountObject = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
 
+    TRACE("LsarCreateAccount(%p %p %lx %p)\n",
+          PolicyHandle, AccountSid, DesiredAccess, AccountHandle);
+
     /* Validate the AccountSid */
     if (!RtlValidSid(AccountSid))
         return STATUS_INVALID_PARAMETER;
@@ -706,8 +712,8 @@ NTSTATUS WINAPI LsarEnumerateAccounts(
     ULONG i;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    TRACE("(%p %p %p %lu)\n", PolicyHandle, EnumerationContext,
-          EnumerationBuffer, PreferedMaximumLength);
+    TRACE("LsarEnumerateAccount(%p %p %p %lu)\n",
+          PolicyHandle, EnumerationContext, EnumerationBuffer, PreferedMaximumLength);
 
     if (EnumerationContext == NULL ||
         EnumerationBuffer == NULL)
@@ -951,7 +957,7 @@ NTSTATUS WINAPI LsarLookupNames(
     ULONG i;
     NTSTATUS Status;
 
-    TRACE("(%p %lu %p %p %p %d %p)\n",
+    TRACE("LsarLookupNames(%p %lu %p %p %p %d %p)\n",
           PolicyHandle, Count, Names, ReferencedDomains, TranslatedSids,
           LookupLevel, MappedCount);
 
@@ -1012,7 +1018,7 @@ NTSTATUS WINAPI LsarLookupSids(
     ULONG i;
     NTSTATUS Status;
 
-    TRACE("(%p %p %p %p %d %p)\n",
+    TRACE("LsarLookupSids(%p %p %p %p %d %p)\n",
           PolicyHandle, SidEnumBuffer, ReferencedDomains, TranslatedNames,
           LookupLevel, MappedCount);
 
@@ -1073,6 +1079,9 @@ NTSTATUS WINAPI LsarCreateSecret(
     PSECURITY_DESCRIPTOR SecretSd = NULL;
     ULONG SecretSdSize;
     NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("LsarCreateSecret(%p %wZ %lx %p)\n",
+          PolicyHandle, SecretName, DesiredAccess, SecretHandle);
 
     /* Validate the PolicyHandle */
     Status = LsapValidateDbObject(PolicyHandle,
@@ -1211,6 +1220,9 @@ NTSTATUS WINAPI LsarOpenAccount(
     PLSA_DB_OBJECT PolicyObject;
     NTSTATUS Status;
 
+    TRACE("LsarOpenAccount(%p %p %lx %p)\n",
+          PolicyHandle, AccountSid, DesiredAccess, AccountHandle);
+
     /* Validate the AccountSid */
     if (!RtlValidSid(AccountSid))
         return STATUS_INVALID_PARAMETER;
@@ -1244,6 +1256,9 @@ NTSTATUS WINAPI LsarEnumeratePrivilegesAccount(
     ULONG PrivilegeSetSize = 0;
     PLSAPR_PRIVILEGE_SET PrivilegeSet = NULL;
     NTSTATUS Status;
+
+    TRACE("LsarEnumeratePrivilegesAccount(%p %p)\n",
+          AccountHandle, Privileges);
 
     *Privileges = NULL;
 
@@ -1302,6 +1317,9 @@ NTSTATUS WINAPI LsarAddPrivilegesToAccount(
     ULONG i, j;
     BOOL bFound;
     NTSTATUS Status;
+
+    TRACE("LsarAddPrivilegesToAccount(%p %p)\n",
+          AccountHandle, Privileges);
 
     /* Validate the AccountHandle */
     Status = LsapValidateDbObject(AccountHandle,
@@ -1455,7 +1473,8 @@ NTSTATUS WINAPI LsarRemovePrivilegesFromAccount(
     BOOL bFound;
     NTSTATUS Status;
 
-    TRACE("(%p %u %p)\n", AccountHandle, AllPrivileges, Privileges);
+    TRACE("LsarRemovePrivilegesFromAccount(%p %u %p)\n",
+          AccountHandle, AllPrivileges, Privileges);
 
     /* */
     if ((AllPrivileges == FALSE && Privileges == NULL) ||
@@ -1605,7 +1624,8 @@ NTSTATUS WINAPI LsarGetQuotasForAccount(
     ULONG Size;
     NTSTATUS Status;
 
-    TRACE("(%p %p)\n", AccountHandle, QuotaLimits);
+    TRACE("LsarGetQuotasForAccount(%p %p)\n",
+          AccountHandle, QuotaLimits);
 
     /* Validate the account handle */
     Status = LsapValidateDbObject(AccountHandle,
@@ -1638,7 +1658,8 @@ NTSTATUS WINAPI LsarSetQuotasForAccount(
     ULONG Size;
     NTSTATUS Status;
 
-    TRACE("(%p %p)\n", AccountHandle, QuotaLimits);
+    TRACE("LsarSetQuotasForAccount(%p %p)\n",
+          AccountHandle, QuotaLimits);
 
     /* Validate the account handle */
     Status = LsapValidateDbObject(AccountHandle,
@@ -1698,6 +1719,9 @@ NTSTATUS WINAPI LsarGetSystemAccessAccount(
     ULONG Size = sizeof(ACCESS_MASK);
     NTSTATUS Status;
 
+    TRACE("LsarGetSystemAccessAccount(%p %p)\n",
+          AccountHandle, SystemAccess);
+
     /* Validate the account handle */
     Status = LsapValidateDbObject(AccountHandle,
                                   LsaDbAccountObject,
@@ -1726,6 +1750,9 @@ NTSTATUS WINAPI LsarSetSystemAccessAccount(
 {
     PLSA_DB_OBJECT AccountObject;
     NTSTATUS Status;
+
+    TRACE("LsarSetSystemAccessAccount(%p %lx)\n",
+          AccountHandle, SystemAccess);
 
     /* Validate the account handle */
     Status = LsapValidateDbObject(AccountHandle,
@@ -1792,6 +1819,9 @@ NTSTATUS WINAPI LsarOpenSecret(
     PLSA_DB_OBJECT PolicyObject;
     PLSA_DB_OBJECT SecretObject = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("LsarOpenSecret(%p %wZ %lx %p)\n",
+          PolicyHandle, SecretName, DesiredAccess, SecretHandle);
 
     /* Validate the PolicyHandle */
     Status = LsapValidateDbObject(PolicyHandle,
@@ -3012,6 +3042,9 @@ NTSTATUS WINAPI LsarRetrievePrivateData(
     PBYTE CurrentValue = NULL;
     NTSTATUS Status;
 
+    TRACE("LsarRetrievePrivateData(%p %wZ %p)\n",
+          PolicyHandle, KeyName, EncryptedData);
+
     /* Validate the SecretHandle */
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
@@ -3262,7 +3295,7 @@ NTSTATUS WINAPI LsarLookupSids2(
 {
     NTSTATUS Status;
 
-    TRACE("(%p %p %p %p %d %p %lu %lu)\n",
+    TRACE("LsarLookupSids2(%p %p %p %p %d %p %lu %lu)\n",
           PolicyHandle, SidEnumBuffer, ReferencedDomains, TranslatedNames,
           LookupLevel, MappedCount, LookupOptions, ClientRevision);
 
@@ -3300,7 +3333,7 @@ NTSTATUS WINAPI LsarLookupNames2(
     ULONG i;
     NTSTATUS Status;
 
-    TRACE("(%p %lu %p %p %p %d %p %lu %lu)\n",
+    TRACE("LsarLookupNames2(%p %lu %p %p %p %d %p %lu %lu)\n",
           PolicyHandle, Count, Names, ReferencedDomains, TranslatedSids,
           LookupLevel, MappedCount, LookupOptions, ClientRevision);
 
@@ -3448,7 +3481,7 @@ NTSTATUS WINAPI LsarLookupNames3(
 {
     NTSTATUS Status;
 
-    TRACE("(%p %lu %p %p %p %d %p %lu %lu)\n",
+    TRACE("LsarLookupNames3(%p %lu %p %p %p %d %p %lu %lu)\n",
           PolicyHandle, Count, Names, ReferencedDomains, TranslatedSids,
           LookupLevel, MappedCount, LookupOptions, ClientRevision);
 
@@ -3556,7 +3589,7 @@ NTSTATUS WINAPI LsarLookupSids3(
 {
     NTSTATUS Status;
 
-    TRACE("(%p %p %p %p %d %p %lu %lu)\n",
+    TRACE("LsarLookupSids3(%p %p %p %p %d %p %lu %lu)\n",
           PolicyHandle, SidEnumBuffer, ReferencedDomains, TranslatedNames,
           LookupLevel, MappedCount, LookupOptions, ClientRevision);
 
@@ -3592,7 +3625,7 @@ NTSTATUS WINAPI LsarLookupNames4(
 {
     NTSTATUS Status;
 
-    TRACE("(%p %lu %p %p %p %d %p %lu %lu)\n",
+    TRACE("LsarLookupNames4(%p %lu %p %p %p %d %p %lu %lu)\n",
           RpcHandle, Count, Names, ReferencedDomains, TranslatedSids,
           LookupLevel, MappedCount, LookupOptions, ClientRevision);
 
