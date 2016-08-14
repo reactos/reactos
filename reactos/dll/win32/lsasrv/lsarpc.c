@@ -136,13 +136,20 @@ NTSTATUS WINAPI LsarQuerySecurityObject(
 {
     PLSA_DB_OBJECT DbObject = NULL;
     PSECURITY_DESCRIPTOR RelativeSd = NULL;
+    PSECURITY_DESCRIPTOR ResultSd = NULL;
     PLSAPR_SR_SECURITY_DESCRIPTOR SdData = NULL;
     ACCESS_MASK DesiredAccess = 0;
     ULONG RelativeSdSize = 0;
+    ULONG ResultSdSize = 0;
     NTSTATUS Status;
+
+    TRACE("LsarQuerySecurityObject(%p %lx %p)\n",
+          ObjectHandle, SecurityInformation, SecurityDescriptor);
 
     if (SecurityDescriptor == NULL)
         return STATUS_INVALID_PARAMETER;
+
+    *SecurityDescriptor = NULL;
 
     if ((SecurityInformation & OWNER_SECURITY_INFORMATION) ||
         (SecurityInformation & GROUP_SECURITY_INFORMATION) ||
@@ -181,10 +188,40 @@ NTSTATUS WINAPI LsarQuerySecurityObject(
     if (!NT_SUCCESS(Status))
         goto done;
 
-    /*
-     * FIXME: Invalidate the SD information that was not requested.
-     *        (see SecurityInformation)
-     */
+    /* Invalidate the SD information that was not requested */
+    if (!(SecurityInformation & OWNER_SECURITY_INFORMATION))
+        ((PISECURITY_DESCRIPTOR)RelativeSd)->Owner = NULL;
+
+    if (!(SecurityInformation & GROUP_SECURITY_INFORMATION))
+        ((PISECURITY_DESCRIPTOR)RelativeSd)->Group = NULL;
+
+    if (!(SecurityInformation & DACL_SECURITY_INFORMATION))
+        ((PISECURITY_DESCRIPTOR)RelativeSd)->Control &= ~SE_DACL_PRESENT;
+
+    if (!(SecurityInformation & SACL_SECURITY_INFORMATION))
+        ((PISECURITY_DESCRIPTOR)RelativeSd)->Control &= ~SE_SACL_PRESENT;
+
+    /* Calculate the required SD size */
+    Status = RtlMakeSelfRelativeSD(RelativeSd,
+                                   NULL,
+                                   &ResultSdSize);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+        goto done;
+
+    /* Allocate a buffer for the new SD */
+    ResultSd = MIDL_user_allocate(ResultSdSize);
+    if (ResultSd == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    /* Build the new SD */
+    Status = RtlMakeSelfRelativeSD(RelativeSd,
+                                   ResultSd,
+                                   &ResultSdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     /* Allocate the SD data buffer */
     SdData = MIDL_user_allocate(sizeof(LSAPR_SR_SECURITY_DESCRIPTOR));
@@ -196,16 +233,19 @@ NTSTATUS WINAPI LsarQuerySecurityObject(
 
     /* Fill the SD data buffer and return it to the caller */
     SdData->Length = RelativeSdSize;
-    SdData->SecurityDescriptor = (PBYTE)RelativeSd;
+    SdData->SecurityDescriptor = (PBYTE)ResultSd;
 
     *SecurityDescriptor = SdData;
 
 done:
     if (!NT_SUCCESS(Status))
     {
-        if (RelativeSd != NULL)
-            MIDL_user_free(RelativeSd);
+        if (ResultSd != NULL)
+            MIDL_user_free(ResultSd);
     }
+
+    if (RelativeSd != NULL)
+        MIDL_user_free(RelativeSd);
 
     return Status;
 }
@@ -2174,7 +2214,7 @@ NTSTATUS WINAPI LsarDeleteObject(
     PLSA_DB_OBJECT DbObject;
     NTSTATUS Status;
 
-    TRACE("(%p)\n", ObjectHandle);
+    TRACE("LsarDeleteObject(%p)\n", ObjectHandle);
 
     if (ObjectHandle == NULL)
         return STATUS_INVALID_PARAMETER;
