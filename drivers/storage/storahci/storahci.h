@@ -76,9 +76,7 @@
 #define AHCI_Global_Port_CAP_NCS(x)         (((x) & 0xF00) >> 8)
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
-#ifdef DBG
-    #define AhciDebugPrint(format, ...) StorPortDebugPrint(0, format, __VA_ARGS__)
-#endif
+#define AhciDebugPrint(format, ...) StorPortDebugPrint(0, format, __VA_ARGS__)
 
 typedef
 VOID
@@ -472,9 +470,9 @@ typedef struct _AHCI_PORT_EXTENSION
         LARGE_INTEGER MaxLba;
         ULONG BytesPerLogicalSector;
         ULONG BytesPerPhysicalSector;
-        // UCHAR VendorId[41];
-        // UCHAR RevisionID[9];
-        // UCHAR SerialNumber[21];
+        UCHAR VendorId[41];
+        UCHAR RevisionID[9];
+        UCHAR SerialNumber[21];
     } DeviceParams;
 
     STOR_DPC CommandCompletion;

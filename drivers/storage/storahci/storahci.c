@@ -24,8 +24,8 @@ AhciPortInitialize (
     )
 {
     AHCI_PORT_CMD cmd;
-    ULONG mappedLength, portNumber;
     PAHCI_MEMORY_REGISTERS abar;
+    ULONG mappedLength, portNumber, ticks;
     PAHCI_ADAPTER_EXTENSION adapterExtension;
     STOR_PHYSICAL_ADDRESS commandListPhysical, receivedFISPhysical;
 
@@ -76,7 +76,22 @@ AhciPortInitialize (
     cmd.Status = StorPortReadRegisterUlong(adapterExtension, &PortExtension->Port->CMD);
     if ((cmd.FR != 0) || (cmd.CR != 0) || (cmd.FRE != 0) || (cmd.ST != 0))
     {
-        AhciDebugPrint("\tPort is not idle: %x\n", cmd);
+        cmd.ST = 0;
+        cmd.FRE = 0;
+
+        ticks = 3;
+        do
+        {
+            StorPortStallExecution(50000);
+            cmd.Status = StorPortReadRegisterUlong(adapterExtension, &PortExtension->Port->CMD);
+            if (ticks == 0)
+            {
+                AhciDebugPrint("\tAttempt to reset port failed: %x\n", cmd);
+                return FALSE;
+            }
+            ticks--;
+        }
+        while(cmd.CR != 0 || cmd.FR != 0);
     }
 
     // 10.1.2 For each implemented port, system software shall allocate memory for and program:
@@ -1644,6 +1659,15 @@ InquiryCompletion (
 
         PortExtension->DeviceParams.BytesPerPhysicalSector = DEVICE_ATA_BLOCK_SIZE;
 
+        // last byte should be NULL
+        StorPortCopyMemory(PortExtension->DeviceParams.VendorId, IdentifyDeviceData->ModelNumber, sizeof(PortExtension->DeviceParams.VendorId) - 1);
+        StorPortCopyMemory(PortExtension->DeviceParams.RevisionID, IdentifyDeviceData->FirmwareRevision, sizeof(PortExtension->DeviceParams.RevisionID) - 1);
+        StorPortCopyMemory(PortExtension->DeviceParams.SerialNumber, IdentifyDeviceData->SerialNumber, sizeof(PortExtension->DeviceParams.SerialNumber) - 1);
+
+        PortExtension->DeviceParams.VendorId[sizeof(PortExtension->DeviceParams.VendorId) - 1] = '\0';
+        PortExtension->DeviceParams.RevisionID[sizeof(PortExtension->DeviceParams.RevisionID) - 1] = '\0';
+        PortExtension->DeviceParams.SerialNumber[sizeof(PortExtension->DeviceParams.SerialNumber) - 1] = '\0';
+
         // TODO: Add other device params
         AhciDebugPrint("\tATA Device\n");
     }
@@ -1658,6 +1682,7 @@ InquiryCompletion (
     if (Srb->DataTransferLength < INQUIRYDATABUFFERSIZE)
     {
         AhciDebugPrint("\tDataBufferLength < sizeof(INQUIRYDATA), Could crash the driver.\n");
+        NT_ASSERT(FALSE);
     }
 
     // update data transfer length
@@ -1674,10 +1699,14 @@ InquiryCompletion (
     InquiryData->DeviceType = PortExtension->DeviceParams.AccessType;
     InquiryData->RemovableMedia = PortExtension->DeviceParams.RemovableDevice;
 
-    // TODO: Fill VendorID, Product Revision Level and other string fields
-    InquiryData->VendorId[0] = '2';
-    InquiryData->ProductId[0] = '3';
-    InquiryData->ProductRevisionLevel[0] = '4';
+    // Fill VendorID, Product Revision Level and other string fields
+    StorPortCopyMemory(InquiryData->VendorId, PortExtension->DeviceParams.VendorId, sizeof(InquiryData->VendorId) - 1);
+    StorPortCopyMemory(InquiryData->ProductId, PortExtension->DeviceParams.RevisionID, sizeof(PortExtension->DeviceParams.RevisionID));
+    StorPortCopyMemory(InquiryData->ProductRevisionLevel, PortExtension->DeviceParams.SerialNumber, sizeof(InquiryData->ProductRevisionLevel) - 1);
+
+    InquiryData->VendorId[sizeof(InquiryData->VendorId) - 1] = '\0';
+    InquiryData->ProductId[sizeof(InquiryData->ProductId) - 1] = '\0';
+    InquiryData->ProductRevisionLevel[sizeof(InquiryData->ProductRevisionLevel) - 1] = '\0';
 
     // send queue depth
     status = StorPortSetDeviceQueueDepth(PortExtension->AdapterExtension,
