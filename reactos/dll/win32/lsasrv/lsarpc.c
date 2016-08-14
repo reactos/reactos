@@ -2285,8 +2285,274 @@ NTSTATUS WINAPI LsarEnumerateAccountsWithUserRight(
     PRPC_UNICODE_STRING UserRight,
     PLSAPR_ACCOUNT_ENUM_BUFFER EnumerationBuffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT PolicyObject;
+    ACCESS_MASK AccountRight = 0;
+    PLUID Luid = NULL;
+    ULONG AccountKeyBufferSize;
+    PWSTR AccountKeyBuffer = NULL;
+    HKEY AccountsKeyHandle = NULL;
+    HKEY AccountKeyHandle = NULL;
+    HKEY AttributeKeyHandle;
+    ACCESS_MASK SystemAccess;
+    PPRIVILEGE_SET PrivilegeSet;
+    PLSAPR_ACCOUNT_INFORMATION EnumBuffer = NULL, ReturnBuffer;
+    ULONG SubKeyCount = 0;
+    ULONG EnumIndex, EnumCount;
+    ULONG Size, i;
+    BOOL Found;
+    NTSTATUS Status;
+
+    TRACE("LsarEnumerateAccountsWithUserRights(%p %wZ %p)\n",
+          PolicyHandle, UserRight, EnumerationBuffer);
+
+    /* Validate the privilege and account right names */
+    if (UserRight != NULL)
+    {
+        Luid = LsarpLookupPrivilegeValue(UserRight);
+        if (Luid == NULL)
+        {
+            AccountRight = LsapLookupAccountRightValue(UserRight);
+            if (AccountRight == 0)
+                return STATUS_NO_SUCH_PRIVILEGE;
+        }
+    }
+
+    if (EnumerationBuffer == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    EnumerationBuffer->EntriesRead = 0;
+    EnumerationBuffer->Information = NULL;
+
+    /* Validate the PolicyHandle */
+    Status = LsapValidateDbObject(PolicyHandle,
+                                  LsaDbPolicyObject,
+                                  POLICY_LOOKUP_NAMES | POLICY_VIEW_LOCAL_INFORMATION,
+                                  &PolicyObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    Status = LsapRegOpenKey(PolicyObject->KeyHandle,
+                            L"Accounts",
+                            KEY_READ,
+                            &AccountsKeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapRegOpenKey returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    Status = LsapRegQueryKeyInfo(AccountsKeyHandle,
+                                 &SubKeyCount,
+                                 &AccountKeyBufferSize,
+                                 NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapRegOpenKey returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    AccountKeyBufferSize += sizeof(WCHAR);
+    AccountKeyBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, AccountKeyBufferSize);
+    if (AccountKeyBuffer == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    EnumBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 SubKeyCount * sizeof(LSAPR_ACCOUNT_INFORMATION));
+    if (EnumBuffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    EnumCount = 0;
+    EnumIndex = 0;
+    while (TRUE)
+    {
+        Found = FALSE;
+
+        Status = LsapRegEnumerateSubKey(AccountsKeyHandle,
+                                        EnumIndex,
+                                        AccountKeyBufferSize,
+                                        AccountKeyBuffer);
+        if (!NT_SUCCESS(Status))
+        {
+            if (Status == STATUS_NO_MORE_ENTRIES)
+                Status = STATUS_SUCCESS;
+            break;
+        }
+
+        TRACE("EnumIndex: %lu\n", EnumIndex);
+        TRACE("Account key name: %S\n", AccountKeyBuffer);
+
+        Status = LsapRegOpenKey(AccountsKeyHandle,
+                                AccountKeyBuffer,
+                                KEY_READ,
+                                &AccountKeyHandle);
+        if (NT_SUCCESS(Status))
+        {
+            if (Luid != NULL || AccountRight != 0)
+            {
+                Status = LsapRegOpenKey(AccountKeyHandle,
+                                        (Luid != NULL) ? L"Privilgs" : L"ActSysAc",
+                                        KEY_READ,
+                                        &AttributeKeyHandle);
+                if (NT_SUCCESS(Status))
+                {
+                    if (Luid != NULL)
+                    {
+                        Size = 0;
+                        LsapRegQueryValue(AttributeKeyHandle,
+                                          NULL,
+                                          NULL,
+                                          NULL,
+                                          &Size);
+                        if (Size != 0)
+                        {
+                            PrivilegeSet = RtlAllocateHeap(RtlGetProcessHeap(), 0, Size);
+                            if (PrivilegeSet)
+                            {
+                                if (LsapRegQueryValue(AttributeKeyHandle,
+                                                      NULL,
+                                                      NULL,
+                                                      PrivilegeSet,
+                                                      &Size) == STATUS_SUCCESS)
+                                {
+                                    for (i = 0; i < PrivilegeSet->PrivilegeCount; i++)
+                                    {
+                                        if (RtlEqualLuid(&(PrivilegeSet->Privilege[i].Luid), Luid))
+                                        {
+                                            TRACE("%S got the privilege!\n", AccountKeyBuffer);
+                                            Found = TRUE;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                RtlFreeHeap(RtlGetProcessHeap(), 0, PrivilegeSet);
+                            }
+                        }
+                    }
+                    else if (AccountRight != 0)
+                    {
+                        SystemAccess = 0;
+                        Size = sizeof(ACCESS_MASK);
+                        LsapRegQueryValue(AttributeKeyHandle,
+                                          NULL,
+                                          NULL,
+                                          &SystemAccess,
+                                          &Size);
+                        if (SystemAccess & AccountRight)
+                        {
+                            TRACE("%S got the account right!\n", AccountKeyBuffer);
+                            Found = TRUE;
+                        }
+                    }
+
+                    LsapRegCloseKey(AttributeKeyHandle);
+                }
+            }
+            else
+            {
+                /* enumerate all accounts */
+                Found = TRUE;
+            }
+
+            if (Found == TRUE)
+            {
+                TRACE("Add account: %S\n", AccountKeyBuffer);
+
+                Status = LsapRegOpenKey(AccountKeyHandle,
+                                        L"Sid",
+                                        KEY_READ,
+                                        &AttributeKeyHandle);
+                if (NT_SUCCESS(Status))
+                {
+                    Size = 0;
+                    LsapRegQueryValue(AttributeKeyHandle,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      &Size);
+                    if (Size != 0)
+                    {
+                        EnumBuffer[EnumCount].Sid = midl_user_allocate(Size);
+                        if (EnumBuffer[EnumCount].Sid != NULL)
+                        {
+                            Status = LsapRegQueryValue(AttributeKeyHandle,
+                                                       NULL,
+                                                       NULL,
+                                                       EnumBuffer[EnumCount].Sid,
+                                                       &Size);
+                            if (NT_SUCCESS(Status))
+                            {
+                                EnumCount++;
+                            }
+                            else
+                            {
+                                TRACE("SampRegQueryValue returned %08lX\n", Status);
+                                midl_user_free(EnumBuffer[EnumCount].Sid);
+                                EnumBuffer[EnumCount].Sid = NULL;
+                            }
+                        }
+                    }
+
+                    LsapRegCloseKey(AttributeKeyHandle);
+                }
+            }
+
+            LsapRegCloseKey(AccountKeyHandle);
+        }
+
+        EnumIndex++;
+    }
+
+    TRACE("EnumCount: %lu\n", EnumCount);
+
+    if (NT_SUCCESS(Status) && EnumCount != 0)
+    {
+        ReturnBuffer = midl_user_allocate(EnumCount * sizeof(LSAPR_ACCOUNT_INFORMATION));
+        if (ReturnBuffer == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        RtlCopyMemory(ReturnBuffer,
+                      EnumBuffer,
+                      EnumCount * sizeof(LSAPR_ACCOUNT_INFORMATION));
+
+        EnumerationBuffer->EntriesRead = EnumCount;
+        EnumerationBuffer->Information = ReturnBuffer;
+    }
+
+done:
+    if (EnumBuffer != NULL)
+    {
+        if (Status != STATUS_SUCCESS)
+        {
+            for (i = 0; i < EnumCount; i++)
+            {
+                if (EnumBuffer[i].Sid != NULL)
+                    midl_user_free(EnumBuffer[i].Sid);
+            }
+        }
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, EnumBuffer);
+    }
+
+    if (AccountKeyBuffer != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AccountKeyBuffer);
+
+    if (Status == STATUS_SUCCESS && EnumCount == 0)
+        Status = STATUS_NO_MORE_ENTRIES;
+
+    return Status;
 }
 
 
