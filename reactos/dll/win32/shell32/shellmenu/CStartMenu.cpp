@@ -472,6 +472,7 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    /* psf is a merged folder, so now we want to get the pidl of the programs item from the merged folder */
     {
         hr = SHGetSpecialFolderLocation(NULL, CSIDL_PROGRAMS, &pidlProgramsAbsolute);
         if (FAILED(hr))
@@ -491,13 +492,14 @@ CStartMenu_Constructor(REFIID riid, void **ppv)
         if (FAILED(hr))
             return hr;
 
-        hr = psfParent->GetDisplayNameOf(pcidlPrograms, SHGDN_NORMAL, &str);
+        hr = psfParent->GetDisplayNameOf(pcidlPrograms, SHGDN_FORPARSING | SHGDN_INFOLDER, &str);
         if (FAILED(hr))
             return hr;
 
         StrRetToBuf(&str, pcidlPrograms, szDisplayName, _countof(szDisplayName));
         ILFree(pidlProgramsAbsolute);
 
+        /* We got the display name from the fs folder and we parse it with the merged folder here */
         hr = psf->ParseDisplayName(NULL, NULL, szDisplayName, NULL, &pidlPrograms, NULL);
         if (FAILED(hr))
             return hr;
