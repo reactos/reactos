@@ -36,6 +36,16 @@ LsaIFree_LSAPR_ACCOUNT_ENUM_BUFFER(
 
 VOID
 NTAPI
+LsaIFree_LSAPR_CR_CIPHER_VALUE(
+    IN PLSAPR_CR_CIPHER_VALUE Ptr)
+{
+    if (Ptr != NULL)
+        midl_user_free(Ptr);
+}
+
+
+VOID
+NTAPI
 LsaIFree_LSAPR_POLICY_INFORMATION(IN POLICY_INFORMATION_CLASS InformationClass,
                                   IN PLSAPR_POLICY_INFORMATION PolicyInformation)
 {
@@ -143,10 +153,61 @@ LsaIFree_LSAPR_POLICY_INFORMATION(IN POLICY_INFORMATION_CLASS InformationClass,
 
 VOID
 NTAPI
+LsaIFree_LSAPR_PRIVILEGE_ENUM_BUFFER(
+    IN PLSAPR_PRIVILEGE_ENUM_BUFFER Ptr)
+{
+    ULONG i;
+
+    if (Ptr != NULL)
+    {
+        if (Ptr->Privileges != NULL)
+        {
+            for (i = 0; i < Ptr->Entries; i++)
+            {
+                if (Ptr->Privileges[i].Name.Buffer != NULL)
+                    midl_user_free(Ptr->Privileges[i].Name.Buffer);
+            }
+
+            midl_user_free(Ptr->Privileges);
+        }
+    }
+}
+
+
+VOID
+NTAPI
 LsaIFree_LSAPR_PRIVILEGE_SET(IN PLSAPR_PRIVILEGE_SET Ptr)
 {
     if (Ptr != NULL)
     {
+        midl_user_free(Ptr);
+    }
+}
+
+
+VOID
+NTAPI
+LsaIFree_LSAPR_REFERENCED_DOMAIN_LIST(
+    IN PLSAPR_REFERENCED_DOMAIN_LIST Ptr)
+{
+    ULONG i;
+
+    if (Ptr != NULL)
+    {
+        if (Ptr->Domains != NULL)
+        {
+            for (i = 0; i < Ptr->Entries; i++)
+            {
+                if (Ptr->Domains[i].Name.Buffer != NULL)
+                     midl_user_free(Ptr->Domains[i].Name.Buffer);
+
+                if (Ptr->Domains[i].Sid != NULL)
+                    midl_user_free(Ptr->Domains[i].Sid);
+            }
+
+            midl_user_free(Ptr->Domains);
+        }
+
         midl_user_free(Ptr);
     }
 }
