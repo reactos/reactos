@@ -8,7 +8,6 @@ Category = 5
 URLSite = http://www.bittorrent.com/
 URLDownload = http://download-new.utorrent.com/endpoint/bittorrent/os/windows/track/stable/BitTorrent.exe
 CDPath = none
-SHA1 = 57604231fc875cebd9dfdb06ba41f2e6611ffa32
 
 [Section.0407]
 License = Freeware für nichtkommerzielle Nutzung
