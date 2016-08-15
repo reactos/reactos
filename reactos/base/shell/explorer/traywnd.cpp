@@ -64,16 +64,15 @@ static const WCHAR szTrayWndClass[] = L"Shell_TrayWnd";
 const GUID IID_IShellDesktopTray = { 0x213e2df9, 0x9a14, 0x4328, { 0x99, 0xb1, 0x69, 0x61, 0xf9, 0x14, 0x3c, 0xe9 } };
 
 class CStartButton
-    : public CContainedWindow
+    : public CWindow
 {
     HIMAGELIST m_ImageList;
     SIZE       m_Size;
     HFONT      m_Font;
 
 public:
-    CStartButton(CMessageMap *pObject, DWORD dwMsgMapID)
-        : CContainedWindow(pObject, dwMsgMapID),
-          m_ImageList(NULL),
+    CStartButton()
+        : m_ImageList(NULL),
           m_Font(NULL)
     {
         m_Size.cx = 0;
@@ -311,7 +310,7 @@ Cleanup:
             }
         }
 
-        SendMessage(WM_SETFONT, (WPARAM) m_Font, FALSE);
+        SetFont(m_Font, FALSE);
 
         if (CreateImageList())
         {
@@ -350,6 +349,36 @@ Cleanup:
             if (hbmOld != NULL)
                 DeleteObject(hbmOld);
         }
+    }
+
+    HWND Create(HWND hwndParent)
+    {
+        WCHAR szStartCaption[32];
+        if (!LoadStringW(hExplorerInstance,
+                         IDS_START,
+                         szStartCaption,
+                         _countof(szStartCaption)))
+        {
+            szStartCaption[0] = L'\0';
+        }
+
+        DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | BS_PUSHBUTTON | BS_CENTER | BS_VCENTER | BS_BITMAP;
+
+        m_hWnd = CreateWindowEx(
+            0,
+            WC_BUTTON,
+            szStartCaption,
+            dwStyle,
+            0, 0, 0, 0,
+            hwndParent,
+            (HMENU) IDC_STARTBTN,
+            hExplorerInstance,
+            NULL);
+
+        if (m_hWnd)
+            Initialize();
+
+        return m_hWnd;
     }
 };
 
@@ -418,7 +447,7 @@ public:
 
 public:
     CTrayWindow() :
-        m_StartButton(this, 1),
+        m_StartButton(),
         m_Theme(NULL),
         m_CaptionFont(NULL),
         m_Font(NULL),
@@ -1457,22 +1486,11 @@ ChangePos:
 
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        WCHAR szStartCaption[32];
-
         ((ITrayWindow*)this)->AddRef();
 
         SetWindowTheme(m_hWnd, L"TaskBar", NULL);
-        OnThemeChanged();
 
         InterlockedIncrement(&TrayWndCount);
-
-        if (!LoadStringW(hExplorerInstance,
-                         IDS_START,
-                         szStartCaption,
-                         _countof(szStartCaption)))
-        {
-            szStartCaption[0] = L'\0';
-        }
 
         if (m_CaptionFont == NULL)
         {
@@ -1490,27 +1508,9 @@ ChangePos:
                 }
             }
         }
-        
-        /* Create the Start button */
-        m_StartButton.SubclassWindow(CreateWindowEx(
-            0,
-            WC_BUTTON,
-            szStartCaption,
-            WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
-            BS_PUSHBUTTON | BS_CENTER | BS_VCENTER | BS_BITMAP,
-            0,
-            0,
-            0,
-            0,
-            m_hWnd,
-            (HMENU) IDC_STARTBTN,
-            hExplorerInstance,
-            NULL));
 
-        if (m_StartButton.m_hWnd)
-        {
-            m_StartButton.Initialize();
-        }
+        /* Create the Start button */
+        m_StartButton.Create(m_hWnd);
 
         /* Load the saved tray window settings */
         RegLoadSettings();
@@ -1520,11 +1520,6 @@ ChangePos:
         m_StartMenuPopup = CreateStartMenu(this, &m_StartMenuBand, hbmBanner, 0);
 
         /* Load the tray band site */
-        if (m_TrayBandSite != NULL)
-        {
-            m_TrayBandSite.Release();
-        }
-
         m_TrayBandSite = CreateTrayBandSite(this, &m_Rebar, &m_TaskSwitch);
         SetWindowTheme(m_Rebar, L"TaskBar", NULL);
 
@@ -2305,6 +2300,36 @@ ChangePos:
 
         if (!Locked)
         {
+            /* Get the rect of the rebar */
+            RECT rebarRect, taskbarRect;
+            ::GetWindowRect(m_Rebar, &rebarRect);
+            ::GetWindowRect(m_hWnd, &taskbarRect);
+            OffsetRect(&rebarRect, -taskbarRect.left, -taskbarRect.top);
+
+            /* Calculate the difference of size of the taskbar and the rebar */
+            SIZE margins;
+            margins.cx = taskbarRect.right - taskbarRect.left - rebarRect.right + rebarRect.left;
+            margins.cy = taskbarRect.bottom - taskbarRect.top - rebarRect.bottom + rebarRect.top;
+
+            /* Calculate the new size of the rebar and make it resize, then change the new taskbar size */
+            switch (m_Position)
+            {
+            case ABE_TOP:
+                rebarRect.bottom = rebarRect.top + pRect->bottom - pRect->top - margins.cy;
+                ::SendMessageW(m_Rebar, RB_SIZETORECT, RBSTR_CHANGERECT,  (LPARAM)&rebarRect);
+                pRect->bottom = pRect->top + rebarRect.bottom - rebarRect.top + margins.cy;
+                break;
+            case ABE_BOTTOM:
+                rebarRect.top = rebarRect.bottom - (pRect->bottom - pRect->top - margins.cy);
+                ::SendMessageW(m_Rebar, RB_SIZETORECT, RBSTR_CHANGERECT,  (LPARAM)&rebarRect);
+                pRect->top = pRect->bottom - (rebarRect.bottom - rebarRect.top + margins.cy);
+                break;
+            case ABE_LEFT:
+            case ABE_RIGHT:
+                /* FIXME: what to do here? */
+                break;
+            }
+
             CalculateValidSize(m_Position, pRect);
         }
         else
