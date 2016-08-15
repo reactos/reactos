@@ -4738,7 +4738,7 @@ UINT FASTCALL IntGetMenuState( HMENU hMenu, UINT uId, UINT uFlags)
 
    if (pItem->spSubMenu)
    {
-      return (pItem->spSubMenu->cItems << 8) | ((pItem->fState|pItem->fType) & 0xff);
+      return (pItem->spSubMenu->cItems << 8) | ((pItem->fState|pItem->fType|MF_POPUP) & 0xff);
    }
    else
       return (pItem->fType | pItem->fState);
