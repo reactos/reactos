@@ -211,22 +211,11 @@ TcpIpCreate(
     _Inout_  struct _IRP *Irp
 )
 {
-#ifndef NDEBUG
-    KIRQL OldIrql;
-    INT i;
-#endif
     NTSTATUS Status;
     PFILE_FULL_EA_INFORMATION FileInfo;
     IPPROTO Protocol;
-//  ADDRESS_FILE *AddressFile;
-
-//  ULONG *temp;
 
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
-
-#ifndef NDEBUG
-    ADD_IRP(Irp);
-#endif
     
     /* Grab the info describing the file */
     FileInfo = Irp->AssociatedIrp.SystemBuffer;
@@ -276,21 +265,11 @@ TcpIpCreate(
                 goto Quickie;
             }
 
-            /* All good. */
-/*          temp = (ULONG*)Address;
-            DPRINT1("\nPTA_IP_ADDRESS dump before\n %08x %08x %08x %08x\n %08x %08x %08x %08x\n",
-                temp[7], temp[6], temp[5], temp[4],
-                temp[3], temp[2], temp[1], temp[0]);*/
-            // DPRINT1("Call into TcpIpCreateAddress\n");
             Status = TcpIpCreateAddress(Irp, &Address->Address[0].Address[0], Protocol);
-            // DPRINT1("Returned from TcpIpCreateAddress\n");
             if (Status != STATUS_SUCCESS)
             {
                 goto Quickie;
             }
-/*          DPRINT1("\nPTA_IP_ADDRESS dump after\n %08x %08x %08x %08x\n %08x %08x %08x %08x\n",
-                temp[7], temp[6], temp[5], temp[4],
-                temp[3], temp[2], temp[1], temp[0]);*/
             break;
         }
         case TDI_CONNECTION_CONTEXT_LENGTH:
@@ -315,19 +294,7 @@ TcpIpCreate(
                 goto Quickie;
             }
 
-/*          temp = (ULONG*)Protocol;
-            DPRINT1("\n Protocol: %08x\n", temp);
-
-            temp = (ULONG*)Address;*/
-
-            /* All good. */
-/*          DPRINT1("\n PTA_IP_ADDRESS dump before\n  %08x %08x %08x %08x\n  %08x %08x %08x %08x\n",
-                temp[7], temp[6], temp[5], temp[4],
-                temp[3], temp[2], temp[1], temp[0]);*/
             Status = TcpIpCreateContext(Irp, &Address->Address[0].Address[0], Protocol);
-/*          DPRINT1("\n PTA_IP_ADDRESS dump after\n  %08x %08x %08x %08x\n  %08x %08x %08x %08x\n",
-                temp[7], temp[6], temp[5], temp[4],
-                temp[3], temp[2], temp[1], temp[0]);*/
             break;
         }
 
@@ -345,9 +312,6 @@ Quickie:
     else
     {
         IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-#ifndef NDEBUG
-        REMOVE_IRP(Irp);
-#endif
     }
 
     return Status;
@@ -361,19 +325,11 @@ TcpIpClose(
     _Inout_  struct _IRP *Irp
 )
 {
-#ifndef NDEBUG
-    KIRQL OldIrql;
-    INT i;
-#endif
     PIO_STACK_LOCATION IrpSp;
     NTSTATUS Status;
     ULONG_PTR FileType;
 
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
-
-#ifndef NDEBUG
-    ADD_IRP(Irp);
-#endif
 
     FileType = (ULONG_PTR)IrpSp->FileObject->FsContext2;
 
@@ -390,14 +346,13 @@ TcpIpClose(
             Status = TcpIpCloseAddress(IrpSp->FileObject->FsContext);
             break;
         case TDI_CONNECTION_FILE:
-            DPRINT1("TCPIP Close Connection File\n");
             if (!IrpSp->FileObject->FsContext)
             {
                 DPRINT1("TCPIP: Got a close request without a file to close!\n");
                 Status = STATUS_INVALID_PARAMETER;
                 goto Quickie;
             }
-            DPRINT1("TCPIP Close Connection Context\n");
+            DPRINT1("TCPIP Close Connection Context %p\n", IrpSp->FileObject->FsContext);
             Status = TcpIpCloseContext(IrpSp->FileObject->FsContext);
             break;
         case TDI_CONTROL_CHANNEL_FILE:
@@ -414,9 +369,6 @@ Quickie:
     Irp->IoStatus.Status = Status;
 
     IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-#ifndef NDEBUG
-    REMOVE_IRP(Irp);
-#endif
 
     return Status;
 }
@@ -429,22 +381,13 @@ TcpIpDispatchInternal(
     _Inout_  struct _IRP *Irp
 )
 {
-#ifndef NDEBUG
-    KIRQL OldIrql;
-    INT i;
-#endif
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp;
     PTCP_CONTEXT Context;
     PADDRESS_FILE AddressFile;
 
-    DPRINT1("TcpIpDispatchInternal\n");
-
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
-
-#ifndef NDEBUG
-    ADD_IRP(Irp);
-#endif
+    DPRINT("TcpIpDispatchInternal on TDI object %p\n", IrpSp->FileObject->FsContext);
 
     switch ((ULONG)IrpSp->FileObject->FsContext2)
     {
@@ -577,9 +520,6 @@ TcpIpDispatchInternal(
     else
     {
         IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-#ifndef NDEBUG
-        REMOVE_IRP(Irp);
-#endif
     }
 
     return Status;
@@ -595,12 +535,6 @@ TcpIpDispatch(
 {
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp;
-
-#ifndef NDEBUG
-    INT i;
-    KIRQL OldIrql;
-    ADD_IRP(Irp);
-#endif
     
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
@@ -642,9 +576,6 @@ TcpIpDispatch(
     else
     {
         IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
-#ifndef NDEBUG
-        REMOVE_IRP(Irp);
-#endif
     }
 
     return Status;

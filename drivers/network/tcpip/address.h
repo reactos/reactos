@@ -10,72 +10,21 @@
 #define TCP_REQUEST_PENDING_LISTEN              4
 #define TCP_REQUEST_PENDING_ACCEPTED_CONNECTION 5
 
-#define TCP_REQUEST_PAYLOAD_IRP  1
-#define TCP_REQUEST_PAYLOAD_PCB  2
+#define TCP_REQUEST_PAYLOAD_IRP 1
+#define TCP_REQUEST_PAYLOAD_PCB 2
 
 // TODO: simplify states
-#define TCP_STATE_CREATED       0x1 << 0
-#define TCP_STATE_BOUND         0x1 << 1
-#define TCP_STATE_LISTENING     0x1 << 2
-#define TCP_STATE_RECEIVING     0x1 << 3
-#define TCP_STATE_ABORTED       0x1 << 4
-#define TCP_STATE_CONNECTING    0x1 << 5
-#define TCP_STATE_CONNECTED     0x1 << 6
-#define TCP_STATE_SENDING       0x1 << 7
-#define TCP_STATE_CLOSED        0x1 << 8
+#define TCP_STATE_CREATED     0x1 << 0
+#define TCP_STATE_BOUND       0x1 << 1
+#define TCP_STATE_LISTENING   0x1 << 2
+#define TCP_STATE_RECEIVING   0x1 << 3
+#define TCP_STATE_ABORTED     0x1 << 4
+#define TCP_STATE_CONNECTING  0x1 << 5
+#define TCP_STATE_CONNECTED   0x1 << 6
+#define TCP_STATE_SENDING     0x1 << 7
+#define TCP_STATE_CLOSED      0x1 << 8
 
 //#define TCPIP_NDEBUG
-#ifndef TCPIP_NDEBUG
-KSPIN_LOCK IRPArrayLock;
-PIRP IRPArray[256];
-volatile long int IRPCount;
-
-#define ADD_IRP(Irp) \
-    KeAcquireSpinLock(&IRPArrayLock, &OldIrql); \
-    IRPArray[IRPCount] = Irp; \
-    IRPCount++; \
-    KeReleaseSpinLock(&IRPArrayLock, OldIrql)
-
-#define ADD_IRP_DPC(Irp) \
-    KeAcquireSpinLockAtDpcLevel(&IRPArrayLock); \
-    IRPArray[IRPCount] = Irp; \
-    IRPCount++; \
-    KeReleaseSpinLockFromDpcLevel(&IRPArrayLock)
-
-#define REMOVE_IRP(Irp) \
-    KeAcquireSpinLock(&IRPArrayLock, &OldIrql); \
-    for (i = 0; i < IRPCount; i++) \
-    { \
-        if (Irp == IRPArray[i]) \
-        { \
-            IRPArray[i] = NULL; \
-        } \
-        if (IRPArray[i] == NULL) \
-        { \
-            IRPArray[i] = IRPArray[i+1]; \
-            IRPArray[i+1] = NULL; \
-        } \
-    } \
-    IRPCount--; \
-    KeReleaseSpinLock(&IRPArrayLock, OldIrql)
-
-#define REMOVE_IRP_DPC(Irp) \
-    KeAcquireSpinLockAtDpcLevel(&IRPArrayLock); \
-    for (i = 0; i < IRPCount; i++) \
-    { \
-        if (Irp == IRPArray[i]) \
-        { \
-            IRPArray[i] = NULL; \
-        } \
-        if (IRPArray[i] == NULL) \
-        { \
-            IRPArray[i] = IRPArray[i+1]; \
-            IRPArray[i+1] = NULL; \
-        } \
-    } \
-    IRPCount--; \
-    KeReleaseSpinLockFromDpcLevel(&IRPArrayLock)
-#endif
 
 #define _IoCompleteRequest(Irp,Mode) \
     DPRINT("Complete IRP %p with IO Status %08X\n", Irp, Irp->IoStatus.Status); \
