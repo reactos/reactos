@@ -148,13 +148,73 @@ LayoutList_Create(VOID)
                     dwSize = sizeof(szBuffer);
 
                     if (RegQueryValueExW(hLayoutKey,
-                                         L"Layout Text",
+                                         L"Layout Display Name",
                                          NULL, NULL,
-                                         (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS)
+                                         (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS &&
+                        szBuffer[0] == L'@')
                     {
-                        DWORD dwLayoutId = DWORDfromString(szLayoutId);
+                        WCHAR szPath[MAX_PATH];
+                        WCHAR *pBuffer;
+                        WCHAR *pIndex;
+                        INT iIndex;
 
-                        LayoutList_AppendNode(dwLayoutId, dwSpecialId, szBuffer);
+                        /* Move to the position after the character "@" */
+                        pBuffer = szBuffer + 1;
+
+                        /* Get a pointer to the beginning ",-" */
+                        pIndex = wcsstr(pBuffer, L",-");
+
+                        /* Convert the number in the string after the ",-" */
+                        iIndex = _wtoi(pIndex + 2);
+
+                        pIndex[0] = 0;
+
+                        if (ExpandEnvironmentStringsW(pBuffer, szPath, ARRAYSIZE(szPath)) != 0)
+                        {
+                            HANDLE hHandle;
+
+                            hHandle = LoadLibraryW(szPath);
+                            if (hHandle != NULL)
+                            {
+                                INT iLength = LoadStringW(hHandle, iIndex, szBuffer, ARRAYSIZE(szBuffer));
+
+                                FreeLibrary(hHandle);
+
+                                if (iLength != 0)
+                                {
+                                    DWORD dwLayoutId = DWORDfromString(szLayoutId);
+
+                                    LayoutList_AppendNode(dwLayoutId, dwSpecialId, szBuffer);
+                                }
+                                else
+                                {
+                                    goto NotTranslated;
+                                }
+                            }
+                            else
+                            {
+                                goto NotTranslated;
+                            }
+                        }
+                        else
+                        {
+                            goto NotTranslated;
+                        }
+                    }
+                    else
+                    {
+NotTranslated:
+                        dwSize = sizeof(szBuffer);
+
+                        if (RegQueryValueExW(hLayoutKey,
+                                             L"Layout Text",
+                                             NULL, NULL,
+                                             (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS)
+                        {
+                            DWORD dwLayoutId = DWORDfromString(szLayoutId);
+
+                            LayoutList_AppendNode(dwLayoutId, dwSpecialId, szBuffer);
+                        }
                     }
                 }
             }
