@@ -79,6 +79,9 @@ typedef struct _EVENTLOGEOF
     ULONG RecordSizeEnd;
 } EVENTLOGEOF, *PEVENTLOGEOF;
 
+#define EVENTLOGEOF_SIZE_FIXED  (5 * sizeof(ULONG))
+C_ASSERT(EVENTLOGEOF_SIZE_FIXED == FIELD_OFFSET(EVENTLOGEOF, BeginRecord));
+
 typedef struct _EVENT_OFFSET_INFO
 {
     ULONG EventNumber;
@@ -89,6 +92,7 @@ typedef struct _LOGFILE
 {
     HANDLE hFile;
     EVENTLOGHEADER Header;
+    ULONG CurrentSize;  /* Equivalent to the file size, is <= MaxSize and can be extended to MaxSize if needed */
     WCHAR *LogName;
     WCHAR *FileName;
     RTL_RESOURCE Lock;
@@ -122,7 +126,6 @@ typedef struct _LOGHANDLE
 
 
 /* eventlog.c */
-extern HANDLE MyHeap;
 extern PEVENTSOURCE EventLogSource;
 
 VOID PRINT_HEADER(PEVENTLOGHEADER header);
@@ -153,18 +156,20 @@ PLOGFILE LogfListItemByName(LPCWSTR Name);
 
 
 
-DWORD LogfReadEvent(PLOGFILE LogFile,
-                   DWORD Flags,
-                   DWORD * RecordNumber,
-                   DWORD BufSize,
-                   PBYTE Buffer,
-                   DWORD * BytesRead,
-                   DWORD * BytesNeeded,
-                   BOOL Ansi);
+NTSTATUS
+LogfReadEvents(PLOGFILE LogFile,
+               ULONG    Flags,
+               PULONG   RecordNumber,
+               ULONG    BufSize,
+               PBYTE    Buffer,
+               PULONG   BytesRead,
+               PULONG   BytesNeeded,
+               BOOLEAN  Ansi);
 
-BOOL LogfWriteData(PLOGFILE LogFile,
-                   DWORD BufSize,
-                   PBYTE Buffer);
+NTSTATUS
+LogfWriteRecord(PLOGFILE LogFile,
+                ULONG BufSize, // SIZE_T
+                PEVENTLOGRECORD Record);
 
 NTSTATUS
 LogfClearFile(PLOGFILE LogFile,
@@ -175,27 +180,23 @@ LogfBackupFile(PLOGFILE LogFile,
                PUNICODE_STRING BackupFileName);
 
 NTSTATUS
-LogfCreate(PLOGFILE *Logfile,
-           WCHAR * LogName,
+LogfCreate(PLOGFILE* LogFile,
+           PCWSTR    LogName,
            PUNICODE_STRING FileName,
-           ULONG ulMaxSize,
-           ULONG ulRetention,
-           BOOL Permanent,
-           BOOL Backup);
+           ULONG     ulMaxSize,
+           ULONG     ulRetention,
+           BOOLEAN   Permanent,
+           BOOLEAN   Backup);
 
 VOID
 LogfClose(PLOGFILE LogFile,
-          BOOL ForceClose);
+          BOOLEAN  ForceClose);
 
 VOID LogfCloseAll(VOID);
 
-DWORD LogfGetOldestRecord(PLOGFILE LogFile);
-
-DWORD LogfGetCurrentRecord(PLOGFILE LogFile);
-
-PBYTE
+PEVENTLOGRECORD
 LogfAllocAndBuildNewRecord(PULONG lpRecSize,
-                           ULONG dwRecordNumber, // FIXME!
+                           ULONG  Time,
                            USHORT wType,
                            USHORT wCategory,
                            ULONG  dwEventId,
@@ -204,13 +205,13 @@ LogfAllocAndBuildNewRecord(PULONG lpRecSize,
                            ULONG  dwSidLength,
                            PSID   lpUserSid,
                            USHORT wNumStrings,
-                           WCHAR* lpStrings,
+                           PWSTR  lpStrings,
                            ULONG  dwDataSize,
                            PVOID  lpRawData);
 
-static __inline void LogfFreeRecord(LPVOID Rec)
+static __inline void LogfFreeRecord(PEVENTLOGRECORD Record)
 {
-    HeapFree(MyHeap, 0, Rec);
+    HeapFree(GetProcessHeap(), 0, Record);
 }
 
 VOID
@@ -218,7 +219,7 @@ LogfReportEvent(USHORT wType,
                 USHORT wCategory,
                 ULONG  dwEventId,
                 USHORT wNumStrings,
-                WCHAR* lpStrings,
+                PWSTR  lpStrings,
                 ULONG  dwDataSize,
                 PVOID  lpRawData);
 

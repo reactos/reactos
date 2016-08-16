@@ -5,6 +5,7 @@
  * PURPOSE:          Event logging service
  * COPYRIGHT:        Copyright 2002 Eric Kohl
  *                   Copyright 2005 Saveliy Tretiakov
+ *                   Hermes Belusca-Maito
  */
 
 /* INCLUDES *****************************************************************/
@@ -19,7 +20,7 @@
 
 /* GLOBALS ******************************************************************/
 
-static VOID CALLBACK ServiceMain(DWORD, LPWSTR *);
+static VOID CALLBACK ServiceMain(DWORD, LPWSTR*);
 static WCHAR ServiceName[] = L"EventLog";
 static SERVICE_TABLE_ENTRYW ServiceTable[2] =
 {
@@ -30,8 +31,7 @@ static SERVICE_TABLE_ENTRYW ServiceTable[2] =
 SERVICE_STATUS ServiceStatus;
 SERVICE_STATUS_HANDLE ServiceStatusHandle;
 
-BOOL onLiveCD = FALSE;  // On livecd events will go to debug output only
-HANDLE MyHeap = NULL;
+BOOL onLiveCD = FALSE;  // On LiveCD events will go to debug output only
 
 PEVENTSOURCE EventLogSource = NULL;
 
@@ -157,7 +157,8 @@ ReportProductInfoEvent(VOID)
 {
     OSVERSIONINFOW versionInfo;
     WCHAR szBuffer[512];
-    DWORD dwLength;
+    PWSTR str;
+    size_t cchRemain;
     HKEY hKey;
     DWORD dwValueLength;
     DWORD dwType;
@@ -171,21 +172,32 @@ ReportProductInfoEvent(VOID)
         return;
 
     ZeroMemory(szBuffer, sizeof(szBuffer));
+    str = szBuffer;
+    cchRemain = ARRAYSIZE(szBuffer);
 
-    /* Write version into the buffer */
-    dwLength = swprintf(szBuffer,
-                        L"%lu.%lu",
-                        versionInfo.dwMajorVersion,
-                        versionInfo.dwMinorVersion) + 1;
+    /* Write the version number into the buffer */
+    StringCchPrintfExW(str, cchRemain,
+                       &str, &cchRemain, 0,
+                       L"%lu.%lu",
+                       versionInfo.dwMajorVersion,
+                       versionInfo.dwMinorVersion);
+    str++;
+    cchRemain++;
 
-    /* Write build number into the buffer */
-    dwLength += swprintf(&szBuffer[dwLength],
-                         L"%lu",
-                         versionInfo.dwBuildNumber) + 1;
+    /* Write the build number into the buffer */
+    StringCchPrintfExW(str, cchRemain,
+                       &str, &cchRemain, 0,
+                       L"%lu",
+                       versionInfo.dwBuildNumber);
+    str++;
+    cchRemain++;
 
-    /* Write service pack info into the buffer */
-    wcscpy(&szBuffer[dwLength], versionInfo.szCSDVersion);
-    dwLength += wcslen(versionInfo.szCSDVersion) + 1;
+    /* Write the service pack info into the buffer */
+    StringCchCopyExW(str, cchRemain,
+                     versionInfo.szCSDVersion,
+                     &str, &cchRemain, 0);
+    str++;
+    cchRemain++;
 
     /* Read 'CurrentType' from the registry and write it into the buffer */
     lResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
@@ -195,12 +207,12 @@ ReportProductInfoEvent(VOID)
                            &hKey);
     if (lResult == ERROR_SUCCESS)
     {
-        dwValueLength = ARRAYSIZE(szBuffer) - dwLength;
+        dwValueLength = cchRemain;
         lResult = RegQueryValueEx(hKey,
                                   L"CurrentType",
                                   NULL,
                                   &dwType,
-                                  (LPBYTE)&szBuffer[dwLength],
+                                  (LPBYTE)str,
                                   &dwValueLength);
 
         RegCloseKey(hKey);
@@ -219,7 +231,7 @@ ReportProductInfoEvent(VOID)
 
 static VOID CALLBACK
 ServiceMain(DWORD argc,
-            LPWSTR *argv)
+            LPWSTR* argv)
 {
     DWORD dwError;
 
@@ -267,10 +279,10 @@ ServiceMain(DWORD argc,
 
 
 static PLOGFILE
-LoadLogFile(HKEY hKey, WCHAR* LogName)
+LoadLogFile(HKEY hKey, PWSTR LogName)
 {
     DWORD MaxValueLen, ValueLen, Type, ExpandedLen;
-    WCHAR *Buf = NULL, *Expanded = NULL;
+    PWSTR Buf = NULL, Expanded = NULL;
     LONG Result;
     PLOGFILE pLogf = NULL;
     UNICODE_STRING FileName;
@@ -288,7 +300,7 @@ LoadLogFile(HKEY hKey, WCHAR* LogName)
     }
 
     MaxValueLen = ROUND_DOWN(MaxValueLen, sizeof(WCHAR));
-    Buf = HeapAlloc(MyHeap, 0, MaxValueLen);
+    Buf = HeapAlloc(GetProcessHeap(), 0, MaxValueLen);
     if (!Buf)
     {
         DPRINT1("Cannot allocate heap!\n");
@@ -312,11 +324,11 @@ LoadLogFile(HKEY hKey, WCHAR* LogName)
         MaxValueLen = (wcslen(L"%SystemRoot%\\System32\\Config\\") +
                        wcslen(LogName) + wcslen(L".evt") + 1) * sizeof(WCHAR);
 
-        Expanded = HeapReAlloc(MyHeap, 0, Buf, MaxValueLen);
+        Expanded = HeapReAlloc(GetProcessHeap(), 0, Buf, MaxValueLen);
         if (!Expanded)
         {
             DPRINT1("Cannot reallocate heap!\n");
-            HeapFree(MyHeap, 0, Buf);
+            HeapFree(GetProcessHeap(), 0, Buf);
             return NULL;
         }
         Buf = Expanded;
@@ -335,17 +347,17 @@ LoadLogFile(HKEY hKey, WCHAR* LogName)
         if (Result != ERROR_SUCCESS)
         {
             DPRINT1("RegSetValueEx failed: %lu\n", Result);
-            HeapFree(MyHeap, 0, Buf);
+            HeapFree(GetProcessHeap(), 0, Buf);
             return NULL;
         }
     }
 
     ExpandedLen = ExpandEnvironmentStringsW(Buf, NULL, 0);
-    Expanded = HeapAlloc(MyHeap, 0, ExpandedLen * sizeof(WCHAR));
+    Expanded = HeapAlloc(GetProcessHeap(), 0, ExpandedLen * sizeof(WCHAR));
     if (!Expanded)
     {
         DPRINT1("Cannot allocate heap!\n");
-        HeapFree(MyHeap, 0, Buf);
+        HeapFree(GetProcessHeap(), 0, Buf);
         return NULL;
     }
 
@@ -354,8 +366,8 @@ LoadLogFile(HKEY hKey, WCHAR* LogName)
     if (!RtlDosPathNameToNtPathName_U(Expanded, &FileName, NULL, NULL))
     {
         DPRINT1("Cannot convert path!\n");
-        HeapFree(MyHeap, 0, Expanded);
-        HeapFree(MyHeap, 0, Buf);
+        HeapFree(GetProcessHeap(), 0, Expanded);
+        HeapFree(GetProcessHeap(), 0, Buf);
         return NULL;
     }
 
@@ -409,8 +421,8 @@ LoadLogFile(HKEY hKey, WCHAR* LogName)
         DPRINT1("Failed to create %S! (Status %08lx)\n", Expanded, Status);
     }
 
-    HeapFree(MyHeap, 0, Expanded);
-    HeapFree(MyHeap, 0, Buf);
+    HeapFree(GetProcessHeap(), 0, Expanded);
+    HeapFree(GetProcessHeap(), 0, Buf);
     return pLogf;
 }
 
@@ -419,7 +431,7 @@ LoadLogFiles(HKEY eventlogKey)
 {
     LONG Result;
     DWORD MaxLognameLen, LognameLen;
-    WCHAR *Buf = NULL;
+    PWSTR Buf = NULL;
     DWORD dwIndex;
     PLOGFILE pLogFile;
 
@@ -433,7 +445,7 @@ LoadLogFiles(HKEY eventlogKey)
 
     MaxLognameLen++;
 
-    Buf = HeapAlloc(MyHeap, 0, MaxLognameLen * sizeof(WCHAR));
+    Buf = HeapAlloc(GetProcessHeap(), 0, MaxLognameLen * sizeof(WCHAR));
     if (!Buf)
     {
         DPRINT1("Error: cannot allocate heap!\n");
@@ -456,7 +468,7 @@ LoadLogFiles(HKEY eventlogKey)
         if (Result != ERROR_SUCCESS)
         {
             DPRINT1("Failed to open %S key.\n", Buf);
-            HeapFree(MyHeap, 0, Buf);
+            HeapFree(GetProcessHeap(), 0, Buf);
             return FALSE;
         }
 
@@ -477,7 +489,7 @@ LoadLogFiles(HKEY eventlogKey)
         dwIndex++;
     }
 
-    HeapFree(MyHeap, 0, Buf);
+    HeapFree(GetProcessHeap(), 0, Buf);
     return TRUE;
 }
 
@@ -491,15 +503,6 @@ int wmain(int argc, WCHAR* argv[])
 
     LogfListInitialize();
     InitEventSourceList();
-
-    MyHeap = HeapCreate(0, 1024 * 256, 0);
-
-    if (!MyHeap)
-    {
-        DPRINT1("FATAL ERROR, can't create heap.\n");
-        RetCode = 1;
-        goto bye_bye;
-    }
 
     GetWindowsDirectoryW(LogPath, MAX_PATH);
 
@@ -536,9 +539,6 @@ int wmain(int argc, WCHAR* argv[])
 
 bye_bye:
     LogfCloseAll();
-
-    if (MyHeap)
-        HeapDestroy(MyHeap);
 
     return RetCode;
 }
@@ -589,7 +589,7 @@ VOID PRINT_HEADER(PEVENTLOGHEADER header)
 VOID PRINT_RECORD(PEVENTLOGRECORD pRec)
 {
     UINT i;
-    WCHAR *str;
+    PWSTR str;
     LARGE_INTEGER SystemTime;
     TIME_FIELDS Time;
 
@@ -642,23 +642,22 @@ VOID PRINT_RECORD(PEVENTLOGRECORD pRec)
     DPRINT("DataLength = %lu\n", pRec->DataLength);
     DPRINT("DataOffset = %lu\n", pRec->DataOffset);
 
-    DPRINT("SourceName: %S\n", (WCHAR *) ((ULONG_PTR)pRec + sizeof(EVENTLOGRECORD)));
+    DPRINT("SourceName: %S\n", (PWSTR)((ULONG_PTR)pRec + sizeof(EVENTLOGRECORD)));
 
-    i = (lstrlenW((WCHAR *) ((ULONG_PTR)pRec + sizeof(EVENTLOGRECORD))) + 1) *
-        sizeof(WCHAR);
+    i = (wcslen((PWSTR)((ULONG_PTR)pRec + sizeof(EVENTLOGRECORD))) + 1) * sizeof(WCHAR);
 
-    DPRINT("ComputerName: %S\n", (WCHAR *) ((ULONG_PTR)pRec + sizeof(EVENTLOGRECORD) + i));
+    DPRINT("ComputerName: %S\n", (PWSTR)((ULONG_PTR)pRec + sizeof(EVENTLOGRECORD) + i));
 
     if (pRec->StringOffset < pRec->Length && pRec->NumStrings)
     {
         DPRINT("Strings:\n");
-        str = (WCHAR *) ((ULONG_PTR)pRec + pRec->StringOffset);
+        str = (PWSTR)((ULONG_PTR)pRec + pRec->StringOffset);
         for (i = 0; i < pRec->NumStrings; i++)
         {
             DPRINT("[%u] %S\n", i, str);
-            str = str + lstrlenW(str) + 1;
+            str += wcslen(str) + 1;
         }
     }
 
-    DPRINT("Length2 = %lu\n", *(PDWORD) ((ULONG_PTR)pRec + pRec->Length - 4));
+    DPRINT("Length2 = %lu\n", *(PULONG)((ULONG_PTR)pRec + pRec->Length - 4));
 }
