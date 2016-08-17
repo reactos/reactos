@@ -420,6 +420,20 @@ FOUND_REQUEST:
             }
             RELEASE_SERIAL_MUTEX();
             break;
+        case TCP_REQUEST_CANCEL_MODE_SHUTDOWN :
+            Timeout.QuadPart = -1;
+            ACQUIRE_SERIAL_MUTEX(&CurrentContext->Mutex, &Timeout);
+            if (CurrentContext->lwip_tcp_pcb != NULL)
+            {
+                tcp_arg(CurrentContext->lwip_tcp_pcb, NULL);
+                tcp_shutdown(CurrentContext->lwip_tcp_pcb, 1, 1);
+#ifndef NDEBUG
+                REMOVE_PCB(CurrentContext->lwip_tcp_pcb);
+#endif
+                CurrentContext->lwip_tcp_pcb = NULL;
+            }
+            RELEASE_SERIAL_MUTEX();
+            break;
         case TCP_REQUEST_CANCEL_MODE_PRESERVE :
             break;
         default :
@@ -1203,7 +1217,7 @@ TcpIpReceive(
         Irp,
         Context,
         CancelRequestRoutine,
-        TCP_REQUEST_CANCEL_MODE_PRESERVE,
+        TCP_REQUEST_CANCEL_MODE_SHUTDOWN,
         TCP_REQUEST_PENDING_RECEIVE);
     TCP_ADD_STATE(TCP_STATE_RECEIVING, Context);
     ContextMutexRelease(Context);
@@ -2111,6 +2125,9 @@ lwip_tcp_recv_callback(
     /* A null buffer means the connection has been closed */
     if (p == NULL)
     {
+        /* Call tcp_abort() to keep this PCB from lingering in CLOSE_WAIT */
+        tcp_arg(Context->lwip_tcp_pcb, NULL);
+        tcp_abort(Context->lwip_tcp_pcb);
 #ifndef NDEBUG
         DPRINT("Context %p closed by lwIP\n", Context);
         REMOVE_PCB(Context->lwip_tcp_pcb);
@@ -2118,7 +2135,7 @@ lwip_tcp_recv_callback(
         Context->lwip_tcp_pcb = NULL;
         TCP_SET_STATE(TCP_STATE_CLOSED, Context);
         ContextMutexRelease(Context);
-        return ERR_OK;
+        return ERR_ABRT;
     }
     
     /* Sanity check the Context */
