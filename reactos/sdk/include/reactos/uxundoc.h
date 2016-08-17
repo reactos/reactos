@@ -114,7 +114,7 @@ HRESULT WINAPI DrawNCPreview(HDC hDC,
                              PNONCLIENTMETRICSW pncMetrics,
                              COLORREF* lpaRgbValues);
 
-BOOL WINAPI ThemeHooksInstall();
+BOOL WINAPI ThemeHooksInstall(VOID);
 
-BOOL WINAPI ThemeHooksRemove();
+BOOL WINAPI ThemeHooksRemove(VOID);
 
