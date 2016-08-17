@@ -1581,7 +1581,7 @@ TcpIpSendDatagram(
         goto Finish;
     }
 
-    /* Get details about what we should be receiving */
+    /* Get details about what we should be sending */
     RequestInfo = (PTDI_REQUEST_KERNEL_SENDDG)&IrpSp->Parameters;
 
     /* Get the address */
@@ -1772,10 +1772,10 @@ CloseAddress(
     {
         case IPPROTO_ICMP :
         case IPPROTO_RAW :
-            raw_remove(AddressFile->lwip_raw_pcb);
+            //raw_remove(AddressFile->lwip_raw_pcb);
             break;
         case IPPROTO_UDP :
-            udp_remove(AddressFile->lwip_udp_pcb);
+            //udp_remove(AddressFile->lwip_udp_pcb);
             break;
         case IPPROTO_TCP :
             /* Nothing to deallocate for TCP */
