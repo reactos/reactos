@@ -363,6 +363,7 @@ ProtocolBindAdapter(
     ip_addr_set_zero(&IpAddr);
     ip_addr_set_zero(&SubnetMask);
     ip_addr_set_zero(&GatewayAddr);
+    ACQUIRE_SERIAL_MUTEX_NO_TO();
     lwip_error = netifapi_netif_add(
         &Interface->lwip_netif,
         &IpAddr,
@@ -371,6 +372,7 @@ ProtocolBindAdapter(
         Interface,
         lwip_netif_init,
         ethernet_input);
+    RELEASE_SERIAL_MUTEX();
     if (lwip_error != ERR_OK)
     {
         DPRINT1("netifapi_netif_add failed with error %d.\n", lwip_error);
