@@ -244,10 +244,8 @@ static void test_capture(IAudioClient *ac, HANDLE handle, WAVEFORMATEX *wfx)
         ok(hr == S_OK, "Valid IAudioCaptureClient_GetBuffer returns %08x\n", hr);
         ok(frames2 == frames, "GetBuffer after ReleaseBuffer(0) %u/%u\n", frames2, frames);
         ok(pos2 == pos, "Position after ReleaseBuffer(0) %u/%u\n", (UINT)pos2, (UINT)pos);
-        if(qpc2 != qpc)
+        todo_wine_if(qpc2 != qpc)
             /* FIXME: Some drivers fail */
-            todo_wine ok(qpc2 == qpc, "HPC after ReleaseBuffer(0) %u vs. %u\n", (UINT)qpc2, (UINT)qpc);
-        else
             ok(qpc2 == qpc, "HPC after ReleaseBuffer(0) %u vs. %u\n", (UINT)qpc2, (UINT)qpc);
     }
 
@@ -414,7 +412,7 @@ static void test_capture(IAudioClient *ac, HANDLE handle, WAVEFORMATEX *wfx)
         sum += frames;
     }
     else if(hr == AUDCLNT_S_BUFFER_EMPTY){
-        ok(!pad, "resetted GCP %u\n", pad);
+        ok(!pad, "reset GCP %u\n", pad);
         Sleep(180);
     }
 
@@ -590,7 +588,7 @@ static void test_audioclient(void)
     ok(hr == S_OK, "SetEventHandle returns %08x\n", hr);
 
     hr = IAudioClient_Reset(ac);
-    ok(hr == S_OK, "Reset on a resetted stream returns %08x\n", hr);
+    ok(hr == S_OK, "Reset on an already reset stream returns %08x\n", hr);
 
     hr = IAudioClient_Stop(ac);
     ok(hr == S_FALSE, "Stop on a stopped stream returns %08x\n", hr);
@@ -920,7 +918,7 @@ static void test_volume_dependence(void)
     ok(hr == S_OK, "GetService (SimpleAudioVolume) failed: %08x\n", hr);
 
     hr = IAudioClient_GetService(ac, &IID_IChannelAudioVolume, (void**)&cav);
-    ok(hr == S_OK, "GetService (ChannelAudioVolme) failed: %08x\n", hr);
+    ok(hr == S_OK, "GetService (ChannelAudioVolume) failed: %08x\n", hr);
 
     hr = IAudioClient_GetService(ac, &IID_IAudioStreamVolume, (void**)&asv);
     ok(hr == S_OK, "GetService (AudioStreamVolume) failed: %08x\n", hr);
