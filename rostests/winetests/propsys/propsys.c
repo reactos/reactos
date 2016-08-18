@@ -47,6 +47,10 @@ DEFINE_GUID(expect_guid, 0x12345678, 0x1234, 0x1234, 0x12, 0x34, 0x12, 0x34, 0x5
 
 #define GUID_MEMBERS(g) {(g).Data1, (g).Data2, (g).Data3, {(g).Data4[0], (g).Data4[1], (g).Data4[2], (g).Data4[3], (g).Data4[4], (g).Data4[5], (g).Data4[6], (g).Data4[7]}}
 
+static const char topic[] = "wine topic";
+static const WCHAR topicW[] = {'w','i','n','e',' ','t','o','p','i','c',0};
+static const WCHAR emptyW[] = {0};
+
 static int strcmp_wa(LPCWSTR strw, const char *stra)
 {
     CHAR buf[512];
@@ -159,7 +163,6 @@ static void test_PSStringFromPropertyKey(void)
 
 static void test_PSPropertyKeyFromString(void)
 {
-    static const WCHAR emptyW[] = {0};
     static const WCHAR fmtid_clsidW[] = {'S','t','d','F','o','n','t',' ','1',0};
     static const WCHAR fmtid_truncatedW[] = {'{','1','2','3','4','5','6','7','8','-','1','2','3','4','-',
                                              '1','2','3','4','-',0};
@@ -350,7 +353,7 @@ static void test_PSPropertyKeyFromString(void)
     } testcases[] =
     {
         {NULL, NULL, E_POINTER},
-        {NULL, &out, E_POINTER, {GUID_MEMBERS(dummy_guid), 0xdeadbeef}},
+        {NULL, &out, E_POINTER, out_init},
         {emptyW, NULL, E_POINTER},
         {emptyW, &out, E_INVALIDARG, {GUID_MEMBERS(GUID_NULL), 0}},
         {fmtid_clsidW, &out, E_INVALIDARG, {GUID_MEMBERS(GUID_NULL), 0}},
@@ -625,6 +628,28 @@ static void test_PropVariantToGUID(void)
     PropVariantClear(&propvar);
 }
 
+static void test_PropVariantToStringAlloc(void)
+{
+    PROPVARIANT prop;
+    WCHAR *str;
+    HRESULT hres;
+
+    prop.vt = VT_NULL;
+    hres = PropVariantToStringAlloc(&prop, &str);
+    ok(hres == S_OK, "returned %x\n", hres);
+    ok(!lstrcmpW(str, emptyW), "got %s\n", wine_dbgstr_w(str));
+    CoTaskMemFree(str);
+
+    prop.vt = VT_LPSTR;
+    prop.u.pszVal = CoTaskMemAlloc(strlen(topic)+1);
+    strcpy(prop.u.pszVal, topic);
+    hres = PropVariantToStringAlloc(&prop, &str);
+    ok(hres == S_OK, "returned %x\n", hres);
+    ok(!lstrcmpW(str, topicW), "got %s\n", wine_dbgstr_w(str));
+    CoTaskMemFree(str);
+    PropVariantClear(&prop);
+}
+
 static void test_PropVariantCompare(void)
 {
     PROPVARIANT empty, null, emptyarray, i2_0, i2_2, i4_large, i4_largeneg, i4_2, str_2, str_02, str_b;
@@ -875,6 +900,42 @@ static void test_intconversions(void)
     ok(llval == -7, "got wrong value %s\n", debugstr_longlong(llval));
 }
 
+static void test_PropVariantChangeType_LPWSTR(void)
+{
+    PROPVARIANT dest, src;
+    HRESULT hr;
+
+    PropVariantInit(&dest);
+
+    src.vt = VT_NULL;
+    hr = PropVariantChangeType(&dest, &src, 0, VT_LPWSTR);
+    ok(hr == S_OK, "hr=%x\n", hr);
+    ok(dest.vt == VT_LPWSTR, "got %d\n", dest.vt);
+    ok(!lstrcmpW(dest.u.pwszVal, emptyW), "got %s\n", wine_dbgstr_w(dest.u.pwszVal));
+    PropVariantClear(&dest);
+    PropVariantClear(&src);
+
+    src.vt = VT_LPSTR;
+    src.u.pszVal = CoTaskMemAlloc(strlen(topic)+1);
+    strcpy(src.u.pszVal, topic);
+    hr = PropVariantChangeType(&dest, &src, 0, VT_LPWSTR);
+    ok(hr == S_OK, "hr=%x\n", hr);
+    ok(dest.vt == VT_LPWSTR, "got %d\n", dest.vt);
+    ok(!lstrcmpW(dest.u.pwszVal, topicW), "got %s\n", wine_dbgstr_w(dest.u.pwszVal));
+    PropVariantClear(&dest);
+    PropVariantClear(&src);
+
+    src.vt = VT_LPWSTR;
+    src.u.pwszVal = CoTaskMemAlloc( (lstrlenW(topicW)+1) * sizeof(WCHAR));
+    lstrcpyW(src.u.pwszVal, topicW);
+    hr = PropVariantChangeType(&dest, &src, 0, VT_LPWSTR);
+    ok(hr == S_OK, "hr=%x\n", hr);
+    ok(dest.vt == VT_LPWSTR, "got %d\n", dest.vt);
+    ok(!lstrcmpW(dest.u.pwszVal, topicW), "got %s\n", wine_dbgstr_w(dest.u.pwszVal));
+    PropVariantClear(&dest);
+    PropVariantClear(&src);
+}
+
 START_TEST(propsys)
 {
     test_PSStringFromPropertyKey();
@@ -883,6 +944,8 @@ START_TEST(propsys)
     test_InitPropVariantFromGUIDAsString();
     test_InitPropVariantFromBuffer();
     test_PropVariantToGUID();
+    test_PropVariantToStringAlloc();
     test_PropVariantCompare();
     test_intconversions();
+    test_PropVariantChangeType_LPWSTR();
 }
