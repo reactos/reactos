@@ -575,8 +575,7 @@ static HRESULT MPEGSplitter_pre_connect(IPin *iface, IPin *pConnectPin, ALLOCATO
 
             if (FAILED(hr))
             {
-                if (amt.pbFormat)
-                    CoTaskMemFree(amt.pbFormat);
+                CoTaskMemFree(amt.pbFormat);
                 ERR("Could not create pin for MPEG audio stream (%x)\n", hr);
                 break;
             }

@@ -152,7 +152,7 @@ static HRESULT WINAPI AVIDec_Receive(TransformFilter *tf, IMediaSample *pSample)
     if (res != ICERR_OK)
         ERR("Error occurred during the decompression (%x)\n", res);
 
-    /* Drop sample if its intended to be dropped */
+    /* Drop sample if it's intended to be dropped */
     if (flags & ICDECOMPRESS_HURRYUP) {
         hr = S_OK;
         goto error;
@@ -329,11 +329,8 @@ static HRESULT WINAPI AVIDec_BreakConnect(TransformFilter *tf, PIN_DIRECTION dir
     {
         if (This->hvid)
             ICClose(This->hvid);
-        if (This->pBihIn)
-            CoTaskMemFree(This->pBihIn);
-        if (This->pBihOut)
-            CoTaskMemFree(This->pBihOut);
-
+        CoTaskMemFree(This->pBihIn);
+        CoTaskMemFree(This->pBihOut);
         This->hvid = NULL;
         This->pBihIn = NULL;
         This->pBihOut = NULL;

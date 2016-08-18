@@ -591,8 +591,7 @@ static void FM2_DeleteRegFilter(REGFILTER2 * prf2)
     for (i = 0; i < prf2->u.s2.cPins2; i++)
     {
         UINT j;
-        if (prf2->u.s2.rgPins2[i].clsPinCategory)
-            CoTaskMemFree((LPVOID)prf2->u.s2.rgPins2[i].clsPinCategory);
+        CoTaskMemFree((void*)prf2->u.s2.rgPins2[i].clsPinCategory);
 
         for (j = 0; j < prf2->u.s2.rgPins2[i].nMediaTypes; j++)
         {

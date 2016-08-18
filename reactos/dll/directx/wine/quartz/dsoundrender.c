@@ -1027,7 +1027,7 @@ static HRESULT WINAPI ReferenceClock_GetTime(IReferenceClock *iface,
         }
         else
         {
-            ERR("pInputPin Disconncted\n");
+            ERR("pInputPin Disconnected\n");
             hr = E_FAIL;
         }
         LeaveCriticalSection(&This->renderer.filter.csFilter);
