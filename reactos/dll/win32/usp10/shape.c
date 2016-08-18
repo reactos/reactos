@@ -1584,7 +1584,7 @@ static void ReplaceInsertChars(HDC hdc, INT cWalk, INT* pcChars, WCHAR *pwOutCha
     cWalk=cWalk+1;
 
     /* Insert */
-    for (i = 1; replacements[i] != 0x0000 && i < 3; i++)
+    for (i = 1; i < 3 && replacements[i] != 0x0000; i++)
     {
         int j;
         for (j = *pcChars; j > cWalk; j--)
