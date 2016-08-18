@@ -2585,9 +2585,7 @@ static void test_file_protocol_url(LPCWSTR url)
             hres = IInternetProtocol_UnlockRequest(protocol);
             ok(hres == S_OK, "UnlockRequest failed: %08x\n", hres);
             hres = IInternetProtocol_Read(protocol, buf, 2, &cb);
-            if(file_with_hash) /* FIXME: An effect of UnlockRequest call? */
-                todo_wine ok(hres == S_OK, "Read failed: %08x\n", hres);
-            else
+            todo_wine_if(file_with_hash) /* FIXME: An effect of UnlockRequest call? */
                 ok(hres == S_OK, "Read failed: %08x\n", hres);
             hres = IInternetProtocol_Terminate(protocol, 0);
             ok(hres == S_OK, "Terminate failed: %08x\n", hres);

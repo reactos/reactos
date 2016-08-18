@@ -333,6 +333,21 @@ static void test_URLOpenBlockingStreamW(void)
     ok(pStream != NULL, "pStream is NULL\n");
     if(pStream)
     {
+        buffer[0] = 0;
+        hr = IStream_Read(pStream, buffer, sizeof(buffer), NULL);
+        ok(hr == S_OK, "IStream_Read failed with error 0x%08x\n", hr);
+        ok(!memcmp(buffer, szHtmlDoc, sizeof(szHtmlDoc)-1), "read data differs from file\n");
+
+        IStream_Release(pStream);
+    }
+
+    hr = URLOpenBlockingStreamW(NULL, INDEX_HTML, &pStream, 0, NULL);
+    ok(hr == S_OK, "URLOpenBlockingStreamW failed with error 0x%08x\n", hr);
+
+    ok(pStream != NULL, "pStream is NULL\n");
+    if(pStream)
+    {
+        buffer[0] = 0;
         hr = IStream_Read(pStream, buffer, sizeof(buffer), NULL);
         ok(hr == S_OK, "IStream_Read failed with error 0x%08x\n", hr);
         ok(!memcmp(buffer, szHtmlDoc, sizeof(szHtmlDoc)-1), "read data differs from file\n");
@@ -370,6 +385,9 @@ static void test_URLOpenStreamW(void)
     CHECK_CALLED(OnProgress_ENDDOWNLOADDATA);
     CHECK_CALLED(OnDataAvailable);
     CHECK_CALLED(OnStopBinding);
+
+    hr = URLOpenStreamW(NULL, INDEX_HTML, 0, NULL);
+    ok(hr == S_OK, "URLOpenStreamW failed with error 0x%08x\n", hr);
 }
 
 START_TEST(stream)
