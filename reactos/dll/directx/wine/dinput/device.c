@@ -512,7 +512,7 @@ failed:
     return DIERR_OUTOFMEMORY;
 }
 
-/* find an object by it's offset in a data format */
+/* find an object by its offset in a data format */
 static int offset_to_object(const DataFormat *df, int offset)
 {
     int i;
