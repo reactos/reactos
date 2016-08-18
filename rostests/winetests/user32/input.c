@@ -184,7 +184,7 @@ static int KbdMessage( KEV kev, WPARAM *pwParam, LPARAM *plParam )
             if(  TrackSysKey == VK_MENU || /* <ALT>-down/<ALT>-up sequence */
                     (VKey != VK_MENU)) /* <ALT>-down...<something else>-up */
                 message = WM_SYSKEYUP;
-                TrackSysKey = 0;
+            TrackSysKey = 0; /* FIXME */
         }
         InputKeyStateTable[VKey] &= ~0x80;
         flags |= KF_REPEAT | KF_UP;
@@ -1768,7 +1768,9 @@ static void test_keyboard_layout_name(void)
     char klid[KL_NAMELENGTH];
 
 if (0) /* crashes on native system */
+{
     ret = GetKeyboardLayoutNameA(NULL);
+}
 
     SetLastError(0xdeadbeef);
     ret = GetKeyboardLayoutNameW(NULL);
