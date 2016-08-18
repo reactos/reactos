@@ -5894,6 +5894,16 @@ static void test_IUnknownChangeTypeEx(void)
 
   lcid = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
 
+  /* NULL IUnknown -> IDispatch */
+  V_VT(&vSrc) = VT_UNKNOWN;
+  V_UNKNOWN(&vSrc) = NULL;
+  VariantInit(&vDst);
+  V_DISPATCH(&vDst) = (void*)0xdeadbeef;
+  hres = VariantChangeTypeEx(&vDst, &vSrc, lcid, 0, VT_DISPATCH);
+  ok(hres == S_OK && V_VT(&vDst) == VT_DISPATCH && V_DISPATCH(&vDst) == NULL,
+     "change unk(src,dst): expected 0x%08x,%d,%p, got 0x%08x,%d,%p\n",
+     S_OK, VT_DISPATCH, NULL, hres, V_VT(&vDst), V_DISPATCH(&vDst));
+
   V_VT(&vSrc) = VT_UNKNOWN;
   V_UNKNOWN(&vSrc) = pu;
 
@@ -6037,6 +6047,16 @@ static void test_IDispatchChangeTypeEx(void)
   pd = &d.IDispatch_iface;
 
   lcid = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
+
+  /* NULL IDispatch -> IUnknown */
+  V_VT(&vSrc) = VT_DISPATCH;
+  V_DISPATCH(&vSrc) = NULL;
+  VariantInit(&vDst);
+  V_UNKNOWN(&vDst) = (void*)0xdeadbeef;
+  hres = VariantChangeTypeEx(&vDst, &vSrc, lcid, 0, VT_UNKNOWN);
+  ok(hres == S_OK && V_VT(&vDst) == VT_UNKNOWN && V_UNKNOWN(&vDst) == NULL,
+     "change unk(src,dst): expected 0x%08x,%d,%p, got 0x%08x,%d,%p\n",
+     S_OK, VT_UNKNOWN, NULL, hres, V_VT(&vDst), V_UNKNOWN(&vDst));
 
   V_VT(&vSrc) = VT_DISPATCH;
   V_DISPATCH(&vSrc) = pd;

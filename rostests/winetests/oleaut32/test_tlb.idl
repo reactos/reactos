@@ -24,6 +24,8 @@
 
 import "oaidl.idl"; /* needed by widl */
 
+midl_pragma warning ( disable : 2368 )
+
 [uuid(8b05fe77-4a6c-4133-b9cd-8f81747af784)]
 library Test
 {
