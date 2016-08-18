@@ -646,9 +646,9 @@ HRESULT CInternetToolbar::ReserveBorderSpace(LONG maxHeight)
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
-    if (availableBorderSpace.top > maxHeight)
+    if (maxHeight && availableBorderSpace.bottom - availableBorderSpace.top > maxHeight)
     {
-        availableBorderSpace.top = maxHeight;
+        availableBorderSpace.bottom = availableBorderSpace.top + maxHeight;
     }
 
     return ResizeBorderDW(&availableBorderSpace, fSite, FALSE);
@@ -742,7 +742,7 @@ HRESULT CInternetToolbar::LockUnlockToolbars(bool locked)
                 SendMessage(fMainReBar, RB_SETBANDINFOW, x, (LPARAM)&rebarBandInfo);
             }
         }
-        hResult = ReserveBorderSpace();
+        hResult = ReserveBorderSpace(0);
 
         // TODO: refresh view menu?
     }
