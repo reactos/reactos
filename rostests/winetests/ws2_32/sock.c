@@ -74,6 +74,7 @@ static int   (WINAPI *pgetaddrinfo)(LPCSTR,LPCSTR,const struct addrinfo *,struct
 static void  (WINAPI *pFreeAddrInfoW)(PADDRINFOW);
 static int   (WINAPI *pGetAddrInfoW)(LPCWSTR,LPCWSTR,const ADDRINFOW *,PADDRINFOW *);
 static PCSTR (WINAPI *pInetNtop)(INT,LPVOID,LPSTR,ULONG);
+static PCWSTR(WINAPI *pInetNtopW)(INT,LPVOID,LPWSTR,ULONG);
 static int   (WINAPI *pInetPtonA)(INT,LPCSTR,LPVOID);
 static int   (WINAPI *pInetPtonW)(INT,LPWSTR,LPVOID);
 static int   (WINAPI *pWSALookupServiceBeginW)(LPWSAQUERYSETW,DWORD,LPHANDLE);
@@ -1230,6 +1231,7 @@ static void Init (void)
     pFreeAddrInfoW = (void *)GetProcAddress(hws2_32, "FreeAddrInfoW");
     pGetAddrInfoW = (void *)GetProcAddress(hws2_32, "GetAddrInfoW");
     pInetNtop = (void *)GetProcAddress(hws2_32, "inet_ntop");
+    pInetNtopW = (void *)GetProcAddress(hws2_32, "InetNtopW");
     pInetPtonA = (void *)GetProcAddress(hws2_32, "inet_pton");
     pInetPtonW = (void *)GetProcAddress(hws2_32, "InetPtonW");
     pWSALookupServiceBeginW = (void *)GetProcAddress(hws2_32, "WSALookupServiceBeginW");
@@ -4889,11 +4891,12 @@ static void test_inet_pton(void)
     int i, ret;
     DWORD err;
     char buffer[64],str[64];
-    WCHAR printableW[64];
+    WCHAR printableW[64], collapsedW[64];
     const char *ptr;
+    const WCHAR *ptrW;
 
     /* InetNtop and InetPton became available in Vista and Win2008 */
-    if (!pInetNtop || !pInetPtonA || !pInetPtonW)
+    if (!pInetNtop || !pInetNtopW || !pInetPtonA || !pInetPtonW)
     {
         win_skip("InetNtop and/or InetPton not present, not executing tests\n");
         return;
@@ -4941,6 +4944,18 @@ static void test_inet_pton(void)
         ok(memcmp(buffer, tests[i].raw_data,
            tests[i].family == AF_INET ? sizeof(struct in_addr) : sizeof(struct in6_addr)) == 0,
            "Test [%d]: Expected binary data differs\n", i);
+
+        /* Test the result from Pton with Ntop */
+        printableW[0] = 0xdead;
+        ptrW = pInetNtopW(tests[i].family, buffer, printableW, sizeof(printableW) / sizeof(printableW[0]));
+        ok (ptrW != NULL, "Test [%d]: Failed with NULL\n", i);
+        ok (ptrW == printableW, "Test [%d]: Pointers differ (%p != %p)\n", i, ptrW, printableW);
+        if (!ptrW) continue;
+
+        MultiByteToWideChar(CP_ACP, 0, tests[i].collapsed, -1, collapsedW,
+                            sizeof(collapsedW) / sizeof(collapsedW[0]));
+        ok (lstrcmpW(ptrW, collapsedW) == 0, "Test [%d]: Expected '%s', got '%s'\n",
+            i, tests[i].collapsed, wine_dbgstr_w(ptrW));
     }
 }
 
