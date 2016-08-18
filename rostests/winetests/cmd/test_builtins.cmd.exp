@@ -980,7 +980,7 @@ a d
 a
 C r
 foo bar baz
-@todo_wine@c:\
+c:\
 ------ skip option
 c
 no output
