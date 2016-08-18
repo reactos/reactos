@@ -23,6 +23,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
+#include "winuser.h"
 
 #include "wine/test.h"
 
@@ -343,10 +344,28 @@ static void test_palette_brush(void)
     DeleteObject( palette2 );
 }
 
+static void test_brush_org( void )
+{
+    HDC hdc = GetDC( 0 );
+    POINT old, pt;
+
+    SetBrushOrgEx( hdc, 0, 0, &old );
+
+    SetBrushOrgEx( hdc, 1, 1, &pt );
+    ok( pt.x == 0 && pt.y == 0, "got %d,%d\n", pt.x, pt.y );
+    SetBrushOrgEx( hdc, 0x10000, -1, &pt );
+    ok( pt.x == 1 && pt.y == 1, "got %d,%d\n", pt.x, pt.y );
+    SetBrushOrgEx( hdc, old.x, old.y, &pt );
+    ok( pt.x == 0x10000 && pt.y == -1, "got %d,%d\n", pt.x, pt.y );
+
+    ReleaseDC( 0, hdc );
+}
+
 START_TEST(brush)
 {
     test_solidbrush();
     test_hatch_brush();
     test_pattern_brush();
     test_palette_brush();
+    test_brush_org();
 }

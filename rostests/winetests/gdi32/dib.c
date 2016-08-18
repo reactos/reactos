@@ -120,7 +120,7 @@ static const char *sha1_graphics_a8r8g8b8[] =
     "94645300d6eb51020a7ef8261dee2941cd51b5df",
     "c56f5bdc9cac4f0bc81c33295d9aed8eaf4cb1f2",
     "21cdfde38ac7edbb241ec83d82f31286e90c4629",
-    "1fd2f4dcb62f8522171872e43fd4a35041d68100",
+    "0e6fc62522b0d6d2019f826ac0b586b91bd0d4fe",
     "68c18db6abfda626cab12d198298d4c39264bfbc",
     "6b59ae6c20749020ad43175e05110dc33b6a59b5",
     "39c31de73aafcfcadf0bf414da4495be9de54417",
@@ -193,7 +193,7 @@ static const char *sha1_graphics_a8r8g8b8_bitfields[] =
     "94645300d6eb51020a7ef8261dee2941cd51b5df",
     "c56f5bdc9cac4f0bc81c33295d9aed8eaf4cb1f2",
     "21cdfde38ac7edbb241ec83d82f31286e90c4629",
-    "1fd2f4dcb62f8522171872e43fd4a35041d68100",
+    "0e6fc62522b0d6d2019f826ac0b586b91bd0d4fe",
     "68c18db6abfda626cab12d198298d4c39264bfbc",
     "6b59ae6c20749020ad43175e05110dc33b6a59b5",
     "39c31de73aafcfcadf0bf414da4495be9de54417",
@@ -266,7 +266,7 @@ static const char *sha1_graphics_a8b8g8r8[] =
     "19b32a0daa91201725b5e13820c343d0a84ff698",
     "abca6a80a99b05722d2d87ce2a8b94ef1ae549e1",
     "2ba70994d0b4ce87fdf6fbc33ada11252178061e",
-    "7b4e1d47a03e2cec236d8fb6e2ae89d8ed078f79",
+    "9b81ccc2d956d1de019085f971ba19435fe5feae",
     "075c4cb50e2cf96ab5d132c9f7bb1c1deb4735bd",
     "8566c1110ab5cb8f754787b47923c8bff38f790c",
     "89e90d6159d59886bbbf0c40a7cd01293c3cfda3",
@@ -339,7 +339,7 @@ static const char *sha1_graphics_r10g10b10[] =
     "5f629ab51719dd0ca5a67d880eb2631f5b598a7b",
     "1ceb85697f649a62b1753438daa14944af7f450c",
     "98ce4dbc04eb48fa0f96ef813db5b4dfa1b2dd39",
-    "3addb9ccd8f56fc0825f61b1b5af67d3297f4ded",
+    "1cb0c7d9d89cdbce7b47d19ef0365bb6b2adc831",
     "f00bac7e18827cfb264fae2e8a0da17b9db18d52",
     "63c1c6c63e82f3b8bd977a1381b248e05321394d",
     "ada202d2f526f6995f83412479891c1764b66e5a",
@@ -412,7 +412,7 @@ static const char *sha1_graphics_r6g6b6[] =
     "3d27002f4fe3c943468b7e3ef6985962c41ac8dc",
     "3231c4d87faefb7ec5bd377613969c05b70343fc",
     "00394e438e9edde978e88602c9ad2a572e965bf6",
-    "e760be69cb37c7be35d5968d7a294e1fd49d4f66",
+    "c0c41390270ba082ee8211576fee39c676813c42",
     "996fb708ddc4b94eb8d1585bd83a5c8a1e2633ba",
     "caa39eb482e8fc2e00f1c6737735c023ac9363ef",
     "c1250ff2b67e6d2a8baccc5c93f8f5ad933c5c4f",
@@ -485,7 +485,7 @@ static const char *sha1_graphics_24[] =
     "b0a959745b2db1d9f449e68e4479a4f36301879c",
     "63f764b9bd2f4876ab1ee0f3c0eb55b5a7de5212",
     "e171f6ec77bca91d6b8559911bce296c0bac469e",
-    "9725669042ef68acb408404d196496d10340bb5a",
+    "33bb75c12f083d799d287fe9caddedbb3892e6fa",
     "26e7e1c300ba0c5aaaef03eeb71d529f6def9289",
     "b1f602d2a74095cc0115ae2ae07b642498e6c0fc",
     "03d5eb8e3a6662e6dc183f88ee2f285065fc9c51",
@@ -557,7 +557,7 @@ static const char *sha1_graphics_r5g5b5[] =
     "a8d6a5285a927ba3a3be34b06a06c70a20d4c1b3",
     "e428d213ad02651287894f093413949dcb369208",
     "7df915bedcc5951a1b6f828490f7dbb93212e835",
-    "645dc251d205139282b17eb7bece1055fff3bcd0",
+    "8720478d904a84c24071e97c731c1ba7882b131e",
     "76215275593631f5900aad3616d725733dc39493",
     "81655a550703849a616d4a16504bb9c6f999285f",
     "573d65665d20f00d36d9782ae2b89772140524ab",
@@ -634,7 +634,7 @@ static const char *sha1_graphics_r4g4b4[] =
     "957a86fbe8a96dd068db65e4e624a52bcc84af46",
     "13b0f240054dc57ba0e2dfde74048496304a2c7f",
     "51ef267eb9c15487c9430f505e8a6c929eb2170c",
-    "1b593d8e031d3b37fecf6f1df5a8f96c8e8bfef8",
+    "60c0752f592c6426a2f4a71173b44c5c086f4f2a",
     "9dd123938b0a02601d8d458ecbd6535ddefea724",
     "815a1e4fc7f3a00c2990c150e87eba0b13f66811",
     "75ae8c80af4356a1a5eebde6608fbc31e8a95372",
@@ -706,7 +706,7 @@ static const char *sha1_graphics_8_color[] =
     "3b7488731da48635d86be551ab7c8c0f91c78219",
     "4fd49cb49853ef950fd0b7e2e35718a71c8374c7",
     "e15a355fc09bfd22267917898e2266168ff410e3",
-    "b9688566bddf18586787c00e68724e51e97dfb72",
+    "7a9c326a56a94621377a7258be70ba50042ca9a2",
     "5e38e03310f1c66f2052af2a745d8c60515707c5",
     "f994fb5019bf4c1a96eccf89af599eae0aa6b412",
     "3a71ad6fef147067641e49a5f69b2454e3a5010d",
@@ -788,7 +788,7 @@ static const char *sha1_graphics_8_grayscale[] =
     "24caede65b40815a60b83c4edfa06bdc542388cd",
     "650a51bedd1af92469d2950eb95220db35f95c6e",
     "3f43aa11e6fccb747cc13224583fb2f951fee08c",
-    "04cea9753b575ecce8e55357eddfcec10ddfbbea",
+    "b83f78ae85df87fc7af565db276c60c102274f20",
     "6b6f4b97f05e015eb37a5f6aff637235feacd030",
     "1bd06e4e11929e5e91c3c9f20def639b20e731e8",
     "d63a6086547e90d2ba84aaebfeae24f3ba0c04f1",
@@ -867,7 +867,7 @@ static const char *sha1_graphics_8[] =
     "ea39ac62ca2f815a1d029340c6465994b6f03cb0",
     "9a603513cd81acf70cf8b27b0d544e7f672e9d40",
     "f4a334e69535de74ee5ed54be93a75120a66e54a",
-    "559fd1d15447745527c61fe43a94c6708bff3e39",
+    "f751a55fb738b63b6fd7c229c33ef92605d0c9c1",
     "995f77f2f53398399f09d1365cb4dfd105764e5c",
     "61907a6685bba93077da40cfb28cf2ab74552fd2",
     "122015e5e17c1c317c6e51c0e207826b606a4077",
@@ -943,7 +943,7 @@ static const char *sha1_graphics_4[] =
     "b672afbeeafb44194a821f0def81a8892872937e",
     "db0124045882b598feea192186cf7eb7a0387866",
     "602d91471378fe24a2d0248bd8a92b624f099fea",
-    "e772873b87a0f55ea51a3da323f64bf8814c6703",
+    "c93a86adfe58dc2d461f2ed962883d6b90888848",
     "21aa1ff238a2d78efed1aa658ac8fe21b1e64daa",
     "1a579cd280422131c35e907a023ee0e80749b5a4",
     "bbf027f506cbb80d359bf4892fcb75f816f2e446",
@@ -1015,7 +1015,7 @@ static const char *sha1_graphics_4_grayscale[] =
     "9c0da52c4ceaa8fdfcff7351328dd520bb57e985",
     "f8224430462f6a93f85ef33b8aa7299525990708",
     "1cf93cecc942b41ab8fae21ea18418a6d64873e5",
-    "d58b8760ef01c12e691651c932d683c66fde3654",
+    "71a1705ee14068ee8c6c6680c1bd99703fb6abd7",
     "94438c82b8812fe81a69d5d1429c5967cdbfed7a",
     "764ea26f10fe11f7bdb538a26fc33d44b3a95d6d",
     "94ad53c578f6034dfc5c666e363203cdfb00f2cc",
@@ -1105,7 +1105,7 @@ static const char *sha1_graphics_1[] =
     "be36cda370650e6d5fb0570aeb8ced491d0c2b1c",
     "4c34cb8e47f9ff4b4348aa2d40cce7cb54d65cb0",
     "18f4497e43903e8df5b27da4ceebf62b15550a87",
-    "3fa3570a2ebd38042b90f24bd3496233bca5a23d",
+    "399e988c922b7fad1c8f6907541c5dda65e60408",
     "2fcd25c2d19a01fa631fd19135d9f28b26b86259",
     "655cfadeb157233c804d42b58195569c8846e3c1",
     "65c8811c609203fd424f5ed5f92ca2268a1dca54",
@@ -1179,7 +1179,7 @@ static const RECT graphics_bounds[] =
     { 10, 10, 110, 110 },
     { 10, 10, 120, 110 },
     { 10, 10, 110, 120 },
-    { 100, 100, 356, 356 },
+    { 0, 4, 356, 356 },
     { 100, 100, 356, 356 },
     { 50, 50, 306, 306 },
     { 100, 100, 356, 356 },
@@ -2185,6 +2185,18 @@ static void draw_graphics(HDC hdc, const BITMAPINFO *bmi, BYTE *bits)
         }
 
     BitBlt( hdc, 100, 100, 256, 256, src_dc, 0, 0, SRCCOPY );
+
+    /* Interesting cases for 1-bpp dst */
+    BitBlt( hdc, 1, 4, 2, 2, src_dc, 0, 0, SRCCOPY );
+    BitBlt( hdc, 1, 8, 16, 2, src_dc, 0, 0, SRCCOPY );
+    BitBlt( hdc, 1, 12, 15, 2, src_dc, 0, 0, SRCCOPY );
+    BitBlt( hdc, 0, 16, 8, 2, src_dc, 0, 0, SRCCOPY );
+    BitBlt( hdc, 0, 20, 9, 2, src_dc, 0, 0, SRCCOPY );
+    BitBlt( hdc, 7, 24, 1, 2, src_dc, 0, 0, SRCCOPY );
+    BitBlt( hdc, 7, 28, 2, 2, src_dc, 0, 0, SRCCOPY );
+    BitBlt( hdc, 7, 32, 9, 2, src_dc, 0, 0, SRCCOPY );
+    BitBlt( hdc, 7, 36, 10, 2, src_dc, 0, 0, SRCCOPY );
+
     if (bmi->bmiHeader.biBitCount == 8)  /* broken on NT4 */
         compare_hash_broken_todo(hdc, bmi, bits, "BitBlt src 32-bpp SRCCOPY", 1, FALSE );
     else

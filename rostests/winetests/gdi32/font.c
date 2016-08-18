@@ -2952,13 +2952,8 @@ static void test_EnumFontFamilies(const char *font_name, INT font_charset)
         ok(!efd.total, "no fonts should be enumerated for empty font_name\n");
     for (i = 0; i < efd.total; i++)
     {
-/* FIXME: remove completely once Wine is fixed */
-if (efd.lf[i].lfCharSet != font_charset)
-{
-todo_wine
-    ok(efd.lf[i].lfCharSet == font_charset, "%d: got charset %d\n", i, efd.lf[i].lfCharSet);
-}
-else
+        /* FIXME: remove completely once Wine is fixed */
+        todo_wine_if(efd.lf[i].lfCharSet != font_charset)
         ok(efd.lf[i].lfCharSet == font_charset, "%d: got charset %d\n", i, efd.lf[i].lfCharSet);
         ok(!strcmp(efd.lf[i].lfFaceName, font_name), "expected %s, got %s\n",
            font_name, efd.lf[i].lfFaceName);
