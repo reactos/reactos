@@ -243,9 +243,23 @@ static void test_ParseDisplayName(void)
     IParseDisplayName_Release( displayname );
 }
 
+static void test_locator(void)
+{
+    IUnknown *locator;
+    HRESULT hr;
+
+    hr = CoCreateInstance( &CLSID_SWbemLocator, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void **)&locator );
+    ok( hr == S_OK, "got %x\n", hr );
+
+    IUnknown_Release( locator );
+}
+
 START_TEST(wbemdisp)
 {
     CoInitialize( NULL );
+
     test_ParseDisplayName();
+    test_locator();
+
     CoUninitialize();
 }
