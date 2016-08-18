@@ -795,7 +795,7 @@ HIC VFWAPI ICGetDisplayFormat(
     if (ICSendMessage(tmphic, ICM_DECOMPRESS_GET_FORMAT, (DWORD_PTR)lpbiIn, (DWORD_PTR)lpbiOut))
         goto errout;
 
-	if (lpbiOut->biCompression != 0) {
+    if (lpbiOut->biCompression != 0) {
            FIXME("Ooch, how come decompressor outputs compressed data (%d)??\n",
 			 lpbiOut->biCompression);
 	}
