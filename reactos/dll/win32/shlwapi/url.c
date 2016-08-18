@@ -911,7 +911,7 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
     }
 
     if (ret == S_OK) {
-	/* Reuse mrelative as temp storage as its already allocated and not needed anymore */
+        /* Reuse mrelative as temp storage as it's already allocated and not needed anymore */
         if(*pcchCombined == 0)
             *pcchCombined = 1;
 	ret = UrlCanonicalizeW(preliminary, mrelative, pcchCombined, (dwFlags & ~URL_FILE_USE_PATHURL));
@@ -946,8 +946,10 @@ HRESULT WINAPI UrlEscapeA(
 
     if(!RtlCreateUnicodeStringFromAsciiz(&urlW, pszUrl))
         return E_INVALIDARG;
-    if(dwFlags & URL_ESCAPE_AS_UTF8)
+    if(dwFlags & URL_ESCAPE_AS_UTF8) {
+        RtlFreeUnicodeString(&urlW);
         return E_NOTIMPL;
+    }
     if((ret = UrlEscapeW(urlW.Buffer, escapedW, &lenW, dwFlags)) == E_POINTER) {
         escapedW = HeapAlloc(GetProcessHeap(), 0, lenW * sizeof(WCHAR));
         ret = UrlEscapeW(urlW.Buffer, escapedW, &lenW, dwFlags);
