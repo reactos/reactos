@@ -339,7 +339,7 @@ HasClipboardData()
     BOOL bRet = FALSE;
     CComPtr<IDataObject> pDataObj;
 
-    if(SUCCEEDED(OleGetClipboard(&pDataObj)))
+    if (SUCCEEDED(OleGetClipboard(&pDataObj)))
     {
         STGMEDIUM medium;
         FORMATETC formatetc;
@@ -348,7 +348,7 @@ HasClipboardData()
 
         /* Set the FORMATETC structure*/
         InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
-        if(SUCCEEDED(pDataObj->GetData(&formatetc, &medium)))
+        if (SUCCEEDED(pDataObj->GetData(&formatetc, &medium)))
         {
             bRet = TRUE;
             ReleaseStgMedium(&medium);
@@ -1002,7 +1002,7 @@ CDefaultContextMenu::NotifyShellViewWindow(LPCMINVOKECOMMANDINFO lpcmi, BOOL bRe
     HRESULT hr;
 
     if (!m_site)
-        return E_FAIL;;
+        return E_FAIL;
 
     /* Get a pointer to the shell browser */
     hr = IUnknown_QueryService(m_site, SID_IFolderView, IID_PPV_ARG(IShellView, &psv));
@@ -1020,7 +1020,7 @@ CDefaultContextMenu::DoRefresh(
     LPCMINVOKECOMMANDINFO lpcmi)
 {
     if (!m_site)
-        return E_FAIL;;
+        return E_FAIL;
     
     /* Get a pointer to the shell view */
     CComPtr<IShellView> psv;
@@ -1210,7 +1210,7 @@ CDefaultContextMenu::DoCopyOrCut(
     HRESULT hr;
 
     hr = SHCreateDataObject(m_pidlFolder, m_cidl, m_apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
-    if(FAILED_UNEXPECTEDLY(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     if (!bCopy)
@@ -1321,7 +1321,7 @@ CDefaultContextMenu::DoProperties(
     else if (_ILIsBitBucket(pidlChild))
     {
         /* FIXME: detect the drive path of bitbucket if appropiate */
-        if(!SH_ShowRecycleBinProperties(L'C'))
+        if (!SH_ShowRecycleBinProperties(L'C'))
             hr = E_FAIL;
     }
     else
@@ -1564,7 +1564,7 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl,
     BOOL bHasPath = SHGetPathFromIDListW(pidlFull, wszPath);
 
     WCHAR wszDir[MAX_PATH];
-    if(bHasPath)
+    if (bHasPath)
     {
         wcscpy(wszDir, wszPath);
         PathRemoveFileSpec(wszDir);
@@ -1819,7 +1819,7 @@ CDefaultContextMenu::HandleMenuMsg2(
     {
         DRAWITEMSTRUCT* pDrawStruct = reinterpret_cast<DRAWITEMSTRUCT*>(lParam);
         PDynamicShellEntry pEntry = GetDynamicEntry(pDrawStruct->itemID);
-        if(pEntry)
+        if (pEntry)
             SHForwardContextMenuMsg(pEntry->pCM, uMsg, wParam, lParam, plResult, TRUE);
         break;
     }
@@ -1827,7 +1827,7 @@ CDefaultContextMenu::HandleMenuMsg2(
     {
         MEASUREITEMSTRUCT* pMeasureStruct = reinterpret_cast<MEASUREITEMSTRUCT*>(lParam);
         PDynamicShellEntry pEntry = GetDynamicEntry(pMeasureStruct->itemID);
-        if(pEntry)
+        if (pEntry)
             SHForwardContextMenuMsg(pEntry->pCM, uMsg, wParam, lParam, plResult, TRUE);
         break;
     }
