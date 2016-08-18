@@ -29,6 +29,8 @@
 #include <winnls.h>
 #include <vfwmsgs.h>
 #include <objbase.h>
+#include <mmreg.h>
+#include <ksmedia.h>
 #include <initguid.h>
 #include <amstream.h>
 #include <dxsdk/uuids.h>
@@ -600,6 +602,265 @@ error:
     IAMMultiMediaStream_Release(pams);
 }
 
+static IUnknown *create_audio_data(void)
+{
+    IUnknown *audio_data = NULL;
+    HRESULT result = CoCreateInstance(&CLSID_AMAudioData, NULL, CLSCTX_INPROC_SERVER,
+            &IID_IUnknown, (void **)&audio_data);
+    ok(S_OK == result, "got 0x%08x\n", result);
+    return audio_data;
+}
+
+static void test_audiodata_query_interface(void)
+{
+    IUnknown *unknown = create_audio_data();
+    IMemoryData *memory_data = NULL;
+    IAudioData *audio_data = NULL;
+
+    HRESULT result;
+
+    result = IUnknown_QueryInterface(unknown, &IID_IMemoryData, (void **)&memory_data);
+    ok(E_NOINTERFACE == result, "got 0x%08x\n", result);
+
+    result = IUnknown_QueryInterface(unknown, &IID_IAudioData, (void **)&audio_data);
+    ok(S_OK == result, "got 0x%08x\n", result);
+    if (S_OK == result)
+    {
+        result = IAudioData_QueryInterface(audio_data, &IID_IMemoryData, (void **)&memory_data);
+        ok(E_NOINTERFACE == result, "got 0x%08x\n", result);
+
+        IAudioData_Release(audio_data);
+    }
+
+    IUnknown_Release(unknown);
+}
+
+static void test_audiodata_get_info(void)
+{
+    IUnknown *unknown = create_audio_data();
+    IAudioData *audio_data = NULL;
+
+    HRESULT result;
+
+    result = IUnknown_QueryInterface(unknown, &IID_IAudioData, (void **)&audio_data);
+    if (FAILED(result))
+    {
+        /* test_audiodata_query_interface handles this case */
+        skip("No IAudioData\n");
+        goto out_unknown;
+    }
+
+    result = IAudioData_GetInfo(audio_data, NULL, NULL, NULL);
+    ok(MS_E_NOTINIT == result, "got 0x%08x\n", result);
+
+    IAudioData_Release(audio_data);
+
+out_unknown:
+    IUnknown_Release(unknown);
+}
+
+static void test_audiodata_set_buffer(void)
+{
+    IUnknown *unknown = create_audio_data();
+    IAudioData *audio_data = NULL;
+    BYTE buffer[100] = {0};
+    DWORD length = 0;
+    BYTE *data = NULL;
+
+    HRESULT result;
+
+    result = IUnknown_QueryInterface(unknown, &IID_IAudioData, (void **)&audio_data);
+    if (FAILED(result))
+    {
+        /* test_audiodata_query_interface handles this case */
+        skip("No IAudioData\n");
+        goto out_unknown;
+    }
+
+    result = IAudioData_SetBuffer(audio_data, 100, NULL, 0);
+    ok(S_OK == result, "got 0x%08x\n", result);
+
+    data = (BYTE *)0xdeadbeef;
+    length = 0xdeadbeef;
+    result = IAudioData_GetInfo(audio_data, &length, &data, NULL);
+    ok(S_OK == result, "got 0x%08x\n", result);
+    ok(100 == length, "got %u\n", length);
+    ok(NULL != data, "got %p\n", data);
+
+    result = IAudioData_SetBuffer(audio_data, 0, buffer, 0);
+    ok(E_INVALIDARG == result, "got 0x%08x\n", result);
+
+    result = IAudioData_SetBuffer(audio_data, sizeof(buffer), buffer, 0);
+    ok(S_OK == result, "got 0x%08x\n", result);
+
+    data = (BYTE *)0xdeadbeef;
+    length = 0xdeadbeef;
+    result = IAudioData_GetInfo(audio_data, &length, &data, NULL);
+    ok(S_OK == result, "got 0x%08x\n", result);
+    ok(sizeof(buffer) == length, "got %u\n", length);
+    ok(buffer == data, "got %p\n", data);
+
+    IAudioData_Release(audio_data);
+
+out_unknown:
+    IUnknown_Release(unknown);
+}
+
+static void test_audiodata_set_actual(void)
+{
+    IUnknown *unknown = create_audio_data();
+    IAudioData *audio_data = NULL;
+    BYTE buffer[100] = {0};
+    DWORD actual_data = 0;
+
+    HRESULT result;
+
+    result = IUnknown_QueryInterface(unknown, &IID_IAudioData, (void **)&audio_data);
+    if (FAILED(result))
+    {
+        /* test_audiodata_query_interface handles this case */
+        skip("No IAudioData\n");
+        goto out_unknown;
+    }
+
+    result = IAudioData_SetActual(audio_data, 0);
+    ok(S_OK == result, "got 0x%08x\n", result);
+
+    result = IAudioData_SetBuffer(audio_data, sizeof(buffer), buffer, 0);
+    ok(S_OK == result, "got 0x%08x\n", result);
+
+    result = IAudioData_SetActual(audio_data, sizeof(buffer) + 1);
+    ok(E_INVALIDARG == result, "got 0x%08x\n", result);
+
+    result = IAudioData_SetActual(audio_data, sizeof(buffer));
+    ok(S_OK == result, "got 0x%08x\n", result);
+
+    actual_data = 0xdeadbeef;
+    result = IAudioData_GetInfo(audio_data, NULL, NULL, &actual_data);
+    ok(S_OK == result, "got 0x%08x\n", result);
+    ok(sizeof(buffer) == actual_data, "got %u\n", actual_data);
+
+    result = IAudioData_SetActual(audio_data, 0);
+    ok(S_OK == result, "got 0x%08x\n", result);
+
+    actual_data = 0xdeadbeef;
+    result = IAudioData_GetInfo(audio_data, NULL, NULL, &actual_data);
+    ok(S_OK == result, "got 0x%08x\n", result);
+    ok(0 == actual_data, "got %u\n", actual_data);
+
+    IAudioData_Release(audio_data);
+
+out_unknown:
+    IUnknown_Release(unknown);
+}
+
+static void test_audiodata_get_format(void)
+{
+    IUnknown *unknown = create_audio_data();
+    IAudioData *audio_data = NULL;
+    WAVEFORMATEX wave_format = {0};
+
+    HRESULT result;
+
+    result = IUnknown_QueryInterface(unknown, &IID_IAudioData, (void **)&audio_data);
+    if (FAILED(result))
+    {
+        /* test_audiodata_query_interface handles this case */
+        skip("No IAudioData\n");
+        goto out_unknown;
+    }
+
+    result = IAudioData_GetFormat(audio_data, NULL);
+    ok(E_POINTER == result, "got 0x%08x\n", result);
+
+    wave_format.wFormatTag = 0xdead;
+    wave_format.nChannels = 0xdead;
+    wave_format.nSamplesPerSec = 0xdeadbeef;
+    wave_format.nAvgBytesPerSec = 0xdeadbeef;
+    wave_format.nBlockAlign = 0xdead;
+    wave_format.wBitsPerSample = 0xdead;
+    wave_format.cbSize = 0xdead;
+    result = IAudioData_GetFormat(audio_data, &wave_format);
+    ok(S_OK == result, "got 0x%08x\n", result);
+    ok(WAVE_FORMAT_PCM == wave_format.wFormatTag, "got %u\n", wave_format.wFormatTag);
+    ok(1 == wave_format.nChannels, "got %u\n", wave_format.nChannels);
+    ok(11025 == wave_format.nSamplesPerSec, "got %u\n", wave_format.nSamplesPerSec);
+    ok(22050 == wave_format.nAvgBytesPerSec, "got %u\n", wave_format.nAvgBytesPerSec);
+    ok(2 == wave_format.nBlockAlign, "got %u\n", wave_format.nBlockAlign);
+    ok(16 == wave_format.wBitsPerSample, "got %u\n", wave_format.wBitsPerSample);
+    ok(0 == wave_format.cbSize, "got %u\n", wave_format.cbSize);
+
+    IAudioData_Release(audio_data);
+
+out_unknown:
+    IUnknown_Release(unknown);
+}
+
+static void test_audiodata_set_format(void)
+{
+    IUnknown *unknown = create_audio_data();
+    IAudioData *audio_data = NULL;
+    WAVEFORMATPCMEX wave_format = {{0}};
+
+    HRESULT result;
+
+    result = IUnknown_QueryInterface(unknown, &IID_IAudioData, (void **)&audio_data);
+    if (FAILED(result))
+    {
+        /* test_audiodata_query_interface handles this case */
+        skip("No IAudioData\n");
+        goto out_unknown;
+    }
+
+    result = IAudioData_SetFormat(audio_data, NULL);
+    ok(E_POINTER == result, "got 0x%08x\n", result);
+
+    wave_format.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+    wave_format.Format.nChannels = 2;
+    wave_format.Format.nSamplesPerSec = 44100;
+    wave_format.Format.nAvgBytesPerSec = 176400;
+    wave_format.Format.nBlockAlign = 4;
+    wave_format.Format.wBitsPerSample = 16;
+    wave_format.Format.cbSize = 22;
+    wave_format.Samples.wValidBitsPerSample = 16;
+    wave_format.dwChannelMask = KSAUDIO_SPEAKER_STEREO;
+    wave_format.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+    result = IAudioData_SetFormat(audio_data, &wave_format.Format);
+    ok(E_INVALIDARG == result, "got 0x%08x\n", result);
+
+    wave_format.Format.wFormatTag = WAVE_FORMAT_PCM;
+    wave_format.Format.nChannels = 2;
+    wave_format.Format.nSamplesPerSec = 44100;
+    wave_format.Format.nAvgBytesPerSec = 176400;
+    wave_format.Format.nBlockAlign = 4;
+    wave_format.Format.wBitsPerSample = 16;
+    wave_format.Format.cbSize = 0;
+    result = IAudioData_SetFormat(audio_data, &wave_format.Format);
+    ok(S_OK == result, "got 0x%08x\n", result);
+
+    wave_format.Format.wFormatTag = 0xdead;
+    wave_format.Format.nChannels = 0xdead;
+    wave_format.Format.nSamplesPerSec = 0xdeadbeef;
+    wave_format.Format.nAvgBytesPerSec = 0xdeadbeef;
+    wave_format.Format.nBlockAlign = 0xdead;
+    wave_format.Format.wBitsPerSample = 0xdead;
+    wave_format.Format.cbSize = 0xdead;
+    result = IAudioData_GetFormat(audio_data, &wave_format.Format);
+    ok(S_OK == result, "got 0x%08x\n", result);
+    ok(WAVE_FORMAT_PCM == wave_format.Format.wFormatTag, "got %u\n", wave_format.Format.wFormatTag);
+    ok(2 == wave_format.Format.nChannels, "got %u\n", wave_format.Format.nChannels);
+    ok(44100 == wave_format.Format.nSamplesPerSec, "got %u\n", wave_format.Format.nSamplesPerSec);
+    ok(176400 == wave_format.Format.nAvgBytesPerSec, "got %u\n", wave_format.Format.nAvgBytesPerSec);
+    ok(4 == wave_format.Format.nBlockAlign, "got %u\n", wave_format.Format.nBlockAlign);
+    ok(16 == wave_format.Format.wBitsPerSample, "got %u\n", wave_format.Format.wBitsPerSample);
+    ok(0 == wave_format.Format.cbSize, "got %u\n", wave_format.Format.cbSize);
+
+    IAudioData_Release(audio_data);
+
+out_unknown:
+    IUnknown_Release(unknown);
+}
+
 START_TEST(amstream)
 {
     HANDLE file;
@@ -617,6 +878,13 @@ START_TEST(amstream)
         test_openfile();
         test_renderfile();
     }
+
+    test_audiodata_query_interface();
+    test_audiodata_get_info();
+    test_audiodata_set_buffer();
+    test_audiodata_set_actual();
+    test_audiodata_get_format();
+    test_audiodata_set_format();
 
     CoUninitialize();
 }
