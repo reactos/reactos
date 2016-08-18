@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <cguid.h>          // for GUID_NULL
+
 namespace ATL
 {
 
