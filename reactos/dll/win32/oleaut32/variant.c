@@ -453,7 +453,10 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     {
     case VT_DISPATCH:
       if (V_DISPATCH(ps) == NULL)
+      {
         V_UNKNOWN(pd) = NULL;
+        res = S_OK;
+      }
       else
         res = IDispatch_QueryInterface(V_DISPATCH(ps), &IID_IUnknown, (LPVOID*)&V_UNKNOWN(pd));
       break;
@@ -465,7 +468,10 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     {
     case VT_UNKNOWN:
       if (V_UNKNOWN(ps) == NULL)
+      {
         V_DISPATCH(pd) = NULL;
+        res = S_OK;
+      }
       else
         res = IUnknown_QueryInterface(V_UNKNOWN(ps), &IID_IDispatch, (LPVOID*)&V_DISPATCH(pd));
       break;
