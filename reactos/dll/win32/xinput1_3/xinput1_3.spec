@@ -4,5 +4,5 @@
 4 stdcall XInputGetCapabilities(long long ptr)
 5 stdcall XInputEnable(long)
 6 stdcall XInputGetDSoundAudioDeviceGuids(long ptr ptr)
-7 stdcall XInputGetBatteryInformation(long ptr ptr)
+7 stdcall XInputGetBatteryInformation(long long ptr)
 8 stdcall XInputGetKeystroke(long long ptr)
