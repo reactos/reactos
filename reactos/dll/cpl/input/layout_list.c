@@ -28,7 +28,7 @@ LayoutList_AppendNode(DWORD dwId, DWORD dwSpecialId, const WCHAR *pszName)
 
     ZeroMemory(pNew, sizeof(LAYOUT_LIST_NODE));
 
-    pNew->pszName = DuplicateString(pszName);
+    pNew->pszName = _wcsdup(pszName);
     if (pNew->pszName == NULL)
     {
         free(pNew);
@@ -153,10 +153,8 @@ LayoutList_Create(VOID)
                                          (LPBYTE)szBuffer, &dwSize) == ERROR_SUCCESS &&
                         szBuffer[0] == L'@')
                     {
-                        WCHAR szPath[MAX_PATH];
                         WCHAR *pBuffer;
                         WCHAR *pIndex;
-                        INT iIndex;
 
                         /* Move to the position after the character "@" */
                         pBuffer = szBuffer + 1;
@@ -164,27 +162,37 @@ LayoutList_Create(VOID)
                         /* Get a pointer to the beginning ",-" */
                         pIndex = wcsstr(pBuffer, L",-");
 
-                        /* Convert the number in the string after the ",-" */
-                        iIndex = _wtoi(pIndex + 2);
-
-                        pIndex[0] = 0;
-
-                        if (ExpandEnvironmentStringsW(pBuffer, szPath, ARRAYSIZE(szPath)) != 0)
+                        if (pIndex != NULL)
                         {
-                            HANDLE hHandle;
+                            WCHAR szPath[MAX_PATH];
+                            INT iIndex;
 
-                            hHandle = LoadLibraryW(szPath);
-                            if (hHandle != NULL)
+                            /* Convert the number in the string after the ",-" */
+                            iIndex = _wtoi(pIndex + 2);
+
+                            pIndex[0] = 0;
+
+                            if (ExpandEnvironmentStringsW(pBuffer, szPath, ARRAYSIZE(szPath)) != 0)
                             {
-                                INT iLength = LoadStringW(hHandle, iIndex, szBuffer, ARRAYSIZE(szBuffer));
+                                HANDLE hHandle;
 
-                                FreeLibrary(hHandle);
-
-                                if (iLength != 0)
+                                hHandle = LoadLibraryW(szPath);
+                                if (hHandle != NULL)
                                 {
-                                    DWORD dwLayoutId = DWORDfromString(szLayoutId);
+                                    INT iLength = LoadStringW(hHandle, iIndex, szBuffer, ARRAYSIZE(szBuffer));
 
-                                    LayoutList_AppendNode(dwLayoutId, dwSpecialId, szBuffer);
+                                    FreeLibrary(hHandle);
+
+                                    if (iLength != 0)
+                                    {
+                                        DWORD dwLayoutId = DWORDfromString(szLayoutId);
+
+                                        LayoutList_AppendNode(dwLayoutId, dwSpecialId, szBuffer);
+                                    }
+                                    else
+                                    {
+                                        goto NotTranslated;
+                                    }
                                 }
                                 else
                                 {

@@ -318,7 +318,7 @@ InputList_Add(LOCALE_LIST_NODE *pLocale, LAYOUT_LIST_NODE *pLayout)
         if (len > 0)
         {
             szIndicator[len - 1] = 0;
-            pInput->pszIndicator = DuplicateString(szIndicator);
+            pInput->pszIndicator = _wcsdup(szIndicator);
         }
     }
 
@@ -447,7 +447,7 @@ InputList_Create(VOID)
                         if (len > 0)
                         {
                             szIndicator[len - 1] = 0;
-                            pInput->pszIndicator = DuplicateString(szIndicator);
+                            pInput->pszIndicator = _wcsdup(szIndicator);
                         }
                     }
                 }

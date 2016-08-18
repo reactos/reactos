@@ -28,7 +28,7 @@ LocaleList_Append(DWORD dwId, const WCHAR *pszName)
 
     ZeroMemory(pNew, sizeof(LOCALE_LIST_NODE));
 
-    pNew->pszName = DuplicateString(pszName);
+    pNew->pszName = _wcsdup(pszName);
     if (pNew->pszName == NULL)
     {
         free(pNew);

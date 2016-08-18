@@ -75,23 +75,6 @@ INT_PTR CALLBACK
 ChangeKeySeqDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 
-static inline WCHAR*
-DuplicateString(const WCHAR *pszString)
-{
-    WCHAR *pszDuplicate;
-    size_t size;
-
-    size = (wcslen(pszString) + 1) * sizeof(WCHAR);
-
-    pszDuplicate = (WCHAR*) malloc(size);
-    if (pszDuplicate != NULL)
-    {
-        StringCbCopyW(pszDuplicate, size, pszString);
-    }
-
-    return pszDuplicate;
-}
-
 static inline DWORD
 DWORDfromString(const WCHAR *pszString)
 {
