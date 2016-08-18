@@ -658,8 +658,8 @@ static void test_position(void)
     oldproc = (WNDPROC)SetWindowLongPtrA(hWndTrackbar, GWLP_WNDPROC, (LONG_PTR)trackbar_no_wmpaint_proc);
     SetWindowLongPtrA(hWndTrackbar, GWLP_USERDATA, (LONG_PTR)oldproc);
 
-    memset(&rect, 0, sizeof(rect));
-    memset(&rect2, 0, sizeof(rect2));
+    SetRectEmpty(&rect);
+    SetRectEmpty(&rect2);
 
     SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect);
 
@@ -690,6 +690,7 @@ static void test_position(void)
 static void test_range(void)
 {
     HWND hWndTrackbar;
+    RECT rect1, rect2;
     int r;
 
     hWndTrackbar = create_trackbar(defaultstyle, hWndParent);
@@ -754,6 +755,28 @@ static void test_range(void)
 
     ok_sequence(sequences, TRACKBAR_SEQ_INDEX, range_test_seq, "range test sequence", TRUE);
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_range_test_seq, "parent range test sequence", TRUE);
+
+    /* TBM_SETRANGE updates thumb visual position (rectangle) if needed */
+    r = SendMessageA(hWndTrackbar, TBM_SETRANGE, TRUE, MAKELONG(-10, 0));
+    ok(r == 0, "got %d\n", r);
+    SendMessageA(hWndTrackbar, TBM_SETPOS, TRUE, 0);
+
+    RedrawWindow(hWndTrackbar, NULL, 0, RDW_UPDATENOW);
+    SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect1);
+
+    r = SendMessageA(hWndTrackbar, TBM_SETRANGE, TRUE, MAKELONG(-10, 10));
+    ok(r == 0, "got %d\n", r);
+    RedrawWindow(hWndTrackbar, NULL, 0, RDW_UPDATENOW);
+
+    SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect2);
+    ok(!EqualRect(&rect1, &rect2), "thumb rectangle not updated\n");
+
+    /* change range back, don't force repaint */
+    r = SendMessageA(hWndTrackbar, TBM_SETRANGE, FALSE, MAKELONG(-10, 0));
+    ok(r == 0, "got %d\n", r);
+
+    SendMessageA(hWndTrackbar, TBM_GETTHUMBRECT, 0, (LPARAM)&rect1);
+    ok(EqualRect(&rect1, &rect2), "thumb rectangle not updated\n");
 
     DestroyWindow(hWndTrackbar);
 }

@@ -32,9 +32,8 @@
         RECT exp = {abs(got.left - _left), abs(got.top - _top), \
                     abs(got.right - _right), abs(got.bottom - _bottom)}; \
         ok(exp.left <= 2 && exp.top <= 2 && exp.right <= 2 && exp.bottom <= 2, \
-           "Expected rect {%d,%d, %d,%d}, got {%d,%d, %d,%d}\n", \
-           _left, _top, _right, _bottom, \
-           (got).left, (got).top, (got).right, (got).bottom); } while (0)
+           "Expected rect (%d,%d)-(%d,%d), got %s\n", _left, _top, _right, _bottom, \
+           wine_dbgstr_rect(&(got))); } while (0)
 
 static HINSTANCE hinst;
 static WNDPROC g_status_wndproc;

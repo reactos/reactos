@@ -1361,8 +1361,8 @@ static void test_hds_nosizing(HWND hParent)
     ok(nm->lItemlParam == lparam, "Invalid lItemlParam %d vs %ld\n", lparam, nm->lItemlParam); \
     ok((nm->rc.top == _top && nm->rc.bottom == _bottom && nm->rc.left == _left && nm->rc.right == _right) || \
         broken(draw_stage != CDDS_ITEMPREPAINT), /* comctl32 < 5.80 */ \
-        "Invalid rect (%d,%d) (%d,%d) vs (%d,%d) (%d,%d)\n", _left, _top, _right, _bottom, \
-        nm->rc.left, nm->rc.top, nm->rc.right, nm->rc.bottom);
+        "Invalid rect (%d,%d)-(%d,%d) vs %s\n", _left, _top, _right, _bottom, \
+        wine_dbgstr_rect(&nm->rc));
 
 static LRESULT customdraw_1(int n, NMCUSTOMDRAW *nm)
 {

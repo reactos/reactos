@@ -893,8 +893,7 @@ static void test_images(void)
     r = SendMessageA(hwnd, LVM_INSERTITEMA, 0, (LPARAM) &item);
     ok(r == 0, "should not fail\n");
 
-    memset(&r1, 0, sizeof r1);
-    r1.left = LVIR_ICON;
+    SetRect(&r1, LVIR_ICON, 0, 0, 0);
     r = SendMessageA(hwnd, LVM_GETITEMRECT, 0, (LPARAM) &r1);
     expect(1, r);
 
@@ -906,12 +905,11 @@ static void test_images(void)
     r = SendMessageA(hwnd, LVM_INSERTITEMA, 0, (LPARAM) &item);
     ok(r == 0, "should not fail\n");
 
-    memset(&r2, 0, sizeof r2);
-    r2.left = LVIR_ICON;
+    SetRect(&r2, LVIR_ICON, 0, 0, 0);
     r = SendMessageA(hwnd, LVM_GETITEMRECT, 0, (LPARAM) &r2);
     expect(1, r);
 
-    ok(!memcmp(&r1, &r2, sizeof r1), "rectangle should be the same\n");
+    ok(EqualRect(&r1, &r2), "rectangle should be the same\n");
 
     DestroyWindow(hwnd);
 }
@@ -1184,7 +1182,8 @@ static void test_items(void)
     r = SendMessageA(hwnd, LVM_GETITEMA, 0, (LPARAM) &item);
     expect(1, r);
     ok(item.state & LVIS_SELECTED, "Expected LVIS_SELECTED\n");
-    SendMessageA(hwnd, LVM_DELETEITEM, 0, 0);
+    r = SendMessageA(hwnd, LVM_DELETEITEM, 0, 0);
+    ok(r, "got %d\n", r);
 
     /* LVIS_SELECTED with zero stateMask */
     /* set */
@@ -1206,7 +1205,8 @@ static void test_items(void)
     r = SendMessageA(hwnd, LVM_GETITEMA, 0, (LPARAM) &item);
     expect(1, r);
     ok(item.state & LVIS_FOCUSED, "Expected LVIS_FOCUSED\n");
-    SendMessageA(hwnd, LVM_DELETEITEM, 0, 0);
+    r = SendMessageA(hwnd, LVM_DELETEITEM, 0, 0);
+    ok(r, "got %d\n", r);
 
     /* LVIS_CUT with LVIS_FOCUSED stateMask */
     /* set */
@@ -1228,7 +1228,8 @@ static void test_items(void)
     r = SendMessageA(hwnd, LVM_GETITEMA, 0, (LPARAM) &item);
     expect(1, r);
     ok(item.state & LVIS_CUT, "Expected LVIS_CUT\n");
-    SendMessageA(hwnd, LVM_DELETEITEM, 0, 0);
+    r = SendMessageA(hwnd, LVM_DELETEITEM, 0, 0);
+    ok(r, "got %d\n", r);
 
     /* Insert an item with just a param */
     memset (&item, 0xcc, sizeof (item));
@@ -1424,6 +1425,12 @@ static void test_columns(void)
     hwnd = CreateWindowExA(0, "SysListView32", "foo", LVS_REPORT,
                 10, 10, 100, 200, hwndparent, NULL, NULL, NULL);
     ok(hwnd != NULL, "failed to create listview window\n");
+
+    rc = SendMessageA(hwnd, LVM_DELETECOLUMN, -1, 0);
+    ok(!rc, "got %d\n", rc);
+
+    rc = SendMessageA(hwnd, LVM_DELETECOLUMN, 0, 0);
+    ok(!rc, "got %d\n", rc);
 
     /* Add a column with no mask */
     memset(&column, 0xcc, sizeof(column));
@@ -1826,14 +1833,16 @@ static LRESULT WINAPI cd_wndproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
                 clr = GetBkColor(nmlvcd->nmcd.hdc);
                 ok(nmlvcd->clrTextBk == CLR_DEFAULT, "got 0x%x\n", nmlvcd->clrTextBk);
                 ok(nmlvcd->clrText == RGB(0, 255, 0), "got 0x%x\n", nmlvcd->clrText);
-                if (nmlvcd->iSubItem)
-                    todo_wine ok(clr == c0ffee, "clr=%.8x\n", clr);
-                else
-                    ok(clr == c0ffee, "clr=%.8x\n", clr);
+                if (!(GetWindowLongW(nmhdr->hwndFrom, GWL_STYLE) & LVS_SHOWSELALWAYS))
+                {
+                    todo_wine_if(nmlvcd->iSubItem)
+                        ok(clr == c0ffee, "clr=%.8x\n", clr);
+                }
                 return CDRF_NOTIFYPOSTPAINT;
             case CDDS_ITEMPOSTPAINT | CDDS_SUBITEM:
                 clr = GetBkColor(nmlvcd->nmcd.hdc);
-                todo_wine ok(clr == c0ffee, "clr=%.8x\n", clr);
+                if (!(GetWindowLongW(nmhdr->hwndFrom, GWL_STYLE) & LVS_SHOWSELALWAYS))
+                    todo_wine ok(clr == c0ffee, "clr=%.8x\n", clr);
                 ok(nmlvcd->clrTextBk == CLR_DEFAULT, "got 0x%x\n", nmlvcd->clrTextBk);
                 ok(nmlvcd->clrText == RGB(0, 255, 0), "got 0x%x\n", nmlvcd->clrText);
                 return CDRF_DODEFAULT;
@@ -2275,7 +2284,29 @@ static void test_multiselect(void)
     item_count = SendMessageA(hwnd, LVM_GETITEMCOUNT, 0, 0);
     expect(items, item_count);
 
-    for (i = 0; i < 4; i++) {
+    r = SendMessageA(hwnd, LVM_SETSELECTIONMARK, 0, -1);
+    ok(r == -1, "got %d\n", r);
+
+    r = SendMessageA(hwnd, LVM_SETSELECTIONMARK, 0, 0);
+    ok(r == -1, "got %d\n", r);
+
+    r = SendMessageA(hwnd, LVM_SETSELECTIONMARK, 0, 0);
+    ok(r == 0, "got %d\n", r);
+
+    /* out of range index */
+    r = SendMessageA(hwnd, LVM_SETSELECTIONMARK, 0, items);
+    ok(r == 0, "got %d\n", r);
+
+    r = SendMessageA(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    ok(r == 0, "got %d\n", r);
+
+    r = SendMessageA(hwnd, LVM_SETSELECTIONMARK, 0, -2);
+    ok(r == 0, "got %d\n", r);
+
+    r = SendMessageA(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    ok(r == 0, "got %d\n", r);
+
+    for (i = 0; i < sizeof(task_list)/sizeof(task_list[0]); i++) {
         DWORD selected_count;
         LVITEMA item;
 
@@ -2284,15 +2315,18 @@ static void test_multiselect(void)
 	/* deselect all items */
         item.state = 0;
         item.stateMask = LVIS_SELECTED;
-        SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
+        r = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
+        ok(r, "got %d\n", r);
 	SendMessageA(hwnd, LVM_SETSELECTIONMARK, 0, -1);
 
 	/* set initial position */
-	SendMessageA(hwnd, LVM_SETSELECTIONMARK, 0, (task.initPos == -1 ? item_count -1 : task.initPos));
+        r = SendMessageA(hwnd, LVM_SETSELECTIONMARK, 0, (task.initPos == -1 ? item_count -1 : task.initPos));
+        ok(r, "got %d\n", r);
 
         item.state = LVIS_SELECTED;
         item.stateMask = LVIS_SELECTED;
-        SendMessageA(hwnd, LVM_SETITEMSTATE, task.initPos == -1 ? item_count-1 : task.initPos, (LPARAM)&item);
+        r = SendMessageA(hwnd, LVM_SETITEMSTATE, task.initPos == -1 ? item_count-1 : task.initPos, (LPARAM)&item);
+        ok(r, "got %d\n", r);
 
 	selected_count = SendMessageA(hwnd, LVM_GETSELECTEDCOUNT, 0, 0);
 	ok(selected_count == 1, "expected 1, got %d\n", selected_count);
@@ -2337,7 +2371,8 @@ static void test_multiselect(void)
     /* select all, check notifications */
     item.state = 0;
     item.stateMask = LVIS_SELECTED;
-    SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
+    r = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
+    ok(r, "got %d\n", r);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
@@ -2371,7 +2406,8 @@ static void test_multiselect(void)
 
     item.state = 0;
     item.stateMask = LVIS_SELECTED;
-    SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
+    r = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
+    ok(r, "got %d\n", r);
 
     ok_sequence(sequences, PARENT_SEQ_INDEX, change_all_parent_seq,
                 "deselect all notification", FALSE);
@@ -2400,11 +2436,13 @@ static void test_multiselect(void)
     ok_sequence(sequences, PARENT_SEQ_INDEX, changing_all_parent_seq,
                 "set state all notification 3", FALSE);
 
-    SendMessageA(hwnd, LVM_SETSELECTIONMARK, 0, -1);
+    r = SendMessageA(hwnd, LVM_SETSELECTIONMARK, 0, -1);
+    ok(r, "got %d\n", r);
     for (i = 0; i < 3; i++) {
         item.state = LVIS_SELECTED;
         item.stateMask = LVIS_SELECTED;
-        SendMessageA(hwnd, LVM_SETITEMSTATE, i, (LPARAM)&item);
+        r = SendMessageA(hwnd, LVM_SETITEMSTATE, i, (LPARAM)&item);
+        ok(r, "got %d\n", r);
     }
 
     r = SendMessageA(hwnd, LVM_GETSELECTEDCOUNT, 0, 0);
@@ -2425,13 +2463,14 @@ static void test_multiselect(void)
     }
     r = SendMessageA(hwnd, LVM_GETSELECTEDCOUNT, 0, 0);
     expect(3, r);
-    SendMessageA(hwnd, LVM_GETSELECTIONMARK, 0, 0);
-    expect(3, r);
+    r = SendMessageA(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    ok(r == -1, "got %d\n", r);
 
     /* select one more */
     item.state = LVIS_SELECTED;
     item.stateMask = LVIS_SELECTED;
-    SendMessageA(hwnd, LVM_SETITEMSTATE, 3, (LPARAM)&item);
+    r = SendMessageA(hwnd, LVM_SETITEMSTATE, 3, (LPARAM)&item);
+    ok(r, "got %d\n", r);
 
     for (i=0;i<3;i++) {
         r = SendMessageA(hwnd, LVM_GETITEMSTATE, i, LVIS_SELECTED);
@@ -2451,7 +2490,8 @@ static void test_multiselect(void)
     item.stateMask = LVIS_SELECTED;
     r = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
     expect(TRUE, r);
-    SendMessageA(hwnd, LVM_SETSELECTIONMARK, 0, -1);
+    r = SendMessageA(hwnd, LVM_SETSELECTIONMARK, 0, -1);
+    ok(r == -1, "got %d\n", r);
 
     item.stateMask = LVIS_SELECTED;
     item.state     = LVIS_SELECTED;
@@ -2671,7 +2711,8 @@ static void test_subitem_rect(void)
     expect(100, rect.left);
     expect(250, rect.right);
 
-    SendMessageA(hwnd, LVM_SCROLL, 10, 0);
+    r = SendMessageA(hwnd, LVM_SCROLL, 10, 0);
+    ok(r, "got %d\n", r);
 
     SetRect(&rect, LVIR_BOUNDS, 1, 0, 0);
     r = SendMessageA(hwnd, LVM_GETSUBITEMRECT, 0, (LPARAM)&rect);
@@ -3621,8 +3662,7 @@ static void test_hittest(void)
     r = SendMessageA(hwnd, LVM_SETCOLUMNWIDTH, 1, MAKELPARAM(100, 0));
     expect(TRUE, r);
 
-    memset(&bounds, 0, sizeof(bounds));
-    bounds.left = LVIR_BOUNDS;
+    SetRect(&bounds, LVIR_BOUNDS, 0, 0, 0);
     r = SendMessageA(hwnd, LVM_GETITEMRECT, 0, (LPARAM)&bounds);
     expect(1, r);
     ok(bounds.bottom - bounds.top > 0, "Expected non zero item height\n");
@@ -3789,7 +3829,8 @@ static void test_getviewrect(void)
     memset(&item, 0, sizeof(item));
     item.iItem = 0;
     item.iSubItem = 0;
-    SendMessageA(hwnd, LVM_INSERTITEMA, 0, (LPARAM)&item);
+    r = SendMessageA(hwnd, LVM_INSERTITEMA, 0, (LPARAM)&item);
+    ok(!r, "got %d\n", r);
 
     r = SendMessageA(hwnd, LVM_SETCOLUMNWIDTH, 0, MAKELPARAM(100, 0));
     expect(TRUE, r);
@@ -3850,8 +3891,9 @@ static void test_getitemposition(void)
     expect(TRUE, r);
     ok_sequence(sequences, LISTVIEW_SEQ_INDEX, getitemposition_seq2, "get item position 2", TRUE);
 
-    memset(&rect, 0, sizeof(rect));
-    SendMessageA(header, HDM_GETITEMRECT, 0, (LPARAM)&rect);
+    SetRectEmpty(&rect);
+    r = SendMessageA(header, HDM_GETITEMRECT, 0, (LPARAM)&rect);
+    ok(r, "got %d\n", r);
     /* some padding? */
     expect(2, pt.x);
     /* offset by header height */
@@ -4850,7 +4892,8 @@ static void test_getcolumnwidth(void)
     /* default column width with item added */
     hwnd = create_listview_control(LVS_LIST);
     memset(&itema, 0, sizeof(itema));
-    SendMessageA(hwnd, LVM_INSERTITEMA, 0, (LPARAM)&itema);
+    ret = SendMessageA(hwnd, LVM_INSERTITEMA, 0, (LPARAM)&itema);
+    ok(!ret, "got %d\n", ret);
     ret = SendMessageA(hwnd, LVM_GETCOLUMNWIDTH, 0, 0);
     height = get_current_font_height(hwnd);
     ok((ret / height) >= 6, "got width %d, height %d\n", ret, height);
@@ -5789,6 +5832,26 @@ static void test_oneclickactivate(void)
     DestroyWindow(hwnd);
 }
 
+static void test_callback_mask(void)
+{
+    DWORD mask;
+    HWND hwnd;
+    BOOL ret;
+
+    hwnd = create_listview_control(LVS_REPORT);
+
+    ret = SendMessageA(hwnd, LVM_SETCALLBACKMASK, ~0u, 0);
+    ok(ret, "got %d\n", ret);
+
+    ret = SendMessageA(hwnd, LVM_SETCALLBACKMASK, ~0u, 1);
+    ok(ret, "got %d\n", ret);
+
+    mask = SendMessageA(hwnd, LVM_GETCALLBACKMASK, 0, 0);
+    ok(mask == ~0u, "got 0x%08x\n", mask);
+
+    DestroyWindow(hwnd);
+}
+
 START_TEST(listview)
 {
     HMODULE hComctl32;
@@ -5859,6 +5922,7 @@ START_TEST(listview)
     test_insertitem();
     test_header_proc();
     test_oneclickactivate();
+    test_callback_mask();
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
     {

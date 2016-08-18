@@ -1041,6 +1041,43 @@ static void test_setinfo(void)
    DestroyWindow(parent2);
 }
 
+static void test_margin(void)
+{
+    RECT r, r1;
+    HWND hwnd;
+    DWORD ret;
+
+    hwnd = CreateWindowExA(0, TOOLTIPS_CLASSA, NULL, 0,
+                           10, 10, 300, 100,
+                           NULL, NULL, NULL, 0);
+    ok(hwnd != NULL, "failed to create tooltip wnd\n");
+
+    ret = SendMessageA(hwnd, TTM_SETMARGIN, 0, 0);
+    ok(!ret, "got %d\n", ret);
+
+    SetRect(&r, -1, -1, 1, 1);
+    ret = SendMessageA(hwnd, TTM_SETMARGIN, 0, (LPARAM)&r);
+    ok(!ret, "got %d\n", ret);
+
+    SetRectEmpty(&r1);
+    ret = SendMessageA(hwnd, TTM_GETMARGIN, 0, (LPARAM)&r1);
+    ok(!ret, "got %d\n", ret);
+    ok(EqualRect(&r, &r1), "got %s, was %s\n", wine_dbgstr_rect(&r1), wine_dbgstr_rect(&r));
+
+    ret = SendMessageA(hwnd, TTM_SETMARGIN, 0, 0);
+    ok(!ret, "got %d\n", ret);
+
+    SetRectEmpty(&r1);
+    ret = SendMessageA(hwnd, TTM_GETMARGIN, 0, (LPARAM)&r1);
+    ok(!ret, "got %d\n", ret);
+    ok(EqualRect(&r, &r1), "got %s, was %s\n", wine_dbgstr_rect(&r1), wine_dbgstr_rect(&r));
+
+    ret = SendMessageA(hwnd, TTM_GETMARGIN, 0, 0);
+    ok(!ret, "got %d\n", ret);
+
+    DestroyWindow(hwnd);
+}
+
 START_TEST(tooltips)
 {
     InitCommonControls();
@@ -1053,4 +1090,5 @@ START_TEST(tooltips)
     test_longtextW();
     test_track();
     test_setinfo();
+    test_margin();
 }

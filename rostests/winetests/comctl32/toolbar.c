@@ -108,9 +108,9 @@ static const struct message restore_parent_seq[] = {
 
 #define expect(EXPECTED,GOT) ok((GOT)==(EXPECTED), "Expected %d, got %d\n", (EXPECTED), (GOT))
 
-#define check_rect(name, val, exp, ...) ok(val.top == exp.top && val.bottom == exp.bottom && \
-    val.left == exp.left && val.right == exp.right, "invalid rect (%d,%d) (%d,%d) - expected (%d,%d) (%d,%d) - (" name ")\n", \
-    val.left, val.top, val.right, val.bottom, exp.left, exp.top, exp.right, exp.bottom, __VA_ARGS__);
+#define check_rect(name, val, exp, ...) ok(EqualRect(&val, &exp), \
+    "invalid rect %s - expected %s - (" name ")\n", \
+    wine_dbgstr_rect(&val), wine_dbgstr_rect(&exp), __VA_ARGS__);
  
 #define compare(val, exp, format) ok((val) == (exp), #val " value " format " expected " format "\n", (val), (exp));
 
@@ -1232,7 +1232,7 @@ static DWORD tbsize_alt_numtests = 0;
         for (i=0; i<min(buttonCount, res->nButtons); i++) { \
             ok(SendMessageA(hToolbar, TB_GETITEMRECT, i, (LPARAM)&rc) == 1, "TB_GETITEMRECT\n"); \
             if (broken(tbsize_alt_numtests < sizeof(tbsize_alt_results)/sizeof(tbsize_alt_results[0]) && \
-                       memcmp(&rc, &tbsize_alt_results[tbsize_alt_numtests].rcButton, sizeof(RECT)) == 0)) { \
+                       EqualRect(&rc, &tbsize_alt_results[tbsize_alt_numtests].rcButton))) { \
                 win_skip("Alternate rect found\n"); \
                 tbsize_alt_numtests++; \
             } else if (!(mask&1)) { \

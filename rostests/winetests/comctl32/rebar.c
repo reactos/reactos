@@ -37,15 +37,14 @@ static HWND hMainWnd;
 static int system_font_height;
 
 
-#define check_rect(name, val, exp) ok(val.top == exp.top && val.bottom == exp.bottom && \
-    val.left == exp.left && val.right == exp.right, "invalid rect (" name ") (%d,%d) (%d,%d) - expected (%d,%d) (%d,%d)\n", \
-    val.left, val.top, val.right, val.bottom, exp.left, exp.top, exp.right, exp.bottom);
+#define check_rect(name, val, exp) ok(EqualRect(&val, &exp), \
+    "invalid rect (" name ") %s - expected %s\n", wine_dbgstr_rect(&val), wine_dbgstr_rect(&exp));
 
 #define check_rect_no_top(name, val, exp) { \
         ok((val.bottom - val.top == exp.bottom - exp.top) && \
-            val.left == exp.left && val.right == exp.right, "invalid rect (" name ") (%d,%d) (%d,%d) - expected (%d,%d) (%d,%d), ignoring top\n", \
-            val.left, val.top, val.right, val.bottom, exp.left, exp.top, exp.right, exp.bottom); \
-    }
+            val.left == exp.left && val.right == exp.right, \
+            "invalid rect (" name ") %s - expected %s, ignoring top\n", \
+            wine_dbgstr_rect(&val), wine_dbgstr_rect(&exp)); }
 
 #define compare(val, exp, format) ok((val) == (exp), #val " value " format " expected " format "\n", (val), (exp));
 
