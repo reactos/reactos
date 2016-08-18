@@ -3350,6 +3350,10 @@ LRESULT CShellBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     HRESULT hr;
+
+    /* The current thread is about to go down so render any IDataObject that may be left in the clipboard */
+    OleFlushClipboard();
+
     // TODO: rip down everything
     {
         fCurrentShellView->DestroyViewWindow();
