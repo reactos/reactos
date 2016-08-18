@@ -212,6 +212,10 @@ static KSPIN_LOCK AddressListLock;
 static LIST_ENTRY AddressListHead;
 
 /* Forward-declare lwIP callback functions */
+static u8_t lwip_raw_ReceiveDatagram_callback(void *arg, struct raw_pcb *pcb, struct pbuf *p,
+    ip_addr_t *addr);
+static void lwip_udp_ReceiveDatagram_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
+    ip_addr_t *addr, u16_t port);
 static err_t lwip_tcp_accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err);
 static err_t lwip_tcp_recv_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
 static err_t lwip_tcp_sent_callback(void *arg, struct tcp_pcb *tpcb, u16_t len);
@@ -1690,6 +1694,90 @@ Finish:
     return Status;
 }
 
+static
+BOOLEAN
+ReceiveDatagram(
+    ADDRESS_FILE* AddressFile,
+    struct pbuf *p,
+    ip_addr_t *addr,
+    u16_t port)
+{
+    KIRQL OldIrql;
+    LIST_ENTRY* ListEntry;
+    RECEIVE_DATAGRAM_REQUEST* Request;
+    ip_addr_t RequestAddr;
+    BOOLEAN Result = FALSE;
+
+    NT_ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
+
+    DPRINT1("Receiving datagram for addr 0x%08x on port %u.\n", ip4_addr_get_u32(addr), port);
+
+    /* Block any cancellation that could occur */
+    IoAcquireCancelSpinLock(&OldIrql);
+    KeAcquireSpinLockAtDpcLevel(&AddressFile->RequestLock);
+
+    ListEntry = AddressFile->RequestListHead.Flink;
+    while (ListEntry != &AddressFile->RequestListHead)
+    {
+        Request = CONTAINING_RECORD(ListEntry, RECEIVE_DATAGRAM_REQUEST, ListEntry);
+        ListEntry = ListEntry->Flink;
+
+        ip4_addr_set_u32(&RequestAddr, Request->RemoteAddress.in_addr);
+
+        if ((RequestAddr.addr == IPADDR_ANY) ||
+                (ip_addr_cmp(&RequestAddr, addr) &&
+                        ((Request->RemoteAddress.sin_port == lwip_htons(port)) || !port)))
+        {
+            PTA_IP_ADDRESS ReturnAddress;
+            PIRP Irp;
+
+            DPRINT1("Found a corresponding IRP.\n");
+
+            Irp = Request->Irp;
+
+            /* We found a request for this one */
+            IoSetCancelRoutine(Irp, NULL);
+            RemoveEntryList(&Request->ListEntry);
+            Result = TRUE;
+
+            KeReleaseSpinLockFromDpcLevel(&AddressFile->RequestLock);
+            IoReleaseCancelSpinLock(OldIrql);
+
+            /* In case of UDP, lwip provides a pbuf directly pointing to the data.
+             * In other case, we must skip the IP header */
+            Irp->IoStatus.Information = pbuf_copy_partial(
+                p,
+                Request->Buffer,
+                Request->BufferLength,
+                0);
+            ReturnAddress = Request->ReturnInfo->RemoteAddress;
+            ReturnAddress->Address->AddressLength = TDI_ADDRESS_LENGTH_IP;
+            ReturnAddress->Address->AddressType = TDI_ADDRESS_TYPE_IP;
+            ReturnAddress->Address->Address->sin_port = lwip_htons(port);
+            ReturnAddress->Address->Address->in_addr = ip4_addr_get_u32(addr);
+            RtlZeroMemory(ReturnAddress->Address->Address->sin_zero,
+                sizeof(ReturnAddress->Address->Address->sin_zero));
+
+            if (Request->BufferLength < p->tot_len)
+                Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
+            else
+                Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NETWORK_INCREMENT);
+
+            ExFreePoolWithTag(Request, TAG_ADDRESS_FILE);
+
+            /* Start again from the beginning */
+            IoAcquireCancelSpinLock(&OldIrql);
+            KeAcquireSpinLockAtDpcLevel(&AddressFile->RequestLock);
+        }
+    }
+
+    KeReleaseSpinLockFromDpcLevel(&AddressFile->RequestLock);
+    IoReleaseCancelSpinLock(OldIrql);
+
+    return Result;
+}
+
 /**
  * TCP/IP Stack Functions
  **/
@@ -1809,6 +1897,8 @@ CreateAddressAndEnlist(
 {
     PADDRESS_FILE AddressFile;
     PLIST_ENTRY Entry;
+    
+    ip_addr_t IpAddr;
 
     /* If a netif is specified, check for AddressFile with matching netif and port in order to
      * detect duplicates */
@@ -1859,18 +1949,34 @@ CreateAddressAndEnlist(
     RtlCopyMemory(&AddressFile->Address, Address, sizeof(*Address));
     AddressFile->NetInterface = lwip_netif;
 
-    /* Entity ID */
+    /* Entity ID and, for unconnected protocols, lwIP PCB and callback functions. */
     switch (Protocol)
     {
         case IPPROTO_TCP :
             InsertEntityInstance(CO_TL_ENTITY, &AddressFile->Instance);
             break;
-        case IPPROTO_ICMP :
-            InsertEntityInstance(ER_ENTITY, &AddressFile->Instance);
+        case IPPROTO_UDP :
+            ip4_addr_set_u32(&IpAddr, AddressFile->Address.in_addr);
+            InsertEntityInstance(CL_TL_ENTITY, &AddressFile->Instance);
+            AddressFile->lwip_udp_pcb = udp_new();
+            udp_bind(AddressFile->lwip_udp_pcb, &IpAddr, lwip_ntohs(AddressFile->Address.sin_port));
+            ip_set_option(AddressFile->lwip_udp_pcb, SOF_BROADCAST);
+            udp_recv(AddressFile->lwip_udp_pcb, lwip_udp_ReceiveDatagram_callback, AddressFile);
             break;
         default :
-            /* UDP, RAW */
-            InsertEntityInstance(CL_TL_ENTITY, &AddressFile->Instance);
+            if (Protocol == IPPROTO_ICMP)
+            {
+                InsertEntityInstance(ER_ENTITY, &AddressFile->Instance);
+            }
+            else
+            {
+                InsertEntityInstance(CL_TL_ENTITY, &AddressFile->Instance);
+            }
+            ip4_addr_set_u32(&IpAddr, AddressFile->Address.in_addr);
+            AddressFile->lwip_raw_pcb = raw_new(Protocol);
+            raw_bind(AddressFile->lwip_raw_pcb, &IpAddr);
+            ip_set_option(AddressFile->lwip_raw_pcb, SOF_BROADCAST);
+            raw_recv(AddressFile->lwip_raw_pcb, lwip_raw_ReceiveDatagram_callback, AddressFile);
             break;
     }
 
@@ -1880,7 +1986,6 @@ CreateAddressAndEnlist(
     /* UDP and RAW variables */
     KeInitializeSpinLock(&AddressFile->RequestLock);
     InitializeListHead(&AddressFile->RequestListHead);
-    AddressFile->lwip_raw_pcb = NULL;
 
     /* Add to master list */
     InsertTailList(&AddressListHead, &AddressFile->ListEntry);
@@ -1988,6 +2093,66 @@ ExtractAddressFromList(
 /**
  * lwIP Callback Functions
  **/
+
+static
+u8_t
+lwip_raw_ReceiveDatagram_callback(
+    void *arg,
+    struct raw_pcb *pcb,
+    struct pbuf *p,
+    ip_addr_t *addr)
+{
+    BOOLEAN Result;
+    ADDRESS_FILE* AddressFile = arg;
+
+    UNREFERENCED_PARAMETER(pcb);
+
+    /* If this is for ICMP, only process the "echo received" packets.
+     * The rest is processed by lwip. */
+    if (AddressFile->Protocol == IPPROTO_ICMP)
+    {
+        /* See icmp_input */
+        s16_t hlen;
+        struct ip_hdr *iphdr;
+
+        iphdr = (struct ip_hdr *)p->payload;
+        hlen = IPH_HL(iphdr) * 4;
+
+        /* Adjust the pbuf to skip the IP header */
+        if (pbuf_header(p, -hlen))
+            return FALSE;
+
+        if (*((u8_t*)p->payload) != ICMP_ER)
+        {
+            pbuf_header(p, hlen);
+            return FALSE;
+        }
+
+        pbuf_header(p, hlen);
+    }
+
+    Result = ReceiveDatagram(arg, p, addr, 0);
+
+    if (Result)
+        pbuf_free(p);
+
+    return Result;
+}
+
+static
+void
+lwip_udp_ReceiveDatagram_callback(
+    void *arg,
+    struct udp_pcb *pcb,
+    struct pbuf *p,
+    ip_addr_t *addr,
+    u16_t port)
+{
+    UNREFERENCED_PARAMETER(pcb);
+
+    ReceiveDatagram(arg, p, addr, port);
+    pbuf_free(p);
+}
 
 static
 err_t

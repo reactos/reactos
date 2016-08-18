@@ -158,6 +158,31 @@ TcpIpQueryKernelInformation(
     /* See what we are queried */
     switch (Query->QueryType)
     {
+        case TDI_QUERY_ADDRESS_INFO :
+            PTDI_ADDRESS_INFO AddressInfo;
+            PADDRESS_FILE AddressFile;
+            PTA_ADDRESS TAAddress;
+            
+            if (MmGetMdlByteCount(Irp->MdlAddress) < sizeof(*AddressInfo)) {
+                DPRINT1("MDL buffer too small.\n");
+                Status = STATUS_BUFFER_TOO_SMALL;
+                break;
+            }
+            
+            AddressFile = IrpSp->FileObject->FsContext;
+            
+            AddressInfo = MmGetSystemAddressForMdl(Irp->MdlAddress);
+            AddressInfo->ActivityCount = AddressFile->RefCount;
+            AddressInfo->Address.TAAddressCount = 1;
+            
+            TAAddress = AddressInfo->Address.Address;
+            TAAddress->AddressLength = TDI_ADDRESS_LENGTH_IP;
+            TAAddress->AddressType = TDI_ADDRESS_TYPE_IP;
+            RtlCopyMemory(&TAAddress->Address[0], &AddressFile->Address, TDI_ADDRESS_LENGTH_IP);
+            
+            Status = STATUS_SUCCESS;
+            
+            break;
         case TDI_QUERY_MAX_DATAGRAM_INFO:
         {
             PTDI_MAX_DATAGRAM_INFO MaxDatagramInfo;

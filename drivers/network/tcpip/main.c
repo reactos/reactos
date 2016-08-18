@@ -428,9 +428,7 @@ TcpIpDispatchInternal(
             break;
         case TDI_RECEIVE_DATAGRAM:
             DPRINT1("TCPIP: TDI_RECEIVE_DATAGRAM!\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-            //return TcpIpReceiveDatagram(Irp);
+            return TcpIpReceiveDatagram(Irp);
 
         case TDI_SEND:
             DPRINT1("TCPIP: TDI_SEND!\n");
@@ -456,9 +454,7 @@ TcpIpDispatchInternal(
 
         case TDI_SEND_DATAGRAM:
             DPRINT1("TCPIP: TDI_SEND_DATAGRAM!\n");
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-            //return TcpIpSendDatagram(Irp);
+            return TcpIpSendDatagram(Irp);
 
         case TDI_ACCEPT:
             DPRINT1("TCPIP: TDI_ACCEPT!\n");
