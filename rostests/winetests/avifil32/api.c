@@ -709,6 +709,35 @@ static void test_COM_wavfile(void)
     while (IAVIFile_Release(avif));
 }
 
+static void test_COM_editstream(void)
+{
+    IAVIEditStream *edit;
+    IAVIStream *stream;
+    IUnknown *unk;
+    ULONG refcount;
+    HRESULT hr;
+
+    /* Same refcount for all AVIEditStream interfaces */
+    hr = CreateEditableStream(&stream, NULL);
+    ok(hr == S_OK, "AVIEditStream create failed: %08x, expected S_OK\n", hr);
+    refcount = IAVIStream_AddRef(stream);
+    ok(refcount == 2, "refcount == %u, expected 2\n", refcount);
+
+    hr = IAVIStream_QueryInterface(stream, &IID_IAVIEditStream, (void**)&edit);
+    ok(hr == S_OK, "QueryInterface for IID_IAVIEditStream failed: %08x\n", hr);
+    refcount = IAVIEditStream_AddRef(edit);
+    ok(refcount == 4, "refcount == %u, expected 4\n", refcount);
+    refcount = IAVIEditStream_Release(edit);
+
+    hr = IAVIEditStream_QueryInterface(edit, &IID_IUnknown, (void**)&unk);
+    ok(hr == S_OK, "QueryInterface for IID_IUnknown failed: %08x\n", hr);
+    refcount = IUnknown_AddRef(unk);
+    ok(refcount == 5, "refcount == %u, expected 5\n", refcount);
+    IUnknown_Release(unk);
+
+    while (IAVIEditStream_Release(edit));
+}
+
 START_TEST(api)
 {
 
@@ -721,6 +750,7 @@ START_TEST(api)
     test_ash1_corruption2();
     test_COM();
     test_COM_wavfile();
+    test_COM_editstream();
     AVIFileExit();
 
 }
