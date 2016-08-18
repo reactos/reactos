@@ -6,12 +6,6 @@
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
-/*
-TODO:
-    The code in NotifyShellViewWindow to deliver commands to the view is broken. It is an excellent
-    example of the wrong way to do it.
-*/
-
 #include "precomp.h"
 
 extern "C"
@@ -61,9 +55,11 @@ struct _StaticInvokeCommandMap_
 
 class CDefaultContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IContextMenu3
+    public IContextMenu3,
+    public IObjectWithSite
 {
     private:
+        CComPtr<IUnknown> m_site;
         CComPtr<IShellFolder> m_psf;
         UINT m_cidl;
         PCUITEMID_CHILD_ARRAY m_apidl;
@@ -87,6 +83,7 @@ class CDefaultContextMenu :
         UINT BuildBackgroundContextMenu(HMENU hMenu, UINT iIdCmdFirst, UINT iIdCmdLast, UINT uFlags);
         UINT AddStaticContextMenusToMenu(HMENU hMenu, UINT IndexMenu);
         UINT BuildShellItemContextMenu(HMENU hMenu, UINT iIdCmdFirst, UINT iIdCmdLast, UINT uFlags);
+        HRESULT NotifyShellViewWindow(LPCMINVOKECOMMANDINFO lpcmi, BOOL bRefresh);
         HRESULT DoPaste(LPCMINVOKECOMMANDINFO lpcmi, BOOL bLink);
         HRESULT DoOpenOrExplore(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoCreateLink(LPCMINVOKECOMMANDINFO lpcmi);
@@ -121,10 +118,15 @@ class CDefaultContextMenu :
         // IContextMenu3
         virtual HRESULT WINAPI HandleMenuMsg2(UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
 
+        // IObjectWithSite
+        virtual HRESULT STDMETHODCALLTYPE SetSite(IUnknown *pUnkSite);
+        virtual HRESULT STDMETHODCALLTYPE GetSite(REFIID riid, void **ppvSite);
+
         BEGIN_COM_MAP(CDefaultContextMenu)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu2, IContextMenu2)
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu3, IContextMenu3)
+        COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
         END_COM_MAP()
 };
 
@@ -992,21 +994,23 @@ CDefaultContextMenu::QueryContextMenu(
     return S_OK;
 }
 
-static
 HRESULT
-NotifyShellViewWindow(LPCMINVOKECOMMANDINFO lpcmi, BOOL bRefresh)
+CDefaultContextMenu::NotifyShellViewWindow(LPCMINVOKECOMMANDINFO lpcmi, BOOL bRefresh)
 {
-    /* Note: CWM_GETISHELLBROWSER returns not referenced object */
-    LPSHELLBROWSER lpSB = (LPSHELLBROWSER)SendMessageA(lpcmi->hwnd, CWM_GETISHELLBROWSER, 0, 0);
-    if (!lpSB)
-        return E_FAIL;
+    CComPtr<IShellView> psv;
 
-    CComPtr<IShellView> lpSV;
-    if (FAILED(lpSB->QueryActiveShellView(&lpSV)))
-        return E_FAIL;
+    HRESULT hr;
+
+    if (!m_site)
+        return E_FAIL;;
+
+    /* Get a pointer to the shell browser */
+    hr = IUnknown_QueryService(m_site, SID_IFolderView, IID_PPV_ARG(IShellView, &psv));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     HWND hwndSV = NULL;
-    if (SUCCEEDED(lpSV->GetWindow(&hwndSV)))
+    if (SUCCEEDED(psv->GetWindow(&hwndSV)))
         SendMessageW(hwndSV, WM_COMMAND, MAKEWPARAM(LOWORD(lpcmi->lpVerb), 0), 0);
     return S_OK;
 }
@@ -1015,19 +1019,16 @@ HRESULT
 CDefaultContextMenu::DoRefresh(
     LPCMINVOKECOMMANDINFO lpcmi)
 {
-    CComPtr<IPersistFolder2> ppf2 = NULL;
-    LPITEMIDLIST pidl;
-    HRESULT hr = m_psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
-    if (SUCCEEDED(hr))
-    {
-        hr = ppf2->GetCurFolder(&pidl);
-        if (SUCCEEDED(hr))
-        {
-            SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_IDLIST, pidl, NULL);
-            ILFree(pidl);
-        }
-    }
-    return hr;
+    if (!m_site)
+        return E_FAIL;;
+    
+    /* Get a pointer to the shell view */
+    CComPtr<IShellView> psv;
+    HRESULT hr = IUnknown_QueryService(m_site, SID_IFolderView, IID_PPV_ARG(IShellView, &psv));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return psv->Refresh();
 }
 
 HRESULT
@@ -1208,69 +1209,44 @@ CDefaultContextMenu::DoCopyOrCut(
     CComPtr<IDataObject> pDataObj;
     HRESULT hr;
 
-    if (SUCCEEDED(SHCreateDataObject(m_pidlFolder, m_cidl, m_apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
-    {
-        if (!bCopy)
-        {
-            FORMATETC formatetc;
-            STGMEDIUM medium;
-            InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECT), TYMED_HGLOBAL);
-            pDataObj->GetData(&formatetc, &medium);
-            DWORD * pdwFlag = (DWORD*)GlobalLock(medium.hGlobal);
-            if (pdwFlag)
-                *pdwFlag = DROPEFFECT_MOVE;
-            GlobalUnlock(medium.hGlobal);
-            pDataObj->SetData(&formatetc, &medium, TRUE);
-        }
-
-        hr = OleSetClipboard(pDataObj);
+    hr = SHCreateDataObject(m_pidlFolder, m_cidl, m_apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
+    if(FAILED_UNEXPECTEDLY(hr))
         return hr;
+
+    if (!bCopy)
+    {
+        FORMATETC formatetc;
+        STGMEDIUM medium;
+        InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECT), TYMED_HGLOBAL);
+        pDataObj->GetData(&formatetc, &medium);
+        DWORD * pdwFlag = (DWORD*)GlobalLock(medium.hGlobal);
+        if (pdwFlag)
+            *pdwFlag = DROPEFFECT_MOVE;
+        GlobalUnlock(medium.hGlobal);
+        pDataObj->SetData(&formatetc, &medium, TRUE);
     }
 
-    /* Note: CWM_GETISHELLBROWSER returns not referenced object */
-    LPSHELLBROWSER lpSB = (LPSHELLBROWSER)SendMessageA(lpcmi->hwnd, CWM_GETISHELLBROWSER, 0, 0);
-    if (!lpSB)
-    {
-        ERR("failed to get shellbrowser\n");
-        return E_FAIL;
-    }
-
-    CComPtr<IShellView> lpSV;
-    hr = lpSB->QueryActiveShellView(&lpSV);
-    if (FAILED(hr))
-    {
-        ERR("failed to query the active shellview\n");
-        return hr;
-    }
-
-    hr = lpSV->GetItemObject(SVGIO_SELECTION, IID_PPV_ARG(IDataObject, &pDataObj));
-    if (SUCCEEDED(hr))
-    {
-        hr = OleSetClipboard(pDataObj);
-        if (FAILED(hr))
-            ERR("OleSetClipboard failed");
-        pDataObj->Release();
-    } else
-        ERR("failed to get item object\n");
-
-    return hr;
+    return OleSetClipboard(pDataObj);
 }
 
 HRESULT
 CDefaultContextMenu::DoRename(
     LPCMINVOKECOMMANDINFO lpcmi)
 {
-    /* get the active IShellView. Note: CWM_GETISHELLBROWSER returns not referenced object */
-    LPSHELLBROWSER lpSB = (LPSHELLBROWSER)SendMessageA(lpcmi->hwnd, CWM_GETISHELLBROWSER, 0, 0);
-    if (!lpSB)
-    {
-        ERR("CWM_GETISHELLBROWSER failed\n");
+    CComPtr<IShellBrowser> psb;
+    HRESULT hr;
+
+    if (!m_site)
         return E_FAIL;
-    }
+
+    /* Get a pointer to the shell browser */
+    hr = IUnknown_QueryService(m_site, SID_IShellBrowser, IID_PPV_ARG(IShellBrowser, &psb));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     /* is the treeview focused */
     HWND hwnd;
-    if (SUCCEEDED(lpSB->GetControlWindow(FCW_TREE, &hwnd)))
+    if (SUCCEEDED(psb->GetControlWindow(FCW_TREE, &hwnd)))
     {
         HTREEITEM hItem = TreeView_GetSelection(hwnd);
         if (hItem)
@@ -1278,12 +1254,9 @@ CDefaultContextMenu::DoRename(
     }
 
     CComPtr<IShellView> lpSV;
-    HRESULT hr = lpSB->QueryActiveShellView(&lpSV);
-    if (FAILED(hr))
-    {
-        ERR("CWM_GETISHELLBROWSER failed\n");
+    hr = psb->QueryActiveShellView(&lpSV);
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
     SVSIF selFlags = SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE | SVSI_FOCUSED | SVSI_SELECT;
     lpSV->SelectItem(m_apidl[0], selFlags);
@@ -1423,24 +1396,20 @@ CDefaultContextMenu::DoCreateNewFolder(
         return E_FAIL;
 
     /* Show and select the new item in the def view */
-    CComPtr<IShellBrowser> lpSB;
-    CComPtr<IShellView> lpSV;
     LPITEMIDLIST pidl;
     PITEMID_CHILD pidlNewItem;
+    CComPtr<IShellView> psv;
 
     /* Notify the view object about the new item */
     SHChangeNotify(SHCNE_MKDIR, SHCNF_PATHW, (LPCVOID)wszName, NULL);
 
-    /* FIXME: I think that this can be implemented using callbacks to the shell folder */
+    if (!m_site)
+        return S_OK;
 
-    /* Note: CWM_GETISHELLBROWSER returns shell browser without adding reference */
-    lpSB = (LPSHELLBROWSER)SendMessageA(lpici->hwnd, CWM_GETISHELLBROWSER, 0, 0);
-    if (!lpSB)
-        return E_FAIL;
-
-    hr = lpSB->QueryActiveShellView(&lpSV);
-    if (FAILED(hr))
-        return hr;
+    /* Get a pointer to the shell view */
+    hr = IUnknown_QueryService(m_site, SID_IFolderView, IID_PPV_ARG(IShellView, &psv));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return S_OK;
 
     /* Attempt to get the pidl of the new item */
     hr = SHILCreateFromPathW(wszName, &pidl, NULL);
@@ -1449,7 +1418,7 @@ CDefaultContextMenu::DoCreateNewFolder(
 
     pidlNewItem = ILFindLastID(pidl);
 
-    hr = lpSV->SelectItem(pidlNewItem, SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE |
+    hr = psv->SelectItem(pidlNewItem, SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE |
                           SVSI_FOCUSED | SVSI_SELECT);
 
     SHFree(pidl);
@@ -1528,7 +1497,7 @@ CDefaultContextMenu::DoDynamicShellExtensions(
 DWORD
 CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticShellEntry pEntry)
 {
-    LPSHELLBROWSER lpSB;
+    CComPtr<IShellBrowser> psb;
     HWND hwndTree;
     LPCWSTR FlagsName;
     WCHAR wszKey[256];
@@ -1536,13 +1505,16 @@ CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticSh
     DWORD wFlags;
     DWORD cbVerb;
 
+    if (!m_site)
+        return 0;
+
     /* Get a pointer to the shell browser */
-    lpSB = (LPSHELLBROWSER)SendMessageA(lpcmi->hwnd, CWM_GETISHELLBROWSER, 0, 0);
-    if (lpSB == NULL)
+    hr = IUnknown_QueryService(m_site, SID_IShellBrowser, IID_PPV_ARG(IShellBrowser, &psb));
+    if (FAILED_UNEXPECTEDLY(hr))
         return 0;
 
     /* See if we are in Explore or Browse mode. If the browser's tree is present, we are in Explore mode.*/
-    if (SUCCEEDED(lpSB->GetControlWindow(FCW_TREE, &hwndTree)) && hwndTree)
+    if (SUCCEEDED(psb->GetControlWindow(FCW_TREE, &hwndTree)) && hwndTree)
         FlagsName = L"ExplorerFlags";
     else
         FlagsName = L"BrowserFlags";
@@ -1565,15 +1537,18 @@ HRESULT
 CDefaultContextMenu::TryToBrowse(
     LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl, DWORD wFlags)
 {
-    LPSHELLBROWSER lpSB = (LPSHELLBROWSER)SendMessageW(lpcmi->hwnd, CWM_GETISHELLBROWSER, 0, 0);
+    CComPtr<IShellBrowser> psb;
     HRESULT hr;
 
-    if (lpSB == NULL)
+    if (!m_site)
         return E_FAIL;
 
-    hr = lpSB->BrowseObject(ILCombine(m_pidlFolder, pidl), wFlags);
+    /* Get a pointer to the shell browser */
+    hr = IUnknown_QueryService(m_site, SID_IShellBrowser, IID_PPV_ARG(IShellBrowser, &psb));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return 0;
 
-    return hr;
+    return psb->BrowseObject(ILCombine(m_pidlFolder, pidl), wFlags);
 }
 
 HRESULT
@@ -1865,42 +1840,29 @@ CDefaultContextMenu::HandleMenuMsg2(
    return S_OK;
 }
 
+HRESULT
+WINAPI
+CDefaultContextMenu::SetSite(IUnknown *pUnkSite)
+{
+    m_site = pUnkSite;
+    return S_OK;
+}
+
+HRESULT 
+WINAPI 
+CDefaultContextMenu::GetSite(REFIID riid, void **ppvSite)
+{
+    if (!m_site)
+        return E_FAIL;
+
+    return m_site->QueryInterface(riid, ppvSite);
+}
+
 static
 HRESULT
-IDefaultContextMenu_Constructor(
-    const DEFCONTEXTMENU *pdcm,
-    REFIID riid,
-    void **ppv)
+CDefaultContextMenu_CreateInstance(const DEFCONTEXTMENU *pdcm, REFIID riid, void **ppv)
 {
-    if (ppv == NULL)
-        return E_POINTER;
-    *ppv = NULL;
-
-    CComObject<CDefaultContextMenu> *pCM;
-    HRESULT hr = CComObject<CDefaultContextMenu>::CreateInstance(&pCM);
-    if (FAILED(hr))
-        return hr;
-    pCM->AddRef(); // CreateInstance returns object with 0 ref count */
-
-    CComPtr<IUnknown> pResult;
-    hr = pCM->QueryInterface(riid, (void **)&pResult);
-    if (FAILED(hr))
-    {
-        pCM->Release();
-        return hr;
-    }
-
-    hr = pCM->Initialize(pdcm);
-    if (FAILED(hr))
-    {
-        pCM->Release();
-        return hr;
-    }
-
-    *ppv = pResult.Detach();
-    pCM->Release();
-    TRACE("This(%p) cidl %u\n", *ppv, pdcm->cidl);
-    return S_OK;
+    return ShellObjectCreatorInit<CDefaultContextMenu>(pdcm, riid, ppv);
 }
 
 /*************************************************************************
@@ -1910,17 +1872,9 @@ IDefaultContextMenu_Constructor(
 
 HRESULT
 WINAPI
-SHCreateDefaultContextMenu(
-    const DEFCONTEXTMENU *pdcm,
-    REFIID riid,
-    void **ppv)
+SHCreateDefaultContextMenu(const DEFCONTEXTMENU *pdcm, REFIID riid, void **ppv)
 {
-    *ppv = NULL;
-    HRESULT hr = IDefaultContextMenu_Constructor(pdcm, riid, ppv);
-    if (FAILED(hr))
-        ERR("IDefaultContextMenu_Constructor failed: %x\n", hr);
-    TRACE("pcm %p hr %x\n", pdcm, hr);
-    return hr;
+    return CDefaultContextMenu_CreateInstance(pdcm, riid, ppv);
 }
 
 /*************************************************************************
