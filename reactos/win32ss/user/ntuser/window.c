@@ -3587,8 +3587,10 @@ co_IntSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi, BOOL bAlte
             if (!bAlter)
                 co_IntSendMessage(hWnd, WM_STYLECHANGING, GWL_STYLE, (LPARAM) &Style);
 
-           /* WS_CLIPSIBLINGS can't be reset on top-level windows */
+            /* WS_CLIPSIBLINGS can't be reset on top-level windows */
             if (Window->spwndParent == UserGetDesktopWindow()) Style.styleNew |= WS_CLIPSIBLINGS;
+            /* WS_MINIMIZE can't be reset */
+            if (OldValue & WS_MINIMIZE) Style.styleNew |= WS_MINIMIZE;
             /* Fixes wine FIXME: changing WS_DLGFRAME | WS_THICKFRAME is supposed to change WS_EX_WINDOWEDGE too */
             if (IntCheckFrameEdge(NewValue, Window->ExStyle))
                Window->ExStyle |= WS_EX_WINDOWEDGE;
