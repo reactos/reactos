@@ -113,12 +113,18 @@ static HRESULT WINAPI ProxyBindStatusCallback_OnStopBinding(IBindStatusCallback 
 
 static HRESULT WINAPI ProxyBindStatusCallback_GetBindInfo(IBindStatusCallback *iface, DWORD *grfBINDF, BINDINFO *pbindinfo)
 {
+    DWORD size = pbindinfo->cbSize;
     ProxyBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
 
     if(This->pBSC)
         return IBindStatusCallback_GetBindInfo(This->pBSC, grfBINDF, pbindinfo);
 
-    return E_INVALIDARG;
+    memset(pbindinfo, 0, size);
+    pbindinfo->cbSize = size;
+
+    *grfBINDF = 0;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI ProxyBindStatusCallback_OnDataAvailable(IBindStatusCallback *iface, DWORD grfBSCF,
@@ -167,8 +173,20 @@ static const IBindStatusCallbackVtbl BlockingBindStatusCallbackVtbl =
 static HRESULT WINAPI AsyncBindStatusCallback_GetBindInfo(IBindStatusCallback *iface, DWORD *grfBINDF, BINDINFO *pbindinfo)
 {
     ProxyBindStatusCallback *This = impl_from_IBindStatusCallback(iface);
-    HRESULT hr = IBindStatusCallback_GetBindInfo(This->pBSC, grfBINDF, pbindinfo);
+    HRESULT hr = S_OK;
+
+    if(This->pBSC)
+        hr = IBindStatusCallback_GetBindInfo(This->pBSC, grfBINDF, pbindinfo);
+    else{
+        DWORD size = pbindinfo->cbSize;
+        memset(pbindinfo, 0, size);
+        pbindinfo->cbSize = size;
+
+        *grfBINDF = 0;
+    }
+
     *grfBINDF |= BINDF_PULLDATA | BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE;
+
     return hr;
 }
 
