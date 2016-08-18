@@ -57,7 +57,7 @@ static HRESULT WINAPI threadref_QueryInterface(IUnknown *iface, REFIID riid, LPV
 {
     threadref * This = impl_from_IUnknown(iface);
 
-    trace("unexpected QueryInterface(%p, %p, %p) called\n", This, riid, ppvObj);
+    trace("unexpected QueryInterface(%p, %s, %p) called\n", This, wine_dbgstr_guid(riid), ppvObj);
     *ppvObj = NULL;
     return E_NOINTERFACE;
 }
