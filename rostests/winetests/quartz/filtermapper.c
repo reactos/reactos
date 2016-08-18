@@ -528,8 +528,7 @@ static void test_parse_filter_data(void)
     ok(pRegFilter->dwMerit == 0x5fffff,"Incorrect merit returned\n");
 
 out:
-    if (pRegFilter)
-        CoTaskMemFree(pRegFilter);
+    CoTaskMemFree(pRegFilter);
     if (psa)
     {
         SafeArrayUnaccessData(psa);
