@@ -4109,7 +4109,14 @@ START_TEST(virtual)
         }
         if (!strcmp(argv[2], "sharedmemro"))
         {
-            test_shared_memory_ro(TRUE, strtol(argv[3], NULL, 16));
+            if(!winetest_interactive)
+            {
+                skip("CORE-8541: Skipping test_shared_memory_ro(TRUE, strtol(argv[3], NULL, 16))\n");
+            }
+            else
+            {
+                test_shared_memory_ro(TRUE, strtol(argv[3], NULL, 16));
+            }
             return;
         }
         while (1)
