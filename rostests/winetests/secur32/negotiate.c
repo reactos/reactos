@@ -31,45 +31,6 @@
 
 #include "wine/test.h"
 
-static HMODULE hsecur32;
-static SECURITY_STATUS (SEC_ENTRY * pAcceptSecurityContext)(PCredHandle, PCtxtHandle,
-    PSecBufferDesc, ULONG, ULONG, PCtxtHandle, PSecBufferDesc, PULONG, PTimeStamp);
-static SECURITY_STATUS (SEC_ENTRY * pAcquireCredentialsHandleA)(SEC_CHAR *, SEC_CHAR *,
-    ULONG, PLUID, PVOID, SEC_GET_KEY_FN, PVOID, PCredHandle, PTimeStamp);
-static SECURITY_STATUS (SEC_ENTRY * pCompleteAuthToken)(PCtxtHandle, PSecBufferDesc);
-static SECURITY_STATUS (SEC_ENTRY * pDecryptMessage)(PCtxtHandle, PSecBufferDesc, ULONG, PULONG);
-static SECURITY_STATUS (SEC_ENTRY * pDeleteSecurityContext)(PCtxtHandle);
-static SECURITY_STATUS (SEC_ENTRY * pEncryptMessage)(PCtxtHandle, ULONG, PSecBufferDesc, ULONG);
-static SECURITY_STATUS (SEC_ENTRY * pFreeContextBuffer)(PVOID);
-static SECURITY_STATUS (SEC_ENTRY * pFreeCredentialsHandle)(PCredHandle);
-static SECURITY_STATUS (SEC_ENTRY * pInitializeSecurityContextA)(PCredHandle, PCtxtHandle,
-    SEC_CHAR *, ULONG, ULONG, ULONG, PSecBufferDesc, ULONG, PCtxtHandle, PSecBufferDesc,
-    PULONG, PTimeStamp);
-static PSecurityFunctionTableA (SEC_ENTRY * pInitSecurityInterfaceA)(void);
-static SECURITY_STATUS (SEC_ENTRY * pMakeSignature)(PCtxtHandle, ULONG, PSecBufferDesc, ULONG);
-static SECURITY_STATUS (SEC_ENTRY * pQueryContextAttributesA)(PCtxtHandle, ULONG, PVOID);
-static SECURITY_STATUS (SEC_ENTRY * pQuerySecurityPackageInfoA)(SEC_CHAR *, PSecPkgInfoA *);
-static SECURITY_STATUS (SEC_ENTRY * pVerifySignature)(PCtxtHandle, PSecBufferDesc, ULONG, PULONG);
-
-static void init_function_ptrs(void)
-{
-    if (!(hsecur32 = LoadLibraryA("secur32.dll"))) return;
-    pAcceptSecurityContext      = (void *)GetProcAddress(hsecur32, "AcceptSecurityContext");
-    pAcquireCredentialsHandleA  = (void *)GetProcAddress(hsecur32, "AcquireCredentialsHandleA");
-    pCompleteAuthToken          = (void *)GetProcAddress(hsecur32, "CompleteAuthToken");
-    pDecryptMessage             = (void *)GetProcAddress(hsecur32, "DecryptMessage");
-    pDeleteSecurityContext      = (void *)GetProcAddress(hsecur32, "DeleteSecurityContext");
-    pEncryptMessage             = (void *)GetProcAddress(hsecur32, "EncryptMessage");
-    pFreeContextBuffer          = (void *)GetProcAddress(hsecur32, "FreeContextBuffer");
-    pFreeCredentialsHandle      = (void *)GetProcAddress(hsecur32, "FreeCredentialsHandle");
-    pInitializeSecurityContextA = (void *)GetProcAddress(hsecur32, "InitializeSecurityContextA");
-    pInitSecurityInterfaceA     = (void *)GetProcAddress(hsecur32, "InitSecurityInterfaceA");
-    pMakeSignature              = (void *)GetProcAddress(hsecur32, "MakeSignature");
-    pQueryContextAttributesA    = (void *)GetProcAddress(hsecur32, "QueryContextAttributesA");
-    pQuerySecurityPackageInfoA  = (void *)GetProcAddress(hsecur32, "QuerySecurityPackageInfoA");
-    pVerifySignature            = (void *)GetProcAddress(hsecur32, "VerifySignature");
-}
-
 #define NEGOTIATE_BASE_CAPS ( \
     SECPKG_FLAG_INTEGRITY  | \
     SECPKG_FLAG_PRIVACY    | \
@@ -158,14 +119,14 @@ static SECURITY_STATUS setup_client( struct sspi_data *data, SEC_CHAR *provider 
 
     trace( "setting up client\n" );
 
-    ret = pQuerySecurityPackageInfoA( provider, &info );
+    ret = QuerySecurityPackageInfoA( provider, &info );
     ok( ret == SEC_E_OK, "QuerySecurityPackageInfo returned %08x\n", ret );
 
     setup_buffers( data, info );
-    pFreeContextBuffer( info );
+    FreeContextBuffer( info );
 
-    ret = pAcquireCredentialsHandleA( NULL, provider, SECPKG_CRED_OUTBOUND, NULL,
-                                      data->id, NULL, NULL, &data->cred, &ttl );
+    ret = AcquireCredentialsHandleA( NULL, provider, SECPKG_CRED_OUTBOUND, NULL,
+                                     data->id, NULL, NULL, &data->cred, &ttl );
     ok( ret == SEC_E_OK, "AcquireCredentialsHandleA returned %08x\n", ret );
     return ret;
 }
@@ -178,14 +139,14 @@ static SECURITY_STATUS setup_server( struct sspi_data *data, SEC_CHAR *provider 
 
     trace( "setting up server\n" );
 
-    ret = pQuerySecurityPackageInfoA( provider, &info );
+    ret = QuerySecurityPackageInfoA( provider, &info );
     ok( ret == SEC_E_OK, "QuerySecurityPackageInfo returned %08x\n", ret );
 
     setup_buffers( data, info );
-    pFreeContextBuffer( info );
+    FreeContextBuffer( info );
 
-    ret = pAcquireCredentialsHandleA( NULL, provider, SECPKG_CRED_INBOUND, NULL,
-                                      NULL, NULL, NULL, &data->cred, &ttl );
+    ret = AcquireCredentialsHandleA( NULL, provider, SECPKG_CRED_INBOUND, NULL,
+                                     NULL, NULL, NULL, &data->cred, &ttl );
     ok( ret == SEC_E_OK, "AcquireCredentialsHandleA returned %08x\n", ret );
     return ret;
 }
@@ -201,12 +162,12 @@ static SECURITY_STATUS run_client( struct sspi_data *data, BOOL first )
     data->out_buf->pBuffers[0].cbBuffer = data->max_token;
     data->out_buf->pBuffers[0].BufferType = SECBUFFER_TOKEN;
 
-    ret = pInitializeSecurityContextA( first ? &data->cred : NULL, first ? NULL : &data->ctxt,
-                                       NULL, 0, 0, SECURITY_NETWORK_DREP, first ? NULL : data->in_buf,
-                                       0, &data->ctxt, data->out_buf, &attr, &ttl );
+    ret = InitializeSecurityContextA( first ? &data->cred : NULL, first ? NULL : &data->ctxt,
+                                      NULL, 0, 0, SECURITY_NETWORK_DREP, first ? NULL : data->in_buf,
+                                      0, &data->ctxt, data->out_buf, &attr, &ttl );
     if (ret == SEC_I_COMPLETE_AND_CONTINUE || ret == SEC_I_COMPLETE_NEEDED)
     {
-        pCompleteAuthToken( &data->ctxt, data->out_buf );
+        CompleteAuthToken( &data->ctxt, data->out_buf );
         if (ret == SEC_I_COMPLETE_AND_CONTINUE)
             ret = SEC_I_CONTINUE_NEEDED;
         else if (ret == SEC_I_COMPLETE_NEEDED)
@@ -227,12 +188,12 @@ static SECURITY_STATUS run_server( struct sspi_data *data, BOOL first )
 
     trace( "running server for the %s time\n", first ? "first" : "second" );
 
-    ret = pAcceptSecurityContext( &data->cred, first ? NULL : &data->ctxt,
-                                  data->in_buf, 0, SECURITY_NETWORK_DREP,
-                                  &data->ctxt, data->out_buf, &attr, &ttl );
+    ret = AcceptSecurityContext( &data->cred, first ? NULL : &data->ctxt,
+                                 data->in_buf, 0, SECURITY_NETWORK_DREP,
+                                 &data->ctxt, data->out_buf, &attr, &ttl );
     if (ret == SEC_I_COMPLETE_AND_CONTINUE || ret == SEC_I_COMPLETE_NEEDED)
     {
-        pCompleteAuthToken( &data->ctxt, data->out_buf );
+        CompleteAuthToken( &data->ctxt, data->out_buf );
         if (ret == SEC_I_COMPLETE_AND_CONTINUE)
             ret = SEC_I_CONTINUE_NEEDED;
         else if (ret == SEC_I_COMPLETE_NEEDED)
@@ -282,7 +243,7 @@ static void test_authentication(void)
     if ((status = setup_server( &server, (SEC_CHAR *)"Negotiate" )))
     {
         skip( "setup_server returned %08x, skipping test\n", status );
-        pFreeCredentialsHandle( &client.cred );
+        FreeCredentialsHandle( &client.cred );
         return;
     }
 
@@ -313,7 +274,7 @@ static void test_authentication(void)
     sizes.cbMaxSignature    = 0xdeadbeef;
     sizes.cbSecurityTrailer = 0xdeadbeef;
     sizes.cbBlockSize       = 0xdeadbeef;
-    status_c = pQueryContextAttributesA( &client.ctxt, SECPKG_ATTR_SIZES, &sizes );
+    status_c = QueryContextAttributesA( &client.ctxt, SECPKG_ATTR_SIZES, &sizes );
     ok( status_c == SEC_E_OK, "pQueryContextAttributesA returned %08x\n", status_c );
     ok( sizes.cbMaxToken == 2888 || sizes.cbMaxToken == 1904,
         "expected 2888 or 1904, got %u\n", sizes.cbMaxToken );
@@ -322,7 +283,7 @@ static void test_authentication(void)
     ok( !sizes.cbBlockSize, "expected 0, got %u\n", sizes.cbBlockSize );
 
     memset( &info, 0, sizeof(info) );
-    status_c = pQueryContextAttributesA( &client.ctxt, SECPKG_ATTR_NEGOTIATION_INFO, &info );
+    status_c = QueryContextAttributesA( &client.ctxt, SECPKG_ATTR_NEGOTIATION_INFO, &info );
     ok( status_c == SEC_E_OK, "pQueryContextAttributesA returned %08x\n", status_c );
 
     pi = info.PackageInfo;
@@ -347,25 +308,25 @@ done:
 
     if (client.ctxt.dwLower || client.ctxt.dwUpper)
     {
-        status_c = pDeleteSecurityContext( &client.ctxt );
+        status_c = DeleteSecurityContext( &client.ctxt );
         ok( status_c == SEC_E_OK, "DeleteSecurityContext returned %08x\n", status_c );
     }
 
     if (server.ctxt.dwLower || server.ctxt.dwUpper)
     {
-        status_s = pDeleteSecurityContext( &server.ctxt );
+        status_s = DeleteSecurityContext( &server.ctxt );
         ok( status_s == SEC_E_OK, "DeleteSecurityContext returned %08x\n", status_s );
     }
 
     if (client.cred.dwLower || client.cred.dwUpper)
     {
-        status_c = pFreeCredentialsHandle( &client.cred );
+        status_c = FreeCredentialsHandle( &client.cred );
         ok( status_c == SEC_E_OK, "FreeCredentialsHandle returned %08x\n", status_c );
     }
 
     if (server.cred.dwLower || server.cred.dwUpper)
     {
-        status_s = pFreeCredentialsHandle(&server.cred);
+        status_s = FreeCredentialsHandle(&server.cred);
         ok( status_s == SEC_E_OK, "FreeCredentialsHandle returned %08x\n", status_s );
     }
 }
@@ -374,15 +335,7 @@ START_TEST(negotiate)
 {
     SecPkgInfoA *info;
 
-    init_function_ptrs();
-
-    if (!pFreeCredentialsHandle || !pAcquireCredentialsHandleA || !pQuerySecurityPackageInfoA ||
-        !pFreeContextBuffer)
-    {
-        win_skip("functions are not available\n");
-        return;
-    }
-    if (pQuerySecurityPackageInfoA( (SEC_CHAR *)"Negotiate", &info ))
+    if (QuerySecurityPackageInfoA( (SEC_CHAR *)"Negotiate", &info ))
     {
         ok( 0, "Negotiate package not installed, skipping test\n" );
         return;
@@ -396,7 +349,7 @@ START_TEST(negotiate)
     ok( info->wVersion == 1, "got %u\n", info->wVersion );
     ok( info->wRPCID == RPC_C_AUTHN_GSS_NEGOTIATE, "got %u\n", info->wRPCID );
     ok( !lstrcmpA( info->Name, "Negotiate" ), "got %s\n", info->Name );
-    pFreeContextBuffer( info );
+    FreeContextBuffer( info );
 
     test_authentication();
 }
