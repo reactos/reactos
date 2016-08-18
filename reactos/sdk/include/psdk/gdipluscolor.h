@@ -106,7 +106,7 @@ public:
 
     VOID SetFromCOLORREF(COLORREF rgb)
     {
-        Argb = 0xff000000 | rgb & 0x000000ff << 16 | rgb & 0x0000ff00 | rgb & 0x00ff0000 >> 16;
+        Argb = 0xff000000 | (rgb & 0x000000ff) << 16 | (rgb & 0x0000ff00) | (rgb & 0x00ff0000) >> 16;
     }
 
     VOID SetValue(ARGB argb)
@@ -116,7 +116,7 @@ public:
 
     COLORREF ToCOLORREF(VOID)
     {
-        return Argb & 0x000000ff << 16 | Argb & 0x0000ff00 | Argb & 0x00ff0000 >> 16;
+        return (Argb & 0x000000ff) << 16 | (Argb & 0x0000ff00) | (Argb & 0x00ff0000) >> 16;
     }
 
 protected:
