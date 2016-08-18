@@ -3268,7 +3268,7 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
  	    if (bm.bmWidth < r.right || bm.bmHeight < r.bottom)
  	    {
  	        hbr = CreateSolidBrush(GetPixel(hdcSrc, 0, 0));
- 	        CopyRect(&r, &rzone);
+                r = rzone;
  	        if (bm.bmWidth < r.right)
  	        {
  	            r.left = bm.bmWidth;

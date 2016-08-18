@@ -714,8 +714,7 @@ REBAR_CalcHorzBand (const REBAR_INFO *infoPtr, UINT rstart, UINT rend)
 	  lpBand->fDraw |= DRAW_GRIPPER;
 	  lpBand->rcGripper.left   += REBAR_PRE_GRIPPER;
 	  lpBand->rcGripper.right  = lpBand->rcGripper.left + GRIPPER_WIDTH;
-	  lpBand->rcGripper.top    += 2;
-	  lpBand->rcGripper.bottom -= 2;
+          InflateRect(&lpBand->rcGripper, 0, -2);
 
 	  SetRect (&lpBand->rcCapImage,
 		   lpBand->rcGripper.right+REBAR_ALWAYS_SPACE, lpBand->rcBand.top,
@@ -843,8 +842,7 @@ REBAR_CalcVertBand (const REBAR_INFO *infoPtr, UINT rstart, UINT rend)
 	    }
 	    else {
 		/*  horizontal gripper  */
-		lpBand->rcGripper.left   += 2;
-		lpBand->rcGripper.right  -= 2;
+                InflateRect(&lpBand->rcGripper, -2, 0);
 		lpBand->rcGripper.top    += REBAR_PRE_GRIPPER;
 		lpBand->rcGripper.bottom  = lpBand->rcGripper.top + GRIPPER_WIDTH;
 
@@ -1557,7 +1555,7 @@ REBAR_AutoSize(REBAR_INFO *infoPtr, BOOL needsLayout)
     GetClientRect(infoPtr->hwndSelf, &rcNew);
 
     GetClientRect(infoPtr->hwndSelf, &autosize.rcTarget);
-    autosize.fChanged = (memcmp(&rc, &rcNew, sizeof(RECT)) == 0);
+    autosize.fChanged = EqualRect(&rc, &rcNew);
     autosize.rcTarget = rc;
     autosize.rcActual = rcNew;
     REBAR_Notify((NMHDR *)&autosize, infoPtr, RBN_AUTOSIZE);
@@ -2434,7 +2432,7 @@ REBAR_GetRect (const REBAR_INFO *infoPtr, INT iBand, RECT *lprc)
 
     lpBand = REBAR_GetBand(infoPtr, iBand);
     /* For CCS_VERT the coordinates will be swapped - like on Windows */
-    CopyRect (lprc, &lpBand->rcBand);
+    *lprc = lpBand->rcBand;
 
     TRACE("band %d, (%s)\n", iBand, wine_dbgstr_rect(lprc));
 

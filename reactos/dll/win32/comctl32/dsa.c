@@ -259,6 +259,9 @@ INT WINAPI DSA_InsertItem (HDSA hdsa, INT nIndex, LPVOID pSrc)
         nNewItems = hdsa->nMaxCount + hdsa->nGrow;
         nSize = hdsa->nItemSize * nNewItems;
 
+        if (nSize / hdsa->nItemSize != nNewItems)
+            return -1;
+
         lpTemp = ReAlloc (hdsa->pData, nSize);
         if (!lpTemp)
             return -1;

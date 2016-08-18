@@ -572,23 +572,28 @@ static const char* debugscrollinfo(const SCROLLINFO *pScrollInfo)
 
     if (pScrollInfo == NULL) return "(null)";
     len = snprintf(buf, size, "{cbSize=%u, ", pScrollInfo->cbSize);
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (pScrollInfo->fMask & SIF_RANGE)
 	len = snprintf(buf, size, "nMin=%d, nMax=%d, ", pScrollInfo->nMin, pScrollInfo->nMax);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (pScrollInfo->fMask & SIF_PAGE)
 	len = snprintf(buf, size, "nPage=%u, ", pScrollInfo->nPage);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (pScrollInfo->fMask & SIF_POS)
 	len = snprintf(buf, size, "nPos=%d, ", pScrollInfo->nPos);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (pScrollInfo->fMask & SIF_TRACKPOS)
 	len = snprintf(buf, size, "nTrackPos=%d, ", pScrollInfo->nTrackPos);
     else len = 0;
-    if (len == -1) goto end; buf += len;
+    if (len == -1) goto end;
+    buf += len;
     goto undo;
 end:
     buf = text + strlen(text);
@@ -613,27 +618,33 @@ static const char* debuglvitem_t(const LVITEMW *lpLVItem, BOOL isW)
     
     if (lpLVItem == NULL) return "(null)";
     len = snprintf(buf, size, "{iItem=%d, iSubItem=%d, ", lpLVItem->iItem, lpLVItem->iSubItem);
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpLVItem->mask & LVIF_STATE)
 	len = snprintf(buf, size, "state=%x, stateMask=%x, ", lpLVItem->state, lpLVItem->stateMask);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpLVItem->mask & LVIF_TEXT)
 	len = snprintf(buf, size, "pszText=%s, cchTextMax=%d, ", debugtext_tn(lpLVItem->pszText, isW, 80), lpLVItem->cchTextMax);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpLVItem->mask & LVIF_IMAGE)
 	len = snprintf(buf, size, "iImage=%d, ", lpLVItem->iImage);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpLVItem->mask & LVIF_PARAM)
 	len = snprintf(buf, size, "lParam=%lx, ", lpLVItem->lParam);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpLVItem->mask & LVIF_INDENT)
 	len = snprintf(buf, size, "iIndent=%d, ", lpLVItem->iIndent);
     else len = 0;
-    if (len == -1) goto end; buf += len;
+    if (len == -1) goto end;
+    buf += len;
     goto undo;
 end:
     buf = text + strlen(text);
@@ -649,31 +660,38 @@ static const char* debuglvcolumn_t(const LVCOLUMNW *lpColumn, BOOL isW)
     
     if (lpColumn == NULL) return "(null)";
     len = snprintf(buf, size, "{");
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpColumn->mask & LVCF_SUBITEM)
 	len = snprintf(buf, size, "iSubItem=%d, ",  lpColumn->iSubItem);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpColumn->mask & LVCF_FMT)
 	len = snprintf(buf, size, "fmt=%x, ", lpColumn->fmt);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpColumn->mask & LVCF_WIDTH)
 	len = snprintf(buf, size, "cx=%d, ", lpColumn->cx);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpColumn->mask & LVCF_TEXT)
 	len = snprintf(buf, size, "pszText=%s, cchTextMax=%d, ", debugtext_tn(lpColumn->pszText, isW, 80), lpColumn->cchTextMax);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpColumn->mask & LVCF_IMAGE)
 	len = snprintf(buf, size, "iImage=%d, ", lpColumn->iImage);
     else len = 0;
-    if (len == -1) goto end; buf += len; size -= len;
+    if (len == -1) goto end;
+    buf += len; size -= len;
     if (lpColumn->mask & LVCF_ORDER)
 	len = snprintf(buf, size, "iOrder=%d, ", lpColumn->iOrder);
     else len = 0;
-    if (len == -1) goto end; buf += len;
+    if (len == -1) goto end;
+    buf += len;
     goto undo;
 end:
     buf = text + strlen(text);
@@ -3856,9 +3874,8 @@ static void LISTVIEW_MarqueeHighlight(LISTVIEW_INFO *infoPtr, const POINT *coord
 
     iterator_frameditems_absolute(&old_elems, infoPtr, &infoPtr->marqueeRect);
 
-    CopyRect(&infoPtr->marqueeRect, &rect);
-
-    CopyRect(&infoPtr->marqueeDrawRect, &rect);
+    infoPtr->marqueeRect = rect;
+    infoPtr->marqueeDrawRect = rect;
     OffsetRect(&infoPtr->marqueeDrawRect, offset->x, offset->y);
 
     iterator_frameditems_absolute(&new_elems, infoPtr, &infoPtr->marqueeRect);
@@ -5629,8 +5646,8 @@ static BOOL LISTVIEW_DeleteColumn(LISTVIEW_INFO *infoPtr, INT nColumn)
     
     TRACE("nColumn=%d\n", nColumn);
 
-    if (nColumn < 0 || DPA_GetPtrCount(infoPtr->hdpaColumns) == 0
-           || nColumn >= DPA_GetPtrCount(infoPtr->hdpaColumns)) return FALSE;
+    if (nColumn < 0 || nColumn >= DPA_GetPtrCount(infoPtr->hdpaColumns))
+        return FALSE;
 
     /* While the MSDN specifically says that column zero should not be deleted,
        what actually happens is that the column itself is deleted but no items or subitems
@@ -5871,13 +5888,15 @@ static BOOL LISTVIEW_EndEditLabelT(LISTVIEW_INFO *infoPtr, BOOL storeText, BOOL 
     {
         DWORD len = isW ? GetWindowTextLengthW(infoPtr->hwndEdit) : GetWindowTextLengthA(infoPtr->hwndEdit);
 
-        if (len)
+        if (len++)
         {
-            if ((pszText = Alloc((len+1) * (isW ? sizeof(WCHAR) : sizeof(CHAR)))))
-            {
-                if (isW) GetWindowTextW(infoPtr->hwndEdit, pszText, len+1);
-                else GetWindowTextA(infoPtr->hwndEdit, (CHAR*)pszText, len+1);
-            }
+            if (!(pszText = Alloc(len * (isW ? sizeof(WCHAR) : sizeof(CHAR)))))
+                return FALSE;
+
+            if (isW)
+                GetWindowTextW(infoPtr->hwndEdit, pszText, len);
+            else
+                GetWindowTextA(infoPtr->hwndEdit, (CHAR*)pszText, len);
         }
     }
 
@@ -9064,7 +9083,8 @@ static INT LISTVIEW_SetSelectionMark(LISTVIEW_INFO *infoPtr, INT nIndex)
 
   TRACE("(nIndex=%d)\n", nIndex);
 
-  infoPtr->nSelectionMark = nIndex;
+  if (nIndex >= -1 && nIndex < infoPtr->nItemCount)
+    infoPtr->nSelectionMark = nIndex;
 
   return nOldIndex;
 }
