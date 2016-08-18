@@ -102,8 +102,8 @@ static HRESULT WINAPI AMCF_CreateInstance(IClassFactory *iface, IUnknown *pOuter
 {
     IClassFactoryImpl *This = impl_from_IClassFactory(iface);
     HRESULT hres;
-    LPUNKNOWN punk;
-    
+    IUnknown *punk;
+
     TRACE("(%p)->(%p,%s,%p)\n",This,pOuter,debugstr_guid(riid),ppobj);
 
     *ppobj = NULL;

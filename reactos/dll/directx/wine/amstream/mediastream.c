@@ -1038,11 +1038,7 @@ static HRESULT ddrawstreamsample_create(IDirectDrawMediaStream *parent, IDirectD
         DDSURFACEDESC desc = { sizeof(desc) };
         hr = IDirectDrawSurface_GetSurfaceDesc(object->surface, &desc);
         if (hr == S_OK)
-        {
-            object->rect.left = object->rect.top = 0;
-            object->rect.right = desc.dwWidth;
-            object->rect.bottom = desc.dwHeight;
-        }
+            SetRect(&object->rect, 0, 0, desc.dwWidth, desc.dwHeight);
     }
 
     *ddraw_stream_sample = &object->IDirectDrawStreamSample_iface;

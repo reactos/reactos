@@ -23,6 +23,11 @@
 typedef struct {
     IAudioData IAudioData_iface;
     LONG ref;
+    DWORD size;
+    BYTE *data;
+    BOOL data_owned;
+    DWORD actual_data;
+    WAVEFORMATEX wave_format;
 } AMAudioDataImpl;
 
 static inline AMAudioDataImpl *impl_from_IAudioData(IAudioData *iface)
@@ -36,7 +41,6 @@ static HRESULT WINAPI IAudioDataImpl_QueryInterface(IAudioData *iface, REFIID ri
     TRACE("(%p)->(%s,%p)\n", iface, debugstr_guid(riid), ret_iface);
 
     if (IsEqualGUID(riid, &IID_IUnknown) ||
-        IsEqualGUID(riid, &IID_IMemoryData) ||
         IsEqualGUID(riid, &IID_IAudioData))
     {
         IAudioData_AddRef(iface);
@@ -66,7 +70,14 @@ static ULONG WINAPI IAudioDataImpl_Release(IAudioData* iface)
     TRACE("(%p)->(): new ref = %u\n", iface, This->ref);
 
     if (!ref)
+    {
+        if (This->data_owned)
+        {
+            CoTaskMemFree(This->data);
+        }
+
         HeapFree(GetProcessHeap(), 0, This);
+    }
 
     return ref;
 }
@@ -74,38 +85,116 @@ static ULONG WINAPI IAudioDataImpl_Release(IAudioData* iface)
 /*** IMemoryData methods ***/
 static HRESULT WINAPI IAudioDataImpl_SetBuffer(IAudioData* iface, DWORD size, BYTE *data, DWORD flags)
 {
-    FIXME("(%p)->(%u,%p,%x): stub\n", iface, size, data, flags);
+    AMAudioDataImpl *This = impl_from_IAudioData(iface);
 
-    return E_NOTIMPL;
+    TRACE("(%p)->(%u,%p,%x)\n", iface, size, data, flags);
+
+    if (!size)
+    {
+        return E_INVALIDARG;
+    }
+
+    if (This->data_owned)
+    {
+        CoTaskMemFree(This->data);
+        This->data_owned = FALSE;
+    }
+
+    This->size = size;
+    This->data = data;
+
+    if (!This->data)
+    {
+        This->data = CoTaskMemAlloc(This->size);
+        This->data_owned = TRUE;
+        if (!This->data)
+        {
+            return E_OUTOFMEMORY;
+        }
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI IAudioDataImpl_GetInfo(IAudioData* iface, DWORD *length, BYTE **data, DWORD *actual_data)
 {
-    FIXME("(%p)->(%p,%p,%p): stub\n", iface, length, data, actual_data);
+    AMAudioDataImpl *This = impl_from_IAudioData(iface);
 
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p,%p,%p)\n", iface, length, data, actual_data);
+
+    if (!This->data)
+    {
+        return MS_E_NOTINIT;
+    }
+
+    if (length)
+    {
+        *length = This->size;
+    }
+    if (data)
+    {
+        *data = This->data;
+    }
+    if (actual_data)
+    {
+        *actual_data = This->actual_data;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI IAudioDataImpl_SetActual(IAudioData* iface, DWORD data_valid)
 {
-    FIXME("(%p)->(%u): stub\n", iface, data_valid);
+    AMAudioDataImpl *This = impl_from_IAudioData(iface);
 
-    return E_NOTIMPL;
+    TRACE("(%p)->(%u)\n", iface, data_valid);
+
+    if (data_valid > This->size)
+    {
+        return E_INVALIDARG;
+    }
+
+    This->actual_data = data_valid;
+
+    return S_OK;
 }
 
 /*** IAudioData methods ***/
 static HRESULT WINAPI IAudioDataImpl_GetFormat(IAudioData* iface, WAVEFORMATEX *wave_format_current)
 {
-    FIXME("(%p)->(%p): stub\n", iface, wave_format_current);
+    AMAudioDataImpl *This = impl_from_IAudioData(iface);
 
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p)\n", iface, wave_format_current);
+
+    if (!wave_format_current)
+    {
+        return E_POINTER;
+    }
+
+    *wave_format_current = This->wave_format;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI IAudioDataImpl_SetFormat(IAudioData* iface, const WAVEFORMATEX *wave_format)
 {
-    FIXME("(%p)->(%p): stub\n", iface, wave_format);
+    AMAudioDataImpl *This = impl_from_IAudioData(iface);
 
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p)\n", iface, wave_format);
+
+    if (!wave_format)
+    {
+        return E_POINTER;
+    }
+
+    if (WAVE_FORMAT_PCM != wave_format->wFormatTag)
+    {
+        return E_INVALIDARG;
+    }
+
+    This->wave_format = *wave_format;
+
+    return S_OK;
 }
 
 static const struct IAudioDataVtbl AudioData_Vtbl =
@@ -138,6 +227,13 @@ HRESULT AMAudioData_create(IUnknown *pUnkOuter, LPVOID *ppObj)
 
     object->IAudioData_iface.lpVtbl = &AudioData_Vtbl;
     object->ref = 1;
+
+    object->wave_format.wFormatTag = WAVE_FORMAT_PCM;
+    object->wave_format.nChannels = 1;
+    object->wave_format.nSamplesPerSec = 11025;
+    object->wave_format.wBitsPerSample = 16;
+    object->wave_format.nBlockAlign = object->wave_format.wBitsPerSample * object->wave_format.nChannels / 8;
+    object->wave_format.nAvgBytesPerSec = object->wave_format.nBlockAlign * object->wave_format.nSamplesPerSec;
 
     *ppObj = &object->IAudioData_iface;
 
