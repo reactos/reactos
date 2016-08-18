@@ -248,7 +248,7 @@ static void test_get_set(void)
     strcpy(buffer,"garbage");
     r = IShellLinkA_GetPath(sl, buffer, sizeof(buffer), NULL, SLGP_RAWPATH);
     ok(r==S_OK, "GetPath failed (0x%08x)\n", r);
-    ok(!strcmp(buffer, "C:\\nonexistent\\file") ||
+    todo_wine ok(!strcmp(buffer, "C:\\nonexistent\\file") ||
        broken(!strcmp(buffer, "C:\\\"c:\\nonexistent\\file\"")), /* NT4 */
        "case doesn't match\n");
 
