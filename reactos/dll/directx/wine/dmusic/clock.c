@@ -121,7 +121,7 @@ HRESULT DMUSIC_CreateReferenceClockImpl(LPCGUID riid, LPVOID* ret_iface, LPUNKNO
     IReferenceClockImpl* clock;
     HRESULT hr;
 
-    TRACE("(%p,%p,%p)\n", riid, ret_iface, unkouter);
+    TRACE("(%s, %p, %p)\n", debugstr_guid(riid), ret_iface, unkouter);
 
     clock = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IReferenceClockImpl));
     if (!clock) {

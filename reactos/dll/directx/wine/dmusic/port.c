@@ -755,7 +755,8 @@ HRESULT DMUSIC_CreateSynthPortImpl(LPCGUID guid, LPVOID *object, LPUNKNOWN unkou
     HRESULT hr = E_FAIL;
     int i;
 
-    TRACE("(%p,%p,%p,%p,%p,%d)\n", guid, object, unkouter, port_params, port_caps, device);
+    TRACE("(%s, %p, %p, %p, %p, %d)\n", debugstr_guid(guid), object, unkouter, port_params,
+            port_caps, device);
 
     *object = NULL;
 
@@ -840,14 +841,16 @@ HRESULT DMUSIC_CreateSynthPortImpl(LPCGUID guid, LPVOID *object, LPUNKNOWN unkou
 
 HRESULT DMUSIC_CreateMidiOutPortImpl(LPCGUID guid, LPVOID *object, LPUNKNOWN unkouter, LPDMUS_PORTPARAMS port_params, LPDMUS_PORTCAPS port_caps, DWORD device)
 {
-    TRACE("(%p,%p,%p,%p,%p,%d): stub\n", guid, object, unkouter, port_params, port_caps, device);
+    TRACE("(%s, %p, %p, %p, %p, %d): stub\n", debugstr_guid(guid), object, unkouter, port_params,
+            port_caps, device);
 
     return E_NOTIMPL;
 }
 
 HRESULT DMUSIC_CreateMidiInPortImpl(LPCGUID guid, LPVOID *object, LPUNKNOWN unkouter, LPDMUS_PORTPARAMS port_params, LPDMUS_PORTCAPS port_caps, DWORD device)
 {
-    TRACE("(%p,%p,%p,%p,%p,%d): stub\n", guid, object, unkouter, port_params, port_caps, device);
+    TRACE("(%s, %p, %p, %p, %p, %d): stub\n", debugstr_guid(guid), object, unkouter, port_params,
+            port_caps, device);
 
     return E_NOTIMPL;
 }
