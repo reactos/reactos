@@ -1357,15 +1357,15 @@ static void test_object(void)
     }
     tests[] =
     {
-        { &CLSID_CDirect3DRMDevice,        &IID_IDirect3DRMDevice,       TRUE  },
-        { &CLSID_CDirect3DRMDevice,        &IID_IDirect3DRMDevice2,      TRUE  },
-        { &CLSID_CDirect3DRMDevice,        &IID_IDirect3DRMDevice3,      TRUE  },
-        { &CLSID_CDirect3DRMDevice,        &IID_IDirect3DRMWinDevice,    TRUE  },
+        { &CLSID_CDirect3DRMDevice,        &IID_IDirect3DRMDevice,       FALSE },
+        { &CLSID_CDirect3DRMDevice,        &IID_IDirect3DRMDevice2,      FALSE },
+        { &CLSID_CDirect3DRMDevice,        &IID_IDirect3DRMDevice3,      FALSE },
+        { &CLSID_CDirect3DRMDevice,        &IID_IDirect3DRMWinDevice,    FALSE },
         { &CLSID_CDirect3DRMTexture,       &IID_IDirect3DRMTexture,      FALSE },
         { &CLSID_CDirect3DRMTexture,       &IID_IDirect3DRMTexture2,     FALSE },
         { &CLSID_CDirect3DRMTexture,       &IID_IDirect3DRMTexture3,     FALSE },
-        { &CLSID_CDirect3DRMViewport,      &IID_IDirect3DRMViewport,     TRUE  },
-        { &CLSID_CDirect3DRMViewport,      &IID_IDirect3DRMViewport2,    TRUE  },
+        { &CLSID_CDirect3DRMViewport,      &IID_IDirect3DRMViewport,     FALSE },
+        { &CLSID_CDirect3DRMViewport,      &IID_IDirect3DRMViewport2,    FALSE },
     };
     IDirect3DRM *d3drm1;
     IDirect3DRM2 *d3drm2;
@@ -1463,41 +1463,294 @@ static void test_object(void)
 
 static void test_Viewport(void)
 {
-    IDirectDrawClipper *pClipper;
+    IDirectDrawClipper *clipper;
     HRESULT hr;
-    IDirect3DRM *d3drm;
-    IDirect3DRMDevice *device;
+    IDirect3DRM *d3drm1;
+    IDirect3DRM2 *d3drm2;
+    IDirect3DRM3 *d3drm3;
+    IDirect3DRMDevice *device1, *d3drm_device1;
+    IDirect3DRMDevice3 *device3, *d3drm_device3;
     IDirect3DRMFrame *frame;
+    IDirect3DRMFrame3 *frame3;
     IDirect3DRMViewport *viewport;
     IDirect3DRMViewport2 *viewport2;
+    IDirect3DViewport *d3d_viewport;
+    D3DVIEWPORT vp;
+    D3DVALUE expected_val;
     IDirect3DRMObject *obj, *obj2;
     GUID driver;
     HWND window;
     RECT rc;
-    DWORD size, data;
+    DWORD size, data, ref1, ref2, ref3, ref4;
+    DWORD initial_ref1, initial_ref2, initial_ref3, device_ref, frame_ref, frame_ref2, viewport_ref;
     CHAR cname[64] = {0};
 
     window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 300, 200, 0, 0, 0, 0);
     GetClientRect(window, &rc);
 
-    hr = Direct3DRMCreate(&d3drm);
+    hr = Direct3DRMCreate(&d3drm1);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRM interface (hr = %x)\n", hr);
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM2, (void **)&d3drm2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM2 interface (hr = %#x).\n", hr);
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM3 interface (hr = %#x).\n", hr);
+    initial_ref1 = get_refcount((IUnknown *)d3drm1);
+    initial_ref2 = get_refcount((IUnknown *)d3drm2);
+    initial_ref3 = get_refcount((IUnknown *)d3drm3);
 
-    hr = DirectDrawCreateClipper(0, &pClipper, NULL);
+    hr = DirectDrawCreateClipper(0, &clipper, NULL);
     ok(hr == DD_OK, "Cannot get IDirectDrawClipper interface (hr = %x)\n", hr);
 
-    hr = IDirectDrawClipper_SetHWnd(pClipper, 0, window);
+    hr = IDirectDrawClipper_SetHWnd(clipper, 0, window);
     ok(hr == DD_OK, "Cannot set HWnd to Clipper (hr = %x)\n", hr);
 
     memcpy(&driver, &IID_IDirect3DRGBDevice, sizeof(GUID));
-    hr = IDirect3DRM3_CreateDeviceFromClipper(d3drm, pClipper, &driver, rc.right, rc.bottom, &device);
+    hr = IDirect3DRM3_CreateDeviceFromClipper(d3drm3, clipper, &driver, rc.right, rc.bottom, &device3);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRMDevice interface (hr = %x)\n", hr);
+    hr = IDirect3DRMDevice3_QueryInterface(device3, &IID_IDirect3DRMDevice, (void **)&device1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice interface (hr = %#x).\n", hr);
 
-    hr = IDirect3DRM_CreateFrame(d3drm, NULL, &frame);
+    hr = IDirect3DRM_CreateFrame(d3drm1, NULL, &frame);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRMFrame interface (hr = %x)\n", hr);
+    hr = IDirect3DRM3_CreateFrame(d3drm3, NULL, &frame3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMFrame3 interface (hr = %x).\n", hr);
 
-    hr = IDirect3DRM_CreateViewport(d3drm, device, frame, rc.left, rc.top, rc.right, rc.bottom, &viewport);
+    ref1 = get_refcount((IUnknown *)d3drm1);
+    ref2 = get_refcount((IUnknown *)d3drm2);
+    ref3 = get_refcount((IUnknown *)d3drm3);
+    device_ref = get_refcount((IUnknown *)device1);
+    frame_ref = get_refcount((IUnknown *)frame);
+
+    hr = IDirect3DRM_CreateViewport(d3drm1, device1, frame, 0, 0, 0, 0, &viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMViewport interface (hr = %#x)\n", hr);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    ok(ref4 > ref1, "Expected ref4 > ref1, got ref1 = %u, ref4 = %u.\n", ref1, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm2);
+    ok(ref4 == ref2, "Expected ref4 == ref2, got ref2 = %u, ref4 = %u.\n", ref2, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm3);
+    ok(ref4 == ref3, "Expected ref4 == ref3, got ref3 = %u, ref4 = %u.\n", ref3, ref4);
+    ref4 = get_refcount((IUnknown *)device1);
+    ok(ref4 == device_ref, "Expected ref4 == device_ref, got device_ref = %u, ref4 = %u.\n", device_ref, ref4);
+    ref4 = get_refcount((IUnknown *)frame);
+    ok(ref4 > frame_ref, "Expected ref4 > frame_ref, got frame_ref = %u, ref4 = %u.\n", frame_ref, ref4);
+
+    hr = IDirect3DRMViewport_GetDevice(viewport, &d3drm_device1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice interface (hr = %x)\n", hr);
+    ok(device1 == d3drm_device1, "Expected device returned = %p, got %p.\n", device1, d3drm_device1);
+    IDirect3DRMDevice_Release(d3drm_device1);
+
+    IDirect3DRMViewport_Release(viewport);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    ok(ref4 == ref1, "Expected ref4 == ref1, got ref1 = %u, ref4 = %u.\n", ref1, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm2);
+    ok(ref4 == ref2, "Expected ref4 == ref2, got ref2 = %u, ref4 = %u.\n", ref2, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm3);
+    ok(ref4 == ref3, "Expected ref4 == ref3, got ref3 = %u, ref4 = %u.\n", ref3, ref4);
+    ref4 = get_refcount((IUnknown *)device1);
+    ok(ref4 == device_ref, "Expected ref4 == device_ref, got device_ref = %u, ref4 = %u.\n", device_ref, ref4);
+    ref4 = get_refcount((IUnknown *)frame);
+    ok(ref4 == frame_ref, "Expected ref4 == frame_ref, got frame_ref = %u, ref4 = %u.\n", frame_ref, ref4);
+
+    hr = IDirect3DRM2_CreateViewport(d3drm2, device1, frame, 0, 0, 0, 0, &viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMViewport interface (hr = %#x)\n", hr);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    ok(ref4 > ref1, "Expected ref4 > ref1, got ref1 = %u, ref4 = %u.\n", ref1, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm2);
+    ok(ref4 == ref2, "Expected ref4 == ref2, got ref2 = %u, ref4 = %u.\n", ref2, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm3);
+    ok(ref4 == ref3, "Expected ref4 == ref3, got ref3 = %u, ref4 = %u.\n", ref3, ref4);
+    ref4 = get_refcount((IUnknown *)device1);
+    ok(ref4 == device_ref, "Expected ref4 == device_ref, got device_ref = %u, ref4 = %u.\n", device_ref, ref4);
+    ref4 = get_refcount((IUnknown *)frame);
+    ok(ref4 > frame_ref, "Expected ref4 > frame_ref, got frame_ref = %u, ref4 = %u.\n", frame_ref, ref4);
+
+    hr = IDirect3DRMViewport_GetDevice(viewport, &d3drm_device1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice interface (hr = %x)\n", hr);
+    ok(device1 == d3drm_device1, "Expected device returned = %p, got %p.\n", device1, d3drm_device1);
+    IDirect3DRMDevice_Release(d3drm_device1);
+
+    IDirect3DRMViewport_Release(viewport);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    ok(ref4 == ref1, "Expected ref4 == ref1, got ref1 = %u, ref4 = %u.\n", ref1, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm2);
+    ok(ref4 == ref2, "Expected ref4 == ref2, got ref2 = %u, ref4 = %u.\n", ref2, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm3);
+    ok(ref4 == ref3, "Expected ref4 == ref3, got ref3 = %u, ref4 = %u.\n", ref3, ref4);
+    ref4 = get_refcount((IUnknown *)device1);
+    ok(ref4 == device_ref, "Expected ref4 == device_ref, got device_ref = %u, ref4 = %u.\n", device_ref, ref4);
+    ref4 = get_refcount((IUnknown *)frame);
+    ok(ref4 == frame_ref, "Expected ref4 == frame_ref, got frame_ref = %u, ref4 = %u.\n", frame_ref, ref4);
+
+    device_ref = get_refcount((IUnknown *)device3);
+    frame_ref2 = get_refcount((IUnknown *)frame3);
+
+    hr = IDirect3DRM3_CreateViewport(d3drm3, device3, frame3, 0, 0, 0, 0, &viewport2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMViewport2 interface (hr = %#x)\n", hr);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    ok(ref4 > ref1, "Expected ref4 > ref1, got ref1 = %u, ref4 = %u.\n", ref1, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm2);
+    ok(ref4 == ref2, "Expected ref4 == ref2, got ref2 = %u, ref4 = %u.\n", ref2, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm3);
+    ok(ref4 == ref3, "Expected ref4 == ref3, got ref3 = %u, ref4 = %u.\n", ref3, ref4);
+    ref4 = get_refcount((IUnknown *)device3);
+    ok(ref4 == device_ref, "Expected ref4 == device_ref, got device_ref = %u, ref4 = %u.\n", device_ref, ref4);
+    ref4 = get_refcount((IUnknown *)frame3);
+    ok(ref4 > frame_ref2, "Expected ref4 > frame_ref2, got frame_ref2 = %u, ref4 = %u.\n", frame_ref2, ref4);
+
+    hr = IDirect3DRMViewport2_GetDevice(viewport2, &d3drm_device3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice3 interface (hr = %x)\n", hr);
+    ok(device3 == d3drm_device3, "Expected device returned = %p, got %p.\n", device3, d3drm_device3);
+    IDirect3DRMDevice3_Release(d3drm_device3);
+
+    IDirect3DRMViewport2_Release(viewport2);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    ok(ref4 == ref1, "Expected ref4 == ref1, got ref1 = %u, ref4 = %u.\n", ref1, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm2);
+    ok(ref4 == ref2, "Expected ref4 == ref2, got ref2 = %u, ref4 = %u.\n", ref2, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm3);
+    ok(ref4 == ref3, "Expected ref4 == ref3, got ref3 = %u, ref4 = %u.\n", ref3, ref4);
+    ref4 = get_refcount((IUnknown *)device3);
+    ok(ref4 == device_ref, "Expected ref4 == device_ref, got device_ref = %u, ref4 = %u.\n", device_ref, ref4);
+    ref4 = get_refcount((IUnknown *)frame3);
+    ok(ref4 == frame_ref2, "Expected ref4 == frame_ref2, got frame_ref2 = %u, ref4 = %u.\n", frame_ref2, ref4);
+
+    /* Test all failures together */
+    hr = IDirect3DRM_CreateViewport(d3drm1, NULL, frame, rc.left, rc.top, rc.right, rc.bottom, &viewport);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRM_CreateViewport(d3drm1, device1, NULL, rc.left, rc.top, rc.right, rc.bottom, &viewport);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRM_CreateViewport(d3drm1, device1, frame, rc.left, rc.top, rc.right + 1, rc.bottom + 1, &viewport);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    hr = IDirect3DRM_CreateViewport(d3drm1, device1, frame, rc.left, rc.top, rc.right + 1, rc.bottom, &viewport);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    hr = IDirect3DRM_CreateViewport(d3drm1, device1, frame, rc.left, rc.top, rc.right, rc.bottom + 1, &viewport);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    hr = IDirect3DRM_CreateViewport(d3drm1, device1, frame, rc.left, rc.top, rc.right, rc.bottom, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+
+    hr = IDirect3DRM2_CreateViewport(d3drm2, NULL, frame, rc.left, rc.top, rc.right, rc.bottom, &viewport);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRM2_CreateViewport(d3drm2, device1, NULL, rc.left, rc.top, rc.right, rc.bottom, &viewport);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRM2_CreateViewport(d3drm2, device1, frame, rc.left, rc.top, rc.right + 1, rc.bottom + 1, &viewport);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    hr = IDirect3DRM2_CreateViewport(d3drm2, device1, frame, rc.left, rc.top, rc.right + 1, rc.bottom, &viewport);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    hr = IDirect3DRM2_CreateViewport(d3drm2, device1, frame, rc.left, rc.top, rc.right, rc.bottom + 1, &viewport);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    hr = IDirect3DRM2_CreateViewport(d3drm2, device1, frame, rc.left, rc.top, rc.right, rc.bottom, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+
+    hr = IDirect3DRM3_CreateViewport(d3drm3, NULL, frame3, rc.left, rc.top, rc.right, rc.bottom, &viewport2);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRM3_CreateViewport(d3drm3, device3, NULL, rc.left, rc.top, rc.right, rc.bottom, &viewport2);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRM3_CreateViewport(d3drm3, device3, frame3, rc.left, rc.top, rc.right + 1, rc.bottom + 1, &viewport2);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    hr = IDirect3DRM3_CreateViewport(d3drm3, device3, frame3, rc.left, rc.top, rc.right + 1, rc.bottom, &viewport2);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    hr = IDirect3DRM3_CreateViewport(d3drm3, device3, frame3, rc.left, rc.top, rc.right, rc.bottom + 1, &viewport2);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    hr = IDirect3DRM3_CreateViewport(d3drm3, device3, frame3, rc.left, rc.top, rc.right, rc.bottom, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+
+    hr = IDirect3DRM2_CreateViewport(d3drm2, device1, frame, rc.left, rc.top, rc.right, rc.bottom, &viewport);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DRMViewport interface (hr = %#x)\n", hr);
+    hr = IDirect3DRMViewport_GetDirect3DViewport(viewport, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+    viewport_ref = get_refcount((IUnknown *)d3d_viewport);
+    hr = IDirect3DRMViewport_GetDirect3DViewport(viewport, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+    ref4 = get_refcount((IUnknown *)d3d_viewport);
+    ok(ref4 > viewport_ref, "Expected ref4 > viewport_ref, got ref4 = %u, viewport_ref = %u.\n", ref4, viewport_ref);
+    IDirect3DViewport_Release(d3d_viewport);
+    ref4 = get_refcount((IUnknown *)d3d_viewport);
+    ok(ref4 == viewport_ref, "Expected ref4 == viewport_ref, got ref4 = %u, viewport_ref = %u.\n", ref4, viewport_ref);
+    IDirect3DViewport_Release(d3d_viewport);
+
+    hr = IDirect3DRMViewport_GetDirect3DViewport(viewport, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+    vp.dwSize = sizeof(vp);
+    hr = IDirect3DViewport_GetViewport(d3d_viewport, &vp);
+    ok(SUCCEEDED(hr), "Cannot get D3DVIEWPORT struct (hr = %#x).\n", hr);
+    ok(vp.dwWidth == rc.right, "Expected viewport width = %u, got %u.\n", rc.right, vp.dwWidth);
+    ok(vp.dwHeight == rc.bottom, "Expected viewport height = %u, got %u.\n", rc.bottom, vp.dwHeight);
+    ok(vp.dwX == rc.left, "Expected viewport X position = %u, got %u.\n", rc.left, vp.dwX);
+    ok(vp.dwY == rc.top, "Expected viewport Y position = %u, got %u.\n", rc.top, vp.dwY);
+    expected_val = (rc.right > rc.bottom) ? (rc.right / 2.0f) : (rc.bottom / 2.0f);
+    ok(vp.dvScaleX == expected_val, "Expected dvScaleX = %f, got %f.\n", expected_val, vp.dvScaleX);
+    ok(vp.dvScaleY == expected_val, "Expected dvScaleY = %f, got %f.\n", expected_val, vp.dvScaleY);
+    expected_val = vp.dwWidth / (2.0f * vp.dvScaleX);
+    ok(vp.dvMaxX == expected_val, "Expected dvMaxX = %f, got %f.\n", expected_val, vp.dvMaxX);
+    expected_val = vp.dwHeight / (2.0f * vp.dvScaleY);
+    ok(vp.dvMaxY == expected_val, "Expected dvMaxY = %f, got %f.\n", expected_val, vp.dvMaxY);
+    IDirect3DViewport_Release(d3d_viewport);
+    IDirect3DRMViewport_Release(viewport);
+
+    hr = IDirect3DRM3_CreateViewport(d3drm3, device3, frame3, rc.left, rc.top, rc.right, rc.bottom, &viewport2);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DRMViewport2 interface (hr = %#x)\n", hr);
+    hr = IDirect3DRMViewport2_GetDirect3DViewport(viewport2, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+    viewport_ref = get_refcount((IUnknown *)d3d_viewport);
+    hr = IDirect3DRMViewport2_GetDirect3DViewport(viewport2, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+    ref4 = get_refcount((IUnknown *)d3d_viewport);
+    ok(ref4 > viewport_ref, "Expected ref4 > viewport_ref, got ref4 = %u, viewport_ref = %u.\n", ref4, viewport_ref);
+    IDirect3DViewport_Release(d3d_viewport);
+    ref4 = get_refcount((IUnknown *)d3d_viewport);
+    ok(ref4 == viewport_ref, "Expected ref4 == viewport_ref, got ref4 = %u, viewport_ref = %u.\n", ref4, viewport_ref);
+    IDirect3DViewport_Release(d3d_viewport);
+
+    hr = IDirect3DRMViewport2_GetDirect3DViewport(viewport2, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+    vp.dwSize = sizeof(vp);
+    hr = IDirect3DViewport_GetViewport(d3d_viewport, &vp);
+    ok(SUCCEEDED(hr), "Cannot get D3DVIEWPORT struct (hr = %#x).\n", hr);
+    ok(vp.dwWidth == rc.right, "Expected viewport width = %u, got %u.\n", rc.right, vp.dwWidth);
+    ok(vp.dwHeight == rc.bottom, "Expected viewport height = %u, got %u.\n", rc.bottom, vp.dwHeight);
+    ok(vp.dwX == rc.left, "Expected viewport X position = %u, got %u.\n", rc.left, vp.dwX);
+    ok(vp.dwY == rc.top, "Expected viewport Y position = %u, got %u.\n", rc.top, vp.dwY);
+    expected_val = (rc.right > rc.bottom) ? (rc.right / 2.0f) : (rc.bottom / 2.0f);
+    ok(vp.dvScaleX == expected_val, "Expected dvScaleX = %f, got %f.\n", expected_val, vp.dvScaleX);
+    ok(vp.dvScaleY == expected_val, "Expected dvScaleY = %f, got %f.\n", expected_val, vp.dvScaleY);
+    expected_val = vp.dwWidth / (2.0f * vp.dvScaleX);
+    ok(vp.dvMaxX == expected_val, "Expected dvMaxX = %f, got %f.\n", expected_val, vp.dvMaxX);
+    expected_val = vp.dwHeight / (2.0f * vp.dvScaleY);
+    ok(vp.dvMaxY == expected_val, "Expected dvMaxY = %f, got %f.\n", expected_val, vp.dvMaxY);
+    IDirect3DViewport_Release(d3d_viewport);
+    IDirect3DRMViewport2_Release(viewport2);
+
+    hr = IDirect3DRM_CreateViewport(d3drm1, device1, frame, rc.left, rc.top, rc.right, rc.bottom, &viewport);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRMViewport interface (hr = %x)\n", hr);
+    hr = IDirect3DRMViewport_GetDirect3DViewport(viewport, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+    viewport_ref = get_refcount((IUnknown *)d3d_viewport);
+    hr = IDirect3DRMViewport_GetDirect3DViewport(viewport, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+    ref4 = get_refcount((IUnknown *)d3d_viewport);
+    ok(ref4 > viewport_ref, "Expected ref4 > viewport_ref, got ref4 = %u, viewport_ref = %u.\n", ref4, viewport_ref);
+    IDirect3DViewport_Release(d3d_viewport);
+    ref4 = get_refcount((IUnknown *)d3d_viewport);
+    ok(ref4 == viewport_ref, "Expected ref4 == viewport_ref, got ref4 = %u, viewport_ref = %u.\n", ref4, viewport_ref);
+    IDirect3DViewport_Release(d3d_viewport);
+
+    hr = IDirect3DRMViewport_GetDirect3DViewport(viewport, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+    vp.dwSize = sizeof(vp);
+    hr = IDirect3DViewport_GetViewport(d3d_viewport, &vp);
+    ok(SUCCEEDED(hr), "Cannot get D3DVIEWPORT struct (hr = %#x).\n", hr);
+    ok(vp.dwWidth == rc.right, "Expected viewport width = %u, got %u.\n", rc.right, vp.dwWidth);
+    ok(vp.dwHeight == rc.bottom, "Expected viewport height = %u, got %u.\n", rc.bottom, vp.dwHeight);
+    ok(vp.dwX == rc.left, "Expected viewport X position = %u, got %u.\n", rc.left, vp.dwX);
+    ok(vp.dwY == rc.top, "Expected viewport Y position = %u, got %u.\n", rc.top, vp.dwY);
+    expected_val = (rc.right > rc.bottom) ? (rc.right / 2.0f) : (rc.bottom / 2.0f);
+    ok(vp.dvScaleX == expected_val, "Expected dvScaleX = %f, got %f.\n", expected_val, vp.dvScaleX);
+    ok(vp.dvScaleY == expected_val, "Expected dvScaleY = %f, got %f.\n", expected_val, vp.dvScaleY);
+    expected_val = vp.dwWidth / (2.0f * vp.dvScaleX);
+    ok(vp.dvMaxX == expected_val, "Expected dvMaxX = %f, got %f.\n", expected_val, vp.dvMaxX);
+    expected_val = vp.dwHeight / (2.0f * vp.dvScaleY);
+    ok(vp.dvMaxY == expected_val, "Expected dvMaxY = %f, got %f.\n", expected_val, vp.dvMaxY);
+    IDirect3DViewport_Release(d3d_viewport);
 
     hr = IDirect3DRMViewport_QueryInterface(viewport, &IID_IDirect3DRMObject, (void**)&obj);
     ok(hr == D3DRM_OK, "expected D3DRM_OK (hr = %x)\n", hr);
@@ -1547,12 +1800,227 @@ static void test_Viewport(void)
     data = IDirect3DRMViewport2_GetAppData(viewport2);
     ok(data == 1, "got %x\n", data);
     IDirect3DRMViewport2_Release(viewport2);
+    IDirect3DRMViewport_Release(viewport);
+
+    /* IDirect3DRMViewport*::Init tests */
+    ref1 = get_refcount((IUnknown *)d3drm1);
+    ref2 = get_refcount((IUnknown *)d3drm2);
+    ref3 = get_refcount((IUnknown *)d3drm3);
+    hr = IDirect3DRM_CreateObject(d3drm1, &CLSID_CDirect3DRMViewport, NULL, &IID_IDirect3DRMViewport,
+            (void **)&viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMViewport interface (hr = %#x).\n", hr);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    ok(ref4 == ref1, "Expected ref4 == ref1, got ref1 = %u, ref4 = %u.\n", ref1, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm2);
+    ok(ref4 == ref2, "Expected ref4 == ref2, got ref2 = %u, ref4 = %u.\n", ref2, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm3);
+    ok(ref4 == ref3, "Expected ref4 == ref3, got ref3 = %u, ref4 = %u.\n", ref3, ref4);
+
+    hr = IDirect3DRMViewport_GetDirect3DViewport(viewport, &d3d_viewport);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRMViewport_GetDevice(viewport, &d3drm_device1);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+
+    /* Test all failures together */
+    hr = IDirect3DRMViewport_Init(viewport, NULL, frame, rc.left, rc.top, rc.right, rc.bottom);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRMViewport_Init(viewport, device1, NULL, rc.left, rc.top, rc.right, rc.bottom);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRMViewport_Init(viewport, device1, frame, rc.left, rc.top, rc.right + 1, rc.bottom + 1);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRMViewport_Init(viewport, device1, frame, rc.left, rc.top, rc.right + 1, rc.bottom);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRMViewport_Init(viewport, device1, frame, rc.left, rc.top, rc.right, rc.bottom + 1);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+
+    device_ref = get_refcount((IUnknown *)device1);
+    frame_ref = get_refcount((IUnknown *)frame);
+    hr = IDirect3DRMViewport_Init(viewport, device1, frame, rc.left, rc.top, rc.right, rc.bottom);
+    ok(SUCCEEDED(hr), "Cannot initialize IDirect3DRMViewport interface (hr = %#x).\n", hr);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    ok(ref4 > ref1, "Expected ref4 > ref1, got ref1 = %u, ref4 = %u.\n", ref1, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm2);
+    ok(ref4 == ref2, "Expected ref4 == ref2, got ref2 = %u, ref4 = %u.\n", ref2, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm3);
+    ok(ref4 == ref3, "Expected ref4 == ref3, got ref3 = %u, ref4 = %u.\n", ref3, ref4);
+    ref4 = get_refcount((IUnknown *)device1);
+    ok(ref4 == device_ref, "Expected ref4 == device_ref, got device_ref = %u, ref4 = %u.\n", device_ref, ref4);
+    ref4 = get_refcount((IUnknown *)frame);
+    ok(ref4 > frame_ref, "Expected ref4 > frame_ref, got frame_ref = %u, ref4 = %u.\n", frame_ref, ref4);
+
+    hr = IDirect3DRMViewport_GetDevice(viewport, &d3drm_device1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice3 interface (hr = %x)\n", hr);
+    ok(device1 == d3drm_device1, "Expected device returned = %p, got %p.\n", device3, d3drm_device3);
+    IDirect3DRMDevice_Release(d3drm_device1);
+
+    hr = IDirect3DRMViewport_GetDirect3DViewport(viewport, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+    viewport_ref = get_refcount((IUnknown *)d3d_viewport);
+    hr = IDirect3DRMViewport_GetDirect3DViewport(viewport, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+    ref4 = get_refcount((IUnknown *)d3d_viewport);
+    ok(ref4 > viewport_ref, "Expected ref4 > viewport_ref, got ref4 = %u, viewport_ref = %u.\n", ref4, viewport_ref);
+    IDirect3DViewport_Release(d3d_viewport);
+    ref4 = get_refcount((IUnknown *)d3d_viewport);
+    ok(ref4 == viewport_ref, "Expected ref4 == viewport_ref, got ref4 = %u, viewport_ref = %u.\n", ref4, viewport_ref);
+    IDirect3DViewport_Release(d3d_viewport);
+
+    hr = IDirect3DRMViewport_GetDirect3DViewport(viewport, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+    vp.dwSize = sizeof(vp);
+    hr = IDirect3DViewport_GetViewport(d3d_viewport, &vp);
+    ok(SUCCEEDED(hr), "Cannot get D3DVIEWPORT struct (hr = %#x).\n", hr);
+    ok(vp.dwWidth == rc.right, "Expected viewport width = %u, got %u.\n", rc.right, vp.dwWidth);
+    ok(vp.dwHeight == rc.bottom, "Expected viewport height = %u, got %u.\n", rc.bottom, vp.dwHeight);
+    ok(vp.dwX == rc.left, "Expected viewport X position = %u, got %u.\n", rc.left, vp.dwX);
+    ok(vp.dwY == rc.top, "Expected viewport Y position = %u, got %u.\n", rc.top, vp.dwY);
+    expected_val = (rc.right > rc.bottom) ? (rc.right / 2.0f) : (rc.bottom / 2.0f);
+    ok(vp.dvScaleX == expected_val, "Expected dvScaleX = %f, got %f.\n", expected_val, vp.dvScaleX);
+    ok(vp.dvScaleY == expected_val, "Expected dvScaleY = %f, got %f.\n", expected_val, vp.dvScaleY);
+    expected_val = vp.dwWidth / (2.0f * vp.dvScaleX);
+    ok(vp.dvMaxX == expected_val, "Expected dvMaxX = %f, got %f.\n", expected_val, vp.dvMaxX);
+    expected_val = vp.dwHeight / (2.0f * vp.dvScaleY);
+    ok(vp.dvMaxY == expected_val, "Expected dvMaxY = %f, got %f.\n", expected_val, vp.dvMaxY);
+    IDirect3DViewport_Release(d3d_viewport);
+
+    hr = IDirect3DRMViewport_Init(viewport, device1, frame, rc.left, rc.top, rc.right, rc.bottom);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+
+    IDirect3DRMViewport_Release(viewport);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    todo_wine ok(ref4 > ref1, "Expected ref4 > ref1, got ref1 = %u, ref4 = %u.\n", ref1, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm2);
+    ok(ref4 == ref2, "Expected ref4 == ref2, got ref2 = %u, ref4 = %u.\n", ref2, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm3);
+    ok(ref4 == ref3, "Expected ref4 == ref3, got ref3 = %u, ref4 = %u.\n", ref3, ref4);
+    ref4 = get_refcount((IUnknown *)device1);
+    ok(ref4 == device_ref, "Expected ref4 == device_ref, got device_ref = %u, ref4 = %u.\n", device_ref, ref4);
+    ref4 = get_refcount((IUnknown *)frame);
+    todo_wine ok(ref4 > frame_ref, "Expected ref4 > frame_ref, got frame_ref = %u, ref4 = %u.\n", frame_ref, ref4);
+
+    ref1 = get_refcount((IUnknown *)d3drm1);
+    ref2 = get_refcount((IUnknown *)d3drm2);
+    ref3 = get_refcount((IUnknown *)d3drm3);
+    hr = IDirect3DRM3_CreateObject(d3drm2, &CLSID_CDirect3DRMViewport, NULL, &IID_IDirect3DRMViewport2,
+            (void **)&viewport2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMViewport2 interface (hr = %#x).\n", hr);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    ok(ref4 == ref1, "Expected ref4 == ref1, got ref1 = %u, ref4 = %u.\n", ref1, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm2);
+    ok(ref4 == ref2, "Expected ref4 == ref2, got ref2 = %u, ref4 = %u.\n", ref2, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm3);
+    ok(ref4 == ref3, "Expected ref4 == ref3, got ref3 = %u, ref4 = %u.\n", ref3, ref4);
+
+    hr = IDirect3DRMViewport2_GetDirect3DViewport(viewport2, &d3d_viewport);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRMViewport2_GetDevice(viewport2, &d3drm_device3);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+
+    hr = IDirect3DRMViewport2_Init(viewport2, NULL, frame3, rc.left, rc.top, rc.right, rc.bottom);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRMViewport2_Init(viewport2, device3, NULL, rc.left, rc.top, rc.right, rc.bottom);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRMViewport2_Init(viewport2, device3, frame3, rc.left, rc.top, rc.right + 1, rc.bottom + 1);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRMViewport2_Init(viewport2, device3, frame3, rc.left, rc.top, rc.right + 1, rc.bottom);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    hr = IDirect3DRMViewport2_Init(viewport2, device3, frame3, rc.left, rc.top, rc.right, rc.bottom + 1);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+
+    device_ref = get_refcount((IUnknown *)device3);
+    frame_ref2 = get_refcount((IUnknown *)frame3);
+    hr = IDirect3DRMViewport2_Init(viewport2, device3, frame3, rc.left, rc.top, rc.right, rc.bottom);
+    ok(SUCCEEDED(hr), "Cannot initialize IDirect3DRMViewport2 interface (hr = %#x).\n", hr);
+    ref4 = get_refcount((IUnknown *)device3);
+    ok(ref4 == device_ref, "Expected ref4 == device_ref, got device_ref = %u, ref4 = %u.\n", device_ref, ref4);
+    ref4 = get_refcount((IUnknown *)frame3);
+    ok(ref4 > frame_ref2, "Expected ref4 > frame_ref2, got frame_ref2 = %u, ref4 = %u.\n", frame_ref2, ref4);
+
+    hr = IDirect3DRMViewport2_GetDevice(viewport2, &d3drm_device3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice3 interface (hr = %x)\n", hr);
+    ok(device3 == d3drm_device3, "Expected device returned = %p, got %p.\n", device3, d3drm_device3);
+    IDirect3DRMDevice3_Release(d3drm_device3);
+
+    hr = IDirect3DRMViewport2_GetDirect3DViewport(viewport2, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+    viewport_ref = get_refcount((IUnknown *)d3d_viewport);
+    hr = IDirect3DRMViewport2_GetDirect3DViewport(viewport2, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+    ref4 = get_refcount((IUnknown *)d3d_viewport);
+    ok(ref4 > viewport_ref, "Expected ref4 > viewport_ref, got ref4 = %u, viewport_ref = %u.\n", ref4, viewport_ref);
+    IDirect3DViewport_Release(d3d_viewport);
+    ref4 = get_refcount((IUnknown *)d3d_viewport);
+    ok(ref4 == viewport_ref, "Expected ref4 == viewport_ref, got ref4 = %u, viewport_ref = %u.\n", ref4, viewport_ref);
+    IDirect3DViewport_Release(d3d_viewport);
+
+    hr = IDirect3DRMViewport2_GetDirect3DViewport(viewport2, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+    vp.dwSize = sizeof(vp);
+    hr = IDirect3DViewport_GetViewport(d3d_viewport, &vp);
+    ok(SUCCEEDED(hr), "Cannot get D3DVIEWPORT struct (hr = %#x).\n", hr);
+    ok(vp.dwWidth == rc.right, "Expected viewport width = %u, got %u.\n", rc.right, vp.dwWidth);
+    ok(vp.dwHeight == rc.bottom, "Expected viewport height = %u, got %u.\n", rc.bottom, vp.dwHeight);
+    ok(vp.dwX == rc.left, "Expected viewport X position = %u, got %u.\n", rc.left, vp.dwX);
+    ok(vp.dwY == rc.top, "Expected viewport Y position = %u, got %u.\n", rc.top, vp.dwY);
+    expected_val = (rc.right > rc.bottom) ? (rc.right / 2.0f) : (rc.bottom / 2.0f);
+    ok(vp.dvScaleX == expected_val, "Expected dvScaleX = %f, got %f.\n", expected_val, vp.dvScaleX);
+    ok(vp.dvScaleY == expected_val, "Expected dvScaleY = %f, got %f.\n", expected_val, vp.dvScaleY);
+    expected_val = vp.dwWidth / (2.0f * vp.dvScaleX);
+    ok(vp.dvMaxX == expected_val, "Expected dvMaxX = %f, got %f.\n", expected_val, vp.dvMaxX);
+    expected_val = vp.dwHeight / (2.0f * vp.dvScaleY);
+    ok(vp.dvMaxY == expected_val, "Expected dvMaxY = %f, got %f.\n", expected_val, vp.dvMaxY);
+    IDirect3DViewport_Release(d3d_viewport);
+
+    hr = IDirect3DRMViewport2_Init(viewport2, device3, frame3, rc.left, rc.top, rc.right, rc.bottom);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+
+    IDirect3DRMViewport2_Release(viewport2);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    todo_wine ok(ref4 > ref1, "Expected ref4 > ref1, got ref1 = %u, ref4 = %u.\n", ref1, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm2);
+    ok(ref4 == ref2, "Expected ref4 == ref2, got ref2 = %u, ref4 = %u.\n", ref2, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm3);
+    ok(ref4 == ref3, "Expected ref4 == ref3, got ref3 = %u, ref4 = %u.\n", ref3, ref4);
+    ref4 = get_refcount((IUnknown *)device3);
+    ok(ref4 == device_ref, "Expected ref4 == device_ref, got device_ref = %u, ref4 = %u.\n", device_ref, ref4);
+    ref4 = get_refcount((IUnknown *)frame3);
+    todo_wine ok(ref4 > frame_ref2, "Expected ref4 > frame_ref2, got frame_ref2 = %u, ref4 = %u.\n", frame_ref2, ref4);
+
+    IDirect3DRMDevice3_Release(device3);
+    IDirect3DRMDevice_Release(device1);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    todo_wine ok(ref4 > initial_ref1, "Expected ref4 > initial_ref1, got initial_ref1 = %u, ref4 = %u.\n", initial_ref1,
+            ref4);
+    ref4 = get_refcount((IUnknown *)d3drm2);
+    ok(ref4 == initial_ref2, "Expected ref4 == initial_ref2, got initial_ref2 = %u, ref4 = %u.\n", initial_ref2, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm3);
+    ok(ref4 == initial_ref3, "Expected ref4 == initial_ref3, got initial_ref3 = %u, ref4 = %u.\n", initial_ref3, ref4);
+    ref4 = get_refcount((IUnknown *)frame);
+    ok(ref4 == frame_ref, "Expected ref4 == frame_ref, got frame_ref = %u, ref4 = %u.\n", frame_ref, ref4);
+    ref4 = get_refcount((IUnknown *)frame3);
+    ok(ref4 == frame_ref2, "Expected ref4 == frame_ref2, got frame_ref2 = %u, ref4 = %u.\n", frame_ref2, ref4);
+
+    IDirect3DRMFrame3_Release(frame3);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    todo_wine ok(ref4 > initial_ref1, "Expected ref4 > initial_ref1, got initial_ref1 = %u, ref4 = %u.\n", initial_ref1,
+            ref4);
+    ref4 = get_refcount((IUnknown *)d3drm2);
+    ok(ref4 == initial_ref2, "Expected ref4 == initial_ref2, got initial_ref2 = %u, ref4 = %u.\n", initial_ref2, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm3);
+    ok(ref4 == initial_ref3, "Expected ref4 == initial_ref3, got initial_ref3 = %u, ref4 = %u.\n", initial_ref3, ref4);
 
     IDirect3DRMFrame_Release(frame);
-    IDirect3DRMDevice_Release(device);
-    IDirectDrawClipper_Release(pClipper);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    ok(ref4 == initial_ref1, "Expected ref4 == initial_ref1, got initial_ref1 = %u, ref4 = %u.\n", initial_ref1, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm2);
+    ok(ref4 == initial_ref2, "Expected ref4 == initial_ref2, got initial_ref2 = %u, ref4 = %u.\n", initial_ref2, ref4);
+    ref4 = get_refcount((IUnknown *)d3drm3);
+    ok(ref4 == initial_ref3, "Expected ref4 == initial_ref3, got initial_ref3 = %u, ref4 = %u.\n", initial_ref3, ref4);
+    IDirectDrawClipper_Release(clipper);
 
-    IDirect3DRM_Release(d3drm);
+    IDirect3DRM3_Release(d3drm3);
+    IDirect3DRM2_Release(d3drm2);
+    IDirect3DRM_Release(d3drm1);
     DestroyWindow(window);
 }
 
@@ -2352,6 +2820,7 @@ struct qi_test
 {
     REFIID iid;
     REFIID refcount_iid;
+    REFIID vtable_iid;
     HRESULT hr;
 };
 
@@ -2383,6 +2852,14 @@ static void test_qi(const char *test_name, IUnknown *base_iface,
                     refcount = IUnknown_Release(iface2);
                     ok(refcount == expected_refcount, "Got refcount %u for test \"%s\" %u, %u, expected %u.\n",
                                 refcount, test_name, i, j, expected_refcount);
+                    if (tests[i].vtable_iid && tests[j].vtable_iid && IsEqualGUID(tests[i].vtable_iid, tests[j].vtable_iid))
+                        ok(iface1 == iface2,
+                                "Expected iface1 == iface2 for test \"%s\" %u, %u. Got iface1 = %p, iface 2 = %p.\n",
+                                test_name, i, j, iface1, iface2);
+                    else if (tests[i].vtable_iid && tests[j].vtable_iid)
+                        ok(iface1 != iface2,
+                                "Expected iface1 != iface2 for test \"%s\" %u, %u. Got iface1 == iface2 == %p.\n",
+                                test_name, i, j, iface1);
                 }
             }
 
@@ -2400,74 +2877,74 @@ static void test_d3drm_qi(void)
 {
     static const struct qi_test tests[] =
     {
-        { &IID_IDirect3DRM3,               &IID_IDirect3DRM3,    S_OK,                     },
-        { &IID_IDirect3DRM2,               &IID_IDirect3DRM2,    S_OK,                     },
-        { &IID_IDirect3DRM,                &IID_IDirect3DRM,     S_OK,                     },
-        { &IID_IDirect3DRMDevice,          NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMObject,          NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMObject2,         NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMDevice2,         NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMDevice3,         NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMViewport,        NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMViewport2,       NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFrame,           NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFrame2,          NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFrame3,          NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMVisual,          NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMesh,            NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMeshBuilder,     NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMeshBuilder2,    NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMeshBuilder3,    NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFace,            NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFace2,           NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMLight,           NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMTexture,         NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMTexture2,        NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMTexture3,        NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMWrap,            NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMaterial,        NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMaterial2,       NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMAnimation,       NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMAnimation2,      NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMAnimationSet,    NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMAnimationSet2,   NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMObjectArray,     NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMDeviceArray,     NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMViewportArray,   NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFrameArray,      NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMVisualArray,     NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMLightArray,      NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMPickedArray,     NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFaceArray,       NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMAnimationArray,  NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMUserVisual,      NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMShadow,          NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMShadow2,         NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMInterpolator,    NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMProgressiveMesh, NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMPicked2Array,    NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMClippedVisual,   NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawClipper,         NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawSurface7,        NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawSurface4,        NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawSurface3,        NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawSurface2,        NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawSurface,         NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DDevice7,           NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DDevice3,           NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DDevice2,           NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DDevice,            NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3D7,                 NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3D3,                 NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3D2,                 NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3D,                  NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDraw7,               NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDraw4,               NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDraw3,               NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDraw2,               NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDraw,                NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DLight,             NULL,                 CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IUnknown,                   &IID_IDirect3DRM,     S_OK                      },
+        { &IID_IDirect3DRM3,               &IID_IDirect3DRM3, &IID_IDirect3DRM3, S_OK                      },
+        { &IID_IDirect3DRM2,               &IID_IDirect3DRM2, &IID_IDirect3DRM2, S_OK                      },
+        { &IID_IDirect3DRM,                &IID_IDirect3DRM,  &IID_IDirect3DRM,  S_OK                      },
+        { &IID_IDirect3DRMDevice,          NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObject,          NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObject2,         NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice2,         NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice3,         NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewport,        NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewport2,       NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrame,           NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrame2,          NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrame3,          NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisual,          NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMesh,            NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder,     NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder2,    NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder3,    NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace,            NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace2,           NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLight,           NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture,         NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture2,        NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture3,        NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMWrap,            NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial,        NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial2,       NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimation,       NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimation2,      NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet,    NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet2,   NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObjectArray,     NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDeviceArray,     NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewportArray,   NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrameArray,      NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisualArray,     NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLightArray,      NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPickedArray,     NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFaceArray,       NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationArray,  NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMUserVisual,      NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow,          NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow2,         NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMInterpolator,    NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMProgressiveMesh, NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPicked2Array,    NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMClippedVisual,   NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawClipper,         NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface7,        NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface4,        NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface3,        NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface2,        NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface,         NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice7,           NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice3,           NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice2,           NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice,            NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D7,                 NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D3,                 NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D2,                 NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D,                  NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw7,               NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw4,               NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw3,               NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw2,               NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw,                NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DLight,             NULL,              NULL,              CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IUnknown,                   &IID_IDirect3DRM,  &IID_IDirect3DRM,  S_OK                      },
     };
     HRESULT hr;
     IDirect3DRM *d3drm;
@@ -2484,73 +2961,73 @@ static void test_frame_qi(void)
 {
     static const struct qi_test tests[] =
     {
-        { &IID_IDirect3DRMFrame3,             &IID_IUnknown,    S_OK                      },
-        { &IID_IDirect3DRMFrame2,             &IID_IUnknown,    S_OK                      },
-        { &IID_IDirect3DRMFrame,              &IID_IUnknown,    S_OK                      },
-        { &IID_IDirect3DRM,                   NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMDevice,             NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMObject,             &IID_IUnknown,    S_OK                      },
-        { &IID_IDirect3DRMDevice2,            NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMDevice3,            NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMViewport,           NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMViewport2,          NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRM3,                  NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRM2,                  NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMVisual,             &IID_IUnknown,    S_OK                      },
-        { &IID_IDirect3DRMMesh,               NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMeshBuilder,        NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMeshBuilder2,       NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMeshBuilder3,       NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFace,               NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFace2,              NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMLight,              NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMTexture,            NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMTexture2,           NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMTexture3,           NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMWrap,               NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMaterial,           NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMaterial2,          NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMAnimation,          NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMAnimation2,         NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMAnimationSet,       NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMAnimationSet2,      NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMObjectArray,        NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMDeviceArray,        NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMViewportArray,      NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFrameArray,         NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMVisualArray,        NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMLightArray,         NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMPickedArray,        NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFaceArray,          NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMAnimationArray,     NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMUserVisual,         NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMShadow,             NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMShadow2,            NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMInterpolator,       NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMProgressiveMesh,    NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMPicked2Array,       NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMClippedVisual,      NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawClipper,            NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawSurface7,           NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawSurface4,           NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawSurface3,           NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawSurface2,           NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawSurface,            NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DDevice7,              NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DDevice3,              NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DDevice2,              NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DDevice,               NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3D7,                    NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3D3,                    NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3D2,                    NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3D,                     NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDraw7,                  NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDraw4,                  NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDraw3,                  NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDraw2,                  NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDraw,                   NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DLight,                NULL,             CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IUnknown,                      &IID_IUnknown,    S_OK                      },
+        { &IID_IDirect3DRMFrame3,          &IID_IUnknown, &IID_IDirect3DRMFrame3, S_OK                      },
+        { &IID_IDirect3DRMFrame2,          &IID_IUnknown, &IID_IDirect3DRMFrame2, S_OK                      },
+        { &IID_IDirect3DRMFrame,           &IID_IUnknown, &IID_IDirect3DRMFrame,  S_OK                      },
+        { &IID_IDirect3DRM,                NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice,          NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObject,          &IID_IUnknown, &IID_IDirect3DRMFrame,  S_OK                      },
+        { &IID_IDirect3DRMDevice2,         NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice3,         NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewport,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewport2,       NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRM3,               NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRM2,               NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisual,          &IID_IUnknown, &IID_IDirect3DRMFrame,  S_OK                      },
+        { &IID_IDirect3DRMMesh,            NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder,     NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder2,    NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder3,    NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace,            NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace2,           NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLight,           NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture,         NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture2,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture3,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMWrap,            NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial2,       NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimation,       NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimation2,      NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet,    NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet2,   NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObjectArray,     NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDeviceArray,     NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewportArray,   NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrameArray,      NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisualArray,     NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLightArray,      NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPickedArray,     NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFaceArray,       NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationArray,  NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMUserVisual,      NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow,          NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow2,         NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMInterpolator,    NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMProgressiveMesh, NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPicked2Array,    NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMClippedVisual,   NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawClipper,         NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface7,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface4,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface3,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface2,        NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface,         NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice7,           NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice3,           NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice2,           NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice,            NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D7,                 NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D3,                 NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D2,                 NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D,                  NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw7,               NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw4,               NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw3,               NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw2,               NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw,                NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DLight,             NULL,          NULL,                   CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IUnknown,                   &IID_IUnknown, NULL,                   S_OK                      },
     };
     HRESULT hr;
     IDirect3DRM *d3drm1;
@@ -2566,7 +3043,7 @@ static void test_frame_qi(void)
 
     hr = IDirect3DRM_CreateFrame(d3drm1, NULL, &frame1);
     ok(hr == D3DRM_OK, "Failed to create frame1 (hr = %x)\n", hr);
-    IDirect3DRMFrame_QueryInterface(frame1, &IID_IUnknown, (void **)&unknown);
+    hr = IDirect3DRMFrame_QueryInterface(frame1, &IID_IUnknown, (void **)&unknown);
     ok(hr == D3DRM_OK, "Failed to create IUnknown from frame1 (hr = %x)\n", hr);
     IDirect3DRMFrame_Release(frame1);
     test_qi("frame1_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
@@ -2576,7 +3053,7 @@ static void test_frame_qi(void)
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRM2 interface (hr = %x).\n", hr);
     hr = IDirect3DRM2_CreateFrame(d3drm2, NULL, &frame2);
     ok(hr == D3DRM_OK, "Failed to create frame2 (hr = %x)\n", hr);
-    IDirect3DRMFrame2_QueryInterface(frame2, &IID_IUnknown, (void **)&unknown);
+    hr = IDirect3DRMFrame2_QueryInterface(frame2, &IID_IUnknown, (void **)&unknown);
     ok(hr == D3DRM_OK, "Failed to create IUnknown from frame2 (hr = %x)\n", hr);
     IDirect3DRMFrame2_Release(frame2);
     test_qi("frame2_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
@@ -2586,7 +3063,7 @@ static void test_frame_qi(void)
     ok(hr == D3DRM_OK, "Cannot get IDirect3DRM3 interface (hr = %x).\n", hr);
     hr = IDirect3DRM3_CreateFrame(d3drm3, NULL, &frame3);
     ok(hr == D3DRM_OK, "Failed to create frame3 (hr = %x)\n", hr);
-    IDirect3DRMFrame3_QueryInterface(frame3, &IID_IUnknown, (void **)&unknown);
+    hr = IDirect3DRMFrame3_QueryInterface(frame3, &IID_IUnknown, (void **)&unknown);
     ok(hr == D3DRM_OK, "Failed to create IUnknown from frame3 (hr = %x)\n", hr);
     IDirect3DRMFrame3_Release(frame3);
     test_qi("frame3_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
@@ -2601,74 +3078,74 @@ static void test_device_qi(void)
 {
     static const struct qi_test tests[] =
     {
-        { &IID_IDirect3DRM3,               NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRM2,               NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRM,                NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMDevice,          &IID_IUnknown,           S_OK,                    },
-        { &IID_IDirect3DRMDevice2,         &IID_IUnknown,           S_OK,                    },
-        { &IID_IDirect3DRMDevice3,         &IID_IUnknown,           S_OK,                    },
-        { &IID_IDirect3DRMWinDevice,       &IID_IUnknown,           S_OK,                    },
-        { &IID_IDirect3DRMObject,          &IID_IUnknown,           S_OK,                    },
-        { &IID_IDirect3DRMViewport,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMViewport2,       NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMFrame,           NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMFrame2,          NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMFrame3,          NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMVisual,          NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMMesh,            NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMMeshBuilder,     NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMMeshBuilder2,    NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMMeshBuilder3,    NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMFace,            NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMFace2,           NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMLight,           NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMTexture,         NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMTexture2,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMTexture3,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMWrap,            NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMMaterial,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMMaterial2,       NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMAnimation,       NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMAnimation2,      NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMAnimationSet,    NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMAnimationSet2,   NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMObjectArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMDeviceArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMViewportArray,   NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMFrameArray,      NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMVisualArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMLightArray,      NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMPickedArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMFaceArray,       NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMAnimationArray,  NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMUserVisual,      NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMShadow,          NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMShadow2,         NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMInterpolator,    NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMProgressiveMesh, NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMPicked2Array,    NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DRMClippedVisual,   NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirectDrawClipper,         NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirectDrawSurface7,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirectDrawSurface4,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirectDrawSurface3,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirectDrawSurface2,        NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirectDrawSurface,         NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DDevice7,           NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DDevice3,           NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DDevice2,           NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DDevice,            NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3D7,                 NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3D3,                 NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3D2,                 NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3D,                  NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirectDraw7,               NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirectDraw4,               NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirectDraw3,               NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirectDraw2,               NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirectDraw,                NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IDirect3DLight,             NULL,                    CLASS_E_CLASSNOTAVAILABLE},
-        { &IID_IUnknown,                   &IID_IUnknown,           S_OK,                    },
+        { &IID_IDirect3DRM3,               NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRM2,               NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRM,                NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice,          &IID_IUnknown, &IID_IDirect3DRMDevice,    S_OK,                     },
+        { &IID_IDirect3DRMDevice2,         &IID_IUnknown, &IID_IDirect3DRMDevice2,   S_OK,                     },
+        { &IID_IDirect3DRMDevice3,         &IID_IUnknown, &IID_IDirect3DRMDevice3,   S_OK,                     },
+        { &IID_IDirect3DRMWinDevice,       &IID_IUnknown, &IID_IDirect3DRMWinDevice, S_OK,                     },
+        { &IID_IDirect3DRMObject,          &IID_IUnknown, &IID_IDirect3DRMDevice,    S_OK,                     },
+        { &IID_IDirect3DRMViewport,        NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewport2,       NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrame,           NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrame2,          NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrame3,          NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisual,          NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMesh,            NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder,     NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder2,    NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder3,    NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace,            NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace2,           NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLight,           NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture,         NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture2,        NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture3,        NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMWrap,            NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial,        NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial2,       NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimation,       NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimation2,      NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet,    NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet2,   NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObjectArray,     NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDeviceArray,     NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewportArray,   NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrameArray,      NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisualArray,     NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLightArray,      NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPickedArray,     NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFaceArray,       NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationArray,  NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMUserVisual,      NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow,          NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow2,         NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMInterpolator,    NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMProgressiveMesh, NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPicked2Array,    NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMClippedVisual,   NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawClipper,         NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface7,        NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface4,        NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface3,        NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface2,        NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface,         NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice7,           NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice3,           NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice2,           NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice,            NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D7,                 NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D3,                 NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D2,                 NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D,                  NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw7,               NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw4,               NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw3,               NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw2,               NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw,                NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DLight,             NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IUnknown,                   &IID_IUnknown, NULL,                      S_OK,                     },
     };
     HRESULT hr;
     IDirect3DRM *d3drm1;
@@ -2728,6 +3205,7 @@ static void test_device_qi(void)
     DestroyWindow(window);
 }
 
+
 static HRESULT CALLBACK surface_callback(IDirectDrawSurface *surface, DDSURFACEDESC *desc, void *context)
 {
     IDirectDrawSurface **primary = context;
@@ -2754,7 +3232,7 @@ static void test_create_device_from_clipper1(void)
     IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_primary = NULL;
     IDirectDrawSurface7 *surface7 = NULL;
     DDSURFACEDESC desc, surface_desc;
-    DWORD expected_flags;
+    DWORD expected_flags, ret_val;
     HWND window;
     GUID driver = IID_IDirect3DRGBDevice;
     HRESULT hr;
@@ -2790,6 +3268,10 @@ static void test_create_device_from_clipper1(void)
     ok(ref2 > ref1, "expected ref2 > ref1, got ref1 = %u , ref2 = %u.\n", ref1, ref2);
     cref2 = get_refcount((IUnknown *)clipper);
     ok(cref2 > cref1, "expected cref2 > cref1, got cref1 = %u , cref2 = %u.\n", cref1, cref2);
+    ret_val = IDirect3DRMDevice_GetWidth(device1);
+    ok(ret_val == 300, "Expected device width = 300, got %u.\n", ret_val);
+    ret_val = IDirect3DRMDevice_GetHeight(device1);
+    ok(ret_val == 200, "Expected device height == 200, got %u.\n", ret_val);
 
     /* Fetch immediate mode device in order to access render target */
     hr = IDirect3DRMDevice_GetDirect3DDevice(device1, &d3ddevice1);
@@ -2921,7 +3403,7 @@ static void test_create_device_from_clipper2(void)
     IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_primary = NULL;
     IDirectDrawSurface7 *surface7 = NULL;
     DDSURFACEDESC desc, surface_desc;
-    DWORD expected_flags;
+    DWORD expected_flags, ret_val;
     HWND window;
     GUID driver = IID_IDirect3DRGBDevice;
     HRESULT hr;
@@ -2963,6 +3445,10 @@ static void test_create_device_from_clipper2(void)
     ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
     cref2 = get_refcount((IUnknown *)clipper);
     ok(cref2 > cref1, "expected cref2 > cref1, got cref1 = %u , cref2 = %u.\n", cref1, cref2);
+    ret_val = IDirect3DRMDevice2_GetWidth(device2);
+    ok(ret_val == 300, "Expected device width = 300, got %u.\n", ret_val);
+    ret_val = IDirect3DRMDevice2_GetHeight(device2);
+    ok(ret_val == 200, "Expected device height == 200, got %u.\n", ret_val);
 
     /* Fetch immediate mode device in order to access render target */
     hr = IDirect3DRMDevice2_GetDirect3DDevice2(device2, &d3ddevice2);
@@ -3095,7 +3581,7 @@ static void test_create_device_from_clipper3(void)
     IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_primary = NULL;
     IDirectDrawSurface7 *surface7 = NULL;
     DDSURFACEDESC desc, surface_desc;
-    DWORD expected_flags;
+    DWORD expected_flags, ret_val;
     HWND window;
     GUID driver = IID_IDirect3DRGBDevice;
     HRESULT hr;
@@ -3137,6 +3623,10 @@ static void test_create_device_from_clipper3(void)
     ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
     cref2 = get_refcount((IUnknown *)clipper);
     ok(cref2 > cref1, "expected cref2 > cref1, got cref1 = %u , cref2 = %u.\n", cref1, cref2);
+    ret_val = IDirect3DRMDevice3_GetWidth(device3);
+    ok(ret_val == 300, "Expected device width = 300, got %u.\n", ret_val);
+    ret_val = IDirect3DRMDevice3_GetHeight(device3);
+    ok(ret_val == 200, "Expected device height == 200, got %u.\n", ret_val);
 
     /* Fetch immediate mode device in order to access render target */
     hr = IDirect3DRMDevice3_GetDirect3DDevice2(device3, &d3ddevice2);
@@ -3265,7 +3755,7 @@ static void test_create_device_from_surface1(void)
     IDirect3DRMDevice *device1 = (IDirect3DRMDevice *)0xdeadbeef;
     IDirect3DDevice *d3ddevice1 = NULL;
     IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_surface = NULL, *d3drm_ds = NULL;
-    DWORD expected_flags;
+    DWORD expected_flags, ret_val;
     HWND window;
     GUID driver = IID_IDirect3DRGBDevice;
     ULONG ref1, ref2, surface_ref1, surface_ref2;
@@ -3320,6 +3810,10 @@ static void test_create_device_from_surface1(void)
     ok(ref2 > ref1, "expected ref2 > ref1, got ref1 = %u , ref2 = %u.\n", ref1, ref2);
     surface_ref2 = get_refcount((IUnknown *)surface);
     ok(surface_ref2 > surface_ref1, "Expected surface_ref2 > surface_ref1, got surface_ref1 = %u, surface_ref2 = %u.\n", surface_ref1, surface_ref2);
+    ret_val = IDirect3DRMDevice_GetWidth(device1);
+    ok(ret_val == rc.right, "Expected device width = 300, got %u.\n", ret_val);
+    ret_val = IDirect3DRMDevice_GetHeight(device1);
+    ok(ret_val == rc.bottom, "Expected device height == 200, got %u.\n", ret_val);
 
     /* Check if CreateDeviceFromSurface creates a primary surface */
     hr = IDirectDraw_EnumSurfaces(ddraw, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
@@ -3433,7 +3927,7 @@ static void test_create_device_from_surface2(void)
     IDirect3DRMDevice2 *device2 = (IDirect3DRMDevice2 *)0xdeadbeef;
     IDirect3DDevice2 *d3ddevice2 = NULL;
     IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_surface = NULL, *d3drm_ds = NULL;
-    DWORD expected_flags;
+    DWORD expected_flags, ret_val;
     HWND window;
     GUID driver = IID_IDirect3DRGBDevice;
     ULONG ref1, ref2, ref3, surface_ref1, surface_ref2;
@@ -3494,6 +3988,10 @@ static void test_create_device_from_surface2(void)
     ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
     surface_ref2 = get_refcount((IUnknown *)surface);
     ok(surface_ref2 > surface_ref1, "Expected surface_ref2 > surface_ref1, got surface_ref1 = %u, surface_ref2 = %u.\n", surface_ref1, surface_ref2);
+    ret_val = IDirect3DRMDevice2_GetWidth(device2);
+    ok(ret_val == rc.right, "Expected device width = 300, got %u.\n", ret_val);
+    ret_val = IDirect3DRMDevice2_GetHeight(device2);
+    ok(ret_val == rc.bottom, "Expected device height == 200, got %u.\n", ret_val);
 
     /* Check if CreateDeviceFromSurface creates a primary surface */
     hr = IDirectDraw_EnumSurfaces(ddraw, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
@@ -3611,7 +4109,7 @@ static void test_create_device_from_surface3(void)
     IDirect3DRMDevice3 *device3 = (IDirect3DRMDevice3 *)0xdeadbeef;
     IDirect3DDevice2 *d3ddevice2 = NULL;
     IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_surface = NULL, *d3drm_ds = NULL;
-    DWORD expected_flags;
+    DWORD expected_flags, ret_val;
     HWND window;
     GUID driver = IID_IDirect3DRGBDevice;
     ULONG ref1, ref2, ref3, surface_ref1, surface_ref2;
@@ -3672,6 +4170,10 @@ static void test_create_device_from_surface3(void)
     ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
     surface_ref2 = get_refcount((IUnknown *)surface);
     ok(surface_ref2 > surface_ref1, "Expected surface_ref2 > surface_ref1, got surface_ref1 = %u, surface_ref2 = %u.\n", surface_ref1, surface_ref2);
+    ret_val = IDirect3DRMDevice3_GetWidth(device3);
+    ok(ret_val == rc.right, "Expected device width = 300, got %u.\n", ret_val);
+    ret_val = IDirect3DRMDevice3_GetHeight(device3);
+    ok(ret_val == rc.bottom, "Expected device height == 200, got %u.\n", ret_val);
 
     /* Check if CreateDeviceFromSurface creates a primary surface */
     hr = IDirectDraw_EnumSurfaces(ddraw, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
@@ -3895,21 +4397,21 @@ static IDirect3DDevice *create_device1(IDirectDraw *ddraw, HWND window, IDirectD
 
 static void test_create_device_from_d3d1(void)
 {
-    IDirectDraw *ddraw1 = NULL;
-    IDirect3D *d3d1 = NULL;
+    IDirectDraw *ddraw1 = NULL, *temp_ddraw1;
+    IDirect3D *d3d1 = NULL, *temp_d3d1;
     IDirect3DRM *d3drm1 = NULL;
     IDirect3DRMDevice *device1 = (IDirect3DRMDevice *)0xdeadbeef;
     IDirect3DRMDevice2 *device2;
     IDirect3DRMDevice3 *device3;
-    IDirect3DDevice *d3ddevice1 = NULL, *d3drm_d3ddevice1 = NULL;
+    IDirect3DDevice *d3ddevice1 = NULL, *d3drm_d3ddevice1 = NULL, *temp_d3ddevice1;
     IDirect3DDevice2 *d3ddevice2 = (IDirect3DDevice2 *)0xdeadbeef;
     IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_ds = NULL;
-    DWORD expected_flags;
+    DWORD expected_flags, ret_val;
     DDSCAPS caps = { DDSCAPS_ZBUFFER };
     DDSURFACEDESC desc;
     RECT rc;
     HWND window;
-    ULONG ref1, ref2, device_ref1, device_ref2;
+    ULONG ref1, ref2, ref3, ref4, device_ref1, device_ref2, d3d_ref1, d3d_ref2;
     HRESULT hr;
 
     hr = DirectDrawCreate(NULL, &ddraw1, NULL);
@@ -3920,6 +4422,7 @@ static void test_create_device_from_d3d1(void)
 
     hr = IDirectDraw_QueryInterface(ddraw1, &IID_IDirect3D, (void **)&d3d1);
     ok(hr == DD_OK, "Cannot get IDirect3D2 interface (hr = %x).\n", hr);
+    d3d_ref1 = get_refcount((IUnknown *)d3d1);
 
     /* Create the immediate mode device */
     d3ddevice1 = create_device1(ddraw1, window, &ds);
@@ -3950,19 +4453,25 @@ static void test_create_device_from_d3d1(void)
     ok(ref2 > ref1, "expected ref2 > ref1, got ref1 = %u , ref2 = %u.\n", ref1, ref2);
     device_ref2 = get_refcount((IUnknown *)d3ddevice1);
     ok(device_ref2 > device_ref1, "Expected device_ref2 > device_ref1, got device_ref1 = %u, device_ref2 = %u.\n", device_ref1, device_ref2);
+    d3d_ref2 = get_refcount((IUnknown *)d3d1);
+    ok(d3d_ref2 > d3d_ref1, "Expected d3d_ref2 > d3d_ref1, got d3d_ref1 = %u, d3d_ref2 = %u.\n", d3d_ref1, d3d_ref2);
+    ret_val = IDirect3DRMDevice_GetWidth(device1);
+    ok(ret_val == rc.right, "Expected device width = 300, got %u.\n", ret_val);
+    ret_val = IDirect3DRMDevice_GetHeight(device1);
+    ok(ret_val == rc.bottom, "Expected device height == 200, got %u.\n", ret_val);
 
     hr = IDirect3DRMDevice_QueryInterface(device1, &IID_IDirect3DRMDevice2, (void **)&device2);
     ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice2 Interface (hr = %x).\n", hr);
     hr = IDirect3DRMDevice2_GetDirect3DDevice2(device2, &d3ddevice2);
-    ok(SUCCEEDED(hr), "Expected hr == DD_OK, got %x).\n", hr);
+    ok(SUCCEEDED(hr), "Expected hr == D3DRM_OK, got %#x.\n", hr);
     ok(d3ddevice2 == NULL, "Expected d3ddevice2 == NULL, got %p.\n", d3ddevice2);
     IDirect3DRMDevice2_Release(device2);
 
     d3ddevice2 = (IDirect3DDevice2 *)0xdeadbeef;
-    hr = IDirect3DRMDevice_QueryInterface(device1, &IID_IDirect3DRMDevice2, (void **)&device3);
-    ok(hr == DD_OK, "Cannot get IDirect3DRMDevice2 Interface (hr = %x).\n", hr);
+    hr = IDirect3DRMDevice_QueryInterface(device1, &IID_IDirect3DRMDevice3, (void **)&device3);
+    ok(hr == DD_OK, "Cannot get IDirect3DRMDevice3 Interface (hr = %x).\n", hr);
     hr = IDirect3DRMDevice3_GetDirect3DDevice2(device3, &d3ddevice2);
-    ok(hr == DD_OK, "Expected hr == DD_OK, got %x).\n", hr);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
     ok(d3ddevice2 == NULL, "Expected d3ddevice2 == NULL, got %p.\n", d3ddevice2);
     IDirect3DRMDevice3_Release(device3);
 
@@ -3973,7 +4482,7 @@ static void test_create_device_from_d3d1(void)
 
     hr = IDirect3DRMDevice_GetDirect3DDevice(device1, &d3drm_d3ddevice1);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice interface (hr = %x).\n", hr);
-    ok(d3ddevice1 == d3drm_d3ddevice1, "Expected Immediate Mode deivce created == %p, got %p.\n", d3ddevice1, d3drm_d3ddevice1);
+    ok(d3ddevice1 == d3drm_d3ddevice1, "Expected Immediate Mode device created == %p, got %p.\n", d3ddevice1, d3drm_d3ddevice1);
 
     /* Check properties of render target and depth surfaces */
     hr = IDirect3DDevice_QueryInterface(d3drm_d3ddevice1, &IID_IDirectDrawSurface, (void **)&surface);
@@ -4014,6 +4523,136 @@ static void test_create_device_from_d3d1(void)
     ok(ref1 == ref2, "expected ref1 == ref2, got ref1 = %u, ref2 = %u.\n", ref1, ref2);
     device_ref2 = get_refcount((IUnknown *)d3ddevice1);
     ok(device_ref2 == device_ref1, "Expected device_ref2 == device_ref1, got device_ref1 = %u, device_ref2 = %u.\n", device_ref1, device_ref2);
+
+    /* InitFromD3D tests */
+    hr = IDirect3DRM_CreateObject(d3drm1, &CLSID_CDirect3DRMDevice, NULL, &IID_IDirect3DRMDevice, (void **)&device1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice interface (hr = %#x).\n", hr);
+
+    hr = IDirect3DRMDevice_InitFromD3D(device1, NULL, d3ddevice1);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    hr = IDirect3DRMDevice_InitFromD3D(device1, d3d1, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+
+    hr = IDirect3DRMDevice_InitFromD3D(device1, d3d1, d3ddevice1);
+    ok(SUCCEEDED(hr), "Failed to initialise IDirect3DRMDevice interface (hr = %#x)\n", hr);
+    ref2 = get_refcount((IUnknown *)d3drm1);
+    ok(ref2 > ref1, "expected ref2 > ref1, got ref1 = %u , ref2 = %u.\n", ref1, ref2);
+    device_ref2 = get_refcount((IUnknown *)d3ddevice1);
+    ok(device_ref2 > device_ref1, "Expected device_ref2 > device_ref1, got device_ref1 = %u, device_ref2 = %u.\n",
+            device_ref1, device_ref2);
+    d3d_ref2 = get_refcount((IUnknown *)d3d1);
+    ok(d3d_ref2 > d3d_ref1, "Expected d3d_ref2 > d3d_ref1, got d3d_ref1 = %u, d3d_ref2 = %u.\n", d3d_ref1, d3d_ref2);
+    ret_val = IDirect3DRMDevice_GetWidth(device1);
+    ok(ret_val == rc.right, "Expected device width = 300, got %u.\n", ret_val);
+    ret_val = IDirect3DRMDevice_GetHeight(device1);
+    ok(ret_val == rc.bottom, "Expected device height == 200, got %u.\n", ret_val);
+
+    hr = IDirect3DRMDevice_InitFromD3D(device1, d3d1, d3ddevice1);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    ref3 = get_refcount((IUnknown *)d3drm1);
+    ok(ref3 > ref1, "expected ref3 > ref1, got ref1 = %u , ref3 = %u.\n", ref1, ref3);
+    ref3 = get_refcount((IUnknown *)d3ddevice1);
+    ok(ref3 > device_ref2, "Expected ref3 > device_ref2, got ref3 = %u, device_ref2 = %u.\n", ref3, device_ref2);
+    ref3 = get_refcount((IUnknown *)d3d1);
+    ok(ref3 > d3d_ref2, "Expected ref3 > d3d_ref2, got ref3 = %u, d3d_ref2 = %u.\n", ref3, d3d_ref2);
+    /* Release leaked references */
+    while (IDirect3DRM_Release(d3drm1) > ref2);
+    while (IDirect3DDevice_Release(d3ddevice1) > device_ref2);
+    while (IDirect3D_Release(d3d1) > d3d_ref2);
+
+    hr = DirectDrawCreate(NULL, &temp_ddraw1, NULL);
+    ok(SUCCEEDED(hr), "Cannot get IDirectDraw interface (hr = %#x).\n", hr);
+    ref4 = get_refcount((IUnknown *)temp_ddraw1);
+
+    hr = IDirectDraw_QueryInterface(temp_ddraw1, &IID_IDirect3D, (void **)&temp_d3d1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3D2 interface (hr = %#x).\n", hr);
+    temp_d3ddevice1 = create_device1(temp_ddraw1, window, &surface);
+    hr = IDirect3DRMDevice_InitFromD3D(device1, temp_d3d1, temp_d3ddevice1);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    ref3 = get_refcount((IUnknown *)d3drm1);
+    ok(ref3 > ref2, "expected ref3 > ref1, got ref1 = %u , ref3 = %u.\n", ref1, ref3);
+    ref3 = get_refcount((IUnknown *)temp_d3ddevice1);
+    ok(ref3 == device_ref2, "Expected ref3 == device_ref2, got ref3 = %u, device_ref2 = %u.\n", ref3, device_ref2);
+    ref3 = get_refcount((IUnknown *)temp_d3d1);
+    todo_wine ok(ref3 < d3d_ref2, "Expected ref3 < d3d_ref2, got ref3 = %u, d3d_ref2 = %u.\n", ref3, d3d_ref2);
+    /* Release leaked references */
+    while (IDirect3DRM_Release(d3drm1) > ref2);
+    while (IDirect3DDevice_Release(temp_d3ddevice1) > 0);
+    while (IDirect3D_Release(temp_d3d1) > ref4);
+    IDirectDrawSurface_Release(surface);
+    IDirectDraw_Release(temp_ddraw1);
+
+    d3ddevice2 = (IDirect3DDevice2 *)0xdeadbeef;
+    hr = IDirect3DRMDevice_QueryInterface(device1, &IID_IDirect3DRMDevice2, (void **)&device2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice2 Interface (hr = %x).\n", hr);
+    hr = IDirect3DRMDevice2_GetDirect3DDevice2(device2, &d3ddevice2);
+    ok(SUCCEEDED(hr), "Expected hr == D3DRM_OK, got %#x.\n", hr);
+    ok(d3ddevice2 == NULL, "Expected d3ddevice2 == NULL, got %p.\n", d3ddevice2);
+    IDirect3DRMDevice2_Release(device2);
+
+    d3ddevice2 = (IDirect3DDevice2 *)0xdeadbeef;
+    hr = IDirect3DRMDevice_QueryInterface(device1, &IID_IDirect3DRMDevice3, (void **)&device3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice3 Interface (hr = %#x).\n", hr);
+    hr = IDirect3DRMDevice3_GetDirect3DDevice2(device3, &d3ddevice2);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    ok(d3ddevice2 == NULL, "Expected d3ddevice2 == NULL, got %p.\n", d3ddevice2);
+    IDirect3DRMDevice3_Release(device3);
+
+    surface = NULL;
+    hr = IDirectDraw_EnumSurfaces(ddraw1, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
+            NULL, &surface, surface_callback);
+    ok(SUCCEEDED(hr), "Failed to enumerate surfaces (hr = %#x).\n", hr);
+    ok(surface == NULL, "No primary surface should have enumerated (%p).\n", surface);
+
+    hr = IDirect3DRMDevice_GetDirect3DDevice(device1, &d3drm_d3ddevice1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DDevice interface (hr = %#x).\n", hr);
+    ok(d3ddevice1 == d3drm_d3ddevice1, "Expected Immediate Mode device created == %p, got %p.\n",
+            d3ddevice1, d3drm_d3ddevice1);
+
+    /* Check properties of render target and depth surfaces */
+    hr = IDirect3DDevice_QueryInterface(d3drm_d3ddevice1, &IID_IDirectDrawSurface, (void **)&surface);
+    ok(SUCCEEDED(hr), "Cannot get surface to the render target (hr = %#x).\n", hr);
+
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(surface, &desc);
+    ok(SUCCEEDED(hr), "Cannot get surface desc structure (hr = %#x).\n", hr);
+
+    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimensions = %u, %u, got %u, %u.\n",
+            rc.right, rc.bottom, desc.dwWidth, desc.dwHeight);
+    ok((desc.ddsCaps.dwCaps & (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE)) == (DDSCAPS_OFFSCREENPLAIN|DDSCAPS_3DDEVICE),
+            "Expected caps containing %x, got %x.\n", DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE, desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_PIXELFORMAT | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(desc.dwFlags == expected_flags, "Expected %x for flags, got %x.\n", expected_flags, desc.dwFlags);
+
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &d3drm_ds);
+    ok(SUCCEEDED(hr), "Cannot get attached depth surface (hr = %x).\n", hr);
+    ok(ds == d3drm_ds, "Expected depth surface (%p) == surface created internally (%p).\n", ds, d3drm_ds);
+
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(ds, &desc);
+    ok(SUCCEEDED(hr), "Cannot get z surface desc structure (hr = %#x).\n", hr);
+
+    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimensions = %u, %u, got %u, %u.\n",
+            rc.right, rc.bottom, desc.dwWidth, desc.dwHeight);
+    ok((desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER) == DDSCAPS_ZBUFFER, "Expected caps containing %#x, got %#x.\n",
+            DDSCAPS_ZBUFFER, desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_ZBUFFERBITDEPTH | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(desc.dwFlags == expected_flags, "Expected %#x for flags, got %#x.\n", expected_flags, desc.dwFlags);
+
+    IDirectDrawSurface_Release(d3drm_ds);
+    IDirectDrawSurface_Release(ds);
+    IDirectDrawSurface_Release(surface);
+    IDirect3DDevice_Release(d3drm_d3ddevice1);
+    IDirect3DRMDevice_Release(device1);
+    ref2 = get_refcount((IUnknown *)d3drm1);
+    ok(ref1 == ref2, "expected ref1 == ref2, got ref1 = %u, ref2 = %u.\n", ref1, ref2);
+    device_ref2 = get_refcount((IUnknown *)d3ddevice1);
+    ok(device_ref2 == device_ref1, "Expected device_ref2 == device_ref1, got device_ref1 = %u, device_ref2 = %u.\n",
+            device_ref1, device_ref2);
+    d3d_ref2 = get_refcount((IUnknown *)d3d1);
+    todo_wine ok(d3d_ref2 > d3d_ref1, "Expected d3d_ref2 > d3d_ref1, got d3d_ref1 = %u, d3d_ref2 = %u.\n", d3d_ref1,
+            d3d_ref2);
 
     IDirect3DRM_Release(d3drm1);
     IDirect3DDevice_Release(d3ddevice1);
@@ -4093,20 +4732,23 @@ static IDirect3DDevice2 *create_device2(IDirectDraw2 *ddraw, HWND window, IDirec
 
 static void test_create_device_from_d3d2(void)
 {
-    IDirectDraw *ddraw1 = NULL;
-    IDirectDraw2 *ddraw2 = NULL;
-    IDirect3D2 *d3d2 = NULL;
+    IDirectDraw *ddraw1 = NULL, *temp_ddraw1;
+    IDirectDraw2 *ddraw2 = NULL, *temp_ddraw2;
+    IDirect3D* d3d1;
+    IDirect3D2 *d3d2 = NULL, *temp_d3d2;
     IDirect3DRM *d3drm1 = NULL;
     IDirect3DRM2 *d3drm2 = NULL;
+    IDirect3DRMDevice *device1;
     IDirect3DRMDevice2 *device2 = (IDirect3DRMDevice2 *)0xdeadbeef;
-    IDirect3DDevice2 *d3ddevice2 = NULL, *d3drm_d3ddevice2 = NULL;
+    IDirect3DDevice *d3ddevice1;
+    IDirect3DDevice2 *d3ddevice2 = NULL, *d3drm_d3ddevice2 = NULL, *temp_d3ddevice2;
     IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_ds = NULL;
-    DWORD expected_flags;
+    DWORD expected_flags, ret_val;
     DDSCAPS caps = { DDSCAPS_ZBUFFER };
     DDSURFACEDESC desc;
     RECT rc;
     HWND window;
-    ULONG ref1, ref2, ref3, device_ref1, device_ref2;
+    ULONG ref1, ref2, ref3, ref4, ref5, device_ref1, device_ref2, d3d_ref1, d3d_ref2;
     HRESULT hr;
 
     hr = DirectDrawCreate(NULL, &ddraw1, NULL);
@@ -4119,6 +4761,7 @@ static void test_create_device_from_d3d2(void)
     ok(hr == DD_OK, "Cannot get IDirect3D2 interface (hr = %x).\n", hr);
     hr = IDirectDraw_QueryInterface(ddraw1, &IID_IDirectDraw2, (void **)&ddraw2);
     ok(hr == DD_OK, "Cannot get IDirectDraw2 interface (hr = %x).\n", hr);
+    d3d_ref1 = get_refcount((IUnknown *)d3d2);
 
     /* Create the immediate mode device */
     d3ddevice2 = create_device2(ddraw2, window, &ds);
@@ -4156,6 +4799,12 @@ static void test_create_device_from_d3d2(void)
     ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
     device_ref2 = get_refcount((IUnknown *)d3ddevice2);
     ok(device_ref2 > device_ref1, "Expected device_ref2 > device_ref1, got device_ref1 = %u, device_ref2 = %u.\n", device_ref1, device_ref2);
+    d3d_ref2 = get_refcount((IUnknown *)d3d2);
+    ok(d3d_ref2 > d3d_ref1, "Expected d3d_ref2 > d3d_ref1, got d3d_ref1 = %u, d3d_ref2 = %u.\n", d3d_ref1, d3d_ref2);
+    ret_val = IDirect3DRMDevice2_GetWidth(device2);
+    ok(ret_val == rc.right, "Expected device width = 300, got %u.\n", ret_val);
+    ret_val = IDirect3DRMDevice2_GetHeight(device2);
+    ok(ret_val == rc.bottom, "Expected device height == 200, got %u.\n", ret_val);
 
     hr = IDirectDraw_EnumSurfaces(ddraw1, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
             NULL, &surface, surface_callback);
@@ -4164,7 +4813,7 @@ static void test_create_device_from_d3d2(void)
 
     hr = IDirect3DRMDevice2_GetDirect3DDevice2(device2, &d3drm_d3ddevice2);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
-    ok(d3ddevice2 == d3drm_d3ddevice2, "Expected Immediate Mode deivce created == %p, got %p.\n", d3ddevice2, d3drm_d3ddevice2);
+    ok(d3ddevice2 == d3drm_d3ddevice2, "Expected Immediate Mode device created == %p, got %p.\n", d3ddevice2, d3drm_d3ddevice2);
 
     /* Check properties of render target and depth surfaces */
     hr = IDirect3DDevice2_GetRenderTarget(d3drm_d3ddevice2, &surface);
@@ -4207,6 +4856,153 @@ static void test_create_device_from_d3d2(void)
     ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
     device_ref2 = get_refcount((IUnknown *)d3ddevice2);
     ok(device_ref2 == device_ref1, "Expected device_ref2 == device_ref1, got device_ref1 = %u, device_ref2 = %u.\n", device_ref1, device_ref2);
+    d3d_ref2 = get_refcount((IUnknown *)d3d2);
+    ok(d3d_ref2 == d3d_ref1, "Expected d3d_ref2 == d3d_ref1, got d3d_ref1 = %u, d3d_ref2 = %u.\n", d3d_ref1, d3d_ref2);
+
+    /* InitFromD3D tests */
+    hr = IDirect3DRM2_CreateObject(d3drm2, &CLSID_CDirect3DRMDevice, NULL, &IID_IDirect3DRMDevice2, (void **)&device2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice2 interface (hr = %#x).\n", hr);
+
+    hr = IDirectDraw_QueryInterface(ddraw1, &IID_IDirect3D, (void **)&d3d1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3D interface (hr = %x).\n", hr);
+    if (SUCCEEDED(hr = IDirect3DDevice2_QueryInterface(d3ddevice2, &IID_IDirect3DDevice, (void **)&d3ddevice1)))
+    {
+        hr = IDirect3DRMDevice2_InitFromD3D(device2, d3d1, d3ddevice1);
+        ok(hr == E_NOINTERFACE, "Expected hr == E_NOINTERFACE, got %#x.\n", hr);
+        hr = IDirect3DRMDevice2_InitFromD3D(device2, NULL, d3ddevice1);
+        ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+        hr = IDirect3DRMDevice2_InitFromD3D(device2, d3d1, NULL);
+        ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+        hr = IDirect3DRMDevice2_QueryInterface(device2, &IID_IDirect3DRMDevice, (void **)&device1);
+        ok(SUCCEEDED(hr), "Cannot obtain IDirect3DRMDevice interface (hr = %#x).\n", hr);
+        hr = IDirect3DRMDevice_InitFromD3D(device1, d3d1, d3ddevice1);
+        todo_wine ok(hr == E_NOINTERFACE, "Expected hr == E_NOINTERFACE, got %#x.\n", hr);
+        IDirect3DRMDevice_Release(device1);
+        if (SUCCEEDED(hr))
+        {
+            IDirect3DRMDevice_Release(device1);
+            hr = IDirect3DRM2_CreateObject(d3drm2, &CLSID_CDirect3DRMDevice, NULL, &IID_IDirect3DRMDevice2,
+                    (void **)&device2);
+            ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice2 interface (hr = %#x).\n", hr);
+        }
+    }
+    IDirect3D_Release(d3d1);
+    IDirect3DDevice_Release(d3ddevice1);
+
+    hr = IDirect3DRMDevice2_InitFromD3D2(device2, NULL, d3ddevice2);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    hr = IDirect3DRMDevice2_InitFromD3D2(device2, d3d2, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+
+    hr = IDirect3DRMDevice2_InitFromD3D2(device2, d3d2, d3ddevice2);
+    ok(SUCCEEDED(hr), "Failed to initialise IDirect3DRMDevice2 interface (hr = %#x)\n", hr);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    ok(ref4 > ref1, "Expected ref4 > ref1, got ref1 = %u , ref4 = %u.\n", ref1, ref4);
+    device_ref2 = get_refcount((IUnknown *)d3ddevice2);
+    ok(device_ref2 > device_ref1, "Expected device_ref2 > device_ref1, got device_ref1 = %u, device_ref2 = %u.\n",
+            device_ref1, device_ref2);
+    d3d_ref2 = get_refcount((IUnknown *)d3d2);
+    ok(d3d_ref2 > d3d_ref1, "Expected d3d_ref2 > d3d_ref1, got d3d_ref1 = %u, d3d_ref2 = %u.\n", d3d_ref1, d3d_ref2);
+    ret_val = IDirect3DRMDevice2_GetWidth(device2);
+    ok(ret_val == rc.right, "Expected device width = 300, got %u.\n", ret_val);
+    ret_val = IDirect3DRMDevice2_GetHeight(device2);
+    ok(ret_val == rc.bottom, "Expected device height == 200, got %u.\n", ret_val);
+
+    hr = IDirect3DRMDevice2_InitFromD3D2(device2, d3d2, d3ddevice2);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    ref3 = get_refcount((IUnknown *)d3drm1);
+    ok(ref3 > ref1, "expected ref3 > ref1, got ref1 = %u , ref3 = %u.\n", ref1, ref3);
+    ref3 = get_refcount((IUnknown *)d3ddevice2);
+    ok(ref3 > device_ref2, "Expected ref3 > device_ref2, got ref3 = %u, device_ref2 = %u.\n", ref3, device_ref2);
+    ref3 = get_refcount((IUnknown *)d3d2);
+    ok(ref3 > d3d_ref2, "Expected ref3 > d3d_ref2, got ref3 = %u, d3d_ref2 = %u.\n", ref3, d3d_ref2);
+    /* Release leaked references */
+    while (IDirect3DRM_Release(d3drm1) > ref4);
+    while (IDirect3DDevice2_Release(d3ddevice2) > device_ref2);
+    while (IDirect3D2_Release(d3d2) > d3d_ref2);
+
+    hr = DirectDrawCreate(NULL, &temp_ddraw1, NULL);
+    ok(SUCCEEDED(hr), "Cannot get IDirectDraw interface (hr = %#x).\n", hr);
+    hr = IDirectDraw_QueryInterface(temp_ddraw1, &IID_IDirect3D2, (void **)&temp_d3d2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3D2 interface (hr = %#x).\n", hr);
+    ref5 = get_refcount((IUnknown *)temp_d3d2);
+
+    hr = IDirectDraw_QueryInterface(temp_ddraw1, &IID_IDirectDraw2, (void **)&temp_ddraw2);
+    ok(SUCCEEDED(hr), "Cannot get IDirectDraw2 interface (hr = %#x).\n", hr);
+
+    temp_d3ddevice2 = create_device2(temp_ddraw2, window, &surface);
+    hr = IDirect3DRMDevice2_InitFromD3D2(device2, temp_d3d2, temp_d3ddevice2);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    ref3 = get_refcount((IUnknown *)d3drm1);
+    ok(ref3 > ref4, "expected ref3 > ref4, got ref3 = %u , ref4 = %u.\n", ref3, ref4);
+    ref3 = get_refcount((IUnknown *)temp_d3ddevice2);
+    ok(ref3 == device_ref2, "Expected ref3 == device_ref2, got ref3 = %u, device_ref2 = %u.\n", ref3, device_ref2);
+    ref3 = get_refcount((IUnknown *)temp_d3d2);
+    ok(ref3 == d3d_ref2, "Expected ref3 == d3d_ref2, got ref3 = %u, d3d_ref2 = %u.\n", ref3, d3d_ref2);
+    /* Release leaked references */
+    while (IDirect3DRM_Release(d3drm1) > ref4);
+    while (IDirect3DDevice2_Release(temp_d3ddevice2) > 0);
+    while (IDirect3D2_Release(temp_d3d2) >= ref5);
+    IDirectDrawSurface_Release(surface);
+    IDirectDraw2_Release(temp_ddraw2);
+    IDirectDraw_Release(temp_ddraw1);
+
+    surface = NULL;
+    hr = IDirectDraw_EnumSurfaces(ddraw1, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
+            NULL, &surface, surface_callback);
+    ok(SUCCEEDED(hr), "Failed to enumerate surfaces (hr = %#x).\n", hr);
+    ok(surface == NULL, "No primary surface should have enumerated (%p).\n", surface);
+
+    hr = IDirect3DRMDevice2_GetDirect3DDevice2(device2, &d3drm_d3ddevice2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DDevice2 interface (hr = %#x).\n", hr);
+    ok(d3ddevice2 == d3drm_d3ddevice2, "Expected Immediate Mode device created == %p, got %p.\n", d3ddevice2,
+            d3drm_d3ddevice2);
+
+    /* Check properties of render target and depth surfaces */
+    hr = IDirect3DDevice2_GetRenderTarget(d3drm_d3ddevice2, &surface);
+    ok(SUCCEEDED(hr), "Cannot get surface to the render target (hr = %#x).\n", hr);
+
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(surface, &desc);
+    ok(SUCCEEDED(hr), "Cannot get surface desc structure (hr = %#x).\n", hr);
+
+    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimensions = %u, %u, got %u, %u.\n",
+            rc.right, rc.bottom, desc.dwWidth, desc.dwHeight);
+    ok((desc.ddsCaps.dwCaps & (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE)) == (DDSCAPS_OFFSCREENPLAIN|DDSCAPS_3DDEVICE),
+            "Expected caps containing %#x, got %#x.\n", DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE, desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_PIXELFORMAT | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(desc.dwFlags == expected_flags, "Expected %#x for flags, got %#x.\n", expected_flags, desc.dwFlags);
+
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &d3drm_ds);
+    ok(SUCCEEDED(hr), "Cannot get attached depth surface (hr = %x).\n", hr);
+    ok(ds == d3drm_ds, "Expected depth surface (%p) == surface created internally (%p).\n", ds, d3drm_ds);
+
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(ds, &desc);
+    ok(SUCCEEDED(hr), "Cannot get z surface desc structure (hr = %x).\n", hr);
+
+    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimensions = %u, %u, got %u, %u.\n",
+            rc.right, rc.bottom, desc.dwWidth, desc.dwHeight);
+    ok((desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER) == DDSCAPS_ZBUFFER, "Expected caps containing %#x, got %#x.\n",
+            DDSCAPS_ZBUFFER, desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_ZBUFFERBITDEPTH | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(desc.dwFlags == expected_flags, "Expected %#x for flags, got %#x.\n", expected_flags, desc.dwFlags);
+
+    IDirectDrawSurface_Release(d3drm_ds);
+    IDirectDrawSurface_Release(ds);
+    IDirectDrawSurface_Release(surface);
+    IDirect3DDevice2_Release(d3drm_d3ddevice2);
+    IDirect3DRMDevice2_Release(device2);
+    ref3 = get_refcount((IUnknown *)d3drm1);
+    ok(ref1 == ref3, "Expected ref1 == ref3, got ref1 = %u, ref3 = %u.\n", ref1, ref3);
+    ref3 = get_refcount((IUnknown *)d3drm2);
+    ok(ref3 == ref2, "Expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
+    device_ref2 = get_refcount((IUnknown *)d3ddevice2);
+    ok(device_ref2 == device_ref1, "Expected device_ref2 == device_ref1, got device_ref1 = %u, device_ref2 = %u.\n",
+            device_ref1, device_ref2);
+    d3d_ref2 = get_refcount((IUnknown *)d3d2);
+    ok(d3d_ref2 == d3d_ref1, "Expected d3d_ref2 == d3d_ref1, got d3d_ref1 = %u, d3d_ref2 = %u.\n", d3d_ref1, d3d_ref2);
 
     IDirect3DRM2_Release(d3drm2);
     IDirect3DRM_Release(d3drm1);
@@ -4219,20 +5015,23 @@ static void test_create_device_from_d3d2(void)
 
 static void test_create_device_from_d3d3(void)
 {
-    IDirectDraw *ddraw1 = NULL;
-    IDirectDraw2 *ddraw2 = NULL;
-    IDirect3D2 *d3d2 = NULL;
+    IDirectDraw *ddraw1 = NULL, *temp_ddraw1;
+    IDirectDraw2 *ddraw2 = NULL, *temp_ddraw2;
+    IDirect3D *d3d1;
+    IDirect3D2 *d3d2 = NULL, *temp_d3d2;
     IDirect3DRM *d3drm1 = NULL;
     IDirect3DRM3 *d3drm3 = NULL;
+    IDirect3DRMDevice *device1;
     IDirect3DRMDevice3 *device3 = (IDirect3DRMDevice3 *)0xdeadbeef;
-    IDirect3DDevice2 *d3ddevice2 = NULL, *d3drm_d3ddevice2 = NULL;
+    IDirect3DDevice *d3ddevice1;
+    IDirect3DDevice2 *d3ddevice2 = NULL, *d3drm_d3ddevice2 = NULL, *temp_d3ddevice2;
     IDirectDrawSurface *surface = NULL, *ds = NULL, *d3drm_ds = NULL;
-    DWORD expected_flags;
+    DWORD expected_flags, ret_val;
     DDSCAPS caps = { DDSCAPS_ZBUFFER };
     DDSURFACEDESC desc;
     RECT rc;
     HWND window;
-    ULONG ref1, ref2, ref3, device_ref1, device_ref2;
+    ULONG ref1, ref2, ref3, ref4, ref5, device_ref1, device_ref2, d3d_ref1, d3d_ref2;
     HRESULT hr;
 
     hr = DirectDrawCreate(NULL, &ddraw1, NULL);
@@ -4245,6 +5044,7 @@ static void test_create_device_from_d3d3(void)
     ok(hr == DD_OK, "Cannot get IDirect3D2 interface (hr = %x).\n", hr);
     hr = IDirectDraw_QueryInterface(ddraw1, &IID_IDirectDraw2, (void **)&ddraw2);
     ok(hr == DD_OK, "Cannot get IDirectDraw2 interface (hr = %x).\n", hr);
+    d3d_ref1 = get_refcount((IUnknown *)d3d2);
 
     /* Create the immediate mode device */
     d3ddevice2 = create_device2(ddraw2, window, &ds);
@@ -4282,6 +5082,10 @@ static void test_create_device_from_d3d3(void)
     ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
     device_ref2 = get_refcount((IUnknown *)d3ddevice2);
     ok(device_ref2 > device_ref1, "Expected device_ref2 > device_ref1, got device_ref1 = %u, device_ref2 = %u.\n", device_ref1, device_ref2);
+    ret_val = IDirect3DRMDevice3_GetWidth(device3);
+    ok(ret_val == rc.right, "Expected device width = 300, got %u.\n", ret_val);
+    ret_val = IDirect3DRMDevice3_GetHeight(device3);
+    ok(ret_val == rc.bottom, "Expected device height == 200, got %u.\n", ret_val);
 
     hr = IDirectDraw_EnumSurfaces(ddraw1, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
             NULL, &surface, surface_callback);
@@ -4290,7 +5094,7 @@ static void test_create_device_from_d3d3(void)
 
     hr = IDirect3DRMDevice3_GetDirect3DDevice2(device3, &d3drm_d3ddevice2);
     ok(hr == D3DRM_OK, "Cannot get IDirect3DDevice2 interface (hr = %x).\n", hr);
-    ok(d3ddevice2 == d3drm_d3ddevice2, "Expected Immediate Mode deivce created == %p, got %p.\n", d3ddevice2, d3drm_d3ddevice2);
+    ok(d3ddevice2 == d3drm_d3ddevice2, "Expected Immediate Mode device created == %p, got %p.\n", d3ddevice2, d3drm_d3ddevice2);
 
     /* Check properties of render target and depth surfaces */
     hr = IDirect3DDevice2_GetRenderTarget(d3drm_d3ddevice2, &surface);
@@ -4333,6 +5137,153 @@ static void test_create_device_from_d3d3(void)
     ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
     device_ref2 = get_refcount((IUnknown *)d3ddevice2);
     ok(device_ref2 == device_ref1, "Expected device_ref2 == device_ref1, got device_ref1 = %u, device_ref2 = %u.\n", device_ref1, device_ref2);
+    d3d_ref2 = get_refcount((IUnknown *)d3d2);
+    ok(d3d_ref2 == d3d_ref1, "Expected d3d_ref2 == d3d_ref1, got d3d_ref1 = %u, d3d_ref2 = %u.\n", d3d_ref1, d3d_ref2);
+
+    /* InitFromD3D tests */
+    hr = IDirect3DRM3_CreateObject(d3drm3, &CLSID_CDirect3DRMDevice, NULL, &IID_IDirect3DRMDevice3, (void **)&device3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice3 interface (hr = %#x).\n", hr);
+
+    hr = IDirectDraw_QueryInterface(ddraw1, &IID_IDirect3D, (void **)&d3d1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3D interface (hr = %#x).\n", hr);
+    if (SUCCEEDED(hr = IDirect3DDevice2_QueryInterface(d3ddevice2, &IID_IDirect3DDevice, (void **)&d3ddevice1)))
+    {
+        hr = IDirect3DRMDevice3_InitFromD3D(device3, d3d1, d3ddevice1);
+        ok(hr == E_NOINTERFACE, "Expected hr == E_NOINTERFACE, got %#x.\n", hr);
+        hr = IDirect3DRMDevice3_InitFromD3D(device3, NULL, d3ddevice1);
+        ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+        hr = IDirect3DRMDevice3_InitFromD3D(device3, d3d1, NULL);
+        ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+        hr = IDirect3DRMDevice3_QueryInterface(device3, &IID_IDirect3DRMDevice, (void **)&device1);
+        ok(SUCCEEDED(hr), "Cannot obtain IDirect3DRMDevice interface (hr = %#x).\n", hr);
+        hr = IDirect3DRMDevice_InitFromD3D(device1, d3d1, d3ddevice1);
+        todo_wine ok(hr == E_NOINTERFACE, "Expected hr == E_NOINTERFACE, got %#x.\n", hr);
+        IDirect3DRMDevice_Release(device1);
+        if (SUCCEEDED(hr))
+        {
+            IDirect3DRMDevice_Release(device1);
+            hr = IDirect3DRM3_CreateObject(d3drm3, &CLSID_CDirect3DRMDevice, NULL, &IID_IDirect3DRMDevice3,
+                    (void **)&device3);
+            ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice3 interface (hr = %#x).\n", hr);
+        }
+    }
+    IDirect3D_Release(d3d1);
+    IDirect3DDevice_Release(d3ddevice1);
+
+    hr = IDirect3DRMDevice3_InitFromD3D2(device3, NULL, d3ddevice2);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    hr = IDirect3DRMDevice3_InitFromD3D2(device3, d3d2, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+
+    hr = IDirect3DRMDevice3_InitFromD3D2(device3, d3d2, d3ddevice2);
+    ok(SUCCEEDED(hr), "Failed to initialise IDirect3DRMDevice2 interface (hr = %#x)\n", hr);
+    ref4 = get_refcount((IUnknown *)d3drm1);
+    ok(ref4 > ref1, "Expected ref4 > ref1, got ref1 = %u , ref4 = %u.\n", ref1, ref4);
+    device_ref2 = get_refcount((IUnknown *)d3ddevice2);
+    ok(device_ref2 > device_ref1, "Expected device_ref2 > device_ref1, got device_ref1 = %u, device_ref2 = %u.\n",
+            device_ref1, device_ref2);
+    d3d_ref2 = get_refcount((IUnknown *)d3d2);
+    ok(d3d_ref2 > d3d_ref1, "Expected d3d_ref2 > d3d_ref1, got d3d_ref1 = %u, d3d_ref2 = %u.\n", d3d_ref1, d3d_ref2);
+    ret_val = IDirect3DRMDevice3_GetWidth(device3);
+    ok(ret_val == rc.right, "Expected device width = 300, got %u.\n", ret_val);
+    ret_val = IDirect3DRMDevice3_GetHeight(device3);
+    ok(ret_val == rc.bottom, "Expected device height == 200, got %u.\n", ret_val);
+
+    hr = IDirect3DRMDevice3_InitFromD3D2(device3, d3d2, d3ddevice2);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    ref3 = get_refcount((IUnknown *)d3drm1);
+    ok(ref3 > ref1, "expected ref3 > ref1, got ref1 = %u , ref3 = %u.\n", ref1, ref3);
+    ref3 = get_refcount((IUnknown *)d3ddevice2);
+    ok(ref3 > device_ref2, "Expected ref3 > device_ref2, got ref3 = %u, device_ref2 = %u.\n", ref3, device_ref2);
+    ref3 = get_refcount((IUnknown *)d3d2);
+    ok(ref3 > d3d_ref2, "Expected ref3 > d3d_ref2, got ref3 = %u, d3d_ref2 = %u.\n", ref3, d3d_ref2);
+    /* Release leaked references */
+    while (IDirect3DRM_Release(d3drm1) > ref4);
+    while (IDirect3DDevice2_Release(d3ddevice2) > device_ref2);
+    while (IDirect3D2_Release(d3d2) > d3d_ref2);
+
+    hr = DirectDrawCreate(NULL, &temp_ddraw1, NULL);
+    ok(SUCCEEDED(hr), "Cannot get IDirectDraw interface (hr = %#x).\n", hr);
+    hr = IDirectDraw_QueryInterface(temp_ddraw1, &IID_IDirect3D2, (void **)&temp_d3d2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3D2 interface (hr = %#x).\n", hr);
+    ref5 = get_refcount((IUnknown *)temp_d3d2);
+
+    hr = IDirectDraw_QueryInterface(temp_ddraw1, &IID_IDirectDraw2, (void **)&temp_ddraw2);
+    ok(SUCCEEDED(hr), "Cannot get IDirectDraw2 interface (hr = %#x).\n", hr);
+
+    temp_d3ddevice2 = create_device2(temp_ddraw2, window, &surface);
+    hr = IDirect3DRMDevice3_InitFromD3D2(device3, temp_d3d2, temp_d3ddevice2);
+    ok(hr == D3DRMERR_BADOBJECT, "Expected hr == D3DRMERR_BADOBJECT, got %#x.\n", hr);
+    ref3 = get_refcount((IUnknown *)d3drm1);
+    ok(ref3 > ref4, "expected ref3 > ref4, got ref3 = %u , ref4 = %u.\n", ref3, ref4);
+    ref3 = get_refcount((IUnknown *)temp_d3ddevice2);
+    ok(ref3 == device_ref2, "Expected ref3 == device_ref2, got ref3 = %u, device_ref2 = %u.\n", ref3, device_ref2);
+    ref3 = get_refcount((IUnknown *)temp_d3d2);
+    ok(ref3 == d3d_ref2, "Expected ref3 == d3d_ref2, got ref3 = %u, d3d_ref2 = %u.\n", ref3, d3d_ref2);
+    /* Release leaked references */
+    while (IDirect3DRM_Release(d3drm1) > ref4);
+    while (IDirect3DDevice2_Release(temp_d3ddevice2) > 0);
+    while (IDirect3D2_Release(temp_d3d2) >= ref5);
+    IDirectDrawSurface_Release(surface);
+    IDirectDraw2_Release(temp_ddraw2);
+    IDirectDraw_Release(temp_ddraw1);
+
+    surface = NULL;
+    hr = IDirectDraw_EnumSurfaces(ddraw1, DDENUMSURFACES_ALL | DDENUMSURFACES_DOESEXIST,
+            NULL, &surface, surface_callback);
+    ok(SUCCEEDED(hr), "Failed to enumerate surfaces (hr = %#x).\n", hr);
+    ok(surface == NULL, "No primary surface should have enumerated (%p).\n", surface);
+
+    hr = IDirect3DRMDevice3_GetDirect3DDevice2(device3, &d3drm_d3ddevice2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DDevice2 interface (hr = %#x).\n", hr);
+    ok(d3ddevice2 == d3drm_d3ddevice2, "Expected Immediate Mode device created == %p, got %p.\n", d3ddevice2,
+            d3drm_d3ddevice2);
+
+    /* Check properties of render target and depth surfaces */
+    hr = IDirect3DDevice2_GetRenderTarget(d3drm_d3ddevice2, &surface);
+    ok(SUCCEEDED(hr), "Cannot get surface to the render target (hr = %#x).\n", hr);
+
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(surface, &desc);
+    ok(SUCCEEDED(hr), "Cannot get surface desc structure (hr = %x).\n", hr);
+
+    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimensions = %u, %u, got %u, %u.\n",
+            rc.right, rc.bottom, desc.dwWidth, desc.dwHeight);
+    ok((desc.ddsCaps.dwCaps & (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE)) == (DDSCAPS_OFFSCREENPLAIN|DDSCAPS_3DDEVICE),
+            "Expected caps containing %#x, got %#x.\n", DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE, desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_PIXELFORMAT | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(desc.dwFlags == expected_flags, "Expected %#x for flags, got %#x.\n", expected_flags, desc.dwFlags);
+
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &d3drm_ds);
+    ok(SUCCEEDED(hr), "Cannot get attached depth surface (hr = %x).\n", hr);
+    ok(ds == d3drm_ds, "Expected depth surface (%p) == surface created internally (%p).\n", ds, d3drm_ds);
+
+    desc.dwSize = sizeof(desc);
+    hr = IDirectDrawSurface_GetSurfaceDesc(ds, &desc);
+    ok(SUCCEEDED(hr), "Cannot get z surface desc structure (hr = %x).\n", hr);
+
+    ok((desc.dwWidth == rc.right) && (desc.dwHeight == rc.bottom), "Expected surface dimensions = %u, %u, got %u, %u.\n",
+            rc.right, rc.bottom, desc.dwWidth, desc.dwHeight);
+    ok((desc.ddsCaps.dwCaps & DDSCAPS_ZBUFFER) == DDSCAPS_ZBUFFER, "Expected caps containing %x, got %#x.\n",
+            DDSCAPS_ZBUFFER, desc.ddsCaps.dwCaps);
+    expected_flags = DDSD_ZBUFFERBITDEPTH | DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
+    ok(desc.dwFlags == expected_flags, "Expected %#x for flags, got %#x.\n", expected_flags, desc.dwFlags);
+
+    IDirectDrawSurface_Release(d3drm_ds);
+    IDirectDrawSurface_Release(ds);
+    IDirectDrawSurface_Release(surface);
+    IDirect3DDevice2_Release(d3drm_d3ddevice2);
+    IDirect3DRMDevice3_Release(device3);
+    ref3 = get_refcount((IUnknown *)d3drm1);
+    ok(ref1 == ref3, "expected ref1 == ref3, got ref1 = %u, ref3 = %u.\n", ref1, ref3);
+    ref3 = get_refcount((IUnknown *)d3drm3);
+    ok(ref3 == ref2, "expected ref3 == ref2, got ref2 = %u , ref3 = %u.\n", ref2, ref3);
+    device_ref2 = get_refcount((IUnknown *)d3ddevice2);
+    ok(device_ref2 == device_ref1, "Expected device_ref2 == device_ref1, got device_ref1 = %u, device_ref2 = %u.\n",
+            device_ref1, device_ref2);
+    d3d_ref2 = get_refcount((IUnknown *)d3d2);
+    ok(d3d_ref2 == d3d_ref1, "Expected d3d_ref2 == d3d_ref1, got d3d_ref1 = %u, d3d_ref2 = %u.\n", d3d_ref1, d3d_ref2);
 
     IDirect3DRM3_Release(d3drm3);
     IDirect3DRM_Release(d3drm1);
@@ -4620,74 +5571,74 @@ static void test_texture_qi(void)
 {
     static const struct qi_test tests[] =
     {
-        { &IID_IDirect3DRM3,               NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRM2,               NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRM,                NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMDevice,          NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMDevice2,         NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMDevice3,         NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMWinDevice,       NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMObject,          &IID_IUnknown,           S_OK                      },
-        { &IID_IDirect3DRMViewport,        NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMViewport2,       NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFrame,           NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFrame2,          NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFrame3,          NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMVisual,          &IID_IUnknown,           S_OK                      },
-        { &IID_IDirect3DRMMesh,            NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMeshBuilder,     NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMeshBuilder2,    NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMeshBuilder3,    NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFace,            NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFace2,           NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMLight,           NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMTexture,         &IID_IUnknown,           S_OK                      },
-        { &IID_IDirect3DRMTexture2,        &IID_IUnknown,           S_OK                      },
-        { &IID_IDirect3DRMTexture3,        &IID_IUnknown,           S_OK                      },
-        { &IID_IDirect3DRMWrap,            NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMaterial,        NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMMaterial2,       NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMAnimation,       NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMAnimation2,      NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMAnimationSet,    NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMAnimationSet2,   NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMObjectArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMDeviceArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMViewportArray,   NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFrameArray,      NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMVisualArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMLightArray,      NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMPickedArray,     NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMFaceArray,       NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMAnimationArray,  NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMUserVisual,      NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMShadow,          NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMShadow2,         NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMInterpolator,    NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMProgressiveMesh, NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMPicked2Array,    NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DRMClippedVisual,   NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawClipper,         NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawSurface7,        NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawSurface4,        NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawSurface3,        NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawSurface2,        NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDrawSurface,         NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DDevice7,           NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DDevice3,           NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DDevice2,           NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DDevice,            NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3D7,                 NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3D3,                 NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3D2,                 NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3D,                  NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDraw7,               NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDraw4,               NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDraw3,               NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDraw2,               NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirectDraw,                NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IDirect3DLight,             NULL,                    CLASS_E_CLASSNOTAVAILABLE },
-        { &IID_IUnknown,                   &IID_IUnknown,           S_OK,                     },
+        { &IID_IDirect3DRM3,               NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRM2,               NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRM,                NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice,          NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice2,         NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice3,         NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMWinDevice,       NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObject,          &IID_IUnknown, &IID_IDirect3DRMTexture,  S_OK                      },
+        { &IID_IDirect3DRMViewport,        NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewport2,       NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrame,           NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrame2,          NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrame3,          NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisual,          &IID_IUnknown, &IID_IDirect3DRMTexture,  S_OK                      },
+        { &IID_IDirect3DRMMesh,            NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder,     NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder2,    NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder3,    NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace,            NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace2,           NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLight,           NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture,         &IID_IUnknown, &IID_IDirect3DRMTexture,  S_OK                      },
+        { &IID_IDirect3DRMTexture2,        &IID_IUnknown, &IID_IDirect3DRMTexture2, S_OK                      },
+        { &IID_IDirect3DRMTexture3,        &IID_IUnknown, &IID_IDirect3DRMTexture3, S_OK                      },
+        { &IID_IDirect3DRMWrap,            NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial,        NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial2,       NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimation,       NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimation2,      NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet,    NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet2,   NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObjectArray,     NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDeviceArray,     NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewportArray,   NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrameArray,      NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisualArray,     NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLightArray,      NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPickedArray,     NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFaceArray,       NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationArray,  NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMUserVisual,      NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow,          NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow2,         NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMInterpolator,    NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMProgressiveMesh, NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPicked2Array,    NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMClippedVisual,   NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawClipper,         NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface7,        NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface4,        NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface3,        NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface2,        NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface,         NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice7,           NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice3,           NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice2,           NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice,            NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D7,                 NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D3,                 NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D2,                 NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D,                  NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw7,               NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw4,               NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw3,               NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw2,               NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw,                NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DLight,             NULL,          NULL,                     CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IUnknown,                   &IID_IUnknown, NULL,                     S_OK,                     },
     };
     HRESULT hr;
     IDirect3DRM *d3drm1;
@@ -4741,6 +5692,152 @@ static void test_texture_qi(void)
     HeapFree(GetProcessHeap(), 0, filename);
 }
 
+static void test_viewport_qi(void)
+{
+    IDirect3DRM *d3drm1;
+    IDirect3DRM2 *d3drm2;
+    IDirect3DRM3 *d3drm3;
+    IDirect3DRMFrame *frame1, *camera1;
+    IDirect3DRMFrame3 *frame3, *camera3;
+    IDirect3DRMDevice *device1;
+    IDirect3DRMDevice3 *device3;
+    IDirectDrawClipper *clipper;
+    IDirect3DRMViewport *viewport1;
+    IDirect3DRMViewport2 *viewport2;
+    IUnknown *unknown;
+    GUID driver = IID_IDirect3DRGBDevice;
+    HRESULT hr;
+
+    static const struct qi_test tests[] =
+    {
+        { &IID_IDirect3DRM3,               NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRM2,               NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRM,                NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice,          NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice2,         NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDevice3,         NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMWinDevice,       NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObject,          &IID_IUnknown, &IID_IDirect3DRMViewport,  S_OK                      },
+        { &IID_IDirect3DRMViewport,        &IID_IUnknown, &IID_IDirect3DRMViewport,  S_OK                      },
+        { &IID_IDirect3DRMViewport2,       &IID_IUnknown, &IID_IDirect3DRMViewport2, S_OK                      },
+        { &IID_IDirect3DRMFrame,           NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrame2,          NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrame3,          NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisual,          NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMesh,            NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder,     NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder2,    NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMeshBuilder3,    NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace,            NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFace2,           NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLight,           NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture,         NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture2,        NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMTexture3,        NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMWrap,            NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial,        NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMMaterial2,       NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimation,       NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimation2,      NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet,    NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationSet2,   NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMObjectArray,     NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMDeviceArray,     NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMViewportArray,   NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFrameArray,      NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMVisualArray,     NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMLightArray,      NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPickedArray,     NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMFaceArray,       NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMAnimationArray,  NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMUserVisual,      NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow,          NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMShadow2,         NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMInterpolator,    NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMProgressiveMesh, NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMPicked2Array,    NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DRMClippedVisual,   NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawClipper,         NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface7,        NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface4,        NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface3,        NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface2,        NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDrawSurface,         NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice7,           NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice3,           NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice2,           NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DDevice,            NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D7,                 NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D3,                 NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D2,                 NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3D,                  NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw7,               NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw4,               NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw3,               NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw2,               NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirectDraw,                NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IDirect3DLight,             NULL,          NULL,                      CLASS_E_CLASSNOTAVAILABLE },
+        { &IID_IUnknown,                   &IID_IUnknown, NULL,                      S_OK,                     },
+    };
+
+    hr = DirectDrawCreateClipper(0, &clipper, NULL);
+    ok(SUCCEEDED(hr), "Cannot get IDirectDrawClipper interface (hr = %#x).\n", hr);
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM interface (hr = %#x).\n", hr);
+
+    hr = IDirect3DRM_CreateDeviceFromClipper(d3drm1, clipper, &driver, 640, 480, &device1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice interface (hr = %#x).\n", hr);
+    hr = IDirect3DRM_CreateFrame(d3drm1, NULL, &frame1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMFrame interface (hr = %#x)\n", hr);
+    hr = IDirect3DRM_CreateFrame(d3drm1, frame1, &camera1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMFrame interface (hr = %#x)\n", hr);
+    hr = IDirect3DRM_CreateViewport(d3drm1, device1, camera1, 0, 0, 640, 480, &viewport1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMViewport interface (hr = %#x)\n", hr);
+    hr = IDirect3DRMViewport_QueryInterface(viewport1, &IID_IUnknown, (void **)&unknown);
+    ok(SUCCEEDED(hr), "Cannot get IUnknown interface (hr = %#x).\n", hr);
+    IDirect3DRMViewport_Release(viewport1);
+    test_qi("viewport1_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    IUnknown_Release(unknown);
+
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM2, (void **)&d3drm2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM2 interface (hr = %#x).\n", hr);
+    hr = IDirect3DRM2_CreateViewport(d3drm2, device1, camera1, 0, 0, 640, 480, &viewport1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMViewport interface (hr = %#x)\n", hr);
+    hr = IDirect3DRMViewport_QueryInterface(viewport1, &IID_IUnknown, (void **)&unknown);
+    ok(SUCCEEDED(hr), "Cannot get IUnknown interface (hr = %#x).\n", hr);
+    IDirect3DRMViewport_Release(viewport1);
+    test_qi("viewport1_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    IUnknown_Release(unknown);
+    IDirect3DRMDevice_Release(device1);
+    IDirect3DRMFrame_Release(camera1);
+    IDirect3DRMFrame_Release(frame1);
+
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM3 interface (hr = %#x).\n", hr);
+    hr = IDirect3DRM3_CreateDeviceFromClipper(d3drm3, clipper, &driver, 640, 480, &device3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMDevice3 interface (hr = %#x).\n", hr);
+    hr = IDirect3DRM3_CreateFrame(d3drm3, NULL, &frame3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMFrame3 interface (hr = %#x)\n", hr);
+    hr = IDirect3DRM3_CreateFrame(d3drm3, frame3, &camera3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMFrame3 interface (hr = %#x)\n", hr);
+    hr = IDirect3DRM3_CreateViewport(d3drm3, device3, camera3, 0, 0, 640, 480, &viewport2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMViewport2 interface (hr = %#x)\n", hr);
+    hr = IDirect3DRMViewport2_QueryInterface(viewport2, &IID_IUnknown, (void **)&unknown);
+    ok(SUCCEEDED(hr), "Cannot get IUnknown interface (hr = %#x).\n", hr);
+    IDirect3DRMViewport_Release(viewport2);
+    test_qi("viewport2_qi", unknown, &IID_IUnknown, tests, sizeof(tests) / sizeof(*tests));
+    IUnknown_Release(unknown);
+    IDirect3DRMDevice3_Release(device3);
+    IDirect3DRMFrame3_Release(camera3);
+    IDirect3DRMFrame3_Release(frame3);
+
+    IDirectDrawClipper_Release(clipper);
+    IDirect3DRM3_Release(d3drm3);
+    IDirect3DRM2_Release(d3drm2);
+    IDirect3DRM_Release(d3drm1);
+}
+
 START_TEST(d3drm)
 {
     test_MeshBuilder();
@@ -4771,4 +5868,5 @@ START_TEST(d3drm)
     test_create_device_from_d3d3();
     test_load_texture();
     test_texture_qi();
+    test_viewport_qi();
 }
