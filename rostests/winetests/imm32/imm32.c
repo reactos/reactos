@@ -44,7 +44,7 @@ static struct _msg_spy {
     HWND         hwnd;
     HHOOK        get_msg_hook;
     HHOOK        call_wnd_proc_hook;
-    imm_msgs     msgs[32];
+    imm_msgs     msgs[64];
     unsigned int i_msg;
 } msg_spy;
 
@@ -58,6 +58,12 @@ typedef struct
         HARDWAREINPUT   hi;
     } u;
 } TEST_INPUT;
+
+typedef struct _tagTRANSMSG {
+    UINT message;
+    WPARAM wParam;
+    LPARAM lParam;
+} TRANSMSG, *LPTRANSMSG;
 
 static UINT (WINAPI *pSendInput) (UINT, INPUT*, size_t);
 
@@ -166,19 +172,72 @@ static void msg_spy_cleanup(void) {
  * messages being sent to this window in response.
  */
 static const char wndcls[] = "winetest_imm32_wndcls";
+static enum { PHASE_UNKNOWN, FIRST_WINDOW, SECOND_WINDOW,
+              CREATE_CANCEL, NCCREATE_CANCEL, IME_DISABLED } test_phase;
 static HWND hwnd;
+
+static HWND get_ime_window(void);
 
 static LRESULT WINAPI wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    HWND default_ime_wnd;
     switch (msg)
     {
         case WM_IME_SETCONTEXT:
+            return TRUE;
         case WM_NCCREATE:
+            default_ime_wnd = get_ime_window();
+            switch(test_phase) {
+                case FIRST_WINDOW:
+                case IME_DISABLED:
+                    ok(!default_ime_wnd, "expected no IME windows\n");
+                    break;
+                case SECOND_WINDOW:
+                    ok(default_ime_wnd != NULL, "expected IME window existence\n");
+                    break;
+                default:
+                    break; /* do nothing */
+            }
+            if (test_phase == NCCREATE_CANCEL)
+                return FALSE;
+            return TRUE;
+        case WM_NCCALCSIZE:
+            default_ime_wnd = get_ime_window();
+            switch(test_phase) {
+                case FIRST_WINDOW:
+                case SECOND_WINDOW:
+                case CREATE_CANCEL:
+                    todo_wine_if(test_phase == FIRST_WINDOW || test_phase == CREATE_CANCEL)
+                    ok(default_ime_wnd != NULL, "expected IME window existence\n");
+                    break;
+                case IME_DISABLED:
+                    ok(!default_ime_wnd, "expected no IME windows\n");
+                    break;
+                default:
+                    break; /* do nothing */
+            }
+            break;
         case WM_CREATE:
+            default_ime_wnd = get_ime_window();
+            switch(test_phase) {
+                case FIRST_WINDOW:
+                case SECOND_WINDOW:
+                case CREATE_CANCEL:
+                    todo_wine_if(test_phase == FIRST_WINDOW || test_phase == CREATE_CANCEL)
+                    ok(default_ime_wnd != NULL, "expected IME window existence\n");
+                    break;
+                case IME_DISABLED:
+                    ok(!default_ime_wnd, "expected no IME windows\n");
+                    break;
+                default:
+                    break; /* do nothing */
+            }
+            if (test_phase == CREATE_CANCEL)
+                return -1;
             return TRUE;
     }
 
-    return DefWindowProcA(hwnd,msg,wParam,lParam);
+    return DefWindowProcA(hWnd,msg,wParam,lParam);
 }
 
 static BOOL init(void) {
@@ -633,8 +692,11 @@ static void test_ImmThreads(void)
     ImmReleaseContext(threadinfo.hwnd,otherHimc);
     ImmReleaseContext(hwnd,himc);
 
-    DestroyWindow(threadinfo.hwnd);
-    TerminateThread(hThread, 1);
+    SendMessageA(threadinfo.hwnd, WM_CLOSE, 0, 0);
+    rc = PostThreadMessageA(dwThreadId, WM_QUIT, 1, 0);
+    ok(rc == 1, "PostThreadMessage should succeed\n");
+    WaitForSingleObject(hThread, INFINITE);
+    CloseHandle(hThread);
 
     himc = ImmGetContext(GetDesktopWindow());
     ok(himc == NULL, "Should not be able to get himc from other process window\n");
@@ -836,11 +898,175 @@ static void test_ImmDefaultHwnd(void)
     WaitForSingleObject(thread, INFINITE);
     ok(thread_ime_wnd != def1, "thread_ime_wnd == def1\n");
     ok(!IsWindow(thread_ime_wnd), "thread_ime_wnd was not destroyed\n");
+    CloseHandle(thread);
 
     ImmReleaseContext(hwnd, imc1);
     ImmReleaseContext(hwnd, imc3);
     ImmDestroyContext(imc2);
     DestroyWindow(hwnd);
+}
+
+static BOOL CALLBACK is_ime_window_proc(HWND hWnd, LPARAM param)
+{
+    static const WCHAR imeW[] = {'I','M','E',0};
+    WCHAR class_nameW[16];
+    HWND *ime_window = (HWND *)param;
+    if (GetClassNameW(hWnd, class_nameW, sizeof(class_nameW)/sizeof(class_nameW[0])) &&
+        !lstrcmpW(class_nameW, imeW)) {
+        *ime_window = hWnd;
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static HWND get_ime_window(void)
+{
+    HWND ime_window = NULL;
+    EnumThreadWindows(GetCurrentThreadId(), is_ime_window_proc, (LPARAM)&ime_window);
+    return ime_window;
+}
+
+struct testcase_ime_window {
+    BOOL visible;
+    BOOL top_level_window;
+};
+
+static DWORD WINAPI test_default_ime_window_cb(void *arg)
+{
+    struct testcase_ime_window *testcase = (struct testcase_ime_window *)arg;
+    DWORD visible = testcase->visible ? WS_VISIBLE : 0;
+    HWND hwnd1, hwnd2, default_ime_wnd, ime_wnd;
+
+    ok(!get_ime_window(), "Expected no IME windows\n");
+    if (testcase->top_level_window) {
+        test_phase = FIRST_WINDOW;
+        hwnd1 = CreateWindowExA(WS_EX_CLIENTEDGE, wndcls, "Wine imm32.dll test",
+                                WS_OVERLAPPEDWINDOW | visible,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                240, 120, NULL, NULL, GetModuleHandleW(NULL), NULL);
+    }
+    else {
+        hwnd1 = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Wine imm32.dll test",
+                                WS_CHILD | visible,
+                                CW_USEDEFAULT, CW_USEDEFAULT,
+                                240, 24, hwnd, NULL, GetModuleHandleW(NULL), NULL);
+    }
+    ime_wnd = get_ime_window();
+    todo_wine ok(ime_wnd != NULL, "Expected IME window existence\n");
+    default_ime_wnd = ImmGetDefaultIMEWnd(hwnd1);
+    todo_wine ok(ime_wnd == default_ime_wnd, "Expected %p, got %p\n", ime_wnd, default_ime_wnd);
+
+    test_phase = SECOND_WINDOW;
+    hwnd2 = CreateWindowExA(WS_EX_CLIENTEDGE, wndcls, "Wine imm32.dll test",
+                            WS_OVERLAPPEDWINDOW | visible,
+                            CW_USEDEFAULT, CW_USEDEFAULT,
+                            240, 120, NULL, NULL, GetModuleHandleW(NULL), NULL);
+    DestroyWindow(hwnd2);
+    todo_wine ok(IsWindow(ime_wnd) ||
+       broken(!testcase->visible /* Vista */)  ||
+       broken(!testcase->top_level_window /* Vista */) ,
+       "Expected IME window existence\n");
+    DestroyWindow(hwnd1);
+    ok(!IsWindow(ime_wnd), "Expected no IME windows\n");
+    return 1;
+}
+
+static DWORD WINAPI test_default_ime_window_cancel_cb(void *arg)
+{
+    struct testcase_ime_window *testcase = (struct testcase_ime_window *)arg;
+    DWORD visible = testcase->visible ? WS_VISIBLE : 0;
+    HWND hwnd1, hwnd2, default_ime_wnd, ime_wnd;
+
+    ok(!get_ime_window(), "Expected no IME windows\n");
+    test_phase = NCCREATE_CANCEL;
+    hwnd1 = CreateWindowExA(WS_EX_CLIENTEDGE, wndcls, "Wine imm32.dll test",
+                            WS_OVERLAPPEDWINDOW | visible,
+                            CW_USEDEFAULT, CW_USEDEFAULT,
+                            240, 120, NULL, NULL, GetModuleHandleW(NULL), NULL);
+    ok(hwnd1 == NULL, "creation succeeded, got %p\n", hwnd1);
+    ok(!get_ime_window(), "Expected no IME windows\n");
+
+    test_phase = CREATE_CANCEL;
+    hwnd1 = CreateWindowExA(WS_EX_CLIENTEDGE, wndcls, "Wine imm32.dll test",
+                            WS_OVERLAPPEDWINDOW | visible,
+                            CW_USEDEFAULT, CW_USEDEFAULT,
+                            240, 120, NULL, NULL, GetModuleHandleW(NULL), NULL);
+    ok(hwnd1 == NULL, "creation succeeded, got %p\n", hwnd1);
+    ok(!get_ime_window(), "Expected no IME windows\n");
+
+    test_phase = FIRST_WINDOW;
+    hwnd2 = CreateWindowExA(WS_EX_CLIENTEDGE, wndcls, "Wine imm32.dll test",
+                            WS_OVERLAPPEDWINDOW | visible,
+                            CW_USEDEFAULT, CW_USEDEFAULT,
+                            240, 120, NULL, NULL, GetModuleHandleW(NULL), NULL);
+    ime_wnd = get_ime_window();
+    todo_wine ok(ime_wnd != NULL, "Expected IME window existence\n");
+    default_ime_wnd = ImmGetDefaultIMEWnd(hwnd2);
+    todo_wine ok(ime_wnd == default_ime_wnd, "Expected %p, got %p\n", ime_wnd, default_ime_wnd);
+
+    DestroyWindow(hwnd2);
+    ok(!IsWindow(ime_wnd), "Expected no IME windows\n");
+    return 1;
+}
+
+static DWORD WINAPI test_default_ime_disabled_cb(void *arg)
+{
+    HWND hWnd, default_ime_wnd;
+
+    ok(!get_ime_window(), "Expected no IME windows\n");
+    ImmDisableIME(GetCurrentThreadId());
+    test_phase = IME_DISABLED;
+    hWnd = CreateWindowExA(WS_EX_CLIENTEDGE, wndcls, "Wine imm32.dll test",
+                            WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                            CW_USEDEFAULT, CW_USEDEFAULT,
+                            240, 120, NULL, NULL, GetModuleHandleW(NULL), NULL);
+    default_ime_wnd = ImmGetDefaultIMEWnd(hWnd);
+    ok(!default_ime_wnd, "Expected no IME windows\n");
+    DestroyWindow(hWnd);
+    return 1;
+}
+
+static void test_default_ime_window_creation(void)
+{
+    HANDLE thread;
+    size_t i;
+    struct testcase_ime_window testcases[] = {
+        /* visible, top-level window */
+        { TRUE,  TRUE  },
+        { FALSE, TRUE  },
+        { TRUE,  FALSE },
+        { FALSE, FALSE }
+    };
+
+    for (i = 0; i < sizeof(testcases)/sizeof(testcases[0]); i++)
+    {
+        thread = CreateThread(NULL, 0, test_default_ime_window_cb, &testcases[i], 0, NULL);
+        ok(thread != NULL, "CreateThread failed with error %u\n", GetLastError());
+        while (MsgWaitForMultipleObjects(1, &thread, FALSE, INFINITE, QS_ALLINPUT) == WAIT_OBJECT_0 + 1)
+        {
+            MSG msg;
+            while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
+            {
+                TranslateMessage(&msg);
+                DispatchMessageA(&msg);
+            }
+        }
+        CloseHandle(thread);
+
+        if (testcases[i].top_level_window)
+        {
+            thread = CreateThread(NULL, 0, test_default_ime_window_cancel_cb, &testcases[i], 0, NULL);
+            ok(thread != NULL, "CreateThread failed with error %u\n", GetLastError());
+            WaitForSingleObject(thread, INFINITE);
+            CloseHandle(thread);
+        }
+    }
+
+    thread = CreateThread(NULL, 0, test_default_ime_disabled_cb, NULL, 0, NULL);
+    WaitForSingleObject(thread, INFINITE);
+    CloseHandle(thread);
+
+    test_phase = PHASE_UNKNOWN;
 }
 
 static void test_ImmGetIMCLockCount(void)
@@ -1015,6 +1241,9 @@ static void test_ImmMessages(void)
     HIMC imc;
     UINT idx = 0;
 
+    LPINPUTCONTEXT lpIMC;
+    LPTRANSMSG lpTransMsg;
+
     HWND hwnd = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Wine imm32.dll test",
                                 WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
                                 240, 120, NULL, NULL, GetModuleHandleA(NULL), NULL);
@@ -1032,6 +1261,64 @@ static void test_ImmMessages(void)
         if (msg) ok(!msg->post, "Message should not be posted\n");
     } while (msg);
     msg_spy_flush_msgs();
+
+    lpIMC = ImmLockIMC(imc);
+    lpIMC->hMsgBuf = ImmReSizeIMCC(lpIMC->hMsgBuf, (lpIMC->dwNumMsgBuf + 1) * sizeof(TRANSMSG));
+    lpTransMsg = ImmLockIMCC(lpIMC->hMsgBuf);
+    lpTransMsg += lpIMC->dwNumMsgBuf;
+    lpTransMsg->message = WM_IME_STARTCOMPOSITION;
+    lpTransMsg->wParam = 0;
+    lpTransMsg->lParam = 0;
+    ImmUnlockIMCC(lpIMC->hMsgBuf);
+    lpIMC->dwNumMsgBuf++;
+    ImmUnlockIMC(imc);
+    ImmGenerateMessage(imc);
+    idx = 0;
+    do
+    {
+        msg = msg_spy_find_next_msg(WM_IME_STARTCOMPOSITION, &idx);
+        if (msg) ok(!msg->post, "Message should not be posted\n");
+    } while (msg);
+    msg_spy_flush_msgs();
+
+    lpIMC = ImmLockIMC(imc);
+    lpIMC->hMsgBuf = ImmReSizeIMCC(lpIMC->hMsgBuf, (lpIMC->dwNumMsgBuf + 1) * sizeof(TRANSMSG));
+    lpTransMsg = ImmLockIMCC(lpIMC->hMsgBuf);
+    lpTransMsg += lpIMC->dwNumMsgBuf;
+    lpTransMsg->message = WM_IME_COMPOSITION;
+    lpTransMsg->wParam = 0;
+    lpTransMsg->lParam = 0;
+    ImmUnlockIMCC(lpIMC->hMsgBuf);
+    lpIMC->dwNumMsgBuf++;
+    ImmUnlockIMC(imc);
+    ImmGenerateMessage(imc);
+    idx = 0;
+    do
+    {
+        msg = msg_spy_find_next_msg(WM_IME_COMPOSITION, &idx);
+        if (msg) ok(!msg->post, "Message should not be posted\n");
+    } while (msg);
+    msg_spy_flush_msgs();
+
+    lpIMC = ImmLockIMC(imc);
+    lpIMC->hMsgBuf = ImmReSizeIMCC(lpIMC->hMsgBuf, (lpIMC->dwNumMsgBuf + 1) * sizeof(TRANSMSG));
+    lpTransMsg = ImmLockIMCC(lpIMC->hMsgBuf);
+    lpTransMsg += lpIMC->dwNumMsgBuf;
+    lpTransMsg->message = WM_IME_ENDCOMPOSITION;
+    lpTransMsg->wParam = 0;
+    lpTransMsg->lParam = 0;
+    ImmUnlockIMCC(lpIMC->hMsgBuf);
+    lpIMC->dwNumMsgBuf++;
+    ImmUnlockIMC(imc);
+    ImmGenerateMessage(imc);
+    idx = 0;
+    do
+    {
+        msg = msg_spy_find_next_msg(WM_IME_ENDCOMPOSITION, &idx);
+        if (msg) ok(!msg->post, "Message should not be posted\n");
+    } while (msg);
+    msg_spy_flush_msgs();
+
     ImmSetOpenStatus(imc, FALSE);
     ImmReleaseContext(hwnd, imc);
     DestroyWindow(hwnd);
@@ -1523,6 +1810,7 @@ START_TEST(imm32) {
         test_ImmGetContext();
         test_ImmGetDescription();
         test_ImmDefaultHwnd();
+        test_default_ime_window_creation();
         test_ImmGetIMCLockCount();
         test_ImmGetIMCCLockCount();
         test_ImmDestroyContext();
