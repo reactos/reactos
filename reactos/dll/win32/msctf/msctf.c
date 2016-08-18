@@ -370,7 +370,7 @@ static void deactivate_remove_conflicting_ts(REFCLSID catid)
             list_remove(&ats->entry);
             HeapFree(GetProcessHeap(),0,ats->ats);
             HeapFree(GetProcessHeap(),0,ats);
-            /* we are guarenteeing there is only 1 */
+            /* we are guaranteeing there is only 1 */
             break;
         }
     }

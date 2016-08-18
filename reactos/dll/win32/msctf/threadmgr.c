@@ -1467,8 +1467,8 @@ static HRESULT EnumTfDocumentMgr_Constructor(struct list* head, IEnumTfDocumentM
     This->head = head;
     This->index = list_head(This->head);
 
-    TRACE("returning %p\n", This);
-    *ppOut = (IEnumTfDocumentMgrs*)This;
+    TRACE("returning %p\n", &This->IEnumTfDocumentMgrs_iface);
+    *ppOut = &This->IEnumTfDocumentMgrs_iface;
     return S_OK;
 }
 
