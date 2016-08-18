@@ -1227,7 +1227,30 @@ static HRESULT WINAPI schema_cache_add(IXMLDOMSchemaCollection2* iface, BSTR uri
                 IUnknown_QueryInterface(V_UNKNOWN(&var), &IID_IXMLDOMNode, (void**)&domnode);
 
                 if (domnode)
-                    doc = xmlNodePtr_from_domnode(domnode, XML_DOCUMENT_NODE)->doc;
+                {
+                    DOMNodeType type;
+
+                    IXMLDOMNode_get_nodeType(domnode, &type);
+                    switch (type)
+                    {
+                    case NODE_ELEMENT:
+                    {
+                        IXMLDOMDocument *domdoc;
+                        VARIANT_BOOL b;
+                        BSTR xml;
+
+                        IXMLDOMNode_get_xml(domnode, &xml);
+                        DOMDocument_create(This->version, (void**)&domdoc);
+                        IXMLDOMDocument_loadXML(domdoc, xml, &b);
+                        SysFreeString(xml);
+                        doc = xmlNodePtr_from_domnode((IXMLDOMNode*)domdoc, XML_DOCUMENT_NODE)->doc;
+                        break;
+                    }
+                    default:
+                        doc = xmlNodePtr_from_domnode(domnode, XML_DOCUMENT_NODE)->doc;
+                        break;
+                    }
+                }
 
                 if (!doc)
                 {
