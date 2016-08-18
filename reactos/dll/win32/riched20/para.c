@@ -364,7 +364,7 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp,
   endCur.pRun = ME_FindItemFwd(pNext, diRun);
   endCur.nOffset = 0;
   startCur = endCur;
-  ME_PrevRun(&startCur.pPara, &startCur.pRun);
+  ME_PrevRun(&startCur.pPara, &startCur.pRun, TRUE);
   ME_SetCharFormat(editor, &startCur, &endCur, &fmt);
 
   if (!editor->bEmulateVersion10) { /* v4.1 */

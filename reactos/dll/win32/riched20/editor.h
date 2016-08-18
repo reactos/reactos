@@ -123,8 +123,8 @@ void ME_CharFormatFromLogFont(HDC hDC, const LOGFONTW *lf, CHARFORMAT2W *fmt) DE
 /* list.c */
 void ME_InsertBefore(ME_DisplayItem *diWhere, ME_DisplayItem *diWhat) DECLSPEC_HIDDEN;
 void ME_Remove(ME_DisplayItem *diWhere) DECLSPEC_HIDDEN;
-BOOL ME_NextRun(ME_DisplayItem **para, ME_DisplayItem **run) DECLSPEC_HIDDEN;
-BOOL ME_PrevRun(ME_DisplayItem **para, ME_DisplayItem **run) DECLSPEC_HIDDEN;
+BOOL ME_NextRun(ME_DisplayItem **para, ME_DisplayItem **run, BOOL all_para) DECLSPEC_HIDDEN;
+BOOL ME_PrevRun(ME_DisplayItem **para, ME_DisplayItem **run, BOOL all_para) DECLSPEC_HIDDEN;
 ME_DisplayItem *ME_FindItemBack(ME_DisplayItem *di, ME_DIType nTypeOrClass) DECLSPEC_HIDDEN;
 ME_DisplayItem *ME_FindItemFwd(ME_DisplayItem *di, ME_DIType nTypeOrClass) DECLSPEC_HIDDEN;
 ME_DisplayItem *ME_FindItemBackOrHere(ME_DisplayItem *di, ME_DIType nTypeOrClass) DECLSPEC_HIDDEN;

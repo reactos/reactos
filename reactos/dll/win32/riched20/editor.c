@@ -1860,7 +1860,7 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
       cursor.nOffset++;
       if (cursor.nOffset == cursor.pRun->member.run.len)
       {
-        ME_NextRun(&cursor.pPara, &cursor.pRun);
+        ME_NextRun(&cursor.pPara, &cursor.pRun, TRUE);
         cursor.nOffset = 0;
       }
     }
@@ -1886,7 +1886,7 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
 
       if (nCurEnd == 0)
       {
-        ME_PrevRun(&pCurPara, &pCurItem);
+        ME_PrevRun(&pCurPara, &pCurItem, TRUE);
         nCurEnd = pCurItem->member.run.len;
       }
 
@@ -1935,7 +1935,7 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
         }
         if (nCurEnd - nMatched == 0)
         {
-          ME_PrevRun(&pCurPara, &pCurItem);
+          ME_PrevRun(&pCurPara, &pCurItem, TRUE);
           /* Don't care about pCurItem becoming NULL here; it's already taken
            * care of in the exterior loop condition */
           nCurEnd = pCurItem->member.run.len + nMatched;
@@ -1949,7 +1949,7 @@ ME_FindText(ME_TextEditor *editor, DWORD flags, const CHARRANGE *chrg, const WCH
       cursor.nOffset--;
       if (cursor.nOffset < 0)
       {
-        ME_PrevRun(&cursor.pPara, &cursor.pRun);
+        ME_PrevRun(&cursor.pPara, &cursor.pRun, TRUE);
         cursor.nOffset = cursor.pRun->member.run.len;
       }
     }
@@ -2624,6 +2624,11 @@ static int ME_CalculateClickCount(ME_TextEditor *editor, UINT msg, WPARAM wParam
     return clickNum;
 }
 
+static BOOL is_link( ME_Run *run )
+{
+    return (run->style->fmt.dwMask & CFM_LINK) && (run->style->fmt.dwEffects & CFE_LINK);
+}
+
 static BOOL ME_SetCursor(ME_TextEditor *editor)
 {
   ME_Cursor cursor;
@@ -2689,8 +2694,7 @@ static BOOL ME_SetCursor(ME_TextEditor *editor)
       ME_Run *run;
 
       run = &cursor.pRun->member.run;
-      if (run->style->fmt.dwMask & CFM_LINK &&
-          run->style->fmt.dwEffects & CFE_LINK)
+      if (is_link( run ))
       {
           ITextHost_TxSetCursor(editor->texthost,
                                 LoadCursorW(NULL, (WCHAR*)IDC_HAND),
@@ -3125,8 +3129,7 @@ static void ME_LinkNotify(ME_TextEditor *editor, UINT msg, WPARAM wParam, LPARAM
   ME_CharFromPos(editor, x, y, &cursor, &isExact);
   if (!isExact) return;
 
-  if (cursor.pRun->member.run.style->fmt.dwMask & CFM_LINK &&
-      cursor.pRun->member.run.style->fmt.dwEffects & CFE_LINK)
+  if (is_link( &cursor.pRun->member.run ))
   { /* The clicked run has CFE_LINK set */
     ME_DisplayItem *di;
 
@@ -3140,21 +3143,15 @@ static void ME_LinkNotify(ME_TextEditor *editor, UINT msg, WPARAM wParam, LPARAM
 
     /* find the first contiguous run with CFE_LINK set */
     info.chrg.cpMin = ME_GetCursorOfs(&cursor);
-    for (di = cursor.pRun->prev;
-         di && di->type == diRun && (di->member.run.style->fmt.dwMask & CFM_LINK) && (di->member.run.style->fmt.dwEffects & CFE_LINK);
-         di = di->prev)
-    {
-      info.chrg.cpMin -= di->member.run.len;
-    }
+    di = cursor.pRun;
+    while (ME_PrevRun( NULL, &di, FALSE ) && is_link( &di->member.run ))
+        info.chrg.cpMin -= di->member.run.len;
 
     /* find the last contiguous run with CFE_LINK set */
     info.chrg.cpMax = ME_GetCursorOfs(&cursor) + cursor.pRun->member.run.len;
-    for (di = cursor.pRun->next;
-         di && di->type == diRun && (di->member.run.style->fmt.dwMask & CFM_LINK) && (di->member.run.style->fmt.dwEffects & CFE_LINK);
-         di = di->next)
-    {
-      info.chrg.cpMax += di->member.run.len;
-    }
+    di = cursor.pRun;
+    while (ME_NextRun( NULL, &di, FALSE ) && is_link( &di->member.run ))
+        info.chrg.cpMax += di->member.run.len;
 
     ITextHost_TxNotify(editor->texthost, info.nmhdr.code, &info);
   }
@@ -3453,14 +3450,15 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
         ME_RewrapRepaint(editor);
       }
 
+      if ((changedSettings & settings & ES_NOHIDESEL) && !editor->bHaveFocus)
+          ME_InvalidateSelection( editor );
+
       if (changedSettings & settings & ECO_VERTICAL)
         FIXME("ECO_VERTICAL not implemented yet!\n");
       if (changedSettings & settings & ECO_AUTOHSCROLL)
         FIXME("ECO_AUTOHSCROLL not implemented yet!\n");
       if (changedSettings & settings & ECO_AUTOVSCROLL)
         FIXME("ECO_AUTOVSCROLL not implemented yet!\n");
-      if (changedSettings & settings & ECO_NOHIDESEL)
-        FIXME("ECO_NOHIDESEL not implemented yet!\n");
       if (changedSettings & settings & ECO_WANTRETURN)
         FIXME("ECO_WANTRETURN not implemented yet!\n");
       if (changedSettings & settings & ECO_AUTOWORDSELECTION)
@@ -4257,6 +4255,8 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     editor->bHaveFocus = TRUE;
     ME_ShowCaret(editor);
     ME_SendOldNotify(editor, EN_SETFOCUS);
+    if (!editor->bHideSelection && !(editor->styleFlags & ES_NOHIDESEL))
+        ME_InvalidateSelection( editor );
     return 0;
   case WM_KILLFOCUS:
     ME_CommitUndo(editor); /* End coalesced undos for typed characters */
@@ -4264,6 +4264,8 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     editor->wheel_remain = 0;
     ME_HideCaret(editor);
     ME_SendOldNotify(editor, EN_KILLFOCUS);
+    if (!editor->bHideSelection && !(editor->styleFlags & ES_NOHIDESEL))
+        ME_InvalidateSelection( editor );
     return 0;
   case WM_COMMAND:
     TRACE("editor wnd command = %d\n", LOWORD(wParam));
@@ -5002,10 +5004,24 @@ LRESULT WINAPI REExtendedRegisterClass(void)
   return result;
 }
 
-static BOOL isurlspecial(WCHAR c)
+static int wchar_comp( const void *key, const void *elem )
 {
-  static const WCHAR special_chars[] = {'.','/','%','@','*','|','\\','+','#',0};
-  return strchrW( special_chars, c ) != NULL;
+    return *(const WCHAR *)key - *(const WCHAR *)elem;
+}
+
+/* neutral characters end the url if the next non-neutral character is a space character,
+   otherwise they are included in the url. */
+static BOOL isurlneutral( WCHAR c )
+{
+    /* NB this list is sorted */
+    static const WCHAR neutral_chars[] = {'!','\"','\'','(',')',',','-','.',':',';','<','>','?','[',']','{','}'};
+
+    /* Some shortcuts */
+    if (isalnum( c )) return FALSE;
+    if (c > neutral_chars[sizeof(neutral_chars) / sizeof(neutral_chars[0]) - 1]) return FALSE;
+
+    return !!bsearch( &c, neutral_chars, sizeof(neutral_chars) / sizeof(neutral_chars[0]),
+                      sizeof(c), wchar_comp );
 }
 
 /**
@@ -5021,87 +5037,90 @@ static BOOL ME_FindNextURLCandidate(ME_TextEditor *editor,
                                     ME_Cursor *candidate_min,
                                     ME_Cursor *candidate_max)
 {
-  ME_Cursor cursor = *start;
-  BOOL foundColon = FALSE;
-  BOOL candidateStarted = FALSE;
-  WCHAR lastAcceptedChar = '\0';
+  ME_Cursor cursor = *start, neutral_end, space_end;
+  BOOL candidateStarted = FALSE, quoted = FALSE;
+  WCHAR c;
 
   while (nChars > 0)
   {
-    WCHAR *strStart = get_text( &cursor.pRun->member.run, 0 );
-    WCHAR *str = strStart + cursor.nOffset;
-    int nLen = cursor.pRun->member.run.len - cursor.nOffset;
-    nChars -= nLen;
+    WCHAR *str = get_text( &cursor.pRun->member.run, 0 );
+    int run_len = cursor.pRun->member.run.len;
 
-    if (~cursor.pRun->member.run.nFlags & MERF_ENDPARA)
+    nChars -= run_len - cursor.nOffset;
+
+    /* Find start of candidate */
+    if (!candidateStarted)
     {
-      /* Find start of candidate */
-      if (!candidateStarted)
+      while (cursor.nOffset < run_len)
       {
-        while (nLen)
+        c = str[cursor.nOffset];
+        if (!isspaceW( c ) && !isurlneutral( c ))
         {
-          nLen--;
-          if (isalnumW(*str) || isurlspecial(*str))
+          *candidate_min = cursor;
+          candidateStarted = TRUE;
+          neutral_end.pPara = NULL;
+          space_end.pPara = NULL;
+          cursor.nOffset++;
+          break;
+        }
+        quoted = (c == '<');
+        cursor.nOffset++;
+      }
+    }
+
+    /* Find end of candidate */
+    if (candidateStarted)
+    {
+      while (cursor.nOffset < run_len)
+      {
+        c = str[cursor.nOffset];
+        if (isspaceW( c ))
+        {
+          if (quoted && c != '\r')
           {
-            cursor.nOffset = str - strStart;
-            *candidate_min = cursor;
-            candidateStarted = TRUE;
-            lastAcceptedChar = *str++;
-            break;
+            if (!space_end.pPara)
+            {
+              if (neutral_end.pPara)
+                space_end = neutral_end;
+              else
+                space_end = cursor;
+            }
           }
-          str++;
+          else
+            goto done;
         }
-      }
-
-      /* Find end of candidate */
-      if (candidateStarted) {
-        while (nLen)
+        else if (isurlneutral( c ))
         {
-          nLen--;
-          if (*str == ':' && !foundColon) {
-            foundColon = TRUE;
-          } else if (!isalnumW(*str) && !isurlspecial(*str)) {
-            cursor.nOffset = str - strStart;
-            if (lastAcceptedChar == ':')
-              ME_MoveCursorChars(editor, &cursor, -1);
-            *candidate_max = cursor;
-            return TRUE;
+          if (quoted && c == '>')
+          {
+            neutral_end.pPara = NULL;
+            space_end.pPara = NULL;
+            goto done;
           }
-          lastAcceptedChar = *str++;
+          if (!neutral_end.pPara)
+            neutral_end = cursor;
         }
-      }
-    } else {
-      /* End of paragraph: skip it if before candidate span, or terminates
-         current active span */
-      if (candidateStarted) {
-        if (lastAcceptedChar == ':')
-          ME_MoveCursorChars(editor, &cursor, -1);
-        *candidate_max = cursor;
-        return TRUE;
+        else
+          neutral_end.pPara = NULL;
+
+        cursor.nOffset++;
       }
     }
 
-    /* Reaching this point means no span was found, so get next span */
-    if (!ME_NextRun(&cursor.pPara, &cursor.pRun)) {
-      if (candidateStarted) {
-        /* There are no further runs, so take end of text as end of candidate */
-        cursor.nOffset = str - strStart;
-        if (lastAcceptedChar == ':')
-          ME_MoveCursorChars(editor, &cursor, -1);
-        *candidate_max = cursor;
-        return TRUE;
-      }
-      *candidate_max = *candidate_min = cursor;
-      return FALSE;
-    }
     cursor.nOffset = 0;
+    if (!ME_NextRun(&cursor.pPara, &cursor.pRun, TRUE))
+      goto done;
   }
 
-  if (candidateStarted) {
-    /* There are no further runs, so take end of text as end of candidate */
-    if (lastAcceptedChar == ':')
-      ME_MoveCursorChars(editor, &cursor, -1);
-    *candidate_max = cursor;
+done:
+  if (candidateStarted)
+  {
+    if (space_end.pPara)
+      *candidate_max = space_end;
+    else if (neutral_end.pPara)
+      *candidate_max = neutral_end;
+    else
+      *candidate_max = cursor;
     return TRUE;
   }
   *candidate_max = *candidate_min = cursor;

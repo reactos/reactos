@@ -331,7 +331,7 @@ BOOL ME_InternalDeleteText(ME_TextEditor *editor, ME_Cursor *start,
     {
       /* We aren't deleting anything in this run, so we will go back to the
        * last run we are deleting text in. */
-      ME_PrevRun(&c.pPara, &c.pRun);
+      ME_PrevRun(&c.pPara, &c.pRun, TRUE);
       c.nOffset = c.pRun->member.run.len;
     }
     run = &c.pRun->member.run;
@@ -1245,7 +1245,7 @@ ME_MoveCursorLines(ME_TextEditor *editor, ME_Cursor *pCursor, int nRelOfs)
   int x = ME_GetXForArrow(editor, pCursor);
 
   if (editor->bCaretAtEnd && !pCursor->nOffset)
-    if (!ME_PrevRun(&pOldPara, &pRun))
+    if (!ME_PrevRun(&pOldPara, &pRun, TRUE))
       return;
 
   if (nRelOfs == -1)
