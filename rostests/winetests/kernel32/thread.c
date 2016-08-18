@@ -1103,42 +1103,42 @@ static void test_SetThreadContext(void)
 
 static void test_GetThreadSelectorEntry(void)
 {
-    TEB *teb = NtCurrentTeb();
     LDT_ENTRY entry;
     CONTEXT ctx;
-    TEB *teb_fs;
-    DWORD ret;
+    DWORD limit;
+    void *base;
+    BOOL ret;
 
     memset(&ctx, 0x11, sizeof(ctx));
     ctx.ContextFlags = CONTEXT_SEGMENTS | CONTEXT_CONTROL;
     ret = GetThreadContext(GetCurrentThread(), &ctx);
     ok(ret, "GetThreadContext error %u\n", GetLastError());
-    ok(!HIWORD(ctx.SegCs) && !HIWORD(ctx.SegDs) && !HIWORD(ctx.SegEs) && !HIWORD(ctx.SegFs) && !HIWORD(ctx.SegGs),
-       "cs %08x, ds %08x, es %08x, fs %08x, gs %08x\n", ctx.SegCs, ctx.SegDs, ctx.SegEs, ctx.SegFs, ctx.SegGs);
+    ok(!HIWORD(ctx.SegCs), "expected HIWORD(SegCs) == 0, got %u\n", ctx.SegCs);
+    ok(!HIWORD(ctx.SegDs), "expected HIWORD(SegDs) == 0, got %u\n", ctx.SegDs);
+    ok(!HIWORD(ctx.SegFs), "expected HIWORD(SegFs) == 0, got %u\n", ctx.SegFs);
 
     ret = GetThreadSelectorEntry(GetCurrentThread(), ctx.SegCs, &entry);
     ok(ret, "GetThreadSelectorEntry(SegCs) error %u\n", GetLastError());
-
     ret = GetThreadSelectorEntry(GetCurrentThread(), ctx.SegDs, &entry);
     ok(ret, "GetThreadSelectorEntry(SegDs) error %u\n", GetLastError());
 
     memset(&entry, 0x11, sizeof(entry));
     ret = GetThreadSelectorEntry(GetCurrentThread(), ctx.SegFs, &entry);
     ok(ret, "GetThreadSelectorEntry(SegFs) error %u\n", GetLastError());
+    entry.HighWord.Bits.Type &= ~1; /* ignore accessed bit */
 
-    teb_fs = (TEB *)((entry.HighWord.Bits.BaseHi << 24) | (entry.HighWord.Bits.BaseMid << 16) | entry.BaseLow);
-    ok(teb_fs == teb, "teb_fs %p != teb %p\n", teb_fs, teb);
+    base  = (void *)((entry.HighWord.Bits.BaseHi << 24) | (entry.HighWord.Bits.BaseMid << 16) | entry.BaseLow);
+    limit = (entry.HighWord.Bits.LimitHi << 16) | entry.LimitLow;
 
-    ret = (entry.HighWord.Bits.LimitHi << 16) | entry.LimitLow;
-    ok(ret == 0x0fff || ret == 0x4000 /* testbot win7u */, "got %#x\n", ret);
-
-    ok(entry.HighWord.Bits.Dpl == 3, "got %#x\n", entry.HighWord.Bits.Dpl);
-    ok(entry.HighWord.Bits.Sys == 0, "got %#x\n", entry.HighWord.Bits.Sys);
-    ok(entry.HighWord.Bits.Pres == 1, "got %#x\n", entry.HighWord.Bits.Pres);
-    ok(entry.HighWord.Bits.Granularity == 0, "got %#x\n", entry.HighWord.Bits.Granularity);
-    ok(entry.HighWord.Bits.Default_Big == 1, "got %#x\n", entry.HighWord.Bits.Default_Big);
-    ok(entry.HighWord.Bits.Type == 0x13, "got %#x\n", entry.HighWord.Bits.Type);
-    ok(entry.HighWord.Bits.Reserved_0 == 0, "got %#x\n", entry.HighWord.Bits.Reserved_0);
+    ok(base == NtCurrentTeb(),                "expected %p, got %p\n", NtCurrentTeb(), base);
+    ok(limit == 0x0fff || limit == 0x4000,    "expected 0x0fff or 0x4000, got %#x\n", limit);
+    ok(entry.HighWord.Bits.Type == 0x12,      "expected 0x12, got %#x\n", entry.HighWord.Bits.Type);
+    ok(entry.HighWord.Bits.Dpl == 3,          "expected 3, got %u\n", entry.HighWord.Bits.Dpl);
+    ok(entry.HighWord.Bits.Pres == 1,         "expected 1, got %u\n", entry.HighWord.Bits.Pres);
+    ok(entry.HighWord.Bits.Sys == 0,          "expected 0, got %u\n", entry.HighWord.Bits.Sys);
+    ok(entry.HighWord.Bits.Reserved_0 == 0,   "expected 0, got %u\n", entry.HighWord.Bits.Reserved_0);
+    ok(entry.HighWord.Bits.Default_Big == 1,  "expected 1, got %u\n", entry.HighWord.Bits.Default_Big);
+    ok(entry.HighWord.Bits.Granularity == 0,  "expected 0, got %u\n", entry.HighWord.Bits.Granularity);
 }
 
 static void test_NtSetLdtEntries(void)
