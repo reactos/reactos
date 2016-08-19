@@ -490,11 +490,15 @@ static HRESULT WINAPI dispexFunc_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
         ok(pdp->cArgs == 2, "cArgs = %d\n", pdp->cArgs);
         ok(pdp->cNamedArgs == 1, "cNamedArgs = %d\n", pdp->cNamedArgs);
         ok(res != NULL, "res == NULL\n");
-        ok(wFlags == (DISPATCH_PROPERTYGET|DISPATCH_METHOD), "wFlags = %x\n", wFlags);
         ok(pei != NULL, "pei == NULL\n");
 
         ok(V_VT(pdp->rgvarg+1) == VT_BOOL, "V_VT(pdp->rgvarg+1) = %d\n", V_VT(pdp->rgvarg+1));
-        ok(!V_BOOL(pdp->rgvarg+1), "V_BOOL(pdp->rgvarg+1) = %x\n", V_BOOL(pdp->rgvarg+1));
+
+        if(V_BOOL(pdp->rgvarg+1))
+            /* NOTE: If called by Function.apply(), native doesn't set DISPATCH_PROPERTYGET flag. */
+            todo_wine ok(wFlags == DISPATCH_METHOD, "wFlags = %x\n", wFlags);
+        else
+            ok(wFlags == (DISPATCH_PROPERTYGET|DISPATCH_METHOD), "wFlags = %x\n", wFlags);
 
         ok(V_VT(pdp->rgvarg) == VT_DISPATCH, "V_VT(pdp->rgvarg) = %d\n", V_VT(pdp->rgvarg));
         ok(V_DISPATCH(pdp->rgvarg) != NULL, "V_DISPATCH(pdp->rgvarg) == NULL\n");
@@ -574,12 +578,15 @@ static HRESULT WINAPI pureDisp_Invoke(IDispatchEx *iface, DISPID dispIdMember, R
         ok(pdp->cArgs == 1, "cArgs = %d\n", pdp->cArgs);
         ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
         ok(res != NULL, "res == NULL\n");
-        ok(wFlags == (DISPATCH_PROPERTYGET|DISPATCH_METHOD), "wFlags = %x\n", wFlags);
         ok(ei != NULL, "ei == NULL\n");
         ok(puArgErr != NULL, "puArgErr == NULL\n");
 
         ok(V_VT(pdp->rgvarg) == VT_BOOL, "V_VT(pdp->rgvarg) = %d\n", V_VT(pdp->rgvarg));
-        ok(!V_BOOL(pdp->rgvarg), "V_BOOL(pdp->rgvarg) = %x\n", V_BOOL(pdp->rgvarg));
+
+        if(V_BOOL(pdp->rgvarg))
+            todo_wine ok(wFlags == DISPATCH_METHOD, "wFlags = %x\n", wFlags);
+        else
+            ok(wFlags == (DISPATCH_PROPERTYGET|DISPATCH_METHOD), "wFlags = %x\n", wFlags);
 
         if(res)
             V_VT(res) = VT_NULL;
@@ -2508,6 +2515,14 @@ static BOOL run_tests(void)
     parse_script_a("var t = {func: dispexFunc}; t = t.func(false);");
     CHECK_CALLED(dispexfunc_value);
 
+    SET_EXPECT(dispexfunc_value);
+    parse_script_a("Function.prototype.apply.call(dispexFunc, testObj, [true]);");
+    CHECK_CALLED(dispexfunc_value);
+
+    SET_EXPECT(puredisp_value);
+    parse_script_a("Function.prototype.apply.call(pureDisp, testObj, [true]);");
+    CHECK_CALLED(puredisp_value);
+
     parse_script_a("(function reportSuccess() {})()");
 
     parse_script_a("ok(typeof(test) === 'object', \"typeof(test) != 'object'\");");
@@ -2521,6 +2536,8 @@ static BOOL run_tests(void)
     SET_EXPECT(global_propget_d);
     parse_script_a("eval('var testPropGet;');");
     CHECK_CALLED(global_propget_d);
+
+    parse_script_a("var testPropGet; function testPropGet() {}");
 
     SET_EXPECT(global_notexists_d);
     parse_script_a("var notExists; notExists = 1;");

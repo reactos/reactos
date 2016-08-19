@@ -350,12 +350,27 @@ ok(Object(1) instanceof Number, "Object(1) is not instance of Number");
 ok(Object("") instanceof String, "Object('') is not instance of String");
 ok(Object(false) instanceof Boolean, "Object(false) is not instance of Boolean");
 
+ok(new Object(1) instanceof Number, "Object(1) is not instance of Number");
+ok(new Object("") instanceof String, "Object('') is not instance of String");
+ok(new Object(false) instanceof Boolean, "Object(false) is not instance of Boolean");
+
 obj = new Object();
 ok(Object(obj) === obj, "Object(obj) !== obj");
 
 ok(typeof(Object()) === "object", "typeof(Object()) !== 'object'");
 ok(typeof(Object(undefined)) === "object", "typeof(Object(undefined)) !== 'object'");
 ok(typeof(Object(null)) === "object", "typeof(Object(null)) !== 'object'");
+ok(typeof(Object(nullDisp)) === "object", "typeof(Object(nullDisp)) !== 'object'");
+
+ok(Object(nullDisp) != nullDisp, "Object(nullDisp) == nullDisp");
+ok(new Object(nullDisp) != nullDisp, "new Object(nullDisp) == nullDisp");
+
+ok(Object(testObj) === testObj, "Object(testObj) != testObj\n");
+ok(new Object(testObj) === testObj, "new Object(testObj) != testObj\n");
+
+tmp = new Object();
+ok(Object(tmp) === tmp, "Object(tmp) != tmp");
+ok(new Object(tmp) === tmp, "new Object(tmp) != tmp");
 
 var obj = new Object();
 obj.toString = function (x) {
