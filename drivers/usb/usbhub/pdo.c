@@ -782,6 +782,7 @@ USBHUB_PdoHandlePnp(
             {
                 DPRINT1("USB_BUS_INTERFACE_USBDI_GUID\n");
                 RtlCopyMemory(Stack->Parameters.QueryInterface.Interface, &UsbChildExtension->DeviceInterface, Stack->Parameters.QueryInterface.Size);
+                UsbChildExtension->DeviceInterface.InterfaceReference(UsbChildExtension->DeviceInterface.BusContext);
                 Status = STATUS_SUCCESS;
                 break;
             }
