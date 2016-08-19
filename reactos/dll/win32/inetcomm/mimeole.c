@@ -21,6 +21,9 @@
 
 #include "inetcomm_private.h"
 
+#include <winreg.h>
+#include <propvarutil.h>
+
 typedef struct
 {
     LPCSTR     name;
@@ -37,26 +40,81 @@ typedef struct
 
 static const property_t default_props[] =
 {
-    {"References",                   PID_HDR_REFS,       0,                               VT_LPSTR},
-    {"Subject",                      PID_HDR_SUBJECT,    0,                               VT_LPSTR},
-    {"From",                         PID_HDR_FROM,       MPF_ADDRESS,                     VT_LPSTR},
-    {"Message-ID",                   PID_HDR_MESSAGEID,  0,                               VT_LPSTR},
-    {"Return-Path",                  PID_HDR_RETURNPATH, MPF_ADDRESS,                     VT_LPSTR},
-    {"Date",                         PID_HDR_DATE,       0,                               VT_LPSTR},
-    {"Received",                     PID_HDR_RECEIVED,   0,                               VT_LPSTR},
-    {"Reply-To",                     PID_HDR_REPLYTO,    MPF_ADDRESS,                     VT_LPSTR},
-    {"X-Mailer",                     PID_HDR_XMAILER,    0,                               VT_LPSTR},
-    {"Bcc",                          PID_HDR_BCC,        MPF_ADDRESS,                     VT_LPSTR},
-    {"MIME-Version",                 PID_HDR_MIMEVER,    MPF_MIME,                        VT_LPSTR},
-    {"Content-Type",                 PID_HDR_CNTTYPE,    MPF_MIME | MPF_HASPARAMS,        VT_LPSTR},
-    {"Content-Transfer-Encoding",    PID_HDR_CNTXFER,    MPF_MIME,                        VT_LPSTR},
-    {"Content-ID",                   PID_HDR_CNTID,      MPF_MIME,                        VT_LPSTR},
-    {"Content-Disposition",          PID_HDR_CNTDISP,    MPF_MIME | MPF_HASPARAMS,        VT_LPSTR},
-    {"To",                           PID_HDR_TO,         MPF_ADDRESS,                     VT_LPSTR},
-    {"Cc",                           PID_HDR_CC,         MPF_ADDRESS,                     VT_LPSTR},
-    {"Sender",                       PID_HDR_SENDER,     MPF_ADDRESS,                     VT_LPSTR},
-    {"In-Reply-To",                  PID_HDR_INREPLYTO,  0,                               VT_LPSTR},
-    {NULL,                           0,                  0,                               0}
+    {"X-Newsgroup",                  PID_HDR_NEWSGROUP,    0,                               VT_LPSTR},
+    {"Newsgroups",                   PID_HDR_NEWSGROUPS,   0,                               VT_LPSTR},
+    {"References",                   PID_HDR_REFS,         0,                               VT_LPSTR},
+    {"Subject",                      PID_HDR_SUBJECT,      0,                               VT_LPSTR},
+    {"From",                         PID_HDR_FROM,         MPF_ADDRESS,                     VT_LPSTR},
+    {"Message-ID",                   PID_HDR_MESSAGEID,    0,                               VT_LPSTR},
+    {"Return-Path",                  PID_HDR_RETURNPATH,   MPF_ADDRESS,                     VT_LPSTR},
+    {"Rr",                           PID_HDR_RR,           0,                               VT_LPSTR},
+    {"Return-Receipt-To",            PID_HDR_RETRCPTO,     MPF_ADDRESS,                     VT_LPSTR},
+    {"Apparently-To",                PID_HDR_APPARTO,      MPF_ADDRESS,                     VT_LPSTR},
+    {"Date",                         PID_HDR_DATE,         0,                               VT_LPSTR},
+    {"Received",                     PID_HDR_RECEIVED,     0,                               VT_LPSTR},
+    {"Reply-To",                     PID_HDR_REPLYTO,      MPF_ADDRESS,                     VT_LPSTR},
+    {"X-Mailer",                     PID_HDR_XMAILER,      0,                               VT_LPSTR},
+    {"Bcc",                          PID_HDR_BCC,          MPF_ADDRESS,                     VT_LPSTR},
+    {"MIME-Version",                 PID_HDR_MIMEVER,      MPF_MIME,                        VT_LPSTR},
+    {"Content-Type",                 PID_HDR_CNTTYPE,      MPF_MIME | MPF_HASPARAMS,        VT_LPSTR},
+    {"Content-Transfer-Encoding",    PID_HDR_CNTXFER,      MPF_MIME,                        VT_LPSTR},
+    {"Content-ID",                   PID_HDR_CNTID,        MPF_MIME,                        VT_LPSTR},
+    {"Content-Description",          PID_HDR_CNTDESC,      MPF_MIME,                        VT_LPSTR},
+    {"Content-Disposition",          PID_HDR_CNTDISP,      MPF_MIME | MPF_HASPARAMS,        VT_LPSTR},
+    {"Content-Base",                 PID_HDR_CNTBASE,      MPF_MIME,                        VT_LPSTR},
+    {"Content-Location",             PID_HDR_CNTLOC,       MPF_MIME,                        VT_LPSTR},
+    {"To",                           PID_HDR_TO,           MPF_ADDRESS,                     VT_LPSTR},
+    {"Path",                         PID_HDR_PATH,         0,                               VT_LPSTR},
+    {"Followup-To",                  PID_HDR_FOLLOWUPTO,   0,                               VT_LPSTR},
+    {"Expires",                      PID_HDR_EXPIRES,      0,                               VT_LPSTR},
+    {"Cc",                           PID_HDR_CC,           MPF_ADDRESS,                     VT_LPSTR},
+    {"Control",                      PID_HDR_CONTROL,      0,                               VT_LPSTR},
+    {"Distribution",                 PID_HDR_DISTRIB,      0,                               VT_LPSTR},
+    {"Keywords",                     PID_HDR_KEYWORDS,     0,                               VT_LPSTR},
+    {"Summary",                      PID_HDR_SUMMARY,      0,                               VT_LPSTR},
+    {"Approved",                     PID_HDR_APPROVED,     0,                               VT_LPSTR},
+    {"Lines",                        PID_HDR_LINES,        0,                               VT_LPSTR},
+    {"Xref",                         PID_HDR_XREF,         0,                               VT_LPSTR},
+    {"Organization",                 PID_HDR_ORG,          0,                               VT_LPSTR},
+    {"X-Newsreader",                 PID_HDR_XNEWSRDR,     0,                               VT_LPSTR},
+    {"X-Priority",                   PID_HDR_XPRI,         0,                               VT_LPSTR},
+    {"X-MSMail-Priority",            PID_HDR_XMSPRI,       0,                               VT_LPSTR},
+    {"par:content-disposition:filename", PID_PAR_FILENAME, 0,                               VT_LPSTR},
+    {"par:content-type:boundary",    PID_PAR_BOUNDARY,     0,                               VT_LPSTR},
+    {"par:content-type:charset",     PID_PAR_CHARSET,      0,                               VT_LPSTR},
+    {"par:content-type:name",        PID_PAR_NAME,         0,                               VT_LPSTR},
+    {"att:filename",                 PID_ATT_FILENAME,     0,                               VT_LPSTR},
+    {"att:pri-content-type",         PID_ATT_PRITYPE,      0,                               VT_LPSTR},
+    {"att:sub-content-type",         PID_ATT_SUBTYPE,      0,                               VT_LPSTR},
+    {"att:illegal-lines",            PID_ATT_ILLEGAL,      0,                               VT_LPSTR},
+    {"att:rendered",                 PID_ATT_RENDERED,     0,                               VT_LPSTR},
+    {"att:sent-time",                PID_ATT_SENTTIME,     0,                               VT_LPSTR},
+    {"att:priority",                 PID_ATT_PRIORITY,     0,                               VT_LPSTR},
+    {"Comment",                      PID_HDR_COMMENT,      0,                               VT_LPSTR},
+    {"Encoding",                     PID_HDR_ENCODING,     0,                               VT_LPSTR},
+    {"Encrypted",                    PID_HDR_ENCRYPTED,    0,                               VT_LPSTR},
+    {"X-Offsets",                    PID_HDR_OFFSETS,      0,                               VT_LPSTR},
+    {"X-Unsent",                     PID_HDR_XUNSENT,      0,                               VT_LPSTR},
+    {"X-ArticleId",                  PID_HDR_ARTICLEID,    0,                               VT_LPSTR},
+    {"Sender",                       PID_HDR_SENDER,       MPF_ADDRESS,                     VT_LPSTR},
+    {"att:athena-server",            PID_ATT_SERVER,       0,                               VT_LPSTR},
+    {"att:athena-account-id",        PID_ATT_ACCOUNT,      0,                               VT_LPSTR},
+    {"att:athena-pop3-uidl",         PID_ATT_UIDL,         0,                               VT_LPSTR},
+    {"att:athena-store-msgid",       PID_ATT_STOREMSGID,   0,                               VT_LPSTR},
+    {"att:athena-user-name",         PID_ATT_USERNAME,     0,                               VT_LPSTR},
+    {"att:athena-forward-to",        PID_ATT_FORWARDTO,    0,                               VT_LPSTR},
+    {"att:athena-store-fdrid",       PID_ATT_STOREFOLDERID,0,                               VT_LPSTR},
+    {"att:athena-ghosted",           PID_ATT_GHOSTED,      0,                               VT_LPSTR},
+    {"att:athena-uncachedsize",      PID_ATT_UNCACHEDSIZE, 0,                               VT_LPSTR},
+    {"att:athena-combined",          PID_ATT_COMBINED,     0,                               VT_LPSTR},
+    {"att:auto-inlined",             PID_ATT_AUTOINLINED,  0,                               VT_LPSTR},
+    {"Disposition-Notification-To",  PID_HDR_DISP_NOTIFICATION_TO,  0,                      VT_LPSTR},
+    {"par:Content-Type:reply-type",  PID_PAR_REPLYTYPE,    0,                               VT_LPSTR},
+    {"par:Content-Type:format",      PID_PAR_FORMAT ,      0,                               VT_LPSTR},
+    {"att:format",                   PID_ATT_FORMAT ,      0,                               VT_LPSTR},
+    {"In-Reply-To",                  PID_HDR_INREPLYTO,    0,                               VT_LPSTR},
+    {"att:athena-account-name",      PID_ATT_ACCOUNTNAME,  0,                               VT_LPSTR},
+    {NULL,                           0,                    0,                               0}
 };
 
 typedef struct
@@ -478,7 +536,15 @@ static HRESULT find_prop(MimeBody *body, const char *name, header_t **prop)
 
     LIST_FOR_EACH_ENTRY(header, &body->headers, header_t, entry)
     {
-        if(!lstrcmpiA(name, header->prop->name))
+        if(ISPIDSTR(name))
+        {
+            if(STRTOPID(name) == header->prop->id)
+            {
+                *prop = header;
+                return S_OK;
+            }
+        }
+        else if(!lstrcmpiA(name, header->prop->name))
         {
             *prop = header;
             return S_OK;
@@ -486,6 +552,33 @@ static HRESULT find_prop(MimeBody *body, const char *name, header_t **prop)
     }
 
     return MIME_E_NOT_FOUND;
+}
+
+static const property_t *find_default_prop(const char *name)
+{
+    const property_t *prop_def = NULL;
+
+    for(prop_def = default_props; prop_def->name; prop_def++)
+    {
+        if(ISPIDSTR(name))
+        {
+            if(STRTOPID(name) == prop_def->id)
+            {
+                break;
+            }
+        }
+        else if(!lstrcmpiA(name, prop_def->name))
+        {
+            break;
+        }
+    }
+
+    if(prop_def->id)
+       TRACE("%s: found match with default property id %d\n", prop_def->name, prop_def->id);
+    else
+       prop_def = NULL;
+
+    return prop_def;
 }
 
 static HRESULT WINAPI MimeBody_QueryInterface(IMimeBody* iface,
@@ -603,8 +696,42 @@ static HRESULT WINAPI MimeBody_GetPropInfo(
                                   LPMIMEPROPINFO pInfo)
 {
     MimeBody *This = impl_from_IMimeBody(iface);
-    FIXME("(%p)->(%s, %p) stub\n", This, debugstr_a(pszName), pInfo);
-    return E_NOTIMPL;
+    header_t *header;
+    HRESULT hr;
+    DWORD supported = PIM_PROPID | PIM_VTDEFAULT;
+
+    TRACE("(%p)->(%s, %p) semi-stub\n", This, debugstr_a(pszName), pInfo);
+
+    if(!pszName || !pInfo)
+        return E_INVALIDARG;
+
+    TRACE("mask 0x%04x\n", pInfo->dwMask);
+
+    if(pInfo->dwMask & ~supported)
+         FIXME("Unsupported mask flags 0x%04x\n", pInfo->dwMask & ~supported);
+
+    hr = find_prop(This, pszName, &header);
+    if(hr == S_OK)
+    {
+        if(pInfo->dwMask & PIM_CHARSET)
+            pInfo->hCharset = 0;
+        if(pInfo->dwMask & PIM_FLAGS)
+            pInfo->dwFlags = 0x00000000;
+        if(pInfo->dwMask & PIM_ROWNUMBER)
+            pInfo->dwRowNumber = 0;
+        if(pInfo->dwMask & PIM_ENCODINGTYPE)
+            pInfo->ietEncoding = 0;
+        if(pInfo->dwMask & PIM_VALUES)
+            pInfo->cValues = 0;
+        if(pInfo->dwMask & PIM_PROPID)
+            pInfo->dwPropId = header->prop->id;
+        if(pInfo->dwMask & PIM_VTDEFAULT)
+            pInfo->vtDefault = header->prop->default_vt;
+        if(pInfo->dwMask & PIM_VTCURRENT)
+            pInfo->vtCurrent = 0;
+    }
+
+    return hr;
 }
 
 static HRESULT WINAPI MimeBody_SetPropInfo(
@@ -632,7 +759,7 @@ static HRESULT WINAPI MimeBody_GetProp(
     if(!pszName || !pValue)
         return E_INVALIDARG;
 
-    if(!lstrcmpiA(pszName, "att:pri-content-type"))
+    if(!ISPIDSTR(pszName) && !lstrcmpiA(pszName, "att:pri-content-type"))
     {
         PropVariantClear(pValue);
         pValue->vt = VT_LPSTR;
@@ -643,7 +770,11 @@ static HRESULT WINAPI MimeBody_GetProp(
     hr = find_prop(This, pszName, &header);
     if(hr == S_OK)
     {
-        PropVariantCopy(pValue, &header->value);
+        TRACE("type %d->%d\n", header->value.vt, pValue->vt);
+
+        hr = PropVariantChangeType(pValue, &header->value, 0,  pValue->vt);
+        if(FAILED(hr))
+            FIXME("Conversion not currently supported (%d->%d)\n", header->value.vt, pValue->vt);
     }
 
     return hr;
@@ -672,7 +803,16 @@ static HRESULT WINAPI MimeBody_SetProp(
 
         LIST_FOR_EACH_ENTRY(prop_entry, &This->new_props, property_list_entry_t, entry)
         {
-            if(!lstrcmpiA(pszName, prop_entry->prop.name))
+            if(ISPIDSTR(pszName))
+            {
+                if(STRTOPID(pszName) == prop_entry->prop.id)
+                {
+                    TRACE("Found match with already added new property id %d\n", prop_entry->prop.id);
+                    prop = &prop_entry->prop;
+                    break;
+                }
+            }
+            else if(!lstrcmpiA(pszName, prop_entry->prop.name))
             {
                 TRACE("Found match with already added new property id %d\n", prop_entry->prop.id);
                 prop = &prop_entry->prop;
@@ -686,14 +826,33 @@ static HRESULT WINAPI MimeBody_SetProp(
 
         if(!prop)
         {
+            const property_t *prop_def = NULL;
             prop_entry = HeapAlloc(GetProcessHeap(), 0, sizeof(*prop_entry));
             if(!prop_entry)
             {
                 HeapFree(GetProcessHeap(), 0, header);
                 return E_OUTOFMEMORY;
             }
-            prop_entry->prop.name = strdupA(pszName);
-            prop_entry->prop.id = This->next_prop_id++;
+
+            prop_def = find_default_prop(pszName);
+            if(prop_def)
+            {
+                prop_entry->prop.name = strdupA(prop_def->name);
+                prop_entry->prop.id =  prop_def->id;
+            }
+            else
+            {
+                if(ISPIDSTR(pszName))
+                {
+                    HeapFree(GetProcessHeap(), 0, prop_entry);
+                    HeapFree(GetProcessHeap(), 0, header);
+                    return MIME_E_NOT_FOUND;
+                }
+
+                prop_entry->prop.name = strdupA(pszName);
+                prop_entry->prop.id = This->next_prop_id++;
+            }
+
             prop_entry->prop.flags = 0;
             prop_entry->prop.default_vt = pValue->vt;
             list_add_tail(&This->new_props, &prop_entry->entry);
@@ -728,8 +887,27 @@ static HRESULT WINAPI MimeBody_DeleteProp(
                                  LPCSTR pszName)
 {
     MimeBody *This = impl_from_IMimeBody(iface);
-    FIXME("(%p)->(%s) stub\n", This, debugstr_a(pszName));
-    return E_NOTIMPL;
+    header_t *cursor;
+    BOOL found;
+
+    TRACE("(%p)->(%s) stub\n", This, debugstr_a(pszName));
+
+    LIST_FOR_EACH_ENTRY(cursor, &This->headers, header_t, entry)
+    {
+        if(ISPIDSTR(pszName))
+            found = STRTOPID(pszName) == cursor->prop->id;
+        else
+            found = !lstrcmpiA(pszName, cursor->prop->name);
+
+        if(found)
+        {
+             list_remove(&cursor->entry);
+             HeapFree(GetProcessHeap(), 0, cursor);
+             return S_OK;
+        }
+    }
+
+    return MIME_E_NOT_FOUND;
 }
 
 static HRESULT WINAPI MimeBody_CopyProps(
@@ -1119,6 +1297,9 @@ static HRESULT WINAPI MimeBody_GetHandle(
 {
     MimeBody *This = impl_from_IMimeBody(iface);
     TRACE("(%p)->(%p)\n", iface, phBody);
+
+    if(!phBody)
+        return E_INVALIDARG;
 
     *phBody = This->handle;
     return This->handle ? S_OK : MIME_E_NO_DATA;
@@ -1625,6 +1806,8 @@ static body_t *new_body_entry(MimeBody *mime_body, DWORD index, body_t *parent)
         body->index = index;
         list_init(&body->children);
         body->parent = parent;
+
+        mime_body->handle = UlongToHandle(body->index);
     }
     return body;
 }
@@ -1888,7 +2071,7 @@ static HRESULT WINAPI MimeMessage_Commit(
     DWORD dwFlags)
 {
     FIXME("(%p)->(0x%x)\n", iface, dwFlags);
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 
@@ -1976,7 +2159,10 @@ static HRESULT get_body(MimeMessage *msg, BODYLOCATION location, HBODY pivot, bo
         switch(location)
         {
         case IBL_PARENT:
-            *out = body->parent;
+            if(body->parent)
+                *out = body->parent;
+            else
+                hr = MIME_E_NOT_FOUND;
             break;
 
         case IBL_FIRST:
@@ -2039,6 +2225,11 @@ static HRESULT WINAPI MimeMessage_GetBody(IMimeMessage *iface, BODYLOCATION loca
     HRESULT hr;
 
     TRACE("(%p)->(%d, %p, %p)\n", iface, location, hPivot, phBody);
+
+    if(!phBody)
+        return E_INVALIDARG;
+
+    *phBody = NULL;
 
     hr = get_body(This, location, hPivot, &body);
 
@@ -2319,6 +2510,9 @@ static HRESULT WINAPI MimeMessage_SetOption(
         break;
     case OID_SAVEBODY_KEEPBOUNDARY:
         FIXME("OID_SAVEBODY_KEEPBOUNDARY (value %d): ignoring\n", pValue->u.boolVal);
+        break;
+    case OID_CLEANUP_TREE_ON_SAVE:
+        FIXME("OID_CLEANUP_TREE_ON_SAVE (value %d): ignoring\n", pValue->u.boolVal);
         break;
     default:
         FIXME("Unhandled oid %08x\n", oid);
