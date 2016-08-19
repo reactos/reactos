@@ -21,6 +21,7 @@
 
 #define MANAGER_TAG 0x72674D68  /* 'hMgr' */
 #define SERVICE_TAG 0x63765368  /* 'hSvc' */
+#define INVALID_TAG 0xAABBCCDD
 
 typedef struct _SCMGR_HANDLE
 {
@@ -952,7 +953,8 @@ DWORD RCloseServiceHandle(
     {
         DPRINT("Found manager handle\n");
 
-        /* FIXME: add handle cleanup code */
+        /* Make sure we don't access stale memory if someone tries to use this handle again. */
+        hManager->Handle.Tag = INVALID_TAG;
 
         HeapFree(GetProcessHeap(), 0, hManager);
         hManager = NULL;
@@ -972,7 +974,8 @@ DWORD RCloseServiceHandle(
         /* Get the pointer to the service record */
         lpService = hService->ServiceEntry;
 
-        /* FIXME: add handle cleanup code */
+        /* Make sure we don't access stale memory if someone tries to use this handle again. */
+        hService->Handle.Tag = INVALID_TAG;
 
         /* Free the handle */
         HeapFree(GetProcessHeap(), 0, hService);
