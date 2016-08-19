@@ -1387,11 +1387,13 @@ Cleanup:
 NTSTATUS
 USBHUB_FdoQueryBusRelations(
     IN PDEVICE_OBJECT DeviceObject,
+    IN PDEVICE_RELATIONS RelationsFromTop,
     OUT PDEVICE_RELATIONS* pDeviceRelations)
 {
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
     PDEVICE_RELATIONS DeviceRelations;
     ULONG i;
+    ULONG ChildrenFromTop = 0;
     ULONG Children = 0;
     ULONG NeededSize;
 
@@ -1410,9 +1412,18 @@ USBHUB_FdoQueryBusRelations(
         Children++;
     }
 
-    NeededSize = sizeof(DEVICE_RELATIONS);
-    if (Children > 1)
-        NeededSize += (Children - 1) * sizeof(PDEVICE_OBJECT);
+    if (RelationsFromTop)
+    {
+        ChildrenFromTop = RelationsFromTop->Count;
+        if (!Children)
+        {
+            // We have nothing to add
+            *pDeviceRelations = RelationsFromTop;
+            return STATUS_SUCCESS;
+        }
+    }
+
+    NeededSize = sizeof(DEVICE_RELATIONS) + (Children + ChildrenFromTop - 1) * sizeof(PDEVICE_OBJECT);
 
     //
     // Allocate DeviceRelations
@@ -1421,9 +1432,21 @@ USBHUB_FdoQueryBusRelations(
                                                         NeededSize);
 
     if (!DeviceRelations)
-        return STATUS_INSUFFICIENT_RESOURCES;
-    DeviceRelations->Count = Children;
-    Children = 0;
+    {
+        if (!RelationsFromTop)
+            return STATUS_INSUFFICIENT_RESOURCES;
+        else
+            return STATUS_NOT_SUPPORTED;
+    }
+    // Copy the objects coming from top
+    if (ChildrenFromTop)
+    {
+        RtlCopyMemory(DeviceRelations->Objects, RelationsFromTop->Objects,
+                      ChildrenFromTop * sizeof(PDEVICE_OBJECT));
+    }
+
+    DeviceRelations->Count = Children + ChildrenFromTop;
+    Children = ChildrenFromTop;
 
     //
     // Fill in return structure
@@ -1438,6 +1461,10 @@ USBHUB_FdoQueryBusRelations(
             DeviceRelations->Objects[Children++] = HubDeviceExtension->ChildDeviceObject[i];
         }
     }
+
+    // We should do this, because replaced this with our's one
+    if (RelationsFromTop)
+        ExFreePool(RelationsFromTop);
 
     ASSERT(Children == DeviceRelations->Count);
     *pDeviceRelations = DeviceRelations;
@@ -1976,7 +2003,6 @@ USBHUB_FdoHandlePnp(
 {
     PIO_STACK_LOCATION Stack;
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG_PTR Information = 0;
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
 
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
@@ -2007,12 +2033,28 @@ USBHUB_FdoHandlePnp(
                 case BusRelations:
                 {
                     PDEVICE_RELATIONS DeviceRelations = NULL;
+                    PDEVICE_RELATIONS RelationsFromTop = (PDEVICE_RELATIONS)Irp->IoStatus.Information;
                     DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
 
-                    Status = USBHUB_FdoQueryBusRelations(DeviceObject, &DeviceRelations);
+                    Status = USBHUB_FdoQueryBusRelations(DeviceObject, RelationsFromTop, &DeviceRelations);
 
-                    Information = (ULONG_PTR)DeviceRelations;
-                    break;
+                    if (!NT_SUCCESS(Status))
+                    {
+                        if (Status == STATUS_NOT_SUPPORTED)
+                        {
+                            // We should process this to not lose relations from top.
+                            Irp->IoStatus.Status = STATUS_SUCCESS;
+                            break;
+                        }
+                        // We should fail an IRP
+                        Irp->IoStatus.Status = Status;
+                        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                        return Status;
+                    }
+
+                    Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
+                    Irp->IoStatus.Status = Status;
+                    return ForwardIrpAndForget(DeviceObject, Irp);
                 }
                 case RemovalRelations:
                 {
@@ -2066,7 +2108,6 @@ USBHUB_FdoHandlePnp(
         }
     }
 
-    Irp->IoStatus.Information = Information;
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
