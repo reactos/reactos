@@ -86,6 +86,8 @@ USBHUB_AddDevice(
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     RtlZeroMemory(HubDeviceExtension, sizeof(HUB_DEVICE_EXTENSION));
 
+    INITIALIZE_PNP_STATE(HubDeviceExtension->Common);
+
     //
     // Set this to Fdo
     //

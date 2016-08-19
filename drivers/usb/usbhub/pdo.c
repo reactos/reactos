@@ -200,7 +200,9 @@ USBHUB_PdoHandleInternalDeviceControl(
     ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(ChildDeviceExtension->Common.IsFDO == FALSE);
 
-    if (ChildDeviceExtension->IsRemovePending || !IsValidPDO(DeviceObject))
+    if (ChildDeviceExtension->Common.PnPState == SurpriseRemovePending ||
+        ChildDeviceExtension->Common.PnPState == RemovePending ||
+        !IsValidPDO(DeviceObject))
     {
         // Parent or child device was surprise removed.
         DPRINT1("[USBHUB] Request for removed device object %p\n", DeviceObject);
@@ -431,6 +433,8 @@ USBHUB_PdoStartDevice(
     //
     IoRegisterDeviceInterface(DeviceObject, &GUID_DEVINTERFACE_USB_DEVICE, NULL, &ChildDeviceExtension->SymbolicLinkName);
     IoSetDeviceInterfaceState(&ChildDeviceExtension->SymbolicLinkName, TRUE);
+
+    SET_NEW_PNP_STATE(ChildDeviceExtension->Common, Started);
 
     UNIMPLEMENTED
     return STATUS_SUCCESS;
@@ -668,9 +672,15 @@ USBHUB_PdoHandlePnp(
 
             DPRINT("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
 
+            ASSERT((UsbChildExtension->Common.PnPState == RemovePending) ||
+                   (UsbChildExtension->Common.PnPState == SurpriseRemovePending));
+
+            SET_NEW_PNP_STATE(UsbChildExtension->Common, NotStarted);
+
             if (!IsValidPDO(DeviceObject))
             {
                 // Parent or child device was surprise removed, freeing resources allocated for child device.
+                SET_NEW_PNP_STATE(UsbChildExtension->Common, Deleted);
 
                 // Remove the usb device
                 if (UsbChildExtension->UsbDeviceHandle)
@@ -699,8 +709,7 @@ USBHUB_PdoHandlePnp(
                 IoDeleteDevice(DeviceObject);
             }
 
-            // Device is physically presented, so we leave its PDO undeleted.
-            ASSERT(UsbChildExtension->IsRemovePending == TRUE);
+            // If device is physically presented, we leave its PDO undeleted.
 
             /* Complete the IRP */
             Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -760,7 +769,7 @@ USBHUB_PdoHandlePnp(
             //
             UsbChildExtension->DeviceInterface.InterfaceDereference(UsbChildExtension->DeviceInterface.BusContext);
 
-            UsbChildExtension->IsRemovePending = TRUE;
+            SET_NEW_PNP_STATE(UsbChildExtension->Common, RemovePending);
 
             /* Sure, no problem */
             Status = STATUS_SUCCESS;
@@ -770,9 +779,9 @@ USBHUB_PdoHandlePnp(
         case IRP_MN_CANCEL_REMOVE_DEVICE:
         {
             // Check to see have we received query-remove before
-            if (UsbChildExtension->IsRemovePending == TRUE)
+            if (UsbChildExtension->Common.PnPState == RemovePending)
             {
-                UsbChildExtension->IsRemovePending = FALSE;
+                RESTORE_PREVIOUS_PNP_STATE(UsbChildExtension->Common);
                 UsbChildExtension->DeviceInterface.InterfaceReference(UsbChildExtension->DeviceInterface.BusContext);
             }
 
@@ -804,7 +813,7 @@ USBHUB_PdoHandlePnp(
             // the flag and do further clean-up in subsequent IRP_MN_REMOVE_DEVICE
             // We can receive this IRP when device is physically connected (on stop/start fail).
             //
-            UsbChildExtension->IsRemovePending = TRUE;
+            SET_NEW_PNP_STATE(UsbChildExtension->Common, SurpriseRemovePending);
 
             Status = STATUS_SUCCESS;
             break;

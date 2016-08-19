@@ -1322,7 +1322,7 @@ CreateUsbChildDeviceObject(
     RtlCopyMemory(&UsbChildExtension->DeviceInterface, &HubDeviceExtension->UsbDInterface, sizeof(USB_BUS_INTERFACE_USBDI_V2));
     UsbChildExtension->DeviceInterface.InterfaceReference(UsbChildExtension->DeviceInterface.BusContext);
 
-    UsbChildExtension->IsRemovePending = FALSE;
+    INITIALIZE_PNP_STATE(UsbChildExtension->Common);
 
     KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
 
@@ -2053,6 +2053,8 @@ USBHUB_FdoHandlePnp(
                 Status = USBHUB_ParentFDOStartDevice(DeviceObject, Irp);
             }
 
+            SET_NEW_PNP_STATE(HubDeviceExtension->Common, Started);
+
             Irp->IoStatus.Status = Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
@@ -2116,6 +2118,18 @@ USBHUB_FdoHandlePnp(
             // No action is required from FDO because it have nothing to free.
             DPRINT("IRP_MN_QUERY_REMOVE_DEVICE\n");
 
+            SET_NEW_PNP_STATE(HubDeviceExtension->Common, RemovePending);
+
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            break;
+        }
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+        {
+            DPRINT("IRP_MN_CANCEL_REMOVE_DEVICE\n");
+
+            if (HubDeviceExtension->Common.PnPState == RemovePending)
+                RESTORE_PREVIOUS_PNP_STATE(HubDeviceExtension->Common);
+
             Irp->IoStatus.Status = STATUS_SUCCESS;
             break;
         }
@@ -2127,6 +2141,7 @@ USBHUB_FdoHandlePnp(
             // our children that their parent is removed and on next removal
             // they also can be removed.
             //
+            SET_NEW_PNP_STATE(HubDeviceExtension->Common, SurpriseRemovePending);
 
             KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
 
