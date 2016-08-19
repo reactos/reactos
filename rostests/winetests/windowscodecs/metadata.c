@@ -149,6 +149,16 @@ static const char metadata_gAMA[] = {
     0xff,0xff,0xff,0xff /* chunk CRC */
 };
 
+static const char metadata_cHRM[] = {
+    0,0,0,32, /* chunk length */
+    'c','H','R','M', /* chunk type */
+    0,0,122,38, 0,0,128,132, /* white point */
+    0,0,250,0, 0,0,128,232, /* red */
+    0,0,117,48, 0,0,234,96, /* green */
+    0,0,58,152, 0,0,23,112, /* blue */
+    0xff,0xff,0xff,0xff /* chunk CRC */
+};
+
 static const char pngimage[285] = {
 0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a,0x00,0x00,0x00,0x0d,0x49,0x48,0x44,0x52,
 0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x01,0x08,0x02,0x00,0x00,0x00,0x90,0x77,0x53,
@@ -458,6 +468,67 @@ static void test_metadata_gAMA(void)
     ok(value.vt == VT_UI4, "unexpected vt: %i\n", value.vt);
     ok(U(value).ulVal == 33333, "unexpected value: %u\n", U(value).ulVal);
     PropVariantClear(&value);
+
+    IWICMetadataReader_Release(reader);
+}
+
+static void test_metadata_cHRM(void)
+{
+    HRESULT hr;
+    IWICMetadataReader *reader;
+    PROPVARIANT schema, id, value;
+    ULONG count;
+    GUID format;
+    int i;
+    static const WCHAR expected_names[8][12] = {
+        {'W','h','i','t','e','P','o','i','n','t','X',0},
+        {'W','h','i','t','e','P','o','i','n','t','Y',0},
+        {'R','e','d','X',0},
+        {'R','e','d','Y',0},
+        {'G','r','e','e','n','X',0},
+        {'G','r','e','e','n','Y',0},
+        {'B','l','u','e','X',0},
+        {'B','l','u','e','Y',0},
+    };
+    static const ULONG expected_vals[8] = {
+        31270,32900, 64000,33000, 30000,60000, 15000,6000
+    };
+
+    PropVariantInit(&schema);
+    PropVariantInit(&id);
+    PropVariantInit(&value);
+
+    hr = CoCreateInstance(&CLSID_WICPngChrmMetadataReader, NULL, CLSCTX_INPROC_SERVER,
+        &IID_IWICMetadataReader, (void**)&reader);
+    ok(hr == S_OK || broken(hr == REGDB_E_CLASSNOTREG) /*winxp*/, "CoCreateInstance failed, hr=%x\n", hr);
+    if (FAILED(hr)) return;
+
+    load_stream((IUnknown*)reader, metadata_cHRM, sizeof(metadata_cHRM), WICPersistOptionsDefault);
+
+    hr = IWICMetadataReader_GetMetadataFormat(reader, &format);
+    ok(hr == S_OK, "GetMetadataFormat failed, hr=%x\n", hr);
+    ok(IsEqualGUID(&format, &GUID_MetadataFormatChunkcHRM), "unexpected format %s\n", wine_dbgstr_guid(&format));
+
+    hr = IWICMetadataReader_GetCount(reader, &count);
+    ok(hr == S_OK, "GetCount failed, hr=%x\n", hr);
+    ok(count == 8, "unexpected count %i\n", count);
+
+    for (i=0; i<8; i++)
+    {
+        hr = IWICMetadataReader_GetValueByIndex(reader, i, &schema, &id, &value);
+        ok(hr == S_OK, "GetValue failed, hr=%x\n", hr);
+
+        ok(schema.vt == VT_EMPTY, "unexpected vt: %i\n", schema.vt);
+        PropVariantClear(&schema);
+
+        ok(id.vt == VT_LPWSTR, "unexpected vt: %i\n", id.vt);
+        ok(!lstrcmpW(U(id).pwszVal, expected_names[i]), "got %s, expected %s\n", wine_dbgstr_w(U(id).pwszVal), wine_dbgstr_w(expected_names[i]));
+        PropVariantClear(&id);
+
+        ok(value.vt == VT_UI4, "unexpected vt: %i\n", value.vt);
+        ok(U(value).ulVal == expected_vals[i], "got %u, expected %u\n", U(value).ulVal, expected_vals[i]);
+        PropVariantClear(&value);
+    }
 
     IWICMetadataReader_Release(reader);
 }
@@ -1901,6 +1972,7 @@ START_TEST(metadata)
     test_metadata_unknown();
     test_metadata_tEXt();
     test_metadata_gAMA();
+    test_metadata_cHRM();
     test_metadata_IFD();
     test_metadata_Exif();
     test_create_reader();

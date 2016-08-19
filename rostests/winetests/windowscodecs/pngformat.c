@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Dmitry Timoshkov
+ * Copyright 2012,2016 Dmitry Timoshkov
  * Copyright 2012 Hans Leidekker for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
@@ -585,6 +585,61 @@ static void test_png_palette(void)
     IWICBitmapDecoder_Release(decoder);
 }
 
+/* RGB 24 bpp 1x1 pixel PNG image */
+static const char png_1x1_data[] = {
+  0x89,'P','N','G',0x0d,0x0a,0x1a,0x0a,
+  0x00,0x00,0x00,0x0d,'I','H','D','R',0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x01,0x08,0x02,0x00,0x00,0x00,0x90,0x77,0x53,0xde,
+  0x00,0x00,0x00,0x0c,'I','D','A','T',0x08,0xd7,0x63,0xf8,0xff,0xff,0x3f,0x00,0x05,0xfe,0x02,0xfe,0xdc,0xcc,0x59,0xe7,
+  0x00,0x00,0x00,0x00,'I','E','N','D',0xae,0x42,0x60,0x82
+};
+
+static void test_color_formats(void)
+{
+    static const struct
+    {
+        char bit_depth, color_type;
+        const GUID *format;
+    } td[] =
+    {
+        /* 2 - PNG_COLOR_TYPE_RGB */
+        { 8, 2, &GUID_WICPixelFormat24bppBGR },
+        /* 0 - PNG_COLOR_TYPE_GRAY */
+        { 1, 0, &GUID_WICPixelFormatBlackWhite },
+        { 2, 0, &GUID_WICPixelFormat2bppGray },
+        { 4, 0, &GUID_WICPixelFormat4bppGray },
+        { 8, 0, &GUID_WICPixelFormat8bppGray },
+        { 16, 0, &GUID_WICPixelFormat16bppGray },
+    };
+    char buf[sizeof(png_1x1_data)];
+    HRESULT hr;
+    IWICBitmapDecoder *decoder;
+    IWICBitmapFrameDecode *frame;
+    GUID format;
+    int i;
+
+    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    {
+        memcpy(buf, png_1x1_data, sizeof(png_1x1_data));
+        buf[24] = td[i].bit_depth;
+        buf[25] = td[i].color_type;
+
+        decoder = create_decoder(buf, sizeof(buf));
+        ok(decoder != NULL, "Failed to load PNG image data\n");
+        if (!decoder) continue;
+
+        hr = IWICBitmapDecoder_GetFrame(decoder, 0, &frame);
+        ok(hr == S_OK, "GetFrame error %#x\n", hr);
+
+        hr = IWICBitmapFrameDecode_GetPixelFormat(frame, &format);
+        ok(hr == S_OK, "GetPixelFormat error %#x\n", hr);
+        ok(IsEqualGUID(&format, td[i].format),
+           "expected %s, got %s\n", wine_dbgstr_guid(td[i].format), wine_dbgstr_guid(&format));
+
+        IWICBitmapFrameDecode_Release(frame);
+        IWICBitmapDecoder_Release(decoder);
+    }
+}
+
 START_TEST(pngformat)
 {
     HRESULT hr;
@@ -597,6 +652,7 @@ START_TEST(pngformat)
 
     test_color_contexts();
     test_png_palette();
+    test_color_formats();
 
     IWICImagingFactory_Release(factory);
     CoUninitialize();
