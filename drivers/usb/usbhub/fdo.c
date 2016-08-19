@@ -1581,7 +1581,8 @@ USBHUB_FdoStartDevice(
     if (!Urb)
     {
          // no memory
-         return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
     }
 
     // zero urb
@@ -1596,8 +1597,7 @@ USBHUB_FdoStartDevice(
     {
         // failed to obtain hub pdo
         DPRINT1("IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO failed with %x\n", Status);
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     // sanity checks
@@ -1614,8 +1614,7 @@ USBHUB_FdoStartDevice(
     {
         // failed to start pdo
         DPRINT1("Failed to start the RootHub PDO\n");
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     // Get the current number of hubs
@@ -1626,8 +1625,7 @@ USBHUB_FdoStartDevice(
     {
         // failed to get number of hubs
         DPRINT1("IOCTL_INTERNAL_USB_GET_HUB_COUNT failed with %x\n", Status);
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     // Get the Hub Interface
@@ -1641,8 +1639,7 @@ USBHUB_FdoStartDevice(
     {
         // failed to get root hub interface
         DPRINT1("Failed to get HUB_GUID interface with status 0x%08lx\n", Status);
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     HubInterfaceBusContext = HubDeviceExtension->HubInterface.BusContext;
@@ -1658,8 +1655,7 @@ USBHUB_FdoStartDevice(
     {
         // failed to get usbdi interface
         DPRINT1("Failed to get USBDI_GUID interface with status 0x%08lx\n", Status);
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     // Get Root Hub Device Handle
@@ -1672,8 +1668,7 @@ USBHUB_FdoStartDevice(
     {
         // failed
         DPRINT1("IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE failed with status 0x%08lx\n", Status);
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     //
@@ -1717,8 +1712,7 @@ USBHUB_FdoStartDevice(
     {
         // failed to get device descriptor of hub
         DPRINT1("Failed to get HubDeviceDescriptor!\n");
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     // build configuration request
@@ -1745,8 +1739,7 @@ USBHUB_FdoStartDevice(
     {
         // failed to get configuration descriptor
         DPRINT1("Failed to get RootHub Configuration with status %x\n", Status);
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     // sanity checks
@@ -1772,16 +1765,15 @@ USBHUB_FdoStartDevice(
     {
         // failed to get hub information
         DPRINT1("Failed to extended hub information. Unable to determine the number of ports!\n");
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     if (!HubDeviceExtension->UsbExtHubInfo.NumberOfPorts)
     {
         // bogus port driver
         DPRINT1("Failed to retrieve the number of ports\n");
-        ExFreePool(Urb);
-        return STATUS_UNSUCCESSFUL;
+        Status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
     }
 
     DPRINT("HubDeviceExtension->UsbExtHubInfo.NumberOfPorts %x\n", HubDeviceExtension->UsbExtHubInfo.NumberOfPorts);
@@ -1812,8 +1804,8 @@ USBHUB_FdoStartDevice(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to get Hub Descriptor!\n");
-        ExFreePool(Urb);
-        return STATUS_UNSUCCESSFUL;
+        Status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
     }
 
     // sanity checks
@@ -1841,14 +1833,21 @@ USBHUB_FdoStartDevice(
     {
         // failed to get hub status
         DPRINT1("Failed to get Hub Status!\n");
-        ExFreePool(Urb);
-        return STATUS_UNSUCCESSFUL;
+        Status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
     }
 
     // Allocate memory for PortStatusChange to hold 2 USHORTs for each port on hub
     HubDeviceExtension->PortStatusChange = ExAllocatePoolWithTag(NonPagedPool,
                                                                     sizeof(ULONG) * HubDeviceExtension->UsbExtHubInfo.NumberOfPorts,
                                                                     USB_HUB_TAG);
+
+    if (!HubDeviceExtension->PortStatusChange)
+    {
+        DPRINT1("Failed to allocate pool for PortStatusChange!\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
 
     // Get the first Configuration Descriptor
     Pid = USBD_ParseConfigurationDescriptorEx(&HubDeviceExtension->HubConfigDescriptor,
@@ -1858,8 +1857,8 @@ USBHUB_FdoStartDevice(
     {
         // failed parse hub descriptor
         DPRINT1("Failed to parse configuration descriptor\n");
-        ExFreePool(Urb);
-        return STATUS_UNSUCCESSFUL;
+        Status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
     }
 
     // create configuration request
@@ -1870,8 +1869,8 @@ USBHUB_FdoStartDevice(
     {
         // failed to build urb
         DPRINT1("Failed to allocate urb\n");
-        ExFreePool(Urb);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
     }
 
     // send request
@@ -1883,9 +1882,7 @@ USBHUB_FdoStartDevice(
     {
         // failed to select configuration
         DPRINT1("Failed to select configuration with %x\n", Status);
-        ExFreePool(Urb);
-        ExFreePool(ConfigUrb);
-        return Status;
+        goto cleanup;
     }
 
     // store configuration & pipe handle
@@ -1894,10 +1891,6 @@ USBHUB_FdoStartDevice(
     DPRINT("Configuration Handle %x\n", HubDeviceExtension->ConfigurationHandle);
 
     FDO_QueryInterface(DeviceObject, &HubDeviceExtension->DeviceInterface);
-
-
-    // free urb
-    ExFreePool(ConfigUrb);
 
     // check if function is available
     if (HubDeviceExtension->UsbDInterface.IsDeviceHighSpeed)
@@ -1938,8 +1931,7 @@ USBHUB_FdoStartDevice(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to set callback\n");
-            ExFreePool(Urb);
-            return Status;
+            goto cleanup;
         }
     }
     else
@@ -1991,7 +1983,29 @@ USBHUB_FdoStartDevice(
     // free urb
     ExFreePool(Urb);
 
+    // free ConfigUrb
+    ExFreePool(ConfigUrb);
+
     // done
+    return Status;
+
+cleanup:
+    if (Urb)
+        ExFreePool(Urb);
+
+    // Dereference interfaces
+    if (HubDeviceExtension->HubInterface.Size)
+        HubDeviceExtension->HubInterface.InterfaceDereference(HubDeviceExtension->HubInterface.BusContext);
+
+    if (HubDeviceExtension->UsbDInterface.Size)
+        HubDeviceExtension->UsbDInterface.InterfaceDereference(HubDeviceExtension->UsbDInterface.BusContext);
+
+    if (HubDeviceExtension->PortStatusChange)
+        ExFreePool(HubDeviceExtension->PortStatusChange);
+
+    if (ConfigUrb)
+        ExFreePool(ConfigUrb);
+
     return Status;
 }
 
