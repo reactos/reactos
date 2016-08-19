@@ -655,7 +655,7 @@ static void test_inffilelist(void)
     ok(ERROR_DIRECTORY == GetLastError(),
        "expected error ERROR_DIRECTORY, got %d\n", GetLastError());
 
-    /* now check the buffer content of a vaild call
+    /* now check the buffer contents of a valid call
      */
     *ptr = 0;
     expected = 3 + strlen(inffile) + strlen(inffile2);
