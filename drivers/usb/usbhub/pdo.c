@@ -146,6 +146,11 @@ IsValidPDO(
 
     ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(ChildDeviceExtension->Common.IsFDO == FALSE);
+
+    // This can happen when parent device was surprise removed.
+    if (ChildDeviceExtension->ParentDeviceObject == NULL)
+        return FALSE;
+
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION)ChildDeviceExtension->ParentDeviceObject->DeviceExtension;
 
     for(Index = 0; Index < USB_MAXCHILDREN; Index++)
