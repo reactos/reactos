@@ -163,6 +163,11 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
       case SC_MOUSEMENU:
       case SC_KEYMENU:
       case SC_SCREENSAVE:
+      case SC_MINIMIZE:
+      case SC_MAXIMIZE:
+      case SC_RESTORE:
+      case SC_CLOSE:
+      case SC_HOTKEY:
         NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
         return 0;
 
@@ -178,27 +183,6 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
   switch (wParam & 0xfff0)
     {
-
-    case SC_MINIMIZE:
-        if (hWnd == GetActiveWindow())
-            ShowOwnedPopups(hWnd,FALSE);
-        ShowWindow( hWnd, SW_MINIMIZE );
-        break;
-
-    case SC_MAXIMIZE:
-        if (IsIconic(hWnd) && hWnd == GetActiveWindow())
-            ShowOwnedPopups(hWnd,TRUE);
-        ShowWindow( hWnd, SW_MAXIMIZE );
-        break;
-
-    case SC_RESTORE:
-        if (IsIconic(hWnd) && hWnd == GetActiveWindow())
-            ShowOwnedPopups(hWnd,TRUE);
-        ShowWindow( hWnd, SW_RESTORE );
-        break;
-
-      case SC_CLOSE:
-        return SendMessageW(hWnd, WM_CLOSE, 0, 0);
 
       case SC_VSCROLL:
       case SC_HSCROLL:
@@ -217,30 +201,6 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
       case SC_NEXTWINDOW:
       case SC_PREVWINDOW:
         DoAppSwitch( wParam, lParam);
-        break;
-
-      case SC_HOTKEY:
-        {
-           HWND hwnd, hWndLastActive;
-           PWND pWnd;
-
-           hwnd = (HWND)lParam;
-           pWnd = ValidateHwnd(hwnd);
-           if (pWnd)
-           {
-              hWndLastActive = GetLastActivePopup(hwnd);
-              if (hWndLastActive)
-              {
-                 hwnd = hWndLastActive;
-                 pWnd = ValidateHwnd(hwnd);
-              }
-              SetForegroundWindow(hwnd);
-              if (pWnd->style & WS_MINIMIZE)
-              {
-                 PostMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
-              }
-           }
-        }
         break;
 
       default:

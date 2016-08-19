@@ -55,3 +55,30 @@ add_dependencies(memcmp psdk)
 add_library(getopt misc/getopt.c)
 add_target_compile_definitions(getopt _DLL __USE_CRTIMP)
 add_dependencies(getopt psdk)
+
+add_library(strtol
+    string/ctype.c
+    string/iswctype.c
+    string/strtoi64.c
+    string/strtol.c
+    string/strtoul.c
+    string/strtoull.c
+    string/wctype.c)
+add_target_compile_definitions(strtol _LIBCNT_)
+add_dependencies(strtol psdk)
+
+
+if(ARCH STREQUAL "i386")
+    list(APPEND ATAN2_ASM_SOURCE math/i386/atan2_asm.s)
+elseif(ARCH STREQUAL "amd64")
+    list(APPEND ATAN2_ASM_SOURCE math/amd64/atan2.S)
+elseif(ARCH STREQUAL "arm")
+    list(APPEND ATAN2_ASM_SOURCE math/arm/atan2.s)
+endif()
+
+add_asm_files(atan2_asm ${ATAN2_ASM_SOURCE})
+add_library(atan2 ${atan2_asm})
+set_target_properties(atan2 PROPERTIES LINKER_LANGUAGE "C")
+add_dependencies(atan2 asm)
+
+

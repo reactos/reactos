@@ -679,12 +679,6 @@ IntIsScrollBarVisible(PWND pWnd, INT hBar)
   return !(sbi.rgstate[0] & STATE_SYSTEM_OFFSCREEN);
 }
 
-BOOL
-UserHasMenu(PWND pWnd, ULONG Style)
-{
-   return (!(Style & WS_CHILD) && UlongToHandle(pWnd->IDMenu) != 0);
-}
-
 /*
  * FIXME:
  * - Cache bitmaps, then just bitblt instead of calling DFC() (and
@@ -852,7 +846,7 @@ VOID UserDrawCaptionBar(
 
    if (!(Flags & DC_NOVISIBLE) && !IntIsWindowVisible(pWnd)) return;
 
-   ERR("UserDrawCaptionBar: pWnd %p, hDc %p, Flags 0x%x.\n", pWnd, hDC, Flags);
+   TRACE("UserDrawCaptionBar: pWnd %p, hDc %p, Flags 0x%x.\n", pWnd, hDC, Flags);
 
    Style = pWnd->style;
    ExStyle = pWnd->ExStyle;
@@ -949,12 +943,12 @@ VOID UserDrawCaptionBar(
 
    if (!(Style & WS_MINIMIZE))
    {
-      PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu));
       /* Draw menu bar */
-      if (menu && !(Style & WS_CHILD))
+      if (pWnd->state & WNDS_HASMENU && pWnd->IDMenu) // Should be pWnd->spmenu
       {
+          PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu)); // FIXME!
           TempRect = CurrentRect;
-          TempRect.bottom = TempRect.top + menu->cyMenu;
+          TempRect.bottom = TempRect.top + menu->cyMenu; // Should be pWnd->spmenu->cyMenu;
           CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
       }
 
@@ -1118,13 +1112,16 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
 
    if (!(Style & WS_MINIMIZE))
    {
-     PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu));
      /* Draw menu bar */
-     if (menu && !(Style & WS_CHILD))
+     if (pWnd->state & WNDS_HASMENU && pWnd->IDMenu) // Should be pWnd->spmenu
      {
-         TempRect = CurrentRect;
-         TempRect.bottom = TempRect.top + menu->cyMenu;
-         if (!(Flags & DC_NOSENDMSG)) CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
+         if (!(Flags & DC_NOSENDMSG))
+         {
+             PMENU menu = UserGetMenuObject(UlongToHandle(pWnd->IDMenu)); // FIXME!
+             TempRect = CurrentRect;
+             TempRect.bottom = TempRect.top + menu->cyMenu; // Should be pWnd->spmenu->cyMenu;
+             CurrentRect.top += MENU_DrawMenuBar(hDC, &TempRect, pWnd, FALSE);
+         }
      }
 
      if (ExStyle & WS_EX_CLIENTEDGE)
@@ -1225,7 +1222,7 @@ LRESULT NC_HandleNCCalcSize( PWND Wnd, WPARAM wparam, RECTL *Rect, BOOL Suspende
             Rect->top += UserGetSystemMetrics(SM_CYCAPTION);
       }
 
-      if (Wnd->IDMenu && ((Wnd->style & (WS_CHILD | WS_POPUP)) != WS_CHILD))
+      if (HAS_MENU(Wnd, Style))
       {
          HDC hDC = UserGetDCEx(Wnd, 0, DCX_USESTYLE | DCX_WINDOW);
 

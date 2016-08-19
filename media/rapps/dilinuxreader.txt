@@ -19,6 +19,11 @@ License = Gratuită
 Description = Un mod facil de acces între Windows/ReactOS și sistemele de fișiere Ext2/Ext3/Ext4, HFS și ReiserFS.
 Size = 20,4 Mio
 
+[Section.0419]
+License = Бесплатно
+Description = Просмотр Linux разделов в Windows/ReactOS. Поддержка файловых систем Ext2/Ext3/Ext4, HFS и ReiserFS.
+Size = 20,4 MiB
+
 [Section.041f]
 Name = DiskInternals Linux Okuyucu
 License = Ücretsiz

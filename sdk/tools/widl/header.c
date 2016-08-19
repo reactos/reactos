@@ -35,6 +35,7 @@
 #include "header.h"
 #include "expr.h"
 #include "typetree.h"
+#include "typelib.h"
 
 static int indentation = 0;
 static int is_object_interface = 0;
@@ -1009,6 +1010,16 @@ void write_args(FILE *h, const var_list_t *args, const char *name, int method, i
             /* Output default value only if all following arguments also have default value. */
             LIST_FOR_EACH_ENTRY_REV( tail_arg, args, const var_t, entry ) {
                 if(tail_arg == arg) {
+                    expr_t bstr;
+
+                    /* Fixup the expression type for a BSTR like midl does. */
+                    if (get_type_vt(arg->type) == VT_BSTR && expr->type == EXPR_STRLIT)
+                    {
+                        bstr = *expr;
+                        bstr.type = EXPR_WSTRLIT;
+                        expr = &bstr;
+                    }
+
                     fprintf(h, " = ");
                     write_expr( h, expr, 0, 1, NULL, NULL, "" );
                     break;

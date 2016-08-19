@@ -464,7 +464,7 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
         pDelHost->dwIndex = pIpNetTable->table[0].dwIndex;
     }
 
-    if (bFlushTable == TRUE)
+    if (bFlushTable != FALSE)
     {
         /* delete arp cache */
         if (FlushIpNetTable(pDelHost->dwIndex) != NO_ERROR)
@@ -568,24 +568,30 @@ INT main(int argc, char* argv[])
                      else if ((argc == 5) && ((strcmp(argv[3], "-N")) == 0))
                          DisplayArpEntries(argv[2], argv[4]);
                      else
+                     {
                          Usage();
                          return EXIT_FAILURE;
+                     }
                      break;
            case 'd': if (argc == 3)
                          Deletehost(argv[2], NULL);
                      else if (argc == 4)
                          Deletehost(argv[2], argv[3]);
                      else
+                     {
                          Usage();
                          return EXIT_FAILURE;
+                     }
                      break;
            case 's': if (argc == 4)
                          Addhost(argv[2], argv[3], NULL);
                      else if (argc == 5)
                          Addhost(argv[2], argv[3], argv[4]);
                      else
+                     {
                          Usage();
                          return EXIT_FAILURE;
+                     }
                      break;
            default:
               Usage();

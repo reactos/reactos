@@ -75,8 +75,8 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
     PVOID BaseAddress = NULL;
     SIZE_T EnviroSize;
     SIZE_T Size;
-    PWCHAR Environment = 0;
-    DPRINT("RtlpInitEnvironment (hProcess: %p, Peb: %p Params: %p)\n",
+    PWCHAR Environment = NULL;
+    DPRINT("RtlpInitEnvironment(ProcessHandle: %p, Peb: %p Params: %p)\n",
             ProcessHandle, Peb, ProcessParameters);
 
     /* Give the caller 1MB if he requested it */
@@ -148,18 +148,28 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
     }
 
     /* Write the Parameter Block */
-    ZwWriteVirtualMemory(ProcessHandle,
-                         BaseAddress,
-                         ProcessParameters,
-                         ProcessParameters->Length,
-                         NULL);
+    Status = ZwWriteVirtualMemory(ProcessHandle,
+                                  BaseAddress,
+                                  ProcessParameters,
+                                  ProcessParameters->Length,
+                                  NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to write the Parameter Block\n");
+        return Status;
+    }
 
     /* Write pointer to Parameter Block */
-    ZwWriteVirtualMemory(ProcessHandle,
-                         &Peb->ProcessParameters,
-                         &BaseAddress,
-                         sizeof(BaseAddress),
-                         NULL);
+    Status = ZwWriteVirtualMemory(ProcessHandle,
+                                  &Peb->ProcessParameters,
+                                  &BaseAddress,
+                                  sizeof(BaseAddress),
+                                  NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to write pointer to Parameter Block\n");
+        return Status;
+    }
 
     /* Return */
     return STATUS_SUCCESS;
@@ -209,7 +219,7 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
         return Status;
     }
 
-    /* Clean out the CurDir Handle if we won't use it */
+    /* Clean out the current directory handle if we won't use it */
     if (!InheritHandles) ProcessParameters->CurrentDirectory.Handle = NULL;
 
     /* Use us as parent if none other specified */
@@ -276,10 +286,82 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
         return Status;
     }
 
+    /* Duplicate the standard handles */
+    Status = STATUS_SUCCESS;
+    _SEH2_TRY
+    {
+        if (ProcessParameters->StandardInput)
+        {
+            Status = ZwDuplicateObject(ParentProcess,
+                                       ProcessParameters->StandardInput,
+                                       ProcessInfo->ProcessHandle,
+                                       &ProcessParameters->StandardInput,
+                                       0,
+                                       0,
+                                       DUPLICATE_SAME_ACCESS |
+                                       DUPLICATE_SAME_ATTRIBUTES);
+            if (!NT_SUCCESS(Status))
+            {
+                _SEH2_LEAVE;
+            }
+        }
+
+        if (ProcessParameters->StandardOutput)
+        {
+            Status = ZwDuplicateObject(ParentProcess,
+                                       ProcessParameters->StandardOutput,
+                                       ProcessInfo->ProcessHandle,
+                                       &ProcessParameters->StandardOutput,
+                                       0,
+                                       0,
+                                       DUPLICATE_SAME_ACCESS |
+                                       DUPLICATE_SAME_ATTRIBUTES);
+            if (!NT_SUCCESS(Status))
+            {
+                _SEH2_LEAVE;
+            }
+        }
+
+        if (ProcessParameters->StandardError)
+        {
+            Status = ZwDuplicateObject(ParentProcess,
+                                       ProcessParameters->StandardError,
+                                       ProcessInfo->ProcessHandle,
+                                       &ProcessParameters->StandardError,
+                                       0,
+                                       0,
+                                       DUPLICATE_SAME_ACCESS |
+                                       DUPLICATE_SAME_ATTRIBUTES);
+            if (!NT_SUCCESS(Status))
+            {
+                _SEH2_LEAVE;
+            }
+        }
+    }
+    _SEH2_FINALLY
+    {
+        if (!NT_SUCCESS(Status))
+        {
+            ZwClose(ProcessInfo->ProcessHandle);
+            ZwClose(hSection);
+        }
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
     /* Create Process Environment */
-    RtlpInitEnvironment(ProcessInfo->ProcessHandle,
-                        ProcessBasicInfo.PebBaseAddress,
-                        ProcessParameters);
+    Status = RtlpInitEnvironment(ProcessInfo->ProcessHandle,
+                                 ProcessBasicInfo.PebBaseAddress,
+                                 ProcessParameters);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not Create Process Environment\n");
+        ZwClose(ProcessInfo->ProcessHandle);
+        ZwClose(hSection);
+        return Status;
+    }
 
     /* Create the first Thread */
     Status = RtlCreateUserThread(ProcessInfo->ProcessHandle,

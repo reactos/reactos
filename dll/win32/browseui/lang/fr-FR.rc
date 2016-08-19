@@ -291,3 +291,10 @@ STRINGTABLE
 BEGIN
     IDS_STANDARD_TOOLBAR, "|Retour|Avancer|Dossier parent|Recherche|Dossiers|Aller vers|Copier dans|Supprimer|Annuler|Affichage|Stop|Rafraîchir|Home|Map Drive|Déconnecter|Favoris|Historique|Plein écran|Propriétés|Couper|Copier|Coller|Options des dossiers||"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_LEGAL_URL, "https://www.reactos.org/joining/faqs"
+    IDS_SORRY_CAPTION, "Désolé"
+    IDS_SORRY_MESSAGE, "ReactOS ne peut pas atteindre '%s' (erreur 0x%lx).\nVeuillez vérifier qu'un navigateur web est installé."
+END

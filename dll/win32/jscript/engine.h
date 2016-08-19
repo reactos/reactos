@@ -50,6 +50,8 @@
     X(int,        1, ARG_INT,    0)        \
     X(jmp,        0, ARG_ADDR,   0)        \
     X(jmp_z,      0, ARG_ADDR,   0)        \
+    X(local,      1, ARG_INT,    0)        \
+    X(local_ref,  1, ARG_INT,    ARG_UINT) \
     X(lshift,     1, 0,0)                  \
     X(lt,         1, 0,0)                  \
     X(lteq,       1, 0,0)                  \
@@ -72,6 +74,7 @@
     X(postinc,    1, ARG_INT,    0)        \
     X(preinc,     1, ARG_INT,    0)        \
     X(push_except,1, ARG_ADDR,   ARG_BSTR) \
+    X(push_ret,   1, 0,0)                  \
     X(push_scope, 1, 0,0)                  \
     X(regexp,     1, ARG_STR,    ARG_UINT) \
     X(rshift,     1, 0,0)                  \
@@ -90,7 +93,6 @@
     X(setret,     1, 0,0)                  \
     X(sub,        1, 0,0)                  \
     X(undefined,  1, 0,0)                  \
-    X(var_set,    1, ARG_BSTR,   0)        \
     X(void,       1, 0,0)                  \
     X(xor,        1, 0,0)
 
@@ -127,8 +129,14 @@ typedef struct {
     } u;
 } instr_t;
 
+typedef struct {
+    BSTR name;
+    int ref;
+} local_ref_t;
+
 typedef struct _function_code_t {
     BSTR name;
+    int local_ref;
     BSTR event_target;
     unsigned instr_off;
 
@@ -139,11 +147,19 @@ typedef struct _function_code_t {
     struct _function_code_t *funcs;
 
     unsigned var_cnt;
-    BSTR *variables;
+    struct {
+        BSTR name;
+        int func_id; /* -1 if not a function */
+    } *variables;
 
     unsigned param_cnt;
     BSTR *params;
+
+    unsigned locals_cnt;
+    local_ref_t *locals;
 } function_code_t;
+
+local_ref_t *lookup_local(const function_code_t*,const WCHAR*) DECLSPEC_HIDDEN;
 
 typedef struct _bytecode_t {
     LONG ref;
@@ -169,56 +185,67 @@ typedef struct _bytecode_t {
 HRESULT compile_script(script_ctx_t*,const WCHAR*,const WCHAR*,const WCHAR*,BOOL,BOOL,bytecode_t**) DECLSPEC_HIDDEN;
 void release_bytecode(bytecode_t*) DECLSPEC_HIDDEN;
 
-static inline void bytecode_addref(bytecode_t *code)
+static inline bytecode_t *bytecode_addref(bytecode_t *code)
 {
     code->ref++;
+    return code;
 }
 
 typedef struct _scope_chain_t {
     LONG ref;
     jsdisp_t *jsobj;
     IDispatch *obj;
+    struct _call_frame_t *frame;
     struct _scope_chain_t *next;
 } scope_chain_t;
 
 HRESULT scope_push(scope_chain_t*,jsdisp_t*,IDispatch*,scope_chain_t**) DECLSPEC_HIDDEN;
 void scope_release(scope_chain_t*) DECLSPEC_HIDDEN;
 
-static inline void scope_addref(scope_chain_t *scope)
+static inline scope_chain_t *scope_addref(scope_chain_t *scope)
 {
     scope->ref++;
+    return scope;
 }
 
 typedef struct _except_frame_t except_frame_t;
 struct _parser_ctx_t;
 
-struct _exec_ctx_t {
-    LONG ref;
-
-    struct _parser_ctx_t *parser;
-    bytecode_t *code;
-    script_ctx_t *script;
-    scope_chain_t *scope_chain;
-    jsdisp_t *var_disp;
-    IDispatch *this_obj;
-    function_code_t *func_code;
-    BOOL is_global;
-
-    jsval_t *stack;
-    unsigned stack_size;
-    unsigned top;
+typedef struct _call_frame_t {
+    unsigned ip;
     except_frame_t *except_frame;
+    unsigned stack_base;
+    scope_chain_t *scope;
+    scope_chain_t *base_scope;
+
     jsval_t ret;
 
-    unsigned ip;
-};
+    IDispatch *this_obj;
+    jsdisp_t *function_instance;
+    jsdisp_t *variable_obj;
+    jsdisp_t *arguments_obj;
+    DWORD flags;
 
-static inline void exec_addref(exec_ctx_t *ctx)
-{
-    ctx->ref++;
-}
+    unsigned argc;
+    unsigned pop_locals;
+    unsigned arguments_off;
+    unsigned variables_off;
+    unsigned pop_variables;
 
-void exec_release(exec_ctx_t*) DECLSPEC_HIDDEN;
-HRESULT create_exec_ctx(script_ctx_t*,IDispatch*,jsdisp_t*,scope_chain_t*,BOOL,exec_ctx_t**) DECLSPEC_HIDDEN;
-HRESULT exec_source(exec_ctx_t*,bytecode_t*,function_code_t*,BOOL,jsval_t*) DECLSPEC_HIDDEN;
+    bytecode_t *bytecode;
+    function_code_t *function;
+
+    struct _call_frame_t *prev_frame;
+} call_frame_t;
+
+#define EXEC_GLOBAL            0x0001
+#define EXEC_CONSTRUCTOR       0x0002
+#define EXEC_RETURN_TO_INTERP  0x0004
+#define EXEC_EVAL              0x0008
+
+HRESULT exec_source(script_ctx_t*,DWORD,bytecode_t*,function_code_t*,scope_chain_t*,IDispatch*,
+        jsdisp_t*,jsdisp_t*,unsigned,jsval_t*,jsval_t*) DECLSPEC_HIDDEN;
+
 HRESULT create_source_function(script_ctx_t*,bytecode_t*,function_code_t*,scope_chain_t*,jsdisp_t**) DECLSPEC_HIDDEN;
+HRESULT setup_arguments_object(script_ctx_t*,call_frame_t*) DECLSPEC_HIDDEN;
+void detach_arguments_object(jsdisp_t*) DECLSPEC_HIDDEN;

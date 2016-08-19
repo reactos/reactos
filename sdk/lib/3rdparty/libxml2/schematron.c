@@ -133,7 +133,7 @@ struct _xmlSchematron {
     int flags;			/* specific to this schematron */
 
     void *_private;		/* unused by the library */
-    xmlDictPtr dict;		/* the dictionnary used internally */
+    xmlDictPtr dict;		/* the dictionary used internally */
 
     const xmlChar *title;	/* the title if any */
 
@@ -186,7 +186,7 @@ struct _xmlSchematronParserCtxt {
     const char *buffer;
     int size;
 
-    xmlDictPtr dict;            /* dictionnary for interned string names */
+    xmlDictPtr dict;            /* dictionary for interned string names */
 
     int nberrors;
     int err;
@@ -245,7 +245,7 @@ xmlSchematronPErrMemory(xmlSchematronParserCtxtPtr ctxt,
  *
  * Handle a parser error
  */
-static void
+static void LIBXML_ATTR_FORMAT(4,0)
 xmlSchematronPErr(xmlSchematronParserCtxtPtr ctxt, xmlNodePtr node, int error,
               const char *msg, const xmlChar * str1, const xmlChar * str2)
 {

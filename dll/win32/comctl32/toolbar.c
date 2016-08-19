@@ -925,7 +925,7 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, 
     HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
 
     rc = btnPtr->rect;
-    CopyRect (&rcArrow, &rc);
+    rcArrow = rc;
 
     /* separator - doesn't send NM_CUSTOMDRAW */
     if (btnPtr->fsStyle & BTNS_SEP) {
@@ -979,8 +979,8 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, 
     /* copy text & bitmap rects after adjusting for drop-down arrow
      * so that text & bitmap is centered in the rectangle not containing
      * the arrow */
-    CopyRect(&rcText, &rc);
-    CopyRect(&rcBitmap, &rc);
+    rcText = rc;
+    rcBitmap = rc;
 
     /* Center the bitmap horizontally and vertically */
     if (dwStyle & TBSTYLE_LIST)
@@ -1007,8 +1007,7 @@ TOOLBAR_DrawButton (const TOOLBAR_INFO *infoPtr, TBUTTON_INFO *btnPtr, HDC hdc, 
     /* calculate text position */
     if (lpText)
     {
-        rcText.left += GetSystemMetrics(SM_CXEDGE);
-        rcText.right -= GetSystemMetrics(SM_CXEDGE);
+        InflateRect(&rcText, -GetSystemMetrics(SM_CXEDGE), 0);
         if (dwStyle & TBSTYLE_LIST)
         {
             rcText.left += infoPtr->nBitmapWidth + infoPtr->iListGap + 2;
@@ -1290,9 +1289,7 @@ TOOLBAR_MeasureString(const TOOLBAR_INFO *infoPtr, const TBUTTON_INFO *btnPtr,
 	    GetTextExtentPoint32W (hdc, lpText, strlenW (lpText), lpSize);
 
 	    /* feed above size into the rectangle for DrawText */
-	    myrect.left = myrect.top = 0;
-	    myrect.right = lpSize->cx;
-	    myrect.bottom = lpSize->cy;
+            SetRect(&myrect, 0, 0, lpSize->cx, lpSize->cy);
 
 	    /* Use DrawText to get true size as drawn (less pesky "&") */
 	    DrawTextW (hdc, lpText, -1, &myrect, DT_VCENTER | DT_SINGLELINE |
@@ -2736,9 +2733,9 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			   lpdis->rcItem.right, lpdis->rcItem.bottom);
 
 		/* calculate button and text rectangles */
-		CopyRect (&rcButton, &lpdis->rcItem);
+                rcButton = lpdis->rcItem;
 		InflateRect (&rcButton, -1, -1);
-		CopyRect (&rcText, &rcButton);
+                rcText = rcButton;
 		rcButton.right = rcButton.left + custInfo->tbInfo->nBitmapWidth + 6;
 		rcText.left = rcButton.right + 2;
 
@@ -5706,7 +5703,7 @@ TOOLBAR_LButtonDown (TOOLBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
             RECT arrowRect;
             infoPtr->nOldHit = nHit;
 
-            CopyRect(&arrowRect, &btnPtr->rect);
+            arrowRect = btnPtr->rect;
             arrowRect.left = max(btnPtr->rect.left, btnPtr->rect.right - DDARROW_WIDTH);
 
             /* for EX_DRAWDDARROWS style,  click must be in the drop-down arrow rect */
@@ -7017,7 +7014,7 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_SYSCOLORCHANGE:
 	    return TOOLBAR_SysColorChange ();
             
-    case WM_THEMECHANGED:
+        case WM_THEMECHANGED:
 #ifdef __REACTOS__
         return TOOLBAR_ThemeChanged(hwnd);
 #else

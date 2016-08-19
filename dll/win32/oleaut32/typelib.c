@@ -3536,6 +3536,10 @@ static ITypeLib2* ITypeLib2_Constructor_MSFT(LPVOID pLib, DWORD dwTLBLength)
     /* name, eventually add to a hash table */
     pTypeLibImpl->Name = MSFT_ReadName(&cx, tlbHeader.NameOffset);
 
+    TRACE("%s, syskind %d, version %d.%d, flags %04x\n",
+        debugstr_w(pTypeLibImpl->Name->str), pTypeLibImpl->syskind,
+        pTypeLibImpl->ver_major, pTypeLibImpl->ver_minor, pTypeLibImpl->libflags);
+
     /* help info */
     pTypeLibImpl->DocString = MSFT_ReadString(&cx, tlbHeader.helpstring);
     pTypeLibImpl->HelpFile = MSFT_ReadString(&cx, tlbHeader.helpfile);
@@ -7080,6 +7084,7 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
             UINT cNamedArgs = pDispParams->cNamedArgs;
             DISPID *rgdispidNamedArgs = pDispParams->rgdispidNamedArgs;
             UINT vargs_converted=0;
+            ULONG_PTR offset;
 
             hres = S_OK;
 
@@ -7327,7 +7332,11 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                     break;
                 }
             }
-            if (FAILED(hres)) goto func_fail; /* FIXME: we don't free changed types here */
+            if (FAILED(hres))
+            {
+                ERR("failed: %08x\n", hres);
+                goto func_fail; /* FIXME: we don't free changed types here */
+            }
 
             /* VT_VOID is a special case for return types, so it is not
              * handled in the general function */
@@ -7340,7 +7349,16 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                 if (FAILED(hres)) goto func_fail; /* FIXME: we don't free changed types here */
             }
 
-            hres = DispCallFunc(pIUnk, func_desc->oVft & 0xFFFC, func_desc->callconv,
+            offset = func_desc->oVft & 0xFFFC;
+#ifdef _WIN64
+            if (This->pTypeLib->syskind == SYS_WIN32)
+            {
+                offset *= 2;
+                TRACE("extended offset to %#lx for SYS_WIN32\n", offset);
+            }
+#endif
+            TRACE("func_desc->oVft %#x, offset %#lx\n", func_desc->oVft, offset);
+            hres = DispCallFunc(pIUnk, offset, func_desc->callconv,
                                 V_VT(&varresult), func_desc->cParams, rgvt,
                                 prgpvarg, &varresult);
 

@@ -153,6 +153,7 @@ PopQuerySystemPowerStateTraverse(PDEVICE_NODE DeviceNode,
                                  PVOID Context)
 {
     PPOWER_STATE_TRAVERSE_CONTEXT PowerStateContext = Context;
+    PDEVICE_OBJECT TopDeviceObject;
     NTSTATUS Status;
 
     DPRINT("PopQuerySystemPowerStateTraverse(%p, %p)\n", DeviceNode, Context);
@@ -163,13 +164,16 @@ PopQuerySystemPowerStateTraverse(PDEVICE_NODE DeviceNode,
     if (DeviceNode->Flags & DNF_LEGACY_DRIVER)
         return STATUS_SUCCESS;
 
-    Status = PopSendQuerySystemPowerState(DeviceNode->PhysicalDeviceObject,
+    TopDeviceObject = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
+
+    Status = PopSendQuerySystemPowerState(TopDeviceObject,
                                           PowerStateContext->SystemPowerState,
                                           PowerStateContext->PowerAction);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Device '%wZ' failed IRP_MN_QUERY_POWER\n", &DeviceNode->InstancePath);
     }
+    ObDereferenceObject(TopDeviceObject);
 
 #if 0
     return Status;
@@ -183,6 +187,7 @@ PopSetSystemPowerStateTraverse(PDEVICE_NODE DeviceNode,
                                PVOID Context)
 {
     PPOWER_STATE_TRAVERSE_CONTEXT PowerStateContext = Context;
+    PDEVICE_OBJECT TopDeviceObject;
     NTSTATUS Status;
 
     DPRINT("PopSetSystemPowerStateTraverse(%p, %p)\n", DeviceNode, Context);
@@ -196,13 +201,22 @@ PopSetSystemPowerStateTraverse(PDEVICE_NODE DeviceNode,
     if (DeviceNode->Flags & DNF_LEGACY_DRIVER)
         return STATUS_SUCCESS;
 
-    Status = PopSendSetSystemPowerState(DeviceNode->PhysicalDeviceObject,
+    TopDeviceObject = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
+    if (TopDeviceObject == PowerStateContext->PowerDevice)
+    {
+        ObDereferenceObject(TopDeviceObject);
+        return STATUS_SUCCESS;
+    }
+
+    Status = PopSendSetSystemPowerState(TopDeviceObject,
                                         PowerStateContext->SystemPowerState,
                                         PowerStateContext->PowerAction);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Device '%wZ' failed IRP_MN_SET_POWER\n", &DeviceNode->InstancePath);
     }
+
+    ObDereferenceObject(TopDeviceObject);
 
 #if 0
     return Status;

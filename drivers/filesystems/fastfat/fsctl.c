@@ -445,7 +445,6 @@ VfatMount(
     Status = VfatMountDevice(DeviceExt, DeviceToMount);
     if (!NT_SUCCESS(Status))
     {
-        /* FIXME: delete device object */
         goto ByeBye;
     }
 
@@ -576,7 +575,7 @@ VfatMount(
     }
 
     VolumeFcb->Flags = FCB_IS_VOLUME;
-    VolumeFcb->RFCB.FileSize.QuadPart = DeviceExt->FatInfo.Sectors * DeviceExt->FatInfo.BytesPerSector;
+    VolumeFcb->RFCB.FileSize.QuadPart = (LONGLONG) DeviceExt->FatInfo.Sectors * DeviceExt->FatInfo.BytesPerSector;
     VolumeFcb->RFCB.ValidDataLength = VolumeFcb->RFCB.FileSize;
     VolumeFcb->RFCB.AllocationSize = VolumeFcb->RFCB.FileSize;
     DeviceExt->VolumeFcb = VolumeFcb;

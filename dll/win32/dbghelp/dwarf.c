@@ -430,6 +430,7 @@ static void dwarf2_swallow_attribute(dwarf2_traverse_context_t* ctx,
 
     switch (abbrev_attr->form)
     {
+    case DW_FORM_flag_present: step = 0; break;
     case DW_FORM_ref_addr:
     case DW_FORM_addr:   step = ctx->word_size; break;
     case DW_FORM_flag:
@@ -475,6 +476,11 @@ static void dwarf2_fill_attr(const dwarf2_parse_context_t* ctx,
     case DW_FORM_flag:
         attr->u.uvalue = dwarf2_get_byte(data);
         TRACE("flag<0x%lx>\n", attr->u.uvalue);
+        break;
+
+    case DW_FORM_flag_present:
+        attr->u.uvalue = 1;
+        TRACE("flag_present\n");
         break;
 
     case DW_FORM_data1:

@@ -63,6 +63,7 @@
 #define FT_INT_MAX     INT_MAX
 #define FT_INT_MIN     INT_MIN
 #define FT_UINT_MAX    UINT_MAX
+#define FT_LONG_MIN    LONG_MIN
 #define FT_LONG_MAX    LONG_MAX
 #define FT_ULONG_MAX   ULONG_MAX
 

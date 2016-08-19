@@ -97,6 +97,8 @@ HRESULT WINAPI DllRegisterServer(void)
     TRACE("\n");
 
     res = __wine_register_resources( DEVENUM_hInstance );
+    if (FAILED(res))
+        return res;
 
 #ifdef __REACTOS__
     /* Quartz is needed for IFilterMapper2 */

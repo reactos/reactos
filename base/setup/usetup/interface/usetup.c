@@ -2403,7 +2403,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
     ULONGLONG DiskSize;
     ULONGLONG PartSize;
     PCHAR Unit;
-    CHAR PartType[32];
+    CHAR PartTypeString[32];
 
     if (PartitionList == NULL ||
         PartitionList->CurrentDisk == NULL ||
@@ -2418,7 +2418,9 @@ DeletePartitionPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(DELETE_PARTITION_PAGE);
 
-    GetPartTypeStringFromPartitionType(PartEntry->PartitionType, PartType, 30);
+    GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
+                                       PartTypeString,
+                                       ARRAYSIZE(PartTypeString));
 
     PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
 #if 0
@@ -2440,7 +2442,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
         Unit = MUIGetString(STRING_KB);
     }
 
-    if (PartType == NULL)
+    if (*PartTypeString == '\0') // STRING_FORMATUNKNOWN ??
     {
         CONSOLE_PrintTextXY(6, 10,
                             MUIGetString(STRING_HDDINFOUNK2),
@@ -2456,7 +2458,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
                             "   %c%c  %s    %I64u %s",
                             (PartEntry->DriveLetter == 0) ? '-' : PartEntry->DriveLetter,
                             (PartEntry->DriveLetter == 0) ? '-' : ':',
-                            PartType,
+                            PartTypeString,
                             PartSize,
                             Unit);
     }
@@ -2558,6 +2560,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     PCHAR DiskUnit;
     PCHAR PartUnit;
     CHAR PartTypeString[32];
+    FORMATMACHINESTATE PreviousFormatState;
 
     DPRINT("SelectFileSystemPage()\n");
 
@@ -2592,6 +2595,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
+    PreviousFormatState = PartitionList->FormatState;
     switch (PartitionList->FormatState)
     {
         case Start:
@@ -2694,7 +2698,9 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     }
 
     /* adjust partition type */
-    GetPartTypeStringFromPartitionType(PartEntry->PartitionType, PartTypeString, 30);
+    GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
+                                       PartTypeString,
+                                       ARRAYSIZE(PartTypeString));
 
     if (PartEntry->AutoCreate == TRUE)
     {
@@ -2705,7 +2711,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
                             PartEntry->PartitionNumber,
                             PartSize,
                             PartUnit,
-                            PartType);
+                            PartTypeString);
 #endif
 
         CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDINFOPARTZEROED),
@@ -2748,7 +2754,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     {
         CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_INSTALLONPART));
 
-        if (PartTypeString == NULL)
+        if (*PartTypeString == '\0') // STRING_FORMATUNKNOWN ??
         {
             CONSOLE_PrintTextXY(8, 10,
                                 MUIGetString(STRING_HDDINFOUNK4),
@@ -2827,6 +2833,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
                  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
         {
+            PartitionList->FormatState = Start;
             return SELECT_PARTITION_PAGE;
         }
         else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -2852,6 +2859,8 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
             }
         }
     }
+
+    PartitionList->FormatState = PreviousFormatState;
 
     return SELECT_FILE_SYSTEM_PAGE;
 }

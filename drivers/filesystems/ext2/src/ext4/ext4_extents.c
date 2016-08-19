@@ -23,6 +23,7 @@
 #pragma warning(disable: 4244)
 #endif
 
+
 /*
  * used by extent splitting.
  */
@@ -2174,7 +2175,11 @@ fix_extent_len:
 /*
  * returns 1 if current index have to be freed (even partial)
  */
-static inline int
+#ifndef __REACTOS__
+static int inline
+#else
+inline int
+#endif
 ext4_ext_more_to_rm(struct ext4_ext_path *path)
 {
 	BUG_ON(path->p_idx == NULL);
@@ -2193,9 +2198,7 @@ ext4_ext_more_to_rm(struct ext4_ext_path *path)
 
 int ext4_ext_remove_space(void *icb, struct inode *inode, unsigned long start)
 {
-#ifndef __REACTOS__
 	struct super_block *sb = inode->i_sb;
-#endif
 	int depth = ext_depth(inode);
 	struct ext4_ext_path *path;
 	handle_t *handle = NULL;

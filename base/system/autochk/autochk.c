@@ -275,6 +275,14 @@ LoadProvider(
     {
       RtlInitUnicodeString(&ProviderDll, L"ubtrfs.dll");
     }
+    else if (wcscmp(FileSystem, L"RFSD") == 0)
+    {
+      RtlInitUnicodeString(&ProviderDll, L"ureiserfs.dll");
+    }
+    else if (wcscmp(FileSystem, L"FFS") == 0)
+    {
+      RtlInitUnicodeString(&ProviderDll, L"uffs.dll");
+    }
     else
     {
       return NULL;

@@ -61,6 +61,7 @@ target_link_libraries(gdi32
     win32ksys
     dxguid
     msvcrtex
+    atan2
     ${PSEH_LIB})
 
 add_importlibs(gdi32 user32 advapi32 kernel32 ntdll)

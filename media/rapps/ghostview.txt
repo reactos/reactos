@@ -22,6 +22,10 @@ License = Licență publică gratuită „Aladdin”
 Description = O interfață grafică pentru GhostScript.
 Size = 1,9 Mio
 
+[Section.0419]
+Description = Графический интерфейс для Ghostscript.
+Size = 1,9 MiB
+
 [Section.041f]
 License = Aladdin Özgür Kamu Ruhsatı
 Description = Ghostscript için bir çizgelik arayüz.

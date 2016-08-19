@@ -1867,11 +1867,12 @@ CURSORICON_CopyImage(
         TRACE("Got module %wZ, resource %p (%S).\n", &ustrModule,
             ustrRsrc.Buffer, IS_INTRESOURCE(ustrRsrc.Buffer) ? L"" : ustrRsrc.Buffer);
 
-        /* Get the module handle */
-        if (!GetModuleHandleExW(0, ustrModule.Buffer, &hModule))
+        /* Get the module handle or load the module */
+        hModule = LoadLibraryExW(ustrModule.Buffer, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE | LOAD_LIBRARY_AS_DATAFILE);
+        if (!hModule)
         {
-            /* This should never happen */
-            ERR("Invalid handle? Module='%wZ', error %lu.\n", &ustrModule, GetLastError());
+            DWORD err = GetLastError();
+            ERR("Unable to load/use module '%wZ' in process %lu, error %lu.\n", &ustrModule, GetCurrentProcessId(), err);
             SetLastError(ERROR_INVALID_PARAMETER);
             goto leave;
         }

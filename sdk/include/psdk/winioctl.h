@@ -197,6 +197,9 @@ extern "C" {
 #ifdef __REACTOS__
 #define PARTITION_OLD_LINUX               0x43
 #define PARTITION_LINUX                   0x83
+#define PARTITION_FREEBSD                 0xA5
+#define PARTITION_OPENBSD                 0xA6
+#define PARTITION_NETBSD                  0xA9
 #endif
 #define SERIAL_LSRMST_ESCAPE          0
 #define SERIAL_LSRMST_LSR_DATA        1
@@ -597,7 +600,10 @@ typedef struct {
     ((t&~PARTITION_NTFT)==PARTITION_FAT32_XINT13)||\
     ((t&~PARTITION_NTFT)==PARTITION_XINT13)||\
     ((t&~PARTITION_NTFT)==PARTITION_LINUX)||\
-    ((t&~PARTITION_NTFT)==PARTITION_OLD_LINUX))
+    ((t&~PARTITION_NTFT)==PARTITION_OLD_LINUX)||\
+    ((t&~PARTITION_NTFT)==PARTITION_FREEBSD)||\
+    ((t&~PARTITION_NTFT)==PARTITION_OPENBSD)||\
+    ((t&~PARTITION_NTFT)==PARTITION_NETBSD))
 #else
 #define IsRecognizedPartition(t)\
   (((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_FAT_12))||\

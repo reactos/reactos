@@ -326,7 +326,7 @@
                                       /* Point to axes after MM_Var struct */
     mmvar->namedstyle      = NULL;
 
-    for ( i = 0 ; i < mmaster.num_axis; ++i )
+    for ( i = 0; i < mmaster.num_axis; ++i )
     {
       mmvar->axis[i].name    = mmaster.axis[i].name;
       mmvar->axis[i].minimum = INT_TO_FIXED( mmaster.axis[i].minimum);
@@ -1544,7 +1544,7 @@
       /*                                                         */
       if ( face->type1.private_dict.lenIV >= 0 )
       {
-        FT_Byte*  temp;
+        FT_Byte*  temp = NULL;
 
 
         /* some fonts define empty subr records -- this is not totally */
@@ -1748,7 +1748,7 @@
         if ( face->type1.private_dict.lenIV >= 0 &&
              n < num_glyphs + TABLE_EXTEND       )
         {
-          FT_Byte*  temp;
+          FT_Byte*  temp = NULL;
 
 
           if ( size <= (FT_ULong)face->type1.private_dict.lenIV )

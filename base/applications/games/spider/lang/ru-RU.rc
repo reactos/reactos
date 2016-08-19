@@ -50,7 +50,7 @@ BEGIN
     IDS_SPI_NAME "Пасьянс ""Паук"""
     IDS_SPI_ABOUT "Пасьянс ""Паук"", Gregor Schneider\n\nCardLib версии 1.0"
     IDS_SPI_QUIT "Выйти из текущей игры?"
-    IDS_SPI_WIN "Поздравляем, вы выйграли!"
+    IDS_SPI_WIN "Поздравляем, вы выиграли!"
     IDS_SPI_DEAL "Попробовать снова?"
 END
 

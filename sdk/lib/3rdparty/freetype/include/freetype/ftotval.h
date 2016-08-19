@@ -106,12 +106,12 @@ FT_BEGIN_HEADER
 #define FT_VALIDATE_JSTF  0x1000
 #define FT_VALIDATE_MATH  0x2000
 
-#define FT_VALIDATE_OT  FT_VALIDATE_BASE | \
-                        FT_VALIDATE_GDEF | \
-                        FT_VALIDATE_GPOS | \
-                        FT_VALIDATE_GSUB | \
-                        FT_VALIDATE_JSTF | \
-                        FT_VALIDATE_MATH
+#define FT_VALIDATE_OT  ( FT_VALIDATE_BASE | \
+                          FT_VALIDATE_GDEF | \
+                          FT_VALIDATE_GPOS | \
+                          FT_VALIDATE_GSUB | \
+                          FT_VALIDATE_JSTF | \
+                          FT_VALIDATE_MATH )
 
  /**********************************************************************
   *

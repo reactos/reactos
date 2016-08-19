@@ -436,6 +436,8 @@ GpStatus WINGDIPAPI GdipSetPropertyItem(GpImage*,GDIPCONST PropertyItem*);
 /* ImageAttributes */
 GpStatus WINGDIPAPI GdipCreateImageAttributes(GpImageAttributes**);
 GpStatus WINGDIPAPI GdipDisposeImageAttributes(GpImageAttributes*);
+GpStatus WINGDIPAPI GdipGetImageAttributesAdjustedPalette(GpImageAttributes*,
+    ColorPalette*,ColorAdjustType);
 GpStatus WINGDIPAPI GdipSetImageAttributesCachedBackground(GpImageAttributes*,
     BOOL);
 GpStatus WINGDIPAPI GdipSetImageAttributesColorKeys(GpImageAttributes*,

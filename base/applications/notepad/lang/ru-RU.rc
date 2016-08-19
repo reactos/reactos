@@ -41,15 +41,15 @@ BEGIN
         MENUITEM "Вст&авить\tCtrl+V", CMD_PASTE
         MENUITEM "&Удалить\tDel", CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Найти", CMD_SEARCH
+        MENUITEM "&Найти...\tCtrl+F", CMD_SEARCH
         MENUITEM "Найти &далее\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Заменить\tCtrl+H", CMD_REPLACE
-        MENUITEM "Перейти к...\tCtrl+G", CMD_GOTO
+        MENUITEM "&Заменить...\tCtrl+H", CMD_REPLACE
+        MENUITEM "Перей&ти...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Выделить в&се", CMD_SELECT_ALL
+        MENUITEM "Выделить в&се \tCtrl+A", CMD_SELECT_ALL
         MENUITEM "Врем&я и дата\tF5", CMD_TIME_DATE
     END
-    POPUP "Фо&рмат"
+    POPUP "Фор&мат"
     BEGIN
         MENUITEM "&Перенос по словам", CMD_WRAP
         MENUITEM "&Шрифт...", CMD_FONT

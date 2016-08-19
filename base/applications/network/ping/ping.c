@@ -652,6 +652,7 @@ static BOOL Ping(VOID)
         else
             FormatOutput(IDS_COULD_NOT_TRANSMIT, WSAGetLastError());
         GlobalFree(Buffer);
+        LostCount++;
         return FALSE;
     }
 

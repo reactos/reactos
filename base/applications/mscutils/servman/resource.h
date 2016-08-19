@@ -122,7 +122,7 @@
 #define IDS_HINT_SYS_MAXIMIZE 21005
 #define IDS_HINT_SYS_CLOSE    21006
 
-/* properties dialog */
+/* General dialog */
 #define IDD_DLG_GENERAL 10001
 #define IDC_SERV_NAME   10002
 #define IDC_DISP_NAME   10003
@@ -136,6 +136,39 @@
 #define IDC_STOP        10102
 #define IDC_PAUSE       10103
 #define IDC_RESUME      10104
+
+/* Logon dialog */
+#define IDD_LOGON               11000
+#define IDC_LOGON_SYSTEMACCOUNT 11001
+#define IDC_LOGON_THISACCOUNT   11002
+#define IDC_LOGON_INTERACTIVE   11003
+#define IDC_LOGON_ACCOUNTNAME   11004
+#define IDC_LOGON_SEARCH        11005
+#define IDC_LOGON_PW1TEXT       11006
+#define IDC_LOGON_PASSWORD1     11007
+#define IDC_LOGON_PW2TEXT       11008
+#define IDC_LOGON_PASSWORD2     11009
+#define IDC_LOGON_HWPROFILE     11010
+#define IDC_LOGON_HWENABLE      11011
+#define IDC_LOGON_HWDISABLE     11012
+
+/* Recovery dialog */
+#define IDD_RECOVERY            11100
+#define IDC_FIRST_FAILURE       11101
+#define IDC_SECOND_FAILURE      11102
+#define IDC_SUBSEQUENT_FAILURES 11103
+#define IDC_RESET_TIME          11104
+#define IDC_RESTART_TEXT1       11105
+#define IDC_RESTART_TIME        11106
+#define IDC_RESTART_TEXT2       11107
+#define IDC_RUN_GROUPBOX        11108
+#define IDC_RUN_TEXT1           11109
+#define IDC_PROGRAM             11110
+#define IDC_BROWSE_PROGRAM      11111
+#define IDC_RUN_TEXT2           11112
+#define IDC_PARAMETERS          11113
+#define IDC_ADD_FAILCOUNT       11114
+#define IDC_RESTART_OPTIONS     11115
 
 /* dependancies dialog */
 #define IDD_DLG_DEPEND     20001
@@ -181,3 +214,11 @@
 #define IDC_STOP_DEPENDS    12001
 #define IDS_STOP_DEPENDS    12002
 #define IDC_STOP_DEPENDS_LB 12003
+
+#define IDS_NO_ACTION        12100
+#define IDS_RESTART_SERVICE  12101
+#define IDS_RUN_PROGRAM      12102
+#define IDS_RESTART_COMPUTER 12103
+
+#define IDS_NOT_SAME_PASSWORD 12150
+#define IDS_INVALID_PASSWORD  12151

@@ -1672,7 +1672,7 @@ PrintPartitionData(
         {
            GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
                                               PartTypeString,
-                                              30);
+                                              ARRAYSIZE(PartTypeString));
            PartType = PartTypeString;
         }
 

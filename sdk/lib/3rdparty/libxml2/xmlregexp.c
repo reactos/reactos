@@ -1544,6 +1544,7 @@ static int
 xmlFAGenerateTransitions(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr from,
 	                 xmlRegStatePtr to, xmlRegAtomPtr atom) {
     xmlRegStatePtr end;
+    int nullable = 0;
 
     if (atom == NULL) {
 	ERROR("genrate transition: atom == NULL");
@@ -1730,6 +1731,13 @@ xmlFAGenerateTransitions(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr from,
     if (xmlRegAtomPush(ctxt, atom) < 0) {
 	return(-1);
     }
+    if ((atom->quant == XML_REGEXP_QUANT_RANGE) &&
+        (atom->min == 0) && (atom->max > 0)) {
+	nullable = 1;
+	atom->min = 1;
+        if (atom->max == 1)
+	    atom->quant = XML_REGEXP_QUANT_OPT;
+    }
     xmlRegStateAddTrans(ctxt, from, atom, to, -1, -1);
     ctxt->state = end;
     switch (atom->quant) {
@@ -1747,11 +1755,8 @@ xmlFAGenerateTransitions(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr from,
 	    xmlRegStateAddTrans(ctxt, to, atom, to, -1, -1);
 	    break;
 	case XML_REGEXP_QUANT_RANGE:
-#if DV_test
-	    if (atom->min == 0) {
+	    if (nullable)
 		xmlFAGenerateEpsilonTransition(ctxt, from, to);
-	    }
-#endif
 	    break;
 	default:
 	    break;
@@ -5052,11 +5057,12 @@ xmlFAParseCharRange(xmlRegParserCtxtPtr ctxt) {
 	ERROR("Expecting the end of a char range");
 	return;
     }
-    NEXTL(len);
+
     /* TODO check that the values are acceptable character ranges for XML */
     if (end < start) {
 	ERROR("End of range is before start of range");
     } else {
+        NEXTL(len);
         xmlRegAtomAddRange(ctxt, ctxt->atom, ctxt->neg,
 		           XML_REGEXP_CHARVAL, start, end, NULL);
     }
@@ -6345,7 +6351,7 @@ struct _xmlExpCtxt {
 /**
  * xmlExpNewCtxt:
  * @maxNodes:  the maximum number of nodes
- * @dict:  optional dictionnary to use internally
+ * @dict:  optional dictionary to use internally
  *
  * Creates a new context for manipulating expressions
  *
@@ -7204,7 +7210,7 @@ xmlExpStringDerive(xmlExpCtxtPtr ctxt, xmlExpNodePtr exp,
         return(NULL);
     }
     /*
-     * check the string is in the dictionnary, if yes use an interned
+     * check the string is in the dictionary, if yes use an interned
      * copy, otherwise we know it's not an acceptable input
      */
     input = xmlDictExists(ctxt->dict, str, len);

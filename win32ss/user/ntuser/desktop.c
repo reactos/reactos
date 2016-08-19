@@ -3,7 +3,7 @@
  *  PROJECT:          ReactOS Win32k subsystem
  *  PURPOSE:          Desktops
  *  FILE:             subsystems/win32/win32k/ntuser/desktop.c
- *  PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *  PROGRAMMER:       Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 /* INCLUDES ******************************************************************/
@@ -60,7 +60,7 @@ IntDesktopObjectParse(IN PVOID ParseObject,
     UNICODE_STRING DesktopName;
     PBOOLEAN pContext = (PBOOLEAN) Context;
 
-    if(pContext)
+    if (pContext)
         *pContext = FALSE;
 
     /* Set the list pointers and loop the window station */
@@ -111,7 +111,7 @@ IntDesktopObjectParse(IN PVOID ParseObject,
         NextEntry = NextEntry->Flink;
     }
 
-    /* If we got here but this isn't a create, then fail */
+    /* If we got here but this isn't a create, just fail */
     if (!Context) return STATUS_OBJECT_NAME_NOT_FOUND;
 
     /* Create the desktop object */
@@ -180,14 +180,14 @@ IntDesktopOkToClose(
     PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS OkToCloseParameters = Parameters;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
-    if( pti == NULL)
+    if (pti == NULL)
     {
         /* This happens when we leak desktop handles */
         return STATUS_SUCCESS;
     }
 
     /* Do not allow the current desktop or the initial desktop to be closed */
-    if( OkToCloseParameters->Handle == pti->ppi->hdeskStartup ||
+    if (OkToCloseParameters->Handle == pti->ppi->hdeskStartup ||
         OkToCloseParameters->Handle == pti->hdesk)
     {
         return STATUS_ACCESS_DENIED;
@@ -246,31 +246,204 @@ InitDesktopImpl(VOID)
     return STATUS_SUCCESS;
 }
 
-static int GetSystemVersionString(LPWSTR buffer)
+static NTSTATUS
+GetSystemVersionString(OUT PWSTR pwszzVersion,
+                       IN SIZE_T cchDest,
+                       IN BOOLEAN InSafeMode,
+                       IN BOOLEAN AppendNtSystemRoot)
 {
-    int len;
-#if 0 // Disabled until versioning in win32k gets correctly implemented (hbelusca).
-    RTL_OSVERSIONINFOEXW versionInfo;
+    NTSTATUS Status;
 
-    versionInfo.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
+    RTL_OSVERSIONINFOEXW VerInfo;
+    UNICODE_STRING BuildLabString;
+    UNICODE_STRING CSDVersionString;
+    RTL_QUERY_REGISTRY_TABLE VersionConfigurationTable[] =
+    {
+        {
+            NULL,
+            RTL_QUERY_REGISTRY_DIRECT,
+            L"BuildLab",
+            &BuildLabString,
+            REG_NONE, NULL, 0
+        },
+        {
+            NULL,
+            RTL_QUERY_REGISTRY_DIRECT,
+            L"CSDVersion",
+            &CSDVersionString,
+            REG_NONE, NULL, 0
+        },
 
-    if (!NT_SUCCESS(RtlGetVersion((PRTL_OSVERSIONINFOW)&versionInfo)))
-        return 0;
+        {0}
+    };
 
-    if (versionInfo.dwMajorVersion <= 4)
-        len = swprintf(buffer,
-                       L"ReactOS Version %lu.%lu %s Build %lu",
-                       versionInfo.dwMajorVersion, versionInfo.dwMinorVersion,
-                       versionInfo.szCSDVersion, versionInfo.dwBuildNumber & 0xFFFF);
+    WCHAR BuildLabBuffer[256];
+    WCHAR VersionBuffer[256];
+    PWCHAR EndBuffer;
+
+    VerInfo.dwOSVersionInfoSize = sizeof(VerInfo);
+
+    /*
+     * This call is uniquely used to retrieve the current CSD numbers.
+     * All the rest (major, minor, ...) is either retrieved from the
+     * SharedUserData structure, or from the registry.
+     */
+    RtlGetVersion((PRTL_OSVERSIONINFOW)&VerInfo);
+
+    /*
+     * - Retrieve the BuildLab string from the registry (set by the kernel).
+     * - In kernel-mode, szCSDVersion is not initialized. Initialize it
+     *   and query its value from the registry.
+     */
+    RtlZeroMemory(BuildLabBuffer, sizeof(BuildLabBuffer));
+    RtlInitEmptyUnicodeString(&BuildLabString,
+                              BuildLabBuffer,
+                              sizeof(BuildLabBuffer));
+    RtlZeroMemory(VerInfo.szCSDVersion, sizeof(VerInfo.szCSDVersion));
+    RtlInitEmptyUnicodeString(&CSDVersionString,
+                              VerInfo.szCSDVersion,
+                              sizeof(VerInfo.szCSDVersion));
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
+                                    L"",
+                                    VersionConfigurationTable,
+                                    NULL,
+                                    NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Indicate nothing is there */
+        BuildLabString.Length = 0;
+        CSDVersionString.Length = 0;
+    }
+    /* NULL-terminate the strings */
+    BuildLabString.Buffer[BuildLabString.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    CSDVersionString.Buffer[CSDVersionString.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    EndBuffer = VersionBuffer;
+    if ( /* VerInfo.wServicePackMajor != 0 && */ CSDVersionString.Length)
+    {
+        /* Print the version string */
+        Status = RtlStringCbPrintfExW(VersionBuffer,
+                                      sizeof(VersionBuffer),
+                                      &EndBuffer,
+                                      NULL,
+                                      0,
+                                      L": %wZ",
+                                      &CSDVersionString);
+        if (!NT_SUCCESS(Status))
+        {
+            /* No version, NULL-terminate the string */
+            *EndBuffer = UNICODE_NULL;
+        }
+    }
     else
-        len = swprintf(buffer,
-                       L"ReactOS %s (Build %lu)",
-                       versionInfo.szCSDVersion, versionInfo.dwBuildNumber & 0xFFFF);
-#else
-    len = swprintf(buffer, L"ReactOS Version %S %S", KERNEL_VERSION_STR, KERNEL_VERSION_BUILD_STR);
-#endif
+    {
+        /* No version, NULL-terminate the string */
+        *EndBuffer = UNICODE_NULL;
+    }
 
-    return len;
+    if (InSafeMode)
+    {
+        /* String for Safe Mode */
+        Status = RtlStringCchPrintfW(pwszzVersion,
+                                     cchDest,
+                                     L"ReactOS Version %S %wZ (NT %u.%u Build %u%s)\n",
+                                     KERNEL_VERSION_STR,
+                                     &BuildLabString,
+                                     SharedUserData->NtMajorVersion,
+                                     SharedUserData->NtMinorVersion,
+                                     (VerInfo.dwBuildNumber & 0xFFFF),
+                                     VersionBuffer);
+
+        if (AppendNtSystemRoot && NT_SUCCESS(Status))
+        {
+            Status = RtlStringCbPrintfW(VersionBuffer,
+                                        sizeof(VersionBuffer),
+                                        L" - %s\n",
+                                        SharedUserData->NtSystemRoot);
+            if (NT_SUCCESS(Status))
+            {
+                /* Replace the last newline by a NULL, before concatenating */
+                EndBuffer = wcsrchr(pwszzVersion, L'\n');
+                if (EndBuffer) *EndBuffer = UNICODE_NULL;
+
+                /* The concatenated string has a terminating newline */
+                Status = RtlStringCchCatW(pwszzVersion,
+                                          cchDest,
+                                          VersionBuffer);
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Concatenation failed, put back the newline */
+                    if (EndBuffer) *EndBuffer = L'\n';
+                }
+            }
+
+            /* Override any failures as the NtSystemRoot string is optional */
+            Status = STATUS_SUCCESS;
+        }
+    }
+    else
+    {
+        /* Multi-string for Normal Mode */
+        Status = RtlStringCchPrintfW(pwszzVersion,
+                                     cchDest,
+                                     L"ReactOS Version %S\n"
+                                     L"Build %wZ\n"
+                                     L"Reporting NT %u.%u (Build %u%s)\n",
+                                     KERNEL_VERSION_STR,
+                                     &BuildLabString,
+                                     SharedUserData->NtMajorVersion,
+                                     SharedUserData->NtMinorVersion,
+                                     (VerInfo.dwBuildNumber & 0xFFFF),
+                                     VersionBuffer);
+
+        if (AppendNtSystemRoot && NT_SUCCESS(Status))
+        {
+            Status = RtlStringCbPrintfW(VersionBuffer,
+                                        sizeof(VersionBuffer),
+                                        L"%s\n",
+                                        SharedUserData->NtSystemRoot);
+            if (NT_SUCCESS(Status))
+            {
+                Status = RtlStringCchCatW(pwszzVersion,
+                                          cchDest,
+                                          VersionBuffer);
+            }
+
+            /* Override any failures as the NtSystemRoot string is optional */
+            Status = STATUS_SUCCESS;
+        }
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fall-back string */
+        Status = RtlStringCchPrintfW(pwszzVersion,
+                                     cchDest,
+                                     L"ReactOS Version %S %wZ\n",
+                                     KERNEL_VERSION_STR,
+                                     &BuildLabString);
+        if (!NT_SUCCESS(Status))
+        {
+            /* General failure, NULL-terminate the string */
+            pwszzVersion[0] = UNICODE_NULL;
+        }
+    }
+
+    /*
+     * Convert the string separators (newlines) into NULLs
+     * and NULL-terminate the multi-string.
+     */
+    while (*pwszzVersion)
+    {
+        EndBuffer = wcschr(pwszzVersion, L'\n');
+        if (!EndBuffer) break;
+        pwszzVersion = EndBuffer;
+
+        *pwszzVersion++ = UNICODE_NULL;
+    }
+    *pwszzVersion = UNICODE_NULL;
+
+    return Status;
 }
 
 
@@ -292,7 +465,7 @@ IntParseDesktopPath(PEPROCESS Process,
     *hWinSta = NULL;
     *hDesktop = NULL;
 
-    if(DesktopPath->Buffer != NULL && DesktopPath->Length > sizeof(WCHAR))
+    if (DesktopPath->Buffer != NULL && DesktopPath->Length > sizeof(WCHAR))
     {
         /*
          * Parse the desktop path string which can be in the form "WinSta\Desktop"
@@ -300,7 +473,7 @@ IntParseDesktopPath(PEPROCESS Process,
          */
 
         pwstrDesktop = wcschr(DesktopPath->Buffer, L'\\');
-        if(pwstrDesktop != NULL)
+        if (pwstrDesktop != NULL)
         {
             *pwstrDesktop = 0;
             pwstrDesktop++;
@@ -326,7 +499,7 @@ IntParseDesktopPath(PEPROCESS Process,
 #endif
     {
         /* We had no luck searching for opened handles, use WinSta0 now */
-        if(!pwstrWinsta)
+        if (!pwstrWinsta)
             pwstrWinsta = L"WinSta0";
     }
 
@@ -341,11 +514,11 @@ IntParseDesktopPath(PEPROCESS Process,
 #endif
     {
         /* We had no luck searching for opened handles, use Desktop now */
-        if(!pwstrDesktop)
+        if (!pwstrDesktop)
             pwstrDesktop = L"Default";
     }
 
-    if(*hWinSta == NULL)
+    if (*hWinSta == NULL)
     {
         swprintf(wstrWinstaFullName, L"%wZ\\%ws", &gustrWindowStationsDir, pwstrWinsta);
         RtlInitUnicodeString( &ObjectName, wstrWinstaFullName);
@@ -367,7 +540,7 @@ IntParseDesktopPath(PEPROCESS Process,
                                     NULL,
                                     (HANDLE*)hWinSta);
 
-        if(!NT_SUCCESS(Status))
+        if (!NT_SUCCESS(Status))
         {
             SetLastNtError(Status);
             ERR("Failed to reference window station %wZ PID: --!\n", &ObjectName );
@@ -375,7 +548,7 @@ IntParseDesktopPath(PEPROCESS Process,
         }
     }
 
-    if(*hDesktop == NULL)
+    if (*hDesktop == NULL)
     {
         RtlInitUnicodeString(&ObjectName, pwstrDesktop);
 
@@ -396,7 +569,7 @@ IntParseDesktopPath(PEPROCESS Process,
                                     NULL,
                                     (HANDLE*)hDesktop);
 
-        if(!NT_SUCCESS(Status))
+        if (!NT_SUCCESS(Status))
         {
             *hDesktop = NULL;
             NtClose(*hWinSta);
@@ -475,7 +648,7 @@ IntGetDesktopObjectHandle(PDESKTOP DesktopObject)
                                        ExDesktopObjectType,
                                        UserMode,
                                        (PHANDLE)&Ret);
-        if(!NT_SUCCESS(Status))
+        if (!NT_SUCCESS(Status))
         {
             /* Unable to create a handle */
             ERR("Unable to create a desktop handle\n");
@@ -512,9 +685,9 @@ IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
         TRACE("No active desktop\n");
         return;
     }
-    if(NewQueue != NULL)
+    if (NewQueue != NULL)
     {
-        if(NewQueue->Desktop != NULL)
+        if (NewQueue->Desktop != NULL)
         {
             TRACE("Message Queue already attached to another desktop!\n");
             return;
@@ -523,7 +696,7 @@ IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
         (void)InterlockedExchangePointer((PVOID*)&NewQueue->Desktop, pdo);
     }
     Old = (PUSER_MESSAGE_QUEUE)InterlockedExchangePointer((PVOID*)&pdo->ActiveMessageQueue, NewQueue);
-    if(Old != NULL)
+    if (Old != NULL)
     {
         (void)InterlockedExchangePointer((PVOID*)&Old->Desktop, 0);
         gpqForegroundPrev = Old;
@@ -692,7 +865,7 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
         case WM_WINDOWPOSCHANGING:
         {
             PWINDOWPOS pWindowPos = (PWINDOWPOS)lParam;
-            if((pWindowPos->flags & SWP_SHOWWINDOW) != 0)
+            if ((pWindowPos->flags & SWP_SHOWWINDOW) != 0)
             {
                 HDESK hdesk = IntGetDesktopObjectHandle(gpdeskInputDesktop);
                 IntSetThreadDesktop(hdesk, FALSE);
@@ -800,12 +973,12 @@ co_IntShowDesktop(PDESKTOP Desktop, ULONG Width, ULONG Height, BOOL bRedraw)
     UINT flags = SWP_NOACTIVATE|SWP_NOZORDER|SWP_SHOWWINDOW;
     ASSERT(pwnd);
 
-    if(!bRedraw)
+    if (!bRedraw)
         flags |= SWP_NOREDRAW;
 
     co_WinPosSetWindowPos(pwnd, NULL, 0, 0, Width, Height, flags);
 
-    if(bRedraw)
+    if (bRedraw)
         co_UserRedrawWindow( pwnd, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN | RDW_INVALIDATE );
 
     return STATUS_SUCCESS;
@@ -1006,16 +1179,14 @@ IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
 BOOL FASTCALL
 IntPaintDesktop(HDC hDC)
 {
+    static WCHAR s_wszSafeMode[] = L"Safe Mode"; // FIXME: Localize!
+
     RECTL Rect;
     HBRUSH DesktopBrush, PreviousBrush;
     HWND hWndDesktop;
     BOOL doPatBlt = TRUE;
     PWND WndDesktop;
-    static WCHAR s_wszSafeMode[] = L"Safe Mode";
-    int len;
-    COLORREF color_old;
-    UINT align_old;
-    int mode_old;
+    BOOLEAN InSafeMode;
 
     if (GdiGetClipBox(hDC, &Rect) == ERROR)
         return FALSE;
@@ -1026,7 +1197,10 @@ IntPaintDesktop(HDC hDC)
     if (!WndDesktop)
         return FALSE;
 
-    if (!UserGetSystemMetrics(SM_CLEANBOOT))
+    /* Retrieve the current SafeMode state */
+    InSafeMode = (UserGetSystemMetrics(SM_CLEANBOOT) != 0); // gpsi->aiSysMet[SM_CLEANBOOT];
+
+    if (!InSafeMode)
     {
         DesktopBrush = (HBRUSH)WndDesktop->pcls->hbrBackground;
 
@@ -1050,13 +1224,13 @@ IntPaintDesktop(HDC hDC)
             }
             else
             {
-                /* Find the upper left corner, can be negative if the bitmap is bigger then the screen */
+                /* Find the upper left corner, can be negative if the bitmap is bigger than the screen */
                 x = (sz.cx / 2) - (gspv.cxWallpaper / 2);
                 y = (sz.cy / 2) - (gspv.cyWallpaper / 2);
             }
 
             hWallpaperDC = NtGdiCreateCompatibleDC(hDC);
-            if(hWallpaperDC != NULL)
+            if (hWallpaperDC != NULL)
             {
                 HBITMAP hOldBitmap;
 
@@ -1064,7 +1238,7 @@ IntPaintDesktop(HDC hDC)
                 if (x > 0 || y > 0)
                 {
                     /* FIXME: Clip out the bitmap
-                       can be replaced with "NtGdiPatBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, PATCOPY | DSTINVERT);"
+                       can be replaced with "NtGdiPatBlt(hDC, x, y, gspv.cxWallpaper, gspv.cyWallpaper, PATCOPY | DSTINVERT);"
                        once we support DSTINVERT */
                     PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
                     NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
@@ -1078,7 +1252,7 @@ IntPaintDesktop(HDC hDC)
 
                 if (gspv.WallpaperMode == wmStretch)
                 {
-                    if(Rect.right && Rect.bottom)
+                    if (Rect.right && Rect.bottom)
                         NtGdiStretchBlt(hDC,
                                         x,
                                         y,
@@ -1095,9 +1269,9 @@ IntPaintDesktop(HDC hDC)
                 else if (gspv.WallpaperMode == wmTile)
                 {
                     /* Paint the bitmap across the screen then down */
-                    for(y = 0; y < Rect.bottom; y += gspv.cyWallpaper)
+                    for (y = 0; y < Rect.bottom; y += gspv.cyWallpaper)
                     {
-                        for(x = 0; x < Rect.right; x += gspv.cxWallpaper)
+                        for (x = 0; x < Rect.right; x += gspv.cxWallpaper)
                         {
                             NtGdiBitBlt(hDC,
                                         x,
@@ -1137,6 +1311,7 @@ IntPaintDesktop(HDC hDC)
         /* Black desktop background in Safe Mode */
         DesktopBrush = StockObjects[BLACK_BRUSH];
     }
+
     /* Background is set to none, clear the screen */
     if (doPatBlt)
     {
@@ -1146,64 +1321,188 @@ IntPaintDesktop(HDC hDC)
     }
 
     /*
-     * Display system version on the desktop background
+     * Display the system version on the desktop background
      */
-
-    if (g_PaintDesktopVersion || UserGetSystemMetrics(SM_CLEANBOOT))
+    if (InSafeMode || g_AlwaysDisplayVersion || g_PaintDesktopVersion)
     {
-        static WCHAR s_wszVersion[256] = {0};
-        RECTL rect;
+        NTSTATUS Status;
+        static WCHAR wszzVersion[1024] = L"\0";
 
-        if (*s_wszVersion)
+        /* Only used in normal mode */
+        // We expect at most 4 strings (3 for version, 1 for optional NtSystemRoot)
+        static POLYTEXTW VerStrs[4] = {{0},{0},{0},{0}};
+        INT i = 0;
+        INT len;
+
+        HFONT hFont1 = NULL, hFont2 = NULL, hOldFont = NULL;
+        COLORREF crText, color_old;
+        UINT align_old;
+        INT mode_old;
+        PDC pdc;
+
+        if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &Rect, 0))
         {
-            len = wcslen(s_wszVersion);
+            Rect.right  = UserGetSystemMetrics(SM_CXSCREEN);
+            Rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
         }
-        else
+
+        /*
+         * Set up the fonts (otherwise use default ones)
+         */
+
+        /* Font for the principal version string */
+        hFont1 = GreCreateFontIndirectW(&gspv.ncm.lfCaptionFont);
+        /* Font for the secondary version strings */
+        hFont2 = GreCreateFontIndirectW(&gspv.ncm.lfMenuFont);
+
+        if (hFont1)
+            hOldFont = NtGdiSelectFont(hDC, hFont1);
+
+        if (gspv.hbmWallpaper == NULL)
         {
-            len = GetSystemVersionString(s_wszVersion);
-        }
-
-        if (len)
-        {
-            if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0))
+            /* Retrieve the brush fill colour */
+            // TODO: The following code constitutes "GreGetBrushColor".
+            PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
+            pdc = DC_LockDc(hDC);
+            if (pdc)
             {
-                rect.right = UserGetSystemMetrics(SM_CXSCREEN);
-                rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
-            }
-
-            color_old = IntGdiSetTextColor(hDC, RGB(255,255,255));
-            align_old = IntGdiSetTextAlign(hDC, TA_RIGHT);
-            mode_old = IntGdiSetBkMode(hDC, TRANSPARENT);
-
-            if(!UserGetSystemMetrics(SM_CLEANBOOT))
-            {
-                GreExtTextOutW(hDC, rect.right - 16, rect.bottom - 48, 0, NULL, s_wszVersion, len, NULL, 0);
+                crText = pdc->eboFill.ulRGBColor;
+                DC_UnlockDc(pdc);
             }
             else
             {
-                /* Safe Mode */
-
-                /* Version information text in top center */
-                IntGdiSetTextAlign(hDC, TA_CENTER | TA_TOP);
-                GreExtTextOutW(hDC, (rect.right + rect.left)/2, rect.top + 3, 0, NULL, s_wszVersion, len, NULL, 0);
-
-                /* Safe Mode text in corners */
-                len = wcslen(s_wszSafeMode);
-                IntGdiSetTextAlign(hDC, TA_LEFT | TA_TOP);
-                GreExtTextOutW(hDC, rect.left, rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
-                IntGdiSetTextAlign(hDC, TA_RIGHT | TA_TOP);
-                GreExtTextOutW(hDC, rect.right, rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
-                IntGdiSetTextAlign(hDC, TA_LEFT | TA_BASELINE);
-                GreExtTextOutW(hDC, rect.left, rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
-                IntGdiSetTextAlign(hDC, TA_RIGHT | TA_BASELINE);
-                GreExtTextOutW(hDC, rect.right, rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
+                crText = RGB(0, 0, 0);
             }
+            NtGdiSelectBrush(hDC, PreviousBrush);
 
-            IntGdiSetBkMode(hDC, mode_old);
-            IntGdiSetTextAlign(hDC, align_old);
-            IntGdiSetTextColor(hDC, color_old);
+            /* Adjust text colour according to the brush */
+            if (GetRValue(crText) + GetGValue(crText) + GetBValue(crText) > 128 * 3)
+                crText = RGB(0, 0, 0);
+            else
+                crText = RGB(255, 255, 255);
+        }
+        else
+        {
+            /* Always use white when the text is displayed on top of a wallpaper */
+            crText = RGB(255, 255, 255);
+        }
+
+        color_old = IntGdiSetTextColor(hDC, crText);
+        align_old = IntGdiSetTextAlign(hDC, TA_RIGHT);
+        mode_old  = IntGdiSetBkMode(hDC, TRANSPARENT);
+
+        /* Display the system version information */
+        if (!*wszzVersion)
+        {
+            Status = GetSystemVersionString(wszzVersion,
+                                            ARRAYSIZE(wszzVersion),
+                                            InSafeMode,
+                                            g_AlwaysDisplayVersion);
+            if (!InSafeMode && NT_SUCCESS(Status) && *wszzVersion)
+            {
+                PWCHAR pstr = wszzVersion;
+                for (i = 0; (i < ARRAYSIZE(VerStrs)) && *pstr; ++i)
+                {
+                    VerStrs[i].n = wcslen(pstr);
+                    VerStrs[i].lpstr = pstr;
+                    pstr += (VerStrs[i].n + 1);
+                }
+            }
+        }
+        else
+        {
+            Status = STATUS_SUCCESS;
+        }
+        if (NT_SUCCESS(Status) && *wszzVersion)
+        {
+            if (!InSafeMode)
+            {
+                SIZE Size = {0, 0};
+                LONG TotalHeight = 0;
+
+                /* Normal Mode: multiple version information text separated by newlines */
+                IntGdiSetTextAlign(hDC, TA_RIGHT | TA_BOTTOM);
+
+                /* Compute the heights of the strings */
+                if (hFont1) NtGdiSelectFont(hDC, hFont1);
+                for (i = 0; i < ARRAYSIZE(VerStrs); ++i)
+                {
+                    if (!VerStrs[i].lpstr || !*VerStrs[i].lpstr || (VerStrs[i].n == 0))
+                        break;
+
+                    GreGetTextExtentW(hDC, VerStrs[i].lpstr, VerStrs[i].n, &Size, 1);
+                    VerStrs[i].y = Size.cy; // Store the string height
+                    TotalHeight += Size.cy;
+
+                    /* While the first string was using hFont1, all the others use hFont2 */
+                    if (hFont2) NtGdiSelectFont(hDC, hFont2);
+                }
+                /* The total height must not exceed the screen height */
+                TotalHeight = min(TotalHeight, Rect.bottom);
+
+                /* Display the strings */
+                if (hFont1) NtGdiSelectFont(hDC, hFont1);
+                for (i = 0; i < ARRAYSIZE(VerStrs); ++i)
+                {
+                    if (!VerStrs[i].lpstr || !*VerStrs[i].lpstr || (VerStrs[i].n == 0))
+                        break;
+
+                    TotalHeight -= VerStrs[i].y;
+                    GreExtTextOutW(hDC,
+                                   Rect.right - 5,
+                                   Rect.bottom - TotalHeight - 5,
+                                   0, NULL,
+                                   VerStrs[i].lpstr,
+                                   VerStrs[i].n,
+                                   NULL, 0);
+
+                    /* While the first string was using hFont1, all the others use hFont2 */
+                    if (hFont2) NtGdiSelectFont(hDC, hFont2);
+                }
+            }
+            else
+            {
+                if (hFont1) NtGdiSelectFont(hDC, hFont1);
+
+                /* Safe Mode: single version information text in top center */
+                len = wcslen(wszzVersion);
+
+                IntGdiSetTextAlign(hDC, TA_CENTER | TA_TOP);
+                GreExtTextOutW(hDC, (Rect.right + Rect.left)/2, Rect.top + 3, 0, NULL, wszzVersion, len, NULL, 0);
+            }
+        }
+
+        if (InSafeMode)
+        {
+            if (hFont1) NtGdiSelectFont(hDC, hFont1);
+
+            /* Print Safe Mode text in corners */
+            len = wcslen(s_wszSafeMode);
+
+            IntGdiSetTextAlign(hDC, TA_LEFT | TA_TOP);
+            GreExtTextOutW(hDC, Rect.left, Rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
+            IntGdiSetTextAlign(hDC, TA_RIGHT | TA_TOP);
+            GreExtTextOutW(hDC, Rect.right, Rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
+            IntGdiSetTextAlign(hDC, TA_LEFT | TA_BOTTOM);
+            GreExtTextOutW(hDC, Rect.left, Rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
+            IntGdiSetTextAlign(hDC, TA_RIGHT | TA_BOTTOM);
+            GreExtTextOutW(hDC, Rect.right, Rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
+        }
+
+        IntGdiSetBkMode(hDC, mode_old);
+        IntGdiSetTextAlign(hDC, align_old);
+        IntGdiSetTextColor(hDC, color_old);
+
+        if (hFont2)
+            GreDeleteObject(hFont2);
+
+        if (hFont1)
+        {
+            NtGdiSelectFont(hDC, hOldFont);
+            GreDeleteObject(hFont1);
         }
     }
+
     return TRUE;
 }
 
@@ -1550,7 +1849,7 @@ NtUserOpenInputDesktop(
     UserEnterExclusive();
     TRACE("Enter NtUserOpenInputDesktop gpdeskInputDesktop 0x%p\n",gpdeskInputDesktop);
 
-    if(fInherit) HandleAttributes = OBJ_INHERIT;
+    if (fInherit) HandleAttributes = OBJ_INHERIT;
 
     /* Create a new handle to the object */
     Status = ObOpenObjectByPointer(
@@ -1605,7 +1904,7 @@ NtUserCloseDesktop(HDESK hDesktop)
     TRACE("NtUserCloseDesktop called (0x%p)\n", hDesktop);
     UserEnterExclusive();
 
-    if( hDesktop == gptiCurrent->hdesk || hDesktop == gptiCurrent->ppi->hdeskStartup)
+    if (hDesktop == gptiCurrent->hdesk || hDesktop == gptiCurrent->ppi->hdeskStartup)
     {
         ERR("Attempted to close thread desktop\n");
         EngSetLastError(ERROR_BUSY);
@@ -1802,7 +2101,7 @@ NtUserSwitchDesktop(HDESK hdesk)
         RETURN(FALSE);
     }
 
-    if(pdesk == gpdeskInputDesktop)
+    if (pdesk == gpdeskInputDesktop)
     {
         ObDereferenceObject(pdesk);
         WARN("NtUserSwitchDesktop called for active desktop\n");
@@ -1813,15 +2112,15 @@ NtUserSwitchDesktop(HDESK hdesk)
      * Don't allow applications switch the desktop if it's locked, unless the caller
      * is the logon application itself
      */
-    if((pdesk->rpwinstaParent->Flags & WSS_LOCKED) &&
-       gpidLogon != PsGetCurrentProcessId())
+    if ((pdesk->rpwinstaParent->Flags & WSS_LOCKED) &&
+        gpidLogon != PsGetCurrentProcessId())
     {
         ObDereferenceObject(pdesk);
         ERR("Switching desktop 0x%p denied because the window station is locked!\n", hdesk);
         RETURN(FALSE);
     }
 
-    if(pdesk->rpwinstaParent != InputWindowStation)
+    if (pdesk->rpwinstaParent != InputWindowStation)
     {
         ObDereferenceObject(pdesk);
         ERR("Switching desktop 0x%p denied because desktop doesn't belong to the interactive winsta!\n", hdesk);
@@ -1837,9 +2136,9 @@ NtUserSwitchDesktop(HDESK hdesk)
     bRedrawDesktop = FALSE;
 
     /* The first time SwitchDesktop is called, gpdeskInputDesktop is NULL */
-    if(gpdeskInputDesktop != NULL)
+    if (gpdeskInputDesktop != NULL)
     {
-        if((gpdeskInputDesktop->pDeskInfo->spwnd->style & WS_VISIBLE) == WS_VISIBLE)
+        if ((gpdeskInputDesktop->pDeskInfo->spwnd->style & WS_VISIBLE) == WS_VISIBLE)
             bRedrawDesktop = TRUE;
 
         /* Hide the previous desktop window */
@@ -1886,20 +2185,20 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
     UserEnterExclusive();
     TRACE("Enter NtUserGetThreadDesktop\n");
 
-    if(!dwThreadId)
+    if (!dwThreadId)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         RETURN(0);
     }
 
     Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)dwThreadId, &Thread);
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         RETURN(0);
     }
 
-    if(Thread->ThreadsProcess == PsGetCurrentProcess())
+    if (Thread->ThreadsProcess == PsGetCurrentProcess())
     {
         /* Just return the handle, we queried the desktop handle of a thread running
            in the same context */
@@ -1909,8 +2208,8 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
     }
 
     /* Get the desktop handle and the desktop of the thread */
-    if(!(hThreadDesktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->hdesk) ||
-       !(DesktopObject = ((PTHREADINFO)Thread->Tcb.Win32Thread)->rpdesk))
+    if (!(hThreadDesktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->hdesk) ||
+        !(DesktopObject = ((PTHREADINFO)Thread->Tcb.Win32Thread)->rpdesk))
     {
         ObDereferenceObject(Thread);
         ERR("Desktop information of thread 0x%x broken!?\n", dwThreadId);
@@ -1931,7 +2230,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
     KeDetachProcess();
 
     /* The handle couldn't be found, there's nothing to get... */
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         ObDereferenceObject(Thread);
         RETURN(NULL);
@@ -2089,7 +2388,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     pci = pti->pClientInfo;
 
     /* If the caller gave us a desktop, ensure it is valid */
-    if(hDesktop != NULL)
+    if (hDesktop != NULL)
     {
         /* Validate the new desktop. */
         Status = IntValidateDesktopHandle( hDesktop, UserMode, 0, &pdesk);
@@ -2110,7 +2409,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     /* Make sure that we don't own any window in the current desktop */
     if (!IsListEmpty(&pti->WindowListHead))
     {
-        if(pdesk)
+        if (pdesk)
             ObDereferenceObject(pdesk);
         ERR("Attempted to change thread desktop although the thread has windows!\n");
         EngSetLastError(ERROR_BUSY);
@@ -2125,7 +2424,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     }
 
     /* Before doing the switch, map the new desktop heap and allocate the new pcti */
-    if(pdesk != NULL)
+    if (pdesk != NULL)
     {
         Status = IntMapDesktopView(pdesk);
         if (!NT_SUCCESS(Status))
@@ -2137,7 +2436,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         }
 
         pctiNew = DesktopHeapAlloc( pdesk, sizeof(CLIENTTHREADINFO));
-        if(pctiNew == NULL)
+        if (pctiNew == NULL)
         {
             ERR("Failed to allocate new pcti\n");
             IntUnmapDesktopView(pdesk);
@@ -2148,12 +2447,12 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     }
 
     /* free all classes or move them to the shared heap */
-    if(pti->rpdesk != NULL)
+    if (pti->rpdesk != NULL)
     {
-        if(!IntCheckProcessDesktopClasses(pti->rpdesk, FreeOnFailure))
+        if (!IntCheckProcessDesktopClasses(pti->rpdesk, FreeOnFailure))
         {
             ERR("Failed to move process classes to shared heap!\n");
-            if(pdesk)
+            if (pdesk)
             {
                 DesktopHeapFree(pdesk, pctiNew);
                 IntUnmapDesktopView(pdesk);
@@ -2171,7 +2470,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         pctiOld = NULL;
 
     /* do the switch */
-    if(pdesk != NULL)
+    if (pdesk != NULL)
     {
         pti->rpdesk = pdesk;
         pti->hdesk = hDesktop;
@@ -2183,7 +2482,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         pci->pClientThreadInfo = (PVOID)((ULONG_PTR)pti->pcti - pci->ulClientDelta);
 
         /* initialize the new pcti */
-        if(pctiOld != NULL)
+        if (pctiOld != NULL)
         {
             RtlCopyMemory(pctiNew, pctiOld, sizeof(CLIENTTHREADINFO));
         }
@@ -2206,7 +2505,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     }
 
     /* clean up the old desktop */
-    if(pdeskOld != NULL)
+    if (pdeskOld != NULL)
     {
         RemoveEntryList(&pti->PtiLink);
         if (pctiOld) DesktopHeapFree(pdeskOld, pctiOld);
@@ -2215,7 +2514,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         ZwClose(hdeskOld);
     }
 
-    if(pdesk)
+    if (pdesk)
     {
         InsertTailList(&pdesk->PtiList, &pti->PtiLink);
     }

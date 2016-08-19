@@ -1459,25 +1459,25 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
  */
 void WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, LPCWSTR cmdline, INT show )
 {
+    BOOL ret = FALSE;
     WCHAR *s, *path, section[MAX_PATH];
     void *callback_context = NULL;
     DWORD SectionNameLength;
     UINT mode;
     HINF hinf = INVALID_HANDLE_VALUE;
     BOOL bRebootRequired = FALSE;
-    BOOL ret;
 
     TRACE("hwnd %p, handle %p, cmdline %s\n", hwnd, handle, debugstr_w(cmdline));
 
     lstrcpynW( section, cmdline, MAX_PATH );
 
-    if (!(s = strchrW( section, ' ' ))) return;
+    if (!(s = strchrW( section, ' ' ))) goto cleanup;
     *s++ = 0;
     while (*s == ' ') s++;
     mode = atoiW( s );
 
     /* quoted paths are not allowed on native, the rest of the command line is taken as the path */
-    if (!(s = strchrW( s, ' ' ))) return;
+    if (!(s = strchrW( s, ' ' ))) goto cleanup;
     while (*s == ' ') s++;
     path = s;
 
@@ -1576,6 +1576,14 @@ cleanup:
         SetupTermDefaultQueueCallback( callback_context );
     if ( hinf != INVALID_HANDLE_VALUE )
         SetupCloseInfFile( hinf );
+
+#ifdef CORE_11689_IS_FIXED
+    // TODO: Localize the error string.
+    if (!ret && !(GlobalSetupFlags & PSPGF_NONINTERACTIVE))
+    {
+        MessageBoxW(hwnd, section, L"setupapi.dll: An error happened...", MB_ICONERROR | MB_OK);
+    }
+#endif
 }
 
 

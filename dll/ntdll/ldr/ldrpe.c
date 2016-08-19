@@ -297,7 +297,6 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     /* Load the module for this entry */
     Status = LdrpLoadImportModule(DllPath,
                                   BoundImportName,
-                                  LdrEntry->DllBase,
                                   &DllLdrEntry,
                                   &AlreadyLoaded);
     if (!NT_SUCCESS(Status))
@@ -371,7 +370,6 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
         /* Load the module */
         Status = LdrpLoadImportModule(DllPath,
                                       ForwarderName,
-                                      LdrEntry->DllBase,
                                       &ForwarderLdrEntry,
                                       &AlreadyLoaded);
         if (NT_SUCCESS(Status))
@@ -558,7 +556,6 @@ LdrpHandleOneOldFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     /* Load the module associated to it */
     Status = LdrpLoadImportModule(DllPath,
                                   ImportName,
-                                  LdrEntry->DllBase,
                                   &DllLdrEntry,
                                   &AlreadyLoaded);
     if (!NT_SUCCESS(Status))
@@ -818,28 +815,73 @@ LdrpWalkImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     return Status;
 }
 
-/* FIXME: This function is missing SxS support and has wrong prototype */
+/* FIXME: This function is missing SxS support */
 NTSTATUS
 NTAPI
 LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
                      IN LPSTR ImportName,
-                     IN PVOID DllBase,
                      OUT PLDR_DATA_TABLE_ENTRY *DataTableEntry,
                      OUT PBOOLEAN Existing)
 {
     ANSI_STRING AnsiString;
     PUNICODE_STRING ImpDescName;
+    const WCHAR *p;
+    BOOLEAN GotExtension;
+    WCHAR c;
     NTSTATUS Status;
     PPEB Peb = RtlGetCurrentPeb();
     PTEB Teb = NtCurrentTeb();
 
-    DPRINT("LdrpLoadImportModule('%s' %p %p %p '%S')\n", ImportName, DllBase, DataTableEntry, Existing, DllPath);
+    DPRINT("LdrpLoadImportModule('%S' '%s' %p %p)\n", DllPath, ImportName, DataTableEntry, Existing);
 
     /* Convert import descriptor name to unicode string */
     ImpDescName = &Teb->StaticUnicodeString;
     RtlInitAnsiString(&AnsiString, ImportName);
     Status = RtlAnsiStringToUnicodeString(ImpDescName, &AnsiString, FALSE);
     if (!NT_SUCCESS(Status)) return Status;
+
+    /* Find the extension, if present */
+    p = ImpDescName->Buffer + ImpDescName->Length / sizeof(WCHAR) - 1;
+    GotExtension = FALSE;
+    while (p >= ImpDescName->Buffer)
+    {
+        c = *p--;
+        if (c == L'.')
+        {
+            GotExtension = TRUE;
+            break;
+        }
+        else if (c == L'\\')
+        {
+            break;
+        }
+    }
+
+    /* If no extension was found, add the default extension */
+    if (!GotExtension)
+    {
+        /* Check that we have space to add one */
+        if ((ImpDescName->Length + LdrApiDefaultExtension.Length + sizeof(UNICODE_NULL)) >=
+            sizeof(Teb->StaticUnicodeBuffer))
+        {
+            /* No space to add the extension */
+            DbgPrintEx(DPFLTR_LDR_ID,
+                       DPFLTR_ERROR_LEVEL,
+                       "LDR: %s - Dll name missing extension; with extension "
+                       "added the name is too long\n"
+                       "   ImpDescName: (@ %p) \"%wZ\"\n"
+                       "   ImpDescName->Length: %u\n",
+                       __FUNCTION__,
+                       ImpDescName,
+                       ImpDescName,
+                       ImpDescName->Length);
+            return STATUS_NAME_TOO_LONG;
+        }
+
+        /* Add it. Needs to be null terminated, thus the length check above */
+        (VOID)RtlAppendUnicodeStringToString(ImpDescName,
+                                             &LdrApiDefaultExtension);
+    }
 
     /* Check if it's loaded */
     if (LdrpCheckForLoadedDll(DllPath,

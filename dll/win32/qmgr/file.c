@@ -412,7 +412,8 @@ done:
     WinHttpCloseHandle(req);
     WinHttpCloseHandle(con);
     WinHttpCloseHandle(ses);
-    if (!ret) DeleteFileW(tmpfile);
+    if (!ret && !transitionJobState(job, BG_JOB_STATE_CONNECTING, BG_JOB_STATE_ERROR))
+        transitionJobState(job, BG_JOB_STATE_TRANSFERRING, BG_JOB_STATE_ERROR);
 
     SetEvent(job->done);
     return ret;
@@ -513,17 +514,15 @@ BOOL processFile(BackgroundCopyFileImpl *file, BackgroundCopyJobImpl *job)
     uc.nPort             = 0;
     uc.lpszUrlPath       = NULL;
     uc.dwUrlPathLength   = ~0u;
+    uc.lpszExtraInfo     = NULL;
+    uc.dwExtraInfoLength = 0;
     ret = WinHttpCrackUrl(file->info.RemoteName, 0, 0, &uc);
     if (!ret)
     {
         TRACE("WinHttpCrackUrl failed, trying local file copy\n");
-        if (!transfer_file_local(file, tmpName)) return FALSE;
+        if (!transfer_file_local(file, tmpName)) WARN("local transfer failed\n");
     }
-    else if (!transfer_file_http(file, &uc, tmpName))
-    {
-        WARN("HTTP transfer failed\n");
-        return FALSE;
-    }
+    else if (!transfer_file_http(file, &uc, tmpName)) WARN("HTTP transfer failed\n");
 
     if (transitionJobState(job, BG_JOB_STATE_CONNECTING, BG_JOB_STATE_QUEUED) ||
         transitionJobState(job, BG_JOB_STATE_TRANSFERRING, BG_JOB_STATE_QUEUED))

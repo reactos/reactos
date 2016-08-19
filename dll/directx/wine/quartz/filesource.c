@@ -598,6 +598,9 @@ static HRESULT WINAPI FileSource_Load(IFileSourceFilter * iface, LPCOLESTR pszFi
 
     TRACE("(%s, %p)\n", debugstr_w(pszFileName), pmt);
 
+    if (!pszFileName)
+        return E_POINTER;
+
     /* open file */
     /* FIXME: check the sharing values that native uses */
     hFile = CreateFileW(pszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
@@ -637,8 +640,8 @@ static HRESULT WINAPI FileSource_Load(IFileSourceFilter * iface, LPCOLESTR pszFi
             hr = GetClassMediaFile(pReader, pszFileName, &This->pmt->majortype, &This->pmt->subtype, NULL);
             if (FAILED(hr))
             {
-                memcpy(&This->pmt->majortype, &MEDIATYPE_Stream, sizeof(GUID));
-                memcpy(&This->pmt->subtype,   &MEDIASUBTYPE_NULL, sizeof(GUID));
+                This->pmt->majortype = MEDIATYPE_Stream;
+                This->pmt->subtype = MEDIASUBTYPE_NULL;
                 hr = S_OK;
             }
         }
@@ -751,7 +754,7 @@ static inline FileAsyncReader *impl_from_BaseOutputPin(BaseOutputPin *iface)
     return CONTAINING_RECORD(iface, FileAsyncReader, pin);
 }
 
-static inline BaseOutputPin *impl_BaseOututPin_from_BasePin(BasePin *iface)
+static inline BaseOutputPin *impl_BaseOutputPin_from_BasePin(BasePin *iface)
 {
     return CONTAINING_RECORD(iface, BaseOutputPin, pin);
 }
@@ -867,7 +870,7 @@ static const IPinVtbl FileAsyncReaderPin_Vtbl =
  * doesn't need the IMemInputPin interface on the receiving pin */
 static HRESULT WINAPI FileAsyncReaderPin_AttemptConnection(BasePin * iface, IPin * pReceivePin, const AM_MEDIA_TYPE * pmt)
 {
-    BaseOutputPin *This = impl_BaseOututPin_from_BasePin(iface);
+    BaseOutputPin *This = impl_BaseOutputPin_from_BasePin(iface);
     HRESULT hr;
 
     TRACE("(%p, %p)\n", pReceivePin, pmt);

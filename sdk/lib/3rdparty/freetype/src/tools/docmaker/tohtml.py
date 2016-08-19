@@ -390,7 +390,7 @@ class  HtmlFormatter( Formatter ):
         """Convert a code sequence to HTML."""
         line = code_header + '\n'
         for l in lines:
-            line = line + html_quote( l ) + '\n'
+            line = line + html_quote( l ).rstrip() + '\n'
 
         return line + code_footer
 

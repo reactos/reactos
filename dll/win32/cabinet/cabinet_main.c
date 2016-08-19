@@ -319,7 +319,7 @@ HRESULT WINAPI Extract(SESSION *dest, LPCSTR szCabName)
     HFDI hfdi;
     char *str, *end, *path = NULL, *name = NULL;
 
-    TRACE("(%p, %s)\n", dest, szCabName);
+    TRACE("(%p, %s)\n", dest, debugstr_a(szCabName));
 
     hfdi = FDICreate(mem_alloc,
                      mem_free,

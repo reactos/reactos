@@ -140,6 +140,13 @@ coclass WICUnknownMetadataReader { interface IWICMetadataReader; }
 coclass WICIfdMetadataReader { interface IWICIfdMetadataReader; }
 
 [
+    helpstring("WIC Png cHRM Metadata Reader"),
+    threading(both),
+    uuid(f90b5f36-367b-402a-9dd1-bc0fd59d8f62)
+]
+coclass WICPngChrmMetadataReader { interface IWICMetadataReader; }
+
+[
     helpstring("WIC Png gAMA Metadata Reader"),
     threading(both),
     uuid(3692ca39-e082-4350-9e1f-3704cb083cd5)

@@ -51,6 +51,22 @@ IntTID2PTI(HANDLE id)
    return pti;
 }
 
+DWORD
+FASTCALL
+UserGetLanguageToggle(VOID)
+{
+    NTSTATUS Status;
+    DWORD dwValue = 0;
+
+    Status = RegReadUserSetting(L"Keyboard Layout\\Toggle", L"Layout Hotkey", REG_SZ, &dwValue, sizeof(dwValue));
+    if (NT_SUCCESS(Status))
+    {
+        dwValue = atoi((char *)&dwValue);
+        TRACE("Layout Hotkey %d\n",dwValue);
+    }
+    return dwValue;
+}
+
 SHORT
 FASTCALL
 UserGetLanguageID(VOID)

@@ -680,7 +680,7 @@
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
 
     {
-      CFF_Font  cff  = (CFF_Font)(face->extra.data);
+      CFF_Font  cff = (CFF_Font)(face->extra.data);
 
 
       return cff_index_access_element( &cff->charstrings_index, glyph_index,
@@ -826,7 +826,7 @@
       /* the seac operator must not be nested */
       decoder->seac = TRUE;
       error = cff_decoder_parse_charstrings( decoder, charstring,
-                                             charstring_len );
+                                             charstring_len, 0 );
       decoder->seac = FALSE;
 
       cff_free_glyph_data( face, &charstring, charstring_len );
@@ -856,7 +856,7 @@
       /* the seac operator must not be nested */
       decoder->seac = TRUE;
       error = cff_decoder_parse_charstrings( decoder, charstring,
-                                             charstring_len );
+                                             charstring_len, 0 );
       decoder->seac = FALSE;
 
       cff_free_glyph_data( face, &charstring, charstring_len );
@@ -895,13 +895,17 @@
   /*                                                                       */
   /*    charstring_len  :: The length in bytes of the charstring stream.   */
   /*                                                                       */
+  /*    in_dict         :: Set to 1 if function is called from top or      */
+  /*                       private DICT (needed for Multiple Master CFFs). */
+  /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
   cff_decoder_parse_charstrings( CFF_Decoder*  decoder,
                                  FT_Byte*      charstring_base,
-                                 FT_ULong      charstring_len )
+                                 FT_ULong      charstring_len,
+                                 FT_Bool       in_dict )
   {
     FT_Error           error;
     CFF_Decoder_Zone*  zone;
@@ -913,6 +917,10 @@
     FT_Fixed*          stack;
     FT_Int             charstring_type =
                          decoder->cff->top_font.font_dict.charstring_type;
+    FT_UShort          num_designs =
+                         decoder->cff->top_font.font_dict.num_designs;
+    FT_UShort          num_axes =
+                         decoder->cff->top_font.font_dict.num_axes;
 
     T2_Hints_Funcs     hinter;
 
@@ -1241,6 +1249,44 @@
         if ( op == cff_op_unknown )
           continue;
 
+        /* in Multiple Master CFFs, T2 charstrings can appear in */
+        /* dictionaries, but some operators are prohibited       */
+        if ( in_dict )
+        {
+          switch ( op )
+          {
+          case cff_op_hstem:
+          case cff_op_vstem:
+          case cff_op_vmoveto:
+          case cff_op_rlineto:
+          case cff_op_hlineto:
+          case cff_op_vlineto:
+          case cff_op_rrcurveto:
+          case cff_op_hstemhm:
+          case cff_op_hintmask:
+          case cff_op_cntrmask:
+          case cff_op_rmoveto:
+          case cff_op_hmoveto:
+          case cff_op_vstemhm:
+          case cff_op_rcurveline:
+          case cff_op_rlinecurve:
+          case cff_op_vvcurveto:
+          case cff_op_hhcurveto:
+          case cff_op_vhcurveto:
+          case cff_op_hvcurveto:
+          case cff_op_hflex:
+          case cff_op_flex:
+          case cff_op_hflex1:
+          case cff_op_flex1:
+          case cff_op_callsubr:
+          case cff_op_callgsubr:
+            goto MM_Error;
+
+          default:
+            break;
+          }
+        }
+
         /* check arguments */
         req_args = cff_argument_counts[op];
         if ( req_args & CFF_COUNT_CHECK_WIDTH )
@@ -1278,7 +1324,9 @@
             case cff_op_endchar:
               /* If there is a width specified for endchar, we either have */
               /* 1 argument or 5 arguments.  We like to argue.             */
-              set_width_ok = ( num_args == 5 ) || ( num_args == 1 );
+              set_width_ok = in_dict
+                               ? 0
+                               : ( ( num_args == 5 ) || ( num_args == 1 ) );
               break;
 
             default:
@@ -1971,6 +2019,10 @@
             return error;
 
         case cff_op_endchar:
+          /* in dictionaries, `endchar' simply indicates end of data */
+          if ( in_dict )
+            return error;
+
           FT_TRACE4(( " endchar\n" ));
 
           /* We are going to emulate the seac operator. */
@@ -2198,6 +2250,10 @@
 
             FT_TRACE4(( " put\n" ));
 
+            /* the Type2 specification before version 16-March-2000 */
+            /* didn't give a hard-coded size limit of the temporary */
+            /* storage array; instead, an argument of the           */
+            /* `MultipleMaster' operator set the size               */
             if ( idx >= 0 && idx < CFF_MAX_TRANS_ELEMENTS )
               decoder->buildchar[idx] = val;
           }
@@ -2222,23 +2278,66 @@
         case cff_op_store:
           /* this operator was removed from the Type2 specification */
           /* in version 16-March-2000                               */
-          FT_TRACE4(( " store\n"));
 
-          goto Unimplemented;
+          /* since we currently don't handle interpolation of multiple */
+          /* master fonts, this is a no-op                             */
+          FT_TRACE4(( " store\n"));
+          break;
 
         case cff_op_load:
           /* this operator was removed from the Type2 specification */
           /* in version 16-March-2000                               */
-          FT_TRACE4(( " load\n" ));
+          {
+            FT_Int  reg_idx = (FT_Int)args[0];
+            FT_Int  idx     = (FT_Int)args[1];
+            FT_Int  count   = (FT_Int)args[2];
 
-          goto Unimplemented;
+
+            FT_TRACE4(( " load\n" ));
+
+            /* since we currently don't handle interpolation of multiple */
+            /* master fonts, we store a vector [1 0 0 ...] in the        */
+            /* temporary storage array regardless of the Registry index  */
+            if ( reg_idx >= 0 && reg_idx <= 2             &&
+                 idx >= 0 && idx < CFF_MAX_TRANS_ELEMENTS &&
+                 count >= 0 && count <= num_axes          )
+            {
+              FT_Int  end, i;
+
+
+              end = FT_MIN( idx + count, CFF_MAX_TRANS_ELEMENTS );
+
+              if ( idx < end )
+                decoder->buildchar[idx] = 1 << 16;
+
+              for ( i = idx + 1; i < end; i++ )
+                decoder->buildchar[i] = 0;
+            }
+          }
+          break;
 
         case cff_op_blend:
           /* this operator was removed from the Type2 specification */
           /* in version 16-March-2000                               */
-          FT_TRACE4(( " blend\n" ));
+          {
+            FT_Int  num_results = (FT_Int)( args[0] >> 16 );
 
-          goto Unimplemented;
+
+            FT_TRACE4(( " blend\n" ));
+
+            if ( num_results < 0 )
+              goto Syntax_Error;
+
+            if ( num_results * (FT_Int)num_designs > num_args )
+              goto Stack_Underflow;
+
+            /* since we currently don't handle interpolation of multiple */
+            /* master fonts, return the `num_results' values of the      */
+            /* first master                                              */
+            args     -= num_results * ( num_designs - 1 );
+            num_args -= num_results * ( num_designs - 1 );
+          }
+          break;
 
         case cff_op_dotsection:
           /* this operator is deprecated and ignored by the parser */
@@ -2511,7 +2610,6 @@
           break;
 
         default:
-        Unimplemented:
           FT_ERROR(( "Unimplemented opcode: %d", ip[-1] ));
 
           if ( ip[-1] == 12 )
@@ -2534,6 +2632,11 @@
 
   Fail:
     return error;
+
+  MM_Error:
+    FT_TRACE4(( "cff_decoder_parse_charstrings:"
+                " invalid opcode found in top DICT charstring\n"));
+    return FT_THROW( Invalid_File_Format );
 
   Syntax_Error:
     FT_TRACE4(( "cff_decoder_parse_charstrings: syntax error\n" ));
@@ -2608,7 +2711,8 @@
         if ( !error )
           error = cff_decoder_parse_charstrings( &decoder,
                                                  charstring,
-                                                 charstring_len );
+                                                 charstring_len,
+                                                 0 );
 
         cff_free_glyph_data( face, &charstring, &charstring_len );
       }
@@ -2859,7 +2963,8 @@
       if ( driver->hinting_engine == FT_CFF_HINTING_FREETYPE )
         error = cff_decoder_parse_charstrings( &decoder,
                                                charstring,
-                                               charstring_len );
+                                               charstring_len,
+                                               0 );
       else
 #endif
       {

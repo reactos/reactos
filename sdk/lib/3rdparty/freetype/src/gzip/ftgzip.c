@@ -59,7 +59,7 @@
  /* original ZLib.                                                   */
 
 #ifndef USE_ZLIB_ZCALLOC
-#define MY_ZCALLOC /* prevent all zcalloc() & zfree() in zutils.c */
+#define MY_ZCALLOC /* prevent all zcalloc() & zfree() in zutil.c */
 #endif
 
 #include "zlib.h"

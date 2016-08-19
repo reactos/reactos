@@ -41,11 +41,12 @@ WINAPI
 CopyRect(LPRECT lprcDst,
          CONST RECT *lprcSrc)
 {
-    if(lprcDst == NULL || lprcSrc == NULL)
-        return(FALSE);
+    if (lprcDst == NULL || lprcSrc == NULL)
+        return FALSE;
 
     *lprcDst = *lprcSrc;
-    return(TRUE);
+
+    return TRUE;
 }
 
 
@@ -74,11 +75,15 @@ InflateRect(LPRECT rect,
             int dx,
             int dy)
 {
+    if (rect == NULL)
+        return FALSE;
+
     rect->left -= dx;
     rect->top -= dy;
     rect->right += dx;
     rect->bottom += dy;
-    return(TRUE);
+
+    return TRUE;
 }
 
 
@@ -91,6 +96,9 @@ IntersectRect(LPRECT lprcDst,
               CONST RECT *lprcSrc1,
               CONST RECT *lprcSrc2)
 {
+    if (lprcDst == NULL || lprcSrc1 == NULL || lprcSrc2 == NULL)
+        return FALSE;
+
     if (IsRectEmpty(lprcSrc1) || IsRectEmpty(lprcSrc2) ||
         lprcSrc1->left >= lprcSrc2->right ||
         lprcSrc2->left >= lprcSrc1->right ||
@@ -98,13 +106,15 @@ IntersectRect(LPRECT lprcDst,
         lprcSrc2->top >= lprcSrc1->bottom)
     {
         SetRectEmpty(lprcDst);
-        return(FALSE);
+        return FALSE;
     }
+
     lprcDst->left = max(lprcSrc1->left, lprcSrc2->left);
     lprcDst->right = min(lprcSrc1->right, lprcSrc2->right);
     lprcDst->top = max(lprcSrc1->top, lprcSrc2->top);
     lprcDst->bottom = min(lprcSrc1->bottom, lprcSrc2->bottom);
-    return(TRUE);
+
+    return TRUE;
 }
 
 
@@ -115,7 +125,10 @@ BOOL
 WINAPI
 IsRectEmpty(CONST RECT *lprc)
 {
-    return((lprc->left >= lprc->right) || (lprc->top >= lprc->bottom));
+    if (lprc == NULL)
+        return TRUE;
+
+    return ((lprc->left >= lprc->right) || (lprc->top >= lprc->bottom));
 }
 
 
@@ -128,14 +141,15 @@ OffsetRect(LPRECT rect,
            int dx,
            int dy)
 {
-    if(rect == NULL)
-        return(FALSE);
+    if (rect == NULL)
+        return FALSE;
 
     rect->left += dx;
     rect->top += dy;
     rect->right += dx;
     rect->bottom += dy;
-    return(TRUE);
+
+    return TRUE;
 }
 
 
@@ -147,6 +161,9 @@ WINAPI
 PtInRect(CONST RECT *lprc,
          POINT pt)
 {
+    if (lprc == NULL)
+        return FALSE;
+
     return((pt.x >= lprc->left) && (pt.x < lprc->right) &&
            (pt.y >= lprc->top) && (pt.y < lprc->bottom));
 }
@@ -159,11 +176,15 @@ SetRect(LPRECT lprc,
         int xRight,
         int yBottom)
 {
+    if (lprc == NULL)
+        return FALSE;
+
     lprc->left = xLeft;
     lprc->top = yTop;
     lprc->right = xRight;
     lprc->bottom = yBottom;
-    return(TRUE);
+
+    return TRUE;
 }
 
 
@@ -174,8 +195,12 @@ BOOL
 WINAPI
 SetRectEmpty(LPRECT lprc)
 {
+    if (lprc == NULL)
+        return FALSE;
+
     lprc->left = lprc->right = lprc->top = lprc->bottom = 0;
-    return(TRUE);
+
+    return TRUE;
 }
 
 
@@ -190,13 +215,13 @@ SubtractRect(LPRECT lprcDst,
 {
     RECT tempRect;
 
-    if(lprcDst == NULL || lprcSrc1 == NULL || lprcSrc2 == NULL)
-        return(FALSE);
+    if (lprcDst == NULL || lprcSrc1 == NULL || lprcSrc2 == NULL)
+        return FALSE;
 
-    if(!IntersectRect(&tempRect, lprcSrc1, lprcSrc2))
+    if (!IntersectRect(&tempRect, lprcSrc1, lprcSrc2))
     {
         *lprcDst = *lprcSrc1;
-        return(TRUE);
+        return TRUE;
     }
 
     if (EqualRect(&tempRect, lprcSrc1))
@@ -207,22 +232,22 @@ SubtractRect(LPRECT lprcDst,
 
     *lprcDst = *lprcSrc1;
 
-    if(lprcDst->top == tempRect.top && lprcDst->bottom == tempRect.bottom)
+    if (lprcDst->top == tempRect.top && lprcDst->bottom == tempRect.bottom)
     {
-        if(lprcDst->left == tempRect.left)
+        if (lprcDst->left == tempRect.left)
             lprcDst->left = tempRect.right;
-        else if(lprcDst->right == tempRect.right)
+        else if (lprcDst->right == tempRect.right)
             lprcDst->right = tempRect.left;
     }
-    else if(lprcDst->left == tempRect.left && lprcDst->right == tempRect.right)
+    else if (lprcDst->left == tempRect.left && lprcDst->right == tempRect.right)
     {
-        if(lprcDst->top == tempRect.top)
+        if (lprcDst->top == tempRect.top)
             lprcDst->top = tempRect.bottom;
-        else if(lprcDst->bottom == tempRect.bottom)
+        else if (lprcDst->bottom == tempRect.bottom)
             lprcDst->bottom = tempRect.top;
     }
 
-    return(TRUE);
+    return TRUE;
 }
 
 
@@ -235,12 +260,15 @@ UnionRect(LPRECT lprcDst,
           CONST RECT *lprcSrc1,
           CONST RECT *lprcSrc2)
 {
+    if (lprcDst == NULL || lprcSrc1 == NULL || lprcSrc2 == NULL)
+        return FALSE;
+
     if (IsRectEmpty(lprcSrc1))
     {
         if (IsRectEmpty(lprcSrc2))
         {
             SetRectEmpty(lprcDst);
-            return(FALSE);
+            return FALSE;
         }
         else
         {
@@ -262,5 +290,5 @@ UnionRect(LPRECT lprcDst,
         }
     }
 
-    return(TRUE);
+    return TRUE;
 }

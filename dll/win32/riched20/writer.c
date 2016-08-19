@@ -112,6 +112,32 @@ ME_StreamOutPrint(ME_OutStream *pStream, const char *format, ...)
   return ME_StreamOutMove(pStream, string, len);
 }
 
+#define HEX_BYTES_PER_LINE 40
+
+static BOOL
+ME_StreamOutHexData(ME_OutStream *stream, const BYTE *data, UINT len)
+{
+
+    char line[HEX_BYTES_PER_LINE * 2 + 1];
+    UINT size, i;
+    static const char hex[] = "0123456789abcdef";
+
+    while (len)
+    {
+        size = min( len, HEX_BYTES_PER_LINE );
+        for (i = 0; i < size; i++)
+        {
+            line[i * 2] = hex[(*data >> 4) & 0xf];
+            line[i * 2 + 1] = hex[*data & 0xf];
+            data++;
+        }
+        line[size * 2] = '\n';
+        if (!ME_StreamOutMove( stream, line, size * 2 + 1 ))
+            return FALSE;
+        len -= size;
+    }
+    return TRUE;
+}
 
 static BOOL
 ME_StreamOutRTFHeader(ME_OutStream *pStream, int dwFormat)
@@ -780,6 +806,69 @@ ME_StreamOutRTFText(ME_OutStream *pStream, const WCHAR *text, LONG nChars)
   return ME_StreamOutMove(pStream, buffer, pos);
 }
 
+static BOOL stream_out_graphics( ME_TextEditor *editor, ME_OutStream *stream,
+                                 ME_Run *run )
+{
+    IDataObject *data;
+    HRESULT hr;
+    FORMATETC fmt = { CF_ENHMETAFILE, NULL, DVASPECT_CONTENT, -1, TYMED_ENHMF };
+    STGMEDIUM med = { TYMED_NULL };
+    BOOL ret = FALSE;
+    ENHMETAHEADER *emf_bits = NULL;
+    UINT size;
+    SIZE goal, pic;
+    ME_Context c;
+
+    hr = IOleObject_QueryInterface( run->ole_obj->poleobj, &IID_IDataObject, (void **)&data );
+    if (FAILED(hr)) return FALSE;
+
+    ME_InitContext( &c, editor, ITextHost_TxGetDC( editor->texthost ) );
+    hr = IDataObject_QueryGetData( data, &fmt );
+    if (hr != S_OK) goto done;
+
+    hr = IDataObject_GetData( data, &fmt, &med );
+    if (FAILED(hr)) goto done;
+    if (med.tymed != TYMED_ENHMF) goto done;
+
+    size = GetEnhMetaFileBits( med.u.hEnhMetaFile, 0, NULL );
+    if (size < FIELD_OFFSET(ENHMETAHEADER, cbPixelFormat)) goto done;
+
+    emf_bits = HeapAlloc( GetProcessHeap(), 0, size );
+    if (!emf_bits) goto done;
+
+    size = GetEnhMetaFileBits( med.u.hEnhMetaFile, size, (BYTE *)emf_bits );
+    if (size < FIELD_OFFSET(ENHMETAHEADER, cbPixelFormat)) goto done;
+
+    /* size_in_pixels = (frame_size / 100) * szlDevice / szlMillimeters
+       pic = size_in_pixels * 2540 / dpi */
+    pic.cx = MulDiv( emf_bits->rclFrame.right - emf_bits->rclFrame.left, emf_bits->szlDevice.cx * 254,
+                     emf_bits->szlMillimeters.cx * c.dpi.cx * 10 );
+    pic.cy = MulDiv( emf_bits->rclFrame.bottom - emf_bits->rclFrame.top, emf_bits->szlDevice.cy * 254,
+                     emf_bits->szlMillimeters.cy * c.dpi.cy * 10 );
+
+    /* convert goal size to twips */
+    goal.cx = MulDiv( run->ole_obj->sizel.cx, 144, 254 );
+    goal.cy = MulDiv( run->ole_obj->sizel.cy, 144, 254 );
+
+    if (!ME_StreamOutPrint( stream, "{\\*\\shppict{\\pict\\emfblip\\picw%d\\pich%d\\picwgoal%d\\pichgoal%d\n",
+                            pic.cx, pic.cy, goal.cx, goal.cy ))
+        goto done;
+
+    if (!ME_StreamOutHexData( stream, (BYTE *)emf_bits, size ))
+        goto done;
+
+    if (!ME_StreamOutPrint( stream, "}}\n" ))
+        goto done;
+
+    ret = TRUE;
+
+done:
+    ME_DestroyContext( &c );
+    HeapFree( GetProcessHeap(), 0, emf_bits );
+    ReleaseStgMedium( &med );
+    IDataObject_Release( data );
+    return ret;
+}
 
 static BOOL ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream,
                             const ME_Cursor *start, int nChars, int dwFormat)
@@ -831,7 +920,8 @@ static BOOL ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream,
     if (cursor.pPara->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND))
       continue;
     if (cursor.pRun->member.run.nFlags & MERF_GRAPHICS) {
-      FIXME("embedded objects are not handled\n");
+      if (!stream_out_graphics(editor, pStream, &cursor.pRun->member.run))
+        return FALSE;
     } else if (cursor.pRun->member.run.nFlags & MERF_TAB) {
       if (editor->bEmulateVersion10 && /* v1.0 - 3.0 */
           cursor.pPara->member.para.pFmt->dwMask & PFM_TABLE &&
@@ -886,7 +976,7 @@ static BOOL ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream,
       if (!ME_StreamOutPrint(pStream, "}"))
         return FALSE;
     }
-  } while (cursor.pRun != endCur.pRun && ME_NextRun(&cursor.pPara, &cursor.pRun));
+  } while (cursor.pRun != endCur.pRun && ME_NextRun(&cursor.pPara, &cursor.pRun, TRUE));
 
   if (!ME_StreamOutMove(pStream, "}\0", 2))
     return FALSE;

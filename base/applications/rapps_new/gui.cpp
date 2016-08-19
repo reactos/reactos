@@ -600,14 +600,14 @@ private:
 
         int count = m_ClientPanel->CountSizableChildren();
         hdwp = BeginDeferWindowPos(count);
-        hdwp = m_ClientPanel->OnParentSize(r, hdwp);
-        EndDeferWindowPos(hdwp);
+        if (hdwp) hdwp = m_ClientPanel->OnParentSize(r, hdwp);
+        if (hdwp) EndDeferWindowPos(hdwp);
 
         // TODO: Sub-layouts for children of children
         count = m_SearchBar->CountSizableChildren();
         hdwp = BeginDeferWindowPos(count);
-        hdwp = m_SearchBar->OnParentSize(r, hdwp);
-        EndDeferWindowPos(hdwp);
+        if (hdwp) hdwp = m_SearchBar->OnParentSize(r, hdwp);
+        if (hdwp) EndDeferWindowPos(hdwp);
     }
 
     BOOL ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT& theResult, DWORD dwMapId)

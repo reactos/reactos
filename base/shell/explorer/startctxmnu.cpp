@@ -70,10 +70,10 @@ class CStartMenuBtnCtxMenu :
         HRESULT hRet;
 
         /* Add the "Open All Users" menu item */
-        if (LoadString(hExplorerInstance,
-            IDS_PROPERTIES,
-            szBuf,
-            sizeof(szBuf) / sizeof(szBuf[0])))
+        if (LoadStringW(hExplorerInstance,
+                        IDS_PROPERTIES,
+                        szBuf,
+                        _countof(szBuf)))
         {
             AppendMenu(hPopup,
                        MF_STRING,
@@ -103,10 +103,10 @@ class CStartMenuBtnCtxMenu :
                                NULL);
 
                     /* Add the "Open All Users" menu item */
-                    if (LoadString(hExplorerInstance,
-                        IDS_OPEN_ALL_USERS,
-                        szBuf,
-                        sizeof(szBuf) / sizeof(szBuf[0])))
+                    if (LoadStringW(hExplorerInstance,
+                                    IDS_OPEN_ALL_USERS,
+                                    szBuf,
+                                    _countof(szBuf)))
                     {
                         AppendMenu(hPopup,
                                    MF_STRING,
@@ -115,10 +115,10 @@ class CStartMenuBtnCtxMenu :
                     }
 
                     /* Add the "Explore All Users" menu item */
-                    if (LoadString(hExplorerInstance,
-                        IDS_EXPLORE_ALL_USERS,
-                        szBuf,
-                        sizeof(szBuf) / sizeof(szBuf[0])))
+                    if (LoadStringW(hExplorerInstance,
+                                    IDS_EXPLORE_ALL_USERS,
+                                    szBuf,
+                                    _countof(szBuf)))
                     {
                         AppendMenu(hPopup,
                                    MF_STRING,
@@ -236,6 +236,7 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
     END_COM_MAP()
 };
+
 HRESULT StartMenuBtnCtxMenuCreator(ITrayWindow * m_TrayWnd, IN HWND m_Owner, IContextMenu ** ppCtxMenu)
 {
     CStartMenuBtnCtxMenu * mnu = new CComObject<CStartMenuBtnCtxMenu>();

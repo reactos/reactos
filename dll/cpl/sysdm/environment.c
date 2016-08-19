@@ -353,11 +353,11 @@ OnNewVariable(HWND hwndDlg,
 
     VarData = GlobalAlloc(GPTR, sizeof(VARIABLE_DATA));
 
-    if (!DialogBoxParam(hApplet,
-                        MAKEINTRESOURCE(IDD_EDIT_VARIABLE),
-                        hwndDlg,
-                        (DLGPROC)EditVariableDlgProc,
-                        (LPARAM)VarData) > 0)
+    if (DialogBoxParam(hApplet,
+                       MAKEINTRESOURCE(IDD_EDIT_VARIABLE),
+                       hwndDlg,
+                       EditVariableDlgProc,
+                       (LPARAM)VarData) <= 0)
     {
         if (VarData->lpName != NULL)
             GlobalFree(VarData->lpName);
@@ -412,7 +412,7 @@ OnEditVariable(HWND hwndDlg,
             if (DialogBoxParam(hApplet,
                                MAKEINTRESOURCE(IDD_EDIT_VARIABLE),
                                hwndDlg,
-                               (DLGPROC)EditVariableDlgProc,
+                               EditVariableDlgProc,
                                (LPARAM)VarData) > 0)
             {
                 ListView_SetItemText(hwndListView, iItem, 0, VarData->lpName);

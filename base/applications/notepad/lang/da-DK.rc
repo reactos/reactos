@@ -23,8 +23,8 @@ BEGIN
     POPUP "&Fil"
     BEGIN
         MENUITEM "&Ny\tCtrl+N", CMD_NEW
-        MENUITEM "Å&bn\tEnter", CMD_OPEN
-        MENUITEM "&Gem", CMD_SAVE
+        MENUITEM "Å&bn...\tCtrl+O", CMD_OPEN
+        MENUITEM "&Gem\tCtrl+S", CMD_SAVE
         MENUITEM "Gem so&m...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Side&opsætning...", CMD_PAGE_SETUP

@@ -657,7 +657,7 @@ static BOOL color_is_gray(ARGB color)
 }
 
 /* returns preferred pixel format for the applied attributes */
-static PixelFormat apply_image_attributes(const GpImageAttributes *attributes, LPBYTE data,
+PixelFormat apply_image_attributes(const GpImageAttributes *attributes, LPBYTE data,
     UINT width, UINT height, INT stride, ColorAdjustType type, PixelFormat fmt)
 {
     UINT x, y;
@@ -2893,23 +2893,7 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
     srcheight = units_to_pixels(srcheight, srcUnit, image->yres);
     TRACE("src pixels: %f,%f %fx%f\n", srcx, srcy, srcwidth, srcheight);
 
-    if (image->picture)
-    {
-        if (!graphics->hdc)
-        {
-            FIXME("graphics object has no HDC\n");
-        }
-
-        if(IPicture_Render(image->picture, graphics->hdc,
-            pti[0].x, pti[0].y, pti[1].x - pti[0].x, pti[2].y - pti[0].y,
-            srcx, srcy, srcwidth, srcheight, NULL) != S_OK)
-        {
-            if(callback)
-                callback(callbackData);
-            return GenericError;
-        }
-    }
-    else if (image->type == ImageTypeBitmap)
+    if (image->type == ImageTypeBitmap)
     {
         GpBitmap* bitmap = (GpBitmap*)image;
         BOOL do_resampling = FALSE;
@@ -4293,6 +4277,7 @@ GpStatus WINGDIPAPI GdipGetVisibleClipBounds(GpGraphics *graphics, GpRectF *rect
 {
     GpRegion *clip_rgn;
     GpStatus stat;
+    GpMatrix device_to_world;
 
     TRACE("(%p, %p)\n", graphics, rect);
 
@@ -4307,6 +4292,13 @@ GpStatus WINGDIPAPI GdipGetVisibleClipBounds(GpGraphics *graphics, GpRectF *rect
         return stat;
 
     if((stat = get_visible_clip_region(graphics, clip_rgn)) != Ok)
+        goto cleanup;
+
+    /* transform to world coordinates */
+    if((stat = get_graphics_transform(graphics, CoordinateSpaceWorld, CoordinateSpaceDevice, &device_to_world)) != Ok)
+        goto cleanup;
+
+    if((stat = GdipTransformRegion(clip_rgn, &device_to_world)) != Ok)
         goto cleanup;
 
     /* get bounds of the region */
@@ -4367,10 +4359,13 @@ GpStatus WINGDIPAPI GdipGraphicsClear(GpGraphics *graphics, ARGB color)
     if(graphics->busy)
         return ObjectBusy;
 
+    if (graphics->image && graphics->image->type == ImageTypeMetafile)
+        return METAFILE_GraphicsClear((GpMetafile*)graphics->image, color);
+
     if((stat = GdipCreateSolidFill(color, &brush)) != Ok)
         return stat;
 
-    if((stat = get_graphics_bounds(graphics, &wnd_rect)) != Ok){
+    if((stat = GdipGetVisibleClipBounds(graphics, &wnd_rect)) != Ok){
         GdipDeleteBrush((GpBrush*)brush);
         return stat;
     }
@@ -5113,6 +5108,8 @@ GpStatus WINGDIPAPI GdipResetClip(GpGraphics *graphics)
 
 GpStatus WINGDIPAPI GdipResetWorldTransform(GpGraphics *graphics)
 {
+    GpStatus stat;
+
     TRACE("(%p)\n", graphics);
 
     if(!graphics)
@@ -5120,6 +5117,13 @@ GpStatus WINGDIPAPI GdipResetWorldTransform(GpGraphics *graphics)
 
     if(graphics->busy)
         return ObjectBusy;
+
+    if (graphics->image && graphics->image->type == ImageTypeMetafile) {
+        stat = METAFILE_ResetWorldTransform((GpMetafile*)graphics->image);
+
+        if (stat != Ok)
+            return stat;
+    }
 
     return GdipSetMatrixElements(&graphics->worldtrans, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
 }
@@ -5227,6 +5231,8 @@ GpStatus WINGDIPAPI GdipEndContainer(GpGraphics *graphics, GraphicsContainer sta
 GpStatus WINGDIPAPI GdipScaleWorldTransform(GpGraphics *graphics, REAL sx,
     REAL sy, GpMatrixOrder order)
 {
+    GpStatus stat;
+
     TRACE("(%p, %.2f, %.2f, %d)\n", graphics, sx, sy, order);
 
     if(!graphics)
@@ -5234,6 +5240,13 @@ GpStatus WINGDIPAPI GdipScaleWorldTransform(GpGraphics *graphics, REAL sx,
 
     if(graphics->busy)
         return ObjectBusy;
+
+    if (graphics->image && graphics->image->type == ImageTypeMetafile) {
+        stat = METAFILE_ScaleWorldTransform((GpMetafile*)graphics->image, sx, sy, order);
+
+        if (stat != Ok)
+            return stat;
+    }
 
     return GdipScaleMatrix(&graphics->worldtrans, sx, sy, order);
 }
@@ -6430,13 +6443,6 @@ GpStatus WINGDIPAPI GdipDrawDriverString(GpGraphics *graphics, GDIPCONST UINT16 
 
     return draw_driver_string(graphics, text, length, font, NULL,
                               brush, positions, flags, matrix);
-}
-
-GpStatus WINGDIPAPI GdipRecordMetafileStream(IStream *stream, HDC hdc, EmfType type, GDIPCONST GpRect *frameRect,
-                                        MetafileFrameUnit frameUnit, GDIPCONST WCHAR *desc, GpMetafile **metafile)
-{
-    FIXME("(%p %p %d %p %d %p %p): stub\n", stream, hdc, type, frameRect, frameUnit, desc, metafile);
-    return NotImplemented;
 }
 
 /*****************************************************************************

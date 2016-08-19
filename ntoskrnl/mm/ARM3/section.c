@@ -2841,7 +2841,7 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
                                     ZeroBits,
                                     AllocationType);
 
-    /* Detatch if needed, then return status */
+    /* Detach if needed, then return status */
     if (Attached) KeUnstackDetachProcess(&ApcState);
     return Status;
 }

@@ -838,25 +838,37 @@ DWORD WINAPI RetreiveFileSecurity(LPCWSTR lpFileName,
 }
 
 
-static DWORD global_flags = 0;  /* FIXME: what should be in here? */
+/*
+ * See: https://msdn.microsoft.com/en-us/library/bb432397(v=vs.85).aspx
+ * for more information.
+ */
+DWORD GlobalSetupFlags = 0;
 
 /***********************************************************************
  *		pSetupGetGlobalFlags  (SETUPAPI.@)
  */
 DWORD WINAPI pSetupGetGlobalFlags(void)
 {
-    FIXME( "stub\n" );
-    return global_flags;
+    return GlobalSetupFlags;
 }
 
+/***********************************************************************
+ *		pSetupModifyGlobalFlags  (SETUPAPI.@)
+ */
+void WINAPI pSetupModifyGlobalFlags( DWORD mask, DWORD flags )
+{
+    FIXME( "stub\n" );
+    GlobalSetupFlags = (GlobalSetupFlags & ~mask) | (flags & mask);
+}
 
 /***********************************************************************
  *		pSetupSetGlobalFlags  (SETUPAPI.@)
  */
 void WINAPI pSetupSetGlobalFlags( DWORD flags )
 {
-    global_flags = flags;
+    pSetupModifyGlobalFlags(0xFFFFFFFF, flags);
 }
+
 
 /***********************************************************************
  *              AssertFail  (SETUPAPI.@)

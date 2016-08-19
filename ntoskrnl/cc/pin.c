@@ -62,6 +62,7 @@ CcMapData (
     {
         CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
             FileObject, FileOffset, Length, Flags);
+        ExRaiseStatus(STATUS_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -75,6 +76,7 @@ CcMapData (
     {
         CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
             FileObject, FileOffset, Length, Flags);
+        ExRaiseStatus(Status);
         return FALSE;
     }
 
@@ -88,11 +90,13 @@ CcMapData (
             return FALSE;
         }
 
-        if (!NT_SUCCESS(CcReadVirtualAddress(Vacb)))
+        Status = CcReadVirtualAddress(Vacb);
+        if (!NT_SUCCESS(Status))
         {
             CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
             CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
                 FileObject, FileOffset, Length, Flags);
+            ExRaiseStatus(Status);
             return FALSE;
         }
     }
@@ -104,6 +108,7 @@ CcMapData (
         CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
         CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
             FileObject, FileOffset, Length, Flags);
+        ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
         return FALSE;
     }
 
@@ -180,10 +185,8 @@ CcPinRead (
             ASSERT(iBcb->Pinned == FALSE);
 
             iBcb->Pinned = TRUE;
-            if (InterlockedIncrement(&iBcb->Vacb->PinCount) == 1)
-            {
-                KeReleaseMutex(&iBcb->Vacb->Mutex, FALSE);
-            }
+            iBcb->Vacb->PinCount++;
+            CcRosReleaseVacbLock(iBcb->Vacb);
 
             if (Flags & PIN_EXCLUSIVE)
             {
@@ -276,14 +279,8 @@ CcUnpinDataForThread (
     {
         ExReleaseResourceForThreadLite(&iBcb->Lock, ResourceThreadId);
         iBcb->Pinned = FALSE;
-        if (InterlockedDecrement(&iBcb->Vacb->PinCount) == 0)
-        {
-            KeWaitForSingleObject(&iBcb->Vacb->Mutex,
-                                  Executive,
-                                  KernelMode,
-                                  FALSE,
-                                  NULL);
-        }
+        CcRosAcquireVacbLock(iBcb->Vacb, NULL);
+        iBcb->Vacb->PinCount--;
     }
 
     CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
@@ -334,11 +331,7 @@ CcUnpinRepinnedBcb (
         IoStatus->Information = 0;
         if (WriteThrough)
         {
-            KeWaitForSingleObject(&iBcb->Vacb->Mutex,
-                                  Executive,
-                                  KernelMode,
-                                  FALSE,
-                                  NULL);
+            CcRosAcquireVacbLock(iBcb->Vacb, NULL);
             if (iBcb->Vacb->Dirty)
             {
                 IoStatus->Status = CcRosFlushVacb(iBcb->Vacb);
@@ -347,7 +340,7 @@ CcUnpinRepinnedBcb (
             {
                 IoStatus->Status = STATUS_SUCCESS;
             }
-            KeReleaseMutex(&iBcb->Vacb->Mutex, FALSE);
+            CcRosReleaseVacbLock(iBcb->Vacb);
         }
         else
         {
@@ -358,14 +351,8 @@ CcUnpinRepinnedBcb (
         {
             ExReleaseResourceLite(&iBcb->Lock);
             iBcb->Pinned = FALSE;
-            if (InterlockedDecrement(&iBcb->Vacb->PinCount) == 0)
-            {
-                KeWaitForSingleObject(&iBcb->Vacb->Mutex,
-                                      Executive,
-                                      KernelMode,
-                                      FALSE,
-                                      NULL);
-            }
+            CcRosAcquireVacbLock(iBcb->Vacb, NULL);
+            iBcb->Vacb->PinCount--;
         }
         ExDeleteResourceLite(&iBcb->Lock);
         ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);

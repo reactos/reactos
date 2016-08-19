@@ -747,7 +747,7 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* A raster is a scan converter, in charge of rendering an outline into  */
-  /* a a bitmap.  This section contains the public API for rasters.        */
+  /* a bitmap.  This section contains the public API for rasters.          */
   /*                                                                       */
   /* Note that in FreeType 2, all rasters are now encapsulated within      */
   /* specific modules called `renderers'.  See `ftrender.h' for more       */

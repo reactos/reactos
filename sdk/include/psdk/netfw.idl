@@ -333,6 +333,149 @@ interface INetFwAuthorizedApplications : IDispatch
 }
 
 [
+   local,
+   object,
+   uuid(af230d27-baba-4e42-aced-f524f22cfce2),
+   dual
+]
+interface INetFwRule : IDispatch
+{
+   [id(1), propget]
+   HRESULT Name( [out, retval] BSTR *name );
+   [id(1), propput]
+   HRESULT Name( [in] BSTR name );
+
+   [id(2), propget]
+   HRESULT Description( [out, retval] BSTR* desc );
+   [id(2), propput]
+   HRESULT Description( [in] BSTR desc );
+
+   [id(3), propget]
+   HRESULT ApplicationName( [out, retval] BSTR *imagename );
+   [id(3), propput]
+   HRESULT ApplicationName( [in] BSTR imagename );
+
+   [id(4), propget]
+   HRESULT ServiceName( [out, retval] BSTR *service );
+   [id(4), propput]
+   HRESULT ServiceName( [in] BSTR service );
+
+   [id(5), propget]
+   HRESULT Protocol( [out, retval] long* protocol );
+   [id(5), propput]
+   HRESULT Protocol( [in] long protocol );
+
+   [id(6), propget]
+   HRESULT LocalPorts( [out, retval] BSTR* ports );
+   [id(6), propput]
+   HRESULT LocalPorts( [in] BSTR ports );
+
+   [id(7), propget]
+   HRESULT RemotePorts( [out, retval] BSTR *ports );
+   [id(7), propput]
+   HRESULT RemotePorts( [in] BSTR ports );
+
+   [id(8), propget]
+   HRESULT LocalAddresses([out, retval] BSTR* address );
+   [id(8), propput]
+   HRESULT LocalAddresses([in] BSTR address);
+
+   [id(9), propget]
+   HRESULT RemoteAddresses( [out, retval] BSTR* address );
+   [id(9), propput]
+   HRESULT RemoteAddresses( [in] BSTR address );
+
+   [id(10), propget]
+   HRESULT IcmpTypesAndCodes( [out, retval] BSTR *codes );
+   [id(10), propput]
+   HRESULT IcmpTypesAndCodes( [in] BSTR codes );
+
+   [id(11), propget]
+   HRESULT Direction( [out, retval] NET_FW_RULE_DIRECTION* dir );
+   [id(11), propput]
+   HRESULT Direction( [in] NET_FW_RULE_DIRECTION dir );
+
+   [id(12), propget]
+   HRESULT Interfaces( [out, retval] VARIANT* interfaces );
+   [id(12), propput]
+   HRESULT Interfaces( [in] VARIANT interfaces );
+
+   [id(13), propget]
+   HRESULT InterfaceTypes( [out, retval] BSTR* types );
+   [id(13), propput]
+   HRESULT InterfaceTypes( [in] BSTR types );
+
+   [id(14), propget]
+   HRESULT Enabled( [out, retval] VARIANT_BOOL* enabled );
+   [id(14), propput]
+   HRESULT Enabled( [in] VARIANT_BOOL enabled );
+
+   [id(15), propget]
+   HRESULT Grouping( [out, retval] BSTR* context );
+   [id(15), propput]
+   HRESULT Grouping( [in] BSTR context );
+
+   [id(16), propget]
+   HRESULT Profiles( [out, retval] long* profiles );
+   [id(16), propput]
+   HRESULT Profiles( [in] long  profiles );
+
+   [id(17), propget]
+   HRESULT EdgeTraversal( [out, retval] VARIANT_BOOL* enabled );
+   [id(17), propput]
+   HRESULT EdgeTraversal( [in] VARIANT_BOOL enabled );
+
+   [id(18), propget]
+   HRESULT Action( [out, retval] NET_FW_ACTION* action );
+   [id(18), propput]
+   HRESULT Action( [in] NET_FW_ACTION action );
+}
+
+[
+   local,
+   object,
+   uuid(9c4c6277-5027-441e-afae-ca1f542da009),
+   dual
+]
+interface INetFwRules : IDispatch
+{
+   [id(1), propget]
+   HRESULT Count( [out, retval] long* count );
+
+   [id(2)]
+   HRESULT Add( [in] INetFwRule* rule );
+
+   [id(3)]
+   HRESULT Remove( [in] BSTR name );
+
+   [id(4)]
+   HRESULT Item( [in] BSTR name, [out, retval] INetFwRule** rule );
+
+   [id(DISPID_NEWENUM), propget, restricted]
+   HRESULT _NewEnum( [out, retval] IUnknown** newEnum );
+}
+
+[
+    local,
+    object,
+    uuid(8267bbe3-f890-491c-b7b6-2db1ef0e5d2b),
+    dual
+]
+interface INetFwServiceRestriction : IDispatch
+{
+   [id(1)]
+   HRESULT RestrictService( [in] BSTR serviceName, [in] BSTR appName,
+              [in] VARIANT_BOOL restrictService, [in] VARIANT_BOOL serviceSidRestricted );
+
+   [id(2)]
+   HRESULT ServiceRestricted( [in] BSTR serviceName, [in] BSTR appName,
+              [out, retval] VARIANT_BOOL* serviceRestricted );
+
+   [id(3), propget]
+   HRESULT Rules( [out, retval] INetFwRules** rules );
+}
+
+[
      object,
      uuid(174A0DDA-E9F9-449D-993B-21AB667CA456),
      dual
@@ -398,6 +541,81 @@ interface INetFwPolicy : IDispatch
 }
 
 [
+    local,
+    object,
+    uuid(98325047-c671-4174-8d81-defcd3f03186),
+    dual
+]
+interface INetFwPolicy2 : IDispatch
+{
+   [id(1), propget]
+   HRESULT CurrentProfileTypes( [out, retval] long *profile );
+
+   [id(2), propget]
+   HRESULT FirewallEnabled( [in] NET_FW_PROFILE_TYPE2 profileType, [out, retval] VARIANT_BOOL* enabled );
+
+   [id(2), propput]
+   HRESULT FirewallEnabled( [in] NET_FW_PROFILE_TYPE2 profileType, [in] VARIANT_BOOL enabled );
+
+   [id(3), propget]
+   HRESULT ExcludedInterfaces( [in] NET_FW_PROFILE_TYPE2 profileType, [out, retval] VARIANT *interfaces );
+
+   [id(3), propput]
+   HRESULT ExcludedInterfaces( [in] NET_FW_PROFILE_TYPE2 profileType, [in] VARIANT interfaces );
+
+   [id(4), propget]
+   HRESULT BlockAllInboundTraffic( [in] NET_FW_PROFILE_TYPE2 profileType, [out, retval] VARIANT_BOOL* block );
+
+   [id(4), propput]
+   HRESULT BlockAllInboundTraffic( [in] NET_FW_PROFILE_TYPE2 profileType, [in] VARIANT_BOOL block );
+
+   [id(5), propget]
+   HRESULT NotificationsDisabled( [in] NET_FW_PROFILE_TYPE2 profileType, [out, retval] VARIANT_BOOL* disabled );
+   [id(5), propput]
+   HRESULT NotificationsDisabled( [in] NET_FW_PROFILE_TYPE2 profileType, [in] VARIANT_BOOL disabled );
+
+   [id(6), propget]
+   HRESULT UnicastResponsesToMulticastBroadcastDisabled( [in] NET_FW_PROFILE_TYPE2 profileType,
+       [out, retval] VARIANT_BOOL* disabled );
+   [id(6), propput]
+   HRESULT UnicastResponsesToMulticastBroadcastDisabled( [in] NET_FW_PROFILE_TYPE2 profileType,
+       [in] VARIANT_BOOL disabled );
+
+   [id(7), propget]
+   HRESULT Rules( [out, retval] INetFwRules** rules );
+
+   [id(8), propget]
+   HRESULT ServiceRestriction( [out, retval] INetFwServiceRestriction **ServiceRestriction );
+
+   [id(9)]
+   HRESULT EnableRuleGroup( [in] long profileTypesBitmask, [in] BSTR group, [in] VARIANT_BOOL enable );
+
+   [id(10)]
+   HRESULT IsRuleGroupEnabled( [in] long profileTypesBitmask, [in] BSTR group, [out, retval] VARIANT_BOOL *enabled );
+
+   [id(11)]
+   HRESULT RestoreLocalFirewallDefaults();
+
+   [id(12), propget]
+   HRESULT DefaultInboundAction( [in] NET_FW_PROFILE_TYPE2 profileType, [out, retval] NET_FW_ACTION* action );
+
+   [id(12), propput]
+   HRESULT DefaultInboundAction( [in] NET_FW_PROFILE_TYPE2 profileType, [in] NET_FW_ACTION action );
+
+   [id(13), propget]
+   HRESULT DefaultOutboundAction( [in] NET_FW_PROFILE_TYPE2 profileType, [out, retval] NET_FW_ACTION* action );
+
+   [id(13), propput]
+   HRESULT DefaultOutboundAction( [in] NET_FW_PROFILE_TYPE2 profileType, [in] NET_FW_ACTION action );
+
+   [id(14), propget]
+   HRESULT IsRuleGroupCurrentlyEnabled( [in] BSTR group, [out, retval] VARIANT_BOOL* enabled );
+
+   [id(15), propget]
+   HRESULT LocalPolicyModifyState( [out, retval] NET_FW_MODIFY_STATE* modifyState );
+}
+
+[
     object,
     uuid(F7898AF5-CAC4-4632-A2EC-DA06E5111AF2),
     dual
@@ -442,6 +660,7 @@ library NetFwPublicTypeLib
     interface INetFwAuthorizedApplications;
     interface INetFwProfile;
     interface INetFwPolicy;
+    interface INetFwPolicy2;
     interface INetFwMgr;
 
     [
@@ -466,5 +685,13 @@ library NetFwPublicTypeLib
     coclass NetFwMgr
     {
         [default] interface INetFwMgr;
+    }
+
+    [
+        uuid(e2b3c97f-6ae1-41ac-817a-f6f92166d7dd)
+    ]
+    coclass NetFwPolicy2
+    {
+        [default] interface INetFwPolicy2;
     }
 }

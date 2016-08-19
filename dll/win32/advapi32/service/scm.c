@@ -326,7 +326,7 @@ ChangeServiceConfigA(SC_HANDLE hService,
 
         /* FIXME: Encrypt the password */
         lpEncryptedPassword = (LPBYTE)lpPasswordW;
-        dwPasswordLength = (DWORD)(lpPasswordW ? (wcslen(lpPasswordW) + 1) * sizeof(WCHAR) : 0);
+        dwPasswordLength = (wcslen(lpPasswordW) + 1) * sizeof(WCHAR);
     }
 
     RpcTryExcept
@@ -407,9 +407,12 @@ ChangeServiceConfigW(SC_HANDLE hService,
         dwDependenciesLength *= sizeof(WCHAR);
     }
 
-    /* FIXME: Encrypt the password */
-    lpEncryptedPassword = (LPBYTE)lpPassword;
-    dwPasswordLength = (lpPassword ? (wcslen(lpPassword) + 1) * sizeof(WCHAR) : 0);
+    if (lpPassword != NULL)
+    {
+        /* FIXME: Encrypt the password */
+        lpEncryptedPassword = (LPBYTE)lpPassword;
+        dwPasswordLength = (wcslen(lpPassword) + 1) * sizeof(WCHAR);
+    }
 
     RpcTryExcept
     {
@@ -619,7 +622,7 @@ CreateServiceA(SC_HANDLE hSCManager,
 
         /* FIXME: Encrypt the password */
         lpEncryptedPassword = (LPBYTE)lpPasswordW;
-        dwPasswordLength = (DWORD)(lpPasswordW ? (wcslen(lpPasswordW) + 1) * sizeof(WCHAR) : 0);
+        dwPasswordLength = (wcslen(lpPasswordW) + 1) * sizeof(WCHAR);
     }
 
     RpcTryExcept
@@ -714,9 +717,12 @@ CreateServiceW(SC_HANDLE hSCManager,
         dwDependenciesLength *= sizeof(WCHAR);
     }
 
-    /* FIXME: Encrypt the password */
-    lpEncryptedPassword = (LPBYTE)lpPassword;
-    dwPasswordLength = (DWORD)(lpPassword ? (wcslen(lpPassword) + 1) * sizeof(WCHAR) : 0);
+    if (lpPassword != NULL)
+    {
+        /* FIXME: Encrypt the password */
+        lpEncryptedPassword = (LPBYTE)lpPassword;
+        dwPasswordLength = (wcslen(lpPassword) + 1) * sizeof(WCHAR);
+    }
 
     RpcTryExcept
     {
@@ -1671,6 +1677,42 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
     }
 
     return TRUE;
+}
+
+
+/**********************************************************************
+ *  I_ScGetCurrentGroupStateW
+ *
+ * @implemented
+ */
+DWORD WINAPI
+I_ScGetCurrentGroupStateW(SC_HANDLE hSCManager,
+                          LPWSTR pszGroupName,
+                          LPDWORD pdwGroupState)
+{
+    DWORD dwError;
+
+    TRACE("I_ScGetCurrentGroupStateW() called\n");
+
+    RpcTryExcept
+    {
+        dwError = RI_ScGetCurrentGroupStateW((SC_RPC_HANDLE)hSCManager,
+                                             pszGroupName,
+                                             pdwGroupState);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    RpcEndExcept
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        TRACE("RI_ScGetCurrentGroupStateW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+    }
+
+    return dwError;
 }
 
 

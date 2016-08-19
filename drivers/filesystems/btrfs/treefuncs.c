@@ -19,355 +19,20 @@
 
 // #define DEBUG_TREE_LOCKS
 
-enum read_tree_status {
-    ReadTreeStatus_Pending,
-    ReadTreeStatus_Success,
-    ReadTreeStatus_Cancelling,
-    ReadTreeStatus_Cancelled,
-    ReadTreeStatus_Error,
-    ReadTreeStatus_CRCError,
-    ReadTreeStatus_MissingDevice
-};
-
-struct read_tree_context;
-
-typedef struct {
-    struct read_tree_context* context;
-    UINT8* buf;
-    PIRP Irp;
-    IO_STATUS_BLOCK iosb;
-    enum read_tree_status status;
-} read_tree_stripe;
-
-typedef struct {
-    KEVENT Event;
-    NTSTATUS Status;
-    chunk* c;
-//     UINT8* buf;
-    UINT32 buflen;
-    UINT64 num_stripes;
-    LONG stripes_left;
-    UINT64 type;
-    read_tree_stripe* stripes;
-} read_tree_context;
-
-enum rollback_type {
-    ROLLBACK_INSERT_ITEM,
-    ROLLBACK_DELETE_ITEM
-};
-
 typedef struct {
     enum rollback_type type;
     void* ptr;
     LIST_ENTRY list_entry;
 } rollback_item;
 
-static NTSTATUS STDCALL read_tree_completion(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID conptr) {
-    read_tree_stripe* stripe = conptr;
-    read_tree_context* context = (read_tree_context*)stripe->context;
-    UINT64 i;
-    
-    if (stripe->status == ReadTreeStatus_Cancelling) {
-        stripe->status = ReadTreeStatus_Cancelled;
-        goto end;
-    }
-    
-    stripe->iosb = Irp->IoStatus;
-    
-    if (NT_SUCCESS(Irp->IoStatus.Status)) {
-        tree_header* th = (tree_header*)stripe->buf;
-        UINT32 crc32;
-        
-        crc32 = ~calc_crc32c(0xffffffff, (UINT8*)&th->fs_uuid, context->buflen - sizeof(th->csum));
-        
-        if (crc32 == *((UINT32*)th->csum)) {
-            stripe->status = ReadTreeStatus_Success;
-            
-            for (i = 0; i < context->num_stripes; i++) {
-                if (context->stripes[i].status == ReadTreeStatus_Pending) {
-                    context->stripes[i].status = ReadTreeStatus_Cancelling;
-                    IoCancelIrp(context->stripes[i].Irp);
-                }
-            }
-            
-            goto end;
-        } else
-            stripe->status = ReadTreeStatus_CRCError;
-    } else {
-        stripe->status = ReadTreeStatus_Error;
-    }
-    
-end:
-    if (InterlockedDecrement(&context->stripes_left) == 0)
-        KeSetEvent(&context->Event, 0, FALSE);
-    
-//     return STATUS_SUCCESS;
-    return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-NTSTATUS STDCALL read_tree(device_extension* Vcb, UINT64 addr, UINT8* buf) {
-    CHUNK_ITEM* ci;
-    CHUNK_ITEM_STRIPE* cis;
-    read_tree_context* context;
-    UINT64 i/*, type*/, offset;
-    NTSTATUS Status;
-    device** devices;
-    
-    // FIXME - make this work with RAID
-    
-    if (Vcb->log_to_phys_loaded) {
-        chunk* c = get_chunk_from_address(Vcb, addr);
-        
-        if (!c) {
-            ERR("get_chunk_from_address failed\n");
-            return STATUS_INTERNAL_ERROR;
-        }
-        
-        ci = c->chunk_item;
-        offset = c->offset;
-        devices = c->devices;
-    } else {
-        LIST_ENTRY* le = Vcb->sys_chunks.Flink;
-        
-        ci = NULL;
-        
-        while (le != &Vcb->sys_chunks) {
-            sys_chunk* sc = CONTAINING_RECORD(le, sys_chunk, list_entry);
-            
-            if (sc->key.obj_id == 0x100 && sc->key.obj_type == TYPE_CHUNK_ITEM && sc->key.offset <= addr) {
-                CHUNK_ITEM* chunk_item = sc->data;
-                
-                if ((addr - sc->key.offset) < chunk_item->size && chunk_item->num_stripes > 0) {
-                    ci = chunk_item;
-                    offset = sc->key.offset;
-                    cis = (CHUNK_ITEM_STRIPE*)&chunk_item[1];
-                    
-                    devices = ExAllocatePoolWithTag(PagedPool, sizeof(device*) * ci->num_stripes, ALLOC_TAG);
-                    if (!devices) {
-                        ERR("out of memory\n");
-                        return STATUS_INSUFFICIENT_RESOURCES;
-                    }
-                    
-                    for (i = 0; i < ci->num_stripes; i++) {
-                        devices[i] = find_device_from_uuid(Vcb, &cis[i].dev_uuid);
-                    }
-                    
-                    break;
-                }
-            }
-            
-            le = le->Flink;
-        }
-        
-        if (!ci) {
-            ERR("could not find chunk for %llx in bootstrap\n", addr);
-            return STATUS_INTERNAL_ERROR;
-        }
-    }
-    
-//     if (ci->type & BLOCK_FLAG_DUPLICATE) {
-//         type = BLOCK_FLAG_DUPLICATE;
-//     } else if (ci->type & BLOCK_FLAG_RAID0) {
-//         FIXME("RAID0 not yet supported\n");
-//         return STATUS_NOT_IMPLEMENTED;
-//     } else if (ci->type & BLOCK_FLAG_RAID1) {
-//         FIXME("RAID1 not yet supported\n");
-//         return STATUS_NOT_IMPLEMENTED;
-//     } else if (ci->type & BLOCK_FLAG_RAID10) {
-//         FIXME("RAID10 not yet supported\n");
-//         return STATUS_NOT_IMPLEMENTED;
-//     } else if (ci->type & BLOCK_FLAG_RAID5) {
-//         FIXME("RAID5 not yet supported\n");
-//         return STATUS_NOT_IMPLEMENTED;
-//     } else if (ci->type & BLOCK_FLAG_RAID6) {
-//         FIXME("RAID6 not yet supported\n");
-//         return STATUS_NOT_IMPLEMENTED;
-//     } else { // SINGLE
-//         type = 0;
-//     }
-
-    cis = (CHUNK_ITEM_STRIPE*)&ci[1];
-
-    context = ExAllocatePoolWithTag(NonPagedPool, sizeof(read_tree_context), ALLOC_TAG);
-    if (!context) {
-        ERR("out of memory\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-    
-    RtlZeroMemory(context, sizeof(read_tree_context));
-    KeInitializeEvent(&context->Event, NotificationEvent, FALSE);
-    
-    context->stripes = ExAllocatePoolWithTag(NonPagedPool, sizeof(read_tree_stripe) * ci->num_stripes, ALLOC_TAG);
-    if (!context->stripes) {
-        ERR("out of memory\n");
-        ExFreePool(context);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-    
-    RtlZeroMemory(context->stripes, sizeof(read_tree_stripe) * ci->num_stripes);
-    
-    context->buflen = Vcb->superblock.node_size;
-    context->num_stripes = ci->num_stripes;
-    context->stripes_left = context->num_stripes;
-//     context->type = type;
-    
-    // FIXME - for RAID, check beforehand whether there's enough devices to satisfy request
-    
-    for (i = 0; i < ci->num_stripes; i++) {
-        PIO_STACK_LOCATION IrpSp;
-        
-        if (!devices[i]) {
-            context->stripes[i].status = ReadTreeStatus_MissingDevice;
-            context->stripes[i].buf = NULL;
-            context->stripes_left--;
-        } else {
-            context->stripes[i].context = (struct read_tree_context*)context;
-            context->stripes[i].buf = ExAllocatePoolWithTag(NonPagedPool, Vcb->superblock.node_size, ALLOC_TAG);
-            
-            if (!context->stripes[i].buf) {
-                ERR("out of memory\n");
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                goto exit;
-            }
-
-            context->stripes[i].Irp = IoAllocateIrp(devices[i]->devobj->StackSize, FALSE);
-            
-            if (!context->stripes[i].Irp) {
-                ERR("IoAllocateIrp failed\n");
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                goto exit;
-            }
-            
-            IrpSp = IoGetNextIrpStackLocation(context->stripes[i].Irp);
-            IrpSp->MajorFunction = IRP_MJ_READ;
-            
-            if (devices[i]->devobj->Flags & DO_BUFFERED_IO) {
-                FIXME("FIXME - buffered IO\n");
-            } else if (devices[i]->devobj->Flags & DO_DIRECT_IO) {
-                context->stripes[i].Irp->MdlAddress = IoAllocateMdl(context->stripes[i].buf, Vcb->superblock.node_size, FALSE, FALSE, NULL);
-                if (!context->stripes[i].Irp->MdlAddress) {
-                    ERR("IoAllocateMdl failed\n");
-                    Status = STATUS_INSUFFICIENT_RESOURCES;
-                    goto exit;
-                }
-                
-                MmProbeAndLockPages(context->stripes[i].Irp->MdlAddress, KernelMode, IoWriteAccess);
-            } else {
-                context->stripes[i].Irp->UserBuffer = context->stripes[i].buf;
-            }
-
-            IrpSp->Parameters.Read.Length = Vcb->superblock.node_size;
-            IrpSp->Parameters.Read.ByteOffset.QuadPart = addr - offset + cis[i].offset;
-            
-            context->stripes[i].Irp->UserIosb = &context->stripes[i].iosb;
-            
-            IoSetCompletionRoutine(context->stripes[i].Irp, read_tree_completion, &context->stripes[i], TRUE, TRUE, TRUE);
-
-            context->stripes[i].status = ReadTreeStatus_Pending;
-        }
-    }
-    
-    for (i = 0; i < ci->num_stripes; i++) {
-        if (context->stripes[i].status != ReadTreeStatus_MissingDevice) {
-            IoCallDriver(devices[i]->devobj, context->stripes[i].Irp);
-        }
-    }
-
-    KeWaitForSingleObject(&context->Event, Executive, KernelMode, FALSE, NULL);
-    
-    // FIXME - if checksum error, write good data over bad
-    
-    // check if any of the devices return a "user-induced" error
-    
-    for (i = 0; i < ci->num_stripes; i++) {
-        if (context->stripes[i].status == ReadTreeStatus_Error && IoIsErrorUserInduced(context->stripes[i].iosb.Status)) {
-            IoSetHardErrorOrVerifyDevice(context->stripes[i].Irp, devices[i]->devobj);
-            
-            Status = context->stripes[i].iosb.Status;
-            goto exit;
-        }
-    }
-    
-    // check if any of the stripes succeeded
-    
-    for (i = 0; i < ci->num_stripes; i++) {
-        if (context->stripes[i].status == ReadTreeStatus_Success) {
-            RtlCopyMemory(buf, context->stripes[i].buf, Vcb->superblock.node_size);
-            Status = STATUS_SUCCESS;
-            goto exit;
-        }
-    }
-    
-    // if not, see if we got a checksum error
-    
-    for (i = 0; i < ci->num_stripes; i++) {
-        if (context->stripes[i].status == ReadTreeStatus_CRCError) {
-#ifdef _DEBUG
-            tree_header* th = (tree_header*)context->stripes[i].buf;
-            UINT32 crc32 = ~calc_crc32c(0xffffffff, (UINT8*)&th->fs_uuid, context->buflen - sizeof(th->csum));
-//             UINT64 j;
-            
-            WARN("stripe %llu had a checksum error\n", i);
-            WARN("crc32 was %08x, expected %08x\n", crc32, *((UINT32*)th->csum));
-#endif
-            
-//             for (j = 0; j < ci->num_stripes; j++) {
-//                 WARN("stripe %llu: device = %p, status = %u\n", j, c->devices[j], context->stripes[j].status);
-//             }
-//             int3;
-            
-            Status = STATUS_IMAGE_CHECKSUM_MISMATCH;
-            goto exit;
-        }
-    }
-    
-    // failing that, return the first error we encountered
-    
-    for (i = 0; i < ci->num_stripes; i++) {
-        if (context->stripes[i].status == ReadTreeStatus_Error) {
-            Status = context->stripes[i].iosb.Status;
-            goto exit;
-        }
-    }
-    
-    // if we somehow get here, return STATUS_INTERNAL_ERROR
-    
-    Status = STATUS_INTERNAL_ERROR;
-
-//     for (i = 0; i < ci->num_stripes; i++) {
-//         ERR("%llx: status = %u, NTSTATUS = %08x\n", i, context->stripes[i].status, context->stripes[i].iosb.Status);
-//     }
-exit:
-
-    for (i = 0; i < ci->num_stripes; i++) {
-        if (context->stripes[i].Irp) {
-            if (devices[i]->devobj->Flags & DO_DIRECT_IO) {
-                MmUnlockPages(context->stripes[i].Irp->MdlAddress);
-                IoFreeMdl(context->stripes[i].Irp->MdlAddress);
-            }
-            IoFreeIrp(context->stripes[i].Irp);
-        }
-        
-        if (context->stripes[i].buf)
-            ExFreePool(context->stripes[i].buf);
-    }
-
-    ExFreePool(context->stripes);
-    ExFreePool(context);
-    
-    if (!Vcb->log_to_phys_loaded)
-        ExFreePool(devices);
-    
-    return Status;
-}
-
-NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, const char* func, const char* file, unsigned int line) {
+NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, tree* parent, const char* func, const char* file, unsigned int line) {
     UINT8* buf;
     NTSTATUS Status;
     tree_header* th;
     tree* t;
     tree_data* td;
     chunk* c;
+    shared_data* sd;
     
     TRACE("(%p, %llx)\n", Vcb, addr);
     
@@ -377,9 +42,9 @@ NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** 
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     
-    Status = read_tree(Vcb, addr, buf);
+    Status = read_data(Vcb, addr, Vcb->superblock.node_size, NULL, TRUE, buf, &c, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("read_tree returned 0x%08x\n", Status);
+        ERR("read_data returned 0x%08x\n", Status);
         ExFreePool(buf);
         return Status;
     }
@@ -407,8 +72,6 @@ NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** 
     t->has_new_address = FALSE;
     t->write = FALSE;
     
-    c = get_chunk_from_address(Vcb, addr);
-    
     if (c)
         t->flags = c->chunk_item->type;
     else
@@ -419,9 +82,30 @@ NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** 
 //     t->items = ExAllocatePoolWithTag(PagedPool, num_items * sizeof(tree_data), ALLOC_TAG);
     InitializeListHead(&t->itemlist);
     
+    if (t->header.flags & HEADER_FLAG_SHARED_BACKREF || !(t->header.flags & HEADER_FLAG_MIXED_BACKREF)) {
+        sd = ExAllocatePoolWithTag(NonPagedPool, sizeof(shared_data), ALLOC_TAG);
+        if (!sd) {
+            ERR("out of memory\n");
+            ExFreePool(buf);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        
+        sd->address = addr;
+        sd->parent = parent ? parent->header.address : addr;
+        InitializeListHead(&sd->entries);
+        
+        ExInterlockedInsertTailList(&Vcb->shared_extents, &sd->list_entry, &Vcb->shared_extents_lock);
+    }
+    
     if (t->header.level == 0) { // leaf node
         leaf_node* ln = (leaf_node*)(buf + sizeof(tree_header));
         unsigned int i;
+        
+        if ((t->header.num_items * sizeof(leaf_node)) + sizeof(tree_header) > Vcb->superblock.node_size) {
+            ERR("tree at %llx has more items than expected (%x)\n", t->header.num_items);
+            ExFreePool(buf);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
         
         for (i = 0; i < t->header.num_items; i++) {
             td = ExAllocatePoolWithTag(PagedPool, sizeof(tree_data), ALLOC_TAG);
@@ -446,6 +130,55 @@ NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** 
             } else
                 td->data = NULL;
             
+            if ((t->header.flags & HEADER_FLAG_SHARED_BACKREF || !(t->header.flags & HEADER_FLAG_MIXED_BACKREF)) &&
+                ln[i].key.obj_type == TYPE_EXTENT_DATA && ln[i].size >= sizeof(EXTENT_DATA)) {
+                EXTENT_DATA* ed = (EXTENT_DATA*)td->data;
+                
+                if ((ed->type == EXTENT_TYPE_REGULAR || ed->type == EXTENT_TYPE_PREALLOC) && ln[i].size >= sizeof(EXTENT_DATA) - 1 + sizeof(EXTENT_DATA2)) {
+                    EXTENT_DATA2* ed2 = (EXTENT_DATA2*)ed->data;
+                    
+                    if (ed2->size != 0) {
+                        LIST_ENTRY* le;
+                        BOOL found = FALSE;
+                        
+                        TRACE("shared extent %llx,%llx\n", ed2->address, ed2->size);
+                        
+                        le = sd->entries.Flink;
+                        while (le != &sd->entries) {
+                            shared_data_entry* sde = CONTAINING_RECORD(le, shared_data_entry, list_entry);
+                            
+                            if (sde->address == ed2->address && sde->size == ed2->size && sde->edr.root == t->header.tree_id &&
+                                sde->edr.objid == ln[i].key.obj_id && sde->edr.offset == ln[i].key.offset - ed2->offset) {
+                                sde->edr.count++;
+                                found = TRUE;
+                                break;
+                            }
+                            
+                            le = le->Flink;
+                        }
+                        
+                        if (!found) {
+                            shared_data_entry* sde = ExAllocatePoolWithTag(PagedPool, sizeof(shared_data_entry), ALLOC_TAG);
+                            
+                            if (!sde) {
+                                ERR("out of memory\n");
+                                ExFreePool(buf);
+                                return STATUS_INSUFFICIENT_RESOURCES;
+                            }
+                            
+                            sde->address = ed2->address;
+                            sde->size = ed2->size;
+                            sde->edr.root = t->header.tree_id;
+                            sde->edr.objid = ln[i].key.obj_id;
+                            sde->edr.offset = ln[i].key.offset - ed2->offset;
+                            sde->edr.count = 1;
+                            
+                            InsertTailList(&sd->entries, &sde->list_entry);
+                        }
+                    }
+                }
+            }
+            
             td->size = ln[i].size;
             td->ignore = FALSE;
             td->inserted = FALSE;
@@ -459,6 +192,12 @@ NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** 
     } else {
         internal_node* in = (internal_node*)(buf + sizeof(tree_header));
         unsigned int i;
+        
+        if ((t->header.num_items * sizeof(internal_node)) + sizeof(tree_header) > Vcb->superblock.node_size) {
+            ERR("tree at %llx has more items than expected (%x)\n", t->header.num_items);
+            ExFreePool(buf);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
         
         for (i = 0; i < t->header.num_items; i++) {
             td = ExAllocatePoolWithTag(PagedPool, sizeof(tree_data), ALLOC_TAG);
@@ -474,7 +213,6 @@ NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** 
             td->treeholder.address = in[i].address;
             td->treeholder.generation = in[i].generation;
             td->treeholder.tree = NULL;
-            init_tree_holder(&td->treeholder);
 //             td->treeholder.nonpaged->status = tree_holder_unloaded;
             td->ignore = FALSE;
             td->inserted = FALSE;
@@ -587,7 +325,7 @@ NTSTATUS STDCALL _do_load_tree(device_extension* Vcb, tree_holder* th, root* r, 
     if (!th->tree) {
         NTSTATUS Status;
         
-        Status = _load_tree(Vcb, th->address, r, &th->tree, func, file, line);
+        Status = _load_tree(Vcb, th->address, r, &th->tree, t, func, file, line);
         if (!NT_SUCCESS(Status)) {
             ERR("load_tree returned %08x\n", Status);
             ExReleaseResourceLite(&r->nonpaged->load_tree_lock);
@@ -964,17 +702,20 @@ void free_trees_root(device_extension* Vcb, root* r) {
             LIST_ENTRY* nextle = le->Flink;
             tree* t = CONTAINING_RECORD(le, tree, list_entry);
             
-            if (t->root == r && t->header.level == level) {
-                BOOL top = !t->paritem;
-                
-                empty = FALSE;
-                
-                free_tree2(t, funcname, __FILE__, __LINE__);
-                if (top && r->treeholder.tree == t)
-                    r->treeholder.tree = NULL;
-                
-                if (IsListEmpty(&Vcb->trees))
-                    return;
+            if (t->root == r) {
+                if (t->header.level == level) {
+                    BOOL top = !t->paritem;
+                    
+                    empty = FALSE;
+                    
+                    free_tree2(t, funcname, __FILE__, __LINE__);
+                    if (top && r->treeholder.tree == t)
+                        r->treeholder.tree = NULL;
+                    
+                    if (IsListEmpty(&Vcb->trees))
+                        return;
+                } else if (t->header.level > level)
+                    empty = FALSE;
             }
             
             le = nextle;
@@ -986,22 +727,59 @@ void free_trees_root(device_extension* Vcb, root* r) {
 }
 
 void STDCALL free_trees(device_extension* Vcb) {
-    tree* t;
-    root* r;
-
-    while (!IsListEmpty(&Vcb->trees)) {
-        t = CONTAINING_RECORD(Vcb->trees.Flink, tree, list_entry);
-        r = t->root;
+    LIST_ENTRY* le;
+    UINT8 level;
+    
+    for (level = 0; level <= 255; level++) {
+        BOOL empty = TRUE;
         
-        ExAcquireResourceExclusiveLite(&r->nonpaged->load_tree_lock, TRUE);
+        le = Vcb->trees.Flink;
         
-        free_trees_root(Vcb, r);
+        while (le != &Vcb->trees) {
+            LIST_ENTRY* nextle = le->Flink;
+            tree* t = CONTAINING_RECORD(le, tree, list_entry);
+            root* r = t->root;
+            
+            if (t->header.level == level) {
+                BOOL top = !t->paritem;
+                
+                empty = FALSE;
+                
+                free_tree2(t, funcname, __FILE__, __LINE__);
+                if (top && r->treeholder.tree == t)
+                    r->treeholder.tree = NULL;
+                
+                if (IsListEmpty(&Vcb->trees))
+                    goto free_shared;
+            } else if (t->header.level > level)
+                empty = FALSE;
+            
+            le = nextle;
+        }
         
-        ExReleaseResourceLite(&r->nonpaged->load_tree_lock);
+        if (empty)
+            break;
+    }
+    
+free_shared:
+    while (!IsListEmpty(&Vcb->shared_extents)) {
+        shared_data* sd;
+        
+        le = RemoveHeadList(&Vcb->shared_extents);
+        sd = CONTAINING_RECORD(le, shared_data, list_entry);
+        
+        while (!IsListEmpty(&sd->entries)) {
+            LIST_ENTRY* le2 = RemoveHeadList(&sd->entries);
+            shared_data_entry* sde = CONTAINING_RECORD(le2, shared_data_entry, list_entry);
+            
+            ExFreePool(sde);
+        }
+        
+        ExFreePool(sd);
     }
 }
 
-static void add_rollback(LIST_ENTRY* rollback, enum rollback_type type, void* ptr) {
+void add_rollback(LIST_ENTRY* rollback, enum rollback_type type, void* ptr) {
     rollback_item* ri;
     
     ri = ExAllocatePoolWithTag(PagedPool, sizeof(rollback_item), ALLOC_TAG);
@@ -1030,6 +808,13 @@ BOOL STDCALL insert_tree_item(device_extension* Vcb, root* r, UINT64 obj_id, UIN
     NTSTATUS Status;
     
     TRACE("(%p, %p, %llx, %x, %llx, %p, %x, %p, %p)\n", Vcb, r, obj_id, obj_type, offset, data, size, ptp, rollback);
+    
+#ifdef DEBUG_PARANOID
+    if (!ExIsResourceAcquiredExclusiveLite(&Vcb->tree_lock)) {
+        ERR("ERROR - tree_lock not held exclusively\n");
+        int3;
+    }
+#endif
     
     searchkey.obj_id = obj_id;
     searchkey.obj_type = obj_type;
@@ -1123,7 +908,7 @@ BOOL STDCALL insert_tree_item(device_extension* Vcb, root* r, UINT64 obj_id, UIN
     
     if (!tp.tree->write) {
         tp.tree->write = TRUE;
-        Vcb->write_trees++;
+        Vcb->need_write = TRUE;
     }
     
     if (ptp)
@@ -1185,6 +970,11 @@ void STDCALL delete_tree_item(device_extension* Vcb, traverse_ptr* tp, LIST_ENTR
     TRACE("deleting item %llx,%x,%llx (ignore = %s)\n", tp->item->key.obj_id, tp->item->key.obj_type, tp->item->key.offset, tp->item->ignore ? "TRUE" : "FALSE");
     
 #ifdef DEBUG_PARANOID
+    if (!ExIsResourceAcquiredExclusiveLite(&Vcb->tree_lock)) {
+        ERR("ERROR - tree_lock not held exclusively\n");
+        int3;
+    }
+
     if (tp->item->ignore) {
         ERR("trying to delete already-deleted item %llx,%x,%llx\n", tp->item->key.obj_id, tp->item->key.obj_type, tp->item->key.offset);
         int3;
@@ -1195,7 +985,7 @@ void STDCALL delete_tree_item(device_extension* Vcb, traverse_ptr* tp, LIST_ENTR
     
     if (!tp->tree->write) {
         tp->tree->write = TRUE;
-        Vcb->write_trees++;
+        Vcb->need_write = TRUE;
     }
     
     tp->tree->header.num_items--;
@@ -1237,6 +1027,9 @@ void clear_rollback(LIST_ENTRY* rollback) {
             case ROLLBACK_DELETE_ITEM:
                 ExFreePool(ri->ptr);
                 break;
+
+            default:
+                break;
         }
         
         ExFreePool(ri);
@@ -1247,7 +1040,7 @@ void do_rollback(device_extension* Vcb, LIST_ENTRY* rollback) {
     rollback_item* ri;
     
     while (!IsListEmpty(rollback)) {
-        LIST_ENTRY* le = RemoveHeadList(rollback);
+        LIST_ENTRY* le = RemoveTailList(rollback);
         ri = CONTAINING_RECORD(le, rollback_item, list_entry);
         
         switch (ri->type) {
@@ -1284,6 +1077,22 @@ void do_rollback(device_extension* Vcb, LIST_ENTRY* rollback) {
                 }
                 
                 ExFreePool(tp);
+                break;
+            }
+            
+            case ROLLBACK_INSERT_EXTENT:
+            {
+                extent* ext = ri->ptr;
+                
+                ext->ignore = TRUE;
+                break;
+            }
+            
+            case ROLLBACK_DELETE_EXTENT:
+            {
+                extent* ext = ri->ptr;
+                
+                ext->ignore = FALSE;
                 break;
             }
         }

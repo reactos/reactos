@@ -1,4 +1,26 @@
+/*
+ * ReactOS Explorer
+ *
+ * Copyright 2016 Sylvain Deverre <deverre dot sylv at gmail dot com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
 #include "precomp.h"
+#include <commoncontrols.h>
+#include <undocshell.h>
 
 #if 1
 #undef UNIMPLEMENTED
@@ -6,184 +28,585 @@
 #define UNIMPLEMENTED DbgPrint("%s is UNIMPLEMENTED!\n", __FUNCTION__)
 #endif
 
-extern "C"
-HRESULT WINAPI CExplorerBand_Constructor(REFIID riid, LPVOID *ppv)
-{
-    return ShellObjectCreator<CExplorerBand>(riid, ppv);
-}
-
 CExplorerBand::CExplorerBand() :
-    m_OnWinEventShown(FALSE)
+    pSite(NULL), fVisible(FALSE), bNavigating(FALSE), dwBandID(0)
 {
-#if 0
-    HRESULT hResult = CoCreateInstance(CLSID_ExplorerBand, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IUnknown, &m_internalBand));
-    if (FAILED(hResult))
-    {
-        ERR("Could not create internal band (hr=%08lx).\n", hResult);
-        m_internalBand = NULL;
-        return;
-    }
-    hResult = m_internalBand->QueryInterface(IID_PPV_ARG(IDeskBand, &m_internalDeskBand));
-    if (FAILED(hResult))
-    {
-        ERR("Could not obtain interface IDeskBand from internal band (hr=%08lx).\n", hResult);
-        m_internalBand = NULL;
-        m_internalDeskBand = NULL;
-        return;
-    }
-    hResult = m_internalBand->QueryInterface(IID_PPV_ARG(IObjectWithSite, &m_internalObjectWithSite));
-    if (FAILED(hResult))
-    {
-        ERR("Could not obtain interface IObjectWithSite from internal band (hr=%08lx).\n", hResult);
-        m_internalBand = NULL;
-        m_internalDeskBand = NULL;
-        m_internalObjectWithSite = NULL;
-        return;
-    }
-    hResult = m_internalBand->QueryInterface(IID_PPV_ARG(IInputObject, &m_internalInputObject));
-    if (FAILED(hResult))
-    {
-        ERR("Could not obtain interface IInputObject from internal band (hr=%08lx).\n", hResult);
-        m_internalBand = NULL;
-        m_internalDeskBand = NULL;
-        m_internalObjectWithSite = NULL;
-        m_internalInputObject = NULL;
-        return;
-    }
-    hResult = m_internalBand->QueryInterface(IID_PPV_ARG(IPersistStream, &m_internalPersistStream));
-    if (FAILED(hResult))
-    {
-        ERR("Could not obtain interface IPersistStream from internal band (hr=%08lx).\n", hResult);
-        m_internalBand = NULL;
-        m_internalDeskBand = NULL;
-        m_internalObjectWithSite = NULL;
-        m_internalInputObject = NULL;
-        m_internalPersistStream = NULL;
-        return;
-    }
-    hResult = m_internalBand->QueryInterface(IID_PPV_ARG(IOleCommandTarget, &m_internalOleCommandTarget));
-    if (FAILED(hResult))
-    {
-        ERR("Could not obtain interface IOleCommandTarget from internal band (hr=%08lx).\n", hResult);
-        m_internalBand = NULL;
-        m_internalDeskBand = NULL;
-        m_internalObjectWithSite = NULL;
-        m_internalInputObject = NULL;
-        m_internalPersistStream = NULL;
-        m_internalOleCommandTarget = NULL;
-        return;
-    }
-    hResult = m_internalBand->QueryInterface(IID_PPV_ARG(IServiceProvider, &m_internalServiceProvider));
-    if (FAILED(hResult))
-    {
-        ERR("Could not obtain interface IServiceProvider from internal band (hr=%08lx).\n", hResult);
-        m_internalBand = NULL;
-        m_internalDeskBand = NULL;
-        m_internalObjectWithSite = NULL;
-        m_internalInputObject = NULL;
-        m_internalPersistStream = NULL;
-        m_internalOleCommandTarget = NULL;
-        m_internalServiceProvider = NULL;
-        return;
-    }
-    hResult = m_internalBand->QueryInterface(IID_PPV_ARG(IBandNavigate, &m_internalBandNavigate));
-    if (FAILED(hResult))
-    {
-        ERR("Could not obtain interface IBandNavigate from internal band (hr=%08lx).\n", hResult);
-        m_internalBand = NULL;
-        m_internalDeskBand = NULL;
-        m_internalObjectWithSite = NULL;
-        m_internalInputObject = NULL;
-        m_internalPersistStream = NULL;
-        m_internalOleCommandTarget = NULL;
-        m_internalServiceProvider = NULL;
-        m_internalBandNavigate = NULL;
-        return;
-    }
-    hResult = m_internalBand->QueryInterface(IID_PPV_ARG(IWinEventHandler, &m_internalWinEventHandler));
-    if (FAILED(hResult))
-    {
-        ERR("Could not obtain interface IWinEventHandler from internal band (hr=%08lx).\n", hResult);
-        m_internalBand = NULL;
-        m_internalDeskBand = NULL;
-        m_internalObjectWithSite = NULL;
-        m_internalInputObject = NULL;
-        m_internalPersistStream = NULL;
-        m_internalOleCommandTarget = NULL;
-        m_internalServiceProvider = NULL;
-        m_internalBandNavigate = NULL;
-        m_internalWinEventHandler = NULL;
-        return;
-    }
-    hResult = m_internalBand->QueryInterface(IID_PPV_ARG(INamespaceProxy, &m_internalNamespaceProxy));
-    if (FAILED(hResult))
-    {
-        ERR("Could not obtain interface INamespaceProxy from internal band (hr=%08lx).\n", hResult);
-        m_internalBand = NULL;
-        m_internalDeskBand = NULL;
-        m_internalObjectWithSite = NULL;
-        m_internalInputObject = NULL;
-        m_internalPersistStream = NULL;
-        m_internalOleCommandTarget = NULL;
-        m_internalServiceProvider = NULL;
-        m_internalBandNavigate = NULL;
-        m_internalWinEventHandler = NULL;
-        m_internalNamespaceProxy = NULL;
-        return;
-    }
-    hResult = m_internalBand->QueryInterface(IID_PPV_ARG(IDispatch, &m_internalDispatch));
-    if (FAILED(hResult))
-    {
-        ERR("Could not obtain interface INamespaceProxy from internal band (hr=%08lx).\n", hResult);
-        m_internalBand = NULL;
-        m_internalDeskBand = NULL;
-        m_internalObjectWithSite = NULL;
-        m_internalInputObject = NULL;
-        m_internalPersistStream = NULL;
-        m_internalOleCommandTarget = NULL;
-        m_internalServiceProvider = NULL;
-        m_internalBandNavigate = NULL;
-        m_internalWinEventHandler = NULL;
-        m_internalNamespaceProxy = NULL;
-        m_internalDispatch = NULL;
-        return;
-    }
-#endif
 }
 
 CExplorerBand::~CExplorerBand()
 {
 }
 
+void CExplorerBand::InitializeExplorerBand()
+{
+    // Init the treeview here
+    HRESULT                             hr;
+    LPITEMIDLIST                        pidl;
+    CComPtr<IWebBrowser2>               browserService;
+    SHChangeNotifyEntry                 shcne;
+
+    hr = SHGetDesktopFolder(&pDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return;
+
+    hr = SHGetFolderLocation(m_hWnd, CSIDL_DESKTOP, NULL, 0, &pidl);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return;
+
+    IImageList * piml;
+    hr = SHGetImageList(SHIL_SMALL, IID_PPV_ARG(IImageList, &piml));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return;
+
+    TreeView_SetImageList(m_hWnd, (HIMAGELIST)piml, TVSIL_NORMAL);
+
+    // Insert the root node
+    hRoot = InsertItem(0, pDesktop, pidl, pidl, FALSE);
+    if (!hRoot)
+    {
+        ERR("Failed to create root item\n");
+        return;
+    }
+
+    NodeInfo* pNodeInfo = GetNodeInfo(hRoot);
+
+    // Insert child nodes
+    InsertSubitems(hRoot, pNodeInfo);
+    TreeView_Expand(m_hWnd, hRoot, TVE_EXPAND);
+
+    // Navigate to current folder position
+    NavigateToCurrentFolder();
+
+    // Register shell notification
+    shcne.pidl = pidl;
+    shcne.fRecursive = TRUE;
+    shellRegID = SHChangeNotifyRegister(
+        m_hWnd,
+        SHCNRF_ShellLevel | SHCNRF_InterruptLevel | SHCNRF_RecursiveInterrupt,
+        SHCNE_DISKEVENTS | SHCNE_RENAMEFOLDER | SHCNE_RMDIR | SHCNE_MKDIR,
+        WM_USER_SHELLEVENT,
+        1,
+        &shcne);
+    if (!shellRegID)
+    {
+        ERR("Something went wrong, error %08x\n", GetLastError());
+    }
+    // Register browser connection endpoint
+    hr = IUnknown_QueryService(pSite, SID_SWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &browserService));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return;
+
+    hr = AtlAdvise(browserService, dynamic_cast<IDispatch*>(this), DIID_DWebBrowserEvents, &adviseCookie);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return;
+
+    ILFree(pidl);
+}
+
+void CExplorerBand::DestroyExplorerBand()
+{
+    HRESULT hr;
+    CComPtr <IWebBrowser2> browserService;
+
+    TRACE("Cleaning up explorer band ...\n");
+
+    hr = IUnknown_QueryService(pSite, SID_SWebBrowserApp, IID_PPV_ARG(IWebBrowser2, &browserService));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return;
+
+    hr = AtlUnadvise(browserService, DIID_DWebBrowserEvents, adviseCookie);
+    /* Remove all items of the treeview */
+    RevokeDragDrop(m_hWnd);
+    TreeView_DeleteAllItems(m_hWnd);
+    pDesktop = NULL;
+    hRoot = NULL;
+    TRACE("Cleanup done !\n");
+}
+
+CExplorerBand::NodeInfo* CExplorerBand::GetNodeInfo(HTREEITEM hItem)
+{
+    TVITEM tvItem;
+
+    tvItem.mask = TVIF_PARAM;
+    tvItem.hItem = hItem;
+
+    if (!TreeView_GetItem(m_hWnd, &tvItem))
+        return 0;
+
+    return reinterpret_cast<NodeInfo*>(tvItem.lParam);
+}
+
+HRESULT CExplorerBand::ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd)
+{
+    CComPtr<IOleWindow>                 pBrowserOleWnd;
+    CMINVOKECOMMANDINFO                 cmi;
+    HWND                                browserWnd;
+    HRESULT                             hr;
+
+    hr = IUnknown_QueryService(pSite, SID_SShellBrowser, IID_PPV_ARG(IOleWindow, &pBrowserOleWnd));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pBrowserOleWnd->GetWindow(&browserWnd);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    ZeroMemory(&cmi, sizeof(cmi));
+    cmi.cbSize = sizeof(cmi);
+    cmi.lpVerb = MAKEINTRESOURCEA(nCmd);
+    cmi.hwnd = browserWnd;
+    if (GetKeyState(VK_SHIFT) & 0x8000)
+        cmi.fMask |= CMIC_MASK_SHIFT_DOWN;
+    if (GetKeyState(VK_CONTROL) & 0x8000)
+        cmi.fMask |= CMIC_MASK_CONTROL_DOWN;
+
+    return menu->InvokeCommand(&cmi);
+}
+
+HRESULT CExplorerBand::UpdateBrowser(LPITEMIDLIST pidlGoto)
+{
+    CComPtr<IShellBrowser>              pBrowserService;
+    HRESULT                             hr;
+
+    hr = IUnknown_QueryService(pSite, SID_STopLevelBrowser, IID_PPV_ARG(IShellBrowser, &pBrowserService));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pBrowserService->BrowseObject(pidlGoto, SBSP_SAMEBROWSER | SBSP_ABSOLUTE);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return hr;
+}
+
+// *** notifications handling ***
+BOOL CExplorerBand::OnTreeItemExpanding(LPNMTREEVIEW pnmtv)
+{
+    NodeInfo *pNodeInfo;
+
+    if (pnmtv->action == TVE_COLLAPSE) {
+        if (pnmtv->itemNew.hItem == hRoot)
+        {
+            // Prenvent root from collapsing
+            pnmtv->itemNew.mask |= TVIF_STATE;
+            pnmtv->itemNew.stateMask |= TVIS_EXPANDED;
+            pnmtv->itemNew.state &= ~TVIS_EXPANDED;
+            pnmtv->action = TVE_EXPAND;
+            return TRUE;
+        }
+    }
+    if (pnmtv->action == TVE_EXPAND) {
+        // Grab our directory PIDL
+        pNodeInfo = GetNodeInfo(pnmtv->itemNew.hItem);
+        // We have it, let's try
+        if (pNodeInfo && !pNodeInfo->expanded)
+            if (!InsertSubitems(pnmtv->itemNew.hItem, pNodeInfo)) {
+                // remove subitem "+" since we failed to add subitems
+                TV_ITEM tvItem;
+
+                tvItem.mask = TVIF_CHILDREN;
+                tvItem.hItem = pnmtv->itemNew.hItem;
+                tvItem.cChildren = 0;
+
+                TreeView_SetItem(m_hWnd, &tvItem);
+            }
+    }
+    return FALSE;
+}
+
+void CExplorerBand::OnSelectionChanged(LPNMTREEVIEW pnmtv)
+{
+    NodeInfo* pNodeInfo = GetNodeInfo(pnmtv->itemNew.hItem);
+
+    /* Prevents navigation if selection is initiated inside the band */
+    if (bNavigating)
+        return;
+
+    UpdateBrowser(pNodeInfo->absolutePidl);
+
+    SetFocus();
+    // Expand the node
+    //TreeView_Expand(m_hWnd, pnmtv->itemNew.hItem, TVE_EXPAND);
+}
+
+
+// *** ATL event handlers ***
+LRESULT CExplorerBand::OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    HTREEITEM                           item;
+    NodeInfo                            *info;
+    HMENU                               treeMenu;
+    WORD                                x;
+    WORD                                y;
+    CComPtr<IShellFolder>               pFolder;
+    CComPtr<IContextMenu>               contextMenu;
+    HRESULT                             hr;
+    UINT                                uCommand;
+    LPITEMIDLIST                        pidlChild;
+
+    treeMenu = NULL;
+    item = TreeView_GetSelection(m_hWnd);
+    bHandled = TRUE;
+    if (!item)
+    {
+        goto Cleanup;
+    }
+
+    x = LOWORD(lParam);
+    y = HIWORD(lParam);
+    if (x == -1 && y == -1)
+    {
+        // TODO: grab position of tree item and position it correctly
+    }
+
+    info = GetNodeInfo(item);
+    if (!info)
+    {
+        ERR("No node data, something has gone wrong !\n");
+        goto Cleanup;
+    }
+    hr = SHBindToParent(info->absolutePidl, IID_PPV_ARG(IShellFolder, &pFolder),
+        (LPCITEMIDLIST*)&pidlChild);
+    if (!SUCCEEDED(hr))
+    {
+        ERR("Can't bind to folder!\n");
+        goto Cleanup;
+    }
+    hr = pFolder->GetUIObjectOf(m_hWnd, 1, (LPCITEMIDLIST*)&pidlChild, IID_IContextMenu,
+        NULL, reinterpret_cast<void**>(&contextMenu));
+    if (!SUCCEEDED(hr))
+    {
+        ERR("Can't get IContextMenu interface\n");
+        goto Cleanup;
+    }
+    treeMenu = CreatePopupMenu();
+    hr = contextMenu->QueryContextMenu(treeMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST,
+        CMF_EXPLORE);
+    if (!SUCCEEDED(hr))
+    {
+        WARN("Can't get context menu for item\n");
+        DestroyMenu(treeMenu);
+        goto Cleanup;
+    }
+    uCommand = TrackPopupMenu(treeMenu, TPM_LEFTALIGN | TPM_RETURNCMD | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
+        x, y, 0, m_hWnd, NULL);
+
+    ExecuteCommand(contextMenu, uCommand);
+Cleanup:
+    if (treeMenu)
+        DestroyMenu(treeMenu);
+    bNavigating = TRUE;
+    TreeView_SelectItem(m_hWnd, oldSelected);
+    bNavigating = FALSE;
+    return TRUE;
+}
+
+LRESULT CExplorerBand::ContextMenuHack(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    bHandled = FALSE;
+    if (uMsg == WM_RBUTTONDOWN)
+    {
+        TVHITTESTINFO info;
+        info.pt.x = LOWORD(lParam);
+        info.pt.y = HIWORD(lParam);
+        info.flags = TVHT_ONITEM;
+        info.hItem = NULL;
+
+        // Save the current location
+        oldSelected = TreeView_GetSelection(m_hWnd);
+
+        // Move to the item selected by the treeview (don't change right pane)
+        TreeView_HitTest(m_hWnd, &info);
+        bNavigating = TRUE;
+        TreeView_SelectItem(m_hWnd, info.hItem);
+        bNavigating = FALSE;
+    }
+    return FALSE; /* let the wndproc process the message */
+}
+// *** Helper functions ***
+HTREEITEM CExplorerBand::InsertItem(HTREEITEM hParent, IShellFolder *psfParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort)
+{
+    TV_INSERTSTRUCT                     tvInsert;
+    HTREEITEM                           htiCreated;
+
+    /* Get the attributes of the node */
+    SFGAOF attrs = SFGAO_STREAM | SFGAO_HASSUBFOLDER;
+    HRESULT hr = psfParent->GetAttributesOf(1, &pEltRelative, &attrs);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return NULL;
+
+    /* Ignore streams */
+    if ((attrs & SFGAO_STREAM))
+    {
+        TRACE("Ignoring stream\n");
+        return NULL;
+    }
+
+    /* Get the name of the node */
+    WCHAR wszDisplayName[MAX_PATH];
+    if (!ILGetDisplayNameEx(psfParent, pElt, wszDisplayName, ILGDN_INFOLDER))
+    {
+        ERR("Failed to get node name\n");
+        return NULL;
+    }
+
+    /* Get the icon of the node */
+    INT iIcon = SHMapPIDLToSystemImageListIndex(psfParent, pEltRelative, NULL);
+
+    NodeInfo* pChildInfo = new NodeInfo;
+    if (!pChildInfo)
+    {
+        ERR("Failed to allocate NodeInfo\n");
+        return FALSE;
+    }
+
+    // Store our node info
+    pChildInfo->absolutePidl = ILClone(pElt);
+    pChildInfo->relativePidl = ILClone(pEltRelative);
+    pChildInfo->expanded = FALSE;
+
+    // Set up our treeview template
+    tvInsert.hParent = hParent;
+    tvInsert.hInsertAfter = TVI_LAST;
+    tvInsert.item.mask = TVIF_PARAM | TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_CHILDREN;
+    tvInsert.item.cchTextMax = MAX_PATH;
+    tvInsert.item.pszText = wszDisplayName;
+    tvInsert.item.iImage = tvInsert.item.iSelectedImage = iIcon;
+    tvInsert.item.cChildren = (attrs & SFGAO_HASSUBFOLDER) ? 1 : 0;
+    tvInsert.item.lParam = (LPARAM)pChildInfo;
+
+    htiCreated = TreeView_InsertItem(m_hWnd, &tvInsert);
+
+    return htiCreated;
+}
+
+/* This is the slow version of the above method */
+HTREEITEM CExplorerBand::InsertItem(HTREEITEM hParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort)
+{
+    CComPtr<IShellFolder> psfFolder;
+    HRESULT hr = SHBindToParent(pElt, IID_PPV_ARG(IShellFolder, &psfFolder), NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return NULL;
+
+    return InsertItem(hParent, psfFolder, pElt, pEltRelative, bSort);
+}
+
+BOOL CExplorerBand::InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo)
+{
+    CComPtr<IEnumIDList>                pEnumIDList;
+    LPITEMIDLIST                        pidlSub;
+    LPITEMIDLIST                        entry;
+    SHCONTF                             EnumFlags;
+    HRESULT                             hr;
+    ULONG                               fetched;
+    ULONG                               uItemCount;
+    CComPtr<IShellFolder>               pFolder;
+
+    entry = pNodeInfo->absolutePidl;
+    fetched = 1;
+    uItemCount = 0;
+    EnumFlags = SHCONTF_FOLDERS;
+
+    hr = SHGetFolderLocation(m_hWnd, CSIDL_DESKTOP, NULL, 0, &pidlSub);
+    if (!SUCCEEDED(hr))
+    {
+        ERR("Can't get desktop PIDL !\n");
+        return FALSE;
+    }
+
+    if (!pDesktop->CompareIDs(NULL, pidlSub, entry))
+    {
+        // We are the desktop, so use pDesktop as pFolder
+        pFolder = pDesktop;
+    }
+    else
+    {
+        // Get an IShellFolder of our pidl
+        hr = pDesktop->BindToObject(entry, NULL, IID_PPV_ARG(IShellFolder, &pFolder));
+        if (!SUCCEEDED(hr))
+        {
+            ILFree(pidlSub);
+            ERR("Can't bind folder to desktop !\n");
+            return FALSE;
+        }
+    }
+    ILFree(pidlSub);
+
+    // TODO: handle hidden folders according to settings !
+    EnumFlags |= SHCONTF_INCLUDEHIDDEN;
+
+    // Enum through objects
+    hr = pFolder->EnumObjects(NULL,EnumFlags,&pEnumIDList);
+
+    // avoid broken IShellFolder implementations that return null pointer with success
+    if (!SUCCEEDED(hr) || !pEnumIDList)
+    {
+        ERR("Can't enum the folder !\n");
+        return FALSE;
+    }
+
+    /* Don't redraw while we add stuff into the tree */
+    SendMessage(WM_SETREDRAW, FALSE, 0);
+    while(SUCCEEDED(pEnumIDList->Next(1, &pidlSub, &fetched)) && pidlSub && fetched)
+    {
+        LPITEMIDLIST pidlSubComplete;
+        pidlSubComplete = ILCombine(entry, pidlSub);
+
+        if (InsertItem(hItem, pFolder, pidlSubComplete, pidlSub, FALSE))
+            uItemCount++;
+        ILFree(pidlSubComplete);
+        ILFree(pidlSub);
+    }
+    pNodeInfo->expanded = TRUE;
+
+    /* Now we can redraw */
+    SendMessage(WM_SETREDRAW, TRUE, 0);
+
+    return (uItemCount > 0) ? TRUE : FALSE;
+}
+
+/**
+ * Navigate to a given PIDL in the treeview, and return matching tree item handle
+ *  - dest: The absolute PIDL we should navigate in the treeview
+ *  - item: Handle of the tree item matching the PIDL
+ *  - bExpand: expand collapsed nodes in order to find the right element
+ *  - bInsert: insert the element at the right place if we don't find it
+ *  - bSelect: select the item after we found it
+ */
+BOOL CExplorerBand::NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert,
+        BOOL bSelect)
+{
+    HTREEITEM                           current;
+    HTREEITEM                           tmp;
+    HTREEITEM                           parent;
+    BOOL                                found;
+    NodeInfo                            *nodeData;
+    LPITEMIDLIST                        relativeChild;
+    TVITEM                              tvItem;
+
+    if (!item)
+        return FALSE;
+
+    found = FALSE;
+    current = hRoot;
+    parent = NULL;
+    while(!found)
+    {
+        nodeData = GetNodeInfo(current);
+        if (!nodeData)
+        {
+            ERR("Something has gone wrong, no data associated to node !\n");
+            *item = NULL;
+            return FALSE;
+        }
+        // If we found our node, give it back
+        if (!pDesktop->CompareIDs(0, nodeData->absolutePidl, dest))
+        {
+            if (bSelect)
+                TreeView_SelectItem(m_hWnd, current);
+            *item = current;
+            return TRUE;
+        }
+
+        // Check if we are a parent of the requested item
+        relativeChild = ILFindChild(nodeData->absolutePidl, dest);
+        if (relativeChild != 0)
+        {
+            // Notify treeview we have children
+            tvItem.mask = TVIF_CHILDREN;
+            tvItem.hItem = current;
+            tvItem.cChildren = 1;
+            TreeView_SetItem(m_hWnd, &tvItem);
+
+            // If we can expand and the node isn't expanded yet, do it
+            if (bExpand)
+            {
+                if (!nodeData->expanded)
+                    InsertSubitems(current, nodeData);
+                TreeView_Expand(m_hWnd, current, TVE_EXPAND);
+            }
+
+            // Try to get a child
+            tmp = TreeView_GetChild(m_hWnd, current);
+            if (tmp)
+            { 
+                // We have a child, let's continue with it
+                parent = current;
+                current = tmp;
+                continue;
+            }
+
+            if (bInsert && nodeData->expanded)
+            {
+                // Happens when we have to create a subchild inside a child
+                current = InsertItem(current, dest, relativeChild, TRUE);
+            }
+            // We end up here, without any children, so we found nothing
+            // Tell the parent node it has children
+            ZeroMemory(&tvItem, sizeof(tvItem));
+            *item = NULL;
+            return FALSE;
+        }
+
+        // Find sibling
+        tmp = TreeView_GetNextSibling(m_hWnd, current);
+        if (tmp)
+        {
+            current = tmp;
+            continue;
+        }
+        if (bInsert)
+        {
+            current = InsertItem(parent, dest, ILFindLastID(dest), TRUE);
+            *item = current;
+            return TRUE;
+        }
+        *item = NULL;
+        return FALSE;
+    }
+    return FALSE;
+}
+
+BOOL CExplorerBand::NavigateToCurrentFolder()
+{
+    LPITEMIDLIST                        explorerPidl;
+    CComPtr<IBrowserService>            pBrowserService;
+    HRESULT                             hr;
+    HTREEITEM                           dummy;
+    BOOL                                result; 
+    explorerPidl = NULL;
+
+    hr = IUnknown_QueryService(pSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &pBrowserService));
+    if (!SUCCEEDED(hr))
+    {
+        ERR("Can't get IBrowserService !\n");
+        return FALSE;
+    }
+
+    hr = pBrowserService->GetPidl(&explorerPidl);
+    if (!SUCCEEDED(hr) || !explorerPidl)
+    {
+        ERR("Unable to get browser PIDL !\n");
+        return FALSE;
+    }
+    bNavigating = TRUE;
+    /* find PIDL into our explorer */
+    result = NavigateToPIDL(explorerPidl, &dummy, TRUE, FALSE, TRUE);
+    bNavigating = FALSE;
+    return result;
+}
+
 // *** IOleWindow methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetWindow(HWND *lphwnd)
 {
-    HRESULT hr;
-    if (m_internalDeskBand)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::GetWindow(HWND *lphwnd=%p)\n", lphwnd);
-        hr = m_internalDeskBand->GetWindow(lphwnd);
-        if (lphwnd)
-            DbgPrint("\t*lphwnd=%p\n", *lphwnd);
-        DbgPrint("CExplorerBand::GetWindow returning %08lx\n", hr);
-        return hr;
-    }
-
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    if (!lphwnd)
+        return E_INVALIDARG;
+    *lphwnd = m_hWnd;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::ContextSensitiveHelp(BOOL fEnterMode)
 {
-    HRESULT hr;
-    if (m_internalDeskBand)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::ContextSensitiveHelp(BOOL fEnterMode=%s)\n", fEnterMode ? "TRUE" : "FALSE");
-        hr = m_internalDeskBand->ContextSensitiveHelp(fEnterMode);
-        DbgPrint("CExplorerBand::ContextSensitiveHelp returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
@@ -192,72 +615,72 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::ContextSensitiveHelp(BOOL fEnterMode)
 // *** IDockingWindow methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::CloseDW(DWORD dwReserved)
 {
-    HRESULT hr;
-    if (m_internalDeskBand)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::CloseDW(DWORD dwReserved=%u)\n", dwReserved);
-        hr = m_internalDeskBand->CloseDW(dwReserved);
-        DbgPrint("CExplorerBand::CloseDW returning %08lx\n", hr);
-        return hr;
-    }
-
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    // We do nothing, we don't have anything to save yet
+    TRACE("CloseDW called\n");
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::ResizeBorderDW(const RECT *prcBorder, IUnknown *punkToolbarSite, BOOL fReserved)
 {
-    HRESULT hr;
-    if (m_internalDeskBand)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::ResizeBorderDW(const RECT *prcBorder=%p, IUnknown *punkToolbarSite=%p, BOOL fReserved=%s)\n",
-                 prcBorder, punkToolbarSite, fReserved ? "TRUE" : "FALSE");
-        if (prcBorder)
-            DbgPrint("\t*prcBorder={%u, %u, %u, %u}\n", prcBorder->left, prcBorder->top, prcBorder->right, prcBorder->bottom);
-        hr = m_internalDeskBand->ResizeBorderDW(prcBorder, punkToolbarSite, fReserved);
-        DbgPrint("CExplorerBand::ResizeBorderDW returning %08lx\n", hr);
-        return hr;
-    }
-
-    UNIMPLEMENTED;
+    /* Must return E_NOTIMPL according to MSDN */
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::ShowDW(BOOL fShow)
 {
-    HRESULT hr;
-    if (m_internalDeskBand)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::ShowDW(BOOL fShow=%s)\n", fShow ? "TRUE" : "FALSE");
-        hr = m_internalDeskBand->ShowDW(fShow);
-        DbgPrint("CExplorerBand::ShowDW returning %08lx\n", hr);
-        return hr;
-    }
-
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    fVisible = fShow;
+    ShowWindow(fShow);
+    return S_OK;
 }
 
 
 // *** IDeskBand methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetBandInfo(DWORD dwBandID, DWORD dwViewMode, DESKBANDINFO *pdbi)
 {
-    HRESULT hr;
-    if (m_internalDeskBand)
+    if (!pdbi)
     {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::GetBandInfo(DWORD dwBandID=%u, DWORD dwViewMode=%u, DESKBANDINFO *pdbi=%p)\n", 
-                 dwBandID, dwViewMode, pdbi);
-        if (pdbi)
-            DbgPrint("\t*pdbi={dwMask=%u, ...}\n", pdbi->dwMask);
-        hr = m_internalDeskBand->GetBandInfo(dwBandID, dwViewMode, pdbi);
-        if (pdbi)
-            DbgPrint("\t*pdbi={dwMask=%u, crBkgnd=%u, ...}\n", pdbi->dwMask, pdbi->crBkgnd);
-        DbgPrint("CExplorerBand::GetBandInfo returning %08lx\n", hr);
-        return hr;
+        return E_INVALIDARG;
+    }
+    this->dwBandID = dwBandID;
+
+    if (pdbi->dwMask & DBIM_MINSIZE)
+    {
+        pdbi->ptMinSize.x = 200;
+        pdbi->ptMinSize.y = 30;
     }
 
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    if (pdbi->dwMask & DBIM_MAXSIZE)
+    {
+        pdbi->ptMaxSize.y = -1;
+    }
+
+    if (pdbi->dwMask & DBIM_INTEGRAL)
+    {
+        pdbi->ptIntegral.y = 1;
+    }
+
+    if (pdbi->dwMask & DBIM_ACTUAL)
+    {
+        pdbi->ptActual.x = 200;
+        pdbi->ptActual.y = 30;
+    }
+
+    if (pdbi->dwMask & DBIM_TITLE)
+    {
+        if (!LoadStringW(_AtlBaseModule.GetResourceInstance(), IDS_FOLDERSLABEL, pdbi->wszTitle, _countof(pdbi->wszTitle)))
+            return HRESULT_FROM_WIN32(GetLastError());
+    }
+
+    if (pdbi->dwMask & DBIM_MODEFLAGS)
+    {
+        pdbi->dwModeFlags = DBIMF_NORMAL | DBIMF_VARIABLEHEIGHT;
+    }
+
+    if (pdbi->dwMask & DBIM_BKCOLOR)
+    {
+        pdbi->dwMask &= ~DBIM_BKCOLOR;
+    }
+    return S_OK;
 }
 
 
@@ -265,65 +688,75 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::GetBandInfo(DWORD dwBandID, DWORD dwVie
 HRESULT STDMETHODCALLTYPE CExplorerBand::SetSite(IUnknown *pUnkSite)
 {
     HRESULT hr;
-    if (m_internalObjectWithSite)
+    HWND parentWnd;
+
+    if (pUnkSite == pSite)
+        return S_OK;
+
+    TRACE("SetSite called \n");
+    if (!pUnkSite)
     {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::SetSite(IUnknown *pUnkSite=%p)\n", pUnkSite);
-        hr = m_internalObjectWithSite->SetSite(pUnkSite);
-        DbgPrint("CExplorerBand::SetSite returning %08lx\n", hr);
-        return hr;
+        DestroyExplorerBand();
+        DestroyWindow();
+        m_hWnd = NULL;
     }
 
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    if (pUnkSite != pSite)
+    {
+        pSite = NULL;
+    }
+
+    if(!pUnkSite)
+        return S_OK;
+
+    hr = IUnknown_GetWindow(pUnkSite, &parentWnd);
+    if (!SUCCEEDED(hr))
+    {
+        ERR("Could not get parent's window ! Status: %08lx\n", hr);
+        return E_INVALIDARG;
+    }
+
+    pSite = pUnkSite;    
+
+    if (m_hWnd)
+    {
+        // Change its parent
+        SetParent(parentWnd);
+    }
+    else
+    {
+        HWND wnd = CreateWindow(WC_TREEVIEW, NULL,
+            WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | TVS_HASLINES | TVS_HASBUTTONS | TVS_SHOWSELALWAYS | TVS_EDITLABELS /* | TVS_SINGLEEXPAND*/ , // remove TVS_SINGLEEXPAND for now since it has strange behaviour
+            0, 0, 0, 0, parentWnd, NULL, _AtlBaseModule.GetModuleInstance(), NULL);
+
+        // Subclass the window
+        SubclassWindow(wnd);
+
+        // Initialize our treeview now
+        InitializeExplorerBand();
+        RegisterDragDrop(m_hWnd, dynamic_cast<IDropTarget*>(this));
+    }
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetSite(REFIID riid, void **ppvSite)
 {
-    HRESULT hr;
-    if (m_internalObjectWithSite)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::GetSite(REFIID riid=%s, void **ppvSite=%p)\n", wine_dbgstr_guid(&riid), ppvSite);
-        hr = m_internalObjectWithSite->GetSite(riid, ppvSite);
-        if (ppvSite)
-            DbgPrint("\t*ppvSite=%p\n", *ppvSite);
-        DbgPrint("CExplorerBand::GetSite returning %08lx\n", hr);
-        return hr;
-    }
-
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    if (!ppvSite)
+        return E_POINTER;
+    *ppvSite = pSite;
+    return S_OK;
 }
 
 
 // *** IOleCommandTarget methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::QueryStatus(const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds [], OLECMDTEXT *pCmdText)
 {
-    HRESULT hr;
-    if (m_internalOleCommandTarget)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::QueryStatus(const GUID *pguidCmdGroup=%s, ULONG cCmds=%08x, OLECMD prgCmds []=%p, OLECMDTEXT *pCmdText=%p)\n",
-                 wine_dbgstr_guid(pguidCmdGroup), cCmds, prgCmds, pCmdText);
-        hr = m_internalOleCommandTarget->QueryStatus(pguidCmdGroup, cCmds, prgCmds, pCmdText);
-        DbgPrint("CExplorerBand::QueryStatus returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
-    HRESULT hr;
-    if (m_internalOleCommandTarget)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::Exec(const GUID *pguidCmdGroup=%s, DWORD nCmdID=%u, DWORD nCmdexecopt=%u, VARIANT *pvaIn=%p, VARIANT *pvaOut=%p)\n",
-                 wine_dbgstr_guid(pguidCmdGroup), nCmdID, nCmdexecopt, pvaIn, pvaOut);
-        hr = m_internalOleCommandTarget->Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-        DbgPrint("CExplorerBand::Exec returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
@@ -332,18 +765,6 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::Exec(const GUID *pguidCmdGroup, DWORD n
 // *** IServiceProvider methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::QueryService(REFGUID guidService, REFIID riid, void **ppvObject)
 {
-    HRESULT hr;
-    if (m_internalServiceProvider)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::QueryService(REFGUID guidService=%s, REFIID riid=%s, void **ppvObject=%p)\n",
-                 wine_dbgstr_guid(&guidService), wine_dbgstr_guid(&riid), ppvObject);
-        hr = m_internalServiceProvider->QueryService(guidService, riid, ppvObject);
-        if (ppvObject)
-            DbgPrint("\t*ppvObject=%p\n", *ppvObject);
-        DbgPrint("CExplorerBand::QueryService returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
@@ -352,136 +773,68 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::QueryService(REFGUID guidService, REFII
 // *** IInputObject methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::UIActivateIO(BOOL fActivate, LPMSG lpMsg)
 {
-    HRESULT hr;
-    if (m_internalInputObject)
+    if (fActivate)
     {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::UIActivateIO(BOOL fActivate=%s, LPMSG lpMsg=%p)\n",
-                 fActivate ? "TRUE" : "FALSE", lpMsg);
-        hr = m_internalInputObject->UIActivateIO(fActivate, lpMsg);
-        if (lpMsg)
-            DbgPrint("\t*lpMsg={hwnd=%p, message=%x, wParam=%x, lParam=%x, time=%x, pt={%u %u}}\n",
-            lpMsg->hwnd, lpMsg->message, lpMsg->wParam, lpMsg->lParam, lpMsg->time, lpMsg->pt.x, lpMsg->pt.y);
-        DbgPrint("CExplorerBand::UIActivateIO returning %08lx\n", hr);
-        return hr;
+        //SetFocus();
+        SetActiveWindow();
     }
-
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    // TODO: handle message
+    if(lpMsg)
+    {
+        TranslateMessage(lpMsg);
+        DispatchMessage(lpMsg);
+    }
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::HasFocusIO()
 {
-    HRESULT hr;
-    if (m_internalInputObject)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::HasFocusIO()\n");
-        hr = m_internalInputObject->HasFocusIO();
-        DbgPrint("CExplorerBand::HasFocusIO returning %08lx\n", hr);
-        return hr;
-    }
-
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    return bFocused ? S_OK : S_FALSE;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    HRESULT hr;
-    if (m_internalInputObject)
+    if (lpMsg->hwnd == m_hWnd)
     {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::TranslateAcceleratorIO(LPMSG lpMsg=%p)\n", lpMsg);
-        hr = m_internalInputObject->TranslateAcceleratorIO(lpMsg);
-        if (lpMsg)
-            DbgPrint("\t*lpMsg={hwnd=%p, message=%x, wParam=%x, lParam=%x, time=%x, pt={%u %u}}\n",
-            lpMsg->hwnd, lpMsg->message, lpMsg->wParam, lpMsg->lParam, lpMsg->time, lpMsg->pt.x, lpMsg->pt.y);
-        DbgPrint("CExplorerBand::TranslateAcceleratorIO returning %08lx\n", hr);
-        return hr;
+        TranslateMessage(lpMsg);
+        DispatchMessage(lpMsg);
+        return S_OK;
     }
 
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    return S_FALSE;
 }
-
 
 // *** IPersist methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetClassID(CLSID *pClassID)
 {
-    HRESULT hr;
-    if (m_internalPersistStream)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::GetClassID(CLSID *pClassID=%p)\n", pClassID);
-        hr = m_internalPersistStream->GetClassID(pClassID);
-        if (pClassID)
-            DbgPrint("\t*pClassID=%s\n", wine_dbgstr_guid(pClassID));
-        DbgPrint("CExplorerBand::GetClassID returning %08lx\n", hr);
-        return hr;
-    }
-
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    if (!pClassID)
+        return E_POINTER;
+    memcpy(pClassID, &CLSID_ExplorerBand, sizeof(CLSID));
+    return S_OK;
 }
 
 
 // *** IPersistStream methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::IsDirty()
 {
-    HRESULT hr;
-    if (m_internalPersistStream)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::IsDirty()\n");
-        hr = m_internalPersistStream->IsDirty();
-        DbgPrint("CExplorerBand::IsDirty returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::Load(IStream *pStm)
 {
-    HRESULT hr;
-    if (m_internalPersistStream)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::Load(IStream *pStm=%p)\n", pStm);
-        hr = m_internalPersistStream->Load(pStm);
-        DbgPrint("CExplorerBand::Load returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::Save(IStream *pStm, BOOL fClearDirty)
 {
-    HRESULT hr;
-    if (m_internalPersistStream)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::Save(IStream *pStm=%p, BOOL fClearDirty=%s)\n",
-                 pStm, fClearDirty ? "TRUE" : "FALSE");
-        hr = m_internalPersistStream->Save(pStm, fClearDirty);
-        DbgPrint("CExplorerBand::Save returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetSizeMax(ULARGE_INTEGER *pcbSize)
 {
-    HRESULT hr;
-    if (m_internalPersistStream)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::GetSizeMax(ULARGE_INTEGER *pcbSize=%p)\n", pcbSize);
-        hr = m_internalPersistStream->GetSizeMax(pcbSize);
-        if (pcbSize)
-            DbgPrint("\t*pcbSize=%llx\n", pcbSize->QuadPart);
-        DbgPrint("CExplorerBand::GetSizeMax returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
@@ -490,200 +843,203 @@ HRESULT STDMETHODCALLTYPE CExplorerBand::GetSizeMax(ULARGE_INTEGER *pcbSize)
 // *** IWinEventHandler methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *theResult)
 {
-    HRESULT hr;
-    if (m_internalWinEventHandler)
+    BOOL bHandled;
+    if (uMsg == WM_NOTIFY)
     {
-        if (m_OnWinEventShown)
-            return m_internalWinEventHandler->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
-        m_OnWinEventShown = TRUE;
+        NMHDR *pNotifyHeader = (NMHDR*)lParam;
+        switch (pNotifyHeader->code)
+        {
+            case TVN_ITEMEXPANDING:
+                *theResult = OnTreeItemExpanding((LPNMTREEVIEW)lParam);
+                break;
+            case TVN_SELCHANGED:
+                OnSelectionChanged((LPNMTREEVIEW)lParam);
+                break;
+            case NM_RCLICK:
+                OnContextMenu(WM_CONTEXTMENU, (WPARAM)m_hWnd, GetMessagePos(), bHandled);
+                *theResult = 1;
+                break;
+            case TVN_BEGINLABELEDITW:
+            {
+                // TODO: put this in a function ? (mostly copypasta from CDefView)
+                DWORD dwAttr = SFGAO_CANRENAME;
+                LPNMTVDISPINFO dispInfo = (LPNMTVDISPINFO)lParam;
+                CComPtr<IShellFolder> pParent;
+                LPCITEMIDLIST pChild;
+                HRESULT hr;
 
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::OnWinEvent(HWND hWnd=%x, UINT uMsg=%x, WPARAM wParam=%x, LPARAM lParam=%x, LRESULT *theResult=%p)\n",
-                 hWnd, uMsg, wParam, lParam, theResult);
-        hr = m_internalWinEventHandler->OnWinEvent(hWnd, uMsg, wParam, lParam, theResult);
-        if (theResult)
-            DbgPrint("\t*theResult=%x\n", *theResult);
-        DbgPrint("CExplorerBand::OnWinEvent returning %08lx\n", hr);
-        return hr;
+                *theResult = 1;
+                NodeInfo *info = GetNodeInfo(dispInfo->item.hItem);
+                if (!info)
+                    return E_FAIL;
+                hr = SHBindToParent(info->absolutePidl, IID_PPV_ARG(IShellFolder, &pParent), &pChild);
+                if (!SUCCEEDED(hr) || !pParent.p)
+                    return E_FAIL;
+
+                hr = pParent->GetAttributesOf(1, &pChild, &dwAttr);
+                if (SUCCEEDED(hr) && (dwAttr & SFGAO_CANRENAME))
+                    *theResult = 0;
+                return S_OK;
+            }
+            case TVN_ENDLABELEDITW:
+            {
+                LPNMTVDISPINFO dispInfo = (LPNMTVDISPINFO)lParam;
+                NodeInfo *info = GetNodeInfo(dispInfo->item.hItem);
+                HRESULT hr;
+
+                *theResult = 0;
+                if (dispInfo->item.pszText)
+                {
+                    LPITEMIDLIST pidlNew;
+                    CComPtr<IShellFolder> pParent;
+                    LPCITEMIDLIST pidlChild;
+
+                    hr = SHBindToParent(info->absolutePidl, IID_PPV_ARG(IShellFolder, &pParent), &pidlChild);
+                if (!SUCCEEDED(hr) || !pParent.p)
+                    return E_FAIL;
+
+                    hr = pParent->SetNameOf(0, pidlChild, dispInfo->item.pszText, SHGDN_INFOLDER, &pidlNew);
+                    if(SUCCEEDED(hr) && pidlNew)
+                    {
+                        CComPtr<IPersistFolder2> pPersist;
+                        LPITEMIDLIST pidlParent, pidlNewAbs;
+
+                        hr = pParent->QueryInterface(IID_PPV_ARG(IPersistFolder2, &pPersist));
+                        if(!SUCCEEDED(hr))
+                            return E_FAIL;
+
+                        hr = pPersist->GetCurFolder(&pidlParent);
+                        if(!SUCCEEDED(hr))
+                            return E_FAIL;
+                        pidlNewAbs = ILCombine(pidlParent, pidlNew);
+
+                        // Navigate to our new location
+                        UpdateBrowser(pidlNewAbs);
+
+                        ILFree(pidlNewAbs);
+                        ILFree(pidlNew);
+                        *theResult = 1;
+                    }
+                    return S_OK;
+                }
+            }
+            default:
+                break;
+        }
     }
-
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::IsWindowOwner(HWND hWnd)
 {
-    HRESULT hr;
-    if (m_internalWinEventHandler)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::IsWindowOwner(HWND hWnd=%x)\n", hWnd);
-        hr = m_internalWinEventHandler->IsWindowOwner(hWnd);
-        DbgPrint("CExplorerBand::IsWindowOwner returning %08lx\n", hr);
-        return hr;
-    }
-
-    UNIMPLEMENTED;
-    return E_NOTIMPL;
+    return (hWnd == m_hWnd) ? S_OK : S_FALSE;
 }
-
 
 // *** IBandNavigate methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::Select(long paramC)
 {
-    HRESULT hr;
-    if (m_internalBandNavigate)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::Select(long paramC=%x)\n", paramC);
-        hr = m_internalBandNavigate->Select(paramC);
-        DbgPrint("CExplorerBand::Select returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
-
 // *** INamespaceProxy ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetNavigateTarget(long paramC, long param10, long param14)
 {
-    HRESULT hr;
-    if (m_internalNamespaceProxy)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::GetNavigateTarget(long paramC=%08x, long param10=%08x, long param14=%08x)\n",
-                 paramC, param10, param14);
-        hr = m_internalNamespaceProxy->GetNavigateTarget(paramC, param10, param14);
-        DbgPrint("CExplorerBand::GetNavigateTarget returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::Invoke(long paramC)
 {
-    HRESULT hr;
-    if (m_internalNamespaceProxy)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::Invoke(long paramC=%08x)\n", paramC);
-        hr = m_internalNamespaceProxy->Invoke(paramC);
-        DbgPrint("CExplorerBand::Invoke returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::OnSelectionChanged(long paramC)
 {
-    HRESULT hr;
-    if (m_internalNamespaceProxy)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::OnSelectionChanged(long paramC=%08x)\n", paramC);
-        hr = m_internalNamespaceProxy->OnSelectionChanged(paramC);
-        DbgPrint("CExplorerBand::OnSelectionChanged returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::RefreshFlags(long paramC, long param10, long param14)
 {
-    HRESULT hr;
-    if (m_internalNamespaceProxy)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::RefreshFlags(long paramC=%08x, long param10=%08x, long param14=%08x)\n",
-                 paramC, param10, param14);
-        hr = m_internalNamespaceProxy->RefreshFlags(paramC, param10, param14);
-        DbgPrint("CExplorerBand::RefreshFlags returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::CacheItem(long paramC)
 {
-    HRESULT hr;
-    if (m_internalNamespaceProxy)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::CacheItem(long paramC=%08x)\n", paramC);
-        hr = m_internalNamespaceProxy->CacheItem(paramC);
-        DbgPrint("CExplorerBand::CacheItem returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
-
 // *** IDispatch methods ***
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetTypeInfoCount(UINT *pctinfo)
 {
-    HRESULT hr;
-    if (m_internalDispatch)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::GetTypeInfoCount(UINT *pctinfo=%p)\n", pctinfo);
-        hr = m_internalDispatch->GetTypeInfoCount(pctinfo);
-        if (pctinfo)
-            DbgPrint("\t*pctinfo=%08x\n", *pctinfo);
-        DbgPrint("CExplorerBand::GetTypeInfoCount returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
 {
-    HRESULT hr;
-    if (m_internalDispatch)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::GetTypeInfo(UINT iTInfo=%u, LCID lcid=%08x, ITypeInfo **ppTInfo=%p)\n",
-                 iTInfo, lcid, ppTInfo);
-        hr = m_internalDispatch->GetTypeInfo(iTInfo, lcid, ppTInfo);
-        if (ppTInfo)
-            DbgPrint("\t*ppTInfo=%08x\n", *ppTInfo);
-        DbgPrint("CExplorerBand::GetTypeInfo returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::GetIDsOfNames(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
 {
-    HRESULT hr;
-    if (m_internalDispatch)
-    {
-        DbgPrint("HRESULT STDMETHODCALLTYPE CExplorerBand::GetIDsOfNames(REFIID riid=%s, LPOLESTR *rgszNames=%S, UINT cNames=%u, LCID lcid=%08x, DISPID *rgDispId=%p)\n",
-                 wine_dbgstr_guid(&riid), rgszNames, cNames, lcid, rgDispId);
-        hr = m_internalDispatch->GetIDsOfNames(riid, rgszNames, cNames, lcid, rgDispId);
-        if (rgDispId && SUCCEEDED(hr))
-        {
-            for (UINT i = 0; i < cNames; i++)
-            {
-                DbgPrint("\trgDispId[%d]=%08x\n", rgDispId[i]);
-            }
-        }
-        DbgPrint("CExplorerBand::GetTypeInfo returning %08lx\n", hr);
-        return hr;
-    }
-
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
 HRESULT STDMETHODCALLTYPE CExplorerBand::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
+    switch (dispIdMember)
+    {
+        case DISPID_DOWNLOADCOMPLETE:
+        case DISPID_NAVIGATECOMPLETE2:
+           TRACE("DISPID_NAVIGATECOMPLETE2 received\n");
+           NavigateToCurrentFolder();
+           return S_OK;
+    }
+    TRACE("Unknown dispid requested: %08x\n", dispIdMember);
+    return E_INVALIDARG;
+}
+
+// *** IDropTarget methods ***
+HRESULT STDMETHODCALLTYPE CExplorerBand::DragEnter(IDataObject *pObj, DWORD glfKeyState, POINTL pt, DWORD *pdwEffect)
+{
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
 
+HRESULT STDMETHODCALLTYPE CExplorerBand::DragOver(DWORD glfKeyState, POINTL pt, DWORD *pdwEffect)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CExplorerBand::DragLeave()
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CExplorerBand::Drop(IDataObject *pObj, DWORD glfKeyState, POINTL pt, DWORD *pdwEffect)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+// *** IDropSource methods ***
+HRESULT STDMETHODCALLTYPE CExplorerBand::QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE CExplorerBand::GiveFeedback(DWORD dwEffect)
+{
+    UNIMPLEMENTED;
+    return E_NOTIMPL;
+}

@@ -275,3 +275,24 @@ InitImageList(UINT StartResource,
 
     return himl;
 }
+
+
+#define BUFFERSIZE 512
+
+VOID
+ResourceMessageBox(
+    HINSTANCE hInstance,
+    HWND hwnd,
+    UINT uType,
+    UINT uCaptionId,
+    UINT uMessageId)
+{
+    WCHAR szErrorText[BUFFERSIZE];
+    WCHAR szErrorCaption[BUFFERSIZE];
+
+    LoadStringW(hInstance, uMessageId, szErrorText, sizeof(szErrorText) / sizeof(WCHAR));
+    LoadStringW(hInstance, uCaptionId, szErrorCaption, sizeof(szErrorCaption) / sizeof(WCHAR));
+
+    MessageBoxW(hwnd, szErrorText, szErrorCaption, uType);
+}
+

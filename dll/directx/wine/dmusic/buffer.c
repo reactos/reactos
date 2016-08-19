@@ -132,8 +132,25 @@ static HRESULT WINAPI IDirectMusicBufferImpl_PackStructured(LPDIRECTMUSICBUFFER 
 static HRESULT WINAPI IDirectMusicBufferImpl_PackUnstructured(LPDIRECTMUSICBUFFER iface, REFERENCE_TIME rt, DWORD dwChannelGroup, DWORD cb, LPBYTE lpb)
 {
     IDirectMusicBufferImpl *This = impl_from_IDirectMusicBuffer(iface);
+    DWORD new_write_pos = This->write_pos + sizeof(DMUS_EVENTHEADER) + cb;
+    DMUS_EVENTHEADER header;
 
     FIXME("(%p, 0x%s, %d, %d, %p): stub\n", This, wine_dbgstr_longlong(rt), dwChannelGroup, cb, lpb);
+
+    if (new_write_pos > This->size)
+        return DMUS_E_BUFFER_FULL;
+
+    if (!This->write_pos)
+        This->start_time = rt;
+
+    header.cbEvent = cb;
+    header.dwChannelGroup = dwChannelGroup;
+    header.rtDelta = rt - This->start_time;
+    header.dwFlags = 0;
+
+    memcpy(This->data + This->write_pos, &header, sizeof(header));
+    memcpy(This->data + This->write_pos + sizeof(header), lpb, cb);
+    This->write_pos = new_write_pos;
 
     return S_OK;
 }

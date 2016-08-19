@@ -4,474 +4,37 @@
  * FILE:             base/services/eventlog/file.c
  * PURPOSE:          Event logging service
  * COPYRIGHT:        Copyright 2005 Saveliy Tretiakov
-                     Michael Martin
+ *                   Michael Martin
+ *                   Hermes Belusca-Maito
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include "eventlog.h"
 
 #include <ndk/iofuncs.h>
+#include <ndk/kefuncs.h>
 
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS ******************************************************************/
+/* LOG FILE LIST - GLOBALS ***************************************************/
 
 static LIST_ENTRY LogFileListHead;
 static CRITICAL_SECTION LogFileListCs;
 
-/* FUNCTIONS ****************************************************************/
-
-static NTSTATUS
-LogfInitializeNew(PLOGFILE LogFile,
-                  ULONG ulMaxSize,
-                  ULONG ulRetention)
-{
-    IO_STATUS_BLOCK IoStatusBlock;
-    EVENTLOGEOF EofRec;
-    NTSTATUS Status;
-
-    ZeroMemory(&LogFile->Header, sizeof(EVENTLOGHEADER));
-    SetFilePointer(LogFile->hFile, 0, NULL, FILE_BEGIN);
-    SetEndOfFile(LogFile->hFile);
-
-    LogFile->Header.HeaderSize = sizeof(EVENTLOGHEADER);
-    LogFile->Header.Signature = LOGFILE_SIGNATURE;
-    LogFile->Header.MajorVersion = MAJORVER;
-    LogFile->Header.MinorVersion = MINORVER;
-    LogFile->Header.StartOffset = sizeof(EVENTLOGHEADER);
-    LogFile->Header.EndOffset = sizeof(EVENTLOGHEADER);
-    LogFile->Header.CurrentRecordNumber = 1;
-    LogFile->Header.OldestRecordNumber = 1;
-    LogFile->Header.MaxSize = ulMaxSize;
-    LogFile->Header.Flags = 0;
-    LogFile->Header.Retention = ulRetention;
-    LogFile->Header.EndHeaderSize = sizeof(EVENTLOGHEADER);
-
-    Status = NtWriteFile(LogFile->hFile,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         &LogFile->Header,
-                         sizeof(EVENTLOGHEADER),
-                         NULL,
-                         NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtWriteFile failed (Status 0x%08lx)\n", Status);
-        return Status;
-    }
-
-    EofRec.RecordSizeBeginning = sizeof(EVENTLOGEOF);
-    EofRec.Ones = 0x11111111;
-    EofRec.Twos = 0x22222222;
-    EofRec.Threes = 0x33333333;
-    EofRec.Fours = 0x44444444;
-    EofRec.BeginRecord = LogFile->Header.StartOffset;
-    EofRec.EndRecord = LogFile->Header.EndOffset;
-    EofRec.CurrentRecordNumber = LogFile->Header.CurrentRecordNumber;
-    EofRec.OldestRecordNumber = LogFile->Header.OldestRecordNumber;
-    EofRec.RecordSizeEnd = sizeof(EVENTLOGEOF);
-
-    Status = NtWriteFile(LogFile->hFile,
-                         NULL,
-                         NULL,
-                         NULL,
-                         &IoStatusBlock,
-                         &EofRec,
-                         sizeof(EVENTLOGEOF),
-                         NULL,
-                         NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtWriteFile failed (Status 0x%08lx)\n", Status);
-        return Status;
-    }
-
-    Status = NtFlushBuffersFile(LogFile->hFile,
-                                &IoStatusBlock);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtFlushBuffersFile failed (Status 0x%08lx)\n", Status);
-        return Status;
-    }
-
-    return STATUS_SUCCESS;
-}
-
-
-static NTSTATUS
-LogfInitializeExisting(PLOGFILE LogFile,
-                       BOOL Backup)
-{
-    DWORD dwRead;
-    DWORD dwRecordsNumber = 0;
-    DWORD dwRecSize, dwRecSign, dwFilePointer;
-    PDWORD pdwRecSize2;
-    PEVENTLOGRECORD RecBuf;
-    BOOL OvewrWrittenRecords = FALSE;
-
-    DPRINT("Initializing LogFile %S\n",LogFile->LogName);
-
-    if (SetFilePointer(LogFile->hFile, 0, NULL, FILE_BEGIN) ==
-        INVALID_SET_FILE_POINTER)
-    {
-        DPRINT1("SetFilePointer failed! %d\n", GetLastError());
-        return STATUS_EVENTLOG_FILE_CORRUPT;
-    }
-
-    if (!ReadFile(LogFile->hFile,
-                  &LogFile->Header,
-                  sizeof(EVENTLOGHEADER),
-                  &dwRead,
-                  NULL))
-    {
-        DPRINT1("ReadFile failed! %d\n", GetLastError());
-        return STATUS_EVENTLOG_FILE_CORRUPT;
-    }
-
-    if (dwRead != sizeof(EVENTLOGHEADER))
-    {
-        DPRINT("EventLog: Invalid file %S.\n", LogFile->FileName);
-        return STATUS_EVENTLOG_FILE_CORRUPT;
-    }
-
-    if (LogFile->Header.HeaderSize != sizeof(EVENTLOGHEADER) ||
-        LogFile->Header.EndHeaderSize != sizeof(EVENTLOGHEADER))
-    {
-        DPRINT("EventLog: Invalid header size in %S.\n", LogFile->FileName);
-        return STATUS_EVENTLOG_FILE_CORRUPT;
-    }
-
-    if (LogFile->Header.Signature != LOGFILE_SIGNATURE)
-    {
-        DPRINT("EventLog: Invalid signature %x in %S.\n",
-               LogFile->Header.Signature, LogFile->FileName);
-        return STATUS_EVENTLOG_FILE_CORRUPT;
-    }
-
-    if (LogFile->Header.EndOffset > GetFileSize(LogFile->hFile, NULL) + 1)
-    {
-        DPRINT("EventLog: Invalid eof offset %x in %S.\n",
-               LogFile->Header.EndOffset, LogFile->FileName);
-        return STATUS_EVENTLOG_FILE_CORRUPT;
-    }
-
-    /* Set the read location to the oldest record */
-    dwFilePointer = SetFilePointer(LogFile->hFile, LogFile->Header.StartOffset, NULL, FILE_BEGIN);
-    if (dwFilePointer == INVALID_SET_FILE_POINTER)
-    {
-        DPRINT1("SetFilePointer failed! %d\n", GetLastError());
-        return STATUS_EVENTLOG_FILE_CORRUPT;
-    }
-
-    for (;;)
-    {
-        dwFilePointer = SetFilePointer(LogFile->hFile, 0, NULL, FILE_CURRENT);
-
-        if (dwFilePointer == INVALID_SET_FILE_POINTER)
-        {
-            DPRINT1("SetFilePointer failed! %d\n", GetLastError());
-            return STATUS_EVENTLOG_FILE_CORRUPT;
-        }
-
-        /* If the EVENTLOGEOF info has been reached and the oldest record was not immediately after the Header */
-        if ((dwFilePointer == LogFile->Header.EndOffset) && (LogFile->Header.StartOffset != sizeof(EVENTLOGHEADER)))
-        {
-            OvewrWrittenRecords = TRUE;
-            /* The file has records that overwrote old ones so read them */
-            dwFilePointer = SetFilePointer(LogFile->hFile, sizeof(EVENTLOGHEADER), NULL, FILE_BEGIN);
-        }
-
-        if (!ReadFile(LogFile->hFile,
-                      &dwRecSize,
-                      sizeof(dwRecSize),
-                      &dwRead,
-                      NULL))
-        {
-            DPRINT1("ReadFile failed! %d\n", GetLastError());
-            return STATUS_EVENTLOG_FILE_CORRUPT;
-        }
-
-        if (dwRead != sizeof(dwRecSize))
-            break;
-
-        if (!ReadFile(LogFile->hFile,
-                      &dwRecSign,
-                      sizeof(dwRecSign),
-                      &dwRead,
-                      NULL))
-        {
-            DPRINT1("ReadFile() failed! %d\n", GetLastError());
-            return STATUS_EVENTLOG_FILE_CORRUPT;
-        }
-
-        if (dwRead != sizeof(dwRecSize))
-            break;
-
-        if (dwRecSign != LOGFILE_SIGNATURE ||
-            dwRecSize + dwFilePointer > GetFileSize(LogFile->hFile, NULL) + 1 ||
-            dwRecSize < sizeof(EVENTLOGRECORD))
-        {
-            break;
-        }
-
-        if (SetFilePointer(LogFile->hFile,
-                           -((LONG) sizeof(DWORD) * 2),
-                           NULL,
-                           FILE_CURRENT) == INVALID_SET_FILE_POINTER)
-        {
-            DPRINT1("SetFilePointer() failed! %d", GetLastError());
-            return STATUS_EVENTLOG_FILE_CORRUPT;
-        }
-
-        RecBuf = (PEVENTLOGRECORD) HeapAlloc(MyHeap, 0, dwRecSize);
-        if (RecBuf == NULL)
-        {
-            DPRINT1("Can't allocate heap!\n");
-            return STATUS_NO_MEMORY;
-        }
-
-        if (!ReadFile(LogFile->hFile, RecBuf, dwRecSize, &dwRead, NULL))
-        {
-            DPRINT1("ReadFile() failed! %d\n", GetLastError());
-            HeapFree(MyHeap, 0, RecBuf);
-            return STATUS_EVENTLOG_FILE_CORRUPT;
-        }
-
-        if (dwRead != dwRecSize)
-        {
-            HeapFree(MyHeap, 0, RecBuf);
-            break;
-        }
-
-        /* if OvewrWrittenRecords is TRUE and this record has already been read */
-        if ((OvewrWrittenRecords == TRUE) && (RecBuf->RecordNumber == LogFile->Header.OldestRecordNumber))
-        {
-            HeapFree(MyHeap, 0, RecBuf);
-            break;
-        }
-
-        pdwRecSize2 = (PDWORD) (((PBYTE) RecBuf) + dwRecSize - 4);
-
-        if (*pdwRecSize2 != dwRecSize)
-        {
-            DPRINT1("Invalid RecordSizeEnd of record %d (%x) in %S\n",
-                    dwRecordsNumber, *pdwRecSize2, LogFile->LogName);
-            HeapFree(MyHeap, 0, RecBuf);
-            break;
-        }
-
-        dwRecordsNumber++;
-
-        if (!LogfAddOffsetInformation(LogFile,
-                                      RecBuf->RecordNumber,
-                                      dwFilePointer))
-        {
-            DPRINT1("LogfAddOffsetInformation() failed!\n");
-            HeapFree(MyHeap, 0, RecBuf);
-            return STATUS_EVENTLOG_FILE_CORRUPT;
-        }
-
-        HeapFree(MyHeap, 0, RecBuf);
-    }
-
-    LogFile->Header.CurrentRecordNumber = dwRecordsNumber + LogFile->Header.OldestRecordNumber;
-    if (LogFile->Header.CurrentRecordNumber == 0)
-        LogFile->Header.CurrentRecordNumber = 1;
-
-    if (!Backup)
-    {
-        if (SetFilePointer(LogFile->hFile, 0, NULL, FILE_BEGIN) ==
-            INVALID_SET_FILE_POINTER)
-        {
-            DPRINT1("SetFilePointer() failed! %d\n", GetLastError());
-            return STATUS_EVENTLOG_FILE_CORRUPT;
-        }
-
-        if (!WriteFile(LogFile->hFile,
-                       &LogFile->Header,
-                       sizeof(EVENTLOGHEADER),
-                       &dwRead,
-                       NULL))
-        {
-            DPRINT1("WriteFile failed! %d\n", GetLastError());
-            return STATUS_EVENTLOG_FILE_CORRUPT;
-        }
-
-        if (!FlushFileBuffers(LogFile->hFile))
-        {
-            DPRINT1("FlushFileBuffers failed! %d\n", GetLastError());
-            return STATUS_EVENTLOG_FILE_CORRUPT;
-        }
-    }
-
-    return STATUS_SUCCESS;
-}
-
-
-NTSTATUS
-LogfCreate(PLOGFILE *LogFile,
-           WCHAR *LogName,
-           PUNICODE_STRING FileName,
-           ULONG ulMaxSize,
-           ULONG ulRetention,
-           BOOL Permanent,
-           BOOL Backup)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    PLOGFILE pLogFile;
-    BOOL bCreateNew = FALSE;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    pLogFile = (LOGFILE *) HeapAlloc(MyHeap, HEAP_ZERO_MEMORY, sizeof(LOGFILE));
-    if (!pLogFile)
-    {
-        DPRINT1("Can't allocate heap!\n");
-        return STATUS_NO_MEMORY;
-    }
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               FileName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtCreateFile(&pLogFile->hFile,
-                          Backup ? (GENERIC_READ | SYNCHRONIZE) : (GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE),
-                          &ObjectAttributes,
-                          &IoStatusBlock,
-                          NULL,
-                          FILE_ATTRIBUTE_NORMAL,
-                          FILE_SHARE_READ,
-                          Backup ? FILE_OPEN : FILE_OPEN_IF,
-                          FILE_SYNCHRONOUS_IO_NONALERT,
-                          NULL,
-                          0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Can't create file %wZ (Status: 0x%08lx)\n", FileName, Status);
-        goto fail;
-    }
-
-    bCreateNew = (IoStatusBlock.Information == FILE_CREATED) ? TRUE: FALSE;
-
-    pLogFile->LogName =
-        (WCHAR *) HeapAlloc(MyHeap,
-                            HEAP_ZERO_MEMORY,
-                            (lstrlenW(LogName) + 1) * sizeof(WCHAR));
-    if (pLogFile->LogName == NULL)
-    {
-        DPRINT1("Can't allocate heap\n");
-        Status = STATUS_NO_MEMORY;
-        goto fail;
-    }
-
-    if (LogName)
-        StringCchCopy(pLogFile->LogName,lstrlenW(LogName) + 1, LogName);
-
-    pLogFile->FileName =
-        (WCHAR *) HeapAlloc(MyHeap,
-                            HEAP_ZERO_MEMORY,
-                            (lstrlenW(FileName->Buffer) + 1) * sizeof(WCHAR));
-    if (pLogFile->FileName == NULL)
-    {
-        DPRINT1("Can't allocate heap\n");
-        Status = STATUS_NO_MEMORY;
-        goto fail;
-    }
-
-    StringCchCopy(pLogFile->FileName, lstrlenW(FileName->Buffer) + 1, FileName->Buffer);
-
-    pLogFile->OffsetInfo =
-        (PEVENT_OFFSET_INFO) HeapAlloc(MyHeap,
-                                       HEAP_ZERO_MEMORY,
-                                       sizeof(EVENT_OFFSET_INFO) * 64);
-    if (pLogFile->OffsetInfo == NULL)
-    {
-        DPRINT1("Can't allocate heap\n");
-        Status = STATUS_NO_MEMORY;
-        goto fail;
-    }
-
-    pLogFile->OffsetInfoSize = 64;
-
-    pLogFile->Permanent = Permanent;
-
-    if (bCreateNew)
-        Status = LogfInitializeNew(pLogFile, ulMaxSize, ulRetention);
-    else
-        Status = LogfInitializeExisting(pLogFile, Backup);
-
-    if (!NT_SUCCESS(Status))
-        goto fail;
-
-    RtlInitializeResource(&pLogFile->Lock);
-
-    LogfListAddItem(pLogFile);
-
-  fail:
-    if (!NT_SUCCESS(Status))
-    {
-        if ((pLogFile->hFile != NULL) && (pLogFile->hFile != INVALID_HANDLE_VALUE))
-            CloseHandle(pLogFile->hFile);
-
-        if (pLogFile->OffsetInfo)
-            HeapFree(MyHeap, 0, pLogFile->OffsetInfo);
-
-        if (pLogFile->FileName)
-            HeapFree(MyHeap, 0, pLogFile->FileName);
-
-        if (pLogFile->LogName)
-            HeapFree(MyHeap, 0, pLogFile->LogName);
-
-        HeapFree(MyHeap, 0, pLogFile);
-    }
-    else
-    {
-        *LogFile = pLogFile;
-    }
-
-    return Status;
-}
-
-
-VOID
-LogfClose(PLOGFILE LogFile,
-          BOOL ForceClose)
-{
-    if (LogFile == NULL)
-        return;
-
-    if ((ForceClose == FALSE) &&
-        (LogFile->Permanent == TRUE))
-        return;
-
-    RtlAcquireResourceExclusive(&LogFile->Lock, TRUE);
-
-    FlushFileBuffers(LogFile->hFile);
-    CloseHandle(LogFile->hFile);
-    LogfListRemoveItem(LogFile);
-
-    RtlDeleteResource(&LogFile->Lock);
-
-    HeapFree(MyHeap, 0, LogFile->LogName);
-    HeapFree(MyHeap, 0, LogFile->FileName);
-    HeapFree(MyHeap, 0, LogFile->OffsetInfo);
-    HeapFree(MyHeap, 0, LogFile);
-
-    return;
-}
+/* LOG FILE LIST - FUNCTIONS *************************************************/
 
 VOID LogfCloseAll(VOID)
 {
+    EnterCriticalSection(&LogFileListCs);
+
     while (!IsListEmpty(&LogFileListHead))
     {
-        LogfClose(LogfListHead(), TRUE);
+        LogfClose(CONTAINING_RECORD(LogFileListHead.Flink, LOGFILE, ListEntry), TRUE);
     }
+
+    LeaveCriticalSection(&LogFileListCs);
 
     DeleteCriticalSection(&LogFileListCs);
 }
@@ -482,26 +45,21 @@ VOID LogfListInitialize(VOID)
     InitializeListHead(&LogFileListHead);
 }
 
-PLOGFILE LogfListHead(VOID)
-{
-    return CONTAINING_RECORD(LogFileListHead.Flink, LOGFILE, ListEntry);
-}
-
-PLOGFILE LogfListItemByName(WCHAR * Name)
+PLOGFILE LogfListItemByName(LPCWSTR Name)
 {
     PLIST_ENTRY CurrentEntry;
-    PLOGFILE Result = NULL;
+    PLOGFILE Item, Result = NULL;
+
+    ASSERT(Name);
 
     EnterCriticalSection(&LogFileListCs);
 
     CurrentEntry = LogFileListHead.Flink;
     while (CurrentEntry != &LogFileListHead)
     {
-        PLOGFILE Item = CONTAINING_RECORD(CurrentEntry,
-                                          LOGFILE,
-                                          ListEntry);
+        Item = CONTAINING_RECORD(CurrentEntry, LOGFILE, ListEntry);
 
-        if (Item->LogName && !lstrcmpi(Item->LogName, Name))
+        if (Item->LogName && !_wcsicmp(Item->LogName, Name))
         {
             Result = Item;
             break;
@@ -514,23 +72,24 @@ PLOGFILE LogfListItemByName(WCHAR * Name)
     return Result;
 }
 
+#if 0
 /* Index starting from 1 */
-INT LogfListItemIndexByName(WCHAR * Name)
+DWORD LogfListItemIndexByName(LPCWSTR Name)
 {
     PLIST_ENTRY CurrentEntry;
-    INT Result = 0;
-    INT i = 1;
+    DWORD Result = 0;
+    DWORD i = 1;
+
+    ASSERT(Name);
 
     EnterCriticalSection(&LogFileListCs);
 
     CurrentEntry = LogFileListHead.Flink;
     while (CurrentEntry != &LogFileListHead)
     {
-        PLOGFILE Item = CONTAINING_RECORD(CurrentEntry,
-                                          LOGFILE,
-                                          ListEntry);
+        PLOGFILE Item = CONTAINING_RECORD(CurrentEntry, LOGFILE, ListEntry);
 
-        if (Item->LogName && !lstrcmpi(Item->LogName, Name))
+        if (Item->LogName && !_wcsicmp(Item->LogName, Name))
         {
             Result = i;
             break;
@@ -543,13 +102,14 @@ INT LogfListItemIndexByName(WCHAR * Name)
     LeaveCriticalSection(&LogFileListCs);
     return Result;
 }
+#endif
 
 /* Index starting from 1 */
-PLOGFILE LogfListItemByIndex(INT Index)
+PLOGFILE LogfListItemByIndex(DWORD Index)
 {
     PLIST_ENTRY CurrentEntry;
     PLOGFILE Result = NULL;
-    INT i = 1;
+    DWORD i = 1;
 
     EnterCriticalSection(&LogFileListCs);
 
@@ -570,10 +130,10 @@ PLOGFILE LogfListItemByIndex(INT Index)
     return Result;
 }
 
-INT LogfListItemCount(VOID)
+DWORD LogfListItemCount(VOID)
 {
     PLIST_ENTRY CurrentEntry;
-    INT i = 0;
+    DWORD i = 0;
 
     EnterCriticalSection(&LogFileListCs);
 
@@ -588,65 +148,1097 @@ INT LogfListItemCount(VOID)
     return i;
 }
 
-VOID LogfListAddItem(PLOGFILE Item)
+static VOID
+LogfListAddItem(PLOGFILE Item)
 {
     EnterCriticalSection(&LogFileListCs);
     InsertTailList(&LogFileListHead, &Item->ListEntry);
     LeaveCriticalSection(&LogFileListCs);
 }
 
-VOID LogfListRemoveItem(PLOGFILE Item)
+static VOID
+LogfListRemoveItem(PLOGFILE Item)
 {
     EnterCriticalSection(&LogFileListCs);
     RemoveEntryList(&Item->ListEntry);
     LeaveCriticalSection(&LogFileListCs);
 }
 
-static BOOL
-ReadAnsiLogEntry(HANDLE hFile,
-                 LPVOID lpBuffer,
-                 DWORD nNumberOfBytesToRead,
-                 LPDWORD lpNumberOfBytesRead)
+
+/* GLOBALS *******************************************************************/
+
+static const EVENTLOGEOF EOFRecord =
 {
-    PEVENTLOGRECORD Dst;
-    PEVENTLOGRECORD Src;
+    sizeof(EOFRecord),
+    0x11111111, 0x22222222, 0x33333333, 0x44444444,
+    0, 0, 0, 0,
+    sizeof(EOFRecord)
+};
+
+/* FUNCTIONS *****************************************************************/
+
+static NTSTATUS
+ReadLogBuffer(IN  PLOGFILE LogFile,
+              OUT PIO_STATUS_BLOCK IoStatusBlock,
+              OUT PVOID Buffer,
+              IN  ULONG Length,
+              IN  PLARGE_INTEGER ByteOffset,
+              OUT PLARGE_INTEGER NextOffset OPTIONAL)
+{
+    NTSTATUS Status;
+    ULONG BufSize;
+    LARGE_INTEGER FileOffset;
+
+    ASSERT(LogFile->CurrentSize <= LogFile->Header.MaxSize);
+    // ASSERT(ByteOffset->QuadPart <= LogFile->Header.MaxSize);
+    ASSERT(ByteOffset->QuadPart <= LogFile->CurrentSize);
+
+    if (NextOffset)
+        NextOffset->QuadPart = 0LL;
+
+    /* Read the first part of the buffer */
+    FileOffset = *ByteOffset;
+    BufSize = min(Length, LogFile->CurrentSize - FileOffset.QuadPart);
+
+    Status = NtReadFile(LogFile->hFile,
+                        NULL,
+                        NULL,
+                        NULL,
+                        IoStatusBlock,
+                        Buffer,
+                        BufSize,
+                        &FileOffset,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtReadFile failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    if (Length > BufSize)
+    {
+        ULONG_PTR Information = IoStatusBlock->Information;
+
+        /*
+         * The buffer was splitted in two, its second part
+         * is to be read at the beginning of the log.
+         */
+        Buffer = (PVOID)((ULONG_PTR)Buffer + BufSize);
+        BufSize = Length - BufSize;
+        FileOffset.QuadPart = sizeof(EVENTLOGHEADER);
+
+        Status = NtReadFile(LogFile->hFile,
+                            NULL,
+                            NULL,
+                            NULL,
+                            IoStatusBlock,
+                            Buffer,
+                            BufSize,
+                            &FileOffset,
+                            NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtReadFile failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
+        /* Add the read number of bytes from the first read */
+        IoStatusBlock->Information += Information;
+    }
+
+    /* We return the offset just after the end of the read buffer */
+    if (NextOffset)
+        NextOffset->QuadPart = FileOffset.QuadPart + BufSize;
+
+    return Status;
+}
+
+static NTSTATUS
+WriteLogBuffer(IN  PLOGFILE LogFile,
+               OUT PIO_STATUS_BLOCK IoStatusBlock,
+               IN  PVOID Buffer,
+               IN  ULONG Length,
+               IN  PLARGE_INTEGER ByteOffset,
+               OUT PLARGE_INTEGER NextOffset OPTIONAL)
+{
+    NTSTATUS Status;
+    ULONG BufSize;
+    LARGE_INTEGER FileOffset;
+
+    ASSERT(LogFile->CurrentSize <= LogFile->Header.MaxSize);
+    ASSERT(ByteOffset->QuadPart <= LogFile->Header.MaxSize);
+    ASSERT(ByteOffset->QuadPart <= LogFile->CurrentSize);
+
+    if (NextOffset)
+        NextOffset->QuadPart = 0LL;
+
+    /* Write the first part of the buffer */
+    FileOffset = *ByteOffset;
+    BufSize = min(Length, LogFile->CurrentSize /* LogFile->Header.MaxSize */ - FileOffset.QuadPart);
+
+    Status = NtWriteFile(LogFile->hFile,
+                         NULL,
+                         NULL,
+                         NULL,
+                         IoStatusBlock,
+                         Buffer,
+                         BufSize,
+                         &FileOffset,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtWriteFile failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    if (Length > BufSize)
+    {
+        ULONG_PTR Information = IoStatusBlock->Information;
+
+        /*
+         * The buffer was splitted in two, its second part is written
+         * at the beginning of the log.
+         */
+        Buffer = (PVOID)((ULONG_PTR)Buffer + BufSize);
+        BufSize = Length - BufSize;
+        FileOffset.QuadPart = sizeof(EVENTLOGHEADER);
+
+        Status = NtWriteFile(LogFile->hFile,
+                             NULL,
+                             NULL,
+                             NULL,
+                             IoStatusBlock,
+                             Buffer,
+                             BufSize,
+                             &FileOffset,
+                             NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtWriteFile failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
+        /* Add the written number of bytes from the first write */
+        IoStatusBlock->Information += Information;
+
+        /* The log wraps */
+        LogFile->Header.Flags |= ELF_LOGFILE_HEADER_WRAP;
+    }
+
+    /* We return the offset just after the end of the written buffer */
+    if (NextOffset)
+        NextOffset->QuadPart = FileOffset.QuadPart + BufSize;
+
+    return Status;
+}
+
+
+/* Returns 0 if nothing is found */
+static ULONG
+LogfOffsetByNumber(PLOGFILE LogFile,
+                   DWORD RecordNumber)
+{
+    DWORD i;
+
+    for (i = 0; i < LogFile->OffsetInfoNext; i++)
+    {
+        if (LogFile->OffsetInfo[i].EventNumber == RecordNumber)
+            return LogFile->OffsetInfo[i].EventOffset;
+    }
+    return 0;
+}
+
+static BOOL
+LogfAddOffsetInformation(PLOGFILE LogFile,
+                         ULONG ulNumber,
+                         ULONG ulOffset)
+{
+    PVOID NewOffsetInfo;
+
+    if (LogFile->OffsetInfoNext == LogFile->OffsetInfoSize)
+    {
+        NewOffsetInfo = HeapReAlloc(GetProcessHeap(),
+                                    HEAP_ZERO_MEMORY,
+                                    LogFile->OffsetInfo,
+                                    (LogFile->OffsetInfoSize + 64) *
+                                        sizeof(EVENT_OFFSET_INFO));
+
+        if (!NewOffsetInfo)
+        {
+            DPRINT1("Cannot reallocate heap.\n");
+            return FALSE;
+        }
+
+        LogFile->OffsetInfo = (PEVENT_OFFSET_INFO)NewOffsetInfo;
+        LogFile->OffsetInfoSize += 64;
+    }
+
+    LogFile->OffsetInfo[LogFile->OffsetInfoNext].EventNumber = ulNumber;
+    LogFile->OffsetInfo[LogFile->OffsetInfoNext].EventOffset = ulOffset;
+    LogFile->OffsetInfoNext++;
+
+    return TRUE;
+}
+
+static BOOL
+LogfDeleteOffsetInformation(PLOGFILE LogFile,
+                            ULONG ulNumberMin,
+                            ULONG ulNumberMax)
+{
+    DWORD i;
+
+    if (ulNumberMin > ulNumberMax)
+        return FALSE;
+
+    /* Remove records ulNumberMin to ulNumberMax inclusive */
+    while (ulNumberMin <= ulNumberMax)
+    {
+        /*
+         * As the offset information is listed in increasing order, and we want
+         * to keep the list without holes, we demand that ulNumberMin is the first
+         * element in the list.
+         */
+        if (ulNumberMin != LogFile->OffsetInfo[0].EventNumber)
+            return FALSE;
+
+        /*
+         * RtlMoveMemory(&LogFile->OffsetInfo[0],
+         *               &LogFile->OffsetInfo[1],
+         *               sizeof(EVENT_OFFSET_INFO) * (LogFile->OffsetInfoNext - 1));
+         */
+        for (i = 0; i < LogFile->OffsetInfoNext - 1; i++)
+        {
+            LogFile->OffsetInfo[i].EventNumber = LogFile->OffsetInfo[i + 1].EventNumber;
+            LogFile->OffsetInfo[i].EventOffset = LogFile->OffsetInfo[i + 1].EventOffset;
+        }
+        LogFile->OffsetInfoNext--;
+
+        /* Go to the next offset information */
+        ulNumberMin++;
+    }
+
+    return TRUE;
+}
+
+static NTSTATUS
+LogfInitializeNew(PLOGFILE LogFile,
+                  ULONG ulMaxSize,
+                  ULONG ulRetention)
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    LARGE_INTEGER FileOffset;
+    EVENTLOGEOF EofRec;
+
+    /* Initialize the event log header */
+    RtlZeroMemory(&LogFile->Header, sizeof(EVENTLOGHEADER));
+
+    LogFile->Header.HeaderSize = sizeof(EVENTLOGHEADER);
+    LogFile->Header.Signature  = LOGFILE_SIGNATURE;
+    LogFile->Header.MajorVersion = MAJORVER;
+    LogFile->Header.MinorVersion = MINORVER;
+
+    /* Set the offset to the oldest record */
+    LogFile->Header.StartOffset = sizeof(EVENTLOGHEADER);
+    /* Set the offset to the ELF_EOF_RECORD */
+    LogFile->Header.EndOffset = sizeof(EVENTLOGHEADER);
+    /* Set the number of the next record that will be added */
+    LogFile->Header.CurrentRecordNumber = 1;
+    /* The event log is empty, there is no record so far */
+    LogFile->Header.OldestRecordNumber = 0;
+
+    // FIXME: Windows' EventLog log file sizes are always multiple of 64kB
+    // but that does not mean the real log size is == file size.
+
+    /* Round MaxSize to be a multiple of ULONG (normally on Windows: multiple of 64 kB) */
+    LogFile->Header.MaxSize = ROUND_UP(ulMaxSize, sizeof(ULONG));
+    LogFile->CurrentSize = LogFile->Header.MaxSize;
+
+    LogFile->Header.Flags = 0;
+    LogFile->Header.Retention = ulRetention;
+    LogFile->Header.EndHeaderSize = sizeof(EVENTLOGHEADER);
+
+    /* Write the header */
+    SetFilePointer(LogFile->hFile, 0, NULL, FILE_BEGIN);
+    SetEndOfFile(LogFile->hFile);
+
+    FileOffset.QuadPart = 0LL;
+    Status = NtWriteFile(LogFile->hFile,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         &LogFile->Header,
+                         sizeof(EVENTLOGHEADER),
+                         &FileOffset,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtWriteFile failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Initialize the ELF_EOF_RECORD and write it */
+    RtlCopyMemory(&EofRec, &EOFRecord, sizeof(EOFRecord));
+    EofRec.BeginRecord = LogFile->Header.StartOffset;
+    EofRec.EndRecord   = LogFile->Header.EndOffset;
+    EofRec.CurrentRecordNumber = LogFile->Header.CurrentRecordNumber;
+    EofRec.OldestRecordNumber  = LogFile->Header.OldestRecordNumber;
+
+    Status = NtWriteFile(LogFile->hFile,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         &EofRec,
+                         sizeof(EofRec),
+                         NULL,
+                         NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtWriteFile failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    Status = NtFlushBuffersFile(LogFile->hFile, &IoStatusBlock);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtFlushBuffersFile failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+LogfInitializeExisting(PLOGFILE LogFile,
+                       BOOLEAN Backup)
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    LARGE_INTEGER FileOffset, NextOffset;
+    LARGE_INTEGER LogFileSize;
+    DWORD dwRecordsNumber = 0;
+    ULONG RecOffset;
+    PDWORD pdwRecSize2;
+    EVENTLOGEOF EofRec;
+    EVENTLOGRECORD RecBuf;
+    PEVENTLOGRECORD pRecBuf;
+    BOOLEAN Wrapping = FALSE;
+    BOOLEAN IsLogDirty = FALSE;
+
+    DPRINT("Initializing LogFile %S\n", LogFile->LogName);
+
+    /* Read the log header */
+    FileOffset.QuadPart = 0LL;
+    Status = NtReadFile(LogFile->hFile,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &IoStatusBlock,
+                        &LogFile->Header,
+                        sizeof(EVENTLOGHEADER),
+                        &FileOffset,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtReadFile failed (Status 0x%08lx)\n", Status);
+        return STATUS_EVENTLOG_FILE_CORRUPT;
+    }
+    if (IoStatusBlock.Information != sizeof(EVENTLOGHEADER))
+    {
+        DPRINT("EventLog: Invalid file %S.\n", LogFile->FileName);
+        return STATUS_EVENTLOG_FILE_CORRUPT;
+    }
+
+    /* Header validity checks */
+
+    if (LogFile->Header.HeaderSize != sizeof(EVENTLOGHEADER) ||
+        LogFile->Header.EndHeaderSize != sizeof(EVENTLOGHEADER))
+    {
+        DPRINT("EventLog: Invalid header size in %S.\n", LogFile->FileName);
+        return STATUS_EVENTLOG_FILE_CORRUPT;
+    }
+
+    if (LogFile->Header.Signature != LOGFILE_SIGNATURE)
+    {
+        DPRINT("EventLog: Invalid signature %x in %S.\n",
+               LogFile->Header.Signature, LogFile->FileName);
+        return STATUS_EVENTLOG_FILE_CORRUPT;
+    }
+
+    IsLogDirty = (LogFile->Header.Flags & ELF_LOGFILE_HEADER_DIRTY);
+
+    /* If the log is a backup log that is dirty, then it is corrupted */
+    if (Backup && IsLogDirty)
+    {
+        DPRINT("EventLog: Backup log %S is dirty.\n", LogFile->FileName);
+        return STATUS_EVENTLOG_FILE_CORRUPT;
+    }
+
+    /*
+     * Retrieve the log file size and check whether the file is not too large;
+     * this log format only supports files of theoretical size < 0xFFFFFFFF .
+     */
+    if (!GetFileSizeEx(LogFile->hFile, &LogFileSize))
+        return I_RpcMapWin32Status(GetLastError());
+
+    if (LogFileSize.HighPart != 0)
+    {
+        DPRINT1("EventLog: Log %S is too large.\n", LogFile->FileName);
+        // return STATUS_FILE_TOO_LARGE;
+        return STATUS_EVENTLOG_FILE_CORRUPT;
+    }
+
+    LogFile->CurrentSize = LogFileSize.LowPart; // LogFileSize.QuadPart;
+
+    /* Adjust the log maximum size if needed */
+    if (LogFile->CurrentSize > LogFile->Header.MaxSize)
+        LogFile->Header.MaxSize = LogFile->CurrentSize;
+
+    /*
+     * In a non-backup dirty log, the most up-to-date information about
+     * the Start/End offsets and the Oldest and Current event record numbers
+     * are found in the EOF record. We need to locate the EOF record without
+     * relying on the log header's EndOffset, then patch the log header with
+     * the values from the EOF record.
+     */
+    if ((LogFile->Header.EndOffset >= sizeof(EVENTLOGHEADER)) &&
+        (LogFile->Header.EndOffset <  LogFile->CurrentSize) &&
+        (LogFile->Header.EndOffset & 3) == 0) // EndOffset % sizeof(ULONG) == 0
+    {
+        /* The header EOF offset may be valid, try to start with it */
+        RecOffset = LogFile->Header.EndOffset;
+    }
+    else
+    {
+        /* The header EOF offset could not be valid, so start from the beginning */
+        RecOffset = sizeof(EVENTLOGHEADER);
+    }
+
+    FileOffset.QuadPart = RecOffset;
+    Wrapping = FALSE;
+
+    for (;;)
+    {
+        if (Wrapping && FileOffset.QuadPart >= RecOffset)
+        {
+            DPRINT1("EOF record not found!\n");
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
+
+        /* Attempt to read the fixed part of an EVENTLOGEOF (may wrap) */
+        Status = ReadLogBuffer(LogFile,
+                               &IoStatusBlock,
+                               &EofRec,
+                               EVENTLOGEOF_SIZE_FIXED,
+                               &FileOffset,
+                               NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ReadLogBuffer failed (Status 0x%08lx)\n", Status);
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
+        if (IoStatusBlock.Information != EVENTLOGEOF_SIZE_FIXED)
+        {
+            DPRINT1("Cannot read at most an EOF record!\n");
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
+
+        /* Is it an EVENTLOGEOF record? */
+        if (RtlCompareMemory(&EofRec, &EOFRecord, EVENTLOGEOF_SIZE_FIXED) == EVENTLOGEOF_SIZE_FIXED)
+        {
+            DPRINT("Found EOF record at %llx\n", FileOffset.QuadPart);
+
+            /* Got it! Break the loop and continue */
+            break;
+        }
+
+        /* No, continue looping */
+        if (*(PULONG)((ULONG_PTR)&EofRec + sizeof(ULONG)) == *(PULONG)(&EOFRecord))
+            FileOffset.QuadPart += sizeof(ULONG);
+        else
+        if (*(PULONG)((ULONG_PTR)&EofRec + 2*sizeof(ULONG)) == *(PULONG)(&EOFRecord))
+            FileOffset.QuadPart += 2*sizeof(ULONG);
+        else
+        if (*(PULONG)((ULONG_PTR)&EofRec + 3*sizeof(ULONG)) == *(PULONG)(&EOFRecord))
+            FileOffset.QuadPart += 3*sizeof(ULONG);
+        else
+        if (*(PULONG)((ULONG_PTR)&EofRec + 4*sizeof(ULONG)) == *(PULONG)(&EOFRecord))
+            FileOffset.QuadPart += 4*sizeof(ULONG);
+        else
+            FileOffset.QuadPart += 5*sizeof(ULONG); // EVENTLOGEOF_SIZE_FIXED
+
+        if (FileOffset.QuadPart >= LogFile->CurrentSize /* LogFile->Header.MaxSize */)
+        {
+            /* Wrap the offset */
+            FileOffset.QuadPart -= LogFile->CurrentSize /* LogFile->Header.MaxSize */ - sizeof(EVENTLOGHEADER);
+            Wrapping = TRUE;
+        }
+    }
+    /*
+     * The only way to be there is to have found a valid EOF record.
+     * Otherwise the previous loop has failed and STATUS_EVENTLOG_FILE_CORRUPT
+     * was returned.
+     */
+
+    /* Read the full EVENTLOGEOF (may wrap) and validate it */
+    Status = ReadLogBuffer(LogFile,
+                           &IoStatusBlock,
+                           &EofRec,
+                           sizeof(EofRec),
+                           &FileOffset,
+                           NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ReadLogBuffer failed (Status 0x%08lx)\n", Status);
+        return STATUS_EVENTLOG_FILE_CORRUPT;
+    }
+    if (IoStatusBlock.Information != sizeof(EofRec))
+    {
+        DPRINT1("Cannot read the full EOF record!\n");
+        return STATUS_EVENTLOG_FILE_CORRUPT;
+    }
+
+    /* Complete validity checks */
+    if ((EofRec.RecordSizeEnd != EofRec.RecordSizeBeginning) ||
+        (EofRec.EndRecord != FileOffset.QuadPart))
+    {
+        DPRINT1("EOF record %llx is corrupted (0x%x vs. 0x%x ; 0x%x vs. 0x%llx), expected %x %x!\n", FileOffset.QuadPart,
+                EofRec.RecordSizeEnd, EofRec.RecordSizeBeginning,
+                EofRec.EndRecord, FileOffset.QuadPart,
+                EOFRecord.RecordSizeEnd, EOFRecord.RecordSizeBeginning);
+        DPRINT1("RecordSizeEnd = %x\n", EofRec.RecordSizeEnd);
+        DPRINT1("RecordSizeBeginning = %x\n", EofRec.RecordSizeBeginning);
+        DPRINT1("EndRecord = %x\n", EofRec.EndRecord);
+        return STATUS_EVENTLOG_FILE_CORRUPT;
+    }
+
+    /* The EOF record is valid, break the loop and continue */
+
+    /* If the log is not dirty, the header values should correspond to the EOF ones */
+    if (!IsLogDirty)
+    {
+        if ( (LogFile->Header.StartOffset != EofRec.BeginRecord) ||
+             (LogFile->Header.EndOffset   != EofRec.EndRecord)   ||
+             (LogFile->Header.CurrentRecordNumber != EofRec.CurrentRecordNumber) ||
+             (LogFile->Header.OldestRecordNumber  != EofRec.OldestRecordNumber) )
+        {
+            DPRINT1("\n"
+                    "Log header or EOF record is corrupted:\n"
+                    "    StartOffset: 0x%x, expected 0x%x; EndOffset: 0x%x, expected 0x%x;\n"
+                    "    CurrentRecordNumber: %d, expected %d; OldestRecordNumber: %d, expected %d.\n",
+                    LogFile->Header.StartOffset, EofRec.BeginRecord,
+                    LogFile->Header.EndOffset  , EofRec.EndRecord,
+                    LogFile->Header.CurrentRecordNumber, EofRec.CurrentRecordNumber,
+                    LogFile->Header.OldestRecordNumber , EofRec.OldestRecordNumber);
+
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
+    }
+
+    /* If the log is dirty, patch the log header with the values from the EOF record */
+    if (!Backup && IsLogDirty)
+    {
+        LogFile->Header.StartOffset = EofRec.BeginRecord;
+        LogFile->Header.EndOffset   = EofRec.EndRecord;
+        LogFile->Header.CurrentRecordNumber = EofRec.CurrentRecordNumber;
+        LogFile->Header.OldestRecordNumber  = EofRec.OldestRecordNumber;
+    }
+
+    /*
+     * FIXME! During operations the EOF record is the one that is the most
+     * updated (its Oldest & Current record numbers are always up-to
+     * date) while the ones from the header may be unsync. When closing
+     * (or flushing?) the event log, the header's record numbers get
+     * updated with the same values as the ones stored in the EOF record.
+     */
+
+    /* Verify Start/End offsets boundaries */
+
+    if ((LogFile->Header.StartOffset >= LogFile->CurrentSize) ||
+        (LogFile->Header.StartOffset & 3) != 0) // StartOffset % sizeof(ULONG) != 0
+    {
+        DPRINT("EventLog: Invalid start offset %x in %S.\n",
+               LogFile->Header.StartOffset, LogFile->FileName);
+        return STATUS_EVENTLOG_FILE_CORRUPT;
+    }
+    if ((LogFile->Header.EndOffset >= LogFile->CurrentSize) ||
+        (LogFile->Header.EndOffset & 3) != 0) // EndOffset % sizeof(ULONG) != 0
+    {
+        DPRINT("EventLog: Invalid EOF offset %x in %S.\n",
+               LogFile->Header.EndOffset, LogFile->FileName);
+        return STATUS_EVENTLOG_FILE_CORRUPT;
+    }
+
+    if ((LogFile->Header.StartOffset != LogFile->Header.EndOffset) &&
+        (LogFile->Header.MaxSize - LogFile->Header.StartOffset < sizeof(EVENTLOGRECORD)))
+    {
+        /*
+         * If StartOffset does not point to EndOffset i.e. to an EVENTLOGEOF,
+         * it should point to a non-splitted EVENTLOGRECORD.
+         */
+        DPRINT("EventLog: Invalid start offset %x in %S.\n",
+               LogFile->Header.StartOffset, LogFile->FileName);
+        return STATUS_EVENTLOG_FILE_CORRUPT;
+    }
+
+    if ((LogFile->Header.StartOffset < LogFile->Header.EndOffset) &&
+        (LogFile->Header.EndOffset - LogFile->Header.StartOffset < sizeof(EVENTLOGRECORD)))
+    {
+        /*
+         * In non-wrapping case, there must be enough space between StartOffset
+         * and EndOffset to contain at least a full EVENTLOGRECORD.
+         */
+        DPRINT("EventLog: Invalid start offset %x or end offset %x in %S.\n",
+               LogFile->Header.StartOffset, LogFile->Header.EndOffset, LogFile->FileName);
+        return STATUS_EVENTLOG_FILE_CORRUPT;
+    }
+
+    if (LogFile->Header.StartOffset <= LogFile->Header.EndOffset)
+    {
+        /*
+         * Non-wrapping case: the (wrapping) free space starting at EndOffset
+         * must be able to contain an EVENTLOGEOF.
+         */
+        if (LogFile->Header.MaxSize - LogFile->Header.EndOffset +
+            LogFile->Header.StartOffset - sizeof(EVENTLOGHEADER) < sizeof(EVENTLOGEOF))
+        {
+            DPRINT("EventLog: Invalid EOF offset %x in %S.\n",
+                   LogFile->Header.EndOffset, LogFile->FileName);
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
+    }
+    else // if (LogFile->Header.StartOffset > LogFile->Header.EndOffset)
+    {
+        /*
+         * Wrapping case: the free space between EndOffset and StartOffset
+         * must be able to contain an EVENTLOGEOF.
+         */
+        if (LogFile->Header.StartOffset - LogFile->Header.EndOffset < sizeof(EVENTLOGEOF))
+        {
+            DPRINT("EventLog: Invalid EOF offset %x in %S.\n",
+                   LogFile->Header.EndOffset, LogFile->FileName);
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
+    }
+
+    /* Start enumerating the event records from the beginning */
+    RecOffset = LogFile->Header.StartOffset;
+    FileOffset.QuadPart = RecOffset;
+    Wrapping = FALSE;
+
+    // // FIXME! FIXME!
+    // if (!(LogFile->Header.Flags & ELF_LOGFILE_HEADER_WRAP))
+    // {
+        // DPRINT1("Log file was wrapping but the flag was not set! Fixing...\n");
+        // LogFile->Header.Flags |= ELF_LOGFILE_HEADER_WRAP;
+    // }
+
+    DPRINT("StartOffset = %x, EndOffset = %x\n",
+           LogFile->Header.StartOffset, LogFile->Header.EndOffset);
+
+    /*
+     * For non-backup logs of size < MaxSize, reorganize the events such that
+     * they do not wrap as soon as we write new ones.
+     */
+#if 0
+    if (!Backup)
+    {
+        pRecBuf = RtlAllocateHeap(GetProcessHeap(), 0, RecBuf.Length);
+        if (pRecBuf == NULL)
+        {
+            DPRINT1("Cannot allocate temporary buffer, skip event reorganization.\n");
+            goto Continue;
+        }
+
+        // TODO: Do the job!
+    }
+
+Continue:
+
+    DPRINT("StartOffset = %x, EndOffset = %x\n",
+           LogFile->Header.StartOffset, LogFile->Header.EndOffset);
+#endif
+
+    while (FileOffset.QuadPart != LogFile->Header.EndOffset)
+    {
+        if (Wrapping && FileOffset.QuadPart >= RecOffset)
+        {
+            /* We have finished enumerating all the event records */
+            break;
+        }
+
+        /* Read the next EVENTLOGRECORD header at once (it cannot be split) */
+        Status = NtReadFile(LogFile->hFile,
+                            NULL,
+                            NULL,
+                            NULL,
+                            &IoStatusBlock,
+                            &RecBuf,
+                            sizeof(RecBuf),
+                            &FileOffset,
+                            NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtReadFile failed (Status 0x%08lx)\n", Status);
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
+        if (IoStatusBlock.Information != sizeof(RecBuf))
+        {
+            DPRINT("Length != sizeof(RecBuf)\n");
+            break;
+        }
+
+        if (RecBuf.Reserved != LOGFILE_SIGNATURE ||
+            RecBuf.Length < sizeof(EVENTLOGRECORD))
+        {
+            DPRINT("RecBuf problem\n");
+            break;
+        }
+
+        /* Allocate a full EVENTLOGRECORD (header + data) */
+        pRecBuf = RtlAllocateHeap(GetProcessHeap(), 0, RecBuf.Length);
+        if (pRecBuf == NULL)
+        {
+            DPRINT1("Cannot allocate heap!\n");
+            return STATUS_NO_MEMORY;
+        }
+
+        /* Attempt to read the full EVENTLOGRECORD (can wrap) */
+        Status = ReadLogBuffer(LogFile,
+                               &IoStatusBlock,
+                               pRecBuf,
+                               RecBuf.Length,
+                               &FileOffset,
+                               &NextOffset);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("ReadLogBuffer failed (Status 0x%08lx)\n", Status);
+            RtlFreeHeap(GetProcessHeap(), 0, pRecBuf);
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
+        if (IoStatusBlock.Information != RecBuf.Length)
+        {
+            DPRINT1("Oh oh!!\n");
+            RtlFreeHeap(GetProcessHeap(), 0, pRecBuf);
+            break;
+        }
+
+        // /* If OverWrittenRecords is TRUE and this record has already been read */
+        // if (OverWrittenRecords && (pRecBuf->RecordNumber == LogFile->Header.OldestRecordNumber))
+        // {
+            // RtlFreeHeap(GetProcessHeap(), 0, pRecBuf);
+            // break;
+        // }
+
+        pdwRecSize2 = (PDWORD)((ULONG_PTR)pRecBuf + RecBuf.Length - 4);
+
+        if (*pdwRecSize2 != RecBuf.Length)
+        {
+            DPRINT1("Invalid RecordSizeEnd of record %d (%x) in %S\n",
+                    dwRecordsNumber, *pdwRecSize2, LogFile->LogName);
+            RtlFreeHeap(GetProcessHeap(), 0, pRecBuf);
+            break;
+        }
+
+        DPRINT("Add new record %d - %x\n", pRecBuf->RecordNumber, FileOffset.QuadPart);
+
+        dwRecordsNumber++;
+
+        if (!LogfAddOffsetInformation(LogFile,
+                                      pRecBuf->RecordNumber,
+                                      FileOffset.QuadPart))
+        {
+            DPRINT1("LogfAddOffsetInformation() failed!\n");
+            RtlFreeHeap(GetProcessHeap(), 0, pRecBuf);
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
+
+        RtlFreeHeap(GetProcessHeap(), 0, pRecBuf);
+
+        if (NextOffset.QuadPart == LogFile->Header.EndOffset)
+        {
+            /* We have finished enumerating all the event records */
+            DPRINT("NextOffset.QuadPart == LogFile->Header.EndOffset, break\n");
+            break;
+        }
+
+        /*
+         * If this was the last event record before the end of the log file,
+         * the next one should start at the beginning of the log and the space
+         * between the last event record and the end of the file is padded.
+         */
+        if (LogFile->Header.MaxSize - NextOffset.QuadPart < sizeof(EVENTLOGRECORD))
+        {
+            /* Wrap to the beginning of the log */
+            DPRINT("Wrap!\n");
+            NextOffset.QuadPart = sizeof(EVENTLOGHEADER);
+        }
+
+        /*
+         * If the next offset to read is below the current offset,
+         * this means we are wrapping.
+         */
+        if (FileOffset.QuadPart > NextOffset.QuadPart)
+        {
+            DPRINT("Wrapping = TRUE;\n");
+            Wrapping = TRUE;
+        }
+
+        /* Move the current offset */
+        FileOffset = NextOffset;
+    }
+
+    /* If the event log was empty, it will now contain one record */
+    if (dwRecordsNumber != 0 && LogFile->Header.OldestRecordNumber == 0)
+        LogFile->Header.OldestRecordNumber = 1;
+
+    LogFile->Header.CurrentRecordNumber = dwRecordsNumber + LogFile->Header.OldestRecordNumber;
+    if (LogFile->Header.CurrentRecordNumber == 0)
+        LogFile->Header.CurrentRecordNumber = 1;
+
+    if (!Backup)
+    {
+        FileOffset.QuadPart = 0LL;
+        Status = NtWriteFile(LogFile->hFile,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &IoStatusBlock,
+                             &LogFile->Header,
+                             sizeof(EVENTLOGHEADER),
+                             &FileOffset,
+                             NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtWriteFile failed (Status 0x%08lx)\n", Status);
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
+
+        Status = NtFlushBuffersFile(LogFile->hFile, &IoStatusBlock);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtFlushBuffersFile failed (Status 0x%08lx)\n", Status);
+            return STATUS_EVENTLOG_FILE_CORRUPT;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+LogfCreate(PLOGFILE* LogFile,
+           PCWSTR    LogName,
+           PUNICODE_STRING FileName,
+           ULONG     ulMaxSize,
+           ULONG     ulRetention,
+           BOOLEAN   Permanent,
+           BOOLEAN   Backup)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PLOGFILE pLogFile;
+    SIZE_T LogNameLen;
+    BOOLEAN CreateNew = FALSE;
+
+    pLogFile = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LOGFILE));
+    if (!pLogFile)
+    {
+        DPRINT1("Cannot allocate heap!\n");
+        return STATUS_NO_MEMORY;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               FileName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtCreateFile(&pLogFile->hFile,
+                          Backup ? (GENERIC_READ | SYNCHRONIZE)
+                                 : (GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE),
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          FILE_ATTRIBUTE_NORMAL,
+                          FILE_SHARE_READ,
+                          Backup ? FILE_OPEN : FILE_OPEN_IF,
+                          FILE_SYNCHRONOUS_IO_NONALERT,
+                          NULL,
+                          0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Cannot create file %wZ (Status: 0x%08lx)\n", FileName, Status);
+        goto Quit;
+    }
+
+    CreateNew = (IoStatusBlock.Information == FILE_CREATED);
+
+    LogNameLen = (LogName ? wcslen(LogName) : 0) + 1;
+    pLogFile->LogName = RtlAllocateHeap(GetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  LogNameLen * sizeof(WCHAR));
+    if (pLogFile->LogName == NULL)
+    {
+        DPRINT1("Cannot allocate heap\n");
+        Status = STATUS_NO_MEMORY;
+        goto Quit;
+    }
+
+    if (LogName)
+        StringCchCopy(pLogFile->LogName, LogNameLen, LogName);
+
+    pLogFile->FileName = RtlAllocateHeap(GetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   /*(wcslen(FileName->Buffer) + 1) * sizeof(WCHAR)*/
+                                   FileName->Length + sizeof(UNICODE_NULL));
+    if (pLogFile->FileName == NULL)
+    {
+        DPRINT1("Cannot allocate heap\n");
+        Status = STATUS_NO_MEMORY;
+        goto Quit;
+    }
+
+    StringCchCopy(pLogFile->FileName,
+                  /*wcslen(FileName->Buffer) + 1*/ (FileName->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR),
+                  FileName->Buffer);
+
+    pLogFile->OffsetInfo = RtlAllocateHeap(GetProcessHeap(),
+                                     HEAP_ZERO_MEMORY,
+                                     sizeof(EVENT_OFFSET_INFO) * 64);
+    if (pLogFile->OffsetInfo == NULL)
+    {
+        DPRINT1("Cannot allocate heap\n");
+        Status = STATUS_NO_MEMORY;
+        goto Quit;
+    }
+    pLogFile->OffsetInfoSize = 64;
+    pLogFile->OffsetInfoNext = 0;
+
+    pLogFile->Permanent = Permanent;
+
+    // FIXME: Always use the regitry values for MaxSize & Retention,
+    // even for existing logs!
+
+    // FIXME: On Windows, EventLog uses the MaxSize setting
+    // from the registry itself; the MaxSize from the header
+    // is just for information purposes.
+
+    if (CreateNew)
+        Status = LogfInitializeNew(pLogFile, ulMaxSize, ulRetention);
+    else
+        Status = LogfInitializeExisting(pLogFile, Backup);
+
+    if (!NT_SUCCESS(Status))
+        goto Quit;
+
+    RtlInitializeResource(&pLogFile->Lock);
+
+    LogfListAddItem(pLogFile);
+
+Quit:
+    if (!NT_SUCCESS(Status))
+    {
+        if ((pLogFile->hFile != NULL) && (pLogFile->hFile != INVALID_HANDLE_VALUE))
+            NtClose(pLogFile->hFile);
+
+        if (pLogFile->OffsetInfo)
+            RtlFreeHeap(GetProcessHeap(), 0, pLogFile->OffsetInfo);
+
+        if (pLogFile->FileName)
+            RtlFreeHeap(GetProcessHeap(), 0, pLogFile->FileName);
+
+        if (pLogFile->LogName)
+            RtlFreeHeap(GetProcessHeap(), 0, pLogFile->LogName);
+
+        RtlFreeHeap(GetProcessHeap(), 0, pLogFile);
+    }
+    else
+    {
+        *LogFile = pLogFile;
+    }
+
+    return Status;
+}
+
+VOID
+LogfClose(PLOGFILE LogFile,
+          BOOLEAN  ForceClose)
+{
+    IO_STATUS_BLOCK IoStatusBlock;
+
+    if (LogFile == NULL)
+        return;
+
+    if (!ForceClose && LogFile->Permanent)
+        return;
+
+    RtlAcquireResourceExclusive(&LogFile->Lock, TRUE);
+
+    NtFlushBuffersFile(LogFile->hFile, &IoStatusBlock);
+    NtClose(LogFile->hFile);
+    LogfListRemoveItem(LogFile);
+
+    RtlDeleteResource(&LogFile->Lock);
+
+    RtlFreeHeap(GetProcessHeap(), 0, LogFile->LogName);
+    RtlFreeHeap(GetProcessHeap(), 0, LogFile->FileName);
+    RtlFreeHeap(GetProcessHeap(), 0, LogFile->OffsetInfo);
+    RtlFreeHeap(GetProcessHeap(), 0, LogFile);
+
+    return;
+}
+
+
+static NTSTATUS
+ReadAnsiLogEntry(IN  PLOGFILE LogFile,
+                 OUT PIO_STATUS_BLOCK IoStatusBlock,
+                 OUT PVOID Buffer,
+                 IN  ULONG Length,
+                 IN  PLARGE_INTEGER ByteOffset,
+                 OUT PLARGE_INTEGER NextOffset OPTIONAL)
+{
+    NTSTATUS Status;
+    PVOID UnicodeBuffer = NULL;
+    PEVENTLOGRECORD Src, Dst;
     ANSI_STRING StringA;
     UNICODE_STRING StringW;
-    LPWSTR SrcPtr;
-    LPSTR DstPtr;
-    LPWSTR SrcString;
-    LPSTR DstString;
-    LPVOID lpUnicodeBuffer = NULL;
-    DWORD dwRead = 0;
+    PVOID SrcPtr, DstPtr;
+    // DWORD dwRead;
     DWORD i;
     DWORD dwPadding;
     DWORD dwEntryLength;
     PDWORD pLength;
-    NTSTATUS Status;
-    BOOL ret = TRUE;
 
-    *lpNumberOfBytesRead = 0;
+    IoStatusBlock->Information = 0;
 
-    lpUnicodeBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nNumberOfBytesToRead);
-    if (lpUnicodeBuffer == NULL)
+    UnicodeBuffer = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+    if (UnicodeBuffer == NULL)
     {
         DPRINT1("Alloc failed!\n");
-        return FALSE;
+        return STATUS_NO_MEMORY;
     }
 
-    if (!ReadFile(hFile, lpUnicodeBuffer, nNumberOfBytesToRead, &dwRead, NULL))
+    Status = ReadLogBuffer(LogFile,
+                           IoStatusBlock,
+                           UnicodeBuffer,
+                           Length,
+                           ByteOffset,
+                           NextOffset);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Read failed!\n");
-        ret = FALSE;
+        DPRINT1("ReadLogBuffer failed (Status 0x%08lx)\n", Status);
+        // Status = STATUS_EVENTLOG_FILE_CORRUPT;
         goto done;
     }
+    // dwRead = IoStatusBlock->Information;
 
-    Dst = (PEVENTLOGRECORD)lpBuffer;
-    Src = (PEVENTLOGRECORD)lpUnicodeBuffer;
+    Src = (PEVENTLOGRECORD)UnicodeBuffer;
+    Dst = (PEVENTLOGRECORD)Buffer;
 
-    Dst->TimeGenerated = Src->TimeGenerated;
     Dst->Reserved = Src->Reserved;
     Dst->RecordNumber = Src->RecordNumber;
+    Dst->TimeGenerated = Src->TimeGenerated;
     Dst->TimeWritten = Src->TimeWritten;
     Dst->EventID = Src->EventID;
     Dst->EventType = Src->EventType;
@@ -655,8 +1247,8 @@ ReadAnsiLogEntry(HANDLE hFile,
     Dst->UserSidLength = Src->UserSidLength;
     Dst->DataLength = Src->DataLength;
 
-    SrcPtr = (LPWSTR)((DWORD_PTR)Src + sizeof(EVENTLOGRECORD));
-    DstPtr = (LPSTR)((DWORD_PTR)Dst + sizeof(EVENTLOGRECORD));
+    SrcPtr = (PVOID)((ULONG_PTR)Src + sizeof(EVENTLOGRECORD));
+    DstPtr = (PVOID)((ULONG_PTR)Dst + sizeof(EVENTLOGRECORD));
 
     /* Convert the module name */
     RtlInitUnicodeString(&StringW, SrcPtr);
@@ -664,125 +1256,156 @@ ReadAnsiLogEntry(HANDLE hFile,
     if (NT_SUCCESS(Status))
     {
         RtlCopyMemory(DstPtr, StringA.Buffer, StringA.MaximumLength);
-
-        DstPtr = (PVOID)((DWORD_PTR)DstPtr + StringA.MaximumLength);
+        DstPtr = (PVOID)((ULONG_PTR)DstPtr + StringA.MaximumLength);
 
         RtlFreeAnsiString(&StringA);
     }
+    else
+    {
+        RtlZeroMemory(DstPtr, StringW.MaximumLength / sizeof(WCHAR));
+        DstPtr = (PVOID)((ULONG_PTR)DstPtr + StringW.MaximumLength / sizeof(WCHAR));
+    }
+    SrcPtr = (PVOID)((ULONG_PTR)SrcPtr + StringW.MaximumLength);
 
     /* Convert the computer name */
+    RtlInitUnicodeString(&StringW, SrcPtr);
+    Status = RtlUnicodeStringToAnsiString(&StringA, &StringW, TRUE);
     if (NT_SUCCESS(Status))
     {
-        SrcPtr = (PWSTR)((DWORD_PTR)SrcPtr + StringW.MaximumLength);
+        RtlCopyMemory(DstPtr, StringA.Buffer, StringA.MaximumLength);
+        DstPtr = (PVOID)((ULONG_PTR)DstPtr + StringA.MaximumLength);
 
+        RtlFreeAnsiString(&StringA);
+    }
+    else
+    {
+        RtlZeroMemory(DstPtr, StringW.MaximumLength / sizeof(WCHAR));
+        DstPtr = (PVOID)((ULONG_PTR)DstPtr + StringW.MaximumLength / sizeof(WCHAR));
+    }
+
+    /* Add the padding and the User SID */
+    dwPadding = sizeof(ULONG) - (((ULONG_PTR)DstPtr - (ULONG_PTR)Dst) % sizeof(ULONG));
+    RtlZeroMemory(DstPtr, dwPadding);
+
+    SrcPtr = (PVOID)((ULONG_PTR)Src + Src->UserSidOffset);
+    DstPtr = (PVOID)((ULONG_PTR)DstPtr + dwPadding);
+
+    Dst->UserSidOffset = (DWORD)((ULONG_PTR)DstPtr - (ULONG_PTR)Dst);
+    RtlCopyMemory(DstPtr, SrcPtr, Src->UserSidLength);
+
+    /* Convert the strings */
+    SrcPtr = (PVOID)((ULONG_PTR)Src + Src->StringOffset);
+    DstPtr = (PVOID)((ULONG_PTR)DstPtr + Src->UserSidLength);
+    Dst->StringOffset = (DWORD)((ULONG_PTR)DstPtr - (ULONG_PTR)Dst);
+
+    for (i = 0; i < Dst->NumStrings; i++)
+    {
         RtlInitUnicodeString(&StringW, SrcPtr);
         Status = RtlUnicodeStringToAnsiString(&StringA, &StringW, TRUE);
         if (NT_SUCCESS(Status))
         {
             RtlCopyMemory(DstPtr, StringA.Buffer, StringA.MaximumLength);
-
-            DstPtr = (PVOID)((DWORD_PTR)DstPtr + StringA.MaximumLength);
+            DstPtr = (PVOID)((ULONG_PTR)DstPtr + StringA.MaximumLength);
 
             RtlFreeAnsiString(&StringA);
         }
-    }
-
-    /* Add the padding and the User SID*/
-    if (NT_SUCCESS(Status))
-    {
-        dwPadding = sizeof(DWORD) - (((DWORD_PTR)DstPtr - (DWORD_PTR)Dst) % sizeof(DWORD));
-        RtlZeroMemory(DstPtr, dwPadding);
-
-        DstPtr = (LPSTR)((DWORD_PTR)DstPtr + dwPadding);
-        RtlCopyMemory(DstPtr,
-                      (PVOID)((DWORD_PTR)Src + Src->UserSidOffset),
-                      Src->UserSidLength);
-
-        Dst->UserSidOffset = (DWORD)((DWORD_PTR)DstPtr - (DWORD_PTR)Dst);
-    }
-
-
-    /* Convert the strings */
-    if (NT_SUCCESS(Status))
-    {
-        DstPtr = (PVOID)((DWORD_PTR)DstPtr + Src->UserSidLength);
-
-        SrcString = (LPWSTR)((DWORD_PTR)Src + (DWORD)Src->StringOffset);
-        DstString = (LPSTR)DstPtr;
-
-        for (i = 0; i < Dst->NumStrings; i++)
+        else
         {
-            RtlInitUnicodeString(&StringW, SrcString);
-
-            RtlUnicodeStringToAnsiString(&StringA, &StringW, TRUE);
-
-            RtlCopyMemory(DstString, StringA.Buffer, StringA.MaximumLength);
-
-            SrcString = (LPWSTR)((DWORD_PTR)SrcString +
-                                 (DWORD)StringW.MaximumLength);
-
-            DstString = (LPSTR)((DWORD_PTR)DstString +
-                                (DWORD)StringA.MaximumLength);
-
-            RtlFreeAnsiString(&StringA);
+            RtlZeroMemory(DstPtr, StringW.MaximumLength / sizeof(WCHAR));
+            DstPtr = (PVOID)((ULONG_PTR)DstPtr + StringW.MaximumLength / sizeof(WCHAR));
         }
-
-        Dst->StringOffset = (DWORD)((DWORD_PTR)DstPtr - (DWORD_PTR)Dst);
-
-
-        /* Copy the binary data */
-        DstPtr = (PVOID)DstString;
-        Dst->DataOffset = (DWORD_PTR)DstPtr - (DWORD_PTR)Dst;
-
-        RtlCopyMemory(DstPtr, (PVOID)((DWORD_PTR)Src + Src->DataOffset), Src->DataLength);
-
-        /* Add the padding */
-        DstPtr = (PVOID)((DWORD_PTR)DstPtr + Src->DataLength);
-        dwPadding = sizeof(DWORD) - (((DWORD_PTR)DstPtr-(DWORD_PTR)Dst) % sizeof(DWORD));
-        RtlZeroMemory(DstPtr, dwPadding);
-
-        dwEntryLength = (DWORD)((DWORD_PTR)DstPtr + dwPadding + sizeof(DWORD) - (DWORD_PTR)Dst);
-
-        /* Set the entry length at the end of the entry*/
-        pLength = (PDWORD)((DWORD_PTR)DstPtr + dwPadding);
-        *pLength = dwEntryLength;
-        Dst->Length = dwEntryLength;
-
-        *lpNumberOfBytesRead = dwEntryLength;
+        SrcPtr = (PVOID)((ULONG_PTR)SrcPtr + StringW.MaximumLength);
     }
+
+    /* Copy the binary data */
+    SrcPtr = (PVOID)((ULONG_PTR)Src + Src->DataOffset);
+    Dst->DataOffset = (ULONG_PTR)DstPtr - (ULONG_PTR)Dst;
+    RtlCopyMemory(DstPtr, SrcPtr, Src->DataLength);
+    DstPtr = (PVOID)((ULONG_PTR)DstPtr + Src->DataLength);
+
+    /* Add the padding */
+    dwPadding = sizeof(ULONG) - (((ULONG_PTR)DstPtr-(ULONG_PTR)Dst) % sizeof(ULONG));
+    RtlZeroMemory(DstPtr, dwPadding);
+
+    dwEntryLength = (DWORD)((ULONG_PTR)DstPtr + dwPadding + sizeof(ULONG) - (ULONG_PTR)Dst);
+
+    /* Set the entry length at the end of the entry */
+    pLength = (PDWORD)((ULONG_PTR)DstPtr + dwPadding);
+    *pLength = dwEntryLength;
+    Dst->Length = dwEntryLength;
+
+    IoStatusBlock->Information = dwEntryLength;
+
+    Status = STATUS_SUCCESS;
 
 done:
-    if (lpUnicodeBuffer != NULL)
-        HeapFree(GetProcessHeap(), 0, lpUnicodeBuffer);
+    if (UnicodeBuffer != NULL)
+        RtlFreeHeap(GetProcessHeap(), 0, UnicodeBuffer);
 
-    return ret;
+    return Status;
 }
 
-
-DWORD LogfReadEvent(PLOGFILE LogFile,
-                   DWORD Flags,
-                   DWORD * RecordNumber,
-                   DWORD BufSize,
-                   PBYTE Buffer,
-                   DWORD * BytesRead,
-                   DWORD * BytesNeeded,
-                   BOOL Ansi)
+/*
+ * NOTE:
+ *   'RecordNumber' is a pointer to the record number at which the read operation
+ *   should start. If the record number is 0 and the flags given in the 'Flags'
+ *   parameter contain EVENTLOG_SEQUENTIAL_READ, an adequate record number is
+ *   computed.
+ */
+NTSTATUS
+LogfReadEvents(PLOGFILE LogFile,
+               ULONG    Flags,
+               PULONG   RecordNumber,
+               ULONG    BufSize,
+               PBYTE    Buffer,
+               PULONG   BytesRead,
+               PULONG   BytesNeeded,
+               BOOLEAN  Ansi)
 {
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    LARGE_INTEGER FileOffset;
     DWORD dwOffset, dwRead, dwRecSize;
-    DWORD dwBufferUsage = 0, dwRecNum;
+    DWORD dwBufferUsage, dwRecNum;
 
-    if (Flags & EVENTLOG_FORWARDS_READ && Flags & EVENTLOG_BACKWARDS_READ)
-        return ERROR_INVALID_PARAMETER;
+    /* Parameters validation */
+
+    /* EVENTLOG_SEQUENTIAL_READ and EVENTLOG_SEEK_READ are mutually exclusive */
+    if ((Flags & EVENTLOG_SEQUENTIAL_READ) && (Flags & EVENTLOG_SEEK_READ))
+        return STATUS_INVALID_PARAMETER;
+
+    if (!(Flags & EVENTLOG_SEQUENTIAL_READ) && !(Flags & EVENTLOG_SEEK_READ))
+        return STATUS_INVALID_PARAMETER;
+
+    /* EVENTLOG_FORWARDS_READ and EVENTLOG_BACKWARDS_READ are mutually exclusive */
+    if ((Flags & EVENTLOG_FORWARDS_READ) && (Flags & EVENTLOG_BACKWARDS_READ))
+        return STATUS_INVALID_PARAMETER;
 
     if (!(Flags & EVENTLOG_FORWARDS_READ) && !(Flags & EVENTLOG_BACKWARDS_READ))
-        return ERROR_INVALID_PARAMETER;
+        return STATUS_INVALID_PARAMETER;
 
     if (!Buffer || !BytesRead || !BytesNeeded)
-        return ERROR_INVALID_PARAMETER;
+        return STATUS_INVALID_PARAMETER;
 
-    if ((*RecordNumber==0) && !(EVENTLOG_SEQUENTIAL_READ))
+    /* In seek read mode, a record number of 0 is invalid */
+    if (!(Flags & EVENTLOG_SEQUENTIAL_READ) && (*RecordNumber == 0))
+        return STATUS_INVALID_PARAMETER;
+
+    /*
+     * In sequential read mode, a record number of 0 means we need
+     * to determine where to start the read operation. Otherwise
+     * we just use the provided record number.
+     */
+    if ((Flags & EVENTLOG_SEQUENTIAL_READ) && (*RecordNumber == 0))
     {
-        return ERROR_INVALID_PARAMETER;
+        if (Flags & EVENTLOG_FORWARDS_READ)
+        {
+            *RecordNumber = LogFile->Header.OldestRecordNumber;
+        }
+        else // if (Flags & EVENTLOG_BACKWARDS_READ)
+        {
+            *RecordNumber = LogFile->Header.CurrentRecordNumber - 1;
+        }
     }
 
     dwRecNum = *RecordNumber;
@@ -792,325 +1415,476 @@ DWORD LogfReadEvent(PLOGFILE LogFile,
     *BytesRead = 0;
     *BytesNeeded = 0;
 
-    dwOffset = LogfOffsetByNumber(LogFile, dwRecNum);
-
-    if (!dwOffset)
+    dwBufferUsage = 0;
+    do
     {
-        RtlReleaseResource(&LogFile->Lock);
-        return ERROR_HANDLE_EOF;
-    }
-
-    if (SetFilePointer(LogFile->hFile, dwOffset, NULL, FILE_BEGIN) ==
-        INVALID_SET_FILE_POINTER)
-    {
-        DPRINT1("SetFilePointer() failed!\n");
-        goto Done;
-    }
-
-    if (!ReadFile(LogFile->hFile, &dwRecSize, sizeof(DWORD), &dwRead, NULL))
-    {
-        DPRINT1("ReadFile() failed!\n");
-        goto Done;
-    }
-
-    if (dwRecSize > BufSize)
-    {
-        *BytesNeeded = dwRecSize;
-        RtlReleaseResource(&LogFile->Lock);
-        return ERROR_INSUFFICIENT_BUFFER;
-    }
-
-    if (SetFilePointer(LogFile->hFile,
-                       -((LONG) sizeof(DWORD)),
-                       NULL,
-                       FILE_CURRENT) == INVALID_SET_FILE_POINTER)
-    {
-        DPRINT1("SetFilePointer() failed!\n");
-        goto Done;
-    }
-
-    if (Ansi == TRUE)
-    {
-        if (!ReadAnsiLogEntry(LogFile->hFile, Buffer, dwRecSize, &dwRead))
-        {
-            DPRINT1("ReadAnsiLogEntry() failed!\n");
-            goto Done;
-        }
-    }
-    else
-    {
-        if (!ReadFile(LogFile->hFile, Buffer, dwRecSize, &dwRead, NULL))
-        {
-            DPRINT1("ReadFile() failed!\n");
-            goto Done;
-        }
-    }
-
-    dwBufferUsage += dwRead;
-
-    while (dwBufferUsage <= BufSize)
-    {
-        if (Flags & EVENTLOG_FORWARDS_READ)
-            dwRecNum++;
-        else
-            dwRecNum--;
-
         dwOffset = LogfOffsetByNumber(LogFile, dwRecNum);
-        if (!dwOffset)
-            break;
-
-        if (SetFilePointer(LogFile->hFile, dwOffset, NULL, FILE_BEGIN) ==
-            INVALID_SET_FILE_POINTER)
+        if (dwOffset == 0)
         {
-            DPRINT1("SetFilePointer() failed!\n");
-            goto Done;
-        }
-
-        if (!ReadFile(LogFile->hFile,
-                      &dwRecSize,
-                      sizeof(DWORD),
-                      &dwRead,
-                      NULL))
-        {
-            DPRINT1("ReadFile() failed!\n");
-            goto Done;
-        }
-
-        if (dwBufferUsage + dwRecSize > BufSize)
-            break;
-
-        if (SetFilePointer(LogFile->hFile,
-                           -((LONG) sizeof(DWORD)),
-                           NULL,
-                           FILE_CURRENT) == INVALID_SET_FILE_POINTER)
-        {
-            DPRINT1("SetFilePointer() failed!\n");
-            goto Done;
-        }
-
-        if (Ansi == TRUE)
-        {
-            if (!ReadAnsiLogEntry(LogFile->hFile,
-                                  Buffer + dwBufferUsage,
-                                  dwRecSize,
-                                  &dwRead))
+            if (dwBufferUsage == 0)
             {
-                DPRINT1("ReadAnsiLogEntry() failed!\n");
-                goto Done;
-            }
-        }
-        else
-        {
-            if (!ReadFile(LogFile->hFile,
-                          Buffer + dwBufferUsage,
-                          dwRecSize,
-                          &dwRead,
-                          NULL))
-            {
-                DPRINT1("ReadFile() failed!\n");
-                goto Done;
-            }
-        }
-
-        dwBufferUsage += dwRead;
-    }
-
-    *BytesRead = dwBufferUsage;
-    * RecordNumber = dwRecNum;
-    RtlReleaseResource(&LogFile->Lock);
-    return ERROR_SUCCESS;
-
-Done:
-    DPRINT1("LogfReadEvent failed with %x\n",GetLastError());
-    RtlReleaseResource(&LogFile->Lock);
-    return GetLastError();
-}
-
-BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
-{
-    DWORD dwWritten;
-    DWORD dwRead;
-    SYSTEMTIME st;
-    EVENTLOGEOF EofRec;
-    PEVENTLOGRECORD RecBuf;
-    LARGE_INTEGER logFileSize;
-    ULONG RecOffSet;
-    ULONG WriteOffSet;
-
-    if (!Buffer)
-        return FALSE;
-
-    GetSystemTime(&st);
-    SystemTimeToEventTime(&st, &((PEVENTLOGRECORD) Buffer)->TimeWritten);
-
-    RtlAcquireResourceExclusive(&LogFile->Lock, TRUE);
-
-    if (!GetFileSizeEx(LogFile->hFile, &logFileSize))
-    {
-        RtlReleaseResource(&LogFile->Lock);
-        return FALSE;
-    }
-
-    /* If the size of the file is over MaxSize */
-    if ((logFileSize.QuadPart + BufSize)> LogFile->Header.MaxSize)
-    {
-        ULONG OverWriteLength = 0;
-        WriteOffSet = LogfOffsetByNumber(LogFile, LogFile->Header.OldestRecordNumber);
-        RecBuf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(EVENTLOGRECORD));
-        /* Determine how many records need to be overwritten */
-        while (TRUE)
-        {
-            DPRINT("EventLogFile has reached maximume size\n");
-
-            if (!RecBuf)
-            {
-                DPRINT1("Failed to allocate buffer for OldestRecord!\n");
-                HeapFree(GetProcessHeap(), 0, RecBuf);
                 RtlReleaseResource(&LogFile->Lock);
-                return FALSE;
+                return STATUS_END_OF_FILE;
             }
-
-            /* Get the oldest record data */
-            RecOffSet = LogfOffsetByNumber(LogFile, LogFile->Header.OldestRecordNumber);
-
-            if (SetFilePointer(LogFile->hFile,
-                               RecOffSet,
-                               NULL,
-                               FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+            else
             {
-                DPRINT1("SetFilePointer() failed! %d\n", GetLastError());
-                HeapFree(GetProcessHeap(), 0, RecBuf);
-                RtlReleaseResource(&LogFile->Lock);
-                return FALSE;
-            }
-
-            if (!ReadFile(LogFile->hFile, RecBuf, sizeof(EVENTLOGRECORD), &dwRead, NULL))
-            {
-                DPRINT1("ReadFile() failed!\n");
-                HeapFree(GetProcessHeap(), 0, RecBuf);
-                RtlReleaseResource(&LogFile->Lock);
-                return FALSE;
-            }
-
-            if (RecBuf->Reserved != LOGFILE_SIGNATURE)
-            {
-                DPRINT1("LogFile corrupt!\n");
-                HeapFree(GetProcessHeap(), 0, RecBuf);
-                RtlReleaseResource(&LogFile->Lock);
-                return FALSE;
-            }
-
-            LogfDeleteOffsetInformation(LogFile,LogFile->Header.OldestRecordNumber);
-
-            LogFile->Header.OldestRecordNumber++;
-
-            OverWriteLength += RecBuf->Length;
-            /* Check the size of the record as the record adding may be larger */
-            if (OverWriteLength >= BufSize)
-            {
-                DPRINT("Record will fit. Length %d, BufSize %d\n", OverWriteLength, BufSize);
-                LogFile->Header.StartOffset = LogfOffsetByNumber(LogFile, LogFile->Header.OldestRecordNumber);
                 break;
             }
         }
-        HeapFree(GetProcessHeap(), 0, RecBuf);
-    }
-    else
-        WriteOffSet = LogFile->Header.EndOffset;
 
-    if (SetFilePointer(LogFile->hFile,
-                       WriteOffSet,
-                       NULL,
-                       FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+        FileOffset.QuadPart = dwOffset;
+        Status = NtReadFile(LogFile->hFile,
+                            NULL,
+                            NULL,
+                            NULL,
+                            &IoStatusBlock,
+                            &dwRecSize,
+                            sizeof(dwRecSize),
+                            &FileOffset,
+                            NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtReadFile failed (Status 0x%08lx)\n", Status);
+            // Status = STATUS_EVENTLOG_FILE_CORRUPT;
+            goto Done;
+        }
+        // dwRead = IoStatusBlock.Information;
+
+        if (dwBufferUsage + dwRecSize > BufSize)
+        {
+            if (dwBufferUsage == 0)
+            {
+                *BytesNeeded = dwRecSize;
+                RtlReleaseResource(&LogFile->Lock);
+                return STATUS_BUFFER_TOO_SMALL;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        FileOffset.QuadPart = dwOffset;
+        if (Ansi)
+        {
+            Status = ReadAnsiLogEntry(LogFile,
+                                      &IoStatusBlock,
+                                      Buffer + dwBufferUsage,
+                                      dwRecSize,
+                                      &FileOffset,
+                                      NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("ReadAnsiLogEntry failed (Status 0x%08lx)\n", Status);
+                // Status = STATUS_EVENTLOG_FILE_CORRUPT;
+                goto Done;
+            }
+        }
+        else
+        {
+            Status = ReadLogBuffer(LogFile,
+                                   &IoStatusBlock,
+                                   Buffer + dwBufferUsage,
+                                   dwRecSize,
+                                   &FileOffset,
+                                   NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("ReadLogBuffer failed (Status 0x%08lx)\n", Status);
+                // Status = STATUS_EVENTLOG_FILE_CORRUPT;
+                goto Done;
+            }
+        }
+        dwRead = IoStatusBlock.Information;
+
+        /* Go to the next event record */
+        /*
+         * NOTE: This implicitely supposes that all the other record numbers
+         * are consecutive (and do not jump than more than one unit); but if
+         * it is not the case, then we would prefer here to call some
+         * "get_next_record_number" function.
+         */
+        if (Flags & EVENTLOG_FORWARDS_READ)
+            dwRecNum++;
+        else // if (Flags & EVENTLOG_BACKWARDS_READ)
+            dwRecNum--;
+
+        dwBufferUsage += dwRead;
+    }
+    while (dwBufferUsage <= BufSize);
+
+    *BytesRead = dwBufferUsage;
+    *RecordNumber = dwRecNum;
+    RtlReleaseResource(&LogFile->Lock);
+    return STATUS_SUCCESS;
+
+Done:
+    DPRINT1("LogfReadEvents failed (Status 0x%08lx)\n", Status);
+    RtlReleaseResource(&LogFile->Lock);
+    return Status;
+}
+
+NTSTATUS
+LogfWriteRecord(PLOGFILE LogFile,
+                ULONG BufSize, // SIZE_T
+                PEVENTLOGRECORD Record)
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    LARGE_INTEGER FileOffset, NextOffset;
+    DWORD dwWritten;
+    // DWORD dwRead;
+    LARGE_INTEGER SystemTime;
+    EVENTLOGEOF EofRec;
+    EVENTLOGRECORD RecBuf;
+    ULONG FreeSpace = 0;
+    ULONG UpperBound;
+    ULONG RecOffset, WriteOffset;
+
+    // ASSERT(sizeof(*Record) == sizeof(RecBuf));
+
+    if (!Record || BufSize < sizeof(*Record))
+        return STATUS_INVALID_PARAMETER;
+
+    RtlAcquireResourceExclusive(&LogFile->Lock, TRUE);
+
+    /*
+     * Retrieve the record written time now, that will also be compared
+     * with the existing events timestamps in case the log is wrapping.
+     */
+    NtQuerySystemTime(&SystemTime);
+    RtlTimeToSecondsSince1970(&SystemTime, &Record->TimeWritten);
+
+    Record->RecordNumber = LogFile->Header.CurrentRecordNumber;
+
+    /* Compute the available log free space */
+    if (LogFile->Header.StartOffset <= LogFile->Header.EndOffset)
+        FreeSpace = LogFile->Header.MaxSize - LogFile->Header.EndOffset + LogFile->Header.StartOffset - sizeof(EVENTLOGHEADER);
+    else // if (LogFile->Header.StartOffset > LogFile->Header.EndOffset)
+        FreeSpace = LogFile->Header.StartOffset - LogFile->Header.EndOffset;
+
+    LogFile->Header.Flags |= ELF_LOGFILE_HEADER_DIRTY;
+
+    /* If the event log was empty, it will now contain one record */
+    if (LogFile->Header.OldestRecordNumber == 0)
+        LogFile->Header.OldestRecordNumber = 1;
+
+    /* By default we append the new record at the old EOF record offset */
+    WriteOffset = LogFile->Header.EndOffset;
+
+    /*
+     * Check whether the log is going to wrap (the events being overwritten).
+     */
+
+    if (LogFile->Header.StartOffset <= LogFile->Header.EndOffset)
+        UpperBound = LogFile->Header.MaxSize;
+    else // if (LogFile->Header.StartOffset > LogFile->Header.EndOffset)
+        UpperBound = LogFile->Header.StartOffset;
+
+    // if (LogFile->Header.MaxSize - WriteOffset < BufSize + sizeof(EofRec))
+    if (UpperBound - WriteOffset < BufSize + sizeof(EofRec))
     {
-        DPRINT1("SetFilePointer() failed! %d\n", GetLastError());
-        RtlReleaseResource(&LogFile->Lock);
-        return FALSE;
+        DPRINT("EventLogFile has reached maximum size (%x), wrapping...\n"
+               "UpperBound = %x, WriteOffset = %x, BufSize = %x\n",
+               LogFile->Header.MaxSize, UpperBound, WriteOffset, BufSize);
+        /* This will be done later */
     }
 
-    if (!WriteFile(LogFile->hFile, Buffer, BufSize, &dwWritten, NULL))
+    if ( (LogFile->Header.StartOffset < LogFile->Header.EndOffset) &&
+         (LogFile->Header.MaxSize - WriteOffset < sizeof(RecBuf)) ) // (UpperBound - WriteOffset < sizeof(RecBuf))
     {
-        DPRINT1("WriteFile() failed! %d\n", GetLastError());
-        RtlReleaseResource(&LogFile->Lock);
-        return FALSE;
+        // ASSERT(UpperBound  == LogFile->Header.MaxSize);
+        // ASSERT(WriteOffset == LogFile->Header.EndOffset);
+
+        /*
+         * We cannot fit the EVENTLOGRECORD header of the buffer before
+         * the end of the file. We need to pad the end of the log with
+         * 0x00000027, normally we will need to pad at most 0x37 bytes
+         * (corresponding to sizeof(EVENTLOGRECORD) - 1).
+         */
+
+        /* Rewind to the beginning of the log, just after the header */
+        WriteOffset = sizeof(EVENTLOGHEADER);
+        /**/UpperBound = LogFile->Header.StartOffset;/**/
+
+        FreeSpace = LogFile->Header.StartOffset - WriteOffset;
+
+        LogFile->Header.Flags |= ELF_LOGFILE_HEADER_WRAP;
     }
+    /*
+     * Otherwise, we can fit the header and only part
+     * of the data will overwrite the oldest records.
+     *
+     * It might be possible that all the event record can fit in one piece,
+     * but that the EOF record needs to be split. This is not a problem,
+     * EVENTLOGEOF can be splitted while EVENTLOGRECORD cannot be.
+     */
+
+    if (UpperBound - WriteOffset < BufSize + sizeof(EofRec))
+    {
+        ULONG OrgOldestRecordNumber, OldestRecordNumber;
+
+        // DPRINT("EventLogFile has reached maximum size, wrapping...\n");
+
+        OldestRecordNumber = OrgOldestRecordNumber = LogFile->Header.OldestRecordNumber;
+
+        // FIXME: Assert whether LogFile->Header.StartOffset is the beginning of a record???
+        // NOTE: It should be, by construction (and this should have been checked when
+        // initializing a new, or existing log).
+
+        /*
+         * Determine how many old records need to be overwritten.
+         * Check the size of the record as the record added may be larger.
+         * Need to take into account that we append the EOF record.
+         */
+        while (FreeSpace < BufSize + sizeof(EofRec))
+        {
+            /* Get the oldest record data */
+            RecOffset = LogfOffsetByNumber(LogFile, OldestRecordNumber);
+            if (RecOffset == 0)
+            {
+                // TODO: It cannot, queue a message box for the user and exit.
+                // See also below...
+                DPRINT1("Record number %d cannot be found, or LogFile is full and cannot wrap!\n", OldestRecordNumber);
+                Status = STATUS_LOG_FILE_FULL; // STATUS_LOG_FULL;
+                goto Quit;
+            }
+
+            RtlZeroMemory(&RecBuf, sizeof(RecBuf));
+
+            FileOffset.QuadPart = RecOffset;
+            Status = NtReadFile(LogFile->hFile,
+                                NULL,
+                                NULL,
+                                NULL,
+                                &IoStatusBlock,
+                                &RecBuf,
+                                sizeof(RecBuf),
+                                &FileOffset,
+                                NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("NtReadFile failed (Status 0x%08lx)\n", Status);
+                // Status = STATUS_EVENTLOG_FILE_CORRUPT;
+                goto Quit;
+            }
+            // dwRead = IoStatusBlock.Information;
+
+            if (RecBuf.Reserved != LOGFILE_SIGNATURE)
+            {
+                DPRINT1("LogFile corrupt!\n");
+                Status = STATUS_EVENTLOG_FILE_CORRUPT;
+                goto Quit;
+            }
+
+            /*
+             * Check whether this event can be overwritten by comparing its
+             * written timestamp with the log's retention value. This value
+             * is the time interval, in seconds, that events records are
+             * protected from being overwritten.
+             *
+             * If the retention value is zero the events are always overwritten.
+             *
+             * If the retention value is non-zero, when the age of an event,
+             * in seconds, reaches or exceeds this value, it can be overwritten.
+             * Also if the events are in the future, we do not overwrite them.
+             */
+            if (LogFile->Header.Retention != 0 &&
+                (Record->TimeWritten <  RecBuf.TimeWritten ||
+                (Record->TimeWritten >= RecBuf.TimeWritten &&
+                 Record->TimeWritten -  RecBuf.TimeWritten < LogFile->Header.Retention)))
+            {
+                // TODO: It cannot, queue a message box for the user and exit.
+                DPRINT1("LogFile is full and cannot wrap!\n");
+                Status = STATUS_LOG_FILE_FULL; // STATUS_LOG_FULL;
+                goto Quit;
+            }
+
+            /*
+             * Advance the oldest record number, add the event record length
+             * (as long as it is valid...) then take account for the possible
+             * paddind after the record, in case this is the last one at the
+             * end of the file.
+             */
+            OldestRecordNumber++;
+            RecOffset += RecBuf.Length;
+            FreeSpace += RecBuf.Length;
+
+            /*
+             * If this was the last event record before the end of the log file,
+             * the next one should start at the beginning of the log and the space
+             * between the last event record and the end of the file is padded.
+             */
+            if (LogFile->Header.MaxSize - RecOffset < sizeof(EVENTLOGRECORD))
+            {
+                /* Add the padding size */
+                FreeSpace += LogFile->Header.MaxSize - RecOffset;
+            }
+        }
+
+        DPRINT("Record will fit. FreeSpace %d, BufSize %d\n", FreeSpace, BufSize);
+
+        /* The log records are wrapping */
+        LogFile->Header.Flags |= ELF_LOGFILE_HEADER_WRAP;
+
+
+        // FIXME: May lead to corruption if the other subsequent calls fail...
+
+        /*
+         * We have validated all the region of events to be discarded,
+         * now we can perform their deletion.
+         */
+        LogfDeleteOffsetInformation(LogFile, OrgOldestRecordNumber, OldestRecordNumber - 1);
+        LogFile->Header.OldestRecordNumber = OldestRecordNumber;
+        LogFile->Header.StartOffset = LogfOffsetByNumber(LogFile, OldestRecordNumber);
+        if (LogFile->Header.StartOffset == 0)
+        {
+            /*
+             * We have deleted all the existing event records to make place
+             * for the new one. We can put it at the start of the event log.
+             */
+            LogFile->Header.StartOffset = sizeof(EVENTLOGHEADER);
+            WriteOffset = LogFile->Header.StartOffset;
+            LogFile->Header.EndOffset = WriteOffset;
+        }
+
+        DPRINT1("MaxSize = %x, StartOffset = %x, WriteOffset = %x, EndOffset = %x, BufSize = %x\n"
+                "OldestRecordNumber = %d\n",
+                LogFile->Header.MaxSize, LogFile->Header.StartOffset, WriteOffset, LogFile->Header.EndOffset, BufSize,
+                OldestRecordNumber);
+    }
+
+    /*
+     * Expand the log file if needed.
+     * NOTE: It may be needed to perform this task a bit sooner if we need
+     * such a thing for performing read operations, in the future...
+     * Or if this operation needs to modify 'FreeSpace'...
+     */
+    if (LogFile->CurrentSize < LogFile->Header.MaxSize)
+    {
+        DPRINT1("Expanding the log file from %lu to %lu\n",
+                LogFile->CurrentSize, LogFile->Header.MaxSize);
+
+        /* For the moment this is a trivial operation */
+        LogFile->CurrentSize = LogFile->Header.MaxSize;
+    }
+
+    /* Pad the end of the log */
+    // if (LogFile->Header.EndOffset + sizeof(RecBuf) > LogFile->Header.MaxSize)
+    if (WriteOffset < LogFile->Header.EndOffset)
+    {
+        /* Pad all the space from LogFile->Header.EndOffset to LogFile->Header.MaxSize */
+        dwWritten = ROUND_DOWN(LogFile->Header.MaxSize - LogFile->Header.EndOffset, sizeof(ULONG));
+        RtlFillMemoryUlong(&RecBuf, dwWritten, 0x00000027);
+
+        FileOffset.QuadPart = LogFile->Header.EndOffset;
+        Status = NtWriteFile(LogFile->hFile,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &IoStatusBlock,
+                             &RecBuf,
+                             dwWritten,
+                             &FileOffset,
+                             NULL);
+        // dwWritten = IoStatusBlock.Information;
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtWriteFile failed (Status 0x%08lx)\n", Status);
+            // goto Quit;
+        }
+    }
+
+    /* Write the event record buffer with possible wrap at offset sizeof(EVENTLOGHEADER) */
+    FileOffset.QuadPart = WriteOffset;
+    Status = WriteLogBuffer(LogFile,
+                            &IoStatusBlock,
+                            Record,
+                            BufSize,
+                            &FileOffset,
+                            &NextOffset);
+    // dwWritten = IoStatusBlock.Information;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("WriteLogBuffer failed (Status 0x%08lx)\n", Status);
+        goto Quit;
+    }
+    /* FileOffset now contains the offset just after the end of the record buffer */
+    FileOffset = NextOffset;
 
     if (!LogfAddOffsetInformation(LogFile,
-                                  LogFile->Header.CurrentRecordNumber,
-                                  WriteOffSet))
+                                  Record->RecordNumber,
+                                  WriteOffset))
     {
-        RtlReleaseResource(&LogFile->Lock);
-        return FALSE;
+        Status = STATUS_NO_MEMORY; // STATUS_EVENTLOG_FILE_CORRUPT;
+        goto Quit;
     }
 
     LogFile->Header.CurrentRecordNumber++;
+    if (LogFile->Header.CurrentRecordNumber == 0)
+        LogFile->Header.CurrentRecordNumber = 1;
 
-    if (WriteOffSet == LogFile->Header.EndOffset)
-    {
-        LogFile->Header.EndOffset += dwWritten;
-    }
-    if (SetFilePointer(LogFile->hFile,
-                       LogFile->Header.EndOffset,
-                       NULL,
-                       FILE_BEGIN) == INVALID_SET_FILE_POINTER)
-    {
-        DPRINT1("SetFilePointer() failed! %d\n", GetLastError());
-        RtlReleaseResource(&LogFile->Lock);
-        return FALSE;
-    }
+    /*
+     * Write the new EOF record offset just after the event record.
+     * The EOF record can wrap (be splitted) if less than sizeof(EVENTLOGEOF)
+     * bytes remains between the end of the record and the end of the log file.
+     */
+    LogFile->Header.EndOffset = FileOffset.QuadPart;
 
-    EofRec.Ones = 0x11111111;
-    EofRec.Twos = 0x22222222;
-    EofRec.Threes = 0x33333333;
-    EofRec.Fours = 0x44444444;
-    EofRec.RecordSizeBeginning = sizeof(EVENTLOGEOF);
-    EofRec.RecordSizeEnd = sizeof(EVENTLOGEOF);
-    EofRec.CurrentRecordNumber = LogFile->Header.CurrentRecordNumber;
-    EofRec.OldestRecordNumber = LogFile->Header.OldestRecordNumber;
+    RtlCopyMemory(&EofRec, &EOFRecord, sizeof(EOFRecord));
     EofRec.BeginRecord = LogFile->Header.StartOffset;
-    EofRec.EndRecord = LogFile->Header.EndOffset;
+    EofRec.EndRecord   = LogFile->Header.EndOffset;
+    EofRec.CurrentRecordNumber = LogFile->Header.CurrentRecordNumber;
+    EofRec.OldestRecordNumber  = LogFile->Header.OldestRecordNumber;
 
-    if (!WriteFile(LogFile->hFile,
-                   &EofRec,
-                   sizeof(EVENTLOGEOF),
-                   &dwWritten,
-                   NULL))
+    // FileOffset.QuadPart = LogFile->Header.EndOffset;
+    Status = WriteLogBuffer(LogFile,
+                            &IoStatusBlock,
+                            &EofRec,
+                            sizeof(EofRec),
+                            &FileOffset,
+                            &NextOffset);
+    // dwWritten = IoStatusBlock.Information;
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("WriteFile() failed! %d\n", GetLastError());
-        RtlReleaseResource(&LogFile->Lock);
-        return FALSE;
+        DPRINT1("WriteLogBuffer failed (Status 0x%08lx)\n", Status);
+        goto Quit;
+    }
+    FileOffset = NextOffset;
+
+    LogFile->Header.Flags &= ELF_LOGFILE_HEADER_DIRTY;
+
+    /* Update the event log header */
+    FileOffset.QuadPart = 0LL;
+    Status = NtWriteFile(LogFile->hFile,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &IoStatusBlock,
+                         &LogFile->Header,
+                         sizeof(EVENTLOGHEADER),
+                         &FileOffset,
+                         NULL);
+    // dwWritten = IoStatusBlock.Information;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtWriteFile failed (Status 0x%08lx)\n", Status);
+        goto Quit;
     }
 
-    if (SetFilePointer(LogFile->hFile, 0, NULL, FILE_BEGIN) ==
-        INVALID_SET_FILE_POINTER)
+    Status = NtFlushBuffersFile(LogFile->hFile, &IoStatusBlock);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("SetFilePointer() failed! %d\n", GetLastError());
-        RtlReleaseResource(&LogFile->Lock);
-        return FALSE;
+        DPRINT1("NtFlushBuffersFile failed (Status 0x%08lx)\n", Status);
+        goto Quit;
     }
 
-    if (!WriteFile(LogFile->hFile,
-                   &LogFile->Header,
-                   sizeof(EVENTLOGHEADER),
-                   &dwWritten,
-                   NULL))
-    {
-        DPRINT1("WriteFile failed! LastError = %d\n", GetLastError());
-        RtlReleaseResource(&LogFile->Lock);
-        return FALSE;
-    }
+    Status = STATUS_SUCCESS;
 
-    if (!FlushFileBuffers(LogFile->hFile))
-    {
-        DPRINT1("FlushFileBuffers() failed! %d\n", GetLastError());
-        RtlReleaseResource(&LogFile->Lock);
-        return FALSE;
-    }
-
+Quit:
     RtlReleaseResource(&LogFile->Lock);
-    return TRUE;
+    return Status;
 }
-
 
 NTSTATUS
 LogfClearFile(PLOGFILE LogFile,
@@ -1123,12 +1897,11 @@ LogfClearFile(PLOGFILE LogFile,
     if (BackupFileName->Length > 0)
     {
         /* Write a backup file */
-        Status = LogfBackupFile(LogFile,
-                                BackupFileName);
+        Status = LogfBackupFile(LogFile, BackupFileName);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("LogfBackupFile failed (Status: 0x%08lx)\n", Status);
-            return Status;
+            goto Quit;
         }
     }
 
@@ -1140,27 +1913,28 @@ LogfClearFile(PLOGFILE LogFile,
         DPRINT1("LogfInitializeNew failed (Status: 0x%08lx)\n", Status);
     }
 
+Quit:
     RtlReleaseResource(&LogFile->Lock);
-
     return Status;
 }
-
 
 NTSTATUS
 LogfBackupFile(PLOGFILE LogFile,
                PUNICODE_STRING BackupFileName)
 {
+    NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
-    EVENTLOGHEADER Header;
-    EVENTLOGEOF EofRec;
-    HANDLE FileHandle = NULL;
-    ULONG i;
     LARGE_INTEGER FileOffset;
-    NTSTATUS Status;
-    PUCHAR Buffer = NULL;
+    HANDLE FileHandle = NULL;
+    EVENTLOGHEADER Header;
+    EVENTLOGRECORD RecBuf;
+    EVENTLOGEOF EofRec;
+    ULONG i;
+    ULONG RecOffset;
+    PVOID Buffer = NULL;
 
-    DWORD dwOffset, dwRead, dwRecSize;
+    // DWORD dwRead;
 
     DPRINT1("LogfBackupFile(%p, %wZ)\n", LogFile, BackupFileName);
 
@@ -1186,33 +1960,34 @@ LogfBackupFile(PLOGFILE LogFile,
                           0);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Can't create backup file %wZ (Status: 0x%08lx)\n", BackupFileName, Status);
+        DPRINT("Cannot create backup file %wZ (Status: 0x%08lx)\n", BackupFileName, Status);
         goto Done;
     }
 
     /* Initialize the (dirty) log file header */
-    Header.HeaderSize = sizeof(EVENTLOGHEADER);
+    Header.HeaderSize = sizeof(Header);
     Header.Signature = LOGFILE_SIGNATURE;
     Header.MajorVersion = MAJORVER;
     Header.MinorVersion = MINORVER;
-    Header.StartOffset = sizeof(EVENTLOGHEADER);
-    Header.EndOffset = sizeof(EVENTLOGHEADER);
+    Header.StartOffset = sizeof(Header);
+    Header.EndOffset = sizeof(Header);
     Header.CurrentRecordNumber = 1;
-    Header.OldestRecordNumber = 1;
+    Header.OldestRecordNumber = 0;
     Header.MaxSize = LogFile->Header.MaxSize;
     Header.Flags = ELF_LOGFILE_HEADER_DIRTY;
     Header.Retention = LogFile->Header.Retention;
-    Header.EndHeaderSize = sizeof(EVENTLOGHEADER);
+    Header.EndHeaderSize = sizeof(Header);
 
     /* Write the (dirty) log file header */
+    FileOffset.QuadPart = 0LL;
     Status = NtWriteFile(FileHandle,
                          NULL,
                          NULL,
                          NULL,
                          &IoStatusBlock,
                          &Header,
-                         sizeof(EVENTLOGHEADER),
-                         NULL,
+                         sizeof(Header),
+                         &FileOffset,
                          NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -1222,85 +1997,94 @@ LogfBackupFile(PLOGFILE LogFile,
 
     for (i = LogFile->Header.OldestRecordNumber; i < LogFile->Header.CurrentRecordNumber; i++)
     {
-        dwOffset = LogfOffsetByNumber(LogFile, i);
-        if (dwOffset == 0)
+        RecOffset = LogfOffsetByNumber(LogFile, i);
+        if (RecOffset == 0)
             break;
 
-        if (SetFilePointer(LogFile->hFile, dwOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+        /* Read the next EVENTLOGRECORD header at once (it cannot be split) */
+        FileOffset.QuadPart = RecOffset;
+        Status = NtReadFile(LogFile->hFile,
+                            NULL,
+                            NULL,
+                            NULL,
+                            &IoStatusBlock,
+                            &RecBuf,
+                            sizeof(RecBuf),
+                            &FileOffset,
+                            NULL);
+        if (!NT_SUCCESS(Status))
         {
-            DPRINT1("SetFilePointer() failed!\n");
+            DPRINT1("NtReadFile failed (Status 0x%08lx)\n", Status);
             goto Done;
         }
+        // dwRead = IoStatusBlock.Information;
 
-        if (!ReadFile(LogFile->hFile, &dwRecSize, sizeof(DWORD), &dwRead, NULL))
-        {
-            DPRINT1("ReadFile() failed!\n");
-            goto Done;
-        }
+        // if (dwRead != sizeof(RecBuf))
+            // break;
 
-        if (SetFilePointer(LogFile->hFile, dwOffset, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
-        {
-            DPRINT1("SetFilePointer() failed!\n");
-            goto Done;
-        }
-
-        Buffer = HeapAlloc(MyHeap, 0, dwRecSize);
+        Buffer = RtlAllocateHeap(GetProcessHeap(), 0, RecBuf.Length);
         if (Buffer == NULL)
         {
-            DPRINT1("HeapAlloc() failed!\n");
+            DPRINT1("RtlAllocateHeap() failed!\n");
             goto Done;
         }
 
-        if (!ReadFile(LogFile->hFile, Buffer, dwRecSize, &dwRead, NULL))
+        /* Read the full EVENTLOGRECORD (header + data) with wrapping */
+        Status = ReadLogBuffer(LogFile,
+                               &IoStatusBlock,
+                               Buffer,
+                               RecBuf.Length,
+                               &FileOffset,
+                               NULL);
+        if (!NT_SUCCESS(Status))
         {
-            DPRINT1("ReadFile() failed!\n");
+            DPRINT1("ReadLogBuffer failed (Status 0x%08lx)\n", Status);
+            RtlFreeHeap(GetProcessHeap(), 0, Buffer);
+            // Status = STATUS_EVENTLOG_FILE_CORRUPT;
             goto Done;
         }
+        // dwRead = IoStatusBlock.Information;
 
-        /* Write the event record */
+        /* Write the event record (no wrap for the backup log) */
         Status = NtWriteFile(FileHandle,
                              NULL,
                              NULL,
                              NULL,
                              &IoStatusBlock,
                              Buffer,
-                             dwRecSize,
+                             RecBuf.Length,
                              NULL,
                              NULL);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("NtWriteFile() failed! (Status: 0x%08lx)\n", Status);
+            RtlFreeHeap(GetProcessHeap(), 0, Buffer);
             goto Done;
         }
 
         /* Update the header information */
-        Header.EndOffset += dwRecSize;
+        Header.EndOffset += RecBuf.Length;
 
         /* Free the buffer */
-        HeapFree(MyHeap, 0, Buffer);
+        RtlFreeHeap(GetProcessHeap(), 0, Buffer);
         Buffer = NULL;
     }
 
     /* Initialize the EOF record */
-    EofRec.RecordSizeBeginning = sizeof(EVENTLOGEOF);
-    EofRec.Ones = 0x11111111;
-    EofRec.Twos = 0x22222222;
-    EofRec.Threes = 0x33333333;
-    EofRec.Fours = 0x44444444;
-    EofRec.BeginRecord = sizeof(EVENTLOGHEADER);
-    EofRec.EndRecord = Header.EndOffset;
+    RtlCopyMemory(&EofRec, &EOFRecord, sizeof(EOFRecord));
+    EofRec.BeginRecord = Header.StartOffset;
+    EofRec.EndRecord   = Header.EndOffset;
     EofRec.CurrentRecordNumber = LogFile->Header.CurrentRecordNumber;
-    EofRec.OldestRecordNumber = LogFile->Header.OldestRecordNumber;
-    EofRec.RecordSizeEnd = sizeof(EVENTLOGEOF);
+    EofRec.OldestRecordNumber  = LogFile->Header.OldestRecordNumber;
 
-    /* Write the EOF record */
+    /* Write the EOF record (no wrap for the backup log) */
     Status = NtWriteFile(FileHandle,
                          NULL,
                          NULL,
                          NULL,
                          &IoStatusBlock,
                          &EofRec,
-                         sizeof(EVENTLOGEOF),
+                         sizeof(EofRec),
                          NULL,
                          NULL);
     if (!NT_SUCCESS(Status))
@@ -1311,19 +2095,19 @@ LogfBackupFile(PLOGFILE LogFile,
 
     /* Update the header information */
     Header.CurrentRecordNumber = LogFile->Header.CurrentRecordNumber;
-    Header.OldestRecordNumber = LogFile->Header.OldestRecordNumber;
-    Header.MaxSize = Header.EndOffset + sizeof(EVENTLOGEOF);
+    Header.OldestRecordNumber  = LogFile->Header.OldestRecordNumber;
+    Header.MaxSize = ROUND_UP(Header.EndOffset + sizeof(EofRec), sizeof(ULONG));
     Header.Flags = 0;
 
     /* Write the (clean) log file header */
-    FileOffset.QuadPart = 0;
+    FileOffset.QuadPart = 0LL;
     Status = NtWriteFile(FileHandle,
                          NULL,
                          NULL,
                          NULL,
                          &IoStatusBlock,
                          &Header,
-                         sizeof(EVENTLOGHEADER),
+                         sizeof(Header),
                          &FileOffset,
                          NULL);
     if (!NT_SUCCESS(Status))
@@ -1332,10 +2116,6 @@ LogfBackupFile(PLOGFILE LogFile,
     }
 
 Done:
-    /* Free the buffer */
-    if (Buffer != NULL)
-        HeapFree(MyHeap, 0, Buffer);
-
     /* Close the backup file */
     if (FileHandle != NULL)
         NtClose(FileHandle);
@@ -1347,134 +2127,82 @@ Done:
 }
 
 
-/* Returns 0 if nothing found. */
-ULONG LogfOffsetByNumber(PLOGFILE LogFile, DWORD RecordNumber)
-{
-    DWORD i;
-
-    for (i = 0; i < LogFile->OffsetInfoNext; i++)
-    {
-        if (LogFile->OffsetInfo[i].EventNumber == RecordNumber)
-            return LogFile->OffsetInfo[i].EventOffset;
-    }
-    return 0;
-}
-
-DWORD LogfGetOldestRecord(PLOGFILE LogFile)
-{
-    return LogFile->Header.OldestRecordNumber;
-}
-
-DWORD LogfGetCurrentRecord(PLOGFILE LogFile)
-{
-    return LogFile->Header.CurrentRecordNumber;
-}
-
-BOOL LogfDeleteOffsetInformation(PLOGFILE LogFile, ULONG ulNumber)
-{
-    DWORD i;
-
-    if (ulNumber != LogFile->OffsetInfo[0].EventNumber)
-    {
-        return FALSE;
-    }
-
-    for (i = 0; i < LogFile->OffsetInfoNext - 1; i++)
-    {
-        LogFile->OffsetInfo[i].EventNumber = LogFile->OffsetInfo[i + 1].EventNumber;
-        LogFile->OffsetInfo[i].EventOffset = LogFile->OffsetInfo[i + 1].EventOffset;
-    }
-    LogFile->OffsetInfoNext--;
-    return TRUE;
-}
-
-BOOL LogfAddOffsetInformation(PLOGFILE LogFile, ULONG ulNumber, ULONG ulOffset)
-{
-    LPVOID NewOffsetInfo;
-
-    if (LogFile->OffsetInfoNext == LogFile->OffsetInfoSize)
-    {
-        NewOffsetInfo = HeapReAlloc(MyHeap,
-                                    HEAP_ZERO_MEMORY,
-                                    LogFile->OffsetInfo,
-                                    (LogFile->OffsetInfoSize + 64) *
-                                        sizeof(EVENT_OFFSET_INFO));
-
-        if (!NewOffsetInfo)
-        {
-            DPRINT1("Can't reallocate heap.\n");
-            return FALSE;
-        }
-
-        LogFile->OffsetInfo = (PEVENT_OFFSET_INFO) NewOffsetInfo;
-        LogFile->OffsetInfoSize += 64;
-    }
-
-    LogFile->OffsetInfo[LogFile->OffsetInfoNext].EventNumber = ulNumber;
-    LogFile->OffsetInfo[LogFile->OffsetInfoNext].EventOffset = ulOffset;
-    LogFile->OffsetInfoNext++;
-
-    return TRUE;
-}
-
-PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
-                                 DWORD   dwRecordNumber,
-                                 WORD    wType,
-                                 WORD    wCategory,
-                                 DWORD   dwEventId,
-                                 LPCWSTR SourceName,
-                                 LPCWSTR ComputerName,
-                                 DWORD   dwSidLength,
-                                 PSID    lpUserSid,
-                                 WORD    wNumStrings,
-                                 WCHAR   * lpStrings,
-                                 DWORD   dwDataSize,
-                                 LPVOID  lpRawData)
+PEVENTLOGRECORD
+LogfAllocAndBuildNewRecord(PULONG lpRecSize,
+                           ULONG  Time,
+                           USHORT wType,
+                           USHORT wCategory,
+                           ULONG  dwEventId,
+                           PCWSTR SourceName,
+                           PCWSTR ComputerName,
+                           ULONG  dwSidLength,
+                           PSID   lpUserSid,
+                           USHORT wNumStrings,
+                           PWSTR  lpStrings,
+                           ULONG  dwDataSize,
+                           PVOID  lpRawData)
 {
     DWORD dwRecSize;
     PEVENTLOGRECORD pRec;
-    SYSTEMTIME SysTime;
-    WCHAR *str;
+    PWSTR str;
     UINT i, pos;
+    SIZE_T SourceNameLen, ComputerNameLen, StringLen;
     PBYTE Buffer;
 
-    dwRecSize =
-        sizeof(EVENTLOGRECORD) + (lstrlenW(ComputerName) +
-                                  lstrlenW(SourceName) + 2) * sizeof(WCHAR);
+    SourceNameLen = (SourceName ? wcslen(SourceName) : 0) + 1;
+    ComputerNameLen = (ComputerName ? wcslen(ComputerName) : 0) + 1;
 
-    if (dwRecSize % 4 != 0)
-        dwRecSize += 4 - (dwRecSize % 4);
+    dwRecSize = sizeof(EVENTLOGRECORD) + (SourceNameLen + ComputerNameLen) * sizeof(WCHAR);
+
+    /* Align on DWORD boundary for the SID */
+    dwRecSize = ROUND_UP(dwRecSize, sizeof(ULONG));
 
     dwRecSize += dwSidLength;
 
+    /* Add the sizes for the strings array */
+    ASSERT((lpStrings == NULL && wNumStrings == 0) ||
+           (lpStrings != NULL && wNumStrings >= 0));
     for (i = 0, str = lpStrings; i < wNumStrings; i++)
     {
-        dwRecSize += (lstrlenW(str) + 1) * sizeof(WCHAR);
-        str += lstrlenW(str) + 1;
+        StringLen = wcslen(str) + 1; // str must be != NULL
+        dwRecSize += StringLen * sizeof(WCHAR);
+        str += StringLen;
     }
 
+    /* Add the data size */
     dwRecSize += dwDataSize;
-    if (dwRecSize % 4 != 0)
-        dwRecSize += 4 - (dwRecSize % 4);
 
-    dwRecSize += 4;
+    /* Align on DWORD boundary for the full structure */
+    dwRecSize = ROUND_UP(dwRecSize, sizeof(ULONG));
 
-    Buffer = HeapAlloc(MyHeap, HEAP_ZERO_MEMORY, dwRecSize);
+    /* Size of the trailing 'Length' member */
+    dwRecSize += sizeof(ULONG);
 
+    Buffer = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, dwRecSize);
     if (!Buffer)
     {
-        DPRINT1("Can't allocate heap!\n");
+        DPRINT1("Cannot allocate heap!\n");
         return NULL;
     }
 
-    pRec = (PEVENTLOGRECORD) Buffer;
+    pRec = (PEVENTLOGRECORD)Buffer;
     pRec->Length = dwRecSize;
     pRec->Reserved = LOGFILE_SIGNATURE;
-    pRec->RecordNumber = dwRecordNumber;
 
-    GetSystemTime(&SysTime);
-    SystemTimeToEventTime(&SysTime, &pRec->TimeGenerated);
-    SystemTimeToEventTime(&SysTime, &pRec->TimeWritten);
+    /*
+     * Do not assign here any precomputed record number to the event record.
+     * The true record number will be assigned atomically and sequentially in
+     * LogfWriteRecord, so that all the event records will have consistent and
+     * unique record numbers.
+     */
+    pRec->RecordNumber = 0;
+
+    /*
+     * Set the generated time, and temporarily set the written time
+     * with the generated time.
+     */
+    pRec->TimeGenerated = Time;
+    pRec->TimeWritten   = Time;
 
     pRec->EventID = dwEventId;
     pRec->EventType = wType;
@@ -1482,19 +2210,21 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
 
     pos = sizeof(EVENTLOGRECORD);
 
-    lstrcpyW((WCHAR *) (Buffer + pos), SourceName);
-    pos += (lstrlenW(SourceName) + 1) * sizeof(WCHAR);
-    lstrcpyW((WCHAR *) (Buffer + pos), ComputerName);
-    pos += (lstrlenW(ComputerName) + 1) * sizeof(WCHAR);
+    if (SourceName)
+        StringCchCopy((PWSTR)(Buffer + pos), SourceNameLen, SourceName);
+    pos += SourceNameLen * sizeof(WCHAR);
+    if (ComputerName)
+        StringCchCopy((PWSTR)(Buffer + pos), ComputerNameLen, ComputerName);
+    pos += ComputerNameLen * sizeof(WCHAR);
 
-    pRec->UserSidOffset = pos;
+    /* Align on DWORD boundary for the SID */
+    pos = ROUND_UP(pos, sizeof(ULONG));
 
-    if (pos % 4 != 0)
-        pos += 4 - (pos % 4);
-
+    pRec->UserSidLength = 0;
+    pRec->UserSidOffset = 0;
     if (dwSidLength)
     {
-        CopyMemory(Buffer + pos, lpUserSid, dwSidLength);
+        RtlCopyMemory(Buffer + pos, lpUserSid, dwSidLength);
         pRec->UserSidLength = dwSidLength;
         pRec->UserSidOffset = pos;
         pos += dwSidLength;
@@ -1503,67 +2233,68 @@ PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
     pRec->StringOffset = pos;
     for (i = 0, str = lpStrings; i < wNumStrings; i++)
     {
-        lstrcpyW((WCHAR *) (Buffer + pos), str);
-        pos += (lstrlenW(str) + 1) * sizeof(WCHAR);
-        str += lstrlenW(str) + 1;
+        StringLen = wcslen(str) + 1; // str must be != NULL
+        StringCchCopy((PWSTR)(Buffer + pos), StringLen, str);
+        str += StringLen;
+        pos += StringLen * sizeof(WCHAR);
     }
     pRec->NumStrings = wNumStrings;
 
-    pRec->DataOffset = pos;
+    pRec->DataLength = 0;
+    pRec->DataOffset = 0;
     if (dwDataSize)
     {
+        RtlCopyMemory(Buffer + pos, lpRawData, dwDataSize);
         pRec->DataLength = dwDataSize;
-        CopyMemory(Buffer + pos, lpRawData, dwDataSize);
+        pRec->DataOffset = pos;
         pos += dwDataSize;
     }
 
-    if (pos % 4 != 0)
-        pos += 4 - (pos % 4);
+    /* Align on DWORD boundary for the full structure */
+    pos = ROUND_UP(pos, sizeof(ULONG));
 
+    /* Initialize the trailing 'Length' member */
     *((PDWORD) (Buffer + pos)) = dwRecSize;
 
     *lpRecSize = dwRecSize;
-    return Buffer;
+    return pRec;
 }
 
-
 VOID
-LogfReportEvent(WORD wType,
-                WORD wCategory,
-                DWORD dwEventId,
-                WORD wNumStrings,
-                WCHAR *lpStrings,
-                DWORD dwDataSize,
-                LPVOID lpRawData)
+LogfReportEvent(USHORT wType,
+                USHORT wCategory,
+                ULONG  dwEventId,
+                USHORT wNumStrings,
+                PWSTR  lpStrings,
+                ULONG  dwDataSize,
+                PVOID  lpRawData)
 {
+    NTSTATUS Status;
     WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
     DWORD dwComputerNameLength = MAX_COMPUTERNAME_LENGTH + 1;
-    PEVENTSOURCE pEventSource = NULL;
-    PBYTE logBuffer;
-    DWORD lastRec;
+    PEVENTLOGRECORD logBuffer;
+    LARGE_INTEGER SystemTime;
+    ULONG Time;
     DWORD recSize;
-    DWORD dwError;
+
+    if (!EventLogSource)
+        return;
 
     if (!GetComputerNameW(szComputerName, &dwComputerNameLength))
     {
-        szComputerName[0] = 0;
+        szComputerName[0] = L'\0';
     }
 
-    pEventSource = GetEventSourceByName(L"EventLog");
-    if (pEventSource == NULL)
-    {
-        return;
-    }
-
-    lastRec = LogfGetCurrentRecord(pEventSource->LogFile);
+    NtQuerySystemTime(&SystemTime);
+    RtlTimeToSecondsSince1970(&SystemTime, &Time);
 
     logBuffer = LogfAllocAndBuildNewRecord(&recSize,
-                                           lastRec,
+                                           Time,
                                            wType,
                                            wCategory,
                                            dwEventId,
-                                           pEventSource->szName,
-                                           (LPCWSTR)szComputerName,
+                                           EventLogSource->szName,
+                                           szComputerName,
                                            0,
                                            NULL,
                                            wNumStrings,
@@ -1571,10 +2302,11 @@ LogfReportEvent(WORD wType,
                                            dwDataSize,
                                            lpRawData);
 
-    dwError = LogfWriteData(pEventSource->LogFile, recSize, logBuffer);
-    if (!dwError)
+    Status = LogfWriteRecord(EventLogSource->LogFile, recSize, logBuffer);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ERROR WRITING TO EventLog %S\n", pEventSource->LogFile->FileName);
+        DPRINT1("ERROR WRITING TO EventLog %S (Status 0x%08lx)\n",
+                EventLogSource->LogFile->FileName, Status);
     }
 
     LogfFreeRecord(logBuffer);

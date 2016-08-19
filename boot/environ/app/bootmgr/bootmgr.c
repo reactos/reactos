@@ -1403,7 +1403,7 @@ BmpPopulateBootEntryList (
 
         /* Check if this is a real mode startup.com */
         if ((ObjectType.Application.ObjectCode == BCD_OBJECT_TYPE_APPLICATION) &&
-            (ObjectType.Application.ImageCode = BCD_IMAGE_TYPE_REAL_MODE) &&
+            (ObjectType.Application.ImageCode == BCD_IMAGE_TYPE_REAL_MODE) &&
             (ObjectType.Application.ApplicationCode == BCD_APPLICATION_TYPE_STARTUPCOM))
         {
             /* Check if PXE soft reboot will occur */
@@ -1470,7 +1470,7 @@ BmGetBootSequence (
     )
 {
     PBL_LOADED_APPLICATION_ENTRY* Sequence;
-    ULONG Count;
+    ULONG Count = SequenceListCount;
     NTSTATUS Status;
 
     /* Allocate the sequence list */

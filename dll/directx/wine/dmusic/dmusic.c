@@ -403,7 +403,7 @@ HRESULT WINAPI DMUSIC_CreateDirectMusicImpl(LPCGUID riid, LPVOID* ret_iface, LPU
     IDirectMusic8Impl *dmusic;
     HRESULT ret;
 
-    TRACE("(%p,%p,%p)\n", riid, ret_iface, unkouter);
+    TRACE("(%s, %p, %p)\n", debugstr_guid(riid), ret_iface, unkouter);
 
     *ret_iface = NULL;
     if (unkouter)

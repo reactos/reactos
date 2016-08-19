@@ -235,7 +235,7 @@ static void CC_DrawFocusRect(CCPRIV *lpp, HWND hwnd, int x, int y, int rows, int
   /* draw it */
   hdc = GetDC(hwnd);
   DrawFocusRect(hdc, &rect);
-  CopyRect(&lpp->focusRect, &rect);
+  lpp->focusRect = rect;
   lpp->hwndFocus = hwnd;
   ReleaseDC(hwnd, hdc);
 }

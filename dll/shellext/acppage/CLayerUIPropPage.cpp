@@ -72,7 +72,7 @@ static struct {
     const PCWSTR Name;
 } g_CompatModes[] = {
     { L"Windows 95", L"WIN95" },
-    { L"Windows 98", L"WIN98" },
+    { L"Windows 98/ME", L"WIN98" },
     { L"Windows NT 4.0 (SP5)", L"NT4SP5" },
     { L"Windows 2000", L"WIN2000" },
     { L"Windows XP (SP2)", L"WINXPSP2" },

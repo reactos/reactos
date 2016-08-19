@@ -34,22 +34,22 @@ CAPTION "Настройки на увеличителя"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON "Изход", IDOK, 96, 161, 50, 14
-    PUSHBUTTON "Помощ", IDC_BUTTON_HELP, 38, 161, 50, 14
-    LTEXT "Увеличение:", IDC_STATIC, 6, 8, 68, 8
+    PUSHBUTTON "&Помощ", IDC_BUTTON_HELP, 38, 161, 50, 14
+    LTEXT "Увелич&ение:", IDC_STATIC, 6, 8, 68, 8
     COMBOBOX IDC_ZOOM, 72, 6, 63, 66, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX "Проследяване", IDC_STATIC, 7, 25, 195, 59
     GROUPBOX "Представяне", IDC_STATIC, 7, 87, 195, 57
-    CONTROL "Следване показалеца на мишката", IDC_FOLLOWMOUSECHECK, "Button",
+    CONTROL "Следване по&казалеца на мишката", IDC_FOLLOWMOUSECHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 42, 164, 10
-    CONTROL "Следване съсредоточаването на клавиатурата", IDC_FOLLOWKEYBOARDCHECK, "Button",
+    CONTROL "Следване със&редоточаването на клавиатурата", IDC_FOLLOWKEYBOARDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 54, 180, 10
-    CONTROL "Следване на словообработката", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
+    CONTROL "След&ване на словообработката", IDC_FOLLOWTEXTEDITINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 66, 180, 10
-    CONTROL "Обръщане на цветовете", IDC_INVERTCOLORSCHECK, "Button",
+    CONTROL "&Обръщане на цветовете", IDC_INVERTCOLORSCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 102, 180, 10
-    CONTROL "Смаляване при пускане", IDC_STARTMINIMIZEDCHECK, "Button",
+    CONTROL "С&маляване при пускане", IDC_STARTMINIMIZEDCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 114, 180, 10
-    CONTROL "Показване на увеличителя", IDC_SHOWMAGNIFIERCHECK, "Button",
+    CONTROL "Показв&ане на увеличителя", IDC_SHOWMAGNIFIERCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 18, 126, 180, 10
 END
 

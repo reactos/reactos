@@ -19,6 +19,11 @@ License = Gratuită
 Description = O aplicație care generează și verifică sume de control md5.
 Size = 452,5 Kio
 
+[Section.0419]
+License = Бесплатно
+Description = Приложение генерирует и проверяет контрольные суммы MD5.
+Size = 452,5 KiB
+
 [Section.041f]
 License = Ücretsiz
 Description = MD5 sağlama toplamlarını oluşturan ve doğrulayan bir uygulamadır.

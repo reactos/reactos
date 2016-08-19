@@ -336,7 +336,7 @@
     /* XXX: we ignore the secondary stroke and edge definitions */
     /*      since we don't support native PFR hinting           */
     /*                                                          */
-    if ( flags & PFR_GLYPH_EXTRA_ITEMS )
+    if ( flags & PFR_GLYPH_SINGLE_EXTRA_ITEMS )
     {
       error = pfr_extra_items_skip( &p, limit );
       if ( error )
@@ -579,7 +579,7 @@
 
     /* ignore extra items when present */
     /*                                 */
-    if ( flags & PFR_GLYPH_EXTRA_ITEMS )
+    if ( flags & PFR_GLYPH_COMPOUND_EXTRA_ITEMS )
     {
       error = pfr_extra_items_skip( &p, limit );
       if ( error )

@@ -163,22 +163,110 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
 }
 
 BOOL
-CNewMenu::LoadAllItems()
+CNewMenu::CacheItems()
 {
+    HKEY hKey;
+    DWORD dwSize = 0;
     DWORD dwIndex = 0;
+    LPWSTR lpValue;
+    LPWSTR lpValues;
     WCHAR wszName[MAX_PATH];
     SHELLNEW_ITEM *pNewItem;
     SHELLNEW_ITEM *pCurItem = NULL;
 
-    /* If there are any unload them */
-    UnloadAllItems();
-
-    /* Enumerate all extesions */
+    /* Enumerate all extensions */
     while (RegEnumKeyW(HKEY_CLASSES_ROOT, dwIndex++, wszName, _countof(wszName)) == ERROR_SUCCESS)
     {
         if (wszName[0] != L'.')
             continue;
 
+        pNewItem = LoadItem(wszName);
+        if (pNewItem)
+        {
+            dwSize += wcslen(wszName) + 1;
+            if (wcsicmp(pNewItem->pwszExt, L".lnk") == 0)
+            {
+                /* Link handler */
+                m_pLinkItem = pNewItem;
+            }
+            else
+            {
+                /* Add at the end of list */
+                if (pCurItem)
+                {
+                    pCurItem->pNext = pNewItem;
+                    pCurItem = pNewItem;
+                }
+                else
+                    pCurItem = m_pItems = pNewItem;
+            }
+        }
+    }
+    
+    dwSize++;
+    
+    lpValues = (LPWSTR) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize * sizeof(WCHAR));
+    if (!lpValues)
+        return FALSE;
+
+    lpValue = lpValues;
+    pCurItem = m_pItems;
+    while (pCurItem)
+    {
+        memcpy(lpValue, pCurItem->pwszExt, (wcslen(pCurItem->pwszExt) + 1) * sizeof(WCHAR));
+        lpValue += wcslen(pCurItem->pwszExt) + 1;
+        pCurItem = pCurItem->pNext;
+    }
+
+    if (RegCreateKeyEx(HKEY_CURRENT_USER, ShellNewKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, lpValues);
+        return FALSE;
+    }
+    
+    if (RegSetValueExW(hKey, L"Classes", NULL, REG_MULTI_SZ, (LPBYTE)lpValues, dwSize * sizeof(WCHAR)) != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, lpValues);
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+    
+    HeapFree(GetProcessHeap(), 0, lpValues);
+    RegCloseKey(hKey);
+    
+    return TRUE;
+}
+
+BOOL
+CNewMenu::LoadCachedItems()
+{
+    LPWSTR wszName;
+    LPWSTR lpValues;
+    DWORD dwSize;
+    HKEY hKey;
+    SHELLNEW_ITEM *pNewItem;
+    SHELLNEW_ITEM *pCurItem = NULL;
+    
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, ShellNewKey, 0, KEY_READ, &hKey) != ERROR_SUCCESS) 
+        return FALSE;
+    
+    if (RegQueryValueExW(hKey, L"Classes", NULL, NULL, NULL, &dwSize) != ERROR_SUCCESS)
+        return FALSE;
+    
+    lpValues = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, dwSize);
+    if (!lpValues)
+        return FALSE;
+    
+    if (RegQueryValueExW(hKey, L"Classes", NULL, NULL, (LPBYTE)lpValues, &dwSize) != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, lpValues);
+        return FALSE;
+    }
+
+    wszName = lpValues;
+
+    for (; '\0' != *wszName; wszName += wcslen(wszName) + 1)
+    {
         pNewItem = LoadItem(wszName);
         if (pNewItem)
         {
@@ -200,7 +288,24 @@ CNewMenu::LoadAllItems()
             }
         }
     }
+    
+    HeapFree(GetProcessHeap(), 0, lpValues);
+    RegCloseKey(hKey);
+    
+    return TRUE;
+}
 
+BOOL
+CNewMenu::LoadAllItems()
+{
+    /* If there are any unload them */
+    UnloadAllItems();
+    
+    if (!LoadCachedItems())
+    {
+        CacheItems();
+    }
+    
     if (!m_pLinkItem)
     {
         m_pLinkItem = static_cast<SHELLNEW_ITEM *>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SHELLNEW_ITEM)));

@@ -15,7 +15,7 @@ STRINGTABLE
     STRING_TERM_PID_SEARCH, "Процесс, с идентификатором %1!u! принудительно завершен.\n"
     STRING_TERM_PROC_SEARCH, "Процесс ""%1"" с идентификатором %2!u! принудительно завершен.\n"
     STRING_SEARCH_FAILED, "Ошибка: Не удается найти процесс ""%1"".\n"
-    STRING_ENUM_FAILED, "Ошибка: Unable to enumerate the process list.\n"
+    STRING_ENUM_FAILED, "Ошибка: Не удается получить список процессов.\n"
     STRING_TERMINATE_FAILED, "Ошибка: Не удается завершить процесс ""%1"".\n"
     STRING_SELF_TERMINATION, "Ошибка: Процесс не может завершить сам себя.\n"
 }

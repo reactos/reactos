@@ -73,14 +73,6 @@ UnloadDynamicImports(PDYN_FUNCS DynFuncs);
 LPWSTR
 AppendBackslash(LPWSTR String);
 
-BOOL
-GetUserSidFromToken(HANDLE hToken,
-                    PSID *Sid);
-
-BOOL
-GetUserSidStringFromToken(HANDLE hToken,
-                          PUNICODE_STRING SidString);
-
 PSECURITY_DESCRIPTOR
 CreateDefaultSecurityDescriptor(VOID);
 
@@ -98,6 +90,11 @@ CreateUserHive(LPCWSTR lpKeyName,
 BOOL
 UpdateUsersShellFolderSettings(LPCWSTR lpUserProfilePath,
                                HKEY hUserKey);
+
+/* sid.c */
+BOOL
+GetUserSidStringFromToken(HANDLE hToken,
+                          PUNICODE_STRING SidString);
 
 /* userenv.c */
 extern HINSTANCE hInstance;

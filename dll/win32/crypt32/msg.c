@@ -3725,6 +3725,17 @@ BOOL WINAPI CryptMsgGetAndVerifySigner(HCRYPTMSG hCryptMsg, DWORD cSignerStore,
     return ret;
 }
 
+BOOL WINAPI CryptMsgVerifyCountersignatureEncoded(HCRYPTPROV_LEGACY hCryptProv,
+ DWORD dwEncodingType, BYTE *pbSignerInfo, DWORD cbSignerInfo,
+ PBYTE pbSignerInfoCountersignature, DWORD cbSignerInfoCountersignature,
+ CERT_INFO *pciCountersigner)
+{
+    FIXME("(%08lx, %08x, %p, %d, %p, %d, %p): stub\n", hCryptProv,
+     dwEncodingType, pbSignerInfo, cbSignerInfo, pbSignerInfoCountersignature,
+     cbSignerInfoCountersignature, pciCountersigner);
+    return FALSE;
+}
+
 BOOL WINAPI CryptMsgVerifyCountersignatureEncodedEx(HCRYPTPROV_LEGACY hCryptProv,
  DWORD dwEncodingType, PBYTE pbSignerInfo, DWORD cbSignerInfo,
  PBYTE pbSignerInfoCountersignature, DWORD cbSignerInfoCountersignature,

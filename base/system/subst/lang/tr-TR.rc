@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2015 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2015, 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -7,6 +7,8 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Değişken sayısı yanlış - %s\n"
     IDS_INVALID_PARAMETER "Değişken sayısı yanlış - %s\n"
     IDS_INVALID_PARAMETER2 "Geçersiz değişken - %s\n"
+    IDS_PATH_NOT_FOUND "Yol bulunamadı - %s\n"
+    IDS_ACCESS_DENIED "Erişim engellendi - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "Sürücü önceden SUBST edilmiş.\n"
     IDS_FAILED_WITH_ERRORCODE "Yanlışlık kodu ile başarısız oldu 0x%x: %s\n"
     IDS_USAGE "Bir sürücü harfiyle bir yolu ilişkilendirir.\n\n\

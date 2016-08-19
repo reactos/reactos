@@ -49,4 +49,9 @@
 #define OleStdCopyMetafilePict(hpictin, phpictout)  \
    (*(phpictout) = OleDuplicateData(hpictin,CF_METAFILEPICT,GHND|GMEM_SHARE))
 
+#define CURSOR_NODROP 1
+#define CURSOR_MOVE   2
+#define CURSOR_COPY   3
+#define CURSOR_LINK   4
+
 #endif /* __WINE_OLESTD_H_ */

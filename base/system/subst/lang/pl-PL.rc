@@ -13,13 +13,16 @@ BEGIN
     IDS_INCORRECT_PARAMETER_COUNT "Nieprawidłowa liczba parametrów - %s\n"
     IDS_INVALID_PARAMETER "Nieprawidłowy parametr - %s\n"
     IDS_INVALID_PARAMETER2 "Nieprawidłowe parametry - %s\n"
+    IDS_PATH_NOT_FOUND "Path not found - %s\n"
+    IDS_ACCESS_DENIED "Access denied - %s\n"
     IDS_DRIVE_ALREADY_SUBSTED "Na tym dysku już użyto komendy SUBST\n"
     IDS_FAILED_WITH_ERRORCODE "Błąd 0x%x: %s\n"
     IDS_USAGE "Powiązuje ścieżkę z literą napędu.\n\n\
 SUBST [napęd1: [napęd2:]ścieżka]\n\
 SUBST napęd1: /D\n\n\
-  napęd1:        Określa wirutalny napęd do litery któreego chcesz powiązać ścieżkę.\n\
-  [napęd2:]ścieżka  Określa istniejącą ścieżkę, którą chcesz powiązać z literą napędu \n                  wirtualnego.\n\
-  /D             Kasuje aktywny (wirtualny) napęd.\n\n\
+  napęd1:           Określa wirutalny napęd do litery któreego chcesz powiązać ścieżkę.\n\
+  [napęd2:]ścieżka  Określa istniejącą ścieżkę, którą chcesz powiązać z literą napędu\n\
+                    wirtualnego.\n\
+  /D                Kasuje aktywny (wirtualny) napęd.\n\n\
 Użycie SUBST bez żadnych parametrów wyświetla aktualną listę napędów wirtualnych.\n"
 END

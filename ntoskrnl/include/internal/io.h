@@ -86,6 +86,21 @@
 #define IOP_MAX_REPARSE_TRAVERSAL 0x20
 
 //
+// Private flags for IoCreateFile / IoParseDevice
+//
+#define IOP_USE_TOP_LEVEL_DEVICE_HINT       0x01
+#define IOP_CREATE_FILE_OBJECT_EXTENSION    0x02
+
+
+typedef struct _FILE_OBJECT_EXTENSION
+{
+    PDEVICE_OBJECT TopDeviceObjectHint;
+
+} FILE_OBJECT_EXTENSION, *PFILE_OBJECT_EXTENSION;
+
+
+
+//
 // We can call the Ob Inlined API, it's the same thing
 //
 #define IopAllocateMdlFromLookaside                     \

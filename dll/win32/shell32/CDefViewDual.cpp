@@ -47,7 +47,7 @@ class CDefViewDual :
         {
             if (!app) return E_INVALIDARG;
 
-            return CShell_Constructor(IID_IDispatch, (LPVOID*)app);
+            return CShellDispatch_Constructor(IID_IDispatch, (LPVOID*)app);
         }
 
         virtual HRESULT STDMETHODCALLTYPE get_Parent(IDispatch **parent) override

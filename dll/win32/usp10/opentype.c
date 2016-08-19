@@ -1178,7 +1178,7 @@ static void GPOS_convert_design_units_to_device(LPOUTLINETEXTMETRICW lpotm, LPLO
     *devX = (desX * emHeight) / (double)lpotm->otmEMSquare;
     *devY = (desY * emHeight) / (double)lpotm->otmEMSquare;
     if (lplogfont->lfWidth)
-        FIXME("Font with lfWidth set no handled properly\n");
+        FIXME("Font with lfWidth set not handled properly\n");
 }
 
 static INT GPOS_get_value_record(WORD ValueFormat, const WORD data[], GPOS_ValueRecord *record)
@@ -1290,14 +1290,14 @@ static void apply_pair_value( const void *pos_table, WORD val_fmt1, WORD val_fmt
     if (val_fmt1)
     {
         GPOS_get_value_record_offsets( pos_table, &val_rec1, val_fmt1, ppem, adjust, advance );
-        TRACE( "Glyph 1 resulting cumulative offset is %i,%i design units\n", adjust[0].x, adjust[0].y );
-        TRACE( "Glyph 1 resulting cumulative advance is %i,%i design units\n", advance[0].x, advance[0].y );
+        TRACE( "Glyph 1 resulting cumulative offset is %s design units\n", wine_dbgstr_point(&adjust[0]) );
+        TRACE( "Glyph 1 resulting cumulative advance is %s design units\n", wine_dbgstr_point(&advance[0]) );
     }
     if (val_fmt2)
     {
         GPOS_get_value_record_offsets( pos_table, &val_rec2, val_fmt2, ppem, adjust + 1, advance + 1 );
-        TRACE( "Glyph 2 resulting cumulative offset is %i,%i design units\n", adjust[1].x, adjust[1].y );
-        TRACE( "Glyph 2 resulting cumulative advance is %i,%i design units\n", advance[1].x, advance[1].y );
+        TRACE( "Glyph 2 resulting cumulative offset is %s design units\n", wine_dbgstr_point(&adjust[1]) );
+        TRACE( "Glyph 2 resulting cumulative advance is %s design units\n", wine_dbgstr_point(&advance[1]) );
     }
 }
 
@@ -1414,7 +1414,7 @@ static VOID GPOS_apply_CursiveAttachment(const OT_LookupTable *look, const SCRIP
                     GPOS_get_anchor_values((const BYTE*)cpf1 + offset, &exit_pt, ppem);
                     offset = GET_BE_WORD(cpf1->EntryExitRecord[index_entry].EntryAnchor);
                     GPOS_get_anchor_values((const BYTE*)cpf1 + offset, &entry_pt, ppem);
-                    TRACE("Found linkage %x[%i,%i] %x[%i,%i]\n",glyphs[glyph_index], exit_pt.x,exit_pt.y, glyphs[glyph_index+write_dir], entry_pt.x, entry_pt.y);
+                    TRACE("Found linkage %x[%s] %x[%s]\n",glyphs[glyph_index], wine_dbgstr_point(&exit_pt), glyphs[glyph_index+write_dir], wine_dbgstr_point(&entry_pt));
                     pt->x = entry_pt.x - exit_pt.x;
                     pt->y = entry_pt.y - exit_pt.y;
                     return;
@@ -1481,7 +1481,7 @@ static int GPOS_apply_MarkToBase(ScriptCache *psc, const OT_LookupTable *look, c
                     ma = (const GPOS_MarkArray*)((const BYTE*)mbpf1 + offset);
                     if (mark_index > GET_BE_WORD(ma->MarkCount))
                     {
-                        ERR("Mark index exeeded mark count\n");
+                        ERR("Mark index exceeded mark count\n");
                         return -1;
                     }
                     mr = &ma->MarkRecord[mark_index];
@@ -1495,11 +1495,11 @@ static int GPOS_apply_MarkToBase(ScriptCache *psc, const OT_LookupTable *look, c
                     GPOS_get_anchor_values((const BYTE*)ba + offset, &base_pt, ppem);
                     offset = GET_BE_WORD(mr->MarkAnchor);
                     GPOS_get_anchor_values((const BYTE*)ma + offset, &mark_pt, ppem);
-                    TRACE("Offset on base is %i,%i design units\n",base_pt.x,base_pt.y);
-                    TRACE("Offset on mark is %i,%i design units\n",mark_pt.x, mark_pt.y);
+                    TRACE("Offset on base is %s design units\n",wine_dbgstr_point(&base_pt));
+                    TRACE("Offset on mark is %s design units\n",wine_dbgstr_point(&mark_pt));
                     pt->x += base_pt.x - mark_pt.x;
                     pt->y += base_pt.y - mark_pt.y;
-                    TRACE("Resulting cumulative offset is %i,%i design units\n",pt->x,pt->y);
+                    TRACE("Resulting cumulative offset is %s design units\n",wine_dbgstr_point(pt));
                     rc = base_glyph;
                 }
             }
@@ -1551,7 +1551,7 @@ static VOID GPOS_apply_MarkToLigature(const OT_LookupTable *look, const SCRIPT_A
                     ma = (const GPOS_MarkArray*)((const BYTE*)mlpf1 + offset);
                     if (mark_index > GET_BE_WORD(ma->MarkCount))
                     {
-                        ERR("Mark index exeeded mark count\n");
+                        ERR("Mark index exceeded mark count\n");
                         return;
                     }
                     mr = &ma->MarkRecord[mark_index];
@@ -1561,7 +1561,7 @@ static VOID GPOS_apply_MarkToLigature(const OT_LookupTable *look, const SCRIPT_A
                     la = (const GPOS_LigatureArray*)((const BYTE*)mlpf1 + offset);
                     if (ligature_index > GET_BE_WORD(la->LigatureCount))
                     {
-                        ERR("Ligature index exeeded ligature count\n");
+                        ERR("Ligature index exceeded ligature count\n");
                         return;
                     }
                     offset = GET_BE_WORD(la->LigatureAttach[ligature_index]);
@@ -1587,11 +1587,11 @@ static VOID GPOS_apply_MarkToLigature(const OT_LookupTable *look, const SCRIPT_A
                     GPOS_get_anchor_values((const BYTE*)lt + offset, &ligature_pt, ppem);
                     offset = GET_BE_WORD(mr->MarkAnchor);
                     GPOS_get_anchor_values((const BYTE*)ma + offset, &mark_pt, ppem);
-                    TRACE("Offset on ligature is %i,%i design units\n",ligature_pt.x,ligature_pt.y);
-                    TRACE("Offset on mark is %i,%i design units\n",mark_pt.x, mark_pt.y);
+                    TRACE("Offset on ligature is %s design units\n",wine_dbgstr_point(&ligature_pt));
+                    TRACE("Offset on mark is %s design units\n",wine_dbgstr_point(&mark_pt));
                     pt->x += ligature_pt.x - mark_pt.x;
                     pt->y += ligature_pt.y - mark_pt.y;
-                    TRACE("Resulting cumulative offset is %i,%i design units\n",pt->x,pt->y);
+                    TRACE("Resulting cumulative offset is %s design units\n",wine_dbgstr_point(pt));
                 }
             }
         }
@@ -1652,11 +1652,11 @@ static BOOL GPOS_apply_MarkToMark(const OT_LookupTable *look, const SCRIPT_ANALY
                     GPOS_get_anchor_values((const BYTE*)m2a + offset, &mark2_pt, ppem);
                     offset = GET_BE_WORD(mr->MarkAnchor);
                     GPOS_get_anchor_values((const BYTE*)ma + offset, &mark_pt, ppem);
-                    TRACE("Offset on mark2 is %i,%i design units\n",mark2_pt.x,mark2_pt.y);
-                    TRACE("Offset on mark is %i,%i design units\n",mark_pt.x, mark_pt.y);
+                    TRACE("Offset on mark2 is %s design units\n",wine_dbgstr_point(&mark2_pt));
+                    TRACE("Offset on mark is %s design units\n",wine_dbgstr_point(&mark_pt));
                     pt->x += mark2_pt.x - mark_pt.x;
                     pt->y += mark2_pt.y - mark_pt.y;
-                    TRACE("Resulting cumulative offset is %i,%i design units\n",pt->x,pt->y);
+                    TRACE("Resulting cumulative offset is %s design units\n",wine_dbgstr_point(pt));
                     rc = TRUE;
                 }
             }

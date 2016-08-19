@@ -25,6 +25,7 @@
 #include "atlcomcli.h"
 #include "atlalloc.h"
 #include "comcat.h"
+#include "tchar.h"
 
 #ifdef _MSC_VER
 // It is common to use this in ATL constructors. They only store this for later use, so the usage is safe.
@@ -884,6 +885,218 @@ public:
     {
         ::CoTaskMemFree(ptr);
     }
+};
+
+class CRegKey
+{
+public:
+    HKEY m_hKey;
+
+public:
+
+    CRegKey() throw()
+        : m_hKey(NULL)
+    {
+    }
+
+    CRegKey(CRegKey& key) throw()
+    {
+        Attach(key.Detach());
+    }
+
+    explicit CRegKey(HKEY hKey) throw()
+        :m_hKey(hKey)
+    {
+    }
+
+    ~CRegKey() throw()
+    {
+    }
+
+    void Attach(HKEY hKey) throw()
+    {
+        m_hKey = hKey;
+    }
+
+    LONG Close() throw()
+    {
+        if (m_hKey)
+        {
+            HKEY hKey = Detach();
+            return RegCloseKey(hKey);
+        }
+        return ERROR_SUCCESS;
+    }
+
+    HKEY Detach() throw()
+    {
+        HKEY hKey = m_hKey;
+        m_hKey = NULL;
+        return hKey;
+    }
+
+    LONG Open(HKEY hKeyParent, LPCTSTR lpszKeyName, REGSAM samDesired = KEY_READ | KEY_WRITE) throw()
+    {
+        HKEY hKey = NULL;
+
+        LONG lRes = RegOpenKeyEx(hKeyParent, lpszKeyName, NULL, samDesired, &hKey);
+        if (lRes == ERROR_SUCCESS)
+        {
+            Close();
+            m_hKey = hKey;
+        }
+        return lRes;
+    }
+
+    LONG Create(HKEY hKeyParent, LPCTSTR lpszKeyName, LPTSTR lpszClass = REG_NONE, DWORD dwOptions = REG_OPTION_NON_VOLATILE, REGSAM samDesired = KEY_READ | KEY_WRITE, LPSECURITY_ATTRIBUTES lpSecAttr = NULL, LPDWORD lpdwDisposition = NULL) throw()
+    {
+        HKEY hKey = NULL;
+
+        LONG lRes = RegCreateKeyEx(hKeyParent, lpszKeyName, NULL, lpszClass, dwOptions, samDesired, lpSecAttr, &hKey, lpdwDisposition);
+        if (lRes == ERROR_SUCCESS)
+        {
+            Close();
+            m_hKey = hKey;
+        }
+        return lRes;
+    }
+
+
+    LONG QueryValue(LPCTSTR pszValueName, DWORD* pdwType, void* pData, ULONG* pnBytes) throw()
+    {
+        return RegQueryValueEx(m_hKey, pszValueName, NULL, pdwType, (LPBYTE)pData, pnBytes);
+    }
+
+    LONG QueryDWORDValue(LPCTSTR pszValueName, DWORD& dwValue) throw()
+    {
+        ULONG size = sizeof(DWORD);
+        DWORD type = 0;
+        LONG lRet = QueryValue(pszValueName, &type, &dwValue, &size);
+
+        if (lRet == ERROR_SUCCESS && type != REG_DWORD)
+            lRet = ERROR_INVALID_DATA;
+
+        return lRet;
+    }
+
+    LONG QueryBinaryValue(LPCTSTR pszValueName, void* pValue, ULONG* pnBytes) throw()
+    {
+        DWORD type = 0;
+        LONG lRet = QueryValue(pszValueName, &type, pValue, pnBytes);
+
+        if (lRet == ERROR_SUCCESS && type != REG_BINARY)
+            lRet = ERROR_INVALID_DATA;
+
+        return lRet;
+    }
+
+    LONG QueryStringValue(LPCTSTR pszValueName, LPTSTR pszValue, ULONG* pnChars) throw()
+    {
+        ULONG size = (*pnChars) * sizeof(TCHAR);
+        DWORD type = 0;
+        LONG lRet = QueryValue(pszValueName, &type, pszValue, &size);
+
+        if (lRet == ERROR_SUCCESS && type != REG_SZ)
+            lRet = ERROR_INVALID_DATA;
+
+        *pnChars = size / sizeof(TCHAR);
+        return lRet;
+    }
+
+    LONG QueryGUIDValue(LPCTSTR pszValueName, GUID& guidValue) throw()
+    {
+        OLECHAR buf[40] = {0};
+        ULONG nChars = 39;
+        LONG lRet;
+
+#ifdef UNICODE
+        lRet = QueryStringValue(pszValueName, buf, &nChars);
+#else
+        CHAR bufA[40] = {0};
+        lRet = QueryStringValue(pszValueName, bufA, &nChars);
+        if (lRet != ERROR_SUCCESS)
+            return lRet;
+        if (!::MultiByteToWideChar(CP_THREAD_ACP, 0, bufA, -1, buf, 39))
+            lRet = ERROR_INVALID_DATA;
+#endif
+        if (lRet != ERROR_SUCCESS)
+            return lRet;
+
+        if (!SUCCEEDED(CLSIDFromString(buf, &guidValue)))
+            return ERROR_INVALID_DATA;
+
+        return lRet;
+    }
+
+    LONG SetValue(LPCTSTR pszValueName, DWORD dwType, const void* pValue, ULONG nBytes) throw()
+    {
+        return RegSetValueEx(m_hKey, pszValueName, NULL, dwType, (const BYTE*)pValue, nBytes);
+    }
+
+    LONG SetDWORDValue(LPCTSTR pszValueName, DWORD dwValue) throw()
+    {
+        return SetValue(pszValueName, REG_DWORD, &dwValue, sizeof(DWORD));
+    }
+
+    LONG SetStringValue(LPCTSTR pszValueName, LPCTSTR pszValue, DWORD dwType = REG_SZ) throw()
+    {
+        if (dwType != REG_SZ)
+            return ERROR_INVALID_DATA;  // not implemented yet.
+
+        ULONG length = (_tcslen(pszValue) + 1) * sizeof(TCHAR);
+        return SetValue(pszValueName, dwType, pszValue, length);
+    }
+
+    LONG SetGUIDValue(LPCTSTR pszValueName, REFGUID guidValue) throw()
+    {
+        OLECHAR buf[40] = {0};
+        StringFromGUID2(guidValue, buf, 39);
+#ifdef UNICODE
+        return SetStringValue(pszValueName, buf);
+#else
+        CHAR bufA[40] = {0};
+        ::WideCharToMultiByte(CP_THREAD_ACP, 0, buf, -1, bufA, 40, NULL, NULL);
+        return SetStringValue(pszValueName, bufA);
+#endif
+    }
+
+    LONG SetBinaryValue(LPCTSTR pszValueName, const void* pValue, ULONG nBytes) throw()
+    {
+        return SetValue(pszValueName, REG_BINARY, pValue, nBytes);
+    }
+
+    LONG SetKeyValue(LPCTSTR lpszKeyName, LPCTSTR lpszValue, LPCTSTR lpszValueName = NULL) throw()
+    {
+        CRegKey key;
+        LONG lRet = key.Create(m_hKey, lpszKeyName);
+        if (lRet == ERROR_SUCCESS)
+        {
+            lRet = key.SetStringValue(lpszValueName, lpszValue);
+        }
+        return lRet;
+    }
+
+    LONG DeleteValue(LPCTSTR lpszValue) throw()
+    {
+        return RegDeleteValue(m_hKey, lpszValue);
+    }
+
+    LONG DeleteSubKey(LPCTSTR lpszSubKey) throw()
+    {
+        return RegDeleteKey(m_hKey, lpszSubKey);
+    }
+
+    operator HKEY() const throw()
+    {
+        return m_hKey;
+    }
+
+    CRegKey& operator =(CRegKey& key) throw()
+    {
+        Attach(Detach());
+        return *this;
+    }
+
 };
 
 

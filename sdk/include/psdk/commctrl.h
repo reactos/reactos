@@ -253,6 +253,8 @@ extern "C" {
 #define CDRF_DODEFAULT 0x0
 #define CDRF_NEWFONT 0x2
 #define CDRF_SKIPDEFAULT 0x4
+#define CDRF_DOERASE 0x8
+#define CDRF_SKIPPOSTPAINT 0x100
 
 #define CDRF_NOTIFYPOSTPAINT 0x10
 #define CDRF_NOTIFYITEMDRAW 0x20
@@ -4275,6 +4277,7 @@ typedef struct {
 #define MCS_NOTODAYCIRCLE      0x0008
 #define MCS_NOTODAY            0x0010
 #define MCS_NOTRAILINGDATES    0x0040
+#define MCS_SHORTDAYSOFWEEK    0x0080
 
 #define GMR_VISIBLE 0
 #define GMR_DAYSTATE 1

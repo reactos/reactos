@@ -130,6 +130,9 @@ static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *transform
     wanted_flags &= 0xffff; /* mask off error condition flags */
     TRACE("validation flags 0x%04x\n", wanted_flags);
 
+    /* native is not validating platform */
+    wanted_flags &= ~MSITRANSFORM_VALIDATE_PLATFORM;
+
     if (wanted_flags & ~supported_flags)
     {
         FIXME("unsupported validation flags 0x%04x\n", wanted_flags);
@@ -182,15 +185,6 @@ static UINT check_transform_applicable( MSIPACKAGE *package, IStorage *transform
             valid_flags |= MSITRANSFORM_VALIDATE_PRODUCT;
         }
         msi_free( product_code_installed );
-    }
-    if (wanted_flags & MSITRANSFORM_VALIDATE_PLATFORM)
-    {
-        if ((p = strchrW( template, ';' )))
-        {
-            *p = 0;
-            if (package->platform == parse_platform( template ))
-                valid_flags |= MSITRANSFORM_VALIDATE_PLATFORM;
-        }
     }
     msi_free( template );
     if (wanted_flags & MSITRANSFORM_VALIDATE_MAJORVERSION)

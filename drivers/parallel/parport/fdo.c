@@ -600,13 +600,14 @@ NTAPI
 FdoPower(IN PDEVICE_OBJECT DeviceObject,
          IN PIRP Irp)
 {
+    PDEVICE_OBJECT LowerDevice;
+
     DPRINT("FdoPower()\n");
 
-    Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return STATUS_SUCCESS;
+    LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
+    PoStartNextPowerIrp(Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
+    return PoCallDriver(LowerDevice, Irp);
 }
 
 /* EOF */

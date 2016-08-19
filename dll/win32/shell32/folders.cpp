@@ -192,126 +192,20 @@ GetIconOverlay(LPCITEMIDLIST pidl, WCHAR * wTemp, int* pIndex)
         return FALSE;
 }
 
-HRESULT GenericExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut)
+HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut)
 {
     CComPtr<IDefaultExtractIconInit>    initIcon;
-    GUID const * riid;
+    HRESULT hr;
     int icon_idx;
     UINT flags;
     CHAR sTemp[MAX_PATH];
     WCHAR wTemp[MAX_PATH];
-    LPCITEMIDLIST pSimplePidl = pidl;
-    HRESULT hr;
 
     hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit,&initIcon));
     if (FAILED(hr))
         return hr;
 
-    if (_ILIsDesktop(pSimplePidl))
-    {
-        initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_DESKTOP);
-    }
-    else if ((riid = _ILGetGUIDPointer(pSimplePidl)))
-    {
-        /* my computer and other shell extensions */
-        static const WCHAR fmt[] = { 'C', 'L', 'S', 'I', 'D', '\\',
-                                     '{', '%', '0', '8', 'l', 'x', '-', '%', '0', '4', 'x', '-', '%', '0', '4', 'x', '-',
-                                     '%', '0', '2', 'x', '%', '0', '2', 'x', '-', '%', '0', '2', 'x', '%', '0', '2', 'x',
-                                     '%', '0', '2', 'x', '%', '0', '2', 'x', '%', '0', '2', 'x', '%', '0', '2', 'x', '}', 0
-                                   };
-        WCHAR xriid[50];
-
-        swprintf(xriid, fmt,
-                 riid->Data1, riid->Data2, riid->Data3,
-                 riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
-                 riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
-        const WCHAR* iconname = NULL;
-        if (_ILIsBitBucket(pSimplePidl))
-        {
-            static const WCHAR szFull[] = {'F','u','l','l',0};
-            static const WCHAR szEmpty[] = {'E','m','p','t','y',0};
-            CComPtr<IEnumIDList> EnumIDList;
-            CoInitialize(NULL);
-
-            CComPtr<IShellFolder2> psfRecycleBin;
-            CComPtr<IShellFolder> psfDesktop;
-            hr = SHGetDesktopFolder(&psfDesktop);
-
-            if (SUCCEEDED(hr))
-                hr = psfDesktop->BindToObject(pSimplePidl, NULL, IID_PPV_ARG(IShellFolder2, &psfRecycleBin));
-            if (SUCCEEDED(hr))
-                hr = psfRecycleBin->EnumObjects(NULL, SHCONTF_FOLDERS | SHCONTF_NONFOLDERS, &EnumIDList);
-
-            ULONG itemcount;
-            LPITEMIDLIST pidl = NULL;
-            if (SUCCEEDED(hr) && (hr = EnumIDList->Next(1, &pidl, &itemcount)) == S_OK)
-            {
-                CoTaskMemFree(pidl);
-                iconname = szFull;
-            } else {
-                iconname = szEmpty;
-            }
-        }
-
-        if (HCR_GetIconW(xriid, wTemp, iconname, MAX_PATH, &icon_idx))
-        {
-            initIcon->SetNormalIcon(wTemp, icon_idx);
-        }
-        else
-        {
-            if (IsEqualGUID(*riid, CLSID_MyComputer))
-                initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_COMPUTER);
-            else if (IsEqualGUID(*riid, CLSID_MyDocuments))
-                initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_DOCUMENTS);
-            else if (IsEqualGUID(*riid, CLSID_NetworkPlaces))
-                initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_MY_NETWORK_PLACES);
-            else
-                initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_FOLDER);
-        }
-    }
-
-    else if (_ILIsDrive (pSimplePidl))
-    {
-        static const WCHAR drive[] = { 'D', 'r', 'i', 'v', 'e', 0 };
-        int icon_idx = -1;
-
-        if (_ILGetDrive(pSimplePidl, sTemp, MAX_PATH))
-        {
-            switch(GetDriveTypeA(sTemp))
-            {
-                case DRIVE_REMOVABLE:
-                    icon_idx = IDI_SHELL_3_14_FLOPPY;
-                    break;
-                case DRIVE_CDROM:
-                    icon_idx = IDI_SHELL_CDROM;
-                    break;
-                case DRIVE_REMOTE:
-                    icon_idx = IDI_SHELL_NETDRIVE;
-                    break;
-                case DRIVE_RAMDISK:
-                    icon_idx = IDI_SHELL_RAMDISK;
-                    break;
-                case DRIVE_NO_ROOT_DIR:
-                    icon_idx = IDI_SHELL_CDROM;
-                    break;
-            }
-        }
-
-        if (icon_idx != -1)
-        {
-            initIcon->SetNormalIcon(swShell32Name, -icon_idx);
-        }
-        else
-        {
-            if (HCR_GetIconW(drive, wTemp, NULL, MAX_PATH, &icon_idx))
-                initIcon->SetNormalIcon(wTemp, icon_idx);
-            else
-                initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_DRIVE);
-        }
-    }
-
-    else if (_ILIsFolder (pSimplePidl))
+    if (_ILIsFolder (pidl))
     {
         if (SUCCEEDED(getIconLocationForFolder(psf, 
                           pidl, 0, wTemp, MAX_PATH,
@@ -350,7 +244,7 @@ HRESULT GenericExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
     {
         BOOL found = FALSE;
 
-        if (_ILGetExtension(pSimplePidl, sTemp, MAX_PATH))
+        if (_ILGetExtension(pidl, sTemp, MAX_PATH))
         {
             if (HCR_MapTypeToValueA(sTemp, sTemp, MAX_PATH, TRUE)
                     && HCR_GetIconA(sTemp, sTemp, NULL, MAX_PATH, &icon_idx))

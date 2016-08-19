@@ -30,6 +30,8 @@ typedef struct tagDocumentMgr {
 
     ITfContext*  contextStack[2]; /* limit of 2 contexts */
     ITfThreadMgrEventSink* ThreadMgrSink;
+
+    struct list TransitoryExtensionSink;
 } DocumentMgr;
 
 typedef struct tagEnumTfContext {
@@ -69,6 +71,7 @@ static void DocumentMgr_Destructor(DocumentMgr *This)
         ITfContext_Release(This->contextStack[0]);
     if (This->contextStack[1])
         ITfContext_Release(This->contextStack[1]);
+    free_sinks(&This->TransitoryExtensionSink);
     CompartmentMgr_Destructor(This->CompartmentMgr);
     HeapFree(GetProcessHeap(),0,This);
 }
@@ -278,15 +281,33 @@ static HRESULT WINAPI DocumentMgrSource_AdviseSink(ITfSource *iface,
         REFIID riid, IUnknown *punk, DWORD *pdwCookie)
 {
     DocumentMgr *This = impl_from_ITfSource(iface);
-    FIXME("STUB:(%p)\n",This);
+
+    TRACE("(%p) %s %p %p\n", This, debugstr_guid(riid), punk, pdwCookie);
+
+    if (!riid || !punk || !pdwCookie)
+        return E_INVALIDARG;
+
+    if (IsEqualIID(riid, &IID_ITfTransitoryExtensionSink))
+    {
+        WARN("semi-stub for ITfTransitoryExtensionSink: callback won't be used.\n");
+        return advise_sink(&This->TransitoryExtensionSink, &IID_ITfTransitoryExtensionSink,
+                           COOKIE_MAGIC_DMSINK, punk, pdwCookie);
+    }
+
+    FIXME("(%p) Unhandled Sink: %s\n",This,debugstr_guid(riid));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI DocumentMgrSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
 {
     DocumentMgr *This = impl_from_ITfSource(iface);
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+
+    TRACE("(%p) %x\n",This,pdwCookie);
+
+    if (get_Cookie_magic(pdwCookie)!=COOKIE_MAGIC_DMSINK)
+        return E_INVALIDARG;
+
+    return unadvise_sink(pdwCookie);
 }
 
 static const ITfSourceVtbl DocumentMgrSourceVtbl =
@@ -310,6 +331,7 @@ HRESULT DocumentMgr_Constructor(ITfThreadMgrEventSink *ThreadMgrSink, ITfDocumen
     This->ITfSource_iface.lpVtbl = &DocumentMgrSourceVtbl;
     This->refCount = 1;
     This->ThreadMgrSink = ThreadMgrSink;
+    list_init(&This->TransitoryExtensionSink);
 
     CompartmentMgr_Constructor((IUnknown*)&This->ITfDocumentMgr_iface, &IID_IUnknown, (IUnknown**)&This->CompartmentMgr);
 

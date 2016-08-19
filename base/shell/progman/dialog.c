@@ -516,7 +516,7 @@ EnumPickIconResourceProc(HMODULE hModule, LPCWSTR lpszType, LPWSTR lpszName, LON
     if (IS_INTRESOURCE(lpszName))
         swprintf(szName, L"%u", lpszName);
     else
-        wcscpy(szName, lpszName);
+        StringCbCopyW(szName, sizeof(szName), lpszName);
 
     hIcon = (HICON)LoadImageW(hModule, lpszName, IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
     if (hIcon == NULL)
@@ -1026,6 +1026,9 @@ VOID DIALOG_Execute(VOID)
     DWORD dwSize;
     DWORD dwType;
 
+    ExecuteContext.hKeyPMRecentFilesList = NULL;
+    ExecuteContext.bCheckBinaryType = TRUE;
+
     lRet = RegCreateKeyExW(Globals.hKeyProgMan,
                            L"Recent File List",
                            0,
@@ -1035,39 +1038,42 @@ VOID DIALOG_Execute(VOID)
                            NULL,
                            &ExecuteContext.hKeyPMRecentFilesList,
                            NULL);
-
-    dwSize = sizeof(ExecuteContext.dwMaxFiles);
-    lRet = RegQueryValueExW(ExecuteContext.hKeyPMRecentFilesList,
-                            L"Max Files",
-                            NULL,
-                            &dwType,
-                            (LPBYTE)&ExecuteContext.dwMaxFiles,
-                            &dwSize);
-    if (lRet != ERROR_SUCCESS || dwType != REG_DWORD)
+    if (lRet == ERROR_SUCCESS)
     {
-        ExecuteContext.dwMaxFiles = 4;
         dwSize = sizeof(ExecuteContext.dwMaxFiles);
-        lRet = RegSetValueExW(ExecuteContext.hKeyPMRecentFilesList,
-                              L"Max Files",
-                              0,
-                              REG_DWORD,
-                              (LPBYTE)&ExecuteContext.dwMaxFiles,
-                              sizeof(ExecuteContext.dwMaxFiles));
-    }
+        lRet = RegQueryValueExW(ExecuteContext.hKeyPMRecentFilesList,
+                                L"Max Files",
+                                NULL,
+                                &dwType,
+                                (LPBYTE)&ExecuteContext.dwMaxFiles,
+                                &dwSize);
+        if (lRet != ERROR_SUCCESS || dwType != REG_DWORD)
+        {
+            ExecuteContext.dwMaxFiles = 4;
+            dwSize = sizeof(ExecuteContext.dwMaxFiles);
+            lRet = RegSetValueExW(ExecuteContext.hKeyPMRecentFilesList,
+                                  L"Max Files",
+                                  0,
+                                  REG_DWORD,
+                                  (LPBYTE)&ExecuteContext.dwMaxFiles,
+                                  sizeof(ExecuteContext.dwMaxFiles));
+        }
 
-    dwSize = sizeof(ExecuteContext.bCheckBinaryType);
-    lRet = RegQueryValueExW(Globals.hKeyPMSettings,
-                            L"CheckBinaryType",
-                            NULL,
-                            &dwType,
-                            (LPBYTE)&ExecuteContext.bCheckBinaryType,
-                            &dwSize);
-    if (lRet != ERROR_SUCCESS || dwType != REG_DWORD)
-    {
-        ExecuteContext.bCheckBinaryType = TRUE;
+        dwSize = sizeof(ExecuteContext.bCheckBinaryType);
+        lRet = RegQueryValueExW(Globals.hKeyPMSettings,
+                                L"CheckBinaryType",
+                                NULL,
+                                &dwType,
+                                (LPBYTE)&ExecuteContext.bCheckBinaryType,
+                                &dwSize);
+        if (lRet != ERROR_SUCCESS || dwType != REG_DWORD)
+        {
+            ExecuteContext.bCheckBinaryType = TRUE;
+        }
     }
 
     DialogBoxParamW(Globals.hInstance, MAKEINTRESOURCEW(IDD_EXECUTE), Globals.hMainWnd, DIALOG_EXECUTE_DlgProc, (LPARAM)&ExecuteContext);
 
-    RegCloseKey(ExecuteContext.hKeyPMRecentFilesList);
+    if (ExecuteContext.hKeyPMRecentFilesList)
+        RegCloseKey(ExecuteContext.hKeyPMRecentFilesList);
 }

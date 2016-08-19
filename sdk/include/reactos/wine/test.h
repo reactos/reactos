@@ -70,6 +70,9 @@ extern void winetest_wait_child_process( HANDLE process );
 
 extern const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n );
 extern const char *wine_dbgstr_guid( const GUID *guid );
+extern const char *wine_dbgstr_point( const POINT *guid );
+extern const char *wine_dbgstr_size( const SIZE *guid );
+extern const char *wine_dbgstr_rect( const RECT *rect );
 static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
 
 /* strcmpW is available for tests compiled under Wine, but not in standalone
@@ -571,6 +574,51 @@ const char *wine_dbgstr_guid( const GUID *guid )
              guid->Data1, guid->Data2, guid->Data3, guid->Data4[0],
              guid->Data4[1], guid->Data4[2], guid->Data4[3], guid->Data4[4],
              guid->Data4[5], guid->Data4[6], guid->Data4[7] );
+    return res;
+}
+
+const char *wine_dbgstr_point( const POINT *point )
+{
+    char *res;
+
+    if (!point) return "(null)";
+    res = get_temp_buffer( 60 );
+#ifdef __ROS_LONG64__
+    sprintf( res, "(%d,%d)", point->x, point->y );
+#else
+    sprintf( res, "(%ld,%ld)", point->x, point->y );
+#endif
+    release_temp_buffer( res, strlen(res) + 1 );
+    return res;
+}
+
+const char *wine_dbgstr_size( const SIZE *size )
+{
+    char *res;
+
+    if (!size) return "(null)";
+    res = get_temp_buffer( 60 );
+#ifdef __ROS_LONG64__
+    sprintf( res, "(%d,%d)", size->cx, size->cy );
+#else
+    sprintf( res, "(%ld,%ld)", size->cx, size->cy );
+#endif
+    release_temp_buffer( res, strlen(res) + 1 );
+    return res;
+}
+
+const char *wine_dbgstr_rect( const RECT *rect )
+{
+    char *res;
+
+    if (!rect) return "(null)";
+    res = get_temp_buffer( 60 );
+#ifdef __ROS_LONG64__
+    sprintf( res, "(%d,%d)-(%d,%d)", rect->left, rect->top, rect->right, rect->bottom );
+#else
+    sprintf( res, "(%ld,%ld)-(%ld,%ld)", rect->left, rect->top, rect->right, rect->bottom );
+#endif
+    release_temp_buffer( res, strlen(res) + 1 );
     return res;
 }
 

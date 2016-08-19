@@ -1921,6 +1921,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Class = IntGetAndReferenceClass(ClassName, Cs->hInstance, FALSE);
    if(!Class)
    {
+       EngSetLastError(ERROR_CANNOT_FIND_WND_CLASS);
        ERR("Failed to find class %wZ\n", ClassName);
        goto cleanup;
    }
@@ -2856,6 +2857,7 @@ NtUserFindWindowEx(HWND hwndParent,
                if (!IntGetAtomFromStringOrAtom(&ClassName,
                                                &ClassAtom))
                {
+                   EngSetLastError(ERROR_CANNOT_FIND_WND_CLASS);
                    _SEH2_LEAVE;
                }
            }
@@ -3585,13 +3587,39 @@ co_IntSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi, BOOL bAlte
             if (!bAlter)
                 co_IntSendMessage(hWnd, WM_STYLECHANGING, GWL_STYLE, (LPARAM) &Style);
 
-           /* WS_CLIPSIBLINGS can't be reset on top-level windows */
+            /* WS_CLIPSIBLINGS can't be reset on top-level windows */
             if (Window->spwndParent == UserGetDesktopWindow()) Style.styleNew |= WS_CLIPSIBLINGS;
+            /* WS_MINIMIZE can't be reset */
+            if (OldValue & WS_MINIMIZE) Style.styleNew |= WS_MINIMIZE;
             /* Fixes wine FIXME: changing WS_DLGFRAME | WS_THICKFRAME is supposed to change WS_EX_WINDOWEDGE too */
             if (IntCheckFrameEdge(NewValue, Window->ExStyle))
                Window->ExStyle |= WS_EX_WINDOWEDGE;
             else
                Window->ExStyle &= ~WS_EX_WINDOWEDGE;
+
+            if ((OldValue & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+            {
+               if ((NewValue & (WS_CHILD | WS_POPUP)) != WS_CHILD)
+               {
+                  //// From child to non-child it should be null already.
+                  ERR("IDMenu going null! %d\n",Window->IDMenu);
+                  Window->IDMenu = 0; // Window->spmenu = 0;
+               }
+            }
+            else
+            {
+               if ((NewValue & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+               {
+                  PMENU pMenu = UserGetMenuObject(UlongToHandle(Window->IDMenu));
+                  Window->state &= ~WNDS_HASMENU;
+                  if (pMenu)
+                  {
+                     ERR("IDMenu released 0x%p\n",pMenu);
+                     // ROS may not hold a lock after setting menu to window. But it should!
+                     //IntReleaseMenuObject(pMenu);
+                  }
+               }
+            }
 
             if ((Style.styleOld ^ Style.styleNew) & WS_VISIBLE)
             {

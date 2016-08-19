@@ -18,8 +18,8 @@
 
 /* GLOBALS ******************************************************************/
 
-HANDLE ConnectPortHandle = NULL;
-HANDLE MessagePortHandle = NULL;
+static HANDLE ConnectPortHandle = NULL;
+static HANDLE MessagePortHandle = NULL;
 extern BOOL onLiveCD;
 
 /* FUNCTIONS ****************************************************************/
@@ -70,7 +70,6 @@ NTSTATUS InitLogPort(VOID)
     }
 
     Status = NtListenPort(ConnectPortHandle, &Request);
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtListenPort() failed (Status %lx)\n", Status);
@@ -79,7 +78,6 @@ NTSTATUS InitLogPort(VOID)
 
     Status = NtAcceptConnectPort(&MessagePortHandle, ConnectPortHandle,
                                  NULL, TRUE, NULL, NULL);
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtAcceptConnectPort() failed (Status %lx)\n", Status);
@@ -93,7 +91,7 @@ NTSTATUS InitLogPort(VOID)
         goto ByeBye;
     }
 
-  ByeBye:
+ByeBye:
     if (!NT_SUCCESS(Status))
     {
         if (ConnectPortHandle != NULL)
@@ -109,11 +107,13 @@ NTSTATUS ProcessPortMessage(VOID)
 {
     IO_ERROR_LPC Request;
     PIO_ERROR_LOG_MESSAGE Message;
+    ULONG Time;
     PEVENTLOGRECORD pRec;
-    ULONG ulRecNum;
     DWORD dwRecSize;
     NTSTATUS Status;
     PLOGFILE SystemLog = NULL;
+    WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD dwComputerNameLength = MAX_COMPUTERNAME_LENGTH + 1;
 
     DPRINT("ProcessPortMessage() called\n");
 
@@ -147,21 +147,32 @@ NTSTATUS ProcessPortMessage(VOID)
         else if (Request.Header.u2.s2.Type == LPC_DATAGRAM)
         {
             DPRINT("Received datagram\n");
-            Message = (PIO_ERROR_LOG_MESSAGE) & Request.Message;
-            ulRecNum = SystemLog ? SystemLog->Header.CurrentRecordNumber : 0;
+            // Message = (PIO_ERROR_LOG_MESSAGE)&Request.Message;
+            Message = &Request.Message;
 
-            pRec = (PEVENTLOGRECORD) LogfAllocAndBuildNewRecord(&dwRecSize,
-                    ulRecNum, Message->Type, Message->EntryData.EventCategory,
-                    Message->EntryData.ErrorCode,
-                    (WCHAR *) (((PBYTE) Message) + Message->DriverNameOffset),
-                    L"MyComputer",  /* FIXME */
-                    0,
-                    NULL,
-                    Message->EntryData.NumberOfStrings,
-                    (WCHAR *) (((PBYTE) Message) + Message->EntryData.StringOffset),
-                    Message->EntryData.DumpDataSize,
-                    (LPVOID) (((PBYTE) Message) + sizeof(IO_ERROR_LOG_PACKET) -
-                        sizeof(ULONG)));
+            if (!GetComputerNameW(szComputerName, &dwComputerNameLength))
+            {
+                szComputerName[0] = L'\0';
+            }
+
+            RtlTimeToSecondsSince1970(&Message->TimeStamp, &Time);
+
+            // TODO: Log more information??
+
+            pRec = LogfAllocAndBuildNewRecord(
+                        &dwRecSize,
+                        Time,
+                        Message->Type,
+                        Message->EntryData.EventCategory,
+                        Message->EntryData.ErrorCode,
+                        (PWSTR)((ULONG_PTR)Message + Message->DriverNameOffset), // FIXME: Use DriverNameLength too!
+                        szComputerName,
+                        0,
+                        NULL,
+                        Message->EntryData.NumberOfStrings,
+                        (PWSTR)((ULONG_PTR)Message + Message->EntryData.StringOffset),
+                        Message->EntryData.DumpDataSize,
+                        (PVOID)((ULONG_PTR)Message + FIELD_OFFSET(IO_ERROR_LOG_PACKET, DumpData)));
 
             if (pRec == NULL)
             {
@@ -177,10 +188,12 @@ NTSTATUS ProcessPortMessage(VOID)
 
             if (!onLiveCD && SystemLog)
             {
-                if (!LogfWriteData(SystemLog, dwRecSize, (PBYTE) pRec))
-                    DPRINT("LogfWriteData failed!\n");
-                else
-                    DPRINT("Data written to Log!\n");
+                Status = LogfWriteRecord(SystemLog, dwRecSize, pRec);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("ERROR WRITING TO EventLog %S (Status 0x%08lx)\n",
+                            SystemLog->FileName, Status);
+                }
             }
 
             LogfFreeRecord(pRec);

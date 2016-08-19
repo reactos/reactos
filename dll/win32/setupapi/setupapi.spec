@@ -219,9 +219,9 @@
 @ stdcall MyRealloc(ptr long)
 @ stdcall SetupAddInstallSectionToDiskSpaceListA(long long long str ptr long)
 @ stub SetupAddInstallSectionToDiskSpaceListW
-@ stub SetupAddSectionToDiskSpaceListA
+@ stdcall -stub SetupAddSectionToDiskSpaceListA(long long long str long ptr long)
 @ stub SetupAddSectionToDiskSpaceListW
-@ stub SetupAddToDiskSpaceListA
+@ stdcall -stub SetupAddToDiskSpaceListA(long str double long ptr long)
 @ stub SetupAddToDiskSpaceListW
 @ stub SetupAddToSourceListA
 @ stub SetupAddToSourceListW
@@ -468,7 +468,7 @@
 @ stdcall SetupPromptForDiskA(ptr str str str str str long ptr long ptr)
 @ stdcall SetupPromptForDiskW(ptr wstr wstr wstr wstr wstr long ptr long ptr)
 @ stdcall SetupPromptReboot(ptr ptr long)
-@ stub SetupQueryDrivesInDiskSpaceListA
+@ stdcall -stub SetupQueryDrivesInDiskSpaceListA(ptr ptr long ptr)
 @ stub SetupQueryDrivesInDiskSpaceListW
 @ stub SetupQueryFileLogA
 @ stub SetupQueryFileLogW
@@ -545,7 +545,7 @@
 @ stub pSetupDestroyRunOnceNodeList
 @ stub pSetupDiGetDeviceInfoContext
 @ stub pSetupDiSetDeviceInfoContext
-@ stub pSetupDoesUserHavePrivilege
+@ stdcall pSetupDoesUserHavePrivilege(wstr) DoesUserHavePrivilege
 @ stdcall pSetupDuplicateString(wstr)
 @ stdcall pSetupEnablePrivilege(wstr long)
 @ stub pSetupFree
@@ -569,7 +569,7 @@
 @ stdcall pSetupIsUserAdmin()
 @ stub pSetupMakeSurePathExists
 @ stub pSetupMalloc
-@ stub pSetupModifyGlobalFlags
+@ stdcall pSetupModifyGlobalFlags(long long)
 @ stdcall pSetupMultiByteToUnicode(str long)
 @ stdcall pSetupOpenAndMapFileForRead(wstr ptr ptr ptr ptr)
 @ stub pSetupOutOfMemory

@@ -105,7 +105,8 @@
 @ stdcall IWICStream_InitializeFromIStream_Proxy(ptr ptr) IWICStream_InitializeFromIStream_Proxy_W
 @ stdcall IWICStream_InitializeFromMemory_Proxy(ptr ptr long) IWICStream_InitializeFromMemory_Proxy_W
 @ stdcall WICConvertBitmapSource(ptr ptr ptr)
-@ stub WICCreateBitmapFromSection
+@ stdcall WICCreateBitmapFromSection(long long ptr long long long ptr)
+@ stdcall WICCreateBitmapFromSectionEx(long long ptr long long long long ptr)
 @ stdcall WICCreateColorContext_Proxy(ptr ptr)
 @ stdcall WICCreateImagingFactory_Proxy(long ptr)
 @ stub WICGetMetadataContentSize

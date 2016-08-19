@@ -59,7 +59,7 @@ BOOLEAN NTAPI LdrpCallInitRoutine(PDLL_INIT_ROUTINE EntryPoint, PVOID BaseAddres
 NTSTATUS NTAPI LdrpInitializeProcess(PCONTEXT Context, PVOID SystemArgument1);
 VOID NTAPI LdrpInitFailure(NTSTATUS Status);
 VOID NTAPI LdrpValidateImageForMp(IN PLDR_DATA_TABLE_ENTRY LdrDataTableEntry);
-VOID NTAPI LdrpEnsureLoaderLockIsHeld();
+VOID NTAPI LdrpEnsureLoaderLockIsHeld(VOID);
 
 /* ldrpe.c */
 NTSTATUS
@@ -105,7 +105,7 @@ LdrpUpdateLoadCount2(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                      IN ULONG Flags);
 
 ULONG NTAPI
-LdrpClearLoadInProgress();
+LdrpClearLoadInProgress(VOID);
 
 NTSTATUS
 NTAPI
@@ -155,7 +155,6 @@ NTSTATUS
 NTAPI
 LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
                      IN LPSTR ImportName,
-                     IN PVOID DllBase,
                      OUT PLDR_DATA_TABLE_ENTRY *DataTableEntry,
                      OUT PBOOLEAN Existing);
                      

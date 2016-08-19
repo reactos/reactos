@@ -172,6 +172,7 @@ HRESULT STDMETHODCALLTYPE CTravelEntry::Update(IUnknown *punk, BOOL fIsLocalAnch
     GetToolTipText(punk, wch);
     TRACE("Updating entry with display name: %S\n", wch);
 
+    ZeroMemory(&windowData, sizeof(WINDOWDATA));
     ILFree(fPIDL);
     fPIDL = NULL;
     GlobalFree(fPersistState);
@@ -623,7 +624,7 @@ HRESULT STDMETHODCALLTYPE CTravelLog::Revert()
     return E_NOTIMPL;
 }
 
-HRESULT CreateTravelLog(REFIID riid, void **ppv)
+HRESULT CTravelLog_CreateInstance(REFIID riid, void **ppv)
 {
     return ShellObjectCreatorInit<CTravelLog>(riid, ppv);
 }

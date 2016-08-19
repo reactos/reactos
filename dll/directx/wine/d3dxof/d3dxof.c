@@ -889,7 +889,7 @@ static HRESULT WINAPI IDirectXFileDataReferenceImpl_Resolve(IDirectXFileDataRefe
   object->level = 0;
   object->from_ref = TRUE;
 
-  *ppDataObj = (LPDIRECTXFILEDATA)object;
+  *ppDataObj = &object->IDirectXFileData_iface;
 
   return DXFILE_OK;
 }
@@ -1044,10 +1044,10 @@ static HRESULT WINAPI IDirectXFileEnumObjectImpl_GetNextDataObject(IDirectXFileE
     goto error;
   }
 
-  *ppDataObj = (LPDIRECTXFILEDATA)object;
+  *ppDataObj = &object->IDirectXFileData_iface;
 
   /* Get a reference to created object */
-  This->pRefObjects[This->nb_xobjects] = (LPDIRECTXFILEDATA)object;
+  This->pRefObjects[This->nb_xobjects] = &object->IDirectXFileData_iface;
   IDirectXFileData_AddRef(This->pRefObjects[This->nb_xobjects]);
 
   This->nb_xobjects++;

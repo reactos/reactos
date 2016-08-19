@@ -40,10 +40,10 @@ UpdateStartMenu(IN OUT IMenuPopup *pMenuPopup,
     return hRet;
 }
 
-IMenuPopup *
+IMenuPopup*
 CreateStartMenu(IN ITrayWindow *Tray,
                 OUT IMenuBand **ppMenuBand,
-                IN HBITMAP hbmBanner  OPTIONAL,
+                IN HBITMAP hbmBanner OPTIONAL,
                 IN BOOL bSmallIcons)
 {
     HRESULT hr;

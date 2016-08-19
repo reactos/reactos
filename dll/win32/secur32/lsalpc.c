@@ -112,7 +112,6 @@ LsaEnumerateLogonSessions(
     PULONG LogonSessionCount,
     PLUID *LogonSessionList)
 {
-#if 1
     LSA_API_MSG ApiMessage;
     NTSTATUS Status;
 
@@ -146,10 +145,6 @@ LsaEnumerateLogonSessions(
     *LogonSessionList = ApiMessage.EnumLogonSessions.Reply.LogonSessionBuffer;
 
     return Status;
-#else
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-#endif
 }
 
 
@@ -162,7 +157,6 @@ LsaGetLogonSessionData(
     PLUID LogonId,
     PSECURITY_LOGON_SESSION_DATA *ppLogonSessionData)
 {
-#if 1
     LSA_API_MSG ApiMessage;
     PSECURITY_LOGON_SESSION_DATA SessionData;
     NTSTATUS Status;
@@ -207,10 +201,6 @@ LsaGetLogonSessionData(
     *ppLogonSessionData = SessionData;
 
     return Status;
-#else
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-#endif
 }
 
 

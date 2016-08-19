@@ -238,7 +238,7 @@ void OnPaint(HWND hWnd)
 
       dcFont = SelectObject(dialogDC, dialogFont);
       SetTextColor(dialogDC, GetSysColor(COLOR_BTNTEXT));
-      SetBkColor(dialogDC, GetSysColor(COLOR_BTNFACE));
+      SetBkMode(dialogDC, TRANSPARENT);
 
       textRC.top = itemsH;
       textRC.left = 8;
@@ -312,7 +312,7 @@ void PrepareWindow(VOID)
    ResizeAndCenter(switchdialog, totalW, totalH);
 }
 
-void ProcessHotKey(VOID)
+BOOL ProcessHotKey(VOID)
 {
    if (!isOpen)
    {
@@ -320,7 +320,7 @@ void ProcessHotKey(VOID)
       EnumWindowsZOrder(EnumerateCallback, 0);
 
       if (windowCount < 2)
-         return;
+         return FALSE;
 
       selectedWindow = 1;
 
@@ -335,6 +335,7 @@ void ProcessHotKey(VOID)
       selectedWindow = (selectedWindow + 1)%windowCount;
       InvalidateRect(switchdialog, NULL, TRUE);
    }
+   return TRUE;
 }
 
 LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
@@ -359,7 +360,7 @@ LRESULT WINAPI DoAppSwitch( WPARAM wParam, LPARAM lParam )
       case VK_TAB:
          if( !CreateSwitcherWindow(User32Instance) ) goto Exit;
          if( !GetDialogFont() ) goto Exit;
-         ProcessHotKey();
+         if( !ProcessHotKey() ) goto Exit;
          break;
 
       case VK_ESCAPE:

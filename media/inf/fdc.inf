@@ -120,6 +120,7 @@ GenericMfg = "(dispozitiv generic de control disc flexibil)"
 *PNP0700.DeviceDesc = "Dispozitiv generic de control disc flexibil"
 
 [Strings.0419]
+ReactOS = "Команда ReactOS"
 FDCClassName = "Контроллеры гибких дисков"
 
 GenericMfg = "(Стандартные контроллеры гибких дисков)"

@@ -495,6 +495,9 @@ typedef long LONG_PTR;
 #define MUI_FULL_LANGUAGE             0x01
 #define MUI_LANGUAGE_ID               0x04
 #define MUI_LANGUAGE_NAME             0x08
+#define MUI_MERGE_SYSTEM_FALLBACK     0x10
+#define MUI_MERGE_USER_FALLBACK       0x20
+#define MUI_UI_FALLBACK               MUI_MERGE_SYSTEM_FALLBACK | MUI_MERGE_USER_FALLBACK
 #define MUI_MACHINE_LANGUAGE_SETTINGS 0x400
 #endif /* (WINVER >= 0x0600) */
 

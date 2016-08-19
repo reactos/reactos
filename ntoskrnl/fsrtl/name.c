@@ -134,6 +134,8 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
             StarFound++;
             if (StarFound >= BackTrackingSize)
             {
+                ASSERT(BackTracking == BackTrackingBuffer);
+
                 BackTrackingSize = Expression->Length / sizeof(WCHAR);
                 BackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
                                                      BackTrackingSize * sizeof(USHORT),
@@ -190,6 +192,8 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                 DosStarFound++;
                 if (DosStarFound >= DosBackTrackingSize)
                 {
+                    ASSERT(DosBackTracking == DosBackTrackingBuffer);
+
                     DosBackTrackingSize = Expression->Length / sizeof(WCHAR);
                     DosBackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
                                                             DosBackTrackingSize * sizeof(USHORT),

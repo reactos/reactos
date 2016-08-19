@@ -17,6 +17,7 @@
 #include <wincon.h>
 #include <winuser.h>
 #include <winsvc.h>
+#include <winnetwk.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -66,6 +67,7 @@ INT cmdLocalGroup(INT argc, WCHAR **argv);
 INT cmdPause(INT argc, WCHAR **argv);
 INT cmdStart(INT argc, WCHAR **argv);
 INT cmdStop(INT argc, WCHAR **argv);
+INT cmdUse(INT argc, WCHAR **argv);
 INT cmdUser(INT argc, WCHAR **argv);
 
 #endif /* _NET_PCH_ */

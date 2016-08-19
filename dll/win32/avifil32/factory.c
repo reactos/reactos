@@ -25,27 +25,11 @@ HMODULE AVIFILE_hModule   = NULL;
 static BOOL    AVIFILE_bLocked;
 static UINT    AVIFILE_uUseCount;
 
-static HRESULT WINAPI IClassFactory_fnQueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj);
-static ULONG   WINAPI IClassFactory_fnAddRef(LPCLASSFACTORY iface);
-static ULONG   WINAPI IClassFactory_fnRelease(LPCLASSFACTORY iface);
-static HRESULT WINAPI IClassFactory_fnCreateInstance(LPCLASSFACTORY iface,LPUNKNOWN pOuter,REFIID riid,LPVOID *ppobj);
-static HRESULT WINAPI IClassFactory_fnLockServer(LPCLASSFACTORY iface,BOOL dolock);
-
-static const IClassFactoryVtbl iclassfact = {
-  IClassFactory_fnQueryInterface,
-  IClassFactory_fnAddRef,
-  IClassFactory_fnRelease,
-  IClassFactory_fnCreateInstance,
-  IClassFactory_fnLockServer
-};
-
 typedef struct
 {
-  /* IUnknown fields */
   IClassFactory IClassFactory_iface;
-  DWORD	 dwRef;
-
-  CLSID  clsid;
+  LONG ref;
+  CLSID clsid;
 } IClassFactoryImpl;
 
 static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
@@ -53,35 +37,10 @@ static inline IClassFactoryImpl *impl_from_IClassFactory(IClassFactory *iface)
   return CONTAINING_RECORD(iface, IClassFactoryImpl, IClassFactory_iface);
 }
 
-static HRESULT AVIFILE_CreateClassFactory(const CLSID *pclsid, const IID *riid,
-					  LPVOID *ppv)
+static HRESULT WINAPI IClassFactory_fnQueryInterface(IClassFactory *iface, REFIID riid,
+        void **ppobj)
 {
-  IClassFactoryImpl *pClassFactory = NULL;
-  HRESULT            hr;
-
-  *ppv = NULL;
-
-  pClassFactory = HeapAlloc(GetProcessHeap(), 0, sizeof(*pClassFactory));
-  if (pClassFactory == NULL)
-    return E_OUTOFMEMORY;
-
-  pClassFactory->IClassFactory_iface.lpVtbl = &iclassfact;
-  pClassFactory->dwRef     = 0;
-  pClassFactory->clsid     = *pclsid;
-
-  hr = IClassFactory_QueryInterface(&pClassFactory->IClassFactory_iface, riid, ppv);
-  if (FAILED(hr)) {
-    HeapFree(GetProcessHeap(), 0, pClassFactory);
-    *ppv = NULL;
-  }
-
-  return hr;
-}
-
-static HRESULT WINAPI IClassFactory_fnQueryInterface(LPCLASSFACTORY iface,
-						     REFIID riid,LPVOID *ppobj)
-{
-  TRACE("(%p,%p,%p)\n", iface, riid, ppobj);
+  TRACE("(%p,%s,%p)\n", iface, debugstr_guid(riid), ppobj);
 
   if ((IsEqualGUID(&IID_IUnknown, riid)) ||
       (IsEqualGUID(&IID_IClassFactory, riid))) {
@@ -93,31 +52,30 @@ static HRESULT WINAPI IClassFactory_fnQueryInterface(LPCLASSFACTORY iface,
   return E_NOINTERFACE;
 }
 
-static ULONG WINAPI IClassFactory_fnAddRef(LPCLASSFACTORY iface)
+static ULONG WINAPI IClassFactory_fnAddRef(IClassFactory *iface)
 {
-  IClassFactoryImpl *This = impl_from_IClassFactory(iface);
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
 
-  TRACE("(%p)\n", iface);
-
-  return ++(This->dwRef);
+    TRACE("(%p) ref = %u\n", This, ref);
+    return ref;
 }
 
-static ULONG WINAPI IClassFactory_fnRelease(LPCLASSFACTORY iface)
+static ULONG WINAPI IClassFactory_fnRelease(IClassFactory *iface)
 {
-  IClassFactoryImpl *This = impl_from_IClassFactory(iface);
+    IClassFactoryImpl *This = impl_from_IClassFactory(iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
 
-  TRACE("(%p)\n", iface);
-  if ((--(This->dwRef)) > 0)
-    return This->dwRef;
+    TRACE("(%p) ref = %u\n", This, ref);
 
-  HeapFree(GetProcessHeap(), 0, This);
+    if(!ref)
+        HeapFree(GetProcessHeap(), 0, This);
 
-  return 0;
+    return ref;
 }
 
-static HRESULT WINAPI IClassFactory_fnCreateInstance(LPCLASSFACTORY iface,
-						     LPUNKNOWN pOuter,
-						     REFIID riid,LPVOID *ppobj)
+static HRESULT WINAPI IClassFactory_fnCreateInstance(IClassFactory *iface, IUnknown *pOuter,
+        REFIID riid, void **ppobj)
 {
   IClassFactoryImpl *This = impl_from_IClassFactory(iface);
 
@@ -147,13 +105,42 @@ static HRESULT WINAPI IClassFactory_fnCreateInstance(LPCLASSFACTORY iface,
   return E_NOINTERFACE;
 }
 
-static HRESULT WINAPI IClassFactory_fnLockServer(LPCLASSFACTORY iface,BOOL dolock)
+static HRESULT WINAPI IClassFactory_fnLockServer(IClassFactory *iface, BOOL dolock)
 {
   TRACE("(%p,%d)\n",iface,dolock);
 
   AVIFILE_bLocked = dolock;
 
   return S_OK;
+}
+
+static const IClassFactoryVtbl iclassfact = {
+    IClassFactory_fnQueryInterface,
+    IClassFactory_fnAddRef,
+    IClassFactory_fnRelease,
+    IClassFactory_fnCreateInstance,
+    IClassFactory_fnLockServer
+};
+
+static HRESULT AVIFILE_CreateClassFactory(const CLSID *clsid, const IID *riid, void **ppv)
+{
+    IClassFactoryImpl *cf;
+    HRESULT hr;
+
+    *ppv = NULL;
+
+    cf = HeapAlloc(GetProcessHeap(), 0, sizeof(*cf));
+    if (!cf)
+        return E_OUTOFMEMORY;
+
+    cf->IClassFactory_iface.lpVtbl = &iclassfact;
+    cf->ref = 1;
+    cf->clsid = *clsid;
+
+    hr = IClassFactory_QueryInterface(&cf->IClassFactory_iface, riid, ppv);
+    IClassFactory_Release(&cf->IClassFactory_iface);
+
+    return hr;
 }
 
 LPCWSTR AVIFILE_BasenameW(LPCWSTR szPath)

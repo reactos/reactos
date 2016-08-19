@@ -458,6 +458,65 @@ vfatPrepareTargetForRename(
     return Status;
 }
 
+static
+BOOLEAN
+IsThereAChildOpened(PVFATFCB FCB)
+{
+    PLIST_ENTRY Entry;
+    PVFATFCB VolFCB;
+
+    for (Entry = FCB->ParentListHead.Flink; Entry != &FCB->ParentListHead; Entry = Entry->Flink)
+    {
+        VolFCB = CONTAINING_RECORD(Entry, VFATFCB, ParentListEntry);
+        if (VolFCB->OpenHandleCount != 0)
+        {
+            ASSERT(VolFCB->parentFcb == FCB);
+            DPRINT1("At least one children file opened! %wZ (%u, %u)\n", &VolFCB->PathNameU, VolFCB->RefCount, VolFCB->OpenHandleCount);
+            return TRUE;
+        }
+
+        if (vfatFCBIsDirectory(VolFCB) && !IsListEmpty(&VolFCB->ParentListHead))
+        {
+            if (IsThereAChildOpened(VolFCB))
+            {
+                return TRUE;
+            }
+        }
+    }
+
+    return FALSE;
+}
+
+static
+VOID
+VfatRenameChildFCB(
+    PDEVICE_EXTENSION DeviceExt,
+    PVFATFCB FCB)
+{
+    PLIST_ENTRY Entry;
+    PVFATFCB Child;
+
+    if (IsListEmpty(&FCB->ParentListHead))
+        return;
+
+    for (Entry = FCB->ParentListHead.Flink; Entry != &FCB->ParentListHead; Entry = Entry->Flink)
+    {
+        NTSTATUS Status;
+
+        Child = CONTAINING_RECORD(Entry, VFATFCB, ParentListEntry);
+        DPRINT("Found %wZ with still %lu references (parent: %lu)!\n", &Child->PathNameU, Child->RefCount, FCB->RefCount);
+
+        Status = vfatSetFCBNewDirName(DeviceExt, Child, FCB);
+        if (!NT_SUCCESS(Status))
+            continue;
+
+        if (vfatFCBIsDirectory(Child))
+        {
+            VfatRenameChildFCB(DeviceExt, Child);
+        }
+    }
+}
+
 /*
  * FUNCTION: Set the file name information
  */
@@ -704,6 +763,16 @@ VfatSetRenameInformation(
     vfatSplitPathName(&NewName, &NewPath, &NewFile);
     DPRINT("New dir: %wZ, New file: %wZ\n", &NewPath, &NewFile);
 
+    if (vfatFCBIsDirectory(FCB) && !IsListEmpty(&FCB->ParentListHead))
+    {
+        if (IsThereAChildOpened(FCB))
+        {
+            Status = STATUS_ACCESS_DENIED;
+            ASSERT(OldReferences == FCB->parentFcb->RefCount);
+            goto Cleanup;
+        }
+    }
+
     /* Are we working in place? */
     if (FsRtlAreNamesEqual(&SourcePath, &NewPath, TRUE, NULL))
     {
@@ -870,6 +939,11 @@ VfatSetRenameInformation(
                                             NULL);
             }
         }
+    }
+
+    if (NT_SUCCESS(Status) && vfatFCBIsDirectory(FCB))
+    {
+        VfatRenameChildFCB(DeviceExt, FCB);
     }
 
     ASSERT(OldReferences == OldParent->RefCount + 1); // removed file
@@ -1114,7 +1188,7 @@ UpdateFileSize(
 {
     if (Size > 0)
     {
-        Fcb->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, ClusterSize);
+        Fcb->RFCB.AllocationSize.QuadPart = ROUND_UP_64(Size, ClusterSize);
     }
     else
     {

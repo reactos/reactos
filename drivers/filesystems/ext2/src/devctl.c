@@ -231,13 +231,16 @@ extern CHAR gDate[];
 NTSTATUS
 Ext2ProcessGlobalProperty(
     IN  PDEVICE_OBJECT  DeviceObject,
-    IN  PEXT2_VOLUME_PROPERTY2 Property,
+    IN  PEXT2_VOLUME_PROPERTY3 Property3,
     IN  ULONG Length
 )
 {
+    PEXT2_VOLUME_PROPERTY3 Property2 = (PVOID)Property3;
+    PEXT2_VOLUME_PROPERTY  Property = (PVOID)Property3;
+    struct nls_table * PageTable = NULL;
+
     NTSTATUS        Status = STATUS_SUCCESS;
     BOOLEAN         GlobalDataResourceAcquired = FALSE;
-    struct nls_table * PageTable = NULL;
 
     _SEH2_TRY {
 
@@ -289,51 +292,57 @@ Ext2ProcessGlobalProperty(
         ExAcquireResourceExclusiveLite(&Ext2Global->Resource, TRUE);
         GlobalDataResourceAcquired = TRUE;
 
-        if (Property->bReadonly) {
-            ClearLongFlag(Ext2Global->Flags, EXT2_SUPPORT_WRITING);
-            ClearLongFlag(Ext2Global->Flags, EXT3_FORCE_WRITING);
-        } else {
-            SetLongFlag(Ext2Global->Flags, EXT2_SUPPORT_WRITING);
-            if (Property->bExt3Writable) {
-                SetLongFlag(Ext2Global->Flags, EXT3_FORCE_WRITING);
-            } else {
-                ClearLongFlag(Ext2Global->Flags, EXT3_FORCE_WRITING);
-            }
-        }
 
-        PageTable = load_nls(Property->Codepage);
-        if (PageTable) {
-            memcpy(Ext2Global->Codepage.AnsiName, Property->Codepage, CODEPAGE_MAXLEN);
-            Ext2Global->Codepage.PageTable = PageTable;
-        }
+        switch (Property->Command) {
 
-        if (Property->Command == APP_CMD_SET_PROPERTY2 ||
-                Property->Command == APP_CMD_SET_PROPERTY3 ) {
+            case APP_CMD_SET_PROPERTY3:
 
-            RtlZeroMemory(Ext2Global->sHidingPrefix, HIDINGPAT_LEN);
-            if ((Ext2Global->bHidingPrefix = Property->bHidingPrefix)) {
-                RtlCopyMemory( Ext2Global->sHidingPrefix,
-                               Property->sHidingPrefix,
-                               HIDINGPAT_LEN - 1);
-            }
-            RtlZeroMemory(Ext2Global->sHidingSuffix, HIDINGPAT_LEN);
-            if ((Ext2Global->bHidingSuffix = Property->bHidingSuffix)) {
-                RtlCopyMemory( Ext2Global->sHidingSuffix,
-                               Property->sHidingSuffix,
-                               HIDINGPAT_LEN - 1);
-            }
-        }
-
-        if (Property->Command == APP_CMD_SET_PROPERTY3) {
-
-            PEXT2_VOLUME_PROPERTY3 Prop3 = (PEXT2_VOLUME_PROPERTY3)Property;
-
-            if (Prop3->Flags & EXT2_VPROP3_AUTOMOUNT) {
-                if (Prop3->AutoMount)
+            if (Property3->Flags2 & EXT2_VPROP3_AUTOMOUNT) {
+                if (Property3->AutoMount)
                     SetLongFlag(Ext2Global->Flags, EXT2_AUTO_MOUNT);
                 else
                     ClearLongFlag(Ext2Global->Flags, EXT2_AUTO_MOUNT);
             }
+
+            case APP_CMD_SET_PROPERTY2:
+
+            RtlZeroMemory(Ext2Global->sHidingPrefix, HIDINGPAT_LEN);
+            if ((Ext2Global->bHidingPrefix = Property2->bHidingPrefix)) {
+                RtlCopyMemory( Ext2Global->sHidingPrefix,
+                               Property2->sHidingPrefix,
+                               HIDINGPAT_LEN - 1);
+            }
+            RtlZeroMemory(Ext2Global->sHidingSuffix, HIDINGPAT_LEN);
+            if ((Ext2Global->bHidingSuffix = Property2->bHidingSuffix)) {
+                RtlCopyMemory( Ext2Global->sHidingSuffix,
+                               Property2->sHidingSuffix,
+                               HIDINGPAT_LEN - 1);
+            }
+
+            case APP_CMD_SET_PROPERTY:
+
+            if (Property->bReadonly) {
+                ClearLongFlag(Ext2Global->Flags, EXT2_SUPPORT_WRITING);
+                ClearLongFlag(Ext2Global->Flags, EXT3_FORCE_WRITING);
+            } else {
+                SetLongFlag(Ext2Global->Flags, EXT2_SUPPORT_WRITING);
+                if (Property->bExt3Writable) {
+                    SetLongFlag(Ext2Global->Flags, EXT3_FORCE_WRITING);
+                } else {
+                    ClearLongFlag(Ext2Global->Flags, EXT3_FORCE_WRITING);
+                }
+            }
+
+            PageTable = load_nls(Property->Codepage);
+            if (PageTable) {
+                memcpy(Ext2Global->Codepage.AnsiName, Property->Codepage, CODEPAGE_MAXLEN);
+                Ext2Global->Codepage.PageTable = PageTable;
+            }
+
+            break;
+
+            default:
+            break;
         }
 
     } _SEH2_FINALLY {
@@ -350,13 +359,15 @@ Ext2ProcessGlobalProperty(
 NTSTATUS
 Ext2ProcessVolumeProperty(
     IN  PEXT2_VCB              Vcb,
-    IN  PEXT2_VOLUME_PROPERTY2 Property,
+    IN  PEXT2_VOLUME_PROPERTY3 Property3,
     IN  ULONG Length
 )
 {
-    NTSTATUS        Status = STATUS_SUCCESS;
-    BOOLEAN         VcbResourceAcquired = FALSE;
     struct nls_table * PageTable = NULL;
+    PEXT2_VOLUME_PROPERTY2 Property2 = (PVOID)Property3;
+    PEXT2_VOLUME_PROPERTY  Property = (PVOID)Property3;
+    NTSTATUS Status = STATUS_SUCCESS;
+    BOOLEAN VcbResourceAcquired = FALSE;
 
     _SEH2_TRY {
 
@@ -364,7 +375,7 @@ Ext2ProcessVolumeProperty(
         VcbResourceAcquired = TRUE;
 
         if (Property->Command == APP_CMD_SET_PROPERTY ||
-                Property->Command == APP_CMD_QUERY_PROPERTY) {
+            Property->Command == APP_CMD_QUERY_PROPERTY) {
             if (Length < sizeof(EXT2_VOLUME_PROPERTY)) {
                 Status = STATUS_INVALID_PARAMETER;
                 _SEH2_LEAVE;
@@ -375,17 +386,67 @@ Ext2ProcessVolumeProperty(
                 Status = STATUS_INVALID_PARAMETER;
                 _SEH2_LEAVE;
             }
+        } else if (Property->Command == APP_CMD_SET_PROPERTY3 ||
+                   Property->Command == APP_CMD_QUERY_PROPERTY3) {
+            if (Length < sizeof(EXT2_VOLUME_PROPERTY3)) {
+                Status = STATUS_INVALID_PARAMETER;
+                _SEH2_LEAVE;
+            }
         }
 
         switch (Property->Command) {
 
-        case APP_CMD_SET_PROPERTY:
+        case APP_CMD_SET_PROPERTY3:
+
+            if (Property3->Flags2 & EXT2_VPROP3_AUTOMOUNT) {
+                if (Property3->AutoMount)
+                    SetLongFlag(Ext2Global->Flags, EXT2_AUTO_MOUNT);
+                else
+                    ClearLongFlag(Ext2Global->Flags, EXT2_AUTO_MOUNT);
+            }
+            if (Property3->Flags2 & EXT2_VPROP3_USERIDS) {
+                SetFlag(Vcb->Flags, VCB_USER_IDS);
+                Vcb->uid = Property3->uid;
+                Vcb->gid = Property3->gid;
+                if (Property3->EIDS) {
+                    Vcb->euid = Property3->euid;
+                    Vcb->egid = Property3->egid;
+                    SetFlag(Vcb->Flags, VCB_USER_EIDS);
+                } else {
+                    Vcb->euid = Vcb->egid = 0;
+                    ClearFlag(Vcb->Flags, VCB_USER_EIDS);
+                }
+            } else {
+                ClearFlag(Vcb->Flags, VCB_USER_IDS);
+                ClearFlag(Vcb->Flags, VCB_USER_EIDS);
+                Vcb->uid = Vcb->gid = 0;
+                Vcb->euid = Vcb->egid = 0;
+            }
+
         case APP_CMD_SET_PROPERTY2:
 
-            if (Property->bReadonly) {
+            RtlZeroMemory(Vcb->sHidingPrefix, HIDINGPAT_LEN);
+            if (Vcb->bHidingPrefix == Property2->bHidingPrefix) {
+                RtlCopyMemory( Vcb->sHidingPrefix,
+                               Property2->sHidingPrefix,
+                               HIDINGPAT_LEN - 1);
+            }
 
-                Ext2FlushFiles(NULL, Vcb, FALSE);
-                Ext2FlushVolume(NULL, Vcb, FALSE);
+            RtlZeroMemory(Vcb->sHidingSuffix, HIDINGPAT_LEN);
+            if (Vcb->bHidingSuffix == Property2->bHidingSuffix) {
+                RtlCopyMemory( Vcb->sHidingSuffix,
+                               Property2->sHidingSuffix,
+                               HIDINGPAT_LEN - 1);
+            }
+            Vcb->DrvLetter = Property2->DrvLetter;
+
+        case APP_CMD_SET_PROPERTY:
+
+            if (Property->bReadonly) {
+                if (IsFlagOn(Vcb->Flags, VCB_INITIALIZED)) {
+                    Ext2FlushFiles(NULL, Vcb, FALSE);
+                    Ext2FlushVolume(NULL, Vcb, FALSE);
+                }
                 SetLongFlag(Vcb->Flags, VCB_READ_ONLY);
 
             } else {
@@ -418,29 +479,57 @@ Ext2ProcessVolumeProperty(
                 Ext2InitializeLabel(Vcb, Vcb->SuperBlock);
             }
 
-            if (Property->Command == APP_CMD_SET_PROPERTY2) {
-
-                RtlZeroMemory(Vcb->sHidingPrefix, HIDINGPAT_LEN);
-                if ((Vcb->bHidingPrefix = Property->bHidingPrefix) != 0) {
-                    RtlCopyMemory( Vcb->sHidingPrefix,
-                                   Property->sHidingPrefix,
-                                   HIDINGPAT_LEN - 1);
-                }
-
-                RtlZeroMemory(Vcb->sHidingSuffix, HIDINGPAT_LEN);
-                if ((Vcb->bHidingSuffix = Property->bHidingSuffix) != 0) {
-                    RtlCopyMemory( Vcb->sHidingSuffix,
-                                   Property->sHidingSuffix,
-                                   HIDINGPAT_LEN - 1);
-                }
-
-                Vcb->DrvLetter = Property->DrvLetter;
-            }
-
             break;
 
-        case APP_CMD_QUERY_PROPERTY:
+        case APP_CMD_QUERY_PROPERTY3:
+
+            if (IsFlagOn(Ext2Global->Flags, EXT2_AUTO_MOUNT)) {
+                SetFlag(Property3->Flags2, EXT2_VPROP3_AUTOMOUNT);
+                Property3->AutoMount = TRUE;
+            } else {
+                ClearFlag(Property3->Flags2, EXT2_VPROP3_AUTOMOUNT);
+                Property3->AutoMount = FALSE;
+            }
+
+            if (IsFlagOn(Vcb->Flags, VCB_USER_IDS)) {
+                SetFlag(Property3->Flags2, EXT2_VPROP3_USERIDS);
+                Property3->uid = Vcb->uid;
+                Property3->gid = Vcb->gid;
+                if (IsFlagOn(Vcb->Flags, VCB_USER_EIDS)) {
+                    Property3->EIDS = TRUE;
+                    Property3->euid = Vcb->euid;
+                    Property3->egid = Vcb->egid;
+                } else {
+                    Property3->EIDS = FALSE;
+                }
+            } else {
+                ClearFlag(Property3->Flags2, EXT2_VPROP3_USERIDS);
+            }
+
         case APP_CMD_QUERY_PROPERTY2:
+
+            RtlCopyMemory(Property2->UUID, Vcb->SuperBlock->s_uuid, 16);
+            Property2->DrvLetter = Vcb->DrvLetter;
+
+            if (Property2->bHidingPrefix == Vcb->bHidingPrefix) {
+                RtlCopyMemory( Property2->sHidingPrefix,
+                               Vcb->sHidingPrefix,
+                               HIDINGPAT_LEN);
+            } else {
+                RtlZeroMemory( Property2->sHidingPrefix,
+                               HIDINGPAT_LEN);
+            }
+
+            if (Property2->bHidingSuffix == Vcb->bHidingSuffix) {
+                RtlCopyMemory( Property2->sHidingSuffix,
+                               Vcb->sHidingSuffix,
+                               HIDINGPAT_LEN);
+            } else {
+                RtlZeroMemory( Property2->sHidingSuffix,
+                               HIDINGPAT_LEN);
+            }
+
+        case APP_CMD_QUERY_PROPERTY:
 
             Property->bExt2 = TRUE;
             Property->bExt3 = Vcb->IsExt3fs;
@@ -457,32 +546,6 @@ Ext2ProcessVolumeProperty(
             } else {
                 strncpy(Property->Codepage, "default", CODEPAGE_MAXLEN);
             }
-
-            if (Property->Command == APP_CMD_QUERY_PROPERTY2) {
-
-                RtlCopyMemory(Property->UUID, Vcb->SuperBlock->s_uuid, 16);
-
-                Property->DrvLetter = Vcb->DrvLetter;
-
-                if ((Property->bHidingPrefix = Vcb->bHidingPrefix) != 0) {
-                    RtlCopyMemory( Property->sHidingPrefix,
-                                   Vcb->sHidingPrefix,
-                                   HIDINGPAT_LEN);
-                } else {
-                    RtlZeroMemory( Property->sHidingPrefix,
-                                   HIDINGPAT_LEN);
-                }
-
-                if ((Property->bHidingSuffix = Vcb->bHidingSuffix) != 0) {
-                    RtlCopyMemory( Property->sHidingSuffix,
-                                   Vcb->sHidingSuffix,
-                                   HIDINGPAT_LEN);
-                } else {
-                    RtlZeroMemory( Property->sHidingSuffix,
-                                   HIDINGPAT_LEN);
-                }
-            }
-
             break;
 
         default:
@@ -503,7 +566,7 @@ Ext2ProcessVolumeProperty(
 NTSTATUS
 Ext2ProcessUserProperty(
     IN PEXT2_IRP_CONTEXT        IrpContext,
-    IN PEXT2_VOLUME_PROPERTY2   Property,
+    IN PEXT2_VOLUME_PROPERTY3   Property,
     IN ULONG                    Length
 )
 {

@@ -2383,10 +2383,12 @@ BOOL EnumerateSectionsStartingWith(
     unsigned int i;
 
     for (i = 0; i < file->nb_sections; i++)
+    {
         if (strncmpiW(pStr, file->sections[i]->name, len) == 0)
         {
             if (!Callback(file->sections[i]->name, Context))
                 return FALSE;
         }
+    }
     return TRUE;
 }

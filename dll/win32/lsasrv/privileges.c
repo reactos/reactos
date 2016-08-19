@@ -152,25 +152,23 @@ LsarpLookupPrivilegeDisplayName(PRPC_UNICODE_STRING Name,
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
-LsarpLookupPrivilegeValue(PRPC_UNICODE_STRING Name,
-                          PLUID Value)
+
+PLUID
+LsarpLookupPrivilegeValue(
+    IN PRPC_UNICODE_STRING Name)
 {
     ULONG Priv;
 
     if (Name->Length == 0 || Name->Buffer == NULL)
-        return STATUS_NO_SUCH_PRIVILEGE;
+        return NULL;
 
     for (Priv = 0; Priv < sizeof(WellKnownPrivileges) / sizeof(WellKnownPrivileges[0]); Priv++)
     {
         if (_wcsicmp(Name->Buffer, WellKnownPrivileges[Priv].Name) == 0)
-        {
-            *Value = WellKnownPrivileges[Priv].Luid;
-            return STATUS_SUCCESS;
-        }
+            return (PLUID)&(WellKnownPrivileges[Priv].Luid);
     }
 
-    return STATUS_NO_SUCH_PRIVILEGE;
+    return NULL;
 }
 
 
@@ -305,6 +303,25 @@ LsapLookupAccountRightName(ULONG RightValue,
     }
 
     return STATUS_NO_SUCH_PRIVILEGE;
+}
+
+
+ACCESS_MASK
+LsapLookupAccountRightValue(
+    IN PRPC_UNICODE_STRING Name)
+{
+    ULONG i;
+
+    if (Name->Length == 0 || Name->Buffer == NULL)
+        return 0;
+
+    for (i = 0; i < sizeof(WellKnownRights) / sizeof(WellKnownRights[0]); i++)
+    {
+        if (_wcsicmp(Name->Buffer, WellKnownRights[i].Name) == 0)
+            return WellKnownRights[i].Flag;
+    }
+
+    return 0;
 }
 
 /* EOF */

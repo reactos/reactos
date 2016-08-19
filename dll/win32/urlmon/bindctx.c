@@ -424,7 +424,7 @@ static HRESULT WINAPI BSCHttpNegotiate_OnResponse(IHttpNegotiate2 *iface, DWORD 
 
     if(pszAdditionalRequestHeaders)
         *pszAdditionalRequestHeaders = additional_headers;
-    else if(additional_headers)
+    else
         CoTaskMemFree(additional_headers);
 
     return hres;

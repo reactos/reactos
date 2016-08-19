@@ -736,7 +736,7 @@ static WORD parse_TOKEN(parse_buffer * buf)
       {
         buf->list_nb_elements--;
         buf->list_separator = FALSE;
-        /* Insert separarator between each values and since list does not accept separator at the end
+        /* Insert separator between each value, and since list does not accept separator at the end
            use a comma so any extra separator will generate an error */
         token = TOKEN_COMMA;
       }
@@ -749,7 +749,7 @@ static WORD parse_TOKEN(parse_buffer * buf)
         *(DWORD*)buf->value = value;
 
         buf->list_separator = TRUE;
-        /* Convert list into a serie of their basic type counterpart */
+        /* Convert list into a series of their basic type counterpart */
         token = buf->list_type_float ? TOKEN_FLOAT : TOKEN_INTEGER;
       }
       dump_TOKEN(token);

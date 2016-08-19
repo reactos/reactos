@@ -6,7 +6,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_APP_HEADER "ReactOS DiskPart"
-    IDS_APP_USAGE "\nDisk Partitioning Interpreter.\n\n\
+    IDS_APP_USAGE "\nРазбиение диска на разделы.\n\n\
 Использование: DISKPART [/S <имя_файла>] [/T <тайм-аут>] [/?]\n\n\
 /S <имя_файла>\tЗапускает указанный скрипт.\n\
 /T <тайм-аут>\tТайм-аут в секундах, чтобы предотвратить использование DiskPart.\n\
@@ -44,7 +44,7 @@ BEGIN
     IDS_LIST_DISK_FORMAT "%c %7lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
     IDS_LIST_PARTITION_HEAD "\n  Разметка       Тип              Размер    Отступ\n"
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
-    IDS_LIST_PARTITION_FORMAT "%c Partition %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
+    IDS_LIST_PARTITION_FORMAT "%c Раздел %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\nДиск с разметкой элементов не выбран.\nУкажите диск и повторите попытку.\n\n"
     IDS_LIST_VOLUME_HEAD "Том ###\tИмя\tМетка\n"
 END

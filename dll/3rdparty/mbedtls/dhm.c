@@ -19,9 +19,12 @@
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 /*
- *  Reference:
+ *  The following sources were referenced in the design of this implementation
+ *  of the Diffie-Hellman-Merkle algorithm:
  *
- *  http://www.cacr.math.uwaterloo.ca/hac/ (chapter 12)
+ *  [1] Handbook of Applied Cryptography - 1997, Chapter 12
+ *      Menezes, van Oorschot and Vanstone
+ *
  */
 
 #if !defined(MBEDTLS_CONFIG_FILE)

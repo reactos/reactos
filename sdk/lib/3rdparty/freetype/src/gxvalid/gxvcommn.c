@@ -900,7 +900,7 @@
     for ( i = 0; i < nnames; i++ )
     {
       if ( FT_Get_Sfnt_Name( gxvalid->face, i, &name ) != FT_Err_Ok )
-        continue ;
+        continue;
 
       if ( name.name_id == name_index )
         goto Out;
@@ -1472,7 +1472,7 @@
     if ( ( p + ( maxEntry + 1 ) * entrySize ) > limit )
       FT_INVALID_TOO_SHORT;
 
-    for (entry = 0; entry <= maxEntry ; entry++ )
+    for (entry = 0; entry <= maxEntry; entry++ )
     {
       FT_UShort                        newState_idx;
       FT_UShort                        flags;

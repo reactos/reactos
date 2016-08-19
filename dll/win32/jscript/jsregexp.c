@@ -257,8 +257,10 @@ static HRESULT RegExp_set_source(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t va
 
 static HRESULT RegExp_get_global(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    *r = jsval_bool(!!(regexp_from_jsdisp(jsthis)->jsregexp->flags & REG_GLOB));
+    return S_OK;
 }
 
 static HRESULT RegExp_set_global(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t value)
@@ -269,8 +271,10 @@ static HRESULT RegExp_set_global(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t va
 
 static HRESULT RegExp_get_ignoreCase(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    *r = jsval_bool(!!(regexp_from_jsdisp(jsthis)->jsregexp->flags & REG_FOLD));
+    return S_OK;
 }
 
 static HRESULT RegExp_set_ignoreCase(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t value)
@@ -281,8 +285,10 @@ static HRESULT RegExp_set_ignoreCase(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_
 
 static HRESULT RegExp_get_multiline(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    *r = jsval_bool(!!(regexp_from_jsdisp(jsthis)->jsregexp->flags & REG_MULTILINE));
+    return S_OK;
 }
 
 static HRESULT RegExp_set_multiline(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t value)
@@ -322,6 +328,7 @@ static HRESULT RegExp_set_lastIndex(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t
 
     TRACE("\n");
 
+    jsval_release(regexp->last_index_val);
     hres = jsval_copy(value, &regexp->last_index_val);
     if(FAILED(hres))
         return hres;
@@ -691,7 +698,7 @@ HRESULT create_regexp_var(script_ctx_t *ctx, jsval_t src_arg, jsval_t *flags_arg
     if(is_object_instance(src_arg)) {
         jsdisp_t *obj;
 
-        obj = iface_to_jsdisp((IUnknown*)get_object(src_arg));
+        obj = iface_to_jsdisp(get_object(src_arg));
         if(obj) {
             if(is_class(obj, JSCLASS_REGEXP)) {
                 RegExpInstance *regexp = (RegExpInstance*)obj;
@@ -942,7 +949,7 @@ static HRESULT RegExpConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags
     case DISPATCH_METHOD:
         if(argc) {
             if(is_object_instance(argv[0])) {
-                jsdisp_t *jsdisp = iface_to_jsdisp((IUnknown*)get_object(argv[0]));
+                jsdisp_t *jsdisp = iface_to_jsdisp(get_object(argv[0]));
                 if(jsdisp) {
                     if(is_class(jsdisp, JSCLASS_REGEXP)) {
                         if(argc > 1 && !is_undefined(argv[1])) {

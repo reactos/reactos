@@ -13,7 +13,6 @@ IsSameObject(IN IUnknown *punk1, IN IUnknown *punk2)
     HRESULT hRet;
 
     hRet = punk1->QueryInterface(IID_PPV_ARG(IUnknown, &punk1));
-
     if (!SUCCEEDED(hRet))
         return hRet;
 
@@ -32,21 +31,16 @@ IsSameObject(IN IUnknown *punk1, IN IUnknown *punk2)
 
 HMENU
 LoadPopupMenu(IN HINSTANCE hInstance,
-              IN LPCTSTR lpMenuName)
+              IN LPCWSTR lpMenuName)
 {
     HMENU hMenu, hSubMenu = NULL;
 
-    hMenu = LoadMenu(hInstance,
-                     lpMenuName);
-
+    hMenu = LoadMenuW(hInstance, lpMenuName);
     if (hMenu != NULL)
     {
-        hSubMenu = GetSubMenu(hMenu,
-                              0);
-        if (hSubMenu != NULL &&
-            !RemoveMenu(hMenu,
-            0,
-            MF_BYPOSITION))
+        hSubMenu = GetSubMenu(hMenu, 0);
+        if ((hSubMenu != NULL) &&
+            !RemoveMenu(hMenu, 0, MF_BYPOSITION))
         {
             hSubMenu = NULL;
         }
@@ -62,15 +56,12 @@ FindSubMenu(IN HMENU hMenu,
             IN UINT uItem,
             IN BOOL fByPosition)
 {
-    MENUITEMINFO mii;
+    MENUITEMINFOW mii;
 
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_SUBMENU;
 
-    if (GetMenuItemInfo(hMenu,
-        uItem,
-        fByPosition,
-        &mii))
+    if (GetMenuItemInfoW(hMenu, uItem, fByPosition, &mii))
     {
         return mii.hSubMenu;
     }
@@ -79,7 +70,7 @@ FindSubMenu(IN HMENU hMenu,
 }
 
 BOOL
-GetCurrentLoggedOnUserName(OUT LPTSTR szBuffer,
+GetCurrentLoggedOnUserName(OUT LPWSTR szBuffer,
                            IN DWORD dwBufferSize)
 {
     DWORD dwType;
@@ -87,25 +78,24 @@ GetCurrentLoggedOnUserName(OUT LPTSTR szBuffer,
 
     /* Query the user name from the registry */
     dwSize = (dwBufferSize * sizeof(WCHAR)) - 1;
-    if (RegQueryValueEx(hkExplorer,
-        TEXT("Logon User Name"),
-        0,
-        &dwType,
-        (LPBYTE) szBuffer,
-        &dwSize) == ERROR_SUCCESS &&
+    if (RegQueryValueExW(hkExplorer,
+                         L"Logon User Name",
+                         0,
+                         &dwType,
+                         (LPBYTE)szBuffer,
+                         &dwSize) == ERROR_SUCCESS &&
         (dwSize / sizeof(WCHAR)) > 1 &&
-        szBuffer[0] != _T('\0'))
+        szBuffer[0] != L'\0')
     {
-        szBuffer[dwSize / sizeof(WCHAR)] = _T('\0');
+        szBuffer[dwSize / sizeof(WCHAR)] = L'\0';
         return TRUE;
     }
 
     /* Fall back to GetUserName() */
     dwSize = dwBufferSize;
-    if (!GetUserName(szBuffer,
-        &dwSize))
+    if (!GetUserNameW(szBuffer, &dwSize))
     {
-        szBuffer[0] = _T('\0');
+        szBuffer[0] = L'\0';
         return FALSE;
     }
 
@@ -116,38 +106,32 @@ BOOL
 FormatMenuString(IN HMENU hMenu,
                  IN UINT uPosition,
                  IN UINT uFlags,
-...)
+                 ...)
 {
     va_list vl;
-    MENUITEMINFO mii;
+    MENUITEMINFOW mii;
     WCHAR szBuf[128];
     WCHAR szBufFmt[128];
 
     /* Find the menu item and read the formatting string */
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_STRING;
-    mii.dwTypeData = (LPTSTR) szBufFmt;
-    mii.cch = sizeof(szBufFmt) / sizeof(szBufFmt[0]);
-    if (GetMenuItemInfo(hMenu,
-        uPosition,
-        uFlags,
-        &mii))
+    mii.dwTypeData = szBufFmt;
+    mii.cch = _countof(szBufFmt);
+    if (GetMenuItemInfoW(hMenu, uPosition, uFlags, &mii))
     {
         /* Format the string */
         va_start(vl, uFlags);
         _vsntprintf(szBuf,
-                    (sizeof(szBuf) / sizeof(szBuf[0])) - 1,
+                    _countof(szBuf) - 1,
                     szBufFmt,
                     vl);
         va_end(vl);
-        szBuf[(sizeof(szBuf) / sizeof(szBuf[0])) - 1] = _T('\0');
+        szBuf[_countof(szBuf) - 1] = L'\0';
 
         /* Update the menu item */
-        mii.dwTypeData = (LPTSTR) szBuf;
-        if (SetMenuItemInfo(hMenu,
-            uPosition,
-            uFlags,
-            &mii))
+        mii.dwTypeData = szBuf;
+        if (SetMenuItemInfo(hMenu, uPosition, uFlags, &mii))
         {
             return TRUE;
         }
@@ -158,44 +142,41 @@ FormatMenuString(IN HMENU hMenu,
 
 BOOL
 GetExplorerRegValueSet(IN HKEY hKey,
-                       IN LPCTSTR lpSubKey,
-                       IN LPCTSTR lpValue)
+                       IN LPCWSTR lpSubKey,
+                       IN LPCWSTR lpValue)
 {
     WCHAR szBuffer[MAX_PATH];
     HKEY hkSubKey;
     DWORD dwType, dwSize;
     BOOL Ret = FALSE;
 
-    StringCbCopy(szBuffer, sizeof(szBuffer),
-                 TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"));
-    if (FAILED_UNEXPECTEDLY(StringCbCat(szBuffer, sizeof(szBuffer),
-        _T("\\"))))
+    StringCbCopyW(szBuffer, sizeof(szBuffer),
+                  L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer");
+    if (FAILED_UNEXPECTEDLY(StringCbCatW(szBuffer, sizeof(szBuffer), L"\\")))
         return FALSE;
-    if (FAILED_UNEXPECTEDLY(StringCbCat(szBuffer, sizeof(szBuffer),
-        lpSubKey)))
+    if (FAILED_UNEXPECTEDLY(StringCbCatW(szBuffer, sizeof(szBuffer), lpSubKey)))
         return FALSE;
 
     dwSize = sizeof(szBuffer);
-    if (RegOpenKeyEx(hKey,
-        szBuffer,
-        0,
-        KEY_QUERY_VALUE,
-        &hkSubKey) == ERROR_SUCCESS)
+    if (RegOpenKeyExW(hKey,
+                      szBuffer,
+                      0,
+                      KEY_QUERY_VALUE,
+                      &hkSubKey) == ERROR_SUCCESS)
     {
-        ZeroMemory(szBuffer,
-                   sizeof(szBuffer));
+        ZeroMemory(szBuffer, sizeof(szBuffer));
 
-        if (RegQueryValueEx(hkSubKey,
-            lpValue,
-            0,
-            &dwType,
-            (LPBYTE) szBuffer,
-            &dwSize) == ERROR_SUCCESS)
+        if (RegQueryValueExW(hkSubKey,
+                             lpValue,
+                             0,
+                             &dwType,
+                             (LPBYTE)szBuffer,
+                             &dwSize) == ERROR_SUCCESS)
         {
-            if (dwType == REG_DWORD && dwSize == sizeof(DWORD))
-                Ret = *((PDWORD) szBuffer) != 0;
+            if ((dwType == REG_DWORD) && (dwSize == sizeof(DWORD)))
+                Ret = *((PDWORD)szBuffer) != 0;
             else if (dwSize > 0)
-                Ret = *((PCHAR) szBuffer) != 0;
+                Ret = *((PWCHAR)szBuffer) != 0;
         }
 
         RegCloseKey(hkSubKey);
@@ -204,10 +185,10 @@ GetExplorerRegValueSet(IN HKEY hKey,
 }
 
 BOOL
-GetVersionInfoString(IN WCHAR *szFileName,
-IN WCHAR *szVersionInfo,
-OUT WCHAR *szBuffer,
-IN UINT cbBufLen)
+GetVersionInfoString(IN LPCWSTR szFileName,
+                     IN LPCWSTR szVersionInfo,
+                     OUT LPWSTR szBuffer,
+                     IN UINT cbBufLen)
 {
     LPVOID lpData = NULL;
     WCHAR szSubBlock[128];
@@ -219,9 +200,9 @@ IN UINT cbBufLen)
     UINT cbTranslate;
     UINT cbLen;
     BOOL bRet = FALSE;
-    unsigned int i;
+    UINT i;
 
-    dwLen = GetFileVersionInfoSize(szFileName, &dwHandle);
+    dwLen = GetFileVersionInfoSizeW(szFileName, &dwHandle);
 
     if (dwLen > 0)
     {
@@ -229,17 +210,17 @@ IN UINT cbBufLen)
 
         if (lpData != NULL)
         {
-            if (GetFileVersionInfo(szFileName,
-                0,
-                dwLen,
-                lpData) != 0)
+            if (GetFileVersionInfoW(szFileName,
+                                    0,
+                                    dwLen,
+                                    lpData) != 0)
             {
                 UserLangId = GetUserDefaultLangID();
 
-                VerQueryValue(lpData,
-                              TEXT("\\VarFileInfo\\Translation"),
-                              (LPVOID *) &lpTranslate,
-                              &cbTranslate);
+                VerQueryValueW(lpData,
+                               L"\\VarFileInfo\\Translation",
+                               (LPVOID*)&lpTranslate,
+                               &cbTranslate);
 
                 for (i = 0; i < cbTranslate / sizeof(LANGCODEPAGE); i++)
                 {
@@ -247,22 +228,21 @@ IN UINT cbBufLen)
                     match, use this version information (since this
                     means that the version information and the users
                     default language are the same). */
-                    if ((lpTranslate[i].wLanguage & 0xFF) ==
-                        (UserLangId & 0xFF))
+                    if (LOBYTE(lpTranslate[i].wLanguage) == LOBYTE(UserLangId))
                     {
                         wnsprintf(szSubBlock,
-                                  sizeof(szSubBlock) / sizeof(szSubBlock[0]),
-                                  TEXT("\\StringFileInfo\\%04X%04X\\%s"),
+                                  _countof(szSubBlock),
+                                  L"\\StringFileInfo\\%04X%04X\\%s",
                                   lpTranslate[i].wLanguage,
                                   lpTranslate[i].wCodePage,
                                   szVersionInfo);
 
-                        if (VerQueryValue(lpData,
-                            szSubBlock,
-                            (LPVOID *) &lpszLocalBuf,
-                            &cbLen) != 0)
+                        if (VerQueryValueW(lpData,
+                                           szSubBlock,
+                                           (LPVOID*)&lpszLocalBuf,
+                                           &cbLen) != 0)
                         {
-                            _tcsncpy(szBuffer, lpszLocalBuf, cbBufLen / sizeof(*szBuffer));
+                            wcsncpy(szBuffer, lpszLocalBuf, cbBufLen / sizeof(*szBuffer));
 
                             bRet = TRUE;
                             break;
@@ -270,6 +250,7 @@ IN UINT cbBufLen)
                     }
                 }
             }
+
             HeapFree(hProcessHeap, 0, lpData);
             lpData = NULL;
         }

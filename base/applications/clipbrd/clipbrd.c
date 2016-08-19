@@ -256,12 +256,12 @@ static int ClipboardCommandHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 
         case CMD_ABOUT:
         {
-            WCHAR szTitle[MAX_STRING_LEN];
             HICON hIcon;
+            WCHAR szTitle[MAX_STRING_LEN];
 
             hIcon = LoadIconW(Globals.hInstance, MAKEINTRESOURCE(CLIPBRD_ICON));
             LoadStringW(Globals.hInstance, STRING_CLIPBOARD, szTitle, ARRAYSIZE(szTitle));
-            ShellAboutW(Globals.hMainWnd, szTitle, 0, hIcon);
+            ShellAboutW(Globals.hMainWnd, szTitle, NULL, hIcon);
             DeleteObject(hIcon);
             break;
         }

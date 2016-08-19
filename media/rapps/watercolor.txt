@@ -12,18 +12,24 @@ CDPath = none
 
 [Section.0407]
 Description = Ein Windows Design basierend auf dem Aussehenvon Windows Codename Whistler.
-Size = 861,1 KiB
+Size = 0,0 B
 
 [Section.0418]
 License = Gratuită
 Description = O temă pentru Windows bazată pe Windows Codename Whistler.
-Size = 861,1 Kio
+Size = 0,0 o
+
+[Section.0419]
+License = Бесплатно
+Description = Windows тема, основанная на Windows Codename Whistler.
+Size = 0.0 B
 
 [Section.041f]
 License = Ücretsiz
 Description = Windows Codename Whistler görünümü tabanlı bir Windows teması.
-Size = 861,1 KiB
+Size = 0,0 B
 
 [Section.0804]
 Description = 基于 Windows 代号 Whistler 的外观的 Windows 主题。
+Size = 0.0 B
 

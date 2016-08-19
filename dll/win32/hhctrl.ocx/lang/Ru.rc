@@ -68,24 +68,24 @@ MENU_WEBBROWSER MENU
 {
     POPUP ""
     {
-        MENUITEM "&Back", IDTB_BACK
-        MENUITEM "&Forward", IDTB_FORWARD
+        MENUITEM "&Назад", IDTB_BACK
+        MENUITEM "&Вперёд", IDTB_FORWARD
         MENUITEM SEPARATOR
-        MENUITEM "Select &All", MIID_SELECTALL
+        MENUITEM "Выделить все", MIID_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&View Source", MIID_VIEWSOURCE
+        MENUITEM "&Показать код", MIID_VIEWSOURCE
         MENUITEM SEPARATOR
-        MENUITEM "&Print...", IDTB_PRINT
-        MENUITEM "&Refresh", IDTB_REFRESH
+        MENUITEM "П&ечать...", IDTB_PRINT
+        MENUITEM "&Обновить", IDTB_REFRESH
         MENUITEM SEPARATOR
-        MENUITEM "Proper&ties", MIID_PROPERTIES
+        MENUITEM "&Свойства", MIID_PROPERTIES
     }
     POPUP ""
     {
-        MENUITEM "Cu&t", MIID_CUT
-        MENUITEM "&Copy", MIID_COPY
-        MENUITEM "Paste", MIID_PASTE
-        MENUITEM "Select &All", MIID_SELECTALL
-        MENUITEM "&Print", IDTB_PRINT
+        MENUITEM "Вы&резать", MIID_CUT
+        MENUITEM "&Копировать", MIID_COPY
+        MENUITEM "Вставить", MIID_PASTE
+        MENUITEM "Выделить &все", MIID_SELECTALL
+        MENUITEM "&Печать", IDTB_PRINT
     }
 }

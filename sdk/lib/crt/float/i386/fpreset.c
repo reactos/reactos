@@ -12,7 +12,7 @@
  */
 void CDECL _fpreset(void)
 {
-    const unsigned int x86_cw = 0x27f;
+    const unsigned short x86_cw = 0x27f;
 #ifdef _MSC_VER
     __asm { fninit }
     __asm { fldcw [x86_cw] }

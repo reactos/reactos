@@ -116,7 +116,7 @@ static HRESULT WINAPI IStream_fnRead(IStream *iface, void* pv, ULONG cb, ULONG* 
   }
   if (pcbRead)
     *pcbRead = dwRead;
-  return S_OK;
+  return dwRead == cb ? S_OK : S_FALSE;
 }
 
 /**************************************************************************

@@ -137,11 +137,7 @@ static BOOL MCIAVI_GetInfoVideo(WINE_MCIAVI* wma, const MMCKINFO* mmckList, MMCK
     TRACE("bih.biClrUsed=%d\n", 	wma->inbih->biClrUsed);
     TRACE("bih.biClrImportant=%d\n", 	wma->inbih->biClrImportant);
 
-    wma->source.left = 0;
-    wma->source.top = 0;
-    wma->source.right = wma->inbih->biWidth;
-    wma->source.bottom = wma->inbih->biHeight;
-
+    SetRect(&wma->source, 0, 0, wma->inbih->biWidth, wma->inbih->biHeight);
     wma->dest = wma->source;
 
     return TRUE;
@@ -226,14 +222,16 @@ static BOOL	MCIAVI_AddFrame(WINE_MCIAVI* wma, LPMMCKINFO mmck,
 	      alb->numAudioBlocks, mmck->cksize);
 	if (wma->lpWaveFormat) {
 	    if (alb->numAudioBlocks >= alb->numAudioAllocated) {
-		alb->numAudioAllocated += 32;
-		if (!wma->lpAudioIndex)
-		    wma->lpAudioIndex = HeapAlloc(GetProcessHeap(), 0,
-						  alb->numAudioAllocated * sizeof(struct MMIOPos));
-		else
-		    wma->lpAudioIndex = HeapReAlloc(GetProcessHeap(), 0, wma->lpAudioIndex,
-						    alb->numAudioAllocated * sizeof(struct MMIOPos));
-		if (!wma->lpAudioIndex) return FALSE;
+                DWORD newsize = alb->numAudioAllocated + 32;
+                struct MMIOPos* newindex;
+
+                if (!wma->lpAudioIndex)
+                    newindex = HeapAlloc(GetProcessHeap(), 0, newsize * sizeof(struct MMIOPos));
+                else
+                    newindex = HeapReAlloc(GetProcessHeap(), 0, wma->lpAudioIndex, newsize * sizeof(struct MMIOPos));
+                if (!newindex) return FALSE;
+                alb->numAudioAllocated = newsize;
+                wma->lpAudioIndex = newindex;
 	    }
 	    wma->lpAudioIndex[alb->numAudioBlocks].dwOffset = mmck->dwDataOffset;
 	    wma->lpAudioIndex[alb->numAudioBlocks].dwSize = mmck->cksize;

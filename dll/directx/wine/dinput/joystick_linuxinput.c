@@ -77,6 +77,7 @@ struct JoyDev {
 	char *device;
 	char *name;
 	GUID guid;
+	GUID guid_product;
 
         BOOL has_ff;
         int num_effects;
@@ -140,6 +141,19 @@ static const GUID DInput_Wine_Joystick_Base_GUID = { /* 9e573eda-7734-11d2-8d4a-
   0x7734,
   0x11d2,
   {0x8d, 0x4a, 0x23, 0x90, 0x3f, 0xb6, 0xbd, 0xf7}
+};
+
+/*
+ * Construct the GUID in the same way of Windows doing this.
+ * Data1 is concatenation of productid and vendorid.
+ * Data2 and Data3 are NULL.
+ * Data4 seems to be a constant.
+ */
+static const GUID DInput_Wine_Joystick_Constant_Part_GUID = {
+  0x000000000,
+  0x0000,
+  0x0000,
+  {0x00, 0x00, 0x50, 0x49, 0x44, 0x56, 0x49, 0x44}
 };
 
 #define test_bit(arr,bit) (((BYTE*)(arr))[(bit)>>3]&(1<<((bit)&7)))
@@ -274,11 +288,18 @@ static void find_joydevs(void)
 	}
 
         if (ioctl(fd, EVIOCGID, &device_id) == -1)
+        {
             WARN("ioctl(EVIOCGID) failed: %d %s\n", errno, strerror(errno));
+            joydev.guid_product = DInput_Wine_Joystick_Base_GUID;
+        }
         else
         {
             joydev.vendor_id = device_id.vendor;
             joydev.product_id = device_id.product;
+
+            /* Concatenate product_id with vendor_id to mimic Windows behaviour */
+            joydev.guid_product       = DInput_Wine_Joystick_Constant_Part_GUID;
+            joydev.guid_product.Data1 = MAKELONG(joydev.vendor_id, joydev.product_id);
         }
 
         if (!have_joydevs)
@@ -308,7 +329,7 @@ static void fill_joystick_dideviceinstanceA(LPDIDEVICEINSTANCEA lpddi, DWORD ver
 
     lpddi->dwSize       = dwSize;
     lpddi->guidInstance = joydevs[id].guid;
-    lpddi->guidProduct  = DInput_Wine_Joystick_Base_GUID;
+    lpddi->guidProduct  = joydevs[id].guid_product;
     lpddi->guidFFDriver = GUID_NULL;
 
     if (version >= 0x0800)
@@ -329,7 +350,7 @@ static void fill_joystick_dideviceinstanceW(LPDIDEVICEINSTANCEW lpddi, DWORD ver
 
     lpddi->dwSize       = dwSize;
     lpddi->guidInstance = joydevs[id].guid;
-    lpddi->guidProduct  = DInput_Wine_Joystick_Base_GUID;
+    lpddi->guidProduct  = joydevs[id].guid_product;
     lpddi->guidFFDriver = GUID_NULL;
 
     if (version >= 0x0800)

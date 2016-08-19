@@ -123,8 +123,8 @@ void ME_CharFormatFromLogFont(HDC hDC, const LOGFONTW *lf, CHARFORMAT2W *fmt) DE
 /* list.c */
 void ME_InsertBefore(ME_DisplayItem *diWhere, ME_DisplayItem *diWhat) DECLSPEC_HIDDEN;
 void ME_Remove(ME_DisplayItem *diWhere) DECLSPEC_HIDDEN;
-BOOL ME_NextRun(ME_DisplayItem **para, ME_DisplayItem **run) DECLSPEC_HIDDEN;
-BOOL ME_PrevRun(ME_DisplayItem **para, ME_DisplayItem **run) DECLSPEC_HIDDEN;
+BOOL ME_NextRun(ME_DisplayItem **para, ME_DisplayItem **run, BOOL all_para) DECLSPEC_HIDDEN;
+BOOL ME_PrevRun(ME_DisplayItem **para, ME_DisplayItem **run, BOOL all_para) DECLSPEC_HIDDEN;
 ME_DisplayItem *ME_FindItemBack(ME_DisplayItem *di, ME_DIType nTypeOrClass) DECLSPEC_HIDDEN;
 ME_DisplayItem *ME_FindItemFwd(ME_DisplayItem *di, ME_DIType nTypeOrClass) DECLSPEC_HIDDEN;
 ME_DisplayItem *ME_FindItemBackOrHere(ME_DisplayItem *di, ME_DIType nTypeOrClass) DECLSPEC_HIDDEN;
@@ -227,6 +227,7 @@ BOOL ME_InternalDeleteText(ME_TextEditor *editor, ME_Cursor *start, int nChars, 
 int ME_GetTextLength(ME_TextEditor *editor) DECLSPEC_HIDDEN;
 int ME_GetTextLengthEx(ME_TextEditor *editor, const GETTEXTLENGTHEX *how) DECLSPEC_HIDDEN;
 ME_Style *ME_GetSelectionInsertStyle(ME_TextEditor *editor) DECLSPEC_HIDDEN;
+void ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor, int *x, int *y, int *height) DECLSPEC_HIDDEN;
 
 /* context.c */
 void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC) DECLSPEC_HIDDEN;

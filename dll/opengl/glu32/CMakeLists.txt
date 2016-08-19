@@ -113,14 +113,7 @@ add_library(glu32 SHARED ${SOURCE} glu32.rc)
 set_module_type(glu32 win32dll)
 
 if(NOT MSVC)
-    add_target_compile_flags(glu32 "-Wno-write-strings")
-    if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        target_link_libraries(glu32 mingwex)
-        #FIXME: longjmp exists in both our msvcrt and mingwex
-        add_target_link_flags(glu32 "-Wl,--allow-multiple-definition")
-    else()
-        add_target_compile_flags(glu32 "-Wno-unused-but-set-variable")
-    endif()
+    add_target_compile_flags(glu32 "-Wno-write-strings -Wno-unused-but-set-variable")
 endif()
 
 add_importlibs(glu32 opengl32 gdi32 msvcrt kernel32 ntdll)

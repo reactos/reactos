@@ -21,6 +21,9 @@
 
 #define KDDEBUG /* uncomment to enable debugging this dll */
 
+/* To undefine once https://sourceware.org/bugzilla/show_bug.cgi?id=17397 is resolved */
+#define MONOPROCESS 1
+
 #ifndef KDDEBUG
 #define KDDBGPRINT(...)
 #else
@@ -34,6 +37,7 @@ FORCEINLINE HANDLE gdb_tid_to_handle(UINT_PTR Tid)
     return (HANDLE)(Tid - 1);
 }
 #define gdb_pid_to_handle gdb_tid_to_handle
+
 FORCEINLINE UINT_PTR handle_to_gdb_tid(HANDLE Handle)
 {
     return (UINT_PTR)Handle + 1;
@@ -68,7 +72,6 @@ typedef KDSTATUS (*KDP_MANIPULATESTATE_HANDLER)(
 /* gdb_input.c */
 extern UINT_PTR gdb_dbg_tid;
 extern UINT_PTR gdb_dbg_pid;
-extern KDSTATUS gdb_interpret_input(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
 extern KDSTATUS gdb_receive_and_interpret_packet(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
 
 /* gdb_receive.c */
@@ -79,8 +82,8 @@ char hex_value(char ch);
 /* gdb_send.c */
 void send_gdb_packet(_In_ CHAR* Buffer);
 void send_gdb_memory(_In_ VOID* Buffer, size_t Length);
-void gdb_send_debug_io(_In_ PSTRING String);
-void gdb_send_exception(void);
+void gdb_send_debug_io(_In_ PSTRING String, _In_ BOOLEAN WithPrefix);
+void gdb_send_exception(BOOLEAN WithThread);
 void send_gdb_ntstatus(_In_ NTSTATUS Status);
 extern const char hex_chars[];
 
@@ -108,8 +111,9 @@ extern PEPROCESS find_process( _In_ UINT_PTR Pid);
 extern PETHREAD find_thread(_In_ UINT_PTR Pid, _In_ UINT_PTR Tid);
 
 /* arch_sup.c */
-extern KDSTATUS gdb_send_register(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
-extern KDSTATUS gdb_send_registers(_Out_ DBGKD_MANIPULATE_STATE64* State, _Out_ PSTRING MessageData, _Out_ PULONG MessageLength, _Inout_ PKD_CONTEXT KdContext);
+extern void gdb_send_register(void);
+extern void gdb_send_registers(void);
+extern char* gdb_append_pc_to_exception(_In_ PETHREAD Thread, _Inout_ char* ptr);
 
 /* Architecture specific defines. See ntoskrnl/include/internal/arch/ke.h */
 #ifdef _M_IX86

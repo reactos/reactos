@@ -58,7 +58,7 @@ typedef struct {
 
 static inline IMediaStreamFilterImpl *impl_from_IMediaStreamFilter(IMediaStreamFilter *iface)
 {
-    return CONTAINING_RECORD(iface, IMediaStreamFilterImpl, filter);
+    return CONTAINING_RECORD((IBaseFilter *)iface, IMediaStreamFilterImpl, filter.IBaseFilter_iface);
 }
 
 static HRESULT WINAPI BasePinImpl_CheckMediaType(BasePin *This, const AM_MEDIA_TYPE *pmt)

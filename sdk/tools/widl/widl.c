@@ -65,6 +65,7 @@ static const char usage[] =
 "   -m32, -m64         Set the kind of typelib to build (Win32 or Win64)\n"
 "   -N                 Do not preprocess input\n"
 "   --oldnames         Use old naming conventions\n"
+"   --oldtlb           Use old typelib (SLTG) format\n"
 "   -o, --output=NAME  Set the output file name\n"
 "   -Otype             Type of stubs to generate (-Os, -Oi, -Oif)\n"
 "   -p                 Generate proxy\n"
@@ -103,6 +104,7 @@ int do_everything = 1;
 static int preprocess_only = 0;
 int do_header = 0;
 int do_typelib = 0;
+int do_old_typelib = 0;
 int do_proxies = 0;
 int do_client = 0;
 int do_server = 0;
@@ -163,7 +165,8 @@ enum {
     WIN64_OPTION,
     WIN32_ALIGN_OPTION,
     WIN64_ALIGN_OPTION,
-    APP_CONFIG_OPTION
+    APP_CONFIG_OPTION,
+    OLD_TYPELIB_OPTION
 };
 
 static const char short_options[] =
@@ -185,6 +188,7 @@ static const struct option long_options[] = {
     { "win32-align", 1, NULL, WIN32_ALIGN_OPTION },
     { "win64-align", 1, NULL, WIN64_ALIGN_OPTION },
     { "app_config", 0, NULL, APP_CONFIG_OPTION },
+    { "oldtlb", 0, NULL, OLD_TYPELIB_OPTION },
     { NULL, 0, NULL, 0 }
 };
 
@@ -306,6 +310,7 @@ static void set_everything(int x)
 {
   do_header = x;
   do_typelib = x;
+  do_old_typelib = x;
   do_proxies = x;
   do_client = x;
   do_server = x;
@@ -690,6 +695,9 @@ int main(int argc,char *argv[])
     case 't':
       do_everything = 0;
       do_typelib = 1;
+      break;
+    case OLD_TYPELIB_OPTION:
+      do_old_typelib = 1;
       break;
     case 'T':
       typelib_name = xstrdup(optarg);

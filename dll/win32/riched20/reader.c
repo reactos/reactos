@@ -258,6 +258,9 @@ void RTFInit(RTF_Info *info)
         info->nestingLevel = 0;
         info->canInheritInTbl = FALSE;
         info->borderType = 0;
+
+        memset(&info->fmt, 0, sizeof(info->fmt));
+        info->fmt.cbSize = sizeof(info->fmt);
 }
 
 /*
@@ -2505,6 +2508,10 @@ static void SpecialChar (RTF_Info *info)
 	case rtfPage:
 	case rtfSect:
 	case rtfPar:
+                RTFFlushOutputBuffer(info);
+                ME_SetSelectionParaFormat(info->editor, &info->fmt);
+                memset(&info->fmt, 0, sizeof(info->fmt));
+                info->fmt.cbSize = sizeof(info->fmt);
 		RTFPutUnicodeChar (info, '\r');
 		if (info->editor->bEmulateVersion10) RTFPutUnicodeChar (info, '\n');
 		break;
@@ -2526,6 +2533,12 @@ static void SpecialChar (RTF_Info *info)
 	case rtfEnDash:
 		RTFPutUnicodeChar (info, 0x2013);
 		break;
+        case rtfEmSpace:
+                RTFPutUnicodeChar (info, ' ');
+                break;
+        case rtfEnSpace:
+                RTFPutUnicodeChar (info, ' ');
+                break;
 	case rtfLQuote:
 		RTFPutUnicodeChar (info, 0x2018);
 		break;
@@ -2538,6 +2551,18 @@ static void SpecialChar (RTF_Info *info)
 	case rtfRDblQuote:
 		RTFPutUnicodeChar (info, 0x201D);
 		break;
+        case rtfLTRMark:
+                RTFPutUnicodeChar (info, 0x200E);
+                break;
+        case rtfRTLMark:
+                RTFPutUnicodeChar (info, 0x200F);
+                break;
+        case rtfNoWidthJoiner:
+                RTFPutUnicodeChar (info, 0x200D);
+                break;
+        case rtfNoWidthNonJoiner:
+                RTFPutUnicodeChar (info, 0x200C);
+                break;
 	}
 }
 

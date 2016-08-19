@@ -24,11 +24,10 @@ typedef struct _TIMEZONE_ENTRY
 {
     struct _TIMEZONE_ENTRY *Prev;
     struct _TIMEZONE_ENTRY *Next;
-    WCHAR Description[64];   /* 'Display' */
+    WCHAR Description[128];  /* 'Display' */
     WCHAR StandardName[33];  /* 'Std' */
     WCHAR DaylightName[33];  /* 'Dlt' */
     TZ_INFO TimezoneInfo;    /* 'TZI' */
-    ULONG Index;             /* 'Index ' */
 } TIMEZONE_ENTRY, *PTIMEZONE_ENTRY;
 
 
@@ -38,21 +37,80 @@ static int cxSource, cySource;
 PTIMEZONE_ENTRY TimeZoneListHead = NULL;
 PTIMEZONE_ENTRY TimeZoneListTail = NULL;
 
-static PTIMEZONE_ENTRY
-GetLargerTimeZoneEntry(DWORD Index)
+static
+PTIMEZONE_ENTRY
+GetLargerTimeZoneEntry(
+    LONG Bias,
+    LPWSTR lpDescription)
 {
     PTIMEZONE_ENTRY Entry;
 
     Entry = TimeZoneListHead;
     while (Entry != NULL)
     {
-        if (Entry->Index >= Index)
+        if (Entry->TimezoneInfo.Bias > Bias)
             return Entry;
+
+        if (Entry->TimezoneInfo.Bias == Bias)
+        {
+            if (_wcsicmp(Entry->Description, lpDescription) > 0)
+                return Entry;
+        }
 
         Entry = Entry->Next;
     }
 
     return NULL;
+}
+
+
+static
+LONG
+QueryTimezoneData(
+    HKEY hZoneKey,
+    PTIMEZONE_ENTRY Entry)
+{
+    DWORD dwValueSize;
+    LONG lError;
+
+    dwValueSize = sizeof(Entry->Description);
+    lError = RegQueryValueExW(hZoneKey,
+                              L"Display",
+                              NULL,
+                              NULL,
+                              (LPBYTE)&Entry->Description,
+                              &dwValueSize);
+    if (lError != ERROR_SUCCESS)
+        return lError;
+
+    dwValueSize = sizeof(Entry->StandardName);
+    lError = RegQueryValueExW(hZoneKey,
+                              L"Std",
+                              NULL,
+                              NULL,
+                              (LPBYTE)&Entry->StandardName,
+                              &dwValueSize);
+    if (lError != ERROR_SUCCESS)
+        return lError;
+
+    dwValueSize = sizeof(Entry->DaylightName);
+    lError = RegQueryValueExW(hZoneKey,
+                              L"Dlt",
+                              NULL,
+                              NULL,
+                              (LPBYTE)&Entry->DaylightName,
+                              &dwValueSize);
+    if (lError != ERROR_SUCCESS)
+        return lError;
+
+    dwValueSize = sizeof(Entry->TimezoneInfo);
+    lError = RegQueryValueExW(hZoneKey,
+                              L"TZI",
+                              NULL,
+                              NULL,
+                              (LPBYTE)&Entry->TimezoneInfo,
+                              &dwValueSize);
+    return lError;
 }
 
 
@@ -62,11 +120,9 @@ CreateTimeZoneList(VOID)
     WCHAR szKeyName[256];
     DWORD dwIndex;
     DWORD dwNameSize;
-    DWORD dwValueSize;
     LONG lError;
     HKEY hZonesKey;
     HKEY hZoneKey;
-
     PTIMEZONE_ENTRY Entry;
     PTIMEZONE_ENTRY Current;
 
@@ -77,10 +133,9 @@ CreateTimeZoneList(VOID)
                       &hZonesKey))
         return;
 
-    dwIndex = 0;
-    while (TRUE)
+    for (dwIndex = 0; ; dwIndex++)
     {
-        dwNameSize = 256 * sizeof(WCHAR);
+        dwNameSize = sizeof(szKeyName);
         lError = RegEnumKeyExW(hZonesKey,
                                dwIndex,
                                szKeyName,
@@ -106,70 +161,16 @@ CreateTimeZoneList(VOID)
             break;
         }
 
-        dwValueSize = 64 * sizeof(WCHAR);
-        lError = RegQueryValueExW(hZoneKey,
-                             L"Display",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&Entry->Description,
-                             &dwValueSize);
-        if (lError != ERROR_SUCCESS)
-        {
-            RegCloseKey(hZoneKey);
-            dwIndex++;
-            HeapFree(GetProcessHeap(), 0, Entry);
-            continue;
-        }
-
-        dwValueSize = 33 * sizeof(WCHAR);
-        if (RegQueryValueExW(hZoneKey,
-                             L"Std",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&Entry->StandardName,
-                             &dwValueSize))
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
-
-        dwValueSize = 33 * sizeof(WCHAR);
-        if (RegQueryValueExW(hZoneKey,
-                             L"Dlt",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&Entry->DaylightName,
-                             &dwValueSize))
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
-
-        dwValueSize = sizeof(DWORD);
-        if (RegQueryValueExW(hZoneKey,
-                             L"Index",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&Entry->Index,
-                             &dwValueSize))
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
-
-        dwValueSize = sizeof(TZ_INFO);
-        if (RegQueryValueExW(hZoneKey,
-                             L"TZI",
-                             NULL,
-                             NULL,
-                             (LPBYTE)&Entry->TimezoneInfo,
-                             &dwValueSize))
-        {
-            RegCloseKey(hZoneKey);
-            break;
-        }
+        lError = QueryTimezoneData(hZoneKey,
+                                   Entry);
 
         RegCloseKey(hZoneKey);
+
+        if (lError != ERROR_SUCCESS)
+        {
+            HeapFree(GetProcessHeap(), 0, Entry);
+            break;
+        }
 
         if (TimeZoneListHead == NULL &&
             TimeZoneListTail == NULL)
@@ -181,7 +182,7 @@ CreateTimeZoneList(VOID)
         }
         else
         {
-            Current = GetLargerTimeZoneEntry(Entry->Index);
+            Current = GetLargerTimeZoneEntry(Entry->TimezoneInfo.Bias, Entry->Description);
             if (Current != NULL)
             {
                 if (Current == TimeZoneListHead)
@@ -210,8 +211,6 @@ CreateTimeZoneList(VOID)
                 TimeZoneListTail = Entry;
             }
         }
-
-        dwIndex++;
     }
 
     RegCloseKey(hZonesKey);
@@ -372,7 +371,7 @@ SetAutoDaylightInfo(HWND hwnd)
                        0,
                        REG_DWORD,
                        (LPBYTE)&dwValue,
-                       sizeof(DWORD));
+                       sizeof(dwValue));
     }
     else
     {
@@ -402,7 +401,7 @@ TimeZonePageProc(HWND hwndDlg,
             hBitmap = LoadImageW(hApplet, MAKEINTRESOURCEW(IDC_WORLD), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
             if (hBitmap != NULL)
             {
-                GetObjectW(hBitmap, sizeof(BITMAP), &bitmap);
+                GetObjectW(hBitmap, sizeof(bitmap), &bitmap);
 
                 cxSource = bitmap.bmWidth;
                 cySource = bitmap.bmHeight;

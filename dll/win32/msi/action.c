@@ -2987,11 +2987,7 @@ static void delete_key( const MSICOMPONENT *comp, HKEY root, const WCHAR *path )
         {
             *p = 0;
             if (!p[1]) continue; /* trailing backslash */
-#ifdef __REACTOS__ /* CORE-10587 */
             hkey = open_key( comp, root, subkey, FALSE, access | READ_CONTROL );
-#else
-            hkey = open_key( comp, root, subkey, FALSE, access );
-#endif
             if (!hkey) break;
             res = RegDeleteKeyExW( hkey, p + 1, access, 0 );
             RegCloseKey( hkey );
@@ -4769,10 +4765,17 @@ static UINT ACTION_RemoveIniValues( MSIPACKAGE *package )
 
 static void register_dll( const WCHAR *dll, BOOL unregister )
 {
+#ifdef __REACTOS__
+    static const WCHAR regW[] =
+        {'r','e','g','s','v','r','3','2','.','e','x','e',' ','/','s',' ','\"','%','s','\"',0};
+    static const WCHAR unregW[] =
+        {'r','e','g','s','v','r','3','2','.','e','x','e',' ','/','s',' ','/','u',' ','\"','%','s','\"',0};
+#else /* __REACTOS__ */
     static const WCHAR regW[] =
         {'r','e','g','s','v','r','3','2','.','e','x','e',' ','\"','%','s','\"',0};
     static const WCHAR unregW[] =
         {'r','e','g','s','v','r','3','2','.','e','x','e',' ','/','u',' ','\"','%','s','\"',0};
+#endif /* __REACTOS__ */
     PROCESS_INFORMATION pi;
     STARTUPINFOW si;
     WCHAR *cmd;
@@ -5799,6 +5802,7 @@ static UINT ITERATE_InstallService(MSIRECORD *rec, LPVOID param)
     LPWSTR name = NULL, disp = NULL, load_order = NULL, serv_name = NULL;
     LPWSTR depends = NULL, pass = NULL, args = NULL, image_path = NULL;
     DWORD serv_type, start_type, err_control;
+    BOOL is_vital;
     SERVICE_DESCRIPTIONW sd = {NULL};
     UINT ret = ERROR_SUCCESS;
 
@@ -5836,6 +5840,13 @@ static UINT ITERATE_InstallService(MSIRECORD *rec, LPVOID param)
     deformat_string(package, MSI_RecordGetString(rec, 10), &pass);
     deformat_string(package, MSI_RecordGetString(rec, 11), &args);
     deformat_string(package, MSI_RecordGetString(rec, 13), &sd.lpDescription);
+
+    /* Should the complete install fail if CreateService fails? */
+    is_vital = (err_control & msidbServiceInstallErrorControlVital);
+
+    /* Remove the msidbServiceInstallErrorControlVital-flag from err_control.
+       CreateService (under Windows) would fail if not. */
+    err_control &= ~msidbServiceInstallErrorControlVital;
 
     /* fetch the service path */
     row = MSI_QueryGetRecord(package->db, query, comp);
@@ -5878,7 +5889,12 @@ static UINT ITERATE_InstallService(MSIRECORD *rec, LPVOID param)
     if (!service)
     {
         if (GetLastError() != ERROR_SERVICE_EXISTS)
-            ERR("Failed to create service %s: %d\n", debugstr_w(name), GetLastError());
+        {
+            WARN("Failed to create service %s: %d\n", debugstr_w(name), GetLastError());
+            if (is_vital)
+                ret = ERROR_INSTALL_FAILURE;
+
+        }
     }
     else if (sd.lpDescription)
     {

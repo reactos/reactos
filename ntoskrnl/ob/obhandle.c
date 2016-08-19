@@ -484,7 +484,22 @@ NTSTATUS
 NTAPI
 ObpValidateAccessMask(IN PACCESS_STATE AccessState)
 {
-    /* TODO */
+    PISECURITY_DESCRIPTOR SecurityDescriptor;
+
+    /* We're only interested if the object for this access state has an SD */
+    SecurityDescriptor = AccessState->SecurityDescriptor;
+    if (SecurityDescriptor)
+    {
+        /* Check if the SD has a system ACL but hasn't been granted access to get/set it */
+        if ((SecurityDescriptor->Control & SE_SACL_PRESENT) &&
+            !(AccessState->PreviouslyGrantedAccess & ACCESS_SYSTEM_SECURITY))
+        {
+            /* We're gonna need access */
+            AccessState->RemainingDesiredAccess |= ACCESS_SYSTEM_SECURITY;
+        }
+    }
+
+    /* This can't fail */
     return STATUS_SUCCESS;
 }
 
@@ -1989,25 +2004,79 @@ ObpDuplicateHandleCallback(IN PEPROCESS Process,
     return Ret;
 }
 
+/*++
+* @name ObClearProcessHandleTable
+*
+*     The ObClearProcessHandleTable routine clears the handle table
+*     of the given process.
+*
+* @param Process
+*        The process of which the handle table should be cleared.
+*
+* @return None.
+*
+* @remarks None.
+*
+*--*/
 VOID
 NTAPI
 ObClearProcessHandleTable(IN PEPROCESS Process)
 {
-    /* FIXME */
+    PHANDLE_TABLE HandleTable;
+    OBP_CLOSE_HANDLE_CONTEXT Context;
+    KAPC_STATE ApcState;
+    BOOLEAN AttachedToProcess = FALSE;
+
+    ASSERT(Process);
+
+    /* Ensure the handle table doesn't go away while we use it */
+    HandleTable = ObReferenceProcessHandleTable(Process);
+    if (!HandleTable) return;
+
+    /* Attach to the current process if needed */
+    if (PsGetCurrentProcess() != Process)
+    {
+        KeStackAttachProcess(&Process->Pcb, &ApcState);
+        AttachedToProcess = TRUE;
+    }
+
+    /* Enter a critical region */
+    KeEnterCriticalRegion();
+
+    /* Fill out the context */
+    Context.AccessMode = UserMode;
+    Context.HandleTable = HandleTable;
+
+    /* Sweep the handle table to close all handles */
+    ExSweepHandleTable(HandleTable,
+                       ObpCloseHandleCallback,
+                       &Context);
+
+    /* Leave the critical region */
+    KeLeaveCriticalRegion();
+
+    /* Detach if needed */
+    if (AttachedToProcess)
+        KeUnstackDetachProcess(&ApcState);
+
+    /* Let the handle table go */
+    ObDereferenceProcessHandleTable(Process);
 }
 
 /*++
-* @name ObpCreateHandleTable
+* @name ObInitProcess
 *
-*     The ObpCreateHandleTable routine <FILLMEIN>
+*     The ObInitProcess routine initializes the handle table for the process
+*     to be initialized, by either creating a new one or duplicating it from
+*     the parent process.
 *
 * @param Parent
-*        <FILLMEIN>.
+*        A parent process (optional).
 *
 * @param Process
-*        <FILLMEIN>.
+*        The process to initialize.
 *
-* @return <FILLMEIN>.
+* @return Success or failure.
 *
 * @remarks None.
 *
@@ -2070,14 +2139,16 @@ ObInitProcess(IN PEPROCESS Parent OPTIONAL,
 /*++
 * @name ObKillProcess
 *
-*     The ObKillProcess routine <FILLMEIN>
+*     The ObKillProcess routine performs rundown operations on the process,
+*     then clears and destroys its handle table.
 *
 * @param Process
-*        <FILLMEIN>.
+*        The process to be killed.
 *
 * @return None.
 *
-* @remarks None.
+* @remarks Called by the Object Manager cleanup code (kernel)
+*          when a process is to be destroyed.
 *
 *--*/
 VOID

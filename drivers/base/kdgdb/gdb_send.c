@@ -123,22 +123,26 @@ send_gdb_memory(
 
 void
 gdb_send_debug_io(
-    _In_ PSTRING String)
+    _In_ PSTRING String,
+    _In_ BOOLEAN WithPrefix)
 {
     UCHAR ack;
 
     do {
         CHAR* ptr = String->Buffer;
-        CHAR check_sum;
+        CHAR check_sum = 0;
         USHORT Length = String->Length;
         CHAR Byte;
 
         KdpSendByte('$');
 
-        KdpSendByte('O');
+        if (WithPrefix)
+        {
+            KdpSendByte('O');
+            check_sum = 'O';
+        }
 
         /* Send the data */
-        check_sum = 'O';
         while (Length--)
         {
             Byte = hex_chars[(*ptr >> 4) & 0xf];
@@ -164,7 +168,7 @@ gdb_send_debug_io(
 }
 
 void
-gdb_send_exception(void)
+gdb_send_exception(BOOLEAN WithThread)
 {
     char gdb_out[1024];
     char* ptr = gdb_out;
@@ -180,11 +184,20 @@ gdb_send_exception(void)
     }
     else
         ptr += sprintf(ptr, "05");
-
-    ptr += sprintf(ptr, "thread:p%" PRIxPTR ".%" PRIxPTR ";",
-        handle_to_gdb_pid(PsGetThreadProcessId(Thread)),
-        handle_to_gdb_tid(PsGetThreadId(Thread)));
+    if (WithThread)
+    {
+#if MONOPROCESS
+        ptr += sprintf(ptr, "thread:%" PRIxPTR ";",
+            handle_to_gdb_tid(PsGetThreadId(Thread)));
+#else
+        ptr += sprintf(ptr, "thread:p%" PRIxPTR ".%" PRIxPTR ";",
+            handle_to_gdb_pid(PsGetThreadProcessId(Thread)),
+            handle_to_gdb_tid(PsGetThreadId(Thread)));
+#endif
+    }
     ptr += sprintf(ptr, "core:%x;", CurrentStateChange.Processor);
+    /* Add program counter */
+    gdb_append_pc_to_exception(Thread, ptr);
     send_gdb_packet(gdb_out);
 }
 

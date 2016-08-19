@@ -216,9 +216,8 @@ int ME_SetSelection(ME_TextEditor *editor, int from, int to)
 }
 
 
-static void
-ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor,
-                        int *x, int *y, int *height)
+void ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor,
+                             int *x, int *y, int *height)
 {
   ME_DisplayItem *row;
   ME_DisplayItem *run = pCursor->pRun;
@@ -332,7 +331,7 @@ BOOL ME_InternalDeleteText(ME_TextEditor *editor, ME_Cursor *start,
     {
       /* We aren't deleting anything in this run, so we will go back to the
        * last run we are deleting text in. */
-      ME_PrevRun(&c.pPara, &c.pRun);
+      ME_PrevRun(&c.pPara, &c.pRun, TRUE);
       c.nOffset = c.pRun->member.run.len;
     }
     run = &c.pRun->member.run;
@@ -390,7 +389,7 @@ BOOL ME_InternalDeleteText(ME_TextEditor *editor, ME_Cursor *start,
          nCharsToDelete is a number of chars to delete from THIS run */
       nChars -= nCharsToDelete;
       shift -= nCharsToDelete;
-      TRACE("Deleting %d (remaning %d) chars at %d in %s (%d)\n",
+      TRACE("Deleting %d (remaining %d) chars at %d in %s (%d)\n",
         nCharsToDelete, nChars, c.nOffset,
         debugstr_run( run ), run->len);
 
@@ -1246,7 +1245,7 @@ ME_MoveCursorLines(ME_TextEditor *editor, ME_Cursor *pCursor, int nRelOfs)
   int x = ME_GetXForArrow(editor, pCursor);
 
   if (editor->bCaretAtEnd && !pCursor->nOffset)
-    if (!ME_PrevRun(&pOldPara, &pRun))
+    if (!ME_PrevRun(&pOldPara, &pRun, TRUE))
       return;
 
   if (nRelOfs == -1)

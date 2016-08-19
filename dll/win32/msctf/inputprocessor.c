@@ -30,15 +30,6 @@ static const WCHAR szwDefault[] = {'D','e','f','a','u','l','t',0};
 static const WCHAR szwProfile[] = {'P','r','o','f','i','l','e',0};
 static const WCHAR szwDefaultFmt[] = {'%','s','\\','%','s','\\','0','x','%','0','8','x','\\','%','s',0};
 
-typedef struct tagInputProcessorProfilesSink {
-    struct list         entry;
-    union {
-        /* InputProcessorProfile Sinks */
-        IUnknown            *pIUnknown;
-        ITfLanguageProfileNotifySink *pITfLanguageProfileNotifySink;
-    } interfaces;
-} InputProcessorProfilesSink;
-
 typedef struct tagInputProcessorProfiles {
     ITfInputProcessorProfiles ITfInputProcessorProfiles_iface;
     ITfSource ITfSource_iface;
@@ -81,7 +72,7 @@ typedef struct {
 } EnumTfInputProcessorProfiles;
 
 static HRESULT ProfilesEnumGuid_Constructor(IEnumGUID **ppOut);
-static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, IEnumTfLanguageProfiles **ppOut);
+static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, EnumTfLanguageProfiles **out);
 
 static inline EnumTfInputProcessorProfiles *impl_from_IEnumTfInputProcessorProfiles(IEnumTfInputProcessorProfiles *iface)
 {
@@ -196,25 +187,11 @@ static inline EnumTfLanguageProfiles *impl_from_IEnumTfLanguageProfiles(IEnumTfL
     return CONTAINING_RECORD(iface, EnumTfLanguageProfiles, IEnumTfLanguageProfiles_iface);
 }
 
-static void free_sink(InputProcessorProfilesSink *sink)
-{
-        IUnknown_Release(sink->interfaces.pIUnknown);
-        HeapFree(GetProcessHeap(),0,sink);
-}
-
 static void InputProcessorProfiles_Destructor(InputProcessorProfiles *This)
 {
-    struct list *cursor, *cursor2;
     TRACE("destroying %p\n", This);
 
-    /* free sinks */
-    LIST_FOR_EACH_SAFE(cursor, cursor2, &This->LanguageProfileNotifySink)
-    {
-        InputProcessorProfilesSink* sink = LIST_ENTRY(cursor,InputProcessorProfilesSink,entry);
-        list_remove(cursor);
-        free_sink(sink);
-    }
-
+    free_sinks(&This->LanguageProfileNotifySink);
     HeapFree(GetProcessHeap(),0,This);
 }
 
@@ -584,18 +561,18 @@ static HRESULT WINAPI InputProcessorProfiles_ChangeCurrentLanguage(
         ITfInputProcessorProfiles *iface, LANGID langid)
 {
     InputProcessorProfiles *This = impl_from_ITfInputProcessorProfiles(iface);
+    ITfLanguageProfileNotifySink *sink;
     struct list *cursor;
     BOOL accept;
 
     FIXME("STUB:(%p)\n",This);
 
-    LIST_FOR_EACH(cursor, &This->LanguageProfileNotifySink)
+    SINK_FOR_EACH(cursor, &This->LanguageProfileNotifySink, ITfLanguageProfileNotifySink, sink)
     {
-        InputProcessorProfilesSink* sink = LIST_ENTRY(cursor,InputProcessorProfilesSink,entry);
         accept = TRUE;
-        ITfLanguageProfileNotifySink_OnLanguageChange(sink->interfaces.pITfLanguageProfileNotifySink, langid, &accept);
+        ITfLanguageProfileNotifySink_OnLanguageChange(sink, langid, &accept);
         if (!accept)
-            return  E_FAIL;
+            return E_FAIL;
     }
 
     /* TODO:  On successful language change call OnLanguageChanged sink */
@@ -618,8 +595,17 @@ static HRESULT WINAPI InputProcessorProfiles_EnumLanguageProfiles(
         IEnumTfLanguageProfiles **ppEnum)
 {
     InputProcessorProfiles *This = impl_from_ITfInputProcessorProfiles(iface);
+    EnumTfLanguageProfiles *profenum;
+    HRESULT hr;
+
     TRACE("(%p) %x %p\n",This,langid,ppEnum);
-    return EnumTfLanguageProfiles_Constructor(langid, ppEnum);
+
+    if (!ppEnum)
+        return E_INVALIDARG;
+    hr = EnumTfLanguageProfiles_Constructor(langid, &profenum);
+    *ppEnum = &profenum->IEnumTfLanguageProfiles_iface;
+
+    return hr;
 }
 
 static HRESULT WINAPI InputProcessorProfiles_EnableLanguageProfile(
@@ -907,7 +893,6 @@ static HRESULT WINAPI IPPSource_AdviseSink(ITfSource *iface,
         REFIID riid, IUnknown *punk, DWORD *pdwCookie)
 {
     InputProcessorProfiles *This = impl_from_ITfSource(iface);
-    InputProcessorProfilesSink *ipps;
 
     TRACE("(%p) %s %p %p\n",This,debugstr_guid(riid),punk,pdwCookie);
 
@@ -915,47 +900,23 @@ static HRESULT WINAPI IPPSource_AdviseSink(ITfSource *iface,
         return E_INVALIDARG;
 
     if (IsEqualIID(riid, &IID_ITfLanguageProfileNotifySink))
-    {
-        ipps = HeapAlloc(GetProcessHeap(),0,sizeof(InputProcessorProfilesSink));
-        if (!ipps)
-            return E_OUTOFMEMORY;
-        if (FAILED(IUnknown_QueryInterface(punk, riid, (LPVOID *)&ipps->interfaces.pITfLanguageProfileNotifySink)))
-        {
-            HeapFree(GetProcessHeap(),0,ipps);
-            return CONNECT_E_CANNOTCONNECT;
-        }
-        list_add_head(&This->LanguageProfileNotifySink,&ipps->entry);
-        *pdwCookie = generate_Cookie(COOKIE_MAGIC_IPPSINK, ipps);
-    }
-    else
-    {
-        FIXME("(%p) Unhandled Sink: %s\n",This,debugstr_guid(riid));
-        return E_NOTIMPL;
-    }
+        return advise_sink(&This->LanguageProfileNotifySink, &IID_ITfLanguageProfileNotifySink,
+                           COOKIE_MAGIC_IPPSINK, punk, pdwCookie);
 
-    TRACE("cookie %x\n",*pdwCookie);
-
-    return S_OK;
+    FIXME("(%p) Unhandled Sink: %s\n",This,debugstr_guid(riid));
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IPPSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
 {
     InputProcessorProfiles *This = impl_from_ITfSource(iface);
-    InputProcessorProfilesSink *sink;
 
     TRACE("(%p) %x\n",This,pdwCookie);
 
     if (get_Cookie_magic(pdwCookie)!=COOKIE_MAGIC_IPPSINK)
         return E_INVALIDARG;
 
-    sink = remove_Cookie(pdwCookie);
-    if (!sink)
-        return CONNECT_E_NOCONNECTION;
-
-    list_remove(&sink->entry);
-    free_sink(sink);
-
-    return S_OK;
+    return unadvise_sink(pdwCookie);
 }
 
 static const ITfSourceVtbl InputProcessorProfilesSourceVtbl =
@@ -1315,16 +1276,16 @@ static HRESULT WINAPI EnumTfLanguageProfiles_Clone( IEnumTfLanguageProfiles *ifa
     IEnumTfLanguageProfiles **ppenum)
 {
     EnumTfLanguageProfiles *This = impl_from_IEnumTfLanguageProfiles(iface);
+    EnumTfLanguageProfiles *new_This;
     HRESULT res;
 
     TRACE("(%p)\n",This);
 
     if (ppenum == NULL) return E_POINTER;
 
-    res = EnumTfLanguageProfiles_Constructor(This->langid, ppenum);
+    res = EnumTfLanguageProfiles_Constructor(This->langid, &new_This);
     if (SUCCEEDED(res))
     {
-        EnumTfLanguageProfiles *new_This = (EnumTfLanguageProfiles *)*ppenum;
         new_This->tip_index = This->tip_index;
         lstrcpynW(new_This->szwCurrentClsid,This->szwCurrentClsid,39);
 
@@ -1337,6 +1298,7 @@ static HRESULT WINAPI EnumTfLanguageProfiles_Clone( IEnumTfLanguageProfiles *ifa
             res = RegOpenKeyExW(new_This->tipkey, fullkey, 0, KEY_READ | KEY_WRITE, &This->langkey);
             new_This->lang_index = This->lang_index;
         }
+        *ppenum = &new_This->IEnumTfLanguageProfiles_iface;
     }
     return res;
 }
@@ -1352,7 +1314,7 @@ static const IEnumTfLanguageProfilesVtbl EnumTfLanguageProfilesVtbl =
     EnumTfLanguageProfiles_Skip
 };
 
-static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, IEnumTfLanguageProfiles **ppOut)
+static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, EnumTfLanguageProfiles **out)
 {
     HRESULT hr;
     EnumTfLanguageProfiles *This;
@@ -1379,7 +1341,7 @@ static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, IEnumTfLanguage
         return E_FAIL;
     }
 
-    *ppOut = &This->IEnumTfLanguageProfiles_iface;
-    TRACE("returning %p\n", *ppOut);
+    *out = This;
+    TRACE("returning %p\n", *out);
     return S_OK;
 }

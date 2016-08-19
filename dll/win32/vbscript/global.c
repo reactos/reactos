@@ -22,8 +22,6 @@
 #include <wingdi.h>
 #include <mshtmhst.h>
 
-#define round(x) (((x) < 0) ? (int)((x) - 0.5) : (int)((x) + 0.5))
-
 #define VB_E_CANNOT_CREATE_OBJ 0x800a01ad
 #define VB_E_MK_PARSE_ERROR    0x800a01b0
 

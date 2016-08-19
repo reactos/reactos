@@ -25,74 +25,80 @@ FsRecIsUdfsVolume(IN PDEVICE_OBJECT DeviceObject,
 {
     PVOLSTRUCTDESC VolumeStructDesc = NULL;
     LARGE_INTEGER Offset;
-    ULONG State = 0;
+    BOOLEAN ret = FALSE;
+    int i;
     PAGED_CODE();
 
-    Offset.QuadPart = UDFS_VRS_START_OFFSET;
-    while (TRUE)
+    Offset.QuadPart = 16 * SectorSize;
+    for (i = 0; i < 16; i++)
     {
         if (!FsRecReadBlock(DeviceObject,
                             &Offset,
                             SectorSize,
                             SectorSize,
-                            (PVOID)&VolumeStructDesc,
+                            (PVOID *)&VolumeStructDesc,
                             NULL))
         {
             break;
         }
 
-        switch (State)
+        if (!strncmp((const char*)VolumeStructDesc->Ident,
+                        VSD_STD_ID_BEA01,
+                        VSD_STD_ID_LEN))
         {
-            case 0:
+            DPRINT("BEA01 found\n");
+        }
 
-                if (!strncmp((const char*)VolumeStructDesc->Ident,
-                             VSD_STD_ID_BEA01,
-                             VSD_STD_ID_LEN))
-                {
-                    State = 1;
-                }
-                else
-                {
-                    ExFreePool(VolumeStructDesc);
-                    return FALSE;
-                }
-                break;
+        if (!strncmp((const char*)VolumeStructDesc->Ident,
+                        VSD_STD_ID_NSR03,
+                        VSD_STD_ID_LEN))
+        {
+            DPRINT("NSR03 found\n");
+            ret = TRUE;
+        }
 
-            case 1:
+        if (!strncmp((const char*)VolumeStructDesc->Ident,
+                        VSD_STD_ID_NSR02,
+                        VSD_STD_ID_LEN))
+        {
+            DPRINT("NSR02 found\n");
+            ret = TRUE;
+        }
 
-                if (!strncmp((const char*)VolumeStructDesc->Ident,
-                             VSD_STD_ID_NSR03,
-                             VSD_STD_ID_LEN) ||
-                    !strncmp((const char*)VolumeStructDesc->Ident,
-                             VSD_STD_ID_NSR02,
-                             VSD_STD_ID_LEN))
-                {
-                    State = 2;
-                }
-                break;
+        if (!strncmp((const char*)VolumeStructDesc->Ident,
+                        VSD_STD_ID_TEA01,
+                        VSD_STD_ID_LEN))
+        {
+            DPRINT("TEA01 found\n");
+        }
 
-            case 2:
+        if (!strncmp((const char*)VolumeStructDesc->Ident,
+                        VSD_STD_ID_CD001,
+                        VSD_STD_ID_LEN))
+        {
+            DPRINT("CD001 found\n");
+        }
 
-                if (!strncmp((const char*)VolumeStructDesc->Ident,
-                             VSD_STD_ID_TEA01,
-                             VSD_STD_ID_LEN))
-                {
-                    ExFreePool(VolumeStructDesc);
-                    return TRUE;
-                }
-                break;
+        if (!strncmp((const char*)VolumeStructDesc->Ident,
+                        VSD_STD_ID_CDW02,
+                        VSD_STD_ID_LEN))
+        {
+            DPRINT("CDW02 found\n");
+        }
+
+        if (!strncmp((const char*)VolumeStructDesc->Ident,
+                        VSD_STD_ID_BOOT2,
+                        VSD_STD_ID_LEN))
+        {
+            DPRINT("BOOT2 found\n");
         }
 
         Offset.QuadPart += SectorSize;
-        if (Offset.QuadPart == UDFS_AVDP_SECTOR)
-        {
-            ExFreePool(VolumeStructDesc);
-            return FALSE;
-        }
     }
 
-    ExFreePool(VolumeStructDesc);
-    return TRUE;
+    if (VolumeStructDesc)
+        ExFreePool(VolumeStructDesc);
+    return ret;
 }
 
 NTSTATUS

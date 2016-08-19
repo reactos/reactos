@@ -14,6 +14,7 @@ list(APPEND SOURCE
     groupdb.c
     lock.c
     rpcserver.c
+    security.c
     services.c
     services.h
     ${CMAKE_CURRENT_BINARY_DIR}/svcctl_s.c)

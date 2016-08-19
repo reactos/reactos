@@ -57,6 +57,11 @@ struct proxy_manager
   void *dest_context_data;  /* reserved context value (LOCK) */
 };
 
+static inline struct proxy_manager *impl_from_IMultiQI( IMultiQI *iface )
+{
+    return CONTAINING_RECORD(iface, struct proxy_manager, IMultiQI_iface);
+}
+
 static inline struct proxy_manager *impl_from_IMarshal( IMarshal *iface )
 {
     return CONTAINING_RECORD(iface, struct proxy_manager, IMarshal_iface);
@@ -215,16 +220,16 @@ static HRESULT WINAPI ClientIdentity_QueryInterface(IMultiQI * iface, REFIID rii
     return hr;
 }
 
-static ULONG WINAPI ClientIdentity_AddRef(IMultiQI * iface)
+static ULONG WINAPI ClientIdentity_AddRef(IMultiQI *iface)
 {
-    struct proxy_manager * This = (struct proxy_manager *)iface;
+    struct proxy_manager *This = impl_from_IMultiQI(iface);
     TRACE("%p - before %d\n", iface, This->refs);
     return InterlockedIncrement(&This->refs);
 }
 
-static ULONG WINAPI ClientIdentity_Release(IMultiQI * iface)
+static ULONG WINAPI ClientIdentity_Release(IMultiQI *iface)
 {
-    struct proxy_manager * This = (struct proxy_manager *)iface;
+    struct proxy_manager *This = impl_from_IMultiQI(iface);
     ULONG refs = InterlockedDecrement(&This->refs);
     TRACE("%p - after %d\n", iface, refs);
     if (!refs)
@@ -234,7 +239,7 @@ static ULONG WINAPI ClientIdentity_Release(IMultiQI * iface)
 
 static HRESULT WINAPI ClientIdentity_QueryMultipleInterfaces(IMultiQI *iface, ULONG cMQIs, MULTI_QI *pMQIs)
 {
-    struct proxy_manager * This = (struct proxy_manager *)iface;
+    struct proxy_manager *This = impl_from_IMultiQI(iface);
     REMQIRESULT *qiresults = NULL;
     ULONG nonlocal_mqis = 0;
     ULONG i;
@@ -750,7 +755,7 @@ static HRESULT proxy_manager_construct(
 
     EnterCriticalSection(&apt->cs);
     /* FIXME: we are dependent on the ordering in here to make sure a proxy's
-     * IRemUnknown proxy doesn't get destroyed before the regual proxy does
+     * IRemUnknown proxy doesn't get destroyed before the regular proxy does
      * because we need the IRemUnknown proxy during the destruction of the
      * regular proxy. Ideally, we should maintain a separate list for the
      * IRemUnknown proxies that need late destruction */
@@ -1760,7 +1765,7 @@ HRESULT WINAPI CoMarshalInterface(IStream *pStream, REFIID riid, IUnknown *pUnk,
         }
     }
 
-    TRACE("Calling IMarshal::MarshalInterace\n");
+    TRACE("Calling IMarshal::MarshalInterface\n");
     /* call helper object to do the actual marshaling */
     hr = IMarshal_MarshalInterface(pMarshal, pStream, riid, pUnk, dwDestContext,
                                    pvDestContext, mshlFlags);

@@ -203,7 +203,7 @@ BOOL
 WINAPI
 CharToOemA(LPCSTR s, LPSTR d)
 {
-    if (!s || !d) return TRUE;
+    if (!s || !d) return FALSE;
     return CharToOemBuffA(s, d, strlen(s) + 1);
 }
 
@@ -215,6 +215,8 @@ WINAPI
 CharToOemBuffA(LPCSTR s, LPSTR d, DWORD len)
 {
     WCHAR* bufW;
+
+    if ( !s || !d ) return FALSE;
 
     bufW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
     if (bufW) {
@@ -233,7 +235,7 @@ WINAPI
 CharToOemBuffW(LPCWSTR s, LPSTR d, DWORD len)
 {
     if (!s || !d)
-        return TRUE;
+        return FALSE;
     WideCharToMultiByte(CP_OEMCP, 0, s, len, d, len, NULL, NULL);
     return TRUE;
 }
@@ -245,6 +247,7 @@ BOOL
 WINAPI
 CharToOemW(LPCWSTR s, LPSTR d)
 {
+    if ( !s || !d ) return FALSE;
     return CharToOemBuffW(s, d, wcslen(s) + 1);
 }
 
@@ -420,6 +423,7 @@ BOOL
 WINAPI
 OemToCharA(LPCSTR s, LPSTR d)
 {
+    if ( !s || !d ) return FALSE;
     return OemToCharBuffA(s, d, strlen(s) + 1);
 }
 
@@ -429,6 +433,8 @@ OemToCharA(LPCSTR s, LPSTR d)
 BOOL WINAPI OemToCharBuffA(LPCSTR s, LPSTR d, DWORD len)
 {
     WCHAR* bufW;
+
+    if ( !s || !d ) return FALSE;
 
     bufW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
     if (bufW) {
@@ -446,6 +452,7 @@ BOOL
 WINAPI
 OemToCharBuffW(LPCSTR s, LPWSTR d, DWORD len)
 {
+    if ( !s || !d ) return FALSE;
     MultiByteToWideChar(CP_OEMCP, 0, s, len, d, len);
     return TRUE;
 }
@@ -455,6 +462,7 @@ OemToCharBuffW(LPCSTR s, LPWSTR d, DWORD len)
  */
 BOOL WINAPI OemToCharW(LPCSTR s, LPWSTR d)
 {
+    if ( !s || !d ) return FALSE;
     return OemToCharBuffW(s, d, strlen(s) + 1);
 }
 

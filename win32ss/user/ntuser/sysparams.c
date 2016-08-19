@@ -317,6 +317,7 @@ SpiUpdatePerUserSystemParameters(VOID)
        if (SPITESTPREF(UPM_COMBOBOXANIMATION)) gpsi->PUSIFlags |= PUSIF_COMBOBOXANIMATION;
        if (SPITESTPREF(UPM_LISTBOXSMOOTHSCROLLING)) gpsi->PUSIFlags |= PUSIF_LISTBOXSMOOTHSCROLLING;
     }
+    gdwLanguageToggleKey = UserGetLanguageToggle();
 }
 
 BOOL
@@ -1209,7 +1210,8 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         }
 
         case SPI_SETLANGTOGGLE:
-            ERR("SPI_SETLANGTOGGLE is unimplemented\n");
+            gdwLanguageToggleKey = UserGetLanguageToggle();
+            return gdwLanguageToggleKey;
             break;
 
         case SPI_GETWINDOWSEXTENSION:
