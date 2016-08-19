@@ -3745,6 +3745,7 @@ CHubController::HandleQueryInterface(
             InterfaceHub->SetDeviceHandleData = USBHI_SetDeviceHandleData;
         }
 
+        InterfaceHub->InterfaceReference(InterfaceHub->BusContext);
         //
         // request completed
         //
@@ -3799,6 +3800,7 @@ CHubController::HandleQueryInterface(
             InterfaceDI->EnumLogEntry = USBDI_EnumLogEntry;
         }
 
+        InterfaceDI->InterfaceReference(InterfaceDI->BusContext);
         //
         // request completed
         //
