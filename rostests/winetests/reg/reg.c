@@ -16,8 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windows.h>
-#include "wine/test.h"
+#include <stdio.h>
+
+#include <wine/test.h>
+#include <winreg.h>
 
 #define lok ok_(__FILE__,line)
 #define KEY_BASE "Software\\Wine\\reg_test"
@@ -442,6 +444,27 @@ static void test_add(void)
 
     RegCloseKey(hkey);
 
+    /* Test duplicate switches */
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v dup1 /t REG_DWORD /d 123 /f /t REG_SZ", &r);
+    ok(r == REG_EXIT_FAILURE || broken(r == REG_EXIT_SUCCESS /* WinXP */),
+       "got exit code %u, expected 1\n", r);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v dup2 /t REG_DWORD /d 123 /f /d 456", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
+
+    /* Test invalid switches */
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v invalid1 /a", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v invalid2 /ae", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v invalid3 /", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
+
+    run_reg_exe("reg add HKCU\\" KEY_BASE " /v invalid4 -", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %u, expected 1\n", r);
+
     err = RegDeleteKeyA(HKEY_CURRENT_USER, KEY_BASE);
     ok(err == ERROR_SUCCESS, "got %d\n", err);
 }
@@ -526,7 +549,7 @@ static void test_query(void)
     ok(err == ERROR_SUCCESS, "got %d, expected 0\n", err);
 
     run_reg_exe("reg query HKCU\\" KEY_BASE " /ve", &r);
-    todo_wine ok(r == REG_EXIT_SUCCESS || broken(r == REG_EXIT_FAILURE /* WinXP */),
+    ok(r == REG_EXIT_SUCCESS || broken(r == REG_EXIT_FAILURE /* WinXP */),
        "got exit code %d, expected 0\n", r);
 
     err = RegSetValueExA(key, "Test", 0, REG_SZ, (BYTE *)hello, sizeof(hello));
@@ -654,6 +677,79 @@ static void test_v_flags(void)
     ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
 }
 
+static BOOL write_reg_file(const char *value, char *tmp_name)
+{
+    static const char regedit4[] = "REGEDIT4";
+    static const char key[] = "[HKEY_CURRENT_USER\\" KEY_BASE "]";
+    char file_data[MAX_PATH], tmp_path[MAX_PATH];
+    HANDLE hfile;
+    DWORD written;
+    BOOL ret;
+
+    sprintf(file_data, "%s\n\n%s\n%s\n", regedit4, key, value);
+
+    GetTempPathA(MAX_PATH, tmp_path);
+    GetTempFileNameA(tmp_path, "reg", 0, tmp_name);
+
+    hfile = CreateFileA(tmp_name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+    if (hfile == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    ret = WriteFile(hfile, file_data, strlen(file_data), &written, NULL);
+    CloseHandle(hfile);
+    return ret;
+}
+
+static void test_import(void)
+{
+    DWORD r, dword = 0x123;
+    char test1_reg[MAX_PATH], test2_reg[MAX_PATH];
+    char cmdline[MAX_PATH];
+    char test_string[] = "Test string";
+    HKEY hkey;
+    LONG err;
+
+    run_reg_exe("reg import", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    run_reg_exe("reg import /?", &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    run_reg_exe("reg import missing.reg", &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    /* Create test files */
+    ok(write_reg_file("\"Wine\"=dword:00000123", test1_reg), "Failed to write registry file\n");
+    ok(write_reg_file("@=\"Test string\"", test2_reg), "Failed to write registry file\n");
+
+    sprintf(cmdline, "reg import %s", test1_reg);
+    run_reg_exe(cmdline, &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    sprintf(cmdline, "reg import %s", test2_reg);
+    run_reg_exe(cmdline, &r);
+    todo_wine ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+
+    err = RegOpenKeyExA(HKEY_CURRENT_USER, KEY_BASE, 0, KEY_READ, &hkey);
+    todo_wine ok(err == ERROR_SUCCESS, "got %d, expected 0\n", err);
+
+    todo_wine verify_reg(hkey, "Wine", REG_DWORD, &dword, sizeof(dword), 0);
+    todo_wine verify_reg(hkey, "", REG_SZ, test_string, sizeof(test_string), 0);
+
+    err = RegCloseKey(hkey);
+    todo_wine ok(err == ERROR_SUCCESS, "got %d, expected 0\n", err);
+
+    err = RegDeleteKeyA(HKEY_CURRENT_USER, KEY_BASE);
+    todo_wine ok(err == ERROR_SUCCESS, "got %d, expected 0\n", err);
+
+    sprintf(cmdline, "reg import %s %s", test1_reg, test2_reg);
+    run_reg_exe(cmdline, &r);
+    ok(r == REG_EXIT_FAILURE, "got exit code %d, expected 1\n", r);
+
+    DeleteFileA(test1_reg);
+    DeleteFileA(test2_reg);
+}
+
 START_TEST(reg)
 {
     DWORD r;
@@ -666,4 +762,5 @@ START_TEST(reg)
     test_delete();
     test_query();
     test_v_flags();
+    test_import();
 }
