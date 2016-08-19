@@ -341,11 +341,12 @@ static const IClassFactoryVtbl ClassFactoryVtbl = {
 
 static IClassFactory testobj_cf = { &ClassFactoryVtbl };
 
-static void run_test(const char *file_name)
+static void run_script_file(const char *file_name, DWORD expected_exit_code)
 {
     char command[MAX_PATH];
     STARTUPINFOA si = {sizeof(si)};
     PROCESS_INFORMATION pi;
+    DWORD exit_code;
     BOOL bres;
 
     script_name = file_name;
@@ -362,20 +363,59 @@ static void run_test(const char *file_name)
 
     wscript_process = pi.hProcess;
     WaitForSingleObject(pi.hProcess, INFINITE);
+
+    bres = GetExitCodeProcess(pi.hProcess, &exit_code);
+    ok(bres, "GetExitCodeProcess failed: %u\n", GetLastError());
+    ok(exit_code == expected_exit_code, "exit_code = %u, expected %u\n", exit_code, expected_exit_code);
+
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
 
     CHECK_CALLED(reportSuccess);
 }
 
+static void run_script(const char *name, const char *script_data, size_t script_size, DWORD expected_exit_code)
+{
+    char file_name[MAX_PATH];
+    const char *ext;
+    HANDLE file;
+    DWORD size;
+    BOOL res;
+
+    ext = strrchr(name, '.');
+    ok(ext != NULL, "no script extension\n");
+    if(!ext)
+      return;
+
+    sprintf(file_name, "test%s", ext);
+
+    file = CreateFileA(file_name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "CreateFile failed: %u\n", GetLastError());
+    if(file == INVALID_HANDLE_VALUE)
+        return;
+
+    res = WriteFile(file, script_data, script_size, &size, NULL);
+    CloseHandle(file);
+    ok(res, "Could not write to file: %u\n", GetLastError());
+    if(!res)
+        return;
+
+    run_script_file(file_name, expected_exit_code);
+
+    DeleteFileA(file_name);
+}
+
+static void run_simple_script(const char *script, DWORD expected_exit_code)
+{
+    run_script("simple.js", script, strlen(script), expected_exit_code);
+}
+
 static BOOL WINAPI test_enum_proc(HMODULE module, LPCSTR type, LPSTR name, LONG_PTR param)
 {
-    const char *script_data, *ext;
-    DWORD script_size, size;
-    char file_name[MAX_PATH];
-    HANDLE file;
+    const char *script_data;
+    DWORD script_size;
     HRSRC src;
-    BOOL res;
 
     trace("running %s test...\n", name);
 
@@ -389,28 +429,7 @@ static BOOL WINAPI test_enum_proc(HMODULE module, LPCSTR type, LPSTR name, LONG_
     while(script_size && !script_data[script_size-1])
         script_size--;
 
-    ext = strrchr(name, '.');
-    ok(ext != NULL, "no script extension\n");
-    if(!ext)
-      return TRUE;
-
-    sprintf(file_name, "test%s", ext);
-
-    file = CreateFileA(file_name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-            FILE_ATTRIBUTE_NORMAL, NULL);
-    ok(file != INVALID_HANDLE_VALUE, "CreateFile failed: %u\n", GetLastError());
-    if(file == INVALID_HANDLE_VALUE)
-        return TRUE;
-
-    res = WriteFile(file, script_data, script_size, &size, NULL);
-    CloseHandle(file);
-    ok(res, "Could not write to file: %u\n", GetLastError());
-    if(!res)
-        return TRUE;
-
-    run_test(file_name);
-
-    DeleteFileA(file_name);
+    run_script(name, script_data, script_size, 0);
     return TRUE;
 }
 
@@ -470,10 +489,16 @@ START_TEST(run)
     }
 
     argc = winetest_get_mainargs(&argv);
-    if(argc > 2)
-        run_test(argv[2]);
-    else
+    if(argc > 2) {
+        run_script_file(argv[2], 0);
+    }else {
         EnumResourceNamesA(NULL, "TESTSCRIPT", test_enum_proc, 0);
+
+        run_simple_script("var winetest = new ActiveXObject('Wine.Test');\n"
+                           "winetest.reportSuccess();\n"
+                           "WScript.Quit(3);\n"
+                           "winetest.ok(false, 'not quit?');\n", 3);
+}
 
     init_registry(FALSE);
     CoUninitialize();
