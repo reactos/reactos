@@ -716,7 +716,7 @@ USBHUB_PdoHandlePnp(
             }
 
             /* allocate device relations */
-            DeviceRelation = (PDEVICE_RELATIONS)ExAllocatePool(NonPagedPool, sizeof(DEVICE_RELATIONS));
+            DeviceRelation = (PDEVICE_RELATIONS)ExAllocatePool(PagedPool, sizeof(DEVICE_RELATIONS));
             if (!DeviceRelation)
             {
                 /* no memory */
@@ -730,7 +730,7 @@ USBHUB_PdoHandlePnp(
             ObReferenceObject(DeviceRelation->Objects[0]);
 
             /* store result */
-            Irp->IoStatus.Information = (ULONG_PTR)DeviceRelation;
+            Information = (ULONG_PTR)DeviceRelation;
             Status = STATUS_SUCCESS;
             break;
         }
