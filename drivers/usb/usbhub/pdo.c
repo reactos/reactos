@@ -190,17 +190,19 @@ USBHUB_PdoHandleInternalDeviceControl(
 
     ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(ChildDeviceExtension->Common.IsFDO == FALSE);
-    HubDeviceExtension = (PHUB_DEVICE_EXTENSION)ChildDeviceExtension->ParentDeviceObject->DeviceExtension;
-    RootHubDeviceObject = HubDeviceExtension->RootHubPhysicalDeviceObject;
 
-    if(!IsValidPDO(DeviceObject))
+    if (ChildDeviceExtension->IsRemovePending || !IsValidPDO(DeviceObject))
     {
+        // Parent or child device was surprise removed.
         DPRINT1("[USBHUB] Request for removed device object %p\n", DeviceObject);
         Irp->IoStatus.Status = STATUS_DEVICE_NOT_CONNECTED;
         Irp->IoStatus.Information = 0;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_DEVICE_NOT_CONNECTED;
     }
+
+    HubDeviceExtension = (PHUB_DEVICE_EXTENSION)ChildDeviceExtension->ParentDeviceObject->DeviceExtension;
+    RootHubDeviceObject = HubDeviceExtension->RootHubPhysicalDeviceObject;
 
     switch (Stack->Parameters.DeviceIoControl.IoControlCode)
     {
@@ -724,6 +726,11 @@ USBHUB_PdoHandlePnp(
         case IRP_MN_QUERY_STOP_DEVICE:
         case IRP_MN_QUERY_REMOVE_DEVICE:
         {
+            // HERE SHOULD BE CHECKED INTERFACE COUNT PROVIED TO UPPER LAYER TO BE ZERO, AS WE ARE HANDLING
+            // IRP_MN_QUERY_INTERFACE IN WRONG WAY, THAT WILL BE DONE LATER. SEE MSDN "IRP_MN_QUERY_INTERFACE"
+
+            UsbChildExtension->IsRemovePending = TRUE;
+
             /* Sure, no problem */
             Status = STATUS_SUCCESS;
             Information = 0;
@@ -747,6 +754,14 @@ USBHUB_PdoHandlePnp(
         case IRP_MN_SURPRISE_REMOVAL:
         {
             DPRINT("[USBHUB] HandlePnp IRP_MN_SURPRISE_REMOVAL\n");
+
+            //
+            // Here we should free all resources and stop all access, lets just set
+            // the flag and do further clean-up in subsequent IRP_MN_REMOVE_DEVICE
+            // We can receive this IRP when device is physically connected (on stop/start fail).
+            //
+            UsbChildExtension->IsRemovePending = TRUE;
+
             Status = STATUS_SUCCESS;
             break;
         }
