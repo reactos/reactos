@@ -116,6 +116,7 @@ static const char *status_string[MAX_INTERNET_STATUS];
 
 static HANDLE hCompleteEvent, conn_close_event, conn_wait_event, server_req_rec_event;
 static DWORD req_error;
+static BOOL is_ie7plus = TRUE;
 
 #define TESTF_REDIRECT      0x01
 #define TESTF_COMPRESSED    0x02
@@ -1084,10 +1085,12 @@ static void InternetReadFileExA_test(int flags)
     CLEAR_NOTIFIED(INTERNET_STATUS_CONNECTING_TO_SERVER);
     CLEAR_NOTIFIED(INTERNET_STATUS_CONNECTED_TO_SERVER);
 
-    rc = InternetReadFileExW(hor, NULL, 0, 0xdeadcafe);
-    ok(!rc && (GetLastError() == ERROR_INVALID_PARAMETER),
-        "InternetReadFileEx should have failed with ERROR_INVALID_PARAMETER instead of %s, %u\n",
-        rc ? "TRUE" : "FALSE", GetLastError());
+    if(is_ie7plus) {
+        rc = InternetReadFileExW(hor, NULL, 0, 0xdeadcafe);
+        ok(!rc && (GetLastError() == ERROR_INVALID_PARAMETER),
+           "InternetReadFileEx should have failed with ERROR_INVALID_PARAMETER instead of %s, %u\n",
+           rc ? "TRUE" : "FALSE", GetLastError());
+    }
 
     /* tests invalid dwStructSize */
     inetbuffers.dwStructSize = sizeof(inetbuffers)+1;
@@ -4963,6 +4966,9 @@ static void test_http_read(int port)
     test_request_t req;
     char buf[4096];
 
+    if(!is_ie7plus)
+        return;
+
     hCompleteEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
     conn_wait_event = CreateEventW(NULL, FALSE, FALSE, NULL);
     server_req_rec_event = CreateEventW(NULL, FALSE, FALSE, NULL);
@@ -4994,6 +5000,47 @@ static void test_http_read(int port)
 
     close_async_handle(req.session, hCompleteEvent, 2);
 
+    open_read_test_request(port, &req,
+                           "HTTP/1.1 200 OK\r\n"
+                           "Server: winetest\r\n"
+                           "Transfer-Encoding: chunked\r\n"
+                           "\r\n"
+                           "9\r\n123456789");
+    readex_expect_sync_data(req.request, IRF_NO_WAIT, &ib, sizeof(buf), "123456789");
+    readex_expect_async(req.request, IRF_NO_WAIT, &ib, sizeof(buf));
+
+    send_response_and_wait("\r\n1\r\na\r\n1\r\nb\r", FALSE, &ib);
+    readex_expect_sync_data(req.request, IRF_NO_WAIT, &ib, sizeof(buf), "ab");
+    readex_expect_async(req.request, IRF_NO_WAIT, &ib, sizeof(buf));
+
+    send_response_and_wait("\n3\r\nab", FALSE, &ib);
+    readex_expect_sync_data(req.request, IRF_NO_WAIT, &ib, sizeof(buf), "ab");
+    readex_expect_async(req.request, IRF_NO_WAIT, &ib, sizeof(buf));
+
+    send_response_and_wait("c", FALSE, &ib);
+    readex_expect_sync_data(req.request, IRF_NO_WAIT, &ib, sizeof(buf), "c");
+    readex_expect_async(req.request, IRF_NO_WAIT, &ib, sizeof(buf));
+
+    send_response_and_wait("\r\n1\r\nx\r\n0\r\n\r\n", TRUE, &ib);
+    readex_expect_sync_data(req.request, IRF_NO_WAIT, &ib, sizeof(buf), "x");
+    readex_expect_sync_data(req.request, IRF_NO_WAIT, &ib, sizeof(buf), "");
+
+    close_async_handle(req.session, hCompleteEvent, 2);
+
+    open_read_test_request(port, &req,
+                           "HTTP/1.1 200 OK\r\n"
+                           "Server: winetest\r\n"
+                           "Transfer-Encoding: chunked\r\n"
+                           "\r\n"
+                           "3\r\n123\r\n");
+    readex_expect_sync_data(req.request, IRF_NO_WAIT, &ib, sizeof(buf), "123");
+    readex_expect_async(req.request, IRF_NO_WAIT, &ib, sizeof(buf));
+
+    send_response_and_wait("0\r\n\r\n", TRUE, &ib);
+    readex_expect_sync_data(req.request, IRF_NO_WAIT, &ib, sizeof(buf), "");
+
+    close_async_handle(req.session, hCompleteEvent, 2);
+
     CloseHandle(hCompleteEvent);
     CloseHandle(conn_wait_event);
     CloseHandle(server_req_rec_event);
@@ -5006,6 +5053,9 @@ static void test_long_url(int port)
     test_request_t req;
     DWORD size, len;
     BOOL ret;
+
+    if(!is_ie7plus)
+        return;
 
     memset(long_path+strlen(long_path), 'x', sizeof(long_path)-strlen(long_path));
     long_path[sizeof(long_path)-1] = 0;
@@ -5849,10 +5899,8 @@ static void test_open_url_async(void)
      * other versions never do. They also hang of following tests. We disable it for everything older
      * than IE7.
      */
-    if(!pInternetGetSecurityInfoByURLA) {
-        win_skip("Skipping async open on too old wininet version.\n");
+    if(!is_ie7plus)
         return;
-    }
 
     ctx.req = NULL;
     ctx.event = CreateEventA(NULL, TRUE, FALSE, "Z:_home_hans_jaman-installer.exe_ev1");
@@ -6337,6 +6385,9 @@ static void test_default_service_port(void)
     char buffer[128];
     BOOL ret;
 
+    if(!is_ie7plus)
+        return;
+
     session = InternetOpenA("winetest", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
     ok(session != NULL, "InternetOpen failed\n");
 
@@ -6512,6 +6563,11 @@ START_TEST(http)
     pInternetSetStatusCallbackA = (void*)GetProcAddress(hdll, "InternetSetStatusCallbackA");
     pInternetSetStatusCallbackW = (void*)GetProcAddress(hdll, "InternetSetStatusCallbackW");
     pInternetGetSecurityInfoByURLA = (void*)GetProcAddress(hdll, "InternetGetSecurityInfoByURLA");
+
+    if(!pInternetGetSecurityInfoByURLA) {
+        is_ie7plus = FALSE;
+        win_skip("IE6 found. It's too old for some tests.\n");
+    }
 
     init_status_tests();
     test_InternetCloseHandle();

@@ -361,11 +361,13 @@ static void test_get_cookie(void)
   DWORD len;
   BOOL ret;
 
+  len = 1024;
   SetLastError(0xdeadbeef);
   ret = InternetGetCookieA("http://www.example.com", NULL, NULL, &len);
   ok(!ret && GetLastError() == ERROR_NO_MORE_ITEMS,
     "InternetGetCookie should have failed with %s and error %d\n",
     ret ? "TRUE" : "FALSE", GetLastError());
+  ok(!len, "len = %u\n", len);
 }
 
 
@@ -389,7 +391,7 @@ static void test_complicated_cookie(void)
   /* Technically illegal! domain should require 2 dots, but native wininet accepts it */
   ret = InternetSetCookieA("http://www.example.com",NULL,"E=F; domain=example.com");
   ok(ret == TRUE,"InternetSetCookie failed\n");
-  ret = InternetSetCookieA("http://www.example.com",NULL,"G=H; domain=.example.com; path=/foo");
+  ret = InternetSetCookieA("http://www.example.com",NULL,"G=H; domain=.example.com; invalid=attr; path=/foo");
   ok(ret == TRUE,"InternetSetCookie failed\n");
   ret = InternetSetCookieA("http://www.example.com/bar.html",NULL,"I=J; domain=.example.com");
   ok(ret == TRUE,"InternetSetCookie failed\n");
@@ -1068,7 +1070,8 @@ static void test_IsDomainLegalCookieDomainW(void)
 
 static void test_PrivacyGetSetZonePreferenceW(void)
 {
-    DWORD ret, zone, type, template, old_template;
+    DWORD ret, zone, type, template, old_template, pref_size = 0;
+    WCHAR pref[256];
 
     zone = 3;
     type = 0;
@@ -1078,6 +1081,14 @@ static void test_PrivacyGetSetZonePreferenceW(void)
     old_template = 0;
     ret = pPrivacyGetZonePreferenceW(zone, type, &old_template, NULL, NULL);
     ok(ret == 0, "expected ret == 0, got %u\n", ret);
+
+    trace("template %u\n", old_template);
+
+    if(old_template == PRIVACY_TEMPLATE_ADVANCED) {
+        pref_size = sizeof(pref)/sizeof(WCHAR);
+        ret = pPrivacyGetZonePreferenceW(zone, type, &old_template, pref, &pref_size);
+        ok(ret == 0, "expected ret == 0, got %u\n", ret);
+    }
 
     template = 5;
     ret = pPrivacySetZonePreferenceW(zone, type, template, NULL);
@@ -1089,7 +1100,7 @@ static void test_PrivacyGetSetZonePreferenceW(void)
     ok(template == 5, "expected template == 5, got %u\n", template);
 
     template = 5;
-    ret = pPrivacySetZonePreferenceW(zone, type, old_template, NULL);
+    ret = pPrivacySetZonePreferenceW(zone, type, old_template, pref_size ? pref : NULL);
     ok(ret == 0, "expected ret == 0, got %u\n", ret);
 }
 
@@ -1175,6 +1186,28 @@ static void test_InternetSetOption(void)
     ok(ret == TRUE, "InternetCloseHandle failed: 0x%08x\n", GetLastError());
     ret = InternetCloseHandle(ses);
     ok(ret == TRUE, "InternetCloseHandle failed: 0x%08x\n", GetLastError());
+}
+
+static void test_end_browser_session(void)
+{
+    DWORD len;
+    BOOL ret;
+
+    ret = InternetSetCookieA("http://www.example.com/test_end", NULL, "A=B");
+    ok(ret == TRUE, "InternetSetCookie failed\n");
+
+    len = 1024;
+    ret = InternetGetCookieA("http://www.example.com/test_end", NULL, NULL, &len);
+    ok(ret == TRUE,"InternetGetCookie failed\n");
+    ok(len != 0, "len = 0\n");
+
+    ret = InternetSetOptionA(NULL, INTERNET_OPTION_END_BROWSER_SESSION, NULL, 0);
+    ok(ret, "InternetSetOptio(INTERNET_OPTION_END_BROWSER_SESSION) failed: %u\n", GetLastError());
+
+    len = 1024;
+    ret = InternetGetCookieA("http://www.example.com/test_end", NULL, NULL, &len);
+    ok(!ret && GetLastError() == ERROR_NO_MORE_ITEMS, "InternetGetCookie returned %x (%u)\n", ret, GetLastError());
+    ok(!len, "len = %u\n", len);
 }
 
 #define verifyProxyEnable(e) r_verifyProxyEnable(__LINE__, e)
@@ -1809,4 +1842,5 @@ START_TEST(internet)
         win_skip("Privacy[SG]etZonePreferenceW are not available\n");
 
     test_InternetSetOption();
+    test_end_browser_session();
 }
