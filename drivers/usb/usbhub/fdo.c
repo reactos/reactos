@@ -569,6 +569,11 @@ QueryInterface(
     Stack->Parameters.QueryInterface.Interface = Interface;
     Stack->Parameters.QueryInterface.InterfaceSpecificData = NULL;
 
+    //
+    // Initialize the status block before sending the IRP
+    //
+    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+
     Status = IoCallDriver(DeviceObject, Irp);
 
     if (Status == STATUS_PENDING)
