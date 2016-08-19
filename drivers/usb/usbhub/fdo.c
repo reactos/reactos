@@ -1089,8 +1089,6 @@ DestroyUsbChildDeviceObject(
     PDEVICE_OBJECT ChildDeviceObject = NULL;
     ULONG Index = 0;
 
-    DPRINT("Removing device on port %d (Child index: %d)\n", PortId, Index);
-
     for (Index = 0; Index < USB_MAXCHILDREN; Index++)
     {
         if (HubDeviceExtension->ChildDeviceObject[Index])
@@ -1114,7 +1112,10 @@ DestroyUsbChildDeviceObject(
         return STATUS_UNSUCCESSFUL;
     }
 
+    DPRINT("Removing device on port %d (Child index: %d)\n", PortId, Index);
+
     /* Remove the device from the table */
+    // is lock needed?
     HubDeviceExtension->ChildDeviceObject[Index] = NULL;
 
     /* Invalidate device relations for the root hub */
@@ -1414,6 +1415,7 @@ USBHUB_FdoQueryBusRelations(
     {
         if (HubDeviceExtension->ChildDeviceObject[i])
         {
+            // The PnP Manager removes the reference when appropriate.
             ObReferenceObject(HubDeviceExtension->ChildDeviceObject[i]);
             HubDeviceExtension->ChildDeviceObject[i]->Flags &= ~DO_DEVICE_INITIALIZING;
             DeviceRelations->Objects[Children++] = HubDeviceExtension->ChildDeviceObject[i];
@@ -1968,6 +1970,7 @@ USBHUB_FdoHandlePnp(
     {
         case IRP_MN_START_DEVICE:
         {
+            DPRINT("IRP_MN_START_DEVICE\n");
             if (USBHUB_IsRootHubFDO(DeviceObject))
             {
                 // start root hub fdo
@@ -2009,11 +2012,13 @@ USBHUB_FdoHandlePnp(
         case IRP_MN_QUERY_REMOVE_DEVICE:
         case IRP_MN_QUERY_STOP_DEVICE:
         {
+            DPRINT("IRP_MN_QUERY_STOP_DEVICE\n");
             Irp->IoStatus.Status = STATUS_SUCCESS;
             return ForwardIrpAndForget(DeviceObject, Irp);
         }
         case IRP_MN_REMOVE_DEVICE:
         {
+            DPRINT("IRP_MN_REMOVE_DEVICE\n");
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
