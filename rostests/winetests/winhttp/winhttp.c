@@ -624,7 +624,7 @@ static void test_WinHttpAddHeaders(void)
         test_header_name, NULL, &len, &index);
     ok(ret == FALSE, "WinHttpQueryHeaders unexpectedly succeeded.\n");
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER,
-        "WinHttpQueryHeaders set incorrect error: expected ERROR_INSUFFICENT_BUFFER, go %u\n", GetLastError());
+        "WinHttpQueryHeaders set incorrect error: expected ERROR_INSUFFICENT_BUFFER, got %u\n", GetLastError());
     ok(len > 40, "WinHttpQueryHeaders returned invalid length: expected greater than 40, got %d\n", len);
     ok(index == 0, "WinHttpQueryHeaders incorrectly incremented header index.\n");
 
@@ -3830,7 +3830,9 @@ static void test_IWinHttpRequest_Invoke(void)
 
     VariantInit(&ret);
 if (0) /* crashes */
+{
     hr = IWinHttpRequest_Invoke(request, DISPID_HTTPREQUEST_OPTION, &IID_NULL, 0, DISPATCH_PROPERTYPUT, NULL, &ret, NULL, &err);
+}
 
     params.cArgs = 1;
     hr = IWinHttpRequest_Invoke(request, DISPID_HTTPREQUEST_OPTION, &IID_NULL, 0, DISPATCH_PROPERTYPUT, &params, &ret, NULL, &err);
