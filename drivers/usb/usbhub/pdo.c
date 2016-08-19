@@ -745,14 +745,34 @@ USBHUB_PdoHandlePnp(
         }
         case IRP_MN_QUERY_REMOVE_DEVICE:
         {
-            // HERE SHOULD BE CHECKED INTERFACE COUNT PROVIED TO UPPER LAYER TO BE ZERO, AS WE ARE HANDLING
-            // IRP_MN_QUERY_INTERFACE IN WRONG WAY, THAT WILL BE DONE LATER. SEE MSDN "IRP_MN_QUERY_INTERFACE"
+            //
+            // Free interface obtained from bottom, according MSDN we should
+            // check interfaces provided to top, but here we are not checking.
+            // All checking will be performed in roothub driver's
+            // IRP_MN_QUERY_REMOVE_DEVICE handler. This will make problems when
+            // buggy driver is loaded on top of us. But we decided to keep source
+            // simpler, because in any case buggy driver will prevent removing of
+            // whole stack.
+            //
+            UsbChildExtension->DeviceInterface.InterfaceDereference(UsbChildExtension->DeviceInterface.BusContext);
 
             UsbChildExtension->IsRemovePending = TRUE;
 
             /* Sure, no problem */
             Status = STATUS_SUCCESS;
             Information = 0;
+            break;
+        }
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+        {
+            // Check to see have we received query-remove before
+            if (UsbChildExtension->IsRemovePending == TRUE)
+            {
+                UsbChildExtension->IsRemovePending = FALSE;
+                UsbChildExtension->DeviceInterface.InterfaceReference(UsbChildExtension->DeviceInterface.BusContext);
+            }
+
+            Status = STATUS_SUCCESS;
             break;
         }
         case IRP_MN_QUERY_INTERFACE:
