@@ -729,6 +729,14 @@ USBHUB_PdoHandlePnp(
             break;
         }
         case IRP_MN_QUERY_STOP_DEVICE:
+        {
+            //
+            // We should fail this request, because we're not handling IRP_MN_STOP_DEVICE for now.
+            // We'll receive this IRP ONLY when the PnP manager rebalances resources.
+            //
+            Status = STATUS_NOT_SUPPORTED;
+            break;
+        }
         case IRP_MN_QUERY_REMOVE_DEVICE:
         {
             // HERE SHOULD BE CHECKED INTERFACE COUNT PROVIED TO UPPER LAYER TO BE ZERO, AS WE ARE HANDLING
