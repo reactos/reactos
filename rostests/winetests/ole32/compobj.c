@@ -2889,7 +2889,9 @@ static void test_CoGetMalloc(void)
     HRESULT hr;
 
 if (0) /* crashes on native */
+{
     hr = CoGetMalloc(0, NULL);
+}
 
     imalloc = (void*)0xdeadbeef;
     hr = CoGetMalloc(0, &imalloc);
