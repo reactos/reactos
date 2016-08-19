@@ -570,10 +570,7 @@ USBHUB_PdoHandlePnp(
     PIO_STACK_LOCATION Stack;
     ULONG_PTR Information = 0;
     PHUB_CHILDDEVICE_EXTENSION UsbChildExtension;
-    ULONG Index;
-    ULONG bFound;
     PDEVICE_RELATIONS DeviceRelation;
-    PDEVICE_OBJECT ParentDevice;
 
     UsbChildExtension = (PHUB_CHILDDEVICE_EXTENSION)DeviceObject->DeviceExtension;
     Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -664,41 +661,46 @@ USBHUB_PdoHandlePnp(
         {
             PHUB_DEVICE_EXTENSION HubDeviceExtension = (PHUB_DEVICE_EXTENSION)UsbChildExtension->ParentDeviceObject->DeviceExtension;
             PUSB_BUS_INTERFACE_HUB_V5 HubInterface = &HubDeviceExtension->HubInterface;
-            ParentDevice = UsbChildExtension->ParentDeviceObject;
 
             DPRINT("IRP_MJ_PNP / IRP_MN_REMOVE_DEVICE\n");
 
-            /* remove us from pdo list */
-            bFound = FALSE;
-            for(Index = 0; Index < USB_MAXCHILDREN; Index++)
+            if (!IsValidPDO(DeviceObject))
             {
-                if (HubDeviceExtension->ChildDeviceObject[Index] == DeviceObject)
+                // Parent or child device was surprise removed, freeing resources allocated for child device.
+
+                // Remove the usb device
+                if (UsbChildExtension->UsbDeviceHandle)
                 {
-                     /* Remove the device */
-                     Status = HubInterface->RemoveUsbDevice(HubDeviceExtension->UsbDInterface.BusContext, UsbChildExtension->UsbDeviceHandle, 0);
-
-                     /* FIXME handle error */
-                     ASSERT(Status == STATUS_SUCCESS);
-
-                    /* remove us */
-                    HubDeviceExtension->ChildDeviceObject[Index] = NULL;
-                    bFound = TRUE;
-                    break;
+                    Status = HubInterface->RemoveUsbDevice(HubInterface->BusContext, UsbChildExtension->UsbDeviceHandle, 0);
+                    ASSERT(Status == STATUS_SUCCESS);
                 }
+                // Free full configuration descriptor
+                if (UsbChildExtension->FullConfigDesc)
+                    ExFreePool(UsbChildExtension->FullConfigDesc);
+
+                // Free ID buffers
+                if (UsbChildExtension->usCompatibleIds.Buffer)
+                    ExFreePool(UsbChildExtension->usCompatibleIds.Buffer);
+
+                if (UsbChildExtension->usDeviceId.Buffer)
+                    ExFreePool(UsbChildExtension->usDeviceId.Buffer);
+
+                if (UsbChildExtension->usHardwareIds.Buffer)
+                    ExFreePool(UsbChildExtension->usHardwareIds.Buffer);
+
+                if (UsbChildExtension->usInstanceId.Buffer)
+                    ExFreePool(UsbChildExtension->usInstanceId.Buffer);
+
+                // Delete child PDO
+                IoDeleteDevice(DeviceObject);
             }
+
+            // Device is physically presented, so we leave its PDO undeleted.
+            ASSERT(UsbChildExtension->IsRemovePending == TRUE);
 
             /* Complete the IRP */
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-            /* delete device */
-            IoDeleteDevice(DeviceObject);
-
-            if (bFound)
-            {
-                /* invalidate device relations */
-                IoInvalidateDeviceRelations(ParentDevice, BusRelations);
-            }
 
             return STATUS_SUCCESS;
         }
