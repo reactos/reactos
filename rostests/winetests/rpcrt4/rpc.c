@@ -909,6 +909,14 @@ static void test_RpcServerInqDefaultPrincName(void)
     HeapFree( GetProcessHeap(), 0, username );
 }
 
+static void test_RpcServerRegisterAuthInfo(void)
+{
+    RPC_STATUS status;
+
+    status = RpcServerRegisterAuthInfoW(NULL, 600, NULL, NULL);
+    ok(status == RPC_S_UNKNOWN_AUTHN_SERVICE, "status = %x\n", status);
+}
+
 START_TEST( rpc )
 {
     UuidConversionAndComparison();
@@ -923,4 +931,5 @@ START_TEST( rpc )
     test_UuidCreateSequential();
     test_RpcBindingFree();
     test_RpcServerInqDefaultPrincName();
+    test_RpcServerRegisterAuthInfo();
 }
