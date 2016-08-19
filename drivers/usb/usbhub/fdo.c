@@ -2030,7 +2030,9 @@ USBHUB_FdoHandlePnp(
 {
     PIO_STACK_LOCATION Stack;
     NTSTATUS Status = STATUS_SUCCESS;
+    PDEVICE_OBJECT ChildDeviceObject;
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
+    PHUB_CHILDDEVICE_EXTENSION ChildDeviceExtension;
 
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
 
@@ -2098,10 +2100,49 @@ USBHUB_FdoHandlePnp(
             }
             break;
         }
-        case IRP_MN_QUERY_REMOVE_DEVICE:
         case IRP_MN_QUERY_STOP_DEVICE:
         {
-            DPRINT("IRP_MN_QUERY_STOP_DEVICE\n");
+            //
+            // We should fail this request, because we're not handling
+            // IRP_MN_STOP_DEVICE for now.We'll receive this IRP ONLY when
+            // PnP manager rebalances resources.
+            //
+            Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_NOT_SUPPORTED;
+        }
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        {
+            // No action is required from FDO because it have nothing to free.
+            DPRINT("IRP_MN_QUERY_REMOVE_DEVICE\n");
+
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            break;
+        }
+        case IRP_MN_SURPRISE_REMOVAL:
+        {
+            //
+            // We'll receive this IRP on HUB unexpected removal, or on USB
+            // controller removal from PCI port. Here we should "let know" all
+            // our children that their parent is removed and on next removal
+            // they also can be removed.
+            //
+
+            KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
+            for (int i = 0; i < USB_MAXCHILDREN; i++)
+            {
+                ChildDeviceObject = HubDeviceExtension->ChildDeviceObject[i];
+                if (ChildDeviceObject)
+                {
+                    ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)ChildDeviceObject->DeviceObjectExtension;
+                    ChildDeviceExtension->ParentDeviceObject = NULL;
+                }
+            }
+
+            KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
+            // This IRP can't be failed
             Irp->IoStatus.Status = STATUS_SUCCESS;
             break;
         }
