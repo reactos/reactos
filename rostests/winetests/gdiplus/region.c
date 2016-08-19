@@ -76,18 +76,16 @@ static void verify_region(HRGN hrgn, const RECT *rc)
     else
         ok(ret == sizeof(rgn.data.rdh) + sizeof(RECT), "expected sizeof(rgn), got %u\n", ret);
 
-    trace("size %u, type %u, count %u, rgn size %u, bound (%d,%d-%d,%d)\n",
+    trace("size %u, type %u, count %u, rgn size %u, bound %s\n",
           rgn.data.rdh.dwSize, rgn.data.rdh.iType,
           rgn.data.rdh.nCount, rgn.data.rdh.nRgnSize,
-          rgn.data.rdh.rcBound.left, rgn.data.rdh.rcBound.top,
-          rgn.data.rdh.rcBound.right, rgn.data.rdh.rcBound.bottom);
+          wine_dbgstr_rect(&rgn.data.rdh.rcBound));
     if (rgn.data.rdh.nCount != 0)
     {
         rect = (const RECT *)rgn.data.Buffer;
-        trace("rect (%d,%d-%d,%d)\n", rect->left, rect->top, rect->right, rect->bottom);
-        ok(EqualRect(rect, rc), "expected (%d,%d)-(%d,%d), got (%d,%d)-(%d,%d)\n",
-           rc->left, rc->top, rc->right, rc->bottom,
-           rect->left, rect->top, rect->right, rect->bottom);
+        trace("rect %s\n", wine_dbgstr_rect(rect));
+        ok(EqualRect(rect, rc), "expected %s, got %s\n",
+           wine_dbgstr_rect(rc), wine_dbgstr_rect(rect));
     }
 
     ok(rgn.data.rdh.dwSize == sizeof(rgn.data.rdh), "expected sizeof(rdh), got %u\n", rgn.data.rdh.dwSize);
@@ -102,9 +100,8 @@ static void verify_region(HRGN hrgn, const RECT *rc)
         ok(rgn.data.rdh.nCount == 1, "expected 1, got %u\n", rgn.data.rdh.nCount);
         ok(rgn.data.rdh.nRgnSize == sizeof(RECT),  "expected sizeof(RECT), got %u\n", rgn.data.rdh.nRgnSize);
     }
-    ok(EqualRect(&rgn.data.rdh.rcBound, rc), "expected (%d,%d)-(%d,%d), got (%d,%d)-(%d,%d)\n",
-       rc->left, rc->top, rc->right, rc->bottom,
-       rgn.data.rdh.rcBound.left, rgn.data.rdh.rcBound.top, rgn.data.rdh.rcBound.right, rgn.data.rdh.rcBound.bottom);
+    ok(EqualRect(&rgn.data.rdh.rcBound, rc), "expected %s, got %s\n",
+       wine_dbgstr_rect(rc), wine_dbgstr_rect(&rgn.data.rdh.rcBound));
 }
 
 static void test_region_data(DWORD *data, UINT size, INT line)

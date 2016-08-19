@@ -2,7 +2,7 @@
  * Unit test suite for images
  *
  * Copyright (C) 2007 Google (Evan Stade)
- * Copyright (C) 2012 Dmitry Timoshkov
+ * Copyright (C) 2012,2016 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -3187,12 +3187,7 @@ static void test_image_properties(void)
 
         status = GdipGetPropertyCount(image, &prop_count);
         ok(status == Ok, "%u: GdipGetPropertyCount error %d\n", i, status);
-        if (td[i].image_data == pngimage || td[i].image_data == jpgimage)
-        todo_wine
-        ok(td[i].prop_count == prop_count || td[i].prop_count2 == prop_count,
-           " %u: expected property count %u or %u, got %u\n",
-           i, td[i].prop_count, td[i].prop_count2, prop_count);
-        else
+        todo_wine_if(td[i].image_data == pngimage || td[i].image_data == jpgimage)
         ok(td[i].prop_count == prop_count || td[i].prop_count2 == prop_count,
            " %u: expected property count %u or %u, got %u\n",
            i, td[i].prop_count, td[i].prop_count2, prop_count);
@@ -4745,6 +4740,135 @@ static void test_createeffect(void)
     }
 }
 
+static void test_getadjustedpalette(void)
+{
+    ColorMap colormap;
+    GpImageAttributes *imageattributes;
+    ColorPalette *palette;
+    GpStatus stat;
+
+    stat = GdipCreateImageAttributes(&imageattributes);
+    expect(Ok, stat);
+
+    colormap.oldColor.Argb = 0xffffff00;
+    colormap.newColor.Argb = 0xffff00ff;
+    stat = GdipSetImageAttributesRemapTable(imageattributes, ColorAdjustTypeBitmap,
+        TRUE, 1, &colormap);
+    expect(Ok, stat);
+
+    colormap.oldColor.Argb = 0xffffff80;
+    colormap.newColor.Argb = 0xffff80ff;
+    stat = GdipSetImageAttributesRemapTable(imageattributes, ColorAdjustTypeDefault,
+        TRUE, 1, &colormap);
+    expect(Ok, stat);
+
+    palette = GdipAlloc(sizeof(*palette) + sizeof(ARGB) * 2);
+    palette->Count = 0;
+
+    stat = GdipGetImageAttributesAdjustedPalette(imageattributes, palette, ColorAdjustTypeBitmap);
+    expect(InvalidParameter, stat);
+
+    palette->Count = 3;
+    palette->Entries[0] = 0xffffff00;
+    palette->Entries[1] = 0xffffff80;
+    palette->Entries[2] = 0xffffffff;
+
+    stat = GdipGetImageAttributesAdjustedPalette(imageattributes, palette, ColorAdjustTypeBitmap);
+    expect(Ok, stat);
+    expect(0xffff00ff, palette->Entries[0]);
+    expect(0xffffff80, palette->Entries[1]);
+    expect(0xffffffff, palette->Entries[2]);
+
+    palette->Entries[0] = 0xffffff00;
+    palette->Entries[1] = 0xffffff80;
+    palette->Entries[2] = 0xffffffff;
+
+    stat = GdipGetImageAttributesAdjustedPalette(imageattributes, palette, ColorAdjustTypeBrush);
+    expect(Ok, stat);
+    expect(0xffffff00, palette->Entries[0]);
+    expect(0xffff80ff, palette->Entries[1]);
+    expect(0xffffffff, palette->Entries[2]);
+
+    stat = GdipGetImageAttributesAdjustedPalette(NULL, palette, ColorAdjustTypeBitmap);
+    expect(InvalidParameter, stat);
+
+    stat = GdipGetImageAttributesAdjustedPalette(imageattributes, NULL, ColorAdjustTypeBitmap);
+    expect(InvalidParameter, stat);
+
+    stat = GdipGetImageAttributesAdjustedPalette(imageattributes, palette, -1);
+    expect(InvalidParameter, stat);
+
+    stat = GdipGetImageAttributesAdjustedPalette(imageattributes, palette, ColorAdjustTypeDefault);
+    expect(InvalidParameter, stat);
+
+    GdipFree(palette);
+    GdipDisposeImageAttributes(imageattributes);
+}
+
+/* RGB 24 bpp 1x1 pixel PNG image */
+static const char png_1x1_data[] = {
+  0x89,'P','N','G',0x0d,0x0a,0x1a,0x0a,
+  0x00,0x00,0x00,0x0d,'I','H','D','R',0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x01,0x08,0x02,0x00,0x00,0x00,0x90,0x77,0x53,0xde,
+  0x00,0x00,0x00,0x0c,'I','D','A','T',0x08,0xd7,0x63,0xf8,0xff,0xff,0x3f,0x00,0x05,0xfe,0x02,0xfe,0xdc,0xcc,0x59,0xe7,
+  0x00,0x00,0x00,0x00,'I','E','N','D',0xae,0x42,0x60,0x82
+};
+
+static void test_png_color_formats(void)
+{
+    static const struct
+    {
+        char bit_depth, color_type;
+        PixelFormat format;
+        UINT flags;
+    } td[] =
+    {
+        /* 2 - PNG_COLOR_TYPE_RGB */
+        { 8, 2, PixelFormat24bppRGB, ImageFlagsColorSpaceRGB },
+        /* 0 - PNG_COLOR_TYPE_GRAY */
+        { 1, 0, PixelFormat1bppIndexed, ImageFlagsColorSpaceRGB },
+        { 2, 0, PixelFormat32bppARGB, ImageFlagsColorSpaceGRAY },
+        { 4, 0, PixelFormat32bppARGB, ImageFlagsColorSpaceGRAY },
+        { 8, 0, PixelFormat32bppARGB, ImageFlagsColorSpaceGRAY },
+        { 16, 0, PixelFormat32bppARGB, ImageFlagsColorSpaceGRAY },
+    };
+    BYTE buf[sizeof(png_1x1_data)];
+    GpStatus status;
+    GpImage *image;
+    ImageType type;
+    PixelFormat format;
+    UINT flags;
+    int i;
+
+    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    {
+        memcpy(buf, png_1x1_data, sizeof(png_1x1_data));
+        buf[24] = td[i].bit_depth;
+        buf[25] = td[i].color_type;
+
+        image = load_image(buf, sizeof(buf));
+        ok(image != NULL, "%d: failed to load image data\n", i);
+        if (!image) continue;
+
+        status = GdipGetImageType(image, &type);
+        ok(status == Ok, "%u: GdipGetImageType error %d\n", i, status);
+        ok(type == ImageTypeBitmap, "%d: wrong image type %d\n", i, type);
+
+        status = GdipGetImagePixelFormat(image, &format);
+        expect(Ok, status);
+        ok(format == td[i].format ||
+           broken(td[i].bit_depth == 1 && td[i].color_type == 0 && format == PixelFormat32bppARGB), /* XP */
+           "%d: expected %#x, got %#x\n", i, td[i].format, format);
+
+        status = GdipGetImageFlags(image, &flags);
+        expect(Ok, status);
+        ok((flags & td[i].flags) == td[i].flags ||
+           broken(td[i].bit_depth == 1 && td[i].color_type == 0 && (flags & ImageFlagsColorSpaceGRAY)), /* XP */
+           "%d: expected %#x, got %#x\n", i, td[i].flags, flags);
+
+        GdipDisposeImage(image);
+    }
+}
+
 START_TEST(image)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -4757,6 +4881,7 @@ START_TEST(image)
 
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+    test_png_color_formats();
     test_supported_encoders();
     test_CloneBitmapArea();
     test_ARGB_conversion();
@@ -4802,6 +4927,7 @@ START_TEST(image)
     test_colorkey();
     test_dispose();
     test_createeffect();
+    test_getadjustedpalette();
 
     GdiplusShutdown(gdiplusToken);
 }
