@@ -2028,7 +2028,10 @@ USBHUB_FdoHandlePnp(
             {
                 Status = USBHUB_ParentFDOStartDevice(DeviceObject, Irp);
             }
-            break;
+
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
         }
 
         case IRP_MN_QUERY_DEVICE_RELATIONS:
@@ -2059,17 +2062,17 @@ USBHUB_FdoHandlePnp(
 
                     Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
                     Irp->IoStatus.Status = Status;
-                    return ForwardIrpAndForget(DeviceObject, Irp);
+                    break;
                 }
                 case RemovalRelations:
                 {
                     DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
-                    return ForwardIrpAndForget(DeviceObject, Irp);
+                    break;
                 }
                 default:
                     DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
                             Stack->Parameters.QueryDeviceRelations.Type);
-                    return ForwardIrpAndForget(DeviceObject, Irp);
+                    break;
             }
             break;
         }
@@ -2078,10 +2081,11 @@ USBHUB_FdoHandlePnp(
         {
             DPRINT("IRP_MN_QUERY_STOP_DEVICE\n");
             Irp->IoStatus.Status = STATUS_SUCCESS;
-            return ForwardIrpAndForget(DeviceObject, Irp);
+            break;
         }
         case IRP_MN_REMOVE_DEVICE:
         {
+            // Should be reworked later in this commits set
             DPRINT("IRP_MN_REMOVE_DEVICE\n");
             Irp->IoStatus.Status = STATUS_SUCCESS;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -2093,29 +2097,33 @@ USBHUB_FdoHandlePnp(
         }
         case IRP_MN_QUERY_BUS_INFORMATION:
         {
+            // Function drivers and filter drivers do not handle this IRP.
             DPRINT("IRP_MN_QUERY_BUS_INFORMATION\n");
             break;
         }
         case IRP_MN_QUERY_ID:
         {
             DPRINT("IRP_MN_QUERY_ID\n");
+            // Function drivers and filter drivers do not handle this IRP.
             break;
         }
         case IRP_MN_QUERY_CAPABILITIES:
         {
+            //
+            // If a function or filter driver does not handle this IRP, it
+            // should pass that down.
+            //
             DPRINT("IRP_MN_QUERY_CAPABILITIES\n");
             break;
         }
         default:
         {
             DPRINT(" IRP_MJ_PNP / unknown minor function 0x%lx\n", Stack->MinorFunction);
-            return ForwardIrpAndForget(DeviceObject, Irp);
+            break;
         }
     }
 
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return Status;
+    return ForwardIrpAndForget(DeviceObject, Irp);
 }
 
 NTSTATUS
