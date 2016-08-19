@@ -94,9 +94,12 @@ extern GpStatus graphics_from_image(GpImage *image, GpGraphics **graphics) DECLS
 extern GpStatus METAFILE_GetGraphicsContext(GpMetafile* metafile, GpGraphics **result) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_GetDC(GpMetafile* metafile, HDC *hdc) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_ReleaseDC(GpMetafile* metafile, HDC hdc) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_GraphicsClear(GpMetafile* metafile, ARGB color) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_FillRectangles(GpMetafile* metafile, GpBrush* brush,
     GDIPCONST GpRectF* rects, INT count) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_SetPageTransform(GpMetafile* metafile, GpUnit unit, REAL scale) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_ScaleWorldTransform(GpMetafile* metafile, REAL sx, REAL sy, MatrixOrder order) DECLSPEC_HIDDEN;
+extern GpStatus METAFILE_ResetWorldTransform(GpMetafile* metafile) DECLSPEC_HIDDEN;
 extern GpStatus METAFILE_GraphicsDeleted(GpMetafile* metafile) DECLSPEC_HIDDEN;
 
 extern void calc_curve_bezier(const GpPointF *pts, REAL tension, REAL *x1,
@@ -183,6 +186,9 @@ extern void convert_32bppARGB_to_32bppPARGB(UINT width, UINT height,
 extern GpStatus convert_pixels(INT width, INT height,
     INT dst_stride, BYTE *dst_bits, PixelFormat dst_format,
     INT src_stride, const BYTE *src_bits, PixelFormat src_format, ColorPalette *palette) DECLSPEC_HIDDEN;
+
+extern PixelFormat apply_image_attributes(const GpImageAttributes *attributes, LPBYTE data,
+    UINT width, UINT height, INT stride, ColorAdjustType type, PixelFormat fmt) DECLSPEC_HIDDEN;
 
 struct GpMatrix{
     REAL matrix[6];
@@ -322,7 +328,7 @@ struct GpCustomLineCap{
     REAL scale;
 };
 
-struct GpAdustableArrowCap{
+struct GpAdjustableArrowCap{
     GpCustomLineCap cap;
 };
 
@@ -351,6 +357,8 @@ struct GpMetafile{
     DWORD comment_data_size;
     DWORD comment_data_length;
     IStream *record_stream;
+    BOOL auto_frame; /* If true, determine the frame automatically */
+    GpPointF auto_frame_min, auto_frame_max;
 
     /* playback */
     GpGraphics *playback_graphics;
@@ -362,6 +370,7 @@ struct GpMetafile{
     GpMatrix *world_transform;
     GpUnit page_unit;
     REAL page_scale;
+    GpRegion *base_clip; /* clip region in device space for all metafile output */
 };
 
 struct GpBitmap{

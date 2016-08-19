@@ -68,6 +68,21 @@ GpStatus WINGDIPAPI GdipDisposeImageAttributes(GpImageAttributes *imageattr)
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipGetImageAttributesAdjustedPalette(GpImageAttributes *imageattr,
+    ColorPalette *palette, ColorAdjustType type)
+{
+    TRACE("(%p,%p,%u)\n", imageattr, palette, type);
+
+    if (!imageattr || !palette || !palette->Count ||
+        type >= ColorAdjustTypeCount || type == ColorAdjustTypeDefault)
+        return InvalidParameter;
+
+    apply_image_attributes(imageattr, (LPBYTE)palette->Entries, palette->Count, 1, 0,
+        type, PixelFormat32bppARGB);
+
+    return Ok;
+}
+
 GpStatus WINGDIPAPI GdipSetImageAttributesColorKeys(GpImageAttributes *imageattr,
     ColorAdjustType type, BOOL enableFlag, ARGB colorLow, ARGB colorHigh)
 {

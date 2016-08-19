@@ -191,7 +191,7 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
             if (stat == Ok)
             {
                 new_texture->transform = texture->transform;
-                *clone = (GpBrush*)new_texture;
+                *clone = &new_texture->brush;
             }
             else
                 *clone = NULL;
