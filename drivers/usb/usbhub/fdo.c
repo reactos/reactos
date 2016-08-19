@@ -1361,6 +1361,21 @@ Cleanup:
         ExFreePool(UsbChildExtension->FullConfigDesc);
 
     //
+    // Free ID buffers if they were allocated in CreateDeviceIds()
+    //
+    if (UsbChildExtension->usCompatibleIds.Buffer)
+        ExFreePool(UsbChildExtension->usCompatibleIds.Buffer);
+
+    if (UsbChildExtension->usDeviceId.Buffer)
+        ExFreePool(UsbChildExtension->usDeviceId.Buffer);
+
+    if (UsbChildExtension->usHardwareIds.Buffer)
+        ExFreePool(UsbChildExtension->usHardwareIds.Buffer);
+
+    if (UsbChildExtension->usInstanceId.Buffer)
+        ExFreePool(UsbChildExtension->usInstanceId.Buffer);
+
+    //
     // Delete the device object
     //
     IoDeleteDevice(NewChildDeviceObject);
