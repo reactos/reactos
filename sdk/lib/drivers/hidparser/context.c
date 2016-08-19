@@ -163,7 +163,7 @@ HidParser_StoreCollection(
         //
         // store offset
         //
-        TargetCollection->Offsets[Collection->NodeCount + Index] = CurrentOffset;
+        TargetCollection->Offsets[Collection->ReportCount + Index] = CurrentOffset;
 
         //
         // store sub collections
@@ -254,7 +254,7 @@ HidParser_SearchReportInCollection(
         //
         // get collection
         //
-        SubCollection = (PHID_COLLECTION)(CollectionContext->RawData + Collection->Offsets[Collection->NodeCount + Index]);
+        SubCollection = (PHID_COLLECTION)(CollectionContext->RawData + Collection->Offsets[Collection->ReportCount + Index]);
 
         //
         // recursively search collection
@@ -314,7 +314,7 @@ HidParser_GetCollectionCount(
         //
         // get offset to sub collection
         //
-        SubCollection = (PHID_COLLECTION)(CollectionContext->RawData + Collection->Offsets[Collection->NodeCount + Index]);
+        SubCollection = (PHID_COLLECTION)(CollectionContext->RawData + Collection->Offsets[Collection->ReportCount + Index]);
 
         //
         // count collection for sub nodes
