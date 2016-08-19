@@ -95,7 +95,6 @@ typedef struct _HUB_DEVICE_EXTENSION
     USBD_CONFIGURATION_HANDLE ConfigurationHandle;
     USBD_PIPE_HANDLE PipeHandle;
     PVOID RootHubHandle;
-    USB_BUS_INTERFACE_USBDI_V2 DeviceInterface;
 
     UNICODE_STRING SymbolicLinkName;
     ULONG InstanceCount;

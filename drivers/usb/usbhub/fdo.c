@@ -1890,8 +1890,6 @@ USBHUB_FdoStartDevice(
     HubDeviceExtension->PipeHandle = ConfigUrb->UrbSelectConfiguration.Interface.Pipes[0].PipeHandle;
     DPRINT("Configuration Handle %x\n", HubDeviceExtension->ConfigurationHandle);
 
-    FDO_QueryInterface(DeviceObject, &HubDeviceExtension->DeviceInterface);
-
     // check if function is available
     if (HubDeviceExtension->UsbDInterface.IsDeviceHighSpeed)
     {
