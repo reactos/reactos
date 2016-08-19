@@ -113,7 +113,7 @@ void *alloc_object(object_header_t *parent, const object_vtbl_t *vtbl, size_t si
         handle_table[handle] = ret;
         ret->valid_handle = TRUE;
 
-        while(handle_table[next_handle] && next_handle < handle_table_size)
+        while(next_handle < handle_table_size && handle_table[next_handle])
             next_handle++;
     }
 
@@ -1896,11 +1896,7 @@ BOOL WINAPI InternetCrackUrlW(const WCHAR *lpszUrl, DWORD dwUrlLength, DWORD dwF
     }
     else
     {
-        if (lpUC->lpszUrlPath && (lpUC->dwUrlPathLength > 0))
-            lpUC->lpszUrlPath[0] = 0;
-        else if (lpUC->dwUrlPathLength > 0)
-            lpUC->lpszUrlPath = (WCHAR*)lpszcp;
-        lpUC->dwUrlPathLength = 0;
+        set_url_component(&lpUC->lpszUrlPath, &lpUC->dwUrlPathLength, lpszcp, 0);
     }
 
     TRACE("%s: scheme(%s) host(%s) path(%s) extra(%s)\n", debugstr_wn(lpszUrl,dwUrlLength),
@@ -2787,7 +2783,8 @@ BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD dwOption,
         FIXME("Option INTERNET_OPTION_RESET_URLCACHE_SESSION: STUB\n");
         break;
     case INTERNET_OPTION_END_BROWSER_SESSION:
-        FIXME("Option INTERNET_OPTION_END_BROWSER_SESSION: STUB\n");
+        FIXME("Option INTERNET_OPTION_END_BROWSER_SESSION: semi-stub\n");
+        free_cookie();
         break;
     case INTERNET_OPTION_CONNECTED_STATE:
         FIXME("Option INTERNET_OPTION_CONNECTED_STATE: STUB\n");
