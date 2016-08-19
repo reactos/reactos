@@ -179,7 +179,7 @@ HRESULT JSGlobal_eval(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned a
         jsval_t *r)
 {
     call_frame_t *frame;
-    DWORD exec_flags = 0;
+    DWORD exec_flags = EXEC_EVAL;
     bytecode_t *code;
     const WCHAR *src;
     HRESULT hres;
@@ -219,7 +219,7 @@ HRESULT JSGlobal_eval(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned a
     if(flags & DISPATCH_JSCRIPT_CALLEREXECSSOURCE)
         exec_flags |= EXEC_RETURN_TO_INTERP;
     hres = exec_source(ctx, exec_flags, code, &code->global_code, frame->scope,
-            frame->this_obj, NULL, frame->variable_obj, NULL, r);
+            frame->this_obj, NULL, frame->variable_obj, 0, NULL, r);
     release_bytecode(code);
     return hres;
 }

@@ -628,7 +628,7 @@ static HRESULT String_match(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsi
     }
 
     if(is_object_instance(argv[0])) {
-        regexp = iface_to_jsdisp((IUnknown*)get_object(argv[0]));
+        regexp = iface_to_jsdisp(get_object(argv[0]));
         if(regexp && !is_class(regexp, JSCLASS_REGEXP)) {
             jsdisp_release(regexp);
             regexp = NULL;
@@ -791,7 +791,7 @@ static HRESULT String_replace(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, un
     }
 
     if(is_object_instance(argv[0])) {
-        regexp = iface_to_jsdisp((IUnknown*)get_object(argv[0]));
+        regexp = iface_to_jsdisp(get_object(argv[0]));
         if(regexp && !is_class(regexp, JSCLASS_REGEXP)) {
             jsdisp_release(regexp);
             regexp = NULL;
@@ -808,7 +808,7 @@ static HRESULT String_replace(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, un
 
     if(argc >= 2) {
         if(is_object_instance(argv[1])) {
-            rep_func = iface_to_jsdisp((IUnknown*)get_object(argv[1]));
+            rep_func = iface_to_jsdisp(get_object(argv[1]));
             if(rep_func && !is_class(rep_func, JSCLASS_FUNCTION)) {
                 jsdisp_release(rep_func);
                 rep_func = NULL;
@@ -1009,7 +1009,7 @@ static HRESULT String_search(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, uns
     }
 
     if(is_object_instance(argv[0])) {
-        regexp = iface_to_jsdisp((IUnknown*)get_object(argv[0]));
+        regexp = iface_to_jsdisp(get_object(argv[0]));
         if(regexp && !is_class(regexp, JSCLASS_REGEXP)) {
             jsdisp_release(regexp);
             regexp = NULL;
@@ -1153,7 +1153,7 @@ static HRESULT String_split(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsi
     }
 
     if(is_object_instance(argv[0])) {
-        regexp = iface_to_jsdisp((IUnknown*)get_object(argv[0]));
+        regexp = iface_to_jsdisp(get_object(argv[0]));
         if(regexp) {
             if(!is_class(regexp, JSCLASS_REGEXP)) {
                 jsdisp_release(regexp);

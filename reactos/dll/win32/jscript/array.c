@@ -178,7 +178,7 @@ static HRESULT concat_obj(jsdisp_t *array, IDispatch *obj, DWORD *len)
     jsdisp_t *jsobj;
     HRESULT hres;
 
-    jsobj = iface_to_jsdisp((IUnknown*)obj);
+    jsobj = iface_to_jsdisp(obj);
     if(jsobj) {
         if(is_class(jsobj, JSCLASS_ARRAY)) {
             hres = concat_array(array, (ArrayInstance*)jsobj, len);
@@ -688,7 +688,7 @@ static HRESULT Array_sort(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, unsigne
             return E_FAIL;
         }
 
-        cmp_func = iface_to_jsdisp((IUnknown*)get_object(argv[0]));
+        cmp_func = iface_to_jsdisp(get_object(argv[0]));
         if(!cmp_func || !is_class(cmp_func, JSCLASS_FUNCTION)) {
             WARN("cmp_func is not a function\n");
             if(cmp_func)

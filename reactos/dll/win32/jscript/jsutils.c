@@ -138,7 +138,7 @@ void heap_pool_clear(heap_pool_t *heap)
     if(!heap)
         return;
 
-    while((tmp = list_next(&heap->custom_blocks, &heap->custom_blocks))) {
+    while((tmp = list_head(&heap->custom_blocks))) {
         list_remove(tmp);
         heap_free(tmp);
     }
@@ -202,13 +202,17 @@ static HRESULT jsval_variant(jsval_t *val, VARIANT *var)
 
     __JSVAL_TYPE(*val) = JSV_VARIANT;
     __JSVAL_VAR(*val) = v = heap_alloc(sizeof(VARIANT));
-    if(!v)
+    if(!v) {
+        *val = jsval_undefined();
         return E_OUTOFMEMORY;
+    }
 
     V_VT(v) = VT_EMPTY;
     hres = VariantCopy(v, var);
-    if(FAILED(hres))
+    if(FAILED(hres)) {
+        *val = jsval_undefined();
         heap_free(v);
+    }
     return hres;
 }
 
@@ -382,7 +386,7 @@ HRESULT to_primitive(script_ctx_t *ctx, jsval_t val, jsval_t *ret, hint_t hint)
             return S_OK;
         }
 
-        jsdisp = iface_to_jsdisp((IUnknown*)get_object(val));
+        jsdisp = iface_to_jsdisp(get_object(val));
         if(!jsdisp)
             return disp_propget(ctx, get_object(val), DISPID_VALUE, ret);
 

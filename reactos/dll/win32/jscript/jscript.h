@@ -142,7 +142,7 @@ typedef enum {
     JSCLASS_JSON
 } jsclass_t;
 
-jsdisp_t *iface_to_jsdisp(IUnknown*) DECLSPEC_HIDDEN;
+jsdisp_t *iface_to_jsdisp(IDispatch*) DECLSPEC_HIDDEN;
 
 typedef struct {
     union {
@@ -184,7 +184,7 @@ static inline void set_disp(vdisp_t *vdisp, IDispatch *disp)
     jsdisp_t *jsdisp;
     HRESULT hres;
 
-    jsdisp = iface_to_jsdisp((IUnknown*)disp);
+    jsdisp = iface_to_jsdisp(disp);
     if(jsdisp) {
         vdisp->u.jsdisp = jsdisp;
         vdisp->flags = VDISP_JSDISP | VDISP_DISPEX;
