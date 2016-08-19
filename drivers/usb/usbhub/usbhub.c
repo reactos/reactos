@@ -97,6 +97,9 @@ USBHUB_AddDevice(
     // initialize mutex
     KeInitializeGuardedMutex(&HubDeviceExtension->HubMutexLock);
 
+    // initialize remove lock
+    IoInitializeRemoveLock(&HubDeviceExtension->Common.RemoveLock, 'buH', 0, 0);
+
     //
     // initialize reset complete event
     //
