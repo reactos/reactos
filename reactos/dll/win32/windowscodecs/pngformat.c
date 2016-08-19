@@ -203,6 +203,84 @@ HRESULT PngGamaReader_CreateInstance(REFIID iid, void** ppv)
     return MetadataReader_Create(&GamaReader_Vtbl, iid, ppv);
 }
 
+static HRESULT LoadChrmMetadata(IStream *stream, const GUID *preferred_vendor,
+    DWORD persist_options, MetadataItem **items, DWORD *item_count)
+{
+    HRESULT hr;
+    BYTE type[4];
+    BYTE *data;
+    ULONG data_size;
+    static const WCHAR names[8][12] = {
+        {'W','h','i','t','e','P','o','i','n','t','X',0},
+        {'W','h','i','t','e','P','o','i','n','t','Y',0},
+        {'R','e','d','X',0},
+        {'R','e','d','Y',0},
+        {'G','r','e','e','n','X',0},
+        {'G','r','e','e','n','Y',0},
+        {'B','l','u','e','X',0},
+        {'B','l','u','e','Y',0},
+    };
+    LPWSTR dyn_names[8] = {0};
+    MetadataItem *result;
+    int i;
+
+    hr = read_png_chunk(stream, type, &data, &data_size);
+    if (FAILED(hr)) return hr;
+
+    if (data_size < 32)
+    {
+        HeapFree(GetProcessHeap(), 0, data);
+        return E_FAIL;
+    }
+
+    result = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MetadataItem)*8);
+    for (i=0; i<8; i++)
+    {
+        dyn_names[i] = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*(lstrlenW(names[i])+1));
+        if (!dyn_names[i]) break;
+    }
+    if (!result || i < 8)
+    {
+        HeapFree(GetProcessHeap(), 0, result);
+        for (i=0; i<8; i++)
+            HeapFree(GetProcessHeap(), 0, dyn_names[i]);
+        HeapFree(GetProcessHeap(), 0, data);
+        return E_OUTOFMEMORY;
+    }
+
+    for (i=0; i<8; i++)
+    {
+        PropVariantInit(&result[i].schema);
+
+        PropVariantInit(&result[i].id);
+        result[i].id.vt = VT_LPWSTR;
+        result[i].id.u.pwszVal = dyn_names[i];
+        lstrcpyW(dyn_names[i], names[i]);
+
+        PropVariantInit(&result[i].value);
+        result[i].value.vt = VT_UI4;
+        result[i].value.u.ulVal = read_ulong_be(&data[i*4]);
+    }
+
+    *items = result;
+    *item_count = 8;
+
+    HeapFree(GetProcessHeap(), 0, data);
+
+    return S_OK;
+}
+
+static const MetadataHandlerVtbl ChrmReader_Vtbl = {
+    0,
+    &CLSID_WICPngChrmMetadataReader,
+    LoadChrmMetadata
+};
+
+HRESULT PngChrmReader_CreateInstance(REFIID iid, void** ppv)
+{
+    return MetadataReader_Create(&ChrmReader_Vtbl, iid, ppv);
+}
+
 #ifdef SONAME_LIBPNG
 
 static void *libpng_handle;

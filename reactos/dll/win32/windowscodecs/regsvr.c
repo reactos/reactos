@@ -1499,6 +1499,21 @@ static const struct reader_containers pnggama_containers[] = {
     { NULL } /* list terminator */
 };
 
+static const BYTE cHRM[] = "cHRM";
+
+static const struct metadata_pattern pngchrm_metadata_pattern[] = {
+    { 4, 4, cHRM, mask_all, 4 },
+    { 0 }
+};
+
+static const struct reader_containers pngchrm_containers[] = {
+    {
+        &GUID_ContainerFormatPng,
+        pngchrm_metadata_pattern
+    },
+    { NULL } /* list terminator */
+};
+
 static const struct metadata_pattern lsd_metadata_patterns[] = {
     { 0, 6, gif87a_magic, mask_all, 0 },
     { 0, 6, gif89a_magic, mask_all, 0 },
@@ -1593,6 +1608,16 @@ static struct regsvr_metadatareader const metadatareader_list[] = {
         &GUID_MetadataFormatIfd,
         1, 1, 0,
         ifd_containers
+    },
+    {   &CLSID_WICPngChrmMetadataReader,
+        "The Wine Project",
+        "Chunk cHRM Reader",
+        "1.0.0.0",
+        "1.0.0.0",
+        &GUID_VendorMicrosoft,
+        &GUID_MetadataFormatChunkcHRM,
+        0, 0, 0,
+        pngchrm_containers
     },
     {   &CLSID_WICPngGamaMetadataReader,
         "The Wine Project",

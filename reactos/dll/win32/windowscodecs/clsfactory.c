@@ -42,6 +42,7 @@ static const classinfo wic_classes[] = {
     {&CLSID_WineTgaDecoder, TgaDecoder_CreateInstance},
     {&CLSID_WICUnknownMetadataReader, UnknownMetadataReader_CreateInstance},
     {&CLSID_WICIfdMetadataReader, IfdMetadataReader_CreateInstance},
+    {&CLSID_WICPngChrmMetadataReader, PngChrmReader_CreateInstance},
     {&CLSID_WICPngGamaMetadataReader, PngGamaReader_CreateInstance},
     {&CLSID_WICPngTextMetadataReader, PngTextReader_CreateInstance},
     {&CLSID_WICLSDMetadataReader, LSDReader_CreateInstance},
