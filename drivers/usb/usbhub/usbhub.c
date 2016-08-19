@@ -92,6 +92,9 @@ USBHUB_AddDevice(
     HubDeviceExtension->Common.IsFDO = TRUE;
     DeviceObject->Flags |= DO_POWER_PAGABLE;
 
+    // initialize mutex
+    KeInitializeGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
     //
     // initialize reset complete event
     //

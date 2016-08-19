@@ -73,6 +73,8 @@ typedef struct _HUB_DEVICE_EXTENSION
     PDEVICE_OBJECT RootHubPhysicalDeviceObject;
     PDEVICE_OBJECT RootHubFunctionalDeviceObject;
 
+    KGUARDED_MUTEX HubMutexLock;
+
     ULONG NumberOfHubs;
     KEVENT ResetComplete;
 

@@ -153,14 +153,18 @@ IsValidPDO(
 
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION)ChildDeviceExtension->ParentDeviceObject->DeviceExtension;
 
+    KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
     for(Index = 0; Index < USB_MAXCHILDREN; Index++)
     {
         if (HubDeviceExtension->ChildDeviceObject[Index] == DeviceObject)
         {
+            KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
             /* PDO exists */
             return TRUE;
         }
     }
+    KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
 
     /* invalid pdo */
     return FALSE;

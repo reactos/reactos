@@ -1094,6 +1094,7 @@ DestroyUsbChildDeviceObject(
     PDEVICE_OBJECT ChildDeviceObject = NULL;
     ULONG Index = 0;
 
+    KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
     for (Index = 0; Index < USB_MAXCHILDREN; Index++)
     {
         if (HubDeviceExtension->ChildDeviceObject[Index])
@@ -1114,14 +1115,16 @@ DestroyUsbChildDeviceObject(
     if (!ChildDeviceObject)
     {
         DPRINT1("Removal request for non-existant device!\n");
+        KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
         return STATUS_UNSUCCESSFUL;
     }
 
     DPRINT("Removing device on port %d (Child index: %d)\n", PortId, Index);
 
     /* Remove the device from the table */
-    // is lock needed?
     HubDeviceExtension->ChildDeviceObject[Index] = NULL;
+
+    KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
 
     /* Invalidate device relations for the root hub */
     IoInvalidateDeviceRelations(HubDeviceExtension->RootHubPhysicalDeviceObject, BusRelations);
@@ -1153,26 +1156,6 @@ CreateUsbChildDeviceObject(
     HubInterface = &HubDeviceExtension->HubInterface;
     RootHubDeviceObject = HubDeviceExtension->RootHubPhysicalDeviceObject;
     HubInterfaceBusContext = HubDeviceExtension->UsbDInterface.BusContext;
-    //
-    // Find an empty slot in the child device array
-    //
-    for (ChildDeviceCount = 0; ChildDeviceCount < USB_MAXCHILDREN; ChildDeviceCount++)
-    {
-        if (HubDeviceExtension->ChildDeviceObject[ChildDeviceCount] == NULL)
-        {
-        DPRINT("Found unused entry at %d\n", ChildDeviceCount);
-            break;
-        }
-    }
-
-    //
-    // Check if the limit has been reached for maximum usb devices
-    //
-    if (ChildDeviceCount == USB_MAXCHILDREN)
-    {
-        DPRINT1("USBHUB: Too many child devices!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
 
     while (TRUE)
     {
@@ -1341,8 +1324,35 @@ CreateUsbChildDeviceObject(
 
     UsbChildExtension->IsRemovePending = FALSE;
 
+    KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
+    //
+    // Find an empty slot in the child device array
+    //
+    for (ChildDeviceCount = 0; ChildDeviceCount < USB_MAXCHILDREN; ChildDeviceCount++)
+    {
+        if (HubDeviceExtension->ChildDeviceObject[ChildDeviceCount] == NULL)
+        {
+            DPRINT("Found unused entry at %d\n", ChildDeviceCount);
+            break;
+        }
+    }
+
+    //
+    // Check if the limit has been reached for maximum usb devices
+    //
+    if (ChildDeviceCount == USB_MAXCHILDREN)
+    {
+        DPRINT1("USBHUB: Too many child devices!\n");
+        Status = STATUS_UNSUCCESSFUL;
+        KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
+        UsbChildExtension->DeviceInterface.InterfaceDereference(UsbChildExtension->DeviceInterface.BusContext);
+        goto Cleanup;
+    }
+
     HubDeviceExtension->ChildDeviceObject[ChildDeviceCount] = NewChildDeviceObject;
     HubDeviceExtension->InstanceCount++;
+    KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
 
     IoInvalidateDeviceRelations(RootHubDeviceObject, BusRelations);
     return STATUS_SUCCESS;
@@ -1398,6 +1408,8 @@ USBHUB_FdoQueryBusRelations(
 
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
+    KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
     //
     // Count the number of children
     //
@@ -1418,6 +1430,7 @@ USBHUB_FdoQueryBusRelations(
         {
             // We have nothing to add
             *pDeviceRelations = RelationsFromTop;
+            KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
             return STATUS_SUCCESS;
         }
     }
@@ -1432,6 +1445,7 @@ USBHUB_FdoQueryBusRelations(
 
     if (!DeviceRelations)
     {
+        KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
         if (!RelationsFromTop)
             return STATUS_INSUFFICIENT_RESOURCES;
         else
@@ -1460,6 +1474,8 @@ USBHUB_FdoQueryBusRelations(
             DeviceRelations->Objects[Children++] = HubDeviceExtension->ChildDeviceObject[i];
         }
     }
+
+    KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
 
     // We should do this, because replaced this with our's one
     if (RelationsFromTop)
@@ -2198,6 +2214,7 @@ USBHUB_FdoHandleDeviceControl(
             // sanity checks
             ASSERT(NodeConnectionInfo);
 
+            KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
             for(Index = 0; Index < USB_MAXCHILDREN; Index++)
             {
                 if (HubDeviceExtension->ChildDeviceObject[Index] == NULL)
@@ -2224,6 +2241,7 @@ USBHUB_FdoHandleDeviceControl(
                 }
                 break;
             }
+            KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
             // done
             Irp->IoStatus.Information = sizeof(USB_NODE_INFORMATION);
             Status = STATUS_SUCCESS;
@@ -2244,6 +2262,7 @@ USBHUB_FdoHandleDeviceControl(
             // sanity checks
             ASSERT(NodeKey);
 
+            KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
             for(Index = 0; Index < USB_MAXCHILDREN; Index++)
             {
                 if (HubDeviceExtension->ChildDeviceObject[Index] == NULL)
@@ -2283,6 +2302,7 @@ USBHUB_FdoHandleDeviceControl(
                 NodeKey->ActualLength = Length + sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME);
                 break;
             }
+            KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
         }
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_USB_GET_NODE_CONNECTION_NAME)
