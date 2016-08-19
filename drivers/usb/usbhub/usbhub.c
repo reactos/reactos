@@ -197,45 +197,58 @@ USBHUB_DispatchPower(
 {
     PIO_STACK_LOCATION IoStack;
     PHUB_DEVICE_EXTENSION DeviceExtension;
-
+    NTSTATUS Status;
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     DeviceExtension = DeviceObject->DeviceExtension;
+
+    Status = IoAcquireRemoveLock(&DeviceExtension->Common.RemoveLock, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
     DPRINT1("Power Function %x\n", IoStack->MinorFunction);
 
     if (DeviceExtension->Common.IsFDO)
     {
         PoStartNextPowerIrp(Irp);
         IoSkipCurrentIrpStackLocation(Irp);
-        return PoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
+        Status = PoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
+        IoReleaseRemoveLock(&DeviceExtension->Common.RemoveLock, Irp);
+        return Status;
     }
 
-    if (IoStack->MinorFunction == IRP_MN_SET_POWER)
+    switch (IoStack->MinorFunction)
     {
-        PoStartNextPowerIrp(Irp);
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_SUCCESS;
-
-    }
-    else if (IoStack->MinorFunction == IRP_MN_QUERY_POWER)
-    {
-        PoStartNextPowerIrp(Irp);
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_SUCCESS;
-
-    }
-    else if (IoStack->MinorFunction == IRP_MN_WAIT_WAKE)
-    {
-        PoStartNextPowerIrp(Irp);
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_SUCCESS;
+        case IRP_MN_SET_POWER:
+        {
+            DPRINT("IRP_MN_SET_POWER\n");
+            break;
+        }
+        case IRP_MN_QUERY_POWER:
+        {
+            DPRINT("IRP_MN_QUERY_POWER\n");
+            break;
+        }
+        case IRP_MN_WAIT_WAKE:
+        {
+            DPRINT("IRP_MN_WAIT_WAKE\n");
+            break;
+        }
+        default:
+        {
+            DPRINT1("PDO IRP_MJ_POWER / unknown minor function 0x%lx\n", IoStack->MinorFunction);
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Irp->IoStatus.Status;
+        }
     }
 
     PoStartNextPowerIrp(Irp);
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoReleaseRemoveLock(&DeviceExtension->Common.RemoveLock, Irp);
     return STATUS_SUCCESS;
 }
 
