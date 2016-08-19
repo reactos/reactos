@@ -1626,7 +1626,7 @@ USBHUB_FdoStartDevice(
     RootHubDeviceObject = HubDeviceExtension->RootHubPhysicalDeviceObject;
 
     // Send the StartDevice to RootHub
-    Status = ForwardIrpAndWait(RootHubDeviceObject, Irp);
+    Status = ForwardIrpAndWait(HubDeviceExtension->LowerDeviceObject, Irp);
 
     if (!NT_SUCCESS(Status))
     {

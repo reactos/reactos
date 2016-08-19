@@ -62,7 +62,7 @@ USBHUB_AddDevice(
     PDEVICE_OBJECT DeviceObject;
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
     NTSTATUS Status;
-    DPRINT("USBHUB: AddDevice\n");
+    DPRINT("USBHUB: AddDevice (%p)\n", PhysicalDeviceObject);
     //
     // Create the Device Object
     //
@@ -162,6 +162,18 @@ USBHUB_DispatchDeviceControl(
     DPRINT("Usbhub: DispatchDeviceControl\n");
     if (((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Common.IsFDO)
         return USBHUB_FdoHandleDeviceControl(DeviceObject, Irp);
+    else
+        return USBHUB_IrpStub(DeviceObject, Irp);
+}
+
+NTSTATUS NTAPI
+USBHUB_DispatchSystemControl(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp)
+{
+    DPRINT("Usbhub: DispatchSystemControl\n");
+    if (((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Common.IsFDO)
+        return USBHUB_IrpStub(DeviceObject, Irp);
     else
         return USBHUB_IrpStub(DeviceObject, Irp);
 }
@@ -275,6 +287,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = USBHUB_Close;
     DriverObject->MajorFunction[IRP_MJ_CLEANUP] = USBHUB_Cleanup;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = USBHUB_DispatchDeviceControl;
+    DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = USBHUB_DispatchSystemControl;
     DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = USBHUB_DispatchInternalDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_PNP] = USBHUB_DispatchPnp;
     DriverObject->MajorFunction[IRP_MJ_POWER] =USBHUB_DispatchPower;
