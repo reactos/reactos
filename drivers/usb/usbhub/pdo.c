@@ -711,6 +711,7 @@ USBHUB_PdoHandlePnp(
             {
                 /* not supported */
                 Status = Irp->IoStatus.Status;
+                Information = Irp->IoStatus.Information;
                 break;
             }
 
