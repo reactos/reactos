@@ -880,6 +880,18 @@ MI_IS_MAPPED_PTE(PMMPTE PointerPte)
 
 #endif
 
+FORCEINLINE
+VOID
+MI_MAKE_TRANSITION_PTE(_Out_ PMMPTE NewPte,
+                       _In_ PFN_NUMBER Page,
+                       _In_ ULONG Protection)
+{
+    NewPte->u.Long = 0;
+    NewPte->u.Trans.Transition = 1;
+    NewPte->u.Trans.Protection = Protection;
+    NewPte->u.Trans.PageFrameNumber = Page;
+}
+
 //
 // Returns if the page is physically resident (ie: a large page)
 // FIXFIX: CISC/x86 only?
@@ -2167,6 +2179,15 @@ MiDeleteVirtualAddresses(
     IN ULONG_PTR Va,
     IN ULONG_PTR EndingAddress,
     IN PMMVAD Vad
+);
+
+VOID
+NTAPI
+MiDeletePte(
+    IN PMMPTE PointerPte,
+    IN PVOID VirtualAddress,
+    IN PEPROCESS CurrentProcess,
+    IN PMMPTE PrototypePte
 );
 
 ULONG

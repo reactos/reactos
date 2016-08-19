@@ -231,13 +231,6 @@ MiIsBalancerThread(VOID)
 
 VOID
 NTAPI
-MiDeletePte(IN PMMPTE PointerPte,
-            IN PVOID VirtualAddress,
-            IN PEPROCESS CurrentProcess,
-            IN PMMPTE PrototypePte);
-
-VOID
-NTAPI
 MmRebalanceMemoryConsumers(VOID)
 {
     if (MiBalancerThreadHandle != NULL &&
