@@ -2168,7 +2168,7 @@ static HRESULT WINAPI IPropertySetStorage_fnCreate(
     IPropertyStorage** ppprstg)
 {
     StorageImpl *This = impl_from_IPropertySetStorage(ppstg);
-    WCHAR name[CCH_MAX_PROPSTG_NAME];
+    WCHAR name[CCH_MAX_PROPSTG_NAME + 1];
     IStream *stm = NULL;
     HRESULT r;
 
@@ -2226,7 +2226,7 @@ static HRESULT WINAPI IPropertySetStorage_fnOpen(
 {
     StorageImpl *This = impl_from_IPropertySetStorage(ppstg);
     IStream *stm = NULL;
-    WCHAR name[CCH_MAX_PROPSTG_NAME];
+    WCHAR name[CCH_MAX_PROPSTG_NAME + 1];
     HRESULT r;
 
     TRACE("%p %s %08x %p\n", This, debugstr_guid(rfmtid), grfMode, ppprstg);
@@ -2270,7 +2270,7 @@ static HRESULT WINAPI IPropertySetStorage_fnDelete(
     REFFMTID rfmtid)
 {
     StorageImpl *This = impl_from_IPropertySetStorage(ppstg);
-    WCHAR name[CCH_MAX_PROPSTG_NAME];
+    WCHAR name[CCH_MAX_PROPSTG_NAME + 1];
     HRESULT r;
 
     TRACE("%p %s\n", This, debugstr_guid(rfmtid));

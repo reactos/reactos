@@ -1247,13 +1247,17 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
     }
 
     ret = RegQueryValueW(HKEY_CLASSES_ROOT, extension, NULL, &sizeProgId);
-
-    /* get the progId associated to the extension */
-    progId = CoTaskMemAlloc(sizeProgId);
-    ret = RegQueryValueW(HKEY_CLASSES_ROOT, extension, progId, &sizeProgId);
-    if (!ret)
-        /* return the clsid associated to the progId */
-        res = CLSIDFromProgID(progId,pclsid);
+    if (!ret) {
+        /* get the progId associated to the extension */
+        progId = CoTaskMemAlloc(sizeProgId);
+        ret = RegQueryValueW(HKEY_CLASSES_ROOT, extension, progId, &sizeProgId);
+        if (!ret)
+            /* return the clsid associated to the progId */
+            res = CLSIDFromProgID(progId, pclsid);
+        else
+            res = HRESULT_FROM_WIN32(ret);
+        CoTaskMemFree(progId);
+    }
     else
         res = HRESULT_FROM_WIN32(ret);
 
@@ -1261,7 +1265,6 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
         CoTaskMemFree(pathDec[i]);
     CoTaskMemFree(pathDec);
 
-    CoTaskMemFree(progId);
     return res != S_OK ? MK_E_INVALIDEXTENSION : res;
 }
 
@@ -1506,7 +1509,7 @@ static HRESULT WINAPI MonikerMarshalInner_QueryInterface(IUnknown *iface, REFIID
     if (IsEqualIID(&IID_IUnknown, riid) || IsEqualIID(&IID_IMarshal, riid))
     {
         *ppv = &This->IMarshal_iface;
-        IUnknown_AddRef((IUnknown *)&This->IMarshal_iface);
+        IMarshal_AddRef(&This->IMarshal_iface);
         return S_OK;
     }
     FIXME("No interface for %s\n", debugstr_guid(riid));

@@ -4967,8 +4967,8 @@ HRESULT WINAPI CoGetContextToken( ULONG_PTR *token )
         context->IComThreadingInfo_iface.lpVtbl = &Context_Threading_Vtbl;
         context->IContextCallback_iface.lpVtbl = &Context_Callback_Vtbl;
         context->IObjContext_iface.lpVtbl = &Context_Object_Vtbl;
-        /* Context token does not take a reference, it's always zero until
-           interface is explicitely requested with CoGetObjectContext(). */
+        /* Context token does not take a reference, it's always zero until the
+           interface is explicitly requested with CoGetObjectContext(). */
         context->refs = 0;
 
         info->context_token = &context->IObjContext_iface;

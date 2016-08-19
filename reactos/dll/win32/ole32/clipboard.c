@@ -1799,7 +1799,7 @@ void OLEClipbrd_UnInitialize(void)
  *
  * Enumerate all formats supported by the source and make
  * those formats available using delayed rendering using SetClipboardData.
- * Cache the enumeration list and make that list visibile as the
+ * Cache the enumeration list and make that list visible as the
  * 'Ole Private Data' format on the clipboard.
  *
  */
