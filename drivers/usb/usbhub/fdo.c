@@ -1232,10 +1232,6 @@ CreateUsbChildDeviceObject(
     UsbChildExtension->ParentDeviceObject = UsbHubDeviceObject;
     UsbChildExtension->PortNumber = PortId;
 
-    // copy device interface
-    RtlCopyMemory(&UsbChildExtension->DeviceInterface, &HubDeviceExtension->DeviceInterface, sizeof(USB_BUS_INTERFACE_USBDI_V2));
-
-
     //
     // Create the UsbDeviceObject
     //
@@ -1249,12 +1245,6 @@ CreateUsbChildDeviceObject(
         DPRINT1("USBHUB: CreateUsbDevice failed with status %x\n", Status);
         goto Cleanup;
     }
-
-    // copy device interface
-    RtlCopyMemory(&UsbChildExtension->DeviceInterface, &HubDeviceExtension->DeviceInterface, sizeof(USB_BUS_INTERFACE_USBDI_V2));
-
-    // FIXME replace buscontext
-    UsbChildExtension->DeviceInterface.BusContext = UsbChildExtension->UsbDeviceHandle;
 
     //
     // Initialize UsbDevice
@@ -1344,6 +1334,10 @@ CreateUsbChildDeviceObject(
         DPRINT1("Failed to create strings needed to describe device to PNP.\n");
         goto Cleanup;
     }
+
+    // copy device interface
+    RtlCopyMemory(&UsbChildExtension->DeviceInterface, &HubDeviceExtension->UsbDInterface, sizeof(USB_BUS_INTERFACE_USBDI_V2));
+    UsbChildExtension->DeviceInterface.InterfaceReference(UsbChildExtension->DeviceInterface.BusContext);
 
     UsbChildExtension->IsRemovePending = FALSE;
 
