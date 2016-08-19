@@ -188,9 +188,18 @@ USBHUB_DispatchPower(
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
+    PHUB_DEVICE_EXTENSION DeviceExtension;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
+    DeviceExtension = DeviceObject->DeviceExtension;
     DPRINT1("Power Function %x\n", IoStack->MinorFunction);
+
+    if (DeviceExtension->Common.IsFDO)
+    {
+        PoStartNextPowerIrp(Irp);
+        IoSkipCurrentIrpStackLocation(Irp);
+        return PoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
+    }
 
     if (IoStack->MinorFunction == IRP_MN_SET_POWER)
     {
