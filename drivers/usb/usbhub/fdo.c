@@ -2034,10 +2034,12 @@ USBHUB_FdoHandlePnp(
     NTSTATUS Status = STATUS_SUCCESS;
     PDEVICE_OBJECT ChildDeviceObject;
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
+    PUSB_BUS_INTERFACE_HUB_V5 HubInterface;
     PHUB_CHILDDEVICE_EXTENSION ChildDeviceExtension;
 
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
 
+    HubInterface = &HubDeviceExtension->HubInterface;
     Stack = IoGetCurrentIrpStackLocation(Irp);
 
     Status = IoAcquireRemoveLock(&HubDeviceExtension->Common.RemoveLock, Irp);
@@ -2175,15 +2177,69 @@ USBHUB_FdoHandlePnp(
         }
         case IRP_MN_REMOVE_DEVICE:
         {
-            // Should be reworked later in this commits set
             DPRINT("IRP_MN_REMOVE_DEVICE\n");
+
+            SET_NEW_PNP_STATE(HubDeviceExtension->Common, Deleted);
+
+            IoReleaseRemoveLockAndWait(&HubDeviceExtension->Common.RemoveLock, Irp);
+
+            //
+            // Here we should remove all child PDOs. At this point all children
+            // received and returned from IRP_MN_REMOVE so remove synchronization
+            // isn't needed here
+            //
+
+            KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
+            for (int i = 0; i < USB_MAXCHILDREN; i++)
+            {
+                ChildDeviceObject = HubDeviceExtension->ChildDeviceObject[i];
+                if (ChildDeviceObject)
+                {
+                    PHUB_CHILDDEVICE_EXTENSION UsbChildExtension = (PHUB_CHILDDEVICE_EXTENSION)ChildDeviceObject->DeviceExtension;
+
+                    SET_NEW_PNP_STATE(UsbChildExtension->Common, Deleted);
+
+                    // Remove the usb device
+                    if (UsbChildExtension->UsbDeviceHandle)
+                    {
+                        Status = HubInterface->RemoveUsbDevice(HubInterface->BusContext, UsbChildExtension->UsbDeviceHandle, 0);
+                        ASSERT(Status == STATUS_SUCCESS);
+                    }
+
+                    // Free full configuration descriptor
+                    if (UsbChildExtension->FullConfigDesc)
+                        ExFreePool(UsbChildExtension->FullConfigDesc);
+
+                    // Free ID buffers
+                    if (UsbChildExtension->usCompatibleIds.Buffer)
+                        ExFreePool(UsbChildExtension->usCompatibleIds.Buffer);
+
+                    if (UsbChildExtension->usDeviceId.Buffer)
+                        ExFreePool(UsbChildExtension->usDeviceId.Buffer);
+
+                    if (UsbChildExtension->usHardwareIds.Buffer)
+                        ExFreePool(UsbChildExtension->usHardwareIds.Buffer);
+
+                    if (UsbChildExtension->usInstanceId.Buffer)
+                        ExFreePool(UsbChildExtension->usInstanceId.Buffer);
+
+                    DPRINT("Deleting child PDO\n");
+                    IoDeleteDevice(DeviceObject);
+                    ChildDeviceObject = NULL;
+                }
+            }
+
+            KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
             Irp->IoStatus.Status = STATUS_SUCCESS;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            Status = ForwardIrpAndForget(DeviceObject, Irp);
 
             IoDetachDevice(HubDeviceExtension->LowerDeviceObject);
+            DPRINT("Deleting FDO 0x%p\n", DeviceObject);
             IoDeleteDevice(DeviceObject);
 
-            return STATUS_SUCCESS;
+            return Status;
         }
         case IRP_MN_QUERY_BUS_INFORMATION:
         {
