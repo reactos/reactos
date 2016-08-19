@@ -210,7 +210,7 @@ USBHUB_PdoHandleInternalDeviceControl(
 
     if (ChildDeviceExtension->Common.PnPState == SurpriseRemovePending ||
         ChildDeviceExtension->Common.PnPState == RemovePending ||
-        !IsValidPDO(DeviceObject))
+        ChildDeviceExtension->ParentDeviceObject == NULL)
     {
         // Parent or child device was surprise removed.
         DPRINT1("[USBHUB] Request for removed device object %p\n", DeviceObject);
