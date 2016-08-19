@@ -32,4 +32,5 @@ STRINGTABLE
     STRING_INVALID_OPTION, "Ошибка: Недопустимый аргумент или параметр [%1]. "
     STRING_REG_HELP, "Введите ""REG /?"" для получения справки по использованию..\n"
     STRING_FUNC_HELP, "Введите ""REG %1 /?"" для получения справки по использованию..\n"
+    STRING_VALUE_NOT_SET, "(value not set)"
 }
