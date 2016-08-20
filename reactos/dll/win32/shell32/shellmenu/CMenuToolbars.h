@@ -97,7 +97,7 @@ public:
     HRESULT KillPopupTimer();
 
     HRESULT MenuBarMouseDown(INT iIndex, BOOL isLButton);
-    HRESULT MenuBarMouseUp(INT iIndex);
+    HRESULT MenuBarMouseUp(INT iIndex, BOOL isLButton);
     HRESULT ProcessClick(INT iItem);
     HRESULT ProcessContextMenu(INT iItem);
     HRESULT BeforeCancelPopup();

@@ -827,8 +827,6 @@ HRESULT CMenuToolbarBase::MenuBarMouseDown(INT iIndex, BOOL isLButton)
     TBBUTTON btn;
 
     GetButton(iIndex, &btn);
-    if (!isLButton)
-        return ProcessContextMenu(btn.idCommand);
 
     if ((m_initFlags & SMINIT_VERTICAL) 
         || m_popupBar
@@ -841,7 +839,7 @@ HRESULT CMenuToolbarBase::MenuBarMouseDown(INT iIndex, BOOL isLButton)
     return ProcessClick(btn.idCommand);
 }
 
-HRESULT CMenuToolbarBase::MenuBarMouseUp(INT iIndex)
+HRESULT CMenuToolbarBase::MenuBarMouseUp(INT iIndex, BOOL isLButton)
 {
     TBBUTTON btn;
 
@@ -851,7 +849,11 @@ HRESULT CMenuToolbarBase::MenuBarMouseUp(INT iIndex)
         return S_OK;
 
     GetButton(iIndex, &btn);
-    return ProcessClick(btn.idCommand);
+
+    if (isLButton)
+        return ProcessClick(btn.idCommand);
+    else
+        return ProcessContextMenu(btn.idCommand);
 }
 
 HRESULT CMenuToolbarBase::PrepareExecuteItem(INT iItem)

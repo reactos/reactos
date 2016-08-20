@@ -1132,12 +1132,12 @@ HRESULT CMenuBand::_MenuBarMouseDown(HWND hwnd, INT item, BOOL isLButton)
     return S_OK;
 }
 
-HRESULT CMenuBand::_MenuBarMouseUp(HWND hwnd, INT item)
+HRESULT CMenuBand::_MenuBarMouseUp(HWND hwnd, INT item, BOOL isLButton)
 {
     if (m_staticToolbar && m_staticToolbar->IsWindowOwner(hwnd) == S_OK)
-        m_staticToolbar->MenuBarMouseUp(item);
+        m_staticToolbar->MenuBarMouseUp(item, isLButton);
     if (m_SFToolbar && m_SFToolbar->IsWindowOwner(hwnd) == S_OK)
-        m_SFToolbar->MenuBarMouseUp(item);
+        m_SFToolbar->MenuBarMouseUp(item, isLButton);
     return S_OK;
 }
 

@@ -199,7 +199,7 @@ public:
     HRESULT _IsTracking();
     HRESULT _KillPopupTimers();
     HRESULT _MenuBarMouseDown(HWND hwnd, INT item, BOOL isLButton);
-    HRESULT _MenuBarMouseUp(HWND hwnd, INT item);
+    HRESULT _MenuBarMouseUp(HWND hwnd, INT item, BOOL isLButton);
     HRESULT _HasSubMenu();
 
     HRESULT AdjustForTheme(BOOL bFlatStyle);

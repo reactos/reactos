@@ -117,7 +117,7 @@ private:
 
     LRESULT ProcessMouseMove(MSG* msg);
     LRESULT ProcessMouseDown(MSG* msg, BOOL isLButton);
-    LRESULT ProcessMouseUp(MSG* msg);
+    LRESULT ProcessMouseUp(MSG* msg, BOOL isLButton);
 public:
     HRESULT PushMenuBar(CMenuBand * mb);
     HRESULT PushMenuPopup(CMenuBand * mb);
