@@ -57,6 +57,7 @@ START_TEST(NtUserCreateWindowEx)
     UNICODE_STRING ver_cls = {12, 32, L"v2test"};
     UNICODE_STRING another_cls = {10, 32, L"Dummy"};
     UNICODE_STRING menu = {10, 10, L"MuMnu"};
+    UNICODE_STRING null_cls = {2, 2, L""};
 
     /* LARGE_STRING for NtUserCreateWindowEx */
     LARGE_STRING l_dummy = {14, 32, 0, L"DummyMe"};
@@ -116,10 +117,29 @@ START_TEST(NtUserCreateWindowEx)
                                     0,
                                     NULL);
 
-    TEST(NtUserGetWOWClass(hinst, &ver_cls) != 0);
+    TEST(NtUserRegisterClassExWOW(&wclex2,      /* wndClass */
+                                  &cls,         /* ClassName */
+                                  NULL,         /* Version */
+                                  &clsMenuName, /* MenuName */
+                                  0,
+                                  0,
+                                  NULL) == 0);
 
-    TEST(atom2 != 0);
+    TEST(NtUserRegisterClassExWOW(&wclex2,      /* wndClass */
+                                  &cls,         /* ClassName */
+                                  &null_cls,    /* Version */
+                                  &clsMenuName, /* MenuName */
+                                  0,
+                                  0,
+                                  NULL) == 0);
+
+    TEST(NtUserGetWOWClass(hinst, &ver_cls) != 0);
+    TEST(NtUserGetWOWClass(hinst, &ver_cls) != NtUserGetWOWClass(hinst, &cls));    TEST(atom2 != 0);
     TEST(atom == atom2 && (atom | atom2) != 0);
+
+    /* Create a window without versioned class */
+    TEST(CreateWnd(hinst, &l_cls, NULL, &l_wndName) == 0);
+    TEST(CreateWnd(hinst, &l_cls, &l_wndName, &l_wndName) == 0);
 
     /* Now, create our first window */
     hwnd = CreateWnd(hinst, &l_cls, &l_cls, &l_wndName);
