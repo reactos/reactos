@@ -117,7 +117,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
         pIconContext->hDlgCtrl = GetDlgItem(hwndDlg, IDC_PICKICON_LIST);
         SendMessageW(pIconContext->hDlgCtrl, LB_SETCOLUMNWIDTH, 32, 0);
         EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext->hDlgCtrl);
-        if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
+        if (ExpandEnvironmentStringsW(pIconContext->szName, szText, MAX_PATH))
             SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, szText);
         else
             SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szName);
@@ -177,7 +177,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                 pIconContext->hLibrary = hLibrary;
                 wcscpy(pIconContext->szName, szText);
                 EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext->hDlgCtrl);
-                if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
+                if (ExpandEnvironmentStringsW(pIconContext->szName, szText, MAX_PATH))
                     SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, szText);
                 else
                     SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szName);
