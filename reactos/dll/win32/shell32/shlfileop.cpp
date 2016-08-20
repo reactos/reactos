@@ -878,9 +878,9 @@ int WINAPI SHCreateDirectoryExW(HWND hWnd, LPCWSTR path, LPSECURITY_ATTRIBUTES s
 
         if (ret && hWnd && (ERROR_CANCELLED != ret))
         {
-            /* We failed and should show a dialog box */
-            FIXME("Show system error message, creating path %s, failed with error %d\n", debugstr_w(path), ret);
-            ret = ERROR_CANCELLED; /* Error has been already presented to user (not really yet!) */
+            ShellMessageBoxW(shell32_hInstance, hWnd, MAKEINTRESOURCEW(IDS_CREATEFOLDER_DENIED), MAKEINTRESOURCEW(IDS_CREATEFOLDER_CAPTION),
+                                    MB_ICONEXCLAMATION | MB_OK, path);
+            ret = ERROR_CANCELLED;
         }
     }
 

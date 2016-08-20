@@ -682,8 +682,8 @@ BEGIN
     IDS_RENAME "Rename"
     IDS_PASTE "Paste"
 
-    IDS_CREATEFOLDER_DENIED "Δεν ήταν δυνατή η δημιουργία του φακέλου: Δεν επιτρέπεται η πρόσβαση."
-    IDS_CREATEFOLDER_CAPTION "Σφάλμα κατά την δημιουργία νέου φακέλου"
+    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
+    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
     IDS_DELETEITEM_CAPTION "Επιβεβαίωση διαγραφής αρχείου"
     IDS_DELETEFOLDER_CAPTION "Επιβεβαίωση διαγραφής φακέλου"
     IDS_DELETEITEM_TEXT "Είστε βέβαιοι ότι θέλετε να διαγράψετε το στοιχείο '%1';"

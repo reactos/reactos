@@ -688,8 +688,8 @@ BEGIN
     IDS_RENAME "Rename"
     IDS_PASTE "Paste"
 
-    IDS_CREATEFOLDER_DENIED "Kan ikke oprette ny mappe: Tilladelse Afvist."
-    IDS_CREATEFOLDER_CAPTION "Fejl ved oprettelse ad ny mappe"
+    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
+    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
     IDS_DELETEITEM_CAPTION "Bekræft sletning af fil"
     IDS_DELETEFOLDER_CAPTION "Bekræft sletning af mappe"
     IDS_DELETEITEM_TEXT "Er du sikker på du vil slette '%1'?"

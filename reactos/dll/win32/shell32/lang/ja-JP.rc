@@ -682,8 +682,8 @@ BEGIN
     IDS_RENAME "名前の変更"
     IDS_PASTE "挿入"
 
-    IDS_CREATEFOLDER_DENIED "新しいフォルダを作成できませんでした: アクセス権がありません。"
-    IDS_CREATEFOLDER_CAPTION "新しいフォルダの作成中にエラーが発生しました"
+    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
+    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
     IDS_DELETEITEM_CAPTION "ファイル削除の確認"
     IDS_DELETEFOLDER_CAPTION "フォルダ削除の確認"
     IDS_DELETEITEM_TEXT "'%1' を削除してもよろしいですか?"

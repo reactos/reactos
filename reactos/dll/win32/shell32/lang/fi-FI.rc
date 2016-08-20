@@ -682,8 +682,8 @@ BEGIN
     IDS_RENAME "Rename"
     IDS_PASTE "Paste"
 
-    IDS_CREATEFOLDER_DENIED "Uutta kansiota ei voitu luoda: Oikeudet eivät riitä."
-    IDS_CREATEFOLDER_CAPTION "Virhe luotaessa uutta kansiota"
+    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
+    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
     IDS_DELETEITEM_CAPTION "Vahvista tiedoston tuhoaminen"
     IDS_DELETEFOLDER_CAPTION "Vahvista kansion tuhoaminen"
     IDS_DELETEITEM_TEXT "Haluatko varmasti tuhota '%1':n?"

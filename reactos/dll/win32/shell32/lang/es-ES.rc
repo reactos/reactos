@@ -684,8 +684,8 @@ BEGIN
     IDS_RENAME "Renombrar"
     IDS_PASTE "Insertar"
 
-    IDS_CREATEFOLDER_DENIED "No se puede crear una nueva carpeta: Permiso denegado."
-    IDS_CREATEFOLDER_CAPTION "Error durante la creación de una nueva carpeta"
+    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
+    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
     IDS_DELETEITEM_CAPTION "Confirmar eliminación de archivos"
     IDS_DELETEFOLDER_CAPTION "Confirmar eliminación de carpetas"
     IDS_DELETEITEM_TEXT "¿Seguro que desea eliminar '%1'?"

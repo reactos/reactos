@@ -682,8 +682,8 @@ BEGIN
     IDS_RENAME "Renomear"
     IDS_PASTE "Inserir"
 
-    IDS_CREATEFOLDER_DENIED "Não pode criar nova pasta: Permissão negada."
-    IDS_CREATEFOLDER_CAPTION "Erro durante a criação da nova pasta"
+    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
+    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
     IDS_DELETEITEM_CAPTION "Confirmar exclusão de arquivo"
     IDS_DELETEFOLDER_CAPTION "Confirmar exclusão de pasta"
     IDS_DELETEITEM_TEXT "Você tem certeza que deseja excluir '%1'?"

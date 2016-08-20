@@ -682,8 +682,8 @@ BEGIN
     IDS_RENAME "Premenovať"
     IDS_PASTE "Vložiť"
 
-    IDS_CREATEFOLDER_DENIED "Nie je možné vytvoriť nový priečinok: Prístup zamietnutý."
-    IDS_CREATEFOLDER_CAPTION "Chyba počas vytvárania nového priečinka"
+    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
+    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
     IDS_DELETEITEM_CAPTION "Potvrdenie odstránenia súboru"
     IDS_DELETEFOLDER_CAPTION "Potvrdenie odstránenia priečinka"
     IDS_DELETEITEM_TEXT "Naozaj chcete vymazať '%1'?"

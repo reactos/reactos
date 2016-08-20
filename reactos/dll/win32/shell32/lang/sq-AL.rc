@@ -686,8 +686,8 @@ BEGIN
     IDS_RENAME "Riemërto"
     IDS_PASTE "Fut"
 
-    IDS_CREATEFOLDER_DENIED "Në pamundësi për të krijuar dosje të re: Ndalohet hyrja."
-    IDS_CREATEFOLDER_CAPTION "Gabim gjatë krijimit të një dosje të re"
+    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
+    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
     IDS_DELETEITEM_CAPTION "Konfirmo fshirjen e dokumentit"
     IDS_DELETEFOLDER_CAPTION "Konfirmo fshirjen e dosjes"
     IDS_DELETEITEM_TEXT "Jeni te sigurte qe doni te fshini '%1'?"

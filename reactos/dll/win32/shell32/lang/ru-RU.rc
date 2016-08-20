@@ -684,8 +684,8 @@ BEGIN
     IDS_RENAME "Переименовать"
     IDS_PASTE "Вставить"
 
-    IDS_CREATEFOLDER_DENIED "Недостаточно прав для создания папки"
-    IDS_CREATEFOLDER_CAPTION "Ошибка во время создания папки"
+    IDS_CREATEFOLDER_DENIED "Невозможно создать папку '%1'"
+    IDS_CREATEFOLDER_CAPTION "Невозможно создать папку"
     IDS_DELETEITEM_CAPTION "Подтверждение удаления файла"
     IDS_DELETEFOLDER_CAPTION "Подтверждение удаления папки"
     IDS_DELETEITEM_TEXT "Удалить '%1'?"

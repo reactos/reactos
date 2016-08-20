@@ -686,8 +686,8 @@ BEGIN
     IDS_RENAME "Zmień nazwę"
     IDS_PASTE "Włóż"
 
-    IDS_CREATEFOLDER_DENIED "Nie mogę utworzyć nowego katalogu: Brak dostępu."
-    IDS_CREATEFOLDER_CAPTION "Błąd przy tworzeniu nowego katalogu."
+    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
+    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
     IDS_DELETEITEM_CAPTION "Potwierdź usunięcia pliku"
     IDS_DELETEFOLDER_CAPTION "Potwierdź usunięcie katalogu"
     IDS_DELETEITEM_TEXT "Czy jesteś pewien, że chcesz usunąć '%1'?"

@@ -683,8 +683,8 @@ BEGIN
     IDS_RENAME "Umbenennen"
     IDS_PASTE "Einfügen"
 
-    IDS_CREATEFOLDER_DENIED "Es konnte kein neues Verzeichnis erstellt werden: Zugriff verweigert."
-    IDS_CREATEFOLDER_CAPTION "Es trat ein Fehler beim Erstellen eines neuen Verzeichnisses auf."
+    IDS_CREATEFOLDER_DENIED " Der Ordner kann nicht erstellt werden '%1'"
+    IDS_CREATEFOLDER_CAPTION " Der Ordner kann nicht erstellt werden."
     IDS_DELETEITEM_CAPTION "Bestätigung: Objekt löschen"
     IDS_DELETEFOLDER_CAPTION "Bestätigung: Verzeichnis löschen"
     IDS_DELETEITEM_TEXT "Sind Sie sich sicher, dass Sie '%1' löschen möchten?"

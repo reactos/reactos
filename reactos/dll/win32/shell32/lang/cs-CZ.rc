@@ -688,8 +688,8 @@ BEGIN
     IDS_RENAME "Přejmenovat"
     IDS_PASTE "Vložit"
 
-    IDS_CREATEFOLDER_DENIED "Nelze vytvořit novou složku, protože přístup byl odepřen."
-    IDS_CREATEFOLDER_CAPTION "Chyba při pokusu vytvořit novou složku"
+    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
+    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
     IDS_DELETEITEM_CAPTION "Potvrdit odstranění souboru"
     IDS_DELETEFOLDER_CAPTION "Potvrdit odstranění složky"
     IDS_DELETEITEM_TEXT "Opravdu chcete odstranit '%1'?"

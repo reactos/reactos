@@ -689,8 +689,8 @@ BEGIN
     IDS_RENAME "重命名"
     IDS_PASTE "贴上"
 
-    IDS_CREATEFOLDER_DENIED "无法创建新文件夹： 权限被拒绝。"
-    IDS_CREATEFOLDER_CAPTION "创建新文件夹时出错"
+    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
+    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
     IDS_DELETEITEM_CAPTION "确认文件删除"
     IDS_DELETEFOLDER_CAPTION "确认文件夹删除"
     IDS_DELETEITEM_TEXT "确实要删除 '%1'?"

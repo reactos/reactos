@@ -682,8 +682,8 @@ BEGIN
     IDS_RENAME "Перейменувати"
     IDS_PASTE "Вставити"
 
-    IDS_CREATEFOLDER_DENIED "Не вдалося створити нову папку: Відмова у доступі."
-    IDS_CREATEFOLDER_CAPTION "Помилка при створенні нової папки"
+    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
+    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
     IDS_DELETEITEM_CAPTION "Підтвердження вилучення файлу"
     IDS_DELETEFOLDER_CAPTION "Підтвердження вилучення папки"
     IDS_DELETEITEM_TEXT "Ви дійсно бажаєте видалити '%1'?"

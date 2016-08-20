@@ -682,8 +682,8 @@ BEGIN
     IDS_RENAME "Rinomina"
     IDS_PASTE "Inserisci"
 
-    IDS_CREATEFOLDER_DENIED "Impossibile creare la cartella: Accesso negato."
-    IDS_CREATEFOLDER_CAPTION "Errore durante la creazione della cartella"
+    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
+    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
     IDS_DELETEITEM_CAPTION "Confermare la cancellazione del file"
     IDS_DELETEFOLDER_CAPTION "Confermare la cancellazione della cartella"
     IDS_DELETEITEM_TEXT "Sei sicuro di voler cancellare '%1'?"
