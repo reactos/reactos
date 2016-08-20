@@ -1480,6 +1480,19 @@ static HRESULT delete_files(FILE_OPERATION *op, const FILE_LIST *flFrom)
             return 0;
         }
 
+    /* Check files. Do not delete one if one file does not exists */
+    for (i = 0; i < flFrom->dwNumFiles; i++)
+    {
+        fileEntry = &flFrom->feFiles[i];
+
+        if ((HANDLE)fileEntry->attributes == INVALID_HANDLE_VALUE)
+        {
+            // This is a windows 2003 server specific value which has been removed.
+            // Later versions of windows return ERROR_FILE_NOT_FOUND.
+            return ERROR_SHELL_INTERNAL_FILE_NOT_FOUND;
+        }
+    }
+
     for (i = 0; i < flFrom->dwNumFiles; i++)
     {
         bPathExists = TRUE;
@@ -1527,7 +1540,7 @@ static HRESULT delete_files(FILE_OPERATION *op, const FILE_LIST *flFrom)
             {
                 // This is a windows 2003 server specific value which ahs been removed.
                 // Later versions of windows return ERROR_FILE_NOT_FOUND.
-                return 1026;
+                return ERROR_SHELL_INTERNAL_FILE_NOT_FOUND;
             }
             else
             {
