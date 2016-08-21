@@ -2382,7 +2382,7 @@ APIENTRY
 NtUserRegisterClassExWOW(
     WNDCLASSEXW* lpwcx,
     PUNICODE_STRING ClassName,
-    PUNICODE_STRING ClsNVersion,
+    PUNICODE_STRING ClsVersion,
     PCLSMENUNAME pClassMenuName,
     DWORD fnID,
     DWORD Flags,
@@ -2437,7 +2437,7 @@ NtUserRegisterClassExWOW(
                       sizeof(WNDCLASSEXW));
 
         CapturedName = ProbeForReadUnicodeString(ClassName);
-        CapturedVersion = ProbeForReadUnicodeString(ClsNVersion);
+        CapturedVersion = ProbeForReadUnicodeString(ClsVersion);
 
         ProbeForRead(pClassMenuName,
                      sizeof(CLSMENUNAME),
