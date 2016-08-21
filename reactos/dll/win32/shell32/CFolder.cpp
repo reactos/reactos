@@ -82,9 +82,17 @@ HRESULT STDMETHODCALLTYPE CFolder::get_ParentFolder(Folder **ppsf)
 
 HRESULT STDMETHODCALLTYPE CFolder::Items(FolderItems **ppid)
 {
-    CFolderItems* item = new CComObject<CFolderItems>();
-    item->AddRef();
-    *ppid = item;
+    CFolderItems* items = new CComObject<CFolderItems>();
+    items->AddRef();
+
+    HRESULT hr = items->Init(ILClone(m_idlist));
+    if (FAILED_UNEXPECTEDLY(hr))
+    {
+        items->Release();
+        return hr;
+    }
+
+    *ppid = items;
     return S_OK;
 }
 
