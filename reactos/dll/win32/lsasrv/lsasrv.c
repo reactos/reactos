@@ -213,6 +213,46 @@ LsaIFree_LSAPR_REFERENCED_DOMAIN_LIST(
 }
 
 
+VOID
+NTAPI
+LsaIFree_LSAPR_SR_SECURITY_DESCRIPTOR(
+    PLSAPR_SR_SECURITY_DESCRIPTOR Ptr)
+{
+    if (Ptr != NULL)
+    {
+        if (Ptr->SecurityDescriptor != NULL)
+            midl_user_free(Ptr->SecurityDescriptor);
+
+        midl_user_free(Ptr);
+    }
+}
+
+
+VOID
+NTAPI
+LsaIFree_LSAPR_TRANSLATED_NAMES(
+    PLSAPR_TRANSLATED_NAMES Ptr)
+{
+    ULONG i;
+
+    if (Ptr != NULL)
+    {
+        if (Ptr->Names != NULL)
+        {
+            for (i = 0; i < Ptr->Entries; i++)
+            {
+                if (Ptr->Names[i].Name.Buffer != NULL)
+                    midl_user_free(Ptr->Names[i].Name.Buffer);
+            }
+
+            midl_user_free(Ptr->Names);
+        }
+
+        midl_user_free(Ptr);
+    }
+}
+
+
 NTSTATUS WINAPI
 LsapInitLsa(VOID)
 {
