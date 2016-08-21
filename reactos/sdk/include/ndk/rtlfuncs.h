@@ -1469,6 +1469,13 @@ ULONG
 NTAPI
 RtlLengthRequiredSid(IN ULONG SubAuthorityCount);
 
+_IRQL_requires_max_(APC_LEVEL)
+NTSYSAPI
+ULONG
+NTAPI
+RtlLengthSecurityDescriptor(
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor);
+
 NTSYSAPI
 ULONG
 NTAPI

@@ -15,10 +15,6 @@
 #define NDEBUG
 #include <debug.h>
 
-ULONG
-NTAPI
-RtlLengthSecurityDescriptor(
-  _In_ PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 /* FUNCTIONS *****************************************************************/
 
