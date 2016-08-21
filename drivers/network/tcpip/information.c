@@ -151,7 +151,11 @@ TcpIpQueryKernelInformation(
     PIO_STACK_LOCATION IrpSp;
     PTDI_REQUEST_KERNEL_QUERY_INFORMATION Query;
     NTSTATUS Status;
-
+    PTDI_ADDRESS_INFO AddressInfo;
+    PADDRESS_FILE AddressFile;
+    PTA_ADDRESS TAAddress;
+    PTDI_MAX_DATAGRAM_INFO MaxDatagramInfo;
+    
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
     Query = (PTDI_REQUEST_KERNEL_QUERY_INFORMATION)&IrpSp->Parameters;
 
@@ -159,10 +163,6 @@ TcpIpQueryKernelInformation(
     switch (Query->QueryType)
     {
         case TDI_QUERY_ADDRESS_INFO :
-            PTDI_ADDRESS_INFO AddressInfo;
-            PADDRESS_FILE AddressFile;
-            PTA_ADDRESS TAAddress;
-            
             if (MmGetMdlByteCount(Irp->MdlAddress) < sizeof(*AddressInfo)) {
                 DPRINT1("MDL buffer too small.\n");
                 Status = STATUS_BUFFER_TOO_SMALL;
@@ -185,8 +185,6 @@ TcpIpQueryKernelInformation(
             break;
         case TDI_QUERY_MAX_DATAGRAM_INFO:
         {
-            PTDI_MAX_DATAGRAM_INFO MaxDatagramInfo;
-
             if (MmGetMdlByteCount(Irp->MdlAddress) < sizeof(*MaxDatagramInfo))
             {
                 DPRINT1("MDL buffer too small.\n");
