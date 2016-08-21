@@ -2836,7 +2836,7 @@ NTAPI
 NtUserRegisterClassExWOW(
     WNDCLASSEXW* lpwcx,
     PUNICODE_STRING pustrClassName,
-    PUNICODE_STRING pustrCNVersion,
+    PUNICODE_STRING pustrCVersion,
     PCLSMENUNAME pClassMenuName,
     DWORD fnID,
     DWORD Flags,
