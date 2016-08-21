@@ -82,8 +82,10 @@ HRESULT STDMETHODCALLTYPE CFolder::get_ParentFolder(Folder **ppsf)
 
 HRESULT STDMETHODCALLTYPE CFolder::Items(FolderItems **ppid)
 {
-    TRACE("(%p, %p)\n", this, ppid);
-    return E_NOTIMPL;
+    CFolderItems* item = new CComObject<CFolderItems>();
+    item->AddRef();
+    *ppid = item;
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CFolder::ParseName(BSTR bName, FolderItem **ppid)
