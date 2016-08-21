@@ -1860,10 +1860,10 @@ CloseAddress(
     {
         case IPPROTO_ICMP :
         case IPPROTO_RAW :
-            //raw_remove(AddressFile->lwip_raw_pcb);
+            raw_remove(AddressFile->lwip_raw_pcb);
             break;
         case IPPROTO_UDP :
-            //udp_remove(AddressFile->lwip_udp_pcb);
+            udp_remove(AddressFile->lwip_udp_pcb);
             break;
         case IPPROTO_TCP :
             /* Nothing to deallocate for TCP */
