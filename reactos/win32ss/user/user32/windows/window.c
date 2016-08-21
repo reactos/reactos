@@ -267,7 +267,7 @@ User32CreateWindowEx(DWORD dwExStyle,
     {
        Handle = NtUserCreateWindowEx(dwExStyle,
                                      plstrClassName,
-                                     NULL,
+                                     plstrClassName,
                                      &WindowName,
                                      dwStyle,
                                      x,

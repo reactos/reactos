@@ -710,7 +710,7 @@ IntGetClassLongA(PWND Wnd, PCLS Class, int nIndex)
                 break;
 
             case GCW_ATOM:
-                Ret = (ULONG_PTR)Class->atomClassName;
+                Ret = (ULONG_PTR)Class->atomNVClassName;
                 break;
 
             case GCLP_HCURSOR:
@@ -784,7 +784,7 @@ IntGetClassLongW (PWND Wnd, PCLS Class, int nIndex)
                 break;
 
             case GCW_ATOM:
-                Ret = (ULONG_PTR)Class->atomClassName;
+                Ret = (ULONG_PTR)Class->atomNVClassName;
                 break;
 
             case GCLP_HCURSOR:
@@ -1503,7 +1503,7 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
    {
        Atom = NtUserRegisterClassExWOW( &WndClass,
                                         &ClassName,
-                                         NULL, //PUNICODE_STRING ClsNVersion,
+                                        &ClassName, //PUNICODE_STRING ClsNVersion,
                                         &clsMenuName,
                                          fnID,
                                          dwFlags,

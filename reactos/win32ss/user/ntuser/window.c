@@ -2403,13 +2403,16 @@ NtUserCreateWindowEx(
     NTSTATUS Status;
     LARGE_STRING lstrWindowName;
     LARGE_STRING lstrClassName;
+    LARGE_STRING lstrClsVersion;
     UNICODE_STRING ustrClassName;
+    UNICODE_STRING ustrClsVersion;
     CREATESTRUCTW Cs;
     HWND hwnd = NULL;
     PWND pwnd;
 
     lstrWindowName.Buffer = NULL;
     lstrClassName.Buffer = NULL;
+    lstrClsVersion.Buffer = NULL;
 
     ASSERT(plstrWindowName);
 
@@ -2461,6 +2464,32 @@ NtUserCreateWindowEx(
         ustrClassName.MaximumLength = (USHORT)min(lstrClassName.MaximumLength, MAXUSHORT);
     }
 
+    /* Check if the class version is an atom */
+    if (IS_ATOM(plstrClsVersion))
+    {
+        /* It is, pass the atom in the UNICODE_STRING */
+        ustrClsVersion.Buffer = (PVOID)plstrClsVersion;
+        ustrClsVersion.Length = 0;
+        ustrClsVersion.MaximumLength = 0;
+    }
+    else
+    {
+        /* It's not, capture the class name */
+        Status = ProbeAndCaptureLargeString(&lstrClsVersion, plstrClsVersion);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("NtUserCreateWindowEx: failed to capture plstrClsVersion\n");
+            /* Set last error, cleanup and return */
+            SetLastNtError(Status);
+            goto cleanup;
+        }
+
+        /* We pass it on as a UNICODE_STRING */
+        ustrClsVersion.Buffer = lstrClsVersion.Buffer;
+        ustrClsVersion.Length = (USHORT)min(lstrClsVersion.Length, MAXUSHORT); // FIXME: LARGE_STRING truncated
+        ustrClsVersion.MaximumLength = (USHORT)min(lstrClsVersion.MaximumLength, MAXUSHORT);
+    }
+
     /* Fill the CREATESTRUCTW */
     /* we will keep here the original parameters */
     Cs.style = dwStyle;
@@ -2479,7 +2508,7 @@ NtUserCreateWindowEx(
     UserEnterExclusive();
 
     /* Call the internal function */
-    pwnd = co_UserCreateWindowEx(&Cs, &ustrClassName, plstrWindowName, acbiBuffer);
+    pwnd = co_UserCreateWindowEx(&Cs, &ustrClsVersion, plstrWindowName, acbiBuffer);
 
     if(!pwnd)
     {
@@ -2497,6 +2526,10 @@ cleanup:
     if (lstrClassName.Buffer)
     {
         ExFreePoolWithTag(lstrClassName.Buffer, TAG_STRING);
+    }
+    if (lstrClsVersion.Buffer)
+    {
+        ExFreePoolWithTag(lstrClsVersion.Buffer, TAG_STRING);
     }
 
    return hwnd;
