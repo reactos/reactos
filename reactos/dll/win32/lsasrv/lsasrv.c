@@ -216,7 +216,7 @@ LsaIFree_LSAPR_REFERENCED_DOMAIN_LIST(
 VOID
 NTAPI
 LsaIFree_LSAPR_SR_SECURITY_DESCRIPTOR(
-    PLSAPR_SR_SECURITY_DESCRIPTOR Ptr)
+    IN PLSAPR_SR_SECURITY_DESCRIPTOR Ptr)
 {
     if (Ptr != NULL)
     {
@@ -231,7 +231,7 @@ LsaIFree_LSAPR_SR_SECURITY_DESCRIPTOR(
 VOID
 NTAPI
 LsaIFree_LSAPR_TRANSLATED_NAMES(
-    PLSAPR_TRANSLATED_NAMES Ptr)
+    IN PLSAPR_TRANSLATED_NAMES Ptr)
 {
     ULONG i;
 
@@ -247,6 +247,21 @@ LsaIFree_LSAPR_TRANSLATED_NAMES(
 
             midl_user_free(Ptr->Names);
         }
+
+        midl_user_free(Ptr);
+    }
+}
+
+
+VOID
+NTAPI
+LsaIFree_LSAPR_TRANSLATED_SIDS(
+    IN PLSAPR_TRANSLATED_SIDS Ptr)
+{
+    if (Ptr != NULL)
+    {
+        if (Ptr->Sids != NULL)
+            midl_user_free(Ptr->Sids);
 
         midl_user_free(Ptr);
     }
