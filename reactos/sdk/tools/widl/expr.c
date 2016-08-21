@@ -222,8 +222,8 @@ expr_t *make_exprt(enum expr_type type, var_t *var, expr_t *expr)
             e->is_const = TRUE;
             if (is_signed_integer_type(tref))
             {
-                cast_mask = (1 << (cast_type_bits - 1)) - 1;
-                if (expr->cval & (1 << (cast_type_bits - 1)))
+                cast_mask = (1u << (cast_type_bits - 1)) - 1;
+                if (expr->cval & (1u << (cast_type_bits - 1)))
                     e->cval = -((-expr->cval) & cast_mask);
                 else
                     e->cval = expr->cval & cast_mask;
@@ -231,8 +231,8 @@ expr_t *make_exprt(enum expr_type type, var_t *var, expr_t *expr)
             else
             {
                 /* calculate ((1 << cast_type_bits) - 1) avoiding overflow */
-                cast_mask = ((1 << (cast_type_bits - 1)) - 1) |
-                            1 << (cast_type_bits - 1);
+                cast_mask = ((1u << (cast_type_bits - 1)) - 1) |
+                            1u << (cast_type_bits - 1);
                 e->cval = expr->cval & cast_mask;
             }
         }
