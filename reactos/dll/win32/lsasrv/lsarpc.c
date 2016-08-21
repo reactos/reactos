@@ -13,6 +13,26 @@
 
 static RTL_CRITICAL_SECTION PolicyHandleTableLock;
 
+static
+GENERIC_MAPPING
+LsapPolicyMapping = {POLICY_READ,
+                     POLICY_WRITE,
+                     POLICY_EXECUTE,
+                     POLICY_ALL_ACCESS};
+
+static
+GENERIC_MAPPING
+LsapAccountMapping = {ACCOUNT_READ,
+                      ACCOUNT_WRITE,
+                      ACCOUNT_EXECUTE,
+                      ACCOUNT_ALL_ACCESS};
+
+static
+GENERIC_MAPPING
+LsapSecretMapping = {SECRET_READ,
+                     SECRET_WRITE,
+                     SECRET_EXECUTE,
+                     SECRET_ALL_ACCESS};
 
 /* FUNCTIONS ***************************************************************/
 
@@ -259,8 +279,142 @@ NTSTATUS WINAPI LsarSetSecurityObject(
     SECURITY_INFORMATION SecurityInformation,
     PLSAPR_SR_SECURITY_DESCRIPTOR SecurityDescriptor)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT DbObject = NULL;
+    ACCESS_MASK DesiredAccess = 0;
+    PSECURITY_DESCRIPTOR RelativeSd = NULL;
+    ULONG RelativeSdSize = 0;
+    HANDLE TokenHandle = NULL;
+    PGENERIC_MAPPING Mapping;
+    NTSTATUS Status;
+
+    TRACE("LsarSetSecurityObject(%p %lx %p)\n",
+          ObjectHandle, SecurityInformation, SecurityDescriptor);
+
+    if ((SecurityDescriptor == NULL) ||
+        (SecurityDescriptor->SecurityDescriptor == NULL) ||
+        !RtlValidSecurityDescriptor((PSECURITY_DESCRIPTOR)SecurityDescriptor->SecurityDescriptor))
+        return ERROR_INVALID_PARAMETER;
+
+    if (SecurityInformation == 0 ||
+        SecurityInformation & ~(OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION
+        | DACL_SECURITY_INFORMATION | SACL_SECURITY_INFORMATION))
+        return ERROR_INVALID_PARAMETER;
+
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+        DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+
+    if (SecurityInformation & DACL_SECURITY_INFORMATION)
+        DesiredAccess |= WRITE_DAC;
+
+    if (SecurityInformation & (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))
+        DesiredAccess |= WRITE_OWNER;
+
+    if ((SecurityInformation & OWNER_SECURITY_INFORMATION) &&
+        (((PISECURITY_DESCRIPTOR)SecurityDescriptor)->Owner == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    if ((SecurityInformation & GROUP_SECURITY_INFORMATION) &&
+        (((PISECURITY_DESCRIPTOR)SecurityDescriptor)->Group == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    /* Validate the ObjectHandle */
+    Status = LsapValidateDbObject(ObjectHandle,
+                                  LsaDbIgnoreObject,
+                                  DesiredAccess,
+                                  &DbObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Get the mapping for the object type */
+    switch (DbObject->ObjectType)
+    {
+        case LsaDbPolicyObject:
+            Mapping = &LsapPolicyMapping;
+            break;
+
+        case LsaDbAccountObject:
+            Mapping = &LsapAccountMapping;
+            break;
+
+//        case LsaDbDomainObject:
+//            Mapping = &LsapDomainMapping;
+//            break;
+
+        case LsaDbSecretObject:
+            Mapping = &LsapSecretMapping;
+            break;
+
+        default:
+            return STATUS_INVALID_HANDLE;
+    }
+
+    /* Get the size of the SD */
+    Status = LsapGetObjectAttribute(DbObject,
+                                    L"SecDesc",
+                                    NULL,
+                                    &RelativeSdSize);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Allocate a buffer for the SD */
+    RelativeSd = RtlAllocateHeap(RtlGetProcessHeap(), 0, RelativeSdSize);
+    if (RelativeSd == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Get the SD */
+    Status = LsapGetObjectAttribute(DbObject,
+                                    L"SecDesc",
+                                    RelativeSd,
+                                    &RelativeSdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+#if 0
+    RpcImpersonateClient(NULL);
+
+    Status = NtOpenThreadToken(NtCurrentThread(),
+                               8,
+                               TRUE,
+                               &hToken);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    RpcRevertToSelf();
+#endif
+
+    /* Build the new security descriptor */
+    Status = RtlSetSecurityObject(SecurityInformation,
+                                  (PSECURITY_DESCRIPTOR)SecurityDescriptor->SecurityDescriptor,
+                                  &RelativeSd,
+                                  Mapping,
+                                  TokenHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("RtlSetSecurityObject failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Set the modified SD */
+    Status = LsapSetObjectAttribute(DbObject,
+                                    L"SecDesc",
+                                    RelativeSd,
+                                    RtlLengthSecurityDescriptor(RelativeSd));
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapSetObjectAttribute failed (Status 0x%08lx)\n", Status);
+    }
+
+done:
+    if (TokenHandle != NULL)
+        NtClose(TokenHandle);
+
+    if (RelativeSd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RelativeSd);
+
+    return Status;
 }
 
 
