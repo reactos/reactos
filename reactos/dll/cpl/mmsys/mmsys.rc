@@ -95,6 +95,9 @@ IDB_SPEAKIMG BITMAP "resources/speaker.bmp"
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
 #ifdef LANGUAGE_NL_NL
     #include "lang/nl-NL.rc"
 #endif
