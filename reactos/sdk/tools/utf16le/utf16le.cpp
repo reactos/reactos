@@ -279,7 +279,7 @@ int main(int argc, char* argv[])
 
     utf_converter::bom_types bom_type = utf_converter::bom;
 
-    if (argc == 4 && stricmp(argv[3], "nobom") == 0)
+    if (argc == 4 && strcasecmp(argv[3], "nobom") == 0)
     {
         bom_type = utf_converter::nobom;
     }
