@@ -279,12 +279,12 @@ int main(int argc, char* argv[])
 
     utf_converter::bom_types bom_type = utf_converter::bom;
 
-    if (argc == 4 && _stricmp(argv[3], "nobom") == 0)
+    if (argc == 4 && stricmp(argv[3], "nobom") == 0)
     {
         bom_type = utf_converter::nobom;
     }
 
-    utf_converter conv(argv[1],argv[2], bom_type);
+    utf_converter conv(argv[1], argv[2], bom_type);
 
     if ((err = conv.getError())!=utf_converter::none)
     {
