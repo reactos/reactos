@@ -1092,7 +1092,7 @@ UpdateFileRecord(PDEVICE_EXTENSION Vcb,
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("UpdateFileRecord failed: %I64u written, %lu expected\n", BytesWritten, Vcb->NtfsInfo.BytesPerFileRecord);
+        DPRINT1("UpdateFileRecord failed: %lu written, %lu expected\n", BytesWritten, Vcb->NtfsInfo.BytesPerFileRecord);
     }
 
     // remove the fixup array (so the file record pointer can still be used)
