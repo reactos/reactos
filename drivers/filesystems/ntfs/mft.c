@@ -1460,6 +1460,46 @@ NtfsLookupFile(PDEVICE_EXTENSION Vcb,
     return NtfsLookupFileAt(Vcb, PathName, FileRecord, MFTIndex, NTFS_FILE_ROOT);
 }
 
+/**
+* @name NtfsDumpFileRecord
+* @implemented
+*
+* Provides diagnostic information about a file record. Prints a hex dump
+* of the entire record (based on the size reported by FileRecord->ByesInUse),
+* then prints a dump of each attribute.
+*
+* @param Vcb
+* Pointer to a DEVICE_EXTENSION describing the volume.
+*
+* @param FileRecord
+* Pointer to the file record to be analyzed.
+*
+* @remarks
+* FileRecord must be a complete file record at least FileRecord->BytesAllocated
+* in size, and not just the header.
+*
+*/
+VOID
+NtfsDumpFileRecord(PDEVICE_EXTENSION Vcb,
+                   PFILE_RECORD_HEADER FileRecord)
+{
+    ULONG i, j;
+
+    // dump binary data, 8 bytes at a time
+    for (i = 0; i < FileRecord->BytesInUse; i += 8)
+    {
+        // display current offset, in hex
+        DbgPrint("\t%03x\t", i);
+
+        // display hex value of each of the next 8 bytes
+        for (j = 0; j < 8; j++)
+            DbgPrint("%02x ", *(PUCHAR)((ULONG_PTR)FileRecord + i + j));
+        DbgPrint("\n");
+    }
+
+    NtfsDumpFileAttributes(Vcb, FileRecord);
+}
+
 NTSTATUS
 NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
                PUNICODE_STRING SearchPattern,

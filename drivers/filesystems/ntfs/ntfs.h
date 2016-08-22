@@ -907,6 +907,10 @@ NtfsLookupFileAt(PDEVICE_EXTENSION Vcb,
                  PULONGLONG MFTIndex,
                  ULONGLONG CurrentMFTIndex);
 
+VOID
+NtfsDumpFileRecord(PDEVICE_EXTENSION Vcb,
+                   PFILE_RECORD_HEADER FileRecord);
+
 NTSTATUS
 NtfsFindFileAt(PDEVICE_EXTENSION Vcb,
                PUNICODE_STRING SearchPattern,
