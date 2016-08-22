@@ -339,6 +339,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NOT_SAME_PASSWORD "The Passwords are not the same!"
-    IDS_INVALID_PASSWORD "Enter a valid Password!"
+    IDS_NOT_SAME_PASSWORD "Пароли не одинаковые!"
+    IDS_INVALID_PASSWORD "Введите корректный пароль!"
 END
