@@ -333,6 +333,9 @@ static inline DWORD VgaGetAddressSize(VOID)
 static inline DWORD VgaTranslateReadAddress(DWORD Address)
 {
     DWORD Offset = LOWORD(Address - VgaGetVideoBaseAddress());
+    DWORD ExtOffset = ((VgaGcRegisters[SVGA_GC_EXT_MODE_REG] & SVGA_GC_EXT_MODE_WND_B) && (Offset & (1 << 15)))
+                      ? VgaGcRegisters[SVGA_GC_OFFSET_1_REG]
+                      : VgaGcRegisters[SVGA_GC_OFFSET_0_REG];
     BYTE Plane;
 
     /* Check for chain-4 and odd-even mode */
@@ -354,14 +357,23 @@ static inline DWORD VgaTranslateReadAddress(DWORD Address)
         Plane = VgaGcRegisters[VGA_GC_READ_MAP_SEL_REG] & 0x03;
     }
 
+    if (ExtOffset)
+    {
+        /* Add the extended offset */
+        Offset += ExtOffset << ((VgaGcRegisters[SVGA_GC_EXT_MODE_REG] & SVGA_GC_EXT_MODE_GRAN) ? 14 : 12);
+    }
+
     /* Return the offset on plane 0 for read mode 1 */
     if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_READ) return Offset;
-    else return Offset + Plane * VGA_BANK_SIZE;
+    else return Offset + Plane * SVGA_BANK_SIZE;
 }
 
 static inline DWORD VgaTranslateWriteAddress(DWORD Address)
 {
     DWORD Offset = LOWORD(Address - VgaGetVideoBaseAddress());
+    DWORD ExtOffset = ((VgaGcRegisters[SVGA_GC_EXT_MODE_REG] & SVGA_GC_EXT_MODE_WND_B) && (Offset & (1 << 15)))
+                      ? VgaGcRegisters[SVGA_GC_OFFSET_1_REG]
+                      : VgaGcRegisters[SVGA_GC_OFFSET_0_REG];
 
     /* Check for chain-4 and odd-even mode */
     if (VgaSeqRegisters[VGA_SEQ_MEM_REG] & VGA_SEQ_MEM_C4)
@@ -373,6 +385,12 @@ static inline DWORD VgaTranslateWriteAddress(DWORD Address)
     {
         /* Clear the lowest bit since it's used to select odd/even */
         Offset &= ~1;
+    }
+
+    if (ExtOffset)
+    {
+        /* Add the extended offset */
+        Offset += ExtOffset << ((VgaGcRegisters[SVGA_GC_EXT_MODE_REG] & SVGA_GC_EXT_MODE_GRAN) ? 14 : 12);
     }
 
     /* Return the offset on plane 0 */
@@ -748,11 +766,15 @@ static VOID VgaUpdateFramebuffer(VOID)
 {
     SHORT i, j, k;
     DWORD AddressSize = VgaGetAddressSize();
-    DWORD ScanlineSize = (DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG] * 2;
+    DWORD ScanlineSize = ((DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG]
+                         + (((DWORD)VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_OFFSET_BIT8) << 4)) * 2;
     BYTE PresetRowScan = VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] & 0x1F;
     BYTE BytePanning = (VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] >> 5) & 3;
     DWORD Address = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
                              VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG])
+                    + ((VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_ADDR_BIT16) << 16)
+                    + ((VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_ADDR_BITS1718) << 15)
+                    + ((VgaCrtcRegisters[SVGA_CRTC_OVERLAY_REG] & SVGA_CRTC_EXT_ADDR_BIT19) << 12)
                     + PresetRowScan * ScanlineSize
                     + BytePanning;
     WORD LineCompare = VgaCrtcRegisters[VGA_CRTC_LINE_COMPARE_REG]
@@ -845,7 +867,7 @@ static VOID VgaUpdateFramebuffer(VOID)
                     if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
                     {
                         /* One byte per pixel */
-                        PixelData = VgaMemory[(X % VGA_NUM_BANKS) * VGA_BANK_SIZE
+                        PixelData = VgaMemory[(X % VGA_NUM_BANKS) * SVGA_BANK_SIZE
                                               + LOWORD((Address + (X / VGA_NUM_BANKS))
                                               * AddressSize)];
                     }
@@ -853,7 +875,7 @@ static VOID VgaUpdateFramebuffer(VOID)
                     {
                         /* 4-bits per pixel */
 
-                        PixelData = VgaMemory[(X % VGA_NUM_BANKS) * VGA_BANK_SIZE
+                        PixelData = VgaMemory[(X % VGA_NUM_BANKS) * SVGA_BANK_SIZE
                                               + LOWORD((Address + (X / (VGA_NUM_BANKS * 2)))
                                               * AddressSize)];
 
@@ -886,8 +908,8 @@ static VOID VgaUpdateFramebuffer(VOID)
                          */
                         DWORD BankNumber = (X / 4) % 2;
                         DWORD Offset = Address + (X / 8);
-                        BYTE LowPlaneData = VgaMemory[BankNumber * VGA_BANK_SIZE + LOWORD(Offset * AddressSize)];
-                        BYTE HighPlaneData = VgaMemory[(BankNumber + 2) * VGA_BANK_SIZE + LOWORD(Offset * AddressSize)];
+                        BYTE LowPlaneData = VgaMemory[BankNumber * SVGA_BANK_SIZE + LOWORD(Offset * AddressSize)];
+                        BYTE HighPlaneData = VgaMemory[(BankNumber + 2) * SVGA_BANK_SIZE + LOWORD(Offset * AddressSize)];
 
                         /* Extract the two bits from each plane */
                         LowPlaneData  = (LowPlaneData  >> (6 - ((X % 4) * 2))) & 0x03;
@@ -909,7 +931,7 @@ static VOID VgaUpdateFramebuffer(VOID)
                         for (k = 0; k < VGA_NUM_BANKS; k++)
                         {
                             /* The data is on plane k, 4 pixels per byte */
-                            BYTE PlaneData = VgaMemory[k * VGA_BANK_SIZE
+                            BYTE PlaneData = VgaMemory[k * SVGA_BANK_SIZE
                                                        + LOWORD((Address + (X / VGA_NUM_BANKS))
                                                        * AddressSize)];
 
@@ -929,7 +951,7 @@ static VOID VgaUpdateFramebuffer(VOID)
 
                         for (k = 0; k < VGA_NUM_BANKS; k++)
                         {
-                            BYTE PlaneData = VgaMemory[k * VGA_BANK_SIZE
+                            BYTE PlaneData = VgaMemory[k * SVGA_BANK_SIZE
                                                        + LOWORD((Address + (X / (VGA_NUM_BANKS * 2)))
                                                        * AddressSize)];
 
@@ -1068,7 +1090,7 @@ static VOID VgaUpdateFramebuffer(VOID)
                 CharInfo.Char = VgaMemory[CurrentAddr];
 
                 /* Plane 1 holds the attribute */
-                CharInfo.Attributes = VgaMemory[CurrentAddr + VGA_BANK_SIZE];
+                CharInfo.Attributes = VgaMemory[CurrentAddr + SVGA_BANK_SIZE];
 
                 /* Now check if the resulting character data has changed */
                 if ((CharBuffer[i * CurrResolution.X + j].Char != CharInfo.Char) ||
@@ -1768,12 +1790,12 @@ VOID FASTCALL VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
                 if (VgaGcRegisters[VGA_GC_COLOR_COMPARE_REG] & (1 << j))
                 {
                     /* Comparing with 11111111 */
-                    Result &= VgaMemory[j * VGA_BANK_SIZE + LOWORD(VideoAddress)];
+                    Result &= VgaMemory[j * SVGA_BANK_SIZE + LOWORD(VideoAddress)];
                 }
                 else
                 {
                     /* Comparing with 00000000 */
-                    Result &= ~(VgaMemory[j * VGA_BANK_SIZE + LOWORD(VideoAddress)]);
+                    Result &= ~(VgaMemory[j * SVGA_BANK_SIZE + LOWORD(VideoAddress)]);
                 }
             }
 
@@ -1784,9 +1806,9 @@ VOID FASTCALL VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
 
     /* Load the latch registers */
     VgaLatchRegisters[0] = VgaMemory[LOWORD(VideoAddress)];
-    VgaLatchRegisters[1] = VgaMemory[VGA_BANK_SIZE + LOWORD(VideoAddress)];
-    VgaLatchRegisters[2] = VgaMemory[(2 * VGA_BANK_SIZE) + LOWORD(VideoAddress)];
-    VgaLatchRegisters[3] = VgaMemory[(3 * VGA_BANK_SIZE) + LOWORD(VideoAddress)];
+    VgaLatchRegisters[1] = VgaMemory[SVGA_BANK_SIZE + LOWORD(VideoAddress)];
+    VgaLatchRegisters[2] = VgaMemory[(2 * SVGA_BANK_SIZE) + LOWORD(VideoAddress)];
+    VgaLatchRegisters[3] = VgaMemory[(3 * SVGA_BANK_SIZE) + LOWORD(VideoAddress)];
 }
 
 BOOLEAN FASTCALL VgaWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
@@ -1834,7 +1856,7 @@ BOOLEAN FASTCALL VgaWriteMemory(ULONG Address, PVOID Buffer, ULONG Size)
             }
 
             /* Copy the value to the VGA memory */
-            VgaMemory[VideoAddress + j * VGA_BANK_SIZE] = VgaTranslateByteForWriting(BufPtr[i], j);
+            VgaMemory[VideoAddress + j * SVGA_BANK_SIZE] = VgaTranslateByteForWriting(BufPtr[i], j);
         }
     }
 
@@ -1849,7 +1871,7 @@ VOID VgaClearMemory(VOID)
 VOID VgaWriteTextModeFont(UINT FontNumber, CONST UCHAR* FontData, UINT Height)
 {
     UINT i, j;
-    PUCHAR FontMemory = (PUCHAR)&VgaMemory[VGA_BANK_SIZE * VGA_FONT_BANK + (FontNumber * VGA_FONT_SIZE)];
+    PUCHAR FontMemory = (PUCHAR)&VgaMemory[SVGA_BANK_SIZE * VGA_FONT_BANK + (FontNumber * VGA_FONT_SIZE)];
 
     ASSERT(Height <= VGA_MAX_FONT_HEIGHT);
 

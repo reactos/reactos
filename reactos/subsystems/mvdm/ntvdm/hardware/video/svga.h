@@ -188,6 +188,14 @@ enum
 #define VGA_CRTC_MODE_CONTROL_BYTE  (1 << 6)
 #define VGA_CRTC_MODE_CONTROL_SYNC  (1 << 7)
 
+/* CRTC extended display register bits */
+#define SVGA_CRTC_EXT_ADDR_BIT16    (1 << 0)
+#define SVGA_CRTC_EXT_ADDR_BITS1718 ((1 << 2) | (1 << 3))
+#define SVGA_CRTC_EXT_OFFSET_BIT8   (1 << 4)
+
+/* CRTC extended overlay register bits */
+#define SVGA_CRTC_EXT_ADDR_BIT19    (1 << 7)
+
 enum
 {
     VGA_CRTC_HORZ_TOTAL_REG,
@@ -248,6 +256,10 @@ enum
 /* Graphics controller miscellaneous register bits */
 #define VGA_GC_MISC_NOALPHA     (1 << 0)
 #define VGA_GC_MISC_OE          (1 << 1)
+
+/* Graphics controller extended mode register bits */
+#define SVGA_GC_EXT_MODE_WND_B  (1 << 0)
+#define SVGA_GC_EXT_MODE_GRAN   (1 << 5)
 
 enum
 {
