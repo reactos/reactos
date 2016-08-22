@@ -115,11 +115,17 @@ function(add_message_headers _type)
     endif()
     foreach(_in_FILE ${ARGN})
         get_filename_component(FILE ${_in_FILE} NAME_WE)
+        set(_converted_item ${REACTOS_BINARY_DIR}/sdk/include/reactos/mc/${FILE}.mc)
+        set(_source_item ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
+        add_custom_command(
+            OUTPUT "${_converted_item}"
+            COMMAND native-utf16le "${_source_item}" "${_converted_item}" "nobom"
+            DEPENDS native-utf16le "${_source_item}")
         macro_mc(${_flag} ${FILE})
         add_custom_command(
             OUTPUT ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.rc ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.h
             COMMAND ${COMMAND_MC} ${MC_FLAGS}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
+            DEPENDS "${_converted_item}")
         set_source_files_properties(
             ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.rc
             PROPERTIES GENERATED TRUE)
