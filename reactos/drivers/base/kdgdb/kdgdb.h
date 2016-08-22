@@ -19,7 +19,7 @@
 
 #include <pstypes.h>
 
-#define KDDEBUG /* uncomment to enable debugging this dll */
+//#define KDDEBUG /* uncomment to enable debugging this dll */
 
 /* To undefine once https://sourceware.org/bugzilla/show_bug.cgi?id=17397 is resolved */
 #define MONOPROCESS 1
@@ -83,7 +83,7 @@ char hex_value(char ch);
 void send_gdb_packet(_In_ CHAR* Buffer);
 void send_gdb_memory(_In_ VOID* Buffer, size_t Length);
 void gdb_send_debug_io(_In_ PSTRING String, _In_ BOOLEAN WithPrefix);
-void gdb_send_exception(BOOLEAN WithThread);
+void gdb_send_exception(void);
 void send_gdb_ntstatus(_In_ NTSTATUS Status);
 extern const char hex_chars[];
 
@@ -113,15 +113,18 @@ extern PETHREAD find_thread(_In_ UINT_PTR Pid, _In_ UINT_PTR Tid);
 /* arch_sup.c */
 extern void gdb_send_register(void);
 extern void gdb_send_registers(void);
-extern char* gdb_append_pc_to_exception(_In_ PETHREAD Thread, _Inout_ char* ptr);
 
 /* Architecture specific defines. See ntoskrnl/include/internal/arch/ke.h */
 #ifdef _M_IX86
+/* Handling passing over the breakpoint instruction */
 #  define KdpGetContextPc(Context) \
     ((Context)->Eip)
 #  define KdpSetContextPc(Context, ProgramCounter) \
     ((Context)->Eip = (ProgramCounter))
 #  define KD_BREAKPOINT_SIZE        sizeof(UCHAR)
+/* Single step mode */
+#  define KdpSetSingleStep(Context) \
+    ((Context)->EFlags |= EFLAGS_TF)
 #else
 #  error "Please define relevant macros for your architecture"
 #endif

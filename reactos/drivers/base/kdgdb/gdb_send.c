@@ -168,7 +168,7 @@ gdb_send_debug_io(
 }
 
 void
-gdb_send_exception(BOOLEAN WithThread)
+gdb_send_exception()
 {
     char gdb_out[1024];
     char* ptr = gdb_out;
@@ -184,20 +184,16 @@ gdb_send_exception(BOOLEAN WithThread)
     }
     else
         ptr += sprintf(ptr, "05");
-    if (WithThread)
-    {
+
 #if MONOPROCESS
-        ptr += sprintf(ptr, "thread:%" PRIxPTR ";",
-            handle_to_gdb_tid(PsGetThreadId(Thread)));
+    ptr += sprintf(ptr, "thread:%" PRIxPTR ";",
+        handle_to_gdb_tid(PsGetThreadId(Thread)));
 #else
-        ptr += sprintf(ptr, "thread:p%" PRIxPTR ".%" PRIxPTR ";",
-            handle_to_gdb_pid(PsGetThreadProcessId(Thread)),
-            handle_to_gdb_tid(PsGetThreadId(Thread)));
+    ptr += sprintf(ptr, "thread:p%" PRIxPTR ".%" PRIxPTR ";",
+        handle_to_gdb_pid(PsGetThreadProcessId(Thread)),
+        handle_to_gdb_tid(PsGetThreadId(Thread)));
 #endif
-    }
     ptr += sprintf(ptr, "core:%x;", CurrentStateChange.Processor);
-    /* Add program counter */
-    gdb_append_pc_to_exception(Thread, ptr);
     send_gdb_packet(gdb_out);
 }
 

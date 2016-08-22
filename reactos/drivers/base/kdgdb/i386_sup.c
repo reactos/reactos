@@ -251,28 +251,4 @@ gdb_send_register(void)
     }
 }
 
-char*
-gdb_append_pc_to_exception(
-    _In_ PETHREAD Thread,
-    _Inout_ char* ptr)
-{
-    /* Get EIP */
-    unsigned short ptrSize;
-    unsigned char* EipPtr = thread_to_reg(Thread, EIP, &ptrSize);
-
-    /* Print it */
-    ptr += sprintf(ptr, "08:");
-    *ptr++ = hex_chars[EipPtr[0] >> 4];
-    *ptr++ = hex_chars[EipPtr[0] & 0xF];
-    *ptr++ = hex_chars[EipPtr[1] >> 4];
-    *ptr++ = hex_chars[EipPtr[1] & 0xF];
-    *ptr++ = hex_chars[EipPtr[2] >> 4];
-    *ptr++ = hex_chars[EipPtr[2] & 0xF];
-    *ptr++ = hex_chars[EipPtr[3] >> 4];
-    *ptr++ = hex_chars[EipPtr[3] & 0xF];
-    *ptr++ = ';';
-    *ptr++ = '\0';
-    
-    return ptr;
-}
 

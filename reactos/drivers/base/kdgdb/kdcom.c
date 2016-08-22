@@ -303,7 +303,6 @@ KdpReceiveByte(_Out_ PUCHAR OutByte)
         return KdPacketReceived;
     }
 
-    KDDBGPRINT("CpGetByte returned %u.\n", CpStatus);
     return KdPacketTimedOut;
 }
 

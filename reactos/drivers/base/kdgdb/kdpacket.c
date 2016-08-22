@@ -160,7 +160,7 @@ send_kd_state_change(DBGKD_ANY_WAIT_STATE_CHANGE* StateChange)
 #else
         gdb_dbg_pid = handle_to_gdb_pid(PsGetThreadProcessId(Thread));
 #endif
-        gdb_send_exception(FALSE);
+        gdb_send_exception();
         /* Next receive call will ask for the context */
         KdpManipulateStateHandler = GetContextManipulateHandler;
         break;
@@ -394,6 +394,13 @@ KdSendPacket(
     IN PSTRING MessageData,
     IN OUT PKD_CONTEXT KdContext)
 {
+    /* Override if we have some debug print from KD. */
+    if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
+    {
+        send_kd_debug_io((DBGKD_DEBUG_IO*)MessageHeader->Buffer, MessageData);
+        return;
+    }
+
     /* Maybe we are in a send <-> receive loop that GDB doesn't need to know about */
     if (KdpSendPacketHandler)
     {
