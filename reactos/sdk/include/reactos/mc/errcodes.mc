@@ -11,7 +11,8 @@ FacilityNames=(System=0x0:FACILITY_SYSTEM
                WIN32=0x7:FACILITY_GENERAL
               )
 
-LanguageNames=(English=0x409:MSG00409)
+LanguageNames=(English=0x409:MSG00409
+               Russian=0x419:MSG00419)
 
 MessageId=0
 Severity=Success
@@ -19,6 +20,9 @@ Facility=System
 SymbolicName=ERROR_SUCCESS
 Language=English
 ERROR_SUCCESS - The operation completed successfully.
+.
+Language=Russian
+ERROR_SUCCESS - Операция успешно завершена.
 .
 
 MessageId=1
@@ -28,6 +32,9 @@ SymbolicName=ERROR_INVALID_FUNCTION
 Language=English
 ERROR_INVALID_FUNCTION - Incorrect function.
 .
+Language=Russian
+ERROR_INVALID_FUNCTION - Неверная функция.
+.
 
 MessageId=2
 Severity=Success
@@ -35,6 +42,9 @@ Facility=System
 SymbolicName=ERROR_FILE_NOT_FOUND
 Language=English
 ERROR_FILE_NOT_FOUND - The system cannot find the file specified.
+.
+Language=Russian
+ERROR_FILE_NOT_FOUND - Не удается найти указанный файл.
 .
 
 MessageId=3
@@ -44,6 +54,9 @@ SymbolicName=ERROR_PATH_NOT_FOUND
 Language=English
 ERROR_PATH_NOT_FOUND - The system cannot find the path specified.
 .
+Language=Russian
+ERROR_PATH_NOT_FOUND - Системе не удается найти указанный путь.
+.
 
 MessageId=4
 Severity=Success
@@ -51,6 +64,9 @@ Facility=System
 SymbolicName=ERROR_TOO_MANY_OPEN_FILES
 Language=English
 ERROR_TOO_MANY_OPEN_FILES - The system cannot open the file.
+.
+Language=Russian
+ERROR_TOO_MANY_OPEN_FILES - Системе не удается открыть файл.
 .
 
 MessageId=5
@@ -60,6 +76,9 @@ SymbolicName=ERROR_ACCESS_DENIED
 Language=English
 ERROR_ACCESS_DENIED - Access is denied.
 .
+Language=Russian
+ERROR_ACCESS_DENIED - Отказано в доступе.
+.
 
 MessageId=6
 Severity=Success
@@ -67,6 +86,9 @@ Facility=System
 SymbolicName=ERROR_INVALID_HANDLE
 Language=English
 ERROR_INVALID_HANDLE - The handle is invalid.
+.
+Language=Russian
+ERROR_INVALID_HANDLE - Неверный дескриптор.
 .
 
 MessageId=7
@@ -76,6 +98,9 @@ SymbolicName=ERROR_ARENA_TRASHED
 Language=English
 ERROR_ARENA_TRASHED - The storage control blocks were destroyed.
 .
+Language=Russian
+ERROR_ARENA_TRASHED - Повреждены управляющие блоки памяти.
+.
 
 MessageId=8
 Severity=Success
@@ -83,6 +108,9 @@ Facility=System
 SymbolicName=ERROR_NOT_ENOUGH_MEMORY
 Language=English
 ERROR_NOT_ENOUGH_MEMORY - Not enough storage is available to process this command.
+.
+Language=Russian
+ERROR_NOT_ENOUGH_MEMORY - Недостаточно памяти для обработки команды.
 .
 
 MessageId=9
@@ -92,6 +120,9 @@ SymbolicName=ERROR_INVALID_BLOCK
 Language=English
 ERROR_INVALID_BLOCK - The storage control block address is invalid.
 .
+Language=Russian
+ERROR_INVALID_BLOCK - Неверный адрес управляющего блока памяти.
+.
 
 MessageId=10
 Severity=Success
@@ -99,6 +130,9 @@ Facility=System
 SymbolicName=ERROR_BAD_ENVIRONMENT
 Language=English
 ERROR_BAD_ENVIRONMENT - The environment is incorrect.
+.
+Language=Russian
+ERROR_BAD_ENVIRONMENT - Недопустимая среда.
 .
 
 MessageId=11
@@ -108,6 +142,9 @@ SymbolicName=ERROR_BAD_FORMAT
 Language=English
 ERROR_BAD_FORMAT - An attempt was made to load a program with an incorrect format.
 .
+Language=Russian
+ERROR_BAD_FORMAT - Попытка запустить программу с недопустимым форматом.
+.
 
 MessageId=12
 Severity=Success
@@ -115,6 +152,9 @@ Facility=System
 SymbolicName=ERROR_INVALID_ACCESS
 Language=English
 ERROR_INVALID_ACCESS - The access code is invalid.
+.
+Language=Russian
+ERROR_INVALID_ACCESS - Неверный код доступа.
 .
 
 MessageId=13
@@ -124,6 +164,9 @@ SymbolicName=ERROR_INVALID_DATA
 Language=English
 ERROR_INVALID_DATA - The data is invalid.
 .
+Language=Russian
+ERROR_INVALID_DATA - Недопустимые данные.
+.
 
 MessageId=14
 Severity=Success
@@ -131,6 +174,9 @@ Facility=System
 SymbolicName=ERROR_OUTOFMEMORY
 Language=English
 ERROR_OUTOFMEMORY - Not enough storage is available to complete this operation.
+.
+Language=Russian
+ERROR_OUTOFMEMORY - Недостаточно памяти для завершения операции.
 .
 
 MessageId=15
@@ -140,6 +186,9 @@ SymbolicName=ERROR_INVALID_DRIVE
 Language=English
 ERROR_INVALID_DRIVE - The system cannot find the drive specified.
 .
+Language=Russian
+ERROR_INVALID_DRIVE - Система не может найти указанное устройство.
+.
 
 MessageId=16
 Severity=Success
@@ -147,6 +196,9 @@ Facility=System
 SymbolicName=ERROR_CURRENT_DIRECTORY
 Language=English
 ERROR_CURRENT_DIRECTORY - The directory cannot be removed.
+.
+Language=Russian
+ERROR_CURRENT_DIRECTORY - Этот каталог не может быть удален.
 .
 
 MessageId=17
@@ -156,6 +208,9 @@ SymbolicName=ERROR_NOT_SAME_DEVICE
 Language=English
 ERROR_NOT_SAME_DEVICE - The system cannot move the file to a different disk drive.
 .
+Language=Russian
+ERROR_NOT_SAME_DEVICE - Система не может переместить файл на другое дисковое устройство.
+.
 
 MessageId=18
 Severity=Success
@@ -163,6 +218,9 @@ Facility=System
 SymbolicName=ERROR_NO_MORE_FILES
 Language=English
 ERROR_NO_MORE_FILES - There are no more files.
+.
+Language=Russian
+ERROR_NO_MORE_FILES - Файлов больше нет.
 .
 
 MessageId=19
@@ -172,6 +230,9 @@ SymbolicName=ERROR_WRITE_PROTECT
 Language=English
 ERROR_WRITE_PROTECT - The media is write protected.
 .
+Language=Russian
+ERROR_WRITE_PROTECT - Носитель защищен от записи.
+.
 
 MessageId=20
 Severity=Success
@@ -179,6 +240,9 @@ Facility=System
 SymbolicName=ERROR_BAD_UNIT
 Language=English
 ERROR_BAD_UNIT - The system cannot find the device specified.
+.
+Language=Russian
+ERROR_BAD_UNIT - Система не может найти указанное устройство.
 .
 
 MessageId=21
@@ -188,6 +252,9 @@ SymbolicName=ERROR_NOT_READY
 Language=English
 ERROR_NOT_READY - The device is not ready.
 .
+Language=Russian
+ERROR_NOT_READY - Устройство не готово.
+.
 
 MessageId=22
 Severity=Success
@@ -195,6 +262,9 @@ Facility=System
 SymbolicName=ERROR_BAD_COMMAND
 Language=English
 ERROR_BAD_COMMAND - The device does not recognize the command.
+.
+Language=Russian
+ERROR_BAD_COMMAND - Устройство не распознает команду.
 .
 
 MessageId=23
@@ -204,6 +274,9 @@ SymbolicName=ERROR_CRC
 Language=English
 ERROR_CRC - Data error (cyclic redundancy check).
 .
+Language=Russian
+ERROR_CRC - Ошибка в данных (циклический код с избыточностью).
+.
 
 MessageId=24
 Severity=Success
@@ -211,6 +284,9 @@ Facility=System
 SymbolicName=ERROR_BAD_LENGTH
 Language=English
 ERROR_BAD_LENGTH - The program issued a command but the command length is incorrect.
+.
+Language=Russian
+ERROR_BAD_LENGTH - Программа выдала команду с недопустимой длиной.
 .
 
 MessageId=25
@@ -220,6 +296,9 @@ SymbolicName=ERROR_SEEK
 Language=English
 ERROR_SEEK - The drive cannot locate a specific area or track on the disk.
 .
+Language=Russian
+ERROR_SEEK - Дисковое устройство не может обнаружить указанную область или дорожку.
+.
 
 MessageId=26
 Severity=Success
@@ -227,6 +306,9 @@ Facility=System
 SymbolicName=ERROR_NOT_DOS_DISK
 Language=English
 ERROR_NOT_DOS_DISK - The specified disk or diskette cannot be accessed.
+.
+Language=Russian
+ERROR_NOT_DOS_DISK - Нет доступа к диску или дискете.
 .
 
 MessageId=27
@@ -236,6 +318,9 @@ SymbolicName=ERROR_SECTOR_NOT_FOUND
 Language=English
 ERROR_SECTOR_NOT_FOUND - The drive cannot find the sector requested.
 .
+Language=Russian
+ERROR_SECTOR_NOT_FOUND - Дисковое устройство не может обнаружить указанную область или дорожку.
+.
 
 MessageId=28
 Severity=Success
@@ -243,6 +328,9 @@ Facility=System
 SymbolicName=ERROR_OUT_OF_PAPER
 Language=English
 ERROR_OUT_OF_PAPER - The printer is out of paper.
+.
+Language=Russian
+ERROR_OUT_OF_PAPER - В принтере закончилась бумага.
 .
 
 MessageId=29
@@ -252,6 +340,9 @@ SymbolicName=ERROR_WRITE_FAULT
 Language=English
 ERROR_WRITE_FAULT - The system cannot write to the specified device.
 .
+Language=Russian
+ERROR_WRITE_FAULT - Система не может выполнить запись на указанное устройство.
+.
 
 MessageId=30
 Severity=Success
@@ -259,6 +350,9 @@ Facility=System
 SymbolicName=ERROR_READ_FAULT
 Language=English
 ERROR_READ_FAULT - The system cannot read from the specified device.
+.
+Language=Russian
+ERROR_READ_FAULT - Системе не может выполнить чтение с указанного устройства.
 .
 
 MessageId=31
@@ -268,6 +362,9 @@ SymbolicName=ERROR_GEN_FAILURE
 Language=English
 ERROR_GEN_FAILURE - A device attached to the system is not functioning.
 .
+Language=Russian
+ERROR_GEN_FAILURE - Устройство, подключенное к системе, не работает.
+.
 
 MessageId=32
 Severity=Success
@@ -275,6 +372,9 @@ Facility=System
 SymbolicName=ERROR_SHARING_VIOLATION
 Language=English
 ERROR_SHARING_VIOLATION - The process cannot access the file because it is being used by another process.
+.
+Language=Russian
+ERROR_SHARING_VIOLATION - Процесс не имеет доступа к файлу, поскольку файл используется другим процессом.
 .
 
 MessageId=33
@@ -284,6 +384,9 @@ SymbolicName=ERROR_LOCK_VIOLATION
 Language=English
 ERROR_LOCK_VIOLATION - The process cannot access the file because another process has locked a portion of the file.
 .
+Language=Russian
+ERROR_LOCK_VIOLATION - Процесс не имеет доступа к файлу, поскольку другой процесс заблокировал часть файла.
+.
 
 MessageId=34
 Severity=Success
@@ -291,6 +394,9 @@ Facility=System
 SymbolicName=ERROR_WRONG_DISK
 Language=English
 ERROR_WRONG_DISK - The wrong diskette is in the drive. Insert %2 (Volume Serial Number: %3) into drive %1.
+.
+Language=Russian
+ERROR_WRONG_DISK - Вставте другую дискету. Вставьте %2 (серийный номер тома: %3) в дисковод %1.
 .
 
 MessageId=36
@@ -300,6 +406,9 @@ SymbolicName=ERROR_SHARING_BUFFER_EXCEEDED
 Language=English
 ERROR_SHARING_BUFFER_EXCEEDED - Too many files opened for sharing.
 .
+Language=Russian
+ERROR_SHARING_BUFFER_EXCEEDED - Слишком много файлов открыто для совместного использования.
+.
 
 MessageId=38
 Severity=Success
@@ -307,6 +416,9 @@ Facility=System
 SymbolicName=ERROR_HANDLE_EOF
 Language=English
 ERROR_HANDLE_EOF - Reached the end of the file.
+.
+Language=Russian
+ERROR_HANDLE_EOF - Достигнут конец файла.
 .
 
 MessageId=39
@@ -316,6 +428,9 @@ SymbolicName=ERROR_HANDLE_DISK_FULL
 Language=English
 ERROR_HANDLE_DISK_FULL - The disk is full.
 .
+Language=Russian
+ERROR_HANDLE_DISK_FULL - Отсутствует место на диске.
+.
 
 MessageId=50
 Severity=Success
@@ -324,14 +439,21 @@ SymbolicName=ERROR_NOT_SUPPORTED
 Language=English
 ERROR_NOT_SUPPORTED - The request is not supported.
 .
+Language=Russian
+ERROR_NOT_SUPPORTED - Запрос не поддерживается.
+.
 
 MessageId=51
 Severity=Success
 Facility=System
 SymbolicName=ERROR_REM_NOT_LIST
 Language=English
-ERROR_REM_NOT_LIST - Windows cannot find the network path. Verify that the network path is correct and the destination computer is not busy or turned off. If Windows still cannot find the network path, contact your network administrator.
+ERROR_REM_NOT_LIST - ReactOS cannot find the network path. Verify that the network path is correct and the destination computer is not busy or turned off. If ReactOS still cannot find the network path, contact your network administrator.
 .
+Language=Russian
+ERROR_REM_NOT_LIST - Невозможно найти сетевой путь. Убедитесь, что сетевой путь указан верно, а конечный компьютер включен и не занят. Если система вновь не сможет найти путь, обратитесь к сетевому администратору.
+.
+
 
 MessageId=52
 Severity=Success
@@ -339,6 +461,9 @@ Facility=System
 SymbolicName=ERROR_DUP_NAME
 Language=English
 ERROR_DUP_NAME - You were not connected because a duplicate name exists on the network. Go to System in the Control Panel to change the computer name and try again.
+.
+Language=Russian
+ERROR_DUP_NAME - Вы не подключены, поскольку такое же имя уже существует в этой сети. Для присоединения к домену откройте компонент панели управления "Система", измените имя компьютера и повторите попытку. Для присоединения к рабочей группе выберите другое имя рабочей группы.
 .
 
 MessageId=53
@@ -348,6 +473,9 @@ SymbolicName=ERROR_BAD_NETPATH
 Language=English
 ERROR_BAD_NETPATH - The network path was not found.
 .
+Language=Russian
+ERROR_BAD_NETPATH - Не найден сетевой путь.
+.
 
 MessageId=54
 Severity=Success
@@ -355,6 +483,9 @@ Facility=System
 SymbolicName=ERROR_NETWORK_BUSY
 Language=English
 ERROR_NETWORK_BUSY - The network is busy.
+.
+Language=Russian
+ERROR_NETWORK_BUSY - Сеть занята.
 .
 
 MessageId=55
@@ -364,6 +495,9 @@ SymbolicName=ERROR_DEV_NOT_EXIST
 Language=English
 ERROR_DEV_NOT_EXIST - The specified network resource or device is no longer available.
 .
+Language=Russian
+ERROR_DEV_NOT_EXIST - Сетевой ресурс или устройство более недоступно.
+.
 
 MessageId=56
 Severity=Success
@@ -371,6 +505,9 @@ Facility=System
 SymbolicName=ERROR_TOO_MANY_CMDS
 Language=English
 ERROR_TOO_MANY_CMDS - The network BIOS command limit has been reached.
+.
+Language=Russian
+ERROR_TOO_MANY_CMDS - Достигнут предел числа команд NetBIOS.
 .
 
 MessageId=57
@@ -380,6 +517,9 @@ SymbolicName=ERROR_ADAP_HDW_ERR
 Language=English
 ERROR_ADAP_HDW_ERR - A network adapter hardware error occurred.
 .
+Language=Russian
+ERROR_ADAP_HDW_ERR - Аппаратная ошибка сетевой платы.
+.
 
 MessageId=58
 Severity=Success
@@ -387,6 +527,9 @@ Facility=System
 SymbolicName=ERROR_BAD_NET_RESP
 Language=English
 ERROR_BAD_NET_RESP - The specified server cannot perform the requested operation.
+.
+Language=Russian
+ERROR_BAD_NET_RESP - Указанный сервер не может выполнить требуемую операцию.
 .
 
 MessageId=59
@@ -396,6 +539,9 @@ SymbolicName=ERROR_UNEXP_NET_ERR
 Language=English
 ERROR_UNEXP_NET_ERR - An unexpected network error occurred.
 .
+Language=Russian
+ERROR_UNEXP_NET_ERR - Непредвиденная сетевая ошибка.
+.
 
 MessageId=60
 Severity=Success
@@ -403,6 +549,9 @@ Facility=System
 SymbolicName=ERROR_BAD_REM_ADAP
 Language=English
 ERROR_BAD_REM_ADAP - The remote adapter is not compatible.
+.
+Language=Russian
+ERROR_BAD_REM_ADAP - Несовместимый удаленный контроллер.
 .
 
 MessageId=61
@@ -412,6 +561,9 @@ SymbolicName=ERROR_PRINTQ_FULL
 Language=English
 ERROR_PRINTQ_FULL - The printer queue is full.
 .
+Language=Russian
+ERROR_PRINTQ_FULL - Очередь печати переполнена.
+.
 
 MessageId=62
 Severity=Success
@@ -419,6 +571,9 @@ Facility=System
 SymbolicName=ERROR_NO_SPOOL_SPACE
 Language=English
 ERROR_NO_SPOOL_SPACE - Space to store the file waiting to be printed is not available on the server.
+.
+Language=Russian
+ERROR_NO_SPOOL_SPACE - На сервере нет места для хранения ожидающего печати файла.
 .
 
 MessageId=63
@@ -428,6 +583,9 @@ SymbolicName=ERROR_PRINT_CANCELLED
 Language=English
 ERROR_PRINT_CANCELLED - Your file waiting to be printed was deleted.
 .
+Language=Russian
+ERROR_PRINT_CANCELLED - Ваш файл, находившийся в очереди вывода на печать, был удален.
+.
 
 MessageId=64
 Severity=Success
@@ -435,6 +593,9 @@ Facility=System
 SymbolicName=ERROR_NETNAME_DELETED
 Language=English
 ERROR_NETNAME_DELETED - The specified network name is no longer available.
+.
+Language=Russian
+ERROR_NETNAME_DELETED - Указанное сетевое имя более недоступно.
 .
 
 MessageId=65
@@ -444,6 +605,9 @@ SymbolicName=ERROR_NETWORK_ACCESS_DENIED
 Language=English
 ERROR_NETWORK_ACCESS_DENIED - Network access is denied.
 .
+Language=Russian
+ERROR_NETWORK_ACCESS_DENIED - Нет доступа к сети.
+.
 
 MessageId=66
 Severity=Success
@@ -451,6 +615,9 @@ Facility=System
 SymbolicName=ERROR_BAD_DEV_TYPE
 Language=English
 ERROR_BAD_DEV_TYPE - The network resource type is not correct.
+.
+Language=Russian
+ERROR_BAD_DEV_TYPE - Неверно указан тип сетевого ресурса.
 .
 
 MessageId=67
@@ -460,6 +627,9 @@ SymbolicName=ERROR_BAD_NET_NAME
 Language=English
 ERROR_BAD_NET_NAME - The network name cannot be found.
 .
+Language=Russian
+ERROR_BAD_NET_NAME - Не найдено сетевое имя.
+.
 
 MessageId=68
 Severity=Success
@@ -467,6 +637,9 @@ Facility=System
 SymbolicName=ERROR_TOO_MANY_NAMES
 Language=English
 ERROR_TOO_MANY_NAMES - The name limit for the local computer network adapter card was exceeded.
+.
+Language=Russian
+ERROR_TOO_MANY_NAMES - Превышен предел числа имен для сетевого адаптера локального компьютера.
 .
 
 MessageId=69
@@ -476,6 +649,9 @@ SymbolicName=ERROR_TOO_MANY_SESS
 Language=English
 ERROR_TOO_MANY_SESS - The network BIOS session limit was exceeded.
 .
+Language=Russian
+ERROR_TOO_MANY_SESS - Превышен предел по числу сеансов NetBIOS.
+.
 
 MessageId=70
 Severity=Success
@@ -483,6 +659,9 @@ Facility=System
 SymbolicName=ERROR_SHARING_PAUSED
 Language=English
 ERROR_SHARING_PAUSED - The remote server has been paused or is in the process of being started.
+.
+Language=Russian
+ERROR_SHARING_PAUSED - Сервер сети был остановлен или находится в процессе запуска.
 .
 
 MessageId=71
@@ -492,6 +671,9 @@ SymbolicName=ERROR_REQ_NOT_ACCEP
 Language=English
 ERROR_REQ_NOT_ACCEP - No more connections can be made to this remote computer at this time because there are already as many connections as the computer can accept.
 .
+Language=Russian
+ERROR_REQ_NOT_ACCEP - Дополнительные подключения к этому удаленному компьютеру сейчас невозможны, так как их число достигло предела.
+.
 
 MessageId=72
 Severity=Success
@@ -499,6 +681,9 @@ Facility=System
 SymbolicName=ERROR_REDIR_PAUSED
 Language=English
 ERROR_REDIR_PAUSED - The specified printer or disk device has been paused.
+.
+Language=Russian
+ERROR_REDIR_PAUSED - Работа указанного принтера или дискового накопителя была остановлена.
 .
 
 MessageId=80
@@ -508,6 +693,9 @@ SymbolicName=ERROR_FILE_EXISTS
 Language=English
 ERROR_FILE_EXISTS - The file exists.
 .
+Language=Russian
+ERROR_FILE_EXISTS - Файл существует.
+.
 
 MessageId=82
 Severity=Success
@@ -515,6 +703,9 @@ Facility=System
 SymbolicName=ERROR_CANNOT_MAKE
 Language=English
 ERROR_CANNOT_MAKE - The directory or file cannot be created.
+.
+Language=Russian
+ERROR_CANNOT_MAKE - Не удается создать файл или папку.
 .
 
 MessageId=83
@@ -524,6 +715,9 @@ SymbolicName=ERROR_FAIL_I24
 Language=English
 ERROR_FAIL_I24 - Fail on INT 24.
 .
+Language=Russian
+ERROR_FAIL_I24 - Сбой прерывания INT 24.
+.
 
 MessageId=84
 Severity=Success
@@ -531,6 +725,9 @@ Facility=System
 SymbolicName=ERROR_OUT_OF_STRUCTURES
 Language=English
 ERROR_OUT_OF_STRUCTURES - Storage to process this request is not available.
+.
+Language=Russian
+ERROR_OUT_OF_STRUCTURES - Недостаточно памяти для обработки запроса.
 .
 
 MessageId=85
@@ -540,6 +737,9 @@ SymbolicName=ERROR_ALREADY_ASSIGNED
 Language=English
 ERROR_ALREADY_ASSIGNED - The local device name is already in use.
 .
+Language=Russian
+ERROR_ALREADY_ASSIGNED - Имя локального устройства уже используется.
+.
 
 MessageId=86
 Severity=Success
@@ -547,6 +747,9 @@ Facility=System
 SymbolicName=ERROR_INVALID_PASSWORD
 Language=English
 ERROR_INVALID_PASSWORD - The specified network password is not correct.
+.
+Language=Russian
+ERROR_INVALID_PASSWORD - Сетевой пароль указан неверно.
 .
 
 MessageId=87
@@ -556,6 +759,9 @@ SymbolicName=ERROR_INVALID_PARAMETER
 Language=English
 ERROR_INVALID_PARAMETER - The parameter is incorrect.
 .
+Language=Russian
+ERROR_INVALID_PARAMETER - Параметр задан неверно.
+.
 
 MessageId=88
 Severity=Success
@@ -563,6 +769,9 @@ Facility=System
 SymbolicName=ERROR_NET_WRITE_FAULT
 Language=English
 ERROR_NET_WRITE_FAULT - A write fault occurred on the network.
+.
+Language=Russian
+ERROR_NET_WRITE_FAULT - Ошибка записи в сети.
 .
 
 MessageId=89
@@ -572,6 +781,9 @@ SymbolicName=ERROR_NO_PROC_SLOTS
 Language=English
 ERROR_NO_PROC_SLOTS - The system cannot start another process at this time.
 .
+Language=Russian
+ERROR_NO_PROC_SLOTS - В настоящее время системе не удается запустить другой процесс.
+.
 
 MessageId=100
 Severity=Success
@@ -579,6 +791,9 @@ Facility=System
 SymbolicName=ERROR_TOO_MANY_SEMAPHORES
 Language=English
 ERROR_TOO_MANY_SEMAPHORES - Cannot create another system semaphore.
+.
+Language=Russian
+ERROR_TOO_MANY_SEMAPHORES - Не удается создать еще один системный семафор.
 .
 
 MessageId=101
@@ -588,6 +803,9 @@ SymbolicName=ERROR_EXCL_SEM_ALREADY_OWNED
 Language=English
 ERROR_EXCL_SEM_ALREADY_OWNED - The exclusive semaphore is owned by another process.
 .
+Language=Russian
+ERROR_EXCL_SEM_ALREADY_OWNED - Семафор эксклюзивного доступа занят другим процессом.
+.
 
 MessageId=102
 Severity=Success
@@ -595,6 +813,9 @@ Facility=System
 SymbolicName=ERROR_SEM_IS_SET
 Language=English
 ERROR_SEM_IS_SET - The semaphore is set and cannot be closed.
+.
+Language=Russian
+ERROR_SEM_IS_SET - Семафор установлен и не может быть закрыт.
 .
 
 MessageId=103
@@ -604,6 +825,9 @@ SymbolicName=ERROR_TOO_MANY_SEM_REQUESTS
 Language=English
 ERROR_TOO_MANY_SEM_REQUESTS - The semaphore cannot be set again.
 .
+Language=Russian
+ERROR_TOO_MANY_SEM_REQUESTS - Семафор не может быть установлен повторно.
+.
 
 MessageId=104
 Severity=Success
@@ -611,6 +835,9 @@ Facility=System
 SymbolicName=ERROR_INVALID_AT_INTERRUPT_TIME
 Language=English
 ERROR_INVALID_AT_INTERRUPT_TIME - Cannot request exclusive semaphores at interrupt time.
+.
+Language=Russian
+ERROR_INVALID_AT_INTERRUPT_TIME - Запросы к семафорам эксклюзивного доступа на время выполнения прерываний не допускаются.
 .
 
 MessageId=105
@@ -620,6 +847,9 @@ SymbolicName=ERROR_SEM_OWNER_DIED
 Language=English
 ERROR_SEM_OWNER_DIED - The previous ownership of this semaphore has ended.
 .
+Language=Russian
+ERROR_SEM_OWNER_DIED - Этот семафор более не принадлежит использовавшему его процессу.
+.
 
 MessageId=106
 Severity=Success
@@ -627,6 +857,9 @@ Facility=System
 SymbolicName=ERROR_SEM_USER_LIMIT
 Language=English
 ERROR_SEM_USER_LIMIT - Insert the diskette for drive %1.
+.
+Language=Russian
+ERROR_SEM_USER_LIMIT - Вставте дискету в дисковод %1.
 .
 
 MessageId=107
@@ -636,6 +869,9 @@ SymbolicName=ERROR_DISK_CHANGE
 Language=English
 ERROR_DISK_CHANGE - The program stopped because an alternate diskette was not inserted.
 .
+Language=Russian
+ERROR_DISK_CHANGE - Программа была остановлена, так как нужный диск вставлен не был.
+.
 
 MessageId=108
 Severity=Success
@@ -643,6 +879,9 @@ Facility=System
 SymbolicName=ERROR_DRIVE_LOCKED
 Language=English
 ERROR_DRIVE_LOCKED - The disk is in use or locked by another process.
+.
+Language=Russian
+ERROR_DRIVE_LOCKED - Диск занят или заблокирован другим процессом.
 .
 
 MessageId=109
@@ -652,6 +891,9 @@ SymbolicName=ERROR_BROKEN_PIPE
 Language=English
 ERROR_BROKEN_PIPE - The pipe has been ended.
 .
+Language=Russian
+ERROR_BROKEN_PIPE - Канал был закрыт.
+.
 
 MessageId=110
 Severity=Success
@@ -659,6 +901,9 @@ Facility=System
 SymbolicName=ERROR_OPEN_FAILED
 Language=English
 ERROR_OPEN_FAILED - The system cannot open the device or file specified.
+.
+Language=Russian
+ERROR_OPEN_FAILED - Системе не удается открыть указанное устройство или файл.
 .
 
 MessageId=111
@@ -668,6 +913,9 @@ SymbolicName=ERROR_BUFFER_OVERFLOW
 Language=English
 ERROR_BUFFER_OVERFLOW - The file name is too long.
 .
+Language=Russian
+ERROR_BUFFER_OVERFLOW - Указано слишком длинное имя файла.
+.
 
 MessageId=112
 Severity=Success
@@ -675,6 +923,9 @@ Facility=System
 SymbolicName=ERROR_DISK_FULL
 Language=English
 ERROR_DISK_FULL - There is not enough space on the disk.
+.
+Language=Russian
+ERROR_DISK_FULL - Недостаточно места на диске.
 .
 
 MessageId=113
@@ -684,6 +935,9 @@ SymbolicName=ERROR_NO_MORE_SEARCH_HANDLES
 Language=English
 ERROR_NO_MORE_SEARCH_HANDLES - No more internal file identifiers available.
 .
+Language=Russian
+ERROR_NO_MORE_SEARCH_HANDLES - Исчерпаны внутренние идентификаторы файлов.
+.
 
 MessageId=114
 Severity=Success
@@ -691,6 +945,9 @@ Facility=System
 SymbolicName=ERROR_INVALID_TARGET_HANDLE
 Language=English
 ERROR_INVALID_TARGET_HANDLE - The target internal file identifier is incorrect.
+.
+Language=Russian
+ERROR_INVALID_TARGET_HANDLE - Результирующий внутренний идентификатор файла неправилен.
 .
 
 MessageId=117
@@ -700,6 +957,9 @@ SymbolicName=ERROR_INVALID_CATEGORY
 Language=English
 ERROR_INVALID_CATEGORY - The IOCTL call made by the application program is not correct.
 .
+Language=Russian
+ERROR_INVALID_CATEGORY - Вызов IOCTL приложением произведен неверно.
+.
 
 MessageId=118
 Severity=Success
@@ -707,6 +967,9 @@ Facility=System
 SymbolicName=ERROR_INVALID_VERIFY_SWITCH
 Language=English
 ERROR_INVALID_VERIFY_SWITCH - The verify-on-write switch parameter value is not correct.
+.
+Language=Russian
+ERROR_INVALID_VERIFY_SWITCH - Параметр проверки записи данных имеет неверное значение.
 .
 
 MessageId=119
@@ -716,6 +979,9 @@ SymbolicName=ERROR_BAD_DRIVER_LEVEL
 Language=English
 ERROR_BAD_DRIVER_LEVEL - The system does not support the command requested.
 .
+Language=Russian
+ERROR_BAD_DRIVER_LEVEL - Система не может обработать полученную команду.
+.
 
 MessageId=120
 Severity=Success
@@ -723,6 +989,9 @@ Facility=System
 SymbolicName=ERROR_CALL_NOT_IMPLEMENTED
 Language=English
 ERROR_CALL_NOT_IMPLEMENTED - This function is not supported on this system.
+.
+Language=Russian
+ERROR_CALL_NOT_IMPLEMENTED - Эта функция не поддерживается для этой системы.
 .
 
 MessageId=121
@@ -732,6 +1001,9 @@ SymbolicName=ERROR_SEM_TIMEOUT
 Language=English
 ERROR_SEM_TIMEOUT - The semaphore timeout period has expired.
 .
+Language=Russian
+ERROR_SEM_TIMEOUT - Превышен таймаут семафора.
+.
 
 MessageId=122
 Severity=Success
@@ -739,6 +1011,9 @@ Facility=System
 SymbolicName=ERROR_INSUFFICIENT_BUFFER
 Language=English
 ERROR_INSUFFICIENT_BUFFER - The data area passed to a system call is too small.
+.
+Language=Russian
+ERROR_INSUFFICIENT_BUFFER - Область данных, переданная по системному вызову, слишком мала.
 .
 
 MessageId=123
@@ -748,6 +1023,9 @@ SymbolicName=ERROR_INVALID_NAME
 Language=English
 ERROR_INVALID_NAME - The filename, directory name, or volume label syntax is incorrect.
 .
+Language=Russian
+ERROR_INVALID_NAME - Синтаксическая ошибка в имени файла, имени папки или метке тома.
+.
 
 MessageId=124
 Severity=Success
@@ -755,6 +1033,9 @@ Facility=System
 SymbolicName=ERROR_INVALID_LEVEL
 Language=English
 ERROR_INVALID_LEVEL - The system call level is not correct.
+.
+Language=Russian
+ERROR_INVALID_LEVEL - Неверный уровень системного вызова.
 .
 
 MessageId=125
@@ -764,6 +1045,9 @@ SymbolicName=ERROR_NO_VOLUME_LABEL
 Language=English
 ERROR_NO_VOLUME_LABEL - The disk has no volume label.
 .
+Language=Russian
+ERROR_NO_VOLUME_LABEL - У диска отсутствует метка тома.
+.
 
 MessageId=126
 Severity=Success
@@ -771,6 +1055,9 @@ Facility=System
 SymbolicName=ERROR_MOD_NOT_FOUND
 Language=English
 ERROR_MOD_NOT_FOUND - The specified module could not be found.
+.
+Language=Russian
+ERROR_MOD_NOT_FOUND - Не найден указанный модуль.
 .
 
 MessageId=127
@@ -780,6 +1067,9 @@ SymbolicName=ERROR_PROC_NOT_FOUND
 Language=English
 ERROR_PROC_NOT_FOUND - The specified procedure could not be found.
 .
+Language=Russian
+ERROR_PROC_NOT_FOUND - Не найдена указанная процедура.
+.
 
 MessageId=128
 Severity=Success
@@ -787,6 +1077,9 @@ Facility=System
 SymbolicName=ERROR_WAIT_NO_CHILDREN
 Language=English
 ERROR_WAIT_NO_CHILDREN - There are no child processes to wait for.
+.
+Language=Russian
+ERROR_WAIT_NO_CHILDREN - Дочерние процессы, окончания которых требуется ожидать, отсутствуют.
 .
 
 MessageId=129
@@ -796,6 +1089,9 @@ SymbolicName=ERROR_CHILD_NOT_COMPLETE
 Language=English
 ERROR_CHILD_NOT_COMPLETE - The %1 application cannot be run in Win32 mode.
 .
+Language=Russian
+ERROR_CHILD_NOT_COMPLETE - Приложение "%1" не может быть запущено в режиме Win32.
+.
 
 MessageId=130
 Severity=Success
@@ -803,6 +1099,9 @@ Facility=System
 SymbolicName=ERROR_DIRECT_ACCESS_HANDLE
 Language=English
 ERROR_DIRECT_ACCESS_HANDLE - Attempt to use a file handle to an open disk partition for an operation other than raw disk I/O.
+.
+Language=Russian
+ERROR_DIRECT_ACCESS_HANDLE - Попытка использовать дескриптор файла для открытия раздела диска и выполнения операции, отличающейся от ввода/вывода нижнего уровня.
 .
 
 MessageId=131
@@ -812,6 +1111,9 @@ SymbolicName=ERROR_NEGATIVE_SEEK
 Language=English
 ERROR_NEGATIVE_SEEK - An attempt was made to move the file pointer before the beginning of the file.
 .
+Language=Russian
+ERROR_NEGATIVE_SEEK - Попытка поместить указатель на файл перед началом файла.
+.
 
 MessageId=132
 Severity=Success
@@ -819,6 +1121,9 @@ Facility=System
 SymbolicName=ERROR_SEEK_ON_DEVICE
 Language=English
 ERROR_SEEK_ON_DEVICE - The file pointer cannot be set on the specified device or file.
+.
+Language=Russian
+ERROR_SEEK_ON_DEVICE - Указатель на файл не может быть установлен на заданное устройство или файл.
 .
 
 MessageId=133
@@ -828,6 +1133,9 @@ SymbolicName=ERROR_IS_JOIN_TARGET
 Language=English
 ERROR_IS_JOIN_TARGET - A JOIN or SUBST command cannot be used for a drive that contains previously joined drives.
 .
+Language=Russian
+ERROR_IS_JOIN_TARGET - Команды JOIN и SUBST не могут быть использованы для дисков, содержащих уже объединенные диски.
+.
 
 MessageId=134
 Severity=Success
@@ -835,6 +1143,9 @@ Facility=System
 SymbolicName=ERROR_IS_JOINED
 Language=English
 ERROR_IS_JOINED - An attempt was made to use a JOIN or SUBST command on a drive that has already been joined.
+.
+Language=Russian
+ERROR_IS_JOINED - Попытка использовать команду JOIN или SUBST для диска, уже включенного в набор объединенных дисков.
 .
 
 MessageId=135
@@ -844,6 +1155,9 @@ SymbolicName=ERROR_IS_SUBSTED
 Language=English
 ERROR_IS_SUBSTED - An attempt was made to use a JOIN or SUBST command on a drive that has already been substituted.
 .
+Language=Russian
+ERROR_IS_SUBSTED - Попытка использовать команду JOIN или SUBST для диска, который уже был отображен.
+.
 
 MessageId=136
 Severity=Success
@@ -851,6 +1165,9 @@ Facility=System
 SymbolicName=ERROR_NOT_JOINED
 Language=English
 ERROR_NOT_JOINED - The system tried to delete the JOIN of a drive that is not joined.
+.
+Language=Russian
+ERROR_NOT_JOINED - Попытка снять признак объединения с диска, для которого команда JOIN не выполнялась.
 .
 
 MessageId=137
@@ -860,6 +1177,9 @@ SymbolicName=ERROR_NOT_SUBSTED
 Language=English
 ERROR_NOT_SUBSTED - The system tried to delete the substitution of a drive that is not substituted.
 .
+Language=Russian
+ERROR_NOT_SUBSTED - Попытка снять признак отображения с диска, для которого команда SUBST не выполнялась.
+.
 
 MessageId=138
 Severity=Success
@@ -867,6 +1187,9 @@ Facility=System
 SymbolicName=ERROR_JOIN_TO_JOIN
 Language=English
 ERROR_JOIN_TO_JOIN - The system tried to join a drive to a directory on a joined drive.
+.
+Language=Russian
+ERROR_JOIN_TO_JOIN - Попытка объединить диск с папкой на объединенном диске.
 .
 
 MessageId=139
@@ -876,6 +1199,9 @@ SymbolicName=ERROR_SUBST_TO_SUBST
 Language=English
 ERROR_SUBST_TO_SUBST - The system tried to substitute a drive to a directory on a substituted drive.
 .
+Language=Russian
+ERROR_SUBST_TO_SUBST - Попытка отобразить диск на папку, находящуюся на отображенном диске.
+.
 
 MessageId=140
 Severity=Success
@@ -883,6 +1209,9 @@ Facility=System
 SymbolicName=ERROR_JOIN_TO_SUBST
 Language=English
 ERROR_JOIN_TO_SUBST - The system tried to join a drive to a directory on a substituted drive.
+.
+Language=Russian
+ERROR_JOIN_TO_SUBST - Попытка объединить диск с папкой на отображенном диске.
 .
 
 MessageId=141
@@ -892,6 +1221,9 @@ SymbolicName=ERROR_SUBST_TO_JOIN
 Language=English
 ERROR_SUBST_TO_JOIN - The system tried to SUBST a drive to a directory on a joined drive.
 .
+Language=Russian
+ERROR_SUBST_TO_JOIN - Попытка отобразить диск на папку, находящуюся на объединенном диске.
+.
 
 MessageId=142
 Severity=Success
@@ -899,6 +1231,9 @@ Facility=System
 SymbolicName=ERROR_BUSY_DRIVE
 Language=English
 ERROR_BUSY_DRIVE - The system cannot perform a JOIN or SUBST at this time.
+.
+Language=Russian
+ERROR_BUSY_DRIVE - В настоящее время выполнить команду JOIN или SUBST невозможно.
 .
 
 MessageId=143
@@ -908,6 +1243,9 @@ SymbolicName=ERROR_SAME_DRIVE
 Language=English
 ERROR_SAME_DRIVE - The system cannot join or substitute a drive to or for a directory on the same drive.
 .
+Language=Russian
+ERROR_SAME_DRIVE - Невозможно объединить (или отобразить) диск с папкой (или на папку) этого же диска.
+.
 
 MessageId=144
 Severity=Success
@@ -915,6 +1253,9 @@ Facility=System
 SymbolicName=ERROR_DIR_NOT_ROOT
 Language=English
 ERROR_DIR_NOT_ROOT - The directory is not a subdirectory of the root directory.
+.
+Language=Russian
+ERROR_DIR_NOT_ROOT - Эта папка не является подпапкой корневой папки.
 .
 
 MessageId=145
@@ -924,6 +1265,9 @@ SymbolicName=ERROR_DIR_NOT_EMPTY
 Language=English
 ERROR_DIR_NOT_EMPTY - The directory is not empty.
 .
+Language=Russian
+ERROR_DIR_NOT_EMPTY - Папка не пуста.
+.
 
 MessageId=146
 Severity=Success
@@ -931,6 +1275,9 @@ Facility=System
 SymbolicName=ERROR_IS_SUBST_PATH
 Language=English
 ERROR_IS_SUBST_PATH - The path specified is being used in a substitute.
+.
+Language=Russian
+ERROR_IS_SUBST_PATH - Указанный путь используется для отображенного диска.
 .
 
 MessageId=147
@@ -940,6 +1287,9 @@ SymbolicName=ERROR_IS_JOIN_PATH
 Language=English
 ERROR_IS_JOIN_PATH - Not enough resources are available to process this command.
 .
+Language=Russian
+ERROR_IS_JOIN_PATH - Недостаточно ресурсов для обработки команды.
+.
 
 MessageId=148
 Severity=Success
@@ -947,6 +1297,9 @@ Facility=System
 SymbolicName=ERROR_PATH_BUSY
 Language=English
 ERROR_PATH_BUSY - The path specified cannot be used at this time.
+.
+Language=Russian
+ERROR_PATH_BUSY - Указанный путь невозможно использовать сейчас.
 .
 
 MessageId=149
@@ -956,6 +1309,9 @@ SymbolicName=ERROR_IS_SUBST_TARGET
 Language=English
 ERROR_IS_SUBST_TARGET - An attempt was made to join or substitute a drive for which a directory on the drive is the target of a previous substitute.
 .
+Language=Russian
+ERROR_IS_SUBST_TARGET - Попытка объединить или отобразить диск, папка на котором уже используется для отображения.
+.
 
 MessageId=150
 Severity=Success
@@ -963,6 +1319,9 @@ Facility=System
 SymbolicName=ERROR_SYSTEM_TRACE
 Language=English
 ERROR_SYSTEM_TRACE - System trace information was not specified in your CONFIG.SYS file, or tracing is disallowed.
+.
+Language=Russian
+ERROR_SYSTEM_TRACE - Сведения о трассировке в файле CONFIG.SYS не найдены, либо трассировка запрещена.
 .
 
 MessageId=151
@@ -972,6 +1331,9 @@ SymbolicName=ERROR_INVALID_EVENT_COUNT
 Language=English
 ERROR_INVALID_EVENT_COUNT - The number of specified semaphore events for DosMuxSemWait is not correct.
 .
+Language=Russian
+ERROR_INVALID_EVENT_COUNT - Число семафоров для DosMuxSemWait задано неверно.
+.
 
 MessageId=152
 Severity=Success
@@ -979,6 +1341,9 @@ Facility=System
 SymbolicName=ERROR_TOO_MANY_MUXWAITERS
 Language=English
 ERROR_TOO_MANY_MUXWAITERS - DosMuxSemWait did not execute; too many semaphores are already set.
+.
+Language=Russian
+ERROR_TOO_MANY_MUXWAITERS - Не выполнен вызов DosMuxSemWait. Установлено слишком много семафоров.
 .
 
 MessageId=153
@@ -988,6 +1353,9 @@ SymbolicName=ERROR_INVALID_LIST_FORMAT
 Language=English
 ERROR_INVALID_LIST_FORMAT - The DosMuxSemWait list is not correct.
 .
+Language=Russian
+ERROR_INVALID_LIST_FORMAT - Некорректный вызов DosMuxSemWait.
+.
 
 MessageId=154
 Severity=Success
@@ -995,6 +1363,9 @@ Facility=System
 SymbolicName=ERROR_LABEL_TOO_LONG
 Language=English
 ERROR_LABEL_TOO_LONG - The volume label you entered exceeds the label character limit of the target file system.
+.
+Language=Russian
+ERROR_LABEL_TOO_LONG - Длина метки тома превосходит предел, установленный для файловой системы.
 .
 
 MessageId=155
@@ -1004,6 +1375,9 @@ SymbolicName=ERROR_TOO_MANY_TCBS
 Language=English
 ERROR_TOO_MANY_TCBS - Cannot create another thread.
 .
+Language=Russian
+ERROR_TOO_MANY_TCBS - Не удается создать еще один поток команд.
+.
 
 MessageId=156
 Severity=Success
@@ -1011,6 +1385,9 @@ Facility=System
 SymbolicName=ERROR_SIGNAL_REFUSED
 Language=English
 ERROR_SIGNAL_REFUSED - The recipient process has refused the signal.
+.
+Language=Russian
+ERROR_SIGNAL_REFUSED - Принимающий процесс отклонил сигнал.
 .
 
 MessageId=157
@@ -1020,6 +1397,9 @@ SymbolicName=ERROR_DISCARDED
 Language=English
 ERROR_DISCARDED - The segment is already discarded and cannot be locked.
 .
+Language=Russian
+ERROR_DISCARDED - Сегмент уже освобожден и не может быть заблокирован.
+.
 
 MessageId=158
 Severity=Success
@@ -1027,6 +1407,9 @@ Facility=System
 SymbolicName=ERROR_NOT_LOCKED
 Language=English
 ERROR_NOT_LOCKED - The segment is already unlocked.
+.
+Language=Russian
+ERROR_NOT_LOCKED - Блокировка с сегмента уже снята.
 .
 
 MessageId=159
@@ -1036,6 +1419,9 @@ SymbolicName=ERROR_BAD_THREADID_ADDR
 Language=English
 ERROR_BAD_THREADID_ADDR - The address for the thread ID is not correct.
 .
+Language=Russian
+ERROR_BAD_THREADID_ADDR - Адрес идентификатора потока команд задан неверно.
+.
 
 MessageId=160
 Severity=Success
@@ -1043,6 +1429,9 @@ Facility=System
 SymbolicName=ERROR_BAD_ARGUMENTS
 Language=English
 ERROR_BAD_ARGUMENTS - The argument string passed to DosExecPgm is not correct.
+.
+Language=Russian
+ERROR_BAD_ARGUMENTS - Неверны один или несколько аргументов.
 .
 
 MessageId=161
@@ -1052,6 +1441,9 @@ SymbolicName=ERROR_BAD_PATHNAME
 Language=English
 ERROR_BAD_PATHNAME - The specified path is invalid.
 .
+Language=Russian
+ERROR_BAD_PATHNAME - Указан недопустимый путь.
+.
 
 MessageId=162
 Severity=Success
@@ -1059,6 +1451,9 @@ Facility=System
 SymbolicName=ERROR_SIGNAL_PENDING
 Language=English
 ERROR_SIGNAL_PENDING - A signal is already pending.
+.
+Language=Russian
+ERROR_SIGNAL_PENDING - Сигнал уже находится в состоянии обработки.
 .
 
 MessageId=164
@@ -1068,6 +1463,9 @@ SymbolicName=ERROR_MAX_THRDS_REACHED
 Language=English
 ERROR_MAX_THRDS_REACHED - No more threads can be created in the system.
 .
+Language=Russian
+ERROR_MAX_THRDS_REACHED - Создание дополнительных потоков команд невозможно.
+.
 
 MessageId=167
 Severity=Success
@@ -1075,6 +1473,9 @@ Facility=System
 SymbolicName=ERROR_LOCK_FAILED
 Language=English
 ERROR_LOCK_FAILED - Unable to lock a region of a file.
+.
+Language=Russian
+ERROR_LOCK_FAILED - Не удается снять блокировку с области файла.
 .
 
 MessageId=170
@@ -1084,6 +1485,9 @@ SymbolicName=ERROR_BUSY
 Language=English
 ERROR_BUSY - The requested resource is in use.
 .
+Language=Russian
+ERROR_BUSY - Требуемый ресурс занят.
+.
 
 MessageId=173
 Severity=Success
@@ -1091,6 +1495,9 @@ Facility=System
 SymbolicName=ERROR_CANCEL_VIOLATION
 Language=English
 ERROR_CANCEL_VIOLATION - A lock request was not outstanding for the supplied cancel region.
+.
+Language=Russian
+ERROR_CANCEL_VIOLATION - Запрос на блокировку соответствует определенной области.
 .
 
 MessageId=174
@@ -1100,6 +1507,9 @@ SymbolicName=ERROR_ATOMIC_LOCKS_NOT_SUPPORTED
 Language=English
 ERROR_ATOMIC_LOCKS_NOT_SUPPORTED - The file system does not support atomic changes to the lock type.
 .
+Language=Russian
+ERROR_ATOMIC_LOCKS_NOT_SUPPORTED - Файловая система не поддерживает указанные изменения типа блокировки.
+.
 
 MessageId=180
 Severity=Success
@@ -1107,6 +1517,9 @@ Facility=System
 SymbolicName=ERROR_INVALID_SEGMENT_NUMBER
 Language=English
 ERROR_INVALID_SEGMENT_NUMBER - The system detected a segment number that was not correct.
+.
+Language=Russian
+ERROR_INVALID_SEGMENT_NUMBER - Система обнаружила неверный номер сегмента.
 .
 
 MessageId=182
@@ -1116,6 +1529,9 @@ SymbolicName=ERROR_INVALID_ORDINAL
 Language=English
 ERROR_INVALID_ORDINAL - The operating system cannot run %1.
 .
+Language=Russian
+ERROR_INVALID_ORDINAL - Операционная система не может выполнить "%1".
+.
 
 MessageId=183
 Severity=Success
@@ -1123,6 +1539,9 @@ Facility=System
 SymbolicName=ERROR_ALREADY_EXISTS
 Language=English
 ERROR_ALREADY_EXISTS - Cannot create a file when that file already exists.
+.
+Language=Russian
+ERROR_ALREADY_EXISTS - Невозможно создать файл, так как он уже существует.
 .
 
 MessageId=186
@@ -1132,6 +1551,9 @@ SymbolicName=ERROR_INVALID_FLAG_NUMBER
 Language=English
 ERROR_INVALID_FLAG_NUMBER - The flag passed is not correct.
 .
+Language=Russian
+ERROR_INVALID_FLAG_NUMBER - Передан неверный флаг.
+.
 
 MessageId=187
 Severity=Success
@@ -1139,6 +1561,9 @@ Facility=System
 SymbolicName=ERROR_SEM_NOT_FOUND
 Language=English
 ERROR_SEM_NOT_FOUND - The specified system semaphore name was not found.
+.
+Language=Russian
+ERROR_SEM_NOT_FOUND - Не найдено указанное имя системного семафора.
 .
 
 MessageId=188
@@ -1148,6 +1573,9 @@ SymbolicName=ERROR_INVALID_STARTING_CODESEG
 Language=English
 ERROR_INVALID_STARTING_CODESEG - The operating system cannot run %1.
 .
+Language=Russian
+ERROR_INVALID_STARTING_CODESEG - Операционная система не может выполнить "%1".
+.
 
 MessageId=189
 Severity=Success
@@ -1155,6 +1583,9 @@ Facility=System
 SymbolicName=ERROR_INVALID_STACKSEG
 Language=English
 ERROR_INVALID_STACKSEG - The operating system cannot run %1.
+.
+Language=Russian
+ERROR_INVALID_STACKSEG - Операционная система не может выполнить "%1".
 .
 
 MessageId=190
@@ -1164,6 +1595,9 @@ SymbolicName=ERROR_INVALID_MODULETYPE
 Language=English
 ERROR_INVALID_MODULETYPE - The operating system cannot run %1.
 .
+Language=Russian
+ERROR_INVALID_MODULETYPE - Операционная система не может выполнить "%1".
+.
 
 MessageId=191
 Severity=Success
@@ -1171,6 +1605,9 @@ Facility=System
 SymbolicName=ERROR_INVALID_EXE_SIGNATURE
 Language=English
 ERROR_INVALID_EXE_SIGNATURE - Cannot run %1 in Win32 mode.
+.
+Language=Russian
+ERROR_INVALID_EXE_SIGNATURE - Невозможно запустить "%1" в режиме Win32.
 .
 
 MessageId=192
@@ -1180,6 +1617,9 @@ SymbolicName=ERROR_EXE_MARKED_INVALID
 Language=English
 ERROR_EXE_MARKED_INVALID - The operating system cannot run %1.
 .
+Language=Russian
+ERROR_EXE_MARKED_INVALID - Операционная система не может выполнить "%1".
+.
 
 MessageId=193
 Severity=Success
@@ -1187,6 +1627,9 @@ Facility=System
 SymbolicName=ERROR_BAD_EXE_FORMAT
 Language=English
 ERROR_BAD_EXE_FORMAT - %1 is not a valid Win32 application.
+.
+Language=Russian
+ERROR_BAD_EXE_FORMAT - "%1" не является приложением Win32.
 .
 
 MessageId=194
@@ -1196,6 +1639,9 @@ SymbolicName=ERROR_ITERATED_DATA_EXCEEDS_64k
 Language=English
 ERROR_ITERATED_DATA_EXCEEDS_64k - The operating system cannot run %1.
 .
+Language=Russian
+ERROR_ITERATED_DATA_EXCEEDS_64k - Операционная система не может выполнить "%1".
+.
 
 MessageId=195
 Severity=Success
@@ -1203,6 +1649,9 @@ Facility=System
 SymbolicName=ERROR_INVALID_MINALLOCSIZE
 Language=English
 ERROR_INVALID_MINALLOCSIZE - The operating system cannot run %1.
+.
+Language=Russian
+ERROR_INVALID_MINALLOCSIZE - Операционная система не может выполнить "%1".
 .
 
 MessageId=196
@@ -1212,6 +1661,9 @@ SymbolicName=ERROR_DYNLINK_FROM_INVALID_RING
 Language=English
 ERROR_DYNLINK_FROM_INVALID_RING - The operating system cannot run this application program.
 .
+Language=Russian
+ERROR_DYNLINK_FROM_INVALID_RING - Операционная система не может запустить это приложение.
+.
 
 MessageId=197
 Severity=Success
@@ -1219,6 +1671,9 @@ Facility=System
 SymbolicName=ERROR_IOPL_NOT_ENABLED
 Language=English
 ERROR_IOPL_NOT_ENABLED - The operating system is not presently configured to run this application.
+.
+Language=Russian
+ERROR_IOPL_NOT_ENABLED - Конфигурация операционной системы не рассчитана на запуск этого приложения.
 .
 
 MessageId=198
@@ -1228,6 +1683,9 @@ SymbolicName=ERROR_INVALID_SEGDPL
 Language=English
 ERROR_INVALID_SEGDPL - The operating system cannot run %1.
 .
+Language=Russian
+ERROR_INVALID_SEGDPL - Операционная система не может выполнить "%1".
+.
 
 MessageId=199
 Severity=Success
@@ -1235,6 +1693,9 @@ Facility=System
 SymbolicName=ERROR_AUTODATASEG_EXCEEDS_64k
 Language=English
 ERROR_AUTODATASEG_EXCEEDS_64k - The operating system cannot run this application program.
+.
+Language=Russian
+ERROR_AUTODATASEG_EXCEEDS_64k - Операционная система не может запустить это приложение.
 .
 
 MessageId=200
@@ -1244,6 +1705,9 @@ SymbolicName=ERROR_RING2SEG_MUST_BE_MOVABLE
 Language=English
 ERROR_RING2SEG_MUST_BE_MOVABLE - The code segment cannot be greater than or equal to 64K.
 .
+Language=Russian
+ERROR_RING2SEG_MUST_BE_MOVABLE - Сегмент кода должен быть меньше 64 КБ.
+.
 
 MessageId=201
 Severity=Success
@@ -1251,6 +1715,9 @@ Facility=System
 SymbolicName=ERROR_RELOC_CHAIN_XEEDS_SEGLIM
 Language=English
 ERROR_RELOC_CHAIN_XEEDS_SEGLIM - The operating system cannot run %1.
+.
+Language=Russian
+ERROR_RELOC_CHAIN_XEEDS_SEGLIM - Операционная система не может выполнить "%1".
 .
 
 MessageId=202
@@ -1260,6 +1727,9 @@ SymbolicName=ERROR_INFLOOP_IN_RELOC_CHAIN
 Language=English
 ERROR_INFLOOP_IN_RELOC_CHAIN - The operating system cannot run %1.
 .
+Language=Russian
+ERROR_INFLOOP_IN_RELOC_CHAIN - Операционная система не может выполнить "%1".
+.
 
 MessageId=203
 Severity=Success
@@ -1267,6 +1737,9 @@ Facility=System
 SymbolicName=ERROR_ENVVAR_NOT_FOUND
 Language=English
 ERROR_ENVVAR_NOT_FOUND - The system could not find the environment option that was entered.
+.
+Language=Russian
+ERROR_ENVVAR_NOT_FOUND - Системе не удается найти указанный параметр среды.
 .
 
 MessageId=205
@@ -1276,6 +1749,9 @@ SymbolicName=ERROR_NO_SIGNAL_SENT
 Language=English
 ERROR_NO_SIGNAL_SENT - No process in the command subtree has a signal handler.
 .
+Language=Russian
+ERROR_NO_SIGNAL_SENT - Ни один из процессов в дереве команды не имеет обработчика сигналов.
+.
 
 MessageId=206
 Severity=Success
@@ -1283,6 +1759,9 @@ Facility=System
 SymbolicName=ERROR_FILENAME_EXCED_RANGE
 Language=English
 ERROR_FILENAME_EXCED_RANGE - The filename or extension is too long.
+.
+Language=Russian
+ERROR_FILENAME_EXCED_RANGE - Имя файла или его расширение имеет слишком большую длину.
 .
 
 MessageId=207
@@ -1292,6 +1771,9 @@ SymbolicName=ERROR_RING2_STACK_IN_USE
 Language=English
 ERROR_RING2_STACK_IN_USE - The ring 2 stack is in use.
 .
+Language=Russian
+ERROR_RING2_STACK_IN_USE - Кольцо 2 стека занято.
+.
 
 MessageId=208
 Severity=Success
@@ -1299,6 +1781,9 @@ Facility=System
 SymbolicName=ERROR_META_EXPANSION_TOO_LONG
 Language=English
 ERROR_META_EXPANSION_TOO_LONG - The global filename characters, * or ?, are entered incorrectly or too many global filename characters are specified.
+.
+Language=Russian
+ERROR_META_EXPANSION_TOO_LONG - Подстановочные знаки * и/или ? заданы неверно или образуют неверный шаблон имени.
 .
 
 MessageId=209
@@ -1308,6 +1793,9 @@ SymbolicName=ERROR_INVALID_SIGNAL_NUMBER
 Language=English
 ERROR_INVALID_SIGNAL_NUMBER - The signal being posted is not correct.
 .
+Language=Russian
+ERROR_INVALID_SIGNAL_NUMBER - Отправляемый сигнал неверен.
+.
 
 MessageId=210
 Severity=Success
@@ -1315,6 +1803,9 @@ Facility=System
 SymbolicName=ERROR_THREAD_1_INACTIVE
 Language=English
 ERROR_THREAD_1_INACTIVE - The signal handler cannot be set.
+.
+Language=Russian
+ERROR_THREAD_1_INACTIVE - Не удается установить обработчик сигналов.
 .
 
 MessageId=212
@@ -1324,6 +1815,9 @@ SymbolicName=ERROR_LOCKED
 Language=English
 ERROR_LOCKED - The segment is locked and cannot be reallocated.
 .
+Language=Russian
+ERROR_LOCKED - Сегмент заблокирован и не может быть перемещен.
+.
 
 MessageId=214
 Severity=Success
@@ -1332,6 +1826,9 @@ SymbolicName=ERROR_TOO_MANY_MODULES
 Language=English
 ERROR_TOO_MANY_MODULES - Too many dynamic-link modules are attached to this program or dynamic-link module.
 .
+Language=Russian
+ERROR_TOO_MANY_MODULES - К этой программе или модулю присоединено слишком много динамически подключаемых модулей.
+.
 
 MessageId=215
 Severity=Success
@@ -1339,6 +1836,9 @@ Facility=System
 SymbolicName=ERROR_NESTING_NOT_ALLOWED
 Language=English
 ERROR_NESTING_NOT_ALLOWED - Cannot nest calls to LoadModule.
+.
+Language=Russian
+ERROR_NESTING_NOT_ALLOWED - Вызовы LoadModule не могут быть вложены.
 .
 
 MessageId=216
