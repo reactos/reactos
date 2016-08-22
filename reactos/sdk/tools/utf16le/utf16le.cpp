@@ -19,6 +19,10 @@
 
 using namespace std;
 
+#ifdef _MSC_VER
+#define strcasecmp _stricmp
+#endif
+
 class utf_converter
 {
 public:
