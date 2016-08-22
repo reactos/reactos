@@ -62,7 +62,9 @@
 *
 * @return
 * STATUS_SUCCESS on success. STATUS_INVALID_PARAMETER if AttrContext describes a resident attribute.
-* STATUS_INSUFFICIENT_RESOURCES if ConvertDataRunsToLargeMCB() fails.
+* STATUS_INSUFFICIENT_RESOURCES if ConvertDataRunsToLargeMCB() fails or if we fail to allocate a 
+* buffer for the new data runs.
+* STATUS_INSUFFICIENT_RESOURCES or STATUS_UNSUCCESSFUL if FsRtlAddLargeMcbEntry() fails.
 * STATUS_BUFFER_TOO_SMALL if ConvertLargeMCBToDataRuns() fails.
 * STATUS_NOT_IMPLEMENTED if we need to migrate the attribute to an attribute list (TODO).
 *
@@ -95,6 +97,11 @@ AddRun(PNTFS_VCB Vcb,
         return STATUS_INVALID_PARAMETER;
 
     RunBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    if (!RunBuffer)
+    {
+        DPRINT1("ERROR: Couldn't allocate memory for data runs!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     // Convert the data runs to a map control block
     Status = ConvertDataRunsToLargeMCB(DataRun, &DataRunsMCB, &NextVBN);
@@ -112,14 +119,12 @@ AddRun(PNTFS_VCB Vcb,
                                    NextAssignedCluster,
                                    RunLength))
         {
-            FsRtlUninitializeLargeMcb(&DataRunsMCB);
-            ExFreePoolWithTag(RunBuffer, TAG_NTFS);
-            return STATUS_INSUFFICIENT_RESOURCES;
+            ExRaiseStatus(STATUS_UNSUCCESSFUL);
         }
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         FsRtlUninitializeLargeMcb(&DataRunsMCB);
         ExFreePoolWithTag(RunBuffer, TAG_NTFS);
-        _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
+        _SEH2_YIELD(_SEH2_GetExceptionCode());
     } _SEH2_END;
 
 
@@ -200,7 +205,7 @@ AddRun(PNTFS_VCB Vcb,
 * Pointer to an unitialized LARGE_MCB structure.
 *
 * @return
-* STATUS_SUCCESS on success, STATUS_INSUFFICIENT_RESOURCES if we fail to
+* STATUS_SUCCESS on success, STATUS_INSUFFICIENT_RESOURCES or STATUS_UNSUCCESSFUL if we fail to
 * initialize the mcb or add an entry.
 *
 * @remarks
@@ -223,7 +228,7 @@ ConvertDataRunsToLargeMCB(PUCHAR DataRun,
     _SEH2_TRY{
         FsRtlInitializeLargeMcb(DataRunsMCB, NonPagedPool);
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
-        _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     } _SEH2_END;
 
     while (*DataRun != 0)
@@ -242,12 +247,11 @@ ConvertDataRunsToLargeMCB(PUCHAR DataRun,
                                            DataRunStartLCN,
                                            DataRunLength))
                 {
-                    FsRtlUninitializeLargeMcb(DataRunsMCB);
-                    return STATUS_INSUFFICIENT_RESOURCES;
+                    ExRaiseStatus(STATUS_UNSUCCESSFUL);
                 }
             } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
                 FsRtlUninitializeLargeMcb(DataRunsMCB);
-                _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             } _SEH2_END;
 
         }
@@ -292,7 +296,7 @@ ConvertLargeMCBToDataRuns(PLARGE_MCB DataRunsMCB,
     LONGLONG  DataRunOffset;
     ULONGLONG LastLCN = 0;
     LONGLONG Vbn, Lbn, Count;
-    int i;
+    ULONG i;
 
 
     DPRINT("\t[Vbn, Lbn, Count]\n");
@@ -436,7 +440,8 @@ FindRun(PNTFS_ATTR_RECORD NresAttr,
 * @return
 * STATUS_SUCCESS on success. STATUS_INVALID_PARAMETER if AttrContext describes a resident attribute,
 * or if the caller requested more clusters be freed than the attribute has been allocated.
-* STATUS_INSUFFICIENT_RESOURCES if ConvertDataRunsToLargeMCB() fails.
+* STATUS_INSUFFICIENT_RESOURCES if allocating a buffer for the data runs fails or
+* if ConvertDataRunsToLargeMCB() fails.
 * STATUS_BUFFER_TOO_SMALL if ConvertLargeMCBToDataRuns() fails.
 *
 *
@@ -460,7 +465,7 @@ FreeClusters(PNTFS_VCB Vcb,
     ULONGLONG NextVBN = AttrContext->Record.NonResident.LowestVCN;
 
     // Allocate some memory for the RunBuffer
-    PUCHAR RunBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    PUCHAR RunBuffer;
     ULONG RunBufferOffset = 0;
 
     PFILE_RECORD_HEADER BitmapRecord;
@@ -472,8 +477,14 @@ FreeClusters(PNTFS_VCB Vcb,
 
     if (!AttrContext->Record.IsNonResident)
     {
-        ExFreePoolWithTag(RunBuffer, TAG_NTFS);
         return STATUS_INVALID_PARAMETER;
+    }
+
+    RunBuffer = ExAllocatePoolWithTag(NonPagedPool, Vcb->NtfsInfo.BytesPerFileRecord, TAG_NTFS);
+    if (!RunBuffer)
+    {
+        DPRINT1("ERROR: Couldn't allocate memory for data runs!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     // Convert the data runs to a map control block
