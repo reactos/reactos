@@ -2596,7 +2596,7 @@ static void FASTCALL MENU_DrawPopupMenu(PWND wnd, HDC hdc, PMENU menu )
                 UINT u;
 
                 item = menu->rgItems;
-                for (u = 0; u < menu->cItems; u++, item++)
+                for( u = menu->cItems; u > 0; u--, item++)
                 {
                     MENU_DrawMenuItem(wnd, menu, menu->spwndNotify, hdc, item,
                                          menu->cyMenu, FALSE, ODA_DRAWENTIRE);
