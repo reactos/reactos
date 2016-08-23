@@ -598,7 +598,7 @@ static void CALLBACK MACRO_JumpID(LPCSTR lpszPathWindow, LPCSTR topic_id)
     LPSTR       ptr;
 
     WINE_TRACE("(%s, %s)\n", debugstr_a(lpszPathWindow), debugstr_a(topic_id));
-    if ((ptr = strchr(lpszPathWindow, '>')) != NULL)
+    if (lpszPathWindow && (ptr = strchr(lpszPathWindow, '>')) != NULL)
     {
         LPSTR   tmp;
         size_t  sz;
