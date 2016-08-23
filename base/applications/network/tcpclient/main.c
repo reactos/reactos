@@ -3,7 +3,7 @@
 #include <winsock2.h>
 
 #define LENGTH 255
-#define NUM_CLIENTS 2
+#define NUM_CLIENTS 128
 
 DWORD WINAPI ClientThreadMain(LPVOID lpParam) {
     SOCKET Sock;
@@ -69,6 +69,8 @@ DWORD WINAPI ClientThreadMain(LPVOID lpParam) {
 
 int wmain(int argc, LPWSTR argv[]) {
     WSADATA wsa;
+    SYSTEMTIME StartTime;
+    SYSTEMTIME EndTime;
     HANDLE ClientThreadHandles[NUM_CLIENTS];
     DWORD ClientThreadIDs[NUM_CLIENTS];
 
@@ -82,6 +84,8 @@ int wmain(int argc, LPWSTR argv[]) {
         printf("Windows Socket API Startup Failed: %d\n", WSAGetLastError());
         return 1;
     }
+
+    GetSystemTime(&StartTime);
 
     for (i = 0; i < NUM_CLIENTS; i++) {
         ClientThreadHandles[i] = CreateThread(
@@ -100,9 +104,17 @@ int wmain(int argc, LPWSTR argv[]) {
 
     WaitForMultipleObjects(NUM_CLIENTS, ClientThreadHandles, TRUE, INFINITE);
 
+    GetSystemTime(&EndTime);
+
+
     for (i = 0; i < NUM_CLIENTS; i++) {
         CloseHandle(ClientThreadHandles[i]);
     }
+
+    fgets(buff, LENGTH, stdin);
+
+    printf("Elapsed: %d.%03d s\n",
+        EndTime.wSecond - StartTime.wSecond, EndTime.wMilliseconds - StartTime.wMilliseconds);
 
     fgets(buff, LENGTH, stdin);
 
