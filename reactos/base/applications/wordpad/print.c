@@ -93,12 +93,7 @@ void registry_read_pagemargins(HKEY hKey)
 
     if(!hKey || RegQueryValueExW(hKey, var_pagemargin, 0, NULL, (LPBYTE)&margins,
                      &size) != ERROR_SUCCESS || size != sizeof(RECT))
-    {
-        margins.top = 1417;
-        margins.bottom = 1417;
-        margins.left = 1757;
-        margins.right = 1757;
-    }
+        SetRect(&margins, 1757, 1417, 1757, 1417);
 }
 
 void registry_set_previewpages(HKEY hKey)
@@ -206,10 +201,7 @@ static RECT get_print_rect(HDC hdc)
         height = centmm_to_twips(27000);
     }
 
-    rc.left = margins.left;
-    rc.right = width - margins.right;
-    rc.top = margins.top;
-    rc.bottom = height - margins.bottom;
+    SetRect(&rc, margins.left, margins.top, width - margins.right, height - margins.bottom);
 
     return rc;
 }
@@ -394,8 +386,7 @@ static void paint_ruler(HWND hWnd, LONG EditLeftmost, BOOL NewMetrics)
     GetClientRect(hWnd, &drawRect);
     FillRect(hdc, &drawRect, hBrush);
 
-    drawRect.top += 3;
-    drawRect.bottom -= 3;
+    InflateRect(&drawRect, 0, -3);
     drawRect.left = EditLeftmost;
     drawRect.right = twips_to_pixels(printRect.right - margins.left, GetDeviceCaps(hdc, LOGPIXELSX));
     FillRect(hdc, &drawRect, GetStockObject(WHITE_BRUSH));
@@ -457,10 +448,7 @@ static void print(LPPRINTDLGW pd, LPWSTR wszFileName)
     fr.hdcTarget = pd->hDC;
 
     fr.rc = get_print_rect(fr.hdc);
-    fr.rcPage.left = 0;
-    fr.rcPage.right = fr.rc.right + margins.right;
-    fr.rcPage.top = 0;
-    fr.rcPage.bottom = fr.rc.bottom + margins.bottom;
+    SetRect(&fr.rcPage, 0, 0, fr.rc.right + margins.right, fr.rc.bottom + margins.bottom);
 
     ZeroMemory(&di, sizeof(di));
     di.cbSize = sizeof(di);
@@ -517,19 +505,15 @@ void dialog_printsetup(HWND hMainWnd)
     ps.lStructSize = sizeof(ps);
     ps.hwndOwner = hMainWnd;
     ps.Flags = PSD_INHUNDREDTHSOFMILLIMETERS | PSD_MARGINS;
-    ps.rtMargin.left = twips_to_centmm(margins.left);
-    ps.rtMargin.right = twips_to_centmm(margins.right);
-    ps.rtMargin.top = twips_to_centmm(margins.top);
-    ps.rtMargin.bottom = twips_to_centmm(margins.bottom);
+    SetRect(&ps.rtMargin, twips_to_centmm(margins.left), twips_to_centmm(margins.top),
+            twips_to_centmm(margins.right), twips_to_centmm(margins.bottom));
     ps.hDevMode = devMode;
     ps.hDevNames = devNames;
 
     if(PageSetupDlgW(&ps))
     {
-        margins.left = centmm_to_twips(ps.rtMargin.left);
-        margins.right = centmm_to_twips(ps.rtMargin.right);
-        margins.top = centmm_to_twips(ps.rtMargin.top);
-        margins.bottom = centmm_to_twips(ps.rtMargin.bottom);
+        SetRect(&margins, centmm_to_twips(ps.rtMargin.left), centmm_to_twips(ps.rtMargin.top),
+                centmm_to_twips(ps.rtMargin.right), centmm_to_twips(ps.rtMargin.bottom));
         devMode = ps.hDevMode;
         devNames = ps.hDevNames;
         update_ruler(get_ruler_wnd(hMainWnd));
@@ -718,20 +702,15 @@ static void draw_margin_lines(HDC hdc, int x, int y, float ratio)
     dpi.cx = GetDeviceCaps(hdc, LOGPIXELSX);
     dpi.cy = GetDeviceCaps(hdc, LOGPIXELSY);
 
-    page_margin.left = preview.rcPage.left + margins.left;
-    page_margin.top = preview.rcPage.top + margins.top;
-    page_margin.bottom = preview.rcPage.bottom - margins.bottom;
-    page_margin.right = preview.rcPage.right - margins.right;
+    SetRect(&page_margin, preview.rcPage.left + margins.left, preview.rcPage.top + margins.top,
+            preview.rcPage.right - margins.right, preview.rcPage.bottom - margins.bottom);
 
     page_margin.left = (int)((float)twips_to_pixels(page_margin.left, dpi.cx) * ratio);
     page_margin.top = (int)((float)twips_to_pixels(page_margin.top, dpi.cy) * ratio);
     page_margin.bottom = (int)((float)twips_to_pixels(page_margin.bottom, dpi.cy) * ratio);
     page_margin.right = (int)((float)twips_to_pixels(page_margin.right, dpi.cx) * ratio);
 
-    page_margin.left += x;
-    page_margin.top += y;
-    page_margin.bottom += y;
-    page_margin.right += x;
+    OffsetRect(&page_margin, x, y);
 
     hPen = CreatePen(PS_DOT, 1, RGB(0,0,0));
     oldPen = SelectObject(hdc, hPen);
@@ -868,10 +847,8 @@ static LRESULT print_preview(HWND hwndPreview)
     /* draw page outlines */
     hPen = CreatePen(PS_SOLID|PS_INSIDEFRAME, 2, RGB(0,0,0));
     oldPen = SelectObject(hdc, hPen);
-    background.left = x - 2;
-    background.right = x + preview.bmScaledSize.cx + 2;
-    background.top = y - 2;
-    background.bottom = y + preview.bmScaledSize.cy + 2;
+    SetRect(&background, x - 2, y - 2, x + preview.bmScaledSize.cx + 2,
+            y + preview.bmScaledSize.cy + 2);
     Rectangle(hdc, background.left, background.top,
               background.right, background.bottom);
     excl_rgn = CreateRectRgnIndirect(&background);
@@ -908,10 +885,7 @@ static LRESULT print_preview(HWND hwndPreview)
 
             draw_margin_lines(hdc, x, y, preview.zoomratio);
         } else {
-            background.left += 2;
-            background.right -= 2;
-            background.top += 2;
-            background.bottom -= 2;
+            InflateRect(&background, -2, -2);
             FillRect(hdc, &background, GetStockObject(WHITE_BRUSH));
         }
     }
@@ -964,10 +938,7 @@ static void update_preview(HWND hMainWnd)
     fr.chrg.cpMin = 0;
     fr.chrg.cpMax = preview.textlength;
 
-    paper.left = 0;
-    paper.right = preview.bmSize.cx;
-    paper.top = 0;
-    paper.bottom = preview.bmSize.cy;
+    SetRect(&paper, 0, 0, preview.bmSize.cx, preview.bmSize.cy);
 
     if (!preview.hdc) {
         preview.hdc = CreateCompatibleDC(hdc);
