@@ -17,6 +17,11 @@
  */
 
 #include "precomp.h"
+
+#include <shlwapi.h>
+#include <shellapi.h>
+#include <strsafe.h>
+#include <apphelp.h>
 #include <windowsx.h>
 #include <sfc.h>
 
