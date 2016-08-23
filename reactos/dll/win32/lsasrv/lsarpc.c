@@ -372,18 +372,27 @@ NTSTATUS WINAPI LsarSetSecurityObject(
     if (!NT_SUCCESS(Status))
         goto done;
 
-#if 0
-    RpcImpersonateClient(NULL);
+    /* Get the clients token if we try to set the owner */
+    if (SecurityInformation & OWNER_SECURITY_INFORMATION)
+    {
+        Status = I_RpcMapWin32Status(RpcImpersonateClient(NULL));
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("RpcImpersonateClient returns 0x%08lx\n", Status);
+            goto done;
+        }
 
-    Status = NtOpenThreadToken(NtCurrentThread(),
-                               8,
-                               TRUE,
-                               &hToken);
-    if (!NT_SUCCESS(Status))
-        goto done;
-
-    RpcRevertToSelf();
-#endif
+        Status = NtOpenThreadToken(NtCurrentThread(),
+                                   TOKEN_QUERY,
+                                   TRUE,
+                                   &TokenHandle);
+        RpcRevertToSelf();
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("NtOpenThreadToken returns 0x%08lx\n", Status);
+            goto done;
+        }
+    }
 
     /* Build the new security descriptor */
     Status = RtlSetSecurityObject(SecurityInformation,
