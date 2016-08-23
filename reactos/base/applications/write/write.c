@@ -25,8 +25,7 @@
 
 #include "resources.h"
 
-static const WCHAR SZ_BACKSLASH[] = {'\\',0};
-static const WCHAR SZ_WORDPAD[]   = {'w','o','r','d','p','a','d','.','e','x','e',0};
+static const WCHAR SZ_WORDPAD[]   = {'\\','w','o','r','d','p','a','d','.','e','x','e',0};
 
 int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPWSTR szCmdParagraph, int res)
 {
@@ -35,20 +34,14 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPWSTR szCmdP
     PROCESS_INFORMATION info;
 
     if (!GetSystemDirectoryW(path, MAX_PATH - 1 - lstrlenW(SZ_WORDPAD)))
-        goto failed;
-
-    if (path[lstrlenW(path) - 1] != '\\')
-        lstrcatW(path, SZ_BACKSLASH);
-
+	goto failed;
     lstrcatW(path, SZ_WORDPAD);
 
-    ZeroMemory(&stinf, sizeof(stinf));
-    stinf.cb = sizeof(stinf);
+    stinf.cb = sizeof(STARTUPINFOW);
     GetStartupInfoW(&stinf);
 
     if (!CreateProcessW(path, GetCommandLineW(), NULL, NULL, FALSE, 0, NULL, NULL, &stinf, &info))
-        goto failed;
-
+	goto failed;
     CloseHandle(info.hProcess);
     CloseHandle(info.hThread);
     return 0;

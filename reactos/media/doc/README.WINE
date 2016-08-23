@@ -242,6 +242,7 @@ reactos/base/applications/notepad           # Forked at Wine-20041201
 reactos/base/applications/regedit           # Out of sync
 reactos/base/applications/winhlp32          # Synced to WineStaging-1.9.16
 reactos/base/applications/wordpad           # Synced to WineStaging-1.9.16
+reactos/base/applications/write             # Synced to WineStaging-1.9.16
 reactos/base/services/rpcss                 # Synced to WineStaging-1.9.11
 reactos/base/system/expand                  # Synced to WineStaging-1.9.11
 reactos/base/system/msiexec                 # Synced to WineStaging-1.9.11
