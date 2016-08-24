@@ -38,7 +38,7 @@ ServiceType    = 1
 StartType      = 1
 ErrorControl   = 0
 ServiceBinary  = %12%\green.sys
-LoadOrderGroup = Extended base
+LoadOrderGroup = Extended Base
 Description    = %GREEN.DriverDesc%
 Dependencies   = blue, serial
 
