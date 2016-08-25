@@ -525,6 +525,53 @@ VOID WINAPI VbeService(LPWORD Stack)
             break;
         }
 
+        /* CPU Video Memory Control */
+        case 0x05:
+        {
+            BYTE Window = getBL();
+            BYTE OldGcIndex = IOReadB(VGA_GC_INDEX);
+
+            switch (getBH())
+            {
+                /* Select Memory Window */
+                case 0:
+                {
+                    setAL(0x4F);
+
+                    if (getDH() != 0)
+                    {
+                        /* Offset too high */
+                        setAH(1);
+                        break;
+                    }
+
+                    IOWriteB(VGA_GC_INDEX, (Window == 0) ? SVGA_GC_OFFSET_0_REG : SVGA_GC_OFFSET_1_REG);
+                    IOWriteB(VGA_GC_DATA, getDL());
+
+                    setAH(0);
+                    break;
+                }
+
+                /* Return Memory Window */
+                case 1:
+                {
+                    IOWriteB(VGA_GC_INDEX, (Window == 0) ? SVGA_GC_OFFSET_0_REG : SVGA_GC_OFFSET_1_REG);
+                    setDX(IOReadB(VGA_GC_DATA));
+
+                    setAX(0x004F);
+                    break;
+                }
+
+                default:
+                {
+                    DPRINT("VESA INT 0x10, AH = 0x05, Unknown subfunction: %02X", getBH());
+                }
+            }
+
+            IOWriteB(VGA_GC_INDEX, OldGcIndex);
+            break;
+        }
+
         default:
         {
             DPRINT1("VESA BIOS Extensions function %02Xh NOT IMPLEMENTED!\n", getAL());
