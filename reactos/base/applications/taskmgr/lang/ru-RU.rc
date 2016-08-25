@@ -57,7 +57,7 @@ BEGIN
         MENUITEM "&Завершение сеанса %s",         ID_SHUTDOWN_LOGOFF
         MENUITEM "С&мена пользователя\tWinKey+L", ID_SHUTDOWN_SWITCHUSER, GRAYED
         MENUITEM "Заб&локировать компьютер\tWinKey+L",      ID_SHUTDOWN_LOCKCOMPUTER
-        MENUITEM "&Disconnect",                   ID_SHUTDOWN_DISCONNECT, GRAYED
+        MENUITEM "&Отключить",                   ID_SHUTDOWN_DISCONNECT, GRAYED
         MENUITEM "С&нять компьютер с док-станции",               ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "&Справка"
