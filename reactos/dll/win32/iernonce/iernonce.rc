@@ -17,6 +17,9 @@ IDI_ICON ICON "res/setup.ico"
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ja-JP.rc"
+#endif
 #ifdef LANGUAGE_MS_MY
     #include "lang/ms-MY.rc"
 #endif
