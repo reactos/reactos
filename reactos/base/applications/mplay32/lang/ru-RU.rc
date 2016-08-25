@@ -46,7 +46,7 @@ STRINGTABLE
 BEGIN
     IDS_MODE_UNKNOWN "Неизвестно"
     IDS_MODE_OPEN "Открыт"
-    IDS_MODE_STOP "Остновлен"
+    IDS_MODE_STOP "Остановлен"
     IDS_MODE_PLAY "Воспроизводится"
     IDS_MODE_PAUSE "Приостановлен"
     IDS_MODE_RECORD "Записывает"
