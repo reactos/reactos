@@ -62,7 +62,7 @@ typedef enum _DEVICE_PNP_STATE {
 (Data).PreviousPnPState = NotStarted;
 
 #define SET_NEW_PNP_STATE(Data, state) \
-(Data).PnPState = (Data).PnPState;\
+(Data).PreviousPnPState = (Data).PnPState;\
 (Data).PnPState = (state);
 
 #define RESTORE_PREVIOUS_PNP_STATE(Data) \
