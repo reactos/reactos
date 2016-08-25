@@ -11,7 +11,7 @@ BEGIN
     END
     POPUP "&Воспроизведение"
     BEGIN
-        MENUITEM "Воспроизведение/&Пауза\tCtrl+P", IDC_PLAY
+        MENUITEM "Воспроизвести/&Приостановить\tCtrl+P", IDC_PLAY
         MENUITEM "&Остановить\tCtrl+S", IDC_STOP
         MENUITEM SEPARATOR
         MENUITEM "&Повтор\tCtrl+T", IDM_REPEAT

@@ -41,7 +41,7 @@ MAIN_MENU MENU
  POPUP "&Закладка" {
    MENUITEM "&Определить...", MNID_BKMK_DEFINE
  }
- POPUP "&Настройки" {
+ POPUP "&Параметры" {
   MENUITEM "Всегда &сверху", MNID_HELP_HELPTOP
   MENUITEM "История",		MNID_OPTS_HISTORY
   POPUP    "&Шрифт"

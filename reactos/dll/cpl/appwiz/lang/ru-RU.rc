@@ -58,7 +58,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Установщик Wine Gecko"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "ReactOS не может найти Wine Gecko пакет, который необходим для приложений с поддержкой HTML, чтобы работать правильно. ReactOS может автоматически загрузить и устанавить ее для вас.",
+    CONTROL "ReactOS не может найти Wine Gecko пакет, который необходим для приложений с поддержкой HTML, чтобы работать правильно. ReactOS может автоматически загрузить и установить его для вас.",
           ID_DWL_STATUS, "SysLink", 0, 10, 10, 240, 65
     CONTROL "", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER | PBS_SMOOTH, 10, 40, 240, 12
     DEFPUSHBUTTON "&Установить", ID_DWL_INSTALL, 200, 76, 50, 14, WS_GROUP | WS_TABSTOP

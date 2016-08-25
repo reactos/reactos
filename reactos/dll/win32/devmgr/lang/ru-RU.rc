@@ -314,10 +314,10 @@ BEGIN
   IDS_HINT_RES_BY_CONN  " Показывает ресурсы, отсортированные по подключению."
   IDS_HINT_SHOW_HIDDEN  " Показывает удаленные из системы и устаревшие устройства."
 
-  IDS_HINT_SYS_RESTORE  " Восстановить окно к его нормальному размеру."
-  IDS_HINT_SYS_MOVE     " Переместить окно."
-  IDS_HINT_SYS_SIZE     " Изменить размер этого окна."
-  IDS_HINT_SYS_MINIMIZE " Свернуть окно."
-  IDS_HINT_SYS_MAXIMIZE " Развернуть окно."
-  IDS_HINT_SYS_CLOSE    " Закрыть окно."
+  IDS_HINT_SYS_RESTORE  " Восстанавливает размер этого окна."
+  IDS_HINT_SYS_MOVE     " Перемещает это окно."
+  IDS_HINT_SYS_SIZE     " Изменяет размер этого окна."
+  IDS_HINT_SYS_MINIMIZE " Сворачивает это окно в панель задач."
+  IDS_HINT_SYS_MAXIMIZE " Разворачивает это окно на весь экран."
+  IDS_HINT_SYS_CLOSE    " Закрывает это окно."
 END

@@ -21,7 +21,7 @@ Description = O strategie n timp real  cu tematică sovietică bazată pe Boswar
 Size = 261,0 Mio
 
 [Section.0419]
-Description = "советская" стратегия реального времени основанная на Boswars. (архив)
+Description = "Советская" стратегия реального времени основанная на Boswars. Вам понадобится архиватор, чтобы распаковать игру.
 URLSite = http://commanderstalin.sourceforge.net/cstalin_rus_index.html
 Size = 261,0 MiB
 

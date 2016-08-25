@@ -4,11 +4,11 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 229, 98
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "О программе Конфигурация системы"
+CAPTION "О программе Параметры системы"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_APPICON, IDC_STATIC, 14, 14, 20, 20
-    LTEXT           "Конфигурация системы\nВерсия 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
+    LTEXT           "Параметры системы\nВерсия 1.0", IDC_STATIC, 42, 14, 182, 17, SS_NOPREFIX
 //  "Copyright (C) ReactOS Team 2005-"COPYRIGHT_YEAR"\n"
     LTEXT           "Copyright (C) ReactOS Team 2005-2015\n\
 Christoph von Wittich (Christoph@ApiViewer.de)\n\
@@ -187,7 +187,7 @@ END
 
 IDD_REQUIRED_SERVICES_DISABLING_DIALOG DIALOGEX 0, 0, 237, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Настройки системы"
+CAPTION "Параметры системы"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK", IDOK, 180, 41, 50, 14
@@ -198,7 +198,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MSCONFIG            "Настройки системы"
+    IDS_MSCONFIG            "Параметры системы"
     IDS_MSCONFIG_2          "Конфигурация системы"
     IDS_ABOUT               "&О программе...\tShift+F1"
 END

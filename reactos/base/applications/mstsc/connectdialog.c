@@ -1270,10 +1270,10 @@ DlgProc(HWND hDlg,
 
                     txtRc.left = bmpRc.right / 4;
                     txtRc.top = txtRc.bottom - 5;
+#ifdef __REACTOS__
+                    txtRc.right = bmpRc.right * 4 / 5;
+#else
                     txtRc.right = bmpRc.right * 3 / 4;
-                    txtRc.bottom = pInfo->headerbitmap.bmHeight * 9 / 10;
-
-                    if (LoadStringW(hInst,
                                     IDS_HEADERTEXT2,
                                     szBuffer,
                                     sizeof(szBuffer) / sizeof(WCHAR)))

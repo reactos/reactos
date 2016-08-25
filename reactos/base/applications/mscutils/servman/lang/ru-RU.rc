@@ -10,7 +10,7 @@ BEGIN
     END
     POPUP "&Действие"
     BEGIN
-        MENUITEM "&Подключиться к ...", ID_CONNECT, GRAYED
+        MENUITEM "&Подключиться к другому компьютеру...", ID_CONNECT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "За&пустить", ID_START, GRAYED
         MENUITEM "О&становить", ID_STOP, GRAYED
