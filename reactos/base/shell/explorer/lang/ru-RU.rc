@@ -40,13 +40,13 @@ BEGIN
         BEGIN
             MENUITEM "(пусто)", -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "&Настройки", IDM_SETTINGS
+        POPUP "Н&астройка", IDM_SETTINGS
         BEGIN
-            MENUITEM "&Панель управления", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM "П&анель управления", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Безопасность...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Сетевые подключения", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
-            MENUITEM "&Принтеры и факсы", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "С&етевые подключения", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "Пр&интеры и факсы", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "Панель &задач и меню ""Пуск""", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
         POPUP "П&оиск", IDM_SEARCH
@@ -57,10 +57,10 @@ BEGIN
         MENUITEM "&Выполнить...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "Синхрониза&ция", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
-        MENUITEM "Завершени&е сеанса %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "Завер&шение сеанса %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
         MENUITEM "Отклю&чение...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
         MENUITEM "Блокировать комп&ьютер", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
-        MENUITEM "В&ыключение...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+        MENUITEM "В&ыключить компьютер...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END
 

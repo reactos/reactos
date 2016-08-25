@@ -837,7 +837,7 @@ static MUI_ENTRY ruRUConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         8,
-        "You have chosen to delete the system partition.",
+        "Вы хотите удалить системный раздел.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -861,49 +861,49 @@ static MUI_ENTRY ruRUConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         14,
-        "Delete a system partition only when you are sure that there are no such",
+        "Удаляйте системный раздел, когда уверены, что на нем нет важных программ",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "programs on the partition, or when you are sure you want to delete them.",
+        "или когда вы уверены, что они не нужны.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "When you delete the partition, you might not be able to boot the",
+        "Когда вы удалите системный раздел, вы не сможете загрузить",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "computer from the harddisk until you finished the ReactOS Setup.",
+        "компьютер с жесткого диска, пока не закончите установку ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         20,
-        "\x07  Press ENTER to delete the system partition. You will be asked",
+        "\x07  Нажмите ENTER чтобы удалить системный раздел. Вы должны будете подтвердить",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "   to confirm the deletion of the partition again later.",
+        "   удаление позже снова.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         24,
-        "\x07  Press ESC to return to the previous page. The partition will",
+        "\x07  Нажмите ESC чтобы вернуться к предыдущей странице. Раздел не",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "   not be deleted.",
+        "   будет удален.",
         TEXT_STYLE_NORMAL
     },
     {
