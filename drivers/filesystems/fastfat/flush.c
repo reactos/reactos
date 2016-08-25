@@ -77,6 +77,25 @@ VfatFlushVolume(
         /* FIXME: Stop flushing if this is a removable media and the media was removed */
     }
 
+    ListEntry = DeviceExt->FcbListHead.Flink;
+    while (ListEntry != &DeviceExt->FcbListHead)
+    {
+        Fcb = CONTAINING_RECORD(ListEntry, VFATFCB, FcbListEntry);
+        ListEntry = ListEntry->Flink;
+        if (vfatFCBIsDirectory(Fcb))
+        {
+            ExAcquireResourceExclusiveLite(&Fcb->MainResource, TRUE);
+            Status = VfatFlushFile(DeviceExt, Fcb);
+            ExReleaseResourceLite (&Fcb->MainResource);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("VfatFlushFile failed, status = %x\n", Status);
+                ReturnStatus = Status;
+            }
+        }
+        /* FIXME: Stop flushing if this is a removable media and the media was removed */
+    }
+
     Fcb = (PVFATFCB) DeviceExt->FATFileObject->FsContext;
 
     ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);
