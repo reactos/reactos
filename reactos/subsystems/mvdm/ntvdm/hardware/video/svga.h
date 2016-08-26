@@ -190,6 +190,7 @@ enum
 
 /* CRTC extended display register bits */
 #define SVGA_CRTC_EXT_ADDR_BIT16    (1 << 0)
+#define SVGA_CRTC_EXT_ADDR_WRAP     (1 << 1)
 #define SVGA_CRTC_EXT_ADDR_BITS1718 ((1 << 2) | (1 << 3))
 #define SVGA_CRTC_EXT_OFFSET_BIT8   (1 << 4)
 
