@@ -230,7 +230,7 @@ PCURICON_OBJECT
 IntSystemSetCursor(PCURICON_OBJECT pcurNew)
 {
     PCURICON_OBJECT pcurOld = UserSetCursor(pcurNew, FALSE);
-    UserReferenceObject(pcurNew);
+    if (pcurNew) UserReferenceObject(pcurNew);
     if (pcurOld) UserDereferenceObject(pcurOld);
     return pcurOld;
 }
