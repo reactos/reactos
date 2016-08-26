@@ -82,6 +82,88 @@ Test_PageFileSection(void)
                                 PAGE_READWRITE);
     ok_ntstatus(Status, STATUS_INVALID_PARAMETER_9);
 
+    /* Try to map 1 page, with free base address and zero bits compatible with 64k granularity */
+    BaseAddress = NULL;
+    SectionOffset.QuadPart = 0;
+    ViewSize = 0x1000;
+    Status = NtMapViewOfSection(SectionHandle,
+                                NtCurrentProcess(),
+                                &BaseAddress,
+                                10,
+                                0,
+                                &SectionOffset,
+                                &ViewSize,
+                                ViewShare,
+                                0,
+                                PAGE_READWRITE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+{
+    ULONG_PTR gran = 64 * 1024;
+    ULONG_PTR ZeroBits = 11;
+
+    ok_hex(gran, 0x10000);
+    gran <<= ZeroBits;
+    ok_hex(gran, 0x8000000);
+    gran >>= ZeroBits;
+    ok_hex(gran, 0x10000);
+
+    ok_hex((gran << ZeroBits) >> ZeroBits, gran);
+
+}
+
+    /* Try to map 1 page, with free base address and zero bits incompatible with 64k granularity */
+    BaseAddress = NULL;
+    SectionOffset.QuadPart = 0;
+    ViewSize = 0x1000;
+    Status = NtMapViewOfSection(SectionHandle,
+                                NtCurrentProcess(),
+                                &BaseAddress,
+                                11,
+                                0,
+                                &SectionOffset,
+                                &ViewSize,
+                                ViewShare,
+                                0,
+                                PAGE_READWRITE);
+    ok_ntstatus(Status, STATUS_NO_MEMORY);
+
+    /* Try to map 1 page, with base address and zero bits being compatible */
+    BaseAddress = (PVOID)0x30000000;
+    SectionOffset.QuadPart = 0;
+    ViewSize = 0x1000;
+    Status = NtMapViewOfSection(SectionHandle,
+                                NtCurrentProcess(),
+                                &BaseAddress,
+                                2,
+                                0,
+                                &SectionOffset,
+                                &ViewSize,
+                                ViewShare,
+                                0,
+                                PAGE_READWRITE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Status = NtUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    /* Try to map 1 page, with base address and zero bits being incompatible */
+    BaseAddress = (PVOID)0x30000000;
+    SectionOffset.QuadPart = 0;
+    ViewSize = 0x1000;
+    Status = NtMapViewOfSection(SectionHandle,
+                                NtCurrentProcess(),
+                                &BaseAddress,
+                                3,
+                                0,
+                                &SectionOffset,
+                                &ViewSize,
+                                ViewShare,
+                                0,
+                                PAGE_READWRITE);
+    ok_ntstatus(Status, STATUS_INVALID_PARAMETER_4);
+
     /* Map 2 pages, without MEM_COMMIT */
     BaseAddress = (PVOID)0x30000000;
     SectionOffset.QuadPart = 0;
