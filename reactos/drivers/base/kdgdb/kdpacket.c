@@ -183,6 +183,7 @@ send_kd_debug_io(
     switch (DebugIO->ApiNumber)
     {
     case DbgKdPrintStringApi:
+    case DbgKdGetStringApi:
         gdb_send_debug_io(String, TRUE);
         break;
     default:
@@ -362,28 +363,34 @@ KdReceivePacket(
     _Out_ PULONG DataLength,
     _Inout_ PKD_CONTEXT KdContext)
 {
-    DBGKD_MANIPULATE_STATE64* State;
-
-    /* Special handling for breakin packet */
     if (PacketType == PACKET_TYPE_KD_POLL_BREAKIN)
     {
         return KdpPollBreakIn();
     }
 
-    if (PacketType != PACKET_TYPE_KD_STATE_MANIPULATE)
+    if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
     {
-        /* What should we do ? */
-        while (1);
+        /* HACK ! RtlAssert asks for (boipt), always say "o" --> break once. */
+        MessageData->Length = 1;
+        MessageData->Buffer[0] = 'o';
+        return KdPacketReceived;
     }
 
-    State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
+    if (PacketType == PACKET_TYPE_KD_STATE_MANIPULATE)
+    {
+        DBGKD_MANIPULATE_STATE64* State = (DBGKD_MANIPULATE_STATE64*)MessageHeader->Buffer;
 
-    /* Maybe we are in a send<->receive loop that GDB doesn't need to know about */
-    if (KdpManipulateStateHandler != NULL)
-        return KdpManipulateStateHandler(State, MessageData, DataLength, KdContext);
+        /* Maybe we are in a send<->receive loop that GDB doesn't need to know about */
+        if (KdpManipulateStateHandler != NULL)
+            return KdpManipulateStateHandler(State, MessageData, DataLength, KdContext);
 
-    /* Receive data from GDB  and interpret it */
-    return gdb_receive_and_interpret_packet(State, MessageData, DataLength, KdContext);
+        /* Receive data from GDB  and interpret it */
+        return gdb_receive_and_interpret_packet(State, MessageData, DataLength, KdContext);
+    }
+
+    /* What should we do ? */
+    while (1);
+    return KdPacketNeedsResend;
 }
 
 VOID

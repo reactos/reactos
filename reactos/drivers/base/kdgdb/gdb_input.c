@@ -830,7 +830,7 @@ handle_gdb_c(
 
         /* See if we should update the program counter */
         if (Exception && (Exception->ExceptionRecord.ExceptionCode == STATUS_BREAKPOINT)
-                && ProgramCounter == KdDebuggerDataBlock->BreakpointWithStatus.Pointer)
+                && ((*(KD_BREAKPOINT_TYPE*)ProgramCounter) == KD_BREAKPOINT_VALUE))
         {
             /* We must get past the breakpoint instruction */
             KdpSetContextPc(&CurrentContext, ProgramCounter + KD_BREAKPOINT_SIZE);

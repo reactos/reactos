@@ -121,7 +121,9 @@ extern void gdb_send_registers(void);
     ((Context)->Eip)
 #  define KdpSetContextPc(Context, ProgramCounter) \
     ((Context)->Eip = (ProgramCounter))
+#  define KD_BREAKPOINT_TYPE        UCHAR
 #  define KD_BREAKPOINT_SIZE        sizeof(UCHAR)
+#  define KD_BREAKPOINT_VALUE       0xCC
 /* Single step mode */
 #  define KdpSetSingleStep(Context) \
     ((Context)->EFlags |= EFLAGS_TF)
