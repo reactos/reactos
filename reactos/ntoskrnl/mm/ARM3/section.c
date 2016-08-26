@@ -1269,19 +1269,24 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     ULONG QuotaCharge = 0, QuotaExcess = 0;
     PMMPTE PointerPte, LastPte;
     MMPTE TempPte;
+    ULONG Granularity = MM_VIRTMEM_GRANULARITY;
+
     DPRINT("Mapping ARM3 data section\n");
 
     /* Get the segment for this section */
     Segment = ControlArea->Segment;
+
+#ifdef _M_IX86
+    /* ALlow being less restrictive on x86. */
+    if (AllocationType & MEM_DOS_LIM)
+        Granularity = PAGE_SIZE;
+#endif
 
     /* One can only reserve a file-based mapping, not shared memory! */
     if ((AllocationType & MEM_RESERVE) && !(ControlArea->FilePointer))
     {
         return STATUS_INVALID_PARAMETER_9;
     }
-
-    /* This flag determines alignment, but ARM3 does not yet support it */
-    ASSERT((AllocationType & MEM_DOS_LIM) == 0);
 
     /* First, increase the map count. No purging is supported yet */
     Status = MiCheckPurgeAndUpMapCount(ControlArea, FALSE);
@@ -1432,7 +1437,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     if (*BaseAddress != NULL)
     {
         /* Just align what the caller gave us */
-        StartAddress = ROUND_UP((ULONG_PTR)*BaseAddress, _64K);
+        StartAddress = ALIGN_DOWN_BY((ULONG_PTR)*BaseAddress, Granularity);
     }
     else if (Section->Address.StartingVpn != 0)
     {
@@ -1449,7 +1454,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
                            &StartAddress,
                            ViewSizeInPages * PAGE_SIZE,
                            MAXULONG_PTR >> ZeroBits,
-                           MM_VIRTMEM_GRANULARITY,
+                           Granularity,
                            AllocationType);
     if (!NT_SUCCESS(Status))
     {
@@ -3447,13 +3452,13 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     ACCESS_MASK DesiredAccess;
     ULONG ProtectionMask;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-
-    /* Check for invalid zero bits */
-    if (ZeroBits > 21) // per-arch?
-    {
-        DPRINT1("Invalid zero bits\n");
-        return STATUS_INVALID_PARAMETER_4;
-    }
+#ifdef _M_IX86
+    static const ULONG ValidAllocationType = (MEM_TOP_DOWN | MEM_LARGE_PAGES |
+            MEM_DOS_LIM | SEC_NO_CHANGE | MEM_RESERVE);
+#else
+    static const ULONG ValidAllocationType = (MEM_TOP_DOWN | MEM_LARGE_PAGES |
+            SEC_NO_CHANGE | MEM_RESERVE);
+#endif
 
     /* Check for invalid inherit disposition */
     if ((InheritDisposition > ViewUnmap) || (InheritDisposition < ViewShare))
@@ -3463,8 +3468,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     }
 
     /* Allow only valid allocation types */
-    if ((AllocationType & ~(MEM_TOP_DOWN | MEM_LARGE_PAGES | MEM_DOS_LIM |
-                            SEC_NO_CHANGE | MEM_RESERVE)))
+    if (AllocationType & ~ValidAllocationType)
     {
         DPRINT1("Invalid allocation type\n");
         return STATUS_INVALID_PARAMETER_9;
@@ -3476,13 +3480,6 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     {
         DPRINT1("Invalid page protection\n");
         return STATUS_INVALID_PAGE_PROTECTION;
-    }
-
-    /* Check for non-allocation-granularity-aligned BaseAddress */
-    if (BaseAddress && (*BaseAddress != ALIGN_DOWN_POINTER_BY(*BaseAddress, MM_VIRTMEM_GRANULARITY)))
-    {
-       DPRINT("BaseAddress is not at 64-kilobyte address boundary.");
-       return STATUS_MAPPED_ALIGNMENT;
     }
 
     /* Now convert the protection mask into desired section access mask */
@@ -3520,6 +3517,33 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
+
+    /* Check for invalid zero bits */
+    if (ZeroBits && SafeBaseAddress)
+    {
+        if ((((ULONG_PTR)SafeBaseAddress << ZeroBits) >> ZeroBits) != (ULONG_PTR)SafeBaseAddress)
+        {
+            DPRINT1("Invalid zero bits\n");
+            return STATUS_INVALID_PARAMETER_4;
+        }
+    }
+
+    if (!(AllocationType & MEM_DOS_LIM))
+    {
+        /* Check for non-allocation-granularity-aligned BaseAddress */
+        if (SafeBaseAddress != ALIGN_DOWN_POINTER_BY(SafeBaseAddress, MM_VIRTMEM_GRANULARITY))
+        {
+           DPRINT("BaseAddress is not at 64-kilobyte address boundary.");
+           return STATUS_MAPPED_ALIGNMENT;
+        }
+
+        /* Do the same for the section offset */
+        if (SafeSectionOffset.LowPart != ALIGN_DOWN_BY(SafeSectionOffset.LowPart, MM_VIRTMEM_GRANULARITY))
+        {
+           DPRINT("SectionOffset is not at 64-kilobyte address boundary.");
+           return STATUS_MAPPED_ALIGNMENT;
+        }
+    }
 
     /* Check for kernel-mode address */
     if (SafeBaseAddress > MM_HIGHEST_VAD_ADDRESS)
