@@ -52,7 +52,9 @@ ULONGLONG CurrentIps = 20000000ULL; // 20 MIPS is a good estimate
 
 static VOID FASTCALL IpsCallback(ULONGLONG ElapsedTime)
 {
+#ifdef IPS_DISPLAY
     static INT NumCalls = 0;
+#endif
     
     ULONGLONG NewIps = 10ULL * (CurrentCycleCount - LastCycles) / ElapsedTime;
     CurrentIps = (CurrentIps + NewIps) >> 1;
