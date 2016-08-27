@@ -1564,6 +1564,9 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
     if (AllocationAttributes & SEC_RESERVE) ControlArea->u.Flags.Reserve = 1;
     if (AllocationAttributes & SEC_COMMIT) ControlArea->u.Flags.Commit = 1;
 
+    /* We just allocated it */
+    ControlArea->u.Flags.BeingCreated = 1;
+
     /* The subsection follows, write the mask, PTE count and point back to the CA */
     Subsection = (PSUBSECTION)(ControlArea + 1);
     Subsection->ControlArea = ControlArea;
@@ -2565,6 +2568,7 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
         /* Set the size here, and read the control area */
         Section.SizeOfSection.QuadPart = NewSegment->SizeOfSegment;
         ControlArea = NewSegment->ControlArea;
+        ASSERT(ControlArea->u.Flags.BeingCreated == 1);
     }
 
     /* Did we already have a segment? */
@@ -2663,6 +2667,60 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
     ASSERT(KernelCall == FALSE);
     NewSection->u.Flags.UserReference = TRUE;
 
+    /* Is this a "based" allocation, in which all mappings are identical? */
+    if (AllocationAttributes & SEC_BASED)
+    {
+        /* Lock the VAD tree during the search */
+        KeAcquireGuardedMutex(&MmSectionBasedMutex);
+
+        /* Is it a brand new ControArea ? */
+        if (ControlArea->u.Flags.BeingCreated == 1)
+        {
+            ASSERT(ControlArea->u.Flags.Based == 1);
+            /* Then we must find a global address, top-down */
+            Status = MiFindEmptyAddressRangeDownBasedTree((SIZE_T)ControlArea->Segment->SizeOfSegment,
+                                                          (ULONG_PTR)MmHighSectionBase,
+                                                          _64K,
+                                                          &MmSectionBasedRoot,
+                                                          (ULONG_PTR*)&ControlArea->Segment->BasedAddress);
+
+            if (!NT_SUCCESS(Status))
+            {
+                /* No way to find a valid range. */
+                KeReleaseGuardedMutex(&MmSectionBasedMutex);
+                ControlArea->u.Flags.Based = 0;
+                NewSection->u.Flags.Based = 0;
+                ObDereferenceObject(NewSection);
+                return Status;
+            }
+
+            /* Compute the ending address and insert it into the VAD tree */
+            NewSection->Address.StartingVpn = (ULONG_PTR)ControlArea->Segment->BasedAddress;
+            NewSection->Address.EndingVpn = NewSection->Address.StartingVpn + NewSection->SizeOfSection.LowPart - 1;
+            MiInsertBasedSection(NewSection);
+        }
+        else
+        {
+            /* FIXME : Should we deny section creation if SEC_BASED is not set ? Can we have two different section objects on the same based address ? Investigate !*/
+            ASSERT(FALSE);
+        }
+
+        KeReleaseGuardedMutex(&MmSectionBasedMutex);
+    }
+
+    /* The control area is not being created anymore */
+    if (ControlArea->u.Flags.BeingCreated == 1)
+    {
+        /* Acquire the PFN lock while we set control area flags */
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+        /* Take off the being created flag, and then release the lock */
+        ControlArea->u.Flags.BeingCreated = 0;
+        NewSection->u.Flags.BeingCreated = 0;
+
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    }
+
     /* Migrate the attribute into a flag */
     if (AllocationAttributes & SEC_NO_CHANGE) NewSection->u.Flags.NoChange = TRUE;
 
@@ -2670,40 +2728,6 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
     if (!(SectionPageProtection & (PAGE_READWRITE | PAGE_EXECUTE_READWRITE)))
     {
         NewSection->u.Flags.CopyOnWrite = TRUE;
-    }
-
-    /* Is this a "based" allocation, in which all mappings are identical? */
-    if (AllocationAttributes & SEC_BASED)
-    {
-        /* Convert the flag, and make sure the section isn't too big */
-        NewSection->u.Flags.Based = TRUE;
-        if ((ULONGLONG)NewSection->SizeOfSection.QuadPart >
-            (ULONG_PTR)MmHighSectionBase)
-        {
-            DPRINT1("BASED section is too large\n");
-            ObDereferenceObject(NewSection);
-            return STATUS_NO_MEMORY;
-        }
-
-        /* Lock the VAD tree during the search */
-        KeAcquireGuardedMutex(&MmSectionBasedMutex);
-
-        /* Find an address top-down */
-        Status = MiFindEmptyAddressRangeDownBasedTree(NewSection->SizeOfSection.LowPart,
-                                                      (ULONG_PTR)MmHighSectionBase,
-                                                      _64K,
-                                                      &MmSectionBasedRoot,
-                                                      &NewSection->Address.StartingVpn);
-        ASSERT(NT_SUCCESS(Status));
-
-        /* Compute the ending address and insert it into the VAD tree */
-        NewSection->Address.EndingVpn = NewSection->Address.StartingVpn +
-                                        NewSection->SizeOfSection.LowPart -
-                                        1;
-        MiInsertBasedSection(NewSection);
-
-        /* Finally release the lock */
-        KeReleaseGuardedMutex(&MmSectionBasedMutex);
     }
 
     /* Write down if this was a kernel call */
@@ -3141,6 +3165,14 @@ MiDeleteARM3Section(PVOID ObjectBody)
     KIRQL OldIrql;
 
     SectionObject = (PSECTION)ObjectBody;
+
+    if (SectionObject->u.Flags.Based == 1)
+    {
+        /* Remove the node from the global section address tree */
+        KeAcquireGuardedMutex(&MmSectionBasedMutex);
+        MiRemoveNode(&SectionObject->Address, &MmSectionBasedRoot);
+        KeReleaseGuardedMutex(&MmSectionBasedMutex);
+    }
 
     /* Lock the PFN database */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
