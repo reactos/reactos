@@ -272,10 +272,11 @@ static BYTE VgaDacRegisters[VGA_PALETTE_SIZE];
 
 // static VGA_REGISTERS VgaRegisters;
 
-static ULONGLONG VerticalRetraceCycle   = 0ULL;
 static ULONGLONG HorizontalRetraceCycle = 0ULL;
-static PHARDWARE_TIMER VSyncTimer;
 static PHARDWARE_TIMER HSyncTimer;
+static DWORD ScanlineCounter = 0;
+static DWORD StartAddressLatch = 0;
+static DWORD ScanlineSizeLatch = 0;
 
 static BOOLEAN NeedsUpdate = FALSE;
 static BOOLEAN ModeChanged = FALSE;
@@ -731,17 +732,8 @@ static VOID VgaUpdateFramebuffer(VOID)
 {
     SHORT i, j, k;
     DWORD AddressSize = VgaGetAddressSize();
-    DWORD ScanlineSize = ((DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG]
-                         + (((DWORD)VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_OFFSET_BIT8) << 4)) * 2;
-    BYTE PresetRowScan = VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] & 0x1F;
+    DWORD Address = StartAddressLatch;
     BYTE BytePanning = (VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] >> 5) & 3;
-    DWORD Address = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
-                             VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG])
-                    + ((VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_ADDR_BIT16) << 16)
-                    + ((VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_ADDR_BITS1718) << 15)
-                    + ((VgaCrtcRegisters[SVGA_CRTC_OVERLAY_REG] & SVGA_CRTC_EXT_ADDR_BIT19) << 12)
-                    + PresetRowScan * ScanlineSize
-                    + BytePanning;
     WORD LineCompare = VgaCrtcRegisters[VGA_CRTC_LINE_COMPARE_REG]
                        | ((VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_LC8) << 4);
     BYTE PixelShift = VgaAcRegisters[VGA_AC_HORZ_PANNING_REG] & 0x0F;
@@ -816,11 +808,11 @@ static VOID VgaUpdateFramebuffer(VOID)
                 /* Apply horizontal pixel panning */
                 if (VgaAcRegisters[VGA_AC_CONTROL_REG] & VGA_AC_CONTROL_8BIT)
                 {
-                    X = j + (PixelShift >> 1);
+                    X = j + ((PixelShift >> 1) & 0x03);
                 }
                 else
                 {
-                    X = j + PixelShift;
+                    X = j + ((PixelShift < 8) ? PixelShift : -1);
                 }
 
                 /* Check the shifting mode */
@@ -1014,7 +1006,7 @@ static VOID VgaUpdateFramebuffer(VOID)
             if (!(VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_OE) || (i & 1))
             {
                 /* Move to the next scanline */
-                Address += ScanlineSize;
+                Address += ScanlineSizeLatch;
             }
         }
 
@@ -1064,7 +1056,7 @@ static VOID VgaUpdateFramebuffer(VOID)
             }
 
             /* Move to the next scanline */
-            Address += ScanlineSize;
+            Address += ScanlineSizeLatch;
         }
     }
 }
@@ -1116,16 +1108,15 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
             ULONG CyclesPerMicrosecond = (ULONG)((GetCycleSpeed() + 500000ULL) / 1000000ULL);
             ULONG Dots = (VgaSeqRegisters[VGA_SEQ_CLOCK_REG] & 1) ? 9 : 8;
             ULONG Clock = VgaGetClockFrequency() / 1000000;
-            ULONG HorizTotalDots = ((ULONG)VgaCrtcRegisters[VGA_CRTC_HORZ_TOTAL_REG] + 5) * Dots;
-            ULONG VblankStart, VblankEnd, HblankStart, HblankEnd;
-            ULONG HblankDuration, VblankDuration;
+            ULONG HblankStart, HblankEnd;
+            ULONG HblankDuration;
+            ULONG VerticalRetraceStart = VgaCrtcRegisters[VGA_CRTC_START_VERT_RETRACE_REG];
+            ULONG VerticalRetraceEnd;
+    
+            VerticalRetraceStart |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VRS8) << 6;
+            VerticalRetraceStart |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VRS9) << 2;
 
-            /* Calculate the vertical blanking duration in cycles */
-            VblankStart = VgaCrtcRegisters[VGA_CRTC_START_VERT_BLANKING_REG] & 0x7F;
-            VblankEnd = VgaCrtcRegisters[VGA_CRTC_END_VERT_BLANKING_REG] & 0x7F;
-            if (VblankEnd < VblankStart) VblankEnd |= 0x80;
-            VblankDuration = ((VblankEnd - VblankStart) * HorizTotalDots
-                             * CyclesPerMicrosecond + (Clock >> 1)) / Clock;
+            VerticalRetraceEnd = VerticalRetraceStart + (VgaCrtcRegisters[VGA_CRTC_END_VERT_RETRACE_REG] & 0x0F);
 
             /* Calculate the horizontal blanking duration in cycles */
             HblankStart = VgaCrtcRegisters[VGA_CRTC_START_HORZ_BLANKING_REG] & 0x1F;
@@ -1134,15 +1125,11 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
             HblankDuration = ((HblankEnd - HblankStart) * Dots
                              * CyclesPerMicrosecond + (Clock >> 1)) / Clock;
 
-            Vsync = (Cycles - VerticalRetraceCycle) < (ULONGLONG)VblankDuration;
+            Vsync = ScanlineCounter >= VerticalRetraceStart && ScanlineCounter <= VerticalRetraceEnd;
             Hsync = (Cycles - HorizontalRetraceCycle) < (ULONGLONG)HblankDuration;
 
             /* Reset the AC latch */
             VgaAcLatch = FALSE;
-
-            /* Reverse the polarity, if needed */
-            if (VgaMiscRegister & VGA_MISC_VSYNCP) Vsync = !Vsync;
-            if (VgaMiscRegister & VGA_MISC_HSYNCP) Hsync = !Hsync;
 
             /* Set a flag if there is a vertical or horizontal retrace */
             if (Vsync || Hsync) Result |= VGA_STAT_DD;
@@ -1591,13 +1578,8 @@ static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
     SvgaHdrCounter = 0;
 }
 
-static VOID FASTCALL VgaVerticalRetrace(ULONGLONG ElapsedTime)
+static inline VOID VgaVerticalRetrace(VOID)
 {
-    UNREFERENCED_PARAMETER(ElapsedTime);
-
-    /* Set the vertical retrace cycle */
-    VerticalRetraceCycle = GetCycleCount();
-
     /* If nothing has changed, just return */
     // if (!ModeChanged && !CursorChanged && !PaletteChanged && !NeedsUpdate)
         // return;
@@ -1640,10 +1622,61 @@ static VOID FASTCALL VgaVerticalRetrace(ULONGLONG ElapsedTime)
 
 static VOID FASTCALL VgaHorizontalRetrace(ULONGLONG ElapsedTime)
 {
+    ULONG VerticalTotal = VgaCrtcRegisters[VGA_CRTC_VERT_TOTAL_REG];
+    ULONG VerticalRetraceStart = VgaCrtcRegisters[VGA_CRTC_START_VERT_RETRACE_REG];
+    ULONG VerticalRetraceEnd;
+    BOOLEAN BeforeVSyncStart, BeforeVSyncEnd;
+    ULONG CurrentCycleCount = GetCycleCount();
+    ULONG ElapsedCycles = CurrentCycleCount - HorizontalRetraceCycle;
+    ULONG Dots = (VgaSeqRegisters[VGA_SEQ_CLOCK_REG] & 1) ? 9 : 8;
+    ULONG HorizTotalDots = ((ULONG)VgaCrtcRegisters[VGA_CRTC_HORZ_TOTAL_REG] + 5) * Dots;
+    ULONG HSyncsPerSecond = VgaGetClockFrequency() / HorizTotalDots;
+    ULONG HSyncs = (ElapsedCycles * HSyncsPerSecond) / GetCycleSpeed();
+
     UNREFERENCED_PARAMETER(ElapsedTime);
+    if (HSyncs == 0) HSyncs = 1;
+    
+    VerticalTotal |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VT8) << 8;
+    VerticalTotal |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VT9) << 4;
+
+    VerticalRetraceStart |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VRS8) << 6;
+    VerticalRetraceStart |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VRS9) << 2;
+
+    VerticalRetraceEnd = VerticalRetraceStart + (VgaCrtcRegisters[VGA_CRTC_END_VERT_RETRACE_REG] & 0x0F);
 
     /* Set the cycle */
-    HorizontalRetraceCycle = GetCycleCount();
+    HorizontalRetraceCycle = CurrentCycleCount;
+
+    /* Increment the scanline counter, but make sure we don't skip any part of the vertical retrace */
+    BeforeVSyncStart = (ScanlineCounter < VerticalRetraceStart);
+    BeforeVSyncEnd = (ScanlineCounter < VerticalRetraceEnd);
+    ScanlineCounter += HSyncs;
+    if (BeforeVSyncStart && ScanlineCounter >= VerticalRetraceStart) ScanlineCounter = VerticalRetraceStart;
+    else if (BeforeVSyncEnd && ScanlineCounter >= VerticalRetraceEnd) ScanlineCounter = VerticalRetraceEnd;
+
+    /* The scanline counter wraps around */
+    ScanlineCounter %= VerticalTotal;
+
+    if (ScanlineCounter == VerticalRetraceStart)
+    {
+        /* Save the scanline size */
+        ScanlineSizeLatch = ((DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG]
+                            + (((DWORD)VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_OFFSET_BIT8) << 4)) * 2;
+
+        /* Save the starting address */
+        StartAddressLatch = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
+                                     VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG])
+                            + ((VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_ADDR_BIT16) << 16)
+                            + ((VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_ADDR_BITS1718) << 15)
+                            + ((VgaCrtcRegisters[SVGA_CRTC_OVERLAY_REG] & SVGA_CRTC_EXT_ADDR_BIT19) << 12)
+                            + (VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] & 0x1F) * ScanlineSizeLatch
+                            + ((VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] >> 5) & 3);
+    }
+
+    if (ScanlineCounter == VerticalRetraceEnd)
+    {
+        VgaVerticalRetrace();
+    }
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -1706,7 +1739,7 @@ COORD VgaGetDisplayResolution(VOID)
 
 VOID VgaRefreshDisplay(VOID)
 {
-    VgaVerticalRetrace(0);
+    VgaVerticalRetrace();
 }
 
 VOID FASTCALL VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
@@ -1803,13 +1836,11 @@ VOID FASTCALL VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
         /*
          * These values can also be computed in the following way, but using the table seems to be faster:
          *
-         * ColorCompareBytes = VgaGcRegisters[VGA_GC_COLOR_COMPARE_REG];
-         * ColorCompareBytes |= (ColorCompareBytes << 7) | (ColorCompareBytes << 14) | (ColorCompareBytes << 21);
+         * ColorCompareBytes = VgaGcRegisters[VGA_GC_COLOR_COMPARE_REG] * 0x000204081;
          * ColorCompareBytes &= 0x01010101;
          * ColorCompareBytes = (ColorCompareBytes << 8) - ColorCompareBytes;
          *
-         * ColorIgnoreBytes = VgaGcRegisters[VGA_GC_COLOR_IGNORE_REG];
-         * ColorIgnoreBytes |= (ColorIgnoreBytes << 7) | (ColorIgnoreBytes << 14) | (ColorIgnoreBytes << 21);
+         * ColorIgnoreBytes = VgaGcRegisters[VGA_GC_COLOR_IGNORE_REG] * 0x000204081;
          * ColorIgnoreBytes &= 0x01010101;
          * ColorIgnoreBytes = (ColorIgnoreBytes << 8) - ColorIgnoreBytes;
          */
@@ -1959,7 +1990,6 @@ BOOLEAN VgaInitialize(HANDLE TextHandle)
     RegisterIoPort(0x3D9, VgaReadPort, VgaWritePort);   // CGA_PAL_CTRL_REG
 
     HSyncTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, HZ_TO_NS(31469), VgaHorizontalRetrace);
-    VSyncTimer = CreateHardwareTimer(HARDWARE_TIMER_ENABLED, HZ_TO_NS(60), VgaVerticalRetrace);
 
     /* Return success */
     return TRUE;
@@ -1970,7 +2000,6 @@ VOID VgaCleanup(VOID)
     /* Do a final display refresh */
     VgaRefreshDisplay();
 
-    DestroyHardwareTimer(VSyncTimer);
     DestroyHardwareTimer(HSyncTimer);
 
     /* Leave the current video mode */
