@@ -1245,6 +1245,12 @@ RtlIsTextUnicode(CONST VOID* buf, INT len, INT* pf)
     const WCHAR *s = buf;
     int i;
     unsigned int flags = MAXULONG, out_flags = 0;
+    UCHAR last_lo_byte = 0;
+    UCHAR last_hi_byte = 0;
+    ULONG hi_byte_diff = 0;
+    ULONG lo_byte_diff = 0;
+    ULONG weight = 3;
+    ULONG lead_byte = 0;
 
     if (len < sizeof(WCHAR))
     {
@@ -1279,19 +1285,47 @@ RtlIsTextUnicode(CONST VOID* buf, INT len, INT* pf)
     if (*s == 0xFEFF) out_flags |= IS_TEXT_UNICODE_SIGNATURE;
     if (*s == 0xFFFE) out_flags |= IS_TEXT_UNICODE_REVERSE_SIGNATURE;
 
-    /* apply some statistical analysis */
-    if (flags & IS_TEXT_UNICODE_STATISTICS)
+    for (i = 0; i < len; i++)
     {
-        int stats = 0;
+        UCHAR lo_byte = LOBYTE(s[i]);
+        UCHAR hi_byte = HIBYTE(s[i]);
 
-        /* FIXME: checks only for ASCII characters in the unicode stream */
+        lo_byte_diff += max(lo_byte, last_lo_byte) - min(lo_byte, last_lo_byte);
+        hi_byte_diff += max(hi_byte, last_hi_byte) - min(hi_byte, last_hi_byte);
+
+        last_lo_byte = lo_byte;
+        last_hi_byte = hi_byte;
+    }
+
+    if (NlsMbCodePageTag)
+    {
         for (i = 0; i < len; i++)
         {
-            if (s[i] <= 255) stats++;
+            if (NlsLeadByteInfo[s[i]])
+            {
+                ++lead_byte;
+                ++i;
+            }
         }
 
-        if (stats > len / 2)
-            out_flags |= IS_TEXT_UNICODE_STATISTICS;
+        if (lead_byte)
+        {
+            weight = (len / 2) - 1;
+
+            if (lead_byte < (weight / 3))
+                weight = 3;
+            else if (lead_byte < ((weight * 2) / 3))
+                weight = 2;
+            else
+                weight = 1;
+        }
+    }
+
+    /* apply some statistical analysis */
+    if ((flags & IS_TEXT_UNICODE_STATISTICS) &&
+        ((weight * hi_byte_diff) < lo_byte_diff))
+    {
+        out_flags |= IS_TEXT_UNICODE_STATISTICS;
     }
 
     /* Check for unicode NULL chars */
@@ -1328,6 +1362,16 @@ RtlIsTextUnicode(CONST VOID* buf, INT len, INT* pf)
                 out_flags |= IS_TEXT_UNICODE_REVERSE_CONTROLS;
                 break;
             }
+        }
+
+        if (hi_byte_diff && !lo_byte_diff)
+        {
+            out_flags |= IS_TEXT_UNICODE_REVERSE_ASCII16;
+        }
+
+        if ((weight * lo_byte_diff) < hi_byte_diff)
+        {
+            out_flags |= IS_TEXT_UNICODE_REVERSE_STATISTICS;
         }
     }
 
