@@ -1104,8 +1104,8 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
         {
             BYTE Result = 0;
             BOOLEAN Vsync, Hsync;
-            ULONGLONG Cycles = GetCycleCount();
-            ULONG CyclesPerMicrosecond = (ULONG)((GetCycleSpeed() + 500000ULL) / 1000000ULL);
+            ULONGLONG Cycles = CurrentCycleCount;
+            ULONG CyclesPerMicrosecond = (ULONG)((CurrentIps + 500000ULL) / 1000000ULL);
             ULONG Dots = (VgaSeqRegisters[VGA_SEQ_CLOCK_REG] & 1) ? 9 : 8;
             ULONG Clock = VgaGetClockFrequency() / 1000000;
             ULONG HblankStart, HblankEnd;
@@ -1624,38 +1624,29 @@ static VOID FASTCALL VgaHorizontalRetrace(ULONGLONG ElapsedTime)
 {
     ULONG VerticalTotal = VgaCrtcRegisters[VGA_CRTC_VERT_TOTAL_REG];
     ULONG VerticalRetraceStart = VgaCrtcRegisters[VGA_CRTC_START_VERT_RETRACE_REG];
-    ULONG VerticalRetraceEnd;
-    BOOLEAN BeforeVSyncStart, BeforeVSyncEnd;
-    ULONG CurrentCycleCount = GetCycleCount();
+    BOOLEAN BeforeVSync;
     ULONG ElapsedCycles = CurrentCycleCount - HorizontalRetraceCycle;
     ULONG Dots = (VgaSeqRegisters[VGA_SEQ_CLOCK_REG] & 1) ? 9 : 8;
     ULONG HorizTotalDots = ((ULONG)VgaCrtcRegisters[VGA_CRTC_HORZ_TOTAL_REG] + 5) * Dots;
     ULONG HSyncsPerSecond = VgaGetClockFrequency() / HorizTotalDots;
-    ULONG HSyncs = (ElapsedCycles * HSyncsPerSecond) / GetCycleSpeed();
+    ULONG HSyncs = (ElapsedCycles * HSyncsPerSecond + (CurrentIps >> 1)) / CurrentIps;
 
     UNREFERENCED_PARAMETER(ElapsedTime);
     if (HSyncs == 0) HSyncs = 1;
-    
+
     VerticalTotal |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VT8) << 8;
     VerticalTotal |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VT9) << 4;
 
     VerticalRetraceStart |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VRS8) << 6;
     VerticalRetraceStart |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VRS9) << 2;
 
-    VerticalRetraceEnd = VerticalRetraceStart + (VgaCrtcRegisters[VGA_CRTC_END_VERT_RETRACE_REG] & 0x0F);
-
     /* Set the cycle */
     HorizontalRetraceCycle = CurrentCycleCount;
 
     /* Increment the scanline counter, but make sure we don't skip any part of the vertical retrace */
-    BeforeVSyncStart = (ScanlineCounter < VerticalRetraceStart);
-    BeforeVSyncEnd = (ScanlineCounter < VerticalRetraceEnd);
+    BeforeVSync = (ScanlineCounter < VerticalRetraceStart);
     ScanlineCounter += HSyncs;
-    if (BeforeVSyncStart && ScanlineCounter >= VerticalRetraceStart) ScanlineCounter = VerticalRetraceStart;
-    else if (BeforeVSyncEnd && ScanlineCounter >= VerticalRetraceEnd) ScanlineCounter = VerticalRetraceEnd;
-
-    /* The scanline counter wraps around */
-    ScanlineCounter %= VerticalTotal;
+    if (BeforeVSync && ScanlineCounter >= VerticalRetraceStart) ScanlineCounter = VerticalRetraceStart;
 
     if (ScanlineCounter == VerticalRetraceStart)
     {
@@ -1673,8 +1664,9 @@ static VOID FASTCALL VgaHorizontalRetrace(ULONGLONG ElapsedTime)
                             + ((VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] >> 5) & 3);
     }
 
-    if (ScanlineCounter == VerticalRetraceEnd)
+    if (ScanlineCounter > VerticalTotal)
     {
+        ScanlineCounter = 0;
         VgaVerticalRetrace();
     }
 }

@@ -33,19 +33,20 @@ typedef struct _HARDWARE_TIMER
 
 /* FUNCTIONS ******************************************************************/
 
+extern ULONGLONG CurrentCycleCount;
+extern ULONGLONG CurrentIps;
+
 PHARDWARE_TIMER CreateHardwareTimer
 (
     ULONG Flags,
     ULONGLONG Delay, /* nanoseconds */
     PHARDWARE_TIMER_PROC Callback
 );
+
 VOID EnableHardwareTimer(PHARDWARE_TIMER Timer);
 VOID DisableHardwareTimer(PHARDWARE_TIMER Timer);
 VOID SetHardwareTimerDelay(PHARDWARE_TIMER Timer, ULONGLONG NewDelay);
 VOID DestroyHardwareTimer(PHARDWARE_TIMER Timer);
-
-ULONGLONG GetCycleCount(VOID);
-ULONGLONG GetCycleSpeed(VOID);
 
 VOID ClockUpdate(VOID);
 BOOLEAN ClockInitialize(VOID);
