@@ -1814,33 +1814,33 @@ VOID FASTCALL VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
     }
     else
     {
-        const ULONG BitExpandTable[] =
+        const ULONG BitExpandInvertTable[] =
         {
-            0x00000000, 0x000000FF, 0x0000FF00, 0x0000FFFF,
-            0x00FF0000, 0x00FF00FF, 0x00FFFF00, 0x00FFFFFF,
-            0xFF000000, 0xFF0000FF, 0xFF00FF00, 0xFF00FFFF,
-            0xFFFF0000, 0xFFFF00FF, 0xFFFFFF00, 0xFFFFFFFF
+            0xFFFFFFFF, 0xFFFFFF00, 0xFFFF00FF, 0xFFFF0000,
+            0xFF00FFFF, 0xFF00FF00, 0xFF0000FF, 0xFF000000,
+            0x00FFFFFF, 0x00FFFF00, 0x00FF00FF, 0x00FF0000,
+            0x0000FFFF, 0x0000FF00, 0x000000FF, 0x00000000
         };
 
-        ULONG ColorCompareBytes = BitExpandTable[VgaGcRegisters[VGA_GC_COLOR_COMPARE_REG] & 0x0F];
-        ULONG ColorIgnoreBytes = BitExpandTable[VgaGcRegisters[VGA_GC_COLOR_IGNORE_REG] & 0x0F];
+        ULONG ColorCompareBytes = BitExpandInvertTable[VgaGcRegisters[VGA_GC_COLOR_COMPARE_REG] & 0x0F];
+        ULONG ColorIgnoreBytes = BitExpandInvertTable[VgaGcRegisters[VGA_GC_COLOR_IGNORE_REG] & 0x0F];
 
         /*
          * These values can also be computed in the following way, but using the table seems to be faster:
          *
          * ColorCompareBytes = VgaGcRegisters[VGA_GC_COLOR_COMPARE_REG] * 0x000204081;
          * ColorCompareBytes &= 0x01010101;
-         * ColorCompareBytes = (ColorCompareBytes << 8) - ColorCompareBytes;
+         * ColorCompareBytes = ~((ColorCompareBytes << 8) - ColorCompareBytes);
          *
          * ColorIgnoreBytes = VgaGcRegisters[VGA_GC_COLOR_IGNORE_REG] * 0x000204081;
          * ColorIgnoreBytes &= 0x01010101;
-         * ColorIgnoreBytes = (ColorIgnoreBytes << 8) - ColorIgnoreBytes;
+         * ColorIgnoreBytes = ~((ColorIgnoreBytes << 8) - ColorIgnoreBytes);
          */
 
         /* Loop through each byte */
         for (i = 0; i < Size; i++)
         {
-            ULONG PlaneData;
+            ULONG PlaneData = 0;
 
             /* This should always return a plane 0 address */
             VideoAddress = VgaTranslateAddress(Address + i);
@@ -1849,13 +1849,13 @@ VOID FASTCALL VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
             PlaneData = *(PULONG)&VgaMemory[VideoAddress * VGA_NUM_BANKS];
 
             /* Reverse the bytes for which the color compare register is zero */
-            PlaneData ^= ~ColorCompareBytes;
+            PlaneData ^= ColorCompareBytes;
 
             /* Apply the color ignore register */
             PlaneData |= ColorIgnoreBytes;
 
             /* Store the value in the buffer */
-            BufPtr[i] = (PlaneData | (PlaneData >> 8) | (PlaneData >> 16) | (PlaneData >> 24)) & 0xFF;
+            BufPtr[i] = (PlaneData & (PlaneData >> 8) & (PlaneData >> 16) & (PlaneData >> 24)) & 0xFF;
         }
     }
 
