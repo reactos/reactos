@@ -327,14 +327,31 @@ static VOID WINAPI BiosMiscService(LPWORD Stack)
              * See Ralf Brown: http://www.ctyme.com/intr/rb-1525.htm
              * for more information.
              */
-            LARGE_INTEGER TimeOut;
-            TimeOut.QuadPart = MAKELONG(getDX(), getCX()) * -10LL;
 
-            // HACK: For now, use the NT API (time in hundreds of nanoseconds).
-            NtDelayExecution(FALSE, &TimeOut);
+            static ULONG CompletionTime = 0;
 
-            /* Clear CF */
-            Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+            /* Check if we're already looping */
+            if (getCF())
+            {
+                if (GetTickCount() >= CompletionTime)
+                {
+                    /* Stop looping */
+                    setCF(0);
+
+                    /* Clear the CF on the stack too */
+                    Stack[STACK_FLAGS] &= ~EMULATOR_FLAG_CF;
+                }
+            }
+            else
+            {
+                /* Set the CF on the stack */
+                Stack[STACK_FLAGS] |= EMULATOR_FLAG_CF;
+
+                /* Set the completion time and start looping */
+                CompletionTime = GetTickCount() + (MAKELONG(getDX(), getCX()) / 1000);
+                setCF(1);
+            }
+
             break;
         }
 
