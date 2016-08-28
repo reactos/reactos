@@ -3550,10 +3550,36 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     }
     _SEH2_END;
 
-    /* Check for invalid zero bits */
-    if (ZeroBits && SafeBaseAddress)
+    /* Check for kernel-mode address */
+    if (SafeBaseAddress > MM_HIGHEST_VAD_ADDRESS)
     {
+        DPRINT1("Kernel base not allowed\n");
+        return STATUS_INVALID_PARAMETER_3;
+    }
+
+    /* Check for range entering kernel-mode */
+    if (((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - (ULONG_PTR)SafeBaseAddress) < SafeViewSize)
+    {
+        DPRINT1("Overflowing into kernel base not allowed\n");
+        return STATUS_INVALID_PARAMETER_3;
+    }
+
+    /* Check for invalid zero bits */
+    if (ZeroBits)
+    {
+        if (ZeroBits > MI_MAX_ZERO_BITS)
+        {
+            DPRINT1("Invalid zero bits\n");
+            return STATUS_INVALID_PARAMETER_4;
+        }
+
         if ((((ULONG_PTR)SafeBaseAddress << ZeroBits) >> ZeroBits) != (ULONG_PTR)SafeBaseAddress)
+        {
+            DPRINT1("Invalid zero bits\n");
+            return STATUS_INVALID_PARAMETER_4;
+        }
+
+        if (((((ULONG_PTR)SafeBaseAddress + SafeViewSize) << ZeroBits) >> ZeroBits) != ((ULONG_PTR)SafeBaseAddress + SafeViewSize))
         {
             DPRINT1("Invalid zero bits\n");
             return STATUS_INVALID_PARAMETER_4;
@@ -3575,27 +3601,6 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
            DPRINT("SectionOffset is not at 64-kilobyte address boundary.");
            return STATUS_MAPPED_ALIGNMENT;
         }
-    }
-
-    /* Check for kernel-mode address */
-    if (SafeBaseAddress > MM_HIGHEST_VAD_ADDRESS)
-    {
-        DPRINT1("Kernel base not allowed\n");
-        return STATUS_INVALID_PARAMETER_3;
-    }
-
-    /* Check for range entering kernel-mode */
-    if (((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - (ULONG_PTR)SafeBaseAddress) < SafeViewSize)
-    {
-        DPRINT1("Overflowing into kernel base not allowed\n");
-        return STATUS_INVALID_PARAMETER_3;
-    }
-
-    /* Check for invalid zero bits */
-    if (((ULONG_PTR)SafeBaseAddress + SafeViewSize) > (0xFFFFFFFF >> ZeroBits)) // arch?
-    {
-        DPRINT1("Invalid zero bits\n");
-        return STATUS_INVALID_PARAMETER_4;
     }
 
     /* Reference the process */
