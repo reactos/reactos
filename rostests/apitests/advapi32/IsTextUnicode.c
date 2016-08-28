@@ -80,7 +80,7 @@ START_TEST(IsTextUnicode)
         NEW_TEST(L"\xFFFE" L"UNICODE String 5 Привет!", IS_TEXT_UNICODE_STATISTICS, 0, FALSE),
         NEW_TEST(L"\xFFFE" L"UNICODE String 5 Привет!", INVALID_FLAG, 0, FALSE),
 
-        // 28
+        // 31
         /* Reverse BOM */
         NEW_TEST(L"UNICODE S" L"\xFFFE" L"tring 5 Привет!", IS_TEXT_UNICODE_ILLEGAL_CHARS, IS_TEXT_UNICODE_ILLEGAL_CHARS, FALSE),
         /* UNICODE_NUL */

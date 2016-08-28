@@ -1295,6 +1295,21 @@ RtlIsTextUnicode(CONST VOID* buf, INT len, INT* pf)
 
         last_lo_byte = lo_byte;
         last_hi_byte = hi_byte;
+
+        switch (s[i])
+        {
+            case 0xFFFE: /* Reverse BOM */
+            case UNICODE_NULL:
+            case 0x0A0D: /* ASCII CRLF (packed into one word) */
+            case 0xFFFF: /* Unicode 0xFFFF */
+                out_flags |= IS_TEXT_UNICODE_ILLEGAL_CHARS;
+                break;
+        }
+    }
+
+    if (lo_byte_diff < 127 && !hi_byte_diff)
+    {
+        out_flags |= IS_TEXT_UNICODE_ASCII16;
     }
 
     if (NlsMbCodePageTag)
