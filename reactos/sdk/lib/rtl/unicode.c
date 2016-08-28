@@ -1307,11 +1307,6 @@ RtlIsTextUnicode(CONST VOID* buf, INT len, INT* pf)
         }
     }
 
-    if (lo_byte_diff < 127 && !hi_byte_diff)
-    {
-        out_flags |= IS_TEXT_UNICODE_ASCII16;
-    }
-
     if (NlsMbCodePageTag)
     {
         for (i = 0; i < len; i++)
@@ -1333,7 +1328,25 @@ RtlIsTextUnicode(CONST VOID* buf, INT len, INT* pf)
                 weight = 2;
             else
                 weight = 1;
+
+            if (*pf && (*pf & IS_TEXT_UNICODE_DBCS_LEADBYTE))
+                out_flags |= IS_TEXT_UNICODE_DBCS_LEADBYTE;
         }
+    }
+
+    if (lo_byte_diff < 127 && !hi_byte_diff)
+    {
+        out_flags |= IS_TEXT_UNICODE_ASCII16;
+    }
+
+    if (hi_byte_diff && !lo_byte_diff)
+    {
+        out_flags |= IS_TEXT_UNICODE_REVERSE_ASCII16;
+    }
+
+    if ((weight * lo_byte_diff) < hi_byte_diff)
+    {
+        out_flags |= IS_TEXT_UNICODE_REVERSE_STATISTICS;
     }
 
     /* apply some statistical analysis */
@@ -1377,16 +1390,6 @@ RtlIsTextUnicode(CONST VOID* buf, INT len, INT* pf)
                 out_flags |= IS_TEXT_UNICODE_REVERSE_CONTROLS;
                 break;
             }
-        }
-
-        if (hi_byte_diff && !lo_byte_diff)
-        {
-            out_flags |= IS_TEXT_UNICODE_REVERSE_ASCII16;
-        }
-
-        if ((weight * lo_byte_diff) < hi_byte_diff)
-        {
-            out_flags |= IS_TEXT_UNICODE_REVERSE_STATISTICS;
         }
     }
 
