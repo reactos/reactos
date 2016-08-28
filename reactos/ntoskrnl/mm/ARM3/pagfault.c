@@ -194,9 +194,8 @@ MiAccessCheck(IN PMMPTE PointerPte,
         /* Attached processes can't expand their stack */
         if (KeIsAttachedProcess()) return STATUS_ACCESS_VIOLATION;
 
-        /* No support for transition PTEs yet */
-        ASSERT(((TempPte.u.Soft.Transition == 1) &&
-                (TempPte.u.Soft.Prototype == 0)) == FALSE);
+        /* No support for prototype PTEs yet */
+        ASSERT(TempPte.u.Soft.Prototype == 0);
 
         /* Remove the guard page bit, and return a guard page violation */
         TempPte.u.Soft.Protection = ProtectionMask & ~MM_GUARDPAGE;
