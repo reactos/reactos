@@ -4299,7 +4299,7 @@ NtQuerySection(
     _In_ SIZE_T SectionInformationLength,
     _Out_opt_ PSIZE_T ResultLength)
 {
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     KPROCESSOR_MODE PreviousMode;
     NTSTATUS Status;
     PAGED_CODE();
@@ -4357,68 +4357,126 @@ NtQuerySection(
         return Status;
     }
 
-    switch (SectionInformationClass)
+    if (MiIsRosSectionObject(Section))
     {
-        case SectionBasicInformation:
-        {
-            PSECTION_BASIC_INFORMATION Sbi = (PSECTION_BASIC_INFORMATION)SectionInformation;
+        PROS_SECTION_OBJECT RosSection = (PROS_SECTION_OBJECT)Section;
 
-            _SEH2_TRY
+        switch (SectionInformationClass)
+        {
+            case SectionBasicInformation:
             {
-                Sbi->Attributes = Section->AllocationAttributes;
-                if (Section->AllocationAttributes & SEC_IMAGE)
+                PSECTION_BASIC_INFORMATION Sbi = (PSECTION_BASIC_INFORMATION)SectionInformation;
+
+                _SEH2_TRY
                 {
-                    Sbi->BaseAddress = 0;
-                    Sbi->Size.QuadPart = 0;
+                    Sbi->Attributes = RosSection->AllocationAttributes;
+                    if (RosSection->AllocationAttributes & SEC_IMAGE)
+                    {
+                        Sbi->BaseAddress = 0;
+                        Sbi->Size.QuadPart = 0;
+                    }
+                    else
+                    {
+                        Sbi->BaseAddress = (PVOID)RosSection->Segment->Image.VirtualAddress;
+                        Sbi->Size.QuadPart = RosSection->Segment->Length.QuadPart;
+                    }
+
+                    if (ResultLength != NULL)
+                    {
+                        *ResultLength = sizeof(SECTION_BASIC_INFORMATION);
+                    }
+                    Status = STATUS_SUCCESS;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+
+                break;
+            }
+
+            case SectionImageInformation:
+            {
+                PSECTION_IMAGE_INFORMATION Sii = (PSECTION_IMAGE_INFORMATION)SectionInformation;
+
+                _SEH2_TRY
+                {
+                    if (RosSection->AllocationAttributes & SEC_IMAGE)
+                    {
+                        PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
+                        ImageSectionObject = RosSection->ImageSection;
+
+                        *Sii = ImageSectionObject->ImageInformation;
+                    }
+
+                    if (ResultLength != NULL)
+                    {
+                        *ResultLength = sizeof(SECTION_IMAGE_INFORMATION);
+                    }
+                    Status = STATUS_SUCCESS;
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+
+                break;
+            }
+        }
+    }
+    else
+    {
+        switch(SectionInformationClass)
+        {
+            case SectionBasicInformation:
+            {
+                SECTION_BASIC_INFORMATION Sbi;
+
+                Sbi.Size = Section->SizeOfSection;
+                Sbi.BaseAddress = (PVOID)Section->Address.StartingVpn;
+
+                Sbi.Attributes = 0;
+                if (Section->u.Flags.Image)
+                    Sbi.Attributes |= SEC_IMAGE;
+                if (Section->u.Flags.Commit)
+                    Sbi.Attributes |= SEC_COMMIT;
+                if (Section->u.Flags.Reserve)
+                    Sbi.Attributes |= SEC_RESERVE;
+                if (Section->u.Flags.File)
+                    Sbi.Attributes |= SEC_FILE;
+                if (Section->u.Flags.Image)
+                    Sbi.Attributes |= SEC_IMAGE;
+
+                /* FIXME : Complete/test the list of flags passed back from NtCreateSection */
+
+                _SEH2_TRY
+                {
+                    *((SECTION_BASIC_INFORMATION*)SectionInformation) = Sbi;
+                    if (ResultLength)
+                        *ResultLength = sizeof(Sbi);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+                break;
+            }
+            case SectionImageInformation:
+            {
+                if (!Section->u.Flags.Image)
+                {
+                    Status = STATUS_SECTION_NOT_IMAGE;
                 }
                 else
                 {
-                    Sbi->BaseAddress = (PVOID)Section->Segment->Image.VirtualAddress;
-                    Sbi->Size.QuadPart = Section->Segment->Length.QuadPart;
+                    /* Currently not supported */
+                    ASSERT(FALSE);
                 }
-
-                if (ResultLength != NULL)
-                {
-                    *ResultLength = sizeof(SECTION_BASIC_INFORMATION);
-                }
-                Status = STATUS_SUCCESS;
+                break;
             }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
-
-            break;
-        }
-
-        case SectionImageInformation:
-        {
-            PSECTION_IMAGE_INFORMATION Sii = (PSECTION_IMAGE_INFORMATION)SectionInformation;
-
-            _SEH2_TRY
-            {
-                if (Section->AllocationAttributes & SEC_IMAGE)
-                {
-                    PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
-                    ImageSectionObject = Section->ImageSection;
-
-                    *Sii = ImageSectionObject->ImageInformation;
-                }
-
-                if (ResultLength != NULL)
-                {
-                    *ResultLength = sizeof(SECTION_IMAGE_INFORMATION);
-                }
-                Status = STATUS_SUCCESS;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
-
-            break;
         }
     }
 
