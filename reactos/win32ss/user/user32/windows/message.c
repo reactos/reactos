@@ -13,6 +13,22 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
+
+#ifdef __i386__
+/* For bad applications which provide bad (non stdcall) WndProc */
+extern
+__cdecl
+LRESULT
+CALL_EXTERN_WNDPROC(
+     WNDPROC WndProc,
+     HWND hWnd,
+     UINT Msg,
+     WPARAM wParam,
+     LPARAM lParam);
+#else
+#  define CALL_EXTERN_WNDPROC(proc, h, m, w, l) proc(h, m, w, l)
+#endif
+
 /* From wine: */
 /* flag for messages that contain pointers */
 /* 32 messages per entry, messages 0..31 map to bits 0..31 */
@@ -1448,15 +1464,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
-      _SEH2_TRY // wine does this.
-      {
-         Result = WndProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam);
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-         ERR("Exception when calling Ansi WndProc %p Msg %d pti %p Wndpti %p\n",WndProc,Msg,GetW32ThreadInfo(),pWnd->head.pti);
-      }
-      _SEH2_END;
+      Result = CALL_EXTERN_WNDPROC(WndProc, AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam);
 
       if (Hook && MsgOverride)
       {
@@ -1497,15 +1505,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
-      _SEH2_TRY
-      {
-         Result = WndProc(hWnd, Msg, wParam, lParam);
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-         ERR("Exception when calling unicode WndProc %p Msg %d pti %p Wndpti %p\n",WndProc, Msg,GetW32ThreadInfo(),pWnd->head.pti);
-      }
-      _SEH2_END;
+      Result = CALL_EXTERN_WNDPROC(WndProc, hWnd, Msg, wParam, lParam);
 
       if (Hook && MsgOverride)
       {
@@ -1585,15 +1585,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
-      _SEH2_TRY
-      {
-         Result = WndProc(hWnd, Msg, wParam, lParam);
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-         ERR("Exception when calling Ansi WndProc %p Msg %d pti %p Wndpti %p\n",WndProc,Msg,GetW32ThreadInfo(),pWnd->head.pti);
-      }
-      _SEH2_END;
+      Result = CALL_EXTERN_WNDPROC(WndProc, hWnd, Msg, wParam, lParam);
 
       if (Hook && MsgOverride)
       {
@@ -1641,16 +1633,7 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
-      _SEH2_TRY
-      {
-         Result = WndProc(UnicodeMsg.hwnd, UnicodeMsg.message,
-                          UnicodeMsg.wParam, UnicodeMsg.lParam);
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-         ERR("Exception when calling unicode WndProc %p Msg %d pti %p Wndpti %p\n",WndProc, Msg,GetW32ThreadInfo(),pWnd->head.pti);
-      }
-      _SEH2_END;
+      Result = CALL_EXTERN_WNDPROC(WndProc, UnicodeMsg.hwnd, UnicodeMsg.message, UnicodeMsg.wParam, UnicodeMsg.lParam);
 
       if (Hook && MsgOverride)
       {
