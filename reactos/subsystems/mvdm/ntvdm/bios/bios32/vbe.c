@@ -24,6 +24,87 @@
 
 /* PRIVATE VARIABLES **********************************************************/
 
+static const VBE_MODE_INFO VbeMode_640x480x256_Info =
+{
+    /* Attributes */
+    VBE_MODE_SUPPORTED
+    | VBE_MODE_OPTIONAL_INFO
+    // | VBE_MODE_BIOS_SUPPORT
+    | VBE_MODE_COLOR
+    | VBE_MODE_GRAPHICS,
+
+    /* Window A attributes */
+    VBE_WINDOW_EXISTS | VBE_WINDOW_READABLE | VBE_WINDOW_WRITABLE,
+    /* Window B attributes */
+    0,
+
+    16,                   /* Window granularity, in KB */
+    64,                   /* Window size, in KB */
+    0xA000,               /* Window A segment, or zero if not supported */
+    0x0000,               /* Window B segment, or zero if not supported */
+    0x00000000,           /* Window position function pointer */
+    800,                  /* Bytes per scanline */
+    640,                  /* Width */
+    480,                  /* Height */
+    8,                    /* Character cell width */
+    16,                   /* Character cell height */
+    1,                    /* Number of memory planes */
+    8,                    /* Bits per pixel */
+    1,                    /* Number of banks */
+    VBE_MODEL_PACKED,     /* Memory model */
+    0,                    /* Bank size */
+    11,                   /* Number of image pages */
+    0,                    /* Reserved field */
+    0,                    /* Red mask size */
+    0,                    /* Red field position */
+    0,                    /* Green mask size */
+    0,                    /* Green field position */
+    0,                    /* Blue mask size */
+    0,                    /* Blue field position */
+    0,                    /* Reserved mask size */
+    0,                    /* Reserved field position */
+    0,                    /* Direct color info */
+};
+
+static SVGA_REGISTERS VbeMode_640x480x256_Registers =
+{
+    /* Miscellaneous Register */
+    0x63,
+
+    /* Hidden Register */
+    0x00,
+
+    /* Sequencer Registers */
+    {
+        0x03, 0x21, 0x0F, 0x00, 0x0E, 0x00, 0x12, 0x11, 0x00, 0x00, 0x18, 0x58,
+        0x58, 0x58, 0x58, 0x98, 0x00, 0x00, 0x04, 0x00, 0x00, 0x04, 0x00, 0x20,
+        0x00, 0x00, 0x00, 0x33, 0x33, 0x33, 0x33, 0x2D
+    },
+
+    /* CRTC Registers */
+    {
+        0x5F, 0x4F, 0x4F, 0x80, 0x52, 0x1E, 0x0B, 0x3E, 0x00, 0x40, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0xEA, 0x2C, 0xDF, 0x50, 0x40, 0xDF, 0x0B, 0xC3,
+        0xFF, 0x00, 0x00, 0x22, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF,
+        0x80, 0x00, 0x20, 0xB8
+    },
+
+    /* GC Registers */
+    {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0xFF, 0x00, 0x00, 0x20, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00
+    },
+
+    /* AC Registers */
+    {
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B,
+        0x0C, 0x0D, 0x0E, 0x0F, 0x41, 0x00, 0x0F, 0x00, 0x00
+    }
+};
+
 static const VBE_MODE_INFO VbeMode_800x600x256_Info =
 {
     /* Attributes */
@@ -114,7 +195,7 @@ static const VBE_MODE Modes[VBE_MODE_COUNT] =
     { 0x5C, 0x103 , &VbeMode_800x600x256_Info, &VbeMode_800x600x256_Registers },
     { 0x5D, 0x104 , NULL /* TODO */          , NULL /* TODO */                },
     { 0x5E, 0x100 , NULL /* TODO */          , NULL /* TODO */                },
-    { 0x5F, 0x101 , NULL /* TODO */          , NULL /* TODO */                },
+    { 0x5F, 0x101 , &VbeMode_640x480x256_Info, &VbeMode_640x480x256_Registers },
     { 0x60, 0x105 , NULL /* TODO */          , NULL /* TODO */                },
     { 0x64, 0x111 , NULL /* TODO */          , NULL /* TODO */                },
     { 0x65, 0x114 , NULL /* TODO */          , NULL /* TODO */                },
