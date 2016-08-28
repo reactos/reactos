@@ -1118,6 +1118,22 @@ static BYTE WINAPI VgaReadPort(USHORT Port)
 
             VerticalRetraceEnd = VerticalRetraceStart + (VgaCrtcRegisters[VGA_CRTC_END_VERT_RETRACE_REG] & 0x0F);
 
+            if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
+            {
+                BYTE MaximumScanLine = 1 + (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & 0x1F);
+
+                if (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & VGA_CRTC_MAXSCANLINE_DOUBLE)
+                {
+                    VerticalRetraceStart <<= 1;
+                    VerticalRetraceEnd <<= 1;
+                }
+                else
+                {
+                    VerticalRetraceStart *= MaximumScanLine;
+                    VerticalRetraceEnd *= MaximumScanLine;
+                }
+            }
+
             /* Calculate the horizontal blanking duration in cycles */
             HblankStart = VgaCrtcRegisters[VGA_CRTC_START_HORZ_BLANKING_REG] & 0x1F;
             HblankEnd = VgaCrtcRegisters[VGA_CRTC_END_HORZ_BLANKING_REG] & 0x1F;
@@ -1644,15 +1660,18 @@ static VOID FASTCALL VgaHorizontalRetrace(ULONGLONG ElapsedTime)
     VerticalRetraceStart |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VRS8) << 6;
     VerticalRetraceStart |= (VgaCrtcRegisters[VGA_CRTC_OVERFLOW_REG] & VGA_CRTC_OVERFLOW_VRS9) << 2;
 
-    if (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & VGA_CRTC_MAXSCANLINE_DOUBLE)
+    if (VgaGcRegisters[VGA_GC_MISC_REG] & VGA_GC_MISC_NOALPHA)
     {
-        VerticalRetraceStart <<= 1;
-        VerticalTotal <<= 1;
-    }
-    else
-    {
-        VerticalRetraceStart *= MaximumScanLine;
-        VerticalTotal *= MaximumScanLine;
+        if (VgaCrtcRegisters[VGA_CRTC_MAX_SCAN_LINE_REG] & VGA_CRTC_MAXSCANLINE_DOUBLE)
+        {
+            VerticalRetraceStart <<= 1;
+            VerticalTotal <<= 1;
+        }
+        else
+        {
+            VerticalRetraceStart *= MaximumScanLine;
+            VerticalTotal *= MaximumScanLine;
+        }
     }
 
     /* Set the cycle */
