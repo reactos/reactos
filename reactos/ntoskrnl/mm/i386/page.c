@@ -765,7 +765,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         /* There should not be anything valid here */
         if (Pte != 0)
         {
-            DPRINT1("Bad PTE %lx\n", Pte);
+            DPRINT1("Bad PTE %lx at %p for %p + %lu\n", Pte, Pt, Address, i);
             KeBugCheck(MEMORY_MANAGEMENT);
         }
 
