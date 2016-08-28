@@ -882,10 +882,10 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
     PFN_NUMBER Page;
     NTSTATUS Status;
     MMPTE TempPte = *PointerPte;
-    KEVENT Event;
     PMMPFN Pfn1;
     ULONG PageFileIndex = TempPte.u.Soft.PageFileLow;
     ULONG_PTR PageFileOffset = TempPte.u.Soft.PageFileHigh;
+    ULONG Protection = TempPte.u.Soft.Protection;
 
     /* Things we don't support yet */
     ASSERT(CurrentProcess > HYDRA_PROCESS);
@@ -911,16 +911,10 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
     ASSERT(Pfn1->u1.Event == NULL);
     ASSERT(Pfn1->u3.e1.ReadInProgress == 0);
     ASSERT(Pfn1->u3.e1.WriteInProgress == 0);
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Pfn1->u1.Event = &Event;
     Pfn1->u3.e1.ReadInProgress = 1;
 
     /* We must write the PTE now as the PFN lock will be released while performing the IO operation */
-    TempPte.u.Soft.Transition = 1;
-    TempPte.u.Soft.PageFileLow = 0;
-    TempPte.u.Soft.Prototype = 0;
-    TempPte.u.Trans.PageFrameNumber = Page;
+    MI_MAKE_TRANSITION_PTE(&TempPte, Page, Protection);
 
     MI_WRITE_INVALID_PTE(PointerPte, TempPte);
 
@@ -934,7 +928,6 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
     *OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     /* Nobody should have changed that while we were not looking */
-    ASSERT(Pfn1->u1.Event == &Event);
     ASSERT(Pfn1->u3.e1.ReadInProgress == 1);
     ASSERT(Pfn1->u3.e1.WriteInProgress == 0);
 
@@ -946,27 +939,29 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
         Pfn1->u1.ReadStatus = Status;
     }
 
-    /* This is now a nice and normal PFN */
-    Pfn1->u1.Event = NULL;
-    Pfn1->u3.e1.ReadInProgress = 0;
-
     /* And the PTE can finally be valid */
-    MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte, TempPte.u.Trans.Protection, Page);
+    MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte, Protection, Page);
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
-    /* Waiters gonna wait */
-    KeSetEvent(&Event, IO_NO_INCREMENT, FALSE);
+    Pfn1->u3.e1.ReadInProgress = 0;
+    /* Did someone start to wait on us while we proceeded ? */
+    if (Pfn1->u1.Event)
+    {
+        /* Tell them we're done */
+        KeSetEvent(Pfn1->u1.Event, IO_NO_INCREMENT, FALSE);
+    }
 
     return Status;
 }
 
 NTSTATUS
 NTAPI
-MiResolveTransitionFault(IN PVOID FaultingAddress,
+MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
+                         IN PVOID FaultingAddress,
                          IN PMMPTE PointerPte,
                          IN PEPROCESS CurrentProcess,
                          IN KIRQL OldIrql,
-                         OUT PVOID *InPageBlock)
+                         OUT PKEVENT **InPageBlock)
 {
     PFN_NUMBER PageFrameIndex;
     PMMPFN Pfn1;
@@ -999,11 +994,11 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
     ASSERT(Pfn1->u4.InPageError == 0);
 
     /* See if we should wait before terminating the fault */
-    if (Pfn1->u3.e1.ReadInProgress == 1)
+    if ((Pfn1->u3.e1.ReadInProgress == 1)
+            || ((Pfn1->u3.e1.WriteInProgress == 1) && StoreInstruction))
     {
-        DPRINT1("The page is currently being read!\n");
-        ASSERT(Pfn1->u1.Event != NULL);
-        *InPageBlock = Pfn1->u1.Event;
+        DPRINT1("The page is currently in a page transition !\n");
+        *InPageBlock = &Pfn1->u1.Event;
         if (PointerPte == Pfn1->PteAddress)
         {
             DPRINT1("And this if for this particular PTE.\n");
@@ -1061,7 +1056,7 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
         }
     }
 
-    /* Build the transition PTE -- maybe a macro? */
+    /* Build the final PTE */
     ASSERT(PointerPte->u.Hard.Valid == 0);
     ASSERT(PointerPte->u.Trans.Prototype == 0);
     ASSERT(PointerPte->u.Trans.Transition == 1);
@@ -1107,7 +1102,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
     PMMPFN Pfn1;
     PFN_NUMBER PageFrameIndex;
     NTSTATUS Status;
-    PVOID InPageBlock = NULL;
+    PKEVENT* InPageBlock = NULL;
     ULONG Protection;
 
     /* Must be called with an invalid, prototype PTE, with the PFN lock held */
@@ -1256,7 +1251,8 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
     {
         /* Resolve the transition fault */
         ASSERT(OldIrql != MM_NOIRQL);
-        Status = MiResolveTransitionFault(Address,
+        Status = MiResolveTransitionFault(StoreInstruction,
+                                          Address,
                                           PointerProtoPte,
                                           Process,
                                           OldIrql,
@@ -1543,22 +1539,38 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     /* Is this a transition PTE */
     if (TempPte.u.Soft.Transition)
     {
-        PVOID InPageBlock = NULL;
+        PKEVENT* InPageBlock = NULL;
+        PKEVENT PreviousPageEvent;
+        KEVENT CurrentPageEvent;
+
         /* Lock the PFN database */
         LockIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
         /* Resolve */
-        Status = MiResolveTransitionFault(Address, PointerPte, Process, LockIrql, &InPageBlock);
+        Status = MiResolveTransitionFault(StoreInstruction, Address, PointerPte, Process, LockIrql, &InPageBlock);
 
         ASSERT(NT_SUCCESS(Status));
+
+        if (InPageBlock != NULL)
+        {
+            /* Another thread is reading or writing this page. Put us into the waiting queue. */
+            KeInitializeEvent(&CurrentPageEvent, NotificationEvent, FALSE);
+            PreviousPageEvent = *InPageBlock;
+            *InPageBlock = &CurrentPageEvent;
+        }
 
         /* And now release the lock and leave*/
         KeReleaseQueuedSpinLock(LockQueuePfnLock, LockIrql);
 
         if (InPageBlock != NULL)
         {
-            /* The page is being paged in by another process */
-            KeWaitForSingleObject(InPageBlock, WrPageIn, KernelMode, FALSE, NULL);
+            KeWaitForSingleObject(&CurrentPageEvent, WrPageIn, KernelMode, FALSE, NULL);
+
+            /* Let's the chain go on */
+            if (PreviousPageEvent)
+            {
+                KeSetEvent(PreviousPageEvent, IO_NO_INCREMENT, FALSE);
+            }
         }
 
         ASSERT(OldIrql == KeGetCurrentIrql());
