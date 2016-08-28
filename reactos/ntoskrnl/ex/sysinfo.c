@@ -1192,8 +1192,6 @@ QSI_DEF(SystemHandleInformation)
     {
         NumberOfHandles += ObGetProcessHandleCount(Process);
         Process = PsGetNextProcess(Process);
-
-        if ((Process == SystemProcess) || (Process == NULL)) break;
     }
     while ((Process != SystemProcess) && (Process != NULL));
 
@@ -1263,8 +1261,6 @@ QSI_DEF(SystemHandleInformation)
         KeLeaveCriticalRegion();
 
         Process = PsGetNextProcess(Process);
-
-        if ((Process == SystemProcess) || (Process == NULL)) break;
     }
     while ((Process != SystemProcess) && (Process != NULL));
 
