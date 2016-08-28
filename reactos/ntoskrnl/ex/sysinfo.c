@@ -1167,11 +1167,13 @@ QSI_DEF(SystemNonPagedPoolInformation)
 /* Class 16 - Handle Information */
 QSI_DEF(SystemHandleInformation)
 {
-    PEPROCESS pr, syspr;
-    ULONG curSize, i = 0;
-    ULONG hCount = 0;
+    PEPROCESS Process;
+    PEPROCESS SystemProcess;
+    ULONG CurrentSize;
+    ULONG NumberOfHandles = 0;
+    ULONG Index;
 
-    PSYSTEM_HANDLE_INFORMATION Shi =
+    PSYSTEM_HANDLE_INFORMATION HandleInformation =
         (PSYSTEM_HANDLE_INFORMATION) Buffer;
 
     DPRINT("NtQuerySystemInformation - SystemHandleInformation\n");
@@ -1182,68 +1184,92 @@ QSI_DEF(SystemHandleInformation)
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-    DPRINT("SystemHandleInformation 1\n");
-
     /* First Calc Size from Count. */
-    syspr = PsGetNextProcess(NULL);
-    pr = syspr;
+    SystemProcess = PsGetNextProcess(NULL);
+    Process = SystemProcess;
 
     do
     {
-        hCount = hCount + ObGetProcessHandleCount(pr);
-        pr = PsGetNextProcess(pr);
+        NumberOfHandles += ObGetProcessHandleCount(Process);
+        Process = PsGetNextProcess(Process);
 
-        if ((pr == syspr) || (pr == NULL)) break;
+        if ((Process == SystemProcess) || (Process == NULL)) break;
     }
-    while ((pr != syspr) && (pr != NULL));
+    while ((Process != SystemProcess) && (Process != NULL));
 
-    if(pr != NULL)
-    {
-        ObDereferenceObject(pr);
-    }
+    if (Process != NULL) ObDereferenceObject(Process);
 
-    DPRINT("SystemHandleInformation 2\n");
+    CurrentSize = sizeof(SYSTEM_HANDLE_INFORMATION) +
+                         ((sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) * NumberOfHandles) -
+                         (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO)));
 
-    curSize = sizeof(SYSTEM_HANDLE_INFORMATION) +
-                     ((sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) * hCount) -
-                     (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO)));
+    HandleInformation->NumberOfHandles = NumberOfHandles;
 
-    Shi->NumberOfHandles = hCount;
+    *ReqSize = CurrentSize;
 
-    if (curSize > Size)
-    {
-        *ReqSize = curSize;
-        return (STATUS_INFO_LENGTH_MISMATCH);
-    }
-
-    DPRINT("SystemHandleInformation 3\n");
+    if (CurrentSize > Size) return STATUS_INFO_LENGTH_MISMATCH;
 
     /* Now get Handles from all processes. */
-    syspr = PsGetNextProcess(NULL);
-    pr = syspr;
+    SystemProcess = PsGetNextProcess(NULL);
+    Process = SystemProcess;
+
+    Index = 0;
 
     do
     {
-        int Count = 0, HandleCount;
+        PHANDLE_TABLE_ENTRY HandleTableEntry;
+        EXHANDLE Handle;
 
-        HandleCount = ObGetProcessHandleCount(pr);
+        /* Enter a critical region */
+        KeEnterCriticalRegion();
 
-        for (Count = 0; HandleCount > 0 ; HandleCount--)
+        /* Set the initial value and loop the entries */
+        Handle.Value = 0;
+        while ((HandleTableEntry = ExpLookupHandleTableEntry(Process->ObjectTable, Handle)))
         {
-            Shi->Handles[i].UniqueProcessId = (USHORT)(ULONG_PTR)pr->UniqueProcessId;
-            Count++;
-            i++;
+            /* Validate the entry */
+            if ((HandleTableEntry) &&
+                (HandleTableEntry->Object) &&
+                (HandleTableEntry->NextFreeTableEntry != -2))
+            {
+                /* Lock the entry */
+                if (ExpLockHandleTableEntry(Process->ObjectTable, HandleTableEntry))
+                {
+                    POBJECT_HEADER ObjectHeader;
+
+                    ObjectHeader = (POBJECT_HEADER)(((ULONG_PTR) HandleTableEntry->Object) & ~OBJ_HANDLE_ATTRIBUTES);
+
+                    /* Filling handle information */
+                    HandleInformation->Handles[Index].UniqueProcessId = (USHORT)(ULONG_PTR) Process->UniqueProcessId;
+                    HandleInformation->Handles[Index].CreatorBackTraceIndex = 0;
+                    HandleInformation->Handles[Index].ObjectTypeIndex = (UCHAR) ObjectHeader->Type->Index;
+                    HandleInformation->Handles[Index].HandleAttributes = HandleTableEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES;
+                    HandleInformation->Handles[Index].HandleValue = (USHORT)(ULONG_PTR) Handle.GenericHandleOverlay;
+                    HandleInformation->Handles[Index].Object = &ObjectHeader->Body;
+                    HandleInformation->Handles[Index].GrantedAccess = HandleTableEntry->GrantedAccess;
+
+                    /* Unlock it */
+                    ExUnlockHandleTableEntry(Process->ObjectTable, HandleTableEntry);
+
+                    ++Index;
+                }
+            }
+
+            /* Go to the next entry */
+            Handle.Value += sizeof(HANDLE);
         }
 
-        pr = PsGetNextProcess(pr);
+        /* Leave the critical region and return callback result */
+        KeLeaveCriticalRegion();
 
-        if ((pr == syspr) || (pr == NULL)) break;
+        Process = PsGetNextProcess(Process);
+
+        if ((Process == SystemProcess) || (Process == NULL)) break;
     }
-    while ((pr != syspr) && (pr != NULL));
+    while ((Process != SystemProcess) && (Process != NULL));
 
-    if(pr != NULL) ObDereferenceObject(pr);
+    if (Process != NULL) ObDereferenceObject(Process);
 
-    DPRINT("SystemHandleInformation 4\n");
     return STATUS_SUCCESS;
 
 }
