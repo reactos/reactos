@@ -73,6 +73,9 @@ extern const char *wine_dbgstr_guid( const GUID *guid );
 extern const char *wine_dbgstr_point( const POINT *guid );
 extern const char *wine_dbgstr_size( const SIZE *guid );
 extern const char *wine_dbgstr_rect( const RECT *rect );
+#ifdef WINETEST_USE_DBGSTR_LONGLONG
+extern const char *wine_dbgstr_longlong( ULONGLONG ll );
+#endif
 static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
 
 /* strcmpW is available for tests compiled under Wine, but not in standalone
@@ -621,6 +624,21 @@ const char *wine_dbgstr_rect( const RECT *rect )
     release_temp_buffer( res, strlen(res) + 1 );
     return res;
 }
+
+#ifdef WINETEST_USE_DBGSTR_LONGLONG
+const char *wine_dbgstr_longlong( ULONGLONG ll )
+{
+    char *res;
+
+    res = get_temp_buffer( 20 );
+    if (/*sizeof(ll) > sizeof(unsigned long) &&*/ ll >> 32) /* ULONGLONG is always > long in ReactOS */
+        sprintf( res, "%lx%08lx", (unsigned long)(ll >> 32), (unsigned long)ll );
+    else
+        sprintf( res, "%lx", (unsigned long)ll );
+    release_temp_buffer( res, strlen(res) + 1 );
+    return res;
+}
+#endif
 
 /* Find a test by name */
 static const struct test *find_test( const char *name )
