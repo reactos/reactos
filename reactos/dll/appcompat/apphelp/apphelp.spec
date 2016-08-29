@@ -94,7 +94,7 @@
 @ stub SdbIsTagrefFromLocalDB
 @ stub SdbIsTagrefFromMainDB
 @ stub SdbLoadString
-@ stub SdbMakeIndexKeyFromString
+@ stdcall SdbMakeIndexKeyFromString(wstr)
 @ stub SdbOpenApphelpDetailsDatabase
 @ stub SdbOpenApphelpDetailsDatabaseSP
 @ stub SdbOpenApphelpInformation

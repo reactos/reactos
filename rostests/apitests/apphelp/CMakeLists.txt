@@ -1,5 +1,5 @@
 project(appcompat)
-add_definitions(-D__ROS_LONG64__)
+add_definitions(-D__ROS_LONG64__ -DWINETEST_USE_DBGSTR_LONGLONG)
 
 list(APPEND SOURCE
     apphelp.c

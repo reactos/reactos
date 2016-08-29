@@ -615,6 +615,47 @@ BOOL WINAPI SdbGetDatabaseVersion(LPCWSTR database, PDWORD VersionHi, PDWORD Ver
     return TRUE;
 }
 
+
+/**
+ * Converts the specified string to an index key.
+ *
+ * @param [in]  str The string which will be converted.
+ *
+ * @return  The resulting index key
+ *
+ * @todo: Fix this for unicode strings.
+ */
+LONGLONG WINAPI SdbMakeIndexKeyFromString(LPCWSTR str)
+{
+    LONGLONG result = 0;
+    int shift = 56;
+
+    while (*str && shift >= 0)
+    {
+        WCHAR c = toupper(*(str++));
+
+        if (c & 0xff)
+        {
+            result |= (((LONGLONG)(c & 0xff)) << shift);
+            shift -= 8;
+        }
+
+        if (shift < 0)
+            break;
+
+        c >>= 8;
+
+        if (c & 0xff)
+        {
+            result |= (((LONGLONG)(c & 0xff)) << shift);
+            shift -= 8;
+        }
+    }
+
+    return result;
+}
+
+
 /**
  * Converts specified tag into a string.
  *

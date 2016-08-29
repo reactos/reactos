@@ -166,6 +166,8 @@ static TAGID (WINAPI *pSdbGetFirstChild)(PDB, TAGID);
 static TAGID (WINAPI *pSdbGetNextChild)(PDB, TAGID, TAGID);
 static BOOL (WINAPI *pSdbGetDatabaseID)(PDB, GUID*);
 static BOOL (WINAPI *pSdbGUIDToString)(CONST GUID *, PCWSTR, SIZE_T);
+static LONGLONG(WINAPI* pSdbMakeIndexKeyFromString)(LPCWSTR);
+
 
 DEFINE_GUID(GUID_DATABASE_TEST,0xe39b0eb0,0x55db,0x450b,0x9b,0xd4,0xd2,0x0c,0x94,0x84,0x26,0x0f);
 
@@ -966,6 +968,90 @@ static void test_CheckDatabaseManually(void)
     DeleteFileA("test_db.sdb");
 }
 
+
+static void expect_indexA_imp(const char* text, LONGLONG expected)
+{
+    static WCHAR wide_string[100] = { 0 };
+    LONGLONG result;
+    MultiByteToWideChar(CP_ACP, 0, text, -1, wide_string, 100);
+
+    result = pSdbMakeIndexKeyFromString(wide_string);
+    winetest_ok(result == expected, "Expected %s to result in %s, was: %s\n", text, wine_dbgstr_longlong(expected), wine_dbgstr_longlong(result));
+}
+
+#define expect_indexA  (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : expect_indexA_imp
+
+static void test_IndexKeyFromString(void)
+{
+    static WCHAR tmp [] = { 0xabba, 0xbcde, 0x2020, 0x20, 0x4444, 0};
+    static WCHAR tmp2 [] = { 0xabba, 0xbcde, 0x20, 0x4444, 0};
+    static WCHAR tmp3 [] = { 0x20, 0xbcde, 0x4041, 0x4444, 0};
+    static WCHAR tmp4 [] = { 0x20, 0xbcde, 0x4041, 0x4444, 0x4444, 0};
+    static WCHAR tmp5 [] = { 0x2020, 0xbcde, 0x4041, 0x4444, 0x4444, 0};
+    static WCHAR tmp6 [] = { 0x20, 0xbcde, 0x4041, 0x4444, 0x4444, 0x4444, 0};
+    static WCHAR tmp7 [] = { 0xbcde, 0x4041, 0x4444, 0x4444, 0x4444, 0x4444, 0x4444, 0x4444, 0x4444, 0};
+    static WCHAR tmp8 [] = { 0xbc00, 0x4041, 0x4444, 0x4444, 0x4444, 0x4444, 0x4444, 0x4444, 0x4444, 0};
+    LONGLONG result;
+
+#if 0
+    /* This crashes. */
+    pSdbMakeIndexKeyFromString(NULL);
+#endif
+
+    expect_indexA("", 0x0000000000000000);
+    expect_indexA("a", 0x4100000000000000);
+    expect_indexA("aa", 0x4141000000000000);
+    expect_indexA("aaa", 0x4141410000000000);
+    expect_indexA("aaaa", 0x4141414100000000);
+    expect_indexA("aaaaa", 0x4141414141000000);
+    expect_indexA("aaaaaa", 0x4141414141410000);
+    expect_indexA("aaaaaaa", 0x4141414141414100);
+    expect_indexA("aaaaaaaa", 0x4141414141414141);
+    expect_indexA("aaa aaaaa", 0x4141412041414141);
+    /* Does not change */
+    expect_indexA("aaaaaaaaa", 0x4141414141414141);
+    expect_indexA("aaaaaaaab", 0x4141414141414141);
+    expect_indexA("aaaaaaaac", 0x4141414141414141);
+    expect_indexA("aaaaaaaaF", 0x4141414141414141);
+    /* Upcase */
+    expect_indexA("AAAAAAAA", 0x4141414141414141);
+    expect_indexA("ABABABAB", 0x4142414241424142);
+    expect_indexA("ABABABABZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ", 0x4142414241424142);
+
+    result = pSdbMakeIndexKeyFromString(tmp);
+    ok(result == 0xbaabdebc20200000, "Expected %s to result in %s, was: %s\n", wine_dbgstr_w(tmp),
+        wine_dbgstr_longlong(0xbaabdebc20200000), wine_dbgstr_longlong(result));
+
+    result = pSdbMakeIndexKeyFromString(tmp2);
+    ok(result == 0xbaabdebc00000000, "Expected %s to result in %s, was: %s\n", wine_dbgstr_w(tmp2),
+        wine_dbgstr_longlong(0xbaabdebc00000000), wine_dbgstr_longlong(result));
+
+    result = pSdbMakeIndexKeyFromString(tmp3);
+    ok(result == 0x20debc4140000000, "Expected %s to result in %s, was: %s\n", wine_dbgstr_w(tmp3),
+        wine_dbgstr_longlong(0x20debc4140000000), wine_dbgstr_longlong(result));
+
+    result = pSdbMakeIndexKeyFromString(tmp4);
+    ok(result == 0x20debc4140000000, "Expected %s to result in %s, was: %s\n", wine_dbgstr_w(tmp4),
+        wine_dbgstr_longlong(0x20debc4140000000), wine_dbgstr_longlong(result));
+
+    result = pSdbMakeIndexKeyFromString(tmp5);
+    ok(result == 0x2020debc41400000, "Expected %s to result in %s, was: %s\n", wine_dbgstr_w(tmp5),
+        wine_dbgstr_longlong(0x2020debc41400000), wine_dbgstr_longlong(result));
+
+    result = pSdbMakeIndexKeyFromString(tmp6);
+    ok(result == 0x20debc4140444400, "Expected %s to result in %s, was: %s\n", wine_dbgstr_w(tmp6),
+        wine_dbgstr_longlong(0x20debc4140444400), wine_dbgstr_longlong(result));
+
+    result = pSdbMakeIndexKeyFromString(tmp7);
+    ok(result == 0xdebc414044444444, "Expected %s to result in %s, was: %s\n", wine_dbgstr_w(tmp7),
+        wine_dbgstr_longlong(0xdebc414044444444), wine_dbgstr_longlong(result));
+
+    result = pSdbMakeIndexKeyFromString(tmp8);
+    ok(result == 0xbc414044444444, "Expected %s to result in %s, was: %s\n", wine_dbgstr_w(tmp8),
+        wine_dbgstr_longlong(0xbc414044444444), wine_dbgstr_longlong(result));
+}
+
+
 START_TEST(db)
 {
     //SetEnvironmentVariable("SHIM_DEBUG_LEVEL", "4");
@@ -1001,9 +1087,11 @@ START_TEST(db)
     pSdbGetNextChild = (void *) GetProcAddress(hdll, "SdbGetNextChild");
     pSdbGetDatabaseID = (void *) GetProcAddress(hdll, "SdbGetDatabaseID");
     pSdbGUIDToString = (void *) GetProcAddress(hdll, "SdbGUIDToString");
+    pSdbMakeIndexKeyFromString = (void*) GetProcAddress(hdll, "SdbMakeIndexKeyFromString");
 
     test_Sdb();
     test_write_ex();
     test_stringtable();
     test_CheckDatabaseManually();
+    test_IndexKeyFromString();
 }
