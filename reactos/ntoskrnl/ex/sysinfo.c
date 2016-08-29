@@ -1167,24 +1167,26 @@ QSI_DEF(SystemNonPagedPoolInformation)
 /* Class 16 - Handle Information */
 QSI_DEF(SystemHandleInformation)
 {
+    PSYSTEM_HANDLE_INFORMATION HandleInformation;
+    KPROCESSOR_MODE PreviousMode;
     PEPROCESS Process;
     PEPROCESS SystemProcess;
     ULONG CurrentSize;
     ULONG NumberOfHandles = 0;
     ULONG Index;
-
-    PSYSTEM_HANDLE_INFORMATION HandleInformation =
-        (PSYSTEM_HANDLE_INFORMATION) Buffer;
+    NTSTATUS Status;
+    PMDL Mdl;
 
     DPRINT("NtQuerySystemInformation - SystemHandleInformation\n");
 
+    /* Check user's buffer size */
     if (Size < sizeof(SYSTEM_HANDLE_INFORMATION))
     {
         *ReqSize = sizeof(SYSTEM_HANDLE_INFORMATION);
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-    /* First Calc Size from Count. */
+    /* Retrieve needed buffer size to hold the list of handles */
     SystemProcess = PsGetNextProcess(NULL);
     Process = SystemProcess;
 
@@ -1195,19 +1197,37 @@ QSI_DEF(SystemHandleInformation)
     }
     while ((Process != SystemProcess) && (Process != NULL));
 
+    /* Dereference the process which was referenced by PsGetNextProcess */
     if (Process != NULL) ObDereferenceObject(Process);
 
+    /* Calculate the current size of all handles */
     CurrentSize = sizeof(SYSTEM_HANDLE_INFORMATION) +
                          ((sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) * NumberOfHandles) -
                          (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO)));
 
-    HandleInformation->NumberOfHandles = NumberOfHandles;
-
     *ReqSize = CurrentSize;
 
+    /* Check user's buffer size */
     if (CurrentSize > Size) return STATUS_INFO_LENGTH_MISMATCH;
 
-    /* Now get Handles from all processes. */
+    /* We need to lock down the memory */
+    PreviousMode = ExGetPreviousMode();
+    Status = ExLockUserBuffer(Buffer,
+                              Size,
+                              PreviousMode,
+                              IoWriteAccess,
+                              (PVOID*)&HandleInformation,
+                              &Mdl);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to lock the user buffer: 0x%lx\n", Status);
+        return Status;
+    }
+
+    /* Initialization of count of handles */
+    HandleInformation->NumberOfHandles = NumberOfHandles;
+
+    /* Now get handles from all processes. */
     SystemProcess = PsGetNextProcess(NULL);
     Process = SystemProcess;
 
@@ -1226,16 +1246,13 @@ QSI_DEF(SystemHandleInformation)
         while ((HandleTableEntry = ExpLookupHandleTableEntry(Process->ObjectTable, Handle)))
         {
             /* Validate the entry */
-            if ((HandleTableEntry) &&
-                (HandleTableEntry->Object) &&
+            if ((HandleTableEntry->Object) &&
                 (HandleTableEntry->NextFreeTableEntry != -2))
             {
                 /* Lock the entry */
                 if (ExpLockHandleTableEntry(Process->ObjectTable, HandleTableEntry))
                 {
-                    POBJECT_HEADER ObjectHeader;
-
-                    ObjectHeader = (POBJECT_HEADER)(((ULONG_PTR) HandleTableEntry->Object) & ~OBJ_HANDLE_ATTRIBUTES);
+                    POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
 
                     /* Filling handle information */
                     HandleInformation->Handles[Index].UniqueProcessId = (USHORT)(ULONG_PTR) Process->UniqueProcessId;
@@ -1257,25 +1274,21 @@ QSI_DEF(SystemHandleInformation)
             Handle.Value += sizeof(HANDLE);
         }
 
-        /* Leave the critical region and return callback result */
+        /* Leave the critical region */
         KeLeaveCriticalRegion();
 
         Process = PsGetNextProcess(Process);
     }
     while ((Process != SystemProcess) && (Process != NULL));
 
+    /* Dereference the process which was referenced by PsGetNextProcess */
     if (Process != NULL) ObDereferenceObject(Process);
 
-    return STATUS_SUCCESS;
-
-}
-/*
-SSI_DEF(SystemHandleInformation)
-{
+    /* Release the locked user buffer */
+    ExUnlockUserBuffer(Mdl);
 
     return STATUS_SUCCESS;
 }
-*/
 
 /* Class 17 -  Information */
 QSI_DEF(SystemObjectInformation)
