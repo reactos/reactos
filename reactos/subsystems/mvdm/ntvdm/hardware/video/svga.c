@@ -1765,6 +1765,19 @@ COORD VgaGetDisplayResolution(VOID)
 
 VOID VgaRefreshDisplay(VOID)
 {
+    /* Save the scanline size */
+    ScanlineSizeLatch = ((DWORD)VgaCrtcRegisters[VGA_CRTC_OFFSET_REG]
+                        + (((DWORD)VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_OFFSET_BIT8) << 4)) * 2;
+
+    /* Save the starting address */
+    StartAddressLatch = MAKEWORD(VgaCrtcRegisters[VGA_CRTC_START_ADDR_LOW_REG],
+                                 VgaCrtcRegisters[VGA_CRTC_START_ADDR_HIGH_REG])
+                        + ((VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_ADDR_BIT16) << 16)
+                        + ((VgaCrtcRegisters[SVGA_CRTC_EXT_DISPLAY_REG] & SVGA_CRTC_EXT_ADDR_BITS1718) << 15)
+                        + ((VgaCrtcRegisters[SVGA_CRTC_OVERLAY_REG] & SVGA_CRTC_EXT_ADDR_BIT19) << 12)
+                        + (VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] & 0x1F) * ScanlineSizeLatch
+                        + ((VgaCrtcRegisters[VGA_CRTC_PRESET_ROW_SCAN_REG] >> 5) & 3);
+
     VgaVerticalRetrace();
 }
 
@@ -1960,7 +1973,7 @@ VOID VgaWriteTextModeFont(UINT FontNumber, CONST UCHAR* FontData, UINT Height)
     UINT i, j;
     ASSERT(Height <= VGA_MAX_FONT_HEIGHT);
 
-    for (i = 0 ; i < VGA_FONT_CHARACTERS; i++)
+    for (i = 0; i < VGA_FONT_CHARACTERS; i++)
     {
         /* Write the character */
         for (j = 0; j < Height; j++)
