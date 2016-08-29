@@ -79,6 +79,7 @@ add_library(user32 SHARED
 
 set_module_type(user32 win32dll ENTRYPOINT DllMain 12 UNICODE)
 target_link_libraries(user32 user32_wsprintf wine win32ksys ${PSEH_LIB})
+add_dependencies(user32 asm)
 
 if(MSVC)
     # for __ftol2_sse, float to int cast helper

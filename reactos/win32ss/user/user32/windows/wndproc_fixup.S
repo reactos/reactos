@@ -15,8 +15,8 @@
 .code
 
 /* 
- * __cdecl 
  * LRESULT
+ * __cdecl 
  * CALL_EXTERN_WNDPROC(
  *     WNDPROC WndProc,
  *     HWND hWnd,
@@ -54,3 +54,5 @@ FUNC _CALL_EXTERN_WNDPROC
     ret
 
 ENDFUNC
+
+END

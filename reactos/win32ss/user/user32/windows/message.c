@@ -17,8 +17,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #ifdef __i386__
 /* For bad applications which provide bad (non stdcall) WndProc */
 extern
-__cdecl
 LRESULT
+__cdecl
 CALL_EXTERN_WNDPROC(
      WNDPROC WndProc,
      HWND hWnd,
