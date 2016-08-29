@@ -157,7 +157,7 @@ CAPTION "Run"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Vnesite ime programa, mape, dokumenta ali spletne strani, in Wine ga (jo) bo odprl.", 12289, 36, 11, 182, 18
+    LTEXT "Vnesite ime programa, mape, dokumenta ali spletne strani, in ReactOS ga (jo) bo odprl.", 12289, 36, 11, 182, 18
     LTEXT "&Odpri:", 12305, 7, 39, 24, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
     DEFPUSHBUTTON "V redu", IDOK, 62, 63, 50, 14, WS_TABSTOP

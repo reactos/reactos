@@ -706,7 +706,7 @@ BEGIN
 
     /* message box strings */
     IDS_RESTART_TITLE "Reiniciar"
-    IDS_RESTART_PROMPT "Você quer simular a reinicialização do Windows?"
+    IDS_RESTART_PROMPT "Você quer simular a reinicialização do ReactOS?"
     IDS_SHUTDOWN_TITLE "Desligar"
     IDS_SHUTDOWN_PROMPT "Você quer finalizar a sessão?"
 

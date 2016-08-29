@@ -814,7 +814,7 @@ BEGIN
     IDS_DEFAULT_CLUSTER_SIZE "Masa parazgjedhur shpërndarjes"
     IDS_COPY_OF "Kopjo"
 
-    IDS_SHLEXEC_NOASSOC "Nuk ka asnjë program të Windows të konfiguruar për të hapur këtë lloj file."
+    IDS_SHLEXEC_NOASSOC "Nuk ka asnjë program të ReactOS të konfiguruar për të hapur këtë lloj file."
 
     IDS_FILE_DETAILS "Detaje për '%s' prapashtesë"
     IDS_FILE_DETAILSADV "Dokumente me prapashtesë '%s' janë të tipit '%s'. Për të ndryshuar cilësimet që ndikojnë të gjithë '%s' dokumentet, kliko Avancuar."

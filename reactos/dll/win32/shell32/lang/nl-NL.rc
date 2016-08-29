@@ -157,7 +157,7 @@ CAPTION "Run"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_RUNDLG_ICON, 7, 11, 18, 20, WS_VISIBLE
-    LTEXT "Geef de naam van een programma, map, document, of Internet-adres op. Wine zal het vervolgens openen.", 12289, 36, 11, 182, 18
+    LTEXT "Geef de naam van een programma, map, document, of Internet-adres op. ReactOS zal het vervolgens openen.", 12289, 36, 11, 182, 18
     LTEXT "&Openen:", 12305, 7, 39, 28, 10
     CONTROL "", IDC_RUNDLG_EDITPATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
     DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
@@ -810,7 +810,7 @@ BEGIN
     IDS_DEFAULT_CLUSTER_SIZE "Default allocation size"
     IDS_COPY_OF "Copy of"
 
-    IDS_SHLEXEC_NOASSOC "Er is geen Windows-programma geconfigureerd om dit soort bestanden te openen."
+    IDS_SHLEXEC_NOASSOC "Er is geen ReactOS-programma geconfigureerd om dit soort bestanden te openen."
 
     IDS_FILE_DETAILS "Details for '%s' extension"
     IDS_FILE_DETAILSADV "Files with extension '%s' are of type '%s'. To change settings that affect all '%s' files, click Advanced."
