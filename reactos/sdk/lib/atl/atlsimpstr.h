@@ -4,7 +4,7 @@
 #pragma once
 
 #include <atlcore.h>
-
+#include <atlexcept.h>
 
 namespace ATL
 {
@@ -485,7 +485,7 @@ private:
         CStringData* pNewData = pOldData->pStringMgr->Clone()->Allocate(nLength, sizeof(XCHAR));
         if (pNewData == NULL)
         {
-            throw; // ThrowMemoryException();
+            ThrowMemoryException();
         }
         int nCharsToCopy = ((nOldLength < nLength) ? nOldLength : nLength) + 1;
         CopyChars(PXSTR(pNewData->data()), nCharsToCopy,
@@ -550,7 +550,7 @@ private:
         CStringData* pNewData = pStringMgr->Reallocate(pOldData, nLength, sizeof(XCHAR));
         if (pNewData == NULL)
         {
-            throw; // ThrowMemoryException();
+            ThrowMemoryException();
         }
 
         Attach(pNewData);
@@ -562,7 +562,9 @@ private:
         ATLASSERT(nLength <= GetData()->nAllocLength);
 
         if (nLength < 0 || nLength > GetData()->nAllocLength)
-            throw;
+        {
+            AtlThrow(E_INVALIDARG);
+        }
 
         GetData()->nDataLength = nLength;
         m_pszData[nLength] = 0;
@@ -583,7 +585,7 @@ private:
             pNewData = pNewStringMgr->Allocate(pData->nDataLength, sizeof(XCHAR));
             if (pNewData == NULL)
             {
-                throw; // ThrowMemoryException();
+                ThrowMemoryException();
             }
 
             pNewData->nDataLength = pData->nDataLength;
@@ -592,6 +594,12 @@ private:
         }
 
         return pNewData;
+    }
+
+
+    static void ThrowMemoryException()
+    {
+        AtlThrow(E_OUTOFMEMORY);
     }
 
 };

@@ -4,7 +4,7 @@ add_subdirectory(shelldesktop)
 add_subdirectory(shellmenu)
 add_subdirectory(shellrecyclebin)
 
-set_cpp(WITH_RUNTIME WITH_EXCEPTIONS)
+set_cpp(WITH_RUNTIME)
 spec2def(shell32.dll shell32.spec ADD_IMPORTLIB)
 
 if(NOT MSVC)
@@ -17,7 +17,8 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
     -D_SHELL32_
-    -D_WINE)
+    -D_WINE
+    -D_ATL_NO_EXCEPTIONS)
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/lib/atl
