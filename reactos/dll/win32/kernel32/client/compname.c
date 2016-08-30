@@ -50,6 +50,9 @@ GetComputerNameFromRegistry(LPWSTR RegistryKey,
     ULONG ReturnSize;
     NTSTATUS Status;
 
+    if (lpBuffer != NULL && *nSize > 0)
+        lpBuffer[0] = 0;
+
     RtlInitUnicodeString(&KeyName, RegistryKey);
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
