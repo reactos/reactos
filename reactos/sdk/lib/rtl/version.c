@@ -56,9 +56,11 @@ RtlVerifyVersionInfo(IN PRTL_OSVERSIONINFOEXW VersionInfo,
                      IN ULONG TypeMask,
                      IN ULONGLONG ConditionMask)
 {
-    NTSTATUS Status;
-    RTL_OSVERSIONINFOEXW ver;
+    RTL_OSVERSIONINFOEXW Version;
     BOOLEAN Comparison;
+    BOOLEAN DoNextCheck;
+    NTSTATUS Status;
+    UCHAR Condition;
 
     /* FIXME:
         - Check the following special case on Windows (various versions):
@@ -67,19 +69,28 @@ RtlVerifyVersionInfo(IN PRTL_OSVERSIONINFOEXW VersionInfo,
         - MSDN talks about some tests being impossible. Check what really happens.
      */
 
-    ver.dwOSVersionInfoSize = sizeof(ver);
-    Status = RtlGetVersion((PRTL_OSVERSIONINFOW)&ver);
-    if (Status != STATUS_SUCCESS) return Status;
+    Version.dwOSVersionInfoSize = sizeof(Version);
 
-    if (!TypeMask || !ConditionMask) return STATUS_INVALID_PARAMETER;
+    Status = RtlGetVersion((PRTL_OSVERSIONINFOW)&Version);
+    if (Status != STATUS_SUCCESS)
+    {
+        return Status;
+    }
+
+    if (!TypeMask || !ConditionMask)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
     if (TypeMask & VER_PRODUCT_TYPE)
     {
-        Comparison = RtlpVerCompare(ver.wProductType,
+        Comparison = RtlpVerCompare(Version.wProductType,
                                     VersionInfo->wProductType,
                                     RtlpVerGetCondition(ConditionMask, VER_PRODUCT_TYPE));
         if (!Comparison)
+        {
             return STATUS_REVISION_MISMATCH;
+        }
     }
 
     if (TypeMask & VER_SUITENAME)
@@ -87,85 +98,123 @@ RtlVerifyVersionInfo(IN PRTL_OSVERSIONINFOEXW VersionInfo,
         switch (RtlpVerGetCondition(ConditionMask, VER_SUITENAME))
         {
             case VER_AND:
-                if ((VersionInfo->wSuiteMask & ver.wSuiteMask) != VersionInfo->wSuiteMask)
+            {
+                if ((VersionInfo->wSuiteMask & Version.wSuiteMask) != VersionInfo->wSuiteMask)
                 {
                     return STATUS_REVISION_MISMATCH;
                 }
-                break;
+            }
+            break;
+
             case VER_OR:
-                if (!(VersionInfo->wSuiteMask & ver.wSuiteMask) && VersionInfo->wSuiteMask)
+            {
+                if (!(VersionInfo->wSuiteMask & Version.wSuiteMask) && VersionInfo->wSuiteMask)
                 {
                     return STATUS_REVISION_MISMATCH;
                 }
                 break;
+            }
+
             default:
+            {
                 return STATUS_INVALID_PARAMETER;
+            }
         }
     }
 
     if (TypeMask & VER_PLATFORMID)
     {
-        Comparison = RtlpVerCompare(ver.dwPlatformId,
+        Comparison = RtlpVerCompare(Version.dwPlatformId,
                                     VersionInfo->dwPlatformId,
                                     RtlpVerGetCondition(ConditionMask, VER_PLATFORMID));
         if (!Comparison)
+        {
             return STATUS_REVISION_MISMATCH;
+        }
     }
 
     if (TypeMask & VER_BUILDNUMBER)
     {
-        Comparison = RtlpVerCompare(ver.dwBuildNumber,
+        Comparison = RtlpVerCompare(Version.dwBuildNumber,
                                     VersionInfo->dwBuildNumber,
                                     RtlpVerGetCondition(ConditionMask, VER_BUILDNUMBER));
         if (!Comparison)
+        {
             return STATUS_REVISION_MISMATCH;
+        }
     }
 
-    TypeMask &= VER_MAJORVERSION|VER_MINORVERSION|VER_SERVICEPACKMAJOR|VER_SERVICEPACKMINOR;
-    if (TypeMask)
-    {
-        BOOLEAN do_next_check = TRUE;
-        /*
-         * Select the leading comparison operator (for example, the comparison
-         * operator for VER_MAJORVERSION supersedes the others for VER_MINORVERSION,
-         * VER_SERVICEPACKMAJOR and VER_SERVICEPACKMINOR).
-         */
-        UCHAR Condition = RtlpVerGetCondition(ConditionMask, TypeMask);
+    DoNextCheck = TRUE;
+    Condition = VER_EQUAL;
 
-        Comparison = TRUE;
-        if (TypeMask & VER_MAJORVERSION)
+    if (TypeMask & VER_MAJORVERSION)
+    {
+        Condition = RtlpVerGetCondition(ConditionMask, VER_MAJORVERSION);
+        DoNextCheck = (VersionInfo->dwMajorVersion == Version.dwMajorVersion);
+        Comparison = RtlpVerCompare(Version.dwMajorVersion,
+                                    VersionInfo->dwMajorVersion,
+                                    Condition);
+
+        if (!Comparison && !DoNextCheck)
         {
-            Comparison = RtlpVerCompare(ver.dwMajorVersion,
-                                        VersionInfo->dwMajorVersion,
-                                        Condition);
-            do_next_check = (ver.dwMajorVersion == VersionInfo->dwMajorVersion) &&
-                ((Condition != VER_EQUAL) || Comparison);
+            return STATUS_REVISION_MISMATCH;
         }
-        if ((TypeMask & VER_MINORVERSION) && do_next_check)
+    }
+
+    if (DoNextCheck)
+    {
+        if (TypeMask & VER_MINORVERSION)
         {
-            Comparison = RtlpVerCompare(ver.dwMinorVersion,
+            if (Condition == VER_EQUAL)
+            {
+                Condition = RtlpVerGetCondition(ConditionMask, VER_MINORVERSION); 
+            }
+
+            DoNextCheck = (VersionInfo->dwMinorVersion == Version.dwMinorVersion);
+            Comparison = RtlpVerCompare(Version.dwMinorVersion,
                                         VersionInfo->dwMinorVersion,
                                         Condition);
-            do_next_check = (ver.dwMinorVersion == VersionInfo->dwMinorVersion) &&
-                ((Condition != VER_EQUAL) || Comparison);
-        }
-        if ((TypeMask & VER_SERVICEPACKMAJOR) && do_next_check)
-        {
-            Comparison = RtlpVerCompare(ver.wServicePackMajor,
-                                        VersionInfo->wServicePackMajor,
-                                        Condition);
-            do_next_check = (ver.wServicePackMajor == VersionInfo->wServicePackMajor) &&
-                ((Condition != VER_EQUAL) || Comparison);
-        }
-        if ((TypeMask & VER_SERVICEPACKMINOR) && do_next_check)
-        {
-            Comparison = RtlpVerCompare(ver.wServicePackMinor,
-                                        VersionInfo->wServicePackMinor,
-                                        Condition);
+
+            if (!Comparison && !DoNextCheck)
+            {
+                return STATUS_REVISION_MISMATCH;
+            }
         }
 
-        if (!Comparison)
-            return STATUS_REVISION_MISMATCH;
+        if (DoNextCheck && (TypeMask & VER_SERVICEPACKMAJOR))
+        {
+            if (Condition == VER_EQUAL)
+            {
+                Condition = RtlpVerGetCondition(ConditionMask, VER_SERVICEPACKMAJOR); 
+            }
+
+            DoNextCheck = (VersionInfo->wServicePackMajor == Version.wServicePackMajor);
+            Comparison = RtlpVerCompare(Version.wServicePackMajor,
+                                        VersionInfo->wServicePackMajor,
+                                        Condition);
+
+            if (!Comparison && !DoNextCheck)
+            {
+                return STATUS_REVISION_MISMATCH;
+            }
+
+            if (DoNextCheck && (TypeMask & VER_SERVICEPACKMINOR))
+            {
+                if (Condition == VER_EQUAL)
+                {
+                    Condition = RtlpVerGetCondition(ConditionMask, VER_SERVICEPACKMINOR); 
+                }
+
+                Comparison = RtlpVerCompare((ULONG)Version.wServicePackMinor,
+                                            (ULONG)VersionInfo->wServicePackMinor,
+                                            Condition);
+
+                if (!Comparison)
+                {
+                    return STATUS_REVISION_MISMATCH;
+                }
+            }
+        }
     }
 
     return STATUS_SUCCESS;
