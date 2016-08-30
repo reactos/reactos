@@ -653,6 +653,104 @@ VOID WINAPI VbeService(LPWORD Stack)
             break;
         }
 
+        /* Get/Set Display Start */
+        case 0x07:
+        {
+            DWORD StartAddress;
+            BYTE Value;
+            PCVBE_MODE Mode = VbeGetModeByNumber(Bda->VideoMode);
+            BYTE OldCrtcIndex = IOReadB(VGA_CRTC_INDEX_COLOR);
+
+            if (getBL() & 0x80)
+            {
+                /* Wait for a vertical retrace */
+                if (!(IOReadB(VGA_INSTAT1_READ_COLOR) & VGA_STAT_VRETRACE))
+                {
+                    setCF(1);
+                    break;
+                }
+
+                setCF(0);
+            }
+
+            switch (getBL() & 0x7F)
+            {
+                /* Set Display Start */
+                case 0x00:
+                {
+                    setAL(0x4F);
+
+                    if (Mode == NULL || Mode->Info == NULL)
+                    {
+                        /* This is not a VBE mode */
+                        // TODO: Support anyway, perhaps? It can be done.
+                        setAH(0x01);
+                        break;
+                    }
+
+                    StartAddress = getCX() + getDX() * Mode->Info->BytesPerScanline;
+
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, SVGA_CRTC_OVERLAY_REG);
+                    Value = IOReadB(VGA_CRTC_DATA_COLOR);
+                    Value &= ~SVGA_CRTC_EXT_ADDR_BIT19;
+                    Value |= (StartAddress >> 12) & SVGA_CRTC_EXT_ADDR_BIT19;
+                    IOWriteB(VGA_CRTC_DATA_COLOR, Value);
+
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, SVGA_CRTC_EXT_DISPLAY_REG);
+                    Value = IOReadB(VGA_CRTC_DATA_COLOR);
+                    Value &= ~(SVGA_CRTC_EXT_ADDR_BIT16 | SVGA_CRTC_EXT_ADDR_BITS1718);
+                    Value |= (StartAddress >> 16) & SVGA_CRTC_EXT_ADDR_BIT16;
+                    Value |= (StartAddress >> 15) & SVGA_CRTC_EXT_ADDR_BITS1718;
+                    IOWriteB(VGA_CRTC_DATA_COLOR, Value);
+
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, VGA_CRTC_START_ADDR_HIGH_REG);
+                    IOWriteB(VGA_CRTC_DATA_COLOR, (StartAddress >> 8) & 0xFF);
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, VGA_CRTC_START_ADDR_LOW_REG);
+                    IOWriteB(VGA_CRTC_DATA_COLOR, StartAddress & 0xFF);
+
+                    setAH(0);
+                    break;
+                }
+
+                /* Get Display Start */
+                case 0x01:
+                {
+                    setAL(0x4F);
+                    StartAddress = 0;
+
+                    if (Mode == NULL || Mode->Info == NULL)
+                    {
+                        /* This is not a VBE mode */
+                        // TODO: Support anyway, perhaps? It can be done.
+                        setAH(0x01);
+                        break;
+                    }
+
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, SVGA_CRTC_OVERLAY_REG);
+                    StartAddress = (IOReadB(VGA_CRTC_DATA_COLOR) & SVGA_CRTC_EXT_ADDR_BIT19) << 12;
+
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, SVGA_CRTC_EXT_DISPLAY_REG);
+                    Value = IOReadB(VGA_CRTC_DATA_COLOR);
+                    StartAddress |= (Value & SVGA_CRTC_EXT_ADDR_BIT16) << 16;
+                    StartAddress |= (Value & SVGA_CRTC_EXT_ADDR_BITS1718) << 15;
+
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, VGA_CRTC_START_ADDR_HIGH_REG);
+                    StartAddress |= IOReadB(VGA_CRTC_DATA_COLOR) << 8;
+                    IOWriteB(VGA_CRTC_INDEX_COLOR, VGA_CRTC_START_ADDR_LOW_REG);
+                    StartAddress |= IOReadB(VGA_CRTC_DATA_COLOR);
+
+                    setCX(StartAddress % Mode->Info->BytesPerScanline);
+                    setDX(StartAddress / Mode->Info->BytesPerScanline);
+
+                    setAH(0);
+                    break;
+                }
+            }
+
+            IOWriteB(VGA_CRTC_INDEX_COLOR, OldCrtcIndex);
+            break;
+        }
+
         default:
         {
             DPRINT1("VESA BIOS Extensions function %02Xh NOT IMPLEMENTED!\n", getAL());
