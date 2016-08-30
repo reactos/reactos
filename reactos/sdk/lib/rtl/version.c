@@ -205,8 +205,8 @@ RtlVerifyVersionInfo(IN PRTL_OSVERSIONINFOEXW VersionInfo,
                     Condition = RtlpVerGetCondition(ConditionMask, VER_SERVICEPACKMINOR); 
                 }
 
-                Comparison = RtlpVerCompare((ULONG)Version.wServicePackMinor,
-                                            (ULONG)VersionInfo->wServicePackMinor,
+                Comparison = RtlpVerCompare(Version.wServicePackMinor,
+                                            VersionInfo->wServicePackMinor,
                                             Condition);
 
                 if (!Comparison)
