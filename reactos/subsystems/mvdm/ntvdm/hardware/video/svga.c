@@ -1797,8 +1797,9 @@ VOID FASTCALL VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
     {
         VideoAddress = VgaTranslateAddress(Address);
 
-        /* Check for chain-4 and odd-even mode */
-        if (VgaSeqRegisters[VGA_SEQ_MEM_REG] & VGA_SEQ_MEM_C4)
+#if 0
+        /* Packed pixel mode - not used yet */
+        if (VgaSeqRegisters[SVGA_SEQ_EXT_MODE_REG] & SVGA_SEQ_EXT_MODE_HIGH_RES)
         {
             /* Just copy from the video memory */
             PVOID VideoMemory = &VgaMemory[VideoAddress * VGA_NUM_BANKS + (Address & 3)];
@@ -1829,12 +1830,65 @@ VOID FASTCALL VgaReadMemory(ULONG Address, PVOID Buffer, ULONG Size)
 #endif
             }
         }
+#endif
+
+        /* Check for chain-4 and odd-even mode */
+        if (VgaSeqRegisters[VGA_SEQ_MEM_REG] & VGA_SEQ_MEM_C4)
+        {
+            i = 0;
+
+            /* Write the unaligned part first */
+            if (Address & 3)
+            {
+                switch (Address & 3)
+                {
+                    case 1:
+                        BufPtr[i++] = VgaMemory[VideoAddress * VGA_NUM_BANKS + 1];
+                    case 2:
+                        BufPtr[i++] = VgaMemory[VideoAddress * VGA_NUM_BANKS + 2];
+                    case 3:
+                        BufPtr[i++] = VgaMemory[VideoAddress * VGA_NUM_BANKS + 3];
+                }
+
+                VideoAddress += 4;
+            }
+
+            /* Copy the aligned dwords */
+            while ((i + 3) < Size)
+            {
+                *(PULONG)&BufPtr[i] = *(PULONG)&VgaMemory[VideoAddress * VGA_NUM_BANKS];
+
+                i += 4;
+                VideoAddress += 4;
+            }
+
+            /* Write the remaining part */
+            if (i < Size)
+            {
+                switch (Size - i - 3)
+                {
+                    case 3:
+                        BufPtr[i] = VgaMemory[VideoAddress * VGA_NUM_BANKS + ((Address + i) & 3)];
+                        i++;
+                    case 2:
+                        BufPtr[i] = VgaMemory[VideoAddress * VGA_NUM_BANKS + ((Address + i) & 3)];
+                        i++;
+                    case 1:
+                        BufPtr[i] = VgaMemory[VideoAddress * VGA_NUM_BANKS + ((Address + i) & 3)];
+                        i++;
+                }
+            }
+        }
         else if (VgaGcRegisters[VGA_GC_MODE_REG] & VGA_GC_MODE_OE)
         {
             i = 0;
 
             /* Check if the starting address is odd */
-            if (Address & 1) BufPtr[i++] = VgaMemory[(VideoAddress++) * VGA_NUM_BANKS + 1];
+            if (Address & 1)
+            {
+                BufPtr[i++] = VgaMemory[VideoAddress * VGA_NUM_BANKS + 1];
+                VideoAddress += 2;
+            }
 
             while (i < (Size - 1))
             {
