@@ -2219,7 +2219,7 @@ static void FASTCALL MENU_DrawMenuItem(PWND Wnd, PMENU Menu, PWND WndOwner, HDC 
 
     if (lpitem->fType & MF_SYSMENU)
     {
-        if ( (Wnd->style & WS_MINIMIZE))
+        if (!(Wnd->style & WS_MINIMIZE))
         {
           NC_GetInsideRect(Wnd, &rect);
           UserDrawSysMenuButton(Wnd, hdc, &rect, lpitem->fState & (MF_HILITE | MF_MOUSESELECT));
@@ -2720,7 +2720,7 @@ UINT MENU_DrawMenuBar( HDC hDC, LPRECT lprect, PWND pWnd, BOOL suppress_draw )
         // No menu. Do not reserve any space
         return 0;
     }
-    
+
     if (lprect == NULL)
     {
         return UserGetSystemMetrics(SM_CYMENU);
@@ -2952,11 +2952,15 @@ static void FASTCALL MENU_SelectItem(PWND pwndOwner, PMENU menu, UINT wIndex,
                                     BOOL sendMenuSelect, PMENU topmenu)
 {
     HDC hdc;
-    PWND pWnd = ValidateHwndNoErr(menu->hWnd);
+    PWND pWnd;
 
     TRACE("M_SI: owner=%p menu=%p index=0x%04x select=0x%04x\n", pwndOwner, menu, wIndex, sendMenuSelect);
 
-    if (!menu || !menu->cItems || !pWnd) return;
+    if (!menu || !menu->cItems) return;
+
+    pWnd = ValidateHwndNoErr(menu->hWnd);
+
+    if (!pWnd) return;
 
     if (menu->iItem == wIndex) return;
 
@@ -3126,6 +3130,8 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
   PWND pWnd;
 
   TRACE("owner=%x menu=%p 0x%04x\n", WndOwner, Menu, SelectFirst);
+
+  if (!Menu) return Menu;
 
   if (Menu->iItem == NO_SELECTED_ITEM) return Menu;
   
@@ -3584,7 +3590,7 @@ static LRESULT FASTCALL MENU_DoNextMenu(MTRACKER* pmt, UINT Vk, UINT wFlags)
           {
               /* switch to the system menu */
               MenuTmp = get_win_sys_menu(hNewWnd);
-              hNewMenu = UserHMGetHandle(MenuTmp);
+              if (MenuTmp) hNewMenu = UserHMGetHandle(MenuTmp);
           }
           else
               return FALSE;
@@ -4356,6 +4362,9 @@ BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
           co_IntSendMessage( UserHMGetHandle(pWnd), WM_INITMENUPOPUP, (WPARAM) UserHMGetHandle(menu), 0);
        }
 
+       if (menu->fFlags & MNF_SYSMENU)
+          MENU_InitSysMenuPopup( menu, pWnd->style, pWnd->pcls->style, HTSYSMENU);
+
        if (MENU_ShowPopup(pWnd, menu, 0, wFlags, x, y, 0, 0 ))
           ret = MENU_TrackMenu( menu, wFlags | TPM_POPUPMENU, 0, 0, pWnd,
                                 lpTpm ? &lpTpm->rcExclude : NULL);
@@ -5114,7 +5123,7 @@ PMENU FASTCALL MENU_GetSystemMenu(PWND Window, PMENU Popup)
 
       ItemInfo.cbSize = sizeof(MENUITEMINFOW);
       ItemInfo.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE | MIIM_SUBMENU;
-      ItemInfo.fType = 0;
+      ItemInfo.fType = MF_POPUP;
       ItemInfo.fState = MFS_ENABLED;
       ItemInfo.dwTypeData = NULL;
       ItemInfo.cch = 0;
@@ -5183,7 +5192,7 @@ IntSetSystemMenu(PWND Window, PMENU Menu)
       if (OldMenu)
       {
           OldMenu->fFlags &= ~MNF_SYSMENU;
-         IntDestroyMenuObject(OldMenu, TRUE);
+          IntDestroyMenuObject(OldMenu, TRUE);
       }
    }
 
