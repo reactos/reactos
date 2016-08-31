@@ -3471,7 +3471,15 @@ static BOOL FASTCALL MENU_MouseMove(MTRACKER *pmt, PMENU PtMenu, UINT Flags)
   if ( PtMenu )
   {
       if (IS_SYSTEM_MENU(PtMenu))
+      {
           Index = 0;
+          //// ReactOS only HACK: CORE-2338
+          // Windows tracks mouse moves to the system menu but does not open it.
+          // Only keyboard tracking can do that.
+          //
+          TRACE("SystemMenu\n");
+          return TRUE; // Stay inside the Loop!
+      }
       else
           MENU_FindItemByCoords( PtMenu, pmt->Pt, &Index );
   }
