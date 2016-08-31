@@ -554,6 +554,11 @@ IdlePong(VOID)
    }
 }
 
+static BOOL is_message_broadcastable(UINT msg)
+{
+    return msg < WM_USER || msg >= 0xc000;
+}
+
 UINT FASTCALL
 GetWakeMask(UINT first, UINT last )
 {
@@ -1200,11 +1205,13 @@ UserPostMessage( HWND Wnd,
         return FALSE;
     }
 
-    if (Wnd == HWND_BROADCAST)
+    if (Wnd == HWND_BROADCAST || Wnd == HWND_TOPMOST)
     {
         HWND *List;
         PWND DesktopWindow;
         ULONG i;
+
+        if (!is_message_broadcastable(Msg)) return TRUE;
 
         DesktopWindow = UserGetDesktopWindow();
         List = IntWinListChildren(DesktopWindow);
@@ -1495,6 +1502,8 @@ co_IntSendMessageTimeout( HWND hWnd,
         return co_IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, uFlags, uTimeout, uResult);
     }
 
+    if (!is_message_broadcastable(Msg)) return TRUE;
+
     DesktopWindow = UserGetDesktopWindow();
     if (NULL == DesktopWindow)
     {
@@ -1516,26 +1525,14 @@ co_IntSendMessageTimeout( HWND hWnd,
 
     for (Child = Children; NULL != *Child; Child++)
     {
-        if (hWnd == HWND_TOPMOST)
-        {
-           DesktopWindow = UserGetWindowObject(*Child);
-           if (DesktopWindow && DesktopWindow->ExStyle & WS_EX_TOPMOST)
-           {
-              ERR("HWND_TOPMOST Found\n");
-              co_IntSendMessageTimeoutSingle(*Child, Msg, wParam, lParam, uFlags, uTimeout, uResult);
-           }
-        }
-        else
-        {
-           PWND pwnd = UserGetWindowObject(*Child);
-           if (!pwnd) continue;
+        PWND pwnd = UserGetWindowObject(*Child);
+        if (!pwnd) continue;
 
-           if ( pwnd->fnid == FNID_MENU ||
-                pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
-              continue;
+        if ( pwnd->fnid == FNID_MENU ||
+             pwnd->pcls->atomClassName == gpsi->atomSysClass[ICLS_SWITCH] )
+           continue;
 
-           co_IntSendMessageTimeoutSingle(*Child, Msg, wParam, lParam, uFlags, uTimeout, uResult);
-        }
+        co_IntSendMessageTimeoutSingle(*Child, Msg, wParam, lParam, uFlags, uTimeout, uResult);
     }
 
     ExFreePoolWithTag(Children, USERTAG_WINDOWLIST);
