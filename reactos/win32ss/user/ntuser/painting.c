@@ -9,9 +9,6 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserPainting);
 
-#define RDW_CLIPCHILDREN  4096
-#define RDW_NOUPDATEDIRTY 32768
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /**

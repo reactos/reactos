@@ -2241,6 +2241,19 @@ co_WinPosSetWindowPos(
 #endif
    }
 
+   if ( !PosChanged &&
+         (WinPos.flags & SWP_FRAMECHANGED) &&
+        !(WinPos.flags & SWP_DEFERERASE) &&    // Prevent sending WM_SYNCPAINT message. 
+         VisAfter )
+   {
+       PWND Parent = Window->spwndParent;
+       if ( !(Window->style & WS_CHILD) && (Parent) && (Parent->style & WS_CLIPCHILDREN))
+       {
+           TRACE("SWP_FRAMECHANGED Parent WS_CLIPCHILDREN\n");
+           UserSyncAndPaintWindows( Parent, RDW_CLIPCHILDREN);
+       }
+   }
+
    // Fix wine msg test_SetFocus, prevents sending WM_WINDOWPOSCHANGED.
    if ( VisBefore == NULL &&
         VisBeforeJustClient == NULL &&
@@ -3396,7 +3409,7 @@ NtUserSetWindowRgn(
    }
    else
    {
-       Window->hrgnNewFrame = (HRGN) 1;
+       Window->hrgnNewFrame = HRGN_WINDOW;
    }
    //// HACK 2
    Ret = co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, bRedraw ? flags : (flags|SWP_NOREDRAW) );

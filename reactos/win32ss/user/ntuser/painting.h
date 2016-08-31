@@ -12,6 +12,9 @@
 #define PRGN_WINDOW  ((PREGION)1) /* region from window rcWindow */
 #define PRGN_MONITOR ((PREGION)2) /* region from monitor region. */
 
+#define RDW_CLIPCHILDREN  4096
+#define RDW_NOUPDATEDIRTY 32768
+
 #define GreCreateRectRgnIndirect(prc) \
   NtGdiCreateRectRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
 
@@ -36,4 +39,4 @@ BOOL FASTCALL IntIntersectWithParents(PWND, RECTL *);
 BOOL FASTCALL IntIsWindowDrawable(PWND);
 BOOL UserDrawCaption(PWND,HDC,RECTL*,HFONT,HICON,const PUNICODE_STRING,UINT);
 VOID FASTCALL UpdateThreadWindows(PWND,PTHREADINFO,HRGN);
-
+VOID FASTCALL UserSyncAndPaintWindows(PWND pWnd, ULONG Flags);
