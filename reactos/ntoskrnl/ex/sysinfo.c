@@ -1241,41 +1241,64 @@ QSI_DEF(SystemHandleInformation)
         /* Enter a critical region */
         KeEnterCriticalRegion();
 
-        /* Set the initial value and loop the entries */
-        Handle.Value = 0;
-        while ((HandleTableEntry = ExpLookupHandleTableEntry(Process->ObjectTable, Handle)))
+        _SEH2_TRY
         {
-            /* Validate the entry */
-            if ((HandleTableEntry->Object) &&
-                (HandleTableEntry->NextFreeTableEntry != -2))
+            /* Set the initial value and loop the entries */
+            Handle.Value = 0;
+            while ((HandleTableEntry = ExpLookupHandleTableEntry(Process->ObjectTable, Handle)))
             {
-                /* Lock the entry */
-                if (ExpLockHandleTableEntry(Process->ObjectTable, HandleTableEntry))
+                /* Validate the entry */
+                if ((HandleTableEntry->Object) &&
+                    (HandleTableEntry->NextFreeTableEntry != -2))
                 {
-                    POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
+                    /* Lock the entry */
+                    if (ExpLockHandleTableEntry(Process->ObjectTable, HandleTableEntry))
+                    {
+                        _SEH2_TRY
+                        {
+                            POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
 
-                    /* Filling handle information */
-                    HandleInformation->Handles[Index].UniqueProcessId = (USHORT)(ULONG_PTR) Process->UniqueProcessId;
-                    HandleInformation->Handles[Index].CreatorBackTraceIndex = 0;
-                    HandleInformation->Handles[Index].ObjectTypeIndex = (UCHAR) ObjectHeader->Type->Index;
-                    HandleInformation->Handles[Index].HandleAttributes = HandleTableEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES;
-                    HandleInformation->Handles[Index].HandleValue = (USHORT)(ULONG_PTR) Handle.GenericHandleOverlay;
-                    HandleInformation->Handles[Index].Object = &ObjectHeader->Body;
-                    HandleInformation->Handles[Index].GrantedAccess = HandleTableEntry->GrantedAccess;
+                            /* Filling handle information */
+                            HandleInformation->Handles[Index].UniqueProcessId =
+                                (USHORT)(ULONG_PTR) Process->UniqueProcessId;
 
-                    /* Unlock it */
-                    ExUnlockHandleTableEntry(Process->ObjectTable, HandleTableEntry);
+                            HandleInformation->Handles[Index].CreatorBackTraceIndex = 0;
 
-                    ++Index;
+                            HandleInformation->Handles[Index].ObjectTypeIndex =
+                                (UCHAR) ObjectHeader->Type->Index;
+
+                            HandleInformation->Handles[Index].HandleAttributes =
+                                HandleTableEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES;
+
+                            HandleInformation->Handles[Index].HandleValue =
+                                (USHORT)(ULONG_PTR) Handle.GenericHandleOverlay;
+
+                            HandleInformation->Handles[Index].Object = &ObjectHeader->Body;
+
+                            HandleInformation->Handles[Index].GrantedAccess =
+                                HandleTableEntry->GrantedAccess;
+
+                            ++Index;
+                        }
+                        _SEH2_FINALLY
+                        {
+                            /* Unlock it */
+                            ExUnlockHandleTableEntry(Process->ObjectTable, HandleTableEntry);
+                        }
+                        _SEH2_END;
+                    }
                 }
+
+                /* Go to the next entry */
+                Handle.Value += sizeof(HANDLE);
             }
-
-            /* Go to the next entry */
-            Handle.Value += sizeof(HANDLE);
         }
-
-        /* Leave the critical region */
-        KeLeaveCriticalRegion();
+        _SEH2_FINALLY
+        {
+            /* Leave the critical region */
+            KeLeaveCriticalRegion();
+        }
+        _SEH2_END;
 
         Process = PsGetNextProcess(Process);
     }
