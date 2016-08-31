@@ -1,6 +1,6 @@
 ========================
 ReactOS™ Version 0.4.x
-Updated January 5, 2016
+Updated August 31, 2016
 ========================
 
 1. What is ReactOS?
@@ -40,7 +40,20 @@ We are already looking at subsystems for: Java, OS/2, and DOS and possibly
 others in the future.
 
 
-5. Tutorials
+5. Is ReactOS legal?
+---------------------------------------
+
+Yes we are.
+All the code of ReactOS has been written from scratch by our developers.
+We go to great lengths to ensure that the code our developers create is clean,
+same applies to the variety of methods we use to understand Windows internals,
+including clean room reverse engineering, using existing documentation freely
+available both in books and on the web, using extensive tests (tens of millions)
+which apply black box engineering methods against both public and private APIs
+exposed by the operating system.
+
+
+6. Tutorials
 ------------
 
 Developer and User Tutorials: http://www.reactos.org/wiki
@@ -49,7 +62,7 @@ The tutorials contain more information on the project, compiling and testing
 ReactOS - amongst other topics. Contributors to the project are always welcome.
 
 
-6. Author
+7. Author
 ---------
 
 This document was written by Jason Filby (jasonfilby@yahoo.com).

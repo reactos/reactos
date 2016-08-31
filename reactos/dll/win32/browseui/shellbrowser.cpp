@@ -597,7 +597,6 @@ public:
     LRESULT OnGoUpLevel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnBackspace(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnGoHome(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
-    LRESULT OnIsThisLegal(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleStatusBarVisible(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToggleToolbarLock(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -642,7 +641,6 @@ public:
         COMMAND_ID_HANDLER(IDM_GOTO_UPONELEVEL, OnGoUpLevel)
         COMMAND_ID_HANDLER(IDM_GOTO_HOMEPAGE, OnGoHome)
         COMMAND_ID_HANDLER(IDM_FAVORITES_ORGANIZEFAVORITES, OnOrganizeFavorites)
-        COMMAND_ID_HANDLER(IDM_HELP_ISTHISCOPYLEGAL, OnIsThisLegal)
         COMMAND_ID_HANDLER(IDM_VIEW_STATUSBAR, OnToggleStatusBarVisible)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_LOCKTOOLBARS, OnToggleToolbarLock)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_STANDARDBUTTONS, OnToggleToolbarBandVisible)
@@ -3590,41 +3588,6 @@ LRESULT CShellBrowser::OnOrganizeFavorites(WORD wNotifyCode, WORD wID, HWND hWnd
     hr = SHInvokeDefaultCommand(m_hWnd, psfDesktop, pidlFavs);
     if (FAILED_UNEXPECTEDLY(hr))
         return 0;
-
-    return 0;
-}
-
-LRESULT CShellBrowser::OnIsThisLegal(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
-{
-    WCHAR wszSite[256];
-    HINSTANCE hResourceInstance = _AtlBaseModule.GetResourceInstance();
-
-    if (!LoadStringW(hResourceInstance, IDS_LEGAL_URL, wszSite, _countof(wszSite)))
-        StringCchCopyW(wszSite, _countof(wszSite), L"https://www.reactos.org/joining/faqs");
-
-    SHELLEXECUTEINFOW execInfo = { sizeof(execInfo), 0 };
-    execInfo.lpVerb = L"open";
-    execInfo.lpFile = wszSite;
-    execInfo.hwnd = m_hWnd;
-    execInfo.nShow = SW_SHOWNORMAL;
-
-    if (!ShellExecuteExW(&execInfo))
-    {
-        WCHAR wszCaption[256];
-        WCHAR wszMessage[512];
-
-        DWORD error = GetLastError();
-
-        if (!LoadStringW(hResourceInstance, IDS_SORRY_MESSAGE, wszCaption, _countof(wszCaption)))
-            StringCchCopyW(wszCaption, _countof(wszCaption), L"ReactOS could not browse to '%s' (error 0x%lx). Please make sure there is a web browser installed.");
-
-        StringCchPrintfW(wszMessage, _countof(wszMessage), wszCaption, wszSite, error);
-
-        if (!LoadStringW(hResourceInstance, IDS_SORRY_CAPTION, wszCaption, _countof(wszCaption)))
-            StringCchCopyW(wszCaption, _countof(wszCaption), L"Sorry");
-
-        MessageBoxW(wszMessage, wszCaption, MB_OK);
-    }
 
     return 0;
 }

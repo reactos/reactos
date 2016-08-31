@@ -92,7 +92,6 @@ BEGIN
     END
     POPUP "帮助(&H)", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "此副本的 ReactOS 是合法的吗？(&L)", IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "关于 ReactOS(&A)", IDM_HELP_ABOUT
     END
 END
@@ -292,11 +291,4 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARD_TOOLBAR, "|返回|前进|向上|搜索|文件夹|移动到|复制到|删除|撤消|视图|停止|刷新|首页|映射磁盘|断开连接|收藏夹|历史|全屏幕|属性|剪下|复制|贴下|文件夹选项||"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_LEGAL_URL, "https://www.reactos.org/joining/faqs"
-    IDS_SORRY_CAPTION, "Sorry"
-    IDS_SORRY_MESSAGE, "ReactOS could not browse to '%s' (error 0x%lx).\nPlease make sure there is a web browser installed."
 END

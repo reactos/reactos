@@ -90,7 +90,6 @@ BEGIN
     END
     POPUP "ヘルプ(&H)", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "このコピーは、適法なReactOSか(&L)？", IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "ReactOSについて(&A)", IDM_HELP_ABOUT
     END
 END
@@ -290,11 +289,4 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARD_TOOLBAR, "|戻る|進む|上へ|検索|フォルダー|移動|コピー|削除|元に戻す|表示|停止|再描画|ホーム|ドライブ接続|接続切断|お気に入り|履歴|フルスクリーン|プロパティ|切り取り|コピー|貼り付け|フォルダー オプション||"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_LEGAL_URL, "https://www.reactos.org/joining/faqs"
-    IDS_SORRY_CAPTION, "申し訳ありません"
-    IDS_SORRY_MESSAGE, "ReactOSは、'%s'を参照できませんでした (エラー 0x%lx)。\nインストール済みのウェブ ブラウザーがあることを確認して下さい。"
 END

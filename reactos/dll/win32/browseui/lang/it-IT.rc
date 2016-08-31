@@ -72,7 +72,6 @@ BEGIN
     END
     POPUP "&Aiuto", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "E' legale questa copia di &ReactOS?", IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "&Informazioni su ReactOS", IDM_HELP_ABOUT
     END
 END
@@ -272,11 +271,4 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARD_TOOLBAR, "|Indietro|Avanti|Livello superiore|Cerca|Cartelle|Sposta in|Copia in|Elimina|Annulla|Visualizza|Ferma|Aggiorna|Pagina iniziale|Mappa disco|Disconnette|Preferiti|Cronologia|Schermo intero|Proprietà|Taglia|Copia|Incolla|Opzioni cartella||"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_LEGAL_URL, "https://www.reactos.org/joining/faqs"
-    IDS_SORRY_CAPTION, "Sorry"
-    IDS_SORRY_MESSAGE, "ReactOS could not browse to '%s' (error 0x%lx).\nPlease make sure there is a web browser installed."
 END

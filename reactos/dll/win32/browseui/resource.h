@@ -54,7 +54,6 @@
 #define IDM_TOOLS_DISCONNECTNETWORKDRIVE 0xA082
 #define IDM_TOOLS_SYNCHRONIZE            0xA176
 #define IDM_TOOLS_FOLDEROPTIONS          0xA123
-#define IDM_HELP_ISTHISCOPYLEGAL         0xA104
 #define IDM_HELP_ABOUT                   0xA102
 #define IDM_TASKBAR_TOOLBARS                268
 #define IDM_TASKBAR_TOOLBARS_DESKTOP          3
@@ -93,7 +92,6 @@
 #define IDR_AUTOCOMPLETE         141
 #define IDR_ACLISTISF            142
 
-#define IDS_LEGAL_URL            12299
 #define IDS_SMALLICONS           12301
 #define IDS_LARGEICONS           12302
 #define IDS_SHOWTEXTLABELS       12303
@@ -106,8 +104,6 @@
 #define IDS_ADDRESSBANDLABEL     12902
 #define IDS_FOLDERSLABEL         12919
 #define IDS_HISTORYTEXT          13169
-#define IDS_SORRY_CAPTION        14001
-#define IDS_SORRY_MESSAGE        14002
 #define IDS_UP                   58434
 #define IDS_BACK                 58689
 #define IDS_FORWARD              58690

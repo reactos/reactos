@@ -91,7 +91,6 @@ BEGIN
     END
     POPUP "&Ndihmë", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "A eshte kjo kopje e ReactOS e &ligjshme?", IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "&Rreth ReactOS", IDM_HELP_ABOUT
     END
 END
@@ -291,11 +290,4 @@ END
 STRINGTABLE
 BEGIN
     IDS_STANDARD_TOOLBAR, "|Back|Forward|Up|Search|Folders|Move To|Copy To|Delete|Undo|Views|Stop|Refresh|Home|Map Drive|Disconnect|Favorites|History|Full Screen|Properties|Cut|Copy|Paste|Folder Options||"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_LEGAL_URL, "https://www.reactos.org/joining/faqs"
-    IDS_SORRY_CAPTION, "Sorry"
-    IDS_SORRY_MESSAGE, "ReactOS could not browse to '%s' (error 0x%lx).\nPlease make sure there is a web browser installed."
 END
