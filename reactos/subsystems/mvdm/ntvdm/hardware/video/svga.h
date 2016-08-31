@@ -182,6 +182,7 @@ enum
 
 /* CRTC max scanline register bits */
 #define VGA_CRTC_MAXSCANLINE_DOUBLE (1 << 7)
+#define VGA_CRTC_MAXSCANLINE_LC9    (1 << 6)
 
 /* CRTC mode control register bits */
 #define VGA_CRTC_MODE_CONTROL_WRAP  (1 << 5)
