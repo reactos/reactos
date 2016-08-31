@@ -43,7 +43,7 @@ static const VBE_MODE_INFO VbeMode_640x480x256_Info =
     0xA000,               /* Window A segment, or zero if not supported */
     0x0000,               /* Window B segment, or zero if not supported */
     0x00000000,           /* Window position function pointer */
-    800,                  /* Bytes per scanline */
+    640,                  /* Bytes per scanline */
     640,                  /* Width */
     480,                  /* Height */
     8,                    /* Character cell width */
