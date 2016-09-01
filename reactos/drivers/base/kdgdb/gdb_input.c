@@ -20,6 +20,13 @@ static struct
 UINT_PTR gdb_dbg_pid;
 UINT_PTR gdb_dbg_tid;
 
+static inline
+KDSTATUS
+LOOP_IF_SUCCESS(x)
+{
+    return (x == KdPacketReceived) ? (KDSTATUS)-1 : x;
+}
+
 /* PRIVATE FUNCTIONS **********************************************************/
 static
 UINT_PTR
@@ -58,9 +65,11 @@ hex_to_address(char* buffer)
 
 /* H* packets */
 static
-void
+KDSTATUS
 handle_gdb_set_thread(void)
 {
+    KDSTATUS Status;
+
     switch (gdb_input[1])
     {
     case 'c':
@@ -68,7 +77,7 @@ handle_gdb_set_thread(void)
             gdb_run_tid = (ULONG_PTR)-1;
         else
             gdb_run_tid = hex_to_tid(&gdb_input[2]);
-        send_gdb_packet("OK");
+        Status = send_gdb_packet("OK");
         break;
     case 'g':
         KDDBGPRINT("Setting debug thread: %s.\n", gdb_input);
@@ -98,20 +107,23 @@ handle_gdb_set_thread(void)
                 gdb_dbg_tid = hex_to_tid(ptr);
         }
 #endif
-        send_gdb_packet("OK");
+        Status = send_gdb_packet("OK");
         break;
     default:
         KDDBGPRINT("KDGBD: Unknown 'H' command: %s\n", gdb_input);
-        send_gdb_packet("");
+        Status = send_gdb_packet("");
     }
+
+    return Status;
 }
 
 static
-void
+KDSTATUS
 handle_gdb_thread_alive(void)
 {
     ULONG_PTR Pid, Tid;
     PETHREAD Thread;
+    KDSTATUS Status;
 
 #if MONOPROCESS
     Pid = 0;
@@ -131,45 +143,44 @@ handle_gdb_thread_alive(void)
     Thread = find_thread(Pid, Tid);
 
     if (Thread != NULL)
-        send_gdb_packet("OK");
+        Status = send_gdb_packet("OK");
     else
-        send_gdb_packet("E03");
+        Status = send_gdb_packet("E03");
+
+    return Status;
 }
 
 /* q* packets */
 static
-void
+KDSTATUS
 handle_gdb_query(void)
 {
     if (strncmp(gdb_input, "qSupported:", 11) == 0)
     {
 #if MONOPROCESS
-        send_gdb_packet("PacketSize=1000;");
+        return send_gdb_packet("PacketSize=1000;qXfer:libraries:read+;");
 #else
-        send_gdb_packet("PacketSize=1000;multiprocess+;");
+        return send_gdb_packet("PacketSize=1000;multiprocess+;qXfer:libraries:read+;");
 #endif
-        return;
     }
 
     if (strncmp(gdb_input, "qAttached", 9) == 0)
     {
 #if MONOPROCESS
-        send_gdb_packet("1");
+        return send_gdb_packet("1");
 #else
         UINT_PTR queried_pid = hex_to_pid(&gdb_input[10]);
         /* Let's say we created system process */
         if (gdb_pid_to_handle(queried_pid) == NULL)
-            send_gdb_packet("0");
+            return send_gdb_packet("0");
         else
-            send_gdb_packet("1");
+            return send_gdb_packet("1");
 #endif
-        return;
     }
 
     if (strncmp(gdb_input, "qRcmd,", 6) == 0)
     {
-        send_gdb_packet("OK");
-        return;
+        return send_gdb_packet("OK");
     }
 
     if (strcmp(gdb_input, "qC") == 0)
@@ -183,112 +194,69 @@ handle_gdb_query(void)
             handle_to_gdb_pid(PsGetThreadProcessId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread)),
             handle_to_gdb_tid(PsGetThreadId((PETHREAD)(ULONG_PTR)CurrentStateChange.Thread)));
 #endif
-        send_gdb_packet(gdb_out);
-        return;
+        return send_gdb_packet(gdb_out);
     }
 
-    if ((strncmp(gdb_input, "qfThreadInfo", 12) == 0)
-            || (strncmp(gdb_input, "qsThreadInfo", 12) == 0))
+    if (strncmp(gdb_input, "qfThreadInfo", 12) == 0)
     {
-        BOOLEAN FirstThread = TRUE;
         PEPROCESS Process;
-        PETHREAD Thread;
-        char gdb_out[1024];
-        char* ptr = gdb_out;
-        BOOLEAN Resuming = strncmp(gdb_input, "qsThreadInfo", 12) == 0;
-        /* Keep track of where we are. */
-        static LIST_ENTRY* CurrentProcessEntry;
-        static LIST_ENTRY* CurrentThreadEntry;
+        char gdb_out[40];
+        LIST_ENTRY* CurrentProcessEntry;
 
-        ptr = gdb_out;
-
-        *ptr++ = 'm';
-        /* NULL terminate in case we got nothing more to iterate */
-        *ptr  = '\0';
-
-        if (!Resuming)
-        {
-        /* Report the idle thread */
-#if MONOPROCESS
-            ptr += sprintf(ptr, "1");
-#else
-            ptr += sprintf(gdb, "p1.1");
-#endif
-            /* Initialize the entries */
-            CurrentProcessEntry = ProcessListHead->Flink;
-            CurrentThreadEntry = NULL;
-            FirstThread = FALSE;
-        }
-
+        CurrentProcessEntry = ProcessListHead->Flink;
         if (CurrentProcessEntry == NULL) /* Ps is not initialized */
         {
-            send_gdb_packet(Resuming ? "l" : gdb_out);
-            return;
+#if MONOPROCESS
+            return send_gdb_packet("m1");
+#else
+            return send_gdb_packet("mp1.1");
+#endif
         }
+
+        /* We will push threads as we find them */
+        start_gdb_packet();
+
+        /* Start with the system thread */
+#if MONOPROCESS
+        send_gdb_partial_packet("m1");
+#else
+        send_gdb_partial_packet("mp1.1");
+#endif
 
         /* List all the processes */
         for ( ;
             CurrentProcessEntry != ProcessListHead;
             CurrentProcessEntry = CurrentProcessEntry->Flink)
         {
+            LIST_ENTRY* CurrentThreadEntry;
 
             Process = CONTAINING_RECORD(CurrentProcessEntry, EPROCESS, ActiveProcessLinks);
 
-            if (CurrentThreadEntry != NULL)
-                CurrentThreadEntry = CurrentThreadEntry->Flink;
-            else
-                CurrentThreadEntry = Process->ThreadListHead.Flink;
-
             /* List threads from this process */
-            for ( ;
+            for ( CurrentThreadEntry = Process->ThreadListHead.Flink;
                  CurrentThreadEntry != &Process->ThreadListHead;
                  CurrentThreadEntry = CurrentThreadEntry->Flink)
             {
-                Thread = CONTAINING_RECORD(CurrentThreadEntry, ETHREAD, ThreadListEntry);
-
-                /* See if we should add a comma */
-                if (FirstThread)
-                {
-                    FirstThread = FALSE;
-                }
-                else
-                {
-                    *ptr++ = ',';
-                }
+                PETHREAD Thread = CONTAINING_RECORD(CurrentThreadEntry, ETHREAD, ThreadListEntry);
 
 #if MONOPROCESS
-                ptr += _snprintf(ptr, 1024 - (ptr - gdb_out),
-                    "%p",
-                    handle_to_gdb_tid(Thread->Cid.UniqueThread));
+                _snprintf(gdb_out, 40, ",%p", handle_to_gdb_tid(Thread->Cid.UniqueThread));
 #else
-                ptr += _snprintf(ptr, 1024 - (ptr - gdb_out),
-                    "p%p.%p",
+                _snprintf(gdb_out, 40, ",p%p.%p",
                     handle_to_gdb_pid(Process->UniqueProcessId),
                     handle_to_gdb_tid(Thread->Cid.UniqueThread));
 #endif
-                if (ptr > (gdb_out + 1024))
-                {
-                    /* send what we got */
-                    send_gdb_packet(gdb_out);
-                    /* GDB can ask anything at this point, it isn't necessarily a qsThreadInfo packet */
-                    return;
-                }
+                send_gdb_partial_packet(gdb_out);
             }
-            /* We're done for this process */
-            CurrentThreadEntry = NULL;
         }
 
-        if (gdb_out[1] == '\0')
-        {
-            /* We didn't iterate over anything, meaning we were already done */
-            send_gdb_packet("l");
-        }
-        else
-        {
-            send_gdb_packet(gdb_out);
-        }
-        /* GDB can ask anything at this point, it isn't necessarily a qsThreadInfo packet */
-        return;
+        return finish_gdb_packet();
+    }
+
+    if (strncmp(gdb_input, "qsThreadInfo", 12) == 0)
+    {
+        /* We sent the whole thread list on first qfThreadInfo call */
+        return send_gdb_packet("l");
     }
 
     if (strncmp(gdb_input, "qThreadExtraInfo,", 17) == 0)
@@ -330,27 +298,117 @@ handle_gdb_query(void)
             String.Length = sprintf(out_string, "%.*s", 16, Process->ImageFileName);
         }
 
-        gdb_send_debug_io(&String, FALSE);
-        return;
+        return gdb_send_debug_io(&String, FALSE);
     }
 
     if (strncmp(gdb_input, "qOffsets", 8) == 0)
     {
         /* We load ntoskrnl at 0x80800000 while compiling it at 0x00800000 base adress */
-        send_gdb_packet("TextSeg=80000000");
-        return;
+        return send_gdb_packet("TextSeg=80000000");
     }
 
     if (strcmp(gdb_input, "qTStatus") == 0)
     {
         /* No tracepoint support */
-        send_gdb_packet("T0");
-        return;
+        return send_gdb_packet("T0");
+    }
+
+    if (strcmp(gdb_input, "qSymbol::") == 0)
+    {
+        /* No need */
+        return send_gdb_packet("OK");
+    }
+
+    if (strncmp(gdb_input, "qXfer:libraries:read::", 22) == 0)
+    {
+        static LIST_ENTRY* CurrentEntry = NULL;
+        char str_helper[256];
+        char name_helper[64];        
+        ULONG_PTR Offset = hex_to_address(&gdb_input[22]);
+        ULONG_PTR ToSend = hex_to_address(strstr(&gdb_input[22], ",") + 1);
+        ULONG Sent = 0;
+        static BOOLEAN allDone = FALSE;
+
+        KDDBGPRINT("KDGDB: qXfer:libraries:read !\n");
+
+        /* Start the packet */
+        start_gdb_packet();
+
+        if (allDone)
+        {
+            send_gdb_partial_packet("l");
+            allDone = FALSE;
+            return finish_gdb_packet();
+        }
+
+        send_gdb_partial_packet("m");
+        Sent++;
+
+        /* Are we starting ? */
+        if (Offset == 0)
+        {
+            Sent += send_gdb_partial_binary("<?xml version=\"1.0\"?>", 21);
+            Sent += send_gdb_partial_binary("<library-list>", 14);
+
+            CurrentEntry = ModuleListHead->Flink;
+
+            if (!CurrentEntry)
+            {
+                /* Ps is not initialized. Send end of XML data or mark that we are finished. */
+                Sent += send_gdb_partial_binary("</library-list>", 15);
+                allDone = TRUE;
+                return finish_gdb_packet();
+            }
+        }
+
+        for ( ;
+            CurrentEntry != ModuleListHead;
+            CurrentEntry = CurrentEntry->Flink)
+        {
+            PLDR_DATA_TABLE_ENTRY TableEntry = CONTAINING_RECORD(CurrentEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+            PVOID DllBase = (PVOID)((ULONG_PTR)TableEntry->DllBase + 0x1000);
+            LONG mem_length;
+            char* ptr;
+
+            /* Convert names to lower case. Yes this _is_ ugly */
+            _snprintf(name_helper, 64, "%wZ", &TableEntry->BaseDllName);
+            for (ptr = name_helper; *ptr; ptr++)
+            {
+                if (*ptr >= 'A' && *ptr <= 'Z')
+                    *ptr += 'a' - 'A';
+            }
+
+            /* GDB doesn't load the file if you don't prefix it with a drive letter... */
+            mem_length = _snprintf(str_helper, 256, "<library name=\"C:\\%s\"><segment address=\"0x%p\"/></library>", &name_helper, DllBase);
+            
+            /* DLL name must be too long. */
+            if (mem_length < 0)
+            {
+                KDDBGPRINT("Failed to report %wZ\n", &TableEntry->BaseDllName);
+                continue;
+            }
+
+            if ((Sent + mem_length) > ToSend)
+            {
+                /* We're done for this pass */
+                return finish_gdb_packet();
+            }
+                
+            Sent += send_gdb_partial_binary(str_helper, mem_length);
+        }
+
+        if ((ToSend - Sent) > 15)
+        {
+            Sent += send_gdb_partial_binary("</library-list>", 15);
+            allDone = TRUE;
+        }
+
+        return finish_gdb_packet();
+   
     }
 
     KDDBGPRINT("KDGDB: Unknown query: %s\n", gdb_input);
-    send_gdb_packet("");
-    return;
+    return send_gdb_packet("");
 }
 
 #if 0
@@ -413,7 +471,9 @@ ReadMemorySendHandler(
     if ((gdb_dbg_pid != 0) && gdb_pid_to_handle(gdb_dbg_pid) != PsGetCurrentProcessId())
 #endif
     {
-        __writecr3(PsGetCurrentProcess()->Pcb.DirectoryTableBase[0]);
+        /* Only do this if Ps is initialized */
+        if (ProcessListHead->Flink)
+            __writecr3(PsGetCurrentProcess()->Pcb.DirectoryTableBase[0]);
     }
 }
 
@@ -442,16 +502,14 @@ handle_gdb_read_mem(
         if (AttachedThread == NULL)
         {
             KDDBGPRINT("The current GDB debug thread is invalid!");
-            send_gdb_packet("E03");
-            return (KDSTATUS)-1;
+            return LOOP_IF_SUCCESS(send_gdb_packet("E03"));
         }
 
         AttachedProcess = AttachedThread->Tcb.Process;
         if (AttachedProcess == NULL)
         {
             KDDBGPRINT("The current GDB debug thread is invalid!");
-            send_gdb_packet("E03");
-            return (KDSTATUS)-1;
+            return LOOP_IF_SUCCESS(send_gdb_packet("E03"));
         }
         __writecr3(AttachedProcess->DirectoryTableBase[0]);
     }
@@ -462,10 +520,11 @@ handle_gdb_read_mem(
         if (AttachedProcess == NULL)
         {
             KDDBGPRINT("The current GDB debug thread is invalid!");
-            send_gdb_packet("E03");
-            return (KDSTATUS)-1;
+            return LOOP_IF_SUCCESS(send_gdb_packet("E03"));
         }
-        __writecr3(AttachedProcess->Pcb.DirectoryTableBase[0]);
+        /* Only do this if Ps is initialized */
+        if (ProcessListHead->Flink)
+            __writecr3(AttachedProcess->Pcb.DirectoryTableBase[0]);
     }
 #endif
 
@@ -474,7 +533,6 @@ handle_gdb_read_mem(
 
     /* KD will reply with KdSendPacket. Catch it */
     KdpSendPacketHandler = ReadMemorySendHandler;
-
     return KdPacketReceived;
 }
 
@@ -514,7 +572,9 @@ WriteMemorySendHandler(
     if ((gdb_dbg_pid != 0) && gdb_pid_to_handle(gdb_dbg_pid) != PsGetCurrentProcessId())
 #endif
     {
-        __writecr3(PsGetCurrentProcess()->Pcb.DirectoryTableBase[0]);
+        /* Only do this if Ps is initialized */
+        if (ProcessListHead->Flink)
+            __writecr3(PsGetCurrentProcess()->Pcb.DirectoryTableBase[0]);
     }
 }
 
@@ -546,16 +606,14 @@ handle_gdb_write_mem(
         if (AttachedThread == NULL)
         {
             KDDBGPRINT("The current GDB debug thread is invalid!");
-            send_gdb_packet("E03");
-            return (KDSTATUS)-1;
+            return LOOP_IF_SUCCESS(send_gdb_packet("E03"));
         }
 
         AttachedProcess = AttachedThread->Tcb.Process;
         if (AttachedProcess == NULL)
         {
             KDDBGPRINT("The current GDB debug thread is invalid!");
-            send_gdb_packet("E03");
-            return (KDSTATUS)-1;
+            return LOOP_IF_SUCCESS(send_gdb_packet("E03"));
         }
         __writecr3(AttachedProcess->DirectoryTableBase[0]);
     }
@@ -566,10 +624,11 @@ handle_gdb_write_mem(
         if (AttachedProcess == NULL)
         {
             KDDBGPRINT("The current GDB debug thread is invalid!");
-            send_gdb_packet("E03");
-            return (KDSTATUS)-1;
+            return LOOP_IF_SUCCESS(send_gdb_packet("E03"));
         }
-        __writecr3(AttachedProcess->Pcb.DirectoryTableBase[0]);
+        /* Only do this if Ps is initialized */
+        if (ProcessListHead->Flink)
+            __writecr3(AttachedProcess->Pcb.DirectoryTableBase[0]);
     }
 #endif
 
@@ -578,8 +637,7 @@ handle_gdb_write_mem(
     if (BufferLength == 0)
     {
         /* Nothing to do */
-        send_gdb_packet("OK");
-        return (KDSTATUS)-1;
+        return LOOP_IF_SUCCESS(send_gdb_packet("OK"));
     }
     
     State->u.WriteMemory.TransferCount = BufferLength;
@@ -613,7 +671,6 @@ handle_gdb_write_mem(
 
     /* KD will reply with KdSendPacket. Catch it */
     KdpSendPacketHandler = WriteMemorySendHandler;
-
     return KdPacketReceived;
 }
 
@@ -698,8 +755,7 @@ handle_gdb_insert_breakpoint(
             {
                 /* We don't have a way to keep track of this break point. Fail. */
                 KDDBGPRINT("No breakpoint slot available!\n");
-                send_gdb_packet("E01");
-                return (KDSTATUS)-1;
+                return LOOP_IF_SUCCESS(send_gdb_packet("E01"));
             }
 
             State->ApiNumber = DbgKdWriteBreakPointApi;
@@ -713,8 +769,7 @@ handle_gdb_insert_breakpoint(
     }
 
     KDDBGPRINT("Unhandled 'Z' packet: %s\n", gdb_input);
-    send_gdb_packet("E01");
-    return (KDSTATUS)-1;
+    return LOOP_IF_SUCCESS(send_gdb_packet("E01"));
 }
 
 static
@@ -793,8 +848,7 @@ handle_gdb_remove_breakpoint(
             if (Handle == 0)
             {
                 KDDBGPRINT("Received %s, but breakpoint was never inserted ?!\n", gdb_input);
-                send_gdb_packet("E01");
-                return (KDSTATUS)-1;
+                return LOOP_IF_SUCCESS(send_gdb_packet("E01"));
             }
 
             State->ApiNumber = DbgKdRestoreBreakPointApi;
@@ -808,8 +862,7 @@ handle_gdb_remove_breakpoint(
     }
 
     KDDBGPRINT("Unhandled 'Z' packet: %s\n", gdb_input);
-    send_gdb_packet("E01");
-    return (KDSTATUS)-1;
+    return LOOP_IF_SUCCESS(send_gdb_packet("E01"));
 }
 
 static
@@ -820,8 +873,13 @@ handle_gdb_c(
     _Out_ PULONG MessageLength,
     _Inout_ PKD_CONTEXT KdContext)
 {
+    KDSTATUS Status;
+
     /* Tell GDB everything is fine, we will handle it */
-    send_gdb_packet("OK");
+    Status = send_gdb_packet("OK");
+    if (Status != KdPacketReceived)
+        return Status;
+        
 
     if (CurrentStateChange.NewState == DbgKdExceptionStateChange)
     {
@@ -873,8 +931,7 @@ handle_gdb_v(
         if (gdb_input[5] == '?')
         {
             /* Report what we support */
-            send_gdb_packet("vCont;c;s");
-            return (KDSTATUS)-1;
+            return LOOP_IF_SUCCESS(send_gdb_packet("vCont;c;s"));
         }
 
         if (strncmp(gdb_input, "vCont;c", 7) == 0)
@@ -890,7 +947,7 @@ handle_gdb_v(
     }
 
     KDDBGPRINT("Unhandled 'v' packet: %s\n", gdb_input);
-    return KdPacketReceived;
+    return LOOP_IF_SUCCESS(send_gdb_packet(""));
 }
 
 KDSTATUS
@@ -904,8 +961,9 @@ gdb_receive_and_interpret_packet(
 
     do
     {
+        KDDBGPRINT("KDGBD: Receiving packet.\n");
         Status = gdb_receive_packet(KdContext);
-        KDDBGPRINT("KDGBD: Packet received with status %u\n", Status);
+        KDDBGPRINT("KDGBD: Packet \"%s\" received with status %u\n", gdb_input, Status);
 
         if (Status != KdPacketReceived)
             return Status;
@@ -916,34 +974,34 @@ gdb_receive_and_interpret_packet(
         {
         case '?':
             /* Send the Status */
-            gdb_send_exception();
+            Status = LOOP_IF_SUCCESS(gdb_send_exception());
             break;
         case '!':
-            send_gdb_packet("OK");
+            Status = LOOP_IF_SUCCESS(send_gdb_packet("OK"));
             break;
         case 'c':
             Status = handle_gdb_c(State, MessageData, MessageLength, KdContext);
             break;
         case 'g':
-            gdb_send_registers();
+            Status = LOOP_IF_SUCCESS(gdb_send_registers());
             break;
         case 'H':
-            handle_gdb_set_thread();
+            Status = LOOP_IF_SUCCESS(handle_gdb_set_thread());
             break;
         case 'm':
             Status = handle_gdb_read_mem(State, MessageData, MessageLength, KdContext);
             break;
         case 'p':
-            gdb_send_register();
+            Status = LOOP_IF_SUCCESS(gdb_send_register());
             break;
         case 'q':
-            handle_gdb_query();
+            Status = LOOP_IF_SUCCESS(handle_gdb_query());
             break;
         case 's':
             Status = handle_gdb_s(State, MessageData, MessageLength, KdContext);
             break;
         case 'T':
-            handle_gdb_thread_alive();
+            Status = LOOP_IF_SUCCESS(handle_gdb_thread_alive());
             break;
         case 'v':
             Status = handle_gdb_v(State, MessageData, MessageLength, KdContext);
@@ -960,7 +1018,7 @@ gdb_receive_and_interpret_packet(
         default:
             /* We don't know how to handle this request. */
             KDDBGPRINT("Unsupported GDB command: %s.\n", gdb_input);
-            send_gdb_packet("");
+            Status = LOOP_IF_SUCCESS(send_gdb_packet(""));
         }
     } while (Status == (KDSTATUS)-1);
 

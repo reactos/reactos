@@ -19,7 +19,7 @@
 
 #include <pstypes.h>
 
-//#define KDDEBUG /* uncomment to enable debugging this dll */
+// #define KDDEBUG /* uncomment to enable debugging this dll */
 
 /* To undefine once https://sourceware.org/bugzilla/show_bug.cgi?id=17397 is resolved */
 #define MONOPROCESS 1
@@ -80,10 +80,15 @@ KDSTATUS NTAPI gdb_receive_packet(_Inout_ PKD_CONTEXT KdContext);
 char hex_value(char ch);
 
 /* gdb_send.c */
-void send_gdb_packet(_In_ CHAR* Buffer);
-void send_gdb_memory(_In_ VOID* Buffer, size_t Length);
-void gdb_send_debug_io(_In_ PSTRING String, _In_ BOOLEAN WithPrefix);
-void gdb_send_exception(void);
+KDSTATUS send_gdb_packet(_In_ const CHAR* Buffer);
+void start_gdb_packet(void);
+void send_gdb_partial_packet(_In_ const CHAR* Buffer);
+KDSTATUS finish_gdb_packet(void);
+KDSTATUS send_gdb_memory(_In_ const VOID* Buffer, size_t Length);
+void send_gdb_partial_memory(_In_ const VOID* Buffer, _In_ size_t Length);
+ULONG send_gdb_partial_binary(_In_ const VOID* Buffer, _In_ size_t Length);
+KDSTATUS gdb_send_debug_io(_In_ PSTRING String, _In_ BOOLEAN WithPrefix);
+KDSTATUS gdb_send_exception(void);
 void send_gdb_ntstatus(_In_ NTSTATUS Status);
 extern const char hex_chars[];
 
@@ -98,6 +103,7 @@ extern CONTEXT CurrentContext;
 extern DBGKD_GET_VERSION64 KdVersion;
 extern KDDEBUGGER_DATA64* KdDebuggerDataBlock;
 extern LIST_ENTRY* ProcessListHead;
+extern LIST_ENTRY* ModuleListHead;
 extern KDP_SEND_HANDLER KdpSendPacketHandler;
 extern KDP_MANIPULATESTATE_HANDLER KdpManipulateStateHandler;
 /* Commone ManipulateState handlers */
@@ -111,8 +117,8 @@ extern PEPROCESS find_process( _In_ UINT_PTR Pid);
 extern PETHREAD find_thread(_In_ UINT_PTR Pid, _In_ UINT_PTR Tid);
 
 /* arch_sup.c */
-extern void gdb_send_register(void);
-extern void gdb_send_registers(void);
+extern KDSTATUS gdb_send_register(void);
+extern KDSTATUS gdb_send_registers(void);
 
 /* Architecture specific defines. See ntoskrnl/include/internal/arch/ke.h */
 #ifdef _M_IX86

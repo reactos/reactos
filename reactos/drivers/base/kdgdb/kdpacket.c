@@ -20,6 +20,7 @@ static BOOLEAN InException = FALSE;
 DBGKD_GET_VERSION64 KdVersion;
 KDDEBUGGER_DATA64* KdDebuggerDataBlock;
 LIST_ENTRY* ProcessListHead;
+LIST_ENTRY* ModuleListHead;
 /* Callbacks used to communicate with KD aside from GDB */
 KDP_SEND_HANDLER KdpSendPacketHandler = FirstSendHandler;
 KDP_MANIPULATESTATE_HANDLER KdpManipulateStateHandler = NULL;
@@ -139,11 +140,6 @@ send_kd_state_change(DBGKD_ANY_WAIT_STATE_CHANGE* StateChange)
     switch (StateChange->NewState)
     {
     case DbgKdLoadSymbolsStateChange:
-    {
-        /* We don't care about symbols loading */
-        KdpManipulateStateHandler = ContinueManipulateStateHandler;
-        break;
-    }
     case DbgKdExceptionStateChange:
     {
         PETHREAD Thread = (PETHREAD)(ULONG_PTR)StateChange->Thread;
@@ -264,6 +260,7 @@ GetVersionSendHandler(
     DebuggerDataList = (LIST_ENTRY*)(ULONG_PTR)KdVersion.DebuggerDataList;
     KdDebuggerDataBlock = CONTAINING_RECORD(DebuggerDataList->Flink, KDDEBUGGER_DATA64, Header.List);
     ProcessListHead = (LIST_ENTRY*)KdDebuggerDataBlock->PsActiveProcessHead.Pointer;
+    ModuleListHead = (LIST_ENTRY*)KdDebuggerDataBlock->PsLoadedModuleList.Pointer;
 
     /* Now we can get the context for the current state */
     KdpSendPacketHandler = NULL;
@@ -363,6 +360,8 @@ KdReceivePacket(
     _Out_ PULONG DataLength,
     _Inout_ PKD_CONTEXT KdContext)
 {
+    KDDBGPRINT("KdReceivePacket.\n");
+
     if (PacketType == PACKET_TYPE_KD_POLL_BREAKIN)
     {
         return KdpPollBreakIn();
@@ -382,7 +381,10 @@ KdReceivePacket(
 
         /* Maybe we are in a send<->receive loop that GDB doesn't need to know about */
         if (KdpManipulateStateHandler != NULL)
+        {
+            KDDBGPRINT("KDGBD: We have a manipulate state handler.\n");
             return KdpManipulateStateHandler(State, MessageData, DataLength, KdContext);
+        }
 
         /* Receive data from GDB  and interpret it */
         return gdb_receive_and_interpret_packet(State, MessageData, DataLength, KdContext);
