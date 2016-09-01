@@ -1241,8 +1241,8 @@ QSI_DEF(SystemHandleInformation)
                         /* Check user's buffer size */
                         if (*ReqSize > Size)
                         {
-                            /* It is correct? How it is correct to leave the enclosed SEH blocks? */
-                            _SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH);
+                            Status = STATUS_INFO_LENGTH_MISMATCH;
+                            break;
                         }
 
                         /* Lock the entry */
@@ -1296,6 +1296,8 @@ QSI_DEF(SystemHandleInformation)
                 KeLeaveCriticalRegion();
             }
             _SEH2_END;
+
+            if (!NT_SUCCESS(Status)) break;
         }
     }
     _SEH2_FINALLY
@@ -1305,7 +1307,7 @@ QSI_DEF(SystemHandleInformation)
     }
     _SEH2_END;
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /* Class 17 -  Information */
