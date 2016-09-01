@@ -17,6 +17,9 @@
 /* The maximum size of an environment value (in bytes) */
 #define MAX_ENVVAL_SIZE 1024
 
+extern LIST_ENTRY HandleTableListHead;
+extern EX_PUSH_LOCK HandleTableListLock;
+
 FAST_MUTEX ExpEnvironmentLock;
 ERESOURCE ExpFirmwareTableResource;
 LIST_ENTRY ExpFirmwareTableProviderListHead;
@@ -1168,53 +1171,25 @@ QSI_DEF(SystemNonPagedPoolInformation)
 QSI_DEF(SystemHandleInformation)
 {
     PSYSTEM_HANDLE_INFORMATION HandleInformation;
-    KPROCESSOR_MODE PreviousMode;
-    PEPROCESS Process;
-    PEPROCESS SystemProcess;
-    ULONG CurrentSize;
-    ULONG NumberOfHandles = 0;
-    ULONG Index;
+    ULONG Index = 0;
     NTSTATUS Status;
     PMDL Mdl;
 
     DPRINT("NtQuerySystemInformation - SystemHandleInformation\n");
 
+    /* Set initial required buffer size */
+    *ReqSize = sizeof(SYSTEM_HANDLE_INFORMATION);
+
     /* Check user's buffer size */
-    if (Size < sizeof(SYSTEM_HANDLE_INFORMATION))
+    if (Size < *ReqSize)
     {
-        *ReqSize = sizeof(SYSTEM_HANDLE_INFORMATION);
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-    /* Retrieve needed buffer size to hold the list of handles */
-    SystemProcess = PsGetNextProcess(NULL);
-    Process = SystemProcess;
-
-    do
-    {
-        NumberOfHandles += ObGetProcessHandleCount(Process);
-        Process = PsGetNextProcess(Process);
-    }
-    while ((Process != SystemProcess) && (Process != NULL));
-
-    /* Dereference the process which was referenced by PsGetNextProcess */
-    if (Process != NULL) ObDereferenceObject(Process);
-
-    /* Calculate the current size of all handles */
-    CurrentSize = sizeof(SYSTEM_HANDLE_INFORMATION) +
-                         ((sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO) * NumberOfHandles) -
-                         (sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO)));
-
-    *ReqSize = CurrentSize;
-
-    /* Check user's buffer size */
-    if (CurrentSize > Size) return STATUS_INFO_LENGTH_MISMATCH;
-
     /* We need to lock down the memory */
-    PreviousMode = ExGetPreviousMode();
     Status = ExLockUserBuffer(Buffer,
                               Size,
-                              PreviousMode,
+                              ExGetPreviousMode(),
                               IoWriteAccess,
                               (PVOID*)&HandleInformation,
                               &Mdl);
@@ -1224,91 +1199,111 @@ QSI_DEF(SystemHandleInformation)
         return Status;
     }
 
-    /* Initialization of count of handles */
-    HandleInformation->NumberOfHandles = NumberOfHandles;
-
-    /* Now get handles from all processes. */
-    SystemProcess = PsGetNextProcess(NULL);
-    Process = SystemProcess;
-
-    Index = 0;
-
-    do
+    _SEH2_TRY
     {
-        PHANDLE_TABLE_ENTRY HandleTableEntry;
-        EXHANDLE Handle;
+        PLIST_ENTRY NextTableEntry;
 
-        /* Enter a critical region */
-        KeEnterCriticalRegion();
-
-        _SEH2_TRY
+        /* Enumerate all system handles */
+        for (NextTableEntry = HandleTableListHead.Flink;
+             NextTableEntry != &HandleTableListHead;
+             NextTableEntry = NextTableEntry->Flink)
         {
-            /* Set the initial value and loop the entries */
-            Handle.Value = 0;
-            while ((HandleTableEntry = ExpLookupHandleTableEntry(Process->ObjectTable, Handle)))
+            PHANDLE_TABLE HandleTable;
+
+            /* Enter a critical region */
+            KeEnterCriticalRegion();
+
+            /* Acquire the handle table lock */
+            ExAcquirePushLockExclusive(&HandleTableListLock);
+
+            /* Get current handle table */
+            HandleTable = CONTAINING_RECORD(NextTableEntry, HANDLE_TABLE, HandleTableList);
+
+            _SEH2_TRY
             {
-                /* Validate the entry */
-                if ((HandleTableEntry->Object) &&
-                    (HandleTableEntry->NextFreeTableEntry != -2))
+                PHANDLE_TABLE_ENTRY HandleTableEntry;
+                EXHANDLE Handle;
+
+                /* Set the initial value and loop the entries */
+                Handle.Value = 0;
+                while ((HandleTableEntry = ExpLookupHandleTableEntry(HandleTable, Handle)))
                 {
-                    /* Lock the entry */
-                    if (ExpLockHandleTableEntry(Process->ObjectTable, HandleTableEntry))
+                    /* Validate the entry */
+                    if ((HandleTableEntry->Object) &&
+                        (HandleTableEntry->NextFreeTableEntry != -2))
                     {
-                        _SEH2_TRY
+                        /* Increase of count of handles */
+                        ++HandleInformation->NumberOfHandles;
+
+                        /* Increase required buffer size */
+                        *ReqSize += sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO);
+
+                        /* Check user's buffer size */
+                        if (*ReqSize > Size)
                         {
-                            POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
-
-                            /* Filling handle information */
-                            HandleInformation->Handles[Index].UniqueProcessId =
-                                (USHORT)(ULONG_PTR) Process->UniqueProcessId;
-
-                            HandleInformation->Handles[Index].CreatorBackTraceIndex = 0;
-
-                            HandleInformation->Handles[Index].ObjectTypeIndex =
-                                (UCHAR) ObjectHeader->Type->Index;
-
-                            HandleInformation->Handles[Index].HandleAttributes =
-                                HandleTableEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES;
-
-                            HandleInformation->Handles[Index].HandleValue =
-                                (USHORT)(ULONG_PTR) Handle.GenericHandleOverlay;
-
-                            HandleInformation->Handles[Index].Object = &ObjectHeader->Body;
-
-                            HandleInformation->Handles[Index].GrantedAccess =
-                                HandleTableEntry->GrantedAccess;
-
-                            ++Index;
+                            /* It is correct? How it is correct to leave the enclosed SEH blocks? */
+                            _SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH);
                         }
-                        _SEH2_FINALLY
+
+                        /* Lock the entry */
+                        if (ExpLockHandleTableEntry(HandleTable, HandleTableEntry))
                         {
-                            /* Unlock it */
-                            ExUnlockHandleTableEntry(Process->ObjectTable, HandleTableEntry);
+                            _SEH2_TRY
+                            {
+                                POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
+
+                                /* Filling handle information */
+                                HandleInformation->Handles[Index].UniqueProcessId =
+                                    (USHORT)(ULONG_PTR) HandleTable->UniqueProcessId;
+
+                                HandleInformation->Handles[Index].CreatorBackTraceIndex = 0;
+
+                                HandleInformation->Handles[Index].ObjectTypeIndex =
+                                    (UCHAR) ObjectHeader->Type->Index;
+
+                                HandleInformation->Handles[Index].HandleAttributes =
+                                    HandleTableEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES;
+
+                                HandleInformation->Handles[Index].HandleValue =
+                                    (USHORT)(ULONG_PTR) Handle.GenericHandleOverlay;
+
+                                HandleInformation->Handles[Index].Object = &ObjectHeader->Body;
+
+                                HandleInformation->Handles[Index].GrantedAccess =
+                                    HandleTableEntry->GrantedAccess;
+
+                                ++Index;
+                            }
+                            _SEH2_FINALLY
+                            {
+                                /* Unlock it */
+                                ExUnlockHandleTableEntry(HandleTable, HandleTableEntry);
+                            }
+                            _SEH2_END;
                         }
-                        _SEH2_END;
                     }
+
+                    /* Go to the next entry */
+                    Handle.Value += sizeof(HANDLE);
                 }
-
-                /* Go to the next entry */
-                Handle.Value += sizeof(HANDLE);
             }
-        }
-        _SEH2_FINALLY
-        {
-            /* Leave the critical region */
-            KeLeaveCriticalRegion();
-        }
-        _SEH2_END;
+            _SEH2_FINALLY
+            {
+                /* Release the lock */
+                ExReleasePushLockExclusive(&HandleTableListLock);
 
-        Process = PsGetNextProcess(Process);
+                /* Leave the critical region */
+                KeLeaveCriticalRegion();
+            }
+            _SEH2_END;
+        }
     }
-    while ((Process != SystemProcess) && (Process != NULL));
-
-    /* Dereference the process which was referenced by PsGetNextProcess */
-    if (Process != NULL) ObDereferenceObject(Process);
-
-    /* Release the locked user buffer */
-    ExUnlockUserBuffer(Mdl);
+    _SEH2_FINALLY
+    {
+        /* Release the locked user buffer */
+        ExUnlockUserBuffer(Mdl);
+    }
+    _SEH2_END;
 
     return STATUS_SUCCESS;
 }
