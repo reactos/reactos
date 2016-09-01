@@ -2417,6 +2417,11 @@ NtGdiBeginPath(HDC  hDC)
     /* Make sure that path is empty */
     PATH_EmptyPath(pPath);
 
+    pPath->numEntriesAllocated = NUM_ENTRIES_INITIAL;
+
+    pPath->pPoints = (POINT *)ExAllocatePoolWithTag(PagedPool, NUM_ENTRIES_INITIAL * sizeof(POINT), TAG_PATH);
+    pPath->pFlags  =  (BYTE *)ExAllocatePoolWithTag(PagedPool, NUM_ENTRIES_INITIAL * sizeof(BYTE),  TAG_PATH);
+
     /* Initialize variables for new path */
     pPath->newStroke = TRUE;
     pPath->state = PATH_Open;
