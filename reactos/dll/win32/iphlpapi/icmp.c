@@ -222,7 +222,8 @@ HANDLE WINAPI IcmpCreateFile(VOID)
 BOOL WINAPI IcmpCloseHandle(HANDLE  IcmpHandle)
 {
     icmp_t* icp=(icmp_t*)IcmpHandle;
-    if (IcmpHandle==INVALID_HANDLE_VALUE) {
+    // REACTOS: Added a check for NULL handle, CORE-10707
+    if (IcmpHandle==INVALID_HANDLE_VALUE || IcmpHandle==NULL) {
         /* FIXME: in fact win98 seems to ignore the handle value !!! */
         SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
