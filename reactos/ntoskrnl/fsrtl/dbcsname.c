@@ -475,7 +475,7 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
         }
 
         /* Filename must be 8.3 filename */
-        if (FirstPart.Length < 3 || FirstPart.Length > 12)
+        if (FirstPart.Length > 12)
             return FALSE;
 
         /* Now, we will parse the filename to find everything bad in */
@@ -520,7 +520,7 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
         if (FirstPart.Buffer[FirstPart.Length - 1] == ' ')
             return FALSE;
 
-        EndLoop:
+EndLoop:
         /* Preparing next loop */
         Name.Buffer = RemainingPart.Buffer;
         Name.Length = RemainingPart.Length;
