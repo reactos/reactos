@@ -205,8 +205,133 @@ SamrSetSecurityObject(IN SAMPR_HANDLE ObjectHandle,
                       IN SECURITY_INFORMATION SecurityInformation,
                       IN PSAMPR_SR_SECURITY_DESCRIPTOR SecurityDescriptor)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT DbObject = NULL;
+    ACCESS_MASK DesiredAccess = 0;
+    PSECURITY_DESCRIPTOR RelativeSd = NULL;
+    ULONG RelativeSdSize = 0;
+    HANDLE TokenHandle = NULL;
+    PGENERIC_MAPPING Mapping;
+    NTSTATUS Status;
+
+    TRACE("SamrSetSecurityObject(%p %lx %p)\n",
+          ObjectHandle, SecurityInformation, SecurityDescriptor);
+
+    if ((SecurityDescriptor == NULL) ||
+        (SecurityDescriptor->SecurityDescriptor == NULL) ||
+        !RtlValidSecurityDescriptor((PSECURITY_DESCRIPTOR)SecurityDescriptor->SecurityDescriptor))
+        return ERROR_INVALID_PARAMETER;
+
+    if (SecurityInformation == 0 ||
+        SecurityInformation & ~(OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION
+        | DACL_SECURITY_INFORMATION | SACL_SECURITY_INFORMATION))
+        return ERROR_INVALID_PARAMETER;
+
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+        DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+
+    if (SecurityInformation & DACL_SECURITY_INFORMATION)
+        DesiredAccess |= WRITE_DAC;
+
+    if (SecurityInformation & (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))
+        DesiredAccess |= WRITE_OWNER;
+
+    if ((SecurityInformation & OWNER_SECURITY_INFORMATION) &&
+        (((PISECURITY_DESCRIPTOR)SecurityDescriptor)->Owner == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    if ((SecurityInformation & GROUP_SECURITY_INFORMATION) &&
+        (((PISECURITY_DESCRIPTOR)SecurityDescriptor)->Group == NULL))
+        return ERROR_INVALID_PARAMETER;
+
+    /* Validate the server handle */
+    Status = SampValidateDbObject(ObjectHandle,
+                                  SamDbIgnoreObject,
+                                  DesiredAccess,
+                                  &DbObject);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Get the mapping for the object type */
+    switch (DbObject->ObjectType)
+    {
+        case SamDbServerObject:
+            Mapping = &ServerMapping;
+            break;
+
+        case SamDbDomainObject:
+            Mapping = &DomainMapping;
+            break;
+
+        case SamDbAliasObject:
+            Mapping = &AliasMapping;
+            break;
+
+        case SamDbGroupObject:
+            Mapping = &GroupMapping;
+            break;
+
+        case SamDbUserObject:
+            Mapping = &UserMapping;
+            break;
+
+        default:
+            return STATUS_INVALID_HANDLE;
+    }
+
+    /* Get the size of the SD */
+    Status = SampGetObjectAttribute(DbObject,
+                                    L"SecDesc",
+                                    NULL,
+                                    NULL,
+                                    &RelativeSdSize);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Allocate a buffer for the SD */
+    RelativeSd = RtlAllocateHeap(RtlGetProcessHeap(), 0, RelativeSdSize);
+    if (RelativeSd == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Get the SD */
+    Status = SampGetObjectAttribute(DbObject,
+                                    L"SecDesc",
+                                    NULL,
+                                    RelativeSd,
+                                    &RelativeSdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Build the new security descriptor */
+    Status = RtlSetSecurityObject(SecurityInformation,
+                                  (PSECURITY_DESCRIPTOR)SecurityDescriptor->SecurityDescriptor,
+                                  &RelativeSd,
+                                  Mapping,
+                                  TokenHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("RtlSetSecurityObject failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Set the modified SD */
+    Status = SampSetObjectAttribute(DbObject,
+                                    L"SecDesc",
+                                    REG_BINARY,
+                                    RelativeSd,
+                                    RtlLengthSecurityDescriptor(RelativeSd));
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampSetObjectAttribute failed (Status 0x%08lx)\n", Status);
+    }
+
+done:
+    if (TokenHandle != NULL)
+        NtClose(TokenHandle);
+
+    if (RelativeSd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, RelativeSd);
+
+    return Status;
 }
 
 
