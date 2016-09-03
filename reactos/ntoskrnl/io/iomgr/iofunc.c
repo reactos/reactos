@@ -348,7 +348,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
         DeviceObject = IoGetRelatedDeviceObject(FileObject);
     }
 
-    /* If that's FS I/O, try to do it with FastIO path */
+    /* If this is a device I/O, try to do it with FastIO path */
     if (IsDevIoCtl)
     {
         PFAST_IO_DISPATCH FastIoDispatch = DeviceObject->DriverObject->FastIoDispatch;
@@ -613,6 +613,12 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
 
     /* Use deferred completion for FS I/O */
     Irp->Flags |= (!IsDevIoCtl) ? IRP_DEFER_IO_COMPLETION : 0;
+
+    /* If we're to dismount a volume, increaase the dismount count */
+    if (IoControlCode == FSCTL_DISMOUNT_VOLUME)
+    {
+        InterlockedExchangeAdd((PLONG)&SharedUserData->DismountCount, 1);
+    }
 
     /* Perform the call */
     return IopPerformSynchronousRequest(DeviceObject,
