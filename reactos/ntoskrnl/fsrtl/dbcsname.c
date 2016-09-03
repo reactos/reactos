@@ -431,7 +431,7 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
                     IN BOOLEAN PathNamePermissible,
                     IN BOOLEAN LeadingBackslashPermissible)
 {
-    ANSI_STRING FirstPart, RemainingPart, Name;
+    ANSI_STRING FirstPart, RemainingPart;
     BOOLEAN LastDot;
     USHORT i;
     PAGED_CODE();
@@ -439,6 +439,20 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
     /* Just quit if the string is empty */
     if (!DbcsName.Length)
         return FALSE;
+
+    /* Accept special filename if wildcards are allowed */
+    if (WildCardsPermissible && (DbcsName.Length == 1 || DbcsName.Length == 2) && DbcsName.Buffer[0] == '.')
+    {
+        if (DbcsName.Length == 2)
+        {
+            if (DbcsName.Buffer[1] == '.')
+                return TRUE;
+        }
+        else
+        {
+            return TRUE;
+        }
+    }
 
     /* DbcsName wasn't supposed to be started with \ */
     if (!LeadingBackslashPermissible && DbcsName.Buffer[0] == '\\')
@@ -451,88 +465,108 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
         DbcsName.MaximumLength = DbcsName.MaximumLength - 1;
     }
 
-    /* Extract first part of the DbcsName to work on */
-    FsRtlDissectDbcs(DbcsName, &FirstPart, &RemainingPart);
-    while (FirstPart.Length > 0)
+    if (PathNamePermissible)
     {
-        /* Reset dots count */
-        LastDot = FALSE;
+        /* We copy the buffer for FsRtlDissectDbcs call */
+        RemainingPart.Buffer = DbcsName.Buffer;
+        RemainingPart.Length = DbcsName.Length;
+        RemainingPart.MaximumLength = DbcsName.MaximumLength;
 
-        /* Accept special filename if wildcards are allowed */
-        if (WildCardsPermissible && (FirstPart.Length == 1 || FirstPart.Length == 2) && FirstPart.Buffer[0] == '.')
+        while (RemainingPart.Length > 0)
         {
-            if (FirstPart.Length == 2)
-            {
-                if (FirstPart.Buffer[1] == '.')
-                {
-                    goto EndLoop;
-                }
-            }
-            else
-            {
-                goto EndLoop;
-            }
-        }
+            if (RemainingPart.Buffer[0] == '\\')
+                return FALSE;
 
-        /* Filename must be 8.3 filename */
-        if (FirstPart.Length > 12)
-            return FALSE;
+            /* Call once again our dissect function */
+            FsRtlDissectDbcs(RemainingPart, &FirstPart, &RemainingPart);
 
-        /* Now, we will parse the filename to find everything bad in */
-        for (i = 0; i < FirstPart.Length; i++)
-        {
-            /* First make sure the character it's not the Lead DBCS */
-            if (FsRtlIsLeadDbcsCharacter(FirstPart.Buffer[i]))
-            {
-                if (i == (FirstPart.Length) - 1)
-                    return FALSE;
-                i++;
-            }
-            /* Then check for bad characters */
-            else if (!FsRtlIsAnsiCharacterLegalFat(FirstPart.Buffer[i], WildCardsPermissible))
+            if (!FsRtlIsFatDbcsLegal(FirstPart,
+                                     WildCardsPermissible,
+                                     FALSE,
+                                     FALSE))
             {
                 return FALSE;
             }
-            else if (FirstPart.Buffer[i] == '.')
+        }
+
+        return TRUE;
+    }
+
+    if (WildCardsPermissible && FsRtlDoesDbcsContainWildCards(&DbcsName))
+    {
+        for (i = 0; i < DbcsName.Length; i++)
+        {
+            /* First make sure the character it's not the Lead DBCS */
+            if (FsRtlIsLeadDbcsCharacter(DbcsName.Buffer[i]))
             {
-                /* Filename can only contain one dot */
-                if (LastDot)
-                    return FALSE;
-
-                LastDot = TRUE;
-
-                /* We mustn't have spaces before dot or at the end of the filename
-                 * and no dot at the beginning of the filename */
-                if ((i == (FirstPart.Length) - 1) || i == 0)
-                    return FALSE;
-
-                if (i > 0)
-                    if (FirstPart.Buffer[i - 1] == ' ')
-                        return FALSE;
-
-                /* Filename must be 8.3 filename and not 3.8 filename */
-                if ((FirstPart.Length - 1) - i > 3)
-                    return FALSE;
+                i++;
+            }
+            /* Then check for bad characters */
+            else if (!FsRtlIsAnsiCharacterLegalFat(DbcsName.Buffer[i], TRUE))
+            {
+                return FALSE;
             }
         }
 
-        /* Filename mustn't finish with a space */
-        if (FirstPart.Buffer[FirstPart.Length - 1] == ' ')
+        return TRUE;
+    }
+
+    /* Filename must be 8.3 filename */
+    if (DbcsName.Length > 12)
+        return FALSE;
+
+    /* Reset dots count */
+    LastDot = FALSE;
+
+    for (i = 0; i < DbcsName.Length; i++)
+    {
+        /* First make sure the character it's not the Lead DBCS */
+        if (FsRtlIsLeadDbcsCharacter(DbcsName.Buffer[i]))
+        {
+            if (!LastDot && (i >= 7))
+                return FALSE;
+
+            if (i == (DbcsName.Length - 1))
+                return FALSE;
+
+            i++;
+            continue;
+        }
+        /* Then check for bad characters */
+        else if (!FsRtlIsAnsiCharacterLegalFat(DbcsName.Buffer[i], WildCardsPermissible))
+        {
             return FALSE;
+        }
+        else if (DbcsName.Buffer[i] == '.')
+        {
+            /* Filename can only contain one dot */
+            if (LastDot)
+                return FALSE;
 
-EndLoop:
-        /* Preparing next loop */
-        Name.Buffer = RemainingPart.Buffer;
-        Name.Length = RemainingPart.Length;
-        Name.MaximumLength = RemainingPart.MaximumLength;
+            LastDot = TRUE;
 
-        /* Call once again our dissect function */
-        FsRtlDissectDbcs(Name, &FirstPart, &RemainingPart);
+            /* We mustn't have spaces before dot or at the end of the filename
+             * and no dot at the beginning of the filename */
+            if (i == (DbcsName.Length - 1) || i == 0)
+                return FALSE;
 
-        /* We found a pathname, it wasn't allowed */
-        if (FirstPart.Length > 0 && !PathNamePermissible)
+            /* Filename must be 8.3 filename and not 3.8 filename */
+            if ((DbcsName.Length - 1) - i > 3)
+                return FALSE;
+
+            if ((i > 0) && DbcsName.Buffer[i - 1] == ' ')
+                return FALSE;
+        }
+        /* Filename mustn't finish with a space */
+        else if (DbcsName.Buffer[i] == ' ' && i == (DbcsName.Length - 1))
+        {
+            return FALSE;
+        }
+
+        if (!LastDot && (i >= 8))
             return FALSE;
     }
+
     return TRUE;
 }
 
