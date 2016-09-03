@@ -603,13 +603,27 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
                      IN BOOLEAN PathNamePermissible,
                      IN BOOLEAN LeadingBackslashPermissible)
 {
-    ANSI_STRING FirstPart, RemainingPart, Name;
+    ANSI_STRING FirstPart, RemainingPart;
     USHORT i;
     PAGED_CODE();
 
     /* Just quit if the string is empty */
     if (!DbcsName.Length)
         return FALSE;
+
+    /* Accept special filename if wildcards are allowed */
+    if (WildCardsPermissible && (DbcsName.Length == 1 || DbcsName.Length == 2) && DbcsName.Buffer[0] == '.')
+    {
+        if (DbcsName.Length == 2)
+        {
+            if (DbcsName.Buffer[1] == '.')
+                return TRUE;
+        }
+        else
+        {
+            return TRUE;
+        }
+    }
 
     /* DbcsName wasn't supposed to be started with \ */
     if (!LeadingBackslashPermissible && DbcsName.Buffer[0] == '\\')
@@ -622,64 +636,56 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
         DbcsName.MaximumLength = DbcsName.MaximumLength - 1;
     }
 
-    /* Extract first part of the DbcsName to work on */
-    FsRtlDissectDbcs(DbcsName, &FirstPart, &RemainingPart);
-    while (FirstPart.Length > 0)
+    if (PathNamePermissible)
     {
-        /* Accept special filename if wildcards are allowed */
-        if (WildCardsPermissible && (FirstPart.Length == 1 || FirstPart.Length == 2) && FirstPart.Buffer[0] == '.')
-        {
-            if (FirstPart.Length == 2)
-            {
-                if (FirstPart.Buffer[1] == '.')
-                {
-                    goto EndLoop;
-                }
-            }
-            else
-            {
-                goto EndLoop;
-            }
-        }
+        /* We copy the buffer for FsRtlDissectDbcs call */
+        RemainingPart.Buffer = DbcsName.Buffer;
+        RemainingPart.Length = DbcsName.Length;
+        RemainingPart.MaximumLength = DbcsName.MaximumLength;
 
-        /* Filename must be 255 bytes maximum */
-        if (FirstPart.Length > 255)
-            return FALSE;
-
-        /* Now, we will parse the filename to find everything bad in */
-        for (i = 0; i < FirstPart.Length; i++)
+        while (RemainingPart.Length > 0)
         {
-            /* First make sure the character it's not the Lead DBCS */
-            if (FsRtlIsLeadDbcsCharacter(FirstPart.Buffer[i]))
-            {
-                if (i == (FirstPart.Length) - 1)
-                    return FALSE;
-                i++;
-            }
-            /* Then check for bad characters */
-            else if (!FsRtlIsAnsiCharacterLegalHpfs(FirstPart.Buffer[i], WildCardsPermissible))
+            if (RemainingPart.Buffer[0] == '\\')
+                return FALSE;
+
+            /* Call once again our dissect function */
+            FsRtlDissectDbcs(RemainingPart, &FirstPart, &RemainingPart);
+
+            if (!FsRtlIsHpfsDbcsLegal(FirstPart,
+                                      WildCardsPermissible,
+                                      FALSE,
+                                      FALSE))
             {
                 return FALSE;
             }
         }
 
-        /* Filename mustn't finish with a space or a dot */
-        if ((FirstPart.Buffer[FirstPart.Length - 1] == ' ') ||
-            (FirstPart.Buffer[FirstPart.Length - 1] == '.'))
-            return FALSE;
-
-        EndLoop:
-        /* Preparing next loop */
-        Name.Buffer = RemainingPart.Buffer;
-        Name.Length = RemainingPart.Length;
-        Name.MaximumLength = RemainingPart.MaximumLength;
-
-        /* Call once again our dissect function */
-        FsRtlDissectDbcs(Name, &FirstPart, &RemainingPart);
-
-        /* We found a pathname, it wasn't allowed */
-        if (FirstPart.Length > 0 && !PathNamePermissible)
-            return FALSE;
+        return TRUE;
     }
+
+    if (DbcsName.Length > 255)
+        return FALSE;
+
+    for (i = 0; i < DbcsName.Length; i++)
+    {
+        /* First make sure the character it's not the Lead DBCS */
+        if (FsRtlIsLeadDbcsCharacter(DbcsName.Buffer[i]))
+        {
+            if (i == (DbcsName.Length - 1))
+                return FALSE;
+            i++;
+        }
+        /* Then check for bad characters */
+        else if (!FsRtlIsAnsiCharacterLegalHpfs(DbcsName.Buffer[i], WildCardsPermissible))
+        {
+            return FALSE;
+        }
+        /* Filename mustn't finish with a space or a dot */
+        else if ((DbcsName.Buffer[i] == ' ' || DbcsName.Buffer[i] == '.') && i == (DbcsName.Length - 1))
+        {
+            return FALSE;
+        }
+    }
+
     return TRUE;
 }
