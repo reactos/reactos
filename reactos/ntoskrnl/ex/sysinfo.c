@@ -1203,6 +1203,9 @@ QSI_DEF(SystemHandleInformation)
     {
         PLIST_ENTRY NextTableEntry;
 
+        /* Reset of count of handles */
+        HandleInformation->NumberOfHandles = 0;
+
         /* Enumerate all system handles */
         for (NextTableEntry = HandleTableListHead.Flink;
              NextTableEntry != &HandleTableListHead;
