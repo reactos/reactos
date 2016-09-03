@@ -95,7 +95,7 @@ extern int _commode;
 #define WX_READCR         0x08  /* underlying file is at \r */
 #define WX_DONTINHERIT    0x10
 #define WX_APPEND         0x20
-#define WX_NOSEEK         0x40
+#define WX_TTY            0x40
 #define WX_TEXT           0x80
 
 /* values for exflag - it's used differently in msvcr90.dll*/
@@ -167,6 +167,17 @@ static CRITICAL_SECTION_DEBUG file_cs_debug =
 static CRITICAL_SECTION file_cs = { &file_cs_debug, -1, 0, 0, 0, 0 };
 #define LOCK_FILES()    do { EnterCriticalSection(&file_cs); } while (0)
 #define UNLOCK_FILES()  do { LeaveCriticalSection(&file_cs); } while (0)
+
+static inline ioinfo* get_ioinfo_nolock(int fd)
+{
+    ioinfo *ret = NULL;
+    if(fd>=0 && fd<MAX_FILES)
+        ret = __pioinfo[fd/FD_BLOCK_SIZE];
+    if(!ret)
+        return &__badioinfo;
+
+    return ret + (fd%FD_BLOCK_SIZE);
+}
 
 static inline ioinfo* get_ioinfo(int fd)
 {
@@ -298,7 +309,7 @@ static int set_fd(HANDLE hand, int flag, int fd)
   }
 
   fdinfo->handle = hand;
-  fdinfo->wxflag = WX_OPEN | (flag & (WX_DONTINHERIT | WX_APPEND | WX_TEXT | WX_PIPE | WX_NOSEEK));
+  fdinfo->wxflag = WX_OPEN | (flag & (WX_DONTINHERIT | WX_APPEND | WX_TEXT | WX_PIPE | WX_TTY));
   fdinfo->lookahead[0] = '\n';
   fdinfo->lookahead[1] = '\n';
   fdinfo->lookahead[2] = '\n';
@@ -467,7 +478,7 @@ void msvcrt_init_io(void)
     HANDLE h = GetStdHandle(STD_INPUT_HANDLE);
     DWORD type = GetFileType(h);
 
-    set_fd(h, WX_OPEN|WX_TEXT|((type&0xf)==FILE_TYPE_CHAR ? WX_NOSEEK : 0)
+    set_fd(h, WX_OPEN|WX_TEXT|((type&0xf)==FILE_TYPE_CHAR ? WX_TTY : 0)
             |((type&0xf)==FILE_TYPE_PIPE ? WX_PIPE : 0), STDIN_FILENO);
   }
 
@@ -476,7 +487,7 @@ void msvcrt_init_io(void)
     HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD type = GetFileType(h);
 
-    set_fd(h, WX_OPEN|WX_TEXT|((type&0xf)==FILE_TYPE_CHAR ? WX_NOSEEK : 0)
+    set_fd(h, WX_OPEN|WX_TEXT|((type&0xf)==FILE_TYPE_CHAR ? WX_TTY : 0)
             |((type&0xf)==FILE_TYPE_PIPE ? WX_PIPE : 0), STDOUT_FILENO);
   }
 
@@ -485,7 +496,7 @@ void msvcrt_init_io(void)
     HANDLE h = GetStdHandle(STD_ERROR_HANDLE);
     DWORD type = GetFileType(h);
 
-    set_fd(h, WX_OPEN|WX_TEXT|((type&0xf)==FILE_TYPE_CHAR ? WX_NOSEEK : 0)
+    set_fd(h, WX_OPEN|WX_TEXT|((type&0xf)==FILE_TYPE_CHAR ? WX_TTY : 0)
             |((type&0xf)==FILE_TYPE_PIPE ? WX_PIPE : 0), STDERR_FILENO);
   }
 
@@ -524,13 +535,9 @@ static int flush_buffer(FILE* file)
  */
 int CDECL _isatty(int fd)
 {
-    HANDLE hand = fdtoh(fd);
+    TRACE(":fd (%d)\n",fd);
 
-    TRACE(":fd (%d) handle (%p)\n",fd,hand);
-    if (hand == INVALID_HANDLE_VALUE)
-        return 0;
-
-    return GetFileType(hand) == FILE_TYPE_CHAR? 1 : 0;
+    return get_ioinfo_nolock(fd)->wxflag & WX_TTY;
 }
 
 /* INTERNAL: Allocate stdio file buffer */
@@ -1688,7 +1695,7 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
 {
   DWORD access = 0, creation = 0, attrib;
   SECURITY_ATTRIBUTES sa;
-  DWORD sharing;
+  DWORD sharing, type;
   int wxflag;
   HANDLE hand;
 
@@ -1820,6 +1827,11 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
       else if (access & GENERIC_READ)
           oflags = check_bom(hand, oflags, TRUE);
   }
+  type = GetFileType(hand);
+  if (type == FILE_TYPE_CHAR)
+      wxflag |= WX_TTY;
+  else if (type == FILE_TYPE_PIPE)
+      wxflag |= WX_PIPE;
 
   *fd = alloc_fd(hand, wxflag);
   if (*fd == -1)
@@ -1979,7 +1991,7 @@ int CDECL _open_osfhandle(intptr_t handle, int oflags)
   }
 
   if (flags == FILE_TYPE_CHAR)
-    flags = WX_NOSEEK;
+    flags = WX_TTY;
   else if (flags == FILE_TYPE_PIPE)
     flags = WX_PIPE;
   else
@@ -2103,7 +2115,7 @@ static int read_utf8(int fd, wchar_t *buf, unsigned int count)
                 buf[0] = '\n';
             else {
                 buf[0] = '\r';
-                if(fdinfo->wxflag & (WX_PIPE | WX_NOSEEK))
+                if(fdinfo->wxflag & (WX_PIPE | WX_TTY))
                     fdinfo->lookahead[0] = lookahead;
                 else
                     SetFilePointer(fdinfo->handle, -1, NULL, FILE_CURRENT);
@@ -2151,7 +2163,7 @@ static int read_utf8(int fd, wchar_t *buf, unsigned int count)
     if(char_len+i <= pos)
         i += char_len;
 
-    if(fdinfo->wxflag & (WX_PIPE | WX_NOSEEK)) {
+    if(fdinfo->wxflag & (WX_PIPE | WX_TTY)) {
         if(i < pos)
             fdinfo->lookahead[0] = readbuf[i];
         if(i+1 < pos)
@@ -2179,7 +2191,7 @@ static int read_utf8(int fd, wchar_t *buf, unsigned int count)
                 if(lookahead != '\n')
                     readbuf[j++] = '\r';
 
-                if(fdinfo->wxflag & (WX_PIPE | WX_NOSEEK))
+                if(fdinfo->wxflag & (WX_PIPE | WX_TTY))
                     fdinfo->lookahead[0] = lookahead;
                 else
                     SetFilePointer(fdinfo->handle, -1, NULL, FILE_CURRENT);
@@ -2313,7 +2325,7 @@ static int read_i(int fd, void *buf, unsigned int count)
                                 if(utf16) bufstart[j++] = 0;
                             }
 
-                            if (fdinfo->wxflag & (WX_PIPE | WX_NOSEEK))
+                            if (fdinfo->wxflag & (WX_PIPE | WX_TTY))
                             {
                                 if (lookahead[0]=='\n' && (!utf16 || !lookahead[1]))
                                 {
