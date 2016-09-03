@@ -210,6 +210,9 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     ACCESS_MASK DesiredAccess;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     ULONG BufferLength;
+
+    PAGED_CODE();
+
     IOTRACE(IO_CTL_DEBUG, "Handle: %p. CTL: %lx. Type: %lx \n",
             DeviceHandle, IoControlCode, IsDevIoCtl);
 
@@ -343,7 +346,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     }
 
     /* If that's FS I/O, try to do it with FastIO path */
-    if (!IsDevIoCtl)
+    if (IsDevIoCtl)
     {
         PFAST_IO_DISPATCH FastIoDispatch = DeviceObject->DriverObject->FastIoDispatch;
 
