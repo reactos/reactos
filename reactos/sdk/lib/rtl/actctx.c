@@ -2579,11 +2579,7 @@ static NTSTATUS open_nt_file( HANDLE *handle, UNICODE_STRING *name )
     attr.ObjectName = name;
     attr.SecurityDescriptor = NULL;
     attr.SecurityQualityOfService = NULL;
-    return NtOpenFile(handle,
-                      GENERIC_READ | SYNCHRONIZE,
-                      &attr, &io,
-                      FILE_SHARE_READ,
-                      FILE_SYNCHRONOUS_IO_ALERT);
+    return NtOpenFile( handle, GENERIC_READ | SYNCHRONIZE, &attr, &io, FILE_SHARE_READ, FILE_SYNCHRONOUS_IO_ALERT );
 }
 
 static NTSTATUS get_module_filename( HMODULE module, UNICODE_STRING *str, USHORT extra_len )
@@ -2837,9 +2833,8 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
               ai->version.major, ai->version.minor, lang );
     RtlInitUnicodeString( &lookup_us, lookup );
 
-    NtQueryDirectoryFile( dir, 0, NULL, NULL, &io, buffer, sizeof(buffer),
-                          FileBothDirectoryInformation, FALSE, &lookup_us, TRUE );
-    if (io.Status == STATUS_SUCCESS)
+    if (!NtQueryDirectoryFile( dir, 0, NULL, NULL, &io, buffer, sizeof(buffer),
+                               FileBothDirectoryInformation, FALSE, &lookup_us, TRUE ))
     {
         ULONG min_build = ai->version.build, min_revision = ai->version.revision;
         FILE_BOTH_DIR_INFORMATION *dir_info;
@@ -2852,9 +2847,9 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
         {
             if (data_pos >= data_len)
             {
-                NtQueryDirectoryFile( dir, 0, NULL, NULL, &io, buffer, sizeof(buffer),
-                                      FileBothDirectoryInformation, FALSE, &lookup_us, FALSE );
-                if (io.Status != STATUS_SUCCESS) break;
+                if (NtQueryDirectoryFile( dir, 0, NULL, NULL, &io, buffer, sizeof(buffer),
+                                          FileBothDirectoryInformation, FALSE, &lookup_us, FALSE ))
+                    break;
                 data_len = (ULONG)io.Information;
                 data_pos = 0;
             }
@@ -2933,11 +2928,8 @@ static NTSTATUS lookup_winsxs(struct actctx_loader* acl, struct assembly_identit
     attr.SecurityDescriptor = NULL;
     attr.SecurityQualityOfService = NULL;
 
-    if (!NtOpenFile(&handle,
-                    GENERIC_READ | SYNCHRONIZE,
-                    &attr, &io,
-                    FILE_SHARE_READ | FILE_SHARE_WRITE,
-                    FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT))
+    if (!NtOpenFile( &handle, GENERIC_READ | SYNCHRONIZE, &attr, &io, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                     FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT ))
     {
         sxs_ai = *ai;
         file = lookup_manifest_file( handle, &sxs_ai );
@@ -4764,7 +4756,7 @@ RtlCreateActivationContext(IN ULONG Flags,
         }
 
         ret = RtlDosPathNameToNtPathName_U(source ? source : pActCtx->lpSource, &nameW, NULL, NULL);
-        if (source) RtlFreeHeap( RtlGetProcessHeap(), 0, source );
+        RtlFreeHeap( RtlGetProcessHeap(), 0, source );
         if (!ret)
         {
             status = STATUS_NO_SUCH_FILE;
