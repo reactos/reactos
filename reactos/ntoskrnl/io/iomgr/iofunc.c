@@ -384,10 +384,10 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                 _SEH2_END;
             }
 
-            /* If we're to dismount a volume, increaase the dismount count */
+            /* If we are dismounting a volume, increaase the dismount count */
             if (IoControlCode == FSCTL_DISMOUNT_VOLUME)
             {
-                InterlockedExchangeAdd((PLONG)&SharedUserData->DismountCount, 1);
+                InterlockedIncrement((PLONG)&SharedUserData->DismountCount);
             }
 
             /* Call the FSD */
@@ -418,7 +418,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                 /* Backup our complete context in case it exists */
                 if (FileObject->CompletionContext)
                 {
-                     CompletionInfo = *(FileObject->CompletionContext);
+                    CompletionInfo = *(FileObject->CompletionContext);
                 }
 
                 /* If we had an event, signal it */
@@ -612,12 +612,15 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     }
 
     /* Use deferred completion for FS I/O */
-    Irp->Flags |= (!IsDevIoCtl) ? IRP_DEFER_IO_COMPLETION : 0;
+    if (!IsDevIoCtl)
+    {
+        Irp->Flags |= IRP_DEFER_IO_COMPLETION;
+    }
 
-    /* If we're to dismount a volume, increaase the dismount count */
+    /* If we are dismounting a volume, increaase the dismount count */
     if (IoControlCode == FSCTL_DISMOUNT_VOLUME)
     {
-        InterlockedExchangeAdd((PLONG)&SharedUserData->DismountCount, 1);
+        InterlockedIncrement((PLONG)&SharedUserData->DismountCount);
     }
 
     /* Perform the call */
