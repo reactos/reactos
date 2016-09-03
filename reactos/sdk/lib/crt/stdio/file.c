@@ -410,7 +410,7 @@ unsigned create_io_inherit_block(WORD *size, BYTE **block)
   ioinfo*     fdinfo;
 
   *size = sizeof(unsigned) + (sizeof(char) + sizeof(HANDLE)) * fdend;
-  *block = calloc(*size, 1);
+  *block = calloc(1, *size);
   if (!*block)
   {
     *size = 0;
@@ -547,7 +547,7 @@ int CDECL _isatty(int fd)
             && _isatty(file->_file))
         return FALSE;
 
-    file->_base = calloc(MSVCRT_INTERNAL_BUFSIZ,1);
+    file->_base = calloc(1, MSVCRT_INTERNAL_BUFSIZ);
     if(file->_base) {
         file->_bufsiz = MSVCRT_INTERNAL_BUFSIZ;
         file->_flag |= _IOMYBUF;
