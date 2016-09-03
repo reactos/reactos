@@ -425,9 +425,14 @@ RegCloseKey(HKEY hKey)
     NTSTATUS Status;
 
     /* don't close null handle or a pseudo handle */
-    if ((!hKey) || (((ULONG_PTR)hKey & 0xF0000000) == 0x80000000))
+    if (!hKey)
     {
         return ERROR_INVALID_HANDLE;
+    }
+
+    if (((ULONG_PTR)hKey & 0xF0000000) == 0x80000000)
+    {
+        return ERROR_SUCCESS;
     }
 
     Status = NtClose(hKey);
