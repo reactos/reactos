@@ -3,6 +3,7 @@ spec2def(apphelp.dll apphelp.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     apphelp.c
+    hsdb.c
     layer.c
     sdbapi.c
     sdbfileattr.c

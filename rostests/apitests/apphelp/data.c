@@ -771,11 +771,16 @@ static unsigned char rawData[2356] = {
     0x21, 0x00, 0x00, 0x00
 };
 
+DWORD test_get_db_size()
+{
+    return sizeof(rawData);
+}
+
 void test_create_db_imp(const char* name)
 {
     HANDLE file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    ok(file != INVALID_HANDLE_VALUE, "can't create file\n");
-    if(file != INVALID_HANDLE_VALUE)
+    winetest_ok(file != INVALID_HANDLE_VALUE, "can't create file '%s'\n", name);
+    if (file != INVALID_HANDLE_VALUE)
     {
         DWORD size;
         WriteFile(file, rawData, sizeof(rawData), &size, NULL);
@@ -797,5 +802,13 @@ DWORD get_host_winver(void)
         g_WinVersion = (rtlinfo.dwMajorVersion << 8) | rtlinfo.dwMinorVersion;
     }
     return g_WinVersion;
+}
+
+void silence_debug_output(void)
+{
+    if (GetEnvironmentVariableA("SHIM_DEBUG_LEVEL", NULL, 0) == ERROR_ENVVAR_NOT_FOUND)
+        SetEnvironmentVariableA("SHIM_DEBUG_LEVEL", "0");
+    if (GetEnvironmentVariableA("SHIMENG_DEBUG_LEVEL", NULL, 0) == ERROR_ENVVAR_NOT_FOUND)
+        SetEnvironmentVariableA("SHIMENG_DEBUG_LEVEL", "0");
 }
 

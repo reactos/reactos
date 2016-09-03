@@ -50,22 +50,58 @@ typedef struct tagATTRINFO {
     };
 } ATTRINFO, *PATTRINFO;
 
+#define SDB_MAX_SDBS 16
+#define SDB_MAX_EXES 16
+#define SDB_MAX_LAYERS 8
+
+/* Flags for adwExeFlags */
+#define SHIMREG_DISABLE_SHIM (0x00000001)
+#define SHIMREG_DISABLE_APPHELP (0x00000002)
+#define SHIMREG_APPHELP_NOUI (0x00000004)
+#define SHIMREG_APPHELP_CANCEL (0x10000000)
+#define SHIMREG_DISABLE_SXS (0x00000010)
+#define SHIMREG_DISABLE_LAYER (0x00000020)
+#define SHIMREG_DISABLE_DRIVER (0x00000040)
+
+#define SDBGMEF_IGNORE_ENVIRONMENT (0x1)
+
+typedef struct tagSDBQUERYRESULT {
+    TAGREF atrExes[SDB_MAX_EXES];
+    DWORD  adwExeFlags[SDB_MAX_EXES];
+    TAGREF atrLayers[SDB_MAX_LAYERS];
+    DWORD  dwLayerFlags;
+    TAGREF trApphelp;
+    DWORD  dwExeCount;
+    DWORD  dwLayerCount;
+    GUID   guidID;
+    DWORD  dwFlags;
+    DWORD  dwCustomSDBMap;
+    GUID   rgGuidDB[SDB_MAX_SDBS];
+} SDBQUERYRESULT, *PSDBQUERYRESULT;
+
 /* apphelp.c */
 
 #include "sdbpapi.h"
 
 PWSTR SdbpStrDup(LPCWSTR string);
+HSDB WINAPI SdbInitDatabase(DWORD, LPCWSTR);
+void WINAPI SdbReleaseDatabase(HSDB);
 
 PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type);
 void WINAPI SdbCloseDatabase(PDB);
 BOOL WINAPI SdbIsNullGUID(CONST GUID *Guid);
+BOOL WINAPI SdbGetAppPatchDir(HSDB db, LPWSTR path, DWORD size);
+LPWSTR WINAPI SdbGetStringTagPtr(PDB db, TAGID tagid);
 
 /* sdbread.c */
 BOOL WINAPI SdbpReadData(PDB db, PVOID dest, DWORD offset, DWORD num);
 TAG WINAPI SdbGetTagFromTagID(PDB db, TAGID tagid);
 TAGID WINAPI SdbFindFirstTag(PDB db, TAGID parent, TAG tag);
+TAGID WINAPI SdbFindNextTag(PDB db, TAGID parent, TAGID prev_child);
 BOOL WINAPI SdbGetDatabaseID(PDB db, GUID* Guid);
 
+/* sdbfileattr.c*/
+BOOL WINAPI SdbFreeFileAttributes(PATTRINFO attr_info);
 
 /* layer.c */
 BOOL WINAPI AllowPermLayer(PCWSTR path);

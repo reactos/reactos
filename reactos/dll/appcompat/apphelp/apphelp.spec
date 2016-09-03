@@ -71,7 +71,7 @@
 @ stub SdbGetLayerName
 @ stub SdbGetLayerTagRef
 @ stub SdbGetLocalPDB
-@ stub SdbGetMatchingExe
+@ stdcall SdbGetMatchingExe(ptr wstr wstr wstr long ptr)
 @ stub SdbGetMsiPackageInformation
 @ stub SdbGetNamedLayer
 @ stdcall SdbGetNextChild(ptr long long)
@@ -87,7 +87,7 @@
 @ stub SdbGrabMatchingInfoEx
 @ stdcall SdbGUIDFromString(wstr ptr)
 @ stdcall SdbGUIDToString(ptr wstr long)
-@ stub SdbInitDatabase
+@ stdcall SdbInitDatabase(long wstr)
 @ stub SdbInitDatabaseEx
 @ stdcall SdbIsNullGUID(ptr)
 @ stub SdbIsStandardDatabase
@@ -129,7 +129,7 @@
 @ stdcall SdbReadWORDTag(ptr long long)
 @ stub SdbReadWORDTagRef
 @ stub SdbRegisterDatabase
-@ stub SdbReleaseDatabase
+@ stdcall SdbReleaseDatabase(ptr)
 @ stub SdbReleaseMatchingExe
 @ stub SdbResolveDatabase
 @ stub SdbSetApphelpDebugParameters
@@ -144,7 +144,7 @@
 @ stub SdbStringReplace
 @ stub SdbStringReplaceArray
 @ stub SdbTagIDToTagRef
-@ stub SdbTagRefToTagID
+@ stdcall SdbTagRefToTagID(ptr long ptr ptr)
 @ stdcall SdbTagToString(long)
 @ stub SdbUnregisterDatabase
 @ stdcall SdbWriteBinaryTag(ptr long ptr long)

@@ -461,59 +461,6 @@ void WINAPI SdbCloseDatabase(PDB db)
 }
 
 /**
- * Retrieves AppPatch directory.
- *
- * @param [in]  db      Handle to the shim database.
- * @param [out] path    Pointer to memory in which path shall be written.
- * @param [in]  size    Size of the buffer in characters.
- */
-BOOL WINAPI SdbGetAppPatchDir(HSDB db, LPWSTR path, DWORD size)
-{
-    static WCHAR* default_dir = NULL;
-    static CONST WCHAR szAppPatch[] = {'\\','A','p','p','P','a','t','c','h',0};
-
-    /* In case function fails, path holds empty string */
-    if (size > 0)
-        *path = 0;
-
-    if (!default_dir)
-    {
-        WCHAR* tmp = NULL;
-        UINT len = GetSystemWindowsDirectoryW(NULL, 0) + lstrlenW(szAppPatch);
-        tmp = SdbAlloc((len + 1)* sizeof(WCHAR));
-        if (tmp)
-        {
-            UINT r = GetSystemWindowsDirectoryW(tmp, len+1);
-            if (r && r < len)
-            {
-                if (SUCCEEDED(StringCchCatW(tmp, len+1, szAppPatch)))
-                {
-                    if (InterlockedCompareExchangePointer((void**)&default_dir, tmp, NULL) == NULL)
-                        tmp = NULL;
-                }
-            }
-            if (tmp)
-                SdbFree(tmp);
-        }
-        if (!default_dir)
-        {
-            SHIM_ERR("Unable to obtain default AppPatch directory\n");
-            return FALSE;
-        }
-    }
-
-    if (!db)
-    {
-        return SUCCEEDED(StringCchCopyW(path, size, default_dir));
-    }
-    else
-    {
-        /* fixme */
-        return FALSE;
-    }
-}
-
-/**
  * Parses a string to retrieve a GUID.
  *
  * @param [in]  GuidString  The string to parse.

@@ -40,7 +40,7 @@ void ApphelppInitDebugLevel(void)
 {
     UNICODE_STRING DebugKey, DebugValue;
     NTSTATUS Status;
-    ULONG NewLevel = 0;
+    ULONG NewLevel = SHIM_ERR;
     WCHAR Buffer[40];
 
     RtlInitUnicodeString(&DebugKey, L"SHIM_DEBUG_LEVEL");

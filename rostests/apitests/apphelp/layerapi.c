@@ -31,8 +31,7 @@
 
 #include "wine/test.h"
 
-/* data.c */
-DWORD get_host_winver(void);
+#include "apphelp_apitest.h"
 
 #define GPLK_USER 1
 #define GPLK_MACHINE 2
@@ -45,12 +44,6 @@ static BOOL(WINAPI *pAllowPermLayer)(PCWSTR path);
 static BOOL(WINAPI *pSdbSetPermLayerKeys)(PCWSTR wszPath, PCWSTR wszLayers, BOOL bMachine);
 static BOOL(WINAPI *pSdbGetPermLayerKeys)(PCWSTR wszPath, PWSTR pwszLayers, PDWORD pdwBytes, DWORD dwFlags);
 static BOOL(WINAPI *pSetPermLayerState)(PCWSTR wszPath, PCWSTR wszLayer, DWORD dwFlags, BOOL bMachine, BOOL bEnable);
-
-
-static DWORD g_WinVersion;
-#define WINVER_VISTA   0x0600
-#define WINVER_WIN8    0x0602
-#define WINVER_WIN10   0x1000
 
 
 /* Helper function to disable Wow64 redirection on an os that reports it being enabled. */
@@ -877,6 +870,7 @@ static void test_Sign_Media(void)
 
 START_TEST(layerapi)
 {
+    silence_debug_output();
     /*SetEnvironmentVariable("SHIM_DEBUG_LEVEL", "4");*/
     hdll = LoadLibraryA("apphelp.dll");
     pAllowPermLayer = (void *)GetProcAddress(hdll, "AllowPermLayer");
