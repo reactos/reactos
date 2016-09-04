@@ -810,6 +810,27 @@ static BOOL ConfirmDialog(HWND hWndOwner, UINT PromptId, UINT TitleId)
   return MessageBoxW(hWndOwner, Prompt, Title, MB_YESNO|MB_ICONQUESTION) == IDYES;
 }
 
+typedef HRESULT (__stdcall *tShellDimScreen) (IUnknown** Unknown, HWND* hWindow);
+
+BOOL
+CallShellDimScreen(IUnknown** pUnknown, HWND* hWindow)
+{
+    static tShellDimScreen ShellDimScreen;
+    static BOOL Initialized = FALSE;
+    if (!Initialized)
+    {
+        HMODULE mod = LoadLibrary(TEXT("msgina.dll"));
+        ShellDimScreen = (tShellDimScreen)GetProcAddress(mod, MAKEINTRESOURCEA(16));
+        Initialized = TRUE;
+    }
+
+    HRESULT hr = E_FAIL;
+    if (ShellDimScreen)
+        hr = ShellDimScreen(pUnknown, hWindow);
+    return SUCCEEDED(hr);
+}
+
+
 
 /*************************************************************************
  * RestartDialogEx                [SHELL32.730]
@@ -819,8 +840,13 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 {
     TRACE("(%p)\n", hWndOwner);
 
+    CComPtr<IUnknown> fadeHandler;
+    HWND parent;
+    if (!CallShellDimScreen(&fadeHandler, &parent))
+        parent = hWndOwner;
+
     /* FIXME: use lpwstrReason */
-    if (ConfirmDialog(hWndOwner, IDS_RESTART_PROMPT, IDS_RESTART_TITLE))
+    if (ConfirmDialog(parent, IDS_RESTART_PROMPT, IDS_RESTART_TITLE))
     {
         HANDLE hToken;
         TOKEN_PRIVILEGES npr;
@@ -881,7 +907,12 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM
 
 EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
 {
-    DialogBox(shell32_hInstance, MAKEINTRESOURCE(IDD_LOG_OFF), hWndOwner, LogOffDialogProc);
+    CComPtr<IUnknown> fadeHandler;
+    HWND parent;
+    if (!CallShellDimScreen(&fadeHandler, &parent))
+        parent = hWndOwner;
+
+    DialogBox(shell32_hInstance, MAKEINTRESOURCE(IDD_LOG_OFF), parent, LogOffDialogProc);
     return 0;
 }
 
@@ -952,12 +983,17 @@ void WINAPI ExitWindowsDialog(HWND hWndOwner)
 
     TRACE("(%p)\n", hWndOwner);
 
+    CComPtr<IUnknown> fadeHandler;
+    HWND parent;
+    if (!CallShellDimScreen(&fadeHandler, &parent))
+        parent = hWndOwner;
+
     /* If the DLL cannot be found for any reason, then it simply uses a
        dialog box to ask if the user wants to shut down the computer. */
     if(!msginaDll)
     {
         TRACE("Unable to load msgina.dll.\n");
-        ExitWindowsDialog_backup(hWndOwner);
+        ExitWindowsDialog_backup(parent);
         return;
     }
 
@@ -966,7 +1002,7 @@ void WINAPI ExitWindowsDialog(HWND hWndOwner)
     if(pShellShutdownDialog)
     {
         /* Actually call the function */
-        DWORD returnValue = pShellShutdownDialog(hWndOwner, NULL, FALSE);
+        DWORD returnValue = pShellShutdownDialog(parent, NULL, FALSE);
 
         switch(returnValue)
         {
@@ -1019,6 +1055,6 @@ void WINAPI ExitWindowsDialog(HWND hWndOwner)
         /* If the function cannot be found, then revert to using the backup solution */
         TRACE("Unable to find the 'ShellShutdownDialog' function");
         FreeLibrary(msginaDll);
-        ExitWindowsDialog_backup(hWndOwner);
+        ExitWindowsDialog_backup(parent);
     }
 }
