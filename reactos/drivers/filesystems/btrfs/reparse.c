@@ -26,8 +26,6 @@ NTSTATUS get_reparse_point(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject,
     char* data;
     NTSTATUS Status;
     
-    // FIXME - check permissions
-    
     TRACE("(%p, %p, %p, %x, %p)\n", DeviceObject, FileObject, buffer, buflen, retlen);
     
     ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, TRUE);
@@ -134,6 +132,7 @@ end:
 static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, REPARSE_DATA_BUFFER* rdb, ULONG buflen, LIST_ENTRY* rollback) {
     NTSTATUS Status;
     ULONG minlen;
+    ULONG tlength;
     UNICODE_STRING subname;
     ANSI_STRING target;
     LARGE_INTEGER offset, time;
@@ -155,7 +154,7 @@ static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, REPARSE_DATA_BUFFER* rd
     
     fileref->fcb->inode_item.st_mode |= __S_IFLNK;
     
-    Status = truncate_file(fileref->fcb, 0, rollback);
+    Status = truncate_file(fileref->fcb, 0, Irp, rollback);
     if (!NT_SUCCESS(Status)) {
         ERR("truncate_file returned %08x\n", Status);
         return Status;
@@ -187,7 +186,8 @@ static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, REPARSE_DATA_BUFFER* rd
     }
     
     offset.QuadPart = 0;
-    Status = write_file2(fileref->fcb->Vcb, Irp, offset, target.Buffer, (ULONG*)&target.Length, FALSE, TRUE,
+    tlength = target.Length;
+    Status = write_file2(fileref->fcb->Vcb, Irp, offset, target.Buffer, &tlength, FALSE, TRUE,
                          TRUE, FALSE, rollback);
     ExFreePool(target.Buffer);
     
@@ -221,9 +221,6 @@ NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     ULONG tag;
     LIST_ENTRY rollback;
     
-    // FIXME - send notification if this succeeds? The attributes will have changed.
-    // FIXME - check permissions
-    
     TRACE("(%p, %p)\n", DeviceObject, Irp);
     
     InitializeListHead(&rollback);
@@ -239,6 +236,13 @@ NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     if (!ccb) {
         ERR("ccb was NULL\n");
         return STATUS_INVALID_PARAMETER;
+    }
+    
+    // It isn't documented what permissions FSCTL_SET_REPARSE_POINT needs, but CreateSymbolicLinkW
+    // creates a file with FILE_WRITE_ATTRIBUTES | DELETE | SYNCHRONIZE.
+    if (!(ccb->access & FILE_WRITE_ATTRIBUTES)) {
+        WARN("insufficient privileges\n");
+        return STATUS_ACCESS_DENIED;
     }
     
     fileref = ccb->fileref;
@@ -300,7 +304,7 @@ NTSTATUS set_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
             
             Status = STATUS_SUCCESS;
         } else { // otherwise, store as file data
-            Status = truncate_file(fcb, 0, &rollback);
+            Status = truncate_file(fcb, 0, Irp, &rollback);
             if (!NT_SUCCESS(Status)) {
                 ERR("truncate_file returned %08x\n", Status);
                 goto end;
@@ -356,8 +360,6 @@ NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     file_ref* fileref;
     LIST_ENTRY rollback;
     
-    // FIXME - check permissions
-    
     TRACE("(%p, %p)\n", DeviceObject, Irp);
     
     InitializeListHead(&rollback);
@@ -368,19 +370,36 @@ NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     }
     
     fcb = FileObject->FsContext;
+    
+    if (!fcb) {
+        ERR("fcb was NULL\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+    
     ccb = FileObject->FsContext2;
-    fileref = ccb ? ccb->fileref : NULL;
     
-    ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, TRUE);
-    ExAcquireResourceExclusiveLite(fcb->Header.Resource, TRUE);
+    if (!ccb) {
+        ERR("ccb was NULL\n");
+        return STATUS_INVALID_PARAMETER;
+    }
     
-    TRACE("%S\n", file_desc(FileObject));
+    if (!(ccb->access & FILE_WRITE_ATTRIBUTES)) {
+        WARN("insufficient privileges\n");
+        return STATUS_ACCESS_DENIED;
+    }
+    
+    fileref = ccb->fileref;
     
     if (!fileref) {
         ERR("fileref was NULL\n");
         Status = STATUS_INVALID_PARAMETER;
         goto end;
     }
+    
+    ExAcquireResourceSharedLite(&fcb->Vcb->tree_lock, TRUE);
+    ExAcquireResourceExclusiveLite(fcb->Header.Resource, TRUE);
+    
+    TRACE("%S\n", file_desc(FileObject));
     
     if (buflen < offsetof(REPARSE_DATA_BUFFER, GenericReparseBuffer.DataBuffer)) {
         ERR("buffer was too short\n");
@@ -433,7 +452,7 @@ NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         
         // FIXME - do we need to check that the reparse tags match?
         
-        Status = truncate_file(fcb, 0, &rollback);
+        Status = truncate_file(fcb, 0, Irp, &rollback);
         if (!NT_SUCCESS(Status)) {
             ERR("truncate_file returned %08x\n", Status);
             goto end;

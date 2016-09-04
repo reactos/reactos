@@ -1,19 +1,47 @@
+/* Copyright (c) Mark Harmstone 2016
+ * 
+ * This file is part of WinBtrfs.
+ * 
+ * WinBtrfs is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public Licence as published by
+ * the Free Software Foundation, either version 3 of the Licence, or
+ * (at your option) any later version.
+ * 
+ * WinBtrfs is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public Licence for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public Licence
+ * along with WinBtrfs.  If not, see <http://www.gnu.org/licenses/>. */
+
 #include "btrfs_drv.h"
 
 extern UNICODE_STRING log_device, log_file, registry_path;
 
 static WCHAR option_mounted[] = L"Mounted";
-static WCHAR option_ignore[] = L"Ignore";
 
 #define hex_digit(c) ((c) >= 0 && (c) <= 9) ? ((c) + '0') : ((c) - 10 + 'a')
 
-NTSTATUS registry_load_volume_options(BTRFS_UUID* uuid, mount_options* options) {
-    UNICODE_STRING path, ignoreus;
+NTSTATUS registry_load_volume_options(device_extension* Vcb) {
+    BTRFS_UUID* uuid = &Vcb->superblock.uuid;
+    mount_options* options = &Vcb->options;
+    UNICODE_STRING path, ignoreus, compressus, compressforceus, compresstypeus, readonlyus, zliblevelus, flushintervalus,
+                   maxinlineus, subvolidus;
     OBJECT_ATTRIBUTES oa;
     NTSTATUS Status;
     ULONG i, j, kvfilen, index, retlen;
     KEY_VALUE_FULL_INFORMATION* kvfi = NULL;
     HANDLE h;
+    
+    options->compress = mount_compress;
+    options->compress_force = mount_compress_force;
+    options->compress_type = mount_compress_type > BTRFS_COMPRESSION_LZO ? 0 : mount_compress_type;
+    options->readonly = FALSE;
+    options->zlib_level = mount_zlib_level;
+    options->flush_interval = mount_flush_interval;
+    options->max_inline = min(mount_max_inline, Vcb->superblock.node_size - sizeof(tree_header) - sizeof(leaf_node) - sizeof(EXTENT_DATA) + 1);
+    options->subvol_id = 0;
     
     path.Length = path.MaximumLength = registry_path.Length + (37 * sizeof(WCHAR));
     path.Buffer = ExAllocatePoolWithTag(PagedPool, path.Length, ALLOC_TAG);
@@ -62,8 +90,15 @@ NTSTATUS registry_load_volume_options(BTRFS_UUID* uuid, mount_options* options) 
     
     index = 0;
     
-    ignoreus.Buffer = option_ignore;
-    ignoreus.Length = ignoreus.MaximumLength = wcslen(option_ignore) * sizeof(WCHAR);
+    RtlInitUnicodeString(&ignoreus, L"Ignore");
+    RtlInitUnicodeString(&compressus, L"Compress");
+    RtlInitUnicodeString(&compressforceus, L"CompressForce");
+    RtlInitUnicodeString(&compresstypeus, L"CompressType");
+    RtlInitUnicodeString(&readonlyus, L"Readonly");
+    RtlInitUnicodeString(&zliblevelus, L"ZlibLevel");
+    RtlInitUnicodeString(&flushintervalus, L"FlushInterval");
+    RtlInitUnicodeString(&maxinlineus, L"MaxInline");
+    RtlInitUnicodeString(&subvolidus, L"SubvolId");
     
     do {
         Status = ZwEnumerateValueKey(h, index, KeyValueFullInformation, kvfi, kvfilen, &retlen);
@@ -80,12 +115,53 @@ NTSTATUS registry_load_volume_options(BTRFS_UUID* uuid, mount_options* options) 
                 DWORD* val = (DWORD*)((UINT8*)kvfi + kvfi->DataOffset);
                 
                 options->ignore = *val != 0 ? TRUE : FALSE;
+            } else if (FsRtlAreNamesEqual(&compressus, &us, TRUE, NULL) && kvfi->DataOffset > 0 && kvfi->DataLength > 0 && kvfi->Type == REG_DWORD) {
+                DWORD* val = (DWORD*)((UINT8*)kvfi + kvfi->DataOffset);
+                
+                options->compress = *val != 0 ? TRUE : FALSE;
+            } else if (FsRtlAreNamesEqual(&compressforceus, &us, TRUE, NULL) && kvfi->DataOffset > 0 && kvfi->DataLength > 0 && kvfi->Type == REG_DWORD) {
+                DWORD* val = (DWORD*)((UINT8*)kvfi + kvfi->DataOffset);
+                
+                options->compress_force = *val != 0 ? TRUE : FALSE;
+            } else if (FsRtlAreNamesEqual(&compresstypeus, &us, TRUE, NULL) && kvfi->DataOffset > 0 && kvfi->DataLength > 0 && kvfi->Type == REG_DWORD) {
+                DWORD* val = (DWORD*)((UINT8*)kvfi + kvfi->DataOffset);
+                
+                options->compress_type = *val > BTRFS_COMPRESSION_LZO ? 0 : *val;
+            } else if (FsRtlAreNamesEqual(&readonlyus, &us, TRUE, NULL) && kvfi->DataOffset > 0 && kvfi->DataLength > 0 && kvfi->Type == REG_DWORD) {
+                DWORD* val = (DWORD*)((UINT8*)kvfi + kvfi->DataOffset);
+                
+                options->readonly = *val != 0 ? TRUE : FALSE;
+            } else if (FsRtlAreNamesEqual(&zliblevelus, &us, TRUE, NULL) && kvfi->DataOffset > 0 && kvfi->DataLength > 0 && kvfi->Type == REG_DWORD) {
+                DWORD* val = (DWORD*)((UINT8*)kvfi + kvfi->DataOffset);
+                
+                options->zlib_level = *val;
+            } else if (FsRtlAreNamesEqual(&flushintervalus, &us, TRUE, NULL) && kvfi->DataOffset > 0 && kvfi->DataLength > 0 && kvfi->Type == REG_DWORD) {
+                DWORD* val = (DWORD*)((UINT8*)kvfi + kvfi->DataOffset);
+                
+                options->flush_interval = *val;
+            } else if (FsRtlAreNamesEqual(&maxinlineus, &us, TRUE, NULL) && kvfi->DataOffset > 0 && kvfi->DataLength > 0 && kvfi->Type == REG_DWORD) {
+                DWORD* val = (DWORD*)((UINT8*)kvfi + kvfi->DataOffset);
+                
+                options->max_inline = min(*val, Vcb->superblock.node_size - sizeof(tree_header) - sizeof(leaf_node) - sizeof(EXTENT_DATA) + 1);
+            } else if (FsRtlAreNamesEqual(&subvolidus, &us, TRUE, NULL) && kvfi->DataOffset > 0 && kvfi->DataLength > 0 && kvfi->Type == REG_QWORD) {
+                UINT64* val = (UINT64*)((UINT8*)kvfi + kvfi->DataOffset);
+                
+                options->subvol_id = *val;
             }
         } else if (Status != STATUS_NO_MORE_ENTRIES) {
             ERR("ZwEnumerateValueKey returned %08x\n", Status);
             goto end2;
         }
     } while (NT_SUCCESS(Status));
+    
+    if (!options->compress && options->compress_force)
+        options->compress = TRUE;
+    
+    if (options->zlib_level > 9)
+        options->zlib_level = 9;
+    
+    if (options->flush_interval == 0)
+        options->flush_interval = mount_flush_interval;
 
     Status = STATUS_SUCCESS;
     
@@ -472,38 +548,13 @@ static void read_mappings(PUNICODE_STRING regpath) {
     ExFreePool(path);
 }
 
-void STDCALL read_registry(PUNICODE_STRING regpath) {
-#ifndef __REACTOS__
-    UNICODE_STRING us;
-#endif
-    OBJECT_ATTRIBUTES oa;
-    NTSTATUS Status;
-    HANDLE h;
-    ULONG dispos;
-#ifndef __REACTOS__
+static void get_registry_value(HANDLE h, WCHAR* string, ULONG type, void* val, ULONG size) {
     ULONG kvfilen;
     KEY_VALUE_FULL_INFORMATION* kvfi;
-#endif
+    UNICODE_STRING us;
+    NTSTATUS Status;
     
-#ifndef __REACTOS__
-    static WCHAR def_log_file[] = L"\\??\\C:\\btrfs.log";
-#endif
-    
-    read_mappings(regpath);
-    
-    InitializeObjectAttributes(&oa, regpath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
-    
-    Status = ZwCreateKey(&h, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &oa, 0, NULL, REG_OPTION_NON_VOLATILE, &dispos);
-    
-    if (!NT_SUCCESS(Status)) {
-        ERR("ZwCreateKey returned %08x\n", Status);
-        return;
-    }
-    
-    reset_subkeys(h, regpath);
-    
-#ifdef _DEBUG
-    RtlInitUnicodeString(&us, L"DebugLogLevel");
+    RtlInitUnicodeString(&us, string);
     
     kvfi = NULL;
     kvfilen = 0;
@@ -521,31 +572,75 @@ void STDCALL read_registry(PUNICODE_STRING regpath) {
         Status = ZwQueryValueKey(h, &us, KeyValueFullInformation, kvfi, kvfilen, &kvfilen);
         
         if (NT_SUCCESS(Status)) {
-            if (kvfi->Type == REG_DWORD && kvfi->DataLength >= sizeof(UINT32)) {
-                RtlCopyMemory(&debug_log_level, ((UINT8*)kvfi) + kvfi->DataOffset, sizeof(UINT32));
+            if (kvfi->Type == type && kvfi->DataLength >= size) {
+                RtlCopyMemory(val, ((UINT8*)kvfi) + kvfi->DataOffset, size);
             } else {
                 Status = ZwDeleteValueKey(h, &us);
                 if (!NT_SUCCESS(Status)) {
                     ERR("ZwDeleteValueKey returned %08x\n", Status);
                 }
 
-                Status = ZwSetValueKey(h, &us, 0, REG_DWORD, &debug_log_level, sizeof(debug_log_level));
+                Status = ZwSetValueKey(h, &us, 0, type, val, size);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("ZwSetValueKey reutrned %08x\n", Status);
+                    ERR("ZwSetValueKey returned %08x\n", Status);
                 }
             }
         }
         
         ExFreePool(kvfi);
     } else if (Status == STATUS_OBJECT_NAME_NOT_FOUND) {
-        Status = ZwSetValueKey(h, &us, 0, REG_DWORD, &debug_log_level, sizeof(debug_log_level));
+        Status = ZwSetValueKey(h, &us, 0, type, val, size);
         
         if (!NT_SUCCESS(Status)) {
-            ERR("ZwSetValueKey reutrned %08x\n", Status);
+            ERR("ZwSetValueKey returned %08x\n", Status);
         }
     } else {
         ERR("ZwQueryValueKey returned %08x\n", Status);
     }
+}
+
+void STDCALL read_registry(PUNICODE_STRING regpath) {
+#ifndef __REACTOS__
+    UNICODE_STRING us;
+#endif
+    OBJECT_ATTRIBUTES oa;
+    NTSTATUS Status;
+    HANDLE h;
+    ULONG dispos;
+#ifndef __REACTOS__
+    ULONG kvfilen;
+    KEY_VALUE_FULL_INFORMATION* kvfi;
+#endif
+    
+#ifndef __REACTOS__    
+    static WCHAR def_log_file[] = L"\\??\\C:\\btrfs.log";
+#endif
+    
+    read_mappings(regpath);
+    
+    InitializeObjectAttributes(&oa, regpath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
+    
+    Status = ZwCreateKey(&h, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &oa, 0, NULL, REG_OPTION_NON_VOLATILE, &dispos);
+    
+    if (!NT_SUCCESS(Status)) {
+        ERR("ZwCreateKey returned %08x\n", Status);
+        return;
+    }
+    
+    reset_subkeys(h, regpath);
+    
+    get_registry_value(h, L"Compress", REG_DWORD, &mount_compress, sizeof(mount_compress));
+    get_registry_value(h, L"CompressForce", REG_DWORD, &mount_compress_force, sizeof(mount_compress_force));
+    get_registry_value(h, L"CompressType", REG_DWORD, &mount_compress_type, sizeof(mount_compress_type));
+    get_registry_value(h, L"ZlibLevel", REG_DWORD, &mount_zlib_level, sizeof(mount_zlib_level));
+    get_registry_value(h, L"FlushInterval", REG_DWORD, &mount_flush_interval, sizeof(mount_flush_interval));
+    get_registry_value(h, L"MaxInline", REG_DWORD, &mount_max_inline, sizeof(mount_max_inline));
+    
+    if (mount_flush_interval == 0)
+        mount_flush_interval = 1;
+    
+#ifdef _DEBUG
+    get_registry_value(h, L"DebugLogLevel", REG_DWORD, &debug_log_level, sizeof(debug_log_level));
     
     RtlInitUnicodeString(&us, L"LogDevice");
     

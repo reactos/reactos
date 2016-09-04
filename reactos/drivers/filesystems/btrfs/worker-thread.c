@@ -1,3 +1,20 @@
+/* Copyright (c) Mark Harmstone 2016
+ * 
+ * This file is part of WinBtrfs.
+ * 
+ * WinBtrfs is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public Licence as published by
+ * the Free Software Foundation, either version 3 of the Licence, or
+ * (at your option) any later version.
+ * 
+ * WinBtrfs is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public Licence for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public Licence
+ * along with WinBtrfs.  If not, see <http://www.gnu.org/licenses/>. */
+
 #include "btrfs_drv.h"
 
 void do_read_job(PIRP Irp) {
@@ -78,6 +95,7 @@ void STDCALL worker_thread(void* context) {
         
         while (TRUE) {
             LIST_ENTRY* le;
+            device_extension* Vcb = thread->DeviceObject->DeviceExtension;
             
             KeAcquireSpinLock(&thread->spin_lock, &irql);
             
@@ -91,6 +109,7 @@ void STDCALL worker_thread(void* context) {
             
             KeReleaseSpinLock(&thread->spin_lock, irql);
             
+            InterlockedDecrement(&Vcb->threads.pending_jobs);
             do_job(thread, le);
         }
         

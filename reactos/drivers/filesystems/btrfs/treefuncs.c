@@ -25,7 +25,7 @@ typedef struct {
     LIST_ENTRY list_entry;
 } rollback_item;
 
-NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, tree* parent, const char* func, const char* file, unsigned int line) {
+NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** pt, tree* parent, PIRP Irp, const char* func, const char* file, unsigned int line) {
     UINT8* buf;
     NTSTATUS Status;
     tree_header* th;
@@ -42,7 +42,7 @@ NTSTATUS STDCALL _load_tree(device_extension* Vcb, UINT64 addr, root* r, tree** 
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     
-    Status = read_data(Vcb, addr, Vcb->superblock.node_size, NULL, TRUE, buf, &c, NULL);
+    Status = read_data(Vcb, addr, Vcb->superblock.node_size, NULL, TRUE, buf, &c, Irp);
     if (!NT_SUCCESS(Status)) {
         ERR("read_data returned 0x%08x\n", Status);
         ExFreePool(buf);
@@ -288,7 +288,8 @@ static tree* free_tree2(tree* t, const char* func, const char* file, unsigned in
     return NULL;
 }
 
-NTSTATUS STDCALL _do_load_tree(device_extension* Vcb, tree_holder* th, root* r, tree* t, tree_data* td, BOOL* loaded, const char* func, const char* file, unsigned int line) {
+NTSTATUS STDCALL _do_load_tree(device_extension* Vcb, tree_holder* th, root* r, tree* t, tree_data* td, BOOL* loaded, PIRP Irp,
+                               const char* func, const char* file, unsigned int line) {
 //     KIRQL irql;
 //     tree_holder_nonpaged* thnp = th->nonpaged;
     BOOL ret;
@@ -325,7 +326,7 @@ NTSTATUS STDCALL _do_load_tree(device_extension* Vcb, tree_holder* th, root* r, 
     if (!th->tree) {
         NTSTATUS Status;
         
-        Status = _load_tree(Vcb, th->address, r, &th->tree, t, func, file, line);
+        Status = _load_tree(Vcb, th->address, r, &th->tree, t, Irp, func, file, line);
         if (!NT_SUCCESS(Status)) {
             ERR("load_tree returned %08x\n", Status);
             ExReleaseResourceLite(&r->nonpaged->load_tree_lock);
@@ -389,7 +390,8 @@ static __inline tree_data* next_item(tree* t, tree_data* td) {
     return CONTAINING_RECORD(le, tree_data, list_entry);
 }
 
-static NTSTATUS STDCALL find_item_in_tree(device_extension* Vcb, tree* t, traverse_ptr* tp, const KEY* searchkey, BOOL ignore, const char* func, const char* file, unsigned int line) {
+static NTSTATUS STDCALL find_item_in_tree(device_extension* Vcb, tree* t, traverse_ptr* tp, const KEY* searchkey, BOOL ignore, PIRP Irp,
+                                          const char* func, const char* file, unsigned int line) {
     int cmp;
     tree_data *td, *lasttd;
     
@@ -399,7 +401,7 @@ static NTSTATUS STDCALL find_item_in_tree(device_extension* Vcb, tree* t, traver
     td = first_item(t);
     lasttd = NULL;
     
-    if (!td) return STATUS_INTERNAL_ERROR;
+    if (!td) return STATUS_NOT_FOUND;
     
     do {
         cmp = keycmp(searchkey, &td->key);
@@ -437,7 +439,7 @@ static NTSTATUS STDCALL find_item_in_tree(device_extension* Vcb, tree* t, traver
             oldtp.tree = t;
             oldtp.item = td;
             
-            while (_find_prev_item(Vcb, &oldtp, tp, TRUE, func, file, line)) {
+            while (_find_prev_item(Vcb, &oldtp, tp, TRUE, Irp, func, file, line)) {
                 if (!tp->item->ignore)
                     return STATUS_SUCCESS;
                 
@@ -449,14 +451,14 @@ static NTSTATUS STDCALL find_item_in_tree(device_extension* Vcb, tree* t, traver
             oldtp.tree = t;
             oldtp.item = td;
             
-            while (_find_next_item(Vcb, &oldtp, tp, TRUE, func, file, line)) {
+            while (_find_next_item(Vcb, &oldtp, tp, TRUE, Irp, func, file, line)) {
                 if (!tp->item->ignore)
                     return STATUS_SUCCESS;
                 
                 oldtp = *tp;
             }
             
-            return STATUS_INTERNAL_ERROR;
+            return STATUS_NOT_FOUND;
         } else {
             tp->tree = t;
             tp->item = td;
@@ -472,24 +474,24 @@ static NTSTATUS STDCALL find_item_in_tree(device_extension* Vcb, tree* t, traver
         }
         
         if (!td)
-            return STATUS_INTERNAL_ERROR;
+            return STATUS_NOT_FOUND;
         
 //         if (i > 0)
 //             TRACE("entering tree from (%x,%x,%x) to (%x,%x,%x) (%p)\n", (UINT32)t->items[i].key.obj_id, t->items[i].key.obj_type, (UINT32)t->items[i].key.offset, (UINT32)t->items[i+1].key.obj_id, t->items[i+1].key.obj_type, (UINT32)t->items[i+1].key.offset, t->items[i].tree);
         
-        Status = _do_load_tree(Vcb, &td->treeholder, t->root, t, td, &loaded, func, file, line);
+        Status = _do_load_tree(Vcb, &td->treeholder, t->root, t, td, &loaded, Irp, func, file, line);
         if (!NT_SUCCESS(Status)) {
             ERR("do_load_tree returned %08x\n", Status);
             return Status;
         }
         
-        Status = find_item_in_tree(Vcb, td->treeholder.tree, tp, searchkey, ignore, func, file, line);
+        Status = find_item_in_tree(Vcb, td->treeholder.tree, tp, searchkey, ignore, Irp, func, file, line);
         
         return Status;
     }
 }
 
-NTSTATUS STDCALL _find_item(device_extension* Vcb, root* r, traverse_ptr* tp, const KEY* searchkey, BOOL ignore, const char* func, const char* file, unsigned int line) {
+NTSTATUS STDCALL _find_item(device_extension* Vcb, root* r, traverse_ptr* tp, const KEY* searchkey, BOOL ignore, PIRP Irp, const char* func, const char* file, unsigned int line) {
     NTSTATUS Status;
     BOOL loaded;
 //     KIRQL irql;
@@ -497,15 +499,15 @@ NTSTATUS STDCALL _find_item(device_extension* Vcb, root* r, traverse_ptr* tp, co
     TRACE("(%p, %p, %p, %p)\n", Vcb, r, tp, searchkey);
     
     if (!r->treeholder.tree) {
-        Status = _do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, &loaded, func, file, line);
+        Status = _do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, &loaded, Irp, func, file, line);
         if (!NT_SUCCESS(Status)) {
             ERR("do_load_tree returned %08x\n", Status);
             return Status;
         }
     }
 
-    Status = find_item_in_tree(Vcb, r->treeholder.tree, tp, searchkey, ignore, func, file, line);
-    if (!NT_SUCCESS(Status)) {
+    Status = find_item_in_tree(Vcb, r->treeholder.tree, tp, searchkey, ignore, Irp, func, file, line);
+    if (!NT_SUCCESS(Status) && Status != STATUS_NOT_FOUND) {
         ERR("find_item_in_tree returned %08x\n", Status);
     }
     
@@ -519,7 +521,8 @@ NTSTATUS STDCALL _find_item(device_extension* Vcb, root* r, traverse_ptr* tp, co
     return Status;
 }
 
-BOOL STDCALL _find_next_item(device_extension* Vcb, const traverse_ptr* tp, traverse_ptr* next_tp, BOOL ignore, const char* func, const char* file, unsigned int line) {
+BOOL STDCALL _find_next_item(device_extension* Vcb, const traverse_ptr* tp, traverse_ptr* next_tp, BOOL ignore, PIRP Irp,
+                             const char* func, const char* file, unsigned int line) {
     tree* t;
     tree_data *td, *next;
     NTSTATUS Status;
@@ -563,7 +566,7 @@ BOOL STDCALL _find_next_item(device_extension* Vcb, const traverse_ptr* tp, trav
     if (!t)
         return FALSE;
     
-    Status = _do_load_tree(Vcb, &td->treeholder, t->parent->root, t->parent, td, &loaded, func, file, line);
+    Status = _do_load_tree(Vcb, &td->treeholder, t->parent->root, t->parent, td, &loaded, Irp, func, file, line);
     if (!NT_SUCCESS(Status)) {
         ERR("do_load_tree returned %08x\n", Status);
         return FALSE;
@@ -576,7 +579,7 @@ BOOL STDCALL _find_next_item(device_extension* Vcb, const traverse_ptr* tp, trav
        
         fi = first_item(t);
         
-        Status = _do_load_tree(Vcb, &fi->treeholder, t->parent->root, t, fi, &loaded, func, file, line);
+        Status = _do_load_tree(Vcb, &fi->treeholder, t->parent->root, t, fi, &loaded, Irp, func, file, line);
         if (!NT_SUCCESS(Status)) {
             ERR("do_load_tree returned %08x\n", Status);
             return FALSE;
@@ -592,7 +595,7 @@ BOOL STDCALL _find_next_item(device_extension* Vcb, const traverse_ptr* tp, trav
         traverse_ptr ntp2;
         BOOL b;
         
-        while ((b = _find_next_item(Vcb, next_tp, &ntp2, TRUE, func, file, line))) {
+        while ((b = _find_next_item(Vcb, next_tp, &ntp2, TRUE, Irp, func, file, line))) {
             *next_tp = ntp2;
             
             if (!next_tp->item->ignore)
@@ -622,7 +625,8 @@ static __inline tree_data* last_item(tree* t) {
     return CONTAINING_RECORD(le, tree_data, list_entry);
 }
 
-BOOL STDCALL _find_prev_item(device_extension* Vcb, const traverse_ptr* tp, traverse_ptr* prev_tp, BOOL ignore, const char* func, const char* file, unsigned int line) {
+BOOL STDCALL _find_prev_item(device_extension* Vcb, const traverse_ptr* tp, traverse_ptr* prev_tp, BOOL ignore, PIRP Irp,
+                             const char* func, const char* file, unsigned int line) {
     tree* t;
     tree_data* td;
     NTSTATUS Status;
@@ -649,7 +653,7 @@ BOOL STDCALL _find_prev_item(device_extension* Vcb, const traverse_ptr* tp, trav
     
     td = prev_item(t->parent, t->paritem);
     
-    Status = _do_load_tree(Vcb, &td->treeholder, t->parent->root, t, td, &loaded, func, file, line);
+    Status = _do_load_tree(Vcb, &td->treeholder, t->parent->root, t, td, &loaded, Irp, func, file, line);
     if (!NT_SUCCESS(Status)) {
         ERR("do_load_tree returned %08x\n", Status);
         return FALSE;
@@ -662,7 +666,7 @@ BOOL STDCALL _find_prev_item(device_extension* Vcb, const traverse_ptr* tp, trav
         
         li = last_item(t);
         
-        Status = _do_load_tree(Vcb, &li->treeholder, t->parent->root, t, li, &loaded, func, file, line);
+        Status = _do_load_tree(Vcb, &li->treeholder, t->parent->root, t, li, &loaded, Irp, func, file, line);
         if (!NT_SUCCESS(Status)) {
             ERR("do_load_tree returned %08x\n", Status);
             return FALSE;
@@ -793,7 +797,7 @@ void add_rollback(LIST_ENTRY* rollback, enum rollback_type type, void* ptr) {
     InsertTailList(rollback, &ri->list_entry);
 }
 
-BOOL STDCALL insert_tree_item(device_extension* Vcb, root* r, UINT64 obj_id, UINT8 obj_type, UINT64 offset, void* data, UINT32 size, traverse_ptr* ptp, LIST_ENTRY* rollback) {
+BOOL STDCALL insert_tree_item(device_extension* Vcb, root* r, UINT64 obj_id, UINT8 obj_type, UINT64 offset, void* data, UINT32 size, traverse_ptr* ptp, PIRP Irp, LIST_ENTRY* rollback) {
     traverse_ptr tp;
     KEY searchkey;
     int cmp;
@@ -820,13 +824,13 @@ BOOL STDCALL insert_tree_item(device_extension* Vcb, root* r, UINT64 obj_id, UIN
     searchkey.obj_type = obj_type;
     searchkey.offset = offset;
     
-    Status = find_item(Vcb, r, &tp, &searchkey, TRUE);
-    if (!NT_SUCCESS(Status)) {
+    Status = find_item(Vcb, r, &tp, &searchkey, TRUE, Irp);
+    if (Status == STATUS_NOT_FOUND) {
         if (r) {
             if (!r->treeholder.tree) {
                 BOOL loaded;
                 
-                Status = do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, &loaded);
+                Status = do_load_tree(Vcb, &r->treeholder, r, NULL, NULL, &loaded, Irp);
                 
                 if (!NT_SUCCESS(Status)) {
                     ERR("do_load_tree returned %08x\n", Status);
@@ -845,6 +849,9 @@ BOOL STDCALL insert_tree_item(device_extension* Vcb, root* r, UINT64 obj_id, UIN
             ERR("error: find_item returned %08x\n", Status);
             goto end;
         }
+    } else if (!NT_SUCCESS(Status)) {
+        ERR("find_item returned %08x\n", Status);
+        goto end;
     }
     
     TRACE("tp.item = %p\n", tp.item);
@@ -855,6 +862,7 @@ BOOL STDCALL insert_tree_item(device_extension* Vcb, root* r, UINT64 obj_id, UIN
         
         if (cmp == 0 && !tp.item->ignore) { // FIXME - look for all items of the same key to make sure none are non-ignored
             ERR("error: key (%llx,%x,%llx) already present\n", obj_id, obj_type, offset);
+            int3;
             goto end;
         }
     } else
@@ -970,10 +978,10 @@ void STDCALL delete_tree_item(device_extension* Vcb, traverse_ptr* tp, LIST_ENTR
     TRACE("deleting item %llx,%x,%llx (ignore = %s)\n", tp->item->key.obj_id, tp->item->key.obj_type, tp->item->key.offset, tp->item->ignore ? "TRUE" : "FALSE");
     
 #ifdef DEBUG_PARANOID
-    if (!ExIsResourceAcquiredExclusiveLite(&Vcb->tree_lock)) {
-        ERR("ERROR - tree_lock not held exclusively\n");
-        int3;
-    }
+//     if (!ExIsResourceAcquiredExclusiveLite(&Vcb->tree_lock)) {
+//         ERR("ERROR - tree_lock not held exclusively\n");
+//         int3;
+//     }
 
     if (tp->item->ignore) {
         ERR("trying to delete already-deleted item %llx,%x,%llx\n", tp->item->key.obj_id, tp->item->key.obj_type, tp->item->key.offset);
@@ -1025,6 +1033,10 @@ void clear_rollback(LIST_ENTRY* rollback) {
         switch (ri->type) {
             case ROLLBACK_INSERT_ITEM:
             case ROLLBACK_DELETE_ITEM:
+            case ROLLBACK_ADD_SPACE:
+            case ROLLBACK_SUBTRACT_SPACE:
+            case ROLLBACK_INSERT_EXTENT:
+            case ROLLBACK_DELETE_EXTENT:
                 ExFreePool(ri->ptr);
                 break;
 
@@ -1037,6 +1049,7 @@ void clear_rollback(LIST_ENTRY* rollback) {
 }
 
 void do_rollback(device_extension* Vcb, LIST_ENTRY* rollback) {
+    NTSTATUS Status;
     rollback_item* ri;
     
     while (!IsListEmpty(rollback)) {
@@ -1082,17 +1095,105 @@ void do_rollback(device_extension* Vcb, LIST_ENTRY* rollback) {
             
             case ROLLBACK_INSERT_EXTENT:
             {
-                extent* ext = ri->ptr;
+                rollback_extent* re = ri->ptr;
                 
-                ext->ignore = TRUE;
+                re->ext->ignore = TRUE;
+                
+                if (re->ext->data->type == EXTENT_TYPE_REGULAR || re->ext->data->type == EXTENT_TYPE_PREALLOC) {
+                    EXTENT_DATA2* ed2 = (EXTENT_DATA2*)re->ext->data->data;
+                    
+                    if (ed2->size != 0) {
+                        chunk* c = get_chunk_from_address(Vcb, ed2->address);
+                        
+                        if (c) {
+                            Status = update_changed_extent_ref(Vcb, c, ed2->address, ed2->size, re->fcb->subvol->id,
+                                                               re->fcb->inode, re->ext->offset - ed2->offset, -1,
+                                                               re->fcb->inode_item.flags & BTRFS_INODE_NODATASUM, ed2->size, NULL);
+                            
+                            if (!NT_SUCCESS(Status))
+                                ERR("update_changed_extent_ref returned %08x\n", Status);
+                        }
+                        
+                        re->fcb->inode_item.st_blocks -= ed2->num_bytes;
+                    }
+                }
+                
+                ExFreePool(re);
                 break;
             }
             
             case ROLLBACK_DELETE_EXTENT:
             {
-                extent* ext = ri->ptr;
+                rollback_extent* re = ri->ptr;
                 
-                ext->ignore = FALSE;
+                re->ext->ignore = FALSE;
+                
+                if (re->ext->data->type == EXTENT_TYPE_REGULAR || re->ext->data->type == EXTENT_TYPE_PREALLOC) {
+                    EXTENT_DATA2* ed2 = (EXTENT_DATA2*)re->ext->data->data;
+                    
+                    if (ed2->size != 0) {
+                        chunk* c = get_chunk_from_address(Vcb, ed2->address);
+                        
+                        if (c) {
+                            Status = update_changed_extent_ref(Vcb, c, ed2->address, ed2->size, re->fcb->subvol->id,
+                                                               re->fcb->inode, re->ext->offset - ed2->offset, 1,
+                                                               re->fcb->inode_item.flags & BTRFS_INODE_NODATASUM, ed2->size, NULL);
+                            
+                            if (!NT_SUCCESS(Status))
+                                ERR("update_changed_extent_ref returned %08x\n", Status);
+                        }
+                        
+                        re->fcb->inode_item.st_blocks += ed2->num_bytes;
+                    }
+                }
+                
+                ExFreePool(re);
+                break;
+            }
+
+            case ROLLBACK_ADD_SPACE:
+            case ROLLBACK_SUBTRACT_SPACE:
+            {
+                rollback_space* rs = ri->ptr;
+                
+                if (rs->chunk)
+                    ExAcquireResourceExclusiveLite(&rs->chunk->lock, TRUE);
+                
+                if (ri->type == ROLLBACK_ADD_SPACE)
+                    space_list_subtract2(rs->list, rs->list_size, rs->address, rs->length, NULL);
+                else
+                    space_list_add2(rs->list, rs->list_size, rs->address, rs->length, NULL);
+                
+                if (rs->chunk) {
+                    LIST_ENTRY* le2 = le->Blink;
+                    
+                    while (le2 != rollback) {
+                        LIST_ENTRY* le3 = le2->Blink;
+                        rollback_item* ri2 = CONTAINING_RECORD(le2, rollback_item, list_entry);
+                        
+                        if (ri2->type == ROLLBACK_ADD_SPACE || ri2->type == ROLLBACK_SUBTRACT_SPACE) {
+                            rollback_space* rs2 = ri2->ptr;
+                            
+                            if (rs2->chunk == rs->chunk) {
+                                if (ri2->type == ROLLBACK_ADD_SPACE)
+                                    space_list_subtract2(rs2->list, rs2->list_size, rs2->address, rs2->length, NULL);
+                                else
+                                    space_list_add2(rs2->list, rs2->list_size, rs2->address, rs2->length, NULL);
+                                
+                                ExFreePool(rs2);
+                                RemoveEntryList(&ri2->list_entry);
+                                ExFreePool(ri2);
+                            }
+                        }
+                        
+                        le2 = le3;
+                    }
+                    
+                    ExReleaseResourceLite(&rs->chunk->lock);
+                }
+                    
+                ExFreePool(rs);
+                
                 break;
             }
         }

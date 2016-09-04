@@ -32,7 +32,7 @@ typedef struct {
     enum DirEntryType dir_entry_type;
 } dir_entry;
 
-static ULONG STDCALL get_reparse_tag(device_extension* Vcb, root* subvol, UINT64 inode, UINT8 type, ULONG atts) {
+ULONG STDCALL get_reparse_tag(device_extension* Vcb, root* subvol, UINT64 inode, UINT8 type, ULONG atts, PIRP Irp) {
     fcb* fcb;
     ULONG tag = 0, br;
     NTSTATUS Status;
@@ -49,7 +49,7 @@ static ULONG STDCALL get_reparse_tag(device_extension* Vcb, root* subvol, UINT64
         return 0;
     
     ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
-    Status = open_fcb(Vcb, subvol, inode, type, NULL, NULL, &fcb);
+    Status = open_fcb(Vcb, subvol, inode, type, NULL, NULL, &fcb, Irp);
     if (!NT_SUCCESS(Status)) {
         ERR("open_fcb returned %08x\n", Status);
         ExReleaseResourceLite(&Vcb->fcb_lock);
@@ -78,7 +78,9 @@ static ULONG STDCALL get_reparse_tag(device_extension* Vcb, root* subvol, UINT64
 end:
     ExReleaseResourceLite(fcb->Header.Resource);
 
+    ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
     free_fcb(fcb);
+    ExReleaseResourceLite(&Vcb->fcb_lock);
     
     return tag;
 }
@@ -154,7 +156,7 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
                     searchkey.obj_type = TYPE_INODE_ITEM;
                     searchkey.offset = 0xffffffffffffffff;
                     
-                    Status = find_item(fcb->Vcb, r, &tp, &searchkey, FALSE);
+                    Status = find_item(fcb->Vcb, r, &tp, &searchkey, FALSE, Irp);
                     if (!NT_SUCCESS(Status)) {
                         ERR("error - find_item returned %08x\n", Status);
                         return Status;
@@ -177,7 +179,7 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
                         
                         BOOL dotfile = de->namelen > 1 && de->name[0] == '.';
 
-                        atts = get_file_attributes(fcb->Vcb, &ii, r, inode, de->type, dotfile, FALSE);
+                        atts = get_file_attributes(fcb->Vcb, &ii, r, inode, de->type, dotfile, FALSE, Irp);
                     }
                 }
                 
@@ -238,12 +240,12 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
             fbdi->CreationTime.QuadPart = unix_time_to_win(&ii.otime);
             fbdi->LastAccessTime.QuadPart = unix_time_to_win(&ii.st_atime);
             fbdi->LastWriteTime.QuadPart = unix_time_to_win(&ii.st_mtime);
-            fbdi->ChangeTime.QuadPart = 0;
+            fbdi->ChangeTime.QuadPart = unix_time_to_win(&ii.st_ctime);
             fbdi->EndOfFile.QuadPart = de->type == BTRFS_TYPE_SYMLINK ? 0 : ii.st_size;
             fbdi->AllocationSize.QuadPart = de->type == BTRFS_TYPE_SYMLINK ? 0 : ii.st_blocks;
             fbdi->FileAttributes = atts;
             fbdi->FileNameLength = stringlen;
-            fbdi->EaSize = get_reparse_tag(fcb->Vcb, r, inode, de->type, atts);
+            fbdi->EaSize = get_reparse_tag(fcb->Vcb, r, inode, de->type, atts, Irp);
             fbdi->ShortNameLength = 0;
 //             fibdi->ShortName[12];
             
@@ -277,7 +279,7 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
             fdi->CreationTime.QuadPart = unix_time_to_win(&ii.otime);
             fdi->LastAccessTime.QuadPart = unix_time_to_win(&ii.st_atime);
             fdi->LastWriteTime.QuadPart = unix_time_to_win(&ii.st_mtime);
-            fdi->ChangeTime.QuadPart = 0;
+            fdi->ChangeTime.QuadPart = unix_time_to_win(&ii.st_ctime);
             fdi->EndOfFile.QuadPart = de->type == BTRFS_TYPE_SYMLINK ? 0 : ii.st_size;
             fdi->AllocationSize.QuadPart = de->type == BTRFS_TYPE_SYMLINK ? 0 : ii.st_blocks;
             fdi->FileAttributes = atts;
@@ -313,12 +315,12 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
             ffdi->CreationTime.QuadPart = unix_time_to_win(&ii.otime);
             ffdi->LastAccessTime.QuadPart = unix_time_to_win(&ii.st_atime);
             ffdi->LastWriteTime.QuadPart = unix_time_to_win(&ii.st_mtime);
-            ffdi->ChangeTime.QuadPart = 0;
+            ffdi->ChangeTime.QuadPart = unix_time_to_win(&ii.st_ctime);
             ffdi->EndOfFile.QuadPart = de->type == BTRFS_TYPE_SYMLINK ? 0 : ii.st_size;
             ffdi->AllocationSize.QuadPart = de->type == BTRFS_TYPE_SYMLINK ? 0 : ii.st_blocks;
             ffdi->FileAttributes = atts;
             ffdi->FileNameLength = stringlen;
-            ffdi->EaSize = get_reparse_tag(fcb->Vcb, r, inode, de->type, atts);
+            ffdi->EaSize = get_reparse_tag(fcb->Vcb, r, inode, de->type, atts, Irp);
             
             Status = RtlUTF8ToUnicodeN(ffdi->FileName, stringlen, &stringlen, de->name, de->namelen);
 
@@ -353,12 +355,12 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
             fibdi->CreationTime.QuadPart = unix_time_to_win(&ii.otime);
             fibdi->LastAccessTime.QuadPart = unix_time_to_win(&ii.st_atime);
             fibdi->LastWriteTime.QuadPart = unix_time_to_win(&ii.st_mtime);
-            fibdi->ChangeTime.QuadPart = 0;
+            fibdi->ChangeTime.QuadPart = unix_time_to_win(&ii.st_ctime);
             fibdi->EndOfFile.QuadPart = de->type == BTRFS_TYPE_SYMLINK ? 0 : ii.st_size;
             fibdi->AllocationSize.QuadPart = de->type == BTRFS_TYPE_SYMLINK ? 0 : ii.st_blocks;
             fibdi->FileAttributes = atts;
             fibdi->FileNameLength = stringlen;
-            fibdi->EaSize = get_reparse_tag(fcb->Vcb, r, inode, de->type, atts);
+            fibdi->EaSize = get_reparse_tag(fcb->Vcb, r, inode, de->type, atts, Irp);
             fibdi->ShortNameLength = 0;
 //             fibdi->ShortName[12];
             fibdi->FileId.QuadPart = inode;
@@ -428,7 +430,7 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
     return STATUS_NO_MORE_FILES;
 }
 
-static NTSTATUS STDCALL next_dir_entry(file_ref* fileref, UINT64* offset, dir_entry* de) {
+static NTSTATUS STDCALL next_dir_entry(file_ref* fileref, UINT64* offset, dir_entry* de, PIRP Irp) {
     KEY searchkey;
     traverse_ptr tp, next_tp;
     DIR_ITEM* di;
@@ -520,14 +522,14 @@ static NTSTATUS STDCALL next_dir_entry(file_ref* fileref, UINT64* offset, dir_en
         searchkey.obj_type = TYPE_DIR_INDEX;
         searchkey.offset = *offset;
         
-        Status = find_item(fileref->fcb->Vcb, fileref->fcb->subvol, &tp, &searchkey, FALSE);
+        Status = find_item(fileref->fcb->Vcb, fileref->fcb->subvol, &tp, &searchkey, FALSE, Irp);
         if (!NT_SUCCESS(Status)) {
             ERR("error - find_item returned %08x\n", Status);
             goto end;
         }
         
         if (keycmp(&tp.item->key, &searchkey) == -1) {
-            if (find_next_item(fileref->fcb->Vcb, &tp, &next_tp, FALSE))
+            if (find_next_item(fileref->fcb->Vcb, &tp, &next_tp, FALSE, Irp))
                 tp = next_tp;
         }
         
@@ -766,7 +768,7 @@ static NTSTATUS STDCALL query_directory(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     }
     
     newoffset = ccb->query_dir_offset;
-    Status = next_dir_entry(fileref, &newoffset, &de);
+    Status = next_dir_entry(fileref, &newoffset, &de, Irp);
     
     if (!NT_SUCCESS(Status)) {
         if (Status == STATUS_NO_MORE_FILES && initial)
@@ -845,7 +847,7 @@ static NTSTATUS STDCALL query_directory(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
             ExFreePool(us.Buffer);
         
         if (!found) {
-            Status = find_file_in_dir(fcb->Vcb, &ccb->query_string, fileref, &found_subvol, &found_inode, &found_type, &found_index, &utf8);
+            Status = find_file_in_dir(fcb->Vcb, &ccb->query_string, fileref, &found_subvol, &found_inode, &found_type, &found_index, &utf8, Irp);
             
             if (!NT_SUCCESS(Status)) {
                 Status = STATUS_NO_SUCH_FILE;
@@ -901,7 +903,7 @@ static NTSTATUS STDCALL query_directory(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
                 ExFreePool(de.name);
             
             newoffset = ccb->query_dir_offset;
-            Status = next_dir_entry(fileref, &newoffset, &de);
+            Status = next_dir_entry(fileref, &newoffset, &de, Irp);
             
             ExFreePool(uni_fn);
             if (NT_SUCCESS(Status)) {
@@ -976,7 +978,7 @@ static NTSTATUS STDCALL query_directory(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
                 UNICODE_STRING di_uni_fn;
                 
                 newoffset = ccb->query_dir_offset;
-                Status = next_dir_entry(fileref, &newoffset, &de);
+                Status = next_dir_entry(fileref, &newoffset, &de, Irp);
                 if (NT_SUCCESS(Status)) {
                     if (has_wildcard) {
                         ULONG stringlen;

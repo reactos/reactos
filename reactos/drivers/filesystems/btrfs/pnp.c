@@ -1,3 +1,20 @@
+/* Copyright (c) Mark Harmstone 2016
+ * 
+ * This file is part of WinBtrfs.
+ * 
+ * WinBtrfs is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public Licence as published by
+ * the Free Software Foundation, either version 3 of the Licence, or
+ * (at your option) any later version.
+ * 
+ * WinBtrfs is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public Licence for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public Licence
+ * along with WinBtrfs.  If not, see <http://www.gnu.org/licenses/>. */
+
 #include "btrfs_drv.h"
 
 struct pnp_context;
@@ -176,8 +193,8 @@ static NTSTATUS pnp_query_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     
     ExAcquireResourceExclusiveLite(&Vcb->tree_lock, TRUE);
 
-    if (Vcb->need_write)
-        do_write(Vcb, &rollback);
+    if (Vcb->need_write && !Vcb->readonly)
+        do_write(Vcb, Irp, &rollback);
     
     clear_rollback(&rollback);
 
@@ -219,7 +236,14 @@ static NTSTATUS pnp_start_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
 }
 
 static NTSTATUS pnp_surprise_removal(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
-    FIXME("STUB\n");
+    device_extension* Vcb = DeviceObject->DeviceExtension;
+    
+    TRACE("(%p, %p)\n", DeviceObject, Irp);
+    
+    if (DeviceObject->Vpb->Flags & VPB_MOUNTED) {
+        uninit(Vcb, FALSE);
+        Vcb->Vpb->Flags &= ~VPB_MOUNTED;
+    }
 
     return STATUS_SUCCESS;
 }

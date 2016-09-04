@@ -75,7 +75,7 @@ BEGIN
             VALUE "LegalCopyright", "Copyright (c) Mark Harmstone 2016"
             VALUE "OriginalFilename", "btrfs.sys"
             VALUE "ProductName", "WinBtrfs"
-            VALUE "ProductVersion", "0.5"
+            VALUE "ProductVersion", "0.6"
         END
     END
     BLOCK "VarFileInfo"

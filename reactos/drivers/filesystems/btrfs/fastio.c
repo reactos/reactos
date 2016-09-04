@@ -67,7 +67,7 @@ static BOOLEAN STDCALL fast_query_basic_info(PFILE_OBJECT FileObject, BOOLEAN wa
     fbi->CreationTime.QuadPart = unix_time_to_win(&fcb->inode_item.otime);
     fbi->LastAccessTime.QuadPart = unix_time_to_win(&fcb->inode_item.st_atime);
     fbi->LastWriteTime.QuadPart = unix_time_to_win(&fcb->inode_item.st_mtime);
-    fbi->ChangeTime.QuadPart = 0;
+    fbi->ChangeTime.QuadPart = unix_time_to_win(&fcb->inode_item.st_ctime);
     fbi->FileAttributes = fcb->atts;
 
     IoStatus->Status = STATUS_SUCCESS;
@@ -212,9 +212,22 @@ static BOOLEAN STDCALL fast_io_query_network_open_info(PFILE_OBJECT FileObject, 
     return FALSE;
 }
 
-static NTSTATUS STDCALL fast_io_acquire_for_mod_write(PFILE_OBJECT FileObject, PLARGE_INTEGER EndingOffset, struct _ERESOURCE **ResourceToRelease, PDEVICE_OBJECT DeviceObject){
-    TRACE("STUB: fast_io_acquire_for_mod_write\n");
-    return STATUS_NOT_IMPLEMENTED;
+static NTSTATUS STDCALL fast_io_acquire_for_mod_write(PFILE_OBJECT FileObject, PLARGE_INTEGER EndingOffset, struct _ERESOURCE **ResourceToRelease, PDEVICE_OBJECT DeviceObject) {
+    fcb* fcb;
+    
+    TRACE("(%p, %llx, %p, %p)\n", FileObject, EndingOffset->QuadPart, ResourceToRelease, DeviceObject);
+    
+    fcb = FileObject->FsContext;
+    
+    if (!fcb)
+        return STATUS_INVALID_PARAMETER;
+    
+    *ResourceToRelease = fcb->Header.PagingIoResource;
+    
+    if (!ExAcquireResourceSharedLite(*ResourceToRelease, FALSE))
+        return STATUS_CANT_WAIT;
+    
+    return STATUS_SUCCESS;
 }
 
 static BOOLEAN STDCALL fast_io_read_compressed(PFILE_OBJECT FileObject, PLARGE_INTEGER FileOffset, ULONG Length, ULONG LockKey, PVOID Buffer, PMDL *MdlChain, PIO_STATUS_BLOCK IoStatus, struct _COMPRESSED_DATA_INFO *CompressedDataInfo, ULONG CompressedDataInfoLength, PDEVICE_OBJECT DeviceObject){
