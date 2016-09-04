@@ -1,6 +1,10 @@
 #ifndef _MSGINA_H
 #define _MSGINA_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS
@@ -124,5 +128,9 @@ CreateProfile(
     IN PWSTR UserName,
     IN PWSTR Domain,
     IN PWSTR Password);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif /* _MSGINA_H */
