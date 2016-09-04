@@ -29,7 +29,7 @@ PUSHORT NlsLeadByteInfo = NULL; /* exported */
 USHORT NlsOemCodePage = 0;
 BOOLEAN NlsMbOemCodePageTag = FALSE; /* exported */
 PWCHAR NlsOemToUnicodeTable = NULL;
-PCHAR NlsUnicodeToOemTable =NULL;
+PCHAR NlsUnicodeToOemTable = NULL;
 PWCHAR NlsDbcsUnicodeToOemTable = NULL;
 PUSHORT NlsOemLeadByteInfo = NULL; /* exported */
 

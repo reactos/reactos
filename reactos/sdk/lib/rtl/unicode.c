@@ -24,6 +24,9 @@ extern BOOLEAN NlsMbOemCodePageTag;
 extern PUSHORT NlsLeadByteInfo;
 extern USHORT NlsOemDefaultChar;
 extern USHORT NlsUnicodeDefaultChar;
+extern PUSHORT NlsOemLeadByteInfo;
+extern PWCHAR NlsOemToUnicodeTable;
+extern PCHAR NlsUnicodeToOemTable;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -503,14 +506,47 @@ RtlpDidUnicodeToOemWork(IN PCUNICODE_STRING UnicodeString,
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 BOOLEAN
 NTAPI
 RtlIsValidOemCharacter(IN PWCHAR Char)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    WCHAR UnicodeChar;
+    WCHAR OemChar;
+    UCHAR Index;
+
+    /* If multi-byte code page present */
+    if (NlsMbOemCodePageTag)
+    {
+        USHORT Offset = 0;
+
+        OemChar = NlsUnicodeToOemTable[*Char];
+
+        /* If character has Lead Byte */
+        if (NlsOemLeadByteInfo[HIBYTE(OemChar)])
+            Offset = NlsOemLeadByteInfo[HIBYTE(OemChar)];
+
+        Index = LOBYTE(OemChar) + Offset;
+    }
+    else
+    {
+        Index = NlsUnicodeToOemTable[*Char];
+    }
+
+    /* Receive Unicode character from the table */
+    UnicodeChar = RtlUpcaseUnicodeChar(NlsOemToUnicodeTable[Index]);
+
+    /* Receive OEM character from the table */
+    OemChar = NlsUnicodeToOemTable[UnicodeChar];
+
+    /* Not valid character, failed */
+    if (OemChar == NlsOemDefaultChar)
+        return FALSE;
+
+    *Char = UnicodeChar;
+
+    return TRUE;
 }
 
 /*
