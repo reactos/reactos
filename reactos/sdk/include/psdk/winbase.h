@@ -29,7 +29,7 @@ extern "C" {
 #define FILE_SYSTEM_NOT_SUPPORT  6
 #define FILE_USER_DISALLOWED     7
 #define FILE_READ_ONLY           8
-#define FILE_DIR_DISALOWED       9
+#define FILE_DIR_DISALLOWED      9
 
 #define COMMPROP_INITIALIZED 0xE73CF52E
 #define SP_SERIALCOMM 1
