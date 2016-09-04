@@ -800,7 +800,11 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     switch (uFlags)
     {
     case SHARD_PIDL:
-        SHGetPathFromIDListA(pv, doc_name);
+        if (!SHGetPathFromIDListA(pv, doc_name))
+        {
+            WARN("can't get path from PIDL\n");
+            return;
+        }
         break;
 
     case SHARD_PATHA:
