@@ -900,7 +900,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 		/* buffer size looks good */
 		ptr += 12; /* get to string */
 		len = bufused - (ptr-buffer);  /* get length of buf remaining */
-		if ((lstrlenA(ptr) > 0) && (lstrlenA(ptr) <= len-1)) {
+                if (ptr[0] && (lstrlenA(ptr) <= len-1)) {
 		    /* appears to be good string */
 		    lstrcpyA(old_lnk_name, link_dir);
 		    PathAppendA(old_lnk_name, ptr);

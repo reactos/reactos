@@ -782,10 +782,11 @@ static HRESULT BrsFolder_NewFolder(browse_info *info)
     if(FAILED(hr))
         return hr;
 
-    hr = SHGetPathFromIDListW(info->pidlRet, name);
-    if(FAILED(hr))
+    if(!SHGetPathFromIDListW(info->pidlRet, name)) {
+        hr = E_FAIL;
         goto cleanup;
-        
+    }
+
     len = strlenW(name);
     if(len<MAX_PATH)
         name[len++] = '\\';
