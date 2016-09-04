@@ -16,6 +16,7 @@ START_TEST(RtlIsValidOemCharacter)
     WCHAR tmp;
     BOOLEAN res;
     INT i;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     res = RtlIsValidOemCharacter(&unicode_null);
     ok(res != FALSE, "UNICODE_NULL is valid char\n");
@@ -49,5 +50,18 @@ START_TEST(RtlIsValidOemCharacter)
         ok(res == FALSE, "Expected fail. '%C' [%d] is NOT valid char\n", InvalidChars[i], i);
         ok(tmp == RtlUpcaseUnicodeChar(InvalidChars[i]), "Expected upcase char for '%C' [%d]\n", InvalidChars[i], i);
     }
+
+    _SEH2_TRY
+    {
+        RtlIsValidOemCharacter(NULL);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Get the exception code */
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    ok(!NT_SUCCESS(Status), "Exception is expected but it did not occur\n");
 }
 
