@@ -1,5 +1,5 @@
 
-add_definitions(-DNO_VIZ)
+add_definitions(-DNO_VIZ -DZ_SOLO)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 
 list(APPEND SOURCE
@@ -7,10 +7,6 @@ list(APPEND SOURCE
     compress.c
     crc32.c
     deflate.c
-    gzclose.c
-    gzlib.c
-    gzread.c
-    gzwrite.c
     infback.c
     inffast.c
     inflate.c
