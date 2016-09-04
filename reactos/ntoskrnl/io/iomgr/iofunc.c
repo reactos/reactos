@@ -384,7 +384,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                 _SEH2_END;
             }
 
-            /* If we are dismounting a volume, increaase the dismount count */
+            /* If we are dismounting a volume, increase the dismount count */
             if (IoControlCode == FSCTL_DISMOUNT_VOLUME)
             {
                 InterlockedIncrement((PLONG)&SharedUserData->DismountCount);
