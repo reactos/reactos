@@ -4812,6 +4812,7 @@ CreateProcessA(LPCSTR lpApplicationName,
  */
 UINT
 WINAPI
+DECLSPEC_HOTPATCH
 WinExec(LPCSTR lpCmdLine,
         UINT uCmdShow)
 {
