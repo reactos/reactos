@@ -528,10 +528,17 @@ static int msvcrt_flush_buffer(FILE* file)
 
         if(file->_flag & _IORW)
             file->_flag &= ~_IOWRT;
-    }
 
+#ifdef __REACTOS__ /* CORE-11949 */
     file->_ptr=file->_base;
     file->_cnt=0;
+#endif
+    }
+
+#ifndef __REACTOS__ /* CORE-11949 */
+    file->_ptr=file->_base;
+    file->_cnt=0;
+#endif
     return 0;
 }
 
