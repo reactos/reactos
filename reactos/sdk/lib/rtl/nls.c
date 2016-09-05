@@ -20,17 +20,16 @@ PUSHORT NlsUnicodeLowercaseTable = NULL;
 
 USHORT NlsAnsiCodePage = 0; /* exported */
 BOOLEAN NlsMbCodePageTag = FALSE; /* exported */
-PWCHAR NlsAnsiToUnicodeTable = NULL;
+PUSHORT NlsAnsiToUnicodeTable = NULL;
 PCHAR NlsUnicodeToAnsiTable = NULL;
-PWCHAR NlsDbcsUnicodeToAnsiTable = NULL;
+PUSHORT NlsUnicodeToMbAnsiTable = NULL;
 PUSHORT NlsLeadByteInfo = NULL; /* exported */
-
 
 USHORT NlsOemCodePage = 0;
 BOOLEAN NlsMbOemCodePageTag = FALSE; /* exported */
-PWCHAR NlsOemToUnicodeTable = NULL;
+PUSHORT NlsOemToUnicodeTable = NULL;
 PCHAR NlsUnicodeToOemTable = NULL;
-PWCHAR NlsDbcsUnicodeToOemTable = NULL;
+PUSHORT NlsUnicodeToMbOemTable = NULL;
 PUSHORT NlsOemLeadByteInfo = NULL; /* exported */
 
 USHORT NlsOemDefaultChar = '\0';
@@ -444,18 +443,18 @@ RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
    DPRINT("RtlResetRtlTranslations() called\n");
 
    /* Set ANSI data */
-   NlsAnsiToUnicodeTable = (PWCHAR)NlsTable->AnsiTableInfo.MultiByteTable; /* Real type is PUSHORT */
+   NlsAnsiToUnicodeTable = (PUSHORT)NlsTable->AnsiTableInfo.MultiByteTable;
    NlsUnicodeToAnsiTable = NlsTable->AnsiTableInfo.WideCharTable;
-   NlsDbcsUnicodeToAnsiTable = (PWCHAR)NlsTable->AnsiTableInfo.WideCharTable;
+   NlsUnicodeToMbAnsiTable = (PUSHORT)NlsTable->AnsiTableInfo.WideCharTable;
    NlsMbCodePageTag = (NlsTable->AnsiTableInfo.DBCSCodePage != 0);
    NlsLeadByteInfo = NlsTable->AnsiTableInfo.DBCSOffsets;
    NlsAnsiCodePage = NlsTable->AnsiTableInfo.CodePage;
    DPRINT("Ansi codepage %hu\n", NlsAnsiCodePage);
 
    /* Set OEM data */
-   NlsOemToUnicodeTable = (PWCHAR)NlsTable->OemTableInfo.MultiByteTable; /* Real type is PUSHORT */
+   NlsOemToUnicodeTable = (PUSHORT)NlsTable->OemTableInfo.MultiByteTable;
    NlsUnicodeToOemTable = NlsTable->OemTableInfo.WideCharTable;
-   NlsDbcsUnicodeToOemTable = (PWCHAR)NlsTable->OemTableInfo.WideCharTable;
+   NlsUnicodeToMbOemTable = (PUSHORT)NlsTable->OemTableInfo.WideCharTable;
    NlsMbOemCodePageTag = (NlsTable->OemTableInfo.DBCSCodePage != 0);
    NlsOemLeadByteInfo = NlsTable->OemTableInfo.DBCSOffsets;
    NlsOemCodePage = NlsTable->OemTableInfo.CodePage;
@@ -566,7 +565,7 @@ RtlUnicodeToMultiByteN (PCHAR MbString,
             continue;
          }
 
-         MbChar = NlsDbcsUnicodeToAnsiTable[WideChar];
+         MbChar = NlsUnicodeToMbAnsiTable[WideChar];
 
          if (!HIBYTE(MbChar))
          {
@@ -616,7 +615,7 @@ RtlUnicodeToMultiByteSize(PULONG MbSize,
         {
             USHORT WideChar = *UnicodeString++;
 
-            if (WideChar >= 0x80 && HIBYTE(NlsDbcsUnicodeToAnsiTable[WideChar]))
+            if (WideChar >= 0x80 && HIBYTE(NlsUnicodeToMbAnsiTable[WideChar]))
             {
                 MbLength += sizeof(WCHAR);
             }
@@ -682,7 +681,7 @@ RtlUnicodeToOemN (PCHAR OemString,
             continue;
          }
 
-         OemChar = NlsDbcsUnicodeToOemTable[WideChar];
+         OemChar = NlsUnicodeToMbOemTable[WideChar];
 
          if (!HIBYTE(OemChar))
          {
@@ -879,7 +878,7 @@ RtlUpcaseUnicodeToOemN (PCHAR OemString,
             continue;
          }
 
-         OemChar = NlsDbcsUnicodeToOemTable[WideChar];
+         OemChar = NlsUnicodeToMbOemTable[WideChar];
 
          if (!HIBYTE(OemChar))
          {
