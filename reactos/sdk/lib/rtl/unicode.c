@@ -515,7 +515,6 @@ RtlIsValidOemCharacter(IN PWCHAR Char)
 {
     WCHAR UnicodeChar;
     WCHAR OemChar;
-    UCHAR Index;
 
     /* If multi-byte code page present */
     if (NlsMbOemCodePageTag)
@@ -528,18 +527,20 @@ RtlIsValidOemCharacter(IN PWCHAR Char)
         if (NlsOemLeadByteInfo[HIBYTE(OemChar)])
             Offset = NlsOemLeadByteInfo[HIBYTE(OemChar)];
 
-        Index = LOBYTE(OemChar) + Offset;
+        /* Receive Unicode character from the table */
+        UnicodeChar = RtlUpcaseUnicodeChar(NlsOemToUnicodeTable[LOBYTE(OemChar) + Offset]);
+
+        /* Receive OEM character from the table */
+        OemChar = NlsUnicodeToMbOemTable[UnicodeChar];
     }
     else
     {
-        Index = NlsUnicodeToOemTable[*Char];
+        /* Receive Unicode character from the table */
+        UnicodeChar = RtlUpcaseUnicodeChar(NlsOemToUnicodeTable[(UCHAR)NlsUnicodeToOemTable[*Char]]);
+
+        /* Receive OEM character from the table */
+        OemChar = NlsUnicodeToOemTable[UnicodeChar];
     }
-
-    /* Receive Unicode character from the table */
-    UnicodeChar = RtlUpcaseUnicodeChar(NlsOemToUnicodeTable[Index]);
-
-    /* Receive OEM character from the table */
-    OemChar = NlsUnicodeToOemTable[UnicodeChar];
 
     /* Not valid character, failed */
     if (OemChar == NlsOemDefaultChar)
