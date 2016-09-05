@@ -518,16 +518,21 @@ void msvcrt_init_io(void)
 /* INTERNAL: Flush stdio file buffer */
 static int msvcrt_flush_buffer(FILE* file)
 {
-  if(file->_flag & (_IOMYBUF | _USERBUF)) {
+    if((file->_flag & (_IOREAD|_IOWRT)) == _IOWRT &&
+            file->_flag & (_IOMYBUF|_USERBUF)) {
         int cnt=file->_ptr-file->_base;
         if(cnt>0 && _write(file->_file, file->_base, cnt) != cnt) {
             file->_flag |= _IOERR;
             return EOF;
         }
-        file->_ptr=file->_base;
-        file->_cnt=0;
-  }
-  return 0;
+
+        if(file->_flag & _IORW)
+            file->_flag &= ~_IOWRT;
+    }
+
+    file->_ptr=file->_base;
+    file->_cnt=0;
+    return 0;
 }
 
 /*********************************************************************
@@ -567,11 +572,13 @@ static BOOL add_std_buffer(FILE *file)
     static char buffers[2][BUFSIZ];
 
     if((file->_file!=STDOUT_FILENO && file->_file!=STDERR_FILENO)
-            || !_isatty(file->_file) || file->_bufsiz)
+            || (file->_flag & (_IONBF | _IOMYBUF | _USERBUF))
+            || !_isatty(file->_file))
         return FALSE;
 
     file->_ptr = file->_base = buffers[file->_file == STDOUT_FILENO ? 0 : 1];
     file->_bufsiz = file->_cnt = BUFSIZ;
+    file->_flag |= _USERBUF;
     return TRUE;
 }
 
@@ -582,6 +589,7 @@ static void remove_std_buffer(FILE *file)
     msvcrt_flush_buffer(file);
     file->_ptr = file->_base = NULL;
     file->_bufsiz = file->_cnt = 0;
+    file->_flag &= ~_USERBUF;
 }
 
 /* INTERNAL: Convert integer to base32 string (0-9a-v), 0 becomes "" */
