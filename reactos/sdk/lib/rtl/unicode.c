@@ -27,6 +27,7 @@ extern USHORT NlsUnicodeDefaultChar;
 extern PUSHORT NlsOemLeadByteInfo;
 extern PWCHAR NlsOemToUnicodeTable;
 extern PCHAR NlsUnicodeToOemTable;
+extern PUSHORT NlsUnicodeToMbOemTable;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -521,7 +522,7 @@ RtlIsValidOemCharacter(IN PWCHAR Char)
     {
         USHORT Offset = 0;
 
-        OemChar = NlsUnicodeToOemTable[*Char];
+        OemChar = NlsUnicodeToMbOemTable[*Char];
 
         /* If character has Lead Byte */
         if (NlsOemLeadByteInfo[HIBYTE(OemChar)])
