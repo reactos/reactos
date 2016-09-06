@@ -17,6 +17,7 @@
 #include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
+#include <fltmgr_shared.h>
 
 #include "wine/debug.h"
 
@@ -24,11 +25,6 @@
 /* DATA ****************************************************************************/
 
 WINE_DEFAULT_DEBUG_CHANNEL(fltlib);
-
-//MOVEME
-#define IOCTL_LOAD_FILTER       CTL_CODE(FILE_DEVICE_DISK_FILE_SYSTEM, 0x01, 0, FILE_WRITE_DATA) //88004
-#define IOCTL_UNLOAD_FILTER     CTL_CODE(FILE_DEVICE_DISK_FILE_SYSTEM, 0x02, 0, FILE_WRITE_DATA) //88008
-#define IOCTL_CREATE_FILTER     CTL_CODE(FILE_DEVICE_DISK_FILE_SYSTEM, 0x03, 0, FILE_READ_DATA)  //8400c
 
 static
 HRESULT
@@ -69,14 +65,15 @@ HRESULT
 FilterLoadUnload(_In_z_ LPCWSTR lpFilterName,
                  _In_ BOOL Load)
 {
-    PUNICODE_STRING FilterName;
+    PFILTER_NAME FilterName;
     HANDLE hFltMgr;
+    DWORD StringLength;
     DWORD BufferLength;
     DWORD dwError;
 
     /* Get a handle to the filter manager */
-    hFltMgr = CreateFileW(lpFilterName,
-                          GENERIC_READ,
+    hFltMgr = CreateFileW(L"\\\\.\\fltmgr",
+                          GENERIC_WRITE,
                           FILE_SHARE_WRITE,
                           NULL,
                           OPEN_EXISTING,
@@ -89,30 +86,31 @@ FilterLoadUnload(_In_z_ LPCWSTR lpFilterName,
     }
 
     /* Calc and allocate a buffer to hold our filter name */
-    BufferLength = wcslen(lpFilterName) * sizeof(WCHAR);
+    StringLength = wcslen(lpFilterName) * sizeof(WCHAR);
+    BufferLength = StringLength + sizeof(FILTER_NAME);
     FilterName = RtlAllocateHeap(GetProcessHeap(),
                                  0,
-                                 BufferLength + sizeof(UNICODE_STRING));
+                                 BufferLength);
     if (FilterName == NULL)
     {
         CloseHandle(hFltMgr);
         return HRESULT_FROM_WIN32(ERROR_OUTOFMEMORY);
     }
 
-    /* Build up the filter name into a real life string */
-    FilterName->Buffer = (PWCH)(FilterName + 1);
-    FilterName->Length = BufferLength;
-    FilterName->MaximumLength = BufferLength;
-    RtlCopyMemory(FilterName->Buffer, lpFilterName, BufferLength);
+    /* Build up the filter name */
+    FilterName->Length = StringLength;
+    CopyMemory(FilterName->FilterName, lpFilterName, StringLength);
 
     /* Tell the filter manager to load the filter for us */
     dwError = SendIoctl(hFltMgr,
                         Load ? IOCTL_LOAD_FILTER : IOCTL_UNLOAD_FILTER,
                         FilterName,
-                        BufferLength + sizeof(UNICODE_STRING));
+                        BufferLength);
 
     /* Cleaup and bail*/
+    RtlFreeHeap(GetProcessHeap(), 0, FilterName);
     CloseHandle(hFltMgr);
+
     return HRESULT_FROM_WIN32(dwError);
 }
 
