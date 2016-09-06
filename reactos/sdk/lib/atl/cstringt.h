@@ -433,6 +433,11 @@ public:
         return *this;
     }
 
+    BOOL LoadString(_In_ UINT nID)
+    {
+        return 0;
+    }
+
     _Check_return_ BOOL LoadString(_In_ HINSTANCE hInstance,
                                    _In_ UINT nID)
     {
