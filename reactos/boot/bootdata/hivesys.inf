@@ -2008,11 +2008,11 @@ HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\ffs","Type",0x00010001,0x00000002
 
 ; Filesystem Filter Manager driver
-HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","ErrorControl",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","Group",0x00000000,"FSFilter Infrastructure"
-HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","ImagePath",0x00020000,"system32\drivers\rosfltmgr.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\rosfltmgr","Type",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","ErrorControl",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","Group",0x00000000,"FSFilter Infrastructure"
+HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","ImagePath",0x00020000,"system32\drivers\fltmgr.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\fltmgr","Type",0x00010001,0x00000002
 
 ; ControlSet selection settings
 HKLM,"SYSTEM\Select","Current",0x00010001,0x00000001
