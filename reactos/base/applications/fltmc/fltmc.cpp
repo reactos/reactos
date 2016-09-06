@@ -19,7 +19,7 @@
 #else
 #include <Windows.h>
 #endif
-#include <fltUser.h>
+#include <fltuser.h>
 #include <atlstr.h>
 #include "resource.h"
 
