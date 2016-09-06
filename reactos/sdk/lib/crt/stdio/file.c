@@ -107,8 +107,8 @@ static char utf8_bom[3] = { 0xef, 0xbb, 0xbf };
 static char utf16_bom[2] = { 0xff, 0xfe };
 
 /* FIXME: this should be allocated dynamically */
-#define MAX_FILES 2048
-#define FD_BLOCK_SIZE 64
+#define MSVCRT_MAX_FILES 2048
+#define MSVCRT_FD_BLOCK_SIZE 64
 
 #define MSVCRT_INTERNAL_BUFSIZ 4096
 
@@ -125,7 +125,7 @@ typedef struct {
  *		__pioinfo (MSVCRT.@)
  * array of pointers to ioinfo arrays [64]
  */
-ioinfo * __pioinfo[MAX_FILES/FD_BLOCK_SIZE] = { 0 };
+ioinfo * __pioinfo[MSVCRT_MAX_FILES/MSVCRT_FD_BLOCK_SIZE] = { 0 };
 
 /*********************************************************************
  *		__badioinfo (MSVCRT.@)
@@ -141,7 +141,7 @@ typedef struct {
 } file_crit;
 
 FILE _iob[_IOB_ENTRIES] = { { 0 } };
-static file_crit* MSVCRT_fstream[MAX_FILES/FD_BLOCK_SIZE] = { NULL };
+static file_crit* MSVCRT_fstream[MSVCRT_MAX_FILES/MSVCRT_FD_BLOCK_SIZE] = { NULL };
 static int MSVCRT_max_streams = 512, MSVCRT_stream_idx;
 
 /* INTERNAL: process umask */
@@ -171,23 +171,23 @@ static CRITICAL_SECTION MSVCRT_file_cs = { &MSVCRT_file_cs_debug, -1, 0, 0, 0, 0
 static inline ioinfo* get_ioinfo_nolock(int fd)
 {
     ioinfo *ret = NULL;
-    if(fd>=0 && fd<MAX_FILES)
-        ret = __pioinfo[fd/FD_BLOCK_SIZE];
+    if(fd>=0 && fd<MSVCRT_MAX_FILES)
+        ret = __pioinfo[fd/MSVCRT_FD_BLOCK_SIZE];
     if(!ret)
         return &__badioinfo;
 
-    return ret + (fd%FD_BLOCK_SIZE);
+    return ret + (fd%MSVCRT_FD_BLOCK_SIZE);
 }
 
 static inline ioinfo* get_ioinfo(int fd)
 {
     ioinfo *ret = NULL;
-    if(fd < MAX_FILES)
-        ret = __pioinfo[fd/FD_BLOCK_SIZE];
+    if(fd < MSVCRT_MAX_FILES)
+        ret = __pioinfo[fd/MSVCRT_FD_BLOCK_SIZE];
     if(!ret)
         return &__badioinfo;
 
-    return ret + (fd%FD_BLOCK_SIZE);
+    return ret + (fd%MSVCRT_FD_BLOCK_SIZE);
 }
 
 static inline FILE* msvcrt_get_file(int i)
@@ -200,18 +200,18 @@ static inline FILE* msvcrt_get_file(int i)
     if(i < _IOB_ENTRIES)
         return &_iob[i];
 
-    ret = MSVCRT_fstream[i/FD_BLOCK_SIZE];
+    ret = MSVCRT_fstream[i/MSVCRT_FD_BLOCK_SIZE];
     if(!ret) {
-        MSVCRT_fstream[i/FD_BLOCK_SIZE] = calloc(FD_BLOCK_SIZE, sizeof(file_crit));
-        if(!MSVCRT_fstream[i/FD_BLOCK_SIZE]) {
+        MSVCRT_fstream[i/MSVCRT_FD_BLOCK_SIZE] = calloc(MSVCRT_FD_BLOCK_SIZE, sizeof(file_crit));
+        if(!MSVCRT_fstream[i/MSVCRT_FD_BLOCK_SIZE]) {
             ERR("out of memory\n");
             *_errno() = ENOMEM;
             return NULL;
         }
 
-        ret = MSVCRT_fstream[i/FD_BLOCK_SIZE] + (i%FD_BLOCK_SIZE);
+        ret = MSVCRT_fstream[i/MSVCRT_FD_BLOCK_SIZE] + (i%MSVCRT_FD_BLOCK_SIZE);
     } else
-        ret += i%FD_BLOCK_SIZE;
+        ret += i%MSVCRT_FD_BLOCK_SIZE;
 
     return &ret->file;
 }
@@ -284,7 +284,7 @@ static int msvcrt_set_fd(HANDLE hand, int flag, int fd)
 {
   ioinfo *fdinfo;
 
-  if (fd >= MAX_FILES)
+  if (fd >= MSVCRT_MAX_FILES)
   {
     WARN(":files exhausted!\n");
     *_errno() = ENFILE;
@@ -295,15 +295,15 @@ static int msvcrt_set_fd(HANDLE hand, int flag, int fd)
   if(fdinfo == &__badioinfo) {
     int i;
 
-    __pioinfo[fd/FD_BLOCK_SIZE] = calloc(FD_BLOCK_SIZE, sizeof(ioinfo));
-    if(!__pioinfo[fd/FD_BLOCK_SIZE]) {
+    __pioinfo[fd/MSVCRT_FD_BLOCK_SIZE] = calloc(MSVCRT_FD_BLOCK_SIZE, sizeof(ioinfo));
+    if(!__pioinfo[fd/MSVCRT_FD_BLOCK_SIZE]) {
       WARN(":out of memory!\n");
       *_errno() = ENOMEM;
       return -1;
     }
 
-    for(i=0; i<FD_BLOCK_SIZE; i++)
-      __pioinfo[fd/FD_BLOCK_SIZE][i].handle = INVALID_HANDLE_VALUE;
+    for(i=0; i<MSVCRT_FD_BLOCK_SIZE; i++)
+      __pioinfo[fd/MSVCRT_FD_BLOCK_SIZE][i].handle = INVALID_HANDLE_VALUE;
 
     fdinfo = get_ioinfo(fd);
   }
@@ -460,7 +460,7 @@ void msvcrt_init_io(void)
     handle_ptr = (HANDLE*)(wxflag_ptr + count);
 
     count = min(count, (si.cbReserved2 - sizeof(unsigned)) / (sizeof(HANDLE) + 1));
-    count = min(count, MAX_FILES);
+    count = min(count, MSVCRT_MAX_FILES);
     for (i = 0; i < count; i++)
     {
       if ((*wxflag_ptr & WX_OPEN) && *handle_ptr != INVALID_HANDLE_VALUE)
@@ -553,7 +553,7 @@ int CDECL _isatty(int fd)
 }
 
 /* INTERNAL: Allocate stdio file buffer */
-/*static*/ BOOL alloc_buffer(FILE* file)
+/*static*/ BOOL msvcrt_alloc_buffer(FILE* file)
 {
     if((file->_file==STDOUT_FILENO || file->_file==STDERR_FILENO)
             && _isatty(file->_file))
@@ -941,7 +941,7 @@ int CDECL _dup2(int od, int nd)
 
   TRACE("(od=%d, nd=%d)\n", od, nd);
   LOCK_FILES();
-  if (nd < MAX_FILES && nd >= 0 && is_valid_fd(od))
+  if (nd < MSVCRT_MAX_FILES && nd >= 0 && is_valid_fd(od))
   {
     HANDLE handle;
 
@@ -1313,7 +1313,7 @@ void CDECL rewind(FILE* file)
   _unlock_file(file);
 }
 
-static int get_flags(const wchar_t* mode, int *open_flags, int* stream_flags)
+static int msvcrt_get_flags(const wchar_t* mode, int *open_flags, int* stream_flags)
 {
   int plus = strchrW(mode, '+') != NULL;
 
@@ -1453,7 +1453,7 @@ FILE* CDECL _wfdopen(int fd, const wchar_t *mode)
   int open_flags, stream_flags;
   FILE* file;
 
-  if (get_flags(mode, &open_flags, &stream_flags) == -1) return NULL;
+  if (msvcrt_get_flags(mode, &open_flags, &stream_flags) == -1) return NULL;
 
   LOCK_FILES();
   if (!(file = msvcrt_alloc_fp()))
@@ -1842,6 +1842,7 @@ int CDECL _wsopen_s( int *fd, const wchar_t* path, int oflags, int shflags, int 
       else if (access & GENERIC_READ)
           oflags = check_bom(hand, oflags, TRUE);
   }
+
   type = GetFileType(hand);
   if (type == FILE_TYPE_CHAR)
       wxflag |= WX_TTY;
@@ -2757,7 +2758,7 @@ int CDECL _filbuf(FILE* file)
 
     /* Allocate buffer if needed */
     if(!(file->_flag & (_IONBF | _IOMYBUF | _USERBUF)))
-        alloc_buffer(file);
+        msvcrt_alloc_buffer(file);
 
     if(!(file->_flag & _IOREAD)) {
         if(file->_flag & _IORW)
@@ -3105,7 +3106,7 @@ FILE * CDECL _wfsopen(const wchar_t *path, const wchar_t *mode, int share)
   TRACE("(%s,%s)\n", debugstr_w(path), debugstr_w(mode));
 
   /* map mode string to open() flags. "man fopen" for possibilities. */
-  if (get_flags(mode, &open_flags, &stream_flags) == -1)
+  if (msvcrt_get_flags(mode, &open_flags, &stream_flags) == -1)
       return NULL;
 
   LOCK_FILES();
@@ -3280,7 +3281,7 @@ size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
   }
 
   if(rcnt>0 && !(file->_flag & (_IONBF | _IOMYBUF | _USERBUF)))
-      alloc_buffer(file);
+      msvcrt_alloc_buffer(file);
 
   while(rcnt>0)
   {
@@ -3344,7 +3345,7 @@ FILE* CDECL _wfreopen(const wchar_t *path, const wchar_t *mode, FILE* file)
   {
     fclose(file);
     /* map mode string to open() flags. "man fopen" for possibilities. */
-    if (get_flags(mode, &open_flags, &stream_flags) == -1)
+    if (msvcrt_get_flags(mode, &open_flags, &stream_flags) == -1)
       file = NULL;
     else
     {
@@ -3862,7 +3863,7 @@ int CDECL ungetc(int c, FILE * file)
 
     _lock_file(file);
     if((!(file->_flag & (_IONBF | _IOMYBUF | _USERBUF))
-                && alloc_buffer(file))
+                && msvcrt_alloc_buffer(file))
             || (!file->_cnt && file->_ptr==file->_base))
         file->_ptr++;
 
@@ -3950,7 +3951,7 @@ int CDECL _setmaxstdio(int newmax)
 {
     TRACE("%d\n", newmax);
 
-    if(newmax<_IOB_ENTRIES || newmax>MAX_FILES || newmax<MSVCRT_stream_idx)
+    if(newmax<_IOB_ENTRIES || newmax>MSVCRT_MAX_FILES || newmax<MSVCRT_stream_idx)
         return -1;
 
     MSVCRT_max_streams = newmax;
