@@ -1,7 +1,7 @@
 /*
 * PROJECT:         Filesystem Filter Manager
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            drivers/fs_minifilter/fltmgr/Object.c
+* FILE:            drivers/filters/fltmgr/Object.c
 * PURPOSE:         Miscellaneous library functions
 * PROGRAMMERS:     Ged Murphy (gedmurphy@reactos.org)
 */
@@ -12,6 +12,7 @@
 /* INCLUDES ******************************************************************/
 
 #include "fltmgr.h"
+#include "fltmgrint.h"
 
 #define NDEBUG
 #include <debug.h>
