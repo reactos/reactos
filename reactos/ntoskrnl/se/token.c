@@ -1832,7 +1832,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
                         Status = _SEH2_GetExceptionCode();
-                        goto Cleanup;
+                        _SEH2_YIELD(goto Cleanup);
                     }
                     _SEH2_END;
 
@@ -1872,7 +1872,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
                         Status = _SEH2_GetExceptionCode();
-                        goto Cleanup;
+                        _SEH2_YIELD(goto Cleanup);
                     }
                     _SEH2_END;
 
@@ -1912,7 +1912,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
                         Status = _SEH2_GetExceptionCode();
-                        goto Cleanup;
+                        _SEH2_YIELD(goto Cleanup);
                     }
                     _SEH2_END;
 
@@ -1979,7 +1979,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     Status = _SEH2_GetExceptionCode();
-                    goto Cleanup;
+                    _SEH2_YIELD(goto Cleanup);
                 }
                 _SEH2_END;
 
@@ -2006,7 +2006,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     Status = _SEH2_GetExceptionCode();
-                    goto Cleanup;
+                    _SEH2_YIELD(goto Cleanup);
                 }
                 _SEH2_END;
 
@@ -2090,7 +2090,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     Status = _SEH2_GetExceptionCode();
-                    goto Cleanup;
+                    _SEH2_YIELD(goto Cleanup);
                 }
                 _SEH2_END;
 
@@ -2125,7 +2125,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     Status = _SEH2_GetExceptionCode();
-                    goto Cleanup;
+                    _SEH2_YIELD(goto Cleanup);
                 }
                 _SEH2_END;
 
@@ -2593,7 +2593,7 @@ NtAdjustPrivilegesToken(
         {
             /* Do cleanup and return the exception code */
             Status = _SEH2_GetExceptionCode();
-            goto Cleanup;
+            _SEH2_YIELD(goto Cleanup);
         }
         _SEH2_END;
 
@@ -2621,7 +2621,7 @@ NtAdjustPrivilegesToken(
     {
         /* Do cleanup and return the exception code */
         Status = _SEH2_GetExceptionCode();
-        goto Cleanup;
+        _SEH2_YIELD(goto Cleanup);
     }
     _SEH2_END;
 
@@ -2751,7 +2751,7 @@ NtCreateToken(
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Return the exception code */
-            return _SEH2_GetExceptionCode();
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
     }

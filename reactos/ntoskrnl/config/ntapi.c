@@ -1058,7 +1058,7 @@ NtLockProductActivationKeys(IN PULONG pPrivateVer,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        return _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 

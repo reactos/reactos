@@ -152,7 +152,7 @@ NtImpersonateClientOfPort(IN HANDLE PortHandle,
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             DPRINT1("Got exception!\n");
-            return _SEH2_GetExceptionCode();
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
     }

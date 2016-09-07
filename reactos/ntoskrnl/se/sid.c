@@ -414,7 +414,7 @@ SeCaptureSidAndAttributesArray(
                 if (((Sid->Revision & 0xF) != SID_REVISION) ||
                     (Sid->SubAuthorityCount > SID_MAX_SUB_AUTHORITIES))
                 {
-                    return STATUS_INVALID_SID;
+                    _SEH2_YIELD(return STATUS_INVALID_SID);
                 }
 
                 /* Calculate the SID length and probe the full SID */
@@ -427,7 +427,7 @@ SeCaptureSidAndAttributesArray(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            return _SEH2_GetExceptionCode();
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
     }

@@ -432,7 +432,7 @@ NtQueryDefaultUILanguage(OUT LANGID* LanguageId)
     _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         /* Return exception code */
-        return _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 

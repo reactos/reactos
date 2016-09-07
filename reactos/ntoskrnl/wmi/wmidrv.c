@@ -144,7 +144,7 @@ WmipCaptureGuidObjectAttributes(
         /* Check if the object name has the expected length */
         if (CapturedObjectName->Length != 45 * sizeof(WCHAR))
         {
-            return STATUS_INVALID_PARAMETER;
+            _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
         }
 
         /* Probe and copy the object name buffer */
@@ -162,7 +162,7 @@ WmipCaptureGuidObjectAttributes(
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         DPRINT1("Got exception!\n");
-        return _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 

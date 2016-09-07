@@ -306,7 +306,7 @@ SeCaptureObjectTypeList(
     {
         ExFreePoolWithTag(*CapturedObjectTypeList, TAG_SEPA);
         *CapturedObjectTypeList = NULL;
-        return _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 
@@ -501,7 +501,7 @@ SepAccessCheckAndAuditAlarm(
     {
         Status = _SEH2_GetExceptionCode();
         DPRINT1("Exception while probing parameters: 0x%lx\n", Status);
-        goto Cleanup;
+        _SEH2_YIELD(goto Cleanup);
     }
     _SEH2_END;
 
@@ -1137,7 +1137,7 @@ NtOpenObjectAuditAlarm(
     {
         Status = _SEH2_GetExceptionCode();
         DPRINT1("Exception while probing parameters: 0x%lx\n", Status);
-        goto Cleanup;
+        _SEH2_YIELD(goto Cleanup);
     }
     _SEH2_END;
 
@@ -1351,7 +1351,7 @@ NtPrivilegedServiceAuditAlarm(
     {
         Status = _SEH2_GetExceptionCode();
         DPRINT1("Got exception 0x%lx\n", Status);
-        goto Cleanup;
+        _SEH2_YIELD(goto Cleanup);
     }
     _SEH2_END;
 

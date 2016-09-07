@@ -335,7 +335,7 @@ PspSetQuotaLimits(
                  (CapturedQuotaLimits.Flags & QUOTA_LIMITS_HARDWS_MAX_DISABLE)))
             {
                 DPRINT1("Invalid quota flags: 0x%lx\n", CapturedQuotaLimits.Flags);
-                return STATUS_INVALID_PARAMETER;
+                _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
             }
 
             /* Verify that the caller didn't pass reserved values */
@@ -351,19 +351,19 @@ PspSetQuotaLimits(
                         CapturedQuotaLimits.Reserved3,
                         CapturedQuotaLimits.Reserved4,
                         CapturedQuotaLimits.CpuRateLimit.RateData);
-                return STATUS_INVALID_PARAMETER;
+                _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
             }
         }
         else
         {
             DPRINT1("Invalid quota size: 0x%lx\n", QuotaLimitsLength);
-            return STATUS_INFO_LENGTH_MISMATCH;
+            _SEH2_YIELD(return STATUS_INFO_LENGTH_MISMATCH);
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         DPRINT1("Exception while copying data\n");
-        return _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 

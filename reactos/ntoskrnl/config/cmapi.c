@@ -1545,16 +1545,16 @@ CmpQueryNameInformation(
     {
         *ResultLength = FIELD_OFFSET(KEY_NAME_INFORMATION, Name) + NeededLength;
         if (Length < RTL_SIZEOF_THROUGH_FIELD(KEY_NAME_INFORMATION, NameLength))
-            return STATUS_BUFFER_TOO_SMALL;
+            _SEH2_YIELD(return STATUS_BUFFER_TOO_SMALL);
         if (Length < *ResultLength)
         {
             KeyNameInfo->NameLength = NeededLength;
-            return STATUS_BUFFER_OVERFLOW;
+            _SEH2_YIELD(return STATUS_BUFFER_OVERFLOW);
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        return _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 
@@ -1597,7 +1597,7 @@ CmpQueryNameInformation(
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        return _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 
