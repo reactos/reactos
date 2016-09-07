@@ -8513,6 +8513,22 @@ static HWND create_async_message_window(void)
     return hWnd;
 }
 
+static void wait_for_async_message(HWND hwnd, HANDLE handle)
+{
+    BOOL ret;
+    MSG msg;
+
+    while ((ret = GetMessageA(&msg, 0, 0, 0)) &&
+           !(msg.hwnd == hwnd && msg.message == WM_ASYNCCOMPLETE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+    }
+
+    ok(ret, "did not expect WM_QUIT message\n");
+    ok(msg.wParam == (WPARAM)handle, "expected wParam = %p, got %lx\n", handle, msg.wParam);
+}
+
 static void test_WSAAsyncGetServByPort(void)
 {
     HWND hwnd = create_async_message_window();
@@ -8530,12 +8546,15 @@ static void test_WSAAsyncGetServByPort(void)
 
     ret = WSAAsyncGetServByPort(hwnd, WM_ASYNCCOMPLETE, 0, NULL, NULL, 0);
     ok(ret != NULL, "WSAAsyncGetServByPort returned NULL\n");
+    wait_for_async_message(hwnd, ret);
 
     ret = WSAAsyncGetServByPort(hwnd, WM_ASYNCCOMPLETE, htons(80), NULL, NULL, 0);
     ok(ret != NULL, "WSAAsyncGetServByPort returned NULL\n");
+    wait_for_async_message(hwnd, ret);
 
     ret = WSAAsyncGetServByPort(hwnd, WM_ASYNCCOMPLETE, htons(80), NULL, buffer, MAXGETHOSTSTRUCT);
     ok(ret != NULL, "WSAAsyncGetServByPort returned NULL\n");
+    wait_for_async_message(hwnd, ret);
 
     DestroyWindow(hwnd);
 }
@@ -8554,15 +8573,19 @@ static void test_WSAAsyncGetServByName(void)
     /* Parameters are not checked when initiating the asynchronous operation.  */
     ret = WSAAsyncGetServByName(hwnd, WM_ASYNCCOMPLETE, "", NULL, NULL, 0);
     ok(ret != NULL, "WSAAsyncGetServByName returned NULL\n");
+    wait_for_async_message(hwnd, ret);
 
     ret = WSAAsyncGetServByName(hwnd, WM_ASYNCCOMPLETE, "", "", buffer, MAXGETHOSTSTRUCT);
     ok(ret != NULL, "WSAAsyncGetServByName returned NULL\n");
+    wait_for_async_message(hwnd, ret);
 
     ret = WSAAsyncGetServByName(hwnd, WM_ASYNCCOMPLETE, "http", NULL, NULL, 0);
     ok(ret != NULL, "WSAAsyncGetServByName returned NULL\n");
+    wait_for_async_message(hwnd, ret);
 
     ret = WSAAsyncGetServByName(hwnd, WM_ASYNCCOMPLETE, "http", "tcp", buffer, MAXGETHOSTSTRUCT);
     ok(ret != NULL, "WSAAsyncGetServByName returned NULL\n");
+    wait_for_async_message(hwnd, ret);
 
     DestroyWindow(hwnd);
 }
