@@ -4137,9 +4137,12 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
            if (mt.TopMenu->fFlags & MNF_POPUP)
            {
               PWND pwndTM = ValidateHwndNoErr(mt.TopMenu->hWnd);
-              IntNotifyWinEvent(EVENT_SYSTEM_MENUPOPUPEND, pwndTM, OBJID_CLIENT, CHILDID_SELF, 0);
+              if (pwndTM)
+              {
+                 IntNotifyWinEvent(EVENT_SYSTEM_MENUPOPUPEND, pwndTM, OBJID_CLIENT, CHILDID_SELF, 0);
 
-              co_UserDestroyWindow(pwndTM);
+                 co_UserDestroyWindow(pwndTM);
+              }
               mt.TopMenu->hWnd = NULL;
 
               if (!(wFlags & TPM_NONOTIFY))
