@@ -4117,6 +4117,13 @@ _IRQL_requires_max_(DISPATCH_LEVEL)
 KSDDKAPI
 VOID
 NTAPI
+KsReleaseDevice(
+  _In_ PKSDEVICE);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+VOID
+NTAPI
 KsReleaseIrpOnCancelableQueue(
   _In_ PIRP Irp,
   _In_opt_ PDRIVER_CANCEL DriverCancel);
