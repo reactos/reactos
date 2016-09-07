@@ -54,7 +54,6 @@ BOOL FASTCALL PATH_Arc (PDC dc, INT x1, INT y1, INT x2, INT y2, INT xStart, INT 
 BOOL FASTCALL PATH_Ellipse (PDC dc, INT x1, INT y1, INT x2, INT y2);
 VOID FASTCALL PATH_EmptyPath (PPATH pPath);
 BOOL FASTCALL PATH_LineTo (PDC dc, INT x, INT y);
-BOOL FASTCALL PATH_MoveTo (PDC dc);
 BOOL FASTCALL PATH_PolyBezier (PDC dc, const POINT *pts, DWORD cbPoints);
 BOOL FASTCALL PATH_PolyBezierTo (PDC dc, const POINT *pts, DWORD cbPoints);
 BOOL FASTCALL PATH_PolyDraw(PDC dc, const POINT *pts, const BYTE *types, DWORD cbPoints);
