@@ -746,6 +746,16 @@ static void test_strftime(void)
         ok(retA == 17, "expected 17, got %ld\n", retA);
         ok(!strcmp(bufA, "02/30/70 00:00:00"), "got %s\n", bufA);
     }
+
+    if(!setlocale(LC_ALL, "Japanese_Japan.932")) {
+        win_skip("Japanese_Japan.932 locale not available\n");
+        return;
+    }
+
+    /* test with multibyte character */
+    retA = strftime(bufA, 256, "\x82%c", gmt_tm);
+    ok(retA == 3, "expected 3, got %ld\n", retA);
+    ok(!strcmp(bufA, "\x82%c"), "got %s\n", bufA);
 }
 
 static void test_asctime(void)
