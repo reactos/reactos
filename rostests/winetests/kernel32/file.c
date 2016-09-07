@@ -4449,17 +4449,10 @@ static void test_file_access(void)
             else
             {
                 /* FIXME: Remove once Wine is fixed */
-                if ((td[j].access & (GENERIC_READ | GENERIC_WRITE)) ||
-                    (!(td[i].access & (GENERIC_WRITE | FILE_WRITE_DATA)) && (td[j].access & FILE_WRITE_DATA)) ||
-                    (!(td[i].access & (GENERIC_READ | FILE_READ_DATA)) && (td[j].access & FILE_READ_DATA)) ||
-                    (!(td[i].access & (GENERIC_WRITE)) && (td[j].access & FILE_APPEND_DATA)))
-                {
-todo_wine
-                ok(!ret, "DuplicateHandle(%#x => %#x) should fail\n", td[i].access, td[j].access);
-todo_wine
-                ok(GetLastError() == ERROR_ACCESS_DENIED, "expected ERROR_ACCESS_DENIED, got %d\n", GetLastError());
-                }
-                else
+                todo_wine_if((td[j].access & (GENERIC_READ | GENERIC_WRITE) ||
+                             (!(td[i].access & (GENERIC_WRITE | FILE_WRITE_DATA)) && (td[j].access & FILE_WRITE_DATA)) ||
+                             (!(td[i].access & (GENERIC_READ | FILE_READ_DATA)) && (td[j].access & FILE_READ_DATA)) ||
+                             (!(td[i].access & (GENERIC_WRITE)) && (td[j].access & FILE_APPEND_DATA))))
                 {
                 ok(!ret, "DuplicateHandle(%#x => %#x) should fail\n", td[i].access, td[j].access);
                 ok(GetLastError() == ERROR_ACCESS_DENIED, "expected ERROR_ACCESS_DENIED, got %d\n", GetLastError());

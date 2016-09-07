@@ -908,6 +908,58 @@ static void testScreenBuffer(HANDLE hConOut)
     SetConsoleOutputCP(oldcp);
 }
 
+static void CALLBACK signaled_function(void *p, BOOLEAN timeout)
+{
+    HANDLE event = p;
+    SetEvent(event);
+    ok(!timeout, "wait shouldn't have timed out\n");
+}
+
+static void testWaitForConsoleInput(HANDLE input_handle)
+{
+    HANDLE wait_handle;
+    HANDLE complete_event;
+    INPUT_RECORD record;
+    DWORD events_written;
+    DWORD wait_ret;
+    BOOL ret;
+
+    complete_event = CreateEventW(NULL, FALSE, FALSE, NULL);
+
+    /* Test success case */
+    ret = RegisterWaitForSingleObject(&wait_handle, input_handle, signaled_function, complete_event, INFINITE, WT_EXECUTEONLYONCE);
+    ok(ret == TRUE, "Expected RegisterWaitForSingleObject to return TRUE, got %d\n", ret);
+    /* give worker thread a chance to start up */
+    Sleep(100);
+    record.EventType = KEY_EVENT;
+    record.Event.KeyEvent.bKeyDown = 1;
+    record.Event.KeyEvent.wRepeatCount = 1;
+    record.Event.KeyEvent.wVirtualKeyCode = VK_RETURN;
+    record.Event.KeyEvent.wVirtualScanCode = VK_RETURN;
+    record.Event.KeyEvent.uChar.UnicodeChar = '\r';
+    record.Event.KeyEvent.dwControlKeyState = 0;
+    ret = WriteConsoleInputW(input_handle, &record, 1, &events_written);
+    ok(ret == TRUE, "Expected WriteConsoleInputW to return TRUE, got %d\n", ret);
+    wait_ret = WaitForSingleObject(complete_event, INFINITE);
+    ok(wait_ret == WAIT_OBJECT_0, "Expected the handle to be signaled\n");
+    ret = UnregisterWait(wait_handle);
+    /* If the callback is still running, this fails with ERROR_IO_PENDING, but
+       that's ok and expected. */
+    ok(ret != 0 || GetLastError() == ERROR_IO_PENDING,
+        "UnregisterWait failed with error %d\n", GetLastError());
+
+    /* Test timeout case */
+    FlushConsoleInputBuffer(input_handle);
+    ret = RegisterWaitForSingleObject(&wait_handle, input_handle, signaled_function, complete_event, INFINITE, WT_EXECUTEONLYONCE);
+    wait_ret = WaitForSingleObject(complete_event, 100);
+    ok(wait_ret == WAIT_TIMEOUT, "Expected the wait to time out\n");
+    ret = UnregisterWait(wait_handle);
+    ok(ret, "UnregisterWait failed with error %d\n", GetLastError());
+
+    /* Clean up */
+    ok(CloseHandle(complete_event), "Failed to close event handle, last error %d\n", GetLastError());
+}
+
 static void test_GetSetConsoleInputExeName(void)
 {
     BOOL ret;
@@ -2938,6 +2990,55 @@ static void test_SetConsoleFont(HANDLE std_output)
     todo_wine ok(GetLastError() == ERROR_INVALID_PARAMETER, "got %u, expected 87\n", GetLastError());
 }
 
+static void test_GetConsoleScreenBufferInfoEx(HANDLE std_output)
+{
+    HANDLE hmod;
+    BOOL (WINAPI *pGetConsoleScreenBufferInfoEx)(HANDLE, CONSOLE_SCREEN_BUFFER_INFOEX *);
+    CONSOLE_SCREEN_BUFFER_INFOEX csbix;
+    BOOL ret;
+    HANDLE std_input = GetStdHandle(STD_INPUT_HANDLE);
+
+    hmod = GetModuleHandleA("kernel32.dll");
+    pGetConsoleScreenBufferInfoEx = (void *)GetProcAddress(hmod, "GetConsoleScreenBufferInfoEx");
+    if (!pGetConsoleScreenBufferInfoEx)
+    {
+        win_skip("GetConsoleScreenBufferInfoEx is not available\n");
+        return;
+    }
+
+    SetLastError(0xdeadbeef);
+    ret = pGetConsoleScreenBufferInfoEx(NULL, &csbix);
+    ok(!ret, "got %d, expected zero\n", ret);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "got %u, expected 87\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pGetConsoleScreenBufferInfoEx(std_input, &csbix);
+    ok(!ret, "got %d, expected zero\n", ret);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "got %u, expected 87\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pGetConsoleScreenBufferInfoEx(std_output, &csbix);
+    ok(!ret, "got %d, expected zero\n", ret);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "got %u, expected 87\n", GetLastError());
+
+    csbix.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
+
+    SetLastError(0xdeadbeef);
+    ret = pGetConsoleScreenBufferInfoEx(NULL, &csbix);
+    ok(!ret, "got %d, expected zero\n", ret);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "got %u, expected 6\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pGetConsoleScreenBufferInfoEx(std_input, &csbix);
+    ok(!ret, "got %d, expected zero\n", ret);
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "got %u, expected 6\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pGetConsoleScreenBufferInfoEx(std_output, &csbix);
+    ok(ret, "got %d, expected non-zero\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "got %u, expected 0xdeadbeef\n", GetLastError());
+}
+
 START_TEST(console)
 {
     static const char font_name[] = "Lucida Console";
@@ -3044,6 +3145,8 @@ START_TEST(console)
     testScroll(hConOut, sbi.dwSize);
     /* will test sb creation / modification / codepage handling */
     testScreenBuffer(hConOut);
+    /* Test waiting for a console handle */
+    testWaitForConsoleInput(hConIn);
 
     /* clear duplicated console font table */
     CloseHandle(hConIn);
@@ -3086,4 +3189,5 @@ START_TEST(console)
     test_GetLargestConsoleWindowSize(hConOut);
     test_GetConsoleFontInfo(hConOut);
     test_SetConsoleFont(hConOut);
+    test_GetConsoleScreenBufferInfoEx(hConOut);
 }

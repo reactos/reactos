@@ -2799,10 +2799,7 @@ static void test_atl_thunk_emulation( ULONG dep_flags )
     ret = send_message_excpt( hWnd, WM_USER, 0, 0 );
     ok( ret == 43, "call returned wrong result, expected 43, got %d\n", ret );
     ok( num_guard_page_calls == 0, "expected no STATUS_GUARD_PAGE_VIOLATION exception, got %d exceptions\n", num_guard_page_calls );
-    if ((dep_flags & MEM_EXECUTE_OPTION_DISABLE) && (dep_flags & MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION))
-        ok( num_execute_fault_calls == 0, "expected no STATUS_ACCESS_VIOLATION exception, got %d exceptions\n", num_execute_fault_calls );
-    else
-        ok( num_execute_fault_calls == 0, "expected no STATUS_ACCESS_VIOLATION exception, got %d exceptions\n", num_execute_fault_calls );
+    ok( num_execute_fault_calls == 0, "expected no STATUS_ACCESS_VIOLATION exception, got %d exceptions\n", num_execute_fault_calls );
 
     /* Now a bit more complicated, the page containing the code is protected with
      * PAGE_GUARD memory protection. */
@@ -4109,14 +4106,7 @@ START_TEST(virtual)
         }
         if (!strcmp(argv[2], "sharedmemro"))
         {
-            if(!winetest_interactive)
-            {
-                skip("CORE-8541: Skipping test_shared_memory_ro(TRUE, strtol(argv[3], NULL, 16))\n");
-            }
-            else
-            {
-                test_shared_memory_ro(TRUE, strtol(argv[3], NULL, 16));
-            }
+            test_shared_memory_ro(TRUE, strtol(argv[3], NULL, 16));
             return;
         }
         while (1)

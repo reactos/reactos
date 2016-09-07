@@ -155,28 +155,20 @@ static void test_FiberHandling(void)
     ok(fiberCount == 1, "Wrong fiber count: %d\n", fiberCount);
     pDeleteFiber(fibers[1]);
 
-    if (!pCreateFiberEx)
+    if (pCreateFiberEx)
     {
-        win_skip( "CreateFiberEx not present\n" );
-        return;
+        fibers[1] = pCreateFiberEx(0,0,0,FiberMainProc,&testparam);
+        ok(fibers[1] != NULL, "CreateFiberEx failed with error %u\n", GetLastError());
+
+        pSwitchToFiber(fibers[1]);
+        ok(fiberCount == 2, "Wrong fiber count: %d\n", fiberCount);
+        pDeleteFiber(fibers[1]);
     }
+    else win_skip( "CreateFiberEx not present\n" );
 
-    fibers[1] = pCreateFiberEx(0,0,0,FiberMainProc,&testparam);
-    ok(fibers[1] != NULL, "CreateFiberEx failed with error %u\n", GetLastError());
-
-    pSwitchToFiber(fibers[1]);
-    ok(fiberCount == 2, "Wrong fiber count: %d\n", fiberCount);
-    pDeleteFiber(fibers[1]);
-
-    if (!pIsThreadAFiber)
-    {
-        win_skip( "IsThreadAFiber not present\n" );
-        return;
-    }
-
-    ok(pIsThreadAFiber(), "IsThreadAFiber reported FALSE\n");
+    if (pIsThreadAFiber) ok(pIsThreadAFiber(), "IsThreadAFiber reported FALSE\n");
     test_ConvertFiberToThread();
-    ok(!pIsThreadAFiber(), "IsThreadAFiber reported TRUE\n");
+    if (pIsThreadAFiber) ok(!pIsThreadAFiber(), "IsThreadAFiber reported TRUE\n");
 }
 
 static void test_FiberLocalStorage(void)

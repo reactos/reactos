@@ -70,6 +70,10 @@ static PVOID    (WINAPI *pResolveDelayLoadedAPI)(PVOID, PCIMAGE_DELAYLOAD_DESCRI
                                                  PDELAYLOAD_FAILURE_DLL_CALLBACK, PVOID,
                                                  PIMAGE_THUNK_DATA ThunkAddress,ULONG);
 static PVOID (WINAPI *pRtlImageDirectoryEntryToData)(HMODULE,BOOL,WORD,ULONG *);
+static DWORD (WINAPI *pFlsAlloc)(PFLS_CALLBACK_FUNCTION);
+static BOOL (WINAPI *pFlsSetValue)(DWORD, PVOID);
+static PVOID (WINAPI *pFlsGetValue)(DWORD);
+static BOOL (WINAPI *pFlsFree)(DWORD);
 
 static PVOID RVAToAddr(DWORD_PTR rva, HMODULE module)
 {
@@ -143,9 +147,9 @@ static const IMAGE_NT_HEADERS nt_header_template =
 static IMAGE_SECTION_HEADER section =
 {
     ".rodata", /* Name */
-    { 0x10 }, /* Misc */
+    { 0 }, /* Misc */
     0, /* VirtualAddress */
-    0x0a, /* SizeOfRawData */
+    0, /* SizeOfRawData */
     0, /* PointerToRawData */
     0, /* PointerToRelocations */
     0, /* PointerToLinenumbers */
@@ -196,6 +200,8 @@ static DWORD create_test_dll( const IMAGE_DOS_HEADER *dos_header, UINT dos_size,
     assert(nt_header->FileHeader.NumberOfSections <= 1);
     if (nt_header->FileHeader.NumberOfSections)
     {
+        section.SizeOfRawData = 10;
+
         if (nt_header->OptionalHeader.SectionAlignment >= page_size)
         {
             section.PointerToRawData = dos_size;
@@ -262,9 +268,13 @@ static void query_image_section( int id, const char *dll_name, const IMAGE_NT_HE
     ok( image.CommittedStackSize == nt_header->OptionalHeader.SizeOfStackCommit || broken(truncated),
         "%u: CommittedStackSize wrong %lx / %lx\n", id,
         image.CommittedStackSize, (SIZE_T)nt_header->OptionalHeader.SizeOfStackCommit );
-    ok( image.SubSystemType == nt_header->OptionalHeader.Subsystem || broken(truncated),
-        "%u: SubSystemType wrong %08x / %08x\n", id,
-        image.SubSystemType, nt_header->OptionalHeader.Subsystem );
+    if (truncated)
+        ok( !image.SubSystemType || broken(truncated),
+            "%u: SubSystemType wrong %08x / 00000000\n", id, image.SubSystemType );
+    else
+        ok( image.SubSystemType == nt_header->OptionalHeader.Subsystem,
+            "%u: SubSystemType wrong %08x / %08x\n", id,
+            image.SubSystemType, nt_header->OptionalHeader.Subsystem );
     ok( image.SubsystemVersionLow == nt_header->OptionalHeader.MinorSubsystemVersion,
         "%u: SubsystemVersionLow wrong %04x / %04x\n", id,
         image.SubsystemVersionLow, nt_header->OptionalHeader.MinorSubsystemVersion );
@@ -1470,6 +1480,7 @@ static HANDLE attached_thread[MAX_COUNT];
 static DWORD attached_thread_count;
 HANDLE stop_event, event, mutex, semaphore, loader_lock_event, peb_lock_event, heap_lock_event, ack_event;
 static int test_dll_phase, inside_loader_lock, inside_peb_lock, inside_heap_lock;
+static LONG fls_callback_count;
 
 static DWORD WINAPI mutex_thread_proc(void *param)
 {
@@ -1552,9 +1563,18 @@ static DWORD WINAPI noop_thread_proc(void *param)
     return 195;
 }
 
+static VOID WINAPI fls_callback(PVOID lpFlsData)
+{
+    ok(lpFlsData == (void*) 0x31415, "lpFlsData is %p, expected %p\n", lpFlsData, (void*) 0x31415);
+    InterlockedIncrement(&fls_callback_count);
+}
+
 static BOOL WINAPI dll_entry_point(HINSTANCE hinst, DWORD reason, LPVOID param)
 {
     static LONG noop_thread_started;
+    static DWORD fls_index = FLS_OUT_OF_INDEXES;
+    static int fls_count = 0;
+    static int thread_detach_count = 0;
     DWORD ret;
 
     ok(!inside_loader_lock, "inside_loader_lock should not be set\n");
@@ -1567,6 +1587,23 @@ static BOOL WINAPI dll_entry_point(HINSTANCE hinst, DWORD reason, LPVOID param)
 
         ret = pRtlDllShutdownInProgress();
         ok(!ret, "RtlDllShutdownInProgress returned %d\n", ret);
+
+        /* Set up the FLS slot, if FLS is available */
+        if (pFlsGetValue)
+        {
+            void* value;
+            BOOL bret;
+            ret = pFlsAlloc(&fls_callback);
+            ok(ret != FLS_OUT_OF_INDEXES, "FlsAlloc returned %d\n", ret);
+            fls_index = ret;
+            SetLastError(0xdeadbeef);
+            value = pFlsGetValue(fls_index);
+            ok(!value, "FlsGetValue returned %p, expected NULL\n", value);
+            ok(GetLastError() == ERROR_SUCCESS, "FlsGetValue failed with error %u\n", GetLastError());
+            bret = pFlsSetValue(fls_index, (void*) 0x31415);
+            ok(bret, "FlsSetValue failed\n");
+            fls_count++;
+        }
 
         break;
     case DLL_PROCESS_DETACH:
@@ -1619,6 +1656,43 @@ static BOOL WINAPI dll_entry_point(HINSTANCE hinst, DWORD reason, LPVOID param)
             /* FIXME: remove once Wine is fixed */
             todo_wine_if (!(expected_code == STILL_ACTIVE || expected_code == 196))
                 ok(!ret || broken(ret) /* before Vista */, "RtlDllShutdownInProgress returned %d\n", ret);
+        }
+
+        /* In the case that the process is terminating, FLS slots should still be accessible, but
+         * the callback should be already run for this thread and the contents already NULL.
+         * Note that this is broken for Win2k3, which runs the callbacks *after* the DLL entry
+         * point has already run.
+         */
+        if (param && pFlsGetValue)
+        {
+            void* value;
+            SetLastError(0xdeadbeef);
+            value = pFlsGetValue(fls_index);
+            todo_wine
+            {
+                ok(broken(value == (void*) 0x31415) || /* Win2k3 */
+                   value == NULL, "FlsGetValue returned %p, expected NULL\n", value);
+            }
+            ok(GetLastError() == ERROR_SUCCESS, "FlsGetValue failed with error %u\n", GetLastError());
+            todo_wine
+            {
+                ok(broken(fls_callback_count == thread_detach_count) || /* Win2k3 */
+                   fls_callback_count == thread_detach_count + 1,
+                   "wrong FLS callback count %d, expected %d\n", fls_callback_count, thread_detach_count + 1);
+            }
+        }
+        if (pFlsFree)
+        {
+            BOOL ret;
+            /* Call FlsFree now and run the remaining callbacks from uncleanly terminated threads */
+            ret = pFlsFree(fls_index);
+            ok(ret, "FlsFree failed with error %u\n", GetLastError());
+            fls_index = FLS_OUT_OF_INDEXES;
+            todo_wine
+            {
+                ok(fls_callback_count == fls_count,
+                   "wrong FLS callback count %d, expected %d\n", fls_callback_count, fls_count);
+            }
         }
 
         ok(attached_thread_count >= 2, "attached thread count should be >= 2\n");
@@ -1791,9 +1865,26 @@ todo_wine
                             0, TRUE, DUPLICATE_SAME_ACCESS);
             attached_thread_count++;
         }
+
+        /* Make sure the FLS slot is empty, if FLS is available */
+        if (pFlsGetValue)
+        {
+            void* value;
+            BOOL ret;
+            SetLastError(0xdeadbeef);
+            value = pFlsGetValue(fls_index);
+            ok(!value, "FlsGetValue returned %p, expected NULL\n", value);
+            todo_wine
+                ok(GetLastError() == ERROR_SUCCESS, "FlsGetValue failed with error %u\n", GetLastError());
+            ret = pFlsSetValue(fls_index, (void*) 0x31415);
+            ok(ret, "FlsSetValue failed\n");
+            fls_count++;
+        }
+
         break;
     case DLL_THREAD_DETACH:
         trace("dll: %p, DLL_THREAD_DETACH, %p\n", hinst, param);
+        thread_detach_count++;
 
         ret = pRtlDllShutdownInProgress();
         /* win7 doesn't allow creating a thread during process shutdown but
@@ -1804,6 +1895,23 @@ todo_wine
             ok(ret, "RtlDllShutdownInProgress returned %d\n", ret);
         else
             ok(!ret, "RtlDllShutdownInProgress returned %d\n", ret);
+
+        /* FLS data should already be destroyed, if FLS is available.
+         * Note that this is broken for Win2k3, which runs the callbacks *after* the DLL entry
+         * point has already run.
+         */
+        if (pFlsGetValue && fls_index != FLS_OUT_OF_INDEXES)
+        {
+            void* value;
+            SetLastError(0xdeadbeef);
+            value = pFlsGetValue(fls_index);
+            todo_wine
+            {
+                ok(broken(value == (void*) 0x31415) || /* Win2k3 */
+                   !value, "FlsGetValue returned %p, expected NULL\n", value);
+            }
+            ok(GetLastError() == ERROR_SUCCESS, "FlsGetValue failed with error %u\n", GetLastError());
+        }
 
         break;
     default:
@@ -2126,7 +2234,6 @@ static void test_ExitProcess(void)
     } section_data = { 0xb8, dll_entry_point, { 0xff,0xe0 } };
 #endif
 #include "poppack.h"
-    static const char filler[0x1000];
     DWORD dummy, file_align;
     HANDLE file, thread, process, hmap, hmap_dup;
     char temp_path[MAX_PATH], dll_name[MAX_PATH], cmdline[MAX_PATH * 2];
@@ -2603,7 +2710,7 @@ static PVOID WINAPI failuredllhook(ULONG ul, DELAYLOAD_INFO* pd)
 
         ok(!!pd->ThunkAddress, "no ThunkAddress supplied\n");
         if (pd->ThunkAddress)
-            ok(pd->ThunkAddress->u1.Ordinal == 0, "expected 0, got %x\n", (UINT)pd->ThunkAddress->u1.Ordinal);
+            ok(pd->ThunkAddress->u1.Ordinal, "no ThunkAddress value supplied\n");
 
         ok(!!pd->TargetDllName, "no TargetDllName supplied\n");
         if (pd->TargetDllName)
@@ -2628,7 +2735,6 @@ static void test_ResolveDelayLoadedAPI(void)
 {
     static const char test_dll[] = "secur32.dll";
     static const char test_func[] = "SealMessage";
-    static const char filler[0x1000];
     char temp_path[MAX_PATH];
     char dll_name[MAX_PATH];
     IMAGE_DELAYLOAD_DESCRIPTOR idd, *delaydir;
@@ -2722,7 +2828,8 @@ static void test_ResolveDelayLoadedAPI(void)
     /* sections */
     section.PointerToRawData = nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT].VirtualAddress;
     section.VirtualAddress = nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT].VirtualAddress;
-    section.Misc.VirtualSize = nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT].Size;
+    section.Misc.VirtualSize = 2 * sizeof(idd);
+    section.SizeOfRawData = section.Misc.VirtualSize;
     section.Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ;
     SetLastError(0xdeadbeef);
     ret = WriteFile(hfile, &section, sizeof(section), &dummy, NULL);
@@ -2734,18 +2841,14 @@ static void test_ResolveDelayLoadedAPI(void)
     section.Misc.VirtualSize = sizeof(test_dll) + sizeof(hint) + sizeof(test_func) + sizeof(HMODULE) +
                                2 * (i + 1) * sizeof(IMAGE_THUNK_DATA);
     ok(section.Misc.VirtualSize <= 0x1000, "Too much tests, add a new section!\n");
+    section.SizeOfRawData = section.Misc.VirtualSize;
     section.Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE;
     SetLastError(0xdeadbeef);
     ret = WriteFile(hfile, &section, sizeof(section), &dummy, NULL);
     ok(ret, "WriteFile error %d\n", GetLastError());
 
     /* fill up to delay data */
-    file_size = GetFileSize(hfile, NULL);
-    SetLastError(0xdeadbeef);
-    ret = WriteFile(hfile, filler,
-                    nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT].VirtualAddress - file_size,
-                    &dummy, NULL);
-    ok(ret, "WriteFile error %d\n", GetLastError());
+    SetFilePointer( hfile, nt_header.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT].VirtualAddress, NULL, SEEK_SET );
 
     /* delay data */
     idd.Attributes.AllAttributes = 1;
@@ -2766,10 +2869,7 @@ static void test_ResolveDelayLoadedAPI(void)
     ok(ret, "WriteFile error %d\n", GetLastError());
 
     /* fill up to extended delay data */
-    file_size = GetFileSize(hfile, NULL);
-    SetLastError(0xdeadbeef);
-    ret = WriteFile(hfile, filler, idd.DllNameRVA - file_size, &dummy, NULL);
-    ok(ret, "WriteFile error %d\n", GetLastError());
+    SetFilePointer( hfile, idd.DllNameRVA, NULL, SEEK_SET );
 
     /* extended delay data */
     SetLastError(0xdeadbeef);
@@ -2784,9 +2884,20 @@ static void test_ResolveDelayLoadedAPI(void)
     ret = WriteFile(hfile, test_func, sizeof(test_func), &dummy, NULL);
     ok(ret, "WriteFile error %d\n", GetLastError());
 
-    file_size = GetFileSize(hfile, NULL);
+    SetFilePointer( hfile, idd.ImportAddressTableRVA, NULL, SEEK_SET );
+
+    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    {
+        /* 0x1a00 is an empty space between delay data and extended delay data, real thunks are not necessary */
+        itd32.u1.Function = nt_header.OptionalHeader.ImageBase + 0x1a00 + i * 0x20;
+        SetLastError(0xdeadbeef);
+        ret = WriteFile(hfile, &itd32, sizeof(itd32), &dummy, NULL);
+        ok(ret, "WriteFile error %d\n", GetLastError());
+    }
+
+    itd32.u1.Function = 0;
     SetLastError(0xdeadbeef);
-    ret = WriteFile(hfile, filler, idd.ImportNameTableRVA - file_size, &dummy, NULL);
+    ret = WriteFile(hfile, &itd32, sizeof(itd32), &dummy, NULL);
     ok(ret, "WriteFile error %d\n", GetLastError());
 
     for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
@@ -2806,10 +2917,8 @@ static void test_ResolveDelayLoadedAPI(void)
     ok(ret, "WriteFile error %d\n", GetLastError());
 
     /* fill up to eof */
-    file_size = GetFileSize(hfile, NULL);
-    SetLastError(0xdeadbeef);
-    ret = WriteFile(hfile, filler, section.VirtualAddress + section.Misc.VirtualSize - file_size, &dummy, NULL);
-    ok(ret, "WriteFile error %d\n", GetLastError());
+    SetFilePointer( hfile, section.VirtualAddress + section.Misc.VirtualSize, NULL, SEEK_SET );
+    SetEndOfFile( hfile );
     CloseHandle(hfile);
 
     SetLastError(0xdeadbeef);
@@ -2902,10 +3011,11 @@ START_TEST(loader)
 {
     int argc;
     char **argv;
-    HANDLE ntdll, mapping;
+    HANDLE ntdll, mapping, kernel32;
     SYSTEM_INFO si;
 
     ntdll = GetModuleHandleA("ntdll.dll");
+    kernel32 = GetModuleHandleA("kernel32.dll");
     pNtCreateSection = (void *)GetProcAddress(ntdll, "NtCreateSection");
     pNtQuerySection = (void *)GetProcAddress(ntdll, "NtQuerySection");
     pNtMapViewOfSection = (void *)GetProcAddress(ntdll, "NtMapViewOfSection");
@@ -2922,7 +3032,11 @@ START_TEST(loader)
     pRtlAcquirePebLock = (void *)GetProcAddress(ntdll, "RtlAcquirePebLock");
     pRtlReleasePebLock = (void *)GetProcAddress(ntdll, "RtlReleasePebLock");
     pRtlImageDirectoryEntryToData = (void *)GetProcAddress(ntdll, "RtlImageDirectoryEntryToData");
-    pResolveDelayLoadedAPI = (void *)GetProcAddress(GetModuleHandleA("kernel32.dll"), "ResolveDelayLoadedAPI");
+    pFlsAlloc = (void *)GetProcAddress(kernel32, "FlsAlloc");
+    pFlsSetValue = (void *)GetProcAddress(kernel32, "FlsSetValue");
+    pFlsGetValue = (void *)GetProcAddress(kernel32, "FlsGetValue");
+    pFlsFree = (void *)GetProcAddress(kernel32, "FlsFree");
+    pResolveDelayLoadedAPI = (void *)GetProcAddress(kernel32, "ResolveDelayLoadedAPI");
 
     GetSystemInfo( &si );
     page_size = si.dwPageSize;
