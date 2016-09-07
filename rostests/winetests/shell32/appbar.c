@@ -423,10 +423,8 @@ static void test_GetCurrentProcessExplicitAppUserModelID(void)
         return;
     }
 
-if (0) /* crashes on native */
-{
-    hr = pGetCurrentProcessExplicitAppUserModelID(NULL);
-}
+    if (0) /* crashes on native */
+        hr = pGetCurrentProcessExplicitAppUserModelID(NULL);
 
     appid = (void*)0xdeadbeef;
     hr = pGetCurrentProcessExplicitAppUserModelID(&appid);

@@ -870,10 +870,8 @@ static void test_SHCreateSessionKey(void)
         return;
     }
 
-if (0) /* crashes on native */
-{
-    hr = pSHCreateSessionKey(KEY_READ, NULL);
-}
+    if (0) /* crashes on native */
+        hr = pSHCreateSessionKey(KEY_READ, NULL);
 
     hkey = (HKEY)0xdeadbeef;
     hr = pSHCreateSessionKey(0, &hkey);
