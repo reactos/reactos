@@ -222,7 +222,7 @@ ExLockUserBuffer(
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ExFreePoolWithTag(Mdl, TAG_MDL);
-        return _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 
@@ -1171,14 +1171,19 @@ QSI_DEF(SystemNonPagedPoolInformation)
 QSI_DEF(SystemHandleInformation)
 {
     PSYSTEM_HANDLE_INFORMATION HandleInformation;
+    PLIST_ENTRY NextTableEntry;
+    PHANDLE_TABLE HandleTable;
+    PHANDLE_TABLE_ENTRY HandleTableEntry;
+    EXHANDLE Handle;
     ULONG Index = 0;
     NTSTATUS Status;
     PMDL Mdl;
+    PAGED_CODE();
 
     DPRINT("NtQuerySystemInformation - SystemHandleInformation\n");
 
     /* Set initial required buffer size */
-    *ReqSize = sizeof(SYSTEM_HANDLE_INFORMATION);
+    *ReqSize = FIELD_OFFSET(SYSTEM_HANDLE_INFORMATION, Handles);
 
     /* Check user's buffer size */
     if (Size < *ReqSize)
@@ -1199,116 +1204,94 @@ QSI_DEF(SystemHandleInformation)
         return Status;
     }
 
-    _SEH2_TRY
+    /* Reset of count of handles */
+    HandleInformation->NumberOfHandles = 0;
+
+    /* Enter a critical region */
+    KeEnterCriticalRegion();
+
+    /* Acquire the handle table lock */
+    ExAcquirePushLockShared(&HandleTableListLock);
+
+    /* Enumerate all system handles */
+    for (NextTableEntry = HandleTableListHead.Flink;
+         NextTableEntry != &HandleTableListHead;
+         NextTableEntry = NextTableEntry->Flink)
     {
-        PLIST_ENTRY NextTableEntry;
+        /* Get current handle table */
+        HandleTable = CONTAINING_RECORD(NextTableEntry, HANDLE_TABLE, HandleTableList);
 
-        /* Reset of count of handles */
-        HandleInformation->NumberOfHandles = 0;
-
-        /* Enumerate all system handles */
-        for (NextTableEntry = HandleTableListHead.Flink;
-             NextTableEntry != &HandleTableListHead;
-             NextTableEntry = NextTableEntry->Flink)
+        /* Set the initial value and loop the entries */
+        Handle.Value = 0;
+        while ((HandleTableEntry = ExpLookupHandleTableEntry(HandleTable, Handle)))
         {
-            PHANDLE_TABLE HandleTable;
-
-            /* Enter a critical region */
-            KeEnterCriticalRegion();
-
-            /* Acquire the handle table lock */
-            ExAcquirePushLockExclusive(&HandleTableListLock);
-
-            /* Get current handle table */
-            HandleTable = CONTAINING_RECORD(NextTableEntry, HANDLE_TABLE, HandleTableList);
-
-            _SEH2_TRY
+            /* Validate the entry */
+            if ((HandleTableEntry->Object) &&
+                (HandleTableEntry->NextFreeTableEntry != -2))
             {
-                PHANDLE_TABLE_ENTRY HandleTableEntry;
-                EXHANDLE Handle;
+                /* Increase of count of handles */
+                ++HandleInformation->NumberOfHandles;
 
-                /* Set the initial value and loop the entries */
-                Handle.Value = 0;
-                while ((HandleTableEntry = ExpLookupHandleTableEntry(HandleTable, Handle)))
+                /* Lock the entry */
+                if (ExpLockHandleTableEntry(HandleTable, HandleTableEntry))
                 {
-                    /* Validate the entry */
-                    if ((HandleTableEntry->Object) &&
-                        (HandleTableEntry->NextFreeTableEntry != -2))
+                    /* Increase required buffer size */
+                    *ReqSize += sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO);
+
+                    /* Check user's buffer size */
+                    if (*ReqSize > Size)
                     {
-                        /* Increase of count of handles */
-                        ++HandleInformation->NumberOfHandles;
+                        Status = STATUS_INFO_LENGTH_MISMATCH;
+                    }
+                    else
+                    {
+                        POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
 
-                        /* Increase required buffer size */
-                        *ReqSize += sizeof(SYSTEM_HANDLE_TABLE_ENTRY_INFO);
+                        /* Filling handle information */
+                        HandleInformation->Handles[Index].UniqueProcessId =
+                            (USHORT)(ULONG_PTR) HandleTable->UniqueProcessId;
 
-                        /* Check user's buffer size */
-                        if (*ReqSize > Size)
-                        {
-                            Status = STATUS_INFO_LENGTH_MISMATCH;
-                            break;
-                        }
+                        HandleInformation->Handles[Index].CreatorBackTraceIndex = 0;
 
-                        /* Lock the entry */
-                        if (ExpLockHandleTableEntry(HandleTable, HandleTableEntry))
-                        {
-                            _SEH2_TRY
-                            {
-                                POBJECT_HEADER ObjectHeader = ObpGetHandleObject(HandleTableEntry);
+#if 0 /* FIXME!!! Type field currupted */
+                        HandleInformation->Handles[Index].ObjectTypeIndex =
+                            (UCHAR) ObjectHeader->Type->Index;
+#else
+                        HandleInformation->Handles[Index].ObjectTypeIndex = 0;
+#endif
 
-                                /* Filling handle information */
-                                HandleInformation->Handles[Index].UniqueProcessId =
-                                    (USHORT)(ULONG_PTR) HandleTable->UniqueProcessId;
+                        HandleInformation->Handles[Index].HandleAttributes =
+                            HandleTableEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES;
 
-                                HandleInformation->Handles[Index].CreatorBackTraceIndex = 0;
+                        HandleInformation->Handles[Index].HandleValue =
+                            (USHORT)(ULONG_PTR) Handle.GenericHandleOverlay;
 
-                                HandleInformation->Handles[Index].ObjectTypeIndex =
-                                    (UCHAR) ObjectHeader->Type->Index;
+                        HandleInformation->Handles[Index].Object = &ObjectHeader->Body;
 
-                                HandleInformation->Handles[Index].HandleAttributes =
-                                    HandleTableEntry->ObAttributes & OBJ_HANDLE_ATTRIBUTES;
+                        HandleInformation->Handles[Index].GrantedAccess =
+                            HandleTableEntry->GrantedAccess;
 
-                                HandleInformation->Handles[Index].HandleValue =
-                                    (USHORT)(ULONG_PTR) Handle.GenericHandleOverlay;
-
-                                HandleInformation->Handles[Index].Object = &ObjectHeader->Body;
-
-                                HandleInformation->Handles[Index].GrantedAccess =
-                                    HandleTableEntry->GrantedAccess;
-
-                                ++Index;
-                            }
-                            _SEH2_FINALLY
-                            {
-                                /* Unlock it */
-                                ExUnlockHandleTableEntry(HandleTable, HandleTableEntry);
-                            }
-                            _SEH2_END;
-                        }
+                        ++Index;
                     }
 
-                    /* Go to the next entry */
-                    Handle.Value += sizeof(HANDLE);
+                    /* Unlock it */
+                    ExUnlockHandleTableEntry(HandleTable, HandleTableEntry);
                 }
             }
-            _SEH2_FINALLY
-            {
-                /* Release the lock */
-                ExReleasePushLockExclusive(&HandleTableListLock);
 
-                /* Leave the critical region */
-                KeLeaveCriticalRegion();
-            }
-            _SEH2_END;
-
-            if (!NT_SUCCESS(Status)) break;
+            /* Go to the next entry */
+            Handle.Value += sizeof(HANDLE);
         }
     }
-    _SEH2_FINALLY
-    {
-        /* Release the locked user buffer */
-        ExUnlockUserBuffer(Mdl);
-    }
-    _SEH2_END;
+
+    /* Release the lock */
+    ExReleasePushLockShared(&HandleTableListLock);
+
+    /* Leave the critical region */
+    KeLeaveCriticalRegion();
+
+    /* Release the locked user buffer */
+    ExUnlockUserBuffer(Mdl);
 
     return Status;
 }
