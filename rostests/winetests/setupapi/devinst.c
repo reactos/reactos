@@ -833,6 +833,7 @@ static void testGetDeviceInterfaceDetail(void)
              "\\\\?\\root#legacy_bogus#0000#{6a55b5a4-3f65-11db-b704-0011955c2bdb}";
             static const char path_w2k[] =
              "\\\\?\\root#legacy_bogus#0000#{6a55b5a4-3f65-11db-b704-0011955c2bdb}\\";
+            SP_DEVINFO_DATA devinfo;
             LPBYTE buf = HeapAlloc(GetProcessHeap(), 0, size);
             SP_DEVICE_INTERFACE_DETAIL_DATA_A *detail =
                 (SP_DEVICE_INTERFACE_DETAIL_DATA_A *)buf;
@@ -860,9 +861,12 @@ static void testGetDeviceInterfaceDetail(void)
              !lstrcmpiA(path_w2k, detail->DevicePath), "Unexpected path %s\n",
              detail->DevicePath);
             /* Check SetupDiGetDeviceInterfaceDetailW */
-            ret = pSetupDiGetDeviceInterfaceDetailW(set, &interfaceData, NULL, 0, &size, NULL);
+            memset(&devinfo, 0, sizeof(devinfo));
+            devinfo.cbSize = sizeof(devinfo);
+            ret = pSetupDiGetDeviceInterfaceDetailW(set, &interfaceData, NULL, 0, &size, &devinfo);
             ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
              "Expected ERROR_INSUFFICIENT_BUFFER, got error code: %d\n", GetLastError());
+            ok(devinfo.DevInst, "Expected DevInst to be set\n");
             ok(expectedsize == size ||
              (expectedsize + sizeof(WCHAR)) == size /* W2K adds a backslash */,
              "SetupDiGetDeviceInterfaceDetailW returned wrong reqsize, got %d\n",
