@@ -3972,15 +3972,13 @@ static void test_AppendMenu(void)
     mii.wID = 206;
     ret = InsertMenuItemA(hmenu, 0, TRUE, &mii);
     ok(ret, "InsertMenuItem failed\n");
-if (0) /* FIXME: uncomment once Wine is fixed */
-{
+if (0) /* FIXME: uncomment once Wine is fixed */ {
     check_menu_items(hmenu, 206, MF_SEPARATOR, MFS_GRAYED);
 }
     mii.wID = 207;
     ret = SetMenuItemInfoA(hmenu, 0, TRUE, &mii);
     ok(ret, "SetMenuItemInfo failed\n");
-if (0) /* FIXME: uncomment once Wine is fixed */
-{
+if (0) /* FIXME: uncomment once Wine is fixed */ {
     check_menu_items(hmenu, 207, MF_SEPARATOR, MFS_GRAYED);
 }
     DestroyMenu(hmenu);

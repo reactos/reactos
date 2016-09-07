@@ -8252,6 +8252,12 @@ static LRESULT MsgCheckProc (BOOL unicode, HWND hwnd, UINT message,
         return 0;
     }
 
+    if (message == WM_CONTEXTMENU)
+    {
+        /* don't create context menu */
+        return 0;
+    }
+
     defwndproc_counter++;
     ret = unicode ? DefWindowProcW(hwnd, message, wParam, lParam) 
 		  : DefWindowProcA(hwnd, message, wParam, lParam);
@@ -13968,13 +13974,46 @@ static void test_paintingloop(void)
     DestroyWindow(hwnd);
 }
 
+static const struct message NCRBUTTONDOWNSeq[] =
+{
+    { EVENT_SYSTEM_CAPTURESTART, winevent_hook|wparam|lparam, 0, 0 },
+    { EVENT_SYSTEM_CAPTUREEND, winevent_hook|wparam|lparam, 0, 0 },
+    { WM_CAPTURECHANGED, sent },
+    { WM_CONTEXTMENU, sent, /*hwnd*/0, -1 },
+    { 0 }
+};
+
 static void test_defwinproc(void)
 {
     HWND hwnd;
     MSG msg;
     BOOL gotwmquit = FALSE;
-    hwnd = CreateWindowExA(0, "static", "test_defwndproc", WS_POPUP, 0,0,0,0,0,0,0, NULL);
+    POINT pos;
+    RECT rect;
+    INT x, y;
+    LRESULT res;
+
+    hwnd = CreateWindowExA(0, "TestWindowClass", "test_defwndproc",
+            WS_VISIBLE | WS_CAPTION | WS_OVERLAPPEDWINDOW, 0,0,500,100,0,0,0, NULL);
     assert(hwnd);
+    flush_events();
+
+    GetCursorPos(&pos);
+    GetWindowRect(hwnd, &rect);
+    x = (rect.left+rect.right) / 2;
+    y = rect.top + GetSystemMetrics(SM_CYFRAME) + 1;
+    SetCursorPos(x, y);
+    flush_events();
+    res = DefWindowProcA( hwnd, WM_NCHITTEST, 0, MAKELPARAM(x, y));
+    ok(res == HTCAPTION, "WM_NCHITTEST returned %ld\n", res);
+
+    flush_sequence();
+    PostMessageA( hwnd, WM_RBUTTONUP, 0, 0);
+    DefWindowProcA( hwnd, WM_NCRBUTTONDOWN, HTCAPTION, MAKELPARAM(x, y));
+    ok_sequence(NCRBUTTONDOWNSeq, "WM_NCRBUTTONDOWN on caption", FALSE);
+
+    SetCursorPos(pos.x, pos.y);
+
     DefWindowProcA( hwnd, WM_ENDSESSION, 1, 0);
     while (PeekMessageA( &msg, 0, 0, 0, PM_REMOVE )) {
         if( msg.message == WM_QUIT) gotwmquit = TRUE;
@@ -14108,7 +14147,7 @@ static void test_clipboard_viewers(void)
     expect_HWND(hWnd1, GetClipboardViewer());
 
     ChangeClipboardChain(NULL, hWnd2);
-    ok_sequence(WmEmptySeq, "change chain (viewer=1, remove=NULL, next=2)", TRUE);
+    ok_sequence(WmEmptySeq, "change chain (viewer=1, remove=NULL, next=2)", FALSE);
     expect_HWND(hWnd1, GetClipboardViewer());
 
     /* Actually change clipboard viewer with ChangeClipboardChain. */
@@ -15868,6 +15907,98 @@ todo_wine_if (thread_n == 2)
     flush_sequence();
 }
 
+static LRESULT CALLBACK insendmessage_wnd_proc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
+{
+    DWORD flags = InSendMessageEx( NULL );
+    BOOL ret;
+
+    switch (msg)
+    {
+    case WM_USER:
+        ok( flags == ISMEX_SEND, "wrong flags %x\n", flags );
+        ok( InSendMessage(), "InSendMessage returned false\n" );
+        ret = ReplyMessage( msg );
+        ok( ret, "ReplyMessage failed err %u\n", GetLastError() );
+        flags = InSendMessageEx( NULL );
+        ok( flags == (ISMEX_SEND | ISMEX_REPLIED), "wrong flags %x\n", flags );
+        ok( InSendMessage(), "InSendMessage returned false\n" );
+        break;
+    case WM_USER + 1:
+        ok( flags == ISMEX_NOTIFY, "wrong flags %x\n", flags );
+        ok( InSendMessage(), "InSendMessage returned false\n" );
+        ret = ReplyMessage( msg );
+        ok( ret, "ReplyMessage failed err %u\n", GetLastError() );
+        flags = InSendMessageEx( NULL );
+        ok( flags == ISMEX_NOTIFY, "wrong flags %x\n", flags );
+        ok( InSendMessage(), "InSendMessage returned false\n" );
+        break;
+    case WM_USER + 2:
+        ok( flags == ISMEX_CALLBACK, "wrong flags %x\n", flags );
+        ok( InSendMessage(), "InSendMessage returned false\n" );
+        ret = ReplyMessage( msg );
+        ok( ret, "ReplyMessage failed err %u\n", GetLastError() );
+        flags = InSendMessageEx( NULL );
+        ok( flags == (ISMEX_CALLBACK | ISMEX_REPLIED) || flags == ISMEX_SEND, "wrong flags %x\n", flags );
+        ok( InSendMessage(), "InSendMessage returned false\n" );
+        break;
+    case WM_USER + 3:
+        ok( flags == ISMEX_NOSEND, "wrong flags %x\n", flags );
+        ok( !InSendMessage(), "InSendMessage returned true\n" );
+        ret = ReplyMessage( msg );
+        ok( !ret, "ReplyMessage succeeded\n" );
+        break;
+    }
+
+    return DefWindowProcA( hwnd, msg, wp, lp );
+}
+
+static void CALLBACK msg_callback( HWND hwnd, UINT msg, ULONG_PTR arg, LRESULT result )
+{
+    ok( msg == WM_USER + 2, "wrong msg %x\n", msg );
+    ok( result == WM_USER + 2, "wrong result %lx\n", result );
+}
+
+static DWORD WINAPI send_message_thread( void *arg )
+{
+    HWND win = arg;
+
+    SendMessageA( win, WM_USER, 0, 0 );
+    SendNotifyMessageA( win, WM_USER + 1, 0, 0 );
+    SendMessageCallbackA( win, WM_USER + 2, 0, 0, msg_callback, 0 );
+    PostMessageA( win, WM_USER + 3, 0, 0 );
+    PostMessageA( win, WM_QUIT, 0, 0 );
+    return 0;
+}
+
+static void test_InSendMessage(void)
+{
+    WNDCLASSA cls;
+    HWND win;
+    MSG msg;
+    HANDLE thread;
+    DWORD tid;
+
+    memset(&cls, 0, sizeof(cls));
+    cls.lpfnWndProc = insendmessage_wnd_proc;
+    cls.hInstance = GetModuleHandleA(NULL);
+    cls.lpszClassName = "InSendMessage_test";
+    RegisterClassA(&cls);
+
+    win = CreateWindowA( "InSendMessage_test", NULL, 0, 0, 0, 0, 0, NULL, 0, NULL, 0 );
+    ok( win != NULL, "CreateWindow failed: %d\n", GetLastError() );
+
+    thread = CreateThread( NULL, 0, send_message_thread, win, 0, &tid );
+    ok( thread != NULL, "CreateThread failed: %d\n", GetLastError() );
+
+    while (GetMessageA(&msg, NULL, 0, 0)) DispatchMessageA( &msg );
+
+    ok( WaitForSingleObject( thread, 30000 ) == WAIT_OBJECT_0, "WaitForSingleObject failed\n" );
+    CloseHandle( thread );
+
+    DestroyWindow( win );
+    UnregisterClassA( "InSendMessage_test", GetModuleHandleA(NULL) );
+}
+
 static const struct message DoubleSetCaptureSeq[] =
 {
     { WM_CAPTURECHANGED, sent },
@@ -15977,6 +16108,7 @@ START_TEST(msg)
 
     test_SendMessage_other_thread(1);
     test_SendMessage_other_thread(2);
+    test_InSendMessage();
     test_SetFocus();
     test_SetParent();
     test_PostMessage();
@@ -16036,13 +16168,8 @@ START_TEST(msg)
     test_keyflags();
     test_hotkey();
     test_layered_window();
-    if(!winetest_interactive)
-       skip("CORE-8299 : Skip Tracking popup menu tests.\n");
-    else
-    {
     test_TrackPopupMenu();
     test_TrackPopupMenuEmpty();
-    }
     test_DoubleSetCapture();
     /* keep it the last test, under Windows it tends to break the tests
      * which rely on active/foreground windows being correct.
@@ -16125,6 +16252,7 @@ START_TEST(msg_queue)
     init_tests();
     test_SendMessage_other_thread(1);
     test_SendMessage_other_thread(2);
+    test_InSendMessage();
     test_PostMessage();
     test_broadcast();
     test_PeekMessage();

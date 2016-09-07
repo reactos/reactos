@@ -2511,12 +2511,6 @@ static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV
                 ok(!lstrcmpW((WCHAR*)buffer, cmd_w),
                    "Expected %s, msg_index=%d\n", wine_dbgstr_w(cmd_w), msg_index);
             }
-            else if (unicode_client)
-            {
-                ok(size == size_w_to_a, "Wrong size %d/%d, msg_index=%d\n", size, size_w_to_a, msg_index);
-                ok(!lstrcmpA((CHAR*)buffer, test_cmd_w_to_a), "Expected %s, got %s, msg_index=%d\n",
-                   test_cmd_w_to_a, buffer, msg_index);
-            }
             else
             {
                 ok(size == size_w_to_a, "Wrong size %d/%d, msg_index=%d\n",
