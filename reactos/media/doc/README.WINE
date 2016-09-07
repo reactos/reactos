@@ -287,6 +287,7 @@ kernel32 -
   reactos/dll/win32/kernel32/winnls/string/sortkey.c     # Synced to WineStaging-1.9.16
 
 msvcrt -
+  reactos/sdk/lib/crt/conio/cputs.c             # Synced to WineStaging-1.9.16
   reactos/sdk/lib/crt/except/cpp.c              # Synced at 20080528
   reactos/sdk/lib/crt/except/cppexcept.c        # Synced at 20071111
   reactos/sdk/lib/crt/process/_cwait.c          # Synced to WineStaging-1.7.37
