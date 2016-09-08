@@ -34,6 +34,7 @@ typedef struct _PATH
   int          numEntriesUsed;
   int          numEntriesAllocated;
   BOOL         newStroke;
+  POINT        pos;
 } PATH, *PPATH;
 
 typedef struct _EPATHOBJ
@@ -50,15 +51,13 @@ typedef struct _EPATHOBJ
 
 #define PATH_IsPathOpen(dclevel) ( ((dclevel).hPath) && ((dclevel).flPath & DCPATH_ACTIVE) )
 
-BOOL FASTCALL PATH_Arc (PDC dc, INT x1, INT y1, INT x2, INT y2, INT xStart, INT yStart, INT xEnd, INT yEnd, INT lines);
+BOOL FASTCALL PATH_Arc (PDC dc, INT x1, INT y1, INT x2, INT y2, INT xStart, INT yStart, INT xEnd, INT yEnd, INT direction, INT lines);
 BOOL FASTCALL PATH_Ellipse (PDC dc, INT x1, INT y1, INT x2, INT y2);
 VOID FASTCALL PATH_EmptyPath (PPATH pPath);
 BOOL FASTCALL PATH_LineTo (PDC dc, INT x, INT y);
 BOOL FASTCALL PATH_PolyBezier (PDC dc, const POINT *pts, DWORD cbPoints);
 BOOL FASTCALL PATH_PolyBezierTo (PDC dc, const POINT *pts, DWORD cbPoints);
 BOOL FASTCALL PATH_PolyDraw(PDC dc, const POINT *pts, const BYTE *types, DWORD cbPoints);
-BOOL FASTCALL PATH_Polygon (PDC dc, const POINT *pts, DWORD cbPoints);
-BOOL FASTCALL PATH_Polyline (PDC dc, const POINT *pts, DWORD cbPoints);
 BOOL FASTCALL PATH_PolylineTo (PDC dc, const POINT *pts, DWORD cbPoints);
 BOOL FASTCALL PATH_PolyPolygon ( PDC dc, const POINT* pts, const INT* counts, UINT polygons);
 BOOL FASTCALL PATH_PolyPolyline( PDC dc, const POINT* pts, const DWORD* counts, DWORD polylines);
@@ -71,7 +70,7 @@ BOOL FASTCALL PATH_AddEntry (PPATH pPath, const POINT *pPoint, BYTE flags);
 BOOL FASTCALL PATH_AddFlatBezier (PPATH pPath, POINT *pt, BOOL closed);
 BOOL FASTCALL PATH_DoArcPart (PPATH pPath, FLOAT_POINT corners[], double angleStart, double angleEnd, BYTE startEntryType);
 BOOL FASTCALL PATH_FillPath( PDC dc, PPATH pPath );
-BOOL FASTCALL PATH_FlattenPath (PPATH pPath);
+PPATH FASTCALL PATH_FlattenPath (PPATH pPath);
 VOID FASTCALL PATH_NormalizePoint (FLOAT_POINT corners[], const FLOAT_POINT *pPoint, double *pX, double *pY);
 
 BOOL FASTCALL PATH_ReserveEntries (PPATH pPath, INT numEntries);
@@ -83,3 +82,6 @@ VOID FASTCALL IntGdiCloseFigure(PPATH pPath);
 BOOL FASTCALL PATH_Delete(HPATH hPath);
 
 VOID FASTCALL IntGetCurrentPositionEx(PDC dc, LPPOINT pt);
+
+BOOL PATH_RestorePath( DC *, DC *);
+BOOL PATH_SavePath( DC *, DC *);

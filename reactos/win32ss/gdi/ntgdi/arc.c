@@ -211,6 +211,7 @@ IntGdiArcInternal(
                YStartArc,
                  XEndArc,
                  YEndArc,
+                       0,
                  arctype);
   }
 

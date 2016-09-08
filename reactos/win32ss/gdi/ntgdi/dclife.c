@@ -387,8 +387,13 @@ DC_vCleanup(PVOID ObjectBody)
     /* Free CLIPOBJ resources */
     IntEngFreeClipResources(&pdc->co);
 
-    PATH_Delete(pdc->dclevel.hPath);
-
+    if (pdc->dclevel.hPath)
+    {
+       DPRINT("DC_vCleanup Path\n");
+       PATH_Delete(pdc->dclevel.hPath);
+       pdc->dclevel.hPath = 0;
+       pdc->dclevel.flPath = 0;
+    }
     if(pdc->dclevel.pSurface)
         SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
 

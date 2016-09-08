@@ -496,7 +496,7 @@ NtGdiSelectClipPath(
     int Mode)
 {
     PREGION  RgnPath;
-    PPATH pPath;
+    PPATH pPath, pNewPath;
     BOOL  success = FALSE;
     PDC_ATTR pdcattr;
     PDC pdc;
@@ -520,8 +520,8 @@ NtGdiSelectClipPath(
     if (pPath->state != PATH_Closed)
     {
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
-        DC_UnlockDc(pdc);
-        return FALSE;
+        success = FALSE;
+        goto Exit;
     }
 
     /* Construct a region from the path */
@@ -533,24 +533,23 @@ NtGdiSelectClipPath(
         return FALSE;
     }
 
-    if (!PATH_PathToRegion(pPath, pdcattr->jFillMode, RgnPath))
-    {
-        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
-        REGION_Delete(RgnPath);
-        DC_UnlockDc(pdc);
-        return FALSE;
-    }
+    pNewPath = PATH_FlattenPath(pPath);
 
-    success = IntGdiExtSelectClipRgn(pdc, RgnPath, Mode) != ERROR;
+    success = PATH_PathToRegion(pNewPath, pdcattr->jFillMode, RgnPath);
+
+    PATH_UnlockPath(pNewPath);
+    PATH_Delete(pNewPath->BaseObject.hHmgr);
+
+    if (success) success = IntGdiExtSelectClipRgn(pdc, RgnPath, Mode) != ERROR;
+
     REGION_Delete(RgnPath);
 
-    /* Empty the path */
-    if (success)
-        PATH_EmptyPath(pPath);
-
-    /* FIXME: Should this function delete the path even if it failed? */
-
+Exit:
     PATH_UnlockPath(pPath);
+    PATH_Delete(pdc->dclevel.hPath);
+    pdc->dclevel.flPath &= ~DCPATH_ACTIVE;
+    pdc->dclevel.hPath = NULL;
+
     DC_UnlockDc(pdc);
 
     return success;
