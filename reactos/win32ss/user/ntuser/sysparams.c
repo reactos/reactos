@@ -304,6 +304,14 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.bScrSaverSecure = FALSE;
 #endif
 
+    gspv.accesstimeout.cbSize = sizeof(ACCESSTIMEOUT);
+    gspv.filterkeys.cbSize = sizeof(FILTERKEYS);
+    gspv.togglekeys.cbSize = sizeof(TOGGLEKEYS);
+    gspv.mousekeys.cbSize = sizeof(MOUSEKEYS);
+    gspv.stickykeys.cbSize = sizeof(STICKYKEYS);
+    gspv.serialkeys.cbSize = sizeof(SERIALKEYS);
+    gspv.soundsentry.cbSize = sizeof(SOUNDSENTRY);
+
     /* Make sure we don't use broken values */
     SpiFixupValues();
 
@@ -438,7 +446,7 @@ SpiMemCopy(PVOID pvDst, PVOID pvSrc, ULONG cbSize, BOOL bProtect, BOOL bToUser)
         {
             Status = _SEH2_GetExceptionCode();
         }
-        _SEH2_END
+        _SEH2_END;
     }
     else
     {
@@ -880,7 +888,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             if (fl & SPIF_UPDATEINIFILE)
             {
                 SpiStoreFont(L"IconFont", &gspv.im.lfFont);
-             }
+            }
             return (UINT_PTR)KEY_METRIC;
 
         case SPI_SETDOUBLECLICKTIME:
@@ -894,7 +902,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_SETFASTTASKSWITCH:
             /* According to Winetest this one is unimplemented */
-            return 0;
+            return 1;
 
         case SPI_GETDRAGFULLWINDOWS:
             return SpiGetInt(pvParam, &gspv.bDragFullWindows, fl);
@@ -1011,9 +1019,28 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             break;
 
         case SPI_GETFILTERKEYS:
+        {
+            LPFILTERKEYS FilterKeys = (LPFILTERKEYS)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(FILTERKEYS))
+                return 0;
+
+            if (!FilterKeys || FilterKeys->cbSize != sizeof(FILTERKEYS))
+                return 0;
+
             return SpiGet(pvParam, &gspv.filterkeys, sizeof(FILTERKEYS), fl);
+        }
 
         case SPI_SETFILTERKEYS:
+        {
+            LPFILTERKEYS FilterKeys = (LPFILTERKEYS)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(FILTERKEYS))
+                return 0;
+
+            if (!FilterKeys || FilterKeys->cbSize != sizeof(FILTERKEYS))
+                return 0;
+
             if (!SpiSet(&gspv.filterkeys, pvParam, sizeof(FILTERKEYS), fl))
                 return 0;
             if (fl & SPIF_UPDATEINIFILE)
@@ -1021,30 +1048,73 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
+        }
 
         case SPI_GETTOGGLEKEYS:
+        {
+            LPTOGGLEKEYS ToggleKeys = (LPTOGGLEKEYS)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(TOGGLEKEYS))
+                return 0;
+
+            if (!ToggleKeys || ToggleKeys->cbSize != sizeof(TOGGLEKEYS))
+                return 0;
+
             return SpiGet(pvParam, &gspv.togglekeys, sizeof(TOGGLEKEYS), fl);
+        }
 
         case SPI_SETTOGGLEKEYS:
+        {
+            LPTOGGLEKEYS ToggleKeys = (LPTOGGLEKEYS)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(TOGGLEKEYS))
+                return 0;
+
+            if (!ToggleKeys || ToggleKeys->cbSize != sizeof(TOGGLEKEYS))
+                return 0;
+
             if (!SpiSet(&gspv.togglekeys, pvParam, sizeof(TOGGLEKEYS), fl))
                 return 0;
+
             if (fl & SPIF_UPDATEINIFILE)
             {
                 // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
+        }
 
         case SPI_GETMOUSEKEYS:
+        {
+            LPMOUSEKEYS MouseKeys = (LPMOUSEKEYS)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(MOUSEKEYS))
+                return 0;
+
+            if (!MouseKeys || MouseKeys->cbSize != sizeof(MOUSEKEYS))
+                return 0;
+
             return SpiGet(pvParam, &gspv.mousekeys, sizeof(MOUSEKEYS), fl);
+        }
 
         case SPI_SETMOUSEKEYS:
+        {
+            LPMOUSEKEYS MouseKeys = (LPMOUSEKEYS)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(MOUSEKEYS))
+                return 0;
+
+            if (!MouseKeys || MouseKeys->cbSize != sizeof(MOUSEKEYS))
+                return 0;
+
             if (!SpiSet(&gspv.mousekeys, pvParam, sizeof(MOUSEKEYS), fl))
                 return 0;
+
             if (fl & SPIF_UPDATEINIFILE)
             {
                 // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
+        }
 
         case SPI_GETSHOWSOUNDS:
             return SpiGetInt(pvParam, &gspv.bShowSounds, fl);
@@ -1053,56 +1123,140 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiSetBool(&gspv.bShowSounds, uiParam, KEY_SHOWSNDS, VAL_ON, fl);
 
         case SPI_GETSTICKYKEYS:
+        {
+            LPSTICKYKEYS StickyKeys = (LPSTICKYKEYS)pvParam;
+
             if (uiParam != 0 && uiParam != sizeof(STICKYKEYS))
                 return 0;
+
+            if (!StickyKeys || StickyKeys->cbSize != sizeof(STICKYKEYS))
+                return 0;
+
             return SpiGetEx(pvParam, &gspv.stickykeys, sizeof(STICKYKEYS), fl);
+        }
 
         case SPI_SETSTICKYKEYS:
+        {
+            LPSTICKYKEYS StickyKeys = (LPSTICKYKEYS)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(STICKYKEYS))
+                return 0;
+
+            if (!StickyKeys || StickyKeys->cbSize != sizeof(STICKYKEYS))
+                return 0;
+
             if (!SpiSet(&gspv.stickykeys, pvParam, sizeof(STICKYKEYS), fl))
                 return 0;
+
             if (fl & SPIF_UPDATEINIFILE)
             {
                 // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
+        }
 
         case SPI_GETACCESSTIMEOUT:
+        {
+            LPACCESSTIMEOUT AccessTimeout = (LPACCESSTIMEOUT)pvParam;
+
             if (uiParam != 0 && uiParam != sizeof(ACCESSTIMEOUT))
                 return 0;
+
+            if (!AccessTimeout || AccessTimeout->cbSize != sizeof(ACCESSTIMEOUT))
+                return 0;
+
             return SpiGetEx(pvParam, &gspv.accesstimeout, sizeof(ACCESSTIMEOUT), fl);
+        }
 
         case SPI_SETACCESSTIMEOUT:
+        {
+            LPACCESSTIMEOUT AccessTimeout = (LPACCESSTIMEOUT)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(ACCESSTIMEOUT))
+            {
+                return 0;
+            }
+
+            if (!AccessTimeout || AccessTimeout->cbSize != sizeof(ACCESSTIMEOUT))
+            {
+                return 0;
+            }
+
             if (!SpiSet(&gspv.accesstimeout, pvParam, sizeof(ACCESSTIMEOUT), fl))
                 return 0;
+
             if (fl & SPIF_UPDATEINIFILE)
             {
                 // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
+        }
 
         case SPI_GETSERIALKEYS:
+        {
+            LPSERIALKEYS SerialKeys = (LPSERIALKEYS)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(SERIALKEYS))
+                return 0;
+
+            if (!SerialKeys || SerialKeys->cbSize != sizeof(SERIALKEYS))
+                return 0;
+
             return SpiGet(pvParam, &gspv.serialkeys, sizeof(SERIALKEYS), fl);
+        }
 
         case SPI_SETSERIALKEYS:
+        {
+            LPSERIALKEYS SerialKeys = (LPSERIALKEYS)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(SERIALKEYS))
+                return 0;
+
+            if (!SerialKeys || SerialKeys->cbSize != sizeof(SERIALKEYS))
+                return 0;
+
             if (!SpiSet(&gspv.serialkeys, pvParam, sizeof(SERIALKEYS), fl))
                 return 0;
+
             if (fl & SPIF_UPDATEINIFILE)
             {
                 // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
+        }
 
         case SPI_GETSOUNDSENTRY:
+        {
+            LPSOUNDSENTRY SoundsEntry = (LPSOUNDSENTRY)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(SOUNDSENTRY))
+                return 0;
+
+            if (!SoundsEntry || SoundsEntry->cbSize != sizeof(SOUNDSENTRY))
+                return 0;
+
             return SpiGet(pvParam, &gspv.soundsentry, sizeof(SOUNDSENTRY), fl);
+        }
 
         case SPI_SETSOUNDSENTRY:
+        {
+            LPSOUNDSENTRY SoundsEntry = (LPSOUNDSENTRY)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(SOUNDSENTRY))
+                return 0;
+
+            if (!SoundsEntry || SoundsEntry->cbSize != sizeof(SOUNDSENTRY))
+                return 0;
+
             if (!SpiSet(&gspv.soundsentry, pvParam, sizeof(SOUNDSENTRY), fl))
                 return 0;
+
             if (fl & SPIF_UPDATEINIFILE)
             {
                 // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
+        }
 
         case SPI_GETHIGHCONTRAST:
             return SpiGet(pvParam, &gspv.highcontrast, sizeof(HIGHCONTRAST), fl);
