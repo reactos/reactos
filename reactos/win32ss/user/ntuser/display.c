@@ -572,8 +572,28 @@ NtUserEnumDisplaySettings(
     TRACE("Enter NtUserEnumDisplaySettings(%wZ, %lu, %p, 0x%lx)\n",
           pustrDevice, iModeNum, lpDevMode, dwFlags);
 
+    _SEH2_TRY
+    {
+        ProbeForWrite(lpDevMode, sizeof(DEVMODEW), 1);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END
+
+    if (lpDevMode->dmSize != sizeof(DEVMODEW))
+    {
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
     if (pustrDevice)
     {
+       if (pustrDevice->Buffer == NULL || pustrDevice->Length == 0)
+       {
+           Status = STATUS_INVALID_PARAMETER_1;
+       }
+
         /* Initialize destination string */
         RtlInitEmptyUnicodeString(&ustrDevice, awcDevice, sizeof(awcDevice));
 
@@ -647,10 +667,16 @@ NtUserEnumDisplaySettings(
         }
         _SEH2_END;
     }
+    else
+    {
+        if (Status == STATUS_UNSUCCESSFUL)
+        {
+            Status = STATUS_INVALID_PARAMETER_1;
+        }
+    }
 
     return Status;
 }
-
 VOID
 UserUpdateFullscreen(
     DWORD flags)
