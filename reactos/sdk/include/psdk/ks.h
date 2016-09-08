@@ -3823,6 +3823,14 @@ NTAPI
 KsPinGetNextSiblingPin(
   _In_ PKSPIN Pin);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+PKSSTREAM_POINTER
+NTAPI
+KsPinGetLeadingEdgeStreamPointer(
+  _In_ PKSPIN Pin,
+  _In_ KSSTREAM_POINTER_STATE State);
+
 /* Does this belong here? */
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -4179,6 +4187,14 @@ KsStreamIo(
   _In_ ULONG Length,
   _In_ ULONG Flags,
   _In_ KPROCESSOR_MODE RequestorMode);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsStreamPointerUnlock(
+  _In_ PKSSTREAM_POINTER StreamPointer,
+  _In_ BOOLEAN Eject);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
