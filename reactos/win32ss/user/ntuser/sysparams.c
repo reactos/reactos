@@ -1053,7 +1053,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiSetBool(&gspv.bShowSounds, uiParam, KEY_SHOWSNDS, VAL_ON, fl);
 
         case SPI_GETSTICKYKEYS:
-            if (uiParam != sizeof(STICKYKEYS))
+            if (uiParam != 0 && uiParam != sizeof(STICKYKEYS))
                 return 0;
             return SpiGetEx(pvParam, &gspv.stickykeys, sizeof(STICKYKEYS), fl);
 
