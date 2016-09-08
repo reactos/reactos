@@ -1761,9 +1761,7 @@ static void test_data_handles(void)
     format_id = RegisterClipboardFormatA( "my_cool_clipboard_format" );
     test_handles( 0 );
     test_handles( GetDesktopWindow() );
-#ifndef __REACTOS__ /* CORE-11953 */
     test_handles( hwnd );
-#endif
     run_thread( test_handles_thread, hwnd, __LINE__ );
 
     bitmap = CreateBitmap( 10, 10, 1, 1, NULL );
