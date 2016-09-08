@@ -4190,7 +4190,7 @@ KsStreamIo(
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 KSDDKAPI
-NTSTATUS
+VOID
 NTAPI
 KsStreamPointerUnlock(
   _In_ PKSSTREAM_POINTER StreamPointer,
