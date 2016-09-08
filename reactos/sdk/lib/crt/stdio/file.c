@@ -108,7 +108,7 @@ static char utf16_bom[2] = { 0xff, 0xfe };
 
 /* FIXME: this should be allocated dynamically */
 #define MSVCRT_MAX_FILES 2048
-#define MSVCRT_FD_BLOCK_SIZE 64
+#define MSVCRT_FD_BLOCK_SIZE 32
 
 #define MSVCRT_INTERNAL_BUFSIZ 4096
 
@@ -123,7 +123,7 @@ typedef struct {
 
 /*********************************************************************
  *		__pioinfo (MSVCRT.@)
- * array of pointers to ioinfo arrays [64]
+ * array of pointers to ioinfo arrays [32]
  */
 ioinfo * __pioinfo[MSVCRT_MAX_FILES/MSVCRT_FD_BLOCK_SIZE] = { 0 };
 
