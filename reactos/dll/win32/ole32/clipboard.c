@@ -2001,6 +2001,10 @@ static LRESULT CALLBACK clipbrd_wndproc(HWND hwnd, UINT message, WPARAM wparam, 
     ole_clipbrd *clipbrd;
 
     get_ole_clipbrd(&clipbrd);
+#ifdef __REACTOS__
+    if(clipbrd == NULL)
+        return DefWindowProcW(hwnd, message, wparam, lparam);
+#endif
 
     switch (message)
     {
