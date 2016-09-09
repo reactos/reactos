@@ -2559,7 +2559,6 @@ NtGdiFillPath(HDC  hDC)
     if (pNewPath->state != PATH_Closed)
     {
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
-        ret = FALSE;
     }
     else if (pNewPath->numEntriesUsed)
     {
@@ -2883,7 +2882,6 @@ NtGdiStrokeAndFillPath(HDC hDC)
     if (pNewPath->state != PATH_Closed)
     {
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
-        bRet = FALSE;
     }
     else if (pNewPath->numEntriesUsed)
     {
@@ -2941,7 +2939,6 @@ NtGdiStrokePath(HDC hDC)
     if (pNewPath->state != PATH_Closed)
     {
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
-        bRet = FALSE;
     }
     else bRet = PATH_StrokePath(pDc, pNewPath);
 
