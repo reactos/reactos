@@ -1995,7 +1995,7 @@ UserDrawCaptionText(
    TRACE("UserDrawCaptionText: %wZ\n", Text);
 
    nclm.cbSize = sizeof(nclm);
-   if(!UserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &nclm, 0))
+   if (!UserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, nclm.cbSize, &nclm, 0))
    {
       ERR("UserSystemParametersInfo() failed!\n");
       return FALSE;
