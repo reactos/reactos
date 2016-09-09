@@ -436,8 +436,8 @@ PATH_CheckCorners(
     /* In GM_COMPATIBLE, don't include bottom and right edges */
     if (pdcattr->iGraphicsMode == GM_COMPATIBLE)
     {
-        if (corners[0].x == corners[1].x) {DPRINT1("PATH_CheckCorners GM_COMPATIBLE x\n"); return FALSE;}
-        if (corners[0].y == corners[1].y) {DPRINT1("PATH_CheckCorners GM_COMPATIBLE y\n"); return FALSE;}
+        if (corners[0].x == corners[1].x) return FALSE;
+        if (corners[0].y == corners[1].y) return FALSE;
         corners[1].x--;
         corners[1].y--;
     }
@@ -773,7 +773,6 @@ PATH_Ellipse(
 
     if (!PATH_CheckCorners(dc, corners, x1, y1, x2, y2))
     {
-        DPRINT1("PATH_Ellipse bad corners\n");
         PATH_UnlockPath(pPath);
         return TRUE;
     }
@@ -1466,13 +1465,6 @@ PATH_FillPath(
     PREGION  Rgn;
     PDC_ATTR pdcattr = dc->pdcattr;
 
-    if (pPath->state != PATH_Closed)
-    {
-        DPRINT("PFP : path not closed\n");
-        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
-        return FALSE;
-    }
-
     /* Allocate a temporary region */
     Rgn = IntSysCreateRectpRgn(0, 0, 0, 0);
     if (!Rgn)
@@ -1559,9 +1551,6 @@ PATH_StrokePath(
     PDC_ATTR pdcattr = dc->pdcattr;
 
     DPRINT("Enter %s\n", __FUNCTION__);
-
-    if (pPath->state != PATH_Closed)
-        return FALSE;
 
     /* Save the mapping mode info */
     mapMode = pdcattr->iMapMode;
@@ -2567,7 +2556,16 @@ NtGdiFillPath(HDC  hDC)
 
     pNewPath = PATH_FlattenPath(pPath);
 
-    ret = PATH_FillPath(dc, pNewPath);
+    if (pNewPath->state != PATH_Closed)
+    {
+        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
+        ret = FALSE;
+    }
+    else if (pNewPath->numEntriesUsed)
+    {
+       ret = PATH_FillPath(dc, pNewPath);
+    }
+    else ret = TRUE;
 
     PATH_UnlockPath(pNewPath);
     PATH_Delete(pNewPath->BaseObject.hHmgr);
@@ -2882,8 +2880,17 @@ NtGdiStrokeAndFillPath(HDC hDC)
 
     pNewPath = PATH_FlattenPath(pPath);
 
-    bRet = PATH_FillPath(pDc, pNewPath);
-    if (bRet) bRet = PATH_StrokePath(pDc, pNewPath);
+    if (pNewPath->state != PATH_Closed)
+    {
+        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
+        bRet = FALSE;
+    }
+    else if (pNewPath->numEntriesUsed)
+    {
+       bRet = PATH_FillPath(pDc, pNewPath);
+       if (bRet) bRet = PATH_StrokePath(pDc, pNewPath);
+    }
+    else bRet = TRUE;
 
     PATH_UnlockPath(pNewPath);
     PATH_Delete(pNewPath->BaseObject.hHmgr);
@@ -2904,7 +2911,7 @@ NtGdiStrokePath(HDC hDC)
 {
     DC *pDc;
     PDC_ATTR pdcattr;
-    PPATH pPath;
+    PPATH pPath, pNewPath;
     BOOL bRet = FALSE;
 
     DPRINT("Enter %s\n", __FUNCTION__);
@@ -2929,7 +2936,17 @@ NtGdiStrokePath(HDC hDC)
     if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
         DC_vUpdateLineBrush(pDc);
 
-    bRet = PATH_StrokePath(pDc, pPath);
+    pNewPath = PATH_FlattenPath(pPath);
+
+    if (pNewPath->state != PATH_Closed)
+    {
+        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
+        bRet = FALSE;
+    }
+    else bRet = PATH_StrokePath(pDc, pNewPath);
+
+    PATH_UnlockPath(pNewPath);
+    PATH_Delete(pNewPath->BaseObject.hHmgr);
 
     DC_vFinishBlit(pDc, NULL);
 
