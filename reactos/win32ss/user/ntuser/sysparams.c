@@ -1013,15 +1013,15 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_SETICONMETRICS:
         {
-            LPICONMETRICS IconMetrics = (LPICONMETRICS)pvParam;
+            LPICONMETRICSW IconMetrics = (LPICONMETRICSW)pvParam;
 
-            if (uiParam != 0 && uiParam != sizeof(ICONMETRICS))
+            if (uiParam != 0 && uiParam != sizeof(ICONMETRICSW))
                 return 0;
 
-            if (!IconMetrics || IconMetrics->cbSize != sizeof(ICONMETRICS))
+            if (!IconMetrics || IconMetrics->cbSize != sizeof(ICONMETRICSW))
                 return 0;
 
-            if (!SpiSet(&gspv.im, pvParam, sizeof(ICONMETRICS), fl))
+            if (!SpiSet(&gspv.im, pvParam, sizeof(ICONMETRICSW), fl))
                 return 0;
 
             if (fl & SPIF_UPDATEINIFILE)
@@ -1955,7 +1955,7 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
             break;
 
         case SPI_SETICONMETRICS:
-            cbSize = sizeof(ICONMETRICS);
+            cbSize = sizeof(ICONMETRICSW);
             bToUser = FALSE;
             break;
 
