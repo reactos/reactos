@@ -742,9 +742,9 @@ Test_SPI_SETNONCLIENTMETRICS(void)
     NONCLIENTMETRICSW metrics;
 
     metrics.cbSize = sizeof(NONCLIENTMETRICSW);
-    TEST(NtUserSystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(NONCLIENTMETRICSW), &metrics, 0) == 1);
-    TEST(NtUserSystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(NONCLIENTMETRICSW) + 1, &metrics, 0) == 0);
-    TEST(NtUserSystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(NONCLIENTMETRICSW), (PVOID)0xdeadbeef, 0) == 0);
+    TEST(NtUserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), &metrics, 0) == 1);
+    TEST(NtUserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW) + 1, &metrics, 0) == 0);
+    TEST(NtUserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), (PVOID)0xdeadbeef, 0) == 0);
 }
 
 void
@@ -753,20 +753,20 @@ Test_SPI_SETMINIMIZEDMETRICS(void)
     MINIMIZEDMETRICS metrics;
 
     metrics.cbSize = sizeof(MINIMIZEDMETRICS);
-    TEST(NtUserSystemParametersInfo(SPI_GETICONMETRICS, sizeof(MINIMIZEDMETRICS), (PVOID)&metrics, 0) == 1);
-    TEST(NtUserSystemParametersInfo(SPI_GETICONMETRICS, sizeof(MINIMIZEDMETRICS) + 1, (PVOID)&metrics, 0) == 0);
-    TEST(NtUserSystemParametersInfo(SPI_GETICONMETRICS, sizeof(MINIMIZEDMETRICS), (PVOID)0xdeadbeef, 0) == 0);
+    TEST(NtUserSystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(MINIMIZEDMETRICS), (PVOID)&metrics, 0) == 1);
+    TEST(NtUserSystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(MINIMIZEDMETRICS) + 1, (PVOID)&metrics, 0) == 0);
+    TEST(NtUserSystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(MINIMIZEDMETRICS), (PVOID)0xdeadbeef, 0) == 0);
 }
 
 void
 Test_SPI_SETICONMETRICS(void)
 {
-    ICONMETRICS metrics;
+    ICONMETRICSW metrics;
 
-    metrics.cbSize = sizeof(ICONMETRICS);
-    TEST(NtUserSystemParametersInfo(SPI_GETICONMETRICS, sizeof(ICONMETRICS), (PVOID)&metrics, 0) == 1);
-    TEST(NtUserSystemParametersInfo(SPI_GETICONMETRICS, sizeof(ICONMETRICS) + 1, (PVOID)&metrics, 0) == 0);
-    TEST(NtUserSystemParametersInfo(SPI_GETICONMETRICS, sizeof(ICONMETRICS), (PVOID)0xdeadbeef, 0) == 0);
+    metrics.cbSize = sizeof(ICONMETRICSW);
+    TEST(NtUserSystemParametersInfo(SPI_GETICONMETRICS, sizeof(ICONMETRICSW), (PVOID)&metrics, 0) == 1);
+    TEST(NtUserSystemParametersInfo(SPI_GETICONMETRICS, sizeof(ICONMETRICSW) + 1, (PVOID)&metrics, 0) == 0);
+    TEST(NtUserSystemParametersInfo(SPI_GETICONMETRICS, sizeof(ICONMETRICSW), (PVOID)0xdeadbeef, 0) == 0);
 }
 
 void

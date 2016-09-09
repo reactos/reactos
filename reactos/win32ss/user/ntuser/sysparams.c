@@ -222,7 +222,7 @@ SpiUpdatePerUserSystemParameters(VOID)
     TRACE("Enter SpiUpdatePerUserSystemParameters\n");
 
     /* Clear the structure */
-    memset(&gspv, 0, sizeof(gspv));
+    RtlZeroMemory(&gspv, sizeof(gspv));
 
     /* Load mouse settings */
     gspv.caiMouse.FirstThreshold = SpiLoadMouse(VAL_MOUSE1, 6);
@@ -424,7 +424,7 @@ SpiStoreFont(PCWSTR pwszValue, LOGFONTW* plogfont)
 // FIXME: get rid of the flags and only use this from um. kernel can access data directly.
 static
 UINT_PTR
-SpiMemCopy(PVOID pvDst, PVOID pvSrc, ULONG cbSize, BOOL bProtect, BOOL bToUser)
+SpiMemCopy(PVOID pvDst, PVOID pvSrc, ULONG cbSize, BOOL bProtect)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -432,15 +432,7 @@ SpiMemCopy(PVOID pvDst, PVOID pvSrc, ULONG cbSize, BOOL bProtect, BOOL bToUser)
     {
         _SEH2_TRY
         {
-            if (bToUser)
-            {
-                ProbeForWrite(pvDst, cbSize, 1);
-            }
-            else
-            {
-                ProbeForRead(pvSrc, cbSize, 1);
-            }
-            memcpy(pvDst, pvSrc, cbSize);
+            RtlCopyMemory(pvDst, pvSrc, cbSize);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -450,14 +442,15 @@ SpiMemCopy(PVOID pvDst, PVOID pvSrc, ULONG cbSize, BOOL bProtect, BOOL bToUser)
     }
     else
     {
-        memcpy(pvDst, pvSrc, cbSize);
+        RtlCopyMemory(pvDst, pvSrc, cbSize);
     }
 
     if (!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
-        ERR("SpiMemCopy failed, pvDst=%p, pvSrc=%p, bProtect=%d, bToUser=%d\n", pvDst, pvSrc, bProtect, bToUser);
+        ERR("SpiMemCopy failed, pvDst=%p, pvSrc=%p, bProtect=%d\n", pvDst, pvSrc, bProtect);
     }
+
     return NT_SUCCESS(Status);
 }
 
@@ -466,7 +459,7 @@ UINT_PTR
 SpiGet(PVOID pvParam, PVOID pvData, ULONG cbSize, FLONG fl)
 {
     REQ_INTERACTIVE_WINSTA(ERROR_ACCESS_DENIED);
-    return SpiMemCopy(pvParam, pvData, cbSize, fl & SPIF_PROTECT, TRUE);
+    return SpiMemCopy(pvParam, pvData, cbSize, fl & SPIF_PROTECT);
 }
 
 static inline
@@ -474,7 +467,7 @@ UINT_PTR
 SpiSet(PVOID pvData, PVOID pvParam, ULONG cbSize, FLONG fl)
 {
     REQ_INTERACTIVE_WINSTA(ERROR_REQUIRES_INTERACTIVE_WINDOWSTATION);
-    return SpiMemCopy(pvData, pvParam, cbSize, fl & SPIF_PROTECT, FALSE);
+    return SpiMemCopy(pvData, pvParam, cbSize, fl & SPIF_PROTECT);
 }
 
 static inline
@@ -631,13 +624,13 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
     }
 
     /* Capture UNICODE_STRING */
-    bResult = SpiMemCopy(&ustr, pvParam, sizeof(ustr), fl & SPIF_PROTECT, 0);
+    bResult = SpiMemCopy(&ustr, pvParam, sizeof(ustr), fl & SPIF_PROTECT);
     if (!bResult) return 0;
     if (ustr.Length > MAX_PATH * sizeof(WCHAR))
         return 0;
 
     /* Copy the string buffer name */
-    bResult = SpiMemCopy(gspv.awcWallpaper, ustr.Buffer, ustr.Length, fl & SPIF_PROTECT, 0);
+    bResult = SpiMemCopy(gspv.awcWallpaper, ustr.Buffer, ustr.Length, fl & SPIF_PROTECT);
     if (!bResult) return 0;
 
     /* Update the UNICODE_STRING */
@@ -911,11 +904,31 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiSetInt(&gspv.bDragFullWindows, uiParam, KEY_DESKTOP, VAL_DRAG, fl);
 
         case SPI_GETNONCLIENTMETRICS:
+        {
+            LPNONCLIENTMETRICSW metrics = (LPNONCLIENTMETRICSW)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(NONCLIENTMETRICSW))
+                return 0;
+
+            if (!metrics || metrics->cbSize != sizeof(NONCLIENTMETRICSW))
+                return 0;
+
             return SpiGet(pvParam, &gspv.ncm, sizeof(NONCLIENTMETRICSW), fl);
+        }
 
         case SPI_SETNONCLIENTMETRICS:
+        {
+            LPNONCLIENTMETRICSW metrics = (LPNONCLIENTMETRICSW)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(NONCLIENTMETRICSW))
+                return 0;
+
+            if (!metrics || metrics->cbSize != sizeof(NONCLIENTMETRICSW))
+                return 0;
+
             if (!SpiSet(&gspv.ncm, pvParam, sizeof(NONCLIENTMETRICSW), fl))
                 return 0;
+
             if (fl & SPIF_UPDATEINIFILE)
             {
                 SpiStoreMetric(VAL_BORDER, gspv.ncm.iBorderWidth);
@@ -936,20 +949,44 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 SpiStoreFont(L"StatusFont", &gspv.ncm.lfStatusFont);
                 SpiStoreFont(L"MessageFont", &gspv.ncm.lfMessageFont);
             }
+
             if(!SpiNotifyNCMetricsChanged())
                 return 0;
+
             return (UINT_PTR)KEY_METRIC;
+        }
 
         case SPI_GETMINIMIZEDMETRICS:
+        {
+            LPMINIMIZEDMETRICS metrics = (LPMINIMIZEDMETRICS)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(MINIMIZEDMETRICS))
+                return 0;
+
+            if (!metrics || metrics->cbSize != sizeof(MINIMIZEDMETRICS))
+                return 0;
+
             return SpiGet(pvParam, &gspv.mm, sizeof(MINIMIZEDMETRICS), fl);
+        }
 
         case SPI_SETMINIMIZEDMETRICS:
+        {
+            LPMINIMIZEDMETRICS metrics = (LPMINIMIZEDMETRICS)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(MINIMIZEDMETRICS))
+                return 0;
+
+            if (!metrics || metrics->cbSize != sizeof(MINIMIZEDMETRICS))
+                return 0;
+
             if (!SpiSet(&gspv.mm, pvParam, sizeof(MINIMIZEDMETRICS), fl))
                 return 0;
+
             gspv.mm.iWidth = max(0, gspv.mm.iWidth);
             gspv.mm.iHorzGap = max(0, gspv.mm.iHorzGap);
             gspv.mm.iVertGap = max(0, gspv.mm.iVertGap);
             gspv.mm.iArrange = gspv.mm.iArrange & 0xf;
+
             if (fl & SPIF_UPDATEINIFILE)
             {
                 SpiStoreMetric(L"MinWidth", gspv.mm.iWidth);
@@ -957,14 +994,36 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 SpiStoreMetric(L"MinVertGap", gspv.mm.iVertGap);
                 SpiStoreMetric(L"MinArrange", gspv.mm.iArrange);
             }
+
             return (UINT_PTR)KEY_METRIC;
+        }
 
         case SPI_GETICONMETRICS:
-            return SpiGet(pvParam, &gspv.im, sizeof(ICONMETRICS), fl);
+        {
+            LPICONMETRICSW IconMetrics = (LPICONMETRICSW)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(ICONMETRICSW))
+                return 0;
+
+            if (!IconMetrics || IconMetrics->cbSize != sizeof(ICONMETRICSW))
+                return 0;
+
+            return SpiGet(pvParam, &gspv.im, sizeof(ICONMETRICSW), fl);
+        }
 
         case SPI_SETICONMETRICS:
+        {
+            LPICONMETRICS IconMetrics = (LPICONMETRICS)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(ICONMETRICS))
+                return 0;
+
+            if (!IconMetrics || IconMetrics->cbSize != sizeof(ICONMETRICS))
+                return 0;
+
             if (!SpiSet(&gspv.im, pvParam, sizeof(ICONMETRICS), fl))
                 return 0;
+
             if (fl & SPIF_UPDATEINIFILE)
             {
                 SpiStoreMetric(VAL_ICONSPC, gspv.im.iHorzSpacing);
@@ -973,6 +1032,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 SpiStoreFont(L"IconFont", &gspv.im.lfFont);
             }
             return (UINT_PTR)KEY_METRIC;
+        }
 
         case SPI_GETWORKAREA:
         {
@@ -1713,6 +1773,276 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
     return 0;
 }
 
+static BOOL
+SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
+{
+    BOOL bToUser = TRUE;
+    ULONG cbSize = 0;
+
+    switch (uiAction)
+    {
+        case SPI_GETBEEP:
+        case SPI_GETBORDER:
+        case SPI_GETKEYBOARDSPEED:
+        case SPI_GETSCREENSAVETIMEOUT:
+        case SPI_GETSCREENSAVEACTIVE:
+        case SPI_GETGRIDGRANULARITY:
+        case SPI_GETKEYBOARDDELAY:
+        case SPI_GETICONTITLEWRAP:
+        case SPI_GETMENUDROPALIGNMENT:
+        case SPI_GETFASTTASKSWITCH:
+        case SPI_GETDRAGFULLWINDOWS:
+        case SPI_GETSHOWSOUNDS:
+        case SPI_GETKEYBOARDPREF:
+        case SPI_GETSCREENREADER:
+        case SPI_GETFONTSMOOTHING:
+        case SPI_GETLOWPOWERTIMEOUT:
+        case SPI_GETPOWEROFFTIMEOUT:
+        case SPI_GETLOWPOWERACTIVE:
+        case SPI_GETPOWEROFFACTIVE:
+        case SPI_GETMOUSETRAILS:
+        case SPI_GETSNAPTODEFBUTTON:
+        case SPI_GETMOUSEHOVERWIDTH:
+        case SPI_GETMOUSEHOVERHEIGHT:
+        case SPI_GETMOUSEHOVERTIME:
+        case SPI_GETWHEELSCROLLLINES:
+        case SPI_GETMENUSHOWDELAY:
+#if (_WIN32_WINNT >= 0x0600)
+        case SPI_GETWHEELSCROLLCHARS:
+#endif
+        case SPI_GETSHOWIMEUI:
+        case SPI_GETMOUSESPEED:
+        case SPI_GETSCREENSAVERRUNNING:
+#if(WINVER >= 0x0600)
+        case SPI_GETSCREENSAVESECURE:
+#endif
+        case SPI_GETACTIVEWINDOWTRACKING:
+        case SPI_GETMENUANIMATION:
+        case SPI_GETCOMBOBOXANIMATION:
+        case SPI_GETLISTBOXSMOOTHSCROLLING:
+        case SPI_GETGRADIENTCAPTIONS:
+        case SPI_GETKEYBOARDCUES:
+        case SPI_GETACTIVEWNDTRKZORDER:
+        case SPI_GETHOTTRACKING:
+        case SPI_GETMENUFADE:
+        case SPI_GETSELECTIONFADE:
+        case SPI_GETTOOLTIPANIMATION:
+        case SPI_GETTOOLTIPFADE:
+        case SPI_GETCURSORSHADOW:
+        case SPI_GETUIEFFECTS:
+        case SPI_GETMOUSESONAR:
+        case SPI_GETMOUSECLICKLOCK:
+        case SPI_GETMOUSEVANISH:
+        case SPI_GETFLATMENU:
+        case SPI_GETDROPSHADOW:
+        case SPI_GETBLOCKSENDINPUTRESETS:
+#if(_WIN32_WINNT >= 0x0600)
+        case SPI_GETDISABLEOVERLAPPEDCONTENT:
+        case SPI_GETCLIENTAREAANIMATION:
+        case SPI_GETCLEARTYPE:
+        case SPI_GETSPEECHRECOGNITION:
+#endif
+        case SPI_GETFOREGROUNDLOCKTIMEOUT:
+        case SPI_GETACTIVEWNDTRKTIMEOUT:
+        case SPI_GETFOREGROUNDFLASHCOUNT:
+        case SPI_GETCARETWIDTH:
+        case SPI_GETMOUSECLICKLOCKTIME:
+        case SPI_GETFONTSMOOTHINGTYPE:
+        case SPI_GETFONTSMOOTHINGCONTRAST:
+        case SPI_GETFOCUSBORDERWIDTH:
+        case SPI_GETFOCUSBORDERHEIGHT:
+        case SPI_GETFONTSMOOTHINGORIENTATION:
+            cbSize = sizeof(INT);
+            break;
+
+        case SPI_ICONHORIZONTALSPACING:
+        case SPI_ICONVERTICALSPACING:
+            if (pvParam) cbSize = sizeof(INT);
+            break;
+
+        case SPI_GETMOUSE:
+            cbSize = 3 * sizeof(INT);
+            break;
+
+        case SPI_GETDESKWALLPAPER:
+            cbSize = min(uiParam, gspv.ustrWallpaper.Length + 1UL);
+            break;
+
+        case SPI_GETICONTITLELOGFONT:
+            cbSize = sizeof(LOGFONTW);
+            break;
+
+        case SPI_GETNONCLIENTMETRICS:
+            cbSize = sizeof(NONCLIENTMETRICSW);
+            break;
+
+        case SPI_GETMINIMIZEDMETRICS:
+            cbSize = sizeof(MINIMIZEDMETRICS);
+            break;
+
+        case SPI_GETICONMETRICS:
+            cbSize = sizeof(ICONMETRICS);
+            break;
+
+        case SPI_GETWORKAREA:
+            cbSize = sizeof(RECTL);
+            break;
+
+        case SPI_GETFILTERKEYS:
+            cbSize = sizeof(FILTERKEYS);
+            break;
+
+        case SPI_GETTOGGLEKEYS:
+            cbSize = sizeof(TOGGLEKEYS);
+            break;
+
+        case SPI_GETMOUSEKEYS:
+            cbSize = sizeof(MOUSEKEYS);
+            break;
+
+        case SPI_GETSTICKYKEYS:
+            cbSize = sizeof(STICKYKEYS);
+            break;
+
+        case SPI_GETACCESSTIMEOUT:
+            cbSize = sizeof(ACCESSTIMEOUT);
+            break;
+
+        case SPI_GETSERIALKEYS:
+            cbSize = sizeof(SERIALKEYS);
+            break;
+
+        case SPI_GETSOUNDSENTRY:
+            cbSize = sizeof(SOUNDSENTRY);
+            break;
+
+        case SPI_GETHIGHCONTRAST:
+            cbSize = sizeof(HIGHCONTRAST);
+            break;
+
+        case SPI_GETANIMATION:
+            cbSize = sizeof(ANIMATIONINFO);
+            break;
+
+        case SPI_GETDEFAULTINPUTLANG:
+            cbSize = sizeof(HKL);
+            break;
+
+#if(WINVER >= 0x0600)
+        case SPI_GETAUDIODESCRIPTION:
+            cbSize = sizeof(AUDIODESCRIPTION);
+            break;
+#endif
+
+        case SPI_SETMOUSE:
+            cbSize = 3 * sizeof(INT);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETICONTITLELOGFONT:
+            cbSize = sizeof(LOGFONTW);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETNONCLIENTMETRICS:
+            cbSize = sizeof(NONCLIENTMETRICSW);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETMINIMIZEDMETRICS:
+            cbSize = sizeof(MINIMIZEDMETRICS);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETICONMETRICS:
+            cbSize = sizeof(ICONMETRICS);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETWORKAREA:
+            cbSize = sizeof(RECTL);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETFILTERKEYS:
+            cbSize = sizeof(FILTERKEYS);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETTOGGLEKEYS:
+            cbSize = sizeof(TOGGLEKEYS);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETMOUSEKEYS:
+            cbSize = sizeof(MOUSEKEYS);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETSTICKYKEYS:
+            cbSize = sizeof(STICKYKEYS);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETACCESSTIMEOUT:
+            cbSize = sizeof(ACCESSTIMEOUT);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETSERIALKEYS:
+            cbSize = sizeof(SERIALKEYS);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETSOUNDSENTRY:
+            cbSize = sizeof(SOUNDSENTRY);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETHIGHCONTRAST:
+            cbSize = sizeof(HIGHCONTRAST);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETANIMATION:
+            cbSize = sizeof(ANIMATIONINFO);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETDEFAULTINPUTLANG:
+            cbSize = sizeof(HKL);
+            bToUser = FALSE;
+            break;
+
+        case SPI_SETMOUSESPEED:
+            cbSize = sizeof(INT);
+            bToUser = FALSE;
+            break;
+    }
+
+    if (cbSize)
+    {
+        _SEH2_TRY
+        {
+            if (bToUser)
+            {
+                ProbeForWrite(pvParam, cbSize, sizeof(UCHAR));
+            }
+            else
+            {
+                ProbeForRead(pvParam, cbSize, sizeof(UCHAR));
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return FALSE);
+        }
+        _SEH2_END;
+    }
+
+    return TRUE;
+}
+
 BOOL
 FASTCALL
 UserSystemParametersInfo(
@@ -1739,6 +2069,12 @@ UserSystemParametersInfo(
         ERR("UserSystemParametersInfo called without active window station.\n");
         //ASSERT(FALSE);
         //return FALSE;
+    }
+
+    if ((fWinIni & SPIF_PROTECT) && !SpiGetSetProbeBuffer(uiAction, uiParam, pvParam))
+    {
+        EngSetLastError(ERROR_NOACCESS);
+        return FALSE;
     }
 
     /* Do the actual operation */
