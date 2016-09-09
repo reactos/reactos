@@ -214,8 +214,6 @@ NtGdiEllipse(
     PBRUSH pFillBrushObj;
     BRUSH tmpFillBrushObj;
 
-    if ((Left == Right) || (Top == Bottom)) return TRUE;
-
     dc = DC_LockDc(hDC);
     if (dc == NULL)
     {
@@ -236,6 +234,15 @@ NtGdiEllipse(
         return ret;
     }
 
+    ////
+    //// Could this use PATH_CheckCorners ?
+    ////
+    if ((Left == Right) || (Top == Bottom))
+    {
+       DC_UnlockDc(dc);
+       return TRUE;
+    }
+
     if (Right < Left)
     {
        INT tmp = Right; Right = Left; Left = tmp;
@@ -244,6 +251,7 @@ NtGdiEllipse(
     {
        INT tmp = Bottom; Bottom = Top; Top = tmp;
     }
+    ////
 
     pdcattr = dc->pdcattr;
 
