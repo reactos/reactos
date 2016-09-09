@@ -1,7 +1,0 @@
-; TDI test driver - ReactOS Operating System
-
-LIBRARY TDITEST.SYS
-
-EXPORTS
-
-; EOF
