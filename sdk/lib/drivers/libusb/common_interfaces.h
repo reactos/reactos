@@ -23,6 +23,24 @@ typedef struct
     LIST_ENTRY InterfaceList;
 }USB_CONFIGURATION, *PUSB_CONFIGURATION;
 
+#if 0
+typedef struct _USB_TRANSFER_PACKET
+{
+    IUSBPipe *Pipe;
+    PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;
+    PIRP Irp;
+    ULONG TransferFlags;
+    ULONG TransferBufferLength;
+    PMDL TransferBufferMDL;
+    ULONG NumberOfMapRegisters;
+    PVOID Context; // for MapTransfer()
+
+    //SgList should be LAST field
+    LIBUSB_SG_LIST SgList; // non IsoTransfer
+
+} USB_TRANSFER_PACKET, *PUSB_TRANSFER_PACKET;
+#endif
+
 //---------------------------------------------------------------------------
 //
 //          Object Hierarchy
