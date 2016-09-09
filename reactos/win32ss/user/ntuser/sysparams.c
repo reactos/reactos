@@ -310,7 +310,8 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.mousekeys.cbSize = sizeof(MOUSEKEYS);
     gspv.stickykeys.cbSize = sizeof(STICKYKEYS);
     gspv.serialkeys.cbSize = sizeof(SERIALKEYS);
-    gspv.soundsentry.cbSize = sizeof(SOUNDSENTRY);
+    gspv.soundsentry.cbSize = sizeof(SOUNDSENTRYW);
+    gspv.highcontrast.cbSize = sizeof(HIGHCONTRASTW);
 
     /* Make sure we don't use broken values */
     SpiFixupValues();
@@ -1103,6 +1104,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
             if (!SpiSet(&gspv.filterkeys, pvParam, sizeof(FILTERKEYS), fl))
                 return 0;
+
             if (fl & SPIF_UPDATEINIFILE)
             {
                 // FIXME: What to do?
@@ -1287,28 +1289,28 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_GETSOUNDSENTRY:
         {
-            LPSOUNDSENTRY SoundsEntry = (LPSOUNDSENTRY)pvParam;
+            LPSOUNDSENTRYW SoundsEntry = (LPSOUNDSENTRYW)pvParam;
 
-            if (uiParam != 0 && uiParam != sizeof(SOUNDSENTRY))
+            if (uiParam != 0 && uiParam != sizeof(SOUNDSENTRYW))
                 return 0;
 
-            if (!SoundsEntry || SoundsEntry->cbSize != sizeof(SOUNDSENTRY))
+            if (!SoundsEntry || SoundsEntry->cbSize != sizeof(SOUNDSENTRYW))
                 return 0;
 
-            return SpiGet(pvParam, &gspv.soundsentry, sizeof(SOUNDSENTRY), fl);
+            return SpiGet(pvParam, &gspv.soundsentry, sizeof(SOUNDSENTRYW), fl);
         }
 
         case SPI_SETSOUNDSENTRY:
         {
-            LPSOUNDSENTRY SoundsEntry = (LPSOUNDSENTRY)pvParam;
+            LPSOUNDSENTRYW SoundsEntry = (LPSOUNDSENTRYW)pvParam;
 
-            if (uiParam != 0 && uiParam != sizeof(SOUNDSENTRY))
+            if (uiParam != 0 && uiParam != sizeof(SOUNDSENTRYW))
                 return 0;
 
-            if (!SoundsEntry || SoundsEntry->cbSize != sizeof(SOUNDSENTRY))
+            if (!SoundsEntry || SoundsEntry->cbSize != sizeof(SOUNDSENTRYW))
                 return 0;
 
-            if (!SpiSet(&gspv.soundsentry, pvParam, sizeof(SOUNDSENTRY), fl))
+            if (!SpiSet(&gspv.soundsentry, pvParam, sizeof(SOUNDSENTRYW), fl))
                 return 0;
 
             if (fl & SPIF_UPDATEINIFILE)
@@ -1319,16 +1321,37 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         }
 
         case SPI_GETHIGHCONTRAST:
-            return SpiGet(pvParam, &gspv.highcontrast, sizeof(HIGHCONTRAST), fl);
+        {
+            LPHIGHCONTRASTW highcontrast = (LPHIGHCONTRASTW)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(HIGHCONTRASTW))
+                return 0;
+
+            if (!highcontrast || highcontrast->cbSize != sizeof(HIGHCONTRASTW))
+                return 0;
+
+            return SpiGet(pvParam, &gspv.highcontrast, sizeof(HIGHCONTRASTW), fl);
+        }
 
         case SPI_SETHIGHCONTRAST:
-            if (!SpiSet(&gspv.highcontrast, pvParam, sizeof(HIGHCONTRAST), fl))
+        {
+            LPHIGHCONTRASTW highcontrast = (LPHIGHCONTRASTW)pvParam;
+
+            if (uiParam != 0 && uiParam != sizeof(HIGHCONTRASTW))
                 return 0;
+
+            if (!highcontrast || highcontrast->cbSize != sizeof(HIGHCONTRASTW))
+                return 0;
+
+            if (!SpiSet(&gspv.highcontrast, pvParam, sizeof(HIGHCONTRASTW), fl))
+                return 0;
+
             if (fl & SPIF_UPDATEINIFILE)
             {
                 // FIXME: What to do?
             }
             return (UINT_PTR)KEY_DESKTOP;
+        }
 
         case SPI_GETKEYBOARDPREF:
             return SpiGetInt(pvParam, &gspv.bKbdPref, fl);
@@ -1881,7 +1904,7 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
             break;
 
         case SPI_GETICONMETRICS:
-            cbSize = sizeof(ICONMETRICS);
+            cbSize = sizeof(ICONMETRICSW);
             break;
 
         case SPI_GETWORKAREA:
@@ -1913,11 +1936,11 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
             break;
 
         case SPI_GETSOUNDSENTRY:
-            cbSize = sizeof(SOUNDSENTRY);
+            cbSize = sizeof(SOUNDSENTRYW);
             break;
 
         case SPI_GETHIGHCONTRAST:
-            cbSize = sizeof(HIGHCONTRAST);
+            cbSize = sizeof(HIGHCONTRASTW);
             break;
 
         case SPI_GETANIMATION:
@@ -1995,12 +2018,12 @@ SpiGetSetProbeBuffer(UINT uiAction, UINT uiParam, PVOID pvParam)
             break;
 
         case SPI_SETSOUNDSENTRY:
-            cbSize = sizeof(SOUNDSENTRY);
+            cbSize = sizeof(SOUNDSENTRYW);
             bToUser = FALSE;
             break;
 
         case SPI_SETHIGHCONTRAST:
-            cbSize = sizeof(HIGHCONTRAST);
+            cbSize = sizeof(HIGHCONTRASTW);
             bToUser = FALSE;
             break;
 
