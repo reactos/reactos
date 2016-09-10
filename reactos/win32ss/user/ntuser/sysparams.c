@@ -912,7 +912,12 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_SETNONCLIENTMETRICS:
         {
-            if (!SpiSet(&gspv.ncm, pvParam, sizeof(NONCLIENTMETRICSW), fl))
+            LPNONCLIENTMETRICSW metrics = (LPNONCLIENTMETRICSW)pvParam;
+
+            /* Fixup user's structure size */
+            metrics->cbSize = sizeof(NONCLIENTMETRICSW);
+            
+            if (!SpiSet(&gspv.ncm, metrics, sizeof(NONCLIENTMETRICSW), fl))
                 return 0;
 
             if (fl & SPIF_UPDATEINIFILE)
@@ -949,7 +954,12 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_SETMINIMIZEDMETRICS:
         {
-            if (!SpiSet(&gspv.mm, pvParam, sizeof(MINIMIZEDMETRICS), fl))
+            LPMINIMIZEDMETRICS metrics = (LPMINIMIZEDMETRICS)pvParam;
+
+            /* Fixup user's structure size */
+            metrics->cbSize = sizeof(MINIMIZEDMETRICS);
+
+            if (!SpiSet(&gspv.mm, metrics, sizeof(MINIMIZEDMETRICS), fl))
                 return 0;
 
             gspv.mm.iWidth = max(0, gspv.mm.iWidth);
@@ -975,7 +985,12 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_SETICONMETRICS:
         {
-            if (!SpiSet(&gspv.im, pvParam, sizeof(ICONMETRICSW), fl))
+            LPICONMETRICSW metrics = (LPICONMETRICSW)pvParam;
+
+            /* Fixup user's structure size */
+            metrics->cbSize = sizeof(ICONMETRICSW);
+
+            if (!SpiSet(&gspv.im, metrics, sizeof(ICONMETRICSW), fl))
                 return 0;
 
             if (fl & SPIF_UPDATEINIFILE)
