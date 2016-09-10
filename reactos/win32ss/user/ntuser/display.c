@@ -477,9 +477,6 @@ UserEnumDisplaySettings(
         return STATUS_UNSUCCESSFUL;
     }
 
-    if (iModeNum >= pGraphicsDevice->cDevModes)
-        return STATUS_NO_MORE_ENTRIES;
-
     iFoundMode = 0;
     for (i = 0; i < pGraphicsDevice->cDevModes; i++)
     {
@@ -504,7 +501,7 @@ UserEnumDisplaySettings(
     }
 
     /* Nothing was found */
-    return STATUS_INVALID_PARAMETER;
+    return STATUS_INVALID_PARAMETER_2;
 }
 
 NTSTATUS
