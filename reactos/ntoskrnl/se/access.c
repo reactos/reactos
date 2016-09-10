@@ -338,12 +338,14 @@ SeUnlockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
     PrimaryToken = SubjectContext->PrimaryToken;
     ClientToken = SubjectContext->ClientToken;
 
+    /* Unlock the impersonation one if it's there */
+    if (ClientToken)
+    {
+        SepReleaseTokenLock(ClientToken);
+    }
+
     /* Always unlock the primary one */
     SepReleaseTokenLock(PrimaryToken);
-
-    /* Unlock the impersonation one if it's there */
-    if (!ClientToken) return;
-    SepReleaseTokenLock(ClientToken);
 }
 
 /*
