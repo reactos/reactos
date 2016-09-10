@@ -1,58 +1,54 @@
-/*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
- * FILE:        lib/sdk/crt/mbstring/ischira.c
- * PURPOSE:
- * PROGRAMER:
- * UPDATE HISTORY:
- *              12/04/99: Ariadne Created
- *              05/30/08: Samuel Serapion adapted  from PROJECT C Library
- *
- */
-
+#include <precomp.h>
 #include <mbctype.h>
 
-
-/*
- * @implemented
+/*********************************************************************
+ *		_ismbchira(MSVCRT.@)
  */
-int _ismbchira( unsigned int c )
+int CDECL _ismbchira(unsigned int c)
 {
-  return ((c>=0x829F) && (c<=0x82F1));
+  if(get_mbcinfo()->mbcodepage == 932)
+  {
+    /* Japanese/Hiragana, CP 932 */
+    return (c >= 0x829f && c <= 0x82f1);
+  }
+  return 0;
 }
 
-/*
- * @implemented
+/*********************************************************************
+ *		_ismbckata(MSVCRT.@)
  */
-int _ismbckata( unsigned int c )
+int CDECL _ismbckata(unsigned int c)
 {
-  return ((c>=0x8340) && (c<=0x8396));
+  if(get_mbcinfo()->mbcodepage == 932)
+  {
+    /* Japanese/Katakana, CP 932 */
+    return (c >= 0x8340 && c <= 0x8396 && c != 0x837f);
+  }
+  return 0;
 }
 
-/*
- * @implemented
+/*********************************************************************
+ *		_mbctohira (MSVCRT.@)
+ *
+ *              Converts a sjis katakana character to hiragana.
  */
-unsigned int _mbctohira( unsigned int c )
+unsigned int CDECL _mbctohira(unsigned int c)
 {
-    if (c >= 0x8340 && c <= 0x837e)
-	return c - 0xa1;
-    else if (c >= 0x8380 && c <= 0x8396)
-	return c - 0xa2;
-    else
-	return c;
+    if(_ismbckata(c) && c <= 0x8393)
+        return (c - 0x8340 - (c >= 0x837f ? 1 : 0)) + 0x829f;
+    return c;
 }
 
-/*
- * @implemented
+/*********************************************************************
+ *		_mbctokata (MSVCRT.@)
+ *
+ *              Converts a sjis hiragana character to katakana.
  */
-unsigned int _mbctokata( unsigned int c )
+unsigned int CDECL _mbctokata(unsigned int c)
 {
-    if (c >= 0x829f && c <= 0x82dd)
-	return c + 0xa1;
-    else if (c >= 0x82de && c <= 0x82f1)
-	return c + 0xa2;
-    else
-	return c;
+    if(_ismbchira(c))
+        return (c - 0x829f) + 0x8340 + (c >= 0x82de ? 1 : 0);
+    return c;
 }
 
 

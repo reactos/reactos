@@ -299,8 +299,9 @@ msvcrt -
   reactos/sdk/lib/crt/string/strtoul.c          # Synced to WineStaging-1.9.9
   reactos/sdk/lib/crt/string/strxfrm.c          # Synced to Wine-1.9.16
   reactos/sdk/lib/crt/string/wcs.c              # Synced at 20080611
-  reactos/sdk/lib/crt/string/wctype.c           # Synced at WineStaging-1.9.16
-  reactos/sdk/lib/crt/string/wtoi64.c           # Synced at Wine-1.9.16
+  reactos/sdk/lib/crt/string/wctype.c           # Synced to WineStaging-1.9.16
+  reactos/sdk/lib/crt/string/wtoi64.c           # Synced to Wine-1.9.16
+  reactos/sdk/lib/crt/mbstring/ischira.c        # Synced to Wine-1.9.16
   reactos/sdk/lib/crt/wine/heap.c               # Synced at 20080529
   reactos/sdk/lib/crt/wine/undname.c            # Synced to WineStaging-1.9.16
   reactos/sdk/lib/crt/process/thread.c          # Synced to WineStaging-1.7.55
