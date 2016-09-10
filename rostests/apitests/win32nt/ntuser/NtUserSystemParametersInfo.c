@@ -716,8 +716,6 @@ Test_SPI_SETICONTITLELOGFONT(void)
 
     /* Test uiParam < 0 */
 	TEST(NtUserSystemParametersInfo(SPI_GETICONTITLELOGFONT, -1, &buf.lf, 0) == 1);
-
-
 }
 
 void
@@ -740,30 +738,60 @@ void
 Test_SPI_SETNONCLIENTMETRICS(void)
 {
     NONCLIENTMETRICSW metrics;
+    NONCLIENTMETRICSW origMetrics;
 
     metrics.cbSize = sizeof(NONCLIENTMETRICSW);
     TEST(NtUserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), &metrics, 0) == 1);
     TEST(NtUserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), (PVOID)0xdeadbeef, 0) == 0);
+
+    origMetrics = metrics;
+
+    metrics.cbSize = sizeof(NONCLIENTMETRICSW) + 10;
+    TEST(NtUserSystemParametersInfo(SPI_SETNONCLIENTMETRICS, 0, (PVOID)&metrics, 0) == 1);
+    TEST(NtUserSystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, (PVOID)&metrics, 0) == 1);
+    ok(metrics.cbSize == sizeof(NONCLIENTMETRICSW), "Expected size: %lu, got %lu\n", (ULONG)sizeof(NONCLIENTMETRICSW), (ULONG)metrics.cbSize);
+
+    TEST(NtUserSystemParametersInfo(SPI_SETNONCLIENTMETRICS, 0, (PVOID)&origMetrics, 0) == 1);
 }
 
 void
 Test_SPI_SETMINIMIZEDMETRICS(void)
 {
     MINIMIZEDMETRICS metrics;
+    MINIMIZEDMETRICS origMetrics;
 
     metrics.cbSize = sizeof(MINIMIZEDMETRICS);
     TEST(NtUserSystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(MINIMIZEDMETRICS), (PVOID)&metrics, 0) == 1);
     TEST(NtUserSystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(MINIMIZEDMETRICS), (PVOID)0xdeadbeef, 0) == 0);
+
+    origMetrics = metrics;
+
+    metrics.cbSize = sizeof(MINIMIZEDMETRICS) + 10;
+    TEST(NtUserSystemParametersInfo(SPI_SETMINIMIZEDMETRICS, 0, (PVOID)&metrics, 0) == 1);
+    TEST(NtUserSystemParametersInfo(SPI_GETMINIMIZEDMETRICS, 0, (PVOID)&metrics, 0) == 1);
+    ok(metrics.cbSize == sizeof(MINIMIZEDMETRICS), "Expected size: %lu, got %lu\n", (ULONG)sizeof(MINIMIZEDMETRICS), (ULONG)metrics.cbSize);
+
+    TEST(NtUserSystemParametersInfo(SPI_SETMINIMIZEDMETRICS, 0, (PVOID)&origMetrics, 0) == 1);
 }
 
 void
 Test_SPI_SETICONMETRICS(void)
 {
     ICONMETRICSW metrics;
+    ICONMETRICSW origMetrics;
 
     metrics.cbSize = sizeof(ICONMETRICSW);
     TEST(NtUserSystemParametersInfo(SPI_GETICONMETRICS, sizeof(ICONMETRICSW), (PVOID)&metrics, 0) == 1);
     TEST(NtUserSystemParametersInfo(SPI_GETICONMETRICS, sizeof(ICONMETRICSW), (PVOID)0xdeadbeef, 0) == 0);
+
+    origMetrics = metrics;
+
+    metrics.cbSize = sizeof(ICONMETRICSW) + 10;
+    TEST(NtUserSystemParametersInfo(SPI_SETICONMETRICS, 0, (PVOID)&metrics, 0) == 1);
+    TEST(NtUserSystemParametersInfo(SPI_GETICONMETRICS, 0, (PVOID)&metrics, 0) == 1);
+    ok(metrics.cbSize == sizeof(ICONMETRICSW), "Expected size: %lu, got %lu\n", (ULONG)sizeof(ICONMETRICSW), (ULONG)metrics.cbSize);
+
+    TEST(NtUserSystemParametersInfo(SPI_SETICONMETRICS, 0, (PVOID)&origMetrics, 0) == 1);
 }
 
 void
