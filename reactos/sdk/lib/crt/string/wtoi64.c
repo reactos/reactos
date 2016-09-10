@@ -1,72 +1,196 @@
-/*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
- * FILE:        lib/sdk/crt/string/wtoi64.c
- * PURPOSE:     Unknown
- * PROGRAMER:   Unknown
- * UPDATE HISTORY:
- *              25/11/05: Added license header
- */
-
 #include <precomp.h>
+#include <internal/wine/msvcrt.h>
 
-/*
- * @implemented
+/*********************************************************************
+ *              _wtoi64_l (MSVCRT.@)
  */
-__int64
-CDECL
-_wtoi64 (const wchar_t *nptr)
+__int64 CDECL _wtoi64_l(const wchar_t *str, _locale_t locale)
 {
-   int c;
-   __int64 value;
-   int sign;
+    ULONGLONG RunningTotal = 0;
+    BOOL bMinus = FALSE;
 
-   if (nptr == NULL)
-       return 0;
+    while (isspaceW(*str)) {
+        str++;
+    } /* while */
 
-   while (iswctype((int)*nptr, _SPACE))
-        ++nptr;
+    if (*str == '+') {
+        str++;
+    } else if (*str == '-') {
+        bMinus = TRUE;
+        str++;
+    } /* if */
 
-   c = (int)*nptr++;
-   sign = c;
-   if (c == L'-' || c == L'+')
-        c = (int)*nptr++;
+    while (*str >= '0' && *str <= '9') {
+        RunningTotal = RunningTotal * 10 + *str - '0';
+        str++;
+    } /* while */
 
-   value = 0;
+    return bMinus ? -RunningTotal : RunningTotal;
+}
 
-   while (iswctype(c, _DIGIT))
-     {
-        value = 10 * value + (c - L'0');
-        c = (int)*nptr++;
-     }
-
-   if (sign == L'-')
-       return -value;
-   else
-       return value;
+/*********************************************************************
+ *              _wtoi64 (MSVCRT.@)
+ */
+__int64 CDECL _wtoi64(const wchar_t *str)
+{
+    return _wtoi64_l(str, NULL);
 }
 
 
-/*
- * @unimplemented
+/*********************************************************************
+ *  _wcstoi64_l (MSVCRT.@)
+ *
+ * FIXME: locale parameter is ignored
  */
-__int64
-CDECL
-_wcstoi64 (const wchar_t *nptr, wchar_t **endptr, int base)
+__int64 CDECL _wcstoi64_l(const wchar_t *nptr,
+        wchar_t **endptr, int base, _locale_t locale)
 {
-   TRACE("_wcstoi64 is UNIMPLEMENTED\n");
-   return 0;
+    BOOL negative = FALSE;
+    __int64 ret = 0;
+
+    TRACE("(%s %p %d %p)\n", debugstr_w(nptr), endptr, base, locale);
+
+    if (!MSVCRT_CHECK_PMT(nptr != NULL)) return 0;
+    if (!MSVCRT_CHECK_PMT(base == 0 || base >= 2)) return 0;
+    if (!MSVCRT_CHECK_PMT(base <= 36)) return 0;
+
+    while(isspaceW(*nptr)) nptr++;
+
+    if(*nptr == '-') {
+        negative = TRUE;
+        nptr++;
+    } else if(*nptr == '+')
+        nptr++;
+
+    if((base==0 || base==16) && *nptr=='0' && tolowerW(*(nptr+1))=='x') {
+        base = 16;
+        nptr += 2;
+    }
+
+    if(base == 0) {
+        if(*nptr=='0')
+            base = 8;
+        else
+            base = 10;
+    }
+
+    while(*nptr) {
+        wchar_t cur = tolowerW(*nptr);
+        int v;
+
+        if(cur>='0' && cur<='9') {
+            if(cur >= '0'+base)
+                break;
+            v = cur-'0';
+        } else {
+            if(cur<'a' || cur>='a'+base-10)
+                break;
+            v = cur-'a'+10;
+        }
+
+        if(negative)
+            v = -v;
+
+        nptr++;
+
+        if(!negative && (ret>_I64_MAX/base || ret*base>_I64_MAX-v)) {
+            ret = _I64_MAX;
+            *_errno() = ERANGE;
+        } else if(negative && (ret<_I64_MIN/base || ret*base<_I64_MIN-v)) {
+            ret = _I64_MIN;
+            *_errno() = ERANGE;
+        } else
+            ret = ret*base + v;
+    }
+
+    if(endptr)
+        *endptr = (wchar_t*)nptr;
+
+    return ret;
 }
 
-/*
- * @unimplemented
+/*********************************************************************
+ *  _wcstoi64 (MSVCRT.@)
  */
-unsigned __int64
-CDECL
-_wcstoui64 (const wchar_t *nptr, wchar_t **endptr, int base)
+__int64 CDECL _wcstoi64(const wchar_t *nptr,
+        wchar_t **endptr, int base)
 {
-   TRACE("_wcstoui64 is UNIMPLEMENTED\n");
-   return 0;
+    return _wcstoi64_l(nptr, endptr, base, NULL);
+}
+
+/*********************************************************************
+ *  _wcstoui64_l (MSVCRT.@)
+ *
+ * FIXME: locale parameter is ignored
+ */
+unsigned __int64 CDECL _wcstoui64_l(const wchar_t *nptr,
+        wchar_t **endptr, int base, _locale_t locale)
+{
+    BOOL negative = FALSE;
+    unsigned __int64 ret = 0;
+
+    TRACE("(%s %p %d %p)\n", debugstr_w(nptr), endptr, base, locale);
+
+    if (!MSVCRT_CHECK_PMT(nptr != NULL)) return 0;
+    if (!MSVCRT_CHECK_PMT(base == 0 || base >= 2)) return 0;
+    if (!MSVCRT_CHECK_PMT(base <= 36)) return 0;
+
+    while(isspaceW(*nptr)) nptr++;
+
+    if(*nptr == '-') {
+        negative = TRUE;
+        nptr++;
+    } else if(*nptr == '+')
+        nptr++;
+
+    if((base==0 || base==16) && *nptr=='0' && tolowerW(*(nptr+1))=='x') {
+        base = 16;
+        nptr += 2;
+    }
+
+    if(base == 0) {
+        if(*nptr=='0')
+            base = 8;
+        else
+            base = 10;
+    }
+
+    while(*nptr) {
+        wchar_t cur = tolowerW(*nptr);
+        int v;
+
+        if(cur>='0' && cur<='9') {
+            if(cur >= '0'+base)
+                break;
+            v = *nptr-'0';
+        } else {
+            if(cur<'a' || cur>='a'+base-10)
+                break;
+            v = cur-'a'+10;
+        }
+
+        nptr++;
+
+        if(ret>_UI64_MAX/base || ret*base>_UI64_MAX-v) {
+            ret = _UI64_MAX;
+            *_errno() = ERANGE;
+        } else
+            ret = ret*base + v;
+    }
+
+    if(endptr)
+        *endptr = (wchar_t*)nptr;
+
+    return negative ? -ret : ret;
+}
+
+/*********************************************************************
+ *  _wcstoui64 (MSVCRT.@)
+ */
+unsigned __int64 CDECL _wcstoui64(const wchar_t *nptr,
+        wchar_t **endptr, int base)
+{
+    return _wcstoui64_l(nptr, endptr, base, NULL);
 }
 
 
