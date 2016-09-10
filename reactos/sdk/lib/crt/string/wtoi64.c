@@ -9,7 +9,7 @@ __int64 CDECL _wtoi64_l(const wchar_t *str, _locale_t locale)
     ULONGLONG RunningTotal = 0;
     BOOL bMinus = FALSE;
 
-    while (isspaceW(*str)) {
+    while (iswctype((int)*str, _SPACE)) {
         str++;
     } /* while */
 
@@ -48,13 +48,15 @@ __int64 CDECL _wcstoi64_l(const wchar_t *nptr,
     BOOL negative = FALSE;
     __int64 ret = 0;
 
+#ifndef _LIBCNT_
     TRACE("(%s %p %d %p)\n", debugstr_w(nptr), endptr, base, locale);
+#endif
 
     if (!MSVCRT_CHECK_PMT(nptr != NULL)) return 0;
     if (!MSVCRT_CHECK_PMT(base == 0 || base >= 2)) return 0;
     if (!MSVCRT_CHECK_PMT(base <= 36)) return 0;
 
-    while(isspaceW(*nptr)) nptr++;
+    while (iswctype((int)*nptr, _SPACE)) nptr++;
 
     if(*nptr == '-') {
         negative = TRUE;
@@ -62,7 +64,7 @@ __int64 CDECL _wcstoi64_l(const wchar_t *nptr,
     } else if(*nptr == '+')
         nptr++;
 
-    if((base==0 || base==16) && *nptr=='0' && tolowerW(*(nptr+1))=='x') {
+    if((base==0 || base==16) && *nptr=='0' && towlower(*(nptr+1))=='x') {
         base = 16;
         nptr += 2;
     }
@@ -75,7 +77,7 @@ __int64 CDECL _wcstoi64_l(const wchar_t *nptr,
     }
 
     while(*nptr) {
-        wchar_t cur = tolowerW(*nptr);
+        wchar_t cur = towlower(*nptr);
         int v;
 
         if(cur>='0' && cur<='9') {
@@ -95,10 +97,14 @@ __int64 CDECL _wcstoi64_l(const wchar_t *nptr,
 
         if(!negative && (ret>_I64_MAX/base || ret*base>_I64_MAX-v)) {
             ret = _I64_MAX;
+#ifndef _LIBCNT_
             *_errno() = ERANGE;
+#endif
         } else if(negative && (ret<_I64_MIN/base || ret*base<_I64_MIN-v)) {
             ret = _I64_MIN;
+#ifndef _LIBCNT_
             *_errno() = ERANGE;
+#endif            
         } else
             ret = ret*base + v;
     }
@@ -129,13 +135,15 @@ unsigned __int64 CDECL _wcstoui64_l(const wchar_t *nptr,
     BOOL negative = FALSE;
     unsigned __int64 ret = 0;
 
+#ifndef _LIBCNT_
     TRACE("(%s %p %d %p)\n", debugstr_w(nptr), endptr, base, locale);
+#endif
 
     if (!MSVCRT_CHECK_PMT(nptr != NULL)) return 0;
     if (!MSVCRT_CHECK_PMT(base == 0 || base >= 2)) return 0;
     if (!MSVCRT_CHECK_PMT(base <= 36)) return 0;
 
-    while(isspaceW(*nptr)) nptr++;
+    while (iswctype((int)*nptr, _SPACE)) nptr++;
 
     if(*nptr == '-') {
         negative = TRUE;
@@ -143,7 +151,7 @@ unsigned __int64 CDECL _wcstoui64_l(const wchar_t *nptr,
     } else if(*nptr == '+')
         nptr++;
 
-    if((base==0 || base==16) && *nptr=='0' && tolowerW(*(nptr+1))=='x') {
+    if((base==0 || base==16) && *nptr=='0' && towlower(*(nptr+1))=='x') {
         base = 16;
         nptr += 2;
     }
@@ -156,7 +164,7 @@ unsigned __int64 CDECL _wcstoui64_l(const wchar_t *nptr,
     }
 
     while(*nptr) {
-        wchar_t cur = tolowerW(*nptr);
+        wchar_t cur = towlower(*nptr);
         int v;
 
         if(cur>='0' && cur<='9') {
@@ -173,8 +181,10 @@ unsigned __int64 CDECL _wcstoui64_l(const wchar_t *nptr,
 
         if(ret>_UI64_MAX/base || ret*base>_UI64_MAX-v) {
             ret = _UI64_MAX;
+#ifndef _LIBCNT_
             *_errno() = ERANGE;
-        } else
+#endif
+            } else
             ret = ret*base + v;
     }
 
