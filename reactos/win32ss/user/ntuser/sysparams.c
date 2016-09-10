@@ -312,6 +312,7 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.serialkeys.cbSize = sizeof(SERIALKEYS);
     gspv.soundsentry.cbSize = sizeof(SOUNDSENTRYW);
     gspv.highcontrast.cbSize = sizeof(HIGHCONTRASTW);
+    gspv.animationinfo.cbSize = sizeof(ANIMATIONINFO);
 
     /* Make sure we don't use broken values */
     SpiFixupValues();
