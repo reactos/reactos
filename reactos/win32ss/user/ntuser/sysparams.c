@@ -906,27 +906,11 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_GETNONCLIENTMETRICS:
         {
-            LPNONCLIENTMETRICSW metrics = (LPNONCLIENTMETRICSW)pvParam;
-
-            if (uiParam != 0 && uiParam != sizeof(NONCLIENTMETRICSW))
-                return 0;
-
-            if (!metrics || metrics->cbSize != sizeof(NONCLIENTMETRICSW))
-                return 0;
-
             return SpiGet(pvParam, &gspv.ncm, sizeof(NONCLIENTMETRICSW), fl);
         }
 
         case SPI_SETNONCLIENTMETRICS:
         {
-            LPNONCLIENTMETRICSW metrics = (LPNONCLIENTMETRICSW)pvParam;
-
-            if (uiParam != 0 && uiParam != sizeof(NONCLIENTMETRICSW))
-                return 0;
-
-            if (!metrics || metrics->cbSize != sizeof(NONCLIENTMETRICSW))
-                return 0;
-
             if (!SpiSet(&gspv.ncm, pvParam, sizeof(NONCLIENTMETRICSW), fl))
                 return 0;
 
@@ -959,27 +943,11 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_GETMINIMIZEDMETRICS:
         {
-            LPMINIMIZEDMETRICS metrics = (LPMINIMIZEDMETRICS)pvParam;
-
-            if (uiParam != 0 && uiParam != sizeof(MINIMIZEDMETRICS))
-                return 0;
-
-            if (!metrics || metrics->cbSize != sizeof(MINIMIZEDMETRICS))
-                return 0;
-
             return SpiGet(pvParam, &gspv.mm, sizeof(MINIMIZEDMETRICS), fl);
         }
 
         case SPI_SETMINIMIZEDMETRICS:
         {
-            LPMINIMIZEDMETRICS metrics = (LPMINIMIZEDMETRICS)pvParam;
-
-            if (uiParam != 0 && uiParam != sizeof(MINIMIZEDMETRICS))
-                return 0;
-
-            if (!metrics || metrics->cbSize != sizeof(MINIMIZEDMETRICS))
-                return 0;
-
             if (!SpiSet(&gspv.mm, pvParam, sizeof(MINIMIZEDMETRICS), fl))
                 return 0;
 
@@ -1001,27 +969,11 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_GETICONMETRICS:
         {
-            LPICONMETRICSW IconMetrics = (LPICONMETRICSW)pvParam;
-
-            if (uiParam != 0 && uiParam != sizeof(ICONMETRICSW))
-                return 0;
-
-            if (!IconMetrics || IconMetrics->cbSize != sizeof(ICONMETRICSW))
-                return 0;
-
             return SpiGet(pvParam, &gspv.im, sizeof(ICONMETRICSW), fl);
         }
 
         case SPI_SETICONMETRICS:
         {
-            LPICONMETRICSW IconMetrics = (LPICONMETRICSW)pvParam;
-
-            if (uiParam != 0 && uiParam != sizeof(ICONMETRICSW))
-                return 0;
-
-            if (!IconMetrics || IconMetrics->cbSize != sizeof(ICONMETRICSW))
-                return 0;
-
             if (!SpiSet(&gspv.im, pvParam, sizeof(ICONMETRICSW), fl))
                 return 0;
 
