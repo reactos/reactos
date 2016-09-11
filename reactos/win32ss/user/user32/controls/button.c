@@ -135,10 +135,6 @@ static const pfPaint btnPaintFunc[MAX_BTN_TYPE] =
     OB_Paint     /* BS_OWNERDRAW */
 };
 
-static HBITMAP hbitmapCheckBoxes = 0;
-static WORD checkBoxWidth = 0, checkBoxHeight = 0;
-
-
 /*********************************************************************
  * button class descriptor
  */
@@ -272,7 +268,8 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
           }
        }
     }
-
+    else
+       return 0;
 #else
     if (!IsWindow( hWnd )) return 0;
 #endif
@@ -299,14 +296,6 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         break;
 
     case WM_CREATE:
-        if (!hbitmapCheckBoxes)
-        {
-            BITMAP bmp;
-            hbitmapCheckBoxes = LoadBitmapW(0, MAKEINTRESOURCEW(OBM_CHECKBOXES));
-            GetObjectW( hbitmapCheckBoxes, sizeof(bmp), &bmp );
-            checkBoxWidth  = bmp.bmWidth / 4;
-            checkBoxHeight = bmp.bmHeight / 3;
-        }
         if (btn_type >= MAX_BTN_TYPE)
             return -1; /* abort */
 
@@ -400,8 +389,9 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
 	    break;
 	/* fall through */
     case WM_LBUTTONUP:
-    {
+#ifdef _REACTOS_
         BOOL TellParent = FALSE; //// ReactOS see note below.
+#endif
         state = get_button_state( hWnd );
         if (!(state & BUTTON_BTNPRESSED)) break;
         state &= BUTTON_NSTATES;
@@ -429,15 +419,27 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
                                 (state & BST_INDETERMINATE) ? 0 : ((state & 3) + 1), 0 );
                 break;
             }
+#ifdef _REACTOS_
             TellParent = TRUE; // <---- Fix CORE-10194, Notify parent after capture is released.
+#else
+            ReleaseCapture();
+            BUTTON_NOTIFY_PARENT(hWnd, BN_CLICKED);
+#endif
         }
+#ifdef _REACTOS_
         ReleaseCapture();
         if (TellParent) BUTTON_NOTIFY_PARENT(hWnd, BN_CLICKED);
-    }
+#else
+        else
+        {
+            ReleaseCapture();
+        }
+#endif
         break;
 
     case WM_CAPTURECHANGED:
         TRACE("WM_CAPTURECHANGED %p\n", hWnd);
+        if (hWnd == (HWND)lParam) break;
         state = get_button_state( hWnd );
         if (state & BUTTON_BTNPRESSED)
         {
@@ -459,36 +461,37 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     {
         /* Clear an old text here as Windows does */
 //
+// ReactOS Note :
 // wine Bug: http://bugs.winehq.org/show_bug.cgi?id=25790
 // Patch: http://source.winehq.org/patches/data/70889
 // By: Alexander LAW, Replicate Windows behavior of WM_SETTEXT handler regarding WM_CTLCOLOR*
 //
 #ifdef __REACTOS__
         if (style & WS_VISIBLE)
-        {
+#else
+        if (IsWindowVisible(hWnd))
 #endif
+        {
             HDC hdc = GetDC(hWnd);
             HBRUSH hbrush;
             RECT client, rc;
             HWND parent = GetParent(hWnd);
-#ifdef __REACTOS__
-            UINT ctlMessage = (btn_type == BS_PUSHBUTTON ||
-                               btn_type == BS_DEFPUSHBUTTON ||
-                               btn_type == BS_PUSHLIKE ||
-                               btn_type == BS_USERBUTTON ||
-                               btn_type == BS_OWNERDRAW) ?
-                               WM_CTLCOLORBTN : WM_CTLCOLORSTATIC;
-#endif
+            UINT message = (btn_type == BS_PUSHBUTTON ||
+                            btn_type == BS_DEFPUSHBUTTON ||
+                            btn_type == BS_PUSHLIKE ||
+                            btn_type == BS_USERBUTTON ||
+                            btn_type == BS_OWNERDRAW) ?
+                            WM_CTLCOLORBTN : WM_CTLCOLORSTATIC;
 
             if (!parent) parent = hWnd;
 #ifdef __REACTOS__
-            hbrush = GetControlColor(parent, hWnd, hdc, ctlMessage);
+            hbrush = GetControlColor(parent, hWnd, hdc, message);
 #else
-        hbrush = (HBRUSH)SendMessageW(parent, WM_CTLCOLORSTATIC,
-				      (WPARAM)hdc, (LPARAM)hWnd);
-        if (!hbrush) /* did the app forget to call DefWindowProc ? */
-            hbrush = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORSTATIC,
-					    (WPARAM)hdc, (LPARAM)hWnd);
+            hbrush = (HBRUSH)SendMessageW(parent, message,
+                                          (WPARAM)hdc, (LPARAM)hWnd);
+            if (!hbrush) /* did the app forget to call DefWindowProc ? */
+                hbrush = (HBRUSH)DefWindowProcW(parent, message,
+                                                (WPARAM)hdc, (LPARAM)hWnd);
 #endif
 
             GetClientRect(hWnd, &client);
@@ -499,9 +502,7 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
             if (rc.bottom > client.bottom) rc.bottom = client.bottom;
             FillRect(hdc, &rc, hbrush);
             ReleaseDC(hWnd, hdc);
-#ifdef __REACTOS__
         }
-#endif
 
         if (unicode) DefWindowProcW( hWnd, WM_SETTEXT, wParam, lParam );
         else DefWindowProcA( hWnd, WM_SETTEXT, wParam, lParam );
@@ -842,11 +843,8 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
 static BOOL CALLBACK BUTTON_DrawTextCallback(HDC hdc, LPARAM lp, WPARAM wp, int cx, int cy)
 {
    RECT rc;
-   rc.left = 0;
-   rc.top = 0;
-   rc.right = cx;
-   rc.bottom = cy;
 
+   SetRect(&rc, 0, 0, cx, cy);
    DrawTextW(hdc, (LPCWSTR)lp, -1, &rc, (UINT)wp);
    return TRUE;
 }
@@ -1026,7 +1024,7 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
 {
     RECT rbox, rtext, client;
     HBRUSH hBrush;
-    int delta;
+    int delta, text_offset, checkBoxWidth, checkBoxHeight;
     UINT dtFlags;
     HFONT hFont;
     LONG state = get_button_state( hwnd );
@@ -1043,7 +1041,12 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
     GetClientRect(hwnd, &client);
     rbox = rtext = client;
 
+    checkBoxWidth  = 12 * GetDeviceCaps( hDC, LOGPIXELSX ) / 96 + 1;
+    checkBoxHeight = 12 * GetDeviceCaps( hDC, LOGPIXELSY ) / 96 + 1;
+
     if ((hFont = get_button_font( hwnd ))) SelectObject( hDC, hFont );
+    GetCharWidthW( hDC, '0', '0', &text_offset );
+    text_offset /= 2;
 
     parent = GetParent(hwnd);
     if (!parent) parent = hwnd;
@@ -1062,12 +1065,12 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
     {
 	/* magic +4 is what CTL3D expects */
 
-        rtext.right -= checkBoxWidth + 4;
+        rtext.right -= checkBoxWidth + text_offset;;
         rbox.left = rbox.right - checkBoxWidth;
     }
     else
     {
-        rtext.left += checkBoxWidth + 4;
+        rtext.left += checkBoxWidth + text_offset;;
         rbox.right = checkBoxWidth;
     }
 
