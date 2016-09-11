@@ -1542,7 +1542,7 @@ ExitProcess(IN UINT uExitCode)
         RtlAcquirePebLock();
 
         /* Kill all the threads */
-        NtTerminateProcess(NULL, 0);
+        NtTerminateProcess(NULL, uExitCode);
 
         /* Unload all DLLs */
         LdrShutdownProcess();
