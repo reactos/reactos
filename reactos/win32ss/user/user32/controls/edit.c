@@ -1,9 +1,9 @@
 /*
- *	Edit control
+ *      Edit control
  *
- *	Copyright  David W. Metcalfe, 1994
- *	Copyright  William Magro, 1995, 1996
- *	Copyright  Frans van Dorsselaer, 1996, 1997
+ *      Copyright  David W. Metcalfe, 1994
+ *      Copyright  William Magro, 1995, 1996
+ *      Copyright  Frans van Dorsselaer, 1996, 1997
  *
  *
  * This library is free software; you can redistribute it and/or
@@ -2904,30 +2904,30 @@ static void EDIT_EM_SetLimitText(EDITSTATE *es, UINT limit)
 
 /*********************************************************************
  *
- *	EM_SETMARGINS
+ *      EM_SETMARGINS
  *
  * EC_USEFONTINFO is used as a left or right value i.e. lParam and not as an
  * action wParam despite what the docs say. EC_USEFONTINFO calculates the
  * margin according to the textmetrics of the current font.
  *
- * FIXME - With TrueType or vector fonts EC_USEFONTINFO currently sets one third
- * of the char's width as the margin, but this is not how Windows handles this.
- * For all other fonts Windows sets the margins to zero.
- *
- * FIXME - When EC_USEFONTINFO is used the margins only change if the
- * edit control is equal to or larger than a certain size.
- * Interestingly if one subtracts both the left and right margins from
- * this size one always seems to get an even number.  The extents of
- * the (four character) string "'**'" match this quite closely, so
- * we'll use this until we come up with a better idea.
+ * When EC_USEFONTINFO is used in the non_cjk case the margins only
+ * change if the edit control is equal to or larger than a certain
+ * size.  Though there is an exception for the empty client rect case
+ * with small font sizes.
  */
-static int calc_min_set_margin_size(HDC dc, INT left, INT right)
+static BOOL is_cjk(UINT charset)
 {
-    static const WCHAR magic_string[] = {'\'','*','*','\'', 0};
-    SIZE sz;
-
-    GetTextExtentPointW(dc, magic_string, sizeof(magic_string)/sizeof(WCHAR) - 1, &sz);
-    return sz.cx + left + right;
+    switch(charset)
+    {
+    case SHIFTJIS_CHARSET:
+    case HANGUL_CHARSET:
+    case GB2312_CHARSET:
+    case CHINESEBIG5_CHARSET:
+        return TRUE;
+    }
+    /* HANGUL_CHARSET is strange, though treated as CJK by Win 8, it is
+     * not by other versions including Win 10. */
+    return FALSE;
 }
 
 static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
@@ -2941,19 +2941,25 @@ static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
         if (es->font && (left == EC_USEFONTINFO || right == EC_USEFONTINFO)) {
             HDC dc = GetDC(es->hwndSelf);
             HFONT old_font = SelectObject(dc, es->font);
-            GetTextMetricsW(dc, &tm);
+            LONG width = GdiGetCharDimensions(dc, &tm, NULL);
+            RECT rc;
+
             /* The default margins are only non zero for TrueType or Vector fonts */
             if (tm.tmPitchAndFamily & ( TMPF_VECTOR | TMPF_TRUETYPE )) {
-                int min_size;
-                RECT rc;
-                /* This must be calculated more exactly! But how? */
-                default_left_margin = tm.tmAveCharWidth / 2;
-                default_right_margin = tm.tmAveCharWidth / 2;
-                min_size = calc_min_set_margin_size(dc, default_left_margin, default_right_margin);
-                GetClientRect(es->hwndSelf, &rc);
-                if (!IsRectEmpty(&rc) && (rc.right - rc.left < min_size)) {
-                    default_left_margin = es->left_margin;
-                    default_right_margin = es->right_margin;
+                if (!is_cjk(tm.tmCharSet)) {
+                    default_left_margin = width / 2;
+                    default_right_margin = width / 2;
+
+                    GetClientRect(es->hwndSelf, &rc);
+                    if (rc.right - rc.left < (width / 2 + width) * 2 &&
+                        (width >= 28 || !IsRectEmpty(&rc)) ) {
+                        default_left_margin = es->left_margin;
+                        default_right_margin = es->right_margin;
+                    }
+                } else {
+                    /* FIXME: figure out the CJK values. They are not affected by the client rect. */
+                    default_left_margin = width / 2;
+                    default_right_margin = width / 2;
                 }
             }
             SelectObject(dc, old_font);
