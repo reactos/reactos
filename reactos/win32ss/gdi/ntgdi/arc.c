@@ -376,6 +376,12 @@ NtGdiArcInternal(
     /* Yes, Windows really returns TRUE in this case */
     return TRUE;
   }
+  if (arctype > GdiTypePie)
+  {
+    DC_UnlockDc(dc);
+    EngSetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
 
   DC_vPrepareDCsForBlit(dc, NULL, NULL, NULL);
 
