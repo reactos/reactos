@@ -571,12 +571,12 @@ NtUserEnumDisplaySettings(
 
     _SEH2_TRY
     {
-        ProbeForRead(lpDevMode, sizeof(DEVMODEW), 1);
+        ProbeForRead(lpDevMode, sizeof(DEVMODEW), sizeof(UCHAR));
 
         cbSize = lpDevMode->dmSize;
         cbExtra = lpDevMode->dmDriverExtra;
 
-        ProbeForWrite(lpDevMode, cbSize + cbExtra, 1);
+        ProbeForWrite(lpDevMode, cbSize + cbExtra, sizeof(UCHAR));
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {

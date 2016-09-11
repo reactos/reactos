@@ -301,7 +301,10 @@ EnumDisplaySettingsExW(
     DWORD dwFlags)
 {
     NTSTATUS Status;
-    UNICODE_STRING usDeviceName, *pusDeviceName = NULL;
+    UNICODE_STRING usDeviceName;
+    PUNICODE_STRING pusDeviceName = NULL;
+    LPDEVMODEW lpExtendedDevMode;
+    BOOL Result = FALSE;
 
     if (lpszDeviceName)
     {
@@ -309,9 +312,54 @@ EnumDisplaySettingsExW(
         pusDeviceName = &usDeviceName;
     }
 
-    Status = NtUserEnumDisplaySettings(pusDeviceName, iModeNum, lpDevMode, dwFlags);
+    /* Allocate memory for DEVMODEW and extra data */
+    lpExtendedDevMode = RtlAllocateHeap(RtlGetProcessHeap(),
+                                        HEAP_ZERO_MEMORY,
+                                        sizeof(DEVMODEW) + lpDevMode->dmDriverExtra);
+    if (!lpExtendedDevMode)
+        return FALSE;
 
-    return NT_SUCCESS(Status);
+    /* Initialize structure fields */
+    lpExtendedDevMode->dmSize = sizeof(DEVMODEW);
+    lpExtendedDevMode->dmDriverExtra = lpDevMode->dmDriverExtra;
+
+    Status = NtUserEnumDisplaySettings(pusDeviceName, iModeNum, lpExtendedDevMode, dwFlags);
+    if (NT_SUCCESS(Status))
+    {
+        /* Store old structure size */
+        WORD OldSize = lpDevMode->dmSize;
+
+        /* Copy general data */
+        RtlCopyMemory(lpDevMode, lpExtendedDevMode, OldSize);
+
+        /* Restore old size */
+        lpDevMode->dmSize = OldSize;
+
+        /* Extra data presented? */
+        if (lpDevMode->dmDriverExtra && lpExtendedDevMode->dmDriverExtra)
+        {
+            /* We choose the smallest size */
+            if (lpDevMode->dmDriverExtra > lpExtendedDevMode->dmDriverExtra)
+                lpDevMode->dmDriverExtra = lpExtendedDevMode->dmDriverExtra;
+
+            /* Copy extra data */
+            RtlCopyMemory(lpDevMode + OldSize, lpExtendedDevMode + 1, lpDevMode->dmDriverExtra);
+        }
+
+        /* If the size of source structure is less, than used, we clean unsupported flags */
+        if (OldSize < FIELD_OFFSET(DEVMODEW, dmPanningHeight))
+            lpDevMode->dmFields &= ~DM_PANNINGHEIGHT;
+
+        if (OldSize < FIELD_OFFSET(DEVMODEW, dmPanningWidth))
+            lpDevMode->dmFields &= ~DM_PANNINGWIDTH;
+
+        Result = TRUE;
+    }
+
+    /* Free memory */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, lpExtendedDevMode);
+
+    return Result;
 }
 
 
@@ -325,7 +373,11 @@ EnumDisplaySettingsW(
     DWORD iModeNum,
     LPDEVMODEW lpDevMode)
 {
-    return EnumDisplaySettingsExW ( lpszDeviceName, iModeNum, lpDevMode, 0 );
+    /* Fixup sizes */
+    lpDevMode->dmSize = FIELD_OFFSET(DEVMODE, dmICMMethod);
+    lpDevMode->dmDriverExtra = 0;
+
+    return EnumDisplaySettingsExW(lpszDeviceName, iModeNum, lpDevMode, 0);
 }
 
 
