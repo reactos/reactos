@@ -443,7 +443,7 @@ UserEnumCurrentDisplaySettings(
     {
         /* No device found */
         ERR("No PDEV found!\n");
-        return STATUS_UNSUCCESSFUL;
+        return STATUS_INVALID_PARAMETER_1;
     }
 
     *ppdm = ppdev->pdmwDev;
@@ -474,7 +474,7 @@ UserEnumDisplaySettings(
     {
         /* No device found */
         ERR("No device found!\n");
-        return STATUS_UNSUCCESSFUL;
+        return STATUS_INVALID_PARAMETER_1;
     }
 
     iFoundMode = 0;
@@ -571,13 +571,18 @@ NtUserEnumDisplaySettings(
 
     _SEH2_TRY
     {
-        ProbeForWrite(lpDevMode, sizeof(DEVMODEW), 1);
+        ProbeForRead(lpDevMode, sizeof(DEVMODEW), 1);
+
+        cbSize = lpDevMode->dmSize;
+        cbExtra = lpDevMode->dmDriverExtra;
+
+        ProbeForWrite(lpDevMode, cbSize + cbExtra, 1);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
-    _SEH2_END
+    _SEH2_END;
 
     if (lpDevMode->dmSize != sizeof(DEVMODEW))
     {
@@ -586,31 +591,30 @@ NtUserEnumDisplaySettings(
 
     if (pustrDevice)
     {
-       if (pustrDevice->Buffer == NULL || pustrDevice->Length == 0)
-       {
-           Status = STATUS_INVALID_PARAMETER_1;
-       }
-
         /* Initialize destination string */
         RtlInitEmptyUnicodeString(&ustrDevice, awcDevice, sizeof(awcDevice));
 
         _SEH2_TRY
         {
             /* Probe the UNICODE_STRING and the buffer */
-            ProbeForRead(pustrDevice, sizeof(UNICODE_STRING), 1);
-            ProbeForRead(pustrDevice->Buffer, pustrDevice->Length, 1);
+            ProbeForReadUnicodeString(pustrDevice);
+
+            if (!pustrDevice->Length || !pustrDevice->Buffer)
+                ExRaiseStatus(STATUS_NO_MEMORY);
+
+            ProbeForRead(pustrDevice->Buffer, pustrDevice->Length, sizeof(UCHAR));
 
             /* Copy the string */
             RtlCopyUnicodeString(&ustrDevice, pustrDevice);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+            _SEH2_YIELD(return STATUS_INVALID_PARAMETER_1);
         }
-        _SEH2_END
+        _SEH2_END;
 
         pustrDevice = &ustrDevice;
-   }
+    }
 
     /* Acquire global USER lock */
     UserEnterShared();
@@ -642,11 +646,6 @@ NtUserEnumDisplaySettings(
         /* Copy some information back */
         _SEH2_TRY
         {
-            ProbeForRead(lpDevMode, sizeof(DEVMODEW), 1);
-            cbSize = lpDevMode->dmSize;
-            cbExtra = lpDevMode->dmDriverExtra;
-
-            ProbeForWrite(lpDevMode, cbSize + cbExtra, 1);
             /* Output what we got */
             RtlCopyMemory(lpDevMode, pdm, min(cbSize, pdm->dmSize));
 
@@ -663,13 +662,6 @@ NtUserEnumDisplaySettings(
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;
-    }
-    else
-    {
-        if (Status == STATUS_UNSUCCESSFUL)
-        {
-            Status = STATUS_INVALID_PARAMETER_1;
-        }
     }
 
     return Status;
