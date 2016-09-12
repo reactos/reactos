@@ -641,7 +641,7 @@ BOOL CDefView::InitList()
     }
     else
     {
-        FIXME("no SF2\n");
+        FIXME("no m_pSF2Parent\n");
     }
 
     Shell_GetImageLists(&big_icons, &small_icons);
@@ -891,7 +891,14 @@ HRESULT CDefView::FillList()
     DPA_DestroyCallback( hdpa, fill_list, this);
 
     /* sort the array */
-    m_pSF2Parent->GetDefaultColumn(NULL, (ULONG*)&m_sortInfo.nHeaderID, NULL);
+    if (m_pSF2Parent)
+    {
+        m_pSF2Parent->GetDefaultColumn(NULL, (ULONG*)&m_sortInfo.nHeaderID, NULL);
+    }
+    else
+    {
+        FIXME("no m_pSF2Parent\n");
+    }
     m_sortInfo.bIsAscending = TRUE;
     m_sortInfo.nLastHeaderID = m_sortInfo.nHeaderID;
     m_ListView.SortItems(ListViewCompareItems, this);
@@ -1748,7 +1755,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                 }
                 else
                 {
-                    FIXME("no SF2\n");
+                    FIXME("no m_pSF2Parent\n");
                 }
             }
             if(lpdi->item.mask & LVIF_IMAGE)    /* image requested */
