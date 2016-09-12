@@ -1,1 +1,0 @@
-@ stdcall SetCounterValuesPointer(ptr)
