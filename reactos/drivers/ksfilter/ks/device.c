@@ -782,15 +782,14 @@ KsInitializeDevice(
             }
         }
 
-        /* does the driver pnp notification */
-        if (Descriptor->Dispatch)
+        /* does the driver care about the add device */
+        if (Descriptor->Dispatch && Descriptor->Dispatch->Add)
         {
-            /* does the driver care about the add device */
             Status = Descriptor->Dispatch->Add(&Header->KsDevice);
-
             DPRINT("Driver: AddHandler Status %x\n", Status);
-            Header->KsDevice.Descriptor = Descriptor;
         }
+
+        Header->KsDevice.Descriptor = Descriptor;
     }
 
 
