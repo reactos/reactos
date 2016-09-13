@@ -19,8 +19,16 @@ https://openclipart.org/detail/172888/simple-beach-ball
 Column
 https://openclipart.org/detail/25388/architetto-capitello-modanatura
 
+Crayon-drawed icon, combined from the icons
+https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Format-justify-fill.svg/48px-Format-justify-fill.svg.png
+https://openclipart.org/detail/85387/crayon
+https://openclipart.org/detail/161623/crayon-star
+
 Domino
 https://openclipart.org/detail/3525/domino-set-15
+
+Soccer ball
+https://openclipart.org/detail/21992/soccer-ball
 
 Race flag
 https://openclipart.org/detail/62779/wavy-checkered-flag
