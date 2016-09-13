@@ -56,6 +56,19 @@ ULONG Locales[LOCALES_COUNT][2] =
     {1252, 775}, // Used for Estonian
 };
 
+#define LONG_NAMES_COUNT 12
+PWSTR LongNames[LONG_NAMES_COUNT] =
+{
+    L"Long File Name 1.txt", L"Long File Name 2.txt", L"Long File Name 3.txt", L"Long File Name 4.txt", L"Long File Name 5.txt", L"Long File Name 6.txt",
+    L"Very Long File Name 1.txt", L"Very Long File Name 2.txt", L"Very Long File Name 3.txt", L"Very Long File Name 4.txt", L"Very Long File Name 5.txt", L"Very Long File Name 6.txt",
+};
+
+PWSTR LongShortNames[LONG_NAMES_COUNT] =
+{
+    L"LONGFI~1.TXT", L"LONGFI~2.TXT", L"LONGFI~3.TXT", L"LONGFI~4.TXT", L"LO1796~1.TXT", L"LO1796~2.TXT",
+    L"VERYLO~1.TXT", L"VERYLO~2.TXT", L"VERYLO~3.TXT", L"VERYLO~4.TXT", L"VED051~1.TXT", L"VED051~2.TXT",
+};
+
 PVOID LoadCodePageData(ULONG Code)
 {
     char filename[MAX_PATH], sysdir[MAX_PATH];
@@ -139,6 +152,27 @@ START_TEST(RtlGenerate8dot3Name)
             RtlGenerate8dot3Name(&LongName, TRUE, &Context, &ShortName);
             RtlInitUnicodeString(&Expected, ExShortNames2[j][i]);
             ok(RtlEqualUnicodeString(&Expected, &ShortName, FALSE), "%u:: Generated: %.*S. Expected: %.*S\n", j, ShortName.Length / sizeof(WCHAR), ShortName.Buffer, Expected.Length / sizeof(WCHAR), Expected.Buffer);
+        }
+    }
+
+    {
+        WCHAR Buffer[12];
+        GENERATE_NAME_CONTEXT Context;
+        UNICODE_STRING LongName, ShortName, Expected;
+
+        ShortName.Buffer = Buffer;
+        ShortName.MaximumLength = sizeof(Buffer);
+
+        for (i = 0; i < LONG_NAMES_COUNT; ++i)
+        {
+            if (i % 6 == 0) RtlZeroMemory(&Context, sizeof(GENERATE_NAME_CONTEXT));
+
+            RtlInitUnicodeString(&LongName, LongNames[i]);
+            ShortName.Length = 0;
+
+            RtlGenerate8dot3Name(&LongName, FALSE, &Context, &ShortName);
+            RtlInitUnicodeString(&Expected, LongShortNames[i]);
+            ok(RtlEqualUnicodeString(&Expected, &ShortName, FALSE), "%u:: Generated: %.*S. Expected: %.*S\n", i, ShortName.Length / sizeof(WCHAR), ShortName.Buffer, Expected.Length / sizeof(WCHAR), Expected.Buffer);
         }
     }
 }
