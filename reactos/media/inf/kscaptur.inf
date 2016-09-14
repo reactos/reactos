@@ -330,7 +330,7 @@ PlugIn_IAMVideoControl="WDM Streaming-IAMVideoControl-Interface handler"
 PlugIn_IVideoEncoder="WDM Streaming-IVideoEncoder-Interface handler"
 Plugin_IKsTopologyInfo="WDM Streaming-IKsTopologyInfo-Interface handler"
 Plugin_ICameraControl="WDM Streaming-ICameraControl-Interface handler"
-Plugin_IVideoProcAmp="WDM Streaming-IVideoProcAmp-Inteface handler"
+Plugin_IVideoProcAmp="WDM Streaming-IVideoProcAmp-Interface handler"
 Plugin_ISelector="WDM Streaming-ISelector-Interface handler"
 Plugin_PropertyObject="Node Interfaces-Aggregate handler"
 
