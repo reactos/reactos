@@ -1509,6 +1509,53 @@ ExQueryPoolUsage(OUT PULONG PagedPoolPages,
     *PagedPoolLookasideHits += 0;
 }
 
+VOID
+NTAPI
+ExReturnPoolQuota(IN PVOID P)
+{
+    PPOOL_HEADER Entry;
+    POOL_TYPE PoolType;
+    USHORT BlockSize;
+    PEPROCESS Process;
+
+    if ((ExpPoolFlags & POOL_FLAG_SPECIAL_POOL) &&
+        (MmIsSpecialPoolAddress(P)))
+    {
+        return;
+    }
+
+    Entry = P;
+    Entry--;
+    ASSERT((ULONG_PTR)Entry % POOL_BLOCK_SIZE == 0);
+
+    PoolType = Entry->PoolType - 1;
+    BlockSize = Entry->BlockSize;
+
+    if (PoolType & QUOTA_POOL_MASK)
+    {
+        Process = ((PVOID *)POOL_NEXT_BLOCK(Entry))[-1];
+        ASSERT(Process != NULL);
+        if (Process)
+        {
+            if (Process->Pcb.Header.Type != ProcessObject)
+            {
+                DPRINT1("Object %p is not a process. Type %u, pool type 0x%x, block size %u\n",
+                        Process, Process->Pcb.Header.Type, Entry->PoolType, BlockSize);
+                KeBugCheckEx(BAD_POOL_CALLER,
+                             0x0D,
+                             (ULONG_PTR)P,
+                             Entry->PoolTag,
+                             (ULONG_PTR)Process);
+            }
+            ((PVOID *)POOL_NEXT_BLOCK(Entry))[-1] = NULL;
+            PsReturnPoolQuota(Process,
+                              PoolType & BASE_POOL_TYPE_MASK,
+                              BlockSize * POOL_BLOCK_SIZE);
+            ObDereferenceObject(Process);
+        }
+    }
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -2285,7 +2332,6 @@ ExFreePoolWithTag(IN PVOID P,
     if ((Entry->PoolType - 1) & QUOTA_POOL_MASK)
     {
         Process = ((PVOID *)POOL_NEXT_BLOCK(Entry))[-1];
-        ASSERT(Process != NULL);
         if (Process)
         {
             if (Process->Pcb.Header.Type != ProcessObject)

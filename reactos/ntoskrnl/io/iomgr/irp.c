@@ -1649,6 +1649,14 @@ IoFreeIrp(IN PIRP Irp)
         /* The free was within the Depth */
         if (Irp)
         {
+            /* Remove the association with the process */
+            if (Irp->AllocationFlags & IRP_QUOTA_CHARGED)
+            {
+                ExReturnPoolQuota(Irp);
+                Irp->AllocationFlags &= ~IRP_QUOTA_CHARGED;
+            }
+
+            /* Add it to the lookaside list */
             InterlockedPushEntrySList(&List->L.ListHead,
                                       (PSLIST_ENTRY)Irp);
         }

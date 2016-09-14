@@ -1397,6 +1397,11 @@ ExpCheckPoolAllocation(
     POOL_TYPE PoolType,
     ULONG Tag);
 
+VOID
+NTAPI
+ExReturnPoolQuota(
+    IN PVOID P);
+
 
 /* mmsup.c *****************************************************************/
 
