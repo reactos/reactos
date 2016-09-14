@@ -592,6 +592,6 @@ PlugIn_IAMVideoControl="Обробник WDM Streaming-IAMVideoControl-Interface
 PlugIn_IVideoEncoder="Обробник WDM Streaming-IVideoEncoder-Interface"
 Plugin_IKsTopologyInfo="Обробник WDM Streaming-IKsTopologyInfo-Interface"
 Plugin_ICameraControl="Обробник WDM Streaming-ICameraControl-Interface"
-Plugin_IVideoProcAmp="Обробник WDM Streaming-IVideoProcAmp-Inteface"
+Plugin_IVideoProcAmp="Обробник WDM Streaming-IVideoProcAmp-Interface"
 Plugin_ISelector="Обробник WDM Streaming-ISelector-Interface"
 Plugin_PropertyObject="Обробник вузлів Interfaces-Aggregate"

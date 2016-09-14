@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS GDI32
- * PURPOSE:          GDI DirectX inteface
+ * PURPOSE:          GDI DirectX interface
  * FILE:             win32ss/gdi/gdi32/misc/gdientry.c
  * PROGRAMERS:       Alex Ionescu (alex@relsoft.net)
  *                   Magnus Olsen (magnus@greatlord.com)

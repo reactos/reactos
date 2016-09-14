@@ -193,7 +193,7 @@ CUSBHardwareDevice::Initialize(
     Status = GetBusInterface(PhysicalDeviceObject, &m_BusInterface);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to get BusInteface!\n");
+        DPRINT1("Failed to get BusInterface!\n");
         return Status;
     }
 
