@@ -577,6 +577,10 @@ co_IntSetActiveWindow(PWND Wnd OPTIONAL, BOOL bMouse, BOOL bFocus, BOOL Async)
       BOOL Ret, DoFG, AllowFG;
 
       if (Wnd->state & WNDS_BEINGACTIVATED) return TRUE;
+      if (Wnd == pWndChg)
+      {
+         return TRUE; // Fix CORE-8780 and CORE-11979. See CORE-11324 for breakage.
+      }
 
       if (ThreadQueue == Wnd->head.pti->MessageQueue)
       {
