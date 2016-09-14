@@ -2212,24 +2212,6 @@ co_WinPosSetWindowPos(
       {
          co_IntSendMessageNoWait(WinPos.hwnd, WM_CHILDACTIVATE, 0, 0);
       }
-#if 0 ////// Break see CORE-11324
-      /*   Do not allow setting if already active.
-           Fix A : wine msg test_SetParent:WmSetParentSeq_2:25 msg!
-           Recursion broke the tests.
-       */
-      else if ( pti->MessageQueue->spwndActive != Window ||
-                pti->MessageQueue != gpqForeground ) // This fixes the breakage at boot time caused by the above line!
-      {
-         // Inside SAW? Fixes Api AttachThreadInput tests.
-         TRACE("SetWindowPos Set FG Window! hWnd %p\n",WinPos.hwnd);
-         if (!(Window->state & WNDS_BEINGACTIVATED))
-         {
-            TRACE("SetWindowPos Set FG Window!\n");
-            // Fixes SW_HIDE issues. Wine win test_SetActiveWindow & test_SetForegroundWindow.
-            co_IntSetForegroundWindow(Window);
-         }
-      }
-#else //////
       else
       {
          //ERR("SetWindowPos Set FG Window!\n");
@@ -2238,7 +2220,6 @@ co_WinPosSetWindowPos(
          else
             co_IntSetForegroundWindow(Window); // Fixes SW_HIDE issues. Wine win test_SetActiveWindow & test_SetForegroundWindow.
       }
-#endif
    }
 
    if ( !PosChanged &&
