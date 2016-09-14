@@ -77,6 +77,36 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
+  /* If you enable this configuration option, FreeType recognizes an       */
+  /* environment variable called `FREETYPE_PROPERTIES', which can be used  */
+  /* to control the various font drivers and modules.  The controllable    */
+  /* properties are listed in the section `Controlling FreeType Modules'   */
+  /* in the reference's table of contents; currently there are properties  */
+  /* for the auto-hinter (file `ftautoh.h'), CFF (file `ftcffdrv.h'), and  */
+  /* TrueType (file `ftttdrv.h').                                          */
+  /*                                                                       */
+  /* `FREETYPE_PROPERTIES' has the following syntax form (broken here into */
+  /* multiple lines for better readability).                               */
+  /*                                                                       */
+  /*   <optional whitespace>                                               */
+  /*   <module-name1> ':'                                                  */
+  /*   <property-name1> '=' <property-value1>                              */
+  /*   <whitespace>                                                        */
+  /*   <module-name2> ':'                                                  */
+  /*   <property-name2> '=' <property-value2>                              */
+  /*   ...                                                                 */
+  /*                                                                       */
+  /* Example:                                                              */
+  /*                                                                       */
+  /*   FREETYPE_PROPERTIES=truetype:interpreter-version=35 \               */
+  /*                       cff:no-stem-darkening=1 \                       */
+  /*                       autofitter:warping=1                            */
+  /*                                                                       */
+//#define FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
+
+
+  /*************************************************************************/
+  /*                                                                       */
   /* Uncomment the line below if you want to activate sub-pixel rendering  */
   /* (a.k.a. LCD rendering, or ClearType) in this build of the library.    */
   /*                                                                       */
@@ -492,7 +522,21 @@ FT_BEGIN_HEADER
   /*   code will be used.                                                  */
   /*                                                                       */
   /*   Setting this macro is needed for systems that prohibit address      */
-  /*   fixups, such as BREW.                                               */
+  /*   fixups, such as BREW.  [Note that standard compilers like gcc or    */
+  /*   clang handle PIC generation automatically; you don't have to set    */
+  /*   FT_CONFIG_OPTION_PIC, which is only necessary for very special      */
+  /*   compilers.]                                                         */
+  /*                                                                       */
+  /*   Note that FT_CONFIG_OPTION_PIC support is not available for all     */
+  /*   modules (see `modules.cfg' for a complete list).  For building with */
+  /*   FT_CONFIG_OPTION_PIC support, do the following.                     */
+  /*                                                                       */
+  /*     0. Clone the repository.                                          */
+  /*     1. Define FT_CONFIG_OPTION_PIC.                                   */
+  /*     2. Remove all subdirectories in `src' that don't have             */
+  /*        FT_CONFIG_OPTION_PIC support.                                  */
+  /*     3. Comment out the corresponding modules in `modules.cfg'.        */
+  /*     4. Compile.                                                       */
   /*                                                                       */
 /* #define FT_CONFIG_OPTION_PIC */
 

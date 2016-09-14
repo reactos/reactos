@@ -1092,7 +1092,7 @@
         FT_UInt  ppem;
 
 
-        scaled    = FT_MulFix( blue->shoot.org, scaler->y_scale );
+        scaled    = FT_MulFix( blue->shoot.org, scale );
         ppem      = metrics->root.scaler.face->size->metrics.x_ppem;
         limit     = metrics->root.globals->increase_x_height;
         threshold = 40;
@@ -1139,8 +1139,6 @@
 
             if ( dist == 0 )
             {
-              scale = new_scale;
-
               FT_TRACE5((
                 "af_latin_metrics_scale_dim:"
                 " x height alignment (style `%s'):\n"
@@ -1148,9 +1146,11 @@
                 " vertical scaling changed from %.4f to %.4f (by %d%%)\n"
                 "\n",
                 af_style_names[metrics->root.style_class->style],
-                axis->org_scale / 65536.0,
                 scale / 65536.0,
+                new_scale / 65536.0,
                 ( fitted - scaled ) * 100 / scaled ));
+
+              scale = new_scale;
             }
 #ifdef FT_DEBUG_LEVEL_TRACE
             else
@@ -1552,8 +1552,9 @@
               /* points are different: we are just leaving an edge, thus */
               /* record a new segment                                    */
 
-              segment->last = point;
-              segment->pos  = (FT_Short)( ( min_pos + max_pos ) >> 1 );
+              segment->last  = point;
+              segment->pos   = (FT_Short)( ( min_pos + max_pos ) >> 1 );
+              segment->delta = (FT_Short)( ( max_pos - min_pos ) >> 1 );
 
               /* a segment is round if either its first or last point */
               /* is a control point, and the length of the on points  */
@@ -1982,6 +1983,7 @@
     FT_Fixed      scale;
     FT_Pos        edge_distance_threshold;
     FT_Pos        segment_length_threshold;
+    FT_Pos        segment_width_threshold;
 
 
     axis->num_edges = 0;
@@ -2003,9 +2005,15 @@
      *  corresponding threshold in font units.
      */
     if ( dim == AF_DIMENSION_HORZ )
-        segment_length_threshold = FT_DivFix( 64, hints->y_scale );
+      segment_length_threshold = FT_DivFix( 64, hints->y_scale );
     else
-        segment_length_threshold = 0;
+      segment_length_threshold = 0;
+
+    /*
+     *  Similarly, we ignore segments that have a width delta
+     *  larger than 0.5px (i.e., a width larger than 1px).
+     */
+    segment_width_threshold = FT_DivFix( 32, scale );
 
     /*********************************************************************/
     /*                                                                   */
@@ -2038,9 +2046,10 @@
       FT_Int   ee;
 
 
-      /* ignore too short segments and, in this loop, */
-      /* one-point segments without a direction       */
+      /* ignore too short segments, too wide ones, and, in this loop, */
+      /* one-point segments without a direction                       */
       if ( seg->height < segment_length_threshold ||
+           seg->delta > segment_width_threshold   ||
            seg->dir == AF_DIR_NONE                )
         continue;
 

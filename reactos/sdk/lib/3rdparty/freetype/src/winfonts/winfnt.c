@@ -759,6 +759,14 @@
     if ( error )
       goto Fail;
 
+    /* sanity check */
+    if ( !face->font->header.pixel_height )
+    {
+      FT_TRACE2(( "invalid pixel height\n" ));
+      error = FT_THROW( Invalid_File_Format );
+      goto Fail;
+    }
+
     /* we now need to fill the root FT_Face fields */
     /* with relevant information                   */
     {
@@ -1062,7 +1070,8 @@
       bitmap->rows       = font->header.pixel_height;
       bitmap->pixel_mode = FT_PIXEL_MODE_MONO;
 
-      if ( offset + pitch * bitmap->rows > font->header.file_size )
+      if ( !pitch                                                 ||
+           offset + pitch * bitmap->rows > font->header.file_size )
       {
         FT_TRACE2(( "invalid bitmap width\n" ));
         error = FT_THROW( Invalid_File_Format );

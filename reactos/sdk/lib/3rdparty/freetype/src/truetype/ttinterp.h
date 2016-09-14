@@ -170,6 +170,7 @@ FT_BEGIN_HEADER
                        pts,
                        twilight;
 
+    FT_Long            pointSize;  /* in 26.6 format */
     FT_Size_Metrics    metrics;
     TT_Size_Metrics    tt_metrics; /* size metrics */
 

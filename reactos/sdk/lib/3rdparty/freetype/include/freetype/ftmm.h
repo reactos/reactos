@@ -195,11 +195,15 @@ FT_BEGIN_HEADER
   /*                       (where every glyph could have a different       */
   /*                       number of designs).                             */
   /*                                                                       */
-  /*    num_namedstyles :: The number of named styles; only meaningful for */
-  /*                       GX that allows certain design coordinates to    */
-  /*                       have a string ID (in the `name' table)          */
-  /*                       associated with them.  The font can tell the    */
-  /*                       user that, for example, Weight=1.5 is `Bold'.   */
+  /*    num_namedstyles :: The number of named styles; a `named style' is  */
+  /*                       a tuple of design coordinates that has a string */
+  /*                       ID (in the `name' table) associated with it.    */
+  /*                       The font can tell the user that, for example,   */
+  /*                       [Weight=1.5,Width=1.1] is `Bold'.               */
+  /*                                                                       */
+  /*                       For Type 1 Multiple Masters fonts, this value   */
+  /*                       is always zero because the format does not      */
+  /*                       support named styles.                           */
   /*                                                                       */
   /*    axis            :: An axis descriptor table.                       */
   /*                       GX fonts contain slightly more data than MM.    */

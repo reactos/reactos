@@ -260,6 +260,7 @@ FT_BEGIN_HEADER
     FT_Byte     flags;       /* edge/segment flags for this segment */
     FT_Char     dir;         /* segment direction                   */
     FT_Short    pos;         /* position of segment                 */
+    FT_Short    delta;       /* deviation from segment position     */
     FT_Short    min_coord;   /* minimum coordinate of segment       */
     FT_Short    max_coord;   /* maximum coordinate of segment       */
     FT_Short    height;      /* the hinted segment height           */

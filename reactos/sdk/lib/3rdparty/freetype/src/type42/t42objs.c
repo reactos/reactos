@@ -656,8 +656,9 @@
     FT_TRACE1(( "T42_GlyphSlot_Load: glyph index %d\n", glyph_index ));
 
     /* map T42 glyph index to embedded TTF's glyph index */
-    glyph_index = (FT_UInt)ft_atol(
-                    (const char *)t42face->type1.charstrings[glyph_index] );
+    glyph_index = (FT_UInt)ft_strtol(
+                    (const char *)t42face->type1.charstrings[glyph_index],
+                    NULL, 10 );
 
     t42_glyphslot_clear( t42slot->ttslot );
     error = ttclazz->load_glyph( t42slot->ttslot,

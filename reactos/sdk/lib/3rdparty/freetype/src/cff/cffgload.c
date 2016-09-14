@@ -2942,6 +2942,7 @@
       cff_decoder_init( &decoder, face, size, glyph, hinting,
                         FT_LOAD_TARGET_MODE( load_flags ) );
 
+      /* this is for pure CFFs */
       if ( load_flags & FT_LOAD_ADVANCE_ONLY )
         decoder.width_only = TRUE;
 

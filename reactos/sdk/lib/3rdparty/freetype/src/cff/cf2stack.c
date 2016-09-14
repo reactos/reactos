@@ -53,14 +53,14 @@
   cf2_stack_init( FT_Memory  memory,
                   FT_Error*  e )
   {
-    FT_Error  error = FT_Err_Ok;     /* for FT_QNEW */
+    FT_Error  error = FT_Err_Ok;     /* for FT_NEW */
 
     CF2_Stack  stack = NULL;
 
 
-    if ( !FT_QNEW( stack ) )
+    if ( !FT_NEW( stack ) )
     {
-      /* initialize the structure; FT_QNEW zeroes it */
+      /* initialize the structure; FT_NEW zeroes it */
       stack->memory = memory;
       stack->error  = e;
       stack->top    = &stack->buffer[0]; /* empty stack */

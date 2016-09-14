@@ -87,13 +87,13 @@ AF_BLUE_STRING_ENUM AF_BLUE_STRINGS_ARRAY AF_BLUE_STRING_MAX_LEN:
     "ـ"
 
   AF_BLUE_STRING_ARMENIAN_CAPITAL_TOP
-    "Ա Մ Ւ Փ Բ Գ Դ Օ"
+    "Ա Մ Ւ Ս Բ Գ Դ Օ"
   AF_BLUE_STRING_ARMENIAN_CAPITAL_BOTTOM
-    "Ւ Ո Փ Ճ Շ Ս Տ Օ"
+    "Ւ Ո Դ Ճ Շ Ս Տ Օ"
   AF_BLUE_STRING_ARMENIAN_SMALL_ASCENDER
-    "ե է ի մ վ փ ֆ փ"
+    "ե է ի մ վ ֆ ճ"
   AF_BLUE_STRING_ARMENIAN_SMALL_TOP
-    "ա յ ւ ս գ ջ ր օ"
+    "ա յ ւ ս գ շ ր օ"
   AF_BLUE_STRING_ARMENIAN_SMALL_BOTTOM
     "հ ո ճ ա ե ծ ս օ"
   AF_BLUE_STRING_ARMENIAN_SMALL_DESCENDER

@@ -148,6 +148,8 @@ FT_BEGIN_HEADER
    * @note:
    *   This property can be used with @FT_Property_Get also.
    *
+   *   This property can be set via the `FREETYPE_PROPERTIES' environment
+   *   variable (using values `adobe' or `freetype').
    */
 
 
@@ -199,6 +201,9 @@ FT_BEGIN_HEADER
    * @note:
    *   This property can be used with @FT_Property_Get also.
    *
+   *   This property can be set via the `FREETYPE_PROPERTIES' environment
+   *   variable (using values 1 and 0 for `on' and `off', respectively).
+   *
    */
 
 
@@ -248,6 +253,14 @@ FT_BEGIN_HEADER
    * @note:
    *   This property can be used with @FT_Property_Get also.
    *
+   *   This property can be set via the `FREETYPE_PROPERTIES' environment
+   *   variable, using eight comma-separated integers without spaces.  Here
+   *   the above example, using `\' to break the line for readability.
+   *
+   *   {
+   *     FREETYPE_PROPERTIES=\
+   *     cff:darkening-parameters=500,300,1000,200,1500,100,2000,0
+   *   }
    */
 
   /* */

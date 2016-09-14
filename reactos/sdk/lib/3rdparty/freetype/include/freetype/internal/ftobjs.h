@@ -532,6 +532,14 @@ FT_BEGIN_HEADER
   ft_module_get_service( FT_Module    module,
                          const char*  service_id );
 
+#ifdef FT_CONFIG_OPTION_ENVIRONMENT_PROPERTIES
+  FT_BASE( FT_Error )
+  ft_property_string_set( FT_Library        library,
+                          const FT_String*  module_name,
+                          const FT_String*  property_name,
+                          FT_String*        value );
+#endif
+
   /* */
 
 

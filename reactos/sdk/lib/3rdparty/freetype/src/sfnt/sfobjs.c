@@ -977,7 +977,7 @@
 #endif
 
     face->root.num_faces  = face->ttc_header.count;
-    face->root.face_index = face_index;
+    face->root.face_index = face_instance_index;
 
     return error;
   }

@@ -602,7 +602,8 @@
 
     if ( !FT_ALLOC( name, byte_len + 1 ) )
     {
-      FT_MEM_COPY( name, bytes, byte_len );
+      if ( byte_len )
+        FT_MEM_COPY( name, bytes, byte_len );
       name[byte_len] = 0;
     }
     cff_index_forget_element( idx, &bytes );

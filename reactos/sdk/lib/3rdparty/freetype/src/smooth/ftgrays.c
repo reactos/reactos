@@ -403,9 +403,12 @@ typedef ptrdiff_t  FT_PtrDist;
 
   } TCell;
 
+  typedef struct TPixmap_
+  {
+    unsigned char*  origin;  /* pixmap origin at the bottom-left */
+    int             pitch;   /* pitch to go down one row */
 
-  /* maximum number of gray spans in a call to the span callback */
-#define FT_MAX_GRAY_SPANS  32
+  } TPixmap;
 
   /* maximum number of gray cells in the buffer */
 #if FT_RENDER_POOL_SIZE > 2048
@@ -430,7 +433,6 @@ typedef ptrdiff_t  FT_PtrDist;
     TCoord  ex, ey;
     TCoord  min_ex, max_ex;
     TCoord  min_ey, max_ey;
-    TCoord  count_ex, count_ey;
 
     TArea   area;
     TCoord  cover;
@@ -443,14 +445,10 @@ typedef ptrdiff_t  FT_PtrDist;
     TPos    x,  y;
 
     FT_Outline  outline;
-    FT_Bitmap   target;
-
-    FT_Span     gray_spans[FT_MAX_GRAY_SPANS];
-    int         num_gray_spans;
+    TPixmap     target;
 
     FT_Raster_Span_Func  render_span;
     void*                render_span_data;
-    int                  span_y;
 
     PCell*     ycells;
 
@@ -482,17 +480,17 @@ typedef ptrdiff_t  FT_PtrDist;
   static void
   gray_dump_cells( RAS_ARG )
   {
-    int  yindex;
+    int  y;
 
 
-    for ( yindex = 0; yindex < ras.count_ey; yindex++ )
+    for ( y = ras.min_ey; y < ras.max_ey; y++ )
     {
-      PCell  cell;
+      PCell  cell = ras.ycells[y - ras.min_ey];
 
 
-      printf( "%3d:", yindex );
+      printf( "%3d:", y );
 
-      for ( cell = ras.ycells[yindex]; cell != NULL; cell = cell->next )
+      for ( ; cell != NULL; cell = cell->next )
         printf( " (%3d, c:%4d, a:%6d)",
                 cell->x, cell->cover, cell->area );
       printf( "\n" );
@@ -513,10 +511,10 @@ typedef ptrdiff_t  FT_PtrDist;
     TCoord  x = ras.ex;
 
 
-    if ( x > ras.count_ex )
-      x = ras.count_ex;
+    if ( x > ras.max_ex )
+      x = ras.max_ex;
 
-    pcell = &ras.ycells[ras.ey];
+    pcell = &ras.ycells[ras.ey - ras.min_ey];
     for (;;)
     {
       cell = *pcell;
@@ -579,14 +577,11 @@ typedef ptrdiff_t  FT_PtrDist;
 
     /* All cells that are on the left of the clipping region go to the */
     /* min_ex - 1 horizontal position.                                 */
-    ey -= ras.min_ey;
-
     if ( ex > ras.max_ex )
       ex = ras.max_ex;
 
-    ex -= ras.min_ex;
-    if ( ex < 0 )
-      ex = -1;
+    if ( ex < ras.min_ex )
+      ex = ras.min_ex - 1;
 
     /* are we moving to a different cell ? */
     if ( ex != ras.ex || ey != ras.ey )
@@ -601,33 +596,10 @@ typedef ptrdiff_t  FT_PtrDist;
       ras.ey    = ey;
     }
 
-    ras.invalid = ( (unsigned int)ey >= (unsigned int)ras.count_ey ||
-                                  ex >= ras.count_ex               );
+    ras.invalid = ( ey >= ras.max_ey || ey < ras.min_ey ||
+                    ex >= ras.max_ex );
   }
 
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* Start a new contour at a given cell.                                  */
-  /*                                                                       */
-  static void
-  gray_start_cell( RAS_ARG_ TCoord  ex,
-                            TCoord  ey )
-  {
-    if ( ex > ras.max_ex )
-      ex = ras.max_ex;
-
-    if ( ex < ras.min_ex )
-      ex = ras.min_ex - 1;
-
-    ras.area    = 0;
-    ras.cover   = 0;
-    ras.ex      = ex - ras.min_ex;
-    ras.ey      = ey - ras.min_ey;
-    ras.invalid = 0;
-
-    gray_set_cell( RAS_VAR_ ex, ey );
-  }
 
 #ifndef FT_LONG64
 
@@ -657,14 +629,14 @@ typedef ptrdiff_t  FT_PtrDist;
       return;
     }
 
-    fx1 = (TCoord)( x1 - SUBPIXELS( ex1 ) );
-    fx2 = (TCoord)( x2 - SUBPIXELS( ex2 ) );
+    fx1   = (TCoord)( x1 - SUBPIXELS( ex1 ) );
+    fx2   = (TCoord)( x2 - SUBPIXELS( ex2 ) );
+    delta = y2 - y1;
 
     /* everything is located in a single cell.  That is easy! */
     /*                                                        */
     if ( ex1 == ex2 )
     {
-      delta      = y2 - y1;
       ras.area  += (TArea)(( fx1 + fx2 ) * delta);
       ras.cover += delta;
       return;
@@ -673,14 +645,17 @@ typedef ptrdiff_t  FT_PtrDist;
     /* ok, we'll have to render a run of adjacent cells on the same */
     /* scanline...                                                  */
     /*                                                              */
-    p     = ( ONE_PIXEL - fx1 ) * ( y2 - y1 );
-    first = ONE_PIXEL;
-    incr  = 1;
-    dx    = x2 - x1;
+    dx = x2 - x1;
 
-    if ( dx < 0 )
+    if ( dx > 0 )
     {
-      p     = fx1 * ( y2 - y1 );
+      p     = ( ONE_PIXEL - fx1 ) * delta;
+      first = ONE_PIXEL;
+      incr  = 1;
+    }
+    else
+    {
+      p     = fx1 * delta;
       first = 0;
       incr  = -1;
       dx    = -dx;
@@ -764,8 +739,6 @@ typedef ptrdiff_t  FT_PtrDist;
     dy = to_y - ras.y;
 
     /* vertical line - avoid calling gray_render_scanline */
-    incr = 1;
-
     if ( dx == 0 )
     {
       TCoord  ex     = TRUNC( ras.x );
@@ -773,8 +746,12 @@ typedef ptrdiff_t  FT_PtrDist;
       TArea   area;
 
 
-      first = ONE_PIXEL;
-      if ( dy < 0 )
+      if ( dy > 0)
+      {
+        first = ONE_PIXEL;
+        incr  = 1;
+      }
+      else
       {
         first = 0;
         incr  = -1;
@@ -806,11 +783,13 @@ typedef ptrdiff_t  FT_PtrDist;
     }
 
     /* ok, we have to render several scanlines */
-    p     = ( ONE_PIXEL - fy1 ) * dx;
-    first = ONE_PIXEL;
-    incr  = 1;
-
-    if ( dy < 0 )
+    if ( dy > 0)
+    {
+      p     = ( ONE_PIXEL - fy1 ) * dx;
+      first = ONE_PIXEL;
+      incr  = 1;
+    }
+    else
     {
       p     = fy1 * dx;
       first = 0;
@@ -1218,15 +1197,11 @@ typedef ptrdiff_t  FT_PtrDist;
     TPos  x, y;
 
 
-    /* record current cell, if any */
-    if ( !ras.invalid )
-      gray_record_cell( RAS_VAR );
-
     /* start to a new position */
     x = UPSCALE( to->x );
     y = UPSCALE( to->y );
 
-    gray_start_cell( RAS_VAR_ TRUNC( x ), TRUNC( y ) );
+    gray_set_cell( RAS_VAR_ TRUNC( x ), TRUNC( y ) );
 
     ras.x = x;
     ras.y = y;
@@ -1265,59 +1240,13 @@ typedef ptrdiff_t  FT_PtrDist;
 
 
   static void
-  gray_render_span( int             y,
-                    int             count,
-                    const FT_Span*  spans,
-                    gray_PWorker    worker )
-  {
-    unsigned char*  p;
-    FT_Bitmap*      map = &worker->target;
-
-
-    /* first of all, compute the scanline offset */
-    p = (unsigned char*)map->buffer - y * map->pitch;
-    if ( map->pitch >= 0 )
-      p += ( map->rows - 1 ) * (unsigned int)map->pitch;
-
-    for ( ; count > 0; count--, spans++ )
-    {
-      unsigned char  coverage = spans->coverage;
-
-
-      if ( coverage )
-      {
-        unsigned char*  q = p + spans->x;
-
-
-        /* For small-spans it is faster to do it by ourselves than
-         * calling `memset'.  This is mainly due to the cost of the
-         * function call.
-         */
-        switch ( spans->len )
-        {
-        case 7: *q++ = coverage;
-        case 6: *q++ = coverage;
-        case 5: *q++ = coverage;
-        case 4: *q++ = coverage;
-        case 3: *q++ = coverage;
-        case 2: *q++ = coverage;
-        case 1: *q   = coverage;
-        case 0: break;
-        default:
-          FT_MEM_SET( q, coverage, spans->len );
-        }
-      }
-    }
-  }
-
-
-  static void
   gray_hline( RAS_ARG_ TCoord  x,
                        TCoord  y,
                        TArea   area,
                        TCoord  acount )
   {
-    int  coverage;
+    int      coverage;
+    FT_Span  span;
 
 
     /* compute the coverage line's coverage, depending on the    */
@@ -1346,64 +1275,37 @@ typedef ptrdiff_t  FT_PtrDist;
         coverage = 255;
     }
 
-    y += ras.min_ey;
-    x += ras.min_ex;
-
-    if ( coverage )
+    if ( ras.render_span )  /* for FT_RASTER_FLAG_DIRECT only */
     {
-      FT_Span*  span;
-      int       count;
+      span.x        = (short)x;
+      span.len      = (unsigned short)acount;
+      span.coverage = (unsigned char)coverage;
+
+      ras.render_span( y, 1, &span, ras.render_span_data );
+    }
+    else
+    {
+      unsigned char*  q = ras.target.origin - ras.target.pitch * y + x;
+      unsigned char   c = (unsigned char)coverage;
 
 
-      /* see whether we can add this span to the current list */
-      count = ras.num_gray_spans;
-      span  = ras.gray_spans + count - 1;
-      if ( span->coverage == coverage &&
-           span->x + span->len == x   &&
-           ras.span_y == y            &&
-           count > 0                  )
+      /* For small-spans it is faster to do it by ourselves than
+       * calling `memset'.  This is mainly due to the cost of the
+       * function call.
+       */
+      switch ( acount )
       {
-        span->len = (unsigned short)( span->len + acount );
-        return;
+      case 7: *q++ = c;
+      case 6: *q++ = c;
+      case 5: *q++ = c;
+      case 4: *q++ = c;
+      case 3: *q++ = c;
+      case 2: *q++ = c;
+      case 1: *q   = c;
+      case 0: break;
+      default:
+        FT_MEM_SET( q, c, acount );
       }
-
-      if ( ras.span_y != y || count >= FT_MAX_GRAY_SPANS )
-      {
-        if ( ras.render_span && count > 0 )
-          ras.render_span( ras.span_y, count, ras.gray_spans,
-                           ras.render_span_data );
-
-#ifdef FT_DEBUG_LEVEL_TRACE
-
-        if ( count > 0 )
-        {
-          int  n;
-
-
-          FT_TRACE7(( "y = %3d ", ras.span_y ));
-          span = ras.gray_spans;
-          for ( n = 0; n < count; n++, span++ )
-            FT_TRACE7(( "[%d..%d]:%02x ",
-                        span->x, span->x + span->len - 1, span->coverage ));
-          FT_TRACE7(( "\n" ));
-        }
-
-#endif /* FT_DEBUG_LEVEL_TRACE */
-
-        ras.num_gray_spans = 0;
-        ras.span_y         = (int)y;
-
-        span  = ras.gray_spans;
-      }
-      else
-        span++;
-
-      /* add a gray span to the current list */
-      span->x        = (short)x;
-      span->len      = (unsigned short)acount;
-      span->coverage = (unsigned char)coverage;
-
-      ras.num_gray_spans++;
     }
   }
 
@@ -1411,22 +1313,19 @@ typedef ptrdiff_t  FT_PtrDist;
   static void
   gray_sweep( RAS_ARG )
   {
-    int  yindex;
+    int  y;
 
 
     if ( ras.num_cells == 0 )
       return;
 
-    ras.num_gray_spans = 0;
-    ras.span_y         = 0;
-
     FT_TRACE7(( "gray_sweep: start\n" ));
 
-    for ( yindex = 0; yindex < ras.count_ey; yindex++ )
+    for ( y = ras.min_ey; y < ras.max_ey; y++ )
     {
-      PCell   cell  = ras.ycells[yindex];
+      PCell   cell  = ras.ycells[y - ras.min_ey];
       TCoord  cover = 0;
-      TCoord  x     = 0;
+      TCoord  x     = ras.min_ex;
 
 
       for ( ; cell != NULL; cell = cell->next )
@@ -1434,48 +1333,25 @@ typedef ptrdiff_t  FT_PtrDist;
         TArea  area;
 
 
-        if ( cell->x > x && cover != 0 )
-          gray_hline( RAS_VAR_ x, yindex, (TArea)cover * ( ONE_PIXEL * 2 ),
+        if ( cover != 0 && cell->x > x )
+          gray_hline( RAS_VAR_ x, y, (TArea)cover * ( ONE_PIXEL * 2 ),
                       cell->x - x );
 
         cover += cell->cover;
         area   = (TArea)cover * ( ONE_PIXEL * 2 ) - cell->area;
 
-        if ( area != 0 && cell->x >= 0 )
-          gray_hline( RAS_VAR_ cell->x, yindex, area, 1 );
+        if ( area != 0 && cell->x >= ras.min_ex )
+          gray_hline( RAS_VAR_ cell->x, y, area, 1 );
 
         x = cell->x + 1;
       }
 
       if ( cover != 0 )
-        gray_hline( RAS_VAR_ x, yindex, (TArea)cover * ( ONE_PIXEL * 2 ),
-                    ras.count_ex - x );
-    }
-
-    if ( ras.render_span && ras.num_gray_spans > 0 )
-      ras.render_span( ras.span_y, ras.num_gray_spans,
-                       ras.gray_spans, ras.render_span_data );
-
-#ifdef FT_DEBUG_LEVEL_TRACE
-
-    if ( ras.num_gray_spans > 0 )
-    {
-      FT_Span*  span;
-      int       n;
-
-
-      FT_TRACE7(( "y = %3d ", ras.span_y ));
-      span = ras.gray_spans;
-      for ( n = 0; n < ras.num_gray_spans; n++, span++ )
-        FT_TRACE7(( "[%d..%d]:%02x ",
-                    span->x, span->x + span->len - 1, span->coverage ));
-      FT_TRACE7(( "\n" ));
+        gray_hline( RAS_VAR_ x, y, (TArea)cover * ( ONE_PIXEL * 2 ),
+                    ras.max_ex - x );
     }
 
     FT_TRACE7(( "gray_sweep: end\n" ));
-
-#endif /* FT_DEBUG_LEVEL_TRACE */
-
   }
 
 
@@ -1839,13 +1715,6 @@ typedef ptrdiff_t  FT_PtrDist;
 #endif /* STANDALONE_ */
 
 
-  typedef struct  gray_TBand_
-  {
-    TCoord  min, max;
-
-  } gray_TBand;
-
-
   FT_DEFINE_OUTLINE_FUNCS(
     func_interface,
 
@@ -1895,47 +1764,49 @@ typedef ptrdiff_t  FT_PtrDist;
 #ifdef __REACTOS__
     TCell *buffer;
 #else
-    TCell        buffer[FT_MAX_GRAY_POOL];
+    TCell    buffer[FT_MAX_GRAY_POOL];
 #endif
-    const int    band_size = FT_MAX_GRAY_POOL / 8;
-    gray_TBand   bands[32];
-    gray_TBand*  band;
-    int          n, num_bands;
-    TCoord       min, max, max_y;
+    TCoord   band_size = FT_MAX_GRAY_POOL / 8;
+    TCoord   count = ras.max_ey - ras.min_ey;
+    int      num_bands;
+    TCoord   min, max, max_y;
+    TCoord   bands[32];  /* enough to accommodate bisections */
+    TCoord*  band;
 
 #ifdef __REACTOS__
     buffer = malloc(FT_MAX(FT_RENDER_POOL_SIZE, 2048));
 #endif
 
     /* set up vertical bands */
-    num_bands = (int)( ( ras.max_ey - ras.min_ey ) / band_size );
-    if ( num_bands == 0 )
-      num_bands = 1;
-    if ( num_bands >= 39 )
-      num_bands = 39;
+    if ( count > band_size )
+    {
+      /* two divisions rounded up */
+      num_bands = (int)( ( count + band_size - 1) / band_size );
+      band_size = ( count + num_bands - 1 ) / num_bands;
+    }
 
     min   = ras.min_ey;
     max_y = ras.max_ey;
 
-    for ( n = 0; n < num_bands; n++, min = max )
+    for ( ; min < max_y; min = max )
     {
       max = min + band_size;
-      if ( n == num_bands - 1 || max > max_y )
+      if ( max > max_y )
         max = max_y;
 
-      bands[0].min = min;
-      bands[0].max = max;
-      band         = bands;
+      band    = bands;
+      band[1] = min;
+      band[0] = max;
 
       do
       {
-        TCoord  bottom, top, middle;
+        TCoord  width = band[0] - band[1];
         int     error;
 
 
         /* memory management */
         {
-          size_t  ycount = (size_t)( band->max - band->min );
+          size_t  ycount = (size_t)width;
           size_t  cell_start;
 
 
@@ -1955,9 +1826,8 @@ typedef ptrdiff_t  FT_PtrDist;
 
         ras.num_cells = 0;
         ras.invalid   = 1;
-        ras.min_ey    = band->min;
-        ras.max_ey    = band->max;
-        ras.count_ey  = band->max - band->min;
+        ras.min_ey    = band[1];
+        ras.max_ey    = ras.ey = band[0];
 
         error = gray_convert_glyph_inner( RAS_VAR );
 
@@ -1977,13 +1847,11 @@ typedef ptrdiff_t  FT_PtrDist;
 
       ReduceBands:
         /* render pool overflow; we will reduce the render band by half */
-        bottom = band->min;
-        top    = band->max;
-        middle = bottom + ( ( top - bottom ) >> 1 );
+        width >>= 1;
 
         /* This is too complex for a single scanline; there must */
         /* be some problems.                                     */
-        if ( middle == bottom )
+        if ( width == 0 )
         {
           FT_TRACE7(( "gray_convert_glyph: rotten glyph\n" ));
 #ifdef __REACTOS__
@@ -1992,11 +1860,9 @@ typedef ptrdiff_t  FT_PtrDist;
           return 1;
         }
 
-        band[1].min = bottom;
-        band[1].max = middle;
-        band[0].min = middle;
-        band[0].max = top;
         band++;
+        band[1]  = band[0];
+        band[0] += width;
       } while ( band >= bands );
     }
 
@@ -2016,11 +1882,17 @@ typedef ptrdiff_t  FT_PtrDist;
     const FT_Bitmap*   target_map  = params->target;
     FT_BBox            cbox, clip;
 
+#ifndef FT_STATIC_RASTER
     gray_TWorker  worker[1];
+#endif
 
 
     if ( !raster )
       return FT_THROW( Invalid_Argument );
+
+    /* this version does not support monochrome rendering */
+    if ( !( params->flags & FT_RASTER_FLAG_AA ) )
+      return FT_THROW( Invalid_Mode );
 
     if ( !outline )
       return FT_THROW( Invalid_Outline );
@@ -2036,9 +1908,19 @@ typedef ptrdiff_t  FT_PtrDist;
            outline->contours[outline->n_contours - 1] + 1 )
       return FT_THROW( Invalid_Outline );
 
-    /* if direct mode is not set, we must have a target bitmap */
-    if ( !( params->flags & FT_RASTER_FLAG_DIRECT ) )
+    ras.outline = *outline;
+
+    if ( params->flags & FT_RASTER_FLAG_DIRECT )
     {
+      if ( !params->gray_spans )
+        return 0;
+
+      ras.render_span      = (FT_Raster_Span_Func)params->gray_spans;
+      ras.render_span_data = params->user;
+    }
+    else
+    {
+      /* if direct mode is not set, we must have a target bitmap */
       if ( !target_map )
         return FT_THROW( Invalid_Argument );
 
@@ -2048,11 +1930,18 @@ typedef ptrdiff_t  FT_PtrDist;
 
       if ( !target_map->buffer )
         return FT_THROW( Invalid_Argument );
-    }
 
-    /* this version does not support monochrome rendering */
-    if ( !( params->flags & FT_RASTER_FLAG_AA ) )
-      return FT_THROW( Invalid_Mode );
+      if ( target_map->pitch < 0 )
+        ras.target.origin = target_map->buffer;
+      else
+        ras.target.origin = target_map->buffer
+              + ( target_map->rows - 1 ) * (unsigned int)target_map->pitch;
+
+      ras.target.pitch = target_map->pitch;
+
+      ras.render_span      = (FT_Raster_Span_Func)NULL;
+      ras.render_span_data = NULL;
+    }
 
     FT_Outline_Get_CBox( outline, &cbox );
 
@@ -2094,23 +1983,6 @@ typedef ptrdiff_t  FT_PtrDist;
 
     if ( ras.max_ex <= ras.min_ex || ras.max_ey <= ras.min_ey )
       return 0;
-
-    ras.count_ex = ras.max_ex - ras.min_ex;
-    ras.count_ey = ras.max_ey - ras.min_ey;
-
-    ras.outline        = *outline;
-
-    if ( params->flags & FT_RASTER_FLAG_DIRECT )
-    {
-      ras.render_span      = (FT_Raster_Span_Func)params->gray_spans;
-      ras.render_span_data = params->user;
-    }
-    else
-    {
-      ras.target           = *target_map;
-      ras.render_span      = (FT_Raster_Span_Func)gray_render_span;
-      ras.render_span_data = &ras;
-    }
 
     return gray_convert_glyph( RAS_VAR );
   }

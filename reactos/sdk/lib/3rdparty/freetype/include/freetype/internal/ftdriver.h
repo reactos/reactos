@@ -67,15 +67,6 @@ FT_BEGIN_HEADER
                        FT_Int32      load_flags );
 
 
-  typedef FT_UInt
-  (*FT_CharMap_CharIndexFunc)( FT_CharMap  charmap,
-                               FT_Long     charcode );
-
-  typedef FT_Long
-  (*FT_CharMap_CharNextFunc)( FT_CharMap  charmap,
-                              FT_Long     charcode );
-
-
   typedef FT_Error
   (*FT_Face_GetKerningFunc)( FT_Face     face,
                              FT_UInt     left_glyph,

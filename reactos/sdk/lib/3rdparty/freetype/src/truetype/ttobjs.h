@@ -286,6 +286,8 @@ FT_BEGIN_HEADER
 
 #ifdef TT_USE_BYTECODE_INTERPRETER
 
+    FT_Long            point_size;    /* for the `MPS' bytecode instruction */
+
     FT_UInt            num_function_defs; /* number of function definitions */
     FT_UInt            max_function_defs;
     TT_DefArray        function_defs;     /* table of function definitions  */
