@@ -7,7 +7,7 @@ BEGIN
         MENUITEM "E&xit", IDM_EXIT
         MENUITEM "&Options", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&About ...", IDM_ABOUT
+        MENUITEM "&About", IDM_ABOUT
     END
 END
 

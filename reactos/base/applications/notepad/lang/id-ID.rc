@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "Simpan seb&agai...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Se&tup Halaman...", CMD_PAGE_SETUP
-        MENUITEM "&Cetak\tCtrl+P", CMD_PRINT
+        MENUITEM "&Cetak...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&Keluar", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Ca&ri...\tCtrl+F", CMD_SEARCH
         MENUITEM "Cari berikut&nya\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Ganti\tCtrl+H", CMD_REPLACE
+        MENUITEM "Ganti...\tCtrl+H", CMD_REPLACE
         MENUITEM "Pergi Ke...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Pilih semu&a\tCtrl+A", CMD_SELECT_ALL

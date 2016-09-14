@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "Вставити\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Видалити виділення\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Обернути виділення", IDM_EDITINVERTSELECTION
-        MENUITEM "Виділити все\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Виді&лити все\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Копіювати до файлу...", IDM_EDITCOPYTO
         MENUITEM "Вставити з файлу...", IDM_EDITPASTEFROM

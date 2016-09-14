@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "Запис &като...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Настройка на страницата...", CMD_PAGE_SETUP
-        MENUITEM "От&печатване\tCtrl+P", CMD_PRINT
+        MENUITEM "От&печатване...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "Из&ход", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Търсене...\tCtrl+F", CMD_SEARCH
         MENUITEM "Търсене на &следващото\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Замяна\tCtrl+H", CMD_REPLACE
+        MENUITEM "Замяна...\tCtrl+H", CMD_REPLACE
         MENUITEM "Отиване на...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Избор на вси&чки\tCtrl+A", CMD_SELECT_ALL

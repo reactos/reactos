@@ -19,7 +19,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Sayfa Görünümü", IDM_FILEPAGEVIEW
         MENUITEM "Sayfa Ayarla...", IDM_FILEPAGESETUP
-        MENUITEM "Yazdır...\tDenetim+P", IDM_FILEPRINT
+        MENUITEM "Ya&zdır...\tDenetim+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
         MENUITEM "&Döşeyerek Duvar Kağıdı Yap", IDM_FILEASWALLPAPERPLANE
         MENUITEM "&Ortalayarak Duvar Kağıdı Yap", IDM_FILEASWALLPAPERCENTERED

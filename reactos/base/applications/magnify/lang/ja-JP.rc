@@ -7,7 +7,7 @@ BEGIN
         MENUITEM "終了(&X)", IDM_EXIT
         MENUITEM "オプション(&O)", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "バージョン情報(&A) ...", IDM_ABOUT
+        MENUITEM "バージョン情報(&A)", IDM_ABOUT
     END
 END
 

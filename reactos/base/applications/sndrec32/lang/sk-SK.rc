@@ -62,7 +62,7 @@ BEGIN
 	END
     POPUP "?"
     BEGIN
-        MENUITEM "Č&o je...", ID_ABOUT
+        MENUITEM "Č&o je", ID_ABOUT
     END
 END
 

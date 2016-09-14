@@ -59,7 +59,7 @@ BEGIN
     END
     POPUP "帮助(&?)"
     BEGIN
-        MENUITEM "关于...", ID_ABOUT
+        MENUITEM "关于", ID_ABOUT
     END
 END
 

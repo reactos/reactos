@@ -30,7 +30,7 @@ BEGIN
     POPUP "Hjälp"
     BEGIN
         MENUITEM "Hjälp\tF1", ID_HELP, GRAYED
-        MENUITEM "Om...", ID_ABOUT
+        MENUITEM "Om", ID_ABOUT
     END
 END
 

@@ -32,7 +32,7 @@ BEGIN
         MENUITEM "Ruaj si...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Konfigurim Faqes...", CMD_PAGE_SETUP
-        MENUITEM "&Printo\tCtrl+P", CMD_PRINT
+        MENUITEM "&Printo...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "Dil", CMD_EXIT
     END
@@ -47,7 +47,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Gjej...\tCtrl+F", CMD_SEARCH
         MENUITEM "Gjej Tjetren\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Ndrysho\tCtrl+H", CMD_REPLACE
+        MENUITEM "Ndrysho...\tCtrl+H", CMD_REPLACE
         MENUITEM "Shko tek...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Perzgjidh te gjith\tCtrl+A", CMD_SELECT_ALL

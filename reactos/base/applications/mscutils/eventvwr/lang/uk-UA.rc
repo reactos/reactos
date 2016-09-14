@@ -33,7 +33,7 @@ BEGIN
     BEGIN
         MENUITEM "Д&опомога", IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Про...", IDM_ABOUT
+        MENUITEM "&Про", IDM_ABOUT
     END
 END
 

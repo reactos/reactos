@@ -47,7 +47,7 @@ BEGIN
         MENUITEM "&Tümünü Seç\tDenetim+A",      ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
         MENUITEM "&Bul...\tDenetim+F",          ID_FIND
-        MENUITEM "S&onrakini Bul\tİ3",          ID_FIND_NEXT
+        MENUITEM "S&onrakini Bul\tF3",          ID_FIND_NEXT
         MENUITEM "&Değiştir...\tDenetim+H",     ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "Ya&lnızca Okunur",            ID_EDIT_READONLY

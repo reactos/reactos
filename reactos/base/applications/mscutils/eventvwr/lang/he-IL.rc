@@ -33,7 +33,7 @@ BEGIN
     BEGIN
         MENUITEM "עזרה", IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "אודות...", IDM_ABOUT
+        MENUITEM "אודות", IDM_ABOUT
     END
 END
 

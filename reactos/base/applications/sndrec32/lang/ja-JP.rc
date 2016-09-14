@@ -57,7 +57,7 @@ BEGIN
     END
     POPUP "?"
     BEGIN
-        MENUITEM "バージョン情報...", ID_ABOUT
+        MENUITEM "バージョン情報", ID_ABOUT
     END
 END
 

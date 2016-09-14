@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "Gem so&m...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Side&opsætning...", CMD_PAGE_SETUP
-        MENUITEM "&Udskriv\tCtrl+P", CMD_PRINT
+        MENUITEM "&Udskriv...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&Afslut", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Søg...", CMD_SEARCH
         MENUITEM "&Find næste\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Replace\tCtrl+H", CMD_REPLACE
+        MENUITEM "Replace...\tCtrl+H", CMD_REPLACE
         MENUITEM "Go To...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Marker &alt", CMD_SELECT_ALL

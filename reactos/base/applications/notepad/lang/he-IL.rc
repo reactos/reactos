@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "שמור &בשם...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "הגדרת עמ&וד", CMD_PAGE_SETUP
-        MENUITEM "הד&פסה\tCtrl+P", CMD_PRINT
+        MENUITEM "הד&פסה...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&יציאה", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&מצא\tCtrl+F", CMD_SEARCH
         MENUITEM "חפ&ש את הבא\tF3", CMD_SEARCH_NEXT
-        MENUITEM "החלפה\tCtrl+H", CMD_REPLACE
+        MENUITEM "החלפה...\tCtrl+H", CMD_REPLACE
         MENUITEM "מעבר א&ל...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "בחר הכל\tCtrl+A", CMD_SELECT_ALL

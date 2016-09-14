@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "Talleta &nimellä...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "&Sivun asetukset...", CMD_PAGE_SETUP
-        MENUITEM "T&ulosta\tCtrl+P", CMD_PRINT
+        MENUITEM "T&ulosta...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&Poistu", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Etsi...", CMD_SEARCH
         MENUITEM "Etsi &seuraava\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Replace\tCtrl+H", CMD_REPLACE
+        MENUITEM "Replace...\tCtrl+H", CMD_REPLACE
         MENUITEM "Go To...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "&Valitse kaikki", CMD_SELECT_ALL

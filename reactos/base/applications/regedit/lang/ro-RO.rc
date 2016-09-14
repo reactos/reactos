@@ -39,7 +39,7 @@ BEGIN
         MENUITEM "&Conectare la un registru din rețea…", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Deconectare de la registru din rețea…", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "I&mprimare…\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "I&mprimare…...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", ID_REGISTRY_EXIT
     END
@@ -65,7 +65,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Copiază numele cheii", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Găsire…\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "&Găsire…...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "Găsește &următorul\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&Afișare"
@@ -125,7 +125,7 @@ BEGIN
             MENUITEM "Valoare &multi-șir", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "Valoare șir e&xtensibil", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Găsire…", ID_EDIT_FIND
+        MENUITEM "&Găsire…...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "Șt&erge", ID_TREE_DELETE
         MENUITEM "&Redenumește", ID_TREE_RENAME

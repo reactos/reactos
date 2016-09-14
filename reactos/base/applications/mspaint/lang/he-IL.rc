@@ -17,7 +17,7 @@ BEGIN
         MENUITEM "קבע כרקע שולחן העבודה (מרכז)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "קבע כרקע שולחן העבודה (מלא)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "י&ציאה\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "&יציאה\tAlt+F4", IDM_FILEEXIT
     END
     POPUP "&עריכה"
     BEGIN

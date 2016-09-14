@@ -34,7 +34,7 @@ BEGIN
     END
     POPUP "&Pomocník"
     BEGIN
-        MENUITEM "Č&o je...", IDM_ABOUT
+        MENUITEM "Č&o je", IDM_ABOUT
     END
 END
 

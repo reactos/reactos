@@ -12,7 +12,7 @@ BEGIN
         MENUITEM "S&končiť", IDM_EXIT
         MENUITEM "&Možnosti", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "Č&o je ...", IDM_ABOUT
+        MENUITEM "Č&o je", IDM_ABOUT
     END
 END
 

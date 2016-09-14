@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "В&ихід", IDM_EXIT
         MENUITEM "П&араметри", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Про програму ...", IDM_ABOUT
+        MENUITEM "&Про програму", IDM_ABOUT
     END
 END
 

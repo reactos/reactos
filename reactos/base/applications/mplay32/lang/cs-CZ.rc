@@ -34,7 +34,7 @@ BEGIN
     END
     POPUP "&Nápověda"
     BEGIN
-        MENUITEM "&O programu...", IDM_ABOUT
+        MENUITEM "&O programu", IDM_ABOUT
     END
 END
 

@@ -39,7 +39,7 @@ BEGIN
     BEGIN
         MENUITEM "&Yardım", IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Üzerine...", IDM_ABOUT
+        MENUITEM "&Üzerine", IDM_ABOUT
     END
 END
 

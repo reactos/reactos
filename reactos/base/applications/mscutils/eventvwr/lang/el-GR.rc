@@ -33,7 +33,7 @@ BEGIN
     BEGIN
         MENUITEM "Βο&ήθεια", IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Περί...", IDM_ABOUT
+        MENUITEM "&Περί", IDM_ABOUT
     END
 END
 

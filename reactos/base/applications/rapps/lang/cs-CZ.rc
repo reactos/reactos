@@ -28,7 +28,7 @@ BEGIN
     POPUP "Nápověda"
     BEGIN
         MENUITEM "Nápověda\tF1", ID_HELP, GRAYED
-        MENUITEM "O programu...", ID_ABOUT
+        MENUITEM "O programu", ID_ABOUT
     END
 END
 

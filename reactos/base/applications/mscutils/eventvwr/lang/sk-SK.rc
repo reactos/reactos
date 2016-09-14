@@ -36,7 +36,7 @@ BEGIN
     BEGIN
         MENUITEM "&Pomocník", IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Č&o je...", IDM_ABOUT
+        MENUITEM "Č&o je", IDM_ABOUT
     END
 END
 

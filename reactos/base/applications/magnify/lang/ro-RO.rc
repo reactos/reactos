@@ -12,7 +12,7 @@ BEGIN
         MENUITEM "I&eșire", IDM_EXIT
         MENUITEM "&Opțiuni", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Despre…", IDM_ABOUT
+        MENUITEM "&Despre", IDM_ABOUT
     END
 END
 

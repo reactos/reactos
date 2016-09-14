@@ -31,7 +31,7 @@ BEGIN
     POPUP "&Довідка"
     BEGIN
         MENUITEM "Дов&ідка\tF1", ID_HELP, GRAYED
-        MENUITEM "Про про&граму...", ID_ABOUT
+        MENUITEM "Про про&граму", ID_ABOUT
     END
 END
 

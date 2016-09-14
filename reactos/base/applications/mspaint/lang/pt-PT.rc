@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "Co&lar\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Limpar &seleção\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Inverter seleção", IDM_EDITINVERTSELECTION
-        MENUITEM "Selecion&ar tudo\tCtrl+T", IDM_EDITSELECTALL
+        MENUITEM "Selecionar &tudo\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "C&opiar para...", IDM_EDITCOPYTO
         MENUITEM "Colar &de...", IDM_EDITPASTEFROM

@@ -56,7 +56,7 @@ BEGIN
     MENUITEM "Copiar a &carpeta...", FCIDM_SHVIEW_COPYTO
     MENUITEM "Mo&ver a carpeta...", FCIDM_SHVIEW_MOVETO
     MENUITEM SEPARATOR
-    MENUITEM "Seleccionar &todo\tCtrl+E", FCIDM_SHVIEW_SELECTALL
+    MENUITEM "Seleccionar t&odo\tCtrl+E", FCIDM_SHVIEW_SELECTALL
     MENUITEM "&Invertir selección", FCIDM_SHVIEW_INVERTSELECTION
 END
 

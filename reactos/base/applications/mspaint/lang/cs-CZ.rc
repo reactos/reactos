@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Nový\tCtrl+N", IDM_FILENEW
         MENUITEM "&Otevřít...\tCtrl+O", IDM_FILEOPEN
         MENUITEM "Uložit\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Uložit jako...", IDM_FILESAVEAS
+        MENUITEM "Uložit j&ako...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Page View", IDM_FILEPAGEVIEW
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP
@@ -25,7 +25,7 @@ BEGIN
         MENUITEM "Nastavit jako pozadí (na střed)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Nastavit jako pozadí (roztáhnout)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Ukončit\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "&Ukončit\tAlt+F4", IDM_FILEEXIT
     END
     POPUP "Úpr&avy"
     BEGIN
@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "Vložit\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Vymazat výběr\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Invertovat výběr", IDM_EDITINVERTSELECTION
-        MENUITEM "Vybrat vše\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Vybrat v&še\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Kopírovat do...", IDM_EDITCOPYTO
         MENUITEM "Vložit z...", IDM_EDITPASTEFROM

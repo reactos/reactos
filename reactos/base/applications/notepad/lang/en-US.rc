@@ -25,10 +25,10 @@ BEGIN
         MENUITEM "&New\tCtrl+N", CMD_NEW
         MENUITEM "&Open...\tCtrl+O", CMD_OPEN
         MENUITEM "&Save\tCtrl+S", CMD_SAVE
-        MENUITEM "Save &as...", CMD_SAVE_AS
+        MENUITEM "Save &As...", CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Page Se&tup...", CMD_PAGE_SETUP
-        MENUITEM "&Print\tCtrl+P", CMD_PRINT
+        MENUITEM "Page Set&up...", CMD_PAGE_SETUP
+        MENUITEM "&Print...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "E&xit", CMD_EXIT
     END
@@ -39,30 +39,30 @@ BEGIN
         MENUITEM "Cu&t\tCtrl+X", CMD_CUT
         MENUITEM "&Copy\tCtrl+C", CMD_COPY
         MENUITEM "&Paste\tCtrl+V", CMD_PASTE
-        MENUITEM "&Delete\tDel", CMD_DELETE
+        MENUITEM "De&lete\tDel", CMD_DELETE
         MENUITEM SEPARATOR
         MENUITEM "&Find...\tCtrl+F", CMD_SEARCH
-        MENUITEM "Find &next\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Replace\tCtrl+H", CMD_REPLACE
-        MENUITEM "Go To...\tCtrl+G", CMD_GOTO
+        MENUITEM "Find &Next\tF3", CMD_SEARCH_NEXT
+        MENUITEM "&Replace...\tCtrl+H", CMD_REPLACE
+        MENUITEM "&Go To...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Select &all\tCtrl+A", CMD_SELECT_ALL
-        MENUITEM "&Time/Date\tF5", CMD_TIME_DATE
+        MENUITEM "Select &All\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "Time/&Date\tF5", CMD_TIME_DATE
     END
     POPUP "F&ormat"
     BEGIN
-        MENUITEM "&Wrap long lines", CMD_WRAP
+        MENUITEM "&Wrap Wrap", CMD_WRAP
         MENUITEM "&Font...", CMD_FONT
     END
     POPUP "&View"
     BEGIN
-        MENUITEM "Status&bar", CMD_STATUSBAR
+        MENUITEM "&Status Bar", CMD_STATUSBAR
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&Contents", CMD_HELP_CONTENTS
+        MENUITEM "View &Help", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&About", CMD_ABOUT
+        MENUITEM "&About Notepad", CMD_ABOUT
         MENUITEM "Inf&o", CMD_HELP_ABOUT_NOTEPAD
     END
 END

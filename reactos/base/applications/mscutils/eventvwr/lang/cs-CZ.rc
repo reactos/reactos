@@ -31,7 +31,7 @@ BEGIN
     BEGIN
         MENUITEM "Ná&pověda", IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&O programu...", IDM_ABOUT
+        MENUITEM "&O programu", IDM_ABOUT
     END
 END
 

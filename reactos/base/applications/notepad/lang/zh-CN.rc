@@ -22,13 +22,13 @@ MAIN_MENU MENU
 BEGIN
     POPUP "文件(&F)"
     BEGIN
-        MENUITEM "新建(&N)...", CMD_NEW
-        MENUITEM "打开(&O)", CMD_OPEN
-        MENUITEM "保存(&S)", CMD_SAVE
+        MENUITEM "新建(&N)\tCtrl+N", CMD_NEW
+        MENUITEM "打开(&O)...\tCtrl+O", CMD_OPEN
+        MENUITEM "保存(&S)\tCtrl+S", CMD_SAVE
         MENUITEM "另存为(&A)...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "页面设置(&T)...", CMD_PAGE_SETUP
-        MENUITEM "打印(&P)", CMD_PRINT
+        MENUITEM "打印(&P)...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "退出(&E)", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "搜索(&S)", CMD_SEARCH
         MENUITEM "搜索下一个(&S)\tF3", CMD_SEARCH_NEXT
-        MENUITEM "替换\tCtrl+H", CMD_REPLACE
+        MENUITEM "替换...\tCtrl+H", CMD_REPLACE
         MENUITEM "转到...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "全选(&A)", CMD_SELECT_ALL

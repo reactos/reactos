@@ -13,7 +13,7 @@ BEGIN
     END
     POPUP "&Справка"
     BEGIN
-        MENUITEM "&О программе...", IDM_HELP_ABOUT
+        MENUITEM "&О программе", IDM_HELP_ABOUT
     END
 END
 
@@ -34,7 +34,7 @@ BEGIN
     END
     POPUP "&Справка"
     BEGIN
-        MENUITEM "&О программе...", IDM_HELP_ABOUT
+        MENUITEM "&О программе", IDM_HELP_ABOUT
     END
 END
 

@@ -39,7 +39,7 @@ BEGIN
     BEGIN
         MENUITEM "Ndihmë", IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "Rreth...", IDM_ABOUT
+        MENUITEM "Rreth", IDM_ABOUT
     END
 END
 

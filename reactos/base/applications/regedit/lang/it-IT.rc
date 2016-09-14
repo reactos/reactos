@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "&Connetti a Registro in rete...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Disconnetti da Registro di rete...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Stampa\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "&Stampa...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "E&sci", ID_REGISTRY_EXIT
     END
@@ -63,7 +63,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Copia nome chiave", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Trova\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "&Trova...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "&Trova Successivo\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&Visualizza"
@@ -123,7 +123,7 @@ BEGIN
             MENUITEM "Valore &multi-stringa", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "Valore stringa &espandibile", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Trova", ID_EDIT_FIND
+        MENUITEM "&Trova...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Cancella", ID_TREE_DELETE
         MENUITEM "&Rinomina", ID_TREE_RENAME

@@ -31,7 +31,7 @@ BEGIN
     END
     POPUP "帮助(&H)"
     BEGIN
-        MENUITEM "关于... (&A)", IDM_ABOUT
+        MENUITEM "关于(&A)", IDM_ABOUT
     END
 END
 

@@ -11,7 +11,7 @@ BEGIN
         MENUITEM "D&il", IDM_EXIT
         MENUITEM "&Opsione", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Rreth ...", IDM_ABOUT
+        MENUITEM "&Rreth", IDM_ABOUT
     END
 END
 

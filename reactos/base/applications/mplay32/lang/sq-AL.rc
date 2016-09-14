@@ -33,7 +33,7 @@ BEGIN
     END
     POPUP "&Ndihmë"
     BEGIN
-        MENUITEM "&Rreth...", IDM_ABOUT
+        MENUITEM "&Rreth", IDM_ABOUT
     END
 END
 

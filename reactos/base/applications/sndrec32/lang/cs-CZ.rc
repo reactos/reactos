@@ -62,7 +62,7 @@ BEGIN
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "O programu...", ID_ABOUT
+        MENUITEM "O programu", ID_ABOUT
     END
 END
 

@@ -20,7 +20,7 @@ BEGIN
     END
     POPUP "&עזרה"
     BEGIN
-        MENUITEM "&אודות...", ID_HELP_ABOUT
+        MENUITEM "&אודות", ID_HELP_ABOUT
     END
 END
 
@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "התחברות לרישום ברשת...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "התנתקות מרישום ברשת...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "הד&פס\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "הד&פס...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&יציאה", ID_REGISTRY_EXIT
     END
@@ -63,7 +63,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "העתק שם מפתח", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "חיפוש\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "חיפוש...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "חפש את הבא\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "תצוגה"
@@ -123,7 +123,7 @@ BEGIN
             MENUITEM "ערך מרובה מחרוזות", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "ערך מחרוזת הניתן להרחבה", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "מצא", ID_EDIT_FIND
+        MENUITEM "מצא...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "מחק", ID_TREE_DELETE
         MENUITEM "שנה שם", ID_TREE_RENAME

@@ -29,7 +29,7 @@ BEGIN
         MENUITEM "Klistra in\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Ta bort\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Invertera val", IDM_EDITINVERTSELECTION
-        MENUITEM "Markera alla\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "&Markera allt\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Kopiera till...", IDM_EDITCOPYTO
         MENUITEM "Klistra från...", IDM_EDITPASTEFROM

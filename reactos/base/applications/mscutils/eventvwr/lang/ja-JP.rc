@@ -33,7 +33,7 @@ BEGIN
     BEGIN
         MENUITEM "ヘルプ(&E)", IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "バージョン情報(&A)...", IDM_ABOUT
+        MENUITEM "バージョン情報(&A)", IDM_ABOUT
     END
 END
 

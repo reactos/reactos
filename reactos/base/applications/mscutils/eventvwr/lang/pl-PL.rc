@@ -35,7 +35,7 @@ BEGIN
     BEGIN
         MENUITEM "Pomo&c", IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "O &programie...", IDM_ABOUT
+        MENUITEM "O &programie", IDM_ABOUT
     END
 END
 

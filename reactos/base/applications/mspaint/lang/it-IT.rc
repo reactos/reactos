@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "Nuovo\tCtrl+N", IDM_FILENEW
         MENUITEM "Apri...\tCtrl+F12", IDM_FILEOPEN
         MENUITEM "Salva\tMaiusc+F12", IDM_FILESAVE
-        MENUITEM "Salva con nome...", IDM_FILESAVEAS
+        MENUITEM "Sal&va con nome...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Page View", IDM_FILEPAGEVIEW
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP
@@ -25,7 +25,7 @@ BEGIN
         MENUITEM "Imposta come sfondo (centrata)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Imposta come sfondo (estesa)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Esci\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "E&sci\tAlt+F4", IDM_FILEEXIT
     END
     POPUP "&Modifica"
     BEGIN
@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "Incolla\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Cancella area selezionata\tCanc", IDM_EDITDELETESELECTION
         MENUITEM "Inverte selezione", IDM_EDITINVERTSELECTION
-        MENUITEM "Seleziona tutto\tCtrl+5(tn)", IDM_EDITSELECTALL
+        MENUITEM "Sele&ziona tutto\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Copia su...", IDM_EDITCOPYTO
         MENUITEM "Incolla da...", IDM_EDITPASTEFROM

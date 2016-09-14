@@ -25,7 +25,7 @@ BEGIN
     END
     POPUP "Помо&щ"
     BEGIN
-        MENUITEM "&За...", ID_HELP_ABOUT
+        MENUITEM "&За", ID_HELP_ABOUT
     END
 END
 
@@ -42,7 +42,7 @@ BEGIN
         MENUITEM "&Свързване с мрежов регистър...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Разделяне от мрежов регистър...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "От&печатване\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "От&печатване...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Из&ход", ID_REGISTRY_EXIT
     END
@@ -68,7 +68,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Запомняне на стойността на ключа", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Търсене\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "&Търсене...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "Търсене на следва&що\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&Изглед"
@@ -128,7 +128,7 @@ BEGIN
             MENUITEM "&Многонизова стойност", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Разширима многонизова стойност", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Търсене", ID_EDIT_FIND
+        MENUITEM "&Търсене...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Изтриване", ID_TREE_DELETE
         MENUITEM "&Преименуване", ID_TREE_RENAME

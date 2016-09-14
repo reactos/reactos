@@ -7,7 +7,7 @@ BEGIN
         MENUITEM "Berria\tCtrl+N", IDM_FILENEW
         MENUITEM "Ireki...\tCtrl+O", IDM_FILEOPEN
         MENUITEM "Gorde\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Gorde honela...", IDM_FILESAVEAS
+        MENUITEM "Gorde &honela...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Page View", IDM_FILEPAGEVIEW
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP

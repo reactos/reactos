@@ -74,7 +74,7 @@ BEGIN
         MENUITEM "De&ck...", IDM_GAME_DECK
         MENUITEM "&Options...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Exit", IDM_GAME_EXIT
+        MENUITEM "E&xit", IDM_GAME_EXIT
     END
     POPUP "&Help"
     BEGIN

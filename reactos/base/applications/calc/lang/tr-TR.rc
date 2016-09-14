@@ -320,14 +320,14 @@ BEGIN
         MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC
         MENUITEM "&Dönüştürme", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "&Onaltılık\tİ5", IDM_VIEW_HEX, CHECKED
-        MENUITEM "O&nluk\tİ6", IDM_VIEW_DEC, CHECKED
-        MENUITEM "&Sekizlik\tİ7", IDM_VIEW_OCT, CHECKED
-        MENUITEM "&İkilik\tİ8", IDM_VIEW_BIN, CHECKED
+        MENUITEM "&Onaltılık\tF5", IDM_VIEW_HEX, CHECKED
+        MENUITEM "O&nluk\tF6", IDM_VIEW_DEC, CHECKED
+        MENUITEM "&Sekizlik\tF7", IDM_VIEW_OCT, CHECKED
+        MENUITEM "&İkilik\tF8", IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "D&erece\tİ2", IDM_VIEW_DEG, CHECKED
-        MENUITEM "&Radyan\tİ3", IDM_VIEW_RAD, CHECKED
-        MENUITEM "&Gradyan\tİ4", IDM_VIEW_GRAD, CHECKED
+        MENUITEM "D&erece\tF2", IDM_VIEW_DEG, CHECKED
+        MENUITEM "&Radyan\tF3", IDM_VIEW_RAD, CHECKED
+        MENUITEM "&Gradyan\tF4", IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "B&asamakları Takımla", IDM_VIEW_GROUP, CHECKED
     END
@@ -352,15 +352,15 @@ BEGIN
         MENUITEM "&Bilimlik", IDM_VIEW_SCIENTIFIC
         MENUITEM "&Dönüştürme", IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "&Onaltılık\tİ5", IDM_VIEW_HEX, CHECKED
-        MENUITEM "O&nluk\tİ6", IDM_VIEW_DEC, CHECKED
-        MENUITEM "&Sekizlik\tİ7", IDM_VIEW_OCT, CHECKED
-        MENUITEM "&İkilik\tİ8", IDM_VIEW_BIN, CHECKED
+        MENUITEM "&Onaltılık\tF5", IDM_VIEW_HEX, CHECKED
+        MENUITEM "O&nluk\tF6", IDM_VIEW_DEC, CHECKED
+        MENUITEM "&Sekizlik\tF7", IDM_VIEW_OCT, CHECKED
+        MENUITEM "&İkilik\tF8", IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Dö&rtlü Sözcük\tİ12", IDM_VIEW_QWORD, CHECKED
-        MENUITEM "İ&kili Sözcük\tİ2", IDM_VIEW_DWORD, CHECKED
-        MENUITEM "Sö&zcük\tİ3", IDM_VIEW_WORD, CHECKED
-        MENUITEM "&Çoklu\tİ4", IDM_VIEW_BYTE, CHECKED
+        MENUITEM "Dö&rtlü Sözcük\tF12", IDM_VIEW_QWORD, CHECKED
+        MENUITEM "İ&kili Sözcük\tF2", IDM_VIEW_DWORD, CHECKED
+        MENUITEM "Sö&zcük\tF3", IDM_VIEW_WORD, CHECKED
+        MENUITEM "&Çoklu\tF4", IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "B&asamakları Takımla", IDM_VIEW_GROUP, CHECKED
     END

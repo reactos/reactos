@@ -26,7 +26,7 @@ BEGIN
         MENUITEM "Nastaviť ako pozadie (v strede)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Nastaviť ako pozadie (roztiahnuté)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Skončiť\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "&Skončiť\tAlt+F4", IDM_FILEEXIT
     END
     POPUP "&Upraviť"
     BEGIN
@@ -38,7 +38,7 @@ BEGIN
         MENUITEM "Prilepiť\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Vymazať výber\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Invertovať výber", IDM_EDITINVERTSELECTION
-        MENUITEM "Vybrať všetko\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Vy&brať všetko\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Kopírovať do...", IDM_EDITCOPYTO
         MENUITEM "Prilepiť z...", IDM_EDITPASTEFROM

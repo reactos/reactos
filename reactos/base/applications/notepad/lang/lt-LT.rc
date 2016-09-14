@@ -28,7 +28,7 @@ BEGIN
         MENUITEM "Įrašyti &kaip...", CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "P&uslapio nuostatos...", CMD_PAGE_SETUP
-        MENUITEM "&Spausdinti\tCtrl+P", CMD_PRINT
+        MENUITEM "&Spausdinti...\tCtrl+P", CMD_PRINT
         MENUITEM SEPARATOR
         MENUITEM "&Baigti", CMD_EXIT
     END
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "I&eškoti...\tCtrl+F", CMD_SEARCH
         MENUITEM "Iešk&oti toliau\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Pakeisti\tCtrl+H", CMD_REPLACE
+        MENUITEM "Pakeisti...\tCtrl+H", CMD_REPLACE
         MENUITEM "Eiti į...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Pažymėti &viską\tCtrl+A", CMD_SELECT_ALL

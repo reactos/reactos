@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "Nieuw\tCtrl+N", IDM_FILENEW
         MENUITEM "Openen...\tCtrl+O", IDM_FILEOPEN
         MENUITEM "Opslaan\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Opslaan als...", IDM_FILESAVEAS
+        MENUITEM "Ops&laan als...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Page View", IDM_FILEPAGEVIEW
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP
@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "Plakken\tCtrl+V", IDM_EDITPASTE
         MENUITEM "Selectie wissen\tDel", IDM_EDITDELETESELECTION
         MENUITEM "Selectie omkeren", IDM_EDITINVERTSELECTION
-        MENUITEM "Alles selecteren\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "&Alles selecteren\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Kopiëren naar...", IDM_EDITCOPYTO
         MENUITEM "Plakken uit...", IDM_EDITPASTEFROM

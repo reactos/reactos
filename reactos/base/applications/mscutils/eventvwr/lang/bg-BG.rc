@@ -31,7 +31,7 @@ BEGIN
     BEGIN
         MENUITEM "Помо&щ", IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&За...", IDM_ABOUT
+        MENUITEM "&За", IDM_ABOUT
     END
 END
 

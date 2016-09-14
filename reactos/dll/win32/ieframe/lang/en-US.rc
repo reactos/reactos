@@ -10,11 +10,11 @@ IDR_BROWSE_MAIN_MENU MENU
         }
         MENUITEM "&Open...",                    ID_BROWSE_OPEN
         MENUITEM "&Save",                       ID_BROWSE_SAVE
-        MENUITEM "Save &as...",                 ID_BROWSE_SAVE_AS
+        MENUITEM "Save &As...",                 ID_BROWSE_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Print &Format...",            ID_BROWSE_PRINT_FORMAT
         MENUITEM "Pr&int...",                   ID_BROWSE_PRINT
-        MENUITEM "Print Previe&w",              ID_BROWSE_PRINT_PREVIEW
+        MENUITEM "Print Pre&view",              ID_BROWSE_PRINT_PREVIEW
         MENUITEM SEPARATOR
         MENUITEM "&Properties",                 ID_BROWSE_PROPERTIES
         MENUITEM "&Close",                      ID_BROWSE_QUIT
@@ -27,9 +27,9 @@ IDR_BROWSE_MAIN_MENU MENU
             MENUITEM "&Address bar",            ID_BROWSE_BAR_ADDR
         }
     }
-    POPUP "&Favorites"
+    POPUP "F&avorites"
     {
-        MENUITEM "&Add to Favorites...",        ID_BROWSE_ADDFAV
+        MENUITEM "&Add to favorites...",        ID_BROWSE_ADDFAV
         MENUITEM SEPARATOR
     }
     POPUP "&Help"

@@ -21,7 +21,7 @@ BEGIN
     END
     POPUP "&Bantuan"
     BEGIN
-        MENUITEM "&Tentang ...", IDM_ABOUT
+        MENUITEM "&Tentang...", IDM_ABOUT
     END
 END
 

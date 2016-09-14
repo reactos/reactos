@@ -25,7 +25,7 @@ BEGIN
         MENUITEM "Поставяне като тапет (в средата)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Поставяне като тапет (разпънато)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Изход\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "Из&ход\tAlt+F4", IDM_FILEEXIT
     END
     POPUP "&Обработка"
     BEGIN

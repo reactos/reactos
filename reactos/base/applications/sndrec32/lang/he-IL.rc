@@ -57,7 +57,7 @@ BEGIN
     END
     POPUP "?"
     BEGIN
-        MENUITEM "אודות...", ID_ABOUT
+        MENUITEM "אודות", ID_ABOUT
     END
 END
 

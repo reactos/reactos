@@ -15,11 +15,11 @@ BEGIN
         MENUITEM "Neu\tStrg+N", IDM_FILENEW
         MENUITEM "Öffnen...\tStrg+O", IDM_FILEOPEN
         MENUITEM "Speichern\tStrg+S", IDM_FILESAVE
-        MENUITEM "Speichern unter...", IDM_FILESAVEAS
+        MENUITEM "Speichern &unter...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Seitenansicht", IDM_FILEPAGEVIEW
         MENUITEM "Seite einrichten...", IDM_FILEPAGESETUP
-        MENUITEM "Drucken...\tStrg+P", IDM_FILEPRINT
+        MENUITEM "&Drucken...\tStrg+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
         MENUITEM "Als Hintergrund (Fläche)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Als Hintergrund (Zentriert)", IDM_FILEASWALLPAPERCENTERED
@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "Einfügen\tStrg+V", IDM_EDITPASTE
         MENUITEM "Auswahl löschen\tEntf", IDM_EDITDELETESELECTION
         MENUITEM "Markierung umkehren", IDM_EDITINVERTSELECTION
-        MENUITEM "Alles markieren\tStrg+A", IDM_EDITSELECTALL
+        MENUITEM "Alles &markieren\tStrg+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "Kopieren nach...", IDM_EDITCOPYTO
         MENUITEM "Einfügen aus...", IDM_EDITPASTEFROM

@@ -23,7 +23,7 @@ BEGIN
     POPUP "Справка"
     BEGIN
         MENUITEM "Содержание\tF1", ID_HELP, GRAYED
-        MENUITEM "О программе...", ID_ABOUT
+        MENUITEM "О программе", ID_ABOUT
     END
 END
 

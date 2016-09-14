@@ -33,7 +33,7 @@ BEGIN
     BEGIN
         MENUITEM "&Ajuda", IDM_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Sobre...", IDM_ABOUT
+        MENUITEM "&Sobre", IDM_ABOUT
     END
 END
 

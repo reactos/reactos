@@ -29,7 +29,7 @@ BEGIN
     END
     POPUP "&Помощь"
     BEGIN
-        MENUITEM "&О программе...", IDM_ABOUT
+        MENUITEM "&О программе", IDM_ABOUT
     END
 END
 

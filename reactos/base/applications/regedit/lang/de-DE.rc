@@ -20,7 +20,7 @@ BEGIN
     END
     POPUP "&Hilfe"
     BEGIN
-        MENUITEM "&Über ...", ID_HELP_ABOUT
+        MENUITEM "&Über", ID_HELP_ABOUT
     END
 END
 
@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "&Mit Netzwerkregistrierung verbinden...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Von Netzwerkregistrierung trennen...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Drucken\tStrg+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "&Drucken...\tStrg+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Beenden", ID_REGISTRY_EXIT
     END
@@ -63,7 +63,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Schlüsselname &kopieren", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Suchen\tStrg+F", ID_EDIT_FIND
+        MENUITEM "&Suchen...\tStrg+F", ID_EDIT_FIND
         MENUITEM "&Weitersuchen\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&Ansicht"
@@ -123,7 +123,7 @@ BEGIN
             MENUITEM "&Multi-String-Wert", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Expandierbarer String-Wert", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Suchen", ID_EDIT_FIND
+        MENUITEM "&Suchen...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Löschen", ID_TREE_DELETE
         MENUITEM "&Umbenennen", ID_TREE_RENAME

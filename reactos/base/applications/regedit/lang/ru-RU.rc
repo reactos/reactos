@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "&Подключить сетевой реестр...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Отключить сетевой реестр...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Печать\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
+        MENUITEM "&Печать...\tCtrl+P", ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "В&ыход", ID_REGISTRY_EXIT
     END
@@ -63,7 +63,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "С&копировать имя ключа", ID_EDIT_COPYKEYNAME
         MENUITEM SEPARATOR
-        MENUITEM "&Найти\tCtrl+F", ID_EDIT_FIND
+        MENUITEM "&Найти...\tCtrl+F", ID_EDIT_FIND
         MENUITEM "Найти &далее\tF3", ID_EDIT_FINDNEXT
     END
     POPUP "&Вид"
@@ -123,7 +123,7 @@ BEGIN
             MENUITEM "&Многострочный параметр", ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "Рас&ширяемый строковый параметр", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
-        MENUITEM "&Найти", ID_EDIT_FIND
+        MENUITEM "&Найти...", ID_EDIT_FIND
         MENUITEM SEPARATOR
         MENUITEM "&Удалить", ID_TREE_DELETE
         MENUITEM "&Переименовать", ID_TREE_RENAME

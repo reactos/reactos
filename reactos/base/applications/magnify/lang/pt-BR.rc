@@ -9,7 +9,7 @@ BEGIN
         MENUITEM "Sa&ir", IDM_EXIT
         MENUITEM "&Opções", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Sobre ...", IDM_ABOUT
+        MENUITEM "&Sobre", IDM_ABOUT
     END
 END
 

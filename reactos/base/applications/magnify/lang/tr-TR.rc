@@ -13,9 +13,9 @@ BEGIN
     POPUP "&Kütük"
     BEGIN
         MENUITEM "&Çıkış", IDM_EXIT
-        MENUITEM "&Seçenekler...", IDM_OPTIONS
+        MENUITEM "&Seçenekler", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Üzerine...", IDM_ABOUT
+        MENUITEM "&Üzerine", IDM_ABOUT
     END
 END
 

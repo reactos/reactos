@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "結束(&X)", IDM_EXIT
         MENUITEM "選項(&O)", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "關於(&A)...", IDM_ABOUT
+        MENUITEM "關於(&A)", IDM_ABOUT
     END
 END
 

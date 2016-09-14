@@ -16,17 +16,17 @@ BEGIN
         MENUITEM "&Nuevo\tCtrl+N", IDM_FILENEW
         MENUITEM "&Abrir...\tCtrl+A", IDM_FILEOPEN
         MENUITEM "&Guardar\tCtrl+G", IDM_FILESAVE
-        MENUITEM "Guard&ar como...", IDM_FILESAVEAS
+        MENUITEM "Guardar &como...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Vista de página", IDM_FILEPAGEVIEW
         MENUITEM "Configurar página...", IDM_FILEPAGESETUP
-        MENUITEM "Imprimir...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "&Imprimir...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
         MENUITEM "Fondo de pantalla (normal)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Fondo de pantalla (centrado)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Fondo de pantalla (extendido)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Salir\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "Sa&lir\tAlt+F4", IDM_FILEEXIT
     END
     POPUP "&Edición"
     BEGIN

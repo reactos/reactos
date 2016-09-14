@@ -15,17 +15,17 @@ BEGIN
         MENUITEM "&New\tCtrl+N", IDM_FILENEW
         MENUITEM "&Open...\tCtrl+O", IDM_FILEOPEN
         MENUITEM "&Save\tCtrl+S", IDM_FILESAVE
-        MENUITEM "Save &as...", IDM_FILESAVEAS
+        MENUITEM "Save &As...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Page View", IDM_FILEPAGEVIEW
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP
-        MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "&Print...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
         MENUITEM "Set as wallpaper (Tiled)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Set as wallpaper (Centered)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Set as wallpaper (Stretched)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "&Quit\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "E&xit\tAlt+F4", IDM_FILEEXIT
     END
     POPUP "&Edit"
     BEGIN
@@ -37,7 +37,7 @@ BEGIN
         MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
         MENUITEM "De&lete selection\tDel", IDM_EDITDELETESELECTION
         MENUITEM "&Invert selection", IDM_EDITINVERTSELECTION
-        MENUITEM "Select &all\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "Select &All\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "C&opy to...", IDM_EDITCOPYTO
         MENUITEM "Paste &from...", IDM_EDITPASTEFROM
@@ -86,7 +86,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&Help topics", IDM_HELPHELPTOPICS
+        MENUITEM "&Help Topics", IDM_HELPHELPTOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Info", IDM_HELPINFO
     END

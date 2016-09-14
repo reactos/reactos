@@ -7,7 +7,7 @@ BEGIN
         MENUITEM "&Выход", IDM_EXIT
         MENUITEM "&Параметры", IDM_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&О программе...", IDM_ABOUT
+        MENUITEM "&О программе", IDM_ABOUT
     END
 END
 

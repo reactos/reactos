@@ -13,7 +13,7 @@ IDM_WINEMINE MENU
 BEGIN
     POPUP "&Seçenekler"
     BEGIN
-        MENUITEM "&Yeni Oyun\tİ2", IDM_NEW
+        MENUITEM "&Yeni Oyun\tF2", IDM_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Soru İmiyle İmleme", IDM_MARKQ
         MENUITEM SEPARATOR

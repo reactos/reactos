@@ -11,13 +11,13 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Просмотр страницы", IDM_FILEPAGEVIEW
         MENUITEM "Параметры страницы...", IDM_FILEPAGESETUP
-        MENUITEM "Печать...\tCtrl+P", IDM_FILEPRINT
+        MENUITEM "&Печать...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
         MENUITEM "Сделать фоновым рисунком (&замостить)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Сделать фоновым рисунком (по ц&ентру)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Сделать фоновым рисунком (раст&януть)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "В&ыход\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "&Выход\tAlt+F4", IDM_FILEEXIT
     END
     POPUP "&Правка"
     BEGIN

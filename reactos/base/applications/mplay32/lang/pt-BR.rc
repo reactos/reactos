@@ -31,7 +31,7 @@ BEGIN
     END
     POPUP "A&juda"
     BEGIN
-        MENUITEM "&Sobre...", IDM_ABOUT
+        MENUITEM "&Sobre", IDM_ABOUT
     END
 END
 
