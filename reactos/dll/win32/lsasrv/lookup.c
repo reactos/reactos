@@ -930,7 +930,7 @@ LsapAddDomainToDomainsList(PLSAPR_REFERENCED_DOMAIN_LIST ReferencedDomains,
     ReferencedDomains->Domains[i].Name.Length = Name->Length;
     ReferencedDomains->Domains[i].Name.MaximumLength = Name->MaximumLength;
     ReferencedDomains->Domains[i].Name.Buffer = MIDL_user_allocate(Name->MaximumLength);
-    if (ReferencedDomains->Domains[i].Sid == NULL)
+    if (ReferencedDomains->Domains[i].Name.Buffer == NULL)
     {
         MIDL_user_free(ReferencedDomains->Domains[i].Sid);
         ReferencedDomains->Domains[i].Sid = NULL;
