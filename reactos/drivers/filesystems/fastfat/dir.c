@@ -158,7 +158,7 @@ VfatGetFileDirectoryInformation(
             pInfo->AllocationSize.u.LowPart = ROUND_UP(DirContext->DirEntry.FatX.FileSize,
                                                        DeviceExt->FatInfo.BytesPerCluster);
         }
-    
+
         pInfo->FileAttributes = DirContext->DirEntry.FatX.Attrib & 0x3f;
     }
     else
@@ -421,9 +421,20 @@ DoQuery(
 #endif
     Buffer = VfatGetUserBuffer(IrpContext->Irp, FALSE);
 
+    if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource,
+                                        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
+    {
+        Status = VfatLockUserBuffer(IrpContext->Irp, BufferLength, IoWriteAccess);
+        if (NT_SUCCESS(Status))
+            Status = STATUS_PENDING;
+
+        return Status;
+    }
+
     if (!ExAcquireResourceSharedLite(&pFcb->MainResource,
                                      BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
     {
+        ExReleaseResourceLite(&IrpContext->DeviceExt->DirResource);
         Status = VfatLockUserBuffer(IrpContext->Irp, BufferLength, IoWriteAccess);
         if (NT_SUCCESS(Status))
             Status = STATUS_PENDING;
@@ -447,7 +458,7 @@ DoQuery(
      * -> The pattern length is not null
      * -> The pattern buffer is not null
      * Otherwise, we'll fall later and allocate a match all (*) pattern
-     */ 
+     */
     if (pSearchPattern &&
         pSearchPattern->Length != 0 && pSearchPattern->Buffer != NULL)
     {
@@ -461,6 +472,7 @@ DoQuery(
             if (!pCcb->SearchPattern.Buffer)
             {
                 ExReleaseResourceLite(&pFcb->MainResource);
+                ExReleaseResourceLite(&IrpContext->DeviceExt->DirResource);
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
             RtlCopyUnicodeString(&pCcb->SearchPattern, pSearchPattern);
@@ -477,6 +489,7 @@ DoQuery(
         if (!pCcb->SearchPattern.Buffer)
         {
             ExReleaseResourceLite(&pFcb->MainResource);
+            ExReleaseResourceLite(&IrpContext->DeviceExt->DirResource);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         pCcb->SearchPattern.Buffer[0] = L'*';
@@ -503,13 +516,6 @@ DoQuery(
     DirContext.LongNameU.MaximumLength = sizeof(LongNameBuffer);
     DirContext.ShortNameU.Buffer = ShortNameBuffer;
     DirContext.ShortNameU.MaximumLength = sizeof(ShortNameBuffer);
-
-    if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource,
-                                        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
-    {
-        ExReleaseResourceLite(&pFcb->MainResource);
-        return STATUS_PENDING;
-    }
 
     while ((Status == STATUS_SUCCESS) && (BufferLength > 0))
     {
@@ -586,8 +592,8 @@ DoQuery(
         IrpContext->Irp->IoStatus.Information = Stack->Parameters.QueryDirectory.Length - BufferLength;
     }
 
-    ExReleaseResourceLite(&IrpContext->DeviceExt->DirResource);
     ExReleaseResourceLite(&pFcb->MainResource);
+    ExReleaseResourceLite(&IrpContext->DeviceExt->DirResource);
 
     return Status;
 }
@@ -600,7 +606,7 @@ NTSTATUS VfatNotifyChangeDirectory(PVFAT_IRP_CONTEXT IrpContext)
     Stack = IrpContext->Stack;
     pVcb = IrpContext->DeviceExt;
     pFcb = (PVFATFCB) IrpContext->FileObject->FsContext;
- 
+
     FsRtlNotifyFullChangeDirectory(pVcb->NotifySync,
                                    &(pVcb->NotifyList),
                                    IrpContext->FileObject->FsContext2,
