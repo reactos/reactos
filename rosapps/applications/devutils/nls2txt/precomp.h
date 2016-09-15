@@ -9,8 +9,6 @@
 #define __PRECOMP_H
 
 #include <windows.h>
-#include <windowsx.h>
-#include <commctrl.h>
 #include <strsafe.h>
 
 #define MAX_STR_LEN   256
