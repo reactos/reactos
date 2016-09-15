@@ -43,14 +43,16 @@ USHORT NlsUnicodeDefaultChar = 0;
  */
 NTSTATUS NTAPI
 RtlCustomCPToUnicodeN(IN PCPTABLEINFO CustomCP,
-                      PWCHAR UnicodeString,
-                      ULONG UnicodeSize,
-                      PULONG ResultSize,
-                      PCHAR CustomString,
-                      ULONG CustomSize)
+                      OUT PWCHAR UnicodeString,
+                      IN ULONG UnicodeSize,
+                      OUT PULONG ResultSize OPTIONAL,
+                      IN PCHAR CustomString,
+                      IN ULONG CustomSize)
 {
     ULONG Size = 0;
     ULONG i;
+
+    PAGED_CODE_RTL();
 
     if (CustomCP->DBCSCodePage == 0)
     {
@@ -87,6 +89,8 @@ WCHAR NTAPI
 RtlDowncaseUnicodeChar(IN WCHAR Source)
 {
     USHORT Offset;
+
+    PAGED_CODE_RTL();
 
     if (Source < L'A')
         return Source;
@@ -127,6 +131,8 @@ VOID NTAPI
 RtlGetDefaultCodePage(OUT PUSHORT AnsiCodePage,
                       OUT PUSHORT OemCodePage)
 {
+    PAGED_CODE_RTL();
+
     *AnsiCodePage = NlsAnsiCodePage;
     *OemCodePage = NlsOemCodePage;
 }
@@ -139,6 +145,8 @@ RtlInitCodePageTable(IN PUSHORT TableBase,
                      OUT PCPTABLEINFO CodePageTable)
 {
     PNLS_FILE_HEADER NlsFileHeader;
+
+    PAGED_CODE_RTL();
 
     DPRINT("RtlInitCodePageTable() called\n");
 
@@ -191,6 +199,8 @@ RtlInitNlsTables(IN PUSHORT AnsiTableBase,
                  IN PUSHORT CaseTableBase,
                  OUT PNLSTABLEINFO NlsTable)
 {
+    PAGED_CODE_RTL();
+
     DPRINT("RtlInitNlsTables()called\n");
 
     if (AnsiTableBase && OemTableBase && CaseTableBase)
@@ -300,9 +310,9 @@ RtlConsoleMultiByteToUnicodeN(OUT PWCHAR UnicodeString,
  */
 NTSTATUS
 NTAPI
-RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
-                          PCSTR MbString,
-                          ULONG MbSize)
+RtlMultiByteToUnicodeSize(OUT PULONG UnicodeSize,
+                          IN PCSTR MbString,
+                          IN ULONG MbSize)
 {
     ULONG Length = 0;
 
@@ -348,14 +358,16 @@ RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
  * @unimplemented
  */
 NTSTATUS NTAPI
-RtlOemToUnicodeN(PWCHAR UnicodeString,
-                 ULONG UnicodeSize,
-                 PULONG ResultSize,
-                 PCCH OemString,
-                 ULONG OemSize)
+RtlOemToUnicodeN(OUT PWCHAR UnicodeString,
+                 IN ULONG UnicodeSize,
+                 OUT PULONG ResultSize OPTIONAL,
+                 IN PCCH OemString,
+                 IN ULONG OemSize)
 {
     ULONG Size = 0;
     ULONG i;
+
+    PAGED_CODE_RTL();
 
     if (NlsMbOemCodePageTag == FALSE)
     {
@@ -420,6 +432,8 @@ RtlOemToUnicodeN(PWCHAR UnicodeString,
 VOID NTAPI
 RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
 {
+    PAGED_CODE_RTL();
+
     DPRINT("RtlResetRtlTranslations() called\n");
 
     /* Set ANSI data */
@@ -454,14 +468,16 @@ RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
  */
 NTSTATUS NTAPI
 RtlUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
-                      PCHAR CustomString,
-                      ULONG CustomSize,
-                      PULONG ResultSize,
-                      PWCHAR UnicodeString,
-                      ULONG UnicodeSize)
+                      OUT PCHAR CustomString,
+                      IN ULONG CustomSize,
+                      OUT PULONG ResultSize OPTIONAL,
+                      IN PWCHAR UnicodeString,
+                      IN ULONG UnicodeSize)
 {
     ULONG Size = 0;
     ULONG i;
+
+    PAGED_CODE_RTL();
 
     if (CustomCP->DBCSCodePage == 0)
     {
@@ -495,11 +511,11 @@ RtlUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
  * @unimplemented
  */
 NTSTATUS NTAPI
-RtlUnicodeToMultiByteN(PCHAR MbString,
-                       ULONG MbSize,
-                       PULONG ResultSize,
-                       PCWCH UnicodeString,
-                       ULONG UnicodeSize)
+RtlUnicodeToMultiByteN(OUT PCHAR MbString,
+                       IN ULONG MbSize,
+                       OUT PULONG ResultSize OPTIONAL,
+                       IN PCWCH UnicodeString,
+                       IN ULONG UnicodeSize)
 {
     ULONG Size = 0;
     ULONG i;
@@ -569,12 +585,14 @@ RtlUnicodeToMultiByteN(PCHAR MbString,
  */
 NTSTATUS
 NTAPI
-RtlUnicodeToMultiByteSize(PULONG MbSize,
-                          PCWCH UnicodeString,
-                          ULONG UnicodeSize)
+RtlUnicodeToMultiByteSize(OUT PULONG MbSize,
+                          IN PCWCH UnicodeString,
+                          IN ULONG UnicodeSize)
 {
     ULONG UnicodeLength = UnicodeSize / sizeof(WCHAR);
     ULONG MbLength = 0;
+
+    PAGED_CODE_RTL();
 
     if (!NlsMbCodePageTag)
     {
@@ -611,14 +629,16 @@ RtlUnicodeToMultiByteSize(PULONG MbSize,
  * @unimplemented
  */
 NTSTATUS NTAPI
-RtlUnicodeToOemN(PCHAR OemString,
-                 ULONG OemSize,
-                 PULONG ResultSize,
-                 PCWCH UnicodeString,
-                 ULONG UnicodeSize)
+RtlUnicodeToOemN(OUT PCHAR OemString,
+                 IN ULONG OemSize,
+                 OUT PULONG ResultSize OPTIONAL,
+                 IN PCWCH UnicodeString,
+                 IN ULONG UnicodeSize)
 {
     ULONG Size = 0;
     ULONG i;
+
+    PAGED_CODE_RTL();
 
     if (NlsMbOemCodePageTag == FALSE)
     {
@@ -688,6 +708,8 @@ RtlUpcaseUnicodeChar(IN WCHAR Source)
 {
     USHORT Offset;
 
+    PAGED_CODE_RTL();
+
     if (Source < 'a')
         return Source;
 
@@ -720,6 +742,8 @@ RtlUpcaseUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
     WCHAR UpcaseChar;
     ULONG Size = 0;
     ULONG i;
+
+    PAGED_CODE_RTL();
 
     if (!CustomCP->DBCSCodePage)
     {
@@ -754,15 +778,17 @@ RtlUpcaseUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
  * @unimplemented
  */
 NTSTATUS NTAPI
-RtlUpcaseUnicodeToMultiByteN(PCHAR MbString,
-                             ULONG MbSize,
-                             PULONG ResultSize,
-                             PCWCH UnicodeString,
-                             ULONG UnicodeSize)
+RtlUpcaseUnicodeToMultiByteN(OUT PCHAR MbString,
+                             IN ULONG MbSize,
+                             OUT PULONG ResultSize OPTIONAL,
+                             IN PCWCH UnicodeString,
+                             IN ULONG UnicodeSize)
 {
     WCHAR UpcaseChar;
     ULONG Size = 0;
     ULONG i;
+
+    PAGED_CODE_RTL();
 
     if (NlsMbCodePageTag == FALSE)
     {
@@ -797,15 +823,17 @@ RtlUpcaseUnicodeToMultiByteN(PCHAR MbString,
  * @unimplemented
  */
 NTSTATUS NTAPI
-RtlUpcaseUnicodeToOemN(PCHAR OemString,
-                       ULONG OemSize,
-                       PULONG ResultSize,
-                       PCWCH UnicodeString,
-                       ULONG UnicodeSize)
+RtlUpcaseUnicodeToOemN(OUT PCHAR OemString,
+                       IN ULONG OemSize,
+                       OUT PULONG ResultSize OPTIONAL,
+                       IN PCWCH UnicodeString,
+                       IN ULONG UnicodeSize)
 {
     WCHAR UpcaseChar;
     ULONG Size = 0;
     ULONG i;
+
+    PAGED_CODE_RTL();
 
     ASSERT(NlsUnicodeToOemTable != NULL);
 
@@ -878,6 +906,8 @@ RtlUpperChar(IN CHAR Source)
 {
     WCHAR Unicode;
     CHAR Destination;
+
+    PAGED_CODE_RTL();
 
     /* Check for simple ANSI case */
     if (Source <= 'z')
