@@ -34,9 +34,9 @@ extern PUSHORT NlsUnicodeToMbOemTable;
 
 NTSTATUS
 NTAPI
-RtlMultiAppendUnicodeStringBuffer(IN PVOID Unknown,
-                                  IN ULONG Unknown2,
-                                  IN PVOID Unknown3)
+RtlMultiAppendUnicodeStringBuffer(OUT PRTL_UNICODE_STRING_BUFFER StringBuffer,
+                                  IN ULONG NumberOfAddends,
+                                  IN PCUNICODE_STRING Addends)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -2376,7 +2376,7 @@ RtlDowncaseUnicodeString(
         }
         else
         {
-            UniDest->Buffer[i] = RtlDowncaseUnicodeChar(UniSource->Buffer[i]);
+            UniDest->Buffer[i] = RtlpDowncaseUnicodeChar(UniSource->Buffer[i]);
         }
     }
 

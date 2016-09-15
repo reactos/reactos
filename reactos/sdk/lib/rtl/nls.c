@@ -86,7 +86,7 @@ RtlCustomCPToUnicodeN(IN PCPTABLEINFO CustomCP,
  * @implemented
  */
 WCHAR NTAPI
-RtlDowncaseUnicodeChar(IN WCHAR Source)
+RtlpDowncaseUnicodeChar(IN WCHAR Source)
 {
     USHORT Offset;
 
@@ -122,6 +122,17 @@ RtlDowncaseUnicodeChar(IN WCHAR Source)
     DPRINT("Result: %hx\n", Source + (SHORT)Offset);
 
     return Source + (SHORT)Offset;
+}
+
+/*
+ * @implemented
+ */
+WCHAR NTAPI
+RtlDowncaseUnicodeChar(IN WCHAR Source)
+{
+    PAGED_CODE_RTL();
+
+    return RtlpDowncaseUnicodeChar(Source);
 }
 
 /*

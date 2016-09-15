@@ -235,4 +235,8 @@ WCHAR
 NTAPI
 RtlpUpcaseUnicodeChar(IN WCHAR Source);
 
+WCHAR
+NTAPI
+RtlpDowncaseUnicodeChar(IN WCHAR Source);
+
 /* EOF */
