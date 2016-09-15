@@ -528,7 +528,7 @@ RtlIsValidOemCharacter(IN PWCHAR Char)
             Offset = NlsOemLeadByteInfo[HIBYTE(OemChar)];
 
         /* Receive Unicode character from the table */
-        UnicodeChar = RtlUpcaseUnicodeChar(NlsOemToUnicodeTable[LOBYTE(OemChar) + Offset]);
+        UnicodeChar = RtlpUpcaseUnicodeChar(NlsOemToUnicodeTable[LOBYTE(OemChar) + Offset]);
 
         /* Receive OEM character from the table */
         OemChar = NlsUnicodeToMbOemTable[UnicodeChar];
@@ -536,7 +536,7 @@ RtlIsValidOemCharacter(IN PWCHAR Char)
     else
     {
         /* Receive Unicode character from the table */
-        UnicodeChar = RtlUpcaseUnicodeChar(NlsOemToUnicodeTable[(UCHAR)NlsUnicodeToOemTable[*Char]]);
+        UnicodeChar = RtlpUpcaseUnicodeChar(NlsOemToUnicodeTable[(UCHAR)NlsUnicodeToOemTable[*Char]]);
 
         /* Receive OEM character from the table */
         OemChar = NlsUnicodeToOemTable[UnicodeChar];
@@ -742,11 +742,11 @@ NTSTATUS NTAPI RtlIntegerToChar(
     }
     else if (len == length)
     {
-        memcpy(str, pos, len);
+        RtlCopyMemory(str, pos, len);
     }
     else
     {
-        memcpy(str, pos, len + 1);
+        RtlCopyMemory(str, pos, len + 1);
     }
 
     return STATUS_SUCCESS;
@@ -943,8 +943,8 @@ RtlPrefixUnicodeString(
         {
             while (NumChars--)
             {
-                if (RtlUpcaseUnicodeChar(*pc1++) !=
-                    RtlUpcaseUnicodeChar(*pc2++))
+                if (RtlpUpcaseUnicodeChar(*pc1++) !=
+                    RtlpUpcaseUnicodeChar(*pc2++))
                     return FALSE;
             }
         }
@@ -1924,7 +1924,7 @@ RtlUpcaseUnicodeString(
 
     for (i = 0; i < j; i++)
     {
-        UniDest->Buffer[i] = RtlUpcaseUnicodeChar(UniSource->Buffer[i]);
+        UniDest->Buffer[i] = RtlpUpcaseUnicodeChar(UniSource->Buffer[i]);
     }
 
     UniDest->Length = UniSource->Length;
@@ -2196,7 +2196,7 @@ RtlCompareUnicodeString(
 
     if (CaseInsensitive)
     {
-        while (!ret && len--) ret = RtlUpcaseUnicodeChar(*p1++) - RtlUpcaseUnicodeChar(*p2++);
+        while (!ret && len--) ret = RtlpUpcaseUnicodeChar(*p1++) - RtlpUpcaseUnicodeChar(*p2++);
     }
     else
     {
@@ -2586,13 +2586,13 @@ RtlpIsCharInUnicodeString(
     USHORT i;
 
     if (CaseInSensitive)
-        Char = RtlUpcaseUnicodeChar(Char);
+        Char = RtlpUpcaseUnicodeChar(Char);
 
     for (i = 0; i < MatchString->Length / sizeof(WCHAR); i++)
     {
         WCHAR OtherChar = MatchString->Buffer[i];
         if (CaseInSensitive)
-            OtherChar = RtlUpcaseUnicodeChar(OtherChar);
+            OtherChar = RtlpUpcaseUnicodeChar(OtherChar);
 
         if (Char == OtherChar)
             return TRUE;

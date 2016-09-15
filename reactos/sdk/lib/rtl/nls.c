@@ -54,7 +54,7 @@ RtlCustomCPToUnicodeN(IN PCPTABLEINFO CustomCP,
 
     PAGED_CODE_RTL();
 
-    if (CustomCP->DBCSCodePage == 0)
+    if (!CustomCP->DBCSCodePage)
     {
         /* single-byte code page */
         if (CustomSize > (UnicodeSize / sizeof(WCHAR)))
@@ -62,7 +62,7 @@ RtlCustomCPToUnicodeN(IN PCPTABLEINFO CustomCP,
         else
             Size = CustomSize;
 
-        if (ResultSize != NULL)
+        if (ResultSize)
             *ResultSize = Size * sizeof(WCHAR);
 
         for (i = 0; i < Size; i++)
@@ -206,7 +206,6 @@ RtlInitNlsTables(IN PUSHORT AnsiTableBase,
     if (AnsiTableBase && OemTableBase && CaseTableBase)
     {
         RtlInitCodePageTable(AnsiTableBase, &NlsTable->AnsiTableInfo);
-
         RtlInitCodePageTable(OemTableBase, &NlsTable->OemTableInfo);
 
         NlsTable->UpperCaseTable = (PUSHORT)CaseTableBase + 2;
@@ -229,7 +228,7 @@ RtlMultiByteToUnicodeN(OUT PWCHAR UnicodeString,
 
     PAGED_CODE_RTL();
 
-    if (NlsMbCodePageTag == FALSE)
+    if (!NlsMbCodePageTag)
     {
         /* single-byte code page */
         if (MbSize > (UnicodeSize / sizeof(WCHAR)))
@@ -237,7 +236,7 @@ RtlMultiByteToUnicodeN(OUT PWCHAR UnicodeString,
         else
             Size = MbSize;
 
-        if (ResultSize != NULL)
+        if (ResultSize)
             *ResultSize = Size * sizeof(WCHAR);
 
         for (i = 0; i < Size; i++)
@@ -274,7 +273,7 @@ RtlMultiByteToUnicodeN(OUT PWCHAR UnicodeString,
                 *UnicodeString++ = NlsLeadByteInfo[LeadByteInfo + *(PUCHAR)MbString++];
         }
 
-        if (ResultSize != NULL)
+        if (ResultSize)
             *ResultSize = i * sizeof(WCHAR);
     }
 
@@ -369,7 +368,7 @@ RtlOemToUnicodeN(OUT PWCHAR UnicodeString,
 
     PAGED_CODE_RTL();
 
-    if (NlsMbOemCodePageTag == FALSE)
+    if (!NlsMbOemCodePageTag)
     {
         /* single-byte code page */
         if (OemSize > (UnicodeSize / sizeof(WCHAR)))
@@ -377,7 +376,7 @@ RtlOemToUnicodeN(OUT PWCHAR UnicodeString,
         else
             Size = OemSize;
 
-        if (ResultSize != NULL)
+        if (ResultSize)
             *ResultSize = Size * sizeof(WCHAR);
 
         for (i = 0; i < Size; i++)
@@ -419,7 +418,7 @@ RtlOemToUnicodeN(OUT PWCHAR UnicodeString,
                     NlsOemLeadByteInfo[OemLeadByteInfo + *(PUCHAR)OemString++];
         }
 
-        if (ResultSize != NULL)
+        if (ResultSize)
             *ResultSize = i * sizeof(WCHAR);
     }
 
@@ -479,7 +478,7 @@ RtlUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
 
     PAGED_CODE_RTL();
 
-    if (CustomCP->DBCSCodePage == 0)
+    if (!CustomCP->DBCSCodePage)
     {
         /* single-byte code page */
         if (UnicodeSize > (CustomSize * sizeof(WCHAR)))
@@ -487,7 +486,7 @@ RtlUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
         else
             Size = UnicodeSize / sizeof(WCHAR);
 
-        if (ResultSize != NULL)
+        if (ResultSize)
             *ResultSize = Size;
 
         for (i = 0; i < Size; i++)
@@ -522,16 +521,14 @@ RtlUnicodeToMultiByteN(OUT PCHAR MbString,
 
     PAGED_CODE_RTL();
 
-    if (NlsMbCodePageTag == FALSE)
+    if (!NlsMbCodePageTag)
     {
         /* single-byte code page */
         Size =  (UnicodeSize > (MbSize * sizeof (WCHAR)))
                  ? MbSize : (UnicodeSize / sizeof (WCHAR));
 
-        if (ResultSize != NULL)
-        {
+        if (ResultSize)
             *ResultSize = Size;
-        }
 
         for (i = 0; i < Size; i++)
         {
@@ -573,7 +570,7 @@ RtlUnicodeToMultiByteN(OUT PCHAR MbString,
             else break;
         }
 
-        if (ResultSize != NULL)
+        if (ResultSize)
             *ResultSize = MbSize - i;
     }
 
@@ -640,7 +637,7 @@ RtlUnicodeToOemN(OUT PCHAR OemString,
 
     PAGED_CODE_RTL();
 
-    if (NlsMbOemCodePageTag == FALSE)
+    if (!NlsMbOemCodePageTag)
     {
         /* single-byte code page */
         if (UnicodeSize > (OemSize * sizeof(WCHAR)))
@@ -648,7 +645,7 @@ RtlUnicodeToOemN(OUT PCHAR OemString,
         else
             Size = UnicodeSize / sizeof(WCHAR);
 
-        if (ResultSize != NULL)
+        if (ResultSize)
             *ResultSize = Size;
 
         for (i = 0; i < Size; i++)
@@ -693,7 +690,7 @@ RtlUnicodeToOemN(OUT PCHAR OemString,
             else break;
         }
 
-        if (ResultSize != NULL)
+        if (ResultSize)
             *ResultSize = OemSize - i;
     }
 
@@ -704,11 +701,9 @@ RtlUnicodeToOemN(OUT PCHAR OemString,
  * @implemented
  */
 WCHAR NTAPI
-RtlUpcaseUnicodeChar(IN WCHAR Source)
+RtlpUpcaseUnicodeChar(IN WCHAR Source)
 {
     USHORT Offset;
-
-    PAGED_CODE_RTL();
 
     if (Source < 'a')
         return Source;
@@ -726,6 +721,17 @@ RtlUpcaseUnicodeChar(IN WCHAR Source)
     Offset = NlsUnicodeUpcaseTable[Offset];
 
     return Source + (SHORT)Offset;
+}
+
+/*
+ * @implemented
+ */
+WCHAR NTAPI
+RtlUpcaseUnicodeChar(IN WCHAR Source)
+{
+    PAGED_CODE_RTL();
+
+    return RtlpUpcaseUnicodeChar(Source);
 }
 
 /*
@@ -758,7 +764,7 @@ RtlUpcaseUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
 
         for (i = 0; i < Size; i++)
         {
-            UpcaseChar = RtlUpcaseUnicodeChar(*UnicodeString);
+            UpcaseChar = RtlpUpcaseUnicodeChar(*UnicodeString);
             *CustomString = ((PCHAR)CustomCP->WideCharTable)[UpcaseChar];
             ++CustomString;
             ++UnicodeString;
@@ -790,7 +796,7 @@ RtlUpcaseUnicodeToMultiByteN(OUT PCHAR MbString,
 
     PAGED_CODE_RTL();
 
-    if (NlsMbCodePageTag == FALSE)
+    if (!NlsMbCodePageTag)
     {
         /* single-byte code page */
         if (UnicodeSize > (MbSize * sizeof(WCHAR)))
@@ -798,12 +804,12 @@ RtlUpcaseUnicodeToMultiByteN(OUT PCHAR MbString,
         else
             Size = UnicodeSize / sizeof(WCHAR);
 
-        if (ResultSize != NULL)
+        if (ResultSize)
             *ResultSize = Size;
 
         for (i = 0; i < Size; i++)
         {
-            UpcaseChar = RtlUpcaseUnicodeChar(*UnicodeString);
+            UpcaseChar = RtlpUpcaseUnicodeChar(*UnicodeString);
             *MbString = NlsUnicodeToAnsiTable[UpcaseChar];
             MbString++;
             UnicodeString++;
@@ -837,7 +843,7 @@ RtlUpcaseUnicodeToOemN(OUT PCHAR OemString,
 
     ASSERT(NlsUnicodeToOemTable != NULL);
 
-    if (NlsMbOemCodePageTag == FALSE)
+    if (!NlsMbOemCodePageTag)
     {
         /* single-byte code page */
         if (UnicodeSize > (OemSize * sizeof(WCHAR)))
@@ -845,12 +851,12 @@ RtlUpcaseUnicodeToOemN(OUT PCHAR OemString,
         else
             Size = UnicodeSize / sizeof(WCHAR);
 
-        if (ResultSize != NULL)
+        if (ResultSize)
             *ResultSize = Size;
 
         for (i = 0; i < Size; i++)
         {
-            UpcaseChar = RtlUpcaseUnicodeChar(*UnicodeString);
+            UpcaseChar = RtlpUpcaseUnicodeChar(*UnicodeString);
             *OemString = NlsUnicodeToOemTable[UpcaseChar];
             OemString++;
             UnicodeString++;
@@ -866,7 +872,7 @@ RtlUpcaseUnicodeToOemN(OUT PCHAR OemString,
 
         for (i = OemSize, Size = UnicodeSize / sizeof(WCHAR); i && Size; i--, Size--)
         {
-            WideChar = RtlUpcaseUnicodeChar(*UnicodeString++);
+            WideChar = RtlpUpcaseUnicodeChar(*UnicodeString++);
 
             if (WideChar < 0x80)
             {
@@ -891,7 +897,7 @@ RtlUpcaseUnicodeToOemN(OUT PCHAR OemString,
             else break;
         }
 
-        if (ResultSize != NULL)
+        if (ResultSize)
             *ResultSize = OemSize - i;
     }
 
@@ -926,7 +932,7 @@ RtlUpperChar(IN CHAR Source)
     }
     else
     {
-        if (NlsMbCodePageTag == FALSE)
+        if (!NlsMbCodePageTag)
         {
             /* single-byte code page */
 
@@ -934,7 +940,7 @@ RtlUpperChar(IN CHAR Source)
             Unicode = NlsAnsiToUnicodeTable[(UCHAR)Source];
 
             /* upcase conversion */
-            Unicode = RtlUpcaseUnicodeChar (Unicode);
+            Unicode = RtlpUpcaseUnicodeChar (Unicode);
 
             /* unicode -> ansi */
             Destination = NlsUnicodeToAnsiTable[(USHORT)Unicode];

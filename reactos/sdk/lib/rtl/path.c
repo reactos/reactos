@@ -614,7 +614,7 @@ RtlGetFullPathName_Ustr(
             ASSERT(FileNameBuffer[1] == L':');
             ASSERT(IS_PATH_SEPARATOR(FileNameBuffer[2]));
 
-            // FileNameBuffer[0] = RtlUpcaseUnicodeChar(FileNameBuffer[0]);
+            // FileNameBuffer[0] = RtlpUpcaseUnicodeChar(FileNameBuffer[0]);
             Prefix = FileNameBuffer;
             PrefixLength = 3 * sizeof(WCHAR);
             Source += 3;
@@ -631,8 +631,8 @@ RtlGetFullPathName_Ustr(
             Source += 2;
             SourceLength -= 2 * sizeof(WCHAR);
 
-            CurDrive = RtlUpcaseUnicodeChar(CurDirName->Buffer[0]);
-            NewDrive = RtlUpcaseUnicodeChar(FileNameBuffer[0]);
+            CurDrive = RtlpUpcaseUnicodeChar(CurDirName->Buffer[0]);
+            NewDrive = RtlpUpcaseUnicodeChar(FileNameBuffer[0]);
 
             if ((NewDrive != CurDrive) || CurDirName->Buffer[1] != L':')
             {

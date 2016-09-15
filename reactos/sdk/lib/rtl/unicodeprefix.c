@@ -96,8 +96,8 @@ CompareUnicodeStrings(IN PUNICODE_STRING Prefix,
             if (FoundPrefix != FoundString)
             {
                 /* Upcase the characters */
-                FoundPrefix = RtlUpcaseUnicodeChar(FoundPrefix);
-                FoundString = RtlUpcaseUnicodeChar(FoundString);
+                FoundPrefix = RtlpUpcaseUnicodeChar(FoundPrefix);
+                FoundString = RtlpUpcaseUnicodeChar(FoundString);
 
                 /* Compare them again */
                 if (FoundPrefix != FoundString) break;

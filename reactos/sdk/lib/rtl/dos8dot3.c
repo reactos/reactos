@@ -113,7 +113,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
                 if (RtlpIsShortIllegal(Char))
                     Char = L'_';
                 else if (Char >= L'a' && Char <= L'z')
-                    Char = RtlUpcaseUnicodeChar(Char);
+                    Char = RtlpUpcaseUnicodeChar(Char);
 
                 Context->NameBuffer[Context->NameLength] = Char;
                 ++Context->NameLength;
@@ -137,7 +137,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
                     if (RtlpIsShortIllegal(Char))
                         Char = L'_';
                     else if (Char >= L'a' && Char <= L'z')
-                        Char = RtlUpcaseUnicodeChar(Char);
+                        Char = RtlpUpcaseUnicodeChar(Char);
 
                     Context->ExtensionBuffer[Context->ExtensionLength++] = Char;
                 }

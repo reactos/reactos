@@ -230,4 +230,9 @@ typedef struct _RTL_BITMAP_RUN64
     ULONG64 NumberOfBits;
 } RTL_BITMAP_RUN64, *PRTL_BITMAP_RUN64;
 
+/* nls.c */
+WCHAR
+NTAPI
+RtlpUpcaseUnicodeChar(IN WCHAR Source);
+
 /* EOF */
