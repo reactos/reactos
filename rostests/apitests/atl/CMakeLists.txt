@@ -10,6 +10,8 @@ add_executable(atl_apitest
     CComHeapPtr.cpp
     CImage.cpp
     CRegKey.cpp
+    CSimpleArray.cpp
+    CSimpleMap.cpp
     CString.cpp
     testlist.c
     atl_apitest.rc)
