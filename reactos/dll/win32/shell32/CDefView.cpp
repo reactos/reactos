@@ -2144,59 +2144,20 @@ HRESULT WINAPI CDefView::Refresh()
 
 HRESULT WINAPI CDefView::CreateViewWindow(IShellView *lpPrevView, LPCFOLDERSETTINGS lpfs, IShellBrowser *psb, RECT *prcView, HWND *phWnd)
 {
-    OLEMENUGROUPWIDTHS omw = { { 0, 0, 0, 0, 0, 0 } };
+    SV2CVW2_PARAMS view_params;
+    HRESULT hr;
 
-    *phWnd = 0;
+    view_params.cbSize = sizeof(view_params);
+    view_params.pfs = lpfs;
+    view_params.psvPrev = lpPrevView;
+    view_params.psbOwner = psb;
+    view_params.prcView = prcView;
+    view_params.pvid = NULL;
 
-    TRACE("(%p)->(shlview=%p set=%p shlbrs=%p rec=%p hwnd=%p) incomplete\n", this, lpPrevView, lpfs, psb, prcView, phWnd);
+    hr = CreateViewWindow2(&view_params);
+    *phWnd = view_params.hwndView;
 
-    if (lpfs != NULL)
-        TRACE("-- vmode=%x flags=%x\n", lpfs->ViewMode, lpfs->fFlags);
-    if (prcView != NULL)
-        TRACE("-- left=%i top=%i right=%i bottom=%i\n", prcView->left, prcView->top, prcView->right, prcView->bottom);
-
-    /* Validate the Shell Browser */
-    if (psb == NULL || m_hWnd)
-        return E_UNEXPECTED;
-
-    /* Set up the member variables */
-    m_pShellBrowser = psb;
-    m_FolderSettings = *lpfs;
-
-    /* Get our parent window */
-    m_pShellBrowser->GetWindow(&m_hWndParent);
-
-    /* Try to get the ICommDlgBrowserInterface, adds a reference !!! */
-    m_pCommDlgBrowser = NULL;
-    if (SUCCEEDED(m_pShellBrowser->QueryInterface(IID_PPV_ARG(ICommDlgBrowser, &m_pCommDlgBrowser))))
-    {
-        TRACE("-- CommDlgBrowser\n");
-    }
-
-    Create(m_hWndParent, prcView, NULL, WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP, 0, 0U);
-    if (m_hWnd == NULL)
-        return E_FAIL;
-
-    *phWnd = m_hWnd;
-
-    CheckToolbar();
-
-    if (!*phWnd)
-        return E_FAIL;
-
-    SetWindowPos(HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-    UpdateWindow();
-
-    if (!m_hMenu)
-    {
-        m_hMenu = CreateMenu();
-        m_pShellBrowser->InsertMenusSB(m_hMenu, &omw);
-        TRACE("-- after fnInsertMenusSB\n");
-    }
-
-    _MergeToolbar();
-
-    return S_OK;
+    return hr;
 }
 
 HRESULT WINAPI CDefView::DestroyViewWindow()
@@ -2552,8 +2513,65 @@ HRESULT STDMETHODCALLTYPE CDefView::GetView(SHELLVIEWID *view_guid, ULONG view_t
 
 HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow2(LPSV2CVW2_PARAMS view_params)
 {
-    FIXME("(%p)->(%p) stub\n", this, view_params);
-    return E_NOTIMPL;
+    OLEMENUGROUPWIDTHS omw = { { 0, 0, 0, 0, 0, 0 } };
+
+    if (view_params->cbSize != sizeof(SV2CVW2_PARAMS))
+        return E_FAIL;
+    
+    if (view_params->pvid != 0)
+        FIXME("SHELLVIEWID not handled\n");
+
+    view_params->hwndView = 0;
+
+    TRACE("(%p)->(shlview=%p set=%p shlbrs=%p rec=%p hwnd=%p) incomplete\n", this, view_params->psvPrev, view_params->pfs, view_params->psbOwner, view_params->prcView, view_params->hwndView);
+
+    if (view_params->pfs != NULL)
+        TRACE("-- vmode=%x flags=%x\n", view_params->pfs->ViewMode, view_params->pfs->fFlags);
+    if (view_params->prcView != NULL)
+        TRACE("-- left=%i top=%i right=%i bottom=%i\n", view_params->prcView->left, view_params->prcView->top, view_params->prcView->right, view_params->prcView->bottom);
+
+    /* Validate the Shell Browser */
+    if (view_params->psbOwner == NULL || m_hWnd)
+        return E_UNEXPECTED;
+
+    /* Set up the member variables */
+    m_pShellBrowser = view_params->psbOwner;
+    m_FolderSettings = *view_params->pfs;
+
+    /* Get our parent window */
+    m_pShellBrowser->GetWindow(&m_hWndParent);
+
+    /* Try to get the ICommDlgBrowserInterface, adds a reference !!! */
+    m_pCommDlgBrowser = NULL;
+    if (SUCCEEDED(m_pShellBrowser->QueryInterface(IID_PPV_ARG(ICommDlgBrowser, &m_pCommDlgBrowser))))
+    {
+        TRACE("-- CommDlgBrowser\n");
+    }
+
+    Create(m_hWndParent, view_params->prcView, NULL, WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP, 0, 0U);
+    if (m_hWnd == NULL)
+        return E_FAIL;
+
+    view_params->hwndView = m_hWnd;
+
+    CheckToolbar();
+
+    if (!view_params->hwndView)
+        return E_FAIL;
+
+    SetWindowPos(HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+    UpdateWindow();
+
+    if (!m_hMenu)
+    {
+        m_hMenu = CreateMenu();
+        m_pShellBrowser->InsertMenusSB(m_hMenu, &omw);
+        TRACE("-- after fnInsertMenusSB\n");
+    }
+
+    _MergeToolbar();
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::HandleRename(LPCITEMIDLIST new_pidl)
