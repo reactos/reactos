@@ -20,8 +20,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#undef VMWINST
-
 #define PM_REGISTRATION_NOTIFY (WM_APP + 1)
 /* Private Message used to communicate progress from the background
    registration thread to the main thread.
@@ -53,47 +51,6 @@ extern void WINAPI Control_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWOR
 BOOL
 GetRosInstallCD(WCHAR *pwszPath, DWORD cchPathMax);
 
-#ifdef VMWINST
-static BOOL
-RunVMWInstall(HWND hWnd)
-{
-    PROCESS_INFORMATION ProcInfo;
-    MSG msg;
-    DWORD ret;
-    STARTUPINFOW si;
-    WCHAR InstallName[] = L"vmwinst.exe";
-
-    ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
-
-    if(CreateProcessW(NULL, InstallName, NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS,
-                      NULL, NULL, &si, &ProcInfo))
-    {
-        EnableWindow(hWnd, FALSE);
-        for (;;)
-        {
-            while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-            {
-                if (msg.message == WM_QUIT)
-                    goto done;
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
-            }
-
-            ret = MsgWaitForMultipleObjects(1, &ProcInfo.hProcess, FALSE, INFINITE, QS_ALLEVENTS | QS_ALLINPUT);
-            if (ret == WAIT_OBJECT_0)
-                break;
-        }
-done:
-        EnableWindow(hWnd, TRUE);
-
-        CloseHandle(ProcInfo.hThread);
-        CloseHandle(ProcInfo.hProcess);
-        return TRUE;
-    }
-    return FALSE;
-}
-#endif
 
 static VOID
 CenterWindow(HWND hWnd)
@@ -1986,11 +1943,6 @@ ProcessPageDlgProc(HWND hwndDlg,
 
             if (wParam)
             {
-#ifdef VMWINST
-                if(!SetupData->UnattendSetup && !SetupData->DisableVmwInst)
-                    RunVMWInstall(GetParent(hwndDlg));
-#endif
-
                 /* Enable the Back and Next buttons */
                 PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT);
                 PropSheet_PressButton(GetParent(hwndDlg), PSBTN_NEXT);
@@ -2233,13 +2185,6 @@ ProcessUnattendInf(
         else if (!wcscmp(szName, L"DisableAutoDaylightTimeSet"))
         {
             pSetupData->DisableAutoDaylightTimeSet = _wtoi(szValue);
-        }
-        else if (!wcscmp(szName, L"DisableVmwInst"))
-        {
-            if(!wcscmp(szValue, L"yes"))
-                pSetupData->DisableVmwInst = 1;
-            else
-                pSetupData->DisableVmwInst = 0;
         }
         else if (!wcscmp(szName, L"DisableGeckoInst"))
         {
