@@ -1283,8 +1283,7 @@ IopDeleteFile(IN PVOID ObjectBody)
         KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
         /* Allocate an IRP */
-        Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-        if (!Irp) return;
+        Irp = IopAllocateIrpMustSucceed(DeviceObject->StackSize);
 
         /* Set it up */
         Irp->UserEvent = &Event;
@@ -1977,8 +1976,7 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
     KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
     /* Allocate an IRP */
-    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return;
+    Irp = IopAllocateIrpMustSucceed(DeviceObject->StackSize);
 
     /* Set it up */
     Irp->UserEvent = &Event;
