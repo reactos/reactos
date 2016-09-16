@@ -450,31 +450,37 @@ HKL FASTCALL
 UserGetKeyboardLayout(
     DWORD dwThreadId)
 {
-    NTSTATUS Status;
-    PETHREAD pThread;
     PTHREADINFO pti;
+    PLIST_ENTRY ListEntry;
     PKL pKl;
-    HKL hKl;
+
+    pti = PsGetCurrentThreadWin32Thread();
 
     if (!dwThreadId)
     {
-        pti = PsGetCurrentThreadWin32Thread();
         pKl = pti->KeyboardLayout;
         return pKl ? pKl->hkl : NULL;
     }
 
-    Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)dwThreadId, &pThread);
-    if (!NT_SUCCESS(Status))
+    ListEntry = pti->rpdesk->PtiList.Flink;
+
+    //
+    // Search the Desktop Thread list for related Desktop active Threads.
+    //
+    while(ListEntry != &pti->rpdesk->PtiList)
     {
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        return NULL;
+        pti = CONTAINING_RECORD(ListEntry, THREADINFO, PtiLink);
+
+        if (PsGetThreadId(pti->pEThread) == UlongToHandle(dwThreadId))
+        {
+           pKl = pti->KeyboardLayout;
+           return pKl ? pKl->hkl : NULL;
+        }
+
+        ListEntry = ListEntry->Flink;
     }
 
-    pti = PsGetThreadWin32Thread(pThread);
-    pKl = pti->KeyboardLayout;
-    hKl = pKl ? pKl->hkl : NULL;
-    ObDereferenceObject(pThread);
-    return hKl;
+    return NULL;
 }
 
 /*
