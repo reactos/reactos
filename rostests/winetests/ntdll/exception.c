@@ -1893,7 +1893,14 @@ static void test_vectored_continue_handler(void)
 START_TEST(exception)
 {
     HMODULE hntdll = GetModuleHandleA("ntdll.dll");
-
+#ifdef __REACTOS__
+    if (!winetest_interactive &&
+        !strcmp(winetest_platform, "windows"))
+    {
+        skip("ROSTESTS-240: Skipping ntdll_winetest:exception because it hangs on WHS-Testbot. Set winetest_interactive to run it anyway.\n");
+        return;
+    }
+#endif
     code_mem = VirtualAlloc(NULL, 65536, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     if(!code_mem) {
         trace("VirtualAlloc failed\n");
