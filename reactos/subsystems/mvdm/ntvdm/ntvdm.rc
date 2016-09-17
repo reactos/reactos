@@ -11,7 +11,13 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME   "ntvdm.exe"
 #include <reactos/version.rc>
 
-IDI_APPICON ICON "res/ntvdm.ico"
+/* Icons */
+1  ICON "res/ntvdm.ico"
+// 2  ICON "res/ntvdm_2.ico" // TODO: Swyter's icon, see CORE-10340
+3  ICON "res/pc_xt.ico"
+4  ICON "res/pc_at.ico"
+5  ICON "res/ros_dos.ico"
+6  ICON "res/vdm_dos.ico"
 
 /* UTF-8 */
 #pragma code_page(65001)
