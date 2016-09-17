@@ -178,7 +178,7 @@ nls_from_txt(const char *txt_file_path, const char *nls_file_path)
     }
 
     /* OEM glyph table size in words */
-    size = (glyph_table ? (256 * sizeof(uint16_t)) : 0);
+    size = (glyph_table ? 256 : 0);
 
     if (fwrite(&size, 1, sizeof(size), file) != sizeof(size))
     {

@@ -172,15 +172,18 @@ BestFit_FromNLS(const WCHAR *pszNLSFile, const WCHAR *pszBestFitFile)
 
         for (CodePageChar = 0; CodePageChar <= 0xFF; CodePageChar++)
         {
-            WCHAR szCharName[MAX_STR_LEN] = { 0 };
+            if (CodePageChar != CodePageTable.UniDefaultChar)
+            {
+                WCHAR szCharName[MAX_STR_LEN] = { 0 };
 
-            GetUName(GlyphTable[CodePageChar], szCharName);
+                GetUName(GlyphTable[CodePageChar], szCharName);
 
-            BestFit_Write(hFile,
-                          L"0x%02X 0x%04X ;%s\r\n",
-                          CodePageChar,
-                          GlyphTable[CodePageChar],
-                          szCharName);
+                BestFit_Write(hFile,
+                              L"0x%02X 0x%04X ;%s\r\n",
+                              CodePageChar,
+                              GlyphTable[CodePageChar],
+                              szCharName);
+            }
         }
 
         BestFit_Write(hFile, L"\r\n");

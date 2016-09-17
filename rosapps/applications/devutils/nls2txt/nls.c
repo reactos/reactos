@@ -62,7 +62,7 @@ NLS_ReadFile(const WCHAR *pszFile, PCPTABLEINFO CodePageTable)
     hFile = CreateFile(pszFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (hFile != INVALID_HANDLE_VALUE)
     {
-        PUSHORT pData = NULL;
+        PUSHORT pData;
         DWORD dwRead;
         DWORD dwFileSize;
 

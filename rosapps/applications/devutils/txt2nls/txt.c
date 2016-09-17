@@ -140,7 +140,7 @@ txt_get_mb_table(const char *file_path, uint16_t uni_default_char)
     int res = 0;
     FILE *file;
 
-    table = malloc(0xFF * sizeof(uint16_t));
+    table = malloc(256 * sizeof(uint16_t));
     if (!table)
     {
         printf("Memory allocation failure\n");
@@ -148,7 +148,7 @@ txt_get_mb_table(const char *file_path, uint16_t uni_default_char)
     }
 
     /* Set default value for all table items */
-    for (index = 0; index <= 0xFF; index++)
+    for (index = 0; index <= 255; index++)
         table[index] = uni_default_char;
 
     file = fopen(file_path, "r");
@@ -254,7 +254,7 @@ txt_get_wc_table(const char *file_path, uint16_t default_char, int is_dbcs)
     int found;
     FILE *file;
 
-    table = malloc(0xFFFF * (is_dbcs ? sizeof(uint16_t) : sizeof(uint8_t)));
+    table = malloc(65536 * (is_dbcs ? sizeof(uint16_t) : sizeof(uint8_t)));
     if (!table)
     {
         printf("Memory allocation failure\n");
@@ -262,7 +262,7 @@ txt_get_wc_table(const char *file_path, uint16_t default_char, int is_dbcs)
     }
 
     /* Set default value for all table items */
-    for (index = 0; index <= 0xFFFF; index++)
+    for (index = 0; index <= 65535; index++)
     {
         /* DBCS code page */
         if (is_dbcs)
@@ -393,7 +393,7 @@ txt_get_glyph_table(const char *file_path, uint16_t uni_default_char)
     int res = 0;
     FILE *file;
 
-    table = malloc(0xFF * sizeof(uint16_t));
+    table = malloc(256 * sizeof(uint16_t));
     if (!table)
     {
         printf("Memory allocation failure\n");
@@ -401,7 +401,7 @@ txt_get_glyph_table(const char *file_path, uint16_t uni_default_char)
     }
 
     /* Set default value for all table items */
-    for (index = 0; index <= 0xFF; index++)
+    for (index = 0; index <= 255; index++)
         table[index] = uni_default_char;
 
     file = fopen(file_path, "r");
