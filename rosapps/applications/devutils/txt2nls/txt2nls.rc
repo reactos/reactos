@@ -1,0 +1,18 @@
+/*
+ * PROJECT:     ReactOS TXT to NLS Converter
+ * LICENSE:     GNU General Public License Version 2.0 or any later version
+ * FILE:        devutils/txt2nls/txt2nls.rc
+ * COPYRIGHT:   Copyright 2016 Dmitry Chapyshev <dmitry@reactos.org>
+ */
+
+#include <windows.h>
+#include <commctrl.h>
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#define REACTOS_STR_FILE_DESCRIPTION    "ReactOS TXT to NLS Converter"
+#define REACTOS_STR_INTERNAL_NAME       "txt2nls"
+#define REACTOS_STR_ORIGINAL_FILENAME   "txt2nls.exe"
+#include <reactos/version.rc>
+
+#include <reactos/manifest_exe.rc>
