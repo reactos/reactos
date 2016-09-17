@@ -213,7 +213,7 @@ nls_from_txt(const char *txt_file_path, const char *nls_file_path)
     }
 
     /* Write wide char table */
-    if (fwrite(wc_table, 1, (65535 * header.MaximumCharacterSize), file) != (65535 * header.MaximumCharacterSize))
+    if (fwrite(wc_table, 1, (65536 * header.MaximumCharacterSize), file) != (65536 * header.MaximumCharacterSize))
     {
         printf("Unable to write NLS file.\n");
         goto Cleanup;
