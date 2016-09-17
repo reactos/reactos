@@ -299,12 +299,14 @@ ExitWindowsDialogShellProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return TRUE;
         }
 
+#if 0
         case WM_ACTIVATE:
         {
             if (LOWORD(wParam) == WA_INACTIVE)
                 EndDialog(hWnd, 0);
             return FALSE;
         }
+#endif
 
         case WM_PAINT:
         {
