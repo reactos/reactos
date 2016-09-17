@@ -35,7 +35,7 @@ private:
     UCHAR* m_bytes;
     int m_step;
 
-    static LRESULT WINAPI Proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT WINAPI WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 public:
     CDimmedWindow()
@@ -49,7 +49,7 @@ public:
         , m_step(0)
     {
         WNDCLASSEXW wndclass = {sizeof(wndclass)};
-        wndclass.lpfnWndProc = Proc;
+        wndclass.lpfnWndProc = WndProc;
         wndclass.hInstance = hDllInstance;
         wndclass.hCursor = LoadCursor(0, IDC_ARROW);
         wndclass.lpszClassName = L"DimmedWindowClass";
@@ -73,9 +73,15 @@ public:
         LONG x = GetSystemMetrics(SM_XVIRTUALSCREEN);
         LONG y = GetSystemMetrics(SM_YVIRTUALSCREEN);
 
-        m_hwnd = CreateWindowExW(WS_EX_TOPMOST, L"DimmedWindowClass", NULL, WS_POPUP,
-            x, y, m_width, m_height,
-            NULL, NULL, hDllInstance, (LPVOID)this);
+        m_hwnd = CreateWindowExW(WS_EX_TOPMOST,
+                                 L"DimmedWindowClass",
+                                 NULL,
+                                 WS_POPUP,
+                                 x, y,
+                                 m_width, m_height,
+                                 NULL, NULL,
+                                 hDllInstance,
+                                 (LPVOID)this);
     }
 
     ~CDimmedWindow()
@@ -115,7 +121,8 @@ public:
     {
         Capture();
 
-        ShowWindow(m_hwnd, SW_SHOWNA);
+        ShowWindow(m_hwnd, SW_SHOW);
+        SetForegroundWindow(m_hwnd);
         EnableWindow(m_hwnd, FALSE);
 
         SetTimer(m_hwnd, FADE_TIMER_ID, 200, NULL);
@@ -191,58 +198,62 @@ public:
 };
 
 
-LRESULT WINAPI CDimmedWindow::Proc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT WINAPI CDimmedWindow::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    switch(uMsg)
+    switch (uMsg)
     {
     case WM_NCCREATE:
     {
         LPCREATESTRUCT lpcs = reinterpret_cast<LPCREATESTRUCT>(lParam);
         CDimmedWindow* info = static_cast<CDimmedWindow*>(lpcs->lpCreateParams);
-        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG)info);
+        SetWindowLongPtrW(hWnd, GWLP_USERDATA, (LONG_PTR)info);
         SetTimer(hWnd, INIT_TIMER_ID, 50, NULL);
         break;
     }
+
     case WM_PAINT:
     {
-        CDimmedWindow* info = reinterpret_cast<CDimmedWindow*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+        CDimmedWindow* info = reinterpret_cast<CDimmedWindow*>(GetWindowLongPtrW(hWnd, GWLP_USERDATA));
         if (info)
         {
-            PAINTSTRUCT paint;
-            HDC hdc = BeginPaint(hWnd, &paint);
-            info->Blt(hdc);
-            EndPaint(hWnd, &paint);
+            PAINTSTRUCT ps;
+            BeginPaint(hWnd, &ps);
+            info->Blt(ps.hdc);
+            EndPaint(hWnd, &ps);
         }
         return 0;
     }
+
     case WM_TIMER:
+    {
         if (wParam == INIT_TIMER_ID)
         {
-            CDimmedWindow* info = reinterpret_cast<CDimmedWindow*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+            CDimmedWindow* info = reinterpret_cast<CDimmedWindow*>(GetWindowLongPtrW(hWnd, GWLP_USERDATA));
             KillTimer(hWnd, INIT_TIMER_ID);
             info->Init();
-            return 0;
         }
-        if (wParam == FADE_TIMER_ID)
+        else if (wParam == FADE_TIMER_ID)
         {
-            CDimmedWindow* info = reinterpret_cast<CDimmedWindow*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+            CDimmedWindow* info = reinterpret_cast<CDimmedWindow*>(GetWindowLongPtrW(hWnd, GWLP_USERDATA));
             if (info && info->Step())
                 InvalidateRect(hWnd, NULL, TRUE);
             else
                 KillTimer(hWnd, FADE_TIMER_ID);
-            return 0;
         }
-        break;
+        return 0;
+    }
+
     default:
         break;
     }
+
     return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
 
 extern "C"
 HRESULT WINAPI
-ShellDimScreen (void** pUnknown, HWND* hWindow)
+ShellDimScreen(void** pUnknown, HWND* hWindow)
 {
     CComObject<CDimmedWindow> *pWindow;
     HRESULT hr = CComObject<CDimmedWindow>::CreateInstance(&pWindow);
