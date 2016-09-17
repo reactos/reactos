@@ -131,6 +131,21 @@ nls_from_txt(const char *txt_file_path, const char *nls_file_path)
     /* GLYPHTABLE optionally. We do not leave if it is absent */
     glyph_table = txt_get_glyph_table(txt_file_path, header.UniDefaultChar);
 
+    if (is_dbcs)
+    {
+        /* DBCS codepage */
+        uint16_t *table = (uint16_t*)wc_table;
+        header.TransUniDefaultChar = table[header.UniDefaultChar];
+        /* TODO: TransDefaultChar for DBCS codepages */
+    }
+    else
+    {
+        /* SBCS codepage */
+        uint8_t *table = (uint8_t*)wc_table;
+        header.TransUniDefaultChar = table[header.UniDefaultChar];
+        header.TransDefaultChar = mb_table[LOBYTE(header.DefaultChar)];
+    }
+
 #ifdef _NLS_DEBUG_PRINT
     nls_print_header(&header);
     nls_print_mb_table(mb_table, header.UniDefaultChar);

@@ -15,6 +15,8 @@
 #include <ctype.h>
 #include <memory.h>
 
+#define LOBYTE(w) ((uint8_t)((uint32_t)(w) & 0xff))
+
 #define MAXIMUM_LEADBYTES   12
 
 typedef struct

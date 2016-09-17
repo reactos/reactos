@@ -96,6 +96,7 @@ txt_get_header(const char *file_path, NLS_FILE_HEADER *header)
             /* Convert string to uint32_t */
             val = strtoul(p, &p, 16);
             header->DefaultChar = (uint16_t)val;
+            /* By default set value as DefaultChar */
             header->TransDefaultChar = (uint16_t)val;
 
             /* Skip all spaces after default char */
@@ -104,6 +105,7 @@ txt_get_header(const char *file_path, NLS_FILE_HEADER *header)
             /* Convert string to uint32_t */
             val = strtoul(p, &p, 16);
             header->UniDefaultChar = (uint16_t)val;
+            /* By default set value as UniDefaultChar */
             header->TransUniDefaultChar = (uint16_t)val;
 
             found = 1;
