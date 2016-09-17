@@ -900,6 +900,13 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             EndDialog(hwnd, IDCANCEL);
             break;
 
+        case WM_ACTIVATE:
+        {
+            if (LOWORD(wParam) == WA_INACTIVE)
+                EndDialog(hwnd, 0);
+            return FALSE;
+        }
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
