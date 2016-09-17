@@ -182,16 +182,17 @@ public:
         {
             RemoveAll();
 
-            m_nCapacity = src.GetSize();
+            int nNewCount = src.GetSize();
 
-            T *pNewData = (T *)realloc(m_pData, m_nCapacity * sizeof(T));
+            T *pNewData = (T *)realloc(m_pData, nNewCount * sizeof(T));
             ATLASSERT(pNewData);
             if (pNewData == NULL)
                 return *this;   // failure
 
-            // store new data and capacity
+            // store new
             m_pData = pNewData;
-            m_nCount = m_nCapacity;
+            m_nCount = nNewCount;
+            m_nCapacity = nNewCount;
         }
         else
         {
