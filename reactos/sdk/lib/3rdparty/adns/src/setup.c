@@ -572,9 +572,14 @@ int adns_init(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
   #define SECURE_PATH_LEN (MAX_PATH - 64)
   char PathBuf[MAX_PATH];
   struct in_addr addr;
+#ifdef __REACTOS__
+  PFIXED_INFO network_info;
+  ULONG network_info_blen = 0;
+#else
   #define ADNS_PFIXED_INFO_BLEN (2048)
   PFIXED_INFO network_info = (PFIXED_INFO)_alloca(ADNS_PFIXED_INFO_BLEN);
   ULONG network_info_blen = ADNS_PFIXED_INFO_BLEN;
+#endif /* __REACTOS__ */
   DWORD network_info_result;
   PIP_ADDR_STRING pip;
   const char *network_err_str = "";
@@ -601,6 +606,10 @@ int adns_init(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
   GetWindowsDirectory(PathBuf, SECURE_PATH_LEN);
   strcat(PathBuf,"\\System32\\Drivers\\etc\\resolv-adns.conf");
   readconfig(ads,PathBuf,0);
+#ifdef __REACTOS__
+  network_info_result = GetNetworkParams(NULL, &network_info_blen);
+  network_info = (PFIXED_INFO)malloc((size_t)network_info_blen);
+#endif
   network_info_result = GetNetworkParams(network_info, &network_info_blen);
   if (network_info_result != ERROR_SUCCESS){
     switch(network_info_result) {
@@ -616,8 +625,17 @@ int adns_init(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
       addr.s_addr = inet_addr(pip->IpAddress.String);
       if ((addr.s_addr != INADDR_ANY) && (addr.s_addr != INADDR_NONE))
         addserver(ads, addr);
+#ifdef __REACTOS__
+      if (network_info->DomainName)
+        ccf_search(ads, "LOCALDOMAIN", -1, network_info->DomainName);
+      else
+        ccf_search(ads, "LOCALDOMAIN", -1, "");
+#endif
     }
   }
+#ifdef __REACTOS__
+  if (network_info) free(network_info);
+#endif
 #else
   readconfig(ads,"/etc/resolv.conf",1);
   readconfig(ads,"/etc/resolv-adns.conf",0);
