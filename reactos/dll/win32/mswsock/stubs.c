@@ -9,6 +9,7 @@
 
 #include "precomp.h"
 
+#include <windef.h>
 #include <ws2spi.h>
 #include <nspapi.h>
 
@@ -416,21 +417,6 @@ GetNameByTypeW(LPGUID lpServiceType,LPWSTR lpServiceName,DWORD dwNameLength)
   OutputDebugStringW(L"w32sock GetNameByTypeW stub called\n");
   return TRUE;
 }
-
-
-/*
- * @unimplemented
- */
-INT
-WINAPI
-NSPStartup(
-    LPGUID lpProviderId,
-    LPNSP_ROUTINE lpnspRoutines
-    )
-{
-  return TRUE;
-}
-
 
 /*
  * @unimplemented
