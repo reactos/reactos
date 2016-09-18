@@ -53,7 +53,7 @@ DnsQuery_A(LPCSTR Name,
            PVOID *Reserved)
 {
     adns_state astate;
-    int quflags = 0;
+    int quflags = adns_qf_search;
     int adns_error;
     adns_answer *answer;
     LPSTR CurrentName;
