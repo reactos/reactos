@@ -177,12 +177,13 @@ ScreenSaverThreadMain(
     }
 
 cleanup:
-    RevertToSelf();
     if (Session->hUserActivity)
         CloseHandle(Session->hUserActivity);
 
     if (Session->hEndOfScreenSaver)
         CloseHandle(Session->hEndOfScreenSaver);
+
+    RevertToSelf();
 
 #ifndef USE_GETLASTINPUTINFO
     if (Session->KeyboardHook)
@@ -194,6 +195,7 @@ cleanup:
 
     CloseHandle(Session->hEndOfScreenSaverThread);
     CloseHandle(Session->hScreenSaverParametersChanged);
+
     return 0;
 }
 
@@ -368,12 +370,13 @@ StartScreenSaver(
     CallNotificationDlls(Session, StopScreenSaverHandler);
 
 cleanup:
-    RevertToSelf();
     if (hKey)
         RegCloseKey(hKey);
 
     if (hCurrentUser)
         RegCloseKey(hCurrentUser);
+
+    RevertToSelf();
 
     if (!ret)
     {

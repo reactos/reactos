@@ -106,51 +106,69 @@ StartUserShell(
 
 BOOL
 SetDefaultLanguage(
-    IN BOOL UserProfile)
+    IN PWLSESSION Session)
 {
-    HKEY BaseKey;
-    LPCWSTR SubKey;
-    LPCWSTR ValueName;
+    BOOL ret = FALSE;
+    BOOL UserProfile;
     LONG rc;
-    HKEY hKey = NULL;
+    HKEY UserKey, hKey = NULL;
+    LPCWSTR SubKey, ValueName;
     DWORD dwType, dwSize;
     LPWSTR Value = NULL;
     UNICODE_STRING ValueString;
     NTSTATUS Status;
     LCID Lcid;
-    BOOL ret = FALSE;
+
+    UserProfile = (Session && Session->UserToken);
+
+    if (UserProfile && !ImpersonateLoggedOnUser(Session->UserToken))
+    {
+        ERR("WL: ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
+        return FALSE;
+        // FIXME: ... or use the default language of the system??
+        // UserProfile = FALSE;
+    }
 
     if (UserProfile)
     {
-        BaseKey = HKEY_CURRENT_USER;
+        rc = RegOpenCurrentUser(MAXIMUM_ALLOWED, &UserKey);
+        if (rc != ERROR_SUCCESS)
+        {
+            TRACE("RegOpenCurrentUser() failed with error %lu\n", rc);
+            goto cleanup;
+        }
+
         SubKey = L"Control Panel\\International";
         ValueName = L"Locale";
     }
     else
     {
-        BaseKey = HKEY_LOCAL_MACHINE;
+        UserKey = NULL;
         SubKey = L"System\\CurrentControlSet\\Control\\Nls\\Language";
         ValueName = L"Default";
     }
 
-    rc = RegOpenKeyExW(
-        BaseKey,
-        SubKey,
-        0,
-        KEY_READ,
-        &hKey);
+    rc = RegOpenKeyExW(UserKey ? UserKey : HKEY_LOCAL_MACHINE,
+                       SubKey,
+                       0,
+                       KEY_READ,
+                       &hKey);
+
+    if (UserKey)
+        RegCloseKey(UserKey);
+
     if (rc != ERROR_SUCCESS)
     {
         TRACE("RegOpenKeyEx() failed with error %lu\n", rc);
         goto cleanup;
     }
-    rc = RegQueryValueExW(
-        hKey,
-        ValueName,
-        NULL,
-        &dwType,
-        NULL,
-        &dwSize);
+
+    rc = RegQueryValueExW(hKey,
+                          ValueName,
+                          NULL,
+                          &dwType,
+                          NULL,
+                          &dwSize);
     if (rc != ERROR_SUCCESS)
     {
         TRACE("RegQueryValueEx() failed with error %lu\n", rc);
@@ -169,13 +187,12 @@ SetDefaultLanguage(
         TRACE("HeapAlloc() failed\n");
         goto cleanup;
     }
-    rc = RegQueryValueExW(
-        hKey,
-        ValueName,
-        NULL,
-        NULL,
-        (LPBYTE)Value,
-        &dwSize);
+    rc = RegQueryValueExW(hKey,
+                          ValueName,
+                          NULL,
+                          NULL,
+                          (LPBYTE)Value,
+                          &dwSize);
     if (rc != ERROR_SUCCESS)
     {
         TRACE("RegQueryValueEx() failed with error %lu\n", rc);
@@ -204,10 +221,15 @@ SetDefaultLanguage(
     ret = TRUE;
 
 cleanup:
-    if (hKey)
-        RegCloseKey(hKey);
     if (Value)
         HeapFree(GetProcessHeap(), 0, Value);
+
+    if (hKey)
+        RegCloseKey(hKey);
+
+    if (UserProfile)
+        RevertToSelf();
+
     return ret;
 }
 
@@ -271,6 +293,11 @@ PlayLogonSoundThread(
     NTSTATUS Status;
     ULONG Index = 0;
     SC_HANDLE hSCManager, hService;
+
+    //
+    // FIXME: Isn't it possible to *JUST* impersonate the current user
+    // *AND* open its HKCU??
+    //
 
     /* Get SID of current user */
     Status = NtQueryInformationToken((HANDLE)lpParameter,
@@ -336,7 +363,7 @@ PlayLogonSoundThread(
         return 0;
     }
 
-    /* Open service manager */
+    /* Open the service manager */
     hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
     if (!hSCManager)
     {
@@ -344,17 +371,17 @@ PlayLogonSoundThread(
         return 0;
     }
 
-    /* Open wdmaud service */
+    /* Open the wdmaud service */
     hService = OpenServiceW(hSCManager, L"wdmaud", GENERIC_READ);
     if (!hService)
     {
-        /* Sound is not installed */
+        /* The service is not installed */
         TRACE("Failed to open wdmaud service (%x)\n", GetLastError());
         CloseServiceHandle(hSCManager);
         return 0;
     }
 
-    /* Wait for wdmaud start */
+    /* Wait for wdmaud to start */
     do
     {
         if (!QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (LPBYTE)&Info, sizeof(SERVICE_STATUS_PROCESS), &dwSize))
@@ -451,8 +478,8 @@ HandleLogon(
     DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGYOURPERSONALSETTINGS);
     UpdatePerUserSystemParameters(0, TRUE);
 
-    /* Set default language */
-    if (!SetDefaultLanguage(TRUE))
+    /* Set default user language */
+    if (!SetDefaultLanguage(Session))
     {
         WARN("WL: SetDefaultLanguage() failed\n");
         goto cleanup;
@@ -1530,7 +1557,7 @@ InitializeSAS(
         goto cleanup;
     }
 
-    if (!SetDefaultLanguage(FALSE))
+    if (!SetDefaultLanguage(NULL))
         return FALSE;
 
     ret = TRUE;

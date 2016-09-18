@@ -134,9 +134,13 @@ CreateUserEnvironment(
     TRACE("WL: CreateUserEnvironment called\n");
 
     /* Impersonate the new user */
-    ImpersonateLoggedOnUser(Session->UserToken);
+    if (!ImpersonateLoggedOnUser(Session->UserToken))
+    {
+        ERR("ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
+        return FALSE;
+    }
 
-    /* Open the new users HKCU key */
+    /* Open the new user HKCU key */
     lError = RegOpenCurrentUser(KEY_CREATE_SUB_KEY,
                                 &hKeyCurrentUser);
     if (lError == ERROR_SUCCESS)

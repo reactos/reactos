@@ -352,8 +352,9 @@ WlxScreenSaverNotify(
     BOOL  *pSecure)
 {
 #if 0
+    PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
     WCHAR szBuffer[2];
-    HKEY hKey;
+    HKEY hKeyCurrentUser, hKey;
     DWORD bufferSize = sizeof(szBuffer);
     DWORD varType = REG_SZ;
     LONG rc;
@@ -369,14 +370,29 @@ WlxScreenSaverNotify(
      *    HKCU\Control Panel\Desktop : ScreenSaverIsSecure
      */
 
-    // FIXME: User impersonation!!
+    if (!ImpersonateLoggedOnUser(pgContext->UserToken))
+    {
+        ERR("WL: ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
+        *pSecure = FALSE;
+        return TRUE;
+    }
 
-    rc = RegOpenKeyExW(HKEY_CURRENT_USER,
-                       L"Control Panel\\Desktop",
-                       0,
-                       KEY_QUERY_VALUE,
-                       &hKey);
-    TRACE("RegOpenKeyExW: %ld\n", rc);
+    /* Open the current user HKCU key */
+    rc = RegOpenCurrentUser(MAXIMUM_ALLOWED, &hKeyCurrentUser);
+    TRACE("RegOpenCurrentUser: %ld\n", rc);
+    if (rc == ERROR_SUCCESS)
+    {
+        /* Open the subkey */
+        rc = RegOpenKeyExW(hKeyCurrentUser,
+                           L"Control Panel\\Desktop",
+                           0,
+                           KEY_QUERY_VALUE,
+                           &hKey);
+        TRACE("RegOpenKeyExW: %ld\n", rc);
+        RegCloseKey(hKeyCurrentUser);
+    }
+
+    /* Read the value */
     if (rc == ERROR_SUCCESS)
     {
         rc = RegQueryValueExW(hKey,
@@ -396,6 +412,9 @@ WlxScreenSaverNotify(
 
         RegCloseKey(hKey);
     }
+
+    /* Revert the impersonation */
+    RevertToSelf();
 
     TRACE("*pSecure: %ld\n", *pSecure);
 #endif
@@ -820,10 +839,10 @@ CreateProfile(
     pProfile->pszEnvironment = lpEnvironment;
 
     if (!GetTokenInformation(pgContext->UserToken,
-        TokenStatistics,
-        (PVOID)&Stats,
-        sizeof(TOKEN_STATISTICS),
-        &cbStats))
+                             TokenStatistics,
+                             &Stats,
+                             sizeof(Stats),
+                             &cbStats))
     {
         WARN("Couldn't get Authentication id from user token!\n");
         goto cleanup;

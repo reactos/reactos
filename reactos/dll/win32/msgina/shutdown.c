@@ -32,18 +32,26 @@ DWORD
 LoadShutdownSelState(VOID)
 {
     LONG lRet;
-    HKEY hKey;
+    HKEY hKeyCurrentUser, hKey;
     DWORD dwValue, dwTemp, dwSize;
 
     /* Default to shutdown */
     dwValue = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF;
 
-    lRet = RegOpenKeyExW(HKEY_CURRENT_USER,
-                         L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
-                         0, KEY_QUERY_VALUE, &hKey);
+    /* Open the current user HKCU key */
+    lRet = RegOpenCurrentUser(MAXIMUM_ALLOWED, &hKeyCurrentUser);
+    if (lRet == ERROR_SUCCESS)
+    {
+        /* Open the subkey */
+        lRet = RegOpenKeyExW(hKeyCurrentUser,
+                             L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+                             0, KEY_QUERY_VALUE, &hKey);
+        RegCloseKey(hKeyCurrentUser);
+    }
     if (lRet != ERROR_SUCCESS)
         return dwValue;
 
+    /* Read the value */
     dwSize = sizeof(dwTemp);
     lRet = RegQueryValueExW(hKey,
                             L"Shutdown Setting",
@@ -90,18 +98,25 @@ VOID
 SaveShutdownSelState(
     IN DWORD ShutdownCode)
 {
-    HKEY hKey;
+    LONG lRet;
+    HKEY hKeyCurrentUser, hKey;
     DWORD dwValue = 0;
 
-    if (RegCreateKeyExW(HKEY_CURRENT_USER,
-                        L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
-                        0, NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_SET_VALUE,
-                        NULL, &hKey, NULL) != ERROR_SUCCESS)
+    /* Open the current user HKCU key */
+    lRet = RegOpenCurrentUser(MAXIMUM_ALLOWED, &hKeyCurrentUser);
+    if (lRet == ERROR_SUCCESS)
     {
-        return;
+        /* Create the subkey */
+        lRet = RegCreateKeyExW(hKeyCurrentUser,
+                               L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer",
+                               0, NULL,
+                               REG_OPTION_NON_VOLATILE,
+                               KEY_SET_VALUE,
+                               NULL, &hKey, NULL);
+        RegCloseKey(hKeyCurrentUser);
     }
+    if (lRet != ERROR_SUCCESS)
+        return;
 
     switch (ShutdownCode)
     {

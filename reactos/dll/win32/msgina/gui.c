@@ -624,15 +624,33 @@ OnShutDown(
     INT ret;
     DWORD ShutdownOptions;
 
-    // FIXME: User impersonation!!
-    pgContext->nShutdownAction = LoadShutdownSelState();
-    ShutdownOptions = GetAllowedShutdownOptions();
+    if (ImpersonateLoggedOnUser(pgContext->UserToken))
+    {
+        pgContext->nShutdownAction = LoadShutdownSelState();
+        ShutdownOptions = GetAllowedShutdownOptions();
+        RevertToSelf();
+    }
+    else
+    {
+        ERR("WL: ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
+        pgContext->nShutdownAction = 0;
+        ShutdownOptions = 0;
+    }
 
     ret = ShutdownDialog(hwndDlg, ShutdownOptions, pgContext);
 
-    // FIXME: User impersonation!!
     if (ret == IDOK)
-        SaveShutdownSelState(pgContext->nShutdownAction);
+    {
+        if (ImpersonateLoggedOnUser(pgContext->UserToken))
+        {
+            SaveShutdownSelState(pgContext->nShutdownAction);
+            RevertToSelf();
+        }
+        else
+        {
+            ERR("WL: ImpersonateLoggedOnUser() failed with error %lu\n", GetLastError());
+        }
+    }
 
     return ret;
 }
