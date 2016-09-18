@@ -523,9 +523,6 @@ IntMultiByteToWideCharCP(UINT CodePage,
             {
                 Char = *MultiByteString++;
 
-                if (Char < 0x80)
-                    continue;
-
                 DBCSOffset = CodePageTable->DBCSOffsets[Char];
 
                 if (!DBCSOffset)
@@ -542,12 +539,6 @@ IntMultiByteToWideCharCP(UINT CodePage,
         {
             Char = *MultiByteString++;
 
-            if (Char < 0x80)
-            {
-                *WideCharString++ = Char;
-                continue;
-            }
-
             DBCSOffset = CodePageTable->DBCSOffsets[Char];
 
             if (!DBCSOffset)
@@ -556,8 +547,19 @@ IntMultiByteToWideCharCP(UINT CodePage,
                 continue;
             }
 
-            if (MultiByteString < MbsEnd)
-                *WideCharString++ = CodePageTable->DBCSOffsets[DBCSOffset + *(PUCHAR)MultiByteString++];
+            if (MultiByteString == MbsEnd)
+            {
+                *WideCharString++ = UNICODE_NULL;
+            }
+            else if (*MultiByteString == 0)
+            {
+                *WideCharString++ = UNICODE_NULL;
+                MultiByteString++;
+            }
+            else
+            {
+                *WideCharString++ = CodePageTable->DBCSOffsets[DBCSOffset + (UCHAR)*MultiByteString++];
+            }
         }
 
         if (MultiByteString < MbsEnd)
@@ -902,41 +904,43 @@ IntWideCharToMultiByteCP(UINT CodePage,
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
+
     CodePageTable = &CodePageEntry->CodePageTable;
 
 
     /* Different handling for DBCS code pages. */
-    if (CodePageTable->MaximumCharacterSize > 1)
+    if (CodePageTable->DBCSCodePage)
     {
         /* If Flags, DefaultChar or UsedDefaultChar were given, we have to do some more work */
-        if(Flags || DefaultChar || UsedDefaultChar)
+        if (Flags || DefaultChar || UsedDefaultChar)
         {
             BOOL TempUsedDefaultChar;
             USHORT DefChar;
 
             /* If UsedDefaultChar is not set, set it to a temporary value, so we don't have
                to check on every character */
-            if(!UsedDefaultChar)
+            if (!UsedDefaultChar)
                 UsedDefaultChar = &TempUsedDefaultChar;
 
             *UsedDefaultChar = FALSE;
 
             /* Use the CodePage's TransDefaultChar if none was given. Don't modify the DefaultChar pointer here. */
-            if(DefaultChar)
+            if (DefaultChar)
                 DefChar = DefaultChar[1] ? ((DefaultChar[0] << 8) | DefaultChar[1]) : DefaultChar[0];
             else
                 DefChar = CodePageTable->TransDefaultChar;
 
             /* Does caller query for output buffer size? */
-            if(!MultiByteCount)
+            if (!MultiByteCount)
             {
-                for(TempLength = 0; WideCharCount; WideCharCount--, WideCharString++, TempLength++)
+                for (TempLength = 0; WideCharCount; WideCharCount--, WideCharString++, TempLength++)
                 {
                     USHORT uChar;
 
                     if ((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
                     {
                         /* FIXME: Handle WC_COMPOSITECHECK */
+                        DPRINT1("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
                     }
 
                     uChar = ((PUSHORT) CodePageTable->WideCharTable)[*WideCharString];
@@ -957,15 +961,16 @@ IntWideCharToMultiByteCP(UINT CodePage,
             }
 
             /* Convert the WideCharString to the MultiByteString and verify if the mapping is valid */
-            for(TempLength = MultiByteCount;
-                WideCharCount && TempLength;
-                TempLength--, WideCharString++, WideCharCount--)
+            for (TempLength = MultiByteCount;
+                 WideCharCount && TempLength;
+                 TempLength--, WideCharString++, WideCharCount--)
             {
                 USHORT uChar;
 
                 if ((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
                 {
                     /* FIXME: Handle WC_COMPOSITECHECK */
+                    DPRINT1("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
                 }
 
                 uChar = ((PUSHORT)CodePageTable->WideCharTable)[*WideCharString];
@@ -1044,7 +1049,7 @@ IntWideCharToMultiByteCP(UINT CodePage,
 
         return MultiByteCount - TempLength;
     }
-    else /* Not DBCS code page */
+    else /* SBCS code page */
     {
         INT nReturn;
 
@@ -1070,6 +1075,7 @@ IntWideCharToMultiByteCP(UINT CodePage,
                     if ((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
                     {
                         /* FIXME: Handle WC_COMPOSITECHECK */
+                        DPRINT1("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
                     }
 
                     if (!*UsedDefaultChar)
@@ -1096,6 +1102,7 @@ IntWideCharToMultiByteCP(UINT CodePage,
                 if ((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
                 {
                     /* FIXME: Handle WC_COMPOSITECHECK */
+                    DPRINT1("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
                 }
 
                 *MultiByteString = ((PCHAR)CodePageTable->WideCharTable)[*WideCharString];
