@@ -476,7 +476,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
 
             while (TempString < MbsEnd)
             {
-                DBCSOffset = CodePageTable->DBCSOffsets[*TempString];
+                DBCSOffset = CodePageTable->DBCSOffsets[(UCHAR)*TempString];
 
                 if (DBCSOffset)
                 {
@@ -487,7 +487,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
                         return 0;
                     }
 
-                    WideChar = CodePageTable->DBCSOffsets[*(TempString + 1) + DBCSOffset];
+                    WideChar = CodePageTable->DBCSOffsets[DBCSOffset + *(TempString + 1)];
 
                     if (WideChar == CodePageTable->UniDefaultChar &&
                         MAKEWORD(*(TempString + 1), *TempString) != CodePageTable->TransUniDefaultChar)
@@ -500,7 +500,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
                 }
                 else
                 {
-                    USHORT WideChar = MultiByteTable[(UCHAR)*TempString];
+                    WideChar = MultiByteTable[(UCHAR)*TempString];
 
                     if ((WideChar == CodePageTable->UniDefaultChar &&
                         *TempString != CodePageTable->TransUniDefaultChar) ||
@@ -568,7 +568,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
 
         return Count;
     }
-    else /* Not DBCS code page */
+    else /* SBCS code page */
     {
         /* Check for invalid characters. */
         if (Flags & MB_ERR_INVALID_CHARS)
@@ -609,7 +609,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
             return 0;
         }
-	    return MultiByteCount;
+        return MultiByteCount;
     }
 }
 
