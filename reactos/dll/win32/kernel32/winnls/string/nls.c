@@ -436,6 +436,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
 {
     PCODEPAGE_ENTRY CodePageEntry;
     PCPTABLEINFO CodePageTable;
+    PUSHORT MultiByteTable;
     LPCSTR TempString;
     INT TempLength;
 
@@ -446,10 +447,22 @@ IntMultiByteToWideCharCP(UINT CodePage,
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
+
     CodePageTable = &CodePageEntry->CodePageTable;
 
+    /* If MB_USEGLYPHCHARS flag present and glyph table present */
+    if ((Flags & MB_USEGLYPHCHARS) && CodePageTable->MultiByteTable[256])
+    {
+        /* Use glyph table */
+        MultiByteTable = CodePageTable->MultiByteTable + 256 + 1;
+    }
+    else
+    {
+        MultiByteTable = CodePageTable->MultiByteTable;
+    }
+
     /* Different handling for DBCS code pages. */
-    if (CodePageTable->MaximumCharacterSize > 1)
+    if (CodePageTable->DBCSCodePage)
     {
         UCHAR Char;
         USHORT DBCSOffset;
@@ -498,7 +511,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
 
             if (!DBCSOffset)
             {
-                *WideCharString++ = CodePageTable->MultiByteTable[Char];
+                *WideCharString++ = MultiByteTable[Char];
                 continue;
             }
 
@@ -523,9 +536,12 @@ IntMultiByteToWideCharCP(UINT CodePage,
                  TempLength > 0;
                  TempString++, TempLength--)
             {
-                if (CodePageTable->MultiByteTable[(UCHAR)*TempString] ==
-                    CodePageTable->UniDefaultChar &&
-                    *TempString != CodePageEntry->CodePageTable.DefaultChar)
+                USHORT WideChar = MultiByteTable[(UCHAR)*TempString];
+
+                if ((WideChar == CodePageTable->UniDefaultChar &&
+                    *TempString != CodePageEntry->CodePageTable.TransUniDefaultChar) ||
+                    /* "Private Use" characters */
+                    (WideChar >= 0xE000 && WideChar <= 0xF8FF))
                 {
                     SetLastError(ERROR_NO_UNICODE_TRANSLATION);
                     return 0;
@@ -542,7 +558,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
             TempLength > 0;
             MultiByteString++, TempLength--)
         {
-            *WideCharString++ = CodePageTable->MultiByteTable[(UCHAR)*MultiByteString];
+            *WideCharString++ = MultiByteTable[(UCHAR)*MultiByteString];
         }
 
         /* Adjust buffer size. Wine trick ;-) */
@@ -1434,9 +1450,9 @@ MultiByteToWideChar(UINT CodePage,
 {
     /* Check the parameters. */
     if (MultiByteString == NULL ||
-        MultiByteCount == 0 ||
-        (WideCharString == NULL && WideCharCount > 0) ||
-        (PVOID)MultiByteString == (PVOID)WideCharString)
+        MultiByteCount == 0 || WideCharCount < 0 ||
+        (WideCharCount && (WideCharString == NULL ||
+        (PVOID)MultiByteString == (PVOID)WideCharString)))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
