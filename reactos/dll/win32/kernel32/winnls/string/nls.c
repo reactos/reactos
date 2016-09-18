@@ -439,6 +439,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
     PUSHORT MultiByteTable;
     LPCSTR TempString;
     INT TempLength;
+    USHORT WideChar;
 
     /* Get code page table. */
     CodePageEntry = IntGetCodePageEntry(CodePage);
@@ -471,8 +472,48 @@ IntMultiByteToWideCharCP(UINT CodePage,
 
         if (Flags & MB_ERR_INVALID_CHARS)
         {
-            /* FIXME */
-            DPRINT1("IntMultiByteToWideCharCP: MB_ERR_INVALID_CHARS case not implemented!\n");
+            TempString = MultiByteString;
+
+            while (TempString < MbsEnd)
+            {
+                DBCSOffset = CodePageTable->DBCSOffsets[*TempString];
+
+                if (DBCSOffset)
+                {
+                    /* If lead byte is presented, but behind it there is no symbol */
+                    if (((TempString + 1) == MbsEnd) || (*(TempString + 1) == 0))
+                    {
+                        SetLastError(ERROR_NO_UNICODE_TRANSLATION);
+                        return 0;
+                    }
+
+                    WideChar = CodePageTable->DBCSOffsets[*(TempString + 1) + DBCSOffset];
+
+                    if (WideChar == CodePageTable->UniDefaultChar &&
+                        MAKEWORD(*(TempString + 1), *TempString) != CodePageTable->TransUniDefaultChar)
+                    {
+                        SetLastError(ERROR_NO_UNICODE_TRANSLATION);
+                        return 0;
+                    }
+
+                    TempString++;
+                }
+                else
+                {
+                    USHORT WideChar = MultiByteTable[(UCHAR)*TempString];
+
+                    if ((WideChar == CodePageTable->UniDefaultChar &&
+                        *TempString != CodePageTable->TransUniDefaultChar) ||
+                        /* "Private Use" characters */
+                        (WideChar >= 0xE000 && WideChar <= 0xF8FF))
+                    {
+                        SetLastError(ERROR_NO_UNICODE_TRANSLATION);
+                        return 0;
+                    }
+                }
+
+                TempString++;
+            }
         }
         
         /* Does caller query for output buffer size? */
@@ -536,10 +577,10 @@ IntMultiByteToWideCharCP(UINT CodePage,
                  TempLength > 0;
                  TempString++, TempLength--)
             {
-                USHORT WideChar = MultiByteTable[(UCHAR)*TempString];
+                WideChar = MultiByteTable[(UCHAR)*TempString];
 
                 if ((WideChar == CodePageTable->UniDefaultChar &&
-                    *TempString != CodePageEntry->CodePageTable.TransUniDefaultChar) ||
+                    *TempString != CodePageTable->TransUniDefaultChar) ||
                     /* "Private Use" characters */
                     (WideChar >= 0xE000 && WideChar <= 0xF8FF))
                 {
