@@ -914,10 +914,11 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case IDOK:
                     ExitWindowsEx(EWX_LOGOFF, 0);
-                break;
+                    break;
+
                 case IDCANCEL:
                     EndDialog(hwnd, IDCANCEL);
-                break;
+                    break;
             }
             break;
 
@@ -956,8 +957,8 @@ int WINAPI RestartDialog(HWND hWndOwner, LPCWSTR lpstrReason, DWORD uFlags)
  * ExitWindowsDialog_backup
  *
  * NOTES
- *     used as a backup solution to shutdown the OS in case msgina.dll somehow
- *     cannot be found.
+ *     Used as a backup solution to shutdown the OS in case msgina.dll
+ *     somehow cannot be found.
  */
 VOID ExitWindowsDialog_backup(HWND hWndOwner)
 {
