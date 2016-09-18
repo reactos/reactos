@@ -221,7 +221,7 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
     {
         /* Open the user's key */
         Status = RtlOpenCurrentUser(KEY_WRITE, &UserKey);
-        if (!NT_SUCCESS(Status)) return(Status);
+        if (!NT_SUCCESS(Status)) return Status;
 
         /* Initialize the registry location */
         RtlInitUnicodeString(&KeyName, L"Control Panel\\International");
@@ -239,10 +239,10 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
 
     /* Initialize the object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
-                              &KeyName,
-                              OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                              UserKey,
-                              NULL);
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               UserKey,
+                               NULL);
 
     /* Check if we don't have a default locale yet */
     if (!DefaultLocaleId)
