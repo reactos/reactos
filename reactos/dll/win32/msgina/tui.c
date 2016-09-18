@@ -70,7 +70,7 @@ DisplayResourceText(
     static LPCWSTR newLine = L"\n";
     DWORD count;
 
-    if (0 == LoadStringW(hDllInstance, uIdResourceText, Prompt, 256))
+    if (0 == LoadStringW(hDllInstance, uIdResourceText, Prompt, _countof(Prompt)))
         return FALSE;
     if (!WriteConsoleW(
         GetStdHandle(STD_OUTPUT_HANDLE),
@@ -205,9 +205,9 @@ TUILoggedOutSAS(
     TRACE("TUILoggedOutSAS()\n");
 
     /* Ask the user for credentials */
-    if (!ReadString(IDS_ASKFORUSER, UserName, 256, TRUE))
+    if (!ReadString(IDS_ASKFORUSER, UserName, _countof(UserName), TRUE))
         return WLX_SAS_ACTION_NONE;
-    if (!ReadString(IDS_ASKFORPASSWORD, Password, 256, FALSE))
+    if (!ReadString(IDS_ASKFORPASSWORD, Password, _countof(Password), FALSE))
         return WLX_SAS_ACTION_NONE;
 
     Status = DoLoginTasks(pgContext, UserName, NULL, Password, &SubStatus);
@@ -238,9 +238,9 @@ TUILockedSAS(
         return WLX_SAS_ACTION_UNLOCK_WKSTA;
 
     /* Ask the user for credentials */
-    if (!ReadString(IDS_ASKFORUSER, UserName, 256, TRUE))
+    if (!ReadString(IDS_ASKFORUSER, UserName, _countof(UserName), TRUE))
         return WLX_SAS_ACTION_NONE;
-    if (!ReadString(IDS_ASKFORPASSWORD, Password, 256, FALSE))
+    if (!ReadString(IDS_ASKFORPASSWORD, Password, _countof(Password), FALSE))
         return WLX_SAS_ACTION_NONE;
 
     Status = ConnectToLsa(pgContext);

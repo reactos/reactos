@@ -26,11 +26,9 @@
 
 #include "msgina.h"
 
-#include <winreg.h>
 #include <winsvc.h>
 #include <userenv.h>
 #include <ndk/sefuncs.h>
-#include <strsafe.h>
 
 HINSTANCE hDllInstance;
 
@@ -228,7 +226,7 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
             pgContext->bDontDisplayLastUserName = TRUE;
     }
 
-    dwSize = 256 * sizeof(WCHAR);
+    dwSize = sizeof(pgContext->UserName);
     rc = RegQueryValueExW(hKey,
                           L"DefaultUserName",
                           NULL,
@@ -236,7 +234,7 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
                           (LPBYTE)&pgContext->UserName,
                           &dwSize);
 
-    dwSize = 256 * sizeof(WCHAR);
+    dwSize = sizeof(pgContext->Domain);
     rc = RegQueryValueExW(hKey,
                           L"DefaultDomain",
                           NULL,
@@ -327,7 +325,7 @@ WlxInitialize(
     pgContext->station = lpWinsta;
 
     /* Clear status window handle */
-    pgContext->hStatusWindow = 0;
+    pgContext->hStatusWindow = NULL;
 
     /* Notify winlogon that we will use the default SAS */
     pgContext->pWlxFuncs->WlxUseCtrlAltDel(hWlx);
@@ -370,6 +368,8 @@ WlxScreenSaverNotify(
      * User setting:
      *    HKCU\Control Panel\Desktop : ScreenSaverIsSecure
      */
+
+    // FIXME: User impersonation!!
 
     rc = RegOpenKeyExW(HKEY_CURRENT_USER,
                        L"Control Panel\\Desktop",
@@ -766,7 +766,7 @@ CreateProfile(
     wcscpy(pgContext->UserName, UserName);
     if (Domain == NULL || wcslen(Domain) == 0)
     {
-        dwLength = 256;
+        dwLength = _countof(pgContext->Domain);
         GetComputerNameW(pgContext->Domain, &dwLength);
     }
     else
@@ -935,9 +935,9 @@ DoAutoLogon(
         }
 
         result = CreateProfile(pgContext, UserName, Domain, Password);
-        if (result == TRUE)
+        if (result)
         {
-            ZeroMemory(pgContext->Password, 256 * sizeof(WCHAR));
+            ZeroMemory(pgContext->Password, sizeof(pgContext->Password));
             wcscpy(pgContext->Password, Password);
 
             NotifyBootConfigStatus(TRUE);
@@ -976,7 +976,7 @@ WlxDisplaySASNotice(
         return;
     }
 
-    if (pgContext->bAutoAdminLogon == TRUE)
+    if (pgContext->bAutoAdminLogon)
     {
         /* Don't display the window, we want to do an automatic logon */
         pgContext->AutoLogonState = AUTOLOGON_ONCE;
@@ -986,7 +986,7 @@ WlxDisplaySASNotice(
     else
         pgContext->AutoLogonState = AUTOLOGON_DISABLED;
 
-    if (pgContext->bDisableCAD == TRUE)
+    if (pgContext->bDisableCAD)
     {
         pgContext->pWlxFuncs->WlxSasNotify(pgContext->hWlx, WLX_SAS_TYPE_CTRL_ALT_DEL);
         return;
@@ -1067,7 +1067,7 @@ WlxDisplayLockedNotice(PVOID pWlxContext)
 
     TRACE("WlxDisplayLockedNotice()\n");
 
-    if (pgContext->bDisableCAD == TRUE)
+    if (pgContext->bDisableCAD)
     {
         pgContext->pWlxFuncs->WlxSasNotify(pgContext->hWlx, WLX_SAS_TYPE_CTRL_ALT_DEL);
         return;
