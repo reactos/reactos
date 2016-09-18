@@ -16,6 +16,112 @@
 
 typedef LONGLONG REFERENCE_TIME;
 
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+#if !defined(INIT_USBAUDIO_MID)
+#define INIT_USBAUDIO_MID(guid, id)\
+{\
+    (guid)->Data1 = 0x4e1cecd2 + (USHORT)(id);\
+    (guid)->Data2 = 0x1679;\
+    (guid)->Data3 = 0x463b;\
+    (guid)->Data4[0] = 0xa7;\
+    (guid)->Data4[1] = 0x2f;\
+    (guid)->Data4[2] = 0xa5;\
+    (guid)->Data4[3] = 0xbf;\
+    (guid)->Data4[4] = 0x64;\
+    (guid)->Data4[5] = 0xc8;\
+    (guid)->Data4[6] = 0x6e;\
+    (guid)->Data4[7] = 0xba;\
+}
+#define EXTRACT_USBAUDIO_MID(guid)\
+    (USHORT)((guid)->Data1 - 0x4e1cecd2)
+#define DEFINE_USBAUDIO_MID_GUID(id)\
+    0x4e1cecd2+(USHORT)(id), 0x1679, 0x463b, 0xa7, 0x2f, 0xa5, 0xbf, 0x64, 0xc8, 0x6e, 0xba
+
+#define INIT_EXBUS_MANUFACTURER_ID INIT_USBAUDIO_MID
+
+#define IS_COMPATIBLE_USBAUDIO_MID(guid)\
+    (((guid)->Data1 >= 0x4e1cecd2) &&\
+    ((guid)->Data1 < 0x4e1cecd2 + 0xffff) &&\
+    ((guid)->Data2 == 0x1679) &&\
+    ((guid)->Data3 == 0x463b) &&\
+    ((guid)->Data4[0] == 0xa7) &&\
+    ((guid)->Data4[1] == 0x2f) &&\
+    ((guid)->Data4[2] == 0xa5) &&\
+    ((guid)->Data4[3] == 0xbf) &&\
+    ((guid)->Data4[4] == 0x64) &&\
+    ((guid)->Data4[5] == 0xc8) &&\
+    ((guid)->Data4[6] == 0x6e) &&\
+    ((guid)->Data4[7] == 0xba))
+#endif // !defined(INIT_USBAUDIO_MID)
+
+#if !defined(INIT_USBAUDIO_PID)
+#define INIT_USBAUDIO_PID(guid, id)\
+{\
+    (guid)->Data1 = 0xabcc5a5e + (USHORT)(id);\
+    (guid)->Data2 = 0xc263;\
+    (guid)->Data3 = 0x463b;\
+    (guid)->Data4[0] = 0xa7;\
+    (guid)->Data4[1] = 0x2f;\
+    (guid)->Data4[2] = 0xa5;\
+    (guid)->Data4[3] = 0xbf;\
+    (guid)->Data4[4] = 0x64;\
+    (guid)->Data4[5] = 0xc8;\
+    (guid)->Data4[6] = 0x6e;\
+    (guid)->Data4[7] = 0xba;\
+}
+#define EXTRACT_USBAUDIO_PID(guid)\
+    (USHORT)((guid)->Data1 - 0xabcc5a5e)
+#define DEFINE_USBAUDIO_PID_GUID(id)\
+    0xabcc5a5e+(USHORT)(id), 0xc263, 0x463b, 0xa7, 0x2f, 0xa5, 0xbf, 0x64, 0xc8, 0x6e, 0xba
+
+#define INIT_EXBUS_PRODUCT_ID INIT_USBAUDIO_PID
+
+#define IS_COMPATIBLE_USBAUDIO_PID(guid)\
+    (((guid)->Data1 >= 0xabcc5a5e) &&\
+    ((guid)->Data1 < 0xabcc5a5e + 0xffff) &&\
+    ((guid)->Data2 == 0xc263) &&\
+    ((guid)->Data3 == 0x463b) &&\
+    ((guid)->Data4[0] == 0xa7) &&\
+    ((guid)->Data4[1] == 0x2f) &&\
+    ((guid)->Data4[2] == 0xa5) &&\
+    ((guid)->Data4[3] == 0xbf) &&\
+    ((guid)->Data4[4] == 0x64) &&\
+    ((guid)->Data4[5] == 0xc8) &&\
+    ((guid)->Data4[6] == 0x6e) &&\
+    ((guid)->Data4[7] == 0xba))
+#endif // !defined(INIT_USBAUDIO_PID)
+
+#if !defined(INIT_USBAUDIO_PRODUCT_NAME)
+#define INIT_USBAUDIO_PRODUCT_NAME(guid, vid, pid, strIndex)\
+{\
+    (guid)->Data1 = 0XFC575048 + (USHORT)(vid);\
+    (guid)->Data2 = 0x2E08     + (USHORT)(pid);\
+    (guid)->Data3 = 0x463B     + (USHORT)(strIndex);\
+    (guid)->Data4[0] = 0xA7;\
+    (guid)->Data4[1] = 0x2F;\
+    (guid)->Data4[2] = 0xA5;\
+    (guid)->Data4[3] = 0xBF;\
+    (guid)->Data4[4] = 0x64;\
+    (guid)->Data4[5] = 0xC8;\
+    (guid)->Data4[6] = 0x6E;\
+    (guid)->Data4[7] = 0xBA;\
+}
+#define DEFINE_USBAUDIO_PRODUCT_NAME(vid, pid, strIndex)\
+    0xFC575048+(USHORT)(vid), 0x2E08+(USHORT)(pid), 0x463B+(USHORT)(strIndex), 0xA7, 0x2F, 0xA5, 0xBF, 0x64, 0xC8, 0x6E, 0xBA
+#endif
+
+#define INIT_EXBUS_PRODUCT_NAME INIT_USBAUDIO_PRODUCT_NAME
+
+// USB Component ID
+#define STATIC_KSCOMPONENTID_USBAUDIO \
+    0x8F1275F0, 0x26E9, 0x4264, 0xBA, 0x4D, 0x39, 0xFF, 0xF0, 0x1D, 0x94, 0xAA
+DEFINE_GUIDSTRUCT("8F1275F0-26E9-4264-BA4D-39FFF01D94AA", KSCOMPONENTID_USBAUDIO);
+#define KSCOMPONENTID_USBAUDIO DEFINE_GUIDNAMED(KSCOMPONENTID_USBAUDIO)
+
+#endif // (NTDDI_VERSION >= NTDDI_WINXP)
+
 #define EXTRACT_WAVEFORMATEX_ID(Guid)\
     (USHORT)((Guid)->Data1)
 
