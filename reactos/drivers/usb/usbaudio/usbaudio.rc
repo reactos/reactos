@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION	"USBAUDIO Driver API\0"
+#define REACTOS_STR_INTERNAL_NAME	"usbaudio\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"usbaudio.sys\0"
+#include <reactos/version.rc>
