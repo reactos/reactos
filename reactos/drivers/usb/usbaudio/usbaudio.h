@@ -11,6 +11,68 @@
 #include <debug.h>
 
 #define USBAUDIO_TAG 'AbsU'
+#define USB_AUDIO_CONTROL_TERMINAL_DESCRIPTOR_TYPE (0x24)
+
+/* Universal Serial Bus Device Class Definition for Terminal Types Section 2.2 */
+#define USB_AUDIO_STREAMING_TERMINAL_TYPE (0x0101)
+
+#define USB_AUDIO_MICROPHONE_TERMINAL_TYPE (0x0201)
+#define USB_AUDIO_DESKTOP_MICROPHONE_TERMINAL_TYPE (0x0202)
+#define USB_AUDIO_PERSONAL_MICROPHONE_TERMINAL_TYPE (0x0203)
+#define USB_AUDIO_OMMNI_MICROPHONE_TERMINAL_TYPE (0x0204)
+#define USB_AUDIO_ARRAY_MICROPHONE_TERMINAL_TYPE (0x0205)
+#define USB_AUDIO_ARRAY_PROCESSING_MICROPHONE_TERMINAL_TYPE (0x0206)
+
+#define USB_AUDIO_SPEAKER_TERMINAL_TYPE (0x0301)
+#define USB_HEADPHONES_SPEAKER_TERMINAL_TYPE (0x0302)
+#define USB_AUDIO_HMDA_TERMINAL_TYPE (0x0303)
+#define USB_AUDIO_DESKTOP_SPEAKER_TERMINAL_TYPE (0x0304)
+#define USB_AUDIO_ROOM_SPEAKER_TERMINAL_TYPE (0x0305)
+#define USB_AUDIO_COMMUNICATION_SPEAKER_TERMINAL_TYPE (0x0306)
+#define USB_AUDIO_SUBWOOFER_TERMINAL_TYPE (0x0307)
+#define USB_AUDIO_UNDEFINED_TERMINAL_TYPE (0xFFFF)
+
+
+#include <pshpack1.h>
+
+typedef struct
+{
+    UCHAR bLength;
+    UCHAR bDescriptorType;
+    UCHAR bDescriptorSubtype;
+    USHORT bcdADC;
+    USHORT wTotalLength;
+    UCHAR bInCollection;
+    UCHAR baInterfaceNr;
+}USB_AUDIO_CONTROL_INTERFACE_HEADER_DESCRIPTOR, *PUSB_AUDIO_CONTROL_INTERFACE_HEADER_DESCRIPTOR;
+
+typedef struct
+{
+    UCHAR bLength;
+    UCHAR bDescriptorType;
+    UCHAR bDescriptorSubtype;
+    UCHAR bTerminalID;
+    USHORT wTerminalType;
+    UCHAR bAssocTerminal;
+    UCHAR bSourceID;
+    UCHAR iTerminal;
+}USB_AUDIO_CONTROL_OUTPUT_TERMINAL_DESCRIPTOR, *PUSB_AUDIO_CONTROL_OUTPUT_TERMINAL_DESCRIPTOR;
+
+
+typedef struct
+{
+    UCHAR bLength;
+    UCHAR bDescriptorType;
+    UCHAR bDescriptorSubtype;
+    UCHAR bTerminalID;
+    USHORT wTerminalType;
+    UCHAR bAssocTerminal;
+    UCHAR bNrChannels;
+    USHORT wChannelConfig;
+    UCHAR iChannelNames;
+    UCHAR iTerminal;
+}USB_AUDIO_CONTROL_INPUT_TERMINAL_DESCRIPTOR, *PUSB_AUDIO_CONTROL_INPUT_TERMINAL_DESCRIPTOR;
+#include <poppack.h>
 
 typedef struct __DEVICE_EXTENSION__
 {
@@ -21,6 +83,13 @@ typedef struct __DEVICE_EXTENSION__
     USBD_CONFIGURATION_HANDLE ConfigurationHandle;               /* configuration handle */
 
 }DEVICE_EXTENSION, *PDEVICE_EXTENSION;
+
+/* filter.c */
+
+NTSTATUS
+NTAPI
+USBAudioCreateFilterContext(
+    PKSDEVICE Device);
 
 /* pool.c */
 PVOID

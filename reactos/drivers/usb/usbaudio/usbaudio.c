@@ -246,7 +246,7 @@ USBAudioStartDevice(
     }
 
     /* build descriptor request */
-    UsbBuildGetDescriptorRequest(Urb, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), USB_DEVICE_DESCRIPTOR_TYPE, 0, 0, ConfigurationDescriptor, NULL, sizeof(USB_CONFIGURATION_DESCRIPTOR), NULL);
+    UsbBuildGetDescriptorRequest(Urb, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), USB_CONFIGURATION_DESCRIPTOR_TYPE, 0, 0, ConfigurationDescriptor, NULL, sizeof(USB_CONFIGURATION_DESCRIPTOR), NULL);
 
     /* submit urb */
     Status = SubmitUrbSync(Device, Urb);
@@ -276,7 +276,7 @@ USBAudioStartDevice(
     }
 
     /* build descriptor request */
-    UsbBuildGetDescriptorRequest(Urb, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), USB_DEVICE_DESCRIPTOR_TYPE, 0, 0, ConfigurationDescriptor, NULL, Length, NULL);
+    UsbBuildGetDescriptorRequest(Urb, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), USB_CONFIGURATION_DESCRIPTOR_TYPE, 0, 0, ConfigurationDescriptor, NULL, Length, NULL);
 
     /* submit urb */
     Status = SubmitUrbSync(Device, Urb);
@@ -349,7 +349,7 @@ USBAudioPnPStart(
         if (NT_SUCCESS(Status))
         {
             /* TODO build filter topology and pin descriptors and retrieve interface */
-            UNIMPLEMENTED
+            Status = USBAudioCreateFilterContext(Device);
         }
     }
 
