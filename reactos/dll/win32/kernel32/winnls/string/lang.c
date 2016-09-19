@@ -1255,11 +1255,12 @@ BOOL WINAPI GetStringTypeW( DWORD type, LPCWSTR src, INT count, LPWORD chartype 
         C2_OTHERNEUTRAL        /* LRE, LRO, RLE, RLO, PDF */
     };
 
-    if (!src) /* Abort and return FALSE when src is null */
+    if (!src)
     {
         SetLastError( ERROR_INVALID_PARAMETER );
         return FALSE;
     }
+
     if (count == -1) count = strlenW(src) + 1;
     switch(type)
     {
@@ -1284,7 +1285,7 @@ BOOL WINAPI GetStringTypeW( DWORD type, LPCWSTR src, INT count, LPWORD chartype 
             if ((c>=0x30A0)&&(c<=0x30FF)) type3 |= C3_KATAKANA;
             if ((c>=0x3040)&&(c<=0x309F)) type3 |= C3_HIRAGANA;
             if ((c>=0x4E00)&&(c<=0x9FAF)) type3 |= C3_IDEOGRAPH;
-            if ((c>=0x0600)&&(c<=0x06FF)) type3 |= C3_KASHIDA;
+            if (c == 0x0640) type3 |= C3_KASHIDA;
             if ((c>=0x3000)&&(c<=0x303F)) type3 |= C3_SYMBOL;
 
             if ((c>=0xD800)&&(c<=0xDBFF)) type3 |= C3_HIGHSURROGATE;
