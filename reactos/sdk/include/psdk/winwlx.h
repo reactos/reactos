@@ -31,7 +31,7 @@ extern "C" {
 #define WLX_VERSION_1_2             0x00010002
 #define WLX_VERSION_1_3             0x00010003
 #define WLX_VERSION_1_4             0x00010004
-#define WLX_CURRENT_VERSION         WLX_VERSION_1_4
+#define WLX_CURRENT_VERSION         (WLX_VERSION_1_4)
 
 #define WLX_SAS_TYPE_TIMEOUT                    0x0000
 #define WLX_SAS_TYPE_CTRL_ALT_DEL               0x0001
@@ -72,7 +72,7 @@ extern "C" {
 #define WLX_WM_SAS  (WM_USER + 0x0259)
 
 #define WLX_DLG_SAS                     0x0065
-#define WLX_DLG_INPUT_TIMEOUT           0x0066 /* (Input keys, ...) timed out */
+#define WLX_DLG_INPUT_TIMEOUT           0x0066 /* Input (keys, ...) timed out */
 #define WLX_DLG_SCREEN_SAVER_TIMEOUT    0x0067 /* Screen saver activated */
 #define WLX_DLG_USER_LOGOFF             0x0068 /* User logged off */
 
