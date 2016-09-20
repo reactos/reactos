@@ -20,18 +20,18 @@ rje                 5/tcp  #Remote Job Entry
 rje                 5/udp  #Remote Job Entry
 echo                7/tcp  #Echo
 echo                7/udp  #Echo
-discard             9/tcp  #Discard
-discard             9/udp  #Discard
+discard             9/tcp  sink null #Discard
+discard             9/udp  sink null #Discard
 systat              11/tcp  #Active Users
 systat              11/udp  #Active Users
 daytime             13/tcp  #Daytime (RFC 867)
 daytime             13/udp  #Daytime (RFC 867)
-qotd                17/tcp  #Quote of the Day
-qotd                17/udp  #Quote of the Day
+qotd                17/tcp  quote #Quote of the Day
+qotd                17/udp  quote #Quote of the Day
 msp                 18/tcp  #Message Send Protocol
 msp                 18/udp  #Message Send Protocol
-chargen             19/tcp  #Character Generator
-chargen             19/udp  #Character Generator
+chargen             19/tcp  ttytst source #Character Generator
+chargen             19/udp  ttytst source #Character Generator
 ftp-data            20/tcp  #File Transfer [Default Data]
 ftp-data            20/udp  #File Transfer [Default Data]
 ftp                 21/tcp  #File Transfer [Control]
@@ -40,10 +40,10 @@ ssh                 22/tcp  #SSH Remote Login Protocol
 ssh                 22/udp  #SSH Remote Login Protocol
 telnet              23/tcp  #Telnet
 telnet              23/udp  #Telnet
-smtp                25/tcp  #Simple Mail Transfer
-smtp                25/udp  #Simple Mail Transfer
-mail                25/tcp  #Simple Mail Transfer
-mail                25/udp  #Simple Mail Transfer
+smtp                25/tcp  mail #Simple Mail Transfer
+#smtp                25/udp  mail #Simple Mail Transfer
+mail                25/tcp  smtp #Simple Mail Transfer
+#mail                25/udp  smtp #Simple Mail Transfer
 nsw-fe              27/tcp  #NSW User System FE
 nsw-fe              27/udp  #NSW User System FE
 msg-icp             29/tcp  #MSG ICP
@@ -52,19 +52,19 @@ msg-auth            31/tcp  #MSG Authentication
 msg-auth            31/udp  #MSG Authentication
 dsp                 33/tcp  #Display Support Protocol
 dsp                 33/udp  #Display Support Protocol
-time                37/tcp  #Time
-time                37/udp  #Time
+time                37/tcp  timserver #Time
+time                37/udp  timserver #Time
 rap                 38/tcp  #Route Access Protocol
 rap                 38/udp  #Route Access Protocol
-rlp                 39/tcp  #Resource Location Protocol
-rlp                 39/udp  #Resource Location Protocol
+rlp                 39/tcp  resource #Resource Location Protocol
+rlp                 39/udp  resource #Resource Location Protocol
 graphics            41/tcp  #Graphics
 graphics            41/udp  #Graphics
 name                42/tcp  #Host Name Server
 name                42/udp  #Host Name Server
-nameserver          42/tcp  #Host Name Server
-nameserver          42/udp  #Host Name Server
-nicname             43/tcp  #Who Is
+nameserver          42/tcp  name #Host Name Server
+nameserver          42/udp  name #Host Name Server
+nicname             43/tcp  whois #Who Is
 nicname             43/udp  #Who Is
 mpm-flags           44/tcp  #MPM FLAGS Protocol
 mpm-flags           44/udp  #MPM FLAGS Protocol
@@ -107,9 +107,9 @@ tacacs-ds           65/udp  #TACACS-Database Service
 sql*net             66/tcp  #Oracle SQL*NET
 sql*net             66/udp  #Oracle SQL*NET
 bootps              67/tcp  #Bootstrap Protocol Server
-bootps              67/udp  #Bootstrap Protocol Server
+bootps              67/udp  dhcps #Bootstrap Protocol Server
 bootpc              68/tcp  #Bootstrap Protocol Client
-bootpc              68/udp  #Bootstrap Protocol Client
+bootpc              68/udp  dhcpc #Bootstrap Protocol Client
 tftp                69/tcp  #Trivial File Transfer
 tftp                69/udp  #Trivial File Transfer
 gopher              70/tcp  #Gopher
@@ -128,12 +128,12 @@ vettcp              78/tcp  #vettcp
 vettcp              78/udp  #vettcp
 finger              79/tcp  #Finger
 finger              79/udp  #Finger
-http                80/tcp  #World Wide Web HTTP
-http                80/udp  #World Wide Web HTTP
+http                80/tcp  www www-http #World Wide Web HTTP
+#http                80/udp  #World Wide Web HTTP
 www                 80/tcp  #World Wide Web HTTP
-www                 80/udp  #World Wide Web HTTP
+#www                 80/udp  #World Wide Web HTTP
 www-http            80/tcp  #World Wide Web HTTP
-www-http            80/udp  #World Wide Web HTTP
+#www-http            80/udp  #World Wide Web HTTP
 hosts2-ns           81/tcp  #HOSTS2 Name Server
 hosts2-ns           81/udp  #HOSTS2 Name Server
 xfer                82/tcp  #XFER Utility
@@ -146,8 +146,8 @@ mit-ml-dev          85/tcp  #MIT ML Device
 mit-ml-dev          85/udp  #MIT ML Device
 mfcobol             86/tcp  #Micro Focus Cobol
 mfcobol             86/udp  #Micro Focus Cobol
-kerberos            88/tcp  #Kerberos
-kerberos            88/udp  #Kerberos
+kerberos            88/tcp  krb5 kerberos-sec #Kerberos
+kerberos            88/udp  krb5 kerberos-sec #Kerberos
 su-mit-tg           89/tcp  #SU/MIT Telnet Gateway
 su-mit-tg           89/udp  #SU/MIT Telnet Gateway
 dnsix               90/tcp  #DNSIX Securit Attribute Token Map
@@ -171,7 +171,7 @@ tacnews             98/udp  #TAC News
 metagram            99/tcp  #Metagram Relay
 metagram            99/udp  #Metagram Relay
 newacct             100/tcp  #[unauthorized use]
-hostname            101/tcp  #NIC Host Name Server
+hostname            101/tcp  hostnames #NIC Host Name Server
 hostname            101/udp  #NIC Host Name Server
 iso-tsap            102/tcp  #ISO-TSAP Class 0
 iso-tsap            102/udp  #ISO-TSAP Class 0
@@ -189,15 +189,15 @@ rtelnet             107/tcp  #Remote Telnet Service
 rtelnet             107/udp  #Remote Telnet Service
 snagas              108/tcp  #SNA Gateway Access Server
 snagas              108/udp  #SNA Gateway Access Server
-pop2                109/tcp  #Post Office Protocol - Version 2
+pop2                109/tcp  postoffice #Post Office Protocol - Version 2
 pop2                109/udp  #Post Office Protocol - Version 2
 pop3                110/tcp  #Post Office Protocol - Version 3
 pop3                110/udp  #Post Office Protocol - Version 3
-sunrpc              111/tcp  #SUN Remote Procedure Call
-sunrpc              111/udp  #SUN Remote Procedure Call
+sunrpc              111/tcp  rpcbind portmap #SUN Remote Procedure Call
+sunrpc              111/udp  rpcbind portmap #SUN Remote Procedure Call
 mcidas              112/tcp  #McIDAS Data Transmission Protocol
 mcidas              112/udp  #McIDAS Data Transmission Protocol
-ident               113/tcp
+ident               113/tcp  ident tap
 auth                113/tcp  #Authentication Service
 auth                113/udp  #Authentication Service
 sftp                115/tcp  #Simple File Transfer Protocol
@@ -208,7 +208,7 @@ uucp-path           117/tcp  #UUCP Path Service
 uucp-path           117/udp  #UUCP Path Service
 sqlserv             118/tcp  #SQL Services
 sqlserv             118/udp  #SQL Services
-nntp                119/tcp  #Network News Transfer Protocol
+nntp                119/tcp  usenet #Network News Transfer Protocol
 nntp                119/udp  #Network News Transfer Protocol
 cfdptkt             120/tcp  #CFDPTKT
 cfdptkt             120/udp  #CFDPTKT
@@ -240,15 +240,15 @@ statsrv             133/tcp  #Statistics Service
 statsrv             133/udp  #Statistics Service
 ingres-net          134/tcp  #INGRES-NET Service
 ingres-net          134/udp  #INGRES-NET Service
-epmap               135/tcp  #DCE endpoint resolution
-epmap               135/udp  #DCE endpoint resolution
+epmap               135/tcp  loc-srv #DCE endpoint resolution
+epmap               135/udp  loc-srv #DCE endpoint resolution
 profile             136/tcp  #PROFILE Naming System           
 profile             136/udp  #PROFILE Naming System           
-netbios-ns          137/tcp  #NETBIOS Name Service    
-netbios-ns          137/udp  #NETBIOS Name Service    
+netbios-ns          137/tcp  nbname #NETBIOS Name Service    
+netbios-ns          137/udp  nbname #NETBIOS Name Service    
 netbios-dgm         138/tcp  #NETBIOS Datagram Service
-netbios-dgm         138/udp  #NETBIOS Datagram Service
-netbios-ssn         139/tcp  #NETBIOS Session Service
+netbios-dgm         138/udp  nbdatagram #NETBIOS Datagram Service
+netbios-ssn         139/tcp  nbsession #NETBIOS Session Service
 netbios-ssn         139/udp  #NETBIOS Session Service
 emfis-data          140/tcp  #EMFIS Data Service
 emfis-data          140/udp  #EMFIS Data Service
@@ -256,7 +256,7 @@ emfis-cntl          141/tcp  #EMFIS Control Service
 emfis-cntl          141/udp  #EMFIS Control Service
 bl-idm              142/tcp  #Britton-Lee IDM           
 bl-idm              142/udp  #Britton-Lee IDM           
-imap                143/tcp  #Internet Message Access Protocol
+imap                143/tcp  imap4 #Internet Message Access Protocol
 imap                143/udp  #Internet Message Access Protocol
 uma                 144/tcp  #Universal Management Architecture
 uma                 144/udp  #Universal Management Architecture
@@ -295,7 +295,7 @@ sgmp-traps          160/udp  #SGMP-TRAPS
 snmp                161/tcp  #SNMP
 snmp                161/udp  #SNMP
 snmptrap            162/tcp  #SNMPTRAP
-snmptrap            162/udp  #SNMPTRAP
+snmptrap            162/udp  snmp-trap #SNMPTRAP
 cmip-man            163/tcp  #CMIP/TCP Manager   
 cmip-man            163/udp  #CMIP/TCP Manager   
 cmip-agent          164/tcp  #CMIP/TCP Agent     
@@ -696,14 +696,14 @@ dsfgw               438/tcp  #dsfgw
 dsfgw               438/udp  #dsfgw
 dasp                439/tcp  #dasp      Thomas Obermair
 dasp                439/udp  #dasp      tommy@inlab.m.eunet.de
-sgcp                440/tcp  #sgcp      
-sgcp                440/udp  #sgcp      
+sgcp                440/tcp  #sgcp
+sgcp                440/udp  #sgcp
 decvms-sysmgt       441/tcp  #decvms-sysmgt
 decvms-sysmgt       441/udp  #decvms-sysmgt
 cvc_hostd           442/tcp  #cvc_hostd
 cvc_hostd           442/udp  #cvc_hostd
-https               443/tcp  #http protocol over TLS/SSL
-https               443/udp  #http protocol over TLS/SSL
+https               443/tcp  MCom #http protocol over TLS/SSL
+https               443/udp  MCom #http protocol over TLS/SSL
 snpp                444/tcp  #Simple Network Paging Protocol
 snpp                444/udp  #Simple Network Paging Protocol
 microsoft-ds        445/tcp  #Microsoft-DS
@@ -817,7 +817,7 @@ siam                498/udp  #siam
 iso-ill             499/tcp  #ISO ILL Protocol
 iso-ill             499/udp  #ISO ILL Protocol
 isakmp              500/tcp  #isakmp
-isakmp              500/udp  #isakmp
+isakmp              500/udp  ike #isakmp
 stmf                501/tcp  #STMF
 stmf                501/udp  #STMF
 asa-appl-proto      502/tcp  #asa-appl-proto
@@ -841,11 +841,13 @@ fcp                 510/udp  #FirstClass Protocol
 passgo              511/tcp  #PassGo
 passgo              511/udp  #PassGo
 exec                512/tcp  #remote process execution;
-biff                512/udp  #used by mail system to notify users
+biff                512/udp  comsat #used by mail system to notify users
 login               513/tcp  #remote login a la telnet;
-who                 513/udp  #maintains data bases showing who's
+who                 513/udp  whod #maintains data bases showing who's
+cmd                 514/tcp  shell
 shell               514/tcp  #cmd
-printer             515/tcp  #spooler
+syslog              514/udp
+printer             515/tcp  spooler #spooler
 printer             515/udp  #spooler
 videotex            516/tcp  #videotex
 videotex            516/udp  #videotex
@@ -854,18 +856,18 @@ talk                517/udp  #like tenex link, but across
 utime               519/tcp  #unixtime
 utime               519/udp  #unixtime
 efs                 520/tcp  #extended file name server
-router              520/udp  #local routing process (on site);
+router              520/udp  route routed #local routing process (on site);
 ripng               521/tcp  #ripng
 ripng               521/udp  #ripng
-ulp                 522/tcp  #ULP    
-ulp                 522/udp  #ULP    
+ulp                 522/tcp  #ULP
+ulp                 522/udp  #ULP
 ibm-db2             523/tcp  #IBM-DB2
 ibm-db2             523/udp  #IBM-DB2
 ncp                 524/tcp  #NCP
 ncp                 524/udp  #NCP    
 timed               525/tcp  #timeserver
-timed               525/udp  #timeserver
-tempo               526/tcp  #newdate
+timed               525/udp  timeserver #timeserver
+tempo               526/tcp  newdate #newdate
 tempo               526/udp  #newdate
 stx                 527/tcp  #Stock IXChange
 stx                 527/udp  #Stock IXChange
@@ -873,11 +875,11 @@ custix              528/tcp  #Customer IXChange
 custix              528/udp  #Customer IXChange
 irc-serv            529/tcp  #IRC-SERV
 irc-serv            529/udp  #IRC-SERV
-courier             530/tcp  #rpc
+courier             530/tcp  rpc #rpc
 courier             530/udp  #rpc
-conference          531/tcp  #chat
+conference          531/tcp  chat #chat
 conference          531/udp  #chat
-netnews             532/tcp  #readnews
+netnews             532/tcp  readnews #readnews
 netnews             532/udp  #readnews
 netwall             533/tcp  #for emergency broadcasts
 netwall             533/udp  #for emergency broadcasts
@@ -893,13 +895,13 @@ gdomap              538/tcp  #gdomap
 gdomap              538/udp  #gdomap
 apertus-ldp         539/tcp  #Apertus Technologies Load Determination
 apertus-ldp         539/udp  #Apertus Technologies Load Determination
-uucp                540/tcp  #uucpd		
-uucp                540/udp  #uucpd		
+uucp                540/tcp  uucpd #uucpd
+uucp                540/udp  #uucpd
 uucp-rlogin         541/tcp  #uucp-rlogin  
 uucp-rlogin         541/udp  #uucp-rlogin
 commerce            542/tcp  #commerce
 commerce            542/udp  #commerce
-kshell              544/tcp  #krcmd
+kshell              544/tcp  krcmd #krcmd
 kshell              544/udp  #krcmd
 appleqtcsrvr        545/tcp  #appleqtcsrvr
 appleqtcsrvr        545/udp  #appleqtcsrvr
@@ -911,7 +913,7 @@ afpovertcp          548/tcp  #AFP over TCP
 afpovertcp          548/udp  #AFP over TCP
 idfp                549/tcp  #IDFP
 idfp                549/udp  #IDFP
-new-rwho            550/tcp  #new-who
+new-rwho            550/tcp  new-who #new-who
 new-rwho            550/udp  #new-who
 cybercash           551/tcp  #cybercash
 cybercash           551/udp  #cybercash
@@ -921,7 +923,7 @@ pirp                553/tcp  #pirp
 pirp                553/udp  #pirp
 rtsp                554/tcp  #Real Time Stream Control Protocol
 rtsp                554/udp  #Real Time Stream Control Protocol
-remotefs            556/tcp  #rfs server
+remotefs            556/tcp  rfs rfs_server #rfs server
 remotefs            556/udp  #rfs server
 openvms-sysipc      557/tcp  #openvms-sysipc
 openvms-sysipc      557/udp  #openvms-sysipc
@@ -930,11 +932,11 @@ sdnskmp             558/udp  #SDNSKMP
 teedtap             559/tcp  #TEEDTAP
 teedtap             559/udp  #TEEDTAP
 rmonitor            560/tcp  #rmonitord
-rmonitor            560/udp  #rmonitord
+rmonitor            560/udp  rmonitord #rmonitord
 chshell             562/tcp  #chcmd
 chshell             562/udp  #chcmd
-nntps               563/tcp  #nntp protocol over TLS/SSL (was snntp)
-nntps               563/udp  #nntp protocol over TLS/SSL (was snntp)
+nntps               563/tcp  snntp #nntp protocol over TLS/SSL (was snntp)
+nntps               563/udp  snntp #nntp protocol over TLS/SSL (was snntp)
 9pfs                564/tcp  #plan 9 file service
 9pfs                564/udp  #plan 9 file service
 whoami              565/tcp  #whoami
@@ -1079,7 +1081,7 @@ ginad               634/tcp  #ginad
 ginad               634/udp  #ginad
 rlzdbase            635/tcp  #RLZ DBase
 rlzdbase            635/udp  #RLZ DBase
-ldaps               636/tcp  #ldap protocol over TLS/SSL (was sldap)
+ldaps               636/tcp  sldap #ldap protocol over TLS/SSL (was sldap)
 ldaps               636/udp  #ldap protocol over TLS/SSL (was sldap)
 lanserver           637/tcp  #lanserver
 lanserver           637/udp  #lanserver
@@ -1301,8 +1303,8 @@ imaps               993/tcp  #imap4 protocol over TLS/SSL
 imaps               993/udp  #imap4 protocol over TLS/SSL
 ircs                994/tcp  #irc protocol over TLS/SSL
 ircs                994/udp  #irc protocol over TLS/SSL
-pop3s               995/tcp  #pop3 protocol over TLS/SSL (was spop3)
-pop3s               995/udp  #pop3 protocol over TLS/SSL (was spop3)
+pop3s               995/tcp  spop3 #pop3 protocol over TLS/SSL (was spop3)
+pop3s               995/udp  spop3 #pop3 protocol over TLS/SSL (was spop3)
 vsinet              996/tcp  #vsinet
 vsinet              996/udp  #vsinet
 applix              999/udp  #Applix ac
@@ -2148,7 +2150,7 @@ ricardo-lm          1522/tcp  #Ricardo North America License Manager
 ricardo-lm          1522/udp  #Ricardo North America License Manager
 cichild-lm          1523/tcp  #cichild
 cichild-lm          1523/udp  #cichild
-ingreslock          1524/tcp  #ingres
+ingreslock          1524/tcp  ingres #ingres
 ingreslock          1524/udp  #ingres
 orasrv              1525/tcp  #oracle
 orasrv              1525/udp  #oracle
@@ -3111,6 +3113,7 @@ isis-bcast          2043/tcp  #isis-bcast
 isis-bcast          2043/udp  #isis-bcast
 nfs                 2049/tcp  #Network File System - Sun Microsystems
 nfs                 2049/udp  #Network File System - Sun Microsystems
+nfsd                2049/udp  nfs #Network File System - Sun Microsystems
 av-emb-config       2050/tcp  #Avaya EMB Config Port
 av-emb-config       2050/udp  #Avaya EMB Config Port
 epnsdp              2051/tcp  #EPNSDP
