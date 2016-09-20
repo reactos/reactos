@@ -2266,12 +2266,7 @@ WSPSetSockOpt(
 
 
     /* FIXME: We should handle some more cases here */
-    if (level != SOL_SOCKET)
-    {
-        *lpErrno = WSAEINVAL;
-        return SOCKET_ERROR;
-    }
-    else
+    if (level == SOL_SOCKET)
     {
         switch (optname)
         {
