@@ -15,22 +15,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msafd);
 
 INT
 WSPAPI
-WSPAddressToString(
-    IN      LPSOCKADDR lpsaAddress,
-    IN      DWORD dwAddressLength,
-    IN      LPWSAPROTOCOL_INFOW lpProtocolInfo,
-    OUT     LPWSTR lpszAddressString,
-    IN OUT  LPDWORD lpdwAddressStringLength,
-    OUT     LPINT lpErrno)
-{
-    UNIMPLEMENTED;
-
-    return SOCKET_ERROR;
-}
-
-
-INT
-WSPAPI
 WSPCancelBlockingCall(
     OUT LPINT lpErrno)
 {
@@ -100,21 +84,6 @@ WSPJoinLeaf(
     UNIMPLEMENTED;
 
     return (SOCKET)0;
-}
-
-INT
-WSPAPI
-WSPStringToAddress(
-    IN      LPWSTR AddressString,
-    IN      INT AddressFamily,
-    IN      LPWSAPROTOCOL_INFOW lpProtocolInfo,
-    OUT     LPSOCKADDR lpAddress,
-    IN OUT  LPINT lpAddressLength,
-    OUT     LPINT lpErrno)
-{
-    UNIMPLEMENTED;
-
-    return SOCKET_ERROR;
 }
 
 /* EOF */

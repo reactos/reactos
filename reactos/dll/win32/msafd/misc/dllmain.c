@@ -13,12 +13,14 @@
 #include <msafd.h>
 
 #include <winuser.h>
+#include <wchar.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msafd);
 
 HANDLE GlobalHeap;
 WSPUPCALLTABLE Upcalls;
+DWORD CatalogEntryId; /* CatalogEntryId for upcalls */
 LPWPUCOMPLETEOVERLAPPEDREQUEST lpWPUCompleteOverlappedRequest;
 PSOCKET_INFORMATION SocketListHead = NULL;
 CRITICAL_SECTION SocketListLock;
@@ -71,6 +73,25 @@ WSPSocket(int AddressFamily,
 
     TRACE("Creating Socket, getting TDI Name - AddressFamily (%d)  SocketType (%d)  Protocol (%d).\n",
         AddressFamily, SocketType, Protocol);
+
+    if (AddressFamily == AF_UNSPEC && SocketType == 0 && Protocol == 0)
+        return WSAEINVAL;
+
+    /* Set the defaults */
+    if (AddressFamily == AF_UNSPEC)
+        AddressFamily = AF_INET;
+
+    if (SocketType == 0)
+        SocketType = SOCK_STREAM;
+
+    if (Protocol == 0)
+    {
+        if (SocketType == SOCK_STREAM)
+            Protocol = IPPROTO_TCP;
+
+        if (SocketType == SOCK_DGRAM)
+            Protocol = IPPROTO_UDP;
+    }
 
     /* Get Helper Data and Transport */
     Status = SockGetTdiName (&AddressFamily,
@@ -2207,7 +2228,8 @@ WSPGetSockOpt(IN SOCKET Handle,
             return 0;
 
         default:
-            break;
+            *lpErrno = WSAEINVAL;
+            return SOCKET_ERROR;
     }
 
 SendToHelper:
@@ -2244,7 +2266,12 @@ WSPSetSockOpt(
 
 
     /* FIXME: We should handle some more cases here */
-    if (level == SOL_SOCKET)
+    if (level != SOL_SOCKET)
+    {
+        *lpErrno = WSAEINVAL;
+        return SOCKET_ERROR;
+    }
+    else
     {
         switch (optname)
         {
@@ -2376,8 +2403,15 @@ WSPStartup(IN  WORD wVersionRequested,
 {
     NTSTATUS Status;
 
-    ERR("wVersionRequested (0x%X) \n", wVersionRequested);
-    Status = NO_ERROR;
+    if (((LOBYTE(wVersionRequested) == 2) && (HIBYTE(wVersionRequested) < 2)) ||
+        (LOBYTE(wVersionRequested) < 2))
+    {
+        ERR("WSPStartup NOT SUPPORTED for version 0x%X\n", wVersionRequested);
+        return WSAVERNOTSUPPORTED;
+    }
+    else
+        Status = NO_ERROR;
+    /* FIXME: Enable all cases of WSPStartup status */
     Upcalls = UpcallTable;
 
     if (Status == NO_ERROR)
@@ -2414,12 +2448,163 @@ WSPStartup(IN  WORD wVersionRequested,
         lpProcTable->lpWSPStringToAddress = WSPStringToAddress;
         lpWSPData->wVersion     = MAKEWORD(2, 2);
         lpWSPData->wHighVersion = MAKEWORD(2, 2);
+        /* Save CatalogEntryId for all upcalls */
+        CatalogEntryId = lpProtocolInfo->dwCatalogEntryId;
     }
 
     TRACE("Status (%d).\n", Status);
     return Status;
 }
 
+
+INT
+WSPAPI
+WSPAddressToString(IN LPSOCKADDR lpsaAddress,
+                   IN DWORD dwAddressLength,
+                   IN LPWSAPROTOCOL_INFOW lpProtocolInfo,
+                   OUT LPWSTR lpszAddressString,
+                   IN OUT LPDWORD lpdwAddressStringLength,
+                   OUT LPINT lpErrno)
+{
+    DWORD size;
+    WCHAR buffer[54]; /* 32 digits + 7':' + '[' + '%" + 5 digits + ']:' + 5 digits + '\0' */
+    WCHAR *p;
+
+    if (!lpsaAddress || !lpszAddressString || !lpdwAddressStringLength)
+    {
+        *lpErrno = WSAEFAULT;
+        return SOCKET_ERROR;
+    }
+
+    switch (lpsaAddress->sa_family)
+    {
+        case AF_INET:
+            if (dwAddressLength < sizeof(SOCKADDR_IN))
+            {
+                *lpErrno = WSAEINVAL;
+                return SOCKET_ERROR;
+            }
+            swprintf(buffer,
+                     L"%u.%u.%u.%u:%u",
+                     (unsigned int)(ntohl(((SOCKADDR_IN *)lpsaAddress)->sin_addr.s_addr) >> 24 & 0xff),
+                     (unsigned int)(ntohl(((SOCKADDR_IN *)lpsaAddress)->sin_addr.s_addr) >> 16 & 0xff),
+                     (unsigned int)(ntohl(((SOCKADDR_IN *)lpsaAddress)->sin_addr.s_addr) >> 8 & 0xff),
+                     (unsigned int)(ntohl(((SOCKADDR_IN *)lpsaAddress)->sin_addr.s_addr) & 0xff),
+                     ntohs(((SOCKADDR_IN *)lpsaAddress)->sin_port));
+
+            p = wcschr(buffer, L':');
+            if (!((SOCKADDR_IN *)lpsaAddress)->sin_port)
+            {
+                *p = 0;
+            }
+            break;
+        default:
+            *lpErrno = WSAEINVAL;
+            return SOCKET_ERROR;
+    }
+
+    size = wcslen(buffer) + 1;
+
+    if (*lpdwAddressStringLength < size)
+    {
+        *lpdwAddressStringLength = size;
+        *lpErrno = WSAENOBUFS;
+        return SOCKET_ERROR;
+    }
+
+    *lpdwAddressStringLength = size;
+    wcscpy(lpszAddressString, buffer);
+    return 0;
+}
+
+INT
+WSPAPI
+WSPStringToAddress(IN LPWSTR AddressString,
+                   IN INT AddressFamily,
+                   IN LPWSAPROTOCOL_INFOW lpProtocolInfo,
+                   OUT LPSOCKADDR lpAddress,
+                   IN OUT LPINT lpAddressLength,
+                   OUT LPINT lpErrno)
+{
+    int pos = 0;
+    LONG inetaddr = 0;
+    LPWSTR *bp = NULL;
+    SOCKADDR_IN *sockaddr;
+
+    if (!lpAddressLength || !lpAddress || !AddressString)
+    {
+        *lpErrno = WSAEINVAL;
+        return SOCKET_ERROR;
+    }
+
+    sockaddr = (SOCKADDR_IN *)lpAddress;
+
+    /* Set right address family */
+    if (lpProtocolInfo != NULL)
+    {
+        sockaddr->sin_family = lpProtocolInfo->iAddressFamily;
+    }
+    else
+    {
+        sockaddr->sin_family = AddressFamily;
+    }
+
+    /* Report size */
+    if (AddressFamily == AF_INET)
+    {
+        if (*lpAddressLength < (INT)sizeof(SOCKADDR_IN))
+        {
+            *lpAddressLength = sizeof(SOCKADDR_IN);
+            *lpErrno = WSAEFAULT;
+        }
+        else
+        {
+            // translate ip string to ip
+
+            /* rest sockaddr.sin_addr.s_addr
+            for we need to be sure it is zero when we come to while */
+            memset(lpAddress, 0, sizeof(SOCKADDR_IN));
+
+            /* Set right adress family */
+            sockaddr->sin_family = AF_INET;
+
+            /* Get port number */
+            pos = wcscspn(AddressString, L":") + 1;
+
+            if (pos < (int)wcslen(AddressString))
+            {
+                sockaddr->sin_port = wcstol(&AddressString[pos], bp, 10);
+            }
+            else
+            {
+                sockaddr->sin_port = 0;
+            }
+
+            /* Get ip number */
+            pos = 0;
+            inetaddr = 0;
+
+            while (pos < (int)wcslen(AddressString))
+            {
+                inetaddr = (inetaddr << 8) +
+                           ((UCHAR)wcstol(&AddressString[pos], bp, 10));
+
+                pos += wcscspn(&AddressString[pos], L".") + 1;
+            }
+
+            *lpErrno = 0;
+            sockaddr->sin_addr.s_addr = inetaddr;
+
+        }
+    }
+
+    if (!*lpErrno)
+    {
+        return 0;
+    }
+
+    return SOCKET_ERROR;
+}
 
 /*
  * FUNCTION: Cleans up service provider for a client
