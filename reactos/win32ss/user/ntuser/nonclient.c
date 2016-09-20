@@ -1378,7 +1378,7 @@ LRESULT NC_HandleNCActivate( PWND Wnd, WPARAM wParam, LPARAM lParam )
    }
 
    if ((Wnd->state & WNDS_NONCPAINT) || !(Wnd->style & WS_VISIBLE))
-      return 0;
+      return TRUE;
 
    /* This isn't documented but is reproducible in at least XP SP2 and
     * Outlook 2007 depends on it

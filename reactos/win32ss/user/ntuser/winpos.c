@@ -2612,7 +2612,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    {
       co_UserSetFocus(Wnd);
       // Fix wine Win test_SetFocus todo #3,
-      if (!(style & WS_CHILD)) co_IntSendMessageNoWait(UserHMGetHandle(Wnd), WM_ACTIVATE, WA_ACTIVE, 0);
+      if (!(style & WS_CHILD)) co_IntSendMessage(UserHMGetHandle(Wnd), WM_ACTIVATE, WA_ACTIVE, 0);
    }
    //ERR("co_WinPosShowWindow EXIT\n");
    return WasVisible;

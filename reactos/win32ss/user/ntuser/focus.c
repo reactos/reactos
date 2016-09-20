@@ -54,14 +54,15 @@ co_IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
    USER_REFERENCE_ENTRY RefPrev;
    PWND WndPrev;
    BOOL Ret = TRUE;
+   LPARAM lParam = hWnd ? (LPARAM)hWnd : 0;
 
    if (hWndPrev && (WndPrev = ValidateHwndNoErr(hWndPrev)))
    {
       UserRefObjectCo(WndPrev, &RefPrev);
 
-      if (co_IntSendMessageNoWait(hWndPrev, WM_NCACTIVATE, FALSE, 0)) //(LPARAM)hWnd))
+      if (co_IntSendMessage(hWndPrev, WM_NCACTIVATE, FALSE, lParam))
       {
-         co_IntSendMessageNoWait(hWndPrev, WM_ACTIVATE,
+         co_IntSendMessage(hWndPrev, WM_ACTIVATE,
                     MAKEWPARAM(WA_INACTIVE, (WndPrev->style & WS_MINIMIZE) != 0),
                     (LPARAM)hWnd);
 
@@ -241,7 +242,7 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
 
       co_IntMakeWindowActive(Window);
 
-      co_IntSendMessageNoWait( UserHMGetHandle(Window),
+      co_IntSendMessage( UserHMGetHandle(Window),
                                WM_NCACTIVATE,
                               (WPARAM)(Window == (gpqForeground ? gpqForeground->spwndActive : NULL)),
                                0); //(LPARAM)hWndPrev);
