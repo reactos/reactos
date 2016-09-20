@@ -114,8 +114,18 @@ static int in_cksum(u_short *addr, int len)
 HANDLE WINAPI Icmp6CreateFile(VOID)
 {
     icmp_t* icp;
+    int sid;
+#ifdef __REACTOS__
+    WSADATA wsaData;
 
-    int sid=socket(AF_INET6,SOCK_RAW,IPPROTO_ICMPV6);
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != ERROR_SUCCESS)
+    {
+        ERR_(winediag)("Failed to use ICMPV6 (network ping), this requires special permissions.\n");
+        return INVALID_HANDLE_VALUE;
+    }
+#endif
+
+    sid=socket(AF_INET6,SOCK_RAW,IPPROTO_ICMPV6);
 #ifndef __REACTOS__
     if (sid < 0)
     {
@@ -133,6 +143,7 @@ HANDLE WINAPI Icmp6CreateFile(VOID)
     if (icp==NULL) {
 #ifdef __REACTOS__
         closesocket(sid);
+        WSACleanup();
 #else
         close(sid);
 #endif
@@ -180,8 +191,17 @@ HANDLE WINAPI IcmpCreateFile(VOID)
     static int once;
 #endif
     icmp_t* icp;
+    int sid;
+#ifdef __REACTOS__
+    WSADATA wsaData;
 
-    int sid=socket(AF_INET,SOCK_RAW,IPPROTO_ICMP);
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != ERROR_SUCCESS)
+    {
+        ERR_(winediag)("Failed to use ICMPV6 (network ping), this requires special permissions.\n");
+        return INVALID_HANDLE_VALUE;
+    }
+#endif
+    sid=socket(AF_INET,SOCK_RAW,IPPROTO_ICMP);
 #ifdef __REACTOS__
     if (sid < 0) {
         ERR_(winediag)("Failed to use ICMP (network ping), this requires special permissions.\n");
@@ -204,6 +224,7 @@ HANDLE WINAPI IcmpCreateFile(VOID)
     if (icp==NULL) {
 #ifdef __REACTOS__
         closesocket(sid);
+        WSACleanup();
 #else
         if (sid >= 0) close(sid);
 #endif
@@ -235,6 +256,9 @@ BOOL WINAPI IcmpCloseHandle(HANDLE  IcmpHandle)
     if (icp->sid >= 0) close(icp->sid);
 #endif
     HeapFree(GetProcessHeap (), 0, icp);
+#ifdef __REACTOS__
+    WSACleanup();
+#endif
     return TRUE;
 }
 
