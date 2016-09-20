@@ -73,6 +73,8 @@ inet_addr(IN  CONST CHAR FAR* cp)
     register u_long val, base, n;
     register unsigned char c;
     u_long parts[4], *pp = parts;
+    if (!cp) return INADDR_ANY;
+    if (!isdigit(*cp)) return INADDR_NONE;
 
 again:
     /*
@@ -144,7 +146,7 @@ again:
         break;
 
     default:
-        return (-1);
+        return (INADDR_NONE);
     }
     val = htonl(val);
     return (val);

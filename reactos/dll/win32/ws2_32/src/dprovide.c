@@ -10,6 +10,9 @@
 
 #include <ws2_32.h>
 
+#define NDEBUG
+#include <debug.h>
+
 /* FUNCTIONS *****************************************************************/
 
 PTPROVIDER
@@ -18,6 +21,7 @@ WsTpAllocate(VOID)
 {
     PTPROVIDER Provider;
     
+    DPRINT("WsTpAllocate: WsSockHeap %d\n", WsSockHeap);
     /* Allocate the object */
     Provider = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, sizeof(*Provider));
 
@@ -35,31 +39,32 @@ WsTpInitialize(IN PTPROVIDER Provider,
                IN LPWSAPROTOCOL_INFOW ProtocolInfo)
 {
     WORD VersionRequested = MAKEWORD(2,2);
-    WSPUPCALLTABLE UpcallTable;
     LPWSPSTARTUP WSPStartupProc;
     WSPDATA WspData;
     CHAR ExpandedDllPath[MAX_PATH];
+    DWORD ErrorCode;
+    DPRINT("WsTpInitialize: %p, %p, %p\n", Provider, DllName, ProtocolInfo);
     
     /* Clear the tables */
-    RtlZeroMemory(&UpcallTable, sizeof(UpcallTable));
+    RtlZeroMemory(&Provider->UpcallTable, sizeof(WSPUPCALLTABLE));
     RtlZeroMemory(&Provider->Service.lpWSPAccept, sizeof(WSPPROC_TABLE));
 
     /* Set up the Upcall Table */
-    UpcallTable.lpWPUCloseEvent = WPUCloseEvent;
-    UpcallTable.lpWPUCloseSocketHandle = WPUCloseSocketHandle;
-    UpcallTable.lpWPUCreateEvent = WPUCreateEvent;
-    UpcallTable.lpWPUCreateSocketHandle = WPUCreateSocketHandle;
-    UpcallTable.lpWPUFDIsSet = WPUFDIsSet;
-    UpcallTable.lpWPUGetProviderPath = WPUGetProviderPath;
-    UpcallTable.lpWPUModifyIFSHandle = WPUModifyIFSHandle;
-    UpcallTable.lpWPUPostMessage = WPUPostMessage;
-    UpcallTable.lpWPUQueryBlockingCallback = WPUQueryBlockingCallback;
-    UpcallTable.lpWPUQuerySocketHandleContext = WPUQuerySocketHandleContext;
-    UpcallTable.lpWPUQueueApc = WPUQueueApc;
-    UpcallTable.lpWPUResetEvent = WPUResetEvent;
-    UpcallTable.lpWPUSetEvent = WPUSetEvent;
-    UpcallTable.lpWPUOpenCurrentThread = WPUOpenCurrentThread;
-    UpcallTable.lpWPUCloseThread = WPUCloseThread;
+    Provider->UpcallTable.lpWPUCloseEvent = WPUCloseEvent;
+    Provider->UpcallTable.lpWPUCloseSocketHandle = WPUCloseSocketHandle;
+    Provider->UpcallTable.lpWPUCreateEvent = WPUCreateEvent;
+    Provider->UpcallTable.lpWPUCreateSocketHandle = WPUCreateSocketHandle;
+    Provider->UpcallTable.lpWPUFDIsSet = WPUFDIsSet;
+    Provider->UpcallTable.lpWPUGetProviderPath = WPUGetProviderPath;
+    Provider->UpcallTable.lpWPUModifyIFSHandle = WPUModifyIFSHandle;
+    Provider->UpcallTable.lpWPUPostMessage = WPUPostMessage;
+    Provider->UpcallTable.lpWPUQueryBlockingCallback = WPUQueryBlockingCallback;
+    Provider->UpcallTable.lpWPUQuerySocketHandleContext = WPUQuerySocketHandleContext;
+    Provider->UpcallTable.lpWPUQueueApc = WPUQueueApc;
+    Provider->UpcallTable.lpWPUResetEvent = WPUResetEvent;
+    Provider->UpcallTable.lpWPUSetEvent = WPUSetEvent;
+    Provider->UpcallTable.lpWPUOpenCurrentThread = WPUOpenCurrentThread;
+    Provider->UpcallTable.lpWPUCloseThread = WPUCloseThread;
 
     /* Expand the DLL Path */
     ExpandEnvironmentStrings(DllName, ExpandedDllPath, MAX_PATH);
@@ -67,18 +72,26 @@ WsTpInitialize(IN PTPROVIDER Provider,
     /* Load the DLL */
     Provider->DllHandle = LoadLibrary(ExpandedDllPath);
 
+    if(!Provider->DllHandle)
+    {
+        return SOCKET_ERROR;
+    }
     /* Get the pointer to WSPStartup */
     WSPStartupProc = (LPWSPSTARTUP)GetProcAddress(Provider->DllHandle, "WSPStartup");
 
+    if(!WSPStartupProc)
+    {
+        return SOCKET_ERROR;
+    }
     /* Call it */
-    (*WSPStartupProc)(VersionRequested,
+    ErrorCode = (*WSPStartupProc)(VersionRequested,
                       &WspData,
                       ProtocolInfo,
-                      UpcallTable,
+                      Provider->UpcallTable,
                       (LPWSPPROC_TABLE)&Provider->Service.lpWSPAccept);
 
     /* Return */
-    return ERROR_SUCCESS;
+    return ErrorCode;
 }
 
 DWORD

@@ -441,6 +441,11 @@ setsockopt(IN SOCKET s,
 
             return Status;
         }
+        if (!optval && optlen > 0)
+        {
+            SetLastError(WSAEFAULT);
+            return SOCKET_ERROR;
+        }
 
         /* Get the Socket Context */
         if ((Socket = WsSockGetSocket(s)))

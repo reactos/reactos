@@ -31,7 +31,7 @@ send(IN SOCKET s,
     LPWSATHREADID ThreadId;
     WSABUF Buffers;
     DWORD BytesSent;
-    DPRINT("send: %lx, %lx, %lx, %p\n", s, flags, len, buf);
+    DPRINT("sendto: %lx, %lx, %lx, %p\n", s, flags, len, buf);
 
     /* Check for WSAStartup */
     if ((ErrorCode = WsQuickPrologTid(&ThreadId)) == ERROR_SUCCESS)

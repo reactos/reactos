@@ -214,7 +214,7 @@ WSALookupServiceEnd(IN HANDLE hLookup)
     }
 
     /* Check for a valid handle, then validate and reference it */
-    if (!(Query) || !(WsNqValidateAndReference(Query)))
+    if (IsBadReadPtr(Query, sizeof(*Query)) || !WsNqValidateAndReference(Query))
     {
         /* Fail */
         SetLastError(WSA_INVALID_HANDLE);
@@ -249,7 +249,8 @@ WSALookupServiceBeginA(IN LPWSAQUERYSETA lpqsRestrictions,
     DPRINT("WSALookupServiceBeginA: %p\n", lpqsRestrictions);
 
     /* Verifiy pointer */
-    if (IsBadReadPtr(lpqsRestrictions, sizeof(*lpqsRestrictions)))
+    if (IsBadReadPtr(lpqsRestrictions, sizeof(*lpqsRestrictions)) || 
+        IsBadReadPtr(lpqsRestrictions->lpServiceClassId, sizeof(*lpqsRestrictions->lpServiceClassId)))
     {
         /* Invalid */
         SetLastError(WSAEFAULT);
@@ -334,7 +335,8 @@ WSALookupServiceBeginW(IN LPWSAQUERYSETW lpqsRestrictions,
 
     /* Verify pointers */
     if (IsBadWritePtr(lphLookup, sizeof(*lphLookup)) ||
-        IsBadReadPtr(lpqsRestrictions, sizeof(*lpqsRestrictions)))
+        IsBadReadPtr(lpqsRestrictions, sizeof(*lpqsRestrictions)) ||
+        IsBadReadPtr(lpqsRestrictions->lpServiceClassId, sizeof(*lpqsRestrictions->lpServiceClassId)))
     {
         /* They are invalid; fail */
         SetLastError(WSAEFAULT);
@@ -401,8 +403,16 @@ WSALookupServiceNextW(IN HANDLE hLookup,
         return SOCKET_ERROR;
     }
 
+    /* Verify pointer */
+    if (IsBadWritePtr(lpqsResults, sizeof(*lpqsResults)))
+    {
+        /* It is invalid; fail */
+        SetLastError(WSAEFAULT);
+        return SOCKET_ERROR;
+    }
+
     /* Check for a valid handle, then validate and reference it */
-    if (!(Query) || !(WsNqValidateAndReference(Query)))
+    if (IsBadReadPtr(Query, sizeof(*Query)) || !WsNqValidateAndReference(Query))
     {
         /* Fail */
         SetLastError(WSA_INVALID_HANDLE);
@@ -611,34 +621,8 @@ WSAInstallServiceClassA(IN LPWSASERVICECLASSINFOA lpServiceClassInfo)
 }
 
 /*
- * @unimplemented
- */
-INT
-WSAAPI
-WSAEnumNameSpaceProvidersA(IN OUT LPDWORD lpdwBufferLength,
-                           OUT LPWSANAMESPACE_INFOA lpnspBuffer)
-{
-    DPRINT("WSAEnumNameSpaceProvidersA: %lx\n", lpnspBuffer);
-    SetLastError(WSAEINVAL);
-    return SOCKET_ERROR;
-}
-
-/*
- * @unimplemented
- */
-INT
-WSAAPI
-WSAEnumNameSpaceProvidersW(IN OUT LPDWORD lpdwBufferLength,
-                           OUT LPWSANAMESPACE_INFOW lpnspBuffer)
-{
-    DPRINT("WSAEnumNameSpaceProvidersW: %lx\n", lpnspBuffer);
-    SetLastError(WSAEINVAL);
-    return SOCKET_ERROR;
-}
-
-/*
- * @unimplemented
- */
+* @unimplemented
+*/
 INT
 WSAAPI
 WSAInstallServiceClassW(IN LPWSASERVICECLASSINFOW lpServiceClassInfo)
@@ -646,6 +630,178 @@ WSAInstallServiceClassW(IN LPWSASERVICECLASSINFOW lpServiceClassInfo)
     DPRINT("WSAInstallServiceClassW: %lx\n", lpServiceClassInfo);
     SetLastError(WSAEINVAL);
     return SOCKET_ERROR;
+}
+
+VOID
+WSAAPI
+NSProviderInfoFromContext(IN PNSCATALOG_ENTRY Entry,
+    IN PNSPROVIDER_ENUM_CONTEXT Context)
+{
+    INT size = Context->Unicode ? sizeof(WSANAMESPACE_INFOW) : sizeof(WSANAMESPACE_INFOA);
+    /* Calculate ProviderName string size */
+    INT size1 = Entry->ProviderName ? wcslen(Entry->ProviderName) + 1 : 0;
+    INT size2 = Context->Unicode ? size1 * sizeof(WCHAR) : size1 * sizeof(CHAR);
+    WSANAMESPACE_INFOW infoW;
+    /* Fill NS Provider data */
+    infoW.dwNameSpace = Entry->NamespaceId;
+    infoW.dwVersion = Entry->Version;
+    infoW.fActive = Entry->Enabled;
+    RtlMoveMemory(&infoW.NSProviderId,
+        &Entry->ProviderId,
+        sizeof(infoW.NSProviderId));
+    if (size2)
+    {
+        /* Calculate ProviderName string pointer */
+        infoW.lpszIdentifier = (LPWSTR)((ULONG_PTR)Context->ProtocolBuffer +
+            Context->BufferUsed + size);
+    }
+    else
+    {
+        infoW.lpszIdentifier = NULL;
+    }
+
+    /* Check if we'll have space */
+    if ((Context->BufferUsed + size + size2) <=
+        (Context->BufferLength))
+    {
+        /* Copy the data */
+        RtlMoveMemory((PVOID)((ULONG_PTR)Context->ProtocolBuffer +
+            Context->BufferUsed),
+            &infoW,
+            size);
+        if (size2)
+        {
+            /* Entry->ProviderName is LPWSTR */
+            if (Context->Unicode)
+            {
+                RtlMoveMemory((PVOID)((ULONG_PTR)Context->ProtocolBuffer +
+                    Context->BufferUsed + size),
+                    Entry->ProviderName,
+                    size2);
+            }
+            else
+            {
+                /* Call the conversion function */
+                WideCharToMultiByte(CP_ACP,
+                    0,
+                    Entry->ProviderName,
+                    -1,
+                    (LPSTR)((ULONG_PTR)Context->ProtocolBuffer +
+                        Context->BufferUsed + size),
+                    size2,
+                    NULL,
+                    NULL);
+
+            }
+        }
+
+        /* Increase the count */
+        Context->Count++;
+    }
+}
+
+BOOL
+WSAAPI
+NSProvidersEnumerationProc(PVOID EnumContext,
+    PNSCATALOG_ENTRY Entry)
+{
+    PNSPROVIDER_ENUM_CONTEXT Context = (PNSPROVIDER_ENUM_CONTEXT)EnumContext;
+
+    /* Calculate ProviderName string size */
+    INT size1 = Entry->ProviderName ? wcslen(Entry->ProviderName) + 1 : 0;
+    INT size2 = Context->Unicode ? size1 * sizeof(WCHAR) : size1 * sizeof(CHAR);
+
+    /* Copy the information */
+    NSProviderInfoFromContext(Entry, Context);
+    Context->BufferUsed += Context->Unicode ? (sizeof(WSANAMESPACE_INFOW)+size2) : (sizeof(WSANAMESPACE_INFOA)+size2);
+
+    /* Continue enumeration */
+    return TRUE;
+}
+
+INT
+WSAAPI
+WSAEnumNameSpaceProvidersInternal(IN OUT LPDWORD lpdwBufferLength,
+    OUT LPWSANAMESPACE_INFOA lpnspBuffer, BOOLEAN Unicode)
+{
+    INT Status;
+    PWSPROCESS WsProcess;
+    PNSCATALOG Catalog;
+    NSPROVIDER_ENUM_CONTEXT Context;
+    DPRINT("WSAEnumNameSpaceProvidersInternal: %lx\n", lpnspBuffer);
+
+    if (!lpdwBufferLength)
+    {
+        WSASetLastError(WSAEFAULT);
+        return SOCKET_ERROR;
+    }
+    WsProcess = WsGetProcess();
+    /* Create a catalog object from the current one */
+    Catalog = WsProcGetNsCatalog(WsProcess);
+    if (!Catalog)
+    {
+        /* Fail if we couldn't */
+        WSASetLastError(WSA_NOT_ENOUGH_MEMORY);
+        return SOCKET_ERROR;
+    }
+
+    Context.ProtocolBuffer = lpnspBuffer;
+    Context.BufferLength = lpnspBuffer ? *lpdwBufferLength : 0;
+    Context.BufferUsed = 0;
+    Context.Count = 0;
+    Context.Unicode = Unicode;
+    Context.ErrorCode = ERROR_SUCCESS;
+
+    WsNcEnumerateCatalogItems(Catalog, NSProvidersEnumerationProc, &Context);
+
+    /* Get status */
+    Status = Context.Count;
+
+    /* Check the error code */
+    if (Context.ErrorCode == ERROR_SUCCESS)
+    {
+        /* Check if enough space was available */
+        if (Context.BufferLength < Context.BufferUsed)
+        {
+            /* Fail and tell them how much we need */
+            *lpdwBufferLength = Context.BufferUsed;
+            WSASetLastError(WSAEFAULT);
+            Status = SOCKET_ERROR;
+        }
+    }
+    else
+    {
+        /* Failure, normalize error */
+        Status = SOCKET_ERROR;
+        WSASetLastError(Context.ErrorCode);
+    }
+
+    /* Return */
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+INT
+WSAAPI
+WSAEnumNameSpaceProvidersA(IN OUT LPDWORD lpdwBufferLength,
+                           OUT LPWSANAMESPACE_INFOA lpnspBuffer)
+{
+    DPRINT("WSAEnumNameSpaceProvidersA: %lx\n", lpnspBuffer);
+    return WSAEnumNameSpaceProvidersInternal(lpdwBufferLength, (LPWSANAMESPACE_INFOA)lpnspBuffer, FALSE);
+}
+
+/*
+ * @implemented
+ */
+INT
+WSAAPI
+WSAEnumNameSpaceProvidersW(IN OUT LPDWORD lpdwBufferLength,
+                           OUT LPWSANAMESPACE_INFOW lpnspBuffer)
+{
+    DPRINT("WSAEnumNameSpaceProvidersW: %lx\n", lpnspBuffer);
+    return WSAEnumNameSpaceProvidersInternal(lpdwBufferLength, (LPWSANAMESPACE_INFOA)lpnspBuffer, TRUE);
 }
 
 /*

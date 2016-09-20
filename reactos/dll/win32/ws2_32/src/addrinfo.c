@@ -90,17 +90,76 @@ WINAPI
 ParseV4Address(IN PCWSTR AddressString,
                OUT PDWORD pAddress)
 {
-    IN_ADDR Address;
-    PCWSTR Terminator;
-    NTSTATUS Status;
-
-    *pAddress = 0;
-    Status = RtlIpv4StringToAddressW(AddressString, FALSE, &Terminator, &Address);
-
-    if (!NT_SUCCESS(Status))
+    CHAR AnsiAddressString[MAX_HOSTNAME_LEN];
+    CHAR * cp = AnsiAddressString;
+    DWORD val, base;
+    unsigned char c;
+    DWORD parts[4], *pp = parts;
+    if (!AddressString)
         return FALSE;
+    WideCharToMultiByte(CP_ACP,
+                        0,
+                        AddressString, 
+                        -1, 
+                        AnsiAddressString, 
+                        sizeof(AnsiAddressString),
+                        NULL,
+                        0);
+    if (!isdigit(*cp)) return FALSE;
 
-    *pAddress = Address.S_un.S_addr;
+again:
+    /*
+    * Collect number up to ``.''.
+    * Values are specified as for C:
+    * 0x=hex, 0=octal, other=decimal.
+    */
+    val = 0; base = 10;
+    if (*cp == '0') {
+        if (*++cp == 'x' || *cp == 'X')
+            base = 16, cp++;
+        else
+            base = 8;
+    }
+    while ((c = *cp)) {
+        if (isdigit(c)) {
+            val = (val * base) + (c - '0');
+            cp++;
+            continue;
+        }
+        if (base == 16 && isxdigit(c)) {
+            val = (val << 4) + (c + 10 - (islower(c) ? 'a' : 'A'));
+            cp++;
+            continue;
+        }
+        break;
+    }
+    if (*cp == '.') {
+        /*
+        * Internet format:
+        *    a.b.c.d
+        */
+        if (pp >= parts + 4) return FALSE;
+        *pp++ = val;
+        cp++;
+        goto again;
+    }
+    /*
+    * Check for trailing characters.
+    */
+    if (*cp) return FALSE;
+
+    *pp++ = val;
+    /*
+    * Concoct the address according to
+    * the number of parts specified.
+    */
+    if ((DWORD)(pp - parts) != 4) return FALSE;
+    if (parts[0] > 0xff || parts[1] > 0xff || parts[2] > 0xff || parts[3] > 0xff) return FALSE;
+    val = (parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3];
+
+    if (pAddress)
+        *pAddress = htonl(val);
+
     return TRUE;
 }
 
@@ -530,7 +589,7 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
                             pszServiceName, 
                             -1, 
                             AnsiServiceName, 
-                            256,
+                            sizeof(AnsiServiceName),
                             NULL,
                             0);
 
@@ -543,6 +602,7 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
             /* Get the port directly */
             wPort = wTcpPort = wUdpPort = htons(wPort);
 
+#if 0
             /* Check if this is both TCP and UDP */
             if (iSocketType == 0)
             {
@@ -550,9 +610,11 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
                 bClone = TRUE;
                 iSocketType = SOCK_STREAM;
             }
+#endif
         }
         else
         {
+            wPort = 0;
             /* The port name was a string. Check if this is a UDP socket */
             if ((iSocketType == 0) || (iSocketType == SOCK_DGRAM))
             {
@@ -576,15 +638,18 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
             /* If we got 0, then fail */
             if (wPort == 0)
             {
-                return iSocketType ? EAI_SERVICE : EAI_NONAME;
+                return EAI_SERVICE;
             }
 
             /* Check if this was for both */
             if (iSocketType == 0)
             {
                 /* Do the TCP case right now */
-                iSocketType = (wTcpPort) ? SOCK_STREAM : SOCK_DGRAM;
-                bClone = (wTcpPort && wUdpPort); 
+                if (wTcpPort && !wUdpPort)
+                    iSocketType = SOCK_STREAM;
+                if (!wTcpPort && wUdpPort)
+                    iSocketType = SOCK_DGRAM;
+                //bClone = (wTcpPort && wUdpPort); 
             }
         }
     }
@@ -612,7 +677,7 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
             /* Set AI_NUMERICHOST since this is a numeric string */
             (*pptResult)->ai_flags |= AI_NUMERICHOST;
             
-            /* Check if the canonical name was requestd */
+            /* Check if the canonical name was requested */
             if (iFlags & AI_CANONNAME)
             {
                 /* Get the canonical name */
@@ -657,7 +722,7 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
                             pszNodeName, 
                             -1, 
                             AnsiNodeName, 
-                            256,
+                            sizeof(AnsiNodeName),
                             NULL,
                             0);
 
@@ -736,23 +801,23 @@ getaddrinfo(const char FAR *nodename,
             struct addrinfo FAR * FAR *res)
 {
     INT ErrorCode;
-    LPWSTR UnicodeNodeName;
+    LPWSTR UnicodeNodeName = NULL;
     LPWSTR UnicodeServName = NULL; 
     DPRINT("getaddrinfo: %s, %s, %p, %p\n", nodename, servname, hints, res);
 
     /* Check for WSAStartup */
     if ((ErrorCode = WsQuickProlog()) != ERROR_SUCCESS) return ErrorCode;
 
-    /* Assume NULL */
-    *res = NULL;
-
     /* Convert the node name */
-    UnicodeNodeName = UnicodeDupFromAnsi((LPSTR)nodename);
-    if (!UnicodeNodeName)
+    if (nodename)
     {
-        /* Prepare to fail */
-        ErrorCode = GetLastError();
-        goto Quickie;
+        UnicodeNodeName = UnicodeDupFromAnsi((LPSTR)nodename);
+        if (!UnicodeNodeName)
+        {
+            /* Prepare to fail */
+            ErrorCode = GetLastError();
+            goto Quickie;
+        }
     }
 
     /* Convert the servname too, if we have one */
@@ -937,7 +1002,7 @@ getnameinfo(const struct sockaddr FAR *sa,
     {
         /* Setup the data for it */
         ServiceString = ServiceBuffer;
-        ServLength = sizeof(ServiceBuffer) / sizeof(WCHAR);
+        ServLength = sizeof(ServiceBuffer) - 1;
     }
   
     /* Now call the unicode function */

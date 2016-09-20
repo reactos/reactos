@@ -360,7 +360,7 @@ WsNqLookupServiceBegin(IN PNSQUERY NsQuery,
 {
     WSASERVICECLASSINFOW ClassInfo;
     PNSQUERY_PROVIDER Provider;
-    LPWSASERVICECLASSINFOW pClassInfo = NULL;
+    LPWSASERVICECLASSINFOW pClassInfo = &ClassInfo;
     PNSQUERY_PROVIDER NextProvider;
     PLIST_ENTRY Entry;
     INT ErrorCode;
@@ -438,7 +438,7 @@ WsNqLookupServiceBegin(IN PNSQUERY NsQuery,
 
     /* Get the class information */
     ClassInfo.lpServiceClassId = Restrictions->lpServiceClassId;
-    ErrorCode = WsNcGetServiceClassInfo(Catalog, &ClassInfoSize, &ClassInfo);
+    ErrorCode = WsNcGetServiceClassInfo(Catalog, &ClassInfoSize, pClassInfo);
 
     /* Check if more buffer space is needed */
     if ((ErrorCode == SOCKET_ERROR) && (GetLastError() == WSAEFAULT))

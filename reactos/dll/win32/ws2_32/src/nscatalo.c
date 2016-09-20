@@ -10,9 +10,11 @@
 
 #include <ws2_32.h>
 
+#define NDEBUG
+#include <debug.h>
+
 /* DATA **********************************************************************/
 
-#define NSCATALOG_NAME      "NameSpace_Catalog5"
 #define WsNcLock()          EnterCriticalSection((LPCRITICAL_SECTION)&Catalog->Lock);
 #define WsNcUnlock()        LeaveCriticalSection((LPCRITICAL_SECTION)&Catalog->Lock);
 
@@ -39,19 +41,37 @@ WsNcOpen(IN PNSCATALOG Catalog,
     LONG ErrorCode;
     DWORD CreateDisposition;
     HKEY CatalogKey, NewKey;
-    //DWORD CatalogEntries = 0;
     DWORD RegType = REG_DWORD;
     DWORD RegSize = sizeof(DWORD);
     DWORD UniqueId = 0;
     DWORD NewData = 0;
+    CHAR* CatalogKeyName;
 
     /* Initialize the catalog lock and namespace list */
     InitializeCriticalSection((LPCRITICAL_SECTION)&Catalog->Lock);
     InitializeListHead(&Catalog->CatalogList);
 
+    /* Read the catalog name */
+    ErrorCode = RegQueryValueEx(ParentKey,
+                                "Current_NameSpace_Catalog",
+                                0,
+                                &RegType,
+                                NULL,
+                                &RegSize);
+
+    CatalogKeyName = HeapAlloc(WsSockHeap, 0, RegSize);
+
+    /* Read the catalog name */
+    ErrorCode = RegQueryValueEx(ParentKey,
+                                "Current_NameSpace_Catalog",
+                                0,
+                                &RegType,
+                                (LPBYTE)CatalogKeyName,
+                                &RegSize);
+
     /* Open the Catalog Key */
     ErrorCode = RegOpenKeyEx(ParentKey,
-                             NSCATALOG_NAME,
+                             CatalogKeyName,
                              0,
                              MAXIMUM_ALLOWED,
                              &CatalogKey);
@@ -66,7 +86,7 @@ WsNcOpen(IN PNSCATALOG Catalog,
     {
         /* Create the Catalog Name */
         ErrorCode = RegCreateKeyEx(ParentKey,
-                                   NSCATALOG_NAME,
+                                   CatalogKeyName,
                                    0,
                                    NULL,
                                    REG_OPTION_NON_VOLATILE,
@@ -75,6 +95,10 @@ WsNcOpen(IN PNSCATALOG Catalog,
                                    &CatalogKey,
                                    &CreateDisposition);
     }
+
+    HeapFree(WsSockHeap, 0, CatalogKeyName);
+    RegType = REG_DWORD;
+    RegSize = sizeof(DWORD);
 
     /* Fail if that didn't work */
     if (ErrorCode != ERROR_SUCCESS) return FALSE;
@@ -133,6 +157,7 @@ WsNcOpen(IN PNSCATALOG Catalog,
     }
     else
     {
+        RegSize = sizeof(UniqueId);
         /* Read the serial number */
         ErrorCode = RegQueryValueEx(CatalogKey,
                                     "Serial_Access_Num",

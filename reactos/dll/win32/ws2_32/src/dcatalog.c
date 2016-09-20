@@ -10,9 +10,10 @@
 
 #include <ws2_32.h>
 
-/* DATA **********************************************************************/
+#define NDEBUG
+#include <debug.h>
 
-#define TCCATALOG_NAME "Protocol_Catalog9"
+/* DATA **********************************************************************/
 
 #define WsTcLock()          EnterCriticalSection((LPCRITICAL_SECTION)&Catalog->Lock);
 #define WsTcUnlock()        LeaveCriticalSection((LPCRITICAL_SECTION)&Catalog->Lock);
@@ -45,14 +46,33 @@ WsTcOpen(IN PTCATALOG Catalog,
     DWORD RegSize = sizeof(DWORD);
     DWORD UniqueId = 0;
     DWORD NewData = 0;
+    CHAR* CatalogKeyName;
 
     /* Initialize the catalog lock and namespace list */
     InitializeCriticalSection((LPCRITICAL_SECTION)&Catalog->Lock);
     InitializeListHead(&Catalog->ProtocolList);
 
+    /* Read the catalog name */
+    ErrorCode = RegQueryValueEx(ParentKey,
+                                "Current_Protocol_Catalog",
+                                0,
+                                &RegType,
+                                NULL,
+                                &RegSize);
+
+    CatalogKeyName = HeapAlloc(WsSockHeap, 0, RegSize);
+
+    /* Read the catalog name */
+    ErrorCode = RegQueryValueEx(ParentKey,
+                                "Current_Protocol_Catalog",
+                                0,
+                                &RegType,
+                                (LPBYTE)CatalogKeyName,
+                                &RegSize);
+
     /* Open the Catalog Key */
     ErrorCode = RegOpenKeyEx(ParentKey,
-                             TCCATALOG_NAME,
+                             CatalogKeyName,
                              0,
                              MAXIMUM_ALLOWED,
                              &CatalogKey);
@@ -67,7 +87,7 @@ WsTcOpen(IN PTCATALOG Catalog,
     {
         /* Create the Catalog Name */
         ErrorCode = RegCreateKeyEx(ParentKey,
-                                   TCCATALOG_NAME,
+                                   CatalogKeyName,
                                    0,
                                    NULL,
                                    REG_OPTION_NON_VOLATILE,
@@ -76,6 +96,10 @@ WsTcOpen(IN PTCATALOG Catalog,
                                    &CatalogKey,
                                    &CreateDisposition);
     }
+
+    HeapFree(WsSockHeap, 0, CatalogKeyName);
+    RegType = REG_DWORD;
+    RegSize = sizeof(DWORD);
 
     /* Fail if that didn't work */
     if (ErrorCode != ERROR_SUCCESS) return FALSE;
@@ -149,6 +173,7 @@ WsTcOpen(IN PTCATALOG Catalog,
     }
     else
     {
+        RegSize = sizeof(DWORD);
         /* Read the serial number */
         ErrorCode = RegQueryValueEx(CatalogKey,
                                     "Serial_Access_Num",
@@ -409,6 +434,7 @@ WsTcGetEntryFromCatalogEntryId(IN PTCATALOG Catalog,
                                IN DWORD CatalogEntryId,
                                IN PTCATALOG_ENTRY *CatalogEntry)
 {
+    INT ErrorCode = WSAEINVAL;
     PLIST_ENTRY NextEntry = Catalog->ProtocolList.Flink;
     PTCATALOG_ENTRY Entry;
 
@@ -435,6 +461,7 @@ WsTcGetEntryFromCatalogEntryId(IN PTCATALOG Catalog,
             /* Reference the entry and return it */
             InterlockedIncrement(&Entry->RefCount);
             *CatalogEntry = Entry;
+            ErrorCode = ERROR_SUCCESS;
             break;
         }
     }
@@ -443,7 +470,7 @@ WsTcGetEntryFromCatalogEntryId(IN PTCATALOG Catalog,
     WsTcUnlock();
 
     /* Return */
-    return ERROR_SUCCESS;
+    return ErrorCode;
 }
 
 DWORD
@@ -458,6 +485,7 @@ WsTcGetEntryFromTriplet(IN PTCATALOG Catalog,
     INT ErrorCode = WSAEINVAL;
     PLIST_ENTRY NextEntry = Catalog->ProtocolList.Flink;
     PTCATALOG_ENTRY Entry;
+    DPRINT("WsTcGetEntryFromTriplet: %lx, %lx, %lx, %lx\n", af, type, protocol, StartId);
 
     /* Assume failure */
     *CatalogEntry = NULL;
@@ -494,9 +522,9 @@ WsTcGetEntryFromTriplet(IN PTCATALOG Catalog,
             if ((Entry->ProtocolInfo.iSocketType == type) || (type == 0))
             {
                 /* Check if Protocol is In Range or if it's wildcard */
-                if (((Entry->ProtocolInfo.iProtocol >= protocol) && 
+                if (((Entry->ProtocolInfo.iProtocol <= protocol) && 
                     ((Entry->ProtocolInfo.iProtocol + 
-                      Entry->ProtocolInfo.iProtocolMaxOffset) <= protocol)) ||
+                      Entry->ProtocolInfo.iProtocolMaxOffset) >= protocol)) ||
                     (protocol == 0))
                 {
                     /* Check if it doesn't already have a provider */
@@ -580,6 +608,7 @@ WsTcLoadProvider(IN PTCATALOG Catalog,
 {
     INT ErrorCode = ERROR_SUCCESS;
     PTPROVIDER Provider;
+    DPRINT("WsTcLoadProvider: %p, %p\n", Catalog, CatalogEntry);
 
     /* Lock the catalog */
     WsTcLock();

@@ -83,11 +83,16 @@ WSACleanup(VOID)
             WsAsyncTerminateThread();
         }
 
+        DPRINT("WSACleanup RefCount = %ld\n", RefCount);
         /* Return success */
         ErrorCode = ERROR_SUCCESS;
+
+        /* Clear last error */
+        SetLastError(ERROR_SUCCESS);
     }
     else
     {
+        DPRINT("WSACleanup unintialized\n");
         /* Weren't initialized */
         SetLastError(ErrorCode);
         ErrorCode = SOCKET_ERROR;
@@ -111,7 +116,7 @@ WSAStartup(IN WORD wVersionRequested,
     WORD VersionReturned = 0;
     DWORD ErrorCode = ERROR_SUCCESS;
     PWSPROCESS CurrentProcess;
-    DPRINT("WSAStartup: %wx\n", wVersionRequested);
+    DPRINT("WSAStartup: %wx %d.%d\n", wVersionRequested, LOBYTE(wVersionRequested), HIBYTE(wVersionRequested));
 
     /* Make sure that we went through DLL Init */
     if (!WsDllHandle) return WSASYSNOTREADY;
@@ -123,14 +128,15 @@ WSAStartup(IN WORD wVersionRequested,
 
             /* We don't support this unknown version */
             ErrorCode = WSAVERNOTSUPPORTED;
+            VersionReturned = MAKEWORD(2, 2);
             break;
 
         case 1:
             /* We support only 1.0 and 1.1 */
-            if (HIBYTE(wVersionRequested) == 0)
+            if (HIBYTE(wVersionRequested) <= 1)
             {
                 /* Caller wants 1.0, return it */
-                VersionReturned = wVersionRequested;
+                VersionReturned = MAKEWORD(1, HIBYTE(wVersionRequested));
             }
             else
             {
@@ -160,6 +166,12 @@ WSAStartup(IN WORD wVersionRequested,
             break;
     }
 
+    if (lpWSAData == NULL)
+    {
+        SetLastError(WSANOTINITIALISED);
+        return ErrorCode == ERROR_SUCCESS ? WSAEFAULT : ErrorCode;
+    }
+
     /* Return the Version Requested, unless error */
     lpWSAData->wVersion = VersionReturned;
 
@@ -181,6 +193,13 @@ WSAStartup(IN WORD wVersionRequested,
     {
         lpWSAData->iMaxSockets = 0;
         lpWSAData->iMaxUdpDg = 0;
+    }
+ 
+    /* Requested invalid version (0) */
+    if (ErrorCode != ERROR_SUCCESS)
+    {
+        SetLastError(WSANOTINITIALISED);
+        return ErrorCode;
     }
 
     /* Enter the startup synchronization lock */
@@ -223,6 +242,14 @@ WSAStartup(IN WORD wVersionRequested,
 
         /* Increase the reference count */
         InterlockedIncrement(&CurrentProcess->RefCount);
+        DPRINT("WSAStartup RefCount = %ld\n", CurrentProcess->RefCount);
+
+        /* Clear last error */
+        SetLastError(ERROR_SUCCESS);
+    }
+    else
+    {
+        SetLastError(WSANOTINITIALISED);
     }
 
     /* Leave the startup lock */

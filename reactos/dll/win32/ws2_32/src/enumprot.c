@@ -31,7 +31,7 @@ CheckProtocolMatch(IN LPINT ProtocolSet,
         ProtocolId = ProtocolSet[i];
 
         /* Loop the list */
-        while (ProtocolId != 0)
+        while (ProtocolId != 0 && ProtocolInfo->iProtocol != 0)
         {
             /* Check if it's within ranges */
             if ((ProtocolId >= ProtocolInfo->iProtocol) &&
@@ -188,7 +188,7 @@ WSCEnumProtocols(IN LPINT lpiProtocols,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 INT
 WSAAPI
@@ -196,14 +196,46 @@ WSAEnumProtocolsA(IN LPINT lpiProtocols,
                   OUT LPWSAPROTOCOL_INFOA lpProtocolBuffer,
                   IN OUT LPDWORD lpdwBufferLength)
 {
-    DPRINT("WSAEnumProtocolsA: %p\n", lpiProtocols);
-    UNIMPLEMENTED;
-    SetLastError(WSAEINVAL);
-    return SOCKET_ERROR;
+    INT error, i, count;
+    LPWSAPROTOCOL_INFOW protocolInfoW;
+    DWORD size;
+    DPRINT("WSAEnumProtocolsA: %p %p %p\n", lpiProtocols, lpProtocolBuffer, lpdwBufferLength);
+    if (!lpdwBufferLength)
+    {
+        SetLastError(WSAENOBUFS);
+        return SOCKET_ERROR;
+    }
+    count = WSCEnumProtocols(lpiProtocols, NULL, &size, &error);
+    if (!lpProtocolBuffer || *lpdwBufferLength < (size/sizeof(WSAPROTOCOL_INFOW))*sizeof(WSAPROTOCOL_INFOA))
+    {
+        *lpdwBufferLength = (size/sizeof(WSAPROTOCOL_INFOW))*sizeof(WSAPROTOCOL_INFOA);
+        SetLastError(WSAENOBUFS);
+        return SOCKET_ERROR;
+    }
+    protocolInfoW = HeapAlloc(WsSockHeap, 0, size);
+    count = WSCEnumProtocols(lpiProtocols, protocolInfoW, &size, &error);
+    if (SOCKET_ERROR == count)
+    {
+        HeapFree(WsSockHeap, 0, protocolInfoW);
+        SetLastError(error);
+        return SOCKET_ERROR;
+    }
+    *lpdwBufferLength = 0;
+    for (i = 0; i < count; i++)
+    {
+        /* Copy the data */
+        RtlMoveMemory(&lpProtocolBuffer[i],
+                      &protocolInfoW[i],
+                      sizeof(lpProtocolBuffer[0])-sizeof(lpProtocolBuffer[0].szProtocol));
+        wcstombs(lpProtocolBuffer[i].szProtocol, protocolInfoW[i].szProtocol, sizeof(lpProtocolBuffer[0].szProtocol));
+        *lpdwBufferLength += sizeof(WSAPROTOCOL_INFOA);
+    }
+    HeapFree(WsSockHeap, 0, protocolInfoW);
+    return i;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 INT
 WSAAPI
@@ -211,14 +243,20 @@ WSAEnumProtocolsW(IN LPINT lpiProtocols,
                   OUT LPWSAPROTOCOL_INFOW lpProtocolBuffer,
                   IN OUT  LPDWORD lpdwBufferLength)
 {
-    DPRINT("WSAEnumProtocolsW: %p\n", lpiProtocols);
-    UNIMPLEMENTED;
-    SetLastError(WSAEINVAL);
-    return SOCKET_ERROR;
+    INT error, count;
+    DPRINT("WSAEnumProtocolsW: %p %p %p\n", lpiProtocols, lpProtocolBuffer, lpdwBufferLength);
+    count = WSCEnumProtocols(lpiProtocols, lpProtocolBuffer, lpdwBufferLength, &error);
+    if (SOCKET_ERROR == count)
+    {
+        SetLastError(error);
+        return SOCKET_ERROR;
+    }
+    return count;
 }
 
+
 /*
- * @unimplemented
+ * @implemented
  */
 INT
 WSPAPI
@@ -227,13 +265,11 @@ WPUGetProviderPath(IN LPGUID lpProviderId,
                    IN OUT LPINT lpProviderDllPathLen,
                    OUT LPINT lpErrno)
 {
-    DPRINT("WPUGetProviderPath: %p\n", lpProviderId);
-    UNIMPLEMENTED;
-    return 0;
+    return WSCGetProviderPath(lpProviderId, lpszProviderDllPath, lpProviderDllPathLen, lpErrno);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 INT
 WSAAPI
@@ -257,7 +293,7 @@ WSCGetProviderPath(IN LPGUID lpProviderId,
                    IN OUT LPINT lpProviderDllPathLen,
                    OUT LPINT lpErrno)
 {
-    DPRINT("WSCGetProviderPath: %p\n", lpProviderId);
+    DPRINT("WSCGetProviderPath: %p %p %p %p\n", lpProviderId, lpszProviderDllPath, lpProviderDllPathLen, lpErrno);
     UNIMPLEMENTED;
     SetLastError(WSAEINVAL);
     return SOCKET_ERROR;

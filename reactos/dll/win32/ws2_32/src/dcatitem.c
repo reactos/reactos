@@ -67,6 +67,8 @@ WsTcEntryInitializeFromRegistry(IN PTCATALOG_ENTRY CatalogEntry,
     DWORD RegType = REG_BINARY;
     HKEY EntryKey;
     DWORD Return;
+    LPBYTE Buf;
+    DWORD index;
 
     /* Convert to a 00000xxx string */
     sprintf(CatalogEntryName, "%0""12""lu", UniqueId);
@@ -79,20 +81,33 @@ WsTcEntryInitializeFromRegistry(IN PTCATALOG_ENTRY CatalogEntry,
                           &EntryKey);
 
     /* Get Size of Catalog Entry Structure */
-    Return = RegQueryValueExW(EntryKey, 
-                              L"PackedCatalogItem",
+    Return = RegQueryValueEx(EntryKey, 
+                              "PackedCatalogItem",
                               0,
                               NULL,
                               NULL,
                               &RegSize);
     
+    if(!(Buf = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, RegSize)))
+        return ERROR_NOT_ENOUGH_MEMORY;
+
     /* Read the Whole Catalog Entry Structure */
-    Return = RegQueryValueExW(EntryKey, 
-                              L"PackedCatalogItem",
+    Return = RegQueryValueEx(EntryKey, 
+                              "PackedCatalogItem",
                               0,
                               &RegType,
-                              (LPBYTE)&CatalogEntry->DllPath,
+                              Buf,
                               &RegSize);
+
+
+    memcpy(CatalogEntry->DllPath, (LPCSTR)Buf, sizeof(CatalogEntry->DllPath));
+    index = sizeof(CatalogEntry->DllPath);
+    if(index < RegSize)
+    {
+        memcpy(&CatalogEntry->ProtocolInfo, &Buf[index], sizeof(WSAPROTOCOL_INFOW));
+        index += sizeof(WSAPROTOCOL_INFOW);
+    }
+    HeapFree(WsSockHeap, 0, Buf);
 
     /* Done */
     RegCloseKey(EntryKey);

@@ -108,9 +108,11 @@ getxyDataEnt(IN OUT PCHAR *Results,
 {
     PWSAQUERYSETA WsaQuery = (PWSAQUERYSETA)*Results;
     INT ErrorCode;
+    DWORD NewLength = Length;
     HANDLE RnRHandle;
     LPBLOB Blob = NULL;
-    PVOID NewResults;
+    PVOID NewResults = NULL;
+    DWORD dwControlFlags = LUP_RETURN_NAME;
 
     /* Assume empty return name */
     if (NewName) *NewName = NULL;
@@ -121,12 +123,15 @@ getxyDataEnt(IN OUT PCHAR *Results,
     WsaQuery->lpszServiceInstanceName = Name;
     WsaQuery->lpServiceClassId = (LPGUID)Type;
     WsaQuery->dwNameSpace = NS_ALL;
-    WsaQuery->dwNumberOfProtocols = 2;
-    WsaQuery->lpafpProtocols = &afp[0];
+    WsaQuery->dwNumberOfProtocols = sizeof(afp)/sizeof(afp[0]);
+    WsaQuery->lpafpProtocols = afp;
+
+    if(!IsEqualGUID(Type, &HostnameGuid))
+        dwControlFlags |= LUP_RETURN_BLOB;
 
     /* Send the Query Request to find a Service */
     ErrorCode = WSALookupServiceBeginA(WsaQuery,
-                                       LUP_RETURN_BLOB | LUP_RETURN_NAME,
+                                       dwControlFlags,
                                        &RnRHandle);
 
     if(ErrorCode == ERROR_SUCCESS) 
@@ -136,7 +141,7 @@ getxyDataEnt(IN OUT PCHAR *Results,
             /* Service was found, send the real query */
             ErrorCode = WSALookupServiceNextA(RnRHandle,
                                               0,
-                                              &Length,
+                                              &NewLength,
                                               WsaQuery);
 
             /* Return the information requested */
@@ -152,7 +157,7 @@ getxyDataEnt(IN OUT PCHAR *Results,
                 else 
                 {
                     /* Check if this was a Hostname lookup */
-                    if (Type == &HostnameGuid)
+                    if (IsEqualGUID(Type, &HostnameGuid))
                     {
                         /* Return the name anyways */
                         if(NewName) *NewName = WsaQuery->lpszServiceInstanceName;
@@ -368,7 +373,7 @@ gethostbyaddr(IN const char FAR * addr,
     else 
     {
         /* We failed, so zero it out */
-        Hostent = 0;
+        Hostent = NULL;
 
         /* Normalize the error message */
         if(GetLastError() == WSASERVICE_NOT_FOUND) 
@@ -390,18 +395,25 @@ gethostbyaddr(IN const char FAR * addr,
 INT
 WSAAPI
 gethostname(OUT char FAR * name,
-            IN int namelen)
+            IN INT namelen)
 {
-    PCHAR Name;
+    PCHAR Name = NULL;
     CHAR ResultsBuffer[RNR_BUFFER_SIZE];
     PCHAR Results = ResultsBuffer;
     DPRINT("gethostname: %p\n", name);
 
+    if (!name || namelen < 1)
+    {
+        SetLastError(WSAEFAULT);
+        return SOCKET_ERROR;
+    }
     /* Get the Hostname in a String */
-    if(getxyDataEnt(&Results, RNR_BUFFER_SIZE, NULL, &HostnameGuid, &Name))
+    /* getxyDataEnt does not return blob for HostnameGuid */
+    getxyDataEnt(&Results, RNR_BUFFER_SIZE, NULL, &HostnameGuid, &Name);
+    if(Name)
     {
         /* Copy it */
-        strcpy((LPSTR)name, Name);
+        strncpy((LPSTR)name, Name, namelen-1);
     }
 
     /* Check if we received a newly allocated buffer; free it. */
@@ -450,7 +462,7 @@ getservbyport(IN int port,
     }
 
     /* Put it into the right syntax */
-    sprintf(PortName, "%d/%s", (port & 0xffff), proto);
+    sprintf(PortName, "%d/%s", (ntohs(port) & 0xffff), proto);
 
     /* Get the Service in a Blob */
     Blob = getxyDataEnt(&Results, RNR_BUFFER_SIZE, PortName, &IANAGuid, 0);
@@ -471,9 +483,6 @@ getservbyport(IN int port,
     {
         /* We failed, so zero it out */
         Servent = 0;
-
-        /* Normalize the error message */
-        if(GetLastError() == WSATYPE_NOT_FOUND) SetLastError(WSANO_DATA);
     }
 
     /* Check if we received a newly allocated buffer; free it. */
@@ -543,9 +552,6 @@ getservbyname(IN const char FAR * name,
     {
         /* We failed, so zero it out */
         Servent = 0;
-
-        /* Normalize the error message */
-        if(GetLastError() == WSATYPE_NOT_FOUND) SetLastError(WSANO_DATA);
     }
 
     /* Check if we received a newly allocated buffer; free it. */

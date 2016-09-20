@@ -79,6 +79,7 @@ typedef struct _TPROVIDER
     LONG RefCount;
     WSPPROC_TABLE Service;
     HINSTANCE DllHandle;
+    WSPUPCALLTABLE UpcallTable;
 } TPROVIDER, *PTPROVIDER;
 
 typedef struct _TCATALOG_ENTRY
@@ -209,6 +210,17 @@ typedef struct _ENUM_CONTEXT
    PNSQUERY NsQuery;
    PNSCATALOG Catalog;
 } ENUM_CONTEXT, *PENUM_CONTEXT;
+
+typedef struct _NSPROVIDER_ENUM_CONTEXT
+{
+    LPINT Protocols;
+    LPVOID ProtocolBuffer;
+    DWORD BufferLength;
+    DWORD BufferUsed;
+    DWORD Count;
+    BOOLEAN Unicode;
+    INT ErrorCode;
+} NSPROVIDER_ENUM_CONTEXT, *PNSPROVIDER_ENUM_CONTEXT;
 
 typedef struct _PROTOCOL_ENUM_CONTEXT
 {

@@ -19,12 +19,17 @@ HANDLE
 WSAAPI
 GetProtoOpenNetworkDatabase(PCHAR Name)
 {
-    CHAR ExpandedPath[MAX_PATH];
-    CHAR DatabasePath[MAX_PATH];
+    PCHAR ExpandedPath;
+    PCHAR DatabasePath;
     INT ErrorCode;
     HKEY DatabaseKey;
     DWORD RegType;
-    DWORD RegSize = sizeof(DatabasePath);
+    DWORD RegSize = 0;
+    HANDLE ret;
+
+    ExpandedPath = HeapAlloc(WsSockHeap, 0, MAX_PATH);
+    if (!ExpandedPath)
+        return INVALID_HANDLE_VALUE;
 
     /* Open the database path key */
     ErrorCode = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
@@ -39,40 +44,66 @@ GetProtoOpenNetworkDatabase(PCHAR Name)
                                     "DatabasePath",
                                     NULL,
                                     &RegType,
+                                    NULL,
+                                    &RegSize);
+
+        DatabasePath = HeapAlloc(WsSockHeap, 0, RegSize);
+        if (!DatabasePath)
+        {
+            HeapFree(WsSockHeap, 0, ExpandedPath);
+            return INVALID_HANDLE_VALUE;
+        }
+
+        /* Read the actual path */
+        ErrorCode = RegQueryValueEx(DatabaseKey,
+                                    "DatabasePath",
+                                    NULL,
+                                    &RegType,
                                     (LPBYTE)DatabasePath,
                                     &RegSize);
+
 
         /* Close the key */
         RegCloseKey(DatabaseKey);
 
         /* Expand the name */
         ExpandEnvironmentStrings(DatabasePath, ExpandedPath, MAX_PATH);
+
+        HeapFree(WsSockHeap, 0, DatabasePath);
     }
     else
     {
         /* Use defalt path */
         GetSystemDirectory(ExpandedPath, MAX_PATH);
-        strcat(ExpandedPath, "DRIVERS\\ETC\\");
+        if (ExpandedPath[strlen(ExpandedPath) - 1] != '\\')
+        {
+            /* It isn't, so add it ourselves */
+            strncat(ExpandedPath, "\\", MAX_PATH);
+        }
+        strncat(ExpandedPath, "DRIVERS\\ETC\\", MAX_PATH);
     }
 
     /* Make sure that the path is backslash-terminated */
     if (ExpandedPath[strlen(ExpandedPath) - 1] != '\\')
     {
         /* It isn't, so add it ourselves */
-        strcat(ExpandedPath, "\\");
+        strncat(ExpandedPath, "\\", MAX_PATH);
     }
 
     /* Add the database name */
-    strcat(ExpandedPath, Name);
+    strncat(ExpandedPath, Name, MAX_PATH);
 
     /* Return a handle to the file */
-    return CreateFile(ExpandedPath,
+    ret = CreateFile(ExpandedPath,
                       FILE_READ_ACCESS,
                       0,
                       NULL,
                       OPEN_EXISTING,
                       FILE_ATTRIBUTE_NORMAL,
                       NULL);
+
+    HeapFree(WsSockHeap, 0, ExpandedPath);
+    return ret;
 }
 
 PCHAR
@@ -117,9 +148,6 @@ GetProtoGetNextEnt(IN HANDLE DbHandle,
                       512,
                       &Read,
                       NULL)) return NULL;
-
-        /* Null terminate LineBuffer */
-        Buffer->LineBuffer[Read] = ANSI_NULL;
 
         /* Find out where the line ends */
         p1 = Buffer->LineBuffer;
@@ -215,7 +243,7 @@ getprotobynumber(IN INT number)
     PWSTHREAD Thread;
     INT ErrorCode;
     PPROTOENT Protoent;
-    PVOID GetProtoBuffer;
+    PVOID GetProtoBuffer; 
     HANDLE DbHandle;
     DPRINT("getprotobynumber: %lx\n", number);
 
@@ -279,7 +307,7 @@ getprotobyname(IN CONST CHAR FAR *name)
     PWSTHREAD Thread;
     INT ErrorCode;
     PPROTOENT Protoent;
-    PVOID GetProtoBuffer;
+    PVOID GetProtoBuffer; 
     HANDLE DbHandle;
     DPRINT("getprotobyname: %s\n", name);
 
