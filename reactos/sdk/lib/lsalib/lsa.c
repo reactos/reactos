@@ -15,76 +15,12 @@
 #include <ndk/mmfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/obfuncs.h>
-// #include <psdk/ntsecapi.h>
 #include <lsass/lsass.h>
 
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *******************************************************************/
-
-// FIXME: Do we really need this?!
-#if !defined(__NTOSKRNL__) && !defined(_NTOSKRNL_) && !defined(_NTSYSTEM_)
-extern HANDLE Secur32Heap;
-#endif
-
 /* FUNCTIONS *****************************************************************/
-
-/* This API is not defined and exported by NTOSKRNL */
-#if !defined(__NTOSKRNL__) && !defined(_NTOSKRNL_) && !defined(_NTSYSTEM_)
-/*
- * @implemented
- */
-NTSTATUS
-NTAPI
-LsaConnectUntrusted(OUT PHANDLE LsaHandle)
-{
-    NTSTATUS Status;
-    UNICODE_STRING PortName; // = RTL_CONSTANT_STRING(L"\\LsaAuthenticationPort");
-    SECURITY_QUALITY_OF_SERVICE SecurityQos;
-    LSA_CONNECTION_INFO ConnectInfo;
-    ULONG ConnectInfoLength = sizeof(ConnectInfo);
-
-    DPRINT("LsaConnectUntrusted(%p)\n", LsaHandle);
-
-    // TODO: Wait on L"\\SECURITY\\LSA_AUTHENTICATION_INITIALIZED" event
-    // for the LSA server to be ready, and because we are untrusted,
-    // we may need to impersonate ourselves before!
-
-    RtlInitUnicodeString(&PortName, L"\\LsaAuthenticationPort");
-
-    SecurityQos.Length              = sizeof(SecurityQos);
-    SecurityQos.ImpersonationLevel  = SecurityIdentification;
-    SecurityQos.ContextTrackingMode = SECURITY_DYNAMIC_TRACKING;
-    SecurityQos.EffectiveOnly       = TRUE;
-
-    RtlZeroMemory(&ConnectInfo,
-                  ConnectInfoLength);
-
-    ConnectInfo.CreateContext = TRUE;
-
-    Status = ZwConnectPort(LsaHandle,
-                           &PortName,
-                           &SecurityQos,
-                           NULL,
-                           NULL,
-                           NULL,
-                           &ConnectInfo,
-                           &ConnectInfoLength);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ZwConnectPort failed (Status 0x%08lx)\n", Status);
-        return Status;
-    }
-
-    if (!NT_SUCCESS(ConnectInfo.Status))
-    {
-        DPRINT1("ConnectInfo.Status: 0x%08lx\n", ConnectInfo.Status);
-    }
-
-    return ConnectInfo.Status;
-}
-#endif
 
 /*
  * @implemented

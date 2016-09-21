@@ -108,6 +108,62 @@ LsapOpenLsaPort(VOID)
  */
 NTSTATUS
 NTAPI
+LsaConnectUntrusted(
+    OUT PHANDLE LsaHandle)
+{
+    UNICODE_STRING PortName;
+    SECURITY_QUALITY_OF_SERVICE SecurityQos;
+    LSA_CONNECTION_INFO ConnectInfo;
+    ULONG ConnectInfoLength = sizeof(ConnectInfo);
+    NTSTATUS Status;
+
+    TRACE("LsaConnectUntrusted(%p)\n", LsaHandle);
+
+    // TODO: Wait on L"\\SECURITY\\LSA_AUTHENTICATION_INITIALIZED" event
+    // for the LSA server to be ready, and because we are untrusted,
+    // we may need to impersonate ourselves before!
+
+    RtlInitUnicodeString(&PortName,
+                         L"\\LsaAuthenticationPort");
+
+    SecurityQos.Length              = sizeof(SecurityQos);
+    SecurityQos.ImpersonationLevel  = SecurityIdentification;
+    SecurityQos.ContextTrackingMode = SECURITY_DYNAMIC_TRACKING;
+    SecurityQos.EffectiveOnly       = TRUE;
+
+    RtlZeroMemory(&ConnectInfo,
+                  ConnectInfoLength);
+
+    ConnectInfo.CreateContext = TRUE;
+
+    Status = NtConnectPort(LsaHandle,
+                           &PortName,
+                           &SecurityQos,
+                           NULL,
+                           NULL,
+                           NULL,
+                           &ConnectInfo,
+                           &ConnectInfoLength);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("NtConnectPort failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    if (!NT_SUCCESS(ConnectInfo.Status))
+    {
+        ERR("ConnectInfo.Status: 0x%08lx\n", ConnectInfo.Status);
+    }
+
+    return ConnectInfo.Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
 LsaEnumerateLogonSessions(
     PULONG LogonSessionCount,
     PLUID *LogonSessionList)
