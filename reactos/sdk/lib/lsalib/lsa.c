@@ -274,9 +274,13 @@ LsaRegisterLogonProcess(IN PLSA_STRING LogonProcessName,
                         OUT PLSA_OPERATIONAL_MODE OperationalMode)
 {
     NTSTATUS Status;
+#if 0
     HANDLE EventHandle;
+#endif
     UNICODE_STRING PortName; // = RTL_CONSTANT_STRING(L"\\LsaAuthenticationPort");
+#if 0
     OBJECT_ATTRIBUTES ObjectAttributes;
+#endif
     SECURITY_QUALITY_OF_SERVICE SecurityQos;
     LSA_CONNECTION_INFO ConnectInfo;
     ULONG ConnectInfoLength = sizeof(ConnectInfo);
@@ -287,6 +291,7 @@ LsaRegisterLogonProcess(IN PLSA_STRING LogonProcessName,
     if (LogonProcessName->Length > LSASS_MAX_LOGON_PROCESS_NAME_LENGTH)
         return STATUS_NAME_TOO_LONG;
 
+#if 0
     /*
      * First check whether the LSA server is ready:
      * open the LSA event and wait on it.
@@ -312,6 +317,7 @@ LsaRegisterLogonProcess(IN PLSA_STRING LogonProcessName,
         DPRINT1("NtWaitForSingleObject failed (Status 0x%08lx)\n", Status);
         return Status;
     }
+#endif
 
     /* Now attempt the connection */
     RtlInitUnicodeString(&PortName, L"\\LsaAuthenticationPort");
