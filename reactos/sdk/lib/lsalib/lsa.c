@@ -278,7 +278,7 @@ LsaRegisterLogonProcess(IN PLSA_STRING LogonProcessName,
                          &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT"NtOpenEvent failed (Status 0x%08lx)\n", Status);
+        DPRINT("ZwOpenEvent failed (Status 0x%08lx)\n", Status);
 
         Status = ZwCreateEvent(&EventHandle,
                                SYNCHRONIZE,
@@ -287,7 +287,7 @@ LsaRegisterLogonProcess(IN PLSA_STRING LogonProcessName,
                                FALSE);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("NtCreateEvent failed (Status 0x%08lx)\n", Status);
+            DPRINT1("ZwCreateEvent failed (Status 0x%08lx)\n", Status);
             return Status;
         }
     }
@@ -298,7 +298,7 @@ LsaRegisterLogonProcess(IN PLSA_STRING LogonProcessName,
     ZwClose(EventHandle);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtWaitForSingleObject failed (Status 0x%08lx)\n", Status);
+        DPRINT1("ZwWaitForSingleObject failed (Status 0x%08lx)\n", Status);
         return Status;
     }
 
