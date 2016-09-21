@@ -35,8 +35,8 @@ LsaCallAuthenticationPackage(IN HANDLE LsaHandle,
                              OUT PULONG ReturnBufferLength,
                              OUT PNTSTATUS ProtocolStatus)
 {
-    NTSTATUS Status;
     LSA_API_MSG ApiMessage;
+    NTSTATUS Status;
 
     DPRINT1("LsaCallAuthenticationPackage()\n");
 
@@ -77,9 +77,50 @@ LsaCallAuthenticationPackage(IN HANDLE LsaHandle,
  */
 NTSTATUS
 NTAPI
+LsaDeregisterLogonProcess(IN HANDLE LsaHandle)
+{
+    LSA_API_MSG ApiMessage;
+    NTSTATUS Status;
+
+    DPRINT("LsaDeregisterLogonProcess()\n");
+
+    ApiMessage.ApiNumber = LSASS_REQUEST_DEREGISTER_LOGON_PROCESS;
+    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.DeregisterLogonProcess);
+    ApiMessage.h.u1.s1.TotalLength = LSA_PORT_MESSAGE_SIZE;
+    ApiMessage.h.u2.ZeroInit = 0;
+
+    Status = ZwRequestWaitReplyPort(LsaHandle,
+                                    (PPORT_MESSAGE)&ApiMessage,
+                                    (PPORT_MESSAGE)&ApiMessage);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwRequestWaitReplyPort() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        DPRINT1("ZwRequestWaitReplyPort() failed (ApiMessage.Status 0x%08lx)\n", ApiMessage.Status);
+        return ApiMessage.Status;
+    }
+
+    ZwClose(LsaHandle);
+
+    DPRINT("LsaDeregisterLogonProcess() done (Status 0x%08lx)\n", Status);
+
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
 LsaFreeReturnBuffer(IN PVOID Buffer)
 {
     SIZE_T Size = 0;
+
     return ZwFreeVirtualMemory(NtCurrentProcess(),
                                &Buffer,
                                &Size,
@@ -96,8 +137,8 @@ LsaLookupAuthenticationPackage(IN HANDLE LsaHandle,
                                IN PLSA_STRING PackageName,
                                OUT PULONG AuthenticationPackage)
 {
-    NTSTATUS Status;
     LSA_API_MSG ApiMessage;
+    NTSTATUS Status;
 
     /* Check the package name length */
     if (PackageName->Length > LSASS_MAX_PACKAGE_NAME_LENGTH)
@@ -155,8 +196,8 @@ LsaLogonUser(IN HANDLE LsaHandle,
              OUT PQUOTA_LIMITS Quotas,
              OUT PNTSTATUS SubStatus)
 {
-    NTSTATUS Status;
     LSA_API_MSG ApiMessage;
+    NTSTATUS Status;
 
     ApiMessage.ApiNumber = LSASS_REQUEST_LOGON_USER;
     ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.LogonUser);
@@ -300,44 +341,4 @@ LsaRegisterLogonProcess(IN PLSA_STRING LogonProcessName,
     }
 
     return ConnectInfo.Status;
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS
-NTAPI
-LsaDeregisterLogonProcess(IN HANDLE LsaHandle)
-{
-    NTSTATUS Status;
-    LSA_API_MSG ApiMessage;
-
-    DPRINT("LsaDeregisterLogonProcess()\n");
-
-    ApiMessage.ApiNumber = LSASS_REQUEST_DEREGISTER_LOGON_PROCESS;
-    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.DeregisterLogonProcess);
-    ApiMessage.h.u1.s1.TotalLength = LSA_PORT_MESSAGE_SIZE;
-    ApiMessage.h.u2.ZeroInit = 0;
-
-    Status = ZwRequestWaitReplyPort(LsaHandle,
-                                    (PPORT_MESSAGE)&ApiMessage,
-                                    (PPORT_MESSAGE)&ApiMessage);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ZwRequestWaitReplyPort() failed (Status 0x%08lx)\n", Status);
-        return Status;
-    }
-
-    if (!NT_SUCCESS(ApiMessage.Status))
-    {
-        DPRINT1("ZwRequestWaitReplyPort() failed (ApiMessage.Status 0x%08lx)\n", ApiMessage.Status);
-        return ApiMessage.Status;
-    }
-
-    ZwClose(LsaHandle);
-
-    DPRINT("LsaDeregisterLogonProcess() done (Status 0x%08lx)\n", Status);
-
-    return Status;
 }
