@@ -209,17 +209,14 @@ LsaRegisterLogonProcess(IN PLSA_STRING LogonProcessName,
                         OUT PHANDLE LsaHandle,
                         OUT PLSA_OPERATIONAL_MODE OperationalMode)
 {
-    NTSTATUS Status;
-#if 0
-    HANDLE EventHandle;
-#endif
-    UNICODE_STRING PortName; // = RTL_CONSTANT_STRING(L"\\LsaAuthenticationPort");
-#if 0
-    OBJECT_ATTRIBUTES ObjectAttributes;
-#endif
     SECURITY_QUALITY_OF_SERVICE SecurityQos;
     LSA_CONNECTION_INFO ConnectInfo;
     ULONG ConnectInfoLength = sizeof(ConnectInfo);
+    UNICODE_STRING PortName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING EventName;
+    HANDLE EventHandle;
+    NTSTATUS Status;
 
     DPRINT("LsaRegisterLogonProcess()\n");
 
@@ -227,36 +224,46 @@ LsaRegisterLogonProcess(IN PLSA_STRING LogonProcessName,
     if (LogonProcessName->Length > LSASS_MAX_LOGON_PROCESS_NAME_LENGTH)
         return STATUS_NAME_TOO_LONG;
 
-#if 0
-    /*
-     * First check whether the LSA server is ready:
-     * open the LSA event and wait on it.
-     */
-    // Note that we just reuse the 'PortName' variable here.
-    RtlInitUnicodeString(&PortName, L"\\SECURITY\\LSA_AUTHENTICATION_INITIALIZED");
+    /* Wait for the LSA authentication thread */
+    RtlInitUnicodeString(&EventName,
+                         L"\\SECURITY\\LSA_AUTHENTICATION_INITIALIZED");
     InitializeObjectAttributes(&ObjectAttributes,
-                               &PortName,
-                               OBJ_CASE_INSENSITIVE,
+                               &EventName,
+                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
                                NULL,
                                NULL);
-    Status = NtOpenEvent(&EventHandle, SYNCHRONIZE, &ObjectAttributes);
+    Status = ZwOpenEvent(&EventHandle,
+                         SYNCHRONIZE,
+                         &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtOpenEvent failed (Status 0x%08lx)\n", Status);
-        return Status;
+        DPRINT"NtOpenEvent failed (Status 0x%08lx)\n", Status);
+
+        Status = ZwCreateEvent(&EventHandle,
+                               SYNCHRONIZE,
+                               &ObjectAttributes,
+                               NotificationEvent,
+                               FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("NtCreateEvent failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
     }
 
-    Status = NtWaitForSingleObject(EventHandle, TRUE, NULL);
-    NtClose(EventHandle);
+    Status = ZwWaitForSingleObject(EventHandle,
+                                   TRUE,
+                                   NULL);
+    ZwClose(EventHandle);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtWaitForSingleObject failed (Status 0x%08lx)\n", Status);
         return Status;
     }
-#endif
 
-    /* Now attempt the connection */
-    RtlInitUnicodeString(&PortName, L"\\LsaAuthenticationPort");
+    /* Establish the connection */
+    RtlInitUnicodeString(&PortName,
+                         L"\\LsaAuthenticationPort");
 
     SecurityQos.Length              = sizeof(SecurityQos);
     SecurityQos.ImpersonationLevel  = SecurityIdentification;
@@ -328,7 +335,7 @@ LsaDeregisterLogonProcess(IN HANDLE LsaHandle)
         return ApiMessage.Status;
     }
 
-    NtClose(LsaHandle);
+    ZwClose(LsaHandle);
 
     DPRINT("LsaDeregisterLogonProcess() done (Status 0x%08lx)\n", Status);
 
