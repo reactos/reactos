@@ -22,6 +22,7 @@
 
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
+#include <ndk/exfuncs.h>
 #include <ndk/kefuncs.h>
 #include <ndk/mmfuncs.h>
 #include <ndk/obfuncs.h>
