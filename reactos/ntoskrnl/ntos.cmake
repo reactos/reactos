@@ -259,7 +259,6 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/accesschk.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/acl.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/audit.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/se/lsa.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/priv.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/sd.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/se/semgr.c
