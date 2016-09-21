@@ -2521,9 +2521,9 @@ HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow2(LPSV2CVW2_PARAMS view_para
     if (view_params->pvid != NULL)
     {
         FIXME("SHELLVIEWID not handled, FAIL\n");
-        return E_NOTIMPL;
+
     }
-    
+
     view_params->hwndView = 0;
 
     TRACE("(%p)->(shlview=%p set=%p shlbrs=%p rec=%p hwnd=%p) incomplete\n", this, view_params->psvPrev, view_params->pfs, view_params->psbOwner, view_params->prcView, view_params->hwndView);
