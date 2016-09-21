@@ -181,7 +181,7 @@ int aexpand(char* name, int expand_wildcards)
  */
 void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, int* new_mode)
 {
-   int i, doexpand, slashesAdded, escapedQuote, inQuotes, bufferIndex;
+   int i, doexpand, slashesAdded, escapedQuote, inQuotes, bufferIndex, anyLetter;
    size_t len;
    char* buffer;
 
@@ -190,6 +190,7 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
    i = 0;
    doexpand = expand_wildcards;
    escapedQuote = FALSE;
+   anyLetter = FALSE;
    slashesAdded = 0;
    inQuotes = 0;
    bufferIndex = 0;
@@ -213,7 +214,11 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
       // Arguments are delimited by white space, which is either a space or a tab.
       if (i >= len || ((_acmdln[i] == ' ' || _acmdln[i] == '\t') && !inQuotes))
       {
-         aexpand(strndup(buffer, bufferIndex), doexpand);
+         // Handle the case when empty spaces are in the end of the cmdline
+         if (anyLetter) 
+         {
+            aexpand(strndup(buffer, bufferIndex), doexpand);
+         }
          // Copy the last element from buffer and quit the loop
          if (i >= len)
          {
@@ -222,11 +227,14 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
 
          while (_acmdln[i] == ' ' || _acmdln[i] == '\t')
             ++i;
+         anyLetter = FALSE;
          bufferIndex = 0;
          slashesAdded = 0;
          escapedQuote = FALSE;
          continue;
       }
+
+      anyLetter = TRUE;
 
       if (_acmdln[i] == '\\')
       {
@@ -307,7 +315,7 @@ void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, i
 void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
                     int expand_wildcards, int* new_mode)
 {
-   int i, doexpand, slashesAdded, escapedQuote, inQuotes, bufferIndex;
+   int i, doexpand, slashesAdded, escapedQuote, inQuotes, bufferIndex, anyLetter;
    size_t len;
    wchar_t* buffer;
 
@@ -316,6 +324,7 @@ void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
    i = 0;
    doexpand = expand_wildcards;
    escapedQuote = FALSE;
+   anyLetter = TRUE;
    slashesAdded = 0;
    inQuotes = 0;
    bufferIndex = 0;
@@ -339,7 +348,11 @@ void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
       // Arguments are delimited by white space, which is either a space or a tab.
       if (i >= len || ((_wcmdln[i] == ' ' || _wcmdln[i] == '\t') && !inQuotes))
       {
-         wexpand(wcsndup(buffer, bufferIndex), doexpand);
+         // Handle the case when empty spaces are in the end of the cmdline
+         if (anyLetter)
+         {
+            wexpand(wcsndup(buffer, bufferIndex), doexpand);
+         }
          // Copy the last element from buffer and quit the loop
          if (i >= len)
          {
@@ -348,11 +361,14 @@ void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
 
          while (_wcmdln[i] == ' ' || _wcmdln[i] == '\t')
             ++i;
+         anyLetter = FALSE;
          bufferIndex = 0;
          slashesAdded = 0;
          escapedQuote = FALSE;
          continue;
       }
+
+      anyLetter = TRUE;
 
       if (_wcmdln[i] == '\\')
       {
