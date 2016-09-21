@@ -84,6 +84,7 @@ START_TEST(__getmainargs)
     ok_argsA("test.exe a  \"  b\\  \"\"  c", "a", "  b\\  \"", "c");
     ok_argsA("test.exe a  \"b\\  \"\"\"  c\" d", "a", "b\\  \"  c", "d");
     ok_argsA("test.exe a  \"b\\  \"\"\"  \"c  \"\"\"\" d", "a", "b\\  \"  c", "\" d");
+    ok_argsA("test.exe a b c  ", "a", "b", "c");
 
     ok_argsW(L"test.exe \"a b c\" d e", L"a b c", L"d", L"e");
     ok_argsW(L"test.exe \"ab\\\"c\" \"\\\\\" d", L"ab\"c", L"\\", L"d");
@@ -97,4 +98,5 @@ START_TEST(__getmainargs)
     ok_argsW(L"test.exe a  \"  b\\  \"\"  c", L"a", L"  b\\  \"", L"c");
     ok_argsW(L"test.exe a  \"b\\  \"\"\"  c\" d", L"a", L"b\\  \"  c", L"d");
     ok_argsW(L"test.exe a  \"b\\  \"\"\"  \"c  \"\"\"\" d", L"a", L"b\\  \"  c", L"\" d");
+    ok_argsW(L"test.exe a b c  ", L"a", L"b", L"c");
 }
