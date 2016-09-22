@@ -439,11 +439,24 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
 {
     SHELLDETAILS sd;
     WCHAR wszItem1[MAX_PATH], wszItem2[MAX_PATH];
+    HRESULT hres;
 
-    isf->GetDetailsOf(pidl1, lParam, &sd);
-    StrRetToBufW(&sd.str, pidl1, wszItem1, MAX_PATH);
-    isf->GetDetailsOf(pidl2, lParam, &sd);
-    StrRetToBufW(&sd.str, pidl2, wszItem2, MAX_PATH);
+    hres = isf->GetDetailsOf(pidl1, lParam, &sd);
+    if (FAILED(hres))
+        return MAKE_COMPARE_HRESULT(1);
+
+    hres = StrRetToBufW(&sd.str, pidl1, wszItem1, MAX_PATH);
+    if (FAILED(hres))
+        return MAKE_COMPARE_HRESULT(1);
+
+    hres = isf->GetDetailsOf(pidl2, lParam, &sd);
+    if (FAILED(hres))
+        return MAKE_COMPARE_HRESULT(1);
+
+    hres = StrRetToBufW(&sd.str, pidl2, wszItem2, MAX_PATH);
+    if (FAILED(hres))
+        return MAKE_COMPARE_HRESULT(1);
+
     int ret = wcsicmp(wszItem1, wszItem2);
 
     return MAKE_COMPARE_HRESULT(ret);
