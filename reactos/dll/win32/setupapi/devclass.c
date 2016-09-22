@@ -101,10 +101,17 @@ SetupDiDestroyClassImageList(
         SetLastError(ERROR_INVALID_USER_BUFFER);
     else
     {
-        //DestroyIcon()
-        //ImageList_Destroy();
-        FIXME("Stub %p\n", ClassImageListData);
-        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        /* If Reserved wasn't NULL, then this is valid too */
+        if (ClassImageListData->ImageList)
+        {
+            ImageList_Destroy(ClassImageListData->ImageList);
+            ClassImageListData->ImageList = NULL;
+        }
+
+        MyFree(list);
+        ClassImageListData->Reserved = 0;
+
+        ret = TRUE;
     }
 
     TRACE("Returning %d\n", ret);
