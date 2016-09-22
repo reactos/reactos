@@ -180,15 +180,6 @@ HRESULT CRegFolder::GetGuidItemAttributes (LPCITEMIDLIST pidl, LPDWORD pdwAttrib
     {
         return S_OK;
     }
-    else
-    {
-        /* If we can't get it from the registry we have to query the child */
-        CComPtr<IShellFolder> psf2;
-        if (SUCCEEDED(BindToObject(pidl, 0, IID_PPV_ARG(IShellFolder, &psf2))))
-        {
-            return psf2->GetAttributesOf(0, NULL, pdwAttributes);
-        }
-    }
 
     *pdwAttributes &= SFGAO_CANLINK;
     return S_OK;
