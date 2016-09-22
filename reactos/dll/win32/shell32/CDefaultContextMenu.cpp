@@ -176,8 +176,6 @@ CDefaultContextMenu::~CDefaultContextMenu()
 
 HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
 {
-    CComPtr<IDataObject> pDataObj;
-
     TRACE("cidl %u\n", pdcm->cidl);
 
     m_cidl = pdcm->cidl;
@@ -186,8 +184,7 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
         return E_OUTOFMEMORY;
     m_psf = pdcm->psf;
 
-    if (SUCCEEDED(SHCreateDataObject(pdcm->pidlFolder, pdcm->cidl, pdcm->apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
-        m_pDataObj = pDataObj;
+    m_psf->GetUIObjectOf(pdcm->hwnd, m_cidl, m_apidl, IID_NULL_PPV_ARG(IDataObject, &m_pDataObj));
 
     if (pdcm->pidlFolder)
     {
@@ -399,26 +396,17 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsi
 
     CComPtr<IContextMenu> pcm;
     hr = SHCoCreateInstance(NULL, pclsid, NULL, IID_PPV_ARG(IContextMenu, &pcm));
-    if (hr != S_OK)
-    {
-        ERR("SHCoCreateInstance failed %x\n", GetLastError());
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
     CComPtr<IShellExtInit> pExtInit;
     hr = pcm->QueryInterface(IID_PPV_ARG(IShellExtInit, &pExtInit));
-    if (hr != S_OK)
-    {
-        ERR("Failed to query for interface IID_IShellExtInit hr %x pclsid %s\n", hr, wine_dbgstr_guid(pclsid));
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
     hr = pExtInit->Initialize(m_pidlFolder, m_pDataObj, hKey);
-    if (hr != S_OK)
-    {
-        TRACE("Failed to initialize shell extension error %x pclsid %s\n", hr, wine_dbgstr_guid(pclsid));
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
     PDynamicShellEntry pEntry = (DynamicShellEntry *)HeapAlloc(GetProcessHeap(), 0, sizeof(DynamicShellEntry));
     if (!pEntry)
@@ -997,15 +985,12 @@ CDefaultContextMenu::QueryContextMenu(
 HRESULT
 CDefaultContextMenu::NotifyShellViewWindow(LPCMINVOKECOMMANDINFO lpcmi, BOOL bRefresh)
 {
-    CComPtr<IShellView> psv;
-
-    HRESULT hr;
-
     if (!m_site)
         return E_FAIL;
 
     /* Get a pointer to the shell browser */
-    hr = IUnknown_QueryService(m_site, SID_IFolderView, IID_PPV_ARG(IShellView, &psv));
+    CComPtr<IShellView> psv;
+    HRESULT hr = IUnknown_QueryService(m_site, SID_IFolderView, IID_PPV_ARG(IShellView, &psv));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -1015,13 +1000,12 @@ CDefaultContextMenu::NotifyShellViewWindow(LPCMINVOKECOMMANDINFO lpcmi, BOOL bRe
     return S_OK;
 }
 
-HRESULT
-CDefaultContextMenu::DoRefresh(
-    LPCMINVOKECOMMANDINFO lpcmi)
+
+HRESULT CDefaultContextMenu::DoRefresh(LPCMINVOKECOMMANDINFO lpcmi)
 {
     if (!m_site)
         return E_FAIL;
-    
+
     /* Get a pointer to the shell view */
     CComPtr<IShellView> psv;
     HRESULT hr = IUnknown_QueryService(m_site, SID_IFolderView, IID_PPV_ARG(IShellView, &psv));
@@ -1031,62 +1015,14 @@ CDefaultContextMenu::DoRefresh(
     return psv->Refresh();
 }
 
-HRESULT
-CDefaultContextMenu::DoPaste(
-    LPCMINVOKECOMMANDINFO lpcmi, BOOL bLink)
+HRESULT CDefaultContextMenu::DoPaste(LPCMINVOKECOMMANDINFO lpcmi, BOOL bLink)
 {
     HRESULT hr;
 
     CComPtr<IDataObject> pda;
     hr = OleGetClipboard(&pda);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-
-    CComPtr<IShellFolder> psfDesktop;
-    CComPtr<IShellFolder> psfTarget = NULL;
-
-    hr = SHGetDesktopFolder(&psfDesktop);
-    if (FAILED(hr))
-        return hr;
-
-    /* Find target folder */
-    if (m_cidl)
-    {
-        hr = m_psf->BindToObject(m_apidl[0], NULL, IID_PPV_ARG(IShellFolder, &psfTarget));
-    }
-    else
-    {
-        CComPtr<IPersistFolder2> ppf2 = NULL;
-        LPITEMIDLIST pidl;
-
-        /* cidl is zero due to explorer view */
-        hr = m_psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
-        if (SUCCEEDED(hr))
-        {
-            hr = ppf2->GetCurFolder(&pidl);
-            if (SUCCEEDED(hr))
-            {
-                if (_ILIsDesktop(pidl))
-                {
-                    /* use desktop shellfolder */
-                    psfTarget = psfDesktop;
-                }
-                else
-                {
-                    /* retrieve target desktop folder */
-                    hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfTarget));
-                }
-                TRACE("psfTarget %x %p, Desktop %u\n", hr, psfTarget.p, _ILIsDesktop(pidl));
-                ILFree(pidl);
-            }
-        }
-    }
-
-    if (FAILED(hr))
-    {
-        ERR("no IShellFolder\n");
-        return hr;
-    }
 
     FORMATETC formatetc2;
     STGMEDIUM medium2;
@@ -1116,12 +1052,13 @@ CDefaultContextMenu::DoPaste(
     }
 
     CComPtr<IDropTarget> pdrop;
-    hr = psfTarget->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pdrop));
-    if (FAILED(hr))
-    {
-        ERR("Error getting IDropTarget interface\n");
+    if (m_cidl)
+        hr = m_psf->GetUIObjectOf(NULL, 1, &m_apidl[0], IID_NULL_PPV_ARG(IDropTarget, &pdrop));
+    else
+        hr = m_psf->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pdrop));
+
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
     SHSimulateDrop(pdrop, pda, dwKey, NULL, NULL);
 
@@ -1130,128 +1067,69 @@ CDefaultContextMenu::DoPaste(
 }
 
 HRESULT
-CDefaultContextMenu::DoOpenOrExplore(
-    LPCMINVOKECOMMANDINFO lpcmi)
+CDefaultContextMenu::DoOpenOrExplore(LPCMINVOKECOMMANDINFO lpcmi)
 {
     UNIMPLEMENTED;
     return E_FAIL;
 }
 
-HRESULT
-CDefaultContextMenu::DoCreateLink(
-    LPCMINVOKECOMMANDINFO lpcmi)
+HRESULT CDefaultContextMenu::DoCreateLink(LPCMINVOKECOMMANDINFO lpcmi)
 {
-    CComPtr<IDataObject> pDataObj;
+    if (!m_cidl || !m_pDataObj)
+        return E_FAIL;
+
     CComPtr<IDropTarget> pDT;
-    HRESULT hr;
-    CComPtr<IPersistFolder2> ppf2 = NULL;
-    LPITEMIDLIST pidl;
-    CComPtr<IShellFolder> psfDesktop;
-    CComPtr<IShellFolder> psfTarget = NULL;
-
-    hr = SHGetDesktopFolder(&psfDesktop);
-    if (FAILED(hr))
+    HRESULT hr = m_psf->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pDT));
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    if (SUCCEEDED(hr = SHCreateDataObject(m_pidlFolder, m_cidl, m_apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj))))
-    {
-        hr = m_psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
-        if (SUCCEEDED(hr))
-        {
-            hr = ppf2->GetCurFolder(&pidl);
-            if (SUCCEEDED(hr))
-            {
-                if (_ILIsDesktop(pidl))
-                {
-                    /* use desktop shellfolder */
-                    psfTarget = psfDesktop;
-                }
-                else
-                {
-                    /* retrieve target desktop folder */
-                    hr = psfDesktop->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &psfTarget));
-                }
-                TRACE("psfTarget %x %p, Desktop %u\n", hr, psfTarget.p, _ILIsDesktop(pidl));
-                ILFree(pidl);
-            }
-        }
-
-    }
-
-    if (FAILED(hr))
-    {
-        ERR("no IShellFolder\n");
-        return hr;
-    }
-
-    hr = psfTarget->CreateViewObject(NULL, IID_PPV_ARG(IDropTarget, &pDT));
-    if (FAILED(hr))
-    {
-        ERR("no IDropTarget Interface\n");
-        return hr;
-    }
-    SHSimulateDrop(pDT, pDataObj, MK_CONTROL|MK_SHIFT, NULL, NULL);
+    SHSimulateDrop(pDT, m_pDataObj, MK_CONTROL|MK_SHIFT, NULL, NULL);
 
     return S_OK;
 }
 
 HRESULT CDefaultContextMenu::DoDelete(LPCMINVOKECOMMANDINFO lpcmi)
 {
+    if (!m_cidl || !m_pDataObj)
+        return E_FAIL;
+
     DoDeleteAsync(m_pDataObj, lpcmi->fMask);
     return S_OK;
 }
 
-HRESULT
-CDefaultContextMenu::DoCopyOrCut(
-    LPCMINVOKECOMMANDINFO lpcmi,
-    BOOL bCopy)
+HRESULT CDefaultContextMenu::DoCopyOrCut(LPCMINVOKECOMMANDINFO lpcmi, BOOL bCopy)
 {
-    CComPtr<IDataObject> pDataObj;
-    HRESULT hr;
-
-    hr = SHCreateDataObject(m_pidlFolder, m_cidl, m_apidl, NULL, IID_PPV_ARG(IDataObject, &pDataObj));
-    if (FAILED_UNEXPECTEDLY(hr))
-        return hr;
+    if (!m_cidl || !m_pDataObj)
+        return E_FAIL;
 
     if (!bCopy)
     {
         FORMATETC formatetc;
         STGMEDIUM medium;
         InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_PREFERREDDROPEFFECT), TYMED_HGLOBAL);
-        pDataObj->GetData(&formatetc, &medium);
+        m_pDataObj->GetData(&formatetc, &medium);
         DWORD * pdwFlag = (DWORD*)GlobalLock(medium.hGlobal);
         if (pdwFlag)
             *pdwFlag = DROPEFFECT_MOVE;
         GlobalUnlock(medium.hGlobal);
-        pDataObj->SetData(&formatetc, &medium, TRUE);
+        m_pDataObj->SetData(&formatetc, &medium, TRUE);
     }
 
-    return OleSetClipboard(pDataObj);
+    return OleSetClipboard(m_pDataObj);
 }
 
-HRESULT
-CDefaultContextMenu::DoRename(
-    LPCMINVOKECOMMANDINFO lpcmi)
+HRESULT CDefaultContextMenu::DoRename(LPCMINVOKECOMMANDINFO lpcmi)
 {
     CComPtr<IShellBrowser> psb;
     HRESULT hr;
 
-    if (!m_site)
+    if (!m_site || !m_cidl)
         return E_FAIL;
 
     /* Get a pointer to the shell browser */
     hr = IUnknown_QueryService(m_site, SID_IShellBrowser, IID_PPV_ARG(IShellBrowser, &psb));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-
-    /* is the treeview focused */
-    HWND hwnd;
-    if (SUCCEEDED(psb->GetControlWindow(FCW_TREE, &hwnd)))
-    {
-        HTREEITEM hItem = TreeView_GetSelection(hwnd);
-        if (hItem)
-            (void)TreeView_EditLabel(hwnd, hItem);
-    }
 
     CComPtr<IShellView> lpSV;
     hr = psb->QueryActiveShellView(&lpSV);
