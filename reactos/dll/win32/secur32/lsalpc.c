@@ -115,14 +115,53 @@ LsaConnectUntrusted(
     SECURITY_QUALITY_OF_SERVICE SecurityQos;
     LSA_CONNECTION_INFO ConnectInfo;
     ULONG ConnectInfoLength = sizeof(ConnectInfo);
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING EventName;
+    HANDLE EventHandle;
     NTSTATUS Status;
 
     TRACE("LsaConnectUntrusted(%p)\n", LsaHandle);
 
-    // TODO: Wait on L"\\SECURITY\\LSA_AUTHENTICATION_INITIALIZED" event
-    // for the LSA server to be ready, and because we are untrusted,
-    // we may need to impersonate ourselves before!
+    // TODO: we may need to impersonate ourselves before, because we are untrusted!
 
+    /* Wait for the LSA authentication thread */
+    RtlInitUnicodeString(&EventName,
+                         L"\\SECURITY\\LSA_AUTHENTICATION_INITIALIZED");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &EventName,
+                               OBJ_CASE_INSENSITIVE | OBJ_PERMANENT,
+                               NULL,
+                               NULL);
+    Status = NtOpenEvent(&EventHandle,
+                         SYNCHRONIZE,
+                         &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        WARN("NtOpenEvent failed (Status 0x%08lx)\n", Status);
+
+        Status = NtCreateEvent(&EventHandle,
+                               SYNCHRONIZE,
+                               &ObjectAttributes,
+                               NotificationEvent,
+                               FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            WARN("NtCreateEvent failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
+    }
+
+    Status = NtWaitForSingleObject(EventHandle,
+                                   TRUE,
+                                   NULL);
+    NtClose(EventHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("NtWaitForSingleObject failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Connect to the authentication port */
     RtlInitUnicodeString(&PortName,
                          L"\\LsaAuthenticationPort");
 
@@ -248,11 +287,33 @@ LsaGetLogonSessionData(
 
     SessionData = ApiMessage.GetLogonSessionData.Reply.SessionDataBuffer;
 
+    TRACE("UserName: %p\n", SessionData->UserName.Buffer);
     if (SessionData->UserName.Buffer != NULL)
-        SessionData->UserName.Buffer = (LPWSTR)((ULONG_PTR)&SessionData->UserName.Buffer + (ULONG_PTR)SessionData->UserName.Buffer);
+        SessionData->UserName.Buffer = (LPWSTR)((ULONG_PTR)SessionData + (ULONG_PTR)SessionData->UserName.Buffer);
 
+    TRACE("LogonDomain: %p\n", SessionData->LogonDomain.Buffer);
+    if (SessionData->LogonDomain.Buffer != NULL)
+        SessionData->LogonDomain.Buffer = (LPWSTR)((ULONG_PTR)SessionData + (ULONG_PTR)SessionData->LogonDomain.Buffer);
+
+    TRACE("AuthenticationPackage: %p\n", SessionData->AuthenticationPackage.Buffer);
+    if (SessionData->AuthenticationPackage.Buffer != NULL)
+        SessionData->AuthenticationPackage.Buffer = (LPWSTR)((ULONG_PTR)SessionData + (ULONG_PTR)SessionData->AuthenticationPackage.Buffer);
+
+    TRACE("Sid: %p\n", SessionData->Sid);
     if (SessionData->Sid != NULL)
-        SessionData->Sid = (LPWSTR)((ULONG_PTR)&SessionData->Sid + (ULONG_PTR)SessionData->Sid);
+        SessionData->Sid = (LPWSTR)((ULONG_PTR)SessionData + (ULONG_PTR)SessionData->Sid);
+
+    TRACE("LogonServer: %p\n", SessionData->LogonServer.Buffer);
+    if (SessionData->LogonServer.Buffer != NULL)
+        SessionData->LogonServer.Buffer = (LPWSTR)((ULONG_PTR)SessionData + (ULONG_PTR)SessionData->LogonServer.Buffer);
+
+    TRACE("DnsDomainName: %p\n", SessionData->DnsDomainName.Buffer);
+    if (SessionData->DnsDomainName.Buffer != NULL)
+        SessionData->DnsDomainName.Buffer = (LPWSTR)((ULONG_PTR)SessionData + (ULONG_PTR)SessionData->DnsDomainName.Buffer);
+
+    TRACE("Upn: %p\n", SessionData->Upn.Buffer);
+    if (SessionData->Upn.Buffer != NULL)
+        SessionData->Upn.Buffer = (LPWSTR)((ULONG_PTR)SessionData + (ULONG_PTR)SessionData->Upn.Buffer);
 
     *ppLogonSessionData = SessionData;
 

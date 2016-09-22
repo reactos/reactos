@@ -320,8 +320,8 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
     PLSAP_LOGON_SESSION Session;
     PSECURITY_LOGON_SESSION_DATA LocalSessionData;
     PVOID ClientBaseAddress = NULL;
-    ULONG Length, MemSize;
-    LPWSTR Ptr;
+    ULONG TotalLength, MemSize, SidLength = 0;
+    PUCHAR Ptr;
     NTSTATUS Status;
 
     TRACE("LsapGetLogonSessionData(%p)\n", RequestMsg);
@@ -332,47 +332,117 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
         return STATUS_NO_SUCH_LOGON_SESSION;
 
     /* Calculate the required buffer size */
-    Length = sizeof(SECURITY_LOGON_SESSION_DATA) +
-             Session->UserName.MaximumLength;
-/*
-             Session->LogonDomain.MaximumLength +
-             Session->AuthenticationPackage.MaximumLength +
-             Session->LogonServer.MaximumLength +
-             Session->DnsDomainName.MaximumLength +
-             Session->Upn.MaximumLength;
-
+    TotalLength = sizeof(SECURITY_LOGON_SESSION_DATA) +
+                  Session->UserName.MaximumLength +
+                  Session->LogonDomain.MaximumLength +
+                  Session->AuthenticationPackage.MaximumLength +
+                  Session->LogonServer.MaximumLength +
+                  Session->DnsDomainName.MaximumLength +
+                  Session->Upn.MaximumLength;
     if (Session->Sid != NULL)
-        RtlLengthSid(Session->Sid);
-*/
-
-    TRACE("Length: %lu\n", Length);
+    {
+        SidLength = RtlLengthSid(Session->Sid);
+        TotalLength += SidLength;
+    }
+    TRACE("TotalLength: %lu\n", TotalLength);
 
     /* Allocate the buffer */
     LocalSessionData = RtlAllocateHeap(RtlGetProcessHeap(),
                                        HEAP_ZERO_MEMORY,
-                                       Length);
+                                       TotalLength);
     if (LocalSessionData == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    Ptr = (LPWSTR)((ULONG_PTR)LocalSessionData + sizeof(SECURITY_LOGON_SESSION_DATA));
+    Ptr = (PUCHAR)((ULONG_PTR)LocalSessionData + sizeof(SECURITY_LOGON_SESSION_DATA));
     TRACE("LocalSessionData: %p  Ptr: %p\n", LocalSessionData, Ptr);
 
     LocalSessionData->Size = sizeof(SECURITY_LOGON_SESSION_DATA);
 
+    /* Copy the LogonId */
     RtlCopyLuid(&LocalSessionData->LogonId,
                 &RequestMsg->GetLogonSessionData.Request.LogonId);
 
+    /* Copy the UserName string*/
     LocalSessionData->UserName.Length = Session->UserName.Length;
     LocalSessionData->UserName.MaximumLength = Session->UserName.MaximumLength;
-    LocalSessionData->UserName.Buffer = Ptr;
 
-//    RtlCopyMemory(Ptr)
+    if (Session->UserName.MaximumLength != 0)
+    {
+        RtlCopyMemory(Ptr, Session->UserName.Buffer, Session->UserName.MaximumLength);
+        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->UserName.MaximumLength);
 
+        LocalSessionData->UserName.Buffer = (PWSTR)((ULONG_PTR)Ptr - (ULONG_PTR)LocalSessionData);
+    }
+
+    /* Copy the LogonDomain string */
+    LocalSessionData->LogonDomain.Length = Session->LogonDomain.Length;
+    LocalSessionData->LogonDomain.MaximumLength = Session->LogonDomain.MaximumLength;
+    if (Session->LogonDomain.MaximumLength != 0)
+    {
+        RtlCopyMemory(Ptr, Session->LogonDomain.Buffer, Session->LogonDomain.MaximumLength);
+        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->LogonDomain.MaximumLength);
+
+        LocalSessionData->LogonDomain.Buffer = (PWSTR)((ULONG_PTR)Ptr - (ULONG_PTR)LocalSessionData);
+    }
+
+    /* Copy the AuthenticationPackage string */
+    LocalSessionData->AuthenticationPackage.Length = Session->AuthenticationPackage.Length;
+    LocalSessionData->AuthenticationPackage.MaximumLength = Session->AuthenticationPackage.MaximumLength;
+    if (Session->AuthenticationPackage.MaximumLength != 0)
+    {
+        RtlCopyMemory(Ptr, Session->AuthenticationPackage.Buffer, Session->AuthenticationPackage.MaximumLength);
+        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->AuthenticationPackage.MaximumLength);
+
+        LocalSessionData->AuthenticationPackage.Buffer = (PWSTR)((ULONG_PTR)Ptr - (ULONG_PTR)LocalSessionData);
+    }
 
     LocalSessionData->LogonType = Session->LogonType;
     LocalSessionData->Session = 0;
 
+    /* Sid */
+    if (Session->Sid != NULL)
+    {
+        RtlCopyMemory(Ptr, Session->Sid, SidLength);
+        Ptr = (PUCHAR)((ULONG_PTR)Ptr + SidLength);
 
+        LocalSessionData->Sid = (PSID)((ULONG_PTR)Ptr - (ULONG_PTR)LocalSessionData);
+    }
+
+    /* LogonTime */
+    LocalSessionData->LogonTime.QuadPart = Session->LogonTime.QuadPart;
+
+    /* Copy the LogonServer string */
+    LocalSessionData->LogonServer.Length = Session->LogonServer.Length;
+    LocalSessionData->LogonServer.MaximumLength = Session->LogonServer.MaximumLength;
+    if (Session->LogonServer.MaximumLength != 0)
+    {
+        RtlCopyMemory(Ptr, Session->LogonServer.Buffer, Session->LogonServer.MaximumLength);
+        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->LogonServer.MaximumLength);
+
+        LocalSessionData->LogonServer.Buffer = (PWSTR)((ULONG_PTR)Ptr - (ULONG_PTR)LocalSessionData);
+    }
+
+    /* Copy the DnsDomainName string */
+    LocalSessionData->DnsDomainName.Length = Session->DnsDomainName.Length;
+    LocalSessionData->DnsDomainName.MaximumLength = Session->DnsDomainName.MaximumLength;
+    if (Session->DnsDomainName.MaximumLength != 0)
+    {
+        RtlCopyMemory(Ptr, Session->DnsDomainName.Buffer, Session->DnsDomainName.MaximumLength);
+        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->DnsDomainName.MaximumLength);
+
+        LocalSessionData->DnsDomainName.Buffer = (PWSTR)((ULONG_PTR)Ptr - (ULONG_PTR)LocalSessionData);
+    }
+
+    /* Copy the Upn string */
+    LocalSessionData->Upn.Length = Session->Upn.Length;
+    LocalSessionData->Upn.MaximumLength = Session->Upn.MaximumLength;
+    if (Session->Upn.MaximumLength != 0)
+    {
+        RtlCopyMemory(Ptr, Session->Upn.Buffer, Session->Upn.MaximumLength);
+        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->Upn.MaximumLength);
+
+        LocalSessionData->Upn.Buffer = (PWSTR)((ULONG_PTR)Ptr - (ULONG_PTR)LocalSessionData);
+    }
 
 
     InitializeObjectAttributes(&ObjectAttributes,
@@ -391,7 +461,7 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
         goto done;
     }
 
-    MemSize = Length;
+    MemSize = TotalLength;
     Status = NtAllocateVirtualMemory(ProcessHandle,
                                      &ClientBaseAddress,
                                      0,
@@ -410,7 +480,7 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
     Status = NtWriteVirtualMemory(ProcessHandle,
                                   ClientBaseAddress,
                                   LocalSessionData,
-                                  Length,
+                                  TotalLength,
                                   NULL);
     if (!NT_SUCCESS(Status))
     {
