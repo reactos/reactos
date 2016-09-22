@@ -1,36 +1,64 @@
+/*
+ * FILE:        base/applications/network/ping/lang/fr-FR.rc
+ * PURPOSE:     French translations for ReactOS Ping Command
+ * TRANSLATORS:
+ */
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\nUtilisation : ping [-t] [-n nombre] [-l taille] [-w délai] hôte-destination\n\n\
+    IDS_USAGE "\n\
+Utilisation : ping [-t] [-a] [-n nombre] [-l taille] [-f] [-i TTL] [-v TOS]\n\
+                   [-w délai] [-4] [-6] hôte-destination\n\
+\n\
 Options :\n\
-    -t             Ping l'hôte spécifié jusqu'à l'arrêt.\n\
-                   Pour l'arrêter, tapez Ctrl+c.\n\
-    -n nombre      Nombre de requêtes echo à envoyer.\n\
-    -l taille      Taille du tampon d'envoi.\n\
-    -w délai       Délai d'attente en millisecondes pour chaque réponse.\n\n\0"
+    -t          Ping the specified host until stopped.\n\
+                To see statistics and continue - type Control-Break;\n\
+                To stop - type Control-C.\n\
+    -a          Resolve addresses to hostnames.\n\
+    -n nombre   Nombre de requêtes echo à envoyer.\n\
+    -l taille   Taille du tampon d'envoi.\n\
+    -f          Set Don't Fragment flag in packet (IPv4-only).\n\
+    -i TTL      Time To Live.\n\
+    -v TOS      Type Of Service (IPv4-only. This setting has been deprecated\n\
+                and has no effect on the type of service field in the IP\n\
+                Header).\n\
+    -w délai    Délai d'attente en millisecondes pour chaque réponse.\n\
+    -4          Force using IPv4.\n\
+    -6          Force using IPv6.\n\
+\n"
 
-    IDS_PING_WITH_BYTES "\nPing de %1 [%2] avec %3!d! octets de données :\n\n\0"
-    IDS_PING_STATISTICS "\nStatistiques du ping de %1 :\n\0"
-    IDS_PACKETS_SENT_RECEIVED_LOST "    Paquets : Envoyés = %1!d!, Reçus = %2!d!, Perdus = %3!d! (%4!d!%% de perte),\n\0"
-    IDS_APPROXIMATE_ROUND_TRIP "Délai approximatif de réponse en millisecondes :\n\0"
-    IDS_MIN_MAX_AVERAGE "    Minimum = %1, Maximum = %2, Moyenne = %3\n\0"
-    IDS_NOT_ENOUGH_RESOURCES "Ressources libres disponibles insuffisantes.\n\0"
-    IDS_UNKNOWN_HOST "Hôte inconnu %1.\n\0"
-    IDS_SETSOCKOPT_FAILED "Échec de setsockopt (%1!d!).\n\0"
-    IDS_COULD_NOT_CREATE_SOCKET "Impossible de créer la socket (#%1!d!).\n\0"
-    IDS_COULD_NOT_INIT_WINSOCK "Impossible d'initialiser winsock dll.\n\0"
-    IDS_DEST_MUST_BE_SPECIFIED "Le nom ou l'adresse IP de l'hôte de destination doit être spécifié.\n\0"
-    IDS_BAD_PARAMETER "Paramètre incorrect %1.\n\0"
-    IDS_BAD_OPTION_FORMAT "Format d'option incorrect %1.\n\0"
-    IDS_BAD_OPTION "Option incorrecte %1.\n\0"
-    IDS_BAD_VALUE_OPTION_L "Valeur incorrecte pour l'option -l, elle doit être entre 0 et %1!d!.\n\0"
-    IDS_BAD_VALUE_OPTION_N "Valeur incorrecte pour l'option -n, elle doit être entre 1 et %1!u!.\n\0"
-    IDS_REPLY_FROM "Réponse de %1 : octets=%2!d! durée%3%4 TTL=%5!d!\n\0"
-    IDS_DEST_UNREACHABLE "Hôte de destination injoignable.\n\0"
-    IDS_COULD_NOT_TRANSMIT "Échec lors de la transmission (%1!d!).\n\0"
-    IDS_COULD_NOT_RECV "Échec lors de la récéption (%1!d!).\n\0"
-    IDS_REQUEST_TIMEOUT "Expiration du délai d'attente.\n\0"
-    IDS_MS "ms\0"
-    IDS_1MS "1ms\0"
+    IDS_CTRL_BREAK "Control-Break\n"
+    IDS_CTRL_C "Control-C\n"
+    IDS_NO_RESOURCES "Ressources libres disponibles insuffisantes.\n"
+    IDS_MISSING_ADDRESS "IP address must be specified.\n"
+    IDS_MISSING_VALUE "Value must be supplied for option %1.\n"
+    IDS_BAD_OPTION "Option incorrecte %1.\n"
+    IDS_BAD_PARAMETER "Paramètre incorrect %1.\n"
+    IDS_BAD_VALUE "Valeur incorrecte pour l'option %1, elle doit être entre %2!d! et %3!u!.\n"
+    IDS_WRONG_FAMILY "The option %1 is only supported for %2.\n"
+    IDS_UNKNOWN_HOST "Ping could not find host %1. Please check the name and try again.\n"
+    IDS_PINGING_ADDRESS "\nPing de %1 %0"
+    IDS_PINGING_HOSTNAME "\nPing de %1 [%2] %0"
+    IDS_SOURCE_ADDRESS "from %1!s! %0"
+    IDS_PING_SIZE "avec %1!d! octets de données :\n\n"
+    IDS_REPLY_FROM "Réponse de %1 : %0"
+    IDS_REPLY_BYTES "octets=%1!d! %0"
+    IDS_REPLY_TIME_MS "durée=%1!d!ms %0"
+    IDS_REPLY_TIME_0MS "durée<1ms %0"
+    IDS_REPLY_TTL "TTL=%1!d!\n"
+    IDS_REPLY_STATUS "Echo reply returned %1.\n"
+    IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\n"
+    IDS_DEST_NET_UNREACHABLE "Destination net unreachable.\n"
+    IDS_REQUEST_TIMED_OUT "Expiration du délai d'attente.\n"
+    IDS_TTL_EXPIRED "TTL expired in transit.\n"
+    IDS_TRANSMIT_FAILED "PING: transmit failed. (Error %1!u!)\n"
+
+    IDS_STATISTICS "\n\
+Statistiques du ping de %1!s! :\n\
+    Paquets : Envoyés = %2!d!, Reçus = %3!d!, Perdus %4!d! (%5!u!%% de perte),\n"
+
+    IDS_APPROXIMATE_RTT "Délai approximatif de réponse en millisecondes :\n\
+    Minimum = %1!u!ms, Maximum = %2!u!ms, Moyenne = %3!u!ms\n"
 END

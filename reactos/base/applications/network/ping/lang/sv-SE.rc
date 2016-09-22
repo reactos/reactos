@@ -1,43 +1,64 @@
 /*
- * PROJECT:    ReactOS PING
- * FILE:       base/applications/network/ping/lang/sv-SE.rc
- * PURPOSE:    Swedish resource file
- * TRANSLATOR: Jaix Bly
+ * FILE:        base/applications/network/ping/lang/sv-SE.rc
+ * PURPOSE:     Swedish translations for ReactOS Ping Command
+ * TRANSLATORS: Jaix Bly
  */
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\nSYNTAX: ping [-t] [-n antal] [-l storlek] [-w timeout] värddator\n\n\
+    IDS_USAGE "\n\
+SYNTAX: ping [-t] [-a] [-n antal] [-l storlek] [-f] [-i TTL] [-v TOS]\n\
+             [-w timeout] [-4] [-6] värddator\n\
+\n\
 Alternativ:\n\
-    -t             Pinga den angivna datorn tills kommandor stoppas.\n\
-                   För att stoppa - tryck Ctrl-C.\n\
-    -n antal       Antal ekobegäranden som ska skickas.\n\
-    -l storlek     Sändniningsbuffertens storlek.\n\
-    -w timeout     Timeout i millisekunder att vänta på varje svar.\n\n\0"
+    -t          Ping the specified host until stopped.\n\
+                To see statistics and continue - type Control-Break;\n\
+                To stop - type Control-C.\n\
+    -a          Resolve addresses to hostnames.\n\
+    -n antal    Antal ekobegäranden som ska skickas.\n\
+    -l storlek  Sändniningsbuffertens storlek.\n\
+    -f          Set Don't Fragment flag in packet (IPv4-only).\n\
+    -i TTL      Time To Live.\n\
+    -v TOS      Type Of Service (IPv4-only. This setting has been deprecated\n\
+                and has no effect on the type of service field in the IP\n\
+                Header).\n\
+    -w timeout  Timeout i millisekunder att vänta på varje svar.\n\
+    -4          Force using IPv4.\n\
+    -6          Force using IPv6.\n\
+\n"
 
-    IDS_PING_WITH_BYTES "\nPingar %1 [%2] med %3!d! bytes data:\n\n\0"
-    IDS_PING_STATISTICS "\nPing statistk för %1:\n\0"
-    IDS_PACKETS_SENT_RECEIVED_LOST "    Packet: Sända = %1!d!, Mottagna = %2!d!, Förlorade = %3!d! (%4!d!%% förlust),\n\0"
-    IDS_APPROXIMATE_ROUND_TRIP "Ungefärliga slingtider i millisekunder:\n\0"
-    IDS_MIN_MAX_AVERAGE "    Minimum = %1, Maximum = %2, Genomsnittlig = %3\n\0"
-    IDS_NOT_ENOUGH_RESOURCES "Inte tillräckliga resurser tillgänliga.\n\0"
-    IDS_UNKNOWN_HOST "Okänd Värd %1.\n\0"
-    IDS_SETSOCKOPT_FAILED "setsockopt misslyckades (%1!d!).\n\0"
-    IDS_COULD_NOT_CREATE_SOCKET "Kunde inte skapa socket (#%1!d!).\n\0"
-    IDS_COULD_NOT_INIT_WINSOCK "Kunde inte initialisera winsock dll.\n\0"
-    IDS_DEST_MUST_BE_SPECIFIED "Namn eller IP adress till värd måste anges.\n\0"
-    IDS_BAD_PARAMETER "Ogiltig parameter %1.\n\0"
-    IDS_BAD_OPTION_FORMAT "Ogiltigt format på alternativ %1.\n\0"
-    IDS_BAD_OPTION "Ogiltigt alternativ %1.\n\0"
-    IDS_BAD_VALUE_OPTION_L "Ogiltigt värde för alternativ -l, giltig intervall är från 0 till %1!d!.\n\0"
-    IDS_BAD_VALUE_OPTION_N "Ogiltigt värde för alternativ -n, giltig intervall är från 1 till %1!u!.\n\0"
-    IDS_REPLY_FROM "Svar från %1: bytes=%2!d! tid%3%4 TTL=%5!d!\n\0"
-    IDS_DEST_UNREACHABLE "Värddatorn går inte att nå.\n\0"
-    IDS_COULD_NOT_TRANSMIT "Kunde inte sända data (%1!d!).\n\0"
-    IDS_COULD_NOT_RECV "Kunde inte ta emot data (%1!d!).\n\0"
-    IDS_REQUEST_TIMEOUT "Förfrågan gjorde timeout.\n\0"
-    IDS_MS "ms\0"
-    IDS_1MS "1ms\0"
+    IDS_CTRL_BREAK "Control-Break\n"
+    IDS_CTRL_C "Control-C\n"
+    IDS_NO_RESOURCES "Inte tillräckliga resurser tillgänliga.\n"
+    IDS_MISSING_ADDRESS "IP address must be specified.\n"
+    IDS_MISSING_VALUE "Value must be supplied for option %1.\n"
+    IDS_BAD_OPTION "Ogiltigt alternativ %1.\n"
+    IDS_BAD_PARAMETER "Ogiltig parameter %1.\n"
+    IDS_BAD_VALUE "Ogiltigt värde för alternativ %1, giltig intervall är från %2!d! till %3!u!.\n"
+    IDS_WRONG_FAMILY "The option %1 is only supported for %2.\n"
+    IDS_UNKNOWN_HOST "Ping could not find host %1. Please check the name and try again.\n"
+    IDS_PINGING_ADDRESS "\nPingar %1 %0"
+    IDS_PINGING_HOSTNAME "\nPingar %1 [%2] %0"
+    IDS_SOURCE_ADDRESS "from %1!s! %0"
+    IDS_PING_SIZE "med %1!d! bytes data:\n\n"
+    IDS_REPLY_FROM "Svar från %1: %0"
+    IDS_REPLY_BYTES "bytes=%1!d! %0"
+    IDS_REPLY_TIME_MS "tid=%1!d!ms %0"
+    IDS_REPLY_TIME_0MS "tid<1ms %0"
+    IDS_REPLY_TTL "TTL=%1!d!\n"
+    IDS_REPLY_STATUS "Echo reply returned %1.\n"
+    IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\n"
+    IDS_DEST_NET_UNREACHABLE "Destination net unreachable.\n"
+    IDS_REQUEST_TIMED_OUT "Förfrågan gjorde timeout.\n"
+    IDS_TTL_EXPIRED "TTL expired in transit.\n"
+    IDS_TRANSMIT_FAILED "PING: transmit failed. (Error %1!u!)\n"
+
+    IDS_STATISTICS "\n\
+Ping statistk för %1!s!:\n\
+    Packet: Sända = %2!d!, Mottagna = %3!d!, Förlorade %4!d! (%5!u!%% förlust),\n"
+
+    IDS_APPROXIMATE_RTT "Ungefärliga slingtider i millisekunder:\n\
+    Minimum = %1!u!ms, Maximum = %2!u!ms, Genomsnittlig = %3!u!ms\n"
 END

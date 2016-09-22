@@ -1,36 +1,64 @@
+/*
+ * FILE:        base/applications/network/ping/lang/ru-RU.rc
+ * PURPOSE:     Russian translations for ReactOS Ping Command
+ * TRANSLATORS:
+ */
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\nИспользование:\n    ping [-t] [-n <число>] [-l <размер>] [-w <тайм-аут>] конечный_узел\n\n\
+    IDS_USAGE "\n\
+Использование: ping [-t] [-a] [-n <число>] [-l <размер>] [-f] [-i TTL] [-v TOS]\n\
+                    [-w <тайм-аут>] [-4] [-6] конечный_узел\n\
+\n\
 Параметры:\n\
-    -t               Проверка связи с указанным узлом до прекращения.\n\
-                     Для прекращения нажмите CTRL+C.\n\
-    -n <число>       Число отправляемых запросов эхо-запросов.\n\
-    -l <размер>      Размер буфера отправки.\n\
-    -w <тайм-аут>    Тайм-аут для каждого ответа (в миллисекундах)\n\n\0"
+    -t            Ping the specified host until stopped.\n\
+                  To see statistics and continue - type Control-Break;\n\
+                  To stop - type Control-C.\n\
+    -a            Resolve addresses to hostnames.\n\
+    -n <число>    Число отправляемых запросов эхо-запросов.\n\
+    -l <размер>   Размер буфера отправки.\n\
+    -f            Set Don't Fragment flag in packet (IPv4-only).\n\
+    -i TTL        Time To Live.\n\
+    -v TOS        Type Of Service (IPv4-only. This setting has been deprecated\n\
+                  and has no effect on the type of service field in the IP\n\
+                  Header).\n\
+    -w <тайм-аут> Тайм-аут для каждого ответа (в миллисекундах).\n\
+    -4            Force using IPv4.\n\
+    -6            Force using IPv6.\n\
+\n"
 
-    IDS_PING_WITH_BYTES "\nОбмен пакетами с %1 [%2] по %3!d! байта данных:\n\n\0"
-    IDS_PING_STATISTICS "\nСтатистика Ping для %1:\n\0"
-    IDS_PACKETS_SENT_RECEIVED_LOST "    Пакетов: отправлено = %1!d!, получено = %2!d!, потеряно = %3!d! (%4!d!%% потерь),\n\0"
-    IDS_APPROXIMATE_ROUND_TRIP "Приблизительное время приема-передачи в мс:\n\0"
-    IDS_MIN_MAX_AVERAGE "    Минимальное = %1, Максимальное = %2, Среднее = %3\n\0"
-    IDS_NOT_ENOUGH_RESOURCES "Невозможно выделить требуемую память.\n\0"
-    IDS_UNKNOWN_HOST "Неизвестный узел %1.\n\0"
-    IDS_SETSOCKOPT_FAILED "Ошибка setsockopt (%1!d!).\n\0"
-    IDS_COULD_NOT_CREATE_SOCKET "Не удалось создать сокет (#%1!d!).\n\0"
-    IDS_COULD_NOT_INIT_WINSOCK "Не удается инициализировать интерфейс ReactOS Sockets.\n\0"
-    IDS_DEST_MUST_BE_SPECIFIED "Необходимо указать адрес IP.\n\0"
-    IDS_BAD_PARAMETER "Неверный параметр %1.\n\0"
-    IDS_BAD_OPTION_FORMAT "Неверный формат опции %1.\n\0"
-    IDS_BAD_OPTION "Неверная опция %1.\n\0"
-    IDS_BAD_VALUE_OPTION_L "Недопустимое значение параметра -l, допустимый диапазон с 0 по %1!d!.\n\0"
-    IDS_BAD_VALUE_OPTION_N "Недопустимое значение параметра -n, допустимый диапазон с 1 по %1!u!.\n\0"
-    IDS_REPLY_FROM "Ответ от %1: число байт=%2!d! время%3%4 TTL=%5!d!\n\0"
-    IDS_DEST_UNREACHABLE "Заданный узел недоступен.\n\0"
-    IDS_COULD_NOT_TRANSMIT "Невозможно передать данные (%1!d!).\n\0"
-    IDS_COULD_NOT_RECV "Невозможно получить данные (%1!d!).\n\0"
-    IDS_REQUEST_TIMEOUT "Превышен интервал ожидания для запроса.\n\0"
-    IDS_MS "мсек\0"
-    IDS_1MS "1мсек\0"
+    IDS_CTRL_BREAK "Control-Break\n"
+    IDS_CTRL_C "Control-C\n"
+    IDS_NO_RESOURCES "Невозможно выделить требуемую память.\n"
+    IDS_MISSING_ADDRESS "IP address must be specified.\n"
+    IDS_MISSING_VALUE "Value must be supplied for option %1.\n"
+    IDS_BAD_OPTION "Неверная опция %1.\n"
+    IDS_BAD_PARAMETER "Неверный параметр %1.\n"
+    IDS_BAD_VALUE "Недопустимое значение параметра %1, допустимый диапазон с %2!d! по %3!u!.\n"
+    IDS_WRONG_FAMILY "The option %1 is only supported for %2.\n"
+    IDS_UNKNOWN_HOST "Ping could not find host %1. Please check the name and try again.\n"
+    IDS_PINGING_ADDRESS "\nОбмен пакетами с %1 %0"
+    IDS_PINGING_HOSTNAME "\nОбмен пакетами с %1 [%2] %0"
+    IDS_SOURCE_ADDRESS "from %1!s! %0"
+    IDS_PING_SIZE "по %1!d! байта данных:\n\n"
+    IDS_REPLY_FROM "Ответ от %1: %0"
+    IDS_REPLY_BYTES "число байт=%1!d! %0"
+    IDS_REPLY_TIME_MS "время=%1!d!ms %0"
+    IDS_REPLY_TIME_0MS "время<1ms %0"
+    IDS_REPLY_TTL "TTL=%1!d!\n"
+    IDS_REPLY_STATUS "Echo reply returned %1.\n"
+    IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\n"
+    IDS_DEST_NET_UNREACHABLE "Destination net unreachable.\n"
+    IDS_REQUEST_TIMED_OUT "Превышен интервал ожидания для запроса.\n"
+    IDS_TTL_EXPIRED "TTL expired in transit.\n"
+    IDS_TRANSMIT_FAILED "PING: transmit failed. (Error %1!u!)\n"
+
+    IDS_STATISTICS "\n\
+Статистика Ping для %1!s!:\n\
+    Пакетов: отправлено = %2!d!, получено = %3!d!, потеряно %4!d! (%5!u!%% потерь),\n"
+
+    IDS_APPROXIMATE_RTT "Приблизительное время приема-передачи в мс:\n\
+    Минимальное = %1!u!ms, Максимальное = %2!u!ms, Среднее = %3!u!ms\n"
 END
