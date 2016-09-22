@@ -29,7 +29,7 @@ typedef struct _DynamicShellEntry_
 typedef struct _StaticShellEntry_
 {
     LPWSTR szVerb;
-    LPWSTR szClass;
+    HKEY hkClass;
     struct _StaticShellEntry_ *pNext;
 } StaticShellEntry, *PStaticShellEntry;
 
@@ -64,6 +64,8 @@ class CDefaultContextMenu :
         UINT m_cidl;
         PCUITEMID_CHILD_ARRAY m_apidl;
         CComPtr<IDataObject> m_pDataObj;
+        HKEY* m_aKeys;
+        UINT m_cKeys;
         PIDLIST_ABSOLUTE m_pidlFolder;
         DWORD m_bGroupPolicyActive;
         PDynamicShellEntry m_pDynamicEntries; /* first dynamic shell extension entry */
@@ -73,9 +75,8 @@ class CDefaultContextMenu :
         UINT m_iIdSCMFirst; /* first static used id */
         UINT m_iIdSCMLast; /* last static used id */
 
-        void AddStaticEntry(LPCWSTR pwszVerb, LPCWSTR pwszClass);
-        void AddStaticEntryForKey(HKEY hKey, LPCWSTR pwszClass);
-        void AddStaticEntryForFileClass(LPCWSTR pwszExt);
+        void AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVerb);
+        void AddStaticEntriesForKey(HKEY hKey);
         BOOL IsShellExtensionAlreadyLoaded(const CLSID *pclsid);
         HRESULT LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsid);
         BOOL EnumerateDynamicContextHandlerForKey(HKEY hRootKey);
@@ -135,6 +136,8 @@ CDefaultContextMenu::CDefaultContextMenu() :
     m_cidl(0),
     m_apidl(NULL),
     m_pDataObj(NULL),
+    m_aKeys(NULL),
+    m_cKeys(NULL),
     m_pidlFolder(NULL),
     m_bGroupPolicyActive(0),
     m_pDynamicEntries(NULL),
@@ -163,11 +166,14 @@ CDefaultContextMenu::~CDefaultContextMenu()
     while (pStaticEntry)
     {
         pNextStatic = pStaticEntry->pNext;
-        HeapFree(GetProcessHeap(), 0, pStaticEntry->szClass);
         HeapFree(GetProcessHeap(), 0, pStaticEntry->szVerb);
         HeapFree(GetProcessHeap(), 0, pStaticEntry);
         pStaticEntry = pNextStatic;
     }
+
+    for (UINT i = 0; i < m_cKeys; i++)
+        RegCloseKey(m_aKeys[i]);
+    HeapFree(GetProcessHeap(), 0, m_aKeys);
 
     if (m_pidlFolder)
         CoTaskMemFree(m_pidlFolder);
@@ -183,6 +189,15 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
     if (m_cidl && !m_apidl)
         return E_OUTOFMEMORY;
     m_psf = pdcm->psf;
+
+    m_cKeys = pdcm->cKeys;
+    if (pdcm->cKeys)
+    {
+        m_aKeys = (HKEY*)HeapAlloc(GetProcessHeap(), 0, sizeof(HKEY) * pdcm->cKeys);
+        if (!m_aKeys)
+            return E_OUTOFMEMORY;
+        memcpy(m_aKeys, pdcm->aKeys, sizeof(HKEY) * pdcm->cKeys);
+    }
 
     m_psf->GetUIObjectOf(pdcm->hwnd, m_cidl, m_apidl, IID_NULL_PPV_ARG(IDataObject, &m_pDataObj));
 
@@ -204,8 +219,7 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
     return S_OK;
 }
 
-void
-CDefaultContextMenu::AddStaticEntry(const WCHAR *szVerb, const WCHAR *szClass)
+void CDefaultContextMenu::AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVerb)
 {
     PStaticShellEntry pEntry = m_pStaticEntries, pLastEntry = NULL;
     while(pEntry)
@@ -219,7 +233,7 @@ CDefaultContextMenu::AddStaticEntry(const WCHAR *szVerb, const WCHAR *szClass)
         pEntry = pEntry->pNext;
     }
 
-    TRACE("adding verb %s szClass %s\n", debugstr_w(szVerb), debugstr_w(szClass));
+    TRACE("adding verb %s\n", debugstr_w(szVerb));
 
     pEntry = (StaticShellEntry *)HeapAlloc(GetProcessHeap(), 0, sizeof(StaticShellEntry));
     if (pEntry)
@@ -228,9 +242,7 @@ CDefaultContextMenu::AddStaticEntry(const WCHAR *szVerb, const WCHAR *szClass)
         pEntry->szVerb = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(szVerb) + 1) * sizeof(WCHAR));
         if (pEntry->szVerb)
             wcscpy(pEntry->szVerb, szVerb);
-        pEntry->szClass = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, (wcslen(szClass) + 1) * sizeof(WCHAR));
-        if (pEntry->szClass)
-            wcscpy(pEntry->szClass, szClass);
+        pEntry->hkClass = hkeyClass;
     }
 
     if (!wcsicmp(szVerb, L"open"))
@@ -245,88 +257,26 @@ CDefaultContextMenu::AddStaticEntry(const WCHAR *szVerb, const WCHAR *szClass)
         m_pStaticEntries = pEntry;
 }
 
-void
-CDefaultContextMenu::AddStaticEntryForKey(HKEY hKey, const WCHAR *pwszClass)
+void CDefaultContextMenu::AddStaticEntriesForKey(HKEY hKey)
 {
     WCHAR wszName[40];
     DWORD cchName, dwIndex = 0;
+    HKEY hShellKey;
 
-    TRACE("AddStaticEntryForKey %x %ls\n", hKey, pwszClass);
+    LRESULT lres = RegOpenKeyExW(hKey, L"shell", 0, KEY_READ, &hShellKey);
+    if (lres != STATUS_SUCCESS)
+        return;
 
     while(TRUE)
     {
         cchName = _countof(wszName);
-        if (RegEnumKeyExW(hKey, dwIndex++, wszName, &cchName, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+        if (RegEnumKeyExW(hShellKey, dwIndex++, wszName, &cchName, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
             break;
 
-        AddStaticEntry(wszName, pwszClass);
-    }
-}
-
-void
-CDefaultContextMenu::AddStaticEntryForFileClass(const WCHAR * szExt)
-{
-    WCHAR szBuffer[100];
-    HKEY hKey;
-    LONG result;
-    DWORD dwBuffer;
-    UINT Length;
-    static WCHAR szShell[] = L"\\shell";
-    static WCHAR szShellAssoc[] = L"SystemFileAssociations\\";
-
-    TRACE("AddStaticEntryForFileClass entered with %s\n", debugstr_w(szExt));
-
-    Length = wcslen(szExt);
-    if (Length + (sizeof(szShell) / sizeof(WCHAR)) + 1 < sizeof(szBuffer) / sizeof(WCHAR))
-    {
-        wcscpy(szBuffer, szExt);
-        wcscpy(&szBuffer[Length], szShell);
-        result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szBuffer, 0, KEY_READ | KEY_QUERY_VALUE, &hKey);
-        if (result == ERROR_SUCCESS)
-        {
-            szBuffer[Length] = 0;
-            AddStaticEntryForKey(hKey, szExt);
-            RegCloseKey(hKey);
-        }
+        AddStaticEntry(hKey, wszName);
     }
 
-    dwBuffer = sizeof(szBuffer);
-    result = RegGetValueW(HKEY_CLASSES_ROOT, szExt, NULL, RRF_RT_REG_SZ, NULL, (LPBYTE)szBuffer, &dwBuffer);
-    if (result == ERROR_SUCCESS)
-    {
-        Length = wcslen(szBuffer);
-        if (Length + (sizeof(szShell) / sizeof(WCHAR)) + 1 < sizeof(szBuffer) / sizeof(WCHAR))
-        {
-            wcscpy(&szBuffer[Length], szShell);
-            TRACE("szBuffer %s\n", debugstr_w(szBuffer));
-
-            result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szBuffer, 0, KEY_READ | KEY_QUERY_VALUE, &hKey);
-            if (result == ERROR_SUCCESS)
-            {
-                szBuffer[Length] = 0;
-                AddStaticEntryForKey(hKey, szBuffer);
-                RegCloseKey(hKey);
-            }
-        }
-    }
-
-    wcscpy(szBuffer, szShellAssoc);
-    dwBuffer = sizeof(szBuffer) - sizeof(szShellAssoc) - sizeof(WCHAR);
-    result = RegGetValueW(HKEY_CLASSES_ROOT, szExt, L"PerceivedType", RRF_RT_REG_SZ, NULL, (LPBYTE)&szBuffer[_countof(szShellAssoc) - 1], &dwBuffer);
-    if (result == ERROR_SUCCESS)
-    {
-        Length = wcslen(&szBuffer[_countof(szShellAssoc)]) + _countof(szShellAssoc);
-        wcscat(szBuffer, L"\\shell");
-        TRACE("szBuffer %s\n", debugstr_w(szBuffer));
-
-        result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szBuffer, 0, KEY_READ | KEY_QUERY_VALUE, &hKey);
-        if (result == ERROR_SUCCESS)
-        {
-            szBuffer[Length] = 0;
-            AddStaticEntryForKey(hKey, szBuffer);
-            RegCloseKey(hKey);
-        }
-    }
+    RegCloseKey(hShellKey);
 }
 
 static
@@ -672,13 +622,13 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
         else
         {
             WCHAR wszKey[256];
-            HRESULT hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"%s\\shell\\%s", pEntry->szClass, pEntry->szVerb);
+            HRESULT hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"shell\\%s", pEntry->szVerb);
 
             if (SUCCEEDED(hr))
             {
                 HKEY hkVerb;
                 DWORD cbVerb = sizeof(wszVerb);
-                LONG res = RegOpenKeyW(HKEY_CLASSES_ROOT, wszKey, &hkVerb);
+                LONG res = RegOpenKeyW(pEntry->hkClass, wszKey, &hkVerb);
                 if (res == ERROR_SUCCESS)
                 {
                     res = RegLoadMUIStringW(hkVerb, 
@@ -757,85 +707,15 @@ CDefaultContextMenu::BuildShellItemContextMenu(
     UINT iIdCmdLast,
     UINT uFlags)
 {
-    HKEY hKey;
     HRESULT hr;
 
     TRACE("BuildShellItemContextMenu entered\n");
     ASSERT(m_cidl >= 1);
 
-    STRRET strFile;
-    hr = m_psf->GetDisplayNameOf(m_apidl[0], SHGDN_FORPARSING, &strFile);
-    if (hr == S_OK)
+    for (UINT i = 0; i < m_cKeys; i++)
     {
-        WCHAR wszPath[MAX_PATH];
-        hr = StrRetToBufW(&strFile, m_apidl[0], wszPath, _countof(wszPath));
-        if (hr == S_OK)
-        {
-            LPCWSTR pwszExt = PathFindExtensionW(wszPath);
-            if (pwszExt[0])
-            {
-                /* enumerate dynamic/static for a given file class */
-                if (RegOpenKeyExW(HKEY_CLASSES_ROOT, pwszExt, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-                {
-                    /* add static verbs */
-                    AddStaticEntryForFileClass(pwszExt);
-
-                    /* load dynamic extensions from file extension key */
-                    EnumerateDynamicContextHandlerForKey(hKey);
-                    RegCloseKey(hKey);
-                }
-
-                WCHAR wszTemp[40];
-                DWORD dwSize = sizeof(wszTemp);
-                if (RegGetValueW(HKEY_CLASSES_ROOT, pwszExt, NULL, RRF_RT_REG_SZ, NULL, wszTemp, &dwSize) == ERROR_SUCCESS)
-                {
-                    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, wszTemp, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-                    {
-                        /* add static verbs from progid key */
-                        AddStaticEntryForFileClass(wszTemp);
-
-                        /* load dynamic extensions from progid key */
-                        EnumerateDynamicContextHandlerForKey(hKey);
-                        RegCloseKey(hKey);
-                    }
-                }
-            }
-        }
-    }
-    else
-        ERR("GetDisplayNameOf failed: %x\n", hr);
-
-    GUID *pGuid = _ILGetGUIDPointer(m_apidl[0]);
-    if (pGuid)
-    {
-        LPOLESTR pwszCLSID;
-        WCHAR buffer[60];
-
-        wcscpy(buffer, L"CLSID\\");
-        hr = StringFromCLSID(*pGuid, &pwszCLSID);
-        if (hr == S_OK)
-        {
-            wcscpy(&buffer[6], pwszCLSID);
-            TRACE("buffer %s\n", debugstr_w(buffer));
-            if (RegOpenKeyExW(HKEY_CLASSES_ROOT, buffer, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-            {
-                EnumerateDynamicContextHandlerForKey(hKey);
-                AddStaticEntryForFileClass(buffer);
-                RegCloseKey(hKey);
-            }
-            CoTaskMemFree(pwszCLSID);
-        }
-    }
-
-    if (_ILIsDrive(m_apidl[0]))
-    {
-        AddStaticEntryForFileClass(L"Drive");
-        if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Drive", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-        {
-            EnumerateDynamicContextHandlerForKey(hKey);
-            RegCloseKey(hKey);
-        }
-
+        AddStaticEntriesForKey(m_aKeys[i]);
+        EnumerateDynamicContextHandlerForKey(m_aKeys[i]);
     }
 
     /* add static actions */
@@ -845,48 +725,6 @@ CDefaultContextMenu::BuildShellItemContextMenu(
     {
         ERR("GetAttributesOf failed: %x\n", hr);
         rfg = 0;
-    }
-
-    if (rfg & SFGAO_FOLDER)
-    {
-        /* add the default verbs open / explore */
-        AddStaticEntryForFileClass(L"Folder");
-        if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Folder", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-        {
-            EnumerateDynamicContextHandlerForKey(hKey);
-            RegCloseKey(hKey);
-        }
-
-        /* Directory is only loaded for real filesystem directories */
-        if (rfg & SFGAO_FILESYSTEM)
-        {
-            AddStaticEntryForFileClass(L"Directory");
-            if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"Directory", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-            {
-                EnumerateDynamicContextHandlerForKey(hKey);
-                RegCloseKey(hKey);
-            }
-        }
-    }
-
-    /* AllFilesystemObjects class is loaded only for files and directories */
-    if (rfg & SFGAO_FILESYSTEM)
-    {
-        if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"AllFilesystemObjects", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-        {
-            /* sendto service is registered here */
-            EnumerateDynamicContextHandlerForKey(hKey);
-            RegCloseKey(hKey);
-        }
-
-        if (!(rfg & SFGAO_FOLDER))
-        {
-            if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"*", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
-            {
-                EnumerateDynamicContextHandlerForKey(hKey);
-                RegCloseKey(hKey);
-            }
-        }
     }
 
     /* add static context menu handlers */
@@ -1398,12 +1236,12 @@ CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticSh
         FlagsName = L"BrowserFlags";
 
     /* Try to get the flag from the verb */
-    hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"%s\\shell\\%s", pEntry->szClass, pEntry->szVerb);
+    hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"shell\\%s", pEntry->szVerb);
     if (!SUCCEEDED(hr))
         return 0;
 
     cbVerb = sizeof(wFlags);
-    if (RegGetValueW(HKEY_CLASSES_ROOT, wszKey, FlagsName, RRF_RT_REG_DWORD, NULL, &wFlags, &cbVerb) == ERROR_SUCCESS)
+    if (RegGetValueW(pEntry->hkClass, wszKey, FlagsName, RRF_RT_REG_DWORD, NULL, &wFlags, &cbVerb) == ERROR_SUCCESS)
     {
         return wFlags;
     }
@@ -1452,9 +1290,6 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl,
         SHGetPathFromIDListW(m_pidlFolder, wszDir);
     }
 
-    HKEY hkeyClass;
-    RegOpenKeyExW(HKEY_CLASSES_ROOT, pEntry->szClass, 0, KEY_READ, &hkeyClass);
-
     SHELLEXECUTEINFOW sei;
     ZeroMemory(&sei, sizeof(sei));
     sei.cbSize = sizeof(sei);
@@ -1463,7 +1298,7 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl,
     sei.lpVerb = pEntry->szVerb;
     sei.lpDirectory = wszDir;
     sei.lpIDList = pidlFull;
-    sei.hkeyClass = hkeyClass;
+    sei.hkeyClass = pEntry->hkClass;
     sei.fMask = SEE_MASK_CLASSKEY | SEE_MASK_IDLIST;
     if (bHasPath)
     {
@@ -1471,8 +1306,6 @@ CDefaultContextMenu::InvokePidl(LPCMINVOKECOMMANDINFO lpcmi, LPCITEMIDLIST pidl,
     }
 
     ShellExecuteExW(&sei);
-
-    RegCloseKey(hkeyClass);
 
     ILFree(pidlFull);
 
@@ -1748,10 +1581,96 @@ CDefaultContextMenu_CreateInstance(const DEFCONTEXTMENU *pdcm, REFIID riid, void
  *
  */
 
+static void AddClassKey(const WCHAR * szClass, HKEY* buffer, UINT* cKeys)
+{
+    LSTATUS result;
+    HKEY hkey;
+    result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ | KEY_QUERY_VALUE, &hkey);
+    if (result != ERROR_SUCCESS)
+        return;
+
+    buffer[*cKeys] = hkey;
+    *cKeys +=1;
+}
+
+void HackFillKeys(DEFCONTEXTMENU *pdcm, HKEY* buffer)
+{
+    PCUITEMID_CHILD pidl = pdcm->apidl[0];
+    pdcm->cKeys = 0;
+    pdcm->aKeys = buffer;
+
+    if (_ILIsValue(pidl))
+    {
+        FileStructW* pFileData = _ILGetFileStructW(pidl);
+        LPWSTR extension = PathFindExtension(pFileData->wszName);
+
+        if (extension)
+        {
+            AddClassKey(extension, buffer, &pdcm->cKeys);
+
+            WCHAR wszClass[40], wszClass2[40];
+            DWORD dwSize = sizeof(wszClass);
+            if (RegGetValueW(HKEY_CLASSES_ROOT, extension, NULL, RRF_RT_REG_SZ, NULL, wszClass, &dwSize) == ERROR_SUCCESS)
+            {
+                swprintf(wszClass2, L"%s//%s", extension, wszClass);
+
+                AddClassKey(wszClass, buffer, &pdcm->cKeys);
+                AddClassKey(wszClass2, buffer, &pdcm->cKeys);
+            }
+
+            swprintf(wszClass2, L"SystemFileAssociations//%s", extension);
+            AddClassKey(wszClass2, buffer, &pdcm->cKeys);
+
+            if (RegGetValueW(HKEY_CLASSES_ROOT, extension, L"PerceivedType ", RRF_RT_REG_SZ, NULL, wszClass, &dwSize) == ERROR_SUCCESS)
+            {
+                swprintf(wszClass2, L"SystemFileAssociations//%s", wszClass);
+                AddClassKey(wszClass2, buffer, &pdcm->cKeys);
+            }
+        }
+
+        AddClassKey(L"AllFilesystemObjects", buffer, &pdcm->cKeys);
+        AddClassKey(L"*", buffer, &pdcm->cKeys);
+    }
+    else if (_ILIsSpecialFolder(pidl))
+    {
+        GUID *pGuid = _ILGetGUIDPointer(pidl);
+        if (pGuid)
+        {
+            LPOLESTR pwszCLSID;
+            WCHAR key[60];
+
+            wcscpy(key, L"CLSID\\");
+            HRESULT hr = StringFromCLSID(*pGuid, &pwszCLSID);
+            if (hr == S_OK)
+            {
+                wcscpy(&key[6], pwszCLSID);
+                AddClassKey(key, buffer, &pdcm->cKeys);
+            }
+        }
+        AddClassKey(L"Folder", buffer, &pdcm->cKeys);
+    }
+    else if (_ILIsFolder(pidl))
+    {
+        AddClassKey(L"AllFilesystemObjects", buffer, &pdcm->cKeys);
+        AddClassKey(L"Directory", buffer, &pdcm->cKeys);
+        AddClassKey(L"Folder", buffer, &pdcm->cKeys);
+    }
+    else if (_ILIsDrive(pidl))
+    {
+        AddClassKey(L"Drive", buffer, &pdcm->cKeys);
+        AddClassKey(L"Folder", buffer, &pdcm->cKeys);
+    }
+}
+
 HRESULT
 WINAPI
 SHCreateDefaultContextMenu(const DEFCONTEXTMENU *pdcm, REFIID riid, void **ppv)
 {
+   /* HACK: move to the shell folders implementation */
+    HKEY hkeyHack[16];
+    if (!pdcm->aKeys && pdcm->cidl)
+        HackFillKeys((DEFCONTEXTMENU *)pdcm, hkeyHack);
+
     return CDefaultContextMenu_CreateInstance(pdcm, riid, ppv);
 }
 
