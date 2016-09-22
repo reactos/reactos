@@ -196,7 +196,7 @@ BEGIN
     IDS_MINIATURETITLE "Miniature"
     IDS_TOOLTIP1 "Free selection"
     IDS_TOOLTIP2 "Selection"
-    IDS_TOOLTIP3 "Rubber"
+    IDS_TOOLTIP3 "Eraser"
     IDS_TOOLTIP4 "Fill with color"
     IDS_TOOLTIP5 "Select color"
     IDS_TOOLTIP6 "Zoom"
