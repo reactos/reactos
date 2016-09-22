@@ -173,6 +173,9 @@ class CDefView :
         virtual HRESULT STDMETHODCALLTYPE HandleRename(LPCITEMIDLIST new_pidl);
         virtual HRESULT STDMETHODCALLTYPE SelectAndPositionItem(LPCITEMIDLIST item, UINT flags, POINT *point);
 
+        // *** IShellView3 methods ***
+        virtual HRESULT STDMETHODCALLTYPE CreateViewWindow3(IShellBrowser *psb, IShellView *psvPrevious, SV3CVW3_FLAGS view_flags, FOLDERFLAGS mask, FOLDERFLAGS flags, FOLDERVIEWMODE mode, const SHELLVIEWID *view_id, RECT *prcView, HWND *hwnd);
+
         // *** IFolderView methods ***
         virtual HRESULT STDMETHODCALLTYPE GetCurrentViewMode(UINT *pViewMode);
         virtual HRESULT STDMETHODCALLTYPE SetCurrentViewMode(UINT ViewMode);
@@ -2144,20 +2147,8 @@ HRESULT WINAPI CDefView::Refresh()
 
 HRESULT WINAPI CDefView::CreateViewWindow(IShellView *lpPrevView, LPCFOLDERSETTINGS lpfs, IShellBrowser *psb, RECT *prcView, HWND *phWnd)
 {
-    SV2CVW2_PARAMS view_params;
-    HRESULT hr;
-
-    view_params.cbSize = sizeof(view_params);
-    view_params.pfs = lpfs;
-    view_params.psvPrev = lpPrevView;
-    view_params.psbOwner = psb;
-    view_params.prcView = prcView;
-    view_params.pvid = NULL;
-
-    hr = CreateViewWindow2(&view_params);
-    *phWnd = view_params.hwndView;
-
-    return hr;
+    return CreateViewWindow3(psb, lpPrevView, SV3CVW3_DEFAULT,
+        (FOLDERFLAGS)lpfs->fFlags, (FOLDERFLAGS)lpfs->fFlags, (FOLDERVIEWMODE)lpfs->ViewMode, NULL, prcView, phWnd);
 }
 
 HRESULT WINAPI CDefView::DestroyViewWindow()
@@ -2513,33 +2504,52 @@ HRESULT STDMETHODCALLTYPE CDefView::GetView(SHELLVIEWID *view_guid, ULONG view_t
 
 HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow2(LPSV2CVW2_PARAMS view_params)
 {
+    return CreateViewWindow3(view_params->psbOwner, view_params->psvPrev,
+        SV3CVW3_DEFAULT, (FOLDERFLAGS)view_params->pfs->fFlags, (FOLDERFLAGS)view_params->pfs->fFlags,
+        (FOLDERVIEWMODE)view_params->pfs->ViewMode, view_params->pvid, view_params->prcView, &view_params->hwndView);
+}
+
+HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow3(IShellBrowser *psb, IShellView *psvPrevious, SV3CVW3_FLAGS view_flags, FOLDERFLAGS mask, FOLDERFLAGS flags, FOLDERVIEWMODE mode, const SHELLVIEWID *view_id, RECT *prcView, HWND *hwnd)
+{
     OLEMENUGROUPWIDTHS omw = { { 0, 0, 0, 0, 0, 0 } };
 
-    if (view_params->cbSize != sizeof(SV2CVW2_PARAMS))
-        return E_FAIL;
+    *hwnd = NULL;
+
+    TRACE("(%p)->(shlview=%p shlbrs=%p rec=%p hwnd=%p vmode=%x flags=%x)\n", this, psvPrevious, psb, prcView, hwnd, mode, flags);
+    if (prcView != NULL)
+        TRACE("-- left=%i top=%i right=%i bottom=%i\n", prcView->left, prcView->top, prcView->right, prcView->bottom);
     
-    if (view_params->pvid != NULL)
-    {
-        FIXME("SHELLVIEWID not handled, FAIL\n");
-
-    }
-
-    view_params->hwndView = 0;
-
-    TRACE("(%p)->(shlview=%p set=%p shlbrs=%p rec=%p hwnd=%p) incomplete\n", this, view_params->psvPrev, view_params->pfs, view_params->psbOwner, view_params->prcView, view_params->hwndView);
-
-    if (view_params->pfs != NULL)
-        TRACE("-- vmode=%x flags=%x\n", view_params->pfs->ViewMode, view_params->pfs->fFlags);
-    if (view_params->prcView != NULL)
-        TRACE("-- left=%i top=%i right=%i bottom=%i\n", view_params->prcView->left, view_params->prcView->top, view_params->prcView->right, view_params->prcView->bottom);
-
     /* Validate the Shell Browser */
-    if (view_params->psbOwner == NULL || m_hWnd)
+    if (psb == NULL || m_hWnd)
         return E_UNEXPECTED;
 
+    if (view_flags != SV3CVW3_DEFAULT)
+        FIXME("unsupported view flags 0x%08x\n", view_flags);
+
     /* Set up the member variables */
-    m_pShellBrowser = view_params->psbOwner;
-    m_FolderSettings = *view_params->pfs;
+    m_pShellBrowser = psb;
+    m_FolderSettings.ViewMode = mode;
+    m_FolderSettings.fFlags = mask & flags;
+
+    if (view_id)
+    {
+        if (IsEqualIID(*view_id, VID_LargeIcons))
+            m_FolderSettings.ViewMode = FVM_ICON;
+        else if (IsEqualIID(*view_id, VID_SmallIcons))
+            m_FolderSettings.ViewMode = FVM_SMALLICON;
+        else if (IsEqualIID(*view_id, VID_List))
+            m_FolderSettings.ViewMode = FVM_LIST;
+        else if (IsEqualIID(*view_id, VID_Details))
+            m_FolderSettings.ViewMode = FVM_DETAILS;
+        else if (IsEqualIID(*view_id, VID_Thumbnails))
+            m_FolderSettings.ViewMode = FVM_THUMBNAIL;
+        else if (IsEqualIID(*view_id, VID_Tile))
+            m_FolderSettings.ViewMode = FVM_TILE;
+        else if (IsEqualIID(*view_id, VID_ThumbStrip))
+            m_FolderSettings.ViewMode = FVM_THUMBSTRIP;
+        else
+            FIXME("Ignoring unrecognized VID %s\n", debugstr_guid(view_id));
+    }
 
     /* Get our parent window */
     m_pShellBrowser->GetWindow(&m_hWndParent);
@@ -2551,15 +2561,15 @@ HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow2(LPSV2CVW2_PARAMS view_para
         TRACE("-- CommDlgBrowser\n");
     }
 
-    Create(m_hWndParent, view_params->prcView, NULL, WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP, 0, 0U);
+    Create(m_hWndParent, prcView, NULL, WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP, 0, 0U);
     if (m_hWnd == NULL)
         return E_FAIL;
 
-    view_params->hwndView = m_hWnd;
+    *hwnd = m_hWnd;
 
     CheckToolbar();
 
-    if (!view_params->hwndView)
+    if (!*hwnd)
         return E_FAIL;
 
     SetWindowPos(HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
