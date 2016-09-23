@@ -250,7 +250,7 @@ IKsFilterFactory_fnInitialize(
         DPRINT("out of memory");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    RtlMoveMemory(This->FilterFactory.FilterDescriptor, Descriptor, sizeof(KSFILTER_DESCRIPTOR));
+    RtlMoveMemory((PVOID)This->FilterFactory.FilterDescriptor, (PVOID)Descriptor, sizeof(KSFILTER_DESCRIPTOR));
 
     /* initialize filter factory control mutex */
     This->Header.ControlMutex = &This->ControlMutex;
