@@ -25,7 +25,9 @@ GUID NodeTypeSubwoofer = { STATIC_KSNODETYPE_LOW_FREQUENCY_EFFECTS_SPEAKER };
 GUID NodeTypeCapture = { STATIC_PINNAME_CAPTURE };
 GUID NodeTypePlayback = { STATIC_KSCATEGORY_AUDIO };
 GUID GUID_KSCATEGORY_AUDIO = { STATIC_KSCATEGORY_AUDIO };
-
+GUID GUID_KSDATAFORMAT_TYPE_AUDIO = { STATIC_KSDATAFORMAT_TYPE_AUDIO };
+GUID GUID_KSDATAFORMAT_SUBTYPE_PCM = { STATIC_KSDATAFORMAT_SUBTYPE_PCM };
+GUID GUID_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX = { STATIC_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX };
 KSPIN_INTERFACE StandardPinInterface =
 {
      {STATIC_KSINTERFACESETID_Standard},
@@ -112,7 +114,7 @@ CountTerminalUnits(
     {
         if (Descriptor->bInterfaceSubClass == 0x01) /* AUDIO_CONTROL */
         {
-            InterfaceHeaderDescriptor = USBD_ParseDescriptors(ConfigurationDescriptor, ConfigurationDescriptor->wTotalLength, Descriptor, USB_AUDIO_CONTROL_TERMINAL_DESCRIPTOR_TYPE);
+            InterfaceHeaderDescriptor = (PUSB_AUDIO_CONTROL_INTERFACE_HEADER_DESCRIPTOR)USBD_ParseDescriptors(ConfigurationDescriptor, ConfigurationDescriptor->wTotalLength, Descriptor, USB_AUDIO_CONTROL_TERMINAL_DESCRIPTOR_TYPE);
             if (InterfaceHeaderDescriptor != NULL)
             {
                 CommonDescriptor = USBD_ParseDescriptors(InterfaceHeaderDescriptor, InterfaceHeaderDescriptor->wTotalLength, (PVOID)((ULONG_PTR)InterfaceHeaderDescriptor + InterfaceHeaderDescriptor->bLength), USB_AUDIO_CONTROL_TERMINAL_DESCRIPTOR_TYPE);
@@ -127,7 +129,7 @@ CountTerminalUnits(
                         }
                         TotalTerminalCount++;
                     }
-                    CommonDescriptor = (PUSB_AUDIO_CONTROL_INPUT_TERMINAL_DESCRIPTOR)((ULONG_PTR)CommonDescriptor + CommonDescriptor->bLength);
+                    CommonDescriptor = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)CommonDescriptor + CommonDescriptor->bLength);
                     if ((ULONG_PTR)CommonDescriptor >= ((ULONG_PTR)InterfaceHeaderDescriptor + InterfaceHeaderDescriptor->wTotalLength))
                         break;
                 }
@@ -203,7 +205,7 @@ UsbAudioGetStreamingTerminalDescriptorByIndex(
     {
         if (Descriptor->bInterfaceSubClass == 0x01) /* AUDIO_CONTROL */
         {
-            InterfaceHeaderDescriptor = USBD_ParseDescriptors(ConfigurationDescriptor, ConfigurationDescriptor->wTotalLength, Descriptor, USB_AUDIO_CONTROL_TERMINAL_DESCRIPTOR_TYPE);
+            InterfaceHeaderDescriptor = (PUSB_AUDIO_CONTROL_INTERFACE_HEADER_DESCRIPTOR)USBD_ParseDescriptors(ConfigurationDescriptor, ConfigurationDescriptor->wTotalLength, Descriptor, USB_AUDIO_CONTROL_TERMINAL_DESCRIPTOR_TYPE);
             if (InterfaceHeaderDescriptor != NULL)
             {
                 CommonDescriptor = USBD_ParseDescriptors(InterfaceHeaderDescriptor, InterfaceHeaderDescriptor->wTotalLength, (PVOID)((ULONG_PTR)InterfaceHeaderDescriptor + InterfaceHeaderDescriptor->bLength), USB_AUDIO_CONTROL_TERMINAL_DESCRIPTOR_TYPE);
@@ -221,7 +223,7 @@ UsbAudioGetStreamingTerminalDescriptorByIndex(
                             TerminalCount++;
                         }
                     }
-                    CommonDescriptor = (PUSB_AUDIO_CONTROL_INPUT_TERMINAL_DESCRIPTOR)((ULONG_PTR)CommonDescriptor + CommonDescriptor->bLength);
+                    CommonDescriptor = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)CommonDescriptor + CommonDescriptor->bLength);
                     if ((ULONG_PTR)CommonDescriptor >= ((ULONG_PTR)InterfaceHeaderDescriptor + InterfaceHeaderDescriptor->wTotalLength))
                         break;
                 }
@@ -249,7 +251,7 @@ UsbAudioGetNonStreamingTerminalDescriptorByIndex(
     {
         if (Descriptor->bInterfaceSubClass == 0x01) /* AUDIO_CONTROL */
         {
-            InterfaceHeaderDescriptor = USBD_ParseDescriptors(ConfigurationDescriptor, ConfigurationDescriptor->wTotalLength, Descriptor, USB_AUDIO_CONTROL_TERMINAL_DESCRIPTOR_TYPE);
+            InterfaceHeaderDescriptor = (PUSB_AUDIO_CONTROL_INTERFACE_HEADER_DESCRIPTOR)USBD_ParseDescriptors(ConfigurationDescriptor, ConfigurationDescriptor->wTotalLength, Descriptor, USB_AUDIO_CONTROL_TERMINAL_DESCRIPTOR_TYPE);
             if (InterfaceHeaderDescriptor != NULL)
             {
                 CommonDescriptor = USBD_ParseDescriptors(InterfaceHeaderDescriptor, InterfaceHeaderDescriptor->wTotalLength, (PVOID)((ULONG_PTR)InterfaceHeaderDescriptor + InterfaceHeaderDescriptor->bLength), USB_AUDIO_CONTROL_TERMINAL_DESCRIPTOR_TYPE);
@@ -267,7 +269,7 @@ UsbAudioGetNonStreamingTerminalDescriptorByIndex(
                             TerminalCount++;
                         }
                     }
-                    CommonDescriptor = (PUSB_AUDIO_CONTROL_INPUT_TERMINAL_DESCRIPTOR)((ULONG_PTR)CommonDescriptor + CommonDescriptor->bLength);
+                    CommonDescriptor = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)CommonDescriptor + CommonDescriptor->bLength);
                     if ((ULONG_PTR)CommonDescriptor >= ((ULONG_PTR)InterfaceHeaderDescriptor + InterfaceHeaderDescriptor->wTotalLength))
                         break;
                 }
@@ -277,6 +279,71 @@ UsbAudioGetNonStreamingTerminalDescriptorByIndex(
     return NULL;
 }
 
+VOID
+UsbAudioGetDataRanges(
+    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+    IN UCHAR bTerminalID,
+    OUT PKSDATARANGE** OutDataRanges,
+    OUT PULONG OutDataRangesCount)
+{
+    PUSB_AUDIO_STREAMING_INTERFACE_DESCRIPTOR StreamingInterfaceDescriptor;
+    PUSB_AUDIO_STREAMING_FORMAT_TYPE_DESCRIPTOR StreamingFormatDescriptor;
+    PUSB_INTERFACE_DESCRIPTOR Descriptor;
+    PKSDATARANGE_AUDIO DataRangeAudio;
+    PKSDATARANGE *DataRangeAudioArray;
+    ULONG NumFrequency;
+
+    for (Descriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, ConfigurationDescriptor, -1, -1, USB_DEVICE_CLASS_AUDIO, -1, -1);
+    Descriptor != NULL;
+        Descriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, (PVOID)((ULONG_PTR)Descriptor + Descriptor->bLength), -1, -1, USB_DEVICE_CLASS_AUDIO, -1, -1))
+    {
+        if (Descriptor->bInterfaceSubClass == 0x02) /* AUDIO_STREAMING */
+        {
+            StreamingInterfaceDescriptor = (PUSB_AUDIO_STREAMING_INTERFACE_DESCRIPTOR)USBD_ParseDescriptors(ConfigurationDescriptor, ConfigurationDescriptor->wTotalLength, Descriptor, USB_AUDIO_CONTROL_TERMINAL_DESCRIPTOR_TYPE);
+            if (StreamingInterfaceDescriptor != NULL)
+            {
+                ASSERT(StreamingInterfaceDescriptor->bDescriptorSubtype == 0x01);
+                ASSERT(StreamingInterfaceDescriptor->wFormatTag == WAVE_FORMAT_PCM);
+                if (StreamingInterfaceDescriptor->bTerminalLink == bTerminalID)
+                {
+                    StreamingFormatDescriptor = (PUSB_AUDIO_STREAMING_FORMAT_TYPE_DESCRIPTOR)((ULONG_PTR)StreamingInterfaceDescriptor + StreamingInterfaceDescriptor->bLength);
+                    ASSERT(StreamingFormatDescriptor->bDescriptorType == 0x24);
+                    ASSERT(StreamingFormatDescriptor->bDescriptorSubtype == 0x02);
+                    ASSERT(StreamingFormatDescriptor->bFormatType == 0x01);
+
+                    DataRangeAudio = AllocFunction(sizeof(KSDATARANGE_AUDIO));
+                    if (DataRangeAudio == NULL)
+                    {
+                        /* no memory*/
+                        return;
+                    }
+
+                    DataRangeAudio->DataRange.FormatSize = sizeof(KSDATARANGE_AUDIO);
+                    DataRangeAudio->DataRange.MajorFormat = GUID_KSDATAFORMAT_TYPE_AUDIO;
+                    DataRangeAudio->DataRange.SubFormat = GUID_KSDATAFORMAT_SUBTYPE_PCM;
+                    DataRangeAudio->DataRange.Specifier = GUID_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
+                    DataRangeAudio->MaximumChannels = 1;
+                    DataRangeAudio->MinimumBitsPerSample = StreamingFormatDescriptor->bBitResolution;
+                    DataRangeAudio->MaximumBitsPerSample = StreamingFormatDescriptor->bBitResolution;
+                    NumFrequency = StreamingFormatDescriptor->bSamFreqType - 1;
+                    DataRangeAudio->MinimumSampleFrequency = StreamingFormatDescriptor->tSamFreq[0] | StreamingFormatDescriptor->tSamFreq[1] << 8 | StreamingFormatDescriptor->tSamFreq[2] << 16;
+                    DataRangeAudio->MaximumSampleFrequency = StreamingFormatDescriptor->tSamFreq[NumFrequency*3] | StreamingFormatDescriptor->tSamFreq[NumFrequency * 3+1] << 8 | StreamingFormatDescriptor->tSamFreq[NumFrequency * 3+2]<<16;
+                    DataRangeAudioArray = AllocFunction(sizeof(PKSDATARANGE_AUDIO));
+                    if (DataRangeAudioArray == NULL)
+                    {
+                        /* no memory */
+                        FreeFunction(DataRangeAudio);
+                        return;
+                    }
+                    DataRangeAudioArray[0] = (PKSDATARANGE)DataRangeAudio;
+                    *OutDataRanges = DataRangeAudioArray;
+                    *OutDataRangesCount = 1;
+                    return;
+                }
+            }
+        }
+    }
+}
 
 
 NTSTATUS
@@ -318,6 +385,7 @@ USBAudioPinBuildDescriptors(
             Pins[Index].PinDescriptor.MediumsCount = 1;
             Pins[Index].PinDescriptor.Mediums = &StandardPinMedium;
             Pins[Index].PinDescriptor.Category = UsbAudioGetPinCategoryFromTerminalDescriptor(TerminalDescriptor);
+            UsbAudioGetDataRanges(DeviceExtension->ConfigurationDescriptor, TerminalDescriptor->bTerminalID, (PKSDATARANGE**)&Pins[Index].PinDescriptor.DataRanges, &Pins[Index].PinDescriptor.DataRangesCount);
 
             if (TerminalDescriptor->bDescriptorSubtype == USB_AUDIO_OUTPUT_TERMINAL)
             {

@@ -74,6 +74,30 @@ typedef struct
     UCHAR iChannelNames;
     UCHAR iTerminal;
 }USB_AUDIO_CONTROL_INPUT_TERMINAL_DESCRIPTOR, *PUSB_AUDIO_CONTROL_INPUT_TERMINAL_DESCRIPTOR;
+
+typedef struct
+{
+    UCHAR bLength;
+    UCHAR bDescriptorType;
+    UCHAR bDescriptorSubtype;
+    UCHAR bTerminalLink;
+    UCHAR bDelay;
+    USHORT wFormatTag;
+}USB_AUDIO_STREAMING_INTERFACE_DESCRIPTOR, *PUSB_AUDIO_STREAMING_INTERFACE_DESCRIPTOR;
+
+typedef struct
+{
+    UCHAR bLength;
+    UCHAR bDescriptorType;
+    UCHAR bDescriptorSubtype;
+    UCHAR bFormatType;
+    UCHAR bNrChannels;
+    UCHAR bSubframeSize;
+    UCHAR bBitResolution;
+    UCHAR bSamFreqType;
+    UCHAR tSamFreq[1];
+}USB_AUDIO_STREAMING_FORMAT_TYPE_DESCRIPTOR, *PUSB_AUDIO_STREAMING_FORMAT_TYPE_DESCRIPTOR;
+
 #include <poppack.h>
 
 typedef struct __DEVICE_EXTENSION__
