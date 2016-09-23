@@ -5,6 +5,7 @@
 
 #include <initguid.h>
 #include <wdmguid.h>
+#include <ksmedia.h>
 #include <hubbusif.h>
 #include <usbbusif.h>
 
