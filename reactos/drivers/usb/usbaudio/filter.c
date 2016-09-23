@@ -45,13 +45,15 @@ KSPIN_MEDIUM StandardPinMedium =
 KSDATARANGE BridgePinAudioFormat[] =
 {
     {
-        sizeof(KSDATAFORMAT),
-        0,
-        0,
-        0,
-        {STATIC_KSDATAFORMAT_TYPE_AUDIO},
-        {STATIC_KSDATAFORMAT_SUBTYPE_ANALOG},
-        {STATIC_KSDATAFORMAT_SPECIFIER_NONE}
+        {
+            sizeof(KSDATAFORMAT),
+            0,
+            0,
+            0,
+            {STATIC_KSDATAFORMAT_TYPE_AUDIO},
+            {STATIC_KSDATAFORMAT_SUBTYPE_ANALOG},
+            {STATIC_KSDATAFORMAT_SPECIFIER_NONE}
+        }
     }
 };
 
@@ -458,7 +460,6 @@ USBAudioCreateFilterContext(
     PKSDEVICE Device)
 {
     KSFILTER_DESCRIPTOR FilterDescriptor;
-    PDEVICE_EXTENSION DeviceExtension;
     PKSCOMPONENTID ComponentId;
     NTSTATUS Status;
 
@@ -509,7 +510,6 @@ USBAudioCreateFilterContext(
     }
 
     /* lets create the filter */
-    DeviceExtension = Device->Context;
     Status = KsCreateFilterFactory(Device->FunctionalDeviceObject, &FilterDescriptor, ReferenceString, NULL, KSCREATE_ITEM_FREEONSTOP, NULL, NULL, NULL);
     DPRINT1("KsCreateFilterFactory: %x\n", Status);
 
