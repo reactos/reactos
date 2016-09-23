@@ -58,7 +58,7 @@ HRESULT WINAPI CPrintersExtractIconW_CreateInstane(LPCITEMIDLIST pidl, REFIID ri
         return NULL;
 
     /* FIXME: other icons for default, network, print to file */
-    initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_PRINTERS_FOLDER);
+    initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_PRINTER);
 
     return initIcon->QueryInterface(riid,ppv);
 }
