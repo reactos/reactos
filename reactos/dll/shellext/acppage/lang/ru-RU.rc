@@ -4,7 +4,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_ACPPAGESHEET DIALOGEX 0, 0, 224, 226
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Compatibility"
+CAPTION "Совместимость"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Если у вас есть проблемы с запуском этой программы в ReactOS, выберите операционную систему, которой ReactOS будет представляться приложению.\nУчтите, работа над этим модулем продолжается, и на данном этапе он ничего не будет делать.", IDC_EXPLANATION, 7, 7 , 210, 31
