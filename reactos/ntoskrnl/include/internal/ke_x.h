@@ -25,7 +25,6 @@ KeGetPreviousMode(VOID)
                                                                             \
     /* Sanity checks */                                                     \
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);                                \
-    ASSERT(_Thread == KeGetCurrentThread());                                \
     ASSERT((_Thread->SpecialApcDisable <= 0) &&                             \
            (_Thread->SpecialApcDisable != -32768));                         \
                                                                             \
@@ -42,7 +41,6 @@ KeGetPreviousMode(VOID)
                                                                             \
     /* Sanity checks */                                                     \
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);                                \
-    ASSERT(_Thread == KeGetCurrentThread());                                \
     ASSERT(_Thread->SpecialApcDisable < 0);                                 \
                                                                             \
     /* Leave region and check if APCs are OK now */                         \
@@ -66,7 +64,6 @@ KeGetPreviousMode(VOID)
     PKTHREAD _Thread = KeGetCurrentThread();                                \
                                                                             \
     /* Sanity checks */                                                     \
-    ASSERT(_Thread == KeGetCurrentThread());                                \
     ASSERT((_Thread->KernelApcDisable <= 0) &&                              \
            (_Thread->KernelApcDisable != -32768));                          \
                                                                             \
@@ -82,7 +79,6 @@ KeGetPreviousMode(VOID)
     PKTHREAD _Thread = KeGetCurrentThread();                                \
                                                                             \
     /* Sanity checks */                                                     \
-    ASSERT(_Thread == KeGetCurrentThread());                                \
     ASSERT(_Thread->KernelApcDisable < 0);                                  \
                                                                             \
     /* Enable Kernel APCs */                                                \
