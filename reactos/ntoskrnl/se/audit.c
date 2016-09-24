@@ -1101,7 +1101,7 @@ NtOpenObjectAuditAlarm(
             if (PrivilegeCount > SEP_PRIVILEGE_SET_MAX_COUNT)
             {
                 Status = STATUS_INVALID_PARAMETER;
-                goto Cleanup;
+                _SEH2_YIELD(goto Cleanup);
             }
 
             /* Calculate the size of the PrivilegeSet structure */
@@ -1118,7 +1118,7 @@ NtOpenObjectAuditAlarm(
             {
                 DPRINT1("Failed to allocate %u bytes\n", PrivilegeSetSize);
                 Status = STATUS_INSUFFICIENT_RESOURCES;
-                goto Cleanup;
+                _SEH2_YIELD(goto Cleanup);
             }
 
             /* Copy the privileges */
@@ -1324,7 +1324,7 @@ NtPrivilegedServiceAuditAlarm(
         if (PrivilegeCount > SEP_PRIVILEGE_SET_MAX_COUNT)
         {
             Status = STATUS_INVALID_PARAMETER;
-            goto Cleanup;
+            _SEH2_YIELD(goto Cleanup);
         }
 
         /* Calculate the size of the Privileges structure */
@@ -1341,7 +1341,7 @@ NtPrivilegedServiceAuditAlarm(
         {
             DPRINT1("Failed to allocate %u bytes\n", PrivilegesSize);
             Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto Cleanup;
+            _SEH2_YIELD(goto Cleanup);
         }
 
         /* Copy the privileges */

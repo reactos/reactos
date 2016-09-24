@@ -746,7 +746,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("LpcpVerifyMessageDataInfo failed\n");
-                return Status;
+                _SEH2_YIELD(return Status);
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -861,7 +861,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
                     ObDereferenceObject(Port);
                     DPRINT1("NumberOfEntries has changed: %u, %u\n",
                             DataInfo->NumberOfEntries, NumberOfDataEntries);
-                    return STATUS_INVALID_PARAMETER;
+                    _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
                 }
             }
 
