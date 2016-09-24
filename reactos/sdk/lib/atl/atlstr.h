@@ -131,6 +131,15 @@ typedef CAtlStringW CStringW;
 typedef CAtlStringA CStringA;
 
 
+#ifdef UNICODE
+typedef CAtlStringW CAtlString;
+typedef CStringW CString;
+#else
+typedef CAtlStringA CAtlString;
+typedef CStringA CString;
+#endif
+
+
 }
 
 #endif

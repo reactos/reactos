@@ -234,6 +234,12 @@ public:
         return *this;
     }
 
+    CSimpleStringT& operator+=(XCHAR ch)
+    {
+        Append(&ch, 1);
+        return *this;
+    }
+
     operator PCXSTR() const throw()
     {
         return m_pszData;
@@ -362,6 +368,13 @@ public:
     {
         ATLASSERT(nNewLength >= 0);
         SetLength(nNewLength);
+    }
+
+    void ReleaseBuffer(_In_ int nNewLength = -1)
+    {
+        if (nNewLength < 0)
+            nNewLength = StringLength(m_pszData);
+        ReleaseBufferSetLength(nNewLength);
     }
 
     bool IsEmpty() const throw()
@@ -603,6 +616,12 @@ private:
     }
 
 };
+
+#ifdef UNICODE
+typedef CSimpleStringT<WCHAR>   CSimpleString;
+#else
+typedef CSimpleStringT<CHAR>    CSimpleString;
+#endif
 }
 
 #endif
