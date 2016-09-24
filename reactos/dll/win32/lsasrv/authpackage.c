@@ -1606,7 +1606,9 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
 
 //    TokenHandle = NULL;
 
-    Status = LsapSetLogonSessionData(&RequestMsg->LogonUser.Reply.LogonId);
+    Status = LsapSetLogonSessionData(&RequestMsg->LogonUser.Reply.LogonId,
+                                     LogonType,
+                                     AccountName);
     if (!NT_SUCCESS(Status))
     {
         ERR("LsapSetLogonSessionData failed (Status 0x%08lx)\n", Status);

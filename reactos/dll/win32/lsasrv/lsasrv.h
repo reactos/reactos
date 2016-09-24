@@ -447,7 +447,10 @@ LsapDeleteCredential(
     _In_ PLSA_STRING PrimaryKeyValue);
 
 NTSTATUS
-LsapSetLogonSessionData(IN PLUID LogonId);
+LsapSetLogonSessionData(
+    _In_ PLUID LogonId,
+    _In_ ULONG LogonType,
+    _In_ PUNICODE_STRING UserName);
 
 NTSTATUS
 LsapEnumLogonSessions(IN OUT PLSA_API_MSG RequestMsg);

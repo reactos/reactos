@@ -64,7 +64,10 @@ LsapGetLogonSession(IN PLUID LogonId)
 
 
 NTSTATUS
-LsapSetLogonSessionData(IN PLUID LogonId)
+LsapSetLogonSessionData(
+    _In_ PLUID LogonId,
+    _In_ ULONG LogonType,
+    _In_ PUNICODE_STRING UserName)
 {
     PLSAP_LOGON_SESSION Session;
 
@@ -74,6 +77,17 @@ LsapSetLogonSessionData(IN PLUID LogonId)
     if (Session == NULL)
         return STATUS_NO_SUCH_LOGON_SESSION;
 
+    TRACE("LogonType %lu\n", LogonType);
+    Session->LogonType = LogonType;
+
+    TRACE("UserName %wZ\n", UserName);
+    Session->UserName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, UserName->MaximumLength);
+    if (Session->UserName.Buffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Session->UserName.Length = UserName->Length;
+    Session->UserName.MaximumLength = UserName->MaximumLength;
+    RtlCopyMemory(Session->UserName.Buffer, UserName->Buffer, UserName->MaximumLength);
 
     return STATUS_SUCCESS;
 }
@@ -369,9 +383,9 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
     if (Session->UserName.MaximumLength != 0)
     {
         RtlCopyMemory(Ptr, Session->UserName.Buffer, Session->UserName.MaximumLength);
-        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->UserName.MaximumLength);
-
         LocalSessionData->UserName.Buffer = (PWSTR)((ULONG_PTR)Ptr - (ULONG_PTR)LocalSessionData);
+
+        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->UserName.MaximumLength);
     }
 
     /* Copy the LogonDomain string */
@@ -380,9 +394,9 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
     if (Session->LogonDomain.MaximumLength != 0)
     {
         RtlCopyMemory(Ptr, Session->LogonDomain.Buffer, Session->LogonDomain.MaximumLength);
-        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->LogonDomain.MaximumLength);
-
         LocalSessionData->LogonDomain.Buffer = (PWSTR)((ULONG_PTR)Ptr - (ULONG_PTR)LocalSessionData);
+
+        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->LogonDomain.MaximumLength);
     }
 
     /* Copy the AuthenticationPackage string */
@@ -391,9 +405,9 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
     if (Session->AuthenticationPackage.MaximumLength != 0)
     {
         RtlCopyMemory(Ptr, Session->AuthenticationPackage.Buffer, Session->AuthenticationPackage.MaximumLength);
-        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->AuthenticationPackage.MaximumLength);
-
         LocalSessionData->AuthenticationPackage.Buffer = (PWSTR)((ULONG_PTR)Ptr - (ULONG_PTR)LocalSessionData);
+
+        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->AuthenticationPackage.MaximumLength);
     }
 
     LocalSessionData->LogonType = Session->LogonType;
@@ -403,9 +417,9 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
     if (Session->Sid != NULL)
     {
         RtlCopyMemory(Ptr, Session->Sid, SidLength);
-        Ptr = (PUCHAR)((ULONG_PTR)Ptr + SidLength);
-
         LocalSessionData->Sid = (PSID)((ULONG_PTR)Ptr - (ULONG_PTR)LocalSessionData);
+
+        Ptr = (PUCHAR)((ULONG_PTR)Ptr + SidLength);
     }
 
     /* LogonTime */
@@ -417,9 +431,9 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
     if (Session->LogonServer.MaximumLength != 0)
     {
         RtlCopyMemory(Ptr, Session->LogonServer.Buffer, Session->LogonServer.MaximumLength);
-        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->LogonServer.MaximumLength);
-
         LocalSessionData->LogonServer.Buffer = (PWSTR)((ULONG_PTR)Ptr - (ULONG_PTR)LocalSessionData);
+
+        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->LogonServer.MaximumLength);
     }
 
     /* Copy the DnsDomainName string */
@@ -428,9 +442,9 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
     if (Session->DnsDomainName.MaximumLength != 0)
     {
         RtlCopyMemory(Ptr, Session->DnsDomainName.Buffer, Session->DnsDomainName.MaximumLength);
-        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->DnsDomainName.MaximumLength);
-
         LocalSessionData->DnsDomainName.Buffer = (PWSTR)((ULONG_PTR)Ptr - (ULONG_PTR)LocalSessionData);
+
+        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->DnsDomainName.MaximumLength);
     }
 
     /* Copy the Upn string */
@@ -439,9 +453,9 @@ LsapGetLogonSessionData(IN OUT PLSA_API_MSG RequestMsg)
     if (Session->Upn.MaximumLength != 0)
     {
         RtlCopyMemory(Ptr, Session->Upn.Buffer, Session->Upn.MaximumLength);
-        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->Upn.MaximumLength);
-
         LocalSessionData->Upn.Buffer = (PWSTR)((ULONG_PTR)Ptr - (ULONG_PTR)LocalSessionData);
+
+        Ptr = (PUCHAR)((ULONG_PTR)Ptr + Session->Upn.MaximumLength);
     }
 
 
