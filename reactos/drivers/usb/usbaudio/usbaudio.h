@@ -222,3 +222,44 @@ USBAudioPnPSetPower(
   _In_ DEVICE_POWER_STATE To,
   _In_ DEVICE_POWER_STATE From
 );
+
+/* pin.c*/
+
+NTSTATUS
+NTAPI
+USBAudioPinCreate(
+    _In_ PKSPIN Pin,
+    _In_ PIRP Irp);
+
+NTSTATUS
+NTAPI
+USBAudioPinClose(
+    _In_ PKSPIN Pin,
+    _In_ PIRP Irp);
+
+NTSTATUS
+NTAPI
+USBAudioPinProcess(
+    _In_ PKSPIN Pin);
+
+VOID
+NTAPI
+USBAudioPinReset(
+    _In_ PKSPIN Pin);
+
+NTSTATUS
+NTAPI
+USBAudioPinSetDataFormat(
+    _In_ PKSPIN Pin,
+    _In_opt_ PKSDATAFORMAT OldFormat,
+    _In_opt_ PKSMULTIPLE_ITEM OldAttributeList,
+    _In_ const KSDATARANGE* DataRange,
+    _In_opt_ const KSATTRIBUTE_LIST* AttributeRange);
+
+NTSTATUS
+NTAPI
+USBAudioPinSetDeviceState(
+    _In_ PKSPIN Pin,
+    _In_ KSSTATE ToState,
+    _In_ KSSTATE FromState);
+

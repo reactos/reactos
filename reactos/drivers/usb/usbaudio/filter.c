@@ -78,6 +78,21 @@ static KSFILTER_DISPATCH USBAudioFilterDispatch =
     NULL
 };
 
+static KSPIN_DISPATCH UsbAudioPinDispatch =
+{
+    USBAudioPinCreate,
+    USBAudioPinClose,
+    USBAudioPinProcess,
+    USBAudioPinReset,
+    USBAudioPinSetDataFormat,
+    USBAudioPinSetDeviceState,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+};
+
+
 NTSTATUS
 BuildUSBAudioFilterTopology(
     PKSDEVICE Device)
@@ -382,6 +397,9 @@ USBAudioPinBuildDescriptors(
         {
             /* irp sink pins*/
             TerminalDescriptor = UsbAudioGetStreamingTerminalDescriptorByIndex(DeviceExtension->ConfigurationDescriptor, Index);
+            ASSERT(TerminalDescriptor != NULL);
+
+            Pins[Index].Dispatch = &UsbAudioPinDispatch;
             Pins[Index].PinDescriptor.InterfacesCount = 1;
             Pins[Index].PinDescriptor.Interfaces = &StandardPinInterface;
             Pins[Index].PinDescriptor.MediumsCount = 1;
@@ -499,7 +517,6 @@ USBAudioCreateFilterContext(
         return Status;
     }
 
-    DbgBreakPoint();
     /* build topology */
     Status = BuildUSBAudioFilterTopology(Device);
     if (!NT_SUCCESS(Status))
