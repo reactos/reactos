@@ -477,20 +477,25 @@ NTAPI
 USBAudioCreateFilterContext(
     PKSDEVICE Device)
 {
-    KSFILTER_DESCRIPTOR FilterDescriptor;
+    PKSFILTER_DESCRIPTOR FilterDescriptor;
     PKSCOMPONENTID ComponentId;
     NTSTATUS Status;
 
-    /* clear filter descriptor */
-    RtlZeroMemory(&FilterDescriptor, sizeof(KSFILTER_DESCRIPTOR));
+    /* allocate descriptor */
+    FilterDescriptor = AllocFunction(sizeof(KSFILTER_DESCRIPTOR));
+    if (!FilterDescriptor)
+    {
+        /* no memory */
+        return USBD_STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* init filter descriptor*/
-    FilterDescriptor.Version = KSFILTER_DESCRIPTOR_VERSION;
-    FilterDescriptor.Flags = 0;
-    FilterDescriptor.ReferenceGuid = &KSNAME_Filter;
-    FilterDescriptor.Dispatch = &USBAudioFilterDispatch;
-    FilterDescriptor.CategoriesCount = 1;
-    FilterDescriptor.Categories = &GUID_KSCATEGORY_AUDIO;
+    FilterDescriptor->Version = KSFILTER_DESCRIPTOR_VERSION;
+    FilterDescriptor->Flags = 0;
+    FilterDescriptor->ReferenceGuid = &KSNAME_Filter;
+    FilterDescriptor->Dispatch = &USBAudioFilterDispatch;
+    FilterDescriptor->CategoriesCount = 1;
+    FilterDescriptor->Categories = &GUID_KSCATEGORY_AUDIO;
 
     /* init component id*/
     ComponentId = AllocFunction(sizeof(KSCOMPONENTID));
@@ -506,10 +511,10 @@ USBAudioCreateFilterContext(
         //FreeFunction(ComponentId);
         //return Status;
     }
-    FilterDescriptor.ComponentId = ComponentId;
+    FilterDescriptor->ComponentId = ComponentId;
 
     /* build pin descriptors */
-    Status = USBAudioPinBuildDescriptors(Device, (PKSPIN_DESCRIPTOR_EX *)&FilterDescriptor.PinDescriptors, &FilterDescriptor.PinDescriptorsCount, &FilterDescriptor.PinDescriptorSize);
+    Status = USBAudioPinBuildDescriptors(Device, (PKSPIN_DESCRIPTOR_EX *)&FilterDescriptor->PinDescriptors, &FilterDescriptor->PinDescriptorsCount, &FilterDescriptor->PinDescriptorSize);
     if (!NT_SUCCESS(Status))
     {
         /* failed*/
@@ -527,7 +532,7 @@ USBAudioCreateFilterContext(
     }
 
     /* lets create the filter */
-    Status = KsCreateFilterFactory(Device->FunctionalDeviceObject, &FilterDescriptor, ReferenceString, NULL, KSCREATE_ITEM_FREEONSTOP, NULL, NULL, NULL);
+    Status = KsCreateFilterFactory(Device->FunctionalDeviceObject, FilterDescriptor, ReferenceString, NULL, KSCREATE_ITEM_FREEONSTOP, NULL, NULL, NULL);
     DPRINT1("KsCreateFilterFactory: %x\n", Status);
 
     return Status;
