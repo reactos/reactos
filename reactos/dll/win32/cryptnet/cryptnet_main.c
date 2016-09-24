@@ -1025,6 +1025,7 @@ static BOOL WINAPI File_RetrieveEncodedObjectW(LPCWSTR pszURL,
              components.dwUrlPathLength + 1);
             hFile = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ,
              NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+#ifndef __REACTOS__
             if (hFile == INVALID_HANDLE_VALUE)
             {
                 /* Try again on the current drive */
@@ -1049,6 +1050,7 @@ static BOOL WINAPI File_RetrieveEncodedObjectW(LPCWSTR pszURL,
                     }
                 }
             }
+#endif
             if (hFile != INVALID_HANDLE_VALUE)
             {
                 if ((ret = CRYPT_GetObjectFromFile(hFile, pObject)))
