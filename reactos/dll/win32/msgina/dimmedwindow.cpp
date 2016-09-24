@@ -104,7 +104,7 @@ public:
     {
         MSG msg;
 
-        while (!IsWindowVisible(m_hwnd))
+        while (!IsWindowVisible(m_hwnd) && IsWindow(m_hwnd))
         {
             while (::PeekMessage(&msg, m_hwnd, 0, 0, PM_REMOVE))
             {
@@ -260,6 +260,15 @@ ShellDimScreen(void** pUnknown, HWND* hWindow)
     ULONG refcount;
 
     pWindow->WaitForInit();
+
+    if (!IsWindow(pWindow->Wnd()))
+    {
+        refcount = pWindow->AddRef();
+        while (refcount)
+            refcount = pWindow->Release();
+
+        return E_FAIL;
+    }
 
     _SEH2_TRY
     {
