@@ -35,7 +35,7 @@ public:
 
     CTimeSpan(LONG lDays, int nHours, int nMins, int nSecs) throw()
     {
-        ATLASSERT(lDays >= 0 && nHours >= 0 && nHours <= 59 && nMins >= 0 && nMins <= 59 && nSecs >= 0 && nSecs <= 59);
+        ATLASSERT(lDays >= 0 && nHours >= 0 && nHours <= 23 && nMins >= 0 && nMins <= 59 && nSecs >= 0 && nSecs <= 59);
         m_nSpan = ((((LONGLONG)lDays) * 24 + nHours) * 60 + nMins) * 60 + nSecs;
     }
 
