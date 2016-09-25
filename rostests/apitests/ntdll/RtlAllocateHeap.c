@@ -62,4 +62,16 @@ START_TEST(RtlAllocateHeap)
     RtlDestroyHeap(hHeap);
 
     ok(Aligned == TRUE, "Unaligned address returned\n");
+
+    _SEH2_TRY
+    {
+        hHeap = RtlCreateHeap(HEAP_CREATE_ALIGN_16, NULL, 0, 0, NULL, (PRTL_HEAP_PARAMETERS)0xdeadbeef);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        hHeap = INVALID_HANDLE_VALUE;
+    }
+    _SEH2_END;
+
+    ok(hHeap == NULL, "Unexpected heap value: %p\n", hHeap);
 }
