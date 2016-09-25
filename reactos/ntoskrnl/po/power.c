@@ -702,6 +702,26 @@ NtPowerInformation(IN POWER_INFORMATION_LEVEL PowerInformationLevel,
             break;
         }
 
+        case ProcessorInformation:
+        {
+            PPROCESSOR_POWER_INFORMATION PowerInformation = (PPROCESSOR_POWER_INFORMATION)OutputBuffer;
+
+            if (InputBuffer != NULL)
+                return STATUS_INVALID_PARAMETER;
+            if (OutputBufferLength < sizeof(PROCESSOR_POWER_INFORMATION))
+                return STATUS_BUFFER_TOO_SMALL;
+
+            PowerInformation->Number = 0;
+            PowerInformation->MaxMhz = 1000;
+            PowerInformation->CurrentMhz = 1000;
+            PowerInformation->MhzLimit = 1000;
+            PowerInformation->MaxIdleState = 0;
+            PowerInformation->CurrentIdleState = 0;
+
+            Status = STATUS_SUCCESS;
+            break;
+        }
+
         default:
             Status = STATUS_NOT_IMPLEMENTED;
             DPRINT1("PowerInformationLevel 0x%x is UNIMPLEMENTED! Have a nice day.\n",
