@@ -196,7 +196,6 @@ gdb_send_registers(void)
             RegisterPtr = thread_to_reg(DbgThread, i, &size);
             if (RegisterPtr)
             {
-                RegisterPtr = ctx_to_reg(&CurrentContext, i, &size);
                 RegisterStr[0] = hex_chars[RegisterPtr[0] >> 4];
                 RegisterStr[1] = hex_chars[RegisterPtr[0] & 0xF];
                 RegisterStr[2] = hex_chars[RegisterPtr[1] >> 4];
