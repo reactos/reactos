@@ -181,10 +181,11 @@ public:
 
     BOOL CompactPathEx(UINT nMaxChars, DWORD dwFlags = 0)
     {
-        StringType result;
-        PXSTR str = result.GetBuffer(nMaxChars);
-        PathCompactPathExX(str, m_strPath, nMaxChars, dwFlags);
-        result.ReleaseBuffer();
+        StringType strTemp;
+        PXSTR str = strTemp.GetBuffer(nMaxChars);
+        BOOL result = PathCompactPathExX(str, m_strPath, nMaxChars, dwFlags);
+        strTemp.ReleaseBuffer();
+        m_strPath = strTemp;
         return result;
     }
 
