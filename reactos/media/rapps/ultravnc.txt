@@ -7,7 +7,7 @@ Size = 36.2 KiB
 Category = 5
 URLSite = http://www.uvnc.com/
 URLDownload = http://www.uvnc.eu/download/1211/UltraVNC_1_2_11_X86_Setup.exe
-SHA1 = 7f202b0e5bbc134582ad24017ec9a4224ba4062f
+SHA1 = 8ef2051ca73ec2f6d4a2343eebc2c69198967297
 CDPath = none
 
 [Section.0407]
@@ -36,7 +36,7 @@ Size = 36,2 Kio
 
 [Section.0419]
 Description = VNC клиент/сервер с открытым исходным кодом.
-Size = 36,2 KiB
+Size = 36,2 КиБ
 
 [Section.041f]
 Description = Açık kaynak VNC istemcisi ve sunucusu.

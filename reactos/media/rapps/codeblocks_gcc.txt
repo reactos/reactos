@@ -28,7 +28,7 @@ Size = 79,9 Mio
 [Section.0419]
 Name = Code::Blocks TDM-GCC (версия 4.9.2, 32 бит)
 Description = Свободная кроссплатформенная среда разработки. Содержит TDM-GCC компилятор версии 4.9.2, 32 бит.
-Size = 79,9 MiB
+Size = 79,9 МиБ
 
 [Section.041f]
 Name = Code::Blocks TDM-GCC (sürüm 4.9.2, 32 bitlik)

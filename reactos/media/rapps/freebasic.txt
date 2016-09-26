@@ -33,7 +33,7 @@ Size = 10,7 Mio
 
 [Section.0419]
 Description = Компилятор языка BASIC. Синтаксис BASIC совместим с QBASIC.
-Size = 10,7 MiB
+Size = 10,7 МиБ
 
 [Section.041f]
 Description = Açık kaynak BASIC derleyicisi. Bu BASIC söz dizimi, QBASIC ile uyumludur.

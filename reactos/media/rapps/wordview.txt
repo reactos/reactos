@@ -59,7 +59,7 @@ SHA1 = 22728a9442043478065c5e4b923a0eb53fdc6bae
 [Section.0419]
 License = Неизвестно
 Description = Средство просмотра документов Word (*.doc).
-Size = 24,6 MiB
+Size = 24,6 МиБ
 URLDownload = http://download.microsoft.com/download/f/e/a/feaea1a7-1e23-47d5-912e-5518f5d0ca1e/wordview_ru-ru.exe
 SHA1 = 99770ed8483ff38e884edac521fbdce1cf27d4f2
 

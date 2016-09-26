@@ -36,7 +36,7 @@ Size = 211,5 Mio
 
 [Section.0419]
 Description = Кросплатформенный, свободно распространяемый офисный пакет с открытым исходным кодом, созданный как ответвление OpenOffice.
-Size = 211,5 MiB
+Size = 211,5 МиБ
 
 [Section.041f]
 Description = Güçlü ve açık kaynak bir ofis paketi. OpenOffice'ten çatallanılmıştır.

@@ -16,5 +16,5 @@ Size = 385,7 KiB
 
 [Section.0419]
 Description = Небольшой, но быстрый C компилятор.
-Size = 385,7 KiB
+Size = 385,7 КиБ
 

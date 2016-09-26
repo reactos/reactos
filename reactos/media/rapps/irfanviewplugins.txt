@@ -44,7 +44,7 @@ Size = 15,6 Mio
 [Section.0419]
 License = Бесплатно (для личного пользования)
 Description = Плагины для поддержки дополнительных типов файлов.
-Size = 15,6 MiB
+Size = 15,6 МиБ
 
 [Section.041f]
 Name = IrfanView Eklentileri

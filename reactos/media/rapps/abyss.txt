@@ -37,7 +37,7 @@ Size = 2,0 Mio
 
 [Section.0419]
 Description = Позволит разместить веб-сайты на вашем компьютере. Он поддерживает защищенные SSL/TLS-соединения (протокол https), а также широкий спектр веб-технологий. Он также может запустить веб-приложения PHP, Perl, Python, ASP, ASP.NET и Ruby, которые, могут быть связаны с базами данных MySQL, SQLite, MS SQL Server, MS Access или Oracle.
-Size = 2,0 MiB
+Size = 2,0 МиБ
 
 [Section.041f]
 Name = Abyss Umûmî Ağ Sunucusu X1

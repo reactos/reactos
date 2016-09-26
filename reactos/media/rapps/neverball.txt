@@ -20,7 +20,7 @@ Size = 72,3 Mio
 
 [Section.0419]
 Description = Компьютерная игра-платформер, в которой игрок управляет мячом путём наклона опорной конструкции в трёхмерном пространстве. Для перехода на следующий уровень нужно открыть цель, собрав для этого определённое количество монет (очков), и попасть в неё мячом.
-Size = 72,3 MiB
+Size = 72,3 МиБ
 
 [Section.0a]
 Description = Gira el suelo para mover una bola a través de una pista de obstáculos a contra reloj. Neverball es mitad puzle, mitad juego de acción y toda una prueba de habilidad. Se necesita una herramienta como 7-Zip para extraer el juego.

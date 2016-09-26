@@ -20,7 +20,7 @@ Size = 6,1 Mio
 
 [Section.0419]
 Description = Инструмент для сравнения и синхронизации файлов и директорий.
-Size = 6,1 MiB
+Size = 6,1 МиБ
 
 [Section.041f]
 License = GPL sürüm 2

@@ -8,6 +8,7 @@ Category = 5
 URLSite = http://www.bittorrent.com/
 URLDownload = http://download-new.utorrent.com/endpoint/bittorrent/os/windows/track/stable/BitTorrent.exe
 CDPath = none
+SHA1 = fe078a8b85ae07a229806ea9db68c7a93718455c
 
 [Section.0407]
 License = Freeware für nichtkommerzielle Nutzung
@@ -33,7 +34,7 @@ Size = 2,4 Mio
 [Section.0419]
 License = Бесплатно, для не коммерческого использования
 Description = Оригинальный клиент BitTorrent
-Size = 2,4 MiB
+Size = 2,4 МиБ
 
 [Section.041f]
 License = Tecimlik olmayan kullanımlar için ücretsiz.

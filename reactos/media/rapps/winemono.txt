@@ -33,7 +33,7 @@ Size = 51,2 Mio
 
 [Section.0419]
 Description = Свободная реализация .NET Framework, используемая в библиотеках Wine.
-Size = 51,2 MiB
+Size = 51,2 МиБ
 
 [Section.041f]
 Name = Wine Mono .NET Çatısı

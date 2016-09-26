@@ -32,7 +32,7 @@ Size = 18,5 Mio
 Name = Драйверы видеокарт NVidia
 License = Неизвестно
 Description = Драйвера для видеокарт RIVA TNT2, GeForce/Quadro 1/2/3/4 от NVidia.
-Size = 18,5 MiB
+Size = 18,5 МиБ
 
 [Section.0804]
 Name = NVidia 显示驱动程序

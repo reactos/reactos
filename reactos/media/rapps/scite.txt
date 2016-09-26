@@ -38,7 +38,7 @@ Size = 788,5 Kio
 [Section.0419]
 License = Бесплатно
 Description = Кроссплатформенный текстовый редактор.
-Size = 788,5 KiB
+Size = 788,5 КиБ
 
 [Section.041f]
 License = Ücretsiz

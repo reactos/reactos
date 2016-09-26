@@ -32,7 +32,7 @@ Size = 5,2 Mio
 
 [Section.0419]
 Description = Double Commander - это открытый двухпанельный файловый менеджер. Вам нужен 7-Zip или подобная утилита для его распаковки.
-Size = 5,2 MiB
+Size = 5,2 МиБ
 
 [Section.041f]
 Version = 0.7.1 Gelişme

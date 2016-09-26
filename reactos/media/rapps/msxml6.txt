@@ -44,7 +44,7 @@ Size = 1,5 Mio
 [Section.0419]
 License = Неизвестно
 Description = Нужен для некоторых MSI установщиков. Содержит: msxml6.dll, msxml6r.dll.
-Size = 1,5 MiB
+Size = 1,5 МиБ
 
 [Section.041f]
 License = Bilinmiyor

@@ -32,7 +32,7 @@ Size = 104,7 Mio
 Name = QB64 (SDL версия)
 License = Бесплатно
 Description = Компилятор языка BASIC для Microsoft Windows, Linux и Mac OS X. Совместим с Microsoft QBasic и Microsoft QuickBASIC. Вам понадобится такой инструмент, как 7-zip, чтобы распаковать его.
-Size = 104,7 MiB
+Size = 104,7 МиБ
 
 [Section.041f]
 Name = QB64 (SDL sürümü)

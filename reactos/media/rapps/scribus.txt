@@ -42,7 +42,7 @@ Size = 78,2 Mio
 
 [Section.0419]
 Description = Приложение для визуальной вёрстки документов с открытым исходным кодом.
-Size = 78,2 MiB
+Size = 78,2 МиБ
 
 [Section.041b]
 Description = Open-source program, ktorý prináša profesionálnej stránke rozloženie na ReactOS.

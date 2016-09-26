@@ -19,7 +19,7 @@ Size = 33,0 Mio
 
 [Section.0419]
 Description = Визуальная объектно-ориентированная среда программирования для детей.
-Size = 33,0 MiB
+Size = 33,0 МиБ
 
 [Section.041f]
 Description = Çocuklar için görmelik nesneye yönelik izlenceleme ortamı.

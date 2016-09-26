@@ -31,7 +31,7 @@ Size = 13,8 Mio
 [Section.0419]
 License = Условно бесплатно
 Description = Одина из лучших игр Пасьянс Маджонг.
-Size = 13,8 MiB
+Size = 13,8 МиБ
 
 [Section.041f]
 License = Paylaşımlı

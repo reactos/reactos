@@ -17,5 +17,5 @@ Size = 682,5 KiB
 [Section.0419]
 License = GNU GPL v3
 Description = Приложение для загрузки подкастов.
-Size = 682,5 KiB
+Size = 682,5 КиБ
 

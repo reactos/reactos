@@ -36,7 +36,7 @@ Size = 5,6 Mio
 
 [Section.0419]
 Description = Текстовый процесор.
-Size = 5,6 MiB
+Size = 5,6 МиБ
 
 [Section.041f]
 Description = Canlı ve açık kaynak sözcük işlemcisi.

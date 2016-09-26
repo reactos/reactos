@@ -19,7 +19,7 @@ Size = 5,3 Mio
 
 [Section.0419]
 Description = Набор инструментов для работы с файлами формата mkv.
-Size = 5,3 MiB
+Size = 5,3 МиБ
 
 [Section.041f]
 Description = MKV biçiminde kütüklerle çalışma için araç takımı.

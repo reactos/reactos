@@ -31,7 +31,7 @@ Size = 12,6 Mio
 
 [Section.0419]
 Description = Аудиоплеер Qmmp (Qt-based Multimedia Player).
-Size = 12,6 MiB
+Size = 12,6 МиБ
 
 [Section.041f]
 Name = Qmmp (Qt Tabanlı Çoklu Ortam Oynatıcısı)

@@ -36,7 +36,7 @@ Size = 2,1 Mio
 
 [Section.0419]
 Description = Расширение оболочки, которое позволяет открыть любую DOS программу в DOSBox. Эта версия содержит DOSBox  0.70, но её можно обновить, установив новую версию DOSBox в папку DosBlaster.
-Size = 2,1 MiB
+Size = 2,1 МиБ
 
 [Section.041f]
 Description = Bir DOS uygulamasını DOSBox'ta sağ tıklamayla açtırılabilmesini olanaklı duruma getiren bir kabuk uzantısıdır. Bu sürüm DOSBox 0.70 içerir ancak daha yeni bir DOSBox'u DosBlaster dizinlerinin içine kurarak kolayca şimdikileştirilebilir.

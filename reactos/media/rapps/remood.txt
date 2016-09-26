@@ -36,7 +36,7 @@ Size = 1,1 Mio
 
 [Section.0419]
 Description = Очередная версия игры Doom.
-Size = 1,1 MiB
+Size = 1,1 МиБ
 
 [Section.041f]
 Description = Doom Legacy'in bir kaynak kodu uyarlamasıdır. Yeni husûsiyetlerle ve daha çok kararlılıkla kökleşik eski deneyimini sağlamayı amaçlar.

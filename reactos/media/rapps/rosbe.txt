@@ -39,7 +39,7 @@ Size = 32,2 Mio
 
 [Section.0419]
 Description = Позволит Вам собрать ReactOS из исходных кодов. Подробности смотрите в ReactOS wiki.
-Size = 32,2 MiB
+Size = 32,2 МиБ
 
 [Section.041f]
 Name = ReactOS Yapma Ortamı

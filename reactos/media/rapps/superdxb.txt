@@ -31,7 +31,7 @@ Size = 3,8 Mio
 [Section.0419]
 License = Условно бесплатно
 Description = Классический арканоид.
-Size = 3,8 MiB
+Size = 3,8 МиБ
 
 [Section.041f]
 License = Paylaşımlı

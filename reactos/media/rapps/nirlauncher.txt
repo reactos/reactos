@@ -30,7 +30,7 @@ Size = 23,6 Mio
 [Section.0419]
 License = Бесплатно
 Description = Пакет из более чем 180 утилит для Windows.
-Size = 23,6 MiB
+Size = 23,6 МиБ
 
 [Section.041f]
 License = Ücretsiz

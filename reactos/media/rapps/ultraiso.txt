@@ -18,7 +18,7 @@ Size = 4,2 Mio
 [Section.0419]
 License = Пробная версия
 Description = Программа для создания, редактирования и конвертирования различных форматов CD и DVD-образов.
-Size = 4,2 MiB
+Size = 4,2 МиБ
 
 [Section.041f]
 License = Deneme sürümü

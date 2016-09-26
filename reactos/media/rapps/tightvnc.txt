@@ -25,7 +25,7 @@ Size = 2,0 Mio
 
 [Section.0419]
 Description = Бесплатный пакет программного обеспечения для удаленного управления.
-Size = 2,0 MiB
+Size = 2,0 МиБ
 
 [Section.0804]
 Description = 一套免费的远程控制软件。

@@ -21,7 +21,7 @@ Size = 17,8 Mio
 
 [Section.0419]
 Description = Кроссплатформенная среда от компании Adobe для запуска приложений, позволяющая использовать HTML/CSS, AJAX, Adobe Flash и Apache Flex для переноса веб-приложений (в том числе Rich Internet Application) на ПК и мобильные устройства.
-Size = 17,8 MiB
+Size = 17,8 МиБ
 
 [Section.041f]
 License = Adobe Yazılım Ruhsatlama Anlaşması

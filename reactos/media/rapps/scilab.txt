@@ -37,7 +37,7 @@ Size = 128,4 Mio
 
 [Section.0419]
 Description = Программное обеспечение для численных вычислений в инженерных и научных приложений.
-Size = 128,4 MiB
+Size = 128,4 МиБ
 
 [Section.041b]
 Description = Softvér pre numerické výpočty v strojárstve a vedeckých aplikáciách.

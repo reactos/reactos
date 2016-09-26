@@ -36,7 +36,7 @@ Size = 12,0 Mio
 
 [Section.0419]
 Description = Мультимедийный проигрыватель.
-Size = 12,0 MiB
+Size = 12,0 МиБ
 
 [Section.041b]
 Description = Multimediálny prehrávač.

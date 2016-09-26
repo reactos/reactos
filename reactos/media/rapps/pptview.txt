@@ -61,7 +61,7 @@ SHA1 = 5cf30cc86d5bc76f7c715a1d07499f21b9f57bac
 License = Неизвестно
 Description = Бесплатная программа для просмотра офесных форматов (*.ppt).
 URLDownload = http://download.microsoft.com/download/C/9/4/C9419731-CC9C-4847-BFB6-0444F97D7BD5/PowerPointViewer.exe
-Size = 60,5 MiB
+Size = 60,5 МиБ
 SHA1 = d465a85621f1c93cd34c882169e21897e0dc2766
 
 [Section.041f]

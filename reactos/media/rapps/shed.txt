@@ -22,7 +22,7 @@ Size = 65,8 Kio
 [Section.0419]
 License = Бесплатно
 Description = Карточная игра для одного игрока.
-Size = 65,8 KiB
+Size = 65,8 КиБ
 
 [Section.041f]
 License = Ücretsiz

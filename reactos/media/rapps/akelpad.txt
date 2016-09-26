@@ -23,7 +23,7 @@ Size = 1,2 Mio
 
 [Section.0419]
 Description = AkelPad - текстовый редактор с открытым исходным кодом, созданный, чтобы быть маленьким и быстрым.
-Size = 1,2 MiB
+Size = 1,2 МиБ
 
 [Section.041f]
 Description = Küçük ve hızlı olmak içn tasarlanmış bir açık kaynak metin düzenleyicisi.

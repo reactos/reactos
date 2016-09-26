@@ -36,7 +36,7 @@ Size = 1,4 Mio
 
 [Section.0419]
 Description = Клон Atomix, использующий SDL библиотеки.
-Size = 1,4 MiB
+Size = 1,4 МиБ
 
 [Section.041f]
 Description = SDL kitaplıklarını kullanan Atomix taklidi.

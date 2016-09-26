@@ -42,7 +42,7 @@ Size = 305,1 Kio
 [Section.0419]
 License = Неизвестно
 Description = Пакет Tahoma шрифтов. Необходим для некоторых приложений. Содержит: Tahoma.ttf, Tahomabd.ttf.
-Size = 305,1 KiB
+Size = 305,1 КиБ
 
 [Section.041f]
 Name = Microsoft Tahoma Yazı Tipi

@@ -44,7 +44,7 @@ Size = 8,6 Mio
 [Section.0419]
 License = Неизвестно
 Description = Необходим для приложений, написанных в Visual Studio 2010. Содержит: atl100.dll, mfc100.dll, mfc90u.dll, mfcm100.dll, mfcm90u.dll, msdia100.dll, msvcm100.dll, msvcp100.dll, msvcr100.dll, vcomp100.dll.
-Size = 8,6 MiB
+Size = 8,6 МиБ
 
 [Section.041f]
 Name = Microsoft Visual C++ 2010 Yeniden Dağıtılabilir Paket

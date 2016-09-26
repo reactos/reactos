@@ -16,5 +16,5 @@ Size = 10,2 MiB
 
 [Section.0419]
 Description = Двух панельный консольный менеджер файлов
-Size = 10,2 MiB
+Size = 10,2 МиБ
 

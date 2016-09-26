@@ -36,7 +36,7 @@ Size = 1,1 Mio
 
 [Section.0419]
 Description = Головоломка. GPL Клон Chip's Challenge
-Size = 1,1 MiB
+Size = 1,1 МиБ
 
 [Section.041f]
 Description = Başlangıçta Atari Lynx için yapılan Chip's Challenge oyununun iyi bir taklidi. Ücretsiz CCLP2 Çizge Paketi'ni kapsar, bu yüzden telifli özgününe gereksinim duymazsınız.

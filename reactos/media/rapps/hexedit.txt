@@ -22,7 +22,7 @@ Size = 146,3 Kio
 [Section.0419]
 License = Бесплатно
 Description = Шестнадцатеричный редактор файлов для  Windows.
-Size = 146,3 KiB
+Size = 146,3 КиБ
 
 [Section.041f]
 License = Ücretsiz

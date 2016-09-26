@@ -22,7 +22,7 @@ Size = 861,1 Kio
 [Section.0419]
 License = Бесплатно
 Description = Windows тема, основанная на Windows Codename Whistler.
-Size = 861,1 KiB
+Size = 861,1 КиБ
 
 [Section.041f]
 License = Ücretsiz

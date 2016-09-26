@@ -24,7 +24,7 @@ Size = 5,1 Mio
 [Section.0419]
 Name = LibreOffice Справочный пакет
 Description = Оффлайн справка для LibreOffice.
-Size = 7,3 MiB
+Size = 7,3 МиБ
 URLDownload = http://download.documentfoundation.org/libreoffice/stable/5.2.0/win/x86/LibreOffice_5.2.0_Win_x86_helppack_ru.msi
 SHA1 = 6e94bb64120b097be9a9e512d5b9880a45a71f56
 

@@ -41,7 +41,7 @@ Size = 4,6 Mio
 [Section.0419]
 Description = Тонкий, свободный, с открытым исходным кодом программа для чтения PDF.
 URLSite = http://www.sumatrapdfreader.org/free-pdf-reader-ru.html
-Size = 4,6 MiB
+Size = 4,6 МиБ
 
 [Section.041f]
 License = GPL sürüm 3

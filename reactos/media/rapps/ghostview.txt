@@ -24,7 +24,7 @@ Size = 1,9 Mio
 
 [Section.0419]
 Description = Графический интерфейс для Ghostscript.
-Size = 1,9 MiB
+Size = 1,9 МиБ
 
 [Section.041f]
 License = Aladdin Özgür Kamu Ruhsatı

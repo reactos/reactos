@@ -36,7 +36,7 @@ Size = 1,7 Mio
 
 [Section.0419]
 Description = Свободно распространяемый клиент для различных протоколов удалённого доступа, включая SSH, Telnet, rlogin.
-Size = 1,7 MiB
+Size = 1,7 МиБ
 
 [Section.041f]
 Description = Ücretsiz bir SSH, Telnet, rlogin ve işlenmemiş TCP istemcisi.

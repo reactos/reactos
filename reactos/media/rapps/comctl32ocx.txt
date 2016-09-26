@@ -58,7 +58,7 @@ Size = 913,7 Kio
 [Section.0419]
 License = Неизвестно
 Description = Файлы, необходимые для работы некоторых приложений. Содержит: comctl32.ocx, mscomctl.ocx, advpack.dll.
-Size = 913,7 KiB
+Size = 913,7 КиБ
 
 [Section.041f]
 Name = Microsoft Visual Basic 6.0 Ortak Denetimler

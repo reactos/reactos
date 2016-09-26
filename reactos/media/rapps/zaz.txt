@@ -29,7 +29,7 @@ Size = 20,9 Mio
 
 [Section.0419]
 Description = Бесплатная аркадная компьютерная игра-головоломка. Наподобие Frozen Bubble.
-Size = 20,9 MiB
+Size = 20,9 МиБ
 
 [Section.041f]
 Description = Ücretsiz, atari salonu oyunu türünde, devingen bir bulmaca oyunudur, birazcık Frozen Bubble'a benzer.

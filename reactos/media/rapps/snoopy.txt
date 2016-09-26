@@ -29,7 +29,7 @@ Size = 704,2 Kio
 [Section.0419]
 License = Бесплатно
 Description = Ремейк оригинальной игры C64 Snoopy.
-Size = 704,2 KiB
+Size = 704,2 КиБ
 
 [Section.041f]
 License = Ücretsiz

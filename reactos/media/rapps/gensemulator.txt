@@ -20,7 +20,7 @@ Size = 573,1 Kio
 
 [Section.0419]
 Description = Эмулятор Sega Genesis / Sega CD / Sega 32X для Win32.
-Size = 573,1 KiB
+Size = 573,1 КиБ
 
 [Section.041f]
 Name = Gens Öykünücü

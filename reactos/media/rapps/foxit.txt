@@ -36,7 +36,7 @@ License = Бесплатно
 Description = Бесплатное приложение для просмотра электронных документов в формате PDF.
 URLDownload = http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/win/7.x/7.3/L10N/FoxitReader736.321_prom_L10N_Setup.exe
 SHA1 = 23e6992e8e47c3295145c9c44b9a05cc630b8dc6
-Size = 60,0 MiB
+Size = 60,0 МиБ
 
 [Section.041f]
 Name = Foxit Okuyucu

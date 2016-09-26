@@ -45,7 +45,7 @@ Size = 1,4 Mio
 License = Бесплатно
 Description = Сервис цифрового распространения компьютерных игр и программ.
 URLSite = http://store.steampowered.com/?l=russian
-Size = 1,4 MiB
+Size = 1,4 МиБ
 
 [Section.041f]
 License = Ücretsiz

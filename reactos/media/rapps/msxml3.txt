@@ -44,7 +44,7 @@ Size = 1,0 Mio
 [Section.0419]
 License = Неизвестно
 Description = Нужен для некоторых MSI установщиков. Содержит: msxml3.dll, msxml3a.dll, msxml3r.dll.
-Size = 1,0 MiB
+Size = 1,0 МиБ
 
 [Section.041f]
 License = Bilinmiyor

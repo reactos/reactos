@@ -23,7 +23,7 @@ Size = 13,9 Mio
 
 [Section.0419]
 Description = Интерпретатор языка PostScript и документов PDF.
-Size = 13,9 MiB
+Size = 13,9 МиБ
 
 [Section.041f]
 Description = PostScript dili ve PDF için bir açık kaynak yorumlayıcı.

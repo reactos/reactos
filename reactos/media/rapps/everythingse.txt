@@ -22,7 +22,7 @@ Size = 906,4 Kio
 [Section.0419]
 License = Бесплатно
 Description = Мгновенный поиск файлов и папок.
-Size = 906,4 KiB
+Size = 906,4 КиБ
 
 [Section.041f]
 Name = Tüm Şeyler Arama Motoru

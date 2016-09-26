@@ -31,7 +31,7 @@ Size = 37,0 Mio
 Name = Пакет обеспечения совместимости Microsoft Office для форматов файлов Word, Excel и PowerPoint
 License = Неизвестно
 Description = Нужен, для открытия файлов *.docx, *.xlsx, и т.д. в Word/Excel Viewer и Office 2003.
-Size = 37,2 MiB
+Size = 37,2 МиБ
 URLSite = http://www.microsoft.com/ru-RU/download/details.aspx?id=3
 URLDownload = http://download.microsoft.com/download/b/c/4/bc41c3a1-c243-4440-a771-8260515e4cc7/FileFormatConverters.exe
 SHA1 = 03908a853cbdb39a026fa99687c6e243d1888b1f

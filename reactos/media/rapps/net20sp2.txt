@@ -41,7 +41,7 @@ Size = 23,8 Mio
 License = Неизвестно
 Description = Компоненты, необходимые для запуска некоторых Windows приложений.
 URLSite = https://www.microsoft.com/ru-RU/download/details.aspx?id=1639
-Size = 23,8 MiB
+Size = 23,8 МиБ
 
 [Section.041f]
 Name = Microsoft .NET Çatısı Sürüm 2.0 Hizmet Paketi 2

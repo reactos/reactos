@@ -16,5 +16,5 @@ Size = 3,2 MiB
 
 [Section.0419]
 Description = Некоторые порты стандартных утилит GNU для Win32.
-Size = 3,2 MiB
+Size = 3,2 МиБ
 

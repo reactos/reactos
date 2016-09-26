@@ -38,7 +38,7 @@ Size = 1,7 Mio
 [Section.0419]
 License = Условно бесплатно
 Description = Самый популярный клиент для IRC (Internet Relay Chat).
-Size = 1,7 MiB
+Size = 1,7 МиБ
 
 [Section.041f]
 License = Paylaşımlı

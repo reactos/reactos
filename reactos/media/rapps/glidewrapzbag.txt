@@ -40,7 +40,7 @@ Size = 249,0 Kio
 [Section.0419]
 License = Бесплатно
 Description = API для эмуляции 3dfx видеокарт с OpenGL. Необходимо для запуска Diablo II в ReactOS.
-Size = 249,0 KiB
+Size = 249,0 КиБ
 
 [Section.041f]
 Name = Zeckensack Eliyle Glide wrapper

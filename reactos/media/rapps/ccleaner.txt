@@ -31,7 +31,7 @@ Size = 6,6 Mio
 [Section.0419]
 License = Бесплатно
 Description = Мощный и простой в использовании инструмент для очистки и оптимизации системы.
-Size = 6,6 MiB
+Size = 6,6 МиБ
 
 [Section.0804]
 Description = 非常好的工具，清理您的电脑。

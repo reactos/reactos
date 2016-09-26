@@ -29,7 +29,7 @@ Size = 7,3 Mio
 
 [Section.0419]
 Description = Свободный классический платформер в стиле Super Mario Bros.
-Size = 7,3 MiB
+Size = 7,3 МиБ
 
 [Section.041f]
 Description = Ücretsiz, açık kaynak ve iki boyutlu bir platform oyunu.

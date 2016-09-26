@@ -28,7 +28,7 @@ Size = 2,5 Mio
 [Section.0419]
 License = Бесплатно
 Description = Помогает удалить софт и нежелательные программы, легко установить.
-Size = 2,5 MiB
+Size = 2,5 МиБ
 
 [Section.0804]
 Description = 可以帮助卸载软件并删除有害的程序，安装方便。
