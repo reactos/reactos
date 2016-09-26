@@ -273,7 +273,7 @@ static BOOL
 StartShell(VOID)
 {
     WCHAR Shell[MAX_PATH];
-    TCHAR szMsg[RC_STRING_MAX_SIZE];
+    WCHAR szMsg[RC_STRING_MAX_SIZE];
     DWORD Type, Size;
     DWORD Value = 0;
     LONG rc;
@@ -375,8 +375,8 @@ StartShell(VOID)
     if (!TryToStartShell(Shell))
     {
         WARN("Failed to start default shell %s\n", debugstr_w(Shell));
-        LoadString( GetModuleHandle(NULL), IDS_SHELL_FAIL, szMsg, ARRAYSIZE(szMsg));
-        MessageBox(NULL, szMsg, NULL, MB_OK);
+        LoadStringW(GetModuleHandle(NULL), IDS_SHELL_FAIL, szMsg, ARRAYSIZE(szMsg));
+        MessageBoxW(NULL, szMsg, NULL, MB_OK);
         return FALSE;
     }
     return TRUE;
@@ -562,7 +562,7 @@ StartInstaller(VOID)
 
     if (!TryToStartShell(Shell))
     {
-        ERR("Failed to start the installer: %s\n", debugstr_w(Shell));
+        WARN("Failed to start the installer: %s\n", debugstr_w(Shell));
         LoadStringW(GetModuleHandle(NULL), IDS_INSTALLER_FAIL, szMsg, ARRAYSIZE(szMsg));
         MessageBoxW(NULL, szMsg, NULL, MB_OK);
         return FALSE;
