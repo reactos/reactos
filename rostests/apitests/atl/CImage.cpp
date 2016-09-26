@@ -8,6 +8,10 @@
 #include <atlimage.h>
 #include "resource.h"
 
+#ifdef _MSC_VER
+#pragma comment(lib, "rpcrt4.lib")
+#endif
+
 #ifdef __REACTOS__
     #include <apitest.h>
 #else
@@ -34,6 +38,17 @@
     #define START_TEST(x)   int main(void)
 #endif
 
+bool IsGuidEqual(const GUID& guid1, const GUID& guid2)
+{
+    RPC_STATUS status;
+    if (::UuidEqual(const_cast<GUID *>(&guid1),
+                    const_cast<GUID *>(&guid2), &status))
+    {
+        if (status == RPC_S_OK)
+            return true;
+    }
+    return false;
+}
 
 const TCHAR* szFiles[] = {
     TEXT("ant.png"),
@@ -269,6 +284,69 @@ START_TEST(CImage)
         bOK = DeleteFile(file);
         ok(bOK, "Expected bOK to be TRUE, was: %d (for %i)\n", bOK, n);
     }
+
+    ATL::IAtlStringMgr *mgr = CAtlStringMgr::GetInstance();
+    CSimpleArray<GUID> aguidFileTypes;
+#ifdef UNICODE
+    CHAR szBuff[512];
+    const WCHAR *psz;
+#else
+    const CHAR *psz;
+#endif
+
+    CSimpleString strImporters(mgr);
+    aguidFileTypes.RemoveAll();
+    hr = CImage::GetImporterFilterString(strImporters,
+                                         aguidFileTypes,
+                                         TEXT("All Image Files"), 0);
+    ok(hr == S_OK, "Expected hr to be S_OK, was: %ld\n", hr);
+    ok(aguidFileTypes.GetSize() == 9, "Expected aguidFileTypes.GetSize() to be 8, was %d.", aguidFileTypes.GetSize());
+    ok(IsGuidEqual(aguidFileTypes[0], GUID_NULL), "Expected aguidFileTypes[0] to be GUID_NULL.\n");
+    ok(IsGuidEqual(aguidFileTypes[1], Gdiplus::ImageFormatBMP), "Expected aguidFileTypes[1] to be Gdiplus::ImageFormatBMP.\n");
+    ok(IsGuidEqual(aguidFileTypes[2], Gdiplus::ImageFormatJPEG), "Expected aguidFileTypes[2] to be Gdiplus::ImageFormatJPEG.\n");
+    ok(IsGuidEqual(aguidFileTypes[3], Gdiplus::ImageFormatGIF), "Expected aguidFileTypes[3] to be Gdiplus::ImageFormatGIF.\n");
+    ok(IsGuidEqual(aguidFileTypes[4], Gdiplus::ImageFormatEMF), "Expected aguidFileTypes[4] to be Gdiplus::ImageFormatEMF.\n");
+    ok(IsGuidEqual(aguidFileTypes[5], Gdiplus::ImageFormatWMF), "Expected aguidFileTypes[5] to be Gdiplus::ImageFormatWMF.\n");
+    ok(IsGuidEqual(aguidFileTypes[6], Gdiplus::ImageFormatTIFF), "Expected aguidFileTypes[6] to be Gdiplus::ImageFormatTIFF.\n");
+    ok(IsGuidEqual(aguidFileTypes[7], Gdiplus::ImageFormatPNG), "Expected aguidFileTypes[7] to be Gdiplus::ImageFormatPNG.\n");
+    ok(IsGuidEqual(aguidFileTypes[8], Gdiplus::ImageFormatIcon), "Expected aguidFileTypes[8] to be Gdiplus::ImageFormatIcon.\n");
+
+    psz = strImporters.GetString();
+#ifdef UNICODE
+    WideCharToMultiByte(CP_ACP, 0, psz, -1, szBuff, 512, NULL, NULL);
+    ok(lstrcmpA(szBuff, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.EMF;*.WMF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|EMF (*.EMF)|*.EMF|WMF (*.WMF)|*.WMF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG|ICO (*.ICO)|*.ICO||") == 0,
+       "The importer filter string is bad, was: %s\n", szBuff);
+#else
+    ok(lstrcmpA(psz, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.EMF;*.WMF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|EMF (*.EMF)|*.EMF|WMF (*.WMF)|*.WMF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG|ICO (*.ICO)|*.ICO||") == 0,
+       "The importer filter string is bad, was: %s\n", psz);
+#endif
+
+    CSimpleString strExporters(mgr);
+    aguidFileTypes.RemoveAll();
+    hr = CImage::GetExporterFilterString(strExporters,
+                                         aguidFileTypes, 
+                                         TEXT("All Image Files"), 0);
+    ok(hr == S_OK, "Expected hr to be S_OK, was: %ld\n", hr);
+    ok(aguidFileTypes.GetSize() == 9, "Expected aguidFileTypes.GetSize() to be 8, was %d.", aguidFileTypes.GetSize());
+    ok(IsGuidEqual(aguidFileTypes[0], GUID_NULL), "Expected aguidFileTypes[0] to be GUID_NULL.\n");
+    ok(IsGuidEqual(aguidFileTypes[1], Gdiplus::ImageFormatBMP), "Expected aguidFileTypes[1] to be Gdiplus::ImageFormatBMP.\n");
+    ok(IsGuidEqual(aguidFileTypes[2], Gdiplus::ImageFormatJPEG), "Expected aguidFileTypes[2] to be Gdiplus::ImageFormatJPEG.\n");
+    ok(IsGuidEqual(aguidFileTypes[3], Gdiplus::ImageFormatGIF), "Expected aguidFileTypes[3] to be Gdiplus::ImageFormatGIF.\n");
+    ok(IsGuidEqual(aguidFileTypes[4], Gdiplus::ImageFormatEMF), "Expected aguidFileTypes[4] to be Gdiplus::ImageFormatEMF.\n");
+    ok(IsGuidEqual(aguidFileTypes[5], Gdiplus::ImageFormatWMF), "Expected aguidFileTypes[5] to be Gdiplus::ImageFormatWMF.\n");
+    ok(IsGuidEqual(aguidFileTypes[6], Gdiplus::ImageFormatTIFF), "Expected aguidFileTypes[6] to be Gdiplus::ImageFormatTIFF.\n");
+    ok(IsGuidEqual(aguidFileTypes[7], Gdiplus::ImageFormatPNG), "Expected aguidFileTypes[7] to be Gdiplus::ImageFormatPNG.\n");
+    ok(IsGuidEqual(aguidFileTypes[8], Gdiplus::ImageFormatIcon), "Expected aguidFileTypes[8] to be Gdiplus::ImageFormatIcon.\n");
+
+    psz = strExporters.GetString();
+#ifdef UNICODE
+    WideCharToMultiByte(CP_ACP, 0, psz, -1, szBuff, 512, NULL, NULL);
+    ok(lstrcmpA(szBuff, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.EMF;*.WMF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|EMF (*.EMF)|*.EMF|WMF (*.WMF)|*.WMF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG|ICO (*.ICO)|*.ICO||") == 0,
+       "The exporter filter string is bad, was: %s\n", szBuff);
+#else
+    ok(lstrcmpA(psz, "All Image Files|*.BMP;*.DIB;*.RLE;*.JPG;*.JPEG;*.JPE;*.JFIF;*.GIF;*.EMF;*.WMF;*.TIF;*.TIFF;*.PNG;*.ICO|BMP (*.BMP;*.DIB;*.RLE)|*.BMP;*.DIB;*.RLE|JPEG (*.JPG;*.JPEG;*.JPE;*.JFIF)|*.JPG;*.JPEG;*.JPE;*.JFIF|GIF (*.GIF)|*.GIF|EMF (*.EMF)|*.EMF|WMF (*.WMF)|*.WMF|TIFF (*.TIF;*.TIFF)|*.TIF;*.TIFF|PNG (*.PNG)|*.PNG|ICO (*.ICO)|*.ICO||") == 0,
+       "The exporter filter string is bad, was: %s\n", psz);
+#endif
 
 #ifndef __REACTOS__
     printf("CImage: %i tests executed (0 marked as todo, %i failures), 0 skipped.\n", g_tests_executed, g_tests_failed);
