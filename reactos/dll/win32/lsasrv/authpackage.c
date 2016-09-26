@@ -1380,7 +1380,12 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     SECURITY_LOGON_TYPE LogonType;
     NTSTATUS Status;
 
-    TRACE("(%p %p)\n", RequestMsg, LogonContext);
+    PUNICODE_STRING UserName = NULL;
+    PUNICODE_STRING LogonDomainName = NULL;
+//    UNICODE_STRING LogonServer;
+
+
+    TRACE("LsapLogonUser(%p %p)\n", RequestMsg, LogonContext);
 
     PackageId = RequestMsg->LogonUser.Request.AuthenticationPackage;
     LogonType = RequestMsg->LogonUser.Request.LogonType;
@@ -1606,9 +1611,23 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
 
 //    TokenHandle = NULL;
 
+    if (LogonType == Interactive ||
+        LogonType == Batch ||
+        LogonType == Service)
+    {
+        UserName = &((PMSV1_0_INTERACTIVE_LOGON)LocalAuthInfo)->UserName;
+        LogonDomainName = &((PMSV1_0_INTERACTIVE_LOGON)LocalAuthInfo)->LogonDomainName;
+    }
+    else
+    {
+        FIXME("LogonType %lu is not supported yet!\n", LogonType);
+    }
+
     Status = LsapSetLogonSessionData(&RequestMsg->LogonUser.Reply.LogonId,
                                      LogonType,
-                                     AccountName);
+                                     UserName,
+                                     LogonDomainName,
+                                     TokenInfo1->User.User.Sid);
     if (!NT_SUCCESS(Status))
     {
         ERR("LsapSetLogonSessionData failed (Status 0x%08lx)\n", Status);

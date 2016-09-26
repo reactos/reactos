@@ -450,7 +450,9 @@ NTSTATUS
 LsapSetLogonSessionData(
     _In_ PLUID LogonId,
     _In_ ULONG LogonType,
-    _In_ PUNICODE_STRING UserName);
+    _In_ PUNICODE_STRING UserName,
+    _In_ PUNICODE_STRING LogonDomain,
+    _In_ PSID Sid);
 
 NTSTATUS
 LsapEnumLogonSessions(IN OUT PLSA_API_MSG RequestMsg);

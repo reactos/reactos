@@ -67,9 +67,12 @@ NTSTATUS
 LsapSetLogonSessionData(
     _In_ PLUID LogonId,
     _In_ ULONG LogonType,
-    _In_ PUNICODE_STRING UserName)
+    _In_ PUNICODE_STRING UserName,
+    _In_ PUNICODE_STRING LogonDomain,
+    _In_ PSID Sid)
 {
     PLSAP_LOGON_SESSION Session;
+    ULONG Length;
 
     TRACE("LsapSetLogonSessionData(%p)\n", LogonId);
 
@@ -88,6 +91,22 @@ LsapSetLogonSessionData(
     Session->UserName.Length = UserName->Length;
     Session->UserName.MaximumLength = UserName->MaximumLength;
     RtlCopyMemory(Session->UserName.Buffer, UserName->Buffer, UserName->MaximumLength);
+
+    TRACE("LogonDomain %wZ\n", LogonDomain);
+    Session->LogonDomain.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, LogonDomain->MaximumLength);
+    if (Session->LogonDomain.Buffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Session->LogonDomain.Length = LogonDomain->Length;
+    Session->LogonDomain.MaximumLength = LogonDomain->MaximumLength;
+    RtlCopyMemory(Session->LogonDomain.Buffer, LogonDomain->Buffer, LogonDomain->MaximumLength);
+
+    Length = RtlLengthSid(Sid);
+    Session->Sid = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+    if (Session->UserName.Buffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    RtlCopyMemory(Session->Sid, Sid, Length);
 
     return STATUS_SUCCESS;
 }
