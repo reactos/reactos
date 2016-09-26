@@ -435,7 +435,7 @@ public:
 
     BOOL LoadString(_In_ UINT nID)
     {
-        return 0;
+        return LoadString(_AtlBaseModule.GetResourceInstance(), nID);
     }
 
     _Check_return_ BOOL LoadString(_In_ HINSTANCE hInstance,
