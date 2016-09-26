@@ -577,13 +577,18 @@ wWinMain(IN HINSTANCE hInst,
          IN LPWSTR lpszCmdLine,
          IN int nCmdShow)
 {
+    BOOL bIsLiveCD;
+    BOOL Success;
     STATE State;
 
     hInstance = hInst;
 
+    bIsLiveCD = IsLiveCD();
+
+Restart:
     SetUserSettings();
 
-    if (IsLiveCD())
+    if (bIsLiveCD)
     {
         State.NextPage = LOCALEPAGE;
         State.Run = SHELL;
@@ -594,20 +599,28 @@ wWinMain(IN HINSTANCE hInst,
         State.Run = SHELL;
     }
 
-    if (State.NextPage != DONE)
+    if (State.NextPage != DONE) // && bIsLiveCD
     {
         RunLiveCD(&State);
     }
 
     if (State.Run == SHELL)
     {
-        StartShell();
-        NotifyLogon();
+        Success = StartShell();
+        if (Success)
+            NotifyLogon();
     }
     else if (State.Run == INSTALLER)
     {
-        StartInstaller();
+        Success = StartInstaller();
     }
+
+    /*
+     * In LiveCD mode, go back to the main menu if we failed
+     * to either start the shell or the installer.
+     */
+    if (bIsLiveCD && !Success)
+        goto Restart;
 
     return 0;
 }
