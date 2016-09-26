@@ -9,13 +9,19 @@ BEGIN
         MENUITEM "&שמור\tCtrl+S", IDM_FILESAVE
         MENUITEM "שמור בש&ם...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM SEPARATOR
         MENUITEM "Page View", IDM_FILEPAGEVIEW
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP
         MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
+        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM SEPARATOR
         MENUITEM "קבע כרקע שולחן העבודה (פרוש)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "קבע כרקע שולחן העבודה (מרכז)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "קבע כרקע שולחן העבודה (מלא)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM SEPARATOR
+        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&יציאה\tAlt+F4", IDM_FILEEXIT
     END
@@ -202,8 +208,8 @@ BEGIN
     IDS_TOOLTIP14 "מצולע"
     IDS_TOOLTIP15 "אליפסה"
     IDS_TOOLTIP16 "מרובע עם קודקודים מרובעים"
-    IDS_OPENFILTER "קבצי מפת סיביות (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
-    IDS_SAVEFILTER "קבצי מפת סיביות של 24 סיביות (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_ALLFILES "All Files"
+    IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d בתים"
     IDS_PRINTRES, "%d x %d פיקסלים למטר"
     IDS_INTNUMBERS, "Please enter integral numbers only!"

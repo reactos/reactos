@@ -78,30 +78,27 @@ void CMainWindow::saveImage(BOOL overwrite)
     }
     else if (GetSaveFileName(&sfn) != 0)
     {
-        TCHAR tempstr[1000];
-        TCHAR resstr[100];
         imageModel.SaveImage(sfn.lpstrFile);
-        CopyMemory(filename, sfn.lpstrFileTitle, sizeof(filename));
-        CopyMemory(filepathname, sfn.lpstrFile, sizeof(filepathname));
-        LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
-        _stprintf(tempstr, resstr, filename);
-        SetWindowText(tempstr);
+        CString strTitle;
+        strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)sfn.lpstrFileTitle);
+        SetWindowText(strTitle);
         isAFile = TRUE;
     }
 }
 
-void CMainWindow::UpdateApplicationProperties(HBITMAP bitmap, LPTSTR newfilename, LPTSTR newfilepathname)
+void CMainWindow::UpdateApplicationProperties(HBITMAP bitmap, LPCTSTR newfilepathname)
 {
-    TCHAR tempstr[1000];
-    TCHAR resstr[100];
     imageModel.Insert(bitmap);
-    CopyMemory(filename, newfilename, sizeof(filename));
     CopyMemory(filepathname, newfilepathname, sizeof(filepathname));
-    LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
-    _stprintf(tempstr, resstr, filename);
-    SetWindowText(tempstr);
+    CPath pathFileName(newfilepathname);
+    pathFileName.StripPath();
+    CString strTitle;
+    strTitle.Format(IDS_WINDOWTITLE, (LPCTSTR)pathFileName);
+    SetWindowText(strTitle);
     imageModel.ClearHistory();
     isAFile = TRUE;
+
+    registrySettings.SetMostRecentFile(newfilepathname);
 }
 
 void CMainWindow::InsertSelectionFromHBITMAP(HBITMAP bitmap, HWND window)
@@ -170,10 +167,7 @@ LRESULT CMainWindow::OnDropFiles(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& 
     LoadDIBFromFile(&bmNew, droppedfile, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
     if (bmNew != NULL)
     {
-        TCHAR *pathend;
-        pathend = _tcsrchr(droppedfile, '\\');
-        pathend++;
-        UpdateApplicationProperties(bmNew, pathend, pathend);
+        UpdateApplicationProperties(bmNew, droppedfile);
     }
     return 0;
 }
@@ -196,13 +190,13 @@ LRESULT CMainWindow::OnClose(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bHan
 {
     if (!imageModel.IsImageSaved())
     {
-        TCHAR programname[20];
-        TCHAR saveprompttext[100];
-        TCHAR temptext[500];
-        LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
-        LoadString(hProgInstance, IDS_SAVEPROMPTTEXT, saveprompttext, SIZEOF(saveprompttext));
-        _stprintf(temptext, saveprompttext, filename);
-        switch (MessageBox(temptext, programname, MB_YESNOCANCEL | MB_ICONQUESTION))
+        CString strProgramName;
+        strProgramName.LoadString(IDS_PROGRAMNAME);
+        CPath pathFileName(filepathname);
+        pathFileName.StripPath();
+        CString strSavePromptText;
+        strSavePromptText.Format(IDS_SAVEPROMPTTEXT, (LPCTSTR)pathFileName);
+        switch (MessageBox(strSavePromptText, strProgramName, MB_YESNOCANCEL | MB_ICONQUESTION))
         {
             case IDNO:
                 DestroyWindow();
@@ -231,6 +225,35 @@ LRESULT CMainWindow::OnInitMenuPopup(UINT nMsg, WPARAM wParam, LPARAM lParam, BO
             EnableMenuItem(menu, IDM_FILEASWALLPAPERPLANE,     ENABLED_IF(isAFile));
             EnableMenuItem(menu, IDM_FILEASWALLPAPERCENTERED,  ENABLED_IF(isAFile));
             EnableMenuItem(menu, IDM_FILEASWALLPAPERSTRETCHED, ENABLED_IF(isAFile));
+            RemoveMenu(menu, IDM_FILE1, MF_BYCOMMAND);
+            RemoveMenu(menu, IDM_FILE2, MF_BYCOMMAND);
+            RemoveMenu(menu, IDM_FILE3, MF_BYCOMMAND);
+            RemoveMenu(menu, IDM_FILE4, MF_BYCOMMAND);
+            if (!registrySettings.strFile1.IsEmpty())
+            {
+                RemoveMenu(menu, IDM_FILEMOSTRECENTLYUSEDFILE, MF_BYCOMMAND);
+                CPath pathFile1(registrySettings.strFile1);
+                pathFile1.CompactPathEx(30);
+                if (!registrySettings.strFile2.IsEmpty())
+                {
+                    CPath pathFile2(registrySettings.strFile2);
+                    pathFile2.CompactPathEx(30);
+                    if (!registrySettings.strFile3.IsEmpty())
+                    {
+                        CPath pathFile3(registrySettings.strFile3);
+                        pathFile3.CompactPathEx(30);
+                        if (!registrySettings.strFile4.IsEmpty())
+                        {
+                            CPath pathFile4(registrySettings.strFile4);
+                            pathFile4.CompactPathEx(30);
+                            InsertMenu((HMENU)wParam, 17, MF_BYPOSITION | MF_STRING, IDM_FILE4, _T("4 ") + pathFile4);
+                        }
+                        InsertMenu((HMENU)wParam, 17, MF_BYPOSITION | MF_STRING, IDM_FILE3, _T("3 ") + pathFile3);
+                    }
+                    InsertMenu((HMENU)wParam, 17, MF_BYPOSITION | MF_STRING, IDM_FILE2, _T("2 ") + pathFile2);
+                }
+                InsertMenu((HMENU)wParam, 17, MF_BYPOSITION | MF_STRING, IDM_FILE1, _T("1 ") + pathFile1);
+            }
             break;
         case 1: /* Edit menu */
             EnableMenuItem(menu, IDM_EDITUNDO, ENABLED_IF(imageModel.HasUndoSteps()));
@@ -352,13 +375,13 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             BOOL reset = TRUE;
             if (!imageModel.IsImageSaved())
             {
-                TCHAR programname[20];
-                TCHAR saveprompttext[100];
-                TCHAR temptext[500];
-                LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
-                LoadString(hProgInstance, IDS_SAVEPROMPTTEXT, saveprompttext, SIZEOF(saveprompttext));
-                _stprintf(temptext, saveprompttext, filename);
-                switch (MessageBox(temptext, programname, MB_YESNOCANCEL | MB_ICONQUESTION))
+                CString strProgramName;
+                strProgramName.LoadString(IDS_PROGRAMNAME);
+                CPath pathFileName(filepathname);
+                pathFileName.StripPath();
+                CString strSavePromptText;
+                strSavePromptText.Format(IDS_SAVEPROMPTTEXT, (LPCTSTR)pathFileName);
+                switch (MessageBox(strSavePromptText, strProgramName, MB_YESNOCANCEL | MB_ICONQUESTION))
                 {
                     case IDNO:
                         imageModel.imageSaved = TRUE; //TODO: move to ImageModel
@@ -385,7 +408,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
                 LoadDIBFromFile(&bmNew, ofn.lpstrFile, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
                 if (bmNew != NULL)
                 {
-                    UpdateApplicationProperties(bmNew, ofn.lpstrFileTitle, ofn.lpstrFileTitle);
+                    UpdateApplicationProperties(bmNew, ofn.lpstrFile);
                 }
             }
             break;
@@ -436,6 +459,46 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
         case IDM_FILEASWALLPAPERSTRETCHED:
             RegistrySettings::SetWallpaper(filepathname, 2, 0);
             break;
+        case IDM_FILE1:
+        {
+            HBITMAP bmNew = NULL;
+            LoadDIBFromFile(&bmNew, registrySettings.strFile1, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
+            if (bmNew != NULL)
+            {
+                UpdateApplicationProperties(bmNew, registrySettings.strFile1);
+            }
+            break;
+        }
+        case IDM_FILE2:
+        {
+            HBITMAP bmNew = NULL;
+            LoadDIBFromFile(&bmNew, registrySettings.strFile2, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
+            if (bmNew != NULL)
+            {
+                UpdateApplicationProperties(bmNew, registrySettings.strFile2);
+            }
+            break;
+        }
+        case IDM_FILE3:
+        {
+            HBITMAP bmNew = NULL;
+            LoadDIBFromFile(&bmNew, registrySettings.strFile3, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
+            if (bmNew != NULL)
+            {
+                UpdateApplicationProperties(bmNew, registrySettings.strFile3);
+            }
+            break;
+        }
+        case IDM_FILE4:
+        {
+            HBITMAP bmNew = NULL;
+            LoadDIBFromFile(&bmNew, registrySettings.strFile4, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
+            if (bmNew != NULL)
+            {
+                UpdateApplicationProperties(bmNew, registrySettings.strFile4);
+            }
+            break;
+        }
         case IDM_EDITUNDO:
             imageModel.Undo();
             imageArea.Invalidate(FALSE);

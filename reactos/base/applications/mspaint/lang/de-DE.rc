@@ -17,13 +17,19 @@ BEGIN
         MENUITEM "Speichern\tStrg+S", IDM_FILESAVE
         MENUITEM "Speichern &unter...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "Von Scanner oder Kamera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM SEPARATOR
         MENUITEM "Seitenansicht", IDM_FILEPAGEVIEW
         MENUITEM "Seite einrichten...", IDM_FILEPAGESETUP
         MENUITEM "&Drucken...\tStrg+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
+        MENUITEM "Senden...", IDM_FILESEND
+        MENUITEM SEPARATOR
         MENUITEM "Als Hintergrund (Fläche)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Als Hintergrund (Zentriert)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Als Hintergrund (Gestreckt)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM SEPARATOR
+        MENUITEM "Zuletzt verwendete Datei", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Beenden\tAlt+F4", IDM_FILEEXIT
     END
@@ -210,8 +216,8 @@ BEGIN
     IDS_TOOLTIP14 "Polygon"
     IDS_TOOLTIP15 "Ellipse"
     IDS_TOOLTIP16 "Abgerundetes Rechteck"
-    IDS_OPENFILTER "Bitmapdateien (*.bmp;*.dib)\1*.bmp;*.dib\1Alle Dateien (*.*)\1*.*\1"
-    IDS_SAVEFILTER "24-Bit-Bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_ALLFILES "Alle Dateien"
+    IDS_ALLPICTUREFILES "Alle Bilddateien"
     IDS_FILESIZE "%d Bytes"
     IDS_PRINTRES "%d x %d Pixel pro Meter"
     IDS_INTNUMBERS "Bitte geben Sie nur ganze Zahlen ein!"

@@ -17,13 +17,19 @@ BEGIN
         MENUITEM "上書き保存(&S)\tCtrl+S", IDM_FILESAVE
         MENUITEM "名前を付けて保存(&A)...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM SEPARATOR
         MENUITEM "Page View", IDM_FILEPAGEVIEW
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP
         MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
+        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM SEPARATOR
         MENUITEM "背景に設定 (並べて表示)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "背景に設定 (中央に表示)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "背景に設定 (拡大)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM SEPARATOR
+        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "ペイントの終了(&Q)\tAlt+F4", IDM_FILEEXIT
     END
@@ -210,8 +216,8 @@ BEGIN
     IDS_TOOLTIP14 "多角形"
     IDS_TOOLTIP15 "楕円"
     IDS_TOOLTIP16 "角丸四角形"
-    IDS_OPENFILTER "ビットマップ ファイル (*.bmp;*.dib)\1*.bmp;*.dib\1すべてのファイル (*.*)\1*.*\1"
-    IDS_SAVEFILTER "24 ビット ビットマップ (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_ALLFILES "すべてのファイル"
+    IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d バイト"
     IDS_PRINTRES "%d x %d ピクセル/メートル"
     IDS_INTNUMBERS "Please enter integral numbers only!"

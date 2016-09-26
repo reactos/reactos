@@ -104,6 +104,27 @@ void RegistrySettings::Load()
         cbData = sizeof(WINDOWPLACEMENT);
         RegQueryValueEx(hView, _T("WindowPlacement"), 0, NULL, (LPBYTE) &WindowPlacement, &cbData);
     }
+
+    CRegKey hKey;
+    if (hKey.Open(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Recent File List"), KEY_READ) == ERROR_SUCCESS)
+    {
+        ULONG nChars = MAX_PATH;
+        LPTSTR pszFile1 = strFile1.GetBuffer(nChars);
+        hKey.QueryStringValue(_T("File1"), pszFile1, &nChars);
+        strFile1.ReleaseBuffer();
+        nChars = MAX_PATH;
+        LPTSTR pszFile2 = strFile2.GetBuffer(nChars);
+        hKey.QueryStringValue(_T("File2"), pszFile2, &nChars);
+        strFile2.ReleaseBuffer();
+        nChars = MAX_PATH;
+        LPTSTR pszFile3 = strFile3.GetBuffer(nChars);
+        hKey.QueryStringValue(_T("File3"), pszFile3, &nChars);
+        strFile3.ReleaseBuffer();
+        nChars = MAX_PATH;
+        LPTSTR pszFile4 = strFile4.GetBuffer(nChars);
+        hKey.QueryStringValue(_T("File4"), pszFile4, &nChars);
+        strFile4.ReleaseBuffer();
+    }
 }
 
 void RegistrySettings::Store()
@@ -125,5 +146,54 @@ void RegistrySettings::Store()
         RegSetValueEx(hView, _T("ThumbYPos"), 0, REG_DWORD, (LPBYTE) &ThumbYPos, sizeof(DWORD));
         RegSetValueEx(hView, _T("UnitSetting"), 0, REG_DWORD, (LPBYTE) &UnitSetting, sizeof(DWORD));
         RegSetValueEx(hView, _T("WindowPlacement"), 0, REG_BINARY, (LPBYTE) &WindowPlacement, sizeof(WINDOWPLACEMENT));
+    }
+
+    CRegKey hKey;
+    if (hKey.Create(HKEY_CURRENT_USER, _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Paint\\Recent File List")) == ERROR_SUCCESS)
+    {
+        if (!strFile1.IsEmpty())
+            hKey.SetStringValue(_T("File1"), strFile1);
+        if (!strFile2.IsEmpty())
+            hKey.SetStringValue(_T("File2"), strFile2);
+        if (!strFile3.IsEmpty())
+            hKey.SetStringValue(_T("File3"), strFile3);
+        if (!strFile4.IsEmpty())
+            hKey.SetStringValue(_T("File4"), strFile4);
+    }
+}
+
+void RegistrySettings::SetMostRecentFile(LPCTSTR pszPathName)
+{
+    if (strFile1 == pszPathName)
+    {
+        // do nothing
+    }
+    else if (strFile2 == pszPathName)
+    {
+        CString strTemp = strFile2;
+        strFile2 = strFile1;
+        strFile1 = strTemp;
+    }
+    else if (strFile3 == pszPathName)
+    {
+        CString strTemp = strFile3;
+        strFile3 = strFile2;
+        strFile2 = strFile1;
+        strFile1 = strTemp;
+    }
+    else if (strFile4 == pszPathName)
+    {
+        CString strTemp = strFile4;
+        strFile4 = strFile3;
+        strFile3 = strFile2;
+        strFile2 = strFile1;
+        strFile1 = strTemp;
+    }
+    else
+    {
+        strFile4 = strFile3;
+        strFile3 = strFile2;
+        strFile2 = strFile1;
+        strFile1 = pszPathName;
     }
 }

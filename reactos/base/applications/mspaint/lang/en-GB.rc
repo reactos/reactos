@@ -17,13 +17,19 @@ BEGIN
         MENUITEM "&Save\tCtrl+S", IDM_FILESAVE
         MENUITEM "Save &As...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM SEPARATOR
         MENUITEM "Page View", IDM_FILEPAGEVIEW
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP
         MENUITEM "&Print...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
+        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM SEPARATOR
         MENUITEM "Set as wallpaper (Tiled)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Set as wallpaper (Centered)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Set as wallpaper (Stretched)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM SEPARATOR
+        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Quit\tAlt+F4", IDM_FILEEXIT
     END
@@ -210,8 +216,8 @@ BEGIN
     IDS_TOOLTIP14 "Polygon"
     IDS_TOOLTIP15 "Ellipse"
     IDS_TOOLTIP16 "Rounded rectangle"
-    IDS_OPENFILTER "Bitmap files (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
-    IDS_SAVEFILTER "24 bit bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_ALLFILES "All Files"
+    IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d bytes"
     IDS_PRINTRES "%d x %d pixels per meter"
     IDS_INTNUMBERS "Please enter integral numbers only!"

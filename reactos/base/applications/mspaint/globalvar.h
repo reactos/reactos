@@ -61,7 +61,6 @@ extern HWND hToolBtn[16];
 
 extern HINSTANCE hProgInstance;
 
-extern TCHAR filename[256];
 extern TCHAR filepathname[1000];
 extern BOOL isAFile;
 extern int fileSize;

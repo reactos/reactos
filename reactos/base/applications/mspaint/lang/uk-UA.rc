@@ -17,13 +17,19 @@ BEGIN
         MENUITEM "З&берегти\tCtrl+S", IDM_FILESAVE
         MENUITEM "Зберегти &як...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
+        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM SEPARATOR
         MENUITEM "Page View", IDM_FILEPAGEVIEW
         MENUITEM "Page Setup...", IDM_FILEPAGESETUP
         MENUITEM "Print...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
+        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM SEPARATOR
         MENUITEM "&Замостити робочий стіл Windows", IDM_FILEASWALLPAPERPLANE
         MENUITEM "До ц&ентру робочого стола Windows", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "&Встановити як тло (розтягнути)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM SEPARATOR
+        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "В&ихід\tAlt+F4", IDM_FILEEXIT
     END
@@ -210,8 +216,8 @@ BEGIN
     IDS_TOOLTIP14 "Багатокутник"
     IDS_TOOLTIP15 "Еліпс"
     IDS_TOOLTIP16 "Прямокутник з округленими кутами"
-    IDS_OPENFILTER "Точкові рисунки (*.bmp;*.dib)\1*.bmp;*.dib\1Усі файли (*.*)\1*.*\1"
-    IDS_SAVEFILTER "24-розрядний рисунок (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_ALLFILES "Усі файли"
+    IDS_ALLPICTUREFILES "All Picture Files"
     IDS_FILESIZE "%d байт"
     IDS_PRINTRES "%d x %d пікс. на метр"
     IDS_INTNUMBERS "Please enter integral numbers only!"

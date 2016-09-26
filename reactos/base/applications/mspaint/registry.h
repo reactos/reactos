@@ -25,8 +25,14 @@ public:
     DWORD UnitSetting;
     WINDOWPLACEMENT WindowPlacement;
 
+    CString strFile1;
+    CString strFile2;
+    CString strFile3;
+    CString strFile4;
+
     static void SetWallpaper(TCHAR *szFileName, DWORD dwStyle, DWORD dwTile);
 
     void Load();
     void Store();
+    void SetMostRecentFile(LPCTSTR pszPathName);
 };
