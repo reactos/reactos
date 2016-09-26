@@ -12,12 +12,15 @@
 //       See rostest/apitests/atl/CImage_WIP.txt for test results.
 // !!!!
 
-// TODO: GetImporterFilterString, GetExporterFilterString, Load, Save
+// TODO: CImage::Load, CImage::Save
 // TODO: make CImage thread-safe
 
 #pragma once
 
-#include <atlcore.h>
+#include <atlcore.h>        // for ATL Core
+#include <atlstr.h>         // for CAtlStringMgr
+#include <atlsimpstr.h>     // for CSimpleString
+#include <atlsimpcoll.h>    // for CSimpleArray
 
 #include <wingdi.h>
 #include <cguid.h>          // for GUID_NULL
@@ -705,31 +708,119 @@ public:
         return TRUE;
     }
 
-#if 0
-    // TODO: implement this
+    enum ExcludeFlags
+    {
+        excludeGIF          = 0x01,
+        excludeBMP          = 0x02,
+        excludeEMF          = 0x04,
+        excludeWMF          = 0x08,
+        excludeJPEG         = 0x10,
+        excludePNG          = 0x20,
+        excludeTIFF         = 0x40,
+        excludeIcon         = 0x80,
+        excludeOther        = 0x80000000,
+        excludeDefaultLoad  = 0,
+        excludeDefaultSave  = excludeIcon | excludeEMF | excludeWMF
+    };
+
+    struct FILTER_DATA {
+        DWORD dwExclude;
+        const TCHAR *title;
+        const TCHAR *extensions;
+        const GUID *guid;
+    };
+
+protected:
+    static HRESULT GetCommonFilterString(
+        CSimpleString& strFilter,
+        CSimpleArray<GUID>& aguidFileTypes,
+        LPCTSTR pszAllFilesDescription,
+        DWORD dwExclude,
+        TCHAR chSeparator)
+    {
+        static const FILTER_DATA table[] =
+        {
+            {excludeBMP, TEXT("BMP"), TEXT("*.BMP;*.DIB;*.RLE"), &Gdiplus::ImageFormatBMP},
+            {excludeJPEG, TEXT("JPEG"), TEXT("*.JPG;*.JPEG;*.JPE;*.JFIF"), &Gdiplus::ImageFormatJPEG},
+            {excludeGIF, TEXT("GIF"), TEXT("*.GIF"), &Gdiplus::ImageFormatGIF},
+            {excludeEMF, TEXT("EMF"), TEXT("*.EMF"), &Gdiplus::ImageFormatEMF},
+            {excludeWMF, TEXT("WMF"), TEXT("*.WMF"), &Gdiplus::ImageFormatWMF},
+            {excludeTIFF, TEXT("TIFF"), TEXT("*.TIF;*.TIFF"), &Gdiplus::ImageFormatTIFF},
+            {excludePNG, TEXT("PNG"), TEXT("*.PNG"), &Gdiplus::ImageFormatPNG},
+            {excludeIcon, TEXT("ICO"), TEXT("*.ICO"), &Gdiplus::ImageFormatIcon}
+        };
+
+        if (pszAllFilesDescription)
+        {
+            strFilter += pszAllFilesDescription;
+            strFilter += chSeparator;
+
+            BOOL bFirst = TRUE;
+            for (size_t i = 0; i < _countof(table); ++i)
+            {
+                if ((dwExclude & table[i].dwExclude) != 0)
+                    continue;
+
+                if (bFirst)
+                    bFirst = FALSE;
+                else
+                    strFilter += TEXT(';');
+
+                strFilter += table[i].extensions;
+            }
+            strFilter += chSeparator;
+
+            aguidFileTypes.Add(GUID_NULL);
+        }
+
+        for (size_t i = 0; i < _countof(table); ++i)
+        {
+            if ((dwExclude & table[i].dwExclude) != 0)
+                continue;
+            strFilter += table[i].title;
+            strFilter += TEXT(" (");
+            strFilter += table[i].extensions;
+            strFilter += TEXT(")");
+            strFilter += chSeparator;
+            strFilter += table[i].extensions;
+            strFilter += chSeparator;
+
+            aguidFileTypes.Add(*table[i].guid);
+        }
+
+        strFilter += chSeparator;
+
+        return S_OK;
+    }
+
+public:
     static HRESULT GetImporterFilterString(
         CSimpleString& strImporters,
         CSimpleArray<GUID>& aguidFileTypes,
         LPCTSTR pszAllFilesDescription = NULL,
         DWORD dwExclude = excludeDefaultLoad,
-        TCHAR chSeparator = _T('|'))
+        TCHAR chSeparator = TEXT('|'))
     {
-        ATLASSERT(0);
-        return -1;
+        return GetCommonFilterString(strImporters,
+                                     aguidFileTypes,
+                                     pszAllFilesDescription,
+                                     dwExclude,
+                                     chSeparator);
     }
 
-    // TODO: implement this
     static HRESULT GetExporterFilterString(
         CSimpleString& strExporters,
         CSimpleArray<GUID>& aguidFileTypes,
         LPCTSTR pszAllFilesDescription = NULL,
         DWORD dwExclude = excludeDefaultSave,
-        TCHAR chSeparator = _T('|'))
+        TCHAR chSeparator = TEXT('|'))
     {
-        ATLASSERT(0);
-        return -1;
+        return GetCommonFilterString(strExporters,
+                                     aguidFileTypes,
+                                     pszAllFilesDescription,
+                                     dwExclude,
+                                     chSeparator);
     }
-#endif  // 0
 
 protected:
     // an extension of BITMAPINFO
