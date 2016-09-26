@@ -95,7 +95,7 @@ NlsInit(VOID)
     RtlInitCodePageTable((PUSHORT)AnsiCodePage.SectionMapping,
                          &AnsiCodePage.CodePageTable);
     AnsiCodePage.CodePage = AnsiCodePage.CodePageTable.CodePage;
-    
+
     InsertTailList(&CodePageListHead, &AnsiCodePage.Entry);
 
     /* Setup OEM code page. */
@@ -515,7 +515,7 @@ IntMultiByteToWideCharCP(UINT CodePage,
                 TempString++;
             }
         }
-        
+
         /* Does caller query for output buffer size? */
         if (WideCharCount == 0)
         {
@@ -753,7 +753,7 @@ IntWideCharToMultiByteUTF8(UINT CodePage,
                            LPBOOL UsedDefaultChar)
 {
     INT TempLength;
-    WCHAR Char;
+    DWORD Char;
 
     /* Does caller query for output buffer size? */
     if (MultiByteCount == 0)
@@ -766,7 +766,17 @@ IntWideCharToMultiByteUTF8(UINT CodePage,
             {
                 TempLength++;
                 if (*WideCharString >= 0x800)
+                {
                     TempLength++;
+                    if (*WideCharString >= 0xd800 && *WideCharString < 0xdc00 &&
+                        WideCharCount >= 1 &&
+                        WideCharString[1] >= 0xdc00 && WideCharString[1] <= 0xe000)
+                    {
+                        WideCharCount--;
+                        WideCharString++;
+                        TempLength++;
+                    }
+                }
             }
         }
         return TempLength;
@@ -798,6 +808,35 @@ IntWideCharToMultiByteUTF8(UINT CodePage,
             MultiByteString[0] = 0xc0 | Char;
             MultiByteString += 2;
             TempLength -= 2;
+            continue;
+        }
+
+        /* surrogate pair 0x10000-0x10ffff: 4 bytes */
+        if (Char >= 0xd800 && Char < 0xdc00 &&
+            WideCharCount >= 1 &&
+            WideCharString[1] >= 0xdc00 && WideCharString[1] < 0xe000)
+        {
+            WideCharCount--;
+            WideCharString++;
+
+            if (TempLength < 4)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                break;
+            }
+
+            Char = (Char - 0xd800) << 10;
+            Char |= *WideCharString - 0xdc00;
+            ASSERT(Char <= 0xfffff);
+            Char += 0x10000;
+            ASSERT(Char <= 0x10ffff);
+
+            MultiByteString[3] = 0x80 | (Char & 0x3f); Char >>= 6;
+            MultiByteString[2] = 0x80 | (Char & 0x3f); Char >>= 6;
+            MultiByteString[1] = 0x80 | (Char & 0x3f); Char >>= 6;
+            MultiByteString[0] = 0xf0 | Char;
+            MultiByteString += 4;
+            TempLength -= 4;
             continue;
         }
 
