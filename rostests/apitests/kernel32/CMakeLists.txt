@@ -14,6 +14,7 @@ list(APPEND SOURCE
     SetUnhandledExceptionFilter.c
     TerminateProcess.c
     TunnelCache.c
+    WideCharToMultiByte.c
     testlist.c
     Mailslot.c)
 
