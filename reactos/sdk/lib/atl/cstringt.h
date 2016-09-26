@@ -575,15 +575,15 @@ public:
     }
 
 
-    //void __cdecl Format(UINT nFormatID, ...)
-    //{
-    //    va_list args;
-    //    va_start(args, dwMessageId);
-    //    CStringT formatString;
-    //    formatString.LoadString(?????);
-    //    FormatV(formatString, args);
-    //    va_end(args);
-    //}
+    void __cdecl Format(UINT nFormatID, ...)
+    {
+        va_list args;
+        va_start(args, nFormatID);
+        CStringT formatString;
+        if (formatString.LoadString(nFormatID))
+            FormatV(formatString, args);
+        va_end(args);
+    }
 
     void __cdecl Format(PCXSTR pszFormat, ...)
     {
