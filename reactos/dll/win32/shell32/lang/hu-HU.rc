@@ -1,42 +1,44 @@
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
-MENU_001 MENU
+MENU_001 MENUEX
 BEGIN
     MENUITEM "Nagy képek", FCIDM_SHVIEW_BIGICON
     MENUITEM "Kis képek", FCIDM_SHVIEW_SMALLICON
     MENUITEM "Lista", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "Részletek", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "Ikonok rendezése", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Automatikus elrendezés", FCIDM_SHVIEW_AUTOARRANGE
+    END
 END
 
 /* shellview background menu */
-MENU_002 MENU
+MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&Nézet"
+        POPUP "&Nézet", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "Nagy képek", FCIDM_SHVIEW_BIGICON
             MENUITEM "Kis képek", FCIDM_SHVIEW_SMALLICON
             MENUITEM "Lista", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "Részletek", FCIDM_SHVIEW_REPORTVIEW
         END
-        MENUITEM SEPARATOR
-        POPUP "Ikonok rendezése"
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "Ikonok rendezése", FCIDM_SHVIEW_ARRANGE
         BEGIN
-            MENUITEM "&Név szerint", 0x30  /* column 0 */
-            MENUITEM "&Típus szerint", 0x32  /* column 2 */
-            MENUITEM "&Méret szerint", 0x31  /* ... */
-            MENUITEM "&Létrehozás ideje szerint", 0x33
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Automatikus elrendezés", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "Ikonok igazitása", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Frissítés", FCIDM_SHVIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Beillesztés", FCIDM_SHVIEW_INSERT
         MENUITEM "Parancsikon beillesztése", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Beállítások", FCIDM_SHVIEW_PROPERTIES
     END
 END

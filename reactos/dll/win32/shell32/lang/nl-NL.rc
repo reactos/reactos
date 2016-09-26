@@ -1,42 +1,44 @@
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
-MENU_001 MENU
+MENU_001 MENUEX
 BEGIN
     MENUITEM "Lar&ge Icons", FCIDM_SHVIEW_BIGICON
     MENUITEM "S&mall Icons", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&List", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Details", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "Arrange &Icons By", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Auto Arrange", FCIDM_SHVIEW_AUTOARRANGE
+    END
 END
 
 /* shellview background menu */
-MENU_002 MENU
+MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&View"
+        POPUP "&View", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "Lar&ge Icons", FCIDM_SHVIEW_BIGICON
             MENUITEM "S&mall Icons", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&List", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Details", FCIDM_SHVIEW_REPORTVIEW
         END
-        MENUITEM SEPARATOR
-        POPUP "Arrange &Icons"
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "Arrange &Icons By", FCIDM_SHVIEW_ARRANGE
         BEGIN
-            MENUITEM "By &Name", 0x30  /* column 0 */
-            MENUITEM "By &Type", 0x32  /* column 2 */
-            MENUITEM "By &Size", 0x31  /* ... */
-            MENUITEM "By &Date", 0x33
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Auto Arrange", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "Line up Icons", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Refresh", FCIDM_SHVIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Paste", FCIDM_SHVIEW_INSERT
         MENUITEM "Paste as Link", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Properties", FCIDM_SHVIEW_PROPERTIES
     END
 END

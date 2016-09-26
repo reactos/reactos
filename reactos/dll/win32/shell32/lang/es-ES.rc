@@ -2,43 +2,45 @@
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
-MENU_001 MENU
+MENU_001 MENUEX
 BEGIN
     MENUITEM "Iconos &grandes", FCIDM_SHVIEW_BIGICON
     MENUITEM "Iconos &pequeños", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Detalles", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "Ordenar &iconos", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Ordenar automáticamente", FCIDM_SHVIEW_AUTOARRANGE
+    END
 END
 
 /* shellview background menu */
-MENU_002 MENU
+MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&Ver"
+        POPUP "&Ver", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "Iconos &grandes", FCIDM_SHVIEW_BIGICON
             MENUITEM "Iconos &pequeños", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Detalles", FCIDM_SHVIEW_REPORTVIEW
         END
-        MENUITEM SEPARATOR
-        POPUP "Ordenar &iconos"
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "Ordenar &iconos", FCIDM_SHVIEW_ARRANGE
         BEGIN
-            MENUITEM "Por &nombre", 0x30  /* column 0 */
-            MENUITEM "Por &tipo", 0x32  /* column 2 */
-            MENUITEM "Por t&amaño", 0x31  /* ... */
-            MENUITEM "Por &fecha", 0x33
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Ordenar automáticamente", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "Alinear iconos", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Actualizar", FCIDM_SHVIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Pegar", FCIDM_SHVIEW_INSERT
         MENUITEM "Pegar acceso directo", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Propiedades", FCIDM_SHVIEW_PROPERTIES
     END
 END

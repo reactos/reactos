@@ -1,42 +1,44 @@
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
-MENU_001 MENU
+MENU_001 MENUEX
 BEGIN
     MENUITEM "大きいアイコン(&G)", FCIDM_SHVIEW_BIGICON
     MENUITEM "小さいアイコン(&M)", FCIDM_SHVIEW_SMALLICON
     MENUITEM "一覧(&L)", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "詳細(&D)", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "アイコンの整列(&I)", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "アイコンの自動整列(&A)", FCIDM_SHVIEW_AUTOARRANGE
+    END
 END
 
 /* shellview background menu */
-MENU_002 MENU
+MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "表示(&V)"
+        POPUP "表示(&V)", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "大きいアイコン(&G)", FCIDM_SHVIEW_BIGICON
             MENUITEM "小さいアイコン(&M)", FCIDM_SHVIEW_SMALLICON
             MENUITEM "一覧(&L)", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "詳細(&D)", FCIDM_SHVIEW_REPORTVIEW
         END
-        MENUITEM SEPARATOR
-        POPUP "アイコンの整列(&I)"
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "アイコンの整列(&I)", FCIDM_SHVIEW_ARRANGE
         BEGIN
-            MENUITEM "名前順(&N)", 0x30  /* column 0 */
-            MENUITEM "種類順(&T)", 0x32  /* column 2 */
-            MENUITEM "サイズ順(&S)", 0x31  /* ... */
-            MENUITEM "日付順(&D)", 0x33
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "アイコンの自動整列(&A)", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "等間隔に整列", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "最新の情報に更新", FCIDM_SHVIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "貼り付け", FCIDM_SHVIEW_INSERT
         MENUITEM "ショートカットの貼り付け", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "プロパティ", FCIDM_SHVIEW_PROPERTIES
     END
 END

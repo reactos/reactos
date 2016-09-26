@@ -1,19 +1,25 @@
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
-MENU_001 MENU
+MENU_001 MENUEX
 BEGIN
     MENUITEM "Sto&ra ikoner", FCIDM_SHVIEW_BIGICON
     MENUITEM "S&må ikoner", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Detaljer", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "Ordna &ikoner", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Ordna automatiskt", FCIDM_SHVIEW_AUTOARRANGE
+    END
 END
 
 /* shellview background menu */
-MENU_002 MENU
+MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&Visa"
+        POPUP "&Visa", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "Sto&ra ikoner", FCIDM_SHVIEW_BIGICON
             MENUITEM "S&må ikoner", FCIDM_SHVIEW_SMALLICON
@@ -21,22 +27,18 @@ BEGIN
             MENUITEM "&Detaljer", FCIDM_SHVIEW_REPORTVIEW
         END
         MENUITEM SEPARATOR
-        POPUP "Ordna &ikoner"
+        POPUP "Ordna &ikoner", FCIDM_SHVIEW_ARRANGE
         BEGIN
-            MENUITEM "Efter &namn", 0x30  /* column 0 */
-            MENUITEM "Efter &typ", 0x32  /* column 2 */
-            MENUITEM "Efter &storlek", 0x31  /* ... */
-            MENUITEM "Efter &datum", 0x33
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Ordna automatiskt", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "Rada upp ikoner", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Uppdatera", FCIDM_SHVIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Klistra in", FCIDM_SHVIEW_INSERT
         MENUITEM "Klistra in som genväg", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Egenskaper", FCIDM_SHVIEW_PROPERTIES
     END
 END

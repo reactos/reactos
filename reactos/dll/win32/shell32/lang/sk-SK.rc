@@ -1,42 +1,44 @@
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
-MENU_001 MENU
+MENU_001 MENUEX
 BEGIN
     MENUITEM "&Veľké ikony", FCIDM_SHVIEW_BIGICON
     MENUITEM "&Malé ikony", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Zoznam", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Podrobnosti", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "&Usporiadať ikony", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Usporiadať &automaticky", FCIDM_SHVIEW_AUTOARRANGE
+    END
 END
 
 /* shellview background menu */
-MENU_002 MENU
+MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&Zobraziť"
+        POPUP "&Zobraziť", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "&Veľké ikony", FCIDM_SHVIEW_BIGICON
             MENUITEM "&Malé ikony", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Zoznam", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Podrobnosti", FCIDM_SHVIEW_REPORTVIEW
         END
-        MENUITEM SEPARATOR
-        POPUP "&Usporiadať ikony"
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "&Usporiadať ikony", FCIDM_SHVIEW_ARRANGE
         BEGIN
-            MENUITEM "&Názov", 0x30  /* column 0 */
-            MENUITEM "&Typ", 0x32  /* column 2 */
-            MENUITEM "&Veľkosť", 0x31  /* ... */
-            MENUITEM "&Zmenené", 0x33
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "Usporiadať &automaticky", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "Zarovnať ikony", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Obnoviť", FCIDM_SHVIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Prilepiť", FCIDM_SHVIEW_INSERT
         MENUITEM "Prilepiť od&kaz", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Vl&astnosti", FCIDM_SHVIEW_PROPERTIES
     END
 END

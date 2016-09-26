@@ -496,34 +496,13 @@ CDefaultContextMenu::BuildBackgroundContextMenu(
         rfg = 0;
     }
 
-    if (!_ILIsDesktop(m_pidlFolder))
-    {
-        WCHAR wszBuf[MAX_PATH];
-
-        /* view option is only available in browsing mode */
-        hSubMenu = LoadMenuW(shell32_hInstance, L"MENU_001");
-        if (hSubMenu && LoadStringW(shell32_hInstance, FCIDM_SHVIEW_VIEW, wszBuf, _countof(wszBuf)))
-        {
-            TRACE("wszBuf %s\n", debugstr_w(wszBuf));
-
-            MENUITEMINFOW mii;
-            ZeroMemory(&mii, sizeof(mii));
-            mii.cbSize = sizeof(mii);
-            mii.fMask = MIIM_TYPE | MIIM_STATE | MIIM_SUBMENU | MIIM_ID;
-            mii.fType = MFT_STRING;
-            mii.wID = iIdCmdFirst++;
-            mii.dwTypeData = wszBuf;
-            mii.cch = wcslen(mii.dwTypeData);
-            mii.fState = MFS_ENABLED;
-            mii.hSubMenu = hSubMenu;
-            InsertMenuItemW(hMenu, IndexMenu++, TRUE, &mii);
-            DestroyMenu(hSubMenu);
-        }
-    }
-
     hSubMenu = LoadMenuW(shell32_hInstance, L"MENU_002");
     if (hSubMenu)
     {
+        /* view option is only available in browsing mode */
+        if (_ILIsDesktop(m_pidlFolder))
+            DeleteMenu(hSubMenu, FCIDM_SHVIEW_VIEW, MF_BYCOMMAND);
+
         /* merge general background context menu in */
         iIdCmdFirst = Shell_MergeMenus(hMenu, GetSubMenu(hSubMenu, 0), IndexMenu, 0, 0xFFFF, MM_DONTREMOVESEPS | MM_SUBMENUSHAVEIDS) + 1;
         DestroyMenu(hSubMenu);

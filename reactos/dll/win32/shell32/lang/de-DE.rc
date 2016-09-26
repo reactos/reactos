@@ -1,42 +1,44 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-MENU_001 MENU
+MENU_001 MENUEX
 BEGIN
     MENUITEM "&Große Symbole", FCIDM_SHVIEW_BIGICON
     MENUITEM "&Kleine Symbole", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Liste", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Details", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "Symbole anordnen", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Automatisch anordnen", FCIDM_SHVIEW_AUTOARRANGE
+    END
 END
 
 /* shellview background menu */
-MENU_002 MENU
+MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&Ansicht"
+        POPUP "&Ansicht", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "&Große Symbole", FCIDM_SHVIEW_BIGICON
             MENUITEM "&Kleine Symbole", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Liste", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Details", FCIDM_SHVIEW_REPORTVIEW
         END
-        MENUITEM SEPARATOR
-        POPUP "Symbole anordnen"
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "Symbole anordnen", FCIDM_SHVIEW_ARRANGE
         BEGIN
-            MENUITEM "Nach &Name", 0x30  /* column 0 */
-            MENUITEM "Nach &Typ", 0x32  /* column 2 */
-            MENUITEM "Nach &Größe", 0x31  /* ... */
-            MENUITEM "Nach &Datum", 0x33
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Automatisch anordnen", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "Icons anordnen", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Aktualisieren", FCIDM_SHVIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Einfügen", FCIDM_SHVIEW_INSERT
         MENUITEM "Einfügen als Verweis", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Eigenschaften", FCIDM_SHVIEW_PROPERTIES
     END
 END

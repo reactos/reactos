@@ -1,42 +1,44 @@
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
-MENU_001 MENU
+MENU_001 MENUEX
 BEGIN
     MENUITEM "Ícones &grandes", FCIDM_SHVIEW_BIGICON
     MENUITEM "Ícones &pequenos", FCIDM_SHVIEW_SMALLICON
     MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
     MENUITEM "&Detalhes", FCIDM_SHVIEW_REPORTVIEW
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "O&rganizar ícones", FCIDM_SHVIEW_ARRANGE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Auto organi&zar", FCIDM_SHVIEW_AUTOARRANGE
+    END
 END
 
 /* shellview background menu */
-MENU_002 MENU
+MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&Exibir"
+        POPUP "&Exibir", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "Ícones &grandes", FCIDM_SHVIEW_BIGICON
             MENUITEM "Ícones &pequenos", FCIDM_SHVIEW_SMALLICON
             MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Detalhes", FCIDM_SHVIEW_REPORTVIEW
         END
-        MENUITEM SEPARATOR
-        POPUP "O&rganizar ícones"
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "O&rganizar ícones", FCIDM_SHVIEW_ARRANGE
         BEGIN
-            MENUITEM "Por &nome", 0x30  /* column 0 */
-            MENUITEM "Por &tipo", 0x32  /* column 2 */
-            MENUITEM "Por ta&manho", 0x31  /* ... */
-            MENUITEM "Por &data", 0x33
-            MENUITEM SEPARATOR
+            MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "Auto organi&zar", FCIDM_SHVIEW_AUTOARRANGE
         END
         MENUITEM "Alin&har ícones", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Atualizar", FCIDM_SHVIEW_REFRESH
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Co&lar", FCIDM_SHVIEW_INSERT
         MENUITEM "Colar a&talho", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Propriedades", FCIDM_SHVIEW_PROPERTIES
     END
 END

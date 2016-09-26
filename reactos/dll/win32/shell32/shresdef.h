@@ -130,7 +130,6 @@
 #define IDS_SHELL_ABOUT_AUTHORS   144
 #define IDS_SHELL_ABOUT_BACK      145
 #define FCIDM_SHVIEW_NEW          146
-#define FCIDM_SHVIEW_VIEW         147
 #define IDS_CONTROLPANEL          148
 #define IDS_NEWFOLDER             149
 #define IDS_COLUMN_EXTENSION      151
@@ -595,6 +594,7 @@
 
 /* Shell view commands */
 #define FCIDM_SHVIEW_ARRANGE         0x7001
+#define FCIDM_SHVIEW_VIEW            0x7002
 #define FCIDM_SHVIEW_DELETE          0x7011
 #define FCIDM_SHVIEW_PROPERTIES      0x7013
 #define FCIDM_SHVIEW_CUT             0x7018
