@@ -4,6 +4,7 @@
 extern void func_atltypes(void);
 extern void func_CComBSTR(void);
 extern void func_CComHeapPtr(void);
+extern void func_CComVariant(void);
 extern void func_CImage(void);
 extern void func_CRegKey(void);
 extern void func_CSimpleArray(void);
@@ -15,6 +16,7 @@ const struct test winetest_testlist[] =
     { "atltypes", func_atltypes },
     { "CComBSTR", func_CComBSTR },
     { "CComHeapPtr", func_CComHeapPtr },
+    { "CComVariant", func_CComVariant },
     { "CImage", func_CImage },
     { "CRegKey", func_CRegKey },
     { "CSimpleArray", func_CSimpleArray },
