@@ -577,8 +577,7 @@ wWinMain(IN HINSTANCE hInst,
          IN LPWSTR lpszCmdLine,
          IN int nCmdShow)
 {
-    BOOL bIsLiveCD;
-    BOOL Success;
+    BOOL bIsLiveCD, Success = TRUE;
     STATE State;
 
     hInstance = hInst;
