@@ -1602,7 +1602,7 @@ _KeReleaseGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
 
     /* Sanity checks */
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-    ASSERT(GuardedMutex->Owner == KeGetCurrentThread());
+    ASSERT(GuardedMutex->Owner == Thread);
     ASSERT(Thread->SpecialApcDisable == GuardedMutex->SpecialApcDisable);
 
     /* Destroy the Owner */
