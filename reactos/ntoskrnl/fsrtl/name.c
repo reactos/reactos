@@ -23,13 +23,14 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                                IN BOOLEAN IgnoreCase,
                                IN PWCHAR UpcaseTable OPTIONAL)
 {
-    SHORT StarFound = -1, DosStarFound = -1;
-    USHORT BackTrackingBuffer[5], DosBackTrackingBuffer[5];
-    PUSHORT BackTracking = BackTrackingBuffer, DosBackTracking = DosBackTrackingBuffer;
-    SHORT BackTrackingSize = RTL_NUMBER_OF(BackTrackingBuffer);
-    SHORT DosBackTrackingSize = RTL_NUMBER_OF(DosBackTrackingBuffer);
+    USHORT Offset, Position, BackTrackingPosition, OldBackTrackingPosition;
+    USHORT BackTrackingBuffer[16], OldBackTrackingBuffer[16] = {0};
+    PUSHORT BackTrackingSwap, BackTracking = BackTrackingBuffer, OldBackTracking = OldBackTrackingBuffer;
     UNICODE_STRING IntExpression;
-    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars, LastDot;
+    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars = 1;
+    BOOLEAN EndOfName = FALSE;
+    BOOLEAN Result = FALSE;
+    BOOLEAN DontSkipDot;
     WCHAR CompareChar;
     PAGED_CODE();
 
@@ -37,7 +38,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
     if (!Name->Length || !Expression->Length)
     {
         /* Return TRUE if both strings are empty, otherwise FALSE */
-        if (Name->Length == 0 && Expression->Length == 0)
+        if (!Name->Length && !Expression->Length)
             return TRUE;
         else
             return FALSE;
@@ -103,193 +104,144 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
         }
     }
 
-    while ((NamePosition < Name->Length / sizeof(WCHAR)) &&
-           (ExpressionPosition < Expression->Length / sizeof(WCHAR)))
+    /* Name parsing loop */
+    for (; !EndOfName; MatchingChars = BackTrackingPosition, NamePosition++)
     {
-        /* Basic check to test if chars are equal */
-        CompareChar = IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
-                                   Name->Buffer[NamePosition];
-        if (Expression->Buffer[ExpressionPosition] == CompareChar)
+        /* Reset positions */
+        OldBackTrackingPosition = BackTrackingPosition = 0;
+
+        if (NamePosition >= Name->Length / sizeof(WCHAR))
         {
-            NamePosition++;
-            ExpressionPosition++;
-        }
-        /* Check cases that eat one char */
-        else if (Expression->Buffer[ExpressionPosition] == L'?')
-        {
-            NamePosition++;
-            ExpressionPosition++;
-        }
-        /* Test star */
-        else if (Expression->Buffer[ExpressionPosition] == L'*')
-        {
-            /* Skip contigous stars */
-            while ((ExpressionPosition + 1 < (USHORT)(Expression->Length / sizeof(WCHAR))) &&
-                   (Expression->Buffer[ExpressionPosition + 1] == L'*'))
-            {
-                ExpressionPosition++;
-            }
-
-            /* Save star position */
-            StarFound++;
-            if (StarFound >= BackTrackingSize)
-            {
-                ASSERT(BackTracking == BackTrackingBuffer);
-
-                BackTrackingSize = Expression->Length / sizeof(WCHAR);
-                BackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
-                                                     BackTrackingSize * sizeof(USHORT),
-                                                     'nrSF');
-                RtlCopyMemory(BackTracking, BackTrackingBuffer, sizeof(BackTrackingBuffer));
-
-            }
-            BackTracking[StarFound] = ExpressionPosition++;
-
-            /* If star is at the end, then eat all rest and leave */
-            if (ExpressionPosition == Expression->Length / sizeof(WCHAR))
-            {
-                NamePosition = Name->Length / sizeof(WCHAR);
+            EndOfName = TRUE;
+            if (OldBackTracking[MatchingChars - 1] == Expression->Length * 2)
                 break;
-            }
-
-            /* Allow null matching */
-            if (Expression->Buffer[ExpressionPosition] != L'?' &&
-                     Expression->Buffer[ExpressionPosition] != Name->Buffer[NamePosition])
-            {
-                NamePosition++;
-            }
         }
-        /* Check DOS_STAR */
-        else if (Expression->Buffer[ExpressionPosition] == DOS_STAR)
-        {
-            /* Skip contigous stars */
-            while ((ExpressionPosition + 1 < (USHORT)(Expression->Length / sizeof(WCHAR))) &&
-                   (Expression->Buffer[ExpressionPosition + 1] == DOS_STAR))
-            {
-                ExpressionPosition++;
-            }
 
-            /* Look for last dot */
-            MatchingChars = 0;
-            LastDot = (USHORT)-1;
-            while (MatchingChars < Name->Length / sizeof(WCHAR))
+        while (MatchingChars > OldBackTrackingPosition)
+        {
+            ExpressionPosition = (OldBackTracking[OldBackTrackingPosition++] + 1) / 2;
+
+            /* Expression parsing loop */
+            for (Offset = 0; ExpressionPosition < Expression->Length; Offset = sizeof(WCHAR))
             {
-                if (Name->Buffer[MatchingChars] == L'.')
+                ExpressionPosition += Offset;
+
+                if (ExpressionPosition == Expression->Length)
                 {
-                    LastDot = MatchingChars;
-                    if (LastDot > NamePosition)
-                        break;
+                    BackTracking[BackTrackingPosition++] = Expression->Length * 2;
+                    break;
                 }
 
-                MatchingChars++;
-            }
-
-            /* If we don't have dots or we didn't find last yet
-             * start eating everything
-             */
-            if (MatchingChars != Name->Length || LastDot == (USHORT)-1)
-            {
-                DosStarFound++;
-                if (DosStarFound >= DosBackTrackingSize)
+                /* If buffer too small */
+                if (BackTrackingPosition > RTL_NUMBER_OF(BackTrackingBuffer) - 1)
                 {
-                    ASSERT(DosBackTracking == DosBackTrackingBuffer);
+                    /* Allocate memory for BackTracking */
+                    BackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                                         (Expression->Length + sizeof(WCHAR)) * sizeof(USHORT),
+                                                         'nrSF');
+                    /* Copy old buffer content */
+                    RtlCopyMemory(BackTracking,
+                                  BackTrackingBuffer,
+                                  RTL_NUMBER_OF(BackTrackingBuffer) * sizeof(USHORT));
 
-                    DosBackTrackingSize = Expression->Length / sizeof(WCHAR);
-                    DosBackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
-                                                            DosBackTrackingSize * sizeof(USHORT),
+                    /* Allocate memory for OldBackTracking */
+                    OldBackTracking = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
+                                                            (Expression->Length + sizeof(WCHAR)) * sizeof(USHORT),
                                                             'nrSF');
-                    RtlCopyMemory(DosBackTracking, DosBackTrackingBuffer, sizeof(DosBackTrackingBuffer));
+                    /* Copy old buffer content */
+                    RtlCopyMemory(OldBackTracking,
+                                  OldBackTrackingBuffer,
+                                  RTL_NUMBER_OF(OldBackTrackingBuffer) * sizeof(USHORT));
                 }
-                DosBackTracking[DosStarFound] = ExpressionPosition++;
 
-                /* Not the same char, start exploring */
-                if (Expression->Buffer[ExpressionPosition] != Name->Buffer[NamePosition])
-                    NamePosition++;
-            }
-            else
-            {
-                /* Else, if we are at last dot, eat it - otherwise, null match */
-                if (Name->Buffer[NamePosition] == '.')
-                    NamePosition++;
+                /* Basic check to test if chars are equal */
+                CompareChar = IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
+                                           Name->Buffer[NamePosition];
+                if (Expression->Buffer[ExpressionPosition / sizeof(WCHAR)] == CompareChar && !EndOfName)
+                {
+                    BackTracking[BackTrackingPosition++] = (ExpressionPosition + sizeof(WCHAR)) * 2;
+                }
+                /* Check cases that eat one char */
+                else if (Expression->Buffer[ExpressionPosition / sizeof(WCHAR)] == L'?' && !EndOfName)
+                {
+                    BackTracking[BackTrackingPosition++] = (ExpressionPosition + sizeof(WCHAR)) * 2;
+                }
+                /* Test star */
+                else if (Expression->Buffer[ExpressionPosition / sizeof(WCHAR)] == L'*')
+                {
+                    BackTracking[BackTrackingPosition++] = ExpressionPosition * 2;
+                    BackTracking[BackTrackingPosition++] = (ExpressionPosition * 2) + 3;
+                    continue;
+                }
+                /* Check DOS_STAR */
+                else if (Expression->Buffer[ExpressionPosition / sizeof(WCHAR)] == DOS_STAR)
+                {
+                    /* Look for last dot */
+                    DontSkipDot = TRUE;
+                    if (!EndOfName && Name->Buffer[NamePosition] == '.')
+                    {
+                        for (Position = NamePosition - 1; Position < Name->Length; Position++)
+                        {
+                            if (Name->Buffer[Position] == L'.')
+                            {
+                                DontSkipDot = FALSE;
+                                break;
+                            }
+                        }
+                    }
 
-                 ExpressionPosition++;
-            }
-        }
-        /* Check DOS_DOT */
-        else if (Expression->Buffer[ExpressionPosition] == DOS_DOT)
-        {
-            /* We only match dots */
-            if (Name->Buffer[NamePosition] == L'.')
-            {
-                NamePosition++;
-            }
-            /* Try to explore later on for null matching */
-            else if ((ExpressionPosition + 1 < (USHORT)(Expression->Length / sizeof(WCHAR))) &&
-                     (Name->Buffer[NamePosition] == Expression->Buffer[ExpressionPosition + 1]))
-            {
-                NamePosition++;
-            }
-            ExpressionPosition++;
-        }
-        /* Check DOS_QM */
-        else if (Expression->Buffer[ExpressionPosition] == DOS_QM)
-        {
-            /* We match everything except dots */
-            if (Name->Buffer[NamePosition] != L'.')
-            {
-                NamePosition++;
-            }
-            ExpressionPosition++;
-        }
-        /* If nothing match, try to backtrack */
-        else if (StarFound >= 0)
-        {
-            ExpressionPosition = BackTracking[StarFound--];
-        }
-        else if (DosStarFound >= 0)
-        {
-            ExpressionPosition = DosBackTracking[DosStarFound--];
-        }
-        /* Otherwise, fail */
-        else
-        {
-            break;
-        }
+                    if (EndOfName || Name->Buffer[NamePosition] != L'.' || !DontSkipDot)
+                        BackTracking[BackTrackingPosition++] = ExpressionPosition * 2;
 
-        /* Under certain circumstances, expression is over, but name isn't
-         * and we can backtrack, then, backtrack */
-        if (ExpressionPosition == Expression->Length / sizeof(WCHAR) &&
-            NamePosition != Name->Length / sizeof(WCHAR) &&
-            StarFound >= 0)
-        {
-            ExpressionPosition = BackTracking[StarFound--];
-        }
-    }
-    /* If we have nullable matching wc at the end of the string, eat them */
-    if (ExpressionPosition != Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR))
-    {
-        while (ExpressionPosition < Expression->Length / sizeof(WCHAR))
-        {
-            if (Expression->Buffer[ExpressionPosition] != DOS_DOT &&
-                Expression->Buffer[ExpressionPosition] != L'*' &&
-                Expression->Buffer[ExpressionPosition] != DOS_STAR)
-            {
+                    BackTracking[BackTrackingPosition++] = (ExpressionPosition * 2) + 3;
+                    continue;
+                }
+                /* Check DOS_DOT */
+                else if (Expression->Buffer[ExpressionPosition / sizeof(WCHAR)] == DOS_DOT)
+                {
+                    if (EndOfName) continue;
+
+                    if (Name->Buffer[NamePosition] == L'.')
+                        BackTracking[BackTrackingPosition++] = (ExpressionPosition + sizeof(WCHAR)) * 2;
+                }
+                /* Check DOS_QM */
+                else if (Expression->Buffer[ExpressionPosition / sizeof(WCHAR)] == DOS_QM)
+                {
+                    if (EndOfName || Name->Buffer[NamePosition] == L'.') continue;
+
+                    BackTracking[BackTrackingPosition++] = (ExpressionPosition + sizeof(WCHAR)) * 2;
+                }
+
+                /* Leave from loop */
                 break;
             }
-            ExpressionPosition++;
+
+            for (Position = 0; MatchingChars > OldBackTrackingPosition && Position < BackTrackingPosition; Position++)
+            {
+                while (MatchingChars > OldBackTrackingPosition &&
+                       BackTracking[Position] > OldBackTracking[OldBackTrackingPosition])
+                {
+                    ++OldBackTrackingPosition;
+                }
+            }
         }
+
+        /* Swap pointers */
+        BackTrackingSwap = BackTracking;
+        BackTracking = OldBackTracking;
+        OldBackTracking = BackTrackingSwap;
     }
 
-    if (BackTracking != BackTrackingBuffer)
-    {
+    /* Store result value */
+    Result = (OldBackTracking[MatchingChars - 1] == (Expression->Length * 2));
+
+    /* Frees the memory if necessary */
+    if (BackTracking != BackTrackingBuffer && BackTracking != OldBackTrackingBuffer)
         ExFreePoolWithTag(BackTracking, 'nrSF');
-    }
-    if (DosBackTracking != DosBackTrackingBuffer)
-    {
-        ExFreePoolWithTag(DosBackTracking, 'nrSF');
-    }
+    if (OldBackTracking != BackTrackingBuffer && OldBackTracking != OldBackTrackingBuffer)
+        ExFreePoolWithTag(OldBackTracking, 'nrSF');
 
-    return (ExpressionPosition == Expression->Length / sizeof(WCHAR) && NamePosition == Name->Length / sizeof(WCHAR));
+    return Result;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
