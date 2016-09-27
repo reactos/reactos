@@ -20,6 +20,13 @@
 
 #include "shelldesktop.h"
 
+// Support for multiple monitors is disabled till LVM_SETWORKAREAS gets implemented
+#ifdef MULTIMONITOR_SUPPORT
+#include <atlcoll.h>
+#endif
+
+
+
 WINE_DEFAULT_DEBUG_CHANNEL(desktop);
 
 static const WCHAR szProgmanClassName[]  = L"Progman";
@@ -38,6 +45,7 @@ private:
     CComPtr<IShellView>        m_ShellView;
 
     LRESULT _NotifyTray(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    HRESULT _Resize();
 
 public:
     CDesktopBrowser();
@@ -109,6 +117,72 @@ CDesktopBrowser::~CDesktopBrowser()
     }
 }
 
+#ifdef MULTIMONITOR_SUPPORT
+BOOL CALLBACK MonitorEnumProc(
+  _In_ HMONITOR hMonitor,
+  _In_ HDC      hdcMonitor,
+  _In_ LPRECT   lprcMonitor,
+  _In_ LPARAM   dwData
+)
+{
+    CAtlList<RECT> *list = (CAtlList<RECT>*)dwData;
+    MONITORINFO MonitorInfo;
+    MonitorInfo.cbSize = sizeof(MonitorInfo);
+    if (::GetMonitorInfoW(hMonitor, &MonitorInfo))
+    {
+        list->AddTail(MonitorInfo.rcWork);
+    }
+
+    return TRUE;
+}
+#endif
+
+HRESULT CDesktopBrowser::_Resize()
+{
+    RECT rcNewSize;
+
+#ifdef MULTIMONITOR_SUPPORT
+
+    UINT cMonitors = GetSystemMetrics(SM_CMONITORS);
+    if (cMonitors == 1)
+    {
+        SystemParametersInfoW(SPI_GETWORKAREA, 0, &rcNewSize, 0);
+    }
+    else
+    {
+        SetRect(&rcNewSize,
+                GetSystemMetrics(SM_XVIRTUALSCREEN),
+                GetSystemMetrics(SM_YVIRTUALSCREEN),
+                GetSystemMetrics(SM_XVIRTUALSCREEN) + GetSystemMetrics(SM_CXVIRTUALSCREEN),
+                GetSystemMetrics(SM_YVIRTUALSCREEN) + GetSystemMetrics(SM_CYVIRTUALSCREEN));
+    }
+
+    ::MoveWindow(m_hWnd, rcNewSize.left, rcNewSize.top, rcNewSize.right - rcNewSize.left, rcNewSize.bottom - rcNewSize.top, FALSE);
+    ::MoveWindow(m_hWndShellView, 0, 0, rcNewSize.right - rcNewSize.left, rcNewSize.bottom - rcNewSize.top, FALSE);
+
+    if (cMonitors != 1)
+    {
+        CAtlList<RECT> list;
+        EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, (LPARAM)&list);
+        RECT* prcWorkAreas = new RECT[list.GetCount()];
+        int i = 0;
+        for (POSITION it = list.GetHeadPosition(); it; list.GetNext(it))
+            prcWorkAreas[i++] = list.GetAt(it);
+
+        HWND hwndListView = FindWindowExW(m_hWndShellView, NULL, WC_LISTVIEW, NULL);
+
+        ::SendMessageW(hwndListView, LVM_SETWORKAREAS , i, (LPARAM)prcWorkAreas);
+    }
+
+#else
+     SystemParametersInfoW(SPI_GETWORKAREA, 0, &rcNewSize, 0);
+    ::MoveWindow(m_hWnd, rcNewSize.left, rcNewSize.top, rcNewSize.right - rcNewSize.left, rcNewSize.bottom - rcNewSize.top, FALSE);
+    ::MoveWindow(m_hWndShellView, 0, 0, rcNewSize.right - rcNewSize.left, rcNewSize.bottom - rcNewSize.top, FALSE);
+
+#endif
+    return S_OK;
+}
+
 HRESULT CDesktopBrowser::Initialize(IShellDesktopTray *ShellDesk)
 {  
     CComPtr<IShellFolder> psfDesktop;
@@ -117,25 +191,9 @@ HRESULT CDesktopBrowser::Initialize(IShellDesktopTray *ShellDesk)
     if (FAILED_UNEXPECTEDLY(hRet))
         return hRet;
 
-    /* Calculate the size and pos of the window */
-    RECT rect;
-    if (!GetSystemMetrics(SM_CXVIRTUALSCREEN) || !GetSystemMetrics(SM_CYVIRTUALSCREEN))
-    {
-        SetRect(&rect, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-    }
-    else
-    {
-        SetRect(&rect,
-                GetSystemMetrics(SM_XVIRTUALSCREEN),
-                GetSystemMetrics(SM_YVIRTUALSCREEN),
-                GetSystemMetrics(SM_XVIRTUALSCREEN) + GetSystemMetrics(SM_CXVIRTUALSCREEN),
-                GetSystemMetrics(SM_YVIRTUALSCREEN) + GetSystemMetrics(SM_CYVIRTUALSCREEN));
-    }
+    m_Tray = ShellDesk;
 
-    
-    m_Tray = ShellDesk;    
-
-    Create(NULL, &rect, szProgmanWindowName, WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_TOOLWINDOW);
+    Create(NULL, NULL, szProgmanWindowName, WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_TOOLWINDOW);
     if (!m_hWnd)
         return E_FAIL;
 
@@ -149,28 +207,14 @@ HRESULT CDesktopBrowser::Initialize(IShellDesktopTray *ShellDesk)
         return hRet;
 
     FOLDERSETTINGS fs;
-    RECT rcWorkArea;
-
-    // FIXME: Add support for multi-monitor?
-    SystemParametersInfoW(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
-
-    // TODO: Call GetClientRect for the tray window and make small computation
-    // to be sure the tray window rect is removed from the work area!
-#if 0
-    RECT rcTray;
-    HWND hWndTray;
-
-    /* Get client rect of the taskbar */
-    hRet = m_Tray->GetTrayWindow(&hWndTray);
-    if (SUCCEEDED(hRet))
-        GetClientRect(hWndTray, &rcTray);
-#endif
-
+    RECT rcShellView = {0,0,0,0};
     fs.ViewMode = FVM_ICON;
     fs.fFlags = FWF_DESKTOP | FWF_NOCLIENTEDGE | FWF_NOSCROLL | FWF_TRANSPARENT;
-    hRet = m_ShellView->CreateViewWindow(NULL, &fs, (IShellBrowser *)this, &rcWorkArea, &m_hWndShellView);
+    hRet = m_ShellView->CreateViewWindow(NULL, &fs, (IShellBrowser *)this, &rcShellView, &m_hWndShellView);
     if (FAILED_UNEXPECTEDLY(hRet))
         return hRet;
+
+    _Resize();
 
     HWND hwndListView = FindWindowExW(m_hWndShellView, NULL, WC_LISTVIEW, NULL);
     SetShellWindowEx(m_hWnd, hwndListView);
@@ -335,18 +379,7 @@ LRESULT CDesktopBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         /* Hey, we're the desktop!!! */
         ::ShowWindow(m_hWnd, SW_RESTORE);
     }
-    else
-    {
-        RECT rcDesktop;
-        rcDesktop.left   = GetSystemMetrics(SM_XVIRTUALSCREEN);
-        rcDesktop.top    = GetSystemMetrics(SM_YVIRTUALSCREEN);
-        rcDesktop.right  = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-        rcDesktop.bottom = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
-        /* FIXME: Update work area */
-        DBG_UNREFERENCED_LOCAL_VARIABLE(rcDesktop);
-    }
-    
     return 0;
 }
 
@@ -358,22 +391,11 @@ LRESULT CDesktopBrowser::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam
         SendMessageW(m_hWndShellView, uMsg, wParam, lParam);
     }
 
-    if (uMsg == WM_SETTINGCHANGE && wParam == SPI_SETWORKAREA &&
-        m_hWndShellView != NULL)
+    if (uMsg == WM_SETTINGCHANGE && wParam == SPI_SETWORKAREA && m_hWndShellView != NULL)
     {
-        RECT rcWorkArea;
-
-        // FIXME: Add support for multi-monitor!
-        // FIXME: Maybe merge with the code that retrieves the
-        //        work area in CDesktopBrowser::CreateDeskWnd ?
-        SystemParametersInfoW(SPI_GETWORKAREA, 0, &rcWorkArea, 0);
-
-        ::SetWindowPos(m_hWndShellView, NULL,
-                       rcWorkArea.left, rcWorkArea.top,
-                       rcWorkArea.right - rcWorkArea.left,
-                       rcWorkArea.bottom - rcWorkArea.top,
-                       SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+        _Resize();
     }
+
     return 0;
 }
 
