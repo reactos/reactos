@@ -110,6 +110,20 @@ typedef struct __DEVICE_EXTENSION__
 
 }DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
+typedef struct
+{
+    PDEVICE_EXTENSION DeviceExtension;                           /* device extension */
+    PDEVICE_OBJECT LowerDevice;                                  /* lower device*/
+
+}FILTER_CONTEXT, *PFILTER_CONTEXT;
+
+typedef struct
+{
+	PDEVICE_EXTENSION DeviceExtension;                           /* device extension */
+	PDEVICE_OBJECT LowerDevice;                                  /* lower device*/
+
+}PIN_CONTEXT, *PPIN_CONTEXT;
+
 /* filter.c */
 
 NTSTATUS
@@ -129,6 +143,11 @@ FreeFunction(
     IN PVOID Item);
 
 /* usbaudio.c */
+
+NTSTATUS
+SubmitUrbSync(
+    IN PDEVICE_OBJECT Device,
+    IN PURB Urb);
 
 NTSTATUS
 NTAPI

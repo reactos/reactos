@@ -107,7 +107,38 @@ USBAudioFilterCreate(
     PKSFILTER Filter,
     PIRP Irp)
 {
-    UNIMPLEMENTED
+    PKSFILTERFACTORY FilterFactory;
+    PKSDEVICE Device;
+    PFILTER_CONTEXT FilterContext;
+
+    FilterFactory = KsGetParent(Filter);
+    if (FilterFactory == NULL)
+    {
+        /* invalid parameter */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Device = KsGetParent(FilterFactory);
+    if (Device == NULL)
+    {
+        /* invalid parameter */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* alloc filter context */
+    FilterContext = AllocFunction(sizeof(FILTER_CONTEXT));
+    if (FilterContext == NULL)
+    {
+        /* no memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* init context */
+    FilterContext->DeviceExtension = Device->Context;
+    FilterContext->LowerDevice = Device->NextDeviceObject;
+    Filter->Context = FilterContext;
+
+    KsAddItemToObjectBag(Filter->Bag, FilterContext, ExFreePool);
     return STATUS_SUCCESS;
 }
 

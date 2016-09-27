@@ -9,13 +9,45 @@
 
 #include "usbaudio.h"
 
+GUID GUID2_KSDATAFORMAT_TYPE_AUDIO = { STATIC_KSDATAFORMAT_TYPE_AUDIO };
+GUID GUID2_KSDATAFORMAT_SUBTYPE_PCM = { STATIC_KSDATAFORMAT_SUBTYPE_PCM };
+GUID GUID2_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX = { STATIC_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX };
+
 NTSTATUS
 NTAPI
 USBAudioPinCreate(
     _In_ PKSPIN Pin,
     _In_ PIRP Irp)
 {
-    UNIMPLEMENTED
+    PKSFILTER Filter;
+    PFILTER_CONTEXT FilterContext;
+    PPIN_CONTEXT PinContext;
+
+    Filter = KsPinGetParentFilter(Pin);
+    if (Filter == NULL)
+    {
+        /* invalid parameter */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* get filter context */
+    FilterContext = Filter->Context;
+
+    /* allocate pin context */
+    PinContext = AllocFunction(sizeof(PIN_CONTEXT));
+    if (!PinContext)
+    {
+        /* no memory*/
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* init pin context */
+    PinContext->DeviceExtension = FilterContext->DeviceExtension;
+    PinContext->LowerDevice = FilterContext->LowerDevice;
+
+    /* store pin context*/
+    Pin->Context = PinContext;
+
     return STATUS_SUCCESS;
 }
 
@@ -57,10 +89,71 @@ USBAudioPinSetDataFormat(
     _In_ const KSDATARANGE* DataRange,
     _In_opt_ const KSATTRIBUTE_LIST* AttributeRange)
 {
-    UNIMPLEMENTED
-    return STATUS_SUCCESS;
-}
+    PURB Urb;
+    PUCHAR SampleRateBuffer;
+    PPIN_CONTEXT PinContext;
+    NTSTATUS Status;
+    PKSDATAFORMAT_WAVEFORMATEX WaveFormatEx;
 
+    /* allocate sample rate buffer */
+    SampleRateBuffer = AllocFunction(sizeof(ULONG));
+    if (!SampleRateBuffer)
+    {
+        /* no memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    if (IsEqualGUIDAligned(&Pin->ConnectionFormat->MajorFormat, &GUID2_KSDATAFORMAT_TYPE_AUDIO) && 
+        IsEqualGUIDAligned(&Pin->ConnectionFormat->SubFormat,  &GUID2_KSDATAFORMAT_SUBTYPE_PCM) &&
+        IsEqualGUIDAligned(&Pin->ConnectionFormat->Specifier, &GUID2_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX))
+    {
+        WaveFormatEx = (PKSDATAFORMAT_WAVEFORMATEX)Pin->ConnectionFormat;
+        SampleRateBuffer[0] = (WaveFormatEx->WaveFormatEx.nSamplesPerSec >> 16) & 0xFF;
+        SampleRateBuffer[1] = (WaveFormatEx->WaveFormatEx.nSamplesPerSec >> 8) & 0xFF;
+        SampleRateBuffer[2] = (WaveFormatEx->WaveFormatEx.nSamplesPerSec >> 0) & 0xFF;
+    }
+    else
+    {
+        /* not supported yet*/
+        UNIMPLEMENTED;
+        FreeFunction(SampleRateBuffer);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* allocate urb */
+    Urb = AllocFunction(sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
+    if (!Urb)
+    {
+        /* no memory */
+        FreeFunction(SampleRateBuffer);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* format urb */
+    UsbBuildVendorRequest(Urb,
+                          URB_FUNCTION_CLASS_ENDPOINT,
+                          sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
+                          USBD_TRANSFER_DIRECTION_OUT,
+                          0,
+                          0x01,
+                          0x100,
+                          0x81, //bEndpointAddress
+                          SampleRateBuffer,
+                          NULL,
+                          3,
+                          NULL);
+
+    /* get pin context */
+    PinContext = Pin->Context;
+    DbgBreakPoint();
+    /* submit urb */
+    Status = SubmitUrbSync(PinContext->LowerDevice, Urb);
+
+    DPRINT1("USBAudioPinSetDataFormat Pin %p Status %x\n", Pin, Status);
+    FreeFunction(Urb);
+    FreeFunction(SampleRateBuffer);
+    return Status;
+}
 
 NTSTATUS
 NTAPI

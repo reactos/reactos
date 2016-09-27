@@ -1,9 +1,8 @@
 /* DO NOT USE THE PRECOMPILED HEADER FOR THIS FILE! */
 
 //#include <wdm.h>
-#include <portcls.h>
-
 #include <initguid.h>
+#include <portcls.h>
 #include <wdmguid.h>
 #include <ksmedia.h>
 #include <hubbusif.h>

@@ -34,27 +34,12 @@ static KSDEVICE_DESCRIPTOR KsDeviceDescriptor = {
 };
 
 NTSTATUS
-NTAPI
-USBAudioCancelCompleteSynch(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp,
-	IN PVOID Context)
-{
-    /* signal event */
-    KeSetEvent(Context, 0, FALSE);
-
-    /* done */
-    return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-NTSTATUS
 SubmitUrbSync(
-    IN PKSDEVICE Device,
+    IN PDEVICE_OBJECT DeviceObject,
     IN PURB Urb)
 {
     PIRP Irp;
     KEVENT Event;
-    PDEVICE_EXTENSION DeviceExtension;
     IO_STATUS_BLOCK IoStatus;
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
@@ -62,12 +47,9 @@ SubmitUrbSync(
     // init event
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    // get device extension
-    DeviceExtension = (PDEVICE_EXTENSION)Device->Context;
-
     // build irp
     Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_USB_SUBMIT_URB,
-        DeviceExtension->LowerDevice,
+        DeviceObject,
         NULL,
         0,
         NULL,
@@ -90,11 +72,8 @@ SubmitUrbSync(
     // store urb
     IoStack->Parameters.Others.Argument1 = Urb;
 
-    // set completion routine
-    IoSetCompletionRoutine(Irp, USBAudioCancelCompleteSynch, &Event, TRUE, TRUE, TRUE);
-
     // call driver
-    Status = IoCallDriver(DeviceExtension->LowerDevice, Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
 
     // wait for the request to finish
     if (Status == STATUS_PENDING)
@@ -169,8 +148,11 @@ USBAudioSelectConfiguration(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* device extension */
+    DeviceExtension = Device->Context;
+
     /* submit configuration urb */
-    Status = SubmitUrbSync(Device, Urb);
+    Status = SubmitUrbSync(DeviceExtension->LowerDevice, Urb);
     if (!NT_SUCCESS(Status))
     {
         /* free resources */
@@ -180,7 +162,6 @@ USBAudioSelectConfiguration(
     }
 
     /* store configuration handle */
-    DeviceExtension = Device->Context;
     DeviceExtension->ConfigurationHandle = Urb->UrbSelectConfiguration.ConfigurationHandle;
 
     /* alloc interface info */
@@ -205,6 +186,9 @@ USBAudioStartDevice(
     NTSTATUS Status;
     ULONG Length;
 
+    /* get device extension */
+    DeviceExtension = Device->Context;
+
     /* allocate urb */
     Urb = AllocFunction(sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST));
     if (!Urb)
@@ -226,7 +210,7 @@ USBAudioStartDevice(
     UsbBuildGetDescriptorRequest(Urb, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), USB_DEVICE_DESCRIPTOR_TYPE, 0, 0, DeviceDescriptor, NULL, sizeof(USB_DEVICE_DESCRIPTOR), NULL);
 
     /* submit urb */
-    Status = SubmitUrbSync(Device, Urb);
+    Status = SubmitUrbSync(DeviceExtension->LowerDevice, Urb);
     if (!NT_SUCCESS(Status))
     {
         /* free resources */
@@ -249,7 +233,7 @@ USBAudioStartDevice(
     UsbBuildGetDescriptorRequest(Urb, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), USB_CONFIGURATION_DESCRIPTOR_TYPE, 0, 0, ConfigurationDescriptor, NULL, sizeof(USB_CONFIGURATION_DESCRIPTOR), NULL);
 
     /* submit urb */
-    Status = SubmitUrbSync(Device, Urb);
+    Status = SubmitUrbSync(DeviceExtension->LowerDevice, Urb);
     if (!NT_SUCCESS(Status))
     {
         /* free resources */
@@ -279,7 +263,7 @@ USBAudioStartDevice(
     UsbBuildGetDescriptorRequest(Urb, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), USB_CONFIGURATION_DESCRIPTOR_TYPE, 0, 0, ConfigurationDescriptor, NULL, Length, NULL);
 
     /* submit urb */
-    Status = SubmitUrbSync(Device, Urb);
+    Status = SubmitUrbSync(DeviceExtension->LowerDevice, Urb);
 
     /* free urb */
     FreeFunction(Urb);
@@ -298,7 +282,7 @@ USBAudioStartDevice(
     Status = USBAudioSelectConfiguration(Device, ConfigurationDescriptor);
     if (NT_SUCCESS(Status))
     {
-        DeviceExtension = Device->Context;
+
         DeviceExtension->ConfigurationDescriptor = ConfigurationDescriptor;
         DeviceExtension->DeviceDescriptor = DeviceDescriptor;
     }
