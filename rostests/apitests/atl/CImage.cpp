@@ -8,10 +8,6 @@
 #include <atlimage.h>
 #include "resource.h"
 
-#ifdef _MSC_VER
-#pragma comment(lib, "rpcrt4.lib")
-#endif
-
 #ifdef __REACTOS__
     #include <apitest.h>
 #else
@@ -37,18 +33,6 @@
     #define ok(value, ...)  ok_func(__FILE__, __LINE__, value, __VA_ARGS__)
     #define START_TEST(x)   int main(void)
 #endif
-
-bool IsGuidEqual(const GUID& guid1, const GUID& guid2)
-{
-    RPC_STATUS status;
-    if (::UuidEqual(const_cast<GUID *>(&guid1),
-                    const_cast<GUID *>(&guid2), &status))
-    {
-        if (status == RPC_S_OK)
-            return true;
-    }
-    return false;
-}
 
 const TCHAR* szFiles[] = {
     TEXT("ant.png"),
@@ -301,15 +285,15 @@ START_TEST(CImage)
                                          TEXT("All Image Files"), 0);
     ok(hr == S_OK, "Expected hr to be S_OK, was: %ld\n", hr);
     ok(aguidFileTypes.GetSize() == 9, "Expected aguidFileTypes.GetSize() to be 8, was %d.", aguidFileTypes.GetSize());
-    ok(IsGuidEqual(aguidFileTypes[0], GUID_NULL), "Expected aguidFileTypes[0] to be GUID_NULL.\n");
-    ok(IsGuidEqual(aguidFileTypes[1], Gdiplus::ImageFormatBMP), "Expected aguidFileTypes[1] to be Gdiplus::ImageFormatBMP.\n");
-    ok(IsGuidEqual(aguidFileTypes[2], Gdiplus::ImageFormatJPEG), "Expected aguidFileTypes[2] to be Gdiplus::ImageFormatJPEG.\n");
-    ok(IsGuidEqual(aguidFileTypes[3], Gdiplus::ImageFormatGIF), "Expected aguidFileTypes[3] to be Gdiplus::ImageFormatGIF.\n");
-    ok(IsGuidEqual(aguidFileTypes[4], Gdiplus::ImageFormatEMF), "Expected aguidFileTypes[4] to be Gdiplus::ImageFormatEMF.\n");
-    ok(IsGuidEqual(aguidFileTypes[5], Gdiplus::ImageFormatWMF), "Expected aguidFileTypes[5] to be Gdiplus::ImageFormatWMF.\n");
-    ok(IsGuidEqual(aguidFileTypes[6], Gdiplus::ImageFormatTIFF), "Expected aguidFileTypes[6] to be Gdiplus::ImageFormatTIFF.\n");
-    ok(IsGuidEqual(aguidFileTypes[7], Gdiplus::ImageFormatPNG), "Expected aguidFileTypes[7] to be Gdiplus::ImageFormatPNG.\n");
-    ok(IsGuidEqual(aguidFileTypes[8], Gdiplus::ImageFormatIcon), "Expected aguidFileTypes[8] to be Gdiplus::ImageFormatIcon.\n");
+    ok(IsEqualGUID(aguidFileTypes[0], GUID_NULL), "Expected aguidFileTypes[0] to be GUID_NULL.\n");
+    ok(IsEqualGUID(aguidFileTypes[1], Gdiplus::ImageFormatBMP), "Expected aguidFileTypes[1] to be Gdiplus::ImageFormatBMP.\n");
+    ok(IsEqualGUID(aguidFileTypes[2], Gdiplus::ImageFormatJPEG), "Expected aguidFileTypes[2] to be Gdiplus::ImageFormatJPEG.\n");
+    ok(IsEqualGUID(aguidFileTypes[3], Gdiplus::ImageFormatGIF), "Expected aguidFileTypes[3] to be Gdiplus::ImageFormatGIF.\n");
+    ok(IsEqualGUID(aguidFileTypes[4], Gdiplus::ImageFormatEMF), "Expected aguidFileTypes[4] to be Gdiplus::ImageFormatEMF.\n");
+    ok(IsEqualGUID(aguidFileTypes[5], Gdiplus::ImageFormatWMF), "Expected aguidFileTypes[5] to be Gdiplus::ImageFormatWMF.\n");
+    ok(IsEqualGUID(aguidFileTypes[6], Gdiplus::ImageFormatTIFF), "Expected aguidFileTypes[6] to be Gdiplus::ImageFormatTIFF.\n");
+    ok(IsEqualGUID(aguidFileTypes[7], Gdiplus::ImageFormatPNG), "Expected aguidFileTypes[7] to be Gdiplus::ImageFormatPNG.\n");
+    ok(IsEqualGUID(aguidFileTypes[8], Gdiplus::ImageFormatIcon), "Expected aguidFileTypes[8] to be Gdiplus::ImageFormatIcon.\n");
 
     psz = strImporters.GetString();
 #ifdef UNICODE
@@ -328,15 +312,15 @@ START_TEST(CImage)
                                          TEXT("All Image Files"), 0);
     ok(hr == S_OK, "Expected hr to be S_OK, was: %ld\n", hr);
     ok(aguidFileTypes.GetSize() == 9, "Expected aguidFileTypes.GetSize() to be 8, was %d.", aguidFileTypes.GetSize());
-    ok(IsGuidEqual(aguidFileTypes[0], GUID_NULL), "Expected aguidFileTypes[0] to be GUID_NULL.\n");
-    ok(IsGuidEqual(aguidFileTypes[1], Gdiplus::ImageFormatBMP), "Expected aguidFileTypes[1] to be Gdiplus::ImageFormatBMP.\n");
-    ok(IsGuidEqual(aguidFileTypes[2], Gdiplus::ImageFormatJPEG), "Expected aguidFileTypes[2] to be Gdiplus::ImageFormatJPEG.\n");
-    ok(IsGuidEqual(aguidFileTypes[3], Gdiplus::ImageFormatGIF), "Expected aguidFileTypes[3] to be Gdiplus::ImageFormatGIF.\n");
-    ok(IsGuidEqual(aguidFileTypes[4], Gdiplus::ImageFormatEMF), "Expected aguidFileTypes[4] to be Gdiplus::ImageFormatEMF.\n");
-    ok(IsGuidEqual(aguidFileTypes[5], Gdiplus::ImageFormatWMF), "Expected aguidFileTypes[5] to be Gdiplus::ImageFormatWMF.\n");
-    ok(IsGuidEqual(aguidFileTypes[6], Gdiplus::ImageFormatTIFF), "Expected aguidFileTypes[6] to be Gdiplus::ImageFormatTIFF.\n");
-    ok(IsGuidEqual(aguidFileTypes[7], Gdiplus::ImageFormatPNG), "Expected aguidFileTypes[7] to be Gdiplus::ImageFormatPNG.\n");
-    ok(IsGuidEqual(aguidFileTypes[8], Gdiplus::ImageFormatIcon), "Expected aguidFileTypes[8] to be Gdiplus::ImageFormatIcon.\n");
+    ok(IsEqualGUID(aguidFileTypes[0], GUID_NULL), "Expected aguidFileTypes[0] to be GUID_NULL.\n");
+    ok(IsEqualGUID(aguidFileTypes[1], Gdiplus::ImageFormatBMP), "Expected aguidFileTypes[1] to be Gdiplus::ImageFormatBMP.\n");
+    ok(IsEqualGUID(aguidFileTypes[2], Gdiplus::ImageFormatJPEG), "Expected aguidFileTypes[2] to be Gdiplus::ImageFormatJPEG.\n");
+    ok(IsEqualGUID(aguidFileTypes[3], Gdiplus::ImageFormatGIF), "Expected aguidFileTypes[3] to be Gdiplus::ImageFormatGIF.\n");
+    ok(IsEqualGUID(aguidFileTypes[4], Gdiplus::ImageFormatEMF), "Expected aguidFileTypes[4] to be Gdiplus::ImageFormatEMF.\n");
+    ok(IsEqualGUID(aguidFileTypes[5], Gdiplus::ImageFormatWMF), "Expected aguidFileTypes[5] to be Gdiplus::ImageFormatWMF.\n");
+    ok(IsEqualGUID(aguidFileTypes[6], Gdiplus::ImageFormatTIFF), "Expected aguidFileTypes[6] to be Gdiplus::ImageFormatTIFF.\n");
+    ok(IsEqualGUID(aguidFileTypes[7], Gdiplus::ImageFormatPNG), "Expected aguidFileTypes[7] to be Gdiplus::ImageFormatPNG.\n");
+    ok(IsEqualGUID(aguidFileTypes[8], Gdiplus::ImageFormatIcon), "Expected aguidFileTypes[8] to be Gdiplus::ImageFormatIcon.\n");
 
     psz = strExporters.GetString();
 #ifdef UNICODE
