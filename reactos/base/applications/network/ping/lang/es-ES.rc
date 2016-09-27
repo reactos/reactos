@@ -61,4 +61,6 @@ Estadísticas de ping para %1!s!:\n\
 
     IDS_APPROXIMATE_RTT "Tiempos aproximados de ida y vuelta en milisegundos:\n\
     Mínimo = %1!u!ms, Máximo = %2!u!ms, Media = %3!u!ms\n"
+
+    IDS_WINSOCK_FAIL "Failed to initialize WinSock: %1!d!\n"
 END

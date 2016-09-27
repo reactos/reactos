@@ -61,4 +61,6 @@ Statystyka rezultatu badania hosta %1!s!:\n\
 
     IDS_APPROXIMATE_RTT "Całkowity, przybliżony czas podróży pakietu w millisekundach:\n\
     Minimum = %1!u!ms, Maksimum = %2!u!ms, Uśredniony = %3!u!ms\n"
+
+    IDS_WINSOCK_FAIL "Failed to initialize WinSock: %1!d!\n"
 END

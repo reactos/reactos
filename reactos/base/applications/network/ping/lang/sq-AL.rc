@@ -61,4 +61,6 @@ Statistikat e Ping për %1!s!:\n\
 
     IDS_APPROXIMATE_RTT "Afersisht koha e matjes në mili-sekonda:\n\
     Minimum = %1!u!ms, Maximum = %2!u!ms, Mesatar = %3!u!ms\n"
+
+    IDS_WINSOCK_FAIL "Failed to initialize WinSock: %1!d!\n"
 END

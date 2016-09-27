@@ -61,4 +61,6 @@ Ping statistics for %1!s!:\n\
 
     IDS_APPROXIMATE_RTT "Approximate round-trip time in milliseconds:\n\
     Minimum = %1!u!ms, Maximum = %2!u!ms, Average = %3!u!ms\n"
+
+    IDS_WINSOCK_FAIL "Failed to initialize WinSock: %1!d!\n"
 END

@@ -61,4 +61,6 @@ BEGIN
 
     IDS_APPROXIMATE_RTT "Приблизительное время приема-передачи в мс:\n\
     Минимальное = %1!u!ms, Максимальное = %2!u!ms, Среднее = %3!u!ms\n"
+
+    IDS_WINSOCK_FAIL "Failed to initialize WinSock: %1!d!\n"
 END

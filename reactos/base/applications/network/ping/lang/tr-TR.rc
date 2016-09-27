@@ -61,4 +61,6 @@ Options:\n\
 
     IDS_APPROXIMATE_RTT "Mili sâniye olarak yaklaşık gidiş geliş süreleri:\n\
     En Az = %1!u!ms, En Çok = %2!u!ms, Ortalama = %3!u!ms\n"
+
+    IDS_WINSOCK_FAIL "Failed to initialize WinSock: %1!d!\n"
 END

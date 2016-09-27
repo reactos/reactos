@@ -28,3 +28,4 @@
 #define IDS_TRANSMIT_FAILED       125
 #define IDS_STATISTICS            126
 #define IDS_APPROXIMATE_RTT       127
+#define IDS_WINSOCK_FAIL          128

@@ -61,4 +61,6 @@ statistici de transmisie pentru %1!s!:\n\
 
     IDS_APPROXIMATE_RTT "timpul aproximativ de tur-retur, in milisecunde:\n\
     minim = %1!u!ms, maxim = %2!u!ms, mediu = %3!u!ms\n"
+
+    IDS_WINSOCK_FAIL "Failed to initialize WinSock: %1!d!\n"
 END

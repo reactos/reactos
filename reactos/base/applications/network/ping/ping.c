@@ -55,6 +55,7 @@ static void PrintStats(void);
 static BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType);
 static void PrintString(UINT id, ...);
 
+static HANDLE hStdOut;
 static HANDLE hIcmpFile = INVALID_HANDLE_VALUE;
 static ULONG Timeout = 4000;
 static int Family = AF_UNSPEC;
@@ -82,8 +83,11 @@ wmain(int argc, WCHAR *argv[])
     WSADATA wsaData;
     ULONG i;
     DWORD StrLen = 46;
+    int Status;
 
     IpOptions.Ttl = 128;
+
+    hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
     if (!ParseCmdLine(argc, argv))
     {
@@ -92,14 +96,15 @@ wmain(int argc, WCHAR *argv[])
 
     if (!SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE))
     {
-        DPRINT1("Failed to set control handler: %lu\n", GetLastError());
+        DPRINT("Failed to set control handler: %lu\n", GetLastError());
 
         return 1;
     }
 
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+    Status = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (Status != 0)
     {
-        DPRINT1("WSAStartup failed\n");
+        PrintString(IDS_WINSOCK_FAIL, Status);
 
         return 1;
     }
@@ -113,7 +118,7 @@ wmain(int argc, WCHAR *argv[])
 
     if (WSAAddressToStringW(Target->ai_addr, (DWORD)Target->ai_addrlen, NULL, Address, &StrLen) != 0)
     {
-        DPRINT1("WSAAddressToStringW failed: %d\n", WSAGetLastError());
+        DPRINT("WSAAddressToStringW failed: %d\n", WSAGetLastError());
         FreeAddrInfoW(Target);
         WSACleanup();
 
@@ -132,7 +137,7 @@ wmain(int argc, WCHAR *argv[])
 
     if (hIcmpFile == INVALID_HANDLE_VALUE)
     {
-        DPRINT1("IcmpCreateFile failed: %lu\n", GetLastError());
+        DPRINT("IcmpCreateFile failed: %lu\n", GetLastError());
         FreeAddrInfoW(Target);
         WSACleanup();
 
@@ -177,12 +182,12 @@ PrintString(UINT id, ...)
 {
     WCHAR Format[1024];
     WCHAR Msg[1024];
-    DWORD Len;
+    DWORD Len, written;
     va_list args;
 
     if (!LoadStringW(GetModuleHandleW(NULL), id, Format, _countof(Format)))
     {
-        DPRINT1("LoadStringW failed: %lu\n", GetLastError());
+        DPRINT("LoadStringW failed: %lu\n", GetLastError());
 
         return;
     }
@@ -196,13 +201,14 @@ PrintString(UINT id, ...)
 
     if (Len == 0)
     {
-        DPRINT1("FormatMessageW failed: %lu\n", GetLastError());
+        DPRINT("FormatMessageW failed: %lu\n", GetLastError());
 
         va_end(args);
         return;
     }
 
-    wprintf(L"%s", Msg);
+    // TODO: Handle writing to file.
+    WriteConsole(hStdOut, Msg, Len, &written, NULL);
 
     va_end(args);
 }
@@ -468,9 +474,7 @@ ResolveTarget(PCWSTR target)
 
         if (Status != 0)
         {
-            DPRINT1("GetNameInfoW failed: %d\n", Status);
-
-            return FALSE;
+            DPRINT("GetNameInfoW failed: %d\n", WSAGetLastError());
         }
     }
 
@@ -604,6 +608,8 @@ Ping(void)
                 {
                     RTTMax = pEchoReply->RoundTripTime;
                 }
+
+                wprintf(L"\n");
 
                 RTTTotal += pEchoReply->RoundTripTime;
                 break;
