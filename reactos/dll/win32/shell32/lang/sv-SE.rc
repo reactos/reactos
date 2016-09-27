@@ -26,7 +26,7 @@ BEGIN
             MENUITEM "&Lista", FCIDM_SHVIEW_LISTVIEW
             MENUITEM "&Detaljer", FCIDM_SHVIEW_REPORTVIEW
         END
-        MENUITEM SEPARATOR
+        MENUITEM "", -1, MFT_SEPARATOR
         POPUP "Ordna &ikoner", FCIDM_SHVIEW_ARRANGE
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
