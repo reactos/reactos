@@ -9,10 +9,6 @@
 
 #include "usbaudio.h"
 
-GUID GUID2_KSDATAFORMAT_TYPE_AUDIO = { STATIC_KSDATAFORMAT_TYPE_AUDIO };
-GUID GUID2_KSDATAFORMAT_SUBTYPE_PCM = { STATIC_KSDATAFORMAT_SUBTYPE_PCM };
-GUID GUID2_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX = { STATIC_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX };
-
 NTSTATUS
 NTAPI
 USBAudioPinCreate(
@@ -103,9 +99,9 @@ USBAudioPinSetDataFormat(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    if (IsEqualGUIDAligned(&Pin->ConnectionFormat->MajorFormat, &GUID2_KSDATAFORMAT_TYPE_AUDIO) && 
-        IsEqualGUIDAligned(&Pin->ConnectionFormat->SubFormat,  &GUID2_KSDATAFORMAT_SUBTYPE_PCM) &&
-        IsEqualGUIDAligned(&Pin->ConnectionFormat->Specifier, &GUID2_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX))
+    if (IsEqualGUIDAligned(&Pin->ConnectionFormat->MajorFormat, &KSDATAFORMAT_TYPE_AUDIO) && 
+        IsEqualGUIDAligned(&Pin->ConnectionFormat->SubFormat,  &KSDATAFORMAT_SUBTYPE_PCM) &&
+        IsEqualGUIDAligned(&Pin->ConnectionFormat->Specifier, &KSDATAFORMAT_SPECIFIER_WAVEFORMATEX))
     {
         WaveFormatEx = (PKSDATAFORMAT_WAVEFORMATEX)Pin->ConnectionFormat;
         SampleRateBuffer[0] = (WaveFormatEx->WaveFormatEx.nSamplesPerSec >> 16) & 0xFF;

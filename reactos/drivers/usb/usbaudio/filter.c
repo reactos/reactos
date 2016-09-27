@@ -25,9 +25,7 @@ GUID NodeTypeSubwoofer = { STATIC_KSNODETYPE_LOW_FREQUENCY_EFFECTS_SPEAKER };
 GUID NodeTypeCapture = { STATIC_PINNAME_CAPTURE };
 GUID NodeTypePlayback = { STATIC_KSCATEGORY_AUDIO };
 GUID GUID_KSCATEGORY_AUDIO = { STATIC_KSCATEGORY_AUDIO };
-GUID GUID_KSDATAFORMAT_TYPE_AUDIO = { STATIC_KSDATAFORMAT_TYPE_AUDIO };
-GUID GUID_KSDATAFORMAT_SUBTYPE_PCM = { STATIC_KSDATAFORMAT_SUBTYPE_PCM };
-GUID GUID_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX = { STATIC_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX };
+
 KSPIN_INTERFACE StandardPinInterface =
 {
      {STATIC_KSINTERFACESETID_Standard},
@@ -367,9 +365,9 @@ UsbAudioGetDataRanges(
                     }
 
                     DataRangeAudio->DataRange.FormatSize = sizeof(KSDATARANGE_AUDIO);
-                    DataRangeAudio->DataRange.MajorFormat = GUID_KSDATAFORMAT_TYPE_AUDIO;
-                    DataRangeAudio->DataRange.SubFormat = GUID_KSDATAFORMAT_SUBTYPE_PCM;
-                    DataRangeAudio->DataRange.Specifier = GUID_KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
+                    DataRangeAudio->DataRange.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
+                    DataRangeAudio->DataRange.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+                    DataRangeAudio->DataRange.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
                     DataRangeAudio->MaximumChannels = 1;
                     DataRangeAudio->MinimumBitsPerSample = StreamingFormatDescriptor->bBitResolution;
                     DataRangeAudio->MaximumBitsPerSample = StreamingFormatDescriptor->bBitResolution;
