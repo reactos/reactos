@@ -148,7 +148,7 @@ static void test_construction()
         ok(V_I8(&l1) == lv, "Expected value to be %s, was: %s\n", wine_dbgstr_longlong(lv), wine_dbgstr_longlong(V_I8(&l1)));
     }
     {
-        ULONGLONG lv = 12030912309123llu;
+        ULONGLONG lv = 12030912309123ull;
         CComVariant l1(lv);
         ok(V_VT(&l1) == VT_UI8, "Expected .vt to be VT_UI8, was %u\n", V_VT(&l1));
         ok(V_UI8(&l1) == lv, "Expected value to be %s, was: %s\n", wine_dbgstr_longlong(lv), wine_dbgstr_longlong(V_UI8(&l1)));
@@ -248,7 +248,7 @@ static void test_copyconstructor()
         ok(V_I8(&l2) == lv, "Expected value to be %s, was: %s\n", wine_dbgstr_longlong(lv), wine_dbgstr_longlong(V_I8(&l2)));
     }
     {
-        ULONGLONG lv = 12030912309123llu;
+        ULONGLONG lv = 12030912309123ull;
         CComVariant l1(lv);
         CComVariant l2(l1);
         ok(V_VT(&l2) == VT_UI8, "Expected .vt to be VT_UI8, was %u\n", V_VT(&l2));
@@ -370,7 +370,7 @@ static void test_assign()
         ok(V_I8(&l2) == lv, "Expected value to be %s, was: %s\n", wine_dbgstr_longlong(lv), wine_dbgstr_longlong(V_I8(&l2)));
     }
     {
-        ULONGLONG lv = 12030912309123llu;
+        ULONGLONG lv = 12030912309123ull;
         CComVariant l1 = lv;
         ok(V_VT(&l1) == VT_UI8, "Expected .vt to be VT_UI8, was %u\n", V_VT(&l1));
         ok(V_UI8(&l1) == lv, "Expected value to be %s, was: %s\n", wine_dbgstr_longlong(lv), wine_dbgstr_longlong(V_UI8(&l1)));
