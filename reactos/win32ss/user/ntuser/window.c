@@ -641,7 +641,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    }
 
    UserReferenceObject(Window);
-   UserDeleteObject(UserHMGetHandle(Window), TYPE_WINDOW);
+   UserMarkObjectDestroy(Window);
 
    IntDestroyScrollBars(Window);
 
@@ -670,6 +670,7 @@ LRESULT co_UserFreeWindow(PWND Window,
    UserFreeWindowInfo(Window->head.pti, Window);
 
    UserDereferenceObject(Window);
+   UserDeleteObject(UserHMGetHandle(Window), TYPE_WINDOW);
 
    return 0;
 }

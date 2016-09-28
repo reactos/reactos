@@ -322,13 +322,9 @@ UserDestroyMenuObject(PVOID Object)
 BOOL FASTCALL
 IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
 {
-   if(Menu)
+   if (Menu)
    {
       PWND Window;
-      ULONG Error;
-
-      /* Remove all menu items */
-      IntDestroyMenu( Menu, bRecurse);
 
       if (PsGetCurrentProcessSessionId() == Menu->head.rpdesk->rpwinstaParent->dwSessionId)
       {
@@ -350,22 +346,14 @@ IntDestroyMenuObject(PMENU Menu, BOOL bRecurse)
                }
             }
          }
-         if (UserObjectInDestroy(Menu->head.h))
-         {
-            WARN("Menu already dead!\n");
-            return FALSE;
-         }
+
+         if (!UserMarkObjectDestroy(Menu)) return TRUE;
+
+         /* Remove all menu items */
+         IntDestroyMenu( Menu, bRecurse);
+
          ret = UserDeleteObject(Menu->head.h, TYPE_MENU);
-         if (!ret)
-         {  // Make sure it is really dead or just marked for deletion.
-            Error = EngGetLastError();
-            ret = UserObjectInDestroy(Menu->head.h);
-            if (ret && EngGetLastError() == ERROR_INVALID_HANDLE)
-            {
-               EngSetLastError(Error);
-               ret = FALSE;
-            }
-         }  // See test_subpopup_locked_by_menu tests....
+         TRACE("IntDestroyMenuObject %d\n",ret);
          return ret;
       }
    }
