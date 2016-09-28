@@ -235,6 +235,7 @@ else()
         ${REACTOS_BINARY_DIR}/sdk/include/dxsdk
         ${REACTOS_BINARY_DIR}/sdk/include/ddk
         ${REACTOS_BINARY_DIR}/sdk/include/reactos
+        ${REACTOS_BINARY_DIR}/sdk/include/reactos/mc
         sdk/include/crt
         sdk/include/ddk
         sdk/include/ndk

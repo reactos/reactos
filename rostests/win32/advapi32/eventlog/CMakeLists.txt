@@ -3,19 +3,15 @@
 ## rc /fo $(IntDir)MyEventProvider.res MyEventProvider.rc
 ## link /dll /noentry /SUBSYSTEM:CONSOLE",5.0" /out:$(SolutionDir)$(Configuration)\MyEventProvider.dll $(IntDir)MyEventProvider.res
 
-## add_message_headers(UNICODE MyEventProvider.mc)
-
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/MyEventProvider.rc ${CMAKE_CURRENT_BINARY_DIR}/MyEventProvider.h
-    COMMAND ${CMAKE_MC_COMPILER} -U ${CMAKE_CURRENT_SOURCE_DIR}/MyEventProvider.mc -r ${CMAKE_CURRENT_BINARY_DIR}/
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/MyEventProvider.mc)
-
-add_library(MyEventProvider SHARED ${CMAKE_CURRENT_BINARY_DIR}/MyEventProvider.rc)
-set_module_type(MyEventProvider module UNICODE)
-add_cd_file(TARGET MyEventProvider DESTINATION reactos/bin FOR all)
+add_message_headers(UNICODE MyEventProvider.mc)
+add_library(MyEventProvider_dll SHARED ${CMAKE_CURRENT_BINARY_DIR}/MyEventProvider.rc)
+add_dependencies(MyEventProvider_dll MyEventProvider)
+set_module_type(MyEventProvider_dll module UNICODE)
+set_target_properties(MyEventProvider_dll PROPERTIES OUTPUT_NAME "MyEventProvider")
+add_cd_file(TARGET MyEventProvider_dll DESTINATION reactos/bin FOR all)
 
 add_executable(evtlogtest EvtLogTest.c)
-add_dependencies(evtlogtest MyEventProvider)
 set_module_type(evtlogtest win32cui UNICODE)
+add_dependencies(evtlogtest MyEventProvider MyEventProvider_dll)
 add_importlibs(evtlogtest advapi32 msvcrt kernel32)
 add_cd_file(TARGET evtlogtest DESTINATION reactos/bin FOR all)

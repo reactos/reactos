@@ -113,23 +113,23 @@ function(add_message_headers _type)
     else()
         set(_flag "-A")
     endif()
-    foreach(_in_FILE ${ARGN})
-        get_filename_component(FILE ${_in_FILE} NAME_WE)
-        set(_converted_item ${REACTOS_BINARY_DIR}/sdk/include/reactos/mc/${FILE}.mc)
-        set(_source_item ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.mc)
+    foreach(_file ${ARGN})
+        get_filename_component(_file_name ${_file} NAME_WE)
+        set(_converted_file ${CMAKE_CURRENT_BINARY_DIR}/${_file}) ## ${_file_name}.mc
+        set(_source_file ${CMAKE_CURRENT_SOURCE_DIR}/${_file})    ## ${_file_name}.mc
         add_custom_command(
-            OUTPUT "${_converted_item}"
-            COMMAND native-utf16le "${_source_item}" "${_converted_item}" "nobom"
-            DEPENDS native-utf16le "${_source_item}")
-        macro_mc(${_flag} ${FILE})
+            OUTPUT "${_converted_file}"
+            COMMAND native-utf16le "${_source_file}" "${_converted_file}" nobom
+            DEPENDS native-utf16le "${_source_file}")
+        macro_mc(${_flag} ${_converted_file})
         add_custom_command(
-            OUTPUT ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.rc ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.h
-            COMMAND ${COMMAND_MC} ${MC_FLAGS}
-            DEPENDS "${_converted_item}")
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.h ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.rc
+            COMMAND ${COMMAND_MC}
+            DEPENDS "${_converted_file}")
         set_source_files_properties(
-            ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.rc
+            ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.h ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.rc
             PROPERTIES GENERATED TRUE)
-        add_custom_target(${FILE} ALL DEPENDS ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/sdk/include/reactos/${FILE}.rc)
+        add_custom_target(${_file_name} ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.h ${CMAKE_CURRENT_BINARY_DIR}/${_file_name}.rc)
     endforeach()
 endfunction()
 

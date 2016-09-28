@@ -379,7 +379,7 @@ function(spec2def _dllname _spec_file)
 endfunction()
 
 macro(macro_mc FLAG FILE)
-    set(COMMAND_MC ${CMAKE_MC_COMPILER} -u ${FLAG} -b ${REACTOS_BINARY_DIR}/sdk/include/reactos/mc/${FILE}.mc -r ${REACTOS_BINARY_DIR}/sdk/include/reactos -h ${REACTOS_BINARY_DIR}/sdk/include/reactos)
+    set(COMMAND_MC ${CMAKE_MC_COMPILER} -u ${FLAG} -b -h ${CMAKE_CURRENT_BINARY_DIR}/ -r ${CMAKE_CURRENT_BINARY_DIR}/ ${FILE})
 endmacro()
 
 # PSEH lib, needed with mingw
