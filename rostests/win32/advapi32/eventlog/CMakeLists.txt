@@ -11,7 +11,7 @@ add_custom_command(
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/MyEventProvider.mc)
 
 add_library(MyEventProvider SHARED ${CMAKE_CURRENT_BINARY_DIR}/MyEventProvider.rc)
-set_module_type(MyEventProvider win32dll UNICODE ENTRYPOINT 0)
+set_module_type(MyEventProvider module UNICODE)
 add_cd_file(TARGET MyEventProvider DESTINATION reactos/bin FOR all)
 
 add_executable(evtlogtest EvtLogTest.c)
