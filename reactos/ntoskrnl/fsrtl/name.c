@@ -27,9 +27,9 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
     USHORT BackTrackingBuffer[16], OldBackTrackingBuffer[16] = {0};
     PUSHORT BackTrackingSwap, BackTracking = BackTrackingBuffer, OldBackTracking = OldBackTrackingBuffer;
     UNICODE_STRING IntExpression;
-    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars = 1;
+    USHORT ExpressionPosition, NamePosition = 0, MatchingChars = 1;
     BOOLEAN EndOfName = FALSE;
-    BOOLEAN Result = FALSE;
+    BOOLEAN Result;
     BOOLEAN DontSkipDot;
     WCHAR CompareChar;
     PAGED_CODE();
