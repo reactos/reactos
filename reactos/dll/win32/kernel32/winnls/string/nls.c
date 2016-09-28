@@ -979,7 +979,7 @@ IntWideCharToMultiByteCP(UINT CodePage,
                     if ((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
                     {
                         /* FIXME: Handle WC_COMPOSITECHECK */
-                        DPRINT1("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
+                        DPRINT("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
                     }
 
                     uChar = ((PUSHORT) CodePageTable->WideCharTable)[*WideCharString];
@@ -1009,7 +1009,7 @@ IntWideCharToMultiByteCP(UINT CodePage,
                 if ((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
                 {
                     /* FIXME: Handle WC_COMPOSITECHECK */
-                    DPRINT1("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
+                    DPRINT("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
                 }
 
                 uChar = ((PUSHORT)CodePageTable->WideCharTable)[*WideCharString];
@@ -1114,7 +1114,7 @@ IntWideCharToMultiByteCP(UINT CodePage,
                     if ((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
                     {
                         /* FIXME: Handle WC_COMPOSITECHECK */
-                        DPRINT1("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
+                        DPRINT("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
                     }
 
                     if (!*UsedDefaultChar)
@@ -1141,7 +1141,7 @@ IntWideCharToMultiByteCP(UINT CodePage,
                 if ((Flags & WC_COMPOSITECHECK) && WideCharCount > 1)
                 {
                     /* FIXME: Handle WC_COMPOSITECHECK */
-                    DPRINT1("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
+                    DPRINT("WC_COMPOSITECHECK flag UNIMPLEMENTED\n");
                 }
 
                 *MultiByteString = ((PCHAR)CodePageTable->WideCharTable)[*WideCharString];
