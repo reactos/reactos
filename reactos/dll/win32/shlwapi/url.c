@@ -1190,13 +1190,23 @@ HRESULT WINAPI UrlEscapeW(
                     if ((cur >= 0xd800 && cur <= 0xdfff) &&
                         (src[1] >= 0xdc00 && src[1] <= 0xdfff))
                     {
+#ifdef __REACTOS__
+                        len = WideCharToMultiByte( CP_UTF8, 0, src, 2,
+                                                   utf, sizeof(utf), NULL, NULL );
+#else
                         len = WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, src, 2,
                                                    utf, sizeof(utf), NULL, NULL );
+#endif
                         src++;
                     }
                     else
+#ifdef __REACTOS__
+                        len = WideCharToMultiByte( CP_UTF8, 0, &cur, 1,
+                                                   utf, sizeof(utf), NULL, NULL );
+#else
                         len = WideCharToMultiByte( CP_UTF8, WC_ERR_INVALID_CHARS, &cur, 1,
                                                    utf, sizeof(utf), NULL, NULL );
+#endif
 
                     if (!len) {
                         utf[0] = 0xef;
