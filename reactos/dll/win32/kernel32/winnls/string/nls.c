@@ -755,6 +755,12 @@ IntWideCharToMultiByteUTF8(UINT CodePage,
     INT TempLength;
     DWORD Char;
 
+    if (Flags)
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return 0;
+    }
+
     /* Does caller query for output buffer size? */
     if (MultiByteCount == 0)
     {
