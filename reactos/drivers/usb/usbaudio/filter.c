@@ -136,6 +136,7 @@ USBAudioFilterCreate(
     FilterContext->LowerDevice = Device->NextDeviceObject;
     Filter->Context = FilterContext;
 
+    DPRINT("USBAudioFilterCreate FilterContext %p LowerDevice %p DeviceExtension %p\n", FilterContext, FilterContext->LowerDevice, FilterContext->DeviceExtension);
     KsAddItemToObjectBag(Filter->Bag, FilterContext, ExFreePool);
     return STATUS_SUCCESS;
 }

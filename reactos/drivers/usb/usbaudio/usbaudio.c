@@ -79,14 +79,6 @@ SubmitUrbSync(
     if (Status == STATUS_PENDING)
     {
         KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-    }
-
-    // complete request
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    if (Status == STATUS_PENDING)
-    {
-        // get final status
         Status = IoStatus.Status;
     }
 
