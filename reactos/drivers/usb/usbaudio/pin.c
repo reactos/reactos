@@ -10,6 +10,90 @@
 #include "usbaudio.h"
 
 NTSTATUS
+GetMaxPacketSizeForInterface(
+    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+    IN PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor,
+    KSPIN_DATAFLOW DataFlow)
+{
+    PUSB_COMMON_DESCRIPTOR CommonDescriptor;
+    PUSB_ENDPOINT_DESCRIPTOR EndpointDescriptor;
+
+    /* loop descriptors */
+    CommonDescriptor = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
+    ASSERT(InterfaceDescriptor->bNumEndpoints > 0);
+    while (CommonDescriptor)
+    {
+        if (CommonDescriptor->bDescriptorType == USB_ENDPOINT_DESCRIPTOR_TYPE)
+        {
+            EndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)CommonDescriptor;
+            return EndpointDescriptor->wMaxPacketSize;
+        }
+
+        if (CommonDescriptor->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE)
+        {
+            /* reached next interface descriptor */
+            break;
+        }
+
+        if ((ULONG_PTR)CommonDescriptor + CommonDescriptor->bLength >= ((ULONG_PTR)ConfigurationDescriptor + ConfigurationDescriptor->wTotalLength))
+            break;
+
+        CommonDescriptor = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)CommonDescriptor + CommonDescriptor->bLength);
+    }
+
+    /* default to 100 */
+    return 100;
+}
+
+NTSTATUS
+UsbAudioAllocCaptureUrbIso(
+    IN USBD_PIPE_HANDLE PipeHandle,
+    IN ULONG MaxPacketSize,
+    IN PVOID Buffer,
+    IN ULONG BufferLength,
+    OUT PURB * OutUrb)
+{
+    PURB Urb;
+    ULONG PacketCount;
+    ULONG UrbSize;
+    ULONG Index;
+
+    /* calculate packet count */
+    PacketCount = BufferLength / MaxPacketSize;
+
+    /* calculate urb size*/
+    UrbSize = GET_ISO_URB_SIZE(PacketCount);
+
+    /* allocate urb */
+    Urb = AllocFunction(UrbSize);
+    if (!Urb)
+    {
+        /* no memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* init urb */
+    Urb->UrbIsochronousTransfer.Hdr.Function = URB_FUNCTION_ISOCH_TRANSFER;
+    Urb->UrbIsochronousTransfer.Hdr.Length = UrbSize;
+    Urb->UrbIsochronousTransfer.PipeHandle = PipeHandle;
+    Urb->UrbIsochronousTransfer.TransferFlags = USBD_TRANSFER_DIRECTION_IN | USBD_START_ISO_TRANSFER_ASAP;
+    Urb->UrbIsochronousTransfer.TransferBufferLength = BufferLength;
+    Urb->UrbIsochronousTransfer.TransferBuffer = Buffer;
+    Urb->UrbIsochronousTransfer.NumberOfPackets = PacketCount;
+
+    for (Index = 0; Index < PacketCount; Index++)
+    {
+        Urb->UrbIsochronousTransfer.IsoPacket[Index].Offset = Index * MaxPacketSize;
+    }
+
+    *OutUrb = Urb;
+    return STATUS_SUCCESS;
+
+}
+
+
+
+NTSTATUS
 UsbAudioSetFormat(
     IN PKSPIN Pin)
 {
@@ -83,6 +167,7 @@ UsbAudioSetFormat(
 
 NTSTATUS
 USBAudioSelectAudioStreamingInterface(
+    IN PPIN_CONTEXT PinContext,
     IN PDEVICE_EXTENSION DeviceExtension,
     IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
 {
@@ -98,7 +183,7 @@ USBAudioSelectAudioStreamingInterface(
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* select the first interface with audio streaming and non zero num of endpoints */
+    /* FIXME selects the first interface with audio streaming and non zero num of endpoints */
     while (InterfaceDescriptor != NULL)
     {
         if (InterfaceDescriptor->bInterfaceSubClass == 0x02 /* AUDIO_STREAMING */ && InterfaceDescriptor->bNumEndpoints > 0) 
@@ -127,9 +212,6 @@ USBAudioSelectAudioStreamingInterface(
      /* copy interface information */
      RtlCopyMemory(&Urb->UrbSelectInterface.Interface, DeviceExtension->InterfaceInfo, DeviceExtension->InterfaceInfo->Length);
 
-     /* set configuration handle */
-     Urb->UrbSelectInterface.ConfigurationHandle = DeviceExtension->ConfigurationHandle;
-
      /* now select the interface */
      Status = SubmitUrbSync(DeviceExtension->LowerDevice, Urb);
 
@@ -141,6 +223,7 @@ USBAudioSelectAudioStreamingInterface(
          /* update configuration info */
          ASSERT(Urb->UrbSelectInterface.Interface.Length == DeviceExtension->InterfaceInfo->Length);
          RtlCopyMemory(DeviceExtension->InterfaceInfo, &Urb->UrbSelectInterface.Interface, Urb->UrbSelectInterface.Interface.Length);
+         PinContext->InterfaceDescriptor = InterfaceDescriptor;
      }
 
      /* free urb */
@@ -153,11 +236,76 @@ InitCapturePin(
     IN PKSPIN Pin)
 {
     NTSTATUS Status;
+    ULONG Index;
+    ULONG BufferSize;
+    ULONG MaximumPacketSize;
+    PIRP Irp;
+    PURB Urb;
+    PPIN_CONTEXT PinContext;
+    PIO_STACK_LOCATION IoStack;
 
     /* set sample rate */
     Status = UsbAudioSetFormat(Pin);
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        return Status;
+    }
 
-    /* TODO: init pin */
+    /* get pin context */
+    PinContext = Pin->Context;
+	DbgBreakPoint();
+    MaximumPacketSize = GetMaxPacketSizeForInterface(PinContext->DeviceExtension->ConfigurationDescriptor, PinContext->InterfaceDescriptor, Pin->DataFlow);
+
+    /* calculate buffer size 8 irps * 10 iso packets * max packet size */
+    BufferSize = 8 * 10 * MaximumPacketSize;
+
+    /* allocate pin capture buffer */
+    PinContext->Buffer = AllocFunction(BufferSize);
+    if (!PinContext->Buffer)
+    {
+        /* no memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    KsAddItemToObjectBag(Pin->Bag, PinContext->Buffer, ExFreePool);
+
+    /* init irps */
+    for (Index = 0; Index < 8; Index++)
+    {
+        /* allocate irp */
+        Irp = IoAllocateIrp(PinContext->DeviceExtension->LowerDevice->StackSize, FALSE);
+        if (!Irp)
+        {
+            /* no memory */
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* insert into irp list */
+        InsertTailList(&PinContext->IrpListHead, &Irp->Tail.Overlay.ListEntry);
+
+        /* add to object bag*/
+        KsAddItemToObjectBag(Pin->Bag, Irp, IoFreeIrp);
+
+        Status = UsbAudioAllocCaptureUrbIso(PinContext->DeviceExtension->InterfaceInfo->Pipes[0].PipeHandle, 
+                                            MaximumPacketSize,
+                                            &PinContext->Buffer[MaximumPacketSize * 10 * Index], 
+                                            MaximumPacketSize * 10,
+                                            &Urb);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* get next stack location */
+            IoStack = IoGetNextIrpStackLocation(Irp);
+
+            /* store urb */
+            IoStack->Parameters.Others.Argument1 = Urb;
+        }
+        else
+        {
+            /* failed */
+            return Status;
+        }
+    }
     return Status;
 }
 
@@ -202,12 +350,13 @@ USBAudioPinCreate(
     /* init pin context */
     PinContext->DeviceExtension = FilterContext->DeviceExtension;
     PinContext->LowerDevice = FilterContext->LowerDevice;
+    InitializeListHead(&PinContext->IrpListHead);
 
     /* store pin context*/
     Pin->Context = PinContext;
 
     /* select streaming interface */
-    Status = USBAudioSelectAudioStreamingInterface(PinContext->DeviceExtension, PinContext->DeviceExtension->ConfigurationDescriptor);
+    Status = USBAudioSelectAudioStreamingInterface(PinContext, PinContext->DeviceExtension, PinContext->DeviceExtension->ConfigurationDescriptor);
     if (!NT_SUCCESS(Status))
     {
         /* failed */

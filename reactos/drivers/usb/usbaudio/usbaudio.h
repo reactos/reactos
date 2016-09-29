@@ -119,8 +119,12 @@ typedef struct
 
 typedef struct
 {
-	PDEVICE_EXTENSION DeviceExtension;                           /* device extension */
-	PDEVICE_OBJECT LowerDevice;                                  /* lower device*/
+    PDEVICE_EXTENSION DeviceExtension;                           /* device extension */
+    PDEVICE_OBJECT LowerDevice;                                  /* lower device*/
+    LIST_ENTRY IrpListHead;                                      /* irp list*/
+    PUCHAR Buffer;                                               /* iso buffer*/
+    ULONG BufferSize;                                            /* iso buffer size */
+    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;               /* interface descriptor */
 
 }PIN_CONTEXT, *PPIN_CONTEXT;
 
