@@ -137,7 +137,6 @@ GetComputerNameExW(COMPUTER_NAME_FORMAT NameType,
     NTSTATUS Status;
     BOOL ret = TRUE;
     DWORD HostSize;
-    DWORD nBufferSize;
 
     if ((nSize == NULL) ||
         (lpBuffer == NULL && *nSize > 0))
@@ -156,27 +155,11 @@ GetComputerNameExW(COMPUTER_NAME_FORMAT NameType,
                                                nSize);
 
         case ComputerNameDnsDomain:
-            /* Save original buffer size for the second call if neccessery */
-            nBufferSize = *nSize;
-            if (!GetComputerNameFromRegistry(L"\\Registry\\Machine\\System\\CurrentControlSet"
-                                             L"\\Services\\Tcpip\\Parameters",
-                                             L"DhcpDomain",
-                                             lpBuffer,
-                                             nSize))
-            {
-                /* The value is there, just the buffer is insufficient in length */
-                if (GetLastError() == ERROR_MORE_DATA)
-                    return FALSE;
-                /* Restore original buffer size for the second call */
-                *nSize = nBufferSize;
-                return GetComputerNameFromRegistry(L"\\Registry\\Machine\\System\\CurrentControlSet"
-                                                   L"\\Services\\Tcpip\\Parameters",
-                                                   L"Domain",
-                                                   lpBuffer,
-                                                   nSize);
-            }
-            else
-                return TRUE;
+            return GetComputerNameFromRegistry(L"\\Registry\\Machine\\System\\CurrentControlSet"
+                                               L"\\Services\\Tcpip\\Parameters",
+                                               L"Domain",
+                                               lpBuffer,
+                                               nSize);
 
         case ComputerNameDnsFullyQualified:
             ResultString.Length = 0;
@@ -212,7 +195,7 @@ GetComputerNameExW(COMPUTER_NAME_FORMAT NameType,
                 RtlFreeUnicodeString(&DomainPart);
 
                 RtlInitUnicodeString(&DomainPart, NULL);
-                QueryTable[0].Name = L"DhcpDomain";
+                QueryTable[0].Name = L"Domain";
                 QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
                 QueryTable[0].EntryContext = &DomainPart;
 
@@ -224,9 +207,7 @@ GetComputerNameExW(COMPUTER_NAME_FORMAT NameType,
                                                 NULL,
                                                 NULL);
 
-                if ((NT_SUCCESS(Status)) &&
-                    (DomainPart.Buffer != NULL) &&
-                    (wcslen(DomainPart.Buffer) > 0))
+                if (NT_SUCCESS(Status))
                 {
                     Status = RtlAppendUnicodeStringToString(&ResultString, &DomainPart);
                     if ((!NT_SUCCESS(Status)) || (!ret))
@@ -240,36 +221,6 @@ GetComputerNameExW(COMPUTER_NAME_FORMAT NameType,
                     *nSize = ResultString.Length / sizeof(WCHAR) - 1;
                     return TRUE;
                 }
-                else
-                {
-                    RtlInitUnicodeString(&DomainPart, NULL);
-                    QueryTable[0].Name = L"Domain";
-                    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
-                    QueryTable[0].EntryContext = &DomainPart;
-
-                    Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
-                                                    L"\\Registry\\Machine\\System"
-                                                    L"\\CurrentControlSet\\Services\\Tcpip"
-                                                    L"\\Parameters",
-                                                    QueryTable,
-                                                    NULL,
-                                                    NULL);
-
-                    if (NT_SUCCESS(Status))
-                    {
-                        Status = RtlAppendUnicodeStringToString(&ResultString, &DomainPart);
-                        if ((!NT_SUCCESS(Status)) || (!ret))
-                        {
-                            *nSize = HostSize + DomainPart.Length;
-                            SetLastError(ERROR_MORE_DATA);
-                            RtlFreeUnicodeString(&DomainPart);
-                            return FALSE;
-                        }
-                        RtlFreeUnicodeString(&DomainPart);
-                        *nSize = ResultString.Length / sizeof(WCHAR) - 1;
-                        return TRUE;
-                    }
-                }
             }
             return FALSE;
 
@@ -281,9 +232,11 @@ GetComputerNameExW(COMPUTER_NAME_FORMAT NameType,
                                                nSize);
 
         case ComputerNamePhysicalDnsDomain:
-            return GetComputerNameExW(ComputerNameDnsDomain,
-                                      lpBuffer,
-                                      nSize);
+            return GetComputerNameFromRegistry(L"\\Registry\\Machine\\System\\CurrentControlSet"
+                                               L"\\Services\\Tcpip\\Parameters",
+                                               L"Domain",
+                                               lpBuffer,
+                                               nSize);
 
         /* XXX Redo these */
         case ComputerNamePhysicalDnsFullyQualified:
