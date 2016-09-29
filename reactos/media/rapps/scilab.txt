@@ -43,7 +43,7 @@ Size = 128,4 МиБ
 Description = Softvér pre numerické výpočty v strojárstve a vedeckých aplikáciách.
 
 [Section.041f]
-Description = mühendislik ve bilimsel uygulamalarda sayısal hesaplama için bir yazılım.
+Description = Mühendislik ve bilimlik uygulamalarda sayısal hesaplama için bir yazılım.
 Size = 128,4 MiB
 
 [Section.0422]

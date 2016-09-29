@@ -14,6 +14,12 @@ CDPath = none
 Description = Einige Portierungen der bekannten GNU Utilities auf natives Win32.
 Size = 3,2 MiB
 
+[Section.041f]
+Name = Win32 için GNU araçları
+License = GPL sürüm 2
+Description = Gerçek Win32 için bilinen birtakım GNU araçlarının uyarlaması.
+Size = 3,2 MiB
+
 [Section.0419]
 Description = Некоторые порты стандартных утилит GNU для Win32.
 Size = 3,2 МиБ

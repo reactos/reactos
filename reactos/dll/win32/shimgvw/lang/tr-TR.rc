@@ -12,10 +12,10 @@ BEGIN
     IDS_TOOLTIP_PREV_PIC "Önceki Resim"
     IDS_TOOLTIP_ZOOM_IN "Yakınlaştır (+)"
     IDS_TOOLTIP_ZOOM_OUT "Uzaklaştır (-)"
-    IDS_TOOLTIP_ROT_CLOCKW "Saat Yönünde Döndür (Ctrl+K)"
-    IDS_TOOLTIP_ROT_COUNCW "Saat Yönünün Tersi Yönünde Döndür (Ctrl+L)"
-    IDS_TOOLTIP_PRINT "Yazdır (Ctrl+P)"
-    IDS_TOOLTIP_SAVEAS "Ayrı Sakla... (Ctrl+S)"
+    IDS_TOOLTIP_ROT_CLOCKW "Saat Yönünde Döndür (Denetim+K)"
+    IDS_TOOLTIP_ROT_COUNCW "Saat Yönünün Tersi Yönünde Döndür (Denetim+L)"
+    IDS_TOOLTIP_PRINT "Yazdır (Denetim+P)"
+    IDS_TOOLTIP_SAVEAS "Ayrı Sakla... (Denetim+S)"
 END
 
 STRINGTABLE

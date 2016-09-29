@@ -14,6 +14,11 @@ CDPath = none
 Description = Ein kleiner, aber sehr schneller C-Compiler.
 Size = 385,7 KiB
 
+[Section.041f]
+Name = Minik C Derleyicisi
+Description = Küçük ancak aşırı hızlı bir C derleyicisi.
+Size = 385,7 KiB
+
 [Section.0419]
 Description = Небольшой, но быстрый C компилятор.
 Size = 385,7 КиБ

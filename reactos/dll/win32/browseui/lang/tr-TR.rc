@@ -1,3 +1,5 @@
+/* TRANSLATORS: 2012 Arda Tanrıkulu (ardatan) (ardatanrikulu@gmail.com), 2015, 2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 /* Menus */
@@ -6,20 +8,20 @@ IDM_CABINET_CONTEXTMENU MENUEX
 BEGIN
     POPUP "", 264,MFT_STRING,MFS_ENABLED
     BEGIN
-        MENUITEM "&Standard Buttons", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
-        MENUITEM "Sta&ndart Düğmeler", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Ölçünlü Düğmeler", IDM_TOOLBARS_STANDARDBUTTONS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Adres Çubuğu", IDM_TOOLBARS_ADDRESSBAR, MFT_STRING, MFS_ENABLED
         MENUITEM "&Bağlantılar", IDM_TOOLBARS_LINKSBAR, MFT_STRING, MFS_ENABLED
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Ar&aç Çubuklarını Kilitle", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
-        MENUITEM "&Özelleştir...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
-        MENUITEM "Me&tin Etiketleri", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
+        MENUITEM "A&raç Çubuklarını Kilitle", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Husûsîleştir...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Metin Etiketleri", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
         MENUITEM "&Git Düğmesi", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
     END
 END
 
 IDM_CABINET_MAINMENU MENUEX
 BEGIN
-    POPUP "&Dosya", FCIDM_MENU_FILE
+    POPUP "&Kütük", FCIDM_MENU_FILE
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Kapat", IDM_FILE_CLOSE
@@ -34,56 +36,56 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
-        MENUITEM "Durum &çubuğu", IDM_VIEW_STATUSBAR
+        MENUITEM "&Durum Çubuğu", IDM_VIEW_STATUSBAR
         POPUP "&Gezgin çubuğu", IDM_VIEW_EXPLORERBAR
         BEGIN
-            MENUITEM "&Arama\tCtrl+E", IDM_EXPLORERBAR_SEARCH
-            MENUITEM "&Sık Kullanılanlar\tCtrl+I", IDM_EXPLORERBAR_FAVORITES
-            MENUITEM "&Çoklu ortam", IDM_EXPLORERBAR_MEDIA
-            MENUITEM "&Geçmiş\tCtrl+H", IDM_EXPLORERBAR_HISTORY
-            MENUITEM "Klasörler", IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "&Ara\tDenetim+E", IDM_EXPLORERBAR_SEARCH
+            MENUITEM "&Yer İmleri\tDenetim+I", IDM_EXPLORERBAR_FAVORITES
+            MENUITEM "&Ortam", IDM_EXPLORERBAR_MEDIA
+            MENUITEM "&Geçmiş\tDenetim+H", IDM_EXPLORERBAR_HISTORY
+            MENUITEM "&Dizinler", IDM_EXPLORERBAR_FOLDERS
             MENUITEM "", IDM_EXPLORERBAR_SEPARATOR
         END
         MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
         POPUP "G&it", FCIDM_MENU_EXPLORE
         BEGIN
-            MENUITEM "&Geri\tAlt+Sol ok", IDM_GOTO_BACK
-            MENUITEM "&İleri\tAlt+Sağ ok", IDM_GOTO_FORWARD
-            MENUITEM "&Bir Üste", IDM_GOTO_UPONELEVEL
+            MENUITEM "&Geri\tSeçenek+Sol Ok", IDM_GOTO_BACK
+            MENUITEM "&İleri\tSeçenek+Sağ Ok", IDM_GOTO_FORWARD
+            MENUITEM "&Bir Düzey Yukarı", IDM_GOTO_UPONELEVEL
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "Giriş sayfası\tAlt+Home", IDM_GOTO_HOMEPAGE
+            MENUITEM "Gi&riş Sayfası\tSeçenek+Ev", IDM_GOTO_HOMEPAGE
         END
         MENUITEM "&Yenile", IDM_VIEW_REFRESH
     END
-    POPUP "Sık Kullanılanlar", FCIDM_MENU_FAVORITES
+    POPUP "&Yer İmleri", FCIDM_MENU_FAVORITES
     BEGIN
-        MENUITEM "&Sık Kullanılanlara ekle...", IDM_FAVORITES_ADDTOFAVORITES
-        MENUITEM "Sık Kullanılanları Düzenle...", IDM_FAVORITES_ORGANIZEFAVORITES
+        MENUITEM "&Yer İmlerine Ekle...", IDM_FAVORITES_ADDTOFAVORITES
+        MENUITEM "Y&er İmlerini Düzenle...", IDM_FAVORITES_ORGANIZEFAVORITES
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "(Boş)", IDM_FAVORITES_EMPTY
     END
     POPUP "&Araçlar", FCIDM_MENU_TOOLS
     BEGIN
-        MENUITEM "Ağ Sürücüsüne bağlan...", IDM_TOOLS_MAPNETWORKDRIVE
-        MENUITEM "&Ağ Sürücüsüyle bağlantıyı kes...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
+        MENUITEM "&Ağ Sürücüsü Oluştur...", IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "A&ğ Sürücüsüyle Bağlantıyı Kes...", IDM_TOOLS_DISCONNECTNETWORKDRIVE
         MENUITEM "&Eşitle...", IDM_TOOLS_SYNCHRONIZE
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Klasör seçenekleri...", IDM_TOOLS_FOLDEROPTIONS
+        MENUITEM "&Dizin Seçenekleri...", IDM_TOOLS_FOLDEROPTIONS
     END
-    POPUP "&Yardım", FCIDM_MENU_HELP
+    POPUP "Ya&rdım", FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "&ReactOS hakkında", IDM_HELP_ABOUT
+        MENUITEM "&ReactOS Hakkında", IDM_HELP_ABOUT
     END
 END
 
 IDM_TASKBAR_TOOLBARS MENUEX
 BEGIN
-	POPUP "&Toolbars", -1, MFT_STRING, MFS_ENABLED, 0
+	POPUP "&Araç Çubukları", -1, MFT_STRING, MFS_ENABLED, 0
 	BEGIN
-		MENUITEM "&Desktop", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
-		MENUITEM "&Quick Launch", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Masaüstü", IDM_TASKBAR_TOOLBARS_DESKTOP, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Hızlı Başlat", IDM_TASKBAR_TOOLBARS_QUICKLAUNCH, MFT_STRING, MFS_GRAYED
 		MENUITEM "", -1, MFT_SEPARATOR, MFS_ENABLED
-		MENUITEM "&New Toolbar...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
+		MENUITEM "&Yeni Araç Çubuğu...", IDM_TASKBAR_TOOLBARS_NEW, MFT_STRING, MFS_GRAYED
 	END
 END
 
@@ -99,16 +101,16 @@ FONT 8, "MS Shell Dlg"
     LTEXT "", IDC_TEXT_LINE + 1, 7, 55, 250, 10, SS_LEFT|SS_NOPREFIX
     LTEXT "", IDC_TEXT_LINE + 2, 7, 75, 190, 10, SS_LEFT|SS_NOPREFIX
     CONTROL "", IDC_PROGRESS_BAR, PROGRESS_CLASSA, WS_BORDER, 7, 65, 190, 8
-    PUSHBUTTON "Cancel", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
+    PUSHBUTTON "İptal", IDCANCEL, 205, 65, 50, 15, WS_GROUP | WS_TABSTOP | WS_VISIBLE
 }
 
 IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT "Metin seçenekleri:", -1, 4, 2, 48, 15
+    LTEXT "&Metin Seçenekleri:", -1, 4, 2, 48, 15
     COMBOBOX IDC_TEXTOPTIONS, 52, 0, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT "Simge seçenekleri:", -1, 4, 20, 48, 15
+    LTEXT "&Simge Seçenekleri:", -1, 4, 20, 48, 15
     COMBOBOX IDC_ICONOPTIONS, 52, 18, 123, 57, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -136,13 +138,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CANCELLING "Canceling..."
-    IDS_REMAINING  "Remaining"
+    IDS_CANCELLING "İptal ediliyor..."
+    IDS_REMAINING  "Kalan"
 END
 
 STRINGTABLE
 BEGIN
-    800 "Seçili öğelerle çalışma komutlarını içerir."
+    800 "Seçili ögelerle çalışma komutlarını içerir."
 END
 
 STRINGTABLE
@@ -152,17 +154,17 @@ END
 
 STRINGTABLE
 BEGIN
-    928 "Görünümü değiştirmek için komutlar içerir."
+    928 "Görünümle oynama komutlarını içerir."
 END
 
 STRINGTABLE
 BEGIN
-    992 "Araç komutlarını içerir."
+    992 "Araçlar komutlarını içerir."
 END
 
 STRINGTABLE
 BEGIN
-    1056 "Yardım'ı görüntülemek için komutlar içerir."
+    1056 "Yardım'ı görüntüleme komutlarını içerir."
 END
 
 STRINGTABLE
@@ -174,13 +176,13 @@ END
 STRINGTABLE
 BEGIN
     9121 "Bir ağ sürücüsüne bağlanır."
-    9122 "Ağ sürücüsü bağlantısını keser."
+    9122 "Ağ sürücüsünden bağlantıyı keser."
 END
 
 STRINGTABLE
 BEGIN
-    9250 "Program bilgisini, sürüm numarasını ve telif hakkını görüntüler."
-    9252 "Displays information for debugging."
+    9250 "İzlence bilgisini, sürüm numarasını ve telif hakkını görüntüler."
+    9252 "Yanlışlık ayıklama bilgisini görüntüler."
 END
 
 STRINGTABLE
@@ -193,33 +195,33 @@ END
 
 STRINGTABLE
 BEGIN
-    9362 "Sık Kullanılanlar klasörünü açar."
-    9363 "Geçerli sayfayı Sık Kullanılanlar listenize ekler."
+    9362 "Yer İmleri dizinini açar."
+    9363 "Şimdiki sayfayı Yer İmleri dizelgenize ekler."
 END
 
 STRINGTABLE
 BEGIN
-    9505 "Araç çubuklarını gösterir veya gizler."
-    9506 "Durum çubuğunu gösterir veya gizler."
-    9508 "Standart Düğmeler araç çubuğunu görüntüler."
+    9505 "Araç çubuklarını gösterir veyâ gizler."
+    9506 "Durum çubuğunu gösterir veyâ gizler."
+    9508 "Ölçünlü Düğmeler araç çubuğunu görüntüler."
     9509 "Adres çubuğunu görüntüler."
     9510 "Hızlı Bağlantılar çubuğunu görüntüler."
-    9516 "Araç çubuklarının boyut ve konumunu kilitler."
+    9516 "Araç çubuklarının boyutlarını ve konumlarını kilitler."
 END
 
 STRINGTABLE
 BEGIN
-    9533 "Araç çubuğunu düzenler."
+    9533 "Araç çubuğunu husûsîleştirir."
 END
 
 STRINGTABLE
 BEGIN
-    9552 "Gezgin çubuğunu gösterir veya gizler."
+    9552 "Bir gezgin çubuğunu gösterir veyâ gizler."
     9553 "Arama çubuğunu gösterir."
-    9554 "Sık Kullanılanlar çubuğunu gösterir."
+    9554 "Yer İmleri çubuğunu gösterir."
     9555 "Geçmiş çubuğunu gösterir."
-    9557 "Klasörler çubuğunu gösterir."
-    9559 "Ortam Çubğu'nu gösterir."
+    9557 "Dizinler çubuğunu gösterir."
+    9559 "Ortam çubuğunu gösterir."
 END
 
 STRINGTABLE
@@ -231,14 +233,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_NOTEXTLABELS "Metin etiketi yok"
-    IDS_SELECTIVETEXTONRIGHT "Seçici metin sağ tarafta"
+    IDS_NOTEXTLABELS "Metin Etiketi Yok"
+    IDS_SELECTIVETEXTONRIGHT "Seçici Metin Sağda"
 END
 
 STRINGTABLE
 BEGIN
     IDS_GOBUTTONLABEL "|Git||"
-    IDS_GOBUTTONTIPTEMPLATE "Buraya git ""%s"""
+    IDS_GOBUTTONTIPTEMPLATE "Git: ""%s"""
 END
 
 STRINGTABLE
@@ -249,12 +251,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_FOLDERSLABEL "Klasörler"
+    IDS_FOLDERSLABEL "Dizinler"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_HISTORYTEXT "&Geçmiş\tCtrl+H"
+    IDS_HISTORYTEXT "&Geçmiş\tDenetim+H"
 END
 
 STRINGTABLE
@@ -264,11 +266,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BACK "Back to %s"
-    IDS_FORWARD "Forward to %s"
+    IDS_BACK "Geri (%s Adresine)"
+    IDS_FORWARD "İleri (%s Adresine)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STANDARD_TOOLBAR, "|Back|Forward|Up|Search|Folders|Move To|Copy To|Delete|Undo|Views|Stop|Refresh|Home|Map Drive|Disconnect|Favorites|History|Full Screen|Properties|Cut|Copy|Paste|Folder Options||"
+    IDS_STANDARD_TOOLBAR, "|Geri|İleri|Yukarı|Ara|Dizinler|Taşı|Çoğalt|Sil|Geri Al|Görünümler|Dur|Yenile|Giriş|Sürücü Oluştur|Bağlantıyı Kes|Yer İmleri|Geçmiş|Tüm Görüntülük|Husûsiyetler|Kes|Çoğalt|Yapıştır|Dizin Seçenekleri||"
 END

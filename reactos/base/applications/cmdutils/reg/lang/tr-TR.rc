@@ -34,5 +34,5 @@ STRINGTABLE
     STRING_INVALID_OPTION, "reg: Geçersiz seçenek [%1]. "
     STRING_REG_HELP, "Yardım için ""REG /?"" yazınız.\n"
     STRING_FUNC_HELP, "Yardım için ""REG %1 /?"" yazınız.\n"
-    STRING_VALUE_NOT_SET, "(value not set)"
+    STRING_VALUE_NOT_SET, "(Değer belirlenmemiş.)"
 }
