@@ -1,0 +1,11 @@
+
+PROJECT(eventcreate)
+
+## The message string templates are in ANSI to reduce binary size
+add_message_headers(ANSI evtmsgstr.mc)
+
+add_executable(eventcreate eventcreate.c eventcreate.rc)
+set_module_type(eventcreate win32cui UNICODE)
+add_dependencies(eventcreate evtmsgstr)
+add_importlibs(eventcreate advapi32 user32 msvcrt kernel32)
+add_cd_file(TARGET eventcreate DESTINATION reactos/system32 FOR all)
