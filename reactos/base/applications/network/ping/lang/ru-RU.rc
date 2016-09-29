@@ -13,47 +13,46 @@ BEGIN
                     [-w <тайм-аут>] [-4] [-6] конечный_узел\n\
 \n\
 Параметры:\n\
-    -t            Ping the specified host until stopped.\n\
-                  To see statistics and continue - type Control-Break;\n\
-                  To stop - type Control-C.\n\
-    -a            Resolve addresses to hostnames.\n\
-    -n <число>    Число отправляемых запросов эхо-запросов.\n\
+    -t            Проверка связи с указанным узлом до прекращения.\n\
+                  Для просмотра статистики и продолжения проверки нажмите Control-Break;\n\
+                  Для прекращения нажмите Control-C.\n\
+    -a            Определение имен узлов по адресам.\n\
+    -n <число>    Число отправляемых эхо-запросов.\n\
     -l <размер>   Размер буфера отправки.\n\
-    -f            Set Don't Fragment flag in packet (IPv4-only).\n\
-    -i TTL        Time To Live.\n\
-    -v TOS        Type Of Service (IPv4-only. This setting has been deprecated\n\
-                  and has no effect on the type of service field in the IP\n\
-                  Header).\n\
+    -f            Установить флаг ""Не фрагментировать"" для IP пакета (только IPv4).\n\
+    -i TTL        Задание срока жизни пакета (TTL).\n\
+    -v TOS        Тип обслуживания (только IPv4. Этот параметр является устаревшим\n\
+                  и не влияет на поле TOS в заголовке IP).\n\
     -w <тайм-аут> Тайм-аут для каждого ответа (в миллисекундах).\n\
-    -4            Force using IPv4.\n\
-    -6            Force using IPv6.\n\
+    -4            Принудительное использование протокола IPv4.\n\
+    -6            Принудительное использование протокола IPv6.\n\
 \n"
 
     IDS_CTRL_BREAK "Control-Break\n"
     IDS_CTRL_C "Control-C\n"
     IDS_NO_RESOURCES "Невозможно выделить требуемую память.\n"
-    IDS_MISSING_ADDRESS "IP address must be specified.\n"
-    IDS_MISSING_VALUE "Value must be supplied for option %1.\n"
+    IDS_MISSING_ADDRESS "Необходимо указать адрес IP.\n"
+    IDS_MISSING_VALUE "Для опции %1 должно быть указано значение.\n"
     IDS_BAD_OPTION "Неверная опция %1.\n"
     IDS_BAD_PARAMETER "Неверный параметр %1.\n"
     IDS_BAD_VALUE "Недопустимое значение параметра %1, допустимый диапазон с %2!d! по %3!u!.\n"
-    IDS_WRONG_FAMILY "The option %1 is only supported for %2.\n"
-    IDS_UNKNOWN_HOST "Ping could not find host %1. Please check the name and try again.\n"
+    IDS_WRONG_FAMILY "Опция %1 доступна только для %2.\n"
+    IDS_UNKNOWN_HOST "Ping не может найти узел %1. Пожалуйста, проверьте имя и повторите попытку.\n"
     IDS_PINGING_ADDRESS "\nОбмен пакетами с %1 %0"
     IDS_PINGING_HOSTNAME "\nОбмен пакетами с %1 [%2] %0"
     IDS_SOURCE_ADDRESS "from %1!s! %0"
     IDS_PING_SIZE "по %1!d! байта данных:\n\n"
     IDS_REPLY_FROM "Ответ от %1: %0"
     IDS_REPLY_BYTES "число байт=%1!d! %0"
-    IDS_REPLY_TIME_MS "время=%1!d!ms %0"
-    IDS_REPLY_TIME_0MS "время<1ms %0"
+    IDS_REPLY_TIME_MS "время=%1!d!мс %0"
+    IDS_REPLY_TIME_0MS "время<1мс %0"
     IDS_REPLY_TTL "TTL=%1!d!\n"
-    IDS_REPLY_STATUS "Echo reply returned %1.\n"
-    IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\n"
-    IDS_DEST_NET_UNREACHABLE "Destination net unreachable.\n"
+    IDS_REPLY_STATUS "Ответ от %1.\n"
+    IDS_DEST_HOST_UNREACHABLE "Заданный узел недоступен.\n"
+    IDS_DEST_NET_UNREACHABLE "Заданная сеть недоступна.\n"
     IDS_REQUEST_TIMED_OUT "Превышен интервал ожидания для запроса.\n"
-    IDS_TTL_EXPIRED "TTL expired in transit.\n"
-    IDS_TRANSMIT_FAILED "PING: transmit failed. (Error %1!u!)\n"
+    IDS_TTL_EXPIRED "Превышен срок жизни (TTL) при передаче пакета.\n"
+    IDS_TRANSMIT_FAILED "PING: сбой передачи. (Ошибка %1!u!)\n"
 
     IDS_STATISTICS "\n\
 Статистика Ping для %1!s!:\n\
@@ -62,5 +61,5 @@ BEGIN
     IDS_APPROXIMATE_RTT "Приблизительное время приема-передачи в мс:\n\
     Минимальное = %1!u!ms, Максимальное = %2!u!ms, Среднее = %3!u!ms\n"
 
-    IDS_WINSOCK_FAIL "Failed to initialize WinSock: %1!d!\n"
+    IDS_WINSOCK_FAIL "Не удалось инициализировать WinSock: %1!d!\n"
 END
