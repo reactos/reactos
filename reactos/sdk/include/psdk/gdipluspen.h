@@ -19,6 +19,8 @@
 #ifndef _GDIPLUSPEN_H
 #define _GDIPLUSPEN_H
 
+class CustomLineCap;
+
 class Pen : public GdiplusBase
 {
   friend class Graphics;

@@ -227,6 +227,14 @@ public:
     INT Length;
 };
 
+/* FIXME: missing the methods. */
+class SizeF
+{
+public:
+    REAL Width;
+    REAL Height;
+};
+
 #else /* end of c++ typedefs */
 
 typedef struct Point
