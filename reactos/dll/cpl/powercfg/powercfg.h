@@ -10,9 +10,11 @@
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
+#include <winreg.h>
 #include <cpl.h>
 #include <tchar.h>
 #include <shlobj.h>
+#include <shlwapi.h>
 #include <powrprof.h>
 
 #include "resource.h"

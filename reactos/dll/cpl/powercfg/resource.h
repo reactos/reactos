@@ -9,15 +9,15 @@
 #define ICONSIZE         16
 
 /* IDs */
-#define IDC_CPLICON_1 1
+
+/* Set default to IDI_AC */
+#define IDC_CPLICON_1 IDI_AC
 
 #define IDS_PROCENT  49
 #define IDS_SOUND    50
 #define IDS_TEXT     51
 #define IDS_CONFIG1  53
 #define IDS_CONFIG2  54
-#define IDS_SIZEBYTS 55
-#define IDS_SIZEMB   56
 
 #define IDD_PROPPAGEPOWERSHEMES 70
 #define IDD_PROPPAGEALARMS      71

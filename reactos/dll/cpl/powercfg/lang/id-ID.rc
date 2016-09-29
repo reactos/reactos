@@ -112,8 +112,6 @@ BEGIN
     IDS_TEXT "Teks"
     IDS_CONFIG1 "Menyetel untuk %1 skema tenaga"
     IDS_CONFIG2 "Setelan Lanjutan untuk %1"
-    IDS_SIZEBYTS "%i byte"
-    IDS_SIZEMB "%i MB"
     IDS_NOACTION "Tidak melakukan apapun"
     IDS_PowerActionNone1 "Tidak ada aksi"
     IDS_PowerActionUnknown "Tidak dikenal"

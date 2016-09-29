@@ -112,8 +112,6 @@ BEGIN
     IDS_TEXT "Text"
     IDS_CONFIG1 "Einstellungen für Energieschema %s."
     IDS_CONFIG2 "Erweiterte Einstellungen für %s."
-    IDS_SIZEBYTS "%i Bytes"
-    IDS_SIZEMB "%i MB"
     IDS_NOACTION "Nichts unternehmen"
     IDS_PowerActionNone1 "Keine Aktion"
     IDS_PowerActionUnknown "Unbekannt"

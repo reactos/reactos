@@ -112,8 +112,6 @@ BEGIN
     IDS_TEXT "テキスト"
     IDS_CONFIG1 "[%1] の電源設定"
     IDS_CONFIG2 "%1の詳細設定"
-    IDS_SIZEBYTS "%i バイト"
-    IDS_SIZEMB "%i MB"
     IDS_NOACTION "何もしない"
     IDS_PowerActionNone1 "何もしない"
     IDS_PowerActionUnknown "不明"
