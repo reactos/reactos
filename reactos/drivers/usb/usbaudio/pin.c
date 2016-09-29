@@ -32,9 +32,9 @@ UsbAudioSetFormat(
         IsEqualGUIDAligned(&Pin->ConnectionFormat->Specifier, &KSDATAFORMAT_SPECIFIER_WAVEFORMATEX))
     {
         WaveFormatEx = (PKSDATAFORMAT_WAVEFORMATEX)Pin->ConnectionFormat;
-        SampleRateBuffer[0] = (WaveFormatEx->WaveFormatEx.nSamplesPerSec >> 16) & 0xFF;
+        SampleRateBuffer[2] = (WaveFormatEx->WaveFormatEx.nSamplesPerSec >> 16) & 0xFF;
         SampleRateBuffer[1] = (WaveFormatEx->WaveFormatEx.nSamplesPerSec >> 8) & 0xFF;
-        SampleRateBuffer[2] = (WaveFormatEx->WaveFormatEx.nSamplesPerSec >> 0) & 0xFF;
+        SampleRateBuffer[0] = (WaveFormatEx->WaveFormatEx.nSamplesPerSec >> 0) & 0xFF;
 
         /* TODO: verify connection format */
     }
@@ -58,7 +58,7 @@ UsbAudioSetFormat(
     /* format urb */
     UsbBuildVendorRequest(Urb,
         URB_FUNCTION_CLASS_ENDPOINT,
-        sizeof(URB),
+        sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
         USBD_TRANSFER_DIRECTION_OUT,
         0,
         0x01,
@@ -71,7 +71,7 @@ UsbAudioSetFormat(
 
     /* get pin context */
     PinContext = Pin->Context;
-    DbgBreakPoint();
+
     /* submit urb */
     Status = SubmitUrbSync(PinContext->LowerDevice, Urb);
 
