@@ -348,7 +348,15 @@ ThreadFunc(LPVOID Context)
 
     hFile = InternetOpenUrlW(hOpen, AppInfo->szUrlDownload, NULL, 0, INTERNET_FLAG_PRAGMA_NOCACHE|INTERNET_FLAG_KEEP_CONNECTION, 0);
     if (!hFile)
+    {
+        WCHAR szMsgText[MAX_STR_LEN];
+
+        if (!LoadStringW(hInst, IDS_UNABLE_TO_DOWNLOAD2, szMsgText, sizeof(szMsgText) / sizeof(WCHAR)))
+            goto end;
+
+        MessageBoxW(hMainWnd, szMsgText, NULL, MB_OK | MB_ICONERROR);
         goto end;
+    }
 
     if (!HttpQueryInfoW(hFile, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwStatusLen, NULL))
         goto end;

@@ -203,6 +203,7 @@ BEGIN
     IDS_APP_REG_REMOVE "Sigur doriți să ștergeți datele din registru pentru această aplicațe?"
     IDS_INFORMATION "Informație"
     IDS_UNABLE_TO_DOWNLOAD "Pachetul nu poate fi descărcat! Adresa nu este găsită!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "Nu se pot elimina datele din registru pentru acest program!"
     IDS_CERT_DOES_NOT_MATCH "Verificarea certificatului SSL a eșuat."    
     IDS_INTEG_CHECK_TITLE "Se verifică integritatea pachetului…"

@@ -200,6 +200,7 @@ BEGIN
     IDS_APP_REG_REMOVE "¿Está seguro de querer borrar del Registro los datos de instalación del programa?"
     IDS_INFORMATION "Información"
     IDS_UNABLE_TO_DOWNLOAD "No se pudo descargar el paquete. No se ha encontrado la dirección de Internet."
+    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "No se pudieron borrar del Registro los datos de instalación del programa."
     IDS_CERT_DOES_NOT_MATCH "Ha fallado la comprobación del certificado SSL."
     IDS_INTEG_CHECK_TITLE "Verificando integridad del paquete..."

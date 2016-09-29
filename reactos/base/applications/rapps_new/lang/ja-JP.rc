@@ -197,6 +197,7 @@ BEGIN
     IDS_APP_REG_REMOVE "レジストリからインストールされたプログラムに関するデータを削除してもよろしいですか?"
     IDS_INFORMATION "情報"
     IDS_UNABLE_TO_DOWNLOAD "Unable to download the package! Address not found!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "レジストリからこのプログラムに関するデータを削除できません!"
     IDS_CERT_DOES_NOT_MATCH "SSL certificate verification failed."
     IDS_INTEG_CHECK_TITLE "Verifying package integrity..."
