@@ -214,6 +214,7 @@ DefWndStartSizeMove(PWND Wnd, WPARAM wParam, POINT *capturePoint)
 		case VK_ESCAPE:
 		  return 0;
 		}
+              break;
             default:
               IntTranslateKbdMessage( &msg, 0 );
               pti->TIF_flags |= TIF_MOVESIZETRACKING;
