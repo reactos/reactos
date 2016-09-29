@@ -249,7 +249,7 @@ InstallEventSource(
      * - In case of failure, use a default path.
      */
     PathSize = GetModuleFileNameW(NULL, ExePath, ARRAYSIZE(ExePath));
-    if ((PathSize == 0) || (GetLastError() != ERROR_SUCCESS))
+    if ((PathSize == 0) || (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
     {
         /* We failed, copy the default value */
         StringCchCopyW(ExePath, ARRAYSIZE(ExePath),
