@@ -1,0 +1,15 @@
+/*
+ * PROJECT:     ReactOS Default ScreenSaver
+ * LICENSE:     Public Domain
+ * FILE:        applications/screensavers/blankscr/lang/ru-RU.rc
+ * PURPOSE:     Russian Language File for Blank Screen ScreenSaver
+ * TRANSLATOR:  Sergey Stopkin
+ */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Заставка ""Пустой экран"""
+    IDS_TEXT        "Эта заставка не имеет настраиваемых параметров."
+END

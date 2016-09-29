@@ -11,7 +11,7 @@ BEGIN
    IDS_COLUMN_PID          "PID  "
    IDS_COLUMN_CPU          "ЦП"
    IDS_COLUMN_MEM          "Использование памяти"
-   IDS_COLUMN_MEM_UNIT		"КБ"
+   IDS_COLUMN_MEM_UNIT     "КБ"
    IDS_COLUMN_PF           "Ошибок страницы"
 
    IDS_IDLE_PROCESS        "Бездействие системы"

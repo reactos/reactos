@@ -1,0 +1,16 @@
+/*
+ * PROJECT:     Cylinders fractal ScreenSaver
+ * LICENSE:     Public Domain
+ * FILE:        applications/screensavers/cylfrac/lang/ru-RU.rc
+ * PURPOSE:     Russian Language File for Cylinders fractal ScreenSaver
+ * TRANSLATOR:  Sergey Stopkin
+ */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Заставка ""Cylinders fractal"""
+    IDS_TITLE       "О программе"
+    IDS_TEXT        "Cylinders fractal от unC0Rr.\nСпециально для ReactOS."
+END

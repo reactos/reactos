@@ -1,0 +1,80 @@
+/*
+ * PROJECT:     System Information
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        rosapps/sysutils/systeminfo/lang/ru-RU.rc
+ * PURPOSE:     Russian Language File for systeminfo
+ * TRANSLATOR:  Sergey Stopkin
+ */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "SYSTEMINFO [/S система [/U имяПользователя [/P [пароль]]]] [/FO формат] [/NH]\n\n\
+Описание:\n\
+  Эта утилита командной строки предоставляет администратору возможность\n\
+  запрашивать основную информацию о конфигурации системы.\n\n\
+Список параметров:\n\
+  /S      система          Определяет удаленную систему для подключения.\n\n\
+  /U      [домен\\]польз.  Определяет контекст пользователя, под которым\n\
+                           выполняется данная команда.\n\n\
+  /P      [password]       Задает пароль для данного контекста пользователя.\n\
+                           Запрашивает ввод пароля, если он не был задан.\n\n\
+  /FO     формат           Определяет формат, в котором отображаются\n\
+                           выходные данные.\n\
+                           Допустимые форматы: ""TABLE"", ""LIST"", ""CSV"".\n\n\
+  /NH                      Указывает, что ""Заголовок столбца""\n\
+                           не должен отображаться в выводе.\n\
+                           Допускается для форматов ""TABLE"" и ""CSV"".\n\n\
+  /?                       Показать эту справку/примеры.\n\n\
+Примеры:\n\
+  SYSTEMINFO\n\
+  SYSTEMINFO /?\n\
+  SYSTEMINFO /S система\n\
+  SYSTEMINFO /S система /U user\n\
+  SYSTEMINFO /S система /U домен\\пользователь /P пароль /FO TABLE\n\
+  SYSTEMINFO /S система /FO LIST\n\
+  SYSTEMINFO /S система /FO CSV /NH\n"
+
+IDS_HOST_NAME,               "Имя компьютера"
+IDS_OS_NAME,                 "Имя ОС"
+IDS_OS_VERSION,              "Версия ОС"
+IDS_BUILD,                   "Сборка"
+IDS_OS_BUILD_TYPE,           "Тип сборки ОС"
+IDS_REG_OWNER,               "Зарегистрированный пользователь"
+IDS_REG_ORG,                 "Зарегистрированная организация"
+IDS_PRODUCT_ID,              "ID продукта"
+IDS_INST_DATE,               "Дата установки"
+IDS_UP_TIME,                 "Время работы системы"
+IDS_UP_TIME_FORMAT,          "%u дней, %u часов, %u минут, %u секунд"
+IDS_SYS_MANUFACTURER,        "Производитель системы"
+IDS_SYS_MODEL,               "Модель системы"
+IDS_SYS_TYPE,                "Тип системы"
+IDS_PROCESSORS,              "Процессор(-ы)"
+IDS_PROCESSORS_FORMAT,       "%u процессор(-ов) установлено."
+IDS_BIOS_DATE,               "Дата BIOS"
+IDS_BIOS_VERSION,            "Версия BIOS"
+IDS_ROS_DIR,                 "Папка ReactOS"
+IDS_SYS_DIR,                 "Системная папка"
+IDS_BOOT_DEV,                "Загрузочное устройство"
+IDS_SYS_LOCALE,              "Язык системы"
+IDS_INPUT_LOCALE,            "Язык ввода"
+IDS_TIME_ZONE,               "Часовой пояс"
+IDS_TOTAL_PHYS_MEM,          "Всего физической памяти"
+IDS_AVAIL_PHISICAL_MEM,      "Доступно физической памяти"
+IDS_VIRT_MEM_MAX,            "Виртуальная память: Макс. размер"
+IDS_VIRT_MEM_AVAIL,          "Виртуальная память: Доступно"
+IDS_VIRT_MEM_INUSE,          "Виртуальная память: Используется"
+IDS_PAGEFILE_LOC,            "Расположение файла подкачки"
+IDS_DOMAIN,                  "Домен"
+IDS_NETWORK_CARDS,           "Сетевая карта(-ы)"
+IDS_NETWORK_CARDS_FORMAT,    "%u Установлено."
+IDS_CONNECTION_NAME,         "Имя соединения"
+IDS_STATUS,                  "Статус"
+IDS_MEDIA_DISCONNECTED,      "Носитель отключен"
+IDS_DHCP_ENABLED,            "DHCP Разрешен"
+IDS_NO,                      "Нет"
+IDS_IP_ADDRESSES,            "IP адрес(-а)"
+
+END
