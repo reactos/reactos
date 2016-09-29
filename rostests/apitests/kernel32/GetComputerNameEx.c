@@ -10,6 +10,7 @@
 #define WIN32_NO_STATUS
 #include <stdio.h>
 #include <ndk/rtltypes.h>
+#include <winreg.h>
 
 static
 VOID
@@ -179,6 +180,339 @@ TestGetComputerNameEx(
     }
 }
 
+static
+LSTATUS
+ReadRegistryValue(PCHAR ValueName, PCHAR Value)
+{
+    INT ErrorCode;
+    HKEY ParametersKey;
+    DWORD RegType;
+    DWORD RegSize = 0;
+
+    /* Open the database path key */
+    ErrorCode = RegOpenKeyExA(HKEY_LOCAL_MACHINE,
+                              "System\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+                              0,
+                              KEY_READ,
+                              &ParametersKey);
+    if (ErrorCode == NO_ERROR)
+    {
+        /* Read the actual path */
+        ErrorCode = RegQueryValueExA(ParametersKey,
+                                     ValueName,
+                                     NULL,
+                                     &RegType,
+                                     NULL,
+                                     &RegSize);
+        if (RegSize)
+        {
+            /* Read the actual path */
+            ErrorCode = RegQueryValueExA(ParametersKey,
+                                         ValueName,
+                                         NULL,
+                                         &RegType,
+                                         (LPBYTE)Value,
+                                         &RegSize);
+        }
+
+        /* Close the key */
+        RegCloseKey(ParametersKey);
+    }
+    return ErrorCode;
+}
+
+static
+LSTATUS
+ReadRegistryComputerNameValue(PCHAR ValueName, PCHAR Value)
+{
+    INT ErrorCode;
+    HKEY ParametersKey;
+    DWORD RegType;
+    DWORD RegSize = 0;
+
+    /* Open the database path key */
+    ErrorCode = RegOpenKeyExA(HKEY_LOCAL_MACHINE,
+                              "System\\CurrentControlSet\\Control\\ComputerName\\ActiveComputerName",
+                              0,
+                              KEY_READ,
+                              &ParametersKey);
+    if (ErrorCode == NO_ERROR)
+    {
+        /* Read the actual path */
+        ErrorCode = RegQueryValueExA(ParametersKey,
+                                     ValueName,
+                                     NULL,
+                                     &RegType,
+                                     NULL,
+                                     &RegSize);
+        if (RegSize)
+        {
+            /* Read the actual path */
+            ErrorCode = RegQueryValueExA(ParametersKey,
+                                         ValueName,
+                                         NULL,
+                                         &RegType,
+                                         (LPBYTE)Value,
+                                         &RegSize);
+        }
+
+        /* Close the key */
+        RegCloseKey(ParametersKey);
+    }
+    return ErrorCode;
+}
+
+static
+LSTATUS
+WriteRegistryValue(PCHAR ValueName, PCHAR Value)
+{
+    INT ErrorCode;
+    HKEY ParametersKey;
+
+    /* Open the database path key */
+    ErrorCode = RegOpenKeyExA(HKEY_LOCAL_MACHINE,
+                              "System\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+                              0,
+                              KEY_WRITE,
+                              &ParametersKey);
+    if (ErrorCode == NO_ERROR)
+    {
+        /* Read the actual path */
+        ErrorCode = RegSetValueExA(ParametersKey,
+                                   ValueName,
+                                   0,
+                                   REG_SZ,
+                                   (LPBYTE)Value,
+                                   strlen(Value) + 1);
+
+        /* Close the key */
+        RegCloseKey(ParametersKey);
+    }
+    return ErrorCode;
+}
+
+static
+LSTATUS
+DeleteRegistryValue(PCHAR ValueName)
+{
+    INT ErrorCode;
+    HKEY ParametersKey;
+
+    /* Open the database path key */
+    ErrorCode = RegOpenKeyExA(HKEY_LOCAL_MACHINE,
+                              "System\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+                              0,
+                              KEY_WRITE,
+                              &ParametersKey);
+    if (ErrorCode == NO_ERROR)
+    {
+        /* Read the actual path */
+        ErrorCode = RegDeleteValueA(ParametersKey, ValueName);
+
+        /* Close the key */
+        RegCloseKey(ParametersKey);
+    }
+    return ErrorCode;
+}
+
+/* If this test crashes it might end up with wrong host and/or domain name in registry! */
+static
+VOID
+TestReturnValues()
+{
+    CHAR OrigNetBIOS[128];
+    CHAR OrigHostname[128];
+    CHAR OrigDomainName[128];
+    CHAR OrigDhcpHostname[128];
+    CHAR OrigDhcpDomainName[128];
+    BOOL OrigNetBIOSExists;
+    BOOL OrigHostnameExists;
+    BOOL OrigDomainNameExists;
+    BOOL OrigDhcpHostnameExists;
+    BOOL OrigDhcpDomainNameExists;
+    CHAR ComputerName[128];
+    DWORD ComputerNameSize = 0;
+    INT ErrorCode;
+
+    memset(OrigNetBIOS, 0, sizeof(OrigNetBIOS));
+    memset(OrigHostname, 0, sizeof(OrigHostname));
+    memset(OrigDomainName, 0, sizeof(OrigDomainName));
+    memset(OrigDhcpHostname, 0, sizeof(OrigDhcpHostname));
+    memset(OrigDhcpDomainName, 0, sizeof(OrigDhcpDomainName));
+    /* read current registry values */
+    ErrorCode = ReadRegistryComputerNameValue("ComputerName", OrigNetBIOS);
+    ok(ErrorCode == ERROR_SUCCESS, "Failed to read registry key ComputerName %d\n", ErrorCode);
+    OrigNetBIOSExists = ErrorCode == STATUS_SUCCESS;
+    ErrorCode = ReadRegistryValue("Hostname", OrigHostname);
+    ok(ErrorCode == ERROR_SUCCESS, "Failed to read registry key Hostname %d\n", ErrorCode);
+    OrigHostnameExists = ErrorCode == STATUS_SUCCESS;
+    ErrorCode = ReadRegistryValue("Domain", OrigDomainName);
+    ok(ErrorCode == ERROR_SUCCESS || ErrorCode == ERROR_FILE_NOT_FOUND, "Failed to read registry key DomainName %d\n", ErrorCode);
+    OrigDomainNameExists = ErrorCode == STATUS_SUCCESS;
+    ErrorCode = ReadRegistryValue("DhcpHostname", OrigDhcpHostname);
+    ok(ErrorCode == ERROR_SUCCESS || ErrorCode == ERROR_FILE_NOT_FOUND, "Failed to read registry key DhcpHostname %d\n", ErrorCode);
+    OrigDhcpHostnameExists = ErrorCode == STATUS_SUCCESS;
+    ErrorCode = ReadRegistryValue("DhcpDomain", OrigDhcpDomainName);
+    ok(ErrorCode == ERROR_SUCCESS || ErrorCode == ERROR_FILE_NOT_FOUND, "Failed to read registry key DhcpDomainName %d\n", ErrorCode);
+    OrigDhcpDomainNameExists = ErrorCode == STATUS_SUCCESS;
+
+    trace("Starting values:\n");
+    trace("NetBIOS: %s, exists %s\n", OrigNetBIOS, OrigNetBIOSExists ? "yes" : "no");
+    trace("Hostname: %s, exists %s\n", OrigHostname, OrigHostnameExists ? "yes" : "no");
+    trace("Domain: %s, exists %s\n", OrigDomainName, OrigDomainNameExists ? "yes" : "no");
+    trace("DhcpHostname: %s, exists %s\n", OrigDhcpHostnameExists ? OrigDhcpHostname : "", OrigDhcpHostnameExists ? "yes" : "no");
+    trace("DhcpDomain: %s, exists %s\n", OrigDhcpDomainNameExists ? OrigDhcpDomainName : "", OrigDhcpDomainNameExists ? "yes" : "no");
+
+    /* ComputerNamePhysicalNetBIOS */
+    ComputerNameSize = 0;
+    StartSeh()
+        GetComputerNameExA(ComputerNamePhysicalNetBIOS, ComputerName, &ComputerNameSize);
+        if (ComputerNameSize)
+            ok(GetComputerNameExA(ComputerNamePhysicalNetBIOS, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNamePhysicalNetBIOS) failed with %ld\n", GetLastError());
+        else
+            memset(ComputerName, 0, sizeof(ComputerName));
+        ok(strcmp(ComputerName, OrigNetBIOS) == 0, "ComputerNamePhysicalNetBIOS doesn't match registry value '%s' != '%s'\n", ComputerName, OrigNetBIOS);
+    EndSeh(STATUS_SUCCESS);
+
+    /* ComputerNamePhysicalDnsHostname */
+    ComputerNameSize = 0;
+    StartSeh()
+        GetComputerNameExA(ComputerNamePhysicalDnsHostname, ComputerName, &ComputerNameSize);
+        if (ComputerNameSize)
+            ok(GetComputerNameExA(ComputerNamePhysicalDnsHostname, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNamePhysicalDnsHostname) failed with %ld\n", GetLastError());
+        else
+            memset(ComputerName, 0, sizeof(ComputerName));
+        ok(strcmp(ComputerName, OrigHostname) == 0, "ComputerNamePhysicalDnsHostname doesn't match registry value '%s' != '%s'\n", ComputerName, OrigHostname);
+    EndSeh(STATUS_SUCCESS);
+
+    /* ComputerNamePhysicalDnsDomain */
+    ComputerNameSize = 0;
+    StartSeh()
+        GetComputerNameExA(ComputerNamePhysicalDnsDomain, ComputerName, &ComputerNameSize);
+        if (ComputerNameSize)
+            ok(GetComputerNameExA(ComputerNamePhysicalDnsDomain, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNamePhysicalDnsDomain) failed with %ld\n", GetLastError());
+        else
+            memset(ComputerName, 0, sizeof(ComputerName));
+        ok(strcmp(ComputerName, OrigDomainName) == 0, "ComputerNamePhysicalDnsDomain doesn't match registry value '%s' != '%s'\n", ComputerName, OrigDomainName);
+    EndSeh(STATUS_SUCCESS);
+    ComputerNameSize = 0;
+
+    /* ComputerNameNetBIOS */
+    StartSeh()
+        GetComputerNameExA(ComputerNameNetBIOS, ComputerName, &ComputerNameSize);
+        if (ComputerNameSize)
+            ok(GetComputerNameExA(ComputerNameNetBIOS, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNameNetBIOS) failed with %ld\n", GetLastError());
+        else
+            memset(ComputerName, 0, sizeof(ComputerName));
+        ok(strcmp(ComputerName, OrigNetBIOS) == 0, "ComputerNameNetBIOS doesn't match registry value '%s' != '%s'\n", ComputerName, OrigNetBIOS);
+    EndSeh(STATUS_SUCCESS);
+
+    /* ComputerNameDnsHostname */
+    ComputerNameSize = 0;
+    StartSeh()
+        GetComputerNameExA(ComputerNameDnsHostname, ComputerName, &ComputerNameSize);
+        if (ComputerNameSize)
+            ok(GetComputerNameExA(ComputerNameDnsHostname, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNameDnsHostname) failed with %ld\n", GetLastError());
+        else
+            memset(ComputerName, 0, sizeof(ComputerName));
+        ok(strcmp(ComputerName, OrigHostname) == 0, "ComputerNameDnsHostname doesn't match registry value '%s' != '%s'\n", ComputerName, OrigHostname);
+    EndSeh(STATUS_SUCCESS);
+
+    /* ComputerNameDnsDomain */
+    ComputerNameSize = 0;
+    StartSeh()
+        GetComputerNameExA(ComputerNameDnsDomain, ComputerName, &ComputerNameSize);
+        if (ComputerNameSize)
+           ok(GetComputerNameExA(ComputerNameDnsDomain, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNameDnsDomain) failed with %ld\n", GetLastError());
+        else
+            memset(ComputerName, 0, sizeof(ComputerName));
+        ok(strcmp(ComputerName, OrigDomainName) == 0, "ComputerNameDnsDomain doesn't match registry value '%s' != '%s'\n", ComputerName, OrigDomainName);
+    EndSeh(STATUS_SUCCESS);
+
+    ErrorCode = WriteRegistryValue("DhcpHostname", "testdhcproshost");
+    ok(ErrorCode == ERROR_SUCCESS, "Failed to write registry key DhcpHostname %d\n", ErrorCode);
+    ErrorCode = WriteRegistryValue("DhcpDomain", "testrosdomain");
+    ok(ErrorCode == ERROR_SUCCESS, "Failed to write registry key DhcpDomainName %d\n", ErrorCode);
+
+    /* ComputerNamePhysicalNetBIOS */
+    ComputerNameSize = 0;
+    StartSeh()
+        GetComputerNameExA(ComputerNamePhysicalNetBIOS, ComputerName, &ComputerNameSize);
+        if (ComputerNameSize)
+            ok(GetComputerNameExA(ComputerNamePhysicalNetBIOS, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNamePhysicalNetBIOS) failed with %ld\n", GetLastError());
+        else
+            memset(ComputerName, 0, sizeof(ComputerName));
+        ok(strcmp(ComputerName, OrigNetBIOS) == 0, "ComputerNamePhysicalNetBIOS doesn't match registry value '%s' != '%s'\n", ComputerName, OrigNetBIOS);
+    EndSeh(STATUS_SUCCESS);
+
+    /* ComputerNamePhysicalDnsHostname */
+    ComputerNameSize = 0;
+    StartSeh()
+        GetComputerNameExA(ComputerNamePhysicalDnsHostname, ComputerName, &ComputerNameSize);
+        if (ComputerNameSize)
+            ok(GetComputerNameExA(ComputerNamePhysicalDnsHostname, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNamePhysicalDnsHostname) failed with %ld\n", GetLastError());
+        else
+            memset(ComputerName, 0, sizeof(ComputerName));
+        ok(strcmp(ComputerName, OrigHostname) == 0, "ComputerNamePhysicalDnsHostname doesn't match registry value '%s' != '%s'\n", ComputerName, OrigHostname);
+    EndSeh(STATUS_SUCCESS);
+
+    /* ComputerNamePhysicalDnsDomain */
+    ComputerNameSize = 0;
+    StartSeh()
+        GetComputerNameExA(ComputerNamePhysicalDnsDomain, ComputerName, &ComputerNameSize);
+        if (ComputerNameSize)
+            ok(GetComputerNameExA(ComputerNamePhysicalDnsDomain, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNamePhysicalDnsDomain) failed with %ld\n", GetLastError());
+        else
+            memset(ComputerName, 0, sizeof(ComputerName));
+        ok(strcmp(ComputerName, OrigDomainName) == 0, "ComputerNamePhysicalDnsDomain doesn't match registry value '%s' != '%s'\n", ComputerName, OrigDomainName);
+    EndSeh(STATUS_SUCCESS);
+    ComputerNameSize = 0;
+
+    /* ComputerNameNetBIOS */
+    StartSeh()
+        GetComputerNameExA(ComputerNameNetBIOS, ComputerName, &ComputerNameSize);
+        if (ComputerNameSize)
+            ok(GetComputerNameExA(ComputerNameNetBIOS, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNameNetBIOS) failed with %ld\n", GetLastError());
+        else
+            memset(ComputerName, 0, sizeof(ComputerName));
+        ok(strcmp(ComputerName, OrigNetBIOS) == 0, "ComputerNameNetBIOS doesn't match registry value '%s' != '%s'\n", ComputerName, OrigNetBIOS);
+    EndSeh(STATUS_SUCCESS);
+
+    /* ComputerNameDnsHostname */
+    ComputerNameSize = 0;
+    StartSeh()
+        GetComputerNameExA(ComputerNameDnsHostname, ComputerName, &ComputerNameSize);
+        if (ComputerNameSize)
+            ok(GetComputerNameExA(ComputerNameDnsHostname, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNameDnsHostname) failed with %ld\n", GetLastError());
+        else
+            memset(ComputerName, 0, sizeof(ComputerName));
+        ok(strcmp(ComputerName, OrigHostname) == 0, "ComputerNameDnsHostname doesn't match registry value '%s' != '%s'\n", ComputerName, OrigHostname);
+    EndSeh(STATUS_SUCCESS);
+
+    /* ComputerNameDnsDomain */
+    ComputerNameSize = 0;
+    StartSeh()
+        GetComputerNameExA(ComputerNameDnsDomain, ComputerName, &ComputerNameSize);
+        if (ComputerNameSize)
+            ok(GetComputerNameExA(ComputerNameDnsDomain, ComputerName, &ComputerNameSize), "GetComputerNameExA(ComputerNameDnsDomain) failed with %ld\n", GetLastError());
+        else
+            memset(ComputerName, 0, sizeof(ComputerName));
+        ok(strcmp(ComputerName, OrigDomainName) == 0, "ComputerNameDnsDomain doesn't match registry value '%s' != '%s'\n", ComputerName, OrigDomainName);
+    EndSeh(STATUS_SUCCESS);
+
+    /* restore registry values */
+    if (OrigDhcpHostnameExists)
+        ErrorCode = WriteRegistryValue("DhcpHostname", OrigDhcpHostname);
+    else
+        ErrorCode = DeleteRegistryValue("DhcpHostname");
+    ok(ErrorCode == ERROR_SUCCESS, "Failed to restore registry key DhcpHostname %d\n", ErrorCode);
+    if (OrigDhcpDomainNameExists)
+        ErrorCode = WriteRegistryValue("DhcpDomain", OrigDhcpDomainName);
+    else
+        ErrorCode = DeleteRegistryValue("DhcpDomain");
+    ok(ErrorCode == ERROR_SUCCESS, "Failed to restore registry key DhcpDomainName %d\n", ErrorCode);
+}
+
 START_TEST(GetComputerNameEx)
 {
     TestGetComputerNameEx(ComputerNameNetBIOS);
@@ -189,4 +523,5 @@ START_TEST(GetComputerNameEx)
     TestGetComputerNameEx(ComputerNamePhysicalDnsHostname);
     TestGetComputerNameEx(ComputerNamePhysicalDnsDomain);
     //TestGetComputerNameEx(ComputerNamePhysicalDnsFullyQualified);
+    TestReturnValues();
 }
