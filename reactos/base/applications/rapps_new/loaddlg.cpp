@@ -508,6 +508,7 @@ DownloadProgressProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PT
                               sizeof(szProgressText),
                               (PCWSTR)lParam);
             }
+            return TRUE;
         }
 
         case WM_ERASEBKGND:
@@ -563,7 +564,7 @@ DownloadProgressProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PT
             ZeroMemory(szProgressText, sizeof(szProgressText));
             RemoveWindowSubclass(hWnd, DownloadProgressProc, uIdSubclass);
         }
-
+        /* Fall-through */
         default:
             return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
