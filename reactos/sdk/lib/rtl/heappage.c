@@ -358,7 +358,7 @@ RtlpDphFreeVm(PVOID Base, SIZE_T Size, ULONG Type)
 
     /* Free the memory */
     Status = RtlpSecMemFreeVirtualMemory(NtCurrentProcess(), &Base, &Size, Type);
-    DPRINT1("Page heap: FreeVm (%p, %Ix, %x) status %x \n", Base, Size, Type, Status);
+    DPRINT("Page heap: FreeVm (%p, %Ix, %x) status %x \n", Base, Size, Type, Status);
     /* Log/report failures */
     if (!NT_SUCCESS(Status))
     {
