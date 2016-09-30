@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <windns.h>
 #include <apitest.h>
+#include <iphlpapi.h>
 
 
 void TestHostName(void)
@@ -17,22 +18,40 @@ void TestHostName(void)
 
     DNS_STATUS dns_status;
     char host_name[255];
-    char domain_name[255];
     char test_name[255];
     PDNS_RECORD dp;
     WCHAR host_nameW[255];
     WCHAR test_nameW[255];
-    DWORD size = sizeof(host_name);
+    PFIXED_INFO network_info;
+    ULONG network_info_blen = 0;
+    DWORD network_info_result;
 
-    GetComputerNameEx(ComputerNameDnsHostname, host_name, &size);
-    size = sizeof(domain_name);
-    GetComputerNameEx(ComputerNameDnsDomain, domain_name, &size);
-    if (strlen(domain_name))
+    network_info_result = GetNetworkParams(NULL, &network_info_blen);
+    network_info = (PFIXED_INFO)HeapAlloc(GetProcessHeap(), 0, (size_t)network_info_blen);
+    if (NULL == network_info)
     {
-        strcat(host_name, ".");
-        strcat(host_name, domain_name);
+        skip("Not enough memory. Can't continue!\n");
+        return;
     }
-    mbstowcs(host_nameW, host_name, 255);
+
+    network_info_result = GetNetworkParams(network_info, &network_info_blen);
+    if (network_info_result != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, network_info);
+        skip("Can't get network info. Some results may be wrong.\n");
+        return;
+    }
+    else
+    {
+        strcpy(host_name, network_info->HostName);
+        if (strlen(network_info->DomainName))
+        {
+            strcat(host_name, ".");
+            strcat(host_name, network_info->DomainName);
+        }
+        HeapFree(GetProcessHeap(), 0, network_info);
+        mbstowcs(host_nameW, host_name, 255);
+    }
 
     //DnsQuery_A:
     //NULL
@@ -40,7 +59,11 @@ void TestHostName(void)
     dns_status = DnsQuery_A(NULL, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_A failed with error %lu\n", dns_status);
     ok(dp == InvalidPointer, "dp = %p\n", dp);
-    
+
+    //NULL dp
+    dns_status = DnsQuery_A(host_name, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, NULL, 0);
+    ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_A failed with error %lu\n", dns_status);
+
     //Testing HostName 
     dp = InvalidPointer;
     dns_status = DnsQuery_A(host_name, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
@@ -260,6 +283,10 @@ void TestHostName(void)
         ok(dp == InvalidPointer, "dp = %p\n", dp);
     }
     if (dp != InvalidPointer) DnsRecordListFree(dp, DnsFreeRecordList);
+
+    //NULL dp
+    dns_status = DnsQuery_W(host_nameW, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, NULL, 0);
+    ok(dns_status == ERROR_INVALID_PARAMETER, "DnsQuery_W failed with error %lu\n", dns_status);
 
     //Testing HostName 
     dns_status = DnsQuery_W(host_nameW, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
