@@ -88,8 +88,11 @@ MiInitSystemMemoryAreas(VOID)
     // ReactOS requires a memory area to keep the initial NP area off-bounds
     MiCreateArm3StaticMemoryArea(MmNonPagedPoolStart, MmSizeOfNonPagedPoolInBytes, FALSE);
 
-    // System NP
-    MiCreateArm3StaticMemoryArea(MmNonPagedSystemStart, MiNonPagedSystemSize, FALSE);
+    // System PTE space
+    MiCreateArm3StaticMemoryArea(MmNonPagedSystemStart, (MmNumberOfSystemPtes + 1) * PAGE_SIZE, FALSE);
+
+    // Nonpaged pool expansion space
+    MiCreateArm3StaticMemoryArea(MmNonPagedPoolExpansionStart, (ULONG_PTR)MmNonPagedPoolEnd - (ULONG_PTR)MmNonPagedPoolExpansionStart, FALSE);
 
     // System view space
     MiCreateArm3StaticMemoryArea(MiSystemViewStart, MmSystemViewSize, FALSE);
