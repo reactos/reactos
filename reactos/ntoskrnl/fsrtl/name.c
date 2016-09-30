@@ -294,7 +294,13 @@ FsRtlAreNamesEqual(IN PCUNICODE_STRING Name1,
         if (!NT_SUCCESS(Status)) RtlRaiseStatus(Status);
 
         /* Upcase the second string too */
-        RtlUpcaseUnicodeString(&UpcaseName2, Name2, TRUE);
+        Status = RtlUpcaseUnicodeString(&UpcaseName2, Name2, TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            RtlFreeUnicodeString(&UpcaseName1);
+            RtlRaiseStatus(Status);
+        }
+
         Name1 = &UpcaseName1;
         Name2 = &UpcaseName2;
 
