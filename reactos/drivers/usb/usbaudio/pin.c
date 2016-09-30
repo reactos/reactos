@@ -209,9 +209,6 @@ USBAudioSelectAudioStreamingInterface(
      /* now prepare interface urb */
      UsbBuildSelectInterfaceRequest(Urb, GET_SELECT_INTERFACE_REQUEST_SIZE(InterfaceDescriptor->bNumEndpoints), DeviceExtension->ConfigurationHandle, InterfaceDescriptor->bInterfaceNumber, InterfaceDescriptor->bAlternateSetting);
 
-     /* copy interface information */
-     RtlCopyMemory(&Urb->UrbSelectInterface.Interface, DeviceExtension->InterfaceInfo, DeviceExtension->InterfaceInfo->Length);
-
      /* now select the interface */
      Status = SubmitUrbSync(DeviceExtension->LowerDevice, Urb);
 
@@ -220,8 +217,23 @@ USBAudioSelectAudioStreamingInterface(
      /* did it succeeed */
      if (NT_SUCCESS(Status))
      {
-         /* update configuration info */
-         ASSERT(Urb->UrbSelectInterface.Interface.Length == DeviceExtension->InterfaceInfo->Length);
+         /* free old interface info */
+         if (DeviceExtension->InterfaceInfo)
+         {
+             /* free old info */
+             FreeFunction(DeviceExtension->InterfaceInfo);
+         }
+
+         /* alloc interface info */
+         DeviceExtension->InterfaceInfo = AllocFunction(Urb->UrbSelectInterface.Interface.Length);
+         if (DeviceExtension->InterfaceInfo == NULL)
+         {
+             /* no memory */
+             FreeFunction(Urb);
+             return STATUS_INSUFFICIENT_RESOURCES;
+         }
+
+         /* copy interface info */
          RtlCopyMemory(DeviceExtension->InterfaceInfo, &Urb->UrbSelectInterface.Interface, Urb->UrbSelectInterface.Interface.Length);
          PinContext->InterfaceDescriptor = InterfaceDescriptor;
      }
@@ -254,7 +266,7 @@ InitCapturePin(
 
     /* get pin context */
     PinContext = Pin->Context;
-	DbgBreakPoint();
+
     MaximumPacketSize = GetMaxPacketSizeForInterface(PinContext->DeviceExtension->ConfigurationDescriptor, PinContext->InterfaceDescriptor, Pin->DataFlow);
 
     /* calculate buffer size 8 irps * 10 iso packets * max packet size */
@@ -286,6 +298,7 @@ InitCapturePin(
         /* add to object bag*/
         KsAddItemToObjectBag(Pin->Bag, Irp, IoFreeIrp);
 
+        /* FIXME select correct pipe handle */
         Status = UsbAudioAllocCaptureUrbIso(PinContext->DeviceExtension->InterfaceInfo->Pipes[0].PipeHandle, 
                                             MaximumPacketSize,
                                             &PinContext->Buffer[MaximumPacketSize * 10 * Index], 
