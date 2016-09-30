@@ -263,8 +263,7 @@ mswBufferAppendBlob_Hostent(_Inout_ PMSW_BUFFER mswBuf,
     /* addr_list */
     RtlZeroMemory(lst, sizeof(lst));
 
-    if (ip4addr != 0)
-        lst[0] = (void*)&ip4addr;
+    lst[0] = (void*)&ip4addr;
 
     phe->h_addr_list = (char**)(mswBufferEndPtr(mswBuf) - bytesOfs);
 
