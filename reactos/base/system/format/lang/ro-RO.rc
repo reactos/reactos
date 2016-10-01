@@ -40,7 +40,7 @@ BEGIN
     STRING_FILESYSTEM "Tipul sistemului de fișiere este «%s».\n"
     STRING_LABEL_NAME_EDIT "Introduceți eticheta curentă a volumului pentru unitatea %C: "
     STRING_ERROR_LABEL "Ați introdus o etichetă eronată pentru volumul acestei unități.\n"
-    STRING_YN_FORMAT "\nATENȚIE, TOATE DATELE DE PE DISCUL FIX %C: SE VOR PIERDE!\nContinuați formatarea? (D|N) "
+    STRING_YN_FORMAT "\nATENȚIE, TOATE DATELE DE PE DISCUL FIX %C: SE VOR PIERDE!\nContinuați formatarea (D|N)? "
     STRING_YES_NO_FAQ "DN"
     STRING_VERIFYING "Verificare"
     STRING_FAST_FMT "FormatareRapidă"

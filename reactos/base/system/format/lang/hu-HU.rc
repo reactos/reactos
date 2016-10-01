@@ -34,7 +34,7 @@ BEGIN
     STRING_LABEL_NAME_EDIT "Adja meg a címkét az alábbi meghajtóhoz: %C: "
     STRING_ERROR_LABEL "Érvénytelen címkét adott meg a meghajtóhoz.\n"
     STRING_YN_FORMAT "\nFIGYELMEZTETÉS: A NEM CSERÉLHETÕ LEMEZMEGHAJTÓN (%C:) MINDEN ADAT EL FOG VESZNI.\n\
-                        \nFolytatja a formázást? (I/N)? "
+                        \nFolytatja a formázást (I/N)? "
     STRING_YES_NO_FAQ "IN"
     STRING_VERIFYING "Ellenõrzés"
     STRING_FAST_FMT "Gyorsformázás"
