@@ -579,13 +579,13 @@ FindRemoveEventMsg(PTHREADINFO pti, DWORD Event, DWORD EventLast)
 
       if (Message->dwQEvent == EventLast)
       {
-         ERR("Event D/SAW: Last Activate/Deactivate %d\n", EventLast);
+         //ERR("Event D/SAW: Last Activate/Deactivate %d\n", EventLast);
          return Ret;
       }
 
       if (Message->dwQEvent == Event)
       {
-         ERR("Event D/SAW: Found one in the Post Msg Queue! Activate/Deactivate %d\n", Event);
+         //ERR("Event D/SAW: Found one in the Post Msg Queue! Activate/Deactivate %d\n", Event);
          ClearMsgBitsMask(pti, Message->QS_Flags);
          MsqDestroyMessage(Message);
          Ret = TRUE;
