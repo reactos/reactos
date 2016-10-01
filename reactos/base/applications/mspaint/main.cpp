@@ -93,7 +93,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     MSG messages;            /* Here messages to the application are saved */
 
     HMENU menu;
-    HANDLE haccel;
+    HACCEL haccel;
 
     TCHAR sfnFilename[1000];
     TCHAR sfnFiletitle[256];
@@ -303,7 +303,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     /* Run the message loop. It will run until GetMessage() returns 0 */
     while (GetMessage(&messages, NULL, 0, 0))
     {
-        TranslateAccelerator(hwnd, (HACCEL) haccel, &messages);
+        TranslateAccelerator(hwnd, haccel, &messages);
 
         /* Translate virtual-key messages into character messages */
         TranslateMessage(&messages);

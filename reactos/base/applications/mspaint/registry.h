@@ -30,9 +30,9 @@ public:
     CString strFile3;
     CString strFile4;
 
-    static void SetWallpaper(TCHAR *szFileName, DWORD dwStyle, DWORD dwTile);
+    static void SetWallpaper(LPCTSTR szFileName, DWORD dwStyle, DWORD dwTile);
 
     void Load();
     void Store();
-    void SetMostRecentFile(LPCTSTR pszPathName);
+    void SetMostRecentFile(LPCTSTR szPathName);
 };
