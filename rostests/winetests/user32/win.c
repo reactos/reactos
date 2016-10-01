@@ -9551,10 +9551,7 @@ START_TEST(win)
     test_smresult();
     test_GetMessagePos();
 
-    if (!winetest_interactive)
-        skip("ROSTESTS-208: Skipping test_activateapp(hwndMain).\n");
-    else
-        test_activateapp(hwndMain);
+    test_activateapp(hwndMain);
     test_winproc_handles(argv[0]);
     test_deferwindowpos();
 
