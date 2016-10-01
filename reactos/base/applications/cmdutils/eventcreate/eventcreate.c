@@ -61,6 +61,9 @@
  *    for all IDs from 0 to 65535 included, as done by Powershell. If somebody
  *    wants to change these limits, one has to perform the following steps:
  *
+ *    0- Update the "/ID EventID" description in the help string "IDS_HELP"
+ *       inside the lang/xx-YY.rc resource files;
+ *
  *    1- Change in this file the two #defines EVENT_ID_MIN and EVENT_ID_MAX
  *       to other values of one's choice (called 'ID_min' and 'ID_max');
  *
@@ -766,7 +769,7 @@ DoParse(
     IN WCHAR* argv[],
     IN OUT POPTION Options,
     IN ULONG NumOptions,
-    IN PRINT_ERROR_FUNC PrintError OPTIONAL)
+    IN PRINT_ERROR_FUNC PrintErrorFunc OPTIONAL)
 {
     BOOL ExclusiveOptionPresent = FALSE;
     PWSTR OptionStr = NULL;
@@ -777,7 +780,7 @@ DoParse(
      * the 'Options' list) before retrieving a new option. This is done so that
      * we know it cannot index a valid option at that moment.
      */
-    UINT Option = NumOptions; 
+    UINT Option = NumOptions;
 
     /* Parse command line for options */
     for (i = 1; i < argc; ++i)
@@ -790,8 +793,8 @@ DoParse(
             /// A hack-fix is to repeat this check after the 'for'-loop.
             if (Option != NumOptions)
             {
-                if (PrintError)
-                    PrintError(ValueRequired, OptionStr);
+                if (PrintErrorFunc)
+                    PrintErrorFunc(ValueRequired, OptionStr);
                 return FALSE;
             }
 
@@ -813,8 +816,8 @@ DoParse(
 
             if (Option >= NumOptions)
             {
-                if (PrintError)
-                    PrintError(InvalidOption, OptionStr);
+                if (PrintErrorFunc)
+                    PrintErrorFunc(InvalidOption, OptionStr);
                 return FALSE;
             }
 
@@ -824,8 +827,8 @@ DoParse(
             if (Options[Option].MaxOfInstances != 0 &&
                 Options[Option].Instances >= Options[Option].MaxOfInstances)
             {
-                if (PrintError)
-                    PrintError(TooManySameOption, OptionStr, Options[Option].MaxOfInstances);
+                if (PrintErrorFunc)
+                    PrintErrorFunc(TooManySameOption, OptionStr, Options[Option].MaxOfInstances);
                 return FALSE;
             }
             ++Options[Option].Instances;
@@ -878,8 +881,8 @@ DoParse(
                 case TYPE_None:
                 {
                     /* There must be no associated value */
-                    if (PrintError)
-                        PrintError(ValueNotAllowed, OptionStr);
+                    if (PrintErrorFunc)
+                        PrintErrorFunc(ValueNotAllowed, OptionStr);
                     return FALSE;
                 }
 
@@ -897,8 +900,8 @@ DoParse(
                     if ((Options[Option].Flags & OPTION_NOT_EMPTY) && !**pStr)
                     {
                         /* Value cannot be empty */
-                        if (PrintError)
-                            PrintError(ValueIsEmpty, OptionStr);
+                        if (PrintErrorFunc)
+                            PrintErrorFunc(ValueIsEmpty, OptionStr);
                         return FALSE;
                     }
 
@@ -912,8 +915,8 @@ DoParse(
                         if (!AllowedValues)
                         {
                             /* The array is empty, no allowed values */
-                            if (PrintError)
-                                PrintError(InvalidValue, *pStr, OptionStr);
+                            if (PrintErrorFunc)
+                                PrintErrorFunc(InvalidValue, *pStr, OptionStr);
                             return FALSE;
                         }
 
@@ -939,8 +942,8 @@ DoParse(
                         if (!*Scan)
                         {
                             /* The value is not allowed */
-                            if (PrintError)
-                                PrintError(InvalidValue, *pStr, OptionStr);
+                            if (PrintErrorFunc)
+                                PrintErrorFunc(InvalidValue, *pStr, OptionStr);
                             return FALSE;
                         }
                     }
@@ -971,8 +974,8 @@ DoParse(
     /// HACK-fix for the check done inside the 'for'-loop.
     if (Option != NumOptions)
     {
-        if (PrintError)
-            PrintError(ValueRequired, OptionStr);
+        if (PrintErrorFunc)
+            PrintErrorFunc(ValueRequired, OptionStr);
         return FALSE;
     }
 
@@ -989,8 +992,8 @@ DoParse(
             if (!(Options[i].Flags & OPTION_EXCLUSIVE) && (Options[i].Instances != 0))
             {
                 /* A non-exclusive option is present on the command-line, fail */
-                if (PrintError)
-                    PrintError(InvalidSyntax);
+                if (PrintErrorFunc)
+                    PrintErrorFunc(InvalidSyntax);
                 return FALSE;
             }
         }
@@ -1005,8 +1008,8 @@ DoParse(
         /* Regular validity checks */
         if ((Options[i].Flags & OPTION_MANDATORY) && (Options[i].Instances == 0))
         {
-            if (PrintError)
-                PrintError(MandatoryOptionAbsent, Options[i].OptionName);
+            if (PrintErrorFunc)
+                PrintErrorFunc(MandatoryOptionAbsent, Options[i].OptionName);
             return FALSE;
         }
     }

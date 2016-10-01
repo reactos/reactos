@@ -39,7 +39,7 @@ Parameters:\n\
     /C  category          Specifies the event category (integer) for the event.\n\
 \n\
     /ID EventID           Specifies the event ID for the event. This must be\n\
-                          an integer between 1 and 1000.\n\
+                          an integer between 0 and 65535.\n\
 \n\
     /D  description       Specifies the description to use for the newly\n\
                           created event.\n\

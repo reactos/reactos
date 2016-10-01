@@ -41,7 +41,7 @@ Liste de paramètres :\n\
     /C  catégorie         Spécifie la catégorie de l'événement (nombre entier).\n\
 \n\
     /ID identificateur    Spécifie l'ID de l'événement. Un identificateur\n\
-                          peut être un nombre entier compris entre 1 et 1000.\n\
+                          peut être un nombre entier compris entre 0 et 65535.\n\
 \n\
     /D  description       Spécifie la description du nouvel événement.\n\
 \n\
