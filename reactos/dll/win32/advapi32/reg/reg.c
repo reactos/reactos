@@ -2637,7 +2637,7 @@ RegEnumKeyExW(
         {
             if (KeyInfo->Basic.NameLength > NameLength)
             {
-                ErrorCode = ERROR_BUFFER_OVERFLOW;
+                ErrorCode = ERROR_MORE_DATA;
             }
             else
             {
@@ -2653,7 +2653,7 @@ RegEnumKeyExW(
             if (KeyInfo->Node.NameLength > NameLength ||
                 KeyInfo->Node.ClassLength > ClassLength)
             {
-                ErrorCode = ERROR_BUFFER_OVERFLOW;
+                ErrorCode = ERROR_MORE_DATA;
             }
             else
             {
