@@ -812,6 +812,10 @@ QSI_DEF(SystemProcessInformation)
         {
             SpiCurrent = (PSYSTEM_PROCESS_INFORMATION) Current;
 
+            /* Lock the Process */
+            KeEnterCriticalRegion();
+            ExAcquirePushLockShared(&Process->ProcessLock);
+
             if ((Process->ProcessExiting) &&
                 (Process->Pcb.Header.SignalState) &&
                 !(Process->ActiveThreads) &&
@@ -821,6 +825,10 @@ QSI_DEF(SystemProcessInformation)
                         Process, Process->ImageFileName, Process->UniqueProcessId);
                 CurrentSize = 0;
                 ImageNameMaximumLength = 0;
+
+                /* Unlock the Process */
+                ExReleasePushLockShared(&Process->ProcessLock);
+                KeLeaveCriticalRegion();
                 goto Skip;
             }
 
@@ -954,6 +962,10 @@ QSI_DEF(SystemProcessInformation)
                 ExFreePoolWithTag(ProcessImageName, TAG_SEPA);
                 ProcessImageName = NULL;
             }
+
+            /* Unlock the Process */
+            ExReleasePushLockShared(&Process->ProcessLock);
+            KeLeaveCriticalRegion();
 
             /* Handle idle process entry */
 Skip:
