@@ -401,6 +401,7 @@ co_WinPosActivateOtherWindow(PWND Wnd)
 
    if (IntIsDesktopWindow(Wnd))
    {
+      //ERR("WinPosActivateOtherWindow Set Focus Msg Q No window!\n");
       IntSetFocusMessageQueue(NULL);
       return;
    }
@@ -437,6 +438,7 @@ co_WinPosActivateOtherWindow(PWND Wnd)
    WndTo = WndTo->spwndChild;
    if ( WndTo == NULL )
    {
+      //ERR("WinPosActivateOtherWindow No window!\n");
       return;
    }
    for (;;)
@@ -464,10 +466,10 @@ done:
       }
    }
    //ERR("WinPosActivateOtherWindow Set Active  0x%p\n",WndTo);
-   if (!co_IntSetActiveWindow(WndTo,FALSE,TRUE,FALSE))  /* Ok for WndTo to be NULL here */
+   if (!UserSetActiveWindow(WndTo))  /* Ok for WndTo to be NULL here */
    {
       //ERR("WPAOW SA 1\n");
-      co_IntSetActiveWindow(NULL,FALSE,TRUE,FALSE);
+      UserSetActiveWindow(NULL);
    }
    if (WndTo) UserDerefObjectCo(WndTo);
 }
@@ -1817,7 +1819,7 @@ co_WinPosSetWindowPos(
    RECTL CopyRect;
    PWND Ancestor;
    BOOL bPointerInWindow, PosChanged = FALSE;
-   //PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+   PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
    ASSERT_REFS_CO(Window);
 
@@ -2215,10 +2217,15 @@ co_WinPosSetWindowPos(
       else
       {
          //ERR("SetWindowPos Set FG Window!\n");
-         if (Window->state & WNDS_BEINGACTIVATED) // Inside SAW?
-            co_IntSetActiveWindow(Window, FALSE, TRUE, FALSE); // Fixes Api AttachThreadInput tests.
-         else
-            co_IntSetForegroundWindow(Window); // Fixes SW_HIDE issues. Wine win test_SetActiveWindow & test_SetForegroundWindow.
+         if ( pti->MessageQueue->spwndActive != Window ||
+              pti->MessageQueue != gpqForeground )
+         {
+            //ERR("WPSWP : set active window\n");
+            if (!(Window->state & WNDS_BEINGACTIVATED)) // Inside SAW?
+            {
+               co_IntSetForegroundWindow(Window); // Fixes SW_HIDE issues. Wine win test_SetActiveWindow & test_SetForegroundWindow.
+            }
+         }
       }
    }
 

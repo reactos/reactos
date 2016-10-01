@@ -613,7 +613,7 @@ IntCallWndProcRet ( PWND Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPar
 static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPARAM lparam )
 {
     LRESULT lRes;
-    USER_REFERENCE_ENTRY Ref;
+//    USER_REFERENCE_ENTRY Ref;
 //    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
     if (!pWnd ||
@@ -641,14 +641,6 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
           ExFreePoolWithTag(winpos, USERTAG_SWP);
           return lRes;
        }
-       case WM_ASYNC_SETACTIVEWINDOW:
-       {
-          PWND Window = (PWND)wparam;
-          if (wparam) UserRefObjectCo(Window, &Ref);
-          lRes = (LRESULT)co_IntSetActiveWindow(Window,(BOOL)lparam,TRUE,TRUE);
-          if (wparam) UserDerefObjectCo(Window);
-          return lRes;
-       }
        case WM_ASYNC_DESTROYWINDOW:
        {
           ERR("WM_ASYNC_DESTROYWINDOW\n");
@@ -661,16 +653,29 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
     return 0;
 }
 
-static LRESULT handle_internal_events( PTHREADINFO pti, PWND pWnd, LONG_PTR ExtraInfo, PMSG pMsg)
+static LRESULT handle_internal_events( PTHREADINFO pti, PWND pWnd, DWORD dwQEvent, LONG_PTR ExtraInfo, PMSG pMsg)
 {
     LRESULT Result = 0;
 
-    switch(pMsg->lParam)
+    switch(dwQEvent)
     {
        case POSTEVENT_NWE:
        {
           co_EVENT_CallEvents( pMsg->message, pMsg->hwnd, pMsg->wParam, ExtraInfo);
        }
+       break;
+       case POSTEVENT_SAW:
+       {
+          //ERR("HIE : SAW : pti 0x%p hWnd 0x%p\n",pti,pMsg->hwnd);
+          IntActivateWindow((PWND)pMsg->wParam, pti, (HANDLE)pMsg->lParam, (DWORD)ExtraInfo);
+       }
+       break;
+       case POSTEVENT_DAW:
+       {
+          //ERR("HIE : DAW : pti 0x%p tid 0x%p hWndPrev 0x%p\n",pti,ExtraInfo,pMsg->hwnd);
+          IntDeactivateWindow(pti, (HANDLE)ExtraInfo);
+       }
+       break;
     }
     return Result;
 }
@@ -873,6 +878,7 @@ co_IntPeekMessage( PMSG Msg,
                             MsgFilterMax,
                             ProcessMask,
                             ExtraInfo,
+                            0,
                             Msg ))
         {
             return TRUE;
@@ -914,6 +920,7 @@ co_IntPeekMessage( PMSG Msg,
         {
            LONG_PTR eExtraInfo;
            MSG eMsg;
+           DWORD dwQEvent;
            if (MsqPeekMessage( pti,
                                TRUE,
                                Window,
@@ -921,9 +928,10 @@ co_IntPeekMessage( PMSG Msg,
                                0,
                                QS_EVENT,
                               &eExtraInfo,
+                              &dwQEvent,
                               &eMsg ))
            {
-              handle_internal_events( pti, Window, eExtraInfo, &eMsg);
+              handle_internal_events( pti, Window, dwQEvent, eExtraInfo, &eMsg);
               continue;
            }
         }

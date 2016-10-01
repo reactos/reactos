@@ -120,7 +120,10 @@ enum internal_event_message
     WM_ASYNC_DESTROYWINDOW
 };
 
+#define POSTEVENT_DAW 4
+#define POSTEVENT_SAW 5
 #define POSTEVENT_NWE 14
+#define POSTEVENT_NONE 0xFFFF
 
 extern LIST_ENTRY usmList;
 
@@ -141,6 +144,7 @@ MsqPeekMessage(IN PTHREADINFO pti,
 	              IN UINT MsgFilterHigh,
 	              IN UINT QSflags,
 	              OUT LONG_PTR *ExtraInfo,
+	              OUT DWORD *dwQEvent,
 	              OUT PMSG Message);
 BOOL APIENTRY
 co_MsqPeekHardwareMessage(IN PTHREADINFO pti,
@@ -261,7 +265,7 @@ WPARAM FASTCALL MsqGetDownKeyState(PUSER_MESSAGE_QUEUE);
 BOOL FASTCALL IsThreadSuspended(PTHREADINFO);
 PUSER_SENT_MESSAGE FASTCALL AllocateUserMessage(BOOL);
 VOID FASTCALL FreeUserMessage(PUSER_SENT_MESSAGE);
-
+VOID FASTCALL MsqDestroyMessage(PUSER_MESSAGE);
 
 int UserShowCursor(BOOL bShow);
 PCURICON_OBJECT

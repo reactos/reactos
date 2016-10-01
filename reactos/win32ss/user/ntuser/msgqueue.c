@@ -2115,6 +2115,7 @@ MsqPeekMessage(IN PTHREADINFO pti,
                   IN UINT MsgFilterHigh,
                   IN UINT QSflags,
                   OUT LONG_PTR *ExtraInfo,
+                  OUT DWORD *dwQEvent,
                   OUT PMSG Message)
 {
    PUSER_MESSAGE CurrentMessage;
@@ -2145,6 +2146,7 @@ MsqPeekMessage(IN PTHREADINFO pti,
          *Message   = CurrentMessage->Msg;
          *ExtraInfo = CurrentMessage->ExtraInfo;
          QS_Flags   = CurrentMessage->QS_Flags;
+         if (dwQEvent) *dwQEvent = CurrentMessage->dwQEvent;
 
          if (Remove)
          {
