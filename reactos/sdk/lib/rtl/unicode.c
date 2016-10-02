@@ -1367,7 +1367,7 @@ RtlIsTextUnicode(CONST VOID* buf, INT len, INT* pf)
             else
                 weight = 1;
 
-            if (flags & IS_TEXT_UNICODE_DBCS_LEADBYTE)
+            if (pf && (*pf & IS_TEXT_UNICODE_DBCS_LEADBYTE))
                 out_flags |= IS_TEXT_UNICODE_DBCS_LEADBYTE;
         }
     }
