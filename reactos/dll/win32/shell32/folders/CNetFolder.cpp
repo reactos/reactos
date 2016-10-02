@@ -39,6 +39,8 @@ LPITEMIDLIST ILCreateFromNetworkPlaceW(LPCWSTR lpNetworkPlace)
     wcscpy((WCHAR*)&pidl->mkid.abID[0], lpNetworkPlace);
     *(WORD*)((char*)pidl + cbData) = 0;
 
+    WNetAddConnectionW(lpNetworkPlace, NULL, NULL);
+
     return pidl;
 }
 #endif
