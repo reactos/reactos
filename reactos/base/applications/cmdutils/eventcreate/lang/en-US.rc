@@ -60,7 +60,7 @@ Parameters:\n\
     IDS_LOG_NOT_FOUND "The log '%s' does not exist. Cannot create the event.\n"
     IDS_SOURCE_NOCREATE "The new source cannot be created because the log name is not specified.\nPlease use the /L switch to specify the log name.\n"
     IDS_SOURCE_EXISTS "The source already exists in the log '%s' and cannot be duplicated.\n"
-    IDS_SOURCE_NOT_CUSTOM "Le paramètre Source est utilisé pour identifier les scripts/applications\npersonnalisées (pas les applications installées).\n"
+    IDS_SOURCE_NOT_CUSTOM "The Source parameter is used to identify the custom scripts/applications\n(not the installed applications).\n"
 
     IDS_SUCCESS_1   "Operation successful: an event of type '%s' has been created in the log '%s'.\n"
     IDS_SUCCESS_2   "Operation successful: an event of type '%s' has been created with the source '%s'.\n"

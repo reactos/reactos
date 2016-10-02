@@ -25,12 +25,12 @@ Değişkenler:\n\
 \n\
     /L  kayıt adı         Oluşturulacak olayın kayıt adını belirtir.\n\
                           Geçerli adlar şunlardır:\n\
-                          Uygulama, Dizge, Güvenlik\n\
+                          Application, System, Security\n\
                           (İkincisi yalnızca DİZGE hesâbına ayrılmıştır.)\n\
 \n\
     /SO kaynak            Olay için kullanılacak kaynak adını belirtir.\n\
                           (Belirtilmezse ön tanımlı kaynak adı\n\
-                          ""eventcreate"" olacaktır.)\n\
+                          'eventcreate' olacaktır.)\n\
                           Geçerli bir kaynak, rastgele bir dizgi olabilir ve olayı\n\
                           oluşturan uygulamayı veyâ bileşeni belirtmelidir.\n\
 \n\
@@ -62,7 +62,7 @@ Değişkenler:\n\
     IDS_LOG_NOT_FOUND """%s"" kaydı yok. Olay oluşturulamıyor.\n"
     IDS_SOURCE_NOCREATE "Kayıt adı belirtilmediğinden yeni kaynak oluşturulamıyor.\nKayıt adını belirtmek için lütfen /L seçeneğini kullanınız.\n"
     IDS_SOURCE_EXISTS "Kaynak ""%s"" kaydında önceden var ve çoğaltılamaz.\n"
-    IDS_SOURCE_NOT_CUSTOM "Le paramètre Source est utilisé pour identifier les scripts/applications\npersonnalisées (pas les applications installées).\n"
+    IDS_SOURCE_NOT_CUSTOM "The Source parameter is used to identify the custom scripts/applications\n(not the installed applications).\n"
 
     IDS_SUCCESS_1   "İşlem başarılı: ""%s"" türünde bir olay ""%s"" kaydında oluşturuldu.\n"
     IDS_SUCCESS_2   "İşlem başarılı: ""%s"" türünde bir olay ""%s"" kaynağıyla oluşturuldu.\n"
