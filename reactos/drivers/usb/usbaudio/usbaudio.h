@@ -122,6 +122,8 @@ typedef struct
     PDEVICE_EXTENSION DeviceExtension;                           /* device extension */
     PDEVICE_OBJECT LowerDevice;                                  /* lower device*/
     LIST_ENTRY IrpListHead;                                      /* irp list*/
+    LIST_ENTRY DoneIrpListHead;                                  /* irp done list head */
+    KSPIN_LOCK IrpListLock;                                      /* irp list lock*/
     PUCHAR Buffer;                                               /* iso buffer*/
     ULONG BufferSize;                                            /* iso buffer size */
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;               /* interface descriptor */
