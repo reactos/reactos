@@ -83,6 +83,8 @@ static __inline int SHELL32_GUIDToStringW (REFGUID guid, LPWSTR str)
 void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags);
 BOOL SHELL_FS_HideExtension(LPWSTR pwszPath);
 
+void AddClassKeyToArray(const WCHAR * szClass, HKEY* array, UINT* cKeys);
+
 #ifdef __cplusplus
 
 HRESULT inline SHSetStrRet(LPSTRRET pStrRet, DWORD resId)

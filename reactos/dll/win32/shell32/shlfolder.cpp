@@ -462,6 +462,20 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
     return MAKE_COMPARE_HRESULT(ret);
 }
 
+void AddClassKeyToArray(const WCHAR * szClass, HKEY* array, UINT* cKeys)
+{
+    if (*cKeys >= 16)
+        return;
+
+    HKEY hkey;
+    LSTATUS result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ | KEY_QUERY_VALUE, &hkey);
+    if (result != ERROR_SUCCESS)
+        return;
+
+    array[*cKeys] = hkey;
+    *cKeys += 1;
+}
+
 /***********************************************************************
  *  SHCreateLinks
  *
