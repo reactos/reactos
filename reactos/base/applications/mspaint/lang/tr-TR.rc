@@ -17,19 +17,19 @@ BEGIN
         MENUITEM "&Sakla\tDenetim+S", IDM_FILESAVE
         MENUITEM "Ay&rı Sakla...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM "Tarayıcıdan ya da Kameradan...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
         MENUITEM "Sayfa Görünümü", IDM_FILEPAGEVIEW
         MENUITEM "Sayfa Ayarla...", IDM_FILEPAGESETUP
         MENUITEM "Ya&zdır...\tDenetim+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
-        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM "Gönder...", IDM_FILESEND
         MENUITEM SEPARATOR
         MENUITEM "&Döşeyerek Duvar Kağıdı Yap", IDM_FILEASWALLPAPERPLANE
         MENUITEM "&Ortalayarak Duvar Kağıdı Yap", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "&Uzatarak Duvar Kağıdı Yap", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM "En Son Kullanılan Kütük", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış\tSeçenek+F4", IDM_FILEEXIT
     END
@@ -217,7 +217,7 @@ BEGIN
     IDS_TOOLTIP15 "Söbek"
     IDS_TOOLTIP16 "Yuvarlatılmış Dikdörtgen"
     IDS_ALLFILES "Tüm Kütükler"
-    IDS_ALLPICTUREFILES "All Picture Files"
+    IDS_ALLPICTUREFILES "Tüm Resim Kütükleri"
     IDS_FILESIZE "%d çoklu"
     IDS_PRINTRES "Tüm metrekarelerde %d*%d nokta"
     IDS_INTNUMBERS "Lütfen yalnızca tam sayı giriniz."

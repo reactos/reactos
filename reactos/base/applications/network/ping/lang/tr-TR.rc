@@ -42,7 +42,7 @@ Seçenekler:\n\
     IDS_PINGING_ADDRESS "\nPing yapılıyor: %1 %0"
     IDS_PINGING_HOSTNAME "\nPing yapılıyor: %1 [%2] %0"
     IDS_SOURCE_ADDRESS "%1!s!'den %0"
-    IDS_PING_SIZE " %1!d! bayt veriyle:\n\n"
+    IDS_PING_SIZE " %1!d! çoklu veriyle:\n\n"
     IDS_REPLY_FROM "%1 varışından yanıt: %0"
     IDS_REPLY_BYTES "çoklu=%1!d! %0"
     IDS_REPLY_TIME_MS "süre=%1!d!ms %0"
@@ -62,5 +62,5 @@ Seçenekler:\n\
     IDS_APPROXIMATE_RTT "Mili sâniye olarak yaklaşık gidiş geliş süreleri:\n\
     En Az = %1!u!ms, En Çok = %2!u!ms, Ortalama = %3!u!ms\n"
 
-    IDS_WINSOCK_FAIL "Failed to initialize WinSock: %1!d!\n"
+    IDS_WINSOCK_FAIL "WinSock'u başlatma başarısız oldu: %1!d!\n"
 END
