@@ -4196,6 +4196,28 @@ KsStreamPointerUnlock(
   _In_ PKSSTREAM_POINTER StreamPointer,
   _In_ BOOLEAN Eject);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsStreamPointerAdvanceOffsets(
+  _In_ PKSSTREAM_POINTER StreamPointer,
+  _In_ ULONG             InUsed,
+  _In_ ULONG             OutUsed,
+  _In_ BOOLEAN           Eject);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+VOID
+NTAPI
+KsStreamPointerAdvanceOffsetsAndUnlock(
+	_In_ PKSSTREAM_POINTER StreamPointer,
+	_In_ ULONG             InUsed,
+	_In_ ULONG             OutUsed,
+	_In_ BOOLEAN           Eject
+	);
+
+
 _IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
