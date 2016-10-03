@@ -2419,6 +2419,7 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
     BOOLEAN FileLock = FALSE, KernelCall = FALSE;
     KIRQL OldIrql;
     PFILE_OBJECT File;
+    BOOLEAN UserRefIncremented = FALSE;
     PVOID PreviousSectionPointer;
 
     /* Make the same sanity checks that the Nt interface should've validated */
@@ -2516,6 +2517,7 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
 
         /* Write down that this CA is being created, and set it */
         ControlArea->u.Flags.BeingCreated = TRUE;
+        ASSERT((AllocationAttributes & SEC_IMAGE) == 0);
         PreviousSectionPointer = File->SectionObjectPointer;
         File->SectionObjectPointer->DataSectionObject = ControlArea;
 
@@ -2535,8 +2537,47 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
                                      SectionPageProtection,
                                      AllocationAttributes,
                                      KernelCall);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Lock the PFN database while we play with the section pointers */
+            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+            /* Reset the waiting-for-deletion event */
+            ASSERT(ControlArea->WaitingForDeletion == NULL);
+            ControlArea->WaitingForDeletion = NULL;
+
+            /* Set the file pointer NULL flag */
+            ASSERT(ControlArea->u.Flags.FilePointerNull == 0);
+            ControlArea->u.Flags.FilePointerNull = TRUE;
+
+            /* Delete the data section object */
+            ASSERT((AllocationAttributes & SEC_IMAGE) == 0);
+            File->SectionObjectPointer->DataSectionObject = NULL;
+
+            /* No longer being created */
+            ControlArea->u.Flags.BeingCreated = FALSE;
+
+            /* We can release the PFN lock now */
+            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
+            /* Check if we locked and set the IRP */
+            if (FileLock)
+            {
+                /* Undo */
+                IoSetTopLevelIrp(NULL);
+                //FsRtlReleaseFile(File);
+            }
+
+            /* Free the control area and de-ref the file object */
+            ExFreePool(ControlArea);
+            ObDereferenceObject(File);
+
+            /* All done */
+            return Status;
+        }
+
+        /* On success, we expect this */
         ASSERT(PreviousSectionPointer == File->SectionObjectPointer);
-        ASSERT(NT_SUCCESS(Status));
 
         /* Check if a maximum size was specified */
         if (!InputMaximumSize->QuadPart)
@@ -2568,7 +2609,9 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
         /* Set the size here, and read the control area */
         Section.SizeOfSection.QuadPart = NewSegment->SizeOfSegment;
         ControlArea = NewSegment->ControlArea;
-        ASSERT(ControlArea->u.Flags.BeingCreated == 1);
+
+        /* MiCreatePagingFileMap increments user references */
+        UserRefIncremented = TRUE;
     }
 
     /* Did we already have a segment? */
@@ -2613,16 +2656,16 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
     /* Check if this is a user-mode read-write non-image file mapping */
     if (!(FileObject) &&
         (SectionPageProtection & (PAGE_READWRITE | PAGE_EXECUTE_READWRITE)) &&
-        (ControlArea->u.Flags.Image == 0) &&
-        (ControlArea->FilePointer != NULL))
+        !(ControlArea->u.Flags.Image) &&
+        (ControlArea->FilePointer))
     {
         /* Add a reference and set the flag */
-        Section.u.Flags.UserWritable = 1;
-        InterlockedIncrement((PLONG)&ControlArea->WritableUserReferences);
+        Section.u.Flags.UserWritable = TRUE;
+        InterlockedIncrement((volatile LONG*)&ControlArea->WritableUserReferences);
     }
 
     /* Check for image mappings or page file mappings */
-    if ((ControlArea->u.Flags.Image == 1) || !(ControlArea->FilePointer))
+    if ((ControlArea->u.Flags.Image) || !(ControlArea->FilePointer))
     {
         /* Charge the segment size, and allocate a subsection */
         PagedCharge = sizeof(SECTION) + NewSegment->TotalNumberOfPtes * sizeof(MMPTE);
@@ -2657,7 +2700,39 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
                             PagedCharge,
                             NonPagedCharge,
                             (PVOID*)&NewSection);
-    ASSERT(NT_SUCCESS(Status));
+    if (!NT_SUCCESS(Status))
+    {
+        /* Check if this is a user-mode read-write non-image file mapping */
+        if (!(FileObject) &&
+            (SectionPageProtection & (PAGE_READWRITE | PAGE_EXECUTE_READWRITE)) &&
+            !(ControlArea->u.Flags.Image) &&
+            (ControlArea->FilePointer))
+        {
+            /* Remove a reference and check the flag */
+            ASSERT(Section.u.Flags.UserWritable == 1);
+            InterlockedDecrement((volatile LONG*)&ControlArea->WritableUserReferences);
+        }
+
+        /* Check if a user reference was added */
+        if (UserRefIncremented)
+        {
+            /* Acquire the PFN lock while we change counters */
+            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+            /* Decrement the accounting counters */
+            ControlArea->NumberOfSectionReferences--;
+            ASSERT((LONG)ControlArea->NumberOfUserReferences > 0);
+            ControlArea->NumberOfUserReferences--;
+
+            /* Check if we should destroy the CA and release the lock */
+            MiCheckControlArea(ControlArea, OldIrql);
+        }
+
+        /* Return the failure code */
+        return Status;
+    }
+
+    /* NOTE: Past this point, all failures will be handled by Ob upon ref->0 */
 
     /* Now copy the local section object from the stack into this new object */
     RtlCopyMemory(NewSection, &Section, sizeof(SECTION));
