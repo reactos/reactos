@@ -245,13 +245,20 @@ ShowLastWin32Error(VOID)
     LPWSTR lpMessageBuffer;
 
     dwError = GetLastError();
-    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                   NULL,
-                   dwError,
-                   0,
-                   (LPWSTR)&lpMessageBuffer,
-                   0,
-                   NULL);
+    if (dwError == ERROR_SUCCESS)
+        return;
+
+    if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                        FORMAT_MESSAGE_FROM_SYSTEM |
+                        FORMAT_MESSAGE_IGNORE_INSERTS,
+                        NULL,
+                        dwError,
+                        LANG_USER_DEFAULT,
+                        (LPWSTR)&lpMessageBuffer,
+                        0, NULL))
+    {
+        return;
+    }
 
     MessageBoxW(hwndMainWindow, lpMessageBuffer, szTitle, MB_OK | MB_ICONERROR);
     LocalFree(lpMessageBuffer);

@@ -35,23 +35,23 @@ VOID ShowLastWin32Error(HWND hWndOwner)
     DWORD LastError;
 
     LastError = GetLastError();
+    if (LastError == ERROR_SUCCESS)
+        return;
 
-    if ((LastError == 0) ||
-         !FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                        FORMAT_MESSAGE_FROM_SYSTEM,
-                        NULL,
-                        LastError,
-                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                        (LPTSTR)&lpMsg,
-                        0,
-                        NULL))
+    if (!FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                       FORMAT_MESSAGE_FROM_SYSTEM |
+                       FORMAT_MESSAGE_IGNORE_INSERTS,
+                       NULL,
+                       LastError,
+                       LANG_USER_DEFAULT,
+                       (LPTSTR)&lpMsg,
+                       0, NULL))
     {
         return;
     }
 
     MessageBox(hWndOwner, lpMsg, NULL, MB_OK | MB_ICONERROR);
-
-    LocalFree((LPVOID)lpMsg);
+    LocalFree(lpMsg);
 }
 
 
