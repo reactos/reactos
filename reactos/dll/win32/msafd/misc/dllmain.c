@@ -890,6 +890,9 @@ WSPSelect(IN int nfds,
 
     if(!NT_SUCCESS(Status))
     {
+        if (lpErrno)
+            *lpErrno = WSAEFAULT;
+
         ERR("NtCreateEvent failed, 0x%08x\n", Status);
         return SOCKET_ERROR;
     }
@@ -2055,6 +2058,24 @@ WSPIoctl(IN  SOCKET Handle,
         case SIO_GET_EXTENSION_FUNCTION_POINTER:
             *lpErrno = WSAEINVAL;
             return SOCKET_ERROR;
+
+        case SIO_ADDRESS_LIST_QUERY:
+            if (cbOutBuffer < (sizeof(SOCKET_ADDRESS_LIST) + sizeof(Socket->WSLocalAddress)) || IS_INTRESOURCE(lpvOutBuffer))
+            {
+                *lpErrno = WSAEINVAL;
+                return SOCKET_ERROR;
+            }
+
+            *lpcbBytesReturned = sizeof(SOCKET_ADDRESS_LIST) +
+                                 sizeof(Socket->WSLocalAddress);
+
+            ((SOCKET_ADDRESS_LIST*)lpvOutBuffer)->iAddressCount = 1;
+            ((SOCKET_ADDRESS_LIST*)lpvOutBuffer)->Address[0].iSockaddrLength = sizeof(Socket->WSLocalAddress);
+            ((SOCKET_ADDRESS_LIST*)lpvOutBuffer)->Address[0].lpSockaddr = &Socket->WSLocalAddress;
+
+            *lpErrno = NO_ERROR;
+            return NO_ERROR;
+
         default:
 			*lpErrno = Socket->HelperData->WSHIoctl(Socket->HelperContext,
 													Handle,
