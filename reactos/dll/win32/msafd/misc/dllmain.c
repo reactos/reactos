@@ -347,6 +347,8 @@ TranslateNtStatusError(NTSTATUS Status)
           return NO_ERROR;
 
        case STATUS_FILE_CLOSED:
+         return WSAECONNRESET;
+
        case STATUS_END_OF_FILE:
           return WSAESHUTDOWN;
 
@@ -371,6 +373,7 @@ TranslateNtStatusError(NTSTATUS Status)
           return WSAEADDRNOTAVAIL;
 
        case STATUS_REMOTE_NOT_LISTENING:
+       case STATUS_REMOTE_DISCONNECT:
           return WSAECONNREFUSED;
 
        case STATUS_NETWORK_UNREACHABLE:
@@ -387,9 +390,6 @@ TranslateNtStatusError(NTSTATUS Status)
 
        case STATUS_LOCAL_DISCONNECT:
           return WSAECONNABORTED;
-
-       case STATUS_REMOTE_DISCONNECT:
-          return WSAECONNRESET;
 
        case STATUS_ACCESS_VIOLATION:
           return WSAEFAULT;
