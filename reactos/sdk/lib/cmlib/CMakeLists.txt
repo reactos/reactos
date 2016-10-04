@@ -26,5 +26,10 @@ else()
         -D__NO_CTYPE_INLINES
         -DCMLIB_HOST)
     add_library(cmlibhost ${SOURCE})
+
+    if(NOT MSVC)
+        add_target_compile_flags(cmlibhost "-fshort-wchar -Wno-multichar")
+    endif()
+
     target_link_libraries(cmlibhost unicode)
 endif()

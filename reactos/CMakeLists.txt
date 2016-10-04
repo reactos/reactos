@@ -94,8 +94,6 @@ if(NOT CMAKE_CROSSCOMPILING)
             add_definitions(/D_ALLOW_KEYWORD_MACROS)
         endif()
         add_definitions(/Dinline=__inline)
-    else()
-        add_compile_flags("-fshort-wchar -Wno-multichar")
     endif()
 
     include_directories(sdk/include/host)
