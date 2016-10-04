@@ -521,17 +521,18 @@ static int init_begin(adns_state *ads_r, adns_initflags flags, FILE *diagfile) {
 }
 
 static int init_finish(adns_state ads) {
-  struct in_addr ia;
   struct protoent *proto;
   int r;
-
+/* Don't add loopback on ReactOS it slows down queries to non existent server */
+#ifndef __REACTOS__
+  struct in_addr ia;
   if (!ads->nservers) {
     if (ads->diagfile && ads->iflags & adns_if_debug)
       fprintf(ads->diagfile,"adns: no nameservers, using localhost\n");
     ia.s_addr= htonl(INADDR_LOOPBACK);
     addserver(ads,ia);
   }
-
+#endif
   proto= getprotobyname("udp"); if (!proto) { r= ENOPROTOOPT; goto x_free; }
   ADNS_CLEAR_ERRNO;
   ads->udpsocket= socket(AF_INET,SOCK_DGRAM,proto->p_proto);

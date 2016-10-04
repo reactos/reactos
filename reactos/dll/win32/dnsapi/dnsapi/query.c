@@ -771,6 +771,12 @@ DnsQuery_W(LPCWSTR Name,
         }
 
         adns_error = adns_init(&astate, adns_if_noenv | adns_if_noerrprint | adns_if_noserverwarn, 0);
+        if (adns_error != adns_s_ok)
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
+            return DnsIntTranslateAdnsToDNS_STATUS(adns_error);
+        }
         for (pip = &(network_info->DnsServerList); pip; pip = pip->Next)
         {
             addr.s_addr = inet_addr(pip->IpAddress.String);
@@ -782,12 +788,6 @@ DnsQuery_W(LPCWSTR Name,
             adns_ccf_search(astate, "LOCALDOMAIN", -1, network_info->DomainName);
         }
         RtlFreeHeap(RtlGetProcessHeap(), 0, network_info);
-
-        if (adns_error != adns_s_ok)
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, AnsiName);
-            return DnsIntTranslateAdnsToDNS_STATUS(adns_error);
-        }
 
         if (Servers)
         {
