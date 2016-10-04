@@ -40,5 +40,5 @@ list(APPEND SOURCE
 add_executable(user32_apitest ${SOURCE})
 target_link_libraries(user32_apitest wine ${PSEH_LIB})
 set_module_type(user32_apitest win32cui)
-add_importlibs(user32_apitest gdi32 user32 msvcrt kernel32 ntdll)
+add_importlibs(user32_apitest advapi32 gdi32 user32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET user32_apitest DESTINATION reactos/bin FOR all)
