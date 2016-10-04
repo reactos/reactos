@@ -9287,7 +9287,6 @@ static void test_completion_port(void)
     CloseHandle(previous_port);
 }
 
-#if CORE_12000_IS_FIXED /* CORE-12000 */
 /* WSHIoctl is not supported by wshtcpip.dll and crashes. Test should be fixed also! */
 static void test_address_list_query(void)
 {
@@ -9351,7 +9350,6 @@ static void test_address_list_query(void)
     HeapFree(GetProcessHeap(), 0, address_list);
     closesocket(s);
 }
-#endif /* CORE-12000 */
 
 static DWORD WINAPI inet_ntoa_thread_proc(void *param)
 {
@@ -9810,9 +9808,7 @@ START_TEST( sock )
     test_WSAAsyncGetServByName();
 
     test_completion_port();
-#if CORE_12000_IS_FIXED /* FIXME: CORE-12000 */
     test_address_list_query();
-#endif
 
     /* this is an io heavy test, do it at the end so the kernel doesn't start dropping packets */
     test_send();
