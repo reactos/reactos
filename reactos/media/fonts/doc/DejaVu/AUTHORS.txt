@@ -21,7 +21,7 @@ James Cloos
 James Crippen
 John Karp
 Keenan Pepper
-Lars Naesbye Christensen
+Lars Næsbye Christensen
 Lior Halphon
 MaEr
 Mashrab Kuvatov
@@ -33,6 +33,7 @@ Misu Moldovan
 Nguyen Thai Ngoc Duy
 Nicolas Mailhot
 Norayr Chilingarian
+Olleg Samoylov
 Ognyan Kulev
 Ondrej Koala Vacha
 Peter Cernak
@@ -53,4 +54,4 @@ Vasek Stodulka
 Wesley Transue
 Yoshiki Ohshima
 
-$Id: AUTHORS 2593 2015-05-17 07:47:39Z ben_laenen $
+$Id$
