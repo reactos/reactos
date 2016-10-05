@@ -789,7 +789,7 @@ IntDispatchMessage(PMSG pMsg)
     {
         Window->state2 &= ~WNDS2_WMPAINTSENT;
         /* send a WM_ERASEBKGND if the non-client area is still invalid */
-        TRACE("Message WM_PAINT\n");
+        ERR("Message WM_PAINT\n");
         co_IntPaintWindows( Window, RDW_NOCHILDREN, FALSE );
     }
 
