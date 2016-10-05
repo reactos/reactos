@@ -874,12 +874,22 @@ GetNameInfoW(IN CONST SOCKADDR *pSockaddr,
 {
     DWORD AddressLength, AddrSize;
     PVOID Addr;
-    SOCKADDR_IN Address;
+    SOCKADDR_IN6 Address;
     INT ErrorCode = ERROR_SUCCESS;
 
+    DPRINT("GetNameInfoW: %p, %d, %p, %ld, %p, %ld, %d\n",
+           pSockaddr,
+           SockaddrLength,
+           pNodeBuffer,
+           NodeBufferSize,
+           pServiceBuffer,
+           ServiceBufferSize,
+           Flags);
+
     /* Check for valid socket */
-    if (!pSockaddr) return EAI_FAIL;
-    
+    if (!pSockaddr)
+        return WSAEFAULT;
+
     /* Check which family this is */
     if (pSockaddr->sa_family == AF_INET)
     {
@@ -902,8 +912,9 @@ GetNameInfoW(IN CONST SOCKADDR *pSockaddr,
     } 
 
     /* Check for valid socket adress length */
-    if ((DWORD)SockaddrLength < AddressLength) return EAI_FAIL;
-    
+    if ((DWORD)SockaddrLength < AddressLength)
+        return WSAEFAULT;
+
     /* Check if we have a node name */
     if (pNodeBuffer)
     {    
@@ -934,7 +945,16 @@ GetNameInfoW(IN CONST SOCKADDR *pSockaddr,
         RtlMoveMemory(&Address, pSockaddr, AddressLength);
 
         /* Get the numeric address */
-        Address.sin_port = 0;
+        if (pSockaddr->sa_family == AF_INET)
+        {
+            /* IPv4 */
+            ((PSOCKADDR_IN)&Address)->sin_port = 0;
+        }
+        else if (pSockaddr->sa_family == AF_INET6)
+        {
+            /* IPv6 */
+            ((PSOCKADDR_IN6)&Address)->sin6_port = 0;
+        }
         ErrorCode = WSAAddressToStringW((LPSOCKADDR)&Address,
                                         AddressLength,
                                         NULL,
