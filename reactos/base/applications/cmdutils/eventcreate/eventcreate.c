@@ -80,8 +80,9 @@
 
 #include <windef.h>
 #include <winbase.h>
-#include <winuser.h>
 #include <winreg.h>
+
+#include <conutils.h>
 
 #include <strsafe.h>
 
@@ -107,56 +108,15 @@
 #define APPLICATION_NAME    L"EventCreate"
 
 
-VOID PrintStringV(LPWSTR szStr, va_list args)
-{
-    WCHAR bufFormatted[RC_STRING_MAX_SIZE];
-    CHAR bufFormattedOem[RC_STRING_MAX_SIZE];
-
-    _vsnwprintf(bufFormatted, ARRAYSIZE(bufFormatted), szStr, args);
-
-    CharToOemW(bufFormatted, bufFormattedOem);
-    // puts(bufFormattedOem);
-    fputs(bufFormattedOem, stdout);
-}
-
-VOID PrintString(LPWSTR szStr, ...)
-{
-    va_list args;
-
-    va_start(args, szStr);
-    PrintStringV(szStr, args);
-    va_end(args);
-}
-
-VOID PrintResourceStringV(UINT uID, va_list args)
-{
-    WCHAR bufSrc[RC_STRING_MAX_SIZE];
-
-    LoadStringW(GetModuleHandleW(NULL), uID, bufSrc, ARRAYSIZE(bufSrc));
-    PrintStringV(bufSrc, args);
-}
-
-VOID PrintResourceString(UINT uID, ...)
-{
-    va_list args;
-
-    va_start(args, uID);
-    PrintResourceStringV(uID, args);
-    va_end(args);
-}
-
 VOID PrintError(DWORD dwError)
 {
-    LPWSTR lpMsgBuf = NULL;
-
     if (dwError == ERROR_SUCCESS)
         return;
 
-    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                   NULL, dwError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                   (LPWSTR)&lpMsgBuf, 0, NULL);
-    PrintString(L"%s\n", lpMsgBuf);
-    LocalFree(lpMsgBuf);
+    ConMsgPrintf(StdErr,
+                 FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                 NULL, dwError, LANG_USER_DEFAULT);
+    ConPrintf(StdErr, L"\n");
 }
 
 
@@ -594,7 +554,7 @@ Finalize:
     if (LogNameValid && !FoundLog)
     {
         /* We have specified a log but it does not exist! */
-        PrintResourceString(IDS_LOG_NOT_FOUND, EventLogName);
+        ConResPrintf(StdErr, IDS_LOG_NOT_FOUND, EventLogName);
         goto Quit;
     }
 
@@ -614,7 +574,7 @@ Finalize:
     if (/* LogSourceValid && */ FoundSource && SourceAlreadyExists)
     {
         /* The source is in another log than the specified one */
-        PrintResourceString(IDS_SOURCE_EXISTS, LogNameErr);
+        ConResPrintf(StdErr, IDS_SOURCE_EXISTS, LogNameErr);
         goto Quit;
     }
 
@@ -634,7 +594,7 @@ Finalize:
             else
             {
                 /* This is NOT a custom source, we must return an error! */
-                PrintResourceString(IDS_SOURCE_NOT_CUSTOM);
+                ConResPrintf(StdErr, IDS_SOURCE_NOT_CUSTOM);
                 goto Quit;
             }
         }
@@ -645,7 +605,7 @@ Finalize:
         if (!LogNameValid /* && !FoundLog */)
         {
             /* The log name is not specified, we cannot create the source */
-            PrintResourceString(IDS_SOURCE_NOCREATE);
+            ConResPrintf(StdErr, IDS_SOURCE_NOCREATE);
             goto Quit;
         }
         else // LogNameValid && FoundLog
@@ -667,8 +627,8 @@ Finalize:
             if (lRet != ERROR_SUCCESS)
             {
                 PrintError(lRet);
-                PrintString(L"Impossible to create the source `%s' for log `%s'!\n",
-                            EventLogSource, EventLogName);
+                ConPrintf(StdErr, L"Impossible to create the source `%s' for log `%s'!\n",
+                          EventLogSource, EventLogName);
                 goto Quit;
             }
 
@@ -1044,15 +1004,15 @@ PrintParserError(PARSER_ERROR Error, ...)
     if (Error < ARRAYSIZE(ErrorIDs))
     {
         va_start(args, Error);
-        PrintResourceStringV(ErrorIDs[Error], args);
+        ConResPrintfV(StdErr, ErrorIDs[Error], args);
         va_end(args);
 
         if (Error != Success)
-            PrintResourceString(IDS_USAGE);
+            ConResPrintf(StdErr, IDS_USAGE);
     }
     else
     {
-        PrintString(L"PARSER: Unknown error %d\n", Error);
+        ConPrintf(StdErr, L"PARSER: Unknown error %d\n", Error);
     }
 }
 
@@ -1143,6 +1103,9 @@ int wmain(int argc, WCHAR* argv[])
 #define OPT_PASSWD  (Options[3])
 #define OPT_EVTID   (Options[8])
 
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
+
     /* Parse command line for options */
     if (!DoParse(argc, argv, Options, ARRAYSIZE(Options), PrintParserError))
         return EXIT_FAILURE;
@@ -1158,7 +1121,7 @@ int wmain(int argc, WCHAR* argv[])
             return EXIT_FAILURE;
         }
 
-        PrintResourceString(IDS_HELP);
+        ConResPrintf(StdOut, IDS_HELP);
         return EXIT_SUCCESS;
     }
 
@@ -1166,19 +1129,19 @@ int wmain(int argc, WCHAR* argv[])
     {
         // TODO: Implement!
         if (szSystem)
-            PrintResourceString(IDS_SWITCH_UNIMPLEMENTED, OPT_SYSTEM.OptionStr);
+            ConResPrintf(StdOut, IDS_SWITCH_UNIMPLEMENTED, OPT_SYSTEM.OptionStr);
         if (szDomainUser)
-            PrintResourceString(IDS_SWITCH_UNIMPLEMENTED, OPT_USER.OptionStr);
+            ConResPrintf(StdOut, IDS_SWITCH_UNIMPLEMENTED, OPT_USER.OptionStr);
         if (szPassword)
-            PrintResourceString(IDS_SWITCH_UNIMPLEMENTED, OPT_PASSWD.OptionStr);
+            ConResPrintf(StdOut, IDS_SWITCH_UNIMPLEMENTED, OPT_PASSWD.OptionStr);
         return EXIT_FAILURE;
     }
 
     if (ulEventIdentifier < EVENT_ID_MIN || ulEventIdentifier > EVENT_ID_MAX)
     {
         /* Invalid event identifier */
-        PrintResourceString(IDS_BADSYNTAX_7, OPT_EVTID.OptionStr, EVENT_ID_MIN, EVENT_ID_MAX);
-        PrintResourceString(IDS_USAGE);
+        ConResPrintf(StdErr, IDS_BADSYNTAX_7, OPT_EVTID.OptionStr, EVENT_ID_MIN, EVENT_ID_MAX);
+        ConResPrintf(StdErr, IDS_USAGE);
         return EXIT_FAILURE;
     }
 
@@ -1275,18 +1238,18 @@ int wmain(int argc, WCHAR* argv[])
         if (!Success)
         {
             PrintError(GetLastError());
-            PrintString(L"Failed to report event!\n");
+            ConPrintf(StdErr, L"Failed to report event!\n");
         }
         else
         {
             /* Show success */
-            PrintString(L"\n");
+            ConPrintf(StdOut, L"\n");
             if (!szEventSource)
-                PrintResourceString(IDS_SUCCESS_1, szEventType, szLogName);
+                ConResPrintf(StdOut, IDS_SUCCESS_1, szEventType, szLogName);
             else if (!szLogName)
-                PrintResourceString(IDS_SUCCESS_2, szEventType, szEventSource);
+                ConResPrintf(StdOut, IDS_SUCCESS_2, szEventType, szEventSource);
             else
-                PrintResourceString(IDS_SUCCESS_3, szEventType, szLogName, szEventSource);
+                ConResPrintf(StdOut, IDS_SUCCESS_3, szEventType, szLogName, szEventSource);
         }
 
         HeapFree(GetProcessHeap(), 0, pUserToken);
@@ -1294,7 +1257,7 @@ int wmain(int argc, WCHAR* argv[])
     else
     {
         PrintError(GetLastError());
-        PrintString(L"GetUserToken() failed!\n");
+        ConPrintf(StdErr, L"GetUserToken() failed!\n");
     }
 
     /* Close the event log */
