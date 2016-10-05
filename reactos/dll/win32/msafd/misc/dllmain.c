@@ -1413,7 +1413,7 @@ WSPAccept(SOCKET Handle,
                        &ListenReceiveData->Address.Address[0].AddressType,
                        sizeof(*RemoteAddress));
         if( SocketAddressLength )
-            *SocketAddressLength = ListenReceiveData->Address.Address[0].AddressLength;
+            *SocketAddressLength = sizeof(*RemoteAddress);
     }
 
     NtClose( SockEvent );
