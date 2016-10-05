@@ -101,6 +101,13 @@ extern "C" {
 #endif
 #endif
 
+#ifndef _STDSTREAM_DEFINED
+#define _STDSTREAM_DEFINED
+#define stdin (&_iob[0])
+#define stdout (&_iob[1])
+#define stderr (&_iob[2])
+#endif /* !_STDSTREAM_DEFINED */
+
 #ifndef _FPOS_T_DEFINED
 #define _FPOS_T_DEFINED
 #undef _FPOSOFF
@@ -114,13 +121,6 @@ extern "C" {
 #endif
 
 #endif
-
-#ifndef _STDSTREAM_DEFINED
-#define _STDSTREAM_DEFINED
-#define stdin (&_iob[0])
-#define stdout (&_iob[1])
-#define stderr (&_iob[1])
-#endif /* !_STDSTREAM_DEFINED */
 
 #define _IOREAD 0x0001
 #define _IOWRT 0x0002

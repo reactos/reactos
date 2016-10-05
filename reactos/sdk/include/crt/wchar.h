@@ -60,7 +60,7 @@ extern "C" {
 #define _STDSTREAM_DEFINED
 #define stdin (&_iob[0])
 #define stdout (&_iob[1])
-#define stderr (&_iob[1])
+#define stderr (&_iob[2])
 #endif /* !_STDSTREAM_DEFINED */
 
 #ifndef _FSIZE_T_DEFINED
