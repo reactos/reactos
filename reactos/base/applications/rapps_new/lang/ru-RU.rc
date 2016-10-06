@@ -197,11 +197,11 @@ BEGIN
     IDS_APP_REG_REMOVE "Вы действительно хотите удалить данные об установленной программе из реестра?"
     IDS_INFORMATION "Информация"
     IDS_UNABLE_TO_DOWNLOAD "Не удалось скачать приложение! Не найден адрес!"
-	IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
+    IDS_UNABLE_TO_DOWNLOAD2 "Unable to download the package! Check Internet Connection!"
     IDS_UNABLE_TO_REMOVE "Не удалось удалить данные о программе из реестра!"
     IDS_CERT_DOES_NOT_MATCH "Ошибка проверки SSL сертификата."
     IDS_INTEG_CHECK_TITLE "Проверка целостности приложения..."
     IDS_INTEG_CHECK_FAIL "Приложение не прошло проверку целостности, возможно оно было повреждено или подменено. Запуск приложения не рекомендуется."
     IDS_INTERRUPTED_DOWNLOAD "Загрузка была прервана. Проверьте подключение к сети Интернет."
-    IDS_UNABLE_TO_WRITE "Не удалось записать данные на диск. Возможно диск переполнен."
+    IDS_UNABLE_TO_WRITE "Не удалось записать данные на диск. Возможно, недостаточно свободного места на диске."
 END
