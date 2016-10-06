@@ -20,7 +20,7 @@ ChooseFolder(HWND hwnd)
     BROWSEINFO bi;
     WCHAR szPath[MAX_PATH], szBuf[MAX_STR_LEN];
 
-    LoadStringW(hInst, IDS_CHOOSE_FOLDER_TEXT, szBuf, sizeof(szBuf) / sizeof(TCHAR));
+    LoadStringW(hInst, IDS_CHOOSE_FOLDER_TEXT, szBuf, _countof(szBuf));
 
     ZeroMemory(&bi, sizeof(bi));
     bi.hwndOwner = hwnd;
@@ -162,7 +162,7 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 
                         LoadStringW(hInst,
                                     IDS_CHOOSE_FOLDER_ERROR,
-                                    szMsgText, sizeof(szMsgText) / sizeof(WCHAR));
+                                    szMsgText, _countof(szMsgText));
 
                         if (MessageBoxW(hDlg, szMsgText, NULL, MB_YESNO) == IDYES)
                         {

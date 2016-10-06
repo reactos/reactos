@@ -28,7 +28,7 @@ ListViewGetlParam(INT Index)
         ItemIndex = Index;
     }
 
-    ZeroMemory(&Item, sizeof(LVITEM));
+    ZeroMemory(&Item, sizeof(Item));
 
     Item.mask = LVIF_PARAM;
     Item.iItem = ItemIndex;
@@ -43,7 +43,7 @@ ListViewAddColumn(INT Index, LPWSTR lpText, INT Width, INT Format)
 {
     LV_COLUMN Column;
 
-    ZeroMemory(&Column, sizeof(LV_COLUMN));
+    ZeroMemory(&Column, sizeof(Column));
 
     Column.mask     = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
     Column.iSubItem = Index;
@@ -59,7 +59,7 @@ ListViewAddItem(INT ItemIndex, INT IconIndex, LPWSTR lpText, LPARAM lParam)
 {
     LV_ITEMW Item;
 
-    ZeroMemory(&Item, sizeof(LV_ITEM));
+    ZeroMemory(&Item, sizeof(Item));
 
     Item.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
     Item.pszText    = lpText;
@@ -82,11 +82,11 @@ ListViewCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 
     IndexInfo.lParam = lParam1;
     Index = ListView_FindItem(hListView, -1, &IndexInfo);
-    ListView_GetItemText(hListView, Index, (INT)lParamSort, Item1, sizeof(Item1) / sizeof(WCHAR));
+    ListView_GetItemText(hListView, Index, (INT)lParamSort, Item1, _countof(Item1));
 
     IndexInfo.lParam = lParam2;
     Index = ListView_FindItem(hListView, -1, &IndexInfo);
-    ListView_GetItemText(hListView, Index, (INT)lParamSort, Item2, sizeof(Item2) / sizeof(WCHAR));
+    ListView_GetItemText(hListView, Index, (INT)lParamSort, Item2, _countof(Item2));
 
     if (bAscending)
         return wcscmp(Item2, Item1);

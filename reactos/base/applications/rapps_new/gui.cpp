@@ -129,12 +129,12 @@ public:
             { 6, ID_EXIT, TBSTATE_ENABLED, BTNS_BUTTON | BTNS_AUTOSIZE, { 0 }, 0, 0 }
         };
 
-        INT NumButtons = sizeof(Buttons) / sizeof(Buttons[0]);
+        INT NumButtons = _countof(Buttons);
         HIMAGELIST hImageList;
 
-        LoadStringW(hInst, IDS_INSTALL, szInstallBtn, sizeof(szInstallBtn) / sizeof(WCHAR));
-        LoadStringW(hInst, IDS_UNINSTALL, szUninstallBtn, sizeof(szUninstallBtn) / sizeof(WCHAR));
-        LoadStringW(hInst, IDS_MODIFY, szModifyBtn, sizeof(szModifyBtn) / sizeof(WCHAR));
+        LoadStringW(hInst, IDS_INSTALL, szInstallBtn, _countof(szInstallBtn));
+        LoadStringW(hInst, IDS_UNINSTALL, szUninstallBtn, _countof(szUninstallBtn));
+        LoadStringW(hInst, IDS_MODIFY, szModifyBtn, _countof(szModifyBtn));
 
         m_hWnd = CreateWindowExW(0,
             TOOLBARCLASSNAMEW,
@@ -213,7 +213,7 @@ public:
             ItemIndex = Index;
         }
 
-        ZeroMemory(&Item, sizeof(LVITEM));
+        ZeroMemory(&Item, sizeof(Item));
 
         Item.mask = LVIF_PARAM;
         Item.iItem = ItemIndex;
@@ -227,7 +227,7 @@ public:
     {
         LV_COLUMN Column;
 
-        ZeroMemory(&Column, sizeof(LV_COLUMN));
+        ZeroMemory(&Column, sizeof(Column));
 
         Column.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
         Column.iSubItem = Index;
@@ -242,7 +242,7 @@ public:
     {
         LV_ITEMW Item;
 
-        ZeroMemory(&Item, sizeof(LV_ITEM));
+        ZeroMemory(&Item, sizeof(Item));
 
         Item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
         Item.pszText = lpText;
@@ -269,11 +269,11 @@ public:
 
         IndexInfo.lParam = lParam1;
         Index = FindItem(-1, &IndexInfo);
-        GetItemText(Index, iSubItem, Item1, sizeof(Item1) / sizeof(WCHAR));
+        GetItemText(Index, iSubItem, Item1, _countof(Item1));
 
         IndexInfo.lParam = lParam2;
         Index = FindItem(-1, &IndexInfo);
-        GetItemText(Index, iSubItem, Item2, sizeof(Item2) / sizeof(WCHAR));
+        GetItemText(Index, iSubItem, Item2, _countof(Item2));
 
         if (bAscending)
             return wcscmp(Item2, Item1);
@@ -510,7 +510,7 @@ private:
 
         m_SearchBar->SendMessageW(WM_SETFONT, (WPARAM) GetStockObject(DEFAULT_GUI_FONT), 0);
 
-        LoadStringW(hInst, IDS_SEARCH_TEXT, szBuf, sizeof(szBuf) / sizeof(WCHAR));
+        LoadStringW(hInst, IDS_SEARCH_TEXT, szBuf, _countof(szBuf));
         m_SearchBar->SetWindowTextW(szBuf);
 
         return hwnd != NULL;

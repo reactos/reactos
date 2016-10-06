@@ -123,7 +123,7 @@ CreateHSplitBar(HWND hwnd)
     WCHAR szWindowClass[] = L"HSplitterWindowClass";
     WNDCLASSEXW WndClass = {0};
 
-    WndClass.cbSize        = sizeof(WNDCLASSEXW);
+    WndClass.cbSize        = sizeof(WndClass);
     WndClass.lpszClassName = szWindowClass;
     WndClass.lpfnWndProc   = HSplitterWindowProc;
     WndClass.hInstance     = hInst;
@@ -264,7 +264,7 @@ CreateVSplitBar(HWND hwnd)
     WCHAR szWindowClass[] = L"VSplitterWindowClass";
     WNDCLASSEXW WndClass = {0};
 
-    WndClass.cbSize        = sizeof(WNDCLASSEXW);
+    WndClass.cbSize        = sizeof(WndClass);
     WndClass.lpszClassName = szWindowClass;
     WndClass.lpfnWndProc   = VSplitterWindowProc;
     WndClass.hInstance     = hInst;

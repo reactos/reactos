@@ -78,7 +78,7 @@ LoadSettings(VOID)
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
-        dwSize = sizeof(SETTINGS_INFO);
+        dwSize = sizeof(SettingsInfo);
         if (RegQueryValueExW(hKey, L"Settings", NULL, NULL, (LPBYTE)&SettingsInfo, &dwSize) == ERROR_SUCCESS)
         {
             RegCloseKey(hKey);
@@ -99,7 +99,7 @@ SaveSettings(HWND hwnd)
 
     if (SettingsInfo.bSaveWndPos)
     {
-        wp.length = sizeof(WINDOWPLACEMENT);
+        wp.length = sizeof(wp);
         GetWindowPlacement(hwnd, &wp);
 
         SettingsInfo.Left = wp.rcNormalPosition.left;
@@ -112,7 +112,7 @@ SaveSettings(HWND hwnd)
     if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", 0, NULL,
         REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
-        RegSetValueExW(hKey, L"Settings", 0, REG_BINARY, (LPBYTE)&SettingsInfo, sizeof(SETTINGS_INFO));
+        RegSetValueExW(hKey, L"Settings", 0, REG_BINARY, (LPBYTE)&SettingsInfo, sizeof(SettingsInfo));
         RegCloseKey(hKey);
     }
 }

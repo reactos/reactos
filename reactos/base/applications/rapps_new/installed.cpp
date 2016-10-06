@@ -104,10 +104,10 @@ UninstallApplication(INT Index, BOOL bModify)
         ItemIndex = Index;
     }
 
-    ListView_GetItemText(hListView, ItemIndex, 0, szAppName, sizeof(szAppName) / sizeof(WCHAR));
+    ListView_GetItemText(hListView, ItemIndex, 0, szAppName, _countof(szAppName));
     WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_REMOVE, szAppName);
 
-    ZeroMemory(&Item, sizeof(LVITEM));
+    ZeroMemory(&Item, sizeof(Item));
 
     Item.mask = LVIF_PARAM;
     Item.iItem = ItemIndex;
@@ -149,7 +149,7 @@ ShowInstalledAppInfo(INT Index)
 #define GET_INFO(a, b, c, d) \
     if (GetApplicationString(Info->hSubKey, a, szInfo)) \
     { \
-        LoadStringW(hInst, b, szText, sizeof(szText) / sizeof(WCHAR)); \
+        LoadStringW(hInst, b, szText, _countof(szText)); \
         InsertRichEditText(szText, c); \
         InsertRichEditText(szInfo, d); \
     } \
@@ -190,8 +190,8 @@ RemoveAppFromRegistry(INT Index)
     Info = (PINSTALLED_INFO) ListViewGetlParam(Index);
     if (!Info || !Info->hSubKey || (ItemIndex == -1)) return;
 
-    if (!LoadStringW(hInst, IDS_APP_REG_REMOVE, szMsgText, sizeof(szMsgText) / sizeof(WCHAR)) ||
-        !LoadStringW(hInst, IDS_INFORMATION, szMsgTitle, sizeof(szMsgTitle) / sizeof(WCHAR)))
+    if (!LoadStringW(hInst, IDS_APP_REG_REMOVE, szMsgText, _countof(szMsgText)) ||
+        !LoadStringW(hInst, IDS_INFORMATION, szMsgTitle, _countof(szMsgTitle)))
         return;
 
     if (MessageBoxW(hMainWnd, szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
@@ -204,7 +204,7 @@ RemoveAppFromRegistry(INT Index)
             return;
         }
 
-        if (!LoadStringW(hInst, IDS_UNABLE_TO_REMOVE, szMsgText, sizeof(szMsgText) / sizeof(WCHAR)))
+        if (!LoadStringW(hInst, IDS_UNABLE_TO_REMOVE, szMsgText, _countof(szMsgText)))
             return;
 
         MessageBoxW(hMainWnd, szMsgText, NULL, MB_OK | MB_ICONERROR);
