@@ -2013,7 +2013,7 @@ KdEnableDebuggerWithLock(IN BOOLEAN NeedLock)
         if (KdPreviouslyEnabled)
         {
             /* Reinitialize the Debugger */
-            KdInitSystem(0, NULL) ;
+            KdInitSystem(0, NULL);
             KdpRestoreAllBreakpoints();
         }
     }
