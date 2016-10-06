@@ -18,27 +18,28 @@
 /** NOTE: Experimental! Don't use USE_CRT yet because output to console is a bit broken **/
 // #define USE_CRT
 
+/* FIXME: Temporary HACK before we cleanly support UNICODE functions */
+#define UNICODE
+#define _UNICODE
+
 #include <stdlib.h> // limits.h // For MB_LEN_MAX
 
 #ifdef USE_CRT
 #include <fcntl.h>
 #include <io.h>
-#endif /* defined(USE_CRT) */
+#endif /* USE_CRT */
 
 #include <windef.h>
 #include <winbase.h>
-
 #include <winnls.h>
 #include <winuser.h> // MAKEINTRESOURCEW, RT_STRING
-
 #include <wincon.h>  // Console APIs (only if kernel32 support included)
-
-#include "conutils.h"
 #include <strsafe.h>
 
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
 
+#include "conutils.h"
 
 // #define RC_STRING_MAX_SIZE  4096
 // #define MAX_BUFFER_SIZE     4096
