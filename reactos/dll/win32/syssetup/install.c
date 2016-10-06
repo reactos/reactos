@@ -834,6 +834,7 @@ InstallLiveCD(IN HINSTANCE hInstance)
     {
         /* Start the TCP/IP protocol driver */
         SetupStartService(L"Tcpip", FALSE);
+        SetupStartService(L"Dhcp", FALSE);
     }
 
     if (!CommonInstall())
@@ -1148,6 +1149,7 @@ InstallReactOS(HINSTANCE hInstance)
     {
         /* Start the TCP/IP protocol driver */
         SetupStartService(L"Tcpip", FALSE);
+        SetupStartService(L"Dhcp", FALSE);
     }
 
 

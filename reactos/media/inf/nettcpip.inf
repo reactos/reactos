@@ -234,6 +234,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Winsock2\Parameters\Protocol_Catalog9\Ca
 
 [MS_TCPIP.PrimaryInstall.Services]
 AddService = Tcpip, , tcpip_Service_Inst
+AddService = DHCP, , dhcp_Service_Inst
 
 [tcpip_Service_Inst]
 ServiceType   = 1
@@ -253,6 +254,20 @@ HKR,"Parameters","IPEnableRouter",0x00010001,0x00000000
 HKR,"Parameters","SearchList",0x00000000,""
 HKR,"Parameters","EnableSecurityFilters",0x00010001,0x00000000
 ;HKR,"Parameters","PersistentRoutes",,0x00000010
+
+[dhcp_Service_Inst]
+DisplayName   = "DHCP Client"
+Description   = "Attempts to obtain network settings automatically from an available DHCP server"
+ServiceType   = 0x20
+StartType     = 2
+ErrorControl  = 1
+ServiceBinary = "%11%\svchost.exe -k netsvcs"
+LoadOrderGroup = TDI
+AddReg=dhcp_AddReg
+
+[dhcp_AddReg]
+HKR,,"ObjectName",0x00000000,"LocalSystem"
+HKR,"Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dhcpcsvc.dll"
 
 ;-------------------------------- STRINGS -------------------------------
 
