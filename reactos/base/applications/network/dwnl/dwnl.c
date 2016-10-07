@@ -2,6 +2,7 @@
 #include <urlmon.h>
 #include <wininet.h>
 #include <tchar.h>
+#include <strsafe.h>
 
 /* FIXME: add correct definitions to urlmon.idl */
 #ifdef UNICODE
@@ -41,21 +42,21 @@ static void
 write_status(LPCTSTR lpFmt, ...)
 {
     va_list args;
-
-    /* FIXME: Determine line length! */
-    TCHAR szTxt[80];
-    int c;
+    TCHAR szTxt[128];
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
 
     va_start(args, lpFmt);
-    _vstprintf(szTxt, lpFmt, args);
+    StringCbVPrintf(szTxt, sizeof(szTxt), lpFmt, args);
     va_end(args);
 
-    c = _tcslen(szTxt);
-    while (c < (sizeof(szTxt) / sizeof(szTxt[0])) - 1)
-        szTxt[c++] = _T(' ');
-    szTxt[c] = _T('\0');
-
-    _tprintf(_T("\r%.79s"), szTxt);
+    if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
+    {
+        _tprintf(_T("\r%*.*s"), -(csbi.dwSize.X - 1), csbi.dwSize.X - 1, szTxt);
+    }
+    else
+    {
+        _putts(szTxt);
+    }
 }
 
 static void
