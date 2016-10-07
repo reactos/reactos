@@ -34,151 +34,15 @@ static GENERIC_MAPPING FileGenericMapping =
 
 
 static
-INT
-LengthOfStrResource(IN HINSTANCE hInst,
-                    IN UINT uID)
+VOID PrintError(DWORD dwError)
 {
-    HRSRC hrSrc;
-    HGLOBAL hRes;
-    LPWSTR lpName, lpStr;
+    if (dwError == ERROR_SUCCESS)
+        return;
 
-    if (hInst == NULL)
-    {
-        hInst = GetModuleHandle(NULL);
-    }
-
-    /* There are always blocks of 16 strings */
-    lpName = (LPWSTR)MAKEINTRESOURCE((uID >> 4) + 1);
-
-    /* Find the string table block */
-    hrSrc = FindResourceW(hInst, lpName, (LPWSTR)RT_STRING);
-    if (hrSrc)
-    {
-        hRes = LoadResource(hInst, hrSrc);
-        if (hRes)
-        {
-            lpStr = LockResource(hRes);
-            if (lpStr)
-            {
-                UINT x;
-
-                /* Find the string we're looking for */
-                uID &= 0xF; /* position in the block, same as % 16 */
-                for (x = 0; x < uID; x++)
-                {
-                    lpStr += (*lpStr) + 1;
-                }
-
-                /* Found the string */
-                return (int)(*lpStr);
-            }
-        }
-    }
-    return -1;
+    ConMsgPrintf(StdErr,
+                 FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                 NULL, dwError, LANG_USER_DEFAULT);
 }
-
-
-static
-INT
-AllocAndLoadString(OUT LPTSTR *lpTarget,
-                   IN HINSTANCE hInst,
-                   IN UINT uID)
-{
-    INT ln;
-
-    ln = LengthOfStrResource(hInst,
-                             uID);
-    if (ln++ > 0)
-    {
-        (*lpTarget) = (LPTSTR)HeapAlloc(GetProcessHeap(),
-                                        0,
-                                        ln * sizeof(TCHAR));
-        if ((*lpTarget) != NULL)
-        {
-            INT Ret;
-            Ret = LoadString(hInst,
-                             uID,
-                             *lpTarget,
-                             ln);
-            if (!Ret)
-            {
-                HeapFree(GetProcessHeap(),
-                         0,
-                         *lpTarget);
-            }
-            return Ret;
-        }
-    }
-    return 0;
-}
-
-
-static
-VOID
-PrintHelp(VOID)
-{
-    LPTSTR szHelp;
-
-    if (AllocAndLoadString(&szHelp,
-                           NULL,
-                           IDS_HELP) != 0)
-    {
-        _tprintf(_T("%s"),
-                 szHelp);
-
-        HeapFree(GetProcessHeap(),
-                 0,
-                 szHelp);
-    }
-}
-
-
-static
-VOID
-PrintErrorMessage(IN DWORD dwError)
-{
-    LPTSTR szError;
-
-    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                          FORMAT_MESSAGE_IGNORE_INSERTS |
-                          FORMAT_MESSAGE_FROM_SYSTEM,
-                      NULL,
-                      dwError,
-                      MAKELANGID(LANG_NEUTRAL,
-                                 SUBLANG_DEFAULT),
-                      (LPTSTR)&szError,
-                      0,
-                      NULL) != 0)
-    {
-        _tprintf(_T("%s"),
-                 szError);
-        LocalFree((HLOCAL)szError);
-    }
-}
-
-
-static
-DWORD
-LoadAndPrintString(IN HINSTANCE hInst,
-                   IN UINT uID)
-{
-    TCHAR szTemp[255];
-    DWORD Len;
-
-    Len = (DWORD)LoadString(hInst,
-                            uID,
-                            szTemp,
-                            sizeof(szTemp) / sizeof(szTemp[0]));
-
-    if (Len != 0)
-    {
-        _tprintf(_T("%s"),
-                 szTemp);
-    }
-
-    return Len;
-}
-
 
 static
 BOOL
@@ -352,18 +216,15 @@ BuildSidString:
                         /* print the ACE Flags */
                         if (Ace->Header.AceFlags & CONTAINER_INHERIT_ACE)
                         {
-                            IndentAccess += LoadAndPrintString(NULL,
-                                                               IDS_ABBR_CI);
+                            IndentAccess += PrintResourceString(IDS_ABBR_CI);
                         }
                         if (Ace->Header.AceFlags & OBJECT_INHERIT_ACE)
                         {
-                            IndentAccess += LoadAndPrintString(NULL,
-                                                               IDS_ABBR_OI);
+                            IndentAccess += PrintResourceString(IDS_ABBR_OI);
                         }
                         if (Ace->Header.AceFlags & INHERIT_ONLY_ACE)
                         {
-                            IndentAccess += LoadAndPrintString(NULL,
-                                                               IDS_ABBR_IO);
+                            IndentAccess += PrintResourceString(IDS_ABBR_IO);
                         }
 
                         IndentAccess += 2;
@@ -375,13 +236,11 @@ BuildSidString:
                         {
                             if (AccessMask == FILE_ALL_ACCESS)
                             {
-                                LoadAndPrintString(NULL,
-                                                   IDS_ABBR_NONE);
+                                PrintResourceString(IDS_ABBR_NONE);
                             }
                             else
                             {
-                                LoadAndPrintString(NULL,
-                                                   IDS_DENY);
+                                PrintResourceString(IDS_DENY);
                                 goto PrintSpecialAccess;
                             }
                         }
@@ -389,24 +248,20 @@ BuildSidString:
                         {
                             if (AccessMask == FILE_ALL_ACCESS)
                             {
-                                LoadAndPrintString(NULL,
-                                                   IDS_ABBR_FULL);
+                                PrintResourceString(IDS_ABBR_FULL);
                             }
                             else if (!(Ace->Mask & (GENERIC_READ | GENERIC_EXECUTE)) &&
                                      AccessMask == (FILE_GENERIC_READ | FILE_EXECUTE))
                             {
-                                LoadAndPrintString(NULL,
-                                                   IDS_ABBR_READ);
+                                PrintResourceString(IDS_ABBR_READ);
                             }
                             else if (AccessMask == (FILE_GENERIC_READ | FILE_GENERIC_WRITE | FILE_EXECUTE | DELETE))
                             {
-                                LoadAndPrintString(NULL,
-                                                   IDS_ABBR_CHANGE);
+                                PrintResourceString(IDS_ABBR_CHANGE);
                             }
                             else if (AccessMask == FILE_GENERIC_WRITE)
                             {
-                                LoadAndPrintString(NULL,
-                                                   IDS_ABBR_WRITE);
+                                PrintResourceString(IDS_ABBR_WRITE);
                             }
                             else
                             {
@@ -446,15 +301,13 @@ BuildSidString:
                                     {STANDARD_RIGHTS_ALL, IDS_STANDARD_RIGHTS_ALL},
                                 };
 
-                                LoadAndPrintString(NULL,
-                                                   IDS_ALLOW);
+                                PrintResourceString(IDS_ALLOW);
 
 PrintSpecialAccess:
-                                LoadAndPrintString(NULL,
-                                                   IDS_SPECIAL_ACCESS);
+                                PrintResourceString(IDS_SPECIAL_ACCESS);
 
                                 /* print the special access rights */
-                                x = sizeof(AccessRights) / sizeof(AccessRights[0]);
+                                x = ARRAYSIZE(AccessRights);
                                 while (x-- != 0)
                                 {
                                     if ((Ace->Mask & AccessRights[x].Access) == AccessRights[x].Access)
@@ -468,8 +321,7 @@ PrintSpecialAccess:
                                             _tprintf(_T(" "));
                                         }
 
-                                        LoadAndPrintString(NULL,
-                                                           AccessRights[x].uID);
+                                        PrintResourceString(AccessRights[x].uID);
                                     }
                                 }
 
@@ -541,7 +393,7 @@ GetPathOfFile(LPTSTR FilePath, LPCTSTR pszFiles)
         *pch = 0;
         if (!GetFullPathName(FilePath, MAX_PATH, FullPath, NULL))
         {
-            PrintErrorMessage(GetLastError());
+            PrintError(GetLastError());
             return FALSE;
         }
         lstrcpyn(FilePath, FullPath, MAX_PATH);
@@ -549,7 +401,7 @@ GetPathOfFile(LPTSTR FilePath, LPCTSTR pszFiles)
         attrs = GetFileAttributes(FilePath);
         if (attrs == 0xFFFFFFFF || !(attrs & FILE_ATTRIBUTE_DIRECTORY))
         {
-            PrintErrorMessage(ERROR_DIRECTORY);
+            PrintError(ERROR_DIRECTORY);
             return FALSE;
         }
     }
@@ -591,7 +443,7 @@ PrintDaclsOfFiles(LPCTSTR pszFiles)
             LastError = GetLastError();
             if (LastError == ERROR_ACCESS_DENIED)
             {
-                PrintErrorMessage(LastError);
+                PrintError(LastError);
                 if (!OptionC)
                 {
                     FindClose(hFind);
@@ -609,7 +461,7 @@ PrintDaclsOfFiles(LPCTSTR pszFiles)
 
     if (LastError != ERROR_NO_MORE_FILES)
     {
-        PrintErrorMessage(LastError);
+        PrintError(LastError);
         return FALSE;
     }
 
@@ -771,7 +623,7 @@ ChangeACLsOfFiles(LPCTSTR pszFiles)
             LastError = GetLastError();
             if (LastError == ERROR_ACCESS_DENIED)
             {
-                PrintErrorMessage(LastError);
+                PrintError(LastError);
                 if (!OptionC)
                 {
                     FindClose(hFind);
@@ -788,7 +640,7 @@ ChangeACLsOfFiles(LPCTSTR pszFiles)
 
     if (LastError != ERROR_NO_MORE_FILES)
     {
-        PrintErrorMessage(LastError);
+        PrintError(LastError);
         return FALSE;
     }
 
@@ -826,7 +678,7 @@ ChangeACLsOfFilesInCurDir(LPCTSTR pszFiles)
             LastError = GetLastError();
             if (LastError == ERROR_ACCESS_DENIED)
             {
-                PrintErrorMessage(LastError);
+                PrintError(LastError);
                 if (!OptionC)
                 {
                     FindClose(hFind);
@@ -843,7 +695,7 @@ ChangeACLsOfFilesInCurDir(LPCTSTR pszFiles)
 
     if (LastError != ERROR_NO_MORE_FILES)
     {
-        PrintErrorMessage(LastError);
+        PrintError(LastError);
         return FALSE;
     }
 
@@ -872,7 +724,7 @@ ChangeACLsOfFilesInCurDir(LPCTSTR pszFiles)
                 LastError = GetLastError();
                 if (LastError == ERROR_ACCESS_DENIED)
                 {
-                    PrintErrorMessage(LastError);
+                    PrintError(LastError);
                     if (!OptionC)
                     {
                         FindClose(hFind);
@@ -889,23 +741,24 @@ ChangeACLsOfFilesInCurDir(LPCTSTR pszFiles)
 
     if (LastError != ERROR_NO_MORE_FILES)
     {
-        PrintErrorMessage(LastError);
+        PrintError(LastError);
         return FALSE;
     }
     return TRUE;
 }
 
-int
-__cdecl
-_tmain(int argc, const TCHAR *argv[])
+int _tmain(int argc, const TCHAR *argv[])
 {
     INT i;
     LPTSTR pch;
     BOOL InvalidParameter = FALSE;
 
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
+
     if (argc <= 1)
     {
-        PrintHelp();
+        PrintResourceString(IDS_HELP);
         return 0;
     }
 
@@ -991,8 +844,8 @@ _tmain(int argc, const TCHAR *argv[])
 
     if (InvalidParameter)
     {
-        PrintErrorMessage(ERROR_INVALID_PARAMETER);
-        PrintHelp();
+        PrintError(ERROR_INVALID_PARAMETER);
+        PrintResourceString(IDS_HELP);
         return 1;
     }
 

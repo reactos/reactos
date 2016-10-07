@@ -15,7 +15,8 @@
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
-#include <winuser.h>
+
+#include <conutils.h>
 
 #include "resource.h"
 
@@ -23,48 +24,28 @@
 
 VOID PrintError(IN DWORD ErrCode)
 {
-    WCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
-    PWSTR buffer, msg = NULL;
+    DWORD dwLength = 0;
+    PWSTR pMsgBuf  = NULL;
 
-    buffer = (PWSTR)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 2048 * sizeof(WCHAR));
-    if (!buffer)
+#if 0
+    if (ErrCode == ERROR_SUCCESS)
         return;
+#endif
 
-    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-                   NULL,
-                   ErrCode,
-                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                   (PWSTR)&msg,
-                   0,
-                   NULL);
-    if (msg)
+    /* Retrieve the message string without appending extra newlines */
+    dwLength = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                              FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
+                              NULL,
+                              ErrCode,
+                              LANG_USER_DEFAULT,
+                              (PWSTR)&pMsgBuf,
+                              0, NULL);
+    if (pMsgBuf /* && dwLength */)
     {
-        LoadStringW(GetModuleHandleW(NULL),
-                    IDS_FAILED_WITH_ERRORCODE,
-                    szFmtString,
-                    ARRAYSIZE(szFmtString));
-        _snwprintf(buffer,
-                   2048,
-                   szFmtString,
-                   ErrCode,
-                   msg);
-        wprintf(L"%s", buffer);
-
-        LocalFree(msg);
+        ConResPrintf(StdErr, IDS_FAILED_WITH_ERRORCODE,
+                     ErrCode, pMsgBuf);
+        LocalFree(pMsgBuf);
     }
-
-    HeapFree(GetProcessHeap(), 0, buffer);
-}
-
-VOID DisplaySubstUsage(VOID)
-{
-    WCHAR szHelp[RC_STRING_MAX_SIZE] = {0};
-
-    LoadStringW(GetModuleHandleW(NULL),
-                IDS_USAGE,
-                szHelp,
-                ARRAYSIZE(szHelp));
-    wprintf(L"%s", szHelp);
 }
 
 ULONG QuerySubstedDrive(IN WCHAR DriveLetter,
@@ -172,7 +153,7 @@ VOID DumpSubstedDrives(VOID)
         DriveLetter = L'A' + i;
         if (QuerySubstedDrive(DriveLetter, &lpTargetPath, &dwSize) == ERROR_IS_SUBSTED)
         {
-            wprintf(L"%c:\\: => %s\n", DriveLetter, lpTargetPath + 4);
+            ConPrintf(StdOut, L"%c:\\: => %s\n", DriveLetter, lpTargetPath + 4);
         }
 
         i++;
@@ -184,7 +165,6 @@ VOID DumpSubstedDrives(VOID)
 INT DeleteSubst(IN PWSTR Drive)
 {
     DWORD dwResult;
-    WCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
 
     if ((wcslen(Drive) != 2) || (Drive[1] != L':'))
     {
@@ -212,21 +192,13 @@ Quit:
         // case ERROR_INVALID_DRIVE:
         case ERROR_INVALID_PARAMETER:
         {
-            LoadStringW(GetModuleHandleW(NULL),
-                        IDS_INVALID_PARAMETER2,
-                        szFmtString,
-                        ARRAYSIZE(szFmtString));
-            wprintf(szFmtString, Drive);
+            ConResPrintf(StdErr, IDS_INVALID_PARAMETER2, Drive);
             return 1;
         }
 
         case ERROR_ACCESS_DENIED:
         {
-            LoadStringW(GetModuleHandleW(NULL),
-                        IDS_ACCESS_DENIED,
-                        szFmtString,
-                        ARRAYSIZE(szFmtString));
-            wprintf(szFmtString, Drive);
+            ConResPrintf(StdErr, IDS_ACCESS_DENIED, Drive);
             return 1;
         }
 
@@ -243,7 +215,6 @@ Quit:
 INT AddSubst(IN PWSTR Drive, IN PWSTR Path)
 {
     DWORD dwResult, dwPathAttr;
-    WCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
 
     if ((wcslen(Drive) != 2) || (Drive[1] != L':'))
     {
@@ -289,42 +260,26 @@ Quit:
         case ERROR_INVALID_DRIVE:
         case ERROR_INVALID_PARAMETER:
         {
-            LoadStringW(GetModuleHandleW(NULL),
-                        IDS_INVALID_PARAMETER2,
-                        szFmtString,
-                        ARRAYSIZE(szFmtString));
-            wprintf(szFmtString, Drive);
+            ConResPrintf(StdErr, IDS_INVALID_PARAMETER2, Drive);
             return 1;
         }
 
         case ERROR_IS_SUBSTED:
         {
-            LoadStringW(GetModuleHandleW(NULL),
-                        IDS_DRIVE_ALREADY_SUBSTED,
-                        szFmtString,
-                        ARRAYSIZE(szFmtString));
-            wprintf(szFmtString);
+            ConResPrintf(StdErr, IDS_DRIVE_ALREADY_SUBSTED);
             return 1;
         }
 
         case ERROR_FILE_NOT_FOUND:
         case ERROR_PATH_NOT_FOUND:
         {
-            LoadStringW(GetModuleHandleW(NULL),
-                        IDS_PATH_NOT_FOUND,
-                        szFmtString,
-                        ARRAYSIZE(szFmtString));
-            wprintf(szFmtString, Path);
+            ConResPrintf(StdErr, IDS_PATH_NOT_FOUND, Path);
             return 1;
         }
 
         case ERROR_ACCESS_DENIED:
         {
-            LoadStringW(GetModuleHandleW(NULL),
-                        IDS_ACCESS_DENIED,
-                        szFmtString,
-                        ARRAYSIZE(szFmtString));
-            wprintf(szFmtString, Path);
+            ConResPrintf(StdErr, IDS_ACCESS_DENIED, Path);
             return 1;
         }
 
@@ -341,13 +296,15 @@ Quit:
 int wmain(int argc, WCHAR* argv[])
 {
     INT i;
-    WCHAR szFmtString[RC_STRING_MAX_SIZE] = {0};
+
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
 
     for (i = 0; i < argc; i++)
     {
         if (!_wcsicmp(argv[i], L"/?"))
         {
-            DisplaySubstUsage();
+            ConResPrintf(StdOut, IDS_USAGE);
             return 0;
         }
     }
@@ -356,11 +313,7 @@ int wmain(int argc, WCHAR* argv[])
     {
         if (argc >= 2)
         {
-            LoadStringW(GetModuleHandleW(NULL),
-                        IDS_INVALID_PARAMETER,
-                        szFmtString,
-                        ARRAYSIZE(szFmtString));
-            wprintf(szFmtString, argv[1]);
+            ConResPrintf(StdErr, IDS_INVALID_PARAMETER, argv[1]);
             return 1;
         }
         DumpSubstedDrives();
@@ -369,11 +322,7 @@ int wmain(int argc, WCHAR* argv[])
 
     if (argc > 3)
     {
-        LoadStringW(GetModuleHandleW(NULL),
-                    IDS_INCORRECT_PARAMETER_COUNT,
-                    szFmtString,
-                    ARRAYSIZE(szFmtString));
-        wprintf(szFmtString, argv[3]);
+        ConResPrintf(StdErr, IDS_INCORRECT_PARAMETER_COUNT, argv[3]);
         return 1;
     }
 

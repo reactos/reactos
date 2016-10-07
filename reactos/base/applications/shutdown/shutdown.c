@@ -12,21 +12,6 @@
 #include <powrprof.h>
 
 /*
- * This takes strings from a resource stringtable
- * and outputs it to the console.
- */
-VOID PrintResourceString(INT resID, ...)
-{
-    WCHAR tmpBuffer[MAX_BUFFER_SIZE];
-    va_list arg_ptr;
-
-    va_start(arg_ptr, resID);
-    LoadStringW(GetModuleHandle(NULL), resID, tmpBuffer, MAX_BUFFER_SIZE);
-    vfwprintf(stdout, tmpBuffer, arg_ptr);
-    va_end(arg_ptr);
-}
-
-/*
  * Takes the commandline arguments, and creates a
  * struct which matches the arguments supplied.
  */
@@ -201,6 +186,9 @@ int wmain(int argc, WCHAR *argv[])
 {
     DWORD error = ERROR_SUCCESS;
     struct CommandLineOptions opts;
+
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
 
     if (argc == 1) /* i.e. no commandline arguments given */
     {

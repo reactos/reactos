@@ -33,31 +33,12 @@
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
-#include <winuser.h>
+
+#include <conutils.h>
 
 #include "resource.h"
 
 #define STRBUF 1024
-
-VOID PrintResourceString(INT resID, ...)
-{
-    WCHAR bufSrc[RC_STRING_MAX_SIZE];
-    WCHAR bufFormatted[RC_STRING_MAX_SIZE];
-    CHAR bufFormattedOem[RC_STRING_MAX_SIZE];
-
-    va_list args;
-    va_start(args, resID);
-
-    if (LoadStringW(GetModuleHandleW(NULL), resID, bufSrc, ARRAYSIZE(bufSrc)))
-        vswprintf(bufFormatted, bufSrc, args);
-    else
-        swprintf(bufFormatted, L"Resource loading error!");
-
-    CharToOemW(bufFormatted, bufFormattedOem);
-    fputs(bufFormattedOem, stdout);
-
-    va_end(args);
-}
 
 /* getline:  read a line, return length */
 INT GetBuff(PBYTE buff, FILE* in)
@@ -74,12 +55,6 @@ INT FileSize(FILE* fd)
         rewind(fd);
     }
     return result;
-}
-
-/* Print program usage */
-VOID Usage(VOID)
-{
-    PrintResourceString(IDS_HELP);
 }
 
 
@@ -106,30 +81,33 @@ int wmain (int argc, WCHAR* argv[])
     INT  FilesOK = 1;
     INT  Status = EXIT_SUCCESS;
 
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
+
     /* Parse command line for options */
     for (i = 1; i < argc; i++)
     {
         if (argv[i][0] == L'/')
         {
-            switch (argv[i][1])
+            switch (towlower(argv[i][1]))
             {
-                case L'A':
+                case L'a':
                     bAscii = TRUE;
                     NumberOfOptions++;
                     break;
 
-                case L'L':
+                case L'l':
                     bLineNos = TRUE;
                     NumberOfOptions++;
                     break;
 
                 case L'?':
-                    Usage();
+                    PrintResourceString(IDS_HELP);
                     return EXIT_SUCCESS;
 
                 default:
                     PrintResourceString(IDS_INVALIDSWITCH, argv[i][1]);
-                    Usage();
+                    PrintResourceString(IDS_HELP);
                     return EXIT_FAILURE;
             }
         }
@@ -149,7 +127,7 @@ int wmain (int argc, WCHAR* argv[])
     Buff1 = (PBYTE)malloc(STRBUF);
     if (Buff1 == NULL)
     {
-        wprintf(L"Can't get free memory for Buff1\n");
+        ConPrintf(StdErr, L"Can't get free memory for Buff1\n");
         Status = EXIT_FAILURE;
         goto Cleanup;
     }
@@ -157,7 +135,7 @@ int wmain (int argc, WCHAR* argv[])
     Buff2 = (PBYTE)malloc(STRBUF);
     if (Buff2 == NULL)
     {
-        wprintf(L"Can't get free memory for Buff2\n");
+        ConPrintf(StdErr, L"Can't get free memory for Buff2\n");
         Status = EXIT_FAILURE;
         goto Cleanup;
     }
