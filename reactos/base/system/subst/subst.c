@@ -24,7 +24,7 @@
 
 VOID PrintError(IN DWORD ErrCode)
 {
-    DWORD dwLength = 0;
+    // DWORD dwLength = 0;
     PWSTR pMsgBuf  = NULL;
 
 #if 0
@@ -33,13 +33,14 @@ VOID PrintError(IN DWORD ErrCode)
 #endif
 
     /* Retrieve the message string without appending extra newlines */
-    dwLength = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-                              FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
-                              NULL,
-                              ErrCode,
-                              LANG_USER_DEFAULT,
-                              (PWSTR)&pMsgBuf,
-                              0, NULL);
+    // dwLength =
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+                   FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
+                   NULL,
+                   ErrCode,
+                   LANG_USER_DEFAULT,
+                   (PWSTR)&pMsgBuf,
+                   0, NULL);
     if (pMsgBuf /* && dwLength */)
     {
         ConResPrintf(StdErr, IDS_FAILED_WITH_ERRORCODE,
