@@ -532,23 +532,13 @@ ConWrite(
 }
 
 INT
-ConPrintfV(
+ConPuts(
     IN PCON_STREAM Stream,
-    IN LPWSTR  szStr,
-    IN va_list args) // arg_ptr
+    IN LPWSTR szStr)
 {
     INT Len;
-    WCHAR bufFormatted[CON_RC_STRING_MAX_SIZE];
 
-#if 1 ///////////////////////////////////////////////////////////////////////  0
-    PWSTR pEnd;
-    StringCchVPrintfExW(bufFormatted, ARRAYSIZE(bufFormatted), &pEnd, NULL, 0, szStr, args);
-    Len = pEnd - bufFormatted;
-#else
-    StringCchVPrintfW(bufFormatted, ARRAYSIZE(bufFormatted), szStr, args);
-    Len = wcslen(bufFormatted);
-#endif
-    Len = Stream->WriteFunc(Stream, bufFormatted, Len);
+    Len = Stream->WriteFunc(Stream, szStr, wcslen(szStr));
 
     /* Fixup returned length in case of errors */
     if (Len < 0)
@@ -558,6 +548,33 @@ ConPrintfV(
 }
 
 INT
+ConPrintfV(
+    IN PCON_STREAM Stream,
+    IN LPWSTR  szStr,
+    IN va_list args) // arg_ptr
+{
+    INT Len;
+    WCHAR bufSrc[CON_RC_STRING_MAX_SIZE];
+
+#if 1 ///////////////////////////////////////////////////////////////////////  0
+    PWSTR pEnd;
+    StringCchVPrintfExW(bufSrc, ARRAYSIZE(bufSrc), &pEnd, NULL, 0, szStr, args);
+    Len = pEnd - bufSrc;
+#else
+    StringCchVPrintfW(bufSrc, ARRAYSIZE(bufSrc), szStr, args);
+    Len = wcslen(bufSrc);
+#endif
+    Len = Stream->WriteFunc(Stream, bufSrc, Len);
+
+    /* Fixup returned length in case of errors */
+    if (Len < 0)
+        Len = 0;
+
+    return Len;
+}
+
+INT
+__cdecl
 ConPrintf(
     IN PCON_STREAM Stream,
     IN LPWSTR szStr,
@@ -580,6 +597,33 @@ ConPrintf(
 }
 
 INT
+ConResPuts(
+    IN PCON_STREAM Stream,
+    IN UINT uID)
+{
+    INT Len;
+#if 0
+    WCHAR bufSrc[CON_RC_STRING_MAX_SIZE];
+
+    // NOTE: We may use the special behaviour where nBufMaxSize == 0
+    Len = K32LoadStringW(GetModuleHandleW(NULL), uID, bufSrc, ARRAYSIZE(bufSrc));
+    if (Len)
+        Len = ConPuts(Stream, bufSrc);
+#else
+    PWCHAR szStr = NULL;
+    Len = K32LoadStringW(GetModuleHandleW(NULL), uID, (PWSTR)&szStr, 0);
+    if (Len)
+        Len = Stream->WriteFunc(Stream, szStr, Len);
+
+    /* Fixup returned length in case of errors */
+    if (Len < 0)
+        Len = 0;
+#endif
+
+    return Len;
+}
+
+INT
 ConResPrintfV(
     IN PCON_STREAM Stream,
     IN UINT    uID,
@@ -597,6 +641,7 @@ ConResPrintfV(
 }
 
 INT
+__cdecl
 ConResPrintf(
     IN PCON_STREAM Stream,
     IN UINT uID,
@@ -608,6 +653,71 @@ ConResPrintf(
     va_start(args, uID);
     Len = ConResPrintfV(Stream, uID, args);
     va_end(args);
+
+    return Len;
+}
+
+INT
+ConMsgPuts(
+    IN PCON_STREAM Stream,
+    IN DWORD   dwFlags,
+    IN LPCVOID lpSource OPTIONAL,
+    IN DWORD   dwMessageId,
+    IN DWORD   dwLanguageId)
+{
+    INT Len;
+    DWORD dwLength  = 0;
+    LPWSTR lpMsgBuf = NULL;
+
+    /*
+     * Sanitize dwFlags. This version always ignore explicitely the inserts
+     * as we emulate the behaviour of the *puts function.
+     */
+    dwFlags |= FORMAT_MESSAGE_ALLOCATE_BUFFER; // Always allocate an internal buffer.
+    dwFlags |= FORMAT_MESSAGE_IGNORE_INSERTS;  // Ignore inserts for FormatMessage.
+    dwFlags &= ~FORMAT_MESSAGE_ARGUMENT_ARRAY;
+
+    dwFlags |= FORMAT_MESSAGE_MAX_WIDTH_MASK;
+
+    /*
+     * Retrieve the message string without appending extra newlines.
+     * Wrap in SEH to protect from invalid string parameters.
+     */
+    _SEH2_TRY
+    {
+        dwLength = FormatMessageW(dwFlags,
+                                  lpSource,
+                                  dwMessageId,
+                                  dwLanguageId,
+                                  (LPWSTR)&lpMsgBuf,
+                                  0, NULL);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+    }
+    _SEH2_END;
+
+    Len = (INT)dwLength;
+
+    if (!lpMsgBuf)
+    {
+        // ASSERT(dwLength == 0);
+    }
+    else
+    {
+        // ASSERT(dwLength != 0);
+
+        /* lpMsgBuf is NULL-terminated by FormatMessage */
+        // Len = ConPuts(Stream, lpMsgBuf);
+        Len = Stream->WriteFunc(Stream, lpMsgBuf, dwLength);
+
+        /* Fixup returned length in case of errors */
+        if (Len < 0)
+            Len = 0;
+
+        /* Free the buffer allocated by FormatMessage */
+        LocalFree(lpMsgBuf);
+    }
 
     return Len;
 }
@@ -739,6 +849,7 @@ ConMsgPrintfV(
 }
 
 INT
+__cdecl
 ConMsgPrintf(
     IN PCON_STREAM Stream,
     IN DWORD   dwFlags,

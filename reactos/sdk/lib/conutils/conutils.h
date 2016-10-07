@@ -171,16 +171,27 @@ ConWrite(
     IN DWORD len);
 
 INT
+ConPuts(
+    IN PCON_STREAM Stream,
+    IN LPWSTR szStr);
+
+INT
 ConPrintfV(
     IN PCON_STREAM Stream,
     IN LPWSTR  szStr,
     IN va_list args); // arg_ptr
 
 INT
+__cdecl
 ConPrintf(
     IN PCON_STREAM Stream,
     IN LPWSTR szStr,
     ...);
+
+INT
+ConResPuts(
+    IN PCON_STREAM Stream,
+    IN UINT uID);
 
 INT
 ConResPrintfV(
@@ -189,10 +200,19 @@ ConResPrintfV(
     IN va_list args); // arg_ptr
 
 INT
+__cdecl
 ConResPrintf(
     IN PCON_STREAM Stream,
     IN UINT uID,
     ...);
+
+INT
+ConMsgPuts(
+    IN PCON_STREAM Stream,
+    IN DWORD   dwFlags,
+    IN LPCVOID lpSource OPTIONAL,
+    IN DWORD   dwMessageId,
+    IN DWORD   dwLanguageId);
 
 INT
 ConMsgPrintf2V(
@@ -213,6 +233,7 @@ ConMsgPrintfV(
     IN va_list args); // arg_ptr
 
 INT
+__cdecl
 ConMsgPrintf(
     IN PCON_STREAM Stream,
     IN DWORD   dwFlags,
