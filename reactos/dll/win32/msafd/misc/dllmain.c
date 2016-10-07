@@ -70,9 +70,30 @@ WSPSocket(int AddressFamily,
     UNICODE_STRING              DevName;
     LARGE_INTEGER               GroupData;
     INT                         Status;
+    PSOCK_SHARED_INFO           SharedData = NULL;
 
     TRACE("Creating Socket, getting TDI Name - AddressFamily (%d)  SocketType (%d)  Protocol (%d).\n",
         AddressFamily, SocketType, Protocol);
+
+    if (lpProtocolInfo && lpProtocolInfo->dwServiceFlags3 != 0 && lpProtocolInfo->dwServiceFlags4 != 0)
+    {
+        /* Duplpicating socket from different process */
+        if ((HANDLE)lpProtocolInfo->dwServiceFlags3 == INVALID_HANDLE_VALUE)
+            return WSAEINVAL;
+        if ((HANDLE)lpProtocolInfo->dwServiceFlags4 == INVALID_HANDLE_VALUE)
+            return WSAEINVAL;
+        SharedData = MapViewOfFile((HANDLE)lpProtocolInfo->dwServiceFlags3,
+                                   FILE_MAP_ALL_ACCESS,
+                                   0,
+                                   0,
+                                   sizeof(SOCK_SHARED_INFO));
+        if (!SharedData)
+            return WSAEINVAL;
+        InterlockedIncrement(&SharedData->RefCount);
+        AddressFamily = SharedData->AddressFamily;
+        SocketType = SharedData->SocketType;
+        Protocol = SharedData->Protocol;
+    }
 
     if (AddressFamily == AF_UNSPEC && SocketType == 0 && Protocol == 0)
         return WSAEINVAL;
@@ -117,41 +138,62 @@ WSPSocket(int AddressFamily,
     /* Set Socket Data */
     Socket = HeapAlloc(GlobalHeap, 0, sizeof(*Socket));
     if (!Socket)
-        return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
-
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto error;
+    }
     RtlZeroMemory(Socket, sizeof(*Socket));
-    Socket->RefCount = 2;
-    Socket->Handle = -1;
-    Socket->SharedData.Listening = FALSE;
-    Socket->SharedData.State = SocketOpen;
-    Socket->SharedData.AddressFamily = AddressFamily;
-    Socket->SharedData.SocketType = SocketType;
-    Socket->SharedData.Protocol = Protocol;
+    if (SharedData)
+    {
+        Socket->SharedData = SharedData;
+        Socket->SharedDataHandle = (HANDLE)lpProtocolInfo->dwServiceFlags3;
+        Sock = (HANDLE)lpProtocolInfo->dwServiceFlags4;
+        Socket->Handle = (SOCKET)lpProtocolInfo->dwServiceFlags4;
+    }
+    else
+    {
+        Socket->SharedDataHandle = INVALID_HANDLE_VALUE;
+        Socket->SharedData = HeapAlloc(GlobalHeap, 0, sizeof(*Socket->SharedData));
+        if (!Socket->SharedData)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto error;
+        }
+        RtlZeroMemory(Socket->SharedData, sizeof(*Socket->SharedData));
+        Socket->SharedData->State = SocketOpen;
+        Socket->SharedData->RefCount = 1L;
+        Socket->SharedData->Listening = FALSE;
+        Socket->SharedData->AddressFamily = AddressFamily;
+        Socket->SharedData->SocketType = SocketType;
+        Socket->SharedData->Protocol = Protocol;
+        Socket->SharedData->SizeOfLocalAddress = HelperData->MaxWSAddressLength;
+        Socket->SharedData->SizeOfRemoteAddress = HelperData->MaxWSAddressLength;
+        Socket->SharedData->UseDelayedAcceptance = HelperData->UseDelayedAcceptance;
+        Socket->SharedData->CreateFlags = dwFlags;
+        Socket->SharedData->ServiceFlags1 = lpProtocolInfo->dwServiceFlags1;
+        Socket->SharedData->ProviderFlags = lpProtocolInfo->dwProviderFlags;
+        Socket->SharedData->UseSAN = FALSE;
+        Socket->SharedData->NonBlocking = FALSE; /* Sockets start blocking */
+
+        /* Ask alex about this */
+        if( Socket->SharedData->SocketType == SOCK_DGRAM ||
+            Socket->SharedData->SocketType == SOCK_RAW )
+        {
+            TRACE("Connectionless socket\n");
+            Socket->SharedData->ServiceFlags1 |= XP1_CONNECTIONLESS;
+        }
+        Socket->Handle = -1;
+    }
+
     Socket->HelperContext = HelperDLLContext;
     Socket->HelperData = HelperData;
     Socket->HelperEvents = HelperEvents;
-    Socket->LocalAddress = &Socket->WSLocalAddress;
-    Socket->SharedData.SizeOfLocalAddress = HelperData->MaxWSAddressLength;
-    Socket->RemoteAddress = &Socket->WSRemoteAddress;
-    Socket->SharedData.SizeOfRemoteAddress = HelperData->MaxWSAddressLength;
-    Socket->SharedData.UseDelayedAcceptance = HelperData->UseDelayedAcceptance;
-    Socket->SharedData.CreateFlags = dwFlags;
-    Socket->SharedData.ServiceFlags1 = lpProtocolInfo->dwServiceFlags1;
-    Socket->SharedData.ProviderFlags = lpProtocolInfo->dwProviderFlags;
-    Socket->SharedData.GroupID = g;
-    Socket->SharedData.GroupType = 0;
-    Socket->SharedData.UseSAN = FALSE;
-    Socket->SharedData.NonBlocking = FALSE; /* Sockets start blocking */
+    Socket->LocalAddress = &Socket->SharedData->WSLocalAddress;
+    Socket->RemoteAddress = &Socket->SharedData->WSRemoteAddress;
     Socket->SanData = NULL;
     RtlCopyMemory(&Socket->ProtocolInfo, lpProtocolInfo, sizeof(Socket->ProtocolInfo));
-
-    /* Ask alex about this */
-    if( Socket->SharedData.SocketType == SOCK_DGRAM ||
-        Socket->SharedData.SocketType == SOCK_RAW )
-    {
-        TRACE("Connectionless socket\n");
-        Socket->SharedData.ServiceFlags1 |= XP1_CONNECTIONLESS;
-    }
+    if (SharedData)
+        goto ok;
 
     /* Packet Size */
     SizeOfPacket = TransportName.Length + sizeof(AFD_CREATE_PACKET) + sizeof(WCHAR);
@@ -162,7 +204,10 @@ WSPSocket(int AddressFamily,
     /* Set up EA Buffer */
     EABuffer = HeapAlloc(GlobalHeap, 0, SizeOfEA);
     if (!EABuffer)
-        return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto error;
+    }
 
     RtlZeroMemory(EABuffer, SizeOfEA);
     EABuffer->NextEntryOffset = 0;
@@ -182,7 +227,7 @@ WSPSocket(int AddressFamily,
     AfdPacket->GroupID = g;
 
     /* Set up Endpoint Flags */
-    if ((Socket->SharedData.ServiceFlags1 & XP1_CONNECTIONLESS) != 0)
+    if ((Socket->SharedData->ServiceFlags1 & XP1_CONNECTIONLESS) != 0)
     {
         if ((SocketType != SOCK_DGRAM) && (SocketType != SOCK_RAW))
         {
@@ -192,11 +237,11 @@ WSPSocket(int AddressFamily,
         AfdPacket->EndpointFlags |= AFD_ENDPOINT_CONNECTIONLESS;
     }
 
-    if ((Socket->SharedData.ServiceFlags1 & XP1_MESSAGE_ORIENTED) != 0)
+    if ((Socket->SharedData->ServiceFlags1 & XP1_MESSAGE_ORIENTED) != 0)
     {
         if (SocketType == SOCK_STREAM)
         {
-            if ((Socket->SharedData.ServiceFlags1 & XP1_PSEUDO_STREAM) == 0)
+            if ((Socket->SharedData->ServiceFlags1 & XP1_PSEUDO_STREAM) == 0)
             {
                 /* The Provider doesn't actually support Message Oriented Streams */
                 goto error;
@@ -212,7 +257,7 @@ WSPSocket(int AddressFamily,
                    WSA_FLAG_MULTIPOINT_D_ROOT |
                    WSA_FLAG_MULTIPOINT_D_LEAF))
     {
-        if ((Socket->SharedData.ServiceFlags1 & XP1_SUPPORT_MULTIPOINT) == 0)
+        if ((Socket->SharedData->ServiceFlags1 & XP1_SUPPORT_MULTIPOINT) == 0)
         {
             /* The Provider doesn't actually support Multipoint */
             goto error;
@@ -221,7 +266,7 @@ WSPSocket(int AddressFamily,
 
         if (dwFlags & WSA_FLAG_MULTIPOINT_C_ROOT)
         {
-            if (((Socket->SharedData.ServiceFlags1 & XP1_MULTIPOINT_CONTROL_PLANE) == 0)
+            if (((Socket->SharedData->ServiceFlags1 & XP1_MULTIPOINT_CONTROL_PLANE) == 0)
                 || ((dwFlags & WSA_FLAG_MULTIPOINT_C_LEAF) != 0))
             {
                 /* The Provider doesn't support Control Planes, or you already gave a leaf */
@@ -232,7 +277,7 @@ WSPSocket(int AddressFamily,
 
         if (dwFlags & WSA_FLAG_MULTIPOINT_D_ROOT)
         {
-            if (((Socket->SharedData.ServiceFlags1 & XP1_MULTIPOINT_DATA_PLANE) == 0)
+            if (((Socket->SharedData->ServiceFlags1 & XP1_MULTIPOINT_DATA_PLANE) == 0)
                 || ((dwFlags & WSA_FLAG_MULTIPOINT_D_LEAF) != 0))
             {
                 /* The Provider doesn't support Data Planes, or you already gave a leaf */
@@ -270,10 +315,7 @@ WSPSocket(int AddressFamily,
     if (!NT_SUCCESS(Status))
     {
         ERR("Failed to open socket. Status 0x%08x\n", Status);
-
-        HeapFree(GlobalHeap, 0, Socket);
-
-        return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
+        goto error;
     }
 
     /* Save Handle */
@@ -283,22 +325,23 @@ WSPSocket(int AddressFamily,
     if (g != 0)
     {
         GetSocketInformation(Socket, AFD_INFO_GROUP_ID_TYPE, NULL, NULL, &GroupData);
-        Socket->SharedData.GroupID = GroupData.u.LowPart;
-        Socket->SharedData.GroupType = GroupData.u.HighPart;
+        Socket->SharedData->GroupID = GroupData.u.LowPart;
+        Socket->SharedData->GroupType = GroupData.u.HighPart;
     }
 
     /* Get Window Sizes and Save them */
     GetSocketInformation (Socket,
                           AFD_INFO_SEND_WINDOW_SIZE,
                           NULL,
-                          &Socket->SharedData.SizeOfSendBuffer,
+                          &Socket->SharedData->SizeOfSendBuffer,
                           NULL);
 
     GetSocketInformation (Socket,
                           AFD_INFO_RECEIVE_WINDOW_SIZE,
                           NULL,
-                          &Socket->SharedData.SizeOfRecvBuffer,
+                          &Socket->SharedData->SizeOfRecvBuffer,
                           NULL);
+ok:
 
     /* Save in Process Sockets List */
     EnterCriticalSection(&SocketListLock);
@@ -320,6 +363,17 @@ WSPSocket(int AddressFamily,
 error:
     ERR("Ending %x\n", Status);
 
+    if( SharedData )
+    {
+        UnmapViewOfFile(SharedData);
+        NtClose((HANDLE)lpProtocolInfo->dwServiceFlags3);
+    }
+    else
+    {
+        if( Socket && Socket->SharedData )
+            HeapFree(GlobalHeap, 0, Socket->SharedData);
+    }
+
     if( Socket )
         HeapFree(GlobalHeap, 0, Socket);
 
@@ -330,6 +384,96 @@ error:
         *lpErrno = Status;
 
     return INVALID_SOCKET;
+}
+
+
+INT
+WSPAPI
+WSPDuplicateSocket(
+    IN  SOCKET Handle,
+    IN  DWORD dwProcessId,
+    OUT LPWSAPROTOCOL_INFOW lpProtocolInfo,
+    OUT LPINT lpErrno)
+{
+    HANDLE hProcess, hDuplicatedSharedData, hDuplicatedHandle;
+    PSOCKET_INFORMATION Socket;
+    PSOCK_SHARED_INFO pSharedData, pOldSharedData;
+    BOOL bDuplicated;
+
+    if (Handle == INVALID_SOCKET)
+        return MsafdReturnWithErrno(STATUS_INVALID_PARAMETER, lpErrno, 0, NULL);
+    Socket = GetSocketStructure(Handle);
+    if( !Socket )
+    {
+        if( lpErrno )
+            *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+    if ( !(hProcess = OpenProcess(PROCESS_DUP_HANDLE, FALSE, dwProcessId)) )
+        return MsafdReturnWithErrno(STATUS_INVALID_PARAMETER, lpErrno, 0, NULL);
+
+    /* It is a not yet duplicated socket, so map the memory, copy the SharedData and free heap */
+    if( Socket->SharedDataHandle == INVALID_HANDLE_VALUE )
+    {
+        Socket->SharedDataHandle = CreateFileMapping(INVALID_HANDLE_VALUE,
+                                                     NULL,
+                                                     PAGE_READWRITE | SEC_COMMIT,
+                                                     0,
+                                                     (sizeof(SOCK_SHARED_INFO) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1),
+                                                     NULL);
+        if( Socket->SharedDataHandle == INVALID_HANDLE_VALUE )
+            return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
+        pSharedData = MapViewOfFile(Socket->SharedDataHandle,
+                                    FILE_MAP_ALL_ACCESS,
+                                    0,
+                                    0,
+                                    sizeof(SOCK_SHARED_INFO));
+
+        RtlCopyMemory(pSharedData, Socket->SharedData, sizeof(SOCK_SHARED_INFO));
+        pOldSharedData = Socket->SharedData;
+        Socket->SharedData = pSharedData;
+        HeapFree(GlobalHeap, 0, pOldSharedData);
+    }
+    /* Duplicate the handles for the new process */
+    bDuplicated = DuplicateHandle(GetCurrentProcess(),
+                                  Socket->SharedDataHandle,
+                                  hProcess,
+                                  (LPHANDLE)&hDuplicatedSharedData,
+                                  0,
+                                  FALSE,
+                                  DUPLICATE_SAME_ACCESS);
+    if (!bDuplicated)
+    {
+        NtClose(hProcess);
+        return MsafdReturnWithErrno(STATUS_ACCESS_DENIED, lpErrno, 0, NULL);
+    }
+    bDuplicated = DuplicateHandle(GetCurrentProcess(),
+                                  (HANDLE)Socket->Handle,
+                                  hProcess,
+                                  (LPHANDLE)&hDuplicatedHandle,
+                                  0,
+                                  FALSE,
+                                  DUPLICATE_SAME_ACCESS);
+    NtClose(hProcess);
+    if( !bDuplicated )
+        return MsafdReturnWithErrno(STATUS_ACCESS_DENIED, lpErrno, 0, NULL);
+
+
+    if (!lpProtocolInfo)
+        return MsafdReturnWithErrno(STATUS_ACCESS_VIOLATION, lpErrno, 0, NULL);
+
+    RtlCopyMemory(lpProtocolInfo, &Socket->ProtocolInfo, sizeof(*lpProtocolInfo));
+
+    lpProtocolInfo->iAddressFamily = Socket->SharedData->AddressFamily;
+    lpProtocolInfo->iProtocol = Socket->SharedData->Protocol;
+    lpProtocolInfo->iSocketType = Socket->SharedData->SocketType;
+    lpProtocolInfo->dwServiceFlags3 = (DWORD)hDuplicatedSharedData;
+    lpProtocolInfo->dwServiceFlags4 = (DWORD)hDuplicatedHandle;
+
+    if( lpErrno )
+        *lpErrno = NO_ERROR;
+
+    return NO_ERROR;
 }
 
 INT
@@ -423,6 +567,7 @@ WSPCloseSocket(IN SOCKET Handle,
     AFD_DISCONNECT_INFO DisconnectInfo;
     SOCKET_STATE OldState;
     LONG LingerWait = -1;
+    DWORD References;
 
     /* Create the Wait Event */
     Status = NtCreateEvent(&SockEvent,
@@ -463,28 +608,32 @@ WSPCloseSocket(IN SOCKET Handle,
     }
 
     /* If a Close is already in Process, give up */
-    if (Socket->SharedData.State == SocketClosed)
+    if (Socket->SharedData->State == SocketClosed)
     {
         WARN("Socket is closing.\n");
         NtClose(SockEvent);
         *lpErrno = WSAENOTSOCK;
         return SOCKET_ERROR;
     }
-
     /* Set the state to close */
-    OldState = Socket->SharedData.State;
-    Socket->SharedData.State = SocketClosed;
+    OldState = Socket->SharedData->State;
+    Socket->SharedData->State = SocketClosed;
+
+    /* Decrement reference count on SharedData */
+    References = InterlockedDecrement(&Socket->SharedData->RefCount);
+    if (References)
+        goto ok;
 
     /* If SO_LINGER is ON and the Socket is connected, we need to disconnect */
     /* FIXME: Should we do this on Datagram Sockets too? */
-    if ((OldState == SocketConnected) && (Socket->SharedData.LingerData.l_onoff))
+    if ((OldState == SocketConnected) && (Socket->SharedData->LingerData.l_onoff))
     {
         ULONG SendsInProgress;
         ULONG SleepWait;
 
         /* We need to respect the timeout */
         SleepWait = 100;
-        LingerWait = Socket->SharedData.LingerData.l_linger * 1000;
+        LingerWait = Socket->SharedData->LingerData.l_linger * 1000;
 
         /* Loop until no more sends are pending, within the timeout */
         while (LingerWait)
@@ -514,11 +663,11 @@ WSPCloseSocket(IN SOCKET Handle,
              * go on since asyncronous operation is expected
              * and we cannot offer it
              */
-            if (Socket->SharedData.NonBlocking)
+            if (Socket->SharedData->NonBlocking)
             {
                 WARN("Would block!\n");
                 NtClose(SockEvent);
-                Socket->SharedData.State = OldState;
+                Socket->SharedData->State = OldState;
                 *lpErrno = WSAEWOULDBLOCK;
                 return SOCKET_ERROR;
             }
@@ -542,8 +691,8 @@ WSPCloseSocket(IN SOCKET Handle,
             DisconnectInfo.Timeout = RtlConvertLongToLargeInteger(0);
             DisconnectInfo.DisconnectType = LingerWait < 0 ? AFD_DISCONNECT_SEND : AFD_DISCONNECT_ABORT;
 
-            if (((DisconnectInfo.DisconnectType & AFD_DISCONNECT_SEND) && (!Socket->SharedData.SendShutdown)) ||
-                ((DisconnectInfo.DisconnectType & AFD_DISCONNECT_ABORT) && (!Socket->SharedData.ReceiveShutdown)))
+            if (((DisconnectInfo.DisconnectType & AFD_DISCONNECT_SEND) && (!Socket->SharedData->SendShutdown)) ||
+                ((DisconnectInfo.DisconnectType & AFD_DISCONNECT_ABORT) && (!Socket->SharedData->ReceiveShutdown)))
             {
                 /* Send IOCTL */
                 Status = NtDeviceIoControlFile((HANDLE)Handle,
@@ -569,12 +718,12 @@ WSPCloseSocket(IN SOCKET Handle,
 
     /* Cleanup Time! */
     Socket->HelperContext = NULL;
-    Socket->SharedData.AsyncDisabledEvents = -1;
+    Socket->SharedData->AsyncDisabledEvents = -1;
     NtClose(Socket->TdiAddressHandle);
     Socket->TdiAddressHandle = NULL;
     NtClose(Socket->TdiConnectionHandle);
     Socket->TdiConnectionHandle = NULL;
-
+ok:
     EnterCriticalSection(&SocketListLock);
     if (SocketListHead == Socket)
     {
@@ -600,6 +749,17 @@ WSPCloseSocket(IN SOCKET Handle,
     NtClose((HANDLE)Handle);
     NtClose(SockEvent);
 
+    if( Socket->SharedDataHandle != INVALID_HANDLE_VALUE )
+    {
+        /* It is a duplicated socket, so unmap the memory */
+        UnmapViewOfFile(Socket->SharedData);
+        NtClose(Socket->SharedDataHandle);
+        Socket->SharedData = NULL;
+    }
+    if( !References && Socket->SharedData )
+    {
+        HeapFree(GlobalHeap, 0, Socket->SharedData);
+    }
     HeapFree(GlobalHeap, 0, Socket);
     return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
 }
@@ -671,7 +831,7 @@ WSPBind(SOCKET Handle,
                                             &SocketInfo);
 
     /* Set the Share Type */
-    if (Socket->SharedData.ExclusiveAddressUse)
+    if (Socket->SharedData->ExclusiveAddressUse)
     {
         BindData->ShareType = AFD_SHARE_EXCLUSIVE;
     }
@@ -679,7 +839,7 @@ WSPBind(SOCKET Handle,
     {
         BindData->ShareType = AFD_SHARE_WILDCARD;
     }
-    else if (Socket->SharedData.ReuseAddresses)
+    else if (Socket->SharedData->ReuseAddresses)
     {
         BindData->ShareType = AFD_SHARE_REUSE;
     }
@@ -696,9 +856,9 @@ WSPBind(SOCKET Handle,
                                    &IOSB,
                                    IOCTL_AFD_BIND,
                                    BindData,
-                                   0xA + Socket->SharedData.SizeOfLocalAddress, /* Can't figure out a way to calculate this in C*/
+                                   0xA + Socket->SharedData->SizeOfLocalAddress, /* Can't figure out a way to calculate this in C*/
                                    BindData,
-                                   0xA + Socket->SharedData.SizeOfLocalAddress); /* Can't figure out a way to calculate this C */
+                                   0xA + Socket->SharedData->SizeOfLocalAddress); /* Can't figure out a way to calculate this C */
 
     /* Wait for return */
     if (Status == STATUS_PENDING)
@@ -714,7 +874,7 @@ WSPBind(SOCKET Handle,
         return MsafdReturnWithErrno ( Status, lpErrno, 0, NULL );
 
     /* Set up Socket Data */
-    Socket->SharedData.State = SocketBound;
+    Socket->SharedData->State = SocketBound;
     Socket->TdiAddressHandle = (HANDLE)IOSB.Information;
 
     if (Socket->HelperEvents & WSH_NOTIFY_BIND)
@@ -755,7 +915,7 @@ WSPListen(SOCKET Handle,
        return SOCKET_ERROR;
     }
 
-    if (Socket->SharedData.Listening)
+    if (Socket->SharedData->Listening)
         return 0;
 
     Status = NtCreateEvent(&SockEvent,
@@ -769,7 +929,7 @@ WSPListen(SOCKET Handle,
 
     /* Set Up Listen Structure */
     ListenData.UseSAN = FALSE;
-    ListenData.UseDelayedAcceptance = Socket->SharedData.UseDelayedAcceptance;
+    ListenData.UseDelayedAcceptance = Socket->SharedData->UseDelayedAcceptance;
     ListenData.Backlog = Backlog;
 
     /* Send IOCTL */
@@ -797,7 +957,7 @@ WSPListen(SOCKET Handle,
        return MsafdReturnWithErrno ( Status, lpErrno, 0, NULL );
 
     /* Set to Listening */
-    Socket->SharedData.Listening = TRUE;
+    Socket->SharedData->Listening = TRUE;
 
     if (Socket->HelperEvents & WSH_NOTIFY_LISTEN)
     {
@@ -1157,7 +1317,7 @@ WSPAccept(SOCKET Handle,
 
     if (lpfnCondition != NULL)
     {
-        if ((Socket->SharedData.ServiceFlags1 & XP1_CONNECT_DATA) != 0)
+        if ((Socket->SharedData->ServiceFlags1 & XP1_CONNECT_DATA) != 0)
         {
             /* Find out how much data is pending */
             PendingAcceptData.SequenceNumber = ListenReceiveData->SequenceNumber;
@@ -1233,14 +1393,14 @@ WSPAccept(SOCKET Handle,
             }
         }
 
-        if ((Socket->SharedData.ServiceFlags1 & XP1_QOS_SUPPORTED) != 0)
+        if ((Socket->SharedData->ServiceFlags1 & XP1_QOS_SUPPORTED) != 0)
         {
             /* I don't support this yet */
         }
 
         /* Build Callee ID */
         CalleeID.buf = (PVOID)Socket->LocalAddress;
-        CalleeID.len = Socket->SharedData.SizeOfLocalAddress;
+        CalleeID.len = Socket->SharedData->SizeOfLocalAddress;
 
         RemoteAddress = HeapAlloc(GlobalHeap, 0, sizeof(*RemoteAddress));
         if (!RemoteAddress)
@@ -1263,7 +1423,7 @@ WSPAccept(SOCKET Handle,
         CallerData.len = PendingDataLength;
 
         /* Check if socket supports Conditional Accept */
-        if (Socket->SharedData.UseDelayedAcceptance != 0)
+        if (Socket->SharedData->UseDelayedAcceptance != 0)
         {
             /* Allocate Buffer for Callee Data */
             CalleeDataBuffer = HeapAlloc(GlobalHeap, 0, 4096);
@@ -1298,7 +1458,7 @@ WSPAccept(SOCKET Handle,
 
         if (CallBack == CF_ACCEPT)
         {
-            if ((Socket->SharedData.ServiceFlags1 & XP1_QOS_SUPPORTED) != 0)
+            if ((Socket->SharedData->ServiceFlags1 & XP1_QOS_SUPPORTED) != 0)
             {
                 /* I don't support this yet */
             }
@@ -1354,12 +1514,12 @@ WSPAccept(SOCKET Handle,
     }
 
     /* Create a new Socket */
-    AcceptSocket = WSPSocket (Socket->SharedData.AddressFamily,
-                              Socket->SharedData.SocketType,
-                              Socket->SharedData.Protocol,
+    AcceptSocket = WSPSocket (Socket->SharedData->AddressFamily,
+                              Socket->SharedData->SocketType,
+                              Socket->SharedData->Protocol,
                               &Socket->ProtocolInfo,
                               GroupID,
-                              Socket->SharedData.CreateFlags,
+                              Socket->SharedData->CreateFlags,
                               lpErrno);
     if (AcceptSocket == INVALID_SOCKET)
         return INVALID_SOCKET;
@@ -1404,7 +1564,7 @@ WSPAccept(SOCKET Handle,
         return INVALID_SOCKET;
     }
 
-    AcceptSocketInfo->SharedData.State = SocketConnected;
+    AcceptSocketInfo->SharedData->State = SocketConnected;
 
     /* Return Address in SOCKADDR FORMAT */
     if( SocketAddress )
@@ -1488,7 +1648,7 @@ WSPConnect(SOCKET Handle,
     }
 
     /* Bind us First */
-    if (Socket->SharedData.State == SocketOpen)
+    if (Socket->SharedData->State == SocketOpen)
     {
         /* Get the Wildcard Address */
         BindAddressLength = Socket->HelperData->MaxWSAddressLength;
@@ -1558,9 +1718,9 @@ WSPConnect(SOCKET Handle,
     * at the end of this function right after the Async Thread disables it.
     * This should only happen at the *next* WSPConnect
     */
-    if (Socket->SharedData.AsyncEvents & FD_CONNECT)
+    if (Socket->SharedData->AsyncEvents & FD_CONNECT)
     {
-        Socket->SharedData.AsyncDisabledEvents |= FD_CONNECT | FD_WRITE;
+        Socket->SharedData->AsyncDisabledEvents |= FD_CONNECT | FD_WRITE;
     }
 
     /* Tell AFD that we want Connection Data back, have it allocate a buffer */
@@ -1595,7 +1755,7 @@ WSPConnect(SOCKET Handle,
     ConnectInfo->Unknown = 0;
 
     /* FIXME: Handle Async Connect */
-    if (Socket->SharedData.NonBlocking)
+    if (Socket->SharedData->NonBlocking)
     {
         ERR("Async Connect UNIMPLEMENTED!\n");
     }
@@ -1621,7 +1781,7 @@ WSPConnect(SOCKET Handle,
     if (Status != STATUS_SUCCESS)
         goto notify;
 
-    Socket->SharedData.State = SocketConnected;
+    Socket->SharedData->State = SocketConnected;
     Socket->TdiConnectionHandle = (HANDLE)IOSB.Information;
 
     /* Get any pending connect data */
@@ -1727,16 +1887,16 @@ WSPShutdown(SOCKET Handle,
     {
         case SD_RECEIVE:
             DisconnectInfo.DisconnectType = AFD_DISCONNECT_RECV;
-            Socket->SharedData.ReceiveShutdown = TRUE;
+            Socket->SharedData->ReceiveShutdown = TRUE;
             break;
         case SD_SEND:
             DisconnectInfo.DisconnectType= AFD_DISCONNECT_SEND;
-            Socket->SharedData.SendShutdown = TRUE;
+            Socket->SharedData->SendShutdown = TRUE;
             break;
         case SD_BOTH:
             DisconnectInfo.DisconnectType = AFD_DISCONNECT_RECV | AFD_DISCONNECT_SEND;
-            Socket->SharedData.ReceiveShutdown = TRUE;
-            Socket->SharedData.SendShutdown = TRUE;
+            Socket->SharedData->ReceiveShutdown = TRUE;
+            Socket->SharedData->SendShutdown = TRUE;
             break;
     }
 
@@ -1811,7 +1971,7 @@ WSPGetSockName(IN SOCKET Handle,
 
     /* Allocate a buffer for the address */
     TdiAddressSize =
-		sizeof(TRANSPORT_ADDRESS) + Socket->SharedData.SizeOfLocalAddress;
+		sizeof(TRANSPORT_ADDRESS) + Socket->SharedData->SizeOfLocalAddress;
     TdiAddress = HeapAlloc(GlobalHeap, 0, TdiAddressSize);
 
     if ( TdiAddress == NULL )
@@ -1846,13 +2006,13 @@ WSPGetSockName(IN SOCKET Handle,
 
     if (NT_SUCCESS(Status))
     {
-        if (*NameLength >= Socket->SharedData.SizeOfLocalAddress)
+        if (*NameLength >= Socket->SharedData->SizeOfLocalAddress)
         {
             Name->sa_family = SocketAddress->Address[0].AddressType;
             RtlCopyMemory (Name->sa_data,
                            SocketAddress->Address[0].Address,
                            SocketAddress->Address[0].AddressLength);
-            *NameLength = Socket->SharedData.SizeOfLocalAddress;
+            *NameLength = Socket->SharedData->SizeOfLocalAddress;
             TRACE("NameLength %d Address: %x Port %x\n",
                           *NameLength, ((struct sockaddr_in *)Name)->sin_addr.s_addr,
                           ((struct sockaddr_in *)Name)->sin_port);
@@ -1905,7 +2065,7 @@ WSPGetPeerName(IN SOCKET s,
        return SOCKET_ERROR;
     }
 
-    if (Socket->SharedData.State != SocketConnected)
+    if (Socket->SharedData->State != SocketConnected)
     {
         NtClose(SockEvent);
         *lpErrno = WSAENOTCONN;
@@ -1920,7 +2080,7 @@ WSPGetPeerName(IN SOCKET s,
     }
 
     /* Allocate a buffer for the address */
-    TdiAddressSize = sizeof(TRANSPORT_ADDRESS) + Socket->SharedData.SizeOfRemoteAddress;
+    TdiAddressSize = sizeof(TRANSPORT_ADDRESS) + Socket->SharedData->SizeOfRemoteAddress;
     SocketAddress = HeapAlloc(GlobalHeap, 0, TdiAddressSize);
 
     if ( SocketAddress == NULL )
@@ -1953,13 +2113,13 @@ WSPGetPeerName(IN SOCKET s,
 
     if (NT_SUCCESS(Status))
     {
-        if (*NameLength >= Socket->SharedData.SizeOfRemoteAddress)
+        if (*NameLength >= Socket->SharedData->SizeOfRemoteAddress)
         {
             Name->sa_family = SocketAddress->Address[0].AddressType;
             RtlCopyMemory (Name->sa_data,
                            SocketAddress->Address[0].Address,
                            SocketAddress->Address[0].AddressLength);
-            *NameLength = Socket->SharedData.SizeOfRemoteAddress;
+            *NameLength = Socket->SharedData->SizeOfRemoteAddress;
             TRACE("NameLength %d Address: %x Port %x\n",
                           *NameLength, ((struct sockaddr_in *)Name)->sin_addr.s_addr,
                           ((struct sockaddr_in *)Name)->sin_port);
@@ -2022,7 +2182,7 @@ WSPIoctl(IN  SOCKET Handle,
                 return SOCKET_ERROR;
             }
             NonBlocking = *((PULONG)lpvInBuffer) ? TRUE : FALSE;
-            Socket->SharedData.NonBlocking = NonBlocking ? 1 : 0;
+            Socket->SharedData->NonBlocking = NonBlocking ? 1 : 0;
             *lpErrno = SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &NonBlocking, NULL, NULL);
 			if (*lpErrno != NO_ERROR)
 				return SOCKET_ERROR;
@@ -2060,18 +2220,18 @@ WSPIoctl(IN  SOCKET Handle,
             return SOCKET_ERROR;
 
         case SIO_ADDRESS_LIST_QUERY:
-            if (cbOutBuffer < (sizeof(SOCKET_ADDRESS_LIST) + sizeof(Socket->WSLocalAddress)) || IS_INTRESOURCE(lpvOutBuffer))
+            if (cbOutBuffer < (sizeof(SOCKET_ADDRESS_LIST) + sizeof(Socket->SharedData->WSLocalAddress)) || IS_INTRESOURCE(lpvOutBuffer))
             {
                 *lpErrno = WSAEINVAL;
                 return SOCKET_ERROR;
             }
 
             *lpcbBytesReturned = sizeof(SOCKET_ADDRESS_LIST) +
-                                 sizeof(Socket->WSLocalAddress);
+                                 sizeof(Socket->SharedData->WSLocalAddress);
 
             ((SOCKET_ADDRESS_LIST*)lpvOutBuffer)->iAddressCount = 1;
-            ((SOCKET_ADDRESS_LIST*)lpvOutBuffer)->Address[0].iSockaddrLength = sizeof(Socket->WSLocalAddress);
-            ((SOCKET_ADDRESS_LIST*)lpvOutBuffer)->Address[0].lpSockaddr = &Socket->WSLocalAddress;
+            ((SOCKET_ADDRESS_LIST*)lpvOutBuffer)->Address[0].iSockaddrLength = sizeof(Socket->SharedData->WSLocalAddress);
+            ((SOCKET_ADDRESS_LIST*)lpvOutBuffer)->Address[0].lpSockaddr = &Socket->SharedData->WSLocalAddress;
 
             *lpErrno = NO_ERROR;
             return NO_ERROR;
@@ -2130,56 +2290,56 @@ WSPGetSockOpt(IN SOCKET Handle,
             switch (OptionName)
             {
                 case SO_TYPE:
-                    Buffer = &Socket->SharedData.SocketType;
+                    Buffer = &Socket->SharedData->SocketType;
                     BufferSize = sizeof(INT);
                     break;
 
                 case SO_RCVBUF:
-                    Buffer = &Socket->SharedData.SizeOfRecvBuffer;
+                    Buffer = &Socket->SharedData->SizeOfRecvBuffer;
                     BufferSize = sizeof(INT);
                     break;
 
                 case SO_SNDBUF:
-                    Buffer = &Socket->SharedData.SizeOfSendBuffer;
+                    Buffer = &Socket->SharedData->SizeOfSendBuffer;
                     BufferSize = sizeof(INT);
                     break;
 
                 case SO_ACCEPTCONN:
-                    BoolBuffer = Socket->SharedData.Listening;
+                    BoolBuffer = Socket->SharedData->Listening;
                     Buffer = &BoolBuffer;
                     BufferSize = sizeof(BOOL);
                     break;
 
                 case SO_BROADCAST:
-                    BoolBuffer = Socket->SharedData.Broadcast;
+                    BoolBuffer = Socket->SharedData->Broadcast;
                     Buffer = &BoolBuffer;
                     BufferSize = sizeof(BOOL);
                     break;
 
                 case SO_DEBUG:
-                    BoolBuffer = Socket->SharedData.Debug;
+                    BoolBuffer = Socket->SharedData->Debug;
                     Buffer = &BoolBuffer;
                     BufferSize = sizeof(BOOL);
                     break;
 
                 case SO_DONTLINGER:
-                    BoolBuffer = (Socket->SharedData.LingerData.l_onoff == 0);
+                    BoolBuffer = (Socket->SharedData->LingerData.l_onoff == 0);
                     Buffer = &BoolBuffer;
                     BufferSize = sizeof(BOOL);
                     break;
 
                 case SO_LINGER:
-                    if (Socket->SharedData.SocketType == SOCK_DGRAM)
+                    if (Socket->SharedData->SocketType == SOCK_DGRAM)
                     {
                         *lpErrno = WSAENOPROTOOPT;
                         return SOCKET_ERROR;
                     }
-                    Buffer = &Socket->SharedData.LingerData;
+                    Buffer = &Socket->SharedData->LingerData;
                     BufferSize = sizeof(struct linger);
                     break;
 
                 case SO_OOBINLINE:
-                    BoolBuffer = (Socket->SharedData.OobInline != 0);
+                    BoolBuffer = (Socket->SharedData->OobInline != 0);
                     Buffer = &BoolBuffer;
                     BufferSize = sizeof(BOOL);
                     break;
@@ -2190,19 +2350,19 @@ WSPGetSockOpt(IN SOCKET Handle,
                    goto SendToHelper;
 
                 case SO_CONDITIONAL_ACCEPT:
-                    BoolBuffer = (Socket->SharedData.UseDelayedAcceptance != 0);
+                    BoolBuffer = (Socket->SharedData->UseDelayedAcceptance != 0);
                     Buffer = &BoolBuffer;
                     BufferSize = sizeof(BOOL);
                     break;
 
                 case SO_REUSEADDR:
-                    BoolBuffer = (Socket->SharedData.ReuseAddresses != 0);
+                    BoolBuffer = (Socket->SharedData->ReuseAddresses != 0);
                     Buffer = &BoolBuffer;
                     BufferSize = sizeof(BOOL);
                     break;
 
                 case SO_EXCLUSIVEADDRUSE:
-                    BoolBuffer = (Socket->SharedData.ExclusiveAddressUse != 0);
+                    BoolBuffer = (Socket->SharedData->ExclusiveAddressUse != 0);
                     Buffer = &BoolBuffer;
                     BufferSize = sizeof(BOOL);
                     break;
@@ -2216,11 +2376,11 @@ WSPGetSockOpt(IN SOCKET Handle,
                     BufferSize = sizeof(INT);
                     break;
                 case SO_SNDTIMEO:
-                    Buffer = &Socket->SharedData.SendTimeout;
+                    Buffer = &Socket->SharedData->SendTimeout;
                     BufferSize = sizeof(DWORD);
                     break;
                 case SO_RCVTIMEO:
-                    Buffer = &Socket->SharedData.RecvTimeout;
+                    Buffer = &Socket->SharedData->RecvTimeout;
                     BufferSize = sizeof(DWORD);
                     break;
                 case SO_PROTOCOL_INFOW:
@@ -2297,7 +2457,7 @@ WSPSetSockOpt(
                   *lpErrno = WSAEFAULT;
                   return SOCKET_ERROR;
               }
-              Socket->SharedData.Broadcast = (*optval != 0) ? 1 : 0;
+              Socket->SharedData->Broadcast = (*optval != 0) ? 1 : 0;
               return 0;
 
            case SO_DONTLINGER:
@@ -2306,7 +2466,7 @@ WSPSetSockOpt(
                   *lpErrno = WSAEFAULT;
                   return SOCKET_ERROR;
               }
-              Socket->SharedData.LingerData.l_onoff = (*optval != 0) ? 0 : 1;
+              Socket->SharedData->LingerData.l_onoff = (*optval != 0) ? 0 : 1;
               return 0;
 
            case SO_REUSEADDR:
@@ -2315,7 +2475,7 @@ WSPSetSockOpt(
                   *lpErrno = WSAEFAULT;
                   return SOCKET_ERROR;
               }
-              Socket->SharedData.ReuseAddresses = (*optval != 0) ? 1 : 0;
+              Socket->SharedData->ReuseAddresses = (*optval != 0) ? 1 : 0;
               return 0;
 
            case SO_EXCLUSIVEADDRUSE:
@@ -2324,7 +2484,7 @@ WSPSetSockOpt(
                   *lpErrno = WSAEFAULT;
                   return SOCKET_ERROR;
               }
-              Socket->SharedData.ExclusiveAddressUse = (*optval != 0) ? 1 : 0;
+              Socket->SharedData->ExclusiveAddressUse = (*optval != 0) ? 1 : 0;
               return 0;
 
            case SO_LINGER:
@@ -2333,7 +2493,7 @@ WSPSetSockOpt(
                   *lpErrno = WSAEFAULT;
                   return SOCKET_ERROR;
               }
-              RtlCopyMemory(&Socket->SharedData.LingerData,
+              RtlCopyMemory(&Socket->SharedData->LingerData,
                             optval,
                             sizeof(struct linger));
               return 0;
@@ -2356,7 +2516,7 @@ WSPSetSockOpt(
                   return SOCKET_ERROR;
               }
 
-              RtlCopyMemory(&Socket->SharedData.SendTimeout,
+              RtlCopyMemory(&Socket->SharedData->SendTimeout,
                             optval,
                             sizeof(DWORD));
               return 0;
@@ -2368,7 +2528,7 @@ WSPSetSockOpt(
                   return SOCKET_ERROR;
               }
 
-              RtlCopyMemory(&Socket->SharedData.RecvTimeout,
+              RtlCopyMemory(&Socket->SharedData->RecvTimeout,
                             optval,
                             sizeof(DWORD));
               return 0;
@@ -2813,14 +2973,14 @@ int CreateContext(PSOCKET_INFORMATION Socket)
         return -1;
 
     /* Create Context */
-    ContextData.SharedData = Socket->SharedData;
+    ContextData.SharedData = *Socket->SharedData;
     ContextData.SizeOfHelperData = 0;
     RtlCopyMemory (&ContextData.LocalAddress,
                    Socket->LocalAddress,
-                   Socket->SharedData.SizeOfLocalAddress);
+                   Socket->SharedData->SizeOfLocalAddress);
     RtlCopyMemory (&ContextData.RemoteAddress,
                    Socket->RemoteAddress,
-                   Socket->SharedData.SizeOfRemoteAddress);
+                   Socket->SharedData->SizeOfRemoteAddress);
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Socket->Handle,
@@ -3012,7 +3172,7 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
     Socket = AsyncData->ParentSocket;
 
     /* Check if the Sequence  Number Changed behind our back */
-    if (AsyncData->SequenceNumber != Socket->SharedData.SequenceNumber )
+    if (AsyncData->SequenceNumber != Socket->SharedData->SequenceNumber )
     {
         return;
     }
@@ -3029,90 +3189,90 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
         switch (AsyncData->AsyncSelectInfo.Handles[0].Events & x)
         {
             case AFD_EVENT_RECEIVE:
-                if (0 != (Socket->SharedData.AsyncEvents & FD_READ) &&
-                    0 == (Socket->SharedData.AsyncDisabledEvents & FD_READ))
+                if (0 != (Socket->SharedData->AsyncEvents & FD_READ) &&
+                    0 == (Socket->SharedData->AsyncDisabledEvents & FD_READ))
                 {
                     /* Make the Notifcation */
-                    (Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
-                                               Socket->SharedData.wMsg,
+                    (Upcalls.lpWPUPostMessage)(Socket->SharedData->hWnd,
+                                               Socket->SharedData->wMsg,
                                                Socket->Handle,
                                                WSAMAKESELECTREPLY(FD_READ, 0));
                     /* Disable this event until the next read(); */
-                    Socket->SharedData.AsyncDisabledEvents |= FD_READ;
+                    Socket->SharedData->AsyncDisabledEvents |= FD_READ;
                 }
             break;
 
             case AFD_EVENT_OOB_RECEIVE:
-            if (0 != (Socket->SharedData.AsyncEvents & FD_OOB) &&
-                0 == (Socket->SharedData.AsyncDisabledEvents & FD_OOB))
+            if (0 != (Socket->SharedData->AsyncEvents & FD_OOB) &&
+                0 == (Socket->SharedData->AsyncDisabledEvents & FD_OOB))
             {
                 /* Make the Notifcation */
-                (Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
-                                           Socket->SharedData.wMsg,
+                (Upcalls.lpWPUPostMessage)(Socket->SharedData->hWnd,
+                                           Socket->SharedData->wMsg,
                                            Socket->Handle,
                                            WSAMAKESELECTREPLY(FD_OOB, 0));
                 /* Disable this event until the next read(); */
-                Socket->SharedData.AsyncDisabledEvents |= FD_OOB;
+                Socket->SharedData->AsyncDisabledEvents |= FD_OOB;
             }
             break;
 
             case AFD_EVENT_SEND:
-                if (0 != (Socket->SharedData.AsyncEvents & FD_WRITE) &&
-                    0 == (Socket->SharedData.AsyncDisabledEvents & FD_WRITE))
+                if (0 != (Socket->SharedData->AsyncEvents & FD_WRITE) &&
+                    0 == (Socket->SharedData->AsyncDisabledEvents & FD_WRITE))
                 {
                     /* Make the Notifcation */
-                    (Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
-                                               Socket->SharedData.wMsg,
+                    (Upcalls.lpWPUPostMessage)(Socket->SharedData->hWnd,
+                                               Socket->SharedData->wMsg,
                                                Socket->Handle,
                                                WSAMAKESELECTREPLY(FD_WRITE, 0));
                     /* Disable this event until the next write(); */
-                    Socket->SharedData.AsyncDisabledEvents |= FD_WRITE;
+                    Socket->SharedData->AsyncDisabledEvents |= FD_WRITE;
                 }
                 break;
 
                 /* FIXME: THIS IS NOT RIGHT!!! HACK HACK HACK! */
             case AFD_EVENT_CONNECT:
             case AFD_EVENT_CONNECT_FAIL:
-                if (0 != (Socket->SharedData.AsyncEvents & FD_CONNECT) &&
-                    0 == (Socket->SharedData.AsyncDisabledEvents & FD_CONNECT))
+                if (0 != (Socket->SharedData->AsyncEvents & FD_CONNECT) &&
+                    0 == (Socket->SharedData->AsyncDisabledEvents & FD_CONNECT))
                 {
                     /* Make the Notifcation */
-                    (Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
-                        Socket->SharedData.wMsg,
+                    (Upcalls.lpWPUPostMessage)(Socket->SharedData->hWnd,
+                        Socket->SharedData->wMsg,
                         Socket->Handle,
                         WSAMAKESELECTREPLY(FD_CONNECT, 0));
                     /* Disable this event forever; */
-                    Socket->SharedData.AsyncDisabledEvents |= FD_CONNECT;
+                    Socket->SharedData->AsyncDisabledEvents |= FD_CONNECT;
                 }
                 break;
 
             case AFD_EVENT_ACCEPT:
-                if (0 != (Socket->SharedData.AsyncEvents & FD_ACCEPT) &&
-                    0 == (Socket->SharedData.AsyncDisabledEvents & FD_ACCEPT))
+                if (0 != (Socket->SharedData->AsyncEvents & FD_ACCEPT) &&
+                    0 == (Socket->SharedData->AsyncDisabledEvents & FD_ACCEPT))
                 {
                     /* Make the Notifcation */
-                    (Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
-                                               Socket->SharedData.wMsg,
+                    (Upcalls.lpWPUPostMessage)(Socket->SharedData->hWnd,
+                                               Socket->SharedData->wMsg,
                                                Socket->Handle,
                                                WSAMAKESELECTREPLY(FD_ACCEPT, 0));
                     /* Disable this event until the next accept(); */
-                    Socket->SharedData.AsyncDisabledEvents |= FD_ACCEPT;
+                    Socket->SharedData->AsyncDisabledEvents |= FD_ACCEPT;
                 }
                 break;
 
             case AFD_EVENT_DISCONNECT:
             case AFD_EVENT_ABORT:
             case AFD_EVENT_CLOSE:
-                if (0 != (Socket->SharedData.AsyncEvents & FD_CLOSE) &&
-                    0 == (Socket->SharedData.AsyncDisabledEvents & FD_CLOSE))
+                if (0 != (Socket->SharedData->AsyncEvents & FD_CLOSE) &&
+                    0 == (Socket->SharedData->AsyncDisabledEvents & FD_CLOSE))
                 {
                     /* Make the Notifcation */
-                    (Upcalls.lpWPUPostMessage)(Socket->SharedData.hWnd,
-                                               Socket->SharedData.wMsg,
+                    (Upcalls.lpWPUPostMessage)(Socket->SharedData->hWnd,
+                                               Socket->SharedData->wMsg,
                                                Socket->Handle,
                                                WSAMAKESELECTREPLY(FD_CLOSE, 0));
                     /* Disable this event forever; */
-                    Socket->SharedData.AsyncDisabledEvents |= FD_CLOSE;
+                    Socket->SharedData->AsyncDisabledEvents |= FD_CLOSE;
                 }
                  break;
             /* FIXME: Support QOS */
@@ -3120,7 +3280,7 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
     }
 
     /* Check if there are any events left for us to check */
-    if ((Socket->SharedData.AsyncEvents & (~Socket->SharedData.AsyncDisabledEvents)) == 0 )
+    if ((Socket->SharedData->AsyncEvents & (~Socket->SharedData->AsyncDisabledEvents)) == 0 )
     {
         return;
     }
@@ -3145,7 +3305,7 @@ VOID SockProcessAsyncSelect(PSOCKET_INFORMATION Socket, PASYNC_DATA AsyncData)
     AsyncData->AsyncSelectInfo.Handles[0].Events = 0;
 
     /* Remove unwanted events */
-    lNetworkEvents = Socket->SharedData.AsyncEvents & (~Socket->SharedData.AsyncDisabledEvents);
+    lNetworkEvents = Socket->SharedData->AsyncEvents & (~Socket->SharedData->AsyncDisabledEvents);
 
     /* Set Events to wait for */
     if (lNetworkEvents & FD_READ)
@@ -3223,13 +3383,13 @@ VOID SockProcessQueuedAsyncSelect(PVOID Context, PIO_STATUS_BLOCK IoStatusBlock)
     Socket = AsyncData->ParentSocket;
 
     /* If someone closed it, stop the function */
-    if (Socket->SharedData.State != SocketClosed)
+    if (Socket->SharedData->State != SocketClosed)
     {
         /* Check if the Sequence Number changed by now, in which case quit */
-        if (AsyncData->SequenceNumber == Socket->SharedData.SequenceNumber)
+        if (AsyncData->SequenceNumber == Socket->SharedData->SequenceNumber)
         {
             /* Do the actuall select, if needed */
-            if ((Socket->SharedData.AsyncEvents & (~Socket->SharedData.AsyncDisabledEvents)))
+            if ((Socket->SharedData->AsyncEvents & (~Socket->SharedData->AsyncDisabledEvents)))
             {
                 SockProcessAsyncSelect(Socket, AsyncData);
                 FreeContext = FALSE;
@@ -3253,16 +3413,16 @@ SockReenableAsyncSelectEvent (IN PSOCKET_INFORMATION Socket,
     PASYNC_DATA AsyncData;
 
     /* Make sure the event is actually disabled */
-    if (!(Socket->SharedData.AsyncDisabledEvents & Event))
+    if (!(Socket->SharedData->AsyncDisabledEvents & Event))
     {
         return;
     }
 
     /* Re-enable it */
-    Socket->SharedData.AsyncDisabledEvents &= ~Event;
+    Socket->SharedData->AsyncDisabledEvents &= ~Event;
 
     /* Return if no more events are being polled */
-    if ((Socket->SharedData.AsyncEvents & (~Socket->SharedData.AsyncDisabledEvents)) == 0 )
+    if ((Socket->SharedData->AsyncEvents & (~Socket->SharedData->AsyncDisabledEvents)) == 0 )
     {
         return;
     }
@@ -3275,11 +3435,11 @@ SockReenableAsyncSelectEvent (IN PSOCKET_INFORMATION Socket,
     SockCreateOrReferenceAsyncThread();
 
     /* Increase the sequence number to stop anything else */
-    Socket->SharedData.SequenceNumber++;
+    Socket->SharedData->SequenceNumber++;
 
     /* Set up the Async Data */
     AsyncData->ParentSocket = Socket;
-    AsyncData->SequenceNumber = Socket->SharedData.SequenceNumber;
+    AsyncData->SequenceNumber = Socket->SharedData->SequenceNumber;
 
     /* Begin Async Select by using I/O Completion */
     NtSetIoCompletion(SockAsyncCompletionPort,

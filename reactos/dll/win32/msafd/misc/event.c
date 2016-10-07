@@ -47,14 +47,14 @@ WSPEventSelect(
 	/* Set Socket to Non-Blocking */
 	BlockMode = TRUE;
 	SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL, NULL);
-	Socket->SharedData.NonBlocking = TRUE;
+	Socket->SharedData->NonBlocking = TRUE;
 
 	/* Deactivate Async Select if there is one */
 	if (Socket->EventObject) {
-		Socket->SharedData.hWnd = NULL;
-		Socket->SharedData.wMsg = 0;
-		Socket->SharedData.AsyncEvents = 0;
-		Socket->SharedData.SequenceNumber++; // This will kill Async Select after the next completion
+		Socket->SharedData->hWnd = NULL;
+		Socket->SharedData->wMsg = 0;
+		Socket->SharedData->AsyncEvents = 0;
+		Socket->SharedData->SequenceNumber++; // This will kill Async Select after the next completion
 	}
 
 	/* Set Structure Info */

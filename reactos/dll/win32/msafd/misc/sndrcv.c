@@ -46,10 +46,10 @@ WSPAsyncSelect(IN  SOCKET Handle,
     /* Change the Socket to Non Blocking */
     BlockMode = TRUE;
     SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL, NULL);
-    Socket->SharedData.NonBlocking = TRUE;
+    Socket->SharedData->NonBlocking = TRUE;
 
     /* Deactive WSPEventSelect */
-    if (Socket->SharedData.AsyncEvents)
+    if (Socket->SharedData->AsyncEvents)
     {
         if (WSPEventSelect(Handle, NULL, 0, lpErrno) == SOCKET_ERROR)
         {
@@ -65,14 +65,14 @@ WSPAsyncSelect(IN  SOCKET Handle,
     SockGetAsyncSelectHelperAfdHandle();
 
     /* Store Socket Data */
-    Socket->SharedData.hWnd = hWnd;
-    Socket->SharedData.wMsg = wMsg;
-    Socket->SharedData.AsyncEvents = lEvent;
-    Socket->SharedData.AsyncDisabledEvents = 0;
-    Socket->SharedData.SequenceNumber++;
+    Socket->SharedData->hWnd = hWnd;
+    Socket->SharedData->wMsg = wMsg;
+    Socket->SharedData->AsyncEvents = lEvent;
+    Socket->SharedData->AsyncDisabledEvents = 0;
+    Socket->SharedData->SequenceNumber++;
 
     /* Return if there are no more Events */
-    if ((Socket->SharedData.AsyncEvents & (~Socket->SharedData.AsyncDisabledEvents)) == 0)
+    if ((Socket->SharedData->AsyncEvents & (~Socket->SharedData->AsyncDisabledEvents)) == 0)
     {
         HeapFree(GetProcessHeap(), 0, AsyncData);
         return 0;
@@ -80,7 +80,7 @@ WSPAsyncSelect(IN  SOCKET Handle,
 
     /* Set up the Async Data */
     AsyncData->ParentSocket = Socket;
-    AsyncData->SequenceNumber = Socket->SharedData.SequenceNumber;
+    AsyncData->SequenceNumber = Socket->SharedData->SequenceNumber;
 
     /* Begin Async Select by using I/O Completion */
     NtSetIoCompletion(SockAsyncCompletionPort,
@@ -136,7 +136,7 @@ WSPRecv(SOCKET Handle,
     RecvInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
     RecvInfo.BufferCount = dwBufferCount;
     RecvInfo.TdiFlags = 0;
-    RecvInfo.AfdFlags = Socket->SharedData.NonBlocking ? AFD_IMMEDIATE : 0;
+    RecvInfo.AfdFlags = Socket->SharedData->NonBlocking ? AFD_IMMEDIATE : 0;
 
     /* Set the TDI Flags */
     if (*ReceiveFlags == 0)
@@ -281,7 +281,7 @@ WSPRecvFrom(SOCKET Handle,
        return SOCKET_ERROR;
     }
 
-    if (!(Socket->SharedData.ServiceFlags1 & XP1_CONNECTIONLESS))
+    if (!(Socket->SharedData->ServiceFlags1 & XP1_CONNECTIONLESS))
     {
         /* Call WSPRecv for a non-datagram socket */
         return WSPRecv(Handle,
@@ -295,6 +295,17 @@ WSPRecvFrom(SOCKET Handle,
                        lpErrno);
     }
 
+    /* Bind us First */
+    if (Socket->SharedData->State == SocketOpen)
+    {
+        Socket->HelperData->WSHGetWildcardSockaddr(Socket->HelperContext,
+            SocketAddress,
+            SocketAddressLength);
+        /* Bind it */
+        if (WSPBind(Handle, SocketAddress, *SocketAddressLength, lpErrno) == SOCKET_ERROR)
+            return SOCKET_ERROR;
+    }
+
     Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
                             NULL, 1, FALSE );
 
@@ -305,7 +316,7 @@ WSPRecvFrom(SOCKET Handle,
     RecvInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
     RecvInfo.BufferCount = dwBufferCount;
     RecvInfo.TdiFlags = 0;
-    RecvInfo.AfdFlags = Socket->SharedData.NonBlocking ? AFD_IMMEDIATE : 0;
+    RecvInfo.AfdFlags = Socket->SharedData->NonBlocking ? AFD_IMMEDIATE : 0;
     RecvInfo.AddressLength = SocketAddressLength;
     RecvInfo.Address = SocketAddress;
 
@@ -457,7 +468,7 @@ WSPSend(SOCKET Handle,
     SendInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
     SendInfo.BufferCount = dwBufferCount;
     SendInfo.TdiFlags = 0;
-    SendInfo.AfdFlags = Socket->SharedData.NonBlocking ? AFD_IMMEDIATE : 0;
+    SendInfo.AfdFlags = Socket->SharedData->NonBlocking ? AFD_IMMEDIATE : 0;
 
     /* Set the TDI Flags */
     if (iFlags)
@@ -574,7 +585,7 @@ WSPSendTo(SOCKET Handle,
        return SOCKET_ERROR;
     }
 
-    if (!(Socket->SharedData.ServiceFlags1 & XP1_CONNECTIONLESS))
+    if (!(Socket->SharedData->ServiceFlags1 & XP1_CONNECTIONLESS))
     {
         /* Use WSPSend for connection-oriented sockets */
         return WSPSend(Handle,
@@ -589,7 +600,7 @@ WSPSendTo(SOCKET Handle,
     }
 
     /* Bind us First */
-    if (Socket->SharedData.State == SocketOpen)
+    if (Socket->SharedData->State == SocketOpen)
     {
         /* Get the Wildcard Address */
         BindAddressLength = Socket->HelperData->MaxWSAddressLength;
@@ -639,7 +650,7 @@ WSPSendTo(SOCKET Handle,
 
     /* Set up Structure */
     SendInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
-    SendInfo.AfdFlags = Socket->SharedData.NonBlocking ? AFD_IMMEDIATE : 0;
+    SendInfo.AfdFlags = Socket->SharedData->NonBlocking ? AFD_IMMEDIATE : 0;
     SendInfo.BufferCount = dwBufferCount;
     SendInfo.TdiConnection.RemoteAddress = RemoteAddress;
     SendInfo.TdiConnection.RemoteAddressLength = Socket->HelperData->MaxTDIAddressLength;

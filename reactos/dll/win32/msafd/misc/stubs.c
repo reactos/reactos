@@ -24,20 +24,6 @@ WSPCancelBlockingCall(
 }
 
 
-INT
-WSPAPI
-WSPDuplicateSocket(
-    IN  SOCKET s,
-    IN  DWORD dwProcessId,
-    OUT LPWSAPROTOCOL_INFOW lpProtocolInfo,
-    OUT LPINT lpErrno)
-{
-    UNIMPLEMENTED;
-
-    return SOCKET_ERROR;
-}
-
-
 BOOL
 WSPAPI
 WSPGetOverlappedResult(

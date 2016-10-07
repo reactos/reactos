@@ -47,6 +47,7 @@ typedef enum _SOCKET_STATE {
 
 typedef struct _SOCK_SHARED_INFO {
     SOCKET_STATE				State;
+    LONG						RefCount;
     INT							AddressFamily;
     INT							SocketType;
     INT							Protocol;
@@ -84,12 +85,14 @@ typedef struct _SOCK_SHARED_INFO {
     UINT						wMsg;
     LONG						AsyncEvents;
     LONG						AsyncDisabledEvents;
+    SOCKADDR					WSLocalAddress;
+    SOCKADDR					WSRemoteAddress;
 } SOCK_SHARED_INFO, *PSOCK_SHARED_INFO;
 
 typedef struct _SOCKET_INFORMATION {
-	ULONG RefCount;
 	SOCKET Handle;
-	SOCK_SHARED_INFO SharedData;
+	PSOCK_SHARED_INFO SharedData;
+	HANDLE SharedDataHandle;
 	DWORD HelperEvents;
 	PHELPER_DATA HelperData;
 	PVOID HelperContext;
@@ -103,8 +106,6 @@ typedef struct _SOCKET_INFORMATION {
 	CRITICAL_SECTION Lock;
 	PVOID SanData;
 	BOOL TrySAN;
-	SOCKADDR WSLocalAddress;
-	SOCKADDR WSRemoteAddress;
 	WSAPROTOCOL_INFOW ProtocolInfo;
 	struct _SOCKET_INFORMATION *NextSocket;
 } SOCKET_INFORMATION, *PSOCKET_INFORMATION;
