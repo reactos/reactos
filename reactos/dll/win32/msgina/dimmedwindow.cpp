@@ -104,7 +104,7 @@ public:
     {
         MSG msg;
 
-        while (!IsWindowVisible(m_hwnd) && IsWindow(m_hwnd))
+        while (IsWindow(m_hwnd) && !IsWindowVisible(m_hwnd))
         {
             while (::PeekMessage(&msg, m_hwnd, 0, 0, PM_REMOVE))
             {
