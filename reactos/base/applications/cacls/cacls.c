@@ -33,19 +33,17 @@ static GENERIC_MAPPING FileGenericMapping =
 };
 
 
-static
-VOID PrintError(DWORD dwError)
+static VOID
+PrintError(DWORD dwError)
 {
     if (dwError == ERROR_SUCCESS)
         return;
 
-    ConMsgPrintf(StdErr,
-                 FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                 NULL, dwError, LANG_USER_DEFAULT);
+    ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
+               NULL, dwError, LANG_USER_DEFAULT);
 }
 
-static
-BOOL
+static BOOL
 PrintFileDacl(IN LPTSTR FilePath,
               IN LPTSTR FileName)
 {
@@ -63,10 +61,8 @@ PrintFileDacl(IN LPTSTR FilePath,
         return FALSE;
     }
 
-    _tcscpy(FullFileName,
-            FilePath);
-    _tcscat(FullFileName,
-            FileName);
+    _tcscpy(FullFileName, FilePath);
+    _tcscat(FullFileName, FileName);
 
     /* find out how much memory we need */
     if (!GetFileSecurity(FullFileName,
@@ -182,8 +178,7 @@ BuildSidString:
                         }
 
                         /* print the file name or space */
-                        _tprintf(_T("%s "),
-                                 FullFileName);
+                        ConPrintf(StdOut, L"%s ", FullFileName);
 
                         /* attempt to map the SID to a user name */
                         if (AceIndex == 0)
@@ -199,32 +194,29 @@ BuildSidString:
                         /* print the domain and/or user if possible, or the SID string */
                         if (Name != NULL && Domain[0] != _T('\0'))
                         {
-                            _tprintf(_T("%s\\%s:"),
-                                     Domain,
-                                     Name);
+                            ConPrintf(StdOut, L"%s\\%s:", Domain, Name);
                             IndentAccess = (DWORD)_tcslen(Domain) + _tcslen(Name);
                         }
                         else
                         {
                             LPTSTR DisplayString = (Name != NULL ? Name : SidString);
 
-                            _tprintf(_T("%s:"),
-                                     DisplayString);
+                            ConPrintf(StdOut, L"%s:", DisplayString);
                             IndentAccess = (DWORD)_tcslen(DisplayString);
                         }
 
                         /* print the ACE Flags */
                         if (Ace->Header.AceFlags & CONTAINER_INHERIT_ACE)
                         {
-                            IndentAccess += PrintResourceString(IDS_ABBR_CI);
+                            IndentAccess += ConResPuts(StdOut, IDS_ABBR_CI);
                         }
                         if (Ace->Header.AceFlags & OBJECT_INHERIT_ACE)
                         {
-                            IndentAccess += PrintResourceString(IDS_ABBR_OI);
+                            IndentAccess += ConResPuts(StdOut, IDS_ABBR_OI);
                         }
                         if (Ace->Header.AceFlags & INHERIT_ONLY_ACE)
                         {
-                            IndentAccess += PrintResourceString(IDS_ABBR_IO);
+                            IndentAccess += ConResPuts(StdOut, IDS_ABBR_IO);
                         }
 
                         IndentAccess += 2;
@@ -236,11 +228,11 @@ BuildSidString:
                         {
                             if (AccessMask == FILE_ALL_ACCESS)
                             {
-                                PrintResourceString(IDS_ABBR_NONE);
+                                ConResPuts(StdOut, IDS_ABBR_NONE);
                             }
                             else
                             {
-                                PrintResourceString(IDS_DENY);
+                                ConResPuts(StdOut, IDS_DENY);
                                 goto PrintSpecialAccess;
                             }
                         }
@@ -248,20 +240,20 @@ BuildSidString:
                         {
                             if (AccessMask == FILE_ALL_ACCESS)
                             {
-                                PrintResourceString(IDS_ABBR_FULL);
+                                ConResPuts(StdOut, IDS_ABBR_FULL);
                             }
                             else if (!(Ace->Mask & (GENERIC_READ | GENERIC_EXECUTE)) &&
                                      AccessMask == (FILE_GENERIC_READ | FILE_EXECUTE))
                             {
-                                PrintResourceString(IDS_ABBR_READ);
+                                ConResPuts(StdOut, IDS_ABBR_READ);
                             }
                             else if (AccessMask == (FILE_GENERIC_READ | FILE_GENERIC_WRITE | FILE_EXECUTE | DELETE))
                             {
-                                PrintResourceString(IDS_ABBR_CHANGE);
+                                ConResPuts(StdOut, IDS_ABBR_CHANGE);
                             }
                             else if (AccessMask == FILE_GENERIC_WRITE)
                             {
-                                PrintResourceString(IDS_ABBR_WRITE);
+                                ConResPuts(StdOut, IDS_ABBR_WRITE);
                             }
                             else
                             {
@@ -301,10 +293,10 @@ BuildSidString:
                                     {STANDARD_RIGHTS_ALL, IDS_STANDARD_RIGHTS_ALL},
                                 };
 
-                                PrintResourceString(IDS_ALLOW);
+                                ConResPuts(StdOut, IDS_ALLOW);
 
 PrintSpecialAccess:
-                                PrintResourceString(IDS_SPECIAL_ACCESS);
+                                ConResPuts(StdOut, IDS_SPECIAL_ACCESS);
 
                                 /* print the special access rights */
                                 x = ARRAYSIZE(AccessRights);
@@ -312,24 +304,21 @@ PrintSpecialAccess:
                                 {
                                     if ((Ace->Mask & AccessRights[x].Access) == AccessRights[x].Access)
                                     {
-                                        _tprintf(_T("\n%s "),
-                                                 FullFileName);
-                                        for (x2 = 0;
-                                             x2 < IndentAccess;
-                                             x2++)
+                                        ConPrintf(StdOut, L"\n%s ", FullFileName);
+                                        for (x2 = 0; x2 < IndentAccess; x2++)
                                         {
-                                            _tprintf(_T(" "));
+                                            ConPuts(StdOut, L" ");
                                         }
 
-                                        PrintResourceString(AccessRights[x].uID);
+                                        ConResPuts(StdOut, AccessRights[x].uID);
                                     }
                                 }
 
-                                _tprintf(_T("\n"));
+                                ConPuts(StdOut, L"\n");
                             }
                         }
 
-                        _tprintf(_T("\n"));
+                        ConPuts(StdOut, L"\n");
 
                         /* free up all resources */
                         if (Name != NULL)
@@ -451,10 +440,14 @@ PrintDaclsOfFiles(LPCTSTR pszFiles)
                 }
             }
             else
+            {
                 break;
+            }
         }
         else
-            _tprintf(_T("\n"));
+        {
+            ConPuts(StdOut, L"\n");
+        }
     } while(FindNextFile(hFind, &FindData));
     LastError = GetLastError();
     FindClose(hFind);
@@ -758,9 +751,11 @@ int _tmain(int argc, const TCHAR *argv[])
 
     if (argc <= 1)
     {
-        PrintResourceString(IDS_HELP);
+        ConResPuts(StdOut, IDS_HELP);
         return 0;
     }
+
+    // FIXME: Convert to proper parsing, with support for /?
 
     /*
      * parse command line options
@@ -845,7 +840,7 @@ int _tmain(int argc, const TCHAR *argv[])
     if (InvalidParameter)
     {
         PrintError(ERROR_INVALID_PARAMETER);
-        PrintResourceString(IDS_HELP);
+        ConResPuts(StdOut, IDS_HELP);
         return 1;
     }
 

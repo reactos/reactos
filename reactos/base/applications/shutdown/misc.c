@@ -162,9 +162,8 @@ DWORD ParseReasonCode(LPCWSTR code)
 /* Writes the last error as both text and error code to the console */
 VOID DisplayError(DWORD dwError)
 {
-    ConMsgPrintf(StdErr,
-                 FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                 NULL, dwError, LANG_USER_DEFAULT);
+    ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
+               NULL, dwError, LANG_USER_DEFAULT);
     ConPrintf(StdErr, L"Error code: %lu\n", dwError);
 }
 

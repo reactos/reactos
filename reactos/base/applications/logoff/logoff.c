@@ -32,9 +32,8 @@ BOOL bVerbose;
 //----------------------------------------------------------------------
 VOID DisplayError(DWORD dwError)
 {
-    ConMsgPrintf(StdErr,
-                 FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                 NULL, dwError, LANG_USER_DEFAULT);
+    ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
+               NULL, dwError, LANG_USER_DEFAULT);
     ConPrintf(StdErr, L"Error code: %lu\n", dwError);
 }
 
@@ -65,7 +64,7 @@ BOOL ParseCommandLine(int argc, WCHAR *argv[])
 			}
 		default:
 			//Invalid parameter detected
-			ConResPrintf(StdErr, IDS_ILLEGAL_PARAM);
+			ConResPuts(StdErr, IDS_ILLEGAL_PARAM);
 			return FALSE;
 		}
 	}
@@ -87,7 +86,7 @@ int wmain(int argc, WCHAR *argv[])
 	// Parse command line
 	//
 	if (!ParseCommandLine(argc, argv)) {
-		ConResPrintf(StdOut, IDS_USAGE);
+		ConResPuts(StdOut, IDS_USAGE);
 		return 1;
 	}
 
@@ -96,11 +95,11 @@ int wmain(int argc, WCHAR *argv[])
 	//
 	if (szRemoteServerName) {
 		if (bVerbose) {
-			ConResPrintf(StdOut, IDS_LOGOFF_REMOTE);
+			ConResPuts(StdOut, IDS_LOGOFF_REMOTE);
 		}
 
 		// FIXME: Add Remote Procedure Call to logoff user on a remote machine
-		ConPrintf(StdErr, L"Remote Procedure Call in logoff.exe has not been implemented");
+		ConPuts(StdErr, L"Remote Procedure Call in logoff.exe has not been implemented");
 	}
 	//
 	// Perform logoff of current session on local machine instead
@@ -108,7 +107,7 @@ int wmain(int argc, WCHAR *argv[])
 	else {
 		if (bVerbose) {
 			// Get resource string, and print it.
-			ConResPrintf(StdOut, IDS_LOGOFF_LOCAL);
+			ConResPuts(StdOut, IDS_LOGOFF_LOCAL);
 		}
 
 		// Actual logoff

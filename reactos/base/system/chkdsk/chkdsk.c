@@ -88,10 +88,9 @@ PCHKDSK Chkdsk;
 static VOID PrintWin32Error(LPWSTR Message, DWORD ErrorCode)
 {
     ConPrintf(StdErr, L"%s: ", Message);
-    ConMsgPrintf(StdErr,
-                 FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                 NULL, ErrorCode, LANG_USER_DEFAULT);
-    ConPrintf(StdErr, L"\n");
+    ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
+               NULL, ErrorCode, LANG_USER_DEFAULT);
+    ConPuts(StdErr, L"\n");
 }
 
 
@@ -240,59 +239,59 @@ ChkdskCallback(
     switch (Command)
     {
         case UNKNOWN2:
-            ConPrintf(StdOut, L"UNKNOWN2\r");
+            ConPuts(StdOut, L"UNKNOWN2\r");
             break;
 
         case UNKNOWN3:
-            ConPrintf(StdOut, L"UNKNOWN3\n");
+            ConPuts(StdOut, L"UNKNOWN3\n");
             break;
 
         case UNKNOWN4:
-            ConPrintf(StdOut, L"UNKNOWN4\n");
+            ConPuts(StdOut, L"UNKNOWN4\n");
             break;
 
         case UNKNOWN5:
-            ConPrintf(StdOut, L"UNKNOWN5\n");
+            ConPuts(StdOut, L"UNKNOWN5\n");
             break;
 
         case FSNOTSUPPORTED:
-            ConPrintf(StdOut, L"FSNOTSUPPORTED\n");
+            ConPuts(StdOut, L"FSNOTSUPPORTED\n");
             break;
 
         case VOLUMEINUSE:
-            ConPrintf(StdOut, L"VOLUMEINUSE\n");
+            ConPuts(StdOut, L"VOLUMEINUSE\n");
             break;
 
         case UNKNOWN9:
-            ConPrintf(StdOut, L"UNKNOWN9\n");
+            ConPuts(StdOut, L"UNKNOWN9\n");
             break;
 
         case UNKNOWNA:
-            ConPrintf(StdOut, L"UNKNOWNA\n");
+            ConPuts(StdOut, L"UNKNOWNA\n");
             break;
 
         case UNKNOWNC:
-            ConPrintf(StdOut, L"UNKNOWNC\n");
+            ConPuts(StdOut, L"UNKNOWNC\n");
             break;
 
         case UNKNOWND:
-            ConPrintf(StdOut, L"UNKNOWND\n");
+            ConPuts(StdOut, L"UNKNOWND\n");
             break;
 
         case INSUFFICIENTRIGHTS:
-            ConPrintf(StdOut, L"INSUFFICIENTRIGHTS\n");
+            ConPuts(StdOut, L"INSUFFICIENTRIGHTS\n");
             break;
 
         case STRUCTUREPROGRESS:
-            ConPrintf(StdOut, L"STRUCTUREPROGRESS\n");
+            ConPuts(StdOut, L"STRUCTUREPROGRESS\n");
             break;
 
         case DONEWITHSTRUCTURE:
-            ConPrintf(StdOut, L"DONEWITHSTRUCTURE\n");
+            ConPuts(StdOut, L"DONEWITHSTRUCTURE\n");
             break;
 
         case CLUSTERSIZETOOSMALL:
-            ConPrintf(StdOut, L"CLUSTERSIZETOOSMALL\n");
+            ConPuts(StdOut, L"CLUSTERSIZETOOSMALL\n");
             break;
 
         case PROGRESS:
@@ -309,7 +308,7 @@ ChkdskCallback(
             status = (PBOOLEAN)Argument;
             if (*status == FALSE)
             {
-                ConPrintf(StdOut, L"Chkdsk was unable to complete successfully.\n\n");
+                ConPuts(StdOut, L"Chkdsk was unable to complete successfully.\n\n");
                 Error = TRUE;
             }
             break;
@@ -369,7 +368,7 @@ wmain(int argc, WCHAR *argv[])
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
 
-    ConPrintf(StdOut,
+    ConPuts(StdOut,
         L"\n"
         L"Chkdskx v1.0.1 by Mark Russinovich\n"
         L"Systems Internals - http://www.sysinternals.com\n"
@@ -381,7 +380,7 @@ wmain(int argc, WCHAR *argv[])
     //
     if (!LoadFMIFSEntryPoints())
     {
-        ConPrintf(StdErr, L"Could not located FMIFS entry points.\n\n");
+        ConPuts(StdErr, L"Could not located FMIFS entry points.\n\n");
         return -1;
     }
 #endif
@@ -448,7 +447,7 @@ wmain(int argc, WCHAR *argv[])
                                    0);
         if (volumeHandle == INVALID_HANDLE_VALUE)
         {
-            ConPrintf(StdErr, L"Chkdsk cannot run because the volume is in use by another process.\n\n");
+            ConPuts(StdErr, L"Chkdsk cannot run because the volume is in use by another process.\n\n");
             return -1;
         }
         CloseHandle(volumeHandle);

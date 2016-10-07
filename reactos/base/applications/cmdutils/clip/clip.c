@@ -21,9 +21,8 @@ VOID PrintError(DWORD dwError)
     if (dwError == ERROR_SUCCESS)
         return;
 
-    ConMsgPrintf(StdErr,
-                 FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                 NULL, dwError, LANG_USER_DEFAULT);
+    ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
+               NULL, dwError, LANG_USER_DEFAULT);
 }
 
 static BOOL IsDataUnicode(HGLOBAL hGlobal)
@@ -55,13 +54,13 @@ int wmain(int argc, wchar_t** argv)
     /* Check for usage */
     if (argc > 1 && wcsncmp(argv[1], L"/?", 2) == 0)
     {
-        ConResPrintf(StdOut, IDS_HELP);
+        ConResPuts(StdOut, IDS_HELP);
         return 0;
     }
 
     if (GetFileType(hInput) == FILE_TYPE_CHAR)
     {
-        ConResPrintf(StdOut, IDS_USAGE);
+        ConResPuts(StdOut, IDS_USAGE);
         return 0;
     }
 

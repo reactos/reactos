@@ -267,7 +267,7 @@ Quit:
 
         case ERROR_IS_SUBSTED:
         {
-            ConResPrintf(StdErr, IDS_DRIVE_ALREADY_SUBSTED);
+            ConResPuts(StdErr, IDS_DRIVE_ALREADY_SUBSTED);
             return 1;
         }
 
@@ -305,7 +305,7 @@ int wmain(int argc, WCHAR* argv[])
     {
         if (!_wcsicmp(argv[i], L"/?"))
         {
-            ConResPrintf(StdOut, IDS_USAGE);
+            ConResPuts(StdOut, IDS_USAGE);
             return 0;
         }
     }

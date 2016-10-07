@@ -117,10 +117,9 @@ SIZEDEFINITION LegalSizes[] = {
 static VOID PrintWin32Error(LPWSTR Message, DWORD ErrorCode)
 {
     ConPrintf(StdErr, L"%s: ", Message);
-    ConMsgPrintf(StdErr,
-                 FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                 NULL, ErrorCode, LANG_USER_DEFAULT);
-    ConPrintf(StdErr, L"\n");
+    ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
+               NULL, ErrorCode, LANG_USER_DEFAULT);
+    ConPuts(StdErr, L"\n");
 }
 
 
@@ -241,7 +240,7 @@ FormatExCallback(
             status = (PBOOLEAN)Argument;
             if (*status == FALSE)
             {
-                ConResPrintf(StdOut, STRING_FORMAT_FAIL);
+                ConResPuts(StdOut, STRING_FORMAT_FAIL);
                 Error = TRUE;
             }
             break;
@@ -260,7 +259,7 @@ FormatExCallback(
         case UNKNOWND:
         case STRUCTUREPROGRESS:
         case CLUSTERSIZETOOSMALL:
-            ConResPrintf(StdOut, STRING_NO_SUPPORT);
+            ConResPuts(StdOut, STRING_NO_SUPPORT);
             return FALSE;
     }
     return TRUE;
@@ -374,7 +373,7 @@ int wmain(int argc, WCHAR *argv[])
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
 
-    ConPrintf(StdOut,
+    ConPuts(StdOut,
         L"\n"
         L"Formatx v1.0 by Mark Russinovich\n"
         L"Systems Internals - http://www.sysinternals.com\n"
@@ -386,7 +385,7 @@ int wmain(int argc, WCHAR *argv[])
     //
     if (!LoadFMIFSEntryPoints())
     {
-        ConResPrintf(StdErr, STRING_FMIFS_FAIL);
+        ConResPuts(StdErr, STRING_FMIFS_FAIL);
         return -1;
     }
 #endif
@@ -397,7 +396,7 @@ int wmain(int argc, WCHAR *argv[])
     badArg = ParseCommandLine(argc, argv);
     if (badArg)
     {
-        ConResPrintf(StdOut, STRING_UNKNOW_ARG, argv[badArg]);
+        ConResPrintf(StdErr, STRING_UNKNOW_ARG, argv[badArg]);
         Usage(argv[0]);
         return -1;
     }
@@ -407,7 +406,7 @@ int wmain(int argc, WCHAR *argv[])
     //
     if (!Drive)
     {
-        ConResPrintf(StdOut, STRING_DRIVE_PARM);
+        ConResPuts(StdErr, STRING_DRIVE_PARM);
         Usage(argv[0]);
         return -1;
     }
@@ -431,7 +430,7 @@ int wmain(int argc, WCHAR *argv[])
 
         case DRIVE_REMOTE:
         case DRIVE_CDROM:
-            ConResPrintf(StdOut, STRING_NO_SUPPORT);
+            ConResPuts(StdOut, STRING_NO_SUPPORT);
             return -1;
 
         case DRIVE_NO_ROOT_DIR:
@@ -462,7 +461,7 @@ int wmain(int argc, WCHAR *argv[])
         if (towlower(path[0]) == towlower(Drive[0]))
         {
             // todo: report "Cannot format system drive"
-            ConResPrintf(StdOut, STRING_NO_SUPPORT);
+            ConResPuts(StdOut, STRING_NO_SUPPORT);
             return -1;
         }
     }
@@ -507,7 +506,7 @@ int wmain(int argc, WCHAR *argv[])
                 if (!wcsicmp(input, volumeName))
                     break;
 
-                ConResPrintf(StdOut, STRING_ERROR_LABEL);
+                ConResPuts(StdOut, STRING_ERROR_LABEL);
             }
         }
 
@@ -520,7 +519,7 @@ int wmain(int argc, WCHAR *argv[])
             if (_wcsnicmp(&input[0], &szMsg[0], 1) == 0) break;
             if (_wcsnicmp(&input[0], &szMsg[1], 1) == 0)
             {
-                ConPrintf(StdOut, L"\n");
+                ConPuts(StdOut, L"\n");
                 return 0;
             }
         }
@@ -554,7 +553,7 @@ int wmain(int argc, WCHAR *argv[])
             ConPrintf(StdOut, L"%s %.2fM\n", szMsg,
                 ((float)(LONGLONG)totalNumberOfBytes.QuadPart)/(float)(1024.0*1024.0));
         }
-        ConResPrintf(StdOut, STRING_CREATE_FSYS);
+        ConResPuts(StdOut, STRING_CREATE_FSYS);
     }
 
     //
@@ -563,7 +562,7 @@ int wmain(int argc, WCHAR *argv[])
     FormatEx(RootDirectory, media, FileSystem, Label, QuickFormat,
              ClusterSize, FormatExCallback);
     if (Error) return -1;
-    ConResPrintf(StdOut, STRING_FMT_COMPLETE);
+    ConResPuts(StdOut, STRING_FMT_COMPLETE);
 
     //
     // Enable compression if desired
@@ -571,7 +570,7 @@ int wmain(int argc, WCHAR *argv[])
     if (CompressDrive)
     {
         if (!EnableVolumeCompression(RootDirectory, TRUE))
-            ConResPrintf(StdOut, STRING_VOL_COMPRESS);
+            ConResPuts(StdOut, STRING_VOL_COMPRESS);
     }
 
     //
@@ -579,7 +578,7 @@ int wmain(int argc, WCHAR *argv[])
     //
     if (!GotALabel)
     {
-        ConResPrintf(StdOut, STRING_ENTER_LABEL);
+        ConResPuts(StdOut, STRING_ENTER_LABEL);
         fgetws(input, ARRAYSIZE(LabelString), stdin);
 
         input[wcslen(input) - 1] = 0;

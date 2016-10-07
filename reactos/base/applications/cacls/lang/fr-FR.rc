@@ -15,7 +15,8 @@ CACLS nomfichier [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
                                     W  Écriture\n\
                                     C  Modification (Écriture)\n\
                                     F  Contrôle total\n\
-   /R user       Supprime les droits d'accès de l'utilisateur spécifié (valide uniquement avec /E).\n\
+   /R user       Supprime les droits d'accès de l'utilisateur spécifié\n\
+                 (valide uniquement avec /E).\n\
    /P user:perm  Remplace les droits d'accès de l'utilisateur spécifié.\n\
                  Perm peut valoir : N  Aucun \n\
                                     R  Lecture\n\
@@ -23,7 +24,8 @@ CACLS nomfichier [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
                                     C  Modification (Écriture)\n\
                                     F  Contrôle total\n\
    /D user       Interdit l'accès à l'utilisateur spécifié.\n\
-Il est possible d'utiliser des caractères joker pour sélectionner plus d'un fichier avec une commande.\n\
+Il est possible d'utiliser des caractères joker pour sélectionner plus d'un\n\
+fichier avec une commande.\n\
 Il est possible de spécifier plus d'un utilisateur dans une commande.\n\n\
 Abréviations:\n\
    CI - Héritage du conteneur.\n\

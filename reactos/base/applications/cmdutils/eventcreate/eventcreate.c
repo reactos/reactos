@@ -113,10 +113,9 @@ VOID PrintError(DWORD dwError)
     if (dwError == ERROR_SUCCESS)
         return;
 
-    ConMsgPrintf(StdErr,
-                 FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                 NULL, dwError, LANG_USER_DEFAULT);
-    ConPrintf(StdErr, L"\n");
+    ConMsgPuts(StdErr, FORMAT_MESSAGE_FROM_SYSTEM,
+               NULL, dwError, LANG_USER_DEFAULT);
+    ConPuts(StdErr, L"\n");
 }
 
 
@@ -594,7 +593,7 @@ Finalize:
             else
             {
                 /* This is NOT a custom source, we must return an error! */
-                ConResPrintf(StdErr, IDS_SOURCE_NOT_CUSTOM);
+                ConResPuts(StdErr, IDS_SOURCE_NOT_CUSTOM);
                 goto Quit;
             }
         }
@@ -605,7 +604,7 @@ Finalize:
         if (!LogNameValid /* && !FoundLog */)
         {
             /* The log name is not specified, we cannot create the source */
-            ConResPrintf(StdErr, IDS_SOURCE_NOCREATE);
+            ConResPuts(StdErr, IDS_SOURCE_NOCREATE);
             goto Quit;
         }
         else // LogNameValid && FoundLog
@@ -721,7 +720,7 @@ typedef enum _PARSER_ERROR
     MandatoryOptionAbsent,
 } PARSER_ERROR;
 
-typedef VOID (__stdcall *PRINT_ERROR_FUNC)(IN PARSER_ERROR, ...);
+typedef VOID (__cdecl *PRINT_ERROR_FUNC)(IN PARSER_ERROR, ...);
 
 BOOL
 DoParse(
@@ -982,7 +981,7 @@ DoParse(
 
 
 static VOID
-__stdcall
+__cdecl
 PrintParserError(PARSER_ERROR Error, ...)
 {
     /* WARNING: Please keep this lookup table in sync with the resources! */
@@ -1008,7 +1007,7 @@ PrintParserError(PARSER_ERROR Error, ...)
         va_end(args);
 
         if (Error != Success)
-            ConResPrintf(StdErr, IDS_USAGE);
+            ConResPuts(StdErr, IDS_USAGE);
     }
     else
     {
@@ -1121,7 +1120,7 @@ int wmain(int argc, WCHAR* argv[])
             return EXIT_FAILURE;
         }
 
-        ConResPrintf(StdOut, IDS_HELP);
+        ConResPuts(StdOut, IDS_HELP);
         return EXIT_SUCCESS;
     }
 
@@ -1141,7 +1140,7 @@ int wmain(int argc, WCHAR* argv[])
     {
         /* Invalid event identifier */
         ConResPrintf(StdErr, IDS_BADSYNTAX_7, OPT_EVTID.OptionStr, EVENT_ID_MIN, EVENT_ID_MAX);
-        ConResPrintf(StdErr, IDS_USAGE);
+        ConResPuts(StdErr, IDS_USAGE);
         return EXIT_FAILURE;
     }
 
@@ -1238,12 +1237,12 @@ int wmain(int argc, WCHAR* argv[])
         if (!Success)
         {
             PrintError(GetLastError());
-            ConPrintf(StdErr, L"Failed to report event!\n");
+            ConPuts(StdErr, L"Failed to report event!\n");
         }
         else
         {
             /* Show success */
-            ConPrintf(StdOut, L"\n");
+            ConPuts(StdOut, L"\n");
             if (!szEventSource)
                 ConResPrintf(StdOut, IDS_SUCCESS_1, szEventType, szLogName);
             else if (!szLogName)
@@ -1257,7 +1256,7 @@ int wmain(int argc, WCHAR* argv[])
     else
     {
         PrintError(GetLastError());
-        ConPrintf(StdErr, L"GetUserToken() failed!\n");
+        ConPuts(StdErr, L"GetUserToken() failed!\n");
     }
 
     /* Close the event log */

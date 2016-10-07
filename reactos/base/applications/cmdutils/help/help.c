@@ -66,8 +66,8 @@ int wmain(int argc, WCHAR* argv[])
      */
     if (argc <= 1)
     {
-        PrintResourceString(IDS_HELP1);
-        PrintResourceString(IDS_HELP2);
+        ConResPuts(StdOut, IDS_HELP1);
+        ConResPuts(StdOut, IDS_HELP2);
         return 0;
     }
 
@@ -77,7 +77,7 @@ int wmain(int argc, WCHAR* argv[])
      */
     if ((argc > 2) || (wcscmp(argv[1], L"/?") == 0))
     {
-        PrintResourceString(IDS_USAGE);
+        ConResPuts(StdOut, IDS_USAGE);
         return 0;
     }
 
@@ -87,7 +87,7 @@ int wmain(int argc, WCHAR* argv[])
      */
     if (!IsInternalCommand(argv[1]))
     {
-        PrintResourceString(IDS_NO_ENTRY, argv[1]);
+        ConResPrintf(StdOut, IDS_NO_ENTRY, argv[1]);
         return 0;
     }
 
