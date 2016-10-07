@@ -243,30 +243,6 @@ ConMsgPrintf(
     ...);
 
 
-/*
- * Those are compatibility #defines for old code!
- */
-
-/*** tree.c ***/
-
-#define PrintStringV(szStr, args)   \
-    ConPrintfV(StdOut, (szStr), (args))
-#define PrintString(szStr, ...)     \
-    ConPrintf(StdOut, (szStr), ##__VA_ARGS__)
-
-/*** network/net/main.c ***/
-#define PrintToConsole(szStr, ...)  \
-    ConPrintf(StdOut, (szStr), ##__VA_ARGS__)
-
-/*** clip.c, comp.c, help.c, tree.c ***/
-/*** subst.c ***/
-/*** format.c, network/net/main.c, shutdown.c, wlanconf.c, diskpart.c ***/
-
-#define PrintResourceStringV(uID, args) \
-    ConResPrintfV(StdOut, (uID), (args))
-#define PrintResourceString(uID, ...)   \
-    ConResPrintf(StdOut, (uID), ##__VA_ARGS__)
-
 //
 // TODO: Add Console paged-output printf & ResPrintf functions!
 //

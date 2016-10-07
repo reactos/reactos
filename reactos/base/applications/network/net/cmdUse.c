@@ -22,7 +22,7 @@ EnumerateConnections(LPCWSTR Local)
     DWORD dCount = -1;
     LPNETRESOURCE lpCur;
 
-    printf("%S\t\t\t%S\t\t\t\t%S\n", L"Local", L"Remote", L"Provider");
+    ConPrintf(StdOut, L"%s\t\t\t%s\t\t\t\t%s\n", L"Local", L"Remote", L"Provider");
 
     dRet = WNetOpenEnum(RESOURCE_CONNECTED, RESOURCETYPE_DISK, 0, NULL, &hEnum);
     if (dRet != WN_SUCCESS)
@@ -51,7 +51,7 @@ EnumerateConnections(LPCWSTR Local)
             {
                 if (!Local || wcsicmp(lpCur->lpLocalName, Local) == 0)
                 {
-                    printf("%S\t\t\t%S\t\t%S\n", lpCur->lpLocalName, lpCur->lpRemoteName, lpCur->lpProvider);
+                    ConPrintf(StdOut, L"%s\t\t\t%s\t\t%s\n", lpCur->lpLocalName, lpCur->lpRemoteName, lpCur->lpProvider);
                 }
 
                 lpCur++;
@@ -75,7 +75,7 @@ cmdUse(
     if (argc == 2)
     {
         Status = EnumerateConnections(NULL);
-        printf("Status: %lu\n", Status);
+        ConPrintf(StdOut, L"Status: %lu\n", Status);
         return 0;
     }
     else if (argc == 3)
@@ -83,38 +83,38 @@ cmdUse(
         Len = wcslen(argv[2]);
         if (Len != 2)
         {
-            PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
+            ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
             return 1;
         }
 
         if (!iswalpha(argv[2][0]) || argv[2][1] != L':')
         {
-            PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
+            ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
             return 1;
         }
 
         Status = EnumerateConnections(argv[2]);
-        printf("Status: %lu\n", Status);
+        ConPrintf(StdOut, L"Status: %lu\n", Status);
         return 0;
     }
 
     Len = wcslen(argv[2]);
     if (Len != 1 && Len != 2)
     {
-        PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
-        printf("Len: %lu\n", Len);
+        ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
+        ConPrintf(StdOut, L"Len: %lu\n", Len);
         return 1;
     }
 
     if (Len == 2 && argv[2][1] != L':')
     {
-        PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
+        ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
         return 1;
     }
 
     if (argv[2][0] != L'*' && !iswalpha(argv[2][0]))
     {
-        PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
+        ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
         return 1;
     }
 
@@ -122,7 +122,7 @@ cmdUse(
     {
         if (argv[2][0] == L'*')
         {
-            PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
+            ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
             return 1;
         }
 
@@ -138,13 +138,13 @@ cmdUse(
         Len = wcslen(argv[3]);
         if (Len < 4)
         {
-            PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"Name");
+            ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"Name");
             return 1;
         }
 
         if (argv[3][0] != L'\\' || argv[3][1] != L'\\')
         {
-            PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"Name");
+            ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"Name");
             return 1;
         }
 
@@ -175,7 +175,7 @@ cmdUse(
                         else
                         {
                             HeapFree(GetProcessHeap(), 0, Cpy);
-                            PrintResourceString(IDS_ERROR_INVALID_OPTION_VALUE, L"Persistent");
+                            ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"Persistent");
                             return 1;
                         }
                     }
@@ -192,7 +192,7 @@ cmdUse(
 
         Status = WNetUseConnection(NULL, &lpNet, NULL, NULL, CONNECT_REDIRECT | (Persist ? CONNECT_UPDATE_PROFILE : 0), Access, &Size, &OutFlags);
         if (argv[2][0] == L'*' && Status == NO_ERROR && OutFlags == CONNECT_LOCALDRIVE)
-            printf("%S is now connected to %S\n", argv[3], Access);
+            ConPrintf(StdOut, L"%s is now connected to %s\n", argv[3], Access);
 
         return Status;
     }

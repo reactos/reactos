@@ -10,24 +10,7 @@
 
 #include "diskpart.h"
 
-#include <stdlib.h>
-#include <winbase.h>
-#include <wincon.h>
-#include <winuser.h>
-
 /* FUNCTIONS ******************************************************************/
-
-VOID
-PrintResourceString(INT resID, ...)
-{
-    WCHAR szMsg[3072];
-    va_list arg_ptr;
-
-    va_start(arg_ptr, resID);
-    LoadStringW(GetModuleHandle(NULL), resID, szMsg, 3072);
-    vwprintf(szMsg, arg_ptr);
-    va_end(arg_ptr);
-}
 
 VOID
 ShowHeader(VOID)
@@ -39,14 +22,14 @@ ShowHeader(VOID)
     GetComputerNameW(szComputerName, &comp_size);
 
     /* TODO: Remove this section of code when program becomes stable enough for production use. */
-    wprintf(L"\n*WARNING*: This program is incomplete and may not work properly.\n");
+    ConPuts(StdOut, L"\n*WARNING*: This program is incomplete and may not work properly.\n");
 
     /* Print the header information */
-    wprintf(L"\n");
-    PrintResourceString(IDS_APP_HEADER);
-    wprintf(L"\n");
-    PrintResourceString(IDS_APP_LICENSE);
-    PrintResourceString(IDS_APP_CURR_COMPUTER, szComputerName);
+    ConPuts(StdOut, L"\n");
+    ConResPuts(StdOut, IDS_APP_HEADER);
+    ConPuts(StdOut, L"\n");
+    ConResPuts(StdOut, IDS_APP_LICENSE);
+    ConResPrintf(StdOut, IDS_APP_CURR_COMPUTER, szComputerName);
 }
 
 /*
@@ -65,7 +48,7 @@ RunScript(LPCWSTR filename)
     if (script == NULL)
     {
         /* if there was problems opening the file */
-        PrintResourceString(IDS_ERROR_MSG_NO_SCRIPT, filename);
+        ConResPrintf(StdErr, IDS_ERROR_MSG_NO_SCRIPT, filename);
         return FALSE; /* if there is no script, exit the program */
     }
 
@@ -97,10 +80,13 @@ int wmain(int argc, const LPWSTR argv[])
     int index, timeout;
     int result = EXIT_SUCCESS;
 
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
+
     /* Sets the title of the program so the user will have an easier time
     determining the current program, especially if diskpart is running a
     script */
-    LoadStringW(GetModuleHandle(NULL), IDS_APP_HEADER, (LPWSTR)appTitle, 50);
+    K32LoadStringW(GetModuleHandle(NULL), IDS_APP_HEADER, appTitle, ARRAYSIZE(appTitle));
     SetConsoleTitleW(appTitle);
 
     /* Sets the timeout value to 0 just in case the user doesn't
@@ -129,7 +115,7 @@ int wmain(int argc, const LPWSTR argv[])
             else
             {
                 /* If there is no flag, then return an error */
-                PrintResourceString(IDS_ERROR_MSG_BAD_ARG, argv[index]);
+                ConResPrintf(StdErr, IDS_ERROR_MSG_BAD_ARG, argv[index]);
                 result = EXIT_FAILURE;
                 goto done;
             }
@@ -138,7 +124,7 @@ int wmain(int argc, const LPWSTR argv[])
             exits as soon as the usage list is shown. */
             if (_wcsicmp(tmpBuffer, L"?") == 0)
             {
-                PrintResourceString(IDS_APP_USAGE);
+                ConResPuts(StdOut, IDS_APP_USAGE);
                 result = EXIT_SUCCESS;
                 goto done;
             }
@@ -168,7 +154,7 @@ int wmain(int argc, const LPWSTR argv[])
             else
             {
                 /* Assume that the flag doesn't exist. */
-                PrintResourceString(IDS_ERROR_MSG_BAD_ARG, tmpBuffer);
+                ConResPrintf(StdErr, IDS_ERROR_MSG_BAD_ARG, tmpBuffer);
                 result = EXIT_FAILURE;
                 goto done;
             }
@@ -194,14 +180,14 @@ int wmain(int argc, const LPWSTR argv[])
         else
         {
             /* Exit failure since the user wanted to run a script */
-            PrintResourceString(IDS_ERROR_MSG_NO_SCRIPT, script);
+            ConResPrintf(StdErr, IDS_ERROR_MSG_NO_SCRIPT, script);
             result = EXIT_FAILURE;
             goto done;
         }
     }
 
     /* Let the user know the program is exiting */
-    PrintResourceString(IDS_APP_LEAVING);
+    ConResPuts(StdOut, IDS_APP_LEAVING);
 
 done:
     DestroyPartitionList();

@@ -10,7 +10,6 @@
 
 BOOL repair_main(INT argc, LPWSTR *argv)
 {
-    printf("\nTODO: Add code later since Win 7 Home Premium doesn't have this feature.\n");
-
+    ConPuts(StdOut, L"\nTODO: Add code later since Win 7 Home Premium doesn't have this feature.\n");
     return TRUE;
 }

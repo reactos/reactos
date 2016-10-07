@@ -10,10 +10,10 @@
 
 BOOL rescan_main(INT argc, LPWSTR *argv)
 {
-    PrintResourceString(IDS_RESCAN_START);
+    ConResPuts(StdOut, IDS_RESCAN_START);
     DestroyPartitionList();
     CreatePartitionList();
-    PrintResourceString(IDS_RESCAN_END);
+    ConResPuts(StdOut, IDS_RESCAN_END);
 
     return TRUE;
 }

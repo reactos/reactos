@@ -10,7 +10,6 @@
 
 BOOL active_main(INT argc, LPWSTR *argv)
 {
-    printf("\nActive\n");
-
+    ConPuts(StdOut, L"\nActive\n");
     return TRUE;
 }

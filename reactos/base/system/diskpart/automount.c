@@ -10,6 +10,6 @@
 
 BOOL automount_main(INT argc, LPWSTR *argv)
 {
-    printf("Automount\n");
+    ConPuts(StdOut, L"Automount\n");
     return TRUE;
 }

@@ -19,7 +19,7 @@ EnumerateRunningServices(VOID)
     DWORD dwBufferSize = 0;
     DWORD dwServiceCount;
     DWORD dwResumeHandle = 0;
-    LPENUM_SERVICE_STATUS lpServiceBuffer = NULL;
+    LPENUM_SERVICE_STATUSW lpServiceBuffer = NULL;
     INT i;
     INT nError = 0;
     DWORD dwError = ERROR_SUCCESS;
@@ -57,11 +57,11 @@ EnumerateRunningServices(VOID)
                                     &dwServiceCount,
                                     &dwResumeHandle))
             {
-                PrintToConsole(L"The following services hav been started:\n\n");
+                ConPuts(StdOut, L"The following services hav been started:\n\n");
 
                 for (i = 0; i < dwServiceCount; i++)
                 {
-                    PrintToConsole(L"  %s\n", lpServiceBuffer[i].lpDisplayName);
+                    ConPrintf(StdOut, L"  %s\n", lpServiceBuffer[i].lpDisplayName);
                 }
             }
 
@@ -79,7 +79,7 @@ done:
      if (dwError != ERROR_SUCCESS)
     {
         /* FIXME: Print proper error message */
-        printf("Error: %lu\n", dwError);
+        ConPrintf(StdErr, L"Error: %lu\n", dwError);
     }
 
     return nError;
@@ -153,7 +153,7 @@ done:
     if (dwError != ERROR_SUCCESS)
     {
         /* FIXME: Print proper error message */
-        printf("Error: %lu\n", dwError);
+        ConPrintf(StdErr, L"Error: %lu\n", dwError);
     }
 
     return nError;
@@ -173,7 +173,7 @@ cmdStart(INT argc, WCHAR **argv)
     {
         if (_wcsicmp(argv[i], L"/help") == 0)
         {
-            PrintResourceString(IDS_START_HELP);
+            ConResPuts(StdOut, IDS_START_HELP);
             return 1;
         }
     }

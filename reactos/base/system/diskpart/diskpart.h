@@ -18,8 +18,9 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
-#include <winuser.h>
 #include <wincon.h>
+
+#include <conutils.h>
 
 /*
 #define NTOS_MODE_USER
@@ -223,7 +224,6 @@ BOOL detach_main(INT argc, LPWSTR *argv);
 BOOL detail_main(INT argc, LPWSTR *argv);
 
 /* diskpart.c */
-VOID PrintResourceString(INT resID, ...);
 
 /* expand.c */
 BOOL expand_main(INT argc, LPWSTR *argv);
