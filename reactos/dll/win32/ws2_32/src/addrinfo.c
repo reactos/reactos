@@ -556,6 +556,7 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
         iFlags = ptHints->ai_flags;
         if ((iFlags & AI_CANONNAME) && !pszNodeName)
         {
+            SetLastError(EAI_BADFLAGS);
             return EAI_BADFLAGS;
         }
 
@@ -563,6 +564,7 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
         iFamily = ptHints->ai_family;
         if ((iFamily != PF_UNSPEC) && (iFamily != PF_INET))
         {
+            SetLastError(EAI_FAMILY);
             return EAI_FAMILY;
         }
 
@@ -573,6 +575,7 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
             (iSocketType != SOCK_DGRAM) &&
             (iSocketType != SOCK_RAW))
         {
+            SetLastError(EAI_SOCKTYPE);
             return EAI_SOCKTYPE;
         }
 
@@ -638,6 +641,7 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
             /* If we got 0, then fail */
             if (wPort == 0)
             {
+                SetLastError(EAI_SERVICE);
                 return EAI_SERVICE;
             }
 
@@ -751,6 +755,7 @@ GetAddrInfoW(IN PCWSTR pszNodeName,
     }
 
     /* Return to caller */
+    SetLastError(iError);
     return iError;
 }
 
@@ -908,6 +913,7 @@ GetNameInfoW(IN CONST SOCKADDR *pSockaddr,
     else
     {
         /* Unsupported family */
+        SetLastError(EAI_FAMILY);
         return EAI_FAMILY;
     } 
 
