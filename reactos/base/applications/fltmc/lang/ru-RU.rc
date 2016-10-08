@@ -2,14 +2,14 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\nValid commands :\n\
-               load        Loads a Filter driver\n\
-               unload      Unloads a Filter driver\n\
-               filters     Lists the Filters currently registered in the system\n\n\0"
+    IDS_USAGE "\nДопустимые команды :\n\
+               load        Загрузить драйвер фильтра\n\
+               unload      Выгрузить драйвер фильтра\n\
+               filters     Список фильтров, зарегистрированных в системе\n\n\0"
 
-    IDS_USAGE_LOAD      "Loads a filter driver\n\0"
-    IDS_USAGE_UNLOAD    "Unloads a filter driver\n\0"
-    IDS_USAGE_FILTERS   "Lists all registered filters\n\0"
+    IDS_USAGE_LOAD      "Загружает драйвер фильтра\n\0"
+    IDS_USAGE_UNLOAD    "Выгружает драйвер фильтра\n\0"
+    IDS_USAGE_FILTERS   "Выводит список всех зарегистрированных фильтров\n\0"
 END
 
 STRINGTABLE
@@ -20,8 +20,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_PRIV      "Failed to set the driver load privilige (0x%X)\n\0"
-    IDS_ERROR_FILTERS   "Failed to list the filters (0x%X)\n\0"
-    IDS_ERROR_LOAD      "Failed to load the filter (0x%X)\n\0"
-    IDS_ERROR_UNLOAD    "Failed to unload the filter (0x%X)\n\0"
+    IDS_ERROR_PRIV      "Не удалось установить привилегии загрузки фильтра (0x%X)\n\0"
+    IDS_ERROR_FILTERS   "Не удалось получить список фильтров (0x%X)\n\0"
+    IDS_ERROR_LOAD      "Не удалось загрузить фильтр (0x%X)\n\0"
+    IDS_ERROR_UNLOAD    "Не удалось выгрузить фильтр (0x%X)\n\0"
 END

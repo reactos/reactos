@@ -524,7 +524,7 @@ RESTORE       восстанавливает окно\n\
     STRING_ERROR_D_PAUSEMSG "Для продолжения нажмите любую клавишу . . ."
     STRING_ERROR_DRIVER_NOT_READY "Устройство не готово"
     STRING_PATH_ERROR "CMD: Не в среде окружения '%s'\n"
-    STRING_REPLACE_ERROR1 "Invalid switch - %s\n"//FIXME
+    STRING_REPLACE_ERROR1 "Неверный ключ - %s\n"
     STRING_REPLACE_ERROR2 "Путь не найден - %s\n"
     STRING_REPLACE_ERROR3 "Имя файла, папки или метка диска неверная.\n"
     STRING_REPLACE_ERROR4 "Неверная комбинация параметров\n"

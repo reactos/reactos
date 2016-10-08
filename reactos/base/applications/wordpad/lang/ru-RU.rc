@@ -171,8 +171,8 @@ BEGIN
     STRING_PREVIEW_PAGES,            "Страницы"
     STRING_UNITS_CM,                 "см"
     STRING_UNITS_IN,                 "in"
-    STRING_UNITS_INCH,               "inch"
-    STRING_UNITS_PT,                 "pt"
+    STRING_UNITS_INCH,               "дюйм."
+    STRING_UNITS_PT,                 "точк."
 END
 
 STRINGTABLE

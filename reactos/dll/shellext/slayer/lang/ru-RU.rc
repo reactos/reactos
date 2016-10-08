@@ -16,7 +16,7 @@ BEGIN
     CHECKBOX "Разрешение 640x480", IDC_CHKRUNIN640480RES, 18, 129, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
     CHECKBOX "Запрещать визуальные темы", IDC_CHKDISABLEVISUALTHEMES, 18, 144, 188, 10, BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "&Режимы совместимости...", IDC_EDITCOMPATIBILITYMODES, 117, 167, 100, 15
-    /* CONTROL "Learn more about <A>program compatibility</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY */
+    /* CONTROL "Подробнее о <A>совместимости программ</A>.", IDC_INFOLINK, "SysLink", WS_CHILD | WS_TABSTOP | WS_VISIBLE, 7, 207, 210, 10, WS_EX_NOPARENTNOTIFY */
 END
 
 IDD_EDITCOMPATIBILITYMODES DIALOGEX 0, 0, 230, 139
@@ -35,5 +35,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_SLAYER "Slayer"
-    IDS_DESCRIPTION "Application Compatibility Layer Shell Extension"
+    IDS_DESCRIPTION "Модуль расширения для обеспечения совместимости приложений"
 END
