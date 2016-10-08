@@ -40,7 +40,7 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Device ini bekerja dengan baik."
     IDS_DEV_NOT_CONFIGURED "Device ini tidak dikonfigurasi dengan baik."
-    IDS_DEV_DEVLOADER_FAILED "ReactOS  tidak bisa mengambil driver untuk device ini karena komputer melaporkan dua %1 tipe bus."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS tidak bisa mengambil driver untuk device ini karena komputer melaporkan dua %1 tipe bus."
     IDS_DEV_DEVLOADER_FAILED2 "Pengambil device %1 untuk device ini tidak mengambil device driver."
     IDS_DEV_OUT_OF_MEMORY "Driver untuk device ini mungkin rusak, sistem anda bisa berjalan lambat pada memori atau sumber daya lain."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Device ini tidak bekerja dengan baik karena salah satu driver-nya mungkin rusak, atau registri anda mungkin rusak."
