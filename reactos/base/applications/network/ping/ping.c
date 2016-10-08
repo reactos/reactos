@@ -49,7 +49,6 @@
 
 static BOOL ParseCmdLine(int argc, PWSTR argv[]);
 static BOOL ResolveTarget(PCWSTR target);
-static void Usage(void);
 static void Ping(void);
 static void PrintStats(void);
 static BOOL WINAPI ConsoleCtrlHandler(DWORD ControlType);
@@ -180,44 +179,35 @@ static
 void
 PrintString(UINT id, ...)
 {
-    WCHAR Format[1024];
-    WCHAR Msg[1024];
-    DWORD Len, written;
+#define RC_STRING_MAX_SIZE  4096
+
+    WCHAR Format[RC_STRING_MAX_SIZE];
+    LPWSTR lpMsgBuf = NULL;
+    DWORD Len;
     va_list args;
 
     if (!LoadStringW(GetModuleHandleW(NULL), id, Format, _countof(Format)))
     {
         DPRINT("LoadStringW failed: %lu\n", GetLastError());
-
         return;
     }
 
     va_start(args, id);
 
-    Len = FormatMessageW(
-        FORMAT_MESSAGE_FROM_STRING,
-        Format, 0, 0,
-        Msg, 1024, &args);
-
-    if (Len == 0)
+    Len = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
+                         Format, 0, 0, (PWSTR)&lpMsgBuf, 0, &args);
+    if (lpMsgBuf /* && Len != 0 */)
+    {
+        // TODO: Handle writing to file. Well, use the ConUtils lib!
+        WriteConsoleW(hStdOut, lpMsgBuf, Len, &Len, NULL);
+        LocalFree(lpMsgBuf);
+    }
+    else
     {
         DPRINT("FormatMessageW failed: %lu\n", GetLastError());
-
-        va_end(args);
-        return;
     }
 
-    // TODO: Handle writing to file.
-    WriteConsole(hStdOut, Msg, Len, &written, NULL);
-
     va_end(args);
-}
-
-static
-void
-Usage(void)
-{
-    PrintString(IDS_USAGE);
 }
 
 static
@@ -228,8 +218,7 @@ ParseCmdLine(int argc, PWSTR argv[])
 
     if (argc < 2)
     {
-        Usage();
-
+        PrintString(IDS_USAGE);
         return FALSE;
     }
 
@@ -404,14 +393,12 @@ ParseCmdLine(int argc, PWSTR argv[])
                 break;
 
             case L'?':
-                Usage();
-
+                PrintString(IDS_USAGE);
                 return FALSE;
 
             default:
                 PrintString(IDS_BAD_OPTION, argv[i]);
-                Usage();
-
+                PrintString(IDS_USAGE);
                 return FALSE;
             }
         }
