@@ -73,13 +73,11 @@ SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC, LPSYSTEMTIME time, int 
 
 void ShowFileLoadError(LPCTSTR name)
 {
-    TCHAR programname[20];
-    TCHAR loaderrortext[100];
-    TCHAR temptext[500];
-    LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
-    LoadString(hProgInstance, IDS_LOADERRORTEXT, loaderrortext, SIZEOF(loaderrortext));
-    _stprintf(temptext, loaderrortext, name);
-    mainWindow.MessageBox(temptext, programname, MB_OK | MB_ICONEXCLAMATION);
+    CString strText;
+    strText.Format(IDS_LOADERRORTEXT, (LPCTSTR) name);
+    CString strProgramName;
+    strProgramName.LoadString(IDS_PROGRAMNAME);
+    mainWindow.MessageBox(strText, strProgramName, MB_OK | MB_ICONEXCLAMATION);
 }
 
 void

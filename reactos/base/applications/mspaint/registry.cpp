@@ -46,15 +46,15 @@ void RegistrySettings::SetWallpaper(LPCTSTR szFileName, DWORD dwStyle, DWORD dwT
     CRegKey desktop;
     if (desktop.Open(HKEY_CURRENT_USER, _T("Control Panel\\Desktop")) == ERROR_SUCCESS)
     {
-        TCHAR szStyle[3], szTile[3];
+        CString strStyle, strTile;
 
         desktop.SetStringValue(_T("Wallpaper"), szFileName);
 
-        _stprintf(szStyle, _T("%lu"), dwStyle);
-        _stprintf(szTile, _T("%lu"), dwTile);
+        strStyle.Format(_T("%lu"), dwStyle);
+        strTile.Format(_T("%lu"), dwTile);
 
-        desktop.SetStringValue(_T("WallpaperStyle"), szStyle);
-        desktop.SetStringValue(_T("TileWallpaper"), szTile);
+        desktop.SetStringValue(_T("WallpaperStyle"), strStyle);
+        desktop.SetStringValue(_T("TileWallpaper"), strTile);
     }
 }
 
