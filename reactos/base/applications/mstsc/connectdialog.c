@@ -138,7 +138,7 @@ LoadUsernameHint(HWND hDlg, INT iCur)
                 if(RegOpenKeyExW(hKey, szName, 0, KEY_READ, &hSubKey) != ERROR_SUCCESS)
                     break;
 
-                dwSize = MAXVALUE;
+                dwSize = MAXVALUE * sizeof(WCHAR);
 
                 if(RegQueryValueExW(hKey, L"UsernameHint", 0,  NULL, (LPBYTE)szValue, &dwSize) == ERROR_SUCCESS)
                 {
@@ -185,7 +185,7 @@ FillServerAddesssCombo(PINFO pInfo)
                                 NULL);
             if (ret == ERROR_SUCCESS)
             {
-                size = MAX_KEY_NAME;
+                size = sizeof(Name);
                 if (RegQueryValueExW(hKey,
                                      Name,
                                      0,

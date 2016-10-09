@@ -531,7 +531,7 @@ static void SECUR32_initializeProviders(void)
     if (apiRet == ERROR_SUCCESS)
     {
         WCHAR securityPkgNames[MAX_PATH]; /* arbitrary len */
-        DWORD size = sizeof(securityPkgNames) / sizeof(WCHAR), type;
+        DWORD size = sizeof(securityPkgNames), type;
 
         apiRet = RegQueryValueExW(key, securityProvidersW, NULL, &type,
          (PBYTE)securityPkgNames, &size);

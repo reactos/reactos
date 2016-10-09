@@ -841,7 +841,7 @@ Int_EnumDependentServicesW(HKEY hServicesKey,
         if (dwError != ERROR_SUCCESS)
             return dwError;
 
-        dwSize = MAX_PATH;
+        dwSize = MAX_PATH * sizeof(WCHAR);
 
         /* Check for the DependOnService Value */
         dwError = RegQueryValueExW(hServiceEnumKey,

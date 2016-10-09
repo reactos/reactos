@@ -390,7 +390,7 @@ void ProcessPageShowContextMenu(DWORD dwProcessId)
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AeDebug", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
-        dwDebuggerSize = 260;
+        dwDebuggerSize = sizeof(strDebugger);
         if (RegQueryValueExW(hKey, L"Debugger", NULL, NULL, (LPBYTE)strDebugger, &dwDebuggerSize) == ERROR_SUCCESS)
         {
             CharUpper(strDebugger);

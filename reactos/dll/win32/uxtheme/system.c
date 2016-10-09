@@ -81,7 +81,7 @@ BOOL CALLBACK UXTHEME_broadcast_msg (HWND hWnd, LPARAM msg)
 static DWORD query_reg_path (HKEY hKey, LPCWSTR lpszValue,
                              LPVOID pvData)
 {
-  DWORD dwRet, dwType, dwUnExpDataLen = MAX_PATH, dwExpDataLen;
+  DWORD dwRet, dwType, dwUnExpDataLen = MAX_PATH * sizeof(WCHAR), dwExpDataLen;
 
   TRACE("(hkey=%p,%s,%p)\n", hKey, debugstr_w(lpszValue),
         pvData);
@@ -194,7 +194,7 @@ void UXTHEME_LoadTheme(BOOL bLoad)
         /* Get current theme configuration */
         if(!RegOpenKeyW(HKEY_CURRENT_USER, szThemeManager, &hKey)) {
             TRACE("Loading theme config\n");
-            buffsize = sizeof(tmp)/sizeof(tmp[0]);
+            buffsize = sizeof(tmp);
             if(!RegQueryValueExW(hKey, szThemeActive, NULL, NULL, (LPBYTE)tmp, &buffsize)) {
                 bThemeActive = (tmp[0] != '0');
             }
@@ -202,10 +202,10 @@ void UXTHEME_LoadTheme(BOOL bLoad)
                 bThemeActive = FALSE;
                 TRACE("Failed to get ThemeActive: %d\n", GetLastError());
             }
-            buffsize = sizeof(szCurrentColor)/sizeof(szCurrentColor[0]);
+            buffsize = sizeof(szCurrentColor);
             if(RegQueryValueExW(hKey, szColorName, NULL, NULL, (LPBYTE)szCurrentColor, &buffsize))
                 szCurrentColor[0] = '\0';
-            buffsize = sizeof(szCurrentSize)/sizeof(szCurrentSize[0]);
+            buffsize = sizeof(szCurrentSize);
             if(RegQueryValueExW(hKey, szSizeName, NULL, NULL, (LPBYTE)szCurrentSize, &buffsize))
                 szCurrentSize[0] = '\0';
             if (query_reg_path (hKey, szDllName, szCurrentTheme))
@@ -618,7 +618,7 @@ BOOL WINAPI IsThemeActive(void)
     Result = RegOpenKeyW(HKEY_CURRENT_USER, szThemeManager, &hKey);
     if (Result == ERROR_SUCCESS)
     {
-        buffsize = sizeof(tmp)/sizeof(tmp[0]);
+        buffsize = sizeof(tmp);
         if (!RegQueryValueExW(hKey, szThemeActive, NULL, NULL, (LPBYTE)tmp, &buffsize)) 
             bActive = (tmp[0] != '0');
         RegCloseKey(hKey);

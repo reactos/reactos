@@ -232,7 +232,7 @@ SETUP_CreateInterfaceList(
 
             /* Step 2. Create an interface list for this element */
             HeapFree(GetProcessHeap(), 0, pSymbolicLink);
-            pSymbolicLink = HeapAlloc(GetProcessHeap(), 0, (dwLength + 1) * sizeof(WCHAR));
+            pSymbolicLink = HeapAlloc(GetProcessHeap(), 0, dwLength + sizeof(WCHAR));
             if (!pSymbolicLink)
             {
                 rc = ERROR_NOT_ENOUGH_MEMORY;

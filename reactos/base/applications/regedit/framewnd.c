@@ -774,7 +774,7 @@ static void ChooseFavorite(LPCWSTR pszFavorite)
     if (RegOpenKeyExW(HKEY_CURRENT_USER, s_szFavoritesRegKey, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
         goto done;
 
-    cbData = (sizeof(szFavoritePath) / sizeof(szFavoritePath[0])) - 1;
+    cbData = sizeof(szFavoritePath);
     memset(szFavoritePath, 0, sizeof(szFavoritePath));
     if (RegQueryValueExW(hKey, pszFavorite, NULL, &dwType, (LPBYTE) szFavoritePath, &cbData) != ERROR_SUCCESS)
         goto done;

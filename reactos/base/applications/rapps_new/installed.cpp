@@ -11,7 +11,7 @@
 BOOL
 GetApplicationString(HKEY hKey, LPCWSTR lpKeyName, LPWSTR lpString)
 {
-    DWORD dwSize = MAX_PATH;
+    DWORD dwSize = MAX_PATH * sizeof(WCHAR);
 
     if (RegQueryValueExW(hKey,
                          lpKeyName,
@@ -50,7 +50,7 @@ IsInstalledApplication(LPWSTR lpRegName, BOOL IsUserKey)
         if (RegOpenKeyW(hKey, szName, &hSubKey) == ERROR_SUCCESS)
         {
             dwType = REG_SZ;
-            dwSize = MAX_PATH;
+            dwSize = sizeof(szDisplayName);
             if (RegQueryValueExW(hSubKey,
                                  L"DisplayName",
                                  NULL,
@@ -118,7 +118,7 @@ UninstallApplication(INT Index, BOOL bModify)
     hKey = ItemInfo->hSubKey;
 
     dwType = REG_SZ;
-    dwSize = MAX_PATH;
+    dwSize = sizeof(szPath);
     if (RegQueryValueExW(hKey,
                          bModify ? szModify : szUninstall,
                          NULL,
@@ -254,7 +254,7 @@ EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
             }
 
             dwType = REG_SZ;
-            dwSize = MAX_PATH;
+            dwSize = sizeof(pszParentKeyName);
             bIsUpdate = (RegQueryValueExW(Info.hSubKey,
                                           L"ParentKeyName",
                                           NULL,
@@ -262,7 +262,7 @@ EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
                                           (LPBYTE)pszParentKeyName,
                                           &dwSize) == ERROR_SUCCESS);
 
-            dwSize = MAX_PATH;
+            dwSize = sizeof(pszDisplayName);
             if (RegQueryValueExW(Info.hSubKey,
                                  L"DisplayName",
                                  NULL,
