@@ -11,7 +11,7 @@
   <TOOL _locID="Computer Management" NAME="Gestiune calculator" PATH="%windir%\System32\compmgmt.msc" DEFAULT_OPT="" ADV_OPT="" HELP="Inspectare și configurare sistem și componente."/>
   <TOOL _locID="System Information" NAME="Informații de sistem" PATH="%windir%\System32\msinfo32.exe" DEFAULT_OPT="" ADV_OPT="" HELP="Inspectare informații avansate despre configurația fizică și de program."/>
   <TOOL _locID="Event Viewer" NAME="Observator de evenimente" PATH="%windir%\System32\eventvwr.exe" DEFAULT_OPT="" ADV_OPT="" HELP="Monitorizarea și depanarea mesajelor."/>
-  <TOOL _locID="Programs" NAME="Programe" PATH="%windir%\System32\appwiz.cpl" DEFAULT_OPT="" ADV_OPT="" HELP="Lansare, adăugare sau eliminare de programe și componente Reactos."/>
+  <TOOL _locID="Programs" NAME="Programe" PATH="%windir%\System32\appwiz.cpl" DEFAULT_OPT="" ADV_OPT="" HELP="Lansare, adăugare sau eliminare de programe și componente ReactOS."/>
   <TOOL _locID="System Properties" NAME="Proprietăți de sistem" PATH="%windir%\System32\control.exe" DEFAULT_OPT="system" ADV_OPT="" HELP="Afișare informații de bază despre configurația de sistem al calculatorului."/>
   <TOOL _locID="Internet Options" NAME="Opțiuni de Internet" PATH="%windir%\System32\inetcpl.cpl" DEFAULT_OPT="" ADV_OPT="" HELP="Afișare opțiune de Internet."/>
   <TOOL _locID="Internet Protocol Configuration" NAME="Configurație protocol de Internet" PATH="%windir%\System32\cmd.exe" DEFAULT_OPT="/k %windir%\system32\ipconfig.exe" ADV_OPT="/k %windir%\system32\ipconfig.exe /all" HELP="Afișare și configurare proprietăți ale adresei de rețea."/>
