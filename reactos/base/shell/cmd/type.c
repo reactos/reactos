@@ -60,7 +60,7 @@ INT cmd_type(LPTSTR param)
 
     for (i = 0; i < argc; i++)
     {
-        if(*argv[i] == _T('/') && _tcslen(argv[i]) >= 2 && _totupper(argv[i][1]) == _T('P'))
+        if (argv[i][0] == _T('/') && _tcslen(argv[i]) == 2 && _totupper(argv[i][1]) == _T('P'))
         {
             bPaging = TRUE;
         }
@@ -68,9 +68,13 @@ INT cmd_type(LPTSTR param)
 
     for (i = 0; i < argc; i++)
     {
-        if (_T('/') == argv[i][0] && _totupper(argv[i][1]) != _T('P'))
+        if (argv[i][0] == _T('/') && _totupper(argv[i][1]) != _T('P'))
         {
             ConErrResPrintf(STRING_TYPE_ERROR1, argv[i] + 1);
+            continue;
+        }
+        if (argv[i][0] == _T('/') && _tcslen(argv[i]) == 2 && _totupper(argv[i][1]) == _T('P'))
+        {
             continue;
         }
 
