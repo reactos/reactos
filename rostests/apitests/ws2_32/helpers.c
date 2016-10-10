@@ -54,10 +54,10 @@ int GetRequestAndWait(SOCKET sck)
     /* Send the GET request */
     SCKTEST(send(sck, szGetRequest, strlen(szGetRequest), 0));
     ok(iResult == strlen(szGetRequest), "iResult = %d\n", iResult);
-
+#if 0 /* breaks windows too */
     /* Shutdown the SEND connection */
     SCKTEST(shutdown(sck, SD_SEND));
-
+#endif
     /* Wait until we're ready to read */
     FD_ZERO(&readable);
     FD_SET(sck, &readable);
