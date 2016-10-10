@@ -2189,9 +2189,15 @@ WSPIoctl(IN  SOCKET Handle,
 			else
 				return NO_ERROR;
         case FIONREAD:
-            if( cbOutBuffer < sizeof(INT) || IS_INTRESOURCE(lpvOutBuffer) )
+            if (IS_INTRESOURCE(lpvOutBuffer) || cbOutBuffer == 0)
             {
+                *lpcbBytesReturned = sizeof(ULONG);
                 *lpErrno = WSAEFAULT;
+                return SOCKET_ERROR;
+            }
+            if (cbOutBuffer < sizeof(ULONG))
+            {
+                *lpErrno = WSAEINVAL;
                 return SOCKET_ERROR;
             }
             *lpErrno = GetSocketInformation(Socket, AFD_INFO_RECEIVE_CONTENT_SIZE, NULL, (PULONG)lpvOutBuffer, NULL);
@@ -2203,9 +2209,15 @@ WSPIoctl(IN  SOCKET Handle,
 				return NO_ERROR;
 			}
         case SIOCATMARK:
-            if (cbOutBuffer < sizeof(BOOL) || IS_INTRESOURCE(lpvOutBuffer))
+            if (IS_INTRESOURCE(lpvOutBuffer) || cbOutBuffer == 0)
             {
+                *lpcbBytesReturned = sizeof(BOOL);
                 *lpErrno = WSAEFAULT;
+                return SOCKET_ERROR;
+            }
+            if (cbOutBuffer < sizeof(BOOL))
+            {
+                *lpErrno = WSAEINVAL;
                 return SOCKET_ERROR;
             }
 
@@ -2220,16 +2232,28 @@ WSPIoctl(IN  SOCKET Handle,
             return SOCKET_ERROR;
 
         case SIO_ADDRESS_LIST_QUERY:
-            if (cbOutBuffer < (sizeof(SOCKET_ADDRESS_LIST) + sizeof(Socket->SharedData->WSLocalAddress)) || IS_INTRESOURCE(lpvOutBuffer))
+            if (IS_INTRESOURCE(lpvOutBuffer) || cbOutBuffer == 0)
+            {
+                *lpcbBytesReturned = sizeof(SOCKET_ADDRESS_LIST) + sizeof(Socket->SharedData->WSLocalAddress);
+                *lpErrno = WSAEFAULT;
+                return SOCKET_ERROR;
+            }
+            if (cbOutBuffer < sizeof(INT))
             {
                 *lpErrno = WSAEINVAL;
                 return SOCKET_ERROR;
             }
 
-            *lpcbBytesReturned = sizeof(SOCKET_ADDRESS_LIST) +
-                                 sizeof(Socket->SharedData->WSLocalAddress);
+            *lpcbBytesReturned = sizeof(SOCKET_ADDRESS_LIST) + sizeof(Socket->SharedData->WSLocalAddress);
 
             ((SOCKET_ADDRESS_LIST*)lpvOutBuffer)->iAddressCount = 1;
+
+            if (cbOutBuffer < (sizeof(SOCKET_ADDRESS_LIST) + sizeof(Socket->SharedData->WSLocalAddress)))
+            {
+                *lpErrno = WSAEFAULT;
+                return SOCKET_ERROR;
+            }
+
             ((SOCKET_ADDRESS_LIST*)lpvOutBuffer)->Address[0].iSockaddrLength = sizeof(Socket->SharedData->WSLocalAddress);
             ((SOCKET_ADDRESS_LIST*)lpvOutBuffer)->Address[0].lpSockaddr = &Socket->SharedData->WSLocalAddress;
 
@@ -2684,7 +2708,7 @@ WSPAddressToString(IN LPSOCKADDR lpsaAddress,
     if (*lpdwAddressStringLength < size)
     {
         *lpdwAddressStringLength = size;
-        *lpErrno = WSAENOBUFS;
+        *lpErrno = WSAEFAULT;
         return SOCKET_ERROR;
     }
 
