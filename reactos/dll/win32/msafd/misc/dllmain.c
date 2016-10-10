@@ -103,15 +103,43 @@ WSPSocket(int AddressFamily,
         AddressFamily = AF_INET;
 
     if (SocketType == 0)
-        SocketType = SOCK_STREAM;
+    {
+        switch (Protocol)
+        {
+        case IPPROTO_TCP:
+            SocketType = SOCK_STREAM;
+            break;
+        case IPPROTO_UDP:
+            SocketType = SOCK_DGRAM;
+            break;
+        case IPPROTO_RAW:
+            SocketType = SOCK_RAW;
+            break;
+        default:
+            TRACE("Unknown Protocol (%d). We will try SOCK_STREAM.\n", Protocol);
+            SocketType = SOCK_STREAM;
+            break;
+        }
+    }
 
     if (Protocol == 0)
     {
-        if (SocketType == SOCK_STREAM)
+        switch (SocketType)
+        {
+        case SOCK_STREAM:
             Protocol = IPPROTO_TCP;
-
-        if (SocketType == SOCK_DGRAM)
+            break;
+        case SOCK_DGRAM:
             Protocol = IPPROTO_UDP;
+            break;
+        case SOCK_RAW:
+            Protocol = IPPROTO_RAW;
+            break;
+        default:
+            TRACE("Unknown SocketType (%d). We will try IPPROTO_TCP.\n", SocketType);
+            Protocol = IPPROTO_TCP;
+            break;
+        }
     }
 
     /* Get Helper Data and Transport */
