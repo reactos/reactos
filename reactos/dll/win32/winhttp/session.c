@@ -83,9 +83,6 @@ static void session_destroy( object_header_t *hdr )
     heap_free( session->proxy_username );
     heap_free( session->proxy_password );
     heap_free( session );
-#ifdef __REACTOS__
-    WSACleanup();
-#endif
 }
 
 static BOOL session_query_option( object_header_t *hdr, DWORD option, LPVOID buffer, LPDWORD buflen )
@@ -194,6 +191,9 @@ static const object_vtbl_t session_vtbl =
     session_set_option
 };
 
+#ifdef __REACTOS__
+BOOL netconn_init_winsock();
+#endif /* __REACTOS__ */
 /***********************************************************************
  *          WinHttpOpen (winhttp.@)
  */
@@ -202,9 +202,7 @@ HINTERNET WINAPI WinHttpOpen( LPCWSTR agent, DWORD access, LPCWSTR proxy, LPCWST
     session_t *session;
     HINTERNET handle = NULL;
 #ifdef __REACTOS__
-    WSADATA wsaData;
-    int error = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (error) ERR("WSAStartup failed: %d\n", error);
+    if (!netconn_init_winsock()) return NULL;
 #endif
 
     TRACE("%s, %u, %s, %s, 0x%08x\n", debugstr_w(agent), access, debugstr_w(proxy), debugstr_w(bypass), flags);
