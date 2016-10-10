@@ -31,7 +31,7 @@
 #ifdef INCLUDE_CMD_TYPE
 
 
-INT cmd_type (LPTSTR param)
+INT cmd_type(LPTSTR param)
 {
     TCHAR  buff[256];
     HANDLE hFile, hConsoleOut;
@@ -42,9 +42,9 @@ INT cmd_type (LPTSTR param)
     BOOL bPaging = FALSE;
     BOOL bFirstTime = TRUE;
 
-    hConsoleOut=GetStdHandle (STD_OUTPUT_HANDLE);
+    hConsoleOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
-    if (!_tcsncmp (param, _T("/?"), 2))
+    if (!_tcsncmp(param, _T("/?"), 2))
     {
         ConOutResPaging(TRUE,STRING_TYPE_HELP1);
         return 0;
@@ -52,13 +52,13 @@ INT cmd_type (LPTSTR param)
 
     if (!*param)
     {
-        error_req_param_missing ();
+        error_req_param_missing();
         return 1;
     }
 
-    argv = split (param, &argc, TRUE, FALSE);
+    argv = split(param, &argc, TRUE, FALSE);
 
-    for(i = 0; i < argc; i++)
+    for (i = 0; i < argc; i++)
     {
         if(*argv[i] == _T('/') && _tcslen(argv[i]) >= 2 && _totupper(argv[i][1]) == _T('P'))
         {
@@ -77,12 +77,12 @@ INT cmd_type (LPTSTR param)
         nErrorLevel = 0;
 
         hFile = CreateFile(argv[i],
-            GENERIC_READ,
-            FILE_SHARE_READ,NULL,
-            OPEN_EXISTING,
-            FILE_ATTRIBUTE_NORMAL,NULL);
+                           GENERIC_READ,
+                           FILE_SHARE_READ, NULL,
+                           OPEN_EXISTING,
+                           FILE_ATTRIBUTE_NORMAL, NULL);
 
-        if(hFile == INVALID_HANDLE_VALUE)
+        if (hFile == INVALID_HANDLE_VALUE)
         {
             FormatMessage (FORMAT_MESSAGE_ALLOCATE_BUFFER |
                            FORMAT_MESSAGE_IGNORE_INSERTS |
@@ -101,7 +101,7 @@ INT cmd_type (LPTSTR param)
 
         if (bPaging)
         {
-            while (FileGetString (hFile, buff, sizeof(buff) / sizeof(TCHAR)))
+            while (FileGetString(hFile, buff, ARRAYSIZE(buff)))
             {
                 if (ConOutPrintfPaging(bFirstTime, _T("%s"), buff) == 1)
                 {

@@ -287,15 +287,15 @@ MKLINK [/D | /H | /J] ținta numelui legăturii\n\n\
   /J  Crează o joncțiune de director.\n\n\
 Dacă nu sunt specificate nici /H și nici /J ca argumente, va fi creată o\n\
 legătură simbolică."
-    STRING_MEMMORY_HELP1 "Afișează cantitatea de memorie a sistemului.\n\nMEMORY\n"
-    STRING_MEMMORY_HELP2 "\n  %12s%% nivel de uzilizare.\n\n\
+    STRING_MEMORY_HELP1 "Afișează cantitatea de memorie a sistemului.\n\nMEMORY\n"
+    STRING_MEMORY_HELP2 "\n  %12s%% nivel de uzilizare.\n\n\
   %13s octeți în total în memoria fizică (RAM).\n\
   %13s octeți disponibili în memorie fizică (RAM).\n\n\
   %13s octeți în total în fișierul de paginare.\n\
   %13s octeți disponibili în fișierul de paginare.\n\n\
   %13s octeți în total în memoria virtuală.\n\
   %13s octeți disponibili în memoria virtuală.\n"
-    STRING_MISC_HELP1 "Tastați pentru a continua...\n"
+    STRING_MISC_HELP1 "Tastați pentru a continua..."
     STRING_MOVE_HELP1 "Suprascrieți «%s»? (Da|Nu|Toate)"
     STRING_MOVE_HELP2 "Mută sau redenumește fișiere și directoare.\n\n\
 Pentru a muta unul sau mai multe fișiere:\n\

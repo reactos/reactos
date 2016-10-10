@@ -253,15 +253,15 @@ MKLINK [/D | /H | /J] linkname target\n\n\
   /H  Create a hard link.\n\
   /J  Create a directory junction.\n\n\
 If neither /H or /J is specified, a symbolic link is created."
-    STRING_MEMMORY_HELP1 "Vis mengde av system minne.\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% benyttet minne.\n\n\
+    STRING_MEMORY_HELP1 "Vis mengde av system minne.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% benyttet minne.\n\n\
   %13s byte totalt fysisk RAM.\n\
   %13s byte tilgjengelig fysisk RAM.\n\n\
   %13s byte total sidevekslingsfil.\n\
   %13s byte tilgjengelig sidevekslingsfil.\n\n\
   %13s byte totalt virtuell minne.\n\
   %13s byte tilgjengelig virtuell minne.\n"
-    STRING_MISC_HELP1 "Trykk en tast for å fortsette...\n"
+    STRING_MISC_HELP1 "Trykk en tast for å fortsette..."
     STRING_MOVE_HELP1 "Overskrive %s (Ja/Nei/Alle)? "
     STRING_MOVE_HELP2 "Flytt filer, og gi nytt navn på filer og mapper.\n\n\
 For å flytte en eller flere filer:\n\

@@ -258,15 +258,15 @@ MKLINK [/D | /H | /J] objektivi i lidhjes së emrit\n\n\
   /H  Krijon një lidhjë të fortë.\n\
   /J  Krijo një kryqëzim në skedë.\n\n\
 Nëse anjëra nga /H ose /J nuk speficikohet, një lidhje simboli do të krijohet."
-    STRING_MEMMORY_HELP1 "Paraqet sasinë e memories së sistemit.\n\nMEMORIA"
-    STRING_MEMMORY_HELP2 "\n  %12s%% ngarkimi i memories.\n\n\
+    STRING_MEMORY_HELP1 "Paraqet sasinë e memories së sistemit.\n\nMEMORIA"
+    STRING_MEMORY_HELP2 "\n  %12s%% ngarkimi i memories.\n\n\
   %13s bytes totali i RAM'it fizik.\n\
   %13s bytes RAM'i fizik ne dispozicion.\n\n\
   %13s bytes totali i faqeve i dokumentave.\n\
   %13s bytes dokumentat dhe faqet ne dispozicion.\n\n\
   %13s bytes memoria totale virtuale.\n\
   %13s bytes memoria virtuale ne dispozicion.\n"
-    STRING_MISC_HELP1 "Shtypni një buton për të vazhduar...\n"
+    STRING_MISC_HELP1 "Shtypni një buton për të vazhduar..."
     STRING_MOVE_HELP1 "Mbishkruaj %s (Po/Jo/Të Gjith)? "
     STRING_MOVE_HELP2 "Lëviz dokumentet dhe emero ato dhe skedat.\n\n\
 Për të lëvizur një ose më shumë dokumenta:\n\

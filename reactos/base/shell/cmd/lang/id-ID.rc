@@ -255,15 +255,15 @@ MKLINK [/D | /H | /J] linkname target\n\n\
   /H  Create a hard link.\n\
   /J  Create a directory junction.\n\n\
 If neither /H or /J is specified, a symbolic link is created."
-    STRING_MEMMORY_HELP1 "Menampilkan jumlah memori sistem.\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% beban memori.\n\n\
+    STRING_MEMORY_HELP1 "Menampilkan jumlah memori sistem.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% beban memori.\n\n\
   %13s byte total fisik RAM.\n\
   %13s byte fisik RAM tersedia.\n\n\
   %13s byte total file page.\n\
   %13s byte file page tersedia.\n\n\
   %13s byte total memori virtual.\n\
   %13s byte memori virtual tersedia.\n"
-    STRING_MISC_HELP1 "Tekan tombol untuk melanjutkan...\n"
+    STRING_MISC_HELP1 "Tekan tombol untuk melanjutkan..."
     STRING_MOVE_HELP1 "Timpa %s (Ya/Tidak/Semua)? "
     STRING_MOVE_HELP2 "Memindahkan file dan mengganti nama file dan direktori.\n\n\
 Untuk memindahkan satu atau lebih file:\n\

@@ -239,15 +239,15 @@ MKLINK [/D | /H | /J] 連結名 目標\n\n\
   /H  創建一個硬連結。\n\
   /J  創建一個目錄連線點。\n\n\
 如果 /H 或 /J 均未被指定，一個符號連結將被創建。"
-    STRING_MEMMORY_HELP1 "顯示系統內存容量。\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% 內存已安裝。\n\n\
+    STRING_MEMORY_HELP1 "顯示系統內存容量。\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% 內存已安裝。\n\n\
   %13s 位元組 總物理內存。\n\
   %13s 位元組 可用物理內存。\n\n\
   %13s 位元組 總頁面檔案大小。\n\
   %13s 位元組 可用頁面檔案。\n\n\
   %13s 位元組 總虛擬內存。\n\
   %13s 位元組 可用虛擬內存。\n"
-    STRING_MISC_HELP1 "按任意鍵繼續...\n"
+    STRING_MISC_HELP1 "按任意鍵繼續..."
     STRING_MOVE_HELP1 "覆蓋 %s 嗎 (Yes/No/All)？"
     STRING_MOVE_HELP2 "移動檔案並重新命名檔案和目錄。\n\n\
 移動一個或多個檔案：\n\

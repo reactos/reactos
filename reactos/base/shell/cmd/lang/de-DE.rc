@@ -253,15 +253,15 @@ MKLINK [/D | /H | /J] Linkname Ziel\n\n\
   /H  Erzeugt einen Hardlink.\n\
   /J  Erzeugt einen Junction Point.\n\n\
 Wenn weder /H noch /J angegeben werden, wird eine symbolische Verknüpfung angelegt."
-    STRING_MEMMORY_HELP1 "Zeigt die Größe des Systemspeicher an.\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% Speicher geladen.\n\n\
+    STRING_MEMORY_HELP1 "Zeigt die Größe des Systemspeicher an.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% Speicher geladen.\n\n\
   %13s Bytes RAM (insgesamt)\n\
   %13s Bytes verfügbarer RAM\n\n\
   %13s Bytes Auslagerungsdatei (insgesamt)\n\
   %13s Bytes verfügbare Auslagerungsdatei\n\n\
   %13s Bytes Virtueller Speicher (insgesamt)\n\
   %13s Bytes verfügbarer virtueller Speicher\n"
-    STRING_MISC_HELP1 "Drücken Sie eine beliebige Taste . . .\n"
+    STRING_MISC_HELP1 "Drücken Sie eine beliebige Taste . . ."
     STRING_MOVE_HELP1 "Überschreiben %s (Ja/Nein/Alle)? "
     STRING_MOVE_HELP2 "Verschiebt Dateien und benennt Dateien sowie Verzeichnisse um.\n\n\
 Um eine oder mehrere Dateien zu verschieben:\n\

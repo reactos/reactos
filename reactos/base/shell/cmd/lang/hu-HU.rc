@@ -241,15 +241,15 @@ MKLINK [/D | /H | /J] linkname target\n\n\
   /H  Create a hard link.\n\
   /J  Create a directory junction.\n\n\
 If neither /H or /J is specified, a symbolic link is created."
-    STRING_MEMMORY_HELP1 "Megjeleníti a memória statisztikát.\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n A memória %12s%%-a foglalt.\n\n\
+    STRING_MEMORY_HELP1 "Megjeleníti a memória statisztikát.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n A memória %12s%%-a foglalt.\n\n\
   %13s bájtnyi teljes fizikai memória.\n\
   %13s bájtnyi elérhetõ memória.\n\n\
   %13s bájt a lapozóállomány.\n\
   %13s bájtnyi elérhetõ a lapozóállományban.\n\n\
   %13s bájt a teljes virtuális memória.\n\
   %13s bájtnyi elérhetõ a virtuális memóriából.\n"
-    STRING_MISC_HELP1 "A folytatáshoz nyomj meg egy billentyût . . .\n"
+    STRING_MISC_HELP1 "A folytatáshoz nyomj meg egy billentyût . . ."
     STRING_MOVE_HELP1 "Felülírja %s (Igen/Nem/Mind)? "
     STRING_MOVE_HELP2 "Áthelyezi és átnevezi az állományokat a mappákban.\n\n\
 Egy vagy több állomány áthelyezéséhez:\n\

@@ -29,7 +29,7 @@ INT CommandMemory (LPTSTR param)
 
     if (!_tcsncmp (param, _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_MEMMORY_HELP1);
+        ConOutResPaging(TRUE,STRING_MEMORY_HELP1);
         return 0;
     }
 
@@ -62,7 +62,7 @@ INT CommandMemory (LPTSTR param)
     ConvertULargeInteger(msex.ullTotalVirtual, szTotalVirtual, 40, TRUE);
     ConvertULargeInteger(msex.ullAvailVirtual, szAvailVirtual, 40, TRUE);
 
-    ConOutResPrintf(STRING_MEMMORY_HELP2,
+    ConOutResPrintf(STRING_MEMORY_HELP2,
                     szMemoryLoad, szTotalPhys, szAvailPhys, szTotalPageFile,
                     szAvailPageFile, szTotalVirtual, szAvailVirtual);
 

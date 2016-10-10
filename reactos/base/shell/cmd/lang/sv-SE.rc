@@ -253,15 +253,15 @@ MKLINK [/D | /H | /J] linknamn mål\n\n\
   /H  Skapar en hårdlänk i stället för en symbolisk länk.\n\
   /J  Skapar en knutpunkt för en mapp sk. junction.\n\n\
 Om varken /H eller /J är angivna kommer en symbolisk länk att skapas."
-    STRING_MEMMORY_HELP1 "Visar mängd systemminne.\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% använt minne.\n\n\
+    STRING_MEMORY_HELP1 "Visar mängd systemminne.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% använt minne.\n\n\
   %13s byte totalt fysisk RAM-minne.\n\
   %13s byte tillgängligt fysisk RAM-minne.\n\n\
   %13s byte total sidväxlingsfil.\n\
   %13s byte tillgänglig sidväxlingsfil.\n\n\
   %13s byte totalt virtuell minne.\n\
   %13s byte tilgängeligt virtuellt minne.\n"
-    STRING_MISC_HELP1 "Tryck en knapp för att fortsätta...\n"
+    STRING_MISC_HELP1 "Tryck en knapp för att fortsätta..."
     STRING_MOVE_HELP1 "Skriv över %s (Ja/Nej/Alla)? "
     STRING_MOVE_HELP2 "Flyttar filer, och byter namn på filer och mappar.\n\n\
 för att flytte en eller flera filer:\n\

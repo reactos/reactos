@@ -266,15 +266,15 @@ MKLINK [/D | /H | /J] linkname target\n\n\
   /H  Create a hard link.\n\
   /J  Create a directory junction.\n\n\
 If neither /H or /J is specified, a symbolic link is created."
-    STRING_MEMMORY_HELP1 "Affiche la quantité de mémoire système.\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% de charge mémoire.\n\n\
+    STRING_MEMORY_HELP1 "Affiche la quantité de mémoire système.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% de charge mémoire.\n\n\
   %13s octets de RAM physique au total.\n\
   %13s octets de RAM physique disponible.\n\n\
   %13s octets de fichier d'échange au total.\n\
   %13s octets de fichier d'échange disponible.\n\n\
   %13s octets de mémoire virtuelle au total.\n\
   %13s octets de mémoire virtuelle disponible.\n"
-    STRING_MISC_HELP1 "Appuyer sur une touche pour continuer...\n"
+    STRING_MISC_HELP1 "Appuyer sur une touche pour continuer..."
     STRING_MOVE_HELP1 "Ecraser %s (Oui/Non/Tous) ? "
     STRING_MOVE_HELP2 "Déplace des fichiers ou renomme des fichiers et des répertoires.\n\n\
 Pouur déplacer un ou plusieurs fichiers:\n\

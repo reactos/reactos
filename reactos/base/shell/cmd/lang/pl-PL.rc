@@ -260,15 +260,15 @@ MKLINK [/D | /H | /J] nazwa_linku element_docelowy\n\n\
   /H  Tworzy dowiązanie twarde.\n\
   /J  Tworzy punkt połączenia katalogów.\n\n\
 Jeśli nie zostały użyte zarówno /H jak i /J, zostanie utworzone dowiązanie symboliczne."
-    STRING_MEMMORY_HELP1 "Wyświetla ilość pamięci systemowej.\n\nMEMORY"
-    STRING_MEMMORY_HELP2 "\n  %12s%% pamięci zajętej.\n\n\
+    STRING_MEMORY_HELP1 "Wyświetla ilość pamięci systemowej.\n\nMEMORY"
+    STRING_MEMORY_HELP2 "\n  %12s%% pamięci zajętej.\n\n\
   %13s bajtów pamięci RAM ogółem.\n\
   %13s bajtów pamięci RAM dostępne.\n\n\
   %13s bajtów w pliku stronicowania ogółem.\n\
   %13s bajtów dostępnych w pliku stronicowania.\n\n\
   %13s bajtów pamięci wirtualnej ogółem.\n\
   %13s bajtów pamięci wirtualnej dostępne.\n"
-    STRING_MISC_HELP1 "Naciśnij dowolny klawisz, aby kontynuować...\n"
+    STRING_MISC_HELP1 "Naciśnij dowolny klawisz, aby kontynuować..."
     STRING_MOVE_HELP1 "Nadpisać %s (Tak/Nie/Zawsze)? "
     STRING_MOVE_HELP2 "Przenosi, a także zmienia nazwy plików i katalogów.\n\n\
 Aby przenieść jeden lub więcej plików:\n\
