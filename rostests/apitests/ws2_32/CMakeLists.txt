@@ -9,6 +9,7 @@ list(APPEND SOURCE
     nostartup.c
     recv.c
     send.c
+    WSARecv.c
     WSAStartup.c
     testlist.c)
 
