@@ -32,16 +32,13 @@
 
 static void test_SetupPromptForDiskA(void)
 {
-#ifdef __REACTOS__
-    char path[] = "C:\\ReactOS\\system32";
-#else
-    #error "path must use GetSystemDirectoryA()! ROSTESTS_234"
-    char path[] = "C:\\windows\\system32";
-#endif
     char file[] = "kernel32.dll";
+    char path[MAX_PATH];
     char buffer[MAX_PATH];
     UINT ret;
     DWORD length;
+
+    GetSystemDirectoryA(path, MAX_PATH);
 
     memset(buffer, 0, sizeof(buffer));
     ret = SetupPromptForDiskA(0, "Test", "Testdisk", path, file, 0, IDF_CHECKFIRST, buffer, sizeof(buffer) - 1, &length);
@@ -71,18 +68,15 @@ static void test_SetupPromptForDiskA(void)
 
 static void test_SetupPromptForDiskW(void)
 {
-#ifdef __REACTOS__
-    WCHAR path[] = {'C',':','\\','R','e','a','c','t','O','S','\\','s','y','s','t','e','m','3','2','\0'};
-#else
-    #error "path must use GetSystemDirectoryW()! ROSTESTS_234"
-    WCHAR path[] = {'C',':','\\','w','i','n','d','o','w','s','\\','s','y','s','t','e','m','3','2','\0'};
-#endif
     WCHAR file[] = {'k','e','r','n','e','l','3','2','.','d','l','l','\0'};
     WCHAR title[] = {'T','e','s','t','\0'};
     WCHAR disk[] = {'T','e','s','t','d','i','s','k','\0'};
+    WCHAR path[MAX_PATH];
     WCHAR buffer[MAX_PATH];
     UINT ret;
     DWORD length;
+
+    GetSystemDirectoryW(path, MAX_PATH);
 
     memset(buffer, 0, sizeof(buffer));
     ret = SetupPromptForDiskW(0, title, disk, path, file, 0, IDF_CHECKFIRST, buffer, MAX_PATH-1, &length);
