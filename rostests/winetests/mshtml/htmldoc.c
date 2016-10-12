@@ -8596,22 +8596,11 @@ START_TEST(htmldoc)
     test_HTMLDocument(TRUE, TRUE);
     test_HTMLDocument_StreamLoad();
     test_HTMLDocument_StreamInitNew();
-    if (winetest_interactive)
-        test_editing_mode(FALSE, FALSE);
-    else
-        skip("Skipping test_editing_mode(FALSE, FALSE). ROSTESTS-113.\n");
+    test_editing_mode(FALSE, FALSE);
     test_editing_mode(TRUE, FALSE);
     test_editing_mode(TRUE, TRUE);
-    if (winetest_interactive)
-    {
-        test_HTMLDocument_http(FALSE);
-        test_HTMLDocument_http(TRUE);
-    }
-    else
-    {
-        skip("Skipping test_HTMLDocument_http(FALSE). ROSTESTS-113.\n");
-        skip("Skipping test_HTMLDocument_http(TRUE). ROSTESTS-113.\n");
-    }
+    test_HTMLDocument_http(FALSE);
+    test_HTMLDocument_http(TRUE);
 
     test_submit();
     test_UIActivate(FALSE, FALSE, FALSE);
