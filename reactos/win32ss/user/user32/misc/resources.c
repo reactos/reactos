@@ -13,12 +13,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(resource);
 typedef DWORD (WINAPI *CMP_REGNOTIFY) (HANDLE, LPVOID, DWORD, PULONG);
 typedef DWORD (WINAPI *CMP_UNREGNOTIFY) (ULONG );
 
-/* FIXME: Currently IsBadWritePtr is implemented using VirtualQuery which
-          does not seem to work properly for stack address space. */
-/* kill `left-hand operand of comma expression has no effect' warning */
-#define IsBadWritePtr(lp, n) ((DWORD)lp==n?0:0)
-
-
 static HINSTANCE hSetupApi = NULL;
 
 /**********************************************************************
