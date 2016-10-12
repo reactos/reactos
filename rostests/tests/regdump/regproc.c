@@ -310,7 +310,7 @@ DWORD convertHexCSVToHex(TCHAR* str, BYTE* buf, ULONG bufLen)
         TCHAR xbuf[3];
         TCHAR wc;
         memcpy(xbuf, s, 2);
-        xbuf[3] = _T('\0');
+        xbuf[2] = _T('\0');
         _stscanf(xbuf, _T("%02x"), (UINT*)&wc);
         if (byteCount < bufLen)
             *b++ = (unsigned char)wc;
