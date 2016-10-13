@@ -572,17 +572,19 @@
  * AVI resources
  *
  * windows shell32 has 14 of them: 150-152 and 160-170
- * FIXME: Add 150, 152
+ * FIXME: Add 165, 166
  */
 
+#define IDA_SHELL_AUTOPLAY        150
 #define IDA_SHELL_SEARCHING_INDEX 151
+#define IDA_SHELL_COMPUTER_SEARCH 152
 #define IDA_SHELL_COPY            160
 #define IDA_SHELL_COPY1           161
-#define IDA_SHELL_COPY2           167
-#define IDA_SHELL_COPY3           168
 #define IDA_SHELL_RECYCLE         162
 #define IDA_SHELL_EMPTY_RECYCLE   163
 #define IDA_SHELL_DELETE          164
+#define IDA_SHELL_COPY2           167
+#define IDA_SHELL_COPY3           168
 #define IDA_SHELL_DELETE1         169
 #define IDA_SHELL_DOWNLOAD        170
 
