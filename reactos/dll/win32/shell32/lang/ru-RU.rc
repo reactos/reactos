@@ -21,7 +21,7 @@ MENU_002 MENUEX
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&Просмотр", FCIDM_SHVIEW_VIEW
+        POPUP "&Вид", FCIDM_SHVIEW_VIEW
         BEGIN
             MENUITEM "&Большие значки", FCIDM_SHVIEW_BIGICON
             MENUITEM "&Мелкие значки", FCIDM_SHVIEW_SMALLICON
