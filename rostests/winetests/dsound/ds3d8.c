@@ -35,7 +35,7 @@
 #include <wingdi.h>
 #include <mmreg.h>
 #include <dsound.h>
-//#include "ks.h"
+#include <ks.h>
 #include <ksmedia.h>
 #include "dsound_test.h"
 

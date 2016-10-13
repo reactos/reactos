@@ -5,6 +5,7 @@
 #include <windef.h>
 #define NOBITMAP
 #include <mmreg.h>
+#include <ks.h>
 #include <ksmedia.h>
 #include <mmsystem.h>
 

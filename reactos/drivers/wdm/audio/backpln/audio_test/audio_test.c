@@ -8,6 +8,7 @@
 #include <math.h>
 #include <setupapi.h>
 #include <ndk/umtypes.h>
+#include <ks.h>
 #include <ksmedia.h>
 #include "interface.h"
 

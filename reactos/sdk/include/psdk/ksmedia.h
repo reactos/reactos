@@ -5,10 +5,12 @@
     Please see COPYING in the top level directory for license information.
 */
 
+#ifndef _KS_
+#error ks.h needs to be included before ksmedia.h
+#endif /* _KS_ */
+
 #ifndef KSMEDIA_H
 #define KSMEDIA_H
-
-#include <ks.h>
 
 /*
     KS CATEGORIES

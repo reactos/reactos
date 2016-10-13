@@ -30,6 +30,7 @@
 #include <vfwmsgs.h>
 #include <objbase.h>
 #include <mmreg.h>
+#include <ks.h>
 #include <ksmedia.h>
 #include <initguid.h>
 #include <amstream.h>

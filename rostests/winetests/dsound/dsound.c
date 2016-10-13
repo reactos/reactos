@@ -38,7 +38,7 @@
 #include <dsound.h>
 #include <dsconf.h>
 //#include "initguid.h"
-//#include "ks.h"
+#include <ks.h>
 #include <ksmedia.h>
 
 #include "dsound_test.h"

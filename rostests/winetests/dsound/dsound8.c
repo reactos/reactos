@@ -39,7 +39,7 @@
 #include <mmreg.h>
 #include <dsound.h>
 #include <dsconf.h>
-//#include "ks.h"
+#include <ks.h>
 #include <ksmedia.h>
 #include <initguid.h>
 #include <mmdeviceapi.h>
