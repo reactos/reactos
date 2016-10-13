@@ -27,6 +27,7 @@
 #include <wsahelp.h>
 #include <tdi.h>
 #include <afd/shared.h>
+#include <mswsock.h>
 #include "include/helpers.h"
 
 extern HANDLE GlobalHeap;
@@ -126,6 +127,13 @@ typedef struct _ASYNC_DATA {
 	IO_STATUS_BLOCK IoStatusBlock;
 	AFD_POLL_INFO AsyncSelectInfo;
 } ASYNC_DATA, *PASYNC_DATA;
+
+typedef struct _AFDAPCCONTEXT
+{
+    LPWSAOVERLAPPED lpOverlapped;
+    LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine;
+    PSOCKET_INFORMATION lpSocket;
+} AFDAPCCONTEXT, *PAFDAPCCONTEXT;
 
 SOCKET
 WSPAPI

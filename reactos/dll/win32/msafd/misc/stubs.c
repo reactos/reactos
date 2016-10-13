@@ -26,22 +26,6 @@ WSPCancelBlockingCall(
 
 BOOL
 WSPAPI
-WSPGetOverlappedResult(
-    IN  SOCKET s,
-    IN  LPWSAOVERLAPPED lpOverlapped,
-    OUT LPDWORD lpcbTransfer,
-    IN  BOOL fWait,
-    OUT LPDWORD lpdwFlags,
-    OUT LPINT lpErrno)
-{
-    UNIMPLEMENTED;
-
-    return FALSE;
-}
-
-
-BOOL
-WSPAPI
 WSPGetQOSByName(
     IN      SOCKET s,
     IN OUT  LPWSABUF lpQOSName,
