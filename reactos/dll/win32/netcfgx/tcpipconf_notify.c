@@ -2710,8 +2710,8 @@ LoadDNSSettings(
         RegQueryValueExW(hKey, L"RegisterAdapterName", NULL, NULL, (LPBYTE)&This->pCurrentConfig->pDNS->RegisterAdapterName, &dwSize);
         RegQueryValueExW(hKey, L"RegistrationEnabled", NULL, NULL, (LPBYTE)&This->pCurrentConfig->pDNS->RegistrationEnabled, &dwSize);
 
-        dwSize = sizeof(This->pCurrentConfig->pDNS->szDomain) / sizeof(WCHAR);
-        RegQueryValueExW(hKey, L"Domain", NULL, NULL, (LPBYTE)szBuffer, &dwSize);
+        dwSize = sizeof(This->pCurrentConfig->pDNS->szDomain);
+        RegQueryValueExW(hKey, L"Domain", NULL, NULL, (LPBYTE)This->pCurrentConfig->pDNS->szDomain, &dwSize);
 
         RegCloseKey(hKey);
     }
