@@ -80,6 +80,34 @@ typedef struct
     UCHAR bLength;
     UCHAR bDescriptorType;
     UCHAR bDescriptorSubtype;
+    UCHAR bUnitID;
+    UCHAR bSourceID;
+    UCHAR bControlSize;
+    UCHAR bmaControls[1];
+    UCHAR iFeature;
+}USB_AUDIO_CONTROL_FEATURE_UNIT_DESCRIPTOR, *PUSB_AUDIO_CONTROL_FEATURE_UNIT_DESCRIPTOR;
+
+typedef struct
+{
+    UCHAR bLength;
+    UCHAR bDescriptorType;
+    UCHAR bDescriptorSubtype;
+    UCHAR bUnitID;
+    UCHAR bNrInPins;
+    UCHAR baSourceID[1];
+    UCHAR bNrChannels;
+    USHORT wChannelConfig;
+    UCHAR iChannelNames;
+    UCHAR bmControls;
+    UCHAR iMixer;
+}USB_AUDIO_CONTROL_MIXER_UNIT_DESCRIPTOR, *PUSB_AUDIO_CONTROL_MIXER_UNIT_DESCRIPTOR;
+
+
+typedef struct
+{
+    UCHAR bLength;
+    UCHAR bDescriptorType;
+    UCHAR bDescriptorSubtype;
     UCHAR bTerminalLink;
     UCHAR bDelay;
     USHORT wFormatTag;
