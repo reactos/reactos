@@ -255,6 +255,18 @@ USBAudioPnPSetPower(
 
 NTSTATUS
 NTAPI
+UsbAudioPinDataIntersect(
+    _In_  PVOID        Context,
+    _In_  PIRP         Irp,
+    _In_  PKSP_PIN     Pin,
+    _In_  PKSDATARANGE DataRange,
+    _In_  PKSDATARANGE MatchingDataRange,
+    _In_  ULONG        DataBufferSize,
+    _Out_ PVOID        Data,
+    _Out_ PULONG       DataSize);
+
+NTSTATUS
+NTAPI
 UsbAudioCaptureComplete(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp,

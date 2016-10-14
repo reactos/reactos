@@ -448,7 +448,10 @@ USBAudioPinBuildDescriptors(
                 Pins[Index].PinDescriptor.DataFlow = KSPIN_DATAFLOW_IN;
             }
 
+            /* data intersect handler */
+            Pins[Index].IntersectHandler = UsbAudioPinDataIntersect;
 
+            /* pin flags */
             Pins[Index].Flags = KSPIN_FLAG_PROCESS_IN_RUN_STATE_ONLY | KSFILTER_FLAG_CRITICAL_PROCESSING;
 
             /* irp sinks / sources can be instantiated */

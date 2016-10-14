@@ -1074,3 +1074,65 @@ USBAudioPinSetDeviceState(
 
     return Status;
 }
+
+
+NTSTATUS
+NTAPI
+UsbAudioPinDataIntersect(
+    _In_  PVOID        Context,
+    _In_  PIRP         Irp,
+    _In_  PKSP_PIN     Pin,
+    _In_  PKSDATARANGE DataRange,
+    _In_  PKSDATARANGE MatchingDataRange,
+    _In_  ULONG        DataBufferSize,
+    _Out_ PVOID        Data,
+    _Out_ PULONG       DataSize)
+{
+    PKSFILTER Filter;
+    PKSPIN_DESCRIPTOR_EX PinDescriptor;
+    PKSDATAFORMAT_WAVEFORMATEX DataFormat;
+    PKSDATARANGE_AUDIO DataRangeAudio;
+
+    /* get filter from irp*/
+    Filter = KsGetFilterFromIrp(Irp);
+    if (!Filter)
+    {
+        /* no match*/
+        return STATUS_NO_MATCH;
+    }
+
+    /* get pin descriptor */
+    PinDescriptor = &Filter->Descriptor->PinDescriptors[Pin->PinId];
+
+    *DataSize = sizeof(KSDATAFORMAT_WAVEFORMATEX);
+    if (DataBufferSize == 0)
+    {
+        /* buffer too small */
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    /* sanity checks*/
+    ASSERT(PinDescriptor->PinDescriptor.DataRangesCount >= 0);
+    ASSERT(PinDescriptor->PinDescriptor.DataRanges[0]->FormatSize == sizeof(KSDATARANGE_AUDIO));
+
+    DataRangeAudio = (PKSDATARANGE_AUDIO)PinDescriptor->PinDescriptor.DataRanges[0];
+
+    DataFormat = Data;
+    DataFormat->WaveFormatEx.wFormatTag = WAVE_FORMAT_PCM;
+    DataFormat->WaveFormatEx.nChannels = DataRangeAudio->MaximumChannels;
+    DataFormat->WaveFormatEx.nSamplesPerSec = DataRangeAudio->MaximumSampleFrequency;
+    DataFormat->WaveFormatEx.nAvgBytesPerSec = DataRangeAudio->MaximumSampleFrequency * (DataRangeAudio->MaximumBitsPerSample / 8) * DataRangeAudio->MaximumChannels;
+    DataFormat->WaveFormatEx.nBlockAlign = (DataRangeAudio->MaximumBitsPerSample / 8) * DataRangeAudio->MaximumChannels;
+    DataFormat->WaveFormatEx.wBitsPerSample = DataRangeAudio->MaximumBitsPerSample;
+    DataFormat->WaveFormatEx.cbSize = 0;
+
+    DataFormat->DataFormat.FormatSize = sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX);
+    DataFormat->DataFormat.Flags = 0;
+    DataFormat->DataFormat.Reserved = 0;
+    DataFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
+    DataFormat->DataFormat.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+    DataFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
+    DataFormat->DataFormat.SampleSize = (DataRangeAudio->MaximumBitsPerSample / 8) * DataRangeAudio->MaximumChannels;
+
+    return STATUS_SUCCESS;
+}
