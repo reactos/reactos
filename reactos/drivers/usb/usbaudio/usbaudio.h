@@ -127,7 +127,10 @@ typedef struct
     PUCHAR Buffer;                                               /* iso buffer*/
     ULONG BufferSize;                                            /* iso buffer size */
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;               /* interface descriptor */
-
+	WORK_QUEUE_ITEM  CaptureWorkItem;                            /* work item */
+	PKSWORKER        CaptureWorker;                              /* capture worker */
+	WORK_QUEUE_ITEM  StarvationWorkItem;                            /* work item */
+	PKSWORKER        StarvationWorker;                              /* capture worker */
 }PIN_CONTEXT, *PPIN_CONTEXT;
 
 /* filter.c */
@@ -249,6 +252,13 @@ USBAudioPnPSetPower(
 );
 
 /* pin.c*/
+
+NTSTATUS
+NTAPI
+UsbAudioCaptureComplete(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp,
+	IN PVOID Context);
 
 NTSTATUS
 NTAPI

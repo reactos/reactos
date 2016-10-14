@@ -448,6 +448,9 @@ USBAudioPinBuildDescriptors(
                 Pins[Index].PinDescriptor.DataFlow = KSPIN_DATAFLOW_IN;
             }
 
+
+            Pins[Index].Flags = KSPIN_FLAG_PROCESS_IN_RUN_STATE_ONLY | KSFILTER_FLAG_CRITICAL_PROCESSING;
+
             /* irp sinks / sources can be instantiated */
             Pins[Index].InstancesPossible = 1;
             Pins[Index].InstancesNecessary = 1;
