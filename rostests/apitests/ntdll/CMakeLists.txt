@@ -5,6 +5,7 @@ list(APPEND SOURCE
     NtApphelpCacheControl.c
     NtContinue.c
     NtCreateFile.c
+    NtCreateKey.c
     NtCreateThread.c
     NtDeleteKey.c
     NtFreeVirtualMemory.c
