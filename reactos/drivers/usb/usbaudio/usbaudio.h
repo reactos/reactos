@@ -155,11 +155,19 @@ typedef struct
     PUCHAR Buffer;                                               /* iso buffer*/
     ULONG BufferSize;                                            /* iso buffer size */
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;               /* interface descriptor */
-	WORK_QUEUE_ITEM  CaptureWorkItem;                            /* work item */
-	PKSWORKER        CaptureWorker;                              /* capture worker */
-	WORK_QUEUE_ITEM  StarvationWorkItem;                            /* work item */
-	PKSWORKER        StarvationWorker;                              /* capture worker */
+    WORK_QUEUE_ITEM  CaptureWorkItem;                            /* work item */
+    PKSWORKER        CaptureWorker;                              /* capture worker */
+    WORK_QUEUE_ITEM  StarvationWorkItem;                            /* work item */
+    PKSWORKER        StarvationWorker;                              /* capture worker */
 }PIN_CONTEXT, *PPIN_CONTEXT;
+
+typedef struct
+{
+    PUSB_COMMON_DESCRIPTOR Descriptor;
+    ULONG NodeCount;
+    ULONG Nodes[20];
+}NODE_CONTEXT, *PNODE_CONTEXT;
+
 
 /* filter.c */
 
@@ -178,6 +186,13 @@ VOID
 NTAPI
 FreeFunction(
     IN PVOID Item);
+
+VOID
+NTAPI
+CountTerminalUnits(
+    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+    OUT PULONG NonStreamingTerminalDescriptorCount,
+    OUT PULONG TotalTerminalDescriptorCount);
 
 /* usbaudio.c */
 
