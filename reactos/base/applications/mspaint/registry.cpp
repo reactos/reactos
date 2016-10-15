@@ -37,9 +37,6 @@ static void ReadFileHistory(CRegKey &key, LPCTSTR lpName, CString &strFile)
 
 void RegistrySettings::SetWallpaper(LPCTSTR szFileName, DWORD dwStyle, DWORD dwTile)
 {
-    // TODO: find out whether this line still serves a purpose
-    SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (PVOID) szFileName, SPIF_UPDATEINIFILE);
-
     if ((dwStyle > 2) || (dwTile > 2))
         return;
 
@@ -56,6 +53,8 @@ void RegistrySettings::SetWallpaper(LPCTSTR szFileName, DWORD dwStyle, DWORD dwT
         desktop.SetStringValue(_T("WallpaperStyle"), strStyle);
         desktop.SetStringValue(_T("TileWallpaper"), strTile);
     }
+
+    SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (PVOID) szFileName, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
 }
 
 void RegistrySettings::LoadPresets()
