@@ -2,7 +2,8 @@
  * PROJECT:         ReactOS api tests
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
  * PURPOSE:         Test for CRegKey
- * PROGRAMMER:      Mark Jansen
+ * PROGRAMMERS:     Mark Jansen
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include <apitest.h>
@@ -185,4 +186,23 @@ START_TEST(CRegKey)
 
     lret = key.DeleteValue(_T("BIN_NAME"));
     ok(lret == ERROR_SUCCESS, "Expected lret to be ERROR_SUCCESS, was: %lu\n", lret);
+
+    {
+        CRegKey test1;
+        lret = test1.Create(HKEY_CURRENT_USER, _T("TEST1"));
+        ok(lret == ERROR_SUCCESS, "Expected lret to be ERROR_SUCCESS, was: %lu\n", lret);
+
+        CRegKey test2;
+        lret = test2.Create(test1, _T("TEST2"));
+        ok(lret == ERROR_SUCCESS, "Expected lret to be ERROR_SUCCESS, was: %lu\n", lret);
+
+        CRegKey test3;
+        lret = test3.Create(test2, _T("TEST3"));
+        ok(lret == ERROR_SUCCESS, "Expected lret to be ERROR_SUCCESS, was: %lu\n", lret);
+    }
+    {
+        CRegKey key(HKEY_CURRENT_USER);
+        lret = key.RecurseDeleteKey(_T("TEST1"));
+        ok(lret == ERROR_SUCCESS, "Expected lret to be ERROR_SUCCESS, was: %lu\n", lret);
+    }
 }

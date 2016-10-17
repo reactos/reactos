@@ -54,6 +54,10 @@
 #define ATL_NO_VTABLE __declspec(novtable)
 #endif
 
+#ifndef ATL_DEPRECATED
+#define ATL_DEPRECATED __declspec(deprecated)
+#endif
+
 #define offsetofclass(base, derived) (reinterpret_cast<DWORD_PTR>(static_cast<base *>(reinterpret_cast<derived *>(_ATL_PACKING))) - _ATL_PACKING)
 
 namespace ATL
@@ -891,6 +895,10 @@ class CRegKey
 {
 public:
     HKEY m_hKey;
+#if 0
+    // FIXME & TODO:
+    CAtlTransactionManager* m_pTM;
+#endif
 
 public:
 
@@ -900,14 +908,22 @@ public:
     }
 
     CRegKey(CRegKey& key) throw()
+        : m_hKey(key.Detach())
     {
-        Attach(key.Detach());
     }
 
     explicit CRegKey(HKEY hKey) throw()
-        :m_hKey(hKey)
+        : m_hKey(hKey)
     {
     }
+
+#if 0
+    // FIXME & TODO:
+    CRegKey(CAtlTransactionManager* pTM) throw()
+    {
+        ...
+    }
+#endif
 
     ~CRegKey() throw()
     {
@@ -923,7 +939,7 @@ public:
         if (m_hKey)
         {
             HKEY hKey = Detach();
-            return RegCloseKey(hKey);
+            return ::RegCloseKey(hKey);
         }
         return ERROR_SUCCESS;
     }
@@ -935,11 +951,19 @@ public:
         return hKey;
     }
 
-    LONG Open(HKEY hKeyParent, LPCTSTR lpszKeyName, REGSAM samDesired = KEY_READ | KEY_WRITE) throw()
+    LONG Open(HKEY hKeyParent, LPCTSTR lpszKeyName,
+              REGSAM samDesired = KEY_READ | KEY_WRITE) throw()
     {
-        HKEY hKey = NULL;
+        ATLASSERT(hKeyParent);
+        ATLASSERT(lpszKeyName);
 
-        LONG lRes = RegOpenKeyEx(hKeyParent, lpszKeyName, NULL, samDesired, &hKey);
+        HKEY hKey = NULL;
+        LONG lRes = ::RegOpenKeyEx(hKeyParent, lpszKeyName, NULL, samDesired, &hKey);
+        if (lRes != ERROR_SUCCESS)
+        {
+            samDesired |= KEY_WOW64_64KEY;
+            lRes = ::RegOpenKeyEx(hKeyParent, lpszKeyName, NULL, samDesired, &hKey);
+        }
         if (lRes == ERROR_SUCCESS)
         {
             Close();
@@ -948,11 +972,27 @@ public:
         return lRes;
     }
 
-    LONG Create(HKEY hKeyParent, LPCTSTR lpszKeyName, LPTSTR lpszClass = REG_NONE, DWORD dwOptions = REG_OPTION_NON_VOLATILE, REGSAM samDesired = KEY_READ | KEY_WRITE, LPSECURITY_ATTRIBUTES lpSecAttr = NULL, LPDWORD lpdwDisposition = NULL) throw()
+    LONG Create(HKEY hKeyParent, LPCTSTR lpszKeyName,
+                LPTSTR lpszClass = REG_NONE,
+                DWORD dwOptions = REG_OPTION_NON_VOLATILE,
+                REGSAM samDesired = KEY_READ | KEY_WRITE,
+                LPSECURITY_ATTRIBUTES lpSecAttr = NULL,
+                LPDWORD lpdwDisposition = NULL) throw()
     {
-        HKEY hKey = NULL;
+        ATLASSERT(hKeyParent);
+        ATLASSERT(lpszKeyName);
 
-        LONG lRes = RegCreateKeyEx(hKeyParent, lpszKeyName, NULL, lpszClass, dwOptions, samDesired, lpSecAttr, &hKey, lpdwDisposition);
+        HKEY hKey = NULL;
+        LONG lRes = ::RegCreateKeyEx(hKeyParent, lpszKeyName, NULL, lpszClass,
+                                     dwOptions, samDesired, lpSecAttr, &hKey,
+                                     lpdwDisposition);
+        if (lRes != ERROR_SUCCESS)
+        {
+            samDesired |= KEY_WOW64_64KEY;
+            lRes = ::RegCreateKeyEx(hKeyParent, lpszKeyName, NULL, lpszClass,
+                                    dwOptions, samDesired, lpSecAttr, &hKey,
+                                    lpdwDisposition);
+        }
         if (lRes == ERROR_SUCCESS)
         {
             Close();
@@ -960,11 +1000,11 @@ public:
         }
         return lRes;
     }
-
 
     LONG QueryValue(LPCTSTR pszValueName, DWORD* pdwType, void* pData, ULONG* pnBytes) throw()
     {
-        return RegQueryValueEx(m_hKey, pszValueName, NULL, pdwType, (LPBYTE)pData, pnBytes);
+        ATLASSERT(m_hKey);
+        return ::RegQueryValueEx(m_hKey, pszValueName, NULL, pdwType, (LPBYTE)pData, pnBytes);
     }
 
     LONG QueryDWORDValue(LPCTSTR pszValueName, DWORD& dwValue) throw()
@@ -996,7 +1036,7 @@ public:
         DWORD type = 0;
         LONG lRet = QueryValue(pszValueName, &type, pszValue, &size);
 
-        if (lRet == ERROR_SUCCESS && type != REG_SZ)
+        if (lRet == ERROR_SUCCESS && type != REG_SZ && type != REG_EXPAND_SZ)
             lRet = ERROR_INVALID_DATA;
 
         *pnChars = size / sizeof(TCHAR);
@@ -1022,15 +1062,42 @@ public:
         if (lRet != ERROR_SUCCESS)
             return lRet;
 
-        if (!SUCCEEDED(CLSIDFromString(buf, &guidValue)))
+        if (!SUCCEEDED(::CLSIDFromString(buf, &guidValue)))
             return ERROR_INVALID_DATA;
 
         return lRet;
     }
 
+    LONG QueryQWORDValue(LPCTSTR pszValueName, ULONGLONG& qwValue) throw()
+    {
+        ULONG size = sizeof(ULONGLONG);
+        DWORD type = 0;
+        LONG lRet = QueryValue(pszValueName, &type, &qwValue, &size);
+
+        if (lRet == ERROR_SUCCESS && type != REG_QWORD)
+            lRet = ERROR_INVALID_DATA;
+
+        return lRet;
+    }
+
+    LONG QueryMultiStringValue(LPCTSTR pszValueName, LPTSTR pszValue,
+                               ULONG* pnChars) throw()
+    {
+        ULONG size = (*pnChars) * sizeof(TCHAR);
+        DWORD type;
+        LONG lRet = QueryValue(pszValueName, &type, pszValue, &size);
+
+        if (lRet == ERROR_SUCCESS && type != REG_MULTI_SZ)
+            lRet = ERROR_INVALID_DATA;
+
+        *pnChars = size / sizeof(TCHAR);
+        return lRet;
+    }
+
     LONG SetValue(LPCTSTR pszValueName, DWORD dwType, const void* pValue, ULONG nBytes) throw()
     {
-        return RegSetValueEx(m_hKey, pszValueName, NULL, dwType, (const BYTE*)pValue, nBytes);
+        ATLASSERT(m_hKey);
+        return ::RegSetValueEx(m_hKey, pszValueName, NULL, dwType, (const BYTE*)pValue, nBytes);
     }
 
     LONG SetDWORDValue(LPCTSTR pszValueName, DWORD dwValue) throw()
@@ -1040,17 +1107,24 @@ public:
 
     LONG SetStringValue(LPCTSTR pszValueName, LPCTSTR pszValue, DWORD dwType = REG_SZ) throw()
     {
-        if (dwType != REG_SZ)
-            return ERROR_INVALID_DATA;  // not implemented yet.
-
-        ULONG length = (_tcslen(pszValue) + 1) * sizeof(TCHAR);
-        return SetValue(pszValueName, dwType, pszValue, length);
+        ULONG length;
+        switch (dwType)
+        {
+        case REG_SZ:
+        case REG_EXPAND_SZ:
+            length = (_tcslen(pszValue) + 1) * sizeof(TCHAR);
+            return SetValue(pszValueName, dwType, pszValue, length);
+        case REG_MULTI_SZ:
+            return SetMultiStringValue(pszValueName, pszValue);
+        default:
+            return ERROR_INVALID_DATA;
+        }
     }
 
     LONG SetGUIDValue(LPCTSTR pszValueName, REFGUID guidValue) throw()
     {
         OLECHAR buf[40] = {0};
-        StringFromGUID2(guidValue, buf, 39);
+        ::StringFromGUID2(guidValue, buf, 39);
 #ifdef UNICODE
         return SetStringValue(pszValueName, buf);
 #else
@@ -1065,7 +1139,48 @@ public:
         return SetValue(pszValueName, REG_BINARY, pValue, nBytes);
     }
 
-    LONG SetKeyValue(LPCTSTR lpszKeyName, LPCTSTR lpszValue, LPCTSTR lpszValueName = NULL) throw()
+    LONG SetMultiStringValue(LPCTSTR pszValueName, LPCTSTR pszValue) throw()
+    {
+        ULONG dwSize = CRegKey::_GetMultiStringSize(pszValue);
+        return SetValue(pszValueName, REG_MULTI_SZ, pszValue, dwSize);
+    }
+
+    LONG SetQWORDValue(LPCTSTR pszValueName, ULONGLONG qwValue) throw()
+    {
+        ULONG dwSize = sizeof(ULONGLONG);
+        return SetValue(pszValueName, REG_QWORD, &qwValue, dwSize);
+    }
+
+    LONG NotifyChangeKeyValue(BOOL bWatchSubtree, DWORD dwNotifyFilter,
+                              HANDLE hEvent, BOOL bAsync = TRUE) throw()
+    {
+        ATLASSERT(m_hKey);
+        LONG ret = ::RegNotifyChangeKeyValue(m_hKey, bWatchSubtree,
+                                             dwNotifyFilter, hEvent, bAsync);
+        return ret;
+    }
+
+    LONG Flush() throw()
+    {
+        ATLASSERT(m_hKey);
+        LONG ret = ::RegFlushKey(m_hKey);
+        return ret;
+    }
+
+    static LONG WINAPI SetValue(HKEY hKeyParent, LPCTSTR lpszKeyName,
+                                LPCTSTR lpszValue, LPCTSTR lpszValueName = NULL)
+    {
+        CRegKey key;
+        LONG lRet = key.Create(hKeyParent, lpszKeyName);
+        if (lRet == ERROR_SUCCESS)
+        {
+            lRet = key.SetStringValue(lpszValueName, lpszValue);
+        }
+        return lRet;
+    }
+
+    LONG SetKeyValue(LPCTSTR lpszKeyName, LPCTSTR lpszValue,
+                     LPCTSTR lpszValueName = NULL) throw()
     {
         CRegKey key;
         LONG lRet = key.Create(m_hKey, lpszKeyName);
@@ -1078,12 +1193,47 @@ public:
 
     LONG DeleteValue(LPCTSTR lpszValue) throw()
     {
-        return RegDeleteValue(m_hKey, lpszValue);
+        ATLASSERT(m_hKey);
+        return ::RegDeleteValue(m_hKey, lpszValue);
     }
 
     LONG DeleteSubKey(LPCTSTR lpszSubKey) throw()
     {
-        return RegDeleteKey(m_hKey, lpszSubKey);
+        ATLASSERT(m_hKey);
+        ATLASSERT(lpszSubKey);
+        return ::RegDeleteKey(m_hKey, lpszSubKey);
+    }
+
+    LONG RecurseDeleteKey(LPCTSTR lpszKey) throw()
+    {
+        ATLASSERT(m_hKey);
+        ATLASSERT(lpszKey);
+        return CRegKey::_DoDeleteKeyTree(m_hKey, lpszKey);
+    }
+
+    LONG EnumKey(DWORD iIndex, LPTSTR pszName, LPDWORD pnNameLength,
+                 FILETIME* pftLastWriteTime = NULL) throw()
+    {
+        ATLASSERT(m_hKey);
+        LONG ret = ::RegEnumKeyEx(m_hKey, iIndex, pszName, pnNameLength, NULL,
+                                  NULL, NULL, pftLastWriteTime);
+        return ret;
+    }
+
+    LONG GetKeySecurity(SECURITY_INFORMATION si, PSECURITY_DESCRIPTOR psd,
+                        LPDWORD pnBytes) throw()
+    {
+        ATLASSERT(m_hKey);
+        LONG ret = ::RegGetKeySecurity(m_hKey, si, psd, pnBytes);
+        return ret;
+    }
+
+    LONG SetKeySecurity(SECURITY_INFORMATION si,
+                        PSECURITY_DESCRIPTOR psd) throw()
+    {
+        ATLASSERT(m_hKey);
+        LONG ret = ::RegSetKeySecurity(m_hKey, si, psd);
+        return ret;
     }
 
     operator HKEY() const throw()
@@ -1091,14 +1241,99 @@ public:
         return m_hKey;
     }
 
-    CRegKey& operator =(CRegKey& key) throw()
+    CRegKey& operator=(CRegKey& key) throw()
     {
-        Attach(Detach());
+        Attach(key.Detach());
         return *this;
     }
 
-};
+protected:
+    // get the total size of a multistring
+    static ULONG _GetMultiStringSize(LPCTSTR pszz)
+    {
+        int count = 0;
+        do
+        {
+            int len = _tcslen(pszz);
+            count += len + 1;
+            pszz += len + 1;
+        } while (*pszz != TEXT('\0'));
+        ++count;
+        return count * sizeof(TCHAR);
+    }
 
+    // delete key recursively
+    static LONG _DoDeleteKeyTree(HKEY hParentKey, LPCTSTR lpszKey)
+    {
+        ATLASSERT(hParentKey);
+        ATLASSERT(lpszKey);
+
+        // open the key
+        CRegKey key;
+        LONG ret = key.Open(hParentKey, lpszKey);
+        if (ret != ERROR_SUCCESS)
+        {
+            return ret;     // failure
+        }
+
+        // get the longest length of subkey names
+        DWORD NameMax;
+        ret = ::RegQueryInfoKey(key, NULL, NULL, NULL, NULL, &NameMax, NULL,
+                                NULL, NULL, NULL, NULL, NULL);
+        if (ret != ERROR_SUCCESS)
+        {
+            return ret;     // failure
+        }
+        ++NameMax;  // for NUL
+
+        // allocate the string buffer for names if necessary
+        TCHAR szNameBuf[MAX_PATH], *pszName;
+        if (NameMax > MAX_PATH)
+        {
+            pszName = (TCHAR *)malloc(NameMax * sizeof(TCHAR));
+            ATLASSERT(pszName);
+            if (pszName == NULL)
+            {
+                return ERROR_OUTOFMEMORY;   // failure
+            }
+        }
+        else
+        {
+            NameMax = MAX_PATH;
+            pszName = szNameBuf;
+        }
+
+        // enumerate every subkey and delete
+        for (;;)
+        {
+            DWORD Count = NameMax;
+            ret = key.EnumKey(0, pszName, &Count);
+            if (ret != ERROR_SUCCESS)
+            {
+                if (ret == ERROR_NO_MORE_ITEMS)
+                    ret = ERROR_SUCCESS;
+                break;
+            }
+
+            ret = CRegKey::_DoDeleteKeyTree(key, pszName);
+            if (ret != ERROR_SUCCESS)
+                break;
+        }
+
+        // close key
+        key.Close();
+
+        // delete the subkey
+        if (ret == ERROR_SUCCESS)
+            ret = ::RegDeleteKey(hParentKey, lpszKey);
+
+        // delete the buffer if any
+        if (pszName != szNameBuf)
+            free(pszName);
+
+        return ret;
+    }
+};
 
 template<class T>
 class CComHeapPtr : public CHeapPtr<T, CComAllocator>
