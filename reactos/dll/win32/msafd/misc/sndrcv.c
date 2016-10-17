@@ -208,8 +208,15 @@ WSPRecv(SOCKET Handle,
     Socket = GetSocketStructure(Handle);
     if (!Socket)
     {
-       *lpErrno = WSAENOTSOCK;
-       return SOCKET_ERROR;
+        if (lpErrno)
+            *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+    if (!lpNumberOfBytesRead && !lpOverlapped)
+    {
+        if (lpErrno)
+            *lpErrno = WSAEFAULT;
+        return SOCKET_ERROR;
     }
 
     Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
@@ -389,8 +396,15 @@ WSPRecvFrom(SOCKET Handle,
     Socket = GetSocketStructure(Handle);
     if (!Socket)
     {
-       *lpErrno = WSAENOTSOCK;
-       return SOCKET_ERROR;
+        if (lpErrno)
+            *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+    if (!lpNumberOfBytesRead && !lpOverlapped)
+    {
+        if (lpErrno)
+            *lpErrno = WSAEFAULT;
+        return SOCKET_ERROR;
     }
 
     if (!(Socket->SharedData->ServiceFlags1 & XP1_CONNECTIONLESS))
@@ -591,8 +605,15 @@ WSPSend(SOCKET Handle,
     Socket = GetSocketStructure(Handle);
     if (!Socket)
     {
-       *lpErrno = WSAENOTSOCK;
-       return SOCKET_ERROR;
+        if (lpErrno)
+            *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+    if (!lpNumberOfBytesSent && !lpOverlapped)
+    {
+        if (lpErrno)
+            *lpErrno = WSAEFAULT;
+        return SOCKET_ERROR;
     }
 
     Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
@@ -740,8 +761,15 @@ WSPSendTo(SOCKET Handle,
     Socket = GetSocketStructure(Handle);
     if (!Socket)
     {
-       *lpErrno = WSAENOTSOCK;
-       return SOCKET_ERROR;
+        if (lpErrno)
+            *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+    if (!lpNumberOfBytesSent && !lpOverlapped)
+    {
+        if (lpErrno)
+            *lpErrno = WSAEFAULT;
+        return SOCKET_ERROR;
     }
 
     if (!(Socket->SharedData->ServiceFlags1 & XP1_CONNECTIONLESS))
