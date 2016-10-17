@@ -271,6 +271,12 @@ Enum(
 
     /* open device interface key */
     Status = IoOpenDeviceInterfaceRegistryKey(&KeyName, GENERIC_READ | GENERIC_WRITE, OutKey);
+
+    if (!NT_SUCCESS(Status))
+    {
+        *OutKey = NULL;
+    }
+
 #if 0
     if (!NT_SUCCESS(Status))
     {

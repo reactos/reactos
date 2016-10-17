@@ -55,11 +55,11 @@ WdmAudControlDeviceType(
     }
     else if (DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
-        Result = WdmAudGetWaveInDeviceCount();
+        Result = WdmAudGetWaveOutDeviceCount();
     }
     else if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE)
     {
-        Result = WdmAudGetWaveOutDeviceCount();
+        Result = WdmAudGetWaveInDeviceCount();
     }
     else if (DeviceInfo->DeviceType == MIDI_IN_DEVICE_TYPE)
     {
