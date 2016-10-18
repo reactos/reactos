@@ -279,7 +279,7 @@ NTSTATUS
 NTAPI
 MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
 {
-    return MiReadPageFile(Page, FILE_FROM_ENTRY(SwapEntry), OFFSET_FROM_ENTRY(SwapEntry));
+    return MiReadPageFile(Page, FILE_FROM_ENTRY(SwapEntry), OFFSET_FROM_ENTRY(SwapEntry) - 1);
 }
 
 NTSTATUS
@@ -450,7 +450,7 @@ MmAllocSwapPage(VOID)
             MiFreeSwapPages--;
             KeReleaseSpinLock(&PagingFileListLock, oldIrql);
 
-            entry = ENTRY_FROM_FILE_OFFSET(i, off);
+            entry = ENTRY_FROM_FILE_OFFSET(i, off + 1);
             return(entry);
         }
     }
