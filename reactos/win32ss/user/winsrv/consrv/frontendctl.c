@@ -174,6 +174,12 @@ CSR_API(SrvGetLargestConsoleWindowSize)
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = Buff->Header.Console;
+
+    /*
+     * Retrieve the largest possible console window size, without
+     * taking into account the size of the console screen buffer
+     * (thus differs from ConDrvGetConsoleScreenBufferInfo).
+     */
     TermGetLargestConsoleWindowSize(Console, &GetLargestWindowSizeRequest->Size);
 
     ConSrvReleaseScreenBuffer(Buff, TRUE);

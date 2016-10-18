@@ -1065,6 +1065,8 @@ ConDrvGetConsoleScreenBufferInfo(IN  PCONSOLE Console,
                                  OUT PCOORD MaximumViewSize,
                                  OUT PWORD  Attributes)
 {
+    COORD LargestWindowSize;
+
     if (Console == NULL || Buffer == NULL || ScreenBufferSize == NULL ||
         CursorPosition  == NULL || ViewOrigin == NULL || ViewSize == NULL ||
         MaximumViewSize == NULL || Attributes == NULL)
@@ -1081,8 +1083,14 @@ ConDrvGetConsoleScreenBufferInfo(IN  PCONSOLE Console,
     *ViewSize         = Buffer->ViewSize;
     *Attributes       = Buffer->ScreenDefaultAttrib;
 
-    // FIXME: Refine the computation
-    *MaximumViewSize  = Buffer->ScreenBufferSize;
+    /*
+     * Retrieve the largest possible console window size, taking
+     * into account the size of the console screen buffer.
+     */
+    TermGetLargestConsoleWindowSize(Console, &LargestWindowSize);
+    LargestWindowSize.X = min(LargestWindowSize.X, Buffer->ScreenBufferSize.X);
+    LargestWindowSize.Y = min(LargestWindowSize.Y, Buffer->ScreenBufferSize.Y);
+    *MaximumViewSize = LargestWindowSize;
 
     return STATUS_SUCCESS;
 }
@@ -1216,6 +1224,7 @@ ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
                            IN PSMALL_RECT WindowRect)
 {
     SMALL_RECT CapturedWindowRect;
+    COORD LargestWindowSize;
 
     if (Console == NULL || Buffer == NULL || WindowRect == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -1227,7 +1236,7 @@ ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
 
     if (!Absolute)
     {
-        /* Relative positions given. Transform them to absolute ones */
+        /* Relative positions are given, transform them to absolute ones */
         CapturedWindowRect.Left   += Buffer->ViewOrigin.X;
         CapturedWindowRect.Top    += Buffer->ViewOrigin.Y;
         CapturedWindowRect.Right  += Buffer->ViewOrigin.X + Buffer->ViewSize.X - 1;
@@ -1248,6 +1257,19 @@ ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
         return STATUS_INVALID_PARAMETER;
     }
 
+    /*
+     * Forbid window sizes larger than the largest allowed console window size,
+     * taking into account the size of the console screen buffer.
+     */
+    TermGetLargestConsoleWindowSize(Console, &LargestWindowSize);
+    LargestWindowSize.X = min(LargestWindowSize.X, Buffer->ScreenBufferSize.X);
+    LargestWindowSize.Y = min(LargestWindowSize.Y, Buffer->ScreenBufferSize.Y);
+    if ((CapturedWindowRect.Right - CapturedWindowRect.Left + 1 > LargestWindowSize.X) ||
+        (CapturedWindowRect.Bottom - CapturedWindowRect.Top + 1 > LargestWindowSize.Y))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Shift the window rectangle coordinates if 'Left' or 'Top' are negative */
     if (CapturedWindowRect.Left < 0)
     {
@@ -1260,11 +1282,9 @@ ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
         CapturedWindowRect.Top = 0;
     }
 
-    if ((CapturedWindowRect.Right  >= Buffer->ScreenBufferSize.X) ||
-        (CapturedWindowRect.Bottom >= Buffer->ScreenBufferSize.Y))
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
+    /* Clip the window rectangle to the screen buffer */
+    CapturedWindowRect.Right  = min(CapturedWindowRect.Right , Buffer->ScreenBufferSize.X);
+    CapturedWindowRect.Bottom = min(CapturedWindowRect.Bottom, Buffer->ScreenBufferSize.Y);
 
     Buffer->ViewOrigin.X = CapturedWindowRect.Left;
     Buffer->ViewOrigin.Y = CapturedWindowRect.Top;

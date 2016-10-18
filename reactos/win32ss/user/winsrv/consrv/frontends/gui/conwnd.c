@@ -172,8 +172,8 @@ UnRegisterConWndClass(HINSTANCE hInstance)
 }
 
 
-
-static VOID
+/* NOTE: Also used in guiterm.c */
+/* static */ VOID
 GetScreenBufferSizeUnits(IN PCONSOLE_SCREEN_BUFFER Buffer,
                          IN PGUI_CONSOLE_DATA GuiData,
                          OUT PUINT WidthUnit,
