@@ -166,14 +166,19 @@ START_TEST(SetConsoleWindowInfo)
     ok(Success, "Getting SB info\n");
     if (Success)
     {
-        ok(csbi2.srWindow.Left == 0, "srWindow.Left = %d, expected 0\n", csbi2.srWindow.Left);
-        ok(csbi2.srWindow.Top == 0, "srWindow.Top = %d, expected 0\n", csbi2.srWindow.Top);
+        ConRect.Right -= ConRect.Left;
+        ConRect.Left = 0;
+        ConRect.Bottom -= ConRect.Top;
+        ConRect.Top = 0;
 
-        /* NOTE that here we compare against the old csbi data! */
-        ok(csbi2.srWindow.Right == csbi.dwSize.X - 2, "srWindow.Right = %d, expected %d\n",
-           csbi2.srWindow.Right,   csbi.dwSize.X - 2);
-        ok(csbi2.srWindow.Bottom == csbi.dwSize.Y - 2, "srWindow.Bottom = %d, expected %d\n",
-           csbi2.srWindow.Bottom,   csbi.dwSize.Y - 2);
+        ok(csbi2.srWindow.Left == ConRect.Left, "srWindow.Left = %d, expected %d\n",
+           csbi2.srWindow.Left, ConRect.Left);
+        ok(csbi2.srWindow.Top == ConRect.Top, "srWindow.Top = %d, expected %d\n",
+           csbi2.srWindow.Top, ConRect.Top);
+        ok(csbi2.srWindow.Right == ConRect.Right, "srWindow.Right = %d, expected %d\n",
+           csbi2.srWindow.Right, ConRect.Right);
+        ok(csbi2.srWindow.Bottom == ConRect.Bottom, "srWindow.Bottom = %d, expected %d\n",
+           csbi2.srWindow.Bottom, ConRect.Bottom);
     }
 
     /* Test 3: Similar to Test 2, but set the Right/Bottom members too large
@@ -195,13 +200,13 @@ START_TEST(SetConsoleWindowInfo)
     if (Success)
     {
         /* NOTE that here we compare against the old csbi data! */
-        ok(csbi2.srWindow.Left == 0, "srWindow(2).Left = %d, expected equal to %d\n",
+        ok(csbi2.srWindow.Left == 0, "srWindow.Left = %d, expected %d\n",
            csbi2.srWindow.Left, 0);
-        ok(csbi2.srWindow.Top == 0, "srWindow(2).Top = %d, expected equal to %d\n",
+        ok(csbi2.srWindow.Top == 0, "srWindow.Top = %d, expected %d\n",
            csbi2.srWindow.Top, 0);
-        ok(csbi2.srWindow.Right == csbi.dwSize.X - 2, "srWindow(2).Right = %d, expected equal to %d\n",
+        ok(csbi2.srWindow.Right == csbi.dwSize.X - 2, "srWindow.Right = %d, expected %d\n",
            csbi2.srWindow.Right, csbi.dwSize.X - 2);
-        ok(csbi2.srWindow.Bottom == csbi.dwSize.Y - 2, "srWindow(2).Bottom = %d, expected equal to %d\n",
+        ok(csbi2.srWindow.Bottom == csbi.dwSize.Y - 2, "srWindow.Bottom = %d, expected %d\n",
            csbi2.srWindow.Bottom, csbi.dwSize.Y - 2);
     }
 
@@ -224,14 +229,16 @@ START_TEST(SetConsoleWindowInfo)
     ok(Success, "Getting SB info\n");
     if (Success)
     {
-        ok(csbi2.srWindow.Left == 0, "srWindow.Left = %d, expected 0\n", csbi2.srWindow.Left);
-        ok(csbi2.srWindow.Top == 0, "srWindow.Top = %d, expected 0\n", csbi2.srWindow.Top);
+        ok(csbi2.srWindow.Left == 0, "srWindow.Left = %d, expected %d\n",
+           csbi2.srWindow.Left, 0);
+        ok(csbi2.srWindow.Top == 0, "srWindow.Top = %d, expected %d\n",
+           csbi2.srWindow.Top, 0);
 
         /* NOTE that here we compare against the old csbi data! */
         ok(csbi2.srWindow.Right == csbi.dwSize.X - 2, "srWindow.Right = %d, expected %d\n",
-           csbi2.srWindow.Right,   csbi.dwSize.X - 2);
+           csbi2.srWindow.Right, csbi.dwSize.X - 2);
         ok(csbi2.srWindow.Bottom == csbi.dwSize.Y - 2, "srWindow.Bottom = %d, expected %d\n",
-           csbi2.srWindow.Bottom,   csbi.dwSize.Y - 2);
+           csbi2.srWindow.Bottom, csbi.dwSize.Y - 2);
     }
 
     /* Test 5: Set Right/Bottom members strictly smaller than Left/Top members
@@ -248,7 +255,7 @@ START_TEST(SetConsoleWindowInfo)
        ERROR_INVALID_PARAMETER, dwLastError);
 
     /* Test 6: Set Left/Top members equal to the Right/Bottom members respectively
-    * (succeeds, disagrees with MSDN) */
+     * (succeeds, disagrees with MSDN) */
     ConRect.Left = ConRect.Right  = 2;
     ConRect.Top  = ConRect.Bottom = 5;
     SetLastError(0xdeadbeef);
@@ -262,11 +269,82 @@ START_TEST(SetConsoleWindowInfo)
     ok(Success, "Getting SB info\n");
     if (Success)
     {
-        ok(csbi2.srWindow.Left == 2, "srWindow.Left = %d, expected 2\n", csbi2.srWindow.Left);
-        ok(csbi2.srWindow.Right == 2, "srWindow.Right = %d, expected 2\n", csbi2.srWindow.Right);
+        ok(csbi2.srWindow.Left == ConRect.Left, "srWindow.Left = %d, expected %d\n",
+           csbi2.srWindow.Left, ConRect.Left);
+        ok(csbi2.srWindow.Top == ConRect.Top, "srWindow.Top = %d, expected %d\n",
+           csbi2.srWindow.Top, ConRect.Top);
+        ok(csbi2.srWindow.Right == ConRect.Right, "srWindow.Right = %d, expected %d\n",
+           csbi2.srWindow.Right, ConRect.Right);
+        ok(csbi2.srWindow.Bottom == ConRect.Bottom, "srWindow.Bottom = %d, expected %d\n",
+           csbi2.srWindow.Bottom, ConRect.Bottom);
+    }
 
-        ok(csbi2.srWindow.Top == 5, "srWindow.Top = %d, expected 5\n", csbi2.srWindow.Top);
-        ok(csbi2.srWindow.Bottom == 5, "srWindow.Bottom = %d, expected 5\n", csbi2.srWindow.Bottom);
+    /*
+     * Test 7: Test how large can the console window be, for a given
+     * screen buffer size. For that we set the console screen buffer
+     * to a really large size, hoping that its corresponding window size
+     * is larger than the computer screen. The permitted maximum window
+     * size specified in csbi.dwMaximumWindowSize should be a boundary.
+     */
+    Resolution.X = 500;
+    Resolution.Y = 500;
+    ResizeTextConsole(hConOut, &csbi, Resolution, NULL);
+    /* Be sure that csbi.dwMaximumWindowSize is strictly smaller
+     * than the console screen buffer size, for our matters... */
+    ok((csbi.dwMaximumWindowSize.X < Resolution.X) && (csbi.dwMaximumWindowSize.Y < Resolution.Y),
+       "dwMaximumWindowSize = {%d, %d} was expected to be smaller than Resolution = {%d, %d}\n",
+       csbi.dwMaximumWindowSize.X, csbi.dwMaximumWindowSize.Y, Resolution.X, Resolution.Y);
+
+    /* Now try to set first the console window to a size smaller than the maximum size */
+    ConRect.Left   = ConRect.Top = 0;
+    ConRect.Right  = csbi.dwMaximumWindowSize.X - 1;
+    ConRect.Bottom = csbi.dwMaximumWindowSize.Y - 1;
+    SetLastError(0xdeadbeef);
+    Success = SetConsoleWindowInfo(hConOut, TRUE, &ConRect);
+    dwLastError = GetLastError();
+    ok(Success, "Setting console wnd info should have succeeded!\n");
+    ok(dwLastError != ERROR_INVALID_PARAMETER, "GetLastError: %lu\n", dwLastError);
+
+    /* Check the new reported window size rect */
+    Success = GetConsoleScreenBufferInfo(hConOut, &csbi2);
+    ok(Success, "Getting SB info\n");
+    if (Success)
+    {
+        ok(csbi2.srWindow.Left == ConRect.Left, "srWindow.Left = %d, expected %d\n",
+           csbi2.srWindow.Left, ConRect.Left);
+        ok(csbi2.srWindow.Top == ConRect.Top, "srWindow.Top = %d, expected %d\n",
+           csbi2.srWindow.Top, ConRect.Top);
+        ok(csbi2.srWindow.Right == ConRect.Right, "srWindow.Right = %d, expected %d\n",
+           csbi2.srWindow.Right, ConRect.Right);
+        ok(csbi2.srWindow.Bottom == ConRect.Bottom, "srWindow.Bottom = %d, expected %d\n",
+           csbi2.srWindow.Bottom, ConRect.Bottom);
+    }
+
+    /* And now try to set the console window to a size larger than the maximum size.
+     * The SetConsoleWindowInfo call should fail */
+    ConRect.Left   = ConRect.Top = 0;
+    ConRect.Right  = csbi.dwMaximumWindowSize.X + 1;
+    ConRect.Bottom = csbi.dwMaximumWindowSize.Y + 1;
+    SetLastError(0xdeadbeef);
+    Success = SetConsoleWindowInfo(hConOut, TRUE, &ConRect);
+    dwLastError = GetLastError();
+    ok(!Success, "Setting console wnd info should have failed!\n");
+    ok(dwLastError == ERROR_INVALID_PARAMETER, "GetLastError: expecting %u got %lu\n",
+       ERROR_INVALID_PARAMETER, dwLastError);
+
+    /* Check the new reported window size rect */
+    Success = GetConsoleScreenBufferInfo(hConOut, &csbi2);
+    ok(Success, "Getting SB info\n");
+    if (Success)
+    {
+        ok(csbi2.srWindow.Left == 0, "srWindow.Left = %d, expected %d\n",
+           csbi2.srWindow.Left, 0);
+        ok(csbi2.srWindow.Top == 0, "srWindow.Top = %d, expected %d\n",
+           csbi2.srWindow.Top, 0);
+        ok(csbi2.srWindow.Right == csbi.dwMaximumWindowSize.X - 1, "srWindow.Right = %d, expected %d\n",
+           csbi2.srWindow.Right, csbi.dwMaximumWindowSize.X - 1);
+        ok(csbi2.srWindow.Bottom == csbi.dwMaximumWindowSize.Y - 1, "srWindow.Bottom = %d, expected %d\n",
+           csbi2.srWindow.Bottom, csbi.dwMaximumWindowSize.Y - 1);
     }
 
 
