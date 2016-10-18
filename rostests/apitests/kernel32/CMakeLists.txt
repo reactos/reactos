@@ -10,6 +10,7 @@ list(APPEND SOURCE
     lstrcpynW.c
     MultiByteToWideChar.c
     PrivMoveFileIdentityW.c
+    SetConsoleWindowInfo.c
     SetCurrentDirectory.c
     SetUnhandledExceptionFilter.c
     TerminateProcess.c
