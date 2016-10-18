@@ -1225,7 +1225,7 @@ ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
 
     CapturedWindowRect = *WindowRect;
 
-    if (Absolute == FALSE)
+    if (!Absolute)
     {
         /* Relative positions given. Transform them to absolute ones */
         CapturedWindowRect.Left   += Buffer->ViewOrigin.X;
@@ -1234,12 +1234,34 @@ ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
         CapturedWindowRect.Bottom += Buffer->ViewOrigin.Y + Buffer->ViewSize.Y - 1;
     }
 
-    /* See MSDN documentation on SetConsoleWindowInfo about the performed checks */
-    if ( (CapturedWindowRect.Left < 0) || (CapturedWindowRect.Top < 0)  ||
-         (CapturedWindowRect.Right  >= Buffer->ScreenBufferSize.X)      ||
-         (CapturedWindowRect.Bottom >= Buffer->ScreenBufferSize.Y)      ||
-         (CapturedWindowRect.Right  <= CapturedWindowRect.Left)         ||
-         (CapturedWindowRect.Bottom <= CapturedWindowRect.Top) )
+    /*
+     * The MSDN documentation on SetConsoleWindowInfo is partially wrong about
+     * the performed checks this API performs. While it is correct that the
+     * 'Right'/'Bottom' members cannot be strictly smaller than the 'Left'/'Top'
+     * members, they can be equal.
+     * Also, if the 'Left' or 'Top' members are negative, this is automatically
+     * corrected for, and the window rectangle coordinates are shifted accordingly.
+     */
+    if ((CapturedWindowRect.Right  < CapturedWindowRect.Left) ||
+        (CapturedWindowRect.Bottom < CapturedWindowRect.Top))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Shift the window rectangle coordinates if 'Left' or 'Top' are negative */
+    if (CapturedWindowRect.Left < 0)
+    {
+        CapturedWindowRect.Right -= CapturedWindowRect.Left;
+        CapturedWindowRect.Left = 0;
+    }
+    if (CapturedWindowRect.Top < 0)
+    {
+        CapturedWindowRect.Bottom -= CapturedWindowRect.Top;
+        CapturedWindowRect.Top = 0;
+    }
+
+    if ((CapturedWindowRect.Right  >= Buffer->ScreenBufferSize.X) ||
+        (CapturedWindowRect.Bottom >= Buffer->ScreenBufferSize.Y))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -1250,7 +1272,7 @@ ConDrvSetConsoleWindowInfo(IN PCONSOLE Console,
     Buffer->ViewSize.X = CapturedWindowRect.Right - CapturedWindowRect.Left + 1;
     Buffer->ViewSize.Y = CapturedWindowRect.Bottom - CapturedWindowRect.Top + 1;
 
-    // TermResizeTerminal(Console);
+    TermResizeTerminal(Console);
 
     return STATUS_SUCCESS;
 }
