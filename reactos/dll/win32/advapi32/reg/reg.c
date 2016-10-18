@@ -3855,7 +3855,7 @@ RegQueryMultipleValuesA(HKEY hKey,
     LONG ErrorCode;
 
     if (maxBytes >= (1024*1024))
-        return ERROR_TRANSFER_TOO_LONG;
+        return ERROR_MORE_DATA;
 
     *ldwTotsize = 0;
 
@@ -3919,7 +3919,7 @@ RegQueryMultipleValuesW(HKEY hKey,
     LONG ErrorCode;
 
     if (maxBytes >= (1024*1024))
-        return ERROR_TRANSFER_TOO_LONG;
+        return ERROR_MORE_DATA;
 
     *ldwTotsize = 0;
 
