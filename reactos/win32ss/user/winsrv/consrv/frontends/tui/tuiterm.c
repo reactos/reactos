@@ -452,7 +452,7 @@ TuiInit(DWORD OemCP)
     }
 
 Quit:
-    if (Ret == FALSE)
+    if (!Ret)
     {
         DeleteCriticalSection(&ActiveVirtConsLock);
         CloseHandle(ConsoleDeviceHandle);

@@ -194,7 +194,7 @@ GuiConsoleInputThread(PVOID Param)
                 NewWindow = CreateWindowExW(WS_EX_CLIENTEDGE,
                                             GUI_CONWND_CLASS,
                                             Console->Title.Buffer,
-                                            WS_OVERLAPPEDWINDOW | WS_HSCROLL | WS_VSCROLL,
+                                            WS_OVERLAPPEDWINDOW,
                                             CW_USEDEFAULT,
                                             CW_USEDEFAULT,
                                             CW_USEDEFAULT,

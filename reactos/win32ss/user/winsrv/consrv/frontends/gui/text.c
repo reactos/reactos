@@ -80,7 +80,7 @@ CopyBlock(PTEXTMODE_SCREEN_BUFFER Buffer,
         DPRINT1("This case must never happen, because selHeight is at least == 1\n");
     }
 
-    size += 1; /* Null-termination */
+    size++; /* Null-termination */
     size *= sizeof(WCHAR);
 
     /* Allocate some memory area to be given to the clipboard, so it will not be freed here */
@@ -319,7 +319,7 @@ GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
         /* Pressing the character key, with the control keys maintained pressed */
         er.Event.KeyEvent.bKeyDown = TRUE;
         er.Event.KeyEvent.wVirtualKeyCode = LOBYTE(VkKey);
-        er.Event.KeyEvent.wVirtualScanCode = MapVirtualKeyW(LOBYTE(VkKey), MAPVK_VK_TO_CHAR);
+        er.Event.KeyEvent.wVirtualScanCode = MapVirtualKeyW(LOBYTE(VkKey), MAPVK_VK_TO_VSC);
         er.Event.KeyEvent.uChar.UnicodeChar = CurChar;
         er.Event.KeyEvent.dwControlKeyState = 0;
         if (HIBYTE(VkKey) & 1)
