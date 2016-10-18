@@ -137,7 +137,7 @@ RegisterConWndClass(IN HINSTANCE hInstance)
                                  GetSystemMetrics(SM_CXSMICON),
                                  GetSystemMetrics(SM_CYSMICON),
                                  LR_SHARED);
-    ghDefaultCursor = LoadCursorW(NULL, IDC_ARROW);
+    ghDefaultCursor = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
 
     WndClass.cbSize = sizeof(WNDCLASSEXW);
     WndClass.lpszClassName = GUI_CONWND_CLASS;
@@ -476,7 +476,7 @@ ResizeConWnd(PGUI_CONSOLE_DATA GuiData, DWORD WidthUnit, DWORD HeightUnit)
         ShowScrollBar(GuiData->hWindow, SB_HORZ, FALSE);
     }
 
-    /* Resize the window  */
+    /* Resize the window */
     SetWindowPos(GuiData->hWindow, NULL, 0, 0, Width, Height,
                  SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOCOPYBITS);
     // NOTE: The SWP_NOCOPYBITS flag can be replaced by a subsequent call
@@ -1342,15 +1342,15 @@ OnTimer(PGUI_CONSOLE_DATA GuiData)
         if ((GuiData->OldCursor.x != Buff->CursorPosition.X) ||
             (GuiData->OldCursor.y != Buff->CursorPosition.Y))
         {
-            SCROLLINFO xScroll;
+            SCROLLINFO sInfo;
             int OldScrollX = -1, OldScrollY = -1;
             int NewScrollX = -1, NewScrollY = -1;
 
-            xScroll.cbSize = sizeof(xScroll);
-            xScroll.fMask = SIF_POS;
+            sInfo.cbSize = sizeof(sInfo);
+            sInfo.fMask = SIF_POS;
             // Capture the original position of the scroll bars and save them.
-            if (GetScrollInfo(GuiData->hWindow, SB_HORZ, &xScroll)) OldScrollX = xScroll.nPos;
-            if (GetScrollInfo(GuiData->hWindow, SB_VERT, &xScroll)) OldScrollY = xScroll.nPos;
+            if (GetScrollInfo(GuiData->hWindow, SB_HORZ, &sInfo)) OldScrollX = sInfo.nPos;
+            if (GetScrollInfo(GuiData->hWindow, SB_VERT, &sInfo)) OldScrollY = sInfo.nPos;
 
             // If we successfully got the info for the horizontal scrollbar
             if (OldScrollX >= 0)
@@ -1405,13 +1405,13 @@ OnTimer(PGUI_CONSOLE_DATA GuiData)
                                SW_INVALIDATE);
                 if (NewScrollX >= 0)
                 {
-                    xScroll.nPos = NewScrollX;
-                    SetScrollInfo(GuiData->hWindow, SB_HORZ, &xScroll, TRUE);
+                    sInfo.nPos = NewScrollX;
+                    SetScrollInfo(GuiData->hWindow, SB_HORZ, &sInfo, TRUE);
                 }
                 if (NewScrollY >= 0)
                 {
-                    xScroll.nPos = NewScrollY;
-                    SetScrollInfo(GuiData->hWindow, SB_VERT, &xScroll, TRUE);
+                    sInfo.nPos = NewScrollY;
+                    SetScrollInfo(GuiData->hWindow, SB_VERT, &sInfo, TRUE);
                 }
                 UpdateWindow(GuiData->hWindow);
                 // InvalidateRect(GuiData->hWindow, NULL, FALSE);
@@ -1555,7 +1555,7 @@ OnScroll(PGUI_CONSOLE_DATA GuiData, INT nBar, WORD sbCode)
         USHORT OldY = Buff->ViewOrigin.Y;
         UINT   WidthUnit, HeightUnit;
 
-        /* We now modify either Buff->ViewOrigin.X or Buff->ViewOrigin.Y */
+        /* We now modify Buff->ViewOrigin */
         *pOriginXY = sInfo.nPos;
 
         GetScreenBufferSizeUnits(Buff, GuiData, &WidthUnit, &HeightUnit);
@@ -2115,8 +2115,8 @@ OnGetMinMaxInfo(PGUI_CONSOLE_DATA GuiData, PMINMAXINFO minMaxInfo)
     windx = (ActiveBuffer->ScreenBufferSize.X) * WidthUnit  + 2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE));
     windy = (ActiveBuffer->ScreenBufferSize.Y) * HeightUnit + 2 * (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYEDGE)) + GetSystemMetrics(SM_CYCAPTION);
 
-    if (ActiveBuffer->ViewSize.X < ActiveBuffer->ScreenBufferSize.X) windy += GetSystemMetrics(SM_CYHSCROLL);    // window currently has a horizontal scrollbar
-    if (ActiveBuffer->ViewSize.Y < ActiveBuffer->ScreenBufferSize.Y) windx += GetSystemMetrics(SM_CXVSCROLL);    // window currently has a vertical scrollbar
+    if (ActiveBuffer->ViewSize.X < ActiveBuffer->ScreenBufferSize.X) windy += GetSystemMetrics(SM_CYHSCROLL); // Window currently has a horizontal scrollbar
+    if (ActiveBuffer->ViewSize.Y < ActiveBuffer->ScreenBufferSize.Y) windx += GetSystemMetrics(SM_CXVSCROLL); // Window currently has a vertical scrollbar
 
     minMaxInfo->ptMaxTrackSize.x = windx;
     minMaxInfo->ptMaxTrackSize.y = windy;
@@ -2134,7 +2134,7 @@ OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
 
     if (!ConDrvValidateConsoleUnsafe((PCONSOLE)Console, CONSOLE_RUNNING, TRUE)) return;
 
-    if ((GuiData->WindowSizeLock == FALSE) &&
+    if (!GuiData->WindowSizeLock &&
         (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED || wParam == SIZE_MINIMIZED))
     {
         PCONSOLE_SCREEN_BUFFER Buff = GuiData->ActiveBuffer;
@@ -2149,8 +2149,8 @@ OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
         windy = HIWORD(lParam);
 
         /* Compensate for existing scroll bars (because lParam values do not accommodate scroll bar) */
-        if (Buff->ViewSize.X < Buff->ScreenBufferSize.X) windy += GetSystemMetrics(SM_CYHSCROLL);    // window currently has a horizontal scrollbar
-        if (Buff->ViewSize.Y < Buff->ScreenBufferSize.Y) windx += GetSystemMetrics(SM_CXVSCROLL);    // window currently has a vertical scrollbar
+        if (Buff->ViewSize.X < Buff->ScreenBufferSize.X) windy += GetSystemMetrics(SM_CYHSCROLL); // Window currently has a horizontal scrollbar
+        if (Buff->ViewSize.Y < Buff->ScreenBufferSize.Y) windx += GetSystemMetrics(SM_CXVSCROLL); // Window currently has a vertical scrollbar
 
         charx = windx / (int)WidthUnit ;
         chary = windy / (int)HeightUnit;
@@ -2159,9 +2159,9 @@ OnSize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
         if ((windx % WidthUnit ) >= (WidthUnit  / 2)) ++charx;
         if ((windy % HeightUnit) >= (HeightUnit / 2)) ++chary;
 
-        /* Compensate for added scroll bars in new window */
-        if (charx < (DWORD)Buff->ScreenBufferSize.X) windy -= GetSystemMetrics(SM_CYHSCROLL);    // new window will have a horizontal scroll bar
-        if (chary < (DWORD)Buff->ScreenBufferSize.Y) windx -= GetSystemMetrics(SM_CXVSCROLL);    // new window will have a vertical scroll bar
+        /* Compensate for added scroll bars in window */
+        if (charx < (DWORD)Buff->ScreenBufferSize.X) windy -= GetSystemMetrics(SM_CYHSCROLL); // Window will have a horizontal scroll bar
+        if (chary < (DWORD)Buff->ScreenBufferSize.Y) windx -= GetSystemMetrics(SM_CXVSCROLL); // Window will have a vertical scroll bar
 
         charx = windx / (int)WidthUnit ;
         chary = windy / (int)HeightUnit;
