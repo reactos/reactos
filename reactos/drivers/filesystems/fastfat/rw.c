@@ -880,7 +880,7 @@ VfatWrite(
         Resource = &Fcb->MainResource;
     }
 
-    if (Fcb->Flags & FCB_IS_PAGE_FILE)
+    if ((Fcb->Flags & FCB_IS_PAGE_FILE) || (IrpContext->Irp->Flags & IRP_PAGING_IO))
     {
         if (!ExAcquireResourceSharedLite(Resource,
                                          BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
