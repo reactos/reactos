@@ -1366,39 +1366,45 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
 
     HasSwapEntry = MmIsPageSwapEntry(Process, Address);
 
-    if (HasSwapEntry)
+    /* See if we should use a private page */
+    if ((HasSwapEntry) || (Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA))
     {
         SWAPENTRY DummyEntry;
 
         /*
          * Is it a wait entry?
          */
-        MmGetPageFileMapping(Process, Address, &SwapEntry);
-
-        if (SwapEntry == MM_WAIT_ENTRY)
+        if (HasSwapEntry)
         {
-            MmUnlockSectionSegment(Segment);
-            MmUnlockAddressSpace(AddressSpace);
-            MiWaitForPageEvent(NULL, NULL);
-            MmLockAddressSpace(AddressSpace);
-            return STATUS_MM_RESTART_OPERATION;
-        }
+            MmGetPageFileMapping(Process, Address, &SwapEntry);
 
-        /*
-         * Must be private page we have swapped out.
-         */
+            if (SwapEntry == MM_WAIT_ENTRY)
+            {
+                MmUnlockSectionSegment(Segment);
+                MmUnlockAddressSpace(AddressSpace);
+                MiWaitForPageEvent(NULL, NULL);
+                MmLockAddressSpace(AddressSpace);
+                return STATUS_MM_RESTART_OPERATION;
+            }
 
-        /*
-         * Sanity check
-         */
-        if (Segment->Flags & MM_PAGEFILE_SEGMENT)
-        {
-            DPRINT1("Found a swaped out private page in a pagefile section.\n");
-            KeBugCheck(MEMORY_MANAGEMENT);
+            /*
+             * Must be private page we have swapped out.
+             */
+
+            /*
+             * Sanity check
+             */
+            if (Segment->Flags & MM_PAGEFILE_SEGMENT)
+            {
+                DPRINT1("Found a swaped out private page in a pagefile section.\n");
+                KeBugCheck(MEMORY_MANAGEMENT);
+            }
+            MmDeletePageFileMapping(Process, Address, &SwapEntry);
         }
 
         MmUnlockSectionSegment(Segment);
-        MmDeletePageFileMapping(Process, Address, &SwapEntry);
+
+        /* Tell everyone else we are serving the fault. */
         MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
 
         MmUnlockAddressSpace(AddressSpace);
@@ -1411,12 +1417,16 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
             KeBugCheck(MEMORY_MANAGEMENT);
         }
 
-        Status = MmReadFromSwapPage(SwapEntry, Page);
-        if (!NT_SUCCESS(Status))
+        if (HasSwapEntry)
         {
-            DPRINT1("MmReadFromSwapPage failed, status = %x\n", Status);
-            KeBugCheck(MEMORY_MANAGEMENT);
+            Status = MmReadFromSwapPage(SwapEntry, Page);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("MmReadFromSwapPage failed, status = %x\n", Status);
+                KeBugCheck(MEMORY_MANAGEMENT);
+            }
         }
+
         MmLockAddressSpace(AddressSpace);
         MmDeletePageFileMapping(Process, PAddress, &DummyEntry);
         Status = MmCreateVirtualMapping(Process,
@@ -1434,7 +1444,8 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         /*
          * Store the swap entry for later use.
          */
-        MmSetSavedSwapEntryPage(Page, SwapEntry);
+        if (HasSwapEntry)
+            MmSetSavedSwapEntryPage(Page, SwapEntry);
 
         /*
          * Add the page to the process's working set
@@ -1536,15 +1547,9 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
             return(Status);
         }
 
-        /*
-         * Mark the offset within the section as having valid, in-memory
-         * data
-         */
+        /* Lock both segment and process address space while we proceed. */
         MmLockAddressSpace(AddressSpace);
         MmLockSectionSegment(Segment);
-        Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
-        MmSetPageEntrySectionSegment(Segment, &Offset, Entry);
-        MmUnlockSectionSegment(Segment);
 
         MmDeletePageFileMapping(Process, PAddress, &FakeSwapEntry);
         DPRINT("CreateVirtualMapping Page %x Process %p PAddress %p Attributes %x\n",
@@ -1562,6 +1567,11 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         ASSERT(MmIsPagePresent(Process, PAddress));
         MmInsertRmap(Page, Process, Address);
 
+        /* Set this section offset has being backed by our new page. */
+        Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
+        MmSetPageEntrySectionSegment(Segment, &Offset, Entry);
+        MmUnlockSectionSegment(Segment);
+
         MiSetPageEvent(Process, Address);
         DPRINT("Address 0x%p\n", Address);
         return(STATUS_SUCCESS);
@@ -1571,6 +1581,16 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         SWAPENTRY SwapEntry;
 
         SwapEntry = SWAPENTRY_FROM_SSE(Entry);
+
+        /* See if a page op is running on this segment. */
+        if (SwapEntry == MM_WAIT_ENTRY)
+        {
+            MmUnlockSectionSegment(Segment);
+            MmUnlockAddressSpace(AddressSpace);
+            MiWaitForPageEvent(NULL, NULL);
+            MmLockAddressSpace(AddressSpace);
+            return STATUS_MM_RESTART_OPERATION;
+        }
 
         /*
         * Release all our locks and read in the page from disk
@@ -1611,17 +1631,11 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         }
 
         /*
-         * Mark the offset within the section as having valid, in-memory
-         * data
-         */
-        Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
-        MmSetPageEntrySectionSegment(Segment, &Offset, Entry);
-        MmUnlockSectionSegment(Segment);
-
-        /*
          * Save the swap entry.
          */
         MmSetSavedSwapEntryPage(Page, SwapEntry);
+
+        /* Map the page into the process address space */
         Status = MmCreateVirtualMapping(Process,
                                         PAddress,
                                         Region->Protect,
@@ -1633,21 +1647,23 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
             KeBugCheck(MEMORY_MANAGEMENT);
         }
         MmInsertRmap(Page, Process, Address);
+
+        /*
+         * Mark the offset within the section as having valid, in-memory
+         * data
+         */
+        Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
+        MmSetPageEntrySectionSegment(Segment, &Offset, Entry);
+        MmUnlockSectionSegment(Segment);
+
         MiSetPageEvent(Process, Address);
         DPRINT("Address 0x%p\n", Address);
         return(STATUS_SUCCESS);
     }
     else
     {
-        /*
-         * If the section offset is already in-memory and valid then just
-         * take another reference to the page
-         */
-
+        /* We already have a page on this section offset. Map it into the process address space. */
         Page = PFN_FROM_SSE(Entry);
-
-        MmSharePageEntrySectionSegment(Segment, &Offset);
-        MmUnlockSectionSegment(Segment);
 
         Status = MmCreateVirtualMapping(Process,
                                         PAddress,
@@ -1660,6 +1676,11 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
             KeBugCheck(MEMORY_MANAGEMENT);
         }
         MmInsertRmap(Page, Process, Address);
+
+        /* Take a reference on it */
+        MmSharePageEntrySectionSegment(Segment, &Offset);
+        MmUnlockSectionSegment(Segment);
+
         MiSetPageEvent(Process, Address);
         DPRINT("Address 0x%p\n", Address);
         return(STATUS_SUCCESS);
@@ -1682,9 +1703,16 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
     PMM_REGION Region;
     ULONG_PTR Entry;
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-    SWAPENTRY SwapEntry;
 
     DPRINT("MmAccessFaultSectionView(%p, %p, %p)\n", AddressSpace, MemoryArea, Address);
+
+    /* Make sure we have a page mapping for this address.  */
+    Status = MmNotPresentFaultSectionView(AddressSpace, MemoryArea, Address, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* This is invalid access ! */
+        return Status;
+    }
 
     /*
      * Check if the page has already been set readwrite
@@ -1708,15 +1736,6 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
                           &MemoryArea->Data.SectionData.RegionListHead,
                           Address, NULL);
     ASSERT(Region != NULL);
-    /*
-     * Lock the segment
-     */
-    MmLockSectionSegment(Segment);
-
-    OldPage = MmGetPfnForProcess(Process, Address);
-    Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
-
-    MmUnlockSectionSegment(Segment);
 
     /*
      * Check if we are doing COW
@@ -1729,48 +1748,23 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
         return(STATUS_ACCESS_VIOLATION);
     }
 
-    if (IS_SWAP_FROM_SSE(Entry) ||
-            PFN_FROM_SSE(Entry) != OldPage)
-    {
-        /* This is a private page. We must only change the page protection. */
-        MmSetPageProtect(Process, Address, Region->Protect);
-        return(STATUS_SUCCESS);
-    }
-
-    if(OldPage == 0)
-        DPRINT("OldPage == 0!\n");
-
-    /*
-     * Get or create a pageop
-     */
+    /* Get the page mapping this section offset. */
     MmLockSectionSegment(Segment);
     Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
 
-    /*
-     * Wait for any other operations to complete
-     */
-    if (Entry == SWAPENTRY_FROM_SSE(MM_WAIT_ENTRY))
+    /* Get the current page mapping for the process */
+    ASSERT(MmIsPagePresent(Process, PAddress));
+    OldPage = MmGetPfnForProcess(Process, PAddress);
+    ASSERT(OldPage != 0);
+
+    if (IS_SWAP_FROM_SSE(Entry) ||
+            PFN_FROM_SSE(Entry) != OldPage)
     {
         MmUnlockSectionSegment(Segment);
-        MmUnlockAddressSpace(AddressSpace);
-        MiWaitForPageEvent(NULL, NULL);
-        /*
-         * Restart the operation
-         */
-        MmLockAddressSpace(AddressSpace);
-        DPRINT("Address 0x%p\n", Address);
-        return(STATUS_MM_RESTART_OPERATION);
+        /* This is a private page. We must only change the page protection. */
+        MmSetPageProtect(Process, PAddress, Region->Protect);
+        return(STATUS_SUCCESS);
     }
-
-    MmDeleteRmap(OldPage, Process, PAddress);
-    MmDeleteVirtualMapping(Process, PAddress, NULL, NULL);
-    MmCreatePageFileMapping(Process, PAddress, MM_WAIT_ENTRY);
-
-    /*
-     * Release locks now we have the pageop
-     */
-    MmUnlockSectionSegment(Segment);
-    MmUnlockAddressSpace(AddressSpace);
 
     /*
      * Allocate a page
@@ -1789,12 +1783,18 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
      */
     MiCopyFromUserPage(NewPage, OldPage);
 
-    MmLockAddressSpace(AddressSpace);
+    /*
+     * Unshare the old page.
+     */
+    DPRINT("Swapping page (Old %x New %x)\n", OldPage, NewPage);
+    MmDeleteVirtualMapping(Process, PAddress, NULL, NULL);
+    MmDeleteRmap(OldPage, Process, PAddress);
+    MmUnsharePageEntrySectionSegment(Section, Segment, &Offset, FALSE, FALSE, NULL);
+    MmUnlockSectionSegment(Segment);
 
     /*
      * Set the PTE to point to the new page
      */
-    MmDeletePageFileMapping(Process, PAddress, &SwapEntry);
     Status = MmCreateVirtualMapping(Process,
                                     PAddress,
                                     Region->Protect,
@@ -1806,15 +1806,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
         KeBugCheck(MEMORY_MANAGEMENT);
         return(Status);
     }
-
-    /*
-     * Unshare the old page.
-     */
-    DPRINT("Swapping page (Old %x New %x)\n", OldPage, NewPage);
     MmInsertRmap(NewPage, Process, PAddress);
-    MmLockSectionSegment(Segment);
-    MmUnsharePageEntrySectionSegment(Section, Segment, &Offset, FALSE, FALSE, NULL);
-    MmUnlockSectionSegment(Segment);
 
     MiSetPageEvent(Process, Address);
     DPRINT("Address 0x%p\n", Address);
@@ -2147,6 +2139,9 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
             else
             {
                 ULONG_PTR OldEntry;
+
+                MmLockSectionSegment(Context.Segment);
+
                 /*
                  * For non-private pages if the page wasn't direct mapped then
                  * set it back into the section segment entry so we don't loose
@@ -2163,7 +2158,6 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
                              Address);
                 // If we got here, the previous entry should have been a wait
                 Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
-                MmLockSectionSegment(Context.Segment);
                 OldEntry = MmGetPageEntrySectionSegment(Context.Segment, &Context.Offset);
                 ASSERT(OldEntry == 0 || OldEntry == MAKE_SWAP_SSE(MM_WAIT_ENTRY));
                 MmSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
@@ -2202,6 +2196,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
         }
         else
         {
+            MmLockSectionSegment(Context.Segment);
             Status = MmCreateVirtualMapping(Process,
                                             Address,
                                             MemoryArea->Protect,
@@ -2213,6 +2208,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
                          Address);
             Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
             MmSetPageEntrySectionSegment(Context.Segment, &Context.Offset, Entry);
+            MmUnlockSectionSegment(Context.Segment);
         }
         MmUnlockAddressSpace(AddressSpace);
         MiSetPageEvent(NULL, NULL);
