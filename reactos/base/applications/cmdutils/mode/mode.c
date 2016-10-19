@@ -35,35 +35,44 @@
 #include <winuser.h>
 #include <wincon.h>
 
+#include <conutils.h>
+
+#include "resource.h"
+
 #define MAX_PORTNAME_LEN 20
 #define MAX_COMPORT_NUM  10
 
 #define ASSERT(a)
 
-const WCHAR* const usage_strings[] =
+/*** For fixes, see also network/net/main.c ***/
+// VOID PrintPadding(...)
+INT
+__cdecl
+UnderlinedResPrintf(
+    IN PCON_STREAM Stream,
+    IN UINT uID,
+    ...)
 {
-    L"Device Status:     MODE [device] [/STATUS]",
-    L"Select code page:  MODE CON[:] CP SELECT=yyy",
-    L"Code page status:  MODE CON[:] CP [/STATUS]",
-    L"Display mode:      MODE CON[:] [COLS=c] [LINES=n]",
-    L"Typematic rate:    MODE CON[:] [RATE=r DELAY=d]",
-    L"Redirect printing: MODE LPTn[:]=COMm[:]",
-    L"Serial port:       MODE COMm[:] [BAUD=b] [PARITY=p] [DATA=d] [STOP=s]\n" \
-    L"                            [to=on|off] [xon=on|off] [odsr=on|off]\n"    \
-    L"                            [octs=on|off] [dtr=on|off|hs]\n"             \
-    L"                            [rts=on|off|hs|tg] [idsr=on|off]",
-};
+    INT Len;
+    va_list args;
 
-void Usage(void)
-{
-    UINT i;
+#define MAX_BUFFER_SIZE 4096
+    INT i;
+    WCHAR szMsgBuffer[MAX_BUFFER_SIZE];
 
-    wprintf(L"\nConfigures system devices.\n\n");
-    for (i = 0; i < ARRAYSIZE(usage_strings); i++)
-    {
-        wprintf(L"%s\n", usage_strings[i]);
-    }
-    wprintf(L"\n");
+    va_start(args, uID);
+    Len = ConResPrintfV(Stream, uID, args);
+    va_end(args);
+
+    ConPuts(Stream, L"\n");
+    for (i = 0; i < Len; i++)
+         szMsgBuffer[i] = L'-';
+    szMsgBuffer[Len] = UNICODE_NULL;
+
+    // FIXME: Use ConStreamWrite instead.
+    ConPuts(Stream, szMsgBuffer);
+
+    return Len;
 }
 
 int QueryDevices(VOID)
@@ -79,26 +88,30 @@ int QueryDevices(VOID)
         {
             if (wcsstr(ptr, L"COM"))
             {
-                wprintf(L"    Found serial device - %s\n", ptr);
+                ConResPrintf(StdOut, IDS_QUERY_SERIAL_FOUND, ptr);
             }
             else if (wcsstr(ptr, L"PRN"))
             {
-                wprintf(L"    Found printer device - %s\n", ptr);
+                ConResPrintf(StdOut, IDS_QUERY_PRINTER_FOUND, ptr);
             }
             else if (wcsstr(ptr, L"LPT"))
             {
-                wprintf(L"    Found parallel device - %s\n", ptr);
+                ConResPrintf(StdOut, IDS_QUERY_PARALLEL_FOUND, ptr);
+            }
+            else if (wcsstr(ptr, L"AUX") || wcsstr(ptr, L"NUL"))
+            {
+                ConResPrintf(StdOut, IDS_QUERY_DOSDEV_FOUND, ptr);
             }
             else
             {
-                // wprintf(L"    Found other device - %s\n", ptr);
+                // ConResPrintf(StdOut, IDS_QUERY_MISC_FOUND, ptr);
             }
             ptr += (wcslen(ptr) + 1);
         }
     }
     else
     {
-        wprintf(L"    ERROR: QueryDosDeviceW(...) failed: 0x%lx\n", GetLastError());
+        wprintf(L"ERROR: QueryDosDeviceW(...) failed: 0x%lx\n", GetLastError());
     }
     return 1;
 }
@@ -109,21 +122,21 @@ int ShowParallelStatus(INT nPortNum)
     WCHAR szPortName[MAX_PORTNAME_LEN];
 
     swprintf(szPortName, L"LPT%d", nPortNum);
-    wprintf(L"\nStatus for device LPT%d:\n", nPortNum);
-    wprintf(L"-----------------------\n");
+
+    ConPuts(StdOut, L"\n");
+    UnderlinedResPrintf(StdOut, IDS_DEVICE_STATUS_HEADER, szPortName);
+    ConPuts(StdOut, L"\n");
+
     if (QueryDosDeviceW(szPortName, buffer, ARRAYSIZE(buffer)))
     {
         WCHAR* ptr = wcsrchr(buffer, L'\\');
         if (ptr != NULL)
         {
             if (_wcsicmp(szPortName, ++ptr) == 0)
-            {
-                wprintf(L"    Printer output is not being rerouted.\n");
-            }
+                ConResPuts(StdOut, IDS_PRINTER_OUTPUT_NOT_REROUTED);
             else
-            {
-                wprintf(L"    Printer output is being rerouted to serial port %s\n", ptr);
-            }
+                ConResPrintf(StdOut, IDS_PRINTER_OUTPUT_REROUTED_SERIAL, ptr);
+
             return 0;
         }
         else
@@ -133,8 +146,9 @@ int ShowParallelStatus(INT nPortNum)
     }
     else
     {
-        wprintf(L"    ERROR: QueryDosDeviceW(%s) failed: 0x%lx\n", szPortName, GetLastError());
+        wprintf(L"ERROR: QueryDosDeviceW(%s) failed: 0x%lx\n", szPortName, GetLastError());
     }
+
     return 1;
 }
 
@@ -193,30 +207,34 @@ int ShowConsoleStatus(VOID)
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     DWORD dwKbdDelay, dwKbdSpeed;
 
-    wprintf(L"\nStatus for device CON:\n");
-    wprintf(L"-----------------------\n");
+    ConPuts(StdOut, L"\n");
+    UnderlinedResPrintf(StdOut, IDS_DEVICE_STATUS_HEADER, L"CON");
+    ConPuts(StdOut, L"\n");
+
     if (GetConsoleScreenBufferInfo(hConOut, &csbi))
     {
-        wprintf(L"    Lines:          %d\n", csbi.dwSize.Y);
-        wprintf(L"    Columns:        %d\n", csbi.dwSize.X);
+        ConResPrintf(StdOut, IDS_CONSOLE_STATUS_LINES, csbi.dwSize.Y);
+        ConResPrintf(StdOut, IDS_CONSOLE_STATUS_COLS , csbi.dwSize.X);
     }
     if (SystemParametersInfoW(SPI_GETKEYBOARDDELAY, 0, &dwKbdDelay, 0))
     {
-        wprintf(L"    Keyboard delay: %ld\n", dwKbdDelay);
+        ConResPrintf(StdOut, IDS_CONSOLE_KBD_DELAY, dwKbdDelay);
     }
     if (SystemParametersInfoW(SPI_GETKEYBOARDSPEED, 0, &dwKbdSpeed, 0))
     {
-        wprintf(L"    Keyboard rate:  %ld\n", dwKbdSpeed);
+        ConResPrintf(StdOut, IDS_CONSOLE_KBD_RATE, dwKbdSpeed);
     }
-    wprintf(L"    Code page:      %d\n", GetConsoleOutputCP());
+    ConResPrintf(StdOut, IDS_CONSOLE_CODEPAGE, GetConsoleOutputCP());
     return 0;
 }
 
 int ShowConsoleCPStatus(VOID)
 {
-    wprintf(L"\nStatus for device CON:\n");
-    wprintf(L"-----------------------\n");
-    wprintf(L"    Code page:      %d\n", GetConsoleOutputCP());
+    ConPuts(StdOut, L"\n");
+    UnderlinedResPrintf(StdOut, IDS_DEVICE_STATUS_HEADER, L"CON");
+    ConPuts(StdOut, L"\n");
+
+    ConResPrintf(StdOut, IDS_CONSOLE_CODEPAGE, GetConsoleOutputCP());
     return 0;
 }
 
@@ -567,6 +585,7 @@ int ShowSerialStatus(INT nPortNum)
 
     DCB dcb;
     COMMTIMEOUTS CommTimeouts;
+    WCHAR szPortName[MAX_PORTNAME_LEN];
 
     if (!SerialPortQuery(nPortNum, &dcb, &CommTimeouts, FALSE))
     {
@@ -582,21 +601,30 @@ int ShowSerialStatus(INT nPortNum)
         wprintf(L"ERROR: Invalid value for Stop Bits %d:\n", dcb.StopBits);
         dcb.StopBits = 0;
     }
-    wprintf(L"\nStatus for device COM%d:\n", nPortNum);
-    wprintf(L"-----------------------\n");
-    wprintf(L"    Baud:            %ld\n", dcb.BaudRate);
-    wprintf(L"    Parity:          %s\n", parity_strings[dcb.Parity]);
-    wprintf(L"    Data Bits:       %d\n", dcb.ByteSize);
-    wprintf(L"    Stop Bits:       %s\n", stopbit_strings[dcb.StopBits]);
-    wprintf(L"    Timeout:         %s\n",
-        (CommTimeouts.ReadTotalTimeoutConstant  != 0) ||
-        (CommTimeouts.WriteTotalTimeoutConstant != 0) ? L"ON" : L"OFF");
-    wprintf(L"    XON/XOFF:        %s\n", dcb.fOutX           ? L"ON" : L"OFF");
-    wprintf(L"    CTS handshaking: %s\n", dcb.fOutxCtsFlow    ? L"ON" : L"OFF");
-    wprintf(L"    DSR handshaking: %s\n", dcb.fOutxDsrFlow    ? L"ON" : L"OFF");
-    wprintf(L"    DSR sensitivity: %s\n", dcb.fDsrSensitivity ? L"ON" : L"OFF");
-    wprintf(L"    DTR circuit:     %s\n", control_strings[dcb.fDtrControl]);
-    wprintf(L"    RTS circuit:     %s\n", control_strings[dcb.fRtsControl]);
+
+    swprintf(szPortName, L"COM%d", nPortNum);
+
+    ConPuts(StdOut, L"\n");
+    UnderlinedResPrintf(StdOut, IDS_DEVICE_STATUS_HEADER, szPortName);
+    ConPuts(StdOut, L"\n");
+
+    ConResPrintf(StdOut, IDS_COM_STATUS_BAUD, dcb.BaudRate);
+    ConResPrintf(StdOut, IDS_COM_STATUS_PARITY, parity_strings[dcb.Parity]);
+    ConResPrintf(StdOut, IDS_COM_STATUS_DATA_BITS, dcb.ByteSize);
+    ConResPrintf(StdOut, IDS_COM_STATUS_STOP_BITS, stopbit_strings[dcb.StopBits]);
+    ConResPrintf(StdOut, IDS_COM_STATUS_TIMEOUT,
+        control_strings[(CommTimeouts.ReadTotalTimeoutConstant  != 0) ||
+                        (CommTimeouts.WriteTotalTimeoutConstant != 0) ? 1 : 0]);
+    ConResPrintf(StdOut, IDS_COM_STATUS_XON_XOFF,
+        control_strings[dcb.fOutX ? 1 : 0]);
+    ConResPrintf(StdOut, IDS_COM_STATUS_CTS_HANDSHAKING,
+        control_strings[dcb.fOutxCtsFlow ? 1 : 0]);
+    ConResPrintf(StdOut, IDS_COM_STATUS_DSR_HANDSHAKING,
+        control_strings[dcb.fOutxDsrFlow ? 1 : 0]);
+    ConResPrintf(StdOut, IDS_COM_STATUS_DSR_SENSITIVITY,
+        control_strings[dcb.fDsrSensitivity ? 1 : 0]);
+    ConResPrintf(StdOut, IDS_COM_STATUS_DTR_CIRCUIT, control_strings[dcb.fDtrControl]);
+    ConResPrintf(StdOut, IDS_COM_STATUS_RTS_CIRCUIT, control_strings[dcb.fRtsControl]);
     return 0;
 }
 
@@ -1080,6 +1108,9 @@ int wmain(int argc, WCHAR* argv[])
 
     INT nPortNum;
 
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
+
     /*
      * MODE.COM has a very peculiar way of parsing its arguments,
      * as they can be even not separated by any space. This extreme
@@ -1130,7 +1161,7 @@ int wmain(int argc, WCHAR* argv[])
 
     if (wcsstr(argStr, L"/?") || wcsstr(argStr, L"-?"))
     {
-        Usage();
+        ConResPuts(StdOut, IDS_USAGE);
         goto Quit;
     }
     else if (_wcsnicmp(argStr, L"/STA", 4) == 0)
