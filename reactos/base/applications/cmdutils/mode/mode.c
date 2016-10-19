@@ -220,19 +220,38 @@ int ShowConsoleCPStatus(VOID)
     return 0;
 }
 
+static VOID
+ClearScreen(
+    IN HANDLE hConOut,
+    IN PCONSOLE_SCREEN_BUFFER_INFO pcsbi)
+{
+    COORD coPos;
+    DWORD dwWritten;
+
+    coPos.X = 0;
+    coPos.Y = 0;
+    FillConsoleOutputAttribute(hConOut, pcsbi->wAttributes,
+                               pcsbi->dwSize.X * pcsbi->dwSize.Y,
+                               coPos, &dwWritten);
+    FillConsoleOutputCharacterW(hConOut, L' ',
+                                pcsbi->dwSize.X * pcsbi->dwSize.Y,
+                                coPos, &dwWritten);
+    SetConsoleCursorPosition(hConOut, coPos);
+}
+
 /*
  * See, or adjust if needed, subsystems/mvdm/ntvdm/console/video.c!ResizeTextConsole()
  * for more information.
  */
-static VOID
+static BOOL
 ResizeTextConsole(
-    HANDLE hConOut,
-    PCONSOLE_SCREEN_BUFFER_INFO pcsbi, // FIXME
-    PCOORD Resolution)
+    IN HANDLE hConOut,
+    IN OUT PCONSOLE_SCREEN_BUFFER_INFO pcsbi,
+    IN COORD Resolution)
 {
     BOOL Success;
+    SHORT Width, Height;
     SMALL_RECT ConRect;
-    SHORT oldWidth, oldHeight;
 
     /*
      * Use this trick to effectively resize the console buffer and window,
@@ -243,61 +262,65 @@ ResizeTextConsole(
      *   than the current console screen buffer size.
      */
 
-
-    // /* Retrieve the latest console information */
-    // GetConsoleScreenBufferInfo(hConsoleOutput, &ConsoleInfo);
-
-    oldWidth  = pcsbi->srWindow.Right  - pcsbi->srWindow.Left + 1;
-    oldHeight = pcsbi->srWindow.Bottom - pcsbi->srWindow.Top  + 1;
-
-    /*
-     * If the current console window is too large to hold the full contents
-     * of the new screen buffer, resize it first.
-     */
-    if (oldWidth > Resolution->X || oldHeight > Resolution->Y)
+    /* Resize the screen buffer only if needed */
+    if (Resolution.X != pcsbi->dwSize.X || Resolution.Y != pcsbi->dwSize.Y)
     {
-        //
-        // NOTE: This is not a problem if we move the window back to (0,0)
-        // because when we resize the screen buffer, the window will move back
-        // to where the cursor is. Or, if the screen buffer is not resized,
-        // when we readjust again the window, we will move back to a correct
-        // position. This is what we wanted after all...
-        //
+        Width  = pcsbi->srWindow.Right  - pcsbi->srWindow.Left + 1;
+        Height = pcsbi->srWindow.Bottom - pcsbi->srWindow.Top  + 1;
 
-        ConRect.Left   = ConRect.Top = 0;
-        ConRect.Right  = ConRect.Left + min(oldWidth , Resolution->X) - 1;
-        ConRect.Bottom = ConRect.Top  + min(oldHeight, Resolution->Y) - 1;
-
-        Success = SetConsoleWindowInfo(hConOut, TRUE, &ConRect);
-        if (!Success) wprintf(L"(resize) SetConsoleWindowInfo(1) failed with error %d\n", GetLastError());
-    }
-
-    /* Resize the screen buffer if needed */
-    if (Resolution->X != pcsbi->dwSize.X || Resolution->Y != pcsbi->dwSize.Y)
-    {
         /*
+         * If the current console window is too large for
+         * the new screen buffer, resize it first.
+         */
+        if (Width > Resolution.X || Height > Resolution.Y)
+        {
+            /*
+             * NOTE: This is not a problem if we move the window back to (0,0)
+             * because when we resize the screen buffer, the window will move back
+             * to where the cursor is. Or, if the screen buffer is not resized,
+             * when we readjust again the window, we will move back to a correct
+             * position. This is what we wanted after all...
+             */
+            ConRect.Left   = ConRect.Top = 0;
+            ConRect.Right  = ConRect.Left + min(Width , Resolution.X) - 1;
+            ConRect.Bottom = ConRect.Top  + min(Height, Resolution.Y) - 1;
+
+            Success = SetConsoleWindowInfo(hConOut, TRUE, &ConRect);
+            if (!Success) return FALSE;
+        }
+
+        /*
+         * Now resize the screen buffer.
+         *
          * SetConsoleScreenBufferSize automatically takes into account the current
          * cursor position when it computes starting which row it should copy text
-         * when resizing the sceenbuffer, and scrolls the console window such that
+         * when resizing the screen buffer, and scrolls the console window such that
          * the cursor is placed in it again. We therefore do not need to care about
          * the cursor position and do the maths ourselves.
          */
-        Success = SetConsoleScreenBufferSize(hConOut, *Resolution);
-        if (!Success) wprintf(L"(resize) SetConsoleScreenBufferSize failed with error %d\n", GetLastError());
+        Success = SetConsoleScreenBufferSize(hConOut, Resolution);
+        if (!Success) return FALSE;
 
         /*
          * Setting a new screen buffer size can change other information,
-         * so update the saved console information.
+         * so update the console screen buffer information.
          */
         GetConsoleScreenBufferInfo(hConOut, pcsbi);
     }
 
+    /* Always resize the console window within the permitted maximum size */
+    Width  = min(Resolution.X, pcsbi->dwMaximumWindowSize.X);
+    Height = min(Resolution.Y, pcsbi->dwMaximumWindowSize.Y);
     ConRect.Left   = 0;
-    ConRect.Right  = ConRect.Left + Resolution->X - 1;
-    ConRect.Bottom = max(pcsbi->dwCursorPosition.Y, Resolution->Y - 1);
-    ConRect.Top    = ConRect.Bottom - Resolution->Y + 1;
+    ConRect.Right  = ConRect.Left + Width - 1;
+    ConRect.Bottom = max(pcsbi->dwCursorPosition.Y, Height - 1);
+    ConRect.Top    = ConRect.Bottom - Height + 1;
 
     SetConsoleWindowInfo(hConOut, TRUE, &ConRect);
+
+    /* Update the console screen buffer information */
+    GetConsoleScreenBufferInfo(hConOut, pcsbi);
+    return TRUE;
 }
 
 int SetConsoleStateOld(IN PCWSTR ArgStr)
@@ -335,16 +358,14 @@ int SetConsoleStateOld(IN PCWSTR ArgStr)
     Resolution.Y = (SHORT)value;
 
     /* This should be the end of the string */
-    if (*argStr) argStr++;
     while (*argStr == L' ') argStr++;
     if (*argStr) goto invalid_parameter;
 
 Quit:
-    /*
-     * See, or adjust if needed, subsystems/mvdm/ntvdm/console/video.c!ResizeTextConsole()
-     * for more information.
-     */
-    ResizeTextConsole(hConOut, &ConsoleScreenBufferInfo, &Resolution);
+    ClearScreen(hConOut, &csbi);
+    if (!ResizeTextConsole(hConOut, &csbi, Resolution))
+        wprintf(L"The screen cannot be set to the number of lines and columns specified.\n");
+
     return 0;
 
 invalid_parameter:
@@ -428,11 +449,9 @@ invalid_parameter:
 
     if (dispMode)
     {
-        /*
-         * See, or adjust if needed, subsystems/mvdm/ntvdm/console/video.c!ResizeTextConsole()
-         * for more information.
-         */
-        ResizeTextConsole(hConOut, &ConsoleScreenBufferInfo, &Resolution);
+        ClearScreen(hConOut, &csbi);
+        if (!ResizeTextConsole(hConOut, &csbi, Resolution))
+            wprintf(L"The screen cannot be set to the number of lines and columns specified.\n");
     }
     else if (kbdMode)
     {
@@ -443,7 +462,9 @@ invalid_parameter:
          *   dwKbdDelay = (dwKbdDelay % 4);
          */
         SystemParametersInfoW(SPI_SETKEYBOARDDELAY, dwKbdDelay, NULL, 0);
+        // "Invalid keyboard delay."
         SystemParametersInfoW(SPI_SETKEYBOARDSPEED, dwKbdSpeed, NULL, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+        // "Invalid keyboard rate."
     }
 
     return 0;
@@ -460,8 +481,13 @@ int SetConsoleCPState(IN PCWSTR ArgStr)
         argStr = ParseNumber(argStr, &CodePage);
         if (!argStr) goto invalid_parameter;
 
+        /* This should be the end of the string */
+        while (*argStr == L' ') argStr++;
+        if (*argStr) goto invalid_parameter;
+
         SetConsoleCP(CodePage);
         SetConsoleOutputCP(CodePage);
+        // "The code page specified is not valid."
         ShowConsoleCPStatus();
     }
     else
@@ -819,9 +845,9 @@ Quit:
             /* Unsupported */
             return FALSE;
     }
+    if (*argStr) argStr++;
 
     /* This should be the end of the string */
-    if (*argStr) argStr++;
     while (*argStr == L' ') argStr++;
     if (*argStr) return FALSE;
 
