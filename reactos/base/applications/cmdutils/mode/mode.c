@@ -189,16 +189,16 @@ DWORD QueryDosDevice(
 
 int ShowConsoleStatus(VOID)
 {
-    HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo;
+    HANDLE hConOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
     DWORD dwKbdDelay, dwKbdSpeed;
 
     wprintf(L"\nStatus for device CON:\n");
     wprintf(L"-----------------------\n");
-    if (GetConsoleScreenBufferInfo(hConsoleOutput, &ConsoleScreenBufferInfo))
+    if (GetConsoleScreenBufferInfo(hConOut, &csbi))
     {
-        wprintf(L"    Lines:          %d\n", ConsoleScreenBufferInfo.dwSize.Y);
-        wprintf(L"    Columns:        %d\n", ConsoleScreenBufferInfo.dwSize.X);
+        wprintf(L"    Lines:          %d\n", csbi.dwSize.Y);
+        wprintf(L"    Columns:        %d\n", csbi.dwSize.X);
     }
     if (SystemParametersInfoW(SPI_GETKEYBOARDDELAY, 0, &dwKbdDelay, 0))
     {
@@ -226,10 +226,9 @@ int ShowConsoleCPStatus(VOID)
  */
 static VOID
 ResizeTextConsole(
-    HANDLE hConsoleOutput,
+    HANDLE hConOut,
     PCONSOLE_SCREEN_BUFFER_INFO pcsbi, // FIXME
-    PCOORD Resolution,
-    PSMALL_RECT WindowSize OPTIONAL)
+    PCOORD Resolution)
 {
     BOOL Success;
     SMALL_RECT ConRect;
@@ -269,7 +268,7 @@ ResizeTextConsole(
         ConRect.Right  = ConRect.Left + min(oldWidth , Resolution->X) - 1;
         ConRect.Bottom = ConRect.Top  + min(oldHeight, Resolution->Y) - 1;
 
-        Success = SetConsoleWindowInfo(hConsoleOutput, TRUE, &ConRect);
+        Success = SetConsoleWindowInfo(hConOut, TRUE, &ConRect);
         if (!Success) wprintf(L"(resize) SetConsoleWindowInfo(1) failed with error %d\n", GetLastError());
     }
 
@@ -283,58 +282,46 @@ ResizeTextConsole(
          * the cursor is placed in it again. We therefore do not need to care about
          * the cursor position and do the maths ourselves.
          */
-        Success = SetConsoleScreenBufferSize(hConsoleOutput, *Resolution);
+        Success = SetConsoleScreenBufferSize(hConOut, *Resolution);
         if (!Success) wprintf(L"(resize) SetConsoleScreenBufferSize failed with error %d\n", GetLastError());
 
         /*
          * Setting a new screen buffer size can change other information,
          * so update the saved console information.
          */
-        GetConsoleScreenBufferInfo(hConsoleOutput, pcsbi);
+        GetConsoleScreenBufferInfo(hConOut, pcsbi);
     }
 
-    if (!WindowSize)
-    {
-        ConRect.Left   = 0;
-        ConRect.Right  = ConRect.Left + Resolution->X - 1;
-        ConRect.Bottom = max(pcsbi->dwCursorPosition.Y, Resolution->Y - 1);
-        ConRect.Top    = ConRect.Bottom - Resolution->Y + 1;
+    ConRect.Left   = 0;
+    ConRect.Right  = ConRect.Left + Resolution->X - 1;
+    ConRect.Bottom = max(pcsbi->dwCursorPosition.Y, Resolution->Y - 1);
+    ConRect.Top    = ConRect.Bottom - Resolution->Y + 1;
 
-        // NOTE: We may take pcsbi->dwMaximumWindowSize into account
-    }
-    else
-    {
-        ConRect.Left   = ConRect.Top = 0;
-        ConRect.Right  = ConRect.Left + WindowSize->Right  - WindowSize->Left;
-        ConRect.Bottom = ConRect.Top  + WindowSize->Bottom - WindowSize->Top ;
-    }
-
-    Success = SetConsoleWindowInfo(hConsoleOutput, TRUE, &ConRect);
-    if (!Success) wprintf(L"(resize) SetConsoleWindowInfo(2) failed with error %d\n", GetLastError());
+    SetConsoleWindowInfo(hConOut, TRUE, &ConRect);
 }
 
 int SetConsoleStateOld(IN PCWSTR ArgStr)
 {
     PCWSTR argStr = ArgStr;
 
-    HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo;
-    COORD dwSize;
+    HANDLE hConOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    COORD Resolution;
     DWORD value;
 
-    if (!GetConsoleScreenBufferInfo(hConsoleOutput, &ConsoleScreenBufferInfo))
+    if (!GetConsoleScreenBufferInfo(hConOut, &csbi))
     {
         // TODO: Error message?
         return 0;
     }
 
-    dwSize = ConsoleScreenBufferInfo.dwSize;
+    Resolution = csbi.dwSize;
 
     /* Parse the column number (only MANDATORY argument) */
     value = 0;
     argStr = ParseNumber(argStr, &value);
     if (!argStr) goto invalid_parameter;
-    dwSize.X = (SHORT)value;
+    Resolution.X = (SHORT)value;
 
     /* Parse the line number (OPTIONAL argument) */
     while (*argStr == L' ') argStr++;
@@ -345,7 +332,7 @@ int SetConsoleStateOld(IN PCWSTR ArgStr)
     value = 0;
     argStr = ParseNumber(argStr, &value);
     if (!argStr) goto invalid_parameter;
-    dwSize.Y = (SHORT)value;
+    Resolution.Y = (SHORT)value;
 
     /* This should be the end of the string */
     if (*argStr) argStr++;
@@ -357,8 +344,7 @@ Quit:
      * See, or adjust if needed, subsystems/mvdm/ntvdm/console/video.c!ResizeTextConsole()
      * for more information.
      */
-    ResizeTextConsole(hConsoleOutput, &ConsoleScreenBufferInfo,
-                      &dwSize, NULL);
+    ResizeTextConsole(hConOut, &ConsoleScreenBufferInfo, &Resolution);
     return 0;
 
 invalid_parameter:
@@ -371,13 +357,13 @@ int SetConsoleState(IN PCWSTR ArgStr)
     PCWSTR argStr = ArgStr;
     BOOL dispMode = FALSE, kbdMode = FALSE;
 
-    HANDLE hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo;
-    COORD dwSize;
+    HANDLE hConOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    COORD Resolution;
     DWORD dwKbdDelay, dwKbdSpeed;
     DWORD value;
 
-    if (!GetConsoleScreenBufferInfo(hConsoleOutput, &ConsoleScreenBufferInfo))
+    if (!GetConsoleScreenBufferInfo(hConOut, &csbi))
     {
         // TODO: Error message?
         return 0;
@@ -393,7 +379,7 @@ int SetConsoleState(IN PCWSTR ArgStr)
         return 0;
     }
 
-    dwSize = ConsoleScreenBufferInfo.dwSize;
+    Resolution = csbi.dwSize;
 
     while (argStr && *argStr)
     {
@@ -407,7 +393,7 @@ int SetConsoleState(IN PCWSTR ArgStr)
             value = 0;
             argStr = ParseNumber(argStr+5, &value);
             if (!argStr) goto invalid_parameter;
-            dwSize.X = (SHORT)value;
+            Resolution.X = (SHORT)value;
         }
         else if (!kbdMode && _wcsnicmp(argStr, L"LINES=", 6) == 0)
         {
@@ -416,7 +402,7 @@ int SetConsoleState(IN PCWSTR ArgStr)
             value = 0;
             argStr = ParseNumber(argStr+6, &value);
             if (!argStr) goto invalid_parameter;
-            dwSize.Y = (SHORT)value;
+            Resolution.Y = (SHORT)value;
         }
         else if (!dispMode && _wcsnicmp(argStr, L"RATE=", 5) == 0)
         {
@@ -446,8 +432,7 @@ invalid_parameter:
          * See, or adjust if needed, subsystems/mvdm/ntvdm/console/video.c!ResizeTextConsole()
          * for more information.
          */
-        ResizeTextConsole(hConsoleOutput, &ConsoleScreenBufferInfo,
-                          &dwSize, NULL);
+        ResizeTextConsole(hConOut, &ConsoleScreenBufferInfo, &Resolution);
     }
     else if (kbdMode)
     {
