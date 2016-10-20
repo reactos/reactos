@@ -66,7 +66,7 @@ ERRORLEVEL, seçeneklerdeki düğme kullanıcısı basmalarının ofsetine ayarl
     STRING_CMD_HELP2 "\nKullanılabilir husûsiyetler:"
     STRING_CMD_HELP3 "  [başka adlar]"
     STRING_CMD_HELP4 "  [geçmiş]"
-    STRING_CMD_HELP5 "  [Unix kütük adı bütünlemesi]"
+    STRING_CMD_HELP5 "  [Bash kütük adı bütünlemesi]"
     STRING_CMD_HELP6 "  [dizin yığını]"
     STRING_CMD_HELP7 "  [yönlendirmeler ve borulama]"
     STRING_CMD_HELP8 "ReactOS komut yatacı yorumlayıcısının yeni bir örneğini başlatır.\n\n\

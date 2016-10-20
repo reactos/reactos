@@ -66,7 +66,7 @@ ERRORLEVEL устанавливается равным номеру выбран
     STRING_CMD_HELP2 "\nДоступные возможности:"
     STRING_CMD_HELP3 "  [псевдонимы]"
     STRING_CMD_HELP4 "  [история]"
-    STRING_CMD_HELP5 "  [завершение имен файлов unix]"
+    STRING_CMD_HELP5 "  [завершение имен файлов Bash]"
     STRING_CMD_HELP6 "  [стек директорий]"
     STRING_CMD_HELP7 "  [перенаправление и piping]"
     STRING_CMD_HELP8 "Запуск новой копии интерпретатора команд ReactOS.\n\n\

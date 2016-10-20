@@ -64,7 +64,7 @@ CHOICE  [/C[:]選択肢][/N][/S][/T[:]c,nn][文字列]\n\n\
     STRING_CMD_HELP2 "\n利用できる機能:"
     STRING_CMD_HELP3 "  [エイリアス]"
     STRING_CMD_HELP4 "  [ヒストリ]"
-    STRING_CMD_HELP5 "  [UNIX ファイル名補完]"
+    STRING_CMD_HELP5 "  [Bash ファイル名補完]"
     STRING_CMD_HELP6 "  [ディレクトリ スタック]"
     STRING_CMD_HELP7 "  [リダイレクトとパイプ]"
     STRING_CMD_HELP8 "ReactOS コマンド ライン インタープリタの新しいインスタンスを開始します。\n\n\

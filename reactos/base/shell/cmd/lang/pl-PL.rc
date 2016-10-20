@@ -73,7 +73,7 @@ ERRORLEVEL ustawiony jest na kompensowanie wyboru użytkownika domyślnym.\n"
     STRING_CMD_HELP2 "\nDostępne opcje:"
     STRING_CMD_HELP3 "  [aliasy]"
     STRING_CMD_HELP4 "  [historia]"
-    STRING_CMD_HELP5 "  [dopełnianie nazw unixa]"
+    STRING_CMD_HELP5 "  [dopełnianie nazw Bash]"
     STRING_CMD_HELP6 "  [stos katalogu]"
     STRING_CMD_HELP7 "  [przekierowania i potoki]"
     STRING_CMD_HELP8 "Uruchamia nowe okno konsoli ReactOS (interpreter linii poleceń).\n\n\

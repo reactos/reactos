@@ -69,7 +69,7 @@ ERRORLEVEL is set to offset of key user presses in choices.\n"
     STRING_CMD_HELP2 "\nFeatures available:"
     STRING_CMD_HELP3 "  [aliases]"
     STRING_CMD_HELP4 "  [history]"
-    STRING_CMD_HELP5 "  [unix filename completion]"
+    STRING_CMD_HELP5 "  [Bash filename completion]"
     STRING_CMD_HELP6 "  [directory stack]"
     STRING_CMD_HELP7 "  [redirections and piping]"
     STRING_CMD_HELP8 "Starts a new instance of the ReactOS command line interpreter.\n\n\

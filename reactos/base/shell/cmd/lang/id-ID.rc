@@ -66,7 +66,7 @@ ERRORLEVEL disetel ke ofset tombol yang ditekan pengguna dalam pilihan.\n"
     STRING_CMD_HELP2 "\nFitur yang tersedia:"
     STRING_CMD_HELP3 "  [alias]"
     STRING_CMD_HELP4 "  [histori]"
-    STRING_CMD_HELP5 "  [pelengkapan nama file unix]"
+    STRING_CMD_HELP5 "  [pelengkapan nama file Bash]"
     STRING_CMD_HELP6 "  [tumpukan direktori]"
     STRING_CMD_HELP7 "  [pengalihan dan piping]"
     STRING_CMD_HELP8 "Memulai instan baru dari interpreter baris perintah ReactOS.\n\n\

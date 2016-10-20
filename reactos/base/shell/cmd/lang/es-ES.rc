@@ -66,7 +66,7 @@ ERRORLEVEL se configura al offset de la tecla que presione el usuario.\n"
     STRING_CMD_HELP2 "\nCaracterísticas disponibles:"
     STRING_CMD_HELP3 "  [alias]"
     STRING_CMD_HELP4 "  [historia]"
-    STRING_CMD_HELP5 "  [Completador de nombres de archivos unix]"
+    STRING_CMD_HELP5 "  [Completador de nombres de archivos Bash]"
     STRING_CMD_HELP6 "  [Pila de directorios]"
     STRING_CMD_HELP7 "  [Redirecciones y túneles]"
     STRING_CMD_HELP8 "Comienza una nueva sesion del interprete de comandos de ReactOS.\n\n\

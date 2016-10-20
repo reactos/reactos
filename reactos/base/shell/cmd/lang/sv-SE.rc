@@ -64,7 +64,7 @@ ERRORLEVEL sätts till nummer för knappen användaren väljer.\n"
     STRING_CMD_HELP2 "\nFunksjoner som är tillgängliga:"
     STRING_CMD_HELP3 "  [alias:er]"
     STRING_CMD_HELP4 "  [historik]"
-    STRING_CMD_HELP5 "  [unix filnamnsavslutning]"
+    STRING_CMD_HELP5 "  [Bash filnamnsavslutning]"
     STRING_CMD_HELP6 "  [mapplista]"
     STRING_CMD_HELP7 "  [omadressering och datakanaler]"
     STRING_CMD_HELP8 "Start ett ny instans av ReactOS kommandotolk.\n\n\

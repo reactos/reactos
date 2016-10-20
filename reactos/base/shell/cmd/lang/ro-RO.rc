@@ -70,7 +70,7 @@ ERRORLEVEL este calibrat pe deplasamentul tastei opțiunii alese de utilizator.\
     STRING_CMD_HELP2 "\nFuncționalitățile disponibile:"
     STRING_CMD_HELP3 "  [alias]"
     STRING_CMD_HELP4 "  [istoric]"
-    STRING_CMD_HELP5 "  [completarea numelui de fișier unix]"
+    STRING_CMD_HELP5 "  [completarea numelui de fișier Bash]"
     STRING_CMD_HELP6 "  [stiva de directoare]"
     STRING_CMD_HELP7 "  [redirecționări și conectări]"
     STRING_CMD_HELP8 "Deschide o nouă instanță a interpretorului de comenzi ReactOS.\n\n\

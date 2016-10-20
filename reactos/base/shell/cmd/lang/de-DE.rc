@@ -66,7 +66,7 @@ ERRORLEVEL wird auf den Offset der Taste, welche der Benutzer gedrückt hat, ges
     STRING_CMD_HELP2 "\nVerfügbare Funktionen:"
     STRING_CMD_HELP3 "  [Aliase]"
     STRING_CMD_HELP4 "  [Verlauf]"
-    STRING_CMD_HELP5 "  [Unix Dateinamen-Vervollständigung]"
+    STRING_CMD_HELP5 "  [Bash Dateinamen-Vervollständigung]"
     STRING_CMD_HELP6 "  [Verzeichnis-Stack]"
     STRING_CMD_HELP7 "  [Weiterleitung und Piping]"
     STRING_CMD_HELP8 "Startet eine neue Instanz der ReactOS-Eingabeaufforderung.\n\n\

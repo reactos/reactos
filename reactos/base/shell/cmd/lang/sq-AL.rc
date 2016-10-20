@@ -68,7 +68,7 @@ ERRORLEVEL është vendosur për të kompensuar e shtyn përdoruesit kryesorë n
     STRING_CMD_HELP2 "\nTiparet në dispozicion:"
     STRING_CMD_HELP3 "  [pseudonimet]"
     STRING_CMD_HELP4 "  [historia]"
-    STRING_CMD_HELP5 "  [Përfundimi i dokumentave të sistemit unix]"
+    STRING_CMD_HELP5 "  [Përfundimi i dokumentave të sistemit Bash]"
     STRING_CMD_HELP6 "  [raftet e skedave]"
     STRING_CMD_HELP7 "  [drejtimi i ri dhe udherrefyesi]"
     STRING_CMD_HELP8 "Fillon një shembull të ri të përkthyesit së Komandave të ReactOS.\n\n\

@@ -64,7 +64,7 @@ Az ERRORLEVEL a válasz sorszámára lesz beállítva.\n"
     STRING_CMD_HELP2 "\nElérhetõ lehetõségek:"
     STRING_CMD_HELP3 "  [aliasok]"
     STRING_CMD_HELP4 "  [elõzmények]"
-    STRING_CMD_HELP5 "  [unix típusú állománynév kiegészítés]"
+    STRING_CMD_HELP5 "  [Bash típusú állománynév kiegészítés]"
     STRING_CMD_HELP6 "  [mappa tár]"
     STRING_CMD_HELP7 "  [átirányítások és csõvezetékek]"
     STRING_CMD_HELP8 "Elindít egy új ReactOS parancssor értelmezõ.\n\n\

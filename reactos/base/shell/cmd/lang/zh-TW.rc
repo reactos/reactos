@@ -64,7 +64,7 @@ ERRORLEVEL 將被設定為使用者輸入在選項中的偏移。\n"
     STRING_CMD_HELP2 "\n可用功能："
     STRING_CMD_HELP3 "  [別名]"
     STRING_CMD_HELP4 "  [歷史]"
-    STRING_CMD_HELP5 "  [Unix 檔名自動完成]"
+    STRING_CMD_HELP5 "  [Bash 檔名自動完成]"
     STRING_CMD_HELP6 "  [目錄棧]"
     STRING_CMD_HELP7 "  [重定向和管道]"
     STRING_CMD_HELP8 "啟動一個新的 ReactOS 命令列直譯器的新例項。\n\n\
