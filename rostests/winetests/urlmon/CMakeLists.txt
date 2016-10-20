@@ -2,7 +2,7 @@
 add_definitions(-DUSE_WINE_TODOS)
 
 list(APPEND SOURCE
-    generated_${ARCH}.c
+    generated.c
     misc.c
     protocol.c
     sec_mgr.c

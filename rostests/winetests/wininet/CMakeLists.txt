@@ -3,7 +3,7 @@ add_definitions(-DUSE_WINE_TODOS)
 
 list(APPEND SOURCE
     ftp.c
-    generated_${ARCH}.c
+    generated.c
     http.c
     internet.c
     url.c

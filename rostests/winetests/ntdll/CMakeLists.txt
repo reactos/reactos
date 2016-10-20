@@ -11,7 +11,7 @@ list(APPEND SOURCE
     error.c
     exception.c
     file.c
-    generated_${ARCH}.c
+    generated.c
     info.c
     large_int.c
     om.c

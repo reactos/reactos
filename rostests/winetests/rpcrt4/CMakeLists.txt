@@ -10,7 +10,7 @@ unset(IDL_FLAGS)
 
 list(APPEND SOURCE
     cstub.c
-    generated_${ARCH}.c
+    generated.c
     ndr_marshall.c
     rpc.c
     rpc_async.c

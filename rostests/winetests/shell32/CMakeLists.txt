@@ -7,7 +7,7 @@ list(APPEND SOURCE
     autocomplete.c
     brsfolder.c
     ebrowser.c
-    generated_${ARCH}.c
+    generated.c
     progman_dde.c
     recyclebin.c
     shelldispatch.c
