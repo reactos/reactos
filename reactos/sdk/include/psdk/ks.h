@@ -2803,13 +2803,12 @@ struct _KSGATE {
 
 #ifndef _NTOS_
 
-__drv_maxIRQL(DISPATCH_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 KSDDKAPI
 PKSGATE
 NTAPI
 KsPinGetAndGate(
-	__in PKSPIN Pin
-);
+    _In_ PKSPIN Pin);
 
 _IRQL_requires_max_(HIGH_LEVEL)
 static
@@ -4762,30 +4761,27 @@ KsDispatchSetSecurity(
   _In_ PDEVICE_OBJECT DeviceObject,
   _In_ PIRP Irp);
 
-__drv_maxIRQL(DISPATCH_LEVEL)
+_IRQL_requires_max_(DISPATCH_LEVEL)
 KSDDKAPI
-void
+VOID
 NTAPI
 KsPinAttemptProcessing(
-	__in PKSPIN Pin,
-	__in BOOLEAN Asynchronous
-	);
+    _In_ PKSPIN Pin,
+    _In_ BOOLEAN Asynchronous);
 
-__drv_maxIRQL(PASSIVE_LEVEL)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
-void
+VOID
 NTAPI
 KsPinAcquireProcessingMutex(
-	__in PKSPIN Pin
-	);
+    _In_ PKSPIN Pin);
 
-__drv_maxIRQL(PASSIVE_LEVEL)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
-void
+VOID
 NTAPI
 KsPinReleaseProcessingMutex(
-	__in PKSPIN Pin
-	);
+    _In_ PKSPIN Pin);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
