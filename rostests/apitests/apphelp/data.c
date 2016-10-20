@@ -65,9 +65,7 @@ static IMAGE_NT_HEADERS32 nt_header =
         0, /* SizeOfUninitializedData */
         0x1000, /* AddressOfEntryPoint */
         0x1000, /* BaseOfCode */
-#ifndef _WIN64
         0, /* BaseOfData */
-#endif
         0x400000, /* ImageBase */
         0x1000, /* SectionAlignment */
         0x200, /* FileAlignment */
