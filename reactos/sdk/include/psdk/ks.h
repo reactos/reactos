@@ -1499,6 +1499,14 @@ typedef struct {
   ULONG Revision;
 } KSCOMPONENTID, *PKSCOMPONENTID;
 
+#define DEFINE_KSPROPERTY_ITEM_GENERAL_COMPONENTID(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_GENERAL_COMPONENTID,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSCOMPONENTID),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
 /* ===============================================================
     Properties
 */
@@ -2794,6 +2802,14 @@ struct _KSGATE {
 };
 
 #ifndef _NTOS_
+
+__drv_maxIRQL(DISPATCH_LEVEL)
+KSDDKAPI
+PKSGATE
+NTAPI
+KsPinGetAndGate(
+	__in PKSPIN Pin
+);
 
 _IRQL_requires_max_(HIGH_LEVEL)
 static
@@ -4745,6 +4761,31 @@ NTAPI
 KsDispatchSetSecurity(
   _In_ PDEVICE_OBJECT DeviceObject,
   _In_ PIRP Irp);
+
+__drv_maxIRQL(DISPATCH_LEVEL)
+KSDDKAPI
+void
+NTAPI
+KsPinAttemptProcessing(
+	__in PKSPIN Pin,
+	__in BOOLEAN Asynchronous
+	);
+
+__drv_maxIRQL(PASSIVE_LEVEL)
+KSDDKAPI
+void
+NTAPI
+KsPinAcquireProcessingMutex(
+	__in PKSPIN Pin
+	);
+
+__drv_maxIRQL(PASSIVE_LEVEL)
+KSDDKAPI
+void
+NTAPI
+KsPinReleaseProcessingMutex(
+	__in PKSPIN Pin
+	);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
