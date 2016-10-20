@@ -45,6 +45,7 @@ const GUID IID_IKsControl = {0x28F54685L, 0x06FD, 0x11D2, {0xB2, 0x7A, 0x00, 0xA
 const GUID IID_IKsFilter  = {0x3ef6ee44L, 0x0D41, 0x11d2, {0xbe, 0xDA, 0x00, 0xc0, 0x4f, 0x8e, 0xF4, 0x57}};
 const GUID KSPROPSETID_Topology                = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 const GUID KSPROPSETID_Pin                     = {0x8C134960L, 0x51AD, 0x11CF, {0x87, 0x8A, 0x94, 0xF8, 0x01, 0xC1, 0x00, 0x00}};
+const GUID KSPROPSETID_General =                 {0x1464EDA5L, 0x6A8F, 0x11D1, {0x9A, 0xA7, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
 
 VOID
 IKsFilter_RemoveFilterFromFilterFactory(
@@ -53,10 +54,11 @@ IKsFilter_RemoveFilterFromFilterFactory(
 
 NTSTATUS NTAPI FilterTopologyPropertyHandler(IN PIRP Irp, IN PKSIDENTIFIER  Request, IN OUT PVOID  Data);
 NTSTATUS NTAPI FilterPinPropertyHandler(IN PIRP Irp, IN PKSIDENTIFIER  Request, IN OUT PVOID  Data);
-
+NTSTATUS NTAPI FilterGeneralComponentIdHandler(IN PIRP Irp, IN PKSIDENTIFIER  Request, IN OUT PVOID  Data);
 
 DEFINE_KSPROPERTY_TOPOLOGYSET(IKsFilterTopologySet, FilterTopologyPropertyHandler);
 DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(IKsFilterPinSet, FilterPinPropertyHandler, FilterPinPropertyHandler, FilterPinPropertyHandler);
+DEFINE_KSPROPERTY_GENEREAL_COMPONENTID(IKsFilterGeneralSet, FilterGeneralComponentIdHandler);
 
 KSPROPERTY_SET FilterPropertySet[] =
 {
@@ -71,6 +73,13 @@ KSPROPERTY_SET FilterPropertySet[] =
         &KSPROPSETID_Pin,
         sizeof(IKsFilterPinSet) / sizeof(KSPROPERTY_ITEM),
         (const KSPROPERTY_ITEM*)&IKsFilterPinSet,
+        0,
+        NULL
+    },
+    {
+        &KSPROPSETID_General,
+        sizeof(IKsFilterGeneralSet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&IKsFilterGeneralSet,
         0,
         NULL
     }
@@ -906,6 +915,39 @@ FilterTopologyPropertyHandler(
 
 }
 
+NTSTATUS
+NTAPI
+FilterGeneralComponentIdHandler(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER  Request,
+    IN OUT PVOID  Data)
+{
+    PIO_STACK_LOCATION IoStack;
+    IKsFilterImpl * This;
+
+    /* get filter implementation */
+    This = (IKsFilterImpl*)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
+
+    /* sanity check */
+    ASSERT(This);
+
+    /* get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    ASSERT(IoStack->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(KSCOMPONENTID));
+
+    if (This->Filter.Descriptor->ComponentId != NULL)
+    {
+        RtlMoveMemory(Data, This->Filter.Descriptor->ComponentId, sizeof(KSCOMPONENTID));
+        Irp->IoStatus.Information = sizeof(KSCOMPONENTID);
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        /* not valid */
+        return STATUS_NOT_FOUND;
+    }
+
+}
 
 NTSTATUS
 NTAPI
@@ -977,6 +1019,7 @@ IKsFilter_DispatchDeviceIoControl(
     UNICODE_STRING GuidString;
     PKSPROPERTY Property;
     ULONG SetCount = 0;
+    //PKSP_NODE NodeProperty;
 
     /* obtain filter from object header */
     Status = IKsFilter_GetFilterFromIrp(Irp, &Filter);
@@ -1024,8 +1067,20 @@ IKsFilter_DispatchDeviceIoControl(
     {
         const KSPROPERTY_SET *PropertySet = NULL;
         ULONG PropertyItemSize = 0;
-
+#if 0
         /* check if the driver supports method sets */
+        if (Property->Flags & KSPROPERTY_TYPE_TOPOLOGY)
+        {
+            NodeProperty = (PKSP_NODE)Property;
+            if (FilterInstance->Descriptor->NodeDescriptors[NodeProperty->NodeId].AutomationTable != NULL)
+            {
+                SetCount = FilterInstance->Descriptor->NodeDescriptors[NodeProperty->NodeId].AutomationTable->PropertySetsCount;
+                PropertySet = FilterInstance->Descriptor->NodeDescriptors[NodeProperty->NodeId].AutomationTable->PropertySets;
+                PropertyItemSize = 0;
+            }
+                
+        } else 
+#endif
         if (FilterInstance->Descriptor->AutomationTable->PropertySetsCount)
         {
             SetCount = FilterInstance->Descriptor->AutomationTable->PropertySetsCount;
@@ -1267,7 +1322,7 @@ IKsFilter_CopyFilterDescriptor(
 
     /* setup filter property sets */
     AutomationTable.PropertyItemSize = sizeof(KSPROPERTY_ITEM);
-    AutomationTable.PropertySetsCount = 2;
+    AutomationTable.PropertySetsCount = 3;
     AutomationTable.PropertySets = FilterPropertySet;
 
     /* merge filter automation table */

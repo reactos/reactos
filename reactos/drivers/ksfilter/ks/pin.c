@@ -1466,7 +1466,7 @@ KsStreamPointerUnlock(
 {
     PKSISTREAM_POINTER Pointer = (PKSISTREAM_POINTER)CONTAINING_RECORD(StreamPointer, KSISTREAM_POINTER, StreamPointer);
 
-    DPRINT("KsStreamPointerUnlock StreamPointer %pEject %lu\n", StreamPointer, Eject);
+    DPRINT1("KsStreamPointerUnlock StreamPointer %pEject %lu\n", StreamPointer, Eject);
 
     Pointer->Irp = NULL;
 }
@@ -1483,7 +1483,7 @@ KsStreamPointerAdvanceOffsetsAndUnlock(
     IN ULONG OutUsed,
     IN BOOLEAN Eject)
 {
-    DPRINT("KsStreamPointerAdvanceOffsets InUsed %lu OutUsed %lu Eject %lu\n", InUsed, OutUsed, Eject);
+    DPRINT1("KsStreamPointerAdvanceOffsets InUsed %lu OutUsed %lu Eject %lu\n", InUsed, OutUsed, Eject);
     DbgBreakPoint();
     UNIMPLEMENTED
 }
@@ -2636,8 +2636,8 @@ KspCreatePin(
     {
         /* failed to create pin, release resources */
         IKsFilter_RemovePin(Filter->lpVtbl->GetStruct(Filter), &This->Pin);
-        KsFreeObjectHeader((KSOBJECT_HEADER)This->ObjectHeader);
         KsFreeObjectBag((KSOBJECT_BAG)This->Pin.Bag);
+        KsFreeObjectHeader((KSOBJECT_HEADER)This->ObjectHeader);
         FreeItem(This);
 
         /* return failure code */
