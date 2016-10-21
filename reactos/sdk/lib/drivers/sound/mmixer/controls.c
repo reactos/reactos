@@ -1269,6 +1269,110 @@ MMixerApplyOutputFilterHack(
 }
 
 MIXER_STATUS
+MMixerHandleTopologyFilter(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PMIXER_LIST MixerList,
+    IN LPMIXER_DATA MixerData,
+    IN OUT LPMIXER_INFO MixerInfo,
+    IN ULONG bInput,
+    IN ULONG Pin)
+{
+    MIXER_STATUS Status;
+    ULONG PinsCount, LineTerminator, DestinationLineID;
+    PULONG Pins;
+    PTOPOLOGY Topology;
+
+    /* re-use existing topology */
+    Topology = MixerData->Topology;
+
+    if (!bInput)
+    {
+        /* allocate pin index array which will hold all referenced pins */
+        Status = MMixerAllocateTopologyPinArray(MixerContext, Topology, &Pins);
+        if (Status != MM_STATUS_SUCCESS)
+        {
+            /* failed to create topology */
+            return Status;
+        }
+
+        /* the mixer is an output mixer
+        * find end pin of the node path
+        */
+        PinsCount = 0;
+        Status = MMixerGetAllUpOrDownstreamPinsFromPinIndex(MixerContext, Topology, Pin, FALSE, &PinsCount, Pins);
+
+        /* check for success */
+        if (Status != MM_STATUS_SUCCESS)
+        {
+            /* failed to get end pin */
+            MixerContext->Free(Pins);
+            //MMixerFreeTopology(Topology);
+
+            /* return error code */
+            return Status;
+        }
+        /* HACK:
+        * some topologies do not have strict boundaries
+        * WorkArround: remove all pin ids which have a physical connection
+        * because bridge pins may belong to different render paths
+        */
+        MMixerApplyOutputFilterHack(MixerContext, MixerData, MixerData->hDevice, &PinsCount, Pins);
+
+        /* sanity checks */
+        ASSERT(PinsCount != 0);
+        if (PinsCount != 1)
+        {
+            DPRINT1("MMixerHandlePhysicalConnection Expected 1 pin but got %lu\n", PinsCount);
+        }
+
+        /* create destination line */
+        Status = MMixerBuildMixerDestinationLine(MixerContext, MixerInfo, MixerData->hDevice, Pins[0], bInput);
+
+        /* calculate destination line id */
+        DestinationLineID = (DESTINATION_LINE + MixerInfo->MixCaps.cDestinations - 1);
+
+        if (Status != MM_STATUS_SUCCESS)
+        {
+            /* failed to build destination line */
+            MixerContext->Free(Pins);
+
+            /* return error code */
+            return Status;
+        }
+
+        /* add mixer controls to destination line */
+        Status = MMixerAddMixerControlsToDestinationLine(MixerContext, MixerInfo, MixerData->hDevice, Topology, Pins[0], bInput, DestinationLineID, &LineTerminator);
+
+        if (Status == MM_STATUS_SUCCESS)
+        {
+            /* now add the rest of the source lines */
+            Status = MMixerAddMixerSourceLines(MixerContext, MixerInfo, MixerData->hDevice, Topology, DestinationLineID, LineTerminator);
+        }
+
+        /* mark pin as consumed */
+        MMixerSetTopologyPinReserved(Topology, Pins[0]);
+
+        /* free topology pin array */
+        MixerContext->Free(Pins);
+    }
+    else
+    {
+        /* calculate destination line id */
+        DestinationLineID = (DESTINATION_LINE + MixerInfo->MixCaps.cDestinations - 1);
+
+        /* add mixer controls */
+        Status = MMixerAddMixerControlsToDestinationLine(MixerContext, MixerInfo, MixerData->hDevice, Topology, Pin, bInput, DestinationLineID, &LineTerminator);
+
+        if (Status == MM_STATUS_SUCCESS)
+        {
+            /* now add the rest of the source lines */
+            Status = MMixerAddMixerSourceLines(MixerContext, MixerInfo, MixerData->hDevice, Topology, DestinationLineID, LineTerminator);
+        }
+    }
+    return Status;
+}
+
+MIXER_STATUS
 MMixerHandlePhysicalConnection(
     IN PMIXER_CONTEXT MixerContext,
     IN PMIXER_LIST MixerList,
@@ -1450,7 +1554,12 @@ MMixerInitializeFilter(
         MixerInfo->MixCaps.cDestinations = 0;
 
         /* get mixer name */
-        MMixerGetDeviceName(MixerContext, MixerInfo->MixCaps.szPname, MixerData->hDeviceInterfaceKey);
+        Status = MMixerGetDeviceName(MixerContext, MixerInfo->MixCaps.szPname, MixerData->hDeviceInterfaceKey);
+        if (Status != MM_STATUS_SUCCESS)
+        {
+            /* try get name with component id */
+            Status = MMixerGetDeviceNameWithComponentId(MixerContext, MixerData->hDevice, MixerInfo->MixCaps.szPname);
+        }
 
         /* initialize line list */
         InitializeListHead(&MixerInfo->LineList);
@@ -1546,10 +1655,8 @@ MMixerInitializeFilter(
     }
     else
     {
-        /* FIXME
-         * handle drivers which expose their topology on the same filter
-         */
-        ASSERT(0);
+        /* topology is on the same filter */
+        Status = MMixerHandleTopologyFilter(MixerContext, MixerList, MixerData, MixerInfo, bInputMixer, Pins[0]);
     }
 
     /* free pins */

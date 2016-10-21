@@ -359,6 +359,12 @@ MMixerGetDeviceName(
     OUT LPWSTR DeviceName,
     IN HANDLE hKey);
 
+MIXER_STATUS
+MMixerGetDeviceNameWithComponentId(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE hMixer,
+    OUT LPWSTR DeviceName);
+
 VOID
 MMixerInitializePinConnect(
     IN OUT PKSPIN_CONNECT PinConnect,
