@@ -1024,21 +1024,171 @@ USBAudioPinBuildDescriptors(
 }
 
 NTSTATUS
+NTAPI
+USBAudioGetDescriptor(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN UCHAR DescriptorType,
+    IN ULONG DescriptorLength,
+    IN UCHAR DescriptorIndex,
+    IN LANGID LanguageId,
+    OUT PVOID *OutDescriptor)
+{
+    PURB Urb;
+    NTSTATUS Status;
+    PVOID Descriptor;
+
+    /* sanity checks */
+    ASSERT(DeviceObject);
+    ASSERT(OutDescriptor);
+    ASSERT(DescriptorLength);
+
+    //
+    // first allocate descriptor buffer
+    //
+    Descriptor = AllocFunction(DescriptorLength);
+    if (!Descriptor)
+    {
+        /* no memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* allocate urb */
+    Urb = (PURB)AllocFunction(sizeof(URB));
+    if (!Urb)
+    {
+        /* no memory */
+        FreeFunction(Descriptor);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* initialize urb */
+    UsbBuildGetDescriptorRequest(Urb,
+        sizeof(Urb->UrbControlDescriptorRequest),
+        DescriptorType,
+        DescriptorIndex,
+        LanguageId,
+        Descriptor,
+        NULL,
+        DescriptorLength,
+        NULL);
+
+    /* submit urb */
+    Status = SubmitUrbSync(DeviceObject, Urb);
+
+    /* free urb */
+    FreeFunction(Urb);
+
+    if (NT_SUCCESS(Status))
+    {
+        /* store result */
+        *OutDescriptor = Descriptor;
+    }
+
+    /* done */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+USBAudioGetStringDescriptor(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG DescriptorLength,
+    IN UCHAR DescriptorIndex,
+    IN LANGID LanguageId,
+    OUT PVOID *OutDescriptor)
+{
+    NTSTATUS Status;
+    PUSB_STRING_DESCRIPTOR StringDescriptor;
+
+    /* retrieve descriptor */
+    Status = USBAudioGetDescriptor(DeviceObject, USB_STRING_DESCRIPTOR_TYPE, DescriptorLength, DescriptorIndex, LanguageId, OutDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        // failed
+        return Status;
+    }
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+USBAudioRegCreateMediaCategoriesKey(
+    IN PUNICODE_STRING Name, 
+    OUT PHANDLE OutHandle)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING DestinationString;
+    HANDLE Handle;
+
+    /* initialize root name*/
+    RtlInitUnicodeString(&DestinationString, L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\MediaCategories\\");
+
+    /* initialize object attributes */
+    InitializeObjectAttributes(&ObjectAttributes, &DestinationString, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, NULL);
+
+    /* create the key */
+    Status = ZwOpenKey(&Handle, KEY_ALL_ACCESS, &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        /* initialize object attributes */
+        InitializeObjectAttributes(&ObjectAttributes, Name, OBJ_CASE_INSENSITIVE, Handle, NULL);
+
+        Status = ZwCreateKey(OutHandle, KEY_ALL_ACCESS, &ObjectAttributes, 0, NULL, 0, NULL);
+        ZwClose(Handle);
+
+    }
+    return Status;
+}
+
+
+NTSTATUS
 USBAudioInitComponentId(
     PKSDEVICE Device,
     IN PKSCOMPONENTID ComponentId)
 {
     PDEVICE_EXTENSION DeviceExtension;
+    NTSTATUS Status;
+    LPWSTR DescriptionBuffer;
+    UNICODE_STRING GuidString;
+    UNICODE_STRING Name;
+    HANDLE hKey;
+    GUID TempGuid;
 
     /* get device extension */
     DeviceExtension = Device->Context;
 
+    /* init component id */
+    ComponentId->Component = KSCOMPONENTID_USBAUDIO;
+    ComponentId->Version = HIBYTE(DeviceExtension->DeviceDescriptor->bcdDevice);
+    ComponentId->Revision = LOBYTE(DeviceExtension->DeviceDescriptor->bcdDevice);
+
     INIT_USBAUDIO_MID(&ComponentId->Manufacturer, DeviceExtension->DeviceDescriptor->idVendor);
     INIT_USBAUDIO_PID(&ComponentId->Product, DeviceExtension->DeviceDescriptor->idProduct);
+    INIT_USBAUDIO_PRODUCT_NAME(&TempGuid, DeviceExtension->DeviceDescriptor->idVendor, DeviceExtension->DeviceDescriptor->idProduct, 0);
 
-    //ComponentId->Component = KSCOMPONENTID_USBAUDIO;
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    if (DeviceExtension->DeviceDescriptor->iProduct)
+    {
+        Status = USBAudioGetStringDescriptor(DeviceExtension->LowerDevice, 100 * sizeof(WCHAR), DeviceExtension->DeviceDescriptor->iProduct, 0x0409 /* FIXME */, (PVOID*)&DescriptionBuffer);
+        if (NT_SUCCESS(Status))
+        {
+            Status = RtlStringFromGUID(&TempGuid, &GuidString);
+            if (NT_SUCCESS(Status))
+            {
+                Status = USBAudioRegCreateMediaCategoriesKey(&GuidString, &hKey);
+                if (NT_SUCCESS(Status))
+                {
+                    RtlInitUnicodeString(&Name, L"Name");
+                    ZwSetValueKey(hKey, &Name, 0, REG_SZ, DescriptionBuffer, (wcslen(DescriptionBuffer) + 1) * sizeof(WCHAR));
+                    ZwClose(hKey);
+
+                    INIT_USBAUDIO_PRODUCT_NAME(&ComponentId->Name, DeviceExtension->DeviceDescriptor->idVendor, DeviceExtension->DeviceDescriptor->idProduct, 0);
+                }
+                RtlFreeUnicodeString(&GuidString);
+            }
+            FreeFunction(DescriptionBuffer);
+        }
+    }
+    return STATUS_SUCCESS;
 }
 
 
