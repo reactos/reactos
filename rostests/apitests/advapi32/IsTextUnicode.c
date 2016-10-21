@@ -2,7 +2,8 @@
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Tests for (Rtl)IsTextUnicode.
- * PROGRAMMER:      Hermes Belusca-Maito
+ * PROGRAMMERS:     Hermes Belusca-Maito
+ *                  Dmitry Chapyshev
  */
 
 #include <apitest.h>
