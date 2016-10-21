@@ -444,6 +444,7 @@ static void rpcrt4_conn_np_handoff(RpcConnection_np *old_npc, RpcConnection_np *
 
 static RPC_STATUS rpcrt4_ncacn_np_handoff(RpcConnection *old_conn, RpcConnection *new_conn)
 {
+  DWORD len = MAX_COMPUTERNAME_LENGTH + 1;
   RPC_STATUS status;
   LPSTR pname;
   static const char prefix[] = "\\\\.";
@@ -454,6 +455,16 @@ static RPC_STATUS rpcrt4_ncacn_np_handoff(RpcConnection *old_conn, RpcConnection
   strcat(strcpy(pname, prefix), old_conn->Endpoint);
   status = rpcrt4_conn_create_pipe(old_conn, pname);
   I_RpcFree(pname);
+
+  /* Store the local computer name as the NetworkAddr for ncacn_np as long as
+   * we don't support named pipes over the network. */
+  FIXME("Using local computer name as NetworkAddr\n");
+  new_conn->NetworkAddr = HeapAlloc(GetProcessHeap(), 0, len);
+  if (!GetComputerNameA(new_conn->NetworkAddr, &len))
+  {
+    ERR("Failed to retrieve the computer name, error %u\n", GetLastError());
+    return RPC_S_OUT_OF_RESOURCES;
+  }
 
   return status;
 }
@@ -487,6 +498,7 @@ static RPC_STATUS rpcrt4_ncalrpc_np_is_server_listening(const char *endpoint)
 
 static RPC_STATUS rpcrt4_ncalrpc_handoff(RpcConnection *old_conn, RpcConnection *new_conn)
 {
+  DWORD len = MAX_COMPUTERNAME_LENGTH + 1;
   RPC_STATUS status;
   LPSTR pname;
   static const char prefix[] = "\\\\.\\pipe\\lrpc\\";
@@ -499,7 +511,15 @@ static RPC_STATUS rpcrt4_ncalrpc_handoff(RpcConnection *old_conn, RpcConnection 
   strcat(strcpy(pname, prefix), old_conn->Endpoint);
   status = rpcrt4_conn_create_pipe(old_conn, pname);
   I_RpcFree(pname);
-    
+
+  /* Store the local computer name as the NetworkAddr for ncalrpc. */
+  new_conn->NetworkAddr = HeapAlloc(GetProcessHeap(), 0, len);
+  if (!GetComputerNameA(new_conn->NetworkAddr, &len))
+  {
+    ERR("Failed to retrieve the computer name, error %u\n", GetLastError());
+    return RPC_S_OUT_OF_RESOURCES;
+  }
+
   return status;
 }
 
@@ -1549,10 +1569,20 @@ static RPC_STATUS rpcrt4_conn_tcp_handoff(RpcConnection *old_conn, RpcConnection
     ERR("Failed to accept a TCP connection: error %d\n", ret);
     return RPC_S_OUT_OF_RESOURCES;
   }
+
   nonblocking = 1;
   ioctlsocket(ret, FIONBIO, &nonblocking);
   client->sock = ret;
-  TRACE("Accepted a new TCP connection\n");
+
+  client->common.NetworkAddr = HeapAlloc(GetProcessHeap(), 0, INET6_ADDRSTRLEN);
+  ret = getnameinfo((struct sockaddr*)&address, addrsize, client->common.NetworkAddr, INET6_ADDRSTRLEN, NULL, 0, NI_NUMERICHOST);
+  if (ret != 0)
+  {
+    ERR("Failed to retrieve the IP address, error %d\n", ret);
+    return RPC_S_OUT_OF_RESOURCES;
+  }
+
+  TRACE("Accepted a new TCP connection from %s\n", client->common.NetworkAddr);
   return RPC_S_OK;
 }
 
