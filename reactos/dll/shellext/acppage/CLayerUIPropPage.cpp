@@ -51,8 +51,7 @@ void ACDBG_FN(PCSTR FunctionName, PCWSTR Format, ...)
 
 
 CLayerUIPropPage::CLayerUIPropPage()
-:m_Filename(NULL)
-, m_IsSfcProtected(FALSE)
+: m_IsSfcProtected(FALSE)
 , m_AllowPermLayer(FALSE)
 , m_LayerQueryFlags(GPLK_USER)
 , m_RegistryOSMode(0)
