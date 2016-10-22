@@ -496,6 +496,18 @@ elseif(USE_FOLDER_STRUCTURE)
 
     function(add_library name)
         _add_library(${name} ${ARGN})
+##
+## The following is a workaround for a CMake bug. Inspired by:
+## http://stackoverflow.com/questions/24926868/cmake-3-0-add-library-of-type-interface-breaks-get-target-property
+##
+## Beginning of the workaround:
+        get_target_property(_TARGET_TYPE ${name} TYPE)
+        if(_TARGET_TYPE STREQUAL "INTERFACE_LIBRARY")
+            unset(_target_excluded)
+        else()
+##
+## This is the original code:
+##
         get_target_property(_target_excluded ${name} EXCLUDE_FROM_ALL)
         if(_target_excluded AND ${name} MATCHES "^lib.*")
             set_property(TARGET "${name}" PROPERTY FOLDER "Importlibs")
@@ -503,6 +515,10 @@ elseif(USE_FOLDER_STRUCTURE)
             string(SUBSTRING ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR_LENGTH} -1 CMAKE_CURRENT_SOURCE_DIR_RELATIVE)
             set_property(TARGET "${name}" PROPERTY FOLDER "${CMAKE_CURRENT_SOURCE_DIR_RELATIVE}")
         endif()
+##
+## End of workaround
+        endif()
+##
     endfunction()
 
     function(add_executable name)
