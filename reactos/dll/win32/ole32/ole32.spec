@@ -35,7 +35,7 @@
 # CoGetApartmentID
 @ stdcall CoGetCallContext(ptr ptr)
 @ stdcall CoGetCallerTID(ptr)
-# CoGetCancelObject
+@ stdcall -stub CoGetCancelObject(long ptr ptr)
 @ stdcall CoGetClassObject(ptr long ptr ptr ptr)
 # CoGetClassVersion
 # CoGetComCatalog
