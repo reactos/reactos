@@ -789,7 +789,6 @@ PinCaptureProcess(
     PPIN_CONTEXT PinContext;
     PLIST_ENTRY CurEntry;
     PIRP Irp;
-    PIO_STACK_LOCATION IoStack;
     PURB Urb;
     PUCHAR TransferBuffer, OutBuffer;
     ULONG Offset, Length;
@@ -827,7 +826,6 @@ PinCaptureProcess(
         Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
 
         /* get urb from irp */
-        IoStack = IoGetNextIrpStackLocation(Irp);
         Urb = (PURB)Irp->Tail.Overlay.DriverContext[0];
         ASSERT(Urb);
 
@@ -882,6 +880,7 @@ PinCaptureProcess(
         else
         {
             Status = KsStreamPointerAdvanceOffsets(LeadingStreamPointer, 0, Length, FALSE);
+            NT_ASSERT(NT_SUCCESS(Status));
             ASSERT(Length == Urb->UrbIsochronousTransfer.TransferBufferLength - Offset);
         }
 
@@ -1102,7 +1101,7 @@ UsbAudioPinDataIntersect(
     }
 
     /* get pin descriptor */
-    PinDescriptor = &Filter->Descriptor->PinDescriptors[Pin->PinId];
+    PinDescriptor = (PKSPIN_DESCRIPTOR_EX)&Filter->Descriptor->PinDescriptors[Pin->PinId];
 
     *DataSize = sizeof(KSDATAFORMAT_WAVEFORMATEX);
     if (DataBufferSize == 0)

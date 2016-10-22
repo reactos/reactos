@@ -1083,6 +1083,11 @@ USBAudioGetDescriptor(
         /* store result */
         *OutDescriptor = Descriptor;
     }
+    else
+    {
+        /* failed */
+        FreeFunction(Descriptor);
+    }
 
     /* done */
     return Status;
@@ -1098,7 +1103,6 @@ USBAudioGetStringDescriptor(
     OUT PVOID *OutDescriptor)
 {
     NTSTATUS Status;
-    PUSB_STRING_DESCRIPTOR StringDescriptor;
 
     /* retrieve descriptor */
     Status = USBAudioGetDescriptor(DeviceObject, USB_STRING_DESCRIPTOR_TYPE, DescriptorLength, DescriptorIndex, LanguageId, OutDescriptor);
@@ -1124,14 +1128,14 @@ USBAudioRegCreateMediaCategoriesKey(
     RtlInitUnicodeString(&DestinationString, L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\MediaCategories\\");
 
     /* initialize object attributes */
-    InitializeObjectAttributes(&ObjectAttributes, &DestinationString, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &DestinationString, OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_KERNEL_HANDLE, NULL, NULL);
 
     /* create the key */
     Status = ZwOpenKey(&Handle, KEY_ALL_ACCESS, &ObjectAttributes);
     if (NT_SUCCESS(Status))
     {
         /* initialize object attributes */
-        InitializeObjectAttributes(&ObjectAttributes, Name, OBJ_CASE_INSENSITIVE, Handle, NULL);
+        InitializeObjectAttributes(&ObjectAttributes, Name, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, Handle, NULL);
 
         Status = ZwCreateKey(OutHandle, KEY_ALL_ACCESS, &ObjectAttributes, 0, NULL, 0, NULL);
         ZwClose(Handle);
@@ -1228,8 +1232,8 @@ USBAudioCreateFilterContext(
     if (!NT_SUCCESS(Status))
     {
         /* failed*/
-        //FreeFunction(ComponentId);
-        //return Status;
+        FreeFunction(ComponentId);
+        return Status;
     }
     FilterDescriptor->ComponentId = ComponentId;
 
@@ -1247,8 +1251,8 @@ USBAudioCreateFilterContext(
     if (!NT_SUCCESS(Status))
     {
         /* failed*/
-        //FreeFunction(ComponentId);
-        //return Status;
+        FreeFunction(ComponentId);
+        return Status;
     }
 
     /* lets create the filter */
