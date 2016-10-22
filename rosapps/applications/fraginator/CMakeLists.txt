@@ -1,5 +1,5 @@
 
-set_cpp(WITH_RUNTIME WITH_STL)
+set_cpp(WITH_RUNTIME WITH_STL WITH_EXCEPTIONS)
 
 list(APPEND SOURCE
 	Fraginator.cpp
@@ -10,7 +10,7 @@ list(APPEND UNFRAG_SOURCE
 	Unfrag.cpp
 	Defragment.cpp
 	DriveVolume.cpp)
-    
+
 add_executable(frag ${SOURCE} ${UNFRAG_SOURCE} Fraginator.rc)
 set_module_type(frag win32gui UNICODE)
 add_importlibs(frag user32 advapi32 shell32 comctl32 msvcrt kernel32 ntdll)
