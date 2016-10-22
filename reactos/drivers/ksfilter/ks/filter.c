@@ -1019,7 +1019,8 @@ IKsFilter_DispatchDeviceIoControl(
     UNICODE_STRING GuidString;
     PKSPROPERTY Property;
     ULONG SetCount = 0;
-    //PKSP_NODE NodeProperty;
+    PKSP_NODE NodeProperty;
+    PKSNODE_DESCRIPTOR NodeDescriptor;
 
     /* obtain filter from object header */
     Status = IKsFilter_GetFilterFromIrp(Irp, &Filter);
@@ -1067,21 +1068,21 @@ IKsFilter_DispatchDeviceIoControl(
     {
         const KSPROPERTY_SET *PropertySet = NULL;
         ULONG PropertyItemSize = 0;
-#if 0
+
         /* check if the driver supports method sets */
         if (Property->Flags & KSPROPERTY_TYPE_TOPOLOGY)
         {
+            ASSERT(IoStack->Parameters.DeviceIoControl.InputBufferLength >= sizeof(KSP_NODE));
             NodeProperty = (PKSP_NODE)Property;
-            if (FilterInstance->Descriptor->NodeDescriptors[NodeProperty->NodeId].AutomationTable != NULL)
+            NodeDescriptor = (PKSNODE_DESCRIPTOR)((ULONG_PTR)FilterInstance->Descriptor->NodeDescriptors + FilterInstance->Descriptor->NodeDescriptorSize * NodeProperty->NodeId);
+            if (NodeDescriptor->AutomationTable != NULL)
             {
-                SetCount = FilterInstance->Descriptor->NodeDescriptors[NodeProperty->NodeId].AutomationTable->PropertySetsCount;
-                PropertySet = FilterInstance->Descriptor->NodeDescriptors[NodeProperty->NodeId].AutomationTable->PropertySets;
+                SetCount = NodeDescriptor->AutomationTable->PropertySetsCount;
+                PropertySet = NodeDescriptor->AutomationTable->PropertySets;
                 PropertyItemSize = 0;
             }
-                
-        } else 
-#endif
-        if (FilterInstance->Descriptor->AutomationTable->PropertySetsCount)
+        }
+        else if (FilterInstance->Descriptor->AutomationTable->PropertySetsCount)
         {
             SetCount = FilterInstance->Descriptor->AutomationTable->PropertySetsCount;
             PropertySet = FilterInstance->Descriptor->AutomationTable->PropertySets;
