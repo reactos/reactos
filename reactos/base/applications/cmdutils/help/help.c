@@ -7,9 +7,7 @@
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <wchar.h>
 
 #define WIN32_NO_STATUS
 #include <windef.h>
@@ -22,7 +20,8 @@
 #include "help.h"
 #include "resource.h"
 
-BOOL IsInternalCommand(LPCWSTR Cmd)
+static BOOL
+IsInternalCommand(PCWSTR Cmd)
 {
     size_t i;
     int res;
@@ -73,7 +72,7 @@ int wmain(int argc, WCHAR* argv[])
 
     /*
      * Bad usage (too much options) or we use the /? switch.
-     * Display help for the help command.
+     * Display help for the HELP command.
      */
     if ((argc > 2) || (wcscmp(argv[1], L"/?") == 0))
     {

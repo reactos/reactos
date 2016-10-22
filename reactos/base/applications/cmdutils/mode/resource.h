@@ -27,8 +27,8 @@
 #define IDS_COM_STATUS_RTS_CIRCUIT         16
 #define IDS_CONSOLE_STATUS_LINES           17
 #define IDS_CONSOLE_STATUS_COLS            18
-#define IDS_CONSOLE_KBD_DELAY              19
-#define IDS_CONSOLE_KBD_RATE               20
+#define IDS_CONSOLE_KBD_RATE               19
+#define IDS_CONSOLE_KBD_DELAY              20
 #define IDS_CONSOLE_CODEPAGE               21
 #define IDS_PRINTER_OUTPUT_NOT_REROUTED    22
 #define IDS_PRINTER_OUTPUT_REROUTED_SERIAL 23
@@ -43,5 +43,6 @@
 #define IDS_ERROR_INVALID_PARITY_BITS   31
 #define IDS_ERROR_INVALID_STOP_BITS     32
 #define IDS_ERROR_NO_MEMORY             33
+#define IDS_ERROR_SCREEN_LINES_COL      34
 
 #endif /* RESOURCE_H */

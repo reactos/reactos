@@ -42,11 +42,11 @@ BEGIN
     IDS_COM_STATUS_DTR_CIRCUIT      "    DTR circuit:     %s\n"
     IDS_COM_STATUS_RTS_CIRCUIT      "    RTS circuit:     %s\n"
 
-    IDS_CONSOLE_STATUS_LINES    "    Zeilen:          %d\n"
-    IDS_CONSOLE_STATUS_COLS     "    Spalten:         %d\n"
-    IDS_CONSOLE_KBD_DELAY       "    Verzögerungszeit:%ld\n"
-    IDS_CONSOLE_KBD_RATE        "    Wiederholrate:   %ld\n"
-    IDS_CONSOLE_CODEPAGE        "    Codepage:        %d\n"
+    IDS_CONSOLE_STATUS_LINES    "    Zeilen:           %d\n"
+    IDS_CONSOLE_STATUS_COLS     "    Spalten:          %d\n"
+    IDS_CONSOLE_KBD_RATE        "    Wiederholrate:    %ld\n"
+    IDS_CONSOLE_KBD_DELAY       "    Verzögerungszeit: %ld\n"
+    IDS_CONSOLE_CODEPAGE        "    Codepage:         %d\n"
 
     IDS_PRINTER_OUTPUT_NOT_REROUTED     "    Druckausgabe wird nicht umgeleitet.\n"
     IDS_PRINTER_OUTPUT_REROUTED_SERIAL  "    Druckausgabe wird an seriellen Anschluss %s umgeleitet.\n"
@@ -64,4 +64,5 @@ BEGIN
     IDS_ERROR_INVALID_PARITY_BITS "ERROR: Invalid value for Parity Bits %d:\n"
     IDS_ERROR_INVALID_STOP_BITS "ERROR: Invalid value for Stop Bits %d:\n"
     IDS_ERROR_NO_MEMORY "ERROR: Not enough memory.\n"
+    IDS_ERROR_SCREEN_LINES_COL "ERROR: The screen cannot be set to the number of lines and columns specified.\n"
 END

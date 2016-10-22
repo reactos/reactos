@@ -44,8 +44,8 @@ BEGIN
 
     IDS_CONSOLE_STATUS_LINES    "    Lines:          %d\n"
     IDS_CONSOLE_STATUS_COLS     "    Columns:        %d\n"
-    IDS_CONSOLE_KBD_DELAY       "    Keyboard delay: %ld\n"
     IDS_CONSOLE_KBD_RATE        "    Keyboard rate:  %ld\n"
+    IDS_CONSOLE_KBD_DELAY       "    Keyboard delay: %ld\n"
     IDS_CONSOLE_CODEPAGE        "    Code page:      %d\n"
 
     IDS_PRINTER_OUTPUT_NOT_REROUTED     "    Printer output is not being rerouted.\n"
@@ -64,4 +64,5 @@ BEGIN
     IDS_ERROR_INVALID_PARITY_BITS "ERROR: Invalid value for Parity Bits %d:\n"
     IDS_ERROR_INVALID_STOP_BITS "ERROR: Invalid value for Stop Bits %d:\n"
     IDS_ERROR_NO_MEMORY "ERROR: Not enough memory.\n"
+    IDS_ERROR_SCREEN_LINES_COL "ERROR: The screen cannot be set to the number of lines and columns specified.\n"
 END

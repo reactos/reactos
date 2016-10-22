@@ -89,7 +89,7 @@ int wmain(int argc, wchar_t** argv)
 
         hBuffer = hTemp;
     }
-    while (dwBytesRead > 0 && bStatus);
+    while (bStatus && dwBytesRead > 0);
 
     /*
      * Resize the buffer to the total size of data read.

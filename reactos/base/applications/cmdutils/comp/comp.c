@@ -38,7 +38,7 @@
 
 #define STRBUF 1024
 
-/* getline:  read a line, return length */
+/* getline: read a line, return length */
 INT GetBuff(PBYTE buff, FILE* in)
 {
     return fread(buff, sizeof(BYTE), STRBUF, in);
@@ -56,7 +56,7 @@ INT FileSize(FILE* fd)
 }
 
 
-int wmain (int argc, WCHAR* argv[])
+int wmain(int argc, WCHAR* argv[])
 {
     INT i;
 
@@ -202,13 +202,9 @@ int wmain (int argc, WCHAR* argv[])
 
                 /* Reporting here a mismatch */
                 if (bLineNos)
-                {
                     ConResPrintf(StdOut, IDS_MISMATCHLINE, LineNumber);
-                }
                 else
-                {
                     ConResPrintf(StdOut, IDS_MISMATCHOFFSET, Offset);
-                }
 
                 if (bAscii)
                 {

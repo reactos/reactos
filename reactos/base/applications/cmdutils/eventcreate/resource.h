@@ -1,7 +1,5 @@
 #pragma once
 
-#define RC_STRING_MAX_SIZE 4096
-
 #define IDS_USAGE           100
 #define IDS_HELP            101
 #define IDS_INVALIDSWITCH   102
