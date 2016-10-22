@@ -1,11 +1,11 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Utilities Library
- * FILE:            sdk/lib/conutils/conutils.c
- * PURPOSE:         Provides simple ready-to-use abstraction wrappers around
- *                  CRT streams or Win32 console API I/O functions, to deal with
- *                  i18n + Unicode related problems.
- * PROGRAMMERS:     - Hermes Belusca-Maito (for making this library);
+ * FILE:            sdk/lib/conutils/stream.c
+ * PURPOSE:         Provides basic abstraction wrappers around CRT streams or
+ *                  Win32 console API I/O functions, to deal with i18n + Unicode
+ *                  related problems.
+ * PROGRAMMERS:     - Hermes Belusca-Maito (for the library);
  *                  - All programmers who wrote the different console applications
  *                    from which I took those functions and improved them.
  */
@@ -22,12 +22,12 @@
 #define UNICODE
 #define _UNICODE
 
-#include <stdlib.h> // limits.h // For MB_LEN_MAX
-
 #ifdef USE_CRT
 #include <fcntl.h>
 #include <io.h>
 #endif /* USE_CRT */
+
+#include <stdlib.h> // limits.h // For MB_LEN_MAX
 
 #include <windef.h>
 #include <winbase.h>
@@ -40,161 +40,16 @@
 #include <pseh/pseh2.h>
 
 #include "conutils.h"
+#include "stream.h"
+
 
 // #define RC_STRING_MAX_SIZE  4096
-// #define MAX_BUFFER_SIZE     4096
-// #define OUTPUT_BUFFER_SIZE  4096
+#define CON_RC_STRING_MAX_SIZE  4096
+// #define MAX_BUFFER_SIZE     4096    // Some programs (wlanconf, shutdown) set it to 5024
+// #define OUTPUT_BUFFER_SIZE  4096    // Name given in cmd/console.c
+// MAX_STRING_SIZE  // Name given in diskpart
 
-
-/*
- * General-purpose utility functions (wrappers around,
- * or reimplementations of, Win32 APIs).
- */
-
-/*
- * 'LoadStringW' API ripped from user32.dll to remove
- * any dependency of this library from user32.dll
- */
-INT
-WINAPI
-K32LoadStringW(
-    IN  HINSTANCE hInstance OPTIONAL,
-    IN  UINT   uID,
-    OUT LPWSTR lpBuffer,
-    IN  INT    nBufferMax)
-{
-    HRSRC hrsrc;
-    HGLOBAL hmem;
-    WCHAR *p;
-    UINT i;
-
-    if (!lpBuffer)
-        return 0;
-
-    /* Use LOWORD (incremented by 1) as ResourceID */
-    /* There are always blocks of 16 strings */
-    // FindResourceExW(hInstance, RT_STRING, name, MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL));
-    // NOTE: Instead of using LANG_NEUTRAL, one might use LANG_USER_DEFAULT...
-    hrsrc = FindResourceW(hInstance,
-                          MAKEINTRESOURCEW((LOWORD(uID) >> 4) + 1),
-                          (LPWSTR)RT_STRING);
-    if (!hrsrc) return 0;
-
-    hmem = LoadResource(hInstance, hrsrc);
-    if (!hmem) return 0;
-
-    p = LockResource(hmem);
-    // FreeResource(hmem);
-
-    /* Find the string we're looking for */
-    uID &= 0x000F; /* Position in the block, same as % 16 */
-    for (i = 0; i < uID; i++)
-        p += *p + 1;
-
-    /*
-     * If nBufferMax == 0, then return a read-only pointer
-     * to the resource itself in lpBuffer it is assumed that
-     * lpBuffer is actually a (LPWSTR *).
-     */
-    if (nBufferMax == 0)
-    {
-        *((LPWSTR*)lpBuffer) = p + 1;
-        return *p;
-    }
-
-    i = min(nBufferMax - 1, *p);
-    if (i > 0)
-    {
-        memcpy(lpBuffer, p + 1, i * sizeof(WCHAR));
-        lpBuffer[i] = L'\0';
-    }
-    else
-    {
-        if (nBufferMax > 1)
-        {
-            lpBuffer[0] = L'\0';
-            return 0;
-        }
-    }
-
-    return i;
-}
-
-/*
- * "Safe" version of FormatMessageW, that does not crash if a malformed
- * source string is retrieved and then being used for formatting.
- * It basically wraps calls to FormatMessageW within SEH.
- */
-DWORD
-WINAPI
-FormatMessageSafeW(
-    IN  DWORD   dwFlags,
-    IN  LPCVOID lpSource OPTIONAL,
-    IN  DWORD   dwMessageId,
-    IN  DWORD   dwLanguageId,
-    OUT LPWSTR  lpBuffer,
-    IN  DWORD   nSize,
-    IN  va_list *Arguments OPTIONAL)
-{
-    DWORD dwLength = 0;
-
-    _SEH2_TRY
-    {
-        /*
-         * Retrieve the message string. Wrap in SEH
-         * to protect from invalid string parameters.
-         */
-        _SEH2_TRY
-        {
-            dwLength = FormatMessageW(dwFlags,
-                                      lpSource,
-                                      dwMessageId,
-                                      dwLanguageId,
-                                      lpBuffer,
-                                      nSize,
-                                      Arguments);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            dwLength = 0;
-
-            /*
-             * An exception occurred while calling FormatMessage, this is usually
-             * the sign that a parameter was invalid, either 'lpBuffer' was NULL
-             * but we did not pass the flag FORMAT_MESSAGE_ALLOCATE_BUFFER, or the
-             * array pointer 'Arguments' was NULL or did not contain enough elements,
-             * and we did not pass the flag FORMAT_MESSAGE_IGNORE_INSERTS, and the
-             * message string expected too many inserts.
-             * In this last case only, we can call again FormatMessage but ignore
-             * explicitely the inserts. The string that we will return to the user
-             * will not be pre-formatted.
-             */
-            if (((dwFlags & FORMAT_MESSAGE_ALLOCATE_BUFFER) || lpBuffer) &&
-                !(dwFlags & FORMAT_MESSAGE_IGNORE_INSERTS))
-            {
-                /* Remove any possible harmful flags and always ignore inserts */
-                dwFlags &= ~FORMAT_MESSAGE_ARGUMENT_ARRAY;
-                dwFlags |=  FORMAT_MESSAGE_IGNORE_INSERTS;
-
-                /* If this call also throws an exception, we are really dead */
-                dwLength = FormatMessageW(dwFlags,
-                                          lpSource,
-                                          dwMessageId,
-                                          dwLanguageId,
-                                          lpBuffer,
-                                          nSize,
-                                          NULL /* Arguments */);
-            }
-        }
-        _SEH2_END;
-    }
-    _SEH2_FINALLY
-    {
-    }
-    _SEH2_END;
-
-    return dwLength;
-}
+// #define MAX_MESSAGE_SIZE    512     // See shutdown...
 
 
 /*
@@ -208,12 +63,20 @@ typedef struct _CON_STREAM
 #ifdef USE_CRT
     FILE* fStream;
 #else
+    BOOL IsInitialized;
+    CRITICAL_SECTION Lock;
+
     HANDLE hHandle;
-    BOOL   bIsConsole; // TRUE if 'hHandle' refers to a console,
-                       // in which case I/O UNICODE is directly used.
 
     /*
-     * 'Mode' flag is used to know the translation mode
+     * TRUE if 'hHandle' refers to a console, in which case I/O UTF-16
+     * is directly used. If 'hHandle' refers to a file or a pipe, the
+     * 'Mode' flag is used.
+     */
+    BOOL IsConsole;
+
+    /*
+     * The 'Mode' flag is used to know the translation mode
      * when 'hHandle' refers to a file or a pipe.
      */
     CON_STREAM_MODE Mode;
@@ -228,7 +91,7 @@ typedef struct _CON_STREAM
 #if 0 // FIXME!
 CON_STREAM StdStreams[3] =
 {
-    {0}, // StdIn // TODO!
+    {0}, // StdIn
     {0}, // StdOut
     {0}, // StdErr
 };
@@ -239,87 +102,123 @@ CON_STREAM csStdErr;
 #endif
 
 
-// static
-BOOL
-IsConsoleHandle(IN HANDLE hHandle)
+/* Stream translation modes */
+#ifdef USE_CRT
+/* Lookup table to convert CON_STREAM_MODE to CRT mode */
+static int ConToCRTMode[] =
 {
-    DWORD dwMode;
+    _O_BINARY,  // Binary    (untranslated)
+    _O_TEXT,    // AnsiText  (translated)
+    _O_WTEXT,   // WideText  (UTF16 with BOM; translated)
+    _O_U16TEXT, // UTF16Text (UTF16 without BOM; translated)
+    _O_U8TEXT,  // UTF8Text  (UTF8  without BOM; translated)
+};
+#endif
 
-    /* Check whether the handle may be that of a console... */
-    if ((GetFileType(hHandle) & ~FILE_TYPE_REMOTE) != FILE_TYPE_CHAR)
-        return FALSE;
+#ifdef USE_CRT
 
-    /*
-     * It may be. Perform another test. The idea comes from the
-     * MSDN description of the WriteConsole API:
-     *
-     * "WriteConsole fails if it is used with a standard handle
-     *  that is redirected to a file. If an application processes
-     *  multilingual output that can be redirected, determine whether
-     *  the output handle is a console handle (one method is to call
-     *  the GetConsoleMode function and check whether it succeeds).
-     *  If the handle is a console handle, call WriteConsole. If the
-     *  handle is not a console handle, the output is redirected and
-     *  you should call WriteFile to perform the I/O."
-     */
-    return GetConsoleMode(hHandle, &dwMode);
-}
+/*
+ * See http://archives.miloush.net/michkap/archive/2008/03/18/8306597.html
+ * and http://archives.miloush.net/michkap/archive/2009/08/14/9869928.html
+ * for more details.
+ */
+
+// NOTE: May the translated mode be cached somehow?
+// NOTE2: We may also call IsConsoleHandle to directly set the mode to
+//        _O_U16TEXT if it's ok??
+// NOTE3: _setmode returns the previous mode, or -1 if failure.
+#define CON_STREAM_SET_MODE(Stream, Mode, CacheCodePage)    \
+do { \
+    fflush((Stream)->fStream); \
+    if ((Mode) < ARRAYSIZE(ConToCRTMode))   \
+        _setmode(_fileno((Stream)->fStream), ConToCRTMode[(Mode)]); \
+    else \
+        _setmode(_fileno((Stream)->fStream), _O_TEXT); /* Default to ANSI text */ \
+} while(0)
+
+#else /* defined(USE_CRT) */
+
+/*
+ * We set Stream->CodePage to INVALID_CP (= -1) to signal that the codepage
+ * is either not assigned (if the mode is Binary, WideText, or UTF16Text), or
+ * is not cached yet (if the mode is AnsiText). In this latter case the cache
+ * is resolved inside ConWrite. Finally, if the mode is UTF8Text, the codepage
+ * cache is set to CP_UTF8.
+ * The codepage cache can be reset by an explicit call to CON_STREAM_SET_MODE
+ * (i.e. by calling ConStreamSetMode, or by reinitializing the stream with
+ * ConStreamInit(Ex)).
+ *
+ * NOTE: the magic value could not be '0' since it is reserved for CP_ACP.
+ */
+#define CON_STREAM_SET_MODE(Stream, Mode, CacheCodePage)    \
+do { \
+    (Stream)->Mode = (Mode); \
+\
+    if ((Mode) == AnsiText)  \
+        (Stream)->CodePage = CacheCodePage; /* Possibly assigned */          \
+    else if ((Mode) == UTF8Text) \
+        (Stream)->CodePage = CP_UTF8;       /* Fixed */                      \
+    else /* Mode == Binary, WideText, UTF16Text */                           \
+        (Stream)->CodePage = INVALID_CP;    /* Not assigned (meaningless) */ \
+} while(0)
+
+#endif /* defined(USE_CRT) */
+
 
 BOOL
 ConStreamInitEx(
     OUT PCON_STREAM Stream,
     IN  PVOID Handle,
     IN  CON_STREAM_MODE Mode,
+    IN  UINT CacheCodePage OPTIONAL,
+    // IN  CON_READ_FUNC ReadFunc OPTIONAL,
     IN  CON_WRITE_FUNC WriteFunc OPTIONAL)
 {
     /* Parameters validation */
-    if (!Stream || !Handle)
+    if (!Stream || !Handle || (Mode > UTF8Text))
         return FALSE;
-    if (Mode > UTF8Text)
-        return FALSE;
-
-    /* Use the default 'ConWrite' helper if nothing is specified */
-    Stream->WriteFunc = (WriteFunc ? WriteFunc : ConWrite);
 
 #ifdef USE_CRT
-{
-/* Lookup table to convert CON_STREAM_MODE to CRT mode */
-    static int ConToCRTMode[] =
-    {
-        _O_BINARY,  // Binary    (untranslated)
-        _O_TEXT,    // AnsiText  (translated)
-        _O_WTEXT,   // WideText  (UTF16 with BOM; translated)
-        _O_U16TEXT, // UTF16Text (UTF16 without BOM; translated)
-        _O_U8TEXT,  // UTF8Text  (UTF8  without BOM; translated)
-    };
 
     Stream->fStream = (FILE*)Handle;
 
-    /* Set the correct file translation mode */
-    // NOTE: May the translated mode be cached somehow?
-    // NOTE2: We may also call IsConsoleHandle to directly set the mode to
-    //        _O_U16TEXT if it's ok??
-    if (Mode < ARRAYSIZE(ConToCRTMode))
-        _setmode(_fileno(Stream->fStream), ConToCRTMode[Mode]);
-    else
-        _setmode(_fileno(Stream->fStream), _O_TEXT); // Default to ANSI text.
-    // _setmode returns the previous mode, or -1 if failure.
-}
 #else
 
-    Stream->hHandle    = (HANDLE)Handle;
-    Stream->bIsConsole = IsConsoleHandle(Stream->hHandle);
-    Stream->Mode       = Mode;
+    if ((HANDLE)Handle == INVALID_HANDLE_VALUE)
+        return FALSE;
 
-    // NOTE: Or recompute them @ each ConWrite call?
-    if (Mode == AnsiText)
-        Stream->CodePage = GetConsoleOutputCP(); // CP_ACP, CP_OEMCP
-    else if (Mode == UTF8Text)
-        Stream->CodePage = CP_UTF8;
-    else // Mode == Binary, WideText, UTF16Text
-        Stream->CodePage = 0;
+    /*
+     * As the user calls us by giving us an existing handle to attach on,
+     * it is not our duty to close it if we are called again. The user
+     * is responsible for having opened those handles, and is responsible
+     * for closing them!
+     */
+#if 0
+    /* Attempt to close the handle of the old stream */
+    if (/* Stream->IsInitialized && */ Stream->hHandle &&
+        Stream->hHandle != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(Stream->hHandle);
+    }
+#endif
+
+    /* Initialize the stream critical section if not already done */
+    if (!Stream->IsInitialized)
+    {
+        InitializeCriticalSection/*AndSpinCount*/(&Stream->Lock /* , 4000 */);
+        Stream->IsInitialized = TRUE;
+    }
+
+    Stream->hHandle   = (HANDLE)Handle;
+    Stream->IsConsole = IsConsoleHandle(Stream->hHandle);
 
 #endif /* defined(USE_CRT) */
+
+    /* Set the correct file translation mode */
+    CON_STREAM_SET_MODE(Stream, Mode, CacheCodePage);
+
+    /* Use the default 'ConWrite' helper if nothing is specified */
+    Stream->WriteFunc = (WriteFunc ? WriteFunc : ConWrite);
 
     return TRUE;
 }
@@ -328,9 +227,116 @@ BOOL
 ConStreamInit(
     OUT PCON_STREAM Stream,
     IN  PVOID Handle,
-    IN  CON_STREAM_MODE Mode)
+    IN  CON_STREAM_MODE Mode,
+    IN  UINT CacheCodePage OPTIONAL)
 {
-    return ConStreamInitEx(Stream, Handle, Mode, ConWrite);
+    return ConStreamInitEx(Stream, Handle, Mode, CacheCodePage, ConWrite);
+}
+
+BOOL
+ConStreamSetMode(
+    IN PCON_STREAM Stream,
+    IN CON_STREAM_MODE Mode,
+    IN UINT CacheCodePage OPTIONAL)
+{
+    /* Parameters validation */
+    if (!Stream || (Mode > UTF8Text))
+        return FALSE;
+
+#ifdef USE_CRT
+    if (!Stream->fStream)
+        return FALSE;
+#endif
+
+    /* Set the correct file translation mode */
+    CON_STREAM_SET_MODE(Stream, Mode, CacheCodePage);
+    return TRUE;
+}
+
+BOOL
+ConStreamSetCacheCodePage(
+    IN PCON_STREAM Stream,
+    IN UINT CacheCodePage)
+{
+#ifdef USE_CRT
+// FIXME!
+#warning The ConStreamSetCacheCodePage function does not make much sense with the CRT!
+#else
+    CON_STREAM_MODE Mode;
+
+    /* Parameters validation */
+    if (!Stream)
+        return FALSE;
+
+    /*
+     * Keep the original stream mode but set the correct file codepage
+     * (will be reset only if Mode == AnsiText).
+     */
+    Mode = Stream->Mode;
+    CON_STREAM_SET_MODE(Stream, Mode, CacheCodePage);
+    return TRUE;
+#endif
+}
+
+HANDLE
+ConStreamGetOSHandle(
+    IN PCON_STREAM Stream)
+{
+    /* Parameters validation */
+    if (!Stream)
+        return INVALID_HANDLE_VALUE;
+
+    /*
+     * See https://support.microsoft.com/kb/99173
+     * for more details.
+     */
+
+#ifdef USE_CRT
+    if (!Stream->fStream)
+        return INVALID_HANDLE_VALUE;
+
+    return (HANDLE)_get_osfhandle(_fileno(Stream->fStream));
+#else
+    return Stream->hHandle;
+#endif
+}
+
+BOOL
+ConStreamSetOSHandle(
+    IN PCON_STREAM Stream,
+    IN HANDLE Handle)
+{
+    /* Parameters validation */
+    if (!Stream)
+        return FALSE;
+
+    /*
+     * See https://support.microsoft.com/kb/99173
+     * for more details.
+     */
+
+#ifdef USE_CRT
+    if (!Stream->fStream)
+        return FALSE;
+
+    int fdOut = _open_osfhandle(Handle, _O_TEXT /* FIXME! */);
+    FILE* fpOut = _fdopen(fdOut, "w");
+    *Stream->fStream = *fpOut;
+    /// setvbuf(Stream->fStream, NULL, _IONBF, 0); 
+
+    return TRUE;
+#else
+    /* Flush the stream and reset its handle */
+    if (Stream->hHandle != INVALID_HANDLE_VALUE)
+        FlushFileBuffers(Stream->hHandle);
+
+    Stream->hHandle   = Handle;
+    Stream->IsConsole = IsConsoleHandle(Stream->hHandle);
+
+    // NOTE: Mode reset??
+
+    return TRUE;
+#endif
 }
 
 
@@ -339,7 +345,7 @@ ConStreamInit(
  * (for the moment, only Output)
  */
 
-// ConWriteStr
+// NOTE: Should be called with the stream locked.
 INT
 __stdcall
 ConWrite(
@@ -359,11 +365,33 @@ ConWrite(
 
     /* Check whether we are writing to a console */
     // if (IsConsoleHandle(Stream->hHandle))
-    if (Stream->bIsConsole)
+    if (Stream->IsConsole)
     {
         // TODO: Check if (ConStream->Mode == WideText or UTF16Text) ??
-        WriteConsole(Stream->hHandle, szStr, len, &dwNumBytes, NULL);
-        return (INT)dwNumBytes; // Really return the number of chars written.
+
+        /*
+         * This code is inspired from _cputws, in particular from the fact that,
+         * according to MSDN: https://msdn.microsoft.com/en-us/library/ms687401(v=vs.85).aspx
+         * the buffer size must be less than 64 KB.
+         *
+         * A similar code can be used for implementing _cputs too.
+         */
+
+        DWORD cchWrite;
+        TotalLen = len, dwNumBytes = 0;
+
+        while (len > 0)
+        {
+            cchWrite = min(len, 65535 / sizeof(WCHAR));
+
+            // FIXME: Check return value!
+            WriteConsole(Stream->hHandle, szStr, cchWrite, &dwNumBytes, NULL);
+
+            szStr += cchWrite;
+            len -= cchWrite;
+        }
+
+        return (INT)TotalLen; // FIXME: Really return the number of chars written!
     }
 
     /*
@@ -378,16 +406,22 @@ ConWrite(
      */
     if ((Stream->Mode == WideText) || (Stream->Mode == UTF16Text))
     {
-#ifndef _UNICODE
+#ifndef _UNICODE // UNICODE means that TCHAR == WCHAR == UTF-16
+        /* Convert from the current process/thread's codepage to UTF-16 */
         WCHAR *buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
         if (!buffer)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return 0;
         }
-        len = (DWORD)MultiByteToWideChar(/* Stream->CodePage */ CP_THREAD_ACP /* CP_ACP -- CP_OEMCP */,
+        len = (DWORD)MultiByteToWideChar(CP_THREAD_ACP, // CP_ACP, CP_OEMCP
                                          0, szStr, (INT)len, buffer, (INT)len);
         szStr = (PVOID)buffer;
+#else
+        /*
+         * Do not perform any conversion since we are already in UTF-16,
+         * that is the same encoding as the stream.
+         */
 #endif
 
         /*
@@ -430,9 +464,20 @@ ConWrite(
     }
     else if ((Stream->Mode == UTF8Text) || (Stream->Mode == AnsiText))
     {
-#ifdef _UNICODE
+        CHAR *buffer;
+
+        /*
+         * Resolve the codepage cache if it was not assigned yet
+         * (only if the stream is in ANSI mode; in UTF8 mode the
+         * codepage was already set to CP_UTF8).
+         */
+        if (/*(Stream->Mode == AnsiText) &&*/ (Stream->CodePage == INVALID_CP))
+            Stream->CodePage = GetConsoleOutputCP(); // CP_ACP, CP_OEMCP
+
+#ifdef _UNICODE // UNICODE means that TCHAR == WCHAR == UTF-16
+        /* Convert from UTF-16 to either UTF-8 or ANSI, using stream codepage */
         // NOTE: MB_LEN_MAX defined either in limits.h or in stdlib.h .
-        CHAR *buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * MB_LEN_MAX);
+        buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * MB_LEN_MAX);
         if (!buffer)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -440,6 +485,14 @@ ConWrite(
         }
         len = WideCharToMultiByte(Stream->CodePage, 0, szStr, len, buffer, len * MB_LEN_MAX, NULL, NULL);
         szStr = (PVOID)buffer;
+#else
+        /*
+         * Convert from the current process/thread's codepage to either
+         * UTF-8 or ANSI, using stream codepage.
+         * We need to perform a double conversion, by going through UTF-16.
+         */
+        // TODO!
+        #error "Need to implement double conversion!"
 #endif
 
         /*
@@ -478,10 +531,13 @@ ConWrite(
 
 #ifdef _UNICODE
         HeapFree(GetProcessHeap(), 0, buffer);
+#else
+        // TODO!
 #endif
     }
     else // if (Stream->Mode == Binary)
     {
+        /* Directly output the string */
         WriteFile(Stream->hHandle, szStr, len, &dwNumBytes, NULL);
     }
 
@@ -497,18 +553,20 @@ ConWrite(
     if (!szStr || len == 0)
         return 0;
 
-    /*
-     * See http://archives.miloush.net/michkap/archive/2008/03/18/8306597.html
-     * and http://archives.miloush.net/michkap/archive/2009/08/14/9869928.html
-     * for more details.
-     */
-    // _setmode(_fileno(Stream->fStream), _O_U16TEXT); // Normally, already set before.
 #if 1
+    /*
+     * There is no "counted" printf-to-stream or puts-like function, therefore
+     * we use this trick to output the counted string to the stream.
+     */
     while (1)
     {
-        written = wprintf(L"%.*s", total, szStr);
+        written = fwprintf(Stream->fStream, L"%.*s", total, szStr);
         if (written < total)
         {
+            /*
+             * Some embedded NULL or special character
+             * was encountered, print it apart.
+             */
             if (written == 0)
             {
                 fputwc(*szStr, Stream->fStream);
@@ -525,10 +583,59 @@ ConWrite(
     }
     return (INT)len;
 #else
+    /* ANSI text or Binary output only */
+    _setmode(_fileno(Stream->fStream), _O_TEXT); // _O_BINARY
     return fwrite(szStr, sizeof(*szStr), len, Stream->fStream);
 #endif
 
 #endif /* defined(USE_CRT) */
+}
+
+
+#define CON_STREAM_WRITE_CALL(Stream, Str, Len) \
+    (Stream)->WriteFunc((Stream), (Str), (Len));
+
+/* Lock the stream only in non-USE_CRT mode (otherwise use the CRT stream lock) */
+#ifndef USE_CRT
+
+#define CON_STREAM_WRITE2(Stream, Str, Len, RetLen) \
+do { \
+    EnterCriticalSection(&(Stream)->Lock); \
+    (RetLen) = CON_STREAM_WRITE_CALL((Stream), (Str), (Len)); \
+    LeaveCriticalSection(&(Stream)->Lock); \
+} while(0)
+
+#define CON_STREAM_WRITE(Stream, Str, Len) \
+do { \
+    EnterCriticalSection(&(Stream)->Lock); \
+    CON_STREAM_WRITE_CALL((Stream), (Str), (Len)); \
+    LeaveCriticalSection(&(Stream)->Lock); \
+} while(0)
+
+#else
+
+#define CON_STREAM_WRITE2(Stream, Str, Len, RetLen) \
+do { \
+    (RetLen) = CON_STREAM_WRITE_CALL((Stream), (Str), (Len)); \
+} while(0)
+
+#define CON_STREAM_WRITE(Stream, Str, Len) \
+do { \
+    CON_STREAM_WRITE_CALL((Stream), (Str), (Len)); \
+} while(0)
+
+#endif
+
+
+INT
+ConStreamWrite(
+    IN PCON_STREAM Stream,
+    IN PTCHAR szStr,
+    IN DWORD len)
+{
+    INT Len;
+    CON_STREAM_WRITE2(Stream, szStr, len, Len);
+    return Len;
 }
 
 INT
@@ -538,7 +645,8 @@ ConPuts(
 {
     INT Len;
 
-    Len = Stream->WriteFunc(Stream, szStr, wcslen(szStr));
+    Len = wcslen(szStr);
+    CON_STREAM_WRITE2(Stream, szStr, Len, Len);
 
     /* Fixup returned length in case of errors */
     if (Len < 0)
@@ -556,15 +664,18 @@ ConPrintfV(
     INT Len;
     WCHAR bufSrc[CON_RC_STRING_MAX_SIZE];
 
-#if 1 ///////////////////////////////////////////////////////////////////////  0
-    PWSTR pEnd;
-    StringCchVPrintfExW(bufSrc, ARRAYSIZE(bufSrc), &pEnd, NULL, 0, szStr, args);
-    Len = pEnd - bufSrc;
-#else
-    StringCchVPrintfW(bufSrc, ARRAYSIZE(bufSrc), szStr, args);
-    Len = wcslen(bufSrc);
-#endif
-    Len = Stream->WriteFunc(Stream, bufSrc, Len);
+    // Len = vfwprintf(Stream->fStream, szStr, args); // vfprintf for direct ANSI
+
+    /*
+     * Reuse szStr as the pointer to end-of-string, to compute
+     * the string length instead of calling wcslen().
+     */
+    // StringCchVPrintfW(bufSrc, ARRAYSIZE(bufSrc), szStr, args);
+    // Len = wcslen(bufSrc);
+    StringCchVPrintfExW(bufSrc, ARRAYSIZE(bufSrc), &szStr, NULL, 0, szStr, args);
+    Len = szStr - bufSrc;
+
+    CON_STREAM_WRITE2(Stream, bufSrc, Len, Len);
 
     /* Fixup returned length in case of errors */
     if (Len < 0)
@@ -583,10 +694,7 @@ ConPrintf(
     INT Len;
     va_list args;
 
-#if 0
-    Len = vfwprintf(stdout, szMsgBuf, arg_ptr); // vfprintf for direct ANSI
-    // or: Len = vwprintf(szMsgBuf, arg_ptr);
-#endif
+    // Len = vfwprintf(Stream->fStream, szMsgBuf, args); // vfprintf for direct ANSI
 
     // StringCchPrintfW
     va_start(args, szStr);
@@ -602,23 +710,16 @@ ConResPuts(
     IN UINT uID)
 {
     INT Len;
-#if 0
-    WCHAR bufSrc[CON_RC_STRING_MAX_SIZE];
-
-    // NOTE: We may use the special behaviour where nBufMaxSize == 0
-    Len = K32LoadStringW(GetModuleHandleW(NULL), uID, bufSrc, ARRAYSIZE(bufSrc));
-    if (Len)
-        Len = ConPuts(Stream, bufSrc);
-#else
     PWCHAR szStr = NULL;
+
     Len = K32LoadStringW(GetModuleHandleW(NULL), uID, (PWSTR)&szStr, 0);
-    if (Len)
-        Len = Stream->WriteFunc(Stream, szStr, Len);
+    if (szStr && Len)
+        // Len = ConPuts(Stream, szStr);
+        CON_STREAM_WRITE2(Stream, szStr, Len, Len);
 
     /* Fixup returned length in case of errors */
     if (Len < 0)
         Len = 0;
-#endif
 
     return Len;
 }
@@ -709,7 +810,7 @@ ConMsgPuts(
 
         /* lpMsgBuf is NULL-terminated by FormatMessage */
         // Len = ConPuts(Stream, lpMsgBuf);
-        Len = Stream->WriteFunc(Stream, lpMsgBuf, dwLength);
+        CON_STREAM_WRITE2(Stream, lpMsgBuf, dwLength, Len);
 
         /* Fixup returned length in case of errors */
         if (Len < 0)
@@ -775,7 +876,7 @@ ConMsgPrintf2V(
 
         /* lpMsgBuf is NULL-terminated by FormatMessage */
         Len = ConPrintfV(Stream, lpMsgBuf, args);
-        // Len = Stream->WriteFunc(Stream, lpMsgBuf, dwLength);
+        // CON_STREAM_WRITE2(Stream, lpMsgBuf, dwLength, Len);
 
         /* Fixup returned length in case of errors */
         if (Len < 0)
@@ -835,7 +936,7 @@ ConMsgPrintfV(
         // ASSERT(dwLength != 0);
 
         // Len = ConPrintfV(Stream, lpMsgBuf, args);
-        Len = Stream->WriteFunc(Stream, lpMsgBuf, dwLength);
+        CON_STREAM_WRITE2(Stream, lpMsgBuf, dwLength, Len);
 
         /* Fixup returned length in case of errors */
         if (Len < 0)
@@ -874,6 +975,38 @@ ConMsgPrintf(
     return Len;
 }
 
-//
-// TODO: Add Console paged-output printf & ResPrintf functions!
-//
+
+
+VOID
+ConClearLine(IN PCON_STREAM Stream)
+{
+    HANDLE hOutput = ConStreamGetOSHandle(Stream);
+
+    /*
+     * Erase the full line where the cursor is, and move
+     * the cursor back to the beginning of the line.
+     */
+
+    if (IsConsoleHandle(hOutput))
+    {
+        CONSOLE_SCREEN_BUFFER_INFO csbi;
+        DWORD dwWritten;
+
+        GetConsoleScreenBufferInfo(hOutput, &csbi);
+
+        csbi.dwCursorPosition.X = 0;
+        // csbi.dwCursorPosition.Y;
+
+        FillConsoleOutputCharacterW(hOutput, L' ',
+                                    csbi.dwSize.X,
+                                    csbi.dwCursorPosition,
+                                    &dwWritten);
+        SetConsoleCursorPosition(hOutput, csbi.dwCursorPosition);
+    }
+    else if (IsTTYHandle(hOutput))
+    {
+        ConPuts(Stream, L"\x1B[2K\x1B[1G"); // FIXME: Just use WriteFile
+    }
+    // else, do nothing for files
+}
+
