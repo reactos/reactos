@@ -216,13 +216,13 @@ int ShowConsoleStatus(VOID)
         ConResPrintf(StdOut, IDS_CONSOLE_STATUS_LINES, csbi.dwSize.Y);
         ConResPrintf(StdOut, IDS_CONSOLE_STATUS_COLS , csbi.dwSize.X);
     }
-    if (SystemParametersInfoW(SPI_GETKEYBOARDDELAY, 0, &dwKbdDelay, 0))
-    {
-        ConResPrintf(StdOut, IDS_CONSOLE_KBD_DELAY, dwKbdDelay);
-    }
     if (SystemParametersInfoW(SPI_GETKEYBOARDSPEED, 0, &dwKbdSpeed, 0))
     {
         ConResPrintf(StdOut, IDS_CONSOLE_KBD_RATE, dwKbdSpeed);
+    }
+    if (SystemParametersInfoW(SPI_GETKEYBOARDDELAY, 0, &dwKbdDelay, 0))
+    {
+        ConResPrintf(StdOut, IDS_CONSOLE_KBD_DELAY, dwKbdDelay);
     }
     ConResPrintf(StdOut, IDS_CONSOLE_CODEPAGE, GetConsoleOutputCP());
     return 0;
