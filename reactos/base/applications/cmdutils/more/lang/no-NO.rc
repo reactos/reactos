@@ -9,6 +9,7 @@ BEGIN
   [Stasjon:][Mappe]Filnavn    En fil, Velg innhold som skal vises.\n\
   Command\t\t     En kommando, Velg output som skal vises.\n\n\
   At the prompt ""-- Fortsett --"" du kan trykke en tast for å vise neste side.\n"
-    IDS_CONTINUE " -- Fortsett (100%) -- "
-    IDS_FILE_ACCESS "Får ikke tilgang til filen %s."
+    IDS_CONTINUE "-- Fortsett --"
+    IDS_CONTINUE_PROGRESS "-- Fortsett (%d%%) --"
+    IDS_FILE_ACCESS "Får ikke tilgang til filen %s.\n"
 END

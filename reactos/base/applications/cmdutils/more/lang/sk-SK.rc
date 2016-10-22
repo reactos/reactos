@@ -14,6 +14,7 @@ BEGIN
   Príkaz\t\t     Príkaz, ktorého výstup má byť zobrazený.\n\n\
   Pri výzve ""-- Pokračujte --"" môžete stlačiť ľubovoľný kláves\n\
   k zobrazeniu nasledujúcej stránky.\n"
-    IDS_CONTINUE " -- Pokračujte (100%) -- "
-    IDS_FILE_ACCESS "Neviem získať prístup k súboru %s."
+    IDS_CONTINUE "-- Pokračujte --"
+    IDS_CONTINUE_PROGRESS "-- Pokračujte (%d%%) --"
+    IDS_FILE_ACCESS "Neviem získať prístup k súboru %s.\n"
 END

@@ -13,6 +13,7 @@ BEGIN
   [Drive:][Path]File name    Nje dokument, përmbajtja e të cilit do të shfaqet.\n\
   Komandë\t\t     Nje komande, nxjerrja e te cilit do të shfaqet.\n\n\
   At the prompt ""-- Vazhdo --"" ju mund të shtypni çfarëdo butoni për të vazhduar në faqen tjetër.\n"
-    IDS_CONTINUE " -- Vazhdo (100%) -- "
-    IDS_FILE_ACCESS "Nuk mund të aksesoj dokumentin %s."
+    IDS_CONTINUE "-- Vazhdo --"
+    IDS_CONTINUE_PROGRESS "-- Vazhdo (%d%%) --"
+    IDS_FILE_ACCESS "Nuk mund të aksesoj dokumentin %s.\n"
 END
