@@ -239,7 +239,7 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
     }
 
     i = FILE_FROM_ENTRY(SwapEntry);
-    offset = OFFSET_FROM_ENTRY(SwapEntry);
+    offset = OFFSET_FROM_ENTRY(SwapEntry) - 1;
 
     if (PagingFileList[i]->FileObject == NULL ||
             PagingFileList[i]->FileObject->DeviceObject == NULL)
@@ -396,7 +396,7 @@ MmFreeSwapPage(SWAPENTRY Entry)
     KIRQL oldIrql;
 
     i = FILE_FROM_ENTRY(Entry);
-    off = OFFSET_FROM_ENTRY(Entry);
+    off = OFFSET_FROM_ENTRY(Entry) - 1;
 
     KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
     if (PagingFileList[i] == NULL)
