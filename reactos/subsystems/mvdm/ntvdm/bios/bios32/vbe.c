@@ -356,6 +356,7 @@ static VOID VbeSetExtendedRegisters(PSVGA_REGISTERS Registers)
 BOOLEAN WINAPI VbeSetExtendedVideoMode(BYTE ModeNumber)
 {
     PCVBE_MODE Mode = VbeGetModeByNumber(ModeNumber);
+    if (Mode == NULL) return FALSE;
 
     /* At this point, Mode->Registers shouldn't be NULL unless the mode is unimplemented */
     if (Mode->Registers == NULL)
