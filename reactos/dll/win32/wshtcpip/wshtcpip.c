@@ -355,7 +355,7 @@ WSHIoctl(
 
     DPRINT1("Ioctl: Unknown IOCTL code: %d\n", IoControlCode);
 
-    return NO_ERROR;
+    return WSAEINVAL;
 }
 
 
