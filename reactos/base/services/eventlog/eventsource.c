@@ -1,9 +1,9 @@
 /*
- * PROJECT:          ReactOS kernel
- * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             base/services/eventlog/eventsource.c
- * PURPOSE:          Event logging service
- * COPYRIGHT:        Copyright 2011 Eric Kohl
+ * PROJECT:         ReactOS EventLog Service
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            base/services/eventlog/eventsource.c
+ * PURPOSE:         Event log sources support
+ * COPYRIGHT:       Copyright 2011 Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
@@ -176,15 +176,15 @@ LoadEventSources(HKEY hKey,
     }
 
     /* Save the list of sources in the registry */
-    Result = RegSetValueEx(hKey,
-                           L"Sources",
-                           0,
-                           REG_MULTI_SZ,
-                           (LPBYTE)SourceList,
-                           (MaxValueLen - cchRemaining + 1) * sizeof(WCHAR));
+    Result = RegSetValueExW(hKey,
+                            L"Sources",
+                            0,
+                            REG_MULTI_SZ,
+                            (LPBYTE)SourceList,
+                            (MaxValueLen - cchRemaining + 1) * sizeof(WCHAR));
     if (Result != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueEx failed: %lu\n", Result);
+        DPRINT1("RegSetValueExW failed: %lu\n", Result);
     }
 
     if (SourceList)

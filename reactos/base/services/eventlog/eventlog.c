@@ -1,17 +1,16 @@
 /*
- * PROJECT:          ReactOS kernel
- * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             base/services/eventlog/eventlog.c
- * PURPOSE:          Event logging service
- * COPYRIGHT:        Copyright 2002 Eric Kohl
- *                   Copyright 2005 Saveliy Tretiakov
- *                   Hermes Belusca-Maito
+ * PROJECT:         ReactOS EventLog Service
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            base/services/eventlog/eventlog.c
+ * PURPOSE:         Event logging service
+ * COPYRIGHT:       Copyright 2002 Eric Kohl
+ *                  Copyright 2005 Saveliy Tretiakov
+ *                  Hermes Belusca-Maito
  */
 
 /* INCLUDES *****************************************************************/
 
 #include "eventlog.h"
-
 #include <stdio.h>
 #include <netevent.h>
 
@@ -200,20 +199,20 @@ ReportProductInfoEvent(VOID)
     cchRemain++;
 
     /* Read 'CurrentType' from the registry and write it into the buffer */
-    lResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
-                           0,
-                           KEY_QUERY_VALUE,
-                           &hKey);
+    lResult = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                            0,
+                            KEY_QUERY_VALUE,
+                            &hKey);
     if (lResult == ERROR_SUCCESS)
     {
         dwValueLength = cchRemain;
-        lResult = RegQueryValueEx(hKey,
-                                  L"CurrentType",
-                                  NULL,
-                                  &dwType,
-                                  (LPBYTE)str,
-                                  &dwValueLength);
+        lResult = RegQueryValueExW(hKey,
+                                   L"CurrentType",
+                                   NULL,
+                                   &dwType,
+                                   (LPBYTE)str,
+                                   &dwValueLength);
 
         RegCloseKey(hKey);
     }
@@ -289,7 +288,7 @@ LoadLogFile(HKEY hKey, PWSTR LogName)
     ULONG ulMaxSize, ulRetention;
     NTSTATUS Status;
 
-    DPRINT("LoadLogFile: %S\n", LogName);
+    DPRINT("LoadLogFile: `%S'\n", LogName);
 
     Result = RegQueryInfoKeyW(hKey, NULL, NULL, NULL, NULL, NULL, NULL,
                               NULL, NULL, &MaxValueLen, NULL, NULL);
@@ -346,7 +345,7 @@ LoadLogFile(HKEY hKey, PWSTR LogName)
                                 ValueLen);
         if (Result != ERROR_SUCCESS)
         {
-            DPRINT1("RegSetValueEx failed: %lu\n", Result);
+            DPRINT1("RegSetValueExW failed: %lu\n", Result);
             HeapFree(GetProcessHeap(), 0, Buf);
             return NULL;
         }
@@ -431,8 +430,8 @@ LoadLogFiles(HKEY eventlogKey)
 {
     LONG Result;
     DWORD MaxLognameLen, LognameLen;
-    PWSTR Buf = NULL;
     DWORD dwIndex;
+    PWSTR Buf = NULL;
     PLOGFILE pLogFile;
 
     Result = RegQueryInfoKeyW(eventlogKey, NULL, NULL, NULL, NULL, &MaxLognameLen,
@@ -464,7 +463,7 @@ LoadLogFiles(HKEY eventlogKey)
 
         DPRINT("%S\n", Buf);
 
-        Result = RegOpenKeyEx(eventlogKey, Buf, 0, KEY_ALL_ACCESS, &SubKey);
+        Result = RegOpenKeyExW(eventlogKey, Buf, 0, KEY_ALL_ACCESS, &SubKey);
         if (Result != ERROR_SUCCESS)
         {
             DPRINT1("Failed to open %S key.\n", Buf);
@@ -496,15 +495,15 @@ LoadLogFiles(HKEY eventlogKey)
 
 int wmain(int argc, WCHAR* argv[])
 {
-    WCHAR LogPath[MAX_PATH];
     INT RetCode = 0;
     LONG Result;
     HKEY elogKey;
+    WCHAR LogPath[MAX_PATH];
 
     LogfListInitialize();
     InitEventSourceList();
 
-    GetWindowsDirectoryW(LogPath, MAX_PATH);
+    GetSystemWindowsDirectoryW(LogPath, ARRAYSIZE(LogPath));
 
     if (GetDriveTypeW(LogPath) == DRIVE_CDROM)
     {
@@ -513,12 +512,11 @@ int wmain(int argc, WCHAR* argv[])
     }
     else
     {
-        Result = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                              L"SYSTEM\\CurrentControlSet\\Services\\EventLog",
-                              0,
-                              KEY_ALL_ACCESS,
-                              &elogKey);
-
+        Result = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                               L"SYSTEM\\CurrentControlSet\\Services\\EventLog",
+                               0,
+                               KEY_ALL_ACCESS,
+                               &elogKey);
         if (Result != ERROR_SUCCESS)
         {
             DPRINT1("Fatal error: cannot open eventlog registry key.\n");
@@ -532,7 +530,7 @@ int wmain(int argc, WCHAR* argv[])
     EventLogSource = GetEventSourceByName(L"EventLog");
     if (!EventLogSource)
     {
-        DPRINT1("No EventLog source available, the EventLog service will not be able to log its own events.\n");
+        DPRINT1("The 'EventLog' source is unavailable. The EventLog service will not be able to log its own events.\n");
     }
 
     StartServiceCtrlDispatcher(ServiceTable);

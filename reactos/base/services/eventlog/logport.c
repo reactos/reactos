@@ -1,16 +1,15 @@
 /*
- * PROJECT:          ReactOS kernel
- * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             base/services/eventlog/logport.c
- * PURPOSE:          Event logging service
- * COPYRIGHT:        Copyright 2002 Eric Kohl
- *                   Copyright 2005 Saveliy Tretiakov
+ * PROJECT:         ReactOS EventLog Service
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            base/services/eventlog/logport.c
+ * PURPOSE:         LPC Port Interface support
+ * COPYRIGHT:       Copyright 2002 Eric Kohl
+ *                  Copyright 2005 Saveliy Tretiakov
  */
 
 /* INCLUDES *****************************************************************/
 
 #include "eventlog.h"
-
 #include <ndk/lpcfuncs.h>
 
 #define NDEBUG
@@ -46,10 +45,10 @@ NTSTATUS WINAPI PortThreadRoutine(PVOID Param)
 
 NTSTATUS InitLogPort(VOID)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING PortName;
-    PORT_MESSAGE Request;
     NTSTATUS Status;
+    UNICODE_STRING PortName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PORT_MESSAGE Request;
 
     ConnectPortHandle = NULL;
     MessagePortHandle = NULL;
@@ -105,12 +104,12 @@ ByeBye:
 
 NTSTATUS ProcessPortMessage(VOID)
 {
+    NTSTATUS Status;
     IO_ERROR_LPC Request;
     PIO_ERROR_LOG_MESSAGE Message;
     ULONG Time;
     PEVENTLOGRECORD pRec;
-    DWORD dwRecSize;
-    NTSTATUS Status;
+    SIZE_T RecSize;
     PLOGFILE SystemLog = NULL;
     WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
     DWORD dwComputerNameLength = MAX_COMPUTERNAME_LENGTH + 1;
@@ -160,7 +159,7 @@ NTSTATUS ProcessPortMessage(VOID)
             // TODO: Log more information??
 
             pRec = LogfAllocAndBuildNewRecord(
-                        &dwRecSize,
+                        &RecSize,
                         Time,
                         Message->Type,
                         Message->EntryData.EventCategory,
@@ -180,7 +179,7 @@ NTSTATUS ProcessPortMessage(VOID)
                 return STATUS_NO_MEMORY;
             }
 
-            DPRINT("dwRecSize = %d\n", dwRecSize);
+            DPRINT("RecSize = %d\n", RecSize);
 
             DPRINT("\n --- EVENTLOG RECORD ---\n");
             PRINT_RECORD(pRec);
@@ -188,10 +187,10 @@ NTSTATUS ProcessPortMessage(VOID)
 
             if (!onLiveCD && SystemLog)
             {
-                Status = LogfWriteRecord(SystemLog, dwRecSize, pRec);
+                Status = LogfWriteRecord(SystemLog, RecSize, pRec);
                 if (!NT_SUCCESS(Status))
                 {
-                    DPRINT1("ERROR WRITING TO EventLog %S (Status 0x%08lx)\n",
+                    DPRINT1("ERROR writing to event log `%S' (Status 0x%08lx)\n",
                             SystemLog->FileName, Status);
                 }
             }

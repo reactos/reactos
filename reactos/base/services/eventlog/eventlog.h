@@ -1,9 +1,9 @@
 /*
- * PROJECT:          ReactOS kernel
- * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             base/services/eventlog/eventlog.h
- * PURPOSE:          Event logging service
- * COPYRIGHT:        Copyright 2005 Saveliy Tretiakov
+ * PROJECT:         ReactOS EventLog Service
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            base/services/eventlog/eventlog.h
+ * PURPOSE:         Precompiled Header for the Event logging service
+ * COPYRIGHT:       Copyright 2005 Saveliy Tretiakov
  */
 
 #ifndef __EVENTLOG_H__
@@ -145,13 +145,9 @@ GetEventSourceByName(LPCWSTR Name);
 
 /* file.c */
 VOID LogfListInitialize(VOID);
-
 DWORD LogfListItemCount(VOID);
-
 PLOGFILE LogfListItemByIndex(DWORD Index);
-
 PLOGFILE LogfListItemByName(LPCWSTR Name);
-
 // DWORD LogfListItemIndexByName(WCHAR * Name);
 
 
@@ -195,19 +191,19 @@ LogfClose(PLOGFILE LogFile,
 VOID LogfCloseAll(VOID);
 
 PEVENTLOGRECORD
-LogfAllocAndBuildNewRecord(PULONG lpRecSize,
-                           ULONG  Time,
-                           USHORT wType,
-                           USHORT wCategory,
-                           ULONG  dwEventId,
-                           PCWSTR SourceName,
-                           PCWSTR ComputerName,
-                           ULONG  dwSidLength,
-                           PSID   lpUserSid,
-                           USHORT wNumStrings,
-                           PWSTR  lpStrings,
-                           ULONG  dwDataSize,
-                           PVOID  lpRawData);
+LogfAllocAndBuildNewRecord(PSIZE_T pRecSize,
+                           ULONG   Time,
+                           USHORT  wType,
+                           USHORT  wCategory,
+                           ULONG   dwEventId,
+                           PCWSTR  SourceName,
+                           PCWSTR  ComputerName,
+                           ULONG   dwSidLength,
+                           PSID    pUserSid,
+                           USHORT  wNumStrings,
+                           PWSTR   pStrings,
+                           ULONG   dwDataSize,
+                           PVOID   pRawData);
 
 static __inline void LogfFreeRecord(PEVENTLOGRECORD Record)
 {
@@ -219,9 +215,9 @@ LogfReportEvent(USHORT wType,
                 USHORT wCategory,
                 ULONG  dwEventId,
                 USHORT wNumStrings,
-                PWSTR  lpStrings,
+                PWSTR  pStrings,
                 ULONG  dwDataSize,
-                PVOID  lpRawData);
+                PVOID  pRawData);
 
 
 /* logport.c */

@@ -1,17 +1,16 @@
 /*
- * PROJECT:          ReactOS kernel
- * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             base/services/eventlog/file.c
- * PURPOSE:          Event logging service
- * COPYRIGHT:        Copyright 2005 Saveliy Tretiakov
- *                   Michael Martin
- *                   Hermes Belusca-Maito
+ * PROJECT:         ReactOS EventLog Service
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            base/services/eventlog/file.c
+ * PURPOSE:         Event log file support wrappers
+ * COPYRIGHT:       Copyright 2005 Saveliy Tretiakov
+ *                  Michael Martin
+ *                  Hermes Belusca-Maito
  */
 
 /* INCLUDES ******************************************************************/
 
 #include "eventlog.h"
-
 #include <ndk/iofuncs.h>
 #include <ndk/kefuncs.h>
 
@@ -1086,7 +1085,7 @@ LogfCreate(PLOGFILE* LogFile,
     }
 
     if (LogName)
-        StringCchCopy(pLogFile->LogName, LogNameLen, LogName);
+        StringCchCopyW(pLogFile->LogName, LogNameLen, LogName);
 
     pLogFile->FileName = RtlAllocateHeap(GetProcessHeap(),
                                    HEAP_ZERO_MEMORY,
@@ -1099,9 +1098,9 @@ LogfCreate(PLOGFILE* LogFile,
         goto Quit;
     }
 
-    StringCchCopy(pLogFile->FileName,
-                  /*wcslen(FileName->Buffer) + 1*/ (FileName->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR),
-                  FileName->Buffer);
+    StringCchCopyW(pLogFile->FileName,
+                   /*wcslen(FileName->Buffer) + 1*/ (FileName->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR),
+                   FileName->Buffer);
 
     pLogFile->OffsetInfo = RtlAllocateHeap(GetProcessHeap(),
                                      HEAP_ZERO_MEMORY,
@@ -2128,57 +2127,57 @@ Done:
 
 
 PEVENTLOGRECORD
-LogfAllocAndBuildNewRecord(PULONG lpRecSize,
-                           ULONG  Time,
-                           USHORT wType,
-                           USHORT wCategory,
-                           ULONG  dwEventId,
-                           PCWSTR SourceName,
-                           PCWSTR ComputerName,
-                           ULONG  dwSidLength,
-                           PSID   lpUserSid,
-                           USHORT wNumStrings,
-                           PWSTR  lpStrings,
-                           ULONG  dwDataSize,
-                           PVOID  lpRawData)
+LogfAllocAndBuildNewRecord(PSIZE_T pRecSize,
+                           ULONG   Time,
+                           USHORT  wType,
+                           USHORT  wCategory,
+                           ULONG   dwEventId,
+                           PCWSTR  SourceName,
+                           PCWSTR  ComputerName,
+                           ULONG   dwSidLength,
+                           PSID    pUserSid,
+                           USHORT  wNumStrings,
+                           PWSTR   pStrings,
+                           ULONG   dwDataSize,
+                           PVOID   pRawData)
 {
-    DWORD dwRecSize;
+    SIZE_T RecSize;
+    PBYTE Buffer;
     PEVENTLOGRECORD pRec;
     PWSTR str;
     UINT i, pos;
     SIZE_T SourceNameLen, ComputerNameLen, StringLen;
-    PBYTE Buffer;
 
     SourceNameLen = (SourceName ? wcslen(SourceName) : 0) + 1;
     ComputerNameLen = (ComputerName ? wcslen(ComputerName) : 0) + 1;
 
-    dwRecSize = sizeof(EVENTLOGRECORD) + (SourceNameLen + ComputerNameLen) * sizeof(WCHAR);
+    RecSize = sizeof(EVENTLOGRECORD) + (SourceNameLen + ComputerNameLen) * sizeof(WCHAR);
 
     /* Align on DWORD boundary for the SID */
-    dwRecSize = ROUND_UP(dwRecSize, sizeof(ULONG));
+    RecSize = ROUND_UP(RecSize, sizeof(ULONG));
 
-    dwRecSize += dwSidLength;
+    RecSize += dwSidLength;
 
     /* Add the sizes for the strings array */
-    ASSERT((lpStrings == NULL && wNumStrings == 0) ||
-           (lpStrings != NULL && wNumStrings >= 0));
-    for (i = 0, str = lpStrings; i < wNumStrings; i++)
+    ASSERT((pStrings == NULL && wNumStrings == 0) ||
+           (pStrings != NULL && wNumStrings >= 0));
+    for (i = 0, str = pStrings; i < wNumStrings; i++)
     {
         StringLen = wcslen(str) + 1; // str must be != NULL
-        dwRecSize += StringLen * sizeof(WCHAR);
+        RecSize += StringLen * sizeof(WCHAR);
         str += StringLen;
     }
 
     /* Add the data size */
-    dwRecSize += dwDataSize;
+    RecSize += dwDataSize;
 
     /* Align on DWORD boundary for the full structure */
-    dwRecSize = ROUND_UP(dwRecSize, sizeof(ULONG));
+    RecSize = ROUND_UP(RecSize, sizeof(ULONG));
 
     /* Size of the trailing 'Length' member */
-    dwRecSize += sizeof(ULONG);
+    RecSize += sizeof(ULONG);
 
-    Buffer = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, dwRecSize);
+    Buffer = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, RecSize);
     if (!Buffer)
     {
         DPRINT1("Cannot allocate heap!\n");
@@ -2186,7 +2185,7 @@ LogfAllocAndBuildNewRecord(PULONG lpRecSize,
     }
 
     pRec = (PEVENTLOGRECORD)Buffer;
-    pRec->Length = dwRecSize;
+    pRec->Length = RecSize;
     pRec->Reserved = LOGFILE_SIGNATURE;
 
     /*
@@ -2211,10 +2210,10 @@ LogfAllocAndBuildNewRecord(PULONG lpRecSize,
     pos = sizeof(EVENTLOGRECORD);
 
     if (SourceName)
-        StringCchCopy((PWSTR)(Buffer + pos), SourceNameLen, SourceName);
+        StringCchCopyW((PWSTR)(Buffer + pos), SourceNameLen, SourceName);
     pos += SourceNameLen * sizeof(WCHAR);
     if (ComputerName)
-        StringCchCopy((PWSTR)(Buffer + pos), ComputerNameLen, ComputerName);
+        StringCchCopyW((PWSTR)(Buffer + pos), ComputerNameLen, ComputerName);
     pos += ComputerNameLen * sizeof(WCHAR);
 
     /* Align on DWORD boundary for the SID */
@@ -2224,17 +2223,17 @@ LogfAllocAndBuildNewRecord(PULONG lpRecSize,
     pRec->UserSidOffset = 0;
     if (dwSidLength)
     {
-        RtlCopyMemory(Buffer + pos, lpUserSid, dwSidLength);
+        RtlCopyMemory(Buffer + pos, pUserSid, dwSidLength);
         pRec->UserSidLength = dwSidLength;
         pRec->UserSidOffset = pos;
         pos += dwSidLength;
     }
 
     pRec->StringOffset = pos;
-    for (i = 0, str = lpStrings; i < wNumStrings; i++)
+    for (i = 0, str = pStrings; i < wNumStrings; i++)
     {
         StringLen = wcslen(str) + 1; // str must be != NULL
-        StringCchCopy((PWSTR)(Buffer + pos), StringLen, str);
+        StringCchCopyW((PWSTR)(Buffer + pos), StringLen, str);
         str += StringLen;
         pos += StringLen * sizeof(WCHAR);
     }
@@ -2244,7 +2243,7 @@ LogfAllocAndBuildNewRecord(PULONG lpRecSize,
     pRec->DataOffset = 0;
     if (dwDataSize)
     {
-        RtlCopyMemory(Buffer + pos, lpRawData, dwDataSize);
+        RtlCopyMemory(Buffer + pos, pRawData, dwDataSize);
         pRec->DataLength = dwDataSize;
         pRec->DataOffset = pos;
         pos += dwDataSize;
@@ -2254,9 +2253,9 @@ LogfAllocAndBuildNewRecord(PULONG lpRecSize,
     pos = ROUND_UP(pos, sizeof(ULONG));
 
     /* Initialize the trailing 'Length' member */
-    *((PDWORD) (Buffer + pos)) = dwRecSize;
+    *((PDWORD)(Buffer + pos)) = RecSize;
 
-    *lpRecSize = dwRecSize;
+    *pRecSize = RecSize;
     return pRec;
 }
 
@@ -2265,17 +2264,17 @@ LogfReportEvent(USHORT wType,
                 USHORT wCategory,
                 ULONG  dwEventId,
                 USHORT wNumStrings,
-                PWSTR  lpStrings,
+                PWSTR  pStrings,
                 ULONG  dwDataSize,
-                PVOID  lpRawData)
+                PVOID  pRawData)
 {
     NTSTATUS Status;
     WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
     DWORD dwComputerNameLength = MAX_COMPUTERNAME_LENGTH + 1;
-    PEVENTLOGRECORD logBuffer;
+    PEVENTLOGRECORD LogBuffer;
     LARGE_INTEGER SystemTime;
     ULONG Time;
-    DWORD recSize;
+    SIZE_T RecSize;
 
     if (!EventLogSource)
         return;
@@ -2288,7 +2287,7 @@ LogfReportEvent(USHORT wType,
     NtQuerySystemTime(&SystemTime);
     RtlTimeToSecondsSince1970(&SystemTime, &Time);
 
-    logBuffer = LogfAllocAndBuildNewRecord(&recSize,
+    LogBuffer = LogfAllocAndBuildNewRecord(&RecSize,
                                            Time,
                                            wType,
                                            wCategory,
@@ -2298,16 +2297,16 @@ LogfReportEvent(USHORT wType,
                                            0,
                                            NULL,
                                            wNumStrings,
-                                           lpStrings,
+                                           pStrings,
                                            dwDataSize,
-                                           lpRawData);
+                                           pRawData);
 
-    Status = LogfWriteRecord(EventLogSource->LogFile, recSize, logBuffer);
+    Status = LogfWriteRecord(EventLogSource->LogFile, RecSize, LogBuffer);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ERROR WRITING TO EventLog %S (Status 0x%08lx)\n",
-                EventLogSource->LogFile->FileName, Status);
+        DPRINT1("ERROR writing to event log `%S' (Status 0x%08lx)\n",
+                EventLogSource->LogFile->LogName, Status);
     }
 
-    LogfFreeRecord(logBuffer);
+    LogfFreeRecord(LogBuffer);
 }
