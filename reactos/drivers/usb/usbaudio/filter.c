@@ -90,6 +90,155 @@ static KSPIN_DISPATCH UsbAudioPinDispatch =
     NULL
 };
 
+NTSTATUS NTAPI FilterAudioVolumeHandler(IN PIRP Irp, IN PKSIDENTIFIER  Request, IN OUT PVOID  Data);
+NTSTATUS NTAPI FilterAudioMuteHandler(IN PIRP Irp, IN PKSIDENTIFIER  Request, IN OUT PVOID  Data);
+
+DEFINE_KSPROPERTY_TABLE_AUDIO_VOLUME(FilterAudioVolumePropertySet, FilterAudioVolumeHandler);
+DEFINE_KSPROPERTY_TABLE_AUDIO_MUTE(FilterAudioMutePropertySet, FilterAudioMuteHandler);
+
+
+static KSPROPERTY_SET FilterAudioVolumePropertySetArray[] =
+{
+    {
+        &KSPROPSETID_Audio,
+        sizeof(FilterAudioVolumePropertySet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&FilterAudioVolumePropertySet,
+        0,
+        NULL
+    }
+};
+
+static KSPROPERTY_SET FilterAudioMutePropertySetArray[] =
+{
+    {
+        &KSPROPSETID_Audio,
+        sizeof(FilterAudioMutePropertySet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&FilterAudioMutePropertySet,
+        0,
+        NULL
+    }
+};
+
+NTSTATUS
+UsbAudioGetSetProperty(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN UCHAR Request,
+    IN USHORT Value,
+    IN USHORT Index,
+    IN PVOID TransferBuffer,
+    IN ULONG TransferBufferLength,
+    IN ULONG TransferFlags)
+{
+    PURB Urb;
+    NTSTATUS Status;
+
+    /* allocate urb */
+    Urb = AllocFunction(sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
+    if (!Urb)
+    {
+        /* no memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* format urb */
+    UsbBuildVendorRequest(Urb,
+        URB_FUNCTION_CLASS_INTERFACE,
+        sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
+        TransferFlags,
+        0,
+        Request,
+        Value,
+        Index,
+        TransferBuffer,
+        NULL,
+        TransferBufferLength,
+        NULL);
+
+    /* submit urb */
+    Status = SubmitUrbSync(DeviceObject, Urb);
+
+    DPRINT1("UsbAudioGetSetProperty Status %x\n", Status);
+    FreeFunction(Urb);
+    return Status;
+}
+
+PNODE_CONTEXT
+FindNodeContextWithNode(
+    IN PNODE_CONTEXT NodeContext,
+    IN ULONG NodeContextCount,
+    IN ULONG NodeId)
+{
+    ULONG Index, NodeIndex;
+    for (Index = 0; Index < NodeContextCount; Index++)
+    {
+        for (NodeIndex = 0; NodeIndex < NodeContext[Index].NodeCount; NodeIndex++)
+        {
+            if (NodeContext[Index].Nodes[NodeIndex] == NodeId)
+            {
+                return &NodeContext[Index];
+            }
+        }
+    }
+    return NULL;
+}
+
+
+NTSTATUS
+NTAPI
+FilterAudioMuteHandler(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER  Request,
+    IN OUT PVOID  Data)
+{
+    PKSNODEPROPERTY_AUDIO_CHANNEL Property;
+    PKSFILTER Filter;
+    PFILTER_CONTEXT FilterContext;
+    PNODE_CONTEXT NodeContext;
+    PUSB_AUDIO_CONTROL_FEATURE_UNIT_DESCRIPTOR FeatureUnitDescriptor;
+    NTSTATUS Status = STATUS_INVALID_PARAMETER;
+
+    /* get filter from irp */
+    Filter = KsGetFilterFromIrp(Irp);
+
+    if (Filter)
+    {
+        /* get property */
+        Property = (PKSNODEPROPERTY_AUDIO_CHANNEL)Request;
+
+        /* get filter context */
+        FilterContext = (PFILTER_CONTEXT)Filter->Context;
+
+        /* search for node context */
+        NodeContext = FindNodeContextWithNode(FilterContext->DeviceExtension->NodeContext, FilterContext->DeviceExtension->NodeContextCount, Property->NodeProperty.NodeId);
+        if (NodeContext)
+        {
+            FeatureUnitDescriptor = (PUSB_AUDIO_CONTROL_FEATURE_UNIT_DESCRIPTOR)NodeContext->Descriptor;
+            if (Property->NodeProperty.Property.Flags & KSPROPERTY_TYPE_GET)
+            {
+                Status = UsbAudioGetSetProperty(FilterContext->DeviceExtension->LowerDevice, 0x81, 0x100, FeatureUnitDescriptor->bUnitID << 8, Data, 1, USBD_TRANSFER_DIRECTION_IN);
+                Irp->IoStatus.Information = sizeof(BOOL);
+            }
+            else
+            {
+                Status = UsbAudioGetSetProperty(FilterContext->DeviceExtension->LowerDevice, 0x01, 0x100, FeatureUnitDescriptor->bUnitID << 8, Data, 1, USBD_TRANSFER_DIRECTION_OUT);
+            }
+        }
+    }
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+FilterAudioVolumeHandler(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER  Request,
+    IN OUT PVOID  Data)
+{
+    UNIMPLEMENTED
+    return STATUS_SUCCESS;
+}
+
+
 ULONG
 CountTopologyComponents(
     IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
@@ -200,10 +349,11 @@ BuildUSBAudioFilterTopology(
     PUSB_AUDIO_CONTROL_INPUT_TERMINAL_DESCRIPTOR InputTerminalDescriptor;
     PUSB_AUDIO_CONTROL_FEATURE_UNIT_DESCRIPTOR FeatureUnitDescriptor;
     PUSB_AUDIO_CONTROL_MIXER_UNIT_DESCRIPTOR MixerUnitDescriptor;
-	PUSB_AUDIO_CONTROL_OUTPUT_TERMINAL_DESCRIPTOR OutputTerminalDescriptor;
+    PUSB_AUDIO_CONTROL_OUTPUT_TERMINAL_DESCRIPTOR OutputTerminalDescriptor;
     PKSNODE_DESCRIPTOR NodeDescriptors;
     PNODE_CONTEXT NodeContext, PreviousNodeContext;
     PKSTOPOLOGY_CONNECTION Connections;
+    PKSAUTOMATION_TABLE AutomationTable;
 
     /* get device extension */
     DeviceExtension = Device->Context;
@@ -220,12 +370,13 @@ BuildUSBAudioFilterTopology(
     }
     FilterDescriptor->NodeDescriptorSize = sizeof(KSNODE_DESCRIPTOR);
 
-    NodeContext = AllocFunction(sizeof(NODE_CONTEXT) * ControlDescriptorCount);
+    DeviceExtension->NodeContext = NodeContext = AllocFunction(sizeof(NODE_CONTEXT) * ControlDescriptorCount);
     if (!NodeContext)
     {
         /* no memory */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+    DeviceExtension->NodeContextCount = ControlDescriptorCount;
     DescriptorCount = 0;
 
     /* first enumerate all topology nodes */
@@ -336,7 +487,13 @@ BuildUSBAudioFilterTopology(
                         {
                             NodeDescriptors[FilterDescriptor->NodeDescriptorsCount].Type = &KSNODETYPE_MUTE;
                             NodeDescriptors[FilterDescriptor->NodeDescriptorsCount].Name = &KSNODETYPE_MUTE;
-                            NodeDescriptors[FilterDescriptor->NodeDescriptorsCount].AutomationTable = AllocFunction(sizeof(KSAUTOMATION_TABLE));
+                            NodeDescriptors[FilterDescriptor->NodeDescriptorsCount].AutomationTable = AutomationTable = AllocFunction(sizeof(KSAUTOMATION_TABLE));
+                            if (AutomationTable)
+                            {
+                                AutomationTable->PropertySets = FilterAudioMutePropertySetArray;
+                                AutomationTable->PropertySetsCount = 1;
+                                AutomationTable->PropertyItemSize = sizeof(KSPROPERTY_ITEM);
+                            }
 
                             /* insert into node context*/
                             NodeContext[DescriptorCount].Nodes[NodeContext[DescriptorCount].NodeCount] = FilterDescriptor->NodeDescriptorsCount;
@@ -348,7 +505,13 @@ BuildUSBAudioFilterTopology(
                         {
                             NodeDescriptors[FilterDescriptor->NodeDescriptorsCount].Type = &KSNODETYPE_VOLUME;
                             NodeDescriptors[FilterDescriptor->NodeDescriptorsCount].Name = &KSNODETYPE_VOLUME;
-                            NodeDescriptors[FilterDescriptor->NodeDescriptorsCount].AutomationTable = AllocFunction(sizeof(KSAUTOMATION_TABLE));
+                            NodeDescriptors[FilterDescriptor->NodeDescriptorsCount].AutomationTable = AutomationTable = AllocFunction(sizeof(KSAUTOMATION_TABLE));
+                            if (AutomationTable)
+                            {
+                                AutomationTable->PropertySets = FilterAudioVolumePropertySetArray;
+                                AutomationTable->PropertySetsCount = 1;
+                                AutomationTable->PropertyItemSize = sizeof(KSPROPERTY_ITEM);
+                            }
 
                             /* insert into node context*/
                             NodeContext[DescriptorCount].Nodes[NodeContext[DescriptorCount].NodeCount] = FilterDescriptor->NodeDescriptorsCount;

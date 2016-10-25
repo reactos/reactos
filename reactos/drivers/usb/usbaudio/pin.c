@@ -91,58 +91,6 @@ UsbAudioAllocCaptureUrbIso(
 }
 
 NTSTATUS
-UsbAudioSetMuteOff(
-    IN PKSPIN Pin)
-{
-    PURB Urb;
-    PVOID SampleRateBuffer;
-    PPIN_CONTEXT PinContext;
-    NTSTATUS Status;
-
-    /* allocate sample rate buffer */
-    SampleRateBuffer = AllocFunction(sizeof(ULONG));
-    if (!SampleRateBuffer)
-    {
-        /* no memory */
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* allocate urb */
-    Urb = AllocFunction(sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-    if (!Urb)
-    {
-        /* no memory */
-        FreeFunction(SampleRateBuffer);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* FIXME: determine controls and format urb */
-    UsbBuildVendorRequest(Urb,
-        URB_FUNCTION_CLASS_INTERFACE,
-        sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
-        USBD_TRANSFER_DIRECTION_OUT,
-        0,
-        0x01,
-        0x100,
-        0x300,
-        SampleRateBuffer,
-        NULL,
-        1,
-        NULL);
-
-    /* get pin context */
-    PinContext = Pin->Context;
-
-    /* submit urb */
-    Status = SubmitUrbSync(PinContext->LowerDevice, Urb);
-
-    DPRINT1("UsbAudioSetMuteOff Pin %p Status %x\n", Pin, Status);
-    FreeFunction(Urb);
-    FreeFunction(SampleRateBuffer);
-    return Status;
-}
-
-NTSTATUS
 UsbAudioSetVolume(
     IN PKSPIN Pin)
 {
@@ -696,7 +644,6 @@ USBAudioPinCreate(
     }
 
     /* FIXME move to build filter topology*/
-    UsbAudioSetMuteOff(Pin);
     UsbAudioSetVolume(Pin);
 
     /* select streaming interface */

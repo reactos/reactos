@@ -35,6 +35,35 @@
 #define USB_AUDIO_INPUT_TERMINAL (0x02)
 #define USB_AUDIO_OUTPUT_TERMINAL (0x03)
 
+#define DEFINE_KSPROPERTY_ITEM_AUDIO_VOLUME(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_AUDIO_VOLUMELEVEL,\
+        (Handler),\
+        sizeof(KSNODEPROPERTY_AUDIO_CHANNEL),\
+        sizeof(LONG),\
+        (Handler), NULL, 0, NULL, NULL, 0)
+
+
+#define DEFINE_KSPROPERTY_TABLE_AUDIO_VOLUME(TopologySet, Handler)\
+DEFINE_KSPROPERTY_TABLE(TopologySet) {\
+    DEFINE_KSPROPERTY_ITEM_AUDIO_VOLUME(Handler)\
+}
+
+#define DEFINE_KSPROPERTY_ITEM_AUDIO_MUTE(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_AUDIO_MUTE,\
+        (Handler),\
+        sizeof(KSNODEPROPERTY_AUDIO_CHANNEL),\
+        sizeof(BOOL),\
+        (Handler), NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_TABLE_AUDIO_MUTE(TopologySet, Handler)\
+DEFINE_KSPROPERTY_TABLE(TopologySet) {\
+    DEFINE_KSPROPERTY_ITEM_AUDIO_MUTE(Handler)\
+}
+
+
+
 #include <pshpack1.h>
 
 typedef struct
@@ -128,6 +157,13 @@ typedef struct
 
 #include <poppack.h>
 
+typedef struct
+{
+    PUSB_COMMON_DESCRIPTOR Descriptor;
+    ULONG NodeCount;
+    ULONG Nodes[20];
+}NODE_CONTEXT, *PNODE_CONTEXT;
+
 typedef struct __DEVICE_EXTENSION__
 {
     PDEVICE_OBJECT LowerDevice;                                  /* lower device*/
@@ -135,7 +171,8 @@ typedef struct __DEVICE_EXTENSION__
     PUSB_DEVICE_DESCRIPTOR DeviceDescriptor;                     /* usb device descriptor */
     PUSBD_INTERFACE_INFORMATION InterfaceInfo;                   /* interface information */
     USBD_CONFIGURATION_HANDLE ConfigurationHandle;               /* configuration handle */
-
+    PNODE_CONTEXT NodeContext;                                   /* node context */
+    ULONG NodeContextCount;                                      /* node context count */
 }DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 typedef struct
@@ -160,14 +197,6 @@ typedef struct
     WORK_QUEUE_ITEM  StarvationWorkItem;                            /* work item */
     PKSWORKER        StarvationWorker;                              /* capture worker */
 }PIN_CONTEXT, *PPIN_CONTEXT;
-
-typedef struct
-{
-    PUSB_COMMON_DESCRIPTOR Descriptor;
-    ULONG NodeCount;
-    ULONG Nodes[20];
-}NODE_CONTEXT, *PNODE_CONTEXT;
-
 
 /* filter.c */
 
