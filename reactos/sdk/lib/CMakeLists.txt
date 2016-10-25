@@ -22,6 +22,7 @@ add_subdirectory(delayimp)
 add_subdirectory(drivers)
 add_subdirectory(dxguid)
 add_subdirectory(epsapi)
+add_subdirectory(evtlib)
 add_subdirectory(fast486)
 add_subdirectory(fslib)
 
