@@ -541,49 +541,6 @@ bye_bye:
     return RetCode;
 }
 
-VOID PRINT_HEADER(PEVENTLOGHEADER header)
-{
-    ULONG Flags = header->Flags;
-
-    DPRINT("HeaderSize = %lu\n", header->HeaderSize);
-    DPRINT("Signature = 0x%x\n", header->Signature);
-    DPRINT("MajorVersion = %lu\n", header->MajorVersion);
-    DPRINT("MinorVersion = %lu\n", header->MinorVersion);
-    DPRINT("StartOffset = %lu\n", header->StartOffset);
-    DPRINT("EndOffset = 0x%x\n", header->EndOffset);
-    DPRINT("CurrentRecordNumber = %lu\n", header->CurrentRecordNumber);
-    DPRINT("OldestRecordNumber = %lu\n", header->OldestRecordNumber);
-    DPRINT("MaxSize = 0x%x\n", header->MaxSize);
-    DPRINT("Retention = 0x%x\n", header->Retention);
-    DPRINT("EndHeaderSize = %lu\n", header->EndHeaderSize);
-    DPRINT("Flags: ");
-    if (Flags & ELF_LOGFILE_HEADER_DIRTY)
-    {
-        DPRINT("ELF_LOGFILE_HEADER_DIRTY");
-        Flags &= ~ELF_LOGFILE_HEADER_DIRTY;
-    }
-    if (Flags) DPRINT(" | ");
-    if (Flags & ELF_LOGFILE_HEADER_WRAP)
-    {
-        DPRINT("ELF_LOGFILE_HEADER_WRAP");
-        Flags &= ~ELF_LOGFILE_HEADER_WRAP;
-    }
-    if (Flags) DPRINT(" | ");
-    if (Flags & ELF_LOGFILE_LOGFULL_WRITTEN)
-    {
-        DPRINT("ELF_LOGFILE_LOGFULL_WRITTEN");
-        Flags &= ~ELF_LOGFILE_LOGFULL_WRITTEN;
-    }
-    if (Flags) DPRINT(" | ");
-    if (Flags & ELF_LOGFILE_ARCHIVE_SET)
-    {
-        DPRINT("ELF_LOGFILE_ARCHIVE_SET");
-        Flags &= ~ELF_LOGFILE_ARCHIVE_SET;
-    }
-    if (Flags) DPRINT(" | 0x%x", Flags);
-    DPRINT("\n");
-}
-
 VOID PRINT_RECORD(PEVENTLOGRECORD pRec)
 {
     UINT i;

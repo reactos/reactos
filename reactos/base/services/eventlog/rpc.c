@@ -16,27 +16,32 @@
 #include <debug.h>
 
 static LIST_ENTRY LogHandleListHead;
+static CRITICAL_SECTION LogHandleListCs;
 
 /* FUNCTIONS ****************************************************************/
+
+static NTSTATUS
+ElfDeleteEventLogHandle(PIELF_HANDLE LogHandle);
 
 DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter)
 {
     RPC_STATUS Status;
 
+    InitializeCriticalSection(&LogHandleListCs);
     InitializeListHead(&LogHandleListHead);
 
     Status = RpcServerUseProtseqEpW(L"ncacn_np", 20, L"\\pipe\\EventLog", NULL);
     if (Status != RPC_S_OK)
     {
         DPRINT("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
-        return 0;
+        goto Quit;
     }
 
     Status = RpcServerRegisterIf(eventlog_v0_0_s_ifspec, NULL, NULL);
     if (Status != RPC_S_OK)
     {
         DPRINT("RpcServerRegisterIf() failed (Status %lx)\n", Status);
-        return 0;
+        goto Quit;
     }
 
     Status = RpcServerListen(1, RPC_C_LISTEN_MAX_CALLS_DEFAULT, FALSE);
@@ -44,6 +49,17 @@ DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter)
     {
         DPRINT("RpcServerListen() failed (Status %lx)\n", Status);
     }
+
+    EnterCriticalSection(&LogHandleListCs);
+    while (!IsListEmpty(&LogHandleListHead))
+    {
+        IELF_HANDLE LogHandle = (IELF_HANDLE)CONTAINING_RECORD(LogHandleListHead.Flink, LOGHANDLE, LogHandleListEntry);
+        ElfDeleteEventLogHandle(&LogHandle);
+    }
+    LeaveCriticalSection(&LogHandleListCs);
+
+Quit:
+    DeleteCriticalSection(&LogHandleListCs);
 
     return 0;
 }
@@ -143,7 +159,9 @@ Done:
     if (NT_SUCCESS(Status))
     {
         /* Append log handle */
+        EnterCriticalSection(&LogHandleListCs);
         InsertTailList(&LogHandleListHead, &pLogHandle->LogHandleListEntry);
+        LeaveCriticalSection(&LogHandleListCs);
         *LogHandle = pLogHandle;
     }
     else
@@ -199,7 +217,9 @@ Done:
     if (NT_SUCCESS(Status))
     {
         /* Append log handle */
+        EnterCriticalSection(&LogHandleListCs);
         InsertTailList(&LogHandleListHead, &pLogHandle->LogHandleListEntry);
+        LeaveCriticalSection(&LogHandleListCs);
         *LogHandle = pLogHandle;
     }
     else
@@ -215,21 +235,28 @@ static PLOGHANDLE
 ElfGetLogHandleEntryByHandle(IELF_HANDLE EventLogHandle)
 {
     PLIST_ENTRY CurrentEntry;
-    PLOGHANDLE pLogHandle;
+    PLOGHANDLE Handle, pLogHandle = NULL;
+
+    EnterCriticalSection(&LogHandleListCs);
 
     CurrentEntry = LogHandleListHead.Flink;
     while (CurrentEntry != &LogHandleListHead)
     {
-        pLogHandle = CONTAINING_RECORD(CurrentEntry,
-                                       LOGHANDLE,
-                                       LogHandleListEntry);
+        Handle = CONTAINING_RECORD(CurrentEntry,
+                                   LOGHANDLE,
+                                   LogHandleListEntry);
         CurrentEntry = CurrentEntry->Flink;
 
-        if (pLogHandle == EventLogHandle)
-            return pLogHandle;
+        if (Handle == EventLogHandle)
+        {
+            pLogHandle = Handle;
+            break;
+        }
     }
 
-    return NULL;
+    LeaveCriticalSection(&LogHandleListCs);
+
+    return pLogHandle;
 }
 
 
@@ -242,7 +269,10 @@ ElfDeleteEventLogHandle(PIELF_HANDLE LogHandle)
     if (!pLogHandle)
         return STATUS_INVALID_HANDLE;
 
+    EnterCriticalSection(&LogHandleListCs);
     RemoveEntryList(&pLogHandle->LogHandleListEntry);
+    LeaveCriticalSection(&LogHandleListCs);
+
     LogfClose(pLogHandle->LogFile, FALSE);
 
     HeapFree(GetProcessHeap(), 0, pLogHandle);
@@ -321,6 +351,7 @@ ElfrNumberOfRecords(
 {
     PLOGHANDLE pLogHandle;
     PLOGFILE pLogFile;
+    ULONG OldestRecordNumber, CurrentRecordNumber;
 
     DPRINT("ElfrNumberOfRecords()\n");
 
@@ -333,11 +364,19 @@ ElfrNumberOfRecords(
 
     pLogFile = pLogHandle->LogFile;
 
-    DPRINT("Oldest: %lu  Current: %lu\n",
-           pLogFile->Header.OldestRecordNumber,
-           pLogFile->Header.CurrentRecordNumber);
+    /* Lock the log file shared */
+    RtlAcquireResourceShared(&pLogFile->Lock, TRUE);
 
-    if (pLogFile->Header.OldestRecordNumber == 0)
+    OldestRecordNumber  = ElfGetOldestRecord(&pLogFile->LogFile);
+    CurrentRecordNumber = ElfGetCurrentRecord(&pLogFile->LogFile);
+
+    /* Unlock the log file */
+    RtlReleaseResource(&pLogFile->Lock);
+
+    DPRINT("Oldest: %lu  Current: %lu\n",
+           OldestRecordNumber, CurrentRecordNumber);
+
+    if (OldestRecordNumber == 0)
     {
         /* OldestRecordNumber == 0 when the log is empty */
         *NumberOfRecords = 0;
@@ -345,8 +384,7 @@ ElfrNumberOfRecords(
     else
     {
         /* The log contains events */
-        *NumberOfRecords = pLogFile->Header.CurrentRecordNumber -
-                           pLogFile->Header.OldestRecordNumber;
+        *NumberOfRecords = CurrentRecordNumber - OldestRecordNumber;
     }
 
     return STATUS_SUCCESS;
@@ -360,6 +398,7 @@ ElfrOldestRecord(
     PULONG OldestRecordNumber)
 {
     PLOGHANDLE pLogHandle;
+    PLOGFILE pLogFile;
 
     pLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!pLogHandle)
@@ -368,7 +407,15 @@ ElfrOldestRecord(
     if (!OldestRecordNumber)
         return STATUS_INVALID_PARAMETER;
 
-    *OldestRecordNumber = pLogHandle->LogFile->Header.OldestRecordNumber;
+    pLogFile = pLogHandle->LogFile;
+
+    /* Lock the log file shared */
+    RtlAcquireResourceShared(&pLogFile->Lock, TRUE);
+
+    *OldestRecordNumber = ElfGetOldestRecord(&pLogFile->LogFile);
+
+    /* Unlock the log file */
+    RtlReleaseResource(&pLogFile->Lock);
 
     return STATUS_SUCCESS;
 }
@@ -624,7 +671,7 @@ ElfrIntReportEventW(
                                            DataSize,
                                            Data);
 
-    Status = LogfWriteRecord(pLogHandle->LogFile, RecSize, LogBuffer);
+    Status = LogfWriteRecord(pLogHandle->LogFile, LogBuffer, RecSize);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ERROR writing to event log `%S' (Status 0x%08lx)\n",
@@ -1068,10 +1115,16 @@ ElfrGetLogInformation(
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PLOGHANDLE pLogHandle;
+    PLOGFILE pLogFile;
 
     pLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!pLogHandle)
         return STATUS_INVALID_HANDLE;
+
+    pLogFile = pLogHandle->LogFile;
+
+    /* Lock the log file shared */
+    RtlAcquireResourceShared(&pLogFile->Lock, TRUE);
 
     switch (InfoLevel)
     {
@@ -1086,12 +1139,7 @@ ElfrGetLogInformation(
                 break;
             }
 
-            /*
-             * FIXME. To check whether an event log is "full" one needs
-             * to compare its current size with respect to the maximum
-             * size threshold "MaxSize" contained in its header.
-             */
-            efi->dwFull = 0;
+            efi->dwFull = !!(ElfGetFlags(&pLogFile->LogFile) & ELF_LOGFILE_LOGFULL_WRITTEN);
             break;
         }
 
@@ -1099,6 +1147,9 @@ ElfrGetLogInformation(
             Status = STATUS_INVALID_LEVEL;
             break;
     }
+
+    /* Unlock the log file */
+    RtlReleaseResource(&pLogFile->Lock);
 
     return Status;
 }
@@ -1109,14 +1160,25 @@ NTSTATUS
 ElfrFlushEL(
     IELF_HANDLE LogHandle)
 {
+    NTSTATUS Status;
     PLOGHANDLE pLogHandle;
+    PLOGFILE pLogFile;
 
     pLogHandle = ElfGetLogHandleEntryByHandle(LogHandle);
     if (!pLogHandle)
         return STATUS_INVALID_HANDLE;
 
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    pLogFile = pLogHandle->LogFile;
+
+    /* Lock the log file exclusive */
+    RtlAcquireResourceExclusive(&pLogFile->Lock, TRUE);
+
+    Status = ElfFlushFile(&pLogFile->LogFile);
+
+    /* Unlock the log file */
+    RtlReleaseResource(&pLogFile->Lock);
+
+    return Status;
 }
 
 

@@ -23,82 +23,29 @@
 #define ROUND_DOWN(n, align) (((ULONG)n) & ~((align) - 1l))
 #define ROUND_UP(n, align) ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
+#include <evtlib.h>
+
 #include <eventlogrpc_s.h>
 #include <strsafe.h>
 
+// FIXME: For that we may directly include NTOS header??
 typedef struct _IO_ERROR_LPC
 {
     PORT_MESSAGE Header;
     IO_ERROR_LOG_MESSAGE Message;
 } IO_ERROR_LPC, *PIO_ERROR_LPC;
 
+// C_ASSERT(sizeof(IO_ERROR_LPC) == 0x100);
 
-/*
- *  Our file format will be compatible with NT's
- */
-#define MAJORVER 1
-#define MINORVER 1
-#define LOGFILE_SIGNATURE 0x654c664c
-
-/*
- *  Flags used in logfile header
- */
-#define ELF_LOGFILE_HEADER_DIRTY    1
-#define ELF_LOGFILE_HEADER_WRAP     2
-#define ELF_LOGFILE_LOGFULL_WRITTEN 4
-#define ELF_LOGFILE_ARCHIVE_SET     8
-
-/* FIXME: MSDN reads that the following two structs are in winnt.h. Are they? */
-typedef struct _EVENTLOGHEADER
-{
-    ULONG HeaderSize;
-    ULONG Signature;
-    ULONG MajorVersion;
-    ULONG MinorVersion;
-    ULONG StartOffset;
-    ULONG EndOffset;
-    ULONG CurrentRecordNumber;
-    ULONG OldestRecordNumber;
-    ULONG MaxSize;
-    ULONG Flags;
-    ULONG Retention;
-    ULONG EndHeaderSize;
-} EVENTLOGHEADER, *PEVENTLOGHEADER;
-
-typedef struct _EVENTLOGEOF
-{
-    ULONG RecordSizeBeginning;
-    ULONG Ones;
-    ULONG Twos;
-    ULONG Threes;
-    ULONG Fours;
-    ULONG BeginRecord;
-    ULONG EndRecord;
-    ULONG CurrentRecordNumber;
-    ULONG OldestRecordNumber;
-    ULONG RecordSizeEnd;
-} EVENTLOGEOF, *PEVENTLOGEOF;
-
-#define EVENTLOGEOF_SIZE_FIXED  (5 * sizeof(ULONG))
-C_ASSERT(EVENTLOGEOF_SIZE_FIXED == FIELD_OFFSET(EVENTLOGEOF, BeginRecord));
-
-typedef struct _EVENT_OFFSET_INFO
-{
-    ULONG EventNumber;
-    ULONG EventOffset;
-} EVENT_OFFSET_INFO, *PEVENT_OFFSET_INFO;
+/* Defined in evtlib.h */
+// #define LOGFILE_SIGNATURE   0x654c664c  // "LfLe"
 
 typedef struct _LOGFILE
 {
-    HANDLE hFile;
-    EVENTLOGHEADER Header;
-    ULONG CurrentSize;  /* Equivalent to the file size, is <= MaxSize and can be extended to MaxSize if needed */
+    EVTLOGFILE LogFile;
+    HANDLE FileHandle;
     WCHAR *LogName;
-    WCHAR *FileName;
     RTL_RESOURCE Lock;
-    PEVENT_OFFSET_INFO OffsetInfo;
-    ULONG OffsetInfoSize;
-    ULONG OffsetInfoNext;
     BOOL Permanent;
     LIST_ENTRY ListEntry;
 } LOGFILE, *PLOGFILE;
@@ -128,7 +75,6 @@ typedef struct _LOGHANDLE
 /* eventlog.c */
 extern PEVENTSOURCE EventLogSource;
 
-VOID PRINT_HEADER(PEVENTLOGHEADER header);
 VOID PRINT_RECORD(PEVENTLOGRECORD pRec);
 
 
@@ -150,7 +96,28 @@ PLOGFILE LogfListItemByIndex(DWORD Index);
 PLOGFILE LogfListItemByName(LPCWSTR Name);
 // DWORD LogfListItemIndexByName(WCHAR * Name);
 
+NTSTATUS
+LogfCreate(PLOGFILE* LogFile,
+           PCWSTR    LogName,
+           PUNICODE_STRING FileName,
+           ULONG     MaxSize,
+           ULONG     Retention,
+           BOOLEAN   Permanent,
+           BOOLEAN   Backup);
 
+VOID
+LogfClose(PLOGFILE LogFile,
+          BOOLEAN  ForceClose);
+
+VOID LogfCloseAll(VOID);
+
+NTSTATUS
+LogfClearFile(PLOGFILE LogFile,
+              PUNICODE_STRING BackupFileName);
+
+NTSTATUS
+LogfBackupFile(PLOGFILE LogFile,
+               PUNICODE_STRING BackupFileName);
 
 NTSTATUS
 LogfReadEvents(PLOGFILE LogFile,
@@ -164,31 +131,8 @@ LogfReadEvents(PLOGFILE LogFile,
 
 NTSTATUS
 LogfWriteRecord(PLOGFILE LogFile,
-                ULONG BufSize, // SIZE_T
-                PEVENTLOGRECORD Record);
-
-NTSTATUS
-LogfClearFile(PLOGFILE LogFile,
-              PUNICODE_STRING BackupFileName);
-
-NTSTATUS
-LogfBackupFile(PLOGFILE LogFile,
-               PUNICODE_STRING BackupFileName);
-
-NTSTATUS
-LogfCreate(PLOGFILE* LogFile,
-           PCWSTR    LogName,
-           PUNICODE_STRING FileName,
-           ULONG     ulMaxSize,
-           ULONG     ulRetention,
-           BOOLEAN   Permanent,
-           BOOLEAN   Backup);
-
-VOID
-LogfClose(PLOGFILE LogFile,
-          BOOLEAN  ForceClose);
-
-VOID LogfCloseAll(VOID);
+                PEVENTLOGRECORD Record,
+                SIZE_T BufSize);
 
 PEVENTLOGRECORD
 LogfAllocAndBuildNewRecord(PSIZE_T pRecSize,

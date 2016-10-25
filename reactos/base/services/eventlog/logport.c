@@ -187,11 +187,11 @@ NTSTATUS ProcessPortMessage(VOID)
 
             if (!onLiveCD && SystemLog)
             {
-                Status = LogfWriteRecord(SystemLog, RecSize, pRec);
+                Status = LogfWriteRecord(SystemLog, pRec, RecSize);
                 if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("ERROR writing to event log `%S' (Status 0x%08lx)\n",
-                            SystemLog->FileName, Status);
+                            SystemLog->LogName, Status);
                 }
             }
 
