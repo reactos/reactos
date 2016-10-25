@@ -434,7 +434,9 @@ int GetSocketInformation(
 	ULONG				AfdInformationClass,
     PBOOLEAN            Boolean      OPTIONAL,
 	PULONG              Ulong        OPTIONAL,
-	PLARGE_INTEGER		LargeInteger OPTIONAL
+	PLARGE_INTEGER		LargeInteger OPTIONAL,
+    LPWSAOVERLAPPED     Overlapped   OPTIONAL,
+    LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine OPTIONAL
 );
 
 int SetSocketInformation(
@@ -442,7 +444,9 @@ int SetSocketInformation(
 	ULONG				AfdInformationClass,
     PBOOLEAN            Boolean      OPTIONAL,
 	PULONG				Ulong		 OPTIONAL,
-	PLARGE_INTEGER		LargeInteger OPTIONAL
+	PLARGE_INTEGER		LargeInteger OPTIONAL,
+    LPWSAOVERLAPPED     Overlapped   OPTIONAL,
+    LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine OPTIONAL
 );
 
 int CreateContext(

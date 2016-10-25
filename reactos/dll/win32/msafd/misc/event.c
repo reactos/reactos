@@ -46,7 +46,7 @@ WSPEventSelect(
 
 	/* Set Socket to Non-Blocking */
 	BlockMode = TRUE;
-	SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL, NULL);
+	SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL, NULL, NULL, NULL);
 	Socket->SharedData->NonBlocking = TRUE;
 
 	/* Deactivate Async Select if there is one */

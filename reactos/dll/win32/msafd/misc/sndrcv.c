@@ -45,7 +45,7 @@ WSPAsyncSelect(IN  SOCKET Handle,
 
     /* Change the Socket to Non Blocking */
     BlockMode = TRUE;
-    SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL, NULL);
+    SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &BlockMode, NULL, NULL, NULL, NULL);
     Socket->SharedData->NonBlocking = TRUE;
 
     /* Deactive WSPEventSelect */
@@ -104,9 +104,8 @@ WSPGetOverlappedResult(
     OUT LPDWORD lpdwFlags,
     OUT LPINT lpErrno)
 {
-    PIO_STATUS_BLOCK        IOSB;
-    NTSTATUS                Status;
     PSOCKET_INFORMATION     Socket;
+    BOOL                    Ret;
 
     TRACE("Called (%x)\n", Handle);
 
@@ -124,35 +123,11 @@ WSPGetOverlappedResult(
             *lpErrno = WSAEFAULT;
         return FALSE;
     }
-    IOSB = (PIO_STATUS_BLOCK)&lpOverlapped->Internal;
-    if (!IOSB)
-    {
-        if (lpErrno)
-            *lpErrno = WSAEFAULT;
-        return FALSE;
-    }
-    Status = IOSB->Status;
+    Ret = GetOverlappedResult((HANDLE)Handle, lpOverlapped, lpdwBytes, fWait);
 
-    /* Wait for completition of overlapped */
-    if (Status == STATUS_PENDING)
-    {
-        /* It's up to the protocol to time out recv.  We must wait
-        * until the protocol decides it's had enough.
-        */
-        if (fWait)
-        {
-            WaitForSingleObject(lpOverlapped->hEvent, INFINITE);
-            Status = IOSB->Status;
-        }
-    }
-
-    TRACE("Status %x Information %d\n", Status, IOSB->Information);
-
-    if (Status != STATUS_PENDING)
+    if (Ret)
     {
         *lpdwFlags = 0;
-
-        *lpdwBytes = IOSB->Information;
 
         /* Re-enable Async Event */
         SockReenableAsyncSelectEvent(Socket, FD_OOB);
@@ -160,7 +135,7 @@ WSPGetOverlappedResult(
         SockReenableAsyncSelectEvent(Socket, FD_READ);
     }
 
-    return Status == STATUS_SUCCESS;
+    return Ret;
 }
 
 VOID

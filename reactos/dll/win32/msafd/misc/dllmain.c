@@ -352,7 +352,13 @@ WSPSocket(int AddressFamily,
     /* Save Group Info */
     if (g != 0)
     {
-        GetSocketInformation(Socket, AFD_INFO_GROUP_ID_TYPE, NULL, NULL, &GroupData);
+        GetSocketInformation(Socket,
+                             AFD_INFO_GROUP_ID_TYPE,
+                             NULL,
+                             NULL,
+                             &GroupData,
+                             NULL,
+                             NULL);
         Socket->SharedData->GroupID = GroupData.u.LowPart;
         Socket->SharedData->GroupType = GroupData.u.HighPart;
     }
@@ -362,12 +368,16 @@ WSPSocket(int AddressFamily,
                           AFD_INFO_SEND_WINDOW_SIZE,
                           NULL,
                           &Socket->SharedData->SizeOfSendBuffer,
+                          NULL,
+                          NULL,
                           NULL);
 
     GetSocketInformation (Socket,
                           AFD_INFO_RECEIVE_WINDOW_SIZE,
                           NULL,
                           &Socket->SharedData->SizeOfRecvBuffer,
+                          NULL,
+                          NULL,
                           NULL);
 ok:
 
@@ -614,7 +624,7 @@ WSPCloseSocket(IN SOCKET Handle,
     if (!Socket)
     {
        NtClose(SockEvent);
-       *lpErrno = WSAENOTSOCK;
+       if (lpErrno) *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
     }
 
@@ -640,7 +650,7 @@ WSPCloseSocket(IN SOCKET Handle,
     {
         WARN("Socket is closing.\n");
         NtClose(SockEvent);
-        *lpErrno = WSAENOTSOCK;
+        if (lpErrno) *lpErrno = WSAENOTSOCK;
         return SOCKET_ERROR;
     }
     /* Set the state to close */
@@ -671,6 +681,8 @@ WSPCloseSocket(IN SOCKET Handle,
                                      AFD_INFO_SENDS_IN_PROGRESS,
                                      NULL,
                                      &SendsInProgress,
+                                     NULL,
+                                     NULL,
                                      NULL))
             {
                 /* Bail out if anything but NO_ERROR */
@@ -696,7 +708,7 @@ WSPCloseSocket(IN SOCKET Handle,
                 WARN("Would block!\n");
                 NtClose(SockEvent);
                 Socket->SharedData->State = OldState;
-                *lpErrno = WSAEWOULDBLOCK;
+                if (lpErrno) *lpErrno = WSAEWOULDBLOCK;
                 return SOCKET_ERROR;
             }
 
@@ -2182,132 +2194,154 @@ WSPIoctl(IN  SOCKET Handle,
          OUT LPINT lpErrno)
 {
     PSOCKET_INFORMATION Socket = NULL;
-	BOOLEAN NeedsCompletion;
+    BOOLEAN NeedsCompletion = lpOverlapped != NULL;
     BOOLEAN NonBlocking;
-
-    if (!lpcbBytesReturned)
-    {
-       *lpErrno = WSAEFAULT;
-       return SOCKET_ERROR;
-    }
+    INT Errno = NO_ERROR, Ret = SOCKET_ERROR;
+    DWORD cbRet = 0;
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
     if (!Socket)
     {
-       *lpErrno = WSAENOTSOCK;
-       return SOCKET_ERROR;
+        if(lpErrno)
+            *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
     }
 
-	*lpcbBytesReturned = 0;
+    if (!lpcbBytesReturned && !lpOverlapped)
+    {
+        if(lpErrno)
+            *lpErrno = WSAEFAULT;
+        return SOCKET_ERROR;
+    }
 
     switch( dwIoControlCode )
     {
         case FIONBIO:
             if( cbInBuffer < sizeof(INT) || IS_INTRESOURCE(lpvInBuffer) )
             {
-                *lpErrno = WSAEFAULT;
-                return SOCKET_ERROR;
+                Errno = WSAEFAULT;
+                break;
             }
             NonBlocking = *((PULONG)lpvInBuffer) ? TRUE : FALSE;
             Socket->SharedData->NonBlocking = NonBlocking ? 1 : 0;
-            *lpErrno = SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &NonBlocking, NULL, NULL);
-			if (*lpErrno != NO_ERROR)
-				return SOCKET_ERROR;
-			else
-				return NO_ERROR;
+            NeedsCompletion = FALSE;
+            Errno = SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &NonBlocking, NULL, NULL, lpOverlapped, lpCompletionRoutine);
+            if (Errno == NO_ERROR)
+                Ret = NO_ERROR;
+            break;
         case FIONREAD:
             if (IS_INTRESOURCE(lpvOutBuffer) || cbOutBuffer == 0)
             {
-                *lpcbBytesReturned = sizeof(ULONG);
-                *lpErrno = WSAEFAULT;
-                return SOCKET_ERROR;
+                cbRet = sizeof(ULONG);
+                Errno = WSAEFAULT;
+                break;
             }
             if (cbOutBuffer < sizeof(ULONG))
             {
-                *lpErrno = WSAEINVAL;
-                return SOCKET_ERROR;
+                Errno = WSAEINVAL;
+                break;
             }
-            *lpErrno = GetSocketInformation(Socket, AFD_INFO_RECEIVE_CONTENT_SIZE, NULL, (PULONG)lpvOutBuffer, NULL);
-			if (*lpErrno != NO_ERROR)
-				return SOCKET_ERROR;
-			else
-			{
-				*lpcbBytesReturned = sizeof(ULONG);
-				return NO_ERROR;
-			}
+            NeedsCompletion = FALSE;
+            Errno = GetSocketInformation(Socket, AFD_INFO_RECEIVE_CONTENT_SIZE, NULL, (PULONG)lpvOutBuffer, NULL, lpOverlapped, lpCompletionRoutine);
+            if (Errno == NO_ERROR)
+            {
+                cbRet = sizeof(ULONG);
+                Ret = NO_ERROR;
+            }
+            break;
         case SIOCATMARK:
             if (IS_INTRESOURCE(lpvOutBuffer) || cbOutBuffer == 0)
             {
-                *lpcbBytesReturned = sizeof(BOOL);
-                *lpErrno = WSAEFAULT;
-                return SOCKET_ERROR;
+                cbRet = sizeof(BOOL);
+                Errno = WSAEFAULT;
+                break;
             }
             if (cbOutBuffer < sizeof(BOOL))
             {
-                *lpErrno = WSAEINVAL;
-                return SOCKET_ERROR;
+                Errno = WSAEINVAL;
+                break;
             }
 
             /* FIXME: Return false for now */
             *(BOOL*)lpvOutBuffer = FALSE;
 
-            *lpcbBytesReturned = sizeof(BOOL);
-            *lpErrno = NO_ERROR;
-            return NO_ERROR;
+            cbRet = sizeof(BOOL);
+            Errno = NO_ERROR;
+            Ret = NO_ERROR;
+            break;
         case SIO_GET_EXTENSION_FUNCTION_POINTER:
-            *lpErrno = WSAEINVAL;
-            return SOCKET_ERROR;
-
+            Errno = WSAEINVAL;
+            break;
         case SIO_ADDRESS_LIST_QUERY:
             if (IS_INTRESOURCE(lpvOutBuffer) || cbOutBuffer == 0)
             {
-                *lpcbBytesReturned = sizeof(SOCKET_ADDRESS_LIST) + sizeof(Socket->SharedData->WSLocalAddress);
-                *lpErrno = WSAEFAULT;
-                return SOCKET_ERROR;
+                cbRet = sizeof(SOCKET_ADDRESS_LIST) + sizeof(Socket->SharedData->WSLocalAddress);
+                Errno = WSAEFAULT;
+                break;
             }
             if (cbOutBuffer < sizeof(INT))
             {
-                *lpErrno = WSAEINVAL;
-                return SOCKET_ERROR;
+                Errno = WSAEINVAL;
+                break;
             }
 
-            *lpcbBytesReturned = sizeof(SOCKET_ADDRESS_LIST) + sizeof(Socket->SharedData->WSLocalAddress);
+            cbRet = sizeof(SOCKET_ADDRESS_LIST) + sizeof(Socket->SharedData->WSLocalAddress);
 
             ((SOCKET_ADDRESS_LIST*)lpvOutBuffer)->iAddressCount = 1;
 
             if (cbOutBuffer < (sizeof(SOCKET_ADDRESS_LIST) + sizeof(Socket->SharedData->WSLocalAddress)))
             {
-                *lpErrno = WSAEFAULT;
-                return SOCKET_ERROR;
+                Errno = WSAEFAULT;
+                break;
             }
 
             ((SOCKET_ADDRESS_LIST*)lpvOutBuffer)->Address[0].iSockaddrLength = sizeof(Socket->SharedData->WSLocalAddress);
             ((SOCKET_ADDRESS_LIST*)lpvOutBuffer)->Address[0].lpSockaddr = &Socket->SharedData->WSLocalAddress;
 
-            *lpErrno = NO_ERROR;
-            return NO_ERROR;
-
+            Errno = NO_ERROR;
+            Ret = NO_ERROR;
+            break;
         default:
-			*lpErrno = Socket->HelperData->WSHIoctl(Socket->HelperContext,
-													Handle,
-													Socket->TdiAddressHandle,
-													Socket->TdiConnectionHandle,
-													dwIoControlCode,
-													lpvInBuffer,
-													cbInBuffer,
-													lpvOutBuffer,
-													cbOutBuffer,
-													lpcbBytesReturned,
-													lpOverlapped,
-													lpCompletionRoutine,
-													(LPBOOL)&NeedsCompletion);
+            Errno = Socket->HelperData->WSHIoctl(Socket->HelperContext,
+                                                 Handle,
+                                                 Socket->TdiAddressHandle,
+                                                 Socket->TdiConnectionHandle,
+                                                 dwIoControlCode,
+                                                 lpvInBuffer,
+                                                 cbInBuffer,
+                                                 lpvOutBuffer,
+                                                 cbOutBuffer,
+                                                 &cbRet,
+                                                 lpOverlapped,
+                                                 lpCompletionRoutine,
+                                                 (LPBOOL)&NeedsCompletion);
 
-			if (*lpErrno != NO_ERROR)
-				return SOCKET_ERROR;
-			else
-				return NO_ERROR;
+            if (Errno == NO_ERROR)
+                Ret = NO_ERROR;
+            break;
     }
+    if (lpOverlapped && NeedsCompletion)
+    {
+        lpOverlapped->Internal = Errno;
+        lpOverlapped->InternalHigh = cbRet;
+        if (lpCompletionRoutine != NULL)
+        {
+            lpCompletionRoutine(Errno, cbRet, lpOverlapped, 0);
+        }
+        if (lpOverlapped->hEvent)
+            SetEvent(lpOverlapped->hEvent);
+        if (!PostQueuedCompletionStatus((HANDLE)Handle, cbRet, 0, lpOverlapped))
+        {
+            ERR("PostQueuedCompletionStatus failed %d\n", GetLastError());
+        }
+        return NO_ERROR;
+    }
+    if (lpErrno)
+        *lpErrno = Errno;
+    if (lpcbBytesReturned)
+        *lpcbBytesReturned = cbRet;
+    return Ret;
 }
 
 
@@ -2852,18 +2886,34 @@ WSPCleanup(OUT LPINT lpErrno)
     return 0;
 }
 
+VOID
+NTAPI
+AfdInfoAPC(PVOID ApcContext,
+    PIO_STATUS_BLOCK IoStatusBlock,
+    ULONG Reserved)
+{
+    PAFDAPCCONTEXT Context = ApcContext;
 
+    Context->lpCompletionRoutine(IoStatusBlock->Status, IoStatusBlock->Information, Context->lpOverlapped, 0);
+    HeapFree(GlobalHeap, 0, ApcContext);
+}
 
 int
 GetSocketInformation(PSOCKET_INFORMATION Socket,
                      ULONG AfdInformationClass,
                      PBOOLEAN Boolean OPTIONAL,
                      PULONG Ulong OPTIONAL,
-                     PLARGE_INTEGER LargeInteger OPTIONAL)
+                     PLARGE_INTEGER LargeInteger OPTIONAL,
+                     LPWSAOVERLAPPED Overlapped OPTIONAL,
+                     LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine OPTIONAL)
 {
-    IO_STATUS_BLOCK     IOSB;
+    PIO_STATUS_BLOCK    IOSB;
+    IO_STATUS_BLOCK     DummyIOSB;
     AFD_INFO            InfoData;
     NTSTATUS            Status;
+    PVOID               APCContext;
+    PIO_APC_ROUTINE     APCFunction;
+    HANDLE              Event = NULL;
     HANDLE              SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
@@ -2878,12 +2928,56 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
     /* Set Info Class */
     InfoData.InformationClass = AfdInformationClass;
 
+    /* Verify if we should use APC */
+    if (Overlapped == NULL)
+    {
+        /* Not using Overlapped structure, so use normal blocking on event */
+        APCContext = NULL;
+        APCFunction = NULL;
+        Event = SockEvent;
+        IOSB = &DummyIOSB;
+    }
+    else
+    {
+        /* Overlapped request for non overlapped opened socket */
+        if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
+        {
+            TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
+            return 0;
+        }
+        if (CompletionRoutine == NULL)
+        {
+            /* Using Overlapped Structure, but no Completition Routine, so no need for APC */
+            APCContext = Overlapped;
+            APCFunction = NULL;
+            Event = Overlapped->hEvent;
+        }
+        else
+        {
+            /* Using Overlapped Structure and a Completition Routine, so use an APC */
+            APCFunction = &AfdInfoAPC; // should be a private io completition function inside us
+            APCContext = HeapAlloc(GlobalHeap, 0, sizeof(AFDAPCCONTEXT));
+            if (!APCContext)
+            {
+                ERR("Not enough memory for APC Context\n");
+                return WSAEFAULT;
+            }
+            ((PAFDAPCCONTEXT)APCContext)->lpCompletionRoutine = CompletionRoutine;
+            ((PAFDAPCCONTEXT)APCContext)->lpOverlapped = Overlapped;
+            ((PAFDAPCCONTEXT)APCContext)->lpSocket = Socket;
+        }
+
+        IOSB = (PIO_STATUS_BLOCK)&Overlapped->Internal;
+    }
+
+    IOSB->Status = STATUS_PENDING;
+
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Socket->Handle,
-                                   SockEvent,
-                                   NULL,
-                                   NULL,
-                                   &IOSB,
+                                   Event,
+                                   APCFunction,
+                                   APCContext,
+                                   IOSB,
                                    IOCTL_AFD_GET_INFO,
                                    &InfoData,
                                    sizeof(InfoData),
@@ -2891,10 +2985,18 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
                                    sizeof(InfoData));
 
     /* Wait for return */
-    if (Status == STATUS_PENDING)
+    if (Status == STATUS_PENDING && Overlapped == NULL)
     {
         WaitForSingleObject(SockEvent, INFINITE);
-        Status = IOSB.Status;
+        Status = IOSB->Status;
+    }
+
+    TRACE("Status %x Information %d\n", Status, IOSB->Information);
+
+    if (Status == STATUS_PENDING)
+    {
+        TRACE("Leaving (Pending)\n");
+        return WSA_IO_PENDING;
     }
 
     if (Status != STATUS_SUCCESS)
@@ -2926,11 +3028,17 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
                      ULONG AfdInformationClass,
                      PBOOLEAN Boolean OPTIONAL,
                      PULONG Ulong OPTIONAL,
-                     PLARGE_INTEGER LargeInteger OPTIONAL)
+                     PLARGE_INTEGER LargeInteger OPTIONAL,
+                     LPWSAOVERLAPPED Overlapped OPTIONAL,
+                     LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine OPTIONAL)
 {
-    IO_STATUS_BLOCK     IOSB;
+    PIO_STATUS_BLOCK    IOSB;
+    IO_STATUS_BLOCK     DummyIOSB;
     AFD_INFO            InfoData;
     NTSTATUS            Status;
+    PVOID               APCContext;
+    PIO_APC_ROUTINE     APCFunction;
+    HANDLE              Event = NULL;
     HANDLE              SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
@@ -2959,12 +3067,56 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
         InfoData.Information.Boolean = *Boolean;
     }
 
+    /* Verify if we should use APC */
+    if (Overlapped == NULL)
+    {
+        /* Not using Overlapped structure, so use normal blocking on event */
+        APCContext = NULL;
+        APCFunction = NULL;
+        Event = SockEvent;
+        IOSB = &DummyIOSB;
+    }
+    else
+    {
+        /* Overlapped request for non overlapped opened socket */
+        if ((Socket->SharedData->CreateFlags & SO_SYNCHRONOUS_NONALERT) != 0)
+        {
+            TRACE("Opened without flag WSA_FLAG_OVERLAPPED. Do nothing.\n");
+            return 0;
+        }
+        if (CompletionRoutine == NULL)
+        {
+            /* Using Overlapped Structure, but no Completition Routine, so no need for APC */
+            APCContext = Overlapped;
+            APCFunction = NULL;
+            Event = Overlapped->hEvent;
+        }
+        else
+        {
+            /* Using Overlapped Structure and a Completition Routine, so use an APC */
+            APCFunction = &AfdInfoAPC; // should be a private io completition function inside us
+            APCContext = HeapAlloc(GlobalHeap, 0, sizeof(AFDAPCCONTEXT));
+            if (!APCContext)
+            {
+                ERR("Not enough memory for APC Context\n");
+                return WSAEFAULT;
+            }
+            ((PAFDAPCCONTEXT)APCContext)->lpCompletionRoutine = CompletionRoutine;
+            ((PAFDAPCCONTEXT)APCContext)->lpOverlapped = Overlapped;
+            ((PAFDAPCCONTEXT)APCContext)->lpSocket = Socket;
+        }
+
+        IOSB = (PIO_STATUS_BLOCK)&Overlapped->Internal;
+    }
+
+    IOSB->Status = STATUS_PENDING;
+
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Socket->Handle,
-                                   SockEvent,
-                                   NULL,
-                                   NULL,
-                                   &IOSB,
+                                   Event,
+                                   APCFunction,
+                                   APCContext,
+                                   IOSB,
                                    IOCTL_AFD_SET_INFO,
                                    &InfoData,
                                    sizeof(InfoData),
@@ -2972,13 +3124,21 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
                                    0);
 
     /* Wait for return */
-    if (Status == STATUS_PENDING)
+    if (Status == STATUS_PENDING && Overlapped == NULL)
     {
         WaitForSingleObject(SockEvent, INFINITE);
-        Status = IOSB.Status;
+        Status = IOSB->Status;
     }
 
     NtClose( SockEvent );
+
+    TRACE("Status %x Information %d\n", Status, IOSB->Information);
+
+    if (Status == STATUS_PENDING)
+    {
+        TRACE("Leaving (Pending)\n");
+        return WSA_IO_PENDING;
+    }
 
     return Status == STATUS_SUCCESS ? 0 : -1;
 
