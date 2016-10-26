@@ -1,26 +1,38 @@
 #include <stdio.h>
 #include <windows.h>
 
-int main()
+void Usage(WCHAR* name)
+{
+    wprintf(L"Usage: %s testfile\n", name);
+}
+
+int wmain(int argc, WCHAR* argv[])
 {
     int ReturnValue = 1;
-    DWORD dwRead;
-    DWORD dwWritten;
+    DWORD dwFileSize;
+    DWORD dwRead, dwWritten;
     HANDLE hFile = INVALID_HANDLE_VALUE;
     HANDLE hPrinter = NULL;
     DOC_INFO_1W docInfo;
-    BYTE Buffer[20000];
+    BYTE Buffer[4096];
 
-    hFile = CreateFileW(L"testfile", GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+    if (argc <= 1)
+    {
+        Usage(argv[0]);
+        return 0;
+    }
+
+    hFile = CreateFileW(argv[1], GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
         printf("CreateFileW failed, last error is %lu!\n", GetLastError());
         goto Cleanup;
     }
 
-    if (!ReadFile(hFile, Buffer, sizeof(Buffer), &dwRead, NULL))
+    dwFileSize = GetFileSize(hFile, NULL);
+    if (dwFileSize == INVALID_FILE_SIZE)
     {
-        printf("ReadFile failed, last error is %lu!\n", GetLastError());
+        printf("File is too big, or GetFileSize failed; last error is %lu!\n", GetLastError());
         goto Cleanup;
     }
 
@@ -30,6 +42,7 @@ int main()
         goto Cleanup;
     }
 
+    /* Print to a printer, with the "RAW" datatype (pDatatype == NULL or "RAW") */
     ZeroMemory(&docInfo, sizeof(docInfo));
     docInfo.pDocName = L"winspool_print";
 
@@ -45,10 +58,21 @@ int main()
         goto Cleanup;
     }
 
-    if (!WritePrinter(hPrinter, Buffer, dwRead, &dwWritten))
+    while (dwFileSize > 0)
     {
-        printf("WritePrinter failed, last error is %lu!\n", GetLastError());
-        goto Cleanup;
+        dwRead = min(sizeof(Buffer), dwFileSize);
+        if (!ReadFile(hFile, Buffer, dwRead, &dwRead, NULL))
+        {
+            printf("ReadFile failed, last error is %lu!\n", GetLastError());
+            goto Cleanup;
+        }
+        dwFileSize -= dwRead;
+
+        if (!WritePrinter(hPrinter, Buffer, dwRead, &dwWritten))
+        {
+            printf("WritePrinter failed, last error is %lu!\n", GetLastError());
+            goto Cleanup;
+        }
     }
 
     if (!EndPagePrinter(hPrinter))
@@ -66,11 +90,11 @@ int main()
     ReturnValue = 0;
 
 Cleanup:
-    if (hFile != INVALID_HANDLE_VALUE)
-        CloseHandle(hFile);
-
     if (hPrinter)
         ClosePrinter(hPrinter);
+
+    if (hFile != INVALID_HANDLE_VALUE)
+        CloseHandle(hFile);
 
     return ReturnValue;
 }
