@@ -5,6 +5,7 @@
  * PURPOSE:         Handling themes and visual effects
  *
  * PROGRAMMERS:     Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ *                  Ismael Ferreras Morezuelas (swyterzone+reactos@gmail.com)
  */
 
 #include "desk.h"
@@ -61,7 +62,7 @@ static const WCHAR *g_RegColorNames[NUM_COLORS] = {
 VOID
 SchemeSetMetric(IN COLOR_SCHEME *scheme, int id, int value)
 {
-    switch(id)
+    switch (id)
     {
         case SIZE_BORDER_WIDTH: scheme->ncMetrics.iBorderWidth = value; break;
         case SIZE_SCROLL_WIDTH: scheme->ncMetrics.iScrollWidth = value; break;
@@ -173,6 +174,26 @@ LoadCurrentScheme(OUT COLOR_SCHEME *scheme)
     scheme->Effects.bTooltipAnimation  = scheme->Effects.bMenuAnimation;
     scheme->Effects.bTooltipFade       = scheme->Effects.bMenuFade;
 
+    /* Use the following transition effect for menus and tooltips */
+    ret = SystemParametersInfoW(SPI_GETFONTSMOOTHING,
+                                0,
+                                &scheme->Effects.bFontSmoothing,
+                                0);
+    if (!ret) return FALSE;
+
+    ret = SystemParametersInfoW(SPI_GETFONTSMOOTHINGTYPE,
+                                0,
+                                &scheme->Effects.uiFontSmoothingType,
+                                0);
+    if (!ret) return FALSE;
+
+    /* Show shadows under menus */
+    ret = SystemParametersInfoW(SPI_GETDROPSHADOW,
+                                0,
+                                &scheme->Effects.bDropShadow,
+                                0);
+    if (!ret) return FALSE;
+
     /* Show content of windows during dragging */
     ret = SystemParametersInfoW(SPI_GETDRAGFULLWINDOWS,
                                 0,
@@ -180,7 +201,7 @@ LoadCurrentScheme(OUT COLOR_SCHEME *scheme)
                                 0);
     if (!ret) return FALSE;
 
-    /* Hide underlined letters for keyboard navigation until I press the Alt key */
+    /* Hide underlined letters for keyboard navigation until the Alt key is pressed */
     ret = SystemParametersInfoW(SPI_GETKEYBOARDCUES,
                                 0,
                                 &scheme->Effects.bKeyboardCues,
@@ -339,23 +360,53 @@ ApplyScheme(IN COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)
     /* FIXME: XP seems to use grayed checkboxes to reflect differences between menu and tooltips settings
      * Just keep them in sync for now.
      */
+
+#define SYS_CONFIG(__uiAction, __uiParam, __pvParam) \
+    SystemParametersInfoW(__uiAction, __uiParam, __pvParam, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE)
+
     scheme->Effects.bTooltipAnimation  = scheme->Effects.bMenuAnimation;
-    scheme->Effects.bTooltipFade = scheme->Effects.bMenuFade;
-    SystemParametersInfoW(SPI_SETDRAGFULLWINDOWS, scheme->Effects.bDragFullWindows, (PVOID)&scheme->Effects.bDragFullWindows, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
-    SystemParametersInfoW(SPI_SETKEYBOARDCUES, 0, IntToPtr(scheme->Effects.bKeyboardCues), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
-    //SystemParametersInfoW(SPI_SETACTIVEWINDOWTRACKING, 0, (PVOID)&scheme->Effects.bActiveWindowTracking, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETMENUANIMATION, 0, (PVOID)&scheme->Effects.bMenuAnimation, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETCOMBOBOXANIMATION, 0, (PVOID)&scheme->Effects.bComboBoxAnimation, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETLISTBOXSMOOTHSCROLLING, 0, (PVOID)&scheme->Effects.bListBoxSmoothScrolling, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETGRADIENTCAPTIONS, 0, (PVOID)&scheme->Effects.bGradientCaptions, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETACTIVEWNDTRKZORDER, 0, (PVOID)&scheme->Effects.bActiveWndTrkZorder, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETHOTTRACKING, 0, (PVOID)&scheme->Effects.bHotTracking, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    SystemParametersInfoW(SPI_SETMENUFADE, 0, (PVOID)&scheme->Effects.bMenuFade, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETSELECTIONFADE, 0, (PVOID)&scheme->Effects.bSelectionFade, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    SystemParametersInfoW(SPI_SETTOOLTIPANIMATION, 0, (PVOID)&scheme->Effects.bTooltipAnimation, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    SystemParametersInfoW(SPI_SETTOOLTIPFADE, 0, (PVOID)&scheme->Effects.bTooltipFade, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETCURSORSHADOW, 0, (PVOID)&scheme->Effects.bCursorShadow, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
-    //SystemParametersInfoW(SPI_SETUIEFFECTS, 0, (PVOID)&scheme->Effects.bUiEffects, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+    scheme->Effects.bTooltipFade       = scheme->Effects.bMenuFade;
+
+    /* Use the following transition effect for menus and tooltips */
+    SYS_CONFIG(SPI_SETMENUANIMATION,             0, IntToPtr(scheme->Effects.bMenuAnimation));
+    SYS_CONFIG(SPI_SETMENUFADE,                  0, IntToPtr(scheme->Effects.bMenuFade));
+
+    /* Use the following method to smooth edges of screen fonts */
+    SYS_CONFIG(SPI_SETFONTSMOOTHING,             scheme->Effects.bFontSmoothing, 0);
+    SYS_CONFIG(SPI_SETFONTSMOOTHINGTYPE,         0, IntToPtr(scheme->Effects.uiFontSmoothingType));
+
+    /*
+     * Refresh and redraw all the windows, otherwise the font smoothing changes
+     * only appear after any future partial region invalidation.
+     * Not everyone listens for this WM_SETTINGCHANGE, including the shell and most third party programs.
+     */
+    InvalidateRect(NULL, NULL, TRUE);
+
+    /* Use large icons */
+    //SYS_CONFIG(SPI_GETDRAGFULLWINDOWS,   (PVOID) g->SchemeAdv.Effects.bMenuFade);
+
+    /* Show shadows under menus */
+    SYS_CONFIG(SPI_SETDROPSHADOW,                0, IntToPtr(scheme->Effects.bDropShadow));
+
+    /* Show window contents while dragging */
+    SYS_CONFIG(SPI_SETDRAGFULLWINDOWS,           scheme->Effects.bDragFullWindows, 0);
+
+    /* Hide underlined letters for keyboard navigation until I press the Alt key */
+    SYS_CONFIG(SPI_SETKEYBOARDCUES,              0, IntToPtr(scheme->Effects.bKeyboardCues));
+
+    // SYS_CONFIG(SPI_SETACTIVEWINDOWTRACKING,   0, IntToPtr(scheme->Effects.bActiveWindowTracking));
+    // SYS_CONFIG(SPI_SETCOMBOBOXANIMATION,      0, IntToPtr(scheme->Effects.bComboBoxAnimation));
+    // SYS_CONFIG(SPI_SETLISTBOXSMOOTHSCROLLING, 0, IntToPtr(scheme->Effects.bListBoxSmoothScrolling));
+    // SYS_CONFIG(SPI_SETGRADIENTCAPTIONS,       0, IntToPtr(scheme->Effects.bGradientCaptions));
+    // SYS_CONFIG(SPI_SETACTIVEWNDTRKZORDER,     0, IntToPtr(scheme->Effects.bActiveWndTrkZorder));
+    // SYS_CONFIG(SPI_SETHOTTRACKING,            0, IntToPtr(scheme->Effects.bHotTracking));
+    // SYS_CONFIG(SPI_SETSELECTIONFADE,          0, IntToPtr(scheme->Effects.bSelectionFade));
+    SYS_CONFIG(SPI_SETTOOLTIPANIMATION,          0, IntToPtr(scheme->Effects.bTooltipAnimation));
+    SYS_CONFIG(SPI_SETTOOLTIPFADE,               0, IntToPtr(scheme->Effects.bTooltipFade));
+    // SYS_CONFIG(SPI_SETCURSORSHADOW,           0, IntToPtr(scheme->Effects.bCursorShadow));
+    // SYS_CONFIG(SPI_SETUIEFFECTS,              0, IntToPtr(scheme->Effects.bUiEffects));
+
+#undef SYS_CONFIG
 
     /* Save SchemeId in the registry */
     if (pSelectedTheme->Theme != NULL && pSelectedTheme->ThemeActive == FALSE)
@@ -668,7 +719,7 @@ EnumThemeProc(IN LPVOID lpReserved,
  *             the visual styles of the system
  */
 PTHEME
-LoadThemes()
+LoadThemes(VOID)
 {
     HRESULT hret;
     PTHEME pClassicTheme;
