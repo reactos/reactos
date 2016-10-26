@@ -101,7 +101,7 @@ do { \
     FILL_COMBOBOX(IDC_EFFAPPEARANCE_SMOOTHINGTYPE,   IDS_STANDARDEFFECT,
                                                      IDS_CLEARTYPEEFFECT);
 
-    /* Sundry checkboxes */
+    /* Other checkboxes */
     INIT_CHECKBOX(IDC_EFFAPPEARANCE_SETDROPSHADOW,   bDropShadow);
     INIT_CHECKBOX(IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, bDragFullWindows);
     INIT_CHECKBOX(IDC_EFFAPPEARANCE_KEYBOARDCUES,    bKeyboardCues);
