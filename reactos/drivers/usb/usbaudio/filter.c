@@ -157,7 +157,6 @@ UsbAudioGetSetProperty(
     /* submit urb */
     Status = SubmitUrbSync(DeviceObject, Urb);
 
-    DPRINT1("UsbAudioGetSetProperty Status %x\n", Status);
     FreeFunction(Urb);
     return Status;
 }
@@ -215,12 +214,12 @@ FilterAudioMuteHandler(
             FeatureUnitDescriptor = (PUSB_AUDIO_CONTROL_FEATURE_UNIT_DESCRIPTOR)NodeContext->Descriptor;
             if (Property->NodeProperty.Property.Flags & KSPROPERTY_TYPE_GET)
             {
-                Status = UsbAudioGetSetProperty(FilterContext->DeviceExtension->LowerDevice, 0x81, 0x100, FeatureUnitDescriptor->bUnitID << 8, Data, 1, USBD_TRANSFER_DIRECTION_IN);
+                Status = UsbAudioGetSetProperty(FilterContext->DeviceExtension->LowerDevice, 0x81, 0x1 << 8, FeatureUnitDescriptor->bUnitID << 8, Data, 1, USBD_TRANSFER_DIRECTION_IN);
                 Irp->IoStatus.Information = sizeof(BOOL);
             }
             else
             {
-                Status = UsbAudioGetSetProperty(FilterContext->DeviceExtension->LowerDevice, 0x01, 0x100, FeatureUnitDescriptor->bUnitID << 8, Data, 1, USBD_TRANSFER_DIRECTION_OUT);
+                Status = UsbAudioGetSetProperty(FilterContext->DeviceExtension->LowerDevice, 0x01, 0x1 << 8, FeatureUnitDescriptor->bUnitID << 8, Data, 1, USBD_TRANSFER_DIRECTION_OUT);
             }
         }
     }
@@ -234,8 +233,85 @@ FilterAudioVolumeHandler(
     IN PKSIDENTIFIER  Request,
     IN OUT PVOID  Data)
 {
-    UNIMPLEMENTED
-    return STATUS_SUCCESS;
+    PKSNODEPROPERTY_AUDIO_CHANNEL Property;
+    PKSFILTER Filter;
+    PFILTER_CONTEXT FilterContext;
+    PNODE_CONTEXT NodeContext;
+    PUSB_AUDIO_CONTROL_FEATURE_UNIT_DESCRIPTOR FeatureUnitDescriptor;
+    PSHORT TransferBuffer;
+    LONG Value;
+    NTSTATUS Status = STATUS_INVALID_PARAMETER;
+
+
+    /* get filter from irp */
+    Filter = KsGetFilterFromIrp(Irp);
+
+    if (Filter)
+    {
+        /* get property */
+        Property = (PKSNODEPROPERTY_AUDIO_CHANNEL)Request;
+
+        /* get filter context */
+        FilterContext = (PFILTER_CONTEXT)Filter->Context;
+
+        TransferBuffer = AllocFunction(sizeof(USHORT) * 3);
+        ASSERT(TransferBuffer);
+
+        Value = *(PLONG)Data;
+
+        /* search for node context */
+        NodeContext = FindNodeContextWithNode(FilterContext->DeviceExtension->NodeContext, FilterContext->DeviceExtension->NodeContextCount, Property->NodeProperty.NodeId);
+        if (NodeContext)
+        {
+            FeatureUnitDescriptor = (PUSB_AUDIO_CONTROL_FEATURE_UNIT_DESCRIPTOR)NodeContext->Descriptor;
+            if (Property->NodeProperty.Property.Flags & KSPROPERTY_TYPE_GET)
+            {
+                Status = UsbAudioGetSetProperty(FilterContext->DeviceExtension->LowerDevice, 0x81, 0x2 << 8, FeatureUnitDescriptor->bUnitID << 8, &TransferBuffer[0], sizeof(USHORT), USBD_TRANSFER_DIRECTION_IN);
+                Value = (LONG)TransferBuffer[0] * 256;
+
+                *(PLONG)Data = Value;
+                Irp->IoStatus.Information = sizeof(BOOL);
+            }
+            else
+            {
+                /* downscale value */
+                Value /= 256;
+
+                /* get minimum value */
+                UsbAudioGetSetProperty(FilterContext->DeviceExtension->LowerDevice, 0x82, 0x2 << 8, FeatureUnitDescriptor->bUnitID << 8, &TransferBuffer[0], sizeof(USHORT), USBD_TRANSFER_DIRECTION_IN);
+
+                /* get maximum value */
+                UsbAudioGetSetProperty(FilterContext->DeviceExtension->LowerDevice, 0x83, 0x2 << 8, FeatureUnitDescriptor->bUnitID << 8, &TransferBuffer[1], sizeof(USHORT), USBD_TRANSFER_DIRECTION_IN);
+
+                if (TransferBuffer[0] > Value)
+                {
+                    /* use minimum value */
+                    Value = TransferBuffer[0];
+                }
+
+                if (TransferBuffer[1] < Value)
+                {
+                    /* use maximum value */
+                    Value = TransferBuffer[1];
+                }
+
+                /* store value */
+                TransferBuffer[2] = Value;
+
+                /* set volume request */
+                Status = UsbAudioGetSetProperty(FilterContext->DeviceExtension->LowerDevice, 0x01, 0x2 << 8, FeatureUnitDescriptor->bUnitID << 8, &TransferBuffer[2], sizeof(USHORT), USBD_TRANSFER_DIRECTION_OUT);
+                if (NT_SUCCESS(Status))
+                {
+                    /* store number of bytes transferred*/
+                    Irp->IoStatus.Information = sizeof(LONG);
+                }
+            }
+        }
+
+        /* free transfer buffer */
+        FreeFunction(TransferBuffer);
+    }
+    return Status;
 }
 
 

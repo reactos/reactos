@@ -62,8 +62,6 @@ DEFINE_KSPROPERTY_TABLE(TopologySet) {\
     DEFINE_KSPROPERTY_ITEM_AUDIO_MUTE(Handler)\
 }
 
-
-
 #include <pshpack1.h>
 
 typedef struct

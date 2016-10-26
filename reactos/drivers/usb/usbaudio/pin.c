@@ -91,61 +91,6 @@ UsbAudioAllocCaptureUrbIso(
 }
 
 NTSTATUS
-UsbAudioSetVolume(
-    IN PKSPIN Pin)
-{
-    PURB Urb;
-    PUCHAR SampleRateBuffer;
-    PPIN_CONTEXT PinContext;
-    NTSTATUS Status;
-
-    /* allocate sample rate buffer */
-    SampleRateBuffer = AllocFunction(sizeof(ULONG));
-    if (!SampleRateBuffer)
-    {
-        /* no memory */
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* allocate urb */
-    Urb = AllocFunction(sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
-    if (!Urb)
-    {
-        /* no memory */
-        FreeFunction(SampleRateBuffer);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* FIXME: determine controls and format urb */
-    UsbBuildVendorRequest(Urb,
-        URB_FUNCTION_CLASS_INTERFACE,
-        sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
-        USBD_TRANSFER_DIRECTION_OUT,
-        0,
-        0x01,
-        0x200,
-        0x300,
-        SampleRateBuffer,
-        NULL,
-        2,
-        NULL);
-
-    /* get pin context */
-    PinContext = Pin->Context;
-
-    SampleRateBuffer[0] = 0xC2;
-    SampleRateBuffer[1] = 0xFE;
-
-    /* submit urb */
-    Status = SubmitUrbSync(PinContext->LowerDevice, Urb);
-
-    DPRINT1("UsbAudioSetVolume Pin %p Status %x\n", Pin, Status);
-    FreeFunction(Urb);
-    FreeFunction(SampleRateBuffer);
-    return Status;
-}
-
-NTSTATUS
 UsbAudioSetFormat(
     IN PKSPIN Pin)
 {
@@ -642,9 +587,6 @@ USBAudioPinCreate(
         Status = _KsEdit(Pin->Bag, (PVOID*)&Pin->Descriptor->AllocatorFraming, sizeof(KSALLOCATOR_FRAMING_EX), sizeof(KSALLOCATOR_FRAMING_EX), USBAUDIO_TAG);
         ASSERT(Status == STATUS_SUCCESS);
     }
-
-    /* FIXME move to build filter topology*/
-    UsbAudioSetVolume(Pin);
 
     /* select streaming interface */
     Status = USBAudioSelectAudioStreamingInterface(PinContext, PinContext->DeviceExtension, PinContext->DeviceExtension->ConfigurationDescriptor);
