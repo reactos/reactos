@@ -260,7 +260,7 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
 
     hdc = BeginPaint(hwnd, &ps);
 
-    if(pPreviewData->hdcPreview)
+    if (pPreviewData->hdcPreview)
     {
         BitBlt(hdc,0,0, pPreviewData->rcDesktop.right, pPreviewData->rcDesktop.bottom, pPreviewData->hdcPreview, 0,0, SRCCOPY);
         EndPaint(hwnd, &ps);
@@ -470,7 +470,7 @@ PreviewWndProc(HWND hwnd,
             CalculateItemSize(pPreviewData);
             InvalidateRect(hwnd, NULL, FALSE);
             break;
-        
+
         case PVM_SETFONT:
         {
             PLOGFONTW plfFont;
@@ -498,15 +498,15 @@ PreviewWndProc(HWND hwnd,
             pPreviewData->Scheme.crColor[wParam] = lParam;
             switch(wParam)
             {
-                case COLOR_SCROLLBAR: 
+                case COLOR_SCROLLBAR:
                     DeleteObject(pPreviewData->hbrScrollbar);
                     pPreviewData->hbrScrollbar = CreateSolidBrush(pPreviewData->Scheme.crColor[wParam]);
                     break;
-                case COLOR_DESKTOP: 
+                case COLOR_DESKTOP:
                     DeleteObject(pPreviewData->hbrDesktop);
                     pPreviewData->hbrDesktop = CreateSolidBrush(pPreviewData->Scheme.crColor[wParam]);
                     break;
-                case COLOR_WINDOW: 
+                case COLOR_WINDOW:
                     DeleteObject(pPreviewData->hbrWindow);
                     pPreviewData->hbrWindow = CreateSolidBrush(pPreviewData->Scheme.crColor[wParam]);
                     break;
@@ -540,7 +540,7 @@ RegisterPreviewControl(IN HINSTANCE hInstance)
 {
     WNDCLASSEX wc = {0};
 
-    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.cbSize = sizeof(wc);
     wc.lpfnWndProc = PreviewWndProc;
     wc.hInstance = hInstance;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);

@@ -101,7 +101,7 @@ GetPossibleSettings(IN LPCTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTI
     DeleteDC(hDC);
 
     /* List all settings */
-    devmode.dmSize = (WORD)sizeof(DEVMODE);
+    devmode.dmSize = (WORD)sizeof(devmode);
     devmode.dmDriverExtra = 0;
 
     if (!EnumDisplaySettingsEx(DeviceName, ENUM_CURRENT_SETTINGS, &devmode, dwFlags))
@@ -319,7 +319,7 @@ OnInitDialog(IN HWND hwndDlg)
 
     /* Get video cards list */
     pData->DisplayDeviceList = NULL;
-    displayDevice.cb = (DWORD)sizeof(DISPLAY_DEVICE);
+    displayDevice.cb = sizeof(displayDevice);
     while (EnumDisplayDevices(NULL, iDevNum, &displayDevice, 0x1))
     {
         if ((displayDevice.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) != 0)
@@ -393,7 +393,7 @@ OnInitDialog(IN HWND hwndDlg)
     }
 
     /* Initialize the color spectrum bitmaps */
-    for(i = 0; i < NUM_SPECTRUM_BITMAPS; i++)
+    for (i = 0; i < NUM_SPECTRUM_BITMAPS; i++)
     {
         pData->hSpectrumBitmaps[i] = LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_SPECTRUM_4 + i), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
@@ -724,8 +724,8 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
                     /* Apply new settings */
                     LONG rc;
                     DEVMODE devmode;
-                    RtlZeroMemory(&devmode, sizeof(DEVMODE));
-                    devmode.dmSize = (WORD)sizeof(DEVMODE);
+                    RtlZeroMemory(&devmode, sizeof(devmode));
+                    devmode.dmSize = (WORD)sizeof(devmode);
                     devmode.dmPelsWidth = pData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth;
                     devmode.dmPelsHeight = pData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight;
                     devmode.dmBitsPerPel = pData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel;

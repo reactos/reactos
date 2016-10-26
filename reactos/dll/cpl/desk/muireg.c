@@ -49,7 +49,7 @@ static int load_string(HINSTANCE hModule, UINT resId, LPWSTR pwszBuffer, INT cMa
  *
  * @implemented
  */
-LONG 
+LONG
 RegLoadMUIStringW(IN HKEY hKey,
                   IN LPCWSTR pszValue  OPTIONAL,
                   OUT LPWSTR pszOutBuf,
@@ -65,7 +65,7 @@ RegLoadMUIStringW(IN HKEY hKey,
     /* Parameter sanity checks. */
     if (!hKey || !pszOutBuf)
         return ERROR_INVALID_PARAMETER;
-    
+
     if (pszDirectory && *pszDirectory)
     {
         //FIXME("BaseDir parameter not yet supported!\n");

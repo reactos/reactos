@@ -111,7 +111,7 @@ DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice)
 
 #ifdef _MSC_VER
     hShell32 = LoadLibrary(_T("shell32.dll"));
-    if(hShell32 == NULL)
+    if (hShell32 == NULL)
         return FALSE;
     msvc_SHCreatePropSheetExtArrayEx = (CPSEAE)GetProcAddress(hShell32, (LPCSTR)194);
     hpsxaDev = msvc_SHCreatePropSheetExtArrayEx(HKEY_LOCAL_MACHINE, REGSTR_PATH_CONTROLSFOLDER TEXT("\\Device"), MAX_ADVANCED_PAGES - psh.nPages, pdo);
