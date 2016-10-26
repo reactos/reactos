@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Local Spooler"
+#define REACTOS_STR_INTERNAL_NAME     "localspl"
+#define REACTOS_STR_ORIGINAL_FILENAME "localspl.dll"
+#include <reactos/version.rc>

@@ -1,0 +1,112 @@
+/*
+ * Top level resource file for localui
+ *
+ * Copyright 2007 Detlef Riekenberg
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ */
+
+#include <windef.h>
+#include <winuser.h>
+
+#include "localui.h"
+
+#define WINE_FILENAME_STR "localui.dll"
+#define WINE_FILEDESCRIPTION_STR "User Interface for the Local Monitor"
+
+/* Same Version as WinXP_sp2 */
+#define WINE_FILEVERSION      5,1,2600,2180
+#define WINE_FILEVERSION_STR "5.1.2600.2180"
+
+#define WINE_PRODUCTVERSION      5,1,2600,2180
+#define WINE_PRODUCTVERSION_STR "5.1.2600.2180"
+
+#include "wine/wine_common_ver.rc"
+
+#include <reactos/manifest_dll.rc>
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+#ifdef LANGUAGE_DA_DK
+    #include "lang/ui_Da.rc"
+#endif
+#ifdef LANGUAGE_DE_DE
+    #include "lang/ui_De.rc"
+#endif
+#ifdef LANGUAGE_EN_US
+    #include "lang/ui_En.rc"
+#endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/ui_Es.rc"
+#endif
+#ifdef LANGUAGE_FR_FR
+    #include "lang/ui_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/ui_He.rc"
+#endif
+#ifdef LANGUAGE_HU_HU
+    #include "lang/ui_Hu.rc"
+#endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/ui_It.rc"
+#endif
+#ifdef LANGUAGE_JA_JP
+    #include "lang/ui_Ja.rc"
+#endif
+#ifdef LANGUAGE_KO_KR
+    #include "lang/ui_Ko.rc"
+#endif
+#ifdef LANGUAGE_LT_LT
+    #include "lang/ui_Lt.rc"
+#endif
+#ifdef LANGUAGE_NL_NL
+    #include "lang/ui_Nl.rc"
+#endif
+#ifdef LANGUAGE_NO_NO
+    #include "lang/ui_No.rc"
+#endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/ui_Pl.rc"
+#endif
+#ifdef LANGUAGE_PT_PT
+    #include "lang/ui_Pt.rc"
+#endif
+#ifdef LANGUAGE_RO_RO
+    #include "lang/ui_Ro.rc"
+#endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ui_Ru.rc"
+#endif
+#ifdef LANGUAGE_SL_SI
+    #include "lang/ui_Si.rc"
+#endif
+#ifdef LANGUAGE_SQ_AL
+    #include "lang/ui_Sq.rc"
+#endif
+#ifdef LANGUAGE_SV_SE
+    #include "lang/ui_Sv.rc"
+#endif
+#ifdef LANGUAGE_TR_TR
+    #include "lang/ui_Tr.rc"
+#endif
+#ifdef LANGUAGE_UK_UA
+    #include "lang/ui_Uk.rc"
+#endif
+#ifdef LANGUAGE_ZH_CN
+    #include "lang/ui_Zh.rc"
+#endif
