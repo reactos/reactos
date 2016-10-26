@@ -88,8 +88,6 @@ reactos/dll/win32/itss                # Synced to WineStaging-1.9.11
 reactos/dll/win32/jscript             # Synced to WineStaging-1.9.16
 reactos/dll/win32/jsproxy             # Synced to WineStaging-1.9.11
 reactos/dll/win32/loadperf            # Synced to WineStaging-1.9.11
-reactos/dll/win32/localspl            # Synced to WineStaging-1.9.11
-reactos/dll/win32/localui             # Synced to WineStaging-1.9.11
 reactos/dll/win32/lz32                # Synced to WineStaging-1.9.11
 reactos/dll/win32/mapi32              # Synced to WineStaging-1.9.11
 reactos/dll/win32/mciavi32            # Synced to WineStaging-1.9.16
@@ -138,7 +136,6 @@ reactos/dll/win32/nddeapi             # Synced to WineStaging-1.9.11
 reactos/dll/win32/netapi32            # Forked at Wine-1.3.34
 reactos/dll/win32/npptools            # Synced to WineStaging-1.9.11
 reactos/dll/win32/ntdsapi             # Synced to WineStaging-1.9.11
-reactos/dll/win32/ntprint             # Synced to WineStaging-1.9.11
 reactos/dll/win32/objsel              # Synced to WineStaging-1.9.11
 reactos/dll/win32/odbc32              # Synced to WineStaging-1.9.11. Depends on port of Linux ODBC.
 reactos/dll/win32/odbccp32            # Synced to WineStaging-1.9.11
@@ -181,7 +178,6 @@ reactos/dll/win32/shlwapi             # Synced to WineStaging-1.9.16
 reactos/dll/win32/slbcsp              # Synced to WineStaging-1.9.11
 reactos/dll/win32/snmpapi             # Synced to WineStaging-1.9.11
 reactos/dll/win32/softpub             # Synced to WineStaging-1.9.11
-reactos/dll/win32/spoolss             # Synced to WineStaging-1.9.11
 reactos/dll/win32/stdole2.tlb         # Synced to WineStaging-1.9.11
 reactos/dll/win32/stdole32.tlb        # Synced to WineStaging-1.9.11
 reactos/dll/win32/sti                 # Synced to WineStaging-1.9.11
@@ -225,6 +221,8 @@ reactos/dll/win32/xinput9_1_0         # Synced to WineStaging-1.9.11
 reactos/dll/win32/xmllite             # Synced to WineStaging-1.9.16
 
 reactos/dll/cpl/inetcpl               # Synced to WineStaging-1.9.11
+
+reactos/win32ss/printing/monitors/localmon/ui/  # Synced to WineStaging-1.9.11 (known there as /dll/win32/localui)
 
 ReactOS shares the following programs with Winehq.
 
