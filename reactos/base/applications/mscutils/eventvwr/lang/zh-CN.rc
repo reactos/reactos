@@ -133,7 +133,7 @@ BEGIN
     IDS_COPYRIGHT "版权所有 (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "事件查看器"
     IDS_APP_TITLE_EX "%s - %s Log on \\\\"
-    IDS_STATUS_MSG "%s has %lu event(s)"
+    IDS_STATUS_MSG "%s has %lu event(s) (listed: %lu)"
     IDS_LOADING_WAIT "正在载入日志。请稍候..."
     IDS_NO_ITEMS "There are no items to show in this view." // "No events in this log."
     IDS_EVENTLOG_SYSTEM "System Logs"

@@ -136,7 +136,7 @@ BEGIN
     IDS_COPYRIGHT "Drept de autor (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "Observator de evenimente"
     IDS_APP_TITLE_EX "%s - %s autentificat pe \\\\"
-    IDS_STATUS_MSG "%s are %lu eveniment(e)"
+    IDS_STATUS_MSG "%s are %lu eveniment(e) (listed: %lu)"
     IDS_LOADING_WAIT "Se încarcă jurnalul de evenimentele. Așteptați…"
     IDS_NO_ITEMS "There are no items to show in this view." // "No events in this log."
     IDS_EVENTLOG_SYSTEM "System Logs"
