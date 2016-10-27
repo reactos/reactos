@@ -48,6 +48,7 @@
 #include <richedit.h>
 
 #include <windowsx.h>
+#include <strsafe.h>
 
 #define MAX_STRING_LEN      255
 #define MAX_PATHNAME_LEN    1024
