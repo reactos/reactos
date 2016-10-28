@@ -139,7 +139,7 @@ START_TEST(WSAAsync)
             {
                 addrsize = sizeof(addr_remote);
                 sockaccept = accept(fSockets[dwWait - WAIT_OBJECT_0], (struct sockaddr*)&addr_remote, &addrsize);
-                ok(sockaccept != INVALID_SOCKET, "ERROR: Connection accept function failed, error %ld\n", WSAGetLastError());
+                ok(sockaccept != INVALID_SOCKET, "ERROR: Connection accept function failed, error %d\n", WSAGetLastError());
                 dwFlags |= FD_ACCEPT;
             }
         }
