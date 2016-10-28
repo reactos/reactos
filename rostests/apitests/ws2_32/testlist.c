@@ -11,6 +11,7 @@ extern void func_ioctlsocket(void);
 extern void func_nostartup(void);
 extern void func_recv(void);
 extern void func_send(void);
+extern void func_WSAAsync(void);
 extern void func_WSAIoctl(void);
 extern void func_WSARecv(void);
 extern void func_WSAStartup(void);
@@ -25,6 +26,7 @@ const struct test winetest_testlist[] =
     { "nostartup", func_nostartup },
     { "recv", func_recv },
     { "send", func_send },
+    { "WSAAsync", func_WSAAsync },
     { "WSAIoctl", func_WSAIoctl },
     { "WSARecv", func_WSARecv },
     { "WSAStartup", func_WSAStartup },
