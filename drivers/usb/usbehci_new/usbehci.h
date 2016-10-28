@@ -10,6 +10,8 @@
 #include <usbdlib.h>
 #include <drivers/usbport/usbmport.h>
 
+#include "hardware.h"
+
 extern USBPORT_REGISTRATION_PACKET RegPacket;
 
 /* roothub.c */
