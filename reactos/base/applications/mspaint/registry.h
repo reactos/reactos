@@ -30,7 +30,13 @@ public:
     CString strFile3;
     CString strFile4;
 
-    static void SetWallpaper(LPCTSTR szFileName, DWORD dwStyle, DWORD dwTile);
+    enum WallpaperStyle {
+        TILED,
+        CENTERED,
+        STRETCHED
+    };
+
+    static void SetWallpaper(LPCTSTR szFileName, WallpaperStyle style);
 
     void Load();
     void Store();

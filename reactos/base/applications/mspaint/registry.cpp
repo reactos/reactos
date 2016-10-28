@@ -35,23 +35,15 @@ static void ReadFileHistory(CRegKey &key, LPCTSTR lpName, CString &strFile)
     strFile.ReleaseBuffer();
 }
 
-void RegistrySettings::SetWallpaper(LPCTSTR szFileName, DWORD dwStyle, DWORD dwTile)
+void RegistrySettings::SetWallpaper(LPCTSTR szFileName, RegistrySettings::WallpaperStyle style)
 {
-    if ((dwStyle > 2) || (dwTile > 2))
-        return;
-
     CRegKey desktop;
     if (desktop.Open(HKEY_CURRENT_USER, _T("Control Panel\\Desktop")) == ERROR_SUCCESS)
     {
-        CString strStyle, strTile;
-
         desktop.SetStringValue(_T("Wallpaper"), szFileName);
 
-        strStyle.Format(_T("%lu"), dwStyle);
-        strTile.Format(_T("%lu"), dwTile);
-
-        desktop.SetStringValue(_T("WallpaperStyle"), strStyle);
-        desktop.SetStringValue(_T("TileWallpaper"), strTile);
+        desktop.SetStringValue(_T("WallpaperStyle"), (style == RegistrySettings::STRETCHED) ? _T("2") : _T("1"));
+        desktop.SetStringValue(_T("TileWallpaper"), (style == RegistrySettings::TILED) ? _T("1") : _T("0"));
     }
 
     SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (PVOID) szFileName, SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
