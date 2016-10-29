@@ -133,7 +133,7 @@ BEGIN
     IDS_COPYRIGHT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "Visionneuse d'événements"
     IDS_APP_TITLE_EX "%s - Journal %s sur \\\\"
-    IDS_STATUS_MSG "%s contient %lu événement(s)"
+    IDS_STATUS_MSG "%s contient %lu événement(s) (listés : %lu)"
     IDS_LOADING_WAIT "Chargement des journaux d'événements. Veuillez patienter..."
     IDS_NO_ITEMS "Aucun élément à afficher dans cet aperçu." // "No events in this log."
     IDS_EVENTLOG_SYSTEM "Journaux système"

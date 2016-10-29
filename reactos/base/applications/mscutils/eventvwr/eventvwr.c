@@ -29,9 +29,9 @@
 #include "eventvwr.h"
 #include "evtdetctl.h"
 
+#include <sddl.h> // For ConvertSidToStringSidW
 #include <shellapi.h>
 #include <shlwapi.h>
-#include <strsafe.h>
 
 // #include "resource.h"
 
@@ -306,6 +306,10 @@ GetMessageStringFromDll(
     if (hLibrary == NULL)
         return NULL;
 
+    /* Sanitize dwFlags */
+    dwFlags &= ~FORMAT_MESSAGE_FROM_STRING;
+    dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
+
     _SEH2_TRY
     {
         /*
@@ -319,7 +323,7 @@ GetMessageStringFromDll(
                                       FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK, */
                                       hLibrary,
                                       dwMessageId,
-                                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                                      LANG_USER_DEFAULT,
                                       (LPWSTR)&lpMsgBuf,
                                       nSize,
                                       Arguments);
@@ -350,10 +354,10 @@ GetMessageStringFromDll(
                 dwLength = FormatMessageW(dwFlags,
                                           hLibrary,
                                           dwMessageId,
-                                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                                          LANG_USER_DEFAULT,
                                           (LPWSTR)&lpMsgBuf,
                                           nSize,
-                                          Arguments);
+                                          NULL /* Arguments */);
             }
         }
         _SEH2_END;
@@ -409,7 +413,7 @@ GetMessageStringFromDllList(
     szDll = wcstok(szMessageDllList, EVENT_DLL_SEPARATOR);
     while ((szDll != NULL) && !Success)
     {
-        // Uses MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT)
+        // Uses LANG_USER_DEFAULT
         lpMsgBuf = GetMessageStringFromDll(szDll,
                                            dwFlags,
                                            dwMessageId,
@@ -1261,7 +1265,8 @@ BOOL
 GetEventUserName(IN PEVENTLOGRECORD pelr,
                  OUT PWCHAR pszUser) // TODO: Add IN DWORD BufLen
 {
-    PSID lpSid;
+    PSID pSid;
+    PWSTR StringSid;
     WCHAR szName[1024];
     WCHAR szDomain[1024];
     SID_NAME_USE peUse;
@@ -1269,13 +1274,19 @@ GetEventUserName(IN PEVENTLOGRECORD pelr,
     DWORD cchDomain = ARRAYSIZE(szDomain);
 
     /* Point to the SID */
-    lpSid = (PSID)((LPBYTE)pelr + pelr->UserSidOffset);
+    pSid = (PSID)((LPBYTE)pelr + pelr->UserSidOffset);
 
     /* User SID */
     if (pelr->UserSidLength > 0)
     {
+        /*
+         * Try to retrieve the user account name and domain name corresponding
+         * to the SID. If it cannot be retrieved, try to convert the SID to a
+         * string-form. It should not be bigger than the user-provided buffer
+         * 'pszUser', otherwise we return an error.
+         */
         if (LookupAccountSidW(NULL, // FIXME: Use computer name? From the particular event?
-                              lpSid,
+                              pSid,
                               szName,
                               &cchName,
                               szDomain,
@@ -1284,6 +1295,27 @@ GetEventUserName(IN PEVENTLOGRECORD pelr,
         {
             StringCchCopyW(pszUser, MAX_PATH, szName);
             return TRUE;
+        }
+        else if (ConvertSidToStringSidW(pSid, &StringSid))
+        {
+            BOOL Success;
+
+            /* Copy the string only if the user-provided buffer is small enough */
+            if (wcslen(StringSid) + 1 <= MAX_PATH) // + 1 for NULL-terminator
+            {
+                StringCchCopyW(pszUser, MAX_PATH, StringSid);
+                Success = TRUE;
+            }
+            else
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                Success = FALSE;
+            }
+
+            /* Free the allocated buffer */
+            LocalFree(StringSid);
+
+            return Success;
         }
     }
 
@@ -1672,7 +1704,8 @@ Cleanup:
                         sizeof(szStatusText),
                         szStatusBarTemplate,
                         EventLog->LogName,
-                        dwTotalRecords);
+                        dwTotalRecords,
+                        ListView_GetItemCount(hwndListView));
     }
     else
     {

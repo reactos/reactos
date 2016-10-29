@@ -133,7 +133,7 @@ BEGIN
     IDS_COPYRIGHT "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "Visualizzatore eventi"
     IDS_APP_TITLE_EX "%s - %s Log on \\\\"
-    IDS_STATUS_MSG "%s has %lu event(s)"
+    IDS_STATUS_MSG "%s has %lu event(s) (listed: %lu)"
     IDS_LOADING_WAIT "Caricamento eventi in corso. Attendere..."
     IDS_NO_ITEMS "There are no items to show in this view." // "No events in this log."
     IDS_EVENTLOG_SYSTEM "System Logs"

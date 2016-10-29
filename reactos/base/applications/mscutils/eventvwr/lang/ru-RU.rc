@@ -133,7 +133,7 @@ BEGIN
     IDS_COPYRIGHT "Авторские права (С) 2007 Марк Пиулачс (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "Просмотр событий"
     IDS_APP_TITLE_EX "%s - %s журнал на \\\\"
-    IDS_STATUS_MSG "%s содержит %lu событие (ий)"
+    IDS_STATUS_MSG "%s содержит %lu событие(ий) (listed: %lu)"
     IDS_LOADING_WAIT "Идет загрузка. Подождите..."
     IDS_NO_ITEMS "Нет элементов для отображения в этом представлении." // "No events in this log."
     IDS_EVENTLOG_SYSTEM "Системный журнал"
