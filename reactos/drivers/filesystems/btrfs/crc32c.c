@@ -75,7 +75,7 @@ static UINT32 crc32c_hw(const void *input, int len, UINT32 crc) {
         crc = _mm_crc32_u8(crc, *buf);
     }
 
-#ifdef __x86_64__
+#ifdef _AMD64_
     CALC_CRC(_mm_crc32_u64, crc, UINT64, buf, len);
 #endif
     CALC_CRC(_mm_crc32_u32, crc, UINT32, buf, len);

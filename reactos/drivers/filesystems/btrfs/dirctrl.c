@@ -37,10 +37,12 @@ ULONG STDCALL get_reparse_tag(device_extension* Vcb, root* subvol, UINT64 inode,
     ULONG tag = 0, br;
     NTSTATUS Status;
     
-    // FIXME - will this slow things down?
-    
-    if (type == BTRFS_TYPE_SYMLINK)
-        return IO_REPARSE_TAG_SYMLINK;
+    if (type == BTRFS_TYPE_SYMLINK) {
+        if (called_from_lxss())
+            return IO_REPARSE_TAG_LXSS_SYMLINK;
+        else
+            return IO_REPARSE_TAG_SYMLINK;
+    }
     
     if (type != BTRFS_TYPE_FILE && type != BTRFS_TYPE_DIRECTORY)
         return 0;
@@ -49,7 +51,7 @@ ULONG STDCALL get_reparse_tag(device_extension* Vcb, root* subvol, UINT64 inode,
         return 0;
     
     ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
-    Status = open_fcb(Vcb, subvol, inode, type, NULL, NULL, &fcb, Irp);
+    Status = open_fcb(Vcb, subvol, inode, type, NULL, NULL, &fcb, PagedPool, Irp);
     if (!NT_SUCCESS(Status)) {
         ERR("open_fcb returned %08x\n", Status);
         ExReleaseResourceLite(&Vcb->fcb_lock);
@@ -85,6 +87,43 @@ end:
     return tag;
 }
 
+static ULONG get_ea_len(device_extension* Vcb, root* subvol, UINT64 inode, PIRP Irp) {
+    UINT8* eadata;
+    UINT16 len;
+    
+    if (get_xattr(Vcb, subvol, inode, EA_EA, EA_EA_HASH, &eadata, &len, Irp)) {
+        ULONG offset;
+        NTSTATUS Status;
+        
+        Status = IoCheckEaBufferValidity((FILE_FULL_EA_INFORMATION*)eadata, len, &offset);
+        
+        if (!NT_SUCCESS(Status)) {
+            WARN("IoCheckEaBufferValidity returned %08x (error at offset %u)\n", Status, offset);
+            ExFreePool(eadata);
+            return 0;
+        } else {
+            FILE_FULL_EA_INFORMATION* eainfo;
+            ULONG ealen;
+            
+            ealen = 4;
+            eainfo = (FILE_FULL_EA_INFORMATION*)eadata;
+            do {
+                ealen += 5 + eainfo->EaNameLength + eainfo->EaValueLength;
+                
+                if (eainfo->NextEntryOffset == 0)
+                    break;
+                
+                eainfo = (FILE_FULL_EA_INFORMATION*)(((UINT8*)eainfo) + eainfo->NextEntryOffset);
+            } while (TRUE);
+            
+            ExFreePool(eadata);
+            
+            return ealen;
+        }
+    } else
+        return 0;
+}
+
 static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, LONG* len, PIRP Irp, dir_entry* de, root* r) {
     PIO_STACK_LOCATION IrpSp;
     UINT32 needed;
@@ -92,7 +131,7 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
     INODE_ITEM ii;
     NTSTATUS Status;
     ULONG stringlen;
-    ULONG atts;
+    ULONG atts, ealen;
     
     IrpSp = IoGetCurrentIrpStackLocation(Irp);
     
@@ -139,6 +178,7 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
                         if (fcb2->inode == inode && !fcb2->ads) {
                             ii = fcb2->inode_item;
                             atts = fcb2->atts;
+                            ealen = fcb2->ealen;
                             found = TRUE;
                             break;
                         }
@@ -175,11 +215,19 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
                     if (IrpSp->Parameters.QueryDirectory.FileInformationClass == FileBothDirectoryInformation ||
                         IrpSp->Parameters.QueryDirectory.FileInformationClass == FileDirectoryInformation ||
                         IrpSp->Parameters.QueryDirectory.FileInformationClass == FileFullDirectoryInformation ||
-                        IrpSp->Parameters.QueryDirectory.FileInformationClass == FileIdBothDirectoryInformation) {
+                        IrpSp->Parameters.QueryDirectory.FileInformationClass == FileIdBothDirectoryInformation || 
+                        IrpSp->Parameters.QueryDirectory.FileInformationClass == FileIdFullDirectoryInformation) {
                         
                         BOOL dotfile = de->namelen > 1 && de->name[0] == '.';
 
                         atts = get_file_attributes(fcb->Vcb, &ii, r, inode, de->type, dotfile, FALSE, Irp);
+                    }
+                    
+                    if (IrpSp->Parameters.QueryDirectory.FileInformationClass == FileBothDirectoryInformation || 
+                        IrpSp->Parameters.QueryDirectory.FileInformationClass == FileFullDirectoryInformation || 
+                        IrpSp->Parameters.QueryDirectory.FileInformationClass == FileIdBothDirectoryInformation || 
+                        IrpSp->Parameters.QueryDirectory.FileInformationClass == FileIdFullDirectoryInformation) {
+                        ealen = get_ea_len(fcb->Vcb, r, inode, Irp);
                     }
                 }
                 
@@ -191,6 +239,7 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
                 r = fcb->subvol;
                 inode = fcb->inode;
                 atts = fcb->atts;
+                ealen = fcb->ealen;
                 break;
                 
             case DirEntryType_Parent:
@@ -199,6 +248,7 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
                     r = fileref->parent->fcb->subvol;
                     inode = fileref->parent->fcb->inode;
                     atts = fileref->parent->fcb->atts;
+                    ealen = fileref->parent->fcb->ealen;
                 } else {
                     ERR("no fileref\n");
                     return STATUS_INTERNAL_ERROR;
@@ -212,6 +262,7 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
         IrpSp->Parameters.QueryDirectory.FileInformationClass == FileDirectoryInformation ||
         IrpSp->Parameters.QueryDirectory.FileInformationClass == FileFullDirectoryInformation ||
         IrpSp->Parameters.QueryDirectory.FileInformationClass == FileIdBothDirectoryInformation ||
+        IrpSp->Parameters.QueryDirectory.FileInformationClass == FileIdFullDirectoryInformation ||
         IrpSp->Parameters.QueryDirectory.FileInformationClass == FileNamesInformation) {
         
         Status = RtlUTF8ToUnicodeN(NULL, 0, &stringlen, de->name, de->namelen);
@@ -245,7 +296,7 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
             fbdi->AllocationSize.QuadPart = de->type == BTRFS_TYPE_SYMLINK ? 0 : ii.st_blocks;
             fbdi->FileAttributes = atts;
             fbdi->FileNameLength = stringlen;
-            fbdi->EaSize = get_reparse_tag(fcb->Vcb, r, inode, de->type, atts, Irp);
+            fbdi->EaSize = atts & FILE_ATTRIBUTE_REPARSE_POINT ? get_reparse_tag(fcb->Vcb, r, inode, de->type, atts, Irp) : ealen;
             fbdi->ShortNameLength = 0;
 //             fibdi->ShortName[12];
             
@@ -320,7 +371,7 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
             ffdi->AllocationSize.QuadPart = de->type == BTRFS_TYPE_SYMLINK ? 0 : ii.st_blocks;
             ffdi->FileAttributes = atts;
             ffdi->FileNameLength = stringlen;
-            ffdi->EaSize = get_reparse_tag(fcb->Vcb, r, inode, de->type, atts, Irp);
+            ffdi->EaSize = atts & FILE_ATTRIBUTE_REPARSE_POINT ? get_reparse_tag(fcb->Vcb, r, inode, de->type, atts, Irp) : ealen;
             
             Status = RtlUTF8ToUnicodeN(ffdi->FileName, stringlen, &stringlen, de->name, de->namelen);
 
@@ -360,10 +411,10 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
             fibdi->AllocationSize.QuadPart = de->type == BTRFS_TYPE_SYMLINK ? 0 : ii.st_blocks;
             fibdi->FileAttributes = atts;
             fibdi->FileNameLength = stringlen;
-            fibdi->EaSize = get_reparse_tag(fcb->Vcb, r, inode, de->type, atts, Irp);
+            fibdi->EaSize = atts & FILE_ATTRIBUTE_REPARSE_POINT ? get_reparse_tag(fcb->Vcb, r, inode, de->type, atts, Irp) : ealen;
             fibdi->ShortNameLength = 0;
 //             fibdi->ShortName[12];
-            fibdi->FileId.QuadPart = inode;
+            fibdi->FileId.QuadPart = make_file_id(r, inode);
             
             Status = RtlUTF8ToUnicodeN(fibdi->FileName, stringlen, &stringlen, de->name, de->namelen);
 
@@ -378,8 +429,45 @@ static NTSTATUS STDCALL query_dir_item(fcb* fcb, file_ref* fileref, void* buf, L
         }
 
         case FileIdFullDirectoryInformation:
-            FIXME("STUB: FileIdFullDirectoryInformation\n");
-            break;
+        {
+            FILE_ID_FULL_DIR_INFORMATION* fifdi = buf;
+            
+            TRACE("FileIdFullDirectoryInformation\n");
+            
+            needed = sizeof(FILE_ID_FULL_DIR_INFORMATION) - sizeof(WCHAR) + stringlen;
+            
+            if (needed > *len) {
+                TRACE("buffer overflow - %u > %u\n", needed, *len);
+                return STATUS_BUFFER_OVERFLOW;
+            }
+            
+//             if (!buf)
+//                 return STATUS_INVALID_POINTER;
+            
+            fifdi->NextEntryOffset = 0;
+            fifdi->FileIndex = 0;
+            fifdi->CreationTime.QuadPart = unix_time_to_win(&ii.otime);
+            fifdi->LastAccessTime.QuadPart = unix_time_to_win(&ii.st_atime);
+            fifdi->LastWriteTime.QuadPart = unix_time_to_win(&ii.st_mtime);
+            fifdi->ChangeTime.QuadPart = unix_time_to_win(&ii.st_ctime);
+            fifdi->EndOfFile.QuadPart = de->type == BTRFS_TYPE_SYMLINK ? 0 : ii.st_size;
+            fifdi->AllocationSize.QuadPart = de->type == BTRFS_TYPE_SYMLINK ? 0 : ii.st_blocks;
+            fifdi->FileAttributes = atts;
+            fifdi->FileNameLength = stringlen;
+            fifdi->EaSize = atts & FILE_ATTRIBUTE_REPARSE_POINT ? get_reparse_tag(fcb->Vcb, r, inode, de->type, atts, Irp) : ealen;
+            fifdi->FileId.QuadPart = make_file_id(r, inode);
+            
+            Status = RtlUTF8ToUnicodeN(fifdi->FileName, stringlen, &stringlen, de->name, de->namelen);
+
+            if (!NT_SUCCESS(Status)) {
+                ERR("RtlUTF8ToUnicodeN returned %08x\n", Status);
+                return Status;
+            }
+            
+            *len -= needed;
+            
+            return STATUS_SUCCESS;
+        }
 
         case FileNamesInformation:
         {
@@ -528,12 +616,12 @@ static NTSTATUS STDCALL next_dir_entry(file_ref* fileref, UINT64* offset, dir_en
             goto end;
         }
         
-        if (keycmp(&tp.item->key, &searchkey) == -1) {
+        if (keycmp(tp.item->key, searchkey) == -1) {
             if (find_next_item(fileref->fcb->Vcb, &tp, &next_tp, FALSE, Irp))
                 tp = next_tp;
         }
         
-        if (keycmp(&tp.item->key, &searchkey) != -1 && tp.item->key.obj_id == searchkey.obj_id && tp.item->key.obj_type == searchkey.obj_type) {
+        if (keycmp(tp.item->key, searchkey) != -1 && tp.item->key.obj_id == searchkey.obj_id && tp.item->key.obj_type == searchkey.obj_type) {
             do {
                 if (fr) {
                     if (fr->index <= tp.item->key.offset && !fr->deleted) {
@@ -673,7 +761,7 @@ static NTSTATUS STDCALL query_directory(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         return STATUS_INVALID_PARAMETER;
     }
     
-    if (!(ccb->access & FILE_LIST_DIRECTORY)) {
+    if (Irp->RequestorMode == UserMode && !(ccb->access & FILE_LIST_DIRECTORY)) {
         WARN("insufficient privileges\n");
         return STATUS_ACCESS_DENIED;
     }
@@ -724,7 +812,7 @@ static NTSTATUS STDCALL query_directory(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         
         if (IrpSp->Parameters.QueryDirectory.FileName->Buffer[0] != '*') {
             specific_file = TRUE;
-            if (FsRtlDoesNameContainWildCards(IrpSp->Parameters.QueryDirectory.FileName)) {
+            if (!ccb->case_sensitive || FsRtlDoesNameContainWildCards(IrpSp->Parameters.QueryDirectory.FileName)) {
                 has_wildcard = TRUE;
                 specific_file = FALSE;
             }
@@ -796,10 +884,14 @@ static NTSTATUS STDCALL query_directory(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         UNICODE_STRING us;
         LIST_ENTRY* le;
         
-        Status = RtlUpcaseUnicodeString(&us, &ccb->query_string, TRUE);
-        if (!NT_SUCCESS(Status)) {
-            ERR("RtlUpcaseUnicodeString returned %08x\n", Status);
-            goto end;
+        us.Buffer = NULL;
+        
+        if (!ccb->case_sensitive) {
+            Status = RtlUpcaseUnicodeString(&us, &ccb->query_string, TRUE);
+            if (!NT_SUCCESS(Status)) {
+                ERR("RtlUpcaseUnicodeString returned %08x\n", Status);
+                goto end;
+            }
         }
         
         ExAcquireResourceSharedLite(&fileref->nonpaged->children_lock, TRUE);
@@ -807,11 +899,17 @@ static NTSTATUS STDCALL query_directory(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         le = fileref->children.Flink;
         while (le != &fileref->children) {
             file_ref* fr2 = CONTAINING_RECORD(le, file_ref, list_entry);
-                
-            if (!fr2->deleted && fr2->filepart_uc.Length == us.Length &&
-                RtlCompareMemory(fr2->filepart_uc.Buffer, us.Buffer, us.Length) == us.Length) {
-                found = TRUE;
             
+            if (!fr2->deleted) {
+                if (!ccb->case_sensitive && fr2->filepart_uc.Length == us.Length &&
+                    RtlCompareMemory(fr2->filepart_uc.Buffer, us.Buffer, us.Length) == us.Length)
+                    found = TRUE;
+                else if (ccb->case_sensitive && fr2->filepart.Length == ccb->query_string.Length &&
+                    RtlCompareMemory(fr2->filepart.Buffer, ccb->query_string.Buffer, ccb->query_string.Length) == ccb->query_string.Length)
+                    found = TRUE;
+            }
+                
+            if (found) {
                 if (fr2->fcb->subvol == fcb->subvol) {
                     de.key.obj_id = fr2->fcb->inode;
                     de.key.obj_type = TYPE_INODE_ITEM;
@@ -847,7 +945,7 @@ static NTSTATUS STDCALL query_directory(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
             ExFreePool(us.Buffer);
         
         if (!found) {
-            Status = find_file_in_dir(fcb->Vcb, &ccb->query_string, fileref, &found_subvol, &found_inode, &found_type, &found_index, &utf8, Irp);
+            Status = find_file_in_dir(fcb->Vcb, &ccb->query_string, fileref, &found_subvol, &found_inode, &found_type, &found_index, &utf8, FALSE, Irp);
             
             if (!NT_SUCCESS(Status)) {
                 Status = STATUS_NO_SUCH_FILE;
@@ -898,7 +996,7 @@ static NTSTATUS STDCALL query_directory(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
         di_uni_fn.Length = di_uni_fn.MaximumLength = stringlen;
         di_uni_fn.Buffer = uni_fn;
         
-        while (!FsRtlIsNameInExpression(&ccb->query_string, &di_uni_fn, TRUE, NULL)) {
+        while (!FsRtlIsNameInExpression(&ccb->query_string, &di_uni_fn, !ccb->case_sensitive, NULL)) {
             if (de.name_alloc)
                 ExFreePool(de.name);
             
@@ -961,6 +1059,7 @@ static NTSTATUS STDCALL query_directory(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
                 case FileDirectoryInformation:
                 case FileIdBothDirectoryInformation:
                 case FileFullDirectoryInformation:
+                case FileIdFullDirectoryInformation:
                     length -= length % 8;
                     break;
                     
@@ -1011,7 +1110,7 @@ static NTSTATUS STDCALL query_directory(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
                         di_uni_fn.Buffer = uni_fn;
                     }
                     
-                    if (!has_wildcard || FsRtlIsNameInExpression(&ccb->query_string, &di_uni_fn, TRUE, NULL)) {
+                    if (!has_wildcard || FsRtlIsNameInExpression(&ccb->query_string, &di_uni_fn, !ccb->case_sensitive, NULL)) {
                         curitem = (UINT8*)buf + IrpSp->Parameters.QueryDirectory.Length - length;
                         count++;
                         
@@ -1086,7 +1185,7 @@ static NTSTATUS STDCALL notify_change_directory(device_extension* Vcb, PIRP Irp)
         return STATUS_INVALID_PARAMETER;
     }
     
-    if (!(ccb->access & FILE_LIST_DIRECTORY)) {
+    if (Irp->RequestorMode == UserMode && !(ccb->access & FILE_LIST_DIRECTORY)) {
         WARN("insufficient privileges\n");
         return STATUS_ACCESS_DENIED;
     }

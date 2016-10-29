@@ -31,6 +31,7 @@
 
 extern LIST_ENTRY VcbList;
 extern ERESOURCE global_loading_lock;
+extern LIST_ENTRY volumes;
 
 static NTSTATUS get_file_ids(PFILE_OBJECT FileObject, void* data, ULONG length) {
     btrfs_get_file_ids* bgfi;
@@ -92,7 +93,7 @@ static NTSTATUS snapshot_tree_copy(device_extension* Vcb, UINT64 addr, root* sub
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     
-    Status = read_data(Vcb, addr, Vcb->superblock.node_size, NULL, TRUE, buf, NULL, Irp);
+    Status = read_data(Vcb, addr, Vcb->superblock.node_size, NULL, TRUE, buf, NULL, NULL, Irp);
     if (!NT_SUCCESS(Status)) {
         ERR("read_data returned %08x\n", Status);
         goto end;
@@ -131,6 +132,7 @@ static NTSTATUS snapshot_tree_copy(device_extension* Vcb, UINT64 addr, root* sub
     th->address = t.new_address;
     th->tree_id = subvol->id;
     th->generation = Vcb->superblock.generation;
+    th->fs_uuid = Vcb->superblock.uuid;
     
     if (th->level == 0) {
         UINT32 i;
@@ -140,8 +142,7 @@ static NTSTATUS snapshot_tree_copy(device_extension* Vcb, UINT64 addr, root* sub
             if (ln[i].key.obj_type == TYPE_EXTENT_DATA && ln[i].size >= sizeof(EXTENT_DATA) && ln[i].offset + ln[i].size <= Vcb->superblock.node_size - sizeof(tree_header)) {
                 EXTENT_DATA* ed = (EXTENT_DATA*)(((UINT8*)&th[1]) + ln[i].offset);
                 
-                // FIXME - what are we supposed to do with prealloc here? Replace it with sparse extents, or do new preallocation?
-                if (ed->type == EXTENT_TYPE_REGULAR && ln[i].size >= sizeof(EXTENT_DATA) - 1 + sizeof(EXTENT_DATA2)) {
+                if ((ed->type == EXTENT_TYPE_REGULAR || ed->type == EXTENT_TYPE_PREALLOC) && ln[i].size >= sizeof(EXTENT_DATA) - 1 + sizeof(EXTENT_DATA2)) {
                     EXTENT_DATA2* ed2 = (EXTENT_DATA2*)&ed->data[0];
                     
                     if (ed2->size != 0) { // not sparse
@@ -157,19 +158,18 @@ static NTSTATUS snapshot_tree_copy(device_extension* Vcb, UINT64 addr, root* sub
         }
     } else {
         UINT32 i;
-        UINT64 newaddr;
         internal_node* in = (internal_node*)&th[1];
         
         for (i = 0; i < th->num_items; i++) {
-            Status = snapshot_tree_copy(Vcb, in[i].address, subvol, dupflags, &newaddr, Irp, rollback);
+            TREE_BLOCK_REF tbr;
             
+            tbr.offset = subvol->id;
+            
+            Status = increase_extent_refcount(Vcb, in[i].address, Vcb->superblock.node_size, TYPE_TREE_BLOCK_REF, &tbr, NULL, th->level - 1, Irp, rollback);
             if (!NT_SUCCESS(Status)) {
-                ERR("snapshot_tree_copy returned %08x\n", Status);
+                ERR("increase_extent_refcount returned %08x\n", Status);
                 goto end;
             }
-            
-            in[i].generation = Vcb->superblock.generation;
-            in[i].address = newaddr;
         }
     }
     
@@ -285,22 +285,21 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
     
     free_trees(Vcb);
     
-    clear_rollback(&rollback);
+    clear_rollback(Vcb, &rollback);
     
     InitializeListHead(&rollback);
     
     // create new root
     
-    if (Vcb->root_root->lastinode == 0)
-        get_last_inode(Vcb, Vcb->root_root, Irp);
-    
-    id = Vcb->root_root->lastinode > 0x100 ? (Vcb->root_root->lastinode + 1) : 0x101;
+    id = InterlockedIncrement64(&Vcb->root_root->lastinode);
     Status = create_root(Vcb, id, &r, TRUE, Vcb->superblock.generation, Irp, &rollback);
     
     if (!NT_SUCCESS(Status)) {
         ERR("create_root returned %08x\n", Status);
         goto end;
     }
+    
+    r->lastinode = subvol->lastinode;
     
     if (!Vcb->uuid_root) {
         root* uuid_root;
@@ -334,7 +333,7 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
         RtlCopyMemory(&searchkey.offset, &r->root_item.uuid.uuid[sizeof(UINT64)], sizeof(UINT64));
         
         Status = find_item(Vcb, Vcb->uuid_root, &tp, &searchkey, FALSE, Irp);
-    } while (NT_SUCCESS(Status) && !keycmp(&searchkey, &tp.item->key));
+    } while (NT_SUCCESS(Status) && !keycmp(searchkey, tp.item->key));
     
     *root_num = r->id;
     
@@ -394,7 +393,6 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
     }
     
     RtlCopyMemory(tp.item->data, &r->root_item, sizeof(ROOT_ITEM));
-    Vcb->root_root->lastinode = r->id;
     
     // update ROOT_ITEM of original subvol
     
@@ -433,7 +431,7 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
     
     RtlCopyMemory(fr->utf8.Buffer, utf8->Buffer, utf8->Length);
     
-    Status = open_fcb(Vcb, r, r->root_item.objid, BTRFS_TYPE_DIRECTORY, utf8, fcb, &fr->fcb, Irp);
+    Status = open_fcb(Vcb, r, r->root_item.objid, BTRFS_TYPE_DIRECTORY, utf8, fcb, &fr->fcb, PagedPool, Irp);
     if (!NT_SUCCESS(Status)) {
         ERR("open_fcb returned %08x\n", Status);
         free_fileref(fr);
@@ -486,9 +484,14 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
     fcb->inode_item.transid = Vcb->superblock.generation;
     fcb->inode_item.sequence++;
     fcb->inode_item.st_size += utf8->Length * 2;
-    fcb->inode_item.st_ctime = now;
-    fcb->inode_item.st_mtime = now;
     
+    if (!ccb->user_set_change_time)
+        fcb->inode_item.st_ctime = now;
+    
+    if (!ccb->user_set_write_time)
+        fcb->inode_item.st_mtime = now;
+    
+    fcb->inode_item_changed = TRUE;
     mark_fcb_dirty(fcb);
     
     fcb->subvol->root_item.ctime = now;
@@ -522,7 +525,7 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
     
 end:
     if (NT_SUCCESS(Status))
-        clear_rollback(&rollback);
+        clear_rollback(Vcb, &rollback);
     else
         do_rollback(Vcb, &rollback);
 
@@ -607,7 +610,7 @@ static NTSTATUS create_snapshot(device_extension* Vcb, PFILE_OBJECT FileObject, 
     ExAcquireResourceExclusiveLite(&Vcb->tree_lock, TRUE);
 
     // no need for fcb_lock as we have tree_lock exclusively
-    Status = open_fileref(fcb->Vcb, &fr2, &nameus, fileref, FALSE, NULL, NULL, Irp);
+    Status = open_fileref(fcb->Vcb, &fr2, &nameus, fileref, FALSE, NULL, NULL, PagedPool, FALSE, Irp);
     
     if (NT_SUCCESS(Status)) {
         if (!fr2->deleted) {
@@ -653,12 +656,38 @@ static NTSTATUS create_snapshot(device_extension* Vcb, PFILE_OBJECT FileObject, 
         goto end;
     }
     
+    // clear unique flag on extents of open files in subvol
+    if (!IsListEmpty(&subvol_fcb->subvol->fcbs)) {
+        LIST_ENTRY* le = subvol_fcb->subvol->fcbs.Flink;
+        
+        while (le != &subvol_fcb->subvol->fcbs) {
+            struct _fcb* openfcb = CONTAINING_RECORD(le, struct _fcb, list_entry);
+            LIST_ENTRY* le2;
+            
+            ExAcquireResourceExclusiveLite(openfcb->Header.Resource, TRUE);
+            
+            le2 = openfcb->extents.Flink;
+            
+            while (le2 != &openfcb->extents) {
+                extent* ext = CONTAINING_RECORD(le2, extent, list_entry);
+                
+                ext->unique = FALSE;
+                
+                le2 = le2->Flink;
+            }
+            
+            ExReleaseResourceLite(openfcb->Header.Resource);
+            
+            le = le->Flink;
+        }
+    }
+    
     Status = do_create_snapshot(Vcb, FileObject, subvol_fcb, &utf8, &nameus, Irp);
     
     if (NT_SUCCESS(Status)) {
         file_ref* fr;
 
-        Status = open_fileref(Vcb, &fr, &nameus, fileref, FALSE, NULL, NULL, Irp);
+        Status = open_fileref(Vcb, &fr, &nameus, fileref, FALSE, NULL, NULL, PagedPool, FALSE, Irp);
         
         if (!NT_SUCCESS(Status)) {
             ERR("open_fileref returned %08x\n", Status);
@@ -779,7 +808,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, WC
     InitializeListHead(&rollback);
     
     // no need for fcb_lock as we have tree_lock exclusively
-    Status = open_fileref(fcb->Vcb, &fr2, &nameus, fileref, FALSE, NULL, NULL, Irp);
+    Status = open_fileref(fcb->Vcb, &fr2, &nameus, fileref, FALSE, NULL, NULL, PagedPool, FALSE, Irp);
     
     if (NT_SUCCESS(Status)) {
         if (!fr2->deleted) {
@@ -794,12 +823,9 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, WC
         goto end;
     }
     
-    if (Vcb->root_root->lastinode == 0)
-        get_last_inode(Vcb, Vcb->root_root, Irp);
-    
     // FIXME - make sure rollback removes new roots from internal structures
     
-    id = Vcb->root_root->lastinode > 0x100 ? (Vcb->root_root->lastinode + 1) : 0x101;
+    id = InterlockedIncrement64(&Vcb->root_root->lastinode);
     Status = create_root(Vcb, id, &r, FALSE, 0, Irp, &rollback);
     
     if (!NT_SUCCESS(Status)) {
@@ -841,7 +867,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, WC
         RtlCopyMemory(&searchkey.offset, &r->root_item.uuid.uuid[sizeof(UINT64)], sizeof(UINT64));
         
         Status = find_item(Vcb, Vcb->uuid_root, &tp, &searchkey, FALSE, Irp);
-    } while (NT_SUCCESS(Status) && !keycmp(&searchkey, &tp.item->key));
+    } while (NT_SUCCESS(Status) && !keycmp(searchkey, tp.item->key));
     
     *root_num = r->id;
     
@@ -913,6 +939,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, WC
     }
     
     rootfcb->sd_dirty = TRUE;
+    rootfcb->inode_item_changed = TRUE;
 
     ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
     InsertTailList(&r->fcbs, &rootfcb->list_entry);
@@ -925,6 +952,8 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, WC
     rootfcb->Header.ValidDataLength.QuadPart = 0;
     
     rootfcb->created = TRUE;
+    
+    r->lastinode = rootfcb->inode;
     
     // add INODE_REF
     
@@ -1019,20 +1048,23 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, WC
     fcb->inode_item.transid = Vcb->superblock.generation;
     fcb->inode_item.st_size += utf8.Length * 2;
     fcb->inode_item.sequence++;
-    fcb->inode_item.st_ctime = now;
-    fcb->inode_item.st_mtime = now;
     
+    if (!ccb->user_set_change_time)
+        fcb->inode_item.st_ctime = now;
+    
+    if (!ccb->user_set_write_time)
+        fcb->inode_item.st_mtime = now;
+    
+    fcb->inode_item_changed = TRUE;
     mark_fcb_dirty(fcb);
     
-    Vcb->root_root->lastinode = id;
-
     Status = STATUS_SUCCESS;    
     
 end:
     if (!NT_SUCCESS(Status))
         do_rollback(Vcb, &rollback);
     else
-        clear_rollback(&rollback);
+        clear_rollback(Vcb, &rollback);
     
     ExReleaseResourceLite(&Vcb->tree_lock);
     
@@ -1233,8 +1265,10 @@ static NTSTATUS set_inode_info(PFILE_OBJECT FileObject, void* data, ULONG length
     if (bsii->gid_changed)
         fcb->inode_item.st_gid = bsii->st_gid;
     
-    if (bsii->flags_changed || bsii->mode_changed || bsii->uid_changed || bsii->gid_changed)
+    if (bsii->flags_changed || bsii->mode_changed || bsii->uid_changed || bsii->gid_changed) {
+        fcb->inode_item_changed = TRUE;
         mark_fcb_dirty(fcb);
+    }
     
     Status = STATUS_SUCCESS;
     
@@ -1278,7 +1312,7 @@ static NTSTATUS is_volume_mounted(device_extension* Vcb, PIRP Irp) {
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS fs_get_statistics(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject, void* buffer, DWORD buflen, DWORD* retlen) {
+static NTSTATUS fs_get_statistics(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject, void* buffer, DWORD buflen, ULONG_PTR* retlen) {
     FILESYSTEM_STATISTICS* fss;
     
     WARN("STUB: FSCTL_FILESYSTEM_GET_STATISTICS\n");
@@ -1328,7 +1362,7 @@ static NTSTATUS set_sparse(device_extension* Vcb, PFILE_OBJECT FileObject, void*
         return STATUS_INVALID_PARAMETER;
     }
     
-    if (!(ccb->access & FILE_WRITE_ATTRIBUTES)) {
+    if (Irp->RequestorMode == UserMode && !(ccb->access & FILE_WRITE_ATTRIBUTES)) {
         WARN("insufficient privileges\n");
         return STATUS_ACCESS_DENIED;
     }
@@ -1478,7 +1512,7 @@ static NTSTATUS set_zero_data(device_extension* Vcb, PFILE_OBJECT FileObject, vo
         return STATUS_INVALID_PARAMETER;
     }
     
-    if (!(ccb->access & FILE_WRITE_DATA)) {
+    if (Irp->RequestorMode == UserMode && !(ccb->access & FILE_WRITE_DATA)) {
         WARN("insufficient privileges\n");
         return STATUS_ACCESS_DENIED;
     }
@@ -1591,10 +1625,15 @@ static NTSTATUS set_zero_data(device_extension* Vcb, PFILE_OBJECT FileObject, vo
     
     fcb->inode_item.transid = Vcb->superblock.generation;
     fcb->inode_item.sequence++;
-    fcb->inode_item.st_ctime = now;
-    fcb->inode_item.st_mtime = now;
+    
+    if (!ccb->user_set_change_time)
+        fcb->inode_item.st_ctime = now;
+    
+    if (!ccb->user_set_write_time)
+        fcb->inode_item.st_mtime = now;
     
     fcb->extents_changed = TRUE;
+    fcb->inode_item_changed = TRUE;
     mark_fcb_dirty(fcb);
     
     send_notification_fcb(fileref, FILE_NOTIFY_CHANGE_LAST_WRITE, FILE_ACTION_MODIFIED);
@@ -1614,7 +1653,7 @@ end:
     if (!NT_SUCCESS(Status))
         do_rollback(Vcb, &rollback);
     else
-        clear_rollback(&rollback);
+        clear_rollback(Vcb, &rollback);
     
     ExReleaseResourceLite(fcb->Header.Resource);
     ExReleaseResourceLite(&Vcb->tree_lock);
@@ -1622,7 +1661,7 @@ end:
     return Status;
 }
 
-static NTSTATUS query_ranges(device_extension* Vcb, PFILE_OBJECT FileObject, FILE_ALLOCATED_RANGE_BUFFER* inbuf, ULONG inbuflen, void* outbuf, ULONG outbuflen, DWORD* retlen) {
+static NTSTATUS query_ranges(device_extension* Vcb, PFILE_OBJECT FileObject, FILE_ALLOCATED_RANGE_BUFFER* inbuf, ULONG inbuflen, void* outbuf, ULONG outbuflen, ULONG_PTR* retlen) {
     NTSTATUS Status;
     fcb* fcb;
     LIST_ENTRY* le;
@@ -1721,7 +1760,7 @@ end:
     return Status;
 }
 
-static NTSTATUS get_object_id(device_extension* Vcb, PFILE_OBJECT FileObject, FILE_OBJECTID_BUFFER* buf, ULONG buflen, DWORD* retlen) {
+static NTSTATUS get_object_id(device_extension* Vcb, PFILE_OBJECT FileObject, FILE_OBJECTID_BUFFER* buf, ULONG buflen, ULONG_PTR* retlen) {
     fcb* fcb;
     
     TRACE("(%p, %p, %p, %x, %p)\n", Vcb, FileObject, buf, buflen, retlen);
@@ -1787,7 +1826,7 @@ static NTSTATUS lock_volume(device_extension* Vcb, PIRP Irp) {
     
     ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
     
-    if (Vcb->root_fileref && Vcb->root_fileref->fcb && (Vcb->root_fileref->fcb->open_count > 0 || has_open_children(Vcb->root_fileref))) {
+    if (Vcb->root_fileref && Vcb->root_fileref->fcb && (Vcb->root_fileref->open_count > 0 || has_open_children(Vcb->root_fileref))) {
         Status = STATUS_ACCESS_DENIED;
         ExReleaseResourceLite(&Vcb->fcb_lock);
         goto end;
@@ -1808,7 +1847,7 @@ static NTSTATUS lock_volume(device_extension* Vcb, PIRP Irp) {
     
     free_trees(Vcb);
     
-    clear_rollback(&rollback);
+    clear_rollback(Vcb, &rollback);
     
     ExReleaseResourceLite(&Vcb->tree_lock);
     
@@ -1949,7 +1988,7 @@ static NTSTATUS invalidate_volumes(PIRP Irp) {
                 
                 free_trees(Vcb);
                 
-                clear_rollback(&rollback);
+                clear_rollback(Vcb, &rollback);
                 
                 flush_fcb_caches(Vcb);
                 
@@ -2016,6 +2055,99 @@ static NTSTATUS is_volume_dirty(device_extension* Vcb, PIRP Irp) {
     return STATUS_SUCCESS;
 }
 
+static NTSTATUS get_compression(device_extension* Vcb, PIRP Irp) {
+    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    USHORT* compression;
+    
+    TRACE("FSCTL_GET_COMPRESSION\n");
+
+    if (Irp->AssociatedIrp.SystemBuffer) {
+        compression = Irp->AssociatedIrp.SystemBuffer;
+    } else if (Irp->MdlAddress != NULL) {
+        compression = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, LowPagePriority);
+
+        if (!compression)
+            return STATUS_INSUFFICIENT_RESOURCES;
+    } else
+        return STATUS_INVALID_USER_BUFFER;
+
+    if (IrpSp->Parameters.FileSystemControl.OutputBufferLength < sizeof(USHORT))
+        return STATUS_INVALID_PARAMETER;
+
+    *compression = COMPRESSION_FORMAT_NONE;
+
+    Irp->IoStatus.Information = sizeof(USHORT);
+
+    return STATUS_SUCCESS;
+}
+
+static void update_volumes(device_extension* Vcb) {
+    LIST_ENTRY* le = volumes.Flink;
+        
+    while (le != &volumes) {
+        volume* v = CONTAINING_RECORD(le, volume, list_entry);
+        
+        if (RtlCompareMemory(&Vcb->superblock.uuid, &v->fsuuid, sizeof(BTRFS_UUID)) == sizeof(BTRFS_UUID)) {
+            UINT64 i;
+            
+            for (i = 0; i < Vcb->superblock.num_devices; i++) {
+                if (RtlCompareMemory(&Vcb->devices[i].devitem.device_uuid, &v->devuuid, sizeof(BTRFS_UUID)) == sizeof(BTRFS_UUID)) {
+                    v->gen1 = v->gen2 = Vcb->superblock.generation - 1;
+                    break;
+                }
+            }
+        }
+        
+        le = le->Flink;
+    }
+}
+
+static NTSTATUS dismount_volume(device_extension* Vcb, PIRP Irp) {
+    NTSTATUS Status;
+    KIRQL irql;
+    LIST_ENTRY rollback;
+    
+    TRACE("FSCTL_DISMOUNT_VOLUME\n");
+    
+    if (!(Vcb->Vpb->Flags & VPB_MOUNTED))
+        return STATUS_SUCCESS;
+    
+    if (Vcb->disallow_dismount) {
+        WARN("attempting to dismount boot volume or one containing a pagefile\n");
+        return STATUS_ACCESS_DENIED;
+    }
+    
+    InitializeListHead(&rollback);
+    
+    Status = FsRtlNotifyVolumeEvent(Vcb->root_file, FSRTL_VOLUME_DISMOUNT);
+    if (!NT_SUCCESS(Status)) {
+        WARN("FsRtlNotifyVolumeEvent returned %08x\n", Status);
+    }
+    
+    ExAcquireResourceExclusiveLite(&Vcb->tree_lock, TRUE);
+    
+    flush_fcb_caches(Vcb);
+    
+    if (Vcb->need_write && !Vcb->readonly)
+        do_write(Vcb, Irp, &rollback);
+    
+    free_trees(Vcb);
+    
+    clear_rollback(Vcb, &rollback);
+    
+    Vcb->removing = TRUE;
+    update_volumes(Vcb);
+    
+    ExReleaseResourceLite(&Vcb->tree_lock);
+    
+    IoAcquireVpbSpinLock(&irql);
+    Vcb->Vpb->Flags &= ~VPB_MOUNTED;
+    Vcb->Vpb->Flags |= VPB_DIRECT_WRITES_ALLOWED;
+    IoReleaseVpbSpinLock(irql);
+    
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL user) {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS Status;
@@ -2060,8 +2192,7 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL 
             break;
 
         case FSCTL_DISMOUNT_VOLUME:
-            WARN("STUB: FSCTL_DISMOUNT_VOLUME\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = dismount_volume(DeviceObject->DeviceExtension, Irp);
             break;
 
         case FSCTL_IS_VOLUME_MOUNTED:
@@ -2084,8 +2215,7 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL 
             break;
 
         case FSCTL_GET_COMPRESSION:
-            WARN("STUB: FSCTL_GET_COMPRESSION\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = get_compression(DeviceObject->DeviceExtension, Irp);
             break;
 
         case FSCTL_SET_COMPRESSION:

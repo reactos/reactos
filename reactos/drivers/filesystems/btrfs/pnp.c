@@ -151,7 +151,7 @@ device_extension* Vcb = DeviceObject->DeviceExtension;
     
     ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
 
-    if (Vcb->root_fileref && Vcb->root_fileref->fcb && (Vcb->root_fileref->fcb->open_count > 0 || has_open_children(Vcb->root_fileref))) {
+    if (Vcb->root_fileref && Vcb->root_fileref->fcb && (Vcb->root_fileref->open_count > 0 || has_open_children(Vcb->root_fileref))) {
         Status = STATUS_ACCESS_DENIED;
         goto end;
     }
@@ -176,7 +176,7 @@ static NTSTATUS pnp_query_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     
     ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
 
-    if (Vcb->root_fileref && Vcb->root_fileref->fcb && (Vcb->root_fileref->fcb->open_count > 0 || has_open_children(Vcb->root_fileref))) {
+    if (Vcb->root_fileref && Vcb->root_fileref->fcb && (Vcb->root_fileref->open_count > 0 || has_open_children(Vcb->root_fileref))) {
         Status = STATUS_ACCESS_DENIED;
         goto end;
     }
@@ -196,7 +196,7 @@ static NTSTATUS pnp_query_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     if (Vcb->need_write && !Vcb->readonly)
         do_write(Vcb, Irp, &rollback);
     
-    clear_rollback(&rollback);
+    clear_rollback(Vcb, &rollback);
 
     ExReleaseResourceLite(&Vcb->tree_lock);
 
@@ -222,8 +222,11 @@ static NTSTATUS pnp_remove_device(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
             WARN("FsRtlNotifyVolumeEvent returned %08x\n", Status);
         }
         
-        uninit(Vcb, FALSE);
-        Vcb->Vpb->Flags &= ~VPB_MOUNTED;
+        if (Vcb->open_files > 0) {
+            Vcb->removing = TRUE;
+            Vcb->Vpb->Flags &= ~VPB_MOUNTED;
+        } else
+            uninit(Vcb, FALSE);
     }
 
     return STATUS_SUCCESS;
@@ -241,8 +244,11 @@ static NTSTATUS pnp_surprise_removal(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
     TRACE("(%p, %p)\n", DeviceObject, Irp);
     
     if (DeviceObject->Vpb->Flags & VPB_MOUNTED) {
-        uninit(Vcb, FALSE);
-        Vcb->Vpb->Flags &= ~VPB_MOUNTED;
+        if (Vcb->open_files > 0) {
+            Vcb->removing = TRUE;
+            Vcb->Vpb->Flags &= ~VPB_MOUNTED;
+        } else
+            uninit(Vcb, FALSE);
     }
 
     return STATUS_SUCCESS;
