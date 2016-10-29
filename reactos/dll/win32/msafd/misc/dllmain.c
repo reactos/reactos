@@ -95,13 +95,33 @@ WSPSocket(int AddressFamily,
         Protocol = SharedData->Protocol;
     }
 
-    if (AddressFamily == AF_UNSPEC && SocketType == 0 && Protocol == 0)
+    if (lpProtocolInfo)
+    {
+        if (lpProtocolInfo->iAddressFamily && AddressFamily <= 0)
+            AddressFamily = lpProtocolInfo->iAddressFamily;
+        if (lpProtocolInfo->iSocketType && SocketType <= 0)
+            SocketType = lpProtocolInfo->iSocketType;
+        if (lpProtocolInfo->iProtocol && Protocol <= 0)
+            Protocol = lpProtocolInfo->iProtocol;
+    }
+
+    /* FIXME: AF_NETDES should be AF_MAX */
+    if (AddressFamily < AF_UNSPEC || AddressFamily > AF_NETDES)
+        return WSAEINVAL;
+
+    if (SocketType < 0 && SocketType > SOCK_SEQPACKET)
+        return WSAEINVAL;
+
+    if (Protocol < 0 && Protocol > IPPROTO_MAX)
+        return WSAEINVAL;
+
+    /* when no protocol and socket type are specified the first entry
+    * from WSAEnumProtocols that has the flag PFL_MATCHES_PROTOCOL_ZERO
+    * is returned */
+    if (SocketType == 0 && Protocol == 0 && lpProtocolInfo && (lpProtocolInfo->dwProviderFlags & PFL_MATCHES_PROTOCOL_ZERO) == 0)
         return WSAEINVAL;
 
     /* Set the defaults */
-    if (AddressFamily == AF_UNSPEC)
-        AddressFamily = AF_INET;
-
     if (SocketType == 0)
     {
         switch (Protocol)
@@ -117,8 +137,7 @@ WSPSocket(int AddressFamily,
             break;
         default:
             TRACE("Unknown Protocol (%d). We will try SOCK_STREAM.\n", Protocol);
-            SocketType = SOCK_STREAM;
-            break;
+            return WSAEINVAL;
         }
     }
 
@@ -137,10 +156,12 @@ WSPSocket(int AddressFamily,
             break;
         default:
             TRACE("Unknown SocketType (%d). We will try IPPROTO_TCP.\n", SocketType);
-            Protocol = IPPROTO_TCP;
-            break;
+            return WSAEINVAL;
         }
     }
+
+    if (AddressFamily == AF_UNSPEC)
+        return WSAEINVAL;
 
     /* Get Helper Data and Transport */
     Status = SockGetTdiName (&AddressFamily,
