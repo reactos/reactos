@@ -64,16 +64,8 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/user32_stubs.c
     include/user32.h)
 
-if(ARCH STREQUAL "i386")
-    list(APPEND ASM_SOURCE
-        windows/wndproc_fixup.S)
-endif()
-
-add_asm_files(user32_asm ${ASM_SOURCE})
-
 add_library(user32 SHARED
     ${SOURCE}
-    ${user32_asm}
     user32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/user32.def)
 
