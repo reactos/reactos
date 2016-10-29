@@ -20,6 +20,7 @@ list(APPEND SOURCE
     NtQueryVolumeInformationFile.c
     NtSaveKey.c
     NtSetValueKey.c
+    NtWriteFile.c
     RtlAllocateHeap.c
     RtlBitmap.c
     RtlCopyMappedMemory.c
