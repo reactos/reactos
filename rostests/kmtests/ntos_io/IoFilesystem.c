@@ -292,6 +292,7 @@ TestRelativeNames(VOID)
         { NULL,                         L"C:\\ReactOS\\explorer.exe",       FALSE,  STATUS_SUCCESS },
         { NULL,                         L"C:\\ReactOS\\\\explorer.exe",     FALSE,  STATUS_OBJECT_NAME_INVALID },
         { NULL,                         L"C:\\ReactOS\\explorer.exe\\",     FALSE,  STATUS_OBJECT_NAME_INVALID },
+        { NULL,                         L"C:\\ReactOS\\explorer.exe\\file", FALSE,  STATUS_OBJECT_PATH_NOT_FOUND },
         { NULL,                         L"C:\\ReactOS\\explorer.exe\\\\",   FALSE,  STATUS_OBJECT_NAME_INVALID },
         /* This will never return STATUS_NOT_A_DIRECTORY. IsDirectory=TRUE is a little hacky but achieves that without special handling */
         { NULL,                         L"C:\\ReactOS\\explorer.exe\\\\\\", TRUE,   STATUS_OBJECT_NAME_INVALID },
