@@ -12,12 +12,23 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include <reactos/version.rc>
 
 /* Icons */
-1  ICON "res/ntvdm.ico"
-// 2  ICON "res/ntvdm_2.ico" // TODO: Swyter's icon, see CORE-10340
-3  ICON "res/pc_xt.ico"
-4  ICON "res/pc_at.ico"
-5  ICON "res/ros_dos.ico"
-6  ICON "res/vdm_dos.ico"
+
+/* Icons for the PC-AT (most recent IBM-PC version) */
+1  ICON "res/ntvdm_pc_at_grey.ico"
+2  ICON "res/ntvdm_pc_at_brown.ico"
+3  ICON "res/ntvdm_pc_at_flat.ico"
+4  ICON "res/ntvdm_pc_at_3d.ico"
+5  ICON "res/pc_at.ico"
+/* Icons for the PC-XT (older IBM-PC version) */
+6  ICON "res/ntvdm_pc_xt_grey.ico"
+7  ICON "res/ntvdm_pc_xt_brown.ico"
+8  ICON "res/ntvdm_pc_xt_flat.ico"
+9  ICON "res/ntvdm_pc_xt_3d.ico"
+10 ICON "res/pc_xt.ico"
+/* Embedded products */
+11 ICON "res/ros_dos.ico"
+12 ICON "res/vdm_dos.ico"
+
 
 /* UTF-8 */
 #pragma code_page(65001)
