@@ -716,7 +716,8 @@ static NTSTATUS STDCALL drv_query_volume_information(IN PDEVICE_OBJECT DeviceObj
             Status = overflow ? STATUS_BUFFER_OVERFLOW : STATUS_SUCCESS;
             break;
         }
-        
+
+#ifndef __REACTOS__
 #ifdef _MSC_VER // not in mingw yet
         case FileFsSectorSizeInformation:
         {
@@ -739,6 +740,7 @@ static NTSTATUS STDCALL drv_query_volume_information(IN PDEVICE_OBJECT DeviceObj
             break;
         }
 #endif
+#endif /* __REACTOS__ */
 
         default:
             Status = STATUS_INVALID_PARAMETER;
