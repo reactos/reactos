@@ -95,33 +95,13 @@ WSPSocket(int AddressFamily,
         Protocol = SharedData->Protocol;
     }
 
-    if (lpProtocolInfo)
-    {
-        if (lpProtocolInfo->iAddressFamily && AddressFamily <= 0)
-            AddressFamily = lpProtocolInfo->iAddressFamily;
-        if (lpProtocolInfo->iSocketType && SocketType <= 0)
-            SocketType = lpProtocolInfo->iSocketType;
-        if (lpProtocolInfo->iProtocol && Protocol <= 0)
-            Protocol = lpProtocolInfo->iProtocol;
-    }
-
-    /* FIXME: AF_NETDES should be AF_MAX */
-    if (AddressFamily < AF_UNSPEC || AddressFamily > AF_NETDES)
-        return WSAEINVAL;
-
-    if (SocketType < 0 && SocketType > SOCK_SEQPACKET)
-        return WSAEINVAL;
-
-    if (Protocol < 0 && Protocol > IPPROTO_MAX)
-        return WSAEINVAL;
-
-    /* when no protocol and socket type are specified the first entry
-    * from WSAEnumProtocols that has the flag PFL_MATCHES_PROTOCOL_ZERO
-    * is returned */
-    if (SocketType == 0 && Protocol == 0 && lpProtocolInfo && (lpProtocolInfo->dwProviderFlags & PFL_MATCHES_PROTOCOL_ZERO) == 0)
+    if (AddressFamily == AF_UNSPEC && SocketType == 0 && Protocol == 0)
         return WSAEINVAL;
 
     /* Set the defaults */
+    if (AddressFamily == AF_UNSPEC)
+        AddressFamily = AF_INET;
+
     if (SocketType == 0)
     {
         switch (Protocol)
@@ -137,7 +117,8 @@ WSPSocket(int AddressFamily,
             break;
         default:
             TRACE("Unknown Protocol (%d). We will try SOCK_STREAM.\n", Protocol);
-            return WSAEINVAL;
+            SocketType = SOCK_STREAM;
+            break;
         }
     }
 
@@ -156,12 +137,10 @@ WSPSocket(int AddressFamily,
             break;
         default:
             TRACE("Unknown SocketType (%d). We will try IPPROTO_TCP.\n", SocketType);
-            return WSAEINVAL;
+            Protocol = IPPROTO_TCP;
+            break;
         }
     }
-
-    if (AddressFamily == AF_UNSPEC)
-        return WSAEINVAL;
 
     /* Get Helper Data and Transport */
     Status = SockGetTdiName (&AddressFamily,
@@ -1719,46 +1698,6 @@ WSPAccept(SOCKET Handle,
     return AcceptSocket;
 }
 
-VOID
-NTAPI
-AfdConnectAPC(PVOID ApcContext,
-              PIO_STATUS_BLOCK IoStatusBlock,
-              ULONG Reserved)
-{
-    PAFDCONNECTAPCCONTEXT Context = ApcContext;
-
-    if (IoStatusBlock->Status == STATUS_SUCCESS)
-    {
-        Context->lpSocket->SharedData->State = SocketConnected;
-        Context->lpSocket->TdiConnectionHandle = (HANDLE)IoStatusBlock->Information;
-    }
-
-    if (Context->lpConnectInfo) HeapFree(GetProcessHeap(), 0, Context->lpConnectInfo);
-
-    /* Re-enable Async Event */
-    SockReenableAsyncSelectEvent(Context->lpSocket, FD_WRITE);
-
-    /* FIXME: THIS IS NOT RIGHT!!! HACK HACK HACK! */
-    SockReenableAsyncSelectEvent(Context->lpSocket, FD_CONNECT);
-
-    if (IoStatusBlock->Status == STATUS_SUCCESS && (Context->lpSocket->HelperEvents & WSH_NOTIFY_CONNECT))
-    {
-        Context->lpSocket->HelperData->WSHNotify(Context->lpSocket->HelperContext,
-                                                 Context->lpSocket->Handle,
-                                                 Context->lpSocket->TdiAddressHandle,
-                                                 Context->lpSocket->TdiConnectionHandle,
-                                                 WSH_NOTIFY_CONNECT);
-    }
-    else if (IoStatusBlock->Status != STATUS_SUCCESS && (Context->lpSocket->HelperEvents & WSH_NOTIFY_CONNECT_ERROR))
-    {
-        Context->lpSocket->HelperData->WSHNotify(Context->lpSocket->HelperContext,
-                                                 Context->lpSocket->Handle,
-                                                 Context->lpSocket->TdiAddressHandle,
-                                                 Context->lpSocket->TdiConnectionHandle,
-                                                 WSH_NOTIFY_CONNECT_ERROR);
-    }
-    HeapFree(GlobalHeap, 0, ApcContext);
-}
 int
 WSPAPI
 WSPConnect(SOCKET Handle,
@@ -1781,18 +1720,6 @@ WSPConnect(SOCKET Handle,
     PSOCKADDR               BindAddress;
     HANDLE                  SockEvent;
     int                     SocketDataLength;
-    PVOID                   APCContext = NULL;
-    PVOID                   APCFunction = NULL;
-
-    TRACE("Called\n");
-
-    /* Get the Socket Structure associate to this Socket*/
-    Socket = GetSocketStructure(Handle);
-    if (!Socket)
-    {
-        if (lpErrno) *lpErrno = WSAENOTSOCK;
-        return SOCKET_ERROR;
-    }
 
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
@@ -1802,6 +1729,17 @@ WSPConnect(SOCKET Handle,
 
     if (!NT_SUCCESS(Status))
         return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
+
+    TRACE("Called\n");
+
+    /* Get the Socket Structure associate to this Socket*/
+    Socket = GetSocketStructure(Handle);
+    if (!Socket)
+    {
+        NtClose(SockEvent);
+        if (lpErrno) *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
 
     /* Bind us First */
     if (Socket->SharedData->State == SocketOpen)
@@ -1913,22 +1851,14 @@ WSPConnect(SOCKET Handle,
     /* FIXME: Handle Async Connect */
     if (Socket->SharedData->NonBlocking)
     {
-        APCFunction = &AfdConnectAPC; // should be a private io completition function inside us
-        APCContext = HeapAlloc(GlobalHeap, 0, sizeof(AFDCONNECTAPCCONTEXT));
-        if (!APCContext)
-        {
-            ERR("Not enough memory for APC Context\n");
-            return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
-        }
-        ((PAFDCONNECTAPCCONTEXT)APCContext)->lpConnectInfo = ConnectInfo;
-        ((PAFDCONNECTAPCCONTEXT)APCContext)->lpSocket = Socket;
+        ERR("Async Connect UNIMPLEMENTED!\n");
     }
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
                                    SockEvent,
-                                   APCFunction,
-                                   APCContext,
+                                   NULL,
+                                   NULL,
                                    &IOSB,
                                    IOCTL_AFD_CONNECT,
                                    ConnectInfo,
@@ -1936,19 +1866,11 @@ WSPConnect(SOCKET Handle,
                                    NULL,
                                    0);
     /* Wait for return */
-    if (Status == STATUS_PENDING && !Socket->SharedData->NonBlocking)
+    if (Status == STATUS_PENDING)
     {
         WaitForSingleObject(SockEvent, INFINITE);
         Status = IOSB.Status;
     }
-
-    if (Status == STATUS_PENDING)
-    {
-        TRACE("Leaving (Pending)\n");
-        return MsafdReturnWithErrno(STATUS_CANT_WAIT, lpErrno, 0, NULL);
-    }
-
-    if (APCContext) HeapFree(GetProcessHeap(), 0, APCContext);
 
     if (Status != STATUS_SUCCESS)
         goto notify;

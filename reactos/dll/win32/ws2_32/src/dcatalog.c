@@ -490,20 +490,6 @@ WsTcGetEntryFromTriplet(IN PTCATALOG Catalog,
     /* Assume failure */
     *CatalogEntry = NULL;
 
-    /* Params can't be all wildcards */
-    if (af == AF_UNSPEC && type == 0 && protocol == 0)
-        return WSAEINVAL;
-
-    /* FIXME: AF_NETDES should be AF_MAX */
-    if (af < AF_UNSPEC || af > AF_NETDES)
-        return WSAEINVAL;
-
-    if (type < 0 && type > SOCK_SEQPACKET)
-        return WSAEINVAL;
-
-    if (protocol < 0 && protocol > IPPROTO_MAX)
-        return WSAEINVAL;
-
     /* Lock the catalog */
     WsTcLock();
 
@@ -541,13 +527,6 @@ WsTcGetEntryFromTriplet(IN PTCATALOG Catalog,
                       Entry->ProtocolInfo.iProtocolMaxOffset) >= protocol)) ||
                     (protocol == 0))
                 {
-                    /* Check that if type and protocol are 0 provider entry has PFL_MATCHES_PROTOCOL_ZERO flag set */
-                    if (type == 0 && protocol == 0 && (Entry->ProtocolInfo.dwProviderFlags & PFL_MATCHES_PROTOCOL_ZERO) == 0)
-                    {
-                        ErrorCode = WSAEPROTONOSUPPORT;
-                        continue;
-                    }
-
                     /* Check if it doesn't already have a provider */
                     if (!Entry->Provider)
                     {
@@ -571,14 +550,12 @@ WsTcGetEntryFromTriplet(IN PTCATALOG Catalog,
             } 
             else 
             {
-                if (ErrorCode != WSAEPROTONOSUPPORT)
-                    ErrorCode = WSAESOCKTNOSUPPORT;
+                ErrorCode = WSAESOCKTNOSUPPORT;
             }
         } 
         else 
         {
-            if (ErrorCode != WSAEPROTONOSUPPORT && ErrorCode != WSAESOCKTNOSUPPORT)
-                ErrorCode = WSAEAFNOSUPPORT;
+            ErrorCode = WSAEAFNOSUPPORT;
         }
     }
 
