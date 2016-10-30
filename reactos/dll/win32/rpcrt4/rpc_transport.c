@@ -458,7 +458,6 @@ static RPC_STATUS rpcrt4_ncacn_np_handoff(RpcConnection *old_conn, RpcConnection
 
   /* Store the local computer name as the NetworkAddr for ncacn_np as long as
    * we don't support named pipes over the network. */
-  FIXME("Using local computer name as NetworkAddr\n");
   new_conn->NetworkAddr = HeapAlloc(GetProcessHeap(), 0, len);
   if (!GetComputerNameA(new_conn->NetworkAddr, &len))
   {
