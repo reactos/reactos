@@ -24,21 +24,21 @@
 #define HAVE_STRING_H 1
 #define STDC_HEADERS 1
 
-#ifndef WIN32
+#ifndef _WIN32
     #define HAVE_UNISTD_H 1
 #endif
 
 #define HAVE_LIMITS_H 1
 #define HAVE_FCNTL_H 1
 
-#ifdef WIN32
+#ifdef _WIN32
     #define HAVE_IO_H 1
 #endif
 
 #define HAVE_INTTYPES_H 1
 #define HAVE_STDINT_H 1
 
-#ifndef WIN32
+#ifndef _WIN32
     #define HAVE_DIRENT_H 1
     #define HAVE_SYS_TIME_H 1
     #define TIME_WITH_SYS_TIME 1
@@ -48,7 +48,7 @@
 #define HAVE_MATH_H 1
 #define HAVE_ERRNO_DEF 1
 
-#ifdef WIN32
+#ifdef _WIN32
     #define HAVE_WINDOWS_H 1
     #define WBOOL WINBOOL
 #endif
@@ -72,7 +72,7 @@
 #define HAVE_MEMMOVE 1
 #define HAVE_MEMSET 1
 
-#ifndef WIN32
+#ifndef _WIN32
     #define HAVE_GETTIMEOFDAY 1
 #endif
 
@@ -109,7 +109,7 @@
 #define HAVE_STRCASECMP 1
 #define HAVE_STRNCASECMP 1
 
-#ifndef WIN32
+#ifndef _WIN32
     #define HAVE_USLEEP 1
 #endif
 
@@ -133,7 +133,7 @@
 #define HAVE_WCSRCHR 1
 #define HAVE_WCSSTR 1
 
-#ifndef WIN32
+#ifndef _WIN32
     #define HAVE_WCWIDTH 1
 #endif
 
@@ -145,21 +145,21 @@
 #define HAVE_MBRTOWC 1
 #define HAVE_WCRTOMB 1
 
-#if !defined(WIN32) && !defined(__APPLE__)
+#if !defined(_WIN32) && !defined(__APPLE__)
     #define HAVE_RAW_FEXECVE 1
 #endif
 
 /*
  * Misc OS stuff
  */
-#ifndef WIN32
+#ifndef _WIN32
     #define HAVE__DEV_NULL 1
 #endif
 
 /*
  * Structures
  */
-#ifndef WIN32
+#ifndef _WIN32
     #define HAVE_STRUCT_TIMEVAL 1
 #endif
 
@@ -171,11 +171,11 @@
  */
 #define HAVE_LONGLONG 1
 
-#ifndef WIN32
+#ifndef _WIN32
     #define VA_LIST_IS_ARRAY 1
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
     #define uid_t int
     #define gid_t int
     #define nlink_t unsigned long
