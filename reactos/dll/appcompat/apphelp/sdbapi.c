@@ -425,7 +425,7 @@ PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type)
     if (!db)
         return NULL;
 
-    if (major != 2)
+    if (major != 2 && major != 3)
     {
         SdbCloseDatabase(db);
         SHIM_ERR("Invalid shim database version\n");
@@ -560,6 +560,67 @@ BOOL WINAPI SdbGetDatabaseVersion(LPCWSTR database, PDWORD VersionHi, PDWORD Ver
         SdbCloseDatabase(db);
 
     return TRUE;
+}
+
+
+/**
+ * Find the first named child tag.
+ *
+ * @param [in]  database    The database.
+ * @param [in]  root        The tag to start at
+ * @param [in]  find        The tag type to find
+ * @param [in]  nametag     The child of 'find' that contains the name
+ * @param [in]  find_name   The name to find
+ *
+ * @return  The found tag, or TAGID_NULL on failure
+ */
+TAGID WINAPI SdbFindFirstNamedTag(PDB db, TAGID root, TAGID find, TAGID nametag, LPCWSTR find_name)
+{
+    TAGID iter;
+
+    iter = SdbFindFirstTag(db, root, find);
+
+    while (iter != TAGID_NULL)
+    {
+        TAGID tmp = SdbFindFirstTag(db, iter, nametag);
+        if (tmp != TAGID_NULL)
+        {
+            LPCWSTR name = SdbGetStringTagPtr(db, tmp);
+            if (name && !lstrcmpiW(name, find_name))
+                return iter;
+        }
+        iter = SdbFindNextTag(db, root, iter);
+    }
+    return TAGID_NULL;
+}
+
+
+/**
+ * Find a named layer in a multi-db.
+ *
+ * @param [in]  hsdb        The multi-database.
+ * @param [in]  layerName   The named tag to find.
+ *
+ * @return  The layer, or TAGREF_NULL on failure
+ */
+TAGREF WINAPI SdbGetLayerTagRef(HSDB hsdb, LPCWSTR layerName)
+{
+    PDB db = hsdb->db;
+
+    TAGID database = SdbFindFirstTag(db, TAGID_ROOT, TAG_DATABASE);
+    if (database != TAGID_NULL)
+    {
+        TAGID layer = SdbFindFirstNamedTag(db, database, TAG_LAYER, TAG_NAME, layerName);
+        if (layer != TAGID_NULL)
+        {
+            TAGREF tr;
+            if (SdbTagIDToTagRef(hsdb, db, layer, &tr))
+            {
+                return tr;
+            }
+        }
+    }
+    return TAGREF_NULL;
 }
 
 

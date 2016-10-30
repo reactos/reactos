@@ -1,14 +1,19 @@
 #ifndef APPHELP_APITEST_H
 #define APPHELP_APITEST_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /* data.c */
-void test_create_db_imp(const char* name);
+void test_create_db_imp(const char* name, int win10);
 DWORD test_get_db_size();
 void test_create_exe_imp(const char* name, int skip_rsrc_exports);
 void test_create_file_imp(const char* name, const char* contents, size_t len);
 void test_create_ne_imp(const char* name, int skip_names);
 DWORD get_host_winver(void);
+DWORD get_module_version(HMODULE mod);
 void silence_debug_output(void);        // Silence output if the environment variable is not set.
 
 #define test_create_db      (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : test_create_db_imp
@@ -27,5 +32,8 @@ static DWORD g_WinVersion;
 #define WINVER_WIN8    0x0602
 #define WINVER_WIN10   0x0a00
 
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif // APPHELP_APITEST_H

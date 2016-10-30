@@ -569,6 +569,9 @@ void test_create_file_imp(const char* name, const char* contents, size_t len)
     }
 }
 
+static unsigned char win10Header[8] = {
+    0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 static unsigned char rawData[2356] = {
     0x02, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x73, 0x64, 0x62, 0x66,
     0x02, 0x78, 0x3E, 0x01, 0x00, 0x00, 0x03, 0x78, 0x44, 0x00, 0x00, 0x00,
@@ -774,7 +777,7 @@ DWORD test_get_db_size()
     return sizeof(rawData);
 }
 
-void test_create_db_imp(const char* name)
+void test_create_db_imp(const char* name, int win10)
 {
     HANDLE file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     winetest_ok(file != INVALID_HANDLE_VALUE, "can't create file '%s'\n", name);
@@ -782,6 +785,11 @@ void test_create_db_imp(const char* name)
     {
         DWORD size;
         WriteFile(file, rawData, sizeof(rawData), &size, NULL);
+        if (win10)
+        {
+            SetFilePointer(file, 0, NULL, FILE_BEGIN);
+            WriteFile(file, win10Header, sizeof(win10Header), &size, NULL);
+        }
         CloseHandle(file);
     }
 }
@@ -800,6 +808,36 @@ DWORD get_host_winver(void)
         g_WinVersion = (rtlinfo.dwMajorVersion << 8) | rtlinfo.dwMinorVersion;
     }
     return g_WinVersion;
+}
+
+DWORD get_module_version(HMODULE mod)
+{
+    DWORD dwVersion = 0;
+    HRSRC hResInfo = FindResource(mod, MAKEINTRESOURCE(VS_VERSION_INFO), RT_VERSION);
+    DWORD dwSize = SizeofResource(mod, hResInfo);
+    if (hResInfo && dwSize)
+    {
+        VS_FIXEDFILEINFO *lpFfi;
+        UINT uLen;
+
+        HGLOBAL hResData = LoadResource(mod, hResInfo);
+        LPVOID pRes = LockResource(hResData);
+        HLOCAL pResCopy = LocalAlloc(LMEM_FIXED, dwSize);
+
+        CopyMemory(pResCopy, pRes, dwSize);
+        FreeResource(hResData);
+
+        if (VerQueryValueW(pResCopy, L"\\", (LPVOID*)&lpFfi, &uLen))
+        {
+            dwVersion = (HIWORD(lpFfi->dwProductVersionMS) << 8) | LOWORD(lpFfi->dwProductVersionMS);
+            if (!dwVersion)
+                dwVersion = (HIWORD(lpFfi->dwFileVersionMS) << 8) | LOWORD(lpFfi->dwFileVersionMS);
+        }
+
+        LocalFree(pResCopy);
+    }
+
+    return dwVersion;
 }
 
 void silence_debug_output(void)

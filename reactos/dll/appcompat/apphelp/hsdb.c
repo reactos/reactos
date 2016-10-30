@@ -23,7 +23,6 @@
 #include "ntndk.h"
 #include "strsafe.h"
 #include "apphelp.h"
-//#include "sdbstringtable.h"
 
 #include "wine/unicode.h"
 
@@ -256,26 +255,58 @@ BOOL WINAPI SdbGetAppPatchDir(HSDB db, LPWSTR path, DWORD size)
  * Translates the given trWhich to a specific database / tagid
  *
  * @param [in]      hsdb        Handle to the database.
- * @param [in]      trWhich     Path to executable for which we query database.
+ * @param [in]      trWhich     Tagref to find
  * @param [out,opt] ppdb        The Shim database that trWhich belongs to.
  * @param [out,opt] ptiWhich    The tagid that trWhich corresponds to.
  *
  * @return  TRUE if it succeeds, FALSE if it fails.
  */
-BOOL WINAPI SdbTagRefToTagID(HSDB hSDB, TAGREF trWhich, PDB* ppdb, TAGID* ptiWhich)
+BOOL WINAPI SdbTagRefToTagID(HSDB hsdb, TAGREF trWhich, PDB* ppdb, TAGID* ptiWhich)
 {
     if (trWhich & 0xf0000000)
     {
         SHIM_ERR("Multiple shim databases not yet implemented!\n");
+        if (ppdb)
+            *ppdb = NULL;
+        if (ptiWhich)
+            *ptiWhich = TAG_NULL;
         return FALSE;
     }
 
     /* There seems to be no range checking on trWhich.. */
     if (ppdb)
-        *ppdb = hSDB->db;
+        *ppdb = hsdb->db;
     if (ptiWhich)
         *ptiWhich = trWhich & 0x0fffffff;
 
     return TRUE;
 }
+
+/**
+ * Translates the given trWhich to a specific database / tagid
+ *
+ * @param [in]      hsdb        Handle to the database.
+ * @param [in]      pdb         The Shim database that tiWhich belongs to.
+ * @param [in]      tiWhich     Path to executable for which we query database.
+ * @param [out,opt] ptrWhich    The tagid that tiWhich corresponds to.
+ *
+ * @return  TRUE if it succeeds, FALSE if it fails.
+ */
+BOOL WINAPI SdbTagIDToTagRef(HSDB hsdb, PDB pdb, TAGID tiWhich, TAGREF* ptrWhich)
+{
+    if (pdb != hsdb->db)
+    {
+        SHIM_ERR("Multiple shim databases not yet implemented!\n");
+        if (ptrWhich)
+            *ptrWhich = TAGREF_NULL;
+        return FALSE;
+    }
+
+    if (ptrWhich)
+        *ptrWhich = tiWhich & 0x0fffffff;
+
+    return TRUE;
+}
+
+
 

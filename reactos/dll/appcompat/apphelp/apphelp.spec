@@ -38,7 +38,7 @@
 @ stub SdbFindFirstDWORDIndexedTag
 @ stub SdbFindFirstMsiPackage
 @ stub SdbFindFirstMsiPackage_Str
-@ stub SdbFindFirstNamedTag
+@ stdcall SdbFindFirstNamedTag(ptr long long long wstr)
 @ stub SdbFindFirstStringIndexedTag
 @ stdcall SdbFindFirstTag(ptr long long)
 @ stub SdbFindFirstTagRef
@@ -69,7 +69,7 @@
 @ stub SdbGetIndex
 @ stub SdbGetItemFromItemRef
 @ stub SdbGetLayerName
-@ stub SdbGetLayerTagRef
+@ stdcall SdbGetLayerTagRef(ptr wstr)
 @ stub SdbGetLocalPDB
 @ stdcall SdbGetMatchingExe(ptr wstr wstr wstr long ptr)
 @ stub SdbGetMsiPackageInformation
@@ -143,7 +143,7 @@
 @ stub SdbStringDuplicate
 @ stub SdbStringReplace
 @ stub SdbStringReplaceArray
-@ stub SdbTagIDToTagRef
+@ stdcall SdbTagIDToTagRef(ptr ptr long ptr)
 @ stdcall SdbTagRefToTagID(ptr long ptr ptr)
 @ stdcall SdbTagToString(long)
 @ stub SdbUnregisterDatabase
