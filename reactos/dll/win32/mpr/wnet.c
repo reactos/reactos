@@ -2094,6 +2094,37 @@ DWORD WINAPI WNetCancelConnection2W( LPCWSTR lpName, DWORD dwFlags, BOOL fForce 
             }
         }
     }
+#ifdef __REACTOS__
+
+    if (dwFlags & CONNECT_UPDATE_PROFILE)
+    {
+        HKEY user_profile;
+        WCHAR *coma = strchrW(lpName, ':');
+
+        if (coma && RegOpenCurrentUser(KEY_ALL_ACCESS, &user_profile) == ERROR_SUCCESS)
+        {
+            WCHAR  *subkey;
+            DWORD len;
+
+            len = (ULONG_PTR)coma - (ULONG_PTR)lpName + sizeof(L"Network\\");
+            subkey = HeapAlloc(GetProcessHeap(), 0, len);
+            if (subkey)
+            {
+                strcpyW(subkey, L"Network\\");
+                memcpy(subkey + (sizeof(L"Network\\") / sizeof(WCHAR)) - 1, lpName, (ULONG_PTR)coma - (ULONG_PTR)lpName);
+                subkey[len / sizeof(WCHAR) - 1] = 0;
+
+                TRACE("Removing: %S\n", subkey);
+
+                RegDeleteKeyW(user_profile, subkey);
+                HeapFree(GetProcessHeap(), 0, subkey);
+            }
+
+            RegCloseKey(user_profile);
+        }
+    }
+
+#endif
     return ret;
 }
 
