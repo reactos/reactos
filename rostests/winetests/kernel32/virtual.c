@@ -4166,19 +4166,10 @@ START_TEST(virtual)
 #if defined(__i386__) || defined(__x86_64__)
     test_stack_commit();
 #endif
-#ifdef __i386__
-    if (!winetest_interactive)
-    {
-        skip("ROSTESTS-155: Skipping virtual guard page tests due to Mm assertion failure.\n");
-    }
-    else
-    {
-        test_guard_page();
-        /* The following tests should be executed as a last step, and in exactly this
-         * order, since ATL thunk emulation cannot be enabled anymore on Windows. */
-        test_atl_thunk_emulation( MEM_EXECUTE_OPTION_ENABLE );
-        test_atl_thunk_emulation( MEM_EXECUTE_OPTION_DISABLE );
-        test_atl_thunk_emulation( MEM_EXECUTE_OPTION_DISABLE | MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION );
-    }
-#endif
+    test_guard_page();
+    /* The following tests should be executed as a last step, and in exactly this
+     * order, since ATL thunk emulation cannot be enabled anymore on Windows. */
+    test_atl_thunk_emulation( MEM_EXECUTE_OPTION_ENABLE );
+    test_atl_thunk_emulation( MEM_EXECUTE_OPTION_DISABLE );
+    test_atl_thunk_emulation( MEM_EXECUTE_OPTION_DISABLE | MEM_EXECUTE_OPTION_DISABLE_THUNK_EMULATION );
 }
