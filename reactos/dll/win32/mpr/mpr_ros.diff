@@ -49,27 +49,71 @@ Index: wnet.c
 ===================================================================
 --- wnet.c	(revision 71983)
 +++ wnet.c	(working copy)
-@@ -48,6 +48,9 @@
-     PF_NPGetResourceInformation getResourceInformation;
+@@ -60,6 +50,9 @@
      PF_NPAddConnection addConnection;
      PF_NPAddConnection3 addConnection3;
+     PF_NPCancelConnection cancelConnection;
 +#ifdef __REACTOS__
 +    PF_NPGetConnection getConnection;
 +#endif
  } WNetProvider, *PWNetProvider;
  
  typedef struct _WNetProviderTable
-@@ -196,6 +199,9 @@
-                         }
+@@ -214,6 +207,9 @@
                          provider->addConnection = MPR_GETPROC(NPAddConnection);
                          provider->addConnection3 = MPR_GETPROC(NPAddConnection3);
+                         provider->cancelConnection = MPR_GETPROC(NPCancelConnection);
 +#ifdef __REACTOS__
 +                        provider->getConnection = MPR_GETPROC(NPGetConnection);
 +#endif
                          TRACE("NPAddConnection %p\n", provider->addConnection);
                          TRACE("NPAddConnection3 %p\n", provider->addConnection3);
-                         providerTable->numProviders++;
-@@ -1949,6 +1955,7 @@
+                         TRACE("NPCancelConnection %p\n", provider->cancelConnection);
+@@ -1870,6 +1866,43 @@
+         }
+     }
+ 
++#ifdef __REACTOS__
++    if (ret == WN_SUCCESS && ctxt->flags & CONNECT_UPDATE_PROFILE)
++    {
++        HKEY user_profile;
++
++        if (netres.dwType == RESOURCETYPE_PRINT)
++        {
++            FIXME("Persistent connection are not supported for printers\n");
++            return ret;
++        }
++
++        if (RegOpenCurrentUser(KEY_ALL_ACCESS, &user_profile) == ERROR_SUCCESS)
++        {
++            HKEY network;
++            WCHAR subkey[10] = {'N', 'e', 't', 'w', 'o', 'r', 'k', '\\', netres.lpLocalName[0], 0};
++
++            if (RegCreateKeyExW(user_profile, subkey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &network, NULL) == ERROR_SUCCESS)
++            {
++                DWORD dword_arg = RESOURCETYPE_DISK;
++                DWORD len = (strlenW(provider->name) + 1) * sizeof(WCHAR);
++
++                RegSetValueExW(network, L"ConnectionType", 0, REG_DWORD, (const BYTE *)&dword_arg, sizeof(DWORD));
++                RegSetValueExW(network, L"ProviderName", 0, REG_SZ, (const BYTE *)provider->name, len);
++                dword_arg = provider->dwNetType;
++                RegSetValueExW(network, L"ProviderType", 0, REG_DWORD, (const BYTE *)&dword_arg, sizeof(DWORD));
++                len = (strlenW(netres.lpRemoteName) + 1) * sizeof(WCHAR);
++                RegSetValueExW(network, L"RemotePath", 0, REG_SZ, (const BYTE *)netres.lpRemoteName, len);
++                len = 0;
++                RegSetValueExW(network, L"UserName", 0, REG_SZ, (const BYTE *)netres.lpRemoteName, len);
++                RegCloseKey(network);
++            }
++
++            RegCloseKey(user_profile);
++        }
++    }
++#endif
++
+     return ret;
+ }
+ 
+@@ -2188,6 +2221,7 @@
  /* find the network connection for a given drive; helper for WNetGetConnection */
  static DWORD get_drive_connection( WCHAR letter, LPWSTR remote, LPDWORD size )
  {
@@ -77,7 +121,7 @@ Index: wnet.c
      char buffer[1024];
      struct mountmgr_unix_drive *data = (struct mountmgr_unix_drive *)buffer;
      HANDLE mgr;
-@@ -1991,6 +1998,32 @@
+@@ -2230,6 +2264,32 @@
      }
      CloseHandle( mgr );
      return ret;

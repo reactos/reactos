@@ -1866,6 +1866,43 @@ static DWORD wnet_use_connection( struct use_connection_context *ctxt )
         }
     }
 
+#ifdef __REACTOS__
+    if (ret == WN_SUCCESS && ctxt->flags & CONNECT_UPDATE_PROFILE)
+    {
+        HKEY user_profile;
+
+        if (netres.dwType == RESOURCETYPE_PRINT)
+        {
+            FIXME("Persistent connection are not supported for printers\n");
+            return ret;
+        }
+
+        if (RegOpenCurrentUser(KEY_ALL_ACCESS, &user_profile) == ERROR_SUCCESS)
+        {
+            HKEY network;
+            WCHAR subkey[10] = {'N', 'e', 't', 'w', 'o', 'r', 'k', '\\', netres.lpLocalName[0], 0};
+
+            if (RegCreateKeyExW(user_profile, subkey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &network, NULL) == ERROR_SUCCESS)
+            {
+                DWORD dword_arg = RESOURCETYPE_DISK;
+                DWORD len = (strlenW(provider->name) + 1) * sizeof(WCHAR);
+
+                RegSetValueExW(network, L"ConnectionType", 0, REG_DWORD, (const BYTE *)&dword_arg, sizeof(DWORD));
+                RegSetValueExW(network, L"ProviderName", 0, REG_SZ, (const BYTE *)provider->name, len);
+                dword_arg = provider->dwNetType;
+                RegSetValueExW(network, L"ProviderType", 0, REG_DWORD, (const BYTE *)&dword_arg, sizeof(DWORD));
+                len = (strlenW(netres.lpRemoteName) + 1) * sizeof(WCHAR);
+                RegSetValueExW(network, L"RemotePath", 0, REG_SZ, (const BYTE *)netres.lpRemoteName, len);
+                len = 0;
+                RegSetValueExW(network, L"UserName", 0, REG_SZ, (const BYTE *)netres.lpRemoteName, len);
+                RegCloseKey(network);
+            }
+
+            RegCloseKey(user_profile);
+        }
+    }
+#endif
+
     return ret;
 }
 
