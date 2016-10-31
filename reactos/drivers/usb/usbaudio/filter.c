@@ -1110,8 +1110,39 @@ UsbAudioGetDataRanges(
     PUSB_INTERFACE_DESCRIPTOR Descriptor;
     PKSDATARANGE_AUDIO DataRangeAudio;
     PKSDATARANGE *DataRangeAudioArray;
-    ULONG NumFrequency;
+    ULONG NumFrequency, DataRangeCount, DataRangeIndex;
 
+    /* count all data ranges */
+    DataRangeCount = 0;
+    for (Descriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, ConfigurationDescriptor, -1, -1, USB_DEVICE_CLASS_AUDIO, -1, -1);
+    Descriptor != NULL;
+        Descriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, (PVOID)((ULONG_PTR)Descriptor + Descriptor->bLength), -1, -1, USB_DEVICE_CLASS_AUDIO, -1, -1))
+    {
+        if (Descriptor->bInterfaceSubClass == 0x02) /* AUDIO_STREAMING */
+        {
+            StreamingInterfaceDescriptor = (PUSB_AUDIO_STREAMING_INTERFACE_DESCRIPTOR)USBD_ParseDescriptors(ConfigurationDescriptor, ConfigurationDescriptor->wTotalLength, Descriptor, USB_AUDIO_CONTROL_TERMINAL_DESCRIPTOR_TYPE);
+            if (StreamingInterfaceDescriptor != NULL)
+            {
+                ASSERT(StreamingInterfaceDescriptor->bDescriptorSubtype == 0x01);
+                ASSERT(StreamingInterfaceDescriptor->wFormatTag == WAVE_FORMAT_PCM);
+                if (StreamingInterfaceDescriptor->bTerminalLink == bTerminalID)
+                {
+                    DataRangeCount++;
+                    DPRINT1("StreamingInterfaceDescriptor %p TerminalID %x\n", StreamingInterfaceDescriptor, bTerminalID);
+                }
+            }
+            Descriptor = (PUSB_INTERFACE_DESCRIPTOR)StreamingInterfaceDescriptor;
+        }
+    }
+
+    DataRangeAudioArray = AllocFunction(sizeof(PVOID) * DataRangeCount);
+    if (DataRangeAudioArray == NULL)
+    {
+        /* no memory */
+        return;
+    }
+
+    DataRangeIndex = 0;
     for (Descriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, ConfigurationDescriptor, -1, -1, USB_DEVICE_CLASS_AUDIO, -1, -1);
     Descriptor != NULL;
         Descriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, (PVOID)((ULONG_PTR)Descriptor + Descriptor->bLength), -1, -1, USB_DEVICE_CLASS_AUDIO, -1, -1))
@@ -1141,27 +1172,23 @@ UsbAudioGetDataRanges(
                     DataRangeAudio->DataRange.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
                     DataRangeAudio->DataRange.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
                     DataRangeAudio->DataRange.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
-                    DataRangeAudio->MaximumChannels = 1;
+                    DataRangeAudio->MaximumChannels = StreamingFormatDescriptor->bNrChannels;
                     DataRangeAudio->MinimumBitsPerSample = StreamingFormatDescriptor->bBitResolution;
                     DataRangeAudio->MaximumBitsPerSample = StreamingFormatDescriptor->bBitResolution;
                     NumFrequency = StreamingFormatDescriptor->bSamFreqType - 1;
                     DataRangeAudio->MinimumSampleFrequency = StreamingFormatDescriptor->tSamFreq[0] | StreamingFormatDescriptor->tSamFreq[1] << 8 | StreamingFormatDescriptor->tSamFreq[2] << 16;
                     DataRangeAudio->MaximumSampleFrequency = StreamingFormatDescriptor->tSamFreq[NumFrequency*3] | StreamingFormatDescriptor->tSamFreq[NumFrequency * 3+1] << 8 | StreamingFormatDescriptor->tSamFreq[NumFrequency * 3+2]<<16;
-                    DataRangeAudioArray = AllocFunction(sizeof(PKSDATARANGE_AUDIO));
-                    if (DataRangeAudioArray == NULL)
-                    {
-                        /* no memory */
-                        FreeFunction(DataRangeAudio);
-                        return;
-                    }
-                    DataRangeAudioArray[0] = (PKSDATARANGE)DataRangeAudio;
-                    *OutDataRanges = DataRangeAudioArray;
-                    *OutDataRangesCount = 1;
-                    return;
+
+                    DataRangeAudioArray[DataRangeIndex] = (PKSDATARANGE)DataRangeAudio;
+                    DataRangeIndex++;
                 }
             }
+            Descriptor = (PUSB_INTERFACE_DESCRIPTOR)StreamingInterfaceDescriptor;
         }
     }
+
+    *OutDataRanges = DataRangeAudioArray;
+    *OutDataRangesCount = DataRangeCount;
 }
 
 
@@ -1213,18 +1240,21 @@ USBAudioPinBuildDescriptors(
             {
                 Pins[Index].PinDescriptor.Communication = KSPIN_COMMUNICATION_BOTH;
                 Pins[Index].PinDescriptor.DataFlow = KSPIN_DATAFLOW_OUT;
+
+                /* pin flags */
+                Pins[Index].Flags = KSPIN_FLAG_PROCESS_IN_RUN_STATE_ONLY | KSFILTER_FLAG_CRITICAL_PROCESSING;
             }
             else if (TerminalDescriptor->bDescriptorSubtype == USB_AUDIO_INPUT_TERMINAL)
             {
                 Pins[Index].PinDescriptor.Communication = KSPIN_COMMUNICATION_SINK;
                 Pins[Index].PinDescriptor.DataFlow = KSPIN_DATAFLOW_IN;
+
+                /* pin flags */
+                Pins[Index].Flags = KSPIN_FLAG_PROCESS_IN_RUN_STATE_ONLY | KSPIN_FLAG_GENERATE_EOS_EVENTS;
             }
 
             /* data intersect handler */
             Pins[Index].IntersectHandler = UsbAudioPinDataIntersect;
-
-            /* pin flags */
-            Pins[Index].Flags = KSPIN_FLAG_PROCESS_IN_RUN_STATE_ONLY | KSFILTER_FLAG_CRITICAL_PROCESSING;
 
             /* irp sinks / sources can be instantiated */
             Pins[Index].InstancesPossible = 1;
