@@ -1058,6 +1058,15 @@ OHCI_SetEndpointState(IN PVOID ohciExtension,
 }
 
 VOID
+NTAPI 
+OHCI_PollIsoEndpoint(IN POHCI_EXTENSION OhciExtension,
+                     IN POHCI_ENDPOINT OhciEndpoint)
+{
+    DPRINT1("OHCI_PollAsyncEndpoint: UNIMPLEMENTED. FIXME \n");
+    ASSERT(FALSE);
+}
+
+VOID
 NTAPI
 OHCI_PollEndpoint(IN PVOID ohciExtension,
                   IN PVOID ohciEndpoint)
