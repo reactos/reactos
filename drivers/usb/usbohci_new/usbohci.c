@@ -1138,8 +1138,23 @@ NTAPI
 OHCI_GetEndpointStatus(IN PVOID ohciExtension,
                        IN PVOID ohciEndpoint)
 {
-    DPRINT("OHCI_GetEndpointStatus: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    POHCI_ENDPOINT OhciEndpoint;
+    POHCI_HCD_ED ED;
+    ULONG EndpointStatus = 0;
+
+    DPRINT_OHCI("OHCI_GetEndpointStatus: ... \n");
+
+    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
+
+    ED = OhciEndpoint->HcdED;
+
+    if ((ED->HwED.HeadPointer & 1) && // Halted
+        !(ED->Flags & OHCI_HCD_ED_FLAG_RESET_ON_HALT)) 
+    {
+        EndpointStatus = 1;
+    }
+
+    return EndpointStatus;
 }
 
 VOID
