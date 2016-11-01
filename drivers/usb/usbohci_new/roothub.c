@@ -452,7 +452,11 @@ VOID
 NTAPI
 OHCI_RH_DisableIrq(IN PVOID ohciExtension)
 {
-    DPRINT("OHCI_RH_DisableIrq: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION  OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    DPRINT("OHCI_RH_DisableIrq: OhciExtension - %p\n", OhciExtension);
+
+    WRITE_REGISTER_ULONG(&OhciExtension->OperationalRegs->HcInterruptDisable.AsULONG,
+                         0x40);
 }
 
 VOID
