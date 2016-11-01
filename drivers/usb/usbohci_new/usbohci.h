@@ -94,6 +94,17 @@ typedef struct _OHCI_ENDPOINT {
   LIST_ENTRY TDList;
 } OHCI_ENDPOINT, *POHCI_ENDPOINT;
 
+typedef struct _OHCI_TRANSFER {
+  ULONG Reserved;
+  ULONG TransferLen;
+  PUSBPORT_TRANSFER_PARAMETERS TransferParameters;
+  ULONG PendingTDs;
+  ULONG Flags;
+  USBD_STATUS USBDStatus;
+  POHCI_ENDPOINT OhciEndpoint;
+  POHCI_HCD_TD NextTD;
+} OHCI_TRANSFER, *POHCI_TRANSFER;
+
 /* roothub.c */
 
 VOID
