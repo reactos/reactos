@@ -10,6 +10,95 @@ USBPORT_REGISTRATION_PACKET RegPacket;
 
 MPSTATUS
 NTAPI
+OHCI_OpenInterruptEndpoint(IN POHCI_EXTENSION OhciExtension,
+                           IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
+                           IN POHCI_ENDPOINT OhciEndpoint)
+{
+    UCHAR Index[8];
+    UCHAR Period;
+    ULONG PeriodIdx = 0;
+    POHCI_HCD_ED ED;
+    ULONG ScheduleOffset;
+    POHCI_HCD_TD TdVA;
+    POHCI_HCD_TD TdPA;
+    ULONG TdCount;
+
+    DPRINT("OHCI_OpenInterruptEndpoint: ... \n");
+
+    ED = (POHCI_HCD_ED)EndpointProperties->BufferVA;
+
+    OhciEndpoint->FirstTD = (POHCI_HCD_TD)((ULONG_PTR)ED + sizeof(OHCI_HCD_ED));
+
+    Index[0] = (1 << 0) - 1;
+    Index[1] = (1 << 1) - 1;
+    Index[2] = (1 << 2) - 1;
+    Index[3] = (1 << 3) - 1;
+    Index[4] = (1 << 4) - 1;
+    Index[5] = (1 << 5) - 1;
+    Index[6] = (1 << 5) - 1;
+    Index[7] = (1 << 5) - 1;
+
+    Period = EndpointProperties->Period;
+
+    while (!(Period & 1))
+    {
+        ++PeriodIdx;
+        Period >>= 1;
+    }
+
+    ScheduleOffset = EndpointProperties->ScheduleOffset;
+    DPRINT_OHCI("OHCI_OpenInterruptEndpoint: InitTD. Index[PeriodIdx] - %x, ScheduleOffset - %x\n",
+                Index[PeriodIdx],
+                ScheduleOffset);
+
+    OhciEndpoint->HeadED = &OhciExtension->IntStaticED[Index[PeriodIdx] +
+                                                       ScheduleOffset];
+
+    //OhciEndpoint->HeadED->UsbBandwidth += EndpointProperties->UsbBandwidth;
+
+    TdCount = (EndpointProperties->BufferLength - sizeof(OHCI_HCD_ED)) /
+               sizeof(OHCI_HCD_TD);
+
+    OhciEndpoint->MaxTransferDescriptors = TdCount;
+
+    if (TdCount > 0)
+    {
+        TdVA = OhciEndpoint->FirstTD;
+        TdPA = (POHCI_HCD_TD)((ULONG_PTR)EndpointProperties->BufferPA +
+                              sizeof(OHCI_HCD_ED));
+
+        do
+        {
+            DPRINT_OHCI("OHCI_OpenInterruptEndpoint: InitTD. TdVA - %p, TdPA - %p\n",
+                        TdVA,
+                        TdPA);
+
+            RtlZeroMemory(TdVA, sizeof(OHCI_HCD_TD));
+
+            TdVA->PhysicalAddress = (ULONG_PTR)TdPA;
+            TdVA->Flags = 0;
+            TdVA->OhciTransfer = NULL;
+
+            ++TdVA;
+            ++TdPA;
+            --TdCount;
+       }
+       while (TdCount > 0);
+
+    }
+
+    OhciEndpoint->HcdED = OHCI_InitializeED(OhciEndpoint,
+                                            ED,
+                                            OhciEndpoint->FirstTD,
+                                            EndpointProperties->BufferPA);
+
+    OHCI_InsertEndpointInSchedule(OhciEndpoint);
+
+    return 0;
+}
+
+MPSTATUS
+NTAPI
 OHCI_OpenIsoEndpoint(IN POHCI_EXTENSION OhciExtension,
                      IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
                      IN POHCI_ENDPOINT OhciEndpoint)
