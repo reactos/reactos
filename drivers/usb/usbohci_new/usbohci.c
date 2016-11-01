@@ -48,6 +48,14 @@ OHCI_CloseEndpoint(IN PVOID ohciExtension,
 
 MPSTATUS
 NTAPI
+OHCI_TakeControlHC(IN POHCI_EXTENSION OhciExtension)
+{
+    DPRINT1("OHCI_TakeControlHC: UNIMPLEMENTED. FIXME\n");
+    return 0;
+}
+
+MPSTATUS
+NTAPI
 OHCI_StartController(IN PVOID ohciExtension,
                      IN PUSBPORT_RESOURCES Resources)
 {
