@@ -423,7 +423,28 @@ NTAPI
 OHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID ohciExtension,
                                           IN USHORT Port)
 {
-    DPRINT("OHCI_RH_ClearFeaturePortOvercurrentChange: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+
+    DPRINT("OHCI_RH_ClearFeaturePortOvercurrentChange: OhciExtension - %p, Port - %x\n",
+           OhciExtension,
+           Port);
+
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    if (Port)
+    {
+        WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
+                             0x80000);
+    }
+    else
+    {
+        WRITE_REGISTER_ULONG(&OperationalRegs->HcRhStatus.AsULONG,
+                             0x20000);
+    }
+
     return 0;
 }
 
