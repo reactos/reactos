@@ -21,6 +21,60 @@ extern USBPORT_REGISTRATION_PACKET RegPacket;
 #define OHCI_HCD_TD_FLAG_CONTROLL      0x00000004
 #define OHCI_HCD_TD_FLAG_DONE          0x00000008
 
+typedef struct _OHCI_TRANSFER *POHCI_TRANSFER;
+
+typedef union _OHCI_HW_TRANSFER_DESCRIPTOR {
+  struct {
+    OHCI_TRANSFER_DESCRIPTOR gTD; // must be aligned to a 16-byte boundary
+    USB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;
+    ULONG Padded[2];
+  };
+  struct {
+    OHCI_ISO_TRANSFER_DESCRIPTOR iTD; // must be aligned to a 32-byte boundary
+  };
+} OHCI_HW_TRANSFER_DESCRIPTOR, *POHCI_HW_TRANSFER_DESCRIPTOR;
+
+C_ASSERT(sizeof(OHCI_HW_TRANSFER_DESCRIPTOR) == 32);
+
+typedef struct _OHCI_HCD_TD {
+  // Hardware part
+  OHCI_HW_TRANSFER_DESCRIPTOR HwTD; // must be aligned to a 32-byte boundary
+  // Software part
+  ULONG_PTR PhysicalAddress;
+  ULONG Flags;
+  POHCI_TRANSFER OhciTransfer;
+  struct _OHCI_HCD_TD * NextHcdTD;
+  ULONG TransferLen;
+  LIST_ENTRY DoneLink;
+  ULONG Pad[1];
+} OHCI_HCD_TD, *POHCI_HCD_TD;
+
+C_ASSERT(sizeof(OHCI_HCD_TD) == 0x40);
+
+typedef struct _OHCI_HCD_ED {
+  // Hardware part
+  OHCI_ENDPOINT_DESCRIPTOR HwED; // must be aligned to a 16-byte boundary
+  // Software part
+  ULONG_PTR PhysicalAddress;
+  ULONG Flags;
+  LIST_ENTRY HcdEDLink;
+  ULONG Pad[8];
+} OHCI_HCD_ED, *POHCI_HCD_ED;
+
+C_ASSERT(sizeof(OHCI_HCD_ED) == 0x40);
+
+typedef struct _OHCI_STATIC_ED {
+  // Software only part
+  POHCI_ENDPOINT_DESCRIPTOR HwED;
+  ULONG_PTR PhysicalAddress;
+  UCHAR HeadIndex;
+  UCHAR Reserved[3];
+  LIST_ENTRY Link;
+  ULONG Type;
+  PULONG pNextED;
+  ULONG HccaIndex;
+} OHCI_STATIC_ED, *POHCI_STATIC_ED;
+
 /* roothub.c */
 
 VOID
