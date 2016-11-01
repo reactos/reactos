@@ -302,8 +302,58 @@ BOOLEAN
 NTAPI
 OHCI_InterruptService(IN PVOID ohciExtension)
 {
-    DPRINT("OHCI_InterruptService: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    POHCI_EXTENSION OhciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    OHCI_REG_INTERRUPT_ENABLE_DISABLE InterruptReg;
+    OHCI_REG_INTERRUPT_STATUS IntStatus; 
+    POHCI_HCCA HcHCCA;
+    BOOLEAN Result = FALSE;
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+
+    DPRINT_OHCI("OHCI_InterruptService: OhciExtension - %p\n",
+                OhciExtension);
+
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    Result = OHCI_HardwarePresent(OhciExtension, FALSE);
+
+    if (!Result)
+    {
+        return FALSE;
+    }
+
+    InterruptReg.AsULONG = 
+        READ_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG);
+
+    IntStatus.AsULONG = InterruptReg.AsULONG &
+        READ_REGISTER_ULONG(&OperationalRegs->HcInterruptStatus.AsULONG);
+
+    if (IntStatus.AsULONG && InterruptReg.MasterInterruptEnable)
+    {
+        if (IntStatus.UnrecoverableError)
+        {
+            DbgBreakPoint();
+        }
+
+        if (IntStatus.FrameNumberOverflow)
+        {
+            HcHCCA = (POHCI_HCCA)OhciExtension->HcResourcesVA;
+
+            DPRINT("OHCI_InterruptService: FrameNumberOverflow. HcHCCA->FrameNumber - %p\n",
+                        HcHCCA->FrameNumber);
+
+            OhciExtension->FrameHighPart += 0x10000 -
+                ((HcHCCA->FrameNumber ^ OhciExtension->FrameHighPart) & 0x8000);
+        }
+
+        Result = TRUE;
+
+        WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptDisable.AsULONG,
+                             0x80000000);
+    }
+
+    return Result;
 }
 
 VOID
