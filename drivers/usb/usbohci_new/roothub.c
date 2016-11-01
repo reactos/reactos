@@ -89,7 +89,68 @@ OHCI_RH_GetPortStatus(IN PVOID ohciExtension,
                       IN USHORT Port,
                       IN PULONG PortStatus)
 {
-    DPRINT("OHCI_RH_GetPortStatus: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    ULONG portStatus;
+    ULONG ix = 0;
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+
+    DPRINT("OHCI_RH_GetPortStatus: OhciExtension - %p, Port - %x, PortStatus - %p\n",
+           OhciExtension,
+           Port,
+           *PortStatus);
+
+    OperationalRegs = ((POHCI_EXTENSION)OhciExtension)->OperationalRegs;
+
+    do
+    {
+        portStatus = READ_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG);
+
+        //DPRINT("OHCI_RH_GetPortStatus: &portreg - %p\n",
+        //       &OperationalRegs->HcRhPortStatus[Port-1].AsULONG);
+
+        if ( portStatus && !(portStatus & 0xFFE0FCE0) )
+            break;
+
+        KeStallExecutionProcessor(5);
+
+        ++ix;
+    }
+    while ( ix < 10 );
+
+    *PortStatus = portStatus;
+
+    DPRINT("OHCI_RH_GetPortStatus: OhciExtension - %p, Port - %x, PortStatus - %p\n",
+           OhciExtension,
+           Port,
+           *PortStatus);
+
+    if (0)//Port == 1)
+    {
+        DPRINT("HcRevision         - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcRevision));
+        DPRINT("HcControl          - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG));
+        DPRINT("HcCommandStatus    - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcCommandStatus.AsULONG));
+        DPRINT("HcInterruptStatus  - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcInterruptStatus.AsULONG));
+        DPRINT("HcInterruptEnable  - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG));
+        DPRINT("HcInterruptDisable - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcInterruptDisable.AsULONG));
+        DPRINT("HcHCCA             - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcHCCA));
+        DPRINT("HcPeriodCurrentED  - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcPeriodCurrentED));
+        DPRINT("HcControlHeadED    - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcControlHeadED));
+        DPRINT("HcControlCurrentED - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcControlCurrentED));
+        DPRINT("HcBulkHeadED       - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcBulkHeadED));
+        DPRINT("HcBulkCurrentED    - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcBulkCurrentED));
+        DPRINT("HcDoneHead         - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcDoneHead));
+        DPRINT("HcFmInterval       - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcFmInterval.AsULONG));
+        DPRINT("HcFmRemaining      - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcFmRemaining));
+        DPRINT("HcFmNumber         - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcFmNumber));
+        DPRINT("HcPeriodicStart    - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcPeriodicStart));
+        DPRINT("HcLSThreshold      - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcLSThreshold));
+        DPRINT("HcRhDescriptorA    - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcRhDescriptorA.AsULONG));
+        DPRINT("HcRhDescriptorB    - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcRhDescriptorB));
+        DPRINT("HcRhStatus         - %p\n", READ_REGISTER_ULONG(&OperationalRegs->HcRhStatus.AsULONG));
+    }
+
     return 0;
 }
 
