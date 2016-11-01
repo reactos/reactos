@@ -3,6 +3,9 @@
 //#define NDEBUG
 #include <debug.h>
 
+#define NDEBUG_OHCI_TRACE
+#include "dbg_ohci.h"
+
 USBPORT_REGISTRATION_PACKET RegPacket;
 
 MPSTATUS
@@ -40,7 +43,7 @@ OHCI_CloseEndpoint(IN PVOID ohciExtension,
                    IN PVOID ohciEndpoint,
                    IN BOOLEAN IsDoDisablePeriodic)
 {
-    DPRINT("OHCI_CloseEndpoint: UNIMPLEMENTED. FIXME\n");
+    DPRINT("OHCI_CloseEndpoint: Not supported\n");
 }
 
 MPSTATUS
@@ -273,7 +276,7 @@ VOID
 NTAPI
 OHCI_Unload(IN PVOID ohciExtension)
 {
-    DPRINT("OHCI_Unload: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("OHCI_Unload: Not supported\n");
 }
 
 NTSTATUS
@@ -281,7 +284,7 @@ NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
             IN PUNICODE_STRING RegistryPath)
 {
-    DPRINT("DriverEntry: DriverObject - %p, RegistryPath - %wZ\n", DriverObject, RegistryPath);
+    DPRINT_OHCI("DriverEntry: DriverObject - %p, RegistryPath - %wZ\n", DriverObject, RegistryPath);
 
     RtlZeroMemory(&RegPacket, sizeof(USBPORT_REGISTRATION_PACKET));
 
