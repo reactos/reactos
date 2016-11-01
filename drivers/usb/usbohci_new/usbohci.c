@@ -361,7 +361,61 @@ NTAPI
 OHCI_InterruptDpc(IN PVOID ohciExtension,
                   IN BOOLEAN IsDoEnableInterrupts)
 {
-    DPRINT("OHCI_InterruptDpc: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    OHCI_REG_INTERRUPT_STATUS IntStatus;
+    POHCI_HCCA HcHCCA;
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    DPRINT_OHCI("OHCI_InterruptDpc: OhciExtension - %p, IsDoEnableInterrupts - %p\n",
+                OhciExtension,
+                IsDoEnableInterrupts);
+
+    IntStatus.AsULONG = 
+        READ_REGISTER_ULONG(&OperationalRegs->HcInterruptStatus.AsULONG);
+
+    if (IntStatus.RootHubStatusChange)
+    {
+        DPRINT_OHCI("OHCI_InterruptDpc: RootHubStatusChange\n");
+        RegPacket.UsbPortInvalidateRootHub(OhciExtension);
+    }
+
+    if (IntStatus.WritebackDoneHead)
+    {
+        DPRINT_OHCI("OHCI_InterruptDpc: WritebackDoneHead\n");
+
+        HcHCCA = (POHCI_HCCA)OhciExtension->HcResourcesVA;
+        HcHCCA->DoneHead = 0;
+
+        RegPacket.UsbPortInvalidateEndpoint(OhciExtension, 0);
+    }
+
+    if (IntStatus.StartofFrame)
+    {
+        WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptDisable.AsULONG,
+                             4);
+    }
+
+    if (IntStatus.ResumeDetected)
+    {
+        ASSERT(FALSE);
+    }
+
+    if (IntStatus.UnrecoverableError)
+    {
+        ASSERT(FALSE);
+    }
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptStatus.AsULONG,
+                         IntStatus.AsULONG);
+
+    if (IsDoEnableInterrupts)
+    {
+        WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG,
+                             0x80000000);
+    }
 }
 
 MPSTATUS
