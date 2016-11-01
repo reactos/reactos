@@ -300,6 +300,36 @@ OHCI_ResumeController(IN PVOID ohciExtension)
 
 BOOLEAN
 NTAPI
+OHCI_HardwarePresent(IN POHCI_EXTENSION OhciExtension,
+                     IN BOOLEAN IsInvalidateController)
+{
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    BOOLEAN Result = FALSE;
+
+    //DPRINT_OHCI("OHCI_HardwarePresent: IsInvalidateController - %x\n",
+    //            IsInvalidateController);
+
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    if (READ_REGISTER_ULONG(&OperationalRegs->HcCommandStatus.AsULONG) == -1)
+    {
+        if (IsInvalidateController)
+        {
+            RegPacket.UsbPortInvalidateController(OhciExtension, 2);
+        }
+
+        Result = FALSE;
+    }
+    else
+    {
+        Result = TRUE;
+    }
+
+    return Result;
+}
+
+BOOLEAN
+NTAPI
 OHCI_InterruptService(IN PVOID ohciExtension)
 {
     POHCI_EXTENSION OhciExtension;
