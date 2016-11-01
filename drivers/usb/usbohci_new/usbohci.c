@@ -51,7 +51,219 @@ NTAPI
 OHCI_StartController(IN PVOID ohciExtension,
                      IN PUSBPORT_RESOURCES Resources)
 {
-    DPRINT("OHCI_StartController: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    OHCI_REG_INTERRUPT_ENABLE_DISABLE Interrupts;
+    OHCI_REG_RH_STATUS HcRhStatus;
+    OHCI_REG_FRAME_INTERVAL FrameInterval;
+    OHCI_REG_CONTROL Control;
+    PVOID ScheduleStartVA;
+    PVOID ScheduleStartPA;
+    UCHAR HeadIndex;
+    POHCI_ENDPOINT_DESCRIPTOR StaticED;
+    ULONG_PTR SchedulePA;
+    POHCI_HCCA OhciHCCA;
+    LARGE_INTEGER SystemTime;
+    LARGE_INTEGER CurrentTime;
+    ULONG ix;
+    ULONG jx;
+    MPSTATUS MPStatus = 0;
+
+    DPRINT_OHCI("OHCI_StartController: ohciExtension - %p, Resources - %p\n",
+                ohciExtension,
+                Resources);
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+
+    /* HC on-chip operational registers */
+    OperationalRegs = (POHCI_OPERATIONAL_REGISTERS)Resources->ResourceBase;
+    OhciExtension->OperationalRegs = OperationalRegs;
+
+    MPStatus = OHCI_TakeControlHC(OhciExtension);
+
+    if (MPStatus != 0)
+    {
+        DPRINT1("OHCI_StartController: OHCI_TakeControlHC return MPStatus - %x\n",
+                MPStatus);
+
+        return MPStatus;
+    }
+
+    OhciExtension->HcResourcesVA = (ULONG_PTR)Resources->StartVA;
+    OhciExtension->HcResourcesPA = (ULONG_PTR)Resources->StartPA;
+
+    DPRINT_OHCI("OHCI_StartController: HcResourcesVA - %p, HcResourcesPA - %p\n",
+                OhciExtension->HcResourcesVA,
+                OhciExtension->HcResourcesPA);
+
+    ScheduleStartVA = (PVOID)((ULONG_PTR)Resources->StartVA + sizeof(OHCI_HCCA));
+    ScheduleStartPA = (PVOID)((ULONG_PTR)Resources->StartPA + sizeof(OHCI_HCCA));
+
+    OhciExtension->ScheduleStartVA = ScheduleStartVA;
+    OhciExtension->ScheduleStartPA = ScheduleStartPA;
+
+    StaticED = (POHCI_ENDPOINT_DESCRIPTOR)ScheduleStartVA;
+    SchedulePA = (ULONG_PTR)ScheduleStartPA;
+
+    ix = 0;
+
+    for (ix = 0; ix < 63; ix++) // FIXME 63 == 32+16+8+4+2+1 (Endpoint Poll Interval (ms))
+    {
+        if (ix == 0)
+        {
+            HeadIndex = ED_EOF;
+            StaticED->NextED = 0;
+        }
+        else
+        {
+            HeadIndex = ((ix - 1) >> 1);
+            ASSERT(HeadIndex >= 0 && HeadIndex < 31);
+            StaticED->NextED = OhciExtension->IntStaticED[HeadIndex].PhysicalAddress;
+        }
+  
+        StaticED->EndpointControl.sKip = 1;
+        StaticED->TailPointer = 0;
+        StaticED->HeadPointer = 0;
+  
+        OhciExtension->IntStaticED[ix].HwED = StaticED;
+        OhciExtension->IntStaticED[ix].PhysicalAddress = SchedulePA;
+        OhciExtension->IntStaticED[ix].HeadIndex = HeadIndex;
+        OhciExtension->IntStaticED[ix].pNextED = &StaticED->NextED;
+  
+        InitializeListHead(&OhciExtension->IntStaticED[ix].Link);
+  
+        StaticED += 1;
+        SchedulePA += sizeof(OHCI_ENDPOINT_DESCRIPTOR);
+    }
+
+    OhciHCCA = (POHCI_HCCA)OhciExtension->HcResourcesVA;
+    DPRINT_OHCI("OHCI_InitializeSchedule: OhciHCCA - %p\n", OhciHCCA);
+
+    for (ix = 0, jx = 31; ix < 32; ix++, jx++)
+    {
+        static UCHAR Balance[32] =
+        {0, 16, 8, 24, 4, 20, 12, 28, 2, 18, 10, 26, 6, 22, 14, 30, 
+         1, 17, 9, 25, 5, 21, 13, 29, 3, 19, 11, 27, 7, 23, 15, 31};
+  
+        OhciHCCA->InterrruptTable[Balance[ix]] =
+            (POHCI_ENDPOINT_DESCRIPTOR)(OhciExtension->IntStaticED[jx].PhysicalAddress);
+  
+        OhciExtension->IntStaticED[jx].pNextED =
+            (PULONG)&OhciHCCA->InterrruptTable[Balance[ix]];
+
+        OhciExtension->IntStaticED[jx].HccaIndex = Balance[ix];
+    }
+
+    DPRINT_OHCI("OHCI_InitializeSchedule: ix - %x\n", ix);
+
+    InitializeListHead(&OhciExtension->ControlStaticED.Link);
+
+    OhciExtension->ControlStaticED.HeadIndex = ED_EOF;
+    OhciExtension->ControlStaticED.Type = OHCI_NUMBER_OF_INTERRUPTS + 1;
+    OhciExtension->ControlStaticED.pNextED = &OperationalRegs->HcControlHeadED;
+
+    InitializeListHead(&OhciExtension->BulkStaticED.Link);
+
+    OhciExtension->BulkStaticED.HeadIndex = ED_EOF;
+    OhciExtension->BulkStaticED.Type = OHCI_NUMBER_OF_INTERRUPTS + 2;
+    OhciExtension->BulkStaticED.pNextED = &OperationalRegs->HcBulkHeadED;
+
+    FrameInterval.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcFmInterval.AsULONG);
+
+    if ((FrameInterval.FrameInterval) < ((12000 - 1) - 120) ||
+        (FrameInterval.FrameInterval) > ((12000 - 1) + 120)) // FIXME 10%
+    {
+        FrameInterval.FrameInterval = (12000 - 1);
+    }
+
+    FrameInterval.FrameIntervalToggle = 1;
+    FrameInterval.FSLargestDataPacket = 
+        ((FrameInterval.FrameInterval - MAXIMUM_OVERHEAD) * 6) / 7;
+
+    OhciExtension->FrameInterval = FrameInterval;
+
+    DPRINT_OHCI("OHCI_StartController: FrameInterval - %p\n",
+                FrameInterval.AsULONG);
+
+    /* reset */
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcCommandStatus.AsULONG,
+                         1);
+
+    KeStallExecutionProcessor(25);
+
+    Control.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG);
+    Control.HostControllerFunctionalState = OHCI_HC_STATE_RESET;
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG,
+                         Control.AsULONG);
+
+    KeQuerySystemTime(&CurrentTime);
+    CurrentTime.QuadPart += 5000000; // 0.5 sec
+
+    while (TRUE)
+    {
+        WRITE_REGISTER_ULONG(&OperationalRegs->HcFmInterval.AsULONG,
+                             OhciExtension->FrameInterval.AsULONG);
+
+        FrameInterval.AsULONG =
+            READ_REGISTER_ULONG(&OperationalRegs->HcFmInterval.AsULONG);
+
+        KeQuerySystemTime(&SystemTime);
+
+        if (SystemTime.QuadPart >= CurrentTime.QuadPart)
+        {
+            MPStatus = 7;
+            break;
+        }
+
+        if (FrameInterval.AsULONG == OhciExtension->FrameInterval.AsULONG)
+        {
+            MPStatus = 0;
+            break;
+        }
+    }
+
+    if (MPStatus != 0)
+    {
+        DPRINT_OHCI("OHCI_StartController: frame interval not set\n");
+        return MPStatus;
+    }
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcPeriodicStart,
+                        (OhciExtension->FrameInterval.FrameInterval * 9) / 10); //90%
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcHCCA,
+                         OhciExtension->HcResourcesPA);
+
+    Interrupts.AsULONG = 0;
+
+    Interrupts.SchedulingOverrun = 1;
+    Interrupts.WritebackDoneHead = 1;
+    Interrupts.UnrecoverableError = 1;
+    Interrupts.FrameNumberOverflow = 1;
+    Interrupts.OwnershipChange = 1;
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG,
+                         Interrupts.AsULONG);
+
+    Control.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG);
+
+    Control.ControlBulkServiceRatio = 0; // FIXME (1 : 1)
+    Control.PeriodicListEnable = 1;
+    Control.IsochronousEnable = 1;
+    Control.ControlListEnable = 1;
+    Control.BulkListEnable = 1;
+    Control.HostControllerFunctionalState = OHCI_HC_STATE_OPERATIONAL;
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG,
+                         Control.AsULONG);
+  
+    HcRhStatus.AsULONG = 0;
+    HcRhStatus.SetGlobalPower = 1;
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcRhStatus.AsULONG,
+                         HcRhStatus.AsULONG);
+
     return 0;
 }
 
