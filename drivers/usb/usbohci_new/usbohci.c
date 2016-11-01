@@ -34,7 +34,50 @@ OHCI_QueryEndpointRequirements(IN PVOID ohciExtension,
                                IN PVOID endpointParameters,
                                IN PULONG EndpointRequirements)
 {
-    DPRINT("OHCI_QueryEndpointRequirements: UNIMPLEMENTED. FIXME\n");
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+    ULONG TransferType;
+
+    DPRINT("OHCI_QueryEndpointRequirements: ... \n");
+
+    EndpointProperties = (PUSBPORT_ENDPOINT_PROPERTIES)endpointParameters;
+    TransferType = EndpointProperties->TransferType;
+
+    switch (TransferType)
+    {
+        case USBPORT_TRANSFER_TYPE_ISOCHRONOUS:
+            DPRINT_OHCI("OHCI_QueryEndpointRequirements: IsoTransfer\n");
+            *((PULONG)EndpointRequirements + 1) = 0x10000;
+            *EndpointRequirements = sizeof(OHCI_HCD_ED) +
+                                    0x40 * sizeof(OHCI_HCD_TD);
+            break;
+
+        case USBPORT_TRANSFER_TYPE_CONTROL:
+            DPRINT_OHCI("OHCI_QueryEndpointRequirements: ControlTransfer\n");
+            *((PULONG)EndpointRequirements + 1) = 0x10000;
+            *EndpointRequirements = sizeof(OHCI_HCD_ED) +
+                                    0x26 * sizeof(OHCI_HCD_TD);
+            break;
+
+        case USBPORT_TRANSFER_TYPE_BULK:
+            DPRINT_OHCI("OHCI_QueryEndpointRequirements: BulkTransfer\n");
+            *((PULONG)EndpointRequirements + 1) = 0x40000;
+            *EndpointRequirements = sizeof(OHCI_HCD_ED) +
+                                    0x44 * sizeof(OHCI_HCD_TD);
+            break;
+
+        case USBPORT_TRANSFER_TYPE_INTERRUPT:
+            DPRINT_OHCI("OHCI_QueryEndpointRequirements: InterruptTransfer\n");
+            *((PULONG)EndpointRequirements + 1) = 0x1000;
+            *EndpointRequirements = sizeof(OHCI_HCD_ED) +
+                                    4 * sizeof(OHCI_HCD_TD);
+            break;
+
+        default:
+            DPRINT1("OHCI_QueryEndpointRequirements: Unknown TransferType - %x\n",
+                    TransferType);
+            DbgBreakPoint();
+            break;
+    }
 }
 
 VOID
@@ -325,7 +368,46 @@ MPSTATUS
 NTAPI
 OHCI_ResumeController(IN PVOID ohciExtension)
 {
-    DPRINT("OHCI_ResumeController: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    POHCI_HCCA HcHCCA;
+    OHCI_REG_CONTROL control;
+    OHCI_REG_INTERRUPT_ENABLE_DISABLE InterruptReg;
+
+    DPRINT("OHCI_ResumeController \n");
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    control.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG);
+
+    if (control.HostControllerFunctionalState != OHCI_HC_STATE_SUSPEND)
+    {
+        return 7;
+    }
+
+    HcHCCA = (POHCI_HCCA)OhciExtension->HcResourcesVA;
+    HcHCCA->Pad1 = 0;
+
+    control.HostControllerFunctionalState = OHCI_HC_STATE_OPERATIONAL;
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG,
+                         control.AsULONG);
+
+    InterruptReg.AsULONG = 0;
+
+    InterruptReg.SchedulingOverrun = 1;
+    InterruptReg.WritebackDoneHead = 1;
+    InterruptReg.UnrecoverableError = 1;
+    InterruptReg.FrameNumberOverflow = 1;
+    InterruptReg.OwnershipChange = 1;
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG,
+                         InterruptReg.AsULONG);
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG,
+                         control.AsULONG);
+
     return 0;
 }
 
