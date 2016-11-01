@@ -284,22 +284,26 @@ NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
             IN PUNICODE_STRING RegistryPath)
 {
-    DPRINT_OHCI("DriverEntry: DriverObject - %p, RegistryPath - %wZ\n", DriverObject, RegistryPath);
+    NTSTATUS Status;
+
+    DPRINT_OHCI("DriverEntry: DriverObject - %p, RegistryPath - %wZ\n",
+                DriverObject,
+                RegistryPath);
 
     RtlZeroMemory(&RegPacket, sizeof(USBPORT_REGISTRATION_PACKET));
 
     RegPacket.MiniPortVersion = USB_MINIPORT_VERSION_OHCI;
 
     RegPacket.MiniPortFlags = USB_MINIPORT_FLAGS_INTERRUPT |
-                              USB_MINIPORT_FLAGS_PORT_IO |
+                              USB_MINIPORT_FLAGS_MEMORY_IO |
                               8;
 
     RegPacket.MiniPortBusBandwidth = 12000;
 
-    RegPacket.MiniPortExtensionSize = 0; //sizeof(OHCI_EXTENSION)
-    RegPacket.MiniPortEndpointSize = 0; //sizeof(OHCI_ENDPOINT);
-    RegPacket.MiniPortTransferSize = 0; //sizeof(OHCI_TRANSFER);
-    RegPacket.MiniPortResourcesSize = 0; //sizeof(OHCI_HC_RESOURCES);
+    RegPacket.MiniPortExtensionSize = sizeof(OHCI_EXTENSION);
+    RegPacket.MiniPortEndpointSize = sizeof(OHCI_ENDPOINT);
+    RegPacket.MiniPortTransferSize = sizeof(OHCI_TRANSFER);
+    RegPacket.MiniPortResourcesSize = sizeof(OHCI_HC_RESOURCES);
 
     RegPacket.OpenEndpoint = OHCI_OpenEndpoint;
     RegPacket.ReopenEndpoint = OHCI_ReopenEndpoint;
@@ -352,5 +356,10 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     DriverObject->DriverUnload = (PDRIVER_UNLOAD)OHCI_Unload;
 
-    return USBPORT_RegisterUSBPortDriver(DriverObject, 100, &RegPacket);
+    Status = USBPORT_RegisterUSBPortDriver(DriverObject, 100, &RegPacket);
+
+    DPRINT_OHCI("DriverEntry: USBPORT_RegisterUSBPortDriver return Status - %x\n",
+                Status);
+
+    return Status;
 }
