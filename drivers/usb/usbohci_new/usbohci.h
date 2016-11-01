@@ -75,6 +75,13 @@ typedef struct _OHCI_STATIC_ED {
   ULONG HccaIndex;
 } OHCI_STATIC_ED, *POHCI_STATIC_ED;
 
+typedef struct _OHCI_HC_RESOURCES {
+  OHCI_HCCA HcHCCA; // +0x000 (256 byte align)
+  OHCI_ENDPOINT_DESCRIPTOR InterrruptHeadED[63]; // +0x100 (16 byte align)
+  OHCI_ENDPOINT_DESCRIPTOR ControlHeadED; // +0x4F0 (16 byte align)
+  OHCI_ENDPOINT_DESCRIPTOR BulkHeadED; // +0x500 (16 byte align)
+} OHCI_HC_RESOURCES, *POHCI_HC_RESOURCES;
+
 /* roothub.c */
 
 VOID
