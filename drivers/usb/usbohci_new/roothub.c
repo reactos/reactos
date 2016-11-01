@@ -336,7 +336,20 @@ NTAPI
 OHCI_RH_ClearFeaturePortEnableChange(IN PVOID ohciExtension,
                                      IN USHORT Port)
 {
-    DPRINT("OHCI_RH_ClearFeaturePortEnableChange: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+
+    DPRINT("OHCI_RH_ClearFeaturePortEnableChange: ohciExtension - %p, Port - %x\n",
+           ohciExtension,
+           Port);
+
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
+                         0x20000);
+
     return 0;
 }
 
