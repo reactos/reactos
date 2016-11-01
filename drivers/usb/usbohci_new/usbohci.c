@@ -448,7 +448,27 @@ OHCI_ReopenEndpoint(IN PVOID ohciExtension,
                     IN PVOID endpointParameters,
                     IN PVOID ohciEndpoint)
 {
-    DPRINT("OHCI_ReopenEndpoint: UNIMPLEMENTED. FIXME\n");
+    POHCI_ENDPOINT OhciEndpoint;
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+    POHCI_HCD_ED ED;
+
+    DPRINT_OHCI("OHCI_ReopenEndpoint: ... \n");
+
+    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
+    EndpointProperties = (PUSBPORT_ENDPOINT_PROPERTIES)endpointParameters;
+
+    ED = OhciEndpoint->HcdED;
+
+    RtlCopyMemory(&OhciEndpoint->EndpointProperties,
+                  EndpointProperties,
+                  sizeof(USBPORT_ENDPOINT_PROPERTIES));
+
+    ED->HwED.EndpointControl.FunctionAddress =
+        OhciEndpoint->EndpointProperties.DeviceAddress;
+
+    ED->HwED.EndpointControl.MaximumPacketSize =
+        OhciEndpoint->EndpointProperties.TotalMaxPacketSize;
+
     return 0;
 }
 
