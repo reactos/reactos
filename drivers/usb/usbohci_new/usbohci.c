@@ -8,6 +8,75 @@
 
 USBPORT_REGISTRATION_PACKET RegPacket;
 
+POHCI_HCD_ED
+NTAPI
+OHCI_InitializeED(IN POHCI_ENDPOINT OhciEndpoint,
+                  IN POHCI_HCD_ED ED,
+                  IN POHCI_HCD_TD FirstTD,
+                  IN ULONG_PTR EdPA)
+{
+    OHCI_ENDPOINT_CONTROL EndpointControl;
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+
+    DPRINT_OHCI("OHCI_InitializeED: OhciEndpoint - %p, ED - %p, FirstTD - %p, EdPA - %p\n",
+                OhciEndpoint,
+                ED,
+                FirstTD,
+                EdPA);
+
+    RtlZeroMemory(ED, sizeof(OHCI_HCD_ED));
+
+    ED->PhysicalAddress = EdPA;
+
+    EndpointProperties = &OhciEndpoint->EndpointProperties;
+
+    ED->HwED.EndpointControl.FunctionAddress = EndpointProperties->DeviceAddress;
+    ED->HwED.EndpointControl.EndpointNumber = EndpointProperties->EndpointAddress;
+
+    EndpointControl = ED->HwED.EndpointControl;
+
+    if (EndpointProperties->TransferType == USBPORT_TRANSFER_TYPE_CONTROL)
+    {
+        EndpointControl.Direction = OHCI_ED_DATA_FLOW_DIRECTION_FROM_TD;
+    }
+    else if (EndpointProperties->Direction)
+    {
+        EndpointControl.Direction = OHCI_ED_DATA_FLOW_DIRECTION_OUT;
+    }
+    else
+    {
+        EndpointControl.Direction = OHCI_ED_DATA_FLOW_DIRECTION_IN;
+    }
+
+    ED->HwED.EndpointControl = EndpointControl;
+
+    if (EndpointProperties->DeviceSpeed == UsbLowSpeed)
+    {
+        ED->HwED.EndpointControl.Speed = OHCI_ENDPOINT_LOW_SPEED;
+    }
+
+    if (EndpointProperties->TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+    {
+        ED->HwED.EndpointControl.Format = OHCI_ENDPOINT_ISOCHRONOUS_FORMAT;
+    }
+    else
+    {
+        ED->HwED.EndpointControl.sKip = 1;
+    }
+
+    ED->HwED.EndpointControl.MaximumPacketSize = EndpointProperties->TotalMaxPacketSize;
+
+    ED->HwED.TailPointer = (ULONG_PTR)FirstTD->PhysicalAddress;
+    ED->HwED.HeadPointer = (ULONG_PTR)FirstTD->PhysicalAddress;
+
+    FirstTD->Flags |= OHCI_HCD_TD_FLAG_ALLOCATED;
+
+    OhciEndpoint->HcdTailP = FirstTD;
+    OhciEndpoint->HcdHeadP = FirstTD;
+
+    return ED;
+}
+
 MPSTATUS
 NTAPI
 OHCI_OpenControlEndpoint(IN POHCI_EXTENSION OhciExtension,
