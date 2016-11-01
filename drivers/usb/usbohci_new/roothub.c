@@ -78,7 +78,8 @@ NTAPI
 OHCI_RH_GetStatus(IN PVOID ohciExtension,
                   IN PUSHORT Status)
 {
-    DPRINT("OHCI_RH_GetStatus: UNIMPLEMENTED. FIXME\n");
+    DPRINT("OHCI_RH_GetStatus: \n");
+    *Status = 1;
     return 0;
 }
 
