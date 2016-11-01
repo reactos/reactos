@@ -1069,7 +1069,61 @@ VOID
 NTAPI
 OHCI_CheckController(IN PVOID ohciExtension)
 {
-    DPRINT("OHCI_CheckController: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    OHCI_REG_CONTROL HcControl;
+    ULONG FmNumber;
+    USHORT FmDiff;
+    POHCI_HCCA HcHCCA;
+
+    //DPRINT_OHCI("OHCI_CheckController: ...\n");
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    if (!OHCI_HardwarePresent(OhciExtension, TRUE))
+    {
+        return;
+    }
+
+    HcControl.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG);
+
+    if (HcControl.HostControllerFunctionalState != OHCI_HC_STATE_OPERATIONAL)
+    {
+        return;
+    }
+
+    FmNumber = READ_REGISTER_ULONG(&OperationalRegs->HcFmNumber);
+    FmDiff = (USHORT)(FmNumber - OhciExtension->HcdFmNumber);
+
+    if (FmNumber == 0 || FmDiff < 5)
+    {
+        return;
+    }
+
+    HcHCCA = (POHCI_HCCA)OhciExtension->HcResourcesVA;
+    OhciExtension->HcdFmNumber = FmNumber;
+
+
+    if (HcHCCA->Pad1)
+    {
+        DPRINT1("OHCI_CheckController: HcHCCA->Pad1 - %x\n",
+                HcHCCA->Pad1);
+
+        if (HcHCCA->Pad1 == 0xBAD1)
+        {
+            HcHCCA->Pad1 = 0xBAD2;
+        }
+        else if (HcHCCA->Pad1 == 0xBAD2)
+        {
+            HcHCCA->Pad1 = 0xBAD3;
+            RegPacket.UsbPortInvalidateController(OhciExtension, 1);
+        }
+    }
+    else
+    {
+        HcHCCA->Pad1 = 0xBAD1;
+    }
 }
 
 ULONG
