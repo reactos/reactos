@@ -10,6 +10,16 @@ USBPORT_REGISTRATION_PACKET RegPacket;
 
 MPSTATUS
 NTAPI
+OHCI_OpenIsoEndpoint(IN POHCI_EXTENSION OhciExtension,
+                     IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
+                     IN POHCI_ENDPOINT OhciEndpoint)
+{
+    DPRINT1("OHCI_OpenIsoEndpoint: UNIMPLEMENTED. FIXME\n");
+    return 6;
+}
+
+MPSTATUS
+NTAPI
 OHCI_OpenEndpoint(IN PVOID ohciExtension,
                   IN PVOID endpointParameters,
                   IN PVOID ohciEndpoint)
