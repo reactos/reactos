@@ -1076,8 +1076,20 @@ ULONG
 NTAPI
 OHCI_Get32BitFrameNumber(IN PVOID ohciExtension)
 {
-    DPRINT("OHCI_Get32BitFrameNumber: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    POHCI_EXTENSION OhciExtension;
+    POHCI_HCCA HcHCCA;
+    ULONG fm;
+    ULONG hp;
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    HcHCCA = (POHCI_HCCA)OhciExtension->HcResourcesVA;
+
+    hp = OhciExtension->FrameHighPart;
+    fm = HcHCCA->FrameNumber;
+
+    DPRINT_OHCI("OHCI_Get32BitFrameNumber: hp - %x, fm - %p\n", hp, fm);
+
+    return ((fm & 0x7FFF) | hp) + ((fm ^ hp) & 0x8000);
 }
 
 VOID
