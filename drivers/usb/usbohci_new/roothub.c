@@ -3,6 +3,36 @@
 //#define NDEBUG
 #include <debug.h>
 
+ULONG
+NTAPI 
+OHCI_ReadRhDescriptorA(IN POHCI_EXTENSION OhciExtension)
+{
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    ULONG DescriptorA;
+    ULONG ix = 0;
+
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    DPRINT("OHCI_ReadRhDescriptorA: OhciExtension - %p\n", OhciExtension);
+
+    do
+    {
+        DescriptorA = READ_REGISTER_ULONG(&OperationalRegs->HcRhDescriptorA.AsULONG);
+
+        if (DescriptorA && !(DescriptorA & 0xFFE0F0)) // Reserved bits
+            break;
+
+        DPRINT1("OHCI_ReadRhDescriptorA: ix - %p\n", ix);
+
+        KeStallExecutionProcessor(5);
+
+        ++ix;
+    }
+    while (ix < 10);
+
+    return DescriptorA;
+}
+
 VOID
 NTAPI
 OHCI_RH_GetRootHubData(IN PVOID ohciExtension,
