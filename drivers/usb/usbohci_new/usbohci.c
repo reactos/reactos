@@ -287,7 +287,38 @@ VOID
 NTAPI
 OHCI_SuspendController(IN PVOID ohciExtension)
 {
-    DPRINT("OHCI_SuspendController: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    OHCI_REG_CONTROL Control;
+    OHCI_REG_INTERRUPT_ENABLE_DISABLE InterruptReg;
+
+    DPRINT("OHCI_SuspendController: ... \n");
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptDisable.AsULONG,
+                         0xFFFFFFFF);
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptStatus.AsULONG,
+                         0xFFFFFFFF);
+
+    Control.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG);
+
+    Control.HostControllerFunctionalState = OHCI_HC_STATE_SUSPEND;
+    Control.RemoteWakeupEnable =  1;
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcControl.AsULONG,
+                         Control.AsULONG);
+
+    InterruptReg.AsULONG = 0;
+    InterruptReg.ResumeDetected = 1;
+    InterruptReg.UnrecoverableError = 1;
+    InterruptReg.RootHubStatusChange = 1;
+    InterruptReg.MasterInterruptEnable = 1;
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG,
+                         InterruptReg.AsULONG);
 }
 
 MPSTATUS
