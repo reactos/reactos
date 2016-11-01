@@ -82,6 +82,18 @@ typedef struct _OHCI_HC_RESOURCES {
   OHCI_ENDPOINT_DESCRIPTOR BulkHeadED; // +0x500 (16 byte align)
 } OHCI_HC_RESOURCES, *POHCI_HC_RESOURCES;
 
+typedef struct _OHCI_ENDPOINT {
+  ULONG Reserved;
+  USBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+  POHCI_STATIC_ED HeadED;
+  POHCI_HCD_TD FirstTD;
+  POHCI_HCD_ED ED;
+  ULONG MaxTransferDescriptors; // TdCount
+  POHCI_HCD_TD HcdHeadP;
+  POHCI_HCD_TD HcdTailP;
+  LIST_ENTRY TDList;
+} OHCI_ENDPOINT, *POHCI_ENDPOINT;
+
 /* roothub.c */
 
 VOID
