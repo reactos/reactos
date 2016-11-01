@@ -204,7 +204,20 @@ NTAPI
 OHCI_RH_SetFeaturePortPower(IN PVOID ohciExtension,
                             IN USHORT Port)
 {
-    DPRINT("OHCI_RH_SetFeaturePortPower: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+
+    DPRINT("OHCI_RH_SetFeaturePortPower: OhciExtension - %p, Port - %x\n",
+           OhciExtension,
+           Port);
+
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcRhPortStatus[Port-1].AsULONG,
+                         0x100);
+
     return 0;
 }
 
