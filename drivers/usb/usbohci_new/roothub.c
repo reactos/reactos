@@ -8,7 +8,39 @@ NTAPI
 OHCI_RH_GetRootHubData(IN PVOID ohciExtension,
                        IN PVOID rootHubData)
 {
-    DPRINT("OHCI_RH_GetRootHubData: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension;
+    PUSBPORT_ROOT_HUB_DATA RootHubData;
+    OHCI_REG_RH_DESCRIPTORA DescriptorA;
+    UCHAR PowerOnToPowerGoodTime;
+    USHORT HubCharacteristics;
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+
+    DPRINT("OHCI_RH_GetRootHubData: OhciExtension - %p, rootHubData - %p\n",
+           OhciExtension,
+           rootHubData);
+
+    RootHubData = (PUSBPORT_ROOT_HUB_DATA)rootHubData;
+    DescriptorA.AsULONG = OHCI_ReadRhDescriptorA(OhciExtension);
+
+    RootHubData->NumberOfPorts = DescriptorA.NumberDownstreamPorts;
+
+    PowerOnToPowerGoodTime = DescriptorA.PowerOnToPowerGoodTime;
+    if (PowerOnToPowerGoodTime <= 25)
+    {
+        PowerOnToPowerGoodTime = 25;
+    }
+    RootHubData->PowerOnToPowerGood = PowerOnToPowerGoodTime;
+
+    HubCharacteristics = (DescriptorA.AsULONG >> 8) & 0xFFFC;
+    RootHubData->HubCharacteristics = HubCharacteristics;
+
+    if (DescriptorA.PowerSwitchingMode)
+    {
+        RootHubData->HubCharacteristics = (HubCharacteristics & 0xFFFD) | 1;
+    }
+
+    RootHubData->HubControlCurrent = 0;
 }
 
 MPSTATUS
