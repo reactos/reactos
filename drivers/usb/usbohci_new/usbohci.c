@@ -418,7 +418,12 @@ VOID
 NTAPI
 OHCI_DisableInterrupts(IN PVOID ohciExtension)
 {
-    DPRINT("OHCI_DisableInterrupts: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION  OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    DPRINT_OHCI("OHCI_DisableInterrupts\n");
+
+    /* HcInterruptDisable.MIE - disables interrupt generation */
+    WRITE_REGISTER_ULONG(&OhciExtension->OperationalRegs->HcInterruptDisable.AsULONG,
+                         0x80000000);
 }
 
 VOID
