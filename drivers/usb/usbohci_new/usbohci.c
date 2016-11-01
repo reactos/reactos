@@ -14,8 +14,58 @@ OHCI_OpenEndpoint(IN PVOID ohciExtension,
                   IN PVOID endpointParameters,
                   IN PVOID ohciEndpoint)
 {
-    DPRINT("OHCI_OpenEndpoint: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    POHCI_EXTENSION OhciExtension;
+    POHCI_ENDPOINT OhciEndpoint;
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+    ULONG TransferType;
+    ULONG Result;
+
+    DPRINT_OHCI("OHCI_OpenEndpoint: ... \n");
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
+    EndpointProperties = (PUSBPORT_ENDPOINT_PROPERTIES)endpointParameters;
+
+    RtlCopyMemory(&OhciEndpoint->EndpointProperties,
+                  endpointParameters,
+                  sizeof(USBPORT_ENDPOINT_PROPERTIES));
+
+    InitializeListHead(&OhciEndpoint->TDList);
+
+    TransferType = EndpointProperties->TransferType;
+
+    switch (TransferType)
+    {
+        case USBPORT_TRANSFER_TYPE_ISOCHRONOUS:
+            Result = OHCI_OpenIsoEndpoint(OhciExtension,
+                                          EndpointProperties,
+                                          OhciEndpoint);
+            break;
+
+        case USBPORT_TRANSFER_TYPE_CONTROL:
+            Result = OHCI_OpenControlEndpoint(OhciExtension,
+                                              EndpointProperties,
+                                              OhciEndpoint);
+            break;
+
+        case USBPORT_TRANSFER_TYPE_BULK:
+            Result = OHCI_OpenBulkEndpoint(OhciExtension,
+                                           EndpointProperties,
+                                           OhciEndpoint);
+            break;
+
+        case USBPORT_TRANSFER_TYPE_INTERRUPT:
+            Result = OHCI_OpenInterruptEndpoint(OhciExtension,
+                                                EndpointProperties,
+                                                OhciEndpoint);
+            break;
+
+        default:
+            Result = 6;
+            break;
+    }
+
+    return Result;
 }
 
 MPSTATUS
