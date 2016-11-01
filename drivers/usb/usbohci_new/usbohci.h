@@ -105,6 +105,21 @@ typedef struct _OHCI_TRANSFER {
   POHCI_HCD_TD NextTD;
 } OHCI_TRANSFER, *POHCI_TRANSFER;
 
+typedef struct _OHCI_EXTENSION {
+  ULONG Reserved;
+  POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+  OHCI_REG_FRAME_INTERVAL FrameInterval;
+  ULONG FrameHighPart;
+  ULONG HcdFmNumber;
+  ULONG HcResourcesVA;
+  ULONG HcResourcesPA;
+  PVOID ScheduleStartVA;
+  PVOID ScheduleStartPA;
+  OHCI_STATIC_ED IntStaticED[63];
+  OHCI_STATIC_ED ControlStaticED; // [64-1] ED_CONTROL
+  OHCI_STATIC_ED BulkStaticED; // [65-1] ED_BULK
+} OHCI_EXTENSION, *POHCI_EXTENSION;
+
 /* roothub.c */
 
 VOID
