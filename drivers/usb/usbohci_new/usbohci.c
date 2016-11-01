@@ -1084,7 +1084,12 @@ VOID
 NTAPI
 OHCI_InterruptNextSOF(IN PVOID ohciExtension)
 {
-    DPRINT("OHCI_InterruptNextSOF: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION  OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    DPRINT_OHCI("OHCI_InterruptNextSOF: OhciExtension - %p\n",
+                OhciExtension);
+
+    WRITE_REGISTER_ULONG(&OhciExtension->OperationalRegs->HcInterruptEnable.AsULONG,
+                         4);
 }
 
 VOID
