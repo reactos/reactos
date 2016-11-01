@@ -1148,7 +1148,31 @@ OHCI_SetEndpointStatus(IN PVOID ohciExtension,
                        IN PVOID ohciEndpoint,
                        IN ULONG EndpointStatus)
 {
-    DPRINT("OHCI_SetEndpointStatus: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension;
+    POHCI_ENDPOINT OhciEndpoint;
+    POHCI_HCD_ED ED;
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
+
+    DPRINT_OHCI("OHCI_SetEndpointStatus: Endpoint - %p, Status - %p\n",
+                OhciEndpoint,
+                EndpointStatus);
+
+    if (EndpointStatus)
+    {
+        if (EndpointStatus == 1)
+        {
+            ASSERT(FALSE);
+        }
+    }
+    else
+    {
+        ED = OhciEndpoint->HcdED;
+        ED->HwED.HeadPointer &= ~1; // ~Halted
+
+        OHCI_EnableList(OhciExtension, OhciEndpoint);
+    }
 }
 
 VOID
