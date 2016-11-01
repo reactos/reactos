@@ -159,7 +159,21 @@ NTAPI
 OHCI_RH_GetHubStatus(IN PVOID ohciExtension,
                      IN PULONG HubStatus)
 {
-    DPRINT("OHCI_RH_GetHubStatus: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+
+    DPRINT("OHCI_RH_GetHubStatus: ohciExtension - %p, HubStatus - %x\n",
+           ohciExtension,
+           HubStatus);
+
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    *HubStatus &= ~0x10001;
+    *HubStatus ^= (READ_REGISTER_ULONG(&OperationalRegs->HcRhStatus.AsULONG) ^
+                  *HubStatus) & 0x20002;
+
     return 0;
 }
 
