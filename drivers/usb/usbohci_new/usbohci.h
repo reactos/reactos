@@ -87,7 +87,7 @@ typedef struct _OHCI_ENDPOINT {
   USBPORT_ENDPOINT_PROPERTIES EndpointProperties;
   POHCI_STATIC_ED HeadED;
   POHCI_HCD_TD FirstTD;
-  POHCI_HCD_ED ED;
+  POHCI_HCD_ED HcdED;
   ULONG MaxTransferDescriptors; // TdCount
   POHCI_HCD_TD HcdHeadP;
   POHCI_HCD_TD HcdTailP;
