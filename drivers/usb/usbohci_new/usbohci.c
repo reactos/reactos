@@ -10,6 +10,46 @@ USBPORT_REGISTRATION_PACKET RegPacket;
 
 VOID
 NTAPI
+OHCI_EnableList(IN POHCI_EXTENSION OhciExtension,
+                IN POHCI_ENDPOINT OhciEndpoint)
+{
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+    ULONG TransferType;
+    OHCI_REG_COMMAND_STATUS CommandStatus;
+
+    DPRINT_OHCI("OHCI_EnableList: ... \n");
+
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    CommandStatus.AsULONG = 0;
+
+    if (READ_REGISTER_ULONG((PULONG)&OperationalRegs->HcControlHeadED))
+    {
+        CommandStatus.ControlListFilled = 1;
+    }
+
+    if (READ_REGISTER_ULONG((PULONG)&OperationalRegs->HcBulkHeadED))
+    {
+        CommandStatus.BulkListFilled = 1;
+    }
+
+    TransferType = OhciEndpoint->EndpointProperties.TransferType;
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_BULK)
+    {
+        CommandStatus.BulkListFilled = 1;
+    }
+    else if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL)
+    {
+        CommandStatus.ControlListFilled = 1;
+    }
+
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcCommandStatus.AsULONG,
+                         CommandStatus.AsULONG);
+}
+
+VOID
+NTAPI
 OHCI_InsertEndpointInSchedule(IN POHCI_ENDPOINT OhciEndpoint)
 {
     POHCI_STATIC_ED HeadED;
