@@ -10,6 +10,67 @@ USBPORT_REGISTRATION_PACKET RegPacket;
 
 MPSTATUS
 NTAPI
+OHCI_OpenControlEndpoint(IN POHCI_EXTENSION OhciExtension,
+                         IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
+                         IN POHCI_ENDPOINT OhciEndpoint)
+{
+    POHCI_HCD_TD TdVA;
+    POHCI_HCD_TD TdPA;
+    POHCI_HCD_ED ED;
+    ULONG TdCount;
+
+    DPRINT_OHCI("OHCI_OpenControlEndpoint: ... \n");
+
+    ED = (POHCI_HCD_ED)EndpointProperties->BufferVA;
+
+    OhciEndpoint->FirstTD = (POHCI_HCD_TD)((ULONG_PTR)ED + sizeof(OHCI_HCD_ED));
+    OhciEndpoint->HeadED = &OhciExtension->ControlStaticED;
+
+    TdCount = (EndpointProperties->BufferLength - sizeof(OHCI_HCD_ED)) / 
+              sizeof(OHCI_HCD_TD);
+
+    OhciEndpoint->MaxTransferDescriptors = TdCount;
+
+    if (TdCount > 0)
+    {
+        TdVA = OhciEndpoint->FirstTD;
+        TdPA = (POHCI_HCD_TD)
+               ((ULONG_PTR)EndpointProperties->BufferPA +
+               sizeof(OHCI_HCD_ED));
+
+        do
+        {
+            DPRINT_OHCI("OHCI_OpenControlEndpoint: InitTD. TdVA - %p, TdPA - %p\n",
+                        TdVA,
+                        TdPA);
+
+            RtlZeroMemory(TdVA, sizeof(OHCI_HCD_TD));
+
+            TdVA->PhysicalAddress = (ULONG_PTR)TdPA;
+            TdVA->Flags = 0;
+            TdVA->OhciTransfer = NULL;
+
+            ++TdVA;
+            ++TdPA;
+            --TdCount;
+        }
+        while (TdCount > 0);
+    }
+
+    OhciEndpoint->HcdED = OHCI_InitializeED(OhciEndpoint,
+                                            ED,
+                                            OhciEndpoint->FirstTD,
+                                            EndpointProperties->BufferPA);
+
+    OhciEndpoint->HcdED->Flags = OHCI_HCD_ED_FLAG_RESET_ON_HALT | 1;
+
+    OHCI_InsertEndpointInSchedule(OhciEndpoint);
+
+    return 0;
+}
+
+MPSTATUS
+NTAPI
 OHCI_OpenBulkEndpoint(IN POHCI_EXTENSION OhciExtension,
                       IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
                       IN POHCI_ENDPOINT OhciEndpoint)
