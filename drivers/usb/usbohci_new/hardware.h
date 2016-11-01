@@ -1,5 +1,47 @@
 #define OHCI_NUMBER_OF_INTERRUPTS  32
 #define OHCI_MAX_PORT_COUNT        15
+#define ED_EOF                     -1
+#define MAXIMUM_OVERHEAD           210
+
+/* Controller states */
+#define OHCI_HC_STATE_RESET       0
+#define OHCI_HC_STATE_RESUME      1
+#define OHCI_HC_STATE_OPERATIONAL 2
+#define OHCI_HC_STATE_SUSPEND     3
+
+/* Endpoint Descriptor Control */
+#define OHCI_ED_DATA_FLOW_DIRECTION_FROM_TD 0
+#define OHCI_ED_DATA_FLOW_DIRECTION_OUT     1
+#define OHCI_ED_DATA_FLOW_DIRECTION_IN      2
+
+#define OHCI_ENDPOINT_FULL_SPEED 0
+#define OHCI_ENDPOINT_LOW_SPEED  1
+
+#define OHCI_ENDPOINT_GENERAL_FORMAT     0
+#define OHCI_ENDPOINT_ISOCHRONOUS_FORMAT 1
+
+/* Transfer Descriptor Control */
+#define OHCI_TD_INTERRUPT_IMMEDIATE 0
+#define OHCI_TD_INTERRUPT_NONE      7
+
+#define OHCI_TD_DIRECTION_PID_SETUP    0
+#define OHCI_TD_DIRECTION_PID_OUT      1
+#define OHCI_TD_DIRECTION_PID_IN       2
+#define OHCI_TD_DIRECTION_PID_RESERVED 3
+
+#define OHCI_TD_CONDITION_NO_ERROR          0x00
+#define OHCI_TD_CONDITION_CRC_ERROR         0x01
+#define OHCI_TD_CONDITION_BIT_STUFFING      0x02
+#define OHCI_TD_CONDITION_TOGGLE_MISMATCH   0x03
+#define OHCI_TD_CONDITION_STALL             0x04
+#define OHCI_TD_CONDITION_NO_RESPONSE       0x05
+#define OHCI_TD_CONDITION_PID_CHECK_FAILURE 0x06
+#define OHCI_TD_CONDITION_UNEXPECTED_PID    0x07
+#define OHCI_TD_CONDITION_DATA_OVERRUN      0x08
+#define OHCI_TD_CONDITION_DATA_UNDERRUN     0x09
+#define OHCI_TD_CONDITION_BUFFER_OVERRUN    0x0C
+#define OHCI_TD_CONDITION_BUFFER_UNDERRUN   0x0D
+#define OHCI_TD_CONDITION_NOT_ACCESSED      0x0E
 
 typedef union _OHCI_TRANSFER_CONTROL {
   struct {
@@ -158,8 +200,8 @@ typedef union _OHCI_REG_RH_DESCRIPTORA {
     ULONG DeviceType                : 1;
     ULONG OverCurrentProtectionMode : 1;
     ULONG NoOverCurrentProtection   : 1;
-    ULONG Reserved2                 : 13;
-    ULONG PowerOnToPowerGoodTime    : 1;
+    ULONG Reserved                  : 11;
+    ULONG PowerOnToPowerGoodTime    : 8;
   };
   ULONG AsULONG;
 } OHCI_REG_RH_DESCRIPTORA, *POHCI_REG_RH_DESCRIPTORA;
