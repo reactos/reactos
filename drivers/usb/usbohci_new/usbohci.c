@@ -1054,7 +1054,39 @@ OHCI_SetEndpointState(IN PVOID ohciExtension,
                       IN PVOID ohciEndpoint,
                       IN ULONG EndpointState)
 {
-    DPRINT("OHCI_SetEndpointState: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension;
+    POHCI_ENDPOINT OhciEndpoint;
+    POHCI_HCD_ED ED;
+
+    DPRINT_OHCI("OHCI_SetEndpointState: EndpointState - %x\n",
+                EndpointState);
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
+
+    ED = OhciEndpoint->HcdED;
+
+    switch (EndpointState)
+    {
+        case USBPORT_ENDPOINT_PAUSED:
+            ED->HwED.EndpointControl.sKip = 1;
+            break;
+
+        case USBPORT_ENDPOINT_ACTIVE:
+            ED->HwED.EndpointControl.sKip = 0;
+            OHCI_EnableList(OhciExtension, OhciEndpoint);
+            break;
+
+        case USBPORT_ENDPOINT_CLOSED:
+            ED->HwED.EndpointControl.sKip = 1;
+            ED->Flags |= 0x10;
+            OHCI_RemoveEndpointFromSchedule(OhciEndpoint);
+            break;
+
+        default:
+            ASSERT(FALSE);
+            break;
+    }
 }
 
 VOID
