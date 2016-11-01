@@ -1062,7 +1062,32 @@ NTAPI
 OHCI_PollEndpoint(IN PVOID ohciExtension,
                   IN PVOID ohciEndpoint)
 {
-    DPRINT("OHCI_PollEndpoint: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension;
+    POHCI_ENDPOINT OhciEndpoint;
+    ULONG TransferType;
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
+
+    DPRINT_OHCI("OHCI_PollEndpoint: OhciExtension - %p, Endpoint - %p\n",
+                OhciExtension,
+                OhciEndpoint);
+
+    TransferType = OhciEndpoint->EndpointProperties.TransferType;
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+    {
+        OHCI_PollIsoEndpoint(OhciExtension, OhciEndpoint);
+    }
+    else
+    {
+        if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
+            TransferType == USBPORT_TRANSFER_TYPE_BULK ||
+            TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+        {
+            OHCI_PollAsyncEndpoint(OhciExtension, OhciEndpoint);
+        }
+    }
 }
 
 VOID
