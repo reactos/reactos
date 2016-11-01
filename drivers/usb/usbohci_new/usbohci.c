@@ -400,7 +400,18 @@ VOID
 NTAPI
 OHCI_EnableInterrupts(IN PVOID ohciExtension)
 {
-    DPRINT("OHCI_EnableInterrupts: UNIMPLEMENTED. FIXME\n");
+    POHCI_EXTENSION OhciExtension;
+    POHCI_OPERATIONAL_REGISTERS OperationalRegs;
+ 
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    DPRINT_OHCI("OHCI_EnableInterrupts: OhciExtension - %p\n",
+                OhciExtension);
+
+    OperationalRegs = OhciExtension->OperationalRegs;
+
+    /* HcInterruptEnable.MIE - Master Interrupt Enable */
+    WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG,
+                         0x80000000);
 }
 
 VOID
