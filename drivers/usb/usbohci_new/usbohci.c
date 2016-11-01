@@ -1050,6 +1050,44 @@ OHCI_GetEndpointState(IN PVOID ohciExtension,
 
 VOID
 NTAPI
+OHCI_RemoveEndpointFromSchedule(IN POHCI_ENDPOINT OhciEndpoint)
+{
+    POHCI_HCD_ED ED;
+    POHCI_HCD_ED PreviousED;
+    POHCI_STATIC_ED HeadED;
+
+    DPRINT("OHCI_RemoveEndpointFromSchedule \n");
+
+    ED = OhciEndpoint->HcdED;
+    HeadED = OhciEndpoint->HeadED;
+
+    if (&HeadED->Link == ED->HcdEDLink.Blink)
+    {
+        if (ED->Flags & 0x20)
+        {
+            WRITE_REGISTER_ULONG((PULONG)HeadED->pNextED, ED->HwED.NextED);
+        }
+        else
+        {
+            *HeadED->pNextED = ED->HwED.NextED;
+        }
+    }
+    else
+    {
+        PreviousED = CONTAINING_RECORD(ED->HcdEDLink.Blink,
+                                       OHCI_HCD_ED,
+                                       HcdEDLink);
+
+        PreviousED->HwED.NextED = ED->HwED.NextED;
+    }
+
+    RemoveEntryList(&ED->HcdEDLink);
+
+    OhciEndpoint->HeadED = NULL;
+}
+
+VOID
+NTAPI
 OHCI_SetEndpointState(IN PVOID ohciExtension,
                       IN PVOID ohciEndpoint,
                       IN ULONG EndpointState)
