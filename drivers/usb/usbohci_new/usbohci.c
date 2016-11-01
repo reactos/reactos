@@ -8,6 +8,51 @@
 
 USBPORT_REGISTRATION_PACKET RegPacket;
 
+VOID
+NTAPI
+OHCI_InsertEndpointInSchedule(IN POHCI_ENDPOINT OhciEndpoint)
+{
+    POHCI_STATIC_ED HeadED;
+    POHCI_HCD_ED ED;
+    POHCI_HCD_ED PrevED;
+    PLIST_ENTRY HeadLink;
+
+    DPRINT_OHCI("OHCI_InsertEndpointInSchedule: OhciEndpoint - %p\n",
+                OhciEndpoint);
+
+    ED = OhciEndpoint->HcdED;
+
+    HeadED = OhciEndpoint->HeadED;
+    HeadLink = &HeadED->Link;
+
+    if (IsListEmpty(HeadLink))
+    {
+        InsertHeadList(HeadLink, &ED->HcdEDLink);
+
+        if (HeadED->Type & 0x20) // ControlTransfer or BulkTransfer
+        {
+            ED->HwED.NextED = READ_REGISTER_ULONG(HeadED->pNextED);
+            WRITE_REGISTER_ULONG(HeadED->pNextED, ED->PhysicalAddress);
+        }
+        else
+        {
+            ED->HwED.NextED = *HeadED->pNextED;
+            *HeadED->pNextED = ED->PhysicalAddress;
+        }
+    }
+    else
+    {
+        PrevED = CONTAINING_RECORD(HeadLink->Blink,
+                                   OHCI_HCD_ED,
+                                   HcdEDLink);
+
+        InsertTailList(HeadLink, &ED->HcdEDLink);
+
+        ED->HwED.NextED = 0;
+        PrevED->HwED.NextED = ED->PhysicalAddress;
+    }
+}
+
 POHCI_HCD_ED
 NTAPI
 OHCI_InitializeED(IN POHCI_ENDPOINT OhciEndpoint,
