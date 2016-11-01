@@ -1130,7 +1130,25 @@ OHCI_SetEndpointDataToggle(IN PVOID ohciExtension,
                            IN PVOID ohciEndpoint,
                            IN ULONG DataToggle)
 {
-    DPRINT("OHCI_SetEndpointDataToggle: UNIMPLEMENTED. FIXME\n");
+    POHCI_ENDPOINT OhciEndpoint;
+    POHCI_HCD_ED ED;
+
+    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
+
+    DPRINT_OHCI("OHCI_SetEndpointDataToggle: Endpoint - %p, DataToggle - %x\n",
+                OhciEndpoint,
+                DataToggle);
+
+    ED = OhciEndpoint->HcdED;
+
+    if (DataToggle)
+    {
+        ED->HwED.HeadPointer |= 2; // toggleCarry
+    }
+    else
+    {
+        ED->HwED.HeadPointer &= ~2;
+    }
 }
 
 ULONG
