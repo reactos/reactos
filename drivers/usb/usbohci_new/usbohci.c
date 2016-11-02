@@ -1006,6 +1006,43 @@ OHCI_InterruptDpc(IN PVOID ohciExtension,
 }
 
 ULONG
+NTAPI 
+OHCI_RemainTDs(IN POHCI_EXTENSION OhciExtension,
+               IN POHCI_ENDPOINT OhciEndpoint)
+{
+    POHCI_HCD_TD TD;
+    ULONG MaxTDs;
+    ULONG Result;
+
+    DPRINT_OHCI("OHCI_RemainTDs: ... \n");
+
+    MaxTDs = OhciEndpoint->MaxTransferDescriptors;
+
+    if (MaxTDs == 0)
+    {
+        return 0;
+    }
+
+    TD = (POHCI_HCD_TD)OhciEndpoint->FirstTD;
+
+    Result = 0;
+
+    do
+    {
+        if (!(TD->Flags & OHCI_HCD_TD_FLAG_ALLOCATED))
+        {
+            ++Result;
+        }
+
+        TD += 1;
+        --MaxTDs;
+    }
+    while (MaxTDs > 0);
+
+    return Result;
+}
+
+ULONG
 NTAPI
 OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
                      IN POHCI_ENDPOINT OhciEndpoint,
