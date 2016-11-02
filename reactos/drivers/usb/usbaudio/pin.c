@@ -136,6 +136,9 @@ UsbAudioSetFormat(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* get pin context */
+    PinContext = Pin->Context;
+
     /* FIXME: determine controls and format urb */
     UsbBuildVendorRequest(Urb,
         URB_FUNCTION_CLASS_ENDPOINT,
@@ -144,14 +147,13 @@ UsbAudioSetFormat(
         0,
         0x01, // SET_CUR
         0x100,
-        0x81, //FIXME bEndpointAddress
+        PinContext->DeviceExtension->InterfaceInfo->Pipes[0].EndpointAddress,
         SampleRateBuffer,
         NULL,
         3,
         NULL);
 
-    /* get pin context */
-    PinContext = Pin->Context;
+
 
     /* submit urb */
     Status = SubmitUrbSync(PinContext->LowerDevice, Urb);
@@ -164,13 +166,23 @@ UsbAudioSetFormat(
 
 NTSTATUS
 USBAudioSelectAudioStreamingInterface(
+    IN PKSPIN Pin,
     IN PPIN_CONTEXT PinContext,
     IN PDEVICE_EXTENSION DeviceExtension,
-    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
+    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+    IN ULONG FormatDescriptorIndex)
 {
     PURB Urb;
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
     NTSTATUS Status;
+    ULONG Found, Index;
+
+    PUSB_AUDIO_STREAMING_INTERFACE_DESCRIPTOR StreamingInterfaceDescriptor;
+    PUSB_AUDIO_CONTROL_INPUT_TERMINAL_DESCRIPTOR TerminalDescriptor = NULL;
+
+    /* search for terminal descriptor of that irp sink / irp source */
+    TerminalDescriptor = UsbAudioGetStreamingTerminalDescriptorByIndex(DeviceExtension->ConfigurationDescriptor, Pin->Id);
+    ASSERT(TerminalDescriptor != NULL);
 
     /* grab interface descriptor */
     InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, ConfigurationDescriptor, -1, -1, USB_DEVICE_CLASS_AUDIO, -1, -1);
@@ -180,19 +192,37 @@ USBAudioSelectAudioStreamingInterface(
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* FIXME selects the first interface with audio streaming and non zero num of endpoints */
+    Found = FALSE;
+    Index = 0;
+
+    /* selects the interface which has an audio streaming interface descriptor associated to the input / output terminal at the given format index */
     while (InterfaceDescriptor != NULL)
     {
         if (InterfaceDescriptor->bInterfaceSubClass == 0x02 /* AUDIO_STREAMING */ && InterfaceDescriptor->bNumEndpoints > 0) 
         {
-            break;
+            StreamingInterfaceDescriptor = (PUSB_AUDIO_STREAMING_INTERFACE_DESCRIPTOR)USBD_ParseDescriptors(ConfigurationDescriptor, ConfigurationDescriptor->wTotalLength, InterfaceDescriptor, USB_AUDIO_CONTROL_TERMINAL_DESCRIPTOR_TYPE);
+            if (StreamingInterfaceDescriptor != NULL)
+            {
+                ASSERT(StreamingInterfaceDescriptor->bDescriptorSubtype == 0x01);
+                ASSERT(StreamingInterfaceDescriptor->wFormatTag == WAVE_FORMAT_PCM);
+                if (StreamingInterfaceDescriptor->bTerminalLink == TerminalDescriptor->bTerminalID)
+                {
+                    if (FormatDescriptorIndex == Index)
+                    {
+                        Found = TRUE;
+                        break;
+                    }
+                    Index++;
+                }
+            }
         }
         InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, (PVOID)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength), -1, -1, USB_DEVICE_CLASS_AUDIO, -1, -1);
     }
 
-    if (!InterfaceDescriptor)
+    if (!Found)
     {
         /* no such interface */
+        DPRINT1("No Interface found\n");
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -200,7 +230,7 @@ USBAudioSelectAudioStreamingInterface(
     if (!Urb)
     {
         /* no memory */
-        return USBD_STATUS_INSUFFICIENT_RESOURCES;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
      /* now prepare interface urb */
@@ -209,7 +239,7 @@ USBAudioSelectAudioStreamingInterface(
      /* now select the interface */
      Status = SubmitUrbSync(DeviceExtension->LowerDevice, Urb);
 
-     DPRINT1("USBAudioSelectAudioStreamingInterface Status %x UrbStatus %x\n", Status, Urb->UrbSelectInterface.Hdr.Status);
+     DPRINT1("USBAudioSelectAudioStreamingInterface Status %x UrbStatus %x InterfaceNumber %x AlternateSetting %x\n", Status, Urb->UrbSelectInterface.Hdr.Status, InterfaceDescriptor->bInterfaceNumber, InterfaceDescriptor->bAlternateSetting);
 
      /* did it succeeed */
      if (NT_SUCCESS(Status))
@@ -534,12 +564,54 @@ NTSTATUS
 InitStreamPin(
     IN PKSPIN Pin)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG Index;
+    PIRP Irp;
+    PPIN_CONTEXT PinContext;
+    PIO_STACK_LOCATION IoStack;
+
+    DPRINT1("InitStreamPin\n");
+
+    /* get pin context */
+    PinContext = Pin->Context;
+
+    /* init irps */
+    for (Index = 0; Index < 12; Index++)
+    {
+        /* allocate irp */
+        Irp = AllocFunction(IoSizeOfIrp(PinContext->DeviceExtension->LowerDevice->StackSize));
+        if (!Irp)
+        {
+            /* no memory */
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        DPRINT1("InitStreamPin Irp %p\n", Irp);
+
+        /* initialize irp */
+        IoInitializeIrp(Irp, IoSizeOfIrp(PinContext->DeviceExtension->LowerDevice->StackSize), PinContext->DeviceExtension->LowerDevice->StackSize);
+
+        Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+        Irp->IoStatus.Information = 0;
+        Irp->Flags = 0;
+        Irp->UserBuffer = NULL;
+
+        IoStack = IoGetNextIrpStackLocation(Irp);
+        IoStack->DeviceObject = PinContext->DeviceExtension->LowerDevice;
+        IoStack->Parameters.Others.Argument2 = NULL;
+        IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
+        IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB;
+
+        IoSetCompletionRoutine(Irp, UsbAudioRenderComplete, Pin, TRUE, TRUE, TRUE);
+
+        /* insert into irp list */
+        InsertTailList(&PinContext->IrpListHead, &Irp->Tail.Overlay.ListEntry);
+
+        /* add to object bag*/
+        KsAddItemToObjectBag(Pin->Bag, Irp, ExFreePool);
+    }
+
+    return STATUS_SUCCESS;
 }
-
-
-
 
 NTSTATUS
 NTAPI
@@ -589,10 +661,12 @@ USBAudioPinCreate(
     }
 
     /* select streaming interface */
-    Status = USBAudioSelectAudioStreamingInterface(PinContext, PinContext->DeviceExtension, PinContext->DeviceExtension->ConfigurationDescriptor);
+    /* FIXME choose correct dataformat */
+    Status = USBAudioSelectAudioStreamingInterface(Pin, PinContext, PinContext->DeviceExtension, PinContext->DeviceExtension->ConfigurationDescriptor, 0);
     if (!NT_SUCCESS(Status))
     {
         /* failed */
+        DPRINT1("USBAudioSelectAudioStreamingInterface failed with %x\n", Status);
         return Status;
     }
 
@@ -607,7 +681,7 @@ USBAudioPinCreate(
         Status = InitStreamPin(Pin);
     }
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 NTSTATUS
@@ -618,6 +692,52 @@ USBAudioPinClose(
 {
     UNIMPLEMENTED
     return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+UsbAudioRenderComplete(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PVOID Context)
+{
+    PKSPIN Pin;
+    PPIN_CONTEXT PinContext;
+    KIRQL OldLevel;
+    PKSSTREAM_POINTER StreamPointerClone;
+    NTSTATUS Status;
+ 
+    /* get pin context */
+    Pin = Context;
+    PinContext = Pin->Context;
+
+    /* get status */
+    Status = Irp->IoStatus.Status;
+
+    /* get streampointer */
+    StreamPointerClone = Irp->Tail.Overlay.DriverContext[1];
+
+    /* acquire lock */
+    KeAcquireSpinLock(&PinContext->IrpListLock, &OldLevel);
+
+    /* insert entry into ready list */
+    InsertTailList(&PinContext->IrpListHead, &Irp->Tail.Overlay.ListEntry);
+
+    /* release lock */
+    KeReleaseSpinLock(&PinContext->IrpListLock, OldLevel);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* set status code because it failed */
+        //KsStreamPointerSetStatusCode(StreamPointerClone, STATUS_DEVICE_DATA_ERROR);
+        DPRINT1("UsbAudioRenderComplete failed with %x\n", Status);
+    }
+
+    /* lets delete the stream pointer clone */
+    KsStreamPointerDelete(StreamPointerClone);
+
+    /* done */
+    return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
 NTSTATUS
@@ -667,6 +787,135 @@ UsbAudioCaptureComplete(
 
     /* done */
     return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+NTSTATUS
+PinRenderProcess(
+    IN PKSPIN Pin)
+{
+    PKSSTREAM_POINTER LeadingStreamPointer;
+    PKSSTREAM_POINTER CloneStreamPointer;
+    NTSTATUS Status;
+    KIRQL OldLevel;
+    PPIN_CONTEXT PinContext;
+    PURB Urb;
+    ULONG PacketCount, TotalPacketSize, Index;
+    PKSDATAFORMAT_WAVEFORMATEX WaveFormatEx;
+    PIO_STACK_LOCATION IoStack;
+    PLIST_ENTRY CurEntry;
+    PIRP Irp = NULL;
+
+    //DPRINT1("PinRenderProcess\n");
+
+    LeadingStreamPointer = KsPinGetLeadingEdgeStreamPointer(Pin, KSSTREAM_POINTER_STATE_LOCKED);
+    if (LeadingStreamPointer == NULL)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    if (NULL == LeadingStreamPointer->StreamHeader->Data)
+    {
+        Status = KsStreamPointerAdvance(LeadingStreamPointer);
+        DPRINT1("Advancing Streampointer\n");
+	}
+
+
+    /* get pin context */
+    PinContext = Pin->Context;
+
+    /* acquire spin lock */
+    KeAcquireSpinLock(&PinContext->IrpListLock, &OldLevel);
+
+    if (!IsListEmpty(&PinContext->IrpListHead))
+    {
+        /* remove entry from list */
+        CurEntry = RemoveHeadList(&PinContext->IrpListHead);
+
+        /* get irp offset */
+        Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
+    }
+
+    /* release lock */
+    KeReleaseSpinLock(&PinContext->IrpListLock, OldLevel);
+
+    if (!Irp)
+    {
+        /* no irps available */
+        DPRINT1("No irps available");
+        KsStreamPointerUnlock(LeadingStreamPointer, TRUE);
+        return STATUS_SUCCESS;
+    }
+
+    /* clone stream pointer */
+    Status = KsStreamPointerClone(LeadingStreamPointer, NULL, 0, &CloneStreamPointer);
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        KsStreamPointerUnlock(LeadingStreamPointer, TRUE);
+        DPRINT1("Leaking Irp %p\n", Irp);
+        return STATUS_SUCCESS;
+    }
+
+
+    /* initialize irp */
+    IoInitializeIrp(Irp, IoSizeOfIrp(PinContext->DeviceExtension->LowerDevice->StackSize), PinContext->DeviceExtension->LowerDevice->StackSize);
+
+    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+    Irp->IoStatus.Information = 0;
+    Irp->Flags = 0;
+    Irp->UserBuffer = NULL;
+
+    IoStack = IoGetNextIrpStackLocation(Irp);
+    IoStack->DeviceObject = PinContext->DeviceExtension->LowerDevice;
+    IoStack->Parameters.Others.Argument2 = NULL;
+    IoStack->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
+    IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB;
+
+    IoSetCompletionRoutine(Irp, UsbAudioRenderComplete, Pin, TRUE, TRUE, TRUE);
+
+    /* calculate packet count */
+    WaveFormatEx = (PKSDATAFORMAT_WAVEFORMATEX)Pin->ConnectionFormat;
+    TotalPacketSize = WaveFormatEx->WaveFormatEx.nAvgBytesPerSec / 1000;
+    ASSERT(TotalPacketSize <= PinContext->DeviceExtension->InterfaceInfo->Pipes[0].MaximumPacketSize);
+
+    /* FIXME correct MaximumPacketSize ? */
+    PacketCount = CloneStreamPointer->OffsetIn.Remaining / TotalPacketSize;
+
+    ASSERT(PacketCount < 255);
+
+    //DPRINT1("PinRenderProcess Irp %p TotalPacketSize %lu MaximumPacketSize %lu PacketCount %lu Count %lu Data %p\n", Irp, TotalPacketSize, PinContext->DeviceExtension->InterfaceInfo->Pipes[0].MaximumPacketSize, PacketCount, CloneStreamPointer->OffsetIn.Count, CloneStreamPointer->OffsetIn.Data);
+
+    Urb = (PURB)AllocFunction(GET_ISO_URB_SIZE(PacketCount));
+    ASSERT(Urb);
+
+    /* init urb */
+    Urb->UrbIsochronousTransfer.Hdr.Function = URB_FUNCTION_ISOCH_TRANSFER;
+    Urb->UrbIsochronousTransfer.Hdr.Length = GET_ISO_URB_SIZE(PacketCount);
+    Urb->UrbIsochronousTransfer.PipeHandle = PinContext->DeviceExtension->InterfaceInfo->Pipes[0].PipeHandle;
+    Urb->UrbIsochronousTransfer.TransferFlags = USBD_TRANSFER_DIRECTION_OUT | USBD_START_ISO_TRANSFER_ASAP;
+    Urb->UrbIsochronousTransfer.TransferBufferLength = CloneStreamPointer->OffsetIn.Remaining;
+    Urb->UrbIsochronousTransfer.TransferBuffer = CloneStreamPointer->OffsetIn.Data;
+    Urb->UrbIsochronousTransfer.NumberOfPackets = PacketCount;
+    Urb->UrbIsochronousTransfer.StartFrame = 0;
+
+    for (Index = 0; Index < PacketCount; Index++)
+    {
+        Urb->UrbIsochronousTransfer.IsoPacket[Index].Offset = Index * TotalPacketSize;
+    }
+
+    /* store urb */
+    IoStack = IoGetNextIrpStackLocation(Irp);
+    IoStack->Parameters.Others.Argument1 = Urb;
+
+    /* store in irp context */
+    Irp->Tail.Overlay.DriverContext[0] = Urb;
+    Irp->Tail.Overlay.DriverContext[1] = CloneStreamPointer;
+
+    Status = IoCallDriver(PinContext->LowerDevice, Irp);
+
+    /* unlock stream pointer and finish*/
+    KsStreamPointerUnlock(LeadingStreamPointer, TRUE);
+    return Status;
 }
 
 NTSTATUS
@@ -830,8 +1079,7 @@ USBAudioPinProcess(
     }
     else
     {
-        UNIMPLEMENTED;
-        Status = STATUS_NOT_IMPLEMENTED;
+        Status = PinRenderProcess(Pin);
     }
 
     return Status;
@@ -914,7 +1162,7 @@ CapturePinStateChange(
     _In_ KSSTATE ToState,
     _In_ KSSTATE FromState)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     if (FromState != ToState)
     {
@@ -957,7 +1205,7 @@ USBAudioPinSetDeviceState(
     else
     {
         UNIMPLEMENTED
-        Status = STATUS_NOT_IMPLEMENTED;
+        Status = STATUS_SUCCESS;
     }
 
     return Status;

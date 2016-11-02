@@ -1258,7 +1258,6 @@ USBAudioPinBuildDescriptors(
 
             /* irp sinks / sources can be instantiated */
             Pins[Index].InstancesPossible = 1;
-            Pins[Index].InstancesNecessary = 1;
         }
         else
         {

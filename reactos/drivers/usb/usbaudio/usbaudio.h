@@ -203,6 +203,11 @@ NTAPI
 USBAudioCreateFilterContext(
     PKSDEVICE Device);
 
+PUSB_AUDIO_CONTROL_INPUT_TERMINAL_DESCRIPTOR
+UsbAudioGetStreamingTerminalDescriptorByIndex(
+    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+    IN ULONG Index);
+
 /* pool.c */
 PVOID
 NTAPI
@@ -338,6 +343,13 @@ UsbAudioPinDataIntersect(
 NTSTATUS
 NTAPI
 UsbAudioCaptureComplete(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp,
+	IN PVOID Context);
+
+NTSTATUS
+NTAPI
+UsbAudioRenderComplete(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp,
 	IN PVOID Context);
