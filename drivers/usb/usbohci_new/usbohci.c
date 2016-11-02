@@ -1777,8 +1777,25 @@ NTAPI
 OHCI_GetEndpointState(IN PVOID ohciExtension,
                       IN PVOID ohciEndpoint)
 {
-    DPRINT("OHCI_GetEndpointState: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    POHCI_ENDPOINT OhciEndpoint;
+    POHCI_HCD_ED ED;
+
+    DPRINT_OHCI("OHCI_GetEndpointState: ... \n");
+
+    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
+    ED = OhciEndpoint->HcdED;
+
+    if (ED->Flags & 0x10)
+    {
+        return USBPORT_ENDPOINT_CLOSED;
+    }
+
+    if (ED->HwED.EndpointControl.sKip)
+    {
+        return USBPORT_ENDPOINT_PAUSED;
+    }
+
+    return USBPORT_ENDPOINT_ACTIVE;
 }
 
 VOID
