@@ -20,10 +20,10 @@ add_custom_target(efisys
     DEPENDS native-fatten fat bootmgfw bcd_hive
     VERBATIM)
 
-if(USE_MKISOFS)
 # Create an 'empty' directory (guaranteed to be empty) to be able to add
 # arbitrary empty directories to the ISO image using mkisofs.
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/empty)
+if(USE_MKISOFS)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/empty)
 endif()
 
 # Retrieve the full paths to the generated files of the 'isoboot', 'isobtrt' and 'efisys' targets
@@ -31,7 +31,6 @@ set(_isoboot_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin) # ge
 set(_isobtrt_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isobtrt.bin) # get_target_property(_isobtrt_file isobtrt LOCATION)
 set(_efisys_file  ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin) # get_target_property(_efisys_file  efisys  LOCATION)
 
-if(USE_MKISOFS)
 # Create a mkisofs sort file to specify an explicit ordering for the boot files
 # to place them at the beginning of the image (makes ISO image analysis easier).
 # See mkisofs/schilytools/mkisofs/README.sort for more details.
@@ -46,8 +45,9 @@ if(USE_MKISOFS)
 # - the boot catalog file path is meaningful;
 # - since its contents are included by mkisofs in the root of the ISO image,
 #   using the empty directory ensures that no extra unwanted files are added.
-# 
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort "\
+#
+if(USE_MKISOFS)
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort "\
 ${CMAKE_CURRENT_BINARY_DIR}/empty/boot.catalog 4
 ${_isoboot_file} 3
 ${_isobtrt_file} 2
@@ -64,7 +64,7 @@ set(ISO_VOLNAME      "ReactOS")             # For both the Volume ID and the Vol
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst "")
 
 if(USE_MKISOFS)
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
     add_custom_target(bootcd
         COMMAND native-mkisofs -o ${REACTOS_BINARY_DIR}/bootcd.iso -iso-level 4
@@ -86,7 +86,7 @@ endif()
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst "")
 
 if(USE_MKISOFS)
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
     add_custom_target(bootcdregtest
         COMMAND native-mkisofs -o ${REACTOS_BINARY_DIR}/bootcdregtest.iso -iso-level 4
@@ -108,7 +108,7 @@ endif()
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "")
 
 if(USE_MKISOFS)
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
     # Create the empty Desktop, Favorites, and Start Menu folders
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Desktop=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
@@ -140,7 +140,7 @@ endif()
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "")
 
 if(USE_MKISOFS)
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
     # Create the empty Desktop, Favorites, and Start Menu folders
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Desktop=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
