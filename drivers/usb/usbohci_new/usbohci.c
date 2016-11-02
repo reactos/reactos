@@ -1524,6 +1524,74 @@ OHCI_SubmitIsoTransfer(IN PVOID ohciExtension,
 
 VOID
 NTAPI
+OHCI_ProcessDoneTD(IN POHCI_EXTENSION OhciExtension,
+                   IN POHCI_HCD_TD TD,
+                   IN BOOLEAN IsPortComplete)
+{
+    POHCI_TRANSFER OhciTransfer;
+    POHCI_ENDPOINT OhciEndpoint;
+    ULONG_PTR Buffer;
+    ULONG_PTR BufferEnd;
+    ULONG Length;
+
+    DPRINT_OHCI("OHCI_ProcessDoneTD: ... \n");
+
+    OhciTransfer = TD->OhciTransfer;
+    OhciEndpoint = OhciTransfer->OhciEndpoint;
+
+    --OhciTransfer->PendingTDs;
+
+    Buffer = (ULONG_PTR)TD->HwTD.gTD.CurrentBuffer;
+    BufferEnd = (ULONG_PTR)TD->HwTD.gTD.BufferEnd;
+
+    if (TD->Flags & 0x10)
+    {
+        TD->HwTD.gTD.Control.ConditionCode = 0;
+    }
+    else
+    {
+        if (TD->HwTD.gTD.CurrentBuffer)
+        {
+            if (TD->TransferLen)
+            {
+                Length = (((Buffer ^ BufferEnd) & 0xFFFFF000) != 0 ? 0x1000 : 0) +
+                         (BufferEnd & 0xFFF) + 1 - (Buffer & 0xFFF);
+
+                TD->TransferLen -= Length;
+            }
+        }
+
+        if (TD->HwTD.gTD.Control.DirectionPID != OHCI_TD_DIRECTION_PID_SETUP)
+        {
+            OhciTransfer->TransferLen += TD->TransferLen;
+        }
+
+        if (TD->HwTD.gTD.Control.ConditionCode)
+        {
+            OhciTransfer->USBDStatus = USBD_STATUS_HALTED |
+                                       TD->HwTD.gTD.Control.ConditionCode;
+        }
+    }
+
+    TD->Flags = 0;
+    TD->HwTD.gTD.NextTD = NULL;
+    TD->OhciTransfer = NULL;
+
+    TD->DoneLink.Flink = NULL;
+    TD->DoneLink.Blink = NULL;
+
+    if (IsPortComplete && (OhciTransfer->PendingTDs == 0))
+    {
+        RegPacket.UsbPortCompleteTransfer(OhciExtension,
+                                          OhciEndpoint,
+                                          OhciTransfer->TransferParameters,
+                                          OhciTransfer->USBDStatus,
+                                          OhciTransfer->TransferLen);
+    }
+}
+
+VOID
+NTAPI
 OHCI_ProcessDoneIsoTD(IN POHCI_EXTENSION OhciExtension,
                       IN POHCI_HCD_TD TD,
                       IN BOOLEAN IsPortComplete)
