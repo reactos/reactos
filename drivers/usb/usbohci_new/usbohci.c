@@ -1524,6 +1524,15 @@ OHCI_SubmitIsoTransfer(IN PVOID ohciExtension,
 
 VOID
 NTAPI
+OHCI_ProcessDoneIsoTD(IN POHCI_EXTENSION OhciExtension,
+                      IN POHCI_HCD_TD TD,
+                      IN BOOLEAN IsPortComplete)
+{
+    DPRINT1("OHCI_ProcessDoneIsoTD: UNIMPLEMENTED. FIXME\n");
+}
+
+VOID
+NTAPI
 OHCI_AbortTransfer(IN PVOID ohciExtension,
                    IN PVOID ohciEndpoint,
                    IN PVOID ohciTransfer,
