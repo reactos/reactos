@@ -1005,6 +1005,90 @@ OHCI_InterruptDpc(IN PVOID ohciExtension,
     }
 }
 
+ULONG
+NTAPI 
+OHCI_MapTransferToTD(IN POHCI_EXTENSION OhciExtension,
+                     IN ULONG MaxPacketSize,
+                     IN OUT ULONG TransferedLen,
+                     IN POHCI_TRANSFER OhciTransfer,
+                     IN POHCI_HCD_TD TD,
+                     IN PUSBPORT_SCATTER_GATHER_LIST SGList)
+{
+    PUSBPORT_SCATTER_GATHER_ELEMENT SgElement;
+    ULONG SgIdx = 0;
+    ULONG SgRemain;
+    ULONG LengthThisTd;
+    ULONG_PTR BufferEnd;
+
+    DPRINT_OHCI("OHCI_MapTransferToTD: TransferedLen - %x\n", TransferedLen);
+
+    if (SGList->SgElementCount > 0)
+    {
+        SgElement = &SGList->SgElement[0];
+
+        do
+        {
+            if (TransferedLen >= SgElement->SgOffset &&
+                TransferedLen < SgElement->SgOffset + SgElement->SgTransferLength)
+            {
+                break;
+            }
+
+            ++SgIdx;
+
+            SgElement += 1;
+        }
+        while (SgIdx < SGList->SgElementCount);
+    }
+
+    DPRINT_OHCI("OHCI_MapTransferToTD: SgIdx - %x, SgCount - %x\n",
+                SgIdx,
+                SGList->SgElementCount);
+
+    ASSERT(SgIdx < SGList->SgElementCount);
+
+    if (SGList->Flags & 1)
+    {
+        ASSERT(FALSE);
+    }
+
+    ASSERT(SGList->SgElement[SgIdx].SgOffset == TransferedLen);
+
+    SgRemain = SGList->SgElementCount - SgIdx;
+
+    if (SgRemain == 1)
+    {
+        LengthThisTd = OhciTransfer->TransferParameters->TransferBufferLength -
+                       TransferedLen;
+
+        BufferEnd = SGList->SgElement[SgIdx].SgPhysicalAddress.LowPart +
+                    LengthThisTd;
+    }
+    else if (SgRemain == 2)
+    {
+        LengthThisTd = OhciTransfer->TransferParameters->TransferBufferLength - 
+                       TransferedLen;
+
+        BufferEnd = SGList->SgElement[SgIdx + 1].SgPhysicalAddress.LowPart +
+                    SGList->SgElement[SgIdx + 1].SgTransferLength;
+    }
+    else
+    {
+        LengthThisTd = SGList->SgElement[SgIdx].SgTransferLength +
+                       SGList->SgElement[SgIdx + 1].SgTransferLength;
+
+        BufferEnd = SGList->SgElement[SgIdx + 1].SgPhysicalAddress.LowPart +
+                    SGList->SgElement[SgIdx + 1].SgTransferLength;
+    }
+
+    TD->HwTD.gTD.CurrentBuffer = (PVOID)SGList->SgElement[SgIdx].SgPhysicalAddress.LowPart;
+    TD->HwTD.gTD.BufferEnd = (PVOID)(BufferEnd - 1);
+
+    TD->TransferLen = LengthThisTd;
+
+    return TransferedLen + LengthThisTd;
+}
+
 POHCI_HCD_TD
 NTAPI 
 OHCI_AllocateTD(IN POHCI_EXTENSION OhciExtension,
@@ -1186,7 +1270,7 @@ OHCI_ControlTransfer(IN POHCI_EXTENSION OhciExtension,
 
             MaxPacketSize = OhciEndpoint->EndpointProperties.TotalMaxPacketSize;
 
-            TransferedLen = OHCI_MapTransferToTd(OhciExtension,
+            TransferedLen = OHCI_MapTransferToTD(OhciExtension,
                                                  MaxPacketSize,
                                                  TransferedLen,
                                                  OhciTransfer,
@@ -1325,7 +1409,7 @@ OHCI_BulkOrInterruptTransfer(IN POHCI_EXTENSION OhciExtension,
         {
             MaxPacketSize = OhciEndpoint->EndpointProperties.TotalMaxPacketSize;
 
-            TransferedLen = OHCI_MapTransferToTd(OhciExtension,
+            TransferedLen = OHCI_MapTransferToTD(OhciExtension,
                                                  MaxPacketSize,
                                                  TransferedLen,
                                                  OhciTransfer,
