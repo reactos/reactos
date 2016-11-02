@@ -1,0 +1,206 @@
+Hiding files on a CD
+=====================
+
+This document attempts to show how to hide files from being seen by an
+operating system accessing a CD as an ISO9660/Rock Ridge, Joliet or HFS
+CD. It also highlights some of the limitations ...
+
+Note: this document is about the various -hide options - not be confused with
+the -hidden options.
+
+The -hidden options set the 'EXISTENCE' bit in the directory entry which
+means the file or directory will be invisible - unless some special option
+is used to mount or view the CD - Linux has the 'unhide' mount option to
+make these files visible. i.e. the directory entry exists on the CD.
+
+With hindsight, to avoid confusion with the -hidden option, it would have
+been better to chose an option name like '-omit' instead of '-hide'...
+
+The various -hide options actually exclude the relevant directory entry
+from the directory tree. Therefore, it is not possible to access a file
+or directory that has be hidden with the -hide option when the ISO9600/Rock
+Ridge directory is mounted - because the directory entry does not exist on the
+CD (but the file data does). You would probably be able to access this file
+or directory when mounted as a Joliet or HFS CD (depending on other options
+used). Similarly, a directory entry hidden with the -hide-joliet option
+will not be accessible when mounted as an Joliet CD. Similarly for -hide-hfs
+etc.
+
+If you don't want a file or directory to appear on the CD at all, then use the
+-exclude options, not the -hide options (mkisofs completely ignores any
+file/directory excluded with the -exclude options).
+
+
+Using the hide options
+======================
+
+There are 6 hide options:
+
+-hide		   Hide a file/directory from the ISO9660/Rock Ridge directory
+-hide-list	   As above, but read file names from a file
+-hide-joliet	   Hide a file/directory from the Joliet directory
+-hide-joliet-list  As above, but read file names from a file
+-hide-hfs	   Hide a file/directory from the HFS directory
+-hide-hfs-list	   As above, but read file names from a file
+
+You can use the -hide, -hide-joliet and/or -hide-hfs options as many times
+as you like on the command line, but if you have many files to hide, then
+it may be better to put your file names in a file (one per line) and use
+the corresponding 'list' option. You can also use the three -hide-list options
+as many times as you want.
+
+The arguments to the -hide options are either the 'basename' or the 'whole
+path name' of a file. That is, if you use the option:
+
+% mkisofs -hide ABC [-other-options] CD_directory
+
+then any file with the name ABC will be hidden. If you want to be more
+specific, then use the whole name - as seen by mkisofs e.g.:
+
+% mkisofs -hide CD_directory/XYZ/ABC [-other-options] CD_directory
+
+will hide just the file 'CD_directory/XYZ/ABC' - not any other file called
+'ABC' that might exist under 'CD_directory'. However, if your command line
+is like:
+
+% mkisofs -hide CD_directory/XYZ/ABC [-other-options] ./CD_directory
+
+Then the file 'CD_directory/XYZ/ABC' will not be hidden because as far as
+mkisofs is concerned. Its whole path is actually './CD_directory/XYZ/ABC'.
+
+You can use wild cards in the -hide arguments.
+
+If the file name to be hidden is a directory, then the directory and all
+its contents are hidden.
+
+The main use of the hide options is on a multi platform (hybrid CD) to hide
+various files/directories that are operating system specific from been seen
+on the CD when mounted on another OS. i.e. You may want to hide Macintosh
+executables from being seen when the CD is mounted as a Joliet CD on a PC etc.
+
+For example, say we want to create a ISO9660/Rock Ridge, Joliet, HFS hybrid
+CD from files/directories in the directory called 'cd_dir' - which are:
+
+MAC/
+MAC/app
+MAC/data/
+MAC/data/file1
+PC/
+PC/app
+PC/data/
+PC/data/file1
+UNIX/
+UNIX/app
+UNIX/data
+UNIX/data/file1
+COMMON/
+COMMON/some_files
+
+We could use the command line:
+
+% mkisofs -r -J -hfs -hide MAC -hide PC -hide-joliet MAC \
+	-hide-joliet UNIX -hide-hfs PC -hide-hfs UNIX -o cd.iso cd_dir
+
+This will give a CD that when mounted as a Rock Ridge CD, you will only 
+see the directories UNIX and COMMON, as a Joliet CD the directories
+PC and COMMON, and as an HFS CD the directories MAC and COMMON.
+
+If you also had the three files in the current directory called README.hfs,
+README.joliet and README.unix - but you wanted to have each of these
+files appear as just 'README' when mounted, then you could use the above
+command line with the following:
+
+% mkisofs -r -J -hfs -graft-points -hide MAC -hide PC -hide-joliet MAC \
+	-hide-joliet UNIX -hide-hfs PC -hide-hfs UNIX \
+	-hide README.hfs -hide README.joliet -hide-joliet README.hfs \
+	-hide-joliet README.uni -hide-hfs README.joliet -hide-hfs README.unix \
+	README=README.hfs README=README.joliet README=README.unix \
+	-o cd.iso cd_dir
+
+Note: we've used the -graft-points option as we're using the '=' syntax
+to insert the files called README.hfs, README.joliet and README.unix as
+'README'
+
+The resulting CD when mounted as a Rock Ridge CD, will have the directories
+UNIX and COMMON - with the file called README - which was originally 
+called README.unix.
+
+However, in most circumstances, it would be better to have the contents
+of each of the OS specific directories (plus the contents of the COMMON
+directory) to appear at the top level of the CD. i.e. when the CD is mounted
+(as ISO9660/Rock Ridge, Joliet or HFS) it has the contents:
+
+README
+app
+data/file1
+some_files
+
+Unfortunately, this is not as straight forward as it may seem - i.e. doing
+the following may seem OK, but it won't work - for reasons I'll explain 
+later:
+
+It gets a bit messy using the -graft-points syntax above, so we'll assume
+each of the MAC, UNIX and PC directories contain the correct README, We'll
+also change to the 'cd_dir' directory and use the command:
+
+mkisofs -r -J -hfs -hide MAC -hide PC -hide-joliet MAC \
+	-hide-joliet UNIX -hide-hfs PC -hide-hfs UNIX \
+	-o cd.iso MAC PC UNIX COMMON
+
+You will get errors like:
+
+mkisofs: Error: UNIX/README and MAC/README have the same Rock Ridge name
+...
+mkisofs: Unable to sort directory 
+
+This is because you can not hide "pathspecs" that are directories ("pathspecs"
+are file names given on the command line, or in a path-list file). This a 
+"feature" of mkisofs. In this case nothing is actually hidden at all.
+
+So you might think that the following may work:
+
+mkisofs -r -J -hfs -hide "MAC/*" -hide "PC/*" -hide-joliet "MAC/*" \
+	-hide-joliet "UNIX/*" -hide-hfs "PC/*" -hide-hfs "UNIX/*" \
+	-o cd.iso MAC PC UNIX COMMON
+
+which may appear to work - but when the CD is mounted as an ISO9660/Rock Ridge
+or Joliet CD, then the directory "data" is missing.
+
+Again this is a feature of mkisofs - the directories PC/data and UNIX/data
+are mapped by mkisofs to the same output directory called "/data" - the
+various "hide" flags are stored with this directory info - in this case as 
+the output directory "/data" is first hidden from the ISO9660/Rock Ridge and
+then the Joliet directory, the net result is that "/data" gets hidden from
+both directories ... the way mkisofs hides HFS directories is slightly
+different, so in this case the directory "data" exists on the HFS volume
+and contains the correct contents.
+
+However, it is possible to obtain the required result, but we have to be
+careful about hiding multiple input directories that map to a single output
+directory.
+
+To do this we have to hide just the files in these directories (or more
+accurately, all the non-directories). This is best done by using lists of
+files to hide for example: 
+
+find PC -type f -print > pc.list
+find UNIX -type f -print > unix.list
+find MAC -type f -print > mac.list
+
+mkisofs -r -J -hfs -hide-list pc.list -hide-list mac.list \
+	-hide-joliet-list unix.list -hide-joliet-list mac.list \
+	-hide-hfs-list pc.list -hide-hfs-list unix.list \
+	-o cd.iso MAC PC UNIX COMMON
+
+i.e. instead of trying to hide a directory and letting mkisofs hide its
+contents, we explicitly hide all the files in the directory, but not the
+directory and any of its sub-directories.
+
+This will work for the above input files, but if your directory trees contain
+symbolic links and/or directories that will not get merged, then the hide lists
+will have to be tailored to get the required result.
+
+
+James Pearson 22-Nov-2001
+
+Any comments/problems to j.pearson@ge.ucl.ac.uk

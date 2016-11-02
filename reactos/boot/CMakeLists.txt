@@ -12,7 +12,7 @@ elseif(ARCH STREQUAL "arm")
 elseif(ARCH STREQUAL "aarch64")
     set(EFI_PLATFORM_ID "aa64")
 else()
-    message(FATAL_ERROR "Unknown ARCH, can't generate a valid UEFI boot filename.")
+    message(FATAL_ERROR "Unknown ARCH '" ${ARCH} "', cannot generate a valid UEFI boot filename.")
 endif()
 
 add_custom_target(efisys
@@ -20,90 +20,155 @@ add_custom_target(efisys
     DEPENDS native-fatten fat bootmgfw bcd_hive
     VERBATIM)
 
-##bootcd
-#clear it out
+if(USE_MKISOFS)
+# Create an 'empty' directory (guaranteed to be empty) to be able to add
+# arbitrary empty directories to the ISO image using mkisofs.
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/empty)
+endif()
+
+# Retrieve the full paths to the generated files of the 'isoboot', 'isobtrt' and 'efisys' targets
+set(_isoboot_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin) # get_target_property(_isoboot_file isoboot LOCATION)
+set(_isobtrt_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isobtrt.bin) # get_target_property(_isobtrt_file isobtrt LOCATION)
+set(_efisys_file  ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin) # get_target_property(_efisys_file  efisys  LOCATION)
+
+if(USE_MKISOFS)
+# Create a mkisofs sort file to specify an explicit ordering for the boot files
+# to place them at the beginning of the image (makes ISO image analysis easier).
+# See mkisofs/schilytools/mkisofs/README.sort for more details.
+# As the default file sort weight is '0', give the boot files sort weights >= 1.
+# Note that it is sad that '-sort' does not work using grafted points, and as a
+# result we need in particular to use the boot catalog file "path" mkisofs that
+# mkisofs expects, that is, the boot catalog file name is appended to the first
+# host-system path listed in the file list, whatever it is, and that does not
+# work well if the first item is a graft point (and especially if it's a file
+# and not a directory). To fix that, the trick is to use as the first file item
+# the empty directory created earlier. This ensures that:
+# - the boot catalog file path is meaningful;
+# - since its contents are included by mkisofs in the root of the ISO image,
+#   using the empty directory ensures that no extra unwanted files are added.
+# 
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort "\
+${CMAKE_CURRENT_BINARY_DIR}/empty/boot.catalog 4
+${_isoboot_file} 3
+${_isobtrt_file} 2
+${_efisys_file} 1
+")
+endif()
+
+# ISO image identificator names
+set(ISO_MANUFACTURER "ReactOS Foundation")  # For both the publisher and the preparer
+set(ISO_VOLNAME      "ReactOS")             # For both the Volume ID and the Volume set ID
+
+## BootCD
+# Create the file list
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst "")
 
 if(USE_MKISOFS)
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+
     add_custom_target(bootcd
-        COMMAND native-mkisofs -o ${REACTOS_BINARY_DIR}/bootcd.iso -iso-level 4 -volid "ReactOS" -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst -graft-points -no-cache-inodes -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -hide boot.catalog -publisher "ReactOS Foundation" -preparer "ReactOS Foundation"
+        COMMAND native-mkisofs -o ${REACTOS_BINARY_DIR}/bootcd.iso -iso-level 4
+            -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
+            -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
+            -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
+            -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst
         DEPENDS native-mkisofs
         VERBATIM)
 else()
     add_custom_target(bootcd
-        COMMAND native-cdmake -j -m -bootdata:2\#p0,e,b${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin\#pEF,e,b${CMAKE_CURRENT_BINARY_DIR}/efisys.bin @${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst REACTOS ${REACTOS_BINARY_DIR}/bootcd.iso
+        COMMAND native-cdmake -j -m -bootdata:2\#p0,e,b${_isoboot_file}\#pEF,e,b${_efisys_file} @${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst REACTOS ${REACTOS_BINARY_DIR}/bootcd.iso
         DEPENDS native-cdmake efisys
         VERBATIM)
 endif()
 
-##bootcdregtest
-#clear it out
+## BootCDRegTest
+# Create the file list
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst "")
 
 if(USE_MKISOFS)
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+
     add_custom_target(bootcdregtest
-        COMMAND native-mkisofs -o ${REACTOS_BINARY_DIR}/bootcdregtest.iso -iso-level 4 -volid "ReactOS" -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst -graft-points -no-cache-inodes -eltorito-boot loader/isobtrt.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -hide boot.catalog -publisher "ReactOS Foundation" -preparer "ReactOS Foundation"
+        COMMAND native-mkisofs -o ${REACTOS_BINARY_DIR}/bootcdregtest.iso -iso-level 4
+            -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
+            -eltorito-boot loader/isobtrt.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
+            -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
+            -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst
         DEPENDS native-mkisofs
         VERBATIM)
 else()
     add_custom_target(bootcdregtest
-        COMMAND native-cdmake -j -m -bootdata:2\#p0,e,b${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isobtrt.bin\#pEF,e,b${CMAKE_CURRENT_BINARY_DIR}/efisys.bin @${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst REACTOS ${REACTOS_BINARY_DIR}/bootcdregtest.iso
+        COMMAND native-cdmake -j -m -bootdata:2\#p0,e,b${_isobtrt_file}\#pEF,e,b${_efisys_file} @${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst REACTOS ${REACTOS_BINARY_DIR}/bootcdregtest.iso
         DEPENDS native-cdmake efisys
         VERBATIM)
 endif()
 
-##livecd
-#clear it out
+## LiveCD
+# Create the file list
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "")
 
 if(USE_MKISOFS)
-    #create the empty Desktop, Favorites, and Start Menu folders
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Desktop=${REACTOS_SOURCE_DIR}/boot/bootdata/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Favorites=${REACTOS_SOURCE_DIR}/boot/bootdata/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Start Menu/Programs=${REACTOS_SOURCE_DIR}/boot/bootdata/empty\n")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+
+    # Create the empty Desktop, Favorites, and Start Menu folders
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Desktop=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Favorites=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Start Menu/Programs=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
     add_custom_target(livecd
-        COMMAND native-mkisofs -o ${REACTOS_BINARY_DIR}/livecd.iso -iso-level 4 -volid "ReactOS" -path-list ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst -graft-points -no-cache-inodes -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -hide boot.catalog -publisher "ReactOS Foundation" -preparer "ReactOS Foundation"
+        COMMAND native-mkisofs -o ${REACTOS_BINARY_DIR}/livecd.iso -iso-level 4
+            -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
+            -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
+            -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
+            -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst
         DEPENDS native-mkisofs
         VERBATIM)
 else()
-    #create the empty Desktop, Favorites, and Start Menu folders
+    # Create the empty Desktop, Favorites, and Start Menu folders
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Desktop\n")
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Favorites\n")
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Start Menu/Programs\n")
 
     add_custom_target(livecd
-        COMMAND native-cdmake -j -m -bootdata:2\#p0,e,b${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin\#pEF,e,b${CMAKE_CURRENT_BINARY_DIR}/efisys.bin @${CMAKE_CURRENT_BINARY_DIR}/livecd.lst REACTOS ${REACTOS_BINARY_DIR}/livecd.iso
+        COMMAND native-cdmake -j -m -bootdata:2\#p0,e,b${_isoboot_file}\#pEF,e,b${_efisys_file} @${CMAKE_CURRENT_BINARY_DIR}/livecd.lst REACTOS ${REACTOS_BINARY_DIR}/livecd.iso
         DEPENDS native-cdmake efisys
         VERBATIM)
 endif()
 
-##hybridcd
-#clear it out
+## HybridCD
+# Create the file list
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "")
 
 if(USE_MKISOFS)
-    #create the empty Desktop, Favorites, and Start Menu folders
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Desktop=${REACTOS_SOURCE_DIR}/boot/bootdata/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Favorites=${REACTOS_SOURCE_DIR}/boot/bootdata/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs=${REACTOS_SOURCE_DIR}/boot/bootdata/empty\n")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+
+    # Create the empty Desktop, Favorites, and Start Menu folders
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Desktop=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Favorites=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
     add_custom_target(hybridcd
-        COMMAND native-mkisofs -o ${REACTOS_BINARY_DIR}/hybridcd.iso -iso-level 4 -volid "ReactOS" -path-list ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst -graft-points -no-cache-inodes -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -hide boot.catalog -publisher "ReactOS Foundation" -preparer "ReactOS Foundation"
+        COMMAND native-mkisofs -o ${REACTOS_BINARY_DIR}/hybridcd.iso -iso-level 4
+            -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
+            -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
+            -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
+            -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst
         DEPENDS native-mkisofs bootcd livecd
         VERBATIM)
-
-    add_cd_file(TARGET efisys FILE ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin DESTINATION loader NO_CAB FOR bootcd regtest livecd hybridcd)
 else()
-    #create the empty Desktop, Favorites, and Start Menu folders
+    # Create the empty Desktop, Favorites, and Start Menu folders
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Desktop\n")
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Favorites\n")
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs\n")
 
     add_custom_target(hybridcd
-        COMMAND native-cdmake -j -m -bootdata:2\#p0,e,b${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin\#pEF,e,b${CMAKE_CURRENT_BINARY_DIR}/efisys.bin @${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst REACTOS ${REACTOS_BINARY_DIR}/hybridcd.iso
+        COMMAND native-cdmake -j -m -bootdata:2\#p0,e,b${_isoboot_file}\#pEF,e,b${_efisys_file} @${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst REACTOS ${REACTOS_BINARY_DIR}/hybridcd.iso
         DEPENDS native-cdmake efisys bootcd livecd
         VERBATIM)
+endif()
+
+if(USE_MKISOFS)
+    add_cd_file(TARGET efisys FILE ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR bootcd regtest livecd hybridcd)
 endif()
 
 add_subdirectory(freeldr)
