@@ -548,7 +548,7 @@
 @ stdcall pSetupDoesUserHavePrivilege(wstr) DoesUserHavePrivilege
 @ stdcall pSetupDuplicateString(wstr)
 @ stdcall pSetupEnablePrivilege(wstr long)
-@ stub pSetupFree
+@ stdcall pSetupFree(ptr) MyFree
 @ stub pSetupFreeStringArray
 @ stub pSetupGetCurrentDriverSigningPolicy
 @ stdcall pSetupGetField(ptr long)
@@ -568,13 +568,13 @@
 @ stub pSetupIsLocalSystem
 @ stdcall pSetupIsUserAdmin()
 @ stub pSetupMakeSurePathExists
-@ stub pSetupMalloc
+@ stdcall pSetupMalloc(long) MyMalloc
 @ stdcall pSetupModifyGlobalFlags(long long)
 @ stdcall pSetupMultiByteToUnicode(str long)
 @ stdcall pSetupOpenAndMapFileForRead(wstr ptr ptr ptr ptr)
 @ stub pSetupOutOfMemory
 @ stub pSetupQueryMultiSzValueToArray
-@ stub pSetupRealloc
+@ stdcall pSetupRealloc(ptr long) MyRealloc
 @ stdcall pSetupRegistryDelnode(long long)
 @ stub pSetupRetrieveServiceConfig
 @ stub pSetupSetArrayToMultiSzValue
