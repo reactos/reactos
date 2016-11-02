@@ -1013,8 +1013,48 @@ OHCI_SubmitTransfer(IN PVOID ohciExtension,
                     IN PVOID ohciTransfer,
                     IN PVOID sgList)
 {
-    DPRINT("OHCI_SubmitTransfer: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    POHCI_EXTENSION OhciExtension;
+    POHCI_ENDPOINT OhciEndpoint;
+    PUSBPORT_TRANSFER_PARAMETERS TransferParameters;
+    POHCI_TRANSFER OhciTransfer;
+    PUSBPORT_SCATTER_GATHER_LIST SGList;
+    ULONG TransferType;
+
+    DPRINT_OHCI("OHCI_SubmitTransfer: ... \n");
+
+    OhciExtension = (POHCI_EXTENSION)ohciExtension;
+    OhciEndpoint = (POHCI_ENDPOINT)ohciEndpoint;
+    TransferParameters = (PUSBPORT_TRANSFER_PARAMETERS)transferParameters;
+    OhciTransfer = (POHCI_TRANSFER)ohciTransfer;
+    SGList = (PUSBPORT_SCATTER_GATHER_LIST)sgList;
+
+    RtlZeroMemory(OhciTransfer, sizeof(OHCI_TRANSFER));
+
+    OhciTransfer->TransferParameters = TransferParameters;
+    OhciTransfer->OhciEndpoint = OhciEndpoint;
+
+    TransferType = OhciEndpoint->EndpointProperties.TransferType;
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL)
+    {
+        return OHCI_ControlTransfer(OhciExtension,
+                                    OhciEndpoint,
+                                    TransferParameters,
+                                    OhciTransfer,
+                                    SGList);
+    }
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_BULK ||
+        TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+    {
+        return OHCI_BulkOrInterruptTransfer(OhciExtension,
+                                            OhciEndpoint,
+                                            TransferParameters,
+                                            OhciTransfer,
+                                            SGList);
+    }
+
+    return 1;
 }
 
 MPSTATUS
