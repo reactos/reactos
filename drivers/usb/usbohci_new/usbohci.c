@@ -298,7 +298,7 @@ OHCI_OpenInterruptEndpoint(IN POHCI_EXTENSION OhciExtension,
     POHCI_HCD_TD TdPA;
     ULONG TdCount;
 
-    DPRINT("OHCI_OpenInterruptEndpoint: ... \n");
+    DPRINT_OHCI("OHCI_OpenInterruptEndpoint: ... \n");
 
     ED = (POHCI_HCD_ED)EndpointProperties->BufferVA;
 
@@ -481,7 +481,7 @@ OHCI_QueryEndpointRequirements(IN PVOID ohciExtension,
     PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
     ULONG TransferType;
 
-    DPRINT("OHCI_QueryEndpointRequirements: ... \n");
+    DPRINT_OHCI("OHCI_QueryEndpointRequirements: ... \n");
 
     EndpointProperties = (PUSBPORT_ENDPOINT_PROPERTIES)endpointParameters;
     TransferType = EndpointProperties->TransferType;
@@ -530,7 +530,10 @@ OHCI_CloseEndpoint(IN PVOID ohciExtension,
                    IN PVOID ohciEndpoint,
                    IN BOOLEAN IsDoDisablePeriodic)
 {
-    DPRINT("OHCI_CloseEndpoint: Not supported\n");
+#if DBG
+    DPRINT1("OHCI_Unload: Not supported\n");
+#endif
+    return;
 }
 
 MPSTATUS
@@ -767,7 +770,7 @@ NTAPI
 OHCI_StopController(IN PVOID ohciExtension,
                     IN BOOLEAN IsDoDisableInterrupts)
 {
-    DPRINT("OHCI_StopController: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("OHCI_StopController: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
@@ -1518,7 +1521,7 @@ OHCI_SubmitIsoTransfer(IN PVOID ohciExtension,
                        IN PVOID ohciTransfer,
                        IN PVOID isoParameters)
 {
-    DPRINT("OHCI_SubmitIsoTransfer: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("OHCI_SubmitIsoTransfer: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -1806,7 +1809,7 @@ OHCI_RemoveEndpointFromSchedule(IN POHCI_ENDPOINT OhciEndpoint)
     POHCI_HCD_ED PreviousED;
     POHCI_STATIC_ED HeadED;
 
-    DPRINT("OHCI_RemoveEndpointFromSchedule \n");
+    DPRINT_OHCI("OHCI_RemoveEndpointFromSchedule \n");
 
     ED = OhciEndpoint->HcdED;
     HeadED = OhciEndpoint->HeadED;
@@ -2209,7 +2212,7 @@ VOID
 NTAPI
 OHCI_PollController(IN PVOID ohciExtension)
 {
-    DPRINT("OHCI_PollController: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("OHCI_PollController: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
@@ -2300,7 +2303,7 @@ VOID
 NTAPI
 OHCI_ResetController(IN PVOID ohciExtension)
 {
-    DPRINT("OHCI_ResetController: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("OHCI_ResetController: UNIMPLEMENTED. FIXME\n");
 }
 
 MPSTATUS
@@ -2314,7 +2317,7 @@ OHCI_StartSendOnePacket(IN PVOID ohciExtension,
                         IN ULONG BufferLength,
                         IN USBD_STATUS * pUSBDStatus)
 {
-    DPRINT("OHCI_StartSendOnePacket: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("OHCI_StartSendOnePacket: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -2329,7 +2332,7 @@ OHCI_EndSendOnePacket(IN PVOID ohciExtension,
                       IN ULONG BufferLength,
                       IN USBD_STATUS * pUSBDStatus)
 {
-    DPRINT("OHCI_EndSendOnePacket: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("OHCI_EndSendOnePacket: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -2340,7 +2343,7 @@ OHCI_PassThru(IN PVOID ohciExtension,
               IN ULONG ParameterLength,
               IN PVOID pParameters)
 {
-    DPRINT("OHCI_PassThru: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("OHCI_PassThru: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -2348,7 +2351,10 @@ VOID
 NTAPI
 OHCI_Unload(IN PVOID ohciExtension)
 {
+#if DBG
     DPRINT1("OHCI_Unload: Not supported\n");
+#endif
+    return;
 }
 
 NTSTATUS
