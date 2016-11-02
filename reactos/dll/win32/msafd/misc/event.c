@@ -30,19 +30,18 @@ WSPEventSelect(
 	BOOLEAN						BlockMode;
 	HANDLE                                  SockEvent;
 
-	Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
-				NULL, 1, FALSE );
-
-	if( !NT_SUCCESS(Status) ) return -1;
-
 	/* Get the Socket Structure associate to this Socket*/
 	Socket = GetSocketStructure(Handle);
 	if (!Socket)
 	{
-		NtClose(SockEvent);
-		*lpErrno = WSAENOTSOCK;
+		if (lpErrno) *lpErrno = WSAENOTSOCK;
 		return SOCKET_ERROR;
 	}
+
+	Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return SOCKET_ERROR;
 
 	/* Set Socket to Non-Blocking */
 	BlockMode = TRUE;
@@ -157,7 +156,7 @@ WSPEnumNetworkEvents(
 
     if( !NT_SUCCESS(Status) ) {
         ERR("Could not make an event %x\n", Status);
-        return -1;
+        return SOCKET_ERROR;
     }
 
     /* Get the Socket Structure associate to this Socket*/
@@ -165,7 +164,7 @@ WSPEnumNetworkEvents(
     if (!Socket)
     {
        NtClose(SockEvent);
-       *lpErrno = WSAENOTSOCK;
+       if (lpErrno) *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
     }
 
