@@ -21,23 +21,23 @@ together with printf-like functionality.
 CONTENTS
 ~-~-~-~-
 
-0. 'conutils_base' library (utils.c and utils.h): Base set of functions for
-   loading string resources and message strings, and handle type identification.
+0. 'conutils_base' (utils.c and utils.h): Base set of functions for loading
+   string resources and message strings, and handle type identification.
 
-1. 'conutils_stream' library (stream.c and stream.h): Console Stream API (CON_STREAM):
+1. 'conutils_stream' (stream.c and stream.h): Console Stream API (CON_STREAM):
    Stream initialization, basic ConStreamRead/Write. Stream utility functions:
    ConPuts/Printf, ConResPuts/Printf, ConMsgPuts/Printf.
-   Depends on the 'conutils_base' library.
+   Depends on 'conutils_base'.
 
-2. 'conutils_screen' library (screen.c and screen.h): Console Screen API (CON_SCREEN):
+2. 'conutils_screen' (screen.c and screen.h): Console Screen API (CON_SCREEN):
    Introduces the notion of console/terminal screen around the streams. Manages
    console/terminal screen metrics for Win32 consoles and TTYs (serial...).
    Additional Screen utility functions.
-   Depends on the 'conutils_stream' library, and indirectly on 'conutils_base'.
+   Depends on 'conutils_stream', and indirectly on 'conutils_base'.
 
-3. 'conutils_pager' library (pager.c and pager.h): Console Pager API (CON_PAGER):
+3. 'conutils_pager' (pager.c and pager.h): Console Pager API (CON_PAGER):
    Implements core console/terminal paging functionality around console screens.
-   Depends on the 'conutils_screen' library, and indirectly on 'conutils_stream'
-   and 'conutils_base'.
+   Depends on 'conutils_screen'  and indirectly on 'conutils_stream' and
+   'conutils_base'.
 
 4. More to come!

@@ -45,7 +45,7 @@ list(APPEND SOURCE
 
 add_executable(diskpart ${SOURCE} diskpart.rc)
 set_module_type(diskpart win32cui UNICODE)
-target_link_libraries(diskpart conutils_stream ${PSEH_LIB})
+target_link_libraries(diskpart conutils ${PSEH_LIB})
 add_importlibs(diskpart advapi32 msvcrt kernel32 ntdll)
 
 if(MSVC)
