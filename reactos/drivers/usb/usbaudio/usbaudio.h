@@ -129,6 +129,17 @@ typedef struct
     UCHAR iMixer;
 }USB_AUDIO_CONTROL_MIXER_UNIT_DESCRIPTOR, *PUSB_AUDIO_CONTROL_MIXER_UNIT_DESCRIPTOR;
 
+typedef struct
+{
+    UCHAR bLength;
+    UCHAR bDescriptorType;
+    UCHAR bDescriptorSubtype;
+    UCHAR bUnitID;
+    UCHAR bNrInPins;
+    UCHAR baSourceID[1];
+    UCHAR iSelector;
+}USB_AUDIO_CONTROL_SELECTOR_UNIT_DESCRIPTOR, *PUSB_AUDIO_CONTROL_SELECTOR_UNIT_DESCRIPTOR;
+
 
 typedef struct
 {
