@@ -2509,6 +2509,10 @@ IoWritePartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
                                                              DriveLayout->PartitionEntry);
                     }
                 }
+                else
+                {
+                    Status = STATUS_INVALID_PARAMETER;
+                }
             }
             break;
 
