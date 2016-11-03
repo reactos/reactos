@@ -3602,7 +3602,7 @@ PrepareCopyPageInfFile(HINF InfFile,
     Status = SetupCreateDirectory(PathBuffer);
     if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
     {
-        DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
+        DPRINT1("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
         MUIDisplayError(ERROR_CREATE_INSTALL_DIR, Ir, POPUP_WAIT_ENTER);
         return FALSE;
     }
