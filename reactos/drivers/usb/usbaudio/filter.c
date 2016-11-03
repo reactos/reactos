@@ -1164,7 +1164,7 @@ UsbAudioGetDataRanges(
     PUSB_INTERFACE_DESCRIPTOR Descriptor;
     PKSDATARANGE_AUDIO DataRangeAudio;
     PKSDATARANGE *DataRangeAudioArray;
-    ULONG NumFrequency, DataRangeCount, DataRangeIndex;
+    ULONG NumFrequency, DataRangeCount, DataRangeIndex, Index;
 
     /* count all data ranges */
     DataRangeCount = 0;
@@ -1229,10 +1229,14 @@ UsbAudioGetDataRanges(
                     DataRangeAudio->MaximumChannels = StreamingFormatDescriptor->bNrChannels;
                     DataRangeAudio->MinimumBitsPerSample = StreamingFormatDescriptor->bBitResolution;
                     DataRangeAudio->MaximumBitsPerSample = StreamingFormatDescriptor->bBitResolution;
-                    NumFrequency = StreamingFormatDescriptor->bSamFreqType - 1;
-                    DataRangeAudio->MinimumSampleFrequency = StreamingFormatDescriptor->tSamFreq[0] | StreamingFormatDescriptor->tSamFreq[1] << 8 | StreamingFormatDescriptor->tSamFreq[2] << 16;
-                    DataRangeAudio->MaximumSampleFrequency = StreamingFormatDescriptor->tSamFreq[NumFrequency*3] | StreamingFormatDescriptor->tSamFreq[NumFrequency * 3+1] << 8 | StreamingFormatDescriptor->tSamFreq[NumFrequency * 3+2]<<16;
-
+                    NumFrequency = StreamingFormatDescriptor->bSamFreqType;
+                    DataRangeAudio->MinimumSampleFrequency = MAXULONG;
+                    DataRangeAudio->MaximumSampleFrequency = 0;
+                    for (Index = 0; Index < NumFrequency; Index++)
+                    {
+                        DataRangeAudio->MinimumSampleFrequency = min(StreamingFormatDescriptor->tSamFreq[Index * 3] | StreamingFormatDescriptor->tSamFreq[(Index * 3) + 1] << 8 | StreamingFormatDescriptor->tSamFreq[(Index * 3) + 2] << 16, DataRangeAudio->MinimumSampleFrequency);
+                        DataRangeAudio->MaximumSampleFrequency = max(StreamingFormatDescriptor->tSamFreq[Index * 3] | StreamingFormatDescriptor->tSamFreq[(Index * 3) + 1] << 8 | StreamingFormatDescriptor->tSamFreq[(Index * 3) + 2] << 16, DataRangeAudio->MaximumSampleFrequency);
+                    }
                     DataRangeAudioArray[DataRangeIndex] = (PKSDATARANGE)DataRangeAudio;
                     DataRangeIndex++;
                 }
