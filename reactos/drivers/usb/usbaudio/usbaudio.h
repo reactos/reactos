@@ -205,6 +205,7 @@ typedef struct
     PKSWORKER        CaptureWorker;                              /* capture worker */
     WORK_QUEUE_ITEM  StarvationWorkItem;                            /* work item */
     PKSWORKER        StarvationWorker;                              /* capture worker */
+	ULONG BufferOffset;
 }PIN_CONTEXT, *PPIN_CONTEXT;
 
 /* filter.c */

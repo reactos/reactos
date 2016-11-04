@@ -874,6 +874,7 @@ PinRenderProcess(
     IoSetCompletionRoutine(Irp, UsbAudioRenderComplete, Pin, TRUE, TRUE, TRUE);
 
     /* calculate packet count */
+    /* FIXME support various sample rates */
     WaveFormatEx = (PKSDATAFORMAT_WAVEFORMATEX)Pin->ConnectionFormat;
     TotalPacketSize = WaveFormatEx->WaveFormatEx.nAvgBytesPerSec / 1000;
     ASSERT(TotalPacketSize <= PinContext->DeviceExtension->InterfaceInfo->Pipes[0].MaximumPacketSize);
@@ -883,8 +884,6 @@ PinRenderProcess(
 
     ASSERT(PacketCount < 255);
 
-    //DPRINT1("PinRenderProcess Irp %p TotalPacketSize %lu MaximumPacketSize %lu PacketCount %lu Count %lu Data %p\n", Irp, TotalPacketSize, PinContext->DeviceExtension->InterfaceInfo->Pipes[0].MaximumPacketSize, PacketCount, CloneStreamPointer->OffsetIn.Count, CloneStreamPointer->OffsetIn.Data);
-
     Urb = (PURB)AllocFunction(GET_ISO_URB_SIZE(PacketCount));
     ASSERT(Urb);
 
@@ -893,8 +892,8 @@ PinRenderProcess(
     Urb->UrbIsochronousTransfer.Hdr.Length = GET_ISO_URB_SIZE(PacketCount);
     Urb->UrbIsochronousTransfer.PipeHandle = PinContext->DeviceExtension->InterfaceInfo->Pipes[0].PipeHandle;
     Urb->UrbIsochronousTransfer.TransferFlags = USBD_TRANSFER_DIRECTION_OUT | USBD_START_ISO_TRANSFER_ASAP;
-    Urb->UrbIsochronousTransfer.TransferBufferLength = CloneStreamPointer->OffsetIn.Remaining;
-    Urb->UrbIsochronousTransfer.TransferBuffer = CloneStreamPointer->OffsetIn.Data;
+    Urb->UrbIsochronousTransfer.TransferBufferLength = PacketCount * TotalPacketSize;
+    Urb->UrbIsochronousTransfer.TransferBuffer = CloneStreamPointer->StreamHeader->Data;
     Urb->UrbIsochronousTransfer.NumberOfPackets = PacketCount;
     Urb->UrbIsochronousTransfer.StartFrame = 0;
 
