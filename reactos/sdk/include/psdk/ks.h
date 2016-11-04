@@ -4219,6 +4219,7 @@ NTAPI
 KsSetMajorFunctionHandler(
   _In_ PDRIVER_OBJECT DriverObject,
   _In_ ULONG MajorFunction);
+
 __checkReturn
 _IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
