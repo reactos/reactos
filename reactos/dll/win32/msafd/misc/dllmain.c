@@ -1351,6 +1351,13 @@ WSPAccept(SOCKET Handle,
        if (lpErrno) *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
     }
+    if ((SocketAddress && !SocketAddressLength) ||
+        (SocketAddressLength && !SocketAddress) ||
+        (SocketAddressLength && *SocketAddressLength < sizeof(SOCKADDR)))
+    {
+       if (lpErrno) *lpErrno = WSAEFAULT;
+       return INVALID_SOCKET;
+    }
 
     Status = NtCreateEvent(&SockEvent,
                            EVENT_ALL_ACCESS,
