@@ -2264,6 +2264,22 @@ WSPIoctl(IN  SOCKET Handle,
                 break;
             }
             NonBlocking = *((PULONG)lpvInBuffer) ? TRUE : FALSE;
+            /* Don't allow to go in blocking mode if WSPAsyncSelect or WSPEventSelect is pending */
+            if (!NonBlocking)
+            {
+                /* If there is an WSPAsyncSelect pending, fail with WSAEINVAL */
+                if (Socket->SharedData->AsyncEvents & (~Socket->SharedData->AsyncDisabledEvents))
+                {
+                    Errno = WSAEINVAL;
+                    break;
+                }
+                /* If there is an WSPEventSelect pending, fail with WSAEINVAL */
+                if (Socket->NetworkEvents)
+                {
+                    Errno = WSAEINVAL;
+                    break;
+                }
+            }
             Socket->SharedData->NonBlocking = NonBlocking ? 1 : 0;
             NeedsCompletion = FALSE;
             Errno = SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, &NonBlocking, NULL, NULL, lpOverlapped, lpCompletionRoutine);
