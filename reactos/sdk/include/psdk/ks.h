@@ -4220,7 +4220,7 @@ KsSetMajorFunctionHandler(
   _In_ PDRIVER_OBJECT DriverObject,
   _In_ ULONG MajorFunction);
 
-__checkReturn
+_Check_return_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
@@ -4256,7 +4256,7 @@ KsStreamPointerAdvanceOffsets(
   _In_ ULONG             OutUsed,
   _In_ BOOLEAN           Eject);
 
-__checkReturn
+_Check_return_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 KSDDKAPI
 NTSTATUS
