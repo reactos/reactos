@@ -3851,6 +3851,35 @@ KsPinGetLeadingEdgeStreamPointer(
   _In_ PKSPIN Pin,
   _In_ KSSTREAM_POINTER_STATE State);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsStreamPointerSetStatusCode(
+    _In_ PKSSTREAM_POINTER StreamPointer,
+    _In_ NTSTATUS Status
+);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+void
+NTAPI
+KsStreamPointerDelete(
+    _In_ PKSSTREAM_POINTER StreamPointer
+);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsStreamPointerClone(
+    _In_ PKSSTREAM_POINTER StreamPointer,
+    _In_opt_ PFNKSSTREAMPOINTER CancelCallback,
+    _In_ ULONG ContextSize,
+    _Out_ PKSSTREAM_POINTER* CloneStreamPointer
+);
+
+
 /* Does this belong here? */
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -4190,7 +4219,7 @@ NTAPI
 KsSetMajorFunctionHandler(
   _In_ PDRIVER_OBJECT DriverObject,
   _In_ ULONG MajorFunction);
-
+__checkReturn
 _IRQL_requires_max_(PASSIVE_LEVEL)
 KSDDKAPI
 NTSTATUS
@@ -4225,6 +4254,14 @@ KsStreamPointerAdvanceOffsets(
   _In_ ULONG             InUsed,
   _In_ ULONG             OutUsed,
   _In_ BOOLEAN           Eject);
+
+__checkReturn
+_IRQL_requires_max_(DISPATCH_LEVEL)
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsStreamPointerAdvance(
+  _In_ PKSSTREAM_POINTER StreamPointer);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 KSDDKAPI
