@@ -10,150 +10,186 @@
 #include <ndk/umtypes.h>
 #include <strsafe.h>
 
+/* Version masks */
+#define T_ALL     0x0
+#define T_WIN2K   0x1
+#define T_WINXP   0x2
+#define T_WIN2K3  0x4
+#define T_VISTA   0x8
+#define T_WIN7    0x10
+#define T_WIN8    0x20
+#define T_WIN10   0x40
+
+#define T_PRE_VISTA T_WIN2K|T_WINXP|T_WIN2K3
+#define T_VISTA_PLUS T_VISTA|T_WIN7|T_WIN8|T_WIN10
+
+struct test_data
+{
+    int testline;
+    PCWSTR wszPathToParse;
+    PCWSTR wszExpectedDisplayName;
+    INT nExpectedCSIDL;
+    HRESULT hResult;
+    UINT ValidForVersion;
+};
+
+struct test_data Tests[] =
+{
+    /* Tests for CDesktopFolder */
+    {__LINE__, NULL, NULL, 0, E_OUTOFMEMORY, T_PRE_VISTA},
+    {__LINE__, NULL, NULL, 0, E_INVALIDARG, T_VISTA_PLUS},
+    {__LINE__, L"", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0, S_OK, 0},
+    {__LINE__, L" ", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), T_PRE_VISTA},
+    {__LINE__, L" ", NULL, 0, E_INVALIDARG, T_VISTA_PLUS},
+    {__LINE__, L":", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L": ", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L" :", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L"/", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L"//", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L"\\", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L"\\\\?", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L"\\\\?\\", NULL, 0, E_INVALIDARG, 0},
+    /* Tests for the shell: protocol */
+    {__LINE__, L"shell:", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), 0},
+    {__LINE__, L"shell::", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), 0},   
+    {__LINE__, L"shell:::", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0},   
+    {__LINE__, L"shell:::{", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0},
+    {__LINE__, L"shell:fail", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), 0},
+    {__LINE__, L"shell:::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0, S_OK, 0},
+    {__LINE__, L"shell:desktop", NULL, CSIDL_DESKTOPDIRECTORY, S_OK, T_PRE_VISTA},
+    {__LINE__, L"shell:windows", NULL, CSIDL_WINDOWS, S_OK, T_PRE_VISTA},
+    {__LINE__, L"shell:system", NULL, CSIDL_SYSTEM, S_OK, T_PRE_VISTA},
+    {__LINE__, L"shell:personal", NULL, CSIDL_MYDOCUMENTS, S_OK, T_PRE_VISTA},
+    {__LINE__, L"shell:programs", NULL, CSIDL_PROGRAMS, S_OK, T_PRE_VISTA},
+    {__LINE__, L"shell:programfiles", NULL, CSIDL_PROGRAM_FILES, S_OK, T_PRE_VISTA},
+    /* The following tests are confusing. They don't work for SHParseDisplayName but work on psfDesktop->ParseDisplayName */
+    {__LINE__, L"shell:desktop", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), T_VISTA_PLUS},
+    {__LINE__, L"shell:windows",  NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), T_VISTA_PLUS},
+    {__LINE__, L"shell:system",  NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), T_VISTA_PLUS},
+    {__LINE__, L"shell:personal",  NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), T_VISTA_PLUS},
+    {__LINE__, L"shell:programs",  NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), T_VISTA_PLUS},
+    {__LINE__, L"shell:programfiles",  NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), T_VISTA_PLUS},
+    /* Tests for CInternet */
+    {__LINE__, L"aa:", NULL, 0, E_INVALIDARG, T_PRE_VISTA},
+    {__LINE__, L"garbage:", NULL, 0, E_INVALIDARG, T_PRE_VISTA},
+    {__LINE__, L"ftp:", NULL, 0, E_INVALIDARG, T_PRE_VISTA},
+    {__LINE__, L"ftp:/", NULL, 0, E_INVALIDARG, T_PRE_VISTA},
+    {__LINE__, L"ftp://", NULL, 0, E_INVALIDARG, T_PRE_VISTA},
+    {__LINE__, L"ftp://a", NULL, 0, E_INVALIDARG, T_PRE_VISTA},
+    {__LINE__, L"ftp://ftp.gnu.org/gnu/octave/", NULL, 0, E_INVALIDARG, T_PRE_VISTA},
+    {__LINE__, L"aa:", L"aa:", 0, S_OK, T_VISTA_PLUS},
+    {__LINE__, L"garbage:", L"garbage:", 0, S_OK, T_VISTA_PLUS},
+    {__LINE__, L"ftp:", L"ftp:", 0, S_OK, T_VISTA_PLUS},
+    {__LINE__, L"ftp:/", L"ftp:/", 0, S_OK, T_VISTA_PLUS},
+    {__LINE__, L"ftp://", L"ftp:///", 0, S_OK, T_VISTA_PLUS},
+    {__LINE__, L"ftp://a", L"ftp://a/", 0, S_OK, T_VISTA_PLUS},
+    {__LINE__, L"ftp://ftp.gnu.org/gnu/octave/", L"ftp://ftp.gnu.org/gnu/octave/", 0, S_OK, T_VISTA_PLUS},
+    /* Tests for CRegFolder */
+    {__LINE__, L"::", NULL, 0, CO_E_CLASSSTRING, 0},
+    {__LINE__, L"::{", NULL, 0, CO_E_CLASSSTRING, 0},  
+    {__LINE__, L"::{ ", NULL, 0, CO_E_CLASSSTRING, 0},  
+    {__LINE__, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0, S_OK, 0},
+    {__LINE__, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D} ", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0, S_OK, 0},
+    {__LINE__, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}a", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0, S_OK, 0},
+    {__LINE__, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}garbage", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", 0, S_OK, 0},
+    {__LINE__, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D ", NULL, 0, CO_E_CLASSSTRING, 0},
+    {__LINE__, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\ ", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}", L"::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}", 0, S_OK, 0},
+     /* Tests for CDrivesFolder */
+    {__LINE__, L"c:", NULL, 0, E_INVALIDARG, T_PRE_VISTA},
+    {__LINE__, L"c:", L"C:\\", 0, S_OK, T_VISTA_PLUS},
+    {__LINE__, L"c:\\", L"C:\\", 0, S_OK, 0},
+    {__LINE__, L"C:\\", L"C:\\", 0, S_OK, 0},
+    {__LINE__, L"y:\\", NULL, 0, HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND), T_PRE_VISTA},
+    {__LINE__, L"y:\\", NULL, 0, HRESULT_FROM_WIN32(ERROR_INVALID_DRIVE), T_VISTA_PLUS},
+    {__LINE__, L"C:\\ ", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), T_PRE_VISTA},
+    {__LINE__, L"C:\\ ", NULL, 0, E_INVALIDARG, T_VISTA_PLUS},
+    /* Tests for CFSFolder */
+    {__LINE__, L"$", NULL, 0, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), 0},
+    {__LINE__, L"c:\\Program Files", L"C:\\Program Files", 0, S_OK, 0},
+    {__LINE__, L"c:\\Program Files\\", L"C:\\Program Files", 0, S_OK, 0},
+    /* Paths with . are valid for win+r dialog or address bar but not for ParseDisplayName */
+    {__LINE__, L"c:\\Program Files\\.", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L"c:\\Program Files\\..", NULL, 0, E_INVALIDARG, 0}, 
+    {__LINE__, L".", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L"..", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L"C:\\.", NULL, 0, E_INVALIDARG, 0},
+    {__LINE__, L"C:\\..", NULL, 0, E_INVALIDARG, 0} /* C:\.. in the addressbar gives my computer! */
+};
+
+UINT get_host_os_flag()
+{
+    switch (LOWORD(GetVersion()))
+    {
+    case 5: return T_WIN2K;
+    case (5 | (1 << 8)): return T_WINXP;
+    case (5 | (2 << 8)): return T_WIN2K3;
+    case 6: return T_VISTA;
+    case (6 | (1 << 8)): return T_WIN7;
+    case (6 | (2 << 8)): return T_WIN8;
+    case 10: return T_WIN10;
+    }
+
+    return 0;
+}
+
 START_TEST(SHParseDisplayName)
 {
     HRESULT hr;
-    PIDLIST_ABSOLUTE pidl;
-    WCHAR systemDir[MAX_PATH];
-    WCHAR path[MAX_PATH];
-    WCHAR resultPath[MAX_PATH];
-    BOOL winv6 = LOBYTE(LOWORD(GetVersion())) >= 6;
+    UINT os_flag = get_host_os_flag();
+    ok (os_flag != 0, "Incompatible os version %d!", os_flag);
+    if (os_flag == 0)
+        return;
 
-    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-
-    GetSystemDirectoryW(systemDir, RTL_NUMBER_OF(systemDir));
-    SetCurrentDirectoryW(systemDir);
-
-    /* The code below relies on these properties */
-    ok(systemDir[1] == L':', "systemDir = %ls\n", systemDir);
-    ok(systemDir[2] == L'\\', "systemDir = %ls\n", systemDir);
-    ok(systemDir[wcslen(systemDir) - 1] != L'\\', "systemDir = %ls\n", systemDir);
-    ok(wcschr(systemDir + 3, L'\\') != NULL, "systemDir = %ls\n", systemDir);
-
-    /* NULL */
-    pidl = NULL;
-    StartSeh()
-        hr = SHParseDisplayName(NULL, NULL, &pidl, 0, NULL);
-    EndSeh(STATUS_SUCCESS);
-    ok(hr == E_OUTOFMEMORY || hr == E_INVALIDARG, "hr = %lx\n", hr);
-    ok(pidl == NULL, "pidl = %p\n", pidl);
-    if (pidl) CoTaskMemFree(pidl);
-
-    /* empty string */
-    pidl = NULL;
-    hr = SHParseDisplayName(L"", NULL, &pidl, 0, NULL);
+    IShellFolder *psfDesktop;
+    hr = SHGetDesktopFolder(&psfDesktop);
     ok(hr == S_OK, "hr = %lx\n", hr);
-    ok(pidl != NULL, "pidl = %p\n", pidl);
-    resultPath[0] = UNICODE_NULL;
-    SHGetPathFromIDListW(pidl, resultPath);
-    ok_wstr(resultPath, L"");
-    if (pidl) CoTaskMemFree(pidl);
 
-    /* C: */
-    path[0] = systemDir[0];
-    path[1] = L':';
-    path[2] = UNICODE_NULL;
-    pidl = NULL;
-    hr = SHParseDisplayName(path, NULL, &pidl, 0, NULL);
-    if (winv6)
+    for (UINT i = 0; i < _countof(Tests); i ++)
     {
-        /* Win7 accepts this and returns C:\ */
-        ok(hr == S_OK, "hr = %lx\n", hr);
-        ok(pidl != NULL, "pidl = %p\n", pidl);
-        resultPath[0] = UNICODE_NULL;
-        SHGetPathFromIDListW(pidl, resultPath);
-        path[2] = L'\\';
-        path[3] = UNICODE_NULL;
-        ok(!wcsicmp(resultPath, path), "Got %ls, expected %ls\n", resultPath, path);
+        if (Tests[i].ValidForVersion && !(Tests[i].ValidForVersion & os_flag))
+           continue;
+
+        PIDLIST_ABSOLUTE pidl;
+        HRESULT hr = SHParseDisplayName(Tests[i].wszPathToParse, NULL, &pidl, 0, NULL);
+        ok(hr == Tests[i].hResult, "%d: Expected error 0x%lx, got 0x%lx\n", Tests[i].testline, Tests[i].hResult, hr);
+
+        if (Tests[i].wszExpectedDisplayName == NULL && Tests[i].nExpectedCSIDL == 0)
+        {
+           ok(pidl == NULL, "%d: Expected no pidl\n", Tests[i].testline);
+           continue;
+        }
+
+        ok(pidl != NULL, "%d: Expected pidl on success\n", Tests[i].testline);
+        if(!pidl)
+            continue;
+
+        STRRET strret;
+        hr = psfDesktop->GetDisplayNameOf(pidl, SHGDN_FORPARSING, &strret);
+        ok(hr == S_OK, "%d: hr = %lx\n", Tests[i].testline, hr);
+
+        ok(strret.uType == STRRET_WSTR, "%d: Expected STRRET_WSTR\n", Tests[i].testline);
+
+        if (Tests[i].wszExpectedDisplayName)
+        {
+            ok(!wcscmp(strret.pOleStr, Tests[i].wszExpectedDisplayName), "%d: expected %S got %S\n", Tests[i].testline, Tests[i].wszExpectedDisplayName, strret.pOleStr);
+        }
+        else
+        {
+            PIDLIST_ABSOLUTE pidlSpecial;
+            hr = SHGetSpecialFolderLocation(NULL, Tests[i].nExpectedCSIDL, &pidlSpecial);
+            ok(hr == S_OK, "%d: hr = %lx\n", Tests[i].testline, hr);
+
+            STRRET strretSpecial;
+            hr = psfDesktop->GetDisplayNameOf(pidlSpecial, SHGDN_FORPARSING, &strretSpecial);
+            ok(hr == S_OK, "%d: hr = %lx\n", Tests[i].testline, hr);
+
+            ok(strret.uType == STRRET_WSTR, "%d: Expected STRRET_WSTR\n", Tests[i].testline);
+
+            ok(!wcscmp(strret.pOleStr, strretSpecial.pOleStr), "%d: expected %S got %S\n", Tests[i].testline, strretSpecial.pOleStr, strret.pOleStr);
+        }
     }
-    else
-    {
-        /* Win2003 fails this */
-        ok(hr == E_INVALIDARG, "hr = %lx\n", hr);
-        ok(pidl == NULL, "pidl = %p\n", pidl);
-    }
-    if (pidl) CoTaskMemFree(pidl);
-
-    /* C:\ */
-    path[0] = systemDir[0];
-    path[1] = L':';
-    path[2] = L'\\';
-    path[3] = UNICODE_NULL;
-    pidl = NULL;
-    hr = SHParseDisplayName(path, NULL, &pidl, 0, NULL);
-    ok(hr == S_OK, "hr = %lx\n", hr);
-    ok(pidl != NULL, "pidl = %p\n", pidl);
-    resultPath[0] = UNICODE_NULL;
-    SHGetPathFromIDListW(pidl, resultPath);
-    ok(!wcsicmp(resultPath, path), "Got %ls, expected %ls\n", resultPath, path);
-    if (pidl) CoTaskMemFree(pidl);
-
-    /* C:\\ */
-    path[0] = systemDir[0];
-    path[1] = L':';
-    path[2] = L'\\';
-    path[3] = L'\\';
-    path[4] = UNICODE_NULL;
-    pidl = NULL;
-    hr = SHParseDisplayName(path, NULL, &pidl, 0, NULL);
-    ok(hr == E_INVALIDARG, "hr = %lx\n", hr);
-    ok(pidl == NULL, "pidl = %p\n", pidl);
-    if (pidl) CoTaskMemFree(pidl);
-
-    /* C:\ReactOS */
-    StringCbCopyW(path, sizeof(path), systemDir);
-    wcschr(path + 3, L'\\')[0] = UNICODE_NULL;
-    pidl = NULL;
-    hr = SHParseDisplayName(path, NULL, &pidl, 0, NULL);
-    ok(hr == S_OK, "hr = %lx\n", hr);
-    ok(pidl != NULL, "pidl = %p\n", pidl);
-    resultPath[0] = UNICODE_NULL;
-    SHGetPathFromIDListW(pidl, resultPath);
-    ok(!wcsicmp(resultPath, path), "Got %ls, expected %ls\n", resultPath, path);
-    if (pidl) CoTaskMemFree(pidl);
-
-    /* C:\ReactOS\ */
-    StringCbCopyW(path, sizeof(path), systemDir);
-    wcschr(path + 3, L'\\')[1] = UNICODE_NULL;
-    pidl = NULL;
-    hr = SHParseDisplayName(path, NULL, &pidl, 0, NULL);
-    ok(hr == S_OK, "hr = %lx\n", hr);
-    ok(pidl != NULL, "pidl = %p\n", pidl);
-    resultPath[0] = UNICODE_NULL;
-    SHGetPathFromIDListW(pidl, resultPath);
-    path[wcslen(path) - 1] = UNICODE_NULL;
-    ok(!wcsicmp(resultPath, path), "Got %ls, expected %ls\n", resultPath, path);
-    if (pidl) CoTaskMemFree(pidl);
-
-    /* C:\ReactOS\system32 */
-    StringCbCopyW(path, sizeof(path), systemDir);
-    pidl = NULL;
-    hr = SHParseDisplayName(path, NULL, &pidl, 0, NULL);
-    ok(hr == S_OK, "hr = %lx\n", hr);
-    ok(pidl != NULL, "pidl = %p\n", pidl);
-    resultPath[0] = UNICODE_NULL;
-    SHGetPathFromIDListW(pidl, resultPath);
-    ok(!wcsicmp(resultPath, path), "Got %ls, expected %ls\n", resultPath, path);
-    if (pidl) CoTaskMemFree(pidl);
-
-    /* C:ntoskrnl.exe */
-    path[0] = systemDir[0];
-    path[1] = L':';
-    path[2] = UNICODE_NULL;
-    StringCbCatW(path, sizeof(path), L"ntoskrnl.exe");
-    pidl = NULL;
-    hr = SHParseDisplayName(path, NULL, &pidl, 0, NULL);
-    ok(hr == E_INVALIDARG, "hr = %lx\n", hr);
-    ok(pidl == NULL, "pidl = %p\n", pidl);
-    if (pidl) CoTaskMemFree(pidl);
-
-    /* ntoskrnl.exe */
-    StringCbCopyW(path, sizeof(path), L"ntoskrnl.exe");
-    pidl = NULL;
-    hr = SHParseDisplayName(path, NULL, &pidl, 0, NULL);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "hr = %lx\n", hr);
-    ok(pidl == NULL, "pidl = %p\n", pidl);
-    if (pidl) CoTaskMemFree(pidl);
 
     CoUninitialize();
 }
