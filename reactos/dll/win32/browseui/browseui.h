@@ -10,6 +10,7 @@
 #define USE_CUSTOM_INTERNETTOOLBAR 1
 
 /* Constructors for the classes that are not exported */
+HRESULT CShellBrowser_CreateInstance(LPITEMIDLIST pidl, DWORD dwFlags, REFIID riid, void **ppv);
 HRESULT CTravelLog_CreateInstance(REFIID riid, void **ppv);
 HRESULT CBaseBar_CreateInstance(REFIID riid, void **ppv, BOOL vertical);
 HRESULT CBaseBarSite_CreateInstance(REFIID riid, void **ppv, BOOL bVertical);

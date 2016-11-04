@@ -309,7 +309,7 @@ public:
 
     CShellBrowser();
     ~CShellBrowser();
-    HRESULT Initialize(LPITEMIDLIST pidl, long b, long c, long d);
+    HRESULT Initialize(LPITEMIDLIST pidl, DWORD dwFlags);
 public:
     HRESULT BrowseToPIDL(LPCITEMIDLIST pidl, long flags);
     HRESULT BrowseToPath(IShellFolder *newShellFolder, LPCITEMIDLIST absolutePIDL,
@@ -706,7 +706,7 @@ CShellBrowser::~CShellBrowser()
         DSA_Destroy(menuDsa);
 }
 
-HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, long b, long c, long d)
+HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, DWORD dwFlags)
 {
     CComPtr<IPersistStreamInit>             persistStreamInit;
     HRESULT                                 hResult;
@@ -3697,72 +3697,7 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     return 0;
 }
 
-static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
+HRESULT CShellBrowser_CreateInstance(LPITEMIDLIST pidl, DWORD dwFlags, REFIID riid, void **ppv)
 {
-    CComPtr<CShellBrowser>    theCabinet;
-    HRESULT                   hResult;
-    MSG Msg;
-    BOOL Ret;
-
-    // Tell the thread ref we are using it.
-    if (parameters && parameters->offsetF8)
-        parameters->offsetF8->AddRef();
-    
-    ATLTRY(theCabinet = new CComObject<CShellBrowser>);
-    if (theCabinet == NULL)
-    {
-        return E_OUTOFMEMORY;
-    }
-    
-    hResult = theCabinet->Initialize(parameters->directoryPIDL, 0, 0, 0);
-    if (FAILED_UNEXPECTEDLY(hResult))
-        return E_OUTOFMEMORY;
-
-    while ((Ret = GetMessage(&Msg, NULL, 0, 0)) != 0)
-    {
-        if (Ret == -1)
-        {
-            // Error: continue or exit?
-            break;
-        }
-
-        if (Msg.message == WM_QUIT)
-            break;
-
-        if (theCabinet->v_MayTranslateAccelerator(&Msg) != S_OK)
-        {
-            TranslateMessage(&Msg);
-            DispatchMessage(&Msg);
-        }
-    }
-
-    int nrc = theCabinet->Release();
-    if (nrc > 0)
-    {
-        DbgPrint("WARNING: There are %d references to the CShellBrowser active or leaked.\n", nrc);
-    }
-
-    theCabinet.Detach();
-
-    // Tell the thread ref we are not using it anymore.
-    if (parameters && parameters->offsetF8)
-        parameters->offsetF8->Release();
-
-    return hResult;
-}
-
-DWORD WINAPI BrowserThreadProc(LPVOID lpThreadParameter)
-{
-    HRESULT hr;
-    IEThreadParamBlock * parameters = (IEThreadParamBlock *) lpThreadParameter;
-
-    OleInitialize(NULL);
-
-    ATLTRY(hr = ExplorerMessageLoop(parameters));
-
-    OleUninitialize();
-
-    SHDestroyIETHREADPARAM(parameters);
-
-    return hr;
+    return ShellObjectCreatorInit<CShellBrowser>(pidl, dwFlags, riid, ppv);
 }

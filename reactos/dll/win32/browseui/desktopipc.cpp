@@ -28,8 +28,6 @@ struct HNFBlock
     UINT                pathLength;
 };
 
-extern DWORD WINAPI BrowserThreadProc(LPVOID lpThreadParameter);
-
 class CProxyDesktop :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public CWindowImpl < CProxyDesktop, CWindow, CFrameWinTraits >
@@ -343,6 +341,70 @@ cleanup0:
     }
 
     return params;
+}
+
+
+static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
+{
+    CComPtr<IBrowserService2> browser;
+    HRESULT                   hResult;
+    MSG Msg;
+    BOOL Ret;
+
+    // Tell the thread ref we are using it.
+    if (parameters && parameters->offsetF8)
+        parameters->offsetF8->AddRef();
+
+    hResult = CShellBrowser_CreateInstance(parameters->directoryPIDL, parameters->dwFlags, IID_PPV_ARG(IBrowserService2, &browser));
+    if (FAILED_UNEXPECTEDLY(hResult))
+        return hResult;
+
+    while ((Ret = GetMessage(&Msg, NULL, 0, 0)) != 0)
+    {
+        if (Ret == -1)
+        {
+            // Error: continue or exit?
+            break;
+        }
+
+        if (Msg.message == WM_QUIT)
+            break;
+
+        if (browser->v_MayTranslateAccelerator(&Msg) != S_OK)
+        {
+            TranslateMessage(&Msg);
+            DispatchMessage(&Msg);
+        }
+    }
+
+    int nrc = browser->Release();
+    if (nrc > 0)
+    {
+        DbgPrint("WARNING: There are %d references to the CShellBrowser active or leaked.\n", nrc);
+    }
+
+    browser.Detach();
+
+    // Tell the thread ref we are not using it anymore.
+    if (parameters && parameters->offsetF8)
+        parameters->offsetF8->Release();
+
+    return hResult;
+}
+
+static DWORD WINAPI BrowserThreadProc(LPVOID lpThreadParameter)
+{
+    IEThreadParamBlock * parameters = (IEThreadParamBlock *) lpThreadParameter;
+
+    OleInitialize(NULL);
+    ExplorerMessageLoop(parameters);
+
+    /* Destroying the parameters releases the thread reference */
+    SHDestroyIETHREADPARAM(parameters);
+
+    OleUninitialize();
+
+    return 0;
 }
 
 /*************************************************************************
