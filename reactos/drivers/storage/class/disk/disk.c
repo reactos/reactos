@@ -4283,7 +4283,7 @@ diskMatched:
     DeviceExtension->DiskGeometry->Geometry.SectorsPerTrack = sectorsPerTrack;
     DeviceExtension->DiskGeometry->Geometry.TracksPerCylinder = tracksPerCylinder;
     DeviceExtension->DiskGeometry->Geometry.Cylinders.QuadPart = (LONGLONG)cylinders;
-    DeviceExtension->DiskGeometry->DiskSize.QuadPart = cylinders * tracksPerCylinder * sectorsPerTrack *
+    DeviceExtension->DiskGeometry->DiskSize.QuadPart = (LONGLONG)cylinders * tracksPerCylinder * sectorsPerTrack *
                                                        DeviceExtension->DiskGeometry->Geometry.BytesPerSector;
 
     DebugPrint((3,
