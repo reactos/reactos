@@ -297,7 +297,7 @@ SepCaptureSid(IN PSID InputSid,
         }
         _SEH2_END;
 
-        /* allocate a SID and copy it */
+        /* Allocate a SID and copy it */
         NewSid = ExAllocatePoolWithTag(PoolType, SidSize, TAG_SID);
         if (!NewSid)
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -324,7 +324,7 @@ SepCaptureSid(IN PSID InputSid,
     {
         SidSize = RtlLengthRequiredSid(Sid->SubAuthorityCount);
 
-        /* allocate a SID and copy it */
+        /* Allocate a SID and copy it */
         NewSid = ExAllocatePoolWithTag(PoolType, SidSize, TAG_SID);
         if (NewSid == NULL)
             return STATUS_INSUFFICIENT_RESOURCES;

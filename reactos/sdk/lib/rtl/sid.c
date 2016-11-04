@@ -250,8 +250,8 @@ RtlCopySidAndAttributesArray(IN ULONG Count,
                              IN PSID_AND_ATTRIBUTES Src,
                              IN ULONG SidAreaSize,
                              IN PSID_AND_ATTRIBUTES Dest,
-                             IN PVOID SidArea,
-                             OUT PVOID* RemainingSidArea,
+                             IN PSID SidArea,
+                             OUT PSID* RemainingSidArea,
                              OUT PULONG RemainingSidAreaSize)
 {
     ULONG SidLength, i;
@@ -273,7 +273,7 @@ RtlCopySidAndAttributesArray(IN ULONG Count,
         RtlCopySid(SidLength, SidArea, Src[i].Sid);
 
         /* Push the buffer area where the SID will reset */
-        SidArea = (PVOID)((ULONG_PTR)SidArea + SidLength);
+        SidArea = (PSID)((ULONG_PTR)SidArea + SidLength);
     }
 
     /* Return how much space is left, and where the buffer is at now */
