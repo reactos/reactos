@@ -780,6 +780,9 @@ HRESULT CShellBrowser::Initialize(LPITEMIDLIST pidl, DWORD dwFlags)
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
+    if ((dwFlags & SBSP_EXPLOREMODE) != NULL)
+        ShowBand(CLSID_ExplorerBand, true);
+
     ShowWindow(SW_SHOWNORMAL);
 
     return S_OK;
@@ -2182,6 +2185,9 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::TranslateAcceleratorSB(MSG *pmsg, WORD 
 
 HRESULT STDMETHODCALLTYPE CShellBrowser::BrowseObject(LPCITEMIDLIST pidl, UINT wFlags)
 {
+    if ((wFlags & SBSP_EXPLOREMODE) != NULL)
+        ShowBand(CLSID_ExplorerBand, true);
+
     return BrowseToPIDL(pidl, BTP_UPDATE_CUR_HISTORY | BTP_UPDATE_NEXT_HISTORY);
 }
 
