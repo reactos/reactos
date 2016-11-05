@@ -669,6 +669,12 @@ BEGIN
     IDS_CONTROLPANEL "Панель управления"
     IDS_ADMINISTRATIVETOOLS "Администрирование"
 
+    /* special folders descriptions */
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Настройка параметров управления для вашего компьютера."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Настройка отображения файлов и папок и изменение сопоставлений файлов."
+    IDS_FONTS_DESCRIPTION "Добавление, изменение и управление шрифтами на компьютере."
+    IDS_PRINTERS_DESCRIPTION "Показывает установленные принтеры и факсы и поможет вам добавить новые."
+
     /* context menus */
     IDS_VIEW_LARGE "&Большие значки"
     IDS_VIEW_SMALL "&Мелкие значки"
