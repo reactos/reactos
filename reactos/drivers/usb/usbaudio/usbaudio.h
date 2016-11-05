@@ -200,12 +200,13 @@ typedef struct
     KSPIN_LOCK IrpListLock;                                      /* irp list lock*/
     PUCHAR Buffer;                                               /* iso buffer*/
     ULONG BufferSize;                                            /* iso buffer size */
+    ULONG BufferOffset;                                          /* buffer offset */
+    ULONG BufferLength;                                          /* remaining render bytes */
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;               /* interface descriptor */
     WORK_QUEUE_ITEM  CaptureWorkItem;                            /* work item */
     PKSWORKER        CaptureWorker;                              /* capture worker */
     WORK_QUEUE_ITEM  StarvationWorkItem;                            /* work item */
     PKSWORKER        StarvationWorker;                              /* capture worker */
-	ULONG BufferOffset;
 }PIN_CONTEXT, *PPIN_CONTEXT;
 
 /* filter.c */

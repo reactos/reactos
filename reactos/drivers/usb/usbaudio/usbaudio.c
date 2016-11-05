@@ -324,7 +324,7 @@ USBAudioPnPStart(
         Status = USBAudioStartDevice(Device);
         if (NT_SUCCESS(Status))
         {
-            /* TODO build filter topology and pin descriptors and retrieve interface */
+            /* TODO retrieve interface */
             Status = USBAudioCreateFilterContext(Device);
         }
     }
