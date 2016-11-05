@@ -67,7 +67,7 @@ if(USE_MKISOFS)
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
     add_custom_target(bootcd
-        COMMAND native-mkisofs -o ${REACTOS_BINARY_DIR}/bootcd.iso -iso-level 4
+        COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/bootcd.iso -iso-level 4
             -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
             -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
             -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
@@ -89,7 +89,7 @@ if(USE_MKISOFS)
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
     add_custom_target(bootcdregtest
-        COMMAND native-mkisofs -o ${REACTOS_BINARY_DIR}/bootcdregtest.iso -iso-level 4
+        COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/bootcdregtest.iso -iso-level 4
             -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
             -eltorito-boot loader/isobtrt.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
             -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
@@ -116,7 +116,7 @@ if(USE_MKISOFS)
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Start Menu/Programs=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
     add_custom_target(livecd
-        COMMAND native-mkisofs -o ${REACTOS_BINARY_DIR}/livecd.iso -iso-level 4
+        COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/livecd.iso -iso-level 4
             -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
             -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
             -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
@@ -148,7 +148,7 @@ if(USE_MKISOFS)
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
     add_custom_target(hybridcd
-        COMMAND native-mkisofs -o ${REACTOS_BINARY_DIR}/hybridcd.iso -iso-level 4
+        COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/hybridcd.iso -iso-level 4
             -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
             -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
             -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
