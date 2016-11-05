@@ -358,6 +358,8 @@ HRESULT WINAPI CDrivesFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcRes
 
 HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
+    HRESULT hres;
+
     if (!pidl1 || !pidl2)
     {
         ERR("Got null pidl pointer (%Ix %p %p)!\n", lParam, pidl1, pidl2);
@@ -365,7 +367,7 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
     }
 
     if (_ILIsSpecialFolder(pidl1) || _ILIsSpecialFolder(pidl2))
-        m_regFolder->CompareIDs(lParam, pidl1, pidl2);
+        return m_regFolder->CompareIDs(lParam, pidl1, pidl2);
 
     if (!_ILIsDrive(pidl1) || !_ILIsDrive(pidl2) || LOWORD(lParam) >= MYCOMPUTERSHELLVIEWCOLUMNS)
         return E_INVALIDARG;
@@ -379,10 +381,12 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
         case 0:        /* name */
         {
             result = stricmp(pszDrive1, pszDrive2);
-            return MAKE_COMPARE_HRESULT(result);
+            hres = MAKE_COMPARE_HRESULT(result);
+            break;
         }
         case 1:        /* Type */
         {
+            /* We want to return immediately because SHELL32_CompareDetails also compares children. */
             return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
         }
         case 2:       /* Size */
@@ -406,10 +410,17 @@ HRESULT WINAPI CDrivesFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1
             else /* Size available */
                 Diff.QuadPart = Drive1Available.QuadPart - Drive2Available.QuadPart;
 
-            return MAKE_COMPARE_HRESULT(Diff.QuadPart);
+            hres = MAKE_COMPARE_HRESULT(Diff.QuadPart);
+            break;
         }
+        default:
+            return E_INVALIDARG;
     }
-    return E_INVALIDARG;
+
+    if (HRESULT_CODE(hres) == 0)
+        return SHELL32_CompareChildren(this, lParam, pidl1, pidl2);
+
+    return hres;
 }
 
 /**************************************************************************

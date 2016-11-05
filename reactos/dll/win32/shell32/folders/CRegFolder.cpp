@@ -282,21 +282,24 @@ HRESULT WINAPI CRegFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, P
         return E_INVALIDARG;
     }
 
-    BOOL bIsGuidFolder1 = _ILIsSpecialFolder(pidl1);
-    BOOL bIsGuidFolder2 = _ILIsSpecialFolder(pidl2);
+    GUID const *clsid1 = _ILGetGUIDPointer (pidl1);
+    GUID const *clsid2 = _ILGetGUIDPointer (pidl2);
 
-    if (!bIsGuidFolder1 && !bIsGuidFolder2)
+    if (!clsid1 && !clsid2)
     {
         ERR("Got no guid pidl!\n");
         return E_INVALIDARG;
     }
-    else if (bIsGuidFolder1 && bIsGuidFolder2)
+    else if (clsid1 && clsid2)
     {
+        if (memcmp(clsid1, clsid2, sizeof(GUID)) == 0)
+            return SHELL32_CompareChildren(this, lParam, pidl1, pidl2);
+
         return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
     }
 
     /* Guid folders come first compared to everything else */
-    return MAKE_COMPARE_HRESULT(bIsGuidFolder1 ? -1 : 1);
+    return MAKE_COMPARE_HRESULT(clsid1 ? -1 : 1);
 }
 
 HRESULT WINAPI CRegFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)

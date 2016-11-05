@@ -435,6 +435,29 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
     return S_OK;
 }
 
+HRESULT SHELL32_CompareChildren(IShellFolder2* psf, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+{
+    PUIDLIST_RELATIVE nextpidl1 = ILGetNext (pidl1);
+    PUIDLIST_RELATIVE nextpidl2 = ILGetNext (pidl2);
+
+    bool isEmpty1 = _ILIsDesktop(nextpidl1);
+    bool isEmpty2 = _ILIsDesktop(nextpidl2);
+    if (isEmpty1 || isEmpty2)
+        return MAKE_COMPARE_HRESULT(isEmpty2 - isEmpty1);
+
+    PITEMID_CHILD firstpidl = ILCloneFirst (pidl1);
+    if (!firstpidl)
+        return E_OUTOFMEMORY;
+
+    CComPtr<IShellFolder> psf2;
+    HRESULT hr = psf->BindToObject(firstpidl, 0, IID_PPV_ARG(IShellFolder, &psf2));
+    ILFree(firstpidl);
+    if (FAILED(hr))
+        return MAKE_COMPARE_HRESULT(0);
+
+    return psf2->CompareIDs(lParam, nextpidl1, nextpidl2);
+}
+
 HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
     SHELLDETAILS sd;
@@ -458,6 +481,8 @@ HRESULT SHELL32_CompareDetails(IShellFolder2* isf, LPARAM lParam, LPCITEMIDLIST 
         return MAKE_COMPARE_HRESULT(1);
 
     int ret = wcsicmp(wszItem1, wszItem2);
+    if (ret == 0)
+        return SHELL32_CompareChildren(isf, lParam, pidl1, pidl2);
 
     return MAKE_COMPARE_HRESULT(ret);
 }

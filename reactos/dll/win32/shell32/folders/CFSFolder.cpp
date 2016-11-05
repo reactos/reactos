@@ -344,6 +344,10 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
         case 4: /* Attributes */
             return SHELL32_CompareDetails(this, lParam, pidl1, pidl2);
     }
+
+    if (result == 0)
+        return SHELL32_CompareChildren(this, lParam, pidl1, pidl2);
+
     return MAKE_COMPARE_HRESULT(result);
 }
 
