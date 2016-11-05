@@ -178,11 +178,11 @@ class audio_membuffer : public audio_receiver, public audio_producer
         void alloc_seconds(float);
 
         /* resizes in bytes the current buffer, without discarding
-           previsiously audio data received */
+           previously audio data received */
         void resize_bytes(unsigned int);
 
         /* resizes in seconds the current buffer, without discarding
-           previsiously audio data received */
+           previously audio data received */
         void resize_seconds( unsigned int );
         void resize_seconds( float );
 

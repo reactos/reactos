@@ -825,7 +825,7 @@ LogfReadEvents(PLOGFILE LogFile,
 
         /* Go to the next event record */
         /*
-         * NOTE: This implicitely supposes that all the other record numbers
+         * NOTE: This implicitly supposes that all the other record numbers
          * are consecutive (and do not jump than more than one unit); but if
          * it is not the case, then we would prefer here to call some
          * "get_next_record_number" function.

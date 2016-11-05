@@ -58,7 +58,7 @@ static int g_clip_left = 0;
 static int g_clip_top = 0;
 static int g_clip_right = 800;
 static int g_clip_bottom = 600;
-static RECT g_wnd_clip; /* this client area of whats actually visable */
+static RECT g_wnd_clip; /* this client area of whats actually visible */
                         /* set from WM_SIZE */
 
 /*****************************************************************************/

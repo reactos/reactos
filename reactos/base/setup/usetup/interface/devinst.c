@@ -163,7 +163,7 @@ InstallDriver(
         (wcslen(Driver) + 1) * sizeof(WCHAR));
     if (NT_SUCCESS(Status))
     {
-        /* Restart the device, so it will use the driver we registred */
+        /* Restart the device, so it will use the driver we registered */
         deviceInstalled = ResetDevice(DeviceId);
     }
 

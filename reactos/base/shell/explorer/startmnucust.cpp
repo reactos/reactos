@@ -75,7 +75,7 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
     switch(Message)
     {
         case WM_INITDIALOG:
-            /* FIXME: Properly intialize the dialog (check whether 'clear' button must be disabled, for example) */
+            /* FIXME: Properly initialize the dialog (check whether 'clear' button must be disabled, for example) */
         return TRUE;
         case WM_COMMAND:
             switch(LOWORD(wParam))

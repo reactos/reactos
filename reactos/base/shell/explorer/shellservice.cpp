@@ -60,7 +60,7 @@ HRESULT InitShellServices(HDPA * phdpa)
 
     *phdpa = NULL;
 
-    TRACE("Enumerating Shell Service Ojbect GUIDs...\n");
+    TRACE("Enumerating Shell Service Object GUIDs...\n");
 
     if (RegOpenKeyW(HKEY_LOCAL_MACHINE,
         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ShellServiceObjectDelayLoad",

@@ -204,7 +204,7 @@ WinMain (HINSTANCE hThisInstance,
 
 	/* The class is registered, let's create the main window */
 	hMainWnd = CreateWindowExW(
-				0,						/* Extended possibilites for variation */
+				0,						/* Extended possibilities for variation */
 				g_szFontViewClassName,	/* Classname */
 				g_ExtLogFontW.elfFullName,/* Title Text */
 				WS_OVERLAPPEDWINDOW,	/* default window */

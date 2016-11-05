@@ -8,7 +8,7 @@
  *        started.
  *        New file to keep the internal command table. I plan on
  *        getting rid of the table real soon now and replacing it
- *        with a dynamic mechnism.
+ *        with a dynamic mechanism.
  *
  *    27 Jul 1998  John P. Price
  *        added config.h include

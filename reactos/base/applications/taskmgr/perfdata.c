@@ -632,7 +632,7 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
                                NULL);
     if (!result)
     {
-        /* Weird, after sucessfully reading the mem of that process
+        /* Weird, after successfully reading the mem of that process
            various times it fails now, forget it and bail out */
         HeapFree(GetProcessHeap(), 0, new_entry);
         goto cleanup;

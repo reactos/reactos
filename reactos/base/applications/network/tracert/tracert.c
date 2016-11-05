@@ -182,7 +182,7 @@ GetTime(PAPPINFO pInfo)
 {
     LARGE_INTEGER Time;
 
-    /* Get the system time using preformance counters if available */
+    /* Get the system time using performance counters if available */
     if (pInfo->bUsePerformanceCounter)
     {
         if (QueryPerformanceCounter(&Time))
@@ -310,7 +310,7 @@ ReceivePacket(PAPPINFO pInfo)
 
     DebugPrint(_T("Receiving packet. Available buffer, %d bytes... "), MAX_PING_PACKET_SIZE);
 
-    /* monitor icmpSock for incomming connections */
+    /* monitor icmpSock for incoming connections */
     FD_ZERO(&readFDS);
     FD_SET(pInfo->icmpSock, &readFDS);
 
@@ -345,7 +345,7 @@ ReceivePacket(PAPPINFO pInfo)
         {
             /* get time packet was received */
             pInfo->lTimeEnd = GetTime(pInfo);
-            DebugPrint(_T("reveived %d bytes\n"), iSockRet);
+            DebugPrint(_T("received %d bytes\n"), iSockRet);
             bRet = TRUE;
         }
         else

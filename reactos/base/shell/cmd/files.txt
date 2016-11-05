@@ -1,11 +1,11 @@
 Archive Contents
 ~~~~~~~~~~~~~~~~
 files.txt       This file list
-history.txt     History of revsions.  Not to date.  see svn.reactos.com for more info.
+history.txt     History of revisions.  Not to date.  see svn.reactos.com for more info.
 license.txt     GNU license - applies to all files named here
 readme.txt      General shell info
-readme2.txt     Techincal shell info
-todo.txt        Things that need to be implmented or fixed(including bugs)
+readme2.txt     Technical shell info
+todo.txt        Things that need to be implemented or fixed(including bugs)
 
 alias.c         Alias code
 alias.h         Alias header file

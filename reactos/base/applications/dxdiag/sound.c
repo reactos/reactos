@@ -73,7 +73,7 @@ IsDriverWHQL(LPWSTR szFileName)
     /* get the driver's cat file */
     if (!GetCatFileFromDriverPath(szFileName, szCatFile))
     {
-        /* driver has no cat so its definately not WHQL signed */
+        /* driver has no cat so it's definitely not WHQL signed */
         return FALSE;
     }
 
@@ -126,7 +126,7 @@ SetDeviceDetails(HWND hwndDlg, LPCGUID classGUID, LPCWSTR lpcstrDescription)
                     SetDlgItemInt(hwndDlg, IDC_STATIC_DSOUND_PRODUCTID, waveOut.wPid, FALSE);
                     /* set the vendor id */
                     SetDlgItemInt(hwndDlg, IDC_STATIC_DSOUND_VENDORID, waveOut.wMid, FALSE);
-                    /* check if its a wdm audio driver */
+                    /* check if it's a WDM audio driver */
                     if (waveOut.wPid == MM_MSFT_WDMAUDIO_WAVEOUT)
                         SendDlgItemMessageW(hwndDlg, IDC_STATIC_DSOUND_TYPE, WM_SETTEXT, 0, (LPARAM)L"WDM");
 

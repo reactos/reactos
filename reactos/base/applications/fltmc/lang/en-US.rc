@@ -20,7 +20,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_PRIV      "Failed to set the driver load privilige (0x%X)\n"
+    IDS_ERROR_PRIV      "Failed to set the driver load privilege (0x%X)\n"
     IDS_ERROR_FILTERS   "Failed to list the filters (0x%X)\n"
     IDS_ERROR_LOAD      "Failed to load the filter (0x%X)\n"
     IDS_ERROR_UNLOAD    "Failed to unload the filter (0x%X)\n"

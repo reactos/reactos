@@ -34,7 +34,7 @@
 * Corrected precision underflow/overflow when working with trigonometric functions.
 * cbrt() function is not used if compiling into ReactOS build system.
 * Resources are moved into /res directory.
-* Added new (partial) support for other languages: bulgarian, spanish, german, dutch, polish, russian, slovak, ukraianian.
+* Added new (partial) support for other languages: bulgarian, spanish, german, dutch, polish, russian, slovak, ukrainian.
 * Decimal precision of number with standard layout has been limited to 16 digits because the output display is smaller here (GMP version only).
 * Fixed buffer overflow with function update_lcd_display().
 * The decimal point is now preserved when switching to temporary scientific notation.

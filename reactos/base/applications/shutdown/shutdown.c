@@ -268,7 +268,7 @@ int wmain(int argc, WCHAR *argv[])
         return EXIT_FAILURE;
     }
 
-    /* Ensure that the timout amount is not too high or a negative number */
+    /* Ensure that the timeout amount is not too high or a negative number */
     if (opts.shutdown_delay > MAX_SHUTDOWN_TIMEOUT)
     {
         ConResPrintf(StdErr, IDS_ERROR_TIMEOUT, opts.shutdown_delay);

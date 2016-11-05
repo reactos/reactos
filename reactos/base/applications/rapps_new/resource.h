@@ -137,7 +137,7 @@
 #define IDS_INFO_MODIFYPATH      295
 #define IDS_INFO_INSTALLDATE     296
 
-/* Info for availabled apps */
+/* Info for available apps */
 #define IDS_AINFO_VERSION        350
 #define IDS_AINFO_DESCRIPTION    351
 #define IDS_AINFO_SIZE           352

@@ -211,7 +211,7 @@ LPTSTR *WINAPI CommandLineToArgvT(LPCTSTR lpCmdLine, int *lpArgc)
 
 // The macro ConvertToWideChar takes a tstring parameter and returns
 // a pointer to a unicode string.  A conversion is performed if
-// neccessary.  FreeConvertedWideChar string should be used on the
+// necessary.  FreeConvertedWideChar string should be used on the
 // return value of ConvertToWideChar when the string is no longer
 // needed.  The original string or the string that is returned
 // should not be modified until FreeConvertedWideChar has been called.

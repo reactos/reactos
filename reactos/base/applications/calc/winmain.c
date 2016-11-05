@@ -435,7 +435,7 @@ KeyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 static void update_lcd_display(HWND hwnd)
 {
     /*
-     * muliply size of calc.buffer by 2 because it may
+     * multiply size of calc.buffer by 2 because it may
      * happen that separator is used between each digit.
      * Also added little additional space for dot and '\0'.
      */

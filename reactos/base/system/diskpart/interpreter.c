@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS DiskPart
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/system/diskpart/interpreter.c
- * PURPOSE:         Reads the user input and then envokes the selected
+ * PURPOSE:         Reads the user input and then invokes the selected
  *                  command by the user.
  * PROGRAMMERS:     Lee Schroeder
  */
@@ -62,7 +62,7 @@ COMMAND cmds[] =
 /*
  * InterpretCmd(char *cmd_line, char *arg_line):
  * compares the command name to a list of available commands, and
- * determines which function to envoke.
+ * determines which function to invoke.
  */
 BOOL
 InterpretCmd(int argc, LPWSTR *argv)

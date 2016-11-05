@@ -1501,7 +1501,7 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
 
         DPRINT("Processing known DLL: %wZ-%wZ\n", &RegEntry->Name, &RegEntry->Value);
 
-        /* Skip the entry if it's in the exluded list */
+        /* Skip the entry if it's in the excluded list */
         if ((SmpFindRegistryValue(&SmpExcludeKnownDllsList,
                                   RegEntry->Name.Buffer)) ||
             (SmpFindRegistryValue(&SmpExcludeKnownDllsList,
@@ -2166,7 +2166,7 @@ Quickie:
         }
         else
         {
-            /* We suceeded with a delete */
+            /* We succeeded with a delete */
             DPRINT("SMSS: '%wZ' (deleted)\n", &RegEntry->Name);
         }
 
@@ -2377,7 +2377,7 @@ SmpLoadDataFromRegistry(OUT PUNICODE_STRING InitialCommand)
         return Status;
     }
 
-    /* And finally load all the subsytems for our first session! */
+    /* And finally load all the subsystems for our first session! */
     Status = SmpLoadSubSystemsForMuSession(&MuSessionId,
                                            &SmpWindowsSubSysProcessId,
                                            InitialCommand);

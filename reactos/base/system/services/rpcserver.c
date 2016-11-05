@@ -968,7 +968,7 @@ DWORD RCloseServiceHandle(
     {
         DPRINT("Found service handle\n");
 
-        /* Lock the service database exlusively */
+        /* Lock the service database exclusively */
         ScmLockDatabaseExclusive();
 
         /* Get the pointer to the service record */
@@ -1022,7 +1022,7 @@ DWORD RCloseServiceHandle(
                     return ERROR_SUCCESS;
                 }
 
-                /* There are no references and no runnning dependencies,
+                /* There are no references and no running dependencies,
                    it is now safe to delete the service */
 
                 /* Delete the Service Key */
@@ -1238,7 +1238,7 @@ DWORD RControlService(
                 dwControl == SERVICE_CONTROL_PAUSE ||
                 dwControl == SERVICE_CONTROL_CONTINUE)
             {
-                /* Log a sucessful send control */
+                /* Log a successful send control */
 
                 switch (dwControl)
                 {
@@ -1439,7 +1439,7 @@ DWORD RSetServiceObjectSecurity(
     SC_RPC_HANDLE hService,
     DWORD dwSecurityInformation,
     LPBYTE lpSecurityDescriptor,
-    DWORD dwSecuityDescriptorSize)
+    DWORD dwSecurityDescriptorSize)
 {
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;

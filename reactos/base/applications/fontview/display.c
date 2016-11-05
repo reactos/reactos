@@ -94,7 +94,7 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + SPACING1;
 
-	/* Draw a seperation Line */
+	/* Draw a separation Line */
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
 	MoveToEx(hDC, 0, y, NULL);
 	LineTo(hDC, 10000, y);
@@ -117,7 +117,7 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + 1;
 
-	/* Draw a seperation Line */
+	/* Draw a separation Line */
 	SelectObject(hDC, GetStockObject(BLACK_PEN));
 	MoveToEx(hDC, 0, y, NULL);
 	LineTo(hDC, 10000, y);

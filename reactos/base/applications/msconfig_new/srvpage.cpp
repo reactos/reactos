@@ -735,15 +735,15 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 case IDC_BTN_SERVICES_ACTIVATE:
                 {
-                    BOOL bAreThereModifs = FALSE;
+                    BOOL bAreThereMods = FALSE;
 
                     int index = -1; // From the beginning.
                     while ((index = ListView_GetNextItem(hServicesListCtrl, index, LVNI_ALL)) != -1)
                     {
-                        bAreThereModifs = ValidateItem(index, TRUE, FALSE) || bAreThereModifs; // The order is verrrrrry important !!!!
+                        bAreThereMods = ValidateItem(index, TRUE, FALSE) || bAreThereMods; // The order is verrrrrry important !!!!
                     }
 
-                    if (bAreThereModifs)
+                    if (bAreThereMods)
                     {
                         Update_Btn_States(hDlg);
                         PropSheet_Changed(GetParent(hServicesPage), hServicesPage);
@@ -754,15 +754,15 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDC_BTN_SERVICES_DEACTIVATE:
                 {
-                    BOOL bAreThereModifs = FALSE;
+                    BOOL bAreThereMods = FALSE;
 
                     int index = -1; // From the beginning.
                     while ((index = ListView_GetNextItem(hServicesListCtrl, index, LVNI_ALL)) != -1)
                     {
-                        bAreThereModifs = ValidateItem(index, FALSE, FALSE) || bAreThereModifs; // The order is verrrrrry important !!!!
+                        bAreThereMods = ValidateItem(index, FALSE, FALSE) || bAreThereMods; // The order is verrrrrry important !!!!
                     }
 
-                    if (bAreThereModifs)
+                    if (bAreThereMods)
                     {
                         Update_Btn_States(hDlg);
                         PropSheet_Changed(GetParent(hServicesPage), hServicesPage);
@@ -927,7 +927,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
                                 if (lpServiceConfig->dwStartType == SERVICE_DISABLED) // We have a disabled service which is becoming to be enabled.
                                 {
-                                    // 3a- Retrive the properties of the disabled service from the registry.
+                                    // 3a- Retrieve the properties of the disabled service from the registry.
                                     RegistryDisabledServiceItemParams params = {};
 
                                     QUERY_REGISTRY_KEYS_TABLE KeysQueryTable[2] = {};

@@ -1488,7 +1488,7 @@ IsDiskSizeValid(PPARTENTRY PartEntry)
 
     if (size < RequiredPartitionDiskSpace)
     {
-        /* partition is too small so ask for another partion */
+        /* partition is too small so ask for another partition */
         DPRINT1("Partition is too small (size: %I64u MB), required disk space is %lu MB\n", size, RequiredPartitionDiskSpace);
         return FALSE;
     }
@@ -3122,7 +3122,7 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     DPRINT1("CheckFileSystemPage -- PartitionType: 0x%02X ; FileSystemName: %S\n",
             PartEntry->PartitionType, (CurrentFileSystem ? CurrentFileSystem->FileSystemName : L"n/a"));
 
-    /* HACK: Do not try to check a partition with an unknown filesytem */
+    /* HACK: Do not try to check a partition with an unknown filesystem */
     if (CurrentFileSystem == NULL)
     {
         PartEntry->NeedsCheck = FALSE;
@@ -3264,7 +3264,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
     WCHAR c;
     ULONG Length;
 
-    /* We do not need the filsystem list any more */
+    /* We do not need the filesystem list any more */
     if (FileSystemList != NULL)
     {
         DestroyFileSystemList(FileSystemList);

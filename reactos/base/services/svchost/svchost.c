@@ -138,10 +138,10 @@ BuildCommandOptions (
                 while ((*pch) && ((*pch != ' ') && (*pch != '\t'))) pch++;
             }
 
-            /* Now we have a space or quote deliminated name, terminate it */
+            /* Now we have a space or quote delimited name, terminate it */
             if (*pch) *pch++ = UNICODE_NULL;
 
-            /* Ok, so we have a string -- was it preceeded by a -K or /K? */
+            /* Ok, so we have a string -- was it preceded by a -K or /K? */
             if (pGroupName)
             {
                 /* Yes it was, remember this, and don't overwrite it later */

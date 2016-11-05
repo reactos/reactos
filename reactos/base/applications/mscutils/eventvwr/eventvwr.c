@@ -340,7 +340,7 @@ GetMessageStringFromDll(
              * and we did not pass the flag FORMAT_MESSAGE_IGNORE_INSERTS, and the
              * message string expected too many inserts.
              * In this last case only, we can call again FormatMessage but ignore
-             * explicitely the inserts. The string that we will return to the user
+             * explicitly the inserts. The string that we will return to the user
              * will not be pre-formatted.
              */
             if (((dwFlags & FORMAT_MESSAGE_ALLOCATE_BUFFER) || lpMsgBuf) &&

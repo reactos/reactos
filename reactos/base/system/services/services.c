@@ -294,7 +294,7 @@ ShutdownHandlerRoutine(DWORD dwCtrlType)
         ScmAutoShutdownServices();
         ScmShutdownServiceDatabase();
 
-        /* Set the shutdwon event */
+        /* Set the shutdown event */
         SetEvent(hScmShutdownEvent);
     }
 

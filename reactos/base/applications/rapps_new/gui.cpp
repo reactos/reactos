@@ -1192,7 +1192,7 @@ private:
         }
         else if (IS_AVAILABLE_ENUM(EnumType))
         {
-            /* Enum availabled applications */
+            /* Enum available applications */
             EnumAvailableApplications(EnumType, s_EnumAvailableAppProc);
         }
 

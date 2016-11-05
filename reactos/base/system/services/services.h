@@ -86,7 +86,7 @@ typedef struct _START_LOCK
 {
     DWORD Tag;             /* Must be LOCK_TAG */
     DWORD TimeWhenLocked;  /* Number of seconds since 1970 */
-    PSID LockOwnerSid;     /* It is NULL if the SCM aquired the lock */
+    PSID LockOwnerSid;     /* It is NULL if the SCM acquired the lock */
 } START_LOCK, *PSTART_LOCK;
 
 

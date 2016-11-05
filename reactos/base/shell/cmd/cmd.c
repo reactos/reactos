@@ -81,7 +81,7 @@
  *        added showcmds function to show commands and options available
  *
  *    07-Aug-1998 (John P Price <linux-guru@gcfl.net>)
- *        Fixed carrage return output to better match MSDOS with echo
+ *        Fixed carriage return output to better match MSDOS with echo
  *        on or off. (marked with "JPP 19980708")
  *
  *    07-Dec-1998 (Eric Kohl)
@@ -137,8 +137,8 @@
  *
  *    06-jul-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        translate '%errorlevel%' to the internal value.
- *        Add proper memmory alloc ProcessInput, the error
- *        handling for memmory handling need to be improve
+ *        Add proper memory alloc ProcessInput, the error
+ *        handling for memory handling need to be improve
  */
 
 #include "precomp.h"
@@ -181,7 +181,7 @@ WORD wDefColor;           /* default color */
  * insert commas into a number
  */
 INT
-ConvertULargeInteger(ULONGLONG num, LPTSTR des, UINT len, BOOL bPutSeperator)
+ConvertULargeInteger(ULONGLONG num, LPTSTR des, UINT len, BOOL bPutSeparator)
 {
     TCHAR temp[39];   /* maximum length with nNumberGroups == 1 */
     UINT  n, iTarget;
@@ -192,11 +192,11 @@ ConvertULargeInteger(ULONGLONG num, LPTSTR des, UINT len, BOOL bPutSeperator)
     n = 0;
     iTarget = nNumberGroups;
     if (!nNumberGroups)
-        bPutSeperator = FALSE;
+        bPutSeparator = FALSE;
 
     do
     {
-        if (iTarget == n && bPutSeperator)
+        if (iTarget == n && bPutSeparator)
         {
             iTarget += nNumberGroups + 1;
             temp[38 - n++] = cThousandSeparator;
@@ -321,7 +321,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
     TRACE ("Execute: \'%s\' \'%s\'\n", debugstr_aw(First), debugstr_aw(Rest));
 
     /* Though it was already parsed once, we have a different set of rules
-       for parsing before we pass to CreateProccess */
+       for parsing before we pass to CreateProcess */
     if (First[0] == _T('/') || (First[0] && First[1] == _T(':')))
     {
         /* Use the entire first word as the program name (no change) */
@@ -1785,7 +1785,7 @@ static VOID Cleanup()
         ParseCommandLine (_T("\\cmdexit.bat"));
     }
 
-#ifdef FEATURE_DIECTORY_STACK
+#ifdef FEATURE_DIRECTORY_STACK
     /* destroy directory stack */
     DestroyDirectoryStack ();
 #endif

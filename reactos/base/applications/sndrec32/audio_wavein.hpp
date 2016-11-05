@@ -30,7 +30,7 @@ class audio_wavein
            about open recording, close, and sound data recorded */
         static DWORD WINAPI recording_procedure(LPVOID);
 
-        /* When this event is signaled, then the previsiously created
+        /* When this event is signaled, then the previously created
            recording thread will wake up and start recording audio
            and will pass audio data to an `audio_receiver' object. */
         HANDLE wakeup_recthread;

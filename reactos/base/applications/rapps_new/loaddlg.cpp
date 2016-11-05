@@ -101,7 +101,7 @@ public:
             /* send the current progress to the progress bar */
             SendMessageW(Item, PBM_SETPOS, uiPercentage, 0);
 
-            /* format the bits and bytes into pretty and accesible units... */
+            /* format the bits and bytes into pretty and accessible units... */
             StrFormatByteSizeW(ulProgress, szProgress, _countof(szProgress));
             StrFormatByteSizeW(ulProgressMax, szProgressMax, _countof(szProgressMax));
 

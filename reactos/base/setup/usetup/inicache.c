@@ -814,7 +814,7 @@ PINICACHEKEY
 IniCacheInsertKey(
     PINICACHESECTION Section,
     PINICACHEKEY AnchorKey,
-    INSERTATION_TYPE InsertationType,
+    INSERTION_TYPE InsertionType,
     PWCHAR Name,
     PWCHAR Data)
 {
@@ -877,15 +877,15 @@ IniCacheInsertKey(
         Section->FirstKey = Key;
         Section->LastKey = Key;
     }
-    else if ((InsertationType == INSERT_FIRST) ||
-             ((InsertationType == INSERT_BEFORE) && ((AnchorKey == NULL) || (AnchorKey == Section->FirstKey))))
+    else if ((InsertionType == INSERT_FIRST) ||
+             ((InsertionType == INSERT_BEFORE) && ((AnchorKey == NULL) || (AnchorKey == Section->FirstKey))))
     {
         /* Insert at the head of the list */
         Section->FirstKey->Prev = Key;
         Key->Next = Section->FirstKey;
         Section->FirstKey = Key;
     }
-    else if ((InsertationType == INSERT_BEFORE) && (AnchorKey != NULL))
+    else if ((InsertionType == INSERT_BEFORE) && (AnchorKey != NULL))
     {
         /* Insert before the anchor key */
         Key->Next = AnchorKey;
@@ -893,14 +893,14 @@ IniCacheInsertKey(
         AnchorKey->Prev->Next = Key;
         AnchorKey->Prev = Key;
     }
-    else if ((InsertationType == INSERT_LAST) ||
-             ((InsertationType == INSERT_AFTER) && ((AnchorKey == NULL) || (AnchorKey == Section->LastKey))))
+    else if ((InsertionType == INSERT_LAST) ||
+             ((InsertionType == INSERT_AFTER) && ((AnchorKey == NULL) || (AnchorKey == Section->LastKey))))
     {
         Section->LastKey->Next = Key;
         Key->Prev = Section->LastKey;
         Section->LastKey = Key;
     }
-    else if ((InsertationType == INSERT_AFTER) && (AnchorKey != NULL))
+    else if ((InsertionType == INSERT_AFTER) && (AnchorKey != NULL))
     {
         /* Insert after the anchor key */
         Key->Next = AnchorKey->Next;

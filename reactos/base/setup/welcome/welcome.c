@@ -630,7 +630,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
            PATCOPY);
     SelectObject(hdc, hOldBrush);
 
-    /* Draw dark verical line */
+    /* Draw dark vertical line */
     hPen = CreatePen(PS_SOLID, 0, DARK_BLUE);
     hOldPen = (HPEN)SelectObject(hdc, hPen);
     MoveToEx(hdc, rcRightPanel.left, rcRightPanel.top, NULL);

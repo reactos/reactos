@@ -91,14 +91,14 @@ void print_help() {
            "    will switch device at Scsi2, bus 1, taget_id 1 to UDMA0 mode\n"
            "  atactl -h -d 30 c1:b0:d0:l0 \n"
            "    will hide Master (d0:l0) device on secondary (c1:b0) IDE channel\n"
-           "    and lock i/o on this channel for 30 seconds to ensure safity\n"
+           "    and lock i/o on this channel for 30 seconds to ensure safety\n"
            "    of removal process"
            "------\n"
            "Device address format:\n"
            "\n"
            "s<controller id> number of controller in system. Is assigned during hardware\n"
            "                   detection. Usually s0/s1 are ATA Pri/Sec.\n"
-           "                   Note, due do NT internal desing ATA controllers are represented\n"
+           "                   Note, due do NT internal design ATA controllers are represented\n"
            "                   as SCSI controllers.\n"
            "b<bus id>        For ATA controllers it is channel number.\n"
            "                   Note, usually onboard controller is represented as 2 legacy\n"
@@ -1283,7 +1283,7 @@ ata_scan(
         to.WaitForPhysicalLink = lock;
         to.Flags = unhide ? UNIATA_ADD_FLAGS_UNHIDE : 0;
 
-        printf("Scaning bus for new devices.\n");
+        printf("Scanning bus for new devices.\n");
         if(lock) {
             printf("You have %d seconds to connect device.\n", lock);
         }

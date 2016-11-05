@@ -43,12 +43,12 @@ dstPattern: here is stored Destiny Argument (C:\ie\hi.txt)
 dstPath: here  is  stored Destiny Path(C:\i)
 dstFILE: here  is  stored FILE re-name(hi.txt)
 
-1)We begin retrieving arguments from command line and fulffilling dstPattern and srcPattern 
+1)We begin retrieving arguments from command line and fulfilling dstPattern and srcPattern 
 
 
 2)If srcPattern contains "\" then:
         -we activate bPath, since srcPattern has a path inside of it.
-        -we explit the srcPattern to srcFile and srcPath.
+        -we split the srcPattern to srcFile and srcPath.
     -Now we check the dstPattern ¿does it contain a Path?:
         -If does: we divide it in dstPath and dstFile.AND ALSO CHECK THAT dstPath and srcPath it´s the same(see syntax error).If they aren the same we launch an error.
         -If doesnt then we copy srcPath to dstPath(see #way2) and also saving dstPattern as dstFile.
@@ -67,7 +67,7 @@ Do while is used to manage Wildcards.So we can iterate Finding all the files wit
 But wildcards (? and *) has different behavior so we have to be carefull.
 
 "q" stores the srcFile(this can be a real name file but ALSO A NAME FULL OF WILDCARDS)(p always has a REAL NAME)(This is the most difficult point to understand the code)
-"r" is the Name File after aplying the Mask (q)(it´s stored in dstLast).
+"r" is the Name File after applying the Mask (q)(it´s stored in dstLast).
 
 If we are just renaming one file,then we dont make the while loop.The do..while loop is made when some files are renamed: i.e ren *.lol *.rem
 
@@ -76,7 +76,7 @@ If we are just renaming one file,then we dont make the while loop.The do..while 
 bPath==TRUE means that Source Argument was a Path so now we have to Join again the Path with the Name File:
     -srcFINAL: srcPath+f.cFileName
     -dstFINAL: dstPath+dstFile
-bPath==False then Souce wasn a Path an we dont need to join anything.
+bPath==False then Source wasn a Path an we dont need to join anything.
     -srcFINAL:f.cFileName
     -dstFINAL:dstFile
 

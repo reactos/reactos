@@ -42,7 +42,7 @@ audio_resampler_acm::init_(void)
     wformat_dst.nAvgBytesPerSec = audfmt_out.byte_rate();
     wformat_dst.nBlockAlign = audfmt_out.block_align();
 
-    /* Init acm structures completed successfull */
+    /* Init acm structures completed successful */
 }
 
 /* Public Functions */

@@ -658,7 +658,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
         return;
     }
 
-    /* aseemble a list of all files names */
+    /* assemble a list of all files names */
     do
     {
         FileName * oldFileList = FileList;

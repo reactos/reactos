@@ -1235,7 +1235,7 @@ ScmControlService(PSERVICE Service,
 #endif
 
 Done:
-    /* Release the contol packet */
+    /* Release the control packet */
     HeapFree(GetProcessHeap(),
              0,
              ControlPacket);
@@ -1477,7 +1477,7 @@ ScmSendStartCommand(PSERVICE Service,
 #endif
 
 Done:
-    /* Release the contol packet */
+    /* Release the control packet */
     HeapFree(GetProcessHeap(),
              0,
              ControlPacket);

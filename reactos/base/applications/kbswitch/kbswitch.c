@@ -174,7 +174,7 @@ GetLayoutID(LPTSTR szLayoutNum, LPTSTR szLCID, SIZE_T LCIDLength)
         RegCloseKey(hKey);
     }
 
-    // Look for a substitude of this layout
+    // Look for a substitute of this layout
     if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Keyboard Layout\\Substitutes"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
     {
         dwBufLen = sizeof(szTempLCID);

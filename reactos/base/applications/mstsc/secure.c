@@ -1011,7 +1011,7 @@ sec_recv(uint8 * rdpver)
 					{
 						/* for some reason the PDU and the length seem to be swapped.
 						   This isn't good, but we're going to do a byte for byte
-						   swap.  So the first foure value appear as: 00 04 XX YY,
+						   swap.  So the first four values appear as: 00 04 XX YY,
 						   where XX YY is the little endian length. We're going to
 						   use 04 00 as the PDU type, so after our swap this will look
 						   like: XX YY 04 00 */
@@ -1074,7 +1074,7 @@ sec_connect(char *server, char *username, char *domain, char *password, RD_BOOL 
 	mcs_data.p = mcs_data.data = (uint8 *) xmalloc(mcs_data.size);
 	sec_out_mcs_data(&mcs_data, selected_proto);
 
-	/* finialize the MCS connect sequence */
+	/* finalize the MCS connect sequence */
 	if (!mcs_connect_finalize(&mcs_data))
 		return False;
 

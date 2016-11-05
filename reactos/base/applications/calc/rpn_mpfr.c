@@ -300,7 +300,7 @@ void run_operator(calc_node_t *result,
             operator_list[operation].op_f(&result->number, &a->number, &b->number);
     } else {
         operator_list[operation].op_i(&result->number, &a->number, &b->number);
-        /* apply final limitator to result */
+        /* apply final limiter to result */
         apply_int_mask(&result->number);
     }
 }

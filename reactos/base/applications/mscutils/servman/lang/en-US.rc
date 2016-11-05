@@ -280,9 +280,9 @@ BEGIN
     IDS_PROGRESS_INFO_STOP "ReactOS is attempting to stop the following service"
     IDS_PROGRESS_INFO_PAUSE "ReactOS is attempting to pause the following service"
     IDS_PROGRESS_INFO_RESUME "ReactOS is attempting to resume the following service"
-    IDS_CREATE_SUCCESS "Service Created Succesfully"
-    IDS_DELETE_SUCCESS "Service Deleted Succesfully"
-    IDS_CREATE_REQ "Fields marked with an\nasterix are mandatory"
+    IDS_CREATE_SUCCESS "Service Created Successfully"
+    IDS_DELETE_SUCCESS "Service Deleted Successfully"
+    IDS_CREATE_REQ "Fields marked with an\nasterisk are mandatory"
     IDS_DELETE_STOP "You must manually stop the service before deleting!"
 END
 

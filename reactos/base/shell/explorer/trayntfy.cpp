@@ -783,7 +783,7 @@ public:
 
                 if (c > 0)
                 {
-                    /* We want a spaceing of 1/2 line */
+                    /* We want a spacing of 1/2 line */
                     LineSpacing = (LineSpacing / c) / 2;
                 }
 

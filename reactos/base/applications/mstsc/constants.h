@@ -131,12 +131,12 @@ enum MCS_PDU_TYPE
 #define LICENCE_SIGNATURE_SIZE	16
 
 #define LICENCE_TAG_REQUEST                     0x01
-#define LICENCE_TAG_PLATFORM_CHALLANGE          0x02
+#define LICENCE_TAG_PLATFORM_CHALLENGE          0x02
 #define LICENCE_TAG_NEW_LICENCE                 0x03
 #define LICENCE_TAG_UPGRADE_LICENCE             0x04
 #define LICENCE_TAG_LICENCE_INFO                0x12
 #define LICENCE_TAG_NEW_LICENCE_REQUEST         0x13
-#define LICENCE_TAG_PLATFORM_CHALLANGE_RESPONSE 0x15
+#define LICENCE_TAG_PLATFORM_CHALLENGE_RESPONSE 0x15
 #define LICENCE_TAG_ERROR_ALERT                 0xff
 
 #define BB_CLIENT_USER_NAME_BLOB	0x000f
@@ -323,7 +323,7 @@ enum RDP_INPUT_DEVICE
 #define RDP_INFO_AUTOLOGON 	      0x00000008
 #define RDP_INFO_UNICODE              0x00000010
 #define RDP_INFO_MAXIMIZESHELL        0x00000020
-#define RDP_INFO_COMPRESSION	      0x00000080	/* mppc compression with 8kB histroy buffer */
+#define RDP_INFO_COMPRESSION	      0x00000080	/* mppc compression with 8kB history buffer */
 #define RDP_INFO_ENABLEWINDOWSKEY     0x00000100
 #define RDP_INFO_COMPRESSION2	      0x00000200	/* rdp5 mppc compression with 64kB history buffer */
 #define RDP_INFO_REMOTE_CONSOLE_AUDIO 0x00002000

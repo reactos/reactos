@@ -1009,7 +1009,7 @@ AddDiskToList(
         }
         else
         {
-            DPRINT1("No matching aligment found! Partition 1 starts at %I64u\n", DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart);
+            DPRINT1("No matching alignment found! Partition 1 starts at %I64u\n", DiskEntry->LayoutBuffer->PartitionEntry[0].StartingOffset.QuadPart);
         }
     }
     else

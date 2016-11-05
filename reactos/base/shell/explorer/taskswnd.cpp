@@ -1464,7 +1464,7 @@ public:
     {
         m_IsGroupingEnabled = bEnable;
 
-        /* Collapse or expand groups if neccessary */
+        /* Collapse or expand groups if necessary */
         UpdateButtonsSize(FALSE);
     }
 
@@ -1605,7 +1605,7 @@ public:
 
             if (TaskItem != NULL && ::IsWindow(TaskItem->hWnd))
             {
-                /* Make the entire button flashing if neccessary */
+                /* Make the entire button flashing if necessary */
                 if (nmtbcd->nmcd.uItemState & CDIS_MARKED)
                 {
                     Ret = TBCDRF_NOBACKGROUND;

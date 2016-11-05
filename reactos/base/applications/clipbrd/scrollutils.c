@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Clipboard Viewer
  * FILE:            base/applications/clipbrd/scrollutils.c
- * PURPOSE:         Scrolling releated helper functions.
+ * PURPOSE:         Scrolling related helper functions.
  * PROGRAMMERS:     Ricardo Hanke
  */
 
