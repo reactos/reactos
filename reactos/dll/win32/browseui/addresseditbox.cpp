@@ -348,13 +348,22 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID ri
         hr = IUnknown_QueryService(fSite, SID_STopLevelBrowser, IID_PPV_ARG(IBrowserService, &isb));
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
-        isb->GetPidl(&absolutePIDL);
 
-        SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
+        hr = isb->GetPidl(&absolutePIDL);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
 
-        sf->GetDisplayNameOf(pidlChild, SHGDN_FORADDRESSBAR | SHGDN_FORPARSING, &ret);
+        hr = SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
 
-        StrRetToBufW(&ret, pidlChild, buf, 4095);
+        hr = sf->GetDisplayNameOf(pidlChild, SHGDN_FORADDRESSBAR | SHGDN_FORPARSING, &ret);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        hr = StrRetToBufW(&ret, pidlChild, buf, 4095);
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
 
         indexClosed = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
 

@@ -5,6 +5,7 @@
 #define PROXY_DESKTOP_CLASS L"Proxy Desktop"
 
 BOOL g_SeparateFolders = FALSE;
+HWND g_hwndProxyDesktop = NULL;
 
 // fields indented more are unknown ;P
 struct HNFBlock
@@ -70,13 +71,13 @@ public:
     END_MSG_MAP()
 };
 
-static CProxyDesktop * CreateProxyDesktop(IEThreadParamBlock * parameters)
-{
-    return new CProxyDesktop(parameters);
-}
-
 HWND FindShellProxy(LPITEMIDLIST pidl)
 {
+    /* If there is a proxy desktop in the current process use it */
+    if (g_hwndProxyDesktop)
+        return g_hwndProxyDesktop;
+
+    /* Try to find the desktop of the main explorer process */
     if (!g_SeparateFolders)
     {
         HWND shell = GetShellWindow();
@@ -92,6 +93,7 @@ HWND FindShellProxy(LPITEMIDLIST pidl)
         TRACE("Separate folders setting enabled. Ignoring main desktop.\n");
     }
 
+    /* The main desktop can't be find so try to see if another process has a proxy desktop */
     HWND proxy = FindWindow(PROXY_DESKTOP_CLASS, NULL);
     if (proxy)
     {
@@ -355,6 +357,12 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
     if (parameters && parameters->offsetF8)
         parameters->offsetF8->AddRef();
 
+    // HACK! This shouldn't happen! SHExplorerParseCmdLine needs fixing.
+    if (!parameters->directoryPIDL)
+    {
+        SHGetFolderLocation(NULL, CSIDL_PERSONAL, NULL, NULL, &parameters->directoryPIDL);
+    }
+
     hResult = CShellBrowser_CreateInstance(parameters->directoryPIDL, parameters->dwFlags, IID_PPV_ARG(IBrowserService2, &browser));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
@@ -401,6 +409,10 @@ static DWORD WINAPI BrowserThreadProc(LPVOID lpThreadParameter)
 
     /* Destroying the parameters releases the thread reference */
     SHDestroyIETHREADPARAM(parameters);
+
+    /* Wake up the proxy desktop thread so it can check whether the last browser thread exited */
+    /* Use PostMessage in order to force GetMessage to return and check if all browser windows have exited */
+    PostMessageW(FindShellProxy(NULL), WM_EXPLORER_1037, 0, 0);
 
     OleUninitialize();
 
@@ -630,9 +642,11 @@ BOOL WINAPI SHCreateFromDesktop(ExplorerCommandLineParseResults * parseResults)
 
     // Else, start our own message loop!
     HRESULT hr = CoInitialize(NULL);
-    CProxyDesktop * proxy = CreateProxyDesktop(parameters);
+    CProxyDesktop * proxy = new CProxyDesktop(parameters);
     if (proxy)
     {
+        g_hwndProxyDesktop = proxy->Create(0);
+
         LONG refCount;
         CComPtr<IUnknown> thread;
         if (SHCreateThreadRef(&refCount, &thread) >= 0)
@@ -651,6 +665,8 @@ BOOL WINAPI SHCreateFromDesktop(ExplorerCommandLineParseResults * parseResults)
             TranslateMessage(&Msg);
             DispatchMessageW(&Msg);
         }
+
+        DestroyWindow(g_hwndProxyDesktop);
 
         delete proxy;
     }

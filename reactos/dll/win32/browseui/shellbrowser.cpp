@@ -1040,25 +1040,27 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
         HIMAGELIST himlSmall, himlLarge;
 
         CComPtr<IShellFolder> sf;
-        SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
+        hResult = SHBindToParent(absolutePIDL, IID_PPV_ARG(IShellFolder, &sf), &pidlChild);
+        if (SUCCEEDED(hResult))
+        {
+            index = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
 
-        index = SHMapPIDLToSystemImageListIndex(sf, pidlChild, &indexOpen);
+            Shell_GetImageLists(&himlLarge, &himlSmall);
 
-        Shell_GetImageLists(&himlLarge, &himlSmall);
+            HICON icSmall = ImageList_GetIcon(himlSmall, indexOpen, 0);
+            HICON icLarge = ImageList_GetIcon(himlLarge, indexOpen, 0);
 
-        HICON icSmall = ImageList_GetIcon(himlSmall, indexOpen, 0);
-        HICON icLarge = ImageList_GetIcon(himlLarge, indexOpen, 0);
+            /* Hack to make it possible to release the old icons */
+            /* Something seems to go wrong with WM_SETICON */
+            HICON oldSmall = (HICON)SendMessage(WM_GETICON, ICON_SMALL, 0);
+            HICON oldLarge = (HICON)SendMessage(WM_GETICON, ICON_BIG,   0);
 
-        /* Hack to make it possible to release the old icons */
-        /* Something seems to go wrong with WM_SETICON */
-        HICON oldSmall = (HICON)SendMessage(WM_GETICON, ICON_SMALL, 0);
-        HICON oldLarge = (HICON)SendMessage(WM_GETICON, ICON_BIG,   0);
+            SendMessage(WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icSmall));
+            SendMessage(WM_SETICON, ICON_BIG,   reinterpret_cast<LPARAM>(icLarge));
 
-        SendMessage(WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icSmall));
-        SendMessage(WM_SETICON, ICON_BIG,   reinterpret_cast<LPARAM>(icLarge));
-
-        DestroyIcon(oldSmall);
-        DestroyIcon(oldLarge);
+            DestroyIcon(oldSmall);
+            DestroyIcon(oldLarge);
+        }
     }
 
     FireCommandStateChangeAll();
