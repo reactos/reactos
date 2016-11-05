@@ -101,7 +101,7 @@ _Check_return_ double __cdecl tanh(_In_ double x);
 
 #ifndef _CRT_MATHERR_DEFINED
 #define _CRT_MATHERR_DEFINED
-int __CRTDECL _matherr(_Inout_ struct _exception *except);
+int __CRTDECL _matherr(_Inout_ struct _exception *exception);
 #endif
 
 #ifndef _CRT_ATOF_DEFINED
