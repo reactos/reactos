@@ -10,6 +10,7 @@ list(APPEND SOURCE
     RegEnumKey.c
     RegEnumValueW.c
     RegQueryInfoKey.c
+    RegQueryValueExW.c
     RtlEncryptMemory.c
     SaferIdentifyLevel.c
     testlist.c)
