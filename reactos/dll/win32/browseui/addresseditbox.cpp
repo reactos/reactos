@@ -90,16 +90,20 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
     ULONG attributes;
     HRESULT hr;
     HWND topLevelWindow;
+    PIDLIST_ABSOLUTE pidlCurrent= NULL;
+    PIDLIST_RELATIVE pidlRelative = NULL;
+    CComPtr<IShellFolder> psfCurrent;
 
-    CComPtr<IShellBrowser> pisb;
-    hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IShellBrowser, &pisb));
+    CComPtr<IBrowserService> pbs;
+    hr = IUnknown_QueryService(fSite, SID_SShellBrowser, IID_PPV_ARG(IBrowserService, &pbs));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    hr = IUnknown_GetWindow(pisb, &topLevelWindow);
+    hr = IUnknown_GetWindow(pbs, &topLevelWindow);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    /* Get the path to browse and expand it if needed */
     LPWSTR input;
     int inputLength = fCombobox.GetWindowTextLength() + 2;
 
@@ -124,13 +128,34 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::ParseNow(long paramC)
         }
     }
 
+    /* Try to parse a relative path and if it fails, try to browse an absolute path */
     CComPtr<IShellFolder> psfDesktop;
     hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        goto cleanup;
+
+    hr = pbs->GetPidl(&pidlCurrent);
+    if (FAILED_UNEXPECTEDLY(hr))
+        goto cleanup;
+
+    hr = psfDesktop->BindToObject(pidlCurrent, NULL, IID_PPV_ARG(IShellFolder, &psfCurrent));
+    if (FAILED_UNEXPECTEDLY(hr))
+        goto cleanup;
+
+    hr = psfCurrent->ParseDisplayName(topLevelWindow, NULL, address, &eaten,  &pidlRelative, &attributes);
     if (SUCCEEDED(hr))
     {
-        hr = psfDesktop->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &pidlLastParsed, &attributes);
+        pidlLastParsed = ILCombine(pidlCurrent, pidlRelative);
+        ILFree(pidlRelative);
+        goto cleanup;
     }
 
+    /* We couldn't parse a relative path, attempt to parse an absolute path */
+    hr = psfDesktop->ParseDisplayName(topLevelWindow, NULL, address, &eaten, &pidlLastParsed, &attributes);
+
+cleanup:
+    if (pidlCurrent)
+        ILFree(pidlCurrent);
     if (address != input)
         delete [] address;
     delete [] input;
