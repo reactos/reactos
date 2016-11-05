@@ -627,19 +627,6 @@ HRESULT WINAPI CRecycleBin::GetDisplayNameOf(PCUITEMID_CHILD pidl, SHGDNF uFlags
 
     TRACE("(%p, %p, %x, %p)\n", this, pidl, (unsigned int)uFlags, pName);
 
-
-    if (_ILIsBitBucket (pidl))
-    {
-        WCHAR pszPath[100];
-
-        if (HCR_GetClassNameW(CLSID_RecycleBin, pszPath, MAX_PATH))
-        {
-            pName->uType = STRRET_WSTR;
-            pName->pOleStr = StrDupW(pszPath);
-            return S_OK;
-        }
-    }
-
     pFileDetails = _ILGetRecycleStruct(pidl);
     if (!pFileDetails)
     {

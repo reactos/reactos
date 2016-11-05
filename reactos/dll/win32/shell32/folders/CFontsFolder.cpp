@@ -114,8 +114,8 @@ HRESULT WINAPI CFontsFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlag
         return m_pisfInner->GetDisplayNameOf(pidl, dwFlags, strRet);
     }
 
-    /* Return the display name from the registry */
-    return HCR_GetClassName(CLSID_FontsFolderShortcut, strRet);
+    ERR("Got empty pidl without SHGDN_FORPARSING\n");
+    return E_INVALIDARG;
 }
 
 HRESULT WINAPI CFontsFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /* simple pidl */

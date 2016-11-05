@@ -113,8 +113,8 @@ HRESULT WINAPI CMyDocsFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFla
         return m_pisfInner->GetDisplayNameOf(pidl, dwFlags, strRet);
     }
 
-    /* Return the display name from the registry */
-    return HCR_GetClassName(CLSID_MyDocuments, strRet);
+    ERR("Got empty pidl without SHGDN_FORPARSING\n");
+    return E_INVALIDARG;
 }
 
 HRESULT WINAPI CMyDocsFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /* simple pidl */

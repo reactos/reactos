@@ -683,7 +683,7 @@ HRESULT WINAPI CDesktopFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
         if ((GET_SHGDN_RELATION(dwFlags) == SHGDN_NORMAL) && (GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING))
             return SHSetStrRet(strRet, sPathTarget);
         else
-            return HCR_GetClassName(CLSID_ShellDesktop, strRet);
+            return m_regFolder->GetDisplayNameOf(pidl, dwFlags, strRet);
     }
 
     /* file system folder or file rooted at the desktop */

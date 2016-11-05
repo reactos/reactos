@@ -457,14 +457,11 @@ HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CH
 */
 HRESULT WINAPI CNetFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    if (!strRet)
+    if (!strRet || !pidl || !pidl->mkid.cb)
         return E_INVALIDARG;
 
-    if (!pidl->mkid.cb)
-        return SHSetStrRet(strRet, IDS_NETWORKPLACE);
 #ifdef HACKY_UNC_PATHS
-    else
-        return SHSetStrRet(strRet, (LPCWSTR)pidl->mkid.abID);
+    return SHSetStrRet(strRet, (LPCWSTR)pidl->mkid.abID);
 #endif
     return E_NOTIMPL;
 }

@@ -113,8 +113,8 @@ HRESULT WINAPI CAdminToolsFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD d
         return m_pisfInner->GetDisplayNameOf(pidl, dwFlags, strRet);
     }
 
-    /* Return the display name from the registry */
-    return HCR_GetClassName(CLSID_AdminFolderShortcut, strRet);
+    ERR("Got empty pidl without SHGDN_FORPARSING\n");
+    return E_INVALIDARG;
 }
 
 HRESULT WINAPI CAdminToolsFolder::SetNameOf(HWND hwndOwner, PCUITEMID_CHILD pidl,    /* simple pidl */

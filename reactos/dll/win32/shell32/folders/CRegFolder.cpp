@@ -361,19 +361,26 @@ HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags,
 
     if (!pidl->mkid.cb)
     {
-        LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
-        if (!pszPath)
-            return E_OUTOFMEMORY;
+        if ((GET_SHGDN_RELATION(dwFlags) == SHGDN_NORMAL) && (GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING))
+        {
+            LPWSTR pszPath = (LPWSTR)CoTaskMemAlloc((MAX_PATH + 1) * sizeof(WCHAR));
+            if (!pszPath)
+                return E_OUTOFMEMORY;
 
-        /* parsing name like ::{...} */
-        pszPath[0] = ':';
-        pszPath[1] = ':';
-        SHELL32_GUIDToStringW(m_guid, &pszPath[2]);
+            /* parsing name like ::{...} */
+            pszPath[0] = ':';
+            pszPath[1] = ':';
+            SHELL32_GUIDToStringW(m_guid, &pszPath[2]);
 
-        strRet->uType = STRRET_WSTR;
-        strRet->pOleStr = pszPath;
+            strRet->uType = STRRET_WSTR;
+            strRet->pOleStr = pszPath;
 
-        return S_OK;
+            return S_OK;
+        }
+        else
+        {
+            return HCR_GetClassName(m_guid, strRet);
+        }
     }
 
     HRESULT hr;

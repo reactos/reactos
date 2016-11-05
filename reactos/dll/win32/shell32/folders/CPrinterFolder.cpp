@@ -367,13 +367,10 @@ HRESULT WINAPI CPrinterFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFl
         return E_INVALIDARG;
     }
 
-    if (!pidl->mkid.cb)
-        return SHSetStrRet(strRet, IDS_PRINTERS);
-
     p = _ILGetPrinterStruct(pidl);
     if (!p)
     {
-        WARN("no printer struct\n");
+        ERR("no printer struct\n");
         return E_INVALIDARG;
     }
 
