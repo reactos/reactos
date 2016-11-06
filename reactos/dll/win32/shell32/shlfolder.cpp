@@ -528,9 +528,21 @@ SHOpenFolderAndSelectItems(LPITEMIDLIST pidlFolder,
     ERR("SHOpenFolderAndSelectItems() is hackplemented\n");
     PCIDLIST_ABSOLUTE pidlItem;
     if (cidl)
-        pidlItem = ILCombine(pidlFolder, apidl[0]);
+    {
+        /* Firefox sends a full pidl here dispite the fact it is a PCUITEMID_CHILD_ARRAY -_- */
+        if (ILGetNext(apidl[0]) != NULL)
+        {
+            pidlItem = apidl[0];
+        }
+        else
+        {
+            pidlItem = ILCombine(pidlFolder, apidl[0]);
+        }
+    }
     else
+    {
         pidlItem = pidlFolder;
+    }
 
     CComPtr<IShellFolder> psfDesktop;
 
