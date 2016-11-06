@@ -1975,6 +1975,13 @@ INT_PTR CALLBACK ExtendedShortcutProc(HWND hwndDlg, UINT uMsg,
     return FALSE;
 }
 
+EXTERN_C HRESULT
+WINAPI
+SHOpenFolderAndSelectItems(LPITEMIDLIST pidlFolder,
+                           UINT cidl,
+                           PCUITEMID_CHILD_ARRAY apidl,
+                           DWORD dwFlags);
+
 /**************************************************************************
  * SH_ShellLinkDlgProc
  *
@@ -2108,6 +2115,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
             switch(LOWORD(wParam))
             {
                 case 14020:
+                    SHOpenFolderAndSelectItems(pThis->pPidl, 0, NULL, 0);
                     ///
                     /// FIXME
                     /// open target directory

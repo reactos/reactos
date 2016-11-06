@@ -252,7 +252,7 @@ HRESULT SHELL32_BindToFS (LPCITEMIDLIST pidlRoot,
         ERR("Binding to file is unimplemented\n");
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     }
-    if (!_ILIsFolder(pidlComplete) && !_ILIsDrive(pidlComplete))
+    if (!_ILIsFolder(pidlComplete))
     {
         ERR("Got an unknown type of pidl!\n");
         return E_FAIL;
@@ -525,6 +525,42 @@ SHOpenFolderAndSelectItems(LPITEMIDLIST pidlFolder,
                            PCUITEMID_CHILD_ARRAY apidl,
                            DWORD dwFlags)
 {
-    FIXME("SHOpenFolderAndSelectItems() stub\n");
-    return E_NOTIMPL;
+    ERR("SHOpenFolderAndSelectItems() is hackplemented\n");
+    PCIDLIST_ABSOLUTE pidlItem;
+    if (cidl)
+        pidlItem = ILCombine(pidlFolder, apidl[0]);
+    else
+        pidlItem = pidlFolder;
+
+    CComPtr<IShellFolder> psfDesktop;
+
+    HRESULT hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    STRRET strret;
+    hr = psfDesktop->GetDisplayNameOf(pidlItem, SHGDN_FORPARSING, &strret);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    WCHAR wszBuf[MAX_PATH];
+    hr = StrRetToBufW(&strret, pidlItem, wszBuf, _countof(wszBuf));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    WCHAR wszParams[MAX_PATH];
+    wcscpy(wszParams, L"/select,");
+    wcscat(wszParams, wszBuf);
+
+    SHELLEXECUTEINFOW sei;
+    memset(&sei, 0, sizeof sei);
+    sei.cbSize = sizeof sei;
+    sei.fMask = SEE_MASK_WAITFORINPUTIDLE;
+    sei.lpFile = L"explorer.exe";
+    sei.lpParameters = wszParams;
+
+    if (ShellExecuteExW(&sei))
+        return S_OK;
+    else
+        return E_FAIL;
 }
