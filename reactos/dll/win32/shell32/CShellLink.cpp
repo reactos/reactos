@@ -2248,7 +2248,7 @@ HRESULT WINAPI CShellLink::DragLeave()
     if (mDropTarget)
     {
         hr = mDropTarget->DragLeave();
-        mDropTarget->Release();
+        mDropTarget.Release();
     }
 
     return hr;
