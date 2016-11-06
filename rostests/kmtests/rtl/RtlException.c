@@ -8,6 +8,104 @@
 #define KMT_EMULATE_KERNEL
 #include <kmt_test.h>
 
+static
+VOID
+PossiblyRaise(
+    _In_ BOOLEAN Raise)
+{
+    if (Raise)
+    {
+        ExRaiseStatus(STATUS_ASSERTION_FAILURE);
+    }
+}
+
+static
+VOID
+InnerFunction(
+    _Inout_ PULONG State,
+    _In_ BOOLEAN Raise)
+{
+    _SEH2_VOLATILE INT Var = 123;
+    static _SEH2_VOLATILE INT *AddressOfVar;
+
+    AddressOfVar = &Var;
+    ok_eq_ulong(*State, 1);
+    _SEH2_TRY
+    {
+        *State = 2;
+        PossiblyRaise(Raise);
+        ok_eq_ulong(*State, 2);
+        *State = 3;
+    }
+    _SEH2_FINALLY
+    {
+        ok_eq_int(Var, 123);
+        ok_eq_pointer(&Var, AddressOfVar);
+        if (Raise)
+            ok_eq_ulong(*State, 2);
+        else
+            ok_eq_ulong(*State, 3);
+        *State = 4;
+    }
+    _SEH2_END;
+
+    ok_eq_int(Var, 123);
+    ok_eq_pointer(&Var, AddressOfVar);
+    ok_eq_ulong(*State, 4);
+    *State = 5;
+}
+
+static
+VOID
+OuterFunction(
+    _Inout_ PULONG State,
+    _In_ BOOLEAN Raise)
+{
+    _SEH2_VOLATILE INT Var = 456;
+    static _SEH2_VOLATILE INT *AddressOfVar;
+
+    AddressOfVar = &Var;
+    ok_eq_ulong(*State, 0);
+    _SEH2_TRY
+    {
+        *State = 1;
+        InnerFunction(State, Raise);
+        ok_eq_ulong(*State, 5);
+        *State = 6;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ok_eq_int(Var, 456);
+        ok_eq_pointer(&Var, AddressOfVar);
+        ok_eq_ulong(*State, 4);
+        *State = 7;
+    }
+    _SEH2_END;
+
+    ok_eq_int(Var, 456);
+    ok_eq_pointer(&Var, AddressOfVar);
+    if (Raise)
+        ok_eq_ulong(*State, 7);
+    else
+        ok_eq_ulong(*State, 6);
+    *State = 8;
+}
+
+static
+VOID
+TestNestedExceptionHandler(VOID)
+{
+    ULONG State;
+
+    State = 0;
+    OuterFunction(&State, FALSE);
+    ok_eq_ulong(State, 8);
+
+    State = 0;
+    OuterFunction(&State, TRUE);
+    ok_eq_ulong(State, 8);
+}
+
 START_TEST(RtlException)
 {
     PCHAR Buffer[128];
@@ -55,6 +153,8 @@ START_TEST(RtlException)
     KmtStartSeh()
         ExRaiseStatus(STATUS_GUARD_PAGE_VIOLATION);
     KmtEndSeh(STATUS_GUARD_PAGE_VIOLATION);
+
+    TestNestedExceptionHandler();
 
     /* We cannot test this in kernel mode easily - the stack is just "somewhere"
      * in system space, and there's no guard page below it */
