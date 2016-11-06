@@ -694,6 +694,71 @@ InitStreamPin(
     return STATUS_SUCCESS;
 }
 
+ULONG
+GetDataRangeIndexForFormat(
+    IN PKSDATARANGE ConnectionFormat,
+    IN PKSDATARANGE * DataRanges,
+    IN ULONG DataRangesCount)
+{
+    ULONG Index;
+    PKSDATARANGE CurrentDataRange;
+    PKSDATARANGE_AUDIO CurrentAudioDataRange;
+    PKSDATAFORMAT_WAVEFORMATEX ConnectionDataFormat;
+
+    if (ConnectionFormat->FormatSize != sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX))
+    {
+        /* unsupported connection format */
+        DPRINT1("GetDataRangeIndexForFormat expected KSDATARANGE_AUDIO\n");
+        return MAXULONG;
+    }
+
+    /* cast to right type */
+    ConnectionDataFormat = (PKSDATAFORMAT_WAVEFORMATEX)ConnectionFormat;
+
+    for (Index = 0; Index < DataRangesCount; Index++)
+    {
+         /* get current data range */
+         CurrentDataRange = DataRanges[Index];
+
+         /* compare guids */
+         if (!IsEqualGUIDAligned(&CurrentDataRange->MajorFormat, &ConnectionFormat->MajorFormat) ||
+             !IsEqualGUIDAligned(&CurrentDataRange->SubFormat, &ConnectionFormat->SubFormat) ||
+             !IsEqualGUIDAligned(&CurrentDataRange->Specifier, &ConnectionFormat->Specifier))
+         {
+             /* no match */
+             continue;
+         }
+
+         /* all pin data ranges are KSDATARANGE_AUDIO */
+         CurrentAudioDataRange = (PKSDATARANGE_AUDIO)CurrentDataRange;
+
+         /* check if number of channel match */
+         if (CurrentAudioDataRange->MaximumChannels != ConnectionDataFormat->WaveFormatEx.nChannels)
+         {
+             /* number of channels mismatch */
+             continue;
+         }
+
+         if (CurrentAudioDataRange->MinimumSampleFrequency > ConnectionDataFormat->WaveFormatEx.nSamplesPerSec)
+         {
+             /* channel frequency too low */
+             continue;
+         }
+
+         if (CurrentAudioDataRange->MaximumSampleFrequency < ConnectionDataFormat->WaveFormatEx.nSamplesPerSec)
+         {
+             /* channel frequency too high */
+             continue;
+         }
+
+         /* FIXME add checks for bitrate / sample size etc */
+         return Index;
+    }
+
+    /* no datarange found */
+    return MAXULONG;
+}
+
 NTSTATUS
 NTAPI
 USBAudioPinCreate(
@@ -704,6 +769,7 @@ USBAudioPinCreate(
     PFILTER_CONTEXT FilterContext;
     PPIN_CONTEXT PinContext;
     NTSTATUS Status;
+    ULONG FormatIndex;
 
     Filter = KsPinGetParentFilter(Pin);
     if (Filter == NULL)
@@ -741,9 +807,16 @@ USBAudioPinCreate(
         ASSERT(Status == STATUS_SUCCESS);
     }
 
+    /* choose correct dataformat */
+    FormatIndex = GetDataRangeIndexForFormat(Pin->ConnectionFormat, Pin->Descriptor->PinDescriptor.DataRanges, Pin->Descriptor->PinDescriptor.DataRangesCount);
+    if (FormatIndex == MAXULONG)
+    {
+        /* no format match */
+        return STATUS_NO_MATCH;
+    }
+
     /* select streaming interface */
-    /* FIXME choose correct dataformat */
-    Status = USBAudioSelectAudioStreamingInterface(Pin, PinContext, PinContext->DeviceExtension, PinContext->DeviceExtension->ConfigurationDescriptor, 0);
+    Status = USBAudioSelectAudioStreamingInterface(Pin, PinContext, PinContext->DeviceExtension, PinContext->DeviceExtension->ConfigurationDescriptor, FormatIndex);
     if (!NT_SUCCESS(Status))
     {
         /* failed */
@@ -980,7 +1053,7 @@ PinRenderProcess(
         /* calculate offset*/
         Offset = TotalPacketSize - PinContext->BufferLength;
 
-        if (PinContext->BufferOffset + Offset >= PinContext->BufferSize)
+        if (PinContext->BufferOffset + TotalPacketSize >= PinContext->BufferSize)
         {
             RtlMoveMemory(PinContext->Buffer, &PinContext->Buffer[PinContext->BufferOffset - PinContext->BufferLength], PinContext->BufferLength);
             PinContext->BufferOffset = PinContext->BufferLength;
@@ -1025,7 +1098,7 @@ PinRenderProcess(
             PinContext->BufferLength = CloneStreamPointer->OffsetIn.Remaining - ((PacketCount * TotalPacketSize) + Offset);
 
             /* check for overflow */
-            if (PinContext->BufferOffset + Offset >= PinContext->BufferSize)
+            if (PinContext->BufferOffset + TotalPacketSize >= PinContext->BufferSize)
             {
                 /* reset buffer offset*/
                 PinContext->BufferOffset = 0;
