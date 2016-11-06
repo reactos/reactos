@@ -357,13 +357,11 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
     if (parameters && parameters->offsetF8)
         parameters->offsetF8->AddRef();
 
-    // HACK! This shouldn't happen! SHExplorerParseCmdLine needs fixing.
-    if (!parameters->directoryPIDL)
-    {
-        SHGetFolderLocation(NULL, CSIDL_PERSONAL, NULL, NULL, &parameters->directoryPIDL);
-    }
+     UINT wFlags = 0;
+     if ((parameters->dwFlags & SH_EXPLORER_CMDLINE_FLAG_E))
+        wFlags |= SBSP_EXPLOREMODE;
 
-    hResult = CShellBrowser_CreateInstance(parameters->directoryPIDL, parameters->dwFlags, IID_PPV_ARG(IBrowserService2, &browser));
+    hResult = CShellBrowser_CreateInstance(parameters->directoryPIDL, wFlags, IID_PPV_ARG(IBrowserService2, &browser));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
 
@@ -607,6 +605,12 @@ BOOL WINAPI SHCreateFromDesktop(ExplorerCommandLineParseResults * parseResults)
         {
             pidl = ILCreateFromPathW(parseResults->strPath);
         }
+    }
+
+    // HACK! This shouldn't happen! SHExplorerParseCmdLine needs fixing.
+    if (!pidl)
+    {
+        SHGetFolderLocation(NULL, CSIDL_PERSONAL, NULL, NULL, &pidl);
     }
 
     parameters->directoryPIDL = pidl;
