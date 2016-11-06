@@ -35,7 +35,10 @@
     #define HAVE_IO_H 1
 #endif
 
+#if !defined(_MSC_VER) || _MSC_VER >= 1800
 #define HAVE_INTTYPES_H 1
+#endif
+
 #define HAVE_STDINT_H 1
 
 #ifndef _WIN32
@@ -77,12 +80,16 @@
 #endif
 
 #define HAVE_TIME 1
+#if !defined(_MSC_VER) || _MSC_VER >= 1800
 #define HAVE_VA_COPY 1
+#endif
 #define HAVE_ECVT 1
 #define HAVE_FCVT 1
 #define HAVE_GCVT 1
+#if !defined(_MSC_VER) || _MSC_VER >= 1800
 #define HAVE_C99_ISINF 1
 #define HAVE_C99_ISNAN 1
+#endif
 
 #define HAVE_SNPRINTF 1
 #if defined(_MSC_VER) && _MSC_VER < 1900
