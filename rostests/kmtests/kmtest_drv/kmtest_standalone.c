@@ -306,7 +306,7 @@ DriverDispatch(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
     PIO_STACK_LOCATION IoStackLocation;
     int i;
 
@@ -328,6 +328,12 @@ DriverDispatch(
     if (IoStackLocation->MajorFunction == IRP_MJ_DEVICE_CONTROL ||
             IoStackLocation->MajorFunction == IRP_MJ_INTERNAL_DEVICE_CONTROL)
         return DeviceControlHandler(DeviceObject, Irp, IoStackLocation);
+
+    /* Return success for create, close, and cleanup */
+    if (IoStackLocation->MajorFunction == IRP_MJ_CREATE ||
+            IoStackLocation->MajorFunction == IRP_MJ_CLOSE ||
+            IoStackLocation->MajorFunction == IRP_MJ_CLEANUP)
+        Status = STATUS_SUCCESS;
 
     /* default handler */
     Irp->IoStatus.Status = Status;
