@@ -798,7 +798,7 @@ Continue:
             break;
         }
 
-        EVTLTRACE1("Add new record %d @ offset 0x%x\n", pRecBuf->RecordNumber, FileOffset.QuadPart);
+        EVTLTRACE("Add new record %d @ offset 0x%x\n", pRecBuf->RecordNumber, FileOffset.QuadPart);
 
         RecordNumber++;
 
