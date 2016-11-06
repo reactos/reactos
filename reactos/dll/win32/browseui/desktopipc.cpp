@@ -357,13 +357,39 @@ static HRESULT ExplorerMessageLoop(IEThreadParamBlock * parameters)
     if (parameters && parameters->offsetF8)
         parameters->offsetF8->AddRef();
 
+    /* Handle /e parameter */
      UINT wFlags = 0;
      if ((parameters->dwFlags & SH_EXPLORER_CMDLINE_FLAG_E))
         wFlags |= SBSP_EXPLOREMODE;
 
+    /* Handle /select parameter */
+    PUITEMID_CHILD pidlSelect = NULL;
+    if ((parameters->dwFlags & SH_EXPLORER_CMDLINE_FLAG_SELECT) && 
+        (ILGetNext(parameters->directoryPIDL) != NULL))
+    {
+        pidlSelect = ILClone(ILFindLastID(parameters->directoryPIDL));
+        ILRemoveLastID(parameters->directoryPIDL);
+    }
+
     hResult = CShellBrowser_CreateInstance(parameters->directoryPIDL, wFlags, IID_PPV_ARG(IBrowserService2, &browser));
     if (FAILED_UNEXPECTEDLY(hResult))
         return hResult;
+
+    if (pidlSelect != NULL)
+    {
+        CComPtr<IShellBrowser> pisb;
+        hResult = browser->QueryInterface(IID_PPV_ARG(IShellBrowser, &pisb));
+        if (SUCCEEDED(hResult))
+        {
+            CComPtr<IShellView> shellView;
+            hResult = pisb->QueryActiveShellView(&shellView);
+            if (SUCCEEDED(hResult))
+            {
+                shellView->SelectItem(pidlSelect, SVSI_SELECT|SVSI_ENSUREVISIBLE);
+            }
+        }
+        ILFree(pidlSelect);
+    }
 
     while ((Ret = GetMessage(&Msg, NULL, 0, 0)) != 0)
     {

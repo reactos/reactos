@@ -2203,7 +2203,7 @@ HRESULT WINAPI CDefView::SelectItem(PCUITEMID_CHILD pidl, UINT uFlags)
         lvItem.iItem++;
     }
 
-    if(uFlags & SVSI_EDIT)
+    if((uFlags & SVSI_EDIT) == SVSI_EDIT)
         m_ListView.EditLabel(i);
 
     return S_OK;
