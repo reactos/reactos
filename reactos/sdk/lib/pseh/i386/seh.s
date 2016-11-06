@@ -426,7 +426,7 @@ except_dismiss3:
     /* Do local unwind */
 except_unwind3:
     push ebp
-    mov ebp, [ebx-SEH_FRAME_PreviousRecord+SEH_FRAME_OriginalEbp]
+    lea ebp, [ebx-SEH_FRAME_PreviousRecord+SEH_FRAME_OriginalEbp]
     push -1
     push ebx
     call __local_unwind2
