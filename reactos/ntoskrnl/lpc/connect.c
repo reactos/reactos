@@ -87,19 +87,20 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                     IN OUT PVOID ConnectionInformation OPTIONAL,
                     IN OUT PULONG ConnectionInformationLength OPTIONAL)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    PETHREAD Thread = PsGetCurrentThread();
     ULONG ConnectionInfoLength = 0;
     PLPCP_PORT_OBJECT Port, ClientPort;
-    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
-    HANDLE Handle;
-    PVOID SectionToMap;
     PLPCP_MESSAGE Message;
     PLPCP_CONNECTION_MESSAGE ConnectMessage;
-    PETHREAD Thread = PsGetCurrentThread();
     ULONG PortMessageLength;
+    HANDLE Handle;
+    PVOID SectionToMap;
     LARGE_INTEGER SectionOffset;
     PTOKEN Token;
     PTOKEN_USER TokenUserInfo;
+
     PAGED_CODE();
     LPCTRACE(LPC_CONNECT_DEBUG,
              "Name: %wZ. Qos: %p. Views: %p/%p. Sid: %p\n",
@@ -138,7 +139,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                                      LpcPortObjectType,
                                      PreviousMode,
                                      NULL,
-                                     (PVOID *)&Port);
+                                     (PVOID*)&Port);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to reference port '%wZ': 0x%lx\n", PortName, Status);
@@ -206,7 +207,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                             sizeof(LPCP_PORT_OBJECT),
                             0,
                             0,
-                            (PVOID *)&ClientPort);
+                            (PVOID*)&ClientPort);
     if (!NT_SUCCESS(Status))
     {
         /* Failed, dereference the server port and return */
@@ -395,7 +396,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         InsertTailList(&Port->LpcReplyChainHead, &Thread->LpcReplyChain);
         Thread->LpcReplyMessage = Message;
 
-        /* Now we can finally reference the client port and link it*/
+        /* Now we can finally reference the client port and link it */
         ObReferenceObject(ClientPort);
         ConnectMessage->ClientPort = ClientPort;
 
@@ -421,15 +422,14 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                  Status);
 
         /* If this is a waitable port, set the event */
-        if (Port->Flags & LPCP_WAITABLE_PORT) KeSetEvent(&Port->WaitEvent,
-                                                         1,
-                                                         FALSE);
+        if (Port->Flags & LPCP_WAITABLE_PORT)
+            KeSetEvent(&Port->WaitEvent, 1, FALSE);
 
         /* Release the queue semaphore and leave the critical region */
         LpcpCompleteWait(Port->MsgQueue.Semaphore);
         KeLeaveCriticalRegion();
 
-        /* Now wait for a reply */
+        /* Now wait for a reply and set 'Status' */
         LpcpConnectWait(&Thread->LpcReplySemaphore, PreviousMode);
     }
 
@@ -478,7 +478,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
                                     NULL,
                                     PORT_ALL_ACCESS,
                                     0,
-                                    (PVOID *)NULL,
+                                    NULL,
                                     &Handle);
             if (NT_SUCCESS(Status))
             {

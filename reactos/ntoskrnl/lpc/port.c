@@ -60,6 +60,7 @@ LpcInitSystem(VOID)
                        NULL,
                        &LpcPortObjectType);
 
+    /* Create the Waitable Port Object Type */
     RtlInitUnicodeString(&Name, L"WaitablePort");
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.DefaultNonPagedPoolCharge += sizeof(LPCP_PORT_OBJECT);
@@ -125,13 +126,14 @@ NTAPI
 NtImpersonateClientOfPort(IN HANDLE PortHandle,
                           IN PPORT_MESSAGE ClientMessage)
 {
-    KPROCESSOR_MODE PreviousMode;
+    NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     CLIENT_ID ClientId;
     ULONG MessageId;
     PLPCP_PORT_OBJECT Port = NULL, ConnectedPort = NULL;
     PETHREAD ClientThread = NULL;
     SECURITY_CLIENT_CONTEXT ClientContext;
-    NTSTATUS Status;
+
     PAGED_CODE();
 
     /* Check the previous mode */
@@ -192,8 +194,7 @@ NtImpersonateClientOfPort(IN HANDLE PortHandle,
 
     /* Get the connected port and try to reference it */
     ConnectedPort = Port->ConnectedPort;
-    if ((ConnectedPort == NULL) ||
-        !ObReferenceObjectSafe(ConnectedPort))
+    if ((ConnectedPort == NULL) || !ObReferenceObjectSafe(ConnectedPort))
     {
         DPRINT1("Failed to reference the connected port\n");
         ConnectedPort = NULL;
@@ -254,13 +255,6 @@ NtImpersonateClientOfPort(IN HANDLE PortHandle,
     /* Get rid of the security context */
     SeDeleteClientSecurity(&ClientContext);
 
-    goto Cleanup;
-
-CleanupWithLock:
-
-    /* Release the lock */
-    KeReleaseGuardedMutex(&LpcpLock);
-
 Cleanup:
 
     if (ConnectedPort != NULL)
@@ -272,6 +266,12 @@ Cleanup:
     ObDereferenceObject(Port);
 
     return Status;
+
+CleanupWithLock:
+
+    /* Release the lock */
+    KeReleaseGuardedMutex(&LpcpLock);
+    goto Cleanup;
 }
 
 NTSTATUS

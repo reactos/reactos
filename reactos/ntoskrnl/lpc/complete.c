@@ -44,19 +44,20 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
                     IN PPORT_VIEW ServerView,
                     IN PREMOTE_PORT_VIEW ClientView)
 {
+    NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    ULONG ConnectionInfoLength;
     PLPCP_PORT_OBJECT ConnectionPort, ServerPort, ClientPort;
+    PLPCP_CONNECTION_MESSAGE ConnectMessage;
+    PLPCP_MESSAGE Message;
     PVOID ClientSectionToMap = NULL;
     HANDLE Handle;
-    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
-    NTSTATUS Status;
-    ULONG ConnectionInfoLength;
-    PLPCP_MESSAGE Message;
-    PLPCP_CONNECTION_MESSAGE ConnectMessage;
     PEPROCESS ClientProcess;
     PETHREAD ClientThread;
     LARGE_INTEGER SectionOffset;
     CLIENT_ID ClientId;
     ULONG MessageId;
+
     PAGED_CODE();
     LPCTRACE(LPC_COMPLETE_DEBUG,
              "Context: %p. Message: %p. Accept: %lx. Views: %p/%p\n",
@@ -407,9 +408,10 @@ NTAPI
 NtCompleteConnectPort(IN HANDLE PortHandle)
 {
     NTSTATUS Status;
-    PLPCP_PORT_OBJECT Port;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    PLPCP_PORT_OBJECT Port;
     PETHREAD Thread;
+
     PAGED_CODE();
     LPCTRACE(LPC_COMPLETE_DEBUG, "Handle: %p\n", PortHandle);
 
@@ -462,7 +464,7 @@ NtCompleteConnectPort(IN HANDLE PortHandle)
     KeReleaseGuardedMutex(&LpcpLock);
     LpcpCompleteWait(&Thread->LpcReplySemaphore);
 
-    /* Dereference the Thread and Port  and return */
+    /* Dereference the Thread and Port and return */
     ObDereferenceObject(Port);
     ObDereferenceObject(Thread);
     LPCTRACE(LPC_COMPLETE_DEBUG, "Port: %p. Thread: %p\n", Port, Thread);

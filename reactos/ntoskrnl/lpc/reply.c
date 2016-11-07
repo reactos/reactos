@@ -99,6 +99,7 @@ LpcpFindDataInfoMessage(
 {
     PLPCP_MESSAGE Message;
     PLIST_ENTRY ListEntry;
+
     PAGED_CODE();
 
     /* Check if the port we want is the connection port */
@@ -141,13 +142,14 @@ LpcpMoveMessage(IN PPORT_MESSAGE Destination,
                 IN ULONG MessageType,
                 IN PCLIENT_ID ClientId)
 {
-    /* Set the Message size */
     LPCTRACE((LPC_REPLY_DEBUG | LPC_SEND_DEBUG),
              "Destination/Origin: %p/%p. Data: %p. Length: %lx\n",
              Destination,
              Origin,
              Data,
              Origin->u1.Length);
+
+    /* Set the Message size */
     Destination->u1.Length = Origin->u1.Length;
 
     /* Set the Message Type */
@@ -188,12 +190,12 @@ NTAPI
 NtReplyPort(IN HANDLE PortHandle,
             IN PPORT_MESSAGE ReplyMessage)
 {
-    PLPCP_PORT_OBJECT Port;
-    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    // PORT_MESSAGE CapturedReplyMessage;
+    PLPCP_PORT_OBJECT Port;
     PLPCP_MESSAGE Message;
     PETHREAD Thread = PsGetCurrentThread(), WakeupThread;
-    //PORT_MESSAGE CapturedReplyMessage;
 
     PAGED_CODE();
     LPCTRACE(LPC_REPLY_DEBUG,
@@ -274,8 +276,8 @@ NtReplyPort(IN HANDLE PortHandle,
     /* Make sure this is the reply the thread is waiting for */
     if ((WakeupThread->LpcReplyMessageId != ReplyMessage->MessageId) ||
         ((LpcpGetMessageFromThread(WakeupThread)) &&
-        (LpcpGetMessageType(&LpcpGetMessageFromThread(WakeupThread)->
-        Request) != LPC_REQUEST)))
+        (LpcpGetMessageType(&LpcpGetMessageFromThread(WakeupThread)-> Request)
+            != LPC_REQUEST)))
     {
         /* It isn't, fail */
         LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
@@ -295,7 +297,7 @@ NtReplyPort(IN HANDLE PortHandle,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Fail */
+        /* Cleanup and return the exception code */
         LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
         ObDereferenceObject(WakeupThread);
         ObDereferenceObject(Port);
@@ -358,15 +360,15 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
                          OUT PPORT_MESSAGE ReceiveMessage,
                          IN PLARGE_INTEGER Timeout OPTIONAL)
 {
-    PLPCP_PORT_OBJECT Port, ReceivePort, ConnectionPort = NULL;
-    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode(), WaitMode = PreviousMode;
     NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode(), WaitMode = PreviousMode;
+    // PORT_MESSAGE CapturedReplyMessage;
+    LARGE_INTEGER CapturedTimeout;
+    PLPCP_PORT_OBJECT Port, ReceivePort, ConnectionPort = NULL;
     PLPCP_MESSAGE Message;
     PETHREAD Thread = PsGetCurrentThread(), WakeupThread;
     PLPCP_CONNECTION_MESSAGE ConnectMessage;
     ULONG ConnectionInfoLength;
-    //PORT_MESSAGE CapturedReplyMessage;
-    LARGE_INTEGER CapturedTimeout;
 
     PAGED_CODE();
     LPCTRACE(LPC_REPLY_DEBUG,
@@ -516,8 +518,8 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         /* Make sure this is the reply the thread is waiting for */
         if ((WakeupThread->LpcReplyMessageId != ReplyMessage->MessageId) ||
             ((LpcpGetMessageFromThread(WakeupThread)) &&
-             (LpcpGetMessageType(&LpcpGetMessageFromThread(WakeupThread)->
-                                 Request) != LPC_REQUEST)))
+             (LpcpGetMessageType(&LpcpGetMessageFromThread(WakeupThread)->Request)
+                != LPC_REQUEST)))
         {
             /* It isn't, fail */
             LpcpFreeToPortZone(Message, LPCP_LOCK_HELD | LPCP_LOCK_RELEASE);
@@ -599,8 +601,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
     }
 
     /* Get the message on the queue */
-    Message = CONTAINING_RECORD(RemoveHeadList(&ReceivePort->
-                                               MsgQueue.ReceiveHead),
+    Message = CONTAINING_RECORD(RemoveHeadList(&ReceivePort->MsgQueue.ReceiveHead),
                                 LPCP_MESSAGE,
                                 Entry);
 
@@ -756,17 +757,18 @@ LpcpCopyRequestData(
     IN ULONG Index,
     IN PVOID Buffer,
     IN ULONG BufferLength,
-    OUT PULONG Returnlength)
+    OUT PULONG ReturnLength)
 {
-    KPROCESSOR_MODE PreviousMode;
+    NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PORT_MESSAGE CapturedMessage;
     PLPCP_PORT_OBJECT Port = NULL;
     PETHREAD ClientThread = NULL;
-    SIZE_T LocalReturnlength;
+    SIZE_T LocalReturnLength;
     PLPCP_MESSAGE InfoMessage;
     PLPCP_DATA_INFO DataInfo;
     PVOID DataInfoBaseAddress;
-    NTSTATUS Status;
+
     PAGED_CODE();
 
     /* Check the previous mode */
@@ -889,7 +891,7 @@ LpcpCopyRequestData(
                                      DataInfoBaseAddress,
                                      BufferLength,
                                      PreviousMode,
-                                     &LocalReturnlength);
+                                     &LocalReturnLength);
     }
     else
     {
@@ -900,7 +902,7 @@ LpcpCopyRequestData(
                                      Buffer,
                                      BufferLength,
                                      PreviousMode,
-                                     &LocalReturnlength);
+                                     &LocalReturnLength);
     }
 
     if (!NT_SUCCESS(Status))
@@ -910,16 +912,16 @@ LpcpCopyRequestData(
     }
 
     /* Check if the caller asked to return the copied length */
-    if (Returnlength != NULL)
+    if (ReturnLength != NULL)
     {
         _SEH2_TRY
         {
-            *Returnlength = LocalReturnlength;
+            *ReturnLength = LocalReturnLength;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Ignore */
-            DPRINT1("Exception writing Returnlength, ignoring\n");
+            DPRINT1("Exception writing ReturnLength, ignoring\n");
         }
         _SEH2_END;
     }
@@ -941,7 +943,7 @@ CleanupWithLock:
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -963,7 +965,7 @@ NtReadRequestData(IN HANDLE PortHandle,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
