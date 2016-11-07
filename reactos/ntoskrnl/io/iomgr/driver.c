@@ -527,12 +527,13 @@ IopInitializeDriverModule(
     RtlFreeUnicodeString(&RegistryKey);
     RtlFreeUnicodeString(&DriverName);
 
-    *DriverObject = Driver;
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IopCreateDriver() failed (Status 0x%08lx)\n", Status);
         return Status;
     }
+
+    *DriverObject = Driver;
 
     MmFreeDriverInitialization((PLDR_DATA_TABLE_ENTRY)Driver->DriverSection);
 
@@ -1426,7 +1427,7 @@ IopReinitializeDrivers(VOID)
                                         &DriverReinitListLock);
     while (Entry)
     {
-        /* Get the item*/
+        /* Get the item */
         ReinitItem = CONTAINING_RECORD(Entry, DRIVER_REINIT_ITEM, ItemEntry);
 
         /* Increment reinitialization counter */
@@ -1462,7 +1463,7 @@ IopReinitializeBootDrivers(VOID)
                                         &DriverBootReinitListLock);
     while (Entry)
     {
-        /* Get the item*/
+        /* Get the item */
         ReinitItem = CONTAINING_RECORD(Entry, DRIVER_REINIT_ITEM, ItemEntry);
 
         /* Increment reinitialization counter */
@@ -1510,7 +1511,7 @@ try_again:
     /* First, create a unique name for the driver if we don't have one */
     if (!DriverName)
     {
-        /* Create a random name and set up the string*/
+        /* Create a random name and set up the string */
         NameLength = (USHORT)swprintf(NameBuffer,
                                       DRIVER_ROOT_NAME L"%08u",
                                       KeTickCount.LowPart);
