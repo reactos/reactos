@@ -554,10 +554,6 @@ IoAllocateErrorLogEntry(IN PVOID IoObject,
         return NULL;
     }
 
-    /* Check if we're past our buffer */
-    // FIXME/TODO: Perform the checks by taking into account EntrySize.
-    if (IopTotalLogSize > IOP_MAXIMUM_LOG_SIZE) return NULL;
-
     /* Check whether the size is too small or too large */
     if ((EntrySize < sizeof(IO_ERROR_LOG_PACKET)) ||
         (EntrySize > ERROR_LOG_MAXIMUM_SIZE))
@@ -566,11 +562,15 @@ IoAllocateErrorLogEntry(IN PVOID IoObject,
         return NULL;
     }
 
-    /* Round up the size */
+    /* Round up the size and calculate the total size */
     EntrySize = ROUND_UP(EntrySize, sizeof(PVOID));
-
-    /* Calculate the total size and allocate it */
     LogEntrySize = sizeof(ERROR_LOG_ENTRY) + EntrySize;
+
+    /* Check if we're past our buffer */
+    // TODO: Improve (what happens in case of concurrent calls?)
+    if (IopTotalLogSize + LogEntrySize > IOP_MAXIMUM_LOG_SIZE) return NULL;
+
+    /* Allocate the entry */
     LogEntry = ExAllocatePoolWithTag(NonPagedPool,
                                      LogEntrySize,
                                      TAG_ERROR_LOG);
