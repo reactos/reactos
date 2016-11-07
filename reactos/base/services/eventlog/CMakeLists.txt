@@ -1,6 +1,7 @@
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/lib/evtlib
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/idl
     ${CMAKE_CURRENT_BINARY_DIR})
 
