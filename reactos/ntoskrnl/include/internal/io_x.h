@@ -11,7 +11,7 @@ __inline
 VOID
 IopLockFileObject(IN PFILE_OBJECT FileObject)
 {
-	/* Lock the FO and check for contention */
+    /* Lock the FO and check for contention */
     InterlockedIncrement((PLONG)&FileObject->Waiters);
     while (InterlockedCompareExchange((PLONG)&FileObject->Busy, TRUE, FALSE) != FALSE)
     {

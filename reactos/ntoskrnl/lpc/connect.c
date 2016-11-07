@@ -79,7 +79,7 @@ NTSTATUS
 NTAPI
 NtSecureConnectPort(OUT PHANDLE PortHandle,
                     IN PUNICODE_STRING PortName,
-                    IN PSECURITY_QUALITY_OF_SERVICE Qos,
+                    IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
                     IN OUT PPORT_VIEW ClientView OPTIONAL,
                     IN PSID ServerSid OPTIONAL,
                     IN OUT PREMOTE_PORT_VIEW ServerView OPTIONAL,
@@ -103,9 +103,9 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
 
     PAGED_CODE();
     LPCTRACE(LPC_CONNECT_DEBUG,
-             "Name: %wZ. Qos: %p. Views: %p/%p. Sid: %p\n",
+             "Name: %wZ. SecurityQos: %p. Views: %p/%p. Sid: %p\n",
              PortName,
-             Qos,
+             SecurityQos,
              ClientView,
              ServerView,
              ServerSid);
@@ -588,17 +588,17 @@ NTSTATUS
 NTAPI
 NtConnectPort(OUT PHANDLE PortHandle,
               IN PUNICODE_STRING PortName,
-              IN PSECURITY_QUALITY_OF_SERVICE Qos,
-              IN PPORT_VIEW ClientView,
-              IN PREMOTE_PORT_VIEW ServerView,
-              OUT PULONG MaxMessageLength,
-              IN PVOID ConnectionInformation,
-              OUT PULONG ConnectionInformationLength)
+              IN PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+              IN OUT PPORT_VIEW ClientView OPTIONAL,
+              IN OUT PREMOTE_PORT_VIEW ServerView OPTIONAL,
+              OUT PULONG MaxMessageLength OPTIONAL,
+              IN OUT PVOID ConnectionInformation OPTIONAL,
+              IN OUT PULONG ConnectionInformationLength OPTIONAL)
 {
     /* Call the newer API */
     return NtSecureConnectPort(PortHandle,
                                PortName,
-                               Qos,
+                               SecurityQos,
                                ClientView,
                                NULL,
                                ServerView,

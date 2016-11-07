@@ -722,7 +722,7 @@ typedef struct _IO_ERROR_LOG_PACKET
     ULONG IoControlCode;
     LARGE_INTEGER DeviceOffset;
     ULONG DumpData[1];
-}IO_ERROR_LOG_PACKET, *PIO_ERROR_LOG_PACKET;
+} IO_ERROR_LOG_PACKET, *PIO_ERROR_LOG_PACKET;
 
 typedef struct _IO_ERROR_LOG_MESSAGE
 {

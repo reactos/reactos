@@ -41,8 +41,8 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
                     IN PVOID PortContext OPTIONAL,
                     IN PPORT_MESSAGE ReplyMessage,
                     IN BOOLEAN AcceptConnection,
-                    IN PPORT_VIEW ServerView,
-                    IN PREMOTE_PORT_VIEW ClientView)
+                    IN OUT PPORT_VIEW ServerView OPTIONAL,
+                    OUT PREMOTE_PORT_VIEW ClientView OPTIONAL)
 {
     NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();

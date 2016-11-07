@@ -1973,6 +1973,13 @@ typedef struct _IO_ERROR_LOG_MESSAGE {
   IO_ERROR_LOG_PACKET EntryData;
 } IO_ERROR_LOG_MESSAGE, *PIO_ERROR_LOG_MESSAGE;
 
+/* See ndk/lpctypes.h */
+#ifdef _WIN64
+#define PORT_MAXIMUM_MESSAGE_LENGTH 512
+#else
+#define PORT_MAXIMUM_MESSAGE_LENGTH 256
+#endif
+
 #define ERROR_LOG_LIMIT_SIZE               240
 #define IO_ERROR_LOG_MESSAGE_HEADER_LENGTH (sizeof(IO_ERROR_LOG_MESSAGE) - \
                                             sizeof(IO_ERROR_LOG_PACKET) + \
@@ -1985,12 +1992,6 @@ typedef struct _IO_ERROR_LOG_MESSAGE {
         PORT_MAXIMUM_MESSAGE_LENGTH)
 #define ERROR_LOG_MAXIMUM_SIZE (IO_ERROR_LOG_MESSAGE_LENGTH -                 \
                                 IO_ERROR_LOG_MESSAGE_HEADER_LENGTH)
-
-#ifdef _WIN64
-#define PORT_MAXIMUM_MESSAGE_LENGTH    512
-#else
-#define PORT_MAXIMUM_MESSAGE_LENGTH    256
-#endif
 
 typedef enum _DMA_WIDTH {
   Width8Bits,
