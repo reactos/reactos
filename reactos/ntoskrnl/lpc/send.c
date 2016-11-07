@@ -857,7 +857,7 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
 
             /* Copy it */
             LpcpMoveMessage(&Message->Request,
-                            LpcRequest,
+                            &CapturedLpcRequest,
                             LpcRequest + 1,
                             MessageType,
                             &Thread->Cid);

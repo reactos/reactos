@@ -84,7 +84,9 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
             ProbeForRead(ReplyMessage + 1, ConnectionInfoLength, 1);
 
             /* The following parameters are optional */
-            if (ServerView != NULL)
+
+            /* Capture the server view */
+            if (ServerView)
             {
                 ProbeForWrite(ServerView, sizeof(*ServerView), sizeof(ULONG));
                 CapturedServerView = *(volatile PORT_VIEW*)ServerView;
@@ -97,7 +99,8 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
                 }
             }
 
-            if (ClientView != NULL)
+            /* Capture the client view */
+            if (ClientView)
             {
                 ProbeForWrite(ClientView, sizeof(*ClientView), sizeof(ULONG));
 
@@ -121,19 +124,27 @@ NtAcceptConnectPort(OUT PHANDLE PortHandle,
         CapturedReplyMessage = *ReplyMessage;
         ConnectionInfoLength = CapturedReplyMessage.u1.s1.DataLength;
 
-        /* Validate the size of the server view */
-        if ((ServerView) && (ServerView->Length != sizeof(*ServerView)))
+        /* Capture the server view */
+        if (ServerView)
         {
-            /* Invalid size */
-            return STATUS_INVALID_PARAMETER;
+            /* Validate the size of the server view */
+            if (ServerView->Length != sizeof(*ServerView))
+            {
+                /* Invalid size */
+                return STATUS_INVALID_PARAMETER;
+            }
+            CapturedServerView = *ServerView;
         }
-        CapturedServerView = *ServerView;
 
-        /* Validate the size of the client view */
-        if ((ClientView) && (ClientView->Length != sizeof(*ClientView)))
+        /* Capture the client view */
+        if (ClientView)
         {
-            /* Invalid size */
-            return STATUS_INVALID_PARAMETER;
+            /* Validate the size of the client view */
+            if (ClientView->Length != sizeof(*ClientView))
+            {
+                /* Invalid size */
+                return STATUS_INVALID_PARAMETER;
+            }
         }
     }
 

@@ -130,7 +130,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
             /* The following parameters are optional */
 
             /* Capture the client view */
-            if (ClientView != NULL)
+            if (ClientView)
             {
                 ProbeForWrite(ClientView, sizeof(*ClientView), sizeof(ULONG));
                 CapturedClientView = *(volatile PORT_VIEW*)ClientView;
@@ -145,7 +145,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
             }
 
             /* Capture the server view */
-            if (ServerView != NULL)
+            if (ServerView)
             {
                 ProbeForWrite(ServerView, sizeof(*ServerView), sizeof(ULONG));
 
@@ -202,7 +202,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         /* The following parameters are optional */
 
         /* Capture the client view */
-        if (ClientView != NULL)
+        if (ClientView)
         {
             /* Validate the size of the client view */
             if (ClientView->Length != sizeof(*ClientView))
@@ -214,7 +214,7 @@ NtSecureConnectPort(OUT PHANDLE PortHandle,
         }
 
         /* Capture the server view */
-        if (ServerView != NULL)
+        if (ServerView)
         {
             /* Validate the size of the server view */
             if (ServerView->Length != sizeof(*ServerView))
