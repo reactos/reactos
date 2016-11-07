@@ -461,9 +461,8 @@ NtRequestPort(IN HANDLE PortHandle,
         _SEH2_TRY
         {
             /* Probe and capture the LpcRequest */
-            ProbeForRead(LpcRequest, sizeof(PORT_MESSAGE), sizeof(ULONG));
-            ProbeForRead(LpcRequest, LpcRequest->u1.s1.TotalLength, sizeof(ULONG));
-            CapturedLpcRequest = *LpcRequest;
+            ProbeForRead(LpcRequest, sizeof(*LpcRequest), sizeof(ULONG));
+            CapturedLpcRequest = *(volatile PORT_MESSAGE*)LpcRequest;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -523,7 +522,7 @@ NtRequestPort(IN HANDLE PortHandle,
     {
         /* Copy it */
         LpcpMoveMessage(&Message->Request,
-                        LpcRequest,
+                        &CapturedLpcRequest,
                         LpcRequest + 1,
                         MessageType,
                         &Thread->Cid);
@@ -725,10 +724,9 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
     {
         _SEH2_TRY
         {
-            /* Probe the full request message and copy the base structure */
+            /* Probe and capture the LpcRequest */
             ProbeForRead(LpcRequest, sizeof(*LpcRequest), sizeof(ULONG));
-            ProbeForRead(LpcRequest, LpcRequest->u1.s1.TotalLength, sizeof(ULONG));
-            CapturedLpcRequest = *LpcRequest;
+            CapturedLpcRequest = *(volatile PORT_MESSAGE*)LpcRequest;
 
             /* Probe the reply message for write */
             ProbeForWrite(LpcReply, sizeof(*LpcReply), sizeof(ULONG));

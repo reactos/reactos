@@ -136,27 +136,25 @@ NtImpersonateClientOfPort(IN HANDLE PortHandle,
 
     PAGED_CODE();
 
-    /* Check the previous mode */
-    PreviousMode = ExGetPreviousMode();
-    if (PreviousMode == KernelMode)
-    {
-        ClientId = ClientMessage->ClientId;
-        MessageId = ClientMessage->MessageId;
-    }
-    else
+    /* Check if the call comes from user mode */
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
             ProbeForRead(ClientMessage, sizeof(*ClientMessage), sizeof(PVOID));
-            ClientId = ClientMessage->ClientId;
-            MessageId = ClientMessage->MessageId;
+            ClientId  = ((volatile PORT_MESSAGE*)ClientMessage)->ClientId;
+            MessageId = ((volatile PORT_MESSAGE*)ClientMessage)->MessageId;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            DPRINT1("Got exception!\n");
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
+    }
+    else
+    {
+        ClientId  = ClientMessage->ClientId;
+        MessageId = ClientMessage->MessageId;
     }
 
     /* Reference the port handle */

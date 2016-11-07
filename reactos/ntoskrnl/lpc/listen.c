@@ -36,13 +36,22 @@ NtListenPort(IN HANDLE PortHandle,
                                         NULL,
                                         ConnectMessage);
 
-        /* Accept only LPC_CONNECTION_REQUEST requests */
-        if ((Status != STATUS_SUCCESS) ||
-            (LpcpGetMessageType(ConnectMessage) == LPC_CONNECTION_REQUEST))
+        _SEH2_TRY
         {
-            /* Break out */
-            break;
+            /* Accept only LPC_CONNECTION_REQUEST requests */
+            if ((Status != STATUS_SUCCESS) ||
+                (LpcpGetMessageType(ConnectMessage) == LPC_CONNECTION_REQUEST))
+            {
+                /* Break out */
+                _SEH2_YIELD(break);
+            }
         }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+            _SEH2_YIELD(break);
+        }
+        _SEH2_END;
     }
 
     /* Return status */
