@@ -914,6 +914,7 @@ WSPBind(SOCKET Handle,
     NtClose( SockEvent );
     HeapFree(GlobalHeap, 0, BindData);
 
+    Socket->SharedData->SocketLastError = TranslateNtStatusError(Status);
     if (Status != STATUS_SUCCESS)
         return MsafdReturnWithErrno ( Status, lpErrno, 0, NULL );
 
@@ -997,6 +998,7 @@ WSPListen(SOCKET Handle,
 
     NtClose( SockEvent );
 
+    Socket->SharedData->SocketLastError = TranslateNtStatusError(Status);
     if (Status != STATUS_SUCCESS)
        return MsafdReturnWithErrno ( Status, lpErrno, 0, NULL );
 
@@ -1250,6 +1252,10 @@ WSPSelect(IN int nfds,
                     TRACE("Event %x on handle %x\n",
                         Events,
                         Handle);
+                    if ((Events & x) == AFD_EVENT_DISCONNECT || (Events & x) == AFD_EVENT_CLOSE)
+                        Socket->SharedData->SocketLastError = WSAECONNRESET;
+                    if ((Events & x) == AFD_EVENT_ABORT)
+                        Socket->SharedData->SocketLastError = WSAECONNABORTED;
                     if( readfds )
                         FD_SET(Handle, readfds);
                     break;
@@ -1643,6 +1649,7 @@ WSPAccept(SOCKET Handle,
         Status = IOSB.Status;
     }
 
+    Socket->SharedData->SocketLastError = TranslateNtStatusError(Status);
     if (!NT_SUCCESS(Status))
     {
         NtClose(SockEvent);
@@ -1871,6 +1878,7 @@ WSPConnect(SOCKET Handle,
         Status = IOSB.Status;
     }
 
+    Socket->SharedData->SocketLastError = TranslateNtStatusError(Status);
     if (Status != STATUS_SUCCESS)
         goto notify;
 
@@ -2017,6 +2025,7 @@ WSPShutdown(SOCKET Handle,
 
     NtClose( SockEvent );
 
+    Socket->SharedData->SocketLastError = TranslateNtStatusError(Status);
     return MsafdReturnWithErrno( Status, lpErrno, 0, NULL );
 }
 
@@ -2428,8 +2437,9 @@ WSPGetSockOpt(IN SOCKET Handle,
     PVOID Buffer;
     INT BufferSize;
     BOOL BoolBuffer;
-    INT IntBuffer;
     INT Errno;
+
+    TRACE("Called\n");
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
@@ -2438,8 +2448,11 @@ WSPGetSockOpt(IN SOCKET Handle,
         if (lpErrno) *lpErrno = WSAENOTSOCK;
         return SOCKET_ERROR;
     }
-
-    TRACE("Called\n");
+    if (!OptionLength || !OptionValue)
+    {
+        if (lpErrno) *lpErrno = WSAEFAULT;
+        return SOCKET_ERROR;
+    }
 
     switch (Level)
     {
@@ -2525,13 +2538,10 @@ WSPGetSockOpt(IN SOCKET Handle,
                     break;
 
                 case SO_ERROR:
-                    /* HACK: This needs to be properly tracked */
-                    IntBuffer = 0;
-                    DbgPrint("MSAFD: Hacked SO_ERROR returning error %d\n", IntBuffer);
-
-                    Buffer = &IntBuffer;
+                    Buffer = &Socket->SharedData->SocketLastError;
                     BufferSize = sizeof(INT);
                     break;
+
                 case SO_SNDTIMEO:
                     Buffer = &Socket->SharedData->SendTimeout;
                     BufferSize = sizeof(DWORD);
@@ -2601,6 +2611,11 @@ WSPSetSockOpt(
     if (Socket == NULL)
     {
         if (lpErrno) *lpErrno = WSAENOTSOCK;
+        return SOCKET_ERROR;
+    }
+    if (!optval)
+    {
+        if (lpErrno) *lpErrno = WSAEFAULT;
         return SOCKET_ERROR;
     }
 
@@ -2675,6 +2690,18 @@ WSPSetSockOpt(
 
               /* TODO: The total per-socket buffer space reserved for sends */
               ERR("Setting send buf to %x is not implemented yet\n", optval);
+              return NO_ERROR;
+
+           case SO_ERROR:
+              if (optlen < sizeof(INT))
+              {
+                  if (lpErrno) *lpErrno = WSAEFAULT;
+                  return SOCKET_ERROR;
+              }
+
+              RtlCopyMemory(&Socket->SharedData->SocketLastError,
+                            optval,
+                            sizeof(INT));
               return NO_ERROR;
 
            case SO_SNDTIMEO:
