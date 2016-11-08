@@ -30,7 +30,7 @@
 #endif
 
 /* Disable expansion for MIDL and RC */
-#if defined(MIDL_PASS) || defined(__midl) || defined(RC_INVOKED) // [
+#if defined(MIDL_PASS) || defined(__midl) || defined(__WIDL__) || defined(RC_INVOKED) // [
 #undef _PREFAST_
 #endif // ]
 
