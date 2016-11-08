@@ -179,7 +179,7 @@ private:
     CComPtr<IExplorerToolbar>               fExplorerToolbar;
 public:
     void Initialize(HWND parent, IUnknown *explorerToolbar);
-
+    void Destroy();
 private:
 
     // message handlers
@@ -205,6 +205,12 @@ void CToolbarProxy::Initialize(HWND parent, IUnknown *explorerToolbar)
         hResult = explorerToolbar->QueryInterface(
             IID_PPV_ARG(IExplorerToolbar, &fExplorerToolbar));
     }
+}
+
+void CToolbarProxy::Destroy()
+{
+    DestroyWindow();
+    fExplorerToolbar = NULL;
 }
 
 LRESULT CToolbarProxy::OnAddBitmap(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -1116,6 +1122,7 @@ HRESULT CShellBrowser::GetBaseBar(bool vertical, REFIID riid, void **theBaseBar)
     
         // we have to store our basebar into cache now
         *cache = newBaseBar;
+        newBaseBar->AddRef();
         
         // tell the new base bar about the shell browser
         hResult = IUnknown_SetSite(newBaseBar, static_cast<IDropTarget *>(this));
@@ -3362,9 +3369,10 @@ LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 
     // TODO: rip down everything
     {
+        fToolbarProxy.Destroy();
+
         fCurrentShellView->DestroyViewWindow();
         fCurrentShellView->UIActivate(SVUIA_DEACTIVATE);
-        ReleaseCComPtrExpectZero(fCurrentShellView);
 
         for (int i = 0; i < 3; i++)
         {
@@ -3393,16 +3401,14 @@ LRESULT CShellBrowser::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
                 }
             }
             pdw->CloseDW(0);
+
+            pClient = NULL;
+            pBarSite = NULL;
             pdw = NULL;
-            /* For some reasons, it's like we miss some AddRef in ATL when QueryInterface on
-             * same interface or inherited one, so we are removing already removed (!) object.
-             * TODO: check with MSVC's ATL to see if this behaviour happens too
-             */
-            bar.Detach();
-            pClient.Detach();
-            pBarSite.Detach();
+            bar = NULL;
             ReleaseCComPtrExpectZero(fClientBars[i].clientBar);
         }
+        ReleaseCComPtrExpectZero(fCurrentShellView);
         ReleaseCComPtrExpectZero(fTravelLog);
 
         fCurrentShellFolder.Release();

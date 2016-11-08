@@ -328,6 +328,10 @@ HRESULT STDMETHODCALLTYPE CBaseBar::SetClient(IUnknown *punkClient)
             WS_VISIBLE | WS_CHILDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_TOOLWINDOW);
         ReserveBorderSpace();
     }
+    else
+    {
+        DestroyWindow();
+    }
     return S_OK;
 }
 
