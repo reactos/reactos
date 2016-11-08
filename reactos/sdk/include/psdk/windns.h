@@ -104,6 +104,8 @@ typedef _Return_type_success_(return == 0) DWORD DNS_STATUS;
 
 #define DNS_ATMA_MAX_ADDR_LENGTH 20
 
+#define DNS_ADDR_MAX_SOCKADDR_LENGTH 32
+
 typedef enum _DNS_CHARSET {
   DnsCharSetUnknown,
   DnsCharSetUnicode,
@@ -164,6 +166,36 @@ typedef struct {
 } IP6_ADDRESS, *PIP6_ADDRESS, DNS_IP6_ADDRESS, *PDNS_IP6_ADDRESS;
 
 #pragma pack(push, 1)
+
+typedef struct _DnsAddr
+{
+  CHAR MaxSa[DNS_ADDR_MAX_SOCKADDR_LENGTH];
+#if defined(__midl) || defined(__WIDL__)
+  DWORD DnsAddrUserDword[8];
+#else
+  union {
+    DWORD DnsAddrUserDword[8];
+  } Data;
+#endif
+} DNS_ADDR, *PDNS_ADDR;
+
+typedef struct _DnsAddrArray
+{
+  DWORD MaxCount;
+  DWORD AddrCount;
+  DWORD Tag;
+  WORD  Family;
+  WORD  WordReserved;
+  DWORD Flags;
+  DWORD MatchFlag;
+  DWORD Reserved1;
+  DWORD Reserved2;
+#if defined(__midl) || defined(__WIDL__)
+  [size_is(AddrCount)] DNS_ADDR AddrArray[];
+#else
+  DNS_ADDR AddrArray[1];
+#endif
+} DNS_ADDR_ARRAY, *PDNS_ADDR_ARRAY;
 
 typedef struct _DNS_HEADER {
   WORD Xid;
@@ -447,6 +479,88 @@ typedef struct {
   BYTE BitMask[1];
 } DNS_WKS_DATA, *PDNS_WKS_DATA;
 
+typedef struct {
+  WORD wKeyTag;
+  BYTE chAlgorithm;
+  BYTE chDigestType;
+  WORD wDigestLength;
+  WORD wPad;
+  BYTE Digest[1];
+} DNS_DS_DATA;
+
+typedef struct {
+  LPWSTR pNextDomainName;    
+  WORD wTypeBitMapsLength;
+  WORD wPad;
+  BYTE TypeBitMaps[1];
+} DNS_NSEC_DATAW;
+
+typedef struct {
+  WORD wFlags;
+  BYTE chProtocol;
+  BYTE chAlgorithm;
+  WORD wKeyLength;
+  WORD wPad;
+  BYTE Key[1];
+} DNS_DNSKEY_DATA;
+
+typedef struct {
+  WORD wDataLength;
+  WORD wPad;
+  BYTE Data[1];
+} DNS_OPT_DATA;
+
+typedef struct {
+  WORD wTypeCovered;
+  BYTE chAlgorithm;
+  BYTE chLabelCount;
+  DWORD dwOriginalTtl;
+  DWORD dwExpiration;
+  DWORD dwTimeSigned;
+  WORD wKeyTag;
+  WORD Pad;
+  LPWSTR pNameSigner;
+  BYTE Signature[1];
+} DNS_RRSIG_DATAW;
+
+#if defined(__midl) || defined(__WIDL__)
+typedef [switch_type(unsigned short )] union DNS_DATAW {
+  [case(1)] DNS_A_DATA A;
+  [case(6)] DNS_SOA_DATAW SOA;
+  [case(12)] DNS_PTR_DATAW PTR;
+  [case(2)] DNS_PTR_DATAW NS;
+  [case(5)] DNS_PTR_DATAW CNAME;
+  [case(7)] DNS_PTR_DATAW MB;
+  [case(3)] DNS_PTR_DATAW MD;
+  [case(4)] DNS_PTR_DATAW MF;
+  [case(8)] DNS_PTR_DATAW MG;
+  [case(9)] DNS_PTR_DATAW MR;
+  [case(14)] DNS_MINFO_DATAW MINFO;
+  [case(17)] DNS_MINFO_DATAW RP;
+  [case(15)] DNS_MX_DATAW MX;
+  [case(18)] DNS_MX_DATAW AFSDB;
+  [case(21)] DNS_MX_DATAW RT;
+  [case(28)] DNS_AAAA_DATA AAAA;
+  [case(33)] DNS_SRV_DATAW SRV;
+  [case(34)] DNS_ATMA_DATA ATMA;
+  [case(43)] DNS_DS_DATA DS;
+  [case(46)] DNS_RRSIG_DATAW RRSIG;
+  [case(47)] DNS_NSEC_DATAW NSEC;
+  [case(48)] DNS_DNSKEY_DATA DNSKEY;
+  [case(41)] DNS_OPT_DATA OPT;
+} DNS_DATAW;
+
+typedef struct _DnsRecordW {
+  [unique]struct _DnsRecordW *pNext;
+  [unique][string] LPWSTR  pName;
+  WORD wType;
+  WORD wDataLength;
+  DWORD Flags;
+  DWORD dwTtl;
+  DWORD dwReserved;
+  [switch_is(wType)] DNS_DATAW Data;
+} _DnsRecordW;    
+#else
 typedef struct _DnsRecordA {
   struct _DnsRecordA* pNext;
   LPSTR pName;
@@ -521,6 +635,8 @@ typedef struct _DnsRecordW {
 #define PDNS_RECORD PDNS_RECORDA
 #endif
 
+#endif
+
 typedef struct _DnsRRSet {
   PDNS_RECORD pFirstRR;
   PDNS_RECORD pLastRR;
@@ -546,6 +662,9 @@ typedef struct _DnsRRSet {
     PDNS_RRSET  _prrset = &(rrset);  \
     _prrset->pLastRR->pNext = NULL;  \
 }
+
+#ifndef __WIDL__
+// HACK
 
 DNS_STATUS
 WINAPI
@@ -608,14 +727,14 @@ DnsModifyRecordsInSet_UTF8(
 BOOL
 WINAPI
 DnsNameCompare_A(
-  _In_ PCSTR,
-  _In_ PCSTR);
+  _In_ PCSTR pszName1,
+  _In_ PCSTR pszName2);
 
 BOOL
 WINAPI
 DnsNameCompare_W(
-  _In_ PCWSTR,
-  _In_ PCWSTR);
+  _In_ PCWSTR pszwName1,
+  _In_ PCWSTR pszwName2);
 
 DNS_STATUS
 WINAPI
@@ -765,6 +884,7 @@ DnsWriteQuestionToBuffer_UTF8(
   _In_ WORD wType,
   _In_ WORD Xid,
   _In_ BOOL fRecursionDesired);
+#endif
 
 #ifdef UNICODE
 
