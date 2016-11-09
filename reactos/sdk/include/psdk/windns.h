@@ -559,7 +559,7 @@ typedef struct _DnsRecordW {
   DWORD dwTtl;
   DWORD dwReserved;
   [switch_is(wType)] DNS_DATAW Data;
-} _DnsRecordW;    
+} DNS_RECORDW, *PDNS_RECORDW;
 #else
 typedef struct _DnsRecordA {
   struct _DnsRecordA* pNext;
