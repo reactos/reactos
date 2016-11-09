@@ -84,7 +84,7 @@ TestShellExecuteEx(const WCHAR* Name, BOOL ExpectedResult)
     }
 }
 
-START_TEST(shlexec)
+START_TEST(ShellExecuteEx)
 {
     ok_ShellExecuteEx(L"iexplore", TRUE);
     ok_ShellExecuteEx(L"iexplore.exe", TRUE);
