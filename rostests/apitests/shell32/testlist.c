@@ -8,6 +8,7 @@ extern void func_CShellDesktop(void);
 extern void func_CShellLink(void);
 extern void func_menu(void);
 extern void func_SHParseDisplayName(void);
+extern void func_shlexec(void);
 
 const struct test winetest_testlist[] =
 {
@@ -16,5 +17,6 @@ const struct test winetest_testlist[] =
     { "CShellLink", func_CShellLink },
     { "menu", func_menu },
     { "SHParseDisplayName", func_SHParseDisplayName },
+    { "shlexec", func_shlexec },
     { 0, 0 }
 };
