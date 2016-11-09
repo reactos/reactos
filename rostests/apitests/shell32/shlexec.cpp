@@ -26,10 +26,10 @@ CreateAppPathRegKey(const WCHAR* Name)
     wcscpy(Buffer, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\");
     wcscat(Buffer, L"IEXPLORE.EXE");
     Result = RegOpenKeyExW(HKEY_LOCAL_MACHINE, Buffer, 0, KEY_READ, &RegistryKey);
-    if (Result != ERROR_SUCCESS) trace("Could not open iexplore.exe key. Status: %d\n", Result);
+    if (Result != ERROR_SUCCESS) trace("Could not open iexplore.exe key. Status: %lu\n", Result);
     if (Result) goto end;
     Result = RegQueryValueExW(RegistryKey, NULL, NULL, NULL, (LPBYTE)KeyValue, &Length);
-    if (Result != ERROR_SUCCESS) trace("Could not read iexplore.exe key. Status: %d\n", Result);
+    if (Result != ERROR_SUCCESS) trace("Could not read iexplore.exe key. Status: %lu\n", Result);
     if (Result) goto end;
     RegCloseKey(RegistryKey);
 
@@ -37,10 +37,10 @@ CreateAppPathRegKey(const WCHAR* Name)
     wcscat(Buffer, Name);
     Result = RegCreateKeyExW(HKEY_LOCAL_MACHINE, Buffer, 0, NULL,
         0, KEY_WRITE, NULL, &RegistryKey, &Disposition);
-    if (Result != ERROR_SUCCESS) trace("Could not create test key. Status: %d\n", Result);
+    if (Result != ERROR_SUCCESS) trace("Could not create test key. Status: %lu\n", Result);
     if (Result) goto end;
     Result = RegSetValueW(RegistryKey, NULL, REG_SZ, KeyValue, 0);
-    if (Result != ERROR_SUCCESS) trace("Could not set value of the test key. Status: %d\n", Result);
+    if (Result != ERROR_SUCCESS) trace("Could not set value of the test key. Status: %lu\n", Result);
     if (Result) goto end;
     RegCloseKey(RegistryKey);
 end:
@@ -57,7 +57,7 @@ DeleteAppPathRegKey(const WCHAR* Name)
     wcscpy(Buffer, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\");
     wcscat(Buffer, Name);
     Result = RegDeleteKeyW(HKEY_LOCAL_MACHINE, Buffer);
-    if (Result != ERROR_SUCCESS) trace("Could not remove the test key. Status: %d\n", Result);
+    if (Result != ERROR_SUCCESS) trace("Could not remove the test key. Status: %lu\n", Result);
 }
 
 static
@@ -74,11 +74,11 @@ TestShellExecuteEx(const WCHAR* Name, BOOL ExpectedResult)
     ShellExecInfo.lpFile = Name;
     ShellExecInfo.lpDirectory = NULL;
     Result = ShellExecuteExW(&ShellExecInfo);
-    ok(Result == ExpectedResult, "ShellExecuteEx lpFile %s failed. Error: %d\n", wine_dbgstr_w(Name), GetLastError());
+    ok(Result == ExpectedResult, "ShellExecuteEx lpFile %s failed. Error: %lu\n", wine_dbgstr_w(Name), GetLastError());
     if (ShellExecInfo.hProcess) 
     {
         Result = TerminateProcess(ShellExecInfo.hProcess, 0);
-        if (!Result) trace("Terminate process failed. Error: %d\n", GetLastError());
+        if (!Result) trace("Terminate process failed. Error: %lu\n", GetLastError());
         WaitForSingleObject(ShellExecInfo.hProcess, INFINITE);
         CloseHandle(ShellExecInfo.hProcess);
     }
