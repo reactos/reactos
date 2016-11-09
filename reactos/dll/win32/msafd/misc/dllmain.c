@@ -2250,7 +2250,7 @@ WSPIoctl(IN  SOCKET Handle,
          OUT LPINT lpErrno)
 {
     PSOCKET_INFORMATION Socket = NULL;
-    BOOLEAN NeedsCompletion = lpOverlapped != NULL;
+    BOOL NeedsCompletion = lpOverlapped != NULL;
     BOOLEAN NonBlocking;
     INT Errno = NO_ERROR, Ret = SOCKET_ERROR;
     DWORD cbRet = 0;
@@ -2394,7 +2394,7 @@ WSPIoctl(IN  SOCKET Handle,
                                                  &cbRet,
                                                  lpOverlapped,
                                                  lpCompletionRoutine,
-                                                 (LPBOOL)&NeedsCompletion);
+                                                 &NeedsCompletion);
 
             if (Errno == NO_ERROR)
                 Ret = NO_ERROR;
