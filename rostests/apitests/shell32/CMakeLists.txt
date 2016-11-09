@@ -8,9 +8,9 @@ add_executable(shell32_apitest
     CShellDesktop.cpp
     CShellLink.cpp
     menu.cpp
+    ShellExecuteEx.cpp
     shelltest.cpp
     SHParseDisplayName.cpp
-    shlexec.cpp
     testlist.c)
 target_link_libraries(shell32_apitest wine uuid ${PSEH_LIB})
 set_module_type(shell32_apitest win32cui)
