@@ -38,7 +38,7 @@ BEGIN
         BEGIN
             MENUITEM "(Vide)", -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "Paramètre&s", IDM_SETTINGS
+        POPUP "Para&mètres", IDM_SETTINGS
         BEGIN
             MENUITEM "Panneau de &contrôle", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
             MENUITEM "", -1, MFT_SEPARATOR
@@ -47,15 +47,15 @@ BEGIN
             MENUITEM "Im&primantes et fax", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "Barre des &tâches et Menu Démarrer", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
-        POPUP "&Chercher", IDM_SEARCH
+        POPUP "&Rechercher", IDM_SEARCH
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
-        MENUITEM "Aide et support", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
-        MENUITEM "Exécuter...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Aide et support", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "E&xécuter...", IDM_RUN, MFT_STRING, MFS_ENABLED
         MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
         MENUITEM "S&ynchroniser", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
-        MENUITEM "Fermer &la session %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Fermer la session %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
         MENUITEM "Déconnecter...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
         MENUITEM "Libér&er l'ordinateur de la station", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
         MENUITEM "Éteindre...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
