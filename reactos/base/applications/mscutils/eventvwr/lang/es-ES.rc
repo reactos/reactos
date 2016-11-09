@@ -8,7 +8,7 @@ BEGIN
     BEGIN
         MENUITEM "&Open...", IDM_OPEN_EVENTLOG
         MENUITEM "Save &Event Log as...", IDM_SAVE_EVENTLOG
-        MENUITEM "Close", IDM_CLOSE_EVENTLOG
+        MENUITEM "&Close", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "&Borrar todos los eventos", IDM_CLEAR_EVENTS
         MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG

@@ -14,7 +14,7 @@ BEGIN
     BEGIN
         MENUITEM "&Aç...", IDM_OPEN_EVENTLOG
         MENUITEM "&Olay Kaydını Ayrı Sakla...", IDM_SAVE_EVENTLOG
-        MENUITEM "Kapat", IDM_CLOSE_EVENTLOG
+        MENUITEM "Ka&pat", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "&Tüm Olayları Sil", IDM_CLEAR_EVENTS
         MENUITEM "&Yeniden Alandır\tF2", IDM_RENAME_EVENTLOG

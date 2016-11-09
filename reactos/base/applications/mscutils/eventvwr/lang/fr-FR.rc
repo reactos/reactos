@@ -6,15 +6,15 @@ IDM_EVENTVWR MENU
 BEGIN
     POPUP "&Journal"
     BEGIN
-        MENUITEM "Ouvrir...", IDM_OPEN_EVENTLOG
+        MENUITEM "&Ouvrir...", IDM_OPEN_EVENTLOG
         MENUITEM "Enregistrer le fichier journal &sous...", IDM_SAVE_EVENTLOG
-        MENUITEM "Fermer", IDM_CLOSE_EVENTLOG
+        MENUITEM "&Fermer", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "&Effacer tous les événements", IDM_CLEAR_EVENTS
         MENUITEM "&Renommer\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "Propriétés du &Journal...", IDM_EVENTLOG_SETTINGS
+        MENUITEM "&Propriétés du Journal...", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
-        MENUITEM "Quitter", IDM_EXIT
+        MENUITEM "&Quitter", IDM_EXIT
     END
     POPUP "&Affichage"
     BEGIN

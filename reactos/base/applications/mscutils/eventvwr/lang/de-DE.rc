@@ -8,9 +8,9 @@ BEGIN
     BEGIN
         MENUITEM "&Open...", IDM_OPEN_EVENTLOG
         MENUITEM "Save &Event Log as...", IDM_SAVE_EVENTLOG
-        MENUITEM "Close", IDM_CLOSE_EVENTLOG
+        MENUITEM "&Close", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
-        MENUITEM "Alle E&reignisse löschen", IDM_CLEAR_EVENTS
+        MENUITEM "&Alle Ereignisse löschen", IDM_CLEAR_EVENTS
         MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
         MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
