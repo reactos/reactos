@@ -672,6 +672,9 @@ HRESULT STDMETHODCALLTYPE CMenuBand::TranslateMenuMessage(MSG *pmsg, LRESULT *pl
 
 HRESULT STDMETHODCALLTYPE CMenuBand::SetShellFolder(IShellFolder *psf, LPCITEMIDLIST pidlFolder, HKEY hKey, DWORD dwFlags)
 {
+    if (!psf)
+        return E_INVALIDARG;
+
     if (m_SFToolbar == NULL)
     {
         m_SFToolbar = new CMenuSFToolbar(this);
