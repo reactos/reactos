@@ -360,9 +360,7 @@ CDefaultContextMenu::LoadDynamicContextMenuHandler(HKEY hKey, const CLSID *pclsi
 
     PDynamicShellEntry pEntry = (DynamicShellEntry *)HeapAlloc(GetProcessHeap(), 0, sizeof(DynamicShellEntry));
     if (!pEntry)
-    {
         return E_OUTOFMEMORY;
-    }
 
     pEntry->iIdCmdFirst = 0;
     pEntry->pNext = NULL;
@@ -829,7 +827,11 @@ HRESULT CDefaultContextMenu::DoRefresh(LPCMINVOKECOMMANDINFO lpcmi)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    return psv->Refresh();
+    hr = psv->Refresh();
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return S_OK;
 }
 
 HRESULT CDefaultContextMenu::DoPaste(LPCMINVOKECOMMANDINFO lpcmi, BOOL bLink)
@@ -932,7 +934,11 @@ HRESULT CDefaultContextMenu::DoCopyOrCut(LPCMINVOKECOMMANDINFO lpcmi, BOOL bCopy
         m_pDataObj->SetData(&formatetc, &medium, TRUE);
     }
 
-    return OleSetClipboard(m_pDataObj);
+    HRESULT hr = OleSetClipboard(m_pDataObj);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return S_OK;
 }
 
 HRESULT CDefaultContextMenu::DoRename(LPCMINVOKECOMMANDINFO lpcmi)
@@ -954,7 +960,10 @@ HRESULT CDefaultContextMenu::DoRename(LPCMINVOKECOMMANDINFO lpcmi)
         return hr;
 
     SVSIF selFlags = SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE | SVSI_FOCUSED | SVSI_SELECT;
-    lpSV->SelectItem(m_apidl[0], selFlags);
+    hr = lpSV->SelectItem(m_apidl[0], selFlags);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
     return S_OK;
 }
 
@@ -1115,10 +1124,12 @@ CDefaultContextMenu::DoCreateNewFolder(
 
     hr = psv->SelectItem(pidlNewItem, SVSI_DESELECTOTHERS | SVSI_EDIT | SVSI_ENSUREVISIBLE |
                           SVSI_FOCUSED | SVSI_SELECT);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     SHFree(pidl);
 
-    return hr;
+    return S_OK;
 }
 
 PDynamicShellEntry CDefaultContextMenu::GetDynamicEntry(UINT idCmd)
@@ -1216,7 +1227,7 @@ CDefaultContextMenu::BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticSh
 
     /* Try to get the flag from the verb */
     hr = StringCbPrintfW(wszKey, sizeof(wszKey), L"shell\\%s", pEntry->szVerb);
-    if (!SUCCEEDED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return 0;
 
     cbVerb = sizeof(wFlags);
@@ -1650,7 +1661,11 @@ SHCreateDefaultContextMenu(const DEFCONTEXTMENU *pdcm, REFIID riid, void **ppv)
     if (!pdcm->aKeys && pdcm->cidl)
         HackFillKeys((DEFCONTEXTMENU *)pdcm, hkeyHack);
 
-    return CDefaultContextMenu_CreateInstance(pdcm, riid, ppv);
+    HRESULT hr = CDefaultContextMenu_CreateInstance(pdcm, riid, ppv);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    return S_OK;
 }
 
 /*************************************************************************
@@ -1683,6 +1698,8 @@ CDefFolderMenu_Create2(
     pdcm.aKeys = ahkeyClsKeys;
 
     HRESULT hr = SHCreateDefaultContextMenu(&pdcm, IID_PPV_ARG(IContextMenu, ppcm));
-    return hr;
-}
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
+    return S_OK;
+}

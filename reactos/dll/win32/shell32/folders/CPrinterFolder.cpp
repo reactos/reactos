@@ -54,8 +54,8 @@ HRESULT WINAPI CPrintersExtractIconW_CreateInstane(LPCITEMIDLIST pidl, REFIID ri
 {
     CComPtr<IDefaultExtractIconInit> initIcon;
     HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit,&initIcon));
-    if (FAILED(hr))
-        return NULL;
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     /* FIXME: other icons for default, network, print to file */
     initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_PRINTER);
