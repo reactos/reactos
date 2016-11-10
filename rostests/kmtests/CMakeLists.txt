@@ -8,6 +8,7 @@ add_subdirectory(example)
 add_subdirectory(kernel32)
 add_subdirectory(ntos_cc)
 add_subdirectory(ntos_io)
+add_subdirectory(ntos_mm)
 add_subdirectory(ntos_po)
 add_subdirectory(tcpip)
 
@@ -126,6 +127,7 @@ list(APPEND KMTEST_SOURCE
     ntos_io/IoCreateFile_user.c
     ntos_io/IoDeviceObject_user.c
     ntos_io/IoReadWrite_user.c
+    ntos_mm/NtCreateSection_user.c
     ntos_po/PoIrp_user.c
     tcpip/TcpIp_user.c
     ${COMMON_SOURCE}
@@ -153,6 +155,7 @@ add_dependencies(kmtest_drivers
     iodeviceobject_drv
     iohelper_drv
     ioreadwrite_drv
+    ntcreatesection_drv
     poirp_drv
     tcpip_drv
     cccopyread_drv)
