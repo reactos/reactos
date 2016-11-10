@@ -1320,6 +1320,21 @@ WSPSelect(IN int nfds,
     return HandleCount;
 }
 
+DWORD
+GetCurrentTimeInSeconds()
+{
+    FILETIME Time;
+    FILETIME Adjustment;
+    ULARGE_INTEGER lTime, lAdj;
+    SYSTEMTIME st = { 1970,1,0,1,0,0,0 };
+    SystemTimeToFileTime(&st, &Adjustment);
+    memcpy(&lAdj, &Adjustment, sizeof(lAdj));
+    GetSystemTimeAsFileTime(&Time);
+    memcpy(&lTime, &Time, sizeof(lTime));
+    lTime.QuadPart -= lAdj.QuadPart;
+    return (DWORD)(lTime.QuadPart / 10000000LLU);
+}
+
 SOCKET
 WSPAPI
 WSPAccept(SOCKET Handle,
@@ -1666,6 +1681,7 @@ WSPAccept(SOCKET Handle,
     }
 
     AcceptSocketInfo->SharedData->State = SocketConnected;
+    AcceptSocketInfo->SharedData->ConnectTime = GetCurrentTimeInSeconds();
 
     /* Return Address in SOCKADDR FORMAT */
     if( SocketAddress )
@@ -1884,6 +1900,7 @@ WSPConnect(SOCKET Handle,
 
     Socket->SharedData->State = SocketConnected;
     Socket->TdiConnectionHandle = (HANDLE)IOSB.Information;
+    Socket->SharedData->ConnectTime = GetCurrentTimeInSeconds();
 
     /* Get any pending connect data */
     if (lpCalleeData != NULL)
@@ -2437,6 +2454,7 @@ WSPGetSockOpt(IN SOCKET Handle,
     PVOID Buffer;
     INT BufferSize;
     BOOL BoolBuffer;
+    DWORD DwordBuffer;
     INT Errno;
 
     TRACE("Called\n");
@@ -2540,6 +2558,12 @@ WSPGetSockOpt(IN SOCKET Handle,
                 case SO_ERROR:
                     Buffer = &Socket->SharedData->SocketLastError;
                     BufferSize = sizeof(INT);
+                    break;
+
+                case SO_CONNECT_TIME:
+                    DwordBuffer = GetCurrentTimeInSeconds() - Socket->SharedData->ConnectTime;
+                    Buffer = &DwordBuffer;
+                    BufferSize = sizeof(DWORD);
                     break;
 
                 case SO_SNDTIMEO:
