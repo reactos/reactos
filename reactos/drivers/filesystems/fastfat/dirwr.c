@@ -298,10 +298,13 @@ FATAddEntry(
     PVOID Context = NULL;
     PFAT_DIR_ENTRY pFatEntry;
     slot *pSlots;
-    USHORT nbSlots = 0, j, posCar;
+    USHORT nbSlots = 0, j;
     PUCHAR Buffer;
     BOOLEAN needTilde = FALSE, needLong = FALSE;
-    BOOLEAN lCaseBase = FALSE, uCaseBase, lCaseExt = FALSE, uCaseExt;
+    BOOLEAN BaseAllLower, BaseAllUpper;
+    BOOLEAN ExtensionAllLower, ExtensionAllUpper;
+    BOOLEAN InExtension;
+    WCHAR c;
     ULONG CurrentCluster;
     LARGE_INTEGER SystemTime, FileOffset;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -386,53 +389,51 @@ FATAddEntry(
             return STATUS_UNSUCCESSFUL;
         }
         IsNameLegal = RtlIsNameLegalDOS8Dot3(&DirContext.ShortNameU, &NameA, &SpacesFound);
-        aName[NameA.Length]=0;
     }
     else
     {
-        aName[NameA.Length] = 0;
-        for (posCar = 0; posCar < DirContext.LongNameU.Length / sizeof(WCHAR); posCar++)
+        BaseAllLower = BaseAllUpper = TRUE;
+        ExtensionAllLower = ExtensionAllUpper = TRUE;
+        InExtension = FALSE;
+        for (i = 0; i < DirContext.LongNameU.Length / sizeof(WCHAR); i++)
         {
-            if (DirContext.LongNameU.Buffer[posCar] == L'.')
+            c = DirContext.LongNameU.Buffer[i];
+            if (c >= L'A' && c <= L'Z')
             {
+                if (InExtension)
+                    ExtensionAllLower = FALSE;
+                else
+                    BaseAllLower = FALSE;
+            }
+            else if (c >= L'a' && c <= L'z')
+            {
+                if (InExtension)
+                    ExtensionAllUpper = FALSE;
+                else
+                    BaseAllUpper = FALSE;
+            }
+            else if (c > 0x7f)
+            {
+                needLong = TRUE;
                 break;
             }
+            
+            if (c == L'.')
+            {
+                InExtension = TRUE;
+            }
         }
-        /* check if the name and the extension contains upper case characters */
-        RtlDowncaseUnicodeString(&DirContext.ShortNameU, &DirContext.LongNameU, FALSE);
-        DirContext.ShortNameU.Buffer[DirContext.ShortNameU.Length / sizeof(WCHAR)] = 0;
-        uCaseBase = wcsncmp(DirContext.LongNameU.Buffer,
-                            DirContext.ShortNameU.Buffer, posCar) ? TRUE : FALSE;
-        if (posCar < DirContext.LongNameU.Length/sizeof(WCHAR))
-        {
-            i = DirContext.LongNameU.Length / sizeof(WCHAR) - posCar;
-            uCaseExt = wcsncmp(DirContext.LongNameU.Buffer + posCar,
-                               DirContext.ShortNameU.Buffer + posCar, i) ? TRUE : FALSE;
-        }
-        else
-        {
-            uCaseExt = FALSE;
-        }
-        /* check if the name and the extension contains lower case characters */
-        RtlUpcaseUnicodeString(&DirContext.ShortNameU, &DirContext.LongNameU, FALSE);
-        DirContext.ShortNameU.Buffer[DirContext.ShortNameU.Length / sizeof(WCHAR)] = 0;
-        lCaseBase = wcsncmp(DirContext.LongNameU.Buffer,
-                            DirContext.ShortNameU.Buffer, posCar) ? TRUE : FALSE;
-        if (posCar < DirContext.LongNameU.Length / sizeof(WCHAR))
-        {
-            i = DirContext.LongNameU.Length / sizeof(WCHAR) - posCar;
-            lCaseExt = wcsncmp(DirContext.LongNameU.Buffer + posCar,
-                               DirContext.ShortNameU.Buffer + posCar, i) ? TRUE : FALSE;
-        }
-        else
-        {
-            lCaseExt = FALSE;
-        }
-        if ((lCaseBase && uCaseBase) || (lCaseExt && uCaseExt))
+
+        if ((!BaseAllLower && !BaseAllUpper) ||
+            (!ExtensionAllLower && !ExtensionAllUpper))
         {
             needLong = TRUE;
         }
+
+        RtlUpcaseUnicodeString(&DirContext.ShortNameU, &DirContext.LongNameU, FALSE);
+        DirContext.ShortNameU.Buffer[DirContext.ShortNameU.Length / sizeof(WCHAR)] = 0;
     }
+    aName[NameA.Length] = 0;
     DPRINT("'%s', '%wZ', needTilde=%u, needLong=%u\n",
            aName, &DirContext.LongNameU, needTilde, needLong);
     memset(DirContext.DirEntry.Fat.ShortName, ' ', 11);
@@ -465,11 +466,11 @@ FATAddEntry(
     else
     {
         nbSlots = 1;
-        if (lCaseBase)
+        if (BaseAllLower && !BaseAllUpper)
         {
             DirContext.DirEntry.Fat.lCase |= VFAT_CASE_LOWER_BASE;
         }
-        if (lCaseExt)
+        if (ExtensionAllLower && !ExtensionAllUpper)
         {
             DirContext.DirEntry.Fat.lCase |= VFAT_CASE_LOWER_EXT;
         }
