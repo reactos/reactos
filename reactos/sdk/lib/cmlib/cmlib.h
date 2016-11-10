@@ -71,6 +71,26 @@
     #define UNICODE_NULL                     ((WCHAR)0)
 
     VOID NTAPI
+    RtlInitUnicodeString(
+        IN OUT PUNICODE_STRING DestinationString,
+        IN PCWSTR SourceString);
+
+    LONG NTAPI
+    RtlCompareUnicodeString(
+        IN PCUNICODE_STRING String1,
+        IN PCUNICODE_STRING String2,
+        IN BOOLEAN CaseInSensitive);
+
+    VOID
+    NTAPI
+    KeBugCheckEx(
+        IN ULONG BugCheckCode,
+        IN ULONG_PTR BugCheckParameter1,
+        IN ULONG_PTR BugCheckParameter2,
+        IN ULONG_PTR BugCheckParameter3,
+        IN ULONG_PTR BugCheckParameter4);
+
+    VOID NTAPI
     KeQuerySystemTime(
         OUT PLARGE_INTEGER CurrentTime);
 
