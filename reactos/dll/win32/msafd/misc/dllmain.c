@@ -2898,8 +2898,9 @@ WSPStringToAddress(IN LPWSTR AddressString,
                    IN OUT LPINT lpAddressLength,
                    OUT LPINT lpErrno)
 {
-    int pos = 0;
-    LONG inetaddr = 0;
+    int numdots = 0;
+    USHORT port;
+    LONG inetaddr = 0, ip_part;
     LPWSTR *bp = NULL;
     SOCKADDR_IN *sockaddr;
 
@@ -2926,47 +2927,74 @@ WSPStringToAddress(IN LPWSTR AddressString,
     {
         if (*lpAddressLength < (INT)sizeof(SOCKADDR_IN))
         {
-            *lpAddressLength = sizeof(SOCKADDR_IN);
             if (lpErrno) *lpErrno = WSAEFAULT;
         }
         else
         {
             // translate ip string to ip
 
-            /* rest sockaddr.sin_addr.s_addr
-            for we need to be sure it is zero when we come to while */
-            memset(lpAddress, 0, sizeof(SOCKADDR_IN));
+            /* Get ip number */
+            bp = &AddressString;
+            inetaddr = 0;
 
-            /* Set right adress family */
-            sockaddr->sin_family = AF_INET;
+            while (*bp < &AddressString[wcslen(AddressString)])
+            {
+                ip_part = wcstol(*bp, bp, 10);
+                /* ip part number should be in range 0-255 */
+                if (ip_part < 0 || ip_part > 255)
+                {
+                    if (lpErrno) *lpErrno = WSAEINVAL;
+                    return SOCKET_ERROR;
+                }
+                inetaddr = (inetaddr << 8) + ip_part;
+                /* we end on string end or port separator */
+                if ((*bp)[0] == 0 || (*bp)[0] == L':')
+                    break;
+                /* ip parts are dot separated. verify it */
+                if ((*bp)[0] != L'.')
+                {
+                    if (lpErrno) *lpErrno = WSAEINVAL;
+                    return SOCKET_ERROR;
+                }
+                /* count the dots */
+                numdots++;
+                /* move over the dot to next ip part */
+                (*bp)++;
+            }
+            
+            /* check dots count */
+            if (numdots != 3)
+            {
+                if (lpErrno) *lpErrno = WSAEINVAL;
+                return SOCKET_ERROR;
+            }
 
             /* Get port number */
-            pos = wcscspn(AddressString, L":") + 1;
-
-            if (pos < (int)wcslen(AddressString))
+            if ((*bp)[0] == L':')
             {
-                sockaddr->sin_port = wcstol(&AddressString[pos], bp, 10);
+                /* move over the column to port part */
+                (*bp)++;
+                /* next char should be numeric */
+                if ((*bp)[0] < L'0' || (*bp)[0] > L'9')
+                {
+                    if (lpErrno) *lpErrno = WSAEINVAL;
+                    return SOCKET_ERROR;
+                }
+                port = wcstol(*bp, bp, 10);
             }
             else
             {
-                sockaddr->sin_port = 0;
-            }
-
-            /* Get ip number */
-            pos = 0;
-            inetaddr = 0;
-
-            while (pos < (int)wcslen(AddressString))
-            {
-                inetaddr = (inetaddr << 8) +
-                           ((UCHAR)wcstol(&AddressString[pos], bp, 10));
-
-                pos += wcscspn(&AddressString[pos], L".") + 1;
+                port = 0;
             }
 
             if (lpErrno) *lpErrno = NO_ERROR;
+            /* rest sockaddr.sin_addr.s_addr
+            for we need to be sure it is zero when we come to while */
+            *lpAddressLength = sizeof(*sockaddr);
+            memset(lpAddress, 0, sizeof(*sockaddr));
+            sockaddr->sin_family = AF_INET;
             sockaddr->sin_addr.s_addr = inetaddr;
-
+            sockaddr->sin_port = port;
         }
     }
 
