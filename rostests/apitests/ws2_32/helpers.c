@@ -34,7 +34,7 @@ int ConnectToReactOSWebsite(SOCKET sck)
     struct sockaddr_in sa;
 
     /* Connect to "www.reactos.org" */
-    host = gethostbyname("www.reactos.org");
+    host = gethostbyname("test.winehq.org");
 
     sa.sin_family = AF_INET;
     sa.sin_addr.s_addr = *(u_long*)host->h_addr_list[0];
