@@ -26,7 +26,7 @@ START_TEST(WSAAsync)
     struct sockaddr_in server_addr_in;
     struct sockaddr_in addr_remote;
     struct sockaddr_in addr_con_loc;
-    int nConRes;
+    int nConRes, nSockNameRes;
     int addrsize, len;
     WSAEVENT fEvents[2];
     SOCKET fSockets[2];
@@ -35,6 +35,11 @@ START_TEST(WSAAsync)
     ULONG ulValue = 1;
     DWORD dwWait;
     DWORD dwFlags = 0;
+    struct fd_set select_rfds;
+    struct fd_set select_wfds;
+    struct fd_set select_efds;
+    struct timeval timeval;
+    BOOL ConnectSent = FALSE;
 
     if (WSAStartup(MAKEWORD(2, 2), &WsaData) != 0)
     {
@@ -156,10 +161,135 @@ START_TEST(WSAAsync)
             }
         }
     }
+    closesocket(sockaccept);
+    closesocket(ServerSocket);
+    closesocket(ClientSocket);
+
+    /* same test but with waiting select and getsockname to return proper values */
+    ServerSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    ClientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+    if (ServerSocket == INVALID_SOCKET)
+    {
+        skip("ERROR: Server socket creation failed\n");
+        return;
+    }
+    if (ClientSocket == INVALID_SOCKET)
+    {
+        skip("ERROR: Client socket creation failed\n");
+        closesocket(ServerSocket);
+        return;
+    }
+    ent = gethostbyname("127.0.0.1");
+    if (ent == NULL)
+    {
+        ok(ent != NULL, "ERROR: gethostbyname '127.0.0.1' failed, trying 'localhost'\n");
+        ent = gethostbyname("localhost");
+
+        if (ent == NULL)
+        {
+            skip("ERROR: gethostbyname 'localhost' failed\n");
+            goto done;
+        }
+    }
+
+    server_addr_in.sin_family = AF_INET;
+    server_addr_in.sin_port = htons(SVR_PORT);
+    memcpy(&server_addr_in.sin_addr.S_un.S_addr, ent->h_addr_list[0], 4);
+
+    // server inialialization
+    trace("Initializing server and client connections ...\n");
+    ok(bind(ServerSocket, (struct sockaddr*)&server_addr_in, sizeof(server_addr_in)) == 0, "ERROR: server bind failed\n");
+    ok(ioctlsocket(ServerSocket, FIONBIO, &ulValue) == 0, "ERROR: server ioctlsocket FIONBIO failed\n");
+
+    // client inialialization
+    ok(ioctlsocket(ClientSocket, FIONBIO, &ulValue) == 0, "ERROR: client ioctlsocket FIONBIO failed\n");
+
+    // listen
+    trace("Starting server listening mode ...\n");
+    ok(listen(ServerSocket, SOMAXCONN) == 0, "ERROR: cannot initialize server listen\n");
+
+    memset(&timeval, 0, sizeof(timeval));
+    timeval.tv_usec = WAIT_TIMEOUT_;
+    dwFlags = 0;
+
+    while (dwFlags != EXIT_FLAGS)
+    {
+        len = sizeof(addr_con_loc);
+        nSockNameRes = getsockname(ClientSocket, (struct sockaddr*)&addr_con_loc, &len);
+        if (dwFlags == 0 && !ConnectSent)
+        {
+            ok(nSockNameRes == SOCKET_ERROR, "ERROR: getsockname function failed, expected %d error %d\n", SOCKET_ERROR, nSockNameRes);
+            ok(WSAGetLastError() == WSAEINVAL, "ERROR: getsockname function failed, expected %ld error %d\n", WSAEINVAL, WSAGetLastError());
+            trace("Starting client to server connection ...\n");
+            // connect
+            nConRes = connect(ClientSocket, (struct sockaddr*)&server_addr_in, sizeof(server_addr_in));
+            ok(nConRes == SOCKET_ERROR, "ERROR: client connect() result is not SOCKET_ERROR\n");
+            ok(WSAGetLastError() == WSAEWOULDBLOCK, "ERROR: client connect() last error is not WSAEWOULDBLOCK\n");
+            ConnectSent = TRUE;
+            continue;
+        }
+        else
+        {
+            ok(nSockNameRes == 0, "ERROR: getsockname function failed, expected %d error %d\n", 0, nSockNameRes);
+            ok(len == sizeof(addr_con_loc), "ERROR: getsockname function wrong size, expected %d returned %d\n", sizeof(addr_con_loc), len);
+            ok(addr_con_loc.sin_addr.s_addr == server_addr_in.sin_addr.s_addr, "ERROR: getsockname function wrong addr, expected %lx returned %lx\n", server_addr_in.sin_addr.s_addr, addr_con_loc.sin_addr.s_addr);
+        }
+        if ((dwFlags & FD_ACCEPT) != 0)
+        {// client connected
+            trace("Select CONNECT...\n");
+            dwFlags |= FD_CONNECT;
+        }
+
+        FD_ZERO(&select_rfds);
+        FD_ZERO(&select_wfds);
+        FD_ZERO(&select_efds);
+        FD_SET(ServerSocket, &select_rfds);
+        FD_SET(ClientSocket, &select_rfds);
+        FD_SET(ServerSocket, &select_wfds);
+        FD_SET(ClientSocket, &select_wfds);
+        FD_SET(ServerSocket, &select_efds);
+        FD_SET(ClientSocket, &select_efds);
+        if ((dwFlags & FD_ACCEPT) != 0)
+        {
+            FD_SET(sockaccept, &select_rfds);
+            FD_SET(sockaccept, &select_wfds);
+            FD_SET(sockaccept, &select_efds);
+        }
+        if (select(0, &select_rfds, &select_wfds, &select_efds, &timeval) != 0)
+        {// connection accepted
+            if (dwFlags == (FD_ACCEPT | FD_CONNECT))
+            {
+                trace("Select ACCEPT&CONNECT...\n");
+                ok(FD_ISSET(ClientSocket, &select_wfds), "ClientSocket is not writable\n");
+                ok(FD_ISSET(sockaccept, &select_wfds), "sockaccept is not writable\n");
+                ok(!FD_ISSET(ServerSocket, &select_rfds), "ServerSocket is readable\n");
+            }
+            if (dwFlags == FD_ACCEPT)
+            {
+                trace("Select ACCEPT...\n");
+                ok(!FD_ISSET(ClientSocket, &select_wfds), "ClientSocket is writable\n");
+                ok(FD_ISSET(sockaccept, &select_wfds), "sockaccept is not writable\n");
+                ok(FD_ISSET(ServerSocket, &select_rfds), "ServerSocket is not readable\n");
+            }
+            if (dwFlags == 0)
+            {
+                if (FD_ISSET(ServerSocket, &select_rfds))
+                {
+                    trace("Select ACCEPT...\n");
+                    addrsize = sizeof(addr_remote);
+                    sockaccept = accept(ServerSocket, (struct sockaddr*)&addr_remote, &addrsize);
+                    ok(sockaccept != INVALID_SOCKET, "ERROR: Connection accept function failed, error %d\n", WSAGetLastError());
+                    dwFlags |= FD_ACCEPT;
+                }
+            }
+        }
+    }
 
 done:
     WSACloseEvent(ServerEvent);
     WSACloseEvent(ClientEvent);
+    closesocket(sockaccept);
     closesocket(ServerSocket);
     closesocket(ClientSocket);
 
