@@ -2998,7 +2998,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     if (MaximumSize.QuadPart > FileInfo.EndOfFile.QuadPart)
     {
         Status = IoSetInformation(FileObject,
-                                  FileAllocationInformation,
+                                  FileEndOfFileInformation,
                                   sizeof(LARGE_INTEGER),
                                   &MaximumSize);
         if (!NT_SUCCESS(Status))
