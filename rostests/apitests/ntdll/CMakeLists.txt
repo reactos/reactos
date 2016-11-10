@@ -40,8 +40,10 @@ list(APPEND SOURCE
     RtlGetLongestNtPathLength.c
     RtlImageRvaToVa.c
     RtlInitializeBitMap.c
+    RtlIsNameLegalDOS8Dot3.c
     RtlMemoryStream.c
     RtlReAllocateHeap.c
+    RtlUpcaseUnicodeStringToCountedOemString.c
     StackOverflow.c
     SystemInfo.c
     Timer.c

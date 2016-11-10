@@ -44,8 +44,10 @@ extern void func_RtlGetLengthWithoutTrailingPathSeperators(void);
 extern void func_RtlGetLongestNtPathLength(void);
 extern void func_RtlImageRvaToVa(void);
 extern void func_RtlInitializeBitMap(void);
+extern void func_RtlIsNameLegalDOS8Dot3(void);
 extern void func_RtlMemoryStream(void);
 extern void func_RtlReAllocateHeap(void);
+extern void func_RtlUpcaseUnicodeStringToCountedOemString(void);
 extern void func_StackOverflow(void);
 extern void func_TimerResolution(void);
 
@@ -92,8 +94,10 @@ const struct test winetest_testlist[] =
     { "RtlGetLongestNtPathLength",      func_RtlGetLongestNtPathLength },
     { "RtlImageRvaToVa",                func_RtlImageRvaToVa },
     { "RtlInitializeBitMap",            func_RtlInitializeBitMap },
+    { "RtlIsNameLegalDOS8Dot3",         func_RtlIsNameLegalDOS8Dot3 },
     { "RtlMemoryStream",                func_RtlMemoryStream },
     { "RtlReAllocateHeap",              func_RtlReAllocateHeap },
+    { "RtlUpcaseUnicodeStringToCountedOemString", func_RtlUpcaseUnicodeStringToCountedOemString },
     { "StackOverflow",                  func_StackOverflow },
     { "TimerResolution",                func_TimerResolution },
 
