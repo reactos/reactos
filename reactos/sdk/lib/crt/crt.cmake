@@ -305,6 +305,7 @@ list(APPEND CRT_SOURCE
     string/wcstombs_s.c
     string/wcstoul.c
     string/wctype.c
+    string/wtof.c
     string/wtoi.c
     string/wtoi64.c
     string/wtol.c
