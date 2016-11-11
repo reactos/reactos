@@ -3,6 +3,8 @@
  */
 
 #include <ms-dtyp.idl>
+
+#define UNICODE
 #include <sal.h>
 #include <windns.h>
 
@@ -48,7 +50,7 @@ interface DnsResolver
         [in] WORD wType, 
         [in] DWORD Flags, 
         [in][out] DWORD *dwRecords, 
-        [out][ref] _DnsRecordW** ppResultRecords);
+        [out][ref] DNS_RECORDW** ppResultRecords);
 
     /* Function: 0x08 */
     /* R_ResolverEnumCache */

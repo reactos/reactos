@@ -626,6 +626,7 @@ typedef struct _DnsRecordW {
     DNS_WINSR_DATAW WINSR, WinsR, NBSTAT, Nbstat;
   } Data;
 } DNS_RECORDW, *PDNS_RECORDW;
+#endif
 
 #ifdef UNICODE
 #define DNS_RECORD DNS_RECORDW
@@ -633,8 +634,6 @@ typedef struct _DnsRecordW {
 #else
 #define DNS_RECORD DNS_RECORDA
 #define PDNS_RECORD PDNS_RECORDA
-#endif
-
 #endif
 
 typedef struct _DnsRRSet {
