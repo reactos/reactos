@@ -1321,18 +1321,18 @@ WSPSelect(IN int nfds,
 }
 
 DWORD
-GetCurrentTimeInSeconds()
+GetCurrentTimeInSeconds(VOID)
 {
-    FILETIME Time;
-    FILETIME Adjustment;
-    ULARGE_INTEGER lTime, lAdj;
-    SYSTEMTIME st = { 1970,1,0,1,0,0,0 };
-    SystemTimeToFileTime(&st, &Adjustment);
-    memcpy(&lAdj, &Adjustment, sizeof(lAdj));
-    GetSystemTimeAsFileTime(&Time);
-    memcpy(&lTime, &Time, sizeof(lTime));
-    lTime.QuadPart -= lAdj.QuadPart;
-    return (DWORD)(lTime.QuadPart / 10000000LLU);
+    SYSTEMTIME st1970 = { 1970, 1, 0, 1, 0, 0, 0, 0 };
+    union
+    {
+        FILETIME ft;
+        ULONGLONG ll;
+    } u1970, Time;
+
+    GetSystemTimeAsFileTime(&Time.ft);
+    SystemTimeToFileTime(&st1970, &u1970.ft);
+    return (DWORD)((Time.ll - u1970.ll) / 10000000ULL);
 }
 
 SOCKET
