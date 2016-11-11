@@ -477,6 +477,7 @@ TestIrpHandler(
                 ok_bool_false(IoStack->Parameters.SetFile.AdvanceOnly, "AdvanceOnly set!\n");
                 ok(EOFInfo->EndOfFile.QuadPart > Fcb->Header.AllocationSize.QuadPart, "New size smaller\n");
 
+                Fcb->Header.AllocationSize.QuadPart = EOFInfo->EndOfFile.QuadPart;
                 if (CcIsFileCached(IoStack->FileObject))
                 {
                     CcSetFileSizes(IoStack->FileObject, (PCC_FILE_SIZES)(&(Fcb->Header.AllocationSize)));
