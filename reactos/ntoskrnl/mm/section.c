@@ -3153,11 +3153,6 @@ extern NTSTATUS NTAPI ElfFmtCreateSection
     IN PEXEFMT_CB_ALLOCATE_SEGMENTS AllocateSegmentsCb
 );
 
-/* TODO: this is a standard DDK/PSDK macro */
-#ifndef RTL_NUMBER_OF
-#define RTL_NUMBER_OF(ARR_) (sizeof(ARR_) / sizeof((ARR_)[0]))
-#endif
-
 static PEXEFMT_LOADER ExeFmtpLoaders[] =
 {
     PeFmtCreateSection,
