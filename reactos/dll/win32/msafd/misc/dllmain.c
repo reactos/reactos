@@ -2056,7 +2056,7 @@ WSPGetSockName(IN SOCKET Handle,
 {
     IO_STATUS_BLOCK         IOSB;
     ULONG                   TdiAddressSize;
-	PTDI_ADDRESS_INFO       TdiAddress;
+    PTDI_ADDRESS_INFO       TdiAddress;
     PTRANSPORT_ADDRESS      SocketAddress;
     PSOCKET_INFORMATION     Socket = NULL;
     NTSTATUS                Status;
@@ -2087,7 +2087,7 @@ WSPGetSockName(IN SOCKET Handle,
 
     /* Allocate a buffer for the address */
     TdiAddressSize =
-		sizeof(TRANSPORT_ADDRESS) + Socket->SharedData->SizeOfLocalAddress;
+        sizeof(TRANSPORT_ADDRESS) + Socket->SharedData->SizeOfLocalAddress;
     TdiAddress = HeapAlloc(GlobalHeap, 0, TdiAddressSize);
 
     if ( TdiAddress == NULL )
@@ -3877,5 +3877,3 @@ DllMain(HANDLE hInstDll,
 }
 
 /* EOF */
-
-
