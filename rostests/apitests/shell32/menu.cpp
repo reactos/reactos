@@ -257,7 +257,7 @@ public:
 
        struct _test_info *result = &m_results[m_iCallback-1];
 
-       ok(psmd != S_OK, "Got NULL psmd\n");
+       ok(psmd != NULL, "Got NULL psmd\n");
        ok(m_iTest == result->iTest, "Wrong test number (%d not %d)\n", m_iTest, result->iTest);
        ok(result->uMsg == uMsg, "%d: Got wrong uMsg (%d instead of %d)\n", m_iCallback, uMsg, result->uMsg);
            
