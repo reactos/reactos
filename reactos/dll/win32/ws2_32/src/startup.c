@@ -92,7 +92,7 @@ WSACleanup(VOID)
     }
     else
     {
-        DPRINT("WSACleanup unintialized\n");
+        DPRINT("WSACleanup uninitialized\n");
         /* Weren't initialized */
         SetLastError(ErrorCode);
         ErrorCode = SOCKET_ERROR;

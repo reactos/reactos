@@ -34,7 +34,7 @@ BEGIN
     IDS_HOTPLUG_DRIVE " - Laufwerk (%s)"
     IDS_HOTPLUG_DRIVES " - Laufwerke (%s)"
     IDS_HOTPLUG_A "A:"
-    IDS_HOTPLUG_REQUIERES "Diese Hardware erfordert ""Sicheres Entfernen"""
+    IDS_HOTPLUG_REQUIRES "Diese Hardware erfordert ""Sicheres Entfernen"""
     IDS_HOTPLUG_CLICK "Klicken Sie auf dieses Symbol, und wählen Sie die zu entfernende Hardware, bevor Sie diese Hardware entfernen."
 
     //Volume related strings

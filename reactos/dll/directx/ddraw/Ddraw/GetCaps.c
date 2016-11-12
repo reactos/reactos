@@ -9,7 +9,7 @@
 
 /* TODO
  * lpddNLVHELCaps and lpddNLVCaps
- * Thouse two can be null or inviald in lpGBL
+ * Thouse two can be null or invalid in lpGBL
  * we need add code in startup to detect if we have lpddNLVCaps set
  * ms HEL does not support lpddNLVHELCaps shall we do that ?
  * ms HEL does not support dwVidMemTotal and dwVidMemFree shall we implement a emulate of them ?

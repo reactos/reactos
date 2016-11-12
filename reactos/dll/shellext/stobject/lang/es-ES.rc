@@ -35,7 +35,7 @@ BEGIN
     IDS_HOTPLUG_DRIVE " - Unidad(%s)"
     IDS_HOTPLUG_DRIVES " - Unidades(%s)"
     IDS_HOTPLUG_A "A:"
-    IDS_HOTPLUG_REQUIERES "Este dispositivo necesita una ""desconexión segura"""
+    IDS_HOTPLUG_REQUIRES "Este dispositivo necesita una ""desconexión segura"""
     IDS_HOTPLUG_CLICK "Antes de desconectar el dispositivo, haga clic en este icono y eliga el dispositivo a desconectar."
 
     //Volume related strings

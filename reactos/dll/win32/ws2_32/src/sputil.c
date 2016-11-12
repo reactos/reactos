@@ -151,7 +151,7 @@ WPUQueryBlockingCallback(IN DWORD dwCatalogEntryId,
     }
     else
     {
-        /* Return excpected value and no callback */
+        /* Return expected value and no callback */
         Status = SOCKET_ERROR;
         Callback = NULL;
     }

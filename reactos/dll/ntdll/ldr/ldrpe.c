@@ -148,7 +148,7 @@ LdrpSnapIAT(IN PLDR_DATA_TABLE_ENTRY ExportLdrEntry,
         /* We'll only do forwarders. Get the import name */
         ImportName = (LPSTR)((ULONG_PTR)ImportLdrEntry->DllBase + IatEntry->Name);
 
-        /* Get the list of forwaders */
+        /* Get the list of forwarders */
         ForwarderChain = IatEntry->ForwarderChain;
 
         /* Loop them */
@@ -288,7 +288,7 @@ LdrpHandleOneNewFormatImportDescriptor(IN LPWSTR DllPath OPTIONAL,
     /* Get the name's VA */
     BoundImportName = (LPSTR)FirstEntry + BoundEntry->OffsetModuleName;
 
-    /* Show debug mesage */
+    /* Show debug message */
     if (ShowSnaps)
     {
         DPRINT1("LDR: %wZ bound to %s\n", &LdrEntry->BaseDllName, BoundImportName);

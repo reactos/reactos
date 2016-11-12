@@ -70,7 +70,7 @@ typedef struct
  * and different sizes. In other words the user can select a combination
  * of colour and size. 
  * That means that for the classic theme THEME.SizesList is unused and 
- * every color has some child styles that corespond its sizes.
+ * every color has some child styles that correspond its sizes.
  * The themes for visual styles however will use both ColoursList and SizesList
  * and ChildStyle will not be used.
  */

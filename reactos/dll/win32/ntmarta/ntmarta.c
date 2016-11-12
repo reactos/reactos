@@ -1117,7 +1117,7 @@ AccpCloseObjectHandle(SE_OBJECT_TYPE ObjectType,
 {
     ASSERT(Handle != NULL);
 
-    /* close allocated handlees depending on the object type */
+    /* close allocated handles depending on the object type */
     switch (ObjectType)
     {
         case SE_REGISTRY_KEY:

@@ -967,7 +967,7 @@ PaintControl(IN PCHECKLISTWND infoPtr,
             }
 
             /* draw the standard checkbox if no themes are enabled or drawing the
-               themeed control failed */
+               themed control failed */
             if (FAILED(hDrawResult))
 #endif
             {
@@ -1022,7 +1022,7 @@ PaintControl(IN PCHECKLISTWND infoPtr,
             }
 
             /* draw the standard checkbox if no themes are enabled or drawing the
-               themeed control failed */
+               themed control failed */
             if (FAILED(hDrawResult))
 #endif
             {

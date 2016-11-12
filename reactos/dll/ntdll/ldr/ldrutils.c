@@ -21,7 +21,7 @@ BOOLEAN g_ShimsEnabled;
 
 /* FUNCTIONS *****************************************************************/
 
-/* NOTE: Remove thise one once our actctx support becomes better */
+/* NOTE: Remove this one once our actctx support becomes better */
 NTSTATUS find_actctx_dll( LPCWSTR libname, WCHAR *fullname )
 {
     static const WCHAR winsxsW[] = {'\\','w','i','n','s','x','s','\\'};
@@ -2290,7 +2290,7 @@ LdrpGetProcedureAddress(IN PVOID BaseAddress,
             return STATUS_INVALID_PARAMETER;
         }
 
-        /* Set the orginal flag in the thunk */
+        /* Set the original flag in the thunk */
         Thunk.u1.Ordinal = Ordinal | IMAGE_ORDINAL_FLAG;
     }
 

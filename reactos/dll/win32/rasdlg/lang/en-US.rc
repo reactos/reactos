@@ -1314,7 +1314,7 @@ BEGIN
     AUTOCHECKBOX "&Use pre-shared key for authentication", 1604, 21, 15, 217, 10
     LTEXT "&Key:", 1602, 20, 31, 44, 12
     EDITTEXT 1605, 66, 30, 172, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX "Allow certificiates from my user store in addition to machine certificates", 1606, 20, 50, 242, 13, WS_DISABLED
+    AUTOCHECKBOX "Allow certificates from my user store in addition to machine certificates", 1606, 20, 50, 242, 13, WS_DISABLED
     AUTOCHECKBOX "Use a specific certificate", 1607, 20, 67, 239, 10, WS_DISABLED
     PUSHBUTTON "Select", 1608, 31, 84, 50, 14, WS_DISABLED
     COMBOBOX 1610, 91, 84, 135, 30, CBS_DROPDOWN | CBS_SORT | WS_DISABLED | WS_VSCROLL | NOT WS_TABSTOP
@@ -2291,15 +2291,15 @@ BEGIN
     7324 "An internal error has occured.  \0"
     7325 "Listview\0"
     7326 "An error has occurred while attempting to commit the changes you have made to the local user database.  \0"
-    7327 "You have insufficient priveleges to add a user to the local system database.  \0"
+    7327 "You have insufficient privileges to add a user to the local system database.  \0"
     7328 "The user you are trying create already exists in the local user database.\0"
     7329 "The user was not added to the local user database because the password you entered was rejected.\0"
     7330 "Unable to reload the system user database because of an internal error.\0"
     7331 "An internal error has occurred:  The local user database handle is corrupt.\0"
-    7332 "Unable to load the resources neccessary to display the user tab.\0"
+    7332 "Unable to load the resources necessary to display the user tab.\0"
     7333 "An internal error occured while attempting to rollback the changes you made to the local user database.  \0"
     7334 "The device database handle is corrupt.\0"
-    7335 "Unable to load the resources neccessary to display the general tab.\0"
+    7335 "Unable to load the resources necessary to display the general tab.\0"
     7336 "An error has occurred while attempting to commit some of the device/vpn related changes you have made.  \0"
     7337 "An internal error occured.\0"
     7338 "An internal error occurred: The networking component database handle is corrupt.\0"

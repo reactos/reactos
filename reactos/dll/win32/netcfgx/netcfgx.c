@@ -143,7 +143,7 @@ DllGetClassObject(
 
 /* Append a REG_SZ to an existing REG_MULTI_SZ string in the registry.
  * If the value doesn't exist, create it.
- * Returns ERROR_SUCCESS if success. Othewise, returns an error code
+ * Returns ERROR_SUCCESS if success. Otherwise, returns an error code
  */
 static
 LONG

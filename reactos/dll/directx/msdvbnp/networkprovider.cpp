@@ -59,7 +59,7 @@ public:
     HRESULT STDMETHODCALLTYPE GetNetworkType(GUID *pguidNetworkType);
     HRESULT STDMETHODCALLTYPE PutTuningSpace(REFGUID guidTuningSpace);
     HRESULT STDMETHODCALLTYPE GetTuningSpace(GUID *pguidTuingSpace);
-    HRESULT STDMETHODCALLTYPE RegisterDeviceFilter(IUnknown *pUnkFilterControl, ULONG *ppvRegisitrationContext);
+    HRESULT STDMETHODCALLTYPE RegisterDeviceFilter(IUnknown *pUnkFilterControl, ULONG *ppvRegistrationContext);
     HRESULT STDMETHODCALLTYPE UnRegisterDeviceFilter(ULONG pvRegistrationContext);
 
     CNetworkProvider(LPCGUID ClassID);
@@ -454,7 +454,7 @@ HRESULT
 STDMETHODCALLTYPE
 CNetworkProvider::RegisterDeviceFilter(
     IUnknown *pUnkFilterControl,
-    ULONG *ppvRegisitrationContext)
+    ULONG *ppvRegistrationContext)
 {
     HRESULT hr;
     IBDA_DeviceControl * pDeviceControl = NULL;
@@ -462,7 +462,7 @@ CNetworkProvider::RegisterDeviceFilter(
 
     OutputDebugStringW(L"CNetworkProvider::RegisterDeviceFilter\n");
 
-    if (!pUnkFilterControl || !ppvRegisitrationContext)
+    if (!pUnkFilterControl || !ppvRegistrationContext)
     {
         //invalid argument
         return E_POINTER;
@@ -497,7 +497,7 @@ CNetworkProvider::RegisterDeviceFilter(
     pTopology->Release();
 
     // store registration ctx
-    *ppvRegisitrationContext = (m_DeviceFilters.size() | DEVICE_FILTER_MASK);
+    *ppvRegistrationContext = (m_DeviceFilters.size() | DEVICE_FILTER_MASK);
 
     // store filter
     m_DeviceFilters.push_back(pUnkFilterControl);

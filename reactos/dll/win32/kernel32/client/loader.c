@@ -73,7 +73,7 @@ BasepMapModuleHandle(HMODULE hModule, BOOLEAN AsDataFile)
     if (LDR_IS_DATAFILE(hModule) && !AsDataFile)
         return NULL;
 
-    /* It'a a normal DLL, just return its handle */
+    /* It's a normal DLL, just return its handle */
     return hModule;
 }
 
@@ -432,7 +432,7 @@ GetProcAddress(HMODULE hModule, LPCSTR lpProcName)
     }
 
     /* Check for a special case when returned pointer is
-       the same as iamge's base address */
+       the same as image's base address */
     if (fnExp == hMapped)
     {
         /* Set correct error code */
@@ -569,7 +569,7 @@ GetModuleFileNameA(HINSTANCE hModule,
         Status = BasepUnicodeStringTo8BitString(&FilenameA, &FilenameW, TRUE);
         if (!NT_SUCCESS(Status))
         {
-            /* Set last error, free string and retun failure */
+            /* Set last error, free string and return failure */
             BaseSetLastNTError(Status);
             RtlFreeUnicodeString(&FilenameW);
             return 0;

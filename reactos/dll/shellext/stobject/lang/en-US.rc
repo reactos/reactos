@@ -34,7 +34,7 @@ BEGIN
     IDS_HOTPLUG_DRIVE " - Drive(%s)"
     IDS_HOTPLUG_DRIVES " - Drives(%s)"
     IDS_HOTPLUG_A "A:"
-    IDS_HOTPLUG_REQUIERES "This hardware requires ""Safe Removal"""
+    IDS_HOTPLUG_REQUIRES "This hardware requires ""Safe Removal"""
     IDS_HOTPLUG_CLICK "Before removing this hardware, click on this icon and select the hardware you want to remove."
 
     //Volume related strings

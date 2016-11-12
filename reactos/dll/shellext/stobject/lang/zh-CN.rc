@@ -36,7 +36,7 @@ BEGIN
     IDS_HOTPLUG_DRIVE " - 磁盘(%s)"
     IDS_HOTPLUG_DRIVES " - 磁盘(%s)"
     IDS_HOTPLUG_A "A:"
-    IDS_HOTPLUG_REQUIERES "此硬件所需""安全删除"""
+    IDS_HOTPLUG_REQUIRES "此硬件所需""安全删除"""
     IDS_HOTPLUG_CLICK "删除这个硬件之前, 单击此图标并选择您想要删除的硬件。"
 
     //Volume related strings

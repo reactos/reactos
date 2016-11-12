@@ -90,7 +90,7 @@ ApplyConsoleInfo(HWND hwndDlg)
     static BOOL ConsoleInfoAlreadySaved = FALSE;
     
     /*
-     * We alread applied all the console properties (and saved if needed).
+     * We already applied all the console properties (and saved if needed).
      * Nothing more needs to be done.
      */
     if (ConsoleInfoAlreadySaved)

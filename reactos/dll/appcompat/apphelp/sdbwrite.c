@@ -95,7 +95,7 @@ static BOOL WINAPI SdbpWriteStringtable(PDB db)
  * 
  * If a file already exists on specified path, that file shall be overwritten.
  * 
- * @note Use SdbCloseDatabasWrite to close the database opened with this function.
+ * @note Use SdbCloseDatabaseWrite to close the database opened with this function.
  *
  * @param [in]  path    Path to the new shim database.
  * @param [in]  type    Type of path. Either DOS_PATH or NT_PATH.

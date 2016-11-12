@@ -36,7 +36,7 @@ BEGIN
     IDS_HOTPLUG_DRIVE " - Диск(%s)"
     IDS_HOTPLUG_DRIVES " - Диски(%s)"
     IDS_HOTPLUG_A "A:"
-    IDS_HOTPLUG_REQUIERES "Это оборудование требует ""Безопасного извлечения"""
+    IDS_HOTPLUG_REQUIRES "Это оборудование требует ""Безопасного извлечения"""
     IDS_HOTPLUG_CLICK "Перед извлечением устройства, кликните эту иконку и выберите устройство, которое вы хотите отключить."
 
     //Volume related strings

@@ -578,7 +578,7 @@ SystemFunction036(PVOID pbBuffer, ULONG dwLen)
     ////////////////////////////////////////////////////////////////
     //////////////////// B I G   W A R N I N G  !!! ////////////////
     // This function will output numbers based on the tick count. //
-    // It will NOT OUPUT CRYPTOGRAPHIC-SAFE RANDOM NUMBERS !!!    //
+    // It will NOT OUTPUT CRYPTOGRAPHIC-SAFE RANDOM NUMBERS !!!    //
     ////////////////////////////////////////////////////////////////
 
     DWORD dwSeed;

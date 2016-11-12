@@ -36,7 +36,7 @@ BEGIN
     IDS_HOTPLUG_DRIVE " - Sürücü (%s)"
     IDS_HOTPLUG_DRIVES " - Sürücüler (%s)"
     IDS_HOTPLUG_A "A:"
-    IDS_HOTPLUG_REQUIERES "Bu donanım ""Güvenli Kaldır""mayı destekliyor."
+    IDS_HOTPLUG_REQUIRES "Bu donanım ""Güvenli Kaldır""mayı destekliyor."
     IDS_HOTPLUG_CLICK "Bu donanımı kaldırmadan önce bu simgenin üzerine tıklayınız ve kaldırmak istediğiniz donanımı seçiniz."
 
     //Volume related strings

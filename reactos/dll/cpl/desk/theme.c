@@ -220,7 +220,7 @@ LoadCurrentScheme(OUT COLOR_SCHEME *scheme)
 }
 
 /*
- * LoadSchemeFromReg: Populates the passed scheme with values retireved from registry
+ * LoadSchemeFromReg: Populates the passed scheme with values retrieved from registry
  */
 BOOL
 LoadSchemeFromReg(OUT COLOR_SCHEME *scheme, IN PTHEME_SELECTION pSelectedTheme)

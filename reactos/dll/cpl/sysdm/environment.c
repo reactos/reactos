@@ -538,7 +538,7 @@ SetAllVars(HWND hwndDlg,
     hwndListView = GetDlgItem(hwndDlg, iDlgItem);
     /* First item is 0 */
     iItem = 0;
-    /* Set up struct to retreive item */
+    /* Set up struct to retrieve item */
     lvi.mask = LVIF_PARAM;
     lvi.iItem = iItem;
 

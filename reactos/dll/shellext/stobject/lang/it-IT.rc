@@ -34,7 +34,7 @@ BEGIN
     IDS_HOTPLUG_DRIVE     " - Unità disco(%s)"
     IDS_HOTPLUG_DRIVES    " - Unità dischi(%s)"
     IDS_HOTPLUG_A         "A:"
-    IDS_HOTPLUG_REQUIERES "Questo dispositivo richiede ""Rimozione Sicura"""
+    IDS_HOTPLUG_REQUIRES "Questo dispositivo richiede ""Rimozione Sicura"""
     IDS_HOTPLUG_CLICK     "Prima di rimuovere questo dispositivo, fare clic su questa icona e selezionare la voce che si desidera rimuovere."
 
     //Volume related strings

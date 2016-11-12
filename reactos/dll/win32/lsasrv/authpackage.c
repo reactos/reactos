@@ -2,7 +2,7 @@
  * PROJECT:     Local Security Authority Server DLL
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/lsasrv/authpackage.c
- * PURPOSE:     Authenticaton package management routines
+ * PURPOSE:     Authentication package management routines
  * COPYRIGHT:   Copyright 2013 Eric Kohl
  */
 
@@ -1410,7 +1410,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-        /* Read the authentication info from the callers adress space */
+        /* Read the authentication info from the callers address space */
         Status = NtReadVirtualMemory(LogonContext->ClientProcessHandle,
                                      RequestMsg->LogonUser.Request.AuthenticationInformation,
                                      LocalAuthInfo,

@@ -248,7 +248,7 @@ WSALookupServiceBeginA(IN LPWSAQUERYSETA lpqsRestrictions,
     DWORD UnicodeQuerySetSize = 0;
     DPRINT("WSALookupServiceBeginA: %p\n", lpqsRestrictions);
 
-    /* Verifiy pointer */
+    /* Verify pointer */
     if (IsBadReadPtr(lpqsRestrictions, sizeof(*lpqsRestrictions)) || 
         IsBadReadPtr(lpqsRestrictions->lpServiceClassId, sizeof(*lpqsRestrictions->lpServiceClassId)))
     {

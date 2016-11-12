@@ -68,7 +68,7 @@ typedef struct _DDRAWI_DIRECTDRAW_GBL {
   LPDDRAWI_DIRECTDRAW_GBL  lp16DD;    // pointer to it self (DDRAWI_DIRECTDRAW_GBL)
   DWORD  dwMaxOverlays;
   DWORD  dwCurrOverlays;
-  DWORD  dwMonitorFrequency;         // current mointor freq, (nivida always set this to 0, it is a bug in nvida drv)
+  DWORD  dwMonitorFrequency;         // current monitor freq, (nvidia always set this to 0, it is a bug in nvidia drv)
   DDCORECAPS  ddHELCaps;
   DWORD  dwUnused2[50];
   DDCOLORKEY  ddckCKDestOverlay;

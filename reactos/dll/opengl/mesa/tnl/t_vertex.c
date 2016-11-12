@@ -432,7 +432,7 @@ void _tnl_build_vertices( struct gl_context *ctx,
 }
 
 /* Emit VB vertices start..end to dest.  Note that VB vertex at
- * postion start will be emitted to dest at position zero.
+ * position start will be emitted to dest at position zero.
  */
 void *_tnl_emit_vertices_to_buffer( struct gl_context *ctx,
 				    GLuint start,
@@ -449,7 +449,7 @@ void *_tnl_emit_vertices_to_buffer( struct gl_context *ctx,
 }
 
 /* Emit indexed VB vertices start..end to dest.  Note that VB vertex at
- * postion start will be emitted to dest at position zero.
+ * position start will be emitted to dest at position zero.
  */
 
 void *_tnl_emit_indexed_vertices_to_buffer( struct gl_context *ctx,

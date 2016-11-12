@@ -899,7 +899,7 @@ SamrOpenDomain(IN SAMPR_HANDLE ServerHandle,
     }
     else
     {
-        /* No vaild domain SID */
+        /* No valid domain SID */
         Status = STATUS_INVALID_PARAMETER;
     }
 
@@ -3053,7 +3053,7 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
         goto done;
     }
 
-    /* Check the alias acoount name */
+    /* Check the alias account name */
     Status = SampCheckAccountName(AccountName, 256);
     if (!NT_SUCCESS(Status))
     {
@@ -5904,7 +5904,7 @@ SampQueryUserLogon(PSAM_DB_OBJECT UserObject,
     }
 
     /* Get the LogonHours attribute */
-    Status = SampGetLogonHoursAttrbute(UserObject,
+    Status = SampGetLogonHoursAttribute(UserObject,
                                        &InfoBuffer->Logon.LogonHours);
     if (!NT_SUCCESS(Status))
     {
@@ -6071,7 +6071,7 @@ SampQueryUserAccount(PSAM_DB_OBJECT UserObject,
     }
 
     /* Get the LogonHours attribute */
-    Status = SampGetLogonHoursAttrbute(UserObject,
+    Status = SampGetLogonHoursAttribute(UserObject,
                                        &InfoBuffer->Account.LogonHours);
     if (!NT_SUCCESS(Status))
     {
@@ -6140,11 +6140,11 @@ SampQueryUserLogonHours(PSAM_DB_OBJECT UserObject,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    Status = SampGetLogonHoursAttrbute(UserObject,
+    Status = SampGetLogonHoursAttribute(UserObject,
                                        &InfoBuffer->LogonHours.LogonHours);
     if (!NT_SUCCESS(Status))
     {
-        TRACE("SampGetLogonHoursAttrbute failed (Status 0x%08lx)\n", Status);
+        TRACE("SampGetLogonHoursAttribute failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -6994,7 +6994,7 @@ SampQueryUserAll(PSAM_DB_OBJECT UserObject,
     /* Get the LogonHours attribute */
     if (InfoBuffer->All.WhichFields & USER_ALL_LOGONHOURS)
     {
-        Status = SampGetLogonHoursAttrbute(UserObject,
+        Status = SampGetLogonHoursAttribute(UserObject,
                                            &InfoBuffer->All.LogonHours);
         if (!NT_SUCCESS(Status))
         {
@@ -7871,7 +7871,7 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
 
     if (WhichFields & USER_ALL_LOGONHOURS)
     {
-        Status = SampSetLogonHoursAttrbute(UserObject,
+        Status = SampSetLogonHoursAttribute(UserObject,
                                            &Buffer->All.LogonHours);
         if (!NT_SUCCESS(Status))
             goto done;
@@ -7952,13 +7952,13 @@ SampSetUserAll(PSAM_DB_OBJECT UserObject,
     {
         if (Buffer->All.PasswordExpired)
         {
-            /* The pasword was last set ages ago */
+            /* The password was last set ages ago */
             FixedData.PasswordLastSet.LowPart = 0;
             FixedData.PasswordLastSet.HighPart = 0;
         }
         else
         {
-            /* The pasword was last set right now */
+            /* The password was last set right now */
             Status = NtQuerySystemTime(&FixedData.PasswordLastSet);
             if (!NT_SUCCESS(Status))
                 goto done;
@@ -8073,7 +8073,7 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
         case UserLogonHoursInformation:
-            Status = SampSetLogonHoursAttrbute(UserObject,
+            Status = SampSetLogonHoursAttribute(UserObject,
                                                &Buffer->LogonHours.LogonHours);
             break;
 

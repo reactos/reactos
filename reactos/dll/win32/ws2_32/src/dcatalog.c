@@ -834,7 +834,7 @@ CatalogChanged:
         /* Check if the socket is invalid */
         if (NewHandle == INVALID_SOCKET) return WSAENOTSOCK;
 
-        /* We suceeded, get out of here */
+        /* We succeeded, get out of here */
         return ERROR_SUCCESS;
     }
 

@@ -272,14 +272,14 @@ DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
  */
 NTSTATUS
 NTAPI
-DbgUiWaitStateChange(OUT PDBGUI_WAIT_STATE_CHANGE DbgUiWaitStateCange,
+DbgUiWaitStateChange(OUT PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
                      IN PLARGE_INTEGER TimeOut OPTIONAL)
 {
     /* Tell the kernel to wait */
     return NtWaitForDebugEvent(NtCurrentTeb()->DbgSsReserved[1],
                                TRUE,
                                TimeOut,
-                               DbgUiWaitStateCange);
+                               WaitStateChange);
 }
 
 /*

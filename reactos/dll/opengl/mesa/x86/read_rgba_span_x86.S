@@ -361,7 +361,7 @@ _generic_read_RGBA_span_BGRA8888_REV_SSE2:
 
 	/* If the source pointer isn't a multiple of 16 we have to process
 	 * a few pixels the "slow" way to get the address aligned for
-	 * the SSE fetch intsructions.
+	 * the SSE fetch instructions.
 	 */
 
 	negl	%eax

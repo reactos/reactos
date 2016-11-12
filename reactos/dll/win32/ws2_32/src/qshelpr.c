@@ -47,7 +47,7 @@ AnsiDupFromUnicode(IN LPWSTR UnicodeString)
         }
         else if (ReturnValue > 0)
         {
-            /* The second loop was sucesfull and we have the string */
+            /* The second loop was successful and we have the string */
             GoOn = FALSE;
         }
         else
@@ -93,7 +93,7 @@ UnicodeDupFromAnsi(IN LPSTR AnsiString)
         }
         else if (ReturnValue > 0)
         {
-            /* The second loop was sucesfull and we have the string */
+            /* The second loop was successful and we have the string */
             GoOn = FALSE;
         }
         else

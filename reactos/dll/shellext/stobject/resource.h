@@ -23,7 +23,7 @@
 #define IDS_HOTPLUG_DRIVE         219
 #define IDS_HOTPLUG_DRIVES        220
 #define IDS_HOTPLUG_A             221
-#define IDS_HOTPLUG_REQUIERES     222
+#define IDS_HOTPLUG_REQUIRES      222
 #define IDS_HOTPLUG_CLICK         223
 
 #define IDI_VOLUME                230

@@ -42,7 +42,7 @@ const LPCWSTR ObjectTypeNames [] = {
     L"Mutant", L"Section", L"Event", L"Semaphore",
     L"Timer", L"Key", L"EventPair", L"IoCompletion",
     L"Device", L"File", L"Controller", L"Profile",
-    L"Type", L"Desktop", L"WindowStatiom", L"Driver",
+    L"Type", L"Desktop", L"WindowStation", L"Driver",
     L"Token", L"Process", L"Thread", L"Adapter", L"Port",
     0
 };
@@ -86,7 +86,7 @@ static DWORD NtOpenObject(OBJECT_TYPE type, PHANDLE phandle, DWORD access, LPCWS
     case TIMER_OBJECT:          return NtOpenTimer(phandle, access, &open_struct);
     case KEY_OBJECT:            return NtOpenKey(phandle, access, &open_struct);
     case EVENTPAIR_OBJECT:      return NtOpenEventPair(phandle, access, &open_struct);
-    case IOCOMPLETITION_OBJECT: return NtOpenIoCompletion(phandle, access, &open_struct);
+    case IOCOMPLETION_OBJECT:   return NtOpenIoCompletion(phandle, access, &open_struct);
     case FILE_OBJECT:           return NtOpenFile(phandle, access, &open_struct, &ioStatusBlock, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, 0);
     default:
         return ERROR_INVALID_FUNCTION;

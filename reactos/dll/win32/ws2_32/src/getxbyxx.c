@@ -51,7 +51,7 @@ UnpackServEnt(PSERVENT Servent)
     /* Convert all the List Offsets to Pointers */
     FixList(&Servent->s_aliases, ServentPtr);
 
-    /* Convert the Name and Protocol Offesets to Pointers */
+    /* Convert the Name and Protocol Offsets to Pointers */
     Servent->s_name = (PCHAR)(Servent->s_name + ServentPtr);
     Servent->s_proto = (PCHAR)(Servent->s_proto + ServentPtr);
 }
@@ -449,7 +449,7 @@ getservbyport(IN int port,
         return NULL;
     }
 
-    /* No protocol specifed */
+    /* No protocol specified */
     if(!proto) proto = "";
 
     /* Allocate memory for the port name */
@@ -518,7 +518,7 @@ getservbyname(IN const char FAR * name,
         return NULL;
     }
 
-    /* No protocol specifed */
+    /* No protocol specified */
     if(!proto) proto = "";
 
     /* Allocate buffer for it */

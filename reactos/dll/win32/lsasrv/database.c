@@ -367,7 +367,7 @@ LsapCreateDatabaseObjects(VOID)
                            &DnsDomainGuid,
                            sizeof(GUID));
 
-    /* Set the Sceurity Descriptor */
+    /* Set the Security Descriptor */
     LsapSetObjectAttribute(PolicyObject,
                            L"SecDesc",
                            PolicySd,

@@ -73,7 +73,7 @@ GetProtoOpenNetworkDatabase(PCHAR Name)
     }
     else
     {
-        /* Use defalt path */
+        /* Use default path */
         GetSystemDirectory(ExpandedPath, MAX_PATH);
         if (ExpandedPath[strlen(ExpandedPath) - 1] != '\\')
         {

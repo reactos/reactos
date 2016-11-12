@@ -706,7 +706,7 @@ WSPCloseSocket(IN SOCKET Handle,
             /*
              * We have to execute a sleep, so it's kind of like
              * a block. If the socket is Nonblock, we cannot
-             * go on since asyncronous operation is expected
+             * go on since asynchronous operation is expected
              * and we cannot offer it
              */
             if (Socket->SharedData->NonBlocking)
@@ -1208,7 +1208,7 @@ WSPSelect(IN int nfds,
 
     TRACE("DeviceIoControlFile => %x\n", Status);
 
-    /* Wait for Completition */
+    /* Wait for Completion */
     if (Status == STATUS_PENDING)
     {
         WaitForSingleObject(SockEvent, INFINITE);
@@ -3369,7 +3369,7 @@ int CreateContext(PSOCKET_INFORMATION Socket)
                                    NULL,
                                    0);
 
-    /* Wait for Completition */
+    /* Wait for Completion */
     if (Status == STATUS_PENDING)
     {
         WaitForSingleObject(SockEvent, INFINITE);
@@ -3482,7 +3482,7 @@ BOOLEAN SockGetAsyncSelectHelperAfdHandle(VOID)
     FILE_COMPLETION_INFORMATION CompletionInfo;
     OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags;
 
-    /* First, make sure we're not already intialized */
+    /* First, make sure we're not already initialized */
     if (SockAsyncHelperAfdHandle)
     {
         return TRUE;
@@ -3567,7 +3567,7 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
                 if (0 != (Socket->SharedData->AsyncEvents & FD_READ) &&
                     0 == (Socket->SharedData->AsyncDisabledEvents & FD_READ))
                 {
-                    /* Make the Notifcation */
+                    /* Make the Notification */
                     (Upcalls.lpWPUPostMessage)(Socket->SharedData->hWnd,
                                                Socket->SharedData->wMsg,
                                                Socket->Handle,
@@ -3581,7 +3581,7 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
             if (0 != (Socket->SharedData->AsyncEvents & FD_OOB) &&
                 0 == (Socket->SharedData->AsyncDisabledEvents & FD_OOB))
             {
-                /* Make the Notifcation */
+                /* Make the Notification */
                 (Upcalls.lpWPUPostMessage)(Socket->SharedData->hWnd,
                                            Socket->SharedData->wMsg,
                                            Socket->Handle,
@@ -3595,7 +3595,7 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
                 if (0 != (Socket->SharedData->AsyncEvents & FD_WRITE) &&
                     0 == (Socket->SharedData->AsyncDisabledEvents & FD_WRITE))
                 {
-                    /* Make the Notifcation */
+                    /* Make the Notification */
                     (Upcalls.lpWPUPostMessage)(Socket->SharedData->hWnd,
                                                Socket->SharedData->wMsg,
                                                Socket->Handle,
@@ -3611,7 +3611,7 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
                 if (0 != (Socket->SharedData->AsyncEvents & FD_CONNECT) &&
                     0 == (Socket->SharedData->AsyncDisabledEvents & FD_CONNECT))
                 {
-                    /* Make the Notifcation */
+                    /* Make the Notification */
                     (Upcalls.lpWPUPostMessage)(Socket->SharedData->hWnd,
                         Socket->SharedData->wMsg,
                         Socket->Handle,
@@ -3625,7 +3625,7 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
                 if (0 != (Socket->SharedData->AsyncEvents & FD_ACCEPT) &&
                     0 == (Socket->SharedData->AsyncDisabledEvents & FD_ACCEPT))
                 {
-                    /* Make the Notifcation */
+                    /* Make the Notification */
                     (Upcalls.lpWPUPostMessage)(Socket->SharedData->hWnd,
                                                Socket->SharedData->wMsg,
                                                Socket->Handle,
@@ -3641,7 +3641,7 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
                 if (0 != (Socket->SharedData->AsyncEvents & FD_CLOSE) &&
                     0 == (Socket->SharedData->AsyncDisabledEvents & FD_CLOSE))
                 {
-                    /* Make the Notifcation */
+                    /* Make the Notification */
                     (Upcalls.lpWPUPostMessage)(Socket->SharedData->hWnd,
                                                Socket->SharedData->wMsg,
                                                Socket->Handle,
@@ -3763,7 +3763,7 @@ VOID SockProcessQueuedAsyncSelect(PVOID Context, PIO_STATUS_BLOCK IoStatusBlock)
         /* Check if the Sequence Number changed by now, in which case quit */
         if (AsyncData->SequenceNumber == Socket->SharedData->SequenceNumber)
         {
-            /* Do the actuall select, if needed */
+            /* Do the actual select, if needed */
             if ((Socket->SharedData->AsyncEvents & (~Socket->SharedData->AsyncDisabledEvents)))
             {
                 SockProcessAsyncSelect(Socket, AsyncData);

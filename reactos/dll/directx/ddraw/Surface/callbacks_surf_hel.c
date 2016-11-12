@@ -163,7 +163,7 @@ DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData)
 
 DWORD CALLBACK HelDdSurfreserved4(DWORD *lpPtr)
 {
-    /* This api is not doucmented by MS, keep it stubbed */
+    /* This api is not documented by MS, keep it stubbed */
     DX_STUB;
 }
 
@@ -205,7 +205,7 @@ DWORD CALLBACK HelDdSurfUnlock(LPDDHAL_UNLOCKDATA lpUnLockData)
     {
         /* Create a memory bitmap to store a copy of current hdc surface */
 
-        /* fixme the rcarea are not store in the struct yet so the data will look corupted */
+        /* fixme the rcarea are not store in the struct yet so the data will look corrupted */
         hImage = CreateCompatibleBitmap (hDC, lpUnLockData->lpDDSurface->lpGbl->wWidth, lpUnLockData->lpDDSurface->lpGbl->wHeight);
 
         /* Create a memory hdc so we can draw on our current memory bitmap */
@@ -249,7 +249,7 @@ DWORD CALLBACK HelDdSurfUnlock(LPDDHAL_UNLOCKDATA lpUnLockData)
     return DDHAL_DRIVER_HANDLED;
 }
 
-DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLayData)
+DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOverLayData)
 {
     DX_STUB;
 }

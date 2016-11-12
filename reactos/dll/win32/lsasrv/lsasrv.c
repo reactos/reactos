@@ -322,7 +322,7 @@ LsapInitLsa(VOID)
     if (hEvent == NULL)
     {
         dwError = GetLastError();
-        TRACE("Failed to create the notication event (Error %lu)\n", dwError);
+        TRACE("Failed to create the notification event (Error %lu)\n", dwError);
 
         if (dwError == ERROR_ALREADY_EXISTS)
         {

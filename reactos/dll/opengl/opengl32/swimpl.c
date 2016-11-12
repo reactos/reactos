@@ -117,7 +117,7 @@ sw_get_string( struct gl_context *ctx, GLenum name )
 static void
 sw_update_state( struct gl_context *ctx, GLuint new_state )
 {
-   /* easy - just propogate */
+   /* easy - just propagate */
    _swrast_InvalidateState( ctx, new_state );
    _swsetup_InvalidateState( ctx, new_state );
    _tnl_InvalidateState( ctx, new_state );

@@ -1181,7 +1181,7 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
 
     SessionCreated = TRUE;
 
-    /* Build and fill the interactve profile buffer */
+    /* Build and fill the interactive profile buffer */
     Status = BuildInteractiveProfileBuffer(ClientRequest,
                                            UserInfo,
                                            &LogonServer,

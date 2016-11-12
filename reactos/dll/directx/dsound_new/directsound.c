@@ -322,7 +322,7 @@ IDirectSound8_fnInitialize(
         return DSERR_ALREADYINITIALIZED;
     }
 
-    /* fixme mutual exlucsion */
+    /* fixme mutual exclusion */
 
     if (pcGuidDevice == NULL || IsEqualGUID(pcGuidDevice, &GUID_NULL))
     {

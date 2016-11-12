@@ -2001,7 +2001,7 @@ GetProcessHandleCount(IN HANDLE hProcess,
                                        NULL);
     if (NT_SUCCESS(Status))
     {
-        /* Copy the count and return sucecss */
+        /* Copy the count and return success */
         *pdwHandleCount = phc;
         return TRUE;
     }
@@ -2251,7 +2251,7 @@ ProcessIdToSessionId(IN DWORD dwProcessId,
                                            sizeof(SessionInformation),
                                            NULL);
 
-        /* Close the handle and check if we suceeded */
+        /* Close the handle and check if we succeeded */
         NtClose(ProcessHandle);
         if (NT_SUCCESS(Status))
         {
@@ -2351,7 +2351,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     BASE_MSG_SXS_HANDLES MappedHandles, Handles, FileHandles;
     PVOID CapturedStrings[3];
     SXS_WIN32_NT_PATH_PAIR ExePathPair, ManifestPathPair, PolicyPathPair;
-    SXS_OVERRIDE_MANIFEST OverrideMannifest;
+    SXS_OVERRIDE_MANIFEST OverrideManifest;
     UNICODE_STRING FreeString, SxsNtExePath;
     PWCHAR SxsConglomeratedBuffer, StaticBuffer;
     ULONG ConglomeratedBufferSizeBytes, StaticBufferSize, i;
@@ -2834,7 +2834,7 @@ StartScan:
                                                              &SxsWin32RelativePath);
     if (!TranslationStatus)
     {
-        /* Path must be invaild somehow, bail out */
+        /* Path must be invalid somehow, bail out */
         DPRINT1("Path translation for SxS failed\n");
         SetLastError(ERROR_PATH_NOT_FOUND);
         Result = FALSE;
@@ -3828,7 +3828,7 @@ StartScan:
                                                   NULL);
     if ((hUserToken) && (lpProcessAttributes))
     {
-        /* Auggment them with information from the user */
+        /* Augment them with information from the user */
 
         LocalProcessAttributes = *lpProcessAttributes;
         LocalProcessAttributes.lpSecurityDescriptor = NULL;

@@ -35,7 +35,7 @@ BEGIN
     IDS_HOTPLUG_DRIVE " - unitate (%s)"
     IDS_HOTPLUG_DRIVES " - unități (%s)"
     IDS_HOTPLUG_A "A:"
-    IDS_HOTPLUG_REQUIERES "Acest dispozitiv necesită „Scoatere în siguranță”"
+    IDS_HOTPLUG_REQUIRES "Acest dispozitiv necesită „Scoatere în siguranță”"
     IDS_HOTPLUG_CLICK "Înainte de a scoate acest dispozitiv, apăsați pe această pictogramă și selectați dispozitivul pe care doriți să-l scoateți."
 
     //Volume related strings

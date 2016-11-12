@@ -24,7 +24,7 @@
 
 #include <precomp.h>
 
-/* This is a table driven implemetation of the glGet*v() functions.
+/* This is a table driven implementation of the glGet*v() functions.
  * The basic idea is that most getters just look up an int somewhere
  * in struct gl_context and then convert it to a bool or float according to
  * which of glGetIntegerv() glGetBooleanv() etc is being called.

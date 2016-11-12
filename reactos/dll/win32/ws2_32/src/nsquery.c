@@ -301,7 +301,7 @@ WsNqLookupServiceNext(IN PNSQUERY NsQuery,
                     /* Call the helper to auto-dial */
                     if (WSAttemptAutodialName(NsQuery->QuerySet))
                     {
-                        /* It suceeded, so we'll delete the current state. */
+                        /* It succeeded, so we'll delete the current state. */
                         while (!IsListEmpty(&NsQuery->ProviderList))
                         {
                             /* Remove the entry and get its provider */

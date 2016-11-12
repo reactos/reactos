@@ -305,7 +305,7 @@ DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW lpCallback,
     | D3DHAL_DP2VIEWPORTINFO | 0x04 - xxxx |
     ---------------------------------------
 
-    to calculate the end of the lpCmd buffer in this exmaple
+    to calculate the end of the lpCmd buffer in this example
     D3DHAL_DP2COMMAND->wStateCount * sizeof(D3DHAL_DP2VIEWPORTINFO);
     now you got number of bytes but we need to add the size of D3DHAL_DP2COMMAND
     to get this right. the end should be
@@ -319,7 +319,7 @@ DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW lpCallback,
 *     The D3DParseUnknownCommand routine    <FILLMEIN>.
 *
 * @param lpCmd
-*       Is a typcast to LPD3DHAL_DP2COMMAND struct
+*       Is a typecast to LPD3DHAL_DP2COMMAND struct
 *       typedef struct _D3DHAL_DP2COMMAND
 *       {
 *           BYTE  bCommand;
@@ -372,7 +372,7 @@ D3DParseUnknownCommand( LPVOID lpCmd,
 
     switch (dp2command->bCommand)
     {
-       /* check for vaild command, only 3 commands are vaild */
+       /* check for valid command, only 3 commands are valid */
        case D3DDP2OP_VIEWPORTINFO:
            *(PBYTE)lpRetCmd += ((dp2command->wStateCount * sizeof(D3DHAL_DP2VIEWPORTINFO)) + sizeof(D3DHAL_DP2COMMAND));
            break;

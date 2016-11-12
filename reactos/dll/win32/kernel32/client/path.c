@@ -350,7 +350,7 @@ BasepComputeProcessPath(IN PBASE_SEARCH_PATH_TYPE PathOrder,
             }
             break;
 
-        /* Add the current dierctory */
+        /* Add the current directory */
         case BaseSearchPathCurrent:
 
             /* Copy it in the buffer, ASSERT there's enough space */
@@ -572,7 +572,7 @@ IsShortName_U(IN PWCHAR Name,
     /* What do you think 8.3 means? */
     if (Length > 12) return FALSE;
 
-    /* Sure, any emtpy name is a short name */
+    /* Sure, any empty name is a short name */
     if (!Length) return TRUE;
 
     /* This could be . or .. or something else */
@@ -1193,7 +1193,7 @@ SearchPathA(IN LPCSTR lpPath,
             goto Quickie;
         }
 
-        /* If the correct ANSI size is too big, return requird length plus a NULL */
+        /* If the correct ANSI size is too big, return required length plus a NULL */
         if (AnsiLength >= nBufferLength)
         {
             PathSize = AnsiLength + 1;

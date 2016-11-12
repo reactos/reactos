@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Accessibility Control Panel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/cpl/access/sound.c
- * PURPOSE:         Sound-related acessibility settings
+ * PURPOSE:         Sound-related accessibility settings
  * COPYRIGHT:       Copyright 2004 Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  Copyright 2007 Eric Kohl
  */

@@ -931,7 +931,7 @@ SampInitializeSAM(VOID)
     pBuiltinSid = RtlAllocateHeap(RtlGetProcessHeap(), 0, RtlLengthRequiredSid(1));
     if (pBuiltinSid == NULL)
     {
-        ERR("Failed to alloacte the Builtin Domain SID\n");
+        ERR("Failed to allocate the Builtin Domain SID\n");
         bResult = FALSE;
         goto done;
     }
@@ -943,7 +943,7 @@ SampInitializeSAM(VOID)
     pInteractiveSid = RtlAllocateHeap(RtlGetProcessHeap(), 0, RtlLengthRequiredSid(1));
     if (pInteractiveSid == NULL)
     {
-        ERR("Failed to alloacte the Interactive SID\n");
+        ERR("Failed to allocate the Interactive SID\n");
         bResult = FALSE;
         goto done;
     }
@@ -955,7 +955,7 @@ SampInitializeSAM(VOID)
     pAuthenticatedUserSid = RtlAllocateHeap(RtlGetProcessHeap(), 0, RtlLengthRequiredSid(1));
     if (pAuthenticatedUserSid == NULL)
     {
-        ERR("Failed to alloacte the Authenticated User SID\n");
+        ERR("Failed to allocate the Authenticated User SID\n");
         bResult = FALSE;
         goto done;
     }

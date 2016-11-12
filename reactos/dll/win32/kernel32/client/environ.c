@@ -142,7 +142,7 @@ Quickie:
     RtlFreeUnicodeString(&VarNameU);
     if (VarValueU.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, VarValueU.Buffer);
 
-    /* Check if we suceeded */
+    /* Check if we succeeded */
     if (!NT_SUCCESS(Status))
     {
         /* We did not, clear the result and set the error code */
@@ -499,7 +499,7 @@ Quickie:
     RtlFreeUnicodeString(&SourceU);
     if (DestU.Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, DestU.Buffer);
 
-    /* Check if we suceeded */
+    /* Check if we succeeded */
     if (!NT_SUCCESS(Status))
     {
         /* We did not, clear the result and set the error code */
