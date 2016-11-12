@@ -49,6 +49,29 @@ TestShellFolder(
     ok(psv != psv_2, "Expected %p != %p\n", static_cast<PVOID>(psv), static_cast<PVOID>(psv_2));
 }
 
+VOID TestInitialize(_In_ IShellFolder2 *psf2)
+{
+    CComPtr<IPersistFolder2> ppf2;
+    HRESULT hr = psf2->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
+    ok(hr == S_OK, "hr = %lx\n", hr);
+
+    hr = ppf2->Initialize(NULL);
+    ok(hr == S_OK, "hr = %lx\n", hr);
+
+    hr = ppf2->Initialize((LPCITEMIDLIST)0xdeaddead);
+    ok(hr == S_OK, "hr = %lx\n", hr);
+
+    //crashes in xp
+    //hr = ppf2->GetCurFolder(NULL);
+    //ok(hr == E_INVALIDARG, "hr = %lx\n", hr);
+
+    LPITEMIDLIST pidl;
+    hr = ppf2->GetCurFolder(&pidl);
+    ok(hr == S_OK, "hr = %lx\n", hr);
+    // 0 in win10, 14 in xp
+    ok(pidl->mkid.cb == 0x14, "expected empty pidl got cb = %x\n", pidl->mkid.cb);
+}
+
 START_TEST(CMyComputer)
 {
     HRESULT hr;
@@ -78,4 +101,5 @@ START_TEST(CMyComputer)
     ok(psf2 == psf2_2, "Expected %p == %p\n", static_cast<PVOID>(psf2), static_cast<PVOID>(psf2_2));
 
     TestShellFolder(psf2);
+    TestInitialize(psf2);
 }
