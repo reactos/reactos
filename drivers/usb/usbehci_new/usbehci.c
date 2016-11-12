@@ -47,6 +47,22 @@ EHCI_CloseEndpoint(IN PVOID ehciExtension,
     DPRINT1("EHCI_CloseEndpoint: UNIMPLEMENTED. FIXME\n");
 }
 
+PEHCI_STATIC_QH
+NTAPI
+EHCI_GetQhForFrame(IN PEHCI_EXTENSION EhciExtension,
+                   IN ULONG FrameIdx)
+{
+    static UCHAR Balance[32] = {
+        0, 16, 8,  24, 4, 20, 12, 28, 2, 18, 10, 26, 6, 22, 14, 30, 
+        1, 17, 9,  25, 5, 21, 13, 29, 3, 19, 11, 27, 7, 23, 15, 31};
+
+    DPRINT_EHCI("EHCI_GetQhForFrame: FrameIdx - %x, Balance[FrameIdx] - %x\n",
+                FrameIdx,
+                Balance[FrameIdx & 0x1F]);
+
+    return EhciExtension->PeriodicHead[Balance[FrameIdx & 0x1F]];
+}
+
 VOID
 NTAPI
 EHCI_AlignHwStructure(IN PEHCI_EXTENSION EhciExtension,
