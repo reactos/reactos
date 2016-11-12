@@ -74,6 +74,15 @@ typedef struct _EHCI_EXTENSION {
   ULONG PortRoutingControl;
   USHORT NumberOfPorts; // HCSPARAMS => N_PORTS 
   USHORT PortPowerControl; // HCSPARAMS => Port Power Control (PPC)
+  /* Shedule */
+  PEHCI_HC_RESOURCES HcResourcesVA;
+  PEHCI_HC_RESOURCES HcResourcesPA;
+  PEHCI_STATIC_QH AsyncHead;
+  PEHCI_STATIC_QH PeriodicHead[64];
+  ULONG_PTR DummyQHListVA;
+  ULONG_PTR DummyQHListPA;
+  ULONG FrameIndex;
+  ULONG FrameHighPart;
 
 } EHCI_EXTENSION, *PEHCI_EXTENSION;
 

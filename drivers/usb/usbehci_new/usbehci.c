@@ -53,7 +53,100 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
                         IN PVOID resourcesStartVA,
                         IN PVOID resourcesStartPA)
 {
-    DPRINT1("EHCI_InitializeSchedule: UNIMPLEMENTED. FIXME\n");
+    PULONG OperationalRegs;
+    PEHCI_HC_RESOURCES HcResourcesVA;
+    PEHCI_HC_RESOURCES HcResourcesPA;
+    PEHCI_STATIC_QH AsyncHead;
+    PEHCI_STATIC_QH AsyncHeadPA;
+    PEHCI_STATIC_QH PeriodicHead;
+    PEHCI_STATIC_QH PeriodicHeadPA;
+    PEHCI_STATIC_QH StaticQH;
+    EHCI_LINK_POINTER NextLink;
+    EHCI_LINK_POINTER StaticHeadPA;
+    ULONG Frame;
+    ULONG ix;
+
+    DPRINT_EHCI("EHCI_InitializeSchedule: BaseVA - %p, BasePA - %p\n",
+                resourcesStartVA,
+                resourcesStartPA);
+
+    OperationalRegs = EhciExtension->OperationalRegs;
+
+    HcResourcesVA = (PEHCI_HC_RESOURCES)resourcesStartVA;
+    HcResourcesPA = (PEHCI_HC_RESOURCES)resourcesStartPA;
+
+    EhciExtension->HcResourcesVA = HcResourcesVA;
+    EhciExtension->HcResourcesPA = HcResourcesPA;
+
+    /* Asynchronous Schedule */
+
+    AsyncHead = &HcResourcesVA->AsyncHead;
+    AsyncHeadPA = &HcResourcesPA->AsyncHead;
+
+    RtlZeroMemory(AsyncHead, sizeof(EHCI_STATIC_QH));
+
+    NextLink.AsULONG = (ULONG)AsyncHeadPA;
+    NextLink.Type = EHCI_LINK_TYPE_QH;
+
+    AsyncHead->HwQH.HorizontalLink = NextLink;
+    AsyncHead->HwQH.EndpointParams.HeadReclamationListFlag = 1;
+    AsyncHead->HwQH.EndpointCaps.PipeMultiplier = 1;
+    AsyncHead->HwQH.NextTD |= 1;
+    AsyncHead->HwQH.Token.Status = EHCI_TOKEN_STATUS_HALTED;
+
+    AsyncHead->PhysicalAddress = AsyncHeadPA;
+    AsyncHead->PrevHead = AsyncHead->NextHead = (PEHCI_HCD_QH)AsyncHead;
+
+    EhciExtension->AsyncHead = AsyncHead;
+
+    /* Periodic Schedule */
+
+    PeriodicHead = &HcResourcesVA->PeriodicHead[0];
+    PeriodicHeadPA = &HcResourcesPA->PeriodicHead[0];
+
+    ix = 0;
+
+    for (ix = 0; ix < 64; ix++)
+    {
+        EHCI_AlignHwStructure(EhciExtension,
+                              (PULONG)&PeriodicHeadPA,
+                              (PULONG)&PeriodicHead,
+                              80);
+
+        EhciExtension->PeriodicHead[ix] = PeriodicHead;
+        EhciExtension->PeriodicHead[ix]->PhysicalAddress = PeriodicHeadPA;
+
+        PeriodicHead += 1;
+        PeriodicHeadPA += 1;
+    }
+
+    EHCI_InitializeInterruptSchedule(EhciExtension);
+
+    for (Frame = 0; Frame < 1024; Frame++)
+    {
+        StaticQH = EHCI_GetQhForFrame(EhciExtension, Frame);
+
+        StaticHeadPA.AsULONG = (ULONG_PTR)StaticQH->PhysicalAddress;
+        StaticHeadPA.Type = EHCI_LINK_TYPE_QH;
+
+        DPRINT_EHCI("EHCI_InitializeSchedule: StaticHeadPA[%x] - %p\n",
+                    Frame,
+                    StaticHeadPA);
+
+        HcResourcesVA->PeriodicFrameList[Frame] = (PEHCI_STATIC_QH)StaticHeadPA.AsULONG;
+    }
+
+    EhciExtension->DummyQHListVA = (ULONG_PTR)&HcResourcesVA->DummyQH;
+    EhciExtension->DummyQHListPA = (ULONG_PTR)&HcResourcesPA->DummyQH;
+
+    EHCI_AddDummyQHs(EhciExtension);
+
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_PERIODICLISTBASE,
+                         (ULONG_PTR)EhciExtension->HcResourcesPA);
+
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_ASYNCLISTBASE,
+                         NextLink.AsULONG);
+
     return 0;
 }
 
