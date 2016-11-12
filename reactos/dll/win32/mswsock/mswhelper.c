@@ -47,7 +47,6 @@ mswBufferIncUsed(_Inout_ PMSW_BUFFER mswBuf,
     return TRUE;
 }
 
-inline
 BYTE*
 mswBufferEndPtr(_Inout_ PMSW_BUFFER mswBuf)
 {
