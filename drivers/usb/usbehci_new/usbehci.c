@@ -3,6 +3,9 @@
 //#define NDEBUG
 #include <debug.h>
 
+#define NDEBUG_EHCI_TRACE
+#include "dbg_ehci.h"
+
 USBPORT_REGISTRATION_PACKET RegPacket;
 
 
@@ -12,7 +15,7 @@ EHCI_OpenEndpoint(IN PVOID ehciExtension,
                   IN PVOID endpointParameters,
                   IN PVOID ehciEndpoint)
 {
-    DPRINT("EHCI_OpenEndpoint: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_OpenEndpoint: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -22,7 +25,7 @@ EHCI_ReopenEndpoint(IN PVOID ehciExtension,
                     IN PVOID endpointParameters,
                     IN PVOID ehciEndpoint)
 {
-    DPRINT("EHCI_ReopenEndpoint: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_ReopenEndpoint: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -32,7 +35,7 @@ EHCI_QueryEndpointRequirements(IN PVOID ehciExtension,
                                IN PVOID endpointParameters,
                                IN PULONG EndpointRequirements)
 {
-    DPRINT("EHCI_QueryEndpointRequirements: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_QueryEndpointRequirements: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
@@ -41,7 +44,7 @@ EHCI_CloseEndpoint(IN PVOID ehciExtension,
                    IN PVOID ehciEndpoint,
                    IN BOOLEAN IsDoDisablePeriodic)
 {
-    DPRINT("EHCI_CloseEndpoint: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_CloseEndpoint: UNIMPLEMENTED. FIXME\n");
 }
 
 MPSTATUS
@@ -49,7 +52,7 @@ NTAPI
 EHCI_StartController(IN PVOID ehciExtension,
                      IN PUSBPORT_RESOURCES Resources)
 {
-    DPRINT("EHCI_StartController: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_StartController: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -58,21 +61,21 @@ NTAPI
 EHCI_StopController(IN PVOID ehciExtension,
                     IN BOOLEAN IsDoDisableInterrupts)
 {
-    DPRINT("EHCI_StopController: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_StopController: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
 NTAPI
 EHCI_SuspendController(IN PVOID ehciExtension)
 {
-    DPRINT("EHCI_SuspendController: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_SuspendController: UNIMPLEMENTED. FIXME\n");
 }
 
 MPSTATUS
 NTAPI
 EHCI_ResumeController(IN PVOID ehciExtension)
 {
-    DPRINT("EHCI_ResumeController: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_ResumeController: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -80,7 +83,7 @@ BOOLEAN
 NTAPI
 EHCI_InterruptService(IN PVOID ehciExtension)
 {
-    DPRINT("EHCI_InterruptService: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_InterruptService: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -89,7 +92,7 @@ NTAPI
 EHCI_InterruptDpc(IN PVOID ehciExtension,
                   IN BOOLEAN IsDoEnableInterrupts)
 {
-    DPRINT("EHCI_InterruptDpc: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_InterruptDpc: UNIMPLEMENTED. FIXME\n");
 }
 
 MPSTATUS
@@ -100,7 +103,7 @@ EHCI_SubmitTransfer(IN PVOID ehciExtension,
                     IN PVOID ehciTransfer,
                     IN PVOID sgList)
 {
-    DPRINT("EHCI_SubmitTransfer: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_SubmitTransfer: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -112,7 +115,7 @@ EHCI_SubmitIsoTransfer(IN PVOID ehciExtension,
                        IN PVOID ehciTransfer,
                        IN PVOID isoParameters)
 {
-    DPRINT("EHCI_SubmitIsoTransfer: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_SubmitIsoTransfer: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -123,7 +126,7 @@ EHCI_AbortTransfer(IN PVOID ehciExtension,
                    IN PVOID ehciTransfer,
                    IN PULONG CompletedLength)
 {
-    DPRINT("EHCI_AbortTransfer: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_AbortTransfer: UNIMPLEMENTED. FIXME\n");
 }
 
 ULONG
@@ -131,7 +134,7 @@ NTAPI
 EHCI_GetEndpointState(IN PVOID ehciExtension,
                       IN PVOID ehciEndpoint)
 {
-    DPRINT("EHCI_GetEndpointState: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_GetEndpointState: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -141,7 +144,7 @@ EHCI_SetEndpointState(IN PVOID ehciExtension,
                       IN PVOID ehciEndpoint,
                       IN ULONG EndpointState)
 {
-    DPRINT("EHCI_SetEndpointState: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_SetEndpointState: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
@@ -149,21 +152,21 @@ NTAPI
 EHCI_PollEndpoint(IN PVOID ohciExtension,
                   IN PVOID ohciEndpoint)
 {
-    DPRINT("EHCI_PollEndpoint: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_PollEndpoint: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
 NTAPI
 EHCI_CheckController(IN PVOID ehciExtension)
 {
-    DPRINT("EHCI_CheckController: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_CheckController: UNIMPLEMENTED. FIXME\n");
 }
 
 ULONG
 NTAPI
 EHCI_Get32BitFrameNumber(IN PVOID ehciExtension)
 {
-    DPRINT("EHCI_Get32BitFrameNumber: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_Get32BitFrameNumber: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -171,28 +174,28 @@ VOID
 NTAPI
 EHCI_InterruptNextSOF(IN PVOID ehciExtension)
 {
-    DPRINT("EHCI_InterruptNextSOF: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_InterruptNextSOF: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
 NTAPI
 EHCI_EnableInterrupts(IN PVOID ehciExtension)
 {
-    DPRINT("EHCI_EnableInterrupts: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_EnableInterrupts: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
 NTAPI
 EHCI_DisableInterrupts(IN PVOID ehciExtension)
 {
-    DPRINT("EHCI_DisableInterrupts: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_DisableInterrupts: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
 NTAPI
 EHCI_PollController(IN PVOID ehciExtension)
 {
-    DPRINT("EHCI_PollController: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_PollController: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
@@ -201,7 +204,7 @@ EHCI_SetEndpointDataToggle(IN PVOID ehciExtension,
                            IN PVOID ehciEndpoint,
                            IN ULONG DataToggle)
 {
-    DPRINT("EHCI_SetEndpointDataToggle: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_SetEndpointDataToggle: UNIMPLEMENTED. FIXME\n");
 }
 
 ULONG
@@ -209,7 +212,7 @@ NTAPI
 EHCI_GetEndpointStatus(IN PVOID ehciExtension,
                        IN PVOID ehciEndpoint)
 {
-    DPRINT("EHCI_GetEndpointStatus: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_GetEndpointStatus: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -219,14 +222,14 @@ EHCI_SetEndpointStatus(IN PVOID ehciExtension,
                        IN PVOID ehciEndpoint,
                        IN ULONG EndpointStatus)
 {
-    DPRINT("EHCI_SetEndpointStatus: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_SetEndpointStatus: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
 NTAPI
 EHCI_ResetController(IN PVOID ehciExtension)
 {
-    DPRINT("EHCI_ResetController: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_ResetController: UNIMPLEMENTED. FIXME\n");
 }
 
 MPSTATUS
@@ -240,7 +243,7 @@ EHCI_StartSendOnePacket(IN PVOID ehciExtension,
                         IN ULONG BufferLength,
                         IN USBD_STATUS * pUSBDStatus)
 {
-    DPRINT("EHCI_StartSendOnePacket: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_StartSendOnePacket: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -255,7 +258,7 @@ EHCI_EndSendOnePacket(IN PVOID ehciExtension,
                       IN ULONG BufferLength,
                       IN USBD_STATUS * pUSBDStatus)
 {
-    DPRINT("EHCI_EndSendOnePacket: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_EndSendOnePacket: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -266,7 +269,7 @@ EHCI_PassThru(IN PVOID ehciExtension,
               IN ULONG ParameterLength,
               IN PVOID pParameters)
 {
-    DPRINT("EHCI_PassThru: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_PassThru: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -276,14 +279,14 @@ EHCI_RebalanceEndpoint(IN PVOID ohciExtension,
                        IN PVOID endpointParameters,
                        IN PVOID ohciEndpoint)
 {
-    DPRINT("EHCI_RebalanceEndpoint: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_RebalanceEndpoint: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
 NTAPI
 EHCI_FlushInterrupts(IN PVOID ohciExtension)
 {
-    DPRINT("EHCI_FlushInterrupts: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_FlushInterrupts: UNIMPLEMENTED. FIXME\n");
 }
 
 MPSTATUS
@@ -291,7 +294,7 @@ NTAPI
 EHCI_RH_ChirpRootPort(IN PVOID ehciExtension,
                       IN USHORT Port)
 {
-    DPRINT("EHCI_RH_ChirpRootPort: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_RH_ChirpRootPort: UNIMPLEMENTED. FIXME\n");
     return 0;
 }
 
@@ -299,14 +302,14 @@ VOID
 NTAPI
 EHCI_TakePortControl(IN PVOID ohciExtension)
 {
-    DPRINT("EHCI_TakePortControl: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_TakePortControl: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
 NTAPI
 EHCI_Unload()
 {
-    DPRINT("EHCI_Unload: UNIMPLEMENTED. FIXME\n");
+    DPRINT1("EHCI_Unload: UNIMPLEMENTED. FIXME\n");
 }
 
 NTSTATUS
@@ -314,7 +317,9 @@ NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
             IN PUNICODE_STRING RegistryPath)
 {
-    DPRINT("DriverEntry: DriverObject - %p, RegistryPath - %wZ\n", DriverObject, RegistryPath);
+    DPRINT("DriverEntry: DriverObject - %p, RegistryPath - %wZ\n",
+           DriverObject,
+           RegistryPath);
 
     if (USBPORT_GetHciMn() != 0x10000001)
     {
