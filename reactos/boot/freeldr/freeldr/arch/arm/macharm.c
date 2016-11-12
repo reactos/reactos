@@ -66,7 +66,7 @@ VOID DiskStopFloppyMotor(VOID)
 }
 
 VOID
-FrLdrCheckCpuCompatiblity(VOID)
+FrLdrCheckCpuCompatibility(VOID)
 {
     /* Nothing for now */
 }

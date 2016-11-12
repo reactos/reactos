@@ -118,7 +118,7 @@ EfiGetLeafNode (
         }
     }
 
-    /* This now contains the deepeest (leaf) node */
+    /* This now contains the deepest (leaf) node */
     return DevicePath;
 }
 
@@ -314,7 +314,7 @@ EfiGetVariable (
         *Attributes = LocalAttributes;
     }
 
-    /* Convert the errot to an NTSTATUS and return it */
+    /* Convert the error to an NTSTATUS and return it */
     Status = EfiGetNtStatusCode(EfiStatus);
     return Status;
 }
@@ -1724,7 +1724,7 @@ BlpFwInitialize (
     NTSTATUS Status = STATUS_SUCCESS;
     EFI_KEY_TOGGLE_STATE KeyToggleState;
 
-    /* Check if we have vaild firmware data */
+    /* Check if we have valid firmware data */
     if (!(FirmwareData) || !(FirmwareData->Version))
     {
         return STATUS_INVALID_PARAMETER;

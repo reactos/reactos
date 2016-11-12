@@ -212,7 +212,7 @@ FileTablePurgeEntry (
         return STATUS_UNSUCCESSFUL;
     }
 
-    /* Purge the entry othwrwise */
+    /* Purge the entry otherwise */
     return FileTableDestroyEntry(FileEntry, FileEntry->FileId);
 }
 

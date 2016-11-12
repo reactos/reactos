@@ -53,7 +53,7 @@ PCSTR OptionsMenuList[] =
 PCSTR FrldrDbgMsg = "Enable FreeLdr debug channels\n"
                     "Acceptable syntax: [level1]#channel1[,[level2]#channel2]\n"
                     "level can be one of: trace,warn,fixme,err\n"
-                    "  if the level is ommited all levels\n"
+                    "  if the level is omitted all levels\n"
                     "  are enabled for the specified channel\n"
                     "# can be either + or -\n"
                     "channel can be one of the following:\n"

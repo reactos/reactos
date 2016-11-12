@@ -370,7 +370,7 @@ FrLdrHeapAllocateEx(
         /* Check if the remaining space is large enough for a new block */
         if (Remaining > 1)
         {
-            /* Make the allocated block as large as neccessary */
+            /* Make the allocated block as large as necessary */
             Block->Size = BlockSize;
 
             /* Get pointer to the new block */
@@ -419,7 +419,7 @@ FrLdrHeapAllocateEx(
         *REDZONE_LOW(Block) = REDZONE_MARK;
         *REDZONE_HI(Block) = REDZONE_MARK;
 
-        /* Allcoation starts after size field and redzone */
+        /* Allocation starts after size field and redzone */
         return (PUCHAR)Block->Data + REDZONE_LOW_OFFSET;
 #endif
         /* Return pointer to the data */

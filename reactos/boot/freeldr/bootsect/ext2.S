@@ -597,7 +597,7 @@ Ext2ReadEntireFileDone:
 // ECX contains the max number of blocks to read
 // EAX contains the number of blocks left to read
 // On return:
-//  EAX contians the new number of blocks left to read
+//  EAX contains the new number of blocks left to read
 Ext2ReadDirectBlockList:
 		cmp  eax,ecx										// Compare it to the maximum number of blocks to read
 		ja   CallExt2ReadDirectBlocks						// If it will take more blocks then just read all of the blocks

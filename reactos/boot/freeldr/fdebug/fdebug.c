@@ -30,7 +30,7 @@ BOOL        bLocalEcho = FALSE;                            // Tells us if local 
 HANDLE        hCaptureFile;                                // Handle to the capture file
 DWORD        dwThreadId = 0;                                // Thread id of RS232 communication thread
 
-// Foward declarations of functions included in this code module:
+// Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);

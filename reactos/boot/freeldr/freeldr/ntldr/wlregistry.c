@@ -563,7 +563,7 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
                     ValueSize = sizeof(TempImagePath);
                     rc = RegQueryValue(hDriverKey, L"ImagePath", NULL, (PUCHAR)TempImagePath, &ValueSize);
 
-                    /* Write the whole path if it suceeded, else prepare to fail */
+                    /* Write the whole path if it succeeded, else prepare to fail */
                     if (rc != ERROR_SUCCESS)
                     {
                         TRACE_CH(REACTOS, "ImagePath: not found\n");

@@ -441,7 +441,7 @@ LoadModule(
     BOOLEAN Success;
     CHAR FullFileName[MAX_PATH];
     CHAR ProgressString[256];
-    PVOID BaseAdress = NULL;
+    PVOID BaseAddress = NULL;
 
     UiDrawBackdrop();
     sprintf(ProgressString, "Loading %s...", File);
@@ -451,13 +451,13 @@ LoadModule(
     strcat(FullFileName, "SYSTEM32\\");
     strcat(FullFileName, File);
 
-    Success = WinLdrLoadImage(FullFileName, MemoryType, &BaseAdress);
+    Success = WinLdrLoadImage(FullFileName, MemoryType, &BaseAddress);
     if (!Success)
     {
         TRACE("Loading %s failed\n", File);
         return FALSE;
     }
-    TRACE("%s loaded successfully at %p\n", File, BaseAdress);
+    TRACE("%s loaded successfully at %p\n", File, BaseAddress);
 
     strcpy(FullFileName, "WINDOWS\\SYSTEM32\\");
     strcat(FullFileName, File);
@@ -469,7 +469,7 @@ LoadModule(
     Success = WinLdrAllocateDataTableEntry(&LoaderBlock->LoadOrderListHead,
                                            (IsKdTransportDll ? "KDCOM.DLL" : File),
                                            FullFileName,
-                                           BaseAdress,
+                                           BaseAddress,
                                            Dte);
 
     return Success;
@@ -692,7 +692,7 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
 
     TRACE("BootPath: '%s'\n", BootPath);
 
-    /* Allocate and minimalistic-initialize LPB */
+    /* Allocate and minimalist-initialize LPB */
     AllocateAndInitLPB(&LoaderBlock);
 
     /* Load Hive */

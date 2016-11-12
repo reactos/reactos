@@ -600,7 +600,7 @@ BlockIoGetInformation (
     _Out_ PBL_DEVICE_INFORMATION DeviceInformation
     )
 {
-    /* Copy the device speciifc data into the block device information */
+    /* Copy the device specific data into the block device information */
     RtlCopyMemory(&DeviceInformation->BlockDeviceInfo,
                    DeviceEntry->DeviceSpecificData,
                    sizeof(DeviceInformation->BlockDeviceInfo));
@@ -1002,7 +1002,7 @@ BlockIoEfiGetDeviceInformation (
         return Status;
     }
 
-    /* Iteratate twice -- once for the top level, once for the bottom */
+    /* Iterate twice -- once for the top level, once for the bottom */
     for (i = 0, Found = FALSE; Found == FALSE && Protocol[i].Handle; i++)
     {
         /* Check what kind of leaf node device this is */
@@ -2237,7 +2237,7 @@ BlpDeviceOpen (
         Status = STATUS_NOT_IMPLEMENTED;
     }
 
-    /* Check if the device was opened successfuly */
+    /* Check if the device was opened successfully */
     if (NT_SUCCESS(Status))
     {
 DeviceOpened:

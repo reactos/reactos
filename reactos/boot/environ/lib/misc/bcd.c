@@ -1028,7 +1028,7 @@ BiEnumerateElements (
         else if ((Flags & BCD_ENUMERATE_FLAG_DEEP) &&
                  (ElementType.PackedValue == BcdLibraryObjectList_InheritedObjects))
         {
-            /* Inherited objects are requsted, so allocate a buffer for them */
+            /* Inherited objects are requested, so allocate a buffer for them */
             SubObjectList = BlMmAllocateHeap(ElementDataLength);
             if (!SubObjectList)
             {

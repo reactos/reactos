@@ -1551,7 +1551,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\lanmanserver\Parameters","ServiceDll",0x
 
 ; Workstation service
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","DisplayName",0x00000000,"Workstation service"
-HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Description",0x00000000,"Responsible for creating and maintaning network connections to servers"
+HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Description",0x00000000,"Responsible for creating and maintaining network connections to servers"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","Group",0x00000000,"Network Provider"
 HKLM,"SYSTEM\CurrentControlSet\Services\lanmanworkstation","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"

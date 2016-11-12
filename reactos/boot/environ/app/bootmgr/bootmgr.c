@@ -274,7 +274,7 @@ BmpFwGetApplicationDirectoryPath (
                                   AppPathLength - sizeof(UNICODE_NULL));
                     PathCopy[AppPathLength] = UNICODE_NULL;
 
-                    /* Finally, initialize the outoing string */
+                    /* Finally, initialize the outgoing string */
                     RtlInitUnicodeString(ApplicationDirectoryPath, PathCopy);
                 }
                 else
@@ -1088,7 +1088,7 @@ BmFwVerifySelfIntegrity (
     VOID
     )
 {
-    /* Check if we're booted by UEFI off the DVD directlry */
+    /* Check if we're booted by UEFI off the DVD directly */
     if ((BlpBootDevice->DeviceType == LocalDevice) &&
         (BlpBootDevice->Local.Type == CdRomDevice) &&
         (BlpApplicationFlags & BL_APPLICATION_FLAG_CONVERTED_FROM_EFI))
@@ -1729,7 +1729,7 @@ BmGetBootMenuPolicy (
             return MenuPolicyLegacy;
         }
 
-        /* Use the correct opetion ID */
+        /* Use the correct option ID */
         OptionId = BcdResumeInteger_BootMenuPolicy;
     }
 
@@ -1783,7 +1783,7 @@ BmpProcessBootEntry (
     /* If the legacy menu must be shown, or if we have a boot entry */
     if ((BmGetBootMenuPolicy(BootEntry) != MenuPolicyStandard) || (BootEntry))
     {
-        /* Check if any key has been presseed */
+        /* Check if any key has been pressed */
         BmDisplayGetBootMenuStatus(&MenuStatus);
         if (MenuStatus.AnyKey)
         {
@@ -2383,22 +2383,22 @@ BmpTransferExecution (
     }
     else if (ReturnArgs.Flags & 4)
     {
-        /* Flag 4 -- unkown */
+        /* Flag 4 -- unknown */
         *LaunchCode = 1;
     }
     else if (ReturnArgs.Flags & 8)
     {
-        /* Flag 5 -- unkown */
+        /* Flag 5 -- unknown */
         *LaunchCode = 5;
     }
     else if (ReturnArgs.Flags & 0x10)
     {
-        /* Flag 6 -- unkown */
+        /* Flag 6 -- unknown */
         *LaunchCode = 6;
     }
     else if (ReturnArgs.Flags & 0x20)
     {
-        /* Flag 7 -- unkown */
+        /* Flag 7 -- unknown */
         *LaunchCode = 7;
     }
     else if (ReturnArgs.Flags & BL_RETURN_ARGUMENTS_NO_PAE_FLAG)
@@ -2558,7 +2558,7 @@ TryAgain:
         return Status;
     }
 
-    /* Check if boot was successfull, or  cancelled and we're not doing WinRE */
+    /* Check if boot was successful, or  cancelled and we're not doing WinRE */
     if (((NT_SUCCESS(Status)) || (Status == STATUS_CANCELLED)) && !(DoRecovery))
     {
         return Status;
@@ -2898,7 +2898,7 @@ BmMain (
     /* Write out the first XML tag */
     BlXmiWrite(L"<bootmgr/>");
 
-    /* Check for factory resset */
+    /* Check for factory reset */
     BlSecureBootCheckForFactoryReset();
 
     /* Load the revocation list */
@@ -2947,7 +2947,7 @@ BmMain (
                                     &CustomActions);
     if ((NT_SUCCESS(Status)) && (CustomActions))
     {
-        /* We don't suppport this yet */
+        /* We don't support this yet */
         EfiPrintf(L"Not implemented\r\n");
         Status = STATUS_NOT_IMPLEMENTED;
         goto Failure;

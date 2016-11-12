@@ -44,19 +44,19 @@ MmMdpHasPrecedence (
     BL_MEMORY_CLASS Class1, Class2;
     ULONG i, j;
 
-    /* Descriptor is free RAM -- it preceeds */
+    /* Descriptor is free RAM -- it precedes */
     if (Type1 == BlConventionalMemory)
     {
         return TRUE;
     }
 
-    /* It isn't free RAM, but the comparator is -- it suceeds it */
+    /* It isn't free RAM, but the comparator is -- it succeeds it */
     if (Type2 == BlConventionalMemory)
     {
         return FALSE;
     }
 
-    /* Descriptor is not system, application, or loader class -- it preceeds */
+    /* Descriptor is not system, application, or loader class -- it precedes */
     Class1 = Type1 >> BL_MEMORY_CLASS_SHIFT;
     if ((Class1 != BlSystemClass) &&
         (Class1 != BlApplicationClass) &&
@@ -65,7 +65,7 @@ MmMdpHasPrecedence (
         return TRUE;
     }
 
-    /* It isn't one of those classes, but the comparator it -- it suceeds it */
+    /* It isn't one of those classes, but the comparator it -- it succeeds it */
     Class2 = Type2 >> BL_MEMORY_CLASS_SHIFT;
     if ((Class2 != BlSystemClass) &&
         (Class2 != BlApplicationClass) &&
@@ -124,23 +124,23 @@ MmMdpHasPrecedence (
             }
         }
 
-        /* The comparator isn't system, so it preceeds it */
+        /* The comparator isn't system, so it precedes it */
         return TRUE;
     }
 
-    /* Descriptor is not system class, but comparator is -- it suceeds it */
+    /* Descriptor is not system class, but comparator is -- it succeeds it */
     if (Class2 == BlSystemClass)
     {
         return FALSE;
     }
 
-    /* Descriptor is loader class -- it preceeds */
+    /* Descriptor is loader class -- it precedes */
     if (Class1 == BlLoaderClass)
     {
         return TRUE;
     }
 
-    /* It isn't loader class  -- if the other guy is, suceed it */
+    /* It isn't loader class  -- if the other guy is, succeed it */
     return Class2 != BlLoaderClass;
 }
 
@@ -343,7 +343,7 @@ MmMdpCoalesceDescriptor (
           ((MemoryDescriptor->VirtualPage) && (PreviousDescriptor->VirtualPage) &&
            (PreviousMappedEndPage == MemoryDescriptor->VirtualPage))))
     {
-        EfiPrintf(L"Previous descriptor coalescible!\r\n");
+        EfiPrintf(L"Previous descriptor coalescable!\r\n");
     }
 
     /* CHeck if the current entry touches the next entry, and is compatible */
@@ -355,7 +355,7 @@ MmMdpCoalesceDescriptor (
             ((MemoryDescriptor->VirtualPage) && (PreviousDescriptor->VirtualPage) &&
                 (MappedEndPage == NextDescriptor->VirtualPage))))
     {
-        EfiPrintf(L"Next descriptor coalescible!\r\n");
+        EfiPrintf(L"Next descriptor coalescable!\r\n");
     }
 
     /* Nothing to do */

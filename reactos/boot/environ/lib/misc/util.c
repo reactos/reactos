@@ -221,7 +221,7 @@ BlUtlInitialize (
 
 VOID
 BmUpdateProgressInfo (
-    _In_ PVOID Uknown,
+    _In_ PVOID Unknown,
     _In_ PWCHAR ProgressInfo
     )
 {
@@ -307,7 +307,7 @@ BlTblFindEntry (
                               Argument4);
             if (Result)
             {
-                /* Entry fouund return it */
+                /* Entry found return it */
                 *EntryIndex = Index;
                 Entry = Table[Index];
                 break;
@@ -679,7 +679,7 @@ BlHtStore (
     PLIST_ENTRY HashLinkHead;
     PBL_HASH_TABLE HashTable;
 
-    /* Check for invalid tablle ID, missing arguments, or malformed entry */
+    /* Check for invalid table ID, missing arguments, or malformed entry */
     if ((HtTableSize <= TableId) ||
         !(Entry) ||
         !(Data) ||

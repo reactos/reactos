@@ -223,7 +223,7 @@ Changes in v1.7.7 (9/5/2002) (ekohl)
 Changes in v1.7.6 (8/31/2002) (ekohl)
 
 - bootsect/isoboot.asm: Reduced read transfer size to ensure that
-  the read buffer for an int13/ah=42h (exended read) does not
+  the read buffer for an int13/ah=42h (extended read) does not
   cross a segment boundary.
 - freeldr.c, bootmgr.c, setupldr.c, makefile: Renamed
   LoadBootManager() and ReactOSRunSetupLoader() to RunLoader().
