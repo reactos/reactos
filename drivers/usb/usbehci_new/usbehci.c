@@ -338,10 +338,10 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     RegPacket.MiniPortBusBandwidth = 400000;
 
-    RegPacket.MiniPortExtensionSize = 0; //sizeof(EHCI_EXTENSION)
-    RegPacket.MiniPortEndpointSize = 0; //sizeof(EHCI_ENDPOINT);
-    RegPacket.MiniPortTransferSize = 0; //sizeof(EHCI_TRANSFER);
-    RegPacket.MiniPortResourcesSize = 0; //sizeof(EHCI_HC_RESOURCES);
+    RegPacket.MiniPortExtensionSize = sizeof(EHCI_EXTENSION)
+    RegPacket.MiniPortEndpointSize = sizeof(EHCI_ENDPOINT);
+    RegPacket.MiniPortTransferSize = sizeof(EHCI_TRANSFER);
+    RegPacket.MiniPortResourcesSize = sizeof(EHCI_HC_RESOURCES);
 
     RegPacket.OpenEndpoint = EHCI_OpenEndpoint;
     RegPacket.ReopenEndpoint = EHCI_ReopenEndpoint;

@@ -14,6 +14,22 @@
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;
 
+typedef struct _EHCI_ENDPOINT {
+  ULONG Reserved;
+} EHCI_ENDPOINT, *PEHCI_ENDPOINT;
+
+typedef struct _EHCI_TRANSFER {
+  ULONG Reserved;
+} EHCI_TRANSFER, *PEHCI_TRANSFER;
+
+typedef struct _EHCI_HC_RESOURCES {
+  UCHAR Padded[0x1000];
+} EHCI_HC_RESOURCES, *PEHCI_HC_RESOURCES;
+
+typedef struct _EHCI_EXTENSION {
+  ULONG Reserved;
+} EHCI_EXTENSION, *PEHCI_EXTENSION;
+
 /* roothub.c */
 
 VOID
