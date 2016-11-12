@@ -14,6 +14,28 @@
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;
 
+typedef struct _EHCI_HCD_TD {
+  //Hardware
+  EHCI_QUEUE_TD HwTD;
+  //Software
+  ULONG_PTR PhysicalAddress;
+  ULONG TdFlags;
+  ULONG Pad[49];
+} EHCI_HCD_TD, *PEHCI_HCD_TD;
+
+C_ASSERT(sizeof(EHCI_HCD_TD) == 0x100);
+
+typedef struct _EHCI_HCD_QH {
+  //Hardware
+  EHCI_QUEUE_HEAD HwQH;
+  //Software
+  struct _EHCI_HCD_QH * PhysicalAddress;
+  ULONG QhFlags;
+  ULONG Pad[49];
+} EHCI_HCD_QH, *PEHCI_HCD_QH;
+
+C_ASSERT(sizeof(EHCI_HCD_QH) == 0x100);
+
 typedef struct _EHCI_ENDPOINT {
   ULONG Reserved;
 } EHCI_ENDPOINT, *PEHCI_ENDPOINT;
