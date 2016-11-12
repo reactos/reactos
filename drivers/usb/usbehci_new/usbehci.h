@@ -18,7 +18,7 @@ typedef struct _EHCI_HCD_TD {
   //Hardware
   EHCI_QUEUE_TD HwTD;
   //Software
-  ULONG_PTR PhysicalAddress;
+  struct _EHCI_HCD_TD * PhysicalAddress;
   ULONG TdFlags;
   ULONG Pad[49];
 } EHCI_HCD_TD, *PEHCI_HCD_TD;
@@ -47,6 +47,17 @@ typedef struct _EHCI_TRANSFER {
 typedef struct _EHCI_HC_RESOURCES {
   UCHAR Padded[0x1000];
 } EHCI_HC_RESOURCES, *PEHCI_HC_RESOURCES;
+
+typedef struct _EHCI_STATIC_QH {
+  //Hardware
+  EHCI_QUEUE_HEAD HwQH;
+  //Software
+  struct _EHCI_STATIC_QH * PhysicalAddress;
+  ULONG QhFlags;
+  ULONG Pad[25];
+} EHCI_STATIC_QH, *PEHCI_STATIC_QH;
+
+C_ASSERT(sizeof(EHCI_STATIC_QH) == 0xA0);
 
 typedef struct _EHCI_EXTENSION {
   ULONG Reserved;
