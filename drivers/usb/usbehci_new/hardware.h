@@ -253,3 +253,50 @@ typedef struct _EHCI_QUEUE_TD { // must be aligned on 32-byte boundaries
 } EHCI_QUEUE_TD, *PEHCI_QUEUE_TD;
 
 C_ASSERT(sizeof(EHCI_QUEUE_TD) == 52);
+
+/* Queue Head */
+
+#define EHCI_QH_FLAG_IN_SCHEDULE  0x01
+#define EHCI_QH_FLAG_STATIC       0x04
+#define EHCI_QH_FLAG_UPDATING     0x10
+#define EHCI_QH_FLAG_NUKED        0x20
+
+typedef union _EHCI_QH_EP_PARAMS {
+  struct {
+    ULONG DeviceAddress               : 7;
+    ULONG InactivateOnNextTransaction : 1;
+    ULONG EndpointNumber              : 4;
+    ULONG EndpointSpeed               : 2;
+    ULONG DataToggleControl           : 1;
+    ULONG HeadReclamationListFlag     : 1;
+    ULONG MaximumPacketLength         : 11; // corresponds to the maximum packet size of the associated endpoint (wMaxPacketSize).
+    ULONG ControlEndpointFlag         : 1;
+    ULONG NakCountReload              : 4;
+  };
+  ULONG AsULONG;
+} EHCI_QH_EP_PARAMS;
+
+typedef union _EHCI_QH_EP_CAPS {
+  struct {
+    ULONG InterruptMask       : 8;
+    ULONG SplitCompletionMask : 8;
+    ULONG HubAddr             : 7;
+    ULONG PortNumber          : 7;
+    ULONG PipeMultiplier      : 2;
+  };
+  ULONG AsULONG;
+} EHCI_QH_EP_CAPS;
+
+typedef struct _EHCI_QUEUE_HEAD { // must be aligned on 32-byte boundaries
+  EHCI_LINK_POINTER HorizontalLink;
+  EHCI_QH_EP_PARAMS EndpointParams;
+  EHCI_QH_EP_CAPS EndpointCaps;
+  ULONG_PTR CurrentTD;
+  ULONG_PTR NextTD;
+  ULONG_PTR AlternateNextTD;
+  EHCI_TD_TOKEN Token;
+  ULONG_PTR Buffer[5];
+  ULONG_PTR ExtendedBuffer[5];
+} EHCI_QUEUE_HEAD, *PEHCI_QUEUE_HEAD;
+
+C_ASSERT(sizeof(EHCI_QUEUE_HEAD) == 68);
