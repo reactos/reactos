@@ -228,3 +228,28 @@ typedef struct _EHCI_SPLIT_ISOCHRONOUS_TD { // must be aligned on a 32-byte boun
 } EHCI_SPLIT_ISOCHRONOUS_TD, *PEHCI_SPLIT_ISOCHRONOUS_TD;
 
 C_ASSERT(sizeof(EHCI_SPLIT_ISOCHRONOUS_TD) == 28);
+
+/* Queue Element Transfer Descriptor (qTD) */
+
+typedef union _EHCI_TD_TOKEN {
+  struct {
+    ULONG Status              : 8;
+    ULONG PIDCode             : 2;
+    ULONG ErrorCounter        : 2;
+    ULONG CurrentPage         : 3;
+    ULONG InterruptOnComplete : 1;
+    ULONG TransferBytes       : 15;
+    ULONG DataToggle          : 1;
+  };
+  ULONG AsULONG;
+} EHCI_TD_TOKEN, *PEHCI_TD_TOKEN;
+
+typedef struct _EHCI_QUEUE_TD { // must be aligned on 32-byte boundaries
+  ULONG_PTR NextTD;
+  ULONG_PTR AlternateNextTD;
+  EHCI_TD_TOKEN Token;
+  ULONG_PTR Buffer[5];
+  ULONG_PTR ExtendedBuffer[5];
+} EHCI_QUEUE_TD, *PEHCI_QUEUE_TD;
+
+C_ASSERT(sizeof(EHCI_QUEUE_TD) == 52);
