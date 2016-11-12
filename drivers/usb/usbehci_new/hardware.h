@@ -104,6 +104,8 @@ typedef union _EHCI_PORT_STATUS_CONTROL {
   ULONG AsULONG;
 } EHCI_PORT_STATUS_CONTROL;
 
+/* Link Pointer */
+
 #define EHCI_LINK_TYPE_iTD  0 // isochronous transfer descriptor
 #define EHCI_LINK_TYPE_QH   1 // queue head
 #define EHCI_LINK_TYPE_siTD 2 // split transaction isochronous transfer
@@ -118,3 +120,49 @@ typedef union _EHCI_LINK_POINTER {
   };
   ULONG AsULONG;
 } EHCI_LINK_POINTER;
+
+/* Isochronous (High-Speed) Transfer Descriptor (iTD) */
+
+typedef union _EHCI_TRANSACTION_CONTROL {
+  struct {
+    ULONG xOffset             : 12;
+    ULONG PageSelect          : 3;
+    ULONG InterruptOnComplete : 1;
+    ULONG xLength             : 12;
+    ULONG Status              : 4;
+  };
+  ULONG AsULONG;
+} EHCI_TRANSACTION_CONTROL;
+
+typedef union _EHCI_TRANSACTION_BUFFER {
+  struct {
+    ULONG DeviceAddress  : 7;
+    ULONG Reserved1      : 1;
+    ULONG EndpointNumber : 4;
+    ULONG DataBuffer0    : 20;
+  };
+  struct {
+    ULONG MaximumPacketSize : 11;
+    ULONG Direction         : 1;
+    ULONG DataBuffer1       : 20;
+  };
+  struct {
+    ULONG Multi       : 2;
+    ULONG Reserved2   : 10;
+    ULONG DataBuffer2 : 20;
+  };
+  struct {
+    ULONG Reserved3  : 12;
+    ULONG DataBuffer : 20;
+  };
+  ULONG AsULONG;
+} EHCI_TRANSACTION_BUFFER;
+
+typedef struct _EHCI_ISOCHRONOUS_TD { // must be aligned on a 32-byte boundary
+  EHCI_LINK_POINTER NextLink;
+  EHCI_TRANSACTION_CONTROL Transaction[8];
+  EHCI_TRANSACTION_BUFFER Buffer[7];
+  ULONG_PTR ExtendedBuffer[7];
+} EHCI_ISOCHRONOUS_TD, *PEHCI_ISOCHRONOUS_TD;
+
+C_ASSERT(sizeof(EHCI_ISOCHRONOUS_TD) == 92);
