@@ -44,10 +44,6 @@ typedef struct _EHCI_TRANSFER {
   ULONG Reserved;
 } EHCI_TRANSFER, *PEHCI_TRANSFER;
 
-typedef struct _EHCI_HC_RESOURCES {
-  UCHAR Padded[0x1000];
-} EHCI_HC_RESOURCES, *PEHCI_HC_RESOURCES;
-
 typedef struct _EHCI_STATIC_QH {
   //Hardware
   EHCI_QUEUE_HEAD HwQH;
@@ -58,6 +54,14 @@ typedef struct _EHCI_STATIC_QH {
 } EHCI_STATIC_QH, *PEHCI_STATIC_QH;
 
 C_ASSERT(sizeof(EHCI_STATIC_QH) == 0xA0);
+
+typedef struct _EHCI_HC_RESOURCES {
+  PEHCI_STATIC_QH PeriodicFrameList[1024]; // 4K-page aligned array
+  EHCI_STATIC_QH AsyncHead;
+  EHCI_STATIC_QH PeriodicHead[64];
+  UCHAR Padded[0x160];
+  EHCI_HCD_QH DummyQH[1024];
+} EHCI_HC_RESOURCES, *PEHCI_HC_RESOURCES;
 
 typedef struct _EHCI_EXTENSION {
   ULONG Reserved;
