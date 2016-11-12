@@ -47,6 +47,41 @@ EHCI_CloseEndpoint(IN PVOID ehciExtension,
     DPRINT1("EHCI_CloseEndpoint: UNIMPLEMENTED. FIXME\n");
 }
 
+VOID
+NTAPI
+EHCI_AlignHwStructure(IN PEHCI_EXTENSION EhciExtension,
+                      IN PULONG PhysicalAddress,
+                      IN PULONG VirtualAddress,
+                      IN ULONG Alignment)
+{
+    ULONG PAddress;
+    PVOID NewPAddress;
+    ULONG VAddress;
+
+    DPRINT_EHCI("EHCI_AlignHwStructure: *PhysicalAddress - %p, *VirtualAddress - %p, Alignment - %x\n",
+                 *PhysicalAddress,
+                 *VirtualAddress,
+                 Alignment);
+
+    PAddress = *PhysicalAddress;
+    VAddress = *VirtualAddress;
+
+    NewPAddress = PAGE_ALIGN(*PhysicalAddress + Alignment - 1);
+
+    if (NewPAddress != PAGE_ALIGN(*PhysicalAddress))
+    {
+        VAddress += (ULONG)NewPAddress - PAddress;
+        PAddress = (ULONG)PAGE_ALIGN(*PhysicalAddress + Alignment - 1);
+
+        DPRINT("EHCI_AlignHwStructure: VAddress - %p, PAddress - %p\n",
+               VAddress,
+               PAddress);
+    }
+
+    *VirtualAddress = VAddress;
+    *PhysicalAddress = PAddress;
+}
+
 MPSTATUS
 NTAPI
 EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
