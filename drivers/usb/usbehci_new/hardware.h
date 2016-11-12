@@ -1,5 +1,15 @@
 /* EHCI hardware registers */
 
+#define EHCI_USBCMD            0
+#define EHCI_USBSTS            1
+#define EHCI_USBINTR           2
+#define EHCI_FRINDEX           3
+#define EHCI_CTRLDSSEGMENT     4
+#define EHCI_PERIODICLISTBASE  5
+#define EHCI_ASYNCLISTBASE     6
+#define EHCI_CONFIGFLAG        16
+#define EHCI_PORTSC            17
+
 typedef union _EHCI_HC_STRUCTURAL_PARAMS {
   struct {
     ULONG PortCount            : 4;
