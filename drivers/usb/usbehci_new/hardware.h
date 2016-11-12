@@ -103,3 +103,18 @@ typedef union _EHCI_PORT_STATUS_CONTROL {
   };
   ULONG AsULONG;
 } EHCI_PORT_STATUS_CONTROL;
+
+#define EHCI_LINK_TYPE_iTD  0 // isochronous transfer descriptor
+#define EHCI_LINK_TYPE_QH   1 // queue head
+#define EHCI_LINK_TYPE_siTD 2 // split transaction isochronous transfer
+#define EHCI_LINK_TYPE_FSTN 3 // frame span traversal node
+
+typedef union _EHCI_LINK_POINTER {
+  struct {
+    ULONG Terminate : 1;
+    ULONG Type      : 2;
+    ULONG Reserved  : 2;
+    ULONG Adress    : 27;
+  };
+  ULONG AsULONG;
+} EHCI_LINK_POINTER;
