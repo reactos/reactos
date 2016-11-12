@@ -49,11 +49,146 @@ EHCI_CloseEndpoint(IN PVOID ehciExtension,
 
 MPSTATUS
 NTAPI
+EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
+                        IN PVOID resourcesStartVA,
+                        IN PVOID resourcesStartPA)
+{
+    DPRINT1("EHCI_InitializeSchedule: UNIMPLEMENTED. FIXME\n");
+    return 0;
+}
+
+MPSTATUS
+NTAPI
+EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
+{
+    DPRINT1("EHCI_InitializeHardware: UNIMPLEMENTED. FIXME\n");
+    return 0;
+}
+
+MPSTATUS
+NTAPI
+EHCI_TakeControlHC(IN PEHCI_EXTENSION EhciExtension)
+{
+    DPRINT1("EHCI_TakeControlHC: UNIMPLEMENTED. FIXME\n");
+    return 0;
+}
+
+VOID
+NTAPI
+EHCI_GetRegistryParameters(IN PEHCI_EXTENSION EhciExtension)
+{
+    DPRINT1("EHCI_GetRegistryParameters: UNIMPLEMENTED. FIXME\n");
+}
+
+MPSTATUS
+NTAPI
 EHCI_StartController(IN PVOID ehciExtension,
                      IN PUSBPORT_RESOURCES Resources)
 {
-    DPRINT1("EHCI_StartController: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    PEHCI_EXTENSION EhciExtension;
+    PULONG BaseIoAdress;
+    PULONG OperationalRegs;
+    MPSTATUS MPStatus;
+    EHCI_USB_COMMAND Command;
+    UCHAR CapabilityRegLength;
+    UCHAR Fladj;
+
+    DPRINT_EHCI("EHCI_StartController: ... \n");
+
+    if ((Resources->TypesResources & 6) != 6) // (Interrupt | Memory)
+    {
+        DPRINT1("EHCI_StartController: Resources->TypesResources - %x\n",
+                Resources->TypesResources);
+
+        return 4;
+    }
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+
+    BaseIoAdress = (PULONG)Resources->ResourceBase;
+    EhciExtension->BaseIoAdress = BaseIoAdress;
+
+    CapabilityRegLength = (UCHAR)READ_REGISTER_ULONG(BaseIoAdress);
+    OperationalRegs = (PULONG)((ULONG)BaseIoAdress + CapabilityRegLength);
+    EhciExtension->OperationalRegs = OperationalRegs;
+
+    DPRINT("EHCI_StartController: BaseIoAdress    - %p\n", BaseIoAdress);
+    DPRINT("EHCI_StartController: OperationalRegs - %p\n", OperationalRegs);
+
+    RegPacket.UsbPortReadWriteConfigSpace(EhciExtension,
+                                          1,
+                                          &Fladj,
+                                          0x61,
+                                          1);
+
+    EhciExtension->FrameLengthAdjustment = Fladj;
+
+    EHCI_GetRegistryParameters(EhciExtension);
+
+    MPStatus = EHCI_TakeControlHC(EhciExtension);
+
+    if (MPStatus)
+    {
+        DPRINT1("EHCI_StartController: Unsuccessful TakeControlHC()\n");
+        return MPStatus;
+    }
+
+    MPStatus = EHCI_InitializeHardware(EhciExtension);
+
+    if (MPStatus)
+    {
+        DPRINT1("EHCI_StartController: Unsuccessful InitializeHardware()\n");
+        return MPStatus;
+    }
+
+    MPStatus = EHCI_InitializeSchedule(EhciExtension,
+                                       Resources->StartVA,
+                                       Resources->StartPA);
+
+    if (MPStatus)
+    {
+        DPRINT1("EHCI_StartController: Unsuccessful InitializeSchedule()\n");
+        return MPStatus;
+    }
+
+    RegPacket.UsbPortReadWriteConfigSpace(EhciExtension,
+                                          1,
+                                          &Fladj,
+                                          0x61,
+                                          1);
+
+    if (Fladj != EhciExtension->FrameLengthAdjustment)
+    {
+        Fladj = EhciExtension->FrameLengthAdjustment;
+
+        RegPacket.UsbPortReadWriteConfigSpace(EhciExtension,
+                                              0, // write
+                                              &Fladj,
+                                              0x61,
+                                              1);
+    }
+
+    /* Port routing control logic default-routes all ports to this HC */
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_CONFIGFLAG, 1);
+    EhciExtension->PortRoutingControl = 1;
+
+    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    Command.InterruptThreshold = 1; // one micro-frame
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
+
+    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    Command.Run = 1; // execution of the schedule
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
+
+    EhciExtension->IsStarted = 1;
+
+    if (Resources->Reserved1)
+    {
+        DPRINT1("EHCI_StartController: FIXME\n");
+        DbgBreakPoint();
+    }
+
+    return MPStatus;
 }
 
 VOID
@@ -338,7 +473,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     RegPacket.MiniPortBusBandwidth = 400000;
 
-    RegPacket.MiniPortExtensionSize = sizeof(EHCI_EXTENSION)
+    RegPacket.MiniPortExtensionSize = sizeof(EHCI_EXTENSION);
     RegPacket.MiniPortEndpointSize = sizeof(EHCI_ENDPOINT);
     RegPacket.MiniPortTransferSize = sizeof(EHCI_TRANSFER);
     RegPacket.MiniPortResourcesSize = sizeof(EHCI_HC_RESOURCES);

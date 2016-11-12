@@ -28,6 +28,14 @@ typedef struct _EHCI_HC_RESOURCES {
 
 typedef struct _EHCI_EXTENSION {
   ULONG Reserved;
+  ULONG Flags;
+  PULONG BaseIoAdress;
+  PULONG OperationalRegs;
+  UCHAR FrameLengthAdjustment;
+  BOOLEAN IsStarted;
+  USHORT Reserved1;
+  ULONG PortRoutingControl;
+
 } EHCI_EXTENSION, *PEHCI_EXTENSION;
 
 /* roothub.c */
