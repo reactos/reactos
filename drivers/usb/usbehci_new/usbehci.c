@@ -61,7 +61,66 @@ MPSTATUS
 NTAPI
 EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
 {
-    DPRINT1("EHCI_InitializeHardware: UNIMPLEMENTED. FIXME\n");
+    PULONG BaseIoAdress;
+    PULONG OperationalRegs;
+    EHCI_USB_COMMAND Command;
+    LARGE_INTEGER CurrentTime = {{0, 0}};
+    LARGE_INTEGER LastTime = {{0, 0}};
+    EHCI_HC_STRUCTURAL_PARAMS StructuralParams;
+
+    DPRINT_EHCI("EHCI_InitializeHardware: ... \n");
+
+    OperationalRegs = EhciExtension->OperationalRegs;
+    BaseIoAdress = EhciExtension->BaseIoAdress;
+
+    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    Command.Reset = 1;
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
+
+    KeQuerySystemTime(&CurrentTime);
+    CurrentTime.QuadPart += 100 * 10000; // 100 msec
+
+    DPRINT_EHCI("EHCI_InitializeHardware: Start reset ... \n");
+
+    while (TRUE)
+    {
+        KeQuerySystemTime(&LastTime);
+        Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+
+        if (Command.Reset != 1)
+        {
+            break;
+        }
+
+        if (LastTime.QuadPart >= CurrentTime.QuadPart)
+        {
+            if (Command.Reset == 1)
+            {
+                DPRINT1("EHCI_InitializeHardware: Reset failed!\n");
+                return 7;
+            }
+
+            break;
+        }
+    }
+
+    DPRINT("EHCI_InitializeHardware: Reset - OK\n");
+
+    StructuralParams.AsULONG = READ_REGISTER_ULONG(BaseIoAdress + 1); // HCSPARAMS register
+
+    EhciExtension->NumberOfPorts = StructuralParams.PortCount;
+    EhciExtension->PortPowerControl = StructuralParams.PortPowerControl;
+
+    DPRINT("EHCI_InitializeHardware: StructuralParams - %p\n", StructuralParams.AsULONG);
+    DPRINT("EHCI_InitializeHardware: PortPowerControl - %x\n", EhciExtension->PortPowerControl);
+    DPRINT("EHCI_InitializeHardware: N_PORTS          - %x\n", EhciExtension->NumberOfPorts);
+
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_PERIODICLISTBASE, 0);
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_ASYNCLISTBASE, 0);
+
+    EhciExtension->InterruptMask.AsULONG = 0;
+    EhciExtension->InterruptMask.PortChangeInterrupt = 1;
+
     return 0;
 }
 
