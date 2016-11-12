@@ -231,6 +231,15 @@ C_ASSERT(sizeof(EHCI_SPLIT_ISOCHRONOUS_TD) == 28);
 
 /* Queue Element Transfer Descriptor (qTD) */
 
+#define	EHCI_TOKEN_STATUS_ACTIVE            (1 << 7)
+#define	EHCI_TOKEN_STATUS_HALTED            (1 << 6)
+#define	EHCI_TOKEN_STATUS_DATA_BUFFER_ERROR (1 << 5)
+#define	EHCI_TOKEN_STATUS_BABBLE_DETECTED   (1 << 4)
+#define	EHCI_TOKEN_STATUS_TRANSACTION_ERROR (1 << 3)
+#define	EHCI_TOKEN_STATUS_MISSED_MICROFRAME (1 << 2)
+#define	EHCI_TOKEN_STATUS_SPLIT_STATE       (1 << 1)
+#define	EHCI_TOKEN_STATUS_PING_STATE        (1 << 0)
+
 typedef union _EHCI_TD_TOKEN {
   struct {
     ULONG Status              : 8;
