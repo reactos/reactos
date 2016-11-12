@@ -82,6 +82,54 @@ EHCI_AlignHwStructure(IN PEHCI_EXTENSION EhciExtension,
     *PhysicalAddress = PAddress;
 }
 
+VOID
+NTAPI
+EHCI_InitializeInterruptSchedule(IN PEHCI_EXTENSION EhciExtension)
+{
+    PEHCI_STATIC_QH StaticQH;
+    ULONG ix;
+    static UCHAR LinkTable[64] = {
+      255, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8,  9, 9,
+      10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19,
+      20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27, 28, 28, 29, 29,
+      30, 30, 0}; 
+
+    DPRINT_EHCI("EHCI_InitializeInterruptSchedule: ... \n");
+
+    for (ix = 0; ix < 63; ix++)
+    {
+        StaticQH = EhciExtension->PeriodicHead[ix];
+
+        StaticQH->HwQH.EndpointParams.HeadReclamationListFlag = 0;
+        StaticQH->HwQH.NextTD |= 1;
+        StaticQH->HwQH.Token.Status |= EHCI_TOKEN_STATUS_HALTED;
+    }
+
+    for (ix = 1; ix < 63; ix++)
+    {
+        StaticQH = EhciExtension->PeriodicHead[ix];
+ 
+        StaticQH->PrevHead = NULL;
+        StaticQH->NextHead = (PEHCI_HCD_QH)EhciExtension->PeriodicHead[LinkTable[ix]];
+
+        StaticQH->HwQH.HorizontalLink.AsULONG = 
+            (ULONG)EhciExtension->PeriodicHead[LinkTable[ix]]->PhysicalAddress;
+
+        StaticQH->HwQH.HorizontalLink.Type = EHCI_LINK_TYPE_QH;
+        StaticQH->HwQH.EndpointCaps.AsULONG = -1;
+
+        StaticQH->QhFlags |= EHCI_QH_FLAG_STATIC;
+
+        if ((ix + 1) <= 6)
+        {
+            StaticQH->QhFlags |= 8;
+        }
+    }
+
+    EhciExtension->PeriodicHead[0]->HwQH.HorizontalLink.Terminate = 1;
+    EhciExtension->PeriodicHead[0]->QhFlags |= (EHCI_QH_FLAG_STATIC | 8);
+}
+
 MPSTATUS
 NTAPI
 EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
