@@ -14,6 +14,16 @@
 #include <debug.h>
 #include <shellutils.h>
 
+LPITEMIDLIST _CreateDummyPidl()
+{
+    /* Create a tiny pidl with no contents */
+    LPITEMIDLIST testpidl = (LPITEMIDLIST)SHAlloc(3 * sizeof(WORD));
+    testpidl->mkid.cb = 2 * sizeof(WORD);
+    *(WORD*)((char*)testpidl + (int)(2 * sizeof(WORD))) = 0;
+
+    return testpidl;
+}
+
 VOID TestUninitialized()
 {
     CComPtr<IShellFolder> psf;
@@ -63,10 +73,7 @@ VOID TestUninitialized()
     hr = psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &ppf2));
     ok(hr == S_OK, "hr = %lx\n", hr);
 
-    /* Create a tiny pidl with no contents */
-    LPITEMIDLIST testpidl = (LPITEMIDLIST)SHAlloc(3 * sizeof(WORD));
-    testpidl->mkid.cb = 2 * sizeof(WORD);
-    *(WORD*)((char*)testpidl + (int)(2 * sizeof(WORD))) = 0;
+    LPITEMIDLIST testpidl = _CreateDummyPidl();
 
     hr = ppf2->Initialize(testpidl);
     ok(hr == S_OK, "hr = %lx\n", hr);
@@ -92,9 +99,72 @@ VOID TestUninitialized()
 
 }
 
+VOID TestInitialize()
+{
+    HRESULT hr;
+    STRRET strretName;
+
+    /* Create a CFSFolder */
+    CComPtr<IShellFolder> psf;
+    hr = CoCreateInstance(CLSID_ShellFSFolder, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IShellFolder, &psf));
+    ok(hr == S_OK, "hr = %lx\n", hr);
+
+    CComPtr<IPersistFolder3> ppf3;
+    hr = psf->QueryInterface(IID_PPV_ARG(IPersistFolder3, &ppf3));
+    ok(hr == S_OK, "hr = %lx\n", hr);
+
+    LPITEMIDLIST testpidl = _CreateDummyPidl();
+    PERSIST_FOLDER_TARGET_INFO pfti = {0};
+    PERSIST_FOLDER_TARGET_INFO queriedPfti;
+    hr = ppf3->InitializeEx(NULL, NULL, NULL);
+    ok(hr == E_INVALIDARG, "hr = %lx\n", hr);
+
+    hr = ppf3->InitializeEx(NULL, NULL, &pfti);
+    ok(hr == E_INVALIDARG, "hr = %lx\n", hr);
+
+    wcscpy(pfti.szTargetParsingName, L"C:\\");
+    hr = ppf3->InitializeEx(NULL, NULL, &pfti);
+    ok(hr == E_INVALIDARG, "hr = %lx\n", hr);
+
+    hr = ppf3->InitializeEx(NULL, testpidl, NULL);
+    ok(hr == S_OK, "hr = %lx\n", hr);
+
+    hr = ppf3->GetFolderTargetInfo(&queriedPfti);
+    ok(hr == E_FAIL, "hr = %lx\n", hr);
+
+    hr = psf->GetDisplayNameOf(NULL,SHGDN_FORPARSING,&strretName);
+    ok(hr == E_FAIL, "hr = %lx\n", hr);
+
+    pfti.szTargetParsingName[0] = 0;
+    hr = ppf3->InitializeEx(NULL, testpidl, &pfti);
+    ok(hr == S_OK, "hr = %lx\n", hr);
+
+    hr = ppf3->GetFolderTargetInfo(&queriedPfti);
+    ok(hr == S_OK, "hr = %lx\n", hr);
+    ok(wcscmp(queriedPfti.szTargetParsingName, L"") == 0, "wrong name, got: %S\n", queriedPfti.szTargetParsingName);
+
+    hr = psf->GetDisplayNameOf(NULL,SHGDN_FORPARSING,&strretName);
+    ok(hr == E_FAIL, "hr = %lx\n", hr);
+
+    wcscpy(pfti.szTargetParsingName, L"C:\\");
+    hr = ppf3->InitializeEx(NULL, testpidl, &pfti);
+    ok(hr == S_OK, "hr = %lx\n", hr);
+
+    hr = ppf3->GetFolderTargetInfo(&queriedPfti);
+    ok(hr == S_OK, "hr = %lx\n", hr);
+    ok(wcscmp(queriedPfti.szTargetParsingName, L"C:\\") == 0, "wrong name, got: %S\n", queriedPfti.szTargetParsingName);
+
+    hr = psf->GetDisplayNameOf(NULL,SHGDN_FORPARSING,&strretName);
+    ok(hr == S_OK, "hr = %lx\n", hr);
+    ok(strretName.uType == STRRET_WSTR, "strretName.uType == %x\n", strretName.uType);
+    ok(wcscmp(strretName.pOleStr, L"C:\\") == 0, "wrong name, got: %S\n", strretName.pOleStr);    
+}
+
+
 START_TEST(CFSFolder)
 {  
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
     TestUninitialized();
+    TestInitialize();
 }
