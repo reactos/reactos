@@ -166,3 +166,65 @@ typedef struct _EHCI_ISOCHRONOUS_TD { // must be aligned on a 32-byte boundary
 } EHCI_ISOCHRONOUS_TD, *PEHCI_ISOCHRONOUS_TD;
 
 C_ASSERT(sizeof(EHCI_ISOCHRONOUS_TD) == 92);
+
+/* Split Transaction Isochronous Transfer Descriptor (siTD) */
+
+typedef union _EHCI_FS_ENDPOINT_PARAMS {
+  struct {
+    ULONG DeviceAddress  : 7;
+    ULONG Reserved1      : 1;
+    ULONG EndpointNumber : 4;
+    ULONG Reserved2      : 4;
+    ULONG HubAddress     : 7;
+    ULONG Reserved3      : 1;
+    ULONG PortNumber     : 7;
+    ULONG Direction      : 1;
+  };
+  ULONG AsULONG;
+} EHCI_FS_ENDPOINT_PARAMS;
+
+typedef union _EHCI_MICROFRAME_CONTROL {
+  struct {
+    ULONG StartMask      : 8;
+    ULONG CompletionMask : 8;
+    ULONG Reserved       : 16;
+  };
+  ULONG AsULONG;
+} EHCI_MICROFRAME_CONTROL;
+
+typedef union _EHCI_SPLIT_TRANSFER_STATE {
+  struct {
+    ULONG Status              : 8;
+    ULONG ProgressMask        : 8;
+    ULONG TotalBytes          : 10;
+    ULONG Reserved            : 4;
+    ULONG PageSelect          : 1;
+    ULONG InterruptOnComplete : 1;
+  };
+  ULONG AsULONG;
+} EHCI_SPLIT_TRANSFER_STATE;
+
+typedef union _EHCI_SPLIT_BUFFER_POINTER {
+  struct {
+    ULONG CurrentOffset : 12;
+    ULONG DataBuffer0   : 20;
+  };
+  struct {
+    ULONG TransactionCount    : 3;
+    ULONG TransactionPosition : 2;
+    ULONG Reserved            : 7;
+    ULONG DataBuffer1         : 20;
+  };
+  ULONG AsULONG;
+} EHCI_SPLIT_BUFFER_POINTER;
+
+typedef struct _EHCI_SPLIT_ISOCHRONOUS_TD { // must be aligned on a 32-byte boundary
+  EHCI_LINK_POINTER NextLink;
+  EHCI_FS_ENDPOINT_PARAMS EndpointCharacteristics;
+  EHCI_MICROFRAME_CONTROL MicroFrameControl;
+  EHCI_SPLIT_TRANSFER_STATE TransferState;
+  EHCI_SPLIT_BUFFER_POINTER Buffer[2];
+  ULONG_PTR BackPointer;
+} EHCI_SPLIT_ISOCHRONOUS_TD, *PEHCI_SPLIT_ISOCHRONOUS_TD;
+
+C_ASSERT(sizeof(EHCI_SPLIT_ISOCHRONOUS_TD) == 28);
