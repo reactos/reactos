@@ -16,6 +16,11 @@ if(POLICY CMP0051)
     cmake_policy(SET CMP0051 NEW)
 endif()
 
+if(POLICY CMP0058)
+    # Ninja requires custom command byproducts to be explicit
+    cmake_policy(SET CMP0058 OLD)
+endif()
+
 project(REACTOS)
 
 # Versioning
