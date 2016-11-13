@@ -35,7 +35,55 @@ EHCI_QueryEndpointRequirements(IN PVOID ehciExtension,
                                IN PVOID endpointParameters,
                                IN PULONG EndpointRequirements)
 {
-    DPRINT1("EHCI_QueryEndpointRequirements: UNIMPLEMENTED. FIXME\n");
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+    ULONG TransferType;
+
+    DPRINT_EHCI("EHCI_QueryEndpointRequirements: ... \n");
+
+    EndpointProperties = (PUSBPORT_ENDPOINT_PROPERTIES)endpointParameters;
+    TransferType = EndpointProperties->TransferType;
+
+    switch (TransferType)
+    {
+        case USBPORT_TRANSFER_TYPE_ISOCHRONOUS:
+            DPRINT("EHCI_QueryEndpointRequirements: IsoTransfer\n");
+
+            if (EndpointProperties->DeviceSpeed == UsbHighSpeed)
+            {
+                *EndpointRequirements = 0x40000;
+                *(PULONG)(EndpointRequirements + 1) = 0x180000;
+            }
+            else
+            {
+                *EndpointRequirements = 0x1000;
+                *(PULONG)(EndpointRequirements + 1) = 0x40000;
+            }
+            break;
+
+        case USBPORT_TRANSFER_TYPE_CONTROL:
+            DPRINT("EHCI_QueryEndpointRequirements: ControlTransfer\n");
+            *EndpointRequirements = sizeof(EHCI_HCD_QH) + (1 + 6) * sizeof(EHCI_HCD_TD);
+            *((PULONG)EndpointRequirements + 1) = 0x10000;
+            break;
+
+        case USBPORT_TRANSFER_TYPE_BULK:
+            DPRINT("EHCI_QueryEndpointRequirements: BulkTransfer\n");
+            *EndpointRequirements = sizeof(EHCI_HCD_QH) + (1 + 209) * sizeof(EHCI_HCD_TD);
+            *((PULONG)EndpointRequirements + 1) = 0x400000;
+            break;
+
+        case USBPORT_TRANSFER_TYPE_INTERRUPT:
+            DPRINT("EHCI_QueryEndpointRequirements: InterruptTransfer\n");
+            *EndpointRequirements = sizeof(EHCI_HCD_QH) + (1 + 4) * sizeof(EHCI_HCD_TD);
+            *((PULONG)EndpointRequirements + 1) = 0x1000;
+            break;
+
+        default:
+            DPRINT1("EHCI_QueryEndpointRequirements: Unknown TransferType - %x\n",
+                    TransferType);
+            DbgBreakPoint();
+            break;
+    }
 }
 
 VOID
