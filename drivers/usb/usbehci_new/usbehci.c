@@ -883,7 +883,14 @@ VOID
 NTAPI
 EHCI_CheckController(IN PVOID ehciExtension)
 {
-    DPRINT1("EHCI_CheckController: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+
+    //DPRINT_EHCI("EHCI_CheckController: ... \n");
+
+    if (EhciExtension->IsStarted)
+    {
+        EHCI_HardwarePresent(EhciExtension, TRUE);
+    }
 }
 
 ULONG
