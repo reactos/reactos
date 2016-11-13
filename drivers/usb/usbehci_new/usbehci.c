@@ -63,6 +63,14 @@ EHCI_GetQhForFrame(IN PEHCI_EXTENSION EhciExtension,
     return EhciExtension->PeriodicHead[Balance[FrameIdx & 0x1F]];
 }
 
+PEHCI_HCD_QH
+NTAPI
+EHCI_GetDummyQhForFrame(IN PEHCI_EXTENSION EhciExtension,
+                        IN ULONG Idx)
+{
+    return (PEHCI_HCD_QH)(EhciExtension->DummyQHListVA + Idx * sizeof(EHCI_HCD_QH));
+}
+
 VOID
 NTAPI
 EHCI_AlignHwStructure(IN PEHCI_EXTENSION EhciExtension,
