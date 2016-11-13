@@ -14,6 +14,36 @@
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;
 
+typedef union _USB20_PORT_STATUS {
+  struct {
+    ULONG ConnectStatus          : 1; // Current Connect Status
+    ULONG EnableStatus           : 1; // Port Enabled/Disabled
+    ULONG SuspendStatus          : 1;
+    ULONG OverCurrent            : 1;
+    ULONG ResetStatus            : 1;
+    ULONG Reserved1              : 3;
+    ULONG PowerStatus            : 1;
+    ULONG LsDeviceAttached       : 1; // Low-Speed Device Attached
+    ULONG HsDeviceAttached       : 1; // High-speed Device Attached
+    ULONG TestMode               : 1; // Port Test Mode
+    ULONG IndicatorControl       : 1; // Port Indicator Control
+    ULONG Reserved2              : 3;
+    ULONG ConnectStatusChange    : 1;
+    ULONG EnableStatusChange     : 1;
+    ULONG SuspendStatusChange    : 1;
+    ULONG OverCurrentChange      : 1;
+    ULONG ResetStatusChange      : 1;
+    ULONG Reserved3              : 3;
+    ULONG PowerStatusChange      : 1;
+    ULONG LsDeviceAttachedChange : 1;
+    ULONG HsDeviceAttachedChange : 1;
+    ULONG TestModeChange         : 1;
+    ULONG IndicatorControlChange : 1;
+    ULONG Reserved4              : 3;
+  };
+  ULONG AsULONG;
+} USB20_PORT_STATUS;
+
 typedef struct _EHCI_HCD_TD {
   //Hardware
   EHCI_QUEUE_TD HwTD;
@@ -85,6 +115,11 @@ typedef struct _EHCI_EXTENSION {
   ULONG_PTR DummyQHListPA;
   ULONG FrameIndex;
   ULONG FrameHighPart;
+  /* Root Hub Bits */
+  ULONG ConnectPortBits;
+  ULONG SuspendPortBits;
+  ULONG ResetPortBits;
+  ULONG FinishResetPortBits;
 
 } EHCI_EXTENSION, *PEHCI_EXTENSION;
 
