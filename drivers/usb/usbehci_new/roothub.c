@@ -149,6 +149,48 @@ EHCI_RH_GetHubStatus(IN PVOID ehciExtension,
     return 0;
 }
 
+VOID
+NTAPI
+EHCI_RH_FinishReset(IN PVOID ehciExtension,
+                    IN PUSHORT Port)
+{
+    PEHCI_EXTENSION EhciExtension;
+    PULONG PortStatusReg;
+    EHCI_PORT_STATUS_CONTROL PortSC;
+
+    DPRINT("EHCI_RH_FinishReset: *Port - %x\n", *Port);
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+
+    PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (*Port - 1);
+    PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
+
+    if (PortSC.AsULONG != -1)
+    {
+        if (!PortSC.CurrentConnectStatus)
+        {
+            DPRINT("EHCI_RH_FinishReset: PortSC.AsULONG - %p\n", PortSC.AsULONG);
+        }
+    
+        if (PortSC.PortEnabledDisabled ||
+            !PortSC.CurrentConnectStatus ||
+            PortSC.ConnectStatusChange)
+        {
+            EhciExtension->FinishResetPortBits |= (1 << (*Port - 1));
+            RegPacket.UsbPortInvalidateRootHub(EhciExtension);
+        }
+        else
+        {
+            PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
+            PortSC.PortOwner = 1;
+            WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
+            EhciExtension->FinishResetPortBits |= (1 << (*Port - 1));
+        }
+    
+        EhciExtension->ResetPortBits &= ~(1 << (*Port - 1));
+    }
+}
+
 ULONG
 NTAPI
 EHCI_RH_PortResetComplete(IN PVOID ehciExtension,
