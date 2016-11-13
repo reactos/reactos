@@ -15,8 +15,68 @@ EHCI_OpenEndpoint(IN PVOID ehciExtension,
                   IN PVOID endpointParameters,
                   IN PVOID ehciEndpoint)
 {
-    DPRINT1("EHCI_OpenEndpoint: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    PEHCI_EXTENSION EhciExtension;
+    PEHCI_ENDPOINT EhciEndpoint;
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+    ULONG TransferType;
+    ULONG Result;
+
+    DPRINT_EHCI("EHCI_OpenEndpoint: ... \n");
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
+    EndpointProperties = (PUSBPORT_ENDPOINT_PROPERTIES)endpointParameters;
+
+    RtlCopyMemory(&EhciEndpoint->EndpointProperties,
+                  endpointParameters,
+                  sizeof(USBPORT_ENDPOINT_PROPERTIES));
+
+    TransferType = EndpointProperties->TransferType;
+
+    switch (TransferType)
+    {
+        case USBPORT_TRANSFER_TYPE_ISOCHRONOUS:
+            if (EndpointProperties->DeviceSpeed == UsbHighSpeed)
+            {
+                Result = EHCI_OpenHsIsoEndpoint(EhciExtension,
+                                                EndpointProperties,
+                                                EhciEndpoint);
+            }
+            else
+            {
+                Result = EHCI_OpenIsoEndpoint(EhciExtension,
+                                              EndpointProperties,
+                                              EhciEndpoint);
+            }
+
+            break;
+
+        case USBPORT_TRANSFER_TYPE_CONTROL:
+            Result = EHCI_OpenBulkOrControlEndpoint(EhciExtension,
+                                                    EndpointProperties,
+                                                    EhciEndpoint,
+                                                    TRUE);
+            break;
+
+        case USBPORT_TRANSFER_TYPE_BULK:
+            Result = EHCI_OpenBulkOrControlEndpoint(EhciExtension,
+                                                    EndpointProperties,
+                                                    EhciEndpoint,
+                                                    FALSE);
+            break;
+
+        case USBPORT_TRANSFER_TYPE_INTERRUPT:
+            Result = EHCI_OpenInterruptEndpoint(EhciExtension,
+                                                EndpointProperties,
+                                                EhciEndpoint);
+            break;
+
+        default:
+            Result = 6;
+            break;
+    }
+
+    return Result;
 }
 
 MPSTATUS
