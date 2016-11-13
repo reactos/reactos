@@ -897,8 +897,22 @@ ULONG
 NTAPI
 EHCI_Get32BitFrameNumber(IN PVOID ehciExtension)
 {
-    DPRINT1("EHCI_Get32BitFrameNumber: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    PEHCI_EXTENSION EhciExtension;
+    ULONG FrameIdx; 
+    ULONG FrameIndex;
+    ULONG FrameNumber;
+
+    //DPRINT_EHCI("EHCI_Get32BitFrameNumber: EhciExtension - %p\n", EhciExtension);
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+
+    FrameIdx = EhciExtension->FrameIndex;
+    FrameIndex = READ_REGISTER_ULONG(EhciExtension->OperationalRegs + EHCI_FRINDEX);
+
+    FrameNumber = (((USHORT)FrameIdx ^ ((FrameIndex >> 3) & 0x7FF)) & 0x400) +
+                           (FrameIndex | ((FrameIndex >> 3) & 0x3FF));
+
+    return FrameNumber;
 }
 
 VOID
