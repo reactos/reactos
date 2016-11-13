@@ -483,7 +483,7 @@ EHCI_RH_ClearFeaturePortConnectChange(IN PVOID ehciExtension,
 
     PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
 
-    if (PortSC.AsULONG & 2)
+    if (PortSC.ConnectStatusChange)
     {
         PortSC.ConnectStatusChange = 1;
         PortSC.PortEnableDisableChange = 0;
@@ -502,7 +502,12 @@ NTAPI
 EHCI_RH_ClearFeaturePortResetChange(IN PVOID ehciExtension,
                                     IN USHORT Port)
 {
-    DPRINT("EHCI_RH_ClearFeaturePortResetChange: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+
+    DPRINT("EHCI_RH_ClearFeaturePortConnectChange: Port - %x\n", Port);
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension->FinishResetPortBits &= ~(1 << (Port - 1));
     return 0;
 }
 
