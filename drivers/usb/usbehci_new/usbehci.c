@@ -638,7 +638,37 @@ NTAPI
 EHCI_InterruptDpc(IN PVOID ehciExtension,
                   IN BOOLEAN IsDoEnableInterrupts)
 {
-    DPRINT1("EHCI_InterruptDpc: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+    PULONG OperationalRegs;
+    EHCI_INTERRUPT_ENABLE iStatus;
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    OperationalRegs = EhciExtension->OperationalRegs;
+
+    DPRINT_EHCI("EHCI_InterruptDpc: ... \n");
+
+    iStatus = EhciExtension->InterruptStatus;
+    EhciExtension->InterruptStatus.AsULONG = 0;
+
+    if ((UCHAR)iStatus.AsULONG &
+        (UCHAR)EhciExtension->InterruptMask.AsULONG &
+        0x23)
+    {
+        RegPacket.UsbPortInvalidateEndpoint(EhciExtension, 0);
+    }
+
+    if ((UCHAR)iStatus.AsULONG &
+        (UCHAR)EhciExtension->InterruptMask.AsULONG &
+        0x04)
+    {
+        RegPacket.UsbPortInvalidateRootHub(EhciExtension);
+    }
+
+    if (IsDoEnableInterrupts)
+    {
+        WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBINTR,
+                             EhciExtension->InterruptMask.AsULONG);
+    }
 }
 
 MPSTATUS
