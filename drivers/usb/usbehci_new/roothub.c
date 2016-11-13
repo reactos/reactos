@@ -8,7 +8,39 @@ NTAPI
 EHCI_RH_GetRootHubData(IN PVOID ehciExtension,
                        IN PVOID rootHubData)
 {
-    DPRINT("EHCI_RH_GetRootHubData: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+    PUSBPORT_ROOT_HUB_DATA RootHubData;
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+
+    DPRINT("EHCI_RH_GetRootHubData: EhciExtension - %p, rootHubData - %p\n",
+           EhciExtension,
+           rootHubData);
+
+    RootHubData = (PUSBPORT_ROOT_HUB_DATA)rootHubData;
+
+    RootHubData->NumberOfPorts = EhciExtension->NumberOfPorts;
+
+    /* Logical Power Switching Mode */
+    if (EhciExtension->PortPowerControl == 1)
+    {
+        /* Individual port power switching */
+        RootHubData->HubCharacteristics = (RootHubData->HubCharacteristics & ~2) | 1;
+    }
+    else
+    {
+        /* Ganged power switching (all ports’ power at once) */
+        RootHubData->HubCharacteristics &= ~3;
+    }
+
+    /* 
+        Identifies a Compound Device: Hub is not part of a compound device.
+        Over-current Protection Mode: Global Over-current Protection.
+    */
+    RootHubData->HubCharacteristics &= 3;
+
+    RootHubData->PowerOnToPowerGood = 2;
+    RootHubData->HubControlCurrent = 0;
 }
 
 MPSTATUS
