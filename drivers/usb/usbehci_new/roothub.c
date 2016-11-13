@@ -385,6 +385,34 @@ EHCI_RH_ClearFeaturePortPower(IN PVOID ehciExtension,
     return 0;
 }
 
+VOID
+NTAPI
+EHCI_RH_PortResumeComplete(IN PULONG ehciExtension,
+                           IN PUSHORT Port)
+{
+    PEHCI_EXTENSION EhciExtension;
+    PULONG PortStatusReg;
+    EHCI_PORT_STATUS_CONTROL PortSC;
+
+    DPRINT("EHCI_RH_PortResumeComplete: *Port - %x\n", *Port);
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (*Port - 1);
+
+    PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
+
+    PortSC.ConnectStatusChange = 0;
+    PortSC.PortEnableDisableChange = 0;
+    PortSC.OverCurrentChange = 0;
+    PortSC.ForcePortResume = 0;
+    PortSC.Suspend = 0;
+
+    WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
+    READ_REGISTER_ULONG(PortStatusReg);
+
+    EhciExtension->SuspendPortBits |= 1 << (*Port - 1);
+}
+
 MPSTATUS
 NTAPI
 EHCI_RH_ClearFeaturePortSuspend(IN PVOID ehciExtension,
