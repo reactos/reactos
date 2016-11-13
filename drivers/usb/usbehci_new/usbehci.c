@@ -8,6 +8,46 @@
 
 USBPORT_REGISTRATION_PACKET RegPacket;
 
+MPSTATUS
+NTAPI
+EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
+                               IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
+                               IN PEHCI_ENDPOINT EhciEndpoint,
+                               IN BOOLEAN IsControl)
+{
+    DPRINT1("EHCI_OpenBulkOrControlEndpoint: UNIMPLEMENTED. FIXME\n");
+    return 6;
+}
+
+MPSTATUS
+NTAPI
+EHCI_OpenInterruptEndpoint(IN PEHCI_EXTENSION EhciExtension,
+                           IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
+                           IN PEHCI_ENDPOINT EhciEndpoint)
+{
+    DPRINT1("EHCI_OpenInterruptEndpoint: UNIMPLEMENTED. FIXME\n");
+    return 6;
+}
+
+MPSTATUS
+NTAPI
+EHCI_OpenHsIsoEndpoint(IN PEHCI_EXTENSION EhciExtension,
+                       IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
+                       IN PEHCI_ENDPOINT EhciEndpoint)
+{
+    DPRINT1("EHCI_OpenHsIsoEndpoint: UNIMPLEMENTED. FIXME\n");
+    return 6;
+}
+
+MPSTATUS
+NTAPI
+EHCI_OpenIsoEndpoint(IN PEHCI_EXTENSION EhciExtension,
+                     IN PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties,
+                     IN PEHCI_ENDPOINT EhciEndpoint)
+{
+    DPRINT1("EHCI_OpenIsoEndpoint: UNIMPLEMENTED. FIXME\n");
+    return 6;
+}
 
 MPSTATUS
 NTAPI
