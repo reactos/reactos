@@ -144,7 +144,8 @@ NTAPI
 EHCI_RH_GetHubStatus(IN PVOID ehciExtension,
                      IN PULONG HubStatus)
 {
-    DPRINT("EHCI_RH_GetHubStatus: UNIMPLEMENTED. FIXME\n");
+    DPRINT("EHCI_RH_GetHubStatus: ... \n");
+    *HubStatus = 0;
     return 0;
 }
 
