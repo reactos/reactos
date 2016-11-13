@@ -70,10 +70,12 @@ typedef struct _EHCI_EXTENSION {
   PULONG OperationalRegs;
   UCHAR FrameLengthAdjustment;
   BOOLEAN IsStarted;
-  USHORT Reserved1;
+  USHORT HcSystemErrors;
   ULONG PortRoutingControl;
   USHORT NumberOfPorts; // HCSPARAMS => N_PORTS 
   USHORT PortPowerControl; // HCSPARAMS => Port Power Control (PPC)
+  EHCI_INTERRUPT_ENABLE InterruptMask;
+  EHCI_INTERRUPT_ENABLE InterruptStatus;
   /* Shedule */
   PEHCI_HC_RESOURCES HcResourcesVA;
   PEHCI_HC_RESOURCES HcResourcesPA;

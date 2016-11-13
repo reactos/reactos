@@ -552,8 +552,6 @@ NTAPI
 EHCI_HardwarePresent(IN PEHCI_EXTENSION EhciExtension,
                      IN BOOLEAN IsInvalidateController)
 {
-    BOOLEAN Result;
-
     if (READ_REGISTER_ULONG(EhciExtension->OperationalRegs) != -1)
     {
         return TRUE;
@@ -574,8 +572,65 @@ BOOLEAN
 NTAPI
 EHCI_InterruptService(IN PVOID ehciExtension)
 {
-    DPRINT1("EHCI_InterruptService: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    PEHCI_EXTENSION EhciExtension;
+    PULONG OperationalRegs;
+    BOOLEAN Result = FALSE;
+    ULONG IntrSts;
+    ULONG IntrEn;
+    EHCI_INTERRUPT_ENABLE iStatus;
+    ULONG FrameIndex;
+    ULONG Command;
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    OperationalRegs = EhciExtension->OperationalRegs;
+
+    DPRINT_EHCI("EHCI_InterruptService: ... \n");
+
+    Result = EHCI_HardwarePresent(EhciExtension, FALSE);
+
+    if (!Result)
+    {
+        return FALSE;
+    }
+
+    IntrEn = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBINTR);
+    IntrSts = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
+
+    iStatus.AsULONG = (IntrEn & IntrSts) & 0x3F;
+
+    if (!iStatus.AsULONG)
+    {
+        return FALSE;
+    }
+
+    EhciExtension->InterruptStatus = iStatus;
+
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS,
+                         (IntrEn & IntrSts) & 0x3F);
+
+    if (iStatus.HostSystemError)
+    {
+        ++EhciExtension->HcSystemErrors;
+
+        if (EhciExtension->HcSystemErrors < 0x100)
+        {
+            //attempting reset
+            Command = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+            WRITE_REGISTER_ULONG((PULONG)OperationalRegs, Command | 1);
+        }
+    }
+
+    FrameIndex = (READ_REGISTER_ULONG(OperationalRegs + EHCI_FRINDEX) >> 3) & 0x7FF;
+
+    if ((FrameIndex ^ EhciExtension->FrameIndex) & 0x400)
+    {
+        EhciExtension->FrameHighPart = EhciExtension->FrameHighPart + 0x800 - 
+                                       ((FrameIndex ^ EhciExtension->FrameHighPart) & 0x400);
+    }
+
+    EhciExtension->FrameIndex = FrameIndex;
+
+    return TRUE;
 }
 
 VOID
