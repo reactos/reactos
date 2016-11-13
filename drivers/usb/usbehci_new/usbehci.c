@@ -912,7 +912,13 @@ VOID
 NTAPI
 EHCI_EnableInterrupts(IN PVOID ehciExtension)
 {
-    DPRINT1("EHCI_EnableInterrupts: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+
+    DPRINT("EHCI_EnableInterrupts: EhciExtension->InterruptMask - %x\n",
+           EhciExtension->InterruptMask.AsULONG);
+
+    WRITE_REGISTER_ULONG(EhciExtension->OperationalRegs + EHCI_USBINTR,
+                         EhciExtension->InterruptMask.AsULONG);
 }
 
 VOID
