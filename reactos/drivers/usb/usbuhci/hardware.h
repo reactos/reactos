@@ -37,7 +37,7 @@
 #define UHCI_USBCMD_RS			0x01	// Run/Stop
 #define UHCI_USBCMD_HCRESET		0x02 	// Host Controller Reset
 #define UHCI_USBCMD_GRESET		0x04 	// Global Reset
-#define UHCI_USBCMD_EGSM		0x08	// Enter Global Suspensd mode
+#define UHCI_USBCMD_EGSM		0x08	// Enter Global Suspend mode
 #define UHCI_USBCMD_FGR			0x10	// Force Global resume
 #define UHCI_USBCMD_SWDBG		0x20	// Software Debug
 #define UHCI_USBCMD_CF			0x40	// Configure Flag

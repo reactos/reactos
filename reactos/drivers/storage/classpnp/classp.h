@@ -395,7 +395,7 @@ struct _CLASS_PRIVATE_FDO_DATA {
     struct {
         ULONG      OriginalSrbFlags;
         ULONG      SuccessfulIO;
-        ULONG      ReEnableThreshhold; // 0 means never
+        ULONG      ReEnableThreshold; // 0 means never
     } Perf;
 
     ULONG_PTR HackFlags;

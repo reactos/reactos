@@ -311,20 +311,20 @@ VOID NTAPI ClassScanForSpecial(
 //
 // whenever there is an error, immediately grab the spin lock.  the
 // MP perf hit here is acceptable, since we're in an error path.  this
-// is also neccessary because we are guaranteed to be modifying the
+// is also necessary because we are guaranteed to be modifying the
 // SRB flags here, setting SuccessfulIO to zero, and incrementing the
 // actual error count (which is always done within this spinlock).
 //
 // whenever there is no error, increment a counter.  if there have been
 // errors on the device, and we've enabled dynamic perf, *and* we've
-// just crossed the perf threshhold, then grab the spin lock and
-// double check that the threshhold has, indeed been hit(*). then
+// just crossed the perf threshold, then grab the spin lock and
+// double check that the threshold has, indeed been hit(*). then
 // decrement the error count, and if it's dropped sufficiently, undo
 // some of the safety changes made in the SRB flags due to the errors.
 //
 // * this works in all cases.  even if lots of ios occur after the
 //   previous guy went in and cleared the successfulio counter, that
-//   just means that we've hit the threshhold again, and so it's proper
+//   just means that we've hit the threshold again, and so it's proper
 //   to run the inner loop again.
 //
 
@@ -348,7 +348,7 @@ ClasspPerfIncrementErrorCount(
         //
         // If the error count has exceeded the error limit, then disable
         // any tagged queuing, multiple requests per lu queueing
-        // and sychronous data transfers.
+        // and synchronous data transfers.
         //
         // Clearing the no queue freeze flag prevents the port driver
         // from sending multiple requests per logical unit.
@@ -400,12 +400,12 @@ ClasspPerfIncrementSuccessfulIo(
         return;
     }
 
-    if (fdoData->Perf.ReEnableThreshhold == 0) {
+    if (fdoData->Perf.ReEnableThreshold == 0) {
         return;
     }
 
     succeeded = InterlockedIncrement((PLONG)&fdoData->Perf.SuccessfulIO);
-    if (succeeded < fdoData->Perf.ReEnableThreshhold) {
+    if (succeeded < fdoData->Perf.ReEnableThreshold) {
         return;
     }
 
@@ -419,14 +419,14 @@ ClasspPerfIncrementSuccessfulIo(
 
     //
     // re-read the value, so we don't run this multiple times
-    // for a single threshhold being hit.  this keeps errorcount
+    // for a single threshold being hit.  this keeps errorcount
     // somewhat useful.
     //
 
     succeeded = fdoData->Perf.SuccessfulIO;
 
     if ((FdoExtension->ErrorCount != 0) &&
-        (fdoData->Perf.ReEnableThreshhold <= succeeded)
+        (fdoData->Perf.ReEnableThreshold <= succeeded)
         ) {
 
         fdoData->Perf.SuccessfulIO = 0; // implicit interlock
@@ -471,7 +471,7 @@ ClasspPerfIncrementSuccessfulIo(
                          SRB_FLAGS_NO_QUEUE_FREEZE);
             }
         }
-    } // end of threshhold definitely being hit for first time
+    } // end of threshold definitely being hit for first time
 
     KeReleaseSpinLock(&fdoData->SpinLock, oldIrql);
     return;

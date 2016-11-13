@@ -61,7 +61,7 @@ FsRecLoadFileSystem(IN PDEVICE_OBJECT DeviceObject,
         /* Make sure that we haven't already loaded the FS */
         if (DeviceExtension->State != Loaded)
         {
-            /* Unregiser us, and set us as loaded */
+            /* Unregister us, and set us as loaded */
             IoUnregisterFileSystem(DeviceObject);
             DeviceExtension->State = Loaded;
         }
@@ -255,7 +255,7 @@ FsRecRegisterFs(IN PDRIVER_OBJECT DriverObject,
                           0);
     if (NT_SUCCESS(Status))
     {
-        /* We suceeded, close the handle */
+        /* We succeeded, close the handle */
         ZwClose(FileHandle);
     }
     else if (Status != STATUS_OBJECT_NAME_NOT_FOUND)

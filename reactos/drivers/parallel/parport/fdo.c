@@ -186,7 +186,7 @@ FdoStartDevice(IN PDEVICE_OBJECT DeviceObject,
                 break;
 
             default:
-                DPRINT1("Other ressource: \n");
+                DPRINT1("Other resource: \n");
                 break;
         }
     }

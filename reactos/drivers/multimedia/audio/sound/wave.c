@@ -58,7 +58,7 @@ void sb16_play(WAVE_HDR* wave)
   	sb16.buffer=((unsigned char*)tmp[i-1]);
 
    /*
-    * Because this is used by alomost every subsystem including irqs it
+    * Because this is used by almost every subsystem including irqs it
     * must be atomic. The following code sequence disables interrupts after
     * saving the previous state of the interrupt flag
     */

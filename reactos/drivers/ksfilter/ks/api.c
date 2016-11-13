@@ -2351,7 +2351,7 @@ KsMergeAutomationTables(
 
         if (AutomationTableA && AutomationTableB)
         {
-            // FIXME handle different propery item sizes
+            // FIXME handle different property item sizes
             ASSERT(AutomationTableA->PropertyItemSize == AutomationTableB->PropertyItemSize);
         }
 

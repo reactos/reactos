@@ -568,7 +568,7 @@ Return Value:
     //  into the name in order to reduce the chance of name conflicts.  We will use
     //  a tilde character followed by a character representation of the dirent offset.
     //  This will be the hexadecimal representation of the dirent offset in the directory.
-    //  It is actuall this offset divided by 32 since we don't need the full
+    //  It is actually this offset divided by 32 since we don't need the full
     //  granularity.
     //
 
@@ -650,7 +650,7 @@ Return Value:
 
     //
     //  Figure out the maximum number of characters we can copy of the base
-    //  name.  We subract the number of characters in the dirent string from 8.
+    //  name.  We subtract the number of characters in the dirent string from 8.
     //  We will copy this many characters or stop when we reach a '.' character
     //  or a '~' character in the name.
     //
@@ -987,8 +987,8 @@ Return Value:
 
     COMPARISON - returns
 
-        LessThan    if NameA < NameB lexicalgraphically,
-        GreaterThan if NameA > NameB lexicalgraphically,
+        LessThan    if NameA < NameB lexicographically,
+        GreaterThan if NameA > NameB lexicographically,
         EqualTo     if NameA is equal to NameB
 
 --*/
@@ -1016,7 +1016,7 @@ Return Value:
 
     //
     //  Loop through looking at all of the characters in both strings
-    //  testing for equalilty, less than, and greater than
+    //  testing for equality, less than, and greater than
     //
 
     i = RtlCompareMemory( NameA->Buffer, NameB->Buffer, MinLength );

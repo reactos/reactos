@@ -221,7 +221,7 @@ typedef struct _RAW_JOLIET_VD {
     UCHAR       Reserved[8];        // reserved 8 = 0
     ULONG       VolSpaceI;          // size of the volume in LBN's Intel
     ULONG       VolSpaceM;          // size of the volume in LBN's Motorola
-    UCHAR       CharSet[32];        // character set bytes 0 = ASCII, Joliett Seq here
+    UCHAR       CharSet[32];        // character set bytes 0 = ASCII, Joliet Seq here
     USHORT      VolSetSizeI;        // volume set size Intel
     USHORT      VolSetSizeM;        // volume set size Motorola
     USHORT      VolSeqNumI;         // volume set sequence number Intel

@@ -114,7 +114,7 @@ NdisWriteEventLogEntry(
  * ARGUMENTS:
  *     LogHandle: pointer to the driver object of the protocol logging the event
  *     EventCode: NDIS_STATUS_XXX describing the event
- *     UniqueEventValue: identifiees this instance of the error value
+ *     UniqueEventValue: identifies this instance of the error value
  *     NumStrings: number of strings in StringList
  *     StringList: list of strings to log
  *     DataSize: number of bytes in Data

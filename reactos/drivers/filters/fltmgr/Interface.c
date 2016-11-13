@@ -35,7 +35,7 @@ static
 NTSTATUS
 FltpAttachDeviceObject(
     _In_ PDEVICE_OBJECT SourceDevice,
-    _In_ PDEVICE_OBJECT Targetevice,
+    _In_ PDEVICE_OBJECT TargetDevice,
     _Out_ PDEVICE_OBJECT *AttachedToDeviceObject
 );
 
@@ -1752,7 +1752,7 @@ FltpEnumerateFileSystemVolumes(_In_ PDEVICE_OBJECT DeviceObject)
         }
 
         /*
-         * Try to get the storage stack (disk) device object accociated with
+         * Try to get the storage stack (disk) device object associated with
          * this file system device object. Ignore the device if we don't have one
          */
         Status = IoGetDiskDeviceObject(DeviceList[i],
@@ -1905,7 +1905,7 @@ FltpAttachToFileSystemDevice(_In_ PDEVICE_OBJECT DeviceObject,
                             &NewDeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create a DO for attatching to a FS : 0x%X\n", Status);
+        DPRINT1("Failed to create a DO for attaching to a FS : 0x%X\n", Status);
         return Status;
     }
 
@@ -2172,7 +2172,7 @@ SetupDispatchAndCallbacksTables(_In_ PDRIVER_OBJECT DriverObject)
     DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] = FltpFsControl;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = FltpDeviceControl;
 
-    /* The FastIo diapatch table is stored in the pool along with a tag */
+    /* The FastIo dispatch table is stored in the pool along with a tag */
     FastIoDispatch = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_IO_DISPATCH), FM_TAG_DISPATCH_TABLE);
     if (FastIoDispatch == NULL) return STATUS_INSUFFICIENT_RESOURCES;
 

@@ -329,7 +329,7 @@ CPortWavePci::Init(
         m_pPowerNotify = PowerNotify;
     }
 
-    DPRINT("IPortWavePci_Init sucessfully initialized\n");
+    DPRINT("IPortWavePci_Init successfully initialized\n");
     return STATUS_SUCCESS;
 }
 

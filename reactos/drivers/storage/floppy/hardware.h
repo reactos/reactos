@@ -66,7 +66,7 @@
 #define DSRB_MOTOR_ENABLE_1             0x2
 #define DSRB_WRITE_ENABLE               0x4
 #define DSRB_READ_DATA                  0x8
-#define DSRB_WRTITE_DATA                0x10
+#define DSRB_WRITE_DATA                 0x10
 #define DSRB_DRIVE_SELECT               0x20
 
 /* DIGITAL_OUTPUT_REGISTER */

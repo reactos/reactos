@@ -24,10 +24,10 @@
 //
 // File description :The driver for BusLogic-BT958 SCSI Host adapter card.
 // This driver assumes that the host adapter(HA from now on) is a PCI device.
-// This is an effort to build a driver for this card for the windows XP ennvironment
+// This is an effort to build a driver for this card for the windows XP environment
 // since the native XP installation doesnt provide this driver.
 //
-// The technical refernece for this device is at :
+// The technical reference for this device is at :
 //
 // Author: Namita Lal, Sirish Raghuram Calsoft Pvt Ltd
 // Date:   5th Feb 2003
@@ -121,7 +121,7 @@ DriverEntry(IN PVOID DriverObject,
     hwInitializationData.HwAdapterControl = BT958HwAdapterControl;
     hwInitializationData.HwFindAdapter =    BT958HwFindAdapter;
 
-    // Inidicate no buffer mapping but will need physical addresses
+    // Indicate no buffer mapping but will need physical addresses
     hwInitializationData.NeedPhysicalAddresses = TRUE;
 
     // Indicate Auto request sense is supported
@@ -225,7 +225,7 @@ BT958HwFindAdapter(IN PVOID HwDeviceExtension,
     if ((*ConfigInfo->AccessRanges)[0].RangeLength != 0)
     {
         // check if the system supplied bus-relative address is valid and has not been
-        // claimed by anyother device
+        // claimed by another device
         if ( ScsiPortValidateRange(deviceExtension,
                                    ConfigInfo->AdapterInterfaceType,
                                    ConfigInfo->SystemIoBusNumber,
@@ -291,7 +291,7 @@ BT958HwFindAdapter(IN PVOID HwDeviceExtension,
     // Should we change this to double-word aligned to increase performance
     ConfigInfo->AlignmentMask = 0x0;
 
-    if (!Buslogic_InitBT958(deviceExtension,ConfigInfo)) // harware specific initializations. Find what's for our card
+    if (!Buslogic_InitBT958(deviceExtension,ConfigInfo)) // hardware specific initializations. Find what's for our card
     {
        ScsiPortLogError(deviceExtension,
                          NULL,
@@ -504,7 +504,7 @@ BusLogic_HardwareResetHostAdapter(BusLogic_HostAdapter_T  *HostAdapter,
           break;
   }
 
-  // if inspite of waiting for time out period , if it didn't et set, then something is wrong-- so just return.
+  // if in spite of waiting for time out period , if it didn't et set, then something is wrong-- so just return.
   if (TimeoutCounter < 0)
       return FALSE;
 
@@ -1319,7 +1319,7 @@ BusLogic_TargetDeviceInquiry(BusLogic_HostAdapter_T *HostAdapter)
 //                  BusLogic_TargetDeviceInquiry inquires about the Target Devices accessible
 //                  through Host Adapter.
 // Arguments:
-//              1. Host Adpater structure
+//              1. Host Adapter structure
 //              2.
 // Return Value:
 //              TRUE : Inquiry successful
@@ -1751,7 +1751,7 @@ BusLogic_QueueCommand(IN PVOID HwDeviceExtension ,
 // Routine Description:
 //                      BusLogic_QueueCommand creates a CCB for Command
 // Arguments:
-//              1. HwDeviceExtemsion: device extension
+//              1. HwDeviceExtension: device extension
 //              2. Srb: Pointe to the SRB
 //              3. CCB: POinter to the buffer containing the space for CCB
 // Return Value:
@@ -2624,7 +2624,7 @@ BT958HwInitialize(IN PVOID HwDeviceExtension)
 // Arguments:
 //              1. device extension
 // Return Value:
-//              TRUE : initialzation successful
+//              TRUE : initialization successful
 //              FALSE : initialization failed
 //_______________________________________________________________________________
 {

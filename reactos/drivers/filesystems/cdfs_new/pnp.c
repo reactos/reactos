@@ -342,7 +342,7 @@ Return Value:
         //  Since we were able to lock the volume, we are guaranteed to
         //  move this volume into dismount state and disconnect it from
         //  the underlying storage stack.  The force on our part is actually
-        //  unnecesary, though complete.
+        //  unnecessary, though complete.
         //
         //  What is not strictly guaranteed, though, is that the closes
         //  for the metadata streams take effect synchronously underneath
@@ -371,7 +371,7 @@ Return Value:
         //
         //  The reason this is the case is that handles/fileobjects place a reference
         //  on the device objects they overly.  In the filesystem case, these references
-        //  are on our target devices.  PnP correcly thinks that if references remain
+        //  are on our target devices.  PnP correctly thinks that if references remain
         //  on the device objects in the stack that someone has a handle, and that this
         //  counts as a reason to not succeed the query - even though every interrogated
         //  driver thinks that it is OK.
@@ -395,7 +395,7 @@ Return Value:
     CdReleaseCdData( IrpContext );
     
     //
-    //  Cleanup our IrpContext and complete the IRP if neccesary.
+    //  Cleanup our IrpContext and complete the IRP if necessary.
     //
 
     CdCompleteRequest( IrpContext, Irp, Status );
@@ -446,7 +446,7 @@ Return Value:
     //  (the only case in which this will be the first warning).
     //
     //  Note that it is entirely unlikely that we will be around
-    //  for a REMOVE in the first two cases, as we try to intiate
+    //  for a REMOVE in the first two cases, as we try to initiate
     //  dismount.
     //
     
@@ -527,7 +527,7 @@ Return Value:
     //
     //  Now make our dismount happen.  This may not vaporize the
     //  Vcb, of course, since there could be any number of handles
-    //  outstanding if we were not preceeded by a QUERY.
+    //  outstanding if we were not preceded by a QUERY.
     //
     //  PnP will take care of disconnecting this stack if we
     //  couldn't get off of it immediately.

@@ -391,7 +391,7 @@ ASSERT(PropertyItem->Set);
         SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertiesCount = 0;
     }
 
-    // as the property set has been indentified, now search for duplicate property set item entries
+    // as the property set has been identified, now search for duplicate property set item entries
     FilterPropertyItem = (PKSPROPERTY_ITEM)SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertyItem;
     bFound = FALSE;
 
@@ -523,7 +523,7 @@ VOID
 DumpAutomationTable(
     IN PPCAUTOMATION_TABLE AutomationTable,
     IN LPCWSTR DebugPrefix,
-    IN LPCWSTR DebugIdentation)
+    IN LPCWSTR DebugIndentation)
 {
     PPCPROPERTY_ITEM PropertyItem;
     PPCEVENT_ITEM EventItem;
@@ -538,10 +538,10 @@ DumpAutomationTable(
     }
 
     DPRINT("=====================================================================\n");
-    DPRINT("%S%S AutomationTable %p\n", DebugIdentation, DebugPrefix, AutomationTable);
-    DPRINT("%S%S PropertyCount %lu\n", DebugIdentation, DebugPrefix, AutomationTable->PropertyCount);
-    DPRINT("%S%S EventCount %lu\n", DebugIdentation, DebugPrefix, AutomationTable->EventCount);
-    DPRINT("%S%S MethodCount %lu\n", DebugIdentation, DebugPrefix, AutomationTable->MethodCount);
+    DPRINT("%S%S AutomationTable %p\n", DebugIndentation, DebugPrefix, AutomationTable);
+    DPRINT("%S%S PropertyCount %lu\n", DebugIndentation, DebugPrefix, AutomationTable->PropertyCount);
+    DPRINT("%S%S EventCount %lu\n", DebugIndentation, DebugPrefix, AutomationTable->EventCount);
+    DPRINT("%S%S MethodCount %lu\n", DebugIndentation, DebugPrefix, AutomationTable->MethodCount);
 
     // print properties
     if (AutomationTable->PropertyCount)
@@ -559,7 +559,7 @@ DumpAutomationTable(
             {
                 // convert to printable string
                 RtlStringFromGUID(*PropertyItem->Set, &GuidString);
-                DPRINT("%SPropertyItemIndex %lu %p GUID %S Id %u Flags %x\n", DebugIdentation, Index, PropertyItem, GuidString.Buffer, PropertyItem->Id, PropertyItem->Flags);
+                DPRINT("%SPropertyItemIndex %lu %p GUID %S Id %u Flags %x\n", DebugIndentation, Index, PropertyItem, GuidString.Buffer, PropertyItem->Id, PropertyItem->Flags);
                 RtlFreeUnicodeString(&GuidString);
                 // move to next item
                 PropertyItem = (PPCPROPERTY_ITEM)((ULONG_PTR)PropertyItem + AutomationTable->PropertyItemSize);
@@ -587,7 +587,7 @@ DumpAutomationTable(
             {
                 // convert to printable string
                 RtlStringFromGUID(*EventItem->Set, &GuidString);
-                DPRINT("%SEventItemIndex %lu %p GUID %S Id %u Flags %x\n", DebugIdentation, Index, EventItem, GuidString.Buffer, EventItem->Id, EventItem->Flags);
+                DPRINT("%SEventItemIndex %lu %p GUID %S Id %u Flags %x\n", DebugIndentation, Index, EventItem, GuidString.Buffer, EventItem->Id, EventItem->Flags);
                 RtlFreeUnicodeString(&GuidString);
 
                 // move to next item
@@ -615,7 +615,7 @@ DumpAutomationTable(
             {
                 // convert to printable string
                 RtlStringFromGUID(*MethodItem->Set, &GuidString);
-                DPRINT("%SMethodItemIndex %lu %p GUID %S Id %u Flags %x\n", DebugIdentation, Index, MethodItem, GuidString.Buffer, MethodItem->Id, MethodItem->Flags);
+                DPRINT("%SMethodItemIndex %lu %p GUID %S Id %u Flags %x\n", DebugIndentation, Index, MethodItem, GuidString.Buffer, MethodItem->Id, MethodItem->Flags);
                 RtlFreeUnicodeString(&GuidString);
 
                 // move to next item

@@ -23,7 +23,7 @@ InterruptServiceRoutine(
 
 VOID
 NTAPI
-UhciDefferedRoutine(
+UhciDeferredRoutine(
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
     IN PVOID SystemArgument1,
@@ -79,7 +79,7 @@ public:
 
     // friend function
     friend BOOLEAN NTAPI InterruptServiceRoutine(IN PKINTERRUPT  Interrupt, IN PVOID  ServiceContext);
-    friend VOID NTAPI UhciDefferedRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
+    friend VOID NTAPI UhciDeferredRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
     friend VOID NTAPI TimerDpcRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
     friend VOID NTAPI StatusChangeWorkItemRoutine(PVOID Context);
     VOID WriteRegister8(IN ULONG Register, IN UCHAR value);
@@ -202,7 +202,7 @@ CUSBHardwareDevice::Initialize(
     KeInitializeSpinLock(&m_Lock);
 
     //
-    // intialize status change work item
+    // initialize status change work item
     //
     //ExInitializeWorkItem(&m_StatusChangeWorkItem, StatusChangeWorkItemRoutine, PVOID(this));
 
@@ -265,7 +265,7 @@ CUSBHardwareDevice::PnpStart(
             case CmResourceTypeInterrupt:
             {
                 KeInitializeDpc(&m_IntDpcObject,
-                                UhciDefferedRoutine,
+                                UhciDeferredRoutine,
                                 this);
 
                 Status = IoConnectInterrupt(&m_Interrupt,
@@ -1403,7 +1403,7 @@ CUSBHardwareDevice::GetQueueHead(
 
 VOID
 NTAPI
-UhciDefferedRoutine(
+UhciDeferredRoutine(
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
     IN PVOID SystemArgument1,
@@ -1417,7 +1417,7 @@ UhciDefferedRoutine(
     //
     This = (CUSBHardwareDevice*)DeferredContext;
 
-    DPRINT("UhciDefferedRoutine\n");
+    DPRINT("UhciDeferredRoutine\n");
 
     //
     // get status

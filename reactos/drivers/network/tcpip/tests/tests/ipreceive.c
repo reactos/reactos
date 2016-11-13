@@ -29,4 +29,4 @@ static void RunTest() {
     _AssertEqualValue(STATUS_SUCCESS, Status);
 }
 
-_Dispatcher(IpreceiveTest, "IPReceive");
+_Dispatcher(IPReceiveTest, "IPReceive");

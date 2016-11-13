@@ -354,7 +354,7 @@ FATGetNextDirEntry(
 
                 index = longNameEntry->id & 0x3f; // Note: it can be 0 for corrupted FS
                 
-                /* Make sure index is valid and we have enaugh space in buffer
+                /* Make sure index is valid and we have enough space in buffer
                   (we count one char for \0) */
                 if (index > 0 &&
                     index * 13 < DirContext->LongNameU.MaximumLength / sizeof(WCHAR))

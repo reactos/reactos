@@ -157,7 +157,7 @@ IKsPin_PinMasterClock(
     /* sanity check */
     ASSERT(ObjectHeader);
 
-    /* locate ks pin implemention from KSPIN offset */
+    /* locate ks pin implementation from KSPIN offset */
     This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
 
     /* sanity check */
@@ -276,7 +276,7 @@ IKsPin_PinStatePropertyHandler(
     /* get the object header */
     ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
 
-    /* locate ks pin implemention from KSPIN offset */
+    /* locate ks pin implementation from KSPIN offset */
     This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
 
     /* acquire control mutex */
@@ -358,7 +358,7 @@ IKsPin_PinAllocatorFramingPropertyHandler(
     /* get the object header */
     ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
 
-    /* locate ks pin implemention from KSPIN offset */
+    /* locate ks pin implementation from KSPIN offset */
     This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
 
     /* setting allocator flags is not supported */
@@ -429,7 +429,7 @@ IKsPin_PinDataFormatPropertyHandler(
     /* get the object header */
     ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
 
-    /* locate ks pin implemention from KSPIN offset */
+    /* locate ks pin implementation from KSPIN offset */
     This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
 
     /* acquire control mutex */
@@ -2007,7 +2007,7 @@ IKsPin_DispatchDeviceIoControl(
     /* get the object header */
     ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
 
-    /* locate ks pin implemention from KSPIN offset */
+    /* locate ks pin implementation from KSPIN offset */
     This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
 
     /* current irp stack */
@@ -2127,7 +2127,7 @@ IKsPin_Close(
     /* get the object header */
     ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
 
-    /* locate ks pin implemention fro KSPIN offset */
+    /* locate ks pin implementation fro KSPIN offset */
     This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
 
     if (This->Pin.Descriptor->Dispatch->Close)
@@ -2197,7 +2197,7 @@ IKsPin_DispatchCreateClock(
     /* sanity check */
     ASSERT(Pin);
 
-    /* locate ks pin implemention fro KSPIN offset */
+    /* locate ks pin implementation fro KSPIN offset */
     This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
 
     /* sanity check */
@@ -2514,19 +2514,19 @@ KspCreatePin(
     This->Pin.ResetState = KSRESET_END;
     This->Pin.ClientState = KSSTATE_STOP;
 
-    /* intialize allocator create item */
+    /* initialize allocator create item */
     CreateItem[0].Context = (PVOID)&This->Pin;
     CreateItem[0].Create = IKsPin_DispatchCreateAllocator;
     CreateItem[0].Flags = KSCREATE_ITEM_FREEONSTOP;
     RtlInitUnicodeString(&CreateItem[0].ObjectClass, KSSTRING_Allocator);
 
-    /* intialize clock create item */
+    /* initialize clock create item */
     CreateItem[1].Context = (PVOID)&This->Pin;
     CreateItem[1].Create = IKsPin_DispatchCreateClock;
     CreateItem[1].Flags = KSCREATE_ITEM_FREEONSTOP;
     RtlInitUnicodeString(&CreateItem[1].ObjectClass, KSSTRING_Clock);
 
-    /* intialize topology node create item */
+    /* initialize topology node create item */
     CreateItem[2].Context = (PVOID)&This->Pin;
     CreateItem[2].Create = IKsPin_DispatchCreateNode;
     CreateItem[2].Flags = KSCREATE_ITEM_FREEONSTOP;

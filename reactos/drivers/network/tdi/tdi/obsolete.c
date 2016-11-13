@@ -9,7 +9,7 @@ TdiMapBuffer (
 	IN PMDL MdlChain
 	)
 {
-	/* This function is absolete */
+	/* This function is obsolete */
 }
 
 

@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Floppy Driver
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            drivers/storage/floppy/floppy.rc
- * PURPOSE:         Resrouce definition file
+ * PURPOSE:         Resource definition file
  * PROGRAMMERS:     Vizzini (vizzini@plasmic.com)
  */
 

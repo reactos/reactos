@@ -241,7 +241,7 @@ Arguments:
         find.  This may already point to a dirent so we need to check if
         we are in the same sector and unmap any buffer as necessary.
 
-        This dirent is left in an indeterminant state if we don't find a dirent.
+        This dirent is left in an indeterminate state if we don't find a dirent.
 
 Return Value:
 
@@ -825,7 +825,7 @@ CdFindFile (
 
 Routine Description:
 
-    This routine is called to search a dirctory for a file matching the input
+    This routine is called to search a directory for a file matching the input
     name.  This name has been upcased at this point if this a case-insensitive
     search.  The name has been separated into separate name and version strings.
     We look for an exact match in the name and only consider the version if
@@ -1000,7 +1000,7 @@ CdFindDirectory (
 
 Routine Description:
 
-    This routine is called to search a dirctory for a directory matching the input
+    This routine is called to search a directory for a directory matching the input
     name.  This name has been upcased at this point if this a case-insensitive
     search.  We look for an exact match in the name and do not look for shortname
     equivalents.
@@ -1283,7 +1283,7 @@ Routine Description:
 
     This routine is called to walk through the directory until we find the
     first possible dirent for file.  We are positioned at some point described
-    by the FileContext.  We will walk through any remaing dirents for the
+    by the FileContext.  We will walk through any remaining dirents for the
     current file until we find the first dirent for some subsequent file.
 
     We can be called when we have found just one dirent for a file or all

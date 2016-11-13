@@ -129,7 +129,7 @@ HandleDataIntersection(
 
     for(Index = 0; Index < MultipleItem->Count; Index++)
     {
-        // Call miniport's properitary handler
+        // Call miniport's proprietary handler
         PC_ASSERT(Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRangesCount);
         PC_ASSERT(Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRanges[0]);
         Status = SubDevice->DataRangeIntersection(Pin->PinId, DataRange, (PKSDATARANGE)Descriptor->Factory.KsPinDescriptor[Pin->PinId].DataRanges[0],

@@ -95,7 +95,7 @@ UINT CopyBufferToBufferChain(
 
         DstSize -= BytesToCopy;
         if (DstSize == 0) {
-            /* No more bytes in desination buffer. Proceed to
+            /* No more bytes in destination buffer. Proceed to
                the next buffer in the destination buffer chain */
             NdisGetNextBuffer(DstBuffer, &DstBuffer);
             if (!DstBuffer)
@@ -380,6 +380,6 @@ VOID FreeNdisPacket
         ExFreePoolWithTag(Data, PACKET_BUFFER_TAG);
     }
 
-    /* Finally free the NDIS packet discriptor */
+    /* Finally free the NDIS packet descriptor */
     NdisFreePacket(Packet);
 }

@@ -107,7 +107,7 @@ CdPrePostIrp (
 
 Routine Description:
 
-    This routine performs any neccessary work before STATUS_PENDING is
+    This routine performs any necessary work before STATUS_PENDING is
     returned with the Fsd thread.  This routine is called within the
     filesystem and by the oplock package.
 
@@ -315,7 +315,7 @@ CdAddToWorkque (
 
 Routine Description:
 
-    This routine is called to acually store the posted Irp to the Fsp
+    This routine is called to actually store the posted Irp to the Fsp
     workque.
 
 Arguments:

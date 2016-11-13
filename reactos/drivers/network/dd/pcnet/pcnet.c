@@ -22,7 +22,7 @@
  *     09-Sep-2003 vizzini - Created
  *     10-Oct-2004 navaraf - Fix receive to work on VMware adapters (
  *                           need to set busmaster bit on PCI).
- *                         - Indicate receive completition.
+ *                         - Indicate receive completion.
  *                         - Implement packet transmitting.
  *                         - Don't read slot number from registry and
  *                           report itself as NDIS 5.0 miniport.
@@ -192,7 +192,7 @@ MiniportHandleInterrupt(
                   if (Descriptor->FLAGS2 & TD2_LCOL)
                     Adapter->Statistics.XmtLateCollisions++;
                   if (Descriptor->FLAGS2 & TD2_EXDEF)
-                    Adapter->Statistics.XmtExcessiveDefferals++;
+                    Adapter->Statistics.XmtExcessiveDeferrals++;
                   if (Descriptor->FLAGS2 & TD2_UFLO)
                     Adapter->Statistics.XmtBufferUnderflows++;
                   if (Descriptor->FLAGS2 & TD2_BUFF)
@@ -650,7 +650,7 @@ MiniportMediaDetectionTimer(
     IN PVOID SystemSpecific2,
     IN PVOID SystemSpecific3)
 /*
- * FUNCTION: Periodially query media state
+ * FUNCTION: Periodically query media state
  * ARGUMENTS:
  *     FunctionContext: Adapter context
  * NOTES:

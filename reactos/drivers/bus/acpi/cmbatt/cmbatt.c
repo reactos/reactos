@@ -975,7 +975,7 @@ CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
         /* The battery is discharging but we don't know by how much... this is bad! */
         if ((BstState & ACPI_BATT_STAT_DISCHARG) &&
             (CmBattDebug & (CMBATT_ACPI_WARNING | CMBATT_GENERIC_WARNING)))
-            DbgPrint("CmBattGetBatteryStatus: battery rate is unkown when battery is not charging!\n");
+            DbgPrint("CmBattGetBatteryStatus: battery rate is unknown when battery is not charging!\n");
     }
     else if (DeviceExtension->State & BATTERY_DISCHARGING)
     {

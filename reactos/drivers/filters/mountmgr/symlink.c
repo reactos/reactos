@@ -489,7 +489,7 @@ CreateNewVolumeName(OUT PUNICODE_STRING VolumeName,
         return Status;
     }
 
-    /* Size for volume namespace, litteral GUID, and null char */
+    /* Size for volume namespace, literal GUID, and null char */
     VolumeName->MaximumLength = 0x14 + 0x4C + sizeof(UNICODE_NULL);
     VolumeName->Buffer = AllocatePool(0x14 + 0x4C + sizeof(UNICODE_NULL));
     if (!VolumeName->Buffer)

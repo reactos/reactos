@@ -114,7 +114,7 @@ UnloadHandler(IN PDRIVER_OBJECT DriverObject)
     PDEVICE_OBJECT DeviceObject, NextDevice;
     SAC_DBG(SAC_DBG_ENTRY_EXIT, "SAC UnloadHandler: Entering.\n");
 
-    /* Go overy ever device part of the driver */
+    /* Go over every device part of the driver */
     DeviceObject = DriverObject->DeviceObject;
     while (DeviceObject)
     {

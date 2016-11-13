@@ -214,7 +214,7 @@ PciAssignSlotResources(IN PUNICODE_STRING RegistryPath,
                     ASSERT(Resources == NULL);
                 }
 
-                /* If assignment succeeed, then we are done */
+                /* If assignment succeed, then we are done */
                 if (NT_SUCCESS(Status)) break;
             }
 

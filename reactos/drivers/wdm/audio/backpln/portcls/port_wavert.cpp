@@ -202,7 +202,7 @@ CPortWaveRT::GetDeviceProperty(
 
     if (!m_bInitialized)
     {
-        DPRINT("IPortWaveRT_fnNewRegistryKey called w/o initiazed\n");
+        DPRINT("IPortWaveRT_fnNewRegistryKey called w/o initialized\n");
         return STATUS_UNSUCCESSFUL;
     }
 

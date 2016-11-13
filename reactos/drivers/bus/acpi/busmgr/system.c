@@ -266,7 +266,7 @@ acpi_system_save_state(
 	//}
 	/* disable interrupts
 	 * Note that acpi_suspend -- our caller -- will do this once we return.
-	 * But, we want it done early, so we don't get any suprises during
+	 * But, we want it done early, so we don't get any surprises during
 	 * the device suspend sequence.
 	 */
 	//ACPI_DISABLE_IRQS();
@@ -384,7 +384,7 @@ acpi_suspend (
 	status = acpi_system_suspend(state);
 
 	/* Even if we failed to go to sleep, all of the devices are in an suspended
-	 * mode. So, we run these unconditionaly to make sure we have a usable system
+	 * mode. So, we run these unconditionally to make sure we have a usable system
 	 * no matter what.
 	 */
 	AcpiLeaveSleepState(state);

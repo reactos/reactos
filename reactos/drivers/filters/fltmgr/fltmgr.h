@@ -43,7 +43,7 @@ typedef struct _FLTMGR_DEVICE_EXTENSION
     /* The file system we're attached to */
     PDEVICE_OBJECT AttachedToDeviceObject;
 
-    /* The storage stack(disk) accociated with the file system device object we're attached to */
+    /* The storage stack(disk) associated with the file system device object we're attached to */
     PDEVICE_OBJECT StorageStackDeviceObject;
 
     /* Either physical drive for volume device objects otherwise

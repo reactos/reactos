@@ -90,7 +90,7 @@ typedef struct _ACPI_BIF_DATA
     ULONG BatteryCapacityGranularity1;
     ULONG BatteryCapacityGranularity2;
     CHAR ModelNumber[256];
-    CHAR SerialNubmer[256];
+    CHAR SerialNumber[256];
     CHAR BatteryType[256];
     CHAR OemInfo[256];
 } ACPI_BIF_DATA, *PACPI_BIF_DATA;

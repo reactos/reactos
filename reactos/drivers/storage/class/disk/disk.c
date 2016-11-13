@@ -67,7 +67,7 @@ typedef struct _DISK_DATA {
     // Partition number of this device object
     //
     // This field is set during driver initialization or when the partition
-    // is created to identify a parition to the system.
+    // is created to identify a partition to the system.
     //
 
     ULONG PartitionNumber;
@@ -104,7 +104,7 @@ typedef struct _DISK_DATA {
     BOOLEAN BootIndicator;
 
     //
-    // DriveNotReady - inidicates that the this device is currenly not ready
+    // DriveNotReady - indicates that the this device is currently not ready
     // because there is no media in the device.
     //
 
@@ -119,7 +119,7 @@ typedef struct _DISK_DATA {
 } DISK_DATA, *PDISK_DATA;
 
 //
-// Define a general structure of identfing disk controllers with bad
+// Define a general structure of identifying disk controllers with bad
 // hardware.
 //
 
@@ -985,7 +985,7 @@ Return Value:
     status = ScsiClassReadDriveCapacity(deviceObject);
 
     //
-    // If the read capcity failed then just return, unless this is a
+    // If the read capacity failed then just return, unless this is a
     // removable disk where a device object partition needs to be created.
     //
 
@@ -1138,7 +1138,7 @@ CreatePartitionDeviceObjects(
         physicalDeviceExtension->DMByteSkew = physicalDeviceExtension->DMSkew * bytesPerSector;
 
         //
-        // Save away the infomation that we need, since this deviceExtension will soon be
+        // Save away the information that we need, since this deviceExtension will soon be
         // blown away.
         //
 
@@ -1247,7 +1247,7 @@ CreatePartitionDeviceObjects(
         if (!initData)
         {
             DebugPrint((1,
-                        "Disk.CreatePartionDeviceObjects - Allocation of initData failed\n"));
+                        "Disk.CreatePartitionDeviceObjects - Allocation of initData failed\n"));
 
             status = STATUS_INSUFFICIENT_RESOURCES;
             goto CreatePartitionDeviceObjectsExit;
@@ -1541,7 +1541,7 @@ Return Value:
         if (((PDISK_DATA)(deviceExtension + 1))->DriveNotReady) {
 
             //
-            // Flag this as a user errror so that a popup is generated.
+            // Flag this as a user error so that a popup is generated.
             //
 
             Irp->IoStatus.Status = STATUS_DEVICE_NOT_READY;
@@ -2106,7 +2106,7 @@ Return Value:
 
         } else if (NT_SUCCESS(status)) {
 
-            // ReadDriveCapacity was allright, create Partition Objects
+            // ReadDriveCapacity was alright, create Partition Objects
 
             if (physicalDiskData->PartitionListState == NotInitialized) {
                     status = CreatePartitionDeviceObjects(deviceExtension->PhysicalDevice, NULL);
@@ -2235,7 +2235,7 @@ Return Value:
         else if (diskData->PartitionNumber == 0) {
 
             //
-            // Paritition zero is not a partition so this is not a
+            // Partition zero is not a partition so this is not a
             // reasonable request.
             //
 
@@ -2313,7 +2313,7 @@ Return Value:
         else if (diskData->PartitionNumber == 0) {
 
             //
-            // Paritition zero is not a partition so this is not a
+            // Partition zero is not a partition so this is not a
             // reasonable request.
             //
 
@@ -2465,7 +2465,7 @@ Return Value:
             //
             // The disk layout has been returned in the partitionList
             // buffer.  Determine its size and, if the data will fit
-            // into the intermediatery buffer, return it.
+            // into the intermediary buffer, return it.
             //
 
             tempSize = FIELD_OFFSET(DRIVE_LAYOUT_INFORMATION,PartitionEntry[0]);
@@ -3020,7 +3020,7 @@ Return Value:
                                              0,
                                              TRUE);
 
-        DebugPrint((1, "ScsiDiskShutdownFlush: Synchonize cache sent. Status = %lx\n", status ));
+        DebugPrint((1, "ScsiDiskShutdownFlush: Synchronize cache sent. Status = %lx\n", status ));
     }
 
     //
@@ -3114,7 +3114,7 @@ Routine Description:
 
     The routine performs the necessary functions to determine if a device is
     really a floppy rather than a harddisk.  This is done by a mode sense
-    command.  First, a check is made to see if the medimum type is set.  Second
+    command.  First, a check is made to see if the media type is set.  Second
     a check is made for the flexible parameters mode page.  Also a check is
     made to see if the write cache is enabled.
 
@@ -3721,7 +3721,7 @@ EnumerateBusKey(
 Routine Description:
 
     The routine queries the registry to determine if this disk is visible to
-    the BIOS.  If the disk is visable to the BIOS, then the geometry information
+    the BIOS.  If the disk is visible to the BIOS, then the geometry information
     is updated.
 
 Arguments:
@@ -3998,7 +3998,7 @@ Return Value:
                 ExFreePool(keyData);
 
                 //
-                // Readjust indentifier string if necessary.
+                // Readjust identifier string if necessary.
                 //
 
                 if (!diskData->MbrCheckSum) {
@@ -4034,7 +4034,7 @@ UpdateGeometry(
 Routine Description:
 
     The routine queries the registry to determine if this disk is visible to
-    the BIOS.  If the disk is visable to the BIOS, then the geometry information
+    the BIOS.  If the disk is visible to the BIOS, then the geometry information
     is updated.
 
 Arguments:
@@ -4192,7 +4192,7 @@ diskMatched:
 
     //
     // Check that the data is long enough to hold a full resource descriptor,
-    // and that the last resouce list is device-specific and long enough.
+    // and that the last resource list is device-specific and long enough.
     //
 
     if (keyData->DataLength < sizeof(CM_FULL_RESOURCE_DESCRIPTOR) ||
@@ -4387,7 +4387,7 @@ Arguments:
 
 Return Value:
 
-    Returns the status of the opertion.
+    Returns the status of the operation.
 
 --*/
 {
@@ -4417,7 +4417,7 @@ Return Value:
     diskData = (PDISK_DATA) (deviceExtension + 1);
 
     //
-    // Read the drive capcity.  If that fails, give up.
+    // Read the drive capacity.  If that fails, give up.
     //
 
     status = ScsiClassReadDriveCapacity(deviceExtension->PhysicalDevice);
@@ -4427,7 +4427,7 @@ Return Value:
     }
 
     //
-    // Read the partition table agian.
+    // Read the partition table again.
     //
 
     status = IoReadPartitionTable(deviceExtension->PhysicalDevice,
@@ -4451,7 +4451,7 @@ Return Value:
         partitionNumber = diskData->PartitionNumber - 1;
 
         //
-        // Update the partition information for this parition.
+        // Update the partition information for this partition.
         //
 
         diskData->PartitionType =
@@ -4475,7 +4475,7 @@ Return Value:
     } else if (diskData->PartitionNumber != 0) {
 
         //
-        // The paritition does not exist.  Zero all the data.
+        // The partition does not exist.  Zero all the data.
         //
 
         diskData->PartitionType = 0;
@@ -4486,7 +4486,7 @@ Return Value:
     }
 
     //
-    // Free the parition list allocate by I/O read partition table.
+    // Free the partition list allocate by I/O read partition table.
     //
 
     ExFreePool(partitionList);
@@ -4572,7 +4572,7 @@ ScanForSpecial(
 
 Routine Description:
 
-    This function checks to see if an SCSI logical unit requires speical
+    This function checks to see if an SCSI logical unit requires special
     flags to be set.
 
 Arguments:

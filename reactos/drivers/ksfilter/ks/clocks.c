@@ -191,7 +191,7 @@ ClockPropertyResolution(
     /* sanity check */
     ASSERT(ObjectHeader);
 
-    /* locate ks pin implemention from KSPIN offset */
+    /* locate ks pin implementation from KSPIN offset */
     Clock = (PKSICLOCK)ObjectHeader->ObjectType;
 
     Resolution->Error = Clock->DefaultClock->Error;
@@ -224,7 +224,7 @@ ClockPropertyState(
     /* sanity check */
     ASSERT(ObjectHeader);
 
-    /* locate ks pin implemention from KSPIN offset */
+    /* locate ks pin implementation from KSPIN offset */
     Clock = (PKSICLOCK)ObjectHeader->ObjectType;
 
     *State = Clock->DefaultClock->State;

@@ -740,7 +740,7 @@ CUSBRequest::BuildIsochronousEndpoint(
     ASSERT(Buffer);
 
     //
-    // FIXME: support requests which spans serveral pages
+    // FIXME: support requests which spans several pages
     //
     ASSERT(ADDRESS_AND_SIZE_TO_SPAN_PAGES(MmGetMdlVirtualAddress(m_TransferBufferMDL), MmGetMdlByteCount(m_TransferBufferMDL)) <= 2);
 
@@ -969,7 +969,7 @@ CUSBRequest::AllocateEndpointDescriptor(
     }
 
     //
-    // intialize descriptor
+    // initialize descriptor
     //
     Descriptor->Flags = OHCI_ENDPOINT_SKIP;
 

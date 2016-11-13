@@ -66,7 +66,7 @@ BOOLEAN LogMessage(PCHAR szFormat, ...)
 		//put a time stamp on the output message
 		sprintf(buf,"%10u-%10u  %s",time.HighPart,time.LowPart,messagebuf);
 
-		//format the string to make sure it appends a newline carrage-return to the
+		//format the string to make sure it appends a newline carriage-return to the
 		//end of the string.
 		Length=strlen(buf);
 		if(buf[Length-1]=='\n')

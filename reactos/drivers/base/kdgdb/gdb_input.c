@@ -303,7 +303,7 @@ handle_gdb_query(void)
 
     if (strncmp(gdb_input, "qOffsets", 8) == 0)
     {
-        /* We load ntoskrnl at 0x80800000 while compiling it at 0x00800000 base adress */
+        /* We load ntoskrnl at 0x80800000 while compiling it at 0x00800000 base address */
         return send_gdb_packet("TextSeg=80000000");
     }
 

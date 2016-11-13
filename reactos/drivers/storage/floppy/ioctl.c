@@ -63,7 +63,7 @@ DeviceIoctl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 VOID NTAPI
 DeviceIoctlPassive(PDRIVE_INFO DriveInfo, PIRP Irp)
 /*
- * FUNCTION: Handlees IOCTL requests at PASSIVE_LEVEL
+ * FUNCTION: Handles IOCTL requests at PASSIVE_LEVEL
  * ARGUMENTS:
  *     DriveInfo: Drive that the IOCTL is directed at
  *     Irp: IRP with the request in it

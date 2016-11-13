@@ -179,7 +179,7 @@ USBSTOR_FdoHandleStartDevice(
     }
 
     //
-    // intialize irp queue
+    // initialize irp queue
     //
     USBSTOR_QueueInitialize(DeviceExtension);
 

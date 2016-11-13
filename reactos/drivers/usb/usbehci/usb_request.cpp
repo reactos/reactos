@@ -391,7 +391,7 @@ CUSBRequest::CompletionCallback(
         }
 
         //
-        // check if the request was successfull
+        // check if the request was successful
         //
         if (!NT_SUCCESS(NtStatusCode))
         {

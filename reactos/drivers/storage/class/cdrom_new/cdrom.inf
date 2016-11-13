@@ -332,7 +332,7 @@ TorisanChanger_devdesc   = "Torisan CD-ROM Changer"
 wearnes_devdesc          = "Wearnes CD-ROM Drive"
 gencdrom_devdesc         = "CD-ROM Drive"
 
-;; Mitsumi Friendly name explictly listed
+;; Mitsumi Friendly name explicitly listed
 Mitsumi_Generic_FriendlyName = "Mitsumi CD-ROM Drive"
 
 ;; Service descriptions

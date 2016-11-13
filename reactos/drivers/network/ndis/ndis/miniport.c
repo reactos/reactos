@@ -1886,7 +1886,7 @@ NdisIPnPStartDevice(
 /*
  * FUNCTION: Handle the PnP start device event
  * ARGUMENTS:
- *     DeviceObejct = Functional Device Object
+ *     DeviceObject = Functional Device Object
  *     Irp          = IRP_MN_START_DEVICE I/O request packet
  * RETURNS:
  *     Status of operation
@@ -2212,7 +2212,7 @@ NdisIPnPStopDevice(
 /*
  * FUNCTION: Handle the PnP stop device event
  * ARGUMENTS:
- *     DeviceObejct = Functional Device Object
+ *     DeviceObject = Functional Device Object
  *     Irp          = IRP_MN_STOP_DEVICE I/O request packet
  * RETURNS:
  *     Status of operation
@@ -2451,7 +2451,7 @@ NdisIAddDevice(
    * Get name of the Linkage registry key for our adapter. It's located under
    * the driver key for our driver and so we have basicly two ways to do it.
    * Either we can use IoOpenDriverRegistryKey or compose it using information
-   * gathered by IoGetDeviceProperty. I choosed the second because
+   * gathered by IoGetDeviceProperty. I chose the second because
    * IoOpenDriverRegistryKey wasn't implemented at the time of writing.
    */
 

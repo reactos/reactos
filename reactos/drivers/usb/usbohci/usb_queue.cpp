@@ -864,7 +864,7 @@ CUSBQueue::FindInterruptEndpointDescriptor(
         Index++;
     }
 
-    DPRINT("InterruptInterval %lu Selected InterruptIndex %lu Choosen Interval %lu\n", InterruptInterval, Index, Power);
+    DPRINT("InterruptInterval %lu Selected InterruptIndex %lu Chosen Interval %lu\n", InterruptInterval, Index, Power);
 
     //
     // return endpoint

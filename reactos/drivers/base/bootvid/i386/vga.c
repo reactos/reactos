@@ -515,7 +515,7 @@ RleBitBlt(IN ULONG Left,
             /* Check if we've gone past the edge */
             if ((x + RleValue) > (Width + Left))
             {
-                /* Fixeup the pixel value */
+                /* Fixup the pixel value */
                 RleValue = Left - x + Width;
             }
 
@@ -526,7 +526,7 @@ RleBitBlt(IN ULONG Left,
             Color = NewRleValue >> 4;
             Color2 = NewRleValue & 0xF;
 
-            /* Increase buffer positition */
+            /* Increase buffer position */
             Buffer++;
 
             /* Check if we need to do a fill */
@@ -560,7 +560,7 @@ RleBitBlt(IN ULONG Left,
             /* Check if there is any value at all */
             if (RleValue)
             {
-                /* Set the pixel and increase posititon */
+                /* Set the pixel and increase position */
                 SetPixel(x, YDelta, (UCHAR)Color);
                 x++;
             }

@@ -324,7 +324,7 @@ NTSTATUS DispTdiAssociateAddress(
   if (Connection->AddressFile) {
     ObDereferenceObject(FileObject);
     UnlockObject(Connection, OldIrql);
-    TI_DbgPrint(MID_TRACE, ("An address file is already asscociated.\n"));
+    TI_DbgPrint(MID_TRACE, ("An address file is already associated.\n"));
     return STATUS_INVALID_PARAMETER;
   }
 

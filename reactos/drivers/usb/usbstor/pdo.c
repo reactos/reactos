@@ -39,7 +39,7 @@ USBSTOR_GetDeviceType(
     }
 
     //
-    // FIXME: use constant - derrived from http://en.wikipedia.org/wiki/SCSI_Peripheral_Device_Type
+    // FIXME: use constant - derived from http://en.wikipedia.org/wiki/SCSI_Peripheral_Device_Type
     // 
     switch (InquiryData->DeviceType)
     {
@@ -113,7 +113,7 @@ USBSTOR_GetGenericType(
     }
 
     //
-    // FIXME: use constant - derrived from http://en.wikipedia.org/wiki/SCSI_Peripheral_Device_Type
+    // FIXME: use constant - derived from http://en.wikipedia.org/wiki/SCSI_Peripheral_Device_Type
     // 
     switch (InquiryData->DeviceType)
     {

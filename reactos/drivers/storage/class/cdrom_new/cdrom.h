@@ -246,7 +246,7 @@ typedef struct _CDROM_DATA {
     UCHAR   Rpc0SystemRegion;           // bitmask, one means prevent play
     UCHAR   Rpc0SystemRegionResetCount;
 
-    ULONG   Rpc0RetryRegistryCallback;   // one until initial region choosen
+    ULONG   Rpc0RetryRegistryCallback;   // one until initial region chosen
 
     KMUTEX  Rpc0RegionMutex;
 

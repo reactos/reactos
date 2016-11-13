@@ -385,7 +385,7 @@ VidInitialize(IN BOOLEAN SetMode)
                                           TRUE);
     if (!Result) return FALSE;
 
-    /* Loop trying to find posssible VGA base addresses */
+    /* Loop trying to find possible VGA base addresses */
     while (TRUE)
     {
         /* See if this is I/O Space, which we need to map */

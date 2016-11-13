@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Serial port driver
  * FILE:            drivers/dd/serial/misc.c
- * PURPOSE:         Misceallenous operations
+ * PURPOSE:         Miscellaneous operations
  *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */

@@ -373,7 +373,7 @@ WdmAudDeviceControl(
         case IOCTL_GETVOLUME:
         case IOCTL_SETVOLUME:
 
-           DPRINT1("Unhandeled %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
+           DPRINT1("Unhandled %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
            break;
     }
 
@@ -485,7 +485,7 @@ WdmAudReadWrite(
     /* store mdl address */
     Mdl = Irp->MdlAddress;
 
-    /* remove mdladdress as KsProbeStreamIrp will interprete it as an already probed audio buffer */
+    /* remove mdladdress as KsProbeStreamIrp will interpret it as an already probed audio buffer */
     Irp->MdlAddress = NULL;
 
     if (IoStack->MajorFunction == IRP_MJ_WRITE)

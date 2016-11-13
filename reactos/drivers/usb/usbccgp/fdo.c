@@ -46,7 +46,7 @@ FDO_QueryCapabilities(
     /* Init event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    /* Now allocte the irp */
+    /* Now allocate the irp */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
     if (!Irp)
     {

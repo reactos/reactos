@@ -27,7 +27,7 @@
 #define DD_RAWIP_DEVICE_NAME    L"\\Device\\RawIp"
 
 /* For NDIS protocol registration */
-/* The DDK says you have to register with the name that's regstered with SCM, e.g. tcpip */
+/* The DDK says you have to register with the name that's registered with SCM, e.g. tcpip */
 #define IP_DEVICE_NAME          L"\\Device\\Ip"
 #define TCPIP_PROTOCOL_NAME     L"Tcpip"
 #endif /* _NTTEST_ */

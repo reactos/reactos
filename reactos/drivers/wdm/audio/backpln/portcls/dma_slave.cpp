@@ -206,7 +206,7 @@ PHYSICAL_ADDRESS
 NTAPI
 CDmaChannelInit::PhysicalAddress()
 {
-    DPRINT("CDmaChannelInit_PhysicalAdress: this %p Virtuell %p Physical High %x Low %x%\n", this, m_Buffer, m_Address.HighPart, m_Address.LowPart);
+    DPRINT("CDmaChannelInit_PhysicalAddress: this %p Virtual %p Physical High %x Low %x%\n", this, m_Buffer, m_Address.HighPart, m_Address.LowPart);
 
     return m_Address;
 }
@@ -218,7 +218,7 @@ NTAPI
 CDmaChannelInit::PhysicalAddress(
     PPHYSICAL_ADDRESS Address)
 {
-    DPRINT("CDmaChannelInit_PhysicalAdress: this %p Virtuell %p Physical High %x Low %x%\n", this, m_Buffer, m_Address.HighPart, m_Address.LowPart);
+    DPRINT("CDmaChannelInit_PhysicalAddress: this %p Virtual %p Physical High %x Low %x%\n", this, m_Buffer, m_Address.HighPart, m_Address.LowPart);
 
     PHYSICAL_ADDRESS Result;
 

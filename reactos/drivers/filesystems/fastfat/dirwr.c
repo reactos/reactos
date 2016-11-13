@@ -145,7 +145,7 @@ vfatRenameEntry(
 
 /*
  * try to find contiguous entries frees in directory,
- * extend a directory if is neccesary
+ * extend a directory if is necessary
  */
 BOOLEAN
 vfatFindDirSpace(

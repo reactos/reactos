@@ -107,7 +107,7 @@ GetPacketTypeFromHeaderBuffer(PLAN_ADAPTER Adapter,
     switch (Adapter->Media)
     {
         case NdisMedium802_3:
-            /* Ethernet and IEEE 802.3 frames can be destinguished by
+            /* Ethernet and IEEE 802.3 frames can be distinguished by
                looking at the IEEE 802.3 length field. This field is
                less than or equal to 1500 for a valid IEEE 802.3 frame
                and larger than 1500 is it's a valid EtherType value.
@@ -927,7 +927,7 @@ VOID NTAPI ProtocolBindAdapter(
     IN  PVOID          SystemSpecific2)
 /*
  * FUNCTION: Called by NDIS during NdisRegisterProtocol to set up initial
- *           bindings, and periodically thereafer as new adapters come online
+ *           bindings, and periodically thereafter as new adapters come online
  * ARGUMENTS:
  *     Status: Return value to NDIS
  *     BindContext: Handle provided by NDIS to track pending binding operations

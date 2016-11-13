@@ -611,7 +611,7 @@ VfatCreateFile(
         return STATUS_OBJECT_PATH_NOT_FOUND;
     }
 
-    /* Check for illegal characters and illegale dot sequences in the file name */
+    /* Check for illegal characters and illegal dot sequences in the file name */
     PathNameU = FileObject->FileName;
     c = PathNameU.Buffer + PathNameU.Length / sizeof(WCHAR);
     last = c - 1;

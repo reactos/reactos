@@ -182,7 +182,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
             }
             else
             {
-                /* Unexpected disconnect by the remote host or initial read after a graceful disconnnect */
+                /* Unexpected disconnect by the remote host or initial read after a graceful disconnect */
                 Status = FCB->LastReceiveStatus;
             }
             NextIrp->IoStatus.Status = Status;

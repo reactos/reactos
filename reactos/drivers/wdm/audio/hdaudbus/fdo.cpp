@@ -351,7 +351,7 @@ HDA_InitCorbRirbPos(
     value = READ_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_WRITE_POS)) & HDAC_CORB_WRITE_POS_MASK;
     WRITE_REGISTER_USHORT((PUSHORT)(DeviceExtension->RegBase + HDAC_CORB_WRITE_POS), value);
 
-    // Reset CORB read pointer. Preseve bits marked as RsvdP.
+    // Reset CORB read pointer. Preserve bits marked as RsvdP.
     // After setting the reset bit, we must wait for the hardware
     // to acknowledge it, then manually unset it and wait for that
     // to be acknowledged as well.

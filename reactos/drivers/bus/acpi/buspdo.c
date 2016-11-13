@@ -404,7 +404,7 @@ Bus_PDO_QueryDeviceCaps(
        deviceCapabilities->EjectSupported = device->flags.ejectable;
        deviceCapabilities->HardwareDisabled = !device->status.enabled && !device->status.functional;
        deviceCapabilities->Removable = device->flags.removable;
-       deviceCapabilities->SurpriseRemovalOK = device->flags.suprise_removal_ok;
+       deviceCapabilities->SurpriseRemovalOK = device->flags.surprise_removal_ok;
        deviceCapabilities->UniqueID = device->flags.unique_id;
        deviceCapabilities->NoDisplayInUI = !device->status.show_in_ui;
        deviceCapabilities->Address = device->pnp.bus_address;

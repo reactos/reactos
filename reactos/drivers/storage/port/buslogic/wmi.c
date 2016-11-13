@@ -108,11 +108,11 @@ Return Value:
    ASSERT(Srb->DataTransferLength >= sizeof(ULONG));
    ASSERT(Srb->DataBuffer);
 
-   // Check if the WMI SRB is targetted for the adapter or one of the disks
+   // Check if the WMI SRB is targeted for the adapter or one of the disks
    if (!(Srb->WMIFlags & SRB_WMI_FLAGS_ADAPTER_REQUEST))
    {
 
-      // This is targetted to one of the disks, since there are no per disk
+      // This is targeted to one of the disks, since there are no per disk
       // wmi information we return an error. Note that if there was per
       // disk information, then you'd likely have a differen WmiLibContext
       // and a different set of guids.
@@ -131,7 +131,7 @@ Return Value:
                                                 Srb->DataTransferLength,
                                                 Srb->DataBuffer);
 
-       // We assune that the wmi request will never pend so that we can
+       // We assume that the wmi request will never pend so that we can
        // allocate the requestContext from stack. If the WMI request could
        // ever pend then we'd need to allocate the request context from
        // the SRB extension.
@@ -324,7 +324,7 @@ Arguments:
         then this can be returned as NULL.
 
     *Pdo returns with the device object for the PDO associated with this
-        device if the WMIREG_FLAG_INSTANCE_PDO flag is retured in
+        device if the WMIREG_FLAG_INSTANCE_PDO flag is returned in
         *RegFlags.
 
 Return Value:

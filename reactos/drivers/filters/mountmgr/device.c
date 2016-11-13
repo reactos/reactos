@@ -537,7 +537,7 @@ MountMgrNextDriveLetterWorker(IN PDEVICE_EXTENSION DeviceExtension,
         }
     }
 
-    /* No, ensure that the device is not automonted nor removable */
+    /* No, ensure that the device is not automounted nor removable */
     if (!DeviceExtension->NoAutoMount && !Removable)
     {
         if (DriveLetterInfo->DriveLetterWasAssigned)

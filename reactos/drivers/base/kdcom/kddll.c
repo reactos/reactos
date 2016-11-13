@@ -237,7 +237,7 @@ KdReceivePacket(
         /* Calculate the length of the message data */
         *DataLength = Packet.ByteCount - MessageHeader->Length;
 
-        /* Shall we receive messsage data? */
+        /* Shall we receive message data? */
         if (MessageData)
         {
             /* Set the length of the message data */
@@ -349,7 +349,7 @@ KdSendPacket(
         /* Send the message header */
         KdpSendBuffer(MessageHeader->Buffer, MessageHeader->Length);
 
-        /* If we have meesage data, also send it */
+        /* If we have message data, also send it */
         if (MessageData)
         {
             KdpSendBuffer(MessageData->Buffer, MessageData->Length);

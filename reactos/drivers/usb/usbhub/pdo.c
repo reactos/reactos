@@ -60,7 +60,7 @@ UrbCompletion(
 }
 
 NTSTATUS
-FowardUrbToRootHub(
+ForwardUrbToRootHub(
     PDEVICE_OBJECT RootHubDeviceObject,
     IN ULONG IoControlCode,
     PIRP Irp,
@@ -300,7 +300,7 @@ USBHUB_PdoHandleInternalDeviceControl(
             //
             // Send the request to RootHub
             //
-            Status = FowardUrbToRootHub(RootHubDeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Irp, Urb, NULL);
+            Status = ForwardUrbToRootHub(RootHubDeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Irp, Urb, NULL);
             return Status;
         }
         //
