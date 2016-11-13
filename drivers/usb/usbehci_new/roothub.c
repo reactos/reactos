@@ -48,7 +48,8 @@ NTAPI
 EHCI_RH_GetStatus(IN PVOID ehciExtension,
                   IN PUSHORT Status)
 {
-    DPRINT("EHCI_RH_GetStatus: UNIMPLEMENTED. FIXME\n");
+    DPRINT("EHCI_RH_GetStatus: ... \n");
+    *Status = 1;
     return 0;
 }
 
