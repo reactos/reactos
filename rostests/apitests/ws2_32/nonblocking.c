@@ -32,6 +32,12 @@ START_TEST(nonblocking)
     struct timeval tval = { 0 };
     char address[100];
 
+    if (!winetest_interactive)
+    {
+        skip("ROSTESTS-247: Skipping ws2_32_apitest:nonblocking because it times out on testbot\n");
+        return;
+    }
+
     if (WSAStartup(MAKEWORD(2, 2), &WsaData) != 0)
     {
         skip("WSAStartup failed\n");
