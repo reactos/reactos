@@ -390,7 +390,26 @@ NTAPI
 EHCI_RH_ClearFeaturePortSuspend(IN PVOID ehciExtension,
                                 IN USHORT Port)
 {
-    DPRINT("EHCI_RH_ClearFeaturePortSuspend: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+    PULONG PortStatusReg;
+    EHCI_PORT_STATUS_CONTROL PortSC;
+
+    DPRINT("EHCI_RH_ClearFeaturePortSuspend: Port - %x\n", Port);
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
+    EhciExtension->ResetPortBits |= 1 << (Port - 1);
+
+    PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
+    PortSC.ForcePortResume = 1;
+    WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
+
+    RegPacket.UsbPortRequestAsyncCallback(EhciExtension,
+                                          50, // TimerValue
+                                          &Port,
+                                          sizeof(Port),
+                                          (ULONG)EHCI_RH_PortResumeComplete);
+
     return 0;
 }
 
