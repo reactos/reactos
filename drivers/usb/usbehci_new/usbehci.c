@@ -311,7 +311,12 @@ EHCI_InitializeHardware(IN PEHCI_EXTENSION EhciExtension)
     WRITE_REGISTER_ULONG(OperationalRegs + EHCI_ASYNCLISTBASE, 0);
 
     EhciExtension->InterruptMask.AsULONG = 0;
-    EhciExtension->InterruptMask.PortChangeInterrupt = 1;
+    EhciExtension->InterruptMask.Interrupt = 1;
+    EhciExtension->InterruptMask.ErrorInterrupt = 1;
+    EhciExtension->InterruptMask.PortChangeInterrupt = 0;
+    EhciExtension->InterruptMask.FrameListRollover = 1;
+    EhciExtension->InterruptMask.HostSystemError = 1;
+    EhciExtension->InterruptMask.InterruptOnAsyncAdvance = 1;
 
     return 0;
 }
