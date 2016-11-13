@@ -426,7 +426,14 @@ START_TEST(RtlMemory)
     KeLowerIrql(Irql);
     Status = STATUS_SUCCESS;
     _SEH2_TRY {
+#if defined(__GNUC__) && __GNUC__ >= 5
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmemset-transposed-args"
+#endif
         RtlFillMemory(NULL, 0, 0x55);
+#if defined(__GNUC__) && __GNUC__ >= 5
+#pragma GCC diagnostic pop
+#endif
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         Status = _SEH2_GetExceptionCode();
     } _SEH2_END;
