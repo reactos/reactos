@@ -303,6 +303,20 @@ START_TEST(RegQueryValueExW)
     ok(size == 46, "Expected size = 46, size is: %ld", size);
     ok(!wcscmp(data23, string22W), "Expected same string! data23: %S, string22W: %S", data23, string22W);
 
+    /* Ask for a var that doesnt exist. */
+    SetLastError(0xdeadbeef);
+    size = sizeof(data23);
+    memset(data23, 0, sizeof(data23));
+    type = 666;
+    ret = RegQueryValueExW(hkey_main, L"XXXXXYYYYYZZZZZZ", NULL, &type, (LPBYTE)data23, &size);
+    ok(ret == ERROR_FILE_NOT_FOUND, "RegQueryValueExW returned: %lx\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "RegQueryValueExW returned: %lx\n", GetLastError());
+    /* 2k3 leaves garbage */
+    ok(type == REG_NONE || broken(type != REG_NONE && type != 666), "Expected REG_NONE, Type is: %ld\n", type);
+    ok(size == 46, "Expected size = 46, size is: %ld", size);
+    ok(!wcscmp(data23,L""), "Expected same string! data23: %S, ''", data23);
+
+
     RegCloseKey(hkey_main);
     RegCloseKey(subkey);
 
