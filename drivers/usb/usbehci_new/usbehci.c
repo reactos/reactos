@@ -108,6 +108,75 @@ EHCI_AlignHwStructure(IN PEHCI_EXTENSION EhciExtension,
 
 VOID
 NTAPI
+EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
+{
+    PEHCI_STATIC_QH * FrameHeader;
+    PEHCI_STATIC_QH StaticQH;
+    PEHCI_HCD_QH DummyQhVA;
+    PEHCI_HCD_QH DummyQhPA;
+    EHCI_LINK_POINTER PrevPA;
+    EHCI_QH_EP_PARAMS EndpointParams;
+    ULONG ix = 0;
+
+    DPRINT_EHCI("EHCI_AddDummyQHs: ... \n");
+
+    FrameHeader = &EhciExtension->HcResourcesVA->PeriodicFrameList[0];
+
+    DummyQhVA = (PEHCI_HCD_QH)EhciExtension->DummyQHListVA;
+    DummyQhPA = (PEHCI_HCD_QH)EhciExtension->DummyQHListPA;
+
+    while (TRUE)
+    {
+        ASSERT(EHCI_GetDummyQhForFrame(EhciExtension, ix) == DummyQhVA);
+
+        RtlZeroMemory(DummyQhVA, sizeof(EHCI_HCD_QH));
+
+        DummyQhVA->HwQH.CurrentTD = 0;
+        DummyQhVA->HwQH.Token.Status &= ~EHCI_TOKEN_STATUS_ACTIVE;
+
+        PrevPA.AsULONG = (ULONG)DummyQhVA->PhysicalAddress;
+        PrevPA.Type = 1;
+
+        DummyQhVA->PhysicalAddress = DummyQhPA;
+
+        DummyQhVA += 1;
+        DummyQhPA += 1;
+
+        DummyQhVA->HwQH.HorizontalLink.AsULONG = (ULONG)(*FrameHeader);
+
+        EndpointParams = DummyQhVA->HwQH.EndpointParams;
+        EndpointParams.DeviceAddress = 0;
+        EndpointParams.EndpointNumber = 0;
+        EndpointParams.EndpointSpeed = 0;
+        EndpointParams.MaximumPacketLength = 64;
+
+        DummyQhVA->HwQH.EndpointParams = EndpointParams;
+
+        DummyQhVA->HwQH.EndpointCaps.AsULONG = 0;
+        DummyQhVA->HwQH.EndpointCaps.InterruptMask = 0;
+        DummyQhVA->HwQH.EndpointCaps.SplitCompletionMask = 0;
+        DummyQhVA->HwQH.EndpointCaps.PipeMultiplier = 1;
+
+        DummyQhVA->HwQH.AlternateNextTD = 1;
+        DummyQhVA->HwQH.NextTD = 1;
+
+        StaticQH = EHCI_GetQhForFrame(EhciExtension, ix);
+        DummyQhVA->StaticQH = StaticQH;
+
+        *FrameHeader = (PEHCI_STATIC_QH)PrevPA.AsULONG;
+
+        FrameHeader += 1;
+        ++ix;
+
+        if (ix >= 1024)
+        {
+            break;
+        }
+    }
+}
+
+VOID
+NTAPI
 EHCI_InitializeInterruptSchedule(IN PEHCI_EXTENSION EhciExtension)
 {
     PEHCI_STATIC_QH StaticQH;
