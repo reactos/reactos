@@ -516,7 +516,12 @@ NTAPI
 EHCI_RH_ClearFeaturePortSuspendChange(IN PVOID ehciExtension,
                                       IN USHORT Port)
 {
-    DPRINT("EHCI_RH_ClearFeaturePortSuspendChange: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+
+    DPRINT("EHCI_RH_ClearFeaturePortSuspendChange: Port - %x\n", Port);
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciExtension->SuspendPortBits &= ~(1 << (Port - 1));
     return 0;
 }
 
