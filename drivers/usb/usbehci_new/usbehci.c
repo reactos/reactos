@@ -775,9 +775,19 @@ EHCI_RebalanceEndpoint(IN PVOID ohciExtension,
 
 VOID
 NTAPI
-EHCI_FlushInterrupts(IN PVOID ohciExtension)
+EHCI_FlushInterrupts(IN PVOID ehciExtension)
 {
-    DPRINT1("EHCI_FlushInterrupts: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+    PULONG OperationalRegs;
+    EHCI_USB_STATUS Status;
+
+    DPRINT("EHCI_FlushInterrupts: ... \n");
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    OperationalRegs = EhciExtension->OperationalRegs;
+
+    Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS, Status.AsULONG);
 }
 
 MPSTATUS
