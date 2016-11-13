@@ -549,6 +549,29 @@ EHCI_ResumeController(IN PVOID ehciExtension)
 
 BOOLEAN
 NTAPI
+EHCI_HardwarePresent(IN PEHCI_EXTENSION EhciExtension,
+                     IN BOOLEAN IsInvalidateController)
+{
+    BOOLEAN Result;
+
+    if (READ_REGISTER_ULONG(EhciExtension->OperationalRegs) != -1)
+    {
+        return TRUE;
+    }
+
+    DPRINT1("EHCI_HardwarePresent: IsInvalidateController - %x\n",
+            IsInvalidateController);
+
+    if (IsInvalidateController)
+    {
+        RegPacket.UsbPortInvalidateController(EhciExtension, 2);
+    }
+
+    return FALSE;
+}
+
+BOOLEAN
+NTAPI
 EHCI_InterruptService(IN PVOID ehciExtension)
 {
     DPRINT1("EHCI_InterruptService: UNIMPLEMENTED. FIXME\n");
