@@ -905,7 +905,12 @@ VOID
 NTAPI
 EHCI_InterruptNextSOF(IN PVOID ehciExtension)
 {
-    DPRINT1("EHCI_InterruptNextSOF: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+
+    DPRINT_EHCI("EHCI_InterruptNextSOF: ... \n");
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    RegPacket.UsbPortInvalidateController(EhciExtension, 3);
 }
 
 VOID
