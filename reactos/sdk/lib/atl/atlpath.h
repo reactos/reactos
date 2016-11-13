@@ -53,18 +53,18 @@ class CPathT
     inline int PathSkipRootX(LPCWSTR pszPath) { return PathSkipRootW(pszPath); }
 
     // non-const
-    inline void PathAddBackslashX(LPSTR pszPath) { return PathAddBackslashA(pszPath); }
-    inline void PathAddBackslashX(LPWSTR pszPath) { return PathAddBackslashW(pszPath); }
+    inline void PathAddBackslashX(LPSTR pszPath) { PathAddBackslashA(pszPath); }
+    inline void PathAddBackslashX(LPWSTR pszPath) { PathAddBackslashW(pszPath); }
     inline BOOL PathAddExtensionX(LPSTR pszPath, LPCSTR pszExt) { return PathAddExtensionA(pszPath, pszExt); }
     inline BOOL PathAddExtensionX(LPWSTR pszPath, LPCWSTR pszExt) { return PathAddExtensionW(pszPath, pszExt); }
     inline BOOL PathAppendX(LPSTR pszPath, LPCSTR pszMore) { return PathAppendA(pszPath, pszMore); }
     inline BOOL PathAppendX(LPWSTR pszPath, LPCWSTR pszMore) { return PathAppendW(pszPath, pszMore); }
-    inline void PathBuildRootX(LPSTR pszRoot, int iDrive) { return PathBuildRootA(pszRoot, iDrive); }
-    inline void PathBuildRootX(LPWSTR pszRoot, int iDrive) { return PathBuildRootW(pszRoot, iDrive); }
-    inline void PathCanonicalizeX(LPSTR pszDst, LPCSTR pszSrc) { return PathCanonicalizeA(pszDst, pszSrc); }
-    inline void PathCanonicalizeX(LPWSTR pszDst, LPCWSTR pszSrc) { return PathCanonicalizeW(pszDst, pszSrc); }
-    inline void PathCombineX(LPSTR pszPathOut, LPCSTR pszPathIn, LPCSTR pszMore) { return PathCombineA(pszPathOut, pszPathIn, pszMore); }
-    inline void PathCombineX(LPWSTR pszPathOut, LPCWSTR pszPathIn, LPCWSTR pszMore) { return PathCombineW(pszPathOut, pszPathIn, pszMore); }
+    inline void PathBuildRootX(LPSTR pszRoot, int iDrive) { PathBuildRootA(pszRoot, iDrive); }
+    inline void PathBuildRootX(LPWSTR pszRoot, int iDrive) { PathBuildRootW(pszRoot, iDrive); }
+    inline void PathCanonicalizeX(LPSTR pszDst, LPCSTR pszSrc) { PathCanonicalizeA(pszDst, pszSrc); }
+    inline void PathCanonicalizeX(LPWSTR pszDst, LPCWSTR pszSrc) { PathCanonicalizeW(pszDst, pszSrc); }
+    inline void PathCombineX(LPSTR pszPathOut, LPCSTR pszPathIn, LPCSTR pszMore) { PathCombineA(pszPathOut, pszPathIn, pszMore); }
+    inline void PathCombineX(LPWSTR pszPathOut, LPCWSTR pszPathIn, LPCWSTR pszMore) { PathCombineW(pszPathOut, pszPathIn, pszMore); }
     inline CPathT<StringType> PathCommonPrefixX(LPCSTR pszFile1, LPCSTR pszFile2, LPSTR pszPath) { return PathCommonPrefixA(pszFile1, pszFile2, pszPath); }
     inline CPathT<StringType> PathCommonPrefixX(LPCWSTR pszFile1, LPCWSTR pszFile2, LPWSTR pszPath) { return PathCommonPrefixW(pszFile1, pszFile2, pszPath); }
     inline BOOL PathCompactPathX(HDC hDC, LPSTR pszPath, UINT dx) { return PathCompactPathA(hDC, pszPath, dx); }
@@ -73,28 +73,28 @@ class CPathT
     inline BOOL PathCompactPathExX(LPWSTR pszOut, LPCWSTR pszSrc, UINT cchMax, DWORD dwFlags) { return PathCompactPathExW(pszOut, pszSrc, cchMax, dwFlags); }
     inline BOOL PathMakePrettyX(LPSTR pszPath) { return PathMakePrettyA(pszPath); }
     inline BOOL PathMakePrettyX(LPWSTR pszPath) { return PathMakePrettyW(pszPath); }
-    inline void PathQuoteSpacesX(LPSTR pszPath) { return PathQuoteSpacesA(pszPath); }
-    inline void PathQuoteSpacesX(LPWSTR pszPath) { return PathQuoteSpacesW(pszPath); }
+    inline void PathQuoteSpacesX(LPSTR pszPath) { PathQuoteSpacesA(pszPath); }
+    inline void PathQuoteSpacesX(LPWSTR pszPath) { PathQuoteSpacesW(pszPath); }
     inline BOOL PathRelativePathToX(LPSTR pszPath, LPCSTR pszFrom, DWORD dwAttrFrom, LPCSTR pszTo, DWORD dwAttrTo) { return PathRelativePathToA(pszPath, pszFrom, dwAttrFrom, pszTo, dwAttrTo); }
     inline BOOL PathRelativePathToX(LPWSTR pszPath, LPCWSTR pszFrom, DWORD dwAttrFrom, LPCWSTR pszTo, DWORD dwAttrTo) { return PathRelativePathToW(pszPath, pszFrom, dwAttrFrom, pszTo, dwAttrTo); }
-    inline void PathRemoveArgsX(LPSTR pszPath) { return PathRemoveArgsA(pszPath); }
-    inline void PathRemoveArgsX(LPWSTR pszPath) { return PathRemoveArgsW(pszPath); }
-    inline void PathRemoveBackslashX(LPSTR pszPath) { return PathRemoveBackslashA(pszPath); }
-    inline void PathRemoveBackslashX(LPWSTR pszPath) { return PathRemoveBackslashW(pszPath); }
-    inline void PathRemoveBlanksX(LPSTR pszPath) { return PathRemoveBlanksA(pszPath); }
-    inline void PathRemoveBlanksX(LPWSTR pszPath) { return PathRemoveBlanksW(pszPath); }
-    inline void PathRemoveExtensionX(LPSTR pszPath) { return PathRemoveExtensionA(pszPath); }
-    inline void PathRemoveExtensionX(LPWSTR pszPath) { return PathRemoveExtensionW(pszPath); }
+    inline void PathRemoveArgsX(LPSTR pszPath) { PathRemoveArgsA(pszPath); }
+    inline void PathRemoveArgsX(LPWSTR pszPath) { PathRemoveArgsW(pszPath); }
+    inline void PathRemoveBackslashX(LPSTR pszPath) { PathRemoveBackslashA(pszPath); }
+    inline void PathRemoveBackslashX(LPWSTR pszPath) { PathRemoveBackslashW(pszPath); }
+    inline void PathRemoveBlanksX(LPSTR pszPath) { PathRemoveBlanksA(pszPath); }
+    inline void PathRemoveBlanksX(LPWSTR pszPath) { PathRemoveBlanksW(pszPath); }
+    inline void PathRemoveExtensionX(LPSTR pszPath) { PathRemoveExtensionA(pszPath); }
+    inline void PathRemoveExtensionX(LPWSTR pszPath) { PathRemoveExtensionW(pszPath); }
     inline BOOL PathRemoveFileSpecX(LPSTR pszPath) { return PathRemoveFileSpecA(pszPath); }
     inline BOOL PathRemoveFileSpecX(LPWSTR pszPath) { return PathRemoveFileSpecW(pszPath); }
     inline BOOL PathRenameExtensionX(LPSTR pszPath, LPCSTR pszExt) { return PathRenameExtensionA(pszPath, pszExt); }
     inline BOOL PathRenameExtensionX(LPWSTR pszPath, LPCWSTR pszExt) { return PathRenameExtensionW(pszPath, pszExt); }
-    inline void PathStripPathX(LPSTR pszPath) { return PathStripPathA(pszPath); }
-    inline void PathStripPathX(LPWSTR pszPath) { return PathStripPathW(pszPath); }
+    inline void PathStripPathX(LPSTR pszPath) { PathStripPathA(pszPath); }
+    inline void PathStripPathX(LPWSTR pszPath) { PathStripPathW(pszPath); }
     inline BOOL PathStripToRootX(LPSTR pszPath) { return PathStripToRootA(pszPath); }
     inline BOOL PathStripToRootX(LPWSTR pszPath) { return PathStripToRootW(pszPath); }
-    inline void PathUnquoteSpacesX(LPSTR pszPath) { return PathUnquoteSpacesA(pszPath); }
-    inline void PathUnquoteSpacesX(LPWSTR pszPath) { return PathUnquoteSpacesW(pszPath); }
+    inline void PathUnquoteSpacesX(LPSTR pszPath) { PathUnquoteSpacesA(pszPath); }
+    inline void PathUnquoteSpacesX(LPWSTR pszPath) { PathUnquoteSpacesW(pszPath); }
 
 public:
     typedef typename StringType::PCXSTR PCXSTR;
