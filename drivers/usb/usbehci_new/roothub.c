@@ -316,7 +316,25 @@ NTAPI
 EHCI_RH_SetFeaturePortSuspend(IN PVOID ehciExtension,
                               IN USHORT Port)
 {
-    DPRINT("EHCI_RH_SetFeaturePortSuspend: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+    PULONG PortStatusReg;
+    EHCI_PORT_STATUS_CONTROL PortSC;
+
+    DPRINT("EHCI_RH_SetFeaturePortSuspend: Port - %x\n", Port);
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
+
+    PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
+
+    PortSC.ConnectStatusChange = 0;
+    PortSC.PortEnableDisableChange = 0;
+    PortSC.OverCurrentChange = 0;
+    PortSC.Suspend = 1;
+
+    WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
+    KeStallExecutionProcessor(125);
+
     return 0;
 }
 
