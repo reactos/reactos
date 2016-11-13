@@ -530,7 +530,24 @@ NTAPI
 EHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID ehciExtension,
                                           IN USHORT Port)
 {
-    DPRINT("EHCI_RH_ClearFeaturePortOvercurrentChange: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+    PULONG PortStatusReg;
+    EHCI_PORT_STATUS_CONTROL PortSC;
+
+    DPRINT("EHCI_RH_ClearFeaturePortOvercurrentChange: Port - %x\n", Port);
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+
+    PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
+
+    PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
+
+    PortSC.ConnectStatusChange = 0;
+    PortSC.PortEnableDisableChange = 0;
+    PortSC.OverCurrentChange = 1;
+
+    WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
+
     return 0;
 }
 
