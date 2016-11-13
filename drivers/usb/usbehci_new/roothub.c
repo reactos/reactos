@@ -307,7 +307,7 @@ NTAPI
 EHCI_RH_SetFeaturePortEnable(IN PVOID ehciExtension,
                              IN USHORT Port)
 {
-    DPRINT("EHCI_RH_SetFeaturePortEnable: UNIMPLEMENTED. FIXME\n");
+    DPRINT("EHCI_RH_SetFeaturePortEnable: Not supported\n");
     return 0;
 }
 
@@ -598,4 +598,3 @@ EHCI_RH_EnableIrq(IN PVOID ehciExtension)
         WRITE_REGISTER_ULONG(IntrStsReg, IntrSts.AsULONG);
     }
 }
-
