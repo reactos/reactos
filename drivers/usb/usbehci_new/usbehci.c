@@ -925,7 +925,12 @@ VOID
 NTAPI
 EHCI_DisableInterrupts(IN PVOID ehciExtension)
 {
-    DPRINT1("EHCI_DisableInterrupts: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+
+    DPRINT("EHCI_DisableInterrupts: UNIMPLEMENTED. FIXME\n");
+
+    WRITE_REGISTER_ULONG(EhciExtension->OperationalRegs + EHCI_USBINTR,
+                         0);
 }
 
 VOID
