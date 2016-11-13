@@ -149,6 +149,56 @@ EHCI_RH_GetHubStatus(IN PVOID ehciExtension,
     return 0;
 }
 
+ULONG
+NTAPI
+EHCI_RH_PortResetComplete(IN PVOID ehciExtension,
+                          IN PUSHORT Port)
+{
+    PEHCI_EXTENSION EhciExtension;
+    PULONG PortStatusReg;
+    EHCI_PORT_STATUS_CONTROL PortSC;
+    ULONG ix;
+
+    DPRINT("EHCI_RH_PortResetComplete: *Port - %x\n", *Port);
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (*Port - 1);
+
+START:
+
+    ix = 0;
+
+    PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
+
+    PortSC.ConnectStatusChange = 0;
+    PortSC.PortEnableDisableChange = 0;
+    PortSC.OverCurrentChange = 0;
+    PortSC.PortReset = 0;
+
+    WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
+
+    do
+    {
+        KeStallExecutionProcessor(20);
+
+        ix += 20;
+
+        PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
+
+        if (ix > 500)
+        {
+            goto START;
+        }
+    }
+    while (PortSC.PortReset && (PortSC.AsULONG != -1));
+
+    return RegPacket.UsbPortRequestAsyncCallback(EhciExtension,
+                                                 50, // TimerValue
+                                                 Port,
+                                                 sizeof(Port),
+                                                 (ULONG)EHCI_RH_FinishReset);
+}
+
 MPSTATUS
 NTAPI
 EHCI_RH_SetFeaturePortReset(IN PVOID ehciExtension,
