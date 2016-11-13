@@ -151,13 +151,47 @@ VOID
 NTAPI
 EHCI_RH_DisableIrq(IN PVOID ehciExtension)
 {
-    DPRINT("EHCI_RH_DisableIrq: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+    PULONG IntrStsReg;
+    EHCI_INTERRUPT_ENABLE IntrSts;
+
+    DPRINT("EHCI_RH_DisableIrq: ... \n");
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+
+    IntrStsReg = EhciExtension->OperationalRegs + EHCI_USBINTR;
+    IntrSts.AsULONG = READ_REGISTER_ULONG(IntrStsReg);
+
+    EhciExtension->InterruptMask.PortChangeInterrupt = 0;
+    IntrSts.PortChangeInterrupt = 0;
+
+    if (IntrSts.Interrupt)
+    {
+        WRITE_REGISTER_ULONG(IntrStsReg, IntrSts.AsULONG);
+    }
 }
 
 VOID
 NTAPI
 EHCI_RH_EnableIrq(IN PVOID ehciExtension)
 {
-    DPRINT("EHCI_RH_EnableIrq: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+    PULONG IntrStsReg;
+    EHCI_INTERRUPT_ENABLE IntrSts;
+
+    DPRINT("EHCI_RH_EnableIrq: ... \n");
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+
+    IntrStsReg = EhciExtension->OperationalRegs + EHCI_USBINTR;
+    IntrSts.AsULONG = READ_REGISTER_ULONG(IntrStsReg);
+
+    EhciExtension->InterruptMask.PortChangeInterrupt = 1;
+    IntrSts.PortChangeInterrupt = 1;
+
+    if (IntrSts.Interrupt)
+    {
+        WRITE_REGISTER_ULONG(IntrStsReg, IntrSts.AsULONG);
+    }
 }
 
