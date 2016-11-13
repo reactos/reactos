@@ -59,7 +59,83 @@ EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
                       IN USHORT Port,
                       IN PULONG PortStatus)
 {
-    DPRINT("EHCI_RH_GetPortStatus: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+    PULONG PortStatusReg;
+    EHCI_PORT_STATUS_CONTROL PortSC;
+    USB20_PORT_STATUS status;
+    ULONG PortMaskBits;
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+
+    PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
+    PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
+
+    if (PortSC.CurrentConnectStatus)
+    {
+        DPRINT("EHCI_RH_GetPortStatus: Port - %x, PortSC.AsULONG - %p\n", Port, PortSC.AsULONG);
+    }
+
+    *PortStatus = 0;
+
+    if (PortSC.LineStatus == 1 && // K-state  Low-speed device
+        PortSC.PortOwner != 1 && // Companion HC not owns and not controls this port
+        (PortSC.PortEnabledDisabled | PortSC.Suspend) && // Enable or Suspend
+        PortSC.CurrentConnectStatus == 1) // Device is present
+    {
+        DPRINT("EHCI_RH_GetPortStatus: LowSpeed device detected\n");
+        PortSC.PortOwner = 1; // release ownership
+        WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
+        return 0;
+    }
+
+    status.AsULONG = 0;
+
+    status.ConnectStatus = PortSC.CurrentConnectStatus;
+    status.EnableStatus = PortSC.PortEnabledDisabled;
+    status.OverCurrent = PortSC.OverCurrentActive;
+    status.ResetStatus = PortSC.PortReset;
+    status.PowerStatus = PortSC.PortPower;
+    status.SuspendStatus = PortSC.Suspend;
+    // PortSC.PortOwner ??
+    status.EnableStatusChange = PortSC.PortEnableDisableChange;
+    status.OverCurrentChange = PortSC.OverCurrentChange;
+
+    PortMaskBits = 1 << (Port - 1);
+
+    if (status.ConnectStatus)
+    {
+        status.LsDeviceAttached = 0;
+    }
+
+    status.HsDeviceAttached = 1;
+
+    if (PortSC.ConnectStatusChange)
+    {
+        EhciExtension->ConnectPortBits |= PortMaskBits;
+    }
+
+    if (EhciExtension->FinishResetPortBits & PortMaskBits)
+    {
+        status.ResetStatusChange = 1;
+    }
+
+    if (EhciExtension->ConnectPortBits & PortMaskBits)
+    {
+        status.ConnectStatusChange = 1;
+    }
+
+    if (EhciExtension->SuspendPortBits & PortMaskBits)
+    {
+        status.SuspendStatusChange = 1;
+    }
+
+    *PortStatus = status.AsULONG;
+
+    if (status.ConnectStatus)
+    {
+        DPRINT("EHCI_RH_GetPortStatus: Port - %x, status.AsULONG - %p\n", Port, status.AsULONG);
+    }
+
     return 0;
 }
 
