@@ -1197,7 +1197,26 @@ NTAPI
 EHCI_InsertQhInAsyncList(IN PEHCI_EXTENSION EhciExtension,
                          IN PEHCI_HCD_QH QH)
 {
-    DPRINT1("EHCI_InsertQhInAsyncList: UNIMPLEMENTED. FIXME\n");
+    PEHCI_STATIC_QH AsyncHead;
+    PEHCI_HCD_QH NextHead;
+
+    DPRINT_EHCI("EHCI_InsertQhInAsyncList: QH - %p\n", QH);
+
+    ASSERT((QH->QhFlags & EHCI_QH_FLAG_IN_SCHEDULE) == 0);
+    ASSERT((QH->QhFlags & EHCI_QH_FLAG_NUKED) == 0);
+
+    AsyncHead = EhciExtension->AsyncHead;
+    NextHead = AsyncHead->NextHead;
+
+    QH->HwQH.HorizontalLink = AsyncHead->HwQH.HorizontalLink;
+    QH->QhFlags |= EHCI_QH_FLAG_IN_SCHEDULE;
+    QH->NextHead = NextHead;
+    QH->PrevHead = (PEHCI_HCD_QH)AsyncHead;
+
+    NextHead->PrevHead = QH;
+
+    AsyncHead->HwQH.HorizontalLink.AsULONG = ((ULONG_PTR)QH->PhysicalAddress & ~0x1C) | 2;
+    AsyncHead->NextHead = QH;
 }
 
 VOID
