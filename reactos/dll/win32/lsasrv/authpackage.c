@@ -950,7 +950,7 @@ LsapAppendSidToGroups(
         Groups->GroupCount = 1;
 
         Groups->Groups[0].Sid = Sid;
-        Groups->Groups[0].Attributes = 
+        Groups->Groups[0].Attributes =
             SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
 
         *TokenGroups = Groups;
@@ -985,7 +985,7 @@ LsapAppendSidToGroups(
         }
 
         Groups->Groups[Groups->GroupCount].Sid = Sid;
-        Groups->Groups[Groups->GroupCount].Attributes = 
+        Groups->Groups[Groups->GroupCount].Attributes =
             SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
 
         Groups->GroupCount++;

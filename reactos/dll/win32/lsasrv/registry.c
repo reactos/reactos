@@ -132,7 +132,7 @@ LsapRegEnumerateSubKey(IN HANDLE KeyHandle,
                           KeyInfo->NameLength);
 
             /* Terminate the string */
-            Buffer[KeyInfo->NameLength / sizeof(WCHAR)] = 0;
+            Buffer[KeyInfo->NameLength / sizeof(WCHAR)] = UNICODE_NULL;
         }
         else
         {
@@ -268,7 +268,7 @@ LsapRegEnumerateValue(IN HANDLE KeyHandle,
                               ValueInfo->NameLength);
 
                 /* Terminate the string */
-                Name[ValueInfo->NameLength / sizeof(WCHAR)] = 0;
+                Name[ValueInfo->NameLength / sizeof(WCHAR)] = UNICODE_NULL;
             }
             else
             {
@@ -295,7 +295,7 @@ LsapRegEnumerateValue(IN HANDLE KeyHandle,
                 {
                     WCHAR *ptr = (WCHAR *)((ULONG_PTR)Data + ValueInfo->DataLength);
                     if ((ptr > (WCHAR *)Data) && ptr[-1])
-                        *ptr = 0;
+                        *ptr = UNICODE_NULL;
                 }
             }
             else
@@ -383,7 +383,7 @@ LsapRegQueryValue(IN HANDLE KeyHandle,
         {
             WCHAR *ptr = (WCHAR *)((ULONG_PTR)Data + ValueInfo->DataLength);
             if ((ptr > (WCHAR *)Data) && ptr[-1])
-                *ptr = 0;
+                *ptr = UNICODE_NULL;
         }
     }
 

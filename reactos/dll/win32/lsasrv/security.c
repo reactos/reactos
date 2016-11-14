@@ -125,7 +125,7 @@ LsapCreatePolicySd(PSECURITY_DESCRIPTOR *PolicySd,
 
     /* Allocate and initialize the DACL */
     DaclSize = sizeof(ACL) +
-               sizeof(ACCESS_DENIED_ACE) - sizeof(ULONG) + RtlLengthSid(AnonymousSid) +
+               sizeof(ACCESS_DENIED_ACE)  - sizeof(ULONG) + RtlLengthSid(AnonymousSid) +
                sizeof(ACCESS_ALLOWED_ACE) - sizeof(ULONG) + RtlLengthSid(AdministratorsSid) +
                sizeof(ACCESS_ALLOWED_ACE) - sizeof(ULONG) + RtlLengthSid(EveryoneSid) +
                sizeof(ACCESS_ALLOWED_ACE) - sizeof(ULONG) + RtlLengthSid(AnonymousSid) +
