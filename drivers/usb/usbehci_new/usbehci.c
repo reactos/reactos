@@ -1964,11 +1964,61 @@ EHCI_InterruptNextSOF(IN PVOID ehciExtension)
 
 VOID
 NTAPI
+EHCI_PollAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
+                       IN PEHCI_ENDPOINT EhciEndpoint)
+{
+    PEHCI_HCD_QH QH;
+    PLIST_ENTRY DoneList;
+    PEHCI_HCD_TD TD;
+
+    //DPRINT_EHCI("EHCI_PollAsyncEndpoint: EhciEndpoint - %p\n", EhciEndpoint);
+
+    if (!EhciEndpoint->PendingTDs)
+    {
+        return;
+    }
+
+    QH = EhciEndpoint->QH;
+
+    if (QH->QhFlags & 2)
+    {
+        return;
+    }
+
+    if (QH->HwQH.Token.Status & EHCI_TOKEN_STATUS_ACTIVE ||
+       !(QH->HwQH.Token.Status & EHCI_TOKEN_STATUS_HALTED))
+    {
+        EHCI_PollActiveAsyncEndpoint(EhciExtension, EhciEndpoint);
+    }
+    else
+    {
+        EhciEndpoint->EndpointStatus |= 1;
+        EHCI_PollHaltedAsyncEndpoint(EhciExtension, EhciEndpoint);
+    }
+
+    DoneList = &EhciEndpoint->ListTDs;
+
+    while (!IsListEmpty(DoneList))
+    {
+        TD = CONTAINING_RECORD(DoneList->Flink,
+                               EHCI_HCD_TD,
+                               DoneLink);
+
+        RemoveHeadList(DoneList);
+
+        ASSERT((TD->TdFlags & (EHCI_HCD_TD_FLAG_PROCESSED |
+                               EHCI_HCD_TD_FLAG_DONE)) != 0);
+
+        EHCI_ProcessDoneAsyncTd(EhciExtension, TD);
+    }
+}
+
+VOID
+NTAPI
 EHCI_PollIsoEndpoint(IN PEHCI_EXTENSION EhciExtension,
                      IN PEHCI_ENDPOINT EhciEndpoint)
 {
     DPRINT1("EHCI_PollIsoEndpoint: UNIMPLEMENTED. FIXME\n");
-
 }
 
 VOID
