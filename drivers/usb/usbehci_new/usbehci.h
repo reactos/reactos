@@ -51,6 +51,7 @@ typedef union _USB20_PORT_STATUS {
 
 struct _EHCI_STATIC_QH;
 struct _EHCI_ENDPOINT;
+struct _EHCI_TRANSFER;
 
 typedef struct _EHCI_HCD_TD {
   //Hardware
@@ -62,7 +63,10 @@ typedef struct _EHCI_HCD_TD {
   struct _EHCI_TRANSFER * EhciTransfer;
   struct _EHCI_HCD_TD * NextHcdTD;
   struct _EHCI_HCD_TD * AltNextHcdTD;
-  ULONG Pad[45];
+  USB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;
+  ULONG LengthThisTD;
+  LIST_ENTRY DoneLink;
+  ULONG Pad[40];
 } EHCI_HCD_TD, *PEHCI_HCD_TD;
 
 C_ASSERT(sizeof(EHCI_HCD_TD) == 0x100);
@@ -105,7 +109,7 @@ typedef struct _EHCI_TRANSFER {
   ULONG USBDStatus;
   ULONG TransferLen;
   PEHCI_ENDPOINT EhciEndpoint;
-  ULONG PendingTds;
+  ULONG PendingTDs;
   ULONG TransferOnAsyncList;
 } EHCI_TRANSFER, *PEHCI_TRANSFER;
 
@@ -157,6 +161,8 @@ typedef struct _EHCI_EXTENSION {
   ULONG SuspendPortBits;
   ULONG ResetPortBits;
   ULONG FinishResetPortBits;
+  /* Transfers */
+  ULONG PendingTransfers;
 
 } EHCI_EXTENSION, *PEHCI_EXTENSION;
 
