@@ -45,6 +45,80 @@ EHCI_AllocTd(IN PEHCI_EXTENSION EhciExtension,
     return TD;
 }
 
+PEHCI_HCD_QH
+NTAPI
+EHCI_InitializeQH(PEHCI_EXTENSION EhciExtension,
+                  PEHCI_ENDPOINT EhciEndpoint,
+                  PEHCI_HCD_QH QH,
+                  PEHCI_HCD_QH QhPA)
+{
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+    ULONG DeviceSpeed;
+
+    DPRINT_EHCI("EHCI_InitializeQH: EhciEndpoint - %p, QH - %p, QhPA - %p\n", 
+                EhciEndpoint,
+                QH,
+                QhPA);
+
+    EndpointProperties = &EhciEndpoint->EndpointProperties;
+
+    RtlZeroMemory(QH, sizeof(EHCI_HCD_QH));
+
+    ASSERT(((ULONG_PTR)QhPA & 0x1F) == 0); // link flags
+
+    QH->PhysicalAddress = QhPA;
+    QH->EhciEndpoint = EhciEndpoint;
+
+    QH->HwQH.EndpointParams.DeviceAddress = EndpointProperties->DeviceAddress & 0x7F;
+    QH->HwQH.EndpointParams.EndpointNumber = EndpointProperties->EndpointAddress & 0x0F;
+
+    DeviceSpeed = EndpointProperties->DeviceSpeed;
+
+    switch (DeviceSpeed)
+    {
+        case UsbLowSpeed:
+            QH->HwQH.EndpointParams.EndpointSpeed = 1;
+            break;
+
+        case UsbFullSpeed:
+            QH->HwQH.EndpointParams.EndpointSpeed = 0;
+            break;
+
+        case UsbHighSpeed:
+            QH->HwQH.EndpointParams.EndpointSpeed = 2;
+            break;
+
+        default:
+            ASSERT(FALSE);
+            break;
+    }
+
+    QH->HwQH.EndpointParams.MaximumPacketLength = EndpointProperties->MaxPacketSize  & 0x7FF;
+
+    QH->HwQH.EndpointCaps.PipeMultiplier = 1;
+
+    if (DeviceSpeed == UsbHighSpeed)
+    {
+        QH->HwQH.EndpointCaps.HubAddr = 0;
+        QH->HwQH.EndpointCaps.PortNumber = 0;
+    }
+    else
+    {
+        QH->HwQH.EndpointCaps.HubAddr = EndpointProperties->HubAddr & 0x7F;
+        QH->HwQH.EndpointCaps.PortNumber = EndpointProperties->PortNumber & 0x7F;
+
+        if (EndpointProperties->TransferType == USBPORT_TRANSFER_TYPE_CONTROL)
+        {
+            QH->HwQH.EndpointParams.ControlEndpointFlag = 1;
+        }
+    }
+
+    QH->HwQH.NextTD = 1;
+    QH->HwQH.AlternateNextTD = 1;
+
+    return QH;
+}
+
 MPSTATUS
 NTAPI
 EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
