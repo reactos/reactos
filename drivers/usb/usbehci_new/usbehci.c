@@ -15,8 +15,113 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
                                IN PEHCI_ENDPOINT EhciEndpoint,
                                IN BOOLEAN IsControl)
 {
-    DPRINT1("EHCI_OpenBulkOrControlEndpoint: UNIMPLEMENTED. FIXME\n");
-    return 6;
+    PEHCI_HCD_QH QH;
+    PEHCI_HCD_QH QhPA; 
+    PEHCI_HCD_TD TdVA;
+    PEHCI_HCD_TD TdPA;
+    PEHCI_HCD_TD TD;
+    ULONG TdCount;
+    ULONG ix;
+
+    DPRINT("EHCI_OpenBulkOrControlEndpoint: EhciEndpoint - %p, IsControl - %x\n",
+           EhciEndpoint,
+           IsControl);
+
+    InitializeListHead(&EhciEndpoint->ListTDs);
+
+    EhciEndpoint->DummyTdVA = (PEHCI_HCD_TD)EndpointProperties->BufferVA;
+    EhciEndpoint->DummyTdPA = (PEHCI_HCD_TD)EndpointProperties->BufferPA;
+
+    RtlZeroMemory(EhciEndpoint->DummyTdVA, sizeof(EHCI_HCD_TD));
+
+    QH = (PEHCI_HCD_QH)(EhciEndpoint->DummyTdVA + 1);
+    QhPA = (PEHCI_HCD_QH)(EhciEndpoint->DummyTdPA + 1);
+
+    EhciEndpoint->FirstTD = (PEHCI_HCD_TD)(QH + 1);
+
+    TdCount = (EndpointProperties->BufferLength -
+               (sizeof(EHCI_HCD_TD) + sizeof(EHCI_HCD_QH))) /
+               sizeof(EHCI_HCD_TD);
+
+    if (EndpointProperties->TransferType == USBPORT_TRANSFER_TYPE_CONTROL)
+    {
+        EhciEndpoint->EndpointStatus |= 4;
+    }
+
+    EhciEndpoint->MaxTDs = TdCount;
+    EhciEndpoint->RemainTDs = TdCount;
+
+    if (TdCount)
+    {
+        TdVA = EhciEndpoint->FirstTD;
+        TdPA = (PEHCI_HCD_TD)(QhPA + 1);
+
+        ix = 0;
+
+        do
+        {
+            DPRINT_EHCI("EHCI_OpenBulkOrControlEndpoint: TdVA - %p, TdPA - %p\n",
+                        TdVA,
+                        TdPA);
+
+            RtlZeroMemory(TdVA, sizeof(EHCI_HCD_TD));
+
+            ASSERT(((ULONG_PTR)TdPA & 0x1F) == 0); // link flags
+
+            TdVA->PhysicalAddress = TdPA;
+            TdVA->EhciEndpoint = EhciEndpoint;
+            TdVA->EhciTransfer = NULL;
+
+            TdPA += 1;
+            TdVA += 1;
+
+            ix++;
+        }
+        while (ix < TdCount);
+    }
+
+    EhciEndpoint->QH = EHCI_InitializeQH(EhciExtension,
+                                         EhciEndpoint,
+                                         QH,
+                                         QhPA);
+
+    if (IsControl)
+    {
+        QH->HwQH.EndpointParams.DataToggleControl = 1;
+        EhciEndpoint->HcdHeadP = NULL;
+    }
+    else
+    {
+        QH->HwQH.EndpointParams.DataToggleControl = 0;
+    }
+
+    TD = EHCI_AllocTd(EhciExtension, EhciEndpoint);
+
+    if (!TD)
+    {
+        return 2;
+    }
+
+    TD->TdFlags |= EHCI_HCD_TD_FLAG_DUMMY;
+    TD->HwTD.Token.Status &= ~EHCI_TOKEN_STATUS_ACTIVE;
+
+    TD->HwTD.NextTD = 1;
+    TD->HwTD.AlternateNextTD = 1;
+
+    TD->NextHcdTD = NULL;
+    TD->AltNextHcdTD = NULL;
+
+    EhciEndpoint->HcdTailP = TD;
+    EhciEndpoint->HcdHeadP = TD;
+
+    QH->HwQH.CurrentTD = (ULONG_PTR)TD->PhysicalAddress;
+    QH->HwQH.NextTD = 1;
+    QH->HwQH.AlternateNextTD = 1;
+
+    QH->HwQH.Token.Status &= ~EHCI_TOKEN_STATUS_ACTIVE;
+    QH->HwQH.Token.TransferBytes = 0;
+
+    return 0;
 }
 
 MPSTATUS
