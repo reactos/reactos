@@ -1174,7 +1174,33 @@ EHCI_SetEndpointState(IN PVOID ehciExtension,
                       IN PVOID ehciEndpoint,
                       IN ULONG EndpointState)
 {
-    DPRINT1("EHCI_SetEndpointState: UNIMPLEMENTED. FIXME\n");
+    PEHCI_ENDPOINT EhciEndpoint;
+    ULONG TransferType;
+
+    DPRINT_EHCI("EHCI_SetEndpointState: ... \n");
+
+    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
+    TransferType = EhciEndpoint->EndpointProperties.TransferType;
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
+        TransferType == USBPORT_TRANSFER_TYPE_BULK ||
+        TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+    {
+         EHCI_SetAsyncEndpointState((PEHCI_EXTENSION)ehciExtension,
+                                    EhciEndpoint,
+                                    EndpointState);
+    }
+    else if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+    {
+        EHCI_SetIsoEndpointState((PEHCI_EXTENSION)ehciExtension,
+                                 EhciEndpoint,
+                                 EndpointState);
+    }
+    else
+    {
+        RegPacket.UsbPortBugCheck(ehciExtension);
+    }
+
 }
 
 VOID
