@@ -1181,7 +1181,38 @@ NTAPI
 EHCI_RemoveQhFromAsyncList(IN PEHCI_EXTENSION EhciExtension,
                            IN PEHCI_HCD_QH QH)
 {
-    DPRINT1("EHCI_RemoveQhFromAsyncList: UNIMPLEMENTED. FIXME\n");
+    PEHCI_HCD_QH NextHead;
+    PEHCI_HCD_QH PrevHead;
+    PEHCI_STATIC_QH AsyncHead;
+    ULONG AsyncHeadPA;
+
+    DPRINT_EHCI("EHCI_RemoveQhFromAsyncList: QH - %p\n", QH);
+
+    if (QH->QhFlags & EHCI_QH_FLAG_IN_SCHEDULE)
+    {
+        NextHead = QH->NextHead;
+        PrevHead = QH->PrevHead;
+
+        AsyncHead = EhciExtension->AsyncHead;
+        AsyncHeadPA = ((ULONG_PTR)AsyncHead->PhysicalAddress & ~0x1C) | 2;
+
+        PrevHead->HwQH.HorizontalLink.AsULONG = 
+            ((ULONG_PTR)NextHead->PhysicalAddress & ~0x1C) | 2;
+
+        PrevHead->NextHead = NextHead;
+        NextHead->PrevHead = PrevHead;
+
+        EHCI_AsyncCacheFlush(EhciExtension);
+
+        if (READ_REGISTER_ULONG(EhciExtension->OperationalRegs + EHCI_ASYNCLISTBASE) ==
+            (ULONG_PTR)QH->PhysicalAddress)
+        {
+            WRITE_REGISTER_ULONG((EhciExtension->OperationalRegs + EHCI_ASYNCLISTBASE),
+                                 AsyncHeadPA);
+        }
+
+        QH->QhFlags &= ~EHCI_QH_FLAG_IN_SCHEDULE;
+    }
 }
 
 VOID
