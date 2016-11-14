@@ -1170,6 +1170,15 @@ EHCI_GetEndpointState(IN PVOID ehciExtension,
 
 VOID
 NTAPI
+EHCI_SetIsoEndpointState(IN PEHCI_EXTENSION EhciExtension,
+                         IN PEHCI_ENDPOINT EhciEndpoint,
+                         IN ULONG EndpointState)
+{
+    DPRINT1("EHCI_SetIsoEndpointState: UNIMPLEMENTED. FIXME\n");
+}
+
+VOID
+NTAPI
 EHCI_SetEndpointState(IN PVOID ehciExtension,
                       IN PVOID ehciEndpoint,
                       IN ULONG EndpointState)
@@ -1200,7 +1209,6 @@ EHCI_SetEndpointState(IN PVOID ehciExtension,
     {
         RegPacket.UsbPortBugCheck(ehciExtension);
     }
-
 }
 
 VOID
