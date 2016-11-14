@@ -1964,6 +1964,15 @@ EHCI_InterruptNextSOF(IN PVOID ehciExtension)
 
 VOID
 NTAPI
+EHCI_PollIsoEndpoint(IN PEHCI_EXTENSION EhciExtension,
+                     IN PEHCI_ENDPOINT EhciEndpoint)
+{
+    DPRINT1("EHCI_PollIsoEndpoint: UNIMPLEMENTED. FIXME\n");
+
+}
+
+VOID
+NTAPI
 EHCI_PollEndpoint(IN PVOID ehciExtension,
                   IN PVOID ehciEndpoint)
 {
