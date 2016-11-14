@@ -1170,6 +1170,38 @@ EHCI_GetEndpointState(IN PVOID ehciExtension,
 
 VOID
 NTAPI
+EHCI_RemoveQhFromPeriodicList(IN PEHCI_EXTENSION EhciExtension,
+                              IN PEHCI_ENDPOINT EhciEndpoint)
+{
+    DPRINT1("EHCI_RemoveQhFromPeriodicList: UNIMPLEMENTED. FIXME\n");
+}
+
+VOID
+NTAPI
+EHCI_RemoveQhFromAsyncList(IN PEHCI_EXTENSION EhciExtension,
+                           IN PEHCI_HCD_QH QH)
+{
+    DPRINT1("EHCI_RemoveQhFromAsyncList: UNIMPLEMENTED. FIXME\n");
+}
+
+VOID
+NTAPI
+EHCI_InsertQhInPeriodicList(IN PEHCI_EXTENSION EhciExtension,
+                            IN PEHCI_ENDPOINT EhciEndpoint)
+{
+    DPRINT1("EHCI_InsertQhInPeriodicList: UNIMPLEMENTED. FIXME\n");
+}
+
+VOID
+NTAPI
+EHCI_InsertQhInAsyncList(IN PEHCI_EXTENSION EhciExtension,
+                         IN PEHCI_HCD_QH QH)
+{
+    DPRINT1("EHCI_InsertQhInAsyncList: UNIMPLEMENTED. FIXME\n");
+}
+
+VOID
+NTAPI
 EHCI_SetIsoEndpointState(IN PEHCI_EXTENSION EhciExtension,
                          IN PEHCI_ENDPOINT EhciEndpoint,
                          IN ULONG EndpointState)
