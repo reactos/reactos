@@ -1964,6 +1964,152 @@ EHCI_InterruptNextSOF(IN PVOID ehciExtension)
 
 VOID
 NTAPI
+EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
+                             IN PEHCI_ENDPOINT EhciEndpoint)
+{
+    PEHCI_HCD_QH QH;
+    PEHCI_HCD_TD TD;
+    PEHCI_HCD_TD CurrentTD;
+    ULONG CurrentTDPhys; 
+    BOOLEAN IsSheduled;
+
+    DPRINT_EHCI("EHCI_PollActiveAsyncEndpoint: ... \n");
+
+    QH = EhciEndpoint->QH;
+
+    CurrentTDPhys = QH->HwQH.CurrentTD & ~0x1F;
+    ASSERT(CurrentTDPhys != 0);
+
+    CurrentTD = (PEHCI_HCD_TD)RegPacket.UsbPortGetMappedVirtualAddress((PVOID)CurrentTDPhys,
+                                                                       EhciExtension,
+                                                                       EhciEndpoint);
+
+    if (CurrentTD == EhciEndpoint->DummyTdVA)
+    {
+        return;
+    }
+
+    IsSheduled = QH->QhFlags & EHCI_QH_FLAG_IN_SCHEDULE;
+
+    if (!EHCI_HardwarePresent(EhciExtension, 0))
+    {
+        IsSheduled = 0;
+    }
+
+    TD = EhciEndpoint->HcdHeadP;
+
+    if (TD == CurrentTD)
+    {
+        if (TD == EhciEndpoint->HcdTailP ||
+            TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE)
+        {
+            goto Next;
+        }
+
+        if (TD->NextHcdTD &&
+            TD->HwTD.NextTD != (ULONG_PTR)TD->NextHcdTD->PhysicalAddress)
+        {
+            TD->HwTD.NextTD = (ULONG_PTR)TD->NextHcdTD->PhysicalAddress;
+        }
+
+        if (TD->AltNextHcdTD &&
+            TD->HwTD.AlternateNextTD != (ULONG_PTR)TD->AltNextHcdTD->PhysicalAddress)
+        {
+            TD->HwTD.AlternateNextTD = (ULONG_PTR)TD->AltNextHcdTD->PhysicalAddress;
+        }
+
+        if (QH->HwQH.CurrentTD == (ULONG_PTR)TD->PhysicalAddress &&
+            !(TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE) && 
+            (QH->HwQH.NextTD != TD->HwTD.NextTD ||
+             QH->HwQH.AlternateNextTD != TD->HwTD.AlternateNextTD))
+        {
+            QH->HwQH.NextTD = TD->HwTD.NextTD;
+            QH->HwQH.AlternateNextTD = TD->HwTD.AlternateNextTD;
+        }
+
+        EHCI_InterruptNextSOF((PVOID)EhciExtension);
+    }
+    else
+    {
+        do
+        {
+            ASSERT((TD->TdFlags & EHCI_HCD_TD_FLAG_DUMMY) == 0);
+
+            TD->TdFlags |= EHCI_HCD_TD_FLAG_DONE;
+
+            if (TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE)
+            {
+                TD->TdFlags |= 0x10;
+            }
+
+            InsertTailList(&EhciEndpoint->ListTDs, &TD->DoneLink);
+            TD = TD->NextHcdTD;
+        }
+        while (TD != CurrentTD);
+    }
+
+Next:
+
+    if (CurrentTD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE)
+    {
+        ASSERT(TD != NULL);
+        EhciEndpoint->HcdHeadP = TD;
+        return;
+    }
+
+    if ((CurrentTD->NextHcdTD != EhciEndpoint->HcdTailP) &&
+         (CurrentTD->AltNextHcdTD != EhciEndpoint->HcdTailP ||
+          CurrentTD->HwTD.Token.TransferBytes == 0))
+    {
+        ASSERT(TD != NULL);
+        EhciEndpoint->HcdHeadP = TD;
+        return;
+    }
+
+    if (IsSheduled)
+    {
+        EHCI_LockQH(EhciExtension,
+                    QH,
+                    EhciEndpoint->EndpointProperties.TransferType);
+    }
+
+    QH->HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DummyTdPA;
+
+    CurrentTD->TdFlags |= EHCI_HCD_TD_FLAG_DONE;
+    InsertTailList(&EhciEndpoint->ListTDs, &CurrentTD->DoneLink);
+
+    if (CurrentTD->HwTD.Token.TransferBytes &&
+        CurrentTD->AltNextHcdTD == EhciEndpoint->HcdTailP)
+    {
+        TD = CurrentTD->NextHcdTD;
+  
+        if (TD != EhciEndpoint->HcdTailP)
+        {
+            do
+            {
+                TD->TdFlags |= 0x10;
+                InsertTailList(&EhciEndpoint->ListTDs, &TD->DoneLink);
+                TD = TD->NextHcdTD;
+            }
+            while (TD != EhciEndpoint->HcdTailP);
+        }
+    }
+
+    QH->HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->HcdTailP->PhysicalAddress;
+    QH->HwQH.NextTD = 1;
+    QH->HwQH.AlternateNextTD = 1;
+    QH->HwQH.Token.TransferBytes = 0;
+
+    EhciEndpoint->HcdHeadP = EhciEndpoint->HcdTailP;
+
+    if (IsSheduled)
+    {
+        EHCI_UnlockQH(EhciExtension, QH);
+    }
+}
+
+VOID
+NTAPI
 EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
                              IN PEHCI_ENDPOINT EhciEndpoint)
 {
