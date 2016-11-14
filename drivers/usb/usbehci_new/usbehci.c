@@ -1152,6 +1152,115 @@ EHCI_EnableAsyncList(IN PEHCI_EXTENSION EhciExtension)
     WRITE_REGISTER_ULONG((OperationalRegs + EHCI_USBCMD), UsbCmd.AsULONG);
 }
 
+VOID
+NTAPI
+EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
+                         PEHCI_ENDPOINT EhciEndpoint,
+                         PEHCI_HCD_TD NextTD)
+{
+    PEHCI_HCD_QH QH;
+    PEHCI_HCD_TD HcdHeadP;
+    PEHCI_HCD_TD TD;
+    PEHCI_TRANSFER Transfer;
+    PEHCI_HCD_TD LinkTD;
+    BOOLEAN IsPresent;
+    ULONG ix;
+
+    DPRINT_EHCI("EHCI_LinkTransferToQueue: EhciEndpoint - %p, NextTD - %p\n",
+                EhciEndpoint,
+                NextTD);
+
+    ASSERT(EhciEndpoint->HcdHeadP != NULL);
+    IsPresent = EHCI_HardwarePresent(EhciExtension, 0);
+
+    QH = EhciEndpoint->QH;
+    HcdHeadP = EhciEndpoint->HcdHeadP;
+
+    if (HcdHeadP == EhciEndpoint->HcdTailP)
+    {
+        if (IsPresent)
+        {
+            EHCI_LockQueueHead(EhciExtension,
+                               QH,
+                               EhciEndpoint->EndpointProperties.TransferType);
+        }
+
+        QH->HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DummyTdPA;
+        QH->HwQH.NextTD = (ULONG_PTR)NextTD->PhysicalAddress;
+        QH->HwQH.AlternateNextTD = NextTD->HwTD.AlternateNextTD;
+
+        QH->HwQH.Token.Status = (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE | EHCI_TOKEN_STATUS_HALTED);
+        QH->HwQH.Token.TransferBytes = 0;
+
+        if (IsPresent)
+        {
+            EHCI_UnlockQueueHead(EhciExtension, QH);
+        }
+
+        EhciEndpoint->HcdHeadP = NextTD;
+    }
+    else
+    {
+        DbgBreakPoint();
+
+        DPRINT("EHCI_LinkTransferToQueue: HcdHeadP - %p, DummyTd - %p\n",
+               EhciEndpoint->HcdHeadP,
+               EhciEndpoint->HcdTailP);
+
+        LinkTD = EhciEndpoint->HcdHeadP;
+
+        if (HcdHeadP != EhciEndpoint->HcdTailP)
+        {
+            while (TRUE)
+            {
+                LinkTD = HcdHeadP;
+                TD = HcdHeadP->NextHcdTD;
+
+                if (TD == EhciEndpoint->HcdTailP)
+                {
+                    break;
+                }
+
+                HcdHeadP = TD;
+            }
+        }
+
+        ASSERT(LinkTD != EhciEndpoint->HcdTailP);
+
+        Transfer = LinkTD->EhciTransfer;
+
+        ix = 0;
+
+        if (EhciEndpoint->MaxTDs)
+        {
+            TD = EhciEndpoint->FirstTD;
+
+            do
+            {
+                if (TD->EhciTransfer == Transfer)
+                {
+                    TD->HwTD.AlternateNextTD = (ULONG_PTR)NextTD->PhysicalAddress;
+                    TD->AltNextHcdTD = NextTD;
+
+                }
+
+                ++ix;
+                TD += 1;
+            }
+            while (ix < EhciEndpoint->MaxTDs);
+        }
+
+        LinkTD->HwTD.NextTD = (ULONG_PTR)NextTD->PhysicalAddress;
+        LinkTD->NextHcdTD = NextTD;
+
+        if (QH->HwQH.CurrentTD == (ULONG_PTR)LinkTD->PhysicalAddress)
+        {
+            QH->HwQH.NextTD = (ULONG_PTR)NextTD->PhysicalAddress;
+            QH->HwQH.AlternateNextTD = 1;
+        }
+    }
+}
+
 MPSTATUS
 NTAPI
 EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,

@@ -163,7 +163,10 @@ typedef struct _EHCI_EXTENSION {
   ULONG FinishResetPortBits;
   /* Transfers */
   ULONG PendingTransfers;
-
+  /* Lock Queue */
+  PEHCI_HCD_QH PrevQH;
+  PEHCI_HCD_QH LockQH;
+  PEHCI_HCD_QH NextQH;
 } EHCI_EXTENSION, *PEHCI_EXTENSION;
 
 /* roothub.c */
