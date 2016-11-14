@@ -1964,6 +1964,14 @@ EHCI_InterruptNextSOF(IN PVOID ehciExtension)
 
 VOID
 NTAPI
+EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
+                             IN PEHCI_ENDPOINT EhciEndpoint)
+{
+    DPRINT1("EHCI_PollHaltedAsyncEndpoint: ... \n");
+}
+
+VOID
+NTAPI
 EHCI_PollAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
                        IN PEHCI_ENDPOINT EhciEndpoint)
 {
