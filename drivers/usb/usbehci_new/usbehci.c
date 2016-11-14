@@ -1952,6 +1952,18 @@ EHCI_SetEndpointState(IN PVOID ehciExtension,
 
 VOID
 NTAPI
+EHCI_InterruptNextSOF(IN PVOID ehciExtension)
+{
+    PEHCI_EXTENSION EhciExtension;
+
+    DPRINT_EHCI("EHCI_InterruptNextSOF: ... \n");
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    RegPacket.UsbPortInvalidateController(EhciExtension, 3);
+}
+
+VOID
+NTAPI
 EHCI_PollEndpoint(IN PVOID ohciExtension,
                   IN PVOID ohciEndpoint)
 {
@@ -1992,18 +2004,6 @@ EHCI_Get32BitFrameNumber(IN PVOID ehciExtension)
                            (FrameIndex | ((FrameIndex >> 3) & 0x3FF));
 
     return FrameNumber;
-}
-
-VOID
-NTAPI
-EHCI_InterruptNextSOF(IN PVOID ehciExtension)
-{
-    PEHCI_EXTENSION EhciExtension;
-
-    DPRINT_EHCI("EHCI_InterruptNextSOF: ... \n");
-
-    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
-    RegPacket.UsbPortInvalidateController(EhciExtension, 3);
 }
 
 VOID
