@@ -186,7 +186,7 @@ LsapInitSids(VOID)
 
     InitializeListHead(&WellKnownSidListHead);
 
-    hInstance = GetModuleHandleW(NULL);
+    hInstance = GetModuleHandleW(L"lsasrv.dll");
 
     /* NT Authority */
 
