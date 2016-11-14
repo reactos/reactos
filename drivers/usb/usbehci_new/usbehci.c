@@ -1043,8 +1043,62 @@ EHCI_SubmitTransfer(IN PVOID ehciExtension,
                     IN PVOID ehciTransfer,
                     IN PVOID sgList)
 {
-    DPRINT1("EHCI_SubmitTransfer: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    PEHCI_EXTENSION EhciExtension;
+    PEHCI_ENDPOINT EhciEndpoint;
+    PUSBPORT_TRANSFER_PARAMETERS TransferParameters;
+    PEHCI_TRANSFER EhciTransfer;
+    PUSBPORT_SCATTER_GATHER_LIST SgList;
+    MPSTATUS MPStatus;
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
+    TransferParameters = (PUSBPORT_TRANSFER_PARAMETERS)transferParameters;
+    EhciTransfer = (PEHCI_TRANSFER)ehciTransfer;
+    SgList = (PUSBPORT_SCATTER_GATHER_LIST)sgList;
+
+    DPRINT_EHCI("EHCI_SubmitTransfer: EhciEndpoint - %p, EhciTransfer - %p\n",
+                EhciEndpoint,
+                EhciTransfer);
+
+    RtlZeroMemory(EhciTransfer, sizeof(EHCI_TRANSFER));
+
+    EhciTransfer->TransferParameters = TransferParameters;
+    EhciTransfer->USBDStatus = USBD_STATUS_SUCCESS;
+    EhciTransfer->EhciEndpoint = EhciEndpoint;
+
+    switch (EhciEndpoint->EndpointProperties.TransferType)
+    {
+        case USBPORT_TRANSFER_TYPE_CONTROL:
+            MPStatus = EHCI_ControlTransfer(EhciExtension,
+                                            EhciEndpoint,
+                                            TransferParameters,
+                                            EhciTransfer,
+                                            SgList);
+            break;
+
+        case USBPORT_TRANSFER_TYPE_BULK:
+            MPStatus = EHCI_BulkTransfer(EhciExtension,
+                                         EhciEndpoint,
+                                         TransferParameters,
+                                         EhciTransfer,
+                                         SgList);
+            break;
+
+        case USBPORT_TRANSFER_TYPE_INTERRUPT:
+            MPStatus = EHCI_InterruptTransfer(EhciExtension,
+                                              EhciEndpoint,
+                                              TransferParameters,
+                                              EhciTransfer,
+                                              SgList);
+            break;
+
+        default:
+            DbgBreakPoint();
+            MPStatus = 2;//?or?
+            break;
+    }
+
+    return MPStatus;
 }
 
 MPSTATUS
