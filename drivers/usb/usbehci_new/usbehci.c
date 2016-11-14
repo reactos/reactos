@@ -1154,6 +1154,97 @@ EHCI_EnableAsyncList(IN PEHCI_EXTENSION EhciExtension)
 
 VOID
 NTAPI
+EHCI_FlushAsyncCache(IN PEHCI_EXTENSION EhciExtension)
+{
+    PULONG OperationalRegs;
+    EHCI_USB_COMMAND Command;
+    EHCI_USB_STATUS Status;
+    LARGE_INTEGER CurrentTime = {{0, 0}};
+    LARGE_INTEGER FirstTime = {{0, 0}};
+    EHCI_USB_COMMAND Cmd;
+
+    DPRINT_EHCI("EHCI_FlushAsyncCache: EhciExtension - %p\n", EhciExtension);
+
+    OperationalRegs = EhciExtension->OperationalRegs;
+    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
+
+    if (!Status.AsynchronousStatus && !Command.AsynchronousEnable)
+    {
+        return;
+    }
+
+    if (Status.AsynchronousStatus && !Command.AsynchronousEnable)
+    {
+        KeQuerySystemTime(&FirstTime);
+        FirstTime.QuadPart += 100 * 10000;  //100 ms
+
+        do
+        {
+            Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
+            Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+            KeQuerySystemTime(&CurrentTime);
+
+            if (CurrentTime.QuadPart > FirstTime.QuadPart)
+            {
+                RegPacket.UsbPortBugCheck(EhciExtension);
+            }
+        }
+        while (Status.AsynchronousStatus && Command.AsULONG != -1 && Command.Run);
+
+        return;
+    }    
+
+    if (!Status.AsynchronousStatus && Command.AsynchronousEnable)
+    {
+        KeQuerySystemTime(&FirstTime);
+        FirstTime.QuadPart += 100 * 10000;  //100 ms
+
+        do
+        {
+            Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
+            Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+            KeQuerySystemTime(&CurrentTime);
+        }
+        while (!Status.AsynchronousStatus && Command.AsULONG != -1 && Command.Run);
+    }
+
+    Command.InterruptAdvanceDoorbell = 1;
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
+
+    KeQuerySystemTime(&FirstTime);
+    FirstTime.QuadPart += 100 * 10000;  //100 ms
+
+    Cmd.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+
+    if (Cmd.InterruptAdvanceDoorbell)
+    {
+        while (Cmd.Run)
+        {
+            if (Cmd.AsULONG == -1)
+            {
+                break;
+            }
+
+            KeStallExecutionProcessor(1);
+            Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+            KeQuerySystemTime(&CurrentTime);
+
+            if (!Command.InterruptAdvanceDoorbell)
+            {
+                break;
+            }
+
+            Cmd = Command;
+        }
+    }
+
+    /* InterruptOnAsyncAdvance */
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS, 0x20);
+}
+
+VOID
+NTAPI
 EHCI_LockQH(IN PEHCI_EXTENSION EhciExtension,
             IN PEHCI_HCD_QH QueueHead,
             IN ULONG TransferType)
@@ -1703,7 +1794,7 @@ EHCI_RemoveQhFromAsyncList(IN PEHCI_EXTENSION EhciExtension,
         PrevHead->NextHead = NextHead;
         NextHead->PrevHead = PrevHead;
 
-        EHCI_AsyncCacheFlush(EhciExtension);
+        EHCI_FlushAsyncCache(EhciExtension);
 
         if (READ_REGISTER_ULONG(EhciExtension->OperationalRegs + EHCI_ASYNCLISTBASE) ==
             (ULONG_PTR)QH->PhysicalAddress)
