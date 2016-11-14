@@ -1136,6 +1136,22 @@ EHCI_MapAsyncTransferToTd(IN PEHCI_EXTENSION EhciExtension,
     return LengthThisTD + TransferedLen;
 }
 
+VOID
+NTAPI
+EHCI_EnableAsyncList(IN PEHCI_EXTENSION EhciExtension)
+{
+    PULONG OperationalRegs;
+    EHCI_USB_COMMAND UsbCmd;
+
+    DPRINT_EHCI("EHCI_EnableAsyncList: ... \n");
+
+    OperationalRegs = EhciExtension->OperationalRegs;
+    UsbCmd.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+
+    UsbCmd.AsynchronousEnable = 1;
+    WRITE_REGISTER_ULONG((OperationalRegs + EHCI_USBCMD), UsbCmd.AsULONG);
+}
+
 MPSTATUS
 NTAPI
 EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
