@@ -1179,6 +1179,71 @@ EHCI_SetIsoEndpointState(IN PEHCI_EXTENSION EhciExtension,
 
 VOID
 NTAPI
+EHCI_SetAsyncEndpointState(IN PEHCI_EXTENSION EhciExtension,
+                           IN PEHCI_ENDPOINT EhciEndpoint,
+                           IN ULONG EndpointState)
+{
+    PEHCI_HCD_QH QH;
+    ULONG TransferType;
+
+    DPRINT_EHCI("EHCI_SetAsyncEndpointState: EhciEndpoint - %p, EndpointState - %p\n",
+                EhciEndpoint,
+                EndpointState);
+
+    QH = EhciEndpoint->QH;
+
+    TransferType = EhciEndpoint->EndpointProperties.TransferType;
+
+    switch (EndpointState)
+    {
+        case USBPORT_ENDPOINT_PAUSED:
+            if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+            {
+                EHCI_RemoveQhFromPeriodicList(EhciExtension, EhciEndpoint);
+            }
+            else
+            {
+                EHCI_RemoveQhFromAsyncList(EhciExtension, EhciEndpoint->QH);
+            }
+
+            break;
+
+        case USBPORT_ENDPOINT_ACTIVE:
+            if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+            {
+                EHCI_InsertQhInPeriodicList(EhciExtension, EhciEndpoint);
+            }
+            else
+            {
+                EHCI_InsertQhInAsyncList(EhciExtension, EhciEndpoint->QH);
+            }
+
+            break;
+
+        case USBPORT_ENDPOINT_CLOSED:
+            QH->QhFlags |= 2;
+
+            if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+            {
+                EHCI_RemoveQhFromPeriodicList(EhciExtension, EhciEndpoint);
+            }
+            else
+            {
+                EHCI_RemoveQhFromAsyncList(EhciExtension, EhciEndpoint->QH);
+            }
+
+            break;
+
+        default:
+            DbgBreakPoint();
+            break;
+    }
+
+    EhciEndpoint->EndpointState = EndpointState;
+}
+
+VOID
+NTAPI
 EHCI_SetEndpointState(IN PVOID ehciExtension,
                       IN PVOID ehciEndpoint,
                       IN ULONG EndpointState)
