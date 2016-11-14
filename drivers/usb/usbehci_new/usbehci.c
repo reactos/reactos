@@ -1037,6 +1037,42 @@ EHCI_InterruptDpc(IN PVOID ehciExtension,
 
 MPSTATUS
 NTAPI
+EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
+                     IN PEHCI_ENDPOINT EhciEndpoint,
+                     IN PUSBPORT_TRANSFER_PARAMETERS TransferParameters,
+                     IN PEHCI_TRANSFER EhciTransfer,
+                     IN PUSBPORT_SCATTER_GATHER_LIST SgList)
+{
+    DPRINT1("EHCI_ControlTransfer: UNIMPLEMENTED. FIXME\n");
+    return 0;
+}
+
+MPSTATUS
+NTAPI
+EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
+                  IN PEHCI_ENDPOINT EhciEndpoint,
+                  IN PUSBPORT_TRANSFER_PARAMETERS TransferParameters,
+                  IN PEHCI_TRANSFER EhciTransfer,
+                  IN PUSBPORT_SCATTER_GATHER_LIST SgList)
+{
+    DPRINT1("EHCI_BulkTransfer: UNIMPLEMENTED. FIXME\n");
+    return 0;
+}
+
+MPSTATUS
+NTAPI
+EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
+                       IN PEHCI_ENDPOINT EhciEndpoint,
+                       IN PUSBPORT_TRANSFER_PARAMETERS TransferParameters,
+                       IN PEHCI_TRANSFER EhciTransfer,
+                       IN PUSBPORT_SCATTER_GATHER_LIST SgList)
+{
+    DPRINT1("EHCI_InterruptTransfer: UNIMPLEMENTED. FIXME\n");
+    return 0;
+}
+
+MPSTATUS
+NTAPI
 EHCI_SubmitTransfer(IN PVOID ehciExtension,
                     IN PVOID ehciEndpoint,
                     IN PVOID transferParameters,
