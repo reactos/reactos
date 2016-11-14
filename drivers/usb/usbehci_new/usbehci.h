@@ -68,6 +68,19 @@ C_ASSERT(sizeof(EHCI_HCD_QH) == 0x100);
 
 typedef struct _EHCI_ENDPOINT {
   ULONG Reserved;
+  ULONG EndpointStatus;
+  ULONG EndpointState;
+  USBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+  PEHCI_HCD_TD DummyTdVA; // DmaBufferVA
+  PEHCI_HCD_TD DummyTdPA; // DmaBufferPA
+  PEHCI_HCD_TD FirstTD;
+  ULONG MaxTDs;
+  ULONG PendingTDs;
+  ULONG RemainTDs;
+  PEHCI_HCD_QH QH;
+  PEHCI_HCD_TD HcdHeadP;
+  PEHCI_HCD_TD HcdTailP;
+  LIST_ENTRY ListTDs;
 } EHCI_ENDPOINT, *PEHCI_ENDPOINT;
 
 typedef struct _EHCI_TRANSFER {
