@@ -1212,6 +1212,25 @@ EHCI_LockQH(IN PEHCI_EXTENSION EhciExtension,
 
 VOID
 NTAPI
+EHCI_UnlockQH(IN PEHCI_EXTENSION EhciExtension,
+              IN PEHCI_HCD_QH QueueHead)
+{
+    DPRINT_EHCI("EHCI_UnlockQH: QueueHead - %p\n", QueueHead);
+
+    ASSERT((QueueHead->QhFlags & EHCI_QH_FLAG_UPDATING) != 0);
+    ASSERT(EhciExtension->LockQH != 0);
+    ASSERT(EhciExtension->LockQH == QueueHead);
+
+    QueueHead->QhFlags &= ~EHCI_QH_FLAG_UPDATING;
+
+    EhciExtension->LockQH = NULL;
+
+    EhciExtension->PrevQH->HwQH.HorizontalLink.AsULONG =
+        ((ULONG_PTR)QueueHead->PhysicalAddress & ~0x1C) | 2;
+}
+
+VOID
+NTAPI
 EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
                          PEHCI_ENDPOINT EhciEndpoint,
                          PEHCI_HCD_TD NextTD)
