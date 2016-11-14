@@ -1035,6 +1035,107 @@ EHCI_InterruptDpc(IN PVOID ehciExtension,
     }
 }
 
+ULONG
+NTAPI
+EHCI_MapAsyncTransferToTd(IN PEHCI_EXTENSION EhciExtension,
+                          IN ULONG MaxPacketSize,
+                          IN ULONG TransferedLen,
+                          IN PULONG DataToggle,
+                          IN PEHCI_TRANSFER EhciTransfer,
+                          IN PEHCI_HCD_TD TD,
+                          IN PUSBPORT_SCATTER_GATHER_LIST SgList)
+{
+    PUSBPORT_TRANSFER_PARAMETERS TransferParameters;
+    PUSBPORT_SCATTER_GATHER_ELEMENT SgElement;
+    ULONG SgIdx;
+    ULONG LengthThisTD;
+    ULONG ix;
+    ULONG SgRemain;
+    ULONG DiffLength;
+    ULONG NumPackets;
+
+    DPRINT_EHCI("EHCI_MapAsyncTransferToTd: EhciTransfer - %p, TD - %p, TransferedLen - %x, MaxPacketSize - %x, DataToggle - %x\n",
+           EhciTransfer,
+           TD,
+           TransferedLen,
+           MaxPacketSize,
+           DataToggle);
+
+    TransferParameters = EhciTransfer->TransferParameters;
+
+    SgIdx = 0;
+
+    if (SgList->SgElementCount)
+    {
+        SgElement = &SgList->SgElement[0];
+
+        do
+        {
+            if (TransferedLen >= SgElement->SgOffset &&
+                TransferedLen < SgElement->SgOffset + SgElement->SgTransferLength)
+            {
+                break;
+            }
+
+            ++SgIdx;
+            SgElement += 1;
+        }
+        while (SgIdx < SgList->SgElementCount);
+    }
+
+    SgRemain = SgList->SgElementCount - SgIdx;
+
+    if (SgRemain > 5)
+    {
+        TD->HwTD.Buffer[0] = SgList->SgElement[SgIdx].SgPhysicalAddress.LowPart - 
+                             SgList->SgElement[SgIdx].SgOffset +
+                             TransferedLen;
+
+        LengthThisTD = 5 * 0x1000 - (TD->HwTD.Buffer[0] & 0xFFF);
+
+        for (ix = 1; ix <= 4; ix++)
+        {
+            TD->HwTD.Buffer[ix] = SgList->SgElement[SgIdx + ix].SgPhysicalAddress.LowPart;
+        }
+
+        NumPackets = LengthThisTD / MaxPacketSize;
+        DiffLength = LengthThisTD - MaxPacketSize * (LengthThisTD / MaxPacketSize);
+
+        if (LengthThisTD != MaxPacketSize * (LengthThisTD / MaxPacketSize))
+        {
+            LengthThisTD -= DiffLength;
+        }
+
+        if (DataToggle && (NumPackets & 1))
+        {
+            *DataToggle = *DataToggle == 0;
+        }
+    }
+    else
+    {
+        LengthThisTD = TransferParameters->TransferBufferLength - TransferedLen;
+
+        TD->HwTD.Buffer[0] = TransferedLen +
+                             SgList->SgElement[SgIdx].SgPhysicalAddress.LowPart - 
+                             SgList->SgElement[SgIdx].SgOffset;
+
+        for (ix = 1; ix < 5; ix++)
+        {
+            if ((SgIdx + ix) >= SgList->SgElementCount)
+            {
+                break;
+            }
+
+            TD->HwTD.Buffer[ix] = SgList->SgElement[SgIdx + ix].SgPhysicalAddress.LowPart;
+        }
+    }
+
+    TD->HwTD.Token.TransferBytes = LengthThisTD;
+    TD->LengthThisTD = LengthThisTD;
+
+    return LengthThisTD + TransferedLen;
+}
+
 MPSTATUS
 NTAPI
 EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
