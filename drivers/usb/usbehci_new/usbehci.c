@@ -1154,6 +1154,64 @@ EHCI_EnableAsyncList(IN PEHCI_EXTENSION EhciExtension)
 
 VOID
 NTAPI
+EHCI_LockQH(IN PEHCI_EXTENSION EhciExtension,
+            IN PEHCI_HCD_QH QueueHead,
+            IN ULONG TransferType)
+{
+    PEHCI_HCD_QH PrevQH;
+    ULONG QhPA;
+    ULONG FrameIndexReg;
+    PULONG OperationalRegs;
+    ULONG Command;
+
+    DPRINT_EHCI("EHCI_LockQH: QueueHead - %p, TransferType - %x\n",
+                QueueHead,
+                TransferType);
+
+    OperationalRegs = EhciExtension->OperationalRegs;
+
+    ASSERT((QueueHead->QhFlags & EHCI_QH_FLAG_UPDATING) == 0);
+    ASSERT(EhciExtension->LockQH == NULL);
+
+    PrevQH = QueueHead->PrevHead;
+    QueueHead->QhFlags |= EHCI_QH_FLAG_UPDATING;
+
+    ASSERT(PrevQH);
+
+    EhciExtension->PrevQH = PrevQH;
+    EhciExtension->NextQH = QueueHead->NextHead;
+    EhciExtension->LockQH = QueueHead;
+
+    if (QueueHead->NextHead)
+    {
+        QhPA = ((ULONG_PTR)QueueHead->NextHead->PhysicalAddress & ~0x1C) | 2;
+    }
+    else
+    {
+        QhPA = 1;
+    }
+
+    PrevQH->HwQH.HorizontalLink.AsULONG = QhPA;
+
+    FrameIndexReg = READ_REGISTER_ULONG(OperationalRegs + EHCI_FRINDEX);
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+    {
+        do
+        {
+            Command = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+        }
+        while (READ_REGISTER_ULONG(OperationalRegs + EHCI_FRINDEX) == 
+               FrameIndexReg && (Command != -1) && (Command & 1));
+    }
+    else
+    {
+        EHCI_FlushAsyncCache(EhciExtension);
+    }
+}
+
+VOID
+NTAPI
 EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
                          PEHCI_ENDPOINT EhciEndpoint,
                          PEHCI_HCD_TD NextTD)
@@ -1180,21 +1238,23 @@ EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
     {
         if (IsPresent)
         {
-            EHCI_LockQueueHead(EhciExtension,
-                               QH,
-                               EhciEndpoint->EndpointProperties.TransferType);
+            EHCI_LockQH(EhciExtension,
+                        QH,
+                        EhciEndpoint->EndpointProperties.TransferType);
         }
 
         QH->HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DummyTdPA;
         QH->HwQH.NextTD = (ULONG_PTR)NextTD->PhysicalAddress;
         QH->HwQH.AlternateNextTD = NextTD->HwTD.AlternateNextTD;
 
-        QH->HwQH.Token.Status = (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE | EHCI_TOKEN_STATUS_HALTED);
+        QH->HwQH.Token.Status = (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE |
+                                         EHCI_TOKEN_STATUS_HALTED);
+
         QH->HwQH.Token.TransferBytes = 0;
 
         if (IsPresent)
         {
-            EHCI_UnlockQueueHead(EhciExtension, QH);
+            EHCI_UnlockQH(EhciExtension, QH);
         }
 
         EhciEndpoint->HcdHeadP = NextTD;
