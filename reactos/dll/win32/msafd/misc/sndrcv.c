@@ -193,6 +193,12 @@ WSPRecv(SOCKET Handle,
             *lpErrno = WSAEFAULT;
         return SOCKET_ERROR;
     }
+    if (Socket->SharedData->OobInline && ReceiveFlags && (*ReceiveFlags & MSG_OOB) != 0)
+    {
+        if (lpErrno)
+            *lpErrno = WSAEINVAL;
+        return SOCKET_ERROR;
+    }
 
     Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
                             NULL, 1, FALSE );
@@ -379,6 +385,12 @@ WSPRecvFrom(SOCKET Handle,
     {
         if (lpErrno)
             *lpErrno = WSAEFAULT;
+        return SOCKET_ERROR;
+    }
+    if (Socket->SharedData->OobInline && ReceiveFlags && (*ReceiveFlags & MSG_OOB) != 0)
+    {
+        if (lpErrno)
+            *lpErrno = WSAEINVAL;
         return SOCKET_ERROR;
     }
 
