@@ -1964,10 +1964,28 @@ EHCI_InterruptNextSOF(IN PVOID ehciExtension)
 
 VOID
 NTAPI
-EHCI_PollEndpoint(IN PVOID ohciExtension,
-                  IN PVOID ohciEndpoint)
+EHCI_PollEndpoint(IN PVOID ehciExtension,
+                  IN PVOID ehciEndpoint)
 {
-    DPRINT1("EHCI_PollEndpoint: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+    PEHCI_ENDPOINT EhciEndpoint;
+    ULONG TransferType;
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
+
+    //DPRINT_EHCI("EHCI_PollEndpoint: EhciEndpoint - %p\n", EhciEndpoint);
+
+    TransferType = EhciEndpoint->EndpointProperties.TransferType;
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+    {
+        EHCI_PollIsoEndpoint(EhciExtension, EhciEndpoint);
+    }
+    else
+    {
+        EHCI_PollAsyncEndpoint(EhciExtension, EhciEndpoint);
+    }
 }
 
 VOID
