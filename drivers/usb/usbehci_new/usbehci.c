@@ -8,6 +8,43 @@
 
 USBPORT_REGISTRATION_PACKET RegPacket;
 
+PEHCI_HCD_TD
+NTAPI
+EHCI_AllocTd(IN PEHCI_EXTENSION EhciExtension,
+             IN PEHCI_ENDPOINT EhciEndpoint)
+{
+    PEHCI_HCD_TD TD;
+    ULONG ix = 0;
+
+    DPRINT_EHCI("EHCI_AllocTd: ... \n");
+
+    if (EhciEndpoint->MaxTDs == 0)
+    {
+        RegPacket.UsbPortBugCheck(EhciExtension);
+        return NULL;
+    }
+
+    TD = EhciEndpoint->FirstTD;
+
+    while (TD->TdFlags & EHCI_HCD_TD_FLAG_ALLOCATED)
+    {
+        ++ix;
+        TD += 1;
+
+        if (ix >= EhciEndpoint->MaxTDs)
+        {
+            RegPacket.UsbPortBugCheck(EhciExtension);
+            return NULL;
+        }
+    }
+
+    TD->TdFlags |= EHCI_HCD_TD_FLAG_ALLOCATED;
+
+    --EhciEndpoint->RemainTDs;
+
+    return TD;
+}
+
 MPSTATUS
 NTAPI
 EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
