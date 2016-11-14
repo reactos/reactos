@@ -14,6 +14,11 @@
 
 extern USBPORT_REGISTRATION_PACKET RegPacket;
 
+#define EHCI_HCD_TD_FLAG_ALLOCATED 0x01
+#define EHCI_HCD_TD_FLAG_PROCESSED 0x02
+#define EHCI_HCD_TD_FLAG_DONE      0x08
+#define EHCI_HCD_TD_FLAG_DUMMY     0x20
+
 typedef union _USB20_PORT_STATUS {
   struct {
     ULONG ConnectStatus          : 1; // Current Connect Status
@@ -44,13 +49,20 @@ typedef union _USB20_PORT_STATUS {
   ULONG AsULONG;
 } USB20_PORT_STATUS;
 
+struct _EHCI_STATIC_QH;
+struct _EHCI_ENDPOINT;
+
 typedef struct _EHCI_HCD_TD {
   //Hardware
   EHCI_QUEUE_TD HwTD;
   //Software
   struct _EHCI_HCD_TD * PhysicalAddress;
   ULONG TdFlags;
-  ULONG Pad[49];
+  struct _EHCI_ENDPOINT * EhciEndpoint;
+  struct _EHCI_TRANSFER * EhciTransfer;
+  struct _EHCI_HCD_TD * NextHcdTD;
+  struct _EHCI_HCD_TD * AltNextHcdTD;
+  ULONG Pad[45];
 } EHCI_HCD_TD, *PEHCI_HCD_TD;
 
 C_ASSERT(sizeof(EHCI_HCD_TD) == 0x100);
@@ -61,7 +73,11 @@ typedef struct _EHCI_HCD_QH {
   //Software
   struct _EHCI_HCD_QH * PhysicalAddress;
   ULONG QhFlags;
-  ULONG Pad[45];
+  struct _EHCI_ENDPOINT * EhciEndpoint;
+  struct _EHCI_STATIC_QH * StaticQH;
+  struct _EHCI_HCD_QH * PrevHead;
+  struct _EHCI_HCD_QH * NextHead;
+  ULONG Pad[41];
 } EHCI_HCD_QH, *PEHCI_HCD_QH;
 
 C_ASSERT(sizeof(EHCI_HCD_QH) == 0x100);
@@ -85,6 +101,12 @@ typedef struct _EHCI_ENDPOINT {
 
 typedef struct _EHCI_TRANSFER {
   ULONG Reserved;
+  PUSBPORT_TRANSFER_PARAMETERS TransferParameters;
+  ULONG USBDStatus;
+  ULONG TransferLen;
+  PEHCI_ENDPOINT EhciEndpoint;
+  ULONG PendingTds;
+  ULONG TransferOnAsyncList;
 } EHCI_TRANSFER, *PEHCI_TRANSFER;
 
 typedef struct _EHCI_STATIC_QH {
@@ -93,7 +115,9 @@ typedef struct _EHCI_STATIC_QH {
   //Software
   struct _EHCI_STATIC_QH * PhysicalAddress;
   ULONG QhFlags;
-  ULONG Pad[21];
+  PEHCI_HCD_QH PrevHead;
+  PEHCI_HCD_QH NextHead;
+  ULONG Pad[19];
 } EHCI_STATIC_QH, *PEHCI_STATIC_QH;
 
 C_ASSERT(sizeof(EHCI_STATIC_QH) == 0xA0);
