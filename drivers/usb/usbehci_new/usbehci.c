@@ -1978,6 +1978,41 @@ EHCI_InterruptNextSOF(IN PVOID ehciExtension)
     RegPacket.UsbPortInvalidateController(EhciExtension, 3);
 }
 
+USBD_STATUS
+NTAPI
+EHCI_GetErrorFromTD(IN PEHCI_HCD_TD TD)
+{
+    EHCI_TD_TOKEN Token;
+
+    DPRINT("EHCI_GetErrorFromTD: TD - %p\n", TD);
+
+    ASSERT(TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_HALTED);
+
+    Token = TD->HwTD.Token;
+
+    if (Token.Status & EHCI_TOKEN_STATUS_TRANSACTION_ERROR)
+    {
+        return USBD_STATUS_XACT_ERROR;
+    }
+
+    if ( Token.Status & EHCI_TOKEN_STATUS_BABBLE_DETECTED)
+    {
+        return USBD_STATUS_BABBLE_DETECTED;
+    }
+
+    if ( Token.Status & EHCI_TOKEN_STATUS_DATA_BUFFER_ERROR)
+    {
+        return USBD_STATUS_DATA_BUFFER_ERROR;
+    }
+
+    if ( Token.Status & EHCI_TOKEN_STATUS_MISSED_MICROFRAME)
+    {
+        return USBD_STATUS_XACT_ERROR;
+    }
+
+    return USBD_STATUS_STALL_PID;
+}
+
 VOID
 NTAPI
 EHCI_ProcessDoneAsyncTd(IN PEHCI_EXTENSION EhciExtension,
