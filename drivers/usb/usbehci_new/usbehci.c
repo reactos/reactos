@@ -2700,7 +2700,22 @@ EHCI_SetEndpointDataToggle(IN PVOID ehciExtension,
                            IN PVOID ehciEndpoint,
                            IN ULONG DataToggle)
 {
-    DPRINT1("EHCI_SetEndpointDataToggle: UNIMPLEMENTED. FIXME\n");
+    PEHCI_ENDPOINT EhciEndpoint;
+    ULONG TransferType;
+
+    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
+
+    DPRINT_EHCI("EHCI_SetEndpointDataToggle: EhciEndpoint - %p, DataToggle - %x\n",
+                EhciEndpoint,
+                DataToggle);
+
+    TransferType = EhciEndpoint->EndpointProperties.TransferType;
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_BULK ||
+        TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
+    {
+        EhciEndpoint->QH->HwQH.Token.DataToggle = DataToggle;
+    }
 }
 
 ULONG
