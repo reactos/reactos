@@ -2045,7 +2045,7 @@ EHCI_AbortIsoTransfer(IN PEHCI_EXTENSION EhciExtension,
                       IN PEHCI_ENDPOINT EhciEndpoint,
                       IN PEHCI_TRANSFER EhciTransfer)
 {
-    DPRINT("EHCI_AbortIsoTransfer: ... \n");
+    DPRINT1("EHCI_AbortIsoTransfer: UNIMPLEMENTED. FIXME\n");
 }
 
 VOID
@@ -2054,7 +2054,147 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
                         IN PEHCI_ENDPOINT EhciEndpoint,
                         IN PEHCI_TRANSFER EhciTransfer)
 {
+    PEHCI_HCD_QH QH;
+    PEHCI_HCD_TD TD;
+    ULONG TransferLength;
+    PEHCI_HCD_TD CurrentTD;
+    PEHCI_TRANSFER CurrentTransfer;
+    PEHCI_HCD_TD FirstTD;
+    PEHCI_HCD_TD LastTD;
+    PEHCI_HCD_TD NextTD;
+
     DPRINT("EHCI_AbortAsyncTransfer: ... \n");
+
+    QH = EhciEndpoint->QH;
+    TD = EhciEndpoint->HcdHeadP;
+
+    --EhciEndpoint->PendingTDs;
+
+    if (TD->EhciTransfer == EhciTransfer)
+    {
+        TransferLength = 0;
+
+        if (TD != EhciEndpoint->HcdTailP)
+        {
+            do
+            {
+                if (TD->EhciTransfer != EhciTransfer)
+                {
+                    break;
+                }
+
+                TransferLength += TD->LengthThisTD - TD->HwTD.Token.TransferBytes;
+
+                TD = TD->NextHcdTD;
+
+                TD->TdFlags = 0;
+                TD->HwTD.NextTD = 0;
+                TD->HwTD.AlternateNextTD = 0;
+
+                ++EhciEndpoint->RemainTDs;
+
+                TD->EhciTransfer = NULL;
+            }
+            while (TD != EhciEndpoint->HcdTailP);
+
+            if (TransferLength)
+            {
+                EhciTransfer->TransferLen += TransferLength;
+            }
+        }
+
+        QH->HwQH.CurrentTD = (ULONG)EhciEndpoint->DummyTdPA;
+        QH->HwQH.NextTD = (ULONG)TD->PhysicalAddress;
+        QH->HwQH.AlternateNextTD = TD->HwTD.AlternateNextTD;
+
+        QH->HwQH.Token.TransferBytes = 0;
+        QH->HwQH.Token.Status = (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE |
+                                         EHCI_TOKEN_STATUS_HALTED);
+
+        EhciEndpoint->HcdHeadP = TD;
+    }
+    else
+    {
+        CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)QH->HwQH.CurrentTD,
+                                                             EhciExtension,
+                                                             EhciEndpoint);
+
+        CurrentTransfer = CurrentTD->EhciTransfer;
+
+        TD = EhciEndpoint->HcdHeadP;
+
+        while (TD && TD->EhciTransfer != EhciTransfer)
+        {
+            TD = TD->NextHcdTD;
+        }
+
+        FirstTD = TD;
+
+        do
+        {
+            if (TD->EhciTransfer != EhciTransfer)
+            {
+                break;
+            }
+
+            TD->TdFlags = 0;
+            TD->HwTD.NextTD = 0;
+            TD->HwTD.AlternateNextTD = 0;
+
+            ++EhciEndpoint->RemainTDs;
+
+            TD->EhciTransfer = NULL;
+
+            TD = TD->NextHcdTD;
+        }
+        while (TD);
+
+        LastTD = TD;
+        NextTD = (PEHCI_HCD_TD)LastTD->PhysicalAddress->HwTD.NextTD;
+
+        FirstTD->HwTD.NextTD = (ULONG)LastTD->PhysicalAddress;
+        FirstTD->HwTD.AlternateNextTD = (ULONG)LastTD->PhysicalAddress;
+
+        FirstTD->NextHcdTD = LastTD;
+        FirstTD->AltNextHcdTD = LastTD;
+
+        if (CurrentTransfer == EhciTransfer)
+        {
+            QH->HwQH.CurrentTD = (ULONG)EhciEndpoint->DummyTdPA;
+
+            QH->HwQH.Token.Status = (UCHAR)~EHCI_TOKEN_STATUS_ACTIVE;
+            QH->HwQH.Token.TransferBytes = 0;
+
+            QH->HwQH.NextTD = (ULONG)NextTD;
+            QH->HwQH.AlternateNextTD = 1;
+
+            return;
+        }
+
+        if (FirstTD->EhciTransfer == CurrentTransfer)
+        {
+            if (QH->HwQH.NextTD == (ULONG)FirstTD->PhysicalAddress)
+            {
+                QH->HwQH.NextTD = (ULONG)NextTD;
+            }
+
+            if (QH->HwQH.AlternateNextTD == (ULONG)FirstTD->PhysicalAddress)
+            {
+                QH->HwQH.AlternateNextTD = (ULONG)NextTD;
+            }
+
+            for (TD = EhciEndpoint->HcdHeadP;
+                 TD;
+                 TD = TD->NextHcdTD)
+            {
+                if (TD->EhciTransfer == CurrentTransfer)
+                {
+                    TD->HwTD.AlternateNextTD = (ULONG)NextTD;
+                    TD->AltNextHcdTD = LastTD;
+                }
+            }
+        }
+    }
 }
 
 VOID
