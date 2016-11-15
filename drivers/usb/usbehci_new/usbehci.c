@@ -2691,7 +2691,34 @@ VOID
 NTAPI
 EHCI_PollController(IN PVOID ehciExtension)
 {
-    DPRINT1("EHCI_PollController: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+    PULONG OperationalRegs;
+    ULONG Port;
+    EHCI_PORT_STATUS_CONTROL PortSC;
+
+    DPRINT_EHCI("EHCI_PollController: ... \n");
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    OperationalRegs = EhciExtension->OperationalRegs;
+
+    if (!(EhciExtension->Flags & 1))
+    {
+        RegPacket.UsbPortInvalidateRootHub(EhciExtension);
+        return;
+    }
+
+    if (EhciExtension->NumberOfPorts)
+    {
+        for (Port = 0; Port < EhciExtension->NumberOfPorts; ++Port)
+        {
+            PortSC.AsULONG = READ_REGISTER_ULONG((OperationalRegs + EHCI_PORTSC) + Port);
+
+            if (PortSC.ConnectStatusChange)
+            {
+                RegPacket.UsbPortInvalidateRootHub(EhciExtension);
+            }
+        }
+    }
 }
 
 VOID
