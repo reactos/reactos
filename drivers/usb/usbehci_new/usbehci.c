@@ -1186,6 +1186,25 @@ EHCI_EnablePeriodicList(IN PEHCI_EXTENSION EhciExtension)
 
 VOID
 NTAPI
+EHCI_DisablePeriodicList(IN PEHCI_EXTENSION EhciExtension)
+{
+    PULONG OperationalRegs;
+    EHCI_USB_COMMAND Command;
+
+    DPRINT_EHCI("EHCI_DisablePeriodicList: ... \n");
+
+    if (EhciExtension->Flags & 0x20)
+    {
+        OperationalRegs = (PULONG)EhciExtension->OperationalRegs;
+
+        Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+        Command.PeriodicEnable = 0;
+        WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
+    }
+}
+
+VOID
+NTAPI
 EHCI_FlushAsyncCache(IN PEHCI_EXTENSION EhciExtension)
 {
     PULONG OperationalRegs;
