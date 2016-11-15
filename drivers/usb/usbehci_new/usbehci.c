@@ -2046,7 +2046,29 @@ EHCI_AbortTransfer(IN PVOID ehciExtension,
                    IN PVOID ehciTransfer,
                    IN PULONG CompletedLength)
 {
-    DPRINT1("EHCI_AbortTransfer: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+    PEHCI_ENDPOINT EhciEndpoint;
+    PEHCI_TRANSFER EhciTransfer;
+    ULONG TransferType;
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
+    EhciTransfer = (PEHCI_TRANSFER)ehciTransfer;
+
+    DPRINT_EHCI("EHCI_AbortTransfer: EhciTransfer - %p, CompletedLength - %x\n",
+                EhciTransfer,
+                CompletedLength);
+
+    TransferType = EhciEndpoint->EndpointProperties.TransferType;
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+    {
+        EHCI_AbortIsoTransfer(EhciExtension, EhciEndpoint, EhciTransfer);
+    }
+    else
+    {
+        EHCI_AbortAsyncTransfer(EhciExtension, EhciEndpoint, EhciTransfer);
+    }
 }
 
 ULONG
