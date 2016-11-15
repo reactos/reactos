@@ -1980,6 +1980,98 @@ EHCI_InterruptNextSOF(IN PVOID ehciExtension)
 
 VOID
 NTAPI
+EHCI_ProcessDoneAsyncTd(IN PEHCI_EXTENSION EhciExtension,
+                        IN PEHCI_HCD_TD TD)
+{
+    PEHCI_TRANSFER EhciTransfer;
+    PUSBPORT_TRANSFER_PARAMETERS TransferParameters;
+    ULONG TransferType;
+    PEHCI_ENDPOINT EhciEndpoint;
+    ULONG LengthTransfered;
+    USBD_STATUS USBDStatus;
+    PULONG OperationalRegs;
+    EHCI_USB_COMMAND Command;
+
+    DPRINT_EHCI("EHCI_ProcessDoneAsyncTd: TD - %p\n", TD);
+
+    EhciTransfer = TD->EhciTransfer;
+
+    TransferParameters = EhciTransfer->TransferParameters;
+    --EhciTransfer->PendingTDs;
+
+    EhciEndpoint = EhciTransfer->EhciEndpoint;
+
+    if (TD->TdFlags & 0x10)
+    {
+        goto Next;
+    }
+
+    if (TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_HALTED)
+    {
+       USBDStatus = EHCI_GetErrorFromTD(TD);
+    }
+    else
+    {
+        USBDStatus = USBD_STATUS_SUCCESS;
+    }
+
+    LengthTransfered = TD->LengthThisTD - TD->HwTD.Token.TransferBytes;
+
+    if (TD->HwTD.Token.PIDCode != 2)
+    {
+        EhciTransfer->TransferLen += LengthTransfered;
+    }
+
+    if (USBDStatus != USBD_STATUS_SUCCESS)
+    {
+        EhciTransfer->USBDStatus = USBDStatus;
+        goto Next;
+    }
+
+Next:
+
+    TD->HwTD.NextTD = 0;
+    TD->HwTD.AlternateNextTD = 0;
+
+    TD->TdFlags = 0;
+    TD->EhciTransfer = NULL;
+
+    ++EhciEndpoint->RemainTDs;
+
+    if (EhciTransfer->PendingTDs == 0)
+    {
+        --EhciEndpoint->PendingTDs;
+
+        TransferType = EhciEndpoint->EndpointProperties.TransferType;
+
+        if (TransferType == USBPORT_TRANSFER_TYPE_CONTROL ||
+            TransferType == USBPORT_TRANSFER_TYPE_BULK)
+        {
+            --EhciExtension->PendingTransfers;
+
+            if (EhciExtension->PendingTransfers == 0)
+            {
+                OperationalRegs = EhciExtension->OperationalRegs;
+                Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+
+                if (!Command.InterruptAdvanceDoorbell &&
+                   (EhciExtension->Flags & 20))
+                {
+                    EHCI_DisableAsyncList(EhciExtension);
+                }
+            }
+        }
+
+        RegPacket.UsbPortCompleteTransfer(EhciExtension,
+                                          EhciEndpoint,
+                                          TransferParameters,
+                                          EhciTransfer->USBDStatus,
+                                          EhciTransfer->TransferLen);
+    }
+}
+
+VOID
+NTAPI
 EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
                              IN PEHCI_ENDPOINT EhciEndpoint)
 {
