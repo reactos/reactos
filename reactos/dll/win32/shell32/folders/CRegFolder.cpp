@@ -356,10 +356,10 @@ HRESULT WINAPI CRegFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CH
 
 HRESULT WINAPI CRegFolder::GetDisplayNameOf(PCUITEMID_CHILD pidl, DWORD dwFlags, LPSTRRET strRet)
 {
-    if (!strRet || !_ILIsSpecialFolder(pidl))
+    if (!strRet || (!_ILIsSpecialFolder(pidl) && pidl != NULL))
         return E_INVALIDARG;
 
-    if (!pidl->mkid.cb)
+    if (!pidl || !pidl->mkid.cb)
     {
         if ((GET_SHGDN_RELATION(dwFlags) == SHGDN_NORMAL) && (GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING))
         {
