@@ -2041,6 +2041,24 @@ EHCI_SubmitIsoTransfer(IN PVOID ehciExtension,
 
 VOID
 NTAPI
+EHCI_AbortIsoTransfer(IN PEHCI_EXTENSION EhciExtension,
+                      IN PEHCI_ENDPOINT EhciEndpoint,
+                      IN PEHCI_TRANSFER EhciTransfer)
+{
+    DPRINT("EHCI_AbortIsoTransfer: ... \n");
+}
+
+VOID
+NTAPI
+EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
+                        IN PEHCI_ENDPOINT EhciEndpoint,
+                        IN PEHCI_TRANSFER EhciTransfer)
+{
+    DPRINT("EHCI_AbortAsyncTransfer: ... \n");
+}
+
+VOID
+NTAPI
 EHCI_AbortTransfer(IN PVOID ehciExtension,
                    IN PVOID ehciEndpoint,
                    IN PVOID ehciTransfer,
