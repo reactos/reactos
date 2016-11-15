@@ -39,6 +39,22 @@ CDrivesFolderEnum is only responsible for returning the physical items.
 *   IShellFolder implementation
 */
 
+HRESULT CDrivesContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
+                                          HWND hwnd,
+                                          UINT cidl,
+                                          PCUITEMID_CHILD_ARRAY apidl,
+                                          IShellFolder *psf,
+                                          IContextMenu **ppcm)
+{
+    HKEY hKeys[2];
+    UINT cKeys = 0;
+    AddClassKeyToArray(L"Drive", hKeys, &cKeys);
+    AddClassKeyToArray(L"Folder", hKeys, &cKeys);
+
+    /* TODO: also pass a callback here */
+    return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, NULL, cKeys, hKeys, ppcm);
+}
+
 HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
 {
     CComPtr<IDefaultExtractIconInit> initIcon;
@@ -536,7 +552,10 @@ HRESULT WINAPI CDrivesFolder::GetUIObjectOf(HWND hwndOwner,
 
     if (IsEqualIID (riid, IID_IContextMenu) && (cidl >= 1))
     {
-        hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, (IShellFolder*)this, NULL, 0, NULL, (IContextMenu**)&pObj);
+        if (_ILIsDrive(apidl[0]))
+            hr = CDrivesContextMenu_CreateInstance(pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), (IContextMenu**)&pObj);
+        else
+            hr = m_regFolder->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, &pObj);
     }
     else if (IsEqualIID (riid, IID_IDataObject) && (cidl >= 1))
     {
@@ -812,12 +831,6 @@ HRESULT WINAPI CDrivesFolder::GetClassID(CLSID *lpClassId)
  */
 HRESULT WINAPI CDrivesFolder::Initialize(LPCITEMIDLIST pidl)
 {
-    TRACE ("(%p)->(%p)\n", this, pidl);
-
-    if (pidlRoot)
-        SHFree((LPVOID)pidlRoot);
-
-    pidlRoot = ILClone(pidl);
     return S_OK;
 }
 
@@ -829,7 +842,7 @@ HRESULT WINAPI CDrivesFolder::GetCurFolder(LPITEMIDLIST *pidl)
     TRACE("(%p)->(%p)\n", this, pidl);
 
     if (!pidl)
-        return E_POINTER;
+        return E_INVALIDARG; /* xp doesn't have this check and crashes on NULL */
 
     *pidl = ILClone(pidlRoot);
     return S_OK;

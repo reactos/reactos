@@ -501,6 +501,52 @@ void AddClassKeyToArray(const WCHAR * szClass, HKEY* array, UINT* cKeys)
     *cKeys += 1;
 }
 
+void AddFSClassKeysToArray(PCUITEMID_CHILD pidl, HKEY* array, UINT* cKeys)
+{
+    if (_ILIsValue(pidl))
+    {
+        FileStructW* pFileData = _ILGetFileStructW(pidl);
+        LPWSTR extension = PathFindExtension(pFileData->wszName);
+
+        if (extension)
+        {
+            AddClassKeyToArray(extension, array, cKeys);
+
+            WCHAR wszClass[40], wszClass2[40];
+            DWORD dwSize = sizeof(wszClass);
+            if (RegGetValueW(HKEY_CLASSES_ROOT, extension, NULL, RRF_RT_REG_SZ, NULL, wszClass, &dwSize) == ERROR_SUCCESS)
+            {
+                swprintf(wszClass2, L"%s//%s", extension, wszClass);
+
+                AddClassKeyToArray(wszClass, array, cKeys);
+                AddClassKeyToArray(wszClass2, array, cKeys);
+            }
+
+            swprintf(wszClass2, L"SystemFileAssociations//%s", extension);
+            AddClassKeyToArray(wszClass2, array, cKeys);
+
+            if (RegGetValueW(HKEY_CLASSES_ROOT, extension, L"PerceivedType ", RRF_RT_REG_SZ, NULL, wszClass, &dwSize) == ERROR_SUCCESS)
+            {
+                swprintf(wszClass2, L"SystemFileAssociations//%s", wszClass);
+                AddClassKeyToArray(wszClass2, array, cKeys);
+            }
+        }
+
+        AddClassKeyToArray(L"AllFilesystemObjects", array, cKeys);
+        AddClassKeyToArray(L"*", array, cKeys);
+    }
+    else if (_ILIsFolder(pidl))
+    {
+        AddClassKeyToArray(L"AllFilesystemObjects", array, cKeys);
+        AddClassKeyToArray(L"Directory", array, cKeys);
+        AddClassKeyToArray(L"Folder", array, cKeys);
+    }
+    else
+    {
+        ERR("Got non FS pidl\n");
+    }
+}
+
 /***********************************************************************
  *  SHCreateLinks
  *

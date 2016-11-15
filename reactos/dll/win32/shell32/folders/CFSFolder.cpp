@@ -490,7 +490,10 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
         if (IsEqualIID(riid, IID_IContextMenu) && (cidl >= 1))
         {
             IContextMenu  * pCm = NULL;
-            hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), NULL, 0, NULL, &pCm);
+            HKEY hKeys[16];
+            UINT cKeys = 0;
+            AddFSClassKeysToArray(apidl[0], hKeys, &cKeys);
+            hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), NULL, cKeys, hKeys, &pCm);
             pObj = pCm;
         }
         else if (IsEqualIID (riid, IID_IDataObject))

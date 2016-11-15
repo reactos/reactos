@@ -1571,96 +1571,10 @@ CDefaultContextMenu_CreateInstance(const DEFCONTEXTMENU *pdcm, REFIID riid, void
  *
  */
 
-static void AddClassKey(const WCHAR * szClass, HKEY* buffer, UINT* cKeys)
-{
-    LSTATUS result;
-    HKEY hkey;
-    result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ | KEY_QUERY_VALUE, &hkey);
-    if (result != ERROR_SUCCESS)
-        return;
-
-    buffer[*cKeys] = hkey;
-    *cKeys +=1;
-}
-
-void HackFillKeys(DEFCONTEXTMENU *pdcm, HKEY* buffer)
-{
-    PCUITEMID_CHILD pidl = pdcm->apidl[0];
-    pdcm->cKeys = 0;
-    pdcm->aKeys = buffer;
-
-    if (_ILIsValue(pidl))
-    {
-        FileStructW* pFileData = _ILGetFileStructW(pidl);
-        LPWSTR extension = PathFindExtension(pFileData->wszName);
-
-        if (extension)
-        {
-            AddClassKey(extension, buffer, &pdcm->cKeys);
-
-            WCHAR wszClass[40], wszClass2[40];
-            DWORD dwSize = sizeof(wszClass);
-            if (RegGetValueW(HKEY_CLASSES_ROOT, extension, NULL, RRF_RT_REG_SZ, NULL, wszClass, &dwSize) == ERROR_SUCCESS)
-            {
-                swprintf(wszClass2, L"%s//%s", extension, wszClass);
-
-                AddClassKey(wszClass, buffer, &pdcm->cKeys);
-                AddClassKey(wszClass2, buffer, &pdcm->cKeys);
-            }
-
-            swprintf(wszClass2, L"SystemFileAssociations//%s", extension);
-            AddClassKey(wszClass2, buffer, &pdcm->cKeys);
-
-            if (RegGetValueW(HKEY_CLASSES_ROOT, extension, L"PerceivedType ", RRF_RT_REG_SZ, NULL, wszClass, &dwSize) == ERROR_SUCCESS)
-            {
-                swprintf(wszClass2, L"SystemFileAssociations//%s", wszClass);
-                AddClassKey(wszClass2, buffer, &pdcm->cKeys);
-            }
-        }
-
-        AddClassKey(L"AllFilesystemObjects", buffer, &pdcm->cKeys);
-        AddClassKey(L"*", buffer, &pdcm->cKeys);
-    }
-    else if (_ILIsSpecialFolder(pidl))
-    {
-        GUID *pGuid = _ILGetGUIDPointer(pidl);
-        if (pGuid)
-        {
-            LPOLESTR pwszCLSID;
-            WCHAR key[60];
-
-            wcscpy(key, L"CLSID\\");
-            HRESULT hr = StringFromCLSID(*pGuid, &pwszCLSID);
-            if (hr == S_OK)
-            {
-                wcscpy(&key[6], pwszCLSID);
-                AddClassKey(key, buffer, &pdcm->cKeys);
-            }
-        }
-        AddClassKey(L"Folder", buffer, &pdcm->cKeys);
-    }
-    else if (_ILIsFolder(pidl))
-    {
-        AddClassKey(L"AllFilesystemObjects", buffer, &pdcm->cKeys);
-        AddClassKey(L"Directory", buffer, &pdcm->cKeys);
-        AddClassKey(L"Folder", buffer, &pdcm->cKeys);
-    }
-    else if (_ILIsDrive(pidl))
-    {
-        AddClassKey(L"Drive", buffer, &pdcm->cKeys);
-        AddClassKey(L"Folder", buffer, &pdcm->cKeys);
-    }
-}
-
 HRESULT
 WINAPI
 SHCreateDefaultContextMenu(const DEFCONTEXTMENU *pdcm, REFIID riid, void **ppv)
 {
-   /* HACK: move to the shell folders implementation */
-    HKEY hkeyHack[16];
-    if (!pdcm->aKeys && pdcm->cidl)
-        HackFillKeys((DEFCONTEXTMENU *)pdcm, hkeyHack);
-
     HRESULT hr = CDefaultContextMenu_CreateInstance(pdcm, riid, ppv);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;

@@ -639,7 +639,21 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
 
     if (IsEqualIID (riid, IID_IContextMenu))
     {
-        hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, (IShellFolder *)this, NULL, 0, NULL, (IContextMenu **)&pObj);
+        if (_ILIsSpecialFolder(apidl[0]))
+        {
+            hr = m_regFolder->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, &pObj);
+        }
+        else
+        {
+            /* Do not use the context menu of the CFSFolder here. */
+            /* We need to pass a pointer of the CDesktopFolder  so as the data object that the context menu gets is rooted to the desktop */
+            /* Otherwise operations like that involve items from both user and shared desktop will not work */
+            IContextMenu  * pCm = NULL;
+            HKEY hKeys[16];
+            UINT cKeys = 0;
+            AddFSClassKeysToArray(apidl[0], hKeys, &cKeys);
+            hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), NULL, cKeys, hKeys, &pCm);
+        }
     }
     else if (IsEqualIID (riid, IID_IDataObject) && (cidl >= 1))
     {
@@ -817,14 +831,15 @@ HRESULT WINAPI CDesktopFolder::Initialize(LPCITEMIDLIST pidl)
 {
     TRACE ("(%p)->(%p)\n", this, pidl);
 
-    return E_NOTIMPL;
+    return E_INVALIDARG;
 }
 
 HRESULT WINAPI CDesktopFolder::GetCurFolder(LPITEMIDLIST * pidl)
 {
     TRACE ("(%p)->(%p)\n", this, pidl);
 
-    if (!pidl) return E_POINTER;
+    if (!pidl) 
+        return E_INVALIDARG; /* xp doesn't have this check and crashes on NULL */
     *pidl = ILClone (pidlRoot);
     return S_OK;
 }

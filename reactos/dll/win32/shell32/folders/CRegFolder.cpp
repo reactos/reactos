@@ -22,6 +22,35 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
+HRESULT CGuidItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
+                                            HWND hwnd,
+                                            UINT cidl,
+                                            PCUITEMID_CHILD_ARRAY apidl,
+                                            IShellFolder *psf,
+                                            IContextMenu **ppcm)
+{
+    HKEY hKeys[10];
+    UINT cKeys = 0;
+
+    GUID *pGuid = _ILGetGUIDPointer(apidl[0]);
+    if (pGuid)
+    {
+        LPOLESTR pwszCLSID;
+        WCHAR key[60];
+
+        wcscpy(key, L"CLSID\\");
+        HRESULT hr = StringFromCLSID(*pGuid, &pwszCLSID);
+        if (hr == S_OK)
+        {
+            wcscpy(&key[6], pwszCLSID);
+            AddClassKeyToArray(key, hKeys, &cKeys);
+        }
+    }
+    AddClassKeyToArray(L"Folder", hKeys, &cKeys);
+
+    return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, NULL, cKeys, hKeys, ppcm);
+}
+
 HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut)
 {
     CComPtr<IDefaultExtractIconInit>    initIcon;
@@ -175,13 +204,26 @@ HRESULT WINAPI CRegFolder::Initialize(const GUID *pGuid, LPCITEMIDLIST pidlRoot,
 
 HRESULT CRegFolder::GetGuidItemAttributes (LPCITEMIDLIST pidl, LPDWORD pdwAttributes)
 {
+    DWORD dwAttributes = *pdwAttributes;
+
     /* First try to get them from the registry */
-    if (HCR_GetFolderAttributes(pidl, pdwAttributes) && *pdwAttributes)
+    if (!HCR_GetFolderAttributes(pidl, pdwAttributes))
     {
-        return S_OK;
+        /* We couldn't get anything */
+        *pdwAttributes = 0;
     }
 
-    *pdwAttributes &= SFGAO_CANLINK;
+    /* Items have more attributes when on desktop */
+    if (_ILIsDesktop(m_pidlRoot))
+    {
+        *pdwAttributes |= (dwAttributes & (SFGAO_CANLINK|SFGAO_CANDELETE|SFGAO_CANRENAME|SFGAO_HASPROPSHEET));
+    }
+
+    /* In any case, links can be created */
+    if (*pdwAttributes == NULL)
+    {
+        *pdwAttributes |= (dwAttributes & SFGAO_CANLINK);
+    }
     return S_OK;
 }
 
@@ -346,8 +388,20 @@ HRESULT WINAPI CRegFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CH
     {
         hr = CGuidItemExtractIcon_CreateInstance(apidl[0], riid, &pObj);
     }
+    else if (IsEqualIID (riid, IID_IContextMenu) && (cidl >= 1))
+    {
+        if (!_ILGetGUIDPointer (apidl[0]))
+        {
+            ERR("Got non guid item!\n");
+            return E_FAIL;
+        }
+
+        hr = CGuidItemContextMenu_CreateInstance(m_pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), (IContextMenu**)&pObj);
+    }
     else
+    {
         hr = E_NOINTERFACE;
+    }
 
     *ppvOut = pObj;
     return hr;
