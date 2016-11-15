@@ -2708,8 +2708,27 @@ NTAPI
 EHCI_GetEndpointStatus(IN PVOID ehciExtension,
                        IN PVOID ehciEndpoint)
 {
-    DPRINT1("EHCI_GetEndpointStatus: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    PEHCI_ENDPOINT EhciEndpoint;
+    ULONG TransferType;
+    ULONG Status = 0;
+
+    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
+
+    DPRINT_EHCI("EHCI_GetEndpointStatus: EhciEndpoint - %p\n", EhciEndpoint);
+
+    TransferType = EhciEndpoint->EndpointProperties.TransferType;
+
+    if (TransferType == USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+    {
+        return Status;
+    }
+
+    if (EhciEndpoint->EndpointStatus & 1)
+    {
+        Status = 1;
+    }
+
+    return Status;
 }
 
 VOID
