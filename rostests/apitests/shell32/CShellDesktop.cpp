@@ -182,6 +182,10 @@ TestShellFolder(
     hr = psf2->CreateViewObject(NULL, IID_PPV_ARG(IShellView, &psv_2));
     ok(hr == S_OK, "hr = %lx\n", hr);
     ok(psv != psv_2, "Expected %p != %p\n", static_cast<PVOID>(psv), static_cast<PVOID>(psv_2));
+
+    STRRET strret;
+    hr = psf2->GetDisplayNameOf(NULL, 0, &strret);
+    ok(hr == S_OK, "hr = %lx\n", hr);
 }
 
 VOID TestInitialize(_In_ IShellFolder *psf)
