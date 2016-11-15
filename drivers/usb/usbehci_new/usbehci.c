@@ -1146,10 +1146,26 @@ EHCI_EnableAsyncList(IN PEHCI_EXTENSION EhciExtension)
     DPRINT_EHCI("EHCI_EnableAsyncList: ... \n");
 
     OperationalRegs = EhciExtension->OperationalRegs;
-    UsbCmd.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
 
+    UsbCmd.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
     UsbCmd.AsynchronousEnable = 1;
     WRITE_REGISTER_ULONG((OperationalRegs + EHCI_USBCMD), UsbCmd.AsULONG);
+}
+
+VOID
+NTAPI
+EHCI_DisableAsyncList(IN PEHCI_EXTENSION EhciExtension)
+{
+    PULONG OperationalRegs;
+    EHCI_USB_COMMAND UsbCmd;
+
+    DPRINT_EHCI("EHCI_DisableAsyncList: ... \n");
+
+    OperationalRegs = EhciExtension->OperationalRegs;
+
+    UsbCmd.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    UsbCmd.AsynchronousEnable = 0;
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, UsbCmd.AsULONG);
 }
 
 VOID
