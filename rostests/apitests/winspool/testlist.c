@@ -13,7 +13,8 @@
 extern void func_ClosePrinter(void);
 extern void func_EnumPrinters(void);
 extern void func_EnumPrintProcessorDatatypes(void);
-extern void func_GetPrintProcessorDirectory(void);
+extern void func_GetPrintProcessorDirectoryA(void);
+extern void func_GetPrintProcessorDirectoryW(void);
 extern void func_IsValidDevmodeA(void);
 extern void func_IsValidDevmodeW(void);
 extern void func_OpenPrinter(void);
@@ -24,7 +25,8 @@ const struct test winetest_testlist[] =
     { "ClosePrinter", func_ClosePrinter },
     { "EnumPrinters", func_EnumPrinters },
     { "EnumPrintProcessorDatatypes", func_EnumPrintProcessorDatatypes },
-    { "GetPrintProcessorDirectory", func_GetPrintProcessorDirectory },
+    { "GetPrintProcessorDirectoryA", func_GetPrintProcessorDirectoryA },
+    { "GetPrintProcessorDirectoryW", func_GetPrintProcessorDirectoryW },
     { "IsValidDevmodeA", func_IsValidDevmodeA },
     { "IsValidDevmodeW", func_IsValidDevmodeW },
     { "OpenPrinter", func_OpenPrinter },
