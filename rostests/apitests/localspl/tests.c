@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Local Spooler API Tests
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Test list
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2016 Colin Finck <colin@reactos.org>
  */
 
 /*
@@ -45,7 +45,7 @@ _RunRemoteTest(const char* szTestName)
     DWORD cbRead;
     DWORD cbWritten;
     HANDLE hCommandPipe = INVALID_HANDLE_VALUE;
-    HANDLE hFind = NULL;
+    HANDLE hFind = INVALID_HANDLE_VALUE;
     HANDLE hOutputPipe = INVALID_HANDLE_VALUE;
     PWSTR p;
     SC_HANDLE hSC = NULL;
@@ -77,7 +77,7 @@ _RunRemoteTest(const char* szTestName)
 
     // Check if the corresponding DLL file exists.
     hFind = FindFirstFileW(wszFilePath, &fd);
-    if (!hFind)
+    if (hFind == INVALID_HANDLE_VALUE)
     {
         skip("My DLL file \"%S\" does not exist!\n", wszFilePath);
         goto Cleanup;
@@ -187,13 +187,13 @@ _RunRemoteTest(const char* szTestName)
     bSuccessful = TRUE;
 
 Cleanup:
-    if (hCommandPipe)
+    if (hCommandPipe != INVALID_HANDLE_VALUE)
         CloseHandle(hCommandPipe);
 
-    if (hOutputPipe)
+    if (hOutputPipe != INVALID_HANDLE_VALUE)
         CloseHandle(hOutputPipe);
 
-    if (hFind)
+    if (hFind != INVALID_HANDLE_VALUE)
         FindClose(hFind);
 
     if (hService)
