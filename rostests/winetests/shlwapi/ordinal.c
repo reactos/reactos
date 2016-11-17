@@ -3243,10 +3243,8 @@ static void test_IUnknown_GetClassID(void)
     CLSID clsid, clsid2, clsid3;
     HRESULT hr;
 
-if (0) /* crashes on native systems */
-{
-    hr = pIUnknown_GetClassID(NULL, NULL);
-}
+    if (0) /* crashes on native systems */
+        hr = pIUnknown_GetClassID(NULL, NULL);
 
     memset(&clsid, 0xcc, sizeof(clsid));
     memset(&clsid3, 0xcc, sizeof(clsid3));
