@@ -2902,8 +2902,8 @@ static void test_ScriptString(HDC hdc)
     int             Charset;
     DWORD           Flags = SSA_GLYPHS;
     int             ReqWidth = 100;
-    const int       Dx[5] = {10, 10, 10, 10, 10};
-    const BYTE      InClass = 0;
+    static const int Dx[(sizeof(teststr) / sizeof(WCHAR)) - 1];
+    static const BYTE InClass[(sizeof(teststr) / sizeof(WCHAR)) - 1];
     SCRIPT_STRING_ANALYSIS ssa = NULL;
 
     int             X = 10; 
@@ -2922,26 +2922,26 @@ static void test_ScriptString(HDC hdc)
     /* Test without hdc to get E_PENDING */
     hr = ScriptStringAnalyse( NULL, teststr, len, Glyphs, Charset, Flags,
                               ReqWidth, NULL, NULL, Dx, NULL,
-                              &InClass, &ssa);
+                              InClass, &ssa);
     ok(hr == E_PENDING, "ScriptStringAnalyse Stub should return E_PENDING not %08x\n", hr);
 
     /* Test that 0 length string returns E_INVALIDARG  */
     hr = ScriptStringAnalyse( hdc, teststr, 0, Glyphs, Charset, Flags,
                               ReqWidth, NULL, NULL, Dx, NULL,
-                              &InClass, &ssa);
+                              InClass, &ssa);
     ok(hr == E_INVALIDARG, "ScriptStringAnalyse should return E_INVALIDARG not %08x\n", hr);
 
     /* test with hdc, this should be a valid test  */
     hr = ScriptStringAnalyse( hdc, teststr, len, Glyphs, Charset, Flags,
                               ReqWidth, NULL, NULL, Dx, NULL,
-                              &InClass, &ssa);
+                              InClass, &ssa);
     ok(hr == S_OK, "ScriptStringAnalyse should return S_OK not %08x\n", hr);
     ScriptStringFree(&ssa);
 
     /* test makes sure that a call with a valid pssa still works */
     hr = ScriptStringAnalyse( hdc, teststr, len, Glyphs, Charset, Flags,
                               ReqWidth, NULL, NULL, Dx, NULL,
-                              &InClass, &ssa);
+                              InClass, &ssa);
     ok(hr == S_OK, "ScriptStringAnalyse should return S_OK not %08x\n", hr);
     ok(ssa != NULL, "ScriptStringAnalyse pssa should not be NULL\n");
 
@@ -2985,7 +2985,7 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
     int             Charset = -1;                       /* unicode                        */
     DWORD           Flags = SSA_GLYPHS;
     int             ReqWidth = 100;
-    const BYTE      InClass = 0;
+    static const BYTE InClass[(sizeof(teststr1)/sizeof(WCHAR))-1];
     SCRIPT_STRING_ANALYSIS ssa = NULL;
 
     int             Ch;                                  /* Character position in string */
@@ -3002,7 +3002,7 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
 
     hr = ScriptStringAnalyse( hdc, String, String_len, Glyphs, Charset, Flags,
                               ReqWidth, NULL, NULL, NULL, NULL,
-                              &InClass, &ssa);
+                              InClass, &ssa);
     ok(hr == S_OK ||
        hr == E_INVALIDARG, /* NT */
        "ScriptStringAnalyse should return S_OK or E_INVALIDARG not %08x\n", hr);
@@ -3142,7 +3142,7 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
          */
         hr = ScriptStringAnalyse( hdc, String, String_len, Glyphs, Charset, Flags,
                                   ReqWidth, NULL, NULL, NULL, NULL,
-                                  &InClass, &ssa);
+                                  InClass, &ssa);
         ok(hr == S_OK, "ScriptStringAnalyse should return S_OK not %08x\n", hr);
 
         /*
@@ -3613,6 +3613,58 @@ static void test_ScriptGetFontFunctions(HDC hdc)
     }
 }
 
+struct logical_width_test
+{
+    int char_count;
+    int glyph_count;
+    int advances[3];
+    WORD map[3];
+    int widths[3];
+    BOOL clusterstart[3];
+    BOOL diacritic[3];
+    BOOL zerowidth[3];
+    BOOL todo;
+};
+
+static const struct logical_width_test logical_width_tests[] =
+{
+    { 3, 3, { 6, 9, 12 }, { 0, 1, 2 }, {  6,  9, 12 }, { 1, 1, 1 } },
+    { 3, 3, { 6, 9, 12 }, { 0, 1, 2 }, {  6,  9, 12 }, { 1, 1, 1 }, { 1, 0, 0 } },
+    { 3, 3, { 6, 9, 12 }, { 0, 1, 2 }, {  6,  9, 12 }, { 1, 1, 1 }, { 0 }, { 1, 1, 1 } },
+    { 3, 3, { 6, 9, 12 }, { 0, 1, 2 }, { 27, 21, 12 }, { 0, 0, 0 }, { 0 }, { 0 }, TRUE },
+    { 3, 3, { 6, 9, 12 }, { 0, 1, 2 }, {  6, 21, 12 }, { 0, 1, 0 }, { 0 }, { 0 }, TRUE },
+    { 3, 3, { 6, 9, 12 }, { 0, 1, 2 }, {  6, 21, 12 }, { 1, 1, 0 }, { 0 }, { 0 }, TRUE },
+    { 3, 3, { 6, 9, 12 }, { 0, 2, 2 }, { 15,  6,  6 }, { 1, 0, 1 } },
+};
+
+static void test_ScriptGetLogicalWidths(void)
+{
+    SCRIPT_ANALYSIS sa = { 0 };
+    unsigned int i, j;
+
+    for (i = 0; i < sizeof(logical_width_tests)/sizeof(logical_width_tests[0]); i++)
+    {
+        const struct logical_width_test *ptr = logical_width_tests + i;
+        SCRIPT_VISATTR attrs[3];
+        int widths[3];
+        HRESULT hr;
+
+        memset(attrs, 0, sizeof(attrs));
+        for (j = 0; j < ptr->glyph_count; j++)
+        {
+            attrs[j].fClusterStart = ptr->clusterstart[j];
+            attrs[j].fDiacritic = ptr->diacritic[j];
+            attrs[j].fZeroWidth = ptr->zerowidth[j];
+        }
+
+        hr = ScriptGetLogicalWidths(&sa, ptr->char_count, ptr->glyph_count, ptr->advances, ptr->map, attrs, widths);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        todo_wine_if(ptr->todo)
+            ok(!memcmp(ptr->widths, widths, sizeof(widths)), "test %u: got wrong widths\n", i);
+    }
+}
+
 START_TEST(usp10)
 {
     HWND            hwnd;
@@ -3666,6 +3718,7 @@ START_TEST(usp10)
     test_newlines();
 
     test_ScriptGetFontFunctions(hdc);
+    test_ScriptGetLogicalWidths();
 
     ReleaseDC(hwnd, hdc);
     DestroyWindow(hwnd);
