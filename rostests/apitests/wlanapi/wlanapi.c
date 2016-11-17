@@ -18,15 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <apitest.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wlanapi.h"
-
-#include "wine/test.h"
+#include <wlanapi.h>
 
 static const GUID InterfaceGuid = {0x439b20af, 0x8955, 0x405b, {0x99, 0xf0, 0xa6, 0x2a, 0xf0, 0xc6, 0x8d, 0x43}};
 
@@ -43,20 +37,20 @@ static void WlanOpenHandle_test(void)
         skip("Skipping wlanapi tests, WlanSvc is not running\n");
         return;
     }
-    ok(ret == ERROR_SUCCESS, "WlanOpenHandle failed, error %d\n", ret);
+    ok(ret == ERROR_SUCCESS, "WlanOpenHandle failed, error %ld\n", ret);
     WlanCloseHandle(hClientHandle, NULL);
 
     /* invalid pdwNegotiatedVersion */
     ret = WlanOpenHandle(1, NULL, NULL, &hClientHandle);
-    ok(ret == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    ok(ret == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
 
     /* invalid hClientHandle */
     ret = WlanOpenHandle(1, NULL, &dwNegotiatedVersion, NULL);
-    ok(ret == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    ok(ret == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
 
     /* invalid pReserved */
     ret = WlanOpenHandle(1, (PVOID) 1, &dwNegotiatedVersion, &hClientHandle);
-    ok(ret == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    ok(ret == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
 }
 
 static void WlanCloseHandle_test(void)
