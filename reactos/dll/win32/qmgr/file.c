@@ -193,7 +193,7 @@ HRESULT BackgroundCopyFileConstructor(BackgroundCopyJobImpl *owner,
     return S_OK;
 }
 
-static HRESULT error_from_http_response(DWORD code)
+static HRESULT hresult_from_http_response(DWORD code)
 {
     switch (code)
     {
@@ -231,7 +231,7 @@ static void CALLBACK progress_callback_http(HINTERNET handle, DWORD_PTR context,
         if (WinHttpQueryHeaders(handle, WINHTTP_QUERY_STATUS_CODE|WINHTTP_QUERY_FLAG_NUMBER,
                                 NULL, &code, &size, NULL))
         {
-            if ((job->error.code = error_from_http_response(code)))
+            if ((job->error.code = hresult_from_http_response(code)))
             {
                 EnterCriticalSection(&job->cs);
 
@@ -273,7 +273,7 @@ static void CALLBACK progress_callback_http(HINTERNET handle, DWORD_PTR context,
     case WINHTTP_CALLBACK_STATUS_REQUEST_ERROR:
     {
         WINHTTP_ASYNC_RESULT *result = (WINHTTP_ASYNC_RESULT *)buf;
-        job->error.code = result->dwError;
+        job->error.code = HRESULT_FROM_WIN32(result->dwError);
         transitionJobState(job, BG_JOB_STATE_TRANSFERRING, BG_JOB_STATE_ERROR);
         break;
     }
@@ -378,10 +378,10 @@ static BOOL transfer_file_http(BackgroundCopyFileImpl *file, URL_COMPONENTSW *uc
     if (!set_request_credentials(req, job)) goto done;
 
     if (!(WinHttpSendRequest(req, job->http_options.headers, ~0u, NULL, 0, 0, (DWORD_PTR)file))) goto done;
-    if (wait_for_completion(job) || job->error.code) goto done;
+    if (wait_for_completion(job) || FAILED(job->error.code)) goto done;
 
     if (!(WinHttpReceiveResponse(req, NULL))) goto done;
-    if (wait_for_completion(job) || job->error.code) goto done;
+    if (wait_for_completion(job) || FAILED(job->error.code)) goto done;
 
     transitionJobState(job, BG_JOB_STATE_CONNECTING, BG_JOB_STATE_TRANSFERRING);
 
@@ -392,7 +392,7 @@ static BOOL transfer_file_http(BackgroundCopyFileImpl *file, URL_COMPONENTSW *uc
     {
         file->read_size = 0;
         if (!(ret = WinHttpReadData(req, buf, sizeof(buf), NULL))) break;
-        if (wait_for_completion(job) || job->error.code)
+        if (wait_for_completion(job) || FAILED(job->error.code))
         {
             ret = FALSE;
             break;

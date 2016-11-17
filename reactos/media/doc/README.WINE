@@ -153,7 +153,7 @@ reactos/dll/win32/powrprof            # Forked at Wine-1.0rc5
 reactos/dll/win32/printui             # Synced to WineStaging-1.9.11
 reactos/dll/win32/propsys             # Synced to WineStaging-1.9.16
 reactos/dll/win32/pstorec             # Synced to WineStaging-1.9.16
-reactos/dll/win32/qmgr                # Synced to WineStaging-1.9.11
+reactos/dll/win32/qmgr                # Synced to WineStaging-1.9.23
 reactos/dll/win32/qmgrprxy            # Synced to WineStaging-1.9.11
 reactos/dll/win32/query               # Synced to WineStaging-1.9.11
 reactos/dll/win32/rasapi32            # Synced to WineStaging-1.9.11
