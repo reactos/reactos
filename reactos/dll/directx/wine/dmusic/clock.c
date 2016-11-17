@@ -136,7 +136,7 @@ HRESULT DMUSIC_CreateReferenceClockImpl(LPCGUID riid, LPVOID* ret_iface, LPUNKNO
 
     DMUSIC_LockModule();
     hr = IReferenceClockImpl_QueryInterface(&clock->IReferenceClock_iface, riid, ret_iface);
-    IReferenceClockImpl_Release(&clock->IReferenceClock_iface);
+    IReferenceClock_Release(&clock->IReferenceClock_iface);
 
     return hr;
 }
