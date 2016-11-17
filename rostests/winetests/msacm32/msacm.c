@@ -591,17 +591,21 @@ static void test_prepareheader(void)
     hdr.cbDstLength = sizeof(pcm);
 
     mr = acmStreamPrepareHeader(has, &hdr, 0);
-todo_wine
     ok(mr == MMSYSERR_INVALPARAM, "expected 0x0b, got 0x%x\n", mr);
 
     hdr.cbSrcLength = src->wfx.nBlockAlign - 1; /* less than block align */
     mr = acmStreamPrepareHeader(has, &hdr, 0);
-todo_wine
     ok(mr == ACMERR_NOTPOSSIBLE, "expected 0x200, got 0x%x\n", mr);
+
+    hdr.cbSrcLength = src->wfx.nBlockAlign + 1; /* more than block align */
+    mr = acmStreamPrepareHeader(has, &hdr, 0);
+    ok(mr == MMSYSERR_NOERROR, "prepare failed: 0x%x\n", mr);
+
+    mr = acmStreamUnprepareHeader(has, &hdr, 0);
+    ok(mr == MMSYSERR_NOERROR, "unprepare failed: 0x%x\n", mr);
 
     hdr.cbSrcLength = src->wfx.nBlockAlign;
     mr = acmStreamPrepareHeader(has, &hdr, 1); /* invalid use of reserved parameter */
-todo_wine
     ok(mr == MMSYSERR_INVALFLAG, "expected 0x0a, got 0x%x\n", mr);
 
     mr = acmStreamPrepareHeader(has, &hdr, 0);
@@ -675,7 +679,6 @@ todo_wine
     hdr.pbDst = pcm;
     hdr.cbDstLength = -4;
     mr = acmStreamPrepareHeader(has, &hdr, 0);
-todo_wine {
     ok(mr == ACMERR_NOTPOSSIBLE, "expected 0x200, got 0x%x\n", mr);
     ok(hdr.fdwStatus == 0, "expected 0, got 0x%x\n", hdr.fdwStatus);
 
@@ -688,7 +691,7 @@ todo_wine {
 
     mr = acmStreamUnprepareHeader(has, &hdr, 0);
     ok(mr == ACMERR_UNPREPARED, "expected 0x202, got 0x%x\n", mr);
-}
+
     /* Less output space than required */
     memset(&hdr, 0, sizeof(hdr));
     hdr.cbStruct = sizeof(hdr);
@@ -826,9 +829,80 @@ todo_wine
     ok(rc == MMSYSERR_INVALPARAM, "failed with error 0x%x\n", rc);
 }
 
+void test_mp3(void)
+{
+    MPEGLAYER3WAVEFORMAT src;
+    WAVEFORMATEX dst;
+    HACMSTREAM has;
+    DWORD output;
+    MMRESULT mr;
+
+    src.wfx.wFormatTag = WAVE_FORMAT_MPEGLAYER3;
+    src.wfx.nSamplesPerSec = 11025;
+    src.wfx.wBitsPerSample = 0;
+    src.wfx.nChannels = 1;
+    src.wfx.nBlockAlign = 576;
+    src.wfx.nAvgBytesPerSec = 2000;
+
+    src.wID = MPEGLAYER3_ID_MPEG;
+    src.fdwFlags = 0;
+    src.nBlockSize = 576;
+    src.nFramesPerBlock = 1;
+    src.nCodecDelay = 0;
+
+    dst.cbSize = 0;
+    dst.wFormatTag = WAVE_FORMAT_PCM;
+    dst.nSamplesPerSec = 11025;
+    dst.wBitsPerSample = 16;
+    dst.nChannels = 1;
+    dst.nBlockAlign = dst.wBitsPerSample * dst.nChannels / 8;
+    dst.nAvgBytesPerSec = dst.nSamplesPerSec * dst.nBlockAlign;
+
+    src.wfx.cbSize = 0;
+
+    mr = acmStreamOpen(&has, NULL, (WAVEFORMATEX*)&src, &dst, NULL, 0, 0, 0);
+    ok(mr == ACMERR_NOTPOSSIBLE, "expected error ACMERR_NOTPOSSIBLE, got 0x%x\n", mr);
+    if (mr == MMSYSERR_NOERROR) acmStreamClose(has, 0);
+
+    src.wfx.cbSize = MPEGLAYER3_WFX_EXTRA_BYTES;
+    src.wID = 0;
+
+    mr = acmStreamOpen(&has, NULL, (WAVEFORMATEX*)&src, &dst, NULL, 0, 0, 0);
+    ok(mr == ACMERR_NOTPOSSIBLE, "expected error ACMERR_NOTPOSSIBLE, got 0x%x\n", mr);
+    if (mr == MMSYSERR_NOERROR) acmStreamClose(has, 0);
+
+    src.wID = MPEGLAYER3_ID_MPEG;
+    src.nBlockSize = 0;
+
+    mr = acmStreamOpen(&has, NULL, (WAVEFORMATEX*)&src, &dst, NULL, 0, 0, 0);
+    ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
+    mr = acmStreamClose(has, 0);
+    ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
+
+    src.nBlockSize = 576;
+    src.wfx.nAvgBytesPerSec = 0;
+
+    mr = acmStreamOpen(&has, NULL, (WAVEFORMATEX*)&src, &dst, NULL, 0, 0, 0);
+    ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
+    /* causes a division by zero exception */
+    if (0) acmStreamSize(has, 4000, &output, ACM_STREAMSIZEF_SOURCE);
+    mr = acmStreamClose(has, 0);
+    ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
+
+    src.wfx.nAvgBytesPerSec = 2000;
+
+    mr = acmStreamOpen(&has, NULL, (WAVEFORMATEX*)&src, &dst, NULL, 0, 0, 0);
+    ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
+    mr = acmStreamSize(has, 4000, &output, ACM_STREAMSIZEF_SOURCE);
+    ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
+    mr = acmStreamClose(has, 0);
+    ok(mr == MMSYSERR_NOERROR, "failed with error 0x%x\n", mr);
+}
+
 START_TEST(msacm)
 {
     driver_tests();
     test_prepareheader();
     test_acmFormatSuggest();
+    test_mp3();
 }
