@@ -21,17 +21,51 @@
 GpStatus WINGDIPAPI GdipCloneImageAttributes(GDIPCONST GpImageAttributes *imageattr,
     GpImageAttributes **cloneImageattr)
 {
-    GpStatus stat;
+    GpStatus stat = Ok;
+    struct color_remap_table remap_tables[ColorAdjustTypeCount] = {{0}};
+    int i;
 
     TRACE("(%p, %p)\n", imageattr, cloneImageattr);
 
     if(!imageattr || !cloneImageattr)
         return InvalidParameter;
 
-    stat = GdipCreateImageAttributes(cloneImageattr);
+    for (i=0; i<ColorAdjustTypeCount; i++)
+    {
+        if (imageattr->colorremaptables[i].enabled)
+        {
+            remap_tables[i].enabled = TRUE;
+            remap_tables[i].mapsize = imageattr->colorremaptables[i].mapsize;
+            remap_tables[i].colormap = heap_alloc(sizeof(ColorMap) * remap_tables[i].mapsize);
+
+            if (remap_tables[i].colormap)
+            {
+                memcpy(remap_tables[i].colormap, imageattr->colorremaptables[i].colormap,
+                    sizeof(ColorMap) * remap_tables[i].mapsize);
+            }
+            else
+            {
+                stat = OutOfMemory;
+                break;
+            }
+        }
+    }
 
     if (stat == Ok)
+        stat = GdipCreateImageAttributes(cloneImageattr);
+
+    if (stat == Ok)
+    {
         **cloneImageattr = *imageattr;
+
+        memcpy((*cloneImageattr)->colorremaptables, remap_tables, sizeof(remap_tables));
+    }
+
+    if (stat != Ok)
+    {
+        for (i=0; i<ColorAdjustTypeCount; i++)
+            heap_free(remap_tables[i].colormap);
+    }
 
     return stat;
 }
