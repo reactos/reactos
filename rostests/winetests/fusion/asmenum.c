@@ -41,7 +41,7 @@ static HRESULT (WINAPI *pCreateAssemblyEnum)(IAssemblyEnum **pEnum,
                                              IUnknown *pUnkReserved,
                                              IAssemblyName *pName,
                                              DWORD dwFlags, LPVOID pvReserved);
-static HRESULT (WINAPI *pCreateAssemblyNameObject)(LPASSEMBLYNAME *ppAssemblyNameObj,
+static HRESULT (WINAPI *pCreateAssemblyNameObject)(IAssemblyName **ppAssemblyNameObj,
                                                    LPCWSTR szAssemblyName, DWORD dwFlags,
                                                    LPVOID pvReserved);
 static HRESULT (WINAPI *pGetCachePath)(ASM_CACHE_FLAGS dwCacheFlags,

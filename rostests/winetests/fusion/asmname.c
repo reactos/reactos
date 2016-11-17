@@ -44,7 +44,7 @@ static CHAR string1[MAX_PATH];
     if (lstrcmpA(string1, aString) != 0) \
         ok(0, "Expected \"%s\", got \"%s\"\n", aString, string1);
 
-static HRESULT (WINAPI *pCreateAssemblyNameObject)(LPASSEMBLYNAME *ppAssemblyNameObj,
+static HRESULT (WINAPI *pCreateAssemblyNameObject)(IAssemblyName **ppAssemblyNameObj,
                                                    LPCWSTR szAssemblyName, DWORD dwFlags,
                                                    LPVOID pvReserved);
 static HRESULT (WINAPI *pLoadLibraryShim)(LPCWSTR szDllName, LPCWSTR szVersion,
