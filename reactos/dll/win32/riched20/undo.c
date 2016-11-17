@@ -155,7 +155,7 @@ BOOL add_undo_set_para_fmt( ME_TextEditor *editor, const ME_Paragraph *para )
     if (!undo) return FALSE;
 
     undo->u.set_para_fmt.pos = para->nCharOfs;
-    undo->u.set_para_fmt.fmt = *para->pFmt;
+    undo->u.set_para_fmt.fmt = para->fmt;
     undo->u.set_para_fmt.border = para->border;
 
     return TRUE;
@@ -189,7 +189,7 @@ BOOL add_undo_split_para( ME_TextEditor *editor, const ME_Paragraph *para, ME_St
 
     undo->u.split_para.pos = para->nCharOfs - eol_str->nLen;
     undo->u.split_para.eol_str = eol_str;
-    undo->u.split_para.fmt = *para->pFmt;
+    undo->u.split_para.fmt = para->fmt;
     undo->u.split_para.border = para->border;
     undo->u.split_para.flags = para->prev_para->member.para.nFlags & ~MEPF_CELL;
 
@@ -339,7 +339,7 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, struct undo_item *undo)
     ME_CursorFromCharOfs(editor, undo->u.set_para_fmt.pos, &tmp);
     para = ME_FindItemBack(tmp.pRun, diParagraph);
     add_undo_set_para_fmt( editor, &para->member.para );
-    *para->member.para.pFmt = undo->u.set_para_fmt.fmt;
+    para->member.para.fmt = undo->u.set_para_fmt.fmt;
     para->member.para.border = undo->u.set_para_fmt.border;
     para->member.para.nFlags |= MEPF_REWRAP;
     break;
@@ -349,7 +349,7 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, struct undo_item *undo)
     ME_Cursor start, end;
     ME_CursorFromCharOfs(editor, undo->u.set_char_fmt.pos, &start);
     end = start;
-    ME_MoveCursorChars(editor, &end, undo->u.set_char_fmt.len);
+    ME_MoveCursorChars(editor, &end, undo->u.set_char_fmt.len, FALSE);
     ME_SetCharFormat(editor, &start, &end, &undo->u.set_char_fmt.fmt);
     break;
   }
@@ -398,7 +398,7 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, struct undo_item *undo)
                                  undo->u.split_para.eol_str->szData, undo->u.split_para.eol_str->nLen, paraFlags);
     if (bFixRowStart)
       new_para->member.para.nFlags |= MEPF_ROWSTART;
-    *new_para->member.para.pFmt = undo->u.split_para.fmt;
+    new_para->member.para.fmt = undo->u.split_para.fmt;
     new_para->member.para.border = undo->u.split_para.border;
     if (paraFlags)
     {

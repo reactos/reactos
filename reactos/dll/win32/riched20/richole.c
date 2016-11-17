@@ -437,7 +437,7 @@ static HRESULT get_textfont_prop_for_pos(const IRichEditOleImpl *reole, int pos,
 
     ME_CursorFromCharOfs(reole->editor, pos, &from);
     to = from;
-    ME_MoveCursorChars(reole->editor, &to, 1);
+    ME_MoveCursorChars(reole->editor, &to, 1, FALSE);
     ME_GetCharFormat(reole->editor, &from, &to, &fmt);
 
     switch (propid)

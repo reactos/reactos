@@ -27,8 +27,7 @@ static ME_DisplayItem *make_para(ME_TextEditor *editor)
 {
     ME_DisplayItem *item = ME_MakeDI(diParagraph);
 
-    item->member.para.pFmt = ALLOC_OBJ(PARAFORMAT2);
-    ME_SetDefaultParaFormat(editor, item->member.para.pFmt);
+    ME_SetDefaultParaFormat(editor, &item->member.para.fmt);
     item->member.para.nFlags = MEPF_REWRAP;
     return item;
 }
@@ -53,11 +52,12 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
   GetObjectW(hf, sizeof(LOGFONTW), &lf);
   ZeroMemory(&cf, sizeof(cf));
   cf.cbSize = sizeof(cf);
-  cf.dwMask = CFM_BACKCOLOR|CFM_COLOR|CFM_FACE|CFM_SIZE|CFM_CHARSET;
+  cf.dwMask = CFM_ANIMATION|CFM_BACKCOLOR|CFM_CHARSET|CFM_COLOR|CFM_FACE|CFM_KERNING|CFM_LCID|CFM_OFFSET;
+  cf.dwMask |= CFM_REVAUTHOR|CFM_SIZE|CFM_SPACING|CFM_STYLE|CFM_UNDERLINETYPE|CFM_WEIGHT;
   cf.dwMask |= CFM_ALLCAPS|CFM_BOLD|CFM_DISABLED|CFM_EMBOSS|CFM_HIDDEN;
   cf.dwMask |= CFM_IMPRINT|CFM_ITALIC|CFM_LINK|CFM_OUTLINE|CFM_PROTECTED;
   cf.dwMask |= CFM_REVISED|CFM_SHADOW|CFM_SMALLCAPS|CFM_STRIKEOUT;
-  cf.dwMask |= CFM_SUBSCRIPT|CFM_UNDERLINETYPE|CFM_WEIGHT;
+  cf.dwMask |= CFM_SUBSCRIPT|CFM_UNDERLINE;
   
   cf.dwEffects = CFE_AUTOCOLOR | CFE_AUTOBACKCOLOR;
   lstrcpyW(cf.szFaceName, lf.lfFaceName);
@@ -66,10 +66,12 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
   if (lf.lfWeight > FW_NORMAL) cf.dwEffects |= CFE_BOLD;
   cf.wWeight = lf.lfWeight;
   if (lf.lfItalic) cf.dwEffects |= CFE_ITALIC;
-  cf.bUnderlineType = (lf.lfUnderline) ? CFU_CF1UNDERLINE : CFU_UNDERLINENONE;
+  if (lf.lfUnderline) cf.dwEffects |= CFE_UNDERLINE;
+  cf.bUnderlineType = CFU_UNDERLINE;
   if (lf.lfStrikeOut) cf.dwEffects |= CFE_STRIKEOUT;
   cf.bPitchAndFamily = lf.lfPitchAndFamily;
   cf.bCharSet = lf.lfCharSet;
+  cf.lcid = GetSystemDefaultLCID();
 
   style = ME_MakeStyle(&cf);
   text->pDefaultStyle = style;
@@ -81,6 +83,8 @@ void ME_MakeFirstParagraph(ME_TextEditor *editor)
   run->member.run.nCharOfs = 0;
   run->member.run.len = eol_len;
   run->member.run.para = &para->member.para;
+
+  para->member.para.eop_run = &run->member.run;
 
   ME_InsertBefore(text->pLast, para);
   ME_InsertBefore(text->pLast, run);
@@ -110,29 +114,234 @@ void ME_MarkAllForWrapping(ME_TextEditor *editor)
 
 static void ME_UpdateTableFlags(ME_DisplayItem *para)
 {
-  para->member.para.pFmt->dwMask |= PFM_TABLE|PFM_TABLEROWDELIMITER;
+  para->member.para.fmt.dwMask |= PFM_TABLE|PFM_TABLEROWDELIMITER;
   if (para->member.para.pCell) {
     para->member.para.nFlags |= MEPF_CELL;
   } else {
     para->member.para.nFlags &= ~MEPF_CELL;
   }
   if (para->member.para.nFlags & MEPF_ROWEND) {
-    para->member.para.pFmt->wEffects |= PFE_TABLEROWDELIMITER;
+    para->member.para.fmt.wEffects |= PFE_TABLEROWDELIMITER;
   } else {
-    para->member.para.pFmt->wEffects &= ~PFE_TABLEROWDELIMITER;
+    para->member.para.fmt.wEffects &= ~PFE_TABLEROWDELIMITER;
   }
   if (para->member.para.nFlags & (MEPF_ROWSTART|MEPF_CELL|MEPF_ROWEND))
-    para->member.para.pFmt->wEffects |= PFE_TABLE;
+    para->member.para.fmt.wEffects |= PFE_TABLE;
   else
-    para->member.para.pFmt->wEffects &= ~PFE_TABLE;
+    para->member.para.fmt.wEffects &= ~PFE_TABLE;
 }
 
-static BOOL ME_SetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, const PARAFORMAT2 *pFmt)
+static inline BOOL para_num_same_list( const PARAFORMAT2 *item, const PARAFORMAT2 *base )
+{
+    return item->wNumbering == base->wNumbering &&
+        item->wNumberingStart == base->wNumberingStart &&
+        item->wNumberingStyle == base->wNumberingStyle &&
+        !(item->wNumberingStyle & PFNS_NEWNUMBER);
+}
+
+static int para_num_get_num( ME_Paragraph *para )
+{
+    ME_DisplayItem *prev;
+    int num = para->fmt.wNumberingStart;
+
+    for (prev = para->prev_para; prev->type == diParagraph;
+         para = &prev->member.para, prev = prev->member.para.prev_para, num++)
+    {
+        if (!para_num_same_list( &prev->member.para.fmt, &para->fmt )) break;
+    }
+    return num;
+}
+
+static ME_String *para_num_get_str( ME_Paragraph *para, WORD num )
+{
+    /* max 4 Roman letters (representing '8') / decade + '(' + ')' */
+    ME_String *str = ME_MakeStringEmpty( 20 + 2 );
+    WCHAR *p;
+    static const WCHAR fmtW[] = {'%', 'd', 0};
+    static const WORD letter_base[] = { 1, 26, 26 * 26, 26 * 26 * 26 };
+    /* roman_base should start on a '5' not a '1', otherwise the 'total' code will need adjusting.
+       'N' and 'O' are what MS uses for 5000 and 10000, their version doesn't work well above 30000,
+       but we'll use 'P' as the obvious extension, this gets us up to 2^16, which is all we care about. */
+    static const struct
+    {
+        int base;
+        char letter;
+    }
+    roman_base[] =
+    {
+        {50000, 'P'}, {10000, 'O'}, {5000, 'N'}, {1000, 'M'},
+        {500, 'D'}, {100, 'C'}, {50, 'L'}, {10, 'X'}, {5, 'V'}, {1, 'I'}
+    };
+    int i, len;
+    WORD letter, total, char_offset = 0;
+
+    if (!str) return NULL;
+
+    p = str->szData;
+
+    if ((para->fmt.wNumberingStyle & 0xf00) == PFNS_PARENS)
+        *p++ = '(';
+
+    switch (para->fmt.wNumbering)
+    {
+    case PFN_ARABIC:
+    default:
+        p += sprintfW( p, fmtW, num );
+        break;
+
+    case PFN_LCLETTER:
+        char_offset = 'a' - 'A';
+        /* fall through */
+    case PFN_UCLETTER:
+        if (!num) num = 1;
+
+        /* This is not base-26 (or 27) as zeros don't count unless they are leading zeros.
+           It's simplest to start with the least significant letter, so first calculate how many letters are needed. */
+        for (i = 0, total = 0; i < sizeof(letter_base) / sizeof(letter_base[0]); i++)
+        {
+            total += letter_base[i];
+            if (num < total) break;
+        }
+        len = i;
+        for (i = 0; i < len; i++)
+        {
+            num -= letter_base[i];
+            letter = (num / letter_base[i]) % 26;
+            p[len - i - 1] = letter + 'A' + char_offset;
+        }
+        p += len;
+        *p = 0;
+        break;
+
+    case PFN_LCROMAN:
+        char_offset = 'a' - 'A';
+        /* fall through */
+    case PFN_UCROMAN:
+        if (!num) num = 1;
+
+        for (i = 0; i < sizeof(roman_base) / sizeof(roman_base[0]); i++)
+        {
+            if (i > 0)
+            {
+                if (i % 2 == 0) /* eg 5000, check for 9000 */
+                    total = roman_base[i].base + 4 * roman_base[i + 1].base;
+                else  /* eg 1000, check for 4000 */
+                    total = 4 * roman_base[i].base;
+
+                if (num / total)
+                {
+                    *p++ = roman_base[(i & ~1) + 1].letter + char_offset;
+                    *p++ = roman_base[i - 1].letter + char_offset;
+                    num -= total;
+                    continue;
+                }
+            }
+
+            len = num / roman_base[i].base;
+            while (len--)
+            {
+                *p++ = roman_base[i].letter + char_offset;
+                num -= roman_base[i].base;
+            }
+        }
+        *p = 0;
+        break;
+    }
+
+    switch (para->fmt.wNumberingStyle & 0xf00)
+    {
+    case PFNS_PARENS:
+    case PFNS_PAREN:
+        *p++ = ')';
+        *p = 0;
+        break;
+
+    case PFNS_PERIOD:
+        *p++ = '.';
+        *p = 0;
+        break;
+    }
+
+    str->nLen = p - str->szData;
+    return str;
+}
+
+void para_num_init( ME_Context *c, ME_Paragraph *para )
+{
+    ME_Style *style;
+    CHARFORMAT2W cf;
+    static const WCHAR bullet_font[] = {'S','y','m','b','o','l',0};
+    static const WCHAR bullet_str[] = {0xb7, 0};
+    static const WCHAR spaceW[] = {' ', 0};
+    HFONT old_font;
+    SIZE sz;
+
+    if (para->para_num.style && para->para_num.text) return;
+
+    if (!para->para_num.style)
+    {
+        style = para->eop_run->style;
+
+        if (para->fmt.wNumbering == PFN_BULLET)
+        {
+            cf.cbSize = sizeof(cf);
+            cf.dwMask = CFM_FACE | CFM_CHARSET;
+            memcpy( cf.szFaceName, bullet_font, sizeof(bullet_font) );
+            cf.bCharSet = SYMBOL_CHARSET;
+            style = ME_ApplyStyle( c->editor, style, &cf );
+        }
+        else
+        {
+            ME_AddRefStyle( style );
+        }
+
+        para->para_num.style = style;
+    }
+
+    if (!para->para_num.text)
+    {
+        if (para->fmt.wNumbering != PFN_BULLET)
+            para->para_num.text = para_num_get_str( para, para_num_get_num( para ) );
+        else
+            para->para_num.text = ME_MakeStringConst( bullet_str, 1 );
+    }
+
+    old_font = ME_SelectStyleFont( c, para->para_num.style );
+    GetTextExtentPointW( c->hDC, para->para_num.text->szData, para->para_num.text->nLen, &sz );
+    para->para_num.width = sz.cx;
+    GetTextExtentPointW( c->hDC, spaceW, 1, &sz );
+    para->para_num.width += sz.cx;
+    ME_UnselectStyleFont( c, para->para_num.style, old_font );
+}
+
+void para_num_clear( struct para_num *pn )
+{
+    if (pn->style)
+    {
+        ME_ReleaseStyle( pn->style );
+        pn->style = NULL;
+    }
+    ME_DestroyString( pn->text );
+    pn->text = NULL;
+}
+
+static void para_num_clear_list( ME_Paragraph *para, const PARAFORMAT2 *orig_fmt )
+{
+    do
+    {
+        para->nFlags |= MEPF_REWRAP;
+        para_num_clear( &para->para_num );
+        if (para->next_para->type != diParagraph) break;
+        para = &para->next_para->member.para;
+    } while (para_num_same_list( &para->fmt, orig_fmt ));
+}
+
+static BOOL ME_SetParaFormat(ME_TextEditor *editor, ME_Paragraph *para, const PARAFORMAT2 *pFmt)
 {
   PARAFORMAT2 copy;
   DWORD dwMask;
 
-  assert(para->member.para.pFmt->cbSize == sizeof(PARAFORMAT2));
+  assert(para->fmt.cbSize == sizeof(PARAFORMAT2));
   dwMask = pFmt->dwMask;
   if (pFmt->cbSize < sizeof(PARAFORMAT))
     return FALSE;
@@ -141,27 +350,27 @@ static BOOL ME_SetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, const 
   else
     dwMask &= PFM_ALL2;
 
-  add_undo_set_para_fmt( editor, &para->member.para );
+  add_undo_set_para_fmt( editor, para );
 
-  copy = *para->member.para.pFmt;
+  copy = para->fmt;
 
 #define COPY_FIELD(m, f) \
   if (dwMask & (m)) {                           \
-    para->member.para.pFmt->dwMask |= m;        \
-    para->member.para.pFmt->f = pFmt->f;        \
+    para->fmt.dwMask |= m;                      \
+    para->fmt.f = pFmt->f;                      \
   }
 
   COPY_FIELD(PFM_NUMBERING, wNumbering);
   COPY_FIELD(PFM_STARTINDENT, dxStartIndent);
   if (dwMask & PFM_OFFSETINDENT)
-    para->member.para.pFmt->dxStartIndent += pFmt->dxStartIndent;
+    para->fmt.dxStartIndent += pFmt->dxStartIndent;
   COPY_FIELD(PFM_RIGHTINDENT, dxRightIndent);
   COPY_FIELD(PFM_OFFSET, dxOffset);
   COPY_FIELD(PFM_ALIGNMENT, wAlignment);
   if (dwMask & PFM_TABSTOPS)
   {
-    para->member.para.pFmt->cTabCount = pFmt->cTabCount;
-    memcpy(para->member.para.pFmt->rgxTabs, pFmt->rgxTabs, pFmt->cTabCount*sizeof(LONG));
+    para->fmt.cTabCount = pFmt->cTabCount;
+    memcpy(para->fmt.rgxTabs, pFmt->rgxTabs, pFmt->cTabCount*sizeof(LONG));
   }
 
 #define EFFECTS_MASK (PFM_RTLPARA|PFM_KEEP|PFM_KEEPNEXT|PFM_PAGEBREAKBEFORE| \
@@ -170,9 +379,9 @@ static BOOL ME_SetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, const 
   /* we take for granted that PFE_xxx is the hiword of the corresponding PFM_xxx */
   if (dwMask & EFFECTS_MASK)
   {
-    para->member.para.pFmt->dwMask |= dwMask & EFFECTS_MASK;
-    para->member.para.pFmt->wEffects &= ~HIWORD(dwMask);
-    para->member.para.pFmt->wEffects |= pFmt->wEffects & HIWORD(dwMask);
+    para->fmt.dwMask |= dwMask & EFFECTS_MASK;
+    para->fmt.wEffects &= ~HIWORD(dwMask);
+    para->fmt.wEffects |= pFmt->wEffects & HIWORD(dwMask);
   }
 #undef EFFECTS_MASK
 
@@ -190,11 +399,19 @@ static BOOL ME_SetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, const 
   COPY_FIELD(PFM_BORDER, wBorderWidth);
   COPY_FIELD(PFM_BORDER, wBorders);
 
-  para->member.para.pFmt->dwMask |= dwMask;
+  para->fmt.dwMask |= dwMask;
 #undef COPY_FIELD
 
-  if (memcmp(&copy, para->member.para.pFmt, sizeof(PARAFORMAT2)))
-    para->member.para.nFlags |= MEPF_REWRAP;
+  if (memcmp(&copy, &para->fmt, sizeof(PARAFORMAT2)))
+  {
+    para->nFlags |= MEPF_REWRAP;
+    if (((dwMask & PFM_NUMBERING)      && (copy.wNumbering != para->fmt.wNumbering)) ||
+        ((dwMask & PFM_NUMBERINGSTART) && (copy.wNumberingStart != para->fmt.wNumberingStart)) ||
+        ((dwMask & PFM_NUMBERINGSTYLE) && (copy.wNumberingStyle != para->fmt.wNumberingStyle)))
+    {
+        para_num_clear_list( para, &copy );
+    }
+  }
 
   return TRUE;
 }
@@ -225,7 +442,11 @@ ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run,
   }
   assert(run->type == diRun);
   run_para = ME_GetParagraph(run);
-  assert(run_para->member.para.pFmt->cbSize == sizeof(PARAFORMAT2));
+  assert(run_para->member.para.fmt.cbSize == sizeof(PARAFORMAT2));
+
+  /* Clear any cached para numbering following this paragraph */
+  if (run_para->member.para.fmt.wNumbering)
+      para_num_clear_list( &run_para->member.para, &run_para->member.para.fmt );
 
   new_para->member.para.text = ME_VSplitString( run_para->member.para.text, run->member.run.nCharOfs );
 
@@ -260,7 +481,7 @@ ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run,
   new_para->member.para.nFlags = MEPF_REWRAP;
 
   /* FIXME initialize format style and call ME_SetParaFormat blah blah */
-  *new_para->member.para.pFmt = *run_para->member.para.pFmt;
+  new_para->member.para.fmt = run_para->member.para.fmt;
   new_para->member.para.border = run_para->member.para.border;
 
   /* insert paragraph into paragraph double linked list */
@@ -272,6 +493,10 @@ ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *run,
   /* insert end run of the old paragraph, and new paragraph, into DI double linked list */
   ME_InsertBefore(run, new_para);
   ME_InsertBefore(new_para, end_run);
+
+  /* Fix up the paras' eop_run ptrs */
+  new_para->member.para.eop_run = run_para->member.para.eop_run;
+  run_para->member.para.eop_run = &end_run->member.run;
 
   if (!editor->bEmulateVersion10) { /* v4.1 */
     if (paraFlags & (MEPF_ROWSTART|MEPF_CELL))
@@ -345,6 +570,10 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp,
   assert(tp->member.para.next_para);
   assert(tp->member.para.next_para->type == diParagraph);
 
+  /* Clear any cached para numbering following this paragraph */
+  if (tp->member.para.fmt.wNumbering)
+      para_num_clear_list( &tp->member.para, &tp->member.para.fmt );
+
   pNext = tp->member.para.next_para;
 
   /* Need to locate end-of-paragraph run here, in order to know end_len */
@@ -399,7 +628,7 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp,
   if (!keepFirstParaFormat)
   {
     add_undo_set_para_fmt( editor, &tp->member.para );
-    *tp->member.para.pFmt = *pNext->member.para.pFmt;
+    tp->member.para.fmt = pNext->member.para.fmt;
     tp->member.para.border = pNext->member.para.border;
   }
 
@@ -429,6 +658,9 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp,
     pTmp->member.run.nCharOfs += shift;
     pTmp->member.run.para = &tp->member.para;
   } while(1);
+
+  /* Fix up the para's eop_run ptr */
+  tp->member.para.eop_run = pNext->member.para.eop_run;
 
   ME_Remove(pRun);
   ME_DestroyDisplayItem(pRun);
@@ -551,7 +783,7 @@ BOOL ME_SetSelectionParaFormat(ME_TextEditor *editor, const PARAFORMAT2 *pFmt)
   ME_GetSelectionParas(editor, &para, &para_end);
 
   do {
-    ME_SetParaFormat(editor, para, pFmt);
+    ME_SetParaFormat(editor, &para->member.para, pFmt);
     if (para == para_end)
       break;
     para = para->member.para.next_para;
@@ -566,9 +798,9 @@ static void ME_GetParaFormat(ME_TextEditor *editor,
 {
   UINT cbSize = pFmt->cbSize;
   if (pFmt->cbSize >= sizeof(PARAFORMAT2)) {
-    *pFmt = *para->member.para.pFmt;
+    *pFmt = para->member.para.fmt;
   } else {
-    CopyMemory(pFmt, para->member.para.pFmt, pFmt->cbSize);
+    CopyMemory(pFmt, &para->member.para.fmt, pFmt->cbSize);
     pFmt->dwMask &= PFM_ALL;
   }
   pFmt->cbSize = cbSize;
@@ -592,7 +824,7 @@ void ME_GetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt)
   while (para != para_end)
   {
     para = para->member.para.next_para;
-    curFmt = para->member.para.pFmt;
+    curFmt = &para->member.para.fmt;
 
 #define CHECK_FIELD(m, f) \
     if (pFmt->f != curFmt->f) pFmt->dwMask &= ~(m);
@@ -603,7 +835,7 @@ void ME_GetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt)
     CHECK_FIELD(PFM_OFFSET, dxOffset);
     CHECK_FIELD(PFM_ALIGNMENT, wAlignment);
     if (pFmt->dwMask & PFM_TABSTOPS) {
-      if (pFmt->cTabCount != para->member.para.pFmt->cTabCount ||
+      if (pFmt->cTabCount != para->member.para.fmt.cTabCount ||
           memcmp(pFmt->rgxTabs, curFmt->rgxTabs, curFmt->cTabCount*sizeof(int)))
         pFmt->dwMask &= ~PFM_TABSTOPS;
     }

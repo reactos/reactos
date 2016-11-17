@@ -79,20 +79,6 @@ static CHARFORMAT2W *ME_ToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from)
     CHARFORMATA *t = (CHARFORMATA *)to;
     CopyMemory(t, from, FIELD_OFFSET(CHARFORMATA, szFaceName));
     WideCharToMultiByte(CP_ACP, 0, from->szFaceName, -1, t->szFaceName, sizeof(t->szFaceName), NULL, NULL);
-    if (from->dwMask & CFM_UNDERLINETYPE)
-    {
-        switch (from->bUnderlineType)
-        {
-        case CFU_CF1UNDERLINE:
-            to->dwMask |= CFM_UNDERLINE;
-            to->dwEffects |= CFE_UNDERLINE;
-            break;
-        case CFU_UNDERLINENONE:
-            to->dwMask |= CFM_UNDERLINE;
-            to->dwEffects &= ~CFE_UNDERLINE;
-            break;
-        }
-    }
     t->cbSize = sizeof(*t); /* it was overwritten by CopyMemory */
     return to;
   }
@@ -100,20 +86,6 @@ static CHARFORMAT2W *ME_ToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from)
   {
     CHARFORMATW *t = (CHARFORMATW *)to;
     CopyMemory(t, from, sizeof(*t));
-    if (from->dwMask & CFM_UNDERLINETYPE)
-    {
-        switch (from->bUnderlineType)
-        {
-        case CFU_CF1UNDERLINE:
-            to->dwMask |= CFM_UNDERLINE;
-            to->dwEffects |= CFE_UNDERLINE;
-            break;
-        case CFU_UNDERLINENONE:
-            to->dwMask |= CFM_UNDERLINE;
-            to->dwEffects &= ~CFE_UNDERLINE;
-            break;
-        }
-    }
     t->cbSize = sizeof(*t); /* it was overwritten by CopyMemory */
     return to;
   }
@@ -195,7 +167,6 @@ ME_Style *ME_ApplyStyle(ME_TextEditor *editor, ME_Style *sSrc, CHARFORMAT2W *mod
   }
   COPY_STYLE_ITEM(CFM_SPACING, sSpacing);
   COPY_STYLE_ITEM(CFM_STYLE, sStyle);
-  COPY_STYLE_ITEM(CFM_UNDERLINETYPE, bUnderlineType);
   COPY_STYLE_ITEM(CFM_WEIGHT, wWeight);
   /* FIXME: this is not documented this way, but that's the more logical */
   COPY_STYLE_ITEM(CFM_FACE, bPitchAndFamily);
@@ -210,12 +181,18 @@ ME_Style *ME_ApplyStyle(ME_TextEditor *editor, ME_Style *sSrc, CHARFORMAT2W *mod
     else
       fmt.dwEffects &= ~CFE_AUTOCOLOR;
   }
-  if (mod->dwMask & CFM_UNDERLINE)
+
+  COPY_STYLE_ITEM(CFM_UNDERLINETYPE, bUnderlineType);
+  /* If the CFM_UNDERLINE effect is not specified set it appropiately */
+  if ((mod->dwMask & CFM_UNDERLINETYPE) && !(mod->dwMask & CFM_UNDERLINE))
   {
-      fmt.dwMask |= CFM_UNDERLINETYPE;
-      fmt.bUnderlineType = (mod->dwEffects & CFM_UNDERLINE) ?
-          CFU_CF1UNDERLINE : CFU_UNDERLINENONE;
+      fmt.dwMask |= CFM_UNDERLINE;
+      if (mod->bUnderlineType == CFU_UNDERLINENONE)
+          fmt.dwEffects &= ~CFE_UNDERLINE;
+      else
+          fmt.dwEffects |= CFE_UNDERLINE;
   }
+
   if (mod->dwMask & CFM_BOLD && !(mod->dwMask & CFM_WEIGHT))
   {
       fmt.wWeight = (mod->dwEffects & CFE_BOLD) ? FW_BOLD : FW_NORMAL;
@@ -329,9 +306,8 @@ ME_LogFontFromStyle(ME_Context* c, LOGFONTW *lf, const ME_Style *s)
     lf->lfWeight = s->fmt.wWeight;
   if (s->fmt.dwEffects & s->fmt.dwMask & CFM_ITALIC)
     lf->lfItalic = 1;
-  if (s->fmt.dwEffects & s->fmt.dwMask & (CFM_UNDERLINE | CFE_LINK))
-    lf->lfUnderline = 1;
-  if (s->fmt.dwMask & CFM_UNDERLINETYPE && s->fmt.bUnderlineType == CFU_CF1UNDERLINE)
+  if ((s->fmt.dwEffects & s->fmt.dwMask & (CFM_UNDERLINE | CFE_LINK)) &&
+      s->fmt.bUnderlineType == CFU_CF1UNDERLINE)
     lf->lfUnderline = 1;
   if (s->fmt.dwEffects & s->fmt.dwMask & CFM_STRIKEOUT)
     lf->lfStrikeOut = 1;
@@ -352,14 +328,13 @@ void ME_CharFormatFromLogFont(HDC hDC, const LOGFONTW *lf, CHARFORMAT2W *fmt)
   ry = GetDeviceCaps(hDC, LOGPIXELSY);
   lstrcpyW(fmt->szFaceName, lf->lfFaceName);
   fmt->dwEffects = 0;
-  fmt->dwMask = CFM_WEIGHT|CFM_BOLD|CFM_ITALIC|CFM_UNDERLINE|CFM_STRIKEOUT|CFM_SIZE|CFM_FACE|CFM_CHARSET;
+  fmt->dwMask = CFM_WEIGHT|CFM_BOLD|CFM_ITALIC|CFM_UNDERLINE|CFM_UNDERLINETYPE|CFM_STRIKEOUT|CFM_SIZE|CFM_FACE|CFM_CHARSET;
   fmt->wWeight = lf->lfWeight;
   fmt->yHeight = -lf->lfHeight*1440/ry;
   if (lf->lfWeight > FW_NORMAL) fmt->dwEffects |= CFM_BOLD;
   if (lf->lfItalic) fmt->dwEffects |= CFM_ITALIC;
   if (lf->lfUnderline) fmt->dwEffects |= CFM_UNDERLINE;
-  /* notice that if a logfont was created with underline due to CFM_LINK, this
-      would add an erroneous CFM_UNDERLINE. This isn't currently ever a problem. */
+  fmt->bUnderlineType = CFU_UNDERLINE;
   if (lf->lfStrikeOut) fmt->dwEffects |= CFM_STRIKEOUT;
   fmt->bPitchAndFamily = lf->lfPitchAndFamily;
   fmt->bCharSet = lf->lfCharSet;
@@ -513,12 +488,13 @@ ME_Style *ME_GetInsertStyle(ME_TextEditor *editor, int nCursor)
   }
 }
 
-void ME_SaveTempStyle(ME_TextEditor *editor)
+void ME_SaveTempStyle(ME_TextEditor *editor, ME_Style *style)
 {
   ME_Style *old_style = editor->pBuffer->pCharStyle;
-  editor->pBuffer->pCharStyle = ME_GetInsertStyle(editor, 0);
-  if (old_style)
-    ME_ReleaseStyle(old_style);
+
+  if (style) ME_AddRefStyle( style );
+  editor->pBuffer->pCharStyle = style;
+  if (old_style) ME_ReleaseStyle( old_style );
 }
 
 void ME_ClearTempStyle(ME_TextEditor *editor)

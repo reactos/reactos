@@ -29,6 +29,7 @@ typedef struct tagME_String
 {
   WCHAR *szData;
   int nLen, nBuffer;
+  void (*free)(struct tagME_String *);
 } ME_String;
 
 typedef struct tagME_FontCacheItem
@@ -158,9 +159,17 @@ typedef struct tagME_BorderRect
   ME_Border right;
 } ME_BorderRect;
 
+struct para_num
+{
+    ME_Style *style;
+    ME_String *text;
+    INT width;
+    POINT pt;
+};
+
 typedef struct tagME_Paragraph
 {
-  PARAFORMAT2 *pFmt;
+  PARAFORMAT2 fmt;
   ME_String *text;
 
   struct tagME_DisplayItem *pCell; /* v4.1 */
@@ -171,6 +180,8 @@ typedef struct tagME_Paragraph
   POINT pt;
   int nHeight, nWidth;
   int nRows;
+  struct para_num para_num;
+  ME_Run *eop_run; /* ptr to the end-of-para run */
   struct tagME_DisplayItem *prev_para, *next_para;
 } ME_Paragraph;
 
@@ -333,27 +344,6 @@ struct tagME_InStream {
 };
 typedef struct tagME_InStream ME_InStream;
 
-
-#define STREAMOUT_BUFFER_SIZE 4096
-#define STREAMOUT_FONTTBL_SIZE 8192
-#define STREAMOUT_COLORTBL_SIZE 1024
-
-typedef struct tagME_OutStream {
-  EDITSTREAM *stream;
-  char buffer[STREAMOUT_BUFFER_SIZE];
-  UINT pos, written;
-  UINT nCodePage;
-  UINT nFontTblLen;
-  ME_FontTableItem fonttbl[STREAMOUT_FONTTBL_SIZE];
-  UINT nColorTblLen;
-  COLORREF colortbl[STREAMOUT_COLORTBL_SIZE];
-  UINT nDefaultFont;
-  UINT nDefaultCodePage;
-  /* nNestingLevel = 0 means we aren't in a cell, 1 means we are in a cell,
-   * an greater numbers mean we are in a cell nested within a cell. */
-  UINT nNestingLevel;
-} ME_OutStream;
-
 typedef struct tagME_TextEditor
 {
   HWND hWnd, hwndParent;
@@ -430,20 +420,5 @@ typedef struct tagME_Context
   /* those are valid inside ME_WrapTextParagraph and related */
   ME_TextEditor *editor;
 } ME_Context;
-
-typedef struct tagME_WrapContext
-{
-  ME_Style *style;
-  ME_Context *context;
-  int nLeftMargin, nRightMargin, nFirstMargin;
-  int nAvailWidth;
-  int nRow;
-  POINT pt;
-  BOOL bOverflown, bWordWrap;
-  ME_DisplayItem *pPara;
-  ME_DisplayItem *pRowStart;
-
-  ME_DisplayItem *pLastSplittableRun;
-} ME_WrapContext;
 
 #endif

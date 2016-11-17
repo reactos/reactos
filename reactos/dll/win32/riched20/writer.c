@@ -23,6 +23,27 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
+#define STREAMOUT_BUFFER_SIZE 4096
+#define STREAMOUT_FONTTBL_SIZE 8192
+#define STREAMOUT_COLORTBL_SIZE 1024
+
+typedef struct tagME_OutStream
+{
+    EDITSTREAM *stream;
+    char buffer[STREAMOUT_BUFFER_SIZE];
+    UINT pos, written;
+    UINT nCodePage;
+    UINT nFontTblLen;
+    ME_FontTableItem fonttbl[STREAMOUT_FONTTBL_SIZE];
+    UINT nColorTblLen;
+    COLORREF colortbl[STREAMOUT_COLORTBL_SIZE];
+    UINT nDefaultFont;
+    UINT nDefaultCodePage;
+    /* nNestingLevel = 0 means we aren't in a cell, 1 means we are in a cell,
+     * an greater numbers mean we are in a cell nested within a cell. */
+    UINT nNestingLevel;
+    CHARFORMAT2W cur_fmt; /* current character format */
+} ME_OutStream;
 
 static BOOL
 ME_StreamOutRTFText(ME_OutStream *pStream, const WCHAR *text, LONG nChars);
@@ -39,6 +60,9 @@ ME_StreamOutInit(ME_TextEditor *editor, EDITSTREAM *stream)
   pStream->nFontTblLen = 0;
   pStream->nColorTblLen = 1;
   pStream->nNestingLevel = 0;
+  memset(&pStream->cur_fmt, 0, sizeof(pStream->cur_fmt));
+  pStream->cur_fmt.dwEffects = CFE_AUTOCOLOR | CFE_AUTOBACKCOLOR;
+  pStream->cur_fmt.bUnderlineType = CFU_UNDERLINE;
   return pStream;
 }
 
@@ -208,6 +232,86 @@ ME_StreamOutRTFHeader(ME_OutStream *pStream, int dwFormat)
   return TRUE;
 }
 
+static void add_font_to_fonttbl( ME_OutStream *stream, ME_Style *style )
+{
+    ME_FontTableItem *table = stream->fonttbl;
+    CHARFORMAT2W *fmt = &style->fmt;
+    WCHAR *face = fmt->szFaceName;
+    BYTE charset = (fmt->dwMask & CFM_CHARSET) ? fmt->bCharSet : DEFAULT_CHARSET;
+    int i;
+
+    if (fmt->dwMask & CFM_FACE)
+    {
+        for (i = 0; i < stream->nFontTblLen; i++)
+            if (table[i].bCharSet == charset
+                && (table[i].szFaceName == face || !lstrcmpW(table[i].szFaceName, face)))
+                break;
+
+        if (i == stream->nFontTblLen && i < STREAMOUT_FONTTBL_SIZE)
+        {
+            table[i].bCharSet = charset;
+            table[i].szFaceName = face;
+            stream->nFontTblLen++;
+        }
+    }
+}
+
+static BOOL find_font_in_fonttbl( ME_OutStream *stream, CHARFORMAT2W *fmt, unsigned int *idx )
+{
+    WCHAR *facename;
+    int i;
+
+    *idx = 0;
+    if (fmt->dwMask & CFM_FACE)
+        facename = fmt->szFaceName;
+    else
+        facename = stream->fonttbl[0].szFaceName;
+    for (i = 0; i < stream->nFontTblLen; i++)
+    {
+        if (facename == stream->fonttbl[i].szFaceName
+            || !lstrcmpW(facename, stream->fonttbl[i].szFaceName))
+            if (!(fmt->dwMask & CFM_CHARSET)
+                || fmt->bCharSet == stream->fonttbl[i].bCharSet)
+            {
+                *idx = i;
+                break;
+            }
+    }
+
+    return i < stream->nFontTblLen;
+}
+
+static void add_color_to_colortbl( ME_OutStream *stream, COLORREF color )
+{
+    int i;
+
+    for (i = 1; i < stream->nColorTblLen; i++)
+        if (stream->colortbl[i] == color)
+            break;
+
+    if (i == stream->nColorTblLen && i < STREAMOUT_COLORTBL_SIZE)
+    {
+        stream->colortbl[i] = color;
+        stream->nColorTblLen++;
+    }
+}
+
+static BOOL find_color_in_colortbl( ME_OutStream *stream, COLORREF color, unsigned int *idx )
+{
+    int i;
+
+    *idx = 0;
+    for (i = 1; i < stream->nColorTblLen; i++)
+    {
+        if (stream->colortbl[i] == color)
+        {
+            *idx = i;
+            break;
+        }
+    }
+
+    return i < stream->nFontTblLen;
+}
 
 static BOOL
 ME_StreamOutRTFFontAndColorTbl(ME_OutStream *pStream, ME_DisplayItem *pFirstRun,
@@ -216,82 +320,44 @@ ME_StreamOutRTFFontAndColorTbl(ME_OutStream *pStream, ME_DisplayItem *pFirstRun,
   ME_DisplayItem *item = pFirstRun;
   ME_FontTableItem *table = pStream->fonttbl;
   unsigned int i;
-  ME_DisplayItem *pLastPara = ME_GetParagraph(pLastRun);
   ME_DisplayItem *pCell = NULL;
-  
+  ME_Paragraph *prev_para = NULL;
+
   do {
     CHARFORMAT2W *fmt = &item->member.run.style->fmt;
-    COLORREF crColor;
 
-    if (fmt->dwMask & CFM_FACE) {
-      WCHAR *face = fmt->szFaceName;
-      BYTE bCharSet = (fmt->dwMask & CFM_CHARSET) ? fmt->bCharSet : DEFAULT_CHARSET;
-  
-      for (i = 0; i < pStream->nFontTblLen; i++)
-        if (table[i].bCharSet == bCharSet
-            && (table[i].szFaceName == face || !lstrcmpW(table[i].szFaceName, face)))
-          break;
-      if (i == pStream->nFontTblLen && i < STREAMOUT_FONTTBL_SIZE) {
-        table[i].bCharSet = bCharSet;
-        table[i].szFaceName = face;
-        pStream->nFontTblLen++;
+    add_font_to_fonttbl( pStream, item->member.run.style );
+
+    if (fmt->dwMask & CFM_COLOR && !(fmt->dwEffects & CFE_AUTOCOLOR))
+      add_color_to_colortbl( pStream, fmt->crTextColor );
+    if (fmt->dwMask & CFM_BACKCOLOR && !(fmt->dwEffects & CFE_AUTOBACKCOLOR))
+      add_color_to_colortbl( pStream, fmt->crBackColor );
+
+    if (item->member.run.para != prev_para)
+    {
+      /* check for any para numbering text */
+      if (item->member.run.para->fmt.wNumbering)
+        add_font_to_fonttbl( pStream, item->member.run.para->para_num.style );
+
+      if ((pCell = item->member.para.pCell))
+      {
+        ME_Border* borders[4] = { &pCell->member.cell.border.top,
+                                  &pCell->member.cell.border.left,
+                                  &pCell->member.cell.border.bottom,
+                                  &pCell->member.cell.border.right };
+        for (i = 0; i < 4; i++)
+          if (borders[i]->width > 0)
+            add_color_to_colortbl( pStream, borders[i]->colorRef );
       }
-    }
-    
-    if (fmt->dwMask & CFM_COLOR && !(fmt->dwEffects & CFE_AUTOCOLOR)) {
-      crColor = fmt->crTextColor;
-      for (i = 1; i < pStream->nColorTblLen; i++)
-        if (pStream->colortbl[i] == crColor)
-          break;
-      if (i == pStream->nColorTblLen && i < STREAMOUT_COLORTBL_SIZE) {
-        pStream->colortbl[i] = crColor;
-        pStream->nColorTblLen++;
-      }
-    }
-    if (fmt->dwMask & CFM_BACKCOLOR && !(fmt->dwEffects & CFE_AUTOBACKCOLOR)) {
-      crColor = fmt->crBackColor;
-      for (i = 1; i < pStream->nColorTblLen; i++)
-        if (pStream->colortbl[i] == crColor)
-          break;
-      if (i == pStream->nColorTblLen && i < STREAMOUT_COLORTBL_SIZE) {
-        pStream->colortbl[i] = crColor;
-        pStream->nColorTblLen++;
-      }
+
+      prev_para = item->member.run.para;
     }
 
     if (item == pLastRun)
       break;
     item = ME_FindItemFwd(item, diRun);
   } while (item);
-  item = ME_GetParagraph(pFirstRun);
-  do {
-    if ((pCell = item->member.para.pCell))
-    {
-        ME_Border* borders[4] = { &pCell->member.cell.border.top,
-                                  &pCell->member.cell.border.left,
-                                  &pCell->member.cell.border.bottom,
-                                  &pCell->member.cell.border.right };
-        for (i = 0; i < 4; i++)
-        {
-          if (borders[i]->width > 0)
-          {
-            unsigned int j;
-            COLORREF crColor = borders[i]->colorRef;
-            for (j = 1; j < pStream->nColorTblLen; j++)
-              if (pStream->colortbl[j] == crColor)
-                break;
-            if (j == pStream->nColorTblLen && j < STREAMOUT_COLORTBL_SIZE) {
-              pStream->colortbl[j] = crColor;
-              pStream->nColorTblLen++;
-            }
-          }
-        }
-    }
-    if (item == pLastPara)
-      break;
-    item = item->member.para.next_para;
-  } while (item);
-        
+
   if (!ME_StreamOutPrint(pStream, "{\\fonttbl"))
     return FALSE;
   
@@ -344,7 +410,7 @@ ME_StreamOutRTFTableProps(ME_TextEditor *editor, ME_OutStream *pStream,
   if (!ME_StreamOutPrint(pStream, "\\trowd"))
     return FALSE;
   if (!editor->bEmulateVersion10) { /* v4.1 */
-    PARAFORMAT2 *pFmt = ME_GetTableRowEnd(para)->member.para.pFmt;
+    PARAFORMAT2 *pFmt = &ME_GetTableRowEnd(para)->member.para.fmt;
     para = ME_GetTableRowStart(para);
     cell = para->member.para.next_para->member.para.pCell;
     assert(cell);
@@ -361,17 +427,13 @@ ME_StreamOutRTFTableProps(ME_TextEditor *editor, ME_OutStream *pStream,
       {
         if (borders[i]->width)
         {
-          unsigned int j;
+          unsigned int idx;
           COLORREF crColor = borders[i]->colorRef;
           sprintf(props + strlen(props), "\\clbrdr%c", sideChar[i]);
           sprintf(props + strlen(props), "\\brdrs");
           sprintf(props + strlen(props), "\\brdrw%d", borders[i]->width);
-          for (j = 1; j < pStream->nColorTblLen; j++) {
-            if (pStream->colortbl[j] == crColor) {
-              sprintf(props + strlen(props), "\\brdrcf%u", j);
-              break;
-            }
-          }
+          if (find_color_in_colortbl( pStream, crColor, &idx ))
+            sprintf(props + strlen(props), "\\brdrcf%u", idx);
         }
       }
       sprintf(props + strlen(props), "\\cellx%d", cell->member.cell.nRightBoundary);
@@ -382,7 +444,7 @@ ME_StreamOutRTFTableProps(ME_TextEditor *editor, ME_OutStream *pStream,
                                     &para->member.para.border.left,
                                     &para->member.para.border.bottom,
                                     &para->member.para.border.right };
-    PARAFORMAT2 *pFmt = para->member.para.pFmt;
+    PARAFORMAT2 *pFmt = &para->member.para.fmt;
 
     assert(!(para->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND|MEPF_CELL)));
     if (pFmt->dxOffset)
@@ -393,17 +455,13 @@ ME_StreamOutRTFTableProps(ME_TextEditor *editor, ME_OutStream *pStream,
     {
       if (borders[i]->width)
       {
-        unsigned int j;
+        unsigned int idx;
         COLORREF crColor = borders[i]->colorRef;
         sprintf(props + strlen(props), "\\trbrdr%c", sideChar[i]);
         sprintf(props + strlen(props), "\\brdrs");
         sprintf(props + strlen(props), "\\brdrw%d", borders[i]->width);
-        for (j = 1; j < pStream->nColorTblLen; j++) {
-          if (pStream->colortbl[j] == crColor) {
-            sprintf(props + strlen(props), "\\brdrcf%u", j);
-            break;
-          }
-        }
+        if (find_color_in_colortbl( pStream, crColor, &idx ))
+          sprintf(props + strlen(props), "\\brdrcf%u", idx);
       }
     }
     for (i = 0; i < pFmt->cTabCount; i++)
@@ -417,13 +475,87 @@ ME_StreamOutRTFTableProps(ME_TextEditor *editor, ME_OutStream *pStream,
   return TRUE;
 }
 
+static BOOL stream_out_para_num( ME_OutStream *stream, ME_Paragraph *para, BOOL pn_dest )
+{
+    static const char fmt_label[] = "{\\*\\pn\\pnlvlbody\\pnf%u\\pnindent%d\\pnstart%d%s%s}";
+    static const char fmt_bullet[] = "{\\*\\pn\\pnlvlblt\\pnf%u\\pnindent%d{\\pntxtb\\'b7}}";
+    static const char dec[] = "\\pndec";
+    static const char lcltr[] = "\\pnlcltr";
+    static const char ucltr[] = "\\pnucltr";
+    static const char lcrm[] = "\\pnlcrm";
+    static const char ucrm[] = "\\pnucrm";
+    static const char period[] = "{\\pntxta.}";
+    static const char paren[] = "{\\pntxta)}";
+    static const char parens[] = "{\\pntxtb(}{\\pntxta)}";
+    const char *type, *style = "";
+    unsigned int idx;
+
+    find_font_in_fonttbl( stream, &para->para_num.style->fmt, &idx );
+
+    if (!ME_StreamOutPrint( stream, "{\\pntext\\f%u ", idx )) return FALSE;
+    if (!ME_StreamOutRTFText( stream, para->para_num.text->szData, para->para_num.text->nLen ))
+        return FALSE;
+    if (!ME_StreamOutPrint( stream, "\\tab}" )) return FALSE;
+
+    if (!pn_dest) return TRUE;
+
+    if (para->fmt.wNumbering == PFN_BULLET)
+    {
+        if (!ME_StreamOutPrint( stream, fmt_bullet, idx, para->fmt.wNumberingTab ))
+            return FALSE;
+    }
+    else
+    {
+        switch (para->fmt.wNumbering)
+        {
+        case PFN_ARABIC:
+        default:
+            type = dec;
+            break;
+        case PFN_LCLETTER:
+            type = lcltr;
+            break;
+        case PFN_UCLETTER:
+            type = ucltr;
+            break;
+        case PFN_LCROMAN:
+            type = lcrm;
+            break;
+        case PFN_UCROMAN:
+            type = ucrm;
+            break;
+        }
+        switch (para->fmt.wNumberingStyle & 0xf00)
+        {
+        case PFNS_PERIOD:
+            style = period;
+            break;
+        case PFNS_PAREN:
+            style = paren;
+            break;
+        case PFNS_PARENS:
+            style = parens;
+            break;
+        }
+
+        if (!ME_StreamOutPrint( stream, fmt_label, idx, para->fmt.wNumberingTab,
+                                para->fmt.wNumberingStart, type, style ))
+            return FALSE;
+    }
+    return TRUE;
+}
+
 static BOOL
 ME_StreamOutRTFParaProps(ME_TextEditor *editor, ME_OutStream *pStream,
                          ME_DisplayItem *para)
 {
-  PARAFORMAT2 *fmt = para->member.para.pFmt;
+  PARAFORMAT2 *fmt = &para->member.para.fmt;
   char props[STREAMOUT_BUFFER_SIZE] = "";
   int i;
+  ME_Paragraph *prev_para = NULL;
+
+  if (para->member.para.prev_para->type == diParagraph)
+      prev_para = &para->member.para.prev_para->member.para;
 
   if (!editor->bEmulateVersion10) { /* v4.1 */
     if (para->member.para.nFlags & MEPF_ROWSTART) {
@@ -443,23 +575,32 @@ ME_StreamOutRTFParaProps(ME_TextEditor *editor, ME_OutStream *pStream,
         if (!ME_StreamOutPrint(pStream, "\\nestrow}{\\nonesttables\\par}\r\n"))
           return FALSE;
       } else {
-        if (!ME_StreamOutPrint(pStream, "\\row \r\n"))
+        if (!ME_StreamOutPrint(pStream, "\\row\r\n"))
           return FALSE;
       }
       return TRUE;
     }
   } else { /* v1.0 - 3.0 */
-    if (para->member.para.pFmt->dwMask & PFM_TABLE &&
-        para->member.para.pFmt->wEffects & PFE_TABLE)
+    if (para->member.para.fmt.dwMask & PFM_TABLE &&
+        para->member.para.fmt.wEffects & PFE_TABLE)
     {
       if (!ME_StreamOutRTFTableProps(editor, pStream, para))
         return FALSE;
     }
   }
 
-  /* TODO: Don't emit anything if the last PARAFORMAT2 is inherited */
+  if (prev_para && !memcmp( fmt, &prev_para->fmt, sizeof(*fmt) ))
+  {
+    if (fmt->wNumbering)
+      return stream_out_para_num( pStream, &para->member.para, FALSE );
+    return TRUE;
+  }
+
   if (!ME_StreamOutPrint(pStream, "\\pard"))
     return FALSE;
+
+  if (fmt->wNumbering)
+    if (!stream_out_para_num( pStream, &para->member.para, TRUE )) return FALSE;
 
   if (!editor->bEmulateVersion10) { /* v4.1 */
     if (pStream->nNestingLevel > 0)
@@ -470,7 +611,7 @@ ME_StreamOutRTFParaProps(ME_TextEditor *editor, ME_OutStream *pStream,
     if (fmt->dwMask & PFM_TABLE && fmt->wEffects & PFE_TABLE)
       strcat(props, "\\intbl");
   }
-  
+
   /* TODO: PFM_BORDER. M$ does not emit any keywords for these properties, and
    * when streaming border keywords in, PFM_BORDER is set, but wBorder field is
    * set very different from the documentation.
@@ -538,11 +679,11 @@ ME_StreamOutRTFParaProps(ME_TextEditor *editor, ME_OutStream *pStream,
   if (!(editor->bEmulateVersion10 && /* v1.0 - 3.0 */
         fmt->dwMask & PFM_TABLE && fmt->wEffects & PFE_TABLE))
   {
-    if (fmt->dwMask & PFM_OFFSET)
+    if (fmt->dxOffset)
       sprintf(props + strlen(props), "\\li%d", fmt->dxOffset);
-    if (fmt->dwMask & PFM_OFFSETINDENT || fmt->dwMask & PFM_STARTINDENT)
+    if (fmt->dxStartIndent)
       sprintf(props + strlen(props), "\\fi%d", fmt->dxStartIndent);
-    if (fmt->dwMask & PFM_RIGHTINDENT)
+    if (fmt->dxRightIndent)
       sprintf(props + strlen(props), "\\ri%d", fmt->dxRightIndent);
     if (fmt->dwMask & PFM_TABSTOPS) {
       static const char * const leader[6] = { "", "\\tldot", "\\tlhyph", "\\tlul", "\\tlth", "\\tleq" };
@@ -568,11 +709,11 @@ ME_StreamOutRTFParaProps(ME_TextEditor *editor, ME_OutStream *pStream,
       }
     }
   }
-  if (fmt->dwMask & PFM_SPACEAFTER)
+  if (fmt->dySpaceAfter)
     sprintf(props + strlen(props), "\\sa%d", fmt->dySpaceAfter);
-  if (fmt->dwMask & PFM_SPACEBEFORE)
+  if (fmt->dySpaceBefore)
     sprintf(props + strlen(props), "\\sb%d", fmt->dySpaceBefore);
-  if (fmt->dwMask & PFM_STYLE)
+  if (fmt->sStyle != -1)
     sprintf(props + strlen(props), "\\s%d", fmt->sStyle);
   
   if (fmt->dwMask & PFM_SHADING) {
@@ -588,6 +729,8 @@ ME_StreamOutRTFParaProps(ME_TextEditor *editor, ME_OutStream *pStream,
     sprintf(props + strlen(props), "\\cfpat%d\\cbpat%d",
             (fmt->wShadingStyle >> 4) & 0xF, (fmt->wShadingStyle >> 8) & 0xF);
   }
+  if (*props)
+    strcat(props, " ");
   
   if (*props && !ME_StreamOutPrint(pStream, props))
     return FALSE;
@@ -601,125 +744,114 @@ ME_StreamOutRTFCharProps(ME_OutStream *pStream, CHARFORMAT2W *fmt)
 {
   char props[STREAMOUT_BUFFER_SIZE] = "";
   unsigned int i;
+  CHARFORMAT2W *old_fmt = &pStream->cur_fmt;
+  static const struct
+  {
+      DWORD effect;
+      const char *on, *off;
+  } effects[] =
+  {
+      { CFE_ALLCAPS,     "\\caps",     "\\caps0"     },
+      { CFE_BOLD,        "\\b",        "\\b0"        },
+      { CFE_DISABLED,    "\\disabled", "\\disabled0" },
+      { CFE_EMBOSS,      "\\embo",     "\\embo0"     },
+      { CFE_HIDDEN,      "\\v",        "\\v0"        },
+      { CFE_IMPRINT,     "\\impr",     "\\impr0"     },
+      { CFE_ITALIC,      "\\i",        "\\i0"        },
+      { CFE_OUTLINE,     "\\outl",     "\\outl0"     },
+      { CFE_PROTECTED,   "\\protect",  "\\protect0"  },
+      { CFE_SHADOW,      "\\shad",     "\\shad0"     },
+      { CFE_SMALLCAPS,   "\\scaps",    "\\scaps0"    },
+      { CFE_STRIKEOUT,   "\\strike",   "\\strike0"   },
+  };
 
-  if (fmt->dwMask & CFM_ALLCAPS && fmt->dwEffects & CFE_ALLCAPS)
-    strcat(props, "\\caps");
-  if (fmt->dwMask & CFM_ANIMATION)
+  for (i = 0; i < sizeof(effects) / sizeof(effects[0]); i++)
+  {
+      if ((old_fmt->dwEffects ^ fmt->dwEffects) & effects[i].effect)
+          strcat( props, fmt->dwEffects & effects[i].effect ? effects[i].on : effects[i].off );
+  }
+
+  if ((old_fmt->dwEffects ^ fmt->dwEffects) & CFE_AUTOBACKCOLOR ||
+      old_fmt->crBackColor != fmt->crBackColor)
+  {
+      if (fmt->dwEffects & CFE_AUTOBACKCOLOR) i = 0;
+      else find_color_in_colortbl( pStream, fmt->crBackColor, &i );
+      sprintf(props + strlen(props), "\\cb%u", i);
+  }
+  if ((old_fmt->dwEffects ^ fmt->dwEffects) & CFE_AUTOCOLOR ||
+      old_fmt->crTextColor != fmt->crTextColor)
+  {
+      if (fmt->dwEffects & CFE_AUTOCOLOR) i = 0;
+      else find_color_in_colortbl( pStream, fmt->crTextColor, &i );
+      sprintf(props + strlen(props), "\\cf%u", i);
+  }
+
+  if (old_fmt->bAnimation != fmt->bAnimation)
     sprintf(props + strlen(props), "\\animtext%u", fmt->bAnimation);
-  if (fmt->dwMask & CFM_BACKCOLOR) {
-    if (!(fmt->dwEffects & CFE_AUTOBACKCOLOR)) {
-      for (i = 1; i < pStream->nColorTblLen; i++)
-        if (pStream->colortbl[i] == fmt->crBackColor) {
-          sprintf(props + strlen(props), "\\cb%u", i);
-          break;
-        }
-    }
-  }
-  if (fmt->dwMask & CFM_BOLD && fmt->dwEffects & CFE_BOLD)
-    strcat(props, "\\b");
-  if (fmt->dwMask & CFM_COLOR) {
-    if (!(fmt->dwEffects & CFE_AUTOCOLOR)) {
-      for (i = 1; i < pStream->nColorTblLen; i++)
-        if (pStream->colortbl[i] == fmt->crTextColor) {
-          sprintf(props + strlen(props), "\\cf%u", i);
-          break;
-        }
-    }
-  }
-  /* TODO: CFM_DISABLED */
-  if (fmt->dwMask & CFM_EMBOSS && fmt->dwEffects & CFE_EMBOSS)
-    strcat(props, "\\embo");
-  if (fmt->dwMask & CFM_HIDDEN && fmt->dwEffects & CFE_HIDDEN)
-    strcat(props, "\\v");
-  if (fmt->dwMask & CFM_IMPRINT && fmt->dwEffects & CFE_IMPRINT)
-    strcat(props, "\\impr");
-  if (fmt->dwMask & CFM_ITALIC && fmt->dwEffects & CFE_ITALIC)
-    strcat(props, "\\i");
-  if (fmt->dwMask & CFM_KERNING)
+  if (old_fmt->wKerning != fmt->wKerning)
     sprintf(props + strlen(props), "\\kerning%u", fmt->wKerning);
-  if (fmt->dwMask & CFM_LCID) {
+
+  if (old_fmt->lcid != fmt->lcid)
+  {
     /* TODO: handle SFF_PLAINRTF */
     if (LOWORD(fmt->lcid) == 1024)
       strcat(props, "\\noproof\\lang1024\\langnp1024\\langfe1024\\langfenp1024");
     else
       sprintf(props + strlen(props), "\\lang%u", LOWORD(fmt->lcid));
   }
-  /* CFM_LINK is not streamed out by M$ */
-  if (fmt->dwMask & CFM_OFFSET) {
+
+  if (old_fmt->yOffset != fmt->yOffset)
+  {
     if (fmt->yOffset >= 0)
       sprintf(props + strlen(props), "\\up%d", fmt->yOffset);
     else
       sprintf(props + strlen(props), "\\dn%d", -fmt->yOffset);
   }
-  if (fmt->dwMask & CFM_OUTLINE && fmt->dwEffects & CFE_OUTLINE)
-    strcat(props, "\\outl");
-  if (fmt->dwMask & CFM_PROTECTED && fmt->dwEffects & CFE_PROTECTED)
-    strcat(props, "\\protect");
-  /* TODO: CFM_REVISED CFM_REVAUTHOR - probably using rsidtbl? */
-  if (fmt->dwMask & CFM_SHADOW && fmt->dwEffects & CFE_SHADOW)
-    strcat(props, "\\shad");
-  if (fmt->dwMask & CFM_SIZE)
+  if (old_fmt->yHeight != fmt->yHeight)
     sprintf(props + strlen(props), "\\fs%d", fmt->yHeight / 10);
-  if (fmt->dwMask & CFM_SMALLCAPS && fmt->dwEffects & CFE_SMALLCAPS)
-    strcat(props, "\\scaps");
-  if (fmt->dwMask & CFM_SPACING)
+  if (old_fmt->sSpacing != fmt->sSpacing)
     sprintf(props + strlen(props), "\\expnd%u\\expndtw%u", fmt->sSpacing / 5, fmt->sSpacing);
-  if (fmt->dwMask & CFM_STRIKEOUT && fmt->dwEffects & CFE_STRIKEOUT)
-    strcat(props, "\\strike");
-  if (fmt->dwMask & CFM_STYLE) {
-    sprintf(props + strlen(props), "\\cs%u", fmt->sStyle);
-    /* TODO: emit style contents here */
-  }
-  if (fmt->dwMask & (CFM_SUBSCRIPT | CFM_SUPERSCRIPT)) {
+  if ((old_fmt->dwEffects ^ fmt->dwEffects) & (CFM_SUBSCRIPT | CFM_SUPERSCRIPT))
+  {
     if (fmt->dwEffects & CFE_SUBSCRIPT)
       strcat(props, "\\sub");
     else if (fmt->dwEffects & CFE_SUPERSCRIPT)
       strcat(props, "\\super");
+    else
+      strcat(props, "\\nosupersub");
   }
-  if (fmt->dwMask & CFM_UNDERLINE || fmt->dwMask & CFM_UNDERLINETYPE) {
-    if (fmt->dwMask & CFM_UNDERLINETYPE)
-      switch (fmt->bUnderlineType) {
-        case CFU_CF1UNDERLINE:
-        case CFU_UNDERLINE:
+  if ((old_fmt->dwEffects ^ fmt->dwEffects) & CFE_UNDERLINE ||
+      old_fmt->bUnderlineType != fmt->bUnderlineType)
+  {
+      BYTE type = (fmt->dwEffects & CFE_UNDERLINE) ? fmt->bUnderlineType : CFU_UNDERLINENONE;
+      switch (type)
+      {
+      case CFU_UNDERLINE:
           strcat(props, "\\ul");
           break;
-        case CFU_UNDERLINEDOTTED:
+      case CFU_UNDERLINEDOTTED:
           strcat(props, "\\uld");
           break;
-        case CFU_UNDERLINEDOUBLE:
+      case CFU_UNDERLINEDOUBLE:
           strcat(props, "\\uldb");
           break;
-        case CFU_UNDERLINEWORD:
+      case CFU_UNDERLINEWORD:
           strcat(props, "\\ulw");
           break;
-        case CFU_UNDERLINENONE:
-        default:
+      case CFU_CF1UNDERLINE:
+      case CFU_UNDERLINENONE:
+      default:
           strcat(props, "\\ulnone");
           break;
       }
-    else if (fmt->dwEffects & CFE_UNDERLINE)
-      strcat(props, "\\ul");
   }
-  /* FIXME: How to emit CFM_WEIGHT? */
   
-  if (fmt->dwMask & CFM_FACE || fmt->dwMask & CFM_CHARSET) {
-    WCHAR *szFaceName;
-    
-    if (fmt->dwMask & CFM_FACE)
-      szFaceName = fmt->szFaceName;
-    else
-      szFaceName = pStream->fonttbl[0].szFaceName;
-    for (i = 0; i < pStream->nFontTblLen; i++) {
-      if (szFaceName == pStream->fonttbl[i].szFaceName
-          || !lstrcmpW(szFaceName, pStream->fonttbl[i].szFaceName))
-        if (!(fmt->dwMask & CFM_CHARSET)
-            || fmt->bCharSet == pStream->fonttbl[i].bCharSet)
-          break;
-    }
-    if (i < pStream->nFontTblLen)
+  if (strcmpW(old_fmt->szFaceName, fmt->szFaceName) ||
+      old_fmt->bCharSet != fmt->bCharSet)
+  {
+    if (find_font_in_fonttbl( pStream, fmt, &i ))
     {
-      if (i != pStream->nDefaultFont)
-        sprintf(props + strlen(props), "\\f%u", i);
+      sprintf(props + strlen(props), "\\f%u", i);
 
       /* In UTF-8 mode, charsets/codepages are not used */
       if (pStream->nDefaultCodePage != CP_UTF8)
@@ -735,6 +867,7 @@ ME_StreamOutRTFCharProps(ME_OutStream *pStream, CHARFORMAT2W *fmt)
     strcat(props, " ");
   if (!ME_StreamOutPrint(pStream, props))
     return FALSE;
+  *old_fmt = *fmt;
   return TRUE;
 }
 
@@ -874,13 +1007,10 @@ static BOOL ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream,
                             const ME_Cursor *start, int nChars, int dwFormat)
 {
   ME_Cursor cursor = *start;
-  ME_DisplayItem *prev_para = cursor.pPara;
+  ME_DisplayItem *prev_para = NULL;
   ME_Cursor endCur = cursor;
-  int actual_chars;
 
-  actual_chars = ME_MoveCursorChars(editor, &endCur, nChars);
-  /* Include the final \r which MoveCursorChars will ignore. */
-  if (actual_chars != nChars) endCur.nOffset++;
+  ME_MoveCursorChars(editor, &endCur, nChars, TRUE);
 
   if (!ME_StreamOutRTFHeader(pStream, dwFormat))
     return FALSE;
@@ -890,8 +1020,7 @@ static BOOL ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream,
 
   /* TODO: stylesheet table */
 
-  /* FIXME: maybe emit something smarter for the generator? */
-  if (!ME_StreamOutPrint(pStream, "{\\*\\generator Wine Riched20 2.0.????;}"))
+  if (!ME_StreamOutPrint(pStream, "{\\*\\generator Wine Riched20 2.0;}"))
     return FALSE;
 
   /* TODO: information group */
@@ -901,9 +1030,6 @@ static BOOL ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream,
   /* FIXME: We have only one document section */
 
   /* TODO: section formatting properties */
-
-  if (!ME_StreamOutRTFParaProps(editor, pStream, cursor.pPara))
-    return FALSE;
 
   do {
     if (cursor.pPara != prev_para)
@@ -924,8 +1050,8 @@ static BOOL ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream,
         return FALSE;
     } else if (cursor.pRun->member.run.nFlags & MERF_TAB) {
       if (editor->bEmulateVersion10 && /* v1.0 - 3.0 */
-          cursor.pPara->member.para.pFmt->dwMask & PFM_TABLE &&
-          cursor.pPara->member.para.pFmt->wEffects & PFE_TABLE)
+          cursor.pPara->member.para.fmt.dwMask & PFM_TABLE &&
+          cursor.pPara->member.para.fmt.wEffects & PFE_TABLE)
       {
         if (!ME_StreamOutPrint(pStream, "\\cell "))
           return FALSE;
@@ -943,27 +1069,25 @@ static BOOL ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream,
       }
       nChars--;
     } else if (cursor.pRun->member.run.nFlags & MERF_ENDPARA) {
-      if (cursor.pPara->member.para.pFmt->dwMask & PFM_TABLE &&
-          cursor.pPara->member.para.pFmt->wEffects & PFE_TABLE &&
+      if (cursor.pPara->member.para.fmt.dwMask & PFM_TABLE &&
+          cursor.pPara->member.para.fmt.wEffects & PFE_TABLE &&
           !(cursor.pPara->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND|MEPF_CELL)))
       {
-        if (!ME_StreamOutPrint(pStream, "\\row \r\n"))
+        if (!ME_StreamOutPrint(pStream, "\\row\r\n"))
           return FALSE;
       } else {
-        if (!ME_StreamOutPrint(pStream, "\r\n\\par"))
+        if (!ME_StreamOutPrint(pStream, "\\par\r\n"))
           return FALSE;
       }
       /* Skip as many characters as required by current line break */
       nChars = max(0, nChars - cursor.pRun->member.run.len);
     } else if (cursor.pRun->member.run.nFlags & MERF_ENDROW) {
-      if (!ME_StreamOutPrint(pStream, "\\line \r\n"))
+      if (!ME_StreamOutPrint(pStream, "\\line\r\n"))
         return FALSE;
       nChars--;
     } else {
       int nEnd;
 
-      if (!ME_StreamOutPrint(pStream, "{"))
-        return FALSE;
       TRACE("style %p\n", cursor.pRun->member.run.style);
       if (!ME_StreamOutRTFCharProps(pStream, &cursor.pRun->member.run.style->fmt))
         return FALSE;
@@ -973,8 +1097,6 @@ static BOOL ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream,
                                nEnd - cursor.nOffset))
         return FALSE;
       cursor.nOffset = 0;
-      if (!ME_StreamOutPrint(pStream, "}"))
-        return FALSE;
     }
   } while (cursor.pRun != endCur.pRun && ME_NextRun(&cursor.pPara, &cursor.pRun, TRUE));
 

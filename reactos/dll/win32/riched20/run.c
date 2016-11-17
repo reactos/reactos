@@ -616,17 +616,16 @@ SIZE ME_GetRunSizeCommon(ME_Context *c, const ME_Paragraph *para, ME_Run *run, i
                          int startx, int *pAscent, int *pDescent)
 {
   SIZE size;
-  int nMaxLen = run->len;
+  WCHAR spaceW[] = {' ',0};
 
-  if (nLen>nMaxLen)
-    nLen = nMaxLen;
+  nLen = min( nLen, run->len );
 
-  /* FIXME the following call also ensures that TEXTMETRIC structure is filled
-   * this is wasteful for MERF_NONTEXT runs, but that shouldn't matter
-   * in practice
-   */
-
-  if (para->nFlags & MEPF_COMPLEX)
+  if (run->nFlags & MERF_ENDPARA)
+  {
+      nLen = min( nLen, 1 );
+      ME_GetTextExtent(c, spaceW, nLen, run->style, &size);
+  }
+  else if (para->nFlags & MEPF_COMPLEX)
   {
       size.cx = run->nWidth;
   }
@@ -647,7 +646,7 @@ SIZE ME_GetRunSizeCommon(ME_Context *c, const ME_Paragraph *para, ME_Run *run, i
   if (run->nFlags & MERF_TAB)
   {
     int pos = 0, i = 0, ppos, shift = 0;
-    PARAFORMAT2 *pFmt = para->pFmt;
+    const PARAFORMAT2 *pFmt = &para->fmt;
 
     if (c->editor->bEmulateVersion10 && /* v1.0 - 3.0 */
         pFmt->dwMask & PFM_TABLE && pFmt->wEffects & PFE_TABLE)
@@ -759,28 +758,26 @@ void ME_SetCharFormat(ME_TextEditor *editor, ME_Cursor *start, ME_Cursor *end, C
   for (run = start_run; run != end_run; run = ME_FindItemFwd( run, diRun ))
   {
     ME_Style *new_style = ME_ApplyStyle(editor, run->member.run.style, pFmt);
+    ME_Paragraph *para = run->member.run.para;
 
     add_undo_set_char_fmt( editor, run->member.run.para->nCharOfs + run->member.run.nCharOfs,
                            run->member.run.len, &run->member.run.style->fmt );
     ME_ReleaseStyle(run->member.run.style);
     run->member.run.style = new_style;
-    run->member.run.para->nFlags |= MEPF_REWRAP;
+
+    /* The para numbering style depends on the eop style */
+    if ((run->member.run.nFlags & MERF_ENDPARA) && para->para_num.style)
+    {
+      ME_ReleaseStyle(para->para_num.style);
+      para->para_num.style = NULL;
+    }
+    para->nFlags |= MEPF_REWRAP;
   }
 }
 
 static void ME_GetRunCharFormat(ME_TextEditor *editor, ME_DisplayItem *run, CHARFORMAT2W *pFmt)
 {
   ME_CopyCharFormat(pFmt, &run->member.run.style->fmt);
-  if ((pFmt->dwMask & CFM_UNDERLINETYPE) && (pFmt->bUnderlineType == CFU_CF1UNDERLINE))
-  {
-    pFmt->dwMask |= CFM_UNDERLINE;
-    pFmt->dwEffects |= CFE_UNDERLINE;
-  }
-  if ((pFmt->dwMask & CFM_UNDERLINETYPE) && (pFmt->bUnderlineType == CFU_UNDERLINENONE))
-  {
-    pFmt->dwMask |= CFM_UNDERLINE;
-    pFmt->dwEffects &= ~CFE_UNDERLINE;
-  }
 }
 
 /******************************************************************************
