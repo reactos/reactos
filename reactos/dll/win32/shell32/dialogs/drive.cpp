@@ -123,7 +123,7 @@ typedef struct _DRIVE_PROP_PAGE
 } DRIVE_PROP_PAGE;
 
 BOOL
-SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *apidl)
+SH_ShowDriveProperties(WCHAR *pwszDrive, LPCITEMIDLIST pidlFolder, PCUITEMID_CHILD_ARRAY apidl)
 {
     HPSXA hpsx = NULL;
     HPROPSHEETPAGE hpsp[MAX_PROPERTY_SHEET_PAGE];

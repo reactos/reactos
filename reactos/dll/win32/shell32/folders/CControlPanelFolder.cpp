@@ -133,8 +133,8 @@ HRESULT CCPLExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, R
 
     CComPtr<IDefaultExtractIconInit> initIcon;
     HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &initIcon));
-    if (FAILED(hr))
-        return NULL;
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     initIcon->SetNormalIcon(pData->szName, (int)pData->iconIdx != -1 ? pData->iconIdx : 0);
 

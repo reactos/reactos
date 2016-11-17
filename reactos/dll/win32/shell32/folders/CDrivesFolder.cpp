@@ -39,6 +39,69 @@ CDrivesFolderEnum is only responsible for returning the physical items.
 *   IShellFolder implementation
 */
 
+HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
+                                           HWND         hwnd,
+                                           IDataObject  *pdtobj,
+                                           UINT         uMsg,
+                                           WPARAM       wParam,
+                                           LPARAM       lParam)
+{
+    if (uMsg != DFM_MERGECONTEXTMENU && uMsg != DFM_INVOKECOMMAND)
+        return S_OK;
+
+    PIDLIST_ABSOLUTE pidlFolder;
+    PUITEMID_CHILD *apidl;
+    UINT cidl;
+    HRESULT hr = SH_GetApidlFromDataObject(pdtobj, &pidlFolder, &apidl, &cidl);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    char szDrive[8] = {0};
+    if (!_ILGetDrive(apidl[0], szDrive, sizeof(szDrive)))
+    {
+        ERR("pidl is not a drive\n");
+        SHFree(pidlFolder);
+        _ILFreeaPidl(apidl, cidl);
+        return E_FAIL;
+    }
+
+    if (uMsg == DFM_MERGECONTEXTMENU)
+    {
+        QCMINFO *pqcminfo = (QCMINFO *)lParam;
+        DWORD dwFlags;
+
+        if (GetVolumeInformationA(szDrive, NULL, 0, NULL, NULL, &dwFlags, NULL, 0))
+        {
+            /* Disable format if read only */
+            if (!(dwFlags & FILE_READ_ONLY_VOLUME) && GetDriveTypeA(szDrive) != DRIVE_REMOTE)
+            {
+                _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+                _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0x7ABC, MFT_STRING, MAKEINTRESOURCEW(IDS_FORMATDRIVE), MFS_ENABLED);
+            }
+        }
+    }
+    else if (uMsg == DFM_INVOKECOMMAND)
+    {
+        if(wParam == 0x7ABC)
+        {
+            SHFormatDrive(hwnd, szDrive[0] - 'A', SHFMT_ID_DEFAULT, 0);
+        }
+        else if (wParam == DFM_CMD_PROPERTIES)
+        {
+            WCHAR wszBuf[4];
+            wcscpy(wszBuf, L"A:\\");
+            wszBuf[0] = (WCHAR)szDrive[0];
+            if (!SH_ShowDriveProperties(wszBuf, pidlFolder, apidl))
+                hr = E_FAIL;
+        }
+    }
+
+    SHFree(pidlFolder);
+    _ILFreeaPidl(apidl, cidl);
+
+    return hr;
+}
+
 HRESULT CDrivesContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
                                           HWND hwnd,
                                           UINT cidl,
@@ -51,16 +114,15 @@ HRESULT CDrivesContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
     AddClassKeyToArray(L"Drive", hKeys, &cKeys);
     AddClassKeyToArray(L"Folder", hKeys, &cKeys);
 
-    /* TODO: also pass a callback here */
-    return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, NULL, cKeys, hKeys, ppcm);
+    return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, DrivesContextMenuCallback, cKeys, hKeys, ppcm);
 }
 
 HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
 {
     CComPtr<IDefaultExtractIconInit> initIcon;
     HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &initIcon));
-    if (FAILED(hr))
-        return NULL;
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     CHAR* pszDrive = _ILGetDataPointer(pidl)->u.drive.szDriveName;
     WCHAR wTemp[MAX_PATH];

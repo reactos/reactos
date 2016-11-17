@@ -61,6 +61,8 @@ class CDefaultContextMenu :
     private:
         CComPtr<IUnknown> m_site;
         CComPtr<IShellFolder> m_psf;
+        CComPtr<IContextMenuCB> m_pmcb;
+        LPFNDFMCALLBACK m_pfnmcb;
         UINT m_cidl;
         PCUITEMID_CHILD_ARRAY m_apidl;
         CComPtr<IDataObject> m_pDataObj;
@@ -75,6 +77,7 @@ class CDefaultContextMenu :
         UINT m_iIdSCMFirst; /* first static used id */
         UINT m_iIdSCMLast; /* last static used id */
 
+        HRESULT _DoCallback(UINT uMsg, WPARAM wParam, LPVOID lParam);
         void AddStaticEntry(const HKEY hkeyClass, const WCHAR *szVerb);
         void AddStaticEntriesForKey(HKEY hKey);
         BOOL IsShellExtensionAlreadyLoaded(const CLSID *pclsid);
@@ -93,7 +96,6 @@ class CDefaultContextMenu :
         HRESULT DoCopyOrCut(LPCMINVOKECOMMANDINFO lpcmi, BOOL bCopy);
         HRESULT DoRename(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoProperties(LPCMINVOKECOMMANDINFO lpcmi);
-        HRESULT DoFormat(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoCreateNewFolder(LPCMINVOKECOMMANDINFO lpici);
         HRESULT DoDynamicShellExtensions(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoStaticShellExtensions(LPCMINVOKECOMMANDINFO lpcmi);
@@ -106,7 +108,7 @@ class CDefaultContextMenu :
     public:
         CDefaultContextMenu();
         ~CDefaultContextMenu();
-        HRESULT WINAPI Initialize(const DEFCONTEXTMENU *pdcm);
+        HRESULT WINAPI Initialize(const DEFCONTEXTMENU *pdcm, LPFNDFMCALLBACK lpfn);
 
         // IContextMenu
         virtual HRESULT WINAPI QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
@@ -133,6 +135,8 @@ class CDefaultContextMenu :
 
 CDefaultContextMenu::CDefaultContextMenu() :
     m_psf(NULL),
+    m_pmcb(NULL),
+    m_pfnmcb(NULL),
     m_cidl(0),
     m_apidl(NULL),
     m_pDataObj(NULL),
@@ -180,7 +184,7 @@ CDefaultContextMenu::~CDefaultContextMenu()
     _ILFreeaPidl(const_cast<PITEMID_CHILD *>(m_apidl), m_cidl);
 }
 
-HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
+HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm, LPFNDFMCALLBACK lpfn)
 {
     TRACE("cidl %u\n", pdcm->cidl);
 
@@ -189,6 +193,8 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
     if (m_cidl && !m_apidl)
         return E_OUTOFMEMORY;
     m_psf = pdcm->psf;
+    m_pmcb = pdcm->pcmcb;
+    m_pfnmcb = lpfn;
 
     m_cKeys = pdcm->cKeys;
     if (pdcm->cKeys)
@@ -214,6 +220,20 @@ HRESULT WINAPI CDefaultContextMenu::Initialize(const DEFCONTEXTMENU *pdcm)
                 ERR("GetCurFolder failed\n");
         }
         TRACE("pidlFolder %p\n", m_pidlFolder);
+    }
+
+    return S_OK;
+}
+
+HRESULT CDefaultContextMenu::_DoCallback(UINT uMsg, WPARAM wParam, LPVOID lParam)
+{
+    if (m_pmcb)
+    {
+        return m_pmcb->CallBack(m_psf, NULL, m_pDataObj, uMsg, wParam, (LPARAM)lParam);
+    }
+    else if(m_pfnmcb)
+    {
+        return m_pfnmcb(m_psf, NULL, m_pDataObj, uMsg, wParam, (LPARAM)lParam);
     }
 
     return S_OK;
@@ -712,23 +732,15 @@ CDefaultContextMenu::BuildShellItemContextMenu(
     IndexMenu = InsertMenuItemsOfDynamicContextMenuExtension(hMenu, IndexMenu, iIdCmdFirst, iIdCmdLast);
     TRACE("IndexMenu %d\n", IndexMenu);
 
-    if (_ILIsDrive(m_apidl[0]))
-    {
-        char szDrive[8] = {0};
-        DWORD dwFlags;
-
-        _ILGetDrive(m_apidl[0], szDrive, sizeof(szDrive));
-        if (GetVolumeInformationA(szDrive, NULL, 0, NULL, NULL, &dwFlags, NULL, 0))
-        {
-            /* Disable format if read only */
-            if (!(dwFlags & FILE_READ_ONLY_VOLUME))
-            {
-                _InsertMenuItemW(hMenu, IndexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-                _InsertMenuItemW(hMenu, IndexMenu++, TRUE, 0x7ABC, MFT_STRING, MAKEINTRESOURCEW(IDS_FORMATDRIVE), MFS_ENABLED);
-                bAddSep = TRUE;
-            }
-        }
-    }
+    /* Now let the callback add its own items */
+    QCMINFO qcminfo;
+    qcminfo.hmenu = hMenu;
+    qcminfo.indexMenu = IndexMenu;
+    qcminfo.idCmdFirst = iIdCmdFirst;
+    qcminfo.idCmdLast = iIdCmdLast;
+    qcminfo.pIdMap = NULL;
+    _DoCallback(DFM_MERGECONTEXTMENU, uFlags, &qcminfo);
+    IndexMenu = GetMenuItemCount(hMenu);
 
     BOOL bClipboardData = (HasClipboardData() && (rfg & SFGAO_FILESYSTEM));
     if (rfg & (SFGAO_CANCOPY | SFGAO_CANMOVE) || bClipboardData)
@@ -971,105 +983,8 @@ HRESULT
 CDefaultContextMenu::DoProperties(
     LPCMINVOKECOMMANDINFO lpcmi)
 {
-    HRESULT hr = S_OK;
-    const ITEMIDLIST *pidlParent = m_pidlFolder, *pidlChild;
+    _DoCallback(DFM_INVOKECOMMAND, DFM_CMD_PROPERTIES, NULL);
 
-    if (!pidlParent)
-    {
-        CComPtr<IPersistFolder2> pf;
-
-        /* pidlFolder is optional */
-        if (SUCCEEDED(m_psf->QueryInterface(IID_PPV_ARG(IPersistFolder2, &pf))))
-        {
-            pf->GetCurFolder((_ITEMIDLIST**)&pidlParent);
-        }
-    }
-
-    if (m_cidl > 0)
-        pidlChild = m_apidl[0];
-    else
-    {
-        /* Set pidlChild to last pidl of current folder */
-        if (pidlParent == m_pidlFolder)
-            pidlParent = (ITEMIDLIST*)ILClone(pidlParent);
-
-        pidlChild = (ITEMIDLIST*)ILClone(ILFindLastID(pidlParent));
-        ILRemoveLastID((ITEMIDLIST*)pidlParent);
-    }
-
-    if (_ILIsMyComputer(pidlChild))
-    {
-        if (32 >= (UINT)ShellExecuteW(lpcmi->hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL))
-            hr = E_FAIL;
-    }
-    else if (_ILIsDesktop(pidlChild))
-    {
-        if (32 >= (UINT)ShellExecuteW(lpcmi->hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL desk.cpl", NULL, NULL, SW_SHOWNORMAL))
-            hr = E_FAIL;
-    }
-    else if (_ILIsDrive(pidlChild))
-    {
-        WCHAR wszBuf[MAX_PATH];
-        ILGetDisplayName(pidlChild, wszBuf);
-        if (!SH_ShowDriveProperties(wszBuf, pidlParent, &pidlChild))
-            hr = E_FAIL;
-    }
-    else if (_ILIsNetHood(pidlChild))
-    {
-        // FIXME path!
-        if (32 >= (UINT)ShellExecuteW(NULL, L"open", L"explorer.exe",
-                                      L"::{7007ACC7-3202-11D1-AAD2-00805FC1270E}",
-                                      NULL, SW_SHOWDEFAULT))
-            hr = E_FAIL;
-    }
-    else if (_ILIsBitBucket(pidlChild))
-    {
-        /* FIXME: detect the drive path of bitbucket if appropiate */
-        if (!SH_ShowRecycleBinProperties(L'C'))
-            hr = E_FAIL;
-    }
-    else
-    {
-        if (m_cidl > 1)
-            WARN("SHMultiFileProperties is not yet implemented\n");
-
-        STRRET strFile;
-        hr = m_psf->GetDisplayNameOf(pidlChild, SHGDN_FORPARSING, &strFile);
-        if (SUCCEEDED(hr))
-        {
-            WCHAR wszBuf[MAX_PATH];
-            hr = StrRetToBufW(&strFile, pidlChild, wszBuf, _countof(wszBuf));
-            if (SUCCEEDED(hr))
-                hr = SH_ShowPropertiesDialog(wszBuf, pidlParent, &pidlChild);
-            else
-                ERR("StrRetToBufW failed\n");
-        }
-        else
-            ERR("IShellFolder_GetDisplayNameOf failed for apidl\n");
-    }
-
-    /* Free allocated PIDLs */
-    if (pidlParent != m_pidlFolder)
-        ILFree((ITEMIDLIST*)pidlParent);
-    if (m_cidl < 1 || pidlChild != m_apidl[0])
-        ILFree((ITEMIDLIST*)pidlChild);
-
-    return hr;
-}
-
-HRESULT
-CDefaultContextMenu::DoFormat(
-    LPCMINVOKECOMMANDINFO lpcmi)
-{
-    char szDrive[8] = {0};
-
-    if (!_ILGetDrive(m_apidl[0], szDrive, sizeof(szDrive)))
-    {
-        ERR("pidl is not a drive\n");
-        return E_FAIL;
-    }
-
-    SHFormatDrive(lpcmi->hwnd, szDrive[0] - 'A', SHFMT_ID_DEFAULT, 0);
     return S_OK;
 }
 
@@ -1411,13 +1326,13 @@ CDefaultContextMenu::InvokeCommand(
     case FCIDM_SHVIEW_PROPERTIES:
         Result = DoProperties(&LocalInvokeInfo);
         break;
-    case 0x7ABC:
-        Result = DoFormat(&LocalInvokeInfo);
-        break;
     case FCIDM_SHVIEW_NEWFOLDER:
         Result = DoCreateNewFolder(&LocalInvokeInfo);
         break;
     default:
+
+        _DoCallback(DFM_INVOKECOMMAND, LOWORD(LocalInvokeInfo.lpVerb), NULL);
+
         Result = E_UNEXPECTED;
         break;
     }
@@ -1561,9 +1476,9 @@ CDefaultContextMenu::GetSite(REFIID riid, void **ppvSite)
 
 static
 HRESULT
-CDefaultContextMenu_CreateInstance(const DEFCONTEXTMENU *pdcm, REFIID riid, void **ppv)
+CDefaultContextMenu_CreateInstance(const DEFCONTEXTMENU *pdcm, LPFNDFMCALLBACK lpfn, REFIID riid, void **ppv)
 {
-    return ShellObjectCreatorInit<CDefaultContextMenu>(pdcm, riid, ppv);
+    return ShellObjectCreatorInit<CDefaultContextMenu>(pdcm, lpfn, riid, ppv);
 }
 
 /*************************************************************************
@@ -1575,7 +1490,7 @@ HRESULT
 WINAPI
 SHCreateDefaultContextMenu(const DEFCONTEXTMENU *pdcm, REFIID riid, void **ppv)
 {
-    HRESULT hr = CDefaultContextMenu_CreateInstance(pdcm, riid, ppv);
+    HRESULT hr = CDefaultContextMenu_CreateInstance(pdcm, NULL, riid, ppv);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -1600,18 +1515,18 @@ CDefFolderMenu_Create2(
     const HKEY *ahkeyClsKeys,
     IContextMenu **ppcm)
 {
-    DEFCONTEXTMENU pdcm;
-    pdcm.hwnd = hwnd;
-    pdcm.pcmcb = NULL;
-    pdcm.pidlFolder = pidlFolder;
-    pdcm.psf = psf;
-    pdcm.cidl = cidl;
-    pdcm.apidl = apidl;
-    pdcm.punkAssociationInfo = NULL;
-    pdcm.cKeys = nKeys;
-    pdcm.aKeys = ahkeyClsKeys;
+    DEFCONTEXTMENU dcm;
+    dcm.hwnd = hwnd;
+    dcm.pcmcb = NULL;
+    dcm.pidlFolder = pidlFolder;
+    dcm.psf = psf;
+    dcm.cidl = cidl;
+    dcm.apidl = apidl;
+    dcm.punkAssociationInfo = NULL;
+    dcm.cKeys = nKeys;
+    dcm.aKeys = ahkeyClsKeys;
 
-    HRESULT hr = SHCreateDefaultContextMenu(&pdcm, IID_PPV_ARG(IContextMenu, ppcm));
+    HRESULT hr = CDefaultContextMenu_CreateInstance(&dcm, lpfn, IID_PPV_ARG(IContextMenu, ppcm));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

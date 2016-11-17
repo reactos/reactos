@@ -67,8 +67,8 @@ HRESULT CRecyclerExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID riid, LPV
 {
     CComPtr<IDefaultExtractIconInit> initIcon;
     HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &initIcon));
-    if (FAILED(hr))
-        return NULL;
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     /* FIXME: This is completely unimplemented */
     initIcon->SetNormalIcon(swShell32Name, 0);

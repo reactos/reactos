@@ -547,6 +547,49 @@ void AddFSClassKeysToArray(PCUITEMID_CHILD pidl, HKEY* array, UINT* cKeys)
     }
 }
 
+HRESULT SH_GetApidlFromDataObject(IDataObject *pDataObject, PIDLIST_ABSOLUTE* ppidlfolder, PUITEMID_CHILD **apidlItems, UINT *pcidl)
+{
+    UINT cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
+    if (!cfShellIDList)
+        return E_FAIL;
+
+    FORMATETC fmt;
+    InitFormatEtc (fmt, cfShellIDList, TYMED_HGLOBAL);
+
+    HRESULT hr = pDataObject->QueryGetData(&fmt);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    STGMEDIUM medium;
+    hr = pDataObject->GetData(&fmt, &medium);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    /* lock the handle */
+    LPIDA lpcida = (LPIDA)GlobalLock(medium.hGlobal);
+    if (!lpcida)
+    {
+        ReleaseStgMedium(&medium);
+        return E_FAIL;
+    }
+
+    /* convert the data into pidl */
+    LPITEMIDLIST pidl;
+    LPITEMIDLIST *apidl = _ILCopyCidaToaPidl(&pidl, lpcida);
+    if (!apidl)
+    {
+        ReleaseStgMedium(&medium);
+        return E_OUTOFMEMORY;
+    }
+
+    *ppidlfolder = pidl;
+    *apidlItems = apidl;
+    *pcidl = lpcida->cidl;
+
+    ReleaseStgMedium(&medium);
+    return S_OK;
+}
+
 /***********************************************************************
  *  SHCreateLinks
  *

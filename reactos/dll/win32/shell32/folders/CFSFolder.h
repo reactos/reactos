@@ -27,7 +27,8 @@ class CFSFolder :
     public CComCoClass<CFSFolder, &CLSID_ShellFSFolder>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
-    public IPersistFolder3
+    public IPersistFolder3,
+    public IContextMenuCB
 {
     private:
         CLSID *pclsid;
@@ -79,6 +80,9 @@ class CFSFolder :
         // IPersistFolder3
         virtual HRESULT WINAPI InitializeEx(IBindCtx *pbc, LPCITEMIDLIST pidlRoot, const PERSIST_FOLDER_TARGET_INFO *ppfti);
         virtual HRESULT WINAPI GetFolderTargetInfo(PERSIST_FOLDER_TARGET_INFO *ppfti);
+
+        // IContextMenuCB
+        virtual HRESULT WINAPI CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
         DECLARE_REGISTRY_RESOURCEID(IDR_SHELLFSFOLDER)
         DECLARE_NOT_AGGREGATABLE(CFSFolder)

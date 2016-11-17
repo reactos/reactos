@@ -53,8 +53,8 @@ HRESULT CNetFolderExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID riid, LP
 {
     CComPtr<IDefaultExtractIconInit> initIcon;
     HRESULT hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit, &initIcon));
-    if (FAILED(hr))
-        return NULL;
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
 
     initIcon->SetNormalIcon(swShell32Name, -IDI_SHELL_NETWORK_FOLDER);
 

@@ -489,12 +489,21 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
 
         if (IsEqualIID(riid, IID_IContextMenu) && (cidl >= 1))
         {
-            IContextMenu  * pCm = NULL;
             HKEY hKeys[16];
             UINT cKeys = 0;
             AddFSClassKeysToArray(apidl[0], hKeys, &cKeys);
-            hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), NULL, cKeys, hKeys, &pCm);
-            pObj = pCm;
+
+            DEFCONTEXTMENU dcm;
+            dcm.hwnd = hwndOwner;
+            dcm.pcmcb = this;
+            dcm.pidlFolder = pidlRoot;
+            dcm.psf = this;
+            dcm.cidl = cidl;
+            dcm.apidl = apidl;
+            dcm.cKeys = cKeys;
+            dcm.aKeys = hKeys;
+            dcm.punkAssociationInfo = NULL;
+            hr = SHCreateDefaultContextMenu (&dcm, riid, &pObj);
         }
         else if (IsEqualIID (riid, IID_IDataObject))
         {
@@ -1087,5 +1096,39 @@ HRESULT WINAPI CFSFolder::_LoadDynamicDropTargetHandler(const CLSID *pclsid, LPC
         ERR("Failed to query for interface IID_IShellExtInit hr %x pclsid %s\n", hr, wine_dbgstr_guid(pclsid));
         return hr;
     }
+    return hr;
+}
+
+HRESULT WINAPI CFSFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg != DFM_INVOKECOMMAND || wParam != DFM_CMD_PROPERTIES)
+        return S_OK;
+
+    PIDLIST_ABSOLUTE pidlFolder;
+    PUITEMID_CHILD *apidl;
+    UINT cidl;
+    HRESULT hr = SH_GetApidlFromDataObject(pdtobj, &pidlFolder, &apidl, &cidl);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    if (cidl > 1)
+        ERR("SHMultiFileProperties is not yet implemented\n");
+
+    STRRET strFile;
+    hr = GetDisplayNameOf(apidl[0], SHGDN_FORPARSING, &strFile);
+    if (SUCCEEDED(hr))
+    {
+        hr = SH_ShowPropertiesDialog(strFile.pOleStr, pidlFolder, apidl);
+        if (FAILED(hr))
+            ERR("SH_ShowPropertiesDialog failed\n");
+    }
+    else
+    {
+        ERR("Failed to get display name\n");
+    }
+
+    SHFree(pidlFolder);
+    _ILFreeaPidl(apidl, cidl);
+
     return hr;
 }

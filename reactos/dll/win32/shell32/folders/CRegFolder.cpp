@@ -22,6 +22,54 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
+HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf,
+                                              HWND         hwnd,
+                                              IDataObject  *pdtobj,
+                                              UINT         uMsg,
+                                              WPARAM       wParam,
+                                              LPARAM       lParam)
+{
+    if (uMsg != DFM_INVOKECOMMAND || wParam != DFM_CMD_PROPERTIES)
+        return S_OK;
+
+    PIDLIST_ABSOLUTE pidlFolder;
+    PUITEMID_CHILD *apidl;
+    UINT cidl;
+    HRESULT hr = SH_GetApidlFromDataObject(pdtobj, &pidlFolder, &apidl, &cidl);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    if (_ILIsMyComputer(apidl[0]))
+    {
+        if (32 >= (UINT)ShellExecuteW(hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL))
+            hr = E_FAIL;
+    }
+    else if (_ILIsDesktop(apidl[0]))
+    {
+        if (32 >= (UINT)ShellExecuteW(hwnd, L"open", L"rundll32.exe shell32.dll,Control_RunDLL desk.cpl", NULL, NULL, SW_SHOWNORMAL))
+            hr = E_FAIL;
+    }
+    else if (_ILIsNetHood(apidl[0]))
+    {
+        // FIXME path!
+        if (32 >= (UINT)ShellExecuteW(NULL, L"open", L"explorer.exe",
+                                      L"::{7007ACC7-3202-11D1-AAD2-00805FC1270E}",
+                                      NULL, SW_SHOWDEFAULT))
+            hr = E_FAIL;
+    }
+    else if (_ILIsBitBucket(apidl[0]))
+    {
+        /* FIXME: detect the drive path of bitbucket if appropiate */
+        if (!SH_ShowRecycleBinProperties(L'C'))
+            hr = E_FAIL;
+    }
+
+    SHFree(pidlFolder);
+    _ILFreeaPidl(apidl, cidl);
+
+    return hr;
+}
+
 HRESULT CGuidItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
                                             HWND hwnd,
                                             UINT cidl,
@@ -48,7 +96,7 @@ HRESULT CGuidItemContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
     }
     AddClassKeyToArray(L"Folder", hKeys, &cKeys);
 
-    return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, NULL, cKeys, hKeys, ppcm);
+    return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, RegFolderContextMenuCallback, cKeys, hKeys, ppcm);
 }
 
 HRESULT CGuidItemExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut)
@@ -397,6 +445,10 @@ HRESULT WINAPI CRegFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CH
         }
 
         hr = CGuidItemContextMenu_CreateInstance(m_pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), (IContextMenu**)&pObj);
+    }
+    else if (IsEqualIID (riid, IID_IDataObject) && (cidl >= 1))
+    {
+        hr = IDataObject_Constructor (hwndOwner, m_pidlRoot, apidl, cidl, (IDataObject **)&pObj);
     }
     else
     {
