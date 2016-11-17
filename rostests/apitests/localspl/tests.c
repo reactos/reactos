@@ -212,3 +212,8 @@ START_TEST(fpEnumPrinters)
 {
     _RunRemoteTest("fpEnumPrinters");
 }
+
+START_TEST(fpGetPrintProcessorDirectory)
+{
+    _RunRemoteTest("fpGetPrintProcessorDirectory");
+}

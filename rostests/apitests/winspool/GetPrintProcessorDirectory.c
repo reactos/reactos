@@ -31,6 +31,7 @@ START_TEST(GetPrintProcessorDirectoryA)
 
     // Try with an invalid environment as well.
     SetLastError(0xDEADBEEF);
+    cbNeeded = 0xDEADBEEF;
     ok(!GetPrintProcessorDirectoryA(NULL, "invalid", 1, NULL, 0, &cbNeeded), "GetPrintProcessorDirectoryA returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_ENVIRONMENT, "GetPrintProcessorDirectoryA returns error %lu!\n", GetLastError());
     ok(cbNeeded == 0, "cbNeeded is %lu!\n", cbNeeded);
@@ -38,18 +39,21 @@ START_TEST(GetPrintProcessorDirectoryA)
     // Now get the required buffer size by supplying pcbNeeded. This needs to fail with ERROR_INSUFFICIENT_BUFFER.
     // Note for GetPrintProcessorDirectoryA: cbNeeded will be the same as for GetPrintProcessorDirectoryW, even though the ANSI string only needs half of it!
     SetLastError(0xDEADBEEF);
+    cbNeeded = 0;
     ok(!GetPrintProcessorDirectoryA(NULL, NULL, 1, NULL, 0, &cbNeeded), "GetPrintProcessorDirectoryA returns TRUE!\n");
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "GetPrintProcessorDirectoryA returns error %lu!\n", GetLastError());
     ok(cbNeeded > 0, "cbNeeded is 0!\n");
 
     // Now provide the demanded size, but no buffer.
     SetLastError(0xDEADBEEF);
+    cbTemp = 0xDEADBEEF;
     ok(!GetPrintProcessorDirectoryA(NULL, NULL, 1, NULL, cbNeeded, &cbTemp), "GetPrintProcessorDirectoryA returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "GetPrintProcessorDirectoryA returns error %lu!\n", GetLastError());
     ok(cbTemp == 0, "cbTemp is %lu!\n", cbTemp);
 
     // Same error has to occur with a size too small.
     SetLastError(0xDEADBEEF);
+    cbTemp = 0xDEADBEEF;
     ok(!GetPrintProcessorDirectoryA(NULL, NULL, 1, NULL, 1, &cbTemp), "GetPrintProcessorDirectoryA returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "GetPrintProcessorDirectoryA returns error %lu!\n", GetLastError());
     ok(cbTemp == 0, "cbTemp is %lu!\n", cbTemp);
@@ -83,24 +87,28 @@ START_TEST(GetPrintProcessorDirectoryW)
 
     // Try with an invalid environment as well.
     SetLastError(0xDEADBEEF);
+    cbNeeded = 0xDEADBEEF;
     ok(!GetPrintProcessorDirectoryW(NULL, L"invalid", 1, NULL, 0, &cbNeeded), "GetPrintProcessorDirectoryW returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_ENVIRONMENT, "GetPrintProcessorDirectoryW returns error %lu!\n", GetLastError());
     ok(cbNeeded == 0, "cbNeeded is %lu!\n", cbNeeded);
 
     // Now get the required buffer size by supplying pcbNeeded. This needs to fail with ERROR_INSUFFICIENT_BUFFER.
     SetLastError(0xDEADBEEF);
+    cbNeeded = 0;
     ok(!GetPrintProcessorDirectoryW(NULL, NULL, 1, NULL, 0, &cbNeeded), "GetPrintProcessorDirectoryW returns TRUE!\n");
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "GetPrintProcessorDirectoryW returns error %lu!\n", GetLastError());
     ok(cbNeeded > 0, "cbNeeded is 0!\n");
 
     // Now provide the demanded size, but no buffer.
     SetLastError(0xDEADBEEF);
+    cbTemp = 0xDEADBEEF;
     ok(!GetPrintProcessorDirectoryW(NULL, NULL, 1, NULL, cbNeeded, &cbTemp), "GetPrintProcessorDirectoryW returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "GetPrintProcessorDirectoryW returns error %lu!\n", GetLastError());
     ok(cbTemp == 0, "cbTemp is %lu!\n", cbTemp);
 
     // Same error has to occur with a size too small.
     SetLastError(0xDEADBEEF);
+    cbTemp = 0xDEADBEEF;
     ok(!GetPrintProcessorDirectoryW(NULL, NULL, 1, NULL, 1, &cbTemp), "GetPrintProcessorDirectoryW returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "GetPrintProcessorDirectoryW returns error %lu!\n", GetLastError());
     ok(cbTemp == 0, "cbTemp is %lu!\n", cbTemp);
