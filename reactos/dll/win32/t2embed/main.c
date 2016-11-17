@@ -32,7 +32,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(t2embed);
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-
     switch (fdwReason)
     {
         case DLL_WINE_PREATTACH:
@@ -75,6 +74,7 @@ LONG WINAPI TTEmbedFont(HDC hDC, ULONG ulFlags, ULONG ulCharSet, ULONG *pulPrivS
 LONG WINAPI TTGetEmbeddingType(HDC hDC, ULONG *status)
 {
     OUTLINETEXTMETRICW otm;
+    WORD fsType;
 
     TRACE("(%p %p)\n", hDC, status);
 
@@ -88,15 +88,22 @@ LONG WINAPI TTGetEmbeddingType(HDC hDC, ULONG *status)
     if (!status)
         return E_PERMISSIONSINVALID;
 
+    otm.otmfsType = (fsType = otm.otmfsType) & 0xf;
     if (otm.otmfsType == LICENSE_INSTALLABLE)
         *status = EMBED_INSTALLABLE;
-    else if (otm.otmfsType & LICENSE_NOEMBEDDING)
-        *status = EMBED_NOEMBEDDING;
-    else if (otm.otmfsType & LICENSE_PREVIEWPRINT)
-        *status = EMBED_PREVIEWPRINT;
     else if (otm.otmfsType & LICENSE_EDITABLE)
         *status = EMBED_EDITABLE;
+    else if (otm.otmfsType & LICENSE_PREVIEWPRINT)
+        *status = EMBED_PREVIEWPRINT;
+    else if (otm.otmfsType & LICENSE_NOEMBEDDING)
+        *status = EMBED_NOEMBEDDING;
+    else
+    {
+        WARN("unrecognized flags, %#x\n", otm.otmfsType);
+        *status = EMBED_INSTALLABLE;
+    }
 
+    TRACE("fsType 0x%04x, status %u\n", fsType, *status);
     return E_NONE;
 }
 
@@ -118,7 +125,7 @@ LONG WINAPI TTIsEmbeddingEnabledForFacename(LPCSTR facename, BOOL *enabled)
 
     *enabled = TRUE;
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, exclusionlistW, 0, GENERIC_READ, &hkey))
-        return E_NONE;
+        goto out;
 
     *enabled = TRUE;
     ret = ERROR_SUCCESS;
@@ -142,6 +149,8 @@ LONG WINAPI TTIsEmbeddingEnabledForFacename(LPCSTR facename, BOOL *enabled)
     }
     RegCloseKey(hkey);
 
+out:
+    TRACE("embedding %s for %s\n", *enabled ? "enabled" : "disabled", debugstr_a(facename));
     return E_NONE;
 }
 
@@ -165,7 +174,7 @@ LONG WINAPI TTIsEmbeddingEnabled(HDC hDC, BOOL *enabled)
         return E_NOFREEMEMORY;
 
     GetOutlineTextMetricsA(hDC, len, otm);
-    ret = TTIsEmbeddingEnabledForFacename(otm->otmpFaceName, enabled);
+    ret = TTIsEmbeddingEnabledForFacename((LPCSTR)otm + (ULONG_PTR)otm->otmpFaceName, enabled);
     HeapFree(GetProcessHeap(), 0, otm);
     return ret;
 }
