@@ -64,7 +64,7 @@ static void test_propertystore(IPropertyStore *store)
     pv.vt = VT_EMPTY;
     hr = IPropertyStore_GetValue(store, (const PROPERTYKEY*)&DEVPKEY_DeviceInterface_FriendlyName, &pv);
     ok(hr == S_OK, "Failed with %08x\n", hr);
-    ok(pv.vt == VT_EMPTY, "Key should not be found\n");
+    ok(pv.vt == VT_LPWSTR && pv.u.pwszVal, "FriendlyName value had wrong type: 0x%x or was NULL\n", pv.vt);
 
     pv.vt = VT_EMPTY;
     hr = IPropertyStore_GetValue(store, (const PROPERTYKEY*)&DEVPKEY_DeviceInterface_Enabled, &pv);
@@ -118,8 +118,9 @@ static void test_getat(IPropertyStore *store)
 	if (IsEqualPropertyKey(pkey, DEVPKEY_Device_DeviceDesc))
 	    found_desc = TRUE;
     }
-    ok(found_name || broken(!found_name), "DEVPKEY_Device_FriendlyName not found\n");
-    ok(found_desc == TRUE, "DEVPKEY_Device_DeviceDesc not found\n");
+    ok(found_name ||
+            broken(!found_name) /* vista */, "DEVPKEY_Device_FriendlyName not found\n");
+    ok(found_desc, "DEVPKEY_Device_DeviceDesc not found\n");
 }
 
 static void test_setvalue_on_wow64(IPropertyStore *store)

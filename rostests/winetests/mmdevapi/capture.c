@@ -309,19 +309,13 @@ static void test_capture(IAudioClient *ac, HANDLE handle, WAVEFORMATEX *wfx)
 
     if(hr == S_OK){
         /* The discontinuity is reported here, but is this an old or new packet? */
-        if(!(flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY)){
+        todo_wine_if(!(flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY)) {
             /* FIXME: Some drivers fail */
-            todo_wine ok(flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY, "expect DISCONTINUITY %x\n", flags);
-            todo_wine ok(pos == sum + frames, "Position %u gap %d\n",
-                         (UINT)pos, (UINT)pos - sum);
-        }else{
             ok(flags & AUDCLNT_BUFFERFLAGS_DATA_DISCONTINUITY, "expect DISCONTINUITY %x\n", flags);
-
             /* Native's position is one period further than what we read.
              * Perhaps that's precisely the meaning of DATA_DISCONTINUITY:
              * signal when the position jump left a gap. */
-            ok(pos == sum + frames, "Position %u gap %d\n",
-                         (UINT)pos, (UINT)pos - sum);
+            ok(pos == sum + frames, "Position %u gap %d\n", (UINT)pos, (UINT)pos - sum);
         }
 
         ok(pad == next, "GCP %u vs. BufferSize %u\n", (UINT32)pad, next);
