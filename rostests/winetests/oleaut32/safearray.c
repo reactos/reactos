@@ -710,11 +710,9 @@ static void test_safearray(void)
     }
 
     if (!pSafeArrayAllocDescriptorEx)
-    {
         return;
-    }
 
-	for (i=0;i<sizeof(vttypes)/sizeof(vttypes[0]);i++) {
+    for (i = 0; i < sizeof(vttypes)/sizeof(vttypes[0]); i++) {
 		a = NULL;
 		hres = pSafeArrayAllocDescriptorEx(vttypes[i].vt,1,&a);
 		ok(hres == S_OK, "SafeArrayAllocDescriptorEx gave hres 0x%x\n", hres);
@@ -768,7 +766,7 @@ static void test_safearray(void)
 		}
 		hres = SafeArrayDestroyDescriptor(a);
 		ok(hres == S_OK,"SADD failed with hres %x\n",hres);
-	}
+    }
 }
 
 static void test_SafeArrayAllocDestroyDescriptor(void)

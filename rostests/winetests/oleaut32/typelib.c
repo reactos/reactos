@@ -229,15 +229,13 @@ static void ref_count_test(LPCWSTR type_lib)
 
 static void test_TypeComp(void)
 {
+    ITypeComp *pTypeComp, *tcomp, *pTypeComp_tmp;
+    ITypeInfo *pTypeInfo, *ti, *pFontTypeInfo;
     ITypeLib *pTypeLib;
-    ITypeComp *pTypeComp;
     HRESULT hr;
     ULONG ulHash;
     DESCKIND desckind;
     BINDPTR bindptr;
-    ITypeInfo *pTypeInfo;
-    ITypeInfo *pFontTypeInfo;
-    ITypeComp *pTypeComp_tmp;
     static WCHAR wszStdFunctions[] = {'S','t','d','F','u','n','c','t','i','o','n','s',0};
     static WCHAR wszSavePicture[] = {'S','a','v','e','P','i','c','t','u','r','e',0};
     static WCHAR wszOLE_TRISTATE[] = {'O','L','E','_','T','R','I','S','T','A','T','E',0};
@@ -437,6 +435,17 @@ static void test_TypeComp(void)
 
     hr = ITypeInfo_GetTypeComp(pFontTypeInfo, &pTypeComp);
     ok_ole_success(hr, ITypeLib_GetTypeComp);
+
+    hr = ITypeInfo_QueryInterface(pFontTypeInfo, &IID_ITypeComp, (void**)&tcomp);
+    ok(hr == S_OK, "got %08x\n", hr);
+    ok(tcomp == pTypeComp, "got %p, was %p\n", tcomp, pTypeComp);
+
+    hr = ITypeComp_QueryInterface(tcomp, &IID_ITypeInfo, (void**)&ti);
+    ok(hr == S_OK, "got %08x\n", hr);
+    ok(ti == pFontTypeInfo, "got %p, was %p\n", ti, pFontTypeInfo);
+    ITypeInfo_Release(ti);
+
+    ITypeComp_Release(tcomp);
 
     ulHash = LHashValOfNameSys(SYS_WIN32, LOCALE_NEUTRAL, wszClone);
     hr = ITypeComp_Bind(pTypeComp, wszClone, ulHash, 0, &pTypeInfo, &desckind, &bindptr);
@@ -1686,7 +1695,7 @@ static void test_CreateTypeLib(SYSKIND sys) {
     ITypeInfo *interface1, *interface2, *dual, *unknown, *dispatch, *ti;
     ITypeInfo *tinfos[2];
     ITypeInfo2 *ti2;
-    ITypeComp *tcomp;
+    ITypeComp *tcomp, *tcomp2;
     MEMBERID memids[2];
     FUNCDESC funcdesc, *pfuncdesc;
     ELEMDESC elemdesc[5], *edesc;
@@ -2026,6 +2035,8 @@ static void test_CreateTypeLib(SYSKIND sys) {
     funcdesc.lprgelemdescParam = NULL;
     funcdesc.invkind = INVOKE_FUNC;
     funcdesc.cParams = 0;
+    funcdesc.cScodes = 1;
+    funcdesc.lprgscode = NULL;
     hres = ICreateTypeInfo_AddFuncDesc(createti, 1, &funcdesc);
     ok(hres == S_OK, "got %08x\n", hres);
 
@@ -3600,6 +3611,11 @@ static void test_CreateTypeLib(SYSKIND sys) {
 
     hres = ITypeInfo_GetTypeComp(ti, &tcomp);
     ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeInfo_QueryInterface(ti, &IID_ITypeComp, (void**)&tcomp2);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(tcomp == tcomp2, "got %p, was %p\n", tcomp2, tcomp);
+    ITypeComp_Release(tcomp2);
 
     hres = ITypeComp_Bind(tcomp, invokeW, 0, INVOKE_FUNC, &interface1, &desckind, &bindptr);
     ok(hres == S_OK, "got %08x\n", hres);

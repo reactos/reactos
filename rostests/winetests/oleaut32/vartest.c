@@ -727,12 +727,13 @@ static void test_VariantClear(void)
 
   /* DISPATCH */
   V_VT(&v) = VT_DISPATCH;
-  V_DISPATCH(&v) = (IDispatch*)&test_myVariantClearImpl;
+  V_DISPATCH(&v) = (IDispatch*)&test_myVariantClearImpl.IUnknown_iface;
   test_myVariantClearImpl.events = 0;
   hres = VariantClear(&v);
   ok(hres == S_OK, "ret %08x\n", hres);
   ok(V_VT(&v) == 0, "vt %04x\n", V_VT(&v));
-  ok(V_DISPATCH(&v) == (IDispatch*)&test_myVariantClearImpl, "dispatch %p\n", V_DISPATCH(&v));
+  ok(V_DISPATCH(&v) == (IDispatch*)&test_myVariantClearImpl.IUnknown_iface,
+     "dispatch %p\n", V_DISPATCH(&v));
   /* Check that Release got called, but nothing else */
   ok(test_myVariantClearImpl.events ==  0x4, "Unexpected call. events %08x\n", test_myVariantClearImpl.events);
 

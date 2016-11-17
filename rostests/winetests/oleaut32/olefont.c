@@ -1235,6 +1235,7 @@ static void test_realization(void)
 static void test_OleCreateFontIndirect(void)
 {
     FONTDESC fontdesc;
+    IUnknown *unk, *unk2;
     IFont *font;
     HRESULT hr;
 
@@ -1266,6 +1267,20 @@ static void test_OleCreateFontIndirect(void)
     hr = pOleCreateFontIndirect(&fontdesc, &IID_IFont, (void**)&font);
     EXPECT_HR(hr, S_OK);
     IFont_Release(font);
+
+    hr = OleInitialize(NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = CoGetClassObject(&CLSID_StdFont, CLSCTX_INPROC_SERVER, NULL, &IID_IClassFactory, (void**)&unk);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IUnknown_QueryInterface(unk, &IID_IUnknown, (void**)&unk2);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    IUnknown_Release(unk);
+    IUnknown_Release(unk2);
+
+    OleUninitialize();
 }
 
 START_TEST(olefont)
