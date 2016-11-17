@@ -51,7 +51,7 @@ BEGIN
     END
     POPUP "&Søg"
     BEGIN
-        MENUITEM "&Wrap long lines", CMD_WRAP
+        MENUITEM "&Word Wrap", CMD_WRAP
         MENUITEM "&Font...", CMD_FONT
     END
     POPUP "&View"

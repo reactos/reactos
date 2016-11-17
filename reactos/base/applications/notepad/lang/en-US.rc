@@ -51,7 +51,7 @@ BEGIN
     END
     POPUP "F&ormat"
     BEGIN
-        MENUITEM "&Wrap Wrap", CMD_WRAP
+        MENUITEM "&Word Wrap", CMD_WRAP
         MENUITEM "&Font...", CMD_FONT
     END
     POPUP "&View"
