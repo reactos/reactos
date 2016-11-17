@@ -3420,3 +3420,11 @@ HRESULT WINAPI MimeGetAddressFormatW(REFIID riid, void *object, DWORD addr_type,
 
     return E_NOTIMPL;
 }
+
+HRESULT WINAPI MimeOleObjectFromMoniker(BINDF bindf, IMoniker *moniker, IBindCtx *binding,
+       REFIID riid, void **out, IMoniker **moniker_new)
+{
+    FIXME("(0x%08x, %p, %p, %s, %p, %p) stub\n", bindf, moniker, binding, debugstr_guid(riid), out, moniker_new);
+
+    return E_NOTIMPL;
+}
