@@ -645,6 +645,19 @@ foo
 foo
 '1' GEQ "10"
 "10" GEQ "10"
+--- unconditional ampersand after if one line
+1@space@
+2@space@
+3 else echo 4
+---
+x@space@
+---
+x@space@
+---
+x@space@
+---
+x@space@
+---
 ------------ Testing for ------------
 --- plain FOR
 A
@@ -1045,8 +1058,8 @@ file move succeeded
 @todo_wine@bar@or_broken@baz
 read-only files are moveable
 file moved in subdirectory
-@todo_wine@moving a file to itself is a no-op@or_broken@moving a file to itself should be a no-op!
-@todo_wine@ErrorLevel: 0@or_broken@ErrorLevel: 1
+moving a file to itself is a no-op@or_broken@moving a file to itself should be a no-op!
+ErrorLevel: 0@or_broken@ErrorLevel: 1
 --- directory move
 simple directory move succeeded
 moving a directory to itself gives error; errlevel 1

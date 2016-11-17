@@ -836,6 +836,17 @@ if 1 GEQ "10" (echo 1 GEQ "10") else echo foo
 if "1" GEQ "10" (echo 1 GEQ "10") else echo foo
 if '1' GEQ "10" (echo '1' GEQ "10") else echo foo
 if "10" GEQ "10" (echo "10" GEQ "10")
+echo --- unconditional ampersand after if one line
+if "0"=="0" echo 1 & echo 2 & echo 3 else echo 4
+echo ---
+echo x & if "0"=="1" echo 1 & echo 2
+echo ---
+echo x & if "0"=="1" echo 1 & echo 2 & echo 3
+echo ---
+echo x & if "0"=="1" (echo 1 & echo 2 & echo 3)
+echo ---
+echo x & if "0"=="1" echo 1 & echo 2 & echo 3 else echo 4
+echo ---
 goto :endIfCompOpsSubroutines
 
 rem IF subroutines helpers
