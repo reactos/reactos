@@ -48,10 +48,23 @@ struct ColorMap
     Color newColor;
 };
 
+enum HistogramFormat
+{
+    HistogramFormatARGB,
+    HistogramFormatPARGB,
+    HistogramFormatRGB,
+    HistogramFormatGray,
+    HistogramFormatB,
+    HistogramFormatG,
+    HistogramFormatR,
+    HistogramFormatA,
+};
+
 #ifndef __cplusplus
 
 typedef enum ColorAdjustType ColorAdjustType;
 typedef enum ColorMatrixFlags ColorMatrixFlags;
+typedef enum HistogramFormat HistogramFormat;
 typedef struct ColorMatrix ColorMatrix;
 typedef struct ColorMap ColorMap;
 
