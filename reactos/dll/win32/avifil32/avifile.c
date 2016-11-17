@@ -297,6 +297,7 @@ static HRESULT WINAPI IAVIFile_fnGetStream(IAVIFile *iface, IAVIStream **avis, D
   }
 
   /* Sorry, but the specified stream doesn't exist */
+  *avis = NULL;
   return AVIERR_NODATA;
 }
 

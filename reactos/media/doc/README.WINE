@@ -48,7 +48,7 @@ reactos/dll/win32/advpack             # Synced to WineStaging-1.9.11
 reactos/dll/win32/atl                 # Synced to WineStaging-1.9.16
 reactos/dll/win32/atl80               # Synced to WineStaging-1.9.11
 reactos/dll/win32/atl100              # Synced to WineStaging-1.9.11
-reactos/dll/win32/avifil32            # Synced to WineStaging-1.9.16
+reactos/dll/win32/avifil32            # Synced to WineStaging-1.9.23
 reactos/dll/win32/bcrypt              # Synced to WineStaging-1.9.4
 reactos/dll/win32/browseui            # Out of sync
 reactos/dll/win32/cabinet             # Synced to WineStaging-1.9.16
