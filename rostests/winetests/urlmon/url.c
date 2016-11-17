@@ -3418,10 +3418,7 @@ static void test_BindToObject(int protocol, DWORD flags, HRESULT exhres)
     }
 
     ok(IMoniker_Release(mon) == 0, "mon should be destroyed here\n");
-    if(test_protocol != HTTP_TEST || emulate_protocol || !(bindf & BINDF_ASYNCHRONOUS))
-        ok(IBindCtx_Release(bctx) == 0, "bctx should be destroyed here\n");
-    else
-        IBindCtx_Release(bctx);
+    IBindCtx_Release(bctx);
 
     if(emulate_protocol)
         CoRevokeClassObject(regid);

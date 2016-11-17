@@ -647,7 +647,7 @@ static const struct {
     {data50, sizeof(data50), "video/mpeg"},
     {data51, sizeof(data51), "video/mpeg"},
     {data52, sizeof(data52), "application/octet-stream", "image/pjpeg"},
-    {data53, sizeof(data53), "application/octet-stream", "image/pjpeg"},
+    {data53, sizeof(data53), "application/octet-stream", "image/pjpeg", "image/x-icon"},
     {data54, sizeof(data54), "text/html", "video/mpeg"},
     {data55, sizeof(data55), "application/x-gzip-compressed"},
     {data56, sizeof(data56), "text/plain"},
