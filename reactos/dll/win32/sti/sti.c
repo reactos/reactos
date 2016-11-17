@@ -34,9 +34,9 @@ static const WCHAR registeredAppsLaunchPath[] = {
 
 typedef struct _stillimage
 {
+    IUnknown IUnknown_inner;
     IStillImageW IStillImageW_iface;
-    IUnknown IUnknown_iface;
-    IUnknown *pUnkOuter;
+    IUnknown *outer_unk;
     LONG ref;
 } stillimage;
 
@@ -49,19 +49,19 @@ static HRESULT WINAPI stillimagew_QueryInterface(IStillImageW *iface, REFIID rii
 {
     stillimage *This = impl_from_IStillImageW(iface);
     TRACE("(%p %s %p)\n", This, debugstr_guid(riid), ppvObject);
-    return IUnknown_QueryInterface(This->pUnkOuter, riid, ppvObject);
+    return IUnknown_QueryInterface(This->outer_unk, riid, ppvObject);
 }
 
 static ULONG WINAPI stillimagew_AddRef(IStillImageW *iface)
 {
     stillimage *This = impl_from_IStillImageW(iface);
-    return IUnknown_AddRef(This->pUnkOuter);
+    return IUnknown_AddRef(This->outer_unk);
 }
 
 static ULONG WINAPI stillimagew_Release(IStillImageW *iface)
 {
     stillimage *This = impl_from_IStillImageW(iface);
-    return IUnknown_Release(This->pUnkOuter);
+    return IUnknown_Release(This->outer_unk);
 }
 
 static HRESULT WINAPI stillimagew_Initialize(IStillImageW *iface, HINSTANCE hinst, DWORD dwVersion)
@@ -251,7 +251,7 @@ static const struct IStillImageWVtbl stillimagew_vtbl =
 
 static inline stillimage *impl_from_IUnknown(IUnknown *iface)
 {
-    return CONTAINING_RECORD(iface, stillimage, IUnknown_iface);
+    return CONTAINING_RECORD(iface, stillimage, IUnknown_inner);
 }
 
 static HRESULT WINAPI Internal_QueryInterface(IUnknown *iface, REFIID riid, void **ppvObject)
@@ -325,18 +325,18 @@ HRESULT WINAPI StiCreateInstanceW(HINSTANCE hinst, DWORD dwVer, PSTIW *ppSti, LP
     if (This)
     {
         This->IStillImageW_iface.lpVtbl = &stillimagew_vtbl;
-        This->IUnknown_iface.lpVtbl = &internal_unk_vtbl;
+        This->IUnknown_inner.lpVtbl = &internal_unk_vtbl;
         if (pUnkOuter)
-            This->pUnkOuter = pUnkOuter;
+            This->outer_unk = pUnkOuter;
         else
-            This->pUnkOuter = &This->IUnknown_iface;
+            This->outer_unk = &This->IUnknown_inner;
         This->ref = 1;
 
         hr = IStillImage_Initialize(&This->IStillImageW_iface, hinst, dwVer);
         if (SUCCEEDED(hr))
         {
             if (pUnkOuter)
-                *ppSti = (IStillImageW*) &This->IUnknown_iface;
+                *ppSti = (IStillImageW*) &This->IUnknown_inner;
             else
                 *ppSti = &This->IStillImageW_iface;
         }

@@ -180,7 +180,7 @@ reactos/dll/win32/snmpapi             # Synced to WineStaging-1.9.11
 reactos/dll/win32/softpub             # Synced to WineStaging-1.9.11
 reactos/dll/win32/stdole2.tlb         # Synced to WineStaging-1.9.11
 reactos/dll/win32/stdole32.tlb        # Synced to WineStaging-1.9.11
-reactos/dll/win32/sti                 # Synced to WineStaging-1.9.11
+reactos/dll/win32/sti                 # Synced to WineStaging-1.9.23
 reactos/dll/win32/sxs                 # Synced to WineStaging-1.9.11
 reactos/dll/win32/t2embed             # Synced to WineStaging-1.9.11
 reactos/dll/win32/tapi32              # Synced to WineStaging-1.9.11
