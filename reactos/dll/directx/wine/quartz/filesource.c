@@ -1419,17 +1419,17 @@ static const IAsyncReaderVtbl FileAsyncReader_Vtbl =
 
 static HRESULT WINAPI AMFilterMiscFlags_QueryInterface(IAMFilterMiscFlags *iface, REFIID riid, void **ppv) {
     AsyncReader *This = impl_from_IAMFilterMiscFlags(iface);
-    return IUnknown_QueryInterface((IUnknown*)This, riid, ppv);
+    return IBaseFilter_QueryInterface(&This->filter.IBaseFilter_iface, riid, ppv);
 }
 
 static ULONG WINAPI AMFilterMiscFlags_AddRef(IAMFilterMiscFlags *iface) {
     AsyncReader *This = impl_from_IAMFilterMiscFlags(iface);
-    return IUnknown_AddRef((IUnknown*)This);
+    return IBaseFilter_AddRef(&This->filter.IBaseFilter_iface);
 }
 
 static ULONG WINAPI AMFilterMiscFlags_Release(IAMFilterMiscFlags *iface) {
     AsyncReader *This = impl_from_IAMFilterMiscFlags(iface);
-    return IUnknown_Release((IUnknown*)This);
+    return IBaseFilter_Release(&This->filter.IBaseFilter_iface);
 }
 
 static ULONG WINAPI AMFilterMiscFlags_GetMiscFlags(IAMFilterMiscFlags *iface) {

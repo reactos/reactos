@@ -192,7 +192,7 @@ static inline IFilterGraphImpl *impl_from_IUnknown(IUnknown *iface)
 static HRESULT WINAPI FilterGraphInner_QueryInterface(IUnknown *iface, REFIID riid, void **ppvObj)
 {
     IFilterGraphImpl *This = impl_from_IUnknown(iface);
-    TRACE("(%p)->(%s (%p), %p)\n", This, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p)->(%s, %p)\n", This, debugstr_guid(riid), ppvObj);
 
     if (IsEqualGUID(&IID_IUnknown, riid)) {
         *ppvObj = &This->IUnknown_inner;
@@ -320,7 +320,7 @@ static HRESULT WINAPI FilterGraph2_QueryInterface(IFilterGraph2 *iface, REFIID r
 {
     IFilterGraphImpl *This = impl_from_IFilterGraph2(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return IUnknown_QueryInterface(This->outer_unk, riid, ppvObj);
 }
@@ -668,14 +668,14 @@ static HRESULT WINAPI FilterGraph2_ConnectDirect(IFilterGraph2 *iface, IPin *ppi
         if (FAILED(hr))
             return hr;
 
-        TRACE("Filter owning first pin => %p\n", PinInfo.pFilter);
+        TRACE("Filter owning ppinIn(%p) => %p\n", ppinIn, PinInfo.pFilter);
         IBaseFilter_Release(PinInfo.pFilter);
 
         hr = IPin_QueryPinInfo(ppinOut, &PinInfo);
         if (FAILED(hr))
             return hr;
 
-        TRACE("Filter owning second pin => %p\n", PinInfo.pFilter);
+        TRACE("Filter owning ppinOut(%p) => %p\n", ppinOut, PinInfo.pFilter);
         IBaseFilter_Release(PinInfo.pFilter);
     }
 
@@ -897,14 +897,14 @@ static HRESULT WINAPI FilterGraph2_Connect(IFilterGraph2 *iface, IPin *ppinOut, 
         if (FAILED(hr))
             return hr;
 
-        TRACE("Filter owning first pin => %p\n", PinInfo.pFilter);
+        TRACE("Filter owning ppinIn(%p) => %p\n", ppinIn, PinInfo.pFilter);
         IBaseFilter_Release(PinInfo.pFilter);
 
         hr = IPin_QueryPinInfo(ppinOut, &PinInfo);
         if (FAILED(hr))
             return hr;
 
-        TRACE("Filter owning second pin => %p\n", PinInfo.pFilter);
+        TRACE("Filter owning ppinOut(%p) => %p\n", ppinOut, PinInfo.pFilter);
         IBaseFilter_Release(PinInfo.pFilter);
     }
 
@@ -924,6 +924,8 @@ static HRESULT WINAPI FilterGraph2_Connect(IFilterGraph2 *iface, IPin *ppinOut, 
     if (dir == PINDIR_INPUT)
     {
         IPin *temp;
+
+        TRACE("Directions seem backwards, swapping pins\n");
 
         temp = ppinIn;
         ppinIn = ppinOut;
@@ -1819,7 +1821,7 @@ static HRESULT WINAPI MediaControl_QueryInterface(IMediaControl *iface, REFIID r
 {
     IFilterGraphImpl *This = impl_from_IMediaControl(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return IUnknown_QueryInterface(This->outer_unk, riid, ppvObj);
 }
@@ -1868,7 +1870,8 @@ static HRESULT WINAPI MediaControl_GetIDsOfNames(IMediaControl *iface, REFIID ri
 {
     IFilterGraphImpl *This = impl_from_IMediaControl(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p, %d, %d, %p): stub !!!\n", This, iface, debugstr_guid(riid), riid, rgszNames, cNames, lcid, rgDispId);
+    TRACE("(%p/%p)->(%s, %p, %d, %d, %p): stub !!!\n", This, iface, debugstr_guid(riid), rgszNames,
+            cNames, lcid, rgDispId);
 
     return S_OK;
 }
@@ -1879,7 +1882,8 @@ static HRESULT WINAPI MediaControl_Invoke(IMediaControl *iface, DISPID dispIdMem
 {
     IFilterGraphImpl *This = impl_from_IMediaControl(iface);
 
-    TRACE("(%p/%p)->(%d, %s (%p), %d, %04x, %p, %p, %p, %p): stub !!!\n", This, iface, dispIdMember, debugstr_guid(riid), riid, lcid, wFlags, pDispParams, pVarResult, pExepInfo, puArgErr);
+    TRACE("(%p/%p)->(%d, %s, %d, %04x, %p, %p, %p, %p): stub !!!\n", This, iface, dispIdMember,
+            debugstr_guid(riid), lcid, wFlags, pDispParams, pVarResult, pExepInfo, puArgErr);
 
     return S_OK;
 }
@@ -2215,7 +2219,7 @@ static HRESULT WINAPI MediaSeeking_QueryInterface(IMediaSeeking *iface, REFIID r
 {
     IFilterGraphImpl *This = impl_from_IMediaSeeking(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return IUnknown_QueryInterface(This->outer_unk, riid, ppvObj);
 }
@@ -2663,7 +2667,7 @@ static HRESULT WINAPI MediaPosition_QueryInterface(IMediaPosition* iface, REFIID
 {
     IFilterGraphImpl *This = impl_from_IMediaPosition( iface );
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return IUnknown_QueryInterface(This->outer_unk, riid, ppvObj);
 }
@@ -2875,7 +2879,7 @@ static HRESULT WINAPI ObjectWithSite_QueryInterface(IObjectWithSite* iface, REFI
 {
     IFilterGraphImpl *This = impl_from_IObjectWithSite( iface );
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return IUnknown_QueryInterface(This->outer_unk, riid, ppvObj);
 }
@@ -2987,7 +2991,7 @@ static HRESULT WINAPI BasicAudio_QueryInterface(IBasicAudio *iface, REFIID riid,
 {
     IFilterGraphImpl *This = impl_from_IBasicAudio(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return IUnknown_QueryInterface(This->outer_unk, riid, ppvObj);
 }
@@ -3059,7 +3063,8 @@ static HRESULT WINAPI BasicAudio_GetIDsOfNames(IBasicAudio *iface, REFIID riid, 
     IBasicAudio* pBasicAudio;
     HRESULT hr;
 
-    TRACE("(%p/%p)->(%s (%p), %p, %d, %d, %p)\n", This, iface, debugstr_guid(riid), riid, rgszNames, cNames, lcid, rgDispId);
+    TRACE("(%p/%p)->(%s, %p, %d, %d, %p)\n", This, iface, debugstr_guid(riid), rgszNames, cNames,
+            lcid, rgDispId);
 
     EnterCriticalSection(&This->cs);
 
@@ -3081,7 +3086,8 @@ static HRESULT WINAPI BasicAudio_Invoke(IBasicAudio *iface, DISPID dispIdMember,
     IBasicAudio* pBasicAudio;
     HRESULT hr;
 
-    TRACE("(%p/%p)->(%d, %s (%p), %d, %04x, %p, %p, %p, %p)\n", This, iface, dispIdMember, debugstr_guid(riid), riid, lcid, wFlags, pDispParams, pVarResult, pExepInfo, puArgErr);
+    TRACE("(%p/%p)->(%d, %s, %d, %04x, %p, %p, %p, %p)\n", This, iface, dispIdMember,
+            debugstr_guid(riid), lcid, wFlags, pDispParams, pVarResult, pExepInfo, puArgErr);
 
     EnterCriticalSection(&This->cs);
 
@@ -3200,7 +3206,7 @@ static HRESULT WINAPI BasicVideo_QueryInterface(IBasicVideo2 *iface, REFIID riid
 {
     IFilterGraphImpl *This = impl_from_IBasicVideo2(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return IUnknown_QueryInterface(This->outer_unk, riid, ppvObj);
 }
@@ -3272,7 +3278,8 @@ static HRESULT WINAPI BasicVideo_GetIDsOfNames(IBasicVideo2 *iface, REFIID riid,
     IBasicVideo *pBasicVideo;
     HRESULT hr;
 
-    TRACE("(%p/%p)->(%s (%p), %p, %d, %d, %p)\n", This, iface, debugstr_guid(riid), riid, rgszNames, cNames, lcid, rgDispId);
+    TRACE("(%p/%p)->(%s, %p, %d, %d, %p)\n", This, iface, debugstr_guid(riid), rgszNames, cNames,
+            lcid, rgDispId);
 
     EnterCriticalSection(&This->cs);
 
@@ -3294,7 +3301,8 @@ static HRESULT WINAPI BasicVideo_Invoke(IBasicVideo2 *iface, DISPID dispIdMember
     IBasicVideo *pBasicVideo;
     HRESULT hr;
 
-    TRACE("(%p/%p)->(%d, %s (%p), %d, %04x, %p, %p, %p, %p)\n", This, iface, dispIdMember, debugstr_guid(riid), riid, lcid, wFlags, pDispParams, pVarResult, pExepInfo, puArgErr);
+    TRACE("(%p/%p)->(%d, %s, %d, %04x, %p, %p, %p, %p)\n", This, iface, dispIdMember,
+            debugstr_guid(riid), lcid, wFlags, pDispParams, pVarResult, pExepInfo, puArgErr);
 
     EnterCriticalSection(&This->cs);
 
@@ -4030,7 +4038,7 @@ static HRESULT WINAPI VideoWindow_QueryInterface(IVideoWindow *iface, REFIID rii
 {
     IFilterGraphImpl *This = impl_from_IVideoWindow(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return IUnknown_QueryInterface(This->outer_unk, riid, ppvObj);
 }
@@ -4102,7 +4110,8 @@ static HRESULT WINAPI VideoWindow_GetIDsOfNames(IVideoWindow *iface, REFIID riid
     IVideoWindow *pVideoWindow;
     HRESULT hr;
 
-    TRACE("(%p/%p)->(%s (%p), %p, %d, %d, %p)\n", This, iface, debugstr_guid(riid), riid, rgszNames, cNames, lcid, rgDispId);
+    TRACE("(%p/%p)->(%s, %p, %d, %d, %p)\n", This, iface, debugstr_guid(riid), rgszNames, cNames,
+            lcid, rgDispId);
 
     EnterCriticalSection(&This->cs);
 
@@ -4124,7 +4133,8 @@ static HRESULT WINAPI VideoWindow_Invoke(IVideoWindow *iface, DISPID dispIdMembe
     IVideoWindow *pVideoWindow;
     HRESULT hr;
 
-    TRACE("(%p/%p)->(%d, %s (%p), %d, %04x, %p, %p, %p, %p)\n", This, iface, dispIdMember, debugstr_guid(riid), riid, lcid, wFlags, pDispParams, pVarResult, pExepInfo, puArgErr);
+    TRACE("(%p/%p)->(%d, %s, %d, %04x, %p, %p, %p, %p)\n", This, iface, dispIdMember,
+            debugstr_guid(riid), lcid, wFlags, pDispParams, pVarResult, pExepInfo, puArgErr);
 
     EnterCriticalSection(&This->cs);
 
@@ -4987,7 +4997,7 @@ static HRESULT WINAPI MediaEvent_QueryInterface(IMediaEventEx *iface, REFIID rii
 {
     IFilterGraphImpl *This = impl_from_IMediaEventEx(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return IUnknown_QueryInterface(This->outer_unk, riid, ppvObj);
 }
@@ -5035,7 +5045,8 @@ static HRESULT WINAPI MediaEvent_GetIDsOfNames(IMediaEventEx *iface, REFIID riid
 {
     IFilterGraphImpl *This = impl_from_IMediaEventEx(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p, %d, %d, %p): stub !!!\n", This, iface, debugstr_guid(riid), riid, rgszNames, cNames, lcid, rgDispId);
+    TRACE("(%p/%p)->(%s, %p, %d, %d, %p): stub !!!\n", This, iface, debugstr_guid(riid), rgszNames,
+            cNames, lcid, rgDispId);
 
     return S_OK;
 }
@@ -5046,7 +5057,8 @@ static HRESULT WINAPI MediaEvent_Invoke(IMediaEventEx *iface, DISPID dispIdMembe
 {
     IFilterGraphImpl *This = impl_from_IMediaEventEx(iface);
 
-    TRACE("(%p/%p)->(%d, %s (%p), %d, %04x, %p, %p, %p, %p): stub !!!\n", This, iface, dispIdMember, debugstr_guid(riid), riid, lcid, wFlags, pDispParams, pVarResult, pExepInfo, puArgErr);
+    TRACE("(%p/%p)->(%d, %s, %d, %04x, %p, %p, %p, %p): stub !!!\n", This, iface, dispIdMember,
+            debugstr_guid(riid), lcid, wFlags, pDispParams, pVarResult, pExepInfo, puArgErr);
 
     return S_OK;
 }

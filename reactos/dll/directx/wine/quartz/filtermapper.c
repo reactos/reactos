@@ -1139,7 +1139,7 @@ static HRESULT WINAPI FilterMapper_EnumMatchingFilters(
     REGFILTER* regfilters;
     HRESULT hr;
 
-    TRACE("(%p/%p)->(%p, %x, %s, %s, %s, %s, %s, %s, %s) stub!\n",
+    TRACE("(%p/%p)->(%p, %x, %s, %s, %s, %s, %s, %s, %s)\n",
         This,
         iface,
         ppEnum,

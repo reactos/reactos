@@ -771,7 +771,7 @@ static HRESULT WINAPI BasicVideo_QueryInterface(IBasicVideo *iface, REFIID riid,
 {
     VideoRendererImpl *This = impl_from_IBasicVideo(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return IUnknown_QueryInterface(This->outer_unk, riid, ppvObj);
 }
@@ -843,7 +843,7 @@ static HRESULT WINAPI VideoWindow_QueryInterface(IVideoWindow *iface, REFIID rii
 {
     VideoRendererImpl *This = impl_from_IVideoWindow(iface);
 
-    TRACE("(%p/%p)->(%s (%p), %p)\n", This, iface, debugstr_guid(riid), riid, ppvObj);
+    TRACE("(%p/%p)->(%s, %p)\n", This, iface, debugstr_guid(riid), ppvObj);
 
     return IUnknown_QueryInterface(This->outer_unk, riid, ppvObj);
 }

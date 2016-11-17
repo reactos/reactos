@@ -360,7 +360,7 @@ static HRESULT MPEGSplitter_init_audio(MPEGSplitterImpl *This, const BYTE *heade
 
     ZeroMemory(pamt, sizeof(*pamt));
     ppiOutput->dir = PINDIR_OUTPUT;
-    ppiOutput->pFilter = (IBaseFilter*)This;
+    ppiOutput->pFilter = &This->Parser.filter.IBaseFilter_iface;
     wsprintfW(ppiOutput->achName, wszAudioStream);
 
     pamt->formattype = FORMAT_WaveFormatEx;
