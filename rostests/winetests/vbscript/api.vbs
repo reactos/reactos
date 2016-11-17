@@ -440,6 +440,35 @@ TestLCase 0.123, doubleAsString(0.123)
 TestLCase Empty, ""
 Call ok(getVT(LCase(Null)) = "VT_NULL", "getVT(LCase(Null)) = " & getVT(LCase(Null)))
 
+Sub TestStrComp(str_left, str_right, mode, ex)
+    x = StrComp(str_left, str_right, mode)
+    Call ok(x = ex, "StrComp(" & str_left & ", " & str_right & ", " & mode & ") = " & x & " expected " & ex)
+End Sub
+
+TestStrComp "ABC",  "abc",  0, -1
+TestStrComp "abc",  "ABC",  0,  1
+TestStrComp "ABC",  "ABC",  0,  0
+TestStrComp "ABC",  "abc",  0, -1
+TestStrComp "abc",  "ABC",  0,  1
+TestStrComp "ABC",  "ABC",  0,  0
+TestStrComp "ABCD", "ABC",  0,  1
+TestStrComp "ABC",  "ABCD", 0, -1
+TestStrComp "ABC",  "abc",  1,  0
+TestStrComp "ABC",  "ABC",  1,  0
+TestStrComp "ABCD", "ABC",  1,  1
+TestStrComp "ABC",  "ABCD", 1, -1
+TestStrComp "ABC",  "ABCD", "0", -1
+TestStrComp "ABC",  "ABCD", "1", -1
+TestStrComp 1,      1,      1,  0
+TestStrComp "1",    1,      1,  0
+TestStrComp "1",    1.0,    1,  0
+TestStrComp Empty,  Empty,  1,  0
+TestStrComp Empty,  "",     1,  0
+TestStrComp Empty,  "ABC",  1,  -1
+TestStrComp "ABC",  Empty,  1,  1
+TestStrComp vbNull, vbNull, 1,  0
+TestStrComp "",     vbNull, 1,  -1
+
 Call ok(Len("abc") = 3, "Len(abc) = " & Len("abc"))
 Call ok(Len("") = 0, "Len() = " & Len(""))
 Call ok(Len(1) = 1, "Len(1) = " & Len(1))

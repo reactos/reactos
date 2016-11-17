@@ -2133,6 +2133,12 @@ static void run_tests(void)
     CHECK_CALLED(global_success_d);
     CHECK_CALLED(global_success_i);
 
+    SET_EXPECT(global_success_d);
+    SET_EXPECT(global_success_i);
+    parse_script_af(0, "TEST.reportSuccess()");
+    CHECK_CALLED(global_success_d);
+    CHECK_CALLED(global_success_i);
+
     SET_EXPECT(global_vbvar_d);
     SET_EXPECT(global_vbvar_i);
     parse_script_a("Option Explicit\nvbvar = 3");
