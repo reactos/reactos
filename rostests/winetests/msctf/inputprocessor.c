@@ -191,12 +191,11 @@ static void TextStoreACP_Destructor(TextStoreACP *This)
 
 static HRESULT WINAPI TextStoreACP_QueryInterface(ITextStoreACP *iface, REFIID iid, LPVOID *ppvOut)
 {
-    TextStoreACP *This = impl_from_ITextStoreACP(iface);
     *ppvOut = NULL;
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITextStoreACP))
     {
-        *ppvOut = This;
+        *ppvOut = iface;
     }
 
     if (*ppvOut)
@@ -464,7 +463,7 @@ static HRESULT TextStoreACP_Constructor(IUnknown **ppOut)
     This->ITextStoreACP_iface.lpVtbl = &TextStoreACP_TextStoreACPVtbl;
     This->refCount = 1;
 
-    *ppOut = (IUnknown *)This;
+    *ppOut = (IUnknown*)&This->ITextStoreACP_iface;
     return S_OK;
 }
 
@@ -489,12 +488,11 @@ static void ThreadMgrEventSink_Destructor(ThreadMgrEventSink *This)
 
 static HRESULT WINAPI ThreadMgrEventSink_QueryInterface(ITfThreadMgrEventSink *iface, REFIID iid, LPVOID *ppvOut)
 {
-    ThreadMgrEventSink *This = impl_from_ITfThreadMgrEventSink(iface);
     *ppvOut = NULL;
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITfThreadMgrEventSink))
     {
-        *ppvOut = This;
+        *ppvOut = iface;
     }
 
     if (*ppvOut)
@@ -623,7 +621,7 @@ static HRESULT ThreadMgrEventSink_Constructor(IUnknown **ppOut)
     This->ITfThreadMgrEventSink_iface.lpVtbl = &ThreadMgrEventSink_ThreadMgrEventSinkVtbl;
     This->refCount = 1;
 
-    *ppOut = (IUnknown *)This;
+    *ppOut = (IUnknown*)&This->ITfThreadMgrEventSink_iface;
     return S_OK;
 }
 
@@ -773,7 +771,7 @@ static HRESULT ClassFactory_Constructor(LPFNCONSTRUCTOR ctor, LPVOID *ppvOut)
     This->IClassFactory_iface.lpVtbl = &ClassFactoryVtbl;
     This->ref = 1;
     This->ctor = ctor;
-    *ppvOut = (LPVOID)This;
+    *ppvOut = &This->IClassFactory_iface;
     TS_refCount++;
     return S_OK;
 }
@@ -785,12 +783,11 @@ static void TextService_Destructor(TextService *This)
 
 static HRESULT WINAPI TextService_QueryInterface(ITfTextInputProcessor *iface, REFIID iid, LPVOID *ppvOut)
 {
-    TextService *This = impl_from_ITfTextInputProcessor(iface);
     *ppvOut = NULL;
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITfTextInputProcessor))
     {
-        *ppvOut = This;
+        *ppvOut = iface;
     }
 
     if (*ppvOut)
@@ -858,7 +855,7 @@ static HRESULT TextService_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
     This->ITfTextInputProcessor_iface.lpVtbl = &TextService_TextInputProcessorVtbl;
     This->refCount = 1;
 
-    *ppOut = (IUnknown *)This;
+    *ppOut = (IUnknown*)&This->ITfTextInputProcessor_iface;
     return S_OK;
 }
 
@@ -1148,12 +1145,11 @@ static void KeyEventSink_Destructor(KeyEventSink *This)
 
 static HRESULT WINAPI KeyEventSink_QueryInterface(ITfKeyEventSink *iface, REFIID iid, LPVOID *ppvOut)
 {
-    KeyEventSink *This = impl_from_ITfKeyEventSink(iface);
     *ppvOut = NULL;
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITfKeyEventSink))
     {
-        *ppvOut = This;
+        *ppvOut = iface;
     }
 
     if (*ppvOut)
@@ -1410,12 +1406,11 @@ static void TextEditSink_Destructor(TextEditSink *This)
 
 static HRESULT WINAPI TextEditSink_QueryInterface(ITfTextEditSink *iface, REFIID iid, LPVOID *ppvOut)
 {
-    TextEditSink *This = impl_from_ITfTextEditSink(iface);
     *ppvOut = NULL;
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITfTextEditSink))
     {
-        *ppvOut = This;
+        *ppvOut = iface;
     }
 
     if (*ppvOut)
@@ -1802,12 +1797,11 @@ static void EditSession_Destructor(EditSession *This)
 
 static HRESULT WINAPI EditSession_QueryInterface(ITfEditSession *iface, REFIID iid, LPVOID *ppvOut)
 {
-    EditSession *This = impl_from_ITfEditSession(iface);
     *ppvOut = NULL;
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITfEditSession))
     {
-        *ppvOut = This;
+        *ppvOut = iface;
     }
 
     if (*ppvOut)
