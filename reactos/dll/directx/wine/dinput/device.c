@@ -71,6 +71,42 @@ static void _dump_cooperativelevel_DI(DWORD dwFlags) {
     }
 }
 
+static void _dump_ObjectDataFormat_flags(DWORD dwFlags) {
+    unsigned int   i;
+    static const struct {
+        DWORD       mask;
+        const char  *name;
+    } flags[] = {
+#define FE(x) { x, #x}
+        FE(DIDOI_FFACTUATOR),
+        FE(DIDOI_FFEFFECTTRIGGER),
+        FE(DIDOI_POLLED),
+        FE(DIDOI_GUIDISUSAGE)
+#undef FE
+    };
+
+    if (!dwFlags) return;
+
+    TRACE("Flags:");
+
+    /* First the flags */
+    for (i = 0; i < (sizeof(flags) / sizeof(flags[0])); i++) {
+        if (flags[i].mask & dwFlags)
+        TRACE(" %s",flags[i].name);
+    }
+
+    /* Now specific values */
+#define FE(x) case x: TRACE(" "#x); break
+    switch (dwFlags & DIDOI_ASPECTMASK) {
+        FE(DIDOI_ASPECTACCEL);
+        FE(DIDOI_ASPECTFORCE);
+        FE(DIDOI_ASPECTPOSITION);
+        FE(DIDOI_ASPECTVELOCITY);
+    }
+#undef FE
+
+}
+
 static void _dump_EnumObjects_flags(DWORD dwFlags) {
     if (TRACE_ON(dinput)) {
 	unsigned int   i;
@@ -215,6 +251,7 @@ void _dump_DIDATAFORMAT(const DIDATAFORMAT *df) {
         TRACE("      * dwType: 0x%08x\n", df->rgodf[i].dwType);
 	TRACE("        "); _dump_EnumObjects_flags(df->rgodf[i].dwType); TRACE("\n");
         TRACE("      * dwFlags: 0x%08x\n", df->rgodf[i].dwFlags);
+	TRACE("        "); _dump_ObjectDataFormat_flags(df->rgodf[i].dwFlags); TRACE("\n");
     }
 }
 
@@ -431,16 +468,20 @@ static HRESULT create_DataFormat(LPCDIDATAFORMAT asked_format, DataFormat *forma
 		      debugstr_guid(asked_format->rgodf[j].pguid),
 		      _dump_dinput_GUID(asked_format->rgodf[j].pguid));
                 TRACE("       * Offset: %3d\n", asked_format->rgodf[j].dwOfs);
-                TRACE("       * dwType: %08x\n", asked_format->rgodf[j].dwType);
+                TRACE("       * dwType: 0x%08x\n", asked_format->rgodf[j].dwType);
 		TRACE("         "); _dump_EnumObjects_flags(asked_format->rgodf[j].dwType); TRACE("\n");
+                TRACE("       * dwFlags: 0x%08x\n", asked_format->rgodf[j].dwFlags);
+		TRACE("         "); _dump_ObjectDataFormat_flags(asked_format->rgodf[j].dwFlags); TRACE("\n");
 		
 		TRACE("   - Wine  (%d) :\n", i);
 		TRACE("       * GUID: %s ('%s')\n",
                       debugstr_guid(format->wine_df->rgodf[i].pguid),
                       _dump_dinput_GUID(format->wine_df->rgodf[i].pguid));
                 TRACE("       * Offset: %3d\n", format->wine_df->rgodf[i].dwOfs);
-                TRACE("       * dwType: %08x\n", format->wine_df->rgodf[i].dwType);
+                TRACE("       * dwType: 0x%08x\n", format->wine_df->rgodf[i].dwType);
                 TRACE("         "); _dump_EnumObjects_flags(format->wine_df->rgodf[i].dwType); TRACE("\n");
+                TRACE("       * dwFlags: 0x%08x\n", format->wine_df->rgodf[i].dwFlags);
+                TRACE("         "); _dump_ObjectDataFormat_flags(format->wine_df->rgodf[i].dwFlags); TRACE("\n");
 		
                 if (format->wine_df->rgodf[i].dwType & DIDFT_BUTTON)
 		    dt[index].size = sizeof(BYTE);
@@ -469,8 +510,10 @@ static HRESULT create_DataFormat(LPCDIDATAFORMAT asked_format, DataFormat *forma
 		  debugstr_guid(asked_format->rgodf[j].pguid),
 		  _dump_dinput_GUID(asked_format->rgodf[j].pguid));
             TRACE("       * Offset: %3d\n", asked_format->rgodf[j].dwOfs);
-            TRACE("       * dwType: %08x\n", asked_format->rgodf[j].dwType);
+            TRACE("       * dwType: 0x%08x\n", asked_format->rgodf[j].dwType);
 	    TRACE("         "); _dump_EnumObjects_flags(asked_format->rgodf[j].dwType); TRACE("\n");
+            TRACE("       * dwFlags: 0x%08x\n", asked_format->rgodf[j].dwFlags);
+	    TRACE("         "); _dump_ObjectDataFormat_flags(asked_format->rgodf[j].dwFlags); TRACE("\n");
 	    
 	    if (asked_format->rgodf[j].dwType & DIDFT_BUTTON)
 		dt[index].size = sizeof(BYTE);
@@ -1537,7 +1580,10 @@ HRESULT WINAPI IDirectInputDevice2WImpl_CreateEffect(LPDIRECTINPUTDEVICE8W iface
                                                      LPDIRECTINPUTEFFECT *ppdef, LPUNKNOWN pUnkOuter)
 {
     FIXME("(this=%p,%s,%p,%p,%p): stub!\n", iface, debugstr_guid(rguid), lpeff, ppdef, pUnkOuter);
-    return DI_OK;
+
+    FIXME("not available in the generic implementation\n");
+    *ppdef = NULL;
+    return DIERR_UNSUPPORTED;
 }
 
 HRESULT WINAPI IDirectInputDevice2AImpl_CreateEffect(LPDIRECTINPUTDEVICE8A iface, REFGUID rguid, LPCDIEFFECT lpeff,

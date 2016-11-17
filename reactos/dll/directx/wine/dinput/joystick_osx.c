@@ -1398,7 +1398,7 @@ static HRESULT WINAPI JoystickWImpl_CreateEffect(IDirectInputDevice8W *iface,
     if(!This->ff){
         TRACE("No force feedback support\n");
         *out = NULL;
-        return S_OK;
+        return DIERR_UNSUPPORTED;
     }
 
     if(outer)
