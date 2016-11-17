@@ -2629,6 +2629,7 @@ BOOL __cdecl FDICopy(
       fdin.date = file->date;
       fdin.time = file->time;
       fdin.attribs = file->attribs;
+      fdin.iFolder = file->index;
       if ((filehf = ((*pfnfdin)(fdintCOPY_FILE, &fdin))) == -1) {
         set_error( fdi, FDIERROR_USER_ABORT, 0 );
         filehf = 0;
@@ -2754,6 +2755,7 @@ BOOL __cdecl FDICopy(
       fdin.date = file->date;
       fdin.time = file->time;
       fdin.attribs = file->attribs; /* FIXME: filter _A_EXEC? */
+      fdin.iFolder = file->index;
       ((*pfnfdin)(fdintCLOSE_FILE_INFO, &fdin));
       filehf = 0;
 
