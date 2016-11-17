@@ -296,9 +296,8 @@ static BOOL ICInfo_enum_handler(const char *drv, unsigned int nr, void *param)
     ICINFO *lpicinfo = param;
     DWORD fccHandler = mmioStringToFOURCCA(drv + 5, 0);
 
-    /* exact match of fccHandler or nth driver found */
-    if ((lpicinfo->fccHandler != nr) && (lpicinfo->fccHandler != fccHandler))
-	return FALSE;
+    if (lpicinfo->fccHandler != nr && compare_fourcc(lpicinfo->fccHandler, fccHandler))
+        return FALSE;
 
     lpicinfo->fccHandler = fccHandler;
     lpicinfo->dwFlags = 0;
