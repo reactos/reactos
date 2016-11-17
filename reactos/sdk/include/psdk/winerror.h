@@ -3268,6 +3268,8 @@
 #define SCARD_W_CACHE_ITEM_STALE                           _HRESULT_TYPEDEF_(0x80100071L)
 #define SCARD_W_CACHE_ITEM_TOO_BIG                         _HRESULT_TYPEDEF_(0x80100072L)
 
+#define WINCODEC_ERR_UNKNOWNIMAGEFORMAT                    _HRESULT_TYPEDEF_(0x88982f07)
+
 #define ERROR_AUDITING_DISABLED                            _HRESULT_TYPEDEF_(0xC0090001L)
 #define ERROR_ALL_SIDS_FILTERED                            _HRESULT_TYPEDEF_(0xC0090002L)
 
