@@ -24,25 +24,16 @@
 /* Create a RGB color from its components */
 D3DCOLOR WINAPI D3DRMCreateColorRGB(D3DVALUE red, D3DVALUE green, D3DVALUE blue)
 {
-    return (D3DRMCreateColorRGBA(red, green, blue, 255.0));
+    return D3DRMCreateColorRGBA(red, green, blue, 1.0f);
 }
 /* Create a RGBA color from its components */
 D3DCOLOR WINAPI D3DRMCreateColorRGBA(D3DVALUE red, D3DVALUE green, D3DVALUE blue, D3DVALUE alpha)
 {
-    int Red, Green, Blue, Alpha;
-    Red=floor(red*255);
-    Green=floor(green*255);
-    Blue=floor(blue*255);
-    Alpha=floor(alpha*255);
-    if (red < 0) Red=0;
-    if (red > 1) Red=255;
-    if (green < 0) Green=0;
-    if (green > 1) Green=255;
-    if (blue < 0) Blue=0;
-    if (blue > 1) Blue=255;
-    if (alpha < 0) Alpha=0;
-    if (alpha > 1) Alpha=255;
-    return (RGBA_MAKE(Red, Green, Blue, Alpha));
+    D3DCOLOR color;
+
+    d3drm_set_color(&color, red, green, blue, alpha);
+
+    return color;
 }
 
 /* Determine the alpha part of a color */

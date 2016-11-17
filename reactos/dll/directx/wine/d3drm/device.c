@@ -202,7 +202,7 @@ static HRESULT d3drm_device_set_ddraw_device_d3d(struct d3drm_device *device, ID
 {
     IDirectDraw *ddraw;
     IDirectDrawSurface *surface;
-    IDirect3DDevice2 *d3d_device2;
+    IDirect3DDevice2 *d3d_device2 = NULL;
     DDSURFACEDESC desc;
     HRESULT hr;
 
@@ -211,9 +211,6 @@ static HRESULT d3drm_device_set_ddraw_device_d3d(struct d3drm_device *device, ID
         return hr;
     IDirect3DRM_AddRef(device->d3drm);
     IDirect3DDevice_AddRef(d3d_device);
-
-    if (device->ddraw)
-        return D3DRMERR_BADOBJECT;
 
     /* Fetch render target and get width/height from there */
     if (FAILED(hr = IDirect3DDevice_QueryInterface(d3d_device, &IID_IDirectDrawSurface, (void **)&surface)))
@@ -226,16 +223,26 @@ static HRESULT d3drm_device_set_ddraw_device_d3d(struct d3drm_device *device, ID
             return hr;
     }
 
+    if (device->ddraw)
+    {
+        if (d3d_device2)
+            IDirectDrawSurface_Release(surface);
+        return D3DRMERR_BADOBJECT;
+    }
+
     desc.dwSize = sizeof(desc);
     hr = IDirectDrawSurface_GetSurfaceDesc(surface, &desc);
-    IDirectDrawSurface_Release(surface);
     if (FAILED(hr))
+    {
+        IDirectDrawSurface_Release(surface);
         return hr;
+    }
 
     device->ddraw = ddraw;
     device->width = desc.dwWidth;
     device->height = desc.dwHeight;
     device->device = d3d_device;
+    device->render_target = surface;
 
     return hr;
 }
@@ -1128,7 +1135,7 @@ static D3DCOLORMODEL WINAPI d3drm_device1_GetColorModel(IDirect3DRMDevice *iface
 {
     struct d3drm_device *device = impl_from_IDirect3DRMDevice(iface);
 
-    TRACE("iface %p stub!\n", iface);
+    TRACE("iface %p.\n", iface);
 
     return d3drm_device3_GetColorModel(&device->IDirect3DRMDevice3_iface);
 }
@@ -1562,7 +1569,7 @@ static HRESULT WINAPI d3drm_device_win_GetName(IDirect3DRMWinDevice *iface, DWOR
 {
     struct d3drm_device *device = impl_from_IDirect3DRMWinDevice(iface);
 
-    TRACE("iface %p, size %p, name %p stub!\n", iface, size, name);
+    TRACE("iface %p, size %p, name %p.\n", iface, size, name);
 
     return d3drm_device3_GetName(&device->IDirect3DRMDevice3_iface, size, name);
 }

@@ -1329,23 +1329,53 @@ static HRESULT WINAPI d3drm_frame1_GetRotation(IDirect3DRMFrame *iface,
 
 static HRESULT WINAPI d3drm_frame3_GetScene(IDirect3DRMFrame3 *iface, IDirect3DRMFrame3 **scene)
 {
-    FIXME("iface %p, scene %p stub!\n", iface, scene);
+    struct d3drm_frame *frame = impl_from_IDirect3DRMFrame3(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, scene %p.\n", iface, scene);
+
+    if (!scene)
+        return D3DRMERR_BADVALUE;
+
+    while (frame->parent)
+        frame = frame->parent;
+
+    *scene = &frame->IDirect3DRMFrame3_iface;
+    IDirect3DRMFrame3_AddRef(*scene);
+
+    return D3DRM_OK;
 }
 
 static HRESULT WINAPI d3drm_frame2_GetScene(IDirect3DRMFrame2 *iface, IDirect3DRMFrame **scene)
 {
-    FIXME("iface %p, scene %p stub!\n", iface, scene);
+    struct d3drm_frame *frame = impl_from_IDirect3DRMFrame2(iface);
+    IDirect3DRMFrame3 *frame3;
+    HRESULT hr;
 
-    return E_NOTIMPL;
+    TRACE("iface %p, scene %p.\n", iface, scene);
+
+    if (!scene)
+        return D3DRMERR_BADVALUE;
+
+    hr = IDirect3DRMFrame3_GetScene(&frame->IDirect3DRMFrame3_iface, &frame3);
+    if (FAILED(hr) || !frame3)
+    {
+        *scene = NULL;
+        return hr;
+    }
+
+    hr = IDirect3DRMFrame3_QueryInterface(frame3, &IID_IDirect3DRMFrame, (void **)scene);
+    IDirect3DRMFrame3_Release(frame3);
+
+    return hr;
 }
 
 static HRESULT WINAPI d3drm_frame1_GetScene(IDirect3DRMFrame *iface, IDirect3DRMFrame **scene)
 {
-    FIXME("iface %p, scene %p stub!\n", iface, scene);
+    struct d3drm_frame *frame = impl_from_IDirect3DRMFrame(iface);
 
-    return E_NOTIMPL;
+    TRACE("iface %p, scene %p.\n", iface, scene);
+
+    return d3drm_frame2_GetScene(&frame->IDirect3DRMFrame2_iface, scene);
 }
 
 static D3DRMSORTMODE WINAPI d3drm_frame3_GetSortMode(IDirect3DRMFrame3 *iface)
@@ -1962,10 +1992,9 @@ static HRESULT WINAPI d3drm_frame3_SetSceneBackgroundRGB(IDirect3DRMFrame3 *ifac
 {
     struct d3drm_frame *frame = impl_from_IDirect3DRMFrame3(iface);
 
-    TRACE("iface %p, red %.8e, green %.8e, blue %.8e stub!\n", iface, red, green, blue);
+    TRACE("iface %p, red %.8e, green %.8e, blue %.8e.\n", iface, red, green, blue);
 
-    frame->scenebackground = RGBA_MAKE((BYTE)(red * 255.0f),
-            (BYTE)(green * 255.0f), (BYTE)(blue * 255.0f), 0xff);
+    d3drm_set_color(&frame->scenebackground, red, green, blue, 1.0f);
 
     return D3DRM_OK;
 }
@@ -2909,7 +2938,7 @@ HRESULT d3drm_frame_create(struct d3drm_frame **frame, IUnknown *parent_frame, I
     object->IDirect3DRMFrame3_iface.lpVtbl = &d3drm_frame3_vtbl;
     object->d3drm = d3drm;
     object->ref = 1;
-    object->scenebackground = RGBA_MAKE(0, 0, 0, 0xff);
+    d3drm_set_color(&object->scenebackground, 0.0f, 0.0f, 0.0f, 1.0f);
 
     memcpy(object->transform, identity, sizeof(D3DRMMATRIX4D));
 

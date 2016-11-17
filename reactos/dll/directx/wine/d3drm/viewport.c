@@ -30,6 +30,32 @@ static inline struct d3drm_viewport *impl_from_IDirect3DRMViewport2(IDirect3DRMV
     return CONTAINING_RECORD(iface, struct d3drm_viewport, IDirect3DRMViewport2_iface);
 }
 
+static inline void d3drm_normalize_d3d_color(D3DCOLORVALUE *color_value, D3DCOLOR color)
+{
+    color_value->u1.r = RGBA_GETRED(color) / 255.0f;
+    color_value->u2.g = RGBA_GETGREEN(color) / 255.0f;
+    color_value->u3.b = RGBA_GETBLUE(color) / 255.0f;
+    color_value->u4.a = RGBA_GETALPHA(color) / 255.0f;
+}
+
+static HRESULT d3drm_update_background_material(struct d3drm_viewport *viewport)
+{
+    IDirect3DRMFrame *root_frame;
+    D3DCOLOR color;
+    D3DMATERIAL mat;
+    HRESULT hr;
+
+    if (FAILED(hr = IDirect3DRMFrame_GetScene(viewport->camera, &root_frame)))
+        return hr;
+    color = IDirect3DRMFrame_GetSceneBackground(root_frame);
+
+    memset(&mat, 0, sizeof(mat));
+    mat.dwSize = sizeof(mat);
+    d3drm_normalize_d3d_color(&mat.u.diffuse, color);
+
+    return IDirect3DMaterial_SetMaterial(viewport->material, &mat);
+}
+
 static void d3drm_viewport_destroy(struct d3drm_viewport *viewport)
 {
     TRACE("viewport %p releasing attached interfaces.\n", viewport);
@@ -275,10 +301,8 @@ static HRESULT WINAPI d3drm_viewport2_Init(IDirect3DRMViewport2 *iface, IDirect3
     D3DVIEWPORT vp;
     D3DVALUE scale;
     IDirect3D *d3d1 = NULL;
-    D3DCOLOR color;
     IDirect3DDevice *d3d_device = NULL;
     IDirect3DMaterial *material = NULL;
-    D3DMATERIAL mat;
     D3DMATERIALHANDLE hmat;
     HRESULT hr = D3DRM_OK;
 
@@ -328,19 +352,7 @@ static HRESULT WINAPI d3drm_viewport2_Init(IDirect3DRMViewport2 *iface, IDirect3
     if (FAILED(hr = IDirect3DRMFrame3_QueryInterface(camera, &IID_IDirect3DRMFrame, (void **)&viewport->camera)))
         goto cleanup;
 
-    color = IDirect3DRMFrame3_GetSceneBackground(camera);
-    /* Create material (ambient/diffuse/emissive?), set material */
     if (FAILED(hr = IDirect3D_CreateMaterial(d3d1, &material, NULL)))
-        goto cleanup;
-
-    memset(&mat, 0, sizeof(mat));
-    mat.dwSize = sizeof(mat);
-    mat.u.diffuse.u1.r = RGBA_GETRED(color) / 255.0f;
-    mat.u.diffuse.u2.g = RGBA_GETGREEN(color) / 255.0f;
-    mat.u.diffuse.u3.b = RGBA_GETBLUE(color) / 255.0f;
-    mat.u.diffuse.u4.a = RGBA_GETALPHA(color) / 255.0f;
-
-    if (FAILED(hr = IDirect3DMaterial_SetMaterial(material, &mat)))
         goto cleanup;
 
     if (FAILED(hr = IDirect3DMaterial_GetHandle(material, d3d_device, &hmat)))
@@ -399,16 +411,49 @@ static HRESULT WINAPI d3drm_viewport1_Init(IDirect3DRMViewport *iface, IDirect3D
 
 static HRESULT WINAPI d3drm_viewport2_Clear(IDirect3DRMViewport2 *iface, DWORD flags)
 {
-    FIXME("iface %p, flags %#x.\n", iface, flags);
+    struct d3drm_viewport *viewport = impl_from_IDirect3DRMViewport2(iface);
+    DDSCAPS caps = { DDSCAPS_ZBUFFER };
+    HRESULT hr;
+    D3DRECT clear_rect;
+    IDirectDrawSurface *ds;
+    DWORD clear_flags = 0;
+
+    TRACE("iface %p, flags %#x.\n", iface, flags);
+
+    clear_rect.u1.x1 = clear_rect.u2.y1 = 0;
+    clear_rect.u3.x2 = viewport->device->width;
+    clear_rect.u4.y2 = viewport->device->height;
+
+    if (flags & D3DRMCLEAR_TARGET)
+    {
+        clear_flags |= D3DCLEAR_TARGET;
+        d3drm_update_background_material(viewport);
+    }
+    if (flags & D3DRMCLEAR_ZBUFFER)
+    {
+        hr = IDirectDrawSurface_GetAttachedSurface(viewport->device->render_target, &caps, &ds);
+        if (SUCCEEDED(hr))
+        {
+            clear_flags |= D3DCLEAR_ZBUFFER;
+            IDirectDrawSurface_Release(ds);
+        }
+    }
+    if (flags & D3DRMCLEAR_DIRTYRECTS)
+        FIXME("Flag D3DRMCLEAR_DIRTYRECT not implemented yet.\n");
+
+    if (FAILED(hr = IDirect3DViewport_Clear(viewport->d3d_viewport, 1, &clear_rect, clear_flags)))
+        return hr;
 
     return D3DRM_OK;
 }
 
 static HRESULT WINAPI d3drm_viewport1_Clear(IDirect3DRMViewport *iface)
 {
-    FIXME("iface %p.\n", iface);
+    struct d3drm_viewport *viewport = impl_from_IDirect3DRMViewport(iface);
 
-    return D3DRM_OK;
+    TRACE("iface %p.\n", iface);
+
+    return d3drm_viewport2_Clear(&viewport->IDirect3DRMViewport2_iface, D3DRMCLEAR_ALL);
 }
 
 static HRESULT WINAPI d3drm_viewport2_Render(IDirect3DRMViewport2 *iface, IDirect3DRMFrame3 *frame)

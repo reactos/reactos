@@ -213,7 +213,7 @@ static HRESULT WINAPI d3drm_texture1_SetDecalSize(IDirect3DRMTexture *iface, D3D
 {
     struct d3drm_texture *texture = impl_from_IDirect3DRMTexture(iface);
 
-    TRACE("iface %p, width %.8e, height %.8e stub!\n", iface, width, height);
+    TRACE("iface %p, width %.8e, height %.8e.\n", iface, width, height);
 
     return IDirect3DRMTexture3_SetDecalSize(&texture->IDirect3DRMTexture3_iface, width, height);
 }
@@ -513,7 +513,7 @@ static HRESULT WINAPI d3drm_texture2_SetDecalSize(IDirect3DRMTexture2 *iface, D3
 {
     struct d3drm_texture *texture = impl_from_IDirect3DRMTexture2(iface);
 
-    TRACE("iface %p, width %.8e, height %.8e stub!\n", iface, width, height);
+    TRACE("iface %p, width %.8e, height %.8e.\n", iface, width, height);
 
     return IDirect3DRMTexture3_SetDecalSize(&texture->IDirect3DRMTexture3_iface, width, height);
 }
