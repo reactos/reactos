@@ -747,6 +747,7 @@ static void test_EM_SETCHARFORMAT(void)
 {
   HWND hwndRichEdit = new_richedit(NULL);
   CHARFORMAT2A cf2;
+  CHARFORMAT2W cfW;
   int rc = 0;
   int tested_effects[] = {
     CFE_BOLD,
@@ -763,10 +764,27 @@ static void test_EM_SETCHARFORMAT(void)
   CHARRANGE cr;
   LOCALESIGNATURE sig;
   BOOL rtl;
+  DWORD expect_effects;
 
   rtl = (GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_FONTSIGNATURE,
                         (LPSTR) &sig, sizeof(LOCALESIGNATURE)) &&
          (sig.lsUsb[3] & 0x08000000) != 0);
+
+  /* check charformat defaults */
+  memset(&cf2, 0, sizeof(CHARFORMAT2A));
+  cf2.cbSize = sizeof(CHARFORMAT2A);
+  SendMessageA(hwndRichEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  ok(cf2.dwMask == CFM_ALL2, "got %08x\n", cf2.dwMask);
+  expect_effects = CFE_AUTOCOLOR | CFE_AUTOBACKCOLOR;
+  if (cf2.wWeight > 550) expect_effects |= CFE_BOLD;
+  ok(cf2.dwEffects == expect_effects, "got %08x\n", cf2.dwEffects);
+  ok(cf2.yOffset == 0, "got %d\n", cf2.yOffset);
+  ok(cf2.sSpacing == 0, "got %d\n", cf2.sSpacing);
+  ok(cf2.lcid == GetSystemDefaultLCID(), "got %x\n", cf2.lcid);
+  ok(cf2.sStyle == 0, "got %d\n", cf2.sStyle);
+  ok(cf2.wKerning == 0, "got %d\n", cf2.wKerning);
+  ok(cf2.bAnimation == 0, "got %d\n", cf2.bAnimation);
+  ok(cf2.bRevAuthor == 0, "got %d\n", cf2.bRevAuthor);
 
   /* Invalid flags, CHARFORMAT2 structure blanked out */
   memset(&cf2, 0, sizeof(cf2));
@@ -1057,6 +1075,14 @@ static void test_EM_SETCHARFORMAT(void)
 
   /* Set two effects on an empty selection */
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"wine");
+  /* first clear bold, italic */
+  SendMessageA(hwndRichEdit, EM_SETSEL, 0, -1);
+  memset(&cf2, 0, sizeof(CHARFORMAT2A));
+  cf2.cbSize = sizeof(CHARFORMAT2A);
+  cf2.dwMask = CFM_BOLD | CFM_ITALIC;
+  cf2.dwEffects = 0;
+  SendMessageA(hwndRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+
   SendMessageA(hwndRichEdit, EM_SETSEL, 2, 2); /* Empty selection */
 
   memset(&cf2, 0, sizeof(CHARFORMAT2A));
@@ -1084,6 +1110,14 @@ static void test_EM_SETCHARFORMAT(void)
   /* Setting the (empty) selection to exactly the same place as before should
      NOT clear the insertion style! */
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"wine");
+  /* first clear bold, italic */
+  SendMessageA(hwndRichEdit, EM_SETSEL, 0, -1);
+  memset(&cf2, 0, sizeof(CHARFORMAT2A));
+  cf2.cbSize = sizeof(CHARFORMAT2A);
+  cf2.dwMask = CFM_BOLD | CFM_ITALIC;
+  cf2.dwEffects = 0;
+  SendMessageA(hwndRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+
   SendMessageA(hwndRichEdit, EM_SETSEL, 2, 2); /* Empty selection */
 
   memset(&cf2, 0, sizeof(CHARFORMAT2A));
@@ -1108,8 +1142,51 @@ static void test_EM_SETCHARFORMAT(void)
   ok((cf2.dwEffects & CFE_BOLD) == CFE_BOLD,
       "%d, cf2.dwEffects == 0x%08x expected effect 0x%08x\n", i, cf2.dwEffects, CFE_BOLD);
 
+  /* Moving the selection will clear the insertion style */
+  SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"wine");
+  /* first clear bold, italic */
+  SendMessageA(hwndRichEdit, EM_SETSEL, 0, -1);
+  memset(&cf2, 0, sizeof(CHARFORMAT2A));
+  cf2.cbSize = sizeof(CHARFORMAT2A);
+  cf2.dwMask = CFM_BOLD | CFM_ITALIC;
+  cf2.dwEffects = 0;
+  SendMessageA(hwndRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+
+  SendMessageA(hwndRichEdit, EM_SETSEL, 2, 2); /* Empty selection */
+
+  memset(&cf2, 0, sizeof(CHARFORMAT2A));
+  cf2.cbSize = sizeof(CHARFORMAT2A);
+  cf2.dwMask = CFM_BOLD;
+  cf2.dwEffects = CFE_BOLD;
+  SendMessageA(hwndRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+
+  /* Move selection and then put it back, insert style should be forgotten here. */
+  SendMessageA(hwndRichEdit, EM_SETSEL, 3, 3);
+  SendMessageA(hwndRichEdit, EM_SETSEL, 2, 2); /* Empty selection */
+
+  /* Selection is now nonempty */
+  SendMessageA(hwndRichEdit, EM_REPLACESEL, 0, (LPARAM)"newi");
+
+  memset(&cf2, 0, sizeof(CHARFORMAT2A));
+  cf2.cbSize = sizeof(CHARFORMAT2A);
+  SendMessageA(hwndRichEdit, EM_SETSEL, 2, 6);
+  SendMessageA(hwndRichEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+
+  ok(((cf2.dwMask & CFM_BOLD) == CFM_BOLD),
+      "%d, cf2.dwMask == 0x%08x expected mask 0x%08x\n", i, cf2.dwMask, CFM_BOLD);
+  ok((cf2.dwEffects & CFE_BOLD) == 0,
+      "%d, cf2.dwEffects == 0x%08x not expecting effect 0x%08x\n", i, cf2.dwEffects, CFE_BOLD);
+
   /* Ditto with EM_EXSETSEL */
   SendMessageA(hwndRichEdit, WM_SETTEXT, 0, (LPARAM)"wine");
+  /* first clear bold, italic */
+  SendMessageA(hwndRichEdit, EM_SETSEL, 0, -1);
+  memset(&cf2, 0, sizeof(CHARFORMAT2A));
+  cf2.cbSize = sizeof(CHARFORMAT2A);
+  cf2.dwMask = CFM_BOLD | CFM_ITALIC;
+  cf2.dwEffects = 0;
+  SendMessageA(hwndRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+
   cr.cpMin = 2; cr.cpMax = 2;
   SendMessageA(hwndRichEdit, EM_EXSETSEL, 0, (LPARAM)&cr); /* Empty selection */
 
@@ -1136,6 +1213,127 @@ static void test_EM_SETCHARFORMAT(void)
       "%d, cf2.dwMask == 0x%08x expected mask 0x%08x\n", i, cf2.dwMask, CFM_BOLD);
   ok((cf2.dwEffects & CFE_BOLD) == CFE_BOLD,
       "%d, cf2.dwEffects == 0x%08x expected effect 0x%08x\n", i, cf2.dwEffects, CFE_BOLD);
+
+  /* show that wWeight is at the correct offset in CHARFORMAT2A */
+  memset(&cf2, 0, sizeof(cf2));
+  cf2.cbSize = sizeof(cf2);
+  cf2.dwMask = CFM_WEIGHT;
+  cf2.wWeight = 100;
+  SendMessageA(hwndRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  memset(&cf2, 0, sizeof(cf2));
+  cf2.cbSize = sizeof(cf2);
+  SendMessageA(hwndRichEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  ok(cf2.wWeight == 100, "got %d\n", cf2.wWeight);
+
+  memset(&cf2, 0, sizeof(cf2));
+  cf2.cbSize = sizeof(cf2);
+  cf2.dwMask = CFM_SPACING;
+  cf2.sSpacing = 10;
+  SendMessageA(hwndRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  memset(&cf2, 0, sizeof(cf2));
+  cf2.cbSize = sizeof(cf2);
+  SendMessageA(hwndRichEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  ok(cf2.sSpacing == 10, "got %d\n", cf2.sSpacing);
+
+  /* show that wWeight is at the correct offset in CHARFORMAT2W */
+  memset(&cfW, 0, sizeof(cfW));
+  cfW.cbSize = sizeof(cfW);
+  cfW.dwMask = CFM_WEIGHT;
+  cfW.wWeight = 100;
+  SendMessageA(hwndRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cfW);
+  memset(&cfW, 0, sizeof(cfW));
+  cfW.cbSize = sizeof(cfW);
+  SendMessageA(hwndRichEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cfW);
+  ok(cfW.wWeight == 100, "got %d\n", cfW.wWeight);
+
+  memset(&cfW, 0, sizeof(cfW));
+  cfW.cbSize = sizeof(cfW);
+  cfW.dwMask = CFM_SPACING;
+  cfW.sSpacing = 10;
+  SendMessageA(hwndRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cfW);
+  memset(&cfW, 0, sizeof(cfW));
+  cfW.cbSize = sizeof(cfW);
+  SendMessageA(hwndRichEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cfW);
+  ok(cfW.sSpacing == 10, "got %d\n", cfW.sSpacing);
+
+  /* test CFE_UNDERLINE and bUnderlineType interaction */
+  /* clear bold, italic */
+  SendMessageA(hwndRichEdit, EM_SETSEL, 0, -1);
+  memset(&cf2, 0, sizeof(CHARFORMAT2A));
+  cf2.cbSize = sizeof(CHARFORMAT2A);
+  cf2.dwMask = CFM_BOLD | CFM_ITALIC;
+  cf2.dwEffects = 0;
+  SendMessageA(hwndRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+
+  /* check CFE_UNDERLINE is clear and bUnderlineType is CFU_UNDERLINE */
+  memset(&cf2, 0, sizeof(CHARFORMAT2A));
+  cf2.cbSize = sizeof(CHARFORMAT2A);
+  SendMessageA(hwndRichEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  ok((cf2.dwMask & (CFM_UNDERLINE | CFM_UNDERLINETYPE)) == (CFM_UNDERLINE | CFM_UNDERLINETYPE),
+     "got %08x\n", cf2.dwMask);
+  ok(!(cf2.dwEffects & CFE_UNDERLINE), "got %08x\n", cf2.dwEffects);
+  ok(cf2.bUnderlineType == CFU_UNDERLINE, "got %x\n", cf2.bUnderlineType);
+
+  /* simply touching bUnderlineType will toggle CFE_UNDERLINE */
+  cf2.dwMask = CFM_UNDERLINETYPE;
+  cf2.bUnderlineType = CFU_UNDERLINE;
+  SendMessageA(hwndRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  memset(&cf2, 0, sizeof(CHARFORMAT2A));
+  cf2.cbSize = sizeof(CHARFORMAT2A);
+  SendMessageA(hwndRichEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  ok((cf2.dwMask & (CFM_UNDERLINE | CFM_UNDERLINETYPE)) == (CFM_UNDERLINE | CFM_UNDERLINETYPE),
+     "got %08x\n", cf2.dwMask);
+  ok(cf2.dwEffects & CFE_UNDERLINE, "got %08x\n", cf2.dwEffects);
+  ok(cf2.bUnderlineType == CFU_UNDERLINE, "got %x\n", cf2.bUnderlineType);
+
+  /* setting bUnderline to CFU_UNDERLINENONE clears CFE_UNDERLINE */
+  cf2.dwMask = CFM_UNDERLINETYPE;
+  cf2.bUnderlineType = CFU_UNDERLINENONE;
+  SendMessageA(hwndRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  memset(&cf2, 0, sizeof(CHARFORMAT2A));
+  cf2.cbSize = sizeof(CHARFORMAT2A);
+  SendMessageA(hwndRichEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  ok((cf2.dwMask & (CFM_UNDERLINE | CFM_UNDERLINETYPE)) == (CFM_UNDERLINE | CFM_UNDERLINETYPE),
+     "got %08x\n", cf2.dwMask);
+  ok(!(cf2.dwEffects & CFE_UNDERLINE), "got %08x\n", cf2.dwEffects);
+  ok(cf2.bUnderlineType == CFU_UNDERLINENONE, "got %x\n", cf2.bUnderlineType);
+
+  /* another underline type also sets CFE_UNDERLINE */
+  cf2.dwMask = CFM_UNDERLINETYPE;
+  cf2.bUnderlineType = CFU_UNDERLINEDOUBLE;
+  SendMessageA(hwndRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  memset(&cf2, 0, sizeof(CHARFORMAT2A));
+  cf2.cbSize = sizeof(CHARFORMAT2A);
+  SendMessageA(hwndRichEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  ok((cf2.dwMask & (CFM_UNDERLINE | CFM_UNDERLINETYPE)) == (CFM_UNDERLINE | CFM_UNDERLINETYPE),
+     "got %08x\n", cf2.dwMask);
+  ok(cf2.dwEffects & CFE_UNDERLINE, "got %08x\n", cf2.dwEffects);
+  ok(cf2.bUnderlineType == CFU_UNDERLINEDOUBLE, "got %x\n", cf2.bUnderlineType);
+
+  /* However explicitly clearing CFE_UNDERLINE results in it remaining cleared */
+  cf2.dwMask = CFM_UNDERLINETYPE | CFM_UNDERLINE;
+  cf2.bUnderlineType = CFU_UNDERLINEDOUBLE;
+  cf2.dwEffects = 0;
+  SendMessageA(hwndRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  memset(&cf2, 0, sizeof(CHARFORMAT2A));
+  cf2.cbSize = sizeof(CHARFORMAT2A);
+  SendMessageA(hwndRichEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  ok((cf2.dwMask & (CFM_UNDERLINE | CFM_UNDERLINETYPE)) == (CFM_UNDERLINE | CFM_UNDERLINETYPE),
+     "got %08x\n", cf2.dwMask);
+  ok(!(cf2.dwEffects & CFE_UNDERLINE), "got %08x\n", cf2.dwEffects);
+  ok(cf2.bUnderlineType == CFU_UNDERLINEDOUBLE, "got %x\n", cf2.bUnderlineType);
+
+  /* And turing it back on again by just setting CFE_UNDERLINE */
+  cf2.dwMask = CFM_UNDERLINE;
+  cf2.dwEffects = CFE_UNDERLINE;
+  SendMessageA(hwndRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  memset(&cf2, 0, sizeof(CHARFORMAT2A));
+  cf2.cbSize = sizeof(CHARFORMAT2A);
+  SendMessageA(hwndRichEdit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf2);
+  ok((cf2.dwMask & (CFM_UNDERLINE | CFM_UNDERLINETYPE)) == (CFM_UNDERLINE | CFM_UNDERLINETYPE),
+     "got %08x\n", cf2.dwMask);
+  ok(cf2.dwEffects & CFE_UNDERLINE, "got %08x\n", cf2.dwEffects);
+  ok(cf2.bUnderlineType == CFU_UNDERLINEDOUBLE, "got %x\n", cf2.bUnderlineType);
 
   DestroyWindow(hwndRichEdit);
 }
@@ -1306,6 +1504,12 @@ static void test_SETPARAFORMAT(void)
 
   ok(ret == expectedMask, "expected %x got %x\n", expectedMask, ret);
   ok(fmt.dwMask == expectedMask, "expected %x got %x\n", expectedMask, fmt.dwMask);
+
+  /* Test some other paraformat field defaults */
+  ok( fmt.wNumbering == 0, "got %d\n", fmt.wNumbering );
+  ok( fmt.wNumberingStart == 0, "got %d\n", fmt.wNumberingStart );
+  ok( fmt.wNumberingStyle == 0, "got %04x\n", fmt.wNumberingStyle );
+  ok( fmt.wNumberingTab == 0, "got %d\n", fmt.wNumberingTab );
 
   DestroyWindow(hwndRichEdit);
 }
@@ -8372,6 +8576,110 @@ static void test_background(void)
     DestroyWindow(hwndRichEdit);
 }
 
+static void test_eop_char_fmt(void)
+{
+    HWND edit = new_richedit( NULL );
+    const char *rtf = "{\\rtf1{\\fonttbl{\\f0\\fswiss\\fprq2\\fcharset0 Arial;}{\\f1\\fnil\\fcharset2 Symbol;}}"
+        "{\\fs10{\\pard\\fs16\\fi200\\li360\\f0 First\\par"
+        "\\f0\\fs25 Second\\par"
+        "{\\f0\\fs26 Third}\\par"
+        "{\\f0\\fs22 Fourth}\\par}}}";
+    EDITSTREAM es;
+    CHARFORMAT2W cf;
+    int i, num, expect_height;
+
+    es.dwCookie = (DWORD_PTR)&rtf;
+    es.dwError = 0;
+    es.pfnCallback = test_EM_STREAMIN_esCallback;
+    num = SendMessageA( edit, EM_STREAMIN, SF_RTF, (LPARAM)&es );
+    ok( num == 25, "got %d\n", num );
+
+    for (i = 0; i <= num; i++)
+    {
+        SendMessageW( edit, EM_SETSEL, i, i + 1 );
+        cf.cbSize = sizeof(cf);
+        cf.dwMask = CFM_SIZE;
+        SendMessageW( edit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf );
+        ok( cf.dwMask & CFM_SIZE, "%d: got %08x\n", i, cf.dwMask );
+        if (i < 6) expect_height = 160;
+        else if (i < 13) expect_height = 250;
+        else if (i < 18) expect_height = 260;
+        else if (i == 18 || i == 25) expect_height = 250;
+        else expect_height = 220;
+        ok( cf.yHeight == expect_height, "%d: got %d\n", i, cf.yHeight );
+    }
+
+    DestroyWindow( edit );
+}
+
+static void test_para_numbering(void)
+{
+    HWND edit = new_richeditW( NULL );
+    const char *numbers = "{\\rtf1{\\fonttbl{\\f0\\fswiss\\fprq2\\fcharset0 Arial;}{\\f1\\fnil\\fcharset2 Symbol;}}"
+        "\\pard{\\pntext\\f0 3.\\tab}{\\*\\pn\\pnlvlbody\\pnfs32\\pnf0\\pnindent1000\\pnstart2\\pndec{\\pntxta.}}"
+        "\\fs20\\fi200\\li360\\f0 First\\par"
+        "{\\pntext\\f0 4.\\tab}\\f0 Second\\par"
+        "{\\pntext\\f0 6.\\tab}\\f0 Third\\par}";
+    const WCHAR expect_numbers_txt[] = {'F','i','r','s','t','\r','S','e','c','o','n','d','\r','T','h','i','r','d',0};
+    EDITSTREAM es;
+    WCHAR buf[80];
+    LRESULT result;
+    PARAFORMAT2 fmt, fmt2;
+    GETTEXTEX get_text;
+    CHARFORMAT2W cf;
+
+    get_text.cb = sizeof(buf);
+    get_text.flags = GT_RAWTEXT;
+    get_text.codepage = 1200;
+    get_text.lpDefaultChar = NULL;
+    get_text.lpUsedDefChar = NULL;
+
+    es.dwCookie = (DWORD_PTR)&numbers;
+    es.dwError = 0;
+    es.pfnCallback = test_EM_STREAMIN_esCallback;
+    result = SendMessageA( edit, EM_STREAMIN, SF_RTF, (LPARAM)&es );
+    ok( result == lstrlenW( expect_numbers_txt ), "got %ld\n", result );
+
+    result = SendMessageW( edit, EM_GETTEXTEX, (WPARAM)&get_text, (LPARAM)buf );
+    ok( result == lstrlenW( expect_numbers_txt ), "got %ld\n", result );
+    ok( !lstrcmpW( buf, expect_numbers_txt ), "got %s\n", wine_dbgstr_w(buf) );
+
+    SendMessageW( edit, EM_SETSEL, 1, 1 );
+    memset( &fmt, 0, sizeof(fmt) );
+    fmt.cbSize = sizeof(fmt);
+    fmt.dwMask = PFM_ALL2;
+    SendMessageW( edit, EM_GETPARAFORMAT, 0, (LPARAM)&fmt );
+    ok( fmt.wNumbering == PFN_ARABIC, "got %d\n", fmt.wNumbering );
+    ok( fmt.wNumberingStart == 2, "got %d\n", fmt.wNumberingStart );
+    ok( fmt.wNumberingStyle == PFNS_PERIOD, "got %04x\n", fmt.wNumberingStyle );
+    ok( fmt.wNumberingTab == 1000, "got %d\n", fmt.wNumberingTab );
+    ok( fmt.dxStartIndent == 560, "got %d\n", fmt.dxStartIndent );
+    ok( fmt.dxOffset == -200, "got %d\n", fmt.dxOffset );
+
+    /* Second para should have identical fmt */
+    SendMessageW( edit, EM_SETSEL, 10, 10 );
+    memset( &fmt2, 0, sizeof(fmt2) );
+    fmt2.cbSize = sizeof(fmt2);
+    fmt2.dwMask = PFM_ALL2;
+    SendMessageW( edit, EM_GETPARAFORMAT, 0, (LPARAM)&fmt2 );
+    ok( !memcmp( &fmt, &fmt2, sizeof(fmt) ), "format mismatch\n" );
+
+    /* Check the eop heights - this determines the label height */
+    SendMessageW( edit, EM_SETSEL, 12, 13 );
+    cf.cbSize = sizeof(cf);
+    cf.dwMask = CFM_SIZE;
+    SendMessageW( edit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf );
+    ok( cf.yHeight == 200, "got %d\n", cf.yHeight );
+
+    SendMessageW( edit, EM_SETSEL, 18, 19 );
+    cf.cbSize = sizeof(cf);
+    cf.dwMask = CFM_SIZE;
+    SendMessageW( edit, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf );
+    ok( cf.yHeight == 200, "got %d\n", cf.yHeight );
+
+    DestroyWindow( edit );
+}
+
 static void test_window_classes(void)
 {
     static const struct
@@ -8476,6 +8784,8 @@ START_TEST( editor )
   test_alignment_style();
   test_rtf_specials();
   test_background();
+  test_eop_char_fmt();
+  test_para_numbering();
 
   /* Set the environment variable WINETEST_RICHED20 to keep windows
    * responsive and open for 30 seconds. This is useful for debugging.
