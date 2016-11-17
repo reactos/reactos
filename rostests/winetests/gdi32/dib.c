@@ -2796,6 +2796,9 @@ static void draw_graphics(HDC hdc, const BITMAPINFO *bmi, BYTE *bits)
 
     ExtSelectClipRgn( hdc, NULL, RGN_COPY );
 
+    ret = ExtFloodFill( hdc, -1, -1, RGB( 0, 0xff, 0 ), FLOODFILLSURFACE );
+    ok (!ret, "got ret %d\n", ret);
+
     SelectObject(hdc, orig_brush);
     SelectObject(hdc, orig_pen);
     DeleteObject(solid_brush);
