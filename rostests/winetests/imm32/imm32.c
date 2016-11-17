@@ -207,7 +207,6 @@ static LRESULT WINAPI wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 case FIRST_WINDOW:
                 case SECOND_WINDOW:
                 case CREATE_CANCEL:
-                    todo_wine_if(test_phase == FIRST_WINDOW || test_phase == CREATE_CANCEL)
                     ok(default_ime_wnd != NULL, "expected IME window existence\n");
                     break;
                 case IME_DISABLED:
@@ -223,7 +222,6 @@ static LRESULT WINAPI wndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 case FIRST_WINDOW:
                 case SECOND_WINDOW:
                 case CREATE_CANCEL:
-                    todo_wine_if(test_phase == FIRST_WINDOW || test_phase == CREATE_CANCEL)
                     ok(default_ime_wnd != NULL, "expected IME window existence\n");
                     break;
                 case IME_DISABLED:
@@ -868,6 +866,8 @@ static void test_ImmDefaultHwnd(void)
     HWND def1, def3;
     HANDLE thread;
     HWND hwnd;
+    char title[16];
+    LONG style;
 
     hwnd = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Wine imm32.dll test",
                            WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
@@ -883,6 +883,13 @@ static void test_ImmDefaultHwnd(void)
     }
 
     def1 = ImmGetDefaultIMEWnd(hwnd);
+
+    GetWindowTextA(def1, title, sizeof(title));
+    ok(!strcmp(title, "Default IME"), "got %s\n", title);
+    style = GetWindowLongA(def1, GWL_STYLE);
+    ok(style == (WS_DISABLED | WS_POPUP | WS_CLIPSIBLINGS), "got %08x\n", style);
+    style = GetWindowLongA(def1, GWL_EXSTYLE);
+    ok(style == 0, "got %08x\n", style);
 
     imc2 = ImmCreateContext();
     ImmSetOpenStatus(imc2, TRUE);
@@ -952,9 +959,9 @@ static DWORD WINAPI test_default_ime_window_cb(void *arg)
                                 240, 24, hwnd, NULL, GetModuleHandleW(NULL), NULL);
     }
     ime_wnd = get_ime_window();
-    todo_wine ok(ime_wnd != NULL, "Expected IME window existence\n");
+    ok(ime_wnd != NULL, "Expected IME window existence\n");
     default_ime_wnd = ImmGetDefaultIMEWnd(hwnd1);
-    todo_wine ok(ime_wnd == default_ime_wnd, "Expected %p, got %p\n", ime_wnd, default_ime_wnd);
+    ok(ime_wnd == default_ime_wnd, "Expected %p, got %p\n", ime_wnd, default_ime_wnd);
 
     test_phase = SECOND_WINDOW;
     hwnd2 = CreateWindowExA(WS_EX_CLIENTEDGE, wndcls, "Wine imm32.dll test",
@@ -962,7 +969,7 @@ static DWORD WINAPI test_default_ime_window_cb(void *arg)
                             CW_USEDEFAULT, CW_USEDEFAULT,
                             240, 120, NULL, NULL, GetModuleHandleW(NULL), NULL);
     DestroyWindow(hwnd2);
-    todo_wine ok(IsWindow(ime_wnd) ||
+    ok(IsWindow(ime_wnd) ||
        broken(!testcase->visible /* Vista */)  ||
        broken(!testcase->top_level_window /* Vista */) ,
        "Expected IME window existence\n");
@@ -1000,9 +1007,9 @@ static DWORD WINAPI test_default_ime_window_cancel_cb(void *arg)
                             CW_USEDEFAULT, CW_USEDEFAULT,
                             240, 120, NULL, NULL, GetModuleHandleW(NULL), NULL);
     ime_wnd = get_ime_window();
-    todo_wine ok(ime_wnd != NULL, "Expected IME window existence\n");
+    ok(ime_wnd != NULL, "Expected IME window existence\n");
     default_ime_wnd = ImmGetDefaultIMEWnd(hwnd2);
-    todo_wine ok(ime_wnd == default_ime_wnd, "Expected %p, got %p\n", ime_wnd, default_ime_wnd);
+    ok(ime_wnd == default_ime_wnd, "Expected %p, got %p\n", ime_wnd, default_ime_wnd);
 
     DestroyWindow(hwnd2);
     ok(!IsWindow(ime_wnd), "Expected no IME windows\n");
@@ -1023,6 +1030,41 @@ static DWORD WINAPI test_default_ime_disabled_cb(void *arg)
     default_ime_wnd = ImmGetDefaultIMEWnd(hWnd);
     ok(!default_ime_wnd, "Expected no IME windows\n");
     DestroyWindow(hWnd);
+    return 1;
+}
+
+static DWORD WINAPI test_default_ime_with_message_only_window_cb(void *arg)
+{
+    HWND hwnd1, hwnd2, default_ime_wnd;
+
+    test_phase = PHASE_UNKNOWN;
+    hwnd1 = CreateWindowA(wndcls, "Wine imm32.dll test",
+                          WS_OVERLAPPEDWINDOW,
+                          CW_USEDEFAULT, CW_USEDEFAULT,
+                          240, 120, HWND_MESSAGE, NULL, GetModuleHandleW(NULL), NULL);
+    default_ime_wnd = ImmGetDefaultIMEWnd(hwnd1);
+    ok(!IsWindow(default_ime_wnd), "Expected no IME windows, got %p\n", default_ime_wnd);
+
+    hwnd2 = CreateWindowA(wndcls, "Wine imm32.dll test",
+                          WS_OVERLAPPEDWINDOW,
+                          CW_USEDEFAULT, CW_USEDEFAULT,
+                          240, 120, hwnd1, NULL, GetModuleHandleW(NULL), NULL);
+    default_ime_wnd = ImmGetDefaultIMEWnd(hwnd2);
+    ok(IsWindow(default_ime_wnd), "Expected IME window existance\n");
+
+    DestroyWindow(hwnd2);
+    DestroyWindow(hwnd1);
+
+    hwnd1 = CreateWindowA(wndcls, "Wine imm32.dll test",
+                          WS_OVERLAPPEDWINDOW,
+                          CW_USEDEFAULT, CW_USEDEFAULT,
+                          240, 120, NULL, NULL, GetModuleHandleW(NULL), NULL);
+    default_ime_wnd = ImmGetDefaultIMEWnd(hwnd1);
+    ok(IsWindow(default_ime_wnd), "Expected IME window existence\n");
+    SetParent(hwnd1, HWND_MESSAGE);
+    default_ime_wnd = ImmGetDefaultIMEWnd(hwnd1);
+    ok(IsWindow(default_ime_wnd), "Expected IME window existence\n");
+    DestroyWindow(hwnd1);
     return 1;
 }
 
@@ -1063,6 +1105,10 @@ static void test_default_ime_window_creation(void)
     }
 
     thread = CreateThread(NULL, 0, test_default_ime_disabled_cb, NULL, 0, NULL);
+    WaitForSingleObject(thread, INFINITE);
+    CloseHandle(thread);
+
+    thread = CreateThread(NULL, 0, test_default_ime_with_message_only_window_cb, NULL, 0, NULL);
     WaitForSingleObject(thread, INFINITE);
     CloseHandle(thread);
 
