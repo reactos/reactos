@@ -1077,6 +1077,7 @@ static void test_widen(void)
     GpPath *path;
     GpPen *pen;
     GpMatrix *m;
+    INT count=-1;
 
     status = GdipCreatePath(FillModeAlternate, &path);
     expect(Ok, status);
@@ -1200,6 +1201,23 @@ static void test_widen(void)
     status = GdipWidenPath(path, pen, m, 1.0);
     expect(Ok, status);
     ok_path(path, widenline_path, sizeof(widenline_path)/sizeof(path_test_t), FALSE);
+
+    /* pen width = 0 pixels - native fails to widen but can draw with this pen */
+    GdipDeletePen(pen);
+    status = GdipCreatePen1(0xffffffff, 0.0, UnitPixel, &pen);
+    expect(Ok, status);
+
+    status = GdipResetPath(path);
+    expect(Ok, status);
+    status = GdipAddPathLine(path, 5.0, 10.0, 50.0, 10.0);
+    expect(Ok, status);
+
+    status = GdipWidenPath(path, pen, m, 1.0);
+    expect(Ok, status);
+
+    status = GdipGetPointCount(path, &count);
+    expect(Ok, status);
+    todo_wine expect(0, count);
 
     GdipDeleteMatrix(m);
     GdipDeletePen(pen);

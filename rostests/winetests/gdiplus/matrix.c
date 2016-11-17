@@ -309,7 +309,42 @@ static void test_constructor3(void)
     expectf(0.0, values[4]);
     expectf(0.0, values[5]);
 
-    GdipDeleteMatrix(matrix);}
+    GdipDeleteMatrix(matrix);
+}
+
+static void test_isidentity(void)
+{
+    GpMatrix *matrix;
+    GpStatus stat;
+    BOOL result;
+
+    stat = GdipIsMatrixIdentity(NULL, NULL);
+    expect(InvalidParameter, stat);
+
+    stat = GdipIsMatrixIdentity(NULL, &result);
+    expect(InvalidParameter, stat);
+
+    stat = GdipCreateMatrix2(1.0, 0.0, 0.0, 1.0, 0.0, 0.0, &matrix);
+    expect(Ok, stat);
+
+    stat = GdipIsMatrixIdentity(matrix, NULL);
+    expect(InvalidParameter, stat);
+
+    result = FALSE;
+    stat = GdipIsMatrixIdentity(matrix, &result);
+    expect(Ok, stat);
+    ok(!!result, "got %d\n", result);
+
+    stat = GdipSetMatrixElements(matrix, 1.0, 0.0, 0.0, 1.0, 0.1, 0.0);
+    expect(Ok, stat);
+
+    result = TRUE;
+    stat = GdipIsMatrixIdentity(matrix, &result);
+    expect(Ok, stat);
+    ok(!result, "got %d\n", result);
+
+    GdipDeleteMatrix(matrix);
+}
 
 START_TEST(matrix)
 {
@@ -329,6 +364,7 @@ START_TEST(matrix)
     test_invert();
     test_shear();
     test_constructor3();
+    test_isidentity();
 
     GdiplusShutdown(gdiplusToken);
 }

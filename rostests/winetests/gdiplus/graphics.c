@@ -332,6 +332,64 @@ static void test_save_restore(void)
 
     log_state(state_a, &state_log);
 
+    /* A state created by SaveGraphics cannot be restored with EndContainer. */
+    GdipCreateFromHDC(hdc, &graphics1);
+    GdipSetInterpolationMode(graphics1, InterpolationModeBilinear);
+    stat = GdipSaveGraphics(graphics1, &state_a);
+    expect(Ok, stat);
+    GdipSetInterpolationMode(graphics1, InterpolationModeBicubic);
+    stat = GdipEndContainer(graphics1, state_a);
+    expect(Ok, stat);
+    GdipGetInterpolationMode(graphics1, &mode);
+    expect(InterpolationModeBicubic, mode);
+    stat = GdipRestoreGraphics(graphics1, state_a);
+    expect(Ok, stat);
+    GdipGetInterpolationMode(graphics1, &mode);
+    expect(InterpolationModeBilinear, mode);
+    GdipDeleteGraphics(graphics1);
+
+    log_state(state_a, &state_log);
+
+    /* A state created by BeginContainer cannot be restored with RestoreGraphics. */
+    GdipCreateFromHDC(hdc, &graphics1);
+    GdipSetInterpolationMode(graphics1, InterpolationModeBilinear);
+    stat = GdipBeginContainer2(graphics1, &state_a);
+    expect(Ok, stat);
+    GdipSetInterpolationMode(graphics1, InterpolationModeBicubic);
+    stat = GdipRestoreGraphics(graphics1, state_a);
+    expect(Ok, stat);
+    GdipGetInterpolationMode(graphics1, &mode);
+    expect(InterpolationModeBicubic, mode);
+    stat = GdipEndContainer(graphics1, state_a);
+    expect(Ok, stat);
+    GdipGetInterpolationMode(graphics1, &mode);
+    expect(InterpolationModeBilinear, mode);
+    GdipDeleteGraphics(graphics1);
+
+    log_state(state_a, &state_log);
+
+    /* BeginContainer and SaveGraphics use the same stack. */
+    GdipCreateFromHDC(hdc, &graphics1);
+    GdipSetInterpolationMode(graphics1, InterpolationModeBilinear);
+    stat = GdipBeginContainer2(graphics1, &state_a);
+    expect(Ok, stat);
+    GdipSetInterpolationMode(graphics1, InterpolationModeBicubic);
+    stat = GdipSaveGraphics(graphics1, &state_b);
+    expect(Ok, stat);
+    GdipSetInterpolationMode(graphics1, InterpolationModeNearestNeighbor);
+    stat = GdipEndContainer(graphics1, state_a);
+    expect(Ok, stat);
+    GdipGetInterpolationMode(graphics1, &mode);
+    expect(InterpolationModeBilinear, mode);
+    stat = GdipRestoreGraphics(graphics1, state_b);
+    expect(Ok, stat);
+    GdipGetInterpolationMode(graphics1, &mode);
+    expect(InterpolationModeBilinear, mode);
+    GdipDeleteGraphics(graphics1);
+
+    log_state(state_a, &state_log);
+    log_state(state_b, &state_log);
+
     /* The same state value should never be returned twice. */
     todo_wine
         check_no_duplicates(state_log);
@@ -3847,15 +3905,18 @@ static void test_pen_thickness(void)
         REAL res_x, res_y, scale;
         GpUnit pen_unit, page_unit;
         REAL pen_width;
-        INT cx, cy;
+        INT cx, cy, path_cx, path_cy;
     } td[] =
     {
-        { 10.0, 10.0, 1.0, UnitPixel, UnitPixel, 1.0, 1, 1 },
-        { 10.0, 10.0, 3.0, UnitPixel, UnitPixel, 2.0, 2, 2 },
-        { 10.0, 10.0, 30.0, UnitPixel, UnitInch, 1.0, 1, 1 },
-        { 10.0, 10.0, 1.0, UnitWorld, UnitPixel, 1.0, 1, 1 },
-        { 10.0, 10.0, 3.0, UnitWorld, UnitPixel, 2.0, 6, 6 },
-        { 10.0, 10.0, 2.0, UnitWorld, UnitInch, 1.0, 20, 20 },
+        { 10.0, 10.0, 1.0, UnitPixel, UnitPixel, 1.0, 1, 1, 1, 1 },
+        { 10.0, 10.0, 1.0, UnitPixel, UnitPixel, 0.0, 0, 0, 1, 1 },
+        { 10.0, 10.0, 1.0, UnitPixel, UnitPixel, 0.1, 1, 1, 1, 1 },
+        { 10.0, 10.0, 3.0, UnitPixel, UnitPixel, 2.0, 2, 2, 2, 2 },
+        { 10.0, 10.0, 30.0, UnitPixel, UnitInch, 1.0, 1, 1, 1, 1 },
+        { 10.0, 10.0, 1.0, UnitWorld, UnitPixel, 1.0, 1, 1, 1, 1 },
+        { 10.0, 10.0, 1.0, UnitWorld, UnitPixel, 0.0, 1, 1, 1, 1 },
+        { 10.0, 10.0, 3.0, UnitWorld, UnitPixel, 2.0, 6, 6, 6, 6 },
+        { 10.0, 10.0, 2.0, UnitWorld, UnitInch, 1.0, 20, 20, 20, 20 },
     };
     GpStatus status;
     int i, j;
@@ -3867,6 +3928,7 @@ static void test_pen_thickness(void)
     } u;
     GpPen *pen;
     GpPointF corner;
+    GpPath *path;
     BitmapData bd;
     INT min, max, size;
 
@@ -3952,6 +4014,82 @@ static void test_pen_thickness(void)
         size = max-min+1;
 
         ok(size == td[i].cy, "%u: expected %d, got %d\n", i, td[i].cy, size);
+
+        status = GdipBitmapUnlockBits(u.bitmap, &bd);
+        expect(Ok, status);
+
+        status = GdipGraphicsClear(graphics, 0xff000000);
+        expect(Ok, status);
+
+        status = GdipCreatePath(FillModeAlternate, &path);
+        expect(Ok, status);
+
+        status = GdipAddPathLine(path, corner.X/2, 0, corner.X/2, corner.Y);
+        expect(Ok, status);
+
+        status = GdipClosePathFigure(path);
+        expect(Ok, status);
+
+        status = GdipAddPathLine(path, 0, corner.Y/2, corner.X, corner.Y/2);
+        expect(Ok, status);
+
+        status = GdipDrawPath(graphics, pen, path);
+        expect(Ok, status);
+
+        GdipDeletePath(path);
+
+        status = GdipBitmapLockBits(u.bitmap, NULL, ImageLockModeRead, PixelFormat24bppRGB, &bd);
+        expect(Ok, status);
+
+        min = -1;
+        max = -2;
+
+        for (j=0; j<100; j++)
+        {
+            if (((BYTE*)bd.Scan0)[j*3] == 0xff)
+            {
+                min = j;
+                break;
+            }
+        }
+
+        for (j=99; j>=0; j--)
+        {
+            if (((BYTE*)bd.Scan0)[j*3] == 0xff)
+            {
+                max = j;
+                break;
+            }
+        }
+
+        size = max-min+1;
+
+        ok(size == td[i].path_cx, "%u: expected %d, got %d\n", i, td[i].path_cx, size);
+
+        min = -1;
+        max = -2;
+
+        for (j=0; j<100; j++)
+        {
+            if (((BYTE*)bd.Scan0)[bd.Stride*j] == 0xff)
+            {
+                min = j;
+                break;
+            }
+        }
+
+        for (j=99; j>=0; j--)
+        {
+            if (((BYTE*)bd.Scan0)[bd.Stride*j] == 0xff)
+            {
+                max = j;
+                break;
+            }
+        }
+
+        size = max-min+1;
+
+        ok(size == td[i].path_cy, "%u: expected %d, got %d\n", i, td[i].path_cy, size);
 
         status = GdipBitmapUnlockBits(u.bitmap, &bd);
         expect(Ok, status);
@@ -5845,6 +5983,178 @@ static void test_GdipGetVisibleClipBounds_memoryDC(void)
     ReleaseDC(hwnd, dc);
 }
 
+static void test_container_rects(void)
+{
+    GpStatus status;
+    GpGraphics *graphics;
+    HDC hdc = GetDC( hwnd );
+    GpRectF dstrect, srcrect;
+    GraphicsContainer state;
+    static const GpPointF test_points[3] = {{0.0,0.0}, {1.0,0.0}, {0.0,1.0}};
+    GpPointF points[3];
+    REAL dpix, dpiy;
+
+    status = GdipCreateFromHDC(hdc, &graphics);
+    expect(Ok, status);
+
+    dstrect.X = 0.0;
+    dstrect.Y = 0.0;
+    dstrect.Width = 1.0;
+    dstrect.Height = 1.0;
+    srcrect = dstrect;
+
+    status = GdipGetDpiX(graphics, &dpix);
+    expect(Ok, status);
+
+    status = GdipGetDpiY(graphics, &dpiy);
+    expect(Ok, status);
+
+    status = GdipBeginContainer(graphics, &dstrect, &srcrect, UnitWorld, &state);
+    expect(InvalidParameter, status);
+
+    status = GdipBeginContainer(graphics, &dstrect, &srcrect, UnitDisplay, &state);
+    expect(InvalidParameter, status);
+
+    status = GdipBeginContainer(graphics, &dstrect, &srcrect, UnitMillimeter+1, &state);
+    expect(InvalidParameter, status);
+
+    status = GdipBeginContainer(NULL, &dstrect, &srcrect, UnitPixel, &state);
+    expect(InvalidParameter, status);
+
+    status = GdipBeginContainer(graphics, NULL, &srcrect, UnitPixel, &state);
+    expect(InvalidParameter, status);
+
+    status = GdipBeginContainer(graphics, &dstrect, NULL, UnitPixel, &state);
+    expect(InvalidParameter, status);
+
+    status = GdipBeginContainer(graphics, &dstrect, &srcrect, -1, &state);
+    expect(InvalidParameter, status);
+
+    status = GdipBeginContainer(graphics, &dstrect, &srcrect, UnitPixel, NULL);
+    expect(InvalidParameter, status);
+
+    status = GdipBeginContainer(graphics, &dstrect, &srcrect, UnitPixel, &state);
+    expect(Ok, status);
+
+    memcpy(points, test_points, sizeof(points));
+    status = GdipTransformPoints(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, points, 3);
+    expect(Ok, status);
+    expectf(0.0, points[0].X);
+    expectf(0.0, points[0].Y);
+    expectf(1.0, points[1].X);
+    expectf(0.0, points[1].Y);
+    expectf(0.0, points[2].X);
+    expectf(1.0, points[2].Y);
+
+    status = GdipEndContainer(graphics, state);
+    expect(Ok, status);
+
+    status = GdipBeginContainer(graphics, &dstrect, &srcrect, UnitInch, &state);
+    expect(Ok, status);
+
+    memcpy(points, test_points, sizeof(points));
+    status = GdipTransformPoints(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, points, 3);
+    expect(Ok, status);
+    expectf(0.0, points[0].X);
+    expectf(0.0, points[0].Y);
+    expectf(1.0/dpix, points[1].X);
+    expectf(0.0, points[1].Y);
+    expectf(0.0, points[2].X);
+    expectf(1.0/dpiy, points[2].Y);
+
+    status = GdipEndContainer(graphics, state);
+    expect(Ok, status);
+
+    status = GdipScaleWorldTransform(graphics, 2.0, 2.0, MatrixOrderPrepend);
+    expect(Ok, status);
+
+    dstrect.X = 1.0;
+    dstrect.Height = 3.0;
+    status = GdipBeginContainer(graphics, &dstrect, &srcrect, UnitPixel, &state);
+    expect(Ok, status);
+
+    memcpy(points, test_points, sizeof(points));
+    status = GdipTransformPoints(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, points, 3);
+    expect(Ok, status);
+    expectf(2.0, points[0].X);
+    expectf(0.0, points[0].Y);
+    expectf(4.0, points[1].X);
+    expectf(0.0, points[1].Y);
+    expectf(2.0, points[2].X);
+    expectf(6.0, points[2].Y);
+
+    status = GdipEndContainer(graphics, state);
+    expect(Ok, status);
+
+    memcpy(points, test_points, sizeof(points));
+    status = GdipTransformPoints(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, points, 3);
+    expect(Ok, status);
+    expectf(0.0, points[0].X);
+    expectf(0.0, points[0].Y);
+    expectf(2.0, points[1].X);
+    expectf(0.0, points[1].Y);
+    expectf(0.0, points[2].X);
+    expectf(2.0, points[2].Y);
+
+    status = GdipResetWorldTransform(graphics);
+    expect(Ok, status);
+
+    status = GdipBeginContainer(graphics, &dstrect, &srcrect, UnitInch, &state);
+    expect(Ok, status);
+
+    memcpy(points, test_points, sizeof(points));
+    status = GdipTransformPoints(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, points, 3);
+    expect(Ok, status);
+    expectf(1.0, points[0].X);
+    expectf(0.0, points[0].Y);
+    expectf((dpix+1.0)/dpix, points[1].X);
+    expectf(0.0, points[1].Y);
+    expectf(1.0, points[2].X);
+    expectf(3.0/dpiy, points[2].Y);
+
+    status = GdipEndContainer(graphics, state);
+    expect(Ok, status);
+
+    status = GdipSetPageUnit(graphics, UnitInch);
+    expect(Ok, status);
+
+    status = GdipBeginContainer(graphics, &dstrect, &srcrect, UnitPixel, &state);
+    expect(Ok, status);
+
+    memcpy(points, test_points, sizeof(points));
+    status = GdipTransformPoints(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, points, 3);
+    expect(Ok, status);
+    expectf(dpix, points[0].X);
+    expectf(0.0, points[0].Y);
+    expectf(dpix*2, points[1].X);
+    expectf(0.0, points[1].Y);
+    expectf(dpix, points[2].X);
+    expectf(dpiy*3, points[2].Y);
+
+    status = GdipEndContainer(graphics, state);
+    expect(Ok, status);
+
+    status = GdipBeginContainer(graphics, &dstrect, &srcrect, UnitInch, &state);
+    expect(Ok, status);
+
+    memcpy(points, test_points, sizeof(points));
+    status = GdipTransformPoints(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, points, 3);
+    expect(Ok, status);
+    expectf(dpix, points[0].X);
+    expectf(0.0, points[0].Y);
+    expectf(dpix+1.0, points[1].X);
+    expectf(0.0, points[1].Y);
+    expectf(dpix, points[2].X);
+    expectf(3.0, points[2].Y);
+
+    status = GdipEndContainer(graphics, state);
+    expect(Ok, status);
+
+    GdipDeleteGraphics(graphics);
+
+    ReleaseDC(hwnd, hdc);
+}
+
 START_TEST(graphics)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -5918,6 +6228,7 @@ START_TEST(graphics)
     test_bitmapfromgraphics();
     test_GdipFillRectangles();
     test_GdipGetVisibleClipBounds_memoryDC();
+    test_container_rects();
 
     GdiplusShutdown(gdiplusToken);
     DestroyWindow( hwnd );
