@@ -2211,6 +2211,23 @@ CDefFolderMenu_Create2(
   _In_reads_opt_(nKeys) const HKEY *,
   _Outptr_ IContextMenu **);
 
+#define DFM_MERGECONTEXTMENU         1
+#define DFM_INVOKECOMMAND            2
+
+#define DFM_CMD_DELETE          ((UINT)-1)
+#define DFM_CMD_MOVE            ((UINT)-2)
+#define DFM_CMD_COPY            ((UINT)-3)
+#define DFM_CMD_LINK            ((UINT)-4)
+#define DFM_CMD_PROPERTIES      ((UINT)-5)
+#define DFM_CMD_NEWFOLDER       ((UINT)-6)
+#define DFM_CMD_PASTE           ((UINT)-7)
+#define DFM_CMD_VIEWLIST        ((UINT)-8)
+#define DFM_CMD_VIEWDETAILS     ((UINT)-9)
+#define DFM_CMD_PASTELINK       ((UINT)-10)
+#define DFM_CMD_PASTESPECIAL    ((UINT)-11)
+#define DFM_CMD_MODALPROP       ((UINT)-12)
+#define DFM_CMD_RENAME          ((UINT)-13)
+
 /****************************************************************************
  * SHCreateDefaultExtractIcon API
  */
