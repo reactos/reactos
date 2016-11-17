@@ -885,6 +885,7 @@ static void test_Frame(void)
     IDirect3DRMFrame *pFrameP1;
     IDirect3DRMFrame *pFrameP2;
     IDirect3DRMFrame *pFrameTmp;
+    IDirect3DRMFrame *scene_frame;
     IDirect3DRMFrameArray *frame_array;
     IDirect3DRMMeshBuilder *mesh_builder;
     IDirect3DRMVisual *visual1;
@@ -967,6 +968,19 @@ static void test_Frame(void)
     CHECK_REFCOUNT(pFrameP1, 1);
     CHECK_REFCOUNT(pFrameC, 2);
 
+    hr = IDirect3DRMFrame_GetScene(pFrameC, NULL);
+    ok(hr == D3DRMERR_BADVALUE, "Expected hr == D3DRMERR_BADVALUE, got %#x.\n", hr);
+    hr = IDirect3DRMFrame_GetScene(pFrameC, &scene_frame);
+    ok(SUCCEEDED(hr), "Cannot get scene (hr == %#x).\n", hr);
+    ok(scene_frame == pFrameP1, "Expected scene frame == %p, got %p.\n", pFrameP1, scene_frame);
+    CHECK_REFCOUNT(pFrameP1, 2);
+    IDirect3DRMFrame_Release(scene_frame);
+    hr = IDirect3DRMFrame_GetScene(pFrameP1, &scene_frame);
+    ok(SUCCEEDED(hr), "Cannot get scene (hr == %#x).\n", hr);
+    ok(scene_frame == pFrameP1, "Expected scene frame == %p, got %p.\n", pFrameP1, scene_frame);
+    CHECK_REFCOUNT(pFrameP1, 2);
+    IDirect3DRMFrame_Release(scene_frame);
+
     frame_array = NULL;
     hr = IDirect3DRMFrame_GetChildren(pFrameP1, &frame_array);
     ok(hr == D3DRM_OK, "Cannot get children (hr = %x)\n", hr);
@@ -1032,6 +1046,16 @@ static void test_Frame(void)
         ok(pFrameTmp == NULL, "pFrameTmp = %p\n", pFrameTmp);
         IDirect3DRMFrameArray_Release(frame_array);
     }
+    hr = IDirect3DRMFrame_GetScene(pFrameC, &scene_frame);
+    ok(SUCCEEDED(hr), "Cannot get scene (hr == %#x).\n", hr);
+    ok(scene_frame == pFrameP2, "Expected scene frame == %p, got %p.\n", pFrameP2, scene_frame);
+    CHECK_REFCOUNT(pFrameP2, 2);
+    IDirect3DRMFrame_Release(scene_frame);
+    hr = IDirect3DRMFrame_GetScene(pFrameP2, &scene_frame);
+    ok(SUCCEEDED(hr), "Cannot get scene (hr == %#x).\n", hr);
+    ok(scene_frame == pFrameP2, "Expected scene frame == %p, got %p.\n", pFrameP2, scene_frame);
+    CHECK_REFCOUNT(pFrameP2, 2);
+    IDirect3DRMFrame_Release(scene_frame);
 
     pFrameTmp = (void*)0xdeadbeef;
     hr = IDirect3DRMFrame_GetParent(pFrameC, &pFrameTmp);
@@ -5838,6 +5862,679 @@ static void test_viewport_qi(void)
     IDirect3DRM_Release(d3drm1);
 }
 
+static D3DCOLOR get_surface_color(IDirectDrawSurface *surface, UINT x, UINT y)
+{
+    RECT rect = { x, y, x + 1, y + 1 };
+    DDSURFACEDESC surface_desc;
+    D3DCOLOR color;
+    HRESULT hr;
+
+    memset(&surface_desc, 0, sizeof(surface_desc));
+    surface_desc.dwSize = sizeof(surface_desc);
+
+    hr = IDirectDrawSurface_Lock(surface, &rect, &surface_desc, DDLOCK_READONLY | DDLOCK_WAIT, NULL);
+    ok(SUCCEEDED(hr), "Failed to lock surface, hr %#x.\n", hr);
+    if (FAILED(hr))
+        return 0xdeadbeef;
+
+    color = *((DWORD *)surface_desc.lpSurface) & 0x00ffffff;
+
+    hr = IDirectDrawSurface_Unlock(surface, NULL);
+    ok(SUCCEEDED(hr), "Failed to unlock surface, hr %#x.\n", hr);
+
+    return color;
+}
+
+static IDirect3DDevice2 *create_device2_without_ds(IDirectDraw2 *ddraw, HWND window)
+{
+    IDirectDrawSurface *surface;
+    IDirect3DDevice2 *device = NULL;
+    DDSURFACEDESC surface_desc;
+    IDirect3D2 *d3d;
+    HRESULT hr;
+    RECT rc;
+
+    GetClientRect(window, &rc);
+    hr = IDirectDraw2_SetCooperativeLevel(ddraw, window, DDSCL_NORMAL);
+    ok(SUCCEEDED(hr), "Failed to set cooperative level, hr %#x.\n", hr);
+
+    memset(&surface_desc, 0, sizeof(surface_desc));
+    surface_desc.dwSize = sizeof(surface_desc);
+    surface_desc.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
+    surface_desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE;
+    surface_desc.dwWidth = rc.right;
+    surface_desc.dwHeight = rc.bottom;
+
+    hr = IDirectDraw2_CreateSurface(ddraw, &surface_desc, &surface, NULL);
+    ok(SUCCEEDED(hr), "Failed to create surface, hr %#x.\n", hr);
+
+    hr = IDirectDraw2_QueryInterface(ddraw, &IID_IDirect3D2, (void **)&d3d);
+    if (FAILED(hr))
+    {
+        IDirectDrawSurface_Release(surface);
+        return NULL;
+    }
+
+    IDirect3D2_CreateDevice(d3d, &IID_IDirect3DHALDevice, surface, &device);
+
+    IDirect3D2_Release(d3d);
+    IDirectDrawSurface_Release(surface);
+    return device;
+}
+
+static BOOL compare_color(D3DCOLOR c1, D3DCOLOR c2, BYTE max_diff)
+{
+    if ((c1 & 0xff) - (c2 & 0xff) > max_diff) return FALSE;
+    c1 >>= 8; c2 >>= 8;
+    if ((c1 & 0xff) - (c2 & 0xff) > max_diff) return FALSE;
+    c1 >>= 8; c2 >>= 8;
+    if ((c1 & 0xff) - (c2 & 0xff) > max_diff) return FALSE;
+    c1 >>= 8; c2 >>= 8;
+    if ((c1 & 0xff) - (c2 & 0xff) > max_diff) return FALSE;
+    return TRUE;
+}
+
+static void clear_depth_surface(IDirectDrawSurface *surface, DWORD value)
+{
+    HRESULT hr;
+    DDBLTFX fx;
+
+    memset(&fx, 0, sizeof(fx));
+    fx.dwSize = sizeof(fx);
+    U5(fx).dwFillDepth = value;
+
+    hr = IDirectDrawSurface_Blt(surface, NULL, NULL, NULL, DDBLT_DEPTHFILL | DDBLT_WAIT, &fx);
+    ok(SUCCEEDED(hr), "Got unexpected hr %#x.\n", hr);
+}
+
+static void set_execute_data(IDirect3DExecuteBuffer *execute_buffer, UINT vertex_count, UINT offset, UINT len)
+{
+    D3DEXECUTEDATA exec_data;
+    HRESULT hr;
+
+    memset(&exec_data, 0, sizeof(exec_data));
+    exec_data.dwSize = sizeof(exec_data);
+    exec_data.dwVertexCount = vertex_count;
+    exec_data.dwInstructionOffset = offset;
+    exec_data.dwInstructionLength = len;
+    hr = IDirect3DExecuteBuffer_SetExecuteData(execute_buffer, &exec_data);
+    ok(SUCCEEDED(hr), "Failed to set execute data, hr %#x.\n", hr);
+}
+
+static void emit_set_ts(void **ptr, D3DTRANSFORMSTATETYPE state, DWORD value)
+{
+    D3DINSTRUCTION *inst = *ptr;
+    D3DSTATE *ts = (D3DSTATE *)(inst + 1);
+
+    inst->bOpcode = D3DOP_STATETRANSFORM;
+    inst->bSize = sizeof(*ts);
+    inst->wCount = 1;
+
+    U1(*ts).dtstTransformStateType = state;
+    U2(*ts).dwArg[0] = value;
+
+    *ptr = ts + 1;
+}
+
+static void emit_set_rs(void **ptr, D3DRENDERSTATETYPE state, DWORD value)
+{
+    D3DINSTRUCTION *inst = *ptr;
+    D3DSTATE *rs = (D3DSTATE *)(inst + 1);
+
+    inst->bOpcode = D3DOP_STATERENDER;
+    inst->bSize = sizeof(*rs);
+    inst->wCount = 1;
+
+    U1(*rs).drstRenderStateType = state;
+    U2(*rs).dwArg[0] = value;
+
+    *ptr = rs + 1;
+}
+
+static void emit_process_vertices(void **ptr, DWORD flags, WORD base_idx, DWORD vertex_count)
+{
+    D3DINSTRUCTION *inst = *ptr;
+    D3DPROCESSVERTICES *pv = (D3DPROCESSVERTICES *)(inst + 1);
+
+    inst->bOpcode = D3DOP_PROCESSVERTICES;
+    inst->bSize = sizeof(*pv);
+    inst->wCount = 1;
+
+    pv->dwFlags = flags;
+    pv->wStart = base_idx;
+    pv->wDest = 0;
+    pv->dwCount = vertex_count;
+    pv->dwReserved = 0;
+
+    *ptr = pv + 1;
+}
+
+static void emit_tquad(void **ptr, WORD base_idx)
+{
+    D3DINSTRUCTION *inst = *ptr;
+    D3DTRIANGLE *tri = (D3DTRIANGLE *)(inst + 1);
+
+    inst->bOpcode = D3DOP_TRIANGLE;
+    inst->bSize = sizeof(*tri);
+    inst->wCount = 2;
+
+    U1(*tri).v1 = base_idx;
+    U2(*tri).v2 = base_idx + 1;
+    U3(*tri).v3 = base_idx + 2;
+    tri->wFlags = D3DTRIFLAG_START;
+    ++tri;
+
+    U1(*tri).v1 = base_idx + 2;
+    U2(*tri).v2 = base_idx + 1;
+    U3(*tri).v3 = base_idx + 3;
+    tri->wFlags = D3DTRIFLAG_ODD;
+    ++tri;
+
+    *ptr = tri;
+}
+
+static void emit_end(void **ptr)
+{
+    D3DINSTRUCTION *inst = *ptr;
+
+    inst->bOpcode = D3DOP_EXIT;
+    inst->bSize = 0;
+    inst->wCount = 0;
+
+    *ptr = inst + 1;
+}
+
+static void d3d_draw_quad1(IDirect3DDevice *device, IDirect3DViewport *viewport)
+{
+    IDirect3DExecuteBuffer *execute_buffer;
+    D3DEXECUTEBUFFERDESC exec_desc;
+    HRESULT hr;
+    void *ptr;
+    UINT inst_length;
+    D3DMATRIXHANDLE world_handle, view_handle, proj_handle;
+    static D3DMATRIX mat =
+    {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f,
+    };
+    static const D3DLVERTEX quad_strip[] =
+    {
+        {{-1.0f}, {-1.0f}, {0.00f}, 0, {0xffbada55}, {0}, {0.0f}, {0.0f}},
+        {{-1.0f}, { 1.0f}, {0.00f}, 0, {0xffbada55}, {0}, {0.0f}, {0.0f}},
+        {{ 1.0f}, {-1.0f}, {1.00f}, 0, {0xffbada55}, {0}, {0.0f}, {0.0f}},
+        {{ 1.0f}, { 1.0f}, {1.00f}, 0, {0xffbada55}, {0}, {0.0f}, {0.0f}},
+    };
+
+    hr = IDirect3DDevice_CreateMatrix(device, &world_handle);
+    ok(hr == D3D_OK, "Creating a matrix object failed, hr %#x.\n", hr);
+    hr = IDirect3DDevice_SetMatrix(device, world_handle, &mat);
+    ok(hr == D3D_OK, "Setting a matrix object failed, hr %#x.\n", hr);
+    hr = IDirect3DDevice_CreateMatrix(device, &view_handle);
+    ok(hr == D3D_OK, "Creating a matrix object failed, hr %#x.\n", hr);
+    hr = IDirect3DDevice_SetMatrix(device, view_handle, &mat);
+    ok(hr == D3D_OK, "Setting a matrix object failed, hr %#x.\n", hr);
+    hr = IDirect3DDevice_CreateMatrix(device, &proj_handle);
+    ok(hr == D3D_OK, "Creating a matrix object failed, hr %#x.\n", hr);
+    hr = IDirect3DDevice_SetMatrix(device, proj_handle, &mat);
+    ok(hr == D3D_OK, "Setting a matrix object failed, hr %#x.\n", hr);
+
+    memset(&exec_desc, 0, sizeof(exec_desc));
+    exec_desc.dwSize = sizeof(exec_desc);
+    exec_desc.dwFlags = D3DDEB_BUFSIZE | D3DDEB_CAPS;
+    exec_desc.dwBufferSize = 1024;
+    exec_desc.dwCaps = D3DDEBCAPS_SYSTEMMEMORY;
+
+    hr = IDirect3DDevice_CreateExecuteBuffer(device, &exec_desc, &execute_buffer, NULL);
+    ok(SUCCEEDED(hr), "Failed to create execute buffer, hr %#x.\n", hr);
+
+    hr = IDirect3DExecuteBuffer_Lock(execute_buffer, &exec_desc);
+    ok(SUCCEEDED(hr), "Failed to lock execute buffer, hr %#x.\n", hr);
+
+    memcpy(exec_desc.lpData, quad_strip, sizeof(quad_strip));
+    ptr = ((BYTE *)exec_desc.lpData) + sizeof(quad_strip);
+    emit_set_ts(&ptr, D3DTRANSFORMSTATE_WORLD, world_handle);
+    emit_set_ts(&ptr, D3DTRANSFORMSTATE_VIEW, view_handle);
+    emit_set_ts(&ptr, D3DTRANSFORMSTATE_PROJECTION, proj_handle);
+    emit_set_rs(&ptr, D3DRENDERSTATE_CLIPPING, FALSE);
+    emit_set_rs(&ptr, D3DRENDERSTATE_ZENABLE, TRUE);
+    emit_set_rs(&ptr, D3DRENDERSTATE_FOGENABLE, FALSE);
+    emit_set_rs(&ptr, D3DRENDERSTATE_CULLMODE, D3DCULL_NONE);
+    emit_set_rs(&ptr, D3DRENDERSTATE_SHADEMODE, D3DSHADE_FLAT);
+
+    emit_process_vertices(&ptr, D3DPROCESSVERTICES_TRANSFORM, 0, 4);
+    emit_tquad(&ptr, 0);
+
+    emit_end(&ptr);
+    inst_length = (BYTE *)ptr - (BYTE *)exec_desc.lpData;
+    inst_length -= sizeof(quad_strip);
+
+    hr = IDirect3DExecuteBuffer_Unlock(execute_buffer);
+    ok(SUCCEEDED(hr), "Failed to unlock execute buffer, hr %#x.\n", hr);
+
+    hr = IDirect3DDevice_BeginScene(device);
+    set_execute_data(execute_buffer, 4, sizeof(quad_strip), inst_length);
+    hr = IDirect3DDevice_Execute(device, execute_buffer, viewport, D3DEXECUTE_CLIPPED);
+    ok(SUCCEEDED(hr), "Failed to execute exec buffer, hr %#x.\n", hr);
+    hr = IDirect3DDevice_EndScene(device);
+    ok(SUCCEEDED(hr), "Failed to end scene, hr %#x.\n", hr);
+
+    IDirect3DExecuteBuffer_Release(execute_buffer);
+}
+
+static void test_viewport_clear1(void)
+{
+    DDSCAPS caps = { DDSCAPS_ZBUFFER };
+    IDirectDraw *ddraw;
+    IDirectDrawClipper *clipper;
+    IDirect3DRM *d3drm1;
+    IDirect3DRMFrame *frame1, *camera1;
+    IDirect3DRMDevice *device1;
+    IDirect3DViewport *d3d_viewport;
+    IDirect3DRMViewport *viewport1;
+    IDirect3DDevice *d3d_device1;
+    IDirectDrawSurface *surface, *ds, *d3drm_ds;
+    HWND window;
+    GUID driver = IID_IDirect3DRGBDevice;
+    HRESULT hr;
+    D3DCOLOR ret_color;
+    RECT rc;
+
+    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 640, 480, 0, 0, 0, 0);
+    GetClientRect(window, &rc);
+
+    hr = DirectDrawCreate(NULL, &ddraw, NULL);
+    ok(SUCCEEDED(hr), "Cannot create IDirectDraw interface (hr = %#x).\n", hr);
+
+    hr = IDirectDraw_SetCooperativeLevel(ddraw, window, DDSCL_NORMAL);
+    ok(SUCCEEDED(hr), "Failed to set cooperative level (hr = %#x).\n", hr);
+
+    hr = IDirectDraw_CreateClipper(ddraw, 0, &clipper, NULL);
+    ok(SUCCEEDED(hr), "Cannot create clipper (hr = %#x).\n", hr);
+
+    hr = IDirectDrawClipper_SetHWnd(clipper, 0, window);
+    ok(SUCCEEDED(hr), "Cannot set HWnd to Clipper (hr = %#x)\n", hr);
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM interface (hr = %#x).\n", hr);
+
+    hr = IDirect3DRM_CreateDeviceFromClipper(d3drm1, clipper, &driver, rc.right, rc.bottom, &device1);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DRMDevice interface (hr = %#x)\n", hr);
+
+    hr = IDirect3DRM_CreateFrame(d3drm1, NULL, &frame1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMFrame interface (hr = %#x)\n", hr);
+    hr = IDirect3DRM_CreateFrame(d3drm1, frame1, &camera1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMFrame interface (hr = %#x)\n", hr);
+
+    hr = IDirect3DRM_CreateViewport(d3drm1, device1, camera1, 0, 0, rc.right,
+            rc.bottom, &viewport1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMViewport2 interface (hr = %#x)\n", hr);
+
+    /* Fetch immediate mode device and viewport */
+    hr = IDirect3DRMDevice_GetDirect3DDevice(device1, &d3d_device1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DDevice interface (hr = %#x).\n", hr);
+    hr = IDirect3DRMViewport_GetDirect3DViewport(viewport1, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+
+    hr = IDirect3DDevice_QueryInterface(d3d_device1, &IID_IDirectDrawSurface, (void **)&surface);
+    ok(SUCCEEDED(hr), "Cannot get surface to the render target (hr = %#x).\n", hr);
+
+    ret_color = get_surface_color(surface, 320, 240);
+    ok(compare_color(ret_color, 0, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    /* Clear uses the scene frame's background color. */
+    hr = IDirect3DRMFrame_SetSceneBackgroundRGB(frame1, 1.0f, 1.0f, 1.0f);
+    ok(SUCCEEDED(hr), "Cannot set scene background RGB (hr = %#x)\n", hr);
+    ret_color = IDirect3DRMFrame_GetSceneBackground(frame1);
+    ok(ret_color == 0xffffffff, "Expected scene color returned == 0xffffffff, got %#x.\n", ret_color);
+    hr = IDirect3DRMFrame_SetSceneBackgroundRGB(camera1, 0.0f, 1.0f, 0.0f);
+    ok(SUCCEEDED(hr), "Cannot set scene background RGB (hr = %#x)\n", hr);
+    ret_color = IDirect3DRMFrame_GetSceneBackground(camera1);
+    ok(ret_color == 0xff00ff00, "Expected scene color returned == 0xff00ff00, got %#x.\n", ret_color);
+
+    hr = IDirect3DRMViewport_Clear(viewport1);
+    ok(SUCCEEDED(hr), "Cannot clear viewport (hr = %#x).\n", hr);
+    ret_color = get_surface_color(surface, 320, 240);
+    ok(compare_color(ret_color, 0x00ffffff, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    hr = IDirect3DRMFrame_SetSceneBackgroundRGB(frame1, 0.0f, 0.0f, 1.0f);
+    ok(SUCCEEDED(hr), "Cannot set scene background RGB (hr = %#x)\n", hr);
+    ret_color = IDirect3DRMFrame_GetSceneBackground(frame1);
+    ok(ret_color == 0xff0000ff, "Expected scene color returned == 0xff00ff00, got %#x.\n", ret_color);
+
+    hr = IDirect3DRMViewport_Configure(viewport1, 0, 0, rc.right, rc.bottom);
+    todo_wine ok(SUCCEEDED(hr), "Cannot configure viewport (hr = %#x).\n", hr);
+    hr = IDirect3DRMViewport_Clear(viewport1);
+    ok(SUCCEEDED(hr), "Cannot clear viewport (hr = %#x).\n", hr);
+    ret_color = get_surface_color(surface, 100, 200);
+    ok(compare_color(ret_color, 0x000000ff, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    d3d_draw_quad1(d3d_device1, d3d_viewport);
+
+    ret_color = get_surface_color(surface, 100, 200);
+    ok(compare_color(ret_color, 0x00bada55, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &ds);
+    ok(SUCCEEDED(hr), "Cannot get attached depth surface (hr = %x).\n", hr);
+
+    hr = IDirect3DRMViewport_Configure(viewport1, 0, 0, rc.right, rc.bottom);
+    todo_wine ok(SUCCEEDED(hr), "Cannot configure viewport (hr = %#x).\n", hr);
+    hr = IDirect3DRMViewport_Clear(viewport1);
+    ok(SUCCEEDED(hr), "Cannot clear viewport (hr = %#x).\n", hr);
+    ret_color = get_surface_color(surface, 100, 200);
+    ok(compare_color(ret_color, 0x000000ff, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    /* Fill the depth surface with a value lower than the quad's depth value. */
+    clear_depth_surface(ds, 0x7fff);
+
+    /* Depth test passes here */
+    d3d_draw_quad1(d3d_device1, d3d_viewport);
+    ret_color = get_surface_color(surface, 100, 200);
+    ok(compare_color(ret_color, 0x00bada55, 1), "Got unexpected color 0x%08x.\n", ret_color);
+    /* Depth test fails here */
+    ret_color = get_surface_color(surface, 500, 400);
+    ok(compare_color(ret_color, 0x000000ff, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    /* Check what happens if we release the depth surface that d3drm created, and clear the viewport */
+    hr = IDirectDrawSurface_DeleteAttachedSurface(surface, 0, ds);
+    ok(SUCCEEDED(hr), "Cannot delete attached surface (hr = %#x).\n", hr);
+    d3drm_ds = (IDirectDrawSurface *)0xdeadbeef;
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &d3drm_ds);
+    ok(hr == DDERR_NOTFOUND, "Expected hr == DDERR_NOTFOUND, got %#x.\n", hr);
+    ok(d3drm_ds == NULL, "Expected NULL z-surface, got %p.\n", d3drm_ds);
+
+    clear_depth_surface(ds, 0x7fff);
+    hr = IDirect3DRMViewport_Configure(viewport1, 0, 0, rc.right, rc.bottom);
+    todo_wine ok(SUCCEEDED(hr), "Cannot configure viewport (hr = %#x).\n", hr);
+    hr = IDirect3DRMViewport_Clear(viewport1);
+    ok(SUCCEEDED(hr), "Cannot clear viewport (hr = %#x).\n", hr);
+
+    ret_color = get_surface_color(surface, 100, 200);
+    ok(compare_color(ret_color, 0x000000ff, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    hr = IDirectDrawSurface_AddAttachedSurface(surface, ds);
+    ok(SUCCEEDED(hr), "Failed to attach depth buffer, hr %#x.\n", hr);
+    IDirectDrawSurface_Release(ds);
+
+    d3d_draw_quad1(d3d_device1, d3d_viewport);
+
+    ret_color = get_surface_color(surface, 100, 200);
+    ok(compare_color(ret_color, 0x00bada55, 1), "Got unexpected color 0x%08x.\n", ret_color);
+    ret_color = get_surface_color(surface, 500, 400);
+    ok(compare_color(ret_color, 0x000000ff, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    IDirect3DViewport_Release(d3d_viewport);
+    IDirectDrawSurface_Release(surface);
+    IDirect3DDevice_Release(d3d_device1);
+    IDirect3DRMViewport_Release(viewport1);
+    IDirect3DRMFrame_Release(frame1);
+    IDirect3DRMFrame_Release(camera1);
+    IDirect3DRMDevice_Release(device1);
+    IDirect3DRM_Release(d3drm1);
+    IDirectDrawClipper_Release(clipper);
+    IDirectDraw_Release(ddraw);
+    DestroyWindow(window);
+}
+
+static void draw_quad2(IDirect3DDevice2 *device, IDirect3DViewport *viewport)
+{
+    static D3DLVERTEX tquad[] =
+    {
+        {{-1.0f}, {-1.0f}, {0.0f}, 0, {0xffbada55}, {0}, {0.0f}, {0.0f}},
+        {{-1.0f}, { 1.0f}, {0.0f}, 0, {0xffbada55}, {0}, {0.0f}, {1.0f}},
+        {{ 1.0f}, {-1.0f}, {1.0f}, 0, {0xffbada55}, {0}, {1.0f}, {0.0f}},
+        {{ 1.0f}, { 1.0f}, {1.0f}, 0, {0xffbada55}, {0}, {1.0f}, {1.0f}},
+    };
+    static D3DMATRIX mat =
+    {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f,
+    };
+    IDirect3DViewport2 *viewport2;
+    HRESULT hr;
+
+    hr = IDirect3DDevice2_SetTransform(device, D3DTRANSFORMSTATE_WORLD, &mat);
+    ok(SUCCEEDED(hr), "Failed to set world transform, hr %#x.\n", hr);
+    hr = IDirect3DDevice2_SetTransform(device, D3DTRANSFORMSTATE_VIEW, &mat);
+    ok(SUCCEEDED(hr), "Failed to set view transform, hr %#x.\n", hr);
+    hr = IDirect3DDevice2_SetTransform(device, D3DTRANSFORMSTATE_PROJECTION, &mat);
+    ok(SUCCEEDED(hr), "Failed to set projection transform, hr %#x.\n", hr);
+
+    hr = IDirect3DViewport_QueryInterface(viewport, &IID_IDirect3DViewport2, (void **)&viewport2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport2 interface (hr = %#x).\n", hr);
+    hr = IDirect3DDevice2_SetCurrentViewport(device, viewport2);
+    ok(SUCCEEDED(hr), "Failed to activate the viewport, hr %#x.\n", hr);
+    IDirect3DViewport2_Release(viewport2);
+
+    hr = IDirect3DDevice2_SetRenderState(device, D3DRENDERSTATE_ZENABLE, D3DZB_TRUE);
+    ok(SUCCEEDED(hr), "Failed to enable z testing, hr %#x.\n", hr);
+    hr = IDirect3DDevice2_SetRenderState(device, D3DRENDERSTATE_ZFUNC, D3DCMP_LESSEQUAL);
+    ok(SUCCEEDED(hr), "Failed to set the z function, hr %#x.\n", hr);
+
+    hr = IDirect3DDevice2_BeginScene(device);
+    ok(SUCCEEDED(hr), "Failed to begin scene, hr %#x.\n", hr);
+    hr = IDirect3DDevice2_DrawPrimitive(device, D3DPT_TRIANGLESTRIP, D3DVT_LVERTEX, tquad, 4, 0);
+    ok(SUCCEEDED(hr), "Failed to draw, hr %#x.\n", hr);
+    hr = IDirect3DDevice2_EndScene(device);
+    ok(SUCCEEDED(hr), "Failed to end scene, hr %#x.\n", hr);
+}
+
+static void test_viewport_clear2(void)
+{
+    DDSCAPS caps = { DDSCAPS_ZBUFFER };
+    IDirect3D2 *d3d2;
+    IDirectDraw *ddraw1;
+    IDirectDraw2 *ddraw2;
+    IDirectDrawClipper *clipper;
+    IDirect3DRM *d3drm1;
+    IDirect3DRM3 *d3drm3;
+    IDirect3DRMFrame3 *frame3, *camera3;
+    IDirect3DRMDevice3 *device3;
+    IDirect3DViewport *d3d_viewport;
+    IDirect3DRMViewport2 *viewport2;
+    IDirect3DDevice2 *d3d_device2;
+    IDirectDrawSurface *surface, *ds, *d3drm_ds;
+    HWND window;
+    GUID driver = IID_IDirect3DRGBDevice;
+    HRESULT hr;
+    D3DCOLOR ret_color;
+    RECT rc;
+
+    window = CreateWindowA("static", "d3drm_test", WS_OVERLAPPEDWINDOW, 0, 0, 640, 480, 0, 0, 0, 0);
+    GetClientRect(window, &rc);
+
+    hr = DirectDrawCreate(NULL, &ddraw1, NULL);
+    ok(SUCCEEDED(hr), "Cannot create IDirectDraw interface (hr = %#x).\n", hr);
+
+    hr = IDirectDraw_SetCooperativeLevel(ddraw1, window, DDSCL_NORMAL);
+    ok(SUCCEEDED(hr), "Failed to set cooperative level (hr = %#x).\n", hr);
+
+    hr = IDirectDraw_CreateClipper(ddraw1, 0, &clipper, NULL);
+    ok(SUCCEEDED(hr), "Cannot create clipper (hr = %#x).\n", hr);
+
+    hr = IDirectDrawClipper_SetHWnd(clipper, 0, window);
+    ok(SUCCEEDED(hr), "Cannot set HWnd to Clipper (hr = %#x)\n", hr);
+
+    hr = Direct3DRMCreate(&d3drm1);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM interface (hr = %#x).\n", hr);
+
+    hr = IDirect3DRM_QueryInterface(d3drm1, &IID_IDirect3DRM3, (void **)&d3drm3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRM3 interface (hr = %#x).\n", hr);
+
+    hr = IDirect3DRM3_CreateDeviceFromClipper(d3drm3, clipper, &driver, rc.right, rc.bottom, &device3);
+    ok(hr == D3DRM_OK, "Cannot get IDirect3DRMDevice3 interface (hr = %#x)\n", hr);
+
+    hr = IDirect3DRM3_CreateFrame(d3drm3, NULL, &frame3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMFrame3 interface (hr = %#x)\n", hr);
+    hr = IDirect3DRM3_CreateFrame(d3drm3, frame3, &camera3);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMFrame3 interface (hr = %#x)\n", hr);
+
+    hr = IDirect3DRM3_CreateViewport(d3drm3, device3, camera3, 0, 0, rc.right,
+            rc.bottom, &viewport2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMViewport2 interface (hr = %#x)\n", hr);
+
+    /* Fetch immediate mode device in order to access render target and test its color. */
+    hr = IDirect3DRMDevice3_GetDirect3DDevice2(device3, &d3d_device2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DDevice2 interface (hr = %#x).\n", hr);
+
+    hr = IDirect3DDevice2_GetRenderTarget(d3d_device2, &surface);
+    ok(SUCCEEDED(hr), "Cannot get surface to the render target (hr = %#x).\n", hr);
+
+    ret_color = get_surface_color(surface, 320, 240);
+    ok(compare_color(ret_color, 0, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    /* Clear uses the scene frame's background color. */
+    hr = IDirect3DRMFrame3_SetSceneBackgroundRGB(frame3, 1.0f, 1.0f, 1.0f);
+    ok(SUCCEEDED(hr), "Cannot set scene background RGB (hr = %#x)\n", hr);
+    ret_color = IDirect3DRMFrame3_GetSceneBackground(frame3);
+    ok(ret_color == 0xffffffff, "Expected scene color returned == 0xffffffff, got %#x.\n", ret_color);
+    hr = IDirect3DRMFrame3_SetSceneBackgroundRGB(camera3, 0.0f, 1.0f, 0.0f);
+    ok(SUCCEEDED(hr), "Cannot set scene background RGB (hr = %#x)\n", hr);
+    ret_color = IDirect3DRMFrame3_GetSceneBackground(camera3);
+    ok(ret_color == 0xff00ff00, "Expected scene color returned == 0xff00ff00, got %#x.\n", ret_color);
+
+    hr = IDirect3DRMViewport2_Clear(viewport2, D3DRMCLEAR_ALL);
+    ok(SUCCEEDED(hr), "Cannot clear viewport (hr = %#x).\n", hr);
+    ret_color = get_surface_color(surface, 320, 240);
+    ok(compare_color(ret_color, 0x00ffffff, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    hr = IDirect3DRMViewport2_GetDirect3DViewport(viewport2, &d3d_viewport);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DViewport interface (hr = %#x).\n", hr);
+
+    hr = IDirect3DRMViewport2_Clear(viewport2, D3DRMCLEAR_ALL);
+    ok(SUCCEEDED(hr), "Cannot clear viewport (hr = %#x).\n", hr);
+
+    /* d3drm seems to be calling BeginScene when Clear is called. */
+    hr = IDirect3DDevice2_BeginScene(d3d_device2);
+    todo_wine ok(hr == D3DERR_SCENE_IN_SCENE, "Expected hr == D3DERR_SCENE_IN_SCENE, got %#x.\n", hr);
+    hr = IDirect3DDevice2_EndScene(d3d_device2);
+    ok(SUCCEEDED(hr), "Failed to end scene, hr %#x.\n", hr);
+
+    ret_color = get_surface_color(surface, 320, 240);
+    ok(compare_color(ret_color, 0x00ffffff, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    /* We're using d3d to draw using IDirect3DDevice2 created from d3drm. */
+    draw_quad2(d3d_device2, d3d_viewport);
+    ret_color = get_surface_color(surface, 320, 240);
+    ok(compare_color(ret_color, 0x00bada55, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    /* Without calling Configure, Clear doesn't work. */
+    hr = IDirect3DRMViewport2_Clear(viewport2, D3DRMCLEAR_ALL);
+    ok(SUCCEEDED(hr), "Cannot clear viewport (hr = %#x).\n", hr);
+    ret_color = get_surface_color(surface, 320, 240);
+    todo_wine ok(compare_color(ret_color, 0x00bada55, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    hr = IDirect3DRMViewport2_Configure(viewport2, 0, 0, rc.right, rc.bottom);
+    todo_wine ok(SUCCEEDED(hr), "Cannot configure viewport (hr = %#x).\n", hr);
+    hr = IDirect3DRMViewport2_Clear(viewport2, D3DRMCLEAR_ALL);
+    ok(SUCCEEDED(hr), "Cannot clear viewport (hr = %#x).\n", hr);
+
+    ret_color = get_surface_color(surface, 320, 240);
+    ok(compare_color(ret_color, 0x00ffffff, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    /* Fetch attached depth surface and see if viewport clears it if it's detached from the render target. */
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &ds);
+    ok(SUCCEEDED(hr), "Cannot get attached depth surface (hr = %x).\n", hr);
+
+    clear_depth_surface(ds, 0x39);
+    draw_quad2(d3d_device2, d3d_viewport);
+
+    ret_color = get_surface_color(surface, 320, 240);
+    ok(compare_color(ret_color, 0x00ffffff, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    hr = IDirectDrawSurface_DeleteAttachedSurface(surface, 0, ds);
+    ok(SUCCEEDED(hr), "Cannot delete attached surface (hr = %#x).\n", hr);
+    d3drm_ds = (IDirectDrawSurface *)0xdeadbeef;
+    hr = IDirectDrawSurface_GetAttachedSurface(surface, &caps, &d3drm_ds);
+    ok(hr == DDERR_NOTFOUND, "Expected hr == DDERR_NOTFOUND, got %#x.\n", hr);
+    ok(d3drm_ds == NULL, "Expected NULL z-surface, got %p.\n", d3drm_ds);
+
+    clear_depth_surface(ds, 0x7fff);
+
+    /* This version of Clear still clears the depth surface even if it's deleted from the render target. */
+    hr = IDirect3DRMViewport2_Configure(viewport2, 0, 0, rc.right, rc.bottom);
+    todo_wine ok(SUCCEEDED(hr), "Cannot configure viewport (hr = %#x).\n", hr);
+    hr = IDirect3DRMViewport2_Clear(viewport2, D3DRMCLEAR_ALL);
+    ok(SUCCEEDED(hr), "Cannot clear viewport (hr = %#x).\n", hr);
+
+    hr = IDirectDrawSurface_AddAttachedSurface(surface, ds);
+    ok(SUCCEEDED(hr), "Failed to attach depth buffer, hr %#x.\n", hr);
+    ret_color = get_surface_color(surface, 320, 240);
+    ok(compare_color(ret_color, 0x00ffffff, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    draw_quad2(d3d_device2, d3d_viewport);
+    ret_color = get_surface_color(surface, 100, 200);
+    ok(compare_color(ret_color, 0x00bada55, 1), "Got unexpected color 0x%08x.\n", ret_color);
+    ret_color = get_surface_color(surface, 500, 400);
+    todo_wine ok(compare_color(ret_color, 0x00bada55, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    /* Clear with no flags */
+    hr = IDirect3DRMViewport2_Configure(viewport2, 0, 0, rc.right, rc.bottom);
+    todo_wine ok(SUCCEEDED(hr), "Cannot configure viewport (hr = %#x).\n", hr);
+    hr = IDirect3DRMViewport2_Clear(viewport2, 0);
+    ok(SUCCEEDED(hr), "Cannot clear viewport (hr = %#x).\n", hr);
+    ret_color = get_surface_color(surface, 320, 240);
+    todo_wine ok(compare_color(ret_color, 0x00bada55, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    hr = IDirect3DRMViewport2_Configure(viewport2, 0, 0, rc.right, rc.bottom);
+    todo_wine ok(SUCCEEDED(hr), "Cannot configure viewport (hr = %#x).\n", hr);
+    hr = IDirect3DRMViewport2_Clear(viewport2, D3DRMCLEAR_ALL);
+    ok(SUCCEEDED(hr), "Cannot clear viewport (hr = %#x).\n", hr);
+    ret_color = get_surface_color(surface, 320, 240);
+    ok(compare_color(ret_color, 0x00ffffff, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    IDirect3DViewport_Release(d3d_viewport);
+    IDirectDrawSurface_Release(surface);
+    IDirectDrawSurface_Release(ds);
+    IDirect3DDevice2_Release(d3d_device2);
+    IDirect3DRMViewport2_Release(viewport2);
+    IDirect3DRMDevice3_Release(device3);
+
+    /* Create device without depth surface attached */
+    hr = IDirectDraw_QueryInterface(ddraw1, &IID_IDirectDraw2, (void **)&ddraw2);
+    ok(SUCCEEDED(hr), "Cannot get IDirectDraw2 interface (hr = %#x).\n", hr);
+    hr = IDirectDraw_QueryInterface(ddraw1, &IID_IDirect3D2, (void **)&d3d2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3D2 interface (hr = %x).\n", hr);
+    d3d_device2 = create_device2_without_ds(ddraw2, window);
+    if (!d3d_device2)
+        goto cleanup;
+
+    hr = IDirect3DRM3_CreateDeviceFromD3D(d3drm3, d3d2, d3d_device2, &device3);
+    ok(SUCCEEDED(hr), "Failed to create IDirect3DRMDevice interface (hr = %#x)\n", hr);
+    hr = IDirect3DRM3_CreateViewport(d3drm3, device3, camera3, 0, 0, rc.right,
+            rc.bottom, &viewport2);
+    ok(SUCCEEDED(hr), "Cannot get IDirect3DRMViewport2 interface (hr = %#x)\n", hr);
+    hr = IDirect3DDevice2_GetRenderTarget(d3d_device2, &surface);
+    ok(SUCCEEDED(hr), "Cannot get surface to the render target (hr = %#x).\n", hr);
+
+    hr = IDirect3DRMViewport2_Clear(viewport2, D3DRMCLEAR_ALL);
+    ok(SUCCEEDED(hr), "Cannot clear viewport (hr = %#x).\n", hr);
+    ret_color = get_surface_color(surface, 320, 240);
+    ok(compare_color(ret_color, 0x00ffffff, 1), "Got unexpected color 0x%08x.\n", ret_color);
+
+    hr = IDirect3DRMViewport2_Clear(viewport2, D3DRMCLEAR_ZBUFFER);
+    ok(SUCCEEDED(hr), "Cannot clear viewport (hr = %#x).\n", hr);
+
+    IDirectDrawSurface_Release(surface);
+    IDirect3DRMViewport2_Release(viewport2);
+    IDirect3DRMDevice3_Release(device3);
+    IDirect3DDevice2_Release(d3d_device2);
+
+cleanup:
+    IDirect3DRMFrame3_Release(camera3);
+    IDirect3DRMFrame3_Release(frame3);
+    IDirect3DRM3_Release(d3drm3);
+    IDirect3DRM_Release(d3drm1);
+    IDirectDrawClipper_Release(clipper);
+    IDirect3D2_Release(d3d2);
+    IDirectDraw2_Release(ddraw2);
+    IDirectDraw_Release(ddraw1);
+    DestroyWindow(window);
+}
+
 START_TEST(d3drm)
 {
     test_MeshBuilder();
@@ -5869,4 +6566,6 @@ START_TEST(d3drm)
     test_load_texture();
     test_texture_qi();
     test_viewport_qi();
+    test_viewport_clear1();
+    test_viewport_clear2();
 }
