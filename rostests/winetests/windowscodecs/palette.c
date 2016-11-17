@@ -1,6 +1,6 @@
 /*
  * Copyright 2009 Vincent Povirk for CodeWeavers
- * Copyright 2012 Dmitry Timoshkov
+ * Copyright 2012,2016 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,9 +32,10 @@
 #include <wincodec.h>
 #include <wine/test.h>
 
+static IWICImagingFactory *factory;
+
 static void test_custom_palette(void)
 {
-    IWICImagingFactory *factory;
     IWICPalette *palette, *palette2;
     HRESULT hr;
     WICBitmapPaletteType type=0xffffffff;
@@ -42,11 +43,6 @@ static void test_custom_palette(void)
     const WICColor initcolors[4]={0xff000000,0xff0000ff,0xffffff00,0xffffffff};
     WICColor colors[4];
     BOOL boolresult;
-
-    hr = CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER,
-        &IID_IWICImagingFactory, (void**)&factory);
-    ok(SUCCEEDED(hr), "CoCreateInstance failed, hr=%x\n", hr);
-    if (FAILED(hr)) return;
 
     hr = IWICImagingFactory_CreatePalette(factory, &palette);
     ok(SUCCEEDED(hr), "CreatePalette failed, hr=%x\n", hr);
@@ -212,8 +208,6 @@ static void test_custom_palette(void)
         IWICPalette_Release(palette2);
         IWICPalette_Release(palette);
     }
-
-    IWICImagingFactory_Release(factory);
 }
 
 static void generate_gray16_palette(DWORD *entries, UINT count)
@@ -456,17 +450,12 @@ static void test_predefined_palette(void)
         { WICBitmapPaletteTypeFixedHalftone256, 0, 0, 256, { 0 } },
         { WICBitmapPaletteTypeFixedHalftone256, 0, 0, 256, { 0 }, 1 }
     };
-    IWICImagingFactory *factory;
     IWICPalette *palette;
     HRESULT hr;
     WICBitmapPaletteType type;
     UINT count, i, ret;
     BOOL bret;
     WICColor color[256];
-
-    hr = CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER,
-                          &IID_IWICImagingFactory, (void **)&factory);
-    ok(hr == S_OK, "CoCreateInstance error %#x\n", hr);
 
     hr = IWICImagingFactory_CreatePalette(factory, &palette);
     ok(hr == S_OK, "CreatePalette error %#x\n", hr);
@@ -543,16 +532,136 @@ static void test_predefined_palette(void)
 
         IWICPalette_Release(palette);
     }
+}
 
-    IWICImagingFactory_Release(factory);
+static BYTE *init_bitmap(UINT *width, UINT *height, UINT *stride)
+{
+    BYTE *src;
+    UINT i, j, scale;
+
+    *width = 256;
+    *height = 256;
+    *stride = (*width * 3 + 3) & ~3;
+    trace("width %d, height %d, stride %d\n", *width, *height, *stride);
+
+    src = HeapAlloc(GetProcessHeap(), 0, *stride * *height);
+
+    scale = 256 / *width;
+    if (!scale) scale = 1;
+
+    for (i = 0; i < *height; i++)
+    {
+        for (j = 0; j < *width; j++)
+        {
+            src[i * *stride + j*3 + 0] = scale * i;
+            src[i * *stride + j*3 + 1] = scale * (255 - (i+j)/2);
+            src[i * *stride + j*3 + 2] = scale * j;
+        }
+    }
+
+    return src;
+}
+
+static void test_palette_from_bitmap(void)
+{
+    HRESULT hr;
+    BYTE *data;
+    IWICBitmap *bitmap;
+    IWICPalette *palette;
+    WICBitmapPaletteType type;
+    UINT width, height, stride, count, ret;
+    WICColor color[257];
+
+    data = init_bitmap(&width, &height, &stride);
+
+    hr = IWICImagingFactory_CreateBitmapFromMemory(factory, width, height, &GUID_WICPixelFormat24bppRGB,
+                                                   stride, stride * height, data, &bitmap);
+    ok(hr == S_OK, "CreateBitmapFromMemory error %#x\n", hr);
+
+    hr = IWICImagingFactory_CreatePalette(factory, &palette);
+    ok(hr == S_OK, "CreatePalette error %#x\n", hr);
+
+    hr = IWICPalette_InitializeFromBitmap(palette, (IWICBitmapSource *)bitmap, 0, FALSE);
+    ok(hr == E_INVALIDARG, "expected E_INVALIDARG, got %#x\n", hr);
+
+    hr = IWICPalette_InitializeFromBitmap(palette, (IWICBitmapSource *)bitmap, 1, FALSE);
+    ok(hr == E_INVALIDARG, "expected E_INVALIDARG, got %#x\n", hr);
+
+    hr = IWICPalette_InitializeFromBitmap(palette, (IWICBitmapSource *)bitmap, 257, FALSE);
+    ok(hr == E_INVALIDARG, "expected E_INVALIDARG, got %#x\n", hr);
+
+    hr = IWICPalette_InitializeFromBitmap(palette, NULL, 16, FALSE);
+    ok(hr == E_INVALIDARG, "expected E_INVALIDARG, got %#x\n", hr);
+
+    hr = IWICPalette_InitializeFromBitmap(palette, (IWICBitmapSource *)bitmap, 2, FALSE);
+    ok(hr == S_OK, "InitializeFromBitmap error %#x\n", hr);
+    count = 0;
+    hr = IWICPalette_GetColorCount(palette, &count);
+    ok(hr == S_OK, "GetColorCount error %#x\n", hr);
+    ok(count == 2, "expected 2, got %u\n", count);
+
+    hr = IWICPalette_InitializeFromBitmap(palette, (IWICBitmapSource *)bitmap, 2, TRUE);
+    ok(hr == S_OK, "InitializeFromBitmap error %#x\n", hr);
+    count = 0;
+    hr = IWICPalette_GetColorCount(palette, &count);
+    ok(hr == S_OK, "GetColorCount error %#x\n", hr);
+    ok(count == 2, "expected 2, got %u\n", count);
+
+    /* without trasparent color */
+    hr = IWICPalette_InitializeFromBitmap(palette, (IWICBitmapSource *)bitmap, 16, FALSE);
+    ok(hr == S_OK, "InitializeFromBitmap error %#x\n", hr);
+    type = -1;
+    hr = IWICPalette_GetType(palette, &type);
+    ok(hr == S_OK, "GetType error %#x\n", hr);
+    ok(type == WICBitmapPaletteTypeCustom, "expected WICBitmapPaletteTypeCustom, got %#x\n", type);
+    count = 0;
+    hr = IWICPalette_GetColorCount(palette, &count);
+    ok(hr == S_OK, "GetColorCount error %#x\n", hr);
+    ok(count == 16, "expected 16, got %u\n", count);
+    memset(color, 0, sizeof(color));
+    hr = IWICPalette_GetColors(palette, count, color, &ret);
+    ok(hr == S_OK, "GetColors error %#x\n", hr);
+    ok(ret == count, "expected %u, got %u\n", count, ret);
+    ok(color[count - 1] != 0, "expected !0, got %08x\n", color[count - 1]);
+
+    /* with trasparent color */
+    hr = IWICPalette_InitializeFromBitmap(palette, (IWICBitmapSource *)bitmap, 16, TRUE);
+    ok(hr == S_OK, "InitializeFromBitmap error %#x\n", hr);
+    type = -1;
+    hr = IWICPalette_GetType(palette, &type);
+    ok(hr == S_OK, "GetType error %#x\n", hr);
+    ok(type == WICBitmapPaletteTypeCustom, "expected WICBitmapPaletteTypeCustom, got %#x\n", type);
+    count = 0;
+    hr = IWICPalette_GetColorCount(palette, &count);
+    ok(hr == S_OK, "GetColorCount error %#x\n", hr);
+    ok(count == 16, "expected 16, got %u\n", count);
+    memset(color, 0xff, sizeof(color));
+    hr = IWICPalette_GetColors(palette, count, color, &ret);
+    ok(hr == S_OK, "GetColors error %#x\n", hr);
+    ok(ret == count, "expected %u, got %u\n", count, ret);
+    ok(color[count - 1] == 0, "expected 0, got %08x\n", color[count - 1]);
+
+    IWICPalette_Release(palette);
+    IWICBitmap_Release(bitmap);
+
+    HeapFree(GetProcessHeap(), 0, data);
 }
 
 START_TEST(palette)
 {
+    HRESULT hr;
+
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
+    hr = CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER,
+                          &IID_IWICImagingFactory, (void **)&factory);
+    ok(hr == S_OK, "CoCreateInstance error %#x\n", hr);
 
     test_custom_palette();
     test_predefined_palette();
+    test_palette_from_bitmap();
+
+    IWICImagingFactory_Release(factory);
 
     CoUninitialize();
 }
