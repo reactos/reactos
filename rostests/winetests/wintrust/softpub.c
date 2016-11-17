@@ -177,16 +177,15 @@ static void test_utils(SAFE_PROVIDER_FUNCTIONS *funcs)
         ok(data.csSigners == 2, "Expected 2 signers, got %d\n", data.csSigners);
         ok(!memcmp(&data.pasSigners[1], &sgnr, sizeof(sgnr)),
          "Unexpected data in signer\n");
-        /* This also adds, but the data aren't copied */
+        /* This also adds, but the index is ignored */
         sgnr.cbStruct = sizeof(DWORD);
         ret = funcs->pfnAddSgnr2Chain(&data, FALSE, 0, &sgnr);
         ok(ret, "pfnAddSgnr2Chain failed: %08x\n", GetLastError());
         ok(data.csSigners == 3, "Expected 3 signers, got %d\n", data.csSigners);
-        ok(data.pasSigners[0].cbStruct == 0, "Unexpected data size %d\n",
-         data.pasSigners[0].cbStruct);
-        ok(data.pasSigners[0].sftVerifyAsOf.dwLowDateTime == 0,
-         "Unexpected verify time %d\n",
-         data.pasSigners[0].sftVerifyAsOf.dwLowDateTime);
+        sgnr.sftVerifyAsOf.dwLowDateTime = 0;
+        todo_wine
+        ok(!memcmp(&data.pasSigners[2], &sgnr, sizeof(sgnr)),
+           "Unexpected data in signer\n");
         /* But too large a thing isn't added */
         sgnr.cbStruct = sizeof(sgnr) + sizeof(DWORD);
         SetLastError(0xdeadbeef);
