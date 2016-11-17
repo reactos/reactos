@@ -215,6 +215,7 @@ static void MPEG3_Reset(PACMDRVSTREAMINSTANCE adsi, AcmMpeg3Data* aad)
  */
 static	LRESULT	MPEG3_StreamOpen(PACMDRVSTREAMINSTANCE adsi)
 {
+    LRESULT error = MMSYSERR_NOTSUPPORTED;
     AcmMpeg3Data*	aad;
     int err;
 
@@ -238,6 +239,18 @@ static	LRESULT	MPEG3_StreamOpen(PACMDRVSTREAMINSTANCE adsi)
               adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_MPEG) &&
              adsi->pwfxDst->wFormatTag == WAVE_FORMAT_PCM)
     {
+        if (adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_MPEGLAYER3)
+        {
+            MPEGLAYER3WAVEFORMAT *formatmp3 = (MPEGLAYER3WAVEFORMAT *)adsi->pwfxSrc;
+
+            if (adsi->pwfxSrc->cbSize < MPEGLAYER3_WFX_EXTRA_BYTES ||
+                formatmp3->wID != MPEGLAYER3_ID_MPEG)
+            {
+                error = ACMERR_NOTPOSSIBLE;
+                goto theEnd;
+            }
+        }
+
 	/* resampling or mono <=> stereo not available
          * MPEG3 algo only define 16 bit per sample output
          */
@@ -261,7 +274,7 @@ static	LRESULT	MPEG3_StreamOpen(PACMDRVSTREAMINSTANCE adsi)
  theEnd:
     HeapFree(GetProcessHeap(), 0, aad);
     adsi->dwDriver = 0L;
-    return MMSYSERR_NOTSUPPORTED;
+    return error;
 }
 
 /***********************************************************************
