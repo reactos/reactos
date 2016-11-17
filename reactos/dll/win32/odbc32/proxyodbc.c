@@ -525,7 +525,7 @@ static BOOL ODBC_LoadDriverManager(void)
       return TRUE;
    }
 failed:
-   WARN("failed to open library %s: %s\n", debugstr_a(s), error);
+   ERR_(winediag)("failed to open library %s: %s\n", debugstr_a(s), error);
    nErrorType = ERROR_LIBRARY_NOT_FOUND;
    return FALSE;
 }
