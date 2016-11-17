@@ -45,7 +45,7 @@ static HRESULT WINAPI ActiveIMMApp_QueryInterface (IActiveIMMApp* iface,
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_IActiveIMMApp))
     {
-        *ppvOut = This;
+        *ppvOut = &This->IActiveIMMApp_iface;
     }
     else if (IsEqualIID(iid, &IID_IActiveIMMMessagePumpOwner))
     {
@@ -888,6 +888,6 @@ DECLSPEC_HIDDEN HRESULT ActiveIMMApp_Constructor(IUnknown *pUnkOuter, IUnknown *
     This->refCount = 1;
 
     TRACE("returning %p\n",This);
-    *ppOut = (IUnknown *)This;
+    *ppOut = (IUnknown *)&This->IActiveIMMApp_iface;
     return S_OK;
 }
