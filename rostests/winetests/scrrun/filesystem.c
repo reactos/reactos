@@ -621,7 +621,7 @@ static void test_GetFile(void)
 
     hr = IFile_get_Path(file, &str);
     ok(hr == S_OK, "got 0x%08x\n", hr);
-    ok(!lstrcmpW(str, pathW), "got %s\n", wine_dbgstr_w(str));
+    ok(!lstrcmpiW(str, pathW), "got %s\n", wine_dbgstr_w(str));
     SysFreeString(str);
 
 #define FILE_ATTR_MASK (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | \
