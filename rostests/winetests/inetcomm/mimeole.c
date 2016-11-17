@@ -338,6 +338,59 @@ static void test_CreateMessage(void)
     hr = IMimeMessage_GetAttachments(msg, &count, &body_list);
     ok(hr == S_OK, "ret %08x\n", hr);
     ok(count == 2, "got %d\n", count);
+    if(count == 2)
+    {
+        ENCODINGTYPE encoding;
+        IMimeBody *attachment;
+        PROPVARIANT prop;
+
+        PropVariantInit(&prop);
+
+        hr = IMimeMessage_BindToObject(msg, body_list[0], &IID_IMimeBody, (void**)&attachment);
+        ok(hr == S_OK, "ret %08x\n", hr);
+
+        hr = IMimeBody_IsContentType(attachment, "multipart", NULL);
+        ok(hr == S_FALSE, "ret %08x\n", hr);
+
+        hr = IMimeBody_GetCurrentEncoding(attachment, &encoding);
+        ok(hr == S_OK, "ret %08x\n", hr);
+        todo_wine ok(encoding == IET_8BIT, "ret %d\n", encoding);
+
+        prop.vt = VT_LPSTR;
+        hr = IMimeBody_GetProp(attachment, "Content-Transfer-Encoding", 0, &prop);
+        ok(hr == S_OK, "ret %08x\n", hr);
+
+        ok(prop.vt == VT_LPSTR, "type %d\n", prop.vt);
+        ok(!strcmp(prop.u.pszVal, "8bit"), "got  %s\n", prop.u.pszVal);
+        PropVariantClear(&prop);
+
+        hr = IMimeBody_IsType(attachment, IBT_ATTACHMENT);
+        todo_wine ok(hr == S_FALSE, "ret %08x\n", hr);
+
+        IMimeBody_Release(attachment);
+
+        hr = IMimeMessage_BindToObject(msg, body_list[1], &IID_IMimeBody, (void**)&attachment);
+        ok(hr == S_OK, "ret %08x\n", hr);
+
+        hr = IMimeBody_IsContentType(attachment, "multipart", NULL);
+        ok(hr == S_FALSE, "ret %08x\n", hr);
+
+        hr = IMimeBody_GetCurrentEncoding(attachment, &encoding);
+        ok(hr == S_OK, "ret %08x\n", hr);
+        todo_wine ok(encoding == IET_7BIT, "ret %d\n", encoding);
+
+        prop.vt = VT_LPSTR;
+        hr = IMimeBody_GetProp(attachment, "Content-Transfer-Encoding", 0, &prop);
+        ok(hr == S_OK, "ret %08x\n", hr);
+        ok(prop.vt == VT_LPSTR, "type %d\n", prop.vt);
+        ok(!strcmp(prop.u.pszVal, "7bit"), "got  %s\n", prop.u.pszVal);
+        PropVariantClear(&prop);
+
+        hr = IMimeBody_IsType(attachment, IBT_ATTACHMENT);
+        ok(hr == S_OK, "ret %08x\n", hr);
+
+        IMimeBody_Release(attachment);
+    }
     CoTaskMemFree(body_list);
 
     hr = IMimeBody_GetCharset(body, &hcs);
