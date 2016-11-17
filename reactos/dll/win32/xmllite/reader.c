@@ -234,6 +234,7 @@ typedef struct
     XmlNodeType nodetype;
     DtdProcessing dtdmode;
     IXmlResolver *resolver;
+    IUnknown *mlang;
     UINT line, pos;           /* reader position in XML stream */
     struct list attrs; /* attributes list for current node */
     struct attribute *attr; /* current attribute */
@@ -2464,6 +2465,7 @@ static ULONG WINAPI xmlreader_Release(IXmlReader *iface)
         IMalloc *imalloc = This->imalloc;
         if (This->input) IUnknown_Release(&This->input->IXmlReaderInput_iface);
         if (This->resolver) IXmlResolver_Release(This->resolver);
+        if (This->mlang) IUnknown_Release(This->mlang);
         reader_clear_attrs(This);
         reader_clear_elements(This);
         reader_free_strvalues(This);
@@ -2548,6 +2550,11 @@ static HRESULT WINAPI xmlreader_GetProperty(IXmlReader* iface, UINT property, LO
 
     switch (property)
     {
+        case XmlReaderProperty_MultiLanguage:
+            *value = (LONG_PTR)This->mlang;
+            if (This->mlang)
+                IUnknown_AddRef(This->mlang);
+            break;
         case XmlReaderProperty_XmlResolver:
             *value = (LONG_PTR)This->resolver;
             if (This->resolver)
@@ -2575,6 +2582,15 @@ static HRESULT WINAPI xmlreader_SetProperty(IXmlReader* iface, UINT property, LO
 
     switch (property)
     {
+        case XmlReaderProperty_MultiLanguage:
+            if (This->mlang)
+                IUnknown_Release(This->mlang);
+            This->mlang = (IUnknown*)value;
+            if (This->mlang)
+                IUnknown_AddRef(This->mlang);
+            if (This->mlang)
+                FIXME("Ignoring MultiLanguage %p\n", This->mlang);
+            break;
         case XmlReaderProperty_XmlResolver:
             if (This->resolver)
                 IXmlResolver_Release(This->resolver);
@@ -2585,6 +2601,9 @@ static HRESULT WINAPI xmlreader_SetProperty(IXmlReader* iface, UINT property, LO
         case XmlReaderProperty_DtdProcessing:
             if (value < 0 || value > _DtdProcessing_Last) return E_INVALIDARG;
             This->dtdmode = value;
+            break;
+        case XmlReaderProperty_MaxElementDepth:
+            FIXME("Ignoring MaxElementDepth %ld\n", value);
             break;
         default:
             FIXME("Unimplemented property (%u)\n", property);
@@ -2979,6 +2998,7 @@ HRESULT WINAPI CreateXmlReader(REFIID riid, void **obj, IMalloc *imalloc)
     reader->resumestate = XmlReadResumeState_Initial;
     reader->dtdmode = DtdProcessing_Prohibit;
     reader->resolver = NULL;
+    reader->mlang = NULL;
     reader->line  = reader->pos = 0;
     reader->imalloc = imalloc;
     if (imalloc) IMalloc_AddRef(imalloc);
