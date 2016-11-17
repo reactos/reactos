@@ -66,6 +66,10 @@ unsigned char * WINAPI CLEANLOCALSTORAGE_UserMarshal(ULONG *pFlags, unsigned cha
 {
     ALIGN_POINTER(Buffer, 3);
     *(DWORD*)Buffer = pstg->flags;
+
+    if (!pstg->pInterface)
+        return Buffer + sizeof(DWORD);
+
     switch(pstg->flags)
     {
     case CLS_LIBATTR:
@@ -1391,52 +1395,145 @@ static void free_embedded_elemdesc(ELEMDESC *edesc)
 
 HRESULT CALLBACK ITypeComp_Bind_Proxy(
     ITypeComp* This,
-    LPOLESTR szName,
+    LPOLESTR name,
     ULONG lHashVal,
-    WORD wFlags,
-    ITypeInfo** ppTInfo,
-    DESCKIND* pDescKind,
-    BINDPTR* pBindPtr)
+    WORD flags,
+    ITypeInfo **ti,
+    DESCKIND *desckind,
+    BINDPTR *bindptr)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    CLEANLOCALSTORAGE stg = { 0 };
+    ITypeComp *typecomp;
+    FUNCDESC *funcdesc;
+    VARDESC *vardesc;
+    HRESULT hr;
+
+    TRACE("(%p, %s, %#x, %#x, %p, %p, %p)\n", This, debugstr_w(name), lHashVal, flags, ti,
+        desckind, bindptr);
+
+    *desckind = DESCKIND_NONE;
+    memset(bindptr, 0, sizeof(*bindptr));
+
+    hr = ITypeComp_RemoteBind_Proxy(This, name, lHashVal, flags, ti, desckind,
+        &funcdesc, &vardesc, &typecomp, &stg);
+
+    if (hr == S_OK)
+    {
+        switch (*desckind)
+        {
+        case DESCKIND_FUNCDESC:
+            bindptr->lpfuncdesc = funcdesc;
+            break;
+        case DESCKIND_VARDESC:
+        case DESCKIND_IMPLICITAPPOBJ:
+            bindptr->lpvardesc = vardesc;
+            break;
+        case DESCKIND_TYPECOMP:
+            bindptr->lptcomp = typecomp;
+            break;
+        default:
+            ;
+        }
+    }
+
+    return hr;
 }
 
 HRESULT __RPC_STUB ITypeComp_Bind_Stub(
     ITypeComp* This,
-    LPOLESTR szName,
+    LPOLESTR name,
     ULONG lHashVal,
-    WORD wFlags,
-    ITypeInfo** ppTInfo,
-    DESCKIND* pDescKind,
-    LPFUNCDESC* ppFuncDesc,
-    LPVARDESC* ppVarDesc,
-    ITypeComp** ppTypeComp,
-    CLEANLOCALSTORAGE* pDummy)
+    WORD flags,
+    ITypeInfo **ti,
+    DESCKIND *desckind,
+    FUNCDESC **funcdesc,
+    VARDESC **vardesc,
+    ITypeComp **typecomp,
+    CLEANLOCALSTORAGE *stg)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    BINDPTR bindptr;
+    HRESULT hr;
+
+    TRACE("(%p, %s, %#x, %#x, %p, %p, %p, %p, %p, %p)\n", This, debugstr_w(name),
+        lHashVal, flags, ti, desckind, funcdesc, vardesc, typecomp, stg);
+
+    memset(stg, 0, sizeof(*stg));
+    memset(&bindptr, 0, sizeof(bindptr));
+
+    *funcdesc = NULL;
+    *vardesc = NULL;
+    *typecomp = NULL;
+    *ti = NULL;
+
+    hr = ITypeComp_Bind(This, name, lHashVal, flags, ti, desckind, &bindptr);
+    if(hr != S_OK)
+        return hr;
+
+    switch (*desckind)
+    {
+    case DESCKIND_FUNCDESC:
+        *funcdesc = bindptr.lpfuncdesc;
+        stg->pInterface = (IUnknown*)*ti;
+        stg->pStorage = funcdesc;
+        stg->flags = CLS_FUNCDESC;
+        break;
+    case DESCKIND_VARDESC:
+    case DESCKIND_IMPLICITAPPOBJ:
+        *vardesc = bindptr.lpvardesc;
+        stg->pInterface = (IUnknown*)*ti;
+        stg->pStorage = vardesc;
+        stg->flags = CLS_VARDESC;
+        break;
+    case DESCKIND_TYPECOMP:
+        *typecomp = bindptr.lptcomp;
+        break;
+    default:
+        ;
+    }
+
+    if (stg->pInterface)
+        IUnknown_AddRef(stg->pInterface);
+
+    return hr;
 }
 
 HRESULT CALLBACK ITypeComp_BindType_Proxy(
     ITypeComp* This,
-    LPOLESTR szName,
+    LPOLESTR name,
     ULONG lHashVal,
-    ITypeInfo** ppTInfo,
-    ITypeComp** ppTComp)
+    ITypeInfo **ti,
+    ITypeComp **typecomp)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    HRESULT hr;
+
+    TRACE("(%p, %s, %#x, %p, %p)\n", This, debugstr_w(name), lHashVal, ti, typecomp);
+
+    hr = ITypeComp_RemoteBindType_Proxy(This, name, lHashVal, ti);
+    if (hr == S_OK)
+        ITypeInfo_GetTypeComp(*ti, typecomp);
+    else if (typecomp)
+        *typecomp = NULL;
+
+    return hr;
 }
 
 HRESULT __RPC_STUB ITypeComp_BindType_Stub(
     ITypeComp* This,
-    LPOLESTR szName,
+    LPOLESTR name,
     ULONG lHashVal,
-    ITypeInfo** ppTInfo)
+    ITypeInfo **ti)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    ITypeComp *typecomp = NULL;
+    HRESULT hr;
+
+    TRACE("(%p, %s, %#x, %p)\n", This, debugstr_w(name), lHashVal, ti);
+
+    hr = ITypeComp_BindType(This, name, lHashVal, ti, &typecomp);
+
+    if (typecomp)
+        ITypeComp_Release(typecomp);
+
+    return hr;
 }
 
 /* ITypeInfo */

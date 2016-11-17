@@ -854,7 +854,8 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 	    return S_OK;
 	/*FALLTHROUGH*/
     }
-    if (IsEqualCLSID(rclsid, &CLSID_PSTypeInfo) ||
+    if (IsEqualCLSID(rclsid, &CLSID_PSTypeComp) ||
+        IsEqualCLSID(rclsid, &CLSID_PSTypeInfo) ||
         IsEqualCLSID(rclsid, &CLSID_PSTypeLib) ||
         IsEqualCLSID(rclsid, &CLSID_PSDispatch) ||
         IsEqualCLSID(rclsid, &CLSID_PSEnumVariant))

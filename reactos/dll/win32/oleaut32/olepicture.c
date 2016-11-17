@@ -291,7 +291,8 @@ static OLEPictureImpl* OLEPictureImpl_Construct(LPPICTDESC pictDesc, BOOL fOwn)
   newObject->IConnectionPointContainer_iface.lpVtbl = &OLEPictureImpl_IConnectionPointContainer_VTable;
 
   newObject->pCP = NULL;
-  CreateConnectionPoint((IUnknown*)newObject,&IID_IPropertyNotifySink,&newObject->pCP);
+  CreateConnectionPoint((IUnknown*)&newObject->IPicture_iface, &IID_IPropertyNotifySink,
+                        &newObject->pCP);
   if (!newObject->pCP)
   {
     HeapFree(GetProcessHeap(), 0, newObject);
