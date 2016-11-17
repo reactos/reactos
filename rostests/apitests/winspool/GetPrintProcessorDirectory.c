@@ -46,13 +46,13 @@ START_TEST(GetPrintProcessorDirectoryA)
     SetLastError(0xDEADBEEF);
     ok(!GetPrintProcessorDirectoryA(NULL, NULL, 1, NULL, cbNeeded, &cbTemp), "GetPrintProcessorDirectoryA returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "GetPrintProcessorDirectoryA returns error %lu!\n", GetLastError());
-    ok(cbTemp == 0, "cbNeeded is %lu!\n", cbNeeded);
+    ok(cbTemp == 0, "cbTemp is %lu!\n", cbTemp);
 
     // Same error has to occur with a size too small.
     SetLastError(0xDEADBEEF);
     ok(!GetPrintProcessorDirectoryA(NULL, NULL, 1, NULL, 1, &cbTemp), "GetPrintProcessorDirectoryA returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "GetPrintProcessorDirectoryA returns error %lu!\n", GetLastError());
-    ok(cbTemp == 0, "cbNeeded is %lu!\n", cbNeeded);
+    ok(cbTemp == 0, "cbTemp is %lu!\n", cbTemp);
 
     // Finally use the function as intended and aim for success!
     pszBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cbNeeded);
@@ -97,13 +97,13 @@ START_TEST(GetPrintProcessorDirectoryW)
     SetLastError(0xDEADBEEF);
     ok(!GetPrintProcessorDirectoryW(NULL, NULL, 1, NULL, cbNeeded, &cbTemp), "GetPrintProcessorDirectoryW returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "GetPrintProcessorDirectoryW returns error %lu!\n", GetLastError());
-    ok(cbTemp == 0, "cbNeeded is %lu!\n", cbNeeded);
+    ok(cbTemp == 0, "cbTemp is %lu!\n", cbTemp);
 
     // Same error has to occur with a size too small.
     SetLastError(0xDEADBEEF);
     ok(!GetPrintProcessorDirectoryW(NULL, NULL, 1, NULL, 1, &cbTemp), "GetPrintProcessorDirectoryW returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "GetPrintProcessorDirectoryW returns error %lu!\n", GetLastError());
-    ok(cbTemp == 0, "cbNeeded is %lu!\n", cbNeeded);
+    ok(cbTemp == 0, "cbTemp is %lu!\n", cbTemp);
 
     // Finally use the function as intended and aim for success!
     pwszBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cbNeeded);
