@@ -70,6 +70,13 @@ coclass WICBmpEncoder { interface IWICBitmapEncoder; }
 coclass WICGifDecoder { interface IWICBitmapDecoder; }
 
 [
+    helpstring("WIC GIF Encoder"),
+    threading(both),
+    uuid(114f5598-0b22-40a0-86a1-c83ea495adbd)
+]
+coclass WICGifEncoder { interface IWICBitmapEncoder; }
+
+[
     helpstring("WIC ICO Decoder"),
     threading(both),
     uuid(c61bfcdf-2e0f-4aad-a8d7-e06bafebcdfe)

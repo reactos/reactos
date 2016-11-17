@@ -103,6 +103,12 @@ HRESULT copy_pixels(UINT bpp, const BYTE *srcbuffer,
     }
 }
 
+static BOOL is_1bpp_format(const WICPixelFormatGUID *format)
+{
+    return IsEqualGUID(format, &GUID_WICPixelFormatBlackWhite) ||
+           IsEqualGUID(format, &GUID_WICPixelFormat1bppIndexed);
+}
+
 HRESULT configure_write_source(IWICBitmapFrameEncode *iface,
     IWICBitmapSource *source, const WICRect *prc,
     const WICPixelFormatGUID *format,
@@ -127,11 +133,11 @@ HRESULT configure_write_source(IWICBitmapFrameEncode *iface,
         format = &dst_format;
     }
 
-    if (!IsEqualGUID(&src_format, format))
+    if (!IsEqualGUID(&src_format, format) && !(is_1bpp_format(&src_format) && is_1bpp_format(format)))
     {
         /* FIXME: should use WICConvertBitmapSource to convert */
-        ERR("format %s unsupported\n", debugstr_guid(&src_format));
-        return E_FAIL;
+        FIXME("format %s unsupported\n", debugstr_guid(&src_format));
+        return E_NOTIMPL;
     }
 
     if (xres == 0.0 || yres == 0.0)

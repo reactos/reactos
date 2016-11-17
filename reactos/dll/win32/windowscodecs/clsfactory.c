@@ -32,6 +32,7 @@ static const classinfo wic_classes[] = {
     {&CLSID_WICPngEncoder, PngEncoder_CreateInstance},
     {&CLSID_WICBmpEncoder, BmpEncoder_CreateInstance},
     {&CLSID_WICGifDecoder, GifDecoder_CreateInstance},
+    {&CLSID_WICGifEncoder, GifEncoder_CreateInstance},
     {&CLSID_WICIcoDecoder, IcoDecoder_CreateInstance},
     {&CLSID_WICJpegDecoder, JpegDecoder_CreateInstance},
     {&CLSID_WICJpegEncoder, JpegEncoder_CreateInstance},

@@ -399,7 +399,7 @@ static HRESULT WINAPI IcnsFrameEncode_Commit(IWICBitmapFrameEncode *iface)
     OSErr ret;
     HRESULT hr = S_OK;
 
-    TRACE("(%p): stub\n", iface);
+    TRACE("(%p)\n", iface);
 
     EnterCriticalSection(&This->encoder->lock);
 

@@ -95,7 +95,7 @@ static HRESULT WINAPI mqr_GetMetadataByName(IWICMetadataQueryReader *iface,
 {
     QueryReader *This = impl_from_IWICMetadataQueryReader(iface);
     FIXME("(%p,%s,%p)\n", This, wine_dbgstr_w(wzName), pvarValue);
-    return E_NOTIMPL;
+    return WINCODEC_ERR_PROPERTYNOTFOUND;
 }
 
 static HRESULT WINAPI mqr_GetEnumerator(IWICMetadataQueryReader *iface,

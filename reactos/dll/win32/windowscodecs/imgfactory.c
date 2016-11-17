@@ -104,22 +104,23 @@ static HRESULT WINAPI ComponentFactory_CreateDecoderFromFilename(
     return hr;
 }
 
-static IWICBitmapDecoder *find_decoder(IStream *pIStream, const GUID *pguidVendor,
-                                       WICDecodeOptions metadataOptions)
+static HRESULT find_decoder(IStream *pIStream, const GUID *pguidVendor,
+                            WICDecodeOptions metadataOptions, IWICBitmapDecoder **decoder)
 {
     IEnumUnknown *enumdecoders;
     IUnknown *unkdecoderinfo;
     IWICBitmapDecoderInfo *decoderinfo;
-    IWICBitmapDecoder *decoder = NULL;
     GUID vendor;
     HRESULT res;
     ULONG num_fetched;
     BOOL matches;
 
-    res = CreateComponentEnumerator(WICDecoder, WICComponentEnumerateDefault, &enumdecoders);
-    if (FAILED(res)) return NULL;
+    *decoder = NULL;
 
-    while (!decoder)
+    res = CreateComponentEnumerator(WICDecoder, WICComponentEnumerateDefault, &enumdecoders);
+    if (FAILED(res)) return res;
+
+    while (!*decoder)
     {
         res = IEnumUnknown_Next(enumdecoders, 1, &unkdecoderinfo, &num_fetched);
 
@@ -144,18 +145,21 @@ static IWICBitmapDecoder *find_decoder(IStream *pIStream, const GUID *pguidVendo
 
                 if (SUCCEEDED(res) && matches)
                 {
-                    res = IWICBitmapDecoderInfo_CreateInstance(decoderinfo, &decoder);
+                    res = IWICBitmapDecoderInfo_CreateInstance(decoderinfo, decoder);
 
                     /* FIXME: should use QueryCapability to choose a decoder */
 
                     if (SUCCEEDED(res))
                     {
-                        res = IWICBitmapDecoder_Initialize(decoder, pIStream, metadataOptions);
+                        res = IWICBitmapDecoder_Initialize(*decoder, pIStream, metadataOptions);
 
                         if (FAILED(res))
                         {
-                            IWICBitmapDecoder_Release(decoder);
-                            decoder = NULL;
+                            IWICBitmapDecoder_Release(*decoder);
+                            IWICBitmapDecoderInfo_Release(decoderinfo);
+                            IUnknown_Release(unkdecoderinfo);
+                            *decoder = NULL;
+                            return res;
                         }
                     }
                 }
@@ -171,7 +175,7 @@ static IWICBitmapDecoder *find_decoder(IStream *pIStream, const GUID *pguidVendo
 
     IEnumUnknown_Release(enumdecoders);
 
-    return decoder;
+    return WINCODEC_ERR_COMPONENTNOTFOUND;
 }
 
 static HRESULT WINAPI ComponentFactory_CreateDecoderFromStream(
@@ -185,9 +189,9 @@ static HRESULT WINAPI ComponentFactory_CreateDecoderFromStream(
         metadataOptions, ppIDecoder);
 
     if (pguidVendor)
-        decoder = find_decoder(pIStream, pguidVendor, metadataOptions);
+        res = find_decoder(pIStream, pguidVendor, metadataOptions, &decoder);
     if (!decoder)
-        decoder = find_decoder(pIStream, NULL, metadataOptions);
+        res = find_decoder(pIStream, NULL, metadataOptions, &decoder);
 
     if (decoder)
     {
@@ -202,17 +206,17 @@ static HRESULT WINAPI ComponentFactory_CreateDecoderFromStream(
             BYTE data[4];
             ULONG bytesread;
 
-            WARN("failed to load from a stream\n");
+            WARN("failed to load from a stream %#x\n", res);
 
             seek.QuadPart = 0;
-            res = IStream_Seek(pIStream, seek, STREAM_SEEK_SET, NULL);
-            if (SUCCEEDED(res))
-                res = IStream_Read(pIStream, data, 4, &bytesread);
-            if (SUCCEEDED(res))
-                WARN("first %i bytes of stream=%x %x %x %x\n", bytesread, data[0], data[1], data[2], data[3]);
+            if (IStream_Seek(pIStream, seek, STREAM_SEEK_SET, NULL) == S_OK)
+            {
+                if (IStream_Read(pIStream, data, 4, &bytesread) == S_OK)
+                    WARN("first %i bytes of stream=%x %x %x %x\n", bytesread, data[0], data[1], data[2], data[3]);
+            }
         }
         *ppIDecoder = NULL;
-        return WINCODEC_ERR_COMPONENTNOTFOUND;
+        return res;
     }
 }
 
