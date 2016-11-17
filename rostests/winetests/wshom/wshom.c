@@ -216,10 +216,8 @@ static void test_wshshell(void)
     SysFreeString(str);
 
     /* current directory */
-if (0) /* crashes on native */
-{
-    hr = IWshShell3_get_CurrentDirectory(sh3, NULL);
-}
+    if (0) /* crashes on native */
+        hr = IWshShell3_get_CurrentDirectory(sh3, NULL);
 
     str = NULL;
     hr = IWshShell3_get_CurrentDirectory(sh3, &str);
