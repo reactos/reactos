@@ -442,8 +442,9 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 
         if (prci.hProcess != NULL)
         {
-            if (IsConsoleProcess(prci.hProcess))
+            if (bc != NULL || IsConsoleProcess(prci.hProcess))
             {
+                /* when processing a batch file or starting console processes: execute synchronously */
                 EnterCriticalSection(&ChildProcessRunningLock);
                 dwChildProcessId = prci.dwProcessId;
 
