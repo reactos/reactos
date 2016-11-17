@@ -1916,7 +1916,7 @@ HRESULT WINAPI CShellLink::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     sei.lpVerb = L"open";
 
     // HACK for ShellExecuteExW
-    if (wcsstr(sPath, L".cpl"))
+    if (sPath && wcsstr(sPath, L".cpl"))
         sei.lpVerb = L"cplopen";
 
     if (ShellExecuteExW(&sei))
