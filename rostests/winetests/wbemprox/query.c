@@ -310,7 +310,6 @@ static void test_Win32_Bios( IWbemServices *services )
     VariantInit( &val );
     hr = IWbemClassObject_Get( obj, identificationcodeW, 0, &val, &type, NULL );
     ok( hr == S_OK, "failed to get identication code %08x\n", hr );
-    todo_wine
     ok( V_VT( &val ) == VT_NULL, "unexpected variant type 0x%x\n", V_VT( &val ) );
     ok( type == CIM_STRING, "unexpected type 0x%x\n", type );
     VariantClear( &val );
@@ -590,7 +589,6 @@ static void test_Win32_SystemEnclosure( IWbemServices *services )
     VariantInit( &val );
     hr = IWbemClassObject_Get( obj, chassistypesW, 0, &val, &type, NULL );
     ok( hr == S_OK, "failed to get chassis types %08x\n", hr );
-    todo_wine
     ok( V_VT( &val ) == (VT_I4|VT_ARRAY), "unexpected variant type 0x%x\n", V_VT( &val ) );
     ok( type == (CIM_UINT16|CIM_FLAG_ARRAY), "unexpected type 0x%x\n", type );
     hr = SafeArrayAccessData( V_ARRAY( &val ), (void **)&data );
@@ -1051,6 +1049,172 @@ static void test_SystemSecurity( IWbemServices *services )
     SysFreeString( class );
 }
 
+static void test_OperatingSystem( IWbemServices *services )
+{
+    static const WCHAR queryW[] =
+        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','W','i','n','3','2','_',
+         'O','p','e','r','a','t','i','n','g','S','y','s','t','e','m',0};
+    static const WCHAR buildnumberW[] = {'B','u','i','l','d','N','u','m','b','e','r',0};
+    static const WCHAR captionW[] = {'C','a','p','t','i','o','n',0};
+    static const WCHAR csdversionW[] = {'C','S','D','V','e','r','s','i','o','n',0};
+    static const WCHAR nameW[] = {'N','a','m','e',0};
+    static const WCHAR osproductsuiteW[] = {'O','S','P','r','o','d','u','c','t','S','u','i','t','e',0};
+    static const WCHAR ostypeW[] = {'O','S','T','y','p','e',0};
+    static const WCHAR suitemaskW[] = {'S','u','i','t','e','M','a','s','k',0};
+    static const WCHAR versionW[] = {'V','e','r','s','i','o','n',0};
+    static const WCHAR servicepackmajorW[] =
+        {'S','e','r','v','i','c','e','P','a','c','k','M','a','j','o','r','V','e','r','s','i','o','n',0};
+    static const WCHAR servicepackminorW[] =
+        {'S','e','r','v','i','c','e','P','a','c','k','M','i','n','o','r','V','e','r','s','i','o','n',0};
+    BSTR wql = SysAllocString( wqlW ), query = SysAllocString( queryW );
+    IEnumWbemClassObject *result;
+    IWbemClassObject *obj;
+    CIMTYPE type;
+    ULONG count;
+    VARIANT val;
+    HRESULT hr;
+
+    hr = IWbemServices_ExecQuery( services, wql, query, 0, NULL, &result );
+    ok( hr == S_OK, "IWbemServices_ExecQuery failed %08x\n", hr );
+
+    hr = IEnumWbemClassObject_Next( result, 10000, 1, &obj, &count );
+    ok( hr == S_OK, "IEnumWbemClassObject_Next failed %08x\n", hr );
+
+    type = 0xdeadbeef;
+    VariantInit( &val );
+    hr = IWbemClassObject_Get( obj, buildnumberW, 0, &val, &type, NULL );
+    ok( hr == S_OK, "failed to get buildnumber %08x\n", hr );
+    ok( V_VT( &val ) == VT_BSTR, "unexpected variant type 0x%x\n", V_VT( &val ) );
+    ok( type == CIM_STRING, "unexpected type 0x%x\n", type );
+    trace( "buildnumber: %s\n", wine_dbgstr_w(V_BSTR( &val )) );
+    VariantClear( &val );
+
+    type = 0xdeadbeef;
+    VariantInit( &val );
+    hr = IWbemClassObject_Get( obj, captionW, 0, &val, &type, NULL );
+    ok( hr == S_OK, "failed to get caption %08x\n", hr );
+    ok( V_VT( &val ) == VT_BSTR, "unexpected variant type 0x%x\n", V_VT( &val ) );
+    ok( type == CIM_STRING, "unexpected type 0x%x\n", type );
+    trace( "caption: %s\n", wine_dbgstr_w(V_BSTR( &val )) );
+    VariantClear( &val );
+
+    type = 0xdeadbeef;
+    VariantInit( &val );
+    hr = IWbemClassObject_Get( obj, csdversionW, 0, &val, &type, NULL );
+    ok( hr == S_OK, "failed to get csdversion %08x\n", hr );
+    ok( V_VT( &val ) == VT_BSTR || V_VT( &val ) == VT_NULL, "unexpected variant type 0x%x\n", V_VT( &val ) );
+    ok( type == CIM_STRING, "unexpected type 0x%x\n", type );
+    trace( "csdversion: %s\n", wine_dbgstr_w(V_BSTR( &val )) );
+    VariantClear( &val );
+
+    type = 0xdeadbeef;
+    VariantInit( &val );
+    hr = IWbemClassObject_Get( obj, nameW, 0, &val, &type, NULL );
+    ok( hr == S_OK, "failed to get name %08x\n", hr );
+    ok( V_VT( &val ) == VT_BSTR, "unexpected variant type 0x%x\n", V_VT( &val ) );
+    ok( type == CIM_STRING, "unexpected type 0x%x\n", type );
+    trace( "name: %s\n", wine_dbgstr_w(V_BSTR( &val )) );
+    VariantClear( &val );
+
+    type = 0xdeadbeef;
+    VariantInit( &val );
+    hr = IWbemClassObject_Get( obj, osproductsuiteW, 0, &val, &type, NULL );
+    ok( hr == S_OK, "failed to get osproductsuite %08x\n", hr );
+    ok( V_VT( &val ) == VT_I4 || broken(V_VT( &val ) == VT_NULL) /* winxp */, "unexpected variant type 0x%x\n", V_VT( &val ) );
+    ok( type == CIM_UINT32, "unexpected type 0x%x\n", type );
+    trace( "osproductsuite: %d (%08x)\n", V_I4( &val ), V_I4( &val ) );
+    VariantClear( &val );
+
+    type = 0xdeadbeef;
+    VariantInit( &val );
+    hr = IWbemClassObject_Get( obj, ostypeW, 0, &val, &type, NULL );
+    ok( hr == S_OK, "failed to get ostype %08x\n", hr );
+    ok( V_VT( &val ) == VT_I4, "unexpected variant type 0x%x\n", V_VT( &val ) );
+    ok( type == CIM_UINT16, "unexpected type 0x%x\n", type );
+    trace( "ostype: %d\n", V_I4( &val ) );
+    VariantClear( &val );
+
+    type = 0xdeadbeef;
+    VariantInit( &val );
+    hr = IWbemClassObject_Get( obj, servicepackmajorW, 0, &val, &type, NULL );
+    ok( hr == S_OK, "failed to get servicepackmajor %08x\n", hr );
+    ok( V_VT( &val ) == VT_I4, "unexpected variant type 0x%x\n", V_VT( &val ) );
+    ok( type == CIM_UINT16, "unexpected type 0x%x\n", type );
+    trace( "servicepackmajor: %d\n", V_I4( &val ) );
+    VariantClear( &val );
+
+    type = 0xdeadbeef;
+    VariantInit( &val );
+    hr = IWbemClassObject_Get( obj, servicepackminorW, 0, &val, &type, NULL );
+    ok( hr == S_OK, "failed to get servicepackminor %08x\n", hr );
+    ok( V_VT( &val ) == VT_I4, "unexpected variant type 0x%x\n", V_VT( &val ) );
+    ok( type == CIM_UINT16, "unexpected type 0x%x\n", type );
+    trace( "servicepackminor: %d\n", V_I4( &val ) );
+    VariantClear( &val );
+
+    type = 0xdeadbeef;
+    VariantInit( &val );
+    hr = IWbemClassObject_Get( obj, suitemaskW, 0, &val, &type, NULL );
+    ok( hr == S_OK, "failed to get suitemask %08x\n", hr );
+    ok( V_VT( &val ) == VT_I4, "unexpected variant type 0x%x\n", V_VT( &val ) );
+    ok( type == CIM_UINT32, "unexpected type 0x%x\n", type );
+    trace( "suitemask: %d (%08x)\n", V_I4( &val ), V_I4( &val ) );
+    VariantClear( &val );
+
+    type = 0xdeadbeef;
+    VariantInit( &val );
+    hr = IWbemClassObject_Get( obj, versionW, 0, &val, &type, NULL );
+    ok( hr == S_OK, "failed to get version %08x\n", hr );
+    ok( V_VT( &val ) == VT_BSTR, "unexpected variant type 0x%x\n", V_VT( &val ) );
+    ok( type == CIM_STRING, "unexpected type 0x%x\n", type );
+    trace( "version: %s\n", wine_dbgstr_w(V_BSTR( &val )) );
+    VariantClear( &val );
+
+    IWbemClassObject_Release( obj );
+    IEnumWbemClassObject_Release( result );
+    SysFreeString( query );
+    SysFreeString( wql );
+}
+
+static void test_ComputerSystemProduct( IWbemServices *services )
+{
+    static const WCHAR uuidW[] = {'U','U','I','D',0};
+    static const WCHAR queryW[] =
+        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','W','i','n','3','2','_',
+         'C','o','m','p','u','t','e','r','S','y','s','t','e','m','P','r','o','d','u','c','t',0};
+    BSTR wql = SysAllocString( wqlW ), query = SysAllocString( queryW );
+    IEnumWbemClassObject *result;
+    IWbemClassObject *service;
+    VARIANT value;
+    CIMTYPE type;
+    HRESULT hr;
+    DWORD count;
+
+    hr = IWbemServices_ExecQuery( services, wql, query, 0, NULL, &result );
+    if (hr != S_OK)
+    {
+        win_skip( "Win32_ComputerSystemProduct not available\n" );
+        return;
+    }
+
+    hr = IEnumWbemClassObject_Next( result, 10000, 1, &service, &count );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+    type = 0xdeadbeef;
+    VariantInit( &value );
+    hr = IWbemClassObject_Get( service, uuidW, 0, &value, &type, NULL );
+    ok( hr == S_OK, "failed to get computer name %08x\n", hr );
+    ok( V_VT( &value ) == VT_BSTR, "unexpected variant type 0x%x\n", V_VT( &value ) );
+    ok( type == CIM_STRING, "unexpected type 0x%x\n", type );
+    trace( "uuid %s\n", wine_dbgstr_w(V_BSTR(&value)) );
+    VariantClear( &value );
+
+    IWbemClassObject_Release( service );
+    IEnumWbemClassObject_Release( result );
+    SysFreeString( query );
+    SysFreeString( wql );
+}
+
 START_TEST(query)
 {
     static const WCHAR cimv2W[] = {'R','O','O','T','\\','C','I','M','V','2',0};
@@ -1088,6 +1252,8 @@ START_TEST(query)
     test_query_async( services );
     test_GetNames( services );
     test_SystemSecurity( services );
+    test_OperatingSystem( services );
+    test_ComputerSystemProduct( services );
 
     SysFreeString( path );
     IWbemServices_Release( services );
