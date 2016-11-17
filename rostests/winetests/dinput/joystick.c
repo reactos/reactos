@@ -147,12 +147,121 @@ static BOOL CALLBACK EnumAxes(const DIDEVICEOBJECTINSTANCEA *pdidoi, void *pCont
         hr = IDirectInputDevice_SetProperty(info->pJoystick, DIPROP_DEADZONE, &dipdw.diph);
         ok(hr==DI_OK,"IDirectInputDevice_SetProperty() failed: %08x\n", hr);
 
+        /* ensure DIDOI_ASPECTPOSITION is set for axes objects  */
+        ok(pdidoi->dwFlags & DIDOI_ASPECTPOSITION, "Missing DIDOI_ASPECTPOSITION, flags are 0x%x\n",
+           pdidoi->dwFlags);
+
         info->axis++;
     } else if (IsEqualIID(&pdidoi->guidType, &GUID_POV))
         info->pov++;
     else if (IsEqualIID(&pdidoi->guidType, &GUID_Button))
         info->button++;
 
+    return DIENUM_CONTINUE;
+}
+
+static const struct effect_id
+{
+    const GUID *guid;
+    int dieft;
+    const char *name;
+} effect_conversion[] = {
+    {&GUID_ConstantForce, DIEFT_CONSTANTFORCE, "Constant"},
+    {&GUID_RampForce,     DIEFT_RAMPFORCE,     "Ramp"},
+    {&GUID_Square,        DIEFT_PERIODIC,      "Square"},
+    {&GUID_Sine,          DIEFT_PERIODIC,      "Sine"},
+    {&GUID_Triangle,      DIEFT_PERIODIC,      "Triangle"},
+    {&GUID_SawtoothUp,    DIEFT_PERIODIC,      "Saw Tooth Up"},
+    {&GUID_SawtoothDown,  DIEFT_PERIODIC,      "Saw Tooth Down"},
+    {&GUID_Spring,        DIEFT_CONDITION,     "Spring"},
+    {&GUID_Damper,        DIEFT_CONDITION,     "Damper"},
+    {&GUID_Inertia,       DIEFT_CONDITION,     "Inertia"},
+    {&GUID_Friction,      DIEFT_CONDITION,     "Friction"},
+    {&GUID_CustomForce,   DIEFT_CUSTOMFORCE,   "Custom"}
+};
+
+static const struct effect_id* effect_from_guid(const GUID *guid)
+{
+    unsigned int i;
+    for (i = 0; i < sizeof(effect_conversion) / sizeof(effect_conversion[0]); i++)
+        if (IsEqualGUID(guid, effect_conversion[i].guid))
+            return &effect_conversion[i];
+    return NULL;
+}
+
+struct effect_enum
+{
+    DIEFFECT eff;
+    GUID guid;
+    int effect_count;
+    const char *effect_name;
+};
+
+/* The last enumerated effect will be used for force feedback testing */
+static BOOL CALLBACK EnumEffects(const DIEFFECTINFOA *lpef, void *ref)
+{
+    const struct effect_id *id = effect_from_guid(&lpef->guid);
+    static union
+    {
+        DICONSTANTFORCE constant;
+        DIPERIODIC periodic;
+        DIRAMPFORCE ramp;
+        DICONDITION condition[2];
+    } specific;
+    struct effect_enum *data = ref;
+    int type = DIDFT_GETTYPE(lpef->dwEffType);
+
+    /* Insanity check */
+    if (!id)
+    {
+        ok(0, "unsupported effect enumerated, GUID %s!\n", wine_dbgstr_guid(&lpef->guid));
+        return DIENUM_CONTINUE;
+    }
+    trace("controller supports '%s' effect\n", id->name);
+    ok(type == id->dieft, "Invalid effect type, expected 0x%x, got 0x%x\n",
+       id->dieft, lpef->dwEffType);
+
+    /* Can't use custom for test as we don't know the data format */
+    if (type == DIEFT_CUSTOMFORCE)
+        return DIENUM_CONTINUE;
+
+    data->effect_count++;
+    data->effect_name = id->name;
+    data->guid = *id->guid;
+
+    ZeroMemory(&specific, sizeof(specific));
+    switch (type)
+    {
+        case DIEFT_PERIODIC:
+            data->eff.cbTypeSpecificParams  = sizeof(specific.periodic);
+            data->eff.lpvTypeSpecificParams = &specific.periodic;
+            specific.periodic.dwMagnitude = DI_FFNOMINALMAX / 2;
+            specific.periodic.dwPeriod = DI_SECONDS; /* 1 second */
+            break;
+        case DIEFT_CONSTANTFORCE:
+            data->eff.cbTypeSpecificParams  = sizeof(specific.constant);
+            data->eff.lpvTypeSpecificParams = &specific.constant;
+            specific.constant.lMagnitude = DI_FFNOMINALMAX / 2;
+            break;
+        case DIEFT_RAMPFORCE:
+            data->eff.cbTypeSpecificParams  = sizeof(specific.ramp);
+            data->eff.lpvTypeSpecificParams = &specific.ramp;
+            specific.ramp.lStart = -DI_FFNOMINALMAX / 2;
+            specific.ramp.lEnd = +DI_FFNOMINALMAX / 2;
+            break;
+        case DIEFT_CONDITION:
+        {
+            int i;
+            data->eff.cbTypeSpecificParams  = sizeof(specific.condition);
+            data->eff.lpvTypeSpecificParams = specific.condition;
+            for (i = 0; i < 2; i++)
+            {
+                specific.condition[i].lNegativeCoefficient = -DI_FFNOMINALMAX / 2;
+                specific.condition[i].lPositiveCoefficient = +DI_FFNOMINALMAX / 2;
+            }
+            break;
+        }
+    }
     return DIENUM_CONTINUE;
 }
 
@@ -187,6 +296,14 @@ static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
     WCHAR nameBuffer[MAX_PATH];
     HWND hWnd = get_hwnd();
     char oldstate[248], curstate[248];
+    DWORD axes[2] = {DIJOFS_X, DIJOFS_Y};
+    LONG  direction[2] = {0, 0};
+    LPDIRECTINPUTEFFECT effect = NULL;
+    LONG cnt1, cnt2;
+    HWND real_hWnd;
+    HINSTANCE hInstance = GetModuleHandleW(NULL);
+    DIPROPDWORD dip_gain_set, dip_gain_get;
+    struct effect_enum effect_data;
 
     ok(data->version > 0x0300, "Joysticks not supported in version 0x%04x\n", data->version);
  
@@ -208,7 +325,27 @@ static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
     if (hr!=DI_OK)
         goto DONE;
 
-    trace("---- %s ----\n", lpddi->tszProductName);
+    trace("---- Controller Information ----\n"
+          "Product Name  : %s\n"
+          "Instance Name : %s\n"
+          "devType       : 0x%08x\n"
+          "GUID Product  : %s\n"
+          "GUID Instance : %s\n"
+          "HID Page      : 0x%04x\n"
+          "HID Usage     : 0x%04x\n",
+          lpddi->tszProductName,
+          lpddi->tszInstanceName,
+          lpddi->dwDevType,
+          wine_dbgstr_guid(&lpddi->guidProduct),
+          wine_dbgstr_guid(&lpddi->guidInstance),
+          lpddi->wUsagePage,
+          lpddi->wUsage);
+
+    /* Check if this is a HID device */
+    if (lpddi->dwDevType & DIDEVTYPE_HID)
+        ok(lpddi->wUsagePage == 0x01 && (lpddi->wUsage == 0x04 || lpddi->wUsage == 0x05),
+           "Expected a game controller HID UsagePage and Usage, got page 0x%x usage 0x%x\n",
+           lpddi->wUsagePage, lpddi->wUsage);
 
     /* Test for joystick ID property */
     ZeroMemory(&dipw, sizeof(dipw));
@@ -232,6 +369,14 @@ static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
     /* Test if instance name is the same as present in DIDEVICEINSTANCE */
     MultiByteToWideChar(CP_ACP, 0, lpddi->tszInstanceName, -1, nameBuffer, MAX_PATH);
     ok(!lstrcmpW(nameBuffer, dps.wsz), "DIPROP_INSTANCENAME returned is wrong. Expected: %s Got: %s\n",
+                 wine_dbgstr_w(nameBuffer), wine_dbgstr_w(dps.wsz));
+
+    hr = IDirectInputDevice_GetProperty(pJoystick, DIPROP_PRODUCTNAME, &dps.diph);
+    ok(SUCCEEDED(hr), "IDirectInput_GetProperty() for DIPROP_PRODUCTNAME failed: %08x\n", hr);
+
+    /* Test if product name is the same as present in DIDEVICEINSTANCE */
+    MultiByteToWideChar(CP_ACP, 0, lpddi->tszProductName, -1, nameBuffer, MAX_PATH);
+    ok(!lstrcmpW(nameBuffer, dps.wsz), "DIPROP_PRODUCTNAME returned is wrong. Expected: %s Got: %s\n",
                  wine_dbgstr_w(nameBuffer), wine_dbgstr_w(dps.wsz));
 
     /* Test for GUIDPATH properties */
@@ -357,54 +502,62 @@ static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
         ok(js.rgdwPOV[3] == -1, "Default for unassigned POV should be -1 not: %d\n", js.rgdwPOV[3]);
     }
 
+    trace("Testing force feedback\n");
+    ZeroMemory(&effect_data, sizeof(effect_data));
+    effect_data.eff.dwSize          = sizeof(effect_data.eff);
+    effect_data.eff.dwFlags         = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
+    effect_data.eff.dwDuration      = INFINITE;
+    effect_data.eff.dwGain          = DI_FFNOMINALMAX;
+    effect_data.eff.dwTriggerButton = DIEB_NOTRIGGER;
+    effect_data.eff.cAxes           = sizeof(axes) / sizeof(axes[0]);
+    effect_data.eff.rgdwAxes        = axes;
+    effect_data.eff.rglDirection    = direction;
+
+    /* Sending effects to joystick requires
+     * calling IDirectInputEffect_Initialize, which requires
+     * having exclusive access to the device, which requires
+     * - not having acquired the joystick when calling
+     *   IDirectInputDevice_SetCooperativeLevel
+     * - a visible window
+     */
+    real_hWnd = CreateWindowExA(0, "EDIT", "Test text", 0, 10, 10, 300, 300, NULL, NULL,
+                                hInstance, NULL);
+    ok(real_hWnd!=0,"CreateWindowExA failed: %p\n", real_hWnd);
+    ShowWindow(real_hWnd, SW_SHOW);
+    hr = IDirectInputDevice_Unacquire(pJoystick);
+    ok(hr==DI_OK,"IDirectInputDevice_Unacquire() failed: %08x\n", hr);
+    hr = IDirectInputDevice_SetCooperativeLevel(pJoystick, real_hWnd,
+                                                DISCL_EXCLUSIVE | DISCL_FOREGROUND);
+    ok(hr==DI_OK,"IDirectInputDevice_SetCooperativeLevel() failed: %08x\n", hr);
+    hr = IDirectInputDevice_Acquire(pJoystick);
+    ok(hr==DI_OK,"IDirectInputDevice_Acquire() failed: %08x\n", hr);
+
+    cnt1 = get_refcount((IUnknown*)pJoystick);
+
+    hr = IDirectInputDevice2_EnumEffects((IDirectInputDevice2A*)pJoystick, EnumEffects, &effect_data, DIEFT_ALL);
+    ok(hr==DI_OK,"IDirectInputDevice2_EnumEffects() failed: %08x\n", hr);
+
+    /* If the controller does not support ANY effect use the constant effect to make
+     * CreateEffect fail but with the unsupported reason instead of invalid parameters. */
+    if (!effect_data.effect_count)
+    {
+        static DICONSTANTFORCE constant;
+        effect_data.guid = GUID_ConstantForce;
+        effect_data.eff.cbTypeSpecificParams  = sizeof(constant);
+        effect_data.eff.lpvTypeSpecificParams = &constant;
+        effect_data.effect_name = "Constant";
+        constant.lMagnitude = DI_FFNOMINALMAX / 2;
+
+        ok(!(caps.dwFlags & DIDC_FORCEFEEDBACK), "effect count is zero but controller supports force feedback?\n");
+    }
+
+    effect = (void *)0xdeadbeef;
+    hr = IDirectInputDevice2_CreateEffect((IDirectInputDevice2A*)pJoystick, &effect_data.guid,
+                                          &effect_data.eff, &effect, NULL);
     if (caps.dwFlags & DIDC_FORCEFEEDBACK)
     {
-        DWORD axes[2] = {DIJOFS_X, DIJOFS_Y};
-        LONG  direction[2] = {0, 0};
-        DICONSTANTFORCE force = {0};
-        DIEFFECT eff;
-        LPDIRECTINPUTEFFECT effect = NULL;
-        LONG cnt1, cnt2;
-        HWND real_hWnd;
-        HINSTANCE hInstance = GetModuleHandleW(NULL);
-        DIPROPDWORD dip_gain_set, dip_gain_get;
-
-        trace("Testing force-feedback\n");
-        memset(&eff, 0, sizeof(eff));
-        eff.dwSize                = sizeof(eff);
-        eff.dwFlags               = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
-        eff.dwDuration            = INFINITE;
-        eff.dwGain                = DI_FFNOMINALMAX;
-        eff.dwTriggerButton       = DIEB_NOTRIGGER;
-        eff.cAxes                 = sizeof(axes) / sizeof(axes[0]);
-        eff.rgdwAxes              = axes;
-        eff.rglDirection          = direction;
-        eff.cbTypeSpecificParams  = sizeof(force);
-        eff.lpvTypeSpecificParams = &force;
-
-        /* Sending effects to joystick requires
-         * calling IDirectInputEffect_Initialize, which requires
-         * having exclusive access to the device, which requires
-         * - not having acquired the joystick when calling
-         *   IDirectInputDevice_SetCooperativeLevel
-         * - a visible window
-         */
-        real_hWnd = CreateWindowExA(0, "EDIT", "Test text", 0, 10, 10, 300, 300, NULL, NULL,
-                                    hInstance, NULL);
-        ok(real_hWnd!=0,"CreateWindowExA failed: %p\n", real_hWnd);
-        ShowWindow(real_hWnd, SW_SHOW);
-        hr = IDirectInputDevice_Unacquire(pJoystick);
-        ok(hr==DI_OK,"IDirectInputDevice_Unacquire() failed: %08x\n", hr);
-        hr = IDirectInputDevice_SetCooperativeLevel(pJoystick, real_hWnd,
-                                                    DISCL_EXCLUSIVE | DISCL_FOREGROUND);
-        ok(hr==DI_OK,"IDirectInputDevice_SetCooperativeLevel() failed: %08x\n", hr);
-        hr = IDirectInputDevice_Acquire(pJoystick);
-        ok(hr==DI_OK,"IDirectInputDevice_Acquire() failed: %08x\n", hr);
-
-        cnt1 = get_refcount((IUnknown*)pJoystick);
-
-        hr = IDirectInputDevice2_CreateEffect((IDirectInputDevice2A*)pJoystick, &GUID_ConstantForce,
-                                              &eff, &effect, NULL);
+        trace("force feedback supported with %d effects, using '%s' for test\n",
+              effect_data.effect_count, effect_data.effect_name);
         ok(hr == DI_OK, "IDirectInputDevice_CreateEffect() failed: %08x\n", hr);
         cnt2 = get_refcount((IUnknown*)pJoystick);
         ok(cnt1 == cnt2, "Ref count is wrong %d != %d\n", cnt1, cnt2);
@@ -416,9 +569,9 @@ static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
             GUID guid = {0};
 
             hr = IDirectInputEffect_Initialize(effect, hInstance, data->version,
-                                               &GUID_ConstantForce);
+                                               &effect_data.guid);
             ok(hr==DI_OK,"IDirectInputEffect_Initialize failed: %08x\n", hr);
-            hr = IDirectInputEffect_SetParameters(effect, &eff, DIEP_AXES | DIEP_DIRECTION |
+            hr = IDirectInputEffect_SetParameters(effect, &effect_data.eff, DIEP_AXES | DIEP_DIRECTION |
                                                   DIEP_TYPESPECIFICPARAMS);
             ok(hr==DI_OK,"IDirectInputEffect_SetParameters failed: %08x\n", hr);
             if (hr==DI_OK) {
@@ -428,7 +581,7 @@ static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
                 ok(hr==DI_OK,"IDirectInputDevice_Unacquire() failed: %08x\n", hr);
                 hr = IDirectInputDevice_Acquire(pJoystick);
                 ok(hr==DI_OK,"IDirectInputDevice_Acquire() failed: %08x\n", hr);
-                hr = IDirectInputEffect_SetParameters(effect, &eff, DIEP_GAIN);
+                hr = IDirectInputEffect_SetParameters(effect, &effect_data.eff, DIEP_GAIN);
                 ok(hr==DI_OK,"IDirectInputEffect_SetParameters failed: %08x\n", hr);
             }
 
@@ -446,10 +599,13 @@ static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
              * - effects are preserved (Download + Start doesn't complain
              *   about incomplete effect)
              */
+            hr = IDirectInputEffect_GetEffectStatus(effect, NULL);
+            ok(hr==E_POINTER,"IDirectInputEffect_GetEffectStatus() must fail with E_POINTER, got: %08x\n", hr);
+            effect_status = 0xdeadbeef;
             hr = IDirectInputEffect_GetEffectStatus(effect, &effect_status);
             ok(hr==DI_OK,"IDirectInputEffect_GetEffectStatus() failed: %08x\n", hr);
             ok(effect_status==0,"IDirectInputEffect_GetEffectStatus() reported effect as started\n");
-            hr = IDirectInputEffect_SetParameters(effect, &eff, DIEP_START);
+            hr = IDirectInputEffect_SetParameters(effect, &effect_data.eff, DIEP_START);
             ok(hr==DI_OK,"IDirectInputEffect_SetParameters failed: %08x\n", hr);
             hr = IDirectInputEffect_GetEffectStatus(effect, &effect_status);
             ok(hr==DI_OK,"IDirectInputEffect_GetEffectStatus() failed: %08x\n", hr);
@@ -467,10 +623,11 @@ static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
             ok(hr==DI_OK,"IDirectInputEffect_Start() failed: %08x\n", hr);
             hr = IDirectInputEffect_GetEffectStatus(effect, &effect_status);
             ok(hr==DI_OK,"IDirectInputEffect_GetEffectStatus() failed: %08x\n", hr);
+            Sleep(250); /* feel the magic */
             todo_wine ok(effect_status!=0,"IDirectInputEffect_GetEffectStatus() reported effect as stopped\n");
             hr = IDirectInputEffect_GetEffectGuid(effect, &guid);
             ok(hr==DI_OK,"IDirectInputEffect_GetEffectGuid() failed: %08x\n", hr);
-            ok(IsEqualGUID(&GUID_ConstantForce, &guid), "Wrong guid returned\n");
+            ok(IsEqualGUID(&effect_data.guid, &guid), "Wrong guid returned\n");
 
             /* Check autocenter status
              * State: initially stopped
@@ -592,18 +749,27 @@ static BOOL CALLBACK EnumJoysticks(const DIDEVICEINSTANCEA *lpddi, void *pvRef)
         }
         cnt1 = get_refcount((IUnknown*)pJoystick);
         ok(cnt1 == cnt2, "Ref count is wrong %d != %d\n", cnt1, cnt2);
-
-        /* Before destroying the window, release joystick to revert to
-         * non-exclusive, background cooperative level. */
-        hr = IDirectInputDevice_Unacquire(pJoystick);
-        ok(hr==DI_OK,"IDirectInputDevice_Unacquire() failed: %08x\n", hr);
-        hr = IDirectInputDevice_SetCooperativeLevel(pJoystick, hWnd,
-                                                    DISCL_NONEXCLUSIVE | DISCL_BACKGROUND);
-        ok(hr==DI_OK,"IDirectInputDevice_SetCooperativeLevel() failed: %08x\n", hr);
-        DestroyWindow (real_hWnd);
-        hr = IDirectInputDevice_Acquire(pJoystick);
-        ok(hr==DI_OK,"IDirectInputDevice_Acquire() failed: %08x\n", hr);
     }
+    /* No force feedback support, CreateEffect is supposed to fail. Fairy Bloom Freesia
+     * calls CreateEffect without checking the DIDC_FORCEFEEDBACK. It expects the correct
+     * error return to determine if force feedback is unsupported. */
+    else
+    {
+        trace("No force feedback support\n");
+        ok(hr==DIERR_UNSUPPORTED, "IDirectInputDevice_CreateEffect() must fail with DIERR_UNSUPPORTED, got: %08x\n", hr);
+        ok(effect == NULL, "effect must be NULL, got %p\n", effect);
+    }
+
+    /* Before destroying the window, release joystick to revert to
+     * non-exclusive, background cooperative level. */
+    hr = IDirectInputDevice_Unacquire(pJoystick);
+    ok(hr==DI_OK,"IDirectInputDevice_Unacquire() failed: %08x\n", hr);
+    hr = IDirectInputDevice_SetCooperativeLevel(pJoystick, hWnd,
+                                                DISCL_NONEXCLUSIVE | DISCL_BACKGROUND);
+    ok(hr==DI_OK,"IDirectInputDevice_SetCooperativeLevel() failed: %08x\n", hr);
+    DestroyWindow (real_hWnd);
+    hr = IDirectInputDevice_Acquire(pJoystick);
+    ok(hr==DI_OK,"IDirectInputDevice_Acquire() failed: %08x\n", hr);
 
     if (winetest_interactive) {
         trace("You have 30 seconds to test all axes, sliders, POVs and buttons\n");
