@@ -2290,7 +2290,7 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
         {
             QH->sqh.HwQH.CurrentTD = (ULONG)EhciEndpoint->DummyTdPA;
 
-            QH->sqh.HwQH.Token.Status = ~EHCI_TOKEN_STATUS_ACTIVE;
+            QH->sqh.HwQH.Token.Status = (UCHAR)~EHCI_TOKEN_STATUS_ACTIVE;
             QH->sqh.HwQH.Token.TransferBytes = 0;
 
             QH->sqh.HwQH.NextTD = (ULONG)NextTD;
