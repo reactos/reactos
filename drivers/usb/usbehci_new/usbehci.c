@@ -3092,7 +3092,38 @@ EHCI_SetEndpointStatus(IN PVOID ehciExtension,
                        IN PVOID ehciEndpoint,
                        IN ULONG EndpointStatus)
 {
-    DPRINT1("EHCI_SetEndpointStatus: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+    PEHCI_ENDPOINT EhciEndpoint;
+    ULONG TransferType;
+    PEHCI_HCD_QH QH;
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
+
+    DPRINT("EHCI_SetEndpointStatus: EhciEndpoint - %p, EndpointStatus - %x\n",
+                EhciEndpoint,
+                EndpointStatus);
+
+    TransferType = EhciEndpoint->EndpointProperties.TransferType;
+
+    if (TransferType != USBPORT_TRANSFER_TYPE_ISOCHRONOUS)
+    {
+
+        if (EndpointStatus == 0)
+        {
+            EhciEndpoint->EndpointStatus &= ~1;
+
+            QH = EhciEndpoint->QH;
+            QH->sqh.HwQH.Token.Status &= (UCHAR)~EHCI_TOKEN_STATUS_HALTED;
+
+            return;
+        }
+
+        if (EndpointStatus == 1)
+        {
+            DbgBreakPoint();
+        }
+    }
 }
 
 VOID
