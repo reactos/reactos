@@ -983,7 +983,58 @@ MPSTATUS
 NTAPI
 EHCI_ResumeController(IN PVOID ehciExtension)
 {
-    DPRINT1("EHCI_ResumeController: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+    PULONG OperationalRegs;
+    ULONG RoutingControl;
+    EHCI_USB_COMMAND Command;
+
+    DPRINT("EHCI_ResumeController: ... \n");
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    OperationalRegs = EhciExtension->OperationalRegs;
+
+    RoutingControl = EhciExtension->PortRoutingControl;
+
+    if (!(RoutingControl & 1))
+    {
+        EhciExtension->PortRoutingControl = RoutingControl | 1;
+
+        WRITE_REGISTER_ULONG(OperationalRegs + EHCI_CONFIGFLAG,
+                             RoutingControl | 1);
+
+        return 7;
+    }
+
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_CTRLDSSEGMENT,
+                         EhciExtension->BakupCtrlDSSegment);
+
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_PERIODICLISTBASE,
+                         EhciExtension->BakupPeriodiclistbase);
+
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_ASYNCLISTBASE,
+                         EhciExtension->BakupAsynclistaddr);
+
+    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+
+    Command.AsULONG = Command.AsULONG ^ EhciExtension->BakupUSBCmd;
+
+    Command.Reset = 0;
+    Command.FrameListSize = 0;
+    Command.InterruptAdvanceDoorbell = 0;
+    Command.LightResetHC = 0;
+    Command.AsynchronousParkModeCount = 0;
+    Command.AsynchronousParkModeEnable = 0;
+
+    Command.Run = 1;
+
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD,
+                         Command.AsULONG);
+
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBINTR,
+                         EhciExtension->InterruptMask.AsULONG);
+
+    EhciExtension->Flags &= ~1;
+
     return 0;
 }
 
@@ -1131,11 +1182,11 @@ EHCI_MapAsyncTransferToTd(IN PEHCI_EXTENSION EhciExtension,
     ULONG NumPackets;
 
     DPRINT_EHCI("EHCI_MapAsyncTransferToTd: EhciTransfer - %p, TD - %p, TransferedLen - %x, MaxPacketSize - %x, DataToggle - %x\n",
-           EhciTransfer,
-           TD,
-           TransferedLen,
-           MaxPacketSize,
-           DataToggle);
+                EhciTransfer,
+                TD,
+                TransferedLen,
+                MaxPacketSize,
+                DataToggle);
 
     TransferParameters = EhciTransfer->TransferParameters;
 
@@ -1454,7 +1505,6 @@ EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
                          PEHCI_HCD_TD NextTD)
 {
     PEHCI_HCD_QH QH;
-    PEHCI_HCD_TD HcdHeadP;
     PEHCI_HCD_TD TD;
     PEHCI_TRANSFER Transfer;
     PEHCI_HCD_TD LinkTD;
@@ -1469,9 +1519,9 @@ EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
     IsPresent = EHCI_HardwarePresent(EhciExtension, 0);
 
     QH = EhciEndpoint->QH;
-    HcdHeadP = EhciEndpoint->HcdHeadP;
+    TD = EhciEndpoint->HcdHeadP;
 
-    if (HcdHeadP == EhciEndpoint->HcdTailP)
+    if (TD == EhciEndpoint->HcdTailP)
     {
         if (IsPresent)
         {
@@ -1500,25 +1550,23 @@ EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
     {
         DbgBreakPoint();
 
-        DPRINT("EHCI_LinkTransferToQueue: HcdHeadP - %p, DummyTd - %p\n",
+        DPRINT("EHCI_LinkTransferToQueue: TD - %p, DummyTd - %p\n",
                EhciEndpoint->HcdHeadP,
                EhciEndpoint->HcdTailP);
 
         LinkTD = EhciEndpoint->HcdHeadP;
 
-        if (HcdHeadP != EhciEndpoint->HcdTailP)
+        if (TD != EhciEndpoint->HcdTailP)
         {
             while (TRUE)
             {
-                LinkTD = HcdHeadP;
-                TD = HcdHeadP->NextHcdTD;
+                LinkTD = TD;
+                TD = TD->NextHcdTD;
 
                 if (TD == EhciEndpoint->HcdTailP)
                 {
                     break;
                 }
-
-                HcdHeadP = TD;
             }
         }
 
@@ -2526,7 +2574,7 @@ EHCI_GetErrorFromTD(IN PEHCI_HCD_TD TD)
 {
     EHCI_TD_TOKEN Token;
 
-    DPRINT("EHCI_GetErrorFromTD: TD - %p\n", TD);
+    DPRINT_EHCI("EHCI_GetErrorFromTD: ... \n");
 
     ASSERT(TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_HALTED);
 
@@ -2534,24 +2582,29 @@ EHCI_GetErrorFromTD(IN PEHCI_HCD_TD TD)
 
     if (Token.Status & EHCI_TOKEN_STATUS_TRANSACTION_ERROR)
     {
+        DPRINT("EHCI_GetErrorFromTD: TD - %p, TRANSACTION_ERROR\n", TD);
         return USBD_STATUS_XACT_ERROR;
     }
 
-    if ( Token.Status & EHCI_TOKEN_STATUS_BABBLE_DETECTED)
+    if (Token.Status & EHCI_TOKEN_STATUS_BABBLE_DETECTED)
     {
+        DPRINT("EHCI_GetErrorFromTD: TD - %p, BABBLE_DETECTED\n", TD);
         return USBD_STATUS_BABBLE_DETECTED;
     }
 
-    if ( Token.Status & EHCI_TOKEN_STATUS_DATA_BUFFER_ERROR)
+    if (Token.Status & EHCI_TOKEN_STATUS_DATA_BUFFER_ERROR)
     {
+        DPRINT("EHCI_GetErrorFromTD: TD - %p, DATA_BUFFER_ERROR\n", TD);
         return USBD_STATUS_DATA_BUFFER_ERROR;
     }
 
-    if ( Token.Status & EHCI_TOKEN_STATUS_MISSED_MICROFRAME)
+    if (Token.Status & EHCI_TOKEN_STATUS_MISSED_MICROFRAME)
     {
+        DPRINT("EHCI_GetErrorFromTD: TD - %p, MISSED_MICROFRAME\n", TD);
         return USBD_STATUS_XACT_ERROR;
     }
 
+    DPRINT("EHCI_GetErrorFromTD: TD - %p, STALL_PID\n", TD);
     return USBD_STATUS_STALL_PID;
 }
 
