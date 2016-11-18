@@ -162,6 +162,18 @@ typedef struct _EHCI_EXTENSION {
   PEHCI_HCD_QH NextQH;
 } EHCI_EXTENSION, *PEHCI_EXTENSION;
 
+/* debug.c */
+
+VOID
+NTAPI
+EHCI_DumpHwTD(
+  IN PEHCI_HCD_TD TD);
+
+VOID
+NTAPI
+EHCI_DumpHwQH(
+  IN PEHCI_HCD_QH QH);
+
 /* roothub.c */
 
 VOID

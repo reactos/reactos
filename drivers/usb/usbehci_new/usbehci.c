@@ -1687,6 +1687,10 @@ End:
     ASSERT(EhciEndpoint->HcdTailP->NextHcdTD == NULL); // dummyTD - > NextHcdTD
     ASSERT(EhciEndpoint->HcdTailP->AltNextHcdTD == NULL); // dummyTD - > AltNextHcdTD
 
+    //EHCI_DPrintHwTD(FirstTD);
+    //EHCI_DPrintHwTD(FirstTD->NextHcdTD);
+    //EHCI_DPrintHwTD(LastTD);
+
     return 0;
 }
 
