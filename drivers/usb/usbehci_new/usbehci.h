@@ -49,7 +49,7 @@ typedef union _USB20_PORT_STATUS {
   ULONG AsULONG;
 } USB20_PORT_STATUS;
 
-struct _EHCI_STATIC_QH;
+struct _EHCI_HCD_QH;
 struct _EHCI_ENDPOINT;
 struct _EHCI_TRANSFER;
 
@@ -71,17 +71,23 @@ typedef struct _EHCI_HCD_TD {
 
 C_ASSERT(sizeof(EHCI_HCD_TD) == 0x100);
 
-typedef struct _EHCI_HCD_QH {
+typedef struct _EHCI_STATIC_QH {
   //Hardware
   EHCI_QUEUE_HEAD HwQH;
   //Software
-  struct _EHCI_HCD_QH * PhysicalAddress;
   ULONG QhFlags;
-  struct _EHCI_ENDPOINT * EhciEndpoint;
-  struct _EHCI_STATIC_QH * StaticQH;
+  struct _EHCI_HCD_QH * PhysicalAddress;
   struct _EHCI_HCD_QH * PrevHead;
   struct _EHCI_HCD_QH * NextHead;
-  ULONG Pad[41];
+  struct _EHCI_STATIC_QH * StaticQH;
+  ULONG Pad[18];
+} EHCI_STATIC_QH, *PEHCI_STATIC_QH;
+
+C_ASSERT(sizeof(EHCI_STATIC_QH) == 0xA0);
+
+typedef struct _EHCI_HCD_QH {
+  struct _EHCI_STATIC_QH sqh;
+  ULONG Pad[24];
 } EHCI_HCD_QH, *PEHCI_HCD_QH;
 
 C_ASSERT(sizeof(EHCI_HCD_QH) == 0x100);
@@ -112,19 +118,6 @@ typedef struct _EHCI_TRANSFER {
   ULONG PendingTDs;
   ULONG TransferOnAsyncList;
 } EHCI_TRANSFER, *PEHCI_TRANSFER;
-
-typedef struct _EHCI_STATIC_QH {
-  //Hardware
-  EHCI_QUEUE_HEAD HwQH;
-  //Software
-  struct _EHCI_STATIC_QH * PhysicalAddress;
-  ULONG QhFlags;
-  PEHCI_HCD_QH PrevHead;
-  PEHCI_HCD_QH NextHead;
-  ULONG Pad[19];
-} EHCI_STATIC_QH, *PEHCI_STATIC_QH;
-
-C_ASSERT(sizeof(EHCI_STATIC_QH) == 0xA0);
 
 typedef struct _EHCI_HC_RESOURCES {
   PEHCI_STATIC_QH PeriodicFrameList[1024]; // 4K-page aligned array

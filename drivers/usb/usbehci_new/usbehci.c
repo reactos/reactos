@@ -66,26 +66,26 @@ EHCI_InitializeQH(PEHCI_EXTENSION EhciExtension,
 
     ASSERT(((ULONG_PTR)QhPA & 0x1F) == 0); // link flags
 
-    QH->PhysicalAddress = QhPA;
-    QH->EhciEndpoint = EhciEndpoint;
+    QH->sqh.PhysicalAddress = QhPA;
+    //QH->EhciEndpoint = EhciEndpoint;
 
-    QH->HwQH.EndpointParams.DeviceAddress = EndpointProperties->DeviceAddress & 0x7F;
-    QH->HwQH.EndpointParams.EndpointNumber = EndpointProperties->EndpointAddress & 0x0F;
+    QH->sqh.HwQH.EndpointParams.DeviceAddress = EndpointProperties->DeviceAddress & 0x7F;
+    QH->sqh.HwQH.EndpointParams.EndpointNumber = EndpointProperties->EndpointAddress & 0x0F;
 
     DeviceSpeed = EndpointProperties->DeviceSpeed;
 
     switch (DeviceSpeed)
     {
         case UsbLowSpeed:
-            QH->HwQH.EndpointParams.EndpointSpeed = 1;
+            QH->sqh.HwQH.EndpointParams.EndpointSpeed = 1;
             break;
 
         case UsbFullSpeed:
-            QH->HwQH.EndpointParams.EndpointSpeed = 0;
+            QH->sqh.HwQH.EndpointParams.EndpointSpeed = 0;
             break;
 
         case UsbHighSpeed:
-            QH->HwQH.EndpointParams.EndpointSpeed = 2;
+            QH->sqh.HwQH.EndpointParams.EndpointSpeed = 2;
             break;
 
         default:
@@ -93,28 +93,28 @@ EHCI_InitializeQH(PEHCI_EXTENSION EhciExtension,
             break;
     }
 
-    QH->HwQH.EndpointParams.MaximumPacketLength = EndpointProperties->MaxPacketSize  & 0x7FF;
+    QH->sqh.HwQH.EndpointParams.MaximumPacketLength = EndpointProperties->MaxPacketSize  & 0x7FF;
 
-    QH->HwQH.EndpointCaps.PipeMultiplier = 1;
+    QH->sqh.HwQH.EndpointCaps.PipeMultiplier = 1;
 
     if (DeviceSpeed == UsbHighSpeed)
     {
-        QH->HwQH.EndpointCaps.HubAddr = 0;
-        QH->HwQH.EndpointCaps.PortNumber = 0;
+        QH->sqh.HwQH.EndpointCaps.HubAddr = 0;
+        QH->sqh.HwQH.EndpointCaps.PortNumber = 0;
     }
     else
     {
-        QH->HwQH.EndpointCaps.HubAddr = EndpointProperties->HubAddr & 0x7F;
-        QH->HwQH.EndpointCaps.PortNumber = EndpointProperties->PortNumber & 0x7F;
+        QH->sqh.HwQH.EndpointCaps.HubAddr = EndpointProperties->HubAddr & 0x7F;
+        QH->sqh.HwQH.EndpointCaps.PortNumber = EndpointProperties->PortNumber & 0x7F;
 
         if (EndpointProperties->TransferType == USBPORT_TRANSFER_TYPE_CONTROL)
         {
-            QH->HwQH.EndpointParams.ControlEndpointFlag = 1;
+            QH->sqh.HwQH.EndpointParams.ControlEndpointFlag = 1;
         }
     }
 
-    QH->HwQH.NextTD = 1;
-    QH->HwQH.AlternateNextTD = 1;
+    QH->sqh.HwQH.NextTD = 1;
+    QH->sqh.HwQH.AlternateNextTD = 1;
 
     return QH;
 }
@@ -198,12 +198,12 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     if (IsControl)
     {
-        QH->HwQH.EndpointParams.DataToggleControl = 1;
+        QH->sqh.HwQH.EndpointParams.DataToggleControl = 1;
         EhciEndpoint->HcdHeadP = NULL;
     }
     else
     {
-        QH->HwQH.EndpointParams.DataToggleControl = 0;
+        QH->sqh.HwQH.EndpointParams.DataToggleControl = 0;
     }
 
     TD = EHCI_AllocTd(EhciExtension, EhciEndpoint);
@@ -225,12 +225,12 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
     EhciEndpoint->HcdTailP = TD;
     EhciEndpoint->HcdHeadP = TD;
 
-    QH->HwQH.CurrentTD = (ULONG_PTR)TD->PhysicalAddress;
-    QH->HwQH.NextTD = 1;
-    QH->HwQH.AlternateNextTD = 1;
+    QH->sqh.HwQH.CurrentTD = (ULONG_PTR)TD->PhysicalAddress;
+    QH->sqh.HwQH.NextTD = 1;
+    QH->sqh.HwQH.AlternateNextTD = 1;
 
-    QH->HwQH.Token.Status &= ~EHCI_TOKEN_STATUS_ACTIVE;
-    QH->HwQH.Token.TransferBytes = 0;
+    QH->sqh.HwQH.Token.Status &= ~EHCI_TOKEN_STATUS_ACTIVE;
+    QH->sqh.HwQH.Token.TransferBytes = 0;
 
     return 0;
 }
@@ -495,37 +495,37 @@ EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
 
         RtlZeroMemory(DummyQhVA, sizeof(EHCI_HCD_QH));
 
-        DummyQhVA->HwQH.CurrentTD = 0;
-        DummyQhVA->HwQH.Token.Status &= ~EHCI_TOKEN_STATUS_ACTIVE;
+        DummyQhVA->sqh.HwQH.CurrentTD = 0;
+        DummyQhVA->sqh.HwQH.Token.Status &= ~EHCI_TOKEN_STATUS_ACTIVE;
 
-        PrevPA.AsULONG = (ULONG)DummyQhVA->PhysicalAddress;
+        PrevPA.AsULONG = (ULONG)DummyQhVA->sqh.PhysicalAddress;
         PrevPA.Type = 1;
 
-        DummyQhVA->PhysicalAddress = DummyQhPA;
+        DummyQhVA->sqh.PhysicalAddress = DummyQhPA;
 
         DummyQhVA += 1;
         DummyQhPA += 1;
 
-        DummyQhVA->HwQH.HorizontalLink.AsULONG = (ULONG)(*FrameHeader);
+        DummyQhVA->sqh.HwQH.HorizontalLink.AsULONG = (ULONG)(*FrameHeader);
 
-        EndpointParams = DummyQhVA->HwQH.EndpointParams;
+        EndpointParams = DummyQhVA->sqh.HwQH.EndpointParams;
         EndpointParams.DeviceAddress = 0;
         EndpointParams.EndpointNumber = 0;
         EndpointParams.EndpointSpeed = 0;
         EndpointParams.MaximumPacketLength = 64;
 
-        DummyQhVA->HwQH.EndpointParams = EndpointParams;
+        DummyQhVA->sqh.HwQH.EndpointParams = EndpointParams;
 
-        DummyQhVA->HwQH.EndpointCaps.AsULONG = 0;
-        DummyQhVA->HwQH.EndpointCaps.InterruptMask = 0;
-        DummyQhVA->HwQH.EndpointCaps.SplitCompletionMask = 0;
-        DummyQhVA->HwQH.EndpointCaps.PipeMultiplier = 1;
+        DummyQhVA->sqh.HwQH.EndpointCaps.AsULONG = 0;
+        DummyQhVA->sqh.HwQH.EndpointCaps.InterruptMask = 0;
+        DummyQhVA->sqh.HwQH.EndpointCaps.SplitCompletionMask = 0;
+        DummyQhVA->sqh.HwQH.EndpointCaps.PipeMultiplier = 1;
 
-        DummyQhVA->HwQH.AlternateNextTD = 1;
-        DummyQhVA->HwQH.NextTD = 1;
+        DummyQhVA->sqh.HwQH.AlternateNextTD = 1;
+        DummyQhVA->sqh.HwQH.NextTD = 1;
 
         StaticQH = EHCI_GetQhForFrame(EhciExtension, ix);
-        DummyQhVA->StaticQH = StaticQH;
+        DummyQhVA->sqh.StaticQH = StaticQH;
 
         *FrameHeader = (PEHCI_STATIC_QH)PrevPA.AsULONG;
 
@@ -634,7 +634,7 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
     AsyncHead->HwQH.NextTD |= 1;
     AsyncHead->HwQH.Token.Status = EHCI_TOKEN_STATUS_HALTED;
 
-    AsyncHead->PhysicalAddress = AsyncHeadPA;
+    AsyncHead->PhysicalAddress = (PEHCI_HCD_QH)AsyncHeadPA;
     AsyncHead->PrevHead = AsyncHead->NextHead = (PEHCI_HCD_QH)AsyncHead;
 
     EhciExtension->AsyncHead = AsyncHead;
@@ -654,7 +654,7 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
                               80);
 
         EhciExtension->PeriodicHead[ix] = PeriodicHead;
-        EhciExtension->PeriodicHead[ix]->PhysicalAddress = PeriodicHeadPA;
+        EhciExtension->PeriodicHead[ix]->PhysicalAddress = (PEHCI_HCD_QH)PeriodicHeadPA;
 
         PeriodicHead += 1;
         PeriodicHeadPA += 1;
@@ -1312,28 +1312,28 @@ EHCI_LockQH(IN PEHCI_EXTENSION EhciExtension,
 
     OperationalRegs = EhciExtension->OperationalRegs;
 
-    ASSERT((QueueHead->QhFlags & EHCI_QH_FLAG_UPDATING) == 0);
+    ASSERT((QueueHead->sqh.QhFlags & EHCI_QH_FLAG_UPDATING) == 0);
     ASSERT(EhciExtension->LockQH == NULL);
 
-    PrevQH = QueueHead->PrevHead;
-    QueueHead->QhFlags |= EHCI_QH_FLAG_UPDATING;
+    PrevQH = QueueHead->sqh.PrevHead;
+    QueueHead->sqh.QhFlags |= EHCI_QH_FLAG_UPDATING;
 
     ASSERT(PrevQH);
 
     EhciExtension->PrevQH = PrevQH;
-    EhciExtension->NextQH = QueueHead->NextHead;
+    EhciExtension->NextQH = QueueHead->sqh.NextHead;
     EhciExtension->LockQH = QueueHead;
 
-    if (QueueHead->NextHead)
+    if (QueueHead->sqh.NextHead)
     {
-        QhPA = ((ULONG_PTR)QueueHead->NextHead->PhysicalAddress & ~0x1C) | 2;
+        QhPA = ((ULONG_PTR)QueueHead->sqh.NextHead->sqh.PhysicalAddress & ~0x1C) | 2;
     }
     else
     {
         QhPA = 1;
     }
 
-    PrevQH->HwQH.HorizontalLink.AsULONG = QhPA;
+    PrevQH->sqh.HwQH.HorizontalLink.AsULONG = QhPA;
 
     FrameIndexReg = READ_REGISTER_ULONG(OperationalRegs + EHCI_FRINDEX);
 
@@ -1359,16 +1359,16 @@ EHCI_UnlockQH(IN PEHCI_EXTENSION EhciExtension,
 {
     DPRINT_EHCI("EHCI_UnlockQH: QueueHead - %p\n", QueueHead);
 
-    ASSERT((QueueHead->QhFlags & EHCI_QH_FLAG_UPDATING) != 0);
+    ASSERT((QueueHead->sqh.QhFlags & EHCI_QH_FLAG_UPDATING) != 0);
     ASSERT(EhciExtension->LockQH != 0);
     ASSERT(EhciExtension->LockQH == QueueHead);
 
-    QueueHead->QhFlags &= ~EHCI_QH_FLAG_UPDATING;
+    QueueHead->sqh.QhFlags &= ~EHCI_QH_FLAG_UPDATING;
 
     EhciExtension->LockQH = NULL;
 
-    EhciExtension->PrevQH->HwQH.HorizontalLink.AsULONG =
-        ((ULONG_PTR)QueueHead->PhysicalAddress & ~0x1C) | 2;
+    EhciExtension->PrevQH->sqh.HwQH.HorizontalLink.AsULONG =
+        ((ULONG_PTR)QueueHead->sqh.PhysicalAddress & ~0x1C) | 2;
 }
 
 VOID
@@ -1404,14 +1404,14 @@ EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
                         EhciEndpoint->EndpointProperties.TransferType);
         }
 
-        QH->HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DummyTdPA;
-        QH->HwQH.NextTD = (ULONG_PTR)NextTD->PhysicalAddress;
-        QH->HwQH.AlternateNextTD = NextTD->HwTD.AlternateNextTD;
+        QH->sqh.HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DummyTdPA;
+        QH->sqh.HwQH.NextTD = (ULONG_PTR)NextTD->PhysicalAddress;
+        QH->sqh.HwQH.AlternateNextTD = NextTD->HwTD.AlternateNextTD;
 
-        QH->HwQH.Token.Status = (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE |
+        QH->sqh.HwQH.Token.Status = (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE |
                                          EHCI_TOKEN_STATUS_HALTED);
 
-        QH->HwQH.Token.TransferBytes = 0;
+        QH->sqh.HwQH.Token.TransferBytes = 0;
 
         if (IsPresent)
         {
@@ -1474,10 +1474,10 @@ EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
         LinkTD->HwTD.NextTD = (ULONG_PTR)NextTD->PhysicalAddress;
         LinkTD->NextHcdTD = NextTD;
 
-        if (QH->HwQH.CurrentTD == (ULONG_PTR)LinkTD->PhysicalAddress)
+        if (QH->sqh.HwQH.CurrentTD == (ULONG_PTR)LinkTD->PhysicalAddress)
         {
-            QH->HwQH.NextTD = (ULONG_PTR)NextTD->PhysicalAddress;
-            QH->HwQH.AlternateNextTD = 1;
+            QH->sqh.HwQH.NextTD = (ULONG_PTR)NextTD->PhysicalAddress;
+            QH->sqh.HwQH.AlternateNextTD = 1;
         }
     }
 }
@@ -2103,19 +2103,19 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
             }
         }
 
-        QH->HwQH.CurrentTD = (ULONG)EhciEndpoint->DummyTdPA;
-        QH->HwQH.NextTD = (ULONG)TD->PhysicalAddress;
-        QH->HwQH.AlternateNextTD = TD->HwTD.AlternateNextTD;
+        QH->sqh.HwQH.CurrentTD = (ULONG)EhciEndpoint->DummyTdPA;
+        QH->sqh.HwQH.NextTD = (ULONG)TD->PhysicalAddress;
+        QH->sqh.HwQH.AlternateNextTD = TD->HwTD.AlternateNextTD;
 
-        QH->HwQH.Token.TransferBytes = 0;
-        QH->HwQH.Token.Status = (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE |
+        QH->sqh.HwQH.Token.TransferBytes = 0;
+        QH->sqh.HwQH.Token.Status = (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE |
                                          EHCI_TOKEN_STATUS_HALTED);
 
         EhciEndpoint->HcdHeadP = TD;
     }
     else
     {
-        CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)QH->HwQH.CurrentTD,
+        CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)QH->sqh.HwQH.CurrentTD,
                                                              EhciExtension,
                                                              EhciEndpoint);
 
@@ -2160,27 +2160,27 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
 
         if (CurrentTransfer == EhciTransfer)
         {
-            QH->HwQH.CurrentTD = (ULONG)EhciEndpoint->DummyTdPA;
+            QH->sqh.HwQH.CurrentTD = (ULONG)EhciEndpoint->DummyTdPA;
 
-            QH->HwQH.Token.Status = (UCHAR)~EHCI_TOKEN_STATUS_ACTIVE;
-            QH->HwQH.Token.TransferBytes = 0;
+            QH->sqh.HwQH.Token.Status = (UCHAR)~EHCI_TOKEN_STATUS_ACTIVE;
+            QH->sqh.HwQH.Token.TransferBytes = 0;
 
-            QH->HwQH.NextTD = (ULONG)NextTD;
-            QH->HwQH.AlternateNextTD = 1;
+            QH->sqh.HwQH.NextTD = (ULONG)NextTD;
+            QH->sqh.HwQH.AlternateNextTD = 1;
 
             return;
         }
 
         if (FirstTD->EhciTransfer == CurrentTransfer)
         {
-            if (QH->HwQH.NextTD == (ULONG)FirstTD->PhysicalAddress)
+            if (QH->sqh.HwQH.NextTD == (ULONG)FirstTD->PhysicalAddress)
             {
-                QH->HwQH.NextTD = (ULONG)NextTD;
+                QH->sqh.HwQH.NextTD = (ULONG)NextTD;
             }
 
-            if (QH->HwQH.AlternateNextTD == (ULONG)FirstTD->PhysicalAddress)
+            if (QH->sqh.HwQH.AlternateNextTD == (ULONG)FirstTD->PhysicalAddress)
             {
-                QH->HwQH.AlternateNextTD = (ULONG)NextTD;
+                QH->sqh.HwQH.AlternateNextTD = (ULONG)NextTD;
             }
 
             for (TD = EhciEndpoint->HcdHeadP;
@@ -2258,30 +2258,30 @@ EHCI_RemoveQhFromAsyncList(IN PEHCI_EXTENSION EhciExtension,
 
     DPRINT_EHCI("EHCI_RemoveQhFromAsyncList: QH - %p\n", QH);
 
-    if (QH->QhFlags & EHCI_QH_FLAG_IN_SCHEDULE)
+    if (QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE)
     {
-        NextHead = QH->NextHead;
-        PrevHead = QH->PrevHead;
+        NextHead = QH->sqh.NextHead;
+        PrevHead = QH->sqh.PrevHead;
 
         AsyncHead = EhciExtension->AsyncHead;
         AsyncHeadPA = ((ULONG_PTR)AsyncHead->PhysicalAddress & ~0x1C) | 2;
 
-        PrevHead->HwQH.HorizontalLink.AsULONG = 
-            ((ULONG_PTR)NextHead->PhysicalAddress & ~0x1C) | 2;
+        PrevHead->sqh.HwQH.HorizontalLink.AsULONG = 
+            ((ULONG_PTR)NextHead->sqh.PhysicalAddress & ~0x1C) | 2;
 
-        PrevHead->NextHead = NextHead;
-        NextHead->PrevHead = PrevHead;
+        PrevHead->sqh.NextHead = NextHead;
+        NextHead->sqh.PrevHead = PrevHead;
 
         EHCI_FlushAsyncCache(EhciExtension);
 
         if (READ_REGISTER_ULONG(EhciExtension->OperationalRegs + EHCI_ASYNCLISTBASE) ==
-            (ULONG_PTR)QH->PhysicalAddress)
+            (ULONG_PTR)QH->sqh.PhysicalAddress)
         {
             WRITE_REGISTER_ULONG((EhciExtension->OperationalRegs + EHCI_ASYNCLISTBASE),
                                  AsyncHeadPA);
         }
 
-        QH->QhFlags &= ~EHCI_QH_FLAG_IN_SCHEDULE;
+        QH->sqh.QhFlags &= ~EHCI_QH_FLAG_IN_SCHEDULE;
     }
 }
 
@@ -2303,20 +2303,20 @@ EHCI_InsertQhInAsyncList(IN PEHCI_EXTENSION EhciExtension,
 
     DPRINT_EHCI("EHCI_InsertQhInAsyncList: QH - %p\n", QH);
 
-    ASSERT((QH->QhFlags & EHCI_QH_FLAG_IN_SCHEDULE) == 0);
-    ASSERT((QH->QhFlags & EHCI_QH_FLAG_NUKED) == 0);
+    ASSERT((QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE) == 0);
+    ASSERT((QH->sqh.QhFlags & EHCI_QH_FLAG_NUKED) == 0);
 
     AsyncHead = EhciExtension->AsyncHead;
     NextHead = AsyncHead->NextHead;
 
-    QH->HwQH.HorizontalLink = AsyncHead->HwQH.HorizontalLink;
-    QH->QhFlags |= EHCI_QH_FLAG_IN_SCHEDULE;
-    QH->NextHead = NextHead;
-    QH->PrevHead = (PEHCI_HCD_QH)AsyncHead;
+    QH->sqh.HwQH.HorizontalLink = AsyncHead->HwQH.HorizontalLink;
+    QH->sqh.QhFlags |= EHCI_QH_FLAG_IN_SCHEDULE;
+    QH->sqh.NextHead = NextHead;
+    QH->sqh.PrevHead = (PEHCI_HCD_QH)AsyncHead;
 
-    NextHead->PrevHead = QH;
+    NextHead->sqh.PrevHead = QH;
 
-    AsyncHead->HwQH.HorizontalLink.AsULONG = ((ULONG_PTR)QH->PhysicalAddress & ~0x1C) | 2;
+    AsyncHead->HwQH.HorizontalLink.AsULONG = ((ULONG_PTR)QH->sqh.PhysicalAddress & ~0x1C) | 2;
     AsyncHead->NextHead = QH;
 }
 
@@ -2373,7 +2373,7 @@ EHCI_SetAsyncEndpointState(IN PEHCI_EXTENSION EhciExtension,
             break;
 
         case USBPORT_ENDPOINT_CLOSED:
-            QH->QhFlags |= 2;
+            QH->sqh.QhFlags |= 2;
 
             if (TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
             {
@@ -2582,7 +2582,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     QH = EhciEndpoint->QH;
 
-    CurrentTDPhys = QH->HwQH.CurrentTD & ~0x1F;
+    CurrentTDPhys = QH->sqh.HwQH.CurrentTD & ~0x1F;
     ASSERT(CurrentTDPhys != 0);
 
     CurrentTD = (PEHCI_HCD_TD)RegPacket.UsbPortGetMappedVirtualAddress((PVOID)CurrentTDPhys,
@@ -2594,7 +2594,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
         return;
     }
 
-    IsSheduled = QH->QhFlags & EHCI_QH_FLAG_IN_SCHEDULE;
+    IsSheduled = QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE;
 
     if (!EHCI_HardwarePresent(EhciExtension, 0))
     {
@@ -2623,13 +2623,13 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
             TD->HwTD.AlternateNextTD = (ULONG_PTR)TD->AltNextHcdTD->PhysicalAddress;
         }
 
-        if (QH->HwQH.CurrentTD == (ULONG_PTR)TD->PhysicalAddress &&
+        if (QH->sqh.HwQH.CurrentTD == (ULONG_PTR)TD->PhysicalAddress &&
             !(TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE) && 
-            (QH->HwQH.NextTD != TD->HwTD.NextTD ||
-             QH->HwQH.AlternateNextTD != TD->HwTD.AlternateNextTD))
+            (QH->sqh.HwQH.NextTD != TD->HwTD.NextTD ||
+             QH->sqh.HwQH.AlternateNextTD != TD->HwTD.AlternateNextTD))
         {
-            QH->HwQH.NextTD = TD->HwTD.NextTD;
-            QH->HwQH.AlternateNextTD = TD->HwTD.AlternateNextTD;
+            QH->sqh.HwQH.NextTD = TD->HwTD.NextTD;
+            QH->sqh.HwQH.AlternateNextTD = TD->HwTD.AlternateNextTD;
         }
 
         EHCI_InterruptNextSOF((PVOID)EhciExtension);
@@ -2678,7 +2678,7 @@ Next:
                     EhciEndpoint->EndpointProperties.TransferType);
     }
 
-    QH->HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DummyTdPA;
+    QH->sqh.HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->DummyTdPA;
 
     CurrentTD->TdFlags |= EHCI_HCD_TD_FLAG_DONE;
     InsertTailList(&EhciEndpoint->ListTDs, &CurrentTD->DoneLink);
@@ -2700,10 +2700,10 @@ Next:
         }
     }
 
-    QH->HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->HcdTailP->PhysicalAddress;
-    QH->HwQH.NextTD = 1;
-    QH->HwQH.AlternateNextTD = 1;
-    QH->HwQH.Token.TransferBytes = 0;
+    QH->sqh.HwQH.CurrentTD = (ULONG_PTR)EhciEndpoint->HcdTailP->PhysicalAddress;
+    QH->sqh.HwQH.NextTD = 1;
+    QH->sqh.HwQH.AlternateNextTD = 1;
+    QH->sqh.HwQH.Token.TransferBytes = 0;
 
     EhciEndpoint->HcdHeadP = EhciEndpoint->HcdTailP;
 
@@ -2739,13 +2739,13 @@ EHCI_PollAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     QH = EhciEndpoint->QH;
 
-    if (QH->QhFlags & 2)
+    if (QH->sqh.QhFlags & 2)
     {
         return;
     }
 
-    if (QH->HwQH.Token.Status & EHCI_TOKEN_STATUS_ACTIVE ||
-       !(QH->HwQH.Token.Status & EHCI_TOKEN_STATUS_HALTED))
+    if (QH->sqh.HwQH.Token.Status & EHCI_TOKEN_STATUS_ACTIVE ||
+       !(QH->sqh.HwQH.Token.Status & EHCI_TOKEN_STATUS_HALTED))
     {
         EHCI_PollActiveAsyncEndpoint(EhciExtension, EhciEndpoint);
     }
@@ -2921,7 +2921,7 @@ EHCI_SetEndpointDataToggle(IN PVOID ehciExtension,
     if (TransferType == USBPORT_TRANSFER_TYPE_BULK ||
         TransferType == USBPORT_TRANSFER_TYPE_INTERRUPT)
     {
-        EhciEndpoint->QH->HwQH.Token.DataToggle = DataToggle;
+        EhciEndpoint->QH->sqh.HwQH.Token.DataToggle = DataToggle;
     }
 }
 
