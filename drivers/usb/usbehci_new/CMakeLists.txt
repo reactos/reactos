@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    debug.c
     roothub.c
     usbehci.c
     usbehci.h)
