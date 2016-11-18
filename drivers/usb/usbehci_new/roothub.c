@@ -3,6 +3,9 @@
 //#define NDEBUG
 #include <debug.h>
 
+#define NDEBUG_EHCI_ROOT_HUB
+#include "dbg_ehci.h"
+
 VOID
 NTAPI
 EHCI_RH_GetRootHubData(IN PVOID ehciExtension,
@@ -13,9 +16,9 @@ EHCI_RH_GetRootHubData(IN PVOID ehciExtension,
 
     EhciExtension = (PEHCI_EXTENSION)ehciExtension;
 
-    DPRINT("EHCI_RH_GetRootHubData: EhciExtension - %p, rootHubData - %p\n",
-           EhciExtension,
-           rootHubData);
+    DPRINT_RH("EHCI_RH_GetRootHubData: EhciExtension - %p, rootHubData - %p\n",
+              EhciExtension,
+              rootHubData);
 
     RootHubData = (PUSBPORT_ROOT_HUB_DATA)rootHubData;
 
@@ -48,7 +51,7 @@ NTAPI
 EHCI_RH_GetStatus(IN PVOID ehciExtension,
                   IN PUSHORT Status)
 {
-    DPRINT("EHCI_RH_GetStatus: ... \n");
+    DPRINT_RH("EHCI_RH_GetStatus: ... \n");
     *Status = 1;
     return 0;
 }
@@ -72,7 +75,9 @@ EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
 
     if (PortSC.CurrentConnectStatus)
     {
-        DPRINT("EHCI_RH_GetPortStatus: Port - %x, PortSC.AsULONG - %p\n", Port, PortSC.AsULONG);
+        DPRINT_RH("EHCI_RH_GetPortStatus: Port - %x, PortSC.AsULONG - %p\n",
+                  Port,
+                  PortSC.AsULONG);
     }
 
     *PortStatus = 0;
@@ -133,7 +138,9 @@ EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
 
     if (status.ConnectStatus)
     {
-        DPRINT("EHCI_RH_GetPortStatus: Port - %x, status.AsULONG - %p\n", Port, status.AsULONG);
+        DPRINT_RH("EHCI_RH_GetPortStatus: Port - %x, status.AsULONG - %p\n",
+                  Port,
+                  status.AsULONG);
     }
 
     return 0;
@@ -144,7 +151,7 @@ NTAPI
 EHCI_RH_GetHubStatus(IN PVOID ehciExtension,
                      IN PULONG HubStatus)
 {
-    DPRINT("EHCI_RH_GetHubStatus: ... \n");
+    DPRINT_RH("EHCI_RH_GetHubStatus: ... \n");
     *HubStatus = 0;
     return 0;
 }
@@ -285,7 +292,7 @@ EHCI_RH_SetFeaturePortPower(IN PVOID ehciExtension,
     PULONG PortStatusReg;
     EHCI_PORT_STATUS_CONTROL PortSC;
 
-    DPRINT("EHCI_RH_SetFeaturePortPower: Port - %x\n", Port);
+    DPRINT_RH("EHCI_RH_SetFeaturePortPower: Port - %x\n", Port);
 
     EhciExtension = (PEHCI_EXTENSION)ehciExtension;
     PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
@@ -307,7 +314,7 @@ NTAPI
 EHCI_RH_SetFeaturePortEnable(IN PVOID ehciExtension,
                              IN USHORT Port)
 {
-    DPRINT("EHCI_RH_SetFeaturePortEnable: Not supported\n");
+    DPRINT_RH("EHCI_RH_SetFeaturePortEnable: Not supported\n");
     return 0;
 }
 
@@ -476,7 +483,7 @@ EHCI_RH_ClearFeaturePortConnectChange(IN PVOID ehciExtension,
     PULONG PortStatusReg;
     EHCI_PORT_STATUS_CONTROL PortSC;
 
-    DPRINT("EHCI_RH_ClearFeaturePortConnectChange: Port - %x\n", Port);
+    DPRINT_RH("EHCI_RH_ClearFeaturePortConnectChange: Port - %x\n", Port);
 
     EhciExtension = (PEHCI_EXTENSION)ehciExtension;
     PortStatusReg = (EhciExtension->OperationalRegs + EHCI_PORTSC) + (Port - 1);
@@ -534,7 +541,7 @@ EHCI_RH_ClearFeaturePortOvercurrentChange(IN PVOID ehciExtension,
     PULONG PortStatusReg;
     EHCI_PORT_STATUS_CONTROL PortSC;
 
-    DPRINT("EHCI_RH_ClearFeaturePortOvercurrentChange: Port - %x\n", Port);
+    DPRINT_RH("EHCI_RH_ClearFeaturePortOvercurrentChange: Port - %x\n", Port);
 
     EhciExtension = (PEHCI_EXTENSION)ehciExtension;
 
@@ -559,7 +566,7 @@ EHCI_RH_DisableIrq(IN PVOID ehciExtension)
     PULONG IntrStsReg;
     EHCI_INTERRUPT_ENABLE IntrSts;
 
-    DPRINT("EHCI_RH_DisableIrq: ... \n");
+    DPRINT_RH("EHCI_RH_DisableIrq: ... \n");
 
     EhciExtension = (PEHCI_EXTENSION)ehciExtension;
 
@@ -583,7 +590,7 @@ EHCI_RH_EnableIrq(IN PVOID ehciExtension)
     PULONG IntrStsReg;
     EHCI_INTERRUPT_ENABLE IntrSts;
 
-    DPRINT("EHCI_RH_EnableIrq: ... \n");
+    DPRINT_RH("EHCI_RH_EnableIrq: ... \n");
 
     EhciExtension = (PEHCI_EXTENSION)ehciExtension;
 
