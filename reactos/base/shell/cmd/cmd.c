@@ -157,6 +157,7 @@ BOOL bExit = FALSE;       /* indicates EXIT was typed */
 BOOL bCanExit = TRUE;     /* indicates if this shell is exitable */
 BOOL bCtrlBreak = FALSE;  /* Ctrl-Break or Ctrl-C hit */
 BOOL bIgnoreEcho = FALSE; /* Set this to TRUE to prevent a newline, when executing a command */
+static BOOL bWaitForCommand = FALSE; /* When we are executing something passed on the commandline after /c or /k */
 INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
 CRITICAL_SECTION ChildProcessRunningLock;
 BOOL bUnicodeOutput = FALSE;
@@ -442,7 +443,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 
         if (prci.hProcess != NULL)
         {
-            if (bc != NULL || IsConsoleProcess(prci.hProcess))
+            if (bc != NULL || bWaitForCommand || IsConsoleProcess(prci.hProcess))
             {
                 /* when processing a batch file or starting console processes: execute synchronously */
                 EnterCriticalSection(&ChildProcessRunningLock);
@@ -1761,7 +1762,9 @@ Initialize()
     {
         /* Do the /C or /K command */
         GetCmdLineCommand(commandline, &ptr[2], AlwaysStrip);
+        bWaitForCommand = TRUE;
         nExitCode = ParseCommandLine(commandline);
+        bWaitForCommand = FALSE;
         if (option != _T('K'))
         {
             nErrorLevel = nExitCode;
