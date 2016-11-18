@@ -343,8 +343,62 @@ EHCI_ReopenEndpoint(IN PVOID ehciExtension,
                     IN PVOID endpointParameters,
                     IN PVOID ehciEndpoint)
 {
-    DPRINT1("EHCI_ReopenEndpoint: UNIMPLEMENTED. FIXME\n");
-    return 0;
+    PEHCI_EXTENSION EhciExtension;
+    PEHCI_ENDPOINT EhciEndpoint;
+    PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
+    ULONG TransferType;
+    PEHCI_HCD_QH QH;
+    ULONG Result;
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    EhciEndpoint = (PEHCI_ENDPOINT)ehciEndpoint;
+    EndpointProperties = (PUSBPORT_ENDPOINT_PROPERTIES)endpointParameters;
+
+    TransferType = EndpointProperties->TransferType;
+
+    DPRINT("EHCI_ReopenEndpoint: EhciEndpoint - %p, TransferType - %x\n",
+           EhciEndpoint,
+           TransferType);
+
+    switch (TransferType)
+    {
+        case USBPORT_TRANSFER_TYPE_ISOCHRONOUS:
+            if (EndpointProperties->DeviceSpeed == UsbHighSpeed)
+            {
+                DPRINT1("EHCI_ReopenEndpoint: HS Iso. UNIMPLEMENTED. FIXME\n");
+                Result = 6;
+            }
+            else
+            {
+                DPRINT1("EHCI_ReopenEndpoint: Iso. UNIMPLEMENTED. FIXME\n");
+                Result = 6;
+            }
+
+            break;
+
+        case USBPORT_TRANSFER_TYPE_CONTROL:
+        case USBPORT_TRANSFER_TYPE_BULK:
+        case USBPORT_TRANSFER_TYPE_INTERRUPT:
+            RtlCopyMemory(&EhciEndpoint->EndpointProperties,
+                          endpointParameters,
+                          sizeof(USBPORT_ENDPOINT_PROPERTIES));
+
+            QH = EhciEndpoint->QH;
+
+            QH->sqh.HwQH.EndpointParams.DeviceAddress = EndpointProperties->DeviceAddress & 0x7F;
+            QH->sqh.HwQH.EndpointParams.MaximumPacketLength = EndpointProperties->MaxPacketSize  & 0x7FF;
+
+            QH->sqh.HwQH.EndpointCaps.HubAddr = EndpointProperties->HubAddr & 0x7F;
+
+            break;
+
+        default:
+            DPRINT1("EHCI_ReopenEndpoint: Unknown TransferType\n");
+            Result = 0;
+            break;
+    }
+
+    return Result;
 }
 
 VOID
