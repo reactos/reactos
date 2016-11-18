@@ -115,6 +115,8 @@ EHCI_InitializeQH(PEHCI_EXTENSION EhciExtension,
 
     QH->sqh.HwQH.NextTD = 1;
     QH->sqh.HwQH.AlternateNextTD = 1;
+    QH->sqh.HwQH.Token.Status &= (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE |
+                                          EHCI_TOKEN_STATUS_HALTED);
 
     return QH;
 }
@@ -214,7 +216,7 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
     }
 
     TD->TdFlags |= EHCI_HCD_TD_FLAG_DUMMY;
-    TD->HwTD.Token.Status &= ~EHCI_TOKEN_STATUS_ACTIVE;
+    TD->HwTD.Token.Status &= (UCHAR)~EHCI_TOKEN_STATUS_ACTIVE;
 
     TD->HwTD.NextTD = 1;
     TD->HwTD.AlternateNextTD = 1;
@@ -229,7 +231,7 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
     QH->sqh.HwQH.NextTD = 1;
     QH->sqh.HwQH.AlternateNextTD = 1;
 
-    QH->sqh.HwQH.Token.Status &= ~EHCI_TOKEN_STATUS_ACTIVE;
+    QH->sqh.HwQH.Token.Status &= (UCHAR)~EHCI_TOKEN_STATUS_ACTIVE;
     QH->sqh.HwQH.Token.TransferBytes = 0;
 
     return 0;
@@ -496,7 +498,7 @@ EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
         RtlZeroMemory(DummyQhVA, sizeof(EHCI_HCD_QH));
 
         DummyQhVA->sqh.HwQH.CurrentTD = 0;
-        DummyQhVA->sqh.HwQH.Token.Status &= ~EHCI_TOKEN_STATUS_ACTIVE;
+        DummyQhVA->sqh.HwQH.Token.Status &= (UCHAR)~EHCI_TOKEN_STATUS_ACTIVE;
 
         PrevPA.AsULONG = (ULONG)DummyQhVA->sqh.PhysicalAddress;
         PrevPA.Type = 1;
@@ -559,7 +561,7 @@ EHCI_InitializeInterruptSchedule(IN PEHCI_EXTENSION EhciExtension)
 
         StaticQH->HwQH.EndpointParams.HeadReclamationListFlag = 0;
         StaticQH->HwQH.NextTD |= 1;
-        StaticQH->HwQH.Token.Status |= EHCI_TOKEN_STATUS_HALTED;
+        StaticQH->HwQH.Token.Status |= (UCHAR)EHCI_TOKEN_STATUS_HALTED;
     }
 
     for (ix = 1; ix < 63; ix++)
@@ -632,7 +634,7 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
     AsyncHead->HwQH.EndpointParams.HeadReclamationListFlag = 1;
     AsyncHead->HwQH.EndpointCaps.PipeMultiplier = 1;
     AsyncHead->HwQH.NextTD |= 1;
-    AsyncHead->HwQH.Token.Status = EHCI_TOKEN_STATUS_HALTED;
+    AsyncHead->HwQH.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_HALTED;
 
     AsyncHead->PhysicalAddress = (PEHCI_HCD_QH)AsyncHeadPA;
     AsyncHead->PrevHead = AsyncHead->NextHead = (PEHCI_HCD_QH)AsyncHead;
@@ -900,7 +902,81 @@ VOID
 NTAPI
 EHCI_SuspendController(IN PVOID ehciExtension)
 {
-    DPRINT1("EHCI_SuspendController: UNIMPLEMENTED. FIXME\n");
+    PEHCI_EXTENSION EhciExtension;
+    PULONG OperationalRegs;
+    EHCI_USB_COMMAND Command;
+    EHCI_USB_STATUS Status;
+    EHCI_INTERRUPT_ENABLE IntrEn;
+    ULONG ix;
+
+    DPRINT("EHCI_SuspendController: ... \n");
+
+    EhciExtension = (PEHCI_EXTENSION)ehciExtension;
+    OperationalRegs = EhciExtension->OperationalRegs;
+
+    EhciExtension->BakupPeriodiclistbase = READ_REGISTER_ULONG(OperationalRegs +
+                                                               EHCI_PERIODICLISTBASE);
+
+    EhciExtension->BakupAsynclistaddr = READ_REGISTER_ULONG(OperationalRegs +
+                                                            EHCI_ASYNCLISTBASE);
+
+    EhciExtension->BakupCtrlDSSegment = READ_REGISTER_ULONG(OperationalRegs +
+                                                            EHCI_CTRLDSSEGMENT);
+
+    EhciExtension->BakupUSBCmd = READ_REGISTER_ULONG(OperationalRegs +
+                                                     EHCI_USBCMD);
+
+    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    Command.InterruptAdvanceDoorbell = 0;
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
+
+    Command.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD);
+    Command.Run = 0;
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBCMD, Command.AsULONG);
+
+    KeStallExecutionProcessor(125);
+
+    Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
+
+    Status.HCHalted = 0;
+    Status.Reclamation = 0;
+    Status.PeriodicStatus = 0;
+    Status.AsynchronousStatus = 0;
+
+    if (Status.AsULONG)
+    {
+        WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS, Status.AsULONG);
+    }
+
+    WRITE_REGISTER_ULONG(OperationalRegs + EHCI_USBINTR, 0);
+
+    ix = 0;
+
+    do
+    {
+        Status.AsULONG = READ_REGISTER_ULONG(OperationalRegs + EHCI_USBSTS);
+
+        if (Status.HCHalted)
+        {
+            break;
+        }
+
+        RegPacket.UsbPortWait(EhciExtension, 1);
+
+        ++ix;
+    }
+    while (ix < 10);
+
+    if (!Status.HCHalted)
+    {
+        DbgBreakPoint();
+    }
+
+    IntrEn.AsULONG = READ_REGISTER_ULONG((PULONG)(OperationalRegs + EHCI_USBINTR));
+    IntrEn.PortChangeInterrupt = 1;
+    WRITE_REGISTER_ULONG((PULONG)(OperationalRegs + EHCI_USBINTR), IntrEn.AsULONG);
+
+    EhciExtension->Flags |= 1;
 }
 
 MPSTATUS
@@ -1409,7 +1485,7 @@ EHCI_LinkTransferToQueue(PEHCI_EXTENSION EhciExtension,
         QH->sqh.HwQH.AlternateNextTD = NextTD->HwTD.AlternateNextTD;
 
         QH->sqh.HwQH.Token.Status = (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE |
-                                         EHCI_TOKEN_STATUS_HALTED);
+                                             EHCI_TOKEN_STATUS_HALTED);
 
         QH->sqh.HwQH.Token.TransferBytes = 0;
 
@@ -1540,7 +1616,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
 
     FirstTD->HwTD.Token.ErrorCounter = 3;
     FirstTD->HwTD.Token.PIDCode = 2;
-    FirstTD->HwTD.Token.Status = EHCI_TOKEN_STATUS_ACTIVE;
+    FirstTD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
     FirstTD->HwTD.Token.TransferBytes = 0x8;
 
     RtlCopyMemory(&FirstTD->SetupPacket,
@@ -1620,7 +1696,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
             }
 
             TD->HwTD.Token.DataToggle = DataToggle;
-            TD->HwTD.Token.Status = EHCI_TOKEN_STATUS_ACTIVE;
+            TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
 
             if (DataToggle)
             {
@@ -1663,7 +1739,7 @@ End:
     LastTD->LengthThisTD = 0;
 
     Token = LastTD->HwTD.Token;
-    Token.Status = EHCI_TOKEN_STATUS_ACTIVE;
+    Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
     Token.InterruptOnComplete = 1;
     Token.DataToggle = 1;
 
@@ -1777,7 +1853,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
                 TD->HwTD.Token.PIDCode = 0;
             }
 
-            TD->HwTD.Token.Status = EHCI_TOKEN_STATUS_ACTIVE;
+            TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
             TD->HwTD.Token.DataToggle = 1;
 
             TransferedLen = EHCI_MapAsyncTransferToTd(EhciExtension,
@@ -1838,7 +1914,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
 
         TD->HwTD.Buffer[0] = (ULONG_PTR)TD->PhysicalAddress;
 
-        TD->HwTD.Token.Status = EHCI_TOKEN_STATUS_ACTIVE;
+        TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
         TD->HwTD.Token.DataToggle = 1;
 
         TD->LengthThisTD = 0;
@@ -1930,7 +2006,7 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
                 TD->HwTD.Token.PIDCode = 0;
             }
 
-            TD->HwTD.Token.Status = EHCI_TOKEN_STATUS_ACTIVE;
+            TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
             TD->HwTD.Token.DataToggle = 1;
 
             TransferedLen = EHCI_MapAsyncTransferToTd(EhciExtension,
@@ -2113,7 +2189,7 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
 
         QH->sqh.HwQH.Token.TransferBytes = 0;
         QH->sqh.HwQH.Token.Status = (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE |
-                                         EHCI_TOKEN_STATUS_HALTED);
+                                             EHCI_TOKEN_STATUS_HALTED);
 
         EhciEndpoint->HcdHeadP = TD;
     }
@@ -2166,7 +2242,7 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
         {
             QH->sqh.HwQH.CurrentTD = (ULONG)EhciEndpoint->DummyTdPA;
 
-            QH->sqh.HwQH.Token.Status = (UCHAR)~EHCI_TOKEN_STATUS_ACTIVE;
+            QH->sqh.HwQH.Token.Status = ~EHCI_TOKEN_STATUS_ACTIVE;
             QH->sqh.HwQH.Token.TransferBytes = 0;
 
             QH->sqh.HwQH.NextTD = (ULONG)NextTD;

@@ -160,6 +160,11 @@ typedef struct _EHCI_EXTENSION {
   PEHCI_HCD_QH PrevQH;
   PEHCI_HCD_QH LockQH;
   PEHCI_HCD_QH NextQH;
+  /* Registers Copy Bakup */
+  ULONG BakupPeriodiclistbase; // PERIODICLISTBASE
+  ULONG BakupAsynclistaddr; // ASYNCLISTADDR
+  ULONG BakupCtrlDSSegment; // CTRLDSSEGMENT
+  ULONG BakupUSBCmd; // USBCMD
 } EHCI_EXTENSION, *PEHCI_EXTENSION;
 
 /* debug.c */
