@@ -2905,7 +2905,113 @@ NTAPI
 EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
                              IN PEHCI_ENDPOINT EhciEndpoint)
 {
-    DPRINT1("EHCI_PollHaltedAsyncEndpoint: ... \n");
+    PEHCI_HCD_QH QH;
+    PEHCI_HCD_TD CurrentTD;
+    ULONG CurrentTdPA;
+    PEHCI_HCD_TD TD;
+    PEHCI_TRANSFER Transfer;
+    BOOLEAN IsSheduled;
+
+    DPRINT("EHCI_PollHaltedAsyncEndpoint: EhciEndpoint - %p\n", EhciEndpoint);
+
+    QH = EhciEndpoint->QH;
+    EHCI_DumpHwQH(QH);
+
+    CurrentTdPA = QH->sqh.HwQH.CurrentTD & ~0x1F;
+    ASSERT(CurrentTdPA != 0);
+
+    IsSheduled = QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE;
+
+    if (!EHCI_HardwarePresent(EhciExtension, 0))
+    {
+        IsSheduled = 0;
+    }
+
+    CurrentTD = (PEHCI_HCD_TD)RegPacket.UsbPortGetMappedVirtualAddress((PVOID)CurrentTdPA,
+                                                                       EhciExtension,
+                                                                       EhciEndpoint);
+
+    DPRINT("EHCI_PollHaltedAsyncEndpoint: CurrentTD - %p\n", CurrentTD);
+
+    if (CurrentTD == EhciEndpoint->DummyTdVA)
+    {
+        return;
+    }
+
+    ASSERT(EhciEndpoint->HcdTailP != CurrentTD);
+
+    if (IsSheduled)
+    {
+        EHCI_LockQH(EhciExtension,
+                    QH,
+                    EhciEndpoint->EndpointProperties.TransferType);
+    }
+
+    TD = EhciEndpoint->HcdHeadP;
+
+    if (TD != CurrentTD)
+    {
+        do
+        {
+            DPRINT("EHCI_PollHaltedAsyncEndpoint: TD - %p\n", TD);
+
+            ASSERT((TD->TdFlags & EHCI_HCD_TD_FLAG_DUMMY) == 0);
+
+            if (TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE)
+            {
+                TD->TdFlags |= 0x10;
+            }
+
+            TD->TdFlags |= EHCI_HCD_TD_FLAG_DONE;
+
+            InsertTailList(&EhciEndpoint->ListTDs, &TD->DoneLink);
+
+            TD = TD->NextHcdTD;
+        }
+        while (TD != CurrentTD);
+    }
+
+    TD = CurrentTD;
+
+    Transfer = CurrentTD->EhciTransfer;
+
+    do
+    {
+        DPRINT("EHCI_PollHaltedAsyncEndpoint: TD - %p\n", TD);
+
+        if (TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE)
+        {
+            TD->TdFlags |= 0x10;
+        }
+
+        TD->TdFlags |= EHCI_HCD_TD_FLAG_DONE;
+
+        InsertTailList(&EhciEndpoint->ListTDs, &TD->DoneLink);
+
+        TD = TD->NextHcdTD;
+    }
+    while (TD->EhciTransfer == Transfer);
+
+    EhciEndpoint->HcdHeadP = TD;
+
+    QH->sqh.HwQH.CurrentTD = (ULONG)EhciEndpoint->DummyTdVA;
+    QH->sqh.HwQH.NextTD = (ULONG)TD->PhysicalAddress;
+    QH->sqh.HwQH.AlternateNextTD = 1;
+    QH->sqh.HwQH.Token.TransferBytes = 0;
+
+    if (IsSheduled)
+    {
+        EHCI_UnlockQH(EhciExtension, QH);
+    }
+
+    if (EhciEndpoint->EndpointStatus & 4)
+    {
+        EhciEndpoint->EndpointStatus &= ~1;
+        QH->sqh.HwQH.Token.ErrorCounter = 0;
+        QH->sqh.HwQH.Token.Status &= (UCHAR)~(EHCI_TOKEN_STATUS_ACTIVE |
+                                              EHCI_TOKEN_STATUS_HALTED);
+
+    }
 }
 
 VOID
