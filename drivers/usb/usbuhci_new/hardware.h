@@ -120,3 +120,12 @@ typedef struct _UHCI_TD { // always aligned on 16-byte boundaries
 } UHCI_TD, *PUHCI_TD;
 
 C_ASSERT(sizeof(UHCI_TD) == 16);
+
+/* Queue Header (QH) */
+
+typedef struct _UHCI_QH { //  must be aligned on a 16-byte boundary
+  ULONG_PTR NextQH;
+  ULONG_PTR FirstElement;
+} UHCI_QH, *PUHCI_QH;
+
+C_ASSERT(sizeof(UHCI_QH) == 8);
