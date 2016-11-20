@@ -3039,7 +3039,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
             /* FIXME: handle this situation */
             ObDereferenceObject(Section);
             ObDereferenceObject(FileObject);
-            return STATUS_INVALID_PARAMETER;
+            return STATUS_INVALID_FILE_FOR_SECTION;
         }
     }
 
