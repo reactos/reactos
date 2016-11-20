@@ -455,14 +455,10 @@ BasicBehaviorChecks(HANDLE FileHandle)
 {
     NTSTATUS Status;
     HANDLE Section = NULL;
-#ifdef ROSTESTS_108_FIXED
     PFILE_OBJECT FileObject;
-#endif /* ROSTESTS_108_FIXED */
     LARGE_INTEGER Length;
     Length.QuadPart = TestStringSize;
 
-/* FIXME: Null pointer dereference. See ROSTESTS-108 */
-#ifdef ROSTESTS_108_FIXED
     //mimic lack of section support for a particular file as well.
     Status = ObReferenceObjectByHandle(FileHandle, STANDARD_RIGHTS_ALL, *IoFileObjectType, KernelMode, (PVOID *)&FileObject, NULL);
     if (!skip(NT_SUCCESS(Status), "Cannot reference object by handle\n"))
@@ -474,7 +470,7 @@ BasicBehaviorChecks(HANDLE FileHandle)
         FileObject->SectionObjectPointer = Pointers;
         ObDereferenceObject(FileObject);
     }
-#endif /* ROSTESTS_108_FIXED */
+
     Length.QuadPart = TestStringSize;
     CREATE_SECTION(Section, (SECTION_ALL_ACCESS), NULL, Length, PAGE_READONLY, SEC_COMMIT, FileHandle, STATUS_SUCCESS, NO_HANDLE_CLOSE);
     CheckObject(Section, 2, 1);
