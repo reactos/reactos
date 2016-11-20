@@ -24,6 +24,18 @@ typedef struct _UHCI_HCD_TD {
 
 C_ASSERT(sizeof(UHCI_HCD_TD) == 0x40);
 
+/* Host Controller Driver Queue Header (HCD QH) */
+
+typedef struct _UHCI_HCD_QH {
+  /* Hardware */
+  UHCI_QH HwQH;
+  /* Software */
+  struct _UHCI_HCD_QH * PhysicalAddress;
+  ULONG Padded[13];
+} UHCI_HCD_QH, *PUHCI_HCD_QH;
+
+C_ASSERT(sizeof(UHCI_HCD_QH) == 0x40);
+
 extern USBPORT_REGISTRATION_PACKET RegPacket;
 
 /* roothub.c */
