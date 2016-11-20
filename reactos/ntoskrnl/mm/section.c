@@ -1354,7 +1354,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
      * Check if someone else is already handling this fault, if so wait
      * for them
      */
-    if (Entry && IS_SWAP_FROM_SSE(Entry) && SWAPENTRY_FROM_SSE(Entry) == MM_WAIT_ENTRY)
+    if (Entry && MM_IS_WAIT_PTE(Entry))
     {
         MmUnlockSectionSegment(Segment);
         MmUnlockAddressSpace(AddressSpace);
@@ -4021,7 +4021,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
     Segment = MemoryArea->Data.SectionData.Segment;
 
     Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
-    while (Entry && IS_SWAP_FROM_SSE(Entry) && SWAPENTRY_FROM_SSE(Entry) == MM_WAIT_ENTRY)
+    while (Entry && MM_IS_WAIT_PTE(Entry))
     {
         MmUnlockSectionSegment(Segment);
         MmUnlockAddressSpace(AddressSpace);
