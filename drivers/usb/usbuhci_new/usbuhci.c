@@ -147,7 +147,7 @@ UhciSetEndpointState(IN PVOID uhciExtension,
 
 VOID
 NTAPI
-UhciPollEndpoint(IN PVOID ohciExtension,
+UhciPollEndpoint(IN PVOID uhciExtension,
                  IN PVOID ohciEndpoint)
 {
     DPRINT("UhciPollEndpoint: UNIMPLEMENTED. FIXME\n");
@@ -232,7 +232,7 @@ UhciResetController(IN PVOID uhciExtension)
 
 MPSTATUS
 NTAPI
-UhciStartSendOnePacket(IN PVOID ohciExtension,
+UhciStartSendOnePacket(IN PVOID uhciExtension,
                        IN PVOID PacketParameters,
                        IN PVOID Data,
                        IN PULONG pDataLength,
@@ -247,7 +247,7 @@ UhciStartSendOnePacket(IN PVOID ohciExtension,
 
 MPSTATUS
 NTAPI
-UhciEndSendOnePacket(IN PVOID ohciExtension,
+UhciEndSendOnePacket(IN PVOID uhciExtension,
                      IN PVOID PacketParameters,
                      IN PVOID Data,
                      IN PULONG pDataLength,
@@ -273,7 +273,7 @@ UhciPassThru(IN PVOID uhciExtension,
 
 VOID
 NTAPI
-UhciFlushInterrupts(IN PVOID ohciExtension)
+UhciFlushInterrupts(IN PVOID uhciExtension)
 {
     DPRINT("UhciFlushInterrupts: UNIMPLEMENTED. FIXME\n");
 }
