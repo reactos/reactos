@@ -19,12 +19,7 @@ START_TEST(NtCreateSection)
     UNICODE_STRING InitOnCreate = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-NtCreateSection\\InitOnCreate");
     UNICODE_STRING InitOnRW = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-NtCreateSection\\InitOnRW");
     UNICODE_STRING InvalidInit = RTL_CONSTANT_STRING(L"\\Device\\Kmtest-NtCreateSection\\InvalidInit");
-    
-    if (skip(0, "ROSTESTS-248: skipping kmtest:NtCreateSection because it hangs on testbot\n"))
-    {
-        return;
-    }
-    
+
     KmtLoadDriver(L"NtCreateSection", FALSE);
     KmtOpenDriver();
 
