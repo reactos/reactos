@@ -4,8 +4,8 @@
 @ stub DsRolerGetDcOperationProgress
 @ stub DsRolerGetDcOperationResults
 @ stub LsaIAddNameToLogonSession
-@ stub LsaIAllocateHeap
-@ stub LsaIAllocateHeapZero
+@ stdcall LsaIAllocateHeap(long) LsapAllocateHeap
+@ stdcall LsaIAllocateHeapZero(long) LsapAllocateHeapZero
 @ stub LsaIAuditAccountLogon
 @ stub LsaIAuditAccountLogonEx
 @ stub LsaIAuditKdcEvent
@@ -27,7 +27,7 @@
 @ stub LsaIFilterSids
 @ stub LsaIForestTrustFindMatch
 @ stub LsaIFreeForestTrustInfo
-@ stub LsaIFreeHeap
+@ stdcall LsaIFreeHeap(ptr) LsapFreeHeap
 @ stub LsaIFreeReturnBuffer
 @ stub LsaIFree_LSAI_PRIVATE_DATA #DATA
 @ stub LsaIFree_LSAI_SECRET_ENUM_BUFFER

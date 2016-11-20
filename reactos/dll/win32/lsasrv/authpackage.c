@@ -360,25 +360,27 @@ LsapGetAuthenticationPackage(IN ULONG PackageId)
 }
 
 
-static
 PVOID
 NTAPI
 LsapAllocateHeap(IN ULONG Length)
 {
-    return RtlAllocateHeap(RtlGetProcessHeap(),
-                           HEAP_ZERO_MEMORY,
-                           Length);
+    return RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
 }
 
 
-static
+PVOID
+NTAPI
+LsapAllocateHeapZero(IN ULONG Length)
+{
+    return RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
+}
+
+
 VOID
 NTAPI
 LsapFreeHeap(IN PVOID Base)
 {
-    RtlFreeHeap(RtlGetProcessHeap(),
-                0,
-                Base);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Base);
 }
 
 
