@@ -73,3 +73,50 @@ typedef union _UHCI_PORT_STATUS_CONTROL {
   };
   USHORT AsUSHORT;
 } UHCI_PORT_STATUS_CONTROL;
+
+/* Transfer Descriptor (TD) */
+
+#define UHCI_TD_STS_ACTIVE            (1 << 7) // 0x80
+#define UHCI_TD_STS_STALLED           (1 << 6) // 0x40
+#define UHCI_TD_STS_DATA_BUFFER_ERROR (1 << 5) // 0x20
+#define UHCI_TD_STS_BABBLE_DETECTED   (1 << 4) // 0x10
+#define UHCI_TD_STS_NAK_RECEIVED      (1 << 3) // 0x08
+#define UHCI_TD_STS_TIMEOUT_CRC_ERROR (1 << 2) // 0x04
+#define UHCI_TD_STS_BITSTUFF_ERROR    (1 << 1) // 0x02
+//#define UHCI_TD_STS_Reserved        (1 << 0) // 0x01
+
+typedef union _UHCI_CONTROL_STATUS {
+  struct {
+    ULONG ActualLength        : 11; // encoded as n - 1
+    ULONG Reserved1           : 5;
+    ULONG Status              : 8; // UHCI_TD_STS_ xxx
+    ULONG InterruptOnComplete : 1;
+    ULONG IsochronousType     : 1;
+    ULONG LowSpeedDevice      : 1;
+    ULONG ErrorCounter        : 2;
+    ULONG ShortPacketDetect   : 1;
+    ULONG Reserved2           : 2;
+  };
+  ULONG AsULONG;
+} UHCI_CONTROL_STATUS;
+
+typedef union _UHCI_TD_TOKEN {
+  struct {
+    ULONG PIDCode       : 8;
+    ULONG DeviceAddress : 7;
+    ULONG Endpoint      : 4;
+    ULONG DataToggle    : 1;
+    ULONG Reserved      : 1;
+    ULONG MaximumLength : 11;
+  };
+  ULONG AsULONG;
+} UHCI_TD_TOKEN;
+
+typedef struct _UHCI_TD { // always aligned on 16-byte boundaries
+  ULONG_PTR NextElement; // another TD, or a QH, or nothing
+  UHCI_CONTROL_STATUS ControlStatus;
+  UHCI_TD_TOKEN Token;
+  ULONG_PTR Buffer;
+} UHCI_TD, *PUHCI_TD;
+
+C_ASSERT(sizeof(UHCI_TD) == 16);
