@@ -646,7 +646,7 @@ CcRosCreateVacb (
 
     DPRINT("CcRosCreateVacb()\n");
 
-    if (FileOffset >= SharedCacheMap->FileSize.QuadPart)
+    if (FileOffset >= SharedCacheMap->SectionSize.QuadPart)
     {
         *Vacb = NULL;
         return STATUS_INVALID_PARAMETER;
