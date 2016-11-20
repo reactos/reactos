@@ -623,6 +623,7 @@ for_ugly_chips:
     }
 
     if(deviceExtension->MaxTransferMode >= ATA_SA150) {
+        KdPrint2((PRINT_PREFIX "setting UNIATA_SATA flag\n"));
         deviceExtension->HwFlags |= UNIATA_SATA;
     }
 
@@ -977,13 +978,16 @@ for_ugly_chips:
                 i = AtapiFindListedDev((BUSMASTER_CONTROLLER_INFORMATION_BASE*)&SiSSouthAdapters[0],
                      -1, HwDeviceExtension, SystemIoBusNumber, PCISLOTNUM_NOT_SPECIFIED, NULL); 
                 if(i != BMLIST_TERMINATOR) {
+                    KdPrint2((PRINT_PREFIX "SIS South\n"));
                     deviceExtension->HwFlags = (deviceExtension->HwFlags & ~CHIPTYPE_MASK) | SIS133OLD;
                     deviceExtension->MaxTransferMode = ATA_UDMA6;
                     //deviceExtension->MaxTransferMode = SiSSouthAdapters[i].MaxTransferMode;
                     if(SiSSouthAdapters[i].RaidFlags & UNIATA_SATA) {
+                        KdPrint2((PRINT_PREFIX "SIS South SATA\n"));
                         deviceExtension->HwFlags |= UNIATA_SATA;
                         if(SiSSouthAdapters[i].nDeviceId == 0x1182 ||
                            SiSSouthAdapters[i].nDeviceId == 0x1183) {
+                            KdPrint2((PRINT_PREFIX "SIS_182\n"));
                             SIS_182 = TRUE;
                         }
                     }

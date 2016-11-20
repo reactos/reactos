@@ -1302,8 +1302,20 @@ IdeMediaStatus(
     IN ULONG DeviceNumber
     );
 
-ULONG NTAPI
+ULONG
+NTAPI
 AtapiFindIsaController(
+    IN PVOID HwDeviceExtension,
+    IN PVOID Context,
+    IN PVOID BusInformation,
+    IN PCHAR ArgumentString,
+    IN OUT PPORT_CONFIGURATION_INFORMATION ConfigInfo,
+    OUT PBOOLEAN Again
+    );
+
+ULONG
+NTAPI
+AtapiReadArgumentString(
     IN PVOID HwDeviceExtension,
     IN PVOID Context,
     IN PVOID BusInformation,

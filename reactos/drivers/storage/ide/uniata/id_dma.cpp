@@ -1148,14 +1148,14 @@ AtapiDmaInit(
 
         if(ChipType == ATPOLD) {
             /* Old Acard 850 */
-            static const USHORT reg4x = 0x0301;
+            static const USHORT reg4x2 = 0x0301;
 
             for(i=udmamode; i>=0; i--) {
                 if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_UDMA + i)) {
 set_old_acard:
                     ChangePciConfig1(0x54, a | (0x01 << dev) | ((i+1) << (dev*2)));
                     SetPciConfig1(0x4a, reg4a);
-                    SetPciConfig2(reg,  reg4x);
+                    SetPciConfig2(reg,  reg4x2);
                     return;
                 }
 

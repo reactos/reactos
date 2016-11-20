@@ -1881,6 +1881,7 @@ extern BOOLEAN g_opt_AtapiDmaRawRead;
 extern BOOLEAN hasPCI;
 
 extern BOOLEAN InDriverEntry;
+extern BOOLEAN g_Dump;
 
 extern BOOLEAN g_opt_Verbose;
 extern ULONG   g_opt_VirtualMachine;

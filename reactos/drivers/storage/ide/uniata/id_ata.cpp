@@ -105,6 +105,7 @@ BOOLEAN hasPCI = FALSE;
 ULONG g_opt_VirtualMachine = 0; // Auto
 
 BOOLEAN InDriverEntry = TRUE;
+BOOLEAN g_Dump = FALSE;
 
 BOOLEAN g_opt_Verbose = 0;
 
@@ -5036,7 +5037,7 @@ AtapiInterrupt__(
         return TRUE;
     }
 
-    if(!DmaTransfer && !atapiDev) {
+    if((!DmaTransfer && !atapiDev) || deviceExtension->DriverMustPoll) {
         KdPrint2((PRINT_PREFIX "  service PIO HDD\n"));
         UseDpc = FALSE;
     }
@@ -6139,7 +6140,9 @@ CompleteRequest:
             } else { // srb->Cdb[0] == SCSIOP_REQUEST_SENSE)
 
                 PSENSE_DATA senseData = (PSENSE_DATA) srb->DataBuffer;
+#ifdef __REACTOS__
                 (void)senseData;
+#endif
                 KdPrint3((PRINT_PREFIX "AtapiInterrupt: ATAPI command status %#x\n", status));
                 if (status == SRB_STATUS_DATA_OVERRUN) {
                     // Check to see if we at least get mininum number of bytes
@@ -10516,16 +10519,56 @@ DriverEntry(
 
     LARGE_INTEGER t0, t1;
 
-    Connect_DbgPrint();
     KdPrint2((PRINT_PREFIX "%s", (PCCHAR)ver_string));
     //a = (WCHAR)strlen(ver_string);
 
-    g_opt_Verbose = (BOOLEAN)AtapiRegCheckDevValue(NULL, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"PrintLogo", 0);
-    if(g_opt_Verbose) {
-        _PrintNtConsole("Universal ATA driver v 0." UNIATA_VER_STR "\n");
+    statusToReturn = 0xffffffff;
+
+    // Zero out structure.
+    RtlZeroMemory(((PCHAR)&hwInitializationData), sizeof(hwInitializationData));
+
+    // Set size of hwInitializationData.
+    hwInitializationData.comm.HwInitializationDataSize =
+      sizeof(hwInitializationData.comm) +
+//      sizeof(hwInitializationData.nt4) +
+      ((WinVer_Id() <= WinVer_NT) ? 0 : sizeof(hwInitializationData.w2k));
+    KdPrint(("HwInitializationDataSize = %x\n", hwInitializationData.comm.HwInitializationDataSize));
+
+    // Set entry points.
+    hwInitializationData.comm.HwInitialize = (PHW_INITIALIZE)AtapiHwInitialize;
+    hwInitializationData.comm.HwResetBus = (PHW_RESET_BUS)AtapiResetController;
+    hwInitializationData.comm.HwStartIo = (PHW_STARTIO)AtapiStartIo;
+    hwInitializationData.comm.HwInterrupt = (PHW_INTERRUPT)AtapiInterrupt;
+
+    // Specify size of extensions.
+    hwInitializationData.comm.DeviceExtensionSize     = sizeof(HW_DEVICE_EXTENSION);
+    hwInitializationData.comm.SpecificLuExtensionSize = sizeof(HW_LU_EXTENSION);
+    hwInitializationData.comm.SrbExtensionSize        = sizeof(ATA_REQ);
+
+    // Indicate PIO device.
+    hwInitializationData.comm.MapBuffers = TRUE;
+
+    // Request and parse arument string.
+    KdPrint2((PRINT_PREFIX "\n\nUniATA: parse ArgumentString\n"));
+    // Zero out structure.
+    hwInitializationData.comm.NumberOfAccessRanges = 2;
+    hwInitializationData.comm.HwFindAdapter = AtapiReadArgumentString;
+    ScsiPortInitialize(DriverObject,
+                                    Argument2,
+                                    &hwInitializationData.comm,
+                                    &adapterCount);
+
+    if(!g_Dump) {
+        Connect_DbgPrint();
+        g_opt_Verbose = (BOOLEAN)AtapiRegCheckDevValue(NULL, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"PrintLogo", 0);
+        if(g_opt_Verbose) {
+            _PrintNtConsole("Universal ATA driver v 0." UNIATA_VER_STR "\n");
+        }
+        IgnoreIsaCompatiblePci = (BOOLEAN)AtapiRegCheckDevValue(NULL, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"IgnoreIsaCompatiblePci", IgnoreIsaCompatiblePci) ? TRUE : FALSE;
+        IgnoreNativePci = (BOOLEAN)AtapiRegCheckDevValue(NULL, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"IgnoreNativePci", IgnoreNativePci) ? TRUE : FALSE;
+    } else {
+        KdPrint(("crashdump mode\n"));
     }
-    IgnoreIsaCompatiblePci = (BOOLEAN)AtapiRegCheckDevValue(NULL, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"IgnoreIsaCompatiblePci", IgnoreIsaCompatiblePci) ? TRUE : FALSE;
-    IgnoreNativePci = (BOOLEAN)AtapiRegCheckDevValue(NULL, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"IgnoreNativePci", IgnoreNativePci) ? TRUE : FALSE;
 
     if(!SavedDriverObject) {
         SavedDriverObject = (PDRIVER_OBJECT)DriverObject;
@@ -10597,31 +10640,6 @@ DriverEntry(
     g_LogToDisplay = AtapiRegCheckDevValue(NULL, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"LogToDisplay", 0);
 #endif //_DEBUG
 
-    statusToReturn = 0xffffffff;
-
-    // Zero out structure.
-    RtlZeroMemory(((PCHAR)&hwInitializationData), sizeof(hwInitializationData));
-
-    // Set size of hwInitializationData.
-    hwInitializationData.comm.HwInitializationDataSize =
-      sizeof(hwInitializationData.comm) +
-//      sizeof(hwInitializationData.nt4) +
-      ((WinVer_Id() <= WinVer_NT) ? 0 : sizeof(hwInitializationData.w2k));
-    KdPrint(("HwInitializationDataSize = %x\n", hwInitializationData.comm.HwInitializationDataSize));
-
-    // Set entry points.
-    hwInitializationData.comm.HwInitialize = (PHW_INITIALIZE)AtapiHwInitialize;
-    hwInitializationData.comm.HwResetBus = (PHW_RESET_BUS)AtapiResetController;
-    hwInitializationData.comm.HwStartIo = (PHW_STARTIO)AtapiStartIo;
-    hwInitializationData.comm.HwInterrupt = (PHW_INTERRUPT)AtapiInterrupt;
-
-    // Specify size of extensions.
-    hwInitializationData.comm.DeviceExtensionSize     = sizeof(HW_DEVICE_EXTENSION);
-    hwInitializationData.comm.SpecificLuExtensionSize = sizeof(HW_LU_EXTENSION);
-    hwInitializationData.comm.SrbExtensionSize        = sizeof(ATA_REQ);
-
-    // Indicate PIO device.
-    hwInitializationData.comm.MapBuffers = TRUE;
     // Set PnP-specific API
     if(WinVer_Id() > WinVer_NT) {
         KdPrint(("set NeedPhysicalAddresses = TRUE\n"));
@@ -10723,7 +10741,7 @@ DriverEntry(
             SecondaryClaimed = TRUE;
         pref_alt = 0;
 
-        if(!WinVer_WDM_Model && !PrimaryClaimed && !SecondaryClaimed &&
+        if(!WinVer_WDM_Model && !PrimaryClaimed && !SecondaryClaimed && !g_Dump &&
             !(BMList[i].ChanInitOk & 0x80)) {
             
             // We just want to claim our PCI device in compatible mode, since we shall not
@@ -11295,6 +11313,10 @@ AtapiRegCheckParameterValue(
 
     UNICODE_STRING    paramPath;
 
+    if(g_Dump) {
+        goto failed;
+    }
+
     // <SavedRegPath>\<PathSuffix> -> <Name>
 //    KdPrint(( "AtapiCheckRegValue: %ws -> %ws\n", PathSuffix, Name));
 //    KdPrint(( "AtapiCheckRegValue: RegistryPath %ws\n", RegistryPath->Buffer));
@@ -11332,6 +11354,7 @@ AtapiRegCheckParameterValue(
     ExFreePool(paramPath.Buffer);
 
     if(!NT_SUCCESS(status)) {
+failed:
         doRun = Default;
     }
 
