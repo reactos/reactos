@@ -12,6 +12,18 @@
 
 #include "hardware.h"
 
+/* Host Controller Driver Transfer Descriptor (HCD TD) */
+
+typedef struct _UHCI_HCD_TD {
+  /* Hardware */
+  UHCI_TD HwTD;
+  /* Software */
+  struct _UHCI_HCD_TD * PhysicalAddress;
+  ULONG Padded[11];
+} UHCI_HCD_TD, *PUHCI_HCD_TD;
+
+C_ASSERT(sizeof(UHCI_HCD_TD) == 0x40);
+
 extern USBPORT_REGISTRATION_PACKET RegPacket;
 
 /* roothub.c */
