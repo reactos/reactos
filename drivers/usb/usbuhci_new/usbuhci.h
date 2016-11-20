@@ -36,6 +36,22 @@ typedef struct _UHCI_HCD_QH {
 
 C_ASSERT(sizeof(UHCI_HCD_QH) == 0x40);
 
+typedef struct _UHCI_ENDPOINT {
+  ULONG Reserved;
+} UHCI_ENDPOINT, *PUHCI_ENDPOINT;
+
+typedef struct _UHCI_TRANSFER {
+  ULONG Reserved;
+} UHCI_TRANSFER, *PUHCI_TRANSFER;
+
+typedef struct _UHCI_HC_RESOURCES {
+  UCHAR Padded[0x2000];
+} UHCI_HC_RESOURCES, *PUHCI_HC_RESOURCES;
+
+typedef struct _UHCI_EXTENSION {
+  ULONG Reserved;
+} UHCI_EXTENSION, *PUHCI_EXTENSION;
+
 extern USBPORT_REGISTRATION_PACKET RegPacket;
 
 /* roothub.c */

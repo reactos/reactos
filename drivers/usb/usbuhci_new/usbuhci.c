@@ -295,21 +295,20 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     RtlZeroMemory(&RegPacket, sizeof(USBPORT_REGISTRATION_PACKET));
 
-    RegPacket.MiniPortVersion = USB_MINIPORT_VERSION_EHCI;
+    RegPacket.MiniPortVersion = USB_MINIPORT_VERSION_UHCI;
 
     RegPacket.MiniPortFlags = USB_MINIPORT_FLAGS_INTERRUPT |
                               USB_MINIPORT_FLAGS_PORT_IO |
-                              USB_MINIPORT_FLAGS_USB2 |
                               0x40 |
                               USB_MINIPORT_FLAGS_POLLING |
                               USB_MINIPORT_FLAGS_WAKE_SUPPORT;
 
     RegPacket.MiniPortBusBandwidth = 12000;
 
-    RegPacket.MiniPortExtensionSize = 0; //sizeof(UHCI_EXTENSION)
-    RegPacket.MiniPortEndpointSize = 0; //sizeof(UHCI_ENDPOINT);
-    RegPacket.MiniPortTransferSize = 0; //sizeof(UHCI_TRANSFER);
-    RegPacket.MiniPortResourcesSize = 0; //sizeof(UHCI_HC_RESOURCES);
+    RegPacket.MiniPortExtensionSize = sizeof(UHCI_EXTENSION);
+    RegPacket.MiniPortEndpointSize = sizeof(UHCI_ENDPOINT);
+    RegPacket.MiniPortTransferSize = sizeof(UHCI_TRANSFER);
+    RegPacket.MiniPortResourcesSize = sizeof(UHCI_HC_RESOURCES);
 
     RegPacket.OpenEndpoint = UhciOpenEndpoint;
     RegPacket.ReopenEndpoint = UhciReopenEndpoint;
