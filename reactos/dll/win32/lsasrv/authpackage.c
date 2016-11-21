@@ -488,7 +488,7 @@ LsapInitAuthPackages(VOID)
     DispatchTable.AddCredential = &LsapAddCredential;
     DispatchTable.GetCredentials = &LsapGetCredentials;
     DispatchTable.DeleteCredential = &LsapDeleteCredential;
-    DispatchTable.AllocateLsaHeap = &LsapAllocateHeap;
+    DispatchTable.AllocateLsaHeap = &LsapAllocateHeapZero;
     DispatchTable.FreeLsaHeap = &LsapFreeHeap;
     DispatchTable.AllocateClientBuffer = &LsapAllocateClientBuffer;
     DispatchTable.FreeClientBuffer = &LsapFreeClientBuffer;
