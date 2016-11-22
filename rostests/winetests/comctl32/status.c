@@ -291,7 +291,7 @@ static void test_status_control(void)
     expect(5,LOWORD(r));
     expect(SBT_POPOUT,HIWORD(r));
     r = SendMessageW(hWndStatus, WM_GETTEXTLENGTH, 0, 0);
-    ok(r == 5 || broken(0x02000005 /* NT4 */), "Expected 5, got %d\n", r);
+    ok(r == 5, "Expected 5, got %d\n", r);
     r = SendMessageA(hWndStatus, SB_GETTEXTLENGTHA, 1, 0);
     expect(0,LOWORD(r));
     expect(SBT_OWNERDRAW,HIWORD(r));

@@ -5785,6 +5785,7 @@ static void test_oneclickactivate(void)
     HWND hwnd, fg;
     RECT rect;
     INT r;
+    POINT orig_pos;
 
     hwnd = CreateWindowExA(0, "SysListView32", "foo", WS_VISIBLE|WS_CHILD|LVS_LIST,
             10, 10, 100, 200, hwndparent, NULL, NULL, NULL);
@@ -5811,6 +5812,7 @@ static void test_oneclickactivate(void)
     ok(r == 0, "should not fail\n");
 
     GetWindowRect(hwnd, &rect);
+    GetCursorPos(&orig_pos);
     SetCursorPos(rect.left+5, rect.top+5);
     flush_events();
     r = SendMessageA(hwnd, WM_MOUSEMOVE, MAKELONG(1, 1), 0);
@@ -5830,6 +5832,7 @@ static void test_oneclickactivate(void)
     expect(1, r);
 
     DestroyWindow(hwnd);
+    SetCursorPos(orig_pos.x, orig_pos.y);
 }
 
 static void test_callback_mask(void)

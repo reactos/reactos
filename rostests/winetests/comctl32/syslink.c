@@ -195,6 +195,7 @@ START_TEST(syslink)
     BOOL rc;
     HWND hWndSysLink;
     LONG oldstyle;
+    POINT orig_pos;
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
         return;
@@ -216,6 +217,10 @@ START_TEST(syslink)
         skip("Could not register ICC_LINK_CLASS\n");
         return;
     }
+
+    /* Move the cursor off the parent window */
+    GetCursorPos(&orig_pos);
+    SetCursorPos(400, 400);
 
     init_msg_sequences(sequences, NUM_MSG_SEQUENCE);
 
@@ -254,4 +259,5 @@ START_TEST(syslink)
     DestroyWindow(hWndSysLink);
     DestroyWindow(hWndParent);
     unload_v6_module(ctx_cookie, hCtx);
+    SetCursorPos(orig_pos.x, orig_pos.y);
 }

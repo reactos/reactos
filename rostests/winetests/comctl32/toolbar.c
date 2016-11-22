@@ -1235,11 +1235,8 @@ static DWORD tbsize_alt_numtests = 0;
                        EqualRect(&rc, &tbsize_alt_results[tbsize_alt_numtests].rcButton))) { \
                 win_skip("Alternate rect found\n"); \
                 tbsize_alt_numtests++; \
-            } else if (!(mask&1)) { \
+            } else todo_wine_if(mask&1) \
                 check_rect("button = %d, tbsize_numtests = %d", rc, res->prcButtons[i], i, tbsize_numtests); \
-            } else {\
-                todo_wine { check_rect("button = %d, tbsize_numtests = %d", rc, res->prcButtons[i], i, tbsize_numtests); } \
-            } \
             mask >>= 1; \
         } \
         tbsize_numtests++; \

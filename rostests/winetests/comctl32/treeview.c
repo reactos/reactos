@@ -2369,6 +2369,30 @@ static void test_WM_KEYDOWN(void)
     DestroyWindow(hwnd);
 }
 
+static void test_TVS_FULLROWSELECT(void)
+{
+    DWORD style;
+    HWND hwnd;
+
+    /* try to create both with TVS_HASLINES and TVS_FULLROWSELECT */
+    hwnd = create_treeview_control(TVS_FULLROWSELECT);
+
+    style = GetWindowLongA(hwnd, GWL_STYLE);
+    ok((style & (TVS_FULLROWSELECT | TVS_HASLINES)) == (TVS_FULLROWSELECT | TVS_HASLINES), "got style 0x%08x\n", style);
+
+    DestroyWindow(hwnd);
+
+    /* create just with TVS_HASLINES, try to enable TVS_FULLROWSELECT later */
+    hwnd = create_treeview_control(0);
+
+    style = GetWindowLongA(hwnd, GWL_STYLE);
+    SetWindowLongA(hwnd, GWL_STYLE, style | TVS_FULLROWSELECT);
+    style = GetWindowLongA(hwnd, GWL_STYLE);
+    ok(style & TVS_FULLROWSELECT, "got style 0x%08x\n", style);
+
+    DestroyWindow(hwnd);
+}
+
 START_TEST(treeview)
 {
     HMODULE hComctl32;
@@ -2444,6 +2468,7 @@ START_TEST(treeview)
     test_WM_GETDLGCODE();
     test_customdraw();
     test_WM_KEYDOWN();
+    test_TVS_FULLROWSELECT();
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
     {
