@@ -1,21 +1,20 @@
-diff -pudN e:\wine\dlls\ole32/comcat.c e:\reactos\dll\win32\ole32/comcat.c
---- e:\wine\dlls\ole32/comcat.c	2016-05-31 18:02:11 +0100
-+++ e:\reactos\dll\win32\ole32/comcat.c	2016-03-04 10:20:45 +0100
-@@ -229,7 +229,11 @@ static HRESULT COMCAT_IsClassOfCategorie
- 	if (res != ERROR_SUCCESS) return S_FALSE;
- 	for (string = impl_strings; *string; string += CHARS_IN_GUID) {
- 	    HKEY catkey;
+diff -pudN e:\wine\dlls\ole32/clipboard.c e:\reactos\dll\win32\ole32/clipboard.c
+--- e:\wine\dlls\ole32/clipboard.c	2016-11-16 17:29:23 +0100
++++ e:\reactos\dll\win32\ole32/clipboard.c	2016-11-16 23:37:23 +0100
+@@ -2001,6 +2001,10 @@ static LRESULT CALLBACK clipbrd_wndproc(
+     ole_clipbrd *clipbrd;
+ 
+     get_ole_clipbrd(&clipbrd);
 +#ifdef __REACTOS__
- 	    res = open_classes_key(subkey, string, READ_CONTROL, &catkey);
-+#else
-+	    res = open_classes_key(subkey, string, 0, &catkey);
++    if(clipbrd == NULL)
++        return DefWindowProcW(hwnd, message, wparam, lparam);
 +#endif
- 	    if (res != ERROR_SUCCESS) {
- 		RegCloseKey(subkey);
- 		return S_FALSE;
+ 
+     switch (message)
+     {
 diff -pudN e:\wine\dlls\ole32/compobj.c e:\reactos\dll\win32\ole32/compobj.c
---- e:\wine\dlls\ole32/compobj.c	2016-05-31 18:02:11 +0100
-+++ e:\reactos\dll\win32\ole32/compobj.c	2016-06-07 11:34:16 +0100
+--- e:\wine\dlls\ole32/compobj.c	2016-11-16 17:29:23 +0100
++++ e:\reactos\dll\win32\ole32/compobj.c	2016-11-17 15:23:00 +0100
 @@ -43,6 +43,7 @@
  
  WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -39,8 +38,8 @@ diff -pudN e:\wine\dlls\ole32/compobj.c e:\reactos\dll\win32\ole32/compobj.c
  static HKEY classes_root_hkey;
  
 diff -pudN e:\wine\dlls\ole32/stg_prop.c e:\reactos\dll\win32\ole32/stg_prop.c
---- e:\wine\dlls\ole32/stg_prop.c	2016-05-31 18:02:11 +0100
-+++ e:\reactos\dll\win32\ole32/stg_prop.c	2016-06-07 11:34:17 +0100
+--- e:\wine\dlls\ole32/stg_prop.c	2016-11-16 17:29:23 +0100
++++ e:\reactos\dll\win32\ole32/stg_prop.c	2016-08-15 16:49:04 +0100
 @@ -41,6 +41,10 @@
  
  WINE_DEFAULT_DEBUG_CHANNEL(storage);

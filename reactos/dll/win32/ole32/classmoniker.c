@@ -52,7 +52,7 @@ static HRESULT WINAPI ClassMoniker_QueryInterface(IMoniker* iface,REFIID riid,vo
 {
     ClassMoniker *This = impl_from_IMoniker(iface);
 
-    TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
+    TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppvObject);
 
     /* Perform a sanity check on the parameters.*/
     if (!ppvObject)
