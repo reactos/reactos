@@ -554,8 +554,9 @@ MiFindExportedRoutineByName(IN PVOID DllBase,
     Function = (PVOID)((ULONG_PTR)DllBase + ExportTable[Ordinal]);
 
     /* We found it! */
-    ASSERT(!(Function > (PVOID)ExportDirectory) &&
-           (Function < (PVOID)((ULONG_PTR)ExportDirectory + ExportSize)));
+    ASSERT((Function < (PVOID)ExportDirectory) ||
+           (Function > (PVOID)((ULONG_PTR)ExportDirectory + ExportSize)));
+
     return Function;
 }
 
