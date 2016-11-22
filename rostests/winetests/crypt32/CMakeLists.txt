@@ -21,5 +21,5 @@ list(APPEND SOURCE
 
 add_executable(crypt32_winetest ${SOURCE})
 set_module_type(crypt32_winetest win32cui)
-add_importlibs(crypt32_winetest crypt32 advapi32 msvcrt kernel32)
+add_importlibs(crypt32_winetest crypt32 advapi32 user32 shlwapi shell32 msvcrt kernel32)
 add_cd_file(TARGET crypt32_winetest DESTINATION reactos/bin FOR all)
