@@ -26,10 +26,10 @@
 #ifdef __GNUC__
 # define WINE_RB_ENTRY_VALUE(element, type, field) ({       \
      const typeof(((type *)0)->field) *__ptr = (element);   \
-     (type *)((char *)__ptr - offsetof(type, field)); })
+     (type *)((char *)__ptr - FIELD_OFFSET(type, field)); })
 #else
 # define WINE_RB_ENTRY_VALUE(element, type, field) \
-     ((type *)((char *)(element) - offsetof(type, field)))
+     ((type *)((char *)(element) - FIELD_OFFSET(type, field)))
 #endif
 
 struct wine_rb_entry
