@@ -1550,10 +1550,16 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
          result = GetFullPathNameW(fodInfos->filename, MAX_PATH, tmpBuf, &nameBit);
          if (result) {
 
-            /* nameBit is always shorter than the original filename */
-            lstrcpyW(fodInfos->filename,nameBit);
+            /* nameBit is always shorter than the original filename. It may be NULL
+             * when the filename contains only a drive name instead of file name */
+            if (nameBit)
+            {
+                lstrcpyW(fodInfos->filename,nameBit);
+                *nameBit = 0x00;
+            }
+            else
+                *fodInfos->filename = '\0';
 
-            *nameBit = 0x00;
             MemFree(fodInfos->initdir);
             fodInfos->initdir = MemAlloc((lstrlenW(tmpBuf) + 1)*sizeof(WCHAR));
             lstrcpyW(fodInfos->initdir, tmpBuf);
@@ -2526,6 +2532,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
                 && fodInfos->ofnInfos->Flags & OFN_EXPLORER)
             {
               SendCustomDlgNotificationMessage(hwnd, CDN_FOLDERCHANGE);
+              SendMessageA(fodInfos->DlgInfos.hwndFileName, WM_SETTEXT, 0, (LPARAM)"");
             }
 	  }
 	  else if( nOpenAction == ONOPEN_SEARCH )
@@ -2536,6 +2543,13 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
           COMDLG32_SHFree(pidlCurrent);
           if (filename_is_edit( fodInfos ))
               SendMessageW(fodInfos->DlgInfos.hwndFileName, EM_SETSEL, 0, -1);
+          else
+          {
+              HWND hwnd;
+
+              hwnd = (HWND)SendMessageA(fodInfos->DlgInfos.hwndFileName, CBEM_GETEDITCONTROL, 0, 0);
+              SendMessageW(hwnd, EM_SETSEL, 0, -1);
+          }
         }
       }
       ret = FALSE;
