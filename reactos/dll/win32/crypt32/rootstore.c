@@ -428,53 +428,6 @@ static BOOL import_certs_from_path(LPCSTR path, HCERTSTORE store,
     return ret;
 }
 
-static BOOL WINAPI CRYPT_RootWriteCert(HCERTSTORE hCertStore,
- PCCERT_CONTEXT cert, DWORD dwFlags)
-{
-    /* The root store can't have certs added */
-    return FALSE;
-}
-
-static BOOL WINAPI CRYPT_RootDeleteCert(HCERTSTORE hCertStore,
- PCCERT_CONTEXT cert, DWORD dwFlags)
-{
-    /* The root store can't have certs deleted */
-    return FALSE;
-}
-
-static BOOL WINAPI CRYPT_RootWriteCRL(HCERTSTORE hCertStore,
- PCCRL_CONTEXT crl, DWORD dwFlags)
-{
-    /* The root store can have CRLs added.  At worst, a malicious application
-     * can DoS itself, as the changes aren't persisted in any way.
-     */
-    return TRUE;
-}
-
-static BOOL WINAPI CRYPT_RootDeleteCRL(HCERTSTORE hCertStore,
- PCCRL_CONTEXT crl, DWORD dwFlags)
-{
-    /* The root store can't have CRLs deleted */
-    return FALSE;
-}
-
-static void *rootProvFuncs[] = {
-    NULL, /* CERT_STORE_PROV_CLOSE_FUNC */
-    NULL, /* CERT_STORE_PROV_READ_CERT_FUNC */
-    CRYPT_RootWriteCert,
-    CRYPT_RootDeleteCert,
-    NULL, /* CERT_STORE_PROV_SET_CERT_PROPERTY_FUNC */
-    NULL, /* CERT_STORE_PROV_READ_CRL_FUNC */
-    CRYPT_RootWriteCRL,
-    CRYPT_RootDeleteCRL,
-    NULL, /* CERT_STORE_PROV_SET_CRL_PROPERTY_FUNC */
-    NULL, /* CERT_STORE_PROV_READ_CTL_FUNC */
-    NULL, /* CERT_STORE_PROV_WRITE_CTL_FUNC */
-    NULL, /* CERT_STORE_PROV_DELETE_CTL_FUNC */
-    NULL, /* CERT_STORE_PROV_SET_CTL_PROPERTY_FUNC */
-    NULL, /* CERT_STORE_PROV_CONTROL_FUNC */
-};
-
 static const char * const CRYPT_knownLocations[] = {
  "/etc/ssl/certs/ca-certificates.crt",
  "/etc/ssl/certs",
@@ -783,68 +736,65 @@ static void read_trusted_roots_from_known_locations(HCERTSTORE store)
 
 static HCERTSTORE create_root_store(void)
 {
-    HCERTSTORE root = NULL;
     HCERTSTORE memStore = CertOpenStore(CERT_STORE_PROV_MEMORY,
      X509_ASN_ENCODING, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
 
     if (memStore)
     {
-        CERT_STORE_PROV_INFO provInfo = {
-         sizeof(CERT_STORE_PROV_INFO),
-         sizeof(rootProvFuncs) / sizeof(rootProvFuncs[0]),
-         rootProvFuncs,
-         NULL,
-         0,
-         NULL
-        };
-
         read_trusted_roots_from_known_locations(memStore);
         add_ms_root_certs(memStore);
-        root = CRYPT_ProvCreateStore(0, memStore, &provInfo);
-#ifdef __REACTOS__
+    }
+
+    TRACE("returning %p\n", memStore);
+    return memStore;
+}
+
+static const WCHAR certs_root_pathW[] =
+ {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
+  'S','y','s','t','e','m','C','e','r','t','i','f','i','c','a','t','e','s','\\',
+  'R','o','o','t','\\', 'C','e','r','t','i','f','i','c','a','t','e','s', 0};
+static const WCHAR semaphoreW[] =
+ {'c','r','y','p','t','3','2','_','r','o','o','t','_','s','e','m','a','p','h','o','r','e',0};
+
+void CRYPT_ImportSystemRootCertsToReg(void)
+{
+    HCERTSTORE store = NULL;
+    HKEY key;
+    LONG rc;
+    HANDLE hsem;
+
+    static BOOL root_certs_imported = FALSE;
+
+    if (root_certs_imported)
+        return;
+
+    hsem = CreateSemaphoreW( NULL, 0, 1, semaphoreW);
+    if (!hsem)
+    {
+        ERR("Failed to create semaphore\n");
+        return;
+    }
+
+    if(GetLastError() == ERROR_ALREADY_EXISTS)
+        WaitForSingleObject(hsem, INFINITE);
+    else
+    {
+        if ((store = create_root_store()))
         {
-            HCERTSTORE regStore = CertOpenStore(CERT_STORE_PROV_SYSTEM_W, 0, 0, CERT_SYSTEM_STORE_LOCAL_MACHINE, L"AuthRoot");
-            if (regStore)
+            rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, certs_root_pathW, 0, NULL, 0,
+                KEY_ALL_ACCESS, NULL, &key, 0);
+            if (!rc)
             {
-                HCERTSTORE collStore = CertOpenStore(CERT_STORE_PROV_COLLECTION, 0, 0,
-                    CERT_STORE_CREATE_NEW_FLAG, NULL);
-                CertAddStoreToCollection(collStore, regStore, 0, 0);
-                CertAddStoreToCollection(collStore, root, 0, 0);
-                root = collStore;
+                if (!CRYPT_SerializeContextsToReg(key, REG_OPTION_VOLATILE, pCertInterface, store))
+                    ERR("Failed to import system certs into registry, %08x\n", GetLastError());
+                RegCloseKey(key);
             }
-        }
-#endif
+            CertCloseStore(store, 0);
+        } else
+            ERR("Failed to create root store\n");
     }
-    TRACE("returning %p\n", root);
-    return root;
-}
 
-static WINECRYPT_CERTSTORE *CRYPT_rootStore;
-
-WINECRYPT_CERTSTORE *CRYPT_RootOpenStore(HCRYPTPROV hCryptProv, DWORD dwFlags)
-{
-    TRACE("(%ld, %08x)\n", hCryptProv, dwFlags);
-
-    if (dwFlags & CERT_STORE_DELETE_FLAG)
-    {
-        WARN("root store can't be deleted\n");
-        SetLastError(ERROR_ACCESS_DENIED);
-        return NULL;
-    }
-    if (!CRYPT_rootStore)
-    {
-        HCERTSTORE root = create_root_store();
-
-        InterlockedCompareExchangePointer((PVOID *)&CRYPT_rootStore, root,
-         NULL);
-        if (CRYPT_rootStore != root)
-            CertCloseStore(root, 0);
-    }
-    CRYPT_rootStore->vtbl->addref(CRYPT_rootStore);
-    return CRYPT_rootStore;
-}
-
-void root_store_free(void)
-{
-    CertCloseStore(CRYPT_rootStore, 0);
+    root_certs_imported = TRUE;
+    ReleaseSemaphore(hsem, 1, NULL);
+    CloseHandle(hsem);
 }
