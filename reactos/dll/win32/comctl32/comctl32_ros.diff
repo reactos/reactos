@@ -1,5 +1,5 @@
 diff -pudN e:\wine\dlls\comctl32/comctl32.h e:\reactos\dll\win32\comctl32/comctl32.h
---- e:\wine\dlls\comctl32/comctl32.h	2016-08-14 19:11:25 +0100
+--- e:\wine\dlls\comctl32/comctl32.h	2016-11-16 17:28:41 +0100
 +++ e:\reactos\dll\win32\comctl32/comctl32.h	2014-03-05 11:47:40 +0100
 @@ -53,67 +53,6 @@
  extern HMODULE COMCTL32_hModule DECLSPEC_HIDDEN;
@@ -79,8 +79,8 @@ diff -pudN e:\wine\dlls\comctl32/comctl32.h e:\reactos\dll\win32\comctl32/comctl
  typedef struct _SUBCLASSPROCS {
      SUBCLASSPROC subproc;
 diff -pudN e:\wine\dlls\comctl32/commctrl.c e:\reactos\dll\win32\comctl32/commctrl.c
---- e:\wine\dlls\comctl32/commctrl.c	2016-08-14 19:11:25 +0100
-+++ e:\reactos\dll\win32\comctl32/commctrl.c	2016-03-01 20:00:53 +0100
+--- e:\wine\dlls\comctl32/commctrl.c	2016-11-16 17:28:41 +0100
++++ e:\reactos\dll\win32\comctl32/commctrl.c	2016-02-26 11:19:35 +0100
 @@ -60,6 +60,19 @@
  
  WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
@@ -333,8 +333,8 @@ diff -pudN e:\wine\dlls\comctl32/commctrl.c e:\reactos\dll\win32\comctl32/commct
 +    return TRUE;
 +}
 diff -pudN e:\wine\dlls\comctl32/imagelist.c e:\reactos\dll\win32\comctl32/imagelist.c
---- e:\wine\dlls\comctl32/imagelist.c	2016-08-14 19:11:25 +0100
-+++ e:\reactos\dll\win32\comctl32/imagelist.c	2016-08-18 12:03:13 +0100
+--- e:\wine\dlls\comctl32/imagelist.c	2016-11-16 17:28:41 +0100
++++ e:\reactos\dll\win32\comctl32/imagelist.c	2016-08-15 16:07:59 +0100
 @@ -33,7 +33,7 @@
   *
   *  TODO:
@@ -504,8 +504,8 @@ diff -pudN e:\wine\dlls\comctl32/imagelist.c e:\reactos\dll\win32\comctl32/image
  
 Common subdirectories: e:\wine\dlls\comctl32/lang and e:\reactos\dll\win32\comctl32/lang
 diff -pudN e:\wine\dlls\comctl32/listview.c e:\reactos\dll\win32\comctl32/listview.c
---- e:\wine\dlls\comctl32/listview.c	2016-08-14 19:11:25 +0100
-+++ e:\reactos\dll\win32\comctl32/listview.c	2016-08-18 12:03:13 +0100
+--- e:\wine\dlls\comctl32/listview.c	2016-11-16 17:28:41 +0100
++++ e:\reactos\dll\win32\comctl32/listview.c	2016-08-15 16:09:30 +0100
 @@ -287,6 +287,9 @@ typedef struct tagLISTVIEW_INFO
    COLORREF clrBk;
    COLORREF clrText;
@@ -623,8 +623,8 @@ diff -pudN e:\wine\dlls\comctl32/listview.c e:\reactos\dll\win32\comctl32/listvi
  
  /*	case WM_TIMER: */
 diff -pudN e:\wine\dlls\comctl32/monthcal.c e:\reactos\dll\win32\comctl32/monthcal.c
---- e:\wine\dlls\comctl32/monthcal.c	2016-08-14 19:11:25 +0100
-+++ e:\reactos\dll\win32\comctl32/monthcal.c	2016-08-18 12:03:13 +0100
+--- e:\wine\dlls\comctl32/monthcal.c	2016-11-16 17:28:41 +0100
++++ e:\reactos\dll\win32\comctl32/monthcal.c	2016-08-17 13:29:31 +0100
 @@ -43,6 +43,9 @@
  
  WINE_DEFAULT_DEBUG_CHANNEL(monthcal);
@@ -636,8 +636,8 @@ diff -pudN e:\wine\dlls\comctl32/monthcal.c e:\reactos\dll\win32\comctl32/monthc
  #define MC_SEL_LBUTDOWN	    2	/* Left button pressed in calendar */
  #define MC_PREVPRESSED      4   /* Prev month button pressed */
 diff -pudN e:\wine\dlls\comctl32/propsheet.c e:\reactos\dll\win32\comctl32/propsheet.c
---- e:\wine\dlls\comctl32/propsheet.c	2016-08-14 19:11:25 +0100
-+++ e:\reactos\dll\win32\comctl32/propsheet.c	2016-08-18 12:03:14 +0100
+--- e:\wine\dlls\comctl32/propsheet.c	2016-11-16 17:28:41 +0100
++++ e:\reactos\dll\win32\comctl32/propsheet.c	2016-08-15 16:10:02 +0100
 @@ -2355,12 +2355,19 @@ static void PROPSHEET_SetWizButtons(HWND
    HWND hwndFinish = GetDlgItem(hwndDlg, IDC_FINISH_BUTTON);
    BOOL enable_finish = ((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH);
@@ -693,8 +693,8 @@ diff -pudN e:\wine\dlls\comctl32/propsheet.c e:\reactos\dll\win32\comctl32/props
  
  /******************************************************************************
 diff -pudN e:\wine\dlls\comctl32/rebar.c e:\reactos\dll\win32\comctl32/rebar.c
---- e:\wine\dlls\comctl32/rebar.c	2016-08-14 19:11:25 +0100
-+++ e:\reactos\dll\win32\comctl32/rebar.c	2016-08-18 12:03:14 +0100
+--- e:\wine\dlls\comctl32/rebar.c	2016-11-16 17:28:41 +0100
++++ e:\reactos\dll\win32\comctl32/rebar.c	2016-08-15 16:11:05 +0100
 @@ -50,7 +50,6 @@
   *   - WM_QUERYNEWPALETTE
   *   - WM_RBUTTONDOWN
@@ -908,8 +908,8 @@ diff -pudN e:\wine\dlls\comctl32/rebar.c e:\reactos\dll\win32\comctl32/rebar.c
  
  /*      case WM_VKEYTOITEM:     supported according to ControlSpy */
 diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar.c
---- e:\wine\dlls\comctl32/toolbar.c	2016-08-14 19:11:25 +0100
-+++ e:\reactos\dll\win32\comctl32/toolbar.c	2016-08-18 12:03:14 +0100
+--- e:\wine\dlls\comctl32/toolbar.c	2016-11-16 17:28:41 +0100
++++ e:\reactos\dll\win32\comctl32/toolbar.c	2016-08-15 16:13:17 +0100
 @@ -33,11 +33,9 @@
   *     - TBSTYLE_REGISTERDROP
   *     - TBSTYLE_EX_DOUBLEBUFFER
@@ -1301,8 +1301,8 @@ diff -pudN e:\wine\dlls\comctl32/toolbar.c e:\reactos\dll\win32\comctl32/toolbar
  /*	case WM_WININICHANGE: */
  
 diff -pudN e:\wine\dlls\comctl32/tooltips.c e:\reactos\dll\win32\comctl32/tooltips.c
---- e:\wine\dlls\comctl32/tooltips.c	2016-08-14 19:11:25 +0100
-+++ e:\reactos\dll\win32\comctl32/tooltips.c	2016-08-18 12:03:14 +0100
+--- e:\wine\dlls\comctl32/tooltips.c	2016-11-16 17:28:41 +0100
++++ e:\reactos\dll\win32\comctl32/tooltips.c	2016-08-15 16:13:43 +0100
 @@ -2009,7 +2009,36 @@ TOOLTIPS_NCHitTest (const TOOLTIPS_INFO 
  static LRESULT
  TOOLTIPS_NotifyFormat (TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
@@ -1341,9 +1341,9 @@ diff -pudN e:\wine\dlls\comctl32/tooltips.c e:\reactos\dll\win32\comctl32/toolti
      return 0;
  }
 diff -pudN e:\wine\dlls\comctl32/treeview.c e:\reactos\dll\win32\comctl32/treeview.c
---- e:\wine\dlls\comctl32/treeview.c	2016-08-14 19:11:25 +0100
-+++ e:\reactos\dll\win32\comctl32/treeview.c	2016-08-18 12:03:14 +0100
-@@ -2888,7 +2888,14 @@ TREEVIEW_Refresh(TREEVIEW_INFO *infoPtr,
+--- e:\wine\dlls\comctl32/treeview.c	2016-11-16 17:28:42 +0100
++++ e:\reactos\dll\win32\comctl32/treeview.c	2016-11-16 18:29:47 +0100
+@@ -2909,7 +2909,14 @@ TREEVIEW_Refresh(TREEVIEW_INFO *infoPtr,
  	}
      }
  

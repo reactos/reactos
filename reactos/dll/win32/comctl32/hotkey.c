@@ -131,7 +131,7 @@ HOTKEY_Refresh(HOTKEY_INFO *infoPtr, HDC hdc)
     TRACE("(infoPtr=%p hdc=%p)\n", infoPtr, hdc);
 
     if(!infoPtr->CurrMod && !infoPtr->HotKey) {
-	HOTKEY_DrawHotKey (infoPtr, hdc, infoPtr->strNone, 4);
+	HOTKEY_DrawHotKey (infoPtr, hdc, infoPtr->strNone, lstrlenW(infoPtr->strNone));
 	return;
     }
 	
