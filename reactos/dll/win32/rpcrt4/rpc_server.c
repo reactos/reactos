@@ -1427,13 +1427,11 @@ RPC_STATUS WINAPI RpcServerRegisterAuthInfoW( RPC_WSTR ServerPrincName, ULONG Au
     max_token = package->cbMaxToken;
     FreeContextBuffer(packages);
 
-    auth_info = HeapAlloc(GetProcessHeap(), 0, sizeof(*auth_info));
+    auth_info = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*auth_info));
     if (!auth_info)
         return RPC_S_OUT_OF_RESOURCES;
 
-    if (!ServerPrincName) {
-        auth_info->principal = NULL;
-    }else if (!(auth_info->principal = RPCRT4_strdupW(ServerPrincName))) {
+    if (ServerPrincName && !(auth_info->principal = RPCRT4_strdupW(ServerPrincName))) {
         HeapFree(GetProcessHeap(), 0, auth_info);
         return RPC_S_OUT_OF_RESOURCES;
     }

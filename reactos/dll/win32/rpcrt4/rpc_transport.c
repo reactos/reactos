@@ -260,7 +260,6 @@ static char *ncalrpc_pipe_name(const char *endpoint)
 static RPC_STATUS rpcrt4_ncalrpc_open(RpcConnection* Connection)
 {
   RpcConnection_np *npc = (RpcConnection_np *) Connection;
-  static const char prefix[] = "\\\\.\\pipe\\lrpc\\";
   RPC_STATUS r;
   LPSTR pname;
 
@@ -268,10 +267,7 @@ static RPC_STATUS rpcrt4_ncalrpc_open(RpcConnection* Connection)
   if (npc->pipe)
     return RPC_S_OK;
 
-  /* protseq=ncalrpc: supposed to use NT LPC ports,
-   * but we'll implement it with named pipes for now */
-  pname = I_RpcAllocate(strlen(prefix) + strlen(Connection->Endpoint) + 1);
-  strcat(strcpy(pname, prefix), Connection->Endpoint);
+  pname = ncalrpc_pipe_name(Connection->Endpoint);
   r = rpcrt4_conn_open_pipe(Connection, pname, TRUE);
   I_RpcFree(pname);
 
@@ -280,7 +276,6 @@ static RPC_STATUS rpcrt4_ncalrpc_open(RpcConnection* Connection)
 
 static RPC_STATUS rpcrt4_protseq_ncalrpc_open_endpoint(RpcServerProtseq* protseq, const char *endpoint)
 {
-  static const char prefix[] = "\\\\.\\pipe\\lrpc\\";
   RPC_STATUS r;
   LPSTR pname;
   RpcConnection *Connection;
@@ -301,10 +296,7 @@ static RPC_STATUS rpcrt4_protseq_ncalrpc_open_endpoint(RpcServerProtseq* protseq
   if (r != RPC_S_OK)
       return r;
 
-  /* protseq=ncalrpc: supposed to use NT LPC ports,
-   * but we'll implement it with named pipes for now */
-  pname = I_RpcAllocate(strlen(prefix) + strlen(Connection->Endpoint) + 1);
-  strcat(strcpy(pname, prefix), Connection->Endpoint);
+  pname = ncalrpc_pipe_name(Connection->Endpoint);
   r = rpcrt4_conn_create_pipe(Connection, pname);
   I_RpcFree(pname);
 
@@ -395,7 +387,6 @@ static RPC_STATUS rpcrt4_ncacn_np_open(RpcConnection* Connection)
 
 static RPC_STATUS rpcrt4_protseq_ncacn_np_open_endpoint(RpcServerProtseq *protseq, const char *endpoint)
 {
-  static const char prefix[] = "\\\\.";
   RPC_STATUS r;
   LPSTR pname;
   RpcConnection *Connection;
@@ -416,9 +407,7 @@ static RPC_STATUS rpcrt4_protseq_ncacn_np_open_endpoint(RpcServerProtseq *protse
   if (r != RPC_S_OK)
     return r;
 
-  /* protseq=ncacn_np: named pipes */
-  pname = I_RpcAllocate(strlen(prefix) + strlen(Connection->Endpoint) + 1);
-  strcat(strcpy(pname, prefix), Connection->Endpoint);
+  pname = ncacn_pipe_name(Connection->Endpoint);
   r = rpcrt4_conn_create_pipe(Connection, pname);
   I_RpcFree(pname);
 
@@ -447,12 +436,10 @@ static RPC_STATUS rpcrt4_ncacn_np_handoff(RpcConnection *old_conn, RpcConnection
   DWORD len = MAX_COMPUTERNAME_LENGTH + 1;
   RPC_STATUS status;
   LPSTR pname;
-  static const char prefix[] = "\\\\.";
 
   rpcrt4_conn_np_handoff((RpcConnection_np *)old_conn, (RpcConnection_np *)new_conn);
 
-  pname = I_RpcAllocate(strlen(prefix) + strlen(old_conn->Endpoint) + 1);
-  strcat(strcpy(pname, prefix), old_conn->Endpoint);
+  pname = ncacn_pipe_name(old_conn->Endpoint);
   status = rpcrt4_conn_create_pipe(old_conn, pname);
   I_RpcFree(pname);
 
@@ -500,14 +487,12 @@ static RPC_STATUS rpcrt4_ncalrpc_handoff(RpcConnection *old_conn, RpcConnection 
   DWORD len = MAX_COMPUTERNAME_LENGTH + 1;
   RPC_STATUS status;
   LPSTR pname;
-  static const char prefix[] = "\\\\.\\pipe\\lrpc\\";
 
   TRACE("%s\n", old_conn->Endpoint);
 
   rpcrt4_conn_np_handoff((RpcConnection_np *)old_conn, (RpcConnection_np *)new_conn);
 
-  pname = I_RpcAllocate(strlen(prefix) + strlen(old_conn->Endpoint) + 1);
-  strcat(strcpy(pname, prefix), old_conn->Endpoint);
+  pname = ncalrpc_pipe_name(old_conn->Endpoint);
   status = rpcrt4_conn_create_pipe(old_conn, pname);
   I_RpcFree(pname);
 
