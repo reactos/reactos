@@ -28,7 +28,7 @@ endif()
 add_executable(rpcrt4_winetest ${SOURCE})
 target_link_libraries(rpcrt4_winetest uuid wine ${PSEH_LIB})
 set_module_type(rpcrt4_winetest win32cui)
-add_importlibs(rpcrt4_winetest ole32 rpcrt4 msvcrt kernel32 ntdll)
+add_importlibs(rpcrt4_winetest ole32 rpcrt4 secur32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET rpcrt4_winetest DESTINATION reactos/bin FOR all)
 
 if(NOT MSVC)

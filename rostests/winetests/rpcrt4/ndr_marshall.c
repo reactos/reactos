@@ -2433,11 +2433,9 @@ static void test_MesEncodeFixedBufferHandleCreate(void)
     status = MesEncodeFixedBufferHandleCreate(buffer, 0, &encoded_size, &handle);
 todo_wine
     ok(status == RPC_S_INVALID_ARG, "got %d\n", status);
-if (status == RPC_S_OK)
-{
+if (status == RPC_S_OK) {
     MesHandleFree(handle);
 }
-
     status = MesEncodeFixedBufferHandleCreate(buffer, 32, NULL, &handle);
     ok(status == RPC_S_INVALID_ARG, "got %d\n", status);
 

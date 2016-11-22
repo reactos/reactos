@@ -429,13 +429,10 @@ static void test_I_RpcMapWin32Status(void)
     RPC_STATUS rpc_status;
     BOOL w2k3_up = FALSE;
 
-    /* Windows 2003 and Vista return STATUS_UNSUCCESSFUL if given an unknown status */
+    /* Windows 2003 and above return STATUS_UNSUCCESSFUL if given an unknown status */
     win32status = I_RpcMapWin32Status(9999);
     if (win32status == STATUS_UNSUCCESSFUL)
-    {
-        trace("We are on Windows 2003 or Vista\n");
         w2k3_up = TRUE;
-    }
 
     /* On Windows XP-SP1 and below some statuses are not mapped and return
      * the given status
@@ -810,7 +807,7 @@ static void test_UuidCreateSequential(void)
             /* If the call succeeded, there's a valid (non-multicast) MAC
              * address in the uuid:
              */
-            ok(!(guid1.Data4[2] & 0x01),
+            ok(!(guid1.Data4[2] & 0x01) || broken(guid1.Data4[2] & 0x01), /* Win 8.1 */
                "GUID does not appear to contain a MAC address: %s\n",
                wine_dbgstr_guid(&guid1));
         }
@@ -860,19 +857,12 @@ static void test_RpcServerInqDefaultPrincName(void)
 {
     RPC_STATUS ret;
     RPC_CSTR principal, saved_principal;
-    BOOLEAN (WINAPI *pGetUserNameExA)(EXTENDED_NAME_FORMAT,LPSTR,PULONG);
     char *username;
     ULONG len = 0;
 
-    pGetUserNameExA = (void *)GetProcAddress( LoadLibraryA("secur32.dll"), "GetUserNameExA" );
-    if (!pGetUserNameExA)
-    {
-        win_skip( "GetUserNameExA not exported\n" );
-        return;
-    }
-    pGetUserNameExA( NameSamCompatible, NULL, &len );
+    GetUserNameExA( NameSamCompatible, NULL, &len );
     username = HeapAlloc( GetProcessHeap(), 0, len );
-    pGetUserNameExA( NameSamCompatible, username, &len );
+    GetUserNameExA( NameSamCompatible, username, &len );
 
     ret = RpcServerInqDefaultPrincNameA( 0, NULL );
     ok( ret == RPC_S_UNKNOWN_AUTHN_SERVICE, "got %u\n", ret );

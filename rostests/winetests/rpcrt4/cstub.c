@@ -44,6 +44,7 @@ static GUID IID_if1 = {0x12345678, 1234, 5678, {12,34,56,78,90,0xab,0xcd,0xef}};
 static GUID IID_if2 = {0x12345679, 1234, 5678, {12,34,56,78,90,0xab,0xcd,0xef}};
 static GUID IID_if3 = {0x1234567a, 1234, 5678, {12,34,56,78,90,0xab,0xcd,0xef}};
 static GUID IID_if4 = {0x1234567b, 1234, 5678, {12,34,56,78,90,0xab,0xcd,0xef}};
+static CLSID CLSID_psfact = {0x1234567c, 1234, 5678, {12,34,56,78,90,0xab,0xcd,0xef}};
 
 static int my_alloc_called;
 static int my_free_called;
@@ -458,7 +459,6 @@ static IPSFactoryBuffer *test_NdrDllGetClassObject(void)
     IPSFactoryBuffer *ppsf = NULL;
     const PCInterfaceProxyVtblList* proxy_vtbl;
     const PCInterfaceStubVtblList* stub_vtbl;
-    const CLSID PSDispatch = {0x20420, 0, 0, {0xc0, 0, 0, 0, 0, 0, 0, 0x46}};
     const CLSID CLSID_Unknown = {0x45678, 0x1234, 0x6666, {0xff, 0x67, 0x45, 0x98, 0x76, 0x12, 0x34, 0x56}};
     static const GUID * const interfaces[] = { &IID_if1, &IID_if2, &IID_if3, &IID_if4 };
     UINT i;
@@ -475,13 +475,13 @@ static IPSFactoryBuffer *test_NdrDllGetClassObject(void)
     void *CStd_DebugServerQueryInterface = GetProcAddress(hmod, "CStdStubBuffer_DebugServerQueryInterface");
     void *CStd_DebugServerRelease = GetProcAddress(hmod, "CStdStubBuffer_DebugServerRelease");
 
-    r = NdrDllGetClassObject(&PSDispatch, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
-                             &CLSID_Unknown, &PSFactoryBuffer);
+    r = NdrDllGetClassObject(&CLSID_Unknown, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
+                             &CLSID_psfact, &PSFactoryBuffer);
     ok(r == CLASS_E_CLASSNOTAVAILABLE, "NdrDllGetClassObject with unknown clsid should have returned CLASS_E_CLASSNOTAVAILABLE instead of 0x%x\n", r);
     ok(ppsf == NULL, "NdrDllGetClassObject should have set ppsf to NULL on failure\n");
 
-    r = NdrDllGetClassObject(&PSDispatch, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
-                         &PSDispatch, &PSFactoryBuffer);
+    r = NdrDllGetClassObject(&CLSID_psfact, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
+                             &CLSID_psfact, &PSFactoryBuffer);
 
     ok(r == S_OK, "ret %08x\n", r);
     ok(ppsf != NULL, "ppsf == NULL\n");
@@ -603,10 +603,42 @@ static IPSFactoryBuffer *test_NdrDllGetClassObject(void)
     ok(PSFactoryBuffer.RefCount == 1, "ref count %d\n", PSFactoryBuffer.RefCount);
     IPSFactoryBuffer_Release(ppsf);
 
+    /* One can also search by IID */
+    r = NdrDllGetClassObject(&IID_if3, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
+                             &CLSID_psfact, &PSFactoryBuffer);
+    ok(r == S_OK, "ret %08x\n", r);
+    ok(ppsf != NULL, "ppsf == NULL\n");
+    IPSFactoryBuffer_Release(ppsf);
+
     r = NdrDllGetClassObject(&IID_if3, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
                              NULL, &PSFactoryBuffer);
     ok(r == S_OK, "ret %08x\n", r);
     ok(ppsf != NULL, "ppsf == NULL\n");
+    IPSFactoryBuffer_Release(ppsf);
+
+    /* but only if the PS factory implements it */
+    r = NdrDllGetClassObject(&IID_IDispatch, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
+                             &CLSID_psfact, &PSFactoryBuffer);
+    ok(r == CLASS_E_CLASSNOTAVAILABLE, "ret %08x\n", r);
+
+    /* Create it again to return */
+    r = NdrDllGetClassObject(&CLSID_psfact, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
+                             &CLSID_psfact, &PSFactoryBuffer);
+    ok(r == S_OK, "ret %08x\n", r);
+    ok(ppsf != NULL, "ppsf == NULL\n");
+
+    /* Because this PS factory is not loaded as a dll in the normal way, Windows 8 / 10
+       get confused and will crash when one of the proxies for the delegated ifaces is created.
+       Registering the ifaces fixes this (in fact calling CoRegisterPSClsid() with any IID / CLSID is enough). */
+
+    r = CoRegisterPSClsid(&IID_if1, &CLSID_psfact);
+    ok(r == S_OK, "ret %08x\n", r);
+    r = CoRegisterPSClsid(&IID_if2, &CLSID_psfact);
+    ok(r == S_OK, "ret %08x\n", r);
+    r = CoRegisterPSClsid(&IID_if3, &CLSID_psfact);
+    ok(r == S_OK, "ret %08x\n", r);
+    r = CoRegisterPSClsid(&IID_if4, &CLSID_psfact);
+    ok(r == S_OK, "ret %08x\n", r);
 
     return ppsf;
 }
