@@ -2621,7 +2621,7 @@ static BOOL parse_cie_details(dwarf2_traverse_context_t* ctx, struct frame_info*
 
     /* parse the CIE first */
     version = dwarf2_parse_byte(ctx);
-    if (version != 1 && version != 3)
+    if (version != 1 && version != 3 && version != 4)
     {
         FIXME("unknown CIE version %u at %p\n", version, ctx->data - 1);
         return FALSE;
@@ -2629,12 +2629,21 @@ static BOOL parse_cie_details(dwarf2_traverse_context_t* ctx, struct frame_info*
     augmentation = (const char*)ctx->data;
     ctx->data += strlen(augmentation) + 1;
 
-    info->code_align = dwarf2_leb128_as_unsigned(ctx);
-    info->data_align = dwarf2_leb128_as_signed(ctx);
-    if (version == 1)
-        info->retaddr_reg = dwarf2_parse_byte(ctx);
-    else
-        info->retaddr_reg = dwarf2_leb128_as_unsigned(ctx);
+    switch (version)
+    {
+    case 4:
+        /* skip 'address_size' and 'segment_size' */
+        ctx->data += 2;
+        /* fallthrough */
+    case 1:
+    case 3:
+        info->code_align = dwarf2_leb128_as_unsigned(ctx);
+        info->data_align = dwarf2_leb128_as_signed(ctx);
+        info->retaddr_reg = version == 1 ? dwarf2_parse_byte(ctx) :dwarf2_leb128_as_unsigned(ctx);
+        break;
+    default:
+        ;
+    }
     info->state.cfa_rule = RULE_CFA_OFFSET;
 
     end = NULL;

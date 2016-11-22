@@ -683,7 +683,6 @@ BOOL module_remove(struct process* pcs, struct module* module)
     }
     hash_table_destroy(&module->ht_symbols);
     hash_table_destroy(&module->ht_types);
-    wine_rb_destroy(&module->sources_offsets_tree, NULL, NULL);
     HeapFree(GetProcessHeap(), 0, module->sources);
     HeapFree(GetProcessHeap(), 0, module->addr_sorttab);
     pool_destroy(&module->pool);

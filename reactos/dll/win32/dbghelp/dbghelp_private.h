@@ -397,7 +397,6 @@ struct symt_idx_to_ptr
 };
 #endif
 
-extern const struct wine_rb_functions source_rb_functions DECLSPEC_HIDDEN;
 struct module
 {
     struct process*             process;
