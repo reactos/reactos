@@ -468,7 +468,7 @@ static BOOL UIINSERTOBJECTDLG_OnOpen(InsertObjectDlgInfo* pdlgInfo)
           WideCharToMultiByte(CP_ACP, 0, wcsFile, -1,
               pdlgInfo->lpOleUIInsertObject->lpszFile, pdlgInfo->lpOleUIInsertObject->cchFile, NULL, NULL);
 
-      if (ERROR_SUCCESS == (hres = GetClassFile(wcsFile, &pdlgInfo->lpOleUIInsertObject->clsid)))
+      if (SUCCEEDED(hres = GetClassFile(wcsFile, &pdlgInfo->lpOleUIInsertObject->clsid)))
       {
          if (pdlgInfo->lpOleUIInsertObject->dwFlags & IOF_CREATEFILEOBJECT)
          {
