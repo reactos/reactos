@@ -470,6 +470,7 @@ static void test_msidecomposedesc(void)
     /* test a valid feature descriptor */
     desc = "']gAVn-}f(ZXfeAR6.jiFollowTheWhiteRabbit>3w2x^IGfe?CxI5heAvk.";
     len = 0;
+    prod[0] = feature[0] = comp[0] = 0;
     r = pMsiDecomposeDescriptorA(desc, prod, feature, comp, &len);
     ok(r == ERROR_SUCCESS, "returned an error\n");
     ok(len == strlen(desc), "length was wrong\n");
@@ -484,6 +485,28 @@ static void test_msidecomposedesc(void)
     len = 0;
     r = pMsiDecomposeDescriptorA(desc, prod, feature, comp, &len);
     ok(r == ERROR_INVALID_PARAMETER, "returned wrong error\n");
+
+    /* test a feature descriptor with < instead of > */
+    desc = "']gAVn-}f(ZXfeAR6.jiFollowTheWhiteRabbit<3w2x^IGfe?CxI5heAvk.";
+    len = 0;
+    prod[0] = feature[0] = 0;
+    comp[0] = 0x55;
+    r = pMsiDecomposeDescriptorA(desc, prod, feature, comp, &len);
+    ok(r == ERROR_SUCCESS, "returned an error\n");
+    ok(len == 41, "got %u\n", len);
+    ok(!strcmp(prod,"{90110409-6000-11D3-8CFE-0150048383C9}"), "got '%s'\n", prod);
+    ok(!strcmp(feature,"FollowTheWhiteRabbit"), "got '%s'\n", feature);
+    ok(!comp[0], "got '%s'\n", comp);
+
+    len = 0;
+    prod[0] = feature[0] = 0;
+    comp[0] = 0x55;
+    r = pMsiDecomposeDescriptorA("yh1BVN)8A$!!!!!MKKSkAlwaysInstalledIntl_1033<", prod, feature, comp, &len);
+    ok(r == ERROR_SUCCESS, "got %u\n", r);
+    ok(len == 45, "got %u\n", len);
+    ok(!strcmp(prod, "{90150000-006E-0409-0000-0000000FF1CE}"), "got '%s'\n", prod);
+    ok(!strcmp(feature, "AlwaysInstalledIntl_1033"), "got '%s'\n", feature);
+    ok(!comp[0], "got '%s'\n", comp);
 
     /*
      * Test a valid feature descriptor with the

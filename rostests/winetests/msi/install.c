@@ -5886,6 +5886,57 @@ static void test_shared_component(void)
     DeleteFileA(msifile2);
 }
 
+static void test_remove_upgrade_code(void)
+{
+    UINT r;
+    LONG res;
+    HKEY hkey;
+    REGSAM access = KEY_ALL_ACCESS;
+    DWORD type, size;
+    char buf[1];
+
+    if (is_process_limited())
+    {
+        skip( "process is limited\n" );
+        return;
+    }
+    if (is_wow64) access |= KEY_WOW64_64KEY;
+
+    create_test_files();
+    create_database( msifile, icon_base_tables, sizeof(icon_base_tables)/sizeof(icon_base_tables[0]) );
+
+    MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
+
+    r = MsiInstallProductA( msifile, "FULL=1" );
+    ok(r == ERROR_SUCCESS, "got %u\n", r);
+
+    res = RegOpenKeyExA( HKEY_LOCAL_MACHINE,
+        "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\UpgradeCodes\\51AAE0C44620A5E4788506E91F249BD2",
+        0, access, &hkey );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+
+    type = 0xdeadbeef;
+    buf[0] = 0x55;
+    size = sizeof(buf);
+    res = RegQueryValueExA( hkey, "94A88FD7F6998CE40A22FB59F6B9C2BB", NULL, &type, (BYTE *)buf, &size );
+    ok( res == ERROR_SUCCESS, "got %d\n", res );
+    ok( type == REG_SZ, "got %u\n", type );
+    ok( size == 1, "got %u\n", size );
+    ok( !buf[0], "wrong data\n" );
+    RegCloseKey( hkey );
+
+    r = MsiInstallProductA( msifile, "REMOVE=ALL" );
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    res = RegOpenKeyExA( HKEY_LOCAL_MACHINE,
+        "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\UpgradeCodes\\51AAE0C44620A5E4788506E91F249BD2",
+        0, access, &hkey );
+    ok( res == ERROR_FILE_NOT_FOUND, "got %d\n", res );
+
+    RemoveDirectoryA( "msitest" );
+    DeleteFileA( msifile );
+}
+
 START_TEST(install)
 {
     DWORD len;
@@ -5972,6 +6023,7 @@ START_TEST(install)
     test_mixed_package();
     test_volume_props();
     test_shared_component();
+    test_remove_upgrade_code();
 
     DeleteFileA(log_file);
 
