@@ -188,21 +188,6 @@ static BOOL copy_value(const char *ptr, void **value, DWORD size)
     return TRUE;
 }
 
-static void *d3dcompiler_rb_alloc(size_t size)
-{
-    return HeapAlloc(GetProcessHeap(), 0, size);
-}
-
-static void *d3dcompiler_rb_realloc(void *ptr, size_t size)
-{
-    return HeapReAlloc(GetProcessHeap(), 0, ptr, size);
-}
-
-static void d3dcompiler_rb_free(void *ptr)
-{
-    HeapFree(GetProcessHeap(), 0, ptr);
-}
-
 static int d3dcompiler_shader_reflection_type_compare(const void *key, const struct wine_rb_entry *entry)
 {
     const struct d3dcompiler_shader_reflection_type *t = WINE_RB_ENTRY_VALUE(entry, const struct d3dcompiler_shader_reflection_type, entry);
@@ -237,14 +222,6 @@ static void d3dcompiler_shader_reflection_type_destroy(struct wine_rb_entry *ent
 
     HeapFree(GetProcessHeap(), 0, t);
 }
-
-static const struct wine_rb_functions d3dcompiler_shader_reflection_type_rb_functions =
-{
-    d3dcompiler_rb_alloc,
-    d3dcompiler_rb_realloc,
-    d3dcompiler_rb_free,
-    d3dcompiler_shader_reflection_type_compare,
-};
 
 static void free_signature(struct d3dcompiler_shader_signature *sig)
 {
@@ -1683,11 +1660,7 @@ static HRESULT d3dcompiler_shader_reflection_init(struct d3dcompiler_shader_refl
     reflection->ID3D11ShaderReflection_iface.lpVtbl = &d3dcompiler_shader_reflection_vtbl;
     reflection->refcount = 1;
 
-    if (wine_rb_init(&reflection->types, &d3dcompiler_shader_reflection_type_rb_functions) == -1)
-    {
-        ERR("Failed to initialize type rbtree.\n");
-        return E_FAIL;
-    }
+    wine_rb_init(&reflection->types, d3dcompiler_shader_reflection_type_compare);
 
     hr = dxbc_parse(data, data_size, &src_dxbc);
     if (FAILED(hr))

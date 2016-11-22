@@ -1317,13 +1317,7 @@ static void *atifs_alloc(const struct wined3d_shader_backend_ops *shader_backend
     if (!(priv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*priv))))
         return NULL;
 
-    if (wine_rb_init(&priv->fragment_shaders, &wined3d_ffp_frag_program_rb_functions) == -1)
-    {
-        ERR("Failed to initialize rbtree.\n");
-        HeapFree(GetProcessHeap(), 0, priv);
-        return NULL;
-    }
-
+    wine_rb_init(&priv->fragment_shaders, wined3d_ffp_frag_program_key_compare);
     return priv;
 }
 
