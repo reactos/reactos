@@ -1234,6 +1234,46 @@ static void test_null_filename(void)
     ok(ofnW.nFileExtension == 0, "ofnW.nFileExtension is 0x%x, should be 0\n", ofnW.nFileExtension);
 }
 
+static void test_directory_filename(void)
+{
+    OPENFILENAMEA ofnA = {0};
+    OPENFILENAMEW ofnW = {0};
+    WCHAR filterW[] = {'t','e','x','t','\0','*','.','t','x','t','\0',
+                       'A','l','l','\0','*','\0','\0'};
+    char szInitialDir[MAX_PATH] = {0};
+    WCHAR szInitialDirW[MAX_PATH] = {0};
+    DWORD ret;
+
+    GetWindowsDirectoryA(szInitialDir, MAX_PATH);
+    GetWindowsDirectoryW(szInitialDirW, MAX_PATH);
+
+    szInitialDir[strlen(szInitialDir)] = '\\';
+    szInitialDirW[lstrlenW(szInitialDirW)] = '\\';
+
+    ofnA.lStructSize = OPENFILENAME_SIZE_VERSION_400A;
+    ofnA.lpstrFile = szInitialDir;
+    ofnA.nMaxFile = MAX_PATH;
+    ofnA.lpfnHook = test_null_wndproc;
+    ofnA.Flags = OFN_ENABLEHOOK | OFN_EXPLORER;
+    ofnA.hInstance = GetModuleHandleA(NULL);
+    ofnA.lpstrFilter = "text\0*.txt\0All\0*\0\0";
+    ofnA.lpstrDefExt = NULL;
+    ret = GetOpenFileNameA(&ofnA);
+    todo_wine ok(!ret, "GetOpenFileNameA returned %#x\n", ret);
+
+    /* unicode tests */
+    ofnW.lStructSize = OPENFILENAME_SIZE_VERSION_400W;
+    ofnW.lpstrFile = szInitialDirW;
+    ofnW.nMaxFile = MAX_PATH;
+    ofnW.lpfnHook = test_null_wndproc;
+    ofnW.Flags = OFN_ENABLEHOOK | OFN_EXPLORER;
+    ofnW.hInstance = GetModuleHandleW(NULL);
+    ofnW.lpstrFilter = filterW;
+    ofnW.lpstrDefExt = NULL;
+    ret = GetOpenFileNameW(&ofnW);
+    todo_wine ok(!ret, "GetOpenFileNameW returned %#x\n", ret);
+}
+
 START_TEST(filedlg)
 {
     test_DialogCancel();
@@ -1247,4 +1287,5 @@ START_TEST(filedlg)
     if( resizesupported) test_resizable2();
     test_extension();
     test_null_filename();
+    test_directory_filename();
 }
