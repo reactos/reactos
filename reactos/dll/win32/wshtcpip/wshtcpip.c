@@ -351,6 +351,18 @@ WSHIoctl(
     IN  LPWSAOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine,
     OUT LPBOOL NeedsCompletion)
 {
+    INT res;
+
+    if (IoControlCode == SIO_GET_INTERFACE_LIST)
+    {
+        res = WSHIoctl_GetInterfaceList(
+            OutputBuffer,
+            OutputBufferLength,
+            NumberOfBytesReturned,
+            NeedsCompletion);
+        return res;
+    }
+
     UNIMPLEMENTED
 
     DPRINT1("Ioctl: Unknown IOCTL code: %d\n", IoControlCode);
@@ -405,7 +417,7 @@ SendRequest(
 
     closeTcpFile(TcpCC);
 
-    DPRINT("DeviceIoControl: %d\n", ((Status == TRUE) ? 0 : GetLastError()));
+    DPRINT("DeviceIoControl: %ld\n", ((Status == TRUE) ? 0 : GetLastError()));
 
     if (!Status)
         return WSAEINVAL;
@@ -473,7 +485,7 @@ WSHNotify(
                 }
             }
 
-            DPRINT("Instance: %x Type: %x\n", Context->AddrFileInstance, Context->AddrFileEntityType);
+            DPRINT("Instance: %lx Type: %lx\n", Context->AddrFileInstance, Context->AddrFileEntityType);
 
             tdiFreeThingSet(EntityIDs);
 
@@ -500,7 +512,7 @@ WSHNotify(
             break;
 
         default:
-            DPRINT1("Unwanted notification received! (%d)\n", NotifyEvent);
+            DPRINT1("Unwanted notification received! (%ld)\n", NotifyEvent);
             break;
     }
 
