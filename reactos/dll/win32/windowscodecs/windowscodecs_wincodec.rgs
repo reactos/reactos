@@ -163,6 +163,10 @@ HKCR
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
         }
+        '{114F5598-0B22-40A0-86A1-C83EA495ADBD}' = s 'WIC GIF Encoder'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+        }
         '{C61BFCDF-2E0F-4AAD-A8D7-E06BAFEBCDFE}' = s 'WIC ICO Decoder'
         {
             InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
