@@ -707,7 +707,8 @@ UINT MSI_RecordSetStream(MSIRECORD *rec, UINT iField, IStream *stream)
 UINT MSI_RecordSetStreamFromFileW(MSIRECORD *rec, UINT iField, LPCWSTR szFilename)
 {
     IStream *stm = NULL;
-    HRESULT r;
+    HRESULT hr;
+    UINT ret;
 
     if( (iField == 0) || (iField > rec->count) )
         return ERROR_INVALID_PARAMETER;
@@ -726,16 +727,16 @@ UINT MSI_RecordSetStreamFromFileW(MSIRECORD *rec, UINT iField, LPCWSTR szFilenam
             return ERROR_INVALID_FIELD;
 
         ofs.QuadPart = 0;
-        r = IStream_Seek( stm, ofs, STREAM_SEEK_SET, &cur );
-        if( FAILED( r ) )
+        hr = IStream_Seek( stm, ofs, STREAM_SEEK_SET, &cur );
+        if (FAILED( hr ))
             return ERROR_FUNCTION_FAILED;
     }
     else
     {
         /* read the file into a stream and save the stream in the record */
-        r = RECORD_StreamFromFile(szFilename, &stm);
-        if( r != ERROR_SUCCESS )
-            return r;
+        ret = RECORD_StreamFromFile(szFilename, &stm);
+        if (ret != ERROR_SUCCESS)
+            return ret;
 
         /* if all's good, store it in the record */
         MSI_RecordSetStream(rec, iField, stm);
