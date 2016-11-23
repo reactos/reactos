@@ -1444,6 +1444,12 @@ VfatQueryInformation(
     DPRINT("VfatQueryInformation is called for '%s'\n",
            FileInformationClass >= FileMaximumInformation - 1 ? "????" : FileInformationClassNames[FileInformationClass]);
 
+    if (FCB == NULL)
+    {
+        DPRINT1("IRP_MJ_QUERY_INFORMATION without FCB!\n");
+        IrpContext->Irp->IoStatus.Information = 0;
+        return STATUS_INVALID_PARAMETER;
+    }
 
     SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
     BufferLength = IrpContext->Stack->Parameters.QueryFile.Length;
@@ -1568,6 +1574,13 @@ VfatSetInformation(
 
     DPRINT("FileInformationClass %d\n", FileInformationClass);
     DPRINT("SystemBuffer %p\n", SystemBuffer);
+
+    if (FCB == NULL)
+    {
+        DPRINT1("IRP_MJ_SET_INFORMATION without FCB!\n");
+        IrpContext->Irp->IoStatus.Information = 0;
+        return STATUS_INVALID_PARAMETER;
+    }
 
     /* Special: We should call MmCanFileBeTruncated here to determine if changing
        the file size would be allowed.  If not, we bail with the right error.
