@@ -114,8 +114,6 @@ AcpiOsMapMemory (
 
     DPRINT("AcpiOsMapMemory(phys 0x%p  size 0x%X)\n", phys, length);
 
-    ASSERT(phys);
-
     Address.QuadPart = (ULONG)phys;
     Ptr = MmMapIoSpace(Address, length, MmNonCached);
     if (!Ptr)
