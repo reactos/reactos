@@ -28,15 +28,25 @@ typedef struct {
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
 
+static inline BoolInstance *bool_from_jsdisp(jsdisp_t *jsdisp)
+{
+    return CONTAINING_RECORD(jsdisp, BoolInstance, dispex);
+}
+
+static inline BoolInstance *bool_from_vdisp(vdisp_t *vdisp)
+{
+    return bool_from_jsdisp(vdisp->u.jsdisp);
+}
+
 static inline BoolInstance *bool_this(vdisp_t *jsthis)
 {
-    return is_vclass(jsthis, JSCLASS_BOOLEAN) ? (BoolInstance*)jsthis->u.jsdisp : NULL;
+    return is_vclass(jsthis, JSCLASS_BOOLEAN) ? bool_from_vdisp(jsthis) : NULL;
 }
 
 BOOL bool_obj_value(jsdisp_t *obj)
 {
     assert(is_class(obj, JSCLASS_BOOLEAN));
-    return ((BoolInstance*)obj)->val;
+    return bool_from_jsdisp(obj)->val;
 }
 
 /* ECMA-262 3rd Edition    15.6.4.2 */

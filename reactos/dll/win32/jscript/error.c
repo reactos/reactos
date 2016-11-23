@@ -76,8 +76,8 @@ static HRESULT Error_toString(script_ctx_t *ctx, vdisp_t *vthis, WORD flags,
         if(name_len && msg_len) {
             WCHAR *ptr;
 
-            ptr = jsstr_alloc_buf(name_len + msg_len + 2, &ret);
-            if(ptr) {
+            ret = jsstr_alloc_buf(name_len + msg_len + 2, &ptr);
+            if(ret) {
                 jsstr_flush(name, ptr);
                 ptr[name_len] = ':';
                 ptr[name_len+1] = ' ';

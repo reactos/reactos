@@ -74,7 +74,7 @@ static HRESULT Arguments_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
 
 static void Arguments_destructor(jsdisp_t *jsdisp)
 {
-    ArgumentsInstance *arguments = (ArgumentsInstance*)jsdisp;
+    ArgumentsInstance *arguments = arguments_from_jsdisp(jsdisp);
 
     TRACE("(%p)\n", arguments);
 
@@ -91,7 +91,7 @@ static void Arguments_destructor(jsdisp_t *jsdisp)
 
 static unsigned Arguments_idx_length(jsdisp_t *jsdisp)
 {
-    ArgumentsInstance *arguments = (ArgumentsInstance*)jsdisp;
+    ArgumentsInstance *arguments = arguments_from_jsdisp(jsdisp);
     return arguments->argc;
 }
 
@@ -106,7 +106,7 @@ static jsval_t *get_argument_ref(ArgumentsInstance *arguments, unsigned idx)
 
 static HRESULT Arguments_idx_get(jsdisp_t *jsdisp, unsigned idx, jsval_t *r)
 {
-    ArgumentsInstance *arguments = (ArgumentsInstance*)jsdisp;
+    ArgumentsInstance *arguments = arguments_from_jsdisp(jsdisp);
     jsval_t *ref;
 
     TRACE("%p[%u]\n", arguments, idx);
@@ -120,7 +120,7 @@ static HRESULT Arguments_idx_get(jsdisp_t *jsdisp, unsigned idx, jsval_t *r)
 
 static HRESULT Arguments_idx_put(jsdisp_t *jsdisp, unsigned idx, jsval_t val)
 {
-    ArgumentsInstance *arguments = (ArgumentsInstance*)jsdisp;
+    ArgumentsInstance *arguments = arguments_from_jsdisp(jsdisp);
     jsval_t *ref;
     HRESULT hres;
 
@@ -295,8 +295,8 @@ static HRESULT function_to_string(FunctionInstance *function, jsstr_t **ret)
         WCHAR *ptr;
 
         name_len = strlenW(function->name);
-        ptr = jsstr_alloc_buf((sizeof(native_prefixW)+sizeof(native_suffixW))/sizeof(WCHAR) + name_len, &str);
-        if(!ptr)
+        str = jsstr_alloc_buf((sizeof(native_prefixW)+sizeof(native_suffixW))/sizeof(WCHAR) + name_len, &ptr);
+        if(!str)
             return E_OUTOFMEMORY;
 
         memcpy(ptr, native_prefixW, sizeof(native_prefixW));
@@ -320,7 +320,7 @@ HRESULT Function_invoke(jsdisp_t *func_this, IDispatch *jsthis, WORD flags, unsi
     TRACE("func %p this %p\n", func_this, jsthis);
 
     assert(is_class(func_this, JSCLASS_FUNCTION));
-    function = (FunctionInstance*)func_this;
+    function = function_from_jsdisp(func_this);
 
     flags &= ~DISPATCH_JSCRIPT_INTERNAL_MASK;
     if(function->value_proc)
@@ -523,7 +523,7 @@ HRESULT Function_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned 
         return E_FAIL;
     }
 
-    function = (FunctionInstance*)jsthis->u.jsdisp;
+    function = function_from_jsdisp(jsthis->u.jsdisp);
 
     assert(function->value_proc != NULL);
     return invoke_value_proc(ctx, function, NULL, flags, argc, argv, r);
@@ -570,7 +570,7 @@ static HRESULT Function_get_arguments(script_ctx_t *ctx, jsdisp_t *jsthis, jsval
 
 static void Function_destructor(jsdisp_t *dispex)
 {
-    FunctionInstance *This = (FunctionInstance*)dispex;
+    FunctionInstance *This = function_from_jsdisp(dispex);
 
     if(This->code)
         release_bytecode(This->code);

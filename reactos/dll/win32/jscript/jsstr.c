@@ -62,7 +62,7 @@ static inline void jsstr_init(jsstr_t *str, unsigned len, jsstr_tag_t tag)
     str->ref = 1;
 }
 
-WCHAR *jsstr_alloc_buf(unsigned len, jsstr_t **r)
+jsstr_t *jsstr_alloc_buf(unsigned len, WCHAR **buf)
 {
     jsstr_inline_t *ret;
 
@@ -75,8 +75,8 @@ WCHAR *jsstr_alloc_buf(unsigned len, jsstr_t **r)
 
     jsstr_init(&ret->str, len, JSSTR_INLINE);
     ret->buf[len] = 0;
-    *r = &ret->str;
-    return ret->buf;
+    *buf = ret->buf;
+    return &ret->str;
 }
 
 jsstr_t *jsstr_alloc_len(const WCHAR *buf, unsigned len)
@@ -84,8 +84,8 @@ jsstr_t *jsstr_alloc_len(const WCHAR *buf, unsigned len)
     jsstr_t *ret;
     WCHAR *ptr;
 
-    ptr = jsstr_alloc_buf(len, &ret);
-    if(ptr)
+    ret = jsstr_alloc_buf(len, &ptr);
+    if(ret)
         memcpy(ptr, buf, len*sizeof(WCHAR));
 
     return ret;
@@ -243,7 +243,7 @@ jsstr_t *jsstr_concat(jsstr_t *str1, jsstr_t *str2)
         }
     }
 
-    ptr = jsstr_alloc_buf(len1+len2, &ret);
+    ret = jsstr_alloc_buf(len1+len2, &ptr);
     if(!ret)
         return NULL;
 
@@ -305,14 +305,15 @@ BOOL init_strings(void)
 {
     static const WCHAR NaNW[] = { 'N','a','N',0 };
     static const WCHAR undefinedW[] = {'u','n','d','e','f','i','n','e','d',0};
+    WCHAR *ptr;
 
-    if(!jsstr_alloc_buf(0, &empty_str))
+    if(!(empty_str = jsstr_alloc_buf(0, &ptr)))
         return FALSE;
     if(!(nan_str = jsstr_alloc(NaNW)))
         return FALSE;
     if(!(undefined_str = jsstr_alloc(undefinedW)))
         return FALSE;
-    if(!jsstr_alloc_buf(0, &null_bstr_str))
+    if(!(null_bstr_str = jsstr_alloc_buf(0, &ptr)))
         return FALSE;
      return TRUE;
 }

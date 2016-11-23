@@ -118,7 +118,7 @@ static HRESULT do_regexp_match_next(script_ctx_t *ctx, RegExpInstance *regexp,
 HRESULT regexp_match_next(script_ctx_t *ctx, jsdisp_t *dispex,
         DWORD rem_flags, jsstr_t *jsstr, match_state_t **ret)
 {
-    RegExpInstance *regexp = (RegExpInstance*)dispex;
+    RegExpInstance *regexp = regexp_from_jsdisp(dispex);
     match_state_t *match;
     heap_pool_t *mark;
     const WCHAR *str;
@@ -175,7 +175,7 @@ HRESULT regexp_match_next(script_ctx_t *ctx, jsdisp_t *dispex,
 static HRESULT regexp_match(script_ctx_t *ctx, jsdisp_t *dispex, jsstr_t *jsstr, BOOL gflag,
         match_result_t **match_result, DWORD *result_cnt)
 {
-    RegExpInstance *This = (RegExpInstance*)dispex;
+    RegExpInstance *This = regexp_from_jsdisp(dispex);
     match_result_t *ret = NULL;
     match_state_t *result;
     DWORD i=0, ret_size = 0;
@@ -367,8 +367,8 @@ static HRESULT RegExp_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
     if(f & REG_MULTILINE)
         len++;
 
-    ptr = jsstr_alloc_buf(len, &ret);
-    if(!ptr)
+    ret = jsstr_alloc_buf(len, &ptr);
+    if(!ret)
         return E_OUTOFMEMORY;
 
     *ptr++ = '/';
@@ -589,7 +589,7 @@ static HRESULT RegExp_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsi
 
 static void RegExp_destructor(jsdisp_t *dispex)
 {
-    RegExpInstance *This = (RegExpInstance*)dispex;
+    RegExpInstance *This = regexp_from_jsdisp(dispex);
 
     if(This->jsregexp)
         regexp_destroy(This->jsregexp);
@@ -701,7 +701,7 @@ HRESULT create_regexp_var(script_ctx_t *ctx, jsval_t src_arg, jsval_t *flags_arg
         obj = iface_to_jsdisp(get_object(src_arg));
         if(obj) {
             if(is_class(obj, JSCLASS_REGEXP)) {
-                RegExpInstance *regexp = (RegExpInstance*)obj;
+                RegExpInstance *regexp = regexp_from_jsdisp(obj);
 
                 hres = create_regexp(ctx, regexp->str, regexp->jsregexp->flags, ret);
                 jsdisp_release(obj);
@@ -747,7 +747,7 @@ HRESULT regexp_string_match(script_ctx_t *ctx, jsdisp_t *re, jsstr_t *jsstr, jsv
     static const WCHAR inputW[] = {'i','n','p','u','t',0};
     static const WCHAR lastIndexW[] = {'l','a','s','t','I','n','d','e','x',0};
 
-    RegExpInstance *regexp = (RegExpInstance*)re;
+    RegExpInstance *regexp = regexp_from_jsdisp(re);
     match_result_t *match_result;
     unsigned match_cnt, i;
     const WCHAR *str;

@@ -103,7 +103,7 @@ static HRESULT get_string_flat_val(script_ctx_t *ctx, vdisp_t *jsthis, jsstr_t *
 
 static HRESULT String_get_length(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
-    StringInstance *string = (StringInstance*)jsthis;
+    StringInstance *string = string_from_jsdisp(jsthis);
 
     TRACE("%p\n", jsthis);
 
@@ -167,7 +167,7 @@ static HRESULT do_attributeless_tag_format(script_ctx_t *ctx, vdisp_t *jsthis, j
 
     tagname_len = strlenW(tagname);
 
-    ptr = jsstr_alloc_buf(jsstr_length(str) + 2*tagname_len + 5, &ret);
+    ret = jsstr_alloc_buf(jsstr_length(str) + 2*tagname_len + 5, &ptr);
     if(!ret) {
         jsstr_release(str);
         return E_OUTOFMEMORY;
@@ -217,8 +217,8 @@ static HRESULT do_attribute_tag_format(script_ctx_t *ctx, vdisp_t *jsthis, unsig
         jsstr_t *ret;
         WCHAR *ptr;
 
-        ptr = jsstr_alloc_buf(2*tagname_len + attrname_len + jsstr_length(attr_value) + jsstr_length(str) + 9, &ret);
-        if(ptr) {
+        ret = jsstr_alloc_buf(2*tagname_len + attrname_len + jsstr_length(attr_value) + jsstr_length(str) + 9, &ptr);
+        if(ret) {
             *ptr++ = '<';
             memcpy(ptr, tagname, tagname_len*sizeof(WCHAR));
             ptr += tagname_len;
@@ -368,7 +368,7 @@ static HRESULT String_charCodeAt(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
 static HRESULT String_concat(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
-    jsstr_t *ret, *str;
+    jsstr_t *ret = NULL, *str;
     HRESULT hres;
 
     TRACE("\n");
@@ -425,8 +425,8 @@ static HRESULT String_concat(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, uns
             }
 
             if(SUCCEEDED(hres)) {
-                ptr = jsstr_alloc_buf(len, &ret);
-                if(ptr) {
+                ret = jsstr_alloc_buf(len, &ptr);
+                if(ret) {
                     for(i=0; i < str_cnt; i++)
                         ptr += jsstr_flush(strs[i], ptr);
                 }else {
@@ -478,9 +478,9 @@ static HRESULT String_fontsize(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, u
 static HRESULT String_indexOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
 {
+    unsigned pos = 0, search_len, length;
     jsstr_t *search_jsstr, *jsstr;
     const WCHAR *search_str, *str;
-    int length, pos = 0;
     INT ret = -1;
     HRESULT hres;
 
@@ -490,7 +490,6 @@ static HRESULT String_indexOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, un
     if(FAILED(hres))
         return hres;
 
-    length = jsstr_length(jsstr);
     if(!argc) {
         if(r)
             *r = jsval_number(-1);
@@ -504,6 +503,9 @@ static HRESULT String_indexOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, un
         return hres;
     }
 
+    search_len = jsstr_length(search_jsstr);
+    length = jsstr_length(jsstr);
+
     if(argc >= 2) {
         double d;
 
@@ -512,14 +514,16 @@ static HRESULT String_indexOf(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, un
             pos = is_int32(d) ? min(length, d) : length;
     }
 
-    if(SUCCEEDED(hres)) {
+    if(SUCCEEDED(hres) && length >= search_len) {
+        const WCHAR *end = str+length-search_len;
         const WCHAR *ptr;
 
-        ptr = strstrW(str+pos, search_str);
-        if(ptr)
-            ret = ptr - str;
-        else
-            ret = -1;
+        for(ptr = str+pos; ptr <= end; ptr++) {
+            if(!memcmp(ptr, search_str, search_len*sizeof(WCHAR))) {
+                ret = ptr-str;
+                break;
+            }
+        }
     }
 
     jsstr_release(search_jsstr);
@@ -1394,17 +1398,19 @@ static HRESULT String_toLowerCase(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags
         return hres;
 
     if(r) {
+        unsigned len = jsstr_length(str);
         jsstr_t *ret;
         WCHAR *buf;
 
-        buf = jsstr_alloc_buf(jsstr_length(str), &ret);
-        if(!buf) {
+        ret = jsstr_alloc_buf(len, &buf);
+        if(!ret) {
             jsstr_release(str);
             return E_OUTOFMEMORY;
         }
 
         jsstr_flush(str, buf);
-        strlwrW(buf);
+        for (; len--; buf++) *buf = tolowerW(*buf);
+
         *r = jsval_string(ret);
     }
     jsstr_release(str);
@@ -1424,17 +1430,19 @@ static HRESULT String_toUpperCase(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags
         return hres;
 
     if(r) {
+        unsigned len = jsstr_length(str);
         jsstr_t *ret;
         WCHAR *buf;
 
-        buf = jsstr_alloc_buf(jsstr_length(str), &ret);
-        if(!buf) {
+        ret = jsstr_alloc_buf(len, &buf);
+        if(!ret) {
             jsstr_release(str);
             return E_OUTOFMEMORY;
         }
 
         jsstr_flush(str, buf);
-        struprW(buf);
+        for (; len--; buf++) *buf = toupperW(*buf);
+
         *r = jsval_string(ret);
     }
     jsstr_release(str);
@@ -1464,7 +1472,7 @@ static HRESULT String_localeCompare(script_ctx_t *ctx, vdisp_t *jsthis, WORD fla
 
 static HRESULT String_get_value(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 {
-    StringInstance *This = (StringInstance*)jsthis;
+    StringInstance *This = string_from_jsdisp(jsthis);
 
     TRACE("\n");
 
@@ -1474,7 +1482,7 @@ static HRESULT String_get_value(script_ctx_t *ctx, jsdisp_t *jsthis, jsval_t *r)
 
 static void String_destructor(jsdisp_t *dispex)
 {
-    StringInstance *This = (StringInstance*)dispex;
+    StringInstance *This = string_from_jsdisp(dispex);
 
     jsstr_release(This->str);
     heap_free(This);
@@ -1482,7 +1490,7 @@ static void String_destructor(jsdisp_t *dispex)
 
 static unsigned String_idx_length(jsdisp_t *jsdisp)
 {
-    StringInstance *string = (StringInstance*)jsdisp;
+    StringInstance *string = string_from_jsdisp(jsdisp);
 
     /*
      * NOTE: For invoke version < 2, indexed array is not implemented at all.
@@ -1496,7 +1504,7 @@ static unsigned String_idx_length(jsdisp_t *jsdisp)
 
 static HRESULT String_idx_get(jsdisp_t *jsdisp, unsigned idx, jsval_t *r)
 {
-    StringInstance *string = (StringInstance*)jsdisp;
+    StringInstance *string = string_from_jsdisp(jsdisp);
     jsstr_t *ret;
 
     ret = jsstr_substr(string->str, idx, 1);
@@ -1580,8 +1588,8 @@ static HRESULT StringConstr_fromCharCode(script_ctx_t *ctx, vdisp_t *jsthis, WOR
 
     TRACE("\n");
 
-    ret_str = jsstr_alloc_buf(argc, &ret);
-    if(!ret_str)
+    ret = jsstr_alloc_buf(argc, &ret_str);
+    if(!ret)
         return E_OUTOFMEMORY;
 
     for(i=0; i<argc; i++) {
