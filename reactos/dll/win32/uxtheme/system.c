@@ -699,8 +699,8 @@ OpenThemeDataInternal(PTHEME_FILE ThemeFile, HWND hwnd, LPCWSTR pszClassList, DW
     LPCWSTR pszAppName;
     LPCWSTR pszUseClassList;
     HTHEME hTheme = NULL;
-    TRACE("(%p,%s)\n", hwnd, debugstr_w(pszClassList));
-    
+    TRACE("(%p,%s, %x)\n", hwnd, debugstr_w(pszClassList), flags);
+
     if(!pszClassList)
     {
         SetLastError(E_POINTER);
@@ -894,7 +894,7 @@ HRESULT WINAPI HitTestThemeBackground(HTHEME hTheme, HDC hdc, int iPartId,
     FIXME("%d %d 0x%08x: stub\n", iPartId, iStateId, dwOptions);
     if(!hTheme)
         return E_HANDLE;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    return E_NOTIMPL;
 }
 
 /***********************************************************************
@@ -1320,7 +1320,7 @@ HRESULT WINAPI ParseThemeIniFile(LPCWSTR pszIniFileName, LPWSTR pszUnknown,
                                  PARSETHEMEINIFILEPROC callback, LPVOID lpData)
 {
     FIXME("%s %s: stub\n", debugstr_w(pszIniFileName), debugstr_w(pszUnknown));
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    return E_NOTIMPL;
 }
 
 /**********************************************************************

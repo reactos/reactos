@@ -82,9 +82,9 @@ HRESULT WINAPI DrawThemeParentBackground(HWND hwnd, HDC hdc, RECT *prc)
     if(!hParent)
         hParent = hwnd;
     if(prc) {
-        CopyRect(&rt, prc);
+        rt = *prc;
         MapWindowPoints(hwnd, hParent, (LPPOINT)&rt, 2);
-        
+
         clip = CreateRectRgn(0,0,1,1);
         hasClip = GetClipRgn(hdc, clip);
         if(hasClip == -1)
@@ -126,7 +126,7 @@ HRESULT WINAPI DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId,
     opts.dwFlags = 0;
     if(pClipRect) {
         opts.dwFlags |= DTBG_CLIPRECT;
-        CopyRect(&opts.rcClip, pClipRect);
+        opts.rcClip = *pClipRect;
     }
     return DrawThemeBackgroundEx(hTheme, hdc, iPartId, iStateId, pRect, &opts);
 }
@@ -562,7 +562,7 @@ static HRESULT get_image_part_size (HTHEME hTheme, HDC hdc, int iPartId,
                 int sizingtype = ST_STRETCH;
                 BOOL uniformsizing = FALSE;
 
-                CopyRect(&rcDst, prc);
+                rcDst = *prc;
 
                 dstSize.x = rcDst.right-rcDst.left;
                 dstSize.y = rcDst.bottom-rcDst.top;
@@ -670,7 +670,7 @@ static HRESULT UXTHEME_DrawImageBackground(HTHEME hTheme, HDC hdc, int iPartId,
     }
     oldSrc = SelectObject(hdcSrc, bmpSrc);
 
-    CopyRect(&rcDst, pRect);
+    rcDst = *pRect;
     
     get_transparency (hTheme, iPartId, iStateId, hasAlpha, &transparent,
         &transparentcolor, FALSE);
@@ -743,7 +743,7 @@ static HRESULT UXTHEME_DrawImageBackground(HTHEME hTheme, HDC hdc, int iPartId,
             rcSrc.right = srcSize.x;
             rcSrc.bottom = srcSize.y;
         }
-#endif
+#endif /* __REACTOS__ */
 
         hdcDst = hdc;
         OffsetViewportOrgEx(hdcDst, rcDst.left, rcDst.top, &org);
@@ -851,7 +851,7 @@ draw_error:
     DeleteDC(hdcSrc);
     if (bmpSrcResized) DeleteObject(bmpSrcResized);
     if (hdcOrigSrc) DeleteDC(hdcOrigSrc);
-    CopyRect(pRect, &rcDst);
+    *pRect = rcDst;
     return hr;
 }
 
@@ -989,7 +989,7 @@ static HRESULT UXTHEME_DrawBorderBackground(HTHEME hTheme, HDC hdc, int iPartId,
     HRESULT hr;
     RECT rt;
 
-    CopyRect(&rt, pRect);
+    rt = *pRect;
 
     hr = UXTHEME_DrawBorderRectangle(hTheme, hdc, iPartId, iStateId, &rt, pOptions);
     if(FAILED(hr))
@@ -1031,7 +1031,7 @@ HRESULT WINAPI DrawThemeBackgroundEx(HTHEME hTheme, HDC hdc, int iPartId,
         else
             IntersectClipRect(hdc, opts->rcClip.left, opts->rcClip.top, opts->rcClip.right, opts->rcClip.bottom);
     }
-    CopyRect(&rt, pRect);
+    rt = *pRect;
 
     if(bgtype == BT_IMAGEFILE)
         hr = UXTHEME_DrawImageBackground(hTheme, hdc, iPartId, iStateId, &rt, opts);
@@ -1614,7 +1614,7 @@ HRESULT WINAPI DrawThemeIcon(HTHEME hTheme, HDC hdc, int iPartId, int iStateId,
     FIXME("%d %d: stub\n", iPartId, iStateId);
     if(!hTheme)
         return E_HANDLE;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    return E_NOTIMPL;
 }
 
 /***********************************************************************
@@ -1710,7 +1710,7 @@ HRESULT WINAPI GetThemeBackgroundContentRect(HTHEME hTheme, HDC hdc, int iPartId
         /* If nothing was found, leave unchanged */
     }
 
-    TRACE("left:%d,top:%d,right:%d,bottom:%d\n", pContentRect->left, pContentRect->top, pContentRect->right, pContentRect->bottom);
+    TRACE("%s\n", wine_dbgstr_rect(pContentRect));
 
     return S_OK;
 }
@@ -1758,7 +1758,7 @@ HRESULT WINAPI GetThemeBackgroundExtent(HTHEME hTheme, HDC hdc, int iPartId,
         /* If nothing was found, leave unchanged */
     }
 
-    TRACE("left:%d,top:%d,right:%d,bottom:%d\n", pExtentRect->left, pExtentRect->top, pExtentRect->right, pExtentRect->bottom);
+    TRACE("%s\n", wine_dbgstr_rect(pExtentRect));
 
     return S_OK;
 }
@@ -2015,8 +2015,8 @@ HRESULT WINAPI GetThemeTextExtent(HTHEME hTheme, HDC hdc, int iPartId,
         return E_HANDLE;
 
     if(pBoundingRect)
-        CopyRect(&rt, pBoundingRect);
-            
+        rt = *pBoundingRect;
+
     hr = GetThemeFont(hTheme, hdc, iPartId, iStateId, TMT_FONT, &logfont);
     if(SUCCEEDED(hr)) {
         hFont = CreateFontIndirectW(&logfont);
@@ -2027,7 +2027,7 @@ HRESULT WINAPI GetThemeTextExtent(HTHEME hTheme, HDC hdc, int iPartId,
         oldFont = SelectObject(hdc, hFont);
         
     DrawTextW(hdc, pszText, iCharCount, &rt, dwTextFlags|DT_CALCRECT);
-    CopyRect(pExtentRect, &rt);
+    *pExtentRect = rt;
 
     if(hFont) {
         SelectObject(hdc, oldFont);

@@ -32,7 +32,7 @@ typedef struct _UXINI_FILE {
     LPCWSTR lpIni;
     LPCWSTR lpCurLoc;
     LPCWSTR lpEnd;
-} UXINI_FILE;
+} UXINI_FILE, *PUXINI_FILE;
 
 /***********************************************************************/
 
