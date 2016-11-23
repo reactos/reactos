@@ -1,7 +1,7 @@
 diff -pudN e:\wine\dlls\winhttp/net.c e:\reactos\dll\win32\winhttp/net.c
---- e:\wine\dlls\winhttp/net.c	2015-02-21 17:13:15.365542100 +0100
-+++ e:\reactos\dll\win32\winhttp/net.c	2015-07-20 14:25:14.321893000 +0100
-@@ -73,6 +50,7 @@ static CRITICAL_SECTION cs_gethostbyname
+--- e:\wine\dlls\winhttp/net.c	2016-11-16 17:36:37 +0100
++++ e:\reactos\dll\win32\winhttp/net.c	2016-10-13 11:15:39 +0100
+@@ -50,6 +50,7 @@ static CRITICAL_SECTION cs_gethostbyname
  #endif
  
  /* translate a unix error code into a winsock error code */
@@ -9,7 +9,7 @@ diff -pudN e:\wine\dlls\winhttp/net.c e:\reactos\dll\win32\winhttp/net.c
  static int sock_get_error( int err )
  {
  #if !defined(__MINGW32__) && !defined (_MSC_VER)
-@@ -138,6 +116,15 @@ static int sock_get_error( int err )
+@@ -115,6 +116,15 @@ static int sock_get_error( int err )
  #endif
      return err;
  }
@@ -25,7 +25,47 @@ diff -pudN e:\wine\dlls\winhttp/net.c e:\reactos\dll\win32\winhttp/net.c
  
  static int sock_send(int fd, const void *msg, size_t len, int flags)
  {
-@@ -366,11 +353,25 @@ BOOL netconn_connect( netconn_t *conn, c
+@@ -266,6 +276,28 @@ static BOOL ensure_cred_handle(void)
+     return ret;
+ }
+ 
++#ifdef __REACTOS__
++static BOOL winsock_initialized = FALSE;
++BOOL netconn_init_winsock()
++{
++    WSADATA wsaData;
++    int error;
++    if (!winsock_initialized)
++    {
++        error = WSAStartup(MAKEWORD(1, 1), &wsaData);
++        if (error)
++        {
++            ERR("WSAStartup failed: %d\n", error);
++            return FALSE;
++        }
++        else
++            winsock_initialized = TRUE;
++    }
++    return winsock_initialized;
++}
++
++#endif
++
+ BOOL netconn_init( netconn_t *conn )
+ {
+     memset(conn, 0, sizeof(*conn));
+@@ -281,6 +313,10 @@ void netconn_unload( void )
+ #ifndef HAVE_GETADDRINFO
+     DeleteCriticalSection(&cs_gethostbyname);
+ #endif
++#ifdef __REACTOS__
++    if(winsock_initialized)
++        WSACleanup();
++#endif
+ }
+ 
+ BOOL netconn_connected( netconn_t *conn )
+@@ -343,11 +379,25 @@ BOOL netconn_connect( netconn_t *conn, c
          res = sock_get_error( errno );
          if (res == WSAEWOULDBLOCK || res == WSAEINPROGRESS)
          {
@@ -52,9 +92,9 @@ diff -pudN e:\wine\dlls\winhttp/net.c e:\reactos\dll\win32\winhttp/net.c
              else
                  res = sock_get_error( errno );
 diff -pudN e:\wine\dlls\winhttp/request.c e:\reactos\dll\win32\winhttp/request.c
---- e:\wine\dlls\winhttp/request.c	2015-07-14 15:44:36.027191600 +0100
-+++ e:\reactos\dll\win32\winhttp/request.c	2015-07-20 14:28:31.803188200 +0100
-@@ -1263,6 +1252,7 @@ BOOL WINAPI WinHttpSendRequest( HINTERNE
+--- e:\wine\dlls\winhttp/request.c	2016-11-16 17:36:37 +0100
++++ e:\reactos\dll\win32\winhttp/request.c	2016-02-27 16:08:59 +0100
+@@ -1258,6 +1258,7 @@ BOOL WINAPI WinHttpSendRequest( HINTERNE
      return ret;
  }
  
@@ -62,7 +102,7 @@ diff -pudN e:\wine\dlls\winhttp/request.c e:\reactos\dll\win32\winhttp/request.c
  #define ARRAYSIZE(array) (sizeof(array) / sizeof((array)[0]))
  
  static const WCHAR basicW[]     = {'B','a','s','i','c',0};
-@@ -2754,8 +2744,8 @@ static void free_request( struct winhttp
+@@ -2758,8 +2759,8 @@ static void free_request( struct winhttp
      CloseHandle( request->thread );
      CloseHandle( request->wait );
      CloseHandle( request->cancel );
@@ -73,7 +113,7 @@ diff -pudN e:\wine\dlls\winhttp/request.c e:\reactos\dll\win32\winhttp/request.c
      heap_free( request->buffer );
      heap_free( request->verb );
      VariantClear( &request->data );
-@@ -2959,16 +2949,16 @@ static HRESULT WINAPI winhttp_request_Se
+@@ -3005,16 +3006,16 @@ static HRESULT WINAPI winhttp_request_Se
      {
      case HTTPREQUEST_PROXYSETTING_DEFAULT:
          request->proxy.dwAccessType = WINHTTP_ACCESS_TYPE_DEFAULT_PROXY;
@@ -94,7 +134,7 @@ diff -pudN e:\wine\dlls\winhttp/request.c e:\reactos\dll\win32\winhttp/request.c
          request->proxy.lpszProxy = NULL;
          request->proxy.lpszProxyBypass = NULL;
          break;
-@@ -2977,12 +2967,12 @@ static HRESULT WINAPI winhttp_request_Se
+@@ -3023,12 +3024,12 @@ static HRESULT WINAPI winhttp_request_Se
          request->proxy.dwAccessType = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
          if (V_VT( &proxy_server ) == VT_BSTR)
          {
@@ -110,31 +150,29 @@ diff -pudN e:\wine\dlls\winhttp/request.c e:\reactos\dll\win32\winhttp/request.c
          }
          break;
 diff -pudN e:\wine\dlls\winhttp/session.c e:\reactos\dll\win32\winhttp/session.c
---- e:\wine\dlls\winhttp/session.c	2015-07-14 15:44:36.029191700 +0100
-+++ e:\reactos\dll\win32\winhttp/session.c	2015-07-20 14:29:15.686698200 +0100
-@@ -109,6 +81,9 @@ static void session_destroy( object_head
-     heap_free( session->proxy_username );
-     heap_free( session->proxy_password );
-     heap_free( session );
-+#ifdef __REACTOS__
-+    WSACleanup();
-+#endif
- }
+--- e:\wine\dlls\winhttp/session.c	2016-11-16 17:36:37 +0100
++++ e:\reactos\dll\win32\winhttp/session.c	2016-11-17 00:14:49 +0100
+@@ -197,6 +197,9 @@ static const object_vtbl_t session_vtbl 
+     session_set_option
+ };
  
- static BOOL session_query_option( object_header_t *hdr, DWORD option, LPVOID buffer, LPDWORD buflen )
-@@ -220,6 +195,11 @@ HINTERNET WINAPI WinHttpOpen( LPCWSTR ag
++#ifdef __REACTOS__
++BOOL netconn_init_winsock();
++#endif /* __REACTOS__ */
+ /***********************************************************************
+  *          WinHttpOpen (winhttp.@)
+  */
+@@ -204,6 +207,9 @@ HINTERNET WINAPI WinHttpOpen( LPCWSTR ag
  {
      session_t *session;
      HINTERNET handle = NULL;
 +#ifdef __REACTOS__
-+    WSADATA wsaData;
-+    int error = WSAStartup(MAKEWORD(2, 2), &wsaData);
-+    if (error) ERR("WSAStartup failed: %d\n", error);
++    if (!netconn_init_winsock()) return NULL;
 +#endif
  
      TRACE("%s, %u, %s, %s, 0x%08x\n", debugstr_w(agent), access, debugstr_w(proxy), debugstr_w(bypass), flags);
  
-@@ -246,14 +226,14 @@ HINTERNET WINAPI WinHttpOpen( LPCWSTR ag
+@@ -230,14 +236,14 @@ HINTERNET WINAPI WinHttpOpen( LPCWSTR ag
          session->access = info.dwAccessType;
          if (info.lpszProxy && !(session->proxy_server = strdupW( info.lpszProxy )))
          {
@@ -153,7 +191,7 @@ diff -pudN e:\wine\dlls\winhttp/session.c e:\reactos\dll\win32\winhttp/session.c
              goto end;
          }
      }
-@@ -624,7 +604,7 @@ static WCHAR *blob_to_str( DWORD encodin
+@@ -610,7 +616,7 @@ static WCHAR *blob_to_str( DWORD encodin
  
  static BOOL convert_sockaddr( const struct sockaddr *addr, SOCKADDR_STORAGE *addr_storage )
  {
