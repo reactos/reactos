@@ -668,7 +668,7 @@ static void test_aggregation(void)
 
     hres = CoCreateInstance(&CLSID_JScript, (IUnknown*)0xdeadbeef, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
             &IID_IUnknown, (void**)&unk);
-    ok(hres == CLASS_E_NOAGGREGATION || broken(E_INVALIDARG) /* win2k */,
+    ok(hres == CLASS_E_NOAGGREGATION,
        "CoCreateInstance failed: %08x, expected CLASS_E_NOAGGREGATION\n", hres);
     ok(!unk || broken(unk != NULL), "unk = %p\n", unk);
 }

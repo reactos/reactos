@@ -629,6 +629,12 @@ tmp = "abcd".indexOf();
 ok(tmp == -1, "indexOf = " + tmp);
 tmp = "abcd".indexOf("b", bigInt);
 ok(tmp == -1, "indexOf = " + tmp);
+tmp = "abcd".indexOf("abcd",0);
+ok(tmp === 0, "indexOf = " + tmp);
+tmp = "abcd".indexOf("abcd",1);
+ok(tmp === -1, "indexOf = " + tmp);
+tmp = ("ab" + String.fromCharCode(0) + "cd").indexOf(String.fromCharCode(0));
+ok(tmp === 2, "indexOf = " + tmp);
 
 tmp = "abcd".lastIndexOf("bc",1);
 ok(tmp === 1, "lastIndexOf = " + tmp);
@@ -650,6 +656,12 @@ tmp = strObj.lastIndexOf("b");
 ok(tmp === 1, "lastIndexOf = " + tmp);
 tmp = "bbb".lastIndexOf("b", bigInt);
 ok(tmp === 2, "lastIndexOf = " + tmp);
+tmp = "abcd".lastIndexOf("abcd",4);
+ok(tmp === 0, "lastIndexOf = " + tmp);
+tmp = "abcd".lastIndexOf("abcd",0);
+ok(tmp === 0, "lastIndexOf = " + tmp);
+tmp = ("ab" + String.fromCharCode(0) + "cd").lastIndexOf(String.fromCharCode(0));
+ok(tmp === 2, "lastIndexOf = " + tmp);
 
 tmp = "".toLowerCase();
 ok(tmp === "", "''.toLowerCase() = " + tmp);
@@ -661,6 +673,8 @@ tmp = "tEsT".toLowerCase();
 ok(tmp === "test", "''.toLowerCase() = " + tmp);
 tmp = "tEsT".toLowerCase(3);
 ok(tmp === "test", "''.toLowerCase(3) = " + tmp);
+tmp = ("tE" + String.fromCharCode(0) + "sT").toLowerCase();
+ok(tmp === "te" + String.fromCharCode(0) + "st", "''.toLowerCase() = " + tmp);
 
 tmp = "".toUpperCase();
 ok(tmp === "", "''.toUpperCase() = " + tmp);
@@ -672,6 +686,8 @@ tmp = "tEsT".toUpperCase();
 ok(tmp === "TEST", "''.toUpperCase() = " + tmp);
 tmp = "tEsT".toUpperCase(3);
 ok(tmp === "TEST", "''.toUpperCase(3) = " + tmp);
+tmp = ("tE" + String.fromCharCode(0) + "sT").toUpperCase();
+ok(tmp === "TE" + String.fromCharCode(0) + "ST", "''.toUpperCase() = " + tmp);
 
 tmp = "".anchor();
 ok(tmp === "<A NAME=\"undefined\"></A>", "''.anchor() = " + tmp);
@@ -916,6 +932,11 @@ tmp = arr.toString();
 ok(tmp === "1,2,,false,,,a", "arr.toString() = " + tmp);
 tmp = arr.toString("test");
 ok(tmp === "1,2,,false,,,a", "arr.toString() = " + tmp);
+
+arr = ["a", "b"];
+
+tmp = arr.join(String.fromCharCode(0));
+ok(tmp === "a" + String.fromCharCode(0) + "b", "arr.join(String.fromCharCode(0)) = " + tmp);
 
 arr = new Object();
 arr.length = 3;
@@ -2129,6 +2150,23 @@ ok(Date.parse("Tue, 22 Mar 2016 09:57:55 -0300") === Date.parse("Tue, 22 Mar 201
         "Date.parse(\"Tue, 22 Mar 2016 09:57:55 -0300\") = " + Date.parse("Tue, 22 Mar 2016 09:57:55 -0300"));
 ok(Date.parse("Tue, 22 Mar 2016 09:57:55 +0400") === Date.parse("Tue, 22 Mar 2016 09:57:55 UTC+0400"),
         "Date.parse(\"Tue, 22 Mar 2016 09:57:55 +0400\") = " + Date.parse("Tue, 22 Mar 2016 09:57:55 +0400"));
+
+tmp = (new Date()).toGMTString();
+ok(tmp.indexOf(String.fromCharCode(0)) == -1, "invalid null byte");
+tmp = (new Date()).toLocaleDateString();
+ok(tmp.indexOf(String.fromCharCode(0)) == -1, "invalid null byte");
+tmp = (new Date(1600, 1, 1, 0, 0, 0, 0)).toLocaleDateString();
+ok(tmp.indexOf(String.fromCharCode(0)) == -1, "invalid null byte");
+tmp = (new Date(1600, 1, 1, 0, 0, 0, 0)).toLocaleString();
+ok(tmp.indexOf(String.fromCharCode(0)) == -1, "invalid null byte");
+tmp = (new Date()).toLocaleTimeString();
+ok(tmp.indexOf(String.fromCharCode(0)) == -1, "invalid null byte");
+tmp = (new Date()).toString();
+ok(tmp.indexOf(String.fromCharCode(0)) == -1, "invalid null byte");
+tmp = (new Date()).toTimeString();
+ok(tmp.indexOf(String.fromCharCode(0)) == -1, "invalid null byte");
+tmp = (new Date()).toUTCString();
+ok(tmp.indexOf(String.fromCharCode(0)) == -1, "invalid null byte");
 
 ok(typeof(Math.PI) === "number", "typeof(Math.PI) = " + typeof(Math.PI));
 ok(Math.floor(Math.PI*100) === 314, "Math.PI = " + Math.PI);
