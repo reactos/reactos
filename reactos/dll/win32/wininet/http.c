@@ -2619,7 +2619,16 @@ static DWORD refill_read_buffer(http_request_t *req, blocking_mode_t blocking_mo
 /* return the size of data available to be read immediately (the read section must be held) */
 static DWORD get_avail_data( http_request_t *req )
 {
-    return req->read_size + req->data_stream->vtbl->get_avail_data(req->data_stream, req);
+    DWORD avail = req->read_size;
+
+    /*
+     * Different Windows versions have different limits of returned data, but all
+     * of them return no more than centrain amount. We use READ_BUFFER_SIZE as a limit.
+     */
+    if(avail < READ_BUFFER_SIZE)
+        avail += req->data_stream->vtbl->get_avail_data(req->data_stream, req);
+
+    return min(avail, READ_BUFFER_SIZE);
 }
 
 static DWORD netconn_get_avail_data(data_stream_t *stream, http_request_t *req)
