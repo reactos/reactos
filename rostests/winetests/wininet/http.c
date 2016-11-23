@@ -205,7 +205,7 @@ static BOOL proxy_active(void)
 static void _test_status_code(unsigned line, HINTERNET req, DWORD excode, BOOL is_todo)
 {
     DWORD code, size, index;
-    char exbuf[10], bufa[10];
+    char exbuf[12], bufa[10];
     WCHAR bufw[10];
     BOOL res;
 
@@ -4904,11 +4904,10 @@ static void open_read_test_request(int port, test_request_t *req, const char *re
     CHECK_NOTIFIED(INTERNET_STATUS_REQUEST_COMPLETE);
 }
 
-#define readex_expect_sync_data(a,b,c,d,e) _readex_expect_sync_data(__LINE__,a,b,c,d,e)
-static void _readex_expect_sync_data(unsigned line, HINTERNET req, DWORD flags, INTERNET_BUFFERSW *buf,
-        DWORD buf_size, const char *exdata)
+#define readex_expect_sync_data_len(a,b,c,d,e,f) _readex_expect_sync_data_len(__LINE__,a,b,c,d,e,f)
+static void _readex_expect_sync_data_len(unsigned line, HINTERNET req, DWORD flags, INTERNET_BUFFERSW *buf,
+        DWORD buf_size, const char *exdata, DWORD len)
 {
-    DWORD len = strlen(exdata);
     BOOL ret;
 
     SET_EXPECT(INTERNET_STATUS_REQUEST_COMPLETE);
@@ -4918,10 +4917,17 @@ static void _readex_expect_sync_data(unsigned line, HINTERNET req, DWORD flags, 
     ret = InternetReadFileExW(req, buf, flags, 0xdeadbeef);
     ok_(__FILE__,line)(ret, "InternetReadFileExW failed: %u\n", GetLastError());
     ok_(__FILE__,line)(buf->dwBufferLength == len, "dwBufferLength = %u, expected %u\n", buf->dwBufferLength, len);
-    if(len)
+    if(len && exdata)
         ok_(__FILE__,line)(!memcmp(buf->lpvBuffer, exdata, len), "Unexpected data\n");
 
     CLEAR_NOTIFIED(INTERNET_STATUS_REQUEST_COMPLETE);
+}
+
+#define readex_expect_sync_data(a,b,c,d,e) _readex_expect_sync_data(__LINE__,a,b,c,d,e)
+static void _readex_expect_sync_data(unsigned line, HINTERNET req, DWORD flags, INTERNET_BUFFERSW *buf,
+        DWORD buf_size, const char *exdata)
+{
+    _readex_expect_sync_data_len(line, req, flags, buf, buf_size, exdata, strlen(exdata));
 }
 
 static void send_response_and_wait(const char *response, BOOL close_connection, INTERNET_BUFFERSW *buf)
@@ -4948,6 +4954,17 @@ static void send_response_and_wait(const char *response, BOOL close_connection, 
     ok(!*(int*)buf->lpvBuffer, "buffer data changed\n");
 }
 
+static void send_response_len_and_wait(unsigned len, BOOL close_connection, INTERNET_BUFFERSW *buf)
+{
+    char *response;
+
+    response = HeapAlloc(GetProcessHeap(), 0, len+1);
+    memset(response, 'x', len);
+    response[len] = 0;
+    send_response_and_wait(response, close_connection, buf);
+    HeapFree(GetProcessHeap(), 0, response);
+}
+
 static void readex_expect_async(HINTERNET req, DWORD flags, INTERNET_BUFFERSW *buf, DWORD buf_size)
 {
     BOOL ret;
@@ -4960,11 +4977,26 @@ static void readex_expect_async(HINTERNET req, DWORD flags, INTERNET_BUFFERSW *b
     ok(!*(int*)buf->lpvBuffer, "buffer data changed\n");
 }
 
+#define expect_data_available(a,b) _expect_data_available(__LINE__,a,b)
+static DWORD _expect_data_available(unsigned line, HINTERNET req, int exsize)
+{
+    DWORD size = 0;
+    BOOL res;
+
+    res = InternetQueryDataAvailable(req, &size, 0, 0);
+    ok_(__FILE__,line)(res, "InternetQueryDataAvailable failed: %u\n", GetLastError());
+    if(exsize != -1)
+        ok_(__FILE__,line)(size  == exsize, "size = %u, expected %u\n", size, exsize);
+
+    return size;
+}
+
 static void test_http_read(int port)
 {
     INTERNET_BUFFERSW ib;
     test_request_t req;
-    char buf[4096];
+    char buf[24000];
+    DWORD avail;
 
     if(!is_ie7plus)
         return;
@@ -5040,6 +5072,27 @@ static void test_http_read(int port)
     readex_expect_sync_data(req.request, IRF_NO_WAIT, &ib, sizeof(buf), "");
 
     close_async_handle(req.session, hCompleteEvent, 2);
+
+    trace("Testing InternetQueryDataAvailable...\n");
+
+    open_read_test_request(port, &req,
+                           "HTTP/1.1 200 OK\r\n"
+                           "Server: winetest\r\n"
+                           "\r\n"
+                           "123");
+    expect_data_available(req.request, 3);
+    readex_expect_sync_data(req.request, IRF_NO_WAIT, &ib, sizeof(buf), "123");
+    readex_expect_async(req.request, IRF_NO_WAIT, &ib, sizeof(buf));
+
+    send_response_len_and_wait(20000, TRUE, &ib);
+    avail = expect_data_available(req.request, -1);
+    ok(avail < 17000, "avail = %u\n", avail);
+
+    SET_WINE_ALLOW(INTERNET_STATUS_CLOSING_CONNECTION);
+    SET_WINE_ALLOW(INTERNET_STATUS_CONNECTION_CLOSED);
+    close_async_handle(req.session, hCompleteEvent, 2);
+    todo_wine CHECK_NOT_NOTIFIED(INTERNET_STATUS_CLOSING_CONNECTION);
+    todo_wine CHECK_NOT_NOTIFIED(INTERNET_STATUS_CONNECTION_CLOSED);
 
     CloseHandle(hCompleteEvent);
     CloseHandle(conn_wait_event);
