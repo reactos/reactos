@@ -930,6 +930,8 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
             owner = parent;
         }
         ////// Wine'ie babies need to fix your code!!!! CORE-11633
+        if (!parent) parent = GetAncestor( owner, GA_ROOT );
+
         if (parent)
         {
            owner = parent;
