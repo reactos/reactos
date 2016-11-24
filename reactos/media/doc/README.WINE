@@ -27,18 +27,18 @@ reactos/dll/directx/wine/d3d9           # Synced to WineStaging-1.9.4
 reactos/dll/directx/wine/d3dcompiler_43 # Synced to WineStaging-1.9.4
 reactos/dll/directx/wine/d3drm          # Synced to WineStaging-1.9.23
 reactos/dll/directx/wine/d3dx9_24 => 43 # Synced to WineStaging-1.9.4
-reactos/dll/directx/wine/d3dxof         # Synced to WineStaging-1.9.16
+reactos/dll/directx/wine/d3dxof         # Synced to WineStaging-1.9.23
 reactos/dll/directx/wine/ddraw          # Synced to WineStaging-1.9.4
-reactos/dll/directx/wine/devenum        # Synced to WineStaging-1.9.16
+reactos/dll/directx/wine/devenum        # Synced to WineStaging-1.9.23
 reactos/dll/directx/wine/dinput         # Synced to WineStaging-1.9.23
-reactos/dll/directx/wine/dinput8        # Synced to WineStaging-1.9.11
+reactos/dll/directx/wine/dinput8        # Synced to WineStaging-1.9.23
 reactos/dll/directx/wine/dmusic         # Synced to WineStaging-1.9.23
-reactos/dll/directx/wine/dplay          # Synced to WineStaging-1.9.11
-reactos/dll/directx/wine/dplayx         # Synced to WineStaging-1.9.16
+reactos/dll/directx/wine/dplay          # Synced to WineStaging-1.9.23
+reactos/dll/directx/wine/dplayx         # Synced to WineStaging-1.9.23
 reactos/dll/directx/wine/dsound         # Synced to Wine-1.3.29
-reactos/dll/directx/wine/dxdiagn        # Synced to WineStaging-1.9.11
-reactos/dll/directx/wine/msdmo          # Synced to WineStaging-1.9.11
-reactos/dll/directx/wine/qedit          # Synced to WineStaging-1.9.16
+reactos/dll/directx/wine/dxdiagn        # Synced to WineStaging-1.9.23
+reactos/dll/directx/wine/msdmo          # Synced to WineStaging-1.9.23
+reactos/dll/directx/wine/qedit          # Synced to WineStaging-1.9.23
 reactos/dll/directx/wine/quartz         # Synced to WineStaging-1.9.23
 reactos/dll/directx/wine/wined3d        # Synced to WineStaging-1.9.4
 
