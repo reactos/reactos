@@ -789,8 +789,8 @@ IntDispatchMessage(PMSG pMsg)
     {
         Window->state2 &= ~WNDS2_WMPAINTSENT;
         /* send a WM_ERASEBKGND if the non-client area is still invalid */
-        ERR("Message WM_PAINT\n");
-        co_IntPaintWindows( Window, RDW_NOCHILDREN, FALSE );
+        ERR("Message WM_PAINT count %d Internal Paint Set? %s\n",Window->head.pti->cPaintsReady, Window->state & WNDS_INTERNALPAINT ? "TRUE" : "FALSE");
+        IntPaintWindow( Window );
     }
 
     return retval;
