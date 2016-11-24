@@ -593,7 +593,7 @@ ssl_handshake(RD_BOOL compat_mode)
 			read_buf_size += 1024;
 		}
 
-		size = recv(g_sock, read_buf+in_bufs[0].cbBuffer, read_buf_size-in_bufs[0].cbBuffer, 0);
+		size = recv(g_sock, (char *)read_buf + in_bufs[0].cbBuffer, read_buf_size - in_bufs[0].cbBuffer, 0);
 		if (size < 1)
 		{
 			error("recv failed: %d (%s)\n", size, TCP_STRERROR);
