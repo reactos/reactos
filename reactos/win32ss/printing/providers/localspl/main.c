@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Local Spooler
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Main functions
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2016 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -12,18 +12,7 @@ WCHAR wszSpoolDirectory[MAX_PATH];
 DWORD cchSpoolDirectory;
 
 // Global Constants
-const WCHAR wszCurrentEnvironment[] =
-#if defined(_X86_)
-    L"Windows NT x86";
-#elif defined(_AMD64_)
-    L"Windows x64";
-#elif defined(_ARM_)
-    L"Windows ARM";
-#else
-    #error Unsupported architecture
-#endif
-
-const DWORD cbCurrentEnvironment = sizeof(wszCurrentEnvironment);
+#include <prtprocenv.h>
 
 const WCHAR wszDefaultDocumentName[] = L"Local Downlevel Document";
 

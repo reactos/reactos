@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Local Spooler
  * LICENSE:     GNU LGPL v2.1 or any later version as published by the Free Software Foundation
  * PURPOSE:     Functions related to Print Processors
- * COPYRIGHT:   Copyright 2015 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2015-2016 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -17,7 +17,7 @@ static LIST_ENTRY _PrintProcessorList;
  * Checks a supplied pEnvironment variable for validity and opens its registry key.
  *
  * @param pEnvironment
- * The pEnvironment variable to check. Can be NULL to use the current environment.
+ * The pEnvironment variable to check.
  *
  * @param hKey
  * On success, this variable will contain a HKEY to the opened registry key of the environment.
@@ -36,9 +36,12 @@ _OpenEnvironment(PCWSTR pEnvironment, PHKEY hKey)
     DWORD dwErrorCode;
     PWSTR pwszEnvironmentKey = NULL;
 
-    // Use the current environment if none was supplied.
+    // Sanity checks
     if (!pEnvironment)
-        pEnvironment = wszCurrentEnvironment;
+    {
+        dwErrorCode = ERROR_INVALID_ENVIRONMENT;
+        goto Cleanup;
+    }
 
     // Construct the registry key of the demanded environment.
     cchEnvironment = wcslen(pEnvironment);
@@ -140,7 +143,7 @@ InitializePrintProcessorList()
     InitializeListHead(&_PrintProcessorList);
     
     // Prepare the path to the Print Processor directory.
-    if (!LocalGetPrintProcessorDirectory(NULL, NULL, 1, (PBYTE)wszPrintProcessorPath, sizeof(wszPrintProcessorPath), &cchPrintProcessorPath))
+    if (!LocalGetPrintProcessorDirectory(NULL, (PWSTR)wszCurrentEnvironment, 1, (PBYTE)wszPrintProcessorPath, sizeof(wszPrintProcessorPath), &cchPrintProcessorPath))
     {
         dwErrorCode = GetLastError();
         goto Cleanup;
@@ -155,7 +158,7 @@ InitializePrintProcessorList()
     ++cchPrintProcessorPath;
 
     // Open the environment registry key.
-    dwErrorCode = _OpenEnvironment(NULL, &hKey);
+    dwErrorCode = _OpenEnvironment(wszCurrentEnvironment, &hKey);
     if (dwErrorCode != ERROR_SUCCESS)
     {
         ERR("_OpenEnvironment failed with error %lu!\n", dwErrorCode);
@@ -602,7 +605,6 @@ Cleanup:
  *
  * @param pEnvironment
  * One of the predefined operating system and architecture "environment" strings (like "Windows NT x86").
- * Alternatively, NULL to output the Print Processor directory of the current environment.
  *
  * @param Level
  * The level of the (non-existing) structure supplied through pPrintProcessorInfo. This must be 1.
@@ -632,20 +634,6 @@ LocalGetPrintProcessorDirectory(PWSTR pName, PWSTR pEnvironment, DWORD Level, PB
     DWORD dwErrorCode;
     HKEY hKey = NULL;
     PWSTR pwszDirectory = (PWSTR)pPrintProcessorInfo;
-
-    // Sanity checks
-    if (Level != 1)
-    {
-        dwErrorCode = ERROR_INVALID_LEVEL;
-        goto Cleanup;
-    }
-
-    if (!pcbNeeded)
-    {
-        // This error is also caught by RPC and returned as RPC_X_NULL_REF_POINTER.
-        dwErrorCode = ERROR_INVALID_PARAMETER;
-        goto Cleanup;
-    }
 
     // Verify pEnvironment and open its registry key.
     dwErrorCode = _OpenEnvironment(pEnvironment, &hKey);

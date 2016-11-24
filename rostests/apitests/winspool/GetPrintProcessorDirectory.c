@@ -21,8 +21,10 @@ START_TEST(GetPrintProcessorDirectoryA)
 
     // Try with an invalid level, this needs to be caught first.
     SetLastError(0xDEADBEEF);
-    ok(!GetPrintProcessorDirectoryA(NULL, NULL, 0, NULL, 0, NULL), "GetPrintProcessorDirectoryA returns TRUE!\n");
+    cbNeeded = 0xDEADBEEF;
+    ok(!GetPrintProcessorDirectoryA(NULL, NULL, 0, NULL, 0, &cbNeeded), "GetPrintProcessorDirectoryA returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_LEVEL, "GetPrintProcessorDirectoryA returns error %lu!\n", GetLastError());
+    ok(cbNeeded == 0xDEADBEEF, "cbNeeded is %lu!\n", cbNeeded);
 
     // Now try with valid level, but no pcbNeeded.
     SetLastError(0xDEADBEEF);
@@ -77,8 +79,10 @@ START_TEST(GetPrintProcessorDirectoryW)
 
     // Try with an invalid level, this needs to be caught first.
     SetLastError(0xDEADBEEF);
-    ok(!GetPrintProcessorDirectoryW(NULL, NULL, 0, NULL, 0, NULL), "GetPrintProcessorDirectoryW returns TRUE!\n");
+    cbNeeded = 0xDEADBEEF;
+    ok(!GetPrintProcessorDirectoryW(NULL, NULL, 0, NULL, 0, &cbNeeded), "GetPrintProcessorDirectoryW returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_LEVEL, "GetPrintProcessorDirectoryW returns error %lu!\n", GetLastError());
+    ok(cbNeeded == 0xDEADBEEF, "cbNeeded is %lu!\n", cbNeeded);
 
     // Now try with valid level, but no pcbNeeded.
     SetLastError(0xDEADBEEF);

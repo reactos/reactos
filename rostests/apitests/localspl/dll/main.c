@@ -67,6 +67,22 @@ GetLocalsplFuncs(LPPRINTPROVIDOR pp)
     return TRUE;
 }
 
+PVOID
+GetSpoolssFunc(const char* FunctionName)
+{
+    HMODULE hSpoolss;
+
+    // Get us a handle to the loaded spoolss.dll.
+    hSpoolss = GetModuleHandleW(L"spoolss");
+    if (!hSpoolss)
+    {
+        skip("GetModuleHandleW failed with error %u!\n", GetLastError());
+        return FALSE;
+    }
+
+    return GetProcAddress(hSpoolss, FunctionName);
+}
+
 // Running the tests from the injected DLL and redirecting their output to the pipe.
 BOOL WINAPI
 DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)

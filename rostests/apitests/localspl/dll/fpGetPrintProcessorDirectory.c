@@ -18,17 +18,24 @@
 #include "../localspl_apitest.h"
 #include <spoolss.h>
 
+typedef BOOL (WINAPI *PGetPrintProcessorDirectoryW)(LPWSTR, LPWSTR, DWORD, LPBYTE, DWORD, LPDWORD);
 extern BOOL GetLocalsplFuncs(LPPRINTPROVIDOR pp);
+extern PVOID GetSpoolssFunc(const char* FunctionName);
 
 START_TEST(fpGetPrintProcessorDirectory)
 {
     DWORD cbNeeded;
     DWORD cbTemp;
     DWORD dwReturned;
+    PGetPrintProcessorDirectoryW pGetPrintProcessorDirectoryW;
     PRINTPROVIDOR pp;
     PWSTR pwszBuffer;
 
     if (!GetLocalsplFuncs(&pp))
+        return;
+
+    pGetPrintProcessorDirectoryW = GetSpoolssFunc("GetPrintProcessorDirectoryW");
+    if (!pGetPrintProcessorDirectoryW)
         return;
 
     // In contrast to GetPrintProcessorDirectoryW, fpGetPrintProcessorDirectory needs an environment and doesn't just accept NULL.
@@ -79,6 +86,14 @@ START_TEST(fpGetPrintProcessorDirectory)
     _SEH2_END;
 
     ok(dwReturned == EXCEPTION_ACCESS_VIOLATION, "dwReturned is %lu!\n", dwReturned);
+
+    // Prove that this check is implemented in spoolss' GetPrintProcessorDirectoryW instead.
+    // In contrast to winspool's GetPrintProcessorDirectoryW, cbTemp is left untouched though. This comes from the fact that RPC isn't involved here.
+    SetLastError(0xDEADBEEF);
+    cbTemp = 0xDEADBEEF;
+    ok(!pGetPrintProcessorDirectoryW(NULL, L"wIndows nt x86", 1, NULL, cbNeeded, &cbTemp), "pGetPrintProcessorDirectoryW returns TRUE!\n");
+    ok(GetLastError() == ERROR_INVALID_USER_BUFFER, "pGetPrintProcessorDirectoryW returns error %lu!\n", GetLastError());
+    ok(cbTemp == 0xDEADBEEF, "cbTemp is %lu!\n", cbTemp);
 
     // Finally use the function as intended and aim for success!
     // We only check success by the boolean return value though. GetLastError doesn't return anything meaningful here.

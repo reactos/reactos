@@ -144,7 +144,7 @@
 243 stub GetFormW
 244 stdcall GetJobA(long long long ptr long ptr)
 245 stdcall GetJobW(long long long ptr long ptr)
-246 stdcall -stub GetPrintProcessorDirectoryA(str str long ptr long ptr)
+246 stdcall GetPrintProcessorDirectoryA(str str long ptr long ptr)
 247 stdcall GetPrintProcessorDirectoryW(wstr wstr long ptr long ptr)
 248 stdcall GetPrinterA(long long ptr long ptr)
 249 stub GetPrinterDataA

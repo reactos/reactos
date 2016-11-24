@@ -26,6 +26,13 @@ EnumPrintProcessorsW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pPrintP
 BOOL WINAPI
 GetPrintProcessorDirectoryW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pPrintProcessorInfo, DWORD cbBuf, PDWORD pcbNeeded)
 {
+    // Sanity checks
+    if (cbBuf && !pPrintProcessorInfo)
+    {
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+        return FALSE;
+    }
+
     // Always call this function on the Local Spooler.
     PSPOOLSS_PRINT_PROVIDER pPrintProvider = CONTAINING_RECORD(PrintProviderList.Flink, SPOOLSS_PRINT_PROVIDER, Entry);
     return pPrintProvider->PrintProvider.fpGetPrintProcessorDirectory(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded);
