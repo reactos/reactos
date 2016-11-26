@@ -381,8 +381,8 @@ BEGIN
     RADIOBUTTON "Taille personnalisée :", 14001, 20, 90, 80, 10, WS_TABSTOP
     EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "T&aille maximale (MO) :", -1, 20, 105, 70, 10
-    RADIOBUTTON "Ne pas déplacer les fichie&rs vers la Corbeille. Effacer les fichiers immédiatement lors de la suppression.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-    AUTOCHECKBOX "Afficher une fenêtre de confirmation d'effacement", 14004, 20, 155, 140, 10, WS_TABSTOP
+    RADIOBUTTON "Ne pas déplacer les fichie&rs vers la Corbeille. Effacer les fichiers immédiatement lors de la suppression.", 14003, 20, 117, 190, 20, BS_MULTILINE | WS_TABSTOP
+    AUTOCHECKBOX "Afficher une fenêtre de confirmation d'effacement", 14004, 20, 155, 190, 10, WS_TABSTOP
 END
 
 IDD_OPEN_WITH DIALOGEX 0, 0, 264, 256
