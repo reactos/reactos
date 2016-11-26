@@ -2909,9 +2909,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     PFILE_OBJECT FileObject;
     PMM_SECTION_SEGMENT Segment;
     ULONG FileAccess;
-    IO_STATUS_BLOCK Iosb;
-    LARGE_INTEGER Offset;
-    CHAR Buffer;
     FILE_STANDARD_INFORMATION FileInfo;
     ULONG Length;
 
@@ -2967,7 +2964,6 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
                                     sizeof(FILE_STANDARD_INFORMATION),
                                     &FileInfo,
                                     &Length);
-    Iosb.Information = Length;
     if (!NT_SUCCESS(Status))
     {
         ObDereferenceObject(Section);
@@ -3012,35 +3008,9 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     if (FileObject->SectionObjectPointer == NULL ||
             FileObject->SectionObjectPointer->SharedCacheMap == NULL)
     {
-        /*
-         * Read a bit so caching is initiated for the file object.
-         * This is only needed because MiReadPage currently cannot
-         * handle non-cached streams.
-         */
-        Offset.QuadPart = 0;
-        Status = ZwReadFile(FileHandle,
-                            NULL,
-                            NULL,
-                            NULL,
-                            &Iosb,
-                            &Buffer,
-                            sizeof (Buffer),
-                            &Offset,
-                            0);
-        if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE))
-        {
-            ObDereferenceObject(Section);
-            ObDereferenceObject(FileObject);
-            return(Status);
-        }
-        if (FileObject->SectionObjectPointer == NULL ||
-                FileObject->SectionObjectPointer->SharedCacheMap == NULL)
-        {
-            /* FIXME: handle this situation */
-            ObDereferenceObject(Section);
-            ObDereferenceObject(FileObject);
-            return STATUS_INVALID_FILE_FOR_SECTION;
-        }
+        ObDereferenceObject(Section);
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_FILE_FOR_SECTION;
     }
 
     /*
@@ -3836,10 +3806,19 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
             if(ImageSectionObject->Segments != NULL)
                 ExFreePool(ImageSectionObject->Segments);
 
+            /*
+             * If image file is empty, then return that the file is invalid for section
+             */
+            Status = StatusExeFmt;
+            if (StatusExeFmt == STATUS_END_OF_FILE)
+            {
+                Status = STATUS_INVALID_FILE_FOR_SECTION;
+            }
+
             ExFreePoolWithTag(ImageSectionObject, TAG_MM_SECTION_SEGMENT);
             ObDereferenceObject(Section);
             ObDereferenceObject(FileObject);
-            return(StatusExeFmt);
+            return(Status);
         }
 
         Section->ImageSection = ImageSectionObject;
@@ -5101,6 +5080,33 @@ MmCreateSection (OUT PVOID  * Section,
             return Status;
         }
         // Caching is initialized...
+
+        // Hack of the hack: actually, it might not be initialized if FSD init on effective right and if file is null-size
+        // In such case, force cache by initiating a write IRP
+        if (Status == STATUS_END_OF_FILE && !(AllocationAttributes & SEC_IMAGE) && FileObject != NULL &&
+            (FileObject->SectionObjectPointer == NULL || FileObject->SectionObjectPointer->SharedCacheMap == NULL))
+        {
+            Status = ZwWriteFile(FileHandle,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 &Iosb,
+                                 &Buffer,
+                                 sizeof(Buffer),
+                                 &ByteOffset,
+                                 NULL);
+            if (NT_SUCCESS(Status))
+            {
+                LARGE_INTEGER Zero;
+                Zero.QuadPart = 0LL;
+
+                Status = IoSetInformation(FileObject,
+                                          FileEndOfFileInformation,
+                                          sizeof(LARGE_INTEGER),
+                                          &Zero);
+                ASSERT(NT_SUCCESS(Status));
+            }
+        }
     }
 #endif
 
