@@ -843,19 +843,19 @@ static MUI_ENTRY ruRUConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         10,
-        "System partitions can contain diagnostic programs, hardware configuration",
+        "Системные разделы могут содержать диагностические программы, программы",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         11,
-        "programs, programs to start an operating system (like ReactOS) or other",
+        "настройки аппаратных средств, программы запуска ОС (подобные ReactOS)",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "programs provided by the hardware manufacturer.",
+        "или другое ПО, предоставленное изготовителем оборудования.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -885,13 +885,13 @@ static MUI_ENTRY ruRUConfirmDeleteSystemPartitionEntries[] =
     {
         8,
         20,
-        "\x07  Нажмите ENTER чтобы удалить системный раздел. Вы должны будете подтвердить",
+        "\x07  Нажмите ENTER чтобы удалить системный раздел. Вы должны будете",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "   удаление позже снова.",
+        "   подтвердить удаление позже снова.",
         TEXT_STYLE_NORMAL
     },
     {
