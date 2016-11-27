@@ -5077,6 +5077,8 @@ MmCreateSection (OUT PVOID  * Section,
         if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
         {
             DPRINT1("CC failure: %lx\n", Status);
+            if (FileObject)
+                ObDereferenceObject(FileObject);
             return Status;
         }
         // Caching is initialized...
