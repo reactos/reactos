@@ -615,4 +615,62 @@ done:
     return dwError;
 }
 
+
+DWORD
+ScmDeleteServiceKey(
+    _In_ HKEY hServicesKey,
+    _In_ PCWSTR pszServiceName)
+{
+    DWORD dwMaxSubkeyLen, dwMaxValueLen;
+    DWORD dwMaxLen, dwSize;
+    PWSTR pszName = NULL;
+    HKEY hServiceKey;
+    DWORD dwError;
+
+    dwError = RegOpenKeyExW(hServicesKey, pszServiceName, 0, KEY_READ, &hServiceKey);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    /* Get maximum length of key and value names */
+    dwError = RegQueryInfoKeyW(hServiceKey, NULL, NULL, NULL, NULL,
+                               &dwMaxSubkeyLen, NULL, NULL, &dwMaxValueLen, NULL, NULL, NULL);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    dwMaxSubkeyLen++;
+    dwMaxValueLen++;
+    dwMaxLen = max(dwMaxSubkeyLen, dwMaxValueLen);
+
+    /* Allocate the name buffer */
+    pszName = HeapAlloc(GetProcessHeap(), 0, dwMaxLen * sizeof(WCHAR));
+    if (pszName == NULL)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    /* Recursively delete all the subkeys */
+    while (TRUE)
+    {
+        dwSize = dwMaxLen;
+        if (RegEnumKeyExW(hServiceKey, 0, pszName, &dwSize,
+                          NULL, NULL, NULL, NULL))
+            break;
+
+        dwError = ScmDeleteServiceKey(hServiceKey, pszName);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
+    dwError = RegDeleteKeyW(hServicesKey, pszServiceName);
+
+done:
+    if (pszName != NULL)
+        HeapFree(GetProcessHeap(), 0, pszName);
+
+    RegCloseKey(hServiceKey);
+
+    return dwError;
+}
+
 /* EOF */
