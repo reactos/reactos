@@ -617,22 +617,22 @@ done:
 
 
 DWORD
-ScmDeleteServiceKey(
-    _In_ HKEY hServicesKey,
-    _In_ PCWSTR pszServiceName)
+ScmDeleteRegKey(
+    _In_ HKEY hKey,
+    _In_ PCWSTR pszSubKey)
 {
     DWORD dwMaxSubkeyLen, dwMaxValueLen;
     DWORD dwMaxLen, dwSize;
     PWSTR pszName = NULL;
-    HKEY hServiceKey;
+    HKEY hSubKey;
     DWORD dwError;
 
-    dwError = RegOpenKeyExW(hServicesKey, pszServiceName, 0, KEY_READ, &hServiceKey);
+    dwError = RegOpenKeyExW(hKey, pszSubKey, 0, KEY_READ, &hSubKey);
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
     /* Get maximum length of key and value names */
-    dwError = RegQueryInfoKeyW(hServiceKey, NULL, NULL, NULL, NULL,
+    dwError = RegQueryInfoKeyW(hSubKey, NULL, NULL, NULL, NULL,
                                &dwMaxSubkeyLen, NULL, NULL, &dwMaxValueLen, NULL, NULL, NULL);
     if (dwError != ERROR_SUCCESS)
         goto done;
@@ -653,22 +653,26 @@ ScmDeleteServiceKey(
     while (TRUE)
     {
         dwSize = dwMaxLen;
-        if (RegEnumKeyExW(hServiceKey, 0, pszName, &dwSize,
-                          NULL, NULL, NULL, NULL))
+        if (RegEnumKeyExW(hSubKey, 0, pszName, &dwSize,
+                          NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
+        {
             break;
+        }
 
-        dwError = ScmDeleteServiceKey(hServiceKey, pszName);
+        dwError = ScmDeleteServiceKey(hSubKey, pszName);
         if (dwError != ERROR_SUCCESS)
             goto done;
     }
-
-    dwError = RegDeleteKeyW(hServicesKey, pszServiceName);
 
 done:
     if (pszName != NULL)
         HeapFree(GetProcessHeap(), 0, pszName);
 
-    RegCloseKey(hServiceKey);
+    RegCloseKey(hSubKey);
+
+    /* Finally delete the key */
+    if (dwError == ERROR_SUCCESS)
+        dwError = RegDeleteKeyW(hKey, pszSubKey);
 
     return dwError;
 }

@@ -143,9 +143,9 @@ ScmReadSecurityDescriptor(
     _Out_ PSECURITY_DESCRIPTOR *ppSecurityDescriptor);
 
 DWORD
-ScmDeleteServiceKey(
-    _In_ HKEY hServicesKey,
-    _In_ PCWSTR pszServiceName);
+ScmDeleteRegKey(
+    _In_ HKEY hKey,
+    _In_ PCWSTR pszSubKey);
 
 /* controlset.c */
 
