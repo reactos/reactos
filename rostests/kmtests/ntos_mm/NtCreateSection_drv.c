@@ -473,16 +473,29 @@ TestIrpHandler(
             }
             else
             {
+                ULONG TestSize = 0;
+
                 ok(EOFInfo != NULL, "Null pointer!\n");
                 ok(Fcb != NULL, "Null pointer!\n");
                 ok_bool_false(IoStack->Parameters.SetFile.AdvanceOnly, "AdvanceOnly set!\n");
                 ok(EOFInfo->EndOfFile.QuadPart > Fcb->Header.AllocationSize.QuadPart, "New size smaller\n");
 
+                if (Fcb->Header.AllocationSize.QuadPart != 0)
+                {
+                    TestSize = 512;
+                }
+
                 Fcb->Header.AllocationSize.QuadPart = EOFInfo->EndOfFile.QuadPart;
+                ok_eq_ulong(Fcb->Header.FileSize.QuadPart, TestSize);
+                ok_eq_ulong(Fcb->Header.ValidDataLength.QuadPart, TestSize);
+
                 if (CcIsFileCached(IoStack->FileObject))
                 {
                     CcSetFileSizes(IoStack->FileObject, (PCC_FILE_SIZES)(&(Fcb->Header.AllocationSize)));
                 }
+
+                ok_eq_ulong(Fcb->Header.FileSize.QuadPart, TestSize);
+                ok_eq_ulong(Fcb->Header.ValidDataLength.QuadPart, TestSize);
 
                 Status = STATUS_SUCCESS;
             }
