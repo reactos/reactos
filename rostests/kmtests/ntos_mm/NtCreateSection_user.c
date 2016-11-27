@@ -53,7 +53,7 @@ START_TEST(NtCreateSection)
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     KmtStartSeh();
-    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x", ((PCHAR)Buffer)[0]);
+    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x\n", ((PCHAR)Buffer)[0]);
     memset(Buffer, 0xBA, 512);
     KmtEndSeh(STATUS_SUCCESS);
 
@@ -79,7 +79,7 @@ START_TEST(NtCreateSection)
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     KmtStartSeh();
-    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x", ((PCHAR)Buffer)[0]);
+    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x\n", ((PCHAR)Buffer)[0]);
     memset(Buffer, 0xBA, 4096);
     KmtEndSeh(STATUS_SUCCESS);
 
@@ -105,7 +105,7 @@ START_TEST(NtCreateSection)
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     KmtStartSeh();
-    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x", ((PCHAR)Buffer)[0]);
+    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x\n", ((PCHAR)Buffer)[0]);
     memset(Buffer, 0xBA, 512);
     KmtEndSeh(STATUS_SUCCESS);
 
@@ -131,7 +131,7 @@ START_TEST(NtCreateSection)
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     KmtStartSeh();
-    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x", ((PCHAR)Buffer)[0]);
+    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x\n", ((PCHAR)Buffer)[0]);
     memset(Buffer, 0xBA, 4096);
     KmtEndSeh(STATUS_SUCCESS);
 
@@ -169,7 +169,7 @@ START_TEST(NtCreateSection)
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     KmtStartSeh();
-    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x", ((PCHAR)Buffer)[0]);
+    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x\n", ((PCHAR)Buffer)[0]);
     memset(Buffer, 0xBA, 512);
     KmtEndSeh(STATUS_SUCCESS);
 
@@ -195,7 +195,7 @@ START_TEST(NtCreateSection)
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     KmtStartSeh();
-    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x", ((PCHAR)Buffer)[0]);
+    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x\n", ((PCHAR)Buffer)[0]);
     memset(Buffer, 0xBA, 4096);
     KmtEndSeh(STATUS_SUCCESS);
 
@@ -221,7 +221,7 @@ START_TEST(NtCreateSection)
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     KmtStartSeh();
-    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x", ((PCHAR)Buffer)[0]);
+    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x\n", ((PCHAR)Buffer)[0]);
     memset(Buffer, 0xBA, 512);
     KmtEndSeh(STATUS_SUCCESS);
 
@@ -247,7 +247,7 @@ START_TEST(NtCreateSection)
     ok_eq_hex(Status, STATUS_SUCCESS);
 
     KmtStartSeh();
-    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x", ((PCHAR)Buffer)[0]);
+    ok(((PCHAR)Buffer)[0] == 0, "First byte is not null! %x\n", ((PCHAR)Buffer)[0]);
     memset(Buffer, 0xBA, 4096);
     KmtEndSeh(STATUS_SUCCESS);
 
