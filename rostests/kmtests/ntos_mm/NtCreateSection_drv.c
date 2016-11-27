@@ -404,7 +404,8 @@ TestIrpHandler(
     {
         Fcb = IoStack->FileObject->FsContext;
         ok(Fcb != NULL, "Null pointer!\n");
-        if (IoStack->FileObject->PrivateCacheMap != NULL)
+        if (IoStack->FileObject->SectionObjectPointer != NULL &&
+            IoStack->FileObject->SectionObjectPointer->SharedCacheMap != NULL)
         {
             CcFlushCache(&Fcb->SectionObjectPointers, NULL, 0, NULL);
             CcPurgeCacheSection(&Fcb->SectionObjectPointers, NULL, 0, FALSE);
