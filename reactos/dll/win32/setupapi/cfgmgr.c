@@ -21,6 +21,7 @@
 
 #include "setupapi_private.h"
 
+#include <dbt.h>
 #include <pnp_c.h>
 
 #include "rpc_private.h"
@@ -57,6 +58,15 @@ typedef struct _LOG_CONF_INFO
 } LOG_CONF_INFO, *PLOG_CONF_INFO;
 
 #define LOG_CONF_MAGIC 0x464E434C  /* "LCNF" */
+
+
+typedef struct _NOTIFY_DATA
+{
+    ULONG ulMagic;
+    ULONG ulNotifyData;
+} NOTIFY_DATA, *PNOTIFY_DATA;
+
+#define NOTIFY_MAGIC 0x44556677
 
 
 static BOOL GuidToString(LPGUID Guid, LPWSTR String)
@@ -121,14 +131,76 @@ CONFIGRET WINAPI CMP_Init_Detection(
  */
 CONFIGRET
 WINAPI
-CMP_RegisterNotification(IN HANDLE hRecipient,
-                         IN LPVOID lpvNotificationFilter,
-                         IN DWORD dwFlags,
-                         OUT PULONG pluhDevNotify)
+CMP_RegisterNotification(
+    IN HANDLE hRecipient,
+    IN LPVOID lpvNotificationFilter,
+    IN DWORD dwFlags,
+    OUT PHDEVNOTIFY phDevNotify)
 {
-    FIXME("Stub %p %p %lu %p\n", hRecipient, lpvNotificationFilter, dwFlags, pluhDevNotify);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return CR_FAILURE;
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    PNOTIFY_DATA pNotifyData = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("CMP_RegisterNotification(%p %p %lu %p)\n", hRecipient, lpvNotificationFilter, dwFlags, phDevNotify);
+
+    if ((hRecipient == NULL) ||
+        (lpvNotificationFilter == NULL) ||
+        (phDevNotify == NULL))
+        return CR_INVALID_POINTER;
+
+    if (dwFlags & ~0x7)
+        return CR_INVALID_FLAG;
+
+    if (((PDEV_BROADCAST_HDR)lpvNotificationFilter)->dbch_size < sizeof(DEV_BROADCAST_HDR))
+        return CR_INVALID_DATA;
+
+    if (!PnpGetLocalHandles(&BindingHandle, NULL))
+        return CR_FAILURE;
+
+    pNotifyData = HeapAlloc(GetProcessHeap(),
+                            HEAP_ZERO_MEMORY,
+                            sizeof(NOTIFY_DATA));
+    if (pNotifyData == NULL)
+        return CR_OUT_OF_MEMORY;
+
+    pNotifyData->ulMagic = NOTIFY_MAGIC;
+
+/*
+    if (dwFlags & DEVICE_NOTIFY_SERVICE_HANDLE == DEVICE_NOTYFY_WINDOW_HANDLE)
+    {
+
+    }
+    else if (dwFlags & DEVICE_NOTIFY_SERVICE_HANDLE == DEVICE_NOTYFY_SERVICE_HANDLE)
+    {
+
+    }
+*/
+
+    RpcTryExcept
+    {
+        ret = PNP_RegisterNotification(BindingHandle,
+                                       dwFlags,
+                                       &pNotifyData->ulNotifyData);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (ret == CR_SUCCESS)
+    {
+        *phDevNotify = (HDEVNOTIFY)pNotifyData;
+    }
+    else
+    {
+        if (pNotifyData != NULL)
+            HeapFree(GetProcessHeap(), 0, pNotifyData);
+
+        *phDevNotify = (HDEVNOTIFY)NULL;
+    }
+
+    return ret;
 }
 
 
@@ -144,7 +216,7 @@ CONFIGRET WINAPI CMP_Report_LogOn(
     BOOL bAdmin;
     DWORD i;
 
-    TRACE("%lu\n", dwMagic);
+    TRACE("CMP_Report_LogOn(%lu %lu)\n", dwMagic, dwProcessId);
 
     if (dwMagic != CMP_MAGIC)
         return CR_INVALID_DATA;
@@ -183,10 +255,39 @@ CONFIGRET WINAPI CMP_Report_LogOn(
  */
 CONFIGRET
 WINAPI
-CMP_UnregisterNotification(IN HDEVNOTIFY handle)
+CMP_UnregisterNotification(
+    IN HDEVNOTIFY hDevNotify)
 {
-    FIXME("Stub %p\n", handle);
-    return CR_SUCCESS;
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    PNOTIFY_DATA pNotifyData;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("CMP_UnregisterNotification(%p)\n", hDevNotify);
+
+    pNotifyData = (PNOTIFY_DATA)hDevNotify;
+
+    if ((pNotifyData == NULL) ||
+        (pNotifyData->ulMagic != NOTIFY_MAGIC))
+        return CR_INVALID_POINTER;
+
+    if (!PnpGetLocalHandles(&BindingHandle, NULL))
+        return CR_FAILURE;
+
+    RpcTryExcept
+    {
+        ret = PNP_UnregisterNotification(BindingHandle,
+                                         pNotifyData->ulNotifyData);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = RpcStatusToCmStatus(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (ret == CR_SUCCESS)
+        HeapFree(GetProcessHeap(), 0, pNotifyData);
+
+    return ret;
 }
 
 
