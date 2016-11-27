@@ -5086,6 +5086,7 @@ MmCreateSection (OUT PVOID  * Section,
         if (Status == STATUS_END_OF_FILE && !(AllocationAttributes & SEC_IMAGE) && FileObject != NULL &&
             (FileObject->SectionObjectPointer == NULL || FileObject->SectionObjectPointer->SharedCacheMap == NULL))
         {
+            Buffer = 0xdb;
             Status = ZwWriteFile(FileHandle,
                                  NULL,
                                  NULL,
