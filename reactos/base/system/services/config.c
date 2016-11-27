@@ -659,7 +659,7 @@ ScmDeleteRegKey(
             break;
         }
 
-        dwError = ScmDeleteServiceKey(hSubKey, pszName);
+        dwError = ScmDeleteRegKey(hSubKey, pszName);
         if (dwError != ERROR_SUCCESS)
             goto done;
     }
