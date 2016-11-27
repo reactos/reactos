@@ -85,6 +85,7 @@ typedef struct tagSDBQUERYRESULT {
 PWSTR SdbpStrDup(LPCWSTR string);
 HSDB WINAPI SdbInitDatabase(DWORD, LPCWSTR);
 void WINAPI SdbReleaseDatabase(HSDB);
+BOOL WINAPI SdbGUIDToString(CONST GUID *Guid, PWSTR GuidString, SIZE_T Length);
 
 PDB WINAPI SdbOpenDatabase(LPCWSTR path, PATH_TYPE type);
 void WINAPI SdbCloseDatabase(PDB);

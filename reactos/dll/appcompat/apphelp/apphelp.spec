@@ -4,7 +4,7 @@
 @ stub ApphelpCheckMsiPackage
 @ stub ApphelpCheckRunApp
 @ stub ApphelpCheckRunAppEx
-@ stub ApphelpCheckShellObject
+@ stdcall ApphelpCheckShellObject(ptr long ptr)
 @ stub ApphelpCreateAppcompatData
 @ stub ApphelpFixMsiPackage
 @ stub ApphelpFixMsiPackageExe

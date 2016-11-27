@@ -82,10 +82,23 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
 
 BOOL WINAPI ApphelpCheckInstallShieldPackage(void* ptr, LPCWSTR path)
 {
-    SHIM_WARN("stub: ptr=%p path='%S'\r\n", ptr, path);
+    SHIM_WARN("stub: ptr=%p, path='%S'\r\n", ptr, path);
     return TRUE;
 }
 
+
+BOOL WINAPI ApphelpCheckShellObject(REFCLSID ObjectCLSID, BOOL bShimIfNecessary, ULONGLONG *pullFlags)
+{
+    WCHAR GuidString[100];
+    if (!ObjectCLSID || !SdbGUIDToString(ObjectCLSID, GuidString, 100))
+        GuidString[0] = L'\0';
+    SHIM_WARN("stub: ObjectCLSID='%S', bShimIfNecessary=%d, pullFlags=%p)\n", GuidString, bShimIfNecessary, pullFlags);
+
+    if (pullFlags)
+        *pullFlags = 0;
+
+    return TRUE;
+}
 
 /**
  * Outputs diagnostic info.
