@@ -5871,7 +5871,12 @@ DWORD RQueryServiceStatusEx(
                   &lpService->Status,
                   sizeof(SERVICE_STATUS));
 
-    lpStatus->dwProcessId = (lpService->lpImage != NULL) ? lpService->lpImage->dwProcessId : 0; /* FIXME */
+    /* Copy the service process ID */
+    if ((lpService->Status.dwCurrentState == SERVICE_STOPPED) || (lpService->lpImage != NULL))
+        lpStatus->dwProcessId = 0;
+    else
+        lpStatus->dwProcessId = lpService->lpImage->dwProcessId;
+
     lpStatus->dwServiceFlags = 0;			/* FIXME */
 
     /* Unlock the service database */
@@ -5996,7 +6001,9 @@ DWORD REnumServicesStatusExA(
                &lpStatusPtrIncrW->ServiceStatusProcess,
                sizeof(SERVICE_STATUS));
 
-        lpStatusPtrA->ServiceStatusProcess.dwProcessId = lpStatusPtrIncrW->ServiceStatusProcess.dwProcessId; /* FIXME */
+        /* Copy the service process ID */
+        lpStatusPtrA->ServiceStatusProcess.dwProcessId = lpStatusPtrIncrW->ServiceStatusProcess.dwProcessId;
+
         lpStatusPtrA->ServiceStatusProcess.dwServiceFlags = 0; /* FIXME */
 
         lpStatusPtrIncrW++;
@@ -6274,8 +6281,13 @@ DWORD REnumServicesStatusExW(
             memcpy(&lpStatusPtr->ServiceStatusProcess,
                    &CurrentService->Status,
                    sizeof(SERVICE_STATUS));
-            lpStatusPtr->ServiceStatusProcess.dwProcessId =
-                (CurrentService->lpImage != NULL) ? CurrentService->lpImage->dwProcessId : 0; /* FIXME */
+
+            /* Copy the service process ID */
+            if ((CurrentService->Status.dwCurrentState == SERVICE_STOPPED) ||(CurrentService->lpImage != NULL))
+                lpStatusPtr->ServiceStatusProcess.dwProcessId = 0;
+            else
+                lpStatusPtr->ServiceStatusProcess.dwProcessId = CurrentService->lpImage->dwProcessId;
+
             lpStatusPtr->ServiceStatusProcess.dwServiceFlags = 0; /* FIXME */
 
             lpStatusPtr++;
