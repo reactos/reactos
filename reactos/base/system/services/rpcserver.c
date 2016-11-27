@@ -5872,7 +5872,7 @@ DWORD RQueryServiceStatusEx(
                   sizeof(SERVICE_STATUS));
 
     /* Copy the service process ID */
-    if ((lpService->Status.dwCurrentState == SERVICE_STOPPED) || (lpService->lpImage != NULL))
+    if ((lpService->Status.dwCurrentState == SERVICE_STOPPED) || (lpService->lpImage == NULL))
         lpStatus->dwProcessId = 0;
     else
         lpStatus->dwProcessId = lpService->lpImage->dwProcessId;
@@ -6283,7 +6283,7 @@ DWORD REnumServicesStatusExW(
                    sizeof(SERVICE_STATUS));
 
             /* Copy the service process ID */
-            if ((CurrentService->Status.dwCurrentState == SERVICE_STOPPED) ||(CurrentService->lpImage != NULL))
+            if ((CurrentService->Status.dwCurrentState == SERVICE_STOPPED) ||(CurrentService->lpImage == NULL))
                 lpStatusPtr->ServiceStatusProcess.dwProcessId = 0;
             else
                 lpStatusPtr->ServiceStatusProcess.dwProcessId = CurrentService->lpImage->dwProcessId;
