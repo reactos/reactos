@@ -1,0 +1,71 @@
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Tastați «EVENTCREATE /?» pentru informații de utilizare.\n"
+    IDS_HELP "\n\
+EVENTCREATE [/S calculator [/U [domeniu\\]nume [/P parolă]]]\n\
+            /ID id_eveniment {[/L nume_jurnal] | [/SO sursă]}\n\
+            /T tip /C categorie /D descriere\n\
+\n\
+Descriere:\n\
+    Acest instrument oferă unui administrator crearea unui eveniment\n\
+    particular într-un jurnal de evenimente specificat.\n\
+\n\
+Parametri:\n\
+    /S  calculator        Specifică sistemul la care se face conectarea.\n\
+\n\
+    /U  [domeniu\\]nume    Numele contului de utilizator sub care va fi\n\
+                          executată comanda.\n\
+\n\
+    /P  [parolă]          Specifică parola contului de utilizator.\n\
+                          Va fi cerută la prompt în cazul omiterii.\n\
+\n\
+    /L  nume_jurnal       Specifică numele jurnalului în care evenimentul va fi\n\
+                          creat. Numele valide sunt:\n\
+                          Application, System, Security\n\
+                          (ultimul este rezervat doar pentru contul SYSTEM).\n\
+\n\
+    /SO sursă             Specifică numele sursei utilizate pentru eveniment.\n\
+                          (Dacă nu e specificat, numele implicit al sursei va\n\
+                           fi «eventcreate».)\n\
+                          O sursă validă poate fi orice șir de caractere și ar\n\
+                          trebui să reprezinte aplicația sau evenimentul care\n\
+                          generează evenimentul.\n\
+\n\
+    /T  tip               Specifică tipul de eveniment creat.\n\
+                          Tipurile valide sunt: SUCCESS, ERROR, WARNING,\n\
+                          INFORMATION.\n\
+\n\
+    /C  categorie         Specifică categoria de eveniment (ca număr întreg).\n\
+\n\
+    /ID id_eveniment      Specifică numărul de identificare pentru eveniment.\n\
+                          Acesta trebuie să fie un număr între 0 și 65535.\n\
+\n\
+    /D  descriere         Specifică o descriere pentru evenimentul nou creat.\n\
+\n\
+    /?                    Afișează acest manual de utilizare.\n\
+"
+    IDS_INVALIDSWITCH "Parametru eronat - «%s».\n"
+    IDS_BADSYNTAX_0 "Comandă cu sintaxă eronată.\n"
+    IDS_BADSYNTAX_1 "Comandă cu sintaxă eronată. Opțiunea «%s» necesită o valoare.\n"
+    IDS_BADSYNTAX_2 "Comandă cu sintaxă eronată. Valoarea pentru opțiunea «%s» nu poate fi omisă.\n"
+    IDS_BADSYNTAX_3 "Comandă cu sintaxă eronată. Valoarea «%s» nu este permisă pentru opțiunea «%s».\n"
+    IDS_BADSYNTAX_4 "Comandă cu sintaxă eronată. Valoarea dată nu poate fi specificată pentru opțiunea «%s».\n"
+    IDS_BADSYNTAX_5 "Comandă cu sintaxă eronată. Opțiunea «%s» nu este permisă mai mult de %lu ori.\n"
+    IDS_BADSYNTAX_6 "Comandă cu sintaxă eronată. Opțiunea obligatorie «%s» a fost omisă.\n"
+    // IDS_BADSYNTAX_7 "Comandă cu sintaxă eronată. Valoarea pentru opțiunea «%s» este în afara domeniului permis.\n"
+    IDS_BADSYNTAX_7 "Comandă cu sintaxă eronată. Valoarea pentru opțiunea «%s» trebuie să fie între %d și %d.\n"
+
+    IDS_LOG_NOT_FOUND "Jurnalul «%s» nu există. Evenimentul nu poate fi creat.\n"
+    IDS_SOURCE_NOCREATE "Sursa nu poate fi creată deoarece numele de jurnal nu este specificat.\nUtilizați parametrul /L pentru a specifica un nume de jurnal.\n"
+    IDS_SOURCE_EXISTS "Sursa deja există în jurnalul «%s» și nu poate fi duplicată.\n"
+    IDS_SOURCE_NOT_CUSTOM "Parametrul de sursă este utilizat pentru a identifica scripturi/aplicații particularizate (nicidecum aplicații instalate).\n"
+
+    IDS_SUCCESS_1   "Operație realizată: un eveniment de tip «%s» a fost creat în jurnalul «%s».\n"
+    IDS_SUCCESS_2   "Operație realizată: un eveniment de tip «%s» a fost creat cu sursa «%s».\n"
+    IDS_SUCCESS_3   "Operație realizată: un eveniment de tip «%s» a fost creat în jurnalul «%s» cu sursa «%s».\n"
+    IDS_SWITCH_UNIMPLEMENTED "Opțiunea «%s» nu este acceptată deocamdată!\n"
+END

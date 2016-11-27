@@ -181,17 +181,17 @@ STRINGTABLE
 BEGIN
     STRING_DEFAULT_FILENAME,     "Document"
     STRING_PROMPT_SAVE_CHANGES,  "Păstrați modificările la „%s”?"
-    STRING_SEARCH_FINISHED,      "S-a terminat căutarea în document."
-    STRING_LOAD_RICHED_FAILED,   "Nu s-a putut încărca biblioteca RichEdit."
+    STRING_SEARCH_FINISHED,      "Căutarea în document a fost finalizată."
+    STRING_LOAD_RICHED_FAILED,   "Biblioteca RichEdit nu a putut fi încărcată."
     STRING_SAVE_LOSEFORMATTING,  "Ați ales să salvați în formatul de text simplu, care va pierde formatarea. Sigur doriți să continuați?"
     STRING_INVALID_NUMBER,       "Formatul de număr nu este valid."
     STRING_OLE_STORAGE_NOT_SUPPORTED, "Documentele de depozitare OLE nu sunt suportate."
-    STRING_WRITE_FAILED,              "Nu s-a putut salva fișierul."
+    STRING_WRITE_FAILED,              "Fișierul nu a putut fi păstrat."
     STRING_WRITE_ACCESS_DENIED,       "Nu aveți permisiunea să salvați fișierul."
-    STRING_OPEN_FAILED,               "Nu s-a putut deschide fișierul."
+    STRING_OPEN_FAILED,               "Fișierul nu a putut fi deschis."
     STRING_OPEN_ACCESS_DENIED,        "Nu aveți permisiunea de a deschide fișierul."
     STRING_PRINTING_NOT_IMPLEMENTED,  "Imprimarea nu este implementată."
-    STRING_MAX_TAB_STOPS,             "Nu se pot adăuga mai mult de 32 de taburi."
+    STRING_MAX_TAB_STOPS,             "Nu pot fi adăugate mai mult de 32 de taburi."
 END
 
 IDD_DATETIME DIALOGEX 30, 20, 130, 80

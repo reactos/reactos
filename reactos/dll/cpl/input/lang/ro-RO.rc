@@ -1,4 +1,4 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -24,7 +24,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Configurație de sistem", -1, 7, 7, 240, 70
     AUTOCHECKBOX "&Dezactivează serviciile avansate de text", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
-    LTEXT "Selectați această bifă pentru a dezactiva serviciile avansate de text în toate programele.\nAceasta nu se recomandă pentru utilizatorii de limbi est-asiatice, deoarece va duce la închiderea barei de limbi.", -1, 14, 40, 230, 35
+    LTEXT "Selectați această bifă pentru a dezactiva serviciile avansate de text în toate programele.\nAceasta nu este recomandată pentru utilizatorii de limbi est-asiatice, deoarece va duce la închiderea barei de limbi.", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163

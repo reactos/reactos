@@ -15,7 +15,7 @@ Description = Werkzeug zur grafischen Darstellung und Zusammenführen von Dateie
 Size = 6,1 MiB
 
 [Section.0418]
-Description = Un instrument pentru inspecția vizuală a diferențelor și unificarea de fișiere și dosare.
+Description = Instrument pentru inspecția vizuală a diferențelor și unificarea de fișiere și dosare.
 Size = 6,1 Mio
 
 [Section.0419]

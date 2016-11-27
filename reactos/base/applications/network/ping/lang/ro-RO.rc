@@ -1,7 +1,7 @@
 /*
  * FILE:        base/applications/network/ping/lang/ro-RO.rc
  * PURPOSE:     Romanian translations for ReactOS Ping Command
- * TRANSLATORS: Fulea Ștefan
+ * TRANSLATORS: Ștefan Fulea
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -9,51 +9,52 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
-Utilizare: ping [-t] [-a] [-n număr] [-l dimensiune] [-f] [-i TTL] [-v TOS]\n\
+Utilizare: ping [-t] [-a] [-n număr] [-l dimensiune] [-f] [-i TDV] [-v TDS]\n\
                 [-w expirare] [-4] [-6] gazdă-destinație\n\
 \n\
 Opțiuni:\n\
-    -t            Ping the specified host until stopped.\n\
-                  To see statistics and continue - type Control-Break;\n\
-                  To stop - type Control-C.\n\
-    -a            Resolve addresses to hostnames.\n\
+    -t            Transmitere continuă până la oprire manuală.\n\
+                  Pentru inspecția de statistici și continuare - Ctrl-Break;\n\
+                  Pentru oprire - Ctrl-C.\n\
+    -a            Determină adresa numelui de gazdă.\n\
     -n număr      Numărul de ecouri cerute ca răspuns.\n\
     -l dimensiune Transmite dimensiunea memoriei tampon.\n\
-    -f            Set Don't Fragment flag in packet (IPv4-only).\n\
-    -i TTL        Time To Live.\n\
-    -v TOS        Type Of Service (IPv4-only. This setting has been deprecated\n\
-                  and has no effect on the type of service field in the IP\n\
-                  Header).\n\
-    -w expirare   Limita temporală de așteptare a unui răspuns, exprimată în milisecunde.\n\
-    -4            Force using IPv4.\n\
-    -6            Force using IPv6.\n\
+    -f            Indicator de prevenție a fragmentării pachetelor (valabil\n\
+                  doar pentru IPv4).\n\
+    -i TDV        Timp de valabilitate.\n\
+    -v TDS        Tip de serviciu (valabil doar pentru IPv4. Această opțiune\n\
+                  nu este de actualitate și nu va avea efect asupra câmpului\n\
+                  tipului de serviciu din antetul unui pachet IP).\n\
+    -w expirare   Limita temporală pentru răspuns, în milisecunde.\n\
+    -4            Solicită IPv4.\n\
+    -6            Solicită IPv6.\n\
 \n"
 
-    IDS_CTRL_BREAK "Control-Break\n"
-    IDS_CTRL_C "Control-C\n"
+    IDS_CTRL_BREAK "Ctrl-Break\n"
+    IDS_CTRL_C "Ctrl-C\n"
     IDS_NO_RESOURCES "Nu există suficiente resurse disponibile.\n"
-    IDS_MISSING_ADDRESS "IP address must be specified.\n"
-    IDS_MISSING_VALUE "Value must be supplied for option %1.\n"
+    IDS_MISSING_ADDRESS "Este necesară specificarea unei adrese IP.\n"
+    IDS_MISSING_VALUE "Nu a fost furnizată nici o valoare pentru opțiunea %1.\n"
     IDS_BAD_OPTION "%1 este o opțiune eronată.\n"
     IDS_BAD_PARAMETER "Parametru eronat: %1.\n"
     IDS_BAD_VALUE "Valoare eronată pentru opțiunea %1, domeniul valid este %2!d! - %3!u!.\n"
-    IDS_WRONG_FAMILY "The option %1 is only supported for %2.\n"
-    IDS_UNKNOWN_HOST "Ping could not find host %1. Please check the name and try again.\n"
+    IDS_WRONG_FAMILY "Opțiunea %1 este acceptată doar pentru %2.\n"
+    IDS_UNKNOWN_HOST "Eșec la localizarea gazdei %1. Verificați numele apoi reîncercați.\n"
     IDS_PINGING_ADDRESS "\nTransmitere către %1 %0"
     IDS_PINGING_HOSTNAME "\nTransmitere către %1 [%2] %0"
-    IDS_SOURCE_ADDRESS "from %1!s! %0"
+    IDS_SOURCE_ADDRESS "de la %1!s! %0"
     IDS_PING_SIZE "cu %1!d! octeți de date:\n\n"
     IDS_REPLY_FROM "Răspuns de %1: %0"
     IDS_REPLY_BYTES "octeți=%1!d! %0"
     IDS_REPLY_TIME_MS "timp=%1!d!ms %0"
     IDS_REPLY_TIME_0MS "timp<1ms %0"
-    IDS_REPLY_TTL "TTL=%1!d!\n"
-    IDS_REPLY_STATUS "Echo reply returned %1.\n"
-    IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\n"
-    IDS_DEST_NET_UNREACHABLE "Destination net unreachable.\n"
+    IDS_REPLY_TTL "TDV=%1!d!\n"
+    IDS_REPLY_STATUS "Răspunsul ecou este %1.\n"
+    IDS_DEST_HOST_UNREACHABLE "Gazda de destinație nu este accesibilă.\n"
+    IDS_DEST_NET_UNREACHABLE "Rețeaua de destinație nu este accesibilă.\n"
     IDS_REQUEST_TIMED_OUT "Cererea a expirat.\n"
-    IDS_TTL_EXPIRED "TTL expired in transit.\n"
-    IDS_TRANSMIT_FAILED "PING: transmit failed. (Error %1!u!)\n"
+    IDS_TTL_EXPIRED "TDV a expirat în tranzit.\n"
+    IDS_TRANSMIT_FAILED "PING: eșec la transmisie. (Eroare %1!u!)\n"
 
     IDS_STATISTICS "\n\
 statistici de transmisie pentru %1!s!:\n\
@@ -62,5 +63,5 @@ statistici de transmisie pentru %1!s!:\n\
     IDS_APPROXIMATE_RTT "timpul aproximativ de tur-retur, in milisecunde:\n\
     minim = %1!u!ms, maxim = %2!u!ms, mediu = %3!u!ms\n"
 
-    IDS_WINSOCK_FAIL "Failed to initialize WinSock: %1!d!\n"
+    IDS_WINSOCK_FAIL "Eșec la inițializarea WinSock: %1!d!\n"
 END

@@ -9,28 +9,28 @@ IDM_EVENTVWR MENU
 BEGIN
     POPUP "&Jurnal"
     BEGIN
-        MENUITEM "&Open...", IDM_OPEN_EVENTLOG
+        MENUITEM "&Deschidere…", IDM_OPEN_EVENTLOG
         MENUITEM "&Păstrare jurnal de evenimente ca…", IDM_SAVE_EVENTLOG
-        MENUITEM "&Close", IDM_CLOSE_EVENTLOG
+        MENUITEM "Î&nchide", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "Înlăt&ură toate evenimentele", IDM_CLEAR_EVENTS
-        MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS
+        MENUITEM "&Redenumire\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "&Configurare jurnal…", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "I&eșire", IDM_EXIT
     END
     POPUP "&Afișare"
     BEGIN
-        MENUITEM "&Newest first", IDM_LIST_NEWEST
-        MENUITEM "&Oldest first", IDM_LIST_OLDEST
+        MENUITEM "După vârstă &crescător", IDM_LIST_NEWEST
+        MENUITEM "După vârstă &descrescător", IDM_LIST_OLDEST
         MENUITEM SEPARATOR
-        MENUITEM "&Details...\tEnter", IDM_EVENT_DETAILS
+        MENUITEM "&Detalii…\tEnter", IDM_EVENT_DETAILS
         MENUITEM SEPARATOR
         MENUITEM "Împ&rospătare\tF5", IDM_REFRESH
     END
     POPUP "&Opțiuni"
     BEGIN
-        MENUITEM "&Show event details view", IDM_SHOW_EVENT_DETAILS_VIEW
+        MENUITEM "&Afișează detalii de eveniment", IDM_SHOW_EVENT_DETAILS_VIEW
     END
     POPUP "Aj&utor"
     BEGIN
@@ -95,40 +95,40 @@ END
 
 IDD_LOGPROPERTIES_GENERAL DIALOGEX 0, 0, 252, 234
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Display name:", IDC_STATIC, 7, 9, 60, 8
+    LTEXT "N&ume afișat:", IDC_STATIC, 7, 9, 60, 8
     EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "&Log name:", IDC_STATIC, 7, 25, 60, 8
+    LTEXT "Nume de ju&rnal:", IDC_STATIC, 7, 25, 60, 8
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Log &file:", IDC_STATIC, 7, 41, 60, 8
+    LTEXT "Fiși&er de jurnal:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Size:", IDC_STATIC, 7, 57, 60, 8
+    LTEXT "Dimensiune:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Created:", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "Creat:", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Modified:", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "Modificat:", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Accessed:", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "Accessat:", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    GROUPBOX "Log size", IDC_STATIC, 7, 106, 238, 99
-    LTEXT "&Maximum log size:", IDC_STATIC, 17, 122, 58, 8
+    GROUPBOX "Dimensiune jurnal", IDC_STATIC, 7, 106, 238, 99
+    LTEXT "Dimensiune ma&ximă pentru jurnal:", IDC_STATIC, 17, 122, 58, 8
     EDITTEXT IDC_EDIT_MAXLOGSIZE, 80, 119, 40, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_MAXLOGSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
-    LTEXT "KB", IDC_STATIC, 130, 122, 20, 8
-    LTEXT "When maximum log size is reached:", IDC_STATIC, 17, 140, 219, 8
-    CONTROL "&Overwrite events as needed", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "O&verwrite events older than", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
-    EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
+    LTEXT "Kio", IDC_STATIC, 130, 122, 20, 8
+    LTEXT "Când dimensiunea maximă este atinsă:", IDC_STATIC, 17, 140, 219, 8
+    CONTROL "Suprascrie evenimentele cân&d este necesar", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
+    CONTROL "Suprascrie evenimentele mai &vechi de", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 155, 10
+    EDITTEXT IDC_EDIT_EVENTS_AGE, 175, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
-            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
-    LTEXT "days", IDC_STATIC, 162, 168, 20, 8
-    CONTROL "Do &not overwrite events\n(clear log manually)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
-    PUSHBUTTON "&Restore Defaults", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
-    AUTOCHECKBOX "Using a lo&w-speed connection", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
-    PUSHBUTTON "&Clear Log", ID_CLEARLOG, 195, 213, 50, 14
+            UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 104, 165, 10, 14
+    LTEXT "zile", IDC_STATIC, 215, 168, 20, 8
+    CONTROL "Inter&zice suprascrierea\n(gestiune manuală de jurnal)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
+    PUSHBUTTON "&Opțiuni implicite", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
+    AUTOCHECKBOX "Conexiune de &bandă limitată", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
+    PUSHBUTTON "&Curăță jurnal", ID_CLEARLOG, 195, 213, 50, 14
 END
 
 STRINGTABLE
@@ -136,13 +136,13 @@ BEGIN
     IDS_COPYRIGHT "Drept de autor (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)"
     IDS_APP_TITLE "Observator de evenimente"
     IDS_APP_TITLE_EX "%s - %s autentificat pe \\\\"
-    IDS_STATUS_MSG "%s are %lu eveniment(e) (listed: %lu)"
-    IDS_LOADING_WAIT "Se încarcă jurnalul de evenimentele. Așteptați…"
-    IDS_NO_ITEMS "There are no items to show in this view." // "No events in this log."
-    IDS_EVENTLOG_SYSTEM "System Logs"
-    IDS_EVENTLOG_APP "Application Logs"
-    IDS_EVENTLOG_USER "User Logs"
-    IDS_EVENTSTRINGIDNOTFOUND "Nu se poate găsi descrierea evenimentului cu ID-ul ( %lu ) în sursa ( %s ). Este posibil ca în calculatorul local să nu existe informațiile de registru necesare sau fișierele dll de mesaje să afișeze mesaje de la un calculator din rețea.\n\nInformații aferente evenimentului:\n\n"
+    IDS_STATUS_MSG "%s are %lu (de) eveniment(e) (afișate: %lu)"
+    IDS_LOADING_WAIT "Jurnal de evenimente în încărcare. Așteptați…"
+    IDS_NO_ITEMS "Nu există elemente de afișat." // "No events in this log."
+    IDS_EVENTLOG_SYSTEM "Jurnale de sistem"
+    IDS_EVENTLOG_APP "Jurnale de aplicație"
+    IDS_EVENTLOG_USER "Jurnale de utilizator"
+    IDS_EVENTSTRINGIDNOTFOUND "Descrierea evenimentului cu ID-ul ( %lu ) în sursa ( %s ) nu a fost găsită. Este posibil ca în calculatorul local să nu existe informațiile de registru necesare sau fișierele dll de mesaje să afișeze mesaje de la un calculator din rețea.\n\nInformații aferente evenimentului:\n\n"
     IDS_CLEAREVENTS_MSG "Doriți păstrarea acestui jurnal de evenimente înainte de a-l închide?"
     IDS_SAVE_FILTER "Jurnal de evenimente (*.evt)\0*.evt\0"
 END
@@ -160,7 +160,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "bytes" // "%s bytes"
+    IDS_BYTES_FORMAT "octeți" // "%s bytes"
     // "%1!ls! (%2!ls! bytes)"
 END
 

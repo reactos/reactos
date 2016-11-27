@@ -136,7 +136,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Derulare", -1, 5, 5, 236, 80
     ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
-    LTEXT "La acționarea rotiței se va derula", -1, 60, 15, 150, 10
+    LTEXT "La acționarea rotiței va fi derulat", -1, 60, 15, 150, 10
     RADIOBUTTON "Si&multan următorul număr de linii:", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
     RADIOBUTTON "Câte un &ecran", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 100, 10
     EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | WS_VISIBLE | WS_GROUP | WS_TABSTOP

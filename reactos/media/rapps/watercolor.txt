@@ -16,7 +16,7 @@ Size = 861,1 KiB
 
 [Section.0418]
 License = Gratuită
-Description = O temă pentru Windows bazată pe Windows Codename Whistler.
+Description = Temă pentru Windows bazată pe Windows Codename Whistler.
 Size = 861,1 Kio
 
 [Section.0419]

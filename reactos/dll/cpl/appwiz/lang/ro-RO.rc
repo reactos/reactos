@@ -81,7 +81,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_DOWNLOADING "Se descarcă…"
-    IDS_INSTALLING "Se instalează…"
+    IDS_DOWNLOADING "În curs de descărcare…"
+    IDS_INSTALLING "În curs de instalare…"
     IDS_INVALID_SHA "Suma de control a fișierului descărcat nu corespunde. Deoarece fișierul a fost corupt, instalarea trebuie abandonată."
 END

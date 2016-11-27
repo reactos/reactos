@@ -1,4 +1,4 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
@@ -26,8 +26,8 @@ CACLS nume_fișier [/T] [/E] [/C] [/G utilizator:acces [...]]\n\
                                         C  De modificare (scriere)\n\
                                         F  Deplin\n\
    /D utilizator        Interzice accesul pentru utilizatorul specificat.\n\
-Se pot specifica mai multe fișiere utilizând metacaractere.\n\
-Pot fi specificați mai mulți utilizatori în aceiași comandă.\n\n\
+Utilizând metacaractere pot fi specificate mai multe fișiere.\n\
+În aceiași comandă pot fi specificați mai mulți utilizatori.\n\n\
 Abrevieri:\n\
    CI - Moștenire container.\n\
         ACE moștenită de directoare.\n\

@@ -1,0 +1,75 @@
+/* Ștefan Fulea (stefan dot fulea at mail dot md) */
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Configurează dispozitive de sistem.\n\n\
+Interogarea stării unui dispozitiv:\n\
+    MODE [dispozitiv] [/STATUS]\n\n\
+Configurarea portului serial:\n\
+    MODE COMm[:] [BAUD=b] [PARITY=p] [DATA=d] [STOP=s]\n\
+                 [to=on|off] [xon=on|off] [odsr=on|off]\n\
+                 [octs=on|off] [dtr=on|off|hs]\n\
+                 [rts=on|off|hs|tg] [idsr=on|off]\n\n\
+Redirecția portului paralel:\n\
+    MODE LPTn[:]=COMm[:]\n\n\
+Selecția unui cod de pagină:\n\
+    MODE CON[:] CP SELECT=yyy\n\n\
+Starea codului de pagină:\n\
+    MODE CON[:] CP [/STATUS]\n\n\
+Modul de afișare:\n\
+    MODE CON[:] [COLS=c] [LINES=n]\n\n\
+Rata de repetiție la menținerea unei taste apăsate:\n\
+    MODE CON[:] [RATE=r DELAY=d]\n"
+
+    IDS_QUERY_SERIAL_FOUND "    Depistat dispozitiv la portul serial - %s\n"
+    IDS_QUERY_PRINTER_FOUND "    Depistat dispozitiv de imprimare - %s\n"
+    IDS_QUERY_PARALLEL_FOUND "    Depistat dispozitiv la portul paralel - %s\n"
+    IDS_QUERY_DOSDEV_FOUND "    Depistat dispozitiv de tip DOS - %s\n"
+    // IDS_QUERY_MISC_FOUND "    Found other device - %s\n"
+
+    // IDS_QUERY_DEVICE_FOUND "    Found %s device - %s\n"
+    // IDS_SERIAL  "serial"
+    // IDS_PRINTER "parallel"
+    // IDS_OTHER   "other"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DEVICE_STATUS_HEADER "Starea pentru dispozitivul %s:"
+
+    IDS_COM_STATUS_BAUD             "    Rata de modulare:  %ld\n"
+    IDS_COM_STATUS_PARITY           "    Paritate:          %s\n"
+    IDS_COM_STATUS_DATA_BITS        "    Biți de date:      %d\n"
+    IDS_COM_STATUS_STOP_BITS        "    Biți delimitori:   %s\n"
+    IDS_COM_STATUS_TIMEOUT          "    Timp de expirare:  %s\n"
+    IDS_COM_STATUS_XON_XOFF         "    XON/XOFF:          %s\n"
+    IDS_COM_STATUS_CTS_HANDSHAKING  "    Inițiere CTS:      %s\n"
+    IDS_COM_STATUS_DSR_HANDSHAKING  "    Inițiere DSR:      %s\n"
+    IDS_COM_STATUS_DSR_SENSITIVITY  "    Senzitivitate DSR: %s\n"
+    IDS_COM_STATUS_DTR_CIRCUIT      "    Circuit DTR:       %s\n"
+    IDS_COM_STATUS_RTS_CIRCUIT      "    Circuit RTS:       %s\n"
+
+    IDS_CONSOLE_STATUS_LINES    "    Linii:             %d\n"
+    IDS_CONSOLE_STATUS_COLS     "    Coloane:           %d\n"
+    IDS_CONSOLE_KBD_DELAY       "    Întârziere taste:  %ld\n"
+    IDS_CONSOLE_KBD_RATE        "    Rată taste:        %ld\n"
+    IDS_CONSOLE_CODEPAGE        "    Cod de pagină:     %d\n"
+
+    IDS_PRINTER_OUTPUT_NOT_REROUTED     "    Ieșirea de imprimantă nu este redirecționată.\n"
+    IDS_PRINTER_OUTPUT_REROUTED_SERIAL  "    Ieșirea de imprimantă este redirecționată către portul %s.\n"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_QUERY_DEVICES "EROARE: Dispozitivul DOS (0x%lx) nu poate fi interogat.\n"
+    IDS_ERROR_QUERY_DEVICES_FORM "    QueryDosDeviceW(%s) a returnat un formular nerecunoscut %s.\n"
+    IDS_ERROR_SET_PARALLEL_STATE "SetParallelState(%d) - DefineDosDevice(%s) (0x%lx)\n"
+    IDS_ERROR_INVALID_PARAMETER "EROARE: Parametru nevalid - %s\n"
+    IDS_ERROR_ILLEGAL_DEVICE_NAME "EROARE: Nume eronat de dispozitiv - %s (0x%lx)\n"
+    IDS_ERROR_STATUS_GET_DEVICE "EROARE: Nu poate fi determinată starea dispozitivului COM%d:\n"
+    IDS_ERROR_STATUS_SET_DEVICE "EROARE: Nu poate fi schimbată starea pentru dispozitivul COM%d:\n"
+    IDS_ERROR_INVALID_PARITY_BITS "EROARE: Valoare eronată pentru biții de paritate %d:\n"
+    IDS_ERROR_INVALID_STOP_BITS "EROARE: Valoare eronată pentru biții delimitori %d:\n"
+    IDS_ERROR_NO_MEMORY "ERAORE: Nu există suficientă memorie.\n"
+END

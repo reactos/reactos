@@ -1,4 +1,4 @@
-/* Ștefan Fulea (stefan dot fulea at mail dot md) */ 
+/* Translator: Ștefan Fulea (stefan dot fulea at mail dot md) */
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL 
 
 IDM_MAINMENU MENU
@@ -21,7 +21,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_SNDVOL32 "Reglaj de volum"
-    IDS_NOMIXERDEVICES "Nu există dispozitive active de mixaj! Aplicația se va închide."
+    IDS_NOMIXERDEVICES "Nu există dispozitive active de mixaj! Aplicația va fi închisă."
 END
 
 IDD_PREFERENCES DIALOGEX 0, 0, 224, 250

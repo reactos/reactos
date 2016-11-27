@@ -155,7 +155,7 @@ STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS
 CAPTION "Luna-XP-style Shut Down dialog"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 80, 122, 55, 14, WS_GROUP
+    DEFPUSHBUTTON "Con&firmă", IDOK, 80, 122, 55, 14, WS_GROUP
 END
 
 STRINGTABLE
@@ -176,7 +176,7 @@ BEGIN
     IDS_NONMATCHINGPASSWORDS "Parolele tastate nu corespund. Tastați aceiași parolă în ambele câmpuri de intrpducere."
     IDS_PASSWORDCHANGED "Parola dumneavoastră a fost modificată."
     IDS_LOGONTITLE "Mesaj de autentificare"
-    IDS_LOGONWRONGUSERORPWD "Sistemul nu vă poate autentifica. Asigurați-vă că numele și domeniul sunt corecte apoi tastați din nou parola. În parolă se face distincție între majuscule și minuscule."
+    IDS_LOGONWRONGUSERORPWD "Sistemul nu vă poate autentifica. Asigurați-vă că numele și domeniul sunt corecte apoi tastați din nou parola. În parolă este făcută distincție între majuscule și minuscule."
     IDS_LOGONUSERDISABLED "Contul dumneavoastră a fost dezactivat. Contactați administratorul de sistem."
     IDS_PASSWORDMUSTCHANGE "Este imperativ să vă schimbați parola la prima autentificare."
     IDS_PASSWORDEXPIRED "Parola v-a expirat și trebuie schimbată."

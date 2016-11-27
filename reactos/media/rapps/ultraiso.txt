@@ -12,7 +12,7 @@ CDPath = none
 
 [Section.0418]
 License = Versiune de evaluare
-Description = Un instrument pentru crearea/editarea/conversia fișierelor de tip imagine ISO CD/DVD. Permite editarea copierea fișierelor ISO de pe o unitate CD/DVD, extracția din asemenea fișiere, și editarea directă, inclusiv pentru medii de inițializare.
+Description = Instrument pentru crearea/editarea/conversia fișierelor de tip imagine ISO CD/DVD. Permite editarea copierea fișierelor ISO de pe o unitate CD/DVD, extracția din asemenea fișiere, și editarea directă, inclusiv pentru medii de inițializare.
 Size = 4,2 Mio
 
 [Section.0419]

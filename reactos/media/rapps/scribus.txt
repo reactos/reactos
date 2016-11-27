@@ -37,7 +37,7 @@ Description = En åpen kildekode-program som gir profesjonell sidelayout til Rea
 Description = Program open source, który przynosi profesjonalny ³ad strony ReactOS.
 
 [Section.0418]
-Description = Un program cu surse deschise care aduce aspectul paginii profesionale la ReactOS.
+Description = Program, cu surse deschise, de tehnoredactare computerizată.
 Size = 78,2 Mio
 
 [Section.0419]

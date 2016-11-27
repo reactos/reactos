@@ -187,7 +187,7 @@ END
 
 IDD_REQUIRED_SERVICES_DISABLING_DIALOG DIALOGEX 0, 0, 237, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Configuratorul de sistem" // "Program de configurare sistem"
+CAPTION "Programul configurator de sistem" // "Program de configurare sistem"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Î&nchide", IDOK, 180, 41, 50, 14
@@ -198,8 +198,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_MSCONFIG            "Programul configurației de sistem"
-    IDS_MSCONFIG_2          "Configurația de sistem"
+    IDS_MSCONFIG            "Programul configurator de sistem"
+    IDS_MSCONFIG_2          "Configurator de sistem"
     IDS_ABOUT               "&Despre…\tShift+F1"
 END
 

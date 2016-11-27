@@ -62,7 +62,7 @@ BEGIN
     LTEXT "Opțiuni legate de conturile de utilizator stocate în calculator.", IDC_STATIC, 16, 88, 228, 20
     PUSHBUTTON "O&pțiuni…", IDC_USERPROFILE, 194, 103, 50, 15
     GROUPBOX "Pornire și recuperare", IDC_STATIC, 6, 131, 244, 52
-    LTEXT "Aceste opțiuni determină modul în care sistemul se deschide, acțiunile în caz de eroare, și alte informații de depanare.", IDC_STATIC, 16, 144, 228, 19
+    LTEXT "Aceste opțiuni determină modul de încărcare a sistemului, acțiunile în caz de eroare, și alte informații de depanare.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "Opți&uni…", IDC_STAREC, 194, 162, 50, 15
     PUSHBUTTON "&Configurare sistem…", IDC_SYSSETTINGS, 6, 192, 80, 15
     PUSHBUTTON "&Variabile de mediu…", IDC_ENVVAR, 88, 192, 80, 15
@@ -86,7 +86,7 @@ CAPTION "Profiluri ale dispozitivelor"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
-    LTEXT "Mulțimea configurațiilor componentelor fizice formează un profil al dispozitivelor. Astfel la pornire se poate specifica un profil preferat din mai multe, stabilite anterior.", IDC_STATIC, 46, 11, 188, 25
+    LTEXT "Mulțimea configurațiilor componentelor fizice formează un profil al dispozitivelor. Astfel la pornire poate fi specificat un profil preferat din mai multe, stabilite anterior.", IDC_STATIC, 46, 11, 188, 25
     LTEXT "Profiluri disponibile:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
     PUSHBUTTON "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON | WS_DISABLED

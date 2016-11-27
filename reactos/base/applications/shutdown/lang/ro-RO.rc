@@ -37,7 +37,7 @@ BEGIN
 Utilizare: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
            [/m \\\\calculator][/t xxx][/d [p|u:]xx:yy [/c «comentariu»]]\n\
 \n\
-    Fără argumente sau /?    Se afișează acest manual.\n\
+    Fără argumente sau /?    Este afișat acest manual.\n\
     /i      Afișarea interfeței grafice de utilizator (GUI). Această\n\
             opțiune trebuie să preceadă.\n\
     /l      Desautentificare locală. Nu poate fi utilizată cu /m sau /d.\n\
@@ -68,7 +68,7 @@ Utilizare: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
             xx este codul pentru motivul major (întreg pozitiv sub 256).\n\
             yy este codul pentru motivul minor (întreg pozitiv sub 65536).\n"
 
-    IDS_ERROR_SHUTDOWN_REBOOT "Eroare: Nu se poate închide și reporni în același timp.\n"
+    IDS_ERROR_SHUTDOWN_REBOOT "Eroare: Închiderea și repornirea nu pot fi în același timp.\n"
     IDS_ERROR_TIMEOUT "Eroare: Valoarea %u a cronometrului este în afara limitelor valide (0-315360000).\n"
     IDS_ERROR_ABORT "Eroare: Închiderea sistemului nu poate fi anulată.\n"
     IDS_ERROR_LOGOFF "Eroare: Deautentificarea din sistem nu poate fi executată.\n"
@@ -79,7 +79,7 @@ Utilizare: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n\
     IDS_ERROR_HIBERNATE_LOCAL "Eroare: Hibernarea nu poate fi comandată la distanță.\n"
     IDS_ERROR_HIBERNATE_ENABLED "Eroare: Modul de hibernare nu este activat.\n"
     IDS_ERROR_DIALOG_CAPTION "Închidere la distanță"
-    IDS_ERROR_DIALOG_INIT "Nu se poate afișa interfața grafică de utilizator."
+    IDS_ERROR_DIALOG_INIT "Interfața grafică de utilizator nu a putut fi afișată."
 END
 
 /* Remote shutdown action strings */

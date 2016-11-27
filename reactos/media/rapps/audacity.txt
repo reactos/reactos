@@ -18,7 +18,7 @@ Size = 25,3 MiB
 Description = Programa libre, gratuito y multiplataforma para grabar y editar audio y música.
 
 [Section.0418]
-Description = Un program gratuit, multiplatformă, cu surse deschise pentru înregistrarea și editarea de sunete.
+Description = Program gratuit, multiplatformă, cu surse deschise pentru înregistrarea și editarea de sunete.
 Size = 25,3 Mio
 
 [Section.0419]

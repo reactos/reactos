@@ -16,7 +16,7 @@ Size = 146,3 KiB
 
 [Section.0418]
 License = Gratuită
-Description = Un editor hexazecimal de fișiere pentru Windows.
+Description = Editor hexazecimal de fișiere pentru Windows.
 Size = 146,3 Kio
 
 [Section.0419]

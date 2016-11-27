@@ -16,7 +16,7 @@ Size = 21,0 MiB
 
 [Section.0418]
 License = Gratuită
-Description = Un mod facil de acces între Windows/ReactOS și sistemele de fișiere Ext2/Ext3/Ext4, HFS și ReiserFS.
+Description = Utilitar facil de acces între Windows/ReactOS și sistemele de fișiere Ext2/Ext3/Ext4, HFS și ReiserFS.
 Size = 21,0 Mio
 
 [Section.0419]

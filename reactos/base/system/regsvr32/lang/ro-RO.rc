@@ -1,8 +1,7 @@
 /*
  * FILE:       base/system/regsvr32/lang/ro-RO.rc
  *             ReactOS Project (http://www.reactos.org)
- * TRANSLATOR: Fulea Ștefan (PM on ReactOS Forum to fulea.stefan)
- * CHANGE LOG: 2011-08-29  initial translation
+ * TRANSLATOR: Ștefan Fulea (stefan dot fulea at mail dot md)
  */
  
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -14,13 +13,13 @@ BEGIN
 /s -	Tacit; fără ferestre de mesaje\n\
 /c -	Debitează informațiile la consolă\n\
 /i -	Apelează DllInstall cu [argumente]; cu /u apelează DllUninstall\n\
-/n -	Omite apelul DllRegisterServer; se utilizează cu /i"
+/n -	Omite apelul DllRegisterServer; este utilizat cu /i"
     IDS_NoDllSpecified "Nu a fost specificat nici un DLL."
     IDS_InvalidFlag "Argument nerecunoscut: %s"
     IDS_SwitchN_NoI "Argument nerecunoscut: /n trebuie utilizat cu /i"
     IDS_DllNotLoaded "Eroare la apelul LoadLibrary('%s').\nCodul de eroare este: 0x%08x."
     IDS_MissingEntry "%s a fost inclus, dar punctul de intrare %s nu e.\n\n\
-Fie %s nu a fost exportat, fie %s nu este corect. Pentru detectarea problemei/corectare se poate utiliza instrumentul PView."
-    IDS_FailureMessage "%s in %s nu s-a realizat.\nCodul de eroare este: 0x%08x"
-    IDS_SuccessMessage "%s in %s s-a realizat cu succes."
+Fie %s nu a fost exportat, fie %s nu este corect. Pentru detectarea problemei/corectare poate fi utilizat instrumentul PView."
+    IDS_FailureMessage "%s din %s nu a fost realizat.\nCodul de eroare este: 0x%08x"
+    IDS_SuccessMessage "%s din %s a fost realizat cu succes."
 END

@@ -16,7 +16,7 @@ Size = 452,5 KiB
 
 [Section.0418]
 License = Gratuită
-Description = O aplicație care generează și verifică sume de control md5.
+Description = Aplicație pentru generarea și verificarea sumelor de control md5.
 Size = 452,5 Kio
 
 [Section.0419]

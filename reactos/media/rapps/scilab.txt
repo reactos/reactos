@@ -32,7 +32,7 @@ Description = Een software voor numerieke berekeningen in engineering en wetensc
 Description = Oprogramowanie do obliczeń numerycznych w inżynierii i zastosowań naukowych.
 
 [Section.0418]
-Description = Un software de calcul numeric în inginerie și aplicații științifice.
+Description = Program de calcul numeric în inginerie și aplicații științifice.
 Size = 128,4 Mio
 
 [Section.0419]

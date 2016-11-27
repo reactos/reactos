@@ -175,7 +175,7 @@ BEGIN
     LTEXT "Acest calculator nu poate emite sunete deoarece serviciul ReactOS Audio este inactiv.", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "&Activează ReactOS Audio", 10253, 60, 68, 150, 9
     LTEXT "Note", 10246, 58, 87, 150, 11
-    LTEXT "1. Trebuie să fiți administrator pentru a porni acest serviciu. Dacă nu sunteți, vi se va solicita un nume și o parolă de administarator.", 10247, 60, 100, 150, 40
+    LTEXT "1. Trebuie să fiți administrator pentru a porni acest serviciu. Dacă nu sunteți, vă vor fi solicitate un nume și o parolă de administarator.", 10247, 60, 100, 150, 40
     LTEXT "2. După ce porniți serviciul, trebuie să reporniți calculatorul.", 10248, 60, 140, 150, 40
 END
 

@@ -16,7 +16,7 @@ Size = 65,8 KiB
 
 [Section.0418]
 License = Gratuită
-Description = Un joc de cărți pentru Windows. Este bazat pe popularul joc de cărți studențesc „Shit-head”.
+Description = Joc de cărți pentru Windows. Este bazat pe popularul joc de cărți studențesc „Shit-head”.
 Size = 65,8 Kio
 
 [Section.0419]

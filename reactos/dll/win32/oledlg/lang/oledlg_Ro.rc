@@ -28,7 +28,7 @@ STRINGTABLE
   IDS_RESULTOBJDESC	"Inserați un nou obiect %s în document"
   IDS_RESULTFILEOBJDESC	"Inserați conținutul fișierului ca pe un obiect în document, astfel încât să îl puteți activa utilizând programul care l-a creat."
   IDS_BROWSE            "Navigare"
-  IDS_NOTOLEMOD         "Fișierul nu pare a fi un modul OLE valid. Nu se poate înregistra controlul OLE."
+  IDS_NOTOLEMOD         "Fișierul nu pare a fi un modul OLE valid. Controlul OLE nu a putut fi înregistrat."
   IDS_NOTOLEMODCAPTION  "Adaugă un control"
   IDS_VERBMENU_OBJECT   "&Obiect"
   IDS_VERBMENU_OBJECT_WITH_NAME "&Obiect %1"
