@@ -1158,33 +1158,13 @@ IntFindWindowToRepaint(PWND Window, PTHREADINFO Thread)
 }
 
 //
-// Hax around internal painting of windows.
+// Internal painting of windows.
 //
 VOID FASTCALL
 IntPaintWindow( PWND Window )
 {
    // Handle normal painting.
    co_IntPaintWindows( Window, RDW_NOCHILDREN, FALSE );
-
-   // Hack to prevent more spamming from misbehaving application.
-   // Handle it like a begin/end paint
-   if (Window->hrgnUpdate != NULL)
-   {
-      ERR("HAX hrgnUpdate not NULL! Dec Paint Count!\n");
-      MsqDecPaintCountQueue(Window->head.pti);
-      IntGdiSetRegionOwner(Window->hrgnUpdate, GDI_OBJ_HMGR_POWNED);
-      GreDeleteObject(Window->hrgnUpdate);
-      Window->state &= ~WNDS_UPDATEDIRTY;
-      Window->hrgnUpdate = NULL;
-   }
-   else
-   {
-      if (!(Window->state & WNDS_INTERNALPAINT))
-      {
-         ERR("HAX WNDS_INTERNALPAINT not set! Dec Paint Count!\n");
-         MsqDecPaintCountQueue(Window->head.pti);
-      }
-   }
 }
 
 BOOL FASTCALL
