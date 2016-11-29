@@ -160,6 +160,20 @@ VOID TestInitialize()
     ok(wcscmp(strretName.pOleStr, L"C:\\") == 0, "wrong name, got: %S\n", strretName.pOleStr);    
 }
 
+VOID TestGetUIObjectOf()
+{
+    HRESULT hr;
+
+    /* Create a CFSFolder */
+    CComPtr<IShellFolder> psf;
+    hr = CoCreateInstance(CLSID_ShellFSFolder, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARG(IShellFolder, &psf));
+    ok(hr == S_OK, "hr = %lx\n", hr);
+
+    /* test 0 cidl for IDataObject */
+    CComPtr<IDataObject> pdo;
+    hr = psf->GetUIObjectOf(NULL, 0, NULL, IID_NULL_PPV_ARG(IDataObject, &pdo));
+    ok(hr == E_INVALIDARG, "hr = %lx\n", hr);
+}
 
 START_TEST(CFSFolder)
 {  
@@ -167,4 +181,5 @@ START_TEST(CFSFolder)
 
     TestUninitialized();
     TestInitialize();
+    TestGetUIObjectOf();
 }
