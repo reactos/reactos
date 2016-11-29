@@ -170,16 +170,25 @@ CDefViewBckgrndMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFir
         hr = m_psf->CreateViewObject(NULL, IID_PPV_ARG(IContextMenu, &m_folderCM));
         if (SUCCEEDED(hr))
         {
-            hr = m_folderCM->QueryContextMenu(hMenuPart, 0, idCmdFirst, idCmdLast, uFlags);
+            InsertMenuA(hMenu, indexMenu++, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+            UINT SeparatorIndex = indexMenu;
+            UINT count = GetMenuItemCount(hMenu);
+
+            hr = m_folderCM->QueryContextMenu(hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
             if (SUCCEEDED(hr))
             {
-                Shell_MergeMenus(hMenu, hMenuPart, indexMenu, 0, 0xFFFF, MM_DONTREMOVESEPS | MM_SUBMENUSHAVEIDS);
-                DestroyMenu(hMenuPart);
+                //Shell_MergeMenus(hMenu, hMenuPart, indexMenu, 0, UINT_MAX, MM_ADDSEPARATOR| MM_DONTREMOVESEPS | MM_SUBMENUSHAVEIDS);
+                //DestroyMenu(hMenuPart);
             }
             else
             {
                 WARN("QueryContextMenu failed!\n");
             }
+
+            /* If no item was added after the separator, remove it */
+            if (count == GetMenuItemCount(hMenu))
+                DeleteMenu(hMenu, SeparatorIndex, MF_BYPOSITION);
+
         }
         else
         {
