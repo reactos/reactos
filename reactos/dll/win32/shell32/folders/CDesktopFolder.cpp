@@ -529,8 +529,21 @@ HRESULT WINAPI CDesktopFolder::CreateViewObject(
     }
     else if (IsEqualIID (riid, IID_IContextMenu))
     {
-        WARN ("IContextMenu not implemented\n");
-        hr = E_NOTIMPL;
+            HKEY hKeys[16];
+            UINT cKeys = 0;
+            AddClassKeyToArray(L"Directory\\Background", hKeys, &cKeys);
+
+            DEFCONTEXTMENU dcm;
+            dcm.hwnd = hwndOwner;
+            dcm.pcmcb = this;
+            dcm.pidlFolder = pidlRoot;
+            dcm.psf = this;
+            dcm.cidl = 0;
+            dcm.apidl = NULL;
+            dcm.cKeys = cKeys;
+            dcm.aKeys = hKeys;
+            dcm.punkAssociationInfo = NULL;
+            hr = SHCreateDefaultContextMenu (&dcm, riid, ppvOut);
     }
     else if (IsEqualIID (riid, IID_IShellView))
     {
@@ -646,13 +659,23 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
         else
         {
             /* Do not use the context menu of the CFSFolder here. */
-            /* We need to pass a pointer of the CDesktopFolder  so as the data object that the context menu gets is rooted to the desktop */
+            /* We need to pass a pointer of the CDesktopFolder so as the data object that the context menu gets is rooted to the desktop */
             /* Otherwise operations like that involve items from both user and shared desktop will not work */
-            IContextMenu  * pCm = NULL;
             HKEY hKeys[16];
             UINT cKeys = 0;
             AddFSClassKeysToArray(apidl[0], hKeys, &cKeys);
-            hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), NULL, cKeys, hKeys, &pCm);
+
+            DEFCONTEXTMENU dcm;
+            dcm.hwnd = hwndOwner;
+            dcm.pcmcb = this;
+            dcm.pidlFolder = pidlRoot;
+            dcm.psf = this;
+            dcm.cidl = cidl;
+            dcm.apidl = apidl;
+            dcm.cKeys = cKeys;
+            dcm.aKeys = hKeys;
+            dcm.punkAssociationInfo = NULL;
+            hr = SHCreateDefaultContextMenu (&dcm, riid, &pObj);
         }
     }
     else if (IsEqualIID (riid, IID_IDataObject) && (cidl >= 1))
@@ -842,6 +865,59 @@ HRESULT WINAPI CDesktopFolder::GetCurFolder(LPITEMIDLIST * pidl)
         return E_INVALIDARG; /* xp doesn't have this check and crashes on NULL */
     *pidl = ILClone (pidlRoot);
     return S_OK;
+}
+
+HRESULT WINAPI CDesktopFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg != DFM_MERGECONTEXTMENU && uMsg != DFM_INVOKECOMMAND)
+        return S_OK;
+
+    /* no data object means no selection */
+    if (!pdtobj)
+    {
+        if (uMsg == DFM_INVOKECOMMAND && wParam == DFM_CMD_PROPERTIES)
+        {
+            if (32 >= (UINT)ShellExecuteW(hwndOwner, L"open", L"rundll32.exe shell32.dll,Control_RunDLL desk.cpl", NULL, NULL, SW_SHOWNORMAL))
+                return E_FAIL;
+            return S_OK;
+        }
+        else if (uMsg == DFM_MERGECONTEXTMENU)
+        {
+            QCMINFO *pqcminfo = (QCMINFO *)lParam;
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, FCIDM_SHVIEW_PROPERTIES, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED);
+        }
+
+        return S_OK;
+    }
+
+    PIDLIST_ABSOLUTE pidlFolder;
+    PUITEMID_CHILD *apidl;
+    UINT cidl;
+    HRESULT hr = SH_GetApidlFromDataObject(pdtobj, &pidlFolder, &apidl, &cidl);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    if (cidl > 1)
+        ERR("SHMultiFileProperties is not yet implemented\n");
+
+    STRRET strFile;
+    hr = GetDisplayNameOf(apidl[0], SHGDN_FORPARSING, &strFile);
+    if (SUCCEEDED(hr))
+    {
+        hr = SH_ShowPropertiesDialog(strFile.pOleStr, pidlFolder, apidl);
+        if (FAILED(hr))
+            ERR("SH_ShowPropertiesDialog failed\n");
+    }
+    else
+    {
+        ERR("Failed to get display name\n");
+    }
+
+    SHFree(pidlFolder);
+    _ILFreeaPidl(apidl, cidl);
+
+    return hr;
 }
 
 /*************************************************************************

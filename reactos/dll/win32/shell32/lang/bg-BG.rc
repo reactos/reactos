@@ -38,8 +38,6 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Поставяне", FCIDM_SHVIEW_INSERT
         MENUITEM "Поставяне като връзка", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Свойства", FCIDM_SHVIEW_PROPERTIES
     END
 END
 

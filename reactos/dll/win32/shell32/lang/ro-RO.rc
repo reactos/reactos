@@ -40,8 +40,6 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Lipește", FCIDM_SHVIEW_INSERT
         MENUITEM "Lipește ca sc&urtătură", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "&Proprietăți", FCIDM_SHVIEW_PROPERTIES
     END
 END
 

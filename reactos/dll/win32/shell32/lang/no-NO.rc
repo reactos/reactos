@@ -38,8 +38,6 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Lim inn", FCIDM_SHVIEW_INSERT
         MENUITEM "Lim inn som snarvei", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Egenskaper", FCIDM_SHVIEW_PROPERTIES
     END
 END
 

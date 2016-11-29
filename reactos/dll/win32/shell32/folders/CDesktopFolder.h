@@ -27,7 +27,8 @@ class CDesktopFolder :
     public CComCoClass<CDesktopFolder, &CLSID_ShellDesktop>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellFolder2,
-    public IPersistFolder2
+    public IPersistFolder2,
+    public IContextMenuCB
 {
     private:
         /* both paths are parsible from the desktop */
@@ -74,6 +75,9 @@ class CDesktopFolder :
 
         // *** IPersistFolder2 methods ***
         virtual HRESULT WINAPI GetCurFolder(LPITEMIDLIST * pidl);
+
+        // IContextMenuCB
+        virtual HRESULT WINAPI CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
         DECLARE_REGISTRY_RESOURCEID(IDR_SHELLDESKTOP)
         DECLARE_CENTRAL_INSTANCE_NOT_AGGREGATABLE(CDesktopFolder)

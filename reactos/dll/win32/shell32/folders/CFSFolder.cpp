@@ -371,8 +371,21 @@ HRESULT WINAPI CFSFolder::CreateViewObject(HWND hwndOwner,
             hr = CFSDropTarget_CreateInstance(sPathTarget, riid, ppvOut);
         else if (IsEqualIID (riid, IID_IContextMenu))
         {
-            FIXME ("IContextMenu not implemented\n");
-            hr = E_NOTIMPL;
+            HKEY hKeys[16];
+            UINT cKeys = 0;
+            AddClassKeyToArray(L"Directory\\Background", hKeys, &cKeys);
+
+            DEFCONTEXTMENU dcm;
+            dcm.hwnd = hwndOwner;
+            dcm.pcmcb = this;
+            dcm.pidlFolder = pidlRoot;
+            dcm.psf = this;
+            dcm.cidl = 0;
+            dcm.apidl = NULL;
+            dcm.cKeys = cKeys;
+            dcm.aKeys = hKeys;
+            dcm.punkAssociationInfo = NULL;
+            hr = SHCreateDefaultContextMenu (&dcm, riid, ppvOut);
         }
         else if (IsEqualIID (riid, IID_IShellView))
         {
@@ -513,7 +526,7 @@ HRESULT WINAPI CFSFolder::GetUIObjectOf(HWND hwndOwner,
             }
             else
             {
-                hr = IDataObject_Constructor (hwndOwner, pidlRoot, (LPCITEMIDLIST*)&pidlRoot, 1, (IDataObject **)&pObj);
+                hr = E_INVALIDARG;
             }
         }
         else if ((IsEqualIID (riid, IID_IExtractIconA) || IsEqualIID (riid, IID_IExtractIconW)) && (cidl == 1))
@@ -1101,6 +1114,33 @@ HRESULT WINAPI CFSFolder::_LoadDynamicDropTargetHandler(const CLSID *pclsid, LPC
 
 HRESULT WINAPI CFSFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    if (uMsg != DFM_MERGECONTEXTMENU && uMsg != DFM_INVOKECOMMAND)
+        return S_OK;
+
+    /* no data object means no selection */
+    if (!pdtobj)
+    {
+        if (uMsg == DFM_INVOKECOMMAND && wParam == DFM_CMD_PROPERTIES)
+        {
+            PUITEMID_CHILD pidlChild = ILClone(ILFindLastID(pidlRoot));
+            LPITEMIDLIST pidlParent = ILClone(pidlRoot);
+            ILRemoveLastID(pidlParent);
+            HRESULT hr = SH_ShowPropertiesDialog(sPathTarget, pidlParent, &pidlChild);
+            if (FAILED(hr))
+                ERR("SH_ShowPropertiesDialog failed\n");
+            ILFree(pidlChild);
+            ILFree(pidlParent);
+        }
+        else if (uMsg == DFM_MERGECONTEXTMENU)
+        {
+            QCMINFO *pqcminfo = (QCMINFO *)lParam;
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+            _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, FCIDM_SHVIEW_PROPERTIES, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED);
+        }
+
+        return S_OK;
+    }
+
     if (uMsg != DFM_INVOKECOMMAND || wParam != DFM_CMD_PROPERTIES)
         return S_OK;
 

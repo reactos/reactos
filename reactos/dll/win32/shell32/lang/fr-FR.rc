@@ -38,8 +38,6 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Coller", FCIDM_SHVIEW_INSERT
         MENUITEM "Coller comme un lien", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Propriétés", FCIDM_SHVIEW_PROPERTIES
     END
 END
 

@@ -63,6 +63,7 @@ list(APPEND SOURCE
     CFileSysBindData.cpp
     CDefView.cpp
     CDefViewDual.cpp
+    CDefViewBckgrndMenu.cpp
     stubs.cpp
     systray.cpp
     CDefaultContextMenu.cpp

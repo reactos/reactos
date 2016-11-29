@@ -63,6 +63,8 @@ BOOL HCR_RegOpenClassIDKey(REFIID riid, HKEY *hkey);
 
 void AddFSClassKeysToArray(PCUITEMID_CHILD pidl, HKEY* array, UINT* cKeys);
 
+HRESULT CDefViewBckgrndMenu_CreateInstance(IShellFolder* psf, REFIID riid, void **ppv);
+
 HRESULT SH_GetApidlFromDataObject(IDataObject *pDataObject, PIDLIST_ABSOLUTE* ppidlfolder, PUITEMID_CHILD **apidlItems, UINT *pcidl);
 
 static __inline int SHELL32_GUIDToStringA (REFGUID guid, LPSTR str)

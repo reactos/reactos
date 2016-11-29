@@ -38,8 +38,6 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Klistra in", FCIDM_SHVIEW_INSERT
         MENUITEM "Klistra in som genväg", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Egenskaper", FCIDM_SHVIEW_PROPERTIES
     END
 END
 

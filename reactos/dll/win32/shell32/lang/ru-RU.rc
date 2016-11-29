@@ -40,8 +40,6 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Вставить", FCIDM_SHVIEW_INSERT
         MENUITEM "Вставить &ярлык", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Сво&йства", FCIDM_SHVIEW_PROPERTIES
     END
 END
 

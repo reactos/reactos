@@ -40,8 +40,6 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Y&apıştır", FCIDM_SHVIEW_INSERT
         MENUITEM "K&ısayol Yapıştır", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "&Husûsîyetler", FCIDM_SHVIEW_PROPERTIES
     END
 END
 

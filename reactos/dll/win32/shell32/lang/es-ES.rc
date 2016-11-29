@@ -40,8 +40,6 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Pegar", FCIDM_SHVIEW_INSERT
         MENUITEM "Pegar acceso directo", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Propiedades", FCIDM_SHVIEW_PROPERTIES
     END
 END
 

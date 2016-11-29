@@ -2223,15 +2223,13 @@ HRESULT WINAPI CDefView::GetItemObject(UINT uItem, REFIID riid, LPVOID *ppvOut)
         case SVGIO_BACKGROUND:
             if (IsEqualIID(riid, IID_IContextMenu))
             {
-                //*ppvOut = ISvBgCm_Constructor(m_pSFParent, FALSE);
                 if (!ppvOut)
                     hr = E_OUTOFMEMORY;
 
-                IContextMenu* pcm;
-                hr = CDefFolderMenu_Create2(NULL, NULL, 0, NULL, m_pSFParent, NULL, 0, NULL, &pcm);
+                hr = CDefViewBckgrndMenu_CreateInstance(m_pSF2Parent, riid, ppvOut);
                 if (FAILED_UNEXPECTEDLY(hr))
                     return hr;
-                *ppvOut = pcm;
+
             }
             else if (IsEqualIID(riid, IID_IDispatch))
             {

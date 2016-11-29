@@ -38,8 +38,6 @@ BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Beillesztés", FCIDM_SHVIEW_INSERT
         MENUITEM "Parancsikon beillesztése", FCIDM_SHVIEW_INSERTLINK
-        MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Beállítások", FCIDM_SHVIEW_PROPERTIES
     END
 END
 
