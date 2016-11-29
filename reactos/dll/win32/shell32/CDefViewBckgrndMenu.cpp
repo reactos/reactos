@@ -172,7 +172,7 @@ CDefViewBckgrndMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFir
         {
             InsertMenuA(hMenu, indexMenu++, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
             UINT SeparatorIndex = indexMenu;
-            UINT count = GetMenuItemCount(hMenu);
+            int count = GetMenuItemCount(hMenu);
 
             hr = m_folderCM->QueryContextMenu(hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
             if (SUCCEEDED(hr))
