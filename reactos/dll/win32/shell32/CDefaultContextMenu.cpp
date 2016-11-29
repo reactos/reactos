@@ -673,6 +673,9 @@ CDefaultContextMenu::QueryContextMenu(
     _DoCallback(DFM_MERGECONTEXTMENU, uFlags, &qcminfo);
     IndexMenu = GetMenuItemCount(hMenu);
 
+    if (uFlags & CMF_VERBSONLY)
+        return S_OK;
+
     /* If this is a background context menu we are done */
     if (!m_cidl)
         return S_OK;
