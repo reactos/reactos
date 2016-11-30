@@ -1,5 +1,4 @@
 #define STANDALONE
-#include "R:\hook\base_hk.h"
 #include <apitest.h>
 
 extern void func_isvalidname(void);
