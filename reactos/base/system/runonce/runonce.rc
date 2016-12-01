@@ -30,6 +30,9 @@ IDI_ICON ICON "res/icon.ico"
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
 #endif
+#ifdef LANGUAGE_IT_IT
+    #include "lang/it-IT.rc"
+#endif
 #ifdef LANGUAGE_JA_JP
     #include "lang/ja-JP.rc"
 #endif
