@@ -13,6 +13,7 @@ list(APPEND SOURCE
     RegQueryValueExW.c
     RtlEncryptMemory.c
     SaferIdentifyLevel.c
+    ServiceArgs.c
     testlist.c)
 
 add_executable(advapi32_apitest ${SOURCE})

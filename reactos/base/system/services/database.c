@@ -1216,17 +1216,17 @@ ScmSendStartCommand(PSERVICE Service,
                     DWORD argc,
                     LPWSTR* argv)
 {
+    DWORD dwError = ERROR_SUCCESS;
     PSCM_CONTROL_PACKET ControlPacket;
     SCM_REPLY_PACKET ReplyPacket;
     DWORD PacketSize;
-    PWSTR Ptr;
-    DWORD dwWriteCount = 0;
-    DWORD dwReadCount = 0;
-    DWORD dwError = ERROR_SUCCESS;
     DWORD i;
+    PWSTR Ptr;
     PWSTR *pOffPtr;
     PWSTR pArgPtr;
     BOOL bResult;
+    DWORD dwWriteCount = 0;
+    DWORD dwReadCount = 0;
 #ifdef USE_ASYNCHRONOUS_IO
     OVERLAPPED Overlapped = {0};
 #endif
@@ -1234,26 +1234,32 @@ ScmSendStartCommand(PSERVICE Service,
     DPRINT("ScmSendStartCommand() called\n");
 
     /* Calculate the total length of the start command line */
-    PacketSize = sizeof(SCM_CONTROL_PACKET) +
-                 (DWORD)((wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR));
+    PacketSize = sizeof(SCM_CONTROL_PACKET);
+    PacketSize += (DWORD)((wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR));
 
-    /* Calculate the required packet size for the start arguments */
+    /*
+     * Calculate the required packet size for the start argument vector 'argv',
+     * composed of the list of pointer offsets, followed by UNICODE strings.
+     * The strings are stored continuously after the vector of offsets, with
+     * the offsets being relative to the beginning of the vector, as in the
+     * following layout (with N == argc):
+     *     [argOff(0)]...[argOff(N-1)][str(0)]...[str(N-1)] .
+     */
     if (argc > 0 && argv != NULL)
     {
-        PacketSize = ALIGN_UP(PacketSize, LPWSTR);
+        PacketSize = ALIGN_UP(PacketSize, PWSTR);
+        PacketSize += (argc * sizeof(PWSTR));
 
         DPRINT("Argc: %lu\n", argc);
         for (i = 0; i < argc; i++)
         {
             DPRINT("Argv[%lu]: %S\n", i, argv[i]);
-            PacketSize += (DWORD)((wcslen(argv[i]) + 1) * sizeof(WCHAR) + sizeof(PWSTR));
+            PacketSize += (DWORD)((wcslen(argv[i]) + 1) * sizeof(WCHAR));
         }
     }
 
     /* Allocate a control packet */
-    ControlPacket = HeapAlloc(GetProcessHeap(),
-                              HEAP_ZERO_MEMORY,
-                              PacketSize);
+    ControlPacket = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, PacketSize);
     if (ControlPacket == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -1262,22 +1268,23 @@ ScmSendStartCommand(PSERVICE Service,
                                ? SERVICE_CONTROL_START_OWN
                                : SERVICE_CONTROL_START_SHARE;
     ControlPacket->hServiceStatus = (SERVICE_STATUS_HANDLE)Service;
-    ControlPacket->dwServiceNameOffset = sizeof(SCM_CONTROL_PACKET);
 
-    Ptr = (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
+    /* Copy the start command line */
+    ControlPacket->dwServiceNameOffset = sizeof(SCM_CONTROL_PACKET);
+    Ptr = (PWSTR)((ULONG_PTR)ControlPacket + ControlPacket->dwServiceNameOffset);
     wcscpy(Ptr, Service->lpServiceName);
 
-    ControlPacket->dwArgumentsCount = 0;
+    ControlPacket->dwArgumentsCount  = 0;
     ControlPacket->dwArgumentsOffset = 0;
 
-    /* Copy argument list */
+    /* Copy the argument vector */
     if (argc > 0 && argv != NULL)
     {
         Ptr += wcslen(Service->lpServiceName) + 1;
         pOffPtr = (PWSTR*)ALIGN_UP_POINTER(Ptr, PWSTR);
         pArgPtr = (PWSTR)((ULONG_PTR)pOffPtr + argc * sizeof(PWSTR));
 
-        ControlPacket->dwArgumentsCount = argc;
+        ControlPacket->dwArgumentsCount  = argc;
         ControlPacket->dwArgumentsOffset = (DWORD)((ULONG_PTR)pOffPtr - (ULONG_PTR)ControlPacket);
 
         DPRINT("dwArgumentsCount: %lu\n", ControlPacket->dwArgumentsCount);
@@ -1285,12 +1292,10 @@ ScmSendStartCommand(PSERVICE Service,
 
         for (i = 0; i < argc; i++)
         {
-             wcscpy(pArgPtr, argv[i]);
-             *pOffPtr = (PWSTR)((ULONG_PTR)pArgPtr - (ULONG_PTR)pOffPtr);
-             DPRINT("offset: %p\n", *pOffPtr);
-
-             pArgPtr += wcslen(argv[i]) + 1;
-             pOffPtr++;
+            wcscpy(pArgPtr, argv[i]);
+            pOffPtr[i] = (PWSTR)((ULONG_PTR)pArgPtr - (ULONG_PTR)pOffPtr);
+            DPRINT("offset[%lu]: %p\n", i, pOffPtr[i]);
+            pArgPtr += wcslen(argv[i]) + 1;
         }
     }
 

@@ -278,58 +278,88 @@ ScConnectControlPipe(HANDLE *hPipe)
 }
 
 
+/*
+ * Ansi/Unicode argument layout of the vector passed to a service at startup,
+ * depending on the different versions of Windows considered:
+ *
+ * - XP/2003:
+ *   [argv array of pointers][parameter 1][parameter 2]...[service name]
+ *
+ * - Vista:
+ *   [argv array of pointers][align to 8 bytes]
+ *   [parameter 1][parameter 2]...[service name]
+ *
+ * - Win7/8:
+ *   [argv array of pointers][service name]
+ *   [parameter 1][align to 4 bytes][parameter 2][align to 4 bytes]...
+ *
+ * Space for parameters and service name is always enough to store
+ * both the Ansi and the Unicode versions including NULL terminator.
+ */
+
 static DWORD
 ScBuildUnicodeArgsVector(PSCM_CONTROL_PACKET ControlPacket,
                          LPDWORD lpArgCount,
                          LPWSTR **lpArgVector)
 {
-    LPWSTR *lpVector;
-    LPWSTR *lpArg;
-    LPWSTR pszServiceName;
+    PWSTR *lpVector;
+    PWSTR pszServiceName;
     DWORD cbServiceName;
+    DWORD cbArguments;
     DWORD cbTotal;
     DWORD i;
 
     if (ControlPacket == NULL || lpArgCount == NULL || lpArgVector == NULL)
         return ERROR_INVALID_PARAMETER;
 
-    *lpArgCount = 0;
+    *lpArgCount  = 0;
     *lpArgVector = NULL;
 
-    pszServiceName = (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
-    cbServiceName = lstrlenW(pszServiceName) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+    /* Retrieve and count the start command line (NULL-terminated) */
+    pszServiceName = (PWSTR)((ULONG_PTR)ControlPacket + ControlPacket->dwServiceNameOffset);
+    cbServiceName  = lstrlenW(pszServiceName) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
 
-    cbTotal = cbServiceName + sizeof(LPWSTR);
+    /*
+     * The total size of the argument vector is equal to the entry for
+     * the service name, plus the size of the original argument vector.
+     */
+    cbTotal = sizeof(PWSTR) + cbServiceName;
     if (ControlPacket->dwArgumentsCount > 0)
-        cbTotal += ControlPacket->dwSize - ControlPacket->dwArgumentsOffset;
+        cbArguments = ControlPacket->dwSize - ControlPacket->dwArgumentsOffset;
+    else
+        cbArguments = 0;
+    cbTotal += cbArguments;
 
-    lpVector = HeapAlloc(GetProcessHeap(),
-                         HEAP_ZERO_MEMORY,
-                         cbTotal);
+    /* Allocate the new argument vector */
+    lpVector = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cbTotal);
     if (lpVector == NULL)
-        return ERROR_OUTOFMEMORY;
+        return ERROR_NOT_ENOUGH_MEMORY;
 
-    lpArg = lpVector;
-    *lpArg = (LPWSTR)(lpArg + 1);
-    lpArg++;
+    /*
+     * The first argument is reserved for the service name, which
+     * will be appended to the end of the argument string list.
+     */
 
-    memcpy(lpArg, pszServiceName, cbServiceName);
-    lpArg = (LPWSTR*)((ULONG_PTR)lpArg + cbServiceName);
-
+    /* Copy the remaining arguments */
     if (ControlPacket->dwArgumentsCount > 0)
     {
-        memcpy(lpArg,
-               ((PBYTE)ControlPacket + ControlPacket->dwArgumentsOffset),
-               ControlPacket->dwSize - ControlPacket->dwArgumentsOffset);
+        memcpy(&lpVector[1],
+               (PWSTR)((ULONG_PTR)ControlPacket + ControlPacket->dwArgumentsOffset),
+               cbArguments);
 
         for (i = 0; i < ControlPacket->dwArgumentsCount; i++)
         {
-            *lpArg = (LPWSTR)((ULONG_PTR)lpArg + (ULONG_PTR)*lpArg);
-            lpArg++;
+            lpVector[i + 1] = (PWSTR)((ULONG_PTR)&lpVector[1] + (ULONG_PTR)lpVector[i + 1]);
+            TRACE("Unicode lpVector[%lu] = '%ls'\n", i + 1, lpVector[i + 1]);
         }
     }
 
-    *lpArgCount = ControlPacket->dwArgumentsCount + 1;
+    /* Now copy the service name */
+    lpVector[0] = (PWSTR)((ULONG_PTR)&lpVector[1] + cbArguments);
+    memcpy(lpVector[0], pszServiceName, cbServiceName);
+    TRACE("Unicode lpVector[%lu] = '%ls'\n", 0, lpVector[0]);
+
+    *lpArgCount  = ControlPacket->dwArgumentsCount + 1;
     *lpArgVector = lpVector;
 
     return ERROR_SUCCESS;
@@ -341,101 +371,48 @@ ScBuildAnsiArgsVector(PSCM_CONTROL_PACKET ControlPacket,
                       LPDWORD lpArgCount,
                       LPSTR **lpArgVector)
 {
-    LPSTR *lpVector;
-    LPSTR *lpPtr;
-    LPWSTR lpUnicodeString;
-    LPWSTR pszServiceName;
-    LPSTR lpAnsiString;
-    DWORD cbServiceName;
-    DWORD dwVectorSize;
-    DWORD dwUnicodeSize;
-    DWORD dwAnsiSize = 0;
-    DWORD dwAnsiNameSize = 0;
-    DWORD i;
+    DWORD dwError;
+    NTSTATUS Status;
+    DWORD ArgCount, i;
+    PWSTR *lpVectorW;
+    PSTR  *lpVectorA;
+    UNICODE_STRING UnicodeString;
+    ANSI_STRING AnsiString;
 
     if (ControlPacket == NULL || lpArgCount == NULL || lpArgVector == NULL)
         return ERROR_INVALID_PARAMETER;
 
-    *lpArgCount = 0;
+    *lpArgCount  = 0;
     *lpArgVector = NULL;
 
-    pszServiceName = (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
-    cbServiceName = lstrlenW(pszServiceName) * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+    /* Build the UNICODE arguments vector */
+    dwError = ScBuildUnicodeArgsVector(ControlPacket, &ArgCount, &lpVectorW);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
 
-    dwAnsiNameSize = WideCharToMultiByte(CP_ACP,
-                                         0,
-                                         pszServiceName,
-                                         cbServiceName,
-                                         NULL,
-                                         0,
-                                         NULL,
-                                         NULL);
-
-    dwVectorSize = ControlPacket->dwArgumentsCount * sizeof(LPWSTR);
-    if (ControlPacket->dwArgumentsCount > 0)
+    /* Convert the vector to ANSI in place */
+    lpVectorA = (PSTR*)lpVectorW;
+    for (i = 0; i < ArgCount; i++)
     {
-        lpUnicodeString = (LPWSTR)((PBYTE)ControlPacket +
-                                   ControlPacket->dwArgumentsOffset +
-                                   dwVectorSize);
-        dwUnicodeSize = (ControlPacket->dwSize -
-                         ControlPacket->dwArgumentsOffset -
-                         dwVectorSize) / sizeof(WCHAR);
+        RtlInitUnicodeString(&UnicodeString, lpVectorW[i]);
+        RtlInitEmptyAnsiString(&AnsiString, lpVectorA[i], UnicodeString.MaximumLength);
+        Status = RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Failed to convert to ANSI; free the allocated vector and return */
+            dwError = RtlNtStatusToDosError(Status);
+            HeapFree(GetProcessHeap(), 0, lpVectorW);
+            return dwError;
+        }
 
-        dwAnsiSize = WideCharToMultiByte(CP_ACP,
-                                         0,
-                                         lpUnicodeString,
-                                         dwUnicodeSize,
-                                         NULL,
-                                         0,
-                                         NULL,
-                                         NULL);
+        /* NULL-terminate the string */
+        AnsiString.Buffer[AnsiString.Length / sizeof(CHAR)] = ANSI_NULL;
+
+        TRACE("Ansi lpVector[%lu] = '%s'\n", i, lpVectorA[i]);
     }
 
-    dwVectorSize += sizeof(LPWSTR);
-
-    lpVector = HeapAlloc(GetProcessHeap(),
-                         HEAP_ZERO_MEMORY,
-                         dwVectorSize + dwAnsiNameSize + dwAnsiSize);
-    if (lpVector == NULL)
-        return ERROR_OUTOFMEMORY;
-
-    lpPtr = (LPSTR*)lpVector;
-    lpAnsiString = (LPSTR)((ULONG_PTR)lpVector + dwVectorSize);
-
-    WideCharToMultiByte(CP_ACP,
-                        0,
-                        pszServiceName,
-                        cbServiceName,
-                        lpAnsiString,
-                        dwAnsiNameSize,
-                        NULL,
-                        NULL);
-
-    if (ControlPacket->dwArgumentsCount > 0)
-    {
-        lpAnsiString = (LPSTR)((ULONG_PTR)lpAnsiString + dwAnsiNameSize);
-
-        WideCharToMultiByte(CP_ACP,
-                            0,
-                            lpUnicodeString,
-                            dwUnicodeSize,
-                            lpAnsiString,
-                            dwAnsiSize,
-                            NULL,
-                            NULL);
-    }
-
-    lpAnsiString = (LPSTR)((ULONG_PTR)lpVector + dwVectorSize);
-    for (i = 0; i < ControlPacket->dwArgumentsCount + 1; i++)
-    {
-        *lpPtr = lpAnsiString;
-
-        lpPtr++;
-        lpAnsiString += (strlen(lpAnsiString) + 1);
-    }
-
-    *lpArgCount = ControlPacket->dwArgumentsCount + 1;
-    *lpArgVector = lpVector;
+    *lpArgCount  = ArgCount;
+    *lpArgVector = lpVectorA;
 
     return ERROR_SUCCESS;
 }

@@ -16,6 +16,7 @@ extern void func_RegQueryInfoKey(void);
 extern void func_RegQueryValueExW(void);
 extern void func_RtlEncryptMemory(void);
 extern void func_SaferIdentifyLevel(void);
+extern void func_ServiceArgs(void);
 
 const struct test winetest_testlist[] =
 {
@@ -32,7 +33,7 @@ const struct test winetest_testlist[] =
     { "RegQueryValueExW", func_RegQueryValueExW },
     { "RtlEncryptMemory", func_RtlEncryptMemory },
     { "SaferIdentifyLevel", func_SaferIdentifyLevel },
-
+    { "ServiceArgs", func_ServiceArgs },
     { 0, 0 }
 };
 

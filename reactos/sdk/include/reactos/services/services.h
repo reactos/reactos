@@ -29,9 +29,9 @@ typedef struct _SCM_CONTROL_PACKET
 {
     DWORD dwSize;
     DWORD dwControl;
+    DWORD dwArgumentsCount;
     SERVICE_STATUS_HANDLE hServiceStatus;
     DWORD dwServiceNameOffset;
-    DWORD dwArgumentsCount;
     DWORD dwArgumentsOffset;
 } SCM_CONTROL_PACKET, *PSCM_CONTROL_PACKET;
 
