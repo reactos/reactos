@@ -720,6 +720,28 @@ CDAFILE="Piste de CD Audio"
 AVIFILE="Clip Vidéo"
 
 
+; LANG_ITALIAN SUBLANG_NEUTRAL
+[Strings.0010]
+CPLFILE_OPENWITH="Aprire con il Pannello di Controllo"
+
+CHMFILE="File della guida HTML compilato"
+XMLFILE="Documento XML"
+XSLFILE="Foglio di stile XSL"
+MSIPACK="Pacchetto di installazione di ReactOS"
+MSSTYLESFILE="File di stili visivi"
+THEMEFILE="File di tema visivo"
+WAVFILE="Audio wave"
+MIDFILE="Sequenza MIDI"
+CDAFILE="Traccia Audio CD"
+AVIFILE="Filmato video"
+MERGE="Unione"
+CONFIGURE="Configura"
+INSTALL="Installa"
+UNINSTALL="Rimuovi"
+REPAIR="Ripara"
+TEST="Prova"
+
+
 ; LANG_POLISH SUBLANG_NEUTRAL
 [Strings.0015]
 CPLFILE_OPENWITH="Otwórz poprzez Panel Sterowania"
