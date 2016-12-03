@@ -279,21 +279,6 @@ static void run_test(LPCSTR shim, const VersionLieInfo* info)
     }
 }
 
-static void hookless_shim(LPCSTR shim)
-{
-    DWORD num_shims = 0;
-    WCHAR wide_shim[50] = { 0 };
-    PHOOKAPI hook;
-    MultiByteToWideChar(CP_ACP, 0, shim, -1, wide_shim, 50);
-    hook = pGetHookAPIs("", wide_shim, &num_shims);
-    if (hook == NULL)
-    {
-        skip("Skipping tests for layers (%s) not present in this os (0x%x)\n", shim, g_WinVersion);
-        return;
-    }
-    ok(hook != NULL, "Expected hook to be a valid pointer for %s\n", shim);
-    ok(num_shims == 0, "Expected not to find any apihooks, got: %u for %s\n", num_shims, shim);
-}
 
 VersionLieInfo g_Win95 = { 0xC3B60004, 4, 0, 950, VER_PLATFORM_WIN32_WINDOWS, 0, 0 };
 VersionLieInfo g_WinNT4SP5 = { 0x05650004, 4, 0, 1381, VER_PLATFORM_WIN32_NT, 5, 0 };
@@ -370,8 +355,4 @@ START_TEST(versionlie)
     run_test("VistaSP1VersionLie", &g_WinVistaSP1);
     run_test("VistaSP2VersionLie", &g_WinVistaSP2);
     run_test("Win7RTMVersionLie", &g_Win7RTM);
-
-    hookless_shim("Force8BitColor");
-    hookless_shim("Force640x480");
-    hookless_shim("DisableThemes");
 }
