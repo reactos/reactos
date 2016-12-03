@@ -193,6 +193,10 @@ DWORD ScmControlDriver(PSERVICE lpService,
 
 /* groupdb.c */
 
+PSERVICE_GROUP
+ScmGetServiceGroupByName(
+    _In_ LPCWSTR lpGroupName);
+
 DWORD ScmCreateGroupList(VOID);
 DWORD ScmSetServiceGroup(PSERVICE lpService,
                          LPCWSTR lpGroupName);

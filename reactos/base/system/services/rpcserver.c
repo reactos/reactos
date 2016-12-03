@@ -1443,7 +1443,7 @@ DWORD RSetServiceObjectSecurity(
 {
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;
-    ACCESS_MASK DesiredAccess = 0;
+    ULONG DesiredAccess = 0;
     HANDLE hToken = NULL;
     HKEY hServiceKey = NULL;
     BOOL bDatabaseLocked = FALSE;
@@ -4580,8 +4580,52 @@ DWORD RI_ScGetCurrentGroupStateW(
     LPWSTR lpLoadOrderGroup,
     LPDWORD lpState)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PMANAGER_HANDLE hManager;
+    PSERVICE_GROUP pServiceGroup;
+    DWORD dwError = ERROR_SUCCESS;
+
+    DPRINT("RI_ScGetCurrentGroupStateW() called\n");
+
+    if (ScmShutdown)
+        return ERROR_SHUTDOWN_IN_PROGRESS;
+
+    hManager = ScmGetServiceManagerFromHandle(hSCManager);
+    if (hManager == NULL)
+    {
+        DPRINT1("Invalid service manager handle!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    /* Check for SC_MANAGER_ENUMERATE_SERVICE access right */
+    if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
+                                  SC_MANAGER_ENUMERATE_SERVICE))
+    {
+        DPRINT("Insufficient access rights! 0x%lx\n",
+                hManager->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    /* Lock the service database shared */
+    ScmLockDatabaseShared();
+
+    /* Get the group list entry */
+    pServiceGroup = ScmGetServiceGroupByName(lpLoadOrderGroup);
+    if (pServiceGroup == NULL)
+    {
+        dwError = ERROR_SERVICE_DOES_NOT_EXIST;
+        goto done;
+    }
+
+    /* FIXME: Return the group state */
+    *lpState = 0;
+
+done:
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
+    DPRINT("RI_ScGetCurrentGroupStateW() done (Error %lu)\n", dwError);
+
+    return dwError;
 }
 
 
