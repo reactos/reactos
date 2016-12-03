@@ -20,12 +20,6 @@
 #include <debug.h>
 
 /*
- * Uncomment the line below to start services
- * using the SERVICE_START_PENDING state.
- */
-#define USE_SERVICE_START_PENDING
-
-/*
  * Uncomment the line below to use asynchronous IO operations
  * on the service control pipes.
  */
@@ -1766,8 +1760,8 @@ ScmLoadService(PSERVICE Service,
         dwError = ScmLoadDriver(Service);
         if (dwError == ERROR_SUCCESS)
         {
-            Service->Status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
             Service->Status.dwCurrentState = SERVICE_RUNNING;
+            Service->Status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
         }
     }
     else // if (Service->Status.dwServiceType & (SERVICE_WIN32 | SERVICE_INTERACTIVE_PROCESS))
@@ -1779,11 +1773,8 @@ ScmLoadService(PSERVICE Service,
             dwError = ScmStartUserModeService(Service, argc, argv);
             if (dwError == ERROR_SUCCESS)
             {
-#ifdef USE_SERVICE_START_PENDING
                 Service->Status.dwCurrentState = SERVICE_START_PENDING;
-#else
-                Service->Status.dwCurrentState = SERVICE_RUNNING;
-#endif
+                Service->Status.dwControlsAccepted = 0;
             }
             else
             {
