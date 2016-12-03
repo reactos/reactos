@@ -1846,6 +1846,40 @@ DWORD RChangeServiceConfigW(
         return ERROR_ACCESS_DENIED;
     }
 
+    /* Check for invalid service type value */
+    if ((dwServiceType != SERVICE_NO_CHANGE) &&
+        (dwServiceType != SERVICE_KERNEL_DRIVER) &&
+        (dwServiceType != SERVICE_FILE_SYSTEM_DRIVER) &&
+        ((dwServiceType & ~SERVICE_INTERACTIVE_PROCESS) != SERVICE_WIN32_OWN_PROCESS) &&
+        ((dwServiceType & ~SERVICE_INTERACTIVE_PROCESS) != SERVICE_WIN32_SHARE_PROCESS))
+            return ERROR_INVALID_PARAMETER;
+
+    /* Check for invalid start type value */
+    if ((dwStartType != SERVICE_NO_CHANGE) &&
+        (dwStartType != SERVICE_BOOT_START) &&
+        (dwStartType != SERVICE_SYSTEM_START) &&
+        (dwStartType != SERVICE_AUTO_START) &&
+        (dwStartType != SERVICE_DEMAND_START) &&
+        (dwStartType != SERVICE_DISABLED))
+        return ERROR_INVALID_PARAMETER;
+
+    /* Only drivers can be boot start or system start services */
+    if ((dwStartType == SERVICE_BOOT_START) ||
+        (dwStartType == SERVICE_SYSTEM_START))
+    {
+        if ((dwServiceType != SERVICE_KERNEL_DRIVER) &&
+            (dwServiceType != SERVICE_FILE_SYSTEM_DRIVER))
+            return ERROR_INVALID_PARAMETER;
+    }
+
+    /* Check for invalid error control value */
+    if ((dwErrorControl != SERVICE_NO_CHANGE) &&
+        (dwErrorControl != SERVICE_ERROR_IGNORE) &&
+        (dwErrorControl != SERVICE_ERROR_NORMAL) &&
+        (dwErrorControl != SERVICE_ERROR_SEVERE) &&
+        (dwErrorControl != SERVICE_ERROR_CRITICAL))
+        return ERROR_INVALID_PARAMETER;
+
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
