@@ -153,8 +153,8 @@ ScmGetServiceImageByImagePath(LPWSTR lpImagePath)
 static
 BOOL
 ScmIsSameServiceAccount(
-    IN PWSTR pszAccountName1,
-    IN PWSTR pszAccountName2)
+    _In_ PCWSTR pszAccountName1,
+    _In_ PCWSTR pszAccountName2)
 {
     if (pszAccountName1 == NULL && pszAccountName2 == NULL)
         return TRUE;
@@ -175,7 +175,7 @@ ScmIsSameServiceAccount(
 static
 BOOL
 ScmIsLocalSystemAccount(
-    IN PWSTR pszAccountName)
+    _In_ PCWSTR pszAccountName)
 {
     if (pszAccountName == NULL ||
         wcscmp(pszAccountName, L"LocalSystem") == 0)
@@ -306,6 +306,7 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
 
         pServiceImage->dwImageRunCount = 1;
         pServiceImage->hControlPipe = INVALID_HANDLE_VALUE;
+        pServiceImage->hProcess = INVALID_HANDLE_VALUE;
 
         pString = (PWSTR)((INT_PTR)pServiceImage + sizeof(SERVICE_IMAGE));
 
@@ -329,6 +330,10 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
         if (dwError != ERROR_SUCCESS)
         {
             DPRINT1("ScmLogonService() failed (Error %lu)\n", dwError);
+
+            /* Release the service image */
+            HeapFree(GetProcessHeap(), 0, pServiceImage);
+
             goto done;
         }
 
@@ -336,7 +341,15 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
         dwError = ScmCreateNewControlPipe(pServiceImage);
         if (dwError != ERROR_SUCCESS)
         {
+            DPRINT1("ScmCreateNewControlPipe() failed (Error %lu)\n", dwError);
+
+            /* Close the logon token */
+            if (pServiceImage->hToken != NULL)
+                CloseHandle(pServiceImage->hToken);
+
+            /* Release the service image */
             HeapFree(GetProcessHeap(), 0, pServiceImage);
+
             goto done;
         }
 
@@ -395,13 +408,17 @@ ScmDereferenceServiceImage(PSERVICE_IMAGE pServiceImage)
         /* Remove the service image from the list */
         RemoveEntryList(&pServiceImage->ImageListEntry);
 
-        /* Close the logon token */
-        if (pServiceImage->hToken != NULL)
-            CloseHandle(pServiceImage->hToken);
+        /* Close the process handle */
+        if (pServiceImage->hProcess != INVALID_HANDLE_VALUE)
+            CloseHandle(pServiceImage->hProcess);
 
         /* Close the control pipe */
         if (pServiceImage->hControlPipe != INVALID_HANDLE_VALUE)
             CloseHandle(pServiceImage->hControlPipe);
+
+        /* Close the logon token */
+        if (pServiceImage->hToken != NULL)
+            CloseHandle(pServiceImage->hToken);
 
         /* Release the service image */
         HeapFree(GetProcessHeap(), 0, pServiceImage);
@@ -1706,30 +1723,25 @@ ScmStartUserModeService(PSERVICE Service,
            ProcessInformation.dwThreadId,
            ProcessInformation.hThread);
 
-    /* Get process handle and id */
+    /* Get the process handle and ID */
+    Service->lpImage->hProcess = ProcessInformation.hProcess;
     Service->lpImage->dwProcessId = ProcessInformation.dwProcessId;
 
-    /* Resume Thread */
+    /* Resume the main thread and close its handle */
     ResumeThread(ProcessInformation.hThread);
+    CloseHandle(ProcessInformation.hThread);
 
     /* Connect control pipe */
     dwError = ScmWaitForServiceConnect(Service);
-    if (dwError == ERROR_SUCCESS)
-    {
-        /* Send start command */
-        dwError = ScmSendStartCommand(Service, argc, argv);
-    }
-    else
+    if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("Connecting control pipe failed! (Error %lu)\n", dwError);
         Service->lpImage->dwProcessId = 0;
+        return dwError;
     }
 
-    /* Close thread and process handle */
-    CloseHandle(ProcessInformation.hThread);
-    CloseHandle(ProcessInformation.hProcess);
-
-    return dwError;
+    /* Send the start command */
+    return ScmSendStartCommand(Service, argc, argv);
 }
 
 
