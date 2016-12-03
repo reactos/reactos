@@ -1443,7 +1443,7 @@ DWORD RSetServiceObjectSecurity(
 {
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;
-    ULONG DesiredAccess = 0;
+    ACCESS_MASK DesiredAccess = 0;
     HANDLE hToken = NULL;
     HKEY hServiceKey = NULL;
     BOOL bDatabaseLocked = FALSE;
@@ -6361,7 +6361,7 @@ DWORD REnumServicesStatusExW(
                    sizeof(SERVICE_STATUS));
 
             /* Copy the service process ID */
-            if ((CurrentService->Status.dwCurrentState == SERVICE_STOPPED) ||(CurrentService->lpImage == NULL))
+            if ((CurrentService->Status.dwCurrentState == SERVICE_STOPPED) || (CurrentService->lpImage == NULL))
                 lpStatusPtr->ServiceStatusProcess.dwProcessId = 0;
             else
                 lpStatusPtr->ServiceStatusProcess.dwProcessId = CurrentService->lpImage->dwProcessId;
