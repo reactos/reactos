@@ -752,7 +752,7 @@ cleanup:
 }
 
 
-START_TEST(LockDatabase)
+START_TEST(LockServiceDatabase)
 {
     Test_LockUnlockServiceDatabase();
     Test_LockUnlockServiceDatabaseWithServiceStart();

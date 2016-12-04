@@ -5,7 +5,7 @@ list(APPEND SOURCE
     eventlog.c
     HKEY_CLASSES_ROOT.c
     IsTextUnicode.c
-    LockDatabase.c
+    LockServiceDatabase.c
     QueryServiceConfig2.c
     RegEnumKey.c
     RegEnumValueW.c
