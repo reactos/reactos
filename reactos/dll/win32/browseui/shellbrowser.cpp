@@ -166,8 +166,8 @@ HRESULT WINAPI SHBindToFolder(LPCITEMIDLIST path, IShellFolder **newFolder)
     return desktop->BindToObject (path, NULL, IID_PPV_ARG(IShellFolder, newFolder));
 }
 
-static const TCHAR szCabinetWndClass[] = TEXT("CabinetWClassX");
-static const TCHAR szExploreWndClass[] = TEXT("ExploreWClassX");
+static const TCHAR szCabinetWndClass[] = TEXT("CabinetWClass");
+static const TCHAR szExploreWndClass[] = TEXT("ExploreWClass");
 
 class CDockManager;
 class CShellBrowser;
