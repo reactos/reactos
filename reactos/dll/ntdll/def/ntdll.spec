@@ -1325,7 +1325,7 @@
 1312 cdecl _wcsicmp(wstr wstr)
 1313 cdecl _wcslwr(wstr)
 1314 cdecl _wcsnicmp(wstr wstr long)
-# _wcstoui64
+1315 cdecl _wcstoui64(wstr ptr long)
 1316 cdecl _wcsupr(wstr)
 1317 cdecl _wtoi(wstr)
 1318 cdecl _wtoi64(wstr)
