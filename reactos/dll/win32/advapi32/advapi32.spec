@@ -674,8 +674,8 @@
 674 stub WmiQuerySingleInstanceMultipleA
 675 stub WmiQuerySingleInstanceMultipleW
 676 stub WmiQuerySingleInstanceW
-677 stdcall WmiReceiveNotificationsA() ntdll.EtwReceiveNotificationsA # FIXME prototype
-678 stdcall WmiReceiveNotificationsW() ntdll.EtwReceiveNotificationsW # FIXME prototype
+677 stdcall WmiReceiveNotificationsA(long long long long) ntdll.EtwReceiveNotificationsA
+678 stdcall WmiReceiveNotificationsW(long long long long) ntdll.EtwReceiveNotificationsW
 679 stub WmiSetSingleInstanceA
 680 stub WmiSetSingleInstanceW
 681 stub WmiSetSingleItemA
