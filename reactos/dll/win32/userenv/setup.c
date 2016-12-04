@@ -122,7 +122,7 @@ InitializeProfiles(VOID)
     if (!LoadStringW(hInstance,
                      IDS_PROFILEPATH,
                      szBuffer,
-                     MAX_PATH))
+                     ARRAYSIZE(szBuffer)))
     {
         DPRINT1("Error: %lu\n", GetLastError());
         return FALSE;
@@ -143,7 +143,7 @@ InitializeProfiles(VOID)
     /* Expand it */
     if (!ExpandEnvironmentStringsW(szBuffer,
                                    szProfilesPath,
-                                   MAX_PATH))
+                                   ARRAYSIZE(szProfilesPath)))
     {
         DPRINT1("Error: %lu\n", GetLastError());
         RegCloseKey(hKey);
@@ -162,7 +162,7 @@ InitializeProfiles(VOID)
     }
 
     /* Store the profiles directory path in the registry */
-    dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
+    dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
     Error = RegSetValueExW(hKey,
                            L"ProfilesDirectory",
                            0,
@@ -186,7 +186,7 @@ InitializeProfiles(VOID)
     wcscat(szProfilePath, szBuffer);
 
     /* Attempt default user directory creation */
-    if (!CreateDirectoryW (szProfilePath, NULL))
+    if (!CreateDirectoryW(szProfilePath, NULL))
     {
         if (GetLastError() != ERROR_ALREADY_EXISTS)
         {
@@ -196,7 +196,7 @@ InitializeProfiles(VOID)
         }
 
         /* Directory existed, let's try to append the postfix */
-        if (!AppendSystemPostfix(szBuffer, MAX_PATH))
+        if (!AppendSystemPostfix(szBuffer, ARRAYSIZE(szBuffer)))
         {
             DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
             RegCloseKey(hKey);
@@ -221,7 +221,7 @@ InitializeProfiles(VOID)
     }
 
     /* Store the default user profile path in the registry */
-    dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
+    dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
     Error = RegSetValueExW(hKey,
                            L"DefaultUserProfile",
                            0,
@@ -254,7 +254,7 @@ InitializeProfiles(VOID)
         if (!LoadStringW(hInstance,
                          lpFolderData->uId,
                          &szBuffer[dwLength],
-                         MAX_PATH - dwLength))
+                         ARRAYSIZE(szBuffer) - dwLength))
         {
             /* Use the default name instead */
             wcscat(szBuffer, lpFolderData->lpPath);
@@ -304,7 +304,7 @@ InitializeProfiles(VOID)
             if (!LoadStringW(hInstance,
                              lpFolderData->uId,
                              &szBuffer[dwLength],
-                             MAX_PATH - dwLength))
+                             ARRAYSIZE(szBuffer) - dwLength))
             {
                 /* Use the default name instead */
                 wcscat(szBuffer, lpFolderData->lpPath);
@@ -330,7 +330,7 @@ InitializeProfiles(VOID)
     }
 
     /* Set 'Fonts' folder path */
-    GetWindowsDirectoryW(szBuffer, MAX_PATH);
+    GetWindowsDirectoryW(szBuffer, ARRAYSIZE(szBuffer));
     wcscat(szBuffer, L"\\Fonts");
 
     dwLength = (wcslen(szBuffer) + 1) * sizeof(WCHAR);
@@ -375,7 +375,7 @@ InitializeProfiles(VOID)
             if (!LoadStringW(hInstance,
                              lpFolderData->uId,
                              &szBuffer[dwLength],
-                             MAX_PATH - dwLength))
+                             ARRAYSIZE(szBuffer) - dwLength))
             {
                 /* Use the default name instead */
                 wcscat(szBuffer, lpFolderData->lpPath);
@@ -411,7 +411,7 @@ InitializeProfiles(VOID)
     wcscat(szProfilePath, szBuffer);
 
     /* Attempt 'All Users' directory creation */
-    if (!CreateDirectoryW (szProfilePath, NULL))
+    if (!CreateDirectoryW(szProfilePath, NULL))
     {
         if (GetLastError() != ERROR_ALREADY_EXISTS)
         {
@@ -420,7 +420,7 @@ InitializeProfiles(VOID)
         }
 
         /* Directory existed, let's try to append the postfix */
-        if (!AppendSystemPostfix(szBuffer, MAX_PATH))
+        if (!AppendSystemPostfix(szBuffer, ARRAYSIZE(szBuffer)))
         {
             DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
             return FALSE;
@@ -486,7 +486,7 @@ InitializeProfiles(VOID)
         if (!LoadStringW(hInstance,
                          lpFolderData->uId,
                          &szBuffer[dwLength],
-                         MAX_PATH - dwLength))
+                         ARRAYSIZE(szBuffer) - dwLength))
         {
             /* Use the default name instead */
             wcscat(szBuffer, lpFolderData->lpPath);
@@ -536,7 +536,7 @@ InitializeProfiles(VOID)
             if (!LoadStringW(hInstance,
                              lpFolderData->uId,
                              &szBuffer[dwLength],
-                             MAX_PATH - dwLength))
+                             ARRAYSIZE(szBuffer) - dwLength))
             {
                 /* Use the default name instead */
                 wcscat(szBuffer, lpFolderData->lpPath);
@@ -588,7 +588,7 @@ InitializeProfiles(VOID)
             if (!LoadStringW(hInstance,
                              lpFolderData->uId,
                              &szBuffer[dwLength],
-                             MAX_PATH - dwLength))
+                             ARRAYSIZE(szBuffer) - dwLength))
             {
                 /* Use the default name instead */
                 wcscat(szBuffer, lpFolderData->lpPath);
@@ -619,7 +619,7 @@ InitializeProfiles(VOID)
     if (!LoadStringW(hInstance,
                      IDS_PROGRAMFILES,
                      szBuffer,
-                     MAX_PATH))
+                     ARRAYSIZE(szBuffer)))
     {
         DPRINT1("Error: %lu\n", GetLastError());
         return FALSE;
@@ -628,7 +628,7 @@ InitializeProfiles(VOID)
     if (!LoadStringW(hInstance,
                      IDS_COMMONFILES,
                      szCommonFilesDirPath,
-                     MAX_PATH))
+                     ARRAYSIZE(szCommonFilesDirPath)))
     {
         DPRINT1("Warning: %lu\n", GetLastError());
     }
@@ -636,7 +636,7 @@ InitializeProfiles(VOID)
     /* Expand it */
     if (!ExpandEnvironmentStringsW(szBuffer,
                                    szProfilesPath,
-                                   MAX_PATH))
+                                   ARRAYSIZE(szProfilesPath)))
     {
         DPRINT1("Error: %lu\n", GetLastError());
         return FALSE;
@@ -647,8 +647,8 @@ InitializeProfiles(VOID)
     wcscat(szBuffer, szCommonFilesDirPath);
 
     if (!ExpandEnvironmentStringsW(szBuffer,
-                                  szCommonFilesDirPath,
-                                  MAX_PATH))
+                                   szCommonFilesDirPath,
+                                   ARRAYSIZE(szCommonFilesDirPath)))
     {
         DPRINT1("Warning: %lu\n", GetLastError());
     }
@@ -666,7 +666,7 @@ InitializeProfiles(VOID)
         return FALSE;
     }
 
-    dwLength = (wcslen (szProfilesPath) + 1) * sizeof(WCHAR);
+    dwLength = (wcslen(szProfilesPath) + 1) * sizeof(WCHAR);
     Error = RegSetValueExW(hKey,
                            L"ProgramFilesDir",
                            0,
@@ -693,12 +693,12 @@ InitializeProfiles(VOID)
         DPRINT1("Warning: %lu\n", Error);
     }
 
-    RegCloseKey (hKey);
+    RegCloseKey(hKey);
 
     /* Create directory */
     if (!CreateDirectoryW(szProfilesPath, NULL))
     {
-        if (GetLastError () != ERROR_ALREADY_EXISTS)
+        if (GetLastError() != ERROR_ALREADY_EXISTS)
         {
             DPRINT1("Error: %lu\n", GetLastError());
             return FALSE;
@@ -708,7 +708,7 @@ InitializeProfiles(VOID)
     /* Create directory */
     if (!CreateDirectoryW(szCommonFilesDirPath, NULL))
     {
-        if (GetLastError () != ERROR_ALREADY_EXISTS)
+        if (GetLastError() != ERROR_ALREADY_EXISTS)
         {
             DPRINT1("Warning: %lu\n", GetLastError());
         }
@@ -759,7 +759,7 @@ UpdateUsersShellFolderSettings(LPCWSTR lpUserProfilePath,
             if (!LoadStringW(hInstance,
                              lpFolderData->uId,
                              &szBuffer[dwLength],
-                             MAX_PATH - dwLength))
+                             ARRAYSIZE(szBuffer) - dwLength))
             {
                 /* Use the default name instead */
                 wcscat(szBuffer, lpFolderData->lpPath);

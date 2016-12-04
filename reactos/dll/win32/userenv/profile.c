@@ -44,7 +44,7 @@ AppendSystemPostfix(LPWSTR lpName,
     /* Build profile name postfix */
     if (!ExpandEnvironmentStringsW(L"%SystemRoot%",
                                    szSystemRoot,
-                                   MAX_PATH))
+                                   ARRAYSIZE(szSystemRoot)))
     {
         DPRINT1("Error: %lu\n", GetLastError());
         return FALSE;
@@ -180,7 +180,7 @@ CreateUserProfileW(PSID Sid,
     }
 
     /* Get profiles path */
-    dwLength = MAX_PATH * sizeof(WCHAR);
+    dwLength = sizeof(szRawProfilesPath);
     Error = RegQueryValueExW(hKey,
                              L"ProfilesDirectory",
                              NULL,
@@ -198,7 +198,7 @@ CreateUserProfileW(PSID Sid,
     /* Expand it */
     if (!ExpandEnvironmentStringsW(szRawProfilesPath,
                                    szProfilesPath,
-                                   MAX_PATH))
+                                   ARRAYSIZE(szProfilesPath)))
     {
         DPRINT1("Error: %lu\n", GetLastError());
         RegCloseKey(hKey);
@@ -216,7 +216,7 @@ CreateUserProfileW(PSID Sid,
     }
 
     /* Get default user path */
-    dwLength = MAX_PATH * sizeof(WCHAR);
+    dwLength = sizeof(szBuffer);
     Error = RegQueryValueExW(hKey,
                              L"DefaultUserProfile",
                              NULL,
@@ -318,7 +318,7 @@ CreateUserProfileW(PSID Sid,
                            0,
                            REG_EXPAND_SZ,
                            (LPBYTE)szBuffer,
-                           (wcslen (szBuffer) + 1) * sizeof(WCHAR));
+                           (wcslen(szBuffer) + 1) * sizeof(WCHAR));
     if (Error != ERROR_SUCCESS)
     {
         DPRINT1("Error: %lu\n", Error);
@@ -766,13 +766,13 @@ GetProfilesDirectoryW(LPWSTR lpProfilesDir,
     /* Expand it */
     if (!ExpandEnvironmentStringsW(szBuffer,
                                    szProfilesPath,
-                                   MAX_PATH))
+                                   ARRAYSIZE(szProfilesPath)))
     {
         DPRINT1("Error: %lu\n", GetLastError());
         return FALSE;
     }
 
-    dwLength = wcslen (szProfilesPath) + 1;
+    dwLength = wcslen(szProfilesPath) + 1;
     if (lpProfilesDir != NULL)
     {
         if (*lpcchSize < dwLength)
@@ -915,7 +915,7 @@ GetUserProfileDirectoryW(HANDLE hToken,
     /* Expand it */
     if (!ExpandEnvironmentStringsW(szRawImagePath,
                                    szImagePath,
-                                   MAX_PATH))
+                                   ARRAYSIZE(szImagePath)))
     {
         DPRINT1 ("Error: %lu\n", GetLastError());
         return FALSE;
@@ -995,7 +995,7 @@ LoadUserProfileA(IN HANDLE hToken,
     }
 
     /* Convert the structure to UNICODE... */
-    ProfileInfoW.dwSize = sizeof(PROFILEINFOW);
+    ProfileInfoW.dwSize = sizeof(ProfileInfoW);
     ProfileInfoW.dwFlags = lpProfileInfo->dwFlags;
 
     if (lpProfileInfo->lpUserName)
