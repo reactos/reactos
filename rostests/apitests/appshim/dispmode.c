@@ -46,7 +46,7 @@ static LONG g_Count;
 static DEVMODEA g_LastDevmode;
 static DWORD g_LastFlags;
 
-LONG (WINAPI *pChangeDisplaySettingsA)(_In_opt_ PDEVMODEA lpDevMode, _In_ DWORD dwflags);
+static LONG (WINAPI *pChangeDisplaySettingsA)(_In_opt_ PDEVMODEA lpDevMode, _In_ DWORD dwflags);
 LONG WINAPI mChangeDisplaySettingsA(_In_opt_ PDEVMODEA lpDevMode, _In_ DWORD dwflags)
 {
     g_Count++;
@@ -56,15 +56,33 @@ LONG WINAPI mChangeDisplaySettingsA(_In_opt_ PDEVMODEA lpDevMode, _In_ DWORD dwf
     return DISP_CHANGE_FAILED;
 }
 
+static LONG g_ThemeCount;
+static DWORD g_LastThemeFlags;
 
-static void pre_8bit()
+static void (WINAPI *pSetThemeAppProperties)(DWORD dwFlags);
+void WINAPI mSetThemeAppProperties(DWORD dwFlags)
+{
+    g_ThemeCount++;
+    g_LastThemeFlags = dwFlags;
+}
+
+
+static const WCHAR* shim_dll(const WCHAR* name)
+{
+    static WCHAR buf[MAX_PATH];
+    pSdbGetAppPatchDir(NULL, buf, MAX_PATH);
+    StringCchCatW(buf, _countof(buf), name);
+    return buf;
+}
+
+static void pre_8bit(void)
 {
     g_Count = 0;
     memset(&g_LastDevmode, 0, sizeof(g_LastDevmode));
     g_LastFlags = 0xffffffff;
 }
 
-static void post_8bit()
+static void post_8bit(void)
 {
     ok_int(g_Count, 1);
     ok_hex(g_LastDevmode.dmFields & DM_BITSPERPEL, DM_BITSPERPEL);
@@ -72,14 +90,14 @@ static void post_8bit()
     ok_hex(g_LastFlags, CDS_FULLSCREEN);
 }
 
-static void pre_640()
+static void pre_640(void)
 {
     g_Count = 0;
     memset(&g_LastDevmode, 0, sizeof(g_LastDevmode));
     g_LastFlags = 0xffffffff;
 }
 
-static void post_640()
+static void post_640(void)
 {
     ok_int(g_Count, 1);
     ok_hex(g_LastDevmode.dmFields & (DM_PELSWIDTH | DM_PELSHEIGHT), (DM_PELSWIDTH | DM_PELSHEIGHT));
@@ -88,8 +106,17 @@ static void post_640()
     ok_hex(g_LastFlags, CDS_FULLSCREEN);
 }
 
+static void pre_theme(void)
+{
+    g_ThemeCount = 0;
+    g_LastThemeFlags = 0xffffffff;
+}
 
-
+static void post_theme(void)
+{
+    ok_int(g_ThemeCount, 1);
+    ok_hex(g_LastThemeFlags, 0);
+}
 
 static PIMAGE_IMPORT_DESCRIPTOR FindImportDescriptor(PBYTE DllBase, PCSTR DllName)
 {
@@ -144,6 +171,15 @@ static BOOL RedirectIat(HMODULE TargetDll, PCSTR DllName, PCSTR FunctionName, UL
     return FALSE;
 }
 
+static BOOL hook_disp(HMODULE dll)
+{
+    return RedirectIat(dll, "user32.dll", "ChangeDisplaySettingsA", (ULONG_PTR)mChangeDisplaySettingsA, (ULONG_PTR*)&pChangeDisplaySettingsA);
+}
+
+static BOOL hook_theme(HMODULE dll)
+{
+    return RedirectIat(dll, "uxtheme.dll", "SetThemeAppProperties", (ULONG_PTR)mSetThemeAppProperties, (ULONG_PTR*)&pSetThemeAppProperties);
+}
 
 
 static void test_one(LPCSTR shim, DWORD dwReason, void(*pre)(), void(*post)())
@@ -178,28 +214,30 @@ static void test_one(LPCSTR shim, DWORD dwReason, void(*pre)(), void(*post)())
 static struct test_info
 {
     const char* name;
+    const WCHAR* dll;
     DWORD winver;
     DWORD reason;
-    void(*pre)();
-    void(*post)();
+    BOOL(*hook)(HMODULE);
+    void(*pre)(void);
+    void(*post)(void);
 } tests[] =
 {
-    { "Force8BitColor", WINVER_ANY, 1, pre_8bit, post_8bit },
-    { "Force8BitColor", WINVER_VISTA, 100, pre_8bit, post_8bit },
-    { "Force640x480", WINVER_ANY, 1, pre_640, post_640 },
-    { "Force640x480", WINVER_VISTA, 100, pre_640, post_640 },
-    /* { "DisableThemes" }, AcGenral.dll */
+    { "Force8BitColor", L"\\aclayers.dll", WINVER_ANY, 1, hook_disp, pre_8bit, post_8bit },
+    { "Force8BitColor", L"\\aclayers.dll", WINVER_VISTA, 100, hook_disp, pre_8bit, post_8bit },
+    { "Force640x480", L"\\aclayers.dll", WINVER_ANY, 1, hook_disp, pre_640, post_640 },
+    { "Force640x480", L"\\aclayers.dll", WINVER_VISTA, 100, hook_disp, pre_640, post_640 },
+    { "DisableThemes", L"\\acgenral.dll", WINVER_ANY, 1, hook_theme, pre_theme, post_theme },
+    { "DisableThemes", L"\\acgenral.dll", WINVER_VISTA, 100, hook_theme, pre_theme, post_theme },
 };
 
 
-static void run_test(size_t n, WCHAR* buf, BOOL unload)
+static void run_test(size_t n, BOOL unload)
 {
     BOOL ret;
     HMODULE dll;
+    const WCHAR* buf = shim_dll(tests[n].dll);
 
-    trace("Running %d (%s)\n", n, tests[n].name);
-
-    dll = LoadLibraryW(buf);
+    dll = LoadLibraryW(shim_dll(tests[n].dll));
     pGetHookAPIs = (void*)GetProcAddress(dll, "GetHookAPIs");
     pNotifyShims = (void*)GetProcAddress(dll, "NotifyShims");
 
@@ -210,14 +248,14 @@ static void run_test(size_t n, WCHAR* buf, BOOL unload)
         return;
     }
 
-    ret = RedirectIat(dll, "user32.dll", "ChangeDisplaySettingsA", (ULONG_PTR)mChangeDisplaySettingsA, (ULONG_PTR*)&pChangeDisplaySettingsA);
+    ret = tests[n].hook(dll);
     if (ret)
     {
         test_one(tests[n].name, tests[n].reason, tests[n].pre, tests[n].post);
     }
     else
     {
-        ok(0, "Unable to redirect ChangeDisplaySettingsA!\n");
+        ok(0, "Unable to redirect functions!\n");
     }
     FreeLibrary(dll);
     if (unload)
@@ -231,8 +269,6 @@ static void run_test(size_t n, WCHAR* buf, BOOL unload)
 START_TEST(dispmode)
 {
     HMODULE dll = LoadLibraryA("apphelp.dll");
-    WCHAR buf[MAX_PATH];
-    WCHAR aclayers[] = L"\\aclayers.dll";
     size_t n;
     int argc;
     char **argv;
@@ -246,26 +282,27 @@ START_TEST(dispmode)
 
     g_WinVersion = get_host_winver();
 
-    pSdbGetAppPatchDir(NULL, buf, MAX_PATH);
-    StringCchCatW(buf, _countof(buf), aclayers);
-
     argc = winetest_get_mainargs(&argv);
     if (argc < 3)
     {
         WCHAR path[MAX_PATH];
         GetModuleFileNameW(NULL, path, _countof(path));
-        dll = GetModuleHandleW(buf);
+        dll = GetModuleHandleW(shim_dll(L"\\aclayers.dll"));
+        if (!dll)
+            dll = GetModuleHandleW(shim_dll(L"\\acgenral.dll"));
         if (dll != NULL)
             trace("Loaded under a shim, running each test in it's own process\n");
 
         for (n = 0; n < _countof(tests); ++n)
         {
+            LONG failures = winetest_get_failures();
+
             if (g_WinVersion < tests[n].winver)
                 continue;
 
             if (dll == NULL)
             {
-                run_test(n, buf, TRUE);
+                run_test(n, TRUE);
             }
             else
             {
@@ -284,6 +321,11 @@ START_TEST(dispmode)
                     CloseHandle(pi.hProcess);
                 }
             }
+
+            if (failures != winetest_get_failures())
+            {
+                trace("Failures from %d (%s)\n", n, tests[n].name);
+            }
         }
     }
     else
@@ -291,7 +333,7 @@ START_TEST(dispmode)
         n = (size_t)atoi(argv[2]);
         if (n >= 0 && n < _countof(tests))
         {
-            run_test(n, buf, FALSE);
+            run_test(n, FALSE);
         }
         else
         {
