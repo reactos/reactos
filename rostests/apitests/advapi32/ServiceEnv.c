@@ -1,8 +1,8 @@
 /*
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Test for StartService functionality
- * PROGRAMMER:      Hermès BÉLUSCA - MAÏTO
+ * PURPOSE:         Test for service process environment block
+ * PROGRAMMER:      Hermes Belusca-Maito
  */
 
 #include <apitest.h>
