@@ -14,6 +14,7 @@ list(APPEND SOURCE
     RtlEncryptMemory.c
     SaferIdentifyLevel.c
     ServiceArgs.c
+    svchlp.c
     testlist.c)
 
 add_executable(advapi32_apitest ${SOURCE})
