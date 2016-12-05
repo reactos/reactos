@@ -14,6 +14,7 @@ list(APPEND SOURCE
     RtlEncryptMemory.c
     SaferIdentifyLevel.c
     ServiceArgs.c
+    ServiceEnv.c
     svchlp.c
     testlist.c)
 
