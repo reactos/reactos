@@ -1700,8 +1700,11 @@ ScmStartUserModeService(PSERVICE Service,
     ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
 
     /* Use the interactive desktop if the service is interactive */
+    // TODO: We should also check the value "NoInteractiveServices ":
+    // See https://msdn.microsoft.com/en-us/library/windows/desktop/ms683502(v=vs.85).aspx
+    // for more details.
     if (Service->Status.dwServiceType & SERVICE_INTERACTIVE_PROCESS)
-        StartupInfo.lpDesktop = L"winsta0\\default";
+        StartupInfo.lpDesktop = L"WinSta0\\Default";
 
     if (Service->lpImage->hToken)
     {
@@ -1710,34 +1713,38 @@ ScmStartUserModeService(PSERVICE Service,
         if (!CreateEnvironmentBlock(&lpEnvironment, Service->lpImage->hToken, FALSE))
         {
             /* We failed, run the service with the current environment */
-            DPRINT1("CreateEnvironmentBlock() failed with error %d, service '%S' will run with the current environment.\n",
-                    Service->lpServiceName, GetLastError());
+            DPRINT1("CreateEnvironmentBlock() failed with error %d; service '%S' will run with the current environment.\n",
+                    GetLastError(), Service->lpServiceName);
             lpEnvironment = NULL;
         }
 
         /* Impersonate the new user */
-        if (!ImpersonateLoggedOnUser(Service->lpImage->hToken))
+        Result = ImpersonateLoggedOnUser(Service->lpImage->hToken);
+        if (Result)
+        {
+            /* Launch the process in the user's logon session */
+            Result = CreateProcessAsUserW(Service->lpImage->hToken,
+                                          NULL,
+                                          Service->lpImage->pszImagePath,
+                                          NULL,
+                                          NULL,
+                                          FALSE,
+                                          CREATE_UNICODE_ENVIRONMENT | DETACHED_PROCESS | CREATE_SUSPENDED,
+                                          lpEnvironment,
+                                          NULL,
+                                          &StartupInfo,
+                                          &ProcessInformation);
+            if (!Result)
+                dwError = GetLastError();
+
+            /* Revert the impersonation */
+            RevertToSelf();
+        }
+        else
         {
             dwError = GetLastError();
-            DPRINT1("ImpersonateLoggedOnUser() failed with error %d\n", GetLastError());
-            return dwError;
+            DPRINT1("ImpersonateLoggedOnUser() failed with error %d\n", dwError);
         }
-
-        /* Launch the process in the user's logon session */
-        Result = CreateProcessAsUserW(Service->lpImage->hToken,
-                                      NULL,
-                                      Service->lpImage->pszImagePath,
-                                      NULL,
-                                      NULL,
-                                      FALSE,
-                                      CREATE_UNICODE_ENVIRONMENT | DETACHED_PROCESS | CREATE_SUSPENDED,
-                                      lpEnvironment,
-                                      NULL,
-                                      &StartupInfo,
-                                      &ProcessInformation);
-
-        /* Revert the impersonation */
-        RevertToSelf();
     }
     else
     {
@@ -1746,8 +1753,8 @@ ScmStartUserModeService(PSERVICE Service,
         if (!CreateEnvironmentBlock(&lpEnvironment, NULL, TRUE))
         {
             /* We failed, run the service with the current environment */
-            DPRINT1("CreateEnvironmentBlock() failed with error %d, service '%S' will run with the current environment.\n",
-                    Service->lpServiceName, GetLastError());
+            DPRINT1("CreateEnvironmentBlock() failed with error %d; service '%S' will run with the current environment.\n",
+                    GetLastError(), Service->lpServiceName);
             lpEnvironment = NULL;
         }
 
@@ -1761,6 +1768,8 @@ ScmStartUserModeService(PSERVICE Service,
                                 NULL,
                                 &StartupInfo,
                                 &ProcessInformation);
+        if (!Result)
+            dwError = GetLastError();
     }
 
     if (lpEnvironment)
@@ -1768,8 +1777,8 @@ ScmStartUserModeService(PSERVICE Service,
 
     if (!Result)
     {
-        dwError = GetLastError();
-        DPRINT1("Starting '%S' failed!\n", Service->lpServiceName);
+        DPRINT1("Starting '%S' failed with error %d\n",
+                Service->lpServiceName, dwError);
         return dwError;
     }
 
