@@ -109,7 +109,6 @@ HGLOBAL RenderFILENAMEW (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
 /* Change Notification */
 void InitChangeNotifications(void) DECLSPEC_HIDDEN;
 void FreeChangeNotifications(void) DECLSPEC_HIDDEN;
-void InitIconOverlays(void);
 
 /* file operation */
 #define ASK_DELETE_FILE           1

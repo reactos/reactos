@@ -87,7 +87,7 @@ static HRESULT getIconLocationForFolder(IShellFolder * psf, LPCITEMIDLIST pidl, 
     return S_OK;
 }
 
-void InitIconOverlays(void)
+static void InitIconOverlays(void)
 {
     HKEY hKey;
     DWORD dwIndex, dwResult, dwSize;
@@ -161,6 +161,8 @@ GetIconOverlay(LPCITEMIDLIST pidl, WCHAR * wTemp, int* pIndex)
     if(!SHGetPathFromIDListW(pidl, szPath))
         return FALSE;
 
+    if (!Handlers)
+        InitIconOverlays();
 
     HighestPriority = 101;
     IconIndex = NumIconOverlayHandlers;

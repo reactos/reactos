@@ -307,9 +307,9 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
         InitCtrls.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES;
         InitCommonControlsEx(&InitCtrls);
 
+        /* Bad idea, initialization in DllMain! */
         SIC_Initialize();
         InitChangeNotifications();
-        InitIconOverlays();
     }
     else if (dwReason == DLL_PROCESS_DETACH)
     {
