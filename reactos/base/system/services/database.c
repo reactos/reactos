@@ -14,7 +14,7 @@
 
 #include "services.h"
 
-#include <winuser.h>
+#include <userenv.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1681,6 +1681,7 @@ ScmStartUserModeService(PSERVICE Service,
 {
     PROCESS_INFORMATION ProcessInformation;
     STARTUPINFOW StartupInfo;
+    LPVOID lpEnvironment;
     BOOL Result;
     DWORD dwError = ERROR_SUCCESS;
 
@@ -1698,17 +1699,73 @@ ScmStartUserModeService(PSERVICE Service,
     StartupInfo.cb = sizeof(StartupInfo);
     ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
 
-    Result = CreateProcessAsUserW(Service->lpImage->hToken,
-                                  NULL,
-                                  Service->lpImage->pszImagePath,
-                                  NULL,
-                                  NULL,
-                                  FALSE,
-                                  DETACHED_PROCESS | CREATE_SUSPENDED,
-                                  NULL,
-                                  NULL,
-                                  &StartupInfo,
-                                  &ProcessInformation);
+    /* Use the interactive desktop if the service is interactive */
+    if (Service->Status.dwServiceType & SERVICE_INTERACTIVE_PROCESS)
+        StartupInfo.lpDesktop = L"winsta0\\default";
+
+    if (Service->lpImage->hToken)
+    {
+        /* User token: Run the service under the user account */
+
+        if (!CreateEnvironmentBlock(&lpEnvironment, Service->lpImage->hToken, FALSE))
+        {
+            /* We failed, run the service with the current environment */
+            DPRINT1("CreateEnvironmentBlock() failed with error %d, service '%S' will run with the current environment.\n",
+                    Service->lpServiceName, GetLastError());
+            lpEnvironment = NULL;
+        }
+
+        /* Impersonate the new user */
+        if (!ImpersonateLoggedOnUser(Service->lpImage->hToken))
+        {
+            dwError = GetLastError();
+            DPRINT1("ImpersonateLoggedOnUser() failed with error %d\n", GetLastError());
+            return dwError;
+        }
+
+        /* Launch the process in the user's logon session */
+        Result = CreateProcessAsUserW(Service->lpImage->hToken,
+                                      NULL,
+                                      Service->lpImage->pszImagePath,
+                                      NULL,
+                                      NULL,
+                                      FALSE,
+                                      CREATE_UNICODE_ENVIRONMENT | DETACHED_PROCESS | CREATE_SUSPENDED,
+                                      lpEnvironment,
+                                      NULL,
+                                      &StartupInfo,
+                                      &ProcessInformation);
+
+        /* Revert the impersonation */
+        RevertToSelf();
+    }
+    else
+    {
+        /* No user token: Run the service under the LocalSystem account */
+
+        if (!CreateEnvironmentBlock(&lpEnvironment, NULL, TRUE))
+        {
+            /* We failed, run the service with the current environment */
+            DPRINT1("CreateEnvironmentBlock() failed with error %d, service '%S' will run with the current environment.\n",
+                    Service->lpServiceName, GetLastError());
+            lpEnvironment = NULL;
+        }
+
+        Result = CreateProcessW(NULL,
+                                Service->lpImage->pszImagePath,
+                                NULL,
+                                NULL,
+                                FALSE,
+                                CREATE_UNICODE_ENVIRONMENT | DETACHED_PROCESS | CREATE_SUSPENDED,
+                                lpEnvironment,
+                                NULL,
+                                &StartupInfo,
+                                &ProcessInformation);
+    }
+
+    if (lpEnvironment)
+        DestroyEnvironmentBlock(lpEnvironment);
+
     if (!Result)
     {
         dwError = GetLastError();
