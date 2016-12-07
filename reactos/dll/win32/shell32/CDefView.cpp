@@ -20,26 +20,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * FIXME: The order by part of the background context menu should be
- * built according to the columns shown.
- *
  * FIXME: CheckToolbar: handle the "new folder" and "folder up" button
  */
 
 /*
 TODO:
 - Load/Save the view state from/into the stream provided by the ShellBrowser.
-- Code to merge menus in the shellbrowser is incorrect.
-- Move the background context menu creation into shell view. It should store the
-   shell view HWND to send commands.
-- Shell view should do SetCommandTarget on internet toolbar.
 - When editing starts on item, set edit text to for editing value.
-- When shell view is called back for item info, let listview save the value.
 - Fix shell view to handle view mode popup exec.
 - The background context menu should have a pidl just like foreground menus. This
    causes crashes when dynamic handlers try to use the NULL pidl.
-- The SHELLDLL_DefView should not be filled with blue unconditionally. This causes
-   annoying flashing of blue even on XP, and is not correct.
 - Reorder of columns doesn't work - might be bug in comctl32
 */
 
