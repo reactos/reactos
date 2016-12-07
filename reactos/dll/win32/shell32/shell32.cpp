@@ -308,7 +308,6 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID fImpLoad)
         InitCommonControlsEx(&InitCtrls);
 
         /* Bad idea, initialization in DllMain! */
-        SIC_Initialize();
         InitChangeNotifications();
     }
     else if (dwReason == DLL_PROCESS_DETACH)
