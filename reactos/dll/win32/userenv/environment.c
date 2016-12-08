@@ -36,25 +36,23 @@ SetUserEnvironmentVariable(LPVOID *Environment,
                            LPWSTR lpValue,
                            BOOL bExpand)
 {
-    WCHAR ShortName[MAX_PATH];
+    NTSTATUS Status;
     UNICODE_STRING Name;
     UNICODE_STRING SrcValue;
     UNICODE_STRING DstValue;
     ULONG Length;
-    NTSTATUS Status;
     PVOID Buffer = NULL;
+    WCHAR ShortName[MAX_PATH];
 
     if (bExpand)
     {
-        RtlInitUnicodeString(&SrcValue,
-                             lpValue);
+        RtlInitUnicodeString(&SrcValue, lpValue);
 
         Length = 2 * MAX_PATH * sizeof(WCHAR);
 
         DstValue.Length = 0;
         DstValue.MaximumLength = Length;
-        DstValue.Buffer = Buffer = LocalAlloc(LPTR,
-                                              Length);
+        DstValue.Buffer = Buffer = LocalAlloc(LPTR, Length);
         if (DstValue.Buffer == NULL)
         {
             DPRINT1("LocalAlloc() failed\n");
@@ -69,15 +67,16 @@ SetUserEnvironmentVariable(LPVOID *Environment,
         {
             DPRINT1("RtlExpandEnvironmentStrings_U() failed (Status %lx)\n", Status);
             DPRINT1("Length %lu\n", Length);
+
             if (Buffer)
                 LocalFree(Buffer);
+
             return FALSE;
         }
     }
     else
     {
-        RtlInitUnicodeString(&DstValue,
-                             lpValue);
+        RtlInitUnicodeString(&DstValue, lpValue);
     }
 
     if (!_wcsicmp(lpName, L"temp") || !_wcsicmp(lpName, L"tmp"))
@@ -86,15 +85,13 @@ SetUserEnvironmentVariable(LPVOID *Environment,
         {
             DPRINT("GetShortPathNameW() failed for %S (Error %lu)\n", DstValue.Buffer, GetLastError());
 
-            RtlInitUnicodeString(&DstValue,
-                                 ShortName);
+            RtlInitUnicodeString(&DstValue, ShortName);
         }
 
         DPRINT("Buffer: %S\n", ShortName);
     }
 
-    RtlInitUnicodeString(&Name,
-                         lpName);
+    RtlInitUnicodeString(&Name, lpName);
 
     DPRINT("Value: %wZ\n", &DstValue);
 
@@ -121,34 +118,27 @@ AppendUserEnvironmentVariable(LPVOID *Environment,
                               LPWSTR lpName,
                               LPWSTR lpValue)
 {
+    NTSTATUS Status;
     UNICODE_STRING Name;
     UNICODE_STRING Value;
-    NTSTATUS Status;
 
-    RtlInitUnicodeString(&Name,
-                         lpName);
+    RtlInitUnicodeString(&Name, lpName);
 
     Value.Length = 0;
     Value.MaximumLength = 1024 * sizeof(WCHAR);
-    Value.Buffer = LocalAlloc(LPTR,
-                              1024 * sizeof(WCHAR));
+    Value.Buffer = LocalAlloc(LPTR, Value.MaximumLength);
     if (Value.Buffer == NULL)
-    {
         return FALSE;
-    }
+
     Value.Buffer[0] = UNICODE_NULL;
 
     Status = RtlQueryEnvironmentVariable_U((PWSTR)*Environment,
                                            &Name,
                                            &Value);
     if (NT_SUCCESS(Status))
-    {
-        RtlAppendUnicodeToString(&Value,
-                                 L";");
-    }
+        RtlAppendUnicodeToString(&Value, L";");
 
-    RtlAppendUnicodeToString(&Value,
-                             lpValue);
+    RtlAppendUnicodeToString(&Value, lpValue);
 
     Status = RtlSetEnvironmentVariable((PWSTR*)Environment,
                                        &Name,
@@ -168,12 +158,11 @@ static
 HKEY
 GetCurrentUserKey(HANDLE hToken)
 {
+    LONG Error;
     UNICODE_STRING SidString;
     HKEY hKey;
-    LONG Error;
 
-    if (!GetUserSidStringFromToken(hToken,
-                                   &SidString))
+    if (!GetUserSidStringFromToken(hToken, &SidString))
     {
         DPRINT1("GetUserSidFromToken() failed\n");
         return NULL;
@@ -204,13 +193,13 @@ GetUserAndDomainName(IN HANDLE hToken,
                      OUT LPWSTR *UserName,
                      OUT LPWSTR *DomainName)
 {
+    BOOL bRet = TRUE;
     PSID Sid = NULL;
     LPWSTR lpUserName = NULL;
     LPWSTR lpDomainName = NULL;
     DWORD cbUserName = 0;
     DWORD cbDomainName = 0;
     SID_NAME_USE SidNameUse;
-    BOOL bRet = TRUE;
 
     Sid = GetUserSid(hToken);
     if (Sid == NULL)
@@ -234,16 +223,14 @@ GetUserAndDomainName(IN HANDLE hToken,
         }
     }
 
-    lpUserName = LocalAlloc(LPTR,
-                            cbUserName * sizeof(WCHAR));
+    lpUserName = LocalAlloc(LPTR, cbUserName * sizeof(WCHAR));
     if (lpUserName == NULL)
     {
         bRet = FALSE;
         goto done;
     }
 
-    lpDomainName = LocalAlloc(LPTR,
-                              cbDomainName * sizeof(WCHAR));
+    lpDomainName = LocalAlloc(LPTR, cbDomainName * sizeof(WCHAR));
     if (lpDomainName == NULL)
     {
         bRet = FALSE;
@@ -287,6 +274,7 @@ SetUserEnvironment(LPVOID *lpEnvironment,
                    HKEY hKey,
                    LPWSTR lpSubKeyName)
 {
+    LONG Error;
     HKEY hEnvKey;
     DWORD dwValues;
     DWORD dwMaxValueNameLength;
@@ -297,7 +285,6 @@ SetUserEnvironment(LPVOID *lpEnvironment,
     DWORD i;
     LPWSTR lpValueName;
     LPWSTR lpValueData;
-    LONG Error;
 
     Error = RegOpenKeyExW(hKey,
                           lpSubKeyName,
@@ -339,16 +326,14 @@ SetUserEnvironment(LPVOID *lpEnvironment,
 
     /* Allocate buffers */
     dwMaxValueNameLength++;
-    lpValueName = LocalAlloc(LPTR,
-                             dwMaxValueNameLength * sizeof(WCHAR));
+    lpValueName = LocalAlloc(LPTR, dwMaxValueNameLength * sizeof(WCHAR));
     if (lpValueName == NULL)
     {
         RegCloseKey(hEnvKey);
         return FALSE;
     }
 
-    lpValueData = LocalAlloc(LPTR,
-                             dwMaxValueDataLength);
+    lpValueData = LocalAlloc(LPTR, dwMaxValueDataLength);
     if (lpValueData == NULL)
     {
         LocalFree(lpValueName);
@@ -410,6 +395,7 @@ static
 BOOL
 SetSystemEnvironment(LPVOID *lpEnvironment)
 {
+    LONG Error;
     HKEY hEnvKey;
     DWORD dwValues;
     DWORD dwMaxValueNameLength;
@@ -420,7 +406,6 @@ SetSystemEnvironment(LPVOID *lpEnvironment)
     DWORD i;
     LPWSTR lpValueName;
     LPWSTR lpValueData;
-    LONG Error;
 
     Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                           L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment",
@@ -460,16 +445,14 @@ SetSystemEnvironment(LPVOID *lpEnvironment)
 
     /* Allocate buffers */
     dwMaxValueNameLength++;
-    lpValueName = LocalAlloc(LPTR,
-                             dwMaxValueNameLength * sizeof(WCHAR));
+    lpValueName = LocalAlloc(LPTR, dwMaxValueNameLength * sizeof(WCHAR));
     if (lpValueName == NULL)
     {
         RegCloseKey(hEnvKey);
         return FALSE;
     }
 
-    lpValueData = LocalAlloc(LPTR,
-                             dwMaxValueDataLength);
+    lpValueData = LocalAlloc(LPTR, dwMaxValueDataLength);
     if (lpValueData == NULL)
     {
         LocalFree(lpValueName);
@@ -523,16 +506,16 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                        HANDLE hToken,
                        BOOL bInherit)
 {
-    WCHAR Buffer[MAX_PATH];
-    WCHAR szValue[1024];
+    NTSTATUS Status;
+    LONG lError;
     DWORD Length;
     DWORD dwType;
     HKEY hKey;
     HKEY hKeyUser;
     LPWSTR lpUserName = NULL;
     LPWSTR lpDomainName = NULL;
-    NTSTATUS Status;
-    LONG lError;
+    WCHAR Buffer[MAX_PATH];
+    WCHAR szValue[1024];
 
     DPRINT("CreateEnvironmentBlock() called\n");
 
@@ -667,9 +650,7 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
 
     /* Set 'USERPROFILE' variable */
     Length = MAX_PATH;
-    if (GetUserProfileDirectoryW(hToken,
-                                 Buffer,
-                                 &Length))
+    if (GetUserProfileDirectoryW(hToken, Buffer, &Length))
     {
         DWORD MinLen = 2;
 
@@ -765,8 +746,8 @@ ExpandEnvironmentStringsForUserW(IN HANDLE hToken,
                                  OUT LPWSTR lpDest,
                                  IN DWORD dwSize)
 {
-    PVOID lpEnvironment;
     BOOL Ret = FALSE;
+    PVOID lpEnvironment;
 
     if (lpSrc == NULL || lpDest == NULL || dwSize == 0)
     {
@@ -781,14 +762,13 @@ ExpandEnvironmentStringsForUserW(IN HANDLE hToken,
         UNICODE_STRING SrcU, DestU;
         NTSTATUS Status;
 
-        /* initialize the strings */
-        RtlInitUnicodeString(&SrcU,
-                             lpSrc);
+        /* Initialize the strings */
+        RtlInitUnicodeString(&SrcU, lpSrc);
         DestU.Length = 0;
         DestU.MaximumLength = dwSize * sizeof(WCHAR);
         DestU.Buffer = lpDest;
 
-        /* expand the strings */
+        /* Expand the strings */
         Status = RtlExpandEnvironmentStrings_U((PWSTR)lpEnvironment,
                                                &SrcU,
                                                &DestU,
@@ -817,9 +797,9 @@ ExpandEnvironmentStringsForUserA(IN HANDLE hToken,
                                  OUT LPSTR lpDest,
                                  IN DWORD dwSize)
 {
+    BOOL Ret = FALSE;
     DWORD dwSrcLen;
     LPWSTR lpSrcW = NULL, lpDestW = NULL;
-    BOOL Ret = FALSE;
 
     if (lpSrc == NULL || lpDest == NULL || dwSize == 0)
     {
@@ -844,9 +824,7 @@ ExpandEnvironmentStringsForUserA(IN HANDLE hToken,
     lpDestW = (LPWSTR)GlobalAlloc(GMEM_FIXED,
                                   dwSize * sizeof(WCHAR));
     if (lpDestW == NULL)
-    {
         goto Cleanup;
-    }
 
     Ret = ExpandEnvironmentStringsForUserW(hToken,
                                            lpSrcW,
@@ -869,14 +847,10 @@ ExpandEnvironmentStringsForUserA(IN HANDLE hToken,
 
 Cleanup:
     if (lpSrcW != NULL)
-    {
         GlobalFree((HGLOBAL)lpSrcW);
-    }
 
     if (lpDestW != NULL)
-    {
         GlobalFree((HGLOBAL)lpDestW);
-    }
 
     return Ret;
 }
