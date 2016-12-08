@@ -31,15 +31,14 @@
 
 static
 BOOL
-SetUserEnvironmentVariable(LPVOID *Environment,
+SetUserEnvironmentVariable(PWSTR* Environment,
                            LPWSTR lpName,
                            LPWSTR lpValue,
                            BOOL bExpand)
 {
     NTSTATUS Status;
     UNICODE_STRING Name;
-    UNICODE_STRING SrcValue;
-    UNICODE_STRING DstValue;
+    UNICODE_STRING SrcValue, DstValue;
     ULONG Length;
     PVOID Buffer = NULL;
     WCHAR ShortName[MAX_PATH];
@@ -59,7 +58,7 @@ SetUserEnvironmentVariable(LPVOID *Environment,
             return FALSE;
         }
 
-        Status = RtlExpandEnvironmentStrings_U((PWSTR)*Environment,
+        Status = RtlExpandEnvironmentStrings_U(*Environment,
                                                &SrcValue,
                                                &DstValue,
                                                &Length);
@@ -79,13 +78,15 @@ SetUserEnvironmentVariable(LPVOID *Environment,
         RtlInitUnicodeString(&DstValue, lpValue);
     }
 
-    if (!_wcsicmp(lpName, L"temp") || !_wcsicmp(lpName, L"tmp"))
+    if (!_wcsicmp(lpName, L"TEMP") || !_wcsicmp(lpName, L"TMP"))
     {
-        if (GetShortPathNameW(DstValue.Buffer, ShortName, MAX_PATH))
+        if (GetShortPathNameW(DstValue.Buffer, ShortName, ARRAYSIZE(ShortName)))
+        {
+            RtlInitUnicodeString(&DstValue, ShortName);
+        }
+        else
         {
             DPRINT("GetShortPathNameW() failed for %S (Error %lu)\n", DstValue.Buffer, GetLastError());
-
-            RtlInitUnicodeString(&DstValue, ShortName);
         }
 
         DPRINT("Buffer: %S\n", ShortName);
@@ -95,7 +96,7 @@ SetUserEnvironmentVariable(LPVOID *Environment,
 
     DPRINT("Value: %wZ\n", &DstValue);
 
-    Status = RtlSetEnvironmentVariable((PWSTR*)Environment,
+    Status = RtlSetEnvironmentVariable(Environment,
                                        &Name,
                                        &DstValue);
 
@@ -114,13 +115,12 @@ SetUserEnvironmentVariable(LPVOID *Environment,
 
 static
 BOOL
-AppendUserEnvironmentVariable(LPVOID *Environment,
+AppendUserEnvironmentVariable(PWSTR* Environment,
                               LPWSTR lpName,
                               LPWSTR lpValue)
 {
     NTSTATUS Status;
-    UNICODE_STRING Name;
-    UNICODE_STRING Value;
+    UNICODE_STRING Name, Value;
 
     RtlInitUnicodeString(&Name, lpName);
 
@@ -132,7 +132,7 @@ AppendUserEnvironmentVariable(LPVOID *Environment,
 
     Value.Buffer[0] = UNICODE_NULL;
 
-    Status = RtlQueryEnvironmentVariable_U((PWSTR)*Environment,
+    Status = RtlQueryEnvironmentVariable_U(*Environment,
                                            &Name,
                                            &Value);
     if (NT_SUCCESS(Status))
@@ -140,7 +140,7 @@ AppendUserEnvironmentVariable(LPVOID *Environment,
 
     RtlAppendUnicodeToString(&Value, lpValue);
 
-    Status = RtlSetEnvironmentVariable((PWSTR*)Environment,
+    Status = RtlSetEnvironmentVariable(Environment,
                                        &Name,
                                        &Value);
     LocalFree(Value.Buffer);
@@ -270,7 +270,7 @@ done:
 
 static
 BOOL
-SetUserEnvironment(LPVOID *lpEnvironment,
+SetUserEnvironment(PWSTR* Environment,
                    HKEY hKey,
                    LPWSTR lpSubKeyName)
 {
@@ -357,17 +357,17 @@ SetUserEnvironment(LPVOID *lpEnvironment,
                               &dwValueDataLength);
         if (Error == ERROR_SUCCESS)
         {
-            if (!_wcsicmp(lpValueName, L"path"))
+            if (!_wcsicmp(lpValueName, L"PATH"))
             {
                 /* Append 'Path' environment variable */
-                AppendUserEnvironmentVariable(lpEnvironment,
+                AppendUserEnvironmentVariable(Environment,
                                               lpValueName,
                                               lpValueData);
             }
             else
             {
                 /* Set environment variable */
-                SetUserEnvironmentVariable(lpEnvironment,
+                SetUserEnvironmentVariable(Environment,
                                            lpValueName,
                                            lpValueData,
                                            (dwType == REG_EXPAND_SZ));
@@ -393,7 +393,7 @@ SetUserEnvironment(LPVOID *lpEnvironment,
 
 static
 BOOL
-SetSystemEnvironment(LPVOID *lpEnvironment)
+SetSystemEnvironment(PWSTR* Environment)
 {
     LONG Error;
     HKEY hEnvKey;
@@ -477,7 +477,7 @@ SetSystemEnvironment(LPVOID *lpEnvironment)
         if (Error == ERROR_SUCCESS)
         {
             /* Set environment variable */
-            SetUserEnvironmentVariable(lpEnvironment,
+            SetUserEnvironmentVariable(Environment,
                                        lpValueName,
                                        lpValueData,
                                        (dwType == REG_EXPAND_SZ));
@@ -502,12 +502,13 @@ SetSystemEnvironment(LPVOID *lpEnvironment)
 
 BOOL
 WINAPI
-CreateEnvironmentBlock(LPVOID *lpEnvironment,
-                       HANDLE hToken,
-                       BOOL bInherit)
+CreateEnvironmentBlock(OUT LPVOID *lpEnvironment,
+                       IN HANDLE hToken,
+                       IN BOOL bInherit)
 {
     NTSTATUS Status;
     LONG lError;
+    PWSTR* Environment = (PWSTR*)lpEnvironment;
     DWORD Length;
     DWORD dwType;
     HKEY hKey;
@@ -525,8 +526,7 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
         return FALSE;
     }
 
-    Status = RtlCreateEnvironment((BOOLEAN)bInherit,
-                                  (PWSTR*)lpEnvironment);
+    Status = RtlCreateEnvironment((BOOLEAN)bInherit, Environment);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlCreateEnvironment() failed (Status %lx)\n", Status);
@@ -535,63 +535,56 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
     }
 
     /* Set 'SystemRoot' variable */
-    Length = MAX_PATH;
-    if (GetEnvironmentVariableW(L"SystemRoot",
-                                Buffer,
-                                Length))
+    Length = ARRAYSIZE(Buffer);
+    if (GetEnvironmentVariableW(L"SystemRoot", Buffer, Length))
     {
-        SetUserEnvironmentVariable(lpEnvironment,
+        SetUserEnvironmentVariable(Environment,
                                    L"SystemRoot",
                                    Buffer,
                                    FALSE);
     }
 
     /* Set 'SystemDrive' variable */
-    if (GetEnvironmentVariableW(L"SystemDrive",
-                                Buffer,
-                                Length))
+    if (GetEnvironmentVariableW(L"SystemDrive", Buffer, Length))
     {
-        SetUserEnvironmentVariable(lpEnvironment,
+        SetUserEnvironmentVariable(Environment,
                                    L"SystemDrive",
                                    Buffer,
                                    FALSE);
     }
 
     /* Set variables from Session Manager */
-    if (!SetSystemEnvironment(lpEnvironment))
+    if (!SetSystemEnvironment(Environment))
     {
-        RtlDestroyEnvironment(*lpEnvironment);
+        RtlDestroyEnvironment(*Environment);
         return FALSE;
     }
 
     /* Set 'COMPUTERNAME' variable */
-    Length = MAX_PATH;
-    if (GetComputerNameW(Buffer,
-                         &Length))
+    Length = ARRAYSIZE(Buffer);
+    if (GetComputerNameW(Buffer, &Length))
     {
-        SetUserEnvironmentVariable(lpEnvironment,
+        SetUserEnvironmentVariable(Environment,
                                    L"COMPUTERNAME",
                                    Buffer,
                                    FALSE);
     }
 
     /* Set 'ALLUSERSPROFILE' variable */
-    Length = MAX_PATH;
-    if (GetAllUsersProfileDirectoryW(Buffer,
-                                     &Length))
+    Length = ARRAYSIZE(Buffer);
+    if (GetAllUsersProfileDirectoryW(Buffer, &Length))
     {
-        SetUserEnvironmentVariable(lpEnvironment,
+        SetUserEnvironmentVariable(Environment,
                                    L"ALLUSERSPROFILE",
                                    Buffer,
                                    FALSE);
     }
 
-    /* Set 'USERSPROFILE' variable to the default users profile */
-    Length = MAX_PATH;
-    if (GetDefaultUserProfileDirectory(Buffer,
-                                       &Length))
+    /* Set 'USERPROFILE' variable to the default users profile */
+    Length = ARRAYSIZE(Buffer);
+    if (GetDefaultUserProfileDirectoryW(Buffer, &Length))
     {
-        SetUserEnvironmentVariable(lpEnvironment,
+        SetUserEnvironmentVariable(Environment,
                                    L"USERPROFILE",
                                    Buffer,
                                    TRUE);
@@ -604,7 +597,7 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                            &hKey);
     if (lError == ERROR_SUCCESS)
     {
-        Length = 1024 * sizeof(WCHAR);
+        Length = sizeof(szValue);
         lError = RegQueryValueExW(hKey,
                                   L"ProgramFilesDir",
                                   NULL,
@@ -613,13 +606,13 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                                   &Length);
         if (lError == ERROR_SUCCESS)
         {
-            SetUserEnvironmentVariable(lpEnvironment,
+            SetUserEnvironmentVariable(Environment,
                                        L"ProgramFiles",
                                        szValue,
                                        FALSE);
         }
 
-        Length = 1024 * sizeof(WCHAR);
+        Length = sizeof(szValue);
         lError = RegQueryValueExW(hKey,
                                   L"CommonFilesDir",
                                   NULL,
@@ -628,7 +621,7 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                                   &Length);
         if (lError == ERROR_SUCCESS)
         {
-            SetUserEnvironmentVariable(lpEnvironment,
+            SetUserEnvironmentVariable(Environment,
                                        L"CommonProgramFiles",
                                        szValue,
                                        FALSE);
@@ -637,6 +630,10 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
         RegCloseKey(hKey);
     }
 
+    /*
+     * If no user token is specified, the system environment variables are set
+     * and we stop here, otherwise continue setting the user-specific variables.
+     */
     if (hToken == NULL)
         return TRUE;
 
@@ -644,34 +641,38 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
     if (hKeyUser == NULL)
     {
         DPRINT1("GetCurrentUserKey() failed\n");
-        RtlDestroyEnvironment(*lpEnvironment);
+        RtlDestroyEnvironment(*Environment);
         return FALSE;
     }
 
     /* Set 'USERPROFILE' variable */
-    Length = MAX_PATH;
+    Length = ARRAYSIZE(Buffer);
     if (GetUserProfileDirectoryW(hToken, Buffer, &Length))
     {
         DWORD MinLen = 2;
 
-        SetUserEnvironmentVariable(lpEnvironment,
+        SetUserEnvironmentVariable(Environment,
                                    L"USERPROFILE",
                                    Buffer,
                                    FALSE);
+
+        // FIXME: Strangely enough the following two environment variables
+        // are not set by userenv.dll in Windows... See r68284 / CORE-9875
+        // FIXME2: This is done by msgina.dll !!
 
         /* At least <drive letter>:<path> */
         if (Length > MinLen)
         {
             /* Set 'HOMEDRIVE' variable */
-            StringCchCopyNW(szValue, MAX_PATH, Buffer, MinLen);
-            SetUserEnvironmentVariable(lpEnvironment,
+            StringCchCopyNW(szValue, ARRAYSIZE(Buffer), Buffer, MinLen);
+            SetUserEnvironmentVariable(Environment,
                                        L"HOMEDRIVE",
                                        szValue,
                                        FALSE);
 
             /* Set 'HOMEPATH' variable */
-            StringCchCopyNW(szValue, MAX_PATH, Buffer + MinLen, Length - MinLen);
-            SetUserEnvironmentVariable(lpEnvironment,
+            StringCchCopyNW(szValue, ARRAYSIZE(Buffer), Buffer + MinLen, Length - MinLen);
+            SetUserEnvironmentVariable(Environment,
                                        L"HOMEPATH",
                                        szValue,
                                        FALSE);
@@ -686,36 +687,36 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                              &lpUserName,
                              &lpDomainName))
     {
+        /* Set 'USERNAME' variable */
+        SetUserEnvironmentVariable(Environment,
+                                   L"USERNAME",
+                                   lpUserName,
+                                   FALSE);
+
         /* Set 'USERDOMAIN' variable */
-        SetUserEnvironmentVariable(lpEnvironment,
+        SetUserEnvironmentVariable(Environment,
                                    L"USERDOMAIN",
                                    lpDomainName,
                                    FALSE);
 
-        /* Set 'USERNAME' variable */
-        SetUserEnvironmentVariable(lpEnvironment,
-                                   L"USERNAME",
-                                   lpUserName,
-                                   FALSE);
+        if (lpUserName != NULL)
+            LocalFree(lpUserName);
+
+        if (lpDomainName != NULL)
+            LocalFree(lpDomainName);
     }
 
     /* Set user environment variables */
-    SetUserEnvironment(lpEnvironment,
+    SetUserEnvironment(Environment,
                        hKeyUser,
                        L"Environment");
 
     /* Set user volatile environment variables */
-    SetUserEnvironment(lpEnvironment,
+    SetUserEnvironment(Environment,
                        hKeyUser,
                        L"Volatile Environment");
 
     RegCloseKey(hKeyUser);
-
-    if (lpUserName != NULL)
-        LocalFree(lpUserName);
-
-    if (lpDomainName != NULL)
-        LocalFree(lpDomainName);
 
     return TRUE;
 }
@@ -723,7 +724,7 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
 
 BOOL
 WINAPI
-DestroyEnvironmentBlock(LPVOID lpEnvironment)
+DestroyEnvironmentBlock(IN LPVOID lpEnvironment)
 {
     DPRINT("DestroyEnvironmentBlock() called\n");
 
