@@ -802,6 +802,7 @@ BEGIN
     IDS_SCR_FILE "Заставка"
     IDS_SYS_FILE "Системный файл"
     IDS_VXD_FILE "Драйвер виртуального устройства"
+    IDS_ANY_FILE "%s-файл"
 
     IDS_OPEN_VERB "Открыть"
     IDS_EXPLORE_VERB "Открыть в дереве"

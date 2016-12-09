@@ -804,6 +804,7 @@ BEGIN
     IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "Plik systemowy"
     IDS_VXD_FILE "Sterownik urządzenia wirtualnego"
+    IDS_ANY_FILE "%s-file"
 
     IDS_OPEN_VERB "Otwórz"
     IDS_EXPLORE_VERB "Eksploruj"

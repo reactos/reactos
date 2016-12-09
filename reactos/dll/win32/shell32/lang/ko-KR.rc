@@ -800,6 +800,7 @@ BEGIN
     IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "System File"
     IDS_VXD_FILE "Virtual Device Driver"
+    IDS_ANY_FILE "%s-file"
 
     IDS_OPEN_VERB "Open"
     IDS_EXPLORE_VERB "Explore"

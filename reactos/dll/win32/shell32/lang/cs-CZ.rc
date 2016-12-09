@@ -806,7 +806,8 @@ BEGIN
     IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "Systémový soubor"
     IDS_VXD_FILE "Virtuální ovladač zařízení"
-
+    IDS_ANY_FILE "%s-file"
+	
     IDS_OPEN_VERB "Otevřít"
     IDS_EXPLORE_VERB "Prozkoumat"
     IDS_RUNAS_VERB "Spustit jako..."

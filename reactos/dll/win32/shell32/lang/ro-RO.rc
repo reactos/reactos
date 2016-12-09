@@ -802,6 +802,7 @@ BEGIN
     IDS_SCR_FILE "Animație regim de inactivitate"
     IDS_SYS_FILE "Fișier de sistem"
     IDS_VXD_FILE "Pilot dispozitiv virtual"
+    IDS_ANY_FILE "%s-file"
 
     IDS_OPEN_VERB "Deschide"
     IDS_EXPLORE_VERB "Explorează"

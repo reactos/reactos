@@ -804,6 +804,7 @@ BEGIN
     IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "Dokumente Sistemi"
     IDS_VXD_FILE "Udhëzuesi Virtual Pajisjes"
+    IDS_ANY_FILE "%s-file"
 
     IDS_OPEN_VERB "Hap"
     IDS_EXPLORE_VERB "Eksplorer"

@@ -807,6 +807,7 @@ BEGIN
     IDS_SCR_FILE "屏幕保护程序"
     IDS_SYS_FILE "系统文件"
     IDS_VXD_FILE "虚拟设备驱动程序"
+    IDS_ANY_FILE "%s-file"
 
     IDS_OPEN_VERB "打开"
     IDS_EXPLORE_VERB "浏览"

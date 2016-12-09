@@ -800,6 +800,7 @@ BEGIN
     IDS_SCR_FILE "Skärmsläckare"
     IDS_SYS_FILE "Systemfil"
     IDS_VXD_FILE "Virtuell enhetsdrivruting"
+    IDS_ANY_FILE "%s-file"
 
     IDS_OPEN_VERB "Öppna"
     IDS_EXPLORE_VERB "Utforska"

@@ -159,6 +159,7 @@
 #define IDS_SCR_FILE              217
 #define IDS_SYS_FILE              218
 #define IDS_VXD_FILE              219
+#define IDS_ANY_FILE              220
 
 #define IDS_EMPTY_BITBUCKET       172
 #define IDS_SHLEXEC_NOASSOC       173

@@ -801,6 +801,7 @@ BEGIN
     IDS_SCR_FILE "Bildschirmschoner"
     IDS_SYS_FILE "Systemdatei"
     IDS_VXD_FILE "Virtueller Gerätetreiber"
+    IDS_ANY_FILE "%s-file"
 
     IDS_OPEN_VERB "Öffnen"
     IDS_EXPLORE_VERB "Durchsuchen"

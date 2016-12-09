@@ -800,6 +800,7 @@ BEGIN
     IDS_SCR_FILE "Écran de veille"
     IDS_SYS_FILE "Fichier système"
     IDS_VXD_FILE "Pilote de périphérique virtuel"
+    IDS_ANY_FILE "%s-file"	
 
     IDS_OPEN_VERB "Ouvrir"
     IDS_EXPLORE_VERB "Explore"

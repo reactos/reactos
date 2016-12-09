@@ -800,6 +800,7 @@ BEGIN
     IDS_SCR_FILE "Screen Saver"
     IDS_SYS_FILE "Системен файл"
     IDS_VXD_FILE "Водач на привидно устройство"
+    IDS_ANY_FILE "%s-file"
 
     IDS_OPEN_VERB "Отваряне"
     IDS_EXPLORE_VERB "Explore"
