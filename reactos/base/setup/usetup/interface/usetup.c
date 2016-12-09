@@ -662,7 +662,10 @@ LanguagePage(PINPUT_RECORD Ir)
     /* If there's just a single language in the list skip
      * the language selection process altogether! */
     if (GenericListHasSingleEntry(LanguageList))
+    {
+        LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
         return INTRO_PAGE;
+    }
 
     DrawGenericList(LanguageList,
                     2,
