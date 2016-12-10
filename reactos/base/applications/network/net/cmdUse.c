@@ -193,6 +193,18 @@ cmdUse(
         Status = WNetUseConnection(NULL, &lpNet, NULL, NULL, CONNECT_REDIRECT | (Persist ? CONNECT_UPDATE_PROFILE : 0), Access, &Size, &OutFlags);
         if (argv[2][0] == L'*' && Status == NO_ERROR && OutFlags == CONNECT_LOCALDRIVE)
             ConPrintf(StdOut, L"%s is now connected to %s\n", argv[3], Access);
+        else if (Status != NO_ERROR)
+        {
+            LPWSTR Buffer;
+
+            ConPrintf(StdErr, L"The system error %d happened.\n", Status);
+
+            if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, Status, 0, (LPWSTR)&Buffer, 0, NULL))
+            {
+                ConPrintf(StdErr, L"\n%s\n", Buffer);
+                LocalFree(Buffer);
+            }
+        }
 
         return Status;
     }
