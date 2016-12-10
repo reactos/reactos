@@ -516,7 +516,8 @@ TestRelativeNames(VOID)
                "[%lu] Status = %lx, expected STATUS_SUCCESS\n", i, Status);
         else if (Tests[i].Status == STATUS_OBJECT_NAME_INVALID && Tests[i].IsDrive)
             ok(Status == STATUS_OBJECT_NAME_INVALID,
-               "[%lu] Status = %lx, expected STATUS_OBJECT_NAME_INVALID\n", i, Status);else if (Tests[i].IsDrive)
+               "[%lu] Status = %lx, expected STATUS_OBJECT_NAME_INVALID\n", i, Status);
+        else if (Tests[i].IsDrive)
             ok(Status == STATUS_ACCESS_DENIED,
                "[%lu] Status = %lx, expected STATUS_ACCESS_DENIED\n", i, Status);
         else if (Tests[i].Status == STATUS_SUCCESS)
