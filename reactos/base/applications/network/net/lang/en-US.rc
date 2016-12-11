@@ -111,6 +111,8 @@ BEGIN
     IDS_USER_ENTER_PASSWORD2 "Enter the password again: "
     IDS_USER_NO_PASSWORD_MATCH "The passwords do not match!"
 
+    IDS_USE_NOW_CONNECTED "%s is now connected to %s\n"
+
     IDS_GENERIC_YES "Yes"
     IDS_GENERIC_NO "No"
     IDS_GENERIC_NEVER "Never"
@@ -120,4 +122,5 @@ BEGIN
 
     IDS_ERROR_OPTION_NOT_SUPPORTED "The %s option is not supported yet.\n"
     IDS_ERROR_INVALID_OPTION_VALUE "You entered an invalid value for the %s option.\n"
+    IDS_ERROR_SYSTEM_ERROR "The system error %d happened.\n"
 END
