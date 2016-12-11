@@ -9,8 +9,6 @@
 
 #include "net.h"
 
-#define COUNT_OF(a) (sizeof(a) / sizeof(a[0]))
-
 static
 DWORD
 EnumerateConnections(LPCWSTR Local)
@@ -133,7 +131,7 @@ cmdUse(
         BOOL Persist = FALSE;
         NETRESOURCE lpNet;
         WCHAR Access[256];
-        DWORD OutFlags = 0, Size = COUNT_OF(Access);
+        DWORD OutFlags = 0, Size = ARRAYSIZE(Access);
 
         Len = wcslen(argv[3]);
         if (Len < 4)
