@@ -63,6 +63,21 @@ EnumerateConnections(LPCWSTR Local)
     return 0;
 }
 
+static
+VOID
+PrintError(DWORD Status)
+{
+    LPWSTR Buffer;
+
+    ConResPrintf(StdErr, IDS_ERROR_SYSTEM_ERROR, Status);
+
+    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, Status, 0, (LPWSTR)&Buffer, 0, NULL))
+    {
+        ConPrintf(StdErr, L"\n%s", Buffer);
+        LocalFree(Buffer);
+    }
+}
+
 INT
 cmdUse(
     INT argc,
@@ -73,7 +88,11 @@ cmdUse(
     if (argc == 2)
     {
         Status = EnumerateConnections(NULL);
-        ConPrintf(StdOut, L"Status: %lu\n", Status);
+        if (Status == NO_ERROR)
+            ConResPrintf(StdOut, IDS_ERROR_NO_ERROR);
+        else
+            PrintError(Status);
+
         return 0;
     }
     else if (argc == 3)
@@ -92,7 +111,11 @@ cmdUse(
         }
 
         Status = EnumerateConnections(argv[2]);
-        ConPrintf(StdOut, L"Status: %lu\n", Status);
+        if (Status == NO_ERROR)
+            ConResPrintf(StdOut, IDS_ERROR_NO_ERROR);
+        else
+            PrintError(Status);
+
         return 0;
     }
 
@@ -100,7 +123,6 @@ cmdUse(
     if (Len != 1 && Len != 2)
     {
         ConResPrintf(StdErr, IDS_ERROR_INVALID_OPTION_VALUE, L"DeviceName");
-        ConPrintf(StdOut, L"Len: %lu\n", Len);
         return 1;
     }
 
@@ -192,17 +214,7 @@ cmdUse(
         if (argv[2][0] == L'*' && Status == NO_ERROR && OutFlags == CONNECT_LOCALDRIVE)
             ConResPrintf(StdOut, IDS_USE_NOW_CONNECTED, argv[3], Access);
         else if (Status != NO_ERROR)
-        {
-            LPWSTR Buffer;
-
-            ConResPrintf(StdErr, IDS_ERROR_SYSTEM_ERROR, Status);
-
-            if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, Status, 0, (LPWSTR)&Buffer, 0, NULL))
-            {
-                ConPrintf(StdErr, L"\n%s\n", Buffer);
-                LocalFree(Buffer);
-            }
-        }
+            PrintError(Status);
 
         return Status;
     }
