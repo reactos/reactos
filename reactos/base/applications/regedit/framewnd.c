@@ -178,10 +178,10 @@ void SetupStatusBar(HWND hWnd, BOOL bResize)
 
 void UpdateStatusBar(void)
 {
-    NMHDR nmhdr;
-    ZeroMemory(&nmhdr, sizeof(NMHDR));
-    nmhdr.code = TVN_SELCHANGED;
-    SendMessageW(g_pChildWnd->hWnd, WM_NOTIFY, (WPARAM)TREE_WINDOW, (LPARAM)&nmhdr);
+    HKEY hKeyRoot;
+    LPCWSTR pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+
+    SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)pszKeyPath);
 }
 
 static void toggle_child(HWND hWnd, UINT cmd, HWND hchild)
