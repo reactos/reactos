@@ -1244,7 +1244,7 @@ DlgProc(HWND hDlg,
                                     szBuffer,
                                     sizeof(szBuffer) / sizeof(WCHAR)))
                     {
-                        lf.lfHeight = 24;
+                        lf.lfHeight = 20;
                         lf.lfCharSet = OEM_CHARSET;
                         lf.lfQuality = DEFAULT_QUALITY;
                         lf.lfWeight = FW_MEDIUM;
@@ -1282,7 +1282,7 @@ DlgProc(HWND hDlg,
                                     szBuffer,
                                     sizeof(szBuffer) / sizeof(WCHAR)))
                     {
-                        lf.lfHeight = 30;
+                        lf.lfHeight = 24;
                         lf.lfCharSet = OEM_CHARSET;
                         lf.lfQuality = DEFAULT_QUALITY;
                         lf.lfWeight = FW_EXTRABOLD;
