@@ -8,5 +8,5 @@ list(APPEND SOURCE
 
 add_executable(appshim_apitest ${SOURCE})
 set_module_type(appshim_apitest win32cui)
-add_importlibs(appshim_apitest msvcrt kernel32 ntdll)
+add_importlibs(appshim_apitest version msvcrt kernel32 ntdll)
 add_cd_file(TARGET appshim_apitest DESTINATION reactos/bin FOR all)
