@@ -16,10 +16,10 @@ PHOOKAPI WINAPI GetHookAPIs(IN LPCSTR szCommandLine, IN LPCWSTR wszShimName, OUT
     return ShimLib_GetHookAPIs(szCommandLine, wszShimName, pdwHookCount);
 }
 
-/* PLDR_DATA_TABLE_ENTRY */
-BOOL WINAPI NotifyShims(DWORD fdwReason, PVOID P)
+/* Forward to the generic implementation */
+BOOL WINAPI NotifyShims(DWORD fdwReason, PVOID ptr)
 {
-    return TRUE;
+    return ShimLib_NotifyShims(fdwReason, ptr);
 }
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)

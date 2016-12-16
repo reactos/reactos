@@ -43,9 +43,9 @@ BOOL WINAPI SHIM_OBJ_NAME(APIHook_RtlGetVersion)(LPOSVERSIONINFOEXA lpOsVersionI
     return FALSE;
 }
 
-BOOL WINAPI SHIM_OBJ_NAME(Notify)(DWORD fdwReason)
+BOOL WINAPI SHIM_OBJ_NAME(Notify)(DWORD fdwReason, PVOID ptr)
 {
-    if (fdwReason == SHIM_REASON_ATTACH && VERSION_INFO.wServicePackMajor)
+    if (fdwReason == SHIM_NOTIFY_ATTACH && VERSION_INFO.wServicePackMajor)
     {
         static CONST WCHAR szServicePack[] = {'S','e','r','v','i','c','e',' ','P','a','c','k',' ','%','u',0};
         HRESULT hr = StringCbPrintfA(VERSION_INFO.szCSDVersionA, sizeof(VERSION_INFO.szCSDVersionA),

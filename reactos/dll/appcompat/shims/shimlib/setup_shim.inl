@@ -19,13 +19,15 @@
 #define SHIM_STRINGIFY2(X_) # X_
 #define SHIM_STRINGIFY(X_) SHIM_STRINGIFY2(X_)
 
+/* TODO: static_assert on (num < SHIM_NUM_HOOKS) */
+
 #define SHIM_HOOK(num, dll, function, target) \
     SHIM_OBJ_NAME(g_pAPIHooks)[num].LibraryName = dll; \
     SHIM_OBJ_NAME(g_pAPIHooks)[num].FunctionName = function; \
     SHIM_OBJ_NAME(g_pAPIHooks)[num].ReplacementFunction = target; \
     SHIM_OBJ_NAME(g_pAPIHooks)[num].OriginalFunction = NULL; \
-    SHIM_OBJ_NAME(g_pAPIHooks)[num].Unk1 = NULL; \
-    SHIM_OBJ_NAME(g_pAPIHooks)[num].Unk2 = NULL;
+    SHIM_OBJ_NAME(g_pAPIHooks)[num].Reserved[0] = NULL; \
+    SHIM_OBJ_NAME(g_pAPIHooks)[num].Reserved[1] = NULL;
 
 #define CALL_SHIM(SHIM_NUM, SHIM_CALLCONV) \
     ((SHIM_CALLCONV)(SHIM_OBJ_NAME(g_pAPIHooks)[SHIM_NUM].OriginalFunction))
