@@ -2213,6 +2213,8 @@ CDefFolderMenu_Create2(
 
 #define DFM_MERGECONTEXTMENU         1
 #define DFM_INVOKECOMMAND            2
+#define DFM_INVOKECOMMANDEX          12
+#define DFM_GETDEFSTATICID           14
 
 #define DFM_CMD_DELETE          ((UINT)-1)
 #define DFM_CMD_MOVE            ((UINT)-2)
