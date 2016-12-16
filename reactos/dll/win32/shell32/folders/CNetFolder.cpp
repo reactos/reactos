@@ -61,6 +61,25 @@ HRESULT CNetFolderExtractIcon_CreateInstance(LPCITEMIDLIST pidl, REFIID riid, LP
     return initIcon->QueryInterface(riid, ppvOut);
 }
 
+HRESULT CALLBACK NetFolderMenuCallback(IShellFolder *psf,
+                                       HWND         hwnd,
+                                       IDataObject  *pdtobj,
+                                       UINT         uMsg,
+                                       WPARAM       wParam,
+                                       LPARAM       lParam)
+{
+    switch (uMsg)
+    {
+    case DFM_MERGECONTEXTMENU:
+        return S_OK;
+    case DFM_INVOKECOMMAND:
+    case DFM_INVOKECOMMANDEX:
+    case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
+        return S_FALSE;
+    }
+    return E_NOTIMPL;
+}
+
 class CNetFolderEnum :
     public CEnumIDListBase
 {
@@ -421,7 +440,7 @@ HRESULT WINAPI CNetFolder::GetUIObjectOf(HWND hwndOwner, UINT cidl, PCUITEMID_CH
         HKEY hkey;
         UINT cKeys = 0;
         AddClassKeyToArray(L"Folder", &hkey, &cKeys);
-        hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, static_cast<IShellFolder*>(this), NULL, cKeys, &hkey, &pCm);
+        hr = CDefFolderMenu_Create2(pidlRoot, hwndOwner, cidl, apidl, this, NetFolderMenuCallback, cKeys, &hkey, &pCm);
         pObj = pCm;
     }
     else if (IsEqualIID(riid, IID_IDataObject) && (cidl >= 1))
