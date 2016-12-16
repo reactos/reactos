@@ -4,6 +4,9 @@
         <OS_PLATFORM >1</OS_PLATFORM>
         <DATABASE_ID>{11111111-1111-1111-1111-111111111111}</DATABASE_ID>
         <LIBRARY>
+
+            <!-- Version lie shims -->
+
             <SHIM>
                 <NAME>Win95VersionLie</NAME>
                 <DLLFILE>aclayers.dll</DLLFILE>
@@ -76,7 +79,29 @@
                 <NAME>Win7RTMVersionLie</NAME>
                 <DLLFILE>aclayers.dll</DLLFILE>
             </SHIM>
+
+            <!-- Display mode shims -->
+
+            <SHIM>
+                <NAME>Force640x480</NAME>
+                <DLLFILE>aclayers.dll</DLLFILE>
+            </SHIM>
+            <SHIM>
+                <NAME>Force8BitColor</NAME>
+                <DLLFILE>aclayers.dll</DLLFILE>
+            </SHIM>
+
+            <!-- misc shims -->
+
+            <SHIM>
+                <NAME>DisableThemes</NAME>
+                <DLLFILE>acgenral.dll</DLLFILE>
+            </SHIM>
+
         </LIBRARY>
+
+        <!-- Backwards compatibility layers, incomplete! -->
+
         <LAYER>
             <NAME>WIN95</NAME>
             <SHIM_REF NAME="Win95VersionLie" />
@@ -182,5 +207,26 @@
             <SHIM_REF NAME="Win7RTMVersionLie" />
             <!-- TODO: Add more fixes! -->
         </LAYER>
+
+        <!-- Display mode layers -->
+
+        <LAYER>
+            <NAME>256Color</NAME>
+            <SHIM_REF NAME="DisableThemes" />
+            <SHIM_REF NAME="Force8BitColor" />
+        </LAYER>
+        <LAYER>
+            <NAME>640X480</NAME>
+            <SHIM_REF NAME="Force640x480" />
+        </LAYER>
+
+
+        <!-- misc layers -->
+
+        <LAYER>
+            <NAME>DisableThemes</NAME>
+            <SHIM_REF NAME="DisableThemes" />
+        </LAYER>
+
     </DATABASE>
 </SDB>
