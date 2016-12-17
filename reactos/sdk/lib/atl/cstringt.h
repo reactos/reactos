@@ -83,6 +83,14 @@ public:
         ::CharLowerBuffW(pszSource, nSrcLength);
     }
 
+    static DWORD GetEnvironmentVariable(
+        _In_z_ LPCWSTR pszVar,
+        _Out_writes_opt_(nBufLength) LPWSTR pszBuf,
+        _In_opt_ int nBufLength)
+    {
+        return ::GetEnvironmentVariableW(pszVar, pszBuf, nBufLength);
+    }
+
     static void __cdecl MakeUpper(
         _Out_writes_(nSrcLength) LPWSTR pszSource,
         _In_ int nSrcLength)
@@ -199,6 +207,14 @@ public:
         _In_ int nSrcLength)
     {
         ::CharLowerBuffA(pszSource, nSrcLength);
+    }
+
+    static DWORD GetEnvironmentVariable(
+        _In_z_ LPCSTR pszVar,
+        _Out_writes_opt_(nBufLength) LPSTR pszBuf,
+        _In_opt_ int nBufLength)
+    {
+        return ::GetEnvironmentVariableA(pszVar, pszBuf, nBufLength);
     }
 
     static void __cdecl MakeUpper(
@@ -450,6 +466,22 @@ public:
         CThisSimpleString::ReleaseBufferSetLength(nLength);
 
         return TRUE;
+    }
+
+    BOOL GetEnvironmentVariable(_In_z_ PCXSTR pszVar)
+    {
+        int nLength = StringTraits::GetEnvironmentVariable(pszVar, NULL, 0);
+
+        if (nLength > 0)
+        {
+            PXSTR pszBuffer = CThisSimpleString::GetBuffer(nLength);
+            StringTraits::GetEnvironmentVariable(pszVar, pszBuffer, nLength);
+            CThisSimpleString::ReleaseBuffer();
+            return TRUE;
+        }
+
+        CThisSimpleString::Empty();
+        return FALSE;
     }
 
     CStringT& MakeLower()

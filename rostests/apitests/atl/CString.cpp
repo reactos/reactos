@@ -5,8 +5,8 @@
  * PROGRAMMER:      Mark Jansen
  */
 
-#include <apitest.h>
 #include <atlstr.h>
+#include <apitest.h>
 
 
 struct traits_test
@@ -119,12 +119,13 @@ static void test_basetypes()
 #undef ok
 #undef _T
 
-#define TEST_NAMEX(name)    void test_##name##W()
-#define CStringX            CStringW
-#define _X(x)               L ## x
-#define XCHAR               WCHAR
-#define dbgstrx(x)          wine_dbgstr_w(x)
-#define ok                  ok_("CStringW:\n" __FILE__, __LINE__)
+#define TEST_NAMEX(name)        void test_##name##W()
+#define CStringX                CStringW
+#define _X(x)                   L ## x
+#define XCHAR                   WCHAR
+#define dbgstrx(x)              wine_dbgstr_w(x)
+#define ok                      ok_("CStringW:\n" __FILE__, __LINE__)
+#define GetWindowsDirectoryX    GetWindowsDirectoryW
 #include "CString.inl"
 
 
@@ -134,13 +135,15 @@ static void test_basetypes()
 #undef XCHAR
 #undef dbgstrx
 #undef ok
+#undef GetWindowsDirectoryX
 
-#define TEST_NAMEX(name)    void test_##name##A()
-#define CStringX            CStringA
-#define _X(x)               x
-#define XCHAR               CHAR
-#define dbgstrx(x)          (const char*)x
-#define ok                  ok_("CStringA:\n" __FILE__, __LINE__)
+#define TEST_NAMEX(name)        void test_##name##A()
+#define CStringX                CStringA
+#define _X(x)                   x
+#define XCHAR                   CHAR
+#define dbgstrx(x)              (const char*)x
+#define ok                      ok_("CStringA:\n" __FILE__, __LINE__)
+#define GetWindowsDirectoryX    GetWindowsDirectoryA
 #include "CString.inl"
 
 
@@ -173,4 +176,7 @@ START_TEST(CString)
 
     test_trimW();
     test_trimA();
+
+    test_envW();
+    test_envA();
 }
