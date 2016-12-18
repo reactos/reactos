@@ -925,6 +925,6 @@ cpp_quote("#if _WIN32_WINNT >= 0x0501")
         [out] DWORD *pulSSDIFlags,
         [in] DWORD ulFlags);
 
-cpp_quote("#endif /* WIN32_WINNT >= 0x0501 */")
+cpp_quote("#endif /* _WIN32_WINNT >= 0x0501 */")
 
 }

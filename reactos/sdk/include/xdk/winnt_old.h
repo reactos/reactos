@@ -3805,7 +3805,7 @@ typedef enum _POWER_INFORMATION_LEVEL {
   PowerInformationLevelMaximum
 } POWER_INFORMATION_LEVEL;
 
-#if 1 /* (WIN32_WINNT >= 0x0500) */
+#if 1 /* (_WIN32_WINNT >= 0x0500) */
 typedef struct _SYSTEM_POWER_INFORMATION {
     ULONG  MaxIdlenessAllowed;
     ULONG  Idleness;
@@ -3899,7 +3899,7 @@ typedef const ASSEMBLY_FILE_DETAILED_INFORMATION *PCASSEMBLY_FILE_DETAILED_INFOR
 #define ACTIVATION_CONTEXT_SECTION_GLOBAL_OBJECT_RENAME_TABLE    8
 #define ACTIVATION_CONTEXT_SECTION_CLR_SURROGATES                9
 
-#endif /* (WIN32_WINNT >= 0x0501) */
+#endif /* (_WIN32_WINNT >= 0x0501) */
 
 typedef struct _PROCESSOR_POWER_POLICY_INFO {
   DWORD TimeCheck;

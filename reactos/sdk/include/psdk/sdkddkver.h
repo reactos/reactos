@@ -128,7 +128,7 @@ Abstract:
 #define NTDDI_VERSION_FROM_WIN32_WINNT2(Version) Version##0000
 #define NTDDI_VERSION_FROM_WIN32_WINNT(Version)  NTDDI_VERSION_FROM_WIN32_WINNT2(Version)
 
-/* Select Default WIN32_WINNT Value */
+/* Select Default _WIN32_WINNT Value */
 #if !defined(_WIN32_WINNT) && !defined(_CHICAGO_)
 #define _WIN32_WINNT    0x0600
 #endif
