@@ -663,8 +663,15 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
     HFONT hFont, hOldFont;
     int i;
     TCHAR OutRight, OutLeft, InRight, InLeft, Center;
+    INT X, Y, Width, Height, Shorter;
     INT BkMode = GetBkMode(dc);
     COLORREF TextColor = GetTextColor(dc);
+
+    Width = r->right - r->left;
+    Height = r->bottom - r->top;
+    Shorter = (Width < Height) ? Width : Height;
+    X = r->left + (Width - Shorter) / 2;
+    Y = r->top + (Height - Shorter) / 2;
 
     if (Radio)
     {
@@ -684,7 +691,7 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
     }
 
     ZeroMemory(&lf, sizeof(LOGFONTW));
-    lf.lfHeight = r->top - r->bottom;
+    lf.lfHeight = Shorter;
     lf.lfCharSet = DEFAULT_CHARSET;
     lstrcpy(lf.lfFaceName, TEXT("Marlett"));
     if (Radio && ((uFlags & 0xFF) == DFCS_BUTTONRADIOMASK))
@@ -697,11 +704,12 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
     if (Radio && ((uFlags & 0xFF) == DFCS_BUTTONRADIOMASK))
     {
 #if 1
+        // FIXME: improve font rendering
         RECT Rect;
         HGDIOBJ hbrOld, hpenOld;
         FillRect(dc, r, (HBRUSH)GetStockObject(WHITE_BRUSH));
-        Rect = *r;
-        InflateRect(&Rect, -1, -1);
+        SetRect(&Rect, X, Y, X + Shorter, Y + Shorter);
+        InflateRect(&Rect, -(Shorter * 8) / 54, -(Shorter * 8) / 54);
         hbrOld = SelectObject(dc, GetStockObject(BLACK_BRUSH));
         hpenOld = SelectObject(dc, GetStockObject(NULL_PEN));
         Ellipse(dc, Rect.left, Rect.top, Rect.right, Rect.bottom);
@@ -711,12 +719,12 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
         SetBkMode(dc, OPAQUE);
         SetBkColor(dc, RGB(255, 255, 255));
         SetTextColor(dc, RGB(0, 0, 0));
-        TextOut(dc, r->left, r->top, &Center, 1);
+        TextOut(dc, X, Y, &Center, 1);
         SetBkMode(dc, TRANSPARENT);
-        TextOut(dc, r->left, r->top, &OutRight, 1);
-        TextOut(dc, r->left, r->top, &OutLeft, 1);
-        TextOut(dc, r->left, r->top, &InRight, 1);
-        TextOut(dc, r->left, r->top, &InLeft, 1);
+        TextOut(dc, X, Y, &OutRight, 1);
+        TextOut(dc, X, Y, &OutLeft, 1);
+        TextOut(dc, X, Y, &InRight, 1);
+        TextOut(dc, X, Y, &InLeft, 1);
 #endif
     }
     else
@@ -729,26 +737,26 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
         else
             i = COLOR_WINDOW;
         SetTextColor(dc, GetSysColor(i));
-        TextOut(dc, r->left, r->top, &Center, 1);
+        TextOut(dc, X, Y, &Center, 1);
 
         if (uFlags & (DFCS_FLAT | DFCS_MONO))
         {
             SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
-            TextOut(dc, r->left, r->top, &OutRight, 1);
-            TextOut(dc, r->left, r->top, &OutLeft, 1);
-            TextOut(dc, r->left, r->top, &InRight, 1);
-            TextOut(dc, r->left, r->top, &InLeft, 1);
+            TextOut(dc, X, Y, &OutRight, 1);
+            TextOut(dc, X, Y, &OutLeft, 1);
+            TextOut(dc, X, Y, &InRight, 1);
+            TextOut(dc, X, Y, &InLeft, 1);
         }
         else
         {
             SetTextColor(dc, GetSysColor(COLOR_BTNSHADOW));
-            TextOut(dc, r->left, r->top, &OutRight, 1);
+            TextOut(dc, X, Y, &OutRight, 1);
             SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
-            TextOut(dc, r->left, r->top, &OutLeft, 1);
+            TextOut(dc, X, Y, &OutLeft, 1);
             SetTextColor(dc, GetSysColor(COLOR_3DDKSHADOW));
-            TextOut(dc, r->left, r->top, &InRight, 1);
+            TextOut(dc, X, Y, &InRight, 1);
             SetTextColor(dc, GetSysColor(COLOR_3DLIGHT));
-            TextOut(dc, r->left, r->top, &InLeft, 1);
+            TextOut(dc, X, Y, &InLeft, 1);
         }
 
         if (uFlags & DFCS_CHECKED)
@@ -756,7 +764,7 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
             TCHAR Check = (Radio) ? 'i' : 'b';
 
             SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
-            TextOut(dc, r->left, r->top, &Check, 1);
+            TextOut(dc, X, Y, &Check, 1);
         }
     }
 
