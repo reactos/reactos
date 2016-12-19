@@ -494,6 +494,7 @@ IntGetFontRenderMode(LOGFONTW *logfont)
 {
     switch (logfont->lfQuality)
     {
+    case ANTIALIASED_QUALITY:
     case NONANTIALIASED_QUALITY:
         return FT_RENDER_MODE_MONO;
     case DRAFT_QUALITY:
