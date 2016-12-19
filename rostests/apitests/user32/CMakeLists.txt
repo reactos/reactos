@@ -20,6 +20,7 @@ list(APPEND SOURCE
     InitializeLpkHooks.c
     LoadImage.c
     LookupIconIdFromDirectoryEx.c
+    NextDlgItem.c
     RealGetWindowClass.c
     RegisterHotKey.c
     ScrollDC.c
