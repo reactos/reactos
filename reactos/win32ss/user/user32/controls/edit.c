@@ -2644,7 +2644,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
 		if (es->buffer_limit < (tl - (e-s)))
 			strl = 0;
 		else
-			strl = es->buffer_limit - (tl - (e-s));
+			strl = min(strl, es->buffer_limit - (tl - (e-s)));
 	}
 
 	if (!EDIT_MakeFit(es, tl - (e - s) + strl))
