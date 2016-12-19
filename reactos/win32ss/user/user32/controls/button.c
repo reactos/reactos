@@ -1029,6 +1029,7 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
     HFONT hFont;
     LONG state = get_button_state( hwnd );
     LONG style = GetWindowLongPtrW( hwnd, GWL_STYLE );
+    LONG ex_style = GetWindowLongW( hwnd, GWL_EXSTYLE );
     HWND parent;
     HRGN hrgn;
 
@@ -1061,7 +1062,7 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
 #endif
     hrgn = set_control_clipping( hDC, &client );
 
-    if (style & BS_LEFTTEXT)
+    if (style & BS_LEFTTEXT || ex_style & WS_EX_RIGHT)
     {
 	/* magic +4 is what CTL3D expects */
 
