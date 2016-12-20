@@ -2313,7 +2313,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     HANDLE FileHandle, SectionHandle, ProcessHandle;
     ULONG ResumeCount;
     PROCESS_PRIORITY_CLASS PriorityClass;
-    NTSTATUS Status, Status1, ImageDbgStatus;
+    NTSTATUS Status, AppCompatStatus, SaferStatus, IFEOStatus, ImageDbgStatus;
     PPEB Peb, RemotePeb;
     PTEB Teb;
     INITIAL_TEB InitialTeb;
@@ -2386,7 +2386,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     /* Zero out the initial core variables and handles */
     QuerySection = FALSE;
     InJob = FALSE;
-    SkipSaferAndAppCompat = TRUE; // HACK for making .bat/.cmd launch working again.
+    SkipSaferAndAppCompat = FALSE;
     ParameterFlags = 0;
     Flags = 0;
     DebugHandle = NULL;
@@ -3051,12 +3051,12 @@ StartScan:
                 if (QuerySection)
                 {
                     /* Nothing to do */
-                    Status = STATUS_SUCCESS;
+                    AppCompatStatus = STATUS_SUCCESS;
                 }
                 else
                 {
                     /* Get some information about the executable */
-                    Status = NtQuerySection(SectionHandle,
+                    AppCompatStatus = NtQuerySection(SectionHandle,
                                             SectionImageInformation,
                                             &ImageInformation,
                                             sizeof(ImageInformation),
@@ -3064,7 +3064,7 @@ StartScan:
                 }
 
                 /* Do we have section information now? */
-                if (NT_SUCCESS(Status))
+                if (NT_SUCCESS(AppCompatStatus))
                 {
                     /* Don't ask for it again, save the machine type */
                     QuerySection = TRUE;
@@ -3073,7 +3073,7 @@ StartScan:
             }
 
             /* Is there a reason/Shim we shouldn't run this application? */
-            Status = BasepCheckBadapp(FileHandle,
+            AppCompatStatus = BasepCheckBadapp(FileHandle,
                                       FreeBuffer,
                                       lpEnvironment,
                                       ImageMachine,
@@ -3082,11 +3082,11 @@ StartScan:
                                       &AppCompatSxsData,
                                       &AppCompatSxsDataSize,
                                       &FusionFlags);
-            if (!NT_SUCCESS(Status))
+            if (!NT_SUCCESS(AppCompatStatus))
             {
                 /* This is usually the status we get back */
-                DPRINT1("App compat launch failure: %lx\n", Status);
-                if (Status == STATUS_ACCESS_DENIED)
+                DPRINT1("App compat launch failure: %lx\n", AppCompatStatus);
+                if (AppCompatStatus == STATUS_ACCESS_DENIED)
                 {
                     /* Convert it to something more Win32-specific */
                     SetLastError(ERROR_CANCELLED);
@@ -3094,7 +3094,7 @@ StartScan:
                 else
                 {
                     /* Some other error */
-                    BaseSetLastNTError(Status);
+                    BaseSetLastNTError(AppCompatStatus);
                 }
 
                 /* Did we have a section? */
@@ -3148,13 +3148,13 @@ StartScan:
         if (SaferNeeded)
         {
             /* We have to call into the WinSafer library and actually check */
-            Status = BasepCheckWinSaferRestrictions(hUserToken,
+            SaferStatus = BasepCheckWinSaferRestrictions(hUserToken,
                                                     (LPWSTR)lpApplicationName,
                                                     FileHandle,
                                                     &InJob,
                                                     &TokenHandle,
                                                     &JobHandle);
-            if (Status == 0xFFFFFFFF)
+            if (SaferStatus == 0xFFFFFFFF)
             {
                 /* Back in 2003, they didn't have an NTSTATUS for this... */
                 DPRINT1("WinSafer blocking process launch\n");
@@ -3164,10 +3164,10 @@ StartScan:
             }
 
             /* Other status codes are not-Safer related, just convert them */
-            if (!NT_SUCCESS(Status))
+            if (!NT_SUCCESS(SaferStatus))
             {
-                DPRINT1("Error checking WinSafer: %lx\n", Status);
-                BaseSetLastNTError(Status);
+                DPRINT1("Error checking WinSafer: %lx\n", SaferStatus);
+                BaseSetLastNTError(SaferStatus);
                 Result = FALSE;
                 goto Quickie;
             }
@@ -3576,7 +3576,7 @@ StartScan:
         goto Quickie;
     }
 
-    /* Don't let callers pass in this flag -- we'll only get it from IFRO */
+    /* Don't let callers pass in this flag -- we'll only get it from IFEO */
     Flags &= ~PROCESS_CREATE_FLAGS_LARGE_PAGES;
 
     /* Clear the IFEO-missing flag, before we know for sure... */
@@ -3587,11 +3587,11 @@ StartScan:
         (NtCurrentPeb()->ReadImageFileExecOptions))
     {
         /* Let's do this! Attempt to open IFEO */
-        Status1 = LdrOpenImageFileOptionsKey(&PathName, 0, &KeyHandle);
-        if (!NT_SUCCESS(Status1))
+        IFEOStatus = LdrOpenImageFileOptionsKey(&PathName, 0, &KeyHandle);
+        if (!NT_SUCCESS(IFEOStatus))
         {
             /* We failed, set the flag so we store this in the parameters */
-            if (Status1 == STATUS_OBJECT_NAME_NOT_FOUND) ParameterFlags |= 2;
+            if (IFEOStatus == STATUS_OBJECT_NAME_NOT_FOUND) ParameterFlags |= 2;
         }
         else
         {
@@ -3605,8 +3605,8 @@ StartScan:
                 if (!DebuggerCmdLine)
                 {
                     /* Close IFEO on failure */
-                    Status1 = NtClose(KeyHandle);
-                    ASSERT(NT_SUCCESS(Status1));
+                    IFEOStatus = NtClose(KeyHandle);
+                    ASSERT(NT_SUCCESS(IFEOStatus));
 
                     /* Fail the call */
                     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -3616,13 +3616,13 @@ StartScan:
             }
 
             /* Now query for the debugger */
-            Status1 = LdrQueryImageFileKeyOption(KeyHandle,
+            IFEOStatus = LdrQueryImageFileKeyOption(KeyHandle,
                                                  L"Debugger",
                                                  REG_SZ,
                                                  DebuggerCmdLine,
                                                  MAX_PATH * sizeof(WCHAR),
                                                  &ResultSize);
-            if (!(NT_SUCCESS(Status1)) ||
+            if (!(NT_SUCCESS(IFEOStatus)) ||
                 (ResultSize < sizeof(WCHAR)) ||
                 (DebuggerCmdLine[0] == UNICODE_NULL))
             {
@@ -3632,21 +3632,21 @@ StartScan:
             }
 
             /* Also query if we should map with large pages */
-            Status1 = LdrQueryImageFileKeyOption(KeyHandle,
+            IFEOStatus = LdrQueryImageFileKeyOption(KeyHandle,
                                                  L"UseLargePages",
                                                  REG_DWORD,
                                                  &UseLargePages,
                                                  sizeof(UseLargePages),
                                                  NULL);
-            if ((NT_SUCCESS(Status1)) && (UseLargePages))
+            if ((NT_SUCCESS(IFEOStatus)) && (UseLargePages))
             {
                 /* Do it! This is the only way this flag can be set */
                 Flags |= PROCESS_CREATE_FLAGS_LARGE_PAGES;
             }
 
             /* We're done with IFEO, can close it now */
-            Status1 = NtClose(KeyHandle);
-            ASSERT(NT_SUCCESS(Status1));
+            IFEOStatus = NtClose(KeyHandle);
+            ASSERT(NT_SUCCESS(IFEOStatus));
         }
     }
 
