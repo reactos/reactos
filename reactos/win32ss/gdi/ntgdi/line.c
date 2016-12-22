@@ -13,6 +13,67 @@
 
 // Some code from the WINE project source (www.winehq.com)
 
+VOID FASTCALL
+AddPenLinesBounds(PDC dc, int count, POINT *points)
+{
+    DWORD join, endcap;
+    RECTL bounds, rect;
+    LONG lWidth;
+    PBRUSH pbrLine;
+
+    /* Get BRUSH from current pen. */
+    pbrLine = dc->dclevel.pbrLine;
+    ASSERT(pbrLine);
+    
+    lWidth = pbrLine->lWidth;
+
+    // Setup bounds
+    bounds.left = bounds.top = INT_MAX;
+    bounds.right = bounds.bottom = INT_MIN;
+
+    if (((pbrLine->ulPenStyle & PS_TYPE_MASK) & PS_GEOMETRIC) || lWidth > 1)
+    {
+        /* Windows uses some heuristics to estimate the distance from the point that will be painted */
+        lWidth = lWidth + 2;
+        endcap = (PS_ENDCAP_MASK & pbrLine->ulPenStyle);
+        join   = (PS_JOIN_MASK   & pbrLine->ulPenStyle);
+        if (join == PS_JOIN_MITER)
+        {
+           lWidth *= 5;
+           if (endcap == PS_ENDCAP_SQUARE) lWidth = (lWidth * 3 + 1) / 2;
+        }
+        else
+        {
+           if (endcap == PS_ENDCAP_SQUARE) lWidth -= lWidth / 4;
+           else lWidth = (lWidth + 1) / 2;
+        }
+    }
+
+    while (count-- > 0)
+    {
+        rect.left   = points->x - lWidth;
+        rect.top    = points->y - lWidth;
+        rect.right  = points->x + lWidth + 1;
+        rect.bottom = points->y + lWidth + 1;
+        RECTL_bUnionRect(&bounds, &bounds, &rect);        
+        points++;
+    }
+
+    DPRINT1("APLB dc %p l %d t %d\n",dc,rect.left,rect.top);
+    DPRINT1("                 r %d b %d\n",rect.right,rect.bottom);
+
+    {
+       RECTL rcRgn;
+       if (dc->fs & DC_FLAG_DIRTY_RAO) CLIPPING_UpdateGCRegion(dc);
+       if (REGION_GetRgnBox(dc->prgnRao, &rcRgn))
+       {
+          if (RECTL_bIntersectRect( &rcRgn, &rcRgn, &bounds )) IntUpdateBoundsRect(dc, &rcRgn);
+       }
+       else
+          IntUpdateBoundsRect(dc, &bounds);
+    }
+}
+
 // Should use Fx in Point
 //
 BOOL FASTCALL
@@ -130,6 +191,13 @@ IntGdiLineTo(DC  *dc,
         /* Get BRUSH from current pen. */
         pbrLine = dc->dclevel.pbrLine;
         ASSERT(pbrLine);
+
+        if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+        {
+           DPRINT1("Bounds dc %p l %d t %d\n",dc,Bounds.left,Bounds.top);
+           DPRINT1("                   r %d b %d\n",Bounds.right,Bounds.bottom);
+           AddPenLinesBounds(dc, 2, Points);
+        }
 
         if (!(pbrLine->flAttrs & BR_IS_NULL))
         {
@@ -258,6 +326,11 @@ IntGdiPolyline(DC      *dc,
             {
                 Points[i].x += dc->ptlDCOrig.x;
                 Points[i].y += dc->ptlDCOrig.y;
+            }
+
+            if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+            {
+               AddPenLinesBounds(dc, Count, Points);
             }
 
             Ret = IntEngPolyline(&psurf->SurfObj,

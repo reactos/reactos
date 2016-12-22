@@ -800,7 +800,7 @@ GetBoundsRect(
     UINT	flags
 )
 {
-    return NtGdiGetBoundsRect(hdc,lprcBounds,flags & DCB_RESET);
+    return NtGdiGetBoundsRect(hdc,lprcBounds,flags & ~DCB_WINDOWMGR);
 }
 
 
@@ -814,7 +814,7 @@ SetBoundsRect(HDC hdc,
               UINT flags)
 {
     /* FIXME add check for validate the flags */
-    return NtGdiSetBoundsRect(hdc, (LPRECT)prc, flags);
+    return NtGdiSetBoundsRect(hdc, (LPRECT)prc, flags & ~DCB_WINDOWMGR);
 }
 
 

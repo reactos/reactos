@@ -559,6 +559,11 @@ NtGdiSetDIBitsToDeviceInternal(
     rcDest.bottom = rcDest.top + Height;
     rcDest.top += StartScan;
 
+    if (pDC->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(pDC, &rcDest);
+    }
+
     ptSource.x = XSrc;
     ptSource.y = YSrc;
 
@@ -1255,6 +1260,11 @@ NtGdiStretchDIBitsInternal(
     rcDst.bottom = rcDst.top + cyDst;
     IntLPtoDP(pdc, (POINTL*)&rcDst, 2);
     RECTL_vOffsetRect(&rcDst, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
+
+    if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(pdc, &rcDst);
+    }
 
     hbmTmp = GreCreateBitmapEx(pbmi->bmiHeader.biWidth,
                                abs(pbmi->bmiHeader.biHeight),

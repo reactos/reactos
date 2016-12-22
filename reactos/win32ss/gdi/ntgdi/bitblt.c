@@ -78,6 +78,11 @@ NtGdiAlphaBlend(
     DestRect.right  += DCDest->ptlDCOrig.x;
     DestRect.bottom += DCDest->ptlDCOrig.y;
 
+    if (DCDest->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(DCDest, &DestRect);
+    }
+
     SourceRect.left   = XOriginSrc;
     SourceRect.top    = YOriginSrc;
     SourceRect.right  = XOriginSrc + WidthSrc;
@@ -262,6 +267,11 @@ NtGdiTransparentBlt(
     rcSrc.right  += DCSrc->ptlDCOrig.x;
     rcSrc.bottom += DCSrc->ptlDCOrig.y;
 
+    if (DCDest->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(DCDest, &rcDest);
+    }
+
     /* Prepare for blit */
     DC_vPrepareDCsForBlit(DCDest, &rcDest, DCSrc, &rcSrc);
 
@@ -419,6 +429,11 @@ NtGdiMaskBlt(
     DestRect.top    += DCDest->ptlDCOrig.y;
     DestRect.right  += DCDest->ptlDCOrig.x;
     DestRect.bottom += DCDest->ptlDCOrig.y;
+
+    if (DCDest->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(DCDest, &DestRect);
+    }
 
     SourcePoint.x = nXSrc;
     SourcePoint.y = nYSrc;
@@ -619,6 +634,11 @@ GreStretchBltMask(
     DestRect.right  += DCDest->ptlDCOrig.x;
     DestRect.bottom += DCDest->ptlDCOrig.y;
 
+    if (DCDest->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(DCDest, &DestRect);
+    }
+
     SourceRect.left   = XOriginSrc;
     SourceRect.top    = YOriginSrc;
     SourceRect.right  = XOriginSrc+WidthSrc;
@@ -807,6 +827,12 @@ IntPatBlt(
     DestRect.top    += pdc->ptlDCOrig.y;
     DestRect.right  += pdc->ptlDCOrig.x;
     DestRect.bottom += pdc->ptlDCOrig.y;
+
+    if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(pdc, &DestRect);
+    }
+
 #ifdef _USE_DIBLIB_
     BrushOrigin.x = pbrush->ptOrigin.x + pdc->ptlDCOrig.x + XLeft;
     BrushOrigin.y = pbrush->ptOrigin.y + pdc->ptlDCOrig.y + YLeft;
@@ -1058,6 +1084,13 @@ IntGdiBitBltRgn(
         return FALSE;
     }
 
+    if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+        RECTL rcrgn;        
+        REGION_GetRgnBox(prgnClip, &rcrgn);
+        IntUpdateBoundsRect(pdc, &rcrgn);
+    }
+
     /* Prepare the DC */
     DC_vPrepareDCsForBlit(pdc, &prgnClip->rdh.rcBound, NULL, NULL);
 
@@ -1135,6 +1168,13 @@ IntGdiFillRgn(
     {
         REGION_Delete(prgnClip);
         return FALSE;
+    }
+
+    if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+        RECTL rcrgn;        
+        REGION_GetRgnBox(prgnClip, &rcrgn);
+        IntUpdateBoundsRect(pdc, &rcrgn);
     }
 
     IntEngInitClipObj(&xcoClip);
@@ -1349,6 +1389,22 @@ NtGdiSetPixel(
         /* Fail! */
         DC_UnlockDc(pdc);
         return -1;
+    }
+
+    if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       RECTL rcDst;
+
+       RECTL_vSetRect(&rcDst, x, y, x+1, y+1);
+
+       IntLPtoDP(pdc, (LPPOINT)&rcDst, 2);
+
+       rcDst.left   += pdc->ptlDCOrig.x;
+       rcDst.top    += pdc->ptlDCOrig.y;
+       rcDst.right  += pdc->ptlDCOrig.x;
+       rcDst.bottom += pdc->ptlDCOrig.y;
+
+       IntUpdateBoundsRect(pdc, &rcDst);
     }
 
     /* Translate the color to the target format */

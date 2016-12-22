@@ -580,6 +580,11 @@ IntRectangle(PDC dc,
     DestRect.top    += dc->ptlDCOrig.y;
     DestRect.bottom += dc->ptlDCOrig.y;
 
+    if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(dc, &DestRect);
+    }
+
     /* In GM_COMPATIBLE, don't include bottom and right edges */
     if (pdcattr->iGraphicsMode == GM_COMPATIBLE)
     {
@@ -979,6 +984,11 @@ GreGradientFill(
     ptlDitherOrg.x += pdc->ptlDCOrig.x;
     ptlDitherOrg.y += pdc->ptlDCOrig.y;
 
+   if (pdc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+   {
+      IntUpdateBoundsRect(pdc, &rclExtent);
+   }
+
     DC_vPrepareDCsForBlit(pdc, &rclExtent, NULL, NULL);
 
     psurf = pdc->dclevel.pSurface;
@@ -1144,6 +1154,11 @@ NtGdiExtFloodFill(
     else
     {
         RECTL_vSetRect(&DestRect, 0, 0, psurf->SurfObj.sizlBitmap.cx, psurf->SurfObj.sizlBitmap.cy);
+    }
+
+    if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+    {
+       IntUpdateBoundsRect(dc, &DestRect);
     }
 
     EXLATEOBJ_vInitialize(&exlo, &gpalRGB, psurf->ppal, 0, 0xffffff, 0);

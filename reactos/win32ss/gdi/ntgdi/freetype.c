@@ -3446,6 +3446,11 @@ GreExtTextOutW(
         DestRect.right  += dc->ptlDCOrig.x;
         DestRect.bottom += dc->ptlDCOrig.y;
 
+        if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+        {
+           IntUpdateBoundsRect(dc, &DestRect);
+        }
+
         DC_vPrepareDCsForBlit(dc, &DestRect, NULL, NULL);
 
         if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
@@ -3722,6 +3727,10 @@ GreExtTextOutW(
             DestRect.top = TextTop + yoff - ((fixAscender + 32) >> 6);
             DestRect.bottom = TextTop + yoff + ((32 - fixDescender) >> 6);
             MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
+            if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
+            {
+               IntUpdateBoundsRect(dc, &DestRect);
+            }
             IntEngBitBlt(
                 &psurf->SurfObj,
                 NULL,
