@@ -986,6 +986,9 @@ INT WINAPI DrawTextExWorker( HDC hdc,
     int prefix_offset;
     ellipsis_data ellip;
     BOOL invert_y=FALSE;
+
+    HRGN    hrgn = 0;
+
 #ifdef _WIN32K_
     TRACE("%S, %d, %08x\n", str, count, flags);
 #else
@@ -1072,7 +1075,40 @@ INT WINAPI DrawTextExWorker( HDC hdc,
     }
 
     if (flags & DT_CALCRECT) flags |= DT_NOCLIP;
-
+#ifndef _WIN32K_ ///// Fix CORE-2201.
+    if (!(flags & DT_NOCLIP) )
+    {
+       int hasClip;
+       hrgn = CreateRectRgn(0,0,0,0);
+       if (hrgn)
+       {
+          hasClip = GetClipRgn(hdc, hrgn);
+          // If the region to be retrieved is NULL, the return value is 0.
+          if (hasClip != 1)
+          {
+             DeleteObject(hrgn);
+             hrgn = NULL;
+          }
+          IntersectClipRect(hdc, rect->left, rect->top, rect->right, rect->bottom);
+       }
+    }
+#else
+    if (!(flags & DT_NOCLIP) )
+    {
+       int hasClip;
+       hrgn = NtGdiCreateRectRgn(0,0,0,0);
+       if (hrgn)
+       {
+          hasClip = NtGdiGetRandomRgn(hdc, hrgn, CLIPRGN);
+          if (hasClip != 1)
+          {
+             GreDeleteObject(hrgn);
+             hrgn = NULL;
+          }
+          NtGdiIntersectClipRect(hdc, rect->left, rect->top, rect->right, rect->bottom);
+       }
+    }
+#endif /////
     if (flags & DT_MODIFYSTRING)
     {
         size_retstr = (count + 4) * sizeof (WCHAR);
@@ -1225,6 +1261,26 @@ INT WINAPI DrawTextExWorker( HDC hdc,
             dtp->uiLengthDrawn += len;
     }
     while (strPtr && !last_line);
+
+#ifndef _WIN32K_
+    if (!(flags & DT_NOCLIP) )
+    {
+       SelectClipRgn(hdc, hrgn);
+       if (hrgn)
+       {
+          DeleteObject(hrgn);
+       }
+    }
+#else
+    if (!(flags & DT_NOCLIP) )
+    {
+       NtGdiExtSelectClipRgn(hdc, hrgn, RGN_COPY);
+       if (hrgn)
+       {
+          GreDeleteObject(hrgn);
+       }
+    }
+#endif
 
     if (flags & DT_CALCRECT)
     {
