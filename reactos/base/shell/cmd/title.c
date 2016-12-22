@@ -13,6 +13,7 @@
 
 #ifdef INCLUDE_CMD_TITLE
 
+extern BOOL bTitleSet;
 
 INT cmd_title (LPTSTR param)
 {
@@ -27,6 +28,7 @@ INT cmd_title (LPTSTR param)
         return 0;
     }
 
+    bTitleSet = TRUE;
     return SetConsoleTitle (param);
 }
 

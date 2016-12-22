@@ -163,6 +163,7 @@ CRITICAL_SECTION ChildProcessRunningLock;
 BOOL bUnicodeOutput = FALSE;
 BOOL bDisableBatchEcho = FALSE;
 BOOL bDelayedExpansion = FALSE;
+BOOL bTitleSet = FALSE;
 DWORD dwChildProcessId = 0;
 HANDLE hIn;
 HANDLE hOut;
@@ -314,7 +315,7 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 {
     TCHAR szFullName[MAX_PATH];
     TCHAR *first, *rest, *dot;
-    TCHAR szWindowTitle[MAX_PATH];
+    TCHAR szWindowTitle[MAX_PATH], szNewTitle[MAX_PATH*2];
     DWORD dwExitCode = 0;
     TCHAR *FirstEnd;
     TCHAR szFullCmdLine [CMDLINE_LENGTH];
@@ -377,7 +378,10 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
         return 1;
     }
 
-    GetConsoleTitle (szWindowTitle, MAX_PATH);
+    GetConsoleTitle(szWindowTitle, ARRAYSIZE(szWindowTitle));
+    bTitleSet = FALSE;
+    _stprintf(szNewTitle, _T("%s - %s%s"), szWindowTitle, First, Rest);
+    SetConsoleTitle(szNewTitle);
 
     /* check if this is a .BAT or .CMD file */
     dot = _tcsrchr (szFullName, _T('.'));
@@ -475,7 +479,8 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
     /* Get code page if it has been changed */
     InputCodePage= GetConsoleCP();
     OutputCodePage = GetConsoleOutputCP();
-    SetConsoleTitle(szWindowTitle);
+    if (!bTitleSet)
+        SetConsoleTitle(szWindowTitle);
 
     return dwExitCode;
 }
