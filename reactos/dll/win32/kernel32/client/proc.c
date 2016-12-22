@@ -2925,10 +2925,11 @@ StartScan:
 
     /* Cleanup in preparation for failure or success */
     RtlReleaseRelativeName(&SxsWin32RelativePath);
+
     if (!NT_SUCCESS(Status))
     {
         /* Failure path, try to understand why */
-        DPRINT1("Open file failed: %lx\n", Status);
+        DPRINT1("Open file failed: %lx (%wZ)\n", Status, &PathName);
         if (RtlIsDosDeviceName_U(lpApplicationName))
         {
             /* If a device is being executed, return this special error code */
