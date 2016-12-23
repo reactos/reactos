@@ -194,8 +194,8 @@ IntGdiLineTo(DC  *dc,
 
         if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
         {
-           DPRINT1("Bounds dc %p l %d t %d\n",dc,Bounds.left,Bounds.top);
-           DPRINT1("                   r %d b %d\n",Bounds.right,Bounds.bottom);
+           DPRINT("Bounds dc %p l %d t %d\n",dc,Bounds.left,Bounds.top);
+           DPRINT("                   r %d b %d\n",Bounds.right,Bounds.bottom);
            AddPenLinesBounds(dc, 2, Points);
         }
 
