@@ -59,8 +59,8 @@ AddPenLinesBounds(PDC dc, int count, POINT *points)
         points++;
     }
 
-    DPRINT1("APLB dc %p l %d t %d\n",dc,rect.left,rect.top);
-    DPRINT1("                 r %d b %d\n",rect.right,rect.bottom);
+    DPRINT("APLB dc %p l %d t %d\n",dc,rect.left,rect.top);
+    DPRINT("                 r %d b %d\n",rect.right,rect.bottom);
 
     {
        RECTL rcRgn;

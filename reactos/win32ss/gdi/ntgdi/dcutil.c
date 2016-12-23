@@ -701,14 +701,14 @@ NtGdiGetBoundsRect(
           rc.top    = max( rc.top, 0 );
           rc.right  = min( rc.right,  rcRgn.right - rcRgn.left );
           rc.bottom = min( rc.bottom, rcRgn.bottom - rcRgn.top );
-          DPRINT1("Rao dc %p r %d b %d\n",pdc,rcRgn.right - rcRgn.left, rcRgn.bottom - rcRgn.top);
-          DPRINT1("rc  l %d t %d\n",rc.left,rc.top);
-          DPRINT1("    r %d b %d\n",rc.right,rc.bottom);
+          DPRINT("Rao dc %p r %d b %d\n",pdc,rcRgn.right - rcRgn.left, rcRgn.bottom - rcRgn.top);
+          DPRINT("rc  l %d t %d\n",rc.left,rc.top);
+          DPRINT("    r %d b %d\n",rc.right,rc.bottom);
           ret = DCB_SET;
        }
        IntDPtoLP( pdc, &rc, 2 );
-       DPRINT1("rc1 l %d t %d\n",rc.left,rc.top);
-       DPRINT1("    r %d b %d\n",rc.right,rc.bottom);
+       DPRINT("rc1 l %d t %d\n",rc.left,rc.top);
+       DPRINT("    r %d b %d\n",rc.right,rc.bottom);
     }
     else
        rc = pdc->erclBounds;
