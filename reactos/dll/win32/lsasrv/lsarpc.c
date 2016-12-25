@@ -1624,7 +1624,7 @@ done:
 /* Function 20 */
 NTSTATUS WINAPI LsarRemovePrivilegesFromAccount(
     LSAPR_HANDLE AccountHandle,
-    BOOL AllPrivileges,
+    BOOLEAN AllPrivileges,
     PLSAPR_PRIVILEGE_SET Privileges)
 {
     PLSA_DB_OBJECT AccountObject;
@@ -3080,7 +3080,7 @@ done:
 NTSTATUS WINAPI LsarRemoveAccountRights(
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID AccountSid,
-    BOOL AllRights,
+    BOOLEAN AllRights,
     PLSAPR_USER_RIGHT_SET UserRights)
 {
     PLSA_DB_OBJECT PolicyObject;
@@ -3988,7 +3988,7 @@ NTSTATUS WINAPI LsarSetForestTrustInformation(
     PLSA_UNICODE_STRING TrustedDomainName,
     LSA_FOREST_TRUST_RECORD_TYPE HighestRecordType,
     PLSA_FOREST_TRUST_INFORMATION ForestTrustInfo,
-    BOOL CheckOnly,
+    BOOLEAN CheckOnly,
     PLSA_FOREST_TRUST_COLLISION_INFORMATION *CollisionInfo)
 {
     UNIMPLEMENTED;

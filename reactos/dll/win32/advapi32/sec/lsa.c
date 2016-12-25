@@ -1653,6 +1653,7 @@ LsaRemoveAccountRights(IN LSA_HANDLE PolicyHandle,
                        IN PLSA_UNICODE_STRING UserRights,
                        IN ULONG CountOfRights)
 {
+    NTSTATUS Status;
     LSAPR_USER_RIGHT_SET UserRightSet;
 
     TRACE("LsaRemoveAccountRights(%p %p %d %p %lu)\n",
@@ -1663,18 +1664,18 @@ LsaRemoveAccountRights(IN LSA_HANDLE PolicyHandle,
 
     RpcTryExcept
     {
-        LsarRemoveAccountRights((LSAPR_HANDLE)PolicyHandle,
-                                (PRPC_SID)AccountSid,
-                                AllRights,
-                                &UserRightSet);
+        Status = LsarRemoveAccountRights((LSAPR_HANDLE)PolicyHandle,
+                                         (PRPC_SID)AccountSid,
+                                         AllRights,
+                                         &UserRightSet);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        I_RpcMapWin32Status(RpcExceptionCode());
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
@@ -1733,7 +1734,6 @@ LsaRetrievePrivateData(IN LSA_HANDLE PolicyHandle,
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
-
 
     if (EncryptedData == NULL)
     {
@@ -1813,7 +1813,7 @@ WINAPI
 LsaSetForestTrustInformation(IN LSA_HANDLE PolicyHandle,
                              IN PLSA_UNICODE_STRING TrustedDomainName,
                              IN PLSA_FOREST_TRUST_INFORMATION ForestTrustInfo,
-                             IN BOOL CheckOnly,
+                             IN BOOLEAN CheckOnly,
                              OUT PLSA_FOREST_TRUST_COLLISION_INFORMATION *CollisionInfo)
 {
     NTSTATUS Status;
