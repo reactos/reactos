@@ -20,23 +20,23 @@
 #define CONST_VTABLE
 
 #include <wine/test.h>
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <stdio.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "ole2.h"
-#include "wininet.h"
-#include "docobj.h"
-#include "dispex.h"
-#include "hlink.h"
-#include "mshtml.h"
-#include "mshtmhst.h"
-#include "initguid.h"
-#include "activscp.h"
-#include "activdbg.h"
-#include "objsafe.h"
-#include "mshtmdid.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "ole2.h"
+#include <wininet.h>
+//#include "docobj.h"
+//#include "dispex.h"
+#include <hlink.h>
+#include <mshtml.h>
+#include <mshtmhst.h>
+//#include "initguid.h"
+//#include "activscp.h"
+#include <activdbg.h>
+#include <objsafe.h>
+#include <mshtmdid.h>
 #include "mshtml_test.h"
 
 DEFINE_GUID(CLSID_IdentityUnmarshal,0x0000001b,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
@@ -50,12 +50,14 @@ const GUID GUID_CUSTOM_CONFIRMOBJECTSAFETY =
 #define CTXARG_T DWORDLONG
 #define IActiveScriptParseVtbl IActiveScriptParse64Vtbl
 #define IActiveScriptParseProcedure2Vtbl IActiveScriptParseProcedure2_64Vtbl
+#define IActiveScriptSiteDebug_Release IActiveScriptSiteDebug64_Release
 
 #else
 
 #define CTXARG_T DWORD
 #define IActiveScriptParseVtbl IActiveScriptParse32Vtbl
 #define IActiveScriptParseProcedure2Vtbl IActiveScriptParseProcedure2_32Vtbl
+#define IActiveScriptSiteDebug_Release IActiveScriptSiteDebug32_Release
 
 #endif
 
@@ -113,7 +115,8 @@ DEFINE_EXPECT(SetScriptState_STARTED);
 DEFINE_EXPECT(SetScriptState_CONNECTED);
 DEFINE_EXPECT(SetScriptState_DISCONNECTED);
 DEFINE_EXPECT(AddNamedItem);
-DEFINE_EXPECT(ParseScriptText);
+DEFINE_EXPECT(ParseScriptText_script);
+DEFINE_EXPECT(ParseScriptText_execScript);
 DEFINE_EXPECT(GetScriptDispatch);
 DEFINE_EXPECT(funcDisp);
 DEFINE_EXPECT(script_divid_d);
@@ -123,9 +126,15 @@ DEFINE_EXPECT(script_testprop2_d);
 DEFINE_EXPECT(AXQueryInterface_IActiveScript);
 DEFINE_EXPECT(AXQueryInterface_IObjectSafety);
 DEFINE_EXPECT(AXGetInterfaceSafetyOptions);
-DEFINE_EXPECT(AXSetInterfaceSafetyOptions_IDispatch);
-DEFINE_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx);
+DEFINE_EXPECT(AXSetInterfaceSafetyOptions_IDispatch_caller);
+DEFINE_EXPECT(AXSetInterfaceSafetyOptions_IDispatch_data);
+DEFINE_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
+DEFINE_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx_caller);
 DEFINE_EXPECT(external_success);
+DEFINE_EXPECT(QS_VariantConversion);
+DEFINE_EXPECT(QS_IActiveScriptSite);
+DEFINE_EXPECT(QS_GetCaller);
+DEFINE_EXPECT(ChangeType);
 
 #define TESTSCRIPT_CLSID "{178fc163-f585-4e24-9c13-4bb7faf80746}"
 #define TESTACTIVEX_CLSID "{178fc163-f585-4e24-9c13-4bb7faf80646}"
@@ -136,12 +145,15 @@ DEFINE_EXPECT(external_success);
 #define DISPID_EXTERNAL_OK             0x300000
 #define DISPID_EXTERNAL_TRACE          0x300001
 #define DISPID_EXTERNAL_REPORTSUCCESS  0x300002
+#define DISPID_EXTERNAL_TODO_WINE_OK   0x300003
+#define DISPID_EXTERNAL_BROKEN         0x300004
 
 static const GUID CLSID_TestScript =
     {0x178fc163,0xf585,0x4e24,{0x9c,0x13,0x4b,0xb7,0xfa,0xf8,0x07,0x46}};
 static const GUID CLSID_TestActiveX =
     {0x178fc163,0xf585,0x4e24,{0x9c,0x13,0x4b,0xb7,0xfa,0xf8,0x06,0x46}};
 
+static BOOL is_ie9plus;
 static IHTMLDocument2 *notif_doc;
 static IOleDocumentView *view;
 static IDispatchEx *window_dispex;
@@ -149,20 +161,12 @@ static BOOL doc_complete;
 static IDispatch *script_disp;
 static BOOL ax_objsafe;
 static HWND container_hwnd;
-static HRESULT ax_getopt_hres = S_OK, ax_setopt_dispex_hres = S_OK, ax_setopt_disp_hres = S_OK;
-static DWORD ax_setopt;
+static HRESULT ax_getopt_hres = S_OK, ax_setopt_dispex_hres = S_OK;
+static HRESULT ax_setopt_disp_caller_hres = S_OK, ax_setopt_disp_data_hres = S_OK;
+static BOOL skip_loadobject_tests;
 
-static const char *debugstr_guid(REFIID riid)
-{
-    static char buf[50];
-
-    sprintf(buf, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
-            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
-            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
-
-    return buf;
-}
+static IActiveScriptSite *site;
+static SCRIPTSTATE state;
 
 static int strcmp_wa(LPCWSTR strw, const char *stra)
 {
@@ -175,6 +179,9 @@ static BSTR a2bstr(const char *str)
 {
     BSTR ret;
     int len;
+
+    if(!str)
+        return NULL;
 
     len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
     ret = SysAllocStringLen(NULL, len);
@@ -189,7 +196,7 @@ static BOOL init_key(const char *key_name, const char *def_value, BOOL init)
     DWORD res;
 
     if(!init) {
-        RegDeleteKey(HKEY_CLASSES_ROOT, key_name);
+        RegDeleteKeyA(HKEY_CLASSES_ROOT, key_name);
         return TRUE;
     }
 
@@ -261,6 +268,101 @@ static IPropertyNotifySinkVtbl PropertyNotifySinkVtbl = {
 };
 
 static IPropertyNotifySink PropertyNotifySink = { &PropertyNotifySinkVtbl };
+
+static HRESULT WINAPI VariantChangeType_QueryInterface(IVariantChangeType *iface, REFIID riid, void **ppv)
+{
+    ok(0, "unexpected call %s\n", wine_dbgstr_guid(riid));
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI VariantChangeType_AddRef(IVariantChangeType *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI VariantChangeType_Release(IVariantChangeType *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI VariantChangeType_ChangeType(IVariantChangeType *iface, VARIANT *dst, VARIANT *src, LCID lcid, VARTYPE vt)
+{
+    CHECK_EXPECT(ChangeType);
+
+    ok(dst != NULL, "dst = NULL\n");
+    ok(V_VT(dst) == VT_EMPTY, "V_VT(dst) = %d\n", V_VT(dst));
+    ok(src != NULL, "src = NULL\n");
+    ok(V_VT(src) == VT_I4, "V_VT(src) = %d\n", V_VT(src));
+    ok(V_I4(src) == 0xf0f0f0, "V_I4(src) = %x\n", V_I4(src));
+    ok(lcid == LOCALE_NEUTRAL, "lcid = %d\n", lcid);
+    ok(vt == VT_BSTR, "vt = %d\n", vt);
+
+    V_VT(dst) = VT_BSTR;
+    V_BSTR(dst) = a2bstr("red");
+    return S_OK;
+}
+
+static const IVariantChangeTypeVtbl VariantChangeTypeVtbl = {
+    VariantChangeType_QueryInterface,
+    VariantChangeType_AddRef,
+    VariantChangeType_Release,
+    VariantChangeType_ChangeType
+};
+
+static IVariantChangeType VChangeType = { &VariantChangeTypeVtbl };
+
+static HRESULT WINAPI ServiceProvider_QueryInterface(IServiceProvider *iface, REFIID riid, void **ppv)
+{
+    ok(0, "unexpected call\n");
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI ServiceProvider_AddRef(IServiceProvider *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI ServiceProvider_Release(IServiceProvider *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface, REFGUID guidService,
+        REFIID riid, void **ppv)
+{
+    if(IsEqualGUID(guidService, &SID_VariantConversion)) {
+        CHECK_EXPECT(QS_VariantConversion);
+        ok(IsEqualGUID(riid, &IID_IVariantChangeType), "unexpected riid %s\n", wine_dbgstr_guid(riid));
+        *ppv = &VChangeType;
+        return S_OK;
+    }
+
+    if(IsEqualGUID(guidService, &IID_IActiveScriptSite)) {
+        CHECK_EXPECT(QS_IActiveScriptSite);
+        ok(IsEqualGUID(riid, &IID_IOleCommandTarget), "unexpected riid %s\n", wine_dbgstr_guid(riid));
+        return IActiveScriptSite_QueryInterface(site, riid, ppv);
+    }
+
+    if(IsEqualGUID(guidService, &SID_GetCaller)) {
+        CHECK_EXPECT(QS_GetCaller);
+        ok(IsEqualGUID(riid, &IID_IServiceProvider), "unexpected riid %s\n", wine_dbgstr_guid(riid));
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    ok(0, "unexpected service %s\n", wine_dbgstr_guid(guidService));
+    return E_NOINTERFACE;
+}
+
+static const IServiceProviderVtbl ServiceProviderVtbl = {
+    ServiceProvider_QueryInterface,
+    ServiceProvider_AddRef,
+    ServiceProvider_Release,
+    ServiceProvider_QueryService
+};
+
+static IServiceProvider caller_sp = { &ServiceProviderVtbl };
 
 static HRESULT WINAPI DispatchEx_QueryInterface(IDispatchEx *iface, REFIID riid, void **ppv)
 {
@@ -423,7 +525,7 @@ static HRESULT WINAPI scriptDisp_GetDispID(IDispatchEx *iface, BSTR bstrName, DW
         return E_FAIL;
     }
 
-    ok(0, "unexpected call\n");
+    ok(0, "unexpected call %s\n", wine_dbgstr_w(bstrName));
     return E_NOTIMPL;
 }
 
@@ -489,6 +591,14 @@ static HRESULT WINAPI externalDisp_GetDispID(IDispatchEx *iface, BSTR bstrName, 
         *pid = DISPID_EXTERNAL_REPORTSUCCESS;
         return S_OK;
     }
+    if(!strcmp_wa(bstrName, "todo_wine_ok")) {
+        *pid = DISPID_EXTERNAL_TODO_WINE_OK;
+        return S_OK;
+    }
+    if(!strcmp_wa(bstrName, "broken")) {
+        *pid = DISPID_EXTERNAL_BROKEN;
+        return S_OK;
+    }
 
     ok(0, "unexpected name %s\n", wine_dbgstr_w(bstrName));
     return DISP_E_UNKNOWNNAME;
@@ -498,7 +608,9 @@ static HRESULT WINAPI externalDisp_InvokeEx(IDispatchEx *iface, DISPID id, LCID 
         VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
 {
     switch(id) {
-    case DISPID_EXTERNAL_OK:
+    case DISPID_EXTERNAL_OK: {
+        VARIANT *b, *m;
+
         ok(wFlags == INVOKE_FUNC || wFlags == (INVOKE_FUNC|INVOKE_PROPERTYGET), "wFlags = %x\n", wFlags);
         ok(pdp != NULL, "pdp == NULL\n");
         ok(pdp->rgvarg != NULL, "rgvarg == NULL\n");
@@ -507,11 +619,19 @@ static HRESULT WINAPI externalDisp_InvokeEx(IDispatchEx *iface, DISPID id, LCID 
         ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
         ok(pei != NULL, "pei == NULL\n");
 
-        ok(V_VT(pdp->rgvarg) == VT_BSTR, "V_VT(psp->rgvargs) = %d\n", V_VT(pdp->rgvarg));
-        ok(V_VT(pdp->rgvarg+1) == VT_BOOL, "V_VT(psp->rgvargs+1) = %d\n", V_VT(pdp->rgvarg));
-        ok(V_BOOL(pdp->rgvarg+1), "%s\n", wine_dbgstr_w(V_BSTR(pdp->rgvarg)));
+        m = pdp->rgvarg;
+        if(V_VT(m) == (VT_BYREF|VT_VARIANT))
+            m = V_BYREF(m);
+        ok(V_VT(m) == VT_BSTR, "V_VT(psp->rgvargs) = %d\n", V_VT(pdp->rgvarg));
 
+        b = pdp->rgvarg+1;
+        if(V_VT(b) == (VT_BYREF|VT_VARIANT))
+            b = V_BYREF(b);
+        ok(V_VT(b) == VT_BOOL, "V_VT(b) = %d\n", V_VT(b));
+
+        ok(V_BOOL(b), "%s\n", wine_dbgstr_w(V_BSTR(m)));
         return S_OK;
+    }
 
      case DISPID_EXTERNAL_TRACE:
         ok(wFlags == INVOKE_FUNC, "wFlags = %x\n", wFlags);
@@ -540,6 +660,36 @@ static HRESULT WINAPI externalDisp_InvokeEx(IDispatchEx *iface, DISPID id, LCID 
         ok(!pvarRes, "pvarRes != NULL\n");
         ok(pei != NULL, "pei == NULL\n");
 
+        return S_OK;
+
+    case DISPID_EXTERNAL_TODO_WINE_OK:
+        ok(wFlags == INVOKE_FUNC || wFlags == (INVOKE_FUNC|INVOKE_PROPERTYGET), "wFlags = %x\n", wFlags);
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(pdp->rgvarg != NULL, "rgvarg == NULL\n");
+        ok(!pdp->rgdispidNamedArgs, "rgdispidNamedArgs != NULL\n");
+        ok(pdp->cArgs == 2, "cArgs = %d\n", pdp->cArgs);
+        ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        ok(pei != NULL, "pei == NULL\n");
+
+        ok(V_VT(pdp->rgvarg) == VT_BSTR, "V_VT(psp->rgvargs) = %d\n", V_VT(pdp->rgvarg));
+        ok(V_VT(pdp->rgvarg+1) == VT_BOOL, "V_VT(psp->rgvargs+1) = %d\n", V_VT(pdp->rgvarg));
+        todo_wine
+        ok(V_BOOL(pdp->rgvarg+1), "%s\n", wine_dbgstr_w(V_BSTR(pdp->rgvarg)));
+
+        return S_OK;
+
+    case DISPID_EXTERNAL_BROKEN:
+        ok(wFlags == INVOKE_FUNC || wFlags == (INVOKE_FUNC|INVOKE_PROPERTYGET), "wFlags = %x\n", wFlags);
+        ok(pdp != NULL, "pdp == NULL\n");
+        ok(pdp->rgvarg != NULL, "rgvarg == NULL\n");
+        ok(!pdp->rgdispidNamedArgs, "rgdispidNamedArgs != NULL\n");
+        ok(pdp->cArgs == 1, "cArgs = %d\n", pdp->cArgs);
+        ok(!pdp->cNamedArgs, "cNamedArgs = %d\n", pdp->cNamedArgs);
+        ok(pei != NULL, "pei == NULL\n");
+
+        ok(V_VT(pdp->rgvarg) == VT_BOOL, "V_VT(psp->rgvargs) = %d\n", V_VT(pdp->rgvarg));
+        V_VT(pvarRes) = VT_BOOL;
+        V_BOOL(pvarRes) = broken(V_BOOL(pdp->rgvarg)) ? VARIANT_TRUE : VARIANT_FALSE;
         return S_OK;
 
     default:
@@ -858,7 +1008,7 @@ static HRESULT WINAPI InPlaceSite_GetWindowContext(IOleInPlaceSite *iface,
     *lprcPosRect = rect;
     *lprcClipRect = rect;
 
-    lpFrameInfo->cb = sizeof(*lpFrameInfo);
+    ok(lpFrameInfo->cb == sizeof(*lpFrameInfo), "lpFrameInfo->cb = %u, expected %u\n", lpFrameInfo->cb, (unsigned)sizeof(*lpFrameInfo));
     lpFrameInfo->fMDIApp = FALSE;
     lpFrameInfo->hwndFrame = container_hwnd;
     lpFrameInfo->haccel = NULL;
@@ -1053,23 +1203,12 @@ static HRESULT QueryInterface(REFIID riid, void **ppv)
 static IHTMLDocument2 *create_document(void)
 {
     IHTMLDocument2 *doc;
-    IHTMLDocument5 *doc5;
     HRESULT hres;
 
     hres = CoCreateInstance(&CLSID_HTMLDocument, NULL, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
             &IID_IHTMLDocument2, (void**)&doc);
     ok(hres == S_OK, "CoCreateInstance failed: %08x\n", hres);
-    if (hres != S_OK) return NULL;
-
-    hres = IHTMLDocument2_QueryInterface(doc, &IID_IHTMLDocument5, (void**)&doc5);
-    if(FAILED(hres)) {
-        win_skip("Could not get IHTMLDocument5, probably too old IE\n");
-        IHTMLDocument2_Release(doc);
-        return NULL;
-    }
-
-    IHTMLDocument5_Release(doc5);
-    return doc;
+    return SUCCEEDED(hres) ? doc : NULL;
 }
 
 static void load_string(IHTMLDocument2 *doc, const char *str)
@@ -1161,9 +1300,9 @@ static void load_doc(IHTMLDocument2 *doc, const char *str)
     load_string(doc, str);
     do_advise(doc, &IID_IPropertyNotifySink, (IUnknown*)&PropertyNotifySink);
 
-    while(!doc_complete && GetMessage(&msg, NULL, 0, 0)) {
+    while(!doc_complete && GetMessageW(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        DispatchMessageW(&msg);
     }
 
     hres = IHTMLDocument2_get_body(doc, &body);
@@ -1178,13 +1317,10 @@ static void load_doc(IHTMLDocument2 *doc, const char *str)
     IHTMLElement_Release(body);
 }
 
-static IActiveScriptSite *site;
-static SCRIPTSTATE state;
-
 static HRESULT WINAPI ObjectSafety_QueryInterface(IObjectSafety *iface, REFIID riid, void **ppv)
 {
     *ppv = NULL;
-    ok(0, "unexpected call %s\n", debugstr_guid(riid));
+    ok(0, "unexpected call %s\n", wine_dbgstr_guid(riid));
     return E_NOINTERFACE;
 }
 
@@ -1203,7 +1339,7 @@ static HRESULT WINAPI ObjectSafety_GetInterfaceSafetyOptions(IObjectSafety *ifac
 {
     CHECK_EXPECT(GetInterfaceSafetyOptions);
 
-    ok(IsEqualGUID(&IID_IActiveScriptParse, riid), "unexpected riid %s\n", debugstr_guid(riid));
+    ok(IsEqualGUID(&IID_IActiveScriptParse, riid), "unexpected riid %s\n", wine_dbgstr_guid(riid));
     ok(pdwSupportedOptions != NULL, "pdwSupportedOptions == NULL\n");
     ok(pdwEnabledOptions != NULL, "pdwEnabledOptions == NULL\n");
 
@@ -1218,7 +1354,7 @@ static HRESULT WINAPI ObjectSafety_SetInterfaceSafetyOptions(IObjectSafety *ifac
 {
     CHECK_EXPECT(SetInterfaceSafetyOptions);
 
-    ok(IsEqualGUID(&IID_IActiveScriptParse, riid), "unexpected riid %s\n", debugstr_guid(riid));
+    ok(IsEqualGUID(&IID_IActiveScriptParse, riid), "unexpected riid %s\n", wine_dbgstr_guid(riid));
 
     ok(dwOptionSetMask == (INTERFACESAFE_FOR_UNTRUSTED_DATA|INTERFACE_USES_DISPEX|INTERFACE_USES_SECURITY_MANAGER),
        "dwOptionSetMask=%x\n", dwOptionSetMask);
@@ -1248,14 +1384,14 @@ static HRESULT WINAPI AXObjectSafety_QueryInterface(IObjectSafety *iface, REFIID
     }
 
     if(IsEqualGUID(&IID_IObjectSafety, riid)) {
-        CHECK_EXPECT(AXQueryInterface_IObjectSafety);
+        CHECK_EXPECT2(AXQueryInterface_IObjectSafety);
         if(!ax_objsafe)
             return E_NOINTERFACE;
         *ppv = iface;
         return S_OK;
     }
 
-    ok(0, "unexpected call %s\n", debugstr_guid(riid));
+    ok(0, "unexpected call %s\n", wine_dbgstr_guid(riid));
     return E_NOINTERFACE;
 }
 
@@ -1264,7 +1400,7 @@ static HRESULT WINAPI AXObjectSafety_GetInterfaceSafetyOptions(IObjectSafety *if
 {
     CHECK_EXPECT(AXGetInterfaceSafetyOptions);
 
-    ok(IsEqualGUID(&IID_IDispatchEx, riid), "unexpected riid %s\n", debugstr_guid(riid));
+    ok(IsEqualGUID(&IID_IDispatchEx, riid), "unexpected riid %s\n", wine_dbgstr_guid(riid));
     ok(pdwSupportedOptions != NULL, "pdwSupportedOptions == NULL\n");
     ok(pdwEnabledOptions != NULL, "pdwEnabledOptions == NULL\n");
 
@@ -1280,22 +1416,42 @@ static HRESULT WINAPI AXObjectSafety_SetInterfaceSafetyOptions(IObjectSafety *if
         DWORD dwOptionSetMask, DWORD dwEnabledOptions)
 {
     if(IsEqualGUID(&IID_IDispatchEx, riid)) {
-        CHECK_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx);
-        ok(dwOptionSetMask == ax_setopt, "dwOptionSetMask=%x, expected %x\n", dwOptionSetMask, ax_setopt);
-        ok(dwEnabledOptions == ax_setopt, "dwEnabledOptions=%x, expected %x\n", dwOptionSetMask, ax_setopt);
+        switch(dwEnabledOptions) {
+        case INTERFACESAFE_FOR_UNTRUSTED_CALLER|INTERFACE_USES_SECURITY_MANAGER:
+            CHECK_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
+            break;
+        case INTERFACESAFE_FOR_UNTRUSTED_CALLER:
+            CHECK_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx_caller);
+            break;
+        default:
+            ok(0, "unexpected dwEnabledOptions %x\n", dwEnabledOptions);
+        }
+
+        ok(dwOptionSetMask == dwEnabledOptions, "dwOptionSetMask=%x, expected %x\n", dwOptionSetMask, dwEnabledOptions);
         return ax_setopt_dispex_hres;
     }
 
     if(IsEqualGUID(&IID_IDispatch, riid)) {
-        DWORD exopt = ax_setopt & ~INTERFACE_USES_SECURITY_MANAGER;
+        HRESULT hres;
 
-        CHECK_EXPECT(AXSetInterfaceSafetyOptions_IDispatch);
-        ok(dwOptionSetMask == exopt, "dwOptionSetMask=%x, expected %x\n", dwOptionSetMask, exopt);
-        ok(dwEnabledOptions == exopt, "dwEnabledOptions=%x, expected %x\n", dwOptionSetMask, exopt);
-        return ax_setopt_disp_hres;
+        switch(dwEnabledOptions) {
+        case INTERFACESAFE_FOR_UNTRUSTED_CALLER:
+            CHECK_EXPECT(AXSetInterfaceSafetyOptions_IDispatch_caller);
+            hres = ax_setopt_disp_caller_hres;
+            break;
+        case INTERFACESAFE_FOR_UNTRUSTED_DATA:
+            CHECK_EXPECT(AXSetInterfaceSafetyOptions_IDispatch_data);
+            hres = ax_setopt_disp_data_hres;
+            break;
+        default:
+            ok(0, "unexpected dwEnabledOptions %x\n", dwEnabledOptions);
+            hres = E_FAIL;
+        }
+        ok(dwOptionSetMask == dwEnabledOptions, "dwOptionSetMask=%x, expected %x\n", dwOptionSetMask, dwEnabledOptions);
+        return hres;
     }
 
-    ok(0, "unexpected riid %s\n", debugstr_guid(riid));
+    ok(0, "unexpected riid %s\n", wine_dbgstr_guid(riid));
     return E_NOINTERFACE;
 }
 
@@ -1309,10 +1465,83 @@ static const IObjectSafetyVtbl AXObjectSafetyVtbl = {
 
 static IObjectSafety AXObjectSafety = { &AXObjectSafetyVtbl };
 
-static BOOL set_safe_reg(BOOL init)
+static BOOL set_safe_reg(BOOL safe_call, BOOL safe_data)
 {
     return init_key("CLSID\\"TESTACTIVEX_CLSID"\\Implemented Categories\\{7dd95801-9882-11cf-9fa9-00aa006c42c4}",
-                    NULL, init);
+                    NULL, safe_call)
+        && init_key("CLSID\\"TESTACTIVEX_CLSID"\\Implemented Categories\\{7dd95802-9882-11cf-9fa9-00aa006c42c4}",
+                    NULL, safe_data);
+}
+
+#define check_custom_policy(a,b,c,d) _check_custom_policy(__LINE__,a,b,c,d)
+static void _check_custom_policy(unsigned line, HRESULT hres, BYTE *ppolicy, DWORD policy_size, DWORD expolicy)
+{
+    ok_(__FILE__,line)(hres == S_OK, "QueryCusromPolicy failed: %08x\n", hres);
+    ok_(__FILE__,line)(policy_size == sizeof(DWORD), "policy_size = %d\n", policy_size);
+    ok_(__FILE__,line)(*(DWORD*)ppolicy == expolicy, "policy = %x, expected %x\n", *(DWORD*)ppolicy, expolicy);
+    CoTaskMemFree(ppolicy);
+}
+
+static void test_security_reg(IInternetHostSecurityManager *sec_mgr, DWORD policy_caller, DWORD policy_load)
+{
+    struct CONFIRMSAFETY cs;
+    DWORD policy_size;
+    BYTE *ppolicy;
+    HRESULT hres;
+
+    cs.clsid = CLSID_TestActiveX;
+    cs.pUnk = (IUnknown*)&AXObjectSafety;
+
+    cs.dwFlags = 0;
+    ax_objsafe = FALSE;
+    SET_EXPECT(AXQueryInterface_IActiveScript);
+    SET_EXPECT(AXQueryInterface_IObjectSafety);
+    hres = IInternetHostSecurityManager_QueryCustomPolicy(sec_mgr, &GUID_CUSTOM_CONFIRMOBJECTSAFETY,
+            &ppolicy, &policy_size, (BYTE*)&cs, sizeof(cs), 0);
+    CHECK_CALLED(AXQueryInterface_IActiveScript);
+    CHECK_CALLED(AXQueryInterface_IObjectSafety);
+    check_custom_policy(hres, ppolicy, policy_size, policy_caller);
+
+    ax_objsafe = TRUE;
+    SET_EXPECT(AXQueryInterface_IActiveScript);
+    SET_EXPECT(AXQueryInterface_IObjectSafety);
+    SET_EXPECT(AXGetInterfaceSafetyOptions);
+    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
+    hres = IInternetHostSecurityManager_QueryCustomPolicy(sec_mgr, &GUID_CUSTOM_CONFIRMOBJECTSAFETY,
+            &ppolicy, &policy_size, (BYTE*)&cs, sizeof(cs), 0);
+    CHECK_CALLED(AXQueryInterface_IActiveScript);
+    CHECK_CALLED(AXQueryInterface_IObjectSafety);
+    CHECK_CALLED(AXGetInterfaceSafetyOptions);
+    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
+    check_custom_policy(hres, ppolicy, policy_size, URLPOLICY_ALLOW);
+
+    if(skip_loadobject_tests)
+        return;
+
+    cs.dwFlags = CONFIRMSAFETYACTION_LOADOBJECT;
+    ax_objsafe = FALSE;
+    SET_EXPECT(AXQueryInterface_IActiveScript);
+    SET_EXPECT(AXQueryInterface_IObjectSafety);
+    hres = IInternetHostSecurityManager_QueryCustomPolicy(sec_mgr, &GUID_CUSTOM_CONFIRMOBJECTSAFETY,
+            &ppolicy, &policy_size, (BYTE*)&cs, sizeof(cs), 0);
+    CHECK_CALLED(AXQueryInterface_IActiveScript);
+    CHECK_CALLED(AXQueryInterface_IObjectSafety);
+    check_custom_policy(hres, ppolicy, policy_size, policy_load);
+
+    ax_objsafe = TRUE;
+    SET_EXPECT(AXQueryInterface_IActiveScript);
+    SET_EXPECT(AXQueryInterface_IObjectSafety);
+    SET_EXPECT(AXGetInterfaceSafetyOptions);
+    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
+    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatch_data);
+    hres = IInternetHostSecurityManager_QueryCustomPolicy(sec_mgr, &GUID_CUSTOM_CONFIRMOBJECTSAFETY,
+            &ppolicy, &policy_size, (BYTE*)&cs, sizeof(cs), 0);
+    CHECK_CALLED(AXQueryInterface_IActiveScript);
+    CHECK_CALLED(AXQueryInterface_IObjectSafety);
+    CHECK_CALLED(AXGetInterfaceSafetyOptions);
+    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
+    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatch_data);
+    check_custom_policy(hres, ppolicy, policy_size, URLPOLICY_ALLOW);
 }
 
 static void test_security(void)
@@ -1323,8 +1552,6 @@ static void test_security(void)
     struct CONFIRMSAFETY cs;
     BYTE *ppolicy;
     HRESULT hres;
-
-    ax_setopt = INTERFACESAFE_FOR_UNTRUSTED_CALLER|INTERFACE_USES_SECURITY_MANAGER;
 
     hres = IActiveScriptSite_QueryInterface(site, &IID_IServiceProvider, (void**)&sp);
     ok(hres == S_OK, "Could not get IServiceProvider iface: %08x\n", hres);
@@ -1347,19 +1574,37 @@ static void test_security(void)
     SET_EXPECT(AXQueryInterface_IActiveScript);
     SET_EXPECT(AXQueryInterface_IObjectSafety);
     SET_EXPECT(AXGetInterfaceSafetyOptions);
-    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx);
+    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
     hres = IInternetHostSecurityManager_QueryCustomPolicy(sec_mgr, &GUID_CUSTOM_CONFIRMOBJECTSAFETY,
             &ppolicy, &policy_size, (BYTE*)&cs, sizeof(cs), 0);
     CHECK_CALLED(AXQueryInterface_IActiveScript);
     CHECK_CALLED(AXQueryInterface_IObjectSafety);
     CHECK_CALLED(AXGetInterfaceSafetyOptions);
-    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatchEx);
+    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
+    check_custom_policy(hres, ppolicy, policy_size, URLPOLICY_ALLOW);
 
-    ok(hres == S_OK, "QueryCusromPolicy failed: %08x\n", hres);
-    ok(policy_size == sizeof(DWORD), "policy_size = %d\n", policy_size);
-    ok(*(DWORD*)ppolicy == URLPOLICY_ALLOW, "policy = %x\n", *(DWORD*)ppolicy);
-    CoTaskMemFree(ppolicy);
+    cs.dwFlags = CONFIRMSAFETYACTION_LOADOBJECT;
+    SET_EXPECT(AXQueryInterface_IActiveScript);
+    SET_EXPECT(AXQueryInterface_IObjectSafety);
+    SET_EXPECT(AXGetInterfaceSafetyOptions);
+    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
+    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatch_data);
+    hres = IInternetHostSecurityManager_QueryCustomPolicy(sec_mgr, &GUID_CUSTOM_CONFIRMOBJECTSAFETY,
+            &ppolicy, &policy_size, (BYTE*)&cs, sizeof(cs), 0);
+    CHECK_CALLED(AXQueryInterface_IActiveScript);
+    CHECK_CALLED(AXQueryInterface_IObjectSafety);
+    CHECK_CALLED(AXGetInterfaceSafetyOptions);
+    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
+    if(called_AXSetInterfaceSafetyOptions_IDispatch_data) {
+        CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatch_data);
+    }else {
+        win_skip("CONFIRMSAFETYACTION_LOADOBJECT flag not supported\n");
+        skip_loadobject_tests = TRUE;
+        CLEAR_CALLED(AXSetInterfaceSafetyOptions_IDispatch_data);
+    }
+    check_custom_policy(hres, ppolicy, policy_size, URLPOLICY_ALLOW);
 
+    cs.dwFlags = 0;
     ax_objsafe = FALSE;
     SET_EXPECT(AXQueryInterface_IActiveScript);
     SET_EXPECT(AXQueryInterface_IObjectSafety);
@@ -1367,110 +1612,127 @@ static void test_security(void)
             &ppolicy, &policy_size, (BYTE*)&cs, sizeof(cs), 0);
     CHECK_CALLED(AXQueryInterface_IActiveScript);
     CHECK_CALLED(AXQueryInterface_IObjectSafety);
+    check_custom_policy(hres, ppolicy, policy_size, URLPOLICY_DISALLOW);
 
-    ok(hres == S_OK, "QueryCusromPolicy failed: %08x\n", hres);
-    ok(policy_size == sizeof(DWORD), "policy_size = %d\n", policy_size);
-    ok(*(DWORD*)ppolicy == URLPOLICY_DISALLOW, "policy = %x\n", *(DWORD*)ppolicy);
-    CoTaskMemFree(ppolicy);
-
-    if(set_safe_reg(TRUE)) {
+    if(!skip_loadobject_tests) {
+        cs.dwFlags = CONFIRMSAFETYACTION_LOADOBJECT;
         ax_objsafe = FALSE;
         SET_EXPECT(AXQueryInterface_IActiveScript);
         SET_EXPECT(AXQueryInterface_IObjectSafety);
         hres = IInternetHostSecurityManager_QueryCustomPolicy(sec_mgr, &GUID_CUSTOM_CONFIRMOBJECTSAFETY,
-                 &ppolicy, &policy_size, (BYTE*)&cs, sizeof(cs), 0);
-        CHECK_CALLED(AXQueryInterface_IActiveScript);
-        CHECK_CALLED(AXQueryInterface_IObjectSafety);
-
-        ok(hres == S_OK, "QueryCusromPolicy failed: %08x\n", hres);
-        ok(policy_size == sizeof(DWORD), "policy_size = %d\n", policy_size);
-        ok(*(DWORD*)ppolicy == URLPOLICY_ALLOW, "policy = %x\n", *(DWORD*)ppolicy);
-        CoTaskMemFree(ppolicy);
-
-        ax_objsafe = TRUE;
-        SET_EXPECT(AXQueryInterface_IActiveScript);
-        SET_EXPECT(AXQueryInterface_IObjectSafety);
-        SET_EXPECT(AXGetInterfaceSafetyOptions);
-        SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx);
-        hres = IInternetHostSecurityManager_QueryCustomPolicy(sec_mgr, &GUID_CUSTOM_CONFIRMOBJECTSAFETY,
                 &ppolicy, &policy_size, (BYTE*)&cs, sizeof(cs), 0);
         CHECK_CALLED(AXQueryInterface_IActiveScript);
         CHECK_CALLED(AXQueryInterface_IObjectSafety);
-        CHECK_CALLED(AXGetInterfaceSafetyOptions);
-        CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatchEx);
+        check_custom_policy(hres, ppolicy, policy_size, URLPOLICY_DISALLOW);
+    }
 
-        ok(hres == S_OK, "QueryCusromPolicy failed: %08x\n", hres);
-        ok(policy_size == sizeof(DWORD), "policy_size = %d\n", policy_size);
-        ok(*(DWORD*)ppolicy == URLPOLICY_ALLOW, "policy = %x\n", *(DWORD*)ppolicy);
-        CoTaskMemFree(ppolicy);
+    if(set_safe_reg(TRUE, FALSE)) {
+        test_security_reg(sec_mgr, URLPOLICY_ALLOW, URLPOLICY_DISALLOW);
 
-        set_safe_reg(FALSE);
+        set_safe_reg(FALSE, TRUE);
+        test_security_reg(sec_mgr, URLPOLICY_DISALLOW, URLPOLICY_DISALLOW);
+
+        set_safe_reg(TRUE, TRUE);
+        test_security_reg(sec_mgr, URLPOLICY_ALLOW, URLPOLICY_ALLOW);
+
+        set_safe_reg(FALSE, FALSE);
     }else {
         skip("Could not set safety registry\n");
     }
 
     ax_objsafe = TRUE;
 
+    cs.dwFlags = 0;
     ax_setopt_dispex_hres = E_NOINTERFACE;
     SET_EXPECT(AXQueryInterface_IActiveScript);
     SET_EXPECT(AXQueryInterface_IObjectSafety);
     SET_EXPECT(AXGetInterfaceSafetyOptions);
-    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx);
-    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatch);
+    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
+    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatch_caller);
     hres = IInternetHostSecurityManager_QueryCustomPolicy(sec_mgr, &GUID_CUSTOM_CONFIRMOBJECTSAFETY,
             &ppolicy, &policy_size, (BYTE*)&cs, sizeof(cs), 0);
     CHECK_CALLED(AXQueryInterface_IActiveScript);
     CHECK_CALLED(AXQueryInterface_IObjectSafety);
     CHECK_CALLED(AXGetInterfaceSafetyOptions);
-    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatchEx);
-    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatch);
-
-    ok(hres == S_OK, "QueryCusromPolicy failed: %08x\n", hres);
-    ok(policy_size == sizeof(DWORD), "policy_size = %d\n", policy_size);
-    ok(*(DWORD*)ppolicy == URLPOLICY_ALLOW, "policy = %x\n", *(DWORD*)ppolicy);
-    CoTaskMemFree(ppolicy);
+    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
+    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatch_caller);
+    check_custom_policy(hres, ppolicy, policy_size, URLPOLICY_ALLOW);
 
     ax_setopt_dispex_hres = E_FAIL;
-    ax_setopt_disp_hres = E_NOINTERFACE;
+    ax_setopt_disp_caller_hres = E_NOINTERFACE;
     SET_EXPECT(AXQueryInterface_IActiveScript);
     SET_EXPECT(AXQueryInterface_IObjectSafety);
     SET_EXPECT(AXGetInterfaceSafetyOptions);
-    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx);
-    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatch);
+    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
+    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatch_caller);
     hres = IInternetHostSecurityManager_QueryCustomPolicy(sec_mgr, &GUID_CUSTOM_CONFIRMOBJECTSAFETY,
             &ppolicy, &policy_size, (BYTE*)&cs, sizeof(cs), 0);
     CHECK_CALLED(AXQueryInterface_IActiveScript);
     CHECK_CALLED(AXQueryInterface_IObjectSafety);
     CHECK_CALLED(AXGetInterfaceSafetyOptions);
-    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatchEx);
-    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatch);
+    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
+    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatch_caller);
+    check_custom_policy(hres, ppolicy, policy_size, URLPOLICY_DISALLOW);
 
-    ok(hres == S_OK, "QueryCusromPolicy failed: %08x\n", hres);
-    ok(policy_size == sizeof(DWORD), "policy_size = %d\n", policy_size);
-    ok(*(DWORD*)ppolicy == URLPOLICY_DISALLOW, "policy = %x\n", *(DWORD*)ppolicy);
-    CoTaskMemFree(ppolicy);
+    if(!skip_loadobject_tests) {
+        cs.dwFlags = CONFIRMSAFETYACTION_LOADOBJECT;
+        ax_setopt_dispex_hres = E_FAIL;
+        ax_setopt_disp_caller_hres = E_NOINTERFACE;
+        SET_EXPECT(AXQueryInterface_IActiveScript);
+        SET_EXPECT(AXQueryInterface_IObjectSafety);
+        SET_EXPECT(AXGetInterfaceSafetyOptions);
+        SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
+        SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatch_caller);
+        hres = IInternetHostSecurityManager_QueryCustomPolicy(sec_mgr, &GUID_CUSTOM_CONFIRMOBJECTSAFETY,
+                &ppolicy, &policy_size, (BYTE*)&cs, sizeof(cs), 0);
+        CHECK_CALLED(AXQueryInterface_IActiveScript);
+        CHECK_CALLED(AXQueryInterface_IObjectSafety);
+        CHECK_CALLED(AXGetInterfaceSafetyOptions);
+        CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatchEx_caller_secmgr);
+        CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatch_caller);
+        check_custom_policy(hres, ppolicy, policy_size, URLPOLICY_DISALLOW);
+    }
 
+    cs.dwFlags = 0;
     ax_setopt_dispex_hres = E_FAIL;
-    ax_setopt_disp_hres = S_OK;
+    ax_setopt_disp_caller_hres = S_OK;
     ax_getopt_hres = E_NOINTERFACE;
-    ax_setopt = INTERFACESAFE_FOR_UNTRUSTED_CALLER;
     SET_EXPECT(AXQueryInterface_IActiveScript);
     SET_EXPECT(AXQueryInterface_IObjectSafety);
     SET_EXPECT(AXGetInterfaceSafetyOptions);
-    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx);
-    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatch);
+    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx_caller);
+    SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatch_caller);
     hres = IInternetHostSecurityManager_QueryCustomPolicy(sec_mgr, &GUID_CUSTOM_CONFIRMOBJECTSAFETY,
             &ppolicy, &policy_size, (BYTE*)&cs, sizeof(cs), 0);
     CHECK_CALLED(AXQueryInterface_IActiveScript);
     CHECK_CALLED(AXQueryInterface_IObjectSafety);
     CHECK_CALLED(AXGetInterfaceSafetyOptions);
-    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatchEx);
-    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatch);
+    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatchEx_caller);
+    CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatch_caller);
+    check_custom_policy(hres, ppolicy, policy_size, URLPOLICY_ALLOW);
 
-    ok(hres == S_OK, "QueryCusromPolicy failed: %08x\n", hres);
-    ok(policy_size == sizeof(DWORD), "policy_size = %d\n", policy_size);
-    ok(*(DWORD*)ppolicy == URLPOLICY_ALLOW, "policy = %x\n", *(DWORD*)ppolicy);
-    CoTaskMemFree(ppolicy);
+    if(!skip_loadobject_tests) {
+        cs.dwFlags = CONFIRMSAFETYACTION_LOADOBJECT;
+        ax_setopt_dispex_hres = E_FAIL;
+        ax_setopt_disp_caller_hres = S_OK;
+        ax_setopt_disp_data_hres = E_FAIL;
+        ax_getopt_hres = E_NOINTERFACE;
+        SET_EXPECT(AXQueryInterface_IActiveScript);
+        SET_EXPECT(AXQueryInterface_IObjectSafety);
+        SET_EXPECT(AXGetInterfaceSafetyOptions);
+        SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatchEx_caller);
+        SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatch_caller);
+        SET_EXPECT(AXSetInterfaceSafetyOptions_IDispatch_data);
+        hres = IInternetHostSecurityManager_QueryCustomPolicy(sec_mgr, &GUID_CUSTOM_CONFIRMOBJECTSAFETY,
+                &ppolicy, &policy_size, (BYTE*)&cs, sizeof(cs), 0);
+        CHECK_CALLED(AXQueryInterface_IActiveScript);
+        CHECK_CALLED(AXQueryInterface_IObjectSafety);
+        CHECK_CALLED(AXGetInterfaceSafetyOptions);
+        CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatchEx_caller);
+        CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatch_caller);
+        CHECK_CALLED(AXSetInterfaceSafetyOptions_IDispatch_data);
+        check_custom_policy(hres, ppolicy, policy_size, URLPOLICY_DISALLOW);
+    }
 
     IInternetHostSecurityManager_Release(sec_mgr);
 }
@@ -1518,6 +1780,8 @@ static HRESULT WINAPI ActiveScriptProperty_SetProperty(IActiveScriptProperty *if
         ok(V_VT(pvarValue) == VT_BOOL, "V_VT(pvarValue)=%d\n", V_VT(pvarValue));
         ok(V_BOOL(pvarValue) == VARIANT_TRUE, "V_BOOL(pvarValue)=%x\n", V_BOOL(pvarValue));
         break;
+    case 0x70000003: /* Undocumented property set by IE10 */
+        return E_NOTIMPL;
     default:
         ok(0, "unexpected property %x\n", dwProperty);
         return E_NOTIMPL;
@@ -1607,13 +1871,21 @@ static HRESULT WINAPI ActiveScriptParse_AddScriptlet(IActiveScriptParse *iface,
     return E_NOTIMPL;
 }
 
-static HRESULT dispex_propput(IDispatchEx *obj, DISPID id, DWORD flags, VARIANT *var)
+static HRESULT dispex_propput(IDispatchEx *obj, DISPID id, DWORD flags, VARIANT *var, IServiceProvider *caller_sp)
 {
     DISPID propput_arg = DISPID_PROPERTYPUT;
     DISPPARAMS dp = {var, &propput_arg, 1, 1};
     EXCEPINFO ei = {0};
 
-    return IDispatchEx_InvokeEx(obj, id, LOCALE_NEUTRAL, DISPATCH_PROPERTYPUT|flags, &dp, NULL, &ei, NULL);
+    return IDispatchEx_InvokeEx(obj, id, LOCALE_NEUTRAL, DISPATCH_PROPERTYPUT|flags, &dp, NULL, &ei, caller_sp);
+}
+
+static HRESULT dispex_propget(IDispatchEx *obj, DISPID id, VARIANT *res, IServiceProvider *caller_sp)
+{
+    DISPPARAMS dp = {NULL};
+    EXCEPINFO ei = {0};
+
+    return IDispatchEx_InvokeEx(obj, id, LOCALE_NEUTRAL, DISPATCH_PROPERTYGET, &dp, res, &ei, caller_sp);
 }
 
 static void test_func(IDispatchEx *obj)
@@ -1661,8 +1933,24 @@ static void test_func(IDispatchEx *obj)
 
     V_VT(&var) = VT_I4;
     V_I4(&var) = 100;
-    hres = dispex_propput(obj, id, 0, &var);
-    ok(hres == E_NOTIMPL, "InvokeEx failed: %08x\n", hres);
+    hres = dispex_propput(obj, id, 0, &var, NULL);
+    todo_wine ok(hres == E_NOTIMPL, "InvokeEx failed: %08x\n", hres);
+
+    hres = dispex_propget(dispex, DISPID_VALUE, &var, NULL);
+    ok(hres == E_ACCESSDENIED, "InvokeEx returned: %08x, expected E_ACCESSDENIED\n", hres);
+    if(SUCCEEDED(hres))
+        VariantClear(&var);
+
+    SET_EXPECT(QS_IActiveScriptSite);
+    SET_EXPECT(QS_GetCaller);
+    hres = dispex_propget(dispex, DISPID_VALUE, &var, &caller_sp);
+    ok(hres == S_OK, "InvokeEx returned: %08x, expected S_OK\n", hres);
+    ok(V_VT(&var) == VT_BSTR, "V_VT(var) = %d\n", V_VT(&var));
+    ok(!strcmp_wa(V_BSTR(&var), "\nfunction toString() {\n    [native code]\n}\n"),
+       "V_BSTR(var) = %s\n", wine_dbgstr_w(V_BSTR(&var)));
+    VariantClear(&var);
+    todo_wine CHECK_CALLED(QS_IActiveScriptSite);
+    todo_wine CHECK_CALLED(QS_GetCaller);
 
     IDispatchEx_Release(dispex);
 }
@@ -1680,7 +1968,8 @@ static void test_nextdispid(IDispatchEx *dispex)
     SysFreeString(name);
 
     V_VT(&var) = VT_EMPTY;
-    hres = dispex_propput(dispex, dyn_id, 0, &var);
+    hres = dispex_propput(dispex, dyn_id, 0, &var, NULL);
+    ok(hres == S_OK, "dispex_propput failed: %08x\n", hres);
 
     while(last_id != dyn_id) {
         hres = IDispatchEx_GetNextDispID(dispex, fdexEnumAll, last_id, &id);
@@ -1732,10 +2021,143 @@ static void test_global_id(void)
     VariantClear(&var);
 }
 
-static HRESULT WINAPI ActiveScriptParse_ParseScriptText(IActiveScriptParse *iface,
-        LPCOLESTR pstrCode, LPCOLESTR pstrItemName, IUnknown *punkContext,
-        LPCOLESTR pstrDelimiter, CTXARG_T dwSourceContextCookie, ULONG ulStartingLine,
-        DWORD dwFlags, VARIANT *pvarResult, EXCEPINFO *pexcepinfo)
+static void test_arg_conv(IHTMLWindow2 *window)
+{
+    IHTMLDocument2 *doc;
+    IDispatchEx *dispex;
+    IHTMLElement *elem;
+    VARIANT v;
+    HRESULT hres;
+
+    hres = IHTMLWindow2_get_document(window, &doc);
+    ok(hres == S_OK, "get_document failed: %08x\n", hres);
+
+    hres = IHTMLDocument2_get_body(doc, &elem);
+    IHTMLDocument2_Release(doc);
+    ok(hres == S_OK, "get_body failed: %08x\n", hres);
+
+    hres = IHTMLElement_QueryInterface(elem, &IID_IDispatchEx, (void**)&dispex);
+    IHTMLElement_Release(elem);
+    ok(hres == S_OK, "Could not get IDispatchEx iface: %08x\n", hres);
+
+    SET_EXPECT(QS_VariantConversion);
+    SET_EXPECT(ChangeType);
+    V_VT(&v) = VT_I4;
+    V_I4(&v) = 0xf0f0f0;
+    hres = dispex_propput(dispex, DISPID_IHTMLBODYELEMENT_BACKGROUND, 0, &v, &caller_sp);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    CHECK_CALLED(QS_VariantConversion);
+    CHECK_CALLED(ChangeType);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = dispex_propget(dispex, DISPID_IHTMLBODYELEMENT_BGCOLOR, &v, &caller_sp);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_BSTR, "V_VT(var)=%d\n", V_VT(&v));
+    ok(!V_BSTR(&v), "V_BSTR(&var) = %s\n", wine_dbgstr_w(V_BSTR(&v)));
+
+    IDispatchEx_Release(dispex);
+}
+
+#define test_elem_disabled(a,b) _test_elem_disabled(__LINE__,a,b)
+static void _test_elem_disabled(unsigned line, IHTMLElement *elem, VARIANT_BOOL exb)
+{
+    IHTMLElement3 *elem3;
+    VARIANT_BOOL b = 100;
+    HRESULT hres;
+
+    hres = IHTMLElement_QueryInterface(elem, &IID_IHTMLElement3, (void**)&elem3);
+    ok_(__FILE__,line)(hres == S_OK, "Could not get IHTMLElement3 iface: %08x\n", hres);
+
+    hres = IHTMLElement3_get_disabled(elem3, &b);
+    ok_(__FILE__,line)(hres == S_OK, "get_disabled failed: %08x\n", hres);
+    ok_(__FILE__,line)(b == exb, "disabled = %x, expected %x\n", b, exb);
+
+    IHTMLElement3_Release(elem3);
+}
+
+static void test_default_arg_conv(IHTMLWindow2 *window)
+{
+    IHTMLDocument2 *doc;
+    IDispatchEx *dispex;
+    IHTMLElement *elem;
+    VARIANT v;
+    HRESULT hres;
+
+    hres = IHTMLWindow2_get_document(window, &doc);
+    ok(hres == S_OK, "get_document failed: %08x\n", hres);
+
+    hres = IHTMLDocument2_get_body(doc, &elem);
+    IHTMLDocument2_Release(doc);
+    ok(hres == S_OK, "get_body failed: %08x\n", hres);
+
+    hres = IHTMLElement_QueryInterface(elem, &IID_IDispatchEx, (void**)&dispex);
+    ok(hres == S_OK, "Could not get IDispatchEx iface: %08x\n", hres);
+
+    test_elem_disabled(elem, VARIANT_FALSE);
+
+    V_VT(&v) = VT_BSTR;
+    V_BSTR(&v) = a2bstr("test");
+    hres = dispex_propput(dispex, DISPID_IHTMLELEMENT3_DISABLED, 0, &v, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    SysFreeString(V_BSTR(&v));
+
+    test_elem_disabled(elem, VARIANT_TRUE);
+
+    V_VT(&v) = VT_I4;
+    V_I4(&v) = 0;
+    hres = dispex_propput(dispex, DISPID_IHTMLELEMENT3_DISABLED, 0, &v, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+
+    test_elem_disabled(elem, VARIANT_FALSE);
+
+    V_VT(&v) = VT_I4;
+    V_I4(&v) = 1;
+    hres = dispex_propput(dispex, DISPID_IHTMLELEMENT3_DISABLED, DISPATCH_PROPERTYPUTREF, &v, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+
+    test_elem_disabled(elem, VARIANT_TRUE);
+
+    IHTMLElement_Release(elem);
+    IDispatchEx_Release(dispex);
+}
+
+static void test_ui(void)
+{
+    IActiveScriptSiteUIControl *ui_control;
+    SCRIPTUICHANDLING uic_handling = 10;
+    HRESULT hres;
+
+    hres = IActiveScriptSite_QueryInterface(site, &IID_IActiveScriptSiteUIControl, (void**)&ui_control);
+    if(hres == E_NOINTERFACE) {
+        win_skip("IActiveScriptSiteUIControl not supported\n");
+        return;
+    }
+    ok(hres == S_OK, "Could not get IActiveScriptSiteUIControl: %08x\n", hres);
+
+    hres = IActiveScriptSiteUIControl_GetUIBehavior(ui_control, SCRIPTUICITEM_MSGBOX, &uic_handling);
+    ok(hres == S_OK, "GetUIBehavior failed: %08x\n", hres);
+    ok(uic_handling == SCRIPTUICHANDLING_ALLOW, "uic_handling = %d\n", uic_handling);
+
+    IActiveScriptSiteUIControl_Release(ui_control);
+}
+
+static void test_sp(void)
+{
+    IServiceProvider *sp;
+    IUnknown *unk;
+    HRESULT hres;
+
+    hres = IActiveScriptSite_QueryInterface(site, &IID_IServiceProvider, (void**)&sp);
+    ok(hres == S_OK, "Could not get IServiceProvider iface: %08x\n", hres);
+
+    hres = IServiceProvider_QueryService(sp, &SID_SContainerDispatch, &IID_IHTMLDocument, (void**)&unk);
+    ok(hres == S_OK, "Could not get SID_SContainerDispatch service: %08x\n", hres);
+    IUnknown_Release(unk);
+
+    IServiceProvider_Release(sp);
+}
+
+static void test_script_run(void)
 {
     IDispatchEx *document, *dispex;
     IHTMLWindow2 *window;
@@ -1751,8 +2173,6 @@ static HRESULT WINAPI ActiveScriptParse_ParseScriptText(IActiveScriptParse *ifac
     static const WCHAR documentW[] = {'d','o','c','u','m','e','n','t',0};
     static const WCHAR testW[] = {'t','e','s','t',0};
     static const WCHAR funcW[] = {'f','u','n','c',0};
-
-    CHECK_EXPECT(ParseScriptText);
 
     SET_EXPECT(GetScriptDispatch);
 
@@ -1793,13 +2213,16 @@ static HRESULT WINAPI ActiveScriptParse_ParseScriptText(IActiveScriptParse *ifac
 
     V_VT(&var) = VT_I4;
     V_I4(&var) = 100;
-    hres = dispex_propput(document, id, 0, &var);
+    hres = dispex_propput(document, id, 0, &var, NULL);
     ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
 
     tmp = SysAllocString(testW);
     hres = IDispatchEx_GetDispID(document, tmp, fdexNameCaseSensitive, &id);
     SysFreeString(tmp);
     ok(hres == S_OK, "GetDispID(document) failed: %08x\n", hres);
+
+    hres = IDispatchEx_DeleteMemberByDispID(document, id);
+    ok(hres == E_NOTIMPL, "DeleteMemberByDispID failed = %08x\n", hres);
 
     VariantInit(&var);
     memset(&dp, 0, sizeof(dp));
@@ -1811,7 +2234,7 @@ static HRESULT WINAPI ActiveScriptParse_ParseScriptText(IActiveScriptParse *ifac
 
     V_VT(&var) = VT_I4;
     V_I4(&var) = 200;
-    hres = dispex_propput(document, id, DISPATCH_PROPERTYPUTREF, &var);
+    hres = dispex_propput(document, id, DISPATCH_PROPERTYPUTREF, &var, NULL);
     ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
 
     VariantInit(&var);
@@ -1838,6 +2261,18 @@ static HRESULT WINAPI ActiveScriptParse_ParseScriptText(IActiveScriptParse *ifac
     ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
     ok(V_VT(&var) == VT_I4, "V_VT(var)=%d\n", V_VT(&var));
     ok(V_I4(&var) == 300, "V_I4(&var) = %d\n", V_I4(&var));
+
+    V_VT(&var) = VT_BSTR;
+    V_BSTR(&var) = NULL;
+    dispex_propput(document, id, 0, &var, NULL);
+
+    VariantInit(&var);
+    memset(&dp, 0, sizeof(dp));
+    memset(&ei, 0, sizeof(ei));
+    hres = IDispatchEx_InvokeEx(document, id, LOCALE_NEUTRAL, INVOKE_PROPERTYGET, &dp, &var, &ei, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(V_VT(&var) == VT_BSTR, "V_VT(var)=%d\n", V_VT(&var));
+    ok(!V_BSTR(&var), "V_BSTR(&var) = %s\n", wine_dbgstr_w(V_BSTR(&var)));
 
     unk = (void*)0xdeadbeef;
     hres = IDispatchEx_GetNameSpaceParent(window_dispex, &unk);
@@ -1882,7 +2317,6 @@ static HRESULT WINAPI ActiveScriptParse_ParseScriptText(IActiveScriptParse *ifac
     ok(hres == S_OK, "Could not get IHTMLWindow2 iface: %08x\n", hres);
 
     hres = IHTMLWindow2_get_navigator(window, &navigator);
-    IHTMLWindow2_Release(window);
     ok(hres == S_OK, "get_navigator failed: %08x\n", hres);
 
     hres = IOmNavigator_QueryInterface(navigator, &IID_IDispatchEx, (void**)&dispex);
@@ -1891,6 +2325,10 @@ static HRESULT WINAPI ActiveScriptParse_ParseScriptText(IActiveScriptParse *ifac
 
     test_func(dispex);
     test_nextdispid(dispex);
+
+    test_arg_conv(window);
+    test_default_arg_conv(window);
+    IHTMLWindow2_Release(window);
 
     tmp = a2bstr("test");
     hres = IDispatchEx_DeleteMemberByName(dispex, tmp, fdexNameCaseSensitive);
@@ -1943,8 +2381,39 @@ static HRESULT WINAPI ActiveScriptParse_ParseScriptText(IActiveScriptParse *ifac
     test_global_id();
 
     test_security();
+    test_ui();
+    test_sp();
+}
 
-    return S_OK;
+static HRESULT WINAPI ActiveScriptParse_ParseScriptText(IActiveScriptParse *iface,
+        LPCOLESTR pstrCode, LPCOLESTR pstrItemName, IUnknown *punkContext,
+        LPCOLESTR pstrDelimiter, CTXARG_T dwSourceContextCookie, ULONG ulStartingLine,
+        DWORD dwFlags, VARIANT *pvarResult, EXCEPINFO *pexcepinfo)
+{
+    ok(pvarResult != NULL, "pvarResult == NULL\n");
+    ok(pexcepinfo != NULL, "pexcepinfo == NULL\n");
+
+    if(!strcmp_wa(pstrCode, "execScript call")) {
+        CHECK_EXPECT(ParseScriptText_execScript);
+        ok(!pstrItemName, "pstrItemName = %s\n", wine_dbgstr_w(pstrItemName));
+        ok(!strcmp_wa(pstrDelimiter, "\""), "pstrDelimiter = %s\n", wine_dbgstr_w(pstrDelimiter));
+        ok(dwFlags == SCRIPTTEXT_ISVISIBLE, "dwFlags = %x\n", dwFlags);
+
+        V_VT(pvarResult) = VT_I4;
+        V_I4(pvarResult) = 10;
+        return S_OK;
+    }else if(!strcmp_wa(pstrCode, "simple script")) {
+        CHECK_EXPECT(ParseScriptText_script);
+        ok(!strcmp_wa(pstrItemName, "window"), "pstrItemName = %s\n", wine_dbgstr_w(pstrItemName));
+        ok(!strcmp_wa(pstrDelimiter, "</SCRIPT>"), "pstrDelimiter = %s\n", wine_dbgstr_w(pstrDelimiter));
+        ok(dwFlags == (SCRIPTTEXT_ISVISIBLE|SCRIPTTEXT_HOSTMANAGESSOURCE), "dwFlags = %x\n", dwFlags);
+
+        test_script_run();
+        return S_OK;
+    }
+
+    ok(0, "unexpected script %s\n", wine_dbgstr_w(pstrCode));
+    return E_FAIL;
 }
 
 static const IActiveScriptParseVtbl ActiveScriptParseVtbl = {
@@ -1990,7 +2459,7 @@ static HRESULT WINAPI ActiveScript_QueryInterface(IActiveScript *iface, REFIID r
     if(IsEqualGUID(&IID_IActiveScriptDebug, riid))
         return E_NOINTERFACE;
 
-    ok(0, "unexpected riid %s\n", debugstr_guid(riid));
+    trace("QI(%s)\n", wine_dbgstr_guid(riid));
     return E_NOINTERFACE;
 }
 
@@ -2031,7 +2500,7 @@ static HRESULT WINAPI ActiveScript_SetScriptSite(IActiveScript *iface, IActiveSc
     hres = IActiveScriptSite_QueryInterface(pass, &IID_IActiveScriptSiteDebug, (void**)&debug);
     ok(hres == S_OK, "Could not get IActiveScriptSiteDebug interface: %08x\n", hres);
     if(SUCCEEDED(hres))
-        IActiveScriptSiteDebug32_Release(debug);
+        IActiveScriptSiteDebug_Release(debug);
 
     hres = IActiveScriptSite_QueryInterface(pass, &IID_ICanHandleException, (void**)&canexpection);
     ok(hres == E_NOINTERFACE, "Could not get IID_ICanHandleException interface: %08x\n", hres);
@@ -2219,7 +2688,7 @@ static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID r
     if(IsEqualGUID(&CLSID_IdentityUnmarshal, riid))
         return E_NOINTERFACE;
 
-    ok(0, "unexpected riid %s\n", debugstr_guid(riid));
+    ok(0, "unexpected riid %s\n", wine_dbgstr_guid(riid));
     return E_NOTIMPL;
 }
 
@@ -2238,7 +2707,7 @@ static HRESULT WINAPI ClassFactory_CreateInstance(IClassFactory *iface, IUnknown
     CHECK_EXPECT(CreateInstance);
 
     ok(!outer, "outer = %p\n", outer);
-    ok(IsEqualGUID(&IID_IActiveScript, riid), "unexpected riid %s\n", debugstr_guid(riid));
+    ok(IsEqualGUID(&IID_IActiveScript, riid), "unexpected riid %s\n", wine_dbgstr_guid(riid));
     *ppv = &ActiveScript;
     return S_OK;
 }
@@ -2265,6 +2734,38 @@ static const char simple_script_str[] =
     "<script language=\"TestScript\">simple script</script>"
     "</body></html>";
 
+static void test_exec_script(IHTMLDocument2 *doc, const char *codea, const char *langa)
+{
+    IHTMLWindow2 *window;
+    BSTR code, lang;
+    VARIANT v;
+    HRESULT hres;
+
+    hres = IHTMLDocument2_get_parentWindow(doc, &window);
+    ok(hres == S_OK, "get_parentWindow failed: %08x\n", hres);
+
+    code = a2bstr(codea);
+    lang = a2bstr(langa);
+
+    SET_EXPECT(ParseScriptText_execScript);
+    hres = IHTMLWindow2_execScript(window, code, lang, &v);
+    ok(hres == S_OK, "execScript failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_I4, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_I4(&v) == 10, "V_I4(v) = %d\n", V_I4(&v));
+    CHECK_CALLED(ParseScriptText_execScript);
+    SysFreeString(lang);
+
+    lang = a2bstr("invalid");
+    V_VT(&v) = 100;
+    hres = IHTMLWindow2_execScript(window, code, lang, &v);
+    ok(hres == CO_E_CLASSSTRING, "execScript failed: %08x, expected CO_E_CLASSSTRING\n", hres);
+    ok(V_VT(&v) == 100, "V_VT(v) = %d\n", V_VT(&v));
+    SysFreeString(lang);
+    SysFreeString(code);
+
+    IHTMLWindow2_Release(window);
+}
+
 static void test_simple_script(void)
 {
     IHTMLDocument2 *doc;
@@ -2284,7 +2785,7 @@ static void test_simple_script(void)
     SET_EXPECT(SetScriptState_STARTED);
     SET_EXPECT(AddNamedItem);
     SET_EXPECT(SetProperty_ABBREVIATE_GLOBALNAME_RESOLUTION); /* IE8 */
-    SET_EXPECT(ParseScriptText);
+    SET_EXPECT(ParseScriptText_script);
     SET_EXPECT(SetScriptState_CONNECTED);
 
     load_doc(doc, simple_script_str);
@@ -2300,8 +2801,10 @@ static void test_simple_script(void)
     CHECK_CALLED(SetScriptState_STARTED);
     CHECK_CALLED(AddNamedItem);
     CHECK_CALLED_BROKEN(SetProperty_ABBREVIATE_GLOBALNAME_RESOLUTION); /* IE8 */
-    CHECK_CALLED(ParseScriptText);
+    CHECK_CALLED(ParseScriptText_script);
     CHECK_CALLED(SetScriptState_CONNECTED);
+
+    test_exec_script(doc, "execScript call", "TestScript");
 
     if(site)
         IActiveScriptSite_Release(site);
@@ -2358,9 +2861,9 @@ static void run_js_script(const char *test_name)
 
     SET_EXPECT(external_success);
 
-    while(!called_external_success && GetMessage(&msg, NULL, 0, 0)) {
+    while(!called_external_success && GetMessageW(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        DispatchMessageW(&msg);
     }
 
     CHECK_CALLED(external_success);
@@ -2372,6 +2875,13 @@ static void run_js_script(const char *test_name)
 static void run_js_tests(void)
 {
     run_js_script("jstest.html");
+    run_js_script("exectest.html");
+    run_js_script("vbtest.html");
+    run_js_script("events.html");
+    if(is_ie9plus)
+        run_js_script("nav_test.html");
+    else
+        win_skip("Skipping nav_test.html on IE older than 9 (for broken ieframe onload).\n");
 }
 
 static BOOL init_registry(BOOL init)
@@ -2395,14 +2905,14 @@ static BOOL register_script_engine(void)
 
     hres = CoRegisterClassObject(&CLSID_TestScript, (IUnknown *)&script_cf,
                                  CLSCTX_INPROC_SERVER, REGCLS_MULTIPLEUSE, &regid);
-    ok(hres == S_OK, "Could not register screipt engine: %08x\n", hres);
+    ok(hres == S_OK, "Could not register script engine: %08x\n", hres);
 
     return TRUE;
 }
 
 static LRESULT WINAPI wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    return DefWindowProc(hwnd, msg, wParam, lParam);
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
 static HWND create_container_window(void)
@@ -2423,21 +2933,52 @@ static HWND create_container_window(void)
             300, 300, NULL, NULL, NULL, NULL);
 }
 
+static BOOL check_ie(void)
+{
+    IHTMLDocument2 *doc;
+    IHTMLDocument5 *doc5;
+    IHTMLDocument7 *doc7;
+    HRESULT hres;
+
+    doc = create_document();
+    if(!doc)
+        return FALSE;
+
+    hres = IHTMLDocument2_QueryInterface(doc, &IID_IHTMLDocument7, (void**)&doc7);
+    if(SUCCEEDED(hres)) {
+        is_ie9plus = TRUE;
+        IHTMLDocument7_Release(doc7);
+    }
+
+    trace("is_ie9plus %x\n", is_ie9plus);
+
+    hres = IHTMLDocument2_QueryInterface(doc, &IID_IHTMLDocument5, (void**)&doc5);
+    if(SUCCEEDED(hres))
+        IHTMLDocument5_Release(doc5);
+
+    IHTMLDocument2_Release(doc);
+    return SUCCEEDED(hres);
+}
+
 START_TEST(script)
 {
     CoInitialize(NULL);
     container_hwnd = create_container_window();
 
-    if(winetest_interactive || ! is_ie_hardened()) {
-        if(register_script_engine()) {
-            test_simple_script();
+    if(check_ie()) {
+        if(winetest_interactive || ! is_ie_hardened()) {
+            if(register_script_engine()) {
+                test_simple_script();
+                init_registry(FALSE);
+            }else {
+                skip("Could not register TestScript engine\n");
+            }
             run_js_tests();
-            init_registry(FALSE);
         }else {
-            skip("Could not register TestScript engine\n");
+            skip("IE running in Enhanced Security Configuration\n");
         }
     }else {
-        skip("IE running in Enhanced Security Configuration\n");
+        win_skip("Too old IE.\n");
     }
 
     DestroyWindow(container_hwnd);

@@ -6,8 +6,8 @@
  */
 
 #include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <apitest.h>
+#include <wingdi.h>
 
 #define COUNT 26
 
@@ -18,13 +18,13 @@ void Test_AddFontResourceA()
     CHAR szFileNameFont2A[MAX_PATH];
     int result;
 
-    GetCurrentDirectoryA(MAX_PATH,szFileNameA);
+    GetWindowsDirectoryA(szFileNameA,MAX_PATH);
 
     memcpy(szFileNameFont1A,szFileNameA,MAX_PATH );
-    strcat(szFileNameFont1A, "\\testdata\\test.ttf");
+    strcat(szFileNameFont1A, "\\bin\\testdata\\test.ttf");
 
     memcpy(szFileNameFont2A,szFileNameA,MAX_PATH );
-    strcat(szFileNameFont2A, "\\testdata\\test.otf");
+    strcat(szFileNameFont2A, "\\bin\\testdata\\test.otf");
 
     RtlZeroMemory(szFileNameA,MAX_PATH);
 
@@ -87,6 +87,36 @@ void Test_AddFontResourceA()
     result = AddFontResourceA(szFileNameA);
     ok(result == 0, "AddFontResourceA succeeded, result=%d\n", result);
     ok(GetLastError() == ERROR_FILE_NOT_FOUND, "GetLastError()=%ld\n", GetLastError());
+
+
+    GetCurrentDirectoryA(MAX_PATH, szFileNameA);
+    strcpy(szFileNameFont1A, szFileNameA);
+    strcat(szFileNameFont1A, "\\bin\\testdata\\test.pfm");
+
+    strcpy(szFileNameFont2A, szFileNameA);
+    strcat(szFileNameFont2A, "\\bin\\testdata\\test.pfb");
+
+    SetLastError(ERROR_SUCCESS);
+
+    sprintf(szFileNameA,"%s|%s", szFileNameFont1A, szFileNameFont2A);
+    result = AddFontResourceA(szFileNameA);
+    ok(result == 1, "AddFontResourceA(\"%s|%s\") failed, result=%d\n",
+                    szFileNameFont1A, szFileNameFont2A, result);
+    ok(GetLastError() == ERROR_SUCCESS, "GetLastError()=%ld\n", GetLastError());
+
+    sprintf(szFileNameA,"%s | %s", szFileNameFont1A, szFileNameFont2A);
+    result = AddFontResourceA(szFileNameA);
+    ok(result == 0, "AddFontResourceA(\"%s | %s\") succeeded, result=%d\n",
+                    szFileNameFont1A, szFileNameFont2A, result);
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "GetLastError()=%ld\n", GetLastError());
+
+    sprintf(szFileNameA,"%s|%s", szFileNameFont2A, szFileNameFont1A);
+    result = AddFontResourceA(szFileNameA);
+    ok(result == 0, "AddFontResourceA(\"%s|%s\") succeeded, result=%d\n",
+                    szFileNameFont2A, szFileNameFont1A, result);
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "GetLastError()=%ld\n", GetLastError());
+
+
 }
 
 START_TEST(AddFontResource)

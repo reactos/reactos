@@ -26,6 +26,13 @@ static int test_value = 0;
 
 static void __cdecl sighandler(int signum)
 {
+    void **ret = __pxcptinfoptrs();
+
+    ok(ret != NULL, "ret = NULL\n");
+    if(signum == SIGABRT)
+        ok(*ret == (void*)0xdeadbeef, "*ret = %p\n", *ret);
+    else if(signum == SIGSEGV)
+        ok(*ret == NULL, "*ret = %p\n", *ret);
     ++test_value;
 }
 
@@ -42,7 +49,32 @@ static void test_signal(void)
     ok(test_value == 1, "SIGBREAK handler not invoked\n");
 }
 
+static void test___pxcptinfoptrs(void)
+{
+    void **ret = __pxcptinfoptrs();
+    int res;
+
+    ok(ret != NULL, "ret == NULL\n");
+    ok(*ret == NULL, "*ret != NULL\n");
+
+    test_value = 0;
+
+    *ret = (void*)0xdeadbeef;
+    signal(SIGSEGV, sighandler);
+    res = raise(SIGSEGV);
+    ok(res == 0, "failed to raise SIGSEGV\n");
+    ok(*ret == (void*)0xdeadbeef, "*ret = %p\n", *ret);
+
+    signal(SIGABRT, sighandler);
+    res = raise(SIGABRT);
+    ok(res == 0, "failed to raise SIGBREAK\n");
+    ok(*ret == (void*)0xdeadbeef, "*ret = %p\n", *ret);
+
+    ok(test_value == 2, "test_value = %d\n", test_value);
+}
+
 START_TEST(signal)
 {
     test_signal();
+    test___pxcptinfoptrs();
 }

@@ -1,0 +1,86 @@
+Test files:
+
+atl_apitest: CImage class from reactos
+CImage.exe : CImage class from microsoft
+
+================================================================================================================
+Windows Server 2003 SP2:
+================================================================================================================
+>atl_apitest.exe CImage
+R:\src\trunk\reactos\modules\rostests\apitests\atl\CImage.cpp(234): Test failed: Expected bpp to be 8, was: 32
+R:\src\trunk\reactos\modules\rostests\apitests\atl\CImage.cpp(265): Test failed: Expected bpp to be 8, was: 32 (for 0)
+R:\src\trunk\reactos\modules\rostests\apitests\atl\CImage.cpp(265): Test failed: Expected bpp to be 8, was: 32 (for 1)
+R:\src\trunk\reactos\modules\rostests\apitests\atl\CImage.cpp(265): Test failed: Expected bpp to be 8, was: 32 (for 2)
+R:\src\trunk\reactos\modules\rostests\apitests\atl\CImage.cpp(260): Test failed: Expected bpp to be 24, was: 32 (for 3)
+R:\src\trunk\reactos\modules\rostests\apitests\atl\CImage.cpp(265): Test failed: Expected bpp to be 8, was: 32 (for 4)
+
+CImage: 79 tests executed (0 marked as todo, 6 failures), 0 skipped.
+================================================================================================================
+>CImage.exe
+CImage: 79 tests executed (0 marked as todo, 0 failures), 0 skipped.
+================================================================================================================
+================================================================================================================
+Windows 10:
+================================================================================================================
+>atl_apitest.exe CImage
+R:\src\trunk\reactos\modules\rostests\apitests\atl\CImage.cpp(234): Test failed: Expected bpp to be 8, was: 32
+R:\src\trunk\reactos\modules\rostests\apitests\atl\CImage.cpp(265): Test failed: Expected bpp to be 8, was: 32 (for 0)
+R:\src\trunk\reactos\modules\rostests\apitests\atl\CImage.cpp(265): Test failed: Expected bpp to be 8, was: 32 (for 1)
+R:\src\trunk\reactos\modules\rostests\apitests\atl\CImage.cpp(265): Test failed: Expected bpp to be 8, was: 32 (for 2)
+R:\src\trunk\reactos\modules\rostests\apitests\atl\CImage.cpp(260): Test failed: Expected bpp to be 24, was: 32 (for 3)
+R:\src\trunk\reactos\modules\rostests\apitests\atl\CImage.cpp(265): Test failed: Expected bpp to be 8, was: 32 (for 4)
+
+CImage: 79 tests executed (0 marked as todo, 6 failures), 0 skipped.
+================================================================================================================
+>CImage.exe
+CImage: 79 tests executed (0 marked as todo, 0 failures), 0 skipped.
+================================================================================================================
+================================================================================================================
+ReactOS:
+================================================================================================================
+>atl_apitest.exe CImage
+CImage.cpp:234: Test failed: Expected bpp to be 8, was: 32
+CImage.cpp:265: Test failed: Expected bpp to be 8, was: 32 (for 0)
+CImage.cpp:245: Test failed: Expected hr to be S_OK, was: 80004005 (for 1)
+CImage.cpp:251: Test failed: Expected hr to be S_OK, was: 80004005 (for 1)
+CImage.cpp:254: Test failed: Expected width to be 48, was: 0 (for 1)
+CImage.cpp:256: Test failed: Expected height to be 48, was: 0 (for 1)
+CImage.cpp:265: Test failed: Expected bpp to be 8, was: 0 (for 1)
+CImage.cpp:148: Test failed: Expected status to be 0, was: 1
+CImage.cpp:149: Test failed: Expected a valid bitmap
+CImage.cpp:245: Test failed: Expected hr to be S_OK, was: 80004005 (for 2)
+CImage.cpp:251: Test failed: Expected hr to be S_OK, was: 80004005 (for 2)
+CImage.cpp:254: Test failed: Expected width to be 48, was: 0 (for 2)
+CImage.cpp:256: Test failed: Expected height to be 48, was: 0 (for 2)
+CImage.cpp:265: Test failed: Expected bpp to be 8, was: 0 (for 2)
+CImage.cpp:148: Test failed: Expected status to be 0, was: 1
+CImage.cpp:149: Test failed: Expected a valid bitmap
+CImage.cpp:260: Test failed: Expected bpp to be 24, was: 32 (for 3)
+CImage.cpp:154: Test failed: Expected PixelFormat to be 0x21808, was: 0x30803
+CImage.cpp:265: Test failed: Expected bpp to be 8, was: 32 (for 4)
+CImage.cpp:154: Test failed: Expected PixelFormat to be 0x30803, was: 0x21808
+
+CImage: 77 tests executed (0 marked as todo, 20 failures), 0 skipped.
+================================================================================================================
+>CImage.exe
+../CImage.cpp (245): Expected hr to be S_OK, was: 80004005 (for 1)
+../CImage.cpp (251): Expected hr to be S_OK, was: 80004005 (for 1)
+../CImage.cpp (254): Expected width to be 48, was: 0 (for 1)
+../CImage.cpp (256): Expected height to be 48, was: 0 (for 1)
+../CImage.cpp (265): Expected bpp to be 8, was: 0 (for 1)
+../CImage.cpp (148): Expected status to be 0, was: 1
+../CImage.cpp (149): Expected a valid bitmap
+../CImage.cpp (245): Expected hr to be S_OK, was: 80004005 (for 2)
+../CImage.cpp (251): Expected hr to be S_OK, was: 80004005 (for 2)
+../CImage.cpp (254): Expected width to be 48, was: 0 (for 2)
+../CImage.cpp (256): Expected height to be 48, was: 0 (for 2)
+../CImage.cpp (265): Expected bpp to be 8, was: 0 (for 2)
+../CImage.cpp (148): Expected status to be 0, was: 1
+../CImage.cpp (149): Expected a valid bitmap
+../CImage.cpp (260): Expected bpp to be 24, was: 8 (for 3)
+../CImage.cpp (154): Expected PixelFormat to be 0x21808, was: 0x30803
+../CImage.cpp (265): Expected bpp to be 8, was: 24 (for 4)
+../CImage.cpp (154): Expected PixelFormat to be 0x30803, was: 0x21808
+CImage: 77 tests executed (0 marked as todo, 18 failures), 0 skipped.
+================================================================================================================
+

@@ -1,0 +1,9 @@
+*** Credits ***
+
+The files used in this testdata folder are properly credited in the following files:
+
+- test.otf : freefont.txt
+- test.ttf : freefont.txt
+- test.pfb : 2PRONG.txt
+- test.pfm : 2PRONG.txt
+

@@ -1,7 +1,7 @@
 #include <windows.h>
 #include "resource.h"
 
-IDM_MAINMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+IDM_MAINMENU MENU
 {
   POPUP "&File"
   {

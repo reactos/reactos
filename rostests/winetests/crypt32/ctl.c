@@ -18,15 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
-#include <winerror.h>
+//#include <winerror.h>
 #include <wincrypt.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 static const BYTE emptyCTL[] = {
 0x30,0x17,0x30,0x00,0x18,0x0f,0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,0x30,
@@ -190,6 +190,7 @@ static void testCreateCTL(void)
 static void testDupCTL(void)
 {
     PCCTL_CONTEXT context, dupContext;
+    BOOL res;
 
     context = CertDuplicateCTLContext(NULL);
     ok(context == NULL, "expected NULL\n");
@@ -198,8 +199,15 @@ static void testDupCTL(void)
     dupContext = CertDuplicateCTLContext(context);
     ok(dupContext != NULL, "expected a context\n");
     ok(dupContext == context, "expected identical context addresses\n");
-    CertFreeCTLContext(dupContext);
-    CertFreeCTLContext(context);
+
+    res = CertFreeCTLContext(dupContext);
+    ok(res, "CertFreeCTLContext failed\n");
+
+    res = CertFreeCTLContext(context);
+    ok(res, "CertFreeCTLContext failed\n");
+
+    res = CertFreeCTLContext(NULL);
+    ok(res, "CertFreeCTLContext failed\n");
 }
 
 static void checkHash(const BYTE *data, DWORD dataLen, ALG_ID algID,
@@ -213,6 +221,7 @@ static void checkHash(const BYTE *data, DWORD dataLen, ALG_ID algID,
     memset(hashProperty, 0, sizeof(hashProperty));
     size = sizeof(hash);
     ret = CryptHashCertificate(0, algID, 0, data, dataLen, hash, &size);
+    ok(ret, "CryptHashCertificate failed: %08x\n", GetLastError());
     ret = CertGetCTLContextProperty(context, propID, hashProperty, &size);
     ok(ret, "CertGetCTLContextProperty failed: %08x\n", GetLastError());
     if (ret)
@@ -381,20 +390,8 @@ static void testAddCTLToStore(void)
      signedCTLWithCTLInnerContentAndBadSig,
      sizeof(signedCTLWithCTLInnerContentAndBadSig), CERT_STORE_ADD_NEW,
      NULL);
-    if (ret)
-    {
-        /* win9x */
-        ok(GetLastError() == CRYPT_E_NOT_FOUND ||
-           GetLastError() == OSS_DATA_ERROR /* some win98 */,
-           "Expected CRYPT_E_NOT_FOUND, got %08x\n", GetLastError());
-    }
-    else
-    {
-        ok(!ret && (GetLastError() == CRYPT_E_EXISTS ||
-           GetLastError() == OSS_DATA_ERROR),
-           "expected CRYPT_E_EXISTS or OSS_DATA_ERROR, got %d %08x\n", ret,
-           GetLastError());
-    }
+    ok(!ret && (GetLastError() == CRYPT_E_EXISTS || GetLastError() == OSS_DATA_ERROR),
+     "expected CRYPT_E_EXISTS or OSS_DATA_ERROR, got %d %08x\n", ret, GetLastError());
     CertCloseStore(store, 0);
 
     store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,

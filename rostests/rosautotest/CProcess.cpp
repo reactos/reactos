@@ -23,7 +23,7 @@ CProcess::CProcess(const wstring& CommandLine, LPSTARTUPINFOW StartupInfo)
     wcscpy(CommandLinePtr, CommandLine.c_str());
 
     if(!CreateProcessW(NULL, CommandLinePtr, NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS, NULL, NULL, StartupInfo, &m_ProcessInfo))
-        FATAL("CreateProcessW failed\n");
+        TESTEXCEPTION("CreateProcessW failed\n");
 }
 
 /**

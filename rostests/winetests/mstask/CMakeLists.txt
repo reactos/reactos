@@ -1,6 +1,4 @@
 
-add_definitions(-D__ROS_LONG64__)
-
 list(APPEND SOURCE
     task.c
     task_scheduler.c
@@ -8,12 +6,6 @@ list(APPEND SOURCE
     testlist.c)
 
 add_executable(mstask_winetest ${SOURCE})
-target_link_libraries(mstask_winetest wine)
-
-if(MSVC)
-    target_link_libraries(mstask_winetest uuid)
-endif()
-
 set_module_type(mstask_winetest win32cui)
-add_importlibs(mstask_winetest ole32 msvcrt kernel32 ntdll)
+add_importlibs(mstask_winetest ole32 user32 msvcrt kernel32)
 add_cd_file(TARGET mstask_winetest DESTINATION reactos/bin FOR all)

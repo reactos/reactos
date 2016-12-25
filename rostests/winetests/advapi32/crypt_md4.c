@@ -26,7 +26,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 
 typedef struct
 {
@@ -36,18 +36,14 @@ typedef struct
     unsigned char digest[16];
 } MD4_CTX;
 
-typedef VOID (WINAPI *fnMD4Init)( MD4_CTX *ctx );
-typedef VOID (WINAPI *fnMD4Update)( MD4_CTX *ctx, const unsigned char *src, const int len );
-typedef VOID (WINAPI *fnMD4Final)( MD4_CTX *ctx );
-typedef int (WINAPI *fnSystemFunction007)(const UNICODE_STRING *, LPBYTE);
+static VOID (WINAPI *pMD4Init)( MD4_CTX *ctx );
+static VOID (WINAPI *pMD4Update)( MD4_CTX *ctx, const unsigned char *src, const int len );
+static VOID (WINAPI *pMD4Final)( MD4_CTX *ctx );
+static int (WINAPI *pSystemFunction007)(const UNICODE_STRING *, LPBYTE);
 typedef int (WINAPI *md4hashfunc)(LPVOID, const LPBYTE, LPBYTE);
 
-fnMD4Init pMD4Init;
-fnMD4Update pMD4Update;
-fnMD4Final pMD4Final;
-fnSystemFunction007 pSystemFunction007;
-md4hashfunc pSystemFunction010;
-md4hashfunc pSystemFunction011;
+static md4hashfunc pSystemFunction010;
+static md4hashfunc pSystemFunction011;
 
 #define ctxcmp( a, b ) memcmp( a, b, FIELD_OFFSET( MD4_CTX, in ) )
 
@@ -149,16 +145,16 @@ START_TEST(crypt_md4)
 
     module = GetModuleHandleA( "advapi32.dll" );
 
-    pMD4Init = (fnMD4Init)GetProcAddress( module, "MD4Init" );
-    pMD4Update = (fnMD4Update)GetProcAddress( module, "MD4Update" );
-    pMD4Final = (fnMD4Final)GetProcAddress( module, "MD4Final" );
+    pMD4Init = (void *)GetProcAddress( module, "MD4Init" );
+    pMD4Update = (void *)GetProcAddress( module, "MD4Update" );
+    pMD4Final = (void *)GetProcAddress( module, "MD4Final" );
 
     if (pMD4Init && pMD4Update && pMD4Final)
         test_md4_ctx();
     else
         win_skip("MD4Init and/or MD4Update and/or MD4Final are not available\n");
 
-    pSystemFunction007 = (fnSystemFunction007)GetProcAddress( module, "SystemFunction007" );
+    pSystemFunction007 = (void *)GetProcAddress( module, "SystemFunction007" );
     if (pSystemFunction007)
         test_SystemFunction007();
     else

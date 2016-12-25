@@ -30,6 +30,7 @@ static DWORD (WINAPI *pGetDiskFreeSpaceExA)(LPCSTR, PULARGE_INTEGER, PULARGE_INT
 static void test_GetDriveTypeA(void)
 {
     char drive[] = "?:\\";
+    char existing_drive_letter = 0;
     DWORD logical_drives;
     UINT type;
 
@@ -46,14 +47,43 @@ static void test_GetDriveTypeA(void)
             ok(type == DRIVE_NO_ROOT_DIR,
                "GetDriveTypeA should return DRIVE_NO_ROOT_DIR for inexistent drive %c: but not %u\n",
                drive[0], type);
+        else if (type != DRIVE_NO_ROOT_DIR)
+            existing_drive_letter = drive[0];
 
         logical_drives >>= 1;
     }
+
+    if (!existing_drive_letter) {
+        skip("No drives found, skipping drive spec format tests.\n");
+        return;
+    }
+
+    drive[0] = existing_drive_letter;
+    drive[2] = 0; /* C: */
+    type = GetDriveTypeA(drive);
+    ok(type > DRIVE_NO_ROOT_DIR && type <= DRIVE_RAMDISK, "got %u for drive spec '%s'\n", type, drive);
+
+    drive[1] = '?'; /* C? */
+    type = GetDriveTypeA(drive);
+    ok(type == DRIVE_NO_ROOT_DIR, "got %u for drive spec '%s'\n", type, drive);
+
+    drive[1] = 0; /* C */
+    type = GetDriveTypeA(drive);
+    ok(type == DRIVE_NO_ROOT_DIR, "got %u for drive spec '%s'\n", type, drive);
+
+    drive[0] = '?'; /* the string "?" */
+    type = GetDriveTypeA(drive);
+    ok(type == DRIVE_NO_ROOT_DIR, "got %u for drive spec '%s'\n", type, drive);
+
+    drive[0] = 0; /* the empty string */
+    type = GetDriveTypeA(drive);
+    ok(type == DRIVE_NO_ROOT_DIR, "got %u for drive spec '%s'\n", type, drive);
 }
 
 static void test_GetDriveTypeW(void)
 {
     WCHAR drive[] = {'?',':','\\',0};
+    WCHAR existing_drive_letter = 0;
     DWORD logical_drives;
     UINT type;
 
@@ -63,11 +93,6 @@ static void test_GetDriveTypeW(void)
     for (drive[0] = 'A'; drive[0] <= 'Z'; drive[0]++)
     {
         type = GetDriveTypeW(drive);
-        if (type == DRIVE_UNKNOWN && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-        {
-            win_skip("GetDriveTypeW is not available on Win9x\n");
-            return;
-        }
         ok(type > DRIVE_UNKNOWN && type <= DRIVE_RAMDISK,
            "not a valid drive %c: type %u\n", drive[0], type);
 
@@ -75,9 +100,38 @@ static void test_GetDriveTypeW(void)
             ok(type == DRIVE_NO_ROOT_DIR,
                "GetDriveTypeW should return DRIVE_NO_ROOT_DIR for inexistent drive %c: but not %u\n",
                drive[0], type);
+        else if (type != DRIVE_NO_ROOT_DIR)
+            existing_drive_letter = drive[0];
 
         logical_drives >>= 1;
     }
+
+    if (!existing_drive_letter) {
+        skip("No drives found, skipping drive spec format tests.\n");
+        return;
+    }
+
+    drive[0] = existing_drive_letter;
+    drive[2] = 0; /* C: */
+    type = GetDriveTypeW(drive);
+    ok(type > DRIVE_NO_ROOT_DIR && type <= DRIVE_RAMDISK, "got %u for drive spec '%s'\n",
+       type, wine_dbgstr_w(drive));
+
+    drive[1] = '?'; /* C? */
+    type = GetDriveTypeW(drive);
+    ok(type == DRIVE_NO_ROOT_DIR, "got %u for drive spec '%s'\n", type, wine_dbgstr_w(drive));
+
+    drive[1] = 0; /* C */
+    type = GetDriveTypeW(drive);
+    ok(type == DRIVE_NO_ROOT_DIR, "got %u for drive spec '%s'\n", type, wine_dbgstr_w(drive));
+
+    drive[0] = '?'; /* the string "?" */
+    type = GetDriveTypeW(drive);
+    ok(type == DRIVE_NO_ROOT_DIR, "got %u for drive spec '%s'\n", type, wine_dbgstr_w(drive));
+
+    drive[0] = 0; /* the empty string */
+    type = GetDriveTypeW(drive);
+    ok(type == DRIVE_NO_ROOT_DIR, "got %u for drive spec '%s'\n", type, wine_dbgstr_w(drive));
 }
 
 static void test_GetDiskFreeSpaceA(void)
@@ -119,18 +173,14 @@ static void test_GetDiskFreeSpaceA(void)
                    drive, ret, GetLastError());
             else
             {
-                ok(ret ||
-                   GetLastError() == ERROR_NOT_READY ||
-                   GetLastError() == ERROR_INVALID_FUNCTION ||
-                   GetLastError() == ERROR_INVALID_DRIVE ||
-                   GetLastError() == ERROR_PATH_NOT_FOUND ||
-                   GetLastError() == ERROR_REQUEST_ABORTED ||
-                   GetLastError() == ERROR_NETNAME_DELETED ||
-                   GetLastError() == ERROR_UNRECOGNIZED_VOLUME,
-                   "GetDiskFreeSpaceA(%s): ret=%d GetLastError=%d\n",
-                   drive, ret, GetLastError());
+
+                if (!ret)
+                    /* GetDiskFreeSpaceA() should succeed, but it can fail with too many
+                       different GetLastError() results to be usable for an ok() */
+                    trace("GetDiskFreeSpaceA(%s) failed with %d\n", drive, GetLastError());
+
                 if( GetVersion() & 0x80000000)
-                    /* win3.0 thru winME */
+                    /* win3.0 through winME */
                     ok( total_clusters <= 65535,
                             "total clusters is %d > 65535\n", total_clusters);
                 else if (pGetDiskFreeSpaceExA) {
@@ -140,14 +190,12 @@ static void test_GetDiskFreeSpaceA(void)
                     tot.QuadPart = sectors_per_cluster;
                     tot.QuadPart = (tot.QuadPart * bytes_per_sector) * total_clusters;
                     ret = pGetDiskFreeSpaceExA( drive, &d, &totEx, NULL);
-                    ok( ret ||
-                        GetLastError() == ERROR_NOT_READY ||
-                        GetLastError() == ERROR_INVALID_FUNCTION ||
-                        GetLastError() == ERROR_PATH_NOT_FOUND ||
-                        GetLastError() == ERROR_REQUEST_ABORTED ||
-                        GetLastError() == ERROR_NETNAME_DELETED ||
-                        GetLastError() == ERROR_UNRECOGNIZED_VOLUME,
-                        "GetDiskFreeSpaceExA( %s ) failed. GetLastError=%d\n", drive, GetLastError());
+
+                    if (!ret)
+                        /* GetDiskFreeSpaceExA() should succeed, but it can fail with too many
+                           different GetLastError() results to be usable for an ok() */
+                        trace("GetDiskFreeSpaceExA(%s) failed with %d\n", drive, GetLastError());
+
                     ok( bytes_per_sector == 0 || /* empty cd rom drive */
                         totEx.QuadPart <= tot.QuadPart,
                         "GetDiskFreeSpaceA should report at least as much bytes on disk %s as GetDiskFreeSpaceExA\n", drive);
@@ -201,15 +249,10 @@ static void test_GetDiskFreeSpaceW(void)
                 ok(!ret && GetLastError() == ERROR_PATH_NOT_FOUND,
                    "GetDiskFreeSpaceW(%c): ret=%d GetLastError=%d\n",
                    drive[0], ret, GetLastError());
-            else
-                ok( ret ||
-                    GetLastError() == ERROR_NOT_READY ||
-                    GetLastError() == ERROR_INVALID_FUNCTION ||
-                    GetLastError() == ERROR_PATH_NOT_FOUND ||
-                    GetLastError() == ERROR_REQUEST_ABORTED ||
-                    GetLastError() == ERROR_UNRECOGNIZED_VOLUME,
-                   "GetDiskFreeSpaceW(%c): ret=%d GetLastError=%d\n",
-                   drive[0], ret, GetLastError());
+            else if (!ret)
+                /* GetDiskFreeSpaceW() should succeed, but it can fail with too many
+                   different GetLastError() results to be usable for an ok() */
+                trace("GetDiskFreeSpaceW(%c) failed with %d\n", drive[0], GetLastError());
         }
         logical_drives >>= 1;
     }

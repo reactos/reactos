@@ -5,12 +5,13 @@
  * PROGRAMMER:      Timo Kreuzer
  */
 
+#include <apitest.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <math.h>
 #include <stdarg.h>
-#include <wine/test.h>
 #include <windows.h>
 
 
@@ -28,9 +29,13 @@ my_sprintf(char *buf, const char *format, ...)
 {
     const TCHAR * fmt = format;
     va_list argptr;
+    int ret;
 
     va_start(argptr, format);
-    return p_vsprintf(buf, fmt, argptr);
+    ret = p_vsprintf(buf, fmt, argptr);
+    va_end(argptr);
+
+    return ret;
 }
 
 int
@@ -38,9 +43,13 @@ my_swprintf(wchar_t *buf, const wchar_t *format, ...)
 {
     const wchar_t * fmt = format;
     va_list argptr;
+    int ret;
 
     va_start(argptr, format);
-    return _vsnwprintf(buf, MAXLONG, fmt, argptr);
+    ret = _vsnwprintf(buf, MAXLONG, fmt, argptr);
+    va_end(argptr);
+
+    return ret;
 }
 
 #define sprintf(buf, format, ...) my_sprintf(buf, format, __VA_ARGS__);

@@ -18,10 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-#include <windows.h>
+//#include <stdio.h>
+//#include <windows.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <commctrl.h>
+#include "v6util.h"
 
 static PVOID (WINAPI * pAlloc)(LONG);
 static PVOID (WINAPI * pReAlloc)(PVOID, LONG);
@@ -34,6 +38,18 @@ static INT (WINAPI * pStr_GetPtrW)(LPCWSTR, LPWSTR, INT);
 static BOOL (WINAPI * pStr_SetPtrW)(LPWSTR, LPCWSTR);
 
 static HMODULE hComctl32 = 0;
+
+static char testicon_data[] =
+{
+    0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x02, 0x02, 0x00, 0x00, 0x01, 0x00,
+    0x20, 0x00, 0x40, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x28, 0x00,
+    0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x01, 0x00,
+    0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x12, 0x0b,
+    0x00, 0x00, 0x12, 0x0b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0xde, 0xde, 0xde, 0xff, 0xde, 0xde, 0xde, 0xff, 0xde, 0xde,
+    0xde, 0xff, 0xde, 0xde, 0xde, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00
+};
 
 #define COMCTL32_GET_PROC(ordinal, func) \
     p ## func = (void*)GetProcAddress(hComctl32, (LPSTR)ordinal); \
@@ -74,7 +90,7 @@ static void test_GetPtrAW(void)
         static char dest[MAX_PATH];
         int sourcelen;
         int destsize = MAX_PATH;
-        int count = -1;
+        int count;
 
         sourcelen = strlen(source) + 1;
 
@@ -87,47 +103,40 @@ static void test_GetPtrAW(void)
              * Our implementation also crashes and we should probably leave
              * it like that.
              */
-            count = -1;
             count = pStr_GetPtrA(NULL, NULL, destsize);
             trace("count : %d\n", count);
         }
 
-        count = 0;
         count = pStr_GetPtrA(source, NULL, 0);
         ok (count == sourcelen ||
             broken(count == sourcelen - 1), /* win9x */
             "Expected count to be %d, it was %d\n", sourcelen, count);
 
-        count = 0;
         strcpy(dest, desttest);
         count = pStr_GetPtrA(source, dest, 0);
         ok (count == sourcelen ||
             broken(count == 0), /* win9x */
             "Expected count to be %d, it was %d\n", sourcelen, count);
-        ok (!lstrcmp(dest, desttest) ||
-            broken(!lstrcmp(dest, "")), /* Win7 */
+        ok (!lstrcmpA(dest, desttest) ||
+            broken(!lstrcmpA(dest, "")), /* Win7 */
             "Expected destination to not have changed\n");
 
-        count = 0;
         count = pStr_GetPtrA(source, NULL, destsize);
         ok (count == sourcelen ||
             broken(count == sourcelen - 1), /* win9x */
             "Expected count to be %d, it was %d\n", sourcelen, count);
 
-        count = 0;
         count = pStr_GetPtrA(source, dest, destsize);
         ok (count == sourcelen ||
             broken(count == sourcelen - 1), /* win9x */
             "Expected count to be %d, it was %d\n", sourcelen, count);
-        ok (!lstrcmp(source, dest), "Expected source and destination to be the same\n");
+        ok (!lstrcmpA(source, dest), "Expected source and destination to be the same\n");
 
-        count = -1;
         strcpy(dest, desttest);
         count = pStr_GetPtrA(NULL, dest, destsize);
         ok (count == 0, "Expected count to be 0, it was %d\n", count);
         ok (dest[0] == '\0', "Expected destination to be cut-off and 0 terminated\n");
 
-        count = 0;
         destsize = 15;
         count = pStr_GetPtrA(source, dest, destsize);
         ok (count == 15 ||
@@ -193,13 +202,219 @@ static void test_Alloc(void)
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
 }
 
+static void test_TaskDialogIndirect(void)
+{
+    HINSTANCE hinst;
+    void *ptr, *ptr2;
+
+    hinst = LoadLibraryA("comctl32.dll");
+
+    ptr = GetProcAddress(hinst, "TaskDialogIndirect");
+    if (!ptr)
+    {
+#ifdef __REACTOS__
+        /* Skipped on 2k3 */
+        skip("TaskDialogIndirect not exported by name\n");
+#else
+        win_skip("TaskDialogIndirect not exported by name\n");
+#endif
+        return;
+    }
+
+    ptr2 = GetProcAddress(hinst, (const CHAR*)345);
+    ok(ptr == ptr2, "got wrong pointer for ordinal 345, %p expected %p\n", ptr2, ptr);
+}
+
+static void test_LoadIconWithScaleDown(void)
+{
+    static const WCHAR nonexisting_fileW[] = {'n','o','n','e','x','i','s','t','i','n','g','.','i','c','o',0};
+    static const WCHAR nonexisting_resourceW[] = {'N','o','n','e','x','i','s','t','i','n','g',0};
+    static const WCHAR prefixW[] = {'I','C','O',0};
+    HRESULT (WINAPI *pLoadIconMetric)(HINSTANCE, const WCHAR *, int, HICON *);
+    HRESULT (WINAPI *pLoadIconWithScaleDown)(HINSTANCE, const WCHAR *, int, int, HICON *);
+    WCHAR tmp_path[MAX_PATH], icon_path[MAX_PATH];
+    ICONINFO info;
+    HMODULE hinst;
+    HANDLE handle;
+    DWORD written;
+    HRESULT hr;
+    BITMAP bmp;
+    HICON icon;
+    void *ptr;
+    int bytes;
+    BOOL res;
+
+    hinst = LoadLibraryA("comctl32.dll");
+    pLoadIconMetric        = (void *)GetProcAddress(hinst, "LoadIconMetric");
+    pLoadIconWithScaleDown = (void *)GetProcAddress(hinst, "LoadIconWithScaleDown");
+    if (!pLoadIconMetric || !pLoadIconWithScaleDown)
+    {
+#ifdef __REACTOS__
+        skip("LoadIconMetric or pLoadIconWithScaleDown not exported by name\n");
+#else
+        win_skip("LoadIconMetric or pLoadIconWithScaleDown not exported by name\n");
+#endif
+        FreeLibrary(hinst);
+        return;
+    }
+
+    GetTempPathW(MAX_PATH, tmp_path);
+    GetTempFileNameW(tmp_path, prefixW, 0, icon_path);
+    handle = CreateFileW(icon_path, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+                         FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(handle != INVALID_HANDLE_VALUE, "CreateFileW failed with error %u\n", GetLastError());
+    res = WriteFile(handle, testicon_data, sizeof(testicon_data), &written, NULL);
+    ok(res && written == sizeof(testicon_data), "Failed to write icon file\n");
+    CloseHandle(handle);
+
+    /* test ordinals */
+    ptr = GetProcAddress(hinst, (const char *)380);
+    ok(ptr == pLoadIconMetric,
+       "got wrong pointer for ordinal 380, %p expected %p\n", ptr, pLoadIconMetric);
+
+    ptr = GetProcAddress(hinst, (const char *)381);
+    ok(ptr == pLoadIconWithScaleDown,
+       "got wrong pointer for ordinal 381, %p expected %p\n", ptr, pLoadIconWithScaleDown);
+
+    /* invalid arguments */
+    icon = (HICON)0x1234;
+    hr = pLoadIconMetric(NULL, (LPWSTR)IDI_APPLICATION, 0x100, &icon);
+    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %x\n", hr);
+    ok(icon == NULL, "Expected NULL, got %p\n", icon);
+
+    icon = (HICON)0x1234;
+    hr = pLoadIconMetric(NULL, NULL, LIM_LARGE, &icon);
+    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %x\n", hr);
+    ok(icon == NULL, "Expected NULL, got %p\n", icon);
+
+    icon = (HICON)0x1234;
+    hr = pLoadIconWithScaleDown(NULL, NULL, 32, 32, &icon);
+    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %x\n", hr);
+    ok(icon == NULL, "Expected NULL, got %p\n", icon);
+
+    /* non-existing filename */
+    hr = pLoadIconMetric(NULL, nonexisting_fileW, LIM_LARGE, &icon);
+    todo_wine
+    ok(hr == HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND),
+       "Expected HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND), got %x\n", hr);
+
+    hr = pLoadIconWithScaleDown(NULL, nonexisting_fileW, 32, 32, &icon);
+    todo_wine
+    ok(hr == HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND),
+       "Expected HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND), got %x\n", hr);
+
+    /* non-existing resource name */
+    hr = pLoadIconMetric(hinst, nonexisting_resourceW, LIM_LARGE, &icon);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND),
+       "Expected HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND), got %x\n", hr);
+
+    hr = pLoadIconWithScaleDown(hinst, nonexisting_resourceW, 32, 32, &icon);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND),
+       "Expected HRESULT_FROM_WIN32(ERROR_RESOURCE_TYPE_NOT_FOUND), got %x\n", hr);
+
+    /* load icon using predefined identifier */
+    hr = pLoadIconMetric(NULL, (LPWSTR)IDI_APPLICATION, LIM_SMALL, &icon);
+    ok(hr == S_OK, "Expected S_OK, got %x\n", hr);
+    res = GetIconInfo(icon, &info);
+    ok(res, "Failed to get icon info, error %u\n", GetLastError());
+    bytes = GetObjectA(info.hbmColor, sizeof(bmp), &bmp);
+    ok(bytes > 0, "Failed to get bitmap info for icon\n");
+    ok(bmp.bmWidth  == GetSystemMetrics(SM_CXSMICON), "Wrong icon width %d\n", bmp.bmWidth);
+    ok(bmp.bmHeight == GetSystemMetrics(SM_CYSMICON), "Wrong icon height %d\n", bmp.bmHeight);
+    DestroyIcon(icon);
+
+    hr = pLoadIconMetric(NULL, (LPWSTR)IDI_APPLICATION, LIM_LARGE, &icon);
+    ok(hr == S_OK, "Expected S_OK, got %x\n", hr);
+    res = GetIconInfo(icon, &info);
+    ok(res, "Failed to get icon info, error %u\n", GetLastError());
+    bytes = GetObjectA(info.hbmColor, sizeof(bmp), &bmp);
+    ok(bytes > 0, "Failed to get bitmap info for icon\n");
+    ok(bmp.bmWidth  == GetSystemMetrics(SM_CXICON), "Wrong icon width %d\n", bmp.bmWidth);
+    ok(bmp.bmHeight == GetSystemMetrics(SM_CYICON), "Wrong icon height %d\n", bmp.bmHeight);
+    DestroyIcon(icon);
+
+    hr = pLoadIconWithScaleDown(NULL, (LPWSTR)IDI_APPLICATION, 42, 42, &icon);
+    ok(hr == S_OK, "Expected S_OK, got %x\n", hr);
+    res = GetIconInfo(icon, &info);
+    ok(res, "Failed to get icon info, error %u\n", GetLastError());
+    bytes = GetObjectA(info.hbmColor, sizeof(bmp), &bmp);
+    ok(bytes > 0, "Failed to get bitmap info for icon\n");
+    ok(bmp.bmWidth  == 42, "Wrong icon width %d\n", bmp.bmWidth);
+    ok(bmp.bmHeight == 42, "Wrong icon height %d\n", bmp.bmHeight);
+    DestroyIcon(icon);
+
+    /* load icon from file */
+    hr = pLoadIconMetric(NULL, icon_path, LIM_SMALL, &icon);
+    ok(hr == S_OK, "Expected S_OK, got %x\n", hr);
+    res = GetIconInfo(icon, &info);
+    ok(res, "Failed to get icon info, error %u\n", GetLastError());
+    bytes = GetObjectA(info.hbmColor, sizeof(bmp), &bmp);
+    ok(bytes > 0, "Failed to get bitmap info for icon\n");
+    ok(bmp.bmWidth  == GetSystemMetrics(SM_CXSMICON), "Wrong icon width %d\n", bmp.bmWidth);
+    ok(bmp.bmHeight == GetSystemMetrics(SM_CYSMICON), "Wrong icon height %d\n", bmp.bmHeight);
+    DestroyIcon(icon);
+
+    hr = pLoadIconWithScaleDown(NULL, icon_path, 42, 42, &icon);
+    ok(hr == S_OK, "Expected S_OK, got %x\n", hr);
+    res = GetIconInfo(icon, &info);
+    ok(res, "Failed to get icon info, error %u\n", GetLastError());
+    bytes = GetObjectA(info.hbmColor, sizeof(bmp), &bmp);
+    ok(bytes > 0, "Failed to get bitmap info for icon\n");
+    ok(bmp.bmWidth  == 42, "Wrong icon width %d\n", bmp.bmWidth);
+    ok(bmp.bmHeight == 42, "Wrong icon height %d\n", bmp.bmHeight);
+    DestroyIcon(icon);
+
+    DeleteFileW(icon_path);
+    FreeLibrary(hinst);
+}
+
+static void check_class( const char *name, int must_exist, UINT style, UINT ignore )
+{
+    WNDCLASSA wc;
+
+    if (GetClassInfoA( 0, name, &wc ))
+    {
+todo_wine
+        ok( !(~wc.style & style & ~ignore), "System class %s is missing bits %x (%08x/%08x)\n",
+            name, ~wc.style & style, wc.style, style );
+        ok( !(wc.style & ~style), "System class %s has extra bits %x (%08x/%08x)\n",
+            name, wc.style & ~style, wc.style, style );
+        ok( !wc.hInstance, "System class %s has hInstance %p\n", name, wc.hInstance );
+    }
+    else
+        ok( !must_exist, "System class %s does not exist\n", name );
+}
+
+/* test styles of system classes */
+static void test_builtin_classes(void)
+{
+    /* check style bits */
+    check_class( "Button",     1, CS_PARENTDC | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0 );
+    check_class( "ComboBox",   1, CS_PARENTDC | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0 );
+    check_class( "Edit",       1, CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS, 0 );
+    check_class( "ListBox",    1, CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS, 0 );
+    check_class( "ScrollBar",  1, CS_PARENTDC | CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS, 0 );
+    check_class( "Static",     1, CS_PARENTDC | CS_DBLCLKS | CS_GLOBALCLASS, 0 );
+    check_class( "ComboLBox",  1, CS_SAVEBITS | CS_DBLCLKS | CS_DROPSHADOW | CS_GLOBALCLASS, CS_DROPSHADOW );
+}
+
 START_TEST(misc)
 {
+    ULONG_PTR ctx_cookie;
+    HANDLE hCtx;
+
     if(!InitFunctionPtrs())
         return;
 
     test_GetPtrAW();
     test_Alloc();
 
-    FreeLibrary(hComctl32);
+    if (!load_v6_module(&ctx_cookie, &hCtx))
+        return;
+
+    test_builtin_classes();
+    test_TaskDialogIndirect();
+    test_LoadIconWithScaleDown();
+
+    unload_v6_module(ctx_cookie, hCtx);
 }

@@ -5,10 +5,9 @@
  * PROGRAMMERS:     Jérôme Gardou
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <apitest.h>
 
+#include <wingdi.h>
 
 void Test_SetDIBits()
 {

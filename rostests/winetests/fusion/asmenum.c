@@ -16,24 +16,32 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 
 #include <stdio.h>
 
-#include <windows.h>
+//#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winnls.h>
 #include <shlwapi.h>
-#include <mscoree.h>
+//#include <mscoree.h>
 #include <fusion.h>
-#include <corerror.h>
+//#include <corerror.h>
 
-#include "wine/test.h"
-#include "wine/list.h"
+#include <wine/test.h>
+#include <wine/list.h>
 
 static HRESULT (WINAPI *pCreateAssemblyEnum)(IAssemblyEnum **pEnum,
                                              IUnknown *pUnkReserved,
                                              IAssemblyName *pName,
                                              DWORD dwFlags, LPVOID pvReserved);
-static HRESULT (WINAPI *pCreateAssemblyNameObject)(LPASSEMBLYNAME *ppAssemblyNameObj,
+static HRESULT (WINAPI *pCreateAssemblyNameObject)(IAssemblyName **ppAssemblyNameObj,
                                                    LPCWSTR szAssemblyName, DWORD dwFlags,
                                                    LPVOID pvReserved);
 static HRESULT (WINAPI *pGetCachePath)(ASM_CACHE_FLAGS dwCacheFlags,
@@ -147,13 +155,15 @@ static BOOL create_full_path(LPCSTR path)
     return ret;
 }
 
-static void create_file_data(LPCSTR name, LPCSTR data, DWORD size)
+static BOOL create_file_data(LPCSTR name, LPCSTR data, DWORD size)
 {
     HANDLE file;
     DWORD written;
 
     file = CreateFileA(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
-    ok(file != INVALID_HANDLE_VALUE, "Failure to open file %s\n", name);
+    if (file == INVALID_HANDLE_VALUE)
+        return FALSE;
+
     WriteFile(file, data, strlen(data), &written, NULL);
 
     if (size)
@@ -163,9 +173,8 @@ static void create_file_data(LPCSTR name, LPCSTR data, DWORD size)
     }
 
     CloseHandle(file);
+    return TRUE;
 }
-
-#define create_file(name, size) create_file_data(name, name, size)
 
 static void test_CreateAssemblyEnum(void)
 {
@@ -409,19 +418,31 @@ static void test_enumerate_name(void)
     CreateDirectoryA(path, NULL);
 
     lstrcatA(path, "\\Wine.dll");
-    create_file(path, 100);
+    if (!create_file_data(path, path, 100))
+    {
+        win_skip("Failed to open file %s, skipping name enumeration tests\n", path);
+        goto done;
+    }
 
     sprintf(path, "%s\\Wine\\1.0.1.2__16a3fcd171e93a8d", gac);
     CreateDirectoryA(path, NULL);
 
     lstrcatA(path, "\\Wine.dll");
-    create_file(path, 100);
+    if (!create_file_data(path, path, 100))
+    {
+        win_skip("Failed to open file %s, skipping name enumeration tests\n", path);
+        goto done;
+    }
 
     sprintf(path, "%s\\Wine\\1.0.1.2__123456789abcdef0", gac);
     CreateDirectoryA(path, NULL);
 
     lstrcatA(path, "\\Wine.dll");
-    create_file(path, 100);
+    if (!create_file_data(path, path, 100))
+    {
+        win_skip("Failed to open file %s, skipping name enumeration tests\n", path);
+        goto done;
+    }
 
     /* test case sensitivity */
     to_widechar(namestr, "wine");
@@ -650,6 +671,7 @@ static void test_enumerate_name(void)
     IAssemblyEnum_Release(asmenum);
     IAssemblyName_Release(asmname);
 
+done:
     sprintf(path, "%s\\Wine\\1.0.0.0__16a3fcd171e93a8d\\Wine.dll", gac);
     DeleteFileA(path);
     sprintf(path, "%s\\Wine\\1.0.1.2__16a3fcd171e93a8d\\Wine.dll", gac);

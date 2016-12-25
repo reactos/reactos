@@ -31,7 +31,6 @@
 #include "mlang.h"
 
 #include <stdio.h>
-#include <assert.h>
 
 #include "wine/test.h"
 

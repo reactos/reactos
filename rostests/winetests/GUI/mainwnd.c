@@ -214,7 +214,7 @@ RunSelectedTest(PMAIN_WND_INFO pInfo)
             {
                 //
                 // Create a new thread to create the client process
-                // and recieve any ouput via stdout
+                // and receive any ouput via stdout
                 //
                 CreateThread(NULL,
                              0,

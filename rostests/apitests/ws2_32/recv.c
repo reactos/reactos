@@ -5,9 +5,11 @@
  * PROGRAMMERS:     Colin Finck
  */
 
+#include <apitest.h>
+
 #include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <ntstatus.h>
+#include <wine/winternl.h>
 #include "ws2_32.h"
 
 #define RECV_BUF   4
@@ -25,6 +27,10 @@ int Test_recv()
     int iResult;
     SOCKET sck;
     WSADATA wdata;
+    NTSTATUS status;
+    IO_STATUS_BLOCK readIosb;
+    HANDLE readEvent;
+    LARGE_INTEGER readOffset;
 
     /* Start up Winsock */
     iResult = WSAStartup(MAKEWORD(2, 2), &wdata);
@@ -73,6 +79,41 @@ int Test_recv()
     SCKTEST(recv(sck, szBuf1, RECV_BUF, 0));
     ok(memcmp(szBuf1, szBuf2, RECV_BUF), "equal\n");
 
+    /* Create an event for NtReadFile */
+    readOffset.QuadPart = 0LL;
+    memcpy(szBuf1, szBuf2, RECV_BUF);
+    status = NtCreateEvent(&readEvent,
+                           EVENT_ALL_ACCESS,
+                           NULL,
+                           NotificationEvent,
+                           FALSE);
+    if (status != 0)
+    {
+        ok(0, "Failed to create event\n");
+        return 0;
+    }
+
+    /* Try reading the socket using the NT file API */
+    status = NtReadFile((HANDLE)sck,
+                        readEvent,
+                        NULL,
+                        NULL,
+                        &readIosb,
+                        szBuf1,
+                        RECV_BUF,
+                        &readOffset,
+                        NULL);
+    if (status == STATUS_PENDING)
+    {
+        WaitForSingleObject(readEvent, INFINITE);
+        status = readIosb.Status;
+    }
+
+    ok(status == 0, "Read failed with status 0x%x\n", (unsigned int)status);
+    ok(memcmp(szBuf2, szBuf1, RECV_BUF), "equal\n");
+    ok(readIosb.Information == RECV_BUF, "Short read\n");
+
+    NtClose(readEvent);
     closesocket(sck);
     WSACleanup();
     return 1;

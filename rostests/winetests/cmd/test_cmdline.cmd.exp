@@ -1,0 +1,133 @@
+--- Test 1
+Line1
+"Line2"
+--- Test 2
+Test quotes "&" work
+--- Test 3
+"&"
+--- Test 4
+"<"
+--- Test 5
+">"
+--- Test 6
+"\"
+--- Test 7
+"|"
+--- Test 8
+"`"
+--- Test 9
+"""
+--- Test 10
+--- Test 11
+--- Test 12
+passed1
+--- Test 13
+passed2@space@
+--- Test 14
+foobar
+--- Test 15
+No whitespace
+--- Test 16
+--- Test 17
+--- Test 18
+No prompts or I would not get here1
+No prompts or I would not get here2
+%hello1%
+%hello2
+%hello3:h=t%
+%hello4%%
+one = %1
+1
+2
+3
+4
+5
+@todo_wine@var contents: 11
+var=33@space@
+99
+------ Testing invocation of batch files ----------
+0@space@
+1@space@
+1@space@
+1@space@
+1@space@
+0@space@
+1@space@
+2@space@
+0@space@
+3@space@
+3@space@
+4@space@
+------ Testing invocation with CMD /C -------------
+0@space@
+1@space@
+0@space@
+0@space@
+1@space@
+0@space@
+1@space@
+2@space@
+0@space@
+3@space@
+4@space@
+Passed
+---------- Testing CMD /C quoting -----------------
+"hi"
+1@space@
+"\"\\"\\\"\\\\"@space@"\"\\"\\\"\\\\"
+1@space@
+0@space@
+1@space@
+0@space@
+0@space@
+0@space@@or_broken@3@space@
+3@space@
+2@space@
+2@space@
+2@space@
+0@space@
+5@space@
+------- Testing CMD /C qualifier treatment ------------
+0@space@
+1@space@
+THIS FAILS: cmd "/c"say one
+THIS FAILS: cmd ignoreme/c say one
+--------- Testing special characters --------------
+0@space@
+0@space@
+)@space@
+[@space@
+]@space@
+{@space@
+}@space@
+0@space@
+0@space@
+!@space@
+0@space@@or_broken@!@space@
+@todo_wine@0@space@
+'@space@
++@space@
+0@space@
+'@space@
+~@space@
+--------- Testing parameter passing  --------------
+1:1,2:@space@
+1:(1),2:@space@
+1:1(2),2:@space@
+1:(1),2:@space@
+1:((1)),2:@space@
+1:(1)(2),2:@space@
+1:(1),2:(2)@space@
+1:1,2:2@space@
+1:1,2:2@space@
+1:1,2:2@space@
+1:"p@space@"1,2:p"@space@"2@space@
+1:p"1@space@p",2:2@space@
+--------- Testing delimiters and parameter passing  --------------
+0:tell,1:1,2:2,All:'1 2'@or_broken@0:tell,1:1,2:2,All:' 1 2'
+0:tell,1:1,2:2,All:'1 2'@or_broken@0:tell,1:1,2:2,All:' 1 2'
+0:tell,1:1,2:2,All:'==1==2'
+0:tell,1:(1234),2:,All:'(1234)'
+0:tell,1:(12(34),2:,All:'(12(34)'
+0:tell,1:(12,2:34),All:'(12;34)'
+--------- Finished  --------------

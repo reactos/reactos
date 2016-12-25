@@ -2,12 +2,12 @@
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         Test for GetMessage/PeekMessage
- * PROGRAMMERS:     Thomas Faber
+ * PROGRAMMERS:     Thomas Faber <thomas.faber@reactos.org>
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <apitest.h>
+
+#include <winuser.h>
 
 void Test_GetMessage(HWND hWnd)
 {

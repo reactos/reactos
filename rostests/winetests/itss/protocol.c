@@ -41,12 +41,6 @@
         called_ ## func = TRUE; \
     }while(0)
 
-#define CHECK_EXPECT2(func) \
-    do { \
-        ok(expect_ ##func, "unexpected call " #func  "\n"); \
-        called_ ## func = TRUE; \
-    }while(0)
-
 #define SET_CALLED(func) \
     expect_ ## func = called_ ## func = FALSE
 
@@ -62,7 +56,7 @@ DEFINE_EXPECT(GetBindInfo);
 DEFINE_EXPECT(ReportProgress_BEGINDOWNLOADDATA);
 DEFINE_EXPECT(ReportProgress_SENDINGREQUEST);
 DEFINE_EXPECT(ReportProgress_MIMETYPEAVAILABLE);
-DEFINE_EXPECT(ReportProgress_CACHEFILENAMEAVAIABLE);
+DEFINE_EXPECT(ReportProgress_CACHEFILENAMEAVAILABLE);
 DEFINE_EXPECT(ReportProgress_DIRECTBIND);
 DEFINE_EXPECT(ReportData);
 DEFINE_EXPECT(ReportResult);
@@ -87,6 +81,8 @@ static const WCHAR blank_url7[] = {'m','k',':','@','M','S','I','T','S','t','o','
     't','e','s','t','.','c','h','m',':',':','\\','b','l','a','n','k','.','h','t','m','l',0};
 static const WCHAR blank_url8[] = {'m','k',':','@','M','S','I','T','S','t','o','r','e',':',
     't','e','s','t','.','c','h','m',':',':','/','b','l','a','n','k','.','h','t','m','l','/',0};
+static const WCHAR blank_url9[] = {'i','t','s',':',
+    't','e','s','t','.','c','h','m',':',':','/','d','i','r','/','.','.','/','b','l','a','n','k','.','h','t','m','l',0};
 
 static enum {
     ITS_PROTOCOL,
@@ -100,6 +96,24 @@ static const WCHAR cache_file2[] =
 static const WCHAR cache_file3[] =
     {'t','e','s','t','.','c','h','m',':',':','/','b','l','a','n','k','.','h','t','m','l','/',0};
 static const WCHAR *cache_file = cache_file1;
+
+static const WCHAR *a2w(const char *str)
+{
+    static WCHAR bufs[8][128];
+    static int i;
+
+    if(!str)
+        return NULL;
+
+    i = (i+1) % 8;
+    MultiByteToWideChar(CP_ACP, 0, str, -1, bufs[i], 128);
+    return bufs[i];
+}
+
+static int strcmp_wa(const WCHAR *str1, const char *str2)
+{
+    return lstrcmpW(str1, a2w(str2));
+}
 
 static HRESULT WINAPI ProtocolSink_QueryInterface(IInternetProtocolSink *iface, REFIID riid, void **ppv)
 {
@@ -149,7 +163,7 @@ static HRESULT WINAPI ProtocolSink_ReportProgress(IInternetProtocolSink *iface, 
         ok(!lstrcmpW(szStatusText, text_html), "unexpected szStatusText\n");
         break;
     case BINDSTATUS_CACHEFILENAMEAVAILABLE:
-        CHECK_EXPECT(ReportProgress_CACHEFILENAMEAVAIABLE);
+        CHECK_EXPECT(ReportProgress_CACHEFILENAMEAVAILABLE);
         ok(!lstrcmpW(szStatusText, cache_file), "unexpected szStatusText\n");
         break;
     case BINDSTATUS_DIRECTBIND:
@@ -294,7 +308,7 @@ static HRESULT _protocol_start(unsigned line, IInternetProtocol *protocol, LPCWS
     if(expect_mime)
         SET_EXPECT(ReportProgress_MIMETYPEAVAILABLE);
     if(test_protocol == MK_PROTOCOL)
-        SET_EXPECT(ReportProgress_CACHEFILENAMEAVAIABLE);
+        SET_EXPECT(ReportProgress_CACHEFILENAMEAVAILABLE);
     SET_EXPECT(ReportData);
     if(test_protocol == ITS_PROTOCOL)
         SET_EXPECT(ReportProgress_BEGINDOWNLOADDATA);
@@ -311,7 +325,7 @@ static HRESULT _protocol_start(unsigned line, IInternetProtocol *protocol, LPCWS
         if(expect_mime)
             SET_CALLED(ReportProgress_MIMETYPEAVAILABLE);
         if(test_protocol == MK_PROTOCOL)
-            SET_EXPECT(ReportProgress_CACHEFILENAMEAVAIABLE);
+            SET_EXPECT(ReportProgress_CACHEFILENAMEAVAILABLE);
         SET_CALLED(ReportData);
         if(test_protocol == ITS_PROTOCOL)
             SET_CALLED(ReportProgress_BEGINDOWNLOADDATA);
@@ -324,7 +338,7 @@ static HRESULT _protocol_start(unsigned line, IInternetProtocol *protocol, LPCWS
         if(expect_mime)
             CHECK_CALLED(ReportProgress_MIMETYPEAVAILABLE);
         if(test_protocol == MK_PROTOCOL)
-            SET_EXPECT(ReportProgress_CACHEFILENAMEAVAIABLE);
+            SET_EXPECT(ReportProgress_CACHEFILENAMEAVAILABLE);
         CHECK_CALLED(ReportData);
         if(test_protocol == ITS_PROTOCOL)
             CHECK_CALLED(ReportProgress_BEGINDOWNLOADDATA);
@@ -440,65 +454,35 @@ static void test_protocol_url(IClassFactory *factory, LPCWSTR url, BOOL expect_m
     read_protocol = NULL;
 }
 
-static const WCHAR rel_url1[] =
-    {'t','e','s','t','.','h','t','m','l',0};
-static const WCHAR rel_url2[] =
-    {'t','e','s','t','.','c','h','m',':',':','/','t','e','s','t','.','h','t','m','l',0};
-static const WCHAR rel_url3[] =
-    {'/','t','e','s','t','.','h','t','m','l',0};
-static const WCHAR rel_url4[] =
-    {'t','e',':','t','.','h','t','m','l',0};
-static const WCHAR rel_url5[] =
-    {'d','i','r','/','t','e','s','t','.','h','t','m','l',0};
-
-static const WCHAR base_url1[] = {'i','t','s',':',
-    't','e','s','t',':','.','c','h','m',':',':','/','b','l','a','n','k','.','h','t','m','l',0};
-static const WCHAR base_url2[] = {'i','t','s',':','t','e','s','t','.','c','h','m',
-    ':',':','/','d','i','r','/','b','l','a','n','k','.','h','t','m','l',0};
-static const WCHAR base_url3[] = {'m','s','-','i','t','s',':','t','e','s','t','.','c','h','m',
-    ':',':','/','d','i','r','/','b','l','a','n','k','.','h','t','m','l',0};
-static const WCHAR base_url4[] = {'m','k',':','@','M','S','I','T','S','t','o','r','e',':',
-    't','e','s','t','.','c','h','m',':',':','/','d','i','r','/',
-    'b','l','a','n','k','.','h','t','m','l',0};
-static const WCHAR base_url5[] = {'x','x','x',':','t','e','s','t','.','c','h','m',
-    ':',':','/','d','i','r','/','b','l','a','n','k','.','h','t','m','l',0};
-
-static const WCHAR combined_url1[] = {'i','t','s',':',
-    't','e','s','t','.','c','h','m',':',':','/','t','e','s','t','.','h','t','m','l',0};
-static const WCHAR combined_url2[] = {'i','t','s',':',
-    't','e','s','t','.','c','h','m',':',':','/','d','i','r','/','t','e','s','t','.','h','t','m','l',0};
-static const WCHAR combined_url3[] = {'i','t','s',':',
-    't','e','s','t',':','.','c','h','m',':',':','/','t','e','s','t','.','h','t','m','l',0};
-static const WCHAR combined_url4[] = {'i','t','s',':','t','e','s','t','.','c','h','m',
-    ':',':','b','l','a','n','k','.','h','t','m','l','t','e','s','t','.','h','t','m','l',0};
-static const WCHAR combined_url5[] = {'m','s','-','i','t','s',':',
-    't','e','s','t','.','c','h','m',':',':','/','d','i','r','/','t','e','s','t','.','h','t','m','l',0};
-static const WCHAR combined_url6[] = {'m','k',':','@','M','S','I','T','S','t','o','r','e',':',
-    't','e','s','t','.','c','h','m',':',':','/','d','i','r','/','t','e','s','t','.','h','t','m','l',0};
-
 static const struct {
-    LPCWSTR base_url;
-    LPCWSTR rel_url;
+    const char *base_url;
+    const char *rel_url;
     DWORD flags;
     HRESULT hres;
-    LPCWSTR combined_url;
+    const char *combined_url;
 } combine_tests[] = {
-    {blank_url1, blank_url1, 0, STG_E_INVALIDNAME, NULL},
-    {blank_url2, blank_url2, 0, STG_E_INVALIDNAME, NULL},
-    {blank_url1, rel_url1, 0, S_OK, combined_url1},
-    {blank_url1, rel_url2, 0, STG_E_INVALIDNAME, NULL},
-    {blank_url1, rel_url3, 0, S_OK, combined_url1},
-    {blank_url1, rel_url4, 0, STG_E_INVALIDNAME, NULL},
-    {blank_url1, rel_url3, URL_ESCAPE_SPACES_ONLY|URL_DONT_ESCAPE_EXTRA_INFO, S_OK, combined_url1},
-    {blank_url1, rel_url5, 0, S_OK, combined_url2},
-    {rel_url1, rel_url2, 0, 0x80041001, NULL},
-    {base_url1, rel_url1, 0, S_OK, combined_url3},
-    {base_url2, rel_url1, 0, S_OK, combined_url2},
-    {blank_url4, rel_url1, 0, S_OK, combined_url4},
-    {base_url3, rel_url1, 0, S_OK, combined_url5},
-    {base_url4, rel_url1, 0, S_OK, combined_url6},
-    {base_url5, rel_url1, 0, INET_E_USE_DEFAULT_PROTOCOLHANDLER, NULL},
-    {base_url2, rel_url3, 0, S_OK, combined_url1},
+    {"its:test.chm::/blank.html", "its:test.chm::/blank.html", 0, STG_E_INVALIDNAME, NULL},
+    {"mS-iTs:test.chm::/blank.html", "mS-iTs:test.chm::/blank.html", 0, STG_E_INVALIDNAME, NULL},
+    {"its:test.chm::/blank.html", "test.html", 0, S_OK, "its:test.chm::/test.html"},
+    {"its:test.chm::/blank.html", "test.chm::/test.html", 0, STG_E_INVALIDNAME, NULL},
+    {"its:test.chm::/blank.html", "/test.html", 0, S_OK, "its:test.chm::/test.html"},
+    {"its:test.chm::/blank.html", "te:t.html", 0, STG_E_INVALIDNAME, NULL},
+    {"its:test.chm::/blank.html", "/test.html", URL_ESCAPE_SPACES_ONLY|URL_DONT_ESCAPE_EXTRA_INFO, S_OK, "its:test.chm::/test.html"},
+    {"its:test.chm::/blank.html", "dir/test.html", 0, S_OK, "its:test.chm::/dir/test.html"},
+    {"test.html", "test.chm::/test.html", 0, 0x80041001, NULL},
+    {"its:test:.chm::/blank.html", "test.html", 0, S_OK, "its:test:.chm::/test.html"},
+    {"its:test.chm::/dir/blank.html", "test.html", 0, S_OK, "its:test.chm::/dir/test.html"},
+    {"its:test.chm::blank.html", "test.html", 0, S_OK, "its:test.chm::blank.htmltest.html"},
+    {"ms-its:test.chm::/dir/blank.html", "test.html", 0, S_OK, "ms-its:test.chm::/dir/test.html"},
+    {"mk:@MSITStore:test.chm::/dir/blank.html", "test.html", 0, S_OK, "mk:@MSITStore:test.chm::/dir/test.html"},
+    {"xxx:test.chm::/dir/blank.html", "test.html", 0, INET_E_USE_DEFAULT_PROTOCOLHANDLER, NULL},
+    {"its:test.chm::/dir/blank.html", "/test.html", 0, S_OK, "its:test.chm::/test.html"},
+    {"its:test.chm::/blank.html", "#frag", 0, S_OK, "its:test.chm::/blank.html#frag"},
+    {"its:test.chm::/blank.html#hash", "#frag", 0, S_OK, "its:test.chm::/blank.html#hash#frag"},
+    {"its:test.chm::/blank.html", "test.html#frag", 0, S_OK, "its:test.chm::/test.html#frag"},
+    {"its:test.chm::/blank.html", "/test.html#frag", 0, S_OK, "its:test.chm::/test.html#frag"},
+    {"its:test.chm::/blank.html", "?query", 0, S_OK, "its:test.chm::/?query"},
+    {"its:test.chm::/blank.html#frag/blank", "test.html", 0, S_OK, "its:test.chm::/blank.html#frag/test.html"},
 };
 
 static void test_its_protocol_info(IInternetProtocol *protocol)
@@ -525,25 +509,25 @@ static void test_its_protocol_info(IInternetProtocol *protocol)
     for(i=0; i < sizeof(combine_tests)/sizeof(combine_tests[0]); i++) {
         size = 0xdeadbeef;
         memset(buf, 0xfe, sizeof(buf));
-        hres = IInternetProtocolInfo_CombineUrl(info, combine_tests[i].base_url,
-                combine_tests[i].rel_url, combine_tests[i].flags, buf,
+        hres = IInternetProtocolInfo_CombineUrl(info, a2w(combine_tests[i].base_url),
+                a2w(combine_tests[i].rel_url), combine_tests[i].flags, buf,
                 sizeof(buf)/sizeof(WCHAR), &size, 0);
         ok(hres == combine_tests[i].hres, "[%d] CombineUrl returned %08x, expected %08x\n",
            i, hres, combine_tests[i].hres);
-        ok(size == (combine_tests[i].combined_url ? lstrlenW(combine_tests[i].combined_url)+1
+        ok(size == (combine_tests[i].combined_url ? strlen(combine_tests[i].combined_url)+1
            : 0xdeadbeef), "[%d] unexpected size=%d\n", i, size);
         if(combine_tests[i].combined_url)
-            ok(!lstrcmpW(combine_tests[i].combined_url, buf), "[%d] unexpected result\n", i);
+            ok(!strcmp_wa(buf, combine_tests[i].combined_url), "[%d] unexpected result: %s\n", i, wine_dbgstr_w(buf));
         else
             ok(buf[0] == 0xfefe, "buf changed\n");
     }
 
     size = 0xdeadbeef;
     memset(buf, 0xfe, sizeof(buf));
-    hres = IInternetProtocolInfo_CombineUrl(info, blank_url1, rel_url1, 0, buf,
+    hres = IInternetProtocolInfo_CombineUrl(info, a2w("its:test.chm::/blank.html"), a2w("test.html"), 0, buf,
             1, &size, 0);
     ok(hres == E_OUTOFMEMORY, "CombineUrl failed: %08x\n", hres);
-    ok(size == sizeof(combined_url1)/sizeof(WCHAR), "size=%d\n", size);
+    ok(size == 25, "size=%d\n", size);
     ok(buf[0] == 0xfefe, "buf changed\n");
 
     IInternetProtocolInfo_Release(info);
@@ -612,6 +596,7 @@ static void test_its_protocol(void)
             test_protocol_url(factory, blank_url5, TRUE);
             test_protocol_url(factory, blank_url6, TRUE);
             test_protocol_url(factory, blank_url8, TRUE);
+            test_protocol_url(factory, blank_url9, TRUE);
             bindf = BINDF_FROMURLMON | BINDF_NEEDFILE;
             test_protocol_url(factory, blank_url1, TRUE);
         }

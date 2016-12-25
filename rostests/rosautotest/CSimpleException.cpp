@@ -12,9 +12,9 @@
  * You should always use the EXCEPTION or SSEXCEPTION macro for throwing this exception.
  *
  * @param Message
- * Constant pointer to a char array containing a short message about the exception
+ * String containing a short message about the exception
  */
-CSimpleException::CSimpleException(const char* Message)
+CSimpleException::CSimpleException(const string& Message)
     : m_Message(Message)
 {
 }

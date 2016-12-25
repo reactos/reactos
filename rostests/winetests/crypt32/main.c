@@ -18,17 +18,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
-#include <winerror.h>
+//#include <winerror.h>
 #include <wincrypt.h>
 #include <winreg.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
-HMODULE hCrypt;
+static HMODULE hCrypt;
 
 static void test_findAttribute(void)
 {
@@ -47,8 +47,7 @@ static void test_findAttribute(void)
     if (0)
     {
         /* crashes */
-        SetLastError(0xdeadbeef);
-        ret = CertFindAttribute(NULL, 1, NULL);
+        CertFindAttribute(NULL, 1, NULL);
         /* returns NULL, last error is ERROR_INVALID_PARAMETER
          * crashes on Vista
          */
@@ -93,7 +92,7 @@ static void test_findExtension(void)
     {
         /* crashes */
         SetLastError(0xdeadbeef);
-        ret = CertFindExtension(NULL, 1, NULL);
+        CertFindExtension(NULL, 1, NULL);
         /* returns NULL, last error is ERROR_INVALID_PARAMETER
          * crashes on Vista
          */
@@ -138,7 +137,7 @@ static void test_findRDNAttr(void)
     {
         /* crashes */
         SetLastError(0xdeadbeef);
-        ret = CertFindRDNAttr(NULL, NULL);
+        CertFindRDNAttr(NULL, NULL);
         /* returns NULL, last error is ERROR_INVALID_PARAMETER
          * crashes on Vista
          */
@@ -182,12 +181,12 @@ static void test_verifyTimeValidity(void)
     /* Check with 0 NotBefore and NotAfter */
     ret = CertVerifyTimeValidity(&fileTime, &info);
     ok(ret == 1, "Expected 1, got %d\n", ret);
-    memcpy(&info.NotAfter, &fileTime, sizeof(info.NotAfter));
+    info.NotAfter = fileTime;
     /* Check with NotAfter equal to comparison time */
     ret = CertVerifyTimeValidity(&fileTime, &info);
     ok(ret == 0, "Expected 0, got %d\n", ret);
     /* Check with NotBefore after comparison time */
-    memcpy(&info.NotBefore, &fileTime, sizeof(info.NotBefore));
+    info.NotBefore = fileTime;
     info.NotBefore.dwLowDateTime += 5000;
     ret = CertVerifyTimeValidity(&fileTime, &info);
     ok(ret == -1, "Expected -1, got %d\n", ret);
@@ -207,33 +206,22 @@ static void test_cryptAllocate(void)
     CryptMemFree(buf);
 }
 
-typedef DWORD  (WINAPI *I_CryptAllocTlsFunc)(void);
-typedef LPVOID (WINAPI *I_CryptDetachTlsFunc)(DWORD dwTlsIndex);
-typedef LPVOID (WINAPI *I_CryptGetTlsFunc)(DWORD dwTlsIndex);
-typedef BOOL   (WINAPI *I_CryptSetTlsFunc)(DWORD dwTlsIndex, LPVOID lpTlsValue);
-typedef BOOL   (WINAPI *I_CryptFreeTlsFunc)(DWORD dwTlsIndex, DWORD unknown);
-
-static I_CryptAllocTlsFunc pI_CryptAllocTls;
-static I_CryptDetachTlsFunc pI_CryptDetachTls;
-static I_CryptGetTlsFunc pI_CryptGetTls;
-static I_CryptSetTlsFunc pI_CryptSetTls;
-static I_CryptFreeTlsFunc pI_CryptFreeTls;
 
 static void test_cryptTls(void)
 {
+    DWORD  (WINAPI *pI_CryptAllocTls)(void);
+    LPVOID (WINAPI *pI_CryptDetachTls)(DWORD dwTlsIndex);
+    LPVOID (WINAPI *pI_CryptGetTls)(DWORD dwTlsIndex);
+    BOOL   (WINAPI *pI_CryptSetTls)(DWORD dwTlsIndex, LPVOID lpTlsValue);
+    BOOL   (WINAPI *pI_CryptFreeTls)(DWORD dwTlsIndex, DWORD unknown);
     DWORD index;
     BOOL ret;
 
-    pI_CryptAllocTls = (I_CryptAllocTlsFunc)GetProcAddress(hCrypt,
-     "I_CryptAllocTls");
-    pI_CryptDetachTls = (I_CryptDetachTlsFunc)GetProcAddress(hCrypt,
-     "I_CryptDetachTls");
-    pI_CryptGetTls = (I_CryptGetTlsFunc)GetProcAddress(hCrypt,
-     "I_CryptGetTls");
-    pI_CryptSetTls = (I_CryptSetTlsFunc)GetProcAddress(hCrypt,
-     "I_CryptSetTls");
-    pI_CryptFreeTls = (I_CryptFreeTlsFunc)GetProcAddress(hCrypt,
-     "I_CryptFreeTls");
+    pI_CryptAllocTls = (void *)GetProcAddress(hCrypt, "I_CryptAllocTls");
+    pI_CryptDetachTls = (void *)GetProcAddress(hCrypt, "I_CryptDetachTls");
+    pI_CryptGetTls = (void *)GetProcAddress(hCrypt, "I_CryptGetTls");
+    pI_CryptSetTls = (void *)GetProcAddress(hCrypt, "I_CryptSetTls");
+    pI_CryptFreeTls = (void *)GetProcAddress(hCrypt, "I_CryptFreeTls");
 
     /* One normal pass */
     index = pI_CryptAllocTls();
@@ -278,16 +266,12 @@ static void test_cryptTls(void)
     }
 }
 
-typedef BOOL (WINAPI *I_CryptReadTrustedPublisherDWORDValueFromRegistryFunc)
- (LPCWSTR, DWORD *);
-
 static void test_readTrustedPublisherDWORD(void)
 {
-    I_CryptReadTrustedPublisherDWORDValueFromRegistryFunc pReadDWORD;
 
-    pReadDWORD = 
-     (I_CryptReadTrustedPublisherDWORDValueFromRegistryFunc)GetProcAddress(
-     hCrypt, "I_CryptReadTrustedPublisherDWORDValueFromRegistry");
+    BOOL (WINAPI *pReadDWORD)(LPCWSTR, DWORD *);
+
+    pReadDWORD = (void *)GetProcAddress(hCrypt, "I_CryptReadTrustedPublisherDWORDValueFromRegistry");
     if (pReadDWORD)
     {
         static const WCHAR safer[] = { 
@@ -321,15 +305,12 @@ static void test_readTrustedPublisherDWORD(void)
     }
 }
 
-typedef HCRYPTPROV (WINAPI *I_CryptGetDefaultCryptProvFunc)(DWORD w);
-
 static void test_getDefaultCryptProv(void)
 {
-    I_CryptGetDefaultCryptProvFunc pI_CryptGetDefaultCryptProv;
+    HCRYPTPROV (WINAPI *pI_CryptGetDefaultCryptProv)(DWORD w);
     HCRYPTPROV prov;
 
-    pI_CryptGetDefaultCryptProv = (I_CryptGetDefaultCryptProvFunc)
-     GetProcAddress(hCrypt, "I_CryptGetDefaultCryptProv");
+    pI_CryptGetDefaultCryptProv = (void *)GetProcAddress(hCrypt, "I_CryptGetDefaultCryptProv");
     if (!pI_CryptGetDefaultCryptProv) return;
 
     prov = pI_CryptGetDefaultCryptProv(0xdeadbeef);
@@ -346,14 +327,12 @@ static void test_getDefaultCryptProv(void)
     CryptReleaseContext(prov, 0);
 }
 
-typedef int (WINAPI *I_CryptInstallOssGlobal)(DWORD,DWORD,DWORD);
-
 static void test_CryptInstallOssGlobal(void)
 {
+    int (WINAPI *pI_CryptInstallOssGlobal)(DWORD,DWORD,DWORD);
     int ret,i;
-    I_CryptInstallOssGlobal pI_CryptInstallOssGlobal;
 
-    pI_CryptInstallOssGlobal= (I_CryptInstallOssGlobal)GetProcAddress(hCrypt,"I_CryptInstallOssGlobal");
+    pI_CryptInstallOssGlobal = (void *)GetProcAddress(hCrypt,"I_CryptInstallOssGlobal");
     /* passing in some random values to I_CryptInstallOssGlobal, it always returns 9 the first time, then 10, 11 etc.*/
     for(i=0;i<30;i++)
     {
@@ -363,10 +342,6 @@ static void test_CryptInstallOssGlobal(void)
          "Expected %d or 0, got %d\n",(9+i),ret);
     }
 }
-
-static BOOL (WINAPI *pCryptFormatObject)(DWORD dwEncoding, DWORD dwFormatType,
- DWORD dwFormatStrType, void *pFormatStruct, LPCSTR lpszStructType,
- const BYTE *pbEncoded, DWORD dwEncoded, void *pbFormat, DWORD *pcbFormat);
 
 static const BYTE encodedInt[] = { 0x02,0x01,0x01 };
 static const WCHAR encodedIntStr[] = { '0','2',' ','0','1',' ','0','1',0 };
@@ -382,6 +357,10 @@ static const WCHAR encodedBigIntStr[] = { '0','2',' ','1','f',' ','0','1',' ',
 
 static void test_format_object(void)
 {
+    BOOL (WINAPI *pCryptFormatObject)(DWORD dwEncoding, DWORD dwFormatType,
+        DWORD dwFormatStrType, void *pFormatStruct, LPCSTR lpszStructType,
+        const BYTE *pbEncoded, DWORD dwEncoded, void *pbFormat,
+        DWORD *pcbFormat);
     BOOL ret;
     DWORD size;
     LPWSTR str;
@@ -395,7 +374,7 @@ static void test_format_object(void)
     /* Crash */
     if (0)
     {
-        ret = pCryptFormatObject(0, 0, 0, NULL, NULL, NULL, 0, NULL, NULL);
+        pCryptFormatObject(0, 0, 0, NULL, NULL, NULL, 0, NULL, NULL);
     }
     /* When called with any but the default encoding, it fails to find a
      * formatting function.

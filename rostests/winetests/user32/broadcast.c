@@ -18,9 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define _WIN32_WINNT 0x0501
+//#define _WIN32_WINNT 0x0501
 
-#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -60,7 +59,7 @@ static LRESULT WINAPI main_window_procA(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 static BOOL init_procs(void)
 {
     WNDCLASSA cls;
-    HANDLE user32 = GetModuleHandle("user32");
+    HANDLE user32 = GetModuleHandleA("user32.dll");
     pBroadcastA = (PBROADCAST)GetProcAddress(user32, "BroadcastSystemMessageA");
     if (!pBroadcastA)
         pBroadcastA = (PBROADCAST)GetProcAddress(user32, "BroadcastSystemMessage");
@@ -83,7 +82,7 @@ static BOOL init_procs(void)
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleA(0);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, IDC_ARROW);
+    cls.hCursor = LoadCursorA(0, (LPCSTR)IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "MainWindowClass";
@@ -93,7 +92,7 @@ static BOOL init_procs(void)
 
     if (!CreateWindowExA(0, "MainWindowClass", "Main window", WS_CAPTION | WS_SYSMENU |
                                WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP, 100, 100, 200,
-                               200, 0, 0, GetModuleHandle(0), NULL))
+                               200, 0, 0, GetModuleHandleA(NULL), NULL))
         return FALSE;
     return TRUE;
 }
@@ -120,7 +119,8 @@ static void test_parameters(PBROADCAST broadcast, const char *functionname)
     ok(!ret || broken(ret), "Returned: %d\n", ret);
     if (!ret) ok(GetLastError() == ERROR_INVALID_PARAMETER, "Last error: %08x\n", GetLastError());
 
-#if 0 /* TODO: Check the hang flags */
+if (0) /* TODO: Check the hang flags */
+{
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
     ret = broadcast( BSF_QUERY|(BSF_NOHANG|BSF_FORCEIFHUNG), &recips, WM_NULL, 30000, 0 );
@@ -144,7 +144,7 @@ static void test_parameters(PBROADCAST broadcast, const char *functionname)
     ret = broadcast( BSF_POSTMESSAGE|(BSF_NOTIMEOUTIFNOTHUNG|BSF_FORCEIFHUNG), &recips, WM_NULL, 30000, 0 );
     ok(0, "Last error: %08x\n", GetLastError());
     ok(0, "Returned: %d\n", ret);
-#endif
+}
 
     recips = BSM_APPLICATIONS;
     ResetEvent(hevent);
@@ -205,31 +205,32 @@ static void test_parametersEx(PBROADCASTEX broadcastex)
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "Last error: %08x\n", GetLastError());
     ok(!ret, "Returned: %d\n", ret);
 
-#if 0 /* TODO: Check the hang flags */
+if (0) /* TODO: Check the hang flags */
+{
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
-    ret = broadcast( BSF_QUERY|(BSF_NOHANG|BSF_FORCEIFHUNG), &recips, WM_NULL, 30000, 0, NULL );
+    ret = broadcastex( BSF_QUERY|(BSF_NOHANG|BSF_FORCEIFHUNG), &recips, WM_NULL, 30000, 0, NULL );
     ok(0, "Last error: %08x\n", GetLastError());
     ok(0, "Returned: %d\n", ret);
 
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
-    ret = broadcast( BSF_QUERY|(BSF_NOHANG|BSF_NOTIMEOUTIFNOTHUNG), &recips, WM_NULL, 30000, 0, NULL );
+    ret = broadcastex( BSF_QUERY|(BSF_NOHANG|BSF_NOTIMEOUTIFNOTHUNG), &recips, WM_NULL, 30000, 0, NULL );
     ok(0, "Last error: %08x\n", GetLastError());
     ok(0, "Returned: %d\n", ret);
 
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
-    ret = broadcast( BSF_QUERY|(BSF_NOTIMEOUTIFNOTHUNG|BSF_FORCEIFHUNG), &recips, WM_NULL, 30000, 0, NULL );
+    ret = broadcastex( BSF_QUERY|(BSF_NOTIMEOUTIFNOTHUNG|BSF_FORCEIFHUNG), &recips, WM_NULL, 30000, 0, NULL );
     ok(0, "Last error: %08x\n", GetLastError());
     ok(0, "Returned: %d\n", ret);
 
     SetLastError(0xcafebabe);
     recips = BSM_APPLICATIONS;
-    ret = broadcast( BSF_POSTMESSAGE|(BSF_NOTIMEOUTIFNOTHUNG|BSF_FORCEIFHUNG), &recips, WM_NULL, 30000, 0, NULL );
+    ret = broadcastex( BSF_POSTMESSAGE|(BSF_NOTIMEOUTIFNOTHUNG|BSF_FORCEIFHUNG), &recips, WM_NULL, 30000, 0, NULL );
     ok(0, "Last error: %08x\n", GetLastError());
     ok(0, "Returned: %d\n", ret);
-#endif
+}
 
     recips = BSM_APPLICATIONS;
     ResetEvent(hevent);

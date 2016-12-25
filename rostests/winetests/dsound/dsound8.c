@@ -25,15 +25,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windows.h>
-#include <stdio.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "wine/test.h"
-#include "dsound.h"
-#include "dsconf.h"
-#include "mmreg.h"
-#include "ks.h"
-#include "ksmedia.h"
+#define COBJMACROS
+#define NONAMELESSUNION
+//#include <windows.h>
+//#include <stdio.h>
+
+#include <wine/test.h>
+#include <wingdi.h>
+#include <mmreg.h>
+#include <dsound.h>
+#include <dsconf.h>
+#include <ks.h>
+#include <ksmedia.h>
+#include <initguid.h>
+#include <mmdeviceapi.h>
+//#include "audioclient.h"
+//#include "propkey.h"
+//#include "devpkey.h"
 
 #include "dsound_test.h"
 
@@ -356,6 +368,8 @@ static HRESULT test_dsound8(LPGUID lpGuid)
                                             &IID_IDirectSoundBuffer8,
                                             (void **)&buffer8);
             if (rc==DS_OK && buffer8!=NULL) {
+                ok(buffer8==(IDirectSoundBuffer8*)secondary,
+                   "IDirectSoundBuffer8 iface different from IDirectSoundBuffer.\n");
                 ref=IDirectSoundBuffer8_AddRef(buffer8);
                 ok(ref==3,"IDirectSoundBuffer8_AddRef() has %d references, "
                    "should have 3\n",ref);
@@ -534,7 +548,7 @@ static HRESULT test_primary_secondary8(LPGUID lpGuid)
     DSCAPS dscaps;
     WAVEFORMATEX wfx, wfx2;
     int ref;
-    unsigned int f;
+    unsigned int f, tag;
 
     /* Create the DirectSound object */
     rc=pDirectSoundCreate8(lpGuid,&dso,NULL);
@@ -568,6 +582,11 @@ static HRESULT test_primary_secondary8(LPGUID lpGuid)
 
     if (rc==DS_OK && primary!=NULL) {
         for (f=0;f<NB_FORMATS;f++) {
+          for (tag=0;tag<NB_TAGS;tag++) {
+            /* if float, we only want to test 32-bit */
+            if ((format_tags[tag] == WAVE_FORMAT_IEEE_FLOAT) && (formats[f][1] != 32))
+                continue;
+
             /* We must call SetCooperativeLevel to be allowed to call
              * SetFormat */
             /* DSOUND: Setting DirectSound cooperative level to
@@ -577,7 +596,7 @@ static HRESULT test_primary_secondary8(LPGUID lpGuid)
             if (rc!=DS_OK)
                 goto EXIT;
 
-            init_format(&wfx,WAVE_FORMAT_PCM,formats[f][0],formats[f][1],
+            init_format(&wfx,format_tags[tag],formats[f][0],formats[f][1],
                         formats[f][2]);
             wfx2=wfx;
             rc=IDirectSoundBuffer_SetFormat(primary,&wfx);
@@ -621,9 +640,9 @@ static HRESULT test_primary_secondary8(LPGUID lpGuid)
                                         wfx.nBlockAlign);
             bufdesc.lpwfxFormat=&wfx2;
             if (winetest_interactive) {
-                trace("  Testing a primary buffer at %dx%dx%d with a "
+                trace("  Testing a primary buffer at %dx%dx%d (fmt=%d) with a "
                       "secondary buffer at %dx%dx%d\n",
-                      wfx.nSamplesPerSec,wfx.wBitsPerSample,wfx.nChannels,
+                      wfx.nSamplesPerSec,wfx.wBitsPerSample,wfx.nChannels,format_tags[tag],
                       wfx2.nSamplesPerSec,wfx2.wBitsPerSample,wfx2.nChannels);
             }
             rc=IDirectSound_CreateSoundBuffer(dso,&bufdesc,&secondary,NULL);
@@ -639,6 +658,7 @@ static HRESULT test_primary_secondary8(LPGUID lpGuid)
                 ok(ref==0,"IDirectSoundBuffer_Release() has %d references, "
                    "should have 0\n",ref);
             }
+          }
         }
 
         ref=IDirectSoundBuffer_Release(primary);
@@ -668,7 +688,7 @@ static HRESULT test_secondary8(LPGUID lpGuid)
     DSBUFFERDESC bufdesc;
     DSCAPS dscaps;
     WAVEFORMATEX wfx, wfx1;
-    DWORD f;
+    DWORD f, tag;
     int ref;
 
     /* Create the DirectSound object */
@@ -708,8 +728,14 @@ static HRESULT test_secondary8(LPGUID lpGuid)
             goto EXIT1;
 
         for (f=0;f<NB_FORMATS;f++) {
+          for (tag=0;tag<NB_TAGS;tag++) {
             WAVEFORMATEXTENSIBLE wfxe;
-            init_format(&wfx,WAVE_FORMAT_PCM,formats[f][0],formats[f][1],
+
+            /* if float, we only want to test 32-bit */
+            if ((format_tags[tag] == WAVE_FORMAT_IEEE_FLOAT) && (formats[f][1] != 32))
+                continue;
+
+            init_format(&wfx,format_tags[tag],formats[f][0],formats[f][1],
                         formats[f][2]);
             secondary=NULL;
             ZeroMemory(&bufdesc, sizeof(bufdesc));
@@ -748,7 +774,7 @@ static HRESULT test_secondary8(LPGUID lpGuid)
             bufdesc.lpwfxFormat=(WAVEFORMATEX*)&wfxe;
             wfxe.Format = wfx;
             wfxe.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-            wfxe.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+            wfxe.SubFormat = (format_tags[tag] == WAVE_FORMAT_PCM ? KSDATAFORMAT_SUBTYPE_PCM : KSDATAFORMAT_SUBTYPE_IEEE_FLOAT);
             wfxe.Format.cbSize = 1;
             wfxe.Samples.wValidBitsPerSample = wfx.wBitsPerSample;
             wfxe.dwChannelMask = (wfx.nChannels == 1 ? KSAUDIO_SPEAKER_MONO : KSAUDIO_SPEAKER_STEREO);
@@ -799,7 +825,7 @@ static HRESULT test_secondary8(LPGUID lpGuid)
                 secondary=NULL;
             }
 
-            wfxe.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+            wfxe.SubFormat = (format_tags[tag] == WAVE_FORMAT_PCM ? KSDATAFORMAT_SUBTYPE_PCM : KSDATAFORMAT_SUBTYPE_IEEE_FLOAT);
             rc=IDirectSound_CreateSoundBuffer(dso,&bufdesc,&secondary,NULL);
             ok(rc==DS_OK && secondary,
                 "IDirectSound_CreateSoundBuffer() returned: %08x %p\n",
@@ -854,9 +880,9 @@ static HRESULT test_secondary8(LPGUID lpGuid)
 
             if (rc==DS_OK && secondary!=NULL) {
                 if (winetest_interactive) {
-                    trace("  Testing a secondary buffer at %dx%dx%d "
+                    trace("  Testing a secondary buffer at %dx%dx%d (fmt=%d) "
                         "with a primary buffer at %dx%dx%d\n",
-                        wfx.nSamplesPerSec,wfx.wBitsPerSample,wfx.nChannels,
+                        wfx.nSamplesPerSec,wfx.wBitsPerSample,wfx.nChannels,format_tags[tag],
                         wfx1.nSamplesPerSec,wfx1.wBitsPerSample,wfx1.nChannels);
                 }
                 test_buffer8(dso,&secondary,0,FALSE,0,FALSE,0,
@@ -866,6 +892,7 @@ static HRESULT test_secondary8(LPGUID lpGuid)
                 ok(ref==0,"IDirectSoundBuffer_Release() has %d references, "
                    "should have 0\n",ref);
             }
+          }
         }
 EXIT1:
         ref=IDirectSoundBuffer_Release(primary);
@@ -915,6 +942,236 @@ static void dsound8_tests(void)
     ok(rc==DS_OK,"DirectSoundEnumerateA() failed: %08x\n",rc);
 }
 
+static void test_hw_buffers(void)
+{
+    IDirectSound8 *ds;
+    IDirectSoundBuffer *primary, *primary2, **secondaries, *secondary;
+    IDirectSoundBuffer8 *buf8;
+    DSCAPS caps;
+    DSBCAPS bufcaps;
+    DSBUFFERDESC bufdesc;
+    WAVEFORMATEX fmt;
+    UINT i;
+    HRESULT hr;
+
+    hr = pDirectSoundCreate8(NULL, &ds, NULL);
+    ok(hr == S_OK || hr == DSERR_NODRIVER || hr == DSERR_ALLOCATED || hr == E_FAIL,
+            "DirectSoundCreate8 failed: %08x\n", hr);
+    if(hr != S_OK)
+        return;
+
+    caps.dwSize = sizeof(caps);
+
+    hr = IDirectSound8_GetCaps(ds, &caps);
+    ok(hr == S_OK, "GetCaps failed: %08x\n", hr);
+
+    ok(caps.dwPrimaryBuffers == 1, "Got wrong number of primary buffers: %u\n",
+            caps.dwPrimaryBuffers);
+
+    /* DSBCAPS_LOC* is ignored for primary buffers */
+    bufdesc.dwSize = sizeof(bufdesc);
+    bufdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_LOCHARDWARE |
+        DSBCAPS_PRIMARYBUFFER;
+    bufdesc.dwBufferBytes = 0;
+    bufdesc.dwReserved = 0;
+    bufdesc.lpwfxFormat = NULL;
+    bufdesc.guid3DAlgorithm = GUID_NULL;
+
+    hr = IDirectSound8_CreateSoundBuffer(ds, &bufdesc, &primary, NULL);
+    ok(hr == S_OK, "CreateSoundBuffer failed: %08x\n", hr);
+    if(hr != S_OK){
+        IDirectSound8_Release(ds);
+        return;
+    }
+
+    bufdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_LOCSOFTWARE |
+        DSBCAPS_PRIMARYBUFFER;
+
+    hr = IDirectSound8_CreateSoundBuffer(ds, &bufdesc, &primary2, NULL);
+    ok(hr == S_OK, "CreateSoundBuffer failed: %08x\n", hr);
+    ok(primary == primary2, "Got different primary buffers: %p, %p\n", primary, primary2);
+    if(hr == S_OK)
+        IDirectSoundBuffer_Release(primary2);
+
+    buf8 = (IDirectSoundBuffer8 *)0xDEADBEEF;
+    hr = IDirectSoundBuffer_QueryInterface(primary, &IID_IDirectSoundBuffer8,
+            (void**)&buf8);
+    ok(hr == E_NOINTERFACE, "QueryInterface gave wrong failure: %08x\n", hr);
+    ok(buf8 == NULL, "Pointer didn't get set to NULL\n");
+
+    fmt.wFormatTag = WAVE_FORMAT_PCM;
+    fmt.nChannels = 2;
+    fmt.nSamplesPerSec = 48000;
+    fmt.wBitsPerSample = 16;
+    fmt.nBlockAlign = fmt.nChannels * fmt.wBitsPerSample / 8;
+    fmt.nAvgBytesPerSec = fmt.nBlockAlign * fmt.nSamplesPerSec;
+    fmt.cbSize = 0;
+
+    bufdesc.lpwfxFormat = &fmt;
+    bufdesc.dwBufferBytes = fmt.nSamplesPerSec * fmt.nBlockAlign / 10;
+    bufdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_LOCHARDWARE |
+        DSBCAPS_CTRLVOLUME;
+
+    secondaries = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+            sizeof(IDirectSoundBuffer *) * caps.dwMaxHwMixingAllBuffers);
+
+    /* try to fill all of the hw buffers */
+    trace("dwMaxHwMixingAllBuffers: %u\n", caps.dwMaxHwMixingAllBuffers);
+    trace("dwMaxHwMixingStaticBuffers: %u\n", caps.dwMaxHwMixingStaticBuffers);
+    trace("dwMaxHwMixingStreamingBuffers: %u\n", caps.dwMaxHwMixingStreamingBuffers);
+    for(i = 0; i < caps.dwMaxHwMixingAllBuffers; ++i){
+        hr = IDirectSound8_CreateSoundBuffer(ds, &bufdesc, &secondaries[i], NULL);
+        ok(hr == S_OK || hr == E_NOTIMPL || broken(hr == DSERR_CONTROLUNAVAIL) || broken(hr == E_FAIL),
+                "CreateSoundBuffer(%u) failed: %08x\n", i, hr);
+        if(hr != S_OK)
+            break;
+
+        bufcaps.dwSize = sizeof(bufcaps);
+        hr = IDirectSoundBuffer_GetCaps(secondaries[i], &bufcaps);
+        ok(hr == S_OK, "GetCaps failed: %08x\n", hr);
+        ok((bufcaps.dwFlags & DSBCAPS_LOCHARDWARE) != 0,
+                "Buffer wasn't allocated in hardware, dwFlags: %x\n", bufcaps.dwFlags);
+    }
+
+    /* see if we can create one more */
+    hr = IDirectSound8_CreateSoundBuffer(ds, &bufdesc, &secondary, NULL);
+    ok((i == caps.dwMaxHwMixingAllBuffers && hr == DSERR_ALLOCATED) || /* out of hw buffers */
+            (caps.dwMaxHwMixingAllBuffers == 0 && hr == DSERR_INVALIDCALL) || /* no hw buffers at all */
+            hr == E_NOTIMPL || /* don't support hw buffers */
+            broken(hr == DSERR_CONTROLUNAVAIL) || /* vmware winxp, others? */
+            broken(hr == E_FAIL) || /* broken AC97 driver */
+            broken(hr == S_OK) /* broken driver allows more hw bufs than dscaps claims */,
+            "CreateSoundBuffer(%u) gave wrong error: %08x\n", i, hr);
+    if(hr == S_OK)
+        IDirectSoundBuffer_Release(secondary);
+
+    for(i = 0; i < caps.dwMaxHwMixingAllBuffers; ++i)
+        if(secondaries[i])
+            IDirectSoundBuffer_Release(secondaries[i]);
+
+    HeapFree(GetProcessHeap(), 0, secondaries);
+
+    IDirectSoundBuffer_Release(primary);
+    IDirectSound8_Release(ds);
+}
+
+static struct {
+    UINT dev_count;
+    GUID guid;
+} default_info = { 0 };
+
+static BOOL WINAPI default_device_cb(GUID *guid, const char *desc,
+        const char *module, void *user)
+{
+    trace("guid: %p, desc: %s\n", guid, desc);
+    if(!guid)
+        ok(default_info.dev_count == 0, "Got NULL GUID not in first position\n");
+    else{
+        if(default_info.dev_count == 0){
+            ok(IsEqualGUID(guid, &default_info.guid), "Expected default device GUID\n");
+        }else{
+            ok(!IsEqualGUID(guid, &default_info.guid), "Got default GUID at unexpected location: %u\n",
+                    default_info.dev_count);
+        }
+
+        /* only count real devices */
+        ++default_info.dev_count;
+    }
+
+    return TRUE;
+}
+
+static void test_first_device(void)
+{
+    IMMDeviceEnumerator *devenum;
+    IMMDevice *defdev;
+    IPropertyStore *ps;
+    PROPVARIANT pv;
+    HRESULT hr;
+
+    hr = CoCreateInstance(&CLSID_MMDeviceEnumerator, NULL,
+            CLSCTX_INPROC_SERVER, &IID_IMMDeviceEnumerator, (void**)&devenum);
+    if(FAILED(hr)){
+        win_skip("MMDevAPI is not available, skipping default device test\n");
+        return;
+    }
+
+    hr = IMMDeviceEnumerator_GetDefaultAudioEndpoint(devenum, eRender,
+            eMultimedia, &defdev);
+    if (hr == E_NOTFOUND) {
+        win_skip("No default device found\n");
+        return;
+    }
+    ok(hr == S_OK, "GetDefaultAudioEndpoint failed: %08x\n", hr);
+
+    hr = IMMDevice_OpenPropertyStore(defdev, STGM_READ, &ps);
+    ok(hr == S_OK, "OpenPropertyStore failed: %08x\n", hr);
+
+    PropVariantInit(&pv);
+
+    hr = IPropertyStore_GetValue(ps, &PKEY_AudioEndpoint_GUID, &pv);
+    ok(hr == S_OK, "GetValue failed: %08x\n", hr);
+
+    CLSIDFromString(pv.u.pwszVal, &default_info.guid);
+
+    PropVariantClear(&pv);
+    IPropertyStore_Release(ps);
+    IMMDevice_Release(defdev);
+    IMMDeviceEnumerator_Release(devenum);
+
+    hr = pDirectSoundEnumerateA(&default_device_cb, NULL);
+    ok(hr == S_OK, "DirectSoundEnumerateA failed: %08x\n", hr);
+}
+
+static void test_COM(void)
+{
+    IDirectSound *ds;
+    IDirectSound8 *ds8 = (IDirectSound8*)0xdeadbeef;
+    IUnknown *unk, *unk8;
+    ULONG refcount;
+    HRESULT hr;
+
+    /* COM aggregation */
+    hr = CoCreateInstance(&CLSID_DirectSound8, (IUnknown*)&ds, CLSCTX_INPROC_SERVER,
+            &IID_IUnknown, (void**)&ds8);
+    ok(hr == CLASS_E_NOAGGREGATION,
+            "DirectSound create failed: %08x, expected CLASS_E_NOAGGREGATION\n", hr);
+    ok(!ds8, "ds8 = %p\n", ds8);
+
+    /* Invalid RIID */
+    hr = CoCreateInstance(&CLSID_DirectSound8, NULL, CLSCTX_INPROC_SERVER,
+            &IID_IDirectSound3DBuffer, (void**)&ds8);
+    ok(hr == E_NOINTERFACE,
+            "DirectSound create failed: %08x, expected E_NOINTERFACE\n", hr);
+
+    /* Same refcount for IDirectSound and IDirectSound8 */
+    hr = CoCreateInstance(&CLSID_DirectSound8, NULL, CLSCTX_INPROC_SERVER, &IID_IDirectSound8,
+            (void**)&ds8);
+    ok(hr == S_OK, "DirectSound create failed: %08x, expected S_OK\n", hr);
+    refcount = IDirectSound8_AddRef(ds8);
+    ok(refcount == 2, "refcount == %u, expected 2\n", refcount);
+    hr = IDirectSound8_QueryInterface(ds8, &IID_IDirectSound, (void**)&ds);
+    ok(hr == S_OK, "QueryInterface for IID_IDirectSound failed: %08x\n", hr);
+    refcount = IDirectSound8_AddRef(ds8);
+    ok(refcount == 4, "refcount == %u, expected 4\n", refcount);
+    refcount = IDirectSound_AddRef(ds);
+    ok(refcount == 5, "refcount == %u, expected 5\n", refcount);
+
+    /* Separate refcount for IUnknown */
+    hr = IDirectSound_QueryInterface(ds, &IID_IUnknown, (void**)&unk);
+    ok(hr == S_OK, "QueryInterface for IID_IUnknown failed: %08x\n", hr);
+    refcount = IUnknown_AddRef(unk);
+    ok(refcount == 2, "refcount == %u, expected 2\n", refcount);
+    hr = IDirectSound_QueryInterface(ds8, &IID_IUnknown, (void**)&unk8);
+    ok(hr == S_OK, "QueryInterface for IID_IUnknown failed: %08x\n", hr);
+    refcount = IUnknown_AddRef(unk8);
+    ok(refcount == 4, "refcount == %u, expected 4\n", refcount);
+    refcount = IDirectSound_AddRef(ds);
+    ok(refcount == 6, "refcount == %u, expected 6\n", refcount);
+
+    while (IDirectSound_Release(ds));
+    while (IUnknown_Release(unk));
+}
 
 START_TEST(dsound8)
 {
@@ -932,16 +1189,19 @@ START_TEST(dsound8)
             "DirectSoundCreate8");
         if (pDirectSoundCreate8)
         {
+            test_COM();
             IDirectSound8_tests();
             dsound8_tests();
+            test_hw_buffers();
+            test_first_device();
         }
         else
-            skip("dsound8 test skipped\n");
+            skip("DirectSoundCreate8 missing - skipping all tests\n");
 
         FreeLibrary(hDsound);
     }
     else
-        skip("dsound.dll not found!\n");
+        skip("dsound.dll not found - skipping all tests\n");
 
     CoUninitialize();
 }

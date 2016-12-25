@@ -21,16 +21,16 @@
  */
 
 #include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <string.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "wininet.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <wininet.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 #define TEST_URL "http://www.winehq.org/site/about#hi"
 #define TEST_URL3 "file:///C:/Program%20Files/Atmel/AVR%20Tools/STK500/STK500.xml"
@@ -124,6 +124,15 @@ static const crack_url_test_t crack_url_tests[] = {
     {"http://www.winehq.org?test=123",
         0, 4, INTERNET_SCHEME_HTTP, 7, 14, 23, 80, -1, 0, -1, 0, 21, 0, 21, 9,
         "http", "www.winehq.org", "", "", "", "?test=123"},
+    {"http://www.winehq.org/myscript.php;test=123",
+        0, 4, INTERNET_SCHEME_HTTP, 7, 14, 23, 80, -1, 0, -1, 0, 21, 22, -1, 0,
+        "http", "www.winehq.org", "", "", "/myscript.php;test=123", ""},
+    {"HtTp://www.winehq.org/scheme",
+        0, 4, INTERNET_SCHEME_HTTP, 7, 14, 23, 80, -1, 0, -1, 0, 21, 7, -1, 0,
+        "HtTp", "www.winehq.org", "", "", "/scheme", ""},
+    {"http://www.winehq.org",
+        0, 4, INTERNET_SCHEME_HTTP, 7, 14, 23, 80, -1, 0, -1, 0, 21, 0, -1, 0,
+        "http", "www.winehq.org", "", "", "", ""},
     {"file:///C:/Program%20Files/Atmel/AVR%20Tools/STK500/STK500.xml",
         0, 4, INTERNET_SCHEME_FILE, -1, 0, -1, 0, -1, 0, -1, 0, 7, 55, -1, 0,
         "file", "", "", "", "C:\\Program Files\\Atmel\\AVR Tools\\STK500\\STK500.xml", ""},
@@ -157,22 +166,40 @@ static const crack_url_test_t crack_url_tests[] = {
     {"file:///C:/Program%20Files/Atmel/./Asdf.xml",
         0, 4, INTERNET_SCHEME_FILE, -1, 0, -1, 0, -1, 0, -1, 0, 7, 36, -1, 0,
         "file", "", "", "", "C:\\Program Files\\Atmel\\.\\Asdf.xml", ""},
+    {"C:\\file.txt",
+        0, 1, INTERNET_SCHEME_UNKNOWN, -1, 0, -1, 0, -1, 0, -1, 0, 2, 9, -1, 0,
+        "C", "", "", "", "\\file.txt", ""}
 };
 
-static const WCHAR *w_str_of(const char *str)
+static WCHAR *a2w(const char *str)
 {
-    static WCHAR buf[512];
-    MultiByteToWideChar(CP_ACP, 0, str, -1, buf, sizeof(buf)/sizeof(buf[0]));
-    return buf;
+    WCHAR *ret;
+    int len;
+
+    len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+    ret = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
+    return ret;
+}
+
+static int strcmp_wa(const WCHAR *str1, const char *str2)
+{
+    WCHAR *str2w = a2w(str2);
+    int ret = lstrcmpW(str1, str2w);
+    HeapFree(GetProcessHeap(), 0, str2w);
+    return ret;
 }
 
 static void test_crack_url(const crack_url_test_t *test)
 {
-    WCHAR buf[INTERNET_MAX_URL_LENGTH];
     URL_COMPONENTSW urlw;
     URL_COMPONENTSA url;
-    char scheme[32], hostname[1024], username[1024];
-    char password[1024], extrainfo[1024], urlpath[1024];
+    char *scheme_a, *hostname_a, *username_a;
+    char *password_a, *extrainfo_a, *urlpath_a;
+    WCHAR *scheme_w, *hostname_w, *username_w;
+    WCHAR *password_w, *extrainfo_w, *urlpath_w;
+    size_t buf_len = strlen(test->url);
+    WCHAR *buf;
     BOOL b;
 
     /* test InternetCrackUrlA with NULL buffers */
@@ -222,9 +249,9 @@ static void test_crack_url(const crack_url_test_t *test)
        test->url, url.dwPasswordLength, test->pass_len);
 
     if(test->path_off == -1)
-        ok(!url.lpszUrlPath, "[%s] url.lpszPath = %p, expected NULL\n", test->url, url.lpszUrlPath);
+        ok(!url.lpszUrlPath, "[%s] url.lpszUrlPath = %p, expected NULL\n", test->url, url.lpszUrlPath);
     else
-        ok(url.lpszUrlPath == test->url+test->path_off, "[%s] url.lpszPath = %p, expected %p\n",
+        ok(url.lpszUrlPath == test->url+test->path_off, "[%s] url.lpszUrlPath = %p, expected %p\n",
            test->url, url.lpszUrlPath, test->url+test->path_off);
     ok(url.dwUrlPathLength == test->path_len, "[%s] url.lpszUrlPathLength = %d, expected %d\n",
        test->url, url.dwUrlPathLength, test->path_len);
@@ -247,10 +274,11 @@ static void test_crack_url(const crack_url_test_t *test)
     urlw.dwUrlPathLength = 1;
     urlw.dwExtraInfoLength = 1;
 
-    MultiByteToWideChar(CP_ACP, 0, test->url, -1, buf, sizeof(buf)/sizeof(buf[0]));
+    buf = a2w(test->url);
     b = InternetCrackUrlW(buf, lstrlenW(buf), 0, &urlw);
     if(!b && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) {
         win_skip("InternetCrackUrlW is not implemented\n");
+        HeapFree(GetProcessHeap(), 0, buf);
         return;
     }
     ok(b, "InternetCrackUrl failed with error %d\n", GetLastError());
@@ -301,9 +329,9 @@ static void test_crack_url(const crack_url_test_t *test)
     }
 
     if(test->path_off == -1)
-        ok(!urlw.lpszUrlPath, "[%s] urlw.lpszPath = %p, expected NULL\n", test->url, urlw.lpszUrlPath);
+        ok(!urlw.lpszUrlPath, "[%s] urlw.lpszUrlPath = %p, expected NULL\n", test->url, urlw.lpszUrlPath);
     else
-        ok(urlw.lpszUrlPath == buf+test->path_off, "[%s] urlw.lpszPath = %p, expected %p\n",
+        ok(urlw.lpszUrlPath == buf+test->path_off, "[%s] urlw.lpszUrlPath = %p, expected %p\n",
            test->url, urlw.lpszUrlPath, buf+test->path_off);
     ok(urlw.dwUrlPathLength == test->path_len, "[%s] urlw.lpszUrlPathLength = %d, expected %d\n",
        test->url, urlw.dwUrlPathLength, test->path_len);
@@ -320,114 +348,165 @@ static void test_crack_url(const crack_url_test_t *test)
     }
 
     /* test InternetCrackUrlA with valid buffers */
+    scheme_a = (char*)(scheme_w = HeapAlloc(GetProcessHeap(), 0, buf_len*sizeof(WCHAR)));
+    hostname_a = (char*)(hostname_w = HeapAlloc(GetProcessHeap(), 0, buf_len*sizeof(WCHAR)));
+    username_a = (char*)(username_w = HeapAlloc(GetProcessHeap(), 0, buf_len*sizeof(WCHAR)));
+    password_a = (char*)(password_w = HeapAlloc(GetProcessHeap(), 0, buf_len*sizeof(WCHAR)));
+    urlpath_a = (char*)(urlpath_w = HeapAlloc(GetProcessHeap(), 0, buf_len*sizeof(WCHAR)));
+    extrainfo_a = (char*)(extrainfo_w = HeapAlloc(GetProcessHeap(), 0, buf_len*sizeof(WCHAR)));
     memset(&url, 0, sizeof(URL_COMPONENTSA));
     url.dwStructSize = sizeof(URL_COMPONENTSA);
-    url.lpszScheme = scheme;
-    url.dwSchemeLength = sizeof(scheme);
-    url.lpszHostName = hostname;
-    url.dwHostNameLength = sizeof(hostname);
-    url.lpszUserName = username;
-    url.dwUserNameLength = sizeof(username);
-    url.lpszPassword = password;
-    url.dwPasswordLength = sizeof(password);
-    url.lpszUrlPath = urlpath;
-    url.dwUrlPathLength = sizeof(urlpath);
-    url.lpszExtraInfo = extrainfo;
-    url.dwExtraInfoLength = sizeof(extrainfo);
+    url.lpszScheme = scheme_a;
+    url.dwSchemeLength = buf_len;
+    url.lpszHostName = hostname_a;
+    url.dwHostNameLength = buf_len;
+    url.lpszUserName = username_a;
+    url.dwUserNameLength = buf_len;
+    url.lpszPassword = password_a;
+    url.dwPasswordLength = buf_len;
+    url.lpszUrlPath = urlpath_a;
+    url.dwUrlPathLength = buf_len;
+    url.lpszExtraInfo = extrainfo_a;
+    url.dwExtraInfoLength = buf_len;
 
     b = InternetCrackUrlA(test->url, strlen(test->url), 0, &url);
     ok(b, "InternetCrackUrlA failed with error %d\n", GetLastError());
 
     ok(url.dwSchemeLength == strlen(test->exp_scheme), "[%s] Got wrong scheme length: %d\n",
-            test->url, url.dwSchemeLength);
-    ok(!strcmp(scheme, test->exp_scheme), "[%s] Got wrong scheme, expected: %s, got: %s\n",
-            test->url, test->exp_scheme, scheme);
+       test->url, url.dwSchemeLength);
+    ok(!strcmp(scheme_a, test->exp_scheme), "[%s] Got wrong scheme, expected: %s, got: %s\n",
+       test->url, test->exp_scheme, scheme_a);
 
     ok(url.nScheme == test->scheme, "[%s] Got wrong nScheme, expected: %d, got: %d\n",
-            test->url, test->scheme, url.nScheme);
+       test->url, test->scheme, url.nScheme);
 
     ok(url.dwHostNameLength == strlen(test->exp_hostname), "[%s] Got wrong hostname length: %d\n",
-            test->url, url.dwHostNameLength);
-    ok(!strcmp(hostname, test->exp_hostname), "[%s] Got wrong hostname, expected: %s, got: %s\n",
-            test->url, test->exp_hostname, hostname);
+       test->url, url.dwHostNameLength);
+    ok(!strcmp(hostname_a, test->exp_hostname), "[%s] Got wrong hostname, expected: %s, got: %s\n",
+       test->url, test->exp_hostname, hostname_a);
 
     ok(url.nPort == test->port, "[%s] Got wrong port, expected: %d, got: %d\n",
-            test->url, test->port, url.nPort);
+       test->url, test->port, url.nPort);
 
     ok(url.dwUserNameLength == strlen(test->exp_username), "[%s] Got wrong username length: %d\n",
-            test->url, url.dwUserNameLength);
-    ok(!strcmp(username, test->exp_username), "[%s] Got wrong username, expected: %s, got: %s\n",
-            test->url, test->exp_username, username);
+       test->url, url.dwUserNameLength);
+    ok(!strcmp(username_a, test->exp_username), "[%s] Got wrong username, expected: %s, got: %s\n",
+       test->url, test->exp_username, username_a);
 
     ok(url.dwPasswordLength == strlen(test->exp_password), "[%s] Got wrong password length: %d\n",
-            test->url, url.dwPasswordLength);
-    ok(!strcmp(password, test->exp_password), "[%s] Got wrong password, expected: %s, got: %s\n",
-            test->url, test->exp_password, password);
+       test->url, url.dwPasswordLength);
+    ok(!strcmp(password_a, test->exp_password), "[%s] Got wrong password, expected: %s, got: %s\n",
+       test->url, test->exp_password, password_a);
 
     ok(url.dwUrlPathLength == strlen(test->exp_urlpath), "[%s] Got wrong urlpath length: %d\n",
-            test->url, url.dwUrlPathLength);
-    ok(!strcmp(urlpath, test->exp_urlpath), "[%s] Got wrong urlpath, expected: %s, got: %s\n",
-            test->url, test->exp_urlpath, urlpath);
+       test->url, url.dwUrlPathLength);
+    ok(!strcmp(urlpath_a, test->exp_urlpath), "[%s] Got wrong urlpath, expected: %s, got: %s\n",
+       test->url, test->exp_urlpath, urlpath_a);
 
     ok(url.dwExtraInfoLength == strlen(test->exp_extrainfo), "[%s] Got wrong extrainfo length: %d\n",
-            test->url, url.dwExtraInfoLength);
-    ok(!strcmp(extrainfo, test->exp_extrainfo), "[%s] Got wrong extrainfo, expected: %s, got: %s\n",
-            test->url, test->exp_extrainfo, extrainfo);
+       test->url, url.dwExtraInfoLength);
+    ok(!strcmp(extrainfo_a, test->exp_extrainfo), "[%s] Got wrong extrainfo, expected: %s, got: %s\n",
+       test->url, test->exp_extrainfo, extrainfo_a);
 
     /* test InternetCrackUrlW with valid buffers */
     memset(&urlw, 0, sizeof(URL_COMPONENTSW));
     urlw.dwStructSize = sizeof(URL_COMPONENTSW);
-    urlw.lpszScheme = (WCHAR*)scheme;
-    urlw.dwSchemeLength = sizeof(scheme) / sizeof(WCHAR);
-    urlw.lpszHostName = (WCHAR*)hostname;
-    urlw.dwHostNameLength = sizeof(hostname) / sizeof(WCHAR);
-    urlw.lpszUserName = (WCHAR*)username;
-    urlw.dwUserNameLength = sizeof(username) / sizeof(WCHAR);
-    urlw.lpszPassword = (WCHAR*)password;
-    urlw.dwPasswordLength = sizeof(password) / sizeof(WCHAR);
-    urlw.lpszUrlPath = (WCHAR*)urlpath;
-    urlw.dwUrlPathLength = sizeof(urlpath) / sizeof(WCHAR);
-    urlw.lpszExtraInfo = (WCHAR*)extrainfo;
-    urlw.dwExtraInfoLength = sizeof(extrainfo) / sizeof(WCHAR);
+    urlw.lpszScheme = scheme_w;
+    urlw.dwSchemeLength = buf_len;
+    urlw.lpszHostName = hostname_w;
+    urlw.dwHostNameLength = buf_len;
+    urlw.lpszUserName = username_w;
+    urlw.dwUserNameLength = buf_len;
+    urlw.lpszPassword = password_w;
+    urlw.dwPasswordLength = buf_len;
+    urlw.lpszUrlPath = urlpath_w;
+    urlw.dwUrlPathLength = buf_len;
+    urlw.lpszExtraInfo = extrainfo_w;
+    urlw.dwExtraInfoLength = buf_len;
 
     b = InternetCrackUrlW(buf, lstrlenW(buf), 0, &urlw);
     ok(b, "InternetCrackUrlW failed with error %d\n", GetLastError());
 
     ok(urlw.dwSchemeLength == strlen(test->exp_scheme), "[%s] Got wrong scheme length: %d\n",
-            test->url, urlw.dwSchemeLength);
-    ok(!lstrcmpW((WCHAR*)scheme, w_str_of(test->exp_scheme)), "[%s] Got wrong scheme, expected: %s, got: %s\n",
-            test->url, test->exp_scheme, wine_dbgstr_w((WCHAR*)scheme));
+       test->url, urlw.dwSchemeLength);
+    ok(!strcmp_wa(scheme_w, test->exp_scheme), "[%s] Got wrong scheme, expected: %s, got: %s\n",
+       test->url, test->exp_scheme, wine_dbgstr_w(scheme_w));
 
     ok(urlw.nScheme == test->scheme, "[%s] Got wrong nScheme, expected: %d, got: %d\n",
-            test->url, test->scheme, urlw.nScheme);
+       test->url, test->scheme, urlw.nScheme);
 
     ok(urlw.dwHostNameLength == strlen(test->exp_hostname), "[%s] Got wrong hostname length: %d\n",
-            test->url, urlw.dwHostNameLength);
-    ok(!lstrcmpW((WCHAR*)hostname, w_str_of(test->exp_hostname)), "[%s] Got wrong hostname, expected: %s, got: %s\n",
-            test->url, test->exp_hostname, wine_dbgstr_w((WCHAR*)hostname));
+       test->url, urlw.dwHostNameLength);
+    ok(!strcmp_wa(hostname_w, test->exp_hostname), "[%s] Got wrong hostname, expected: %s, got: %s\n",
+       test->url, test->exp_hostname, wine_dbgstr_w(hostname_w));
 
     ok(urlw.nPort == test->port, "[%s] Got wrong port, expected: %d, got: %d\n",
-            test->url, test->port, urlw.nPort);
+       test->url, test->port, urlw.nPort);
 
     ok(urlw.dwUserNameLength == strlen(test->exp_username), "[%s] Got wrong username length: %d\n",
-            test->url, urlw.dwUserNameLength);
-    ok(!lstrcmpW((WCHAR*)username, w_str_of(test->exp_username)), "[%s] Got wrong username, expected: %s, got: %s\n",
-            test->url, test->exp_username, wine_dbgstr_w((WCHAR*)username));
+       test->url, urlw.dwUserNameLength);
+    ok(!strcmp_wa(username_w, test->exp_username), "[%s] Got wrong username, expected: %s, got: %s\n",
+       test->url, test->exp_username, wine_dbgstr_w(username_w));
 
     ok(urlw.dwPasswordLength == strlen(test->exp_password), "[%s] Got wrong password length: %d\n",
-            test->url, urlw.dwPasswordLength);
-    ok(!lstrcmpW((WCHAR*)password, w_str_of(test->exp_password)), "[%s] Got wrong password, expected: %s, got: %s\n",
-            test->url, test->exp_password, wine_dbgstr_w((WCHAR*)password));
+       test->url, urlw.dwPasswordLength);
+    ok(!strcmp_wa(password_w, test->exp_password), "[%s] Got wrong password, expected: %s, got: %s\n",
+       test->url, test->exp_password, wine_dbgstr_w(password_w));
 
     ok(urlw.dwUrlPathLength == strlen(test->exp_urlpath), "[%s] Got wrong urlpath length: %d\n",
-            test->url, urlw.dwUrlPathLength);
-    ok(!lstrcmpW((WCHAR*)urlpath, w_str_of(test->exp_urlpath)), "[%s] Got wrong urlpath, expected: %s, got: %s\n",
-            test->url, test->exp_urlpath, wine_dbgstr_w((WCHAR*)urlpath));
+       test->url, urlw.dwUrlPathLength);
+    ok(!strcmp_wa(urlpath_w, test->exp_urlpath), "[%s] Got wrong urlpath, expected: %s, got: %s\n",
+       test->url, test->exp_urlpath, wine_dbgstr_w(urlpath_w));
 
     ok(urlw.dwExtraInfoLength == strlen(test->exp_extrainfo), "[%s] Got wrong extrainfo length: %d\n",
-            test->url, urlw.dwExtraInfoLength);
-    ok(!lstrcmpW((WCHAR*)extrainfo, w_str_of(test->exp_extrainfo)), "[%s] Got wrong extrainfo, expected: %s, got: %s\n",
-            test->url, test->exp_extrainfo, wine_dbgstr_w((WCHAR*)extrainfo));
+       test->url, urlw.dwExtraInfoLength);
+    ok(!strcmp_wa(extrainfo_w, test->exp_extrainfo), "[%s] Got wrong extrainfo, expected: %s, got: %s\n",
+       test->url, test->exp_extrainfo, wine_dbgstr_w(extrainfo_w));
+
+    HeapFree(GetProcessHeap(), 0, scheme_w);
+    HeapFree(GetProcessHeap(), 0, hostname_w);
+    HeapFree(GetProcessHeap(), 0, username_w);
+    HeapFree(GetProcessHeap(), 0, password_w);
+    HeapFree(GetProcessHeap(), 0, urlpath_w);
+    HeapFree(GetProcessHeap(), 0, extrainfo_w);
+    HeapFree(GetProcessHeap(), 0, buf);
+}
+
+static void test_long_url(void)
+{
+    char long_buf[6000];
+    char long_url[sizeof(long_buf) + 1000];
+    crack_url_test_t test_long_path =
+        {long_url, 0, 4, INTERNET_SCHEME_HTTP, 7, 14, -1, 80, -1, 0, -1, 0, 21, sizeof(long_buf)-1, -1, 0,
+         "http", "www.winehq.org", "", "", long_buf, ""};
+    crack_url_test_t test_long_extra =
+        {long_url, 0, 4, INTERNET_SCHEME_HTTP, 7, 14, -1, 80, -1, 0, -1, 0, 21, 6, 27, sizeof(long_buf)-1,
+         "http", "www.winehq.org", "", "", "/path/", long_buf};
+    URL_COMPONENTSA url_comp;
+    BOOL b;
+
+    memset(long_buf, 'x', sizeof(long_buf));
+    long_buf[0] = '/';
+    long_buf[sizeof(long_buf)-1] = 0;
+
+    strcpy(long_url, "http://www.winehq.org");
+    strcat(long_url, long_buf);
+    test_crack_url(&test_long_path);
+
+    strcpy(long_url, "http://www.winehq.org/path/");
+    long_buf[0] = '#';
+    strcat(long_url, long_buf);
+    test_crack_url(&test_long_extra);
+
+    zero_compsA(&url_comp, 0, 0, 0, 0, 0, 100);
+    url_comp.lpszExtraInfo = long_buf;
+    b = InternetCrackUrlA(long_url, strlen(long_url), 0, &url_comp);
+    ok(!b && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "InternetCrackUrlA returned %x with error %d\n", b, GetLastError());
+
+    zero_compsA(&url_comp, 4, 0, 0, 0, 0, 0);
+    url_comp.lpszScheme = long_buf;
+    b = InternetCrackUrlA(long_url, strlen(long_url), 0, &url_comp);
+    ok(!b && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "InternetCrackUrlA returned %x with error %d\n", b, GetLastError());
 }
 
 static void InternetCrackUrl_test(void)
@@ -455,26 +534,26 @@ static void InternetCrackUrl_test(void)
    * The last two (path and extrainfo) are the same for all versions
    * of the wininet.dll.
    */
-  copy_compsA(&urlSrc, &urlComponents, 0, 1024, 1024, 1024, 2048, 1024);
+  copy_compsA(&urlSrc, &urlComponents, 0, 1024, 1024, 1024, 1024, 1024);
   SetLastError(0xdeadbeef);
   firstret = InternetCrackUrlA(TEST_URL3, 0, ICU_DECODE, &urlComponents);
   firstGLE = GetLastError();
 
-  copy_compsA(&urlSrc, &urlComponents, 32, 0, 1024, 1024, 2048, 1024);
+  copy_compsA(&urlSrc, &urlComponents, 32, 0, 1024, 1024, 1024, 1024);
   SetLastError(0xdeadbeef);
   ret = InternetCrackUrlA(TEST_URL3, 0, ICU_DECODE, &urlComponents);
   GLE = GetLastError();
   ok(ret==firstret && (GLE==firstGLE), "InternetCrackUrl returned %d with GLE=%d (expected to return %d)\n",
     ret, GLE, firstret);
 
-  copy_compsA(&urlSrc, &urlComponents, 32, 1024, 0, 1024, 2048, 1024);
+  copy_compsA(&urlSrc, &urlComponents, 32, 1024, 0, 1024, 1024, 1024);
   SetLastError(0xdeadbeef);
   ret = InternetCrackUrlA(TEST_URL3, 0, ICU_DECODE, &urlComponents);
   GLE = GetLastError();
   ok(ret==firstret && (GLE==firstGLE), "InternetCrackUrl returned %d with GLE=%d (expected to return %d)\n",
     ret, GLE, firstret);
 
-  copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 0, 2048, 1024);
+  copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 0, 1024, 1024);
   SetLastError(0xdeadbeef);
   ret = InternetCrackUrlA(TEST_URL3, 0, ICU_DECODE, &urlComponents);
   GLE = GetLastError();
@@ -490,7 +569,7 @@ static void InternetCrackUrl_test(void)
      "InternetCrackUrl returned %d with GLE=%d (expected to return 0 and ERROR_INVALID_HANDLE or ERROR_INSUFFICIENT_BUFFER)\n",
     ret, GLE);
 
-  copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 1024, 2048, 0);
+  copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 1024, 1024, 0);
   SetLastError(0xdeadbeef);
   ret = InternetCrackUrlA(TEST_URL3, 0, ICU_DECODE, &urlComponents);
   GLE = GetLastError();
@@ -507,8 +586,8 @@ static void InternetCrackUrl_test(void)
      "InternetCrackUrl returned %d with GLE=%d (expected to return 0 and ERROR_INVALID_PARAMETER)\n",
     ret, GLE);
 
-  copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 1024, 2048, 1024);
-  ret = InternetCrackUrl("about://host/blank", 0,0,&urlComponents);
+  copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 1024, 1024, 1024);
+  ret = InternetCrackUrlA("about://host/blank", 0,0,&urlComponents);
   ok(ret, "InternetCrackUrl failed with %d\n", GetLastError());
   ok(!strcmp(urlComponents.lpszScheme, "about"), "lpszScheme was \"%s\" instead of \"about\"\n", urlComponents.lpszScheme);
   ok(!strcmp(urlComponents.lpszHostName, "host"), "lpszHostName was \"%s\" instead of \"host\"\n", urlComponents.lpszHostName);
@@ -516,8 +595,8 @@ static void InternetCrackUrl_test(void)
 
   /* try a NULL lpszUrl */
   SetLastError(0xdeadbeef);
-  copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 1024, 2048, 1024);
-  ret = InternetCrackUrl(NULL, 0, 0, &urlComponents);
+  copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 1024, 1024, 1024);
+  ret = InternetCrackUrlA(NULL, 0, 0, &urlComponents);
   GLE = GetLastError();
   ok(ret == FALSE, "Expected InternetCrackUrl to fail\n");
   ok(GLE == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", GLE);
@@ -526,30 +605,48 @@ static void InternetCrackUrl_test(void)
    * we just need to fail and not return success
    */
   SetLastError(0xdeadbeef);
-  copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 1024, 2048, 1024);
-  ret = InternetCrackUrl("", 0, 0, &urlComponents);
+  copy_compsA(&urlSrc, &urlComponents, 32, 1024, 1024, 1024, 1024, 1024);
+  ret = InternetCrackUrlA("", 0, 0, &urlComponents);
   GLE = GetLastError();
   ok(ret == FALSE, "Expected InternetCrackUrl to fail\n");
   ok(GLE != 0xdeadbeef && GLE != ERROR_SUCCESS, "Expected GLE to represent a failure\n");
 
   /* Invalid Call: must set size of components structure (Windows only
    * enforces this on the InternetCrackUrlA version of the call) */
-  copy_compsA(&urlSrc, &urlComponents, 0, 1024, 1024, 1024, 2048, 1024);
+  copy_compsA(&urlSrc, &urlComponents, 0, 1024, 1024, 1024, 1024, 1024);
   SetLastError(0xdeadbeef);
   urlComponents.dwStructSize = 0;
   ret = InternetCrackUrlA(TEST_URL, 0, 0, &urlComponents);
+  GLE = GetLastError();
   ok(ret == FALSE, "Expected InternetCrackUrl to fail\n");
   ok(GLE != 0xdeadbeef && GLE != ERROR_SUCCESS, "Expected GLE to represent a failure\n");
 
   /* Invalid Call: size of dwStructSize must be one of the "standard" sizes
    * of the URL_COMPONENTS structure (Windows only enforces this on the
    * InternetCrackUrlA version of the call) */
-  copy_compsA(&urlSrc, &urlComponents, 0, 1024, 1024, 1024, 2048, 1024);
+  copy_compsA(&urlSrc, &urlComponents, 0, 1024, 1024, 1024, 1024, 1024);
   SetLastError(0xdeadbeef);
   urlComponents.dwStructSize = sizeof(urlComponents) + 1;
   ret = InternetCrackUrlA(TEST_URL, 0, 0, &urlComponents);
+  GLE = GetLastError();
   ok(ret == FALSE, "Expected InternetCrackUrl to fail\n");
   ok(GLE != 0xdeadbeef && GLE != ERROR_SUCCESS, "Expected GLE to represent a failure\n");
+
+  SetLastError(0xdeadbeef);
+  memset(&urlComponents, 0, sizeof(urlComponents));
+  urlComponents.dwStructSize = sizeof(urlComponents);
+  ret = InternetCrackUrlA("file.txt", 0, 0, &urlComponents);
+  GLE = GetLastError();
+  ok(ret == FALSE, "Expected InternetCrackUrl to fail\n");
+  ok(GLE == ERROR_INTERNET_UNRECOGNIZED_SCHEME, "Expected GLE to represent a failure\n");
+
+  SetLastError(0xdeadbeef);
+  memset(&urlComponents, 0, sizeof(urlComponents));
+  urlComponents.dwStructSize = sizeof(urlComponents);
+  ret = InternetCrackUrlA("www.winehq.org", 0, 0, &urlComponents);
+  GLE = GetLastError();
+  ok(ret == FALSE, "Expected InternetCrackUrl to fail\n");
+  ok(GLE == ERROR_INTERNET_UNRECOGNIZED_SCHEME, "Expected GLE to represent a failure\n");
 }
 
 static void InternetCrackUrlW_test(void)
@@ -620,11 +717,7 @@ static void InternetCrackUrlW_test(void)
     ok( comp.dwExtraInfoLength == 29, "extra length wrong\n");
  
     urlpart[0]=0;
-    scheme[0]=0;
-    extra[0]=0;
     host[0]=0;
-    user[0]=0;
-    pwd[0]=0;
     memset(&comp, 0, sizeof comp);
     comp.dwStructSize = sizeof comp;
     comp.lpszHostName = host;
@@ -642,11 +735,7 @@ static void InternetCrackUrlW_test(void)
     ok( comp.dwExtraInfoLength == 0, "extra length wrong\n");
 
     urlpart[0]=0;
-    scheme[0]=0;
-    extra[0]=0;
     host[0]=0;
-    user[0]=0;
-    pwd[0]=0;
     memset(&comp, 0, sizeof comp);
     comp.dwStructSize = sizeof comp;
     comp.lpszHostName = host;
@@ -687,12 +776,10 @@ static void InternetCrackUrlW_test(void)
     comp.dwExtraInfoLength = sizeof(extra)/sizeof(extra[0]);
 
     r = InternetCrackUrlW(url2, 0, 0, &comp);
-    todo_wine {
     ok(!r, "InternetCrackUrl should have failed\n");
     ok(GetLastError() == ERROR_INTERNET_UNRECOGNIZED_SCHEME,
         "InternetCrackUrl should have failed with error ERROR_INTERNET_UNRECOGNIZED_SCHEME instead of error %d\n",
         GetLastError());
-    }
 
     /* Test to see whether cracking a URL without a filename initializes urlpart */
     urlpart[0]=0xba;
@@ -719,9 +806,22 @@ static void InternetCrackUrlW_test(void)
     ok( r, "InternetCrackUrlW failed unexpectedly\n");
     ok( host[0] == 'x', "host should be x.org\n");
     ok( urlpart[0] == 0, "urlpart should be empty\n");
+
+    urlpart[0] = 0;
+    host[0] = 0;
+    memset(&comp, 0, sizeof(comp));
+    comp.dwStructSize = sizeof(comp);
+    comp.lpszHostName = host;
+    comp.dwHostNameLength = sizeof(host)/sizeof(host[0]);
+    comp.lpszUrlPath = urlpart;
+    comp.dwUrlPathLength = sizeof(urlpart)/sizeof(urlpart[0]);
+    r = InternetCrackUrlW(url3, 0, ICU_DECODE, &comp);
+    ok(r, "InternetCrackUrlW failed unexpectedly\n");
+    ok(!strcmp_wa(host, "x.org"), "host is %s, should be x.org\n", wine_dbgstr_w(host));
+    todo_wine ok(urlpart[0] == 0, "urlpart should be empty\n");
 }
 
-static void fill_url_components(LPURL_COMPONENTS lpUrlComponents)
+static void fill_url_components(URL_COMPONENTSA *lpUrlComponents)
 {
     static CHAR http[]       = "http",
                 winehq[]     = "www.winehq.org",
@@ -730,7 +830,7 @@ static void fill_url_components(LPURL_COMPONENTS lpUrlComponents)
                 site_about[] = "/site/about",
                 empty[]      = "";
 
-    lpUrlComponents->dwStructSize = sizeof(URL_COMPONENTS);
+    lpUrlComponents->dwStructSize = sizeof(URL_COMPONENTSA);
     lpUrlComponents->lpszScheme = http;
     lpUrlComponents->dwSchemeLength = strlen(lpUrlComponents->lpszScheme);
     lpUrlComponents->nScheme = INTERNET_SCHEME_HTTP;
@@ -749,7 +849,7 @@ static void fill_url_components(LPURL_COMPONENTS lpUrlComponents)
 
 static void InternetCreateUrlA_test(void)
 {
-	URL_COMPONENTS urlComp;
+	URL_COMPONENTSA urlComp;
 	LPSTR szUrl;
 	DWORD len = -1;
 	BOOL ret;
@@ -777,7 +877,7 @@ static void InternetCreateUrlA_test(void)
 	ok(len == -1, "Expected len -1, got %d\n", len);
 
 	/* test zero'ed lpUrlComponents */
-	ZeroMemory(&urlComp, sizeof(URL_COMPONENTS));
+	ZeroMemory(&urlComp, sizeof(urlComp));
 	SetLastError(0xdeadbeef);
 	ret = InternetCreateUrlA(&urlComp, 0, NULL, &len);
 	ok(!ret, "Expected failure\n");
@@ -792,7 +892,6 @@ static void InternetCreateUrlA_test(void)
 	ok(!ret, "Expected failure\n");
 	ok(GetLastError() == ERROR_INVALID_PARAMETER,
 		"Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
-	ok(len == -1, "Expected len -1, got %d\n", len);
 
 	/* test valid lpUrlComponents, empty szUrl
 	 * lpdwUrlLength is size of buffer required on exit, including
@@ -827,12 +926,9 @@ static void InternetCreateUrlA_test(void)
 	/* alloc-ed szUrl, NULL lpszScheme
 	 * shows that it uses nScheme instead
 	 */
-	SetLastError(0xdeadbeef);
 	urlComp.lpszScheme = NULL;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 50, "Expected len 50, got %d\n", len);
 	ok(!strcmp(szUrl, CREATE_URL1), "Expected %s, got %s\n", CREATE_URL1, szUrl);
 
@@ -840,48 +936,36 @@ static void InternetCreateUrlA_test(void)
 	 * any nScheme out of range seems ignored
 	 */
 	fill_url_components(&urlComp);
-	SetLastError(0xdeadbeef);
 	urlComp.nScheme = -3;
 	len++;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 50, "Expected len 50, got %d\n", len);
 
 	/* test valid lpUrlComponents, alloc-ed szUrl */
 	fill_url_components(&urlComp);
-	SetLastError(0xdeadbeef);
 	len = 51;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 50, "Expected len 50, got %d\n", len);
 	ok(strstr(szUrl, "80") == NULL, "Didn't expect to find 80 in szUrl\n");
 	ok(!strcmp(szUrl, CREATE_URL1), "Expected %s, got %s\n", CREATE_URL1, szUrl);
 
 	/* valid username, NULL password */
 	fill_url_components(&urlComp);
-	SetLastError(0xdeadbeef);
 	urlComp.lpszPassword = NULL;
 	len = 42;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 41, "Expected len 41, got %d\n", len);
 	ok(!strcmp(szUrl, CREATE_URL2), "Expected %s, got %s\n", CREATE_URL2, szUrl);
 
 	/* valid username, empty password */
 	fill_url_components(&urlComp);
-	SetLastError(0xdeadbeef);
 	urlComp.lpszPassword = empty;
 	len = 51;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 50, "Expected len 50, got %d\n", len);
 	ok(!strcmp(szUrl, CREATE_URL3), "Expected %s, got %s\n", CREATE_URL3, szUrl);
 
@@ -903,39 +987,30 @@ static void InternetCreateUrlA_test(void)
 	 * if password is provided, username has to exist
 	 */
 	fill_url_components(&urlComp);
-	SetLastError(0xdeadbeef);
 	urlComp.lpszUserName = empty;
 	len = 51;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 50, "Expected len 50, got %d\n", len);
 	ok(!strcmp(szUrl, CREATE_URL5), "Expected %s, got %s\n", CREATE_URL5, szUrl);
 
 	/* NULL username, NULL password */
 	fill_url_components(&urlComp);
-	SetLastError(0xdeadbeef);
 	urlComp.lpszUserName = NULL;
 	urlComp.lpszPassword = NULL;
 	len = 42;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 32, "Expected len 32, got %d\n", len);
 	ok(!strcmp(szUrl, CREATE_URL4), "Expected %s, got %s\n", CREATE_URL4, szUrl);
 
 	/* empty username, empty password */
 	fill_url_components(&urlComp);
-	SetLastError(0xdeadbeef);
 	urlComp.lpszUserName = empty;
 	urlComp.lpszPassword = empty;
 	len = 51;
 	ret = InternetCreateUrlA(&urlComp, 0, szUrl, &len);
 	ok(ret, "Expected success\n");
-	ok(GetLastError() == 0xdeadbeef,
-		"Expected 0xdeadbeef, got %d\n", GetLastError());
 	ok(len == 50, "Expected len 50, got %d\n", len);
 	ok(!strcmp(szUrl, CREATE_URL5), "Expected %s, got %s\n", CREATE_URL5, szUrl);
 
@@ -968,7 +1043,7 @@ static void InternetCreateUrlA_test(void)
 	HeapFree(GetProcessHeap(), 0, szUrl);
 
 	memset(&urlComp, 0, sizeof(urlComp));
-	urlComp.dwStructSize = sizeof(URL_COMPONENTS);
+	urlComp.dwStructSize = sizeof(urlComp);
 	urlComp.lpszScheme = http;
 	urlComp.dwSchemeLength = 0;
 	urlComp.nScheme = INTERNET_SCHEME_HTTP;
@@ -993,7 +1068,7 @@ static void InternetCreateUrlA_test(void)
 	HeapFree(GetProcessHeap(), 0, szUrl);
 
 	memset(&urlComp, 0, sizeof(urlComp));
-	urlComp.dwStructSize = sizeof(URL_COMPONENTS);
+	urlComp.dwStructSize = sizeof(urlComp);
 	urlComp.lpszScheme = https;
 	urlComp.dwSchemeLength = 0;
 	urlComp.nScheme = INTERNET_SCHEME_HTTP;
@@ -1018,7 +1093,7 @@ static void InternetCreateUrlA_test(void)
 	HeapFree(GetProcessHeap(), 0, szUrl);
 
 	memset(&urlComp, 0, sizeof(urlComp));
-	urlComp.dwStructSize = sizeof(URL_COMPONENTS);
+	urlComp.dwStructSize = sizeof(urlComp);
 	urlComp.lpszScheme = about;
 	urlComp.dwSchemeLength = 5;
 	urlComp.lpszUrlPath = blank;
@@ -1034,7 +1109,7 @@ static void InternetCreateUrlA_test(void)
 	HeapFree(GetProcessHeap(), 0, szUrl);
 
 	memset(&urlComp, 0, sizeof(urlComp));
-	urlComp.dwStructSize = sizeof(URL_COMPONENTS);
+	urlComp.dwStructSize = sizeof(urlComp);
 	urlComp.lpszScheme = about;
 	urlComp.lpszHostName = host;
 	urlComp.lpszUrlPath = blank;
@@ -1049,7 +1124,7 @@ static void InternetCreateUrlA_test(void)
 	HeapFree(GetProcessHeap(), 0, szUrl);
 
 	memset(&urlComp, 0, sizeof(urlComp));
-	urlComp.dwStructSize = sizeof(URL_COMPONENTS);
+	urlComp.dwStructSize = sizeof(urlComp);
 	urlComp.nPort = 8080;
 	urlComp.lpszScheme = about;
 	len = strlen(CREATE_URL11);
@@ -1062,7 +1137,7 @@ static void InternetCreateUrlA_test(void)
 	HeapFree(GetProcessHeap(), 0, szUrl);
 
 	memset(&urlComp, 0, sizeof(urlComp));
-	urlComp.dwStructSize = sizeof(URL_COMPONENTS);
+	urlComp.dwStructSize = sizeof(urlComp);
 	urlComp.lpszScheme = http;
 	urlComp.dwSchemeLength = 0;
 	urlComp.nScheme = INTERNET_SCHEME_HTTP;
@@ -1079,7 +1154,7 @@ static void InternetCreateUrlA_test(void)
 	HeapFree(GetProcessHeap(), 0, szUrl);
 
     memset(&urlComp, 0, sizeof(urlComp));
-    urlComp.dwStructSize = sizeof(URL_COMPONENTS);
+    urlComp.dwStructSize = sizeof(urlComp);
     urlComp.lpszScheme = http;
     urlComp.dwSchemeLength = strlen(urlComp.lpszScheme);
     urlComp.lpszHostName = localhost;
@@ -1099,6 +1174,47 @@ static void InternetCreateUrlA_test(void)
     HeapFree(GetProcessHeap(), 0, szUrl);
 }
 
+static void InternetCanonicalizeUrl_test(void)
+{
+    char src[] = "http://www.winehq.org/%27/ /./>/#>  ";
+    char dst[64];
+    DWORD dstlen;
+
+    dstlen = sizeof(dst);
+    InternetCanonicalizeUrlA(src, dst, &dstlen, 0);
+    ok(strcmp(dst, "http://www.winehq.org/%27/%20/%3E/#>") == 0, "Got \"%s\"\n", dst);
+
+    /* despite what MSDN says, ICU_BROWSER_MODE seems to be ignored */
+    dstlen = sizeof(dst);
+    InternetCanonicalizeUrlA(src, dst, &dstlen, ICU_BROWSER_MODE);
+    ok(strcmp(dst, "http://www.winehq.org/%27/%20/%3E/#>") == 0, "Got \"%s\"\n", dst);
+
+    /* ICU_ESCAPE is supposed to be ignored */
+    dstlen = sizeof(dst);
+    InternetCanonicalizeUrlA(src, dst, &dstlen, ICU_ESCAPE);
+    ok(strcmp(dst, "http://www.winehq.org/%27/%20/%3E/#>") == 0, "Got \"%s\"\n", dst);
+
+    dstlen = sizeof(dst);
+    InternetCanonicalizeUrlA(src, dst, &dstlen, ICU_DECODE);
+    ok(strcmp(dst, "http://www.winehq.org/'/%20/%3E/#>") == 0, "Got \"%s\"\n", dst);
+
+    dstlen = sizeof(dst);
+    InternetCanonicalizeUrlA(src, dst, &dstlen, ICU_ENCODE_PERCENT);
+    ok(strcmp(dst, "http://www.winehq.org/%2527/%20/%3E/#>") == 0, "Got \"%s\"\n", dst);
+
+    dstlen = sizeof(dst);
+    InternetCanonicalizeUrlA(src, dst, &dstlen, ICU_ENCODE_SPACES_ONLY);
+    ok(strcmp(dst, "http://www.winehq.org/%27/%20/>/#>") == 0, "Got \"%s\"\n", dst);
+
+    dstlen = sizeof(dst);
+    InternetCanonicalizeUrlA(src, dst, &dstlen, ICU_NO_ENCODE);
+    ok(strcmp(dst, "http://www.winehq.org/%27/ />/#>") == 0, "Got \"%s\"\n", dst);
+
+    dstlen = sizeof(dst);
+    InternetCanonicalizeUrlA(src, dst, &dstlen, ICU_NO_META);
+    ok(strcmp(dst, "http://www.winehq.org/%27/%20/./%3E/#>") == 0, "Got \"%s\"\n", dst);
+}
+
 START_TEST(url)
 {
     int i;
@@ -1111,7 +1227,10 @@ START_TEST(url)
     for(i=0; i < sizeof(crack_url_tests)/sizeof(*crack_url_tests); i++)
         test_crack_url(crack_url_tests+i);
 
+    test_long_url();
+
     InternetCrackUrl_test();
     InternetCrackUrlW_test();
     InternetCreateUrlA_test();
+    InternetCanonicalizeUrl_test();
 }

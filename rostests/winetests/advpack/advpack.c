@@ -19,12 +19,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdio.h>
-#include <stdarg.h>
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <objbase.h>
 #include <advpub.h>
 #include <assert.h>
-#include "wine/test.h"
+#include <wine/test.h>
 
 /* defines for the TranslateInfString/Ex tests */
 #define TEST_STRING1 "\\Application Name"
@@ -32,15 +38,15 @@
 
 /* defines for the SetPerUserSecValues tests */
 #define GUID_KEY    "SOFTWARE\\Microsoft\\Active Setup\\Installed Components\\guid"
-#define REG_VAL_EXISTS(key, value)   !RegQueryValueEx(key, value, NULL, NULL, NULL, NULL)
-#define OPEN_GUID_KEY() !RegOpenKey(HKEY_LOCAL_MACHINE, GUID_KEY, &guid)
+#define REG_VAL_EXISTS(key, value)   !RegQueryValueExA(key, value, NULL, NULL, NULL, NULL)
+#define OPEN_GUID_KEY() !RegOpenKeyA(HKEY_LOCAL_MACHINE, GUID_KEY, &guid)
 
 static HMODULE hAdvPack;
 static HRESULT (WINAPI *pCloseINFEngine)(HINF);
 static HRESULT (WINAPI *pDelNode)(LPCSTR,DWORD);
 static HRESULT (WINAPI *pGetVersionFromFile)(LPCSTR,LPDWORD,LPDWORD,BOOL);
 static HRESULT (WINAPI *pOpenINFEngine)(PCSTR,PCSTR,DWORD,HINF*,PVOID);
-static HRESULT (WINAPI *pSetPerUserSecValues)(PPERUSERSECTION pPerUser);
+static HRESULT (WINAPI *pSetPerUserSecValues)(PPERUSERSECTIONA pPerUser);
 static HRESULT (WINAPI *pTranslateInfString)(LPCSTR,LPCSTR,LPCSTR,LPCSTR,LPSTR,DWORD,LPDWORD,LPVOID);
 static HRESULT (WINAPI *pTranslateInfStringEx)(HINF,PCSTR,PCSTR,PCSTR,PSTR,DWORD,PDWORD,PVOID);
 
@@ -130,7 +136,7 @@ static void delnode_test(void)
     HRESULT hr;
     HANDLE hn;
     CHAR currDir[MAX_PATH];
-    int currDirLen;
+    UINT currDirLen;
 
     /* Native DelNode apparently does not support relative paths, so we use
        absolute paths for testing */
@@ -147,47 +153,46 @@ static void delnode_test(void)
     ok (hr == E_FAIL, "DelNode called with empty pathname should return E_FAIL\n");
 
     /* Test deletion of a file. */
-    hn = CreateFile("DelNodeTestFile1", GENERIC_WRITE, 0, NULL,
+    hn = CreateFileA("DelNodeTestFile1", GENERIC_WRITE, 0, NULL,
         CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     assert(hn != INVALID_HANDLE_VALUE);
     CloseHandle(hn);
-    hr = pDelNode(lstrcat(currDir, "\\DelNodeTestFile1"), 0);
+    hr = pDelNode(lstrcatA(currDir, "\\DelNodeTestFile1"), 0);
     ok (hr == S_OK, "DelNode failed deleting a single file\n");
     currDir[currDirLen] = '\0';
 
     /* Test deletion of an empty directory. */
     CreateDirectoryA("DelNodeTestDir", NULL);
-    hr = pDelNode(lstrcat(currDir, "\\DelNodeTestDir"), 0);
+    hr = pDelNode(lstrcatA(currDir, "\\DelNodeTestDir"), 0);
     ok (hr == S_OK, "DelNode failed deleting an empty directory\n");
     currDir[currDirLen] = '\0';
 
     /* Test deletion of a directory containing one file. */
     CreateDirectoryA("DelNodeTestDir", NULL);
-    hn = CreateFile("DelNodeTestDir\\DelNodeTestFile1", GENERIC_WRITE, 0, NULL,
+    hn = CreateFileA("DelNodeTestDir\\DelNodeTestFile1", GENERIC_WRITE, 0, NULL,
         CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     assert(hn != INVALID_HANDLE_VALUE);
     CloseHandle(hn);
-    hr = pDelNode(lstrcat(currDir, "\\DelNodeTestDir"), 0);
+    hr = pDelNode(lstrcatA(currDir, "\\DelNodeTestDir"), 0);
     ok (hr == S_OK, "DelNode failed deleting a directory containing one file\n");
     currDir[currDirLen] = '\0';
 
     /* Test deletion of a directory containing multiple files. */
     CreateDirectoryA("DelNodeTestDir", NULL);
-    hn = CreateFile("DelNodeTestDir\\DelNodeTestFile1", GENERIC_WRITE, 0, NULL,
+    hn = CreateFileA("DelNodeTestDir\\DelNodeTestFile1", GENERIC_WRITE, 0, NULL,
         CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     assert(hn != INVALID_HANDLE_VALUE);
     CloseHandle(hn);
-    hn = CreateFile("DelNodeTestDir\\DelNodeTestFile2", GENERIC_WRITE, 0, NULL,
+    hn = CreateFileA("DelNodeTestDir\\DelNodeTestFile2", GENERIC_WRITE, 0, NULL,
         CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     assert(hn != INVALID_HANDLE_VALUE);
     CloseHandle(hn);
-    hn = CreateFile("DelNodeTestDir\\DelNodeTestFile3", GENERIC_WRITE, 0, NULL,
+    hn = CreateFileA("DelNodeTestDir\\DelNodeTestFile3", GENERIC_WRITE, 0, NULL,
         CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     assert(hn != INVALID_HANDLE_VALUE);
     CloseHandle(hn);
-    hr = pDelNode(lstrcat(currDir, "\\DelNodeTestDir"), 0);
+    hr = pDelNode(lstrcatA(currDir, "\\DelNodeTestDir"), 0);
     ok (hr == S_OK, "DelNode failed deleting a directory containing multiple files\n");
-    currDir[currDirLen] = '\0';
 }
 
 static void append_str(char **str, const char *data, ...)
@@ -205,8 +210,8 @@ static void create_inf_file(void)
     char data[1024];
     char *ptr = data;
     DWORD dwNumberOfBytesWritten;
-    HANDLE hf = CreateFile(inf_file, GENERIC_WRITE, 0, NULL,
-                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hf = CreateFileA(inf_file, GENERIC_WRITE, 0, NULL,
+                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     append_str(&ptr, "[Version]\n");
     append_str(&ptr, "Signature=\"$Chicago$\"\n");
@@ -319,8 +324,8 @@ static void translateinfstring_test(void)
         ok(dwSize == 25, "Expected size 25, got %d\n", dwSize);
     }
 
-    DeleteFile("c:\\a.inf");
-    DeleteFile(inf_file);
+    DeleteFileA("c:\\a.inf");
+    DeleteFileA(inf_file);
 }
 
 static void translateinfstringex_test(void)
@@ -444,9 +449,9 @@ static void translateinfstringex_test(void)
     hr = pTranslateInfStringEx(hinf, inf_file, "Options.NTx86", "Result1",
                               buffer, size, &size, NULL);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(!lstrcmpi(buffer, PROG_FILES_ROOT),
+    ok(!lstrcmpiA(buffer, PROG_FILES_ROOT),
            "Expected %s, got %s\n", PROG_FILES_ROOT, buffer);
-    ok(size == lstrlenA(PROG_FILES_ROOT)+1, "Expected size %d, got %d\n",
+    ok(size == strlen(PROG_FILES_ROOT)+1, "Expected size %d, got %d\n",
            lstrlenA(PROG_FILES_ROOT)+1, size);
 
     memset(buffer, 'a', APP_PATH_LEN);
@@ -455,14 +460,14 @@ static void translateinfstringex_test(void)
     hr = pTranslateInfStringEx(hinf, inf_file, "Options.NTx86", "Result2",
                               buffer, size, &size, NULL);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(!lstrcmpi(buffer, PROG_FILES_ROOT),
+    ok(!lstrcmpiA(buffer, PROG_FILES_ROOT),
            "Expected %s, got %s\n", PROG_FILES_ROOT, buffer);
-    ok(size == lstrlenA(PROG_FILES_ROOT)+1, "Expected size %d, got %d\n",
+    ok(size == strlen(PROG_FILES_ROOT)+1, "Expected size %d, got %d\n",
            lstrlenA(PROG_FILES_ROOT)+1, size);
 
     {
         char drive[MAX_PATH];
-        lstrcpy(drive, PROG_FILES_ROOT);
+        lstrcpyA(drive, PROG_FILES_ROOT);
         drive[3] = 0x00; /* Just keep the system drive plus '\' */
 
         memset(buffer, 'a', APP_PATH_LEN);
@@ -471,9 +476,9 @@ static void translateinfstringex_test(void)
         hr = pTranslateInfStringEx(hinf, inf_file, "Options.NTx86", "Result3",
                                   buffer, size, &size, NULL);
         ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-        ok(!lstrcmpi(buffer, drive),
+        ok(!lstrcmpiA(buffer, drive),
                "Expected %s, got %s\n", drive, buffer);
-        ok(size == lstrlenA(drive)+1, "Expected size %d, got %d\n",
+        ok(size == strlen(drive)+1, "Expected size %d, got %d\n",
                lstrlenA(drive)+1, size);
     }
 
@@ -488,7 +493,7 @@ static void translateinfstringex_test(void)
         char data[1024];
         char *ptr = data;
         DWORD dwNumberOfBytesWritten;
-        HANDLE hf = CreateFile(inf_file, GENERIC_WRITE, 0, NULL,
+        HANDLE hf = CreateFileA(inf_file, GENERIC_WRITE, 0, NULL,
                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
         append_str(&ptr, "[Version]\n");
@@ -529,9 +534,9 @@ static void translateinfstringex_test(void)
     hr = pTranslateInfStringEx(hinf, inf_file, "Options.NTx86", "Result2",
                               buffer, size, &size, NULL);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-    ok(!lstrcmpi(buffer, PROG_FILES_ROOT),
+    ok(!lstrcmpiA(buffer, PROG_FILES_ROOT),
            "Expected %s, got %s\n", PROG_FILES_ROOT, buffer);
-    ok(size == lstrlenA(PROG_FILES_ROOT)+1, "Expected size %d, got %d\n",
+    ok(size == strlen(PROG_FILES_ROOT)+1, "Expected size %d, got %d\n",
            lstrlenA(PROG_FILES_ROOT)+1, size);
 
     /* close the INF again */
@@ -546,10 +551,10 @@ static BOOL check_reg_str(HKEY hkey, LPCSTR name, LPCSTR value)
     DWORD size = MAX_PATH;
     char check[MAX_PATH];
 
-    if (RegQueryValueEx(hkey, name, NULL, NULL, (LPBYTE)check, &size))
+    if (RegQueryValueExA(hkey, name, NULL, NULL, (LPBYTE)check, &size))
         return FALSE;
 
-    return !lstrcmp(check, value);
+    return !lstrcmpA(check, value);
 }
 
 static BOOL check_reg_dword(HKEY hkey, LPCSTR name, DWORD value)
@@ -557,7 +562,7 @@ static BOOL check_reg_dword(HKEY hkey, LPCSTR name, DWORD value)
     DWORD size = sizeof(DWORD);
     DWORD check;
 
-    if (RegQueryValueEx(hkey, name, NULL, NULL, (LPBYTE)&check, &size))
+    if (RegQueryValueExA(hkey, name, NULL, NULL, (LPBYTE)&check, &size))
         return FALSE;
 
     return (check == value);
@@ -565,15 +570,15 @@ static BOOL check_reg_dword(HKEY hkey, LPCSTR name, DWORD value)
 
 static void setperusersecvalues_test(void)
 {
-    PERUSERSECTION peruser;
+    PERUSERSECTIONA peruser;
     HRESULT hr;
     HKEY guid;
 
-    lstrcpy(peruser.szDispName, "displayname");
-    lstrcpy(peruser.szLocale, "locale");
-    lstrcpy(peruser.szStub, "stub");
-    lstrcpy(peruser.szVersion, "1,1,1,1");
-    lstrcpy(peruser.szCompID, "compid");
+    lstrcpyA(peruser.szDispName, "displayname");
+    lstrcpyA(peruser.szLocale, "locale");
+    lstrcpyA(peruser.szStub, "stub");
+    lstrcpyA(peruser.szVersion, "1,1,1,1");
+    lstrcpyA(peruser.szCompID, "compid");
     peruser.dwIsInstalled = 1;
     peruser.bRollback = FALSE;
 
@@ -594,7 +599,7 @@ static void setperusersecvalues_test(void)
     ok(!OPEN_GUID_KEY(), "Expected guid key to not exist\n");
 
     /* set initial values */
-    lstrcpy(peruser.szGUID, "guid");
+    lstrcpyA(peruser.szGUID, "guid");
     hr = pSetPerUserSecValues(&peruser);
     if (hr == E_FAIL)
     {
@@ -616,7 +621,7 @@ static void setperusersecvalues_test(void)
     ok(!REG_VAL_EXISTS(guid, "RealStubPath"), "Expected RealStubPath to not exist\n");
 
     /* raise the version, but bRollback is FALSE, so vals not saved */
-    lstrcpy(peruser.szVersion, "2,1,1,1");
+    lstrcpyA(peruser.szVersion, "2,1,1,1");
     hr = pSetPerUserSecValues(&peruser);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
     ok(check_reg_str(guid, NULL, "displayname"), "Expected displayname\n");
@@ -633,7 +638,7 @@ static void setperusersecvalues_test(void)
 
     /* raise the version again, bRollback is TRUE so vals are saved */
     peruser.bRollback = TRUE;
-    lstrcpy(peruser.szVersion, "3,1,1,1");
+    lstrcpyA(peruser.szVersion, "3,1,1,1");
     hr = pSetPerUserSecValues(&peruser);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
     ok(check_reg_str(guid, NULL, "displayname"), "Expected displayname\n");
@@ -653,7 +658,7 @@ static void setperusersecvalues_test(void)
            "Expected real stub\n");
     }
 
-    RegDeleteKey(HKEY_LOCAL_MACHINE, GUID_KEY);
+    RegDeleteKeyA(HKEY_LOCAL_MACHINE, GUID_KEY);
 }
 
 START_TEST(advpack)
@@ -662,10 +667,10 @@ START_TEST(advpack)
         return;
 
     /* Make sure we create the temporary file in a directory
-     * were we have enough rights
+     * where we have adequate rights
      */
-    GetTempPath(MAX_PATH, inf_file);
-    lstrcat(inf_file,"test.inf");
+    GetTempPathA(MAX_PATH, inf_file);
+    lstrcatA(inf_file,"test.inf");
 
     get_progfiles_dir();
 

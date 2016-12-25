@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * reactos/apps/lpc/creport.c
  *
  * To be run in a real WNT 4.0 system to

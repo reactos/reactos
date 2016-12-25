@@ -23,13 +23,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include <windows.h>
 
 #include <math.h>
 
-#include "wine/test.h"
-#include "dsound.h"
-#include "mmreg.h"
+#include <wine/test.h>
+#include <wingdi.h>
+#include <mmreg.h>
+#include <dsound.h>
+#include <ks.h>
+#include <ksmedia.h>
 #include "dsound_test.h"
 
 static HRESULT (WINAPI *pDirectSoundEnumerateA)(LPDSENUMCALLBACKA,LPVOID)=NULL;
@@ -181,6 +188,7 @@ void test_buffer8(LPDIRECTSOUND8 dso, LPDIRECTSOUNDBUFFER * dsbo,
     DSBCAPS dsbcaps;
     WAVEFORMATEX wfx,wfx2;
     DWORD size,status,freq;
+    BOOL ieee = FALSE;
     int ref;
 
     /* DSOUND: Error: Invalid caps pointer */
@@ -214,11 +222,15 @@ void test_buffer8(LPDIRECTSOUND8 dso, LPDIRECTSOUNDBUFFER * dsbo,
 
     if (size == sizeof(WAVEFORMATEX)) {
         rc=IDirectSoundBuffer_GetFormat(*dsbo,&wfx,size,NULL);
+        ieee = (wfx.wFormatTag == WAVE_FORMAT_IEEE_FLOAT);
     } else if (size == sizeof(WAVEFORMATEXTENSIBLE)) {
         WAVEFORMATEXTENSIBLE wfxe;
         rc=IDirectSoundBuffer_GetFormat(*dsbo,(WAVEFORMATEX*)&wfxe,size,NULL);
         wfx = wfxe.Format;
-    }
+        ieee = IsEqualGUID(&wfxe.SubFormat, &KSDATAFORMAT_SUBTYPE_IEEE_FLOAT);
+    } else
+        return;
+
     ok(rc==DS_OK,"IDirectSoundBuffer_GetFormat() failed: %08x\n", rc);
     if (rc==DS_OK && winetest_debug > 1) {
         trace("    Format: %s tag=0x%04x %dx%dx%d avg.B/s=%d align=%d\n",
@@ -447,7 +459,7 @@ void test_buffer8(LPDIRECTSOUND8 dso, LPDIRECTSOUNDBUFFER * dsbo,
         ok(rc==DSERR_INVALIDPARAM, "IDirectSoundBuffer_Lock() should have "
            "returned DSERR_INVALIDPARAM, returned %08x\n", rc);
 
-        state.wave=wave_generate_la(&wfx,duration,&state.wave_len);
+        state.wave=wave_generate_la(&wfx,duration,&state.wave_len,ieee);
 
         state.dsbo=*dsbo;
         state.wfx=&wfx;
@@ -643,7 +655,10 @@ static HRESULT test_secondary8(LPGUID lpGuid, int play,
                "IDirectSound8_CreateSoundBuffer(secondary) should have "
                "returned DSERR_INVALIDPARAM, returned %08x\n", rc);
             if (secondary)
+            {
                 ref=IDirectSoundBuffer_Release(secondary);
+                ok(ref==0,"IDirectSoundBuffer_Release() primary has %d references, should have 0\n",ref);
+            }
             init_format(&wfx,WAVE_FORMAT_PCM,22050,16,1);
         }
 
@@ -699,7 +714,7 @@ static HRESULT test_secondary8(LPGUID lpGuid, int play,
                 rc=IDirectSoundBuffer_SetPan(secondary,-1000);
                 ok(rc==DS_OK,"IDirectSoundBuffer_SetPan(secondary) failed: %08x\n",rc);
                 rc=IDirectSoundBuffer_GetPan(secondary,&pan);
-                ok(rc==DS_OK,"IDirectSoundBuffer_SetPan(secondary) failed: %08x\n",rc);
+                ok(rc==DS_OK,"IDirectSoundBuffer_GetPan(secondary) failed: %08x\n",rc);
                 ok(pan==-1000,"secondary: wrong pan %d instead of -1000\n",
                    pan);
 
@@ -1073,11 +1088,14 @@ return DSERR_GENERIC;
     return rc;
 }
 
+static unsigned driver_count = 0;
+
 static BOOL WINAPI dsenum_callback(LPGUID lpGuid, LPCSTR lpcstrDescription,
                                    LPCSTR lpcstrModule, LPVOID lpContext)
 {
     HRESULT rc;
     trace("*** Testing %s - %s ***\n",lpcstrDescription,lpcstrModule);
+    driver_count++;
 
     rc = test_for_driver8(lpGuid);
     if (rc == DSERR_NODRIVER) {
@@ -1124,6 +1142,7 @@ static void ds3d8_tests(void)
     HRESULT rc;
     rc=pDirectSoundEnumerateA(&dsenum_callback,NULL);
     ok(rc==DS_OK,"DirectSoundEnumerateA() failed: %08x\n",rc);
+    trace("tested %u DirectSound drivers\n", driver_count);
 }
 
 START_TEST(ds3d8)
@@ -1143,12 +1162,12 @@ START_TEST(ds3d8)
         if (pDirectSoundCreate8)
             ds3d8_tests();
         else
-            skip("ds3d8 test skipped\n");
+            skip("DirectSoundCreate8 missing - skipping all tests\n");
 
         FreeLibrary(hDsound);
     }
     else
-        skip("dsound.dll not found!\n");
+        skip("dsound.dll not found - skipping all tests\n");
 
     CoUninitialize();
 }

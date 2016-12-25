@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * FILE  : reactos/apps/shm/shmsrv.c
  * AUTHOR: David Welch
  */

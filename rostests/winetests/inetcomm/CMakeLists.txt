@@ -1,5 +1,5 @@
 
-add_definitions(-D__ROS_LONG64__)
+add_definitions(-DUSE_WINE_TODOS)
 
 list(APPEND SOURCE
     mimeintl.c
@@ -7,12 +7,6 @@ list(APPEND SOURCE
     testlist.c)
 
 add_executable(inetcomm_winetest ${SOURCE})
-target_link_libraries(inetcomm_winetest wine)
-
-if(MSVC)
-    target_link_libraries(inetcomm_winetest uuid)
-endif()
-
 set_module_type(inetcomm_winetest win32cui)
-add_importlibs(inetcomm_winetest inetcomm oleaut32 ole32 msvcrt kernel32 ntdll)
+add_importlibs(inetcomm_winetest inetcomm oleaut32 ole32 msvcrt kernel32)
 add_cd_file(TARGET inetcomm_winetest DESTINATION reactos/bin FOR all)

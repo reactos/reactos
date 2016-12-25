@@ -42,29 +42,24 @@ static int mailslot_test(void)
             &dwMsgCount, &dwTimeout ), "getmailslotinfo succeeded\n");
 
     /* open a mailslot that doesn't exist */
-    hWriter = CreateFile(szmspath, GENERIC_READ|GENERIC_WRITE,
+    hWriter = CreateFileA(szmspath, GENERIC_READ|GENERIC_WRITE,
                              FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     ok( hWriter == INVALID_HANDLE_VALUE, "nonexistent mailslot\n");
 
     /* open a mailslot without the right name */
-    hSlot = CreateMailslot( "blah", 0, 0, NULL );
+    hSlot = CreateMailslotA( "blah", 0, 0, NULL );
     ok( hSlot == INVALID_HANDLE_VALUE,
             "Created mailslot with invalid name\n");
     ok( GetLastError() == ERROR_INVALID_NAME,
             "error should be ERROR_INVALID_NAME\n");
 
     /* open a mailslot with a null name */
-    hSlot = CreateMailslot( NULL, 0, 0, NULL );
-    ok( hSlot == INVALID_HANDLE_VALUE || broken(hSlot != INVALID_HANDLE_VALUE), /* win9x */
-        "Created mailslot with invalid name\n");
-    if (hSlot == INVALID_HANDLE_VALUE)
-        ok( GetLastError() == ERROR_PATH_NOT_FOUND,
-            "error should be ERROR_PATH_NOT_FOUND\n");
-    else  /* succeeds on win9x */
-        CloseHandle( hSlot );
+    hSlot = CreateMailslotA( NULL, 0, 0, NULL );
+    ok( hSlot == INVALID_HANDLE_VALUE, "Created mailslot with invalid name\n");
+    ok( GetLastError() == ERROR_PATH_NOT_FOUND, "error should be ERROR_PATH_NOT_FOUND\n");
 
     /* valid open, but with wacky parameters ... then check them */
-    hSlot = CreateMailslot( szmspath, -1, -1, NULL );
+    hSlot = CreateMailslotA( szmspath, -1, -1, NULL );
     ok( hSlot != INVALID_HANDLE_VALUE , "mailslot with valid name failed\n");
     dwMax = dwNext = dwMsgCount = dwTimeout = 0;
     ok( GetMailslotInfo( hSlot, &dwMax, &dwNext, &dwMsgCount, &dwTimeout ),
@@ -78,14 +73,29 @@ static int mailslot_test(void)
     ok( CloseHandle(hSlot), "failed to close mailslot\n");
 
     /* now open it for real */
-    hSlot = CreateMailslot( szmspath, 0, 0, NULL );
+    hSlot = CreateMailslotA( szmspath, 0, 0, NULL );
     ok( hSlot != INVALID_HANDLE_VALUE , "valid mailslot failed\n");
 
     /* try and read/write to it */
+    count = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = ReadFile(INVALID_HANDLE_VALUE, buffer, 0, &count, NULL);
+    ok(!ret, "ReadFile should fail\n");
+    ok(GetLastError() == ERROR_INVALID_HANDLE, "wrong error %u\n", GetLastError());
+    ok(count == 0, "expected 0, got %u\n", count);
+
+    count = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = ReadFile(hSlot, buffer, 0, &count, NULL);
+    ok(!ret, "ReadFile should fail\n");
+todo_wine
+    ok(GetLastError() == ERROR_SEM_TIMEOUT, "wrong error %u\n", GetLastError());
+    ok(count == 0, "expected 0, got %u\n", count);
+
     count = 0;
     memset(buffer, 0, sizeof buffer);
     ret = ReadFile( hSlot, buffer, sizeof buffer, &count, NULL);
-    ok( !ret || broken(ret), /* win9x */ "slot read\n");
+    ok( !ret, "slot read\n");
     if (!ret) ok( GetLastError() == ERROR_SEM_TIMEOUT, "wrong error %u\n", GetLastError() );
     else ok( count == 0, "wrong count %u\n", count );
     ok( !WriteFile( hSlot, buffer, sizeof buffer, &count, NULL),
@@ -93,17 +103,15 @@ static int mailslot_test(void)
     ok( GetLastError() == ERROR_ACCESS_DENIED, "wrong error %u\n", GetLastError() );
 
     /* now try and open the client, but with the wrong sharing mode */
-    hWriter = CreateFile(szmspath, GENERIC_WRITE,
+    hWriter = CreateFileA(szmspath, GENERIC_WRITE,
                              0, NULL, OPEN_EXISTING, 0, NULL);
     ok( hWriter != INVALID_HANDLE_VALUE /* vista */ || GetLastError() == ERROR_SHARING_VIOLATION,
         "error should be ERROR_SHARING_VIOLATION got %p / %u\n", hWriter, GetLastError());
     if (hWriter != INVALID_HANDLE_VALUE) CloseHandle( hWriter );
 
     /* now open the client with the correct sharing mode */
-    hWriter = CreateFile(szmspath, GENERIC_READ|GENERIC_WRITE,
+    hWriter = CreateFileA(szmspath, GENERIC_READ|GENERIC_WRITE,
                              FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-    if (hWriter == INVALID_HANDLE_VALUE)  /* win9x doesn't like GENERIC_READ */
-        hWriter = CreateFile(szmspath, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     ok( hWriter != INVALID_HANDLE_VALUE, "existing mailslot err %u\n", GetLastError());
 
     /*
@@ -111,7 +119,7 @@ static int mailslot_test(void)
      * whether we can read or write the mailslot
      */
     ret = ReadFile( hSlot, buffer, sizeof buffer/2, &count, NULL);
-    ok( !ret || broken(ret), /* win9x */ "slot read\n");
+    ok( !ret, "slot read\n");
     if (!ret) ok( GetLastError() == ERROR_SEM_TIMEOUT, "wrong error %u\n", GetLastError() );
     else ok( count == 0, "wrong count %u\n", count );
     ok( !WriteFile( hSlot, buffer, sizeof buffer/2, &count, NULL),
@@ -143,30 +151,30 @@ static int mailslot_test(void)
 
     /* but not again */
     ret = ReadFile( hSlot, buffer, sizeof buffer, &count, NULL);
-    ok( !ret || broken(ret), /* win9x */ "slot read\n");
+    ok( !ret, "slot read\n");
     if (!ret) ok( GetLastError() == ERROR_SEM_TIMEOUT, "wrong error %u\n", GetLastError() );
     else ok( count == 0, "wrong count %u\n", count );
 
     /* now try open another writer... should fail */
-    hWriter2 = CreateFile(szmspath, GENERIC_READ|GENERIC_WRITE,
+    hWriter2 = CreateFileA(szmspath, GENERIC_READ|GENERIC_WRITE,
                      FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     /* succeeds on vista, don't test */
     if (hWriter2 != INVALID_HANDLE_VALUE) CloseHandle( hWriter2 );
 
     /* now try open another as a reader ... also fails */
-    hWriter2 = CreateFile(szmspath, GENERIC_READ,
+    hWriter2 = CreateFileA(szmspath, GENERIC_READ,
                      FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     /* succeeds on vista, don't test */
     if (hWriter2 != INVALID_HANDLE_VALUE) CloseHandle( hWriter2 );
 
     /* now try open another as a writer ... still fails */
-    hWriter2 = CreateFile(szmspath, GENERIC_WRITE,
+    hWriter2 = CreateFileA(szmspath, GENERIC_WRITE,
                      FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     /* succeeds on vista, don't test */
     if (hWriter2 != INVALID_HANDLE_VALUE) CloseHandle( hWriter2 );
 
     /* now open another one */
-    hSlot2 = CreateMailslot( szmspath, 0, 0, NULL );
+    hSlot2 = CreateMailslotA( szmspath, 0, 0, NULL );
     ok( hSlot2 == INVALID_HANDLE_VALUE , "opened two mailslots\n");
 
     /* close the client again */
@@ -176,7 +184,7 @@ static int mailslot_test(void)
      * now try reopen it with slightly different permissions ...
      * shared writing
      */
-    hWriter = CreateFile(szmspath, GENERIC_WRITE,
+    hWriter = CreateFileA(szmspath, GENERIC_WRITE,
               FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
     ok( hWriter != INVALID_HANDLE_VALUE, "sharing writer\n");
 
@@ -184,13 +192,13 @@ static int mailslot_test(void)
      * now try open another as a writer ...
      * but don't share with the first ... fail
      */
-    hWriter2 = CreateFile(szmspath, GENERIC_WRITE,
+    hWriter2 = CreateFileA(szmspath, GENERIC_WRITE,
                      FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     /* succeeds on vista, don't test */
     if (hWriter2 != INVALID_HANDLE_VALUE) CloseHandle( hWriter2 );
 
     /* now try open another as a writer ... and share with the first */
-    hWriter2 = CreateFile(szmspath, GENERIC_WRITE,
+    hWriter2 = CreateFileA(szmspath, GENERIC_WRITE,
               FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
     ok( hWriter2 != INVALID_HANDLE_VALUE, "2nd sharing writer\n");
 
@@ -205,7 +213,7 @@ static int mailslot_test(void)
 
     /* check there's still no data */
     ret = ReadFile( hSlot, buffer, sizeof buffer, &count, NULL);
-    ok( !ret || broken(ret), /* win9x */ "slot read\n");
+    ok( !ret, "slot read\n");
     if (!ret) ok( GetLastError() == ERROR_SEM_TIMEOUT, "wrong error %u\n", GetLastError() );
     else ok( count == 0, "wrong count %u\n", count );
 
@@ -242,8 +250,7 @@ static int mailslot_test(void)
         "getmailslotinfo failed\n");
     ok( dwNext == 1, "dwNext incorrect\n");
     todo_wine
-        ok( dwMsgCount == 3 || broken(dwMsgCount == 2), /* win9x */
-            "dwMsgCount incorrect %u\n", dwMsgCount);
+        ok( dwMsgCount == 3, "dwMsgCount incorrect %u\n", dwMsgCount);
 
     buffer[0]=buffer[1]=0;
 
@@ -262,8 +269,7 @@ static int mailslot_test(void)
         "getmailslotinfo failed\n");
     ok( dwNext == 2, "dwNext incorrect\n");
     todo_wine {
-        ok( dwMsgCount == 2 || broken(dwMsgCount == 1), /* win9x */
-            "dwMsgCount incorrect %u\n", dwMsgCount);
+        ok( dwMsgCount == 2, "dwMsgCount incorrect %u\n", dwMsgCount);
     }
 
     /* read the second message */
@@ -276,10 +282,9 @@ static int mailslot_test(void)
     dwNext = dwMsgCount = 0;
     ok( GetMailslotInfo( hSlot, NULL, &dwNext, &dwMsgCount, NULL ),
         "getmailslotinfo failed\n");
-    ok( dwNext == 0 || broken(dwNext == ~0u), /* win9x */ "dwNext incorrect %u\n", dwNext);
+    ok( dwNext == 0, "dwNext incorrect %u\n", dwNext);
     todo_wine {
-        ok( dwMsgCount == 1 || broken(dwMsgCount == 0), /* win9x */
-            "dwMsgCount incorrect %u\n", dwMsgCount);
+        ok( dwMsgCount == 1, "dwMsgCount incorrect %u\n", dwMsgCount);
     }
 
     /* read the 3rd (zero length) message */
@@ -301,7 +306,7 @@ static int mailslot_test(void)
 
     /* check that reads fail */
     ret = ReadFile( hSlot, buffer, sizeof buffer, &count, NULL);
-    ok( !ret || broken(ret), /* win9x */ "3rd slot read succeeded\n");
+    ok( !ret, "3rd slot read succeeded\n");
     if (!ret) ok( GetLastError() == ERROR_SEM_TIMEOUT, "wrong error %u\n", GetLastError() );
     else ok( count == 0, "wrong count %u\n", count );
 
@@ -311,14 +316,13 @@ static int mailslot_test(void)
     ok( CloseHandle( hSlot ), "closing the mailslot\n");
 
     /* test timeouts */
-    hSlot = CreateMailslot( szmspath, 0, 1000, NULL );
+    hSlot = CreateMailslotA( szmspath, 0, 1000, NULL );
     ok( hSlot != INVALID_HANDLE_VALUE , "valid mailslot failed\n");
     count = 0;
     memset(buffer, 0, sizeof buffer);
     dwTimeout = GetTickCount();
     ok( !ReadFile( hSlot, buffer, sizeof buffer, &count, NULL), "slot read\n");
-    ok( GetLastError() == ERROR_SEM_TIMEOUT || broken(GetLastError() == ERROR_ACCESS_DENIED), /* win9x */
-        "wrong error %u\n", GetLastError() );
+    ok( GetLastError() == ERROR_SEM_TIMEOUT, "wrong error %u\n", GetLastError() );
     dwTimeout = GetTickCount() - dwTimeout;
     ok( dwTimeout >= 990, "timeout too short %u\n", dwTimeout );
     ok( CloseHandle( hSlot ), "closing the mailslot\n");

@@ -224,6 +224,7 @@ static void test_SetTrigger_GetTrigger(void)
     memset(&trigger_state, 0xcf, sizeof(trigger_state));
     trigger_state.cbTriggerSize = sizeof(trigger_state);
     hres = ITaskTrigger_GetTrigger(test_trigger, &trigger_state);
+    ok(hres == S_OK, "Expected S_OK: 0x%08x\n", hres);
     ok(trigger_state.Reserved1 == 0 && trigger_state.Reserved2 == 0,
             "Reserved fields should be set to zero\n");
     normal_trigger_state.Reserved1 = 0;
@@ -261,6 +262,7 @@ static void test_SetTrigger_GetTrigger(void)
     memset(&trigger_state, 0xcf, sizeof(trigger_state));
     trigger_state.cbTriggerSize = sizeof(trigger_state);
     hres = ITaskTrigger_GetTrigger(test_trigger, &trigger_state);
+    ok(hres == S_OK, "Expected S_OK: 0x%08x\n", hres);
     ok(trigger_state.wEndYear == 0, "End year should be 0: %d\n",
             trigger_state.wEndYear);
     ok(trigger_state.wEndMonth == 200, "End month should be 200: %d\n",
@@ -280,7 +282,6 @@ static void test_SetTrigger_GetTrigger(void)
     normal_trigger_state.wStartHour = 24;
     hres = ITaskTrigger_SetTrigger(test_trigger, &normal_trigger_state);
     ok(hres == E_INVALIDARG, "Expected E_INVALIDARG: 0x%08x\n", hres);
-    normal_trigger_state.wStartHour = 3;
     normal_trigger_state.wStartHour = 60;
     hres = ITaskTrigger_SetTrigger(test_trigger, &normal_trigger_state);
     ok(hres == E_INVALIDARG, "Expected E_INVALIDARG: 0x%08x\n", hres);
@@ -301,7 +302,8 @@ static void test_SetTrigger_GetTrigger(void)
     ok(hres == E_INVALIDARG, "Expected E_INVALIDARG: 0x%08x\n", hres);
     normal_trigger_state.MinutesDuration = 5;
     normal_trigger_state.MinutesInterval = 0;
-    ok(hres == E_INVALIDARG, "Expected E_INVALIDARG: 0x%08x\n", hres);
+    hres = ITaskTrigger_SetTrigger(test_trigger, &normal_trigger_state);
+    ok(hres == S_OK, "Failed to set trigger: 0x%08x\n", hres);
     normal_trigger_state.MinutesDuration = 0;
     normal_trigger_state.MinutesInterval = 0;
 
@@ -328,6 +330,7 @@ static void test_SetTrigger_GetTrigger(void)
     memset(&trigger_state, 0xcf, sizeof(trigger_state));
     trigger_state.cbTriggerSize = sizeof(trigger_state);
     hres = ITaskTrigger_GetTrigger(test_trigger, &trigger_state);
+    ok(hres == S_OK, "Expected S_OK: 0x%08x\n", hres);
     ok(trigger_state.Type.Weekly.WeeksInterval == 0xcfcf,
             "Expected WeeksInterval set remain untouched: %d\n",
             trigger_state.Type.Weekly.WeeksInterval);
@@ -337,6 +340,7 @@ static void test_SetTrigger_GetTrigger(void)
     normal_trigger_state.TriggerType = TASK_TIME_TRIGGER_DAILY;
     normal_trigger_state.Type.Daily.DaysInterval = 1;
     hres = ITaskTrigger_SetTrigger(test_trigger, &normal_trigger_state);
+    ok(hres == S_OK, "Expected S_OK: 0x%08x\n", hres);
 
     /* Test setting trigger with set wRandomMinutesInterval */
     normal_trigger_state.wRandomMinutesInterval = 5;
@@ -345,6 +349,7 @@ static void test_SetTrigger_GetTrigger(void)
     memset(&trigger_state, 0xcf, sizeof(trigger_state));
     trigger_state.cbTriggerSize = sizeof(trigger_state);
     hres = ITaskTrigger_GetTrigger(test_trigger, &trigger_state);
+    ok(hres == S_OK, "Expected S_OK: 0x%08x\n", hres);
     ok(trigger_state.wRandomMinutesInterval == 0,
             "wRandomMinutesInterval should be set to zero\n");
     normal_trigger_state.wRandomMinutesInterval = 0;

@@ -75,13 +75,13 @@ static int     init(void)
     case 4: /* the sub-process */
         ev1 = (HANDLE)(INT_PTR)atoi(argv[2]);
         ev2 = (HANDLE)(INT_PTR)atoi(argv[3]);
-        ev3 = CreateEvent(NULL, FALSE, FALSE, NULL);
+        ev3 = CreateEventW(NULL, FALSE, FALSE, NULL);
 
         if (ev3 == NULL) ExitProcess(WAIT_ABANDONED);
         hThread = CreateThread(NULL, 0, sub_thread, ev3, 0, &tid);
         if (hThread == NULL) ExitProcess(WAIT_ABANDONED);
         if (!LoadLibraryA("shell32.dll")) ExitProcess(WAIT_ABANDONED);
-    
+
         /* signal init of sub-process is done */
         SetEvent(ev1);
         /* wait for parent to have done all its queries */
@@ -175,8 +175,8 @@ static void test_thread(DWORD curr_pid, DWORD sub_pcs_pid)
             num++;
         } while (pThread32Next( hSnapshot, &te ));
     }
-    ok(curr_found == 1, "couldn't find self in thread list\n");
-    ok(sub_found == 2, "couldn't find sub-process thread's in thread list\n");
+    ok(curr_found, "couldn't find self in thread list\n");
+    ok(sub_found >= 2, "couldn't find sub-process threads in thread list\n");
 
     /* check that first really resets enumeration */
     curr_found = 0;
@@ -192,8 +192,8 @@ static void test_thread(DWORD curr_pid, DWORD sub_pcs_pid)
             num--;
         } while (pThread32Next( hSnapshot, &te ));
     }
-    ok(curr_found == 1, "couldn't find self in thread list\n");
-    ok(sub_found == 2, "couldn't find sub-process thread's in thread list\n");
+    ok(curr_found, "couldn't find self in thread list\n");
+    ok(sub_found >= 2, "couldn't find sub-process threads in thread list\n");
 
     me.dwSize = sizeof(me);
     ok(!pModule32First( hSnapshot, &me ), "shouldn't return a module\n");
@@ -204,17 +204,19 @@ static void test_thread(DWORD curr_pid, DWORD sub_pcs_pid)
 
 static const char* curr_expected_modules[] =
 {
-    "kernel32_test.exe"
+    "kernel32_test.exe",
     "kernel32.dll",
-    /* FIXME: could test for ntdll on NT and Wine */
+    "ntdll.dll"
 };
+
 static const char* sub_expected_modules[] =
 {
     "kernel32_test.exe",
     "kernel32.dll",
-    "shell32.dll"
-    /* FIXME: could test for ntdll on NT and Wine */
+    "shell32.dll",
+    "ntdll.dll"
 };
+
 #define NUM_OF(x) (sizeof(x) / sizeof(x[0]))
 
 static void test_module(DWORD pid, const char* expected[], unsigned num_expected)
@@ -242,7 +244,7 @@ static void test_module(DWORD pid, const char* expected[], unsigned num_expected
                   me.th32ProcessID, me.modBaseAddr, me.modBaseSize, me.szExePath, me.szModule);
             ok(me.th32ProcessID == pid, "wrong returned process id\n");
             for (i = 0; i < num_expected; i++)
-                if (!lstrcmpi(expected[i], me.szModule)) found[i]++;
+                if (!lstrcmpiA(expected[i], me.szModule)) found[i]++;
             num++;
         } while (pModule32Next( hSnapshot, &me ));
     }
@@ -260,7 +262,7 @@ static void test_module(DWORD pid, const char* expected[], unsigned num_expected
             trace("PID=%x base=%p size=%x %s %s\n",
                   me.th32ProcessID, me.modBaseAddr, me.modBaseSize, me.szExePath, me.szModule);
             for (i = 0; i < num_expected; i++)
-                if (!lstrcmpi(expected[i], me.szModule)) found[i]++;
+                if (!lstrcmpiA(expected[i], me.szModule)) found[i]++;
             num--;
         } while (pModule32Next( hSnapshot, &me ));
     }
@@ -317,8 +319,8 @@ START_TEST(toolhelp)
     sa.lpSecurityDescriptor = NULL;
     sa.bInheritHandle = TRUE;
 
-    ev1 = CreateEvent(&sa, FALSE, FALSE, NULL);
-    ev2 = CreateEvent(&sa, FALSE, FALSE, NULL);
+    ev1 = CreateEventW(&sa, FALSE, FALSE, NULL);
+    ev2 = CreateEventW(&sa, FALSE, FALSE, NULL);
     ok (ev1 != NULL && ev2 != NULL, "Couldn't create events\n");
     memset(&startup, 0, sizeof(startup));
     startup.cb = sizeof(startup);

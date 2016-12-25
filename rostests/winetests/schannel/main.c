@@ -34,12 +34,29 @@
 
 /* Helper macros to find the size of SECPKG_FUNCTION_TABLE */
 #define SECPKG_FUNCTION_TABLE_SIZE_1 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
-    SetExtendedInformation)
-#define SECPKG_FUNCTION_TABLE_SIZE_2 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
     SetContextAttributes)
-#define SECPKG_FUNCTION_TABLE_SIZE_3 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
+#define SECPKG_FUNCTION_TABLE_SIZE_2 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
     SetCredentialsAttributes)
-#define SECPKG_FUNCTION_TABLE_SIZE_4 sizeof(SECPKG_FUNCTION_TABLE)
+#define SECPKG_FUNCTION_TABLE_SIZE_3 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
+    ChangeAccountPassword)
+#define SECPKG_FUNCTION_TABLE_SIZE_4 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
+    QueryMetaData)
+#define SECPKG_FUNCTION_TABLE_SIZE_5 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
+    ValidateTargetInfo)
+#define SECPKG_FUNCTION_TABLE_SIZE_6 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
+    PostLogonUser)
+#define SECPKG_FUNCTION_TABLE_SIZE_7 sizeof(SECPKG_FUNCTION_TABLE)
+
+#define LSA_BASE_CAPS ( \
+    SECPKG_FLAG_INTEGRITY         | \
+    SECPKG_FLAG_PRIVACY           | \
+    SECPKG_FLAG_CONNECTION        | \
+    SECPKG_FLAG_MULTI_REQUIRED    | \
+    SECPKG_FLAG_EXTENDED_ERROR    | \
+    SECPKG_FLAG_IMPERSONATION     | \
+    SECPKG_FLAG_ACCEPT_WIN32_NAME | \
+    SECPKG_FLAG_STREAM            | \
+    SECPKG_FLAG_MUTUAL_AUTH )
 
 static NTSTATUS (NTAPI *pSpLsaModeInitialize)(ULONG, PULONG,
     PSECPKG_FUNCTION_TABLE*, PULONG);
@@ -133,6 +150,12 @@ static PSECPKG_FUNCTION_TABLE getNextSecPkgTable(PSECPKG_FUNCTION_TABLE pTable,
         size = SECPKG_FUNCTION_TABLE_SIZE_3;
     else if (Version == SECPKG_INTERFACE_VERSION_4)
         size = SECPKG_FUNCTION_TABLE_SIZE_4;
+    else if (Version == SECPKG_INTERFACE_VERSION_5)
+        size = SECPKG_FUNCTION_TABLE_SIZE_5;
+    else if (Version == SECPKG_INTERFACE_VERSION_6)
+        size = SECPKG_FUNCTION_TABLE_SIZE_6;
+    else if (Version == SECPKG_INTERFACE_VERSION_7)
+        size = SECPKG_FUNCTION_TABLE_SIZE_7;
     else {
         ok(FALSE, "Unknown package version 0x%x\n", Version);
         return NULL;
@@ -171,8 +194,9 @@ static void testGetInfo(void)
     /* First package: Unified */
     status = pTables->GetInfo(&PackageInfo);
     ok(status == STATUS_SUCCESS, "status: 0x%x\n", status);
-    ok(PackageInfo.fCapabilities == 0x107b3, "fCapabilities: 0x%x\n",
-       PackageInfo.fCapabilities);
+    ok(PackageInfo.fCapabilities == LSA_BASE_CAPS ||
+       PackageInfo.fCapabilities == (LSA_BASE_CAPS|SECPKG_FLAG_APPCONTAINER_PASSTHROUGH),
+       "fCapabilities: 0x%x\n", PackageInfo.fCapabilities);
     ok(PackageInfo.wVersion == 1, "wVersion: %d\n", PackageInfo.wVersion);
     ok(PackageInfo.wRPCID == 14, "wRPCID: %d\n", PackageInfo.wRPCID);
     ok(PackageInfo.cbMaxToken == 0x4000 ||
@@ -196,8 +220,9 @@ static void testGetInfo(void)
 
     if (status == STATUS_SUCCESS)
     {
-        ok(PackageInfo.fCapabilities == 0x107b3, "fCapabilities: 0x%x\n",
-           PackageInfo.fCapabilities);
+        ok(PackageInfo.fCapabilities == LSA_BASE_CAPS ||
+           PackageInfo.fCapabilities == (LSA_BASE_CAPS|SECPKG_FLAG_APPCONTAINER_PASSTHROUGH),
+           "fCapabilities: 0x%x\n", PackageInfo.fCapabilities);
         ok(PackageInfo.wVersion == 1, "wVersion: %d\n", PackageInfo.wVersion);
         ok(PackageInfo.wRPCID == 14, "wRPCID: %d\n", PackageInfo.wRPCID);
         ok(PackageInfo.cbMaxToken == 0x4000 ||

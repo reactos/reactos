@@ -9,6 +9,9 @@
 #ifndef _WS2_32_APITESTS_H
 #define _WS2_32_APITESTS_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 #include <winsock2.h>
 
 /* Simple macro for executing a socket command and doing cleanup operations in case of a failure */

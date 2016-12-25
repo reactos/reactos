@@ -2,6 +2,7 @@
  * Unit test suite for comdlg32 API functions: printer dialogs
  *
  * Copyright 2006-2007 Detlef Riekenberg
+ * Copyright 2013 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,51 +20,37 @@
  *
  */
 
-#include <stdarg.h>
+#define COBJMACROS
+#define CONST_VTABLE
+#define WIN32_NO_STATUS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "objbase.h"
+#include <wine/test.h>
 
-#include "cderr.h"
-#include "commdlg.h"
+//#include <stdarg.h>
+#include <stdio.h>
 
-#include "wine/test.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winerror.h"
+#include <wingdi.h>
+#include <winuser.h>
+#include <objbase.h>
+
+#include <cderr.h>
+#include <commdlg.h>
+#include <dlgs.h>
 
 /* ########################### */
 
+extern const IID IID_IObjectWithSite;
+
 static HMODULE  hcomdlg32;
-static HRESULT (WINAPI * pPrintDlgExA)(LPPRINTDLGEXA);
 static HRESULT (WINAPI * pPrintDlgExW)(LPPRINTDLGEXW);
 
 /* ########################### */
 
 static const CHAR emptyA[] = "";
 static const CHAR PrinterPortsA[] = "PrinterPorts";
-
-/* ########################### */
-
-static LPCSTR load_functions(void)
-{
-    LPCSTR  ptr;
-
-    ptr = "comdlg32.dll";
-    hcomdlg32 = GetModuleHandleA(ptr);
-
-    ptr = "PrintDlgExA";
-    pPrintDlgExA = (void *) GetProcAddress(hcomdlg32, ptr);
-    if (!pPrintDlgExA) return ptr;
-
-    ptr = "PrintDlgExW";
-    pPrintDlgExW = (void *) GetProcAddress(hcomdlg32, ptr);
-    if (!pPrintDlgExW) return ptr;
-
-    return NULL;
-
-}
 
 /* ########################### */
 
@@ -127,9 +114,21 @@ static void test_PageSetupDlgA(void)
 
 /* ########################### */
 
+static UINT_PTR CALLBACK print_hook_proc(HWND hdlg, UINT msg, WPARAM wp, LPARAM lp)
+{
+    if (msg == WM_INITDIALOG)
+    {
+        /* some driver popup a dialog and hung the test or silently limit the number of copies,
+           when trying to set more than 999 copies */
+        SetDlgItemInt(hdlg, edt3, 123, FALSE);
+        PostMessageA(hdlg, WM_COMMAND, IDOK, FALSE);
+    }
+    return 0;
+}
+
 static void test_PrintDlgA(void)
 {
-    DWORD       res;
+    DWORD res, n_copies = 0;
     LPPRINTDLGA pDlg;
     DEVNAMES    *pDevNames;
     LPCSTR driver;
@@ -137,7 +136,7 @@ static void test_PrintDlgA(void)
     LPCSTR port;
     CHAR   buffer[MAX_PATH];
     LPSTR  ptr;
-
+    DEVMODEA *dm;
 
     pDlg = HeapAlloc(GetProcessHeap(), 0, (sizeof(PRINTDLGA)) * 2);
     if (!pDlg) return;
@@ -200,9 +199,7 @@ static void test_PrintDlgA(void)
 
         /* The Driver Entry does not include a Path */
         ptr = strrchr(driver, '\\');
-        todo_wine {
         ok( ptr == NULL, "got %p for '%s' (expected NULL for a simple name)\n", ptr, driver);
-        }
 
         /* The Driver Entry does not have an extension (fixed to ".drv") */
         ptr = strrchr(driver, '.');
@@ -220,41 +217,178 @@ static void test_PrintDlgA(void)
             res, GetLastError(), ptr, buffer);
 
         if (ptr) ptr[0] = '\0';
-        todo_wine {
         ok( lstrcmpiA(driver, buffer) == 0,
             "got driver '%s' (expected '%s')\n", driver, buffer);
-        }
 
+        n_copies = DeviceCapabilitiesA(device, port, DC_COPIES, NULL, NULL);
+        ok(n_copies > 0, "DeviceCapabilities(DC_COPIES) failed\n");
     }
 
     GlobalUnlock(pDlg->hDevNames);
-
     GlobalFree(pDlg->hDevMode);
     GlobalFree(pDlg->hDevNames);
-    HeapFree(GetProcessHeap(), 0, pDlg);
 
+    /* if device doesn't support printing of multiple copies then
+     * an attempt to set number of copies > 1 in print dialog would
+     * cause the PrintDlg under Windows display the MessageBox and
+     * the test will hang waiting for user response.
+     */
+    if (n_copies > 1)
+    {
+        ZeroMemory(pDlg, sizeof(*pDlg));
+        pDlg->lStructSize = sizeof(*pDlg);
+        pDlg->Flags = PD_ENABLEPRINTHOOK;
+        pDlg->lpfnPrintHook = print_hook_proc;
+        res = PrintDlgA(pDlg);
+        ok(res, "PrintDlg error %#x\n", CommDlgExtendedError());
+        /* Version of Microsoft XPS Document Writer driver shipped before Win7
+         * reports that it can print multiple copies, but returns 1.
+         */
+        ok(pDlg->nCopies == 123 || broken(pDlg->nCopies == 1), "expected nCopies 123, got %d\n", pDlg->nCopies);
+        ok(pDlg->hDevMode != 0, "hDevMode should not be 0\n");
+        dm = GlobalLock(pDlg->hDevMode);
+        /* some broken drivers use always PD_USEDEVMODECOPIES */
+        ok((S1(U1(*dm)).dmCopies == 1) || broken(S1(U1(*dm)).dmCopies == 123),
+            "expected dm->dmCopies 1, got %d\n", S1(U1(*dm)).dmCopies);
+        GlobalUnlock(pDlg->hDevMode);
+        GlobalFree(pDlg->hDevMode);
+        GlobalFree(pDlg->hDevNames);
+
+        ZeroMemory(pDlg, sizeof(*pDlg));
+        pDlg->lStructSize = sizeof(*pDlg);
+        pDlg->Flags = PD_ENABLEPRINTHOOK | PD_USEDEVMODECOPIES;
+        pDlg->lpfnPrintHook = print_hook_proc;
+        res = PrintDlgA(pDlg);
+        ok(res, "PrintDlg error %#x\n", CommDlgExtendedError());
+        ok(pDlg->nCopies == 1, "expected nCopies 1, got %d\n", pDlg->nCopies);
+        ok(pDlg->hDevMode != 0, "hDevMode should not be 0\n");
+        dm = GlobalLock(pDlg->hDevMode);
+        ok(S1(U1(*dm)).dmCopies == 123, "expected dm->dmCopies 123, got %d\n", S1(U1(*dm)).dmCopies);
+        GlobalUnlock(pDlg->hDevMode);
+        GlobalFree(pDlg->hDevMode);
+        GlobalFree(pDlg->hDevNames);
+    }
+
+    HeapFree(GetProcessHeap(), 0, pDlg);
 }
 
 /* ########################### */
 
+static HRESULT WINAPI callback_QueryInterface(IPrintDialogCallback *iface,
+                                              REFIID riid, void **ppv)
+{
+    ok(0, "callback_QueryInterface(%s): unexpected call\n", wine_dbgstr_guid(riid));
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI callback_AddRef(IPrintDialogCallback *iface)
+{
+    trace("callback_AddRef\n");
+    return 2;
+}
+
+static ULONG WINAPI callback_Release(IPrintDialogCallback *iface)
+{
+    trace("callback_Release\n");
+    return 1;
+}
+
+static HRESULT WINAPI callback_InitDone(IPrintDialogCallback *iface)
+{
+    trace("callback_InitDone\n");
+    return S_OK;
+}
+
+static HRESULT WINAPI callback_SelectionChange(IPrintDialogCallback *iface)
+{
+    trace("callback_SelectionChange\n");
+    return S_OK;
+}
+
+static HRESULT WINAPI callback_HandleMessage(IPrintDialogCallback *iface,
+    HWND hdlg, UINT msg, WPARAM wp, LPARAM lp, LRESULT *res)
+{
+    trace("callback_HandleMessage %p,%04x,%lx,%lx,%p\n", hdlg, msg, wp, lp, res);
+    /* *res = PD_RESULT_PRINT; */
+    return S_OK;
+}
+
+static const IPrintDialogCallbackVtbl callback_Vtbl =
+{
+    callback_QueryInterface,
+    callback_AddRef,
+    callback_Release,
+    callback_InitDone,
+    callback_SelectionChange,
+    callback_HandleMessage
+};
+
+static IPrintDialogCallback callback = { &callback_Vtbl };
+
+static HRESULT WINAPI unknown_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
+{
+    trace("unknown_QueryInterface %s\n", wine_dbgstr_guid(riid));
+
+    if (IsEqualGUID(riid, &IID_IPrintDialogCallback))
+    {
+        *ppv = &callback;
+        return S_OK;
+    }
+    else if (IsEqualGUID(riid, &IID_IObjectWithSite))
+    {
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    ok(0, "unexpected IID %s\n", wine_dbgstr_guid(riid));
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI unknown_AddRef(IUnknown *iface)
+{
+    trace("unknown_AddRef\n");
+    return 2;
+}
+
+static ULONG WINAPI unknown_Release(IUnknown *iface)
+{
+    trace("unknown_Release\n");
+    return 1;
+}
+
+static const IUnknownVtbl unknown_Vtbl =
+{
+    unknown_QueryInterface,
+    unknown_AddRef,
+    unknown_Release
+};
+
+static IUnknown unknown = { &unknown_Vtbl };
+
 static void test_PrintDlgExW(void)
 {
+    PRINTPAGERANGE pagerange[2];
     LPPRINTDLGEXW pDlg;
+    DEVNAMES *dn;
     HRESULT res;
 
-    /* Set CommDlgExtendedError != 0 */
-    PrintDlg(NULL);
-    SetLastError(0xdeadbeef);
-    res = pPrintDlgExW(NULL);
-    if(res == E_NOTIMPL)
-    {
-        win_skip("PrintDlgExW returns not implemented\n");
+    /* PrintDlgEx not present before w2k */
+    if (!pPrintDlgExW) {
+        skip("PrintDlgExW not available\n");
         return;
     }
-    ok( (res == E_INVALIDARG),
-        "got 0x%x with %u and %u (expected 'E_INVALIDARG')\n",
-        res, GetLastError(), CommDlgExtendedError());
 
+    if (0) /* Crashes on Win10 */
+    {
+        /* Set CommDlgExtendedError != 0 */
+        PrintDlgA(NULL);
+        SetLastError(0xdeadbeef);
+        res = pPrintDlgExW(NULL);
+        ok( (res == E_INVALIDARG),
+            "got 0x%x with %u and %u (expected 'E_INVALIDARG')\n",
+            res, GetLastError(), CommDlgExtendedError() );
+    }
 
     pDlg = HeapAlloc(GetProcessHeap(), 0, (sizeof(PRINTDLGEXW)) + 8);
     if (!pDlg) return;
@@ -262,7 +396,7 @@ static void test_PrintDlgExW(void)
     /* lStructSize must be exact */
     ZeroMemory(pDlg, sizeof(PRINTDLGEXW));
     pDlg->lStructSize = sizeof(PRINTDLGEXW) - 1;
-    PrintDlg(NULL);
+    PrintDlgA(NULL);
     SetLastError(0xdeadbeef);
     res = pPrintDlgExW(pDlg);
     ok( (res == E_INVALIDARG),
@@ -272,7 +406,7 @@ static void test_PrintDlgExW(void)
 
     ZeroMemory(pDlg, sizeof(PRINTDLGEXW));
     pDlg->lStructSize = sizeof(PRINTDLGEXW) + 1;
-    PrintDlg(NULL);
+    PrintDlgA(NULL);
     SetLastError(0xdeadbeef);
     res = pPrintDlgExW(pDlg);
     ok( (res == E_INVALIDARG),
@@ -288,10 +422,137 @@ static void test_PrintDlgExW(void)
         "got 0x%x with %u and %u (expected 'E_HANDLE')\n",
         res, GetLastError(), CommDlgExtendedError());
 
+    /* nStartPage must be START_PAGE_GENERAL for the general page or a valid property sheet index */
+    ZeroMemory(pDlg, sizeof(PRINTDLGEXW));
+    pDlg->lStructSize = sizeof(PRINTDLGEXW);
+    pDlg->hwndOwner = GetDesktopWindow();
+    pDlg->Flags = PD_RETURNDEFAULT | PD_NOWARNING | PD_NOPAGENUMS;
+    res = pPrintDlgExW(pDlg);
+    ok((res == E_INVALIDARG), "got 0x%x (expected 'E_INVALIDARG')\n", res);
+
+    /* Use PD_NOPAGENUMS or set nMaxPageRanges and lpPageRanges */
+    ZeroMemory(pDlg, sizeof(PRINTDLGEXW));
+    pDlg->lStructSize = sizeof(PRINTDLGEXW);
+    pDlg->hwndOwner = GetDesktopWindow();
+    pDlg->Flags = PD_RETURNDEFAULT | PD_NOWARNING;
+    pDlg->nStartPage = START_PAGE_GENERAL;
+    res = pPrintDlgExW(pDlg);
+    ok((res == E_INVALIDARG), "got 0x%x (expected 'E_INVALIDARG')\n", res);
+
+    /* this is invalid: a valid lpPageRanges with 0 for nMaxPageRanges */
+    ZeroMemory(pDlg, sizeof(PRINTDLGEXW));
+    pDlg->lStructSize = sizeof(PRINTDLGEXW);
+    pDlg->hwndOwner = GetDesktopWindow();
+    pDlg->Flags = PD_RETURNDEFAULT | PD_NOWARNING;
+    pDlg->lpPageRanges = pagerange;
+    pDlg->nStartPage = START_PAGE_GENERAL;
+    res = pPrintDlgExW(pDlg);
+    ok((res == E_INVALIDARG), "got 0x%x (expected 'E_INVALIDARG')\n", res);
+
+    /* this is invalid: NULL for lpPageRanges with a valid nMaxPageRanges */
+    ZeroMemory(pDlg, sizeof(PRINTDLGEXW));
+    pDlg->lStructSize = sizeof(PRINTDLGEXW);
+    pDlg->hwndOwner = GetDesktopWindow();
+    pDlg->Flags = PD_RETURNDEFAULT | PD_NOWARNING;
+    pDlg->nMaxPageRanges = 1;
+    pDlg->nStartPage = START_PAGE_GENERAL;
+    res = pPrintDlgExW(pDlg);
+    ok((res == E_INVALIDARG), "got 0x%x (expected 'E_INVALIDARG')\n", res);
+
+    /* this works: lpPageRanges with a valid nMaxPageRanges */
+    ZeroMemory(pDlg, sizeof(PRINTDLGEXW));
+    pDlg->lStructSize = sizeof(PRINTDLGEXW);
+    pDlg->hwndOwner = GetDesktopWindow();
+    pDlg->Flags = PD_RETURNDEFAULT | PD_NOWARNING;
+    pDlg->nMaxPageRanges = 1;
+    pDlg->lpPageRanges = pagerange;
+    pDlg->nStartPage = START_PAGE_GENERAL;
+    res = pPrintDlgExW(pDlg);
+    if (res == E_FAIL)
+    {
+        skip("No printer configured.\n");
+        HeapFree(GetProcessHeap(), 0, pDlg);
+        return;
+    }
+
+    ok(res == S_OK, "got 0x%x (expected S_OK)\n", res);
+
+    dn = GlobalLock(pDlg->hDevNames);
+    ok(dn != NULL, "expected '!= NULL' for GlobalLock(%p)\n",pDlg->hDevNames);
+    if (dn)
+    {
+        ok(dn->wDriverOffset, "(expected '!= 0' for wDriverOffset)\n");
+        ok(dn->wDeviceOffset, "(expected '!= 0' for wDeviceOffset)\n");
+        ok(dn->wOutputOffset, "(expected '!= 0' for wOutputOffset)\n");
+        ok(dn->wDefault == DN_DEFAULTPRN, "got 0x%x (expected DN_DEFAULTPRN)\n", dn->wDefault);
+
+        GlobalUnlock(pDlg->hDevNames);
+    }
+    GlobalFree(pDlg->hDevMode);
+    GlobalFree(pDlg->hDevNames);
+
+    /* this works also: PD_NOPAGENUMS */
+    ZeroMemory(pDlg, sizeof(PRINTDLGEXW));
+    pDlg->lStructSize = sizeof(PRINTDLGEXW);
+    pDlg->hwndOwner = GetDesktopWindow();
+    pDlg->Flags = PD_RETURNDEFAULT | PD_NOWARNING | PD_NOPAGENUMS;
+    pDlg->nStartPage = START_PAGE_GENERAL;
+    res = pPrintDlgExW(pDlg);
+    ok(res == S_OK, "got 0x%x (expected S_OK)\n", res);
+    GlobalFree(pDlg->hDevMode);
+    GlobalFree(pDlg->hDevNames);
+
+    /* this works: PD_RETURNDC with PD_RETURNDEFAULT */
+    ZeroMemory(pDlg, sizeof(PRINTDLGEXW));
+    pDlg->lStructSize = sizeof(PRINTDLGEXW);
+    pDlg->hwndOwner = GetDesktopWindow();
+    pDlg->Flags = PD_RETURNDEFAULT | PD_NOWARNING | PD_NOPAGENUMS | PD_RETURNDC;
+    pDlg->nStartPage = START_PAGE_GENERAL;
+    res = pPrintDlgExW(pDlg);
+    ok(res == S_OK, "got 0x%x (expected S_OK)\n", res);
+    ok(pDlg->hDC != NULL, "HDC missing for PD_RETURNDC\n");
+    GlobalFree(pDlg->hDevMode);
+    GlobalFree(pDlg->hDevNames);
+    DeleteDC(pDlg->hDC);
+
+    /* this works: PD_RETURNIC with PD_RETURNDEFAULT */
+    ZeroMemory(pDlg, sizeof(PRINTDLGEXW));
+    pDlg->lStructSize = sizeof(PRINTDLGEXW);
+    pDlg->hwndOwner = GetDesktopWindow();
+    pDlg->Flags = PD_RETURNDEFAULT | PD_NOWARNING | PD_NOPAGENUMS | PD_RETURNIC;
+    pDlg->nStartPage = START_PAGE_GENERAL;
+    res = pPrintDlgExW(pDlg);
+    ok(res == S_OK, "got 0x%x (expected S_OK)\n", res);
+    ok(pDlg->hDC != NULL, "HDC missing for PD_RETURNIC\n");
+    GlobalFree(pDlg->hDevMode);
+    GlobalFree(pDlg->hDevNames);
+    DeleteDC(pDlg->hDC);
+
+    /* interactive PrintDlgEx tests */
+
+    if (!winetest_interactive)
+    {
+        skip("interactive PrintDlgEx tests (set WINETEST_INTERACTIVE=1)\n");
+        HeapFree(GetProcessHeap(), 0, pDlg);
+        return;
+    }
+
+    ZeroMemory(pDlg, sizeof(PRINTDLGEXW));
+    pDlg->lStructSize = sizeof(PRINTDLGEXW);
+    pDlg->hwndOwner = GetDesktopWindow();
+    pDlg->Flags = PD_NOPAGENUMS | PD_RETURNIC;
+    pDlg->nStartPage = START_PAGE_GENERAL;
+    pDlg->lpCallback = &unknown;
+    pDlg->dwResultAction = S_OK;
+    res = pPrintDlgExW(pDlg);
+    ok(res == S_OK, "got 0x%x (expected S_OK)\n", res);
+    ok(pDlg->dwResultAction == PD_RESULT_PRINT, "expected PD_RESULT_PRINT, got %#x\n", pDlg->dwResultAction);
+    ok(pDlg->hDC != NULL, "HDC missing for PD_RETURNIC\n");
+    GlobalFree(pDlg->hDevMode);
+    GlobalFree(pDlg->hDevNames);
+    DeleteDC(pDlg->hDC);
 
     HeapFree(GetProcessHeap(), 0, pDlg);
-    return;
-
 }
 
 static BOOL abort_proc_called = FALSE;
@@ -320,18 +581,14 @@ static void test_abort_proc(void)
     if (!PrintDlgA(&pd))
     {
         skip("No default printer available.\n");
-        ok(DeleteFileA(filename), "Failed to delete temporary file\n");
-        return;
+        goto end;
     }
     GlobalFree(pd.hDevMode);
     GlobalFree(pd.hDevNames);
 
     ok(pd.hDC != NULL, "PrintDlg didn't return a DC.\n");
     if (!(print_dc = pd.hDC))
-    {
-        ok(DeleteFileA(filename), "Failed to delete temporary file\n");
-        return;
-    }
+        goto end;
 
     ok(SetAbortProc(print_dc, abort_proc) > 0, "SetAbortProc failed\n");
     ok(!abort_proc_called, "AbortProc got called unexpectedly by SetAbortProc.\n");
@@ -371,26 +628,20 @@ static void test_abort_proc(void)
     abort_proc_called = FALSE;
 
 end:
-    ok(DeleteFileA(filename), "Failed to delete temporary file\n");
+    SetLastError(0xdeadbeef);
+    if(!DeleteFileA(filename))
+        trace("Failed to delete temporary file (err = %x)\n", GetLastError());
 }
 
 /* ########################### */
 
 START_TEST(printdlg)
 {
-    LPCSTR  ptr;
-
-    ptr = load_functions();
+    hcomdlg32 = GetModuleHandleA("comdlg32.dll");
+    pPrintDlgExW = (void *) GetProcAddress(hcomdlg32, "PrintDlgExW");
 
     test_PageSetupDlgA();
     test_PrintDlgA();
-    test_abort_proc();
-
-    /* PrintDlgEx not present before w2k */
-    if (ptr) {
-        win_skip("%s\n", ptr);
-        return;
-    }
-
     test_PrintDlgExW();
+    test_abort_proc();
 }

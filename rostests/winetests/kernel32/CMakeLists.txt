@@ -1,18 +1,15 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
-
-set_rc_compiler()
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
 
 list(APPEND SOURCE
     actctx.c
-    alloc.c
     atom.c
     change.c
     codepage.c
     comm.c
     console.c
+    cpu.c
     debugger.c
     directory.c
     drive.c
@@ -22,7 +19,6 @@ list(APPEND SOURCE
     format_msg.c
     #generated.c
     heap.c
-    interlck.c
     loader.c
     locale.c
     mailslot.c
@@ -40,13 +36,14 @@ list(APPEND SOURCE
     version.c
     virtual.c
     volume.c
-    dosdev.c
-    testlist.c
-    resource.rc)
+    testlist.c)
 
-add_executable(kernel32_winetest ${SOURCE})
-target_link_libraries(kernel32_winetest wine)
+add_executable(kernel32_winetest ${SOURCE} resource.rc)
+
+if(NOT MSVC)
+    add_target_compile_flags(kernel32_winetest "-Wno-format")
+endif()
+
 set_module_type(kernel32_winetest win32cui)
 add_importlibs(kernel32_winetest user32 advapi32 msvcrt kernel32 ntdll)
-
 add_cd_file(TARGET kernel32_winetest DESTINATION reactos/bin FOR all)

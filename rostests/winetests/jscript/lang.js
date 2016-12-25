@@ -38,6 +38,17 @@ ok(1000000*1000000 === 1000000000000, "1000000*1000000 === 1000000000000 is fals
 ok(8.64e15 === 8640000000000000, "8.64e15 !== 8640000000000000");
 ok(1e2147483648 === Infinity, "1e2147483648 !== Infinity");
 
+ok(00 === 0, "00 != 0");
+ok(010 === 8, "010 != 8");
+ok(077 === 63, "077 != 63");
+ok(080 === 80, "080 != 80");
+ok(090 === 90, "090 != 90");
+ok(018 === 18, "018 != 18");
+tmp = 07777777777777777777777;
+ok(typeof(tmp) === "number" && tmp > 0xffffffff, "tmp = " + tmp);
+tmp = 07777777779777777777777;
+ok(typeof(tmp) === "number" && tmp > 0xffffffff, "tmp = " + tmp);
+
 ok(1 !== 2, "1 !== 2 is false");
 ok(null !== undefined, "null !== undefined is false");
 
@@ -56,6 +67,9 @@ ok(0 == false, "0 == false is false");
 ok(1 != 2, "1 != 2 is false");
 ok(false != 1, "false != 1 is false");
 
+ok(this === test, "this !== test");
+eval('ok(this === test, "this !== test");');
+
 var trueVar = true;
 ok(trueVar, "trueVar is not true");
 
@@ -69,11 +83,33 @@ function testFunc1(x, y) {
     ok(arguments["0"] === true, "arguments[0] is not true");
     ok(arguments["1"] === "test", "arguments[1] is not \"test\"");
     ok(arguments.callee === testFunc1, "arguments.calee !== testFunc1");
+    ok(testFunc1.arguments === arguments, "testFunc1.arguments = " + testFunc1.arguments);
+
+    x = false;
+    ok(arguments[0] === false, "arguments[0] is not false");
+    arguments[1] = "x";
+    ok(y === "x", "y = " + y);
+    ok(arguments[1] === "x", "arguments[1] = " + arguments[1]);
+
+    ok(arguments["0x0"] === undefined, "arguments['0x0'] = " + arguments["0x0"]);
+    ok(arguments["x"] === undefined, "arguments['x'] = " + arguments["x"]);
+
+    ok(this === test, "this !== test");
+    eval('ok(this === test, "this !== test");');
+
+    tmp = delete arguments;
+    ok(tmp === false, "arguments deleted");
+    ok(typeof(arguments) === "object", "typeof(arguments) = " + typeof(arguments));
+
+    x = 2;
+    ok(x === 2, "x = " + x);
+    ok(arguments[0] === 2, "arguments[0] = " + arguments[0]);
 
     return true;
 }
 
 ok(testFunc1.length === 2, "testFunc1.length is not 2");
+ok(testFunc1.arguments === null, "testFunc1.arguments = " + testFunc1.arguments);
 
 ok(Object.prototype !== undefined, "Object.prototype is undefined");
 ok(Object.prototype.prototype === undefined, "Object.prototype is not undefined");
@@ -88,6 +124,35 @@ ok(Function.prototype !== undefined, "Function.prototype is undefined");
 ok(Function.prototype.prototype === undefined, "Function.prototype.prototype is not undefined");
 ok(Date.prototype !== undefined, "Date.prototype is undefined");
 ok(Date.prototype.prototype === undefined, "Date.prototype is not undefined");
+
+function testConstructor(constr, name, inst) {
+    ok(constr.prototype.constructor === constr, name + ".prototype.constructor !== " + name);
+    ok(constr.prototype.hasOwnProperty("constructor"), name + ".prototype.hasOwnProperty('constructor')");
+
+    if(!inst)
+        inst = new constr();
+
+    ok(inst.constructor === constr, "(new " + name + "()).constructor !== " + name);
+    ok(!inst.hasOwnProperty("constructor"), "(new " + name + "()).hasOwnProperty('constructor')");
+}
+
+testConstructor(Object, "Object");
+testConstructor(String, "String");
+testConstructor(Array, "Array");
+testConstructor(Boolean, "Boolean");
+testConstructor(Number, "Number");
+testConstructor(RegExp, "RegExp", /x/);
+testConstructor(Function, "Function");
+testConstructor(Date, "Date");
+testConstructor(VBArray, "VBArray", new VBArray(createArray()));
+testConstructor(Error, "Error");
+testConstructor(EvalError, "EvalError");
+testConstructor(RangeError, "RangeError");
+testConstructor(ReferenceError, "ReferenceError");
+testConstructor(RegExpError, "RegExpError");
+testConstructor(SyntaxError, "SyntaxError");
+testConstructor(TypeError, "TypeError");
+testConstructor(URIError, "URIError");
 
 Function.prototype.test = true;
 ok(testFunc1.test === true, "testFunc1.test !== true");
@@ -106,13 +171,175 @@ ok(typeof(testFunc1) === "function", "typeof(testFunc1) is not function");
 ok(typeof(String) === "function", "typeof(String) is not function");
 ok(typeof(ScriptEngine) === "function", "typeof(ScriptEngine) is not function");
 ok(typeof(this) === "object", "typeof(this) is not object");
+ok(typeof(doesnotexist) === "undefined", "typeof(doesnotexist) = " + typeof(doesnotexist));
+tmp = typeof((new Object()).doesnotexist);
+ok(tmp === "undefined", "typeof((new Object).doesnotexist = " + tmp);
+tmp = typeof(testObj.onlyDispID);
+ok(tmp === "unknown", "typeof(testObj.onlyDispID) = " + tmp);
 
 ok(testFunc1(true, "test") === true, "testFunc1 not returned true");
+
+ok(testFunc1.arguments === null, "testFunc1.arguments = " + testFunc1.arguments);
+
+(tmp) = 3;
+ok(tmp === 3, "tmp = " + tmp);
+
+function testRecFunc(x) {
+    ok(testRecFunc.arguments === arguments, "testRecFunc.arguments = " + testRecFunc.arguments);
+    if(x) {
+        testRecFunc(false);
+        ok(testRecFunc.arguments === arguments, "testRecFunc.arguments = " + testRecFunc.arguments);
+        ok(testRecFunc.arguments[0] === true, "testRecFunc.arguments.x = " + testRecFunc.arguments[0]);
+    }
+}
+
+testRecFunc.arguments = 5;
+ok(testRecFunc.arguments === null, "testRecFunc.arguments = " + testRecFunc.arguments);
+testRecFunc(true);
+ok(testRecFunc.arguments === null, "testRecFunc.arguments = " + testRecFunc.arguments);
+
+function argumentsTest() {
+    var save = arguments;
+    with({arguments: 1}) {
+        ok(arguments === 1, "arguments = " + arguments);
+        (function() {
+            ok(argumentsTest.arguments === save, "unexpected argumentsTest.arguments");
+        })();
+    }
+    eval('ok(arguments === save, "unexpected arguments");');
+    [1,2].sort(function() {
+        ok(argumentsTest.arguments === save, "unexpected argumentsTest.arguments");
+        return 1;
+    });
+}
+
+argumentsTest();
+
+// arguments object detached from its execution context
+(function() {
+    var args, get_x, set_x;
+
+    function test_args(detached) {
+        ok(args[0] === 1, "args[0] = " + args[0]);
+        set_x(2);
+        ok(args[0] === (detached ? 1 : 2), "args[0] = " + args[0] + " expected " + (detached ? 1 : 2));
+        args[0] = 3;
+        ok(get_x() === (detached ? 2 : 3), "get_x() = " + get_x());
+        ok(args[0] === 3, "args[0] = " + args[0]);
+    }
+
+    (function(x) {
+        args = arguments;
+        get_x = function() { return x; };
+        set_x = function(v) { x = v; };
+
+        test_args(false);
+        x = 1;
+    })(1);
+
+    test_args(true);
+})();
+
+// arguments is a regular variable, it may be overwritten
+(function() {
+    ok(typeof(arguments) === "object", "typeof(arguments) = " + typeof(arguments));
+    arguments = 1;
+    ok(arguments === 1, "arguments = " + arguments);
+})();
+
+(function callAsExprTest() {
+    ok(callAsExprTest.arguments === null, "callAsExprTest.arguments = " + callAsExprTest.arguments);
+})(1,2);
 
 tmp = (function() {1;})();
 ok(tmp === undefined, "tmp = " + tmp);
 tmp = eval("1;");
 ok(tmp === 1, "tmp = " + tmp);
+tmp = eval("1,2;");
+ok(tmp === 2, "tmp = " + tmp);
+tmp = eval("testNoRes(),2;");
+ok(tmp === 2, "tmp = " + tmp);
+tmp = eval("if(true) {3}");
+ok(tmp === 3, "tmp = " + tmp);
+eval("testRes(); testRes()");
+tmp = eval("3; if(false) {4;} else {};;;")
+ok(tmp === 3, "tmp = " + tmp);
+
+testNoRes();
+testRes() && testRes();
+testNoRes(), testNoRes();
+
+(function() {
+    eval("var x=1;");
+    ok(x === 1, "x = " + x);
+})();
+
+(function() {
+    var e = eval;
+    var r = e(1);
+    ok(r === 1, "r = " + r);
+    (function(x, a) { x(a); })(eval, "2");
+})();
+
+(function(r) {
+    r = eval("1");
+    ok(r === 1, "r = " + r);
+    (function(x, a) { x(a); })(eval, "2");
+})();
+
+tmp = (function(){ return testNoRes(), testRes();})();
+
+var f1, f2;
+
+ok(funcexpr() == 2, "funcexpr() = " + funcexpr());
+
+f1 = function funcexpr() { return 1; }
+ok(f1 != funcexpr, "f1 == funcexpr");
+ok(f1() === 1, "f1() = " + f1());
+
+f2 = function funcexpr() { return 2; }
+ok(f2 != funcexpr, "f2 != funcexpr");
+ok(f2() === 2, "f2() = " + f2());
+
+f1 = null;
+for(i = 0; i < 3; i++) {
+    f2 = function funcexpr2() {};
+    ok(f1 != f2, "f1 == f2");
+    f1 = f2;
+}
+
+f1 = null;
+for(i = 0; i < 3; i++) {
+    f2 = function() {};
+    ok(f1 != f2, "f1 == f2");
+    f1 = f2;
+}
+
+(function() {
+    ok(infuncexpr() == 2, "infuncexpr() = " + infuncexpr());
+
+    f1 = function infuncexpr() { return 1; }
+    ok(f1 != funcexpr, "f1 == funcexpr");
+    ok(f1() === 1, "f1() = " + f1());
+
+    f2 = function infuncexpr() { return 2; }
+    ok(f2 != funcexpr, "f2 != funcexpr");
+    ok(f2() === 2, "f2() = " + f2());
+
+    f1 = null;
+    for(i = 0; i < 3; i++) {
+        f2 = function infuncexpr2() {};
+        ok(f1 != f2, "f1 == f2");
+        f1 = f2;
+    }
+
+    f1 = null;
+    for(i = 0; i < 3; i++) {
+        f2 = function() {};
+        ok(f1 != f2, "f1 == f2");
+        f1 = f2;
+    }
+})();
 
 var obj1 = new Object();
 ok(typeof(obj1) === "object", "typeof(obj1) is not object");
@@ -142,11 +369,13 @@ function testConstr1() {
 }
 
 testConstr1.prototype.pvar = 1;
+ok(testConstr1.prototype.constructor === testConstr1, "testConstr1.prototype.constructor !== testConstr1");
 
 var obj2 = new testConstr1(true);
 ok(typeof(obj2) === "object", "typeof(obj2) is not object");
 ok(obj2.constructor === testConstr1, "unexpected obj2.constructor");
 ok(obj2.pvar === 1, "obj2.pvar is not 1");
+ok(!obj2.hasOwnProperty('constructor'), "obj2.hasOwnProperty('constructor')");
 
 testConstr1.prototype.pvar = 2;
 ok(obj2.pvar === 2, "obj2.pvar is not 2");
@@ -173,6 +402,20 @@ ok(typeof(obj2) === "object", "typeof(obj2) = " + typeof(obj2));
 var obj3 = new Object;
 ok(typeof(obj3) === "object", "typeof(obj3) is not object");
 
+(function() {
+    ok(typeof(func) === "function", "typeof(func) = " + typeof(func));
+    function func() {}
+    ok(typeof(func) === "function", "typeof(func) = " + typeof(func));
+    func = 0;
+    ok(typeof(func) === "number", "typeof(func) = " + typeof(func));
+})();
+
+(function(f) {
+    ok(typeof(f) === "function", "typeof(f) = " + typeof(f));
+    function f() {};
+    ok(typeof(f) === "function", "typeof(f) = " + typeof(f));
+})(1);
+
 for(var iter in "test")
     ok(false, "unexpected forin call, test = " + iter);
 
@@ -181,6 +424,25 @@ for(var iter in null)
 
 for(var iter in false)
     ok(false, "unexpected forin call, test = " + iter);
+
+for(var iter in pureDisp)
+    ok(false, "unexpected forin call in pureDisp object");
+
+tmp = new Object();
+ok(!tmp.nonexistent, "!tmp.nonexistent = " + !tmp.nonexistent);
+ok(!("nonexistent" in tmp), "nonexistent is in tmp after '!' expression")
+
+tmp = new Object();
+ok((~tmp.nonexistent) === -1, "!tmp.nonexistent = " + ~tmp.nonexistent);
+ok(!("nonexistent" in tmp), "nonexistent is in tmp after '~' expression")
+
+tmp = new Object();
+ok(isNaN(+tmp.nonexistent), "!tmp.nonexistent = " + (+tmp.nonexistent));
+ok(!("nonexistent" in tmp), "nonexistent is in tmp after '+' expression")
+
+tmp = new Object();
+tmp[tmp.nonexistent];
+ok(!("nonexistent" in tmp), "nonexistent is in tmp after array expression")
 
 tmp = 0;
 if(true)
@@ -225,7 +487,7 @@ ok((0 === 2 ? 1 : 2) === 2, "conditional expression true is not 2");
 ok(getVT(undefined) === "VT_EMPTY", "getVT(undefined) is not VT_EMPTY");
 ok(getVT(null) === "VT_NULL", "getVT(null) is not VT_NULL");
 ok(getVT(0) === "VT_I4", "getVT(0) is not VT_I4");
-ok(getVT(0.5) === "VT_R8", "getVT(1.5) is not VT_R8");
+ok(getVT(0.5) === "VT_R8", "getVT(0.5) is not VT_R8");
 ok(getVT("test") === "VT_BSTR", "getVT(\"test\") is not VT_BSTR");
 ok(getVT(Math) === "VT_DISPATCH", "getVT(Math) is not VT_DISPATCH");
 ok(getVT(false) === "VT_BOOL", "getVT(false) is not VT_BOOL");
@@ -248,7 +510,7 @@ ok(getVT(tmp) === "VT_I4", "getVT(4-2) !== VT_I4");
 
 tmp = 4.5-2;
 ok(tmp === 2.5, "4.5-2 !== 2.5");
-ok(getVT(tmp) === "VT_R8", "getVT(4-2) !== VT_R8");
+ok(getVT(tmp) === "VT_R8", "getVT(4.5-2) !== VT_R8");
 
 tmp = -2;
 ok(tmp === 0-2, "-2 !== 0-2");
@@ -267,6 +529,10 @@ tmp = 2.5*3.5;
 /* ok(tmp === 8.75, "2.5*3.5 !== 8.75"); */
 ok(tmp > 8.749999 && tmp < 8.750001, "2.5*3.5 !== 8.75");
 ok(getVT(tmp) === "VT_R8", "getVT(2.5*3.5) !== VT_R8");
+
+tmp = 2*.5;
+ok(tmp === 1, "2*.5 !== 1");
+ok(getVT(tmp) == "VT_I4", "getVT(2*.5) !== VT_I4");
 
 tmp = 4/2;
 ok(tmp === 2, "4/2 !== 2");
@@ -480,6 +746,10 @@ ok(tmp === 2, "incremented tmp(1) is not 2");
 ok(tmp-- === 2, "tmp-- (2) is not 2");
 ok(tmp === 1, "decremented tmp is not 1");
 
+tmp = new Object();
+tmp.iii++;
+ok(isNaN(tmp.iii), "tmp.iii = " + tmp.iii);
+
 String.prototype.test = true;
 ok("".test === true, "\"\".test is not true");
 
@@ -508,6 +778,29 @@ try {
     state = "finally";
 }
 ok(state === "finally", "state = " + state + " expected finally");
+
+state = "";
+try {
+    try {
+        throw 0;
+    }finally {
+        state = "finally";
+    }
+}catch(e) {
+    ok(state === "finally", "state = " + state + " expected finally");
+    state = "catch";
+}
+ok(state === "catch", "state = " + state + " expected catch");
+
+try {
+    try {
+        throw 0;
+    }finally {
+        throw 1;
+    }
+}catch(e) {
+    ok(e === 1, "e = " + e);
+}
 
 state = "";
 try {
@@ -643,6 +936,49 @@ case false:
 }
 ok(state === "default", "state = " + state);
 
+switch(1) {
+case 2:
+    ok(false, "unexpected case 2");
+case 3:
+    ok(false, "unexpected case 3");
+}
+
+switch(1) {
+case 2:
+    ok(false, "unexpected case 2");
+    break;
+default:
+    /* empty default */
+}
+
+switch(2) {
+default:
+    ok(false, "unexpected default");
+    break;
+case 2:
+    /* empty case */
+};
+
+switch(2) {
+default:
+    ok(false, "unexpected default");
+    break;
+case 1:
+case 2:
+case 3:
+    /* empty case */
+};
+
+(function() {
+    var i=0;
+
+    switch(1) {
+    case 1:
+        i++;
+    }
+    return i;
+})();
+
 tmp = eval("1");
 ok(tmp === 1, "eval(\"1\") !== 1");
 eval("{ ok(tmp === 1, 'eval: tmp !== 1'); } tmp = 2;");
@@ -753,6 +1089,152 @@ for(var fi=0; fi < 4; fi++)
     ok(fi < 4, "fi = " + fi);
 ok(fi === 4, "fi !== 4");
 
+tmp = true;
+obj1 = new Object();
+for(obj1.nonexistent; tmp; tmp = false)
+    ok(!("nonexistent" in obj1), "nonexistent added to obj1");
+
+obj1 = new Object();
+for(tmp in obj1.nonexistent)
+    ok(false, "for(tmp in obj1.nonexistent) called with tmp = " + tmp);
+ok(!("nonexistent" in obj1), "nonexistent added to obj1 by for..in loop");
+
+
+var i, j;
+
+/* Previous versions have broken finally block implementation */
+if(ScriptEngineMinorVersion() >= 8) {
+    tmp = "";
+    i = 0;
+    while(true) {
+        tmp += "1";
+        for(i = 1; i < 3; i++) {
+            switch(i) {
+            case 1:
+                tmp += "2";
+                continue;
+            case 2:
+                tmp += "3";
+                try {
+                    throw null;
+                }finally {
+                    tmp += "4";
+                    break;
+                }
+            default:
+                ok(false, "unexpected state");
+            }
+            tmp += "5";
+        }
+        with({prop: "6"}) {
+            tmp += prop;
+            break;
+        }
+    }
+    ok(tmp === "123456", "tmp = " + tmp);
+}
+
+tmp = "";
+i = 0;
+for(j in [1,2,3]) {
+    tmp += "1";
+    for(;;) {
+        with({prop: "2"}) {
+            tmp += prop;
+            try {
+                throw "3";
+            }catch(e) {
+                tmp += e;
+                with([0])
+                    break;
+            }
+        }
+        ok(false, "unexpected state");
+    }
+    while(true) {
+        tmp += "4";
+        break;
+    }
+    break;
+}
+ok(tmp === "1234", "tmp = " + tmp);
+
+tmp = 0;
+for(var iter in [1,2,3]) {
+    tmp += +iter;
+    continue;
+}
+ok(tmp === 3, "tmp = " + tmp);
+
+tmp = false;
+for(var iter in [1,2,3]) {
+    switch(+iter) {
+    case 1:
+        tmp = true;
+        try {
+            continue;
+        }finally {}
+    default:
+        continue;
+    }
+}
+ok(tmp, "tmp = " + tmp);
+
+loop_label:
+while(true) {
+    while(true)
+        break loop_label;
+}
+
+loop_label: {
+    tmp = 0;
+    while(true) {
+        while(true)
+            break loop_label;
+    }
+    ok(false, "unexpected evaluation 1");
+}
+
+while(true) {
+    some_label: break;
+    ok(false, "unexpected evaluation 2");
+}
+
+just_label: tmp = 1;
+ok(tmp === 1, "tmp != 1");
+
+some_label: break some_label;
+
+other_label: {
+    break other_label;
+    ok(false, "unexpected evaluation 3");
+}
+
+loop_label:
+do {
+    while(true)
+        continue loop_label;
+}while(false);
+
+loop_label:
+for(i = 0; i < 3; i++) {
+    while(true)
+        continue loop_label;
+}
+
+loop_label:
+other_label:
+for(i = 0; i < 3; i++) {
+    while(true)
+        continue loop_label;
+}
+
+loop_label:
+for(tmp in {prop: false}) {
+    while(true)
+        continue loop_label;
+}
+
 ok((void 1) === undefined, "(void 1) !== undefined");
 
 var inobj = new Object();
@@ -792,8 +1274,18 @@ tmp = new Object();
 tmp.test = false;
 ok((delete tmp.test) === true, "delete returned false");
 ok(typeof(tmp.test) === "undefined", "tmp.test type = " + typeof(tmp.test));
+ok(!("test" in tmp), "test is still in tmp after delete?");
 for(iter in tmp)
     ok(false, "tmp has prop " + iter);
+ok((delete tmp.test) === true, "deleting test didn't return true");
+ok((delete tmp.nonexistent) === true, "deleting nonexistent didn't return true");
+ok((delete nonexistent) === true, "deleting nonexistent didn't return true");
+
+tmp = new Object();
+tmp.test = false;
+ok((delete tmp["test"]) === true, "delete returned false");
+ok(typeof(tmp.test) === "undefined", "tmp.test type = " + typeof(tmp.test));
+ok(!("test" in tmp), "test is still in tmp after delete?");
 
 tmp.testWith = true;
 with(tmp)
@@ -825,6 +1317,38 @@ try {
     tmp = deleteTest;
     ok(false, "deleteTest not throwed exception?");
 }catch(ex) {}
+
+(function() {
+    var to_delete = 2;
+    var r = delete to_delete;
+    ok(r === false, "delete 1 returned " + r);
+    if(r)
+        return;
+    ok(to_delete === 2, "to_delete = " + to_delete);
+
+    to_delete = new Object();
+    r = delete to_delete;
+    ok(r === false, "delete 2 returned " + r);
+    ok(typeof(to_delete) === "object", "typeof(to_delete) = " + typeof(to_delete));
+})();
+
+(function(to_delete) {
+    var r = delete to_delete;
+    ok(r === false, "delete 3 returned " + r);
+    ok(to_delete === 2, "to_delete = " + to_delete);
+
+    to_delete = new Object();
+    r = delete to_delete;
+    ok(r === false, "delete 4 returned " + r);
+    ok(typeof(to_delete) === "object", "typeof(to_delete) = " + typeof(to_delete));
+})(2);
+
+(function() {
+    with({to_delete: new Object()}) {
+        var r = delete to_delete;
+        ok(r === true, "delete returned " + r);
+    }
+})();
 
 if (false)
     if (true)
@@ -877,6 +1401,20 @@ try {
 }catch(e) {}
 ok(!("prop" in obj), "prop in obj");
 
+if(invokeVersion >= 2) {
+    ok("test"[0] === "t", '"test"[0] = ' + test[0]);
+    ok("test"[5] === undefined, '"test"[0] = ' + test[0]);
+
+    tmp = "test";
+    ok(tmp[1] === "e", "tmp[1] = " + tmp[1]);
+    tmp[1] = "x";
+    ok(tmp[1] === "e", "tmp[1] = " + tmp[1]);
+    ok(tmp["1"] === "e", "tmp['1'] = " + tmp["1"]);
+    ok(tmp["0x1"] === undefined, "tmp['0x1'] = " + tmp["0x1"]);
+}else {
+    ok("test"[0] === undefined, '"test"[0] = ' + test[0]);
+}
+
 ok(isNaN(NaN) === true, "isNaN(NaN) !== true");
 ok(isNaN(0.5) === false, "isNaN(0.5) !== false");
 ok(isNaN(Infinity) === false, "isNaN(Infinity) !== false");
@@ -924,6 +1462,30 @@ ok((Infinity != NaN) === true, "(Infinity != NaN) !== true");
 ok((Infinity != NaN) === true, "(Infinity != NaN) !== true");
 ok((0 == NaN) === false, "(0 === NaN) != false");
 
+// escape tests
+var escapeTests = [
+    ["\'", "\\'", 39],
+    ["\"", "\\\"", 34],
+    ["\\", "\\\\", 92],
+    ["\b", "\\b", 8],
+    ["\t", "\\t", 9],
+    ["\n", "\\n", 10],
+    ["\v", "\\v", 118],
+    ["\f", "\\f", 12],
+    ["\r", "\\r", 13],
+    ["\xf3", "\\xf3", 0xf3],
+    ["\u1234", "\\u1234", 0x1234],
+    ["\a", "\\a", 97],
+    ["\?", "\\?", 63]
+];
+
+for(i=0; i<escapeTests.length; i++) {
+    tmp = escapeTests[i][0].charCodeAt(0);
+    ok(tmp === escapeTests[i][2], "escaped '" + escapeTests[i][1] + "' = " + tmp + " expected " + escapeTests[i][2]);
+}
+
+tmp = !+"\v1";
+ok(tmp === true, '!+"\v1" = ' + tmp);
 
 ok(typeof(testFunc2) === "function", "typeof(testFunc2) = " + typeof(testFunc2));
 tmp = testFunc2(1);
@@ -945,7 +1507,7 @@ ok(tmp === 5, "testFunc4(1) = " + tmp);
 tmp = function testFunc4(x) { return x+4; };
 ok(testFunc4 === 1, "testFunc4 = " + testFunc4);
 
-function testEmbededFunctions() {
+function testEmbeddedFunctions() {
     ok(typeof(testFunc5) === "function", "typeof(testFunc5) = " + typeof(testFunc5));
     tmp = testFunc5(1);
     ok(tmp === 3, "testFunc5(1) = " + tmp);
@@ -961,7 +1523,7 @@ function testEmbededFunctions() {
     ok(testFunc6 === 1, "testFunc4 = " + testFunc6);
 }
 
-testEmbededFunctions();
+testEmbeddedFunctions();
 
 date = new Date();
 date.toString = function() { return "toString"; }
@@ -985,7 +1547,9 @@ for(var i=0; i<2; i++)
     tmp[i] = /b/;
 ok(tmp[0] != tmp[1], "tmp[0] == tmp [1]");
 
-ok(createNullBSTR() === '', "createNullBSTR() !== ''");
+ok(isNullBSTR(getNullBSTR()), "isNullBSTR(getNullBSTR()) failed\n");
+ok(getNullBSTR() === '', "getNullBSTR() !== ''");
+ok(+getNullBSTR() === 0 , "+getNullBTR() !=== 0");
 
 ok(getVT(nullDisp) === "VT_DISPATCH", "getVT(nullDisp) = " + getVT(nullDisp));
 ok(typeof(nullDisp) === "object", "typeof(nullDisp) = " + typeof(nullDisp));
@@ -1015,15 +1579,101 @@ if(false) {
 
 ok(in_if_false(), "in_if_false failed");
 
-ok(typeof(doesnotexist) === "undefined", "typeof(doesnotexist) = " + typeof(doesnotexist));
-
 (function() { newValue = 1; })();
 ok(newValue === 1, "newValue = " + newValue);
 
 obj = {undefined: 3};
 
+ok(typeof(name_override_func) === "function", "typeof(name_override_func) = " + typeof(name_override_func));
+name_override_func = 3;
+ok(name_override_func === 3, "name_override_func = " + name_override_func);
+function name_override_func() {};
+ok(name_override_func === 3, "name_override_func = " + name_override_func);
+
+tmp = (function() {
+    var ret = false;
+    with({ret: true})
+        return ret;
+})();
+ok(tmp, "tmp = " + tmp);
+
+(function() {
+    ok(typeof(func) === "function", "typeof(func)  = " + typeof(func));
+    with(new Object()) {
+        var x = false && function func() {};
+    }
+    ok(typeof(func) === "function", "typeof(func)  = " + typeof(func));
+})();
+
+(function() {
+    ok(x === undefined, "x = " + x); // x is declared, but never initialized
+    with({x: 1}) {
+        ok(x === 1, "x = " + x);
+        var x = 2;
+        ok(x === 2, "x = " + x);
+    }
+    ok(x === undefined, "x = " + x);
+})();
+
+/* NoNewline rule parser tests */
+while(true) {
+    if(true) break
+    tmp = false
+}
+
+while(true) {
+    if(true) break /*
+                    * no semicolon, but comment present */
+    tmp = false
+}
+
+while(true) {
+    if(true) break // no semicolon, but comment present
+    tmp = false
+}
+
+while(true) {
+    break
+    continue
+    tmp = false
+}
+
+function returnTest() {
+    return
+    true;
+}
+
+ok(returnTest() === undefined, "returnTest = " + returnTest());
+
+ActiveXObject = 1;
+ok(ActiveXObject === 1, "ActiveXObject = " + ActiveXObject);
+
+Boolean = 1;
+ok(Boolean === 1, "Boolean = " + Boolean);
+
+Object = 1;
+ok(Object === 1, "Object = " + Object);
+
+Array = 1;
+ok(Array === 1, "Array = " + Array);
+
+Date = 1;
+ok(Date === 1, "Date = " + Date);
+
+Error = 1;
+ok(Error === 1, "Error = " + Error);
+
 /* Keep this test in the end of file */
 undefined = 6;
 ok(undefined === 6, "undefined = " + undefined);
+
+NaN = 6;
+ok(NaN === 6, "NaN !== 6");
+
+Infinity = 6;
+ok(Infinity === 6, "Infinity !== 6");
+
+Math = 6;
+ok(Math === 6, "NaN !== 6");
 
 reportSuccess();

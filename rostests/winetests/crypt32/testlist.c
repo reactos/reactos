@@ -1,10 +1,7 @@
 /* Automatically generated file; DO NOT EDIT!! */
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 #define STANDALONE
-#include "wine/test.h"
+#include <wine/test.h>
 
 extern void func_base64(void);
 extern void func_cert(void);
@@ -29,15 +26,15 @@ const struct test winetest_testlist[] =
     { "chain", func_chain },
     { "crl", func_crl },
     { "ctl", func_ctl },
-	{ "encode", func_encode },
-	{ "main", func_main },
-	{ "message", func_message },
-	{ "msg", func_msg },
-	{ "object", func_object },
-	{ "oid", func_oid },
-	{ "protectdata", func_protectdata },
-	{ "sip", func_sip },
-	{ "store", func_store },
-	{ "str", func_str },
-	{ 0, 0 }
+    { "encode", func_encode },
+    { "main", func_main },
+    { "message", func_message },
+    { "msg", func_msg },
+    { "object", func_object },
+    { "oid", func_oid },
+    { "protectdata", func_protectdata },
+    { "sip", func_sip },
+    { "store", func_store },
+    { "str", func_str },
+    { 0, 0 }
 };

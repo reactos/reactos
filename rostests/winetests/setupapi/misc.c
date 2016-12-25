@@ -29,6 +29,7 @@
 #include "winuser.h"
 #include "winreg.h"
 #include "setupapi.h"
+#include "cfgmgr32.h"
 
 #include "wine/test.h"
 
@@ -51,8 +52,8 @@ static BOOL (WINAPI *pSetupUninstallOEMInfA)(PCSTR, DWORD, PVOID);
 static void create_inf_file(LPCSTR filename)
 {
     DWORD dwNumberOfBytesWritten;
-    HANDLE hf = CreateFile(filename, GENERIC_WRITE, 0, NULL,
-                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hf = CreateFileA(filename, GENERIC_WRITE, 0, NULL,
+                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     static const char data[] =
         "[Version]\n"
@@ -72,15 +73,15 @@ static void get_temp_filename(LPSTR path)
     CHAR temp[MAX_PATH];
     LPSTR ptr;
 
-    GetTempFileName(CURR_DIR, "set", 0, temp);
+    GetTempFileNameA(CURR_DIR, "set", 0, temp);
     ptr = strrchr(temp, '\\');
 
-    lstrcpy(path, ptr + 1);
+    strcpy(path, ptr + 1);
 }
 
 static BOOL file_exists(LPSTR path)
 {
-    return GetFileAttributes(path) != INVALID_FILE_ATTRIBUTES;
+    return GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES;
 }
 
 static BOOL check_format(LPSTR path, LPSTR inf)
@@ -90,19 +91,19 @@ static BOOL check_format(LPSTR path, LPSTR inf)
 
     static const CHAR format[] = "\\INF\\oem";
 
-    GetWindowsDirectory(check, MAX_PATH);
-    lstrcat(check, format);
-    res = CompareString(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, check, -1, path, lstrlen(check)) == CSTR_EQUAL &&
-          path[lstrlen(check)] != '\\';
+    GetWindowsDirectoryA(check, MAX_PATH);
+    strcat(check, format);
+    res = CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, check, -1, path, strlen(check)) == CSTR_EQUAL &&
+          path[strlen(check)] != '\\';
 
-    return (!inf) ? res : res && (inf == path + lstrlen(check) - 3);
+    return (!inf) ? res : res && (inf == path + strlen(check) - 3);
 }
 
 static void test_original_file_name(LPCSTR original, LPCSTR dest)
 {
     HINF hinf;
     PSP_INF_INFORMATION pspii;
-    SP_ORIGINAL_FILE_INFO spofi;
+    SP_ORIGINAL_FILE_INFO_A spofi;
     BOOL res;
     DWORD size;
 
@@ -115,12 +116,12 @@ static void test_original_file_name(LPCSTR original, LPCSTR dest)
     hinf = SetupOpenInfFileA(dest, NULL, INF_STYLE_WIN4, NULL);
     ok(hinf != NULL, "SetupOpenInfFileA failed with error %d\n", GetLastError());
 
-    res = SetupGetInfInformation(hinf, INFINFO_INF_SPEC_IS_HINF, NULL, 0, &size);
+    res = SetupGetInfInformationA(hinf, INFINFO_INF_SPEC_IS_HINF, NULL, 0, &size);
     ok(res, "SetupGetInfInformation failed with error %d\n", GetLastError());
 
     pspii = HeapAlloc(GetProcessHeap(), 0, size);
 
-    res = SetupGetInfInformation(hinf, INFINFO_INF_SPEC_IS_HINF, pspii, size, NULL);
+    res = SetupGetInfInformationA(hinf, INFINFO_INF_SPEC_IS_HINF, pspii, size, NULL);
     ok(res, "SetupGetInfInformation failed with error %d\n", GetLastError());
 
     spofi.cbSize = 0;
@@ -173,8 +174,8 @@ static void test_SetupCopyOEMInf(void)
        "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
 
     /* try an absolute nonexistent SourceInfFileName */
-    lstrcpy(path, CURR_DIR);
-    lstrcat(path, "\\nonexistent");
+    strcpy(path, CURR_DIR);
+    strcat(path, "\\nonexistent");
     SetLastError(0xdeadbeef);
     res = pSetupCopyOEMInfA(path, NULL, 0, SP_COPY_NOOVERWRITE, NULL, 0, NULL, NULL);
     ok(res == FALSE, "Expected FALSE, got %d\n", res);
@@ -207,7 +208,7 @@ static void test_SetupCopyOEMInf(void)
         * popups during the installation though as it also needs a catalog file (signed?).
         */
        win_skip("Needs a different inf file on Vista+\n");
-       DeleteFile(tmpfile);
+       DeleteFileA(tmpfile);
        return;
     }
 
@@ -225,9 +226,9 @@ static void test_SetupCopyOEMInf(void)
     ok(file_exists(tmpfile), "Expected source inf to exist\n");
 
     /* try an absolute SourceInfFileName, without DestinationInfFileName */
-    lstrcpy(path, CURR_DIR);
-    lstrcat(path, "\\");
-    lstrcat(path, tmpfile);
+    strcpy(path, CURR_DIR);
+    strcat(path, "\\");
+    strcat(path, tmpfile);
     SetLastError(0xdeadbeef);
     res = pSetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, NULL, 0, NULL, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
@@ -253,18 +254,18 @@ static void test_SetupCopyOEMInf(void)
     res = pSetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, MAX_PATH, NULL, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
-    ok(lstrlen(dest) != 0, "Expected a non-zero length string\n");
+    ok(strlen(dest) != 0, "Expected a non-zero length string\n");
     ok(file_exists(dest), "Expected destination inf to exist\n");
     ok(check_format(dest, NULL), "Expected %%windir%%\\inf\\OEMx.inf, got %s\n", dest);
     ok(file_exists(path), "Expected source inf to exist\n");
 
-    lstrcpy(dest_save, dest);
-    DeleteFile(dest_save);
+    strcpy(dest_save, dest);
+    DeleteFileA(dest_save);
 
     /* get the DestinationInfFileName, DestinationInfFileNameSize is too small
      *   - inf is still copied
      */
-    lstrcpy(dest, "aaa");
+    strcpy(dest, "aaa");
     size = 0;
     SetLastError(0xdeadbeef);
     res = pSetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, 5, &size, NULL);
@@ -273,19 +274,19 @@ static void test_SetupCopyOEMInf(void)
        "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
     ok(file_exists(path), "Expected source inf to exist\n");
     ok(file_exists(dest_save), "Expected dest inf to exist\n");
-    ok(!lstrcmp(dest, "aaa"), "Expected dest to be unchanged\n");
-    ok(size == lstrlen(dest_save) + 1, "Expected size to be lstrlen(dest_save) + 1\n");
+    ok(!strcmp(dest, "aaa"), "Expected dest to be unchanged\n");
+    ok(size == strlen(dest_save) + 1, "Expected size to be lstrlen(dest_save) + 1\n");
 
     /* get the DestinationInfFileName and DestinationInfFileNameSize */
     SetLastError(0xdeadbeef);
     res = pSetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, MAX_PATH, &size, NULL);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
-    ok(lstrlen(dest) + 1 == size, "Expected sizes to match, got (%d, %d)\n", lstrlen(dest), size);
+    ok(lstrlenA(dest) + 1 == size, "Expected sizes to match, got (%d, %d)\n", lstrlenA(dest), size);
     ok(file_exists(dest), "Expected destination inf to exist\n");
     ok(check_format(dest, NULL), "Expected %%windir%%\\inf\\OEMx.inf, got %s\n", dest);
     ok(file_exists(path), "Expected source inf to exist\n");
-    ok(size == lstrlen(dest_save) + 1, "Expected size to be lstrlen(dest_save) + 1\n");
+    ok(size == lstrlenA(dest_save) + 1, "Expected size to be lstrlen(dest_save) + 1\n");
 
     test_original_file_name(strrchr(path, '\\') + 1, dest);
 
@@ -294,14 +295,14 @@ static void test_SetupCopyOEMInf(void)
     res = pSetupCopyOEMInfA(path, NULL, SPOST_NONE, 0, dest, MAX_PATH, &size, &inf);
     ok(res == TRUE, "Expected TRUE, got %d\n", res);
     ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", GetLastError());
-    ok(lstrlen(dest) + 1 == size, "Expected sizes to match, got (%d, %d)\n", lstrlen(dest), size);
+    ok(lstrlenA(dest) + 1 == size, "Expected sizes to match, got (%d, %d)\n", lstrlenA(dest), size);
     ok(file_exists(dest), "Expected destination inf to exist\n");
     ok((inf && inf[0] != 0) ||
        broken(!inf), /* Win98 */
        "Expected inf to point to the filename\n");
     ok(check_format(dest, inf), "Expected %%windir%%\\inf\\OEMx.inf, got %s\n", dest);
     ok(file_exists(path), "Expected source inf to exist\n");
-    ok(size == lstrlen(dest_save) + 1, "Expected size to be lstrlen(dest_save) + 1\n");
+    ok(size == lstrlenA(dest_save) + 1, "Expected size to be lstrlen(dest_save) + 1\n");
 
     /* try SP_COPY_DELETESOURCE */
     SetLastError(0xdeadbeef);
@@ -312,16 +313,41 @@ static void test_SetupCopyOEMInf(void)
 
     if (pSetupUninstallOEMInfA)
     {
+        char pnf[MAX_PATH];
+        char *pnffile;
         char *destfile = strrchr(dest, '\\') + 1;
 
+        strcpy(pnf, dest);
+        *(strrchr(pnf, '.') + 1) = 'p';
+        pnffile = strrchr(pnf, '\\') + 1;
+
         SetLastError(0xdeadbeef);
-        ok(pSetupUninstallOEMInfA(destfile, 0, NULL), "Failed to uninstall '%s' : %d\n", destfile, GetLastError());
+        res = pSetupUninstallOEMInfA(destfile, 0, NULL);
+        if(!res)
+            res = pSetupUninstallOEMInfA(pnffile, 0, NULL);
+        ok(res, "Failed to uninstall '%s'/'%s' : %d\n", destfile,
+           pnffile, GetLastError());
+        todo_wine ok(!file_exists(dest), "Expected inf '%s' to not exist\n", dest);
+        if(file_exists(dest))
+        {
+            SetLastError(0xdeadbeef);
+            res = DeleteFileA(dest);
+            ok(res, "Failed to delete file '%s' : %d\n", dest, GetLastError());
+        }
+        ok(!file_exists(pnf), "Expected pnf '%s' to not exist\n", pnf);
+        if(file_exists(pnf))
+        {
+            SetLastError(0xdeadbeef);
+            res = DeleteFileA(pnf);
+            ok(res, "Failed to delete file '%s' : %d\n", pnf, GetLastError());
+        }
     }
     else
     {
         /* Win9x/WinMe */
         SetLastError(0xdeadbeef);
-        ok(DeleteFileA(dest), "Failed to delete file '%s' : %d\n", dest, GetLastError());
+        res = DeleteFileA(dest);
+        ok(res, "Failed to delete file '%s' : %d\n", dest, GetLastError());
 
         /* On WinMe we also need to remove the .pnf file */
         *(strrchr(dest, '.') + 1) = 'p';
@@ -706,9 +732,102 @@ static void test_SetupUninstallOEMInf(void)
     }
 }
 
+struct default_callback_context
+{
+    DWORD     magic;
+    HWND      owner;
+    DWORD     unk1[4];
+    DWORD_PTR unk2[7];
+    HWND      progress;
+    UINT      message;
+    DWORD_PTR unk3[5];
+};
+
+static void test_defaultcallback(void)
+{
+    struct default_callback_context *ctxt;
+    static const DWORD magic = 0x43515053; /* "SPQC" */
+    HWND owner, progress;
+
+    owner = (HWND)0x123;
+    progress = (HWND)0x456;
+    ctxt = SetupInitDefaultQueueCallbackEx(owner, progress, WM_USER, 0, NULL);
+    ok(ctxt != NULL, "got %p\n", ctxt);
+
+    ok(ctxt->magic == magic || broken(ctxt->magic != magic) /* win2000 */, "got magic 0x%08x\n", ctxt->magic);
+    if (ctxt->magic == magic)
+    {
+        ok(ctxt->owner == owner, "got %p, expected %p\n", ctxt->owner, owner);
+        ok(ctxt->progress == progress, "got %p, expected %p\n", ctxt->progress, progress);
+        ok(ctxt->message == WM_USER, "got %d, expected %d\n", ctxt->message, WM_USER);
+        SetupTermDefaultQueueCallback(ctxt);
+    }
+    else
+    {
+        win_skip("Skipping tests on old systems.\n");
+        SetupTermDefaultQueueCallback(ctxt);
+        return;
+    }
+
+    ctxt = SetupInitDefaultQueueCallback(owner);
+    ok(ctxt->magic == magic, "got magic 0x%08x\n", ctxt->magic);
+    ok(ctxt->owner == owner, "got %p, expected %p\n", ctxt->owner, owner);
+    ok(ctxt->progress == NULL, "got %p, expected %p\n", ctxt->progress, progress);
+    ok(ctxt->message == 0, "got %d\n", ctxt->message);
+    SetupTermDefaultQueueCallback(ctxt);
+}
+
+static void test_SetupLogError(void)
+{
+    BOOL ret;
+    DWORD error;
+
+    SetLastError(0xdeadbeef);
+    ret = SetupLogErrorA("Test without opening\r\n", LogSevInformation);
+    error = GetLastError();
+    ok(!ret, "SetupLogError succeeded\n");
+    ok(error == ERROR_FILE_INVALID, "got wrong error: %d\n", error);
+
+    SetLastError(0xdeadbeef);
+    ret = SetupOpenLog(FALSE);
+    if (!ret && GetLastError() == ERROR_ACCESS_DENIED)
+    {
+        win_skip("SetupOpenLog() failed on insufficient permissions\n");
+        return;
+    }
+    ok(ret, "SetupOpenLog failed, error %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = SetupLogErrorA("Test with wrong log severity\r\n", LogSevMaximum);
+    error = GetLastError();
+    ok(!ret, "SetupLogError succeeded\n");
+    ok(error == 0xdeadbeef, "got wrong error: %d\n", error);
+    ret = SetupLogErrorA("Test without EOL", LogSevInformation);
+    ok(ret, "SetupLogError failed\n");
+
+    SetLastError(0xdeadbeef);
+    ret = SetupLogErrorA(NULL, LogSevInformation);
+    ok(ret || broken(!ret && GetLastError() == ERROR_INVALID_PARAMETER /* Win Vista+ */),
+        "SetupLogError failed: %08x\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = SetupOpenLog(FALSE);
+    ok(ret, "SetupOpenLog failed, error %d\n", GetLastError());
+
+    SetupCloseLog();
+}
+
+static void test_CM_Get_Version(void)
+{
+    WORD ret;
+
+    ret = CM_Get_Version();
+    ok(ret == 0x0400, "got version %#x\n", ret);
+}
+
 START_TEST(misc)
 {
-    HMODULE hsetupapi = GetModuleHandle("setupapi.dll");
+    HMODULE hsetupapi = GetModuleHandleA("setupapi.dll");
 
     pSetupGetFileCompressionInfoExA = (void*)GetProcAddress(hsetupapi, "SetupGetFileCompressionInfoExA");
     pSetupCopyOEMInfA = (void*)GetProcAddress(hsetupapi, "SetupCopyOEMInfA");
@@ -735,4 +854,9 @@ START_TEST(misc)
         test_SetupUninstallOEMInf();
     else
         win_skip("SetupUninstallOEMInfA is not available\n");
+
+    test_defaultcallback();
+
+    test_SetupLogError();
+    test_CM_Get_Version();
 }

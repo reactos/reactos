@@ -6,8 +6,9 @@
  * COPYRIGHT:   Copyright 2008 Colin Finck <mail@colinfinck.de>
  */
 
+#include <apitest.h>
+
 #include <stdio.h>
-#include <wine/test.h>
 #include "ws2_32.h"
 
 int CreateSocket(SOCKET* psck)
@@ -33,7 +34,7 @@ int ConnectToReactOSWebsite(SOCKET sck)
     struct sockaddr_in sa;
 
     /* Connect to "www.reactos.org" */
-    host = gethostbyname("www.reactos.org");
+    host = gethostbyname("test.winehq.org");
 
     sa.sin_family = AF_INET;
     sa.sin_addr.s_addr = *(u_long*)host->h_addr_list[0];
@@ -53,10 +54,10 @@ int GetRequestAndWait(SOCKET sck)
     /* Send the GET request */
     SCKTEST(send(sck, szGetRequest, strlen(szGetRequest), 0));
     ok(iResult == strlen(szGetRequest), "iResult = %d\n", iResult);
-
+#if 0 /* breaks windows too */
     /* Shutdown the SEND connection */
     SCKTEST(shutdown(sck, SD_SEND));
-
+#endif
     /* Wait until we're ready to read */
     FD_ZERO(&readable);
     FD_SET(sck, &readable);

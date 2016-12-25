@@ -16,5 +16,40 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* @makedep: exectest.html */
+exectest.html HTML "exectest.html"
+
 /* @makedep: jstest.html */
 jstest.html HTML "jstest.html"
+
+/* @makedep: vbtest.html */
+vbtest.html HTML "vbtest.html"
+
+/* @makedep: events.html */
+events.html HTML "events.html"
+
+/* @makedep: externscr.js */
+externscr.js HTML "externscr.js"
+
+/* @makedep: nav_test.html */
+nav_test.html HTML "nav_test.html"
+
+/* @makedep: blank.html */
+blank.html HTML "blank.html"
+
+/* @makedep: blank.html */
+blank2.html HTML "blank.html"
+
+/* @makedep: blank.html */
+123 HTML "blank.html"
+
+/* @makedep: test_tlb.tlb */
+1 TYPELIB test_tlb.tlb
+
+/* For res: protocol test: */
+
+/* @makedep: jstest.html */
+res.html test "jstest.html"
+
+/* @makedep: jstest.html */
+dir/dir2/res.html test "jstest.html"

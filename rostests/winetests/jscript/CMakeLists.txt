@@ -1,22 +1,24 @@
 
-add_definitions(-D__ROS_LONG64__)
-
-set_rc_compiler()
+add_definitions(-DUSE_WINE_TODOS)
 
 list(APPEND SOURCE
     activex.c
+    caller.c
     jscript.c
     run.c
-    testlist.c
-    rsrc.rc)
+    testlist.c)
 
-add_executable(jscript_winetest ${SOURCE})
-target_link_libraries(jscript_winetest wine)
+list(APPEND jscript_winetest_rc_deps
+    ${CMAKE_CURRENT_SOURCE_DIR}/api.js
+    ${CMAKE_CURRENT_SOURCE_DIR}/cc.js
+    ${CMAKE_CURRENT_SOURCE_DIR}/lang.js
+    ${CMAKE_CURRENT_SOURCE_DIR}/regexp.js
+    ${CMAKE_CURRENT_SOURCE_DIR}/sunspider-regexp-dna.js
+    ${CMAKE_CURRENT_SOURCE_DIR}/sunspider-string-base64.js
+    ${CMAKE_CURRENT_SOURCE_DIR}/sunspider-string-validate-input.js)
 
-if(MSVC)
-    target_link_libraries(jscript_winetest uuid)
-endif()
-
+set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${jscript_winetest_rc_deps}")
+add_executable(jscript_winetest ${SOURCE} rsrc.rc)
 set_module_type(jscript_winetest win32cui)
-add_importlibs(jscript_winetest ole32 oleaut32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(jscript_winetest ole32 oleaut32 advapi32 msvcrt kernel32)
 add_cd_file(TARGET jscript_winetest DESTINATION reactos/bin FOR all)

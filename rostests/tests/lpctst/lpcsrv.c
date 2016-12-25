@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * DESCRIPTION: Simple LPC Server
  * PROGRAMMER:  David Welch
  */

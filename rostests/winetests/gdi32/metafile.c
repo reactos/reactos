@@ -37,6 +37,8 @@ static BOOL emr_processed = FALSE;
 
 static INT (WINAPI * pGetRelAbs)(HDC, DWORD);
 static INT (WINAPI * pSetRelAbs)(HDC, INT);
+static COLORREF (WINAPI *pSetDCBrushColor)(HDC,COLORREF);
+static COLORREF (WINAPI *pSetDCPenColor)(HDC,COLORREF);
 
 #define GDI_GET_PROC(func)                                     \
     p ## func = (void *)GetProcAddress(hGDI, #func);           \
@@ -54,6 +56,22 @@ static void init_function_pointers(void)
     assert(hGDI);
     GDI_GET_PROC(GetRelAbs);
     GDI_GET_PROC(SetRelAbs);
+    GDI_GET_PROC(SetDCBrushColor);
+    GDI_GET_PROC(SetDCPenColor);
+}
+
+static DWORD rgn_rect_count(HRGN hrgn)
+{
+    DWORD size;
+    RGNDATA *data;
+
+    if (!hrgn) return 0;
+    if (!(size = GetRegionData(hrgn, 0, NULL))) return 0;
+    if (!(data = HeapAlloc(GetProcessHeap(), 0, size))) return 0;
+    GetRegionData(hrgn, size, data);
+    size = data->rdh.nCount;
+    HeapFree(GetProcessHeap(), 0, data);
+    return size;
 }
 
 static int CALLBACK eto_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
@@ -65,9 +83,6 @@ static int CALLBACK eto_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
     INT *orig_dx = (INT *)param;
     LOGFONTA device_lf;
     INT ret;
-
-    trace("hdc %p, emr->iType %d, emr->nSize %d, param %p\n",
-           hdc, emr->iType, emr->nSize, (void *)param);
 
     if(!hdc) return 1;
 
@@ -132,6 +147,13 @@ static int CALLBACK eto_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
          */
         ok(!memcmp(&orig_lf, &device_lf, FIELD_OFFSET(LOGFONTA, lfOutPrecision)), "fonts don't match\n");
         ok(!lstrcmpA(orig_lf.lfFaceName, device_lf.lfFaceName), "font names don't match\n");
+
+        ok(!emr_ExtTextOutW->rclBounds.left, "emr_ExtTextOutW->rclBounds.left = %d\n",
+                emr_ExtTextOutW->rclBounds.left);
+        ok(emr_ExtTextOutW->rclBounds.right != -1, "emr_ExtTextOutW->rclBounds.right = %d\n",
+                emr_ExtTextOutW->rclBounds.right);
+        ok(emr_ExtTextOutW->rclBounds.bottom != -1, "emr_ExtTextOutW->rclBounds.bottom = %d\n",
+                emr_ExtTextOutW->rclBounds.bottom);
 
         for(i = 0; i < emr_ExtTextOutW->emrtext.nChars; i++)
         {
@@ -214,6 +236,20 @@ static void test_ExtTextOut(void)
     ret = ExtTextOutA(hdcMetafile, 0, 20, 0, &rc, text, lstrlenA(text), dx);
     ok( ret, "ExtTextOutA error %d\n", GetLastError());
 
+    /* 3. pass NULL lprc */
+    ret = ExtTextOutA(hdcMetafile, 0, 40, 0, NULL, text, lstrlenA(text), NULL);
+    ok( ret, "ExtTextOutA error %d\n", GetLastError());
+
+    /* 4. test with unmatched BeginPath/EndPath calls */
+    ret = BeginPath(hdcMetafile);
+    ok( ret, "BeginPath error %d\n", GetLastError());
+    ret = BeginPath(hdcMetafile);
+    ok( ret, "BeginPath error %d\n", GetLastError());
+    ret = EndPath(hdcMetafile);
+    ok( ret, "BeginPath error %d\n", GetLastError());
+    ret = ExtTextOutA(hdcMetafile, 0, 60, 0, NULL, text, lstrlenA(text), NULL);
+    ok( ret, "ExtTextOutA error %d\n", GetLastError());
+
     hFont = SelectObject(hdcMetafile, hFont);
     ret = DeleteObject(hFont);
     ok( ret, "DeleteObject error %d\n", GetLastError());
@@ -263,6 +299,137 @@ static void test_ExtTextOut(void)
     ok( ret, "ReleaseDC error %d\n", GetLastError());
     DestroyWindow(hwnd);
 }
+
+struct eto_scale_test_record
+{
+    INT graphics_mode;
+    INT map_mode;
+    double ex_scale;
+    double ey_scale;
+    BOOL processed;
+};
+
+static int CALLBACK eto_scale_enum_proc(HDC hdc, HANDLETABLE *handle_table,
+    const ENHMETARECORD *emr, int n_objs, LPARAM param)
+{
+    struct eto_scale_test_record *test = (struct eto_scale_test_record*)param;
+
+    if (emr->iType == EMR_EXTTEXTOUTW)
+    {
+        const EMREXTTEXTOUTW *pExtTextOutW = (const EMREXTTEXTOUTW *)emr;
+        ok(fabs(test->ex_scale - pExtTextOutW->exScale) < 0.001,
+           "Got exScale %f, expected %f\n", pExtTextOutW->exScale, test->ex_scale);
+        ok(fabs(test->ey_scale - pExtTextOutW->eyScale) < 0.001,
+           "Got eyScale %f, expected %f\n", pExtTextOutW->eyScale, test->ey_scale);
+        test->processed = TRUE;
+    }
+
+    return 1;
+}
+
+static void test_ExtTextOutScale(void)
+{
+    const RECT rc = { 0, 0, 100, 100 };
+    const WCHAR str[] = {'a',0 };
+    struct eto_scale_test_record test;
+    HDC hdcDisplay, hdcMetafile;
+    HENHMETAFILE hMetafile;
+    HWND hwnd;
+    SIZE wndext, vportext;
+    int horzSize, vertSize, horzRes, vertRes;
+    int ret;
+    int i;
+
+    hwnd = CreateWindowExA(0, "static", NULL, WS_POPUP | WS_VISIBLE,
+                           0, 0, 200, 200, 0, 0, 0, NULL);
+    ok(hwnd != 0, "CreateWindowExA failed\n");
+
+    hdcDisplay = GetDC(hwnd);
+    ok(hdcDisplay != 0, "GetDC failed\n");
+
+    horzSize = GetDeviceCaps(hdcDisplay, HORZSIZE);
+    horzRes  = GetDeviceCaps(hdcDisplay, HORZRES);
+    vertSize = GetDeviceCaps(hdcDisplay, VERTSIZE);
+    vertRes  = GetDeviceCaps(hdcDisplay, VERTRES);
+    ok(horzSize && horzRes && vertSize && vertRes, "GetDeviceCaps failed\n");
+
+    for (i = 0; i < 16; i++)
+    {
+        test.graphics_mode = i / 8 + 1;
+        test.map_mode      = i % 8 + 1;
+
+        ret = SetGraphicsMode(hdcDisplay, test.graphics_mode);
+        ok(ret, "SetGraphicsMode failed\n");
+        ret = SetMapMode(hdcDisplay, test.map_mode);
+        ok(ret, "SetMapMode failed\n");
+
+        if ((test.map_mode == MM_ISOTROPIC) || (test.map_mode == MM_ANISOTROPIC))
+        {
+            ret = SetWindowExtEx(hdcDisplay, 1, 1, NULL);
+            ok(ret, "SetWindowExtEx failed\n");
+            ret = SetViewportExtEx(hdcDisplay, -20, -10, NULL);
+            ok(ret, "SetViewportExtEx failed\n");
+        }
+
+        ret = GetViewportExtEx(hdcDisplay, &vportext);
+        ok(ret, "GetViewportExtEx failed\n");
+        ret = GetWindowExtEx(hdcDisplay, &wndext);
+        ok(ret, "GetWindowExtEx failed\n");
+
+        trace("gm %d, mm %d, wnd %d,%d, vp %d,%d horz %d,%d vert %d,%d\n",
+               test.graphics_mode, test.map_mode,
+               wndext.cx, wndext.cy, vportext.cx, vportext.cy,
+               horzSize, horzRes, vertSize, vertRes);
+
+        if (test.graphics_mode == GM_COMPATIBLE)
+        {
+            test.ex_scale = 100.0 * ((FLOAT)horzSize  / (FLOAT)horzRes) /
+                                    ((FLOAT)wndext.cx / (FLOAT)vportext.cx);
+            test.ey_scale = 100.0 * ((FLOAT)vertSize  / (FLOAT)vertRes) /
+                                    ((FLOAT)wndext.cy / (FLOAT)vportext.cy);
+        }
+        else
+        {
+            test.ex_scale = 0.0;
+            test.ey_scale = 0.0;
+        }
+
+        hdcMetafile = CreateEnhMetaFileA(hdcDisplay, NULL, NULL, NULL);
+        ok(hdcMetafile != 0, "CreateEnhMetaFileA failed\n");
+
+        ret = SetGraphicsMode(hdcMetafile, test.graphics_mode);
+        ok(ret, "SetGraphicsMode failed\n");
+        ret = SetMapMode(hdcMetafile, test.map_mode);
+        ok(ret, "SetMapMode failed\n");
+
+        if ((test.map_mode == MM_ISOTROPIC) || (test.map_mode == MM_ANISOTROPIC))
+        {
+            ret = SetWindowExtEx(hdcMetafile, 1, 1, NULL);
+            ok(ret, "SetWindowExtEx failed\n");
+            ret = SetViewportExtEx(hdcMetafile, -20, -10, NULL);
+            ok(ret, "SetViewportExtEx failed\n");
+        }
+
+        ret = ExtTextOutW(hdcMetafile, 0, 0, 0, 0, str, 1, NULL);
+        ok(ret, "ExtTextOutW failed\n");
+
+        hMetafile = CloseEnhMetaFile(hdcMetafile);
+        ok(hMetafile != 0, "CloseEnhMetaFile failed\n");
+
+        test.processed = 0;
+        ret = EnumEnhMetaFile(hdcDisplay, hMetafile, eto_scale_enum_proc, &test, &rc);
+        ok(ret, "EnumEnhMetaFile failed\n");
+        ok(test.processed, "EnumEnhMetaFile couldn't find EMR_EXTTEXTOUTW record\n");
+
+        ret = DeleteEnhMetaFile(hMetafile);
+        ok(ret, "DeleteEnhMetaFile failed\n");
+    }
+
+    ret = ReleaseDC(hwnd, hdcDisplay);
+    ok(ret, "ReleaseDC failed\n");
+    DestroyWindow(hwnd);
+}
+
 
 static void check_dc_state(HDC hdc, int restore_no,
                            int wnd_org_x, int wnd_org_y, int wnd_ext_x, int wnd_ext_y,
@@ -335,18 +502,21 @@ static int CALLBACK savedc_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
     trace("hdc %p, emr->iType %d, emr->nSize %d, param %p\n",
            hdc, emr->iType, emr->nSize, (void *)param);
 
-    trace("BEFORE:\n");
     SetLastError(0xdeadbeef);
     ret = GetWorldTransform(hdc, &xform);
     if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
-        ok(GetWindowOrgEx(hdc, &pt), "GetWindowOrgEx error %u\n", GetLastError());
+        ret = GetWindowOrgEx(hdc, &pt);
+        ok(ret, "GetWindowOrgEx error %u\n", GetLastError());
         trace("window org (%d,%d)\n", pt.x, pt.y);
-        ok(GetViewportOrgEx(hdc, &pt), "GetViewportOrgEx error %u\n", GetLastError());
+        ret = GetViewportOrgEx(hdc, &pt);
+        ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
         trace("vport org (%d,%d)\n", pt.x, pt.y);
-        ok(GetWindowExtEx(hdc, &size), "GetWindowExtEx error %u\n", GetLastError());
+        ret = GetWindowExtEx(hdc, &size);
+        ok(ret, "GetWindowExtEx error %u\n", GetLastError());
         trace("window ext (%d,%d)\n", size.cx, size.cy);
-        ok(GetViewportExtEx(hdc, &size), "GetViewportExtEx error %u\n", GetLastError());
+        ret = GetViewportExtEx(hdc, &size);
+        ok(ret, "GetViewportExtEx error %u\n", GetLastError());
         trace("vport ext (%d,%d)\n", size.cx, size.cy);
     }
     else
@@ -453,18 +623,21 @@ static int CALLBACK savedc_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
         break;
     }
 
-    trace("AFTER:\n");
     SetLastError(0xdeadbeef);
     ret = GetWorldTransform(hdc, &xform);
     if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
-        ok(GetWindowOrgEx(hdc, &pt), "GetWindowOrgEx error %u\n", GetLastError());
+        ret = GetWindowOrgEx(hdc, &pt);
+        ok(ret, "GetWindowOrgEx error %u\n", GetLastError());
         trace("window org (%d,%d)\n", pt.x, pt.y);
-        ok(GetViewportOrgEx(hdc, &pt), "GetViewportOrgEx error %u\n", GetLastError());
+        ret = GetViewportOrgEx(hdc, &pt);
+        ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
         trace("vport org (%d,%d)\n", pt.x, pt.y);
-        ok(GetWindowExtEx(hdc, &size), "GetWindowExtEx error %u\n", GetLastError());
+        ret = GetWindowExtEx(hdc, &size);
+        ok(ret, "GetWindowExtEx error %u\n", GetLastError());
         trace("window ext (%d,%d)\n", size.cx, size.cy);
-        ok(GetViewportExtEx(hdc, &size), "GetViewportExtEx error %u\n", GetLastError());
+        ret = GetViewportExtEx(hdc, &size);
+        ok(ret, "GetViewportExtEx error %u\n", GetLastError());
         trace("vport ext (%d,%d)\n", size.cx, size.cy);
     }
     else
@@ -512,8 +685,10 @@ static void test_SaveDC(void)
     SetPixelV(hdcMetafile, 50, 50, 0);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 0,"Expecting ViewportOrg x of 0, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 120,"Expecting ViewportExt cx of 120, got %i\n",size.cx);
     ret = SaveDC(hdcMetafile);
     ok(ret == 1, "ret = %d\n", ret);
@@ -527,8 +702,10 @@ static void test_SaveDC(void)
     SetPixelV(hdcMetafile, 50, 50, 0);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 10,"Expecting ViewportOrg x of 10, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 200,"Expecting ViewportExt cx of 200, got %i\n",size.cx);
     ret = SaveDC(hdcMetafile);
     ok(ret == 2, "ret = %d\n", ret);
@@ -544,8 +721,10 @@ static void test_SaveDC(void)
     SetPixelV(hdcMetafile, 50, 50, 0);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 20,"Expecting ViewportOrg x of 20, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 300,"Expecting ViewportExt cx of 300, got %i\n",size.cx);
     ret = SaveDC(hdcMetafile);
     ok(ret == 3, "ret = %d\n", ret);
@@ -564,15 +743,19 @@ static void test_SaveDC(void)
     SetPixelV(hdcMetafile, 50, 50, 0);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 30,"Expecting ViewportOrg x of 30, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 400,"Expecting ViewportExt cx of 400, got %i\n",size.cx);
     ret = RestoreDC(hdcMetafile, -1);
     ok(ret, "ret = %d\n", ret);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 20,"Expecting ViewportOrg x of 20, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 300,"Expecting ViewportExt cx of 300, got %i\n",size.cx);
     ok( GetPolyFillMode( hdcMetafile ) == ALTERNATE, "PolyFillMode not restored\n" );
     ok( GetBkColor( hdcMetafile ) == 0, "Background color not restored\n" );
@@ -580,14 +763,18 @@ static void test_SaveDC(void)
     ok(ret == 3, "ret = %d\n", ret);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 20,"Expecting ViewportOrg x of 20, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 300,"Expecting ViewportExt cx of 300, got %i\n",size.cx);
     ret = RestoreDC(hdcMetafile, 1);
     ok(ret, "ret = %d\n", ret);
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 0,"Expecting ViewportOrg x of 0, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 120,"Expecting ViewportExt cx of 120, got %i\n",size.cx);
 
     SetWindowOrgEx(hdcMetafile, -4, -4, NULL);
@@ -599,15 +786,19 @@ static void test_SaveDC(void)
     SetPixelV(hdcMetafile, 50, 50, 0);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 40,"Expecting ViewportOrg x of 40, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 50,"Expecting ViewportExt cx of 50, got %i\n",size.cx);
     ret = SaveDC(hdcMetafile);
     ok(ret == 1, "ret = %d\n", ret);
 
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 40,"Expecting ViewportOrg x of 40, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 50,"Expecting ViewportExt cx of 50, got %i\n",size.cx);
     ret = SaveDC(hdcMetafile);
     ok(ret == 2, "ret = %d\n", ret);
@@ -635,8 +826,10 @@ static void test_SaveDC(void)
     ret = RestoreDC(hdcMetafile, 1);
     ok(ret, "ret = %d\n", ret);
     ret = GetViewportOrgEx(hdcMetafile, &pt);
+    ok(ret, "GetViewportOrgEx error %u\n", GetLastError());
     ok(pt.x == 40,"Expecting ViewportOrg x of 40, got %i\n",pt.x);
     ret = GetViewportExtEx(hdcMetafile, &size);
+    ok(ret, "GetViewportExtEx error %u\n", GetLastError());
     ok(size.cx == 50,"Expecting ViewportExt cx of 50, got %i\n",size.cx);
 
     hFontCheck = SelectObject(hdcMetafile, hFontOld);
@@ -683,10 +876,18 @@ static void test_mf_SaveDC(void)
     /* Need to write something to the emf, otherwise Windows won't play it back */
     LineTo(hdcMetafile, 150, 150);
 
-    SetWindowOrgEx(hdcMetafile, 0, 0, NULL);
-    SetViewportOrgEx(hdcMetafile, 0, 0, NULL);
-    SetWindowExtEx(hdcMetafile, 110, 110, NULL );
-    SetViewportExtEx(hdcMetafile, 120, 120, NULL );
+    pt.x = pt.y = 5555;
+    SetWindowOrgEx(hdcMetafile, 0, 0, &pt);
+    ok( pt.x == 5555 && pt.y == 5555, "wrong origin %d,%d\n", pt.x, pt.y);
+    pt.x = pt.y = 5555;
+    SetViewportOrgEx(hdcMetafile, 0, 0, &pt);
+    ok( pt.x == 5555 && pt.y == 5555, "wrong origin %d,%d\n", pt.x, pt.y);
+    size.cx = size.cy = 5555;
+    SetWindowExtEx(hdcMetafile, 110, 110, &size );
+    ok( size.cx == 5555 && size.cy == 5555, "wrong size %d,%d\n", size.cx, size.cy );
+    size.cx = size.cy = 5555;
+    SetViewportExtEx(hdcMetafile, 120, 120, &size );
+    ok( size.cx == 5555 && size.cy == 5555, "wrong size %d,%d\n", size.cx, size.cy );
 
     /* Force Win9x to update DC state */
     SetPixelV(hdcMetafile, 50, 50, 0);
@@ -809,7 +1010,7 @@ static void test_mf_SaveDC(void)
 /* with the nominal results. */
 
 /* Maximum size of sample metafiles in bytes. */
-#define MF_BUFSIZE 512
+#define MF_BUFSIZE 1024
 
 /* 8x8 bitmap data for a pattern brush */
 static const unsigned char SAMPLE_PATTERN_BRUSH[] = {
@@ -860,6 +1061,21 @@ static const unsigned char MF_PATTERN_BRUSH_BITS[] = {
     0x00, 0x00
 };
 
+static const unsigned char MF_DCBRUSH_BITS[] =
+{
+    0x01, 0x00, 0x09, 0x00, 0x00, 0x03, 0x2a, 0x00,
+    0x00, 0x00, 0x02, 0x00, 0x08, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0xfc, 0x02,
+    0x00, 0x00, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00,
+    0x04, 0x00, 0x00, 0x00, 0x2d, 0x01, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0xfa, 0x02, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x04, 0x00, 0x00, 0x00, 0x2d, 0x01, 0x01, 0x00,
+    0x07, 0x00, 0x00, 0x00, 0x1b, 0x04, 0x14, 0x00,
+    0x14, 0x00, 0x0a, 0x00, 0x0a, 0x00, 0x03, 0x00,
+    0x00, 0x00, 0x00, 0x00
+};
+
 static const unsigned char MF_TEXTOUT_ON_PATH_BITS[] =
 {
     0x01, 0x00, 0x09, 0x00, 0x00, 0x03, 0x19, 0x00,
@@ -901,6 +1117,44 @@ static const unsigned char EMF_TEXTOUT_ON_PATH_BITS[] =
     0x03, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00,
     0x08, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00,
     0x3c, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00,
+    0x0e, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
+    0x14, 0x00, 0x00, 0x00
+};
+
+static const unsigned char EMF_TEXTOUT_OUTLINE_ON_PATH_BITS[] =
+{
+    0x01, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xdd, 0xff, 0xff, 0xff, 0xdd, 0xff, 0xff, 0xff,
+    0x20, 0x45, 0x4d, 0x46, 0x00, 0x00, 0x01, 0x00,
+    0x0c, 0x01, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x90, 0x06, 0x00, 0x00, 0x1a, 0x04, 0x00, 0x00,
+    0x51, 0x02, 0x00, 0x00, 0x72, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x1a, 0x0b, 0x09, 0x00,
+    0xf0, 0xa6, 0x05, 0x00, 0x25, 0x00, 0x00, 0x00,
+    0x0c, 0x00, 0x00, 0x00, 0x0d, 0x00, 0x00, 0x80,
+    0x3b, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00,
+    0x54, 0x00, 0x00, 0x00, 0x64, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0x01, 0x00, 0x00, 0x00, 0xc3, 0x30, 0x0d, 0x42,
+    0xcf, 0xf3, 0x0c, 0x42, 0x0b, 0x00, 0x00, 0x00,
+    0x16, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00,
+    0x4c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0x54, 0x00, 0x00, 0x00, 0x54, 0x00, 0x65, 0x00,
+    0x73, 0x00, 0x74, 0x00, 0x03, 0x00, 0x00, 0x00,
+    0x05, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00,
+    0x0c, 0x00, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0x25, 0x00, 0x00, 0x00,
+    0x0c, 0x00, 0x00, 0x00, 0x0d, 0x00, 0x00, 0x80,
     0x0e, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
     0x14, 0x00, 0x00, 0x00
@@ -1036,16 +1290,16 @@ static const unsigned char EMF_BITBLT[] =
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x03, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x6a, 0x00, 0x00, 0x00, 0x6a, 0x00, 0x00, 0x00,
+    0x4f, 0x00, 0x00, 0x00, 0x4f, 0x00, 0x00, 0x00,
     0x20, 0x45, 0x4d, 0x46, 0x00, 0x00, 0x01, 0x00,
-    0xa0, 0x01, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00,
+    0x64, 0x02, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00,
     0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x23, 0x04, 0x00, 0x00, 0x3b, 0x02, 0x00, 0x00,
-    0x75, 0x01, 0x00, 0x00, 0xc9, 0x00, 0x00, 0x00,
+    0x80, 0x07, 0x00, 0x00, 0xb0, 0x04, 0x00, 0x00,
+    0xfc, 0x01, 0x00, 0x00, 0x3e, 0x01, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x08, 0xb1, 0x05, 0x00,
-    0x28, 0x11, 0x03, 0x00, 0x4c, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x60, 0xc0, 0x07, 0x00,
+    0x30, 0xda, 0x04, 0x00, 0x4c, 0x00, 0x00, 0x00,
     0xbc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
     0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1081,11 +1335,216 @@ static const unsigned char EMF_BITBLT[] =
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00,
-    0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x10, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00
+    0x00, 0x00, 0x00, 0x00, 0x4d, 0x00, 0x00, 0x00,
+    0xc4, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
+    0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00,
+    0x04, 0x00, 0x00, 0x00, 0x20, 0x00, 0xcc, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x0a, 0xd7, 0xa3, 0x3b, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x0a, 0xd7, 0x23, 0x3c,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x6c, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00,
+    0x94, 0x00, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00,
+    0x90, 0x01, 0x00, 0x00, 0x90, 0x01, 0x00, 0x00,
+    0x28, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00,
+    0x04, 0x00, 0x00, 0x00, 0x01, 0x00, 0x18, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x0e, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
+    0x14, 0x00, 0x00, 0x00
 };
 
+static const unsigned char EMF_DCBRUSH_BITS[] =
+{
+    0x01, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00,
+    0x13, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00,
+    0x39, 0x01, 0x00, 0x00, 0x39, 0x01, 0x00, 0x00,
+    0x52, 0x02, 0x00, 0x00, 0x52, 0x02, 0x00, 0x00,
+    0x20, 0x45, 0x4d, 0x46, 0x00, 0x00, 0x01, 0x00,
+    0x44, 0x01, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00,
+    0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x04, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00,
+    0x40, 0x01, 0x00, 0x00, 0xf0, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0xe2, 0x04, 0x00,
+    0x80, 0xa9, 0x03, 0x00, 0x25, 0x00, 0x00, 0x00,
+    0x0c, 0x00, 0x00, 0x00, 0x12, 0x00, 0x00, 0x80,
+    0x25, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00,
+    0x13, 0x00, 0x00, 0x80, 0x27, 0x00, 0x00, 0x00,
+    0x18, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x55, 0x55, 0x55, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x25, 0x00, 0x00, 0x00,
+    0x0c, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x26, 0x00, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x33, 0x44, 0x55, 0x00, 0x25, 0x00, 0x00, 0x00,
+    0x0c, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
+    0x2b, 0x00, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00,
+    0x13, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00,
+    0x28, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x27, 0x00, 0x00, 0x00,
+    0x18, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x12, 0x34, 0x56, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x25, 0x00, 0x00, 0x00,
+    0x0c, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x28, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00,
+    0x0c, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
+    0x0e, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
+    0x14, 0x00, 0x00, 0x00
+};
+
+static const unsigned char EMF_BEZIER_BITS[] =
+{
+    0x01, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x01, 0x80, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x1a, 0x2a, 0x0d, 0x00, 0x1a, 0x2f, 0x0d, 0x00,
+    0x20, 0x45, 0x4d, 0x46, 0x00, 0x00, 0x01, 0x00,
+    0x44, 0x01, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x05, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00,
+    0x51, 0x01, 0x00, 0x00, 0x0e, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x68, 0x24, 0x05, 0x00,
+    0xb0, 0x1e, 0x04, 0x00, 0x58, 0x00, 0x00, 0x00,
+    0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
+    0x14, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x0a, 0x00, 0x14, 0x00, 0x14, 0x00,
+    0x0f, 0x00, 0x0f, 0x00, 0x55, 0x00, 0x00, 0x00,
+    0x2c, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x00, 0x00, 0x19, 0x00, 0x00, 0x00,
+    0x19, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x0a, 0x00, 0x14, 0x00, 0x14, 0x00,
+    0x0f, 0x00, 0x0f, 0x00, 0x19, 0x00, 0x19, 0x00,
+    0x02, 0x00, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x00,
+    0x0f, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x00,
+    0x01, 0x80, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00,
+    0x04, 0x00, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00,
+    0x01, 0x80, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
+    0x14, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x00,
+    0x0f, 0x00, 0x00, 0x00, 0x19, 0x00, 0x00, 0x00,
+    0x19, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00,
+    0x34, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x00,
+    0x0f, 0x00, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00,
+    0x01, 0x80, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
+    0x01, 0x80, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00,
+    0x14, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
+    0x0f, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x00,
+    0x0e, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
+    0x14, 0x00, 0x00, 0x00
+};
+
+static const unsigned char EMF_POLYPOLYLINE_BITS[] =
+{
+    0x01, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
+    0x00, 0x90, 0x00, 0x00, 0xf4, 0x01, 0x00, 0x00,
+    0x61, 0x01, 0x00, 0x00, 0xc2, 0x02, 0x00, 0x00,
+    0x7a, 0xd4, 0x13, 0x00, 0xe8, 0x44, 0x00, 0x00,
+    0x20, 0x45, 0x4d, 0x46, 0x00, 0x00, 0x01, 0x00,
+    0x84, 0x01, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xa1, 0x05, 0x00, 0x00, 0x47, 0x03, 0x00, 0x00,
+    0xfc, 0x01, 0x00, 0x00, 0x28, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0xc0, 0xc1, 0x07, 0x00,
+    0x2c, 0x84, 0x04, 0x00, 0x5a, 0x00, 0x00, 0x00,
+    0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x5a, 0x00, 0x00, 0x00,
+    0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0x02, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x14, 0x00,
+    0x5a, 0x00, 0x00, 0x00, 0x30, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x14, 0x00, 0x64, 0x00, 0xc8, 0x00,
+    0x07, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
+    0x64, 0x00, 0x00, 0x00, 0xc8, 0x00, 0x00, 0x00,
+    0x00, 0x90, 0x00, 0x00, 0x2c, 0x01, 0x00, 0x00,
+    0x07, 0x00, 0x00, 0x00, 0x48, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
+    0x00, 0x90, 0x00, 0x00, 0xf4, 0x01, 0x00, 0x00,
+    0x02, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
+    0x64, 0x00, 0x00, 0x00, 0xc8, 0x00, 0x00, 0x00,
+    0x00, 0x90, 0x00, 0x00, 0x2c, 0x01, 0x00, 0x00,
+    0x90, 0x01, 0x00, 0x00, 0xf4, 0x01, 0x00, 0x00,
+    0x0e, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
+    0x14, 0x00, 0x00, 0x00
+};
+
+static const unsigned char EMF_GRADIENTFILL_BITS[] =
+{
+    0x01, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00,
+    0x2b, 0x01, 0x00, 0x00, 0x35, 0x01, 0x00, 0x00,
+    0x23, 0x00, 0x00, 0x00, 0x61, 0x01, 0x00, 0x00,
+    0x31, 0x29, 0x00, 0x00, 0xa3, 0x2a, 0x00, 0x00,
+    0x20, 0x45, 0x4d, 0x46, 0x00, 0x00, 0x01, 0x00,
+    0x0c, 0x01, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x40, 0x05, 0x00, 0x00, 0x46, 0x03, 0x00, 0x00,
+    0xda, 0x01, 0x00, 0x00, 0x28, 0x01, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x15, 0x3c, 0x07, 0x00,
+    0xcb, 0x82, 0x04, 0x00, 0x76, 0x00, 0x00, 0x00,
+    0x8c, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x00, 0x00, 0x2b, 0x01, 0x00, 0x00,
+    0x35, 0x01, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00,
+    0x00, 0xff, 0x00, 0x80, 0x00, 0x00, 0x01, 0x80,
+    0xc8, 0x00, 0x00, 0x00, 0xd2, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0xff,
+    0xb4, 0x00, 0x00, 0x00, 0xbe, 0x00, 0x00, 0x00,
+    0x34, 0x12, 0x78, 0x56, 0xbc, 0x9a, 0xf0, 0xde,
+    0x2c, 0x01, 0x00, 0x00, 0x36, 0x01, 0x00, 0x00,
+    0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0x00,
+    0x90, 0x01, 0x00, 0x00, 0x9a, 0x01, 0x00, 0x00,
+    0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x0e, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
+    0x14, 0x00, 0x00, 0x00
+};
 
 /* For debugging or dumping the raw metafiles produced by
  * new test functions.
@@ -1354,6 +1813,28 @@ static BOOL match_emf_record(const ENHMETARECORD *emr1, const ENHMETARECORD *emr
             HeapFree(GetProcessHeap(), 0, emr_nt4);
         }
     }
+    else if (emr1->iType == EMR_POLYBEZIERTO16 || emr1->iType == EMR_POLYBEZIER16)
+    {
+        EMRPOLYBEZIER16 *eto1, *eto2;
+
+        eto1 = (EMRPOLYBEZIER16*)emr1;
+        eto2 = (EMRPOLYBEZIER16*)emr2;
+
+        diff = eto1->cpts != eto2->cpts;
+        if(!diff)
+            diff = memcmp(eto1->apts, eto2->apts, eto1->cpts * sizeof(POINTS));
+    }
+    else if (emr1->iType == EMR_POLYBEZIERTO || emr1->iType == EMR_POLYBEZIER)
+    {
+        EMRPOLYBEZIER *eto1, *eto2;
+
+        eto1 = (EMRPOLYBEZIER*)emr1;
+        eto2 = (EMRPOLYBEZIER*)emr2;
+
+        diff = eto1->cptl != eto2->cptl;
+        if(!diff)
+            diff = memcmp(eto1->aptl, eto2->aptl, eto1->cptl * sizeof(POINTL));
+    }
     else
         diff = memcmp(emr1, emr2, emr1->nSize);
 
@@ -1413,6 +1894,14 @@ static int compare_emf_bits(const HENHMETAFILE mf, const unsigned char *bits,
        broken(emh1->nSize - diff_nt4 == emh2->nSize) ||
        broken(emh1->nSize - diff_9x == emh2->nSize),
        "expected nSize %u, got %u\n", emh1->nSize, emh2->nSize);
+    ok(emh1->rclBounds.left == emh2->rclBounds.left, "%s: expected rclBounds.left = %d, got %d\n",
+            desc, emh1->rclBounds.left, emh2->rclBounds.left);
+    ok(emh1->rclBounds.top == emh2->rclBounds.top, "%s: expected rclBounds.top = %d, got %d\n",
+            desc, emh1->rclBounds.top, emh2->rclBounds.top);
+    ok(emh1->rclBounds.right == emh2->rclBounds.right, "%s: expected rclBounds.right = %d, got %d\n",
+            desc, emh1->rclBounds.right, emh2->rclBounds.right);
+    ok(emh1->rclBounds.bottom == emh2->rclBounds.bottom, "%s: expected rclBounds.bottom = %d, got %d\n",
+            desc, emh1->rclBounds.bottom, emh2->rclBounds.bottom);
     ok(emh1->dSignature == emh2->dSignature, "expected dSignature %u, got %u\n", emh1->dSignature, emh2->dSignature);
     ok(emh1->nBytes == emh2->nBytes ||
        broken(emh1->nBytes - diff_nt4 == emh2->nBytes) ||
@@ -1424,21 +1913,17 @@ static int compare_emf_bits(const HENHMETAFILE mf, const unsigned char *bits,
     offset2 = emh2->nSize; /* Needed for Win9x/WinME/NT4 */
     while (offset1 < emh1->nBytes)
     {
-	const ENHMETARECORD *emr1 = (const ENHMETARECORD *)(bits + offset1);
-	const ENHMETARECORD *emr2 = (const ENHMETARECORD *)(buf + offset2);
+        const ENHMETARECORD *emr1 = (const ENHMETARECORD *)(bits + offset1);
+        const ENHMETARECORD *emr2 = (const ENHMETARECORD *)(buf + offset2);
 
-#if 1
-	skip("skipping match_emf_record(), bug 5393\n");
-#else
-	trace("%s: EMF record %u, size %u/record %u, size %u\n",
-                desc, emr1->iType, emr1->nSize, emr2->iType, emr2->nSize);
- 
+        trace("%s: EMF record %u, size %u/record %u, size %u\n",
+              desc, emr1->iType, emr1->nSize, emr2->iType, emr2->nSize);
+
         if (!match_emf_record(emr1, emr2, desc, ignore_scaling)) return -1;
-#endif
 
         /* We have already bailed out if iType or nSize don't match */
-	offset1 += emr1->nSize;
-	offset2 += emr2->nSize;
+        offset1 += emr1->nSize;
+        offset2 += emr2->nSize;
     }
     return 0;
 }
@@ -1465,6 +1950,7 @@ static void test_emf_BitBlt(void)
         0,      /* biClrImportant */
     };
     void *bits;
+    XFORM xform;
     BOOL ret;
 
     hdcDisplay = CreateDCA("DISPLAY", NULL, NULL, NULL);
@@ -1472,6 +1958,7 @@ static void test_emf_BitBlt(void)
 
     hdcBitmap = CreateCompatibleDC(hdcDisplay);
     ok( hdcBitmap != 0, "CreateCompatibleDC failed\n" );
+    ok(SetGraphicsMode(hdcBitmap, GM_ADVANCED), "SetGraphicsMode failed\n");
     bmih.biXPelsPerMeter = MulDiv(GetDeviceCaps(hdcDisplay, LOGPIXELSX), 100, 3937);
     bmih.biYPelsPerMeter = MulDiv(GetDeviceCaps(hdcDisplay, LOGPIXELSY), 100, 3937);
     hBitmap = CreateDIBSection(hdcDisplay, (const BITMAPINFO *)&bmih,
@@ -1490,6 +1977,19 @@ static void test_emf_BitBlt(void)
     ret = BitBlt(hdcMetafile, 0, 0, BMP_DIM, BMP_DIM, 0, 0, 0, WHITENESS);
     ok( ret, "BitBlt(WHITENESS) failed\n" );
 
+    ok(SetMapMode(hdcBitmap, MM_ANISOTROPIC), "SetMapMode failed\n");
+    ok(SetWindowOrgEx(hdcBitmap, 0, 0, NULL), "SetWindowOrgEx failed\n");
+    ok(SetWindowExtEx(hdcBitmap, 400, 400, NULL), "SetWindowExtEx failed\n");
+    ok(SetViewportOrgEx(hdcBitmap, 0, 0, NULL), "SetViewportOrgEx failed\n");
+    ok(SetViewportExtEx(hdcBitmap, BMP_DIM, BMP_DIM, NULL), "SetViewportExtEx failed\n");
+    memset(&xform, 0, sizeof(xform));
+    xform.eM11 = 0.5;
+    xform.eM22 = 1.0;
+    ok(SetWorldTransform(hdcBitmap, &xform), "SetWorldTransform failed\n");
+
+    ret = StretchBlt(hdcMetafile, 0, 0, BMP_DIM, BMP_DIM, hdcBitmap, 0, 0, 400, 400, SRCCOPY);
+    ok( ret, "StretchBlt(SRCCOPY) failed\n" );
+
     hMetafile = CloseEnhMetaFile(hdcMetafile);
     ok( hMetafile != 0, "CloseEnhMetaFile failed\n" );
 
@@ -1505,6 +2005,58 @@ static void test_emf_BitBlt(void)
     DeleteDC(hdcBitmap);
     DeleteDC(hdcDisplay);
 #undef BMP_DIM
+}
+
+static void test_emf_DCBrush(void)
+{
+    HDC hdcMetafile;
+    HENHMETAFILE hMetafile;
+    HBRUSH hBrush;
+    HPEN hPen;
+    BOOL ret;
+    COLORREF color;
+
+    if (!pSetDCBrushColor || !pSetDCPenColor)
+    {
+        win_skip( "SetDCBrush/PenColor not supported\n" );
+        return;
+    }
+
+    hdcMetafile = CreateEnhMetaFileA(GetDC(0), NULL, NULL, NULL);
+    ok( hdcMetafile != 0, "CreateEnhMetaFileA failed\n" );
+
+    hBrush = SelectObject(hdcMetafile, GetStockObject(DC_BRUSH));
+    ok(hBrush != 0, "SelectObject error %d.\n", GetLastError());
+
+    hPen = SelectObject(hdcMetafile, GetStockObject(DC_PEN));
+    ok(hPen != 0, "SelectObject error %d.\n", GetLastError());
+
+    color = pSetDCBrushColor( hdcMetafile, RGB(0x55,0x55,0x55) );
+    ok( color == 0xffffff, "SetDCBrushColor returned %x\n", color );
+
+    color = pSetDCPenColor( hdcMetafile, RGB(0x33,0x44,0x55) );
+    ok( color == 0, "SetDCPenColor returned %x\n", color );
+
+    Rectangle( hdcMetafile, 10, 10, 20, 20 );
+
+    color = pSetDCBrushColor( hdcMetafile, RGB(0x12,0x34,0x56) );
+    ok( color == 0x555555, "SetDCBrushColor returned %x\n", color );
+
+    hMetafile = CloseEnhMetaFile(hdcMetafile);
+    ok( hMetafile != 0, "CloseEnhMetaFile failed\n" );
+
+    if (compare_emf_bits (hMetafile, EMF_DCBRUSH_BITS, sizeof(EMF_DCBRUSH_BITS),
+                          "emf_DC_Brush", FALSE ) != 0)
+    {
+        dump_emf_bits(hMetafile, "emf_DC_Brush");
+        dump_emf_records(hMetafile, "emf_DC_Brush");
+    }
+    ret = DeleteEnhMetaFile(hMetafile);
+    ok( ret, "DeleteEnhMetaFile error %d\n", GetLastError());
+    ret = DeleteObject(hBrush);
+    ok( ret, "DeleteObject(HBRUSH) error %d\n", GetLastError());
+    ret = DeleteObject(hPen);
+    ok( ret, "DeleteObject(HPEN) error %d\n", GetLastError());
 }
 
 /* Test a blank metafile.  May be used as a template for new tests. */
@@ -1668,6 +2220,7 @@ static void test_SetMetaFileBits(void)
     ret = DeleteMetaFile(hmf);
     ok(ret, "DeleteMetaFile(%p) error %d\n", hmf, GetLastError());
 
+#ifndef _WIN64 /* Generates access violation on XP x64 and Win2003 x64 */
     /* Now with zeroed out mtSize field */
     memcpy(buf, MF_GRAPHICS_BITS, sizeof(MF_GRAPHICS_BITS));
     mh = (METAHEADER *)buf;
@@ -1685,6 +2238,7 @@ static void test_SetMetaFileBits(void)
 
     ret = DeleteMetaFile(hmf);
     ok(ret, "DeleteMetaFile(%p) error %d\n", hmf, GetLastError());
+#endif
 }
 
 /* Simple APIs from mfdrv/graphics.c
@@ -1781,6 +2335,53 @@ static void test_mf_PatternBrush(void)
     HeapFree (GetProcessHeap(), 0, orig_lb);
 }
 
+static void test_mf_DCBrush(void)
+{
+    HDC hdcMetafile;
+    HMETAFILE hMetafile;
+    HBRUSH hBrush;
+    HPEN hPen;
+    BOOL ret;
+    COLORREF color;
+
+    if (!pSetDCBrushColor || !pSetDCPenColor)
+    {
+        win_skip( "SetDCBrush/PenColor not supported\n" );
+        return;
+    }
+
+    hdcMetafile = CreateMetaFileA(NULL);
+    ok( hdcMetafile != 0, "CreateMetaFileA failed\n" );
+
+    hBrush = SelectObject(hdcMetafile, GetStockObject(DC_BRUSH));
+    ok(hBrush != 0, "SelectObject error %d.\n", GetLastError());
+
+    hPen = SelectObject(hdcMetafile, GetStockObject(DC_PEN));
+    ok(hPen != 0, "SelectObject error %d.\n", GetLastError());
+
+    color = pSetDCBrushColor( hdcMetafile, RGB(0x55,0x55,0x55) );
+    ok( color == CLR_INVALID, "SetDCBrushColor returned %x\n", color );
+
+    color = pSetDCPenColor( hdcMetafile, RGB(0x33,0x44,0x55) );
+    ok( color == CLR_INVALID, "SetDCPenColor returned %x\n", color );
+
+    Rectangle( hdcMetafile, 10, 10, 20, 20 );
+
+    color = pSetDCBrushColor( hdcMetafile, RGB(0x12,0x34,0x56) );
+    ok( color == CLR_INVALID, "SetDCBrushColor returned %x\n", color );
+
+    hMetafile = CloseMetaFile(hdcMetafile);
+    ok( hMetafile != 0, "CloseMetaFile failed\n" );
+
+    if (compare_mf_bits(hMetafile, MF_DCBRUSH_BITS, sizeof(MF_DCBRUSH_BITS), "mf_DCBrush") != 0)
+    {
+        dump_mf_bits(hMetafile, "mf_DCBrush");
+        EnumMetaFile(0, hMetafile, mf_enum_proc, 0);
+    }
+    ret = DeleteMetaFile(hMetafile);
+    ok(ret, "DeleteMetaFile(%p) error %d\n", hMetafile, GetLastError());
+}
+
 static void test_mf_ExtTextOut_on_path(void)
 {
     HDC hdcMetafile;
@@ -1821,6 +2422,8 @@ static void test_emf_ExtTextOut_on_path(void)
     HDC hdcDisplay, hdcMetafile;
     HENHMETAFILE hMetafile;
     BOOL ret;
+    LOGFONTA lf;
+    HFONT hFont;
     static const INT dx[4] = { 3, 5, 8, 12 };
 
     /* Win9x doesn't play EMFs on invisible windows */
@@ -1830,6 +2433,19 @@ static void test_emf_ExtTextOut_on_path(void)
 
     hdcDisplay = GetDC(hwnd);
     ok(hdcDisplay != 0, "GetDC error %d\n", GetLastError());
+
+    /* with default font */
+    ret = BeginPath(hdcDisplay);
+    ok(ret, "BeginPath error %d\n", GetLastError());
+
+    ret = ExtTextOutA(hdcDisplay, 11, 22, 0, NULL, "Test", 4, dx);
+    ok(ret, "ExtTextOut error %d\n", GetLastError());
+
+    ret = EndPath(hdcDisplay);
+    ok(ret, "EndPath error %d\n", GetLastError());
+
+    ret = GetPath(hdcDisplay, NULL, NULL, 0);
+    ok(!ret, "expected 0, got %d\n", ret);
 
     hdcMetafile = CreateEnhMetaFileA(hdcDisplay, NULL, NULL, NULL);
     ok(hdcMetafile != 0, "CreateEnhMetaFileA error %d\n", GetLastError());
@@ -1842,6 +2458,9 @@ static void test_emf_ExtTextOut_on_path(void)
 
     ret = EndPath(hdcMetafile);
     ok(ret, "EndPath error %d\n", GetLastError());
+
+    ret = GetPath(hdcMetafile, NULL, NULL, 0);
+    ok(!ret, "expected 0, got %d\n", ret);
 
     hMetafile = CloseEnhMetaFile(hdcMetafile);
     ok(hMetafile != 0, "CloseEnhMetaFile error %d\n", GetLastError());
@@ -1858,6 +2477,66 @@ static void test_emf_ExtTextOut_on_path(void)
 
     ret = DeleteEnhMetaFile(hMetafile);
     ok(ret, "DeleteEnhMetaFile error %d\n", GetLastError());
+
+    /* with outline font */
+    memset(&lf, 0, sizeof(lf));
+    lf.lfCharSet = ANSI_CHARSET;
+    lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    lf.lfWeight = FW_DONTCARE;
+    lf.lfHeight = 7;
+    lf.lfQuality = DEFAULT_QUALITY;
+    lstrcpyA(lf.lfFaceName, "Tahoma");
+    hFont = CreateFontIndirectA(&lf);
+    ok(hFont != 0, "CreateFontIndirectA error %d\n", GetLastError());
+    hFont = SelectObject(hdcDisplay, hFont);
+
+    ret = BeginPath(hdcDisplay);
+    ok(ret, "BeginPath error %d\n", GetLastError());
+
+    ret = ExtTextOutA(hdcDisplay, 11, 22, 0, NULL, "Test", 4, dx);
+    ok(ret, "ExtTextOut error %d\n", GetLastError());
+
+    ret = EndPath(hdcDisplay);
+    ok(ret, "EndPath error %d\n", GetLastError());
+
+    ret = GetPath(hdcDisplay, NULL, NULL, 0);
+    ok(ret != 0, "expected != 0\n");
+
+    SelectObject(hdcDisplay, hFont);
+
+    hdcMetafile = CreateEnhMetaFileA(hdcDisplay, NULL, NULL, NULL);
+    ok(hdcMetafile != 0, "CreateEnhMetaFileA error %d\n", GetLastError());
+
+    hFont = SelectObject(hdcMetafile, hFont);
+
+    ret = BeginPath(hdcMetafile);
+    ok(ret, "BeginPath error %d\n", GetLastError());
+
+    ret = ExtTextOutA(hdcMetafile, 11, 22, 0, NULL, "Test", 4, dx);
+    ok(ret, "ExtTextOut error %d\n", GetLastError());
+
+    ret = EndPath(hdcMetafile);
+    ok(ret, "EndPath error %d\n", GetLastError());
+
+    ret = GetPath(hdcMetafile, NULL, NULL, 0);
+    ok(!ret, "expected 0, got %d\n", ret);
+
+    hFont = SelectObject(hdcMetafile, hFont);
+    DeleteObject(hFont);
+
+    hMetafile = CloseEnhMetaFile(hdcMetafile);
+    ok(hMetafile != 0, "CloseEnhMetaFile error %d\n", GetLastError());
+
+    if (compare_emf_bits(hMetafile, EMF_TEXTOUT_OUTLINE_ON_PATH_BITS, sizeof(EMF_TEXTOUT_OUTLINE_ON_PATH_BITS),
+        "emf_TextOut_on_path", FALSE) != 0)
+    {
+        dump_emf_bits(hMetafile, "emf_TextOut_outline_on_path");
+        dump_emf_records(hMetafile, "emf_TextOut_outline_on_path");
+    }
+
+    ret = DeleteEnhMetaFile(hMetafile);
+    ok(ret, "DeleteEnhMetaFile error %d\n", GetLastError());
+
     ret = ReleaseDC(hwnd, hdcDisplay);
     ok(ret, "ReleaseDC error %d\n", GetLastError());
     DestroyWindow(hwnd);
@@ -1919,7 +2598,7 @@ static int CALLBACK clip_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
 {
     if (emr->iType == EMR_EXTSELECTCLIPRGN)
     {
-	const EMREXTSELECTCLIPRGN *clip = (const EMREXTSELECTCLIPRGN *)emr;
+        const EMREXTSELECTCLIPRGN *clip = (const EMREXTSELECTCLIPRGN *)emr;
         union _rgn
         {
             RGNDATA data;
@@ -1945,16 +2624,15 @@ static int CALLBACK clip_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
 
         rgn1 = (const union _rgn *)clip->RgnData;
 
-        trace("size %u, type %u, count %u, rgn size %u, bound (%d,%d-%d,%d)\n",
+        trace("size %u, type %u, count %u, rgn size %u, bound %s\n",
               rgn1->data.rdh.dwSize, rgn1->data.rdh.iType,
               rgn1->data.rdh.nCount, rgn1->data.rdh.nRgnSize,
-              rgn1->data.rdh.rcBound.left, rgn1->data.rdh.rcBound.top,
-              rgn1->data.rdh.rcBound.right, rgn1->data.rdh.rcBound.bottom);
+              wine_dbgstr_rect(&rgn1->data.rdh.rcBound));
 
         ok(EqualRect(&rgn1->data.rdh.rcBound, rc), "rects don't match\n");
 
         rect = *(const RECT *)rgn1->data.Buffer;
-        trace("rect (%d,%d-%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom);
+        trace("rect %s\n", wine_dbgstr_rect(&rect));
         ok(EqualRect(&rect, rc), "rects don't match\n");
 
         ok(rgn1->data.rdh.dwSize == sizeof(rgn1->data.rdh), "expected sizeof(rdh), got %u\n", rgn1->data.rdh.dwSize);
@@ -1990,26 +2668,23 @@ static int CALLBACK clip_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
         ok(ret == sizeof(rgn2.data.rdh) + sizeof(RECT), "expected sizeof(rgn), got %u\n", ret);
 
         ret = GetRegionData(hrgn, sizeof(rgn2), &rgn2.data);
+        ok(ret == sizeof(rgn2), "expected sizeof(rgn2), got %u\n", ret);
 
-        trace("size %u, type %u, count %u, rgn size %u, bound (%d,%d-%d,%d)\n",
-              rgn2.data.rdh.dwSize, rgn2.data.rdh.iType,
-              rgn2.data.rdh.nCount, rgn2.data.rdh.nRgnSize,
-              rgn2.data.rdh.rcBound.left, rgn2.data.rdh.rcBound.top,
-              rgn2.data.rdh.rcBound.right, rgn2.data.rdh.rcBound.bottom);
+        trace("size %u, type %u, count %u, rgn size %u, bound %s\n", rgn2.data.rdh.dwSize,
+              rgn2.data.rdh.iType, rgn2.data.rdh.nCount, rgn2.data.rdh.nRgnSize,
+              wine_dbgstr_rect(&rgn2.data.rdh.rcBound));
 
         rect = rgn2.data.rdh.rcBound;
         rc_transformed = *rc;
         translate((POINT *)&rc_transformed, 2, &xform);
-        trace("transformed (%d,%d-%d,%d)\n", rc_transformed.left, rc_transformed.top,
-              rc_transformed.right, rc_transformed.bottom);
+        trace("transformed %s\n", wine_dbgstr_rect(&rc_transformed));
         ok(is_equal_rect(&rect, &rc_transformed), "rects don't match\n");
 
         rect = *(const RECT *)rgn2.data.Buffer;
-        trace("rect (%d,%d-%d,%d)\n", rect.left, rect.top, rect.right, rect.bottom);
+        trace("rect %s\n", wine_dbgstr_rect(&rect));
         rc_transformed = *rc;
         translate((POINT *)&rc_transformed, 2, &xform);
-        trace("transformed (%d,%d-%d,%d)\n", rc_transformed.left, rc_transformed.top,
-              rc_transformed.right, rc_transformed.bottom);
+        trace("transformed %s\n", wine_dbgstr_rect(&rc_transformed));
         ok(is_equal_rect(&rect, &rc_transformed), "rects don't match\n");
 
         ok(rgn2.data.rdh.dwSize == sizeof(rgn1->data.rdh), "expected sizeof(rdh), got %u\n", rgn2.data.rdh.dwSize);
@@ -2078,19 +2753,232 @@ static void test_emf_clipping(void)
     SetRect(&rc_sclip, 100, 100, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
     hrgn = CreateRectRgn(rc_sclip.left, rc_sclip.top, rc_sclip.right, rc_sclip.bottom);
     SelectClipRgn(hdc, hrgn);
+    SetRect(&rc_res, -1, -1, -1, -1);
     ret = GetClipBox(hdc, &rc_res);
-todo_wine
     ok(ret == SIMPLEREGION, "got %d\n", ret);
-    if(ret == SIMPLEREGION)
-        ok(EqualRect(&rc_res, &rc_sclip),
-                 "expected rc_res (%d, %d) - (%d, %d), got (%d, %d) - (%d, %d)\n",
-                 rc_sclip.left, rc_sclip.top, rc_sclip.right, rc_sclip.bottom,
-                 rc_res.left, rc_res.top, rc_res.right, rc_res.bottom);
+    ok(EqualRect(&rc_res, &rc_sclip), "expected %s, got %s\n", wine_dbgstr_rect(&rc_sclip),
+       wine_dbgstr_rect(&rc_res));
+
+    OffsetRect(&rc_sclip, -100, -100);
+    ret = OffsetClipRgn(hdc, -100, -100);
+    ok(ret == SIMPLEREGION, "got %d\n", ret);
+    SetRect(&rc_res, -1, -1, -1, -1);
+    ret = GetClipBox(hdc, &rc_res);
+    ok(ret == SIMPLEREGION, "got %d\n", ret);
+    ok(EqualRect(&rc_res, &rc_sclip), "expected %s, got %s\n", wine_dbgstr_rect(&rc_sclip),
+       wine_dbgstr_rect(&rc_res));
+
+    ret = IntersectClipRect(hdc, 0, 0, 100, 100);
+    ok(ret == SIMPLEREGION || broken(ret == COMPLEXREGION) /* XP */, "got %d\n", ret);
+    if (ret == COMPLEXREGION)
+    {
+        /* XP returns COMPLEXREGION although region contains only 1 rect */
+        ret = GetClipRgn(hdc, hrgn);
+        ok(ret == 1, "expected 1, got %d\n", ret);
+        ret = rgn_rect_count(hrgn);
+        ok(ret == 1, "expected 1, got %d\n", ret);
+    }
+    SetRect(&rc_res, -1, -1, -1, -1);
+    ret = GetClipBox(hdc, &rc_res);
+    ok(ret == SIMPLEREGION, "got %d\n", ret);
+    ok(EqualRect(&rc_res, &rc), "expected %s, got %s\n", wine_dbgstr_rect(&rc),
+       wine_dbgstr_rect(&rc_res));
+
+    SetRect(&rc_sclip, 0, 0, 100, 50);
+    ret = ExcludeClipRect(hdc, 0, 50, 100, 100);
+    ok(ret == SIMPLEREGION || broken(ret == COMPLEXREGION) /* XP */, "got %d\n", ret);
+    if (ret == COMPLEXREGION)
+    {
+        /* XP returns COMPLEXREGION although region contains only 1 rect */
+        ret = GetClipRgn(hdc, hrgn);
+        ok(ret == 1, "expected 1, got %d\n", ret);
+        ret = rgn_rect_count(hrgn);
+        ok(ret == 1, "expected 1, got %d\n", ret);
+    }
+    SetRect(&rc_res, -1, -1, -1, -1);
+    ret = GetClipBox(hdc, &rc_res);
+    ok(ret == SIMPLEREGION, "got %d\n", ret);
+    ok(EqualRect(&rc_res, &rc_sclip), "expected %s, got %s\n", wine_dbgstr_rect(&rc_sclip),
+       wine_dbgstr_rect(&rc_res));
 
     hemf = CloseEnhMetaFile(hdc);
     DeleteEnhMetaFile(hemf);
     DeleteObject(hrgn);
-    DeleteDC(hdc);
+}
+
+static const unsigned char MF_CLIP_BITS[] = {
+    /* METAHEADER */
+    0x01, 0x00,             /* mtType */
+    0x09, 0x00,             /* mtHeaderSize */
+    0x00, 0x03,             /* mtVersion */
+    0x32, 0x00, 0x00, 0x00, /* mtSize */
+    0x01, 0x00,             /* mtNoObjects */
+    0x14, 0x00, 0x00, 0x00, /* mtMaxRecord (size in words of longest record) */
+    0x00, 0x00,             /* reserved */
+
+    /* METARECORD for CreateRectRgn(0x11, 0x22, 0x33, 0x44) */
+    0x14, 0x00, 0x00, 0x00, /* rdSize in words */
+    0xff, 0x06,             /* META_CREATEREGION */
+    0x00, 0x00, 0x06, 0x00, 0xf6, 0x02, 0x00, 0x00,
+    0x24, 0x00, 0x01, 0x00, 0x02, 0x00, 0x11, 0x00,
+    0x22, 0x00, 0x33, 0x00, 0x44, 0x00, 0x02, 0x00,
+    0x22, 0x00, 0x44, 0x00, 0x11, 0x00, 0x33, 0x00,
+    0x02, 0x00,
+
+    /* METARECORD for SelectObject */
+    0x04, 0x00, 0x00, 0x00,
+    0x2d, 0x01,             /* META_SELECTOBJECT (not META_SELECTCLIPREGION?!) */
+    0x00, 0x00,
+
+    /* METARECORD */
+    0x04, 0x00, 0x00, 0x00,
+    0xf0, 0x01,             /* META_DELETEOBJECT */
+    0x00, 0x00,
+
+    /* METARECORD for MoveTo(1,0x30) */
+    0x05, 0x00, 0x00, 0x00, /* rdSize in words */
+    0x14, 0x02,             /* META_MOVETO */
+    0x30, 0x00,             /* y */
+    0x01, 0x00,             /* x */
+
+    /* METARECORD for LineTo(0x20, 0x30) */
+    0x05, 0x00, 0x00, 0x00, /* rdSize in words */
+    0x13, 0x02,             /* META_LINETO */
+    0x30, 0x00,             /* y */
+    0x20, 0x00,             /* x */
+
+    /* EOF */
+    0x03, 0x00, 0x00, 0x00,
+    0x00, 0x00
+};
+
+static int clip_mf_enum_proc_seen_selectclipregion;
+static int clip_mf_enum_proc_seen_selectobject;
+
+static int CALLBACK clip_mf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
+                                       METARECORD *mr, int n_objs, LPARAM param)
+{
+    switch (mr->rdFunction) {
+    case META_SELECTCLIPREGION:
+        clip_mf_enum_proc_seen_selectclipregion++;
+        break;
+    case META_SELECTOBJECT:
+        clip_mf_enum_proc_seen_selectobject++;
+        break;
+    }
+    return 1;
+}
+
+static void test_mf_clipping(void)
+{
+                          /* left top right bottom */
+    static RECT rc_clip = { 0x11, 0x22, 0x33, 0x44 };
+    HWND hwnd;
+    HDC hdc;
+    HMETAFILE hmf;
+    HRGN hrgn;
+    INT ret;
+
+    SetLastError(0xdeadbeef);
+    hdc = CreateMetaFileA(NULL);
+    ok(hdc != 0, "CreateMetaFileA error %d\n", GetLastError());
+
+    hrgn = CreateRectRgn(rc_clip.left, rc_clip.top, rc_clip.right, rc_clip.bottom);
+    ret = SelectClipRgn(hdc, hrgn);
+    /* Seems like it should be SIMPLEREGION, but windows returns NULLREGION? */
+    ok(ret == NULLREGION, "expected NULLREGION, got %d\n", ret);
+
+    /* Draw a line that starts off left of the clip region and ends inside it */
+    MoveToEx(hdc, 0x1, 0x30, NULL);
+    LineTo(hdc,  0x20, 0x30);
+
+    SetLastError(0xdeadbeef);
+    hmf = CloseMetaFile(hdc);
+    ok(hmf != 0, "CloseMetaFile error %d\n", GetLastError());
+
+    if (compare_mf_bits(hmf, MF_CLIP_BITS, sizeof(MF_CLIP_BITS),
+        "mf_clipping") != 0)
+    {
+        dump_mf_bits(hmf, "mf_clipping");
+    }
+
+    DeleteObject(hrgn);
+
+    hwnd = CreateWindowExA(0, "static", NULL, WS_POPUP | WS_VISIBLE,
+                           0, 0, 200, 200, 0, 0, 0, NULL);
+    ok(hwnd != 0, "CreateWindowExA error %d\n", GetLastError());
+
+    hdc = GetDC(hwnd);
+
+    ret = EnumMetaFile(hdc, hmf, clip_mf_enum_proc, (LPARAM)&rc_clip);
+    ok(ret, "EnumMetaFile error %d\n", GetLastError());
+
+    /* Oddly, windows doesn't seem to use META_SELECTCLIPREGION */
+    ok(clip_mf_enum_proc_seen_selectclipregion == 0,
+       "expected 0 selectclipregion, saw %d\n", clip_mf_enum_proc_seen_selectclipregion);
+    ok(clip_mf_enum_proc_seen_selectobject == 1,
+       "expected 1 selectobject, saw %d\n", clip_mf_enum_proc_seen_selectobject);
+
+    DeleteMetaFile(hmf);
+    ReleaseDC(hwnd, hdc);
+    DestroyWindow(hwnd);
+}
+
+static const unsigned char MF_PATH_BITS[] =
+{
+    0x01, 0x00, 0x09, 0x00, 0x00, 0x03, 0x2c, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x14, 0x02,
+    0x32, 0x00, 0x32, 0x00, 0x05, 0x00, 0x00, 0x00,
+    0x13, 0x02, 0x96, 0x00, 0x32, 0x00, 0x05, 0x00,
+    0x00, 0x00, 0x13, 0x02, 0x96, 0x00, 0x96, 0x00,
+    0x05, 0x00, 0x00, 0x00, 0x13, 0x02, 0x32, 0x00,
+    0x96, 0x00, 0x05, 0x00, 0x00, 0x00, 0x13, 0x02,
+    0x32, 0x00, 0x32, 0x00, 0x07, 0x00, 0x00, 0x00,
+    0x1b, 0x04, 0x14, 0x00, 0x14, 0x00, 0x0a, 0x00,
+    0x0a, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+static void test_mf_GetPath(void)
+{
+    HDC hdc;
+    HMETAFILE hmf;
+    BOOL ret;
+    int size;
+
+    SetLastError(0xdeadbeef);
+    hdc = CreateMetaFileA(NULL);
+    ok(hdc != 0, "CreateMetaFileA error %d\n", GetLastError());
+
+    ret = BeginPath(hdc);
+    ok(!ret, "BeginPath on metafile DC should fail\n");
+    ret = MoveToEx(hdc, 50, 50, NULL);
+    ok( ret, "MoveToEx error %d.\n", GetLastError());
+    ret = LineTo(hdc, 50, 150);
+    ok( ret, "LineTo error %d.\n", GetLastError());
+    ret = LineTo(hdc, 150, 150);
+    ok( ret, "LineTo error %d.\n", GetLastError());
+    ret = LineTo(hdc, 150, 50);
+    ok( ret, "LineTo error %d.\n", GetLastError());
+    ret = LineTo(hdc, 50, 50);
+    ok( ret, "LineTo error %d.\n", GetLastError());
+    Rectangle(hdc, 10, 10, 20, 20);
+    EndPath(hdc);
+
+    size = GetPath(hdc, NULL, NULL, 0);
+    ok( size == -1, "GetPath returned %d.\n", size);
+
+    hmf = CloseMetaFile(hdc);
+    ok(hmf != 0, "CloseMetaFile error %d\n", GetLastError());
+
+    if (compare_mf_bits (hmf, MF_PATH_BITS, sizeof(MF_PATH_BITS), "mf_GetPath") != 0)
+    {
+        dump_mf_bits(hmf, "mf_GetPath");
+        EnumMetaFile(0, hmf, mf_enum_proc, 0);
+    }
+
+    ret = DeleteMetaFile(hmf);
+    ok( ret, "DeleteMetaFile error %d\n", GetLastError());
 }
 
 static INT CALLBACK EmfEnumProc(HDC hdc, HANDLETABLE *lpHTable, const ENHMETARECORD *lpEMFR, INT nObj, LPARAM lpData)
@@ -2141,7 +3029,7 @@ static HENHMETAFILE create_converted_emf(const METAFILEPICT *mfp)
     UINT size;
     LPBYTE pBits;
 
-    hdcMf = CreateMetaFile(NULL);
+    hdcMf = CreateMetaFileA(NULL);
     ok(hdcMf != NULL, "CreateMetaFile failed with error %d\n", GetLastError());
     ret = LineTo(hdcMf, (INT)LINE_X, (INT)LINE_Y);
     ok(ret, "LineTo failed with error %d\n", GetLastError());
@@ -2321,13 +3209,12 @@ static void test_SetWinMetaFileBits(void)
   HDC dc;
   LONG diffx, diffy;
 
-  wmfDC = CreateMetaFile(NULL);
+  wmfDC = CreateMetaFileA(NULL);
   ok(wmfDC != NULL, "CreateMetaFile failed\n");
   if (!wmfDC) return;
 
   SetWindowExtEx(wmfDC, 100, 100, NULL);
-  rect.left = rect.top = 0;
-  rect.right = rect.bottom = 50;
+  SetRect(&rect, 0, 0, 50, 50);
   FillRect(wmfDC, &rect, GetStockObject(BLACK_BRUSH));
   wmf = CloseMetaFile(wmfDC);
   ok(wmf != NULL, "Metafile creation failed\n");
@@ -2465,15 +3352,17 @@ static BOOL near_match(int x, int y)
 
 static void getwinmetafilebits(UINT mode, int scale, RECT *rc)
 {
-    HENHMETAFILE emf;
+    HENHMETAFILE emf, emf2;
     HDC display_dc, emf_dc;
-    ENHMETAHEADER *enh_header;
-    UINT size, emf_size, i;
+    ENHMETAHEADER *enh_header, *enh2_header;
+    UINT size, emf_size, i, emf2_size;
     WORD check = 0;
     DWORD rec_num = 0;
     METAHEADER *mh = NULL;
     METARECORD *rec;
     INT horz_res, vert_res, horz_size, vert_size;
+    INT curve_caps, line_caps, poly_caps;
+    METAFILEPICT mfp;
 
     display_dc = GetDC(NULL);
     ok(display_dc != NULL, "display_dc is NULL\n");
@@ -2485,6 +3374,16 @@ static void getwinmetafilebits(UINT mode, int scale, RECT *rc)
 
     emf_dc = CreateEnhMetaFileA(display_dc, NULL, rc, NULL);
     ok(emf_dc != NULL, "emf_dc is NULL\n");
+
+    curve_caps = GetDeviceCaps(emf_dc, CURVECAPS);
+    ok(curve_caps == 511, "expect 511 got %d\n", curve_caps);
+
+    line_caps = GetDeviceCaps(emf_dc, LINECAPS);
+    ok(line_caps == 254, "expect 254 got %d\n", line_caps);
+
+    poly_caps = GetDeviceCaps(emf_dc, POLYGONALCAPS);
+    ok(poly_caps == 255, "expect 511 got %d\n", poly_caps);
+
     for(i = 0; i < 3000; i++) /* This is enough to take emf_size > 0xffff */
         Rectangle(emf_dc, 0, 0, 1000, 20);
     emf = CloseEnhMetaFile(emf_dc);
@@ -2606,6 +3505,21 @@ static void getwinmetafilebits(UINT mode, int scale, RECT *rc)
         rec = (METARECORD*)((WORD*)rec + rec->rdSize);
     }
 
+    /* Show that we get the original back when we do the reverse conversion.
+       mfp is ignored in this case. */
+    mfp.mm = MM_ISOTROPIC;
+    mfp.xExt = 0xcafe;
+    mfp.yExt = 0xbeef;
+    emf2 = SetWinMetaFileBits( size, (BYTE*)mh, NULL, &mfp );
+    ok( !!emf2, "got NULL\n" );
+    emf2_size = GetEnhMetaFileBits( emf2, 0, NULL );
+    enh2_header = HeapAlloc( GetProcessHeap(), 0, emf2_size );
+    emf2_size = GetEnhMetaFileBits( emf2, emf2_size, (BYTE*)enh2_header );
+    ok( emf_size == emf2_size, "%d %d\n", emf_size, emf2_size );
+    ok( !memcmp( enh_header, enh2_header, emf_size ), "mismatch\n" );
+    HeapFree( GetProcessHeap(), 0, enh2_header );
+    DeleteEnhMetaFile( emf2 );
+
 end:
     HeapFree(GetProcessHeap(), 0, mh);
     HeapFree(GetProcessHeap(), 0, enh_header);
@@ -2634,11 +3548,8 @@ static void test_GetWinMetaFileBits(void)
     for(mode = MM_MIN; mode <= MM_MAX; mode++)
     {
         RECT *rc;
-        trace("mode %d\n", mode);
-
         for(rc = frames; rc->right - rc->left > 0; rc++)
         {
-            trace("frame %d,%d - %d,%d\n", rc->left, rc->top, rc->right, rc->bottom);
             getwinmetafilebits(mode, 1, rc);
             getwinmetafilebits(mode, 2, rc);
         }
@@ -2657,7 +3568,7 @@ static void test_gdiis(void)
     HMODULE hgdi32;
 
     /* resolve all the functions */
-    hgdi32 = GetModuleHandle("gdi32");
+    hgdi32 = GetModuleHandleA("gdi32.dll");
     pGdiIsMetaPrintDC = (void*) GetProcAddress(hgdi32, "GdiIsMetaPrintDC");
     pGdiIsMetaFileDC = (void*) GetProcAddress(hgdi32, "GdiIsMetaFileDC");
     pGdiIsPlayMetafileDC = (void*) GetProcAddress(hgdi32, "GdiIsPlayMetafileDC");
@@ -2674,7 +3585,7 @@ static void test_gdiis(void)
     ok(!pGdiIsPlayMetafileDC(NULL), "isplaymetafile with NULL parameter\n");
 
     /* try with a metafile */
-    hmfDC = CreateMetaFile(NULL);
+    hmfDC = CreateMetaFileA(NULL);
     ok(!pGdiIsMetaPrintDC(hmfDC), "ismetaprint on metafile\n");
     ok(pGdiIsMetaFileDC(hmfDC), "ismetafile on metafile\n");
     ok(!pGdiIsPlayMetafileDC(hmfDC), "isplaymetafile on metafile\n");
@@ -2746,25 +3657,394 @@ static void test_SetEnhMetaFileBits(void)
     DeleteEnhMetaFile(hemf);
 }
 
+static void test_emf_polybezier(void)
+{
+    HDC hdcMetafile;
+    HENHMETAFILE hemf;
+    POINT pts[4];
+    BOOL ret;
+
+    SetLastError(0xdeadbeef);
+    hdcMetafile = CreateEnhMetaFileA(GetDC(0), NULL, NULL, NULL);
+    ok(hdcMetafile != 0, "CreateEnhMetaFileA error %d\n", GetLastError());
+
+    pts[0].x = pts[0].y = 10;
+    pts[1].x = pts[1].y = 20;
+    pts[2].x = pts[2].y = 15;
+    pts[3].x = pts[3].y = 25;
+    ret = PolyBezierTo(hdcMetafile, pts, 3);  /* EMR_POLYBEZIERTO16 */
+    ok( ret, "PolyBezierTo failed\n" );
+    ret = PolyBezier(hdcMetafile, pts, 4);    /* EMR_POLYBEZIER16   */
+    ok( ret, "PolyBezier failed\n" );
+
+    pts[0].x = pts[0].y = 32769;
+    ret = PolyBezier(hdcMetafile, pts, 4);    /* EMR_POLYBEZIER   */
+    ok( ret, "PolyBezier failed\n" );
+    ret = PolyBezierTo(hdcMetafile, pts, 3);  /* EMR_POLYBEZIERTO */
+    ok( ret, "PolyBezierTo failed\n" );
+
+    hemf = CloseEnhMetaFile(hdcMetafile);
+    ok(hemf != 0, "CloseEnhMetaFile error %d\n", GetLastError());
+
+    if(compare_emf_bits(hemf, EMF_BEZIER_BITS, sizeof(EMF_BEZIER_BITS),
+        "emf_Bezier", FALSE) != 0)
+    {
+        dump_emf_bits(hemf, "emf_Bezier");
+        dump_emf_records(hemf, "emf_Bezier");
+    }
+
+    DeleteEnhMetaFile(hemf);
+}
+
+static const unsigned char EMF_PATH_BITS[] =
+{
+    0x01, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00,
+    0x96, 0x00, 0x00, 0x00, 0x96, 0x00, 0x00, 0x00,
+    0x90, 0x01, 0x00, 0x00, 0x90, 0x01, 0x00, 0x00,
+    0x70, 0x17, 0x00, 0x00, 0x70, 0x17, 0x00, 0x00,
+    0x20, 0x45, 0x4d, 0x46, 0x00, 0x00, 0x01, 0x00,
+    0xf8, 0x02, 0x00, 0x00, 0x17, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x20, 0x03, 0x00, 0x00, 0x58, 0x02, 0x00, 0x00,
+    0x40, 0x01, 0x00, 0x00, 0xf0, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0xe2, 0x04, 0x00,
+    0x80, 0xa9, 0x03, 0x00, 0x3b, 0x00, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00,
+    0x10, 0x00, 0x00, 0x00, 0x32, 0x00, 0x00, 0x00,
+    0x32, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00,
+    0x10, 0x00, 0x00, 0x00, 0x32, 0x00, 0x00, 0x00,
+    0x96, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00,
+    0x10, 0x00, 0x00, 0x00, 0x96, 0x00, 0x00, 0x00,
+    0x96, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00,
+    0x10, 0x00, 0x00, 0x00, 0x96, 0x00, 0x00, 0x00,
+    0x32, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00,
+    0x10, 0x00, 0x00, 0x00, 0x32, 0x00, 0x00, 0x00,
+    0x32, 0x00, 0x00, 0x00, 0x2b, 0x00, 0x00, 0x00,
+    0x18, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00,
+    0x13, 0x00, 0x00, 0x00, 0x2d, 0x00, 0x00, 0x00,
+    0x28, 0x00, 0x00, 0x00, 0x15, 0x00, 0x00, 0x00,
+    0x15, 0x00, 0x00, 0x00, 0x26, 0x00, 0x00, 0x00,
+    0x1c, 0x00, 0x00, 0x00, 0x27, 0x00, 0x00, 0x00,
+    0x1d, 0x00, 0x00, 0x00, 0x15, 0x00, 0x00, 0x00,
+    0x15, 0x00, 0x00, 0x00, 0x37, 0x00, 0x00, 0x00,
+    0x28, 0x00, 0x00, 0x00, 0x17, 0x00, 0x00, 0x00,
+    0x17, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00,
+    0x1a, 0x00, 0x00, 0x00, 0x25, 0x00, 0x00, 0x00,
+    0x1b, 0x00, 0x00, 0x00, 0x17, 0x00, 0x00, 0x00,
+    0x17, 0x00, 0x00, 0x00, 0x2e, 0x00, 0x00, 0x00,
+    0x28, 0x00, 0x00, 0x00, 0x15, 0x00, 0x00, 0x00,
+    0x15, 0x00, 0x00, 0x00, 0x26, 0x00, 0x00, 0x00,
+    0x1c, 0x00, 0x00, 0x00, 0x27, 0x00, 0x00, 0x00,
+    0x1d, 0x00, 0x00, 0x00, 0x15, 0x00, 0x00, 0x00,
+    0x15, 0x00, 0x00, 0x00, 0x2f, 0x00, 0x00, 0x00,
+    0x28, 0x00, 0x00, 0x00, 0x15, 0x00, 0x00, 0x00,
+    0x15, 0x00, 0x00, 0x00, 0x26, 0x00, 0x00, 0x00,
+    0x1c, 0x00, 0x00, 0x00, 0x27, 0x00, 0x00, 0x00,
+    0x1d, 0x00, 0x00, 0x00, 0x15, 0x00, 0x00, 0x00,
+    0x15, 0x00, 0x00, 0x00, 0x2a, 0x00, 0x00, 0x00,
+    0x18, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00,
+    0x13, 0x00, 0x00, 0x00, 0x2c, 0x00, 0x00, 0x00,
+    0x20, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00,
+    0x13, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
+    0x05, 0x00, 0x00, 0x00, 0x57, 0x00, 0x00, 0x00,
+    0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0x04, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x0a, 0x00, 0x14, 0x00, 0x0a, 0x00,
+    0x0a, 0x00, 0x14, 0x00, 0x14, 0x00, 0x14, 0x00,
+    0x59, 0x00, 0x00, 0x00, 0x2c, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0x04, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x0a, 0x00,
+    0x14, 0x00, 0x0a, 0x00, 0x0a, 0x00, 0x14, 0x00,
+    0x14, 0x00, 0x14, 0x00, 0x5a, 0x00, 0x00, 0x00,
+    0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0x02, 0x00, 0x00, 0x00,
+    0x04, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
+    0x02, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x0a, 0x00,
+    0x14, 0x00, 0x0a, 0x00, 0x0a, 0x00, 0x14, 0x00,
+    0x14, 0x00, 0x14, 0x00, 0x5c, 0x00, 0x00, 0x00,
+    0x4c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0x09, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x0a, 0x00, 0x14, 0x00, 0x0a, 0x00,
+    0x0a, 0x00, 0x14, 0x00, 0x14, 0x00, 0x14, 0x00,
+    0x1e, 0x00, 0x1e, 0x00, 0x28, 0x00, 0x14, 0x00,
+    0x14, 0x00, 0x1e, 0x00, 0x14, 0x00, 0x14, 0x00,
+    0x14, 0x00, 0x0a, 0x00, 0x06, 0x02, 0x04, 0x04,
+    0x04, 0x02, 0x03, 0x06, 0x02, 0x00, 0x00, 0x00,
+    0x29, 0x00, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x00,
+    0x25, 0x00, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00,
+    0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0xb4, 0x42,
+    0x00, 0x00, 0x34, 0x43, 0x3c, 0x00, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x00,
+    0x18, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00,
+    0x0a, 0x00, 0x00, 0x00, 0x96, 0x00, 0x00, 0x00,
+    0x96, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x00,
+    0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0x0e, 0x00, 0x00, 0x00,
+    0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x10, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00
+};
+
+static const unsigned char EMF_EMPTY_PATH_BITS[] =
+{
+    0x01, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0xd8, 0xff, 0xff, 0xff, 0xd8, 0xff, 0xff, 0xff,
+    0x20, 0x45, 0x4d, 0x46, 0x00, 0x00, 0x01, 0x00,
+    0xc8, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00,
+    0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x20, 0x03, 0x00, 0x00, 0x58, 0x02, 0x00, 0x00,
+    0x40, 0x01, 0x00, 0x00, 0xf0, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0xe2, 0x04, 0x00,
+    0x80, 0xa9, 0x03, 0x00, 0x3b, 0x00, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0x3d, 0x00, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0x3b, 0x00, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0x3d, 0x00, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0x3b, 0x00, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0x44, 0x00, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0x44, 0x00, 0x00, 0x00,
+    0x08, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00,
+    0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x10, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00
+};
+
+static void test_emf_paths(void)
+{
+    POINT pts[9] = {{10, 10}, {20, 10}, {10, 20}, {20, 20}, {30, 30}, {40, 20}, {20, 30}, {20, 20}, {20, 10}};
+    DWORD counts[2] = {2, 2};
+    BYTE types[9] = { PT_MOVETO, PT_LINETO, PT_BEZIERTO, PT_BEZIERTO, PT_BEZIERTO, PT_LINETO,
+                      PT_LINETO | PT_CLOSEFIGURE, PT_MOVETO, PT_LINETO };
+    HDC hdcMetafile;
+    HENHMETAFILE hemf;
+    BOOL ret;
+    int size;
+
+    SetLastError(0xdeadbeef);
+    hdcMetafile = CreateEnhMetaFileA(GetDC(0), NULL, NULL, NULL);
+    ok(hdcMetafile != 0, "CreateEnhMetaFileA error %d\n", GetLastError());
+
+    ret = BeginPath(hdcMetafile);
+    ok(ret, "BeginPath error %d\n", GetLastError());
+    ret = MoveToEx(hdcMetafile, 50, 50, NULL);
+    ok( ret, "MoveToEx error %d.\n", GetLastError());
+    ret = LineTo(hdcMetafile, 50, 150);
+    ok( ret, "LineTo error %d.\n", GetLastError());
+    ret = LineTo(hdcMetafile, 150, 150);
+    ok( ret, "LineTo error %d.\n", GetLastError());
+    ret = LineTo(hdcMetafile, 150, 50);
+    ok( ret, "LineTo error %d.\n", GetLastError());
+    ret = LineTo(hdcMetafile, 50, 50);
+    ok( ret, "LineTo error %d.\n", GetLastError());
+    Rectangle(hdcMetafile, 10, 10, 20, 20);
+    Arc(hdcMetafile, 21, 21, 39, 29, 39, 29, 21, 21);
+    ArcTo(hdcMetafile, 23, 23, 37, 27, 37, 27, 23, 23);
+    Chord(hdcMetafile, 21, 21, 39, 29, 39, 29, 21, 21);
+    Pie(hdcMetafile, 21, 21, 39, 29, 39, 29, 21, 21);
+    Ellipse(hdcMetafile, 10, 10, 20, 20);
+    RoundRect(hdcMetafile, 10, 10, 20, 20, 3, 5);
+    Polyline(hdcMetafile, pts, 4);
+    PolylineTo(hdcMetafile, pts, 4);
+    PolyPolyline(hdcMetafile, pts, counts, 2);
+    PolyDraw(hdcMetafile, pts, types, 9);
+    AngleArc(hdcMetafile, 37, 36, 23, 90, 180);
+    EndPath(hdcMetafile);
+
+    size = GetPath(hdcMetafile, NULL, NULL, 0);
+    ok( size == 112, "GetPath returned %d.\n", size);
+
+    ret = StrokeAndFillPath( hdcMetafile );
+    ok( ret, "StrokeAndFillPath failed err %d\n", GetLastError() );
+    ret = StrokeAndFillPath( hdcMetafile );
+    ok( !ret, "StrokeAndFillPath succeeded\n" );
+
+    hemf = CloseEnhMetaFile(hdcMetafile);
+    ok(hemf != 0, "CloseEnhMetaFile error %d\n", GetLastError());
+
+    if (compare_emf_bits(hemf, EMF_PATH_BITS, sizeof(EMF_PATH_BITS), "test_emf_paths", FALSE) != 0)
+    {
+        dump_emf_bits(hemf, "test_emf_paths");
+        dump_emf_records(hemf, "test_emf_paths");
+    }
+
+    DeleteEnhMetaFile(hemf);
+
+    SetLastError(0xdeadbeef);
+    hdcMetafile = CreateEnhMetaFileA(GetDC(0), NULL, NULL, NULL);
+    ok(hdcMetafile != 0, "CreateEnhMetaFileA error %d\n", GetLastError());
+
+    ret = BeginPath(hdcMetafile);
+    ok( ret, "BeginPath failed error %d\n", GetLastError() );
+    ret = CloseFigure(hdcMetafile);
+    ok( ret, "CloseFigure failed error %d\n", GetLastError() );
+    ret = BeginPath(hdcMetafile);
+    ok( ret, "BeginPath failed error %d\n", GetLastError() );
+    ret = EndPath(hdcMetafile);
+    ok( ret, "EndPath failed error %d\n", GetLastError() );
+    ret = EndPath(hdcMetafile);
+    ok( !ret, "EndPath succeeded\n" );
+    ret = CloseFigure(hdcMetafile);
+    ok( !ret, "CloseFigure succeeded\n" );
+    ret = BeginPath(hdcMetafile);
+    ok( ret, "BeginPath failed error %d\n", GetLastError() );
+    ret = AbortPath(hdcMetafile);
+    ok( ret, "AbortPath failed error %d\n", GetLastError() );
+    ret = AbortPath(hdcMetafile);
+    ok( ret, "AbortPath failed error %d\n", GetLastError() );
+
+    hemf = CloseEnhMetaFile(hdcMetafile);
+    ok(hemf != 0, "CloseEnhMetaFile error %d\n", GetLastError());
+
+    if (compare_emf_bits(hemf, EMF_EMPTY_PATH_BITS, sizeof(EMF_EMPTY_PATH_BITS), "empty path", FALSE) != 0)
+    {
+        dump_emf_bits(hemf, "empty path");
+        dump_emf_records(hemf, "empty path");
+    }
+
+    DeleteEnhMetaFile(hemf);
+}
+
+static void test_emf_PolyPolyline(void)
+{
+    HDC hdcMetafile;
+    HENHMETAFILE hemf;
+    POINT pts[4] = {{10, 20}, {100, 200}, {0x9000,300}, {400, 500}};
+    DWORD counts[2];
+    BOOL ret;
+
+    SetLastError(0xdeadbeef);
+    hdcMetafile = CreateEnhMetaFileA(GetDC(0), NULL, NULL, NULL);
+    ok(hdcMetafile != 0, "CreateEnhMetaFileA error %d\n", GetLastError());
+
+    ret = PolyPolyline(hdcMetafile, NULL, NULL, 0);
+    ok( !ret, "PolyPolyline\n" );
+
+    SetLastError( 0xdeadbeef );
+    counts[0] = 0;
+    counts[1] = 1;
+    ret = PolyPolyline(hdcMetafile, pts, counts, 2);
+    ok( !ret, "PolyPolyline\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "gle %d\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    counts[0] = 1;
+    counts[1] = 1;
+    ret = PolyPolyline(hdcMetafile, pts, counts, 2);
+    ok( !ret, "PolyPolyline\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "gle %d\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    counts[0] = 2;
+    counts[1] = 1;
+    ret = PolyPolyline(hdcMetafile, pts, counts, 2);
+    ok( !ret, "PolyPolyline\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "gle %d\n", GetLastError() );
+
+    counts[0] = 2;
+    counts[1] = 2;
+    ret = PolyPolyline(hdcMetafile, pts, counts, 2);
+    ok( ret, "PolyPolyline\n" );
+
+    hemf = CloseEnhMetaFile(hdcMetafile);
+    ok(hemf != 0, "CloseEnhMetaFile error %d\n", GetLastError());
+
+    if(compare_emf_bits(hemf, EMF_POLYPOLYLINE_BITS, sizeof(EMF_POLYPOLYLINE_BITS),
+        "emf_PolyPolyline", FALSE) != 0)
+    {
+        dump_emf_bits(hemf, "emf_PolyPolyline");
+        dump_emf_records(hemf, "emf_PolyPolyline");
+    }
+
+    DeleteEnhMetaFile(hemf);
+}
+
+static void test_emf_GradientFill(void)
+{
+    HDC mf;
+    HENHMETAFILE hemf;
+    TRIVERTEX v[] =
+    {
+        {   1,  10, 0xff00, 0x8000, 0x0000, 0x8001 },
+        { 200, 210, 0x0000, 0x0000, 0xff00, 0xff00 },
+        { 180, 190, 0x1234, 0x5678, 0x9abc, 0xdef0 },
+        { 300, 310, 0xff00, 0xff00, 0xff00, 0x0000 },
+        { 400, 410, 0xff00, 0xff00, 0xff00, 0x0000 }
+    };
+    GRADIENT_TRIANGLE tri[] = { { 0, 1, 2 }, { 3, 1, 0 } };
+    BOOL ret;
+
+    mf = CreateEnhMetaFileA( GetDC( 0 ), NULL, NULL, NULL );
+    ok( mf != 0, "CreateEnhMetaFileA error %d\n", GetLastError() );
+
+    /* Don't test the GRADIENT_FILL_RECT_ modes since a Windows bug
+     * means it allocates three mesh indices rather than two per
+     * rectangle.  This results in uninitialised values being written
+     * to the EMF which is rather difficult to test against.
+     *
+     * Note also that the final vertex here is not required, yet it is
+     * written to the EMF, but is not considered in the bounds
+     * calculation.
+     */
+    ret = GdiGradientFill( mf, v, sizeof(v) / sizeof(v[0]), tri, sizeof(tri) / sizeof(tri[0]),
+                           GRADIENT_FILL_TRIANGLE );
+    ok( ret, "GradientFill\n" );
+
+    hemf = CloseEnhMetaFile( mf );
+    ok( hemf != 0, "CloseEnhMetaFile error %d\n", GetLastError() );
+
+    if (compare_emf_bits( hemf, EMF_GRADIENTFILL_BITS, sizeof(EMF_GRADIENTFILL_BITS),
+                          "emf_GradientFill", FALSE ) != 0)
+    {
+        dump_emf_bits( hemf, "emf_GradientFill" );
+        dump_emf_records( hemf, "emf_GradientFill" );
+    }
+
+    DeleteEnhMetaFile( hemf );
+}
+
 START_TEST(metafile)
 {
     init_function_pointers();
 
     /* For enhanced metafiles (enhmfdrv) */
     test_ExtTextOut();
+    test_ExtTextOutScale();
     test_SaveDC();
     test_emf_BitBlt();
+    test_emf_DCBrush();
+    test_emf_ExtTextOut_on_path();
+    test_emf_clipping();
+    test_emf_polybezier();
+    test_emf_paths();
+    test_emf_PolyPolyline();
+    test_emf_GradientFill();
 
     /* For win-format metafiles (mfdrv) */
     test_mf_SaveDC();
     test_mf_Blank();
     test_mf_Graphics();
     test_mf_PatternBrush();
+    test_mf_DCBrush();
     test_CopyMetaFile();
     test_SetMetaFileBits();
     test_mf_ExtTextOut_on_path();
-    test_emf_ExtTextOut_on_path();
-    test_emf_clipping();
+    test_mf_clipping();
+    test_mf_GetPath();
 
     /* For metafile conversions */
     test_mf_conversions();

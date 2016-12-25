@@ -14,6 +14,7 @@
 #include <stdarg.h>
 #include "windef.h"
 #include "winbase.h"
+#include "ole2.h"
 #include "rpc.h"
 #include "rpcndr.h"
 #include "rpcproxy.h"

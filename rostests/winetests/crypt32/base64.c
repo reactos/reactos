@@ -18,17 +18,19 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
-#include <winerror.h>
+//#include <winerror.h>
 #include <wincrypt.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 #define CERT_HEADER               "-----BEGIN CERTIFICATE-----\r\n"
+#define ALT_CERT_HEADER           "-----BEGIN This is some arbitrary text that goes on and on-----\r\n"
 #define CERT_TRAILER              "-----END CERTIFICATE-----\r\n"
+#define ALT_CERT_TRAILER          "-----END More arbitrary text------\r\n"
 #define CERT_REQUEST_HEADER       "-----BEGIN NEW CERTIFICATE REQUEST-----\r\n"
 #define CERT_REQUEST_TRAILER      "-----END NEW CERTIFICATE REQUEST-----\r\n"
 #define X509_HEADER               "-----BEGIN X509 CRL-----\r\n"
@@ -40,14 +42,11 @@
 #define X509_HEADER_NOCR          "-----BEGIN X509 CRL-----\n"
 #define X509_TRAILER_NOCR         "-----END X509 CRL-----\n"
 
-typedef BOOL (WINAPI *CryptBinaryToStringAFunc)(const BYTE *pbBinary,
+static BOOL (WINAPI *pCryptBinaryToStringA)(const BYTE *pbBinary,
  DWORD cbBinary, DWORD dwFlags, LPSTR pszString, DWORD *pcchString);
-typedef BOOL (WINAPI *CryptStringToBinaryAFunc)(LPCSTR pszString,
+static BOOL (WINAPI *pCryptStringToBinaryA)(LPCSTR pszString,
  DWORD cchString, DWORD dwFlags, BYTE *pbBinary, DWORD *pcbBinary,
  DWORD *pdwSkip, DWORD *pdwFlags);
-
-CryptBinaryToStringAFunc pCryptBinaryToStringA;
-CryptStringToBinaryAFunc pCryptStringToBinaryA;
 
 struct BinTests
 {
@@ -58,13 +57,13 @@ struct BinTests
 
 static const BYTE toEncode1[] = { 0 };
 static const BYTE toEncode2[] = { 1,2 };
-static const BYTE toEncode3[] = { 1,2,3 };
+/* static const BYTE toEncode3[] = { 1,2,3 }; */
 static const BYTE toEncode4[] =
  "abcdefghijlkmnopqrstuvwxyz01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890"
  "abcdefghijlkmnopqrstuvwxyz01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890"
  "abcdefghijlkmnopqrstuvwxyz01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890";
 
-struct BinTests tests[] = {
+static const struct BinTests tests[] = {
  { toEncode1, sizeof(toEncode1), "AA==\r\n", },
  { toEncode2, sizeof(toEncode2), "AQI=\r\n", },
  /* { toEncode3, sizeof(toEncode3), "AQID\r\n", },  This test fails on Vista. */
@@ -76,7 +75,7 @@ struct BinTests tests[] = {
    "SElKS0xNTk9QUVJTVFVWV1hZWjAxMjM0NTY3ODkwAA==\r\n" },
 };
 
-struct BinTests testsNoCR[] = {
+static const struct BinTests testsNoCR[] = {
  { toEncode1, sizeof(toEncode1), "AA==\n", },
  { toEncode2, sizeof(toEncode2), "AQI=\n", },
  /* { toEncode3, sizeof(toEncode3), "AQID\n", },  This test fails on Vista. */
@@ -118,11 +117,8 @@ static void encodeAndCompareBase64_A(const BYTE *toEncode, DWORD toEncodeLen,
          "Expected %s, got %s\n", expected, ptr);
         ptr += strlen(expected);
         if (trailer)
-        {
             ok(!strncmp(trailer, ptr, strlen(trailer)),
              "Expected trailer %s, got %s\n", trailer, ptr);
-            ptr += strlen(trailer);
-        }
         HeapFree(GetProcessHeap(), 0, str);
     }
 }
@@ -154,6 +150,7 @@ static void testBinaryToStringA(void)
 
             ret = pCryptBinaryToStringA(tests[i].toEncode, tests[i].toEncodeLen,
              CRYPT_STRING_BINARY, str, &strLen2);
+            ok(ret, "CryptBinaryToStringA failed: %d\n", GetLastError());
             ok(strLen == strLen2, "Expected length %d, got %d\n", strLen,
              strLen2);
             ok(!memcmp(str, tests[i].toEncode, tests[i].toEncodeLen),
@@ -190,6 +187,7 @@ static void testBinaryToStringA(void)
             ret = pCryptBinaryToStringA(testsNoCR[i].toEncode,
              testsNoCR[i].toEncodeLen, CRYPT_STRING_BINARY | CRYPT_STRING_NOCR,
              str, &strLen2);
+            ok(ret, "CryptBinaryToStringA failed: %d\n", GetLastError());
             ok(strLen == strLen2, "Expected length %d, got %d\n", strLen,
              strLen2);
             ok(!memcmp(str, testsNoCR[i].toEncode, testsNoCR[i].toEncodeLen),
@@ -290,6 +288,7 @@ static void decodeAndCompareBase64_A(LPCSTR toDecode, LPCSTR header,
 
                 ret = pCryptStringToBinaryA(str, 0, useFormat, buf, &bufLen,
                  &skipped, &usedFormat);
+                ok(ret, "CryptStringToBinaryA failed: %d\n", GetLastError());
                 ok(skipped == strlen(garbage),
                  "Expected %d characters of \"%s\" skipped when trying format %08x, got %d (used format is %08x)\n",
                  lstrlenA(garbage), str, useFormat, skipped, usedFormat);
@@ -306,10 +305,7 @@ struct BadString
     DWORD       format;
 };
 
-struct BadString badStrings[] = {
- { "A\r\nA\r\n=\r\n=\r\n", CRYPT_STRING_BASE64 },
- { "AA\r\n=\r\n=\r\n", CRYPT_STRING_BASE64 },
- { "AA=\r\n=\r\n", CRYPT_STRING_BASE64 },
+static const struct BadString badStrings[] = {
  { "-----BEGIN X509 CRL-----\r\nAA==\r\n", CRYPT_STRING_BASE64X509CRLHEADER },
 };
 
@@ -320,20 +316,20 @@ static void testStringToBinaryA(void)
 
     ret = pCryptStringToBinaryA(NULL, 0, 0, NULL, NULL, NULL, NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-     "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+     "Expected ERROR_INVALID_PARAMETER, got ret=%d le=%u\n", ret, GetLastError());
     ret = pCryptStringToBinaryA(NULL, 0, 0, NULL, &bufLen, NULL, NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
-     "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+     "Expected ERROR_INVALID_PARAMETER, got ret=%d le=%u\n", ret, GetLastError());
     /* Bogus format */
     ret = pCryptStringToBinaryA(tests[0].base64, 0, 0, NULL, &bufLen, NULL,
      NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_DATA,
-     "Expected ERROR_INVALID_DATA, got %d\n", GetLastError());
+     "Expected ERROR_INVALID_DATA, got ret=%d le=%u\n", ret, GetLastError());
     /* Decoding doesn't expect the NOCR flag to be specified */
     ret = pCryptStringToBinaryA(tests[0].base64, 1,
      CRYPT_STRING_BASE64 | CRYPT_STRING_NOCR, NULL, &bufLen, NULL, NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_DATA,
-     "Expected ERROR_INVALID_DATA, got %d\n", GetLastError());
+     "Expected ERROR_INVALID_DATA, got ret=%d le=%u\n", ret, GetLastError());
     /* Bad strings */
     for (i = 0; i < sizeof(badStrings) / sizeof(badStrings[0]); i++)
     {
@@ -341,7 +337,7 @@ static void testStringToBinaryA(void)
         ret = pCryptStringToBinaryA(badStrings[i].str, 0, badStrings[i].format,
          NULL, &bufLen, NULL, NULL);
         ok(!ret && GetLastError() == ERROR_INVALID_DATA,
-         "Expected ERROR_INVALID_DATA, got %d\n", GetLastError());
+           "%d: Expected ERROR_INVALID_DATA, got ret=%d le=%u\n", i, ret, GetLastError());
     }
     /* Good strings */
     for (i = 0; i < sizeof(tests) / sizeof(tests[0]); i++)
@@ -358,6 +354,9 @@ static void testStringToBinaryA(void)
          CRYPT_STRING_BASE64, CRYPT_STRING_BASE64, tests[i].toEncode,
          tests[i].toEncodeLen);
         decodeAndCompareBase64_A(tests[i].base64, CERT_HEADER, CERT_TRAILER,
+         CRYPT_STRING_BASE64HEADER, CRYPT_STRING_BASE64HEADER,
+         tests[i].toEncode, tests[i].toEncodeLen);
+        decodeAndCompareBase64_A(tests[i].base64, ALT_CERT_HEADER, ALT_CERT_TRAILER,
          CRYPT_STRING_BASE64HEADER, CRYPT_STRING_BASE64HEADER,
          tests[i].toEncode, tests[i].toEncodeLen);
         decodeAndCompareBase64_A(tests[i].base64, CERT_REQUEST_HEADER,
@@ -441,10 +440,8 @@ START_TEST(base64)
 {
     HMODULE lib = GetModuleHandleA("crypt32");
 
-    pCryptBinaryToStringA = (CryptBinaryToStringAFunc)GetProcAddress(lib,
-     "CryptBinaryToStringA");
-    pCryptStringToBinaryA = (CryptStringToBinaryAFunc)GetProcAddress(lib,
-     "CryptStringToBinaryA");
+    pCryptBinaryToStringA = (void *)GetProcAddress(lib, "CryptBinaryToStringA");
+    pCryptStringToBinaryA = (void *)GetProcAddress(lib, "CryptStringToBinaryA");
 
     if (pCryptBinaryToStringA)
         testBinaryToStringA();

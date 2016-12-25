@@ -19,7 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -44,6 +43,15 @@ static WNDPROC old_dde_client_wndproc;
 
 static const DWORD default_timeout = 200;
 
+static BOOL is_cjk(void)
+{
+    int lang_id = PRIMARYLANGID(GetUserDefaultLangID());
+
+    if (lang_id == LANG_CHINESE || lang_id == LANG_JAPANESE || lang_id == LANG_KOREAN)
+        return TRUE;
+    return FALSE;
+}
+
 static void flush_events(void)
 {
     MSG msg;
@@ -54,7 +62,7 @@ static void flush_events(void)
     while (diff > 0)
     {
         if (MsgWaitForMultipleObjects( 0, NULL, FALSE, min_timeout, QS_ALLINPUT ) == WAIT_TIMEOUT) break;
-        while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessage( &msg );
+        while (PeekMessageA( &msg, 0, 0, 0, PM_REMOVE )) DispatchMessageA( &msg );
         diff = time - GetTickCount();
         min_timeout = 10;
     }
@@ -63,23 +71,25 @@ static void flush_events(void)
 static void create_dde_window(HWND *hwnd, LPCSTR name, WNDPROC wndproc)
 {
     WNDCLASSA wcA;
+    ATOM aclass;
 
     memset(&wcA, 0, sizeof(wcA));
     wcA.lpfnWndProc = wndproc;
     wcA.lpszClassName = name;
     wcA.hInstance = GetModuleHandleA(0);
-    assert(RegisterClassA(&wcA));
+    aclass = RegisterClassA(&wcA);
+    ok (aclass, "RegisterClass failed\n");
 
     *hwnd = CreateWindowExA(0, name, NULL, WS_POPUP,
                             500, 500, CW_USEDEFAULT, CW_USEDEFAULT,
                             GetDesktopWindow(), 0, GetModuleHandleA(0), NULL);
-    assert(*hwnd);
+    ok(*hwnd != NULL, "CreateWindowExA failed\n");
 }
 
 static void destroy_dde_window(HWND *hwnd, LPCSTR name)
 {
     DestroyWindow(*hwnd);
-    UnregisterClass(name, GetModuleHandleA(0));
+    UnregisterClassA(name, GetModuleHandleA(NULL));
 }
 
 static LRESULT WINAPI dde_server_wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -142,7 +152,7 @@ static LRESULT WINAPI dde_server_wndproc(HWND hwnd, UINT msg, WPARAM wparam, LPA
         else
             lstrcpyA(str, "requested data\r\n");
 
-        size = sizeof(DDEDATA) + lstrlenA(str) + 1;
+        size = FIELD_OFFSET(DDEDATA, Value[lstrlenA(str) + 1]);
         hglobal = GlobalAlloc(GMEM_MOVEABLE, size);
         ok(hglobal != NULL, "Expected non-NULL hglobal\n");
 
@@ -254,7 +264,7 @@ static void test_msg_server(HANDLE hproc, HANDLE hthread)
 
     while (MsgWaitForMultipleObjects( 1, &hproc, FALSE, INFINITE, QS_ALLINPUT ) != 0)
     {
-        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+        while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
     }
 
     destroy_dde_window(&hwnd, "dde_server");
@@ -313,8 +323,7 @@ static void test_ddeml_client(void)
     {
         str = (LPSTR)DdeAccessData(hdata, &size);
         ok(!lstrcmpA(str, "requested data\r\n"), "Expected 'requested data\\r\\n', got %s\n", str);
-        ok(size == 19 || broken(size == 28), /* sizes are rounded up on win9x */
-           "Expected 19, got %d\n", size);
+        ok(size == 17, "Expected 17, got %d\n", size);
 
         ret = DdeUnaccessData(hdata);
         ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
@@ -335,8 +344,7 @@ todo_wine
     {
         str = (LPSTR)DdeAccessData(hdata, &size);
         ok(!lstrcmpA(str, "requested data\r\n"), "Expected 'requested data\\r\\n', got %s\n", str);
-        ok(size == 19 || broken(size == 28), /* sizes are rounded up on win9x */
-           "Expected 19, got %d\n", size);
+        ok(size == 17, "Expected 17, got %d\n", size);
 
         ret = DdeUnaccessData(hdata);
         ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
@@ -356,8 +364,7 @@ todo_wine
     {
         str = (LPSTR)DdeAccessData(hdata, &size);
         ok(!lstrcmpA(str, "requested data\r\n"), "Expected 'requested data\\r\\n', got %s\n", str);
-        ok(size == 19 || broken(size == 28), /* sizes are rounded up on win9x */
-           "Expected 19, got %d\n", size);
+        ok(size == 17, "Expected 17, got %d\n", size);
 
         ret = DdeUnaccessData(hdata);
         ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
@@ -482,8 +489,7 @@ todo_wine
     {
         str = (LPSTR)DdeAccessData(hdata, &size);
         ok(!lstrcmpA(str, "command executed\r\n"), "Expected 'command executed\\r\\n', got %s\n", str);
-        ok(size == 21 || broken(size == 28), /* sizes are rounded up on win9x */
-           "Expected 21, got %d\n", size);
+        ok(size == 19, "Expected 19, got %d\n", size);
 
         ret = DdeUnaccessData(hdata);
         ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
@@ -779,7 +785,6 @@ static HDDEDATA CALLBACK server_ddeml_callback(UINT uType, UINT uFmt, HCONV hcon
         else if (msg_index == 10)
         {
             DWORD rsize = 0;
-            size = 0;
 
             size = DdeGetData(hdata, NULL, 0, 0);
             ok(size == 17, "DdeGetData should have returned 17 not %d\n", size);
@@ -828,10 +833,10 @@ static void test_ddeml_server(HANDLE hproc)
 
     /* set up DDE server */
     server_pid = 0;
-    res = DdeInitialize(&server_pid, server_ddeml_callback, APPCLASS_STANDARD, 0);
+    res = DdeInitializeA(&server_pid, server_ddeml_callback, APPCLASS_STANDARD, 0);
     ok(res == DMLERR_NO_ERROR, "Expected DMLERR_NO_ERROR, got %d\n", res);
 
-    server = DdeCreateStringHandle(server_pid, "TestDDEServer", CP_WINANSI);
+    server = DdeCreateStringHandleA(server_pid, "TestDDEServer", CP_WINANSI);
     ok(server != NULL, "Expected non-NULL string handle\n");
 
     hdata = DdeNameService(server_pid, server, 0, DNS_REGISTER);
@@ -839,7 +844,7 @@ static void test_ddeml_server(HANDLE hproc)
 
     while (MsgWaitForMultipleObjects( 1, &hproc, FALSE, INFINITE, QS_ALLINPUT ) != 0)
     {
-        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+        while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
     }
     ret = DdeUninitialize(server_pid);
     ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
@@ -1000,7 +1005,7 @@ static LRESULT WINAPI dde_msg_client_wndproc(HWND hwnd, UINT msg, WPARAM wparam,
         ok(data->fAckReq == 0, "Expected 0, got %d\n", data->fAckReq);
         ok(data->cfFormat == CF_TEXT, "Expected CF_TEXT, got %d\n", data->cfFormat);
         ok(!lstrcmpA((LPSTR)data->Value, "requested data\r\n"),
-           "Expeted 'requested data\\r\\n', got %s\n", data->Value);
+           "Expected 'requested data\\r\\n', got %s\n", data->Value);
         GlobalUnlock((HGLOBAL)lo);
 
         size = GlobalGetAtomNameA(hi, str, MAX_PATH);
@@ -1077,7 +1082,7 @@ static void test_msg_client(void)
 
     flush_events();
 
-    item = GlobalAddAtom("request");
+    item = GlobalAddAtomA("request");
     ok(item != 0, "Expected non-NULL item\n");
 
     /* WM_DDE_REQUEST, bad clipboard format */
@@ -1295,7 +1300,7 @@ static LRESULT WINAPI dde_server_wndprocA(HWND hwnd, UINT msg, WPARAM wparam, LP
                 if (!conv_unicode)
                     ok( !lstrcmpA(cmd, exec_cmdA), "server A got wrong command '%s'\n", cmd );
                 else  /* we get garbage as the A command was mapped W->A */
-                    ok( cmd[0] == '?', "server A got wrong command '%s'\n", cmd );
+                    ok( cmd[0] != exec_cmdA[0], "server A got wrong command '%s'\n", cmd );
                 break;
 
             case 2:  /* ANSI command in Unicode format */
@@ -1316,7 +1321,7 @@ static LRESULT WINAPI dde_server_wndprocA(HWND hwnd, UINT msg, WPARAM wparam, LP
                 if (!conv_unicode)
                     ok( !lstrcmpA(cmd, exec_cmdWA), "server A got wrong command '%s'\n", cmd );
                 else  /* we get garbage as the A command was mapped W->A */
-                    ok( cmd[0] == '?', "server A got wrong command '%s'\n", cmd );
+                    ok( cmd[0] != exec_cmdWA[0], "server A got wrong command '%s'\n", cmd );
                 break;
             }
             GlobalUnlock((HGLOBAL)hi);
@@ -1430,7 +1435,7 @@ static LRESULT WINAPI dde_server_wndprocW(HWND hwnd, UINT msg, WPARAM wparam, LP
 
             case 1:  /* ANSI command */
                 if (conv_unicode && !client_unicode) /* W->A mapping -> garbage */
-                    ok( cmd[0] == '?', "server W got wrong command '%s'\n", cmd );
+                    ok( cmd[0] != exec_cmdA[0], "server W got wrong command '%s'\n", cmd );
                 else if (!conv_unicode && client_unicode)  /* A->W mapping */
                     ok( !lstrcmpW((LPCWSTR)cmd, exec_cmdAW), "server W got wrong command '%s'\n", cmd );
                 else
@@ -1457,7 +1462,7 @@ static LRESULT WINAPI dde_server_wndprocW(HWND hwnd, UINT msg, WPARAM wparam, LP
 
             case 4:  /* Unicode command in ANSI format */
                 if (conv_unicode && !client_unicode) /* W->A mapping -> garbage */
-                    ok( cmd[0] == '?', "server W got wrong command '%s'\n", cmd );
+                    ok( cmd[0] != exec_cmdWA[0], "server W got wrong command '%s'\n", cmd );
                 else if (!conv_unicode && client_unicode)  /* A->W mapping */
                     ok( !lstrcmpW((LPCWSTR)cmd, exec_cmdW), "server W got wrong command '%s'\n", cmd );
                 else
@@ -1571,6 +1576,7 @@ static void test_dde_aw_transaction( BOOL client_unicode, BOOL server_unicode )
     CONVINFO info;
     HDDEDATA hdata;
     BOOL conv_unicode = client_unicode;
+    BOOL got;
     static char test_cmd[] = "test dde command";
 
     if (!(hwnd_server = create_dde_server( server_unicode ))) return;
@@ -1593,7 +1599,7 @@ static void test_dde_aw_transaction( BOOL client_unicode, BOOL server_unicode )
     info.cb = sizeof(info);
     ret = DdeQueryConvInfo(hconv, QID_SYNC, &info);
     ok(ret, "wrong info size %d, DdeQueryConvInfo error %x\n", ret, DdeGetLastError(dde_inst));
-    ok(info.ConvCtxt.iCodePage == client_unicode ? CP_WINUNICODE : CP_WINANSI,
+    ok(info.ConvCtxt.iCodePage == (client_unicode ? CP_WINUNICODE : CP_WINANSI),
        "wrong iCodePage %d\n", info.ConvCtxt.iCodePage);
     ok(!info.hConvPartner, "unexpected info.hConvPartner: %p\n", info.hConvPartner);
 todo_wine {
@@ -1709,7 +1715,8 @@ todo_wine {
         ok(err == DMLERR_NOTPROCESSED, "DdeClientTransaction returned error %x\n", err);
     }
 
-    ok(DdeDisconnect(hconv), "DdeDisconnect error %x\n", DdeGetLastError(dde_inst));
+    got = DdeDisconnect(hconv);
+    ok(got, "DdeDisconnect error %x\n", DdeGetLastError(dde_inst));
 
     info.cb = sizeof(info);
     ret = DdeQueryConvInfo(hconv, QID_SYNC, &info);
@@ -1719,7 +1726,8 @@ todo_wine {
     ok(err == DMLERR_INVALIDPARAMETER, "wrong dde error %x\n", err);
 }
 
-    ok(DdeFreeStringHandle(dde_inst, hsz_server), "DdeFreeStringHandle error %x\n", DdeGetLastError(dde_inst));
+    got = DdeFreeStringHandle(dde_inst, hsz_server);
+    ok(got, "DdeFreeStringHandle error %x\n", DdeGetLastError(dde_inst));
 
     /* This call hangs on win2k SP4 and XP SP1.
     DdeUninitialize(dde_inst);*/
@@ -1757,7 +1765,7 @@ static void test_initialisation(void)
 
     item = DdeCreateStringHandleA(client_pid, "request", CP_WINANSI);
 
-    /* There is no converstation so an invalild parameter results */
+    /* There is no conversation so an invalid parameter results */
     res = 0xdeadbeef;
     DdeGetLastError(client_pid);
     hdata = DdeClientTransaction(NULL, 0, conversation, item, CF_TEXT, XTYP_REQUEST, default_timeout, &res);
@@ -1920,7 +1928,7 @@ static void test_DdeCreateDataHandle(void)
     ok(err == DMLERR_INVALIDPARAMETER, "Expected DMLERR_INVALIDPARAMETER, got %d\n", err);
 
     ret = DdeUninitialize(dde_inst2);
-    ok(res == DMLERR_NO_ERROR, "Expected DMLERR_NO_ERROR, got %d\n", res);
+    ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
 
 
     /* NULL pSrc */
@@ -2033,7 +2041,7 @@ static void test_DdeCreateDataHandle(void)
     ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
 
     ret = DdeUninitialize(dde_inst);
-    ok(res == DMLERR_NO_ERROR, "Expected DMLERR_NO_ERROR, got %d\n", res);
+    ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
 }
 
 static void test_DdeCreateStringHandle(void)
@@ -2043,12 +2051,6 @@ static void test_DdeCreateStringHandle(void)
     dde_inst = 0xdeadbeef;
     SetLastError(0xdeadbeef);
     ret = DdeInitializeW(&dde_inst, client_ddeml_callback, APPCMD_CLIENTONLY, 0);
-    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-    {
-        win_skip("DdeInitializeW is unimplemented\n");
-        return;
-    }
-
     ok(ret == DMLERR_INVALIDPARAMETER, "DdeInitializeW should fail, but got %04x instead\n", ret);
     ok(DdeGetLastError(dde_inst) == DMLERR_INVALIDPARAMETER, "expected DMLERR_INVALIDPARAMETER\n");
 
@@ -2392,6 +2394,7 @@ static WCHAR test_cmd_w_to_w[][32] = {
     { 0x2018, 0x2019, 0x0161, 0x0041, 0x02dc, 0 },  /* some chars that should map properly to CP1252 */
     { 0x2026, 0x2020, 0x2021, 0x0d0a, 0 },  /* false negative for IsTextUnicode */
     { 0x4efa, 0x4efc, 0x0061, 0x4efe, 0 },  /* some Chinese chars */
+    { 0x0061, 0x0062, 0x0063, 0x9152, 0 },  /* Chinese with latin characters begin */
 };
 static const int nb_callbacks = 5 + sizeof(test_cmd_w_to_w)/sizeof(test_cmd_w_to_w[0]);
 
@@ -2403,8 +2406,8 @@ static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV
     char str[MAX_PATH];
     static int msg_index = 0;
     static HCONV conversation = 0;
-    static char test_service [] = "TestDDEService";
-    static char test_topic [] = "TestDDETopic";
+    static const char test_service [] = "TestDDEService";
+    static const char test_topic [] = "TestDDETopic";
 
     msg_index++;
 
@@ -2462,10 +2465,9 @@ static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV
         ok(!lstrcmpA(str, test_topic), "Expected %s, got %s, msg_index=%d\n",
                              test_topic, str, msg_index);
         ok(size == 12, "Expected 12, got %d, msg_index=%d\n", size, msg_index);
-        ok(size == 12, "Expected 12, got %d, msg_index=%d\n", size, msg_index);
 
         size = DdeGetData(hdata, NULL, 0, 0);
-        ok((buffer = HeapAlloc(GetProcessHeap(), 0, size)) != NULL, "should not be null\n");
+        ok((buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size)) != NULL, "should not be null\n");
         rsize = DdeGetData(hdata, buffer, size, 0);
         ok(rsize == size, "Incorrect size returned, expected %d got %d, msg_index=%d\n",
            size, rsize, msg_index);
@@ -2493,8 +2495,6 @@ static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV
             else if (unicode_client)
             {
                 /* ASCII string mapped W->A -> garbage */
-                ok(size == size_a / sizeof(WCHAR) || size == size_a / sizeof(WCHAR) + 1,
-                   "Wrong size %d, msg_index=%d\n", size, msg_index);
             }
             else
             {
@@ -2510,12 +2510,6 @@ static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV
                 ok(size == size_w, "Wrong size %d/%d, msg_index=%d\n", size, size_w, msg_index);
                 ok(!lstrcmpW((WCHAR*)buffer, cmd_w),
                    "Expected %s, msg_index=%d\n", wine_dbgstr_w(cmd_w), msg_index);
-            }
-            else if (unicode_client)
-            {
-                ok(size == size_w_to_a, "Wrong size %d/%d, msg_index=%d\n", size, size_w_to_a, msg_index);
-                ok(!lstrcmpA((CHAR*)buffer, test_cmd_w_to_a), "Expected %s, got %s, msg_index=%d\n",
-                   test_cmd_w_to_a, buffer, msg_index);
             }
             else
             {
@@ -2536,7 +2530,8 @@ static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV
                 DWORD nt_size = MultiByteToWideChar( CP_ACP, 0, (char *)cmd_w, size_w, test_cmd_a_to_w,
                                                      sizeof(test_cmd_a_to_w)/sizeof(WCHAR) ) * sizeof(WCHAR);
                 DWORD xp_size = MultiByteToWideChar( CP_ACP, 0, (char *)cmd_w, -1, NULL, 0 ) * sizeof(WCHAR);
-                ok(size == xp_size || broken(size == nt_size),
+                ok(size == xp_size || broken(size == nt_size) ||
+                   broken(str_index == 4 && IsDBCSLeadByte(cmd_w[0])) /* East Asian */,
                    "Wrong size %d/%d, msg_index=%d\n", size, size_a_to_w, msg_index);
                 ok(!lstrcmpW((WCHAR*)buffer, test_cmd_a_to_w),
                    "Expected %s, msg_index=%d\n", wine_dbgstr_w(test_cmd_a_to_w), msg_index);
@@ -2554,11 +2549,47 @@ static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV
                    "Expected %s, msg_index=%d\n", wine_dbgstr_w(cmd_w), msg_index);
             }
             break;
+        case 5: /* Chinese with latin characters begin */
+            if (unicode_server && unicode_client)
+            {
+                todo_wine ok(size == size_w, "Wrong size %d expected %d, msg_index=%d\n", size, size_w, msg_index);
+                MultiByteToWideChar(CP_ACP, 0, test_cmd_w_to_a, size_w, test_cmd_a_to_w,
+                                    sizeof(test_cmd_a_to_w)/sizeof(WCHAR));
+                todo_wine ok(!lstrcmpW((WCHAR*)buffer, cmd_w),
+                             "Expected %s got %s, msg_index=%d\n", wine_dbgstr_w(cmd_w), wine_dbgstr_w((WCHAR *)buffer), msg_index);
+            }
+            else if (unicode_server)
+            {
+                todo_wine ok(size == size_w, "Wrong size %d expected %d, msg_index=%d\n", size, size_w, msg_index);
+                MultiByteToWideChar(CP_ACP, 0, test_cmd_w_to_a, size_w, test_cmd_a_to_w,
+                                    sizeof(test_cmd_a_to_w)/sizeof(WCHAR));
+                if (!is_cjk())
+                    todo_wine ok(!lstrcmpW((WCHAR*)buffer, test_cmd_a_to_w), "Expected %s, got %s, msg_index=%d\n",
+                                 wine_dbgstr_w(test_cmd_a_to_w), wine_dbgstr_w((WCHAR*)buffer), msg_index);
+                else
+                    todo_wine ok(!lstrcmpW((WCHAR*)buffer, cmd_w),
+                                 "Expected %s got %s, msg_index=%d\n", wine_dbgstr_w(cmd_w), wine_dbgstr_w((WCHAR *)buffer), msg_index);
+            }
+            else if (unicode_client)
+            {
+                ok(size == size_w_to_a, "Wrong size %d expected %d, msg_index=%d\n", size, size_w_to_a, msg_index);
+                ok(!lstrcmpA((CHAR*)buffer, test_cmd_w_to_a), "Expected %s, got %s, msg_index=%d\n",
+                   test_cmd_w_to_a, buffer, msg_index);
+            }
+            else
+            {
+                todo_wine ok(size == size_w_to_a || size == (size_w_to_a - 1), "Wrong size %d expected %d or %d, msg_index=%d\n",
+                             size, size_w_to_a, size_w_to_a - 1, msg_index);
+                todo_wine ok(!lstrcmpA((CHAR*)buffer, test_cmd_w_to_a), "Expected %s, got %s, msg_index=%d\n",
+                             test_cmd_w_to_a, buffer, msg_index);
+            }
+            break;
 
         default:
             ok( 0, "Invalid message %u\n", msg_index );
             break;
         }
+        HeapFree(GetProcessHeap(), 0, buffer);
         return (HDDEDATA) DDE_FACK;
     }
     case XTYP_DISCONNECT:
@@ -2594,10 +2625,10 @@ static void test_end_to_end_client(BOOL type_a)
     HSZ server, topic;
     HCONV hconv;
     HDDEDATA hdata;
-    static char test_service[] = "TestDDEService";
-    static WCHAR test_service_w[] = {'T','e','s','t','D','D','E','S','e','r','v','i','c','e',0};
-    static char test_topic[] = "TestDDETopic";
-    static WCHAR test_topic_w[] = {'T','e','s','t','D','D','E','T','o','p','i','c',0};
+    static const char test_service[] = "TestDDEService";
+    static const WCHAR test_service_w[] = {'T','e','s','t','D','D','E','S','e','r','v','i','c','e',0};
+    static const char test_topic[] = "TestDDETopic";
+    static const WCHAR test_topic_w[] = {'T','e','s','t','D','D','E','T','o','p','i','c',0};
 
     trace("Start end to end client %s\n", type_a ? "ASCII" : "UNICODE");
 
@@ -2659,7 +2690,7 @@ static void test_end_to_end_server(HANDLE hproc, HANDLE hthread, BOOL type_a)
     BOOL ret;
     DWORD res;
     HDDEDATA hdata;
-    static CHAR test_service[] = "TestDDEService";
+    static const char test_service[] = "TestDDEService";
 
     trace("start end to end server %s\n", type_a ? "ASCII" : "UNICODE");
     server_pid = 0;
@@ -2680,7 +2711,7 @@ static void test_end_to_end_server(HANDLE hproc, HANDLE hthread, BOOL type_a)
 
     while (MsgWaitForMultipleObjects( 1, &hproc, FALSE, INFINITE, QS_ALLINPUT ) != 0)
     {
-        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
+        while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageA(&msg);
     }
 
     ret = DdeUninitialize(server_pid);
@@ -2694,8 +2725,9 @@ START_TEST(dde)
     int argc;
     char **argv;
     char buffer[MAX_PATH];
-    STARTUPINFO startup;
+    STARTUPINFOA startup;
     PROCESS_INFORMATION proc;
+    DWORD dde_inst = 0xdeadbeef;
 
     argc = winetest_get_mainargs(&argv);
     if (argc == 3)
@@ -2714,7 +2746,15 @@ START_TEST(dde)
 
     test_initialisation();
 
-    ZeroMemory(&startup, sizeof(STARTUPINFO));
+    SetLastError(0xdeadbeef);
+    DdeInitializeW(&dde_inst, client_ddeml_callback, APPCMD_CLIENTONLY, 0);
+    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("Skipping tests on win9x because of brokenness\n");
+        return;
+    }
+
+    ZeroMemory(&startup, sizeof(STARTUPINFOA));
     sprintf(buffer, "%s dde ddeml", argv[0]);
     startup.cb = sizeof(startup);
     startup.dwFlags = STARTF_USESHOWWINDOW;

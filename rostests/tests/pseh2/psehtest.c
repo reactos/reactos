@@ -20,15 +20,11 @@
 	DEALINGS IN THE SOFTWARE.
 */
 
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <pseh/pseh2.h>
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define STANDALONE
 #include <wine/test.h>
@@ -62,7 +58,11 @@ extern int return_minusone_4(void *, int);
 
 extern void set_positive(int *);
 
-static int call_test(int (*)(void));
+//static int call_test(int (*)(void));
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #define DEFINE_TEST(NAME_) static int NAME_(void)
 
@@ -2410,6 +2410,189 @@ DEFINE_TEST(test_bug_4663)
 //}}}
 //}}}
 
+DEFINE_TEST(test_unvolatile)
+{
+    int val = 0;
+
+    _SEH2_TRY
+    {
+        val = return_one();
+        *((char*)0xc0000000) = 0;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        val = val + 3;
+    }
+    _SEH2_END;
+
+    return (val == 4);
+}
+
+DEFINE_TEST(test_unvolatile_2)
+{
+    int val = 0;
+
+    _SEH2_TRY
+    {
+        val = 1;
+        *((char*)0xc0000000) = 0;
+        val = 2;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        val = val + 3;
+    }
+    _SEH2_END;
+
+    return (val == 3) || (val == 4) || (val == 5);
+}
+
+/* This test is mainly for documentation purpose. As can be seen it doesn't
+   provide a satisfying result. In fact the compiler could do even more
+   crazy things like reusing val1 between the assignment to 0 and the last
+   assignment to 3. This DOES happen with C++ and it's NOT a PSEH bug, but
+   rather an unavoidable consequence of how the compiler works.
+   The conclusion: Do not use assignments to a variable inside a __try block
+   that is being used later inside the __except block, unless it is declared
+   volatile! */
+#ifndef __cplusplus
+DEFINE_TEST(test_unvolatile_3)
+{
+    register int val1 = 0, val2 = 0;
+
+    _SEH2_TRY
+    {
+        val1 = 1;
+
+        _SEH2_TRY
+        {
+            val2 = 1;
+            *((char*)0xc0000000) = 0;
+            val2 = 2;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            val2 |= 4;
+        }
+        _SEH2_END;
+
+        val1 = 2;
+        *((int*)0xc0000000) = 1;
+        val1 = 3;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        val1 = val1 * val2;
+    }
+    _SEH2_END;
+
+    /* The expected case */
+    if ((val1 == 10) && (val2 == 5))
+        return TRUE;
+
+    /* The compiler can optimize away "val1 = 1" and "val1 = 2" and
+       only use the last "val1 = 3", in this case val1 is still 0
+       when the outer exception handler kicks in */
+    if ((val1 == 0) && (val2 == 5))
+        return TRUE;
+
+    /* Same as above, but this time val2 optimized away */
+    if (((val1 == 8) && (val2 == 4)) ||
+        ((val1 == 0) && (val2 == 4)))
+        return TRUE;
+
+    return FALSE;
+}
+#endif // __cplusplus
+
+DEFINE_TEST(test_unvolatile_4)
+{
+    unsigned result = 0xdeadbeef;
+
+    _SEH2_TRY
+    {
+        *(char*)0x80000000 = 1;
+    }
+    _SEH2_EXCEPT(result == 0xdeadbeef)
+    {
+        result = 2;
+    }
+    _SEH2_END;
+
+    result = (result == 0xdeadbeef) ? 0 : result + 1;
+
+    return result == 3;
+}
+
+DEFINE_TEST(test_finally_goto)
+{
+    volatile int val = 0;
+
+    _SEH2_TRY
+    {
+        val |= 1;
+        _SEH2_TRY
+        {
+            val |= 2;
+            goto next;
+        }
+        _SEH2_FINALLY
+        {
+            val |= 4;
+            *((char*)0xdeadc0de) = 0;
+            val |= 8;
+        }
+        _SEH2_END;
+
+        val |= 16;
+next:
+        val |= 32;
+        *((char*)0xdeadc0de) = 0;
+        val |= 64;
+    }
+    _SEH2_EXCEPT(1)
+    {
+        val |= 128;
+    }
+    _SEH2_END;
+
+    return (val == (128|4|2|1));
+}
+
+DEFINE_TEST(test_nested_exception)
+{
+    volatile int val = 0;
+
+    _SEH2_TRY
+    {
+        val |= 1;
+        _SEH2_TRY
+        {
+            val |= 2;
+            *((char*)0xdeadc0de) = 0;
+            val |= 4;
+        }
+        _SEH2_EXCEPT(1)
+        {
+            val |= 8;
+            *((char*)0xdeadc0de) = 0;
+            val |= 16;
+        }
+        _SEH2_END;
+
+        val |= 32;
+        *((char*)0xdeadc0de) = 0;
+        val |= 64;
+    }
+    _SEH2_EXCEPT(1)
+    {
+        val |= 128;
+    }
+    _SEH2_END;
+
+    return (val == (1|2|8|128));
+}
+
 static
 LONG WINAPI unhandled_exception(PEXCEPTION_POINTERS ExceptionInfo)
 {
@@ -2437,7 +2620,7 @@ static
 DECLSPEC_NOINLINE
 int sanity_check(int ret, struct volatile_context * before, struct volatile_context * after)
 {
-	if(ret && memcmp(before, after, sizeof(before)))
+	if(ret && memcmp(before, after, sizeof(*before)))
 	{
 		trace("volatile context corrupted\n");
 		return 0;
@@ -2446,11 +2629,13 @@ int sanity_check(int ret, struct volatile_context * before, struct volatile_cont
 	return ret;
 }
 
+#ifndef _PSEH3_H_
 static
 int passthrough_handler(struct _EXCEPTION_RECORD * e, void * f, struct _CONTEXT * c, void * d)
 {
 	return ExceptionContinueSearch;
 }
+#endif
 
 static
 DECLSPEC_NOINLINE
@@ -2459,12 +2644,14 @@ int call_test(int (* func)(void))
 	static int ret;
 	static struct volatile_context before, after;
 	static LPTOP_LEVEL_EXCEPTION_FILTER prev_unhandled_exception;
+#ifndef _PSEH3_H_
 	static _SEH2Registration_t * prev_frame;
 	_SEH2Registration_t passthrough_frame;
+#endif
 
 	prev_unhandled_exception = SetUnhandledExceptionFilter(&unhandled_exception);
 
-#if defined(_X86_)
+#if defined(_X86_) && !defined(_PSEH3_H_)
 	prev_frame = (_SEH2Registration_t *)__readfsdword(0);
 	passthrough_frame.SER_Prev = prev_frame;
 	passthrough_frame.SER_Handler = passthrough_handler;
@@ -2500,7 +2687,7 @@ int call_test(int (* func)(void))
 	ret = func();
 #endif
 
-#if defined(_X86_)
+#if defined(_X86_) && !defined(_PSEH3_H_)
 	if((_SEH2Registration_t *)__readfsdword(0) != &passthrough_frame || passthrough_frame.SER_Prev != prev_frame)
 	{
 		trace("exception registration list corrupted\n");
@@ -2512,6 +2699,55 @@ int call_test(int (* func)(void))
 
 	SetUnhandledExceptionFilter(prev_unhandled_exception);
 	return ret;
+}
+
+DEFINE_TEST(test_PSEH3_bug)
+{
+    volatile int count = 0;
+    int dummy = 0;
+
+    _SEH2_TRY
+    {
+        if (count++ == 0)
+        {
+            *(volatile int*)0x12345678 = 0x12345678;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dummy = 0;
+    }
+    _SEH2_END;
+
+    (void)dummy;
+    return (count == 1);
+}
+
+void
+use_lots_of_stack(void)
+{
+    int i;
+    volatile int arr[512];
+    for (i = 0; i < 512; i++)
+        arr[i] = 123;
+    (void)arr;
+}
+
+DEFINE_TEST(test_PSEH3_bug2)
+{
+    unsigned long status = 0;
+    _SEH2_TRY
+    {
+        *(volatile int*)0x12345678 = 0x12345678;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        use_lots_of_stack();
+        status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    return (status == STATUS_ACCESS_VIOLATION);
 }
 
 #define USE_TEST_NAME_(NAME_) # NAME_
@@ -2638,6 +2874,17 @@ void testsuite_syntax(void)
 
 		USE_TEST(test_bug_4004),
 		USE_TEST(test_bug_4663),
+
+		USE_TEST(test_unvolatile),
+		USE_TEST(test_unvolatile_2),
+#ifndef __cplusplus
+		USE_TEST(test_unvolatile_3),
+#endif
+		USE_TEST(test_unvolatile_4),
+		USE_TEST(test_finally_goto),
+		USE_TEST(test_nested_exception),
+		USE_TEST(test_PSEH3_bug),
+		USE_TEST(test_PSEH3_bug2),
 	};
 
 	size_t i;

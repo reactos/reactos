@@ -23,8 +23,16 @@
 #include "windef.h"
 #include "winbase.h"
 #include "wincred.h"
+#include "sspi.h"
 
 #include "wine/test.h"
+
+static SECURITY_STATUS (SEC_ENTRY *pSspiEncodeAuthIdentityAsStrings)
+    (PSEC_WINNT_AUTH_IDENTITY_OPAQUE,PCWSTR*,PCWSTR*,PCWSTR*);
+static void (SEC_ENTRY *pSspiFreeAuthIdentity)
+    (PSEC_WINNT_AUTH_IDENTITY_OPAQUE);
+static ULONG (SEC_ENTRY *pSspiPromptForCredentialsW)
+    (PCWSTR,void*,ULONG,PCWSTR,PSEC_WINNT_AUTH_IDENTITY_OPAQUE,PSEC_WINNT_AUTH_IDENTITY_OPAQUE*,int*,ULONG);
 
 static void test_CredUIPromptForCredentials(void)
 {
@@ -65,7 +73,7 @@ static void test_CredUIPromptForCredentials(void)
                                       sizeof(username)/sizeof(username[0]),
                                       password, sizeof(password)/sizeof(password[0]),
                                       NULL, CREDUI_FLAGS_SHOW_SAVE_CHECK_BOX);
-    ok(ret == ERROR_INVALID_PARAMETER, "CredUIPromptForCredentials should have returned ERROR_INVALID_FLAGS instead of %d\n", ret);
+    ok(ret == ERROR_INVALID_PARAMETER, "CredUIPromptForCredentials should have returned ERROR_INVALID_PARAMETER instead of %d\n", ret);
 
     if (winetest_interactive)
     {
@@ -83,7 +91,10 @@ static void test_CredUIPromptForCredentials(void)
                                           &save, CREDUI_FLAGS_EXPECT_CONFIRMATION);
         ok(ret == ERROR_SUCCESS || ret == ERROR_CANCELLED, "CredUIPromptForCredentials failed with error %d\n", ret);
         if (ret == ERROR_SUCCESS)
+        {
             ret = CredUIConfirmCredentialsW(wszServerName, FALSE);
+            ok(ret == ERROR_SUCCESS, "CredUIConfirmCredentials failed with error %d\n", ret);
+        }
 
         credui_info.pszCaptionText = wszCaption1;
         ret = CredUIPromptForCredentialsW(&credui_info, wszServerName, NULL,
@@ -93,7 +104,10 @@ static void test_CredUIPromptForCredentials(void)
                                           &save, CREDUI_FLAGS_EXPECT_CONFIRMATION);
         ok(ret == ERROR_SUCCESS || ret == ERROR_CANCELLED, "CredUIPromptForCredentials failed with error %d\n", ret);
         if (ret == ERROR_SUCCESS)
+        {
             ret = CredUIConfirmCredentialsW(wszServerName, FALSE);
+            ok(ret == ERROR_SUCCESS, "CredUIConfirmCredentials failed with error %d\n", ret);
+        }
 
         credui_info.pszCaptionText = wszCaption2;
         ret = CredUIPromptForCredentialsW(&credui_info, wszServerName, NULL, 0,
@@ -102,7 +116,11 @@ static void test_CredUIPromptForCredentials(void)
                                           NULL, CREDUI_FLAGS_INCORRECT_PASSWORD|CREDUI_FLAGS_EXPECT_CONFIRMATION);
         ok(ret == ERROR_SUCCESS || ret == ERROR_CANCELLED, "CredUIPromptForCredentials failed with error %d\n", ret);
         if (ret == ERROR_SUCCESS)
+        {
             ret = CredUIConfirmCredentialsW(wszServerName, FALSE);
+            ok(ret == ERROR_SUCCESS, "CredUIConfirmCredentials failed with error %d\n", ret);
+        }
+
 
         save = TRUE;
         credui_info.pszCaptionText = wszCaption3;
@@ -122,11 +140,79 @@ static void test_CredUIPromptForCredentials(void)
         ok(ret == ERROR_SUCCESS || ret == ERROR_CANCELLED, "CredUIPromptForCredentials failed with error %d\n", ret);
         ok(!save, "save flag should have been untouched\n");
         if (ret == ERROR_SUCCESS)
+        {
             ret = CredUIConfirmCredentialsW(wszServerName, FALSE);
+            ok(ret == ERROR_SUCCESS, "CredUIConfirmCredentials failed with error %d\n", ret);
+        }
+
+    }
+}
+
+static void test_SspiPromptForCredentials(void)
+{
+    static const WCHAR targetW[] = {'S','s','p','i','T','e','s','t',0};
+    static const WCHAR basicW[] = {'b','a','s','i','c',0};
+    ULONG ret;
+    SECURITY_STATUS status;
+    CREDUI_INFOW info;
+    PSEC_WINNT_AUTH_IDENTITY_OPAQUE id;
+    const WCHAR *username, *domain, *creds;
+    int save;
+
+    if (!pSspiPromptForCredentialsW || !pSspiFreeAuthIdentity)
+    {
+        win_skip( "SspiPromptForCredentialsW is missing\n" );
+        return;
+    }
+
+    info.cbSize         = sizeof(info);
+    info.hwndParent     = NULL;
+    info.pszMessageText = targetW;
+    info.pszCaptionText = basicW;
+    info.hbmBanner      = NULL;
+    ret = pSspiPromptForCredentialsW( NULL, &info, 0, basicW, NULL, &id, &save, 0 );
+    ok( ret == ERROR_INVALID_PARAMETER, "got %u\n", ret );
+
+    ret = pSspiPromptForCredentialsW( targetW, &info, 0, NULL, NULL, &id, &save, 0 );
+    ok( ret == ERROR_NO_SUCH_PACKAGE, "got %u\n", ret );
+
+    if (winetest_interactive)
+    {
+        id = NULL;
+        save = -1;
+        ret = pSspiPromptForCredentialsW( targetW, &info, 0, basicW, NULL, &id, &save, 0 );
+        ok( ret == ERROR_SUCCESS || ret == ERROR_CANCELLED, "got %u\n", ret );
+        if (ret == ERROR_SUCCESS)
+        {
+            ok( id != NULL, "id not set\n" );
+            ok( save == TRUE || save == FALSE, "got %d\n", save );
+
+            username = creds = NULL;
+            domain = (const WCHAR *)0xdeadbeef;
+            status = pSspiEncodeAuthIdentityAsStrings( id, &username, &domain, &creds );
+            ok( status == SEC_E_OK, "got %u\n", status );
+            ok( username != NULL, "username not set\n" );
+            ok( domain == NULL, "domain not set\n" );
+            ok( creds != NULL, "creds not set\n" );
+            pSspiFreeAuthIdentity( id );
+        }
     }
 }
 
 START_TEST(credui)
 {
+    HMODULE hcredui = GetModuleHandleA( "credui.dll" ), hsecur32 = LoadLibraryA( "secur32.dll" );
+
+    if (hcredui)
+        pSspiPromptForCredentialsW = (void *)GetProcAddress( hcredui, "SspiPromptForCredentialsW" );
+    if (hsecur32)
+    {
+        pSspiEncodeAuthIdentityAsStrings = (void *)GetProcAddress( hsecur32, "SspiEncodeAuthIdentityAsStrings" );
+        pSspiFreeAuthIdentity = (void *)GetProcAddress( hsecur32, "SspiFreeAuthIdentity" );
+    }
+
     test_CredUIPromptForCredentials();
+    test_SspiPromptForCredentials();
+
+    FreeLibrary( hsecur32 );
 }

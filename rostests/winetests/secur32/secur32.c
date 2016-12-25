@@ -30,6 +30,17 @@
 
 static HMODULE secdll;
 
+static SECURITY_STATUS (SEC_ENTRY *pSspiEncodeAuthIdentityAsStrings)
+    (PSEC_WINNT_AUTH_IDENTITY_OPAQUE, PCWSTR *, PCWSTR *, PCWSTR *);
+static SECURITY_STATUS (SEC_ENTRY *pSspiEncodeStringsAsAuthIdentity)
+    (PCWSTR, PCWSTR, PCWSTR, PSEC_WINNT_AUTH_IDENTITY_OPAQUE *);
+static void (SEC_ENTRY *pSspiFreeAuthIdentity)
+    (PSEC_WINNT_AUTH_IDENTITY_OPAQUE);
+static void (SEC_ENTRY *pSspiLocalFree)
+    (void *);
+static void (SEC_ENTRY *pSspiZeroAuthIdentity)
+    (PSEC_WINNT_AUTH_IDENTITY_OPAQUE);
+
 static BOOLEAN (WINAPI * pGetComputerObjectNameA)(EXTENDED_NAME_FORMAT NameFormat, LPSTR lpNameBuffer, PULONG lpnSize);
 static BOOLEAN (WINAPI * pGetComputerObjectNameW)(EXTENDED_NAME_FORMAT NameFormat, LPWSTR lpNameBuffer, PULONG lpnSize);
 static BOOLEAN (WINAPI * pGetUserNameExA)(EXTENDED_NAME_FORMAT NameFormat, LPSTR lpNameBuffer, PULONG lpnSize);
@@ -118,7 +129,7 @@ static void testGetUserNameExA(void)
     }
 
     if (0) /* Crashes on Windows */
-        rc = pGetUserNameExA(NameSamCompatible, NULL, NULL);
+        pGetUserNameExA(NameSamCompatible, NULL, NULL);
 
     size = 0;
     rc = pGetUserNameExA(NameSamCompatible, NULL, &size);
@@ -128,7 +139,7 @@ static void testGetUserNameExA(void)
     if (0) /* Crashes on Windows with big enough size */
     {
         /* Returned size is already big enough */
-        rc = pGetUserNameExA(NameSamCompatible, NULL, &size);
+        pGetUserNameExA(NameSamCompatible, NULL, &size);
     }
 
     size = 0;
@@ -165,7 +176,7 @@ static void testGetUserNameExW(void)
     }
 
     if (0) /* Crashes on Windows */
-        rc = pGetUserNameExW(NameSamCompatible, NULL, NULL);
+        pGetUserNameExW(NameSamCompatible, NULL, NULL);
 
     size = 0;
     rc = pGetUserNameExW(NameSamCompatible, NULL, &size);
@@ -175,7 +186,7 @@ static void testGetUserNameExW(void)
     if (0) /* Crashes on Windows with big enough size */
     {
         /* Returned size is already big enough */
-        rc = pGetUserNameExW(NameSamCompatible, NULL, &size);
+        pGetUserNameExW(NameSamCompatible, NULL, &size);
     }
 
     size = 0;
@@ -198,14 +209,12 @@ static void test_InitSecurityInterface(void)
     sftA = pInitSecurityInterfaceA();
     ok(sftA != NULL, "pInitSecurityInterfaceA failed\n");
     ok(sftA->dwVersion == SECURITY_SUPPORT_PROVIDER_INTERFACE_VERSION, "wrong dwVersion %d in security function table\n", sftA->dwVersion);
-    ok(!sftA->Reserved2 || broken(sftA->Reserved2 != NULL) /* WinME */,
+    ok(!sftA->Reserved2,
        "Reserved2 should be NULL instead of %p in security function table\n",
        sftA->Reserved2);
-    ok(sftA->Reserved3 == sftA->EncryptMessage ||
-       broken(sftA->Reserved3 != sftA->EncryptMessage) /* Win9x */,
+    ok(sftA->Reserved3 == sftA->EncryptMessage,
        "Reserved3 should be equal to EncryptMessage in the security function table\n");
-    ok(sftA->Reserved4 == sftA->DecryptMessage ||
-       broken(sftA->Reserved4 != sftA->DecryptMessage) /* Win9x */,
+    ok(sftA->Reserved4 == sftA->DecryptMessage,
        "Reserved4 should be equal to DecryptMessage in the security function table\n");
 
     if (!pInitSecurityInterfaceW)
@@ -222,6 +231,139 @@ static void test_InitSecurityInterface(void)
     ok(sftW->Reserved4 == sftW->DecryptMessage, "Reserved4 should be equal to DecryptMessage in the security function table\n");
 }
 
+static void test_SspiEncodeStringsAsAuthIdentity(void)
+{
+    static const WCHAR username[] = {'u','s','e','r','n','a','m','e',0};
+    static const WCHAR domainname[] = {'d','o','m','a','i','n','n','a','m','e',0};
+    static const WCHAR password[] = {'p','a','s','s','w','o','r','d',0};
+    const WCHAR *username_ptr, *domainname_ptr, *password_ptr;
+    PSEC_WINNT_AUTH_IDENTITY_OPAQUE id;
+    SECURITY_STATUS status;
+
+    if (!pSspiEncodeStringsAsAuthIdentity)
+    {
+        win_skip( "SspiEncodeAuthIdentityAsStrings not exported by secur32.dll\n" );
+        return;
+    }
+
+    status = pSspiEncodeStringsAsAuthIdentity( NULL, NULL, NULL, NULL );
+    ok( status == SEC_E_INVALID_TOKEN, "got %08x\n", status );
+
+    id = (PSEC_WINNT_AUTH_IDENTITY_OPAQUE)0xdeadbeef;
+    status = pSspiEncodeStringsAsAuthIdentity( NULL, NULL, NULL, &id );
+    ok( status == SEC_E_INVALID_TOKEN, "got %08x\n", status );
+    ok( id == (PSEC_WINNT_AUTH_IDENTITY_OPAQUE)0xdeadbeef, "id set\n" );
+
+    id = NULL;
+    status = pSspiEncodeStringsAsAuthIdentity( NULL, NULL, password, &id );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( id != NULL, "id not set\n" );
+    pSspiFreeAuthIdentity( id );
+
+    id = NULL;
+    status = pSspiEncodeStringsAsAuthIdentity( NULL, domainname, password, &id );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( id != NULL, "id not set\n" );
+    pSspiFreeAuthIdentity( id );
+
+    id = NULL;
+    status = pSspiEncodeStringsAsAuthIdentity( username, NULL, password, &id );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( id != NULL, "id not set\n" );
+    pSspiFreeAuthIdentity( id );
+
+    id = NULL;
+    status = pSspiEncodeStringsAsAuthIdentity( username, NULL, NULL, &id );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( id != NULL, "id not set\n" );
+    pSspiFreeAuthIdentity( id );
+
+    id = NULL;
+    status = pSspiEncodeStringsAsAuthIdentity( username, domainname, password, &id );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( id != NULL, "id not set\n" );
+
+    username_ptr = domainname_ptr = password_ptr = NULL;
+    status = pSspiEncodeAuthIdentityAsStrings( id, &username_ptr, &domainname_ptr, &password_ptr );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( !lstrcmpW( username, username_ptr ), "wrong username\n" );
+    ok( !lstrcmpW( domainname, domainname_ptr ), "wrong domainname\n" );
+    ok( !lstrcmpW( password, password_ptr ), "wrong password\n" );
+
+    pSspiZeroAuthIdentity( id );
+
+    pSspiLocalFree( (void *)username_ptr );
+    pSspiLocalFree( (void *)domainname_ptr );
+    pSspiLocalFree( (void *)password_ptr );
+    pSspiFreeAuthIdentity( id );
+
+    id = NULL;
+    status = pSspiEncodeStringsAsAuthIdentity( username, NULL, password, &id );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( id != NULL, "id not set\n" );
+
+    username_ptr = password_ptr = NULL;
+    domainname_ptr = (const WCHAR *)0xdeadbeef;
+    status = pSspiEncodeAuthIdentityAsStrings( id, &username_ptr, &domainname_ptr, &password_ptr );
+    ok( status == SEC_E_OK, "got %08x\n", status );
+    ok( !lstrcmpW( username, username_ptr ), "wrong username\n" );
+    ok( domainname_ptr == NULL, "domainname_ptr not cleared\n" );
+    ok( !lstrcmpW( password, password_ptr ), "wrong password\n" );
+
+    pSspiLocalFree( (void *)username_ptr );
+    pSspiLocalFree( (void *)password_ptr );
+    pSspiFreeAuthIdentity( id );
+}
+
+static void test_kerberos(void)
+{
+    SecPkgInfoA *info;
+    TimeStamp ttl;
+    CredHandle cred;
+    SECURITY_STATUS status;
+
+    SEC_CHAR provider[] = {'K','e','r','b','e','r','o','s',0};
+
+    static const ULONG expected_flags =
+          SECPKG_FLAG_INTEGRITY
+        | SECPKG_FLAG_PRIVACY
+        | SECPKG_FLAG_TOKEN_ONLY
+        | SECPKG_FLAG_DATAGRAM
+        | SECPKG_FLAG_CONNECTION
+        | SECPKG_FLAG_MULTI_REQUIRED
+        | SECPKG_FLAG_EXTENDED_ERROR
+        | SECPKG_FLAG_IMPERSONATION
+        | SECPKG_FLAG_ACCEPT_WIN32_NAME
+        | SECPKG_FLAG_NEGOTIABLE
+        | SECPKG_FLAG_GSS_COMPATIBLE
+        | SECPKG_FLAG_LOGON
+        | SECPKG_FLAG_MUTUAL_AUTH
+        | SECPKG_FLAG_DELEGATION
+        | SECPKG_FLAG_READONLY_WITH_CHECKSUM;
+    static const ULONG optional_mask =
+          SECPKG_FLAG_RESTRICTED_TOKENS
+        | SECPKG_FLAG_APPCONTAINER_CHECKS;
+
+    status = QuerySecurityPackageInfoA(provider, &info);
+    ok(status == SEC_E_OK, "Kerberos package not installed, skipping test\n");
+    if(status != SEC_E_OK)
+        return;
+
+    ok( (info->fCapabilities & ~optional_mask) == expected_flags, "got %08x, expected %08x\n", info->fCapabilities, expected_flags );
+    ok( info->wVersion == 1, "got %u\n", info->wVersion );
+    ok( info->wRPCID == RPC_C_AUTHN_GSS_KERBEROS, "got %u\n", info->wRPCID );
+    ok( info->cbMaxToken >= 12000, "got %u\n", info->cbMaxToken );
+    ok( !lstrcmpA( info->Name, "Kerberos" ), "got %s\n", info->Name );
+    ok( !lstrcmpA( info->Comment, "Microsoft Kerberos V1.0" ), "got %s\n", info->Comment );
+    FreeContextBuffer( info );
+
+    status = AcquireCredentialsHandleA( NULL, provider, SECPKG_CRED_OUTBOUND, NULL,
+                                        NULL, NULL, NULL, &cred, &ttl );
+    todo_wine ok( status == SEC_E_OK, "AcquireCredentialsHandleA returned %08x\n", status );
+    if(status == SEC_E_OK)
+        FreeCredentialHandle( &cred );
+}
+
 START_TEST(secur32)
 {
     secdll = LoadLibraryA("secur32.dll");
@@ -231,6 +373,11 @@ START_TEST(secur32)
 
     if (secdll)
     {
+        pSspiEncodeAuthIdentityAsStrings = (void *)GetProcAddress(secdll, "SspiEncodeAuthIdentityAsStrings");
+        pSspiEncodeStringsAsAuthIdentity = (void *)GetProcAddress(secdll, "SspiEncodeStringsAsAuthIdentity");
+        pSspiFreeAuthIdentity = (void *)GetProcAddress(secdll, "SspiFreeAuthIdentity");
+        pSspiLocalFree = (void *)GetProcAddress(secdll, "SspiLocalFree");
+        pSspiZeroAuthIdentity = (void *)GetProcAddress(secdll, "SspiZeroAuthIdentity");
         pGetComputerObjectNameA = (PVOID)GetProcAddress(secdll, "GetComputerObjectNameA");
         pGetComputerObjectNameW = (PVOID)GetProcAddress(secdll, "GetComputerObjectNameW");
         pGetUserNameExA = (PVOID)GetProcAddress(secdll, "GetUserNameExA");
@@ -259,7 +406,10 @@ START_TEST(secur32)
             win_skip("GetUserNameExW not exported by secur32.dll\n");
 
         test_InitSecurityInterface();
+        test_SspiEncodeStringsAsAuthIdentity();
 
         FreeLibrary(secdll);
     }
+
+    test_kerberos();
 }

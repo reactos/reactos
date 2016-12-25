@@ -18,12 +18,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include <windows.h>
+//#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winnls.h>
+#include <objbase.h>
 #include <commctrl.h>
 #include <assert.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 #include "v6util.h"
 #include "msg.h"
 
@@ -97,16 +107,16 @@ static const struct message add_header_to_parent_seq[] = {
 };
 
 static const struct message insertItem_seq[] = {
-    { HDM_INSERTITEM, sent|wparam, 0 },
-    { HDM_INSERTITEM, sent|wparam, 1 },
-    { HDM_INSERTITEM, sent|wparam, 2 },
-    { HDM_INSERTITEM, sent|wparam, 3 },
+    { HDM_INSERTITEMA, sent|wparam, 0 },
+    { HDM_INSERTITEMA, sent|wparam, 1 },
+    { HDM_INSERTITEMA, sent|wparam, 2 },
+    { HDM_INSERTITEMA, sent|wparam, 3 },
     { 0 }
 };
 
 static const struct message getItem_seq[] = {
-    { HDM_GETITEM, sent|wparam, 3 },
-    { HDM_GETITEM, sent|wparam, 0 },
+    { HDM_GETITEMA, sent|wparam, 3 },
+    { HDM_GETITEMA, sent|wparam, 0 },
     { 0 }
 };
 
@@ -128,8 +138,8 @@ static const struct message orderArray_seq[] = {
 };
 
 static const struct message setItem_seq[] = {
-    { HDM_SETITEM, sent|wparam, 0 },
-    { HDM_SETITEM, sent|wparam, 1 },
+    { HDM_SETITEMA, sent|wparam, 0 },
+    { HDM_SETITEMA, sent|wparam, 1 },
     { 0 }
 };
 
@@ -216,17 +226,21 @@ static const struct message bitmapmarginMessages_seq[] = {
 
 static void expect_notify(INT iCode, BOOL fUnicode, HDITEMA *lpItem)
 {
-    assert(nExpectedNotify < 10);
-    expectedNotify[nExpectedNotify].iCode = iCode;
-    expectedNotify[nExpectedNotify].fUnicode = fUnicode;
-    expectedNotify[nExpectedNotify].hdItem = *lpItem;
-    nExpectedNotify++;
+    ok(nExpectedNotify < 10, "notification count %d\n", nExpectedNotify);
+    if (nExpectedNotify < 10)
+    {
+        expectedNotify[nExpectedNotify].iCode = iCode;
+        expectedNotify[nExpectedNotify].fUnicode = fUnicode;
+        expectedNotify[nExpectedNotify].hdItem = *lpItem;
+        nExpectedNotify++;
+    }
 }
 
 static void dont_expect_notify(INT iCode)
 {
-    assert(nUnexpectedNotify < 10);
-    unexpectedNotify[nUnexpectedNotify++] = iCode;
+    ok(nExpectedNotify < 10, "notification count %d\n", nExpectedNotify);
+    if (nExpectedNotify < 10)
+        unexpectedNotify[nUnexpectedNotify++] = iCode;
 }
 
 static BOOL notifies_received(void)
@@ -244,7 +258,7 @@ static LONG addItem(HWND hdex, int idx, LPSTR text)
     hdItem.cxy        = 100;
     hdItem.pszText    = text;
     hdItem.cchTextMax = 0;
-    return SendMessage(hdex, HDM_INSERTITEMA, idx, (LPARAM)&hdItem);
+    return SendMessageA(hdex, HDM_INSERTITEMA, idx, (LPARAM)&hdItem);
 }
 
 static LONG setItem(HWND hdex, int idx, LPSTR text, BOOL fCheckNotifies)
@@ -259,7 +273,7 @@ static LONG setItem(HWND hdex, int idx, LPSTR text, BOOL fCheckNotifies)
         expect_notify(HDN_ITEMCHANGINGA, FALSE, &hdexItem);
         expect_notify(HDN_ITEMCHANGEDA, FALSE, &hdexItem);
     }
-    ret = SendMessage(hdex, HDM_SETITEMA, idx, (LPARAM)&hdexItem);
+    ret = SendMessageA(hdex, HDM_SETITEMA, idx, (LPARAM)&hdexItem);
     if (fCheckNotifies)
         ok(notifies_received(), "setItem(): not all expected notifies were received\n");
     return ret;
@@ -279,19 +293,19 @@ static LONG setItemUnicodeNotify(HWND hdex, int idx, LPSTR text, LPWSTR wText)
     
     expect_notify(HDN_ITEMCHANGINGW, TRUE, (HDITEMA*)&hdexNotify);
     expect_notify(HDN_ITEMCHANGEDW, TRUE, (HDITEMA*)&hdexNotify);
-    ret = SendMessage(hdex, HDM_SETITEMA, idx, (LPARAM)&hdexItem);
+    ret = SendMessageA(hdex, HDM_SETITEMA, idx, (LPARAM)&hdexItem);
     ok(notifies_received(), "setItemUnicodeNotify(): not all expected notifies were received\n");
     return ret;
 }
 
 static LONG delItem(HWND hdex, int idx)
 {
-    return SendMessage(hdex, HDM_DELETEITEM, idx, 0);
+    return SendMessageA(hdex, HDM_DELETEITEM, idx, 0);
 }
 
 static LONG getItemCount(HWND hdex)
 {
-    return SendMessage(hdex, HDM_GETITEMCOUNT, 0, 0);
+    return SendMessageA(hdex, HDM_GETITEMCOUNT, 0, 0);
 }
 
 static LONG getItem(HWND hdex, int idx, LPSTR textBuffer)
@@ -300,16 +314,16 @@ static LONG getItem(HWND hdex, int idx, LPSTR textBuffer)
     hdItem.mask         = HDI_TEXT;
     hdItem.pszText      = textBuffer;
     hdItem.cchTextMax   = MAX_CHARS;
-    return SendMessage(hdex, HDM_GETITEMA, idx, (LPARAM)&hdItem);
+    return SendMessageA(hdex, HDM_GETITEMA, idx, (LPARAM)&hdItem);
 }
 
 static void addReadDelItem(HWND hdex, HDITEMA *phdiCreate, int maskRead, HDITEMA *phdiRead)
 {
-    ok(SendMessage(hdex, HDM_INSERTITEMA, 0, (LPARAM)phdiCreate)!=-1, "Adding item failed\n");
+    ok(SendMessageA(hdex, HDM_INSERTITEMA, 0, (LPARAM)phdiCreate)!=-1, "Adding item failed\n");
     ZeroMemory(phdiRead, sizeof(HDITEMA));
     phdiRead->mask = maskRead;
-    ok(SendMessage(hdex, HDM_GETITEMA, 0, (LPARAM)phdiRead)!=0, "Getting item data failed\n");
-    ok(SendMessage(hdex, HDM_DELETEITEM, 0, 0)!=0, "Deleting item failed\n");
+    ok(SendMessageA(hdex, HDM_GETITEMA, 0, (LPARAM)phdiRead)!=0, "Getting item data failed\n");
+    ok(SendMessageA(hdex, HDM_DELETEITEM, 0, 0)!=0, "Deleting item failed\n");
 }
 
 static HWND create_header_control (void)
@@ -319,11 +333,11 @@ static HWND create_header_control (void)
     RECT rectwin;
     WINDOWPOS winpos;
 
-    handle = CreateWindowEx(0, WC_HEADER, NULL,
-			    WS_CHILD|WS_BORDER|WS_VISIBLE|HDS_BUTTONS|HDS_HORZ,
-			    0, 0, 0, 0,
-			    hHeaderParentWnd, NULL, NULL, NULL);
-    assert(handle);
+    handle = CreateWindowExA(0, WC_HEADERA, NULL,
+			     WS_CHILD|WS_BORDER|WS_VISIBLE|HDS_BUTTONS|HDS_HORZ,
+			     0, 0, 0, 0,
+			     hHeaderParentWnd, NULL, NULL, NULL);
+    ok(handle != NULL, "failed to create header window\n");
 
     if (winetest_interactive)
 	ShowWindow (hHeaderParentWnd, SW_SHOW);
@@ -331,7 +345,7 @@ static HWND create_header_control (void)
     GetClientRect(hHeaderParentWnd,&rectwin);
     hlayout.prc = &rectwin;
     hlayout.pwpos = &winpos;
-    SendMessageA(handle,HDM_LAYOUT,0,(LPARAM) &hlayout);
+    SendMessageA(handle, HDM_LAYOUT, 0, (LPARAM)&hlayout);
     SetWindowPos(handle, winpos.hwndInsertAfter, winpos.x, winpos.y, 
                  winpos.cx, winpos.cy, 0);
 
@@ -403,12 +417,12 @@ static LRESULT WINAPI header_subclass_proc(HWND hwnd, UINT message, WPARAM wPara
     LRESULT ret;
     struct message msg;
 
-    trace("header: %p, %04x, %08lx, %08lx\n", hwnd, message, wParam, lParam);
     msg.message = message;
     msg.flags = sent|wparam|lparam;
     if (defwndproc_counter) msg.flags |= defwinproc;
     msg.wParam = wParam;
     msg.lParam = lParam;
+    msg.id = 0;
     add_message(sequences, HEADER_SEQ_INDEX, &msg);
 
     defwndproc_counter++;
@@ -434,13 +448,12 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
         message != WM_DEVICECHANGE)
 
     {
-        trace("parent: %p, %04x, %08lx, %08lx\n", hwnd, message, wParam, lParam);
-
         msg.message = message;
         msg.flags = sent|wparam|lparam;
         if (defwndproc_counter) msg.flags |= defwinproc;
         msg.wParam = wParam;
         msg.lParam = lParam;
+        msg.id = 0;
         add_message(sequences, PARENT_SEQ_INDEX, &msg);
    }
 
@@ -461,7 +474,7 @@ static BOOL register_parent_wnd_class(void)
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleA(NULL);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, IDC_ARROW);
+    cls.hCursor = LoadCursorA(0, (LPCSTR)IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "Header test parent class";
@@ -492,26 +505,25 @@ static HWND create_custom_header_control(HWND hParent, BOOL preloadHeaderItems)
     static char firstHeaderItem[] = "Name";
     static char secondHeaderItem[] = "Size";
     static char *items[] = {secondHeaderItem, firstHeaderItem};
-    HDITEM hdItem;
+    HDITEMA hdItem;
     hdItem.mask = HDI_TEXT | HDI_WIDTH | HDI_FORMAT;
     hdItem.fmt = HDF_LEFT;
     hdItem.cxy = 80;
     hdItem.cchTextMax = 260;
 
-
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
-    childHandle = CreateWindowEx(0, WC_HEADER, NULL,
+    childHandle = CreateWindowExA(0, WC_HEADERA, NULL,
                            WS_CHILD|WS_BORDER|WS_VISIBLE|HDS_BUTTONS|HDS_HORZ,
                            0, 0, 0, 0,
                            hParent, NULL, NULL, NULL);
-    assert(childHandle);
+    ok(childHandle != NULL, "failed to create child window\n");
     if (preloadHeaderItems)
     {
          for ( loopcnt = 0 ; loopcnt < 2 ; loopcnt++ )
          {
              hdItem.pszText = items[loopcnt];
-             retVal = SendMessage(childHandle, HDM_INSERTITEM, loopcnt, (LPARAM) &hdItem);
+             retVal = SendMessageA(childHandle, HDM_INSERTITEMA, loopcnt, (LPARAM) &hdItem);
              ok(retVal == loopcnt, "Adding item %d failed with return value %d\n", ( loopcnt + 1 ), retVal);
           }
     }
@@ -654,24 +666,24 @@ static void check_mask(void)
     hdi.iOrder = 0;
     hdi.lParam = 17;
     hdi.cchTextMax = 260;
-    ret = SendMessage(hWndHeader, HDM_INSERTITEM, 0, (LPARAM)&hdi);
+    ret = SendMessageA(hWndHeader, HDM_INSERTITEMA, 0, (LPARAM)&hdi);
     ok(ret == -1, "Creating an item with a zero mask should have failed\n");
-    if (ret != -1) SendMessage(hWndHeader, HDM_DELETEITEM, 0, 0);
+    if (ret != -1) SendMessageA(hWndHeader, HDM_DELETEITEM, 0, 0);
 
     /* with a non-zero mask creation will succeed */
     ZeroMemory(&hdi, sizeof(hdi));
     hdi.mask = HDI_LPARAM;
-    ret = SendMessage(hWndHeader, HDM_INSERTITEM, 0, (LPARAM)&hdi);
+    ret = SendMessageA(hWndHeader, HDM_INSERTITEMA, 0, (LPARAM)&hdi);
     ok(ret != -1, "Adding item with non-zero mask failed\n");
     if (ret != -1)
-        SendMessage(hWndHeader, HDM_DELETEITEM, 0, 0);
+        SendMessageA(hWndHeader, HDM_DELETEITEM, 0, 0);
 
     /* in SETITEM if the mask contains a unknown bit, it is ignored */
     ZeroMemory(&hdi, sizeof(hdi));
     hdi.mask = 0x08000000 | HDI_LPARAM | HDI_IMAGE;
     hdi.lParam = 133;
     hdi.iImage = 17;
-    ret = SendMessage(hWndHeader, HDM_INSERTITEM, 0, (LPARAM)&hdi);
+    ret = SendMessageA(hWndHeader, HDM_INSERTITEMA, 0, (LPARAM)&hdi);
     ok(ret != -1, "Adding item failed\n");
 
     if (ret != -1)
@@ -679,18 +691,18 @@ static void check_mask(void)
         /* check result */
         ZeroMemory(&hdi, sizeof(hdi));
         hdi.mask = HDI_LPARAM | HDI_IMAGE;
-        SendMessage(hWndHeader, HDM_GETITEM, 0, (LPARAM)&hdi);
+        SendMessageA(hWndHeader, HDM_GETITEMA, 0, (LPARAM)&hdi);
         ok(hdi.lParam == 133, "comctl32 4.0 field not set\n");
         ok(hdi.iImage == 17, "comctl32 >4.0 field not set\n");
 
         /* but in GETITEM if an unknown bit is set, comctl32 uses only version 4.0 fields */
         ZeroMemory(&hdi, sizeof(hdi));
         hdi.mask = 0x08000000 | HDI_LPARAM | HDI_IMAGE;
-        SendMessage(hWndHeader, HDM_GETITEM, 0, (LPARAM)&hdi);
+        SendMessageA(hWndHeader, HDM_GETITEMA, 0, (LPARAM)&hdi);
         ok(hdi.lParam == 133, "comctl32 4.0 field not read\n");
         ok(hdi.iImage == 0, "comctl32 >4.0 field shouldn't be read\n");
 
-        SendMessage(hWndHeader, HDM_DELETEITEM, 0, 0);
+        SendMessageA(hWndHeader, HDM_DELETEITEM, 0, 0);
     }
 }
 
@@ -806,7 +818,7 @@ static void test_hdm_getitemrect(HWND hParent)
     ok_sequence(sequences, PARENT_SEQ_INDEX, add_header_to_parent_seq,
                                     "adder header control to parent", FALSE);
 
-    retVal = SendMessage(hChild, HDM_GETITEMRECT, 1, (LPARAM) &rect);
+    retVal = SendMessageA(hChild, HDM_GETITEMRECT, 1, (LPARAM) &rect);
     ok(retVal == TRUE, "Getting item rect should TRUE, got %d\n", retVal);
     /* check bounding rectangle information of 2nd header item */
     expect(80, rect.left);
@@ -814,7 +826,7 @@ static void test_hdm_getitemrect(HWND hParent)
     expect(160, rect.right);
     expect(g_customheight, rect.bottom);
 
-    retVal = SendMessage(hChild, HDM_GETITEMRECT, 0, (LPARAM) &rect);
+    retVal = SendMessageA(hChild, HDM_GETITEMRECT, 0, (LPARAM) &rect);
 
     ok(retVal == TRUE, "Getting item rect should TRUE, got %d\n", retVal);
     /* check bounding rectangle information of 1st header item */
@@ -824,7 +836,7 @@ static void test_hdm_getitemrect(HWND hParent)
     expect(80, rect.right);
     expect(g_customheight, rect.bottom);
 
-    retVal = SendMessage(hChild, HDM_GETITEMRECT, 10, (LPARAM) &rect);
+    retVal = SendMessageA(hChild, HDM_GETITEMRECT, 10, (LPARAM) &rect);
     ok(retVal == 0, "Getting rect of nonexistent item should return 0, got %d\n", retVal);
 
     ok_sequence(sequences, HEADER_SEQ_INDEX, getItemRect_seq, "getItemRect sequence testing", FALSE);
@@ -847,7 +859,7 @@ static void test_hdm_layout(HWND hParent)
                                     "adder header control to parent", FALSE);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
-    retVal = SendMessage(hChild, HDM_LAYOUT, 0, (LPARAM) &hdLayout);
+    retVal = SendMessageA(hChild, HDM_LAYOUT, 0, (LPARAM) &hdLayout);
     expect(TRUE, retVal);
 
     ok_sequence(sequences, HEADER_SEQ_INDEX, layout_seq, "layout sequence testing", FALSE);
@@ -866,7 +878,7 @@ static void test_hdm_ordertoindex(HWND hParent)
                                     "adder header control to parent", FALSE);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
-    retVal = SendMessage(hChild, HDM_ORDERTOINDEX, 1, 0);
+    retVal = SendMessageA(hChild, HDM_ORDERTOINDEX, 1, 0);
     expect(1, retVal);
 
     ok_sequence(sequences, HEADER_SEQ_INDEX, orderToIndex_seq, "orderToIndex sequence testing", FALSE);
@@ -894,7 +906,7 @@ static void test_hdm_hittest(HWND hParent)
                                     "adder header control to parent", FALSE);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
-    retVal = SendMessage(hChild, HDM_HITTEST, 0, (LPARAM) &hdHitTestInfo);
+    retVal = SendMessageA(hChild, HDM_HITTEST, 0, (LPARAM) &hdHitTestInfo);
     expect(0, retVal);
     expect(0, hdHitTestInfo.iItem);
     expect(HHT_ONDIVIDER, hdHitTestInfo.flags);
@@ -902,7 +914,7 @@ static void test_hdm_hittest(HWND hParent)
     pt.x = secondItemRightBoundary - 1;
     pt.y = bottomBoundary - 1;
     hdHitTestInfo.pt = pt;
-    retVal = SendMessage(hChild, HDM_HITTEST, 1, (LPARAM) &hdHitTestInfo);
+    retVal = SendMessageA(hChild, HDM_HITTEST, 1, (LPARAM) &hdHitTestInfo);
     expect(1, retVal);
     expect(1, hdHitTestInfo.iItem);
     expect(HHT_ONDIVIDER, hdHitTestInfo.flags);
@@ -910,7 +922,7 @@ static void test_hdm_hittest(HWND hParent)
     pt.x = secondItemRightBoundary;
     pt.y = bottomBoundary + 1;
     hdHitTestInfo.pt = pt;
-    retVal = SendMessage(hChild, HDM_HITTEST, 0, (LPARAM) &hdHitTestInfo);
+    retVal = SendMessageA(hChild, HDM_HITTEST, 0, (LPARAM) &hdHitTestInfo);
     expect(-1, retVal);
     expect(-1, hdHitTestInfo.iItem);
     expect(HHT_BELOW, hdHitTestInfo.flags);
@@ -934,12 +946,12 @@ static void test_hdm_sethotdivider(HWND hParent)
                                     "adder header control to parent", FALSE);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
-    retVal = SendMessage(hChild, HDM_SETHOTDIVIDER, TRUE, MAKELPARAM(5, 5));
+    retVal = SendMessageA(hChild, HDM_SETHOTDIVIDER, TRUE, MAKELPARAM(5, 5));
     expect(0, retVal);
 
-    retVal = SendMessage(hChild, HDM_SETHOTDIVIDER, FALSE, 100);
+    retVal = SendMessageA(hChild, HDM_SETHOTDIVIDER, FALSE, 100);
     expect(100, retVal);
-    retVal = SendMessage(hChild, HDM_SETHOTDIVIDER, FALSE, 1);
+    retVal = SendMessageA(hChild, HDM_SETHOTDIVIDER, FALSE, 1);
     expect(1, retVal);
     if (winetest_interactive)
        ok_sequence(sequences, HEADER_SEQ_INDEX, setHotDivider_seq_interactive,
@@ -955,6 +967,7 @@ static void test_hdm_imageMessages(HWND hParent)
 {
     HIMAGELIST hImageList = ImageList_Create (4, 4, 0, 1, 0);
     HIMAGELIST hIml;
+    BOOL wasValid;
     HWND hChild;
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
@@ -964,19 +977,22 @@ static void test_hdm_imageMessages(HWND hParent)
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
-    hIml = (HIMAGELIST) SendMessage(hChild, HDM_SETIMAGELIST, 0, (LPARAM) hImageList);
+    hIml = (HIMAGELIST) SendMessageA(hChild, HDM_SETIMAGELIST, 0, (LPARAM) hImageList);
     ok(hIml == NULL, "Expected NULL, got %p\n", hIml);
 
-    hIml = (HIMAGELIST) SendMessage(hChild, HDM_GETIMAGELIST, 0, 0);
+    hIml = (HIMAGELIST) SendMessageA(hChild, HDM_GETIMAGELIST, 0, 0);
     ok(hIml != NULL, "Expected non-NULL handle, got %p\n", hIml);
 
-    hIml = (HIMAGELIST) SendMessage(hChild, HDM_CREATEDRAGIMAGE, 0, 0);
+    hIml = (HIMAGELIST) SendMessageA(hChild, HDM_CREATEDRAGIMAGE, 0, 0);
     ok(hIml != NULL, "Expected non-NULL handle, got %p\n", hIml);
     ImageList_Destroy(hIml);
 
     ok_sequence(sequences, HEADER_SEQ_INDEX, imageMessages_seq, "imageMessages sequence testing", FALSE);
 
     DestroyWindow(hChild);
+
+    wasValid = ImageList_Destroy(hImageList);
+    ok(wasValid, "Header must not free image list at destruction!\n");
 }
 
 static void test_hdm_filterMessages(HWND hParent)
@@ -986,12 +1002,22 @@ static void test_hdm_filterMessages(HWND hParent)
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     hChild = create_custom_header_control(hParent, TRUE);
-    assert(hChild);
     ok_sequence(sequences, PARENT_SEQ_INDEX, add_header_to_parent_seq,
                                     "adder header control to parent", FALSE);
 
-    timeout = SendMessage(hChild, HDM_SETFILTERCHANGETIMEOUT, 1, 100);
-    SendMessage(hChild, HDM_SETFILTERCHANGETIMEOUT, 1, timeout);
+    timeout = SendMessageA(hChild, HDM_SETFILTERCHANGETIMEOUT, 0, 0);
+    ok(timeout == 1000, "got %d\n", timeout);
+
+    timeout = SendMessageA(hChild, HDM_SETFILTERCHANGETIMEOUT, 0, 0);
+    ok(timeout == 1000, "got %d\n", timeout);
+
+    timeout = SendMessageA(hChild, HDM_SETFILTERCHANGETIMEOUT, 0, -100);
+    ok(timeout == 1000, "got %d\n", timeout);
+
+    timeout = SendMessageA(hChild, HDM_SETFILTERCHANGETIMEOUT, 1, 100);
+    ok(timeout == -100, "got %d\n", timeout);
+    retVal = SendMessageA(hChild, HDM_SETFILTERCHANGETIMEOUT, 1, timeout);
+    ok(retVal == 100, "got %d\n", retVal);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
@@ -1001,18 +1027,18 @@ static void test_hdm_filterMessages(HWND hParent)
      * return previous filter timeout value
      */
 
-    retVal = SendMessage(hChild, HDM_SETFILTERCHANGETIMEOUT, 1, 100);
+    retVal = SendMessageA(hChild, HDM_SETFILTERCHANGETIMEOUT, 1, 100);
     expect(timeout, retVal);
 
     todo_wine
     {
-        retVal = SendMessage(hChild, HDM_CLEARFILTER, 0, 1);
+        retVal = SendMessageA(hChild, HDM_CLEARFILTER, 0, 1);
         if (retVal == 0)
             win_skip("HDM_CLEARFILTER needs 5.80\n");
         else
             expect(1, retVal);
 
-        retVal = SendMessage(hChild, HDM_EDITFILTER, 1, 0);
+        retVal = SendMessageA(hChild, HDM_EDITFILTER, 1, 0);
         if (retVal == 0)
             win_skip("HDM_EDITFILTER needs 5.80\n");
         else
@@ -1024,10 +1050,6 @@ static void test_hdm_filterMessages(HWND hParent)
     else
          ok_sequence(sequences, HEADER_SEQ_INDEX, filterMessages_seq_noninteractive,
                      "filterMessages sequence testing", FALSE);
-    /* Some Win9x versions don't send a WM_KILLFOCUS.
-     * Set the focus explicitly to the parent to avoid a crash.
-     */
-    SetFocus(hParent);
     DestroyWindow(hChild);
 
 }
@@ -1043,9 +1065,9 @@ static void test_hdm_unicodeformatMessages(HWND hParent)
                                     "adder header control to parent", FALSE);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
-    retVal = SendMessage(hChild, HDM_SETUNICODEFORMAT, TRUE, 0);
+    retVal = SendMessageA(hChild, HDM_SETUNICODEFORMAT, TRUE, 0);
     expect(0, retVal);
-    retVal = SendMessage(hChild, HDM_GETUNICODEFORMAT, 0, 0);
+    retVal = SendMessageA(hChild, HDM_GETUNICODEFORMAT, 0, 0);
     expect(1, retVal);
 
     ok_sequence(sequences, HEADER_SEQ_INDEX, unicodeformatMessages_seq,
@@ -1064,7 +1086,7 @@ static void test_hdm_bitmapmarginMessages(HWND hParent)
                                     "adder header control to parent", FALSE);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
-    retVal = SendMessage(hChild, HDM_GETBITMAPMARGIN, 0, 0);
+    retVal = SendMessageA(hChild, HDM_GETBITMAPMARGIN, 0, 0);
     if (retVal == 0)
         win_skip("HDM_GETBITMAPMARGIN needs 5.80\n");
     else
@@ -1078,23 +1100,15 @@ static void test_hdm_bitmapmarginMessages(HWND hParent)
 static void test_hdm_index_messages(HWND hParent)
 {
     HWND hChild;
-    int retVal;
-    int loopcnt;
-    int strcmpResult;
-    int iSize;
+    int retVal, i, iSize;
     static const int lpiarray[2] = {1, 0};
-    static int lpiarrayReceived[2];
-    static char firstHeaderItem[] = "Name";
-    static char secondHeaderItem[] = "Size";
-    static char thirdHeaderItem[] = "Type";
-    static char fourthHeaderItem[] = "Date Modified";
-    static char *items[] = {firstHeaderItem, secondHeaderItem, thirdHeaderItem, fourthHeaderItem};
+    static const char *item_texts[] = {
+        "Name", "Size", "Type", "Date Modified"
+    };
     RECT rect;
-    HDITEM hdItem;
-    hdItem.mask = HDI_TEXT | HDI_WIDTH | HDI_FORMAT;
-    hdItem.fmt = HDF_LEFT;
-    hdItem.cxy = 80;
-    hdItem.cchTextMax = 260;
+    HDITEMA hdItem;
+    char buffA[32];
+    int array[2];
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     hChild = create_custom_header_control(hParent, FALSE);
@@ -1105,29 +1119,33 @@ static void test_hdm_index_messages(HWND hParent)
          ok_sequence(sequences, PARENT_SEQ_INDEX, add_header_to_parent_seq,
                                      "adder header control to parent", FALSE);
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
-    for ( loopcnt = 0 ; loopcnt < 4 ; loopcnt++ )
+    for (i = 0; i < sizeof(item_texts)/sizeof(item_texts[0]); i++)
     {
-      hdItem.pszText = items[loopcnt];
-      retVal = SendMessage(hChild, HDM_INSERTITEM, loopcnt, (LPARAM) &hdItem);
-      ok(retVal == loopcnt, "Adding item %d failed with return value %d\n", ( loopcnt + 1 ), retVal);
+        hdItem.mask = HDI_TEXT | HDI_WIDTH | HDI_FORMAT;
+        hdItem.pszText = (char*)item_texts[i];
+        hdItem.fmt = HDF_LEFT;
+        hdItem.cxy = 80;
+
+        retVal = SendMessageA(hChild, HDM_INSERTITEMA, i, (LPARAM) &hdItem);
+        ok(retVal == i, "Adding item %d failed with return value %d\n", i, retVal);
     }
     ok_sequence(sequences, HEADER_SEQ_INDEX, insertItem_seq, "insertItem sequence testing", FALSE);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
-    retVal = SendMessage(hChild, HDM_DELETEITEM, 3, (LPARAM) &hdItem);
+    retVal = SendMessageA(hChild, HDM_DELETEITEM, 3, (LPARAM) &hdItem);
     ok(retVal == TRUE, "Deleting item 3 should return TRUE, got %d\n", retVal);
-    retVal = SendMessage(hChild, HDM_GETITEMCOUNT, 0, 0);
+    retVal = SendMessageA(hChild, HDM_GETITEMCOUNT, 0, 0);
     ok(retVal == 3, "Getting item count should return 3, got %d\n", retVal);
 
-    retVal = SendMessage(hChild, HDM_DELETEITEM, 3, (LPARAM) &hdItem);
+    retVal = SendMessageA(hChild, HDM_DELETEITEM, 3, (LPARAM) &hdItem);
     ok(retVal == FALSE, "Deleting already-deleted item should return FALSE, got %d\n", retVal);
-    retVal = SendMessage(hChild, HDM_GETITEMCOUNT, 0, 0);
+    retVal = SendMessageA(hChild, HDM_GETITEMCOUNT, 0, 0);
     ok(retVal == 3, "Getting item count should return 3, got %d\n", retVal);
 
-    retVal = SendMessage(hChild, HDM_DELETEITEM, 2, (LPARAM) &hdItem);
+    retVal = SendMessageA(hChild, HDM_DELETEITEM, 2, (LPARAM) &hdItem);
     ok(retVal == TRUE, "Deleting item 2 should return TRUE, got %d\n", retVal);
-    retVal = SendMessage(hChild, HDM_GETITEMCOUNT, 0, 0);
+    retVal = SendMessageA(hChild, HDM_GETITEMCOUNT, 0, 0);
     ok(retVal == 2, "Getting item count should return 2, got %d\n", retVal);
 
     ok_sequence(sequences, HEADER_SEQ_INDEX, deleteItem_getItemCount_seq,
@@ -1135,54 +1153,58 @@ static void test_hdm_index_messages(HWND hParent)
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
-    retVal = SendMessage(hChild, HDM_GETITEM, 3, (LPARAM) &hdItem);
+    hdItem.mask = HDI_WIDTH;
+    retVal = SendMessageA(hChild, HDM_GETITEMA, 3, (LPARAM) &hdItem);
     ok(retVal == FALSE, "Getting already-deleted item should return FALSE, got %d\n", retVal);
 
-    retVal = SendMessage(hChild, HDM_GETITEM, 0, (LPARAM) &hdItem);
+    hdItem.mask = HDI_TEXT | HDI_WIDTH;
+    hdItem.pszText = buffA;
+    hdItem.cchTextMax = sizeof(buffA)/sizeof(buffA[0]);
+    retVal = SendMessageA(hChild, HDM_GETITEMA, 0, (LPARAM) &hdItem);
     ok(retVal == TRUE, "Getting the 1st header item should return TRUE, got %d\n", retVal);
 
     ok_sequence(sequences, HEADER_SEQ_INDEX, getItem_seq, "getItem sequence testing", FALSE);
 
     /* check if the item is the right one */
-    strcmpResult =  strcmp(hdItem.pszText, firstHeaderItem);
-    expect(0, strcmpResult);
+    ok(!strcmp(hdItem.pszText, item_texts[0]), "got wrong item %s, expected %s\n",
+        hdItem.pszText, item_texts[0]);
     expect(80, hdItem.cxy);
 
-    iSize = SendMessage(hChild, HDM_GETITEMCOUNT, 0, 0);
+    iSize = SendMessageA(hChild, HDM_GETITEMCOUNT, 0, 0);
 
     /* item should be updated just after accepting new array */
     ShowWindow(hChild, SW_HIDE);
-    retVal = SendMessage(hChild, HDM_SETORDERARRAY, iSize, (LPARAM) lpiarray);
+    retVal = SendMessageA(hChild, HDM_SETORDERARRAY, iSize, (LPARAM) lpiarray);
     expect(TRUE, retVal);
     rect.left = 0;
-    retVal = SendMessage(hChild, HDM_GETITEMRECT, 0, (LPARAM) &rect);
+    retVal = SendMessageA(hChild, HDM_GETITEMRECT, 0, (LPARAM) &rect);
     expect(TRUE, retVal);
     ok(rect.left != 0, "Expected updated rectangle\n");
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
-    retVal = SendMessage(hChild, HDM_SETORDERARRAY, iSize, (LPARAM) lpiarray);
+    retVal = SendMessageA(hChild, HDM_SETORDERARRAY, iSize, (LPARAM) lpiarray);
     ok(retVal == TRUE, "Setting header items order should return TRUE, got %d\n", retVal);
 
-    retVal = SendMessage(hChild, HDM_GETORDERARRAY, iSize, (LPARAM) lpiarrayReceived);
+    retVal = SendMessageA(hChild, HDM_GETORDERARRAY, 2, (LPARAM) array);
     ok(retVal == TRUE, "Getting header items order should return TRUE, got %d\n", retVal);
 
     ok_sequence(sequences, HEADER_SEQ_INDEX, orderArray_seq, "set_get_orderArray sequence testing", FALSE);
 
     /* check if the array order is set correctly and the size of the array is correct. */
     expect(2, iSize);
-    expect(lpiarray[0], lpiarrayReceived[0]);
-    expect(lpiarray[1], lpiarrayReceived[1]);
+    ok(lpiarray[0] == array[0], "got %d, expected %d\n", array[0], lpiarray[0]);
+    ok(lpiarray[1] == array[1], "got %d, expected %d\n", array[1], lpiarray[1]);
 
     hdItem.mask = HDI_FORMAT;
     hdItem.fmt = HDF_CENTER | HDF_STRING;
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
-    retVal = SendMessage(hChild, HDM_SETITEM, 0, (LPARAM) &hdItem);
+    retVal = SendMessageA(hChild, HDM_SETITEMA, 0, (LPARAM) &hdItem);
     ok(retVal == TRUE, "Aligning 1st header item to center should return TRUE, got %d\n", retVal);
     hdItem.fmt = HDF_RIGHT | HDF_STRING;
-    retVal = SendMessage(hChild, HDM_SETITEM, 1, (LPARAM) &hdItem);
+    retVal = SendMessageA(hChild, HDM_SETITEMA, 1, (LPARAM) &hdItem);
     ok(retVal == TRUE, "Aligning 2nd header item to right should return TRUE, got %d\n", retVal);
 
     ok_sequence(sequences, HEADER_SEQ_INDEX, setItem_seq, "setItem sequence testing", FALSE);
@@ -1192,7 +1214,7 @@ static void test_hdm_index_messages(HWND hParent)
 static void test_hdf_fixedwidth(HWND hParent)
 {
     HWND hChild;
-    HDITEM hdItem;
+    HDITEMA hdItem;
     DWORD ret;
     RECT rect;
     HDHITTESTINFO ht;
@@ -1203,20 +1225,20 @@ static void test_hdf_fixedwidth(HWND hParent)
     hdItem.fmt = HDF_FIXEDWIDTH;
     hdItem.cxy = 80;
 
-    ret = SendMessage(hChild, HDM_INSERTITEM, 0, (LPARAM)&hdItem);
+    ret = SendMessageA(hChild, HDM_INSERTITEMA, 0, (LPARAM)&hdItem);
     expect(0, ret);
 
     /* try to change width */
     rect.right = rect.bottom = 0;
-    SendMessage(hChild, HDM_GETITEMRECT, 0, (LPARAM)&rect);
+    SendMessageA(hChild, HDM_GETITEMRECT, 0, (LPARAM)&rect);
     ok(rect.right  != 0, "Expected not zero width\n");
     ok(rect.bottom != 0, "Expected not zero height\n");
 
-    SendMessage(hChild, WM_LBUTTONDOWN, 0, MAKELPARAM(rect.right, rect.bottom / 2));
-    SendMessage(hChild, WM_MOUSEMOVE, 0, MAKELPARAM(rect.right + 20, rect.bottom / 2));
-    SendMessage(hChild, WM_LBUTTONUP, 0, MAKELPARAM(rect.right + 20, rect.bottom / 2));
+    SendMessageA(hChild, WM_LBUTTONDOWN, 0, MAKELPARAM(rect.right, rect.bottom / 2));
+    SendMessageA(hChild, WM_MOUSEMOVE, 0, MAKELPARAM(rect.right + 20, rect.bottom / 2));
+    SendMessageA(hChild, WM_LBUTTONUP, 0, MAKELPARAM(rect.right + 20, rect.bottom / 2));
 
-    SendMessage(hChild, HDM_GETITEMRECT, 0, (LPARAM)&rect);
+    SendMessageA(hChild, HDM_GETITEMRECT, 0, (LPARAM)&rect);
 
     if (hdItem.cxy != rect.right)
     {
@@ -1229,29 +1251,29 @@ static void test_hdf_fixedwidth(HWND hParent)
     hdItem.mask = HDI_WIDTH;
     hdItem.cxy = 90;
 
-    ret = SendMessage(hChild, HDM_SETITEM, 0, (LPARAM)&hdItem);
+    ret = SendMessageA(hChild, HDM_SETITEMA, 0, (LPARAM)&hdItem);
     expect(TRUE, ret);
 
     rect.right = 0;
-    SendMessage(hChild, HDM_GETITEMRECT, 0, (LPARAM)&rect);
+    SendMessageA(hChild, HDM_GETITEMRECT, 0, (LPARAM)&rect);
     expect(90, rect.right);
 
     /* hittesting doesn't report ondivider flag for HDF_FIXEDWIDTH */
     ht.pt.x = rect.right - 1;
     ht.pt.y = rect.bottom / 2;
-    SendMessage(hChild, HDM_HITTEST, 0, (LPARAM)&ht);
+    SendMessageA(hChild, HDM_HITTEST, 0, (LPARAM)&ht);
     expect(HHT_ONHEADER, ht.flags);
 
     /* try to adjust with message */
     hdItem.mask = HDI_FORMAT;
     hdItem.fmt  = 0;
 
-    ret = SendMessage(hChild, HDM_SETITEM, 0, (LPARAM)&hdItem);
+    ret = SendMessageA(hChild, HDM_SETITEMA, 0, (LPARAM)&hdItem);
     expect(TRUE, ret);
 
     ht.pt.x = 90;
     ht.pt.y = rect.bottom / 2;
-    SendMessage(hChild, HDM_HITTEST, 0, (LPARAM)&ht);
+    SendMessageA(hChild, HDM_HITTEST, 0, (LPARAM)&ht);
     expect(HHT_ONDIVIDER, ht.flags);
 
     DestroyWindow(hChild);
@@ -1260,7 +1282,7 @@ static void test_hdf_fixedwidth(HWND hParent)
 static void test_hds_nosizing(HWND hParent)
 {
     HWND hChild;
-    HDITEM hdItem;
+    HDITEMA hdItem;
     DWORD ret;
     RECT rect;
     HDHITTESTINFO ht;
@@ -1271,24 +1293,24 @@ static void test_hds_nosizing(HWND hParent)
     hdItem.mask = HDI_WIDTH;
     hdItem.cxy = 80;
 
-    ret = SendMessage(hChild, HDM_INSERTITEM, 0, (LPARAM)&hdItem);
+    ret = SendMessageA(hChild, HDM_INSERTITEMA, 0, (LPARAM)&hdItem);
     expect(0, ret);
 
     /* HDS_NOSIZING only blocks hittesting */
-    ret = GetWindowLong(hChild, GWL_STYLE);
-    SetWindowLong(hChild, GWL_STYLE, ret | HDS_NOSIZING);
+    ret = GetWindowLongA(hChild, GWL_STYLE);
+    SetWindowLongA(hChild, GWL_STYLE, ret | HDS_NOSIZING);
 
     /* try to change width with mouse gestures */
     rect.right = rect.bottom = 0;
-    SendMessage(hChild, HDM_GETITEMRECT, 0, (LPARAM)&rect);
+    SendMessageA(hChild, HDM_GETITEMRECT, 0, (LPARAM)&rect);
     ok(rect.right  != 0, "Expected not zero width\n");
     ok(rect.bottom != 0, "Expected not zero height\n");
 
-    SendMessage(hChild, WM_LBUTTONDOWN, 0, MAKELPARAM(rect.right, rect.bottom / 2));
-    SendMessage(hChild, WM_MOUSEMOVE, 0, MAKELPARAM(rect.right + 20, rect.bottom / 2));
-    SendMessage(hChild, WM_LBUTTONUP, 0, MAKELPARAM(rect.right + 20, rect.bottom / 2));
+    SendMessageA(hChild, WM_LBUTTONDOWN, 0, MAKELPARAM(rect.right, rect.bottom / 2));
+    SendMessageA(hChild, WM_MOUSEMOVE, 0, MAKELPARAM(rect.right + 20, rect.bottom / 2));
+    SendMessageA(hChild, WM_LBUTTONUP, 0, MAKELPARAM(rect.right + 20, rect.bottom / 2));
 
-    SendMessage(hChild, HDM_GETITEMRECT, 0, (LPARAM)&rect);
+    SendMessageA(hChild, HDM_GETITEMRECT, 0, (LPARAM)&rect);
 
     if (hdItem.cxy != rect.right)
     {
@@ -1299,7 +1321,7 @@ static void test_hds_nosizing(HWND hParent)
 
     /* this style doesn't set HDF_FIXEDWIDTH for items */
     hdItem.mask = HDI_FORMAT;
-    ret = SendMessage(hChild, HDM_GETITEM, 0, (LPARAM)&hdItem);
+    ret = SendMessageA(hChild, HDM_GETITEMA, 0, (LPARAM)&hdItem);
     expect(TRUE, ret);
     ok(!(hdItem.fmt & HDF_FIXEDWIDTH), "Unexpected HDF_FIXEDWIDTH\n");
 
@@ -1307,26 +1329,26 @@ static void test_hds_nosizing(HWND hParent)
     hdItem.mask = HDI_WIDTH;
     hdItem.cxy = 90;
 
-    ret = SendMessage(hChild, HDM_SETITEM, 0, (LPARAM)&hdItem);
+    ret = SendMessageA(hChild, HDM_SETITEMA, 0, (LPARAM)&hdItem);
     expect(TRUE, ret);
 
     rect.right = 0;
-    SendMessage(hChild, HDM_GETITEMRECT, 0, (LPARAM)&rect);
+    SendMessageA(hChild, HDM_GETITEMRECT, 0, (LPARAM)&rect);
     expect(90, rect.right);
 
     /* hittesting doesn't report ondivider flags for HDS_NOSIZING */
     ht.pt.x = rect.right - 1;
     ht.pt.y = rect.bottom / 2;
-    SendMessage(hChild, HDM_HITTEST, 0, (LPARAM)&ht);
+    SendMessageA(hChild, HDM_HITTEST, 0, (LPARAM)&ht);
     expect(HHT_ONHEADER, ht.flags);
 
     /* try to adjust with message */
-    ret = GetWindowLong(hChild, GWL_STYLE);
-    SetWindowLong(hChild, GWL_STYLE, ret & ~HDS_NOSIZING);
+    ret = GetWindowLongA(hChild, GWL_STYLE);
+    SetWindowLongA(hChild, GWL_STYLE, ret & ~HDS_NOSIZING);
 
     ht.pt.x = 90;
     ht.pt.y = rect.bottom / 2;
-    SendMessage(hChild, HDM_HITTEST, 0, (LPARAM)&ht);
+    SendMessageA(hChild, HDM_HITTEST, 0, (LPARAM)&ht);
     expect(HHT_ONDIVIDER, ht.flags);
 
     DestroyWindow(hChild);
@@ -1339,8 +1361,8 @@ static void test_hds_nosizing(HWND hParent)
     ok(nm->lItemlParam == lparam, "Invalid lItemlParam %d vs %ld\n", lparam, nm->lItemlParam); \
     ok((nm->rc.top == _top && nm->rc.bottom == _bottom && nm->rc.left == _left && nm->rc.right == _right) || \
         broken(draw_stage != CDDS_ITEMPREPAINT), /* comctl32 < 5.80 */ \
-        "Invalid rect (%d,%d) (%d,%d) vs (%d,%d) (%d,%d)\n", _left, _top, _right, _bottom, \
-        nm->rc.left, nm->rc.top, nm->rc.right, nm->rc.bottom);
+        "Invalid rect (%d,%d)-(%d,%d) vs %s\n", _left, _top, _right, _bottom, \
+        wine_dbgstr_rect(&nm->rc));
 
 static LRESULT customdraw_1(int n, NMCUSTOMDRAW *nm)
 {
@@ -1357,7 +1379,7 @@ static LRESULT customdraw_1(int n, NMCUSTOMDRAW *nm)
         return 0;
     }
 
-    ok(FALSE, "To many custom draw messages (n=%d, nm->dwDrawStage=%d)\n", n, nm->dwDrawStage);
+    ok(FALSE, "Too many custom draw messages (n=%d, nm->dwDrawStage=%d)\n", n, nm->dwDrawStage);
     return -1;
 }
 
@@ -1384,7 +1406,7 @@ static LRESULT customdraw_2(int n, NMCUSTOMDRAW *nm)
         return 0;
     }
 
-    ok(FALSE, "To many custom draw messages (n=%d, nm->dwDrawStage=%d)\n", n, nm->dwDrawStage);
+    ok(FALSE, "Too many custom draw messages (n=%d, nm->dwDrawStage=%d)\n", n, nm->dwDrawStage);
     return 0;
 }
 
@@ -1414,7 +1436,7 @@ static LRESULT customdraw_3(int n, NMCUSTOMDRAW *nm)
         return 0;
     }
 
-    ok(FALSE, "To many custom draw messages (n=%d, nm->dwDrawStage=%d)\n", n, nm->dwDrawStage);
+    ok(FALSE, "Too many custom draw messages (n=%d, nm->dwDrawStage=%d)\n", n, nm->dwDrawStage);
     return 0;
 }
 
@@ -1442,7 +1464,7 @@ static LRESULT customdraw_4(int n, NMCUSTOMDRAW *nm)
         return 0;
     }
 
-    ok(FALSE, "To many custom draw messages (n=%d, nm->dwDrawStage=%d)\n", n, nm->dwDrawStage);
+    ok(FALSE, "Too many custom draw messages (n=%d, nm->dwDrawStage=%d)\n", n, nm->dwDrawStage);
     return 0;
 }
 
@@ -1459,7 +1481,7 @@ static void run_customdraw_scenario(CUSTOMDRAWPROC proc)
 static void test_customdraw(void)
 {
     int i;
-    HDITEM item;
+    HDITEMA item;
     RECT rect;
     CHAR name[] = "Test";
     hWndHeader = create_header_control();
@@ -1475,7 +1497,7 @@ static void test_customdraw(void)
         item.cxy = 50*(i+1);
         item.pszText = name;
         item.lParam = i*5;
-        SendMessage(hWndHeader, HDM_INSERTITEM, i, (LPARAM)&item);
+        SendMessageA(hWndHeader, HDM_INSERTITEMA, i, (LPARAM)&item);
     }
 
     run_customdraw_scenario(customdraw_1);
@@ -1485,13 +1507,13 @@ static void test_customdraw(void)
     ZeroMemory(&item, sizeof(item));
     item.mask = HDI_FORMAT;
     item.fmt = HDF_OWNERDRAW;
-    SendMessage(hWndHeader, HDM_SETITEM, 1, (LPARAM)&item);
+    SendMessageA(hWndHeader, HDM_SETITEMA, 1, (LPARAM)&item);
     g_DrawItem.CtlID = 0;
     g_DrawItem.CtlType = ODT_HEADER;
     g_DrawItem.hwndItem = hWndHeader;
     g_DrawItem.itemID = 1;
     g_DrawItem.itemState = 0;
-    SendMessage(hWndHeader, HDM_GETITEMRECT, 1, (LPARAM)&g_DrawItem.rcItem);
+    SendMessageA(hWndHeader, HDM_GETITEMRECT, 1, (LPARAM)&g_DrawItem.rcItem);
     run_customdraw_scenario(customdraw_4);
     ok(g_DrawItemReceived, "WM_DRAWITEM not received\n");
     DestroyWindow(hWndHeader);
@@ -1510,7 +1532,7 @@ static void check_order(const int expected_id[], const int expected_order[],
     for (i = 0; i < count; i++)
     {
         hdi.mask = HDI_LPARAM|HDI_ORDER;
-        SendMessage(hWndHeader, HDM_GETITEMA, i, (LPARAM)&hdi);
+        SendMessageA(hWndHeader, HDM_GETITEMA, i, (LPARAM)&hdi);
         ok(hdi.lParam == expected_id[i],
             "Invalid item ids after '%s'- item %d has lParam %d\n", type, i, (int)hdi.lParam);
         ok(hdi.iOrder == expected_order[i],
@@ -1549,7 +1571,7 @@ static void test_header_order (void)
     for (i = 0; i < 5; i++)
     {
         hdi.lParam = i;
-        SendMessage(hWndHeader, HDM_INSERTITEMA, rand1[i], (LPARAM)&hdi);
+        SendMessageA(hWndHeader, HDM_INSERTITEMA, rand1[i], (LPARAM)&hdi);
         rand();
     }
     check_order(ids1, ord1, 5, "insert without iOrder");
@@ -1559,7 +1581,7 @@ static void test_header_order (void)
     {
         hdi.lParam = i + 5;
         hdi.iOrder = rand2[i];
-        SendMessage(hWndHeader, HDM_INSERTITEMA, rand3[i], (LPARAM)&hdi);
+        SendMessageA(hWndHeader, HDM_INSERTITEMA, rand3[i], (LPARAM)&hdi);
         rand(); rand();
     }
     check_order(ids2, ord2, 10, "insert with order");
@@ -1568,13 +1590,13 @@ static void test_header_order (void)
     for (i=0; i<10; i++)
     {
         hdi.iOrder = rand5[i];
-        SendMessage(hWndHeader, HDM_SETITEMA, rand4[i], (LPARAM)&hdi);
+        SendMessageA(hWndHeader, HDM_SETITEMA, rand4[i], (LPARAM)&hdi);
         rand(); rand();
     }
     check_order(ids2, ord3, 10, "setitems changing order");
 
     for (i=0; i<5; i++)
-        SendMessage(hWndHeader, HDM_DELETEITEM, rand6[i], 0);
+        SendMessageA(hWndHeader, HDM_DELETEITEM, rand6[i], 0);
     check_order(ids4, ord4, 5, "deleteitem");
 
     DestroyWindow(hWndHeader);
@@ -1587,7 +1609,7 @@ static LRESULT CALLBACK HeaderTestWndProc(HWND hWnd, UINT msg, WPARAM wParam, LP
 
     case WM_NOTIFY:
     {
-        NMHEADERA *hdr = (NMHEADER *)lParam;
+        NMHEADERA *hdr = (NMHEADERA*)lParam;
         EXPECTEDNOTIFY *expected;
         int i;
 
@@ -1637,7 +1659,7 @@ static LRESULT CALLBACK HeaderTestWndProc(HWND hWnd, UINT msg, WPARAM wParam, LP
     return 0L;
 }
 
-static int init(void)
+static BOOL init(void)
 {
     HMODULE hComctl32;
     BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
@@ -1652,7 +1674,7 @@ static int init(void)
     if (!pInitCommonControlsEx)
     {
         skip("InitCommonControlsEx() is missing. Skipping the tests\n");
-        return 0;
+        return FALSE;
     }
 
     iccex.dwSize = sizeof(iccex);
@@ -1664,7 +1686,7 @@ static int init(void)
     wc.cbWndExtra = 0;
     wc.hInstance = GetModuleHandleA(NULL);
     wc.hIcon = NULL;
-    wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
+    wc.hCursor = LoadCursorA(NULL, (LPCSTR)IDC_ARROW);
     wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
     wc.lpszMenuName = NULL;
     wc.lpszClassName = "HeaderTestClass";
@@ -1686,45 +1708,42 @@ static int init(void)
       CW_USEDEFAULT, CW_USEDEFAULT, 672+2*GetSystemMetrics(SM_CXSIZEFRAME),
       226+GetSystemMetrics(SM_CYCAPTION)+2*GetSystemMetrics(SM_CYSIZEFRAME),
       NULL, NULL, GetModuleHandleA(NULL), 0);
-    assert(hHeaderParentWnd != NULL);
+    ok(hHeaderParentWnd != NULL, "failed to create parent wnd\n");
+
     ShowWindow(hHeaderParentWnd, SW_SHOW);
-    return 1;
+    return hHeaderParentWnd != NULL;
 }
 
 /* maximum 8 items allowed */
 static void check_orderarray(HWND hwnd, DWORD start, DWORD set, DWORD expected,
-                             int todo, int line)
+                             BOOL todo, int line)
 {
     int count, i;
     INT order[8];
     DWORD ret, array = 0;
 
-    count = SendMessage(hwnd, HDM_GETITEMCOUNT, 0, 0);
+    count = SendMessageA(hwnd, HDM_GETITEMCOUNT, 0, 0);
 
     /* initial order */
     for(i = 1; i<=count; i++)
         order[i-1] = start>>(4*(count-i)) & 0xf;
 
-    ret = SendMessage(hwnd, HDM_SETORDERARRAY, count, (LPARAM)order);
-    ok_(__FILE__, line)(ret, "Expected HDM_SETORDERARAY to succeed, got %d\n", ret);
+    ret = SendMessageA(hwnd, HDM_SETORDERARRAY, count, (LPARAM)order);
+    ok_(__FILE__, line)(ret, "Expected HDM_SETORDERARRAY to succeed, got %d\n", ret);
 
     /* new order */
     for(i = 1; i<=count; i++)
         order[i-1] = set>>(4*(count-i)) & 0xf;
-    ret = SendMessage(hwnd, HDM_SETORDERARRAY, count, (LPARAM)order);
-    ok_(__FILE__, line)(ret, "Expected HDM_SETORDERARAY to succeed, got %d\n", ret);
+    ret = SendMessageA(hwnd, HDM_SETORDERARRAY, count, (LPARAM)order);
+    ok_(__FILE__, line)(ret, "Expected HDM_SETORDERARRAY to succeed, got %d\n", ret);
 
     /* check actual order */
-    ret = SendMessage(hwnd, HDM_GETORDERARRAY, count, (LPARAM)order);
-    ok_(__FILE__, line)(ret, "Expected HDM_GETORDERARAY to succeed, got %d\n", ret);
+    ret = SendMessageA(hwnd, HDM_GETORDERARRAY, count, (LPARAM)order);
+    ok_(__FILE__, line)(ret, "Expected HDM_GETORDERARRAY to succeed, got %d\n", ret);
     for(i = 1; i<=count; i++)
         array |= order[i-1]<<(4*(count-i));
 
-    if (todo) {
-    todo_wine
-        ok_(__FILE__, line)(array == expected, "Expected %x, got %x\n", expected, array);
-    }
-    else
+    todo_wine_if(todo)
         ok_(__FILE__, line)(array == expected, "Expected %x, got %x\n", expected, array);
 }
 
@@ -1741,7 +1760,7 @@ static void test_hdm_orderarray(void)
     addItem(hwnd, 1, NULL);
     addItem(hwnd, 2, NULL);
 
-    ret = SendMessage(hwnd, HDM_GETORDERARRAY, 3, (LPARAM)order);
+    ret = SendMessageA(hwnd, HDM_GETORDERARRAY, 3, (LPARAM)order);
     if (!ret)
     {
         win_skip("HDM_GETORDERARRAY not implemented.\n");
@@ -1756,14 +1775,14 @@ static void test_hdm_orderarray(void)
 if (0)
 {
     /* null pointer, crashes native */
-    ret = SendMessage(hwnd, HDM_SETORDERARRAY, 3, 0);
+    ret = SendMessageA(hwnd, HDM_SETORDERARRAY, 3, 0);
     expect(FALSE, ret);
 }
     /* count out of limits */
-    ret = SendMessage(hwnd, HDM_SETORDERARRAY, 5, (LPARAM)order);
+    ret = SendMessageA(hwnd, HDM_SETORDERARRAY, 5, (LPARAM)order);
     expect(FALSE, ret);
     /* count out of limits */
-    ret = SendMessage(hwnd, HDM_SETORDERARRAY, 2, (LPARAM)order);
+    ret = SendMessageA(hwnd, HDM_SETORDERARRAY, 2, (LPARAM)order);
     expect(FALSE, ret);
 
     /* try with out of range item index */
@@ -1816,7 +1835,6 @@ START_TEST(header)
     HWND parent_hwnd;
     ULONG_PTR ctx_cookie;
     HANDLE hCtx;
-    HWND hwnd;
 
     if (!init())
         return;
@@ -1848,22 +1866,6 @@ START_TEST(header)
         DestroyWindow(parent_hwnd);
         return;
     }
-
-    /* this is a XP SP3 failure workaround */
-    hwnd = CreateWindowExA(0, WC_HEADER, NULL,
-                           WS_CHILD|WS_BORDER|WS_VISIBLE|HDS_BUTTONS|HDS_HORZ,
-                           0, 0, 100, 100,
-                           parent_hwnd, NULL, GetModuleHandleA(NULL), NULL);
-
-    if (!IsWindow(hwnd))
-    {
-        win_skip("FIXME: failed to create Header window.\n");
-        unload_v6_module(ctx_cookie, hCtx);
-        DestroyWindow(parent_hwnd);
-        return;
-    }
-    else
-        DestroyWindow(hwnd);
 
     /* comctl32 version 6 tests start here */
     test_hdf_fixedwidth(parent_hwnd);

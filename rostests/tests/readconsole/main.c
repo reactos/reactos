@@ -23,7 +23,7 @@ int main()
     //
     _tprintf(TEXT("You printed %c :: "), Buffer);
     _tprintf(TEXT("With a value %d :: "), Buffer);
-    _tprintf(TEXT("Number of chars recieved %lu :: "), Count);
+    _tprintf(TEXT("Number of chars received %lu :: "), Count);
     _tprintf(TEXT("Char equal to backspace %d \n"), (Buffer == TEXT('\b')));
 
     //

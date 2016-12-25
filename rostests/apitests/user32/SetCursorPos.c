@@ -5,9 +5,10 @@
  * PROGRAMMERS:     Giannis Adamopoulos
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <apitest.h>
+
+#include <wingdi.h>
+#include <winuser.h>
 #include <assert.h>
 
 HHOOK hMouseHookLL, hMouseHook;
@@ -20,7 +21,7 @@ struct _test_info
 };
 
 struct _test_info info[] = { {0,0,0}, /* SetCursorPos without a window */
-                             {1,2,0}, /* mouse_event without a window */
+                             {1,1,0}, /* mouse_event without a window */
                              {0,1,1}, /* SetCursorPos with a window */
                              {1,1,1}, /* mouse_event with a window */
                              {0,1,1}, /* multiple SetCursorPos with a window with coalescing */
@@ -59,7 +60,7 @@ static HWND CreateTestWindow()
     WNDCLASSA  wclass;
     HANDLE hInstance = GetModuleHandleA( NULL );
     HWND hWndTest;
-	
+
     wclass.lpszClassName = "MouseInputTestClass";
     wclass.style         = CS_HREDRAW | CS_VREDRAW;
     wclass.lpfnWndProc   = WndProc;
@@ -94,10 +95,8 @@ void Test_SetCursorPos()
     MSG msg;
     int i;
 
-    memset(results, sizeof(results), 0);
-
     hMouseHookLL = SetWindowsHookEx(WH_MOUSE_LL, MouseLLHookProc, GetModuleHandleA( NULL ), 0);
-    hMouseHook = SetWindowsHookEx(WH_MOUSE, MouseHookProc, GetModuleHandleA( NULL ), 0);
+    hMouseHook = SetWindowsHookExW(WH_MOUSE, MouseHookProc, GetModuleHandleW( NULL ), GetCurrentThreadId());
     ok(hMouseHook!=NULL,"failed to set hook\n");
     ok(hMouseHookLL!=NULL,"failed to set hook\n");
 
@@ -154,12 +153,53 @@ void Test_SetCursorPos()
     SetCapture(NULL);
     DestroyWindow(hwnd);
 
-    UnhookWindowsHookEx (hMouseHook);	
-    UnhookWindowsHookEx (hMouseHookLL);	
+    UnhookWindowsHookEx (hMouseHook);
+    UnhookWindowsHookEx (hMouseHookLL);
 
+}
+
+void Test_DesktopAccess()
+{
+    HDESK hDesk, hDeskInitial;
+    POINT curPoint, initialPoint;
+    BOOL ret;
+
+    hDeskInitial = GetThreadDesktop(GetCurrentThreadId());
+    ok(hDeskInitial != NULL, "Failed to retrieve the initial desktop\n");
+
+    ret = GetCursorPos(&initialPoint);
+    ok(ret == TRUE, "GetCursorPos should succed\n");
+
+    hDesk = CreateDesktopW(L"testDesktop", NULL, NULL, 0, 0x01ff, NULL);
+    ok(hDesk != 0, "Failed to create a new desktop\n");
+    SetThreadDesktop(hDesk);
+    ok(GetThreadDesktop(GetCurrentThreadId()) == hDesk, "SetThreadDesktop had no effect\n");
+
+    SetLastError(0xdeadbeef);
+
+    ret = GetCursorPos(&curPoint);
+    ok(ret == FALSE, "GetCursorPos should fail\n");
+
+    ok(GetLastError() == ERROR_ACCESS_DENIED, "Expected ERROR_ACCESS_DENIED got 0x%lx\n", GetLastError());
+    SetLastError(0xdeadbeef);
+
+    ret = SetCursorPos(2,2);
+    ok(ret == FALSE, "SetCursorPos should fail\n");
+
+    ok(GetLastError() == 0xdeadbeef, "Wrong last error, got 0x%lx\n", GetLastError());
+
+    ret = GetCursorPos(&curPoint);
+    ok(ret == FALSE, "GetCursorPos should fail\n");
+
+    SetThreadDesktop(hDeskInitial);
+
+    ret = GetCursorPos(&curPoint);
+    ok(ret == TRUE, "GetCursorPos should succed\n");
+    ok(curPoint.x ==  initialPoint.x && curPoint.y ==  initialPoint.y, "Mouse position changed\n");
 }
 
 START_TEST(SetCursorPos)
 {
+    Test_DesktopAccess();
     Test_SetCursorPos();
 }

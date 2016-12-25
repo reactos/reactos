@@ -178,7 +178,6 @@ static void test_info_size(void)
     ok(retval == 0, "Expected 0, got %d\n", retval);
     ok(hdl == 0, "Expected 0, got %d\n", hdl);
     ok(GetLastError() == ERROR_RESOURCE_DATA_NOT_FOUND ||
-       GetLastError() == ERROR_BAD_FORMAT || /* win9x */
        GetLastError() == ERROR_SUCCESS, /* win2k */
        "Expected ERROR_RESOURCE_DATA_NOT_FOUND, got %d\n", GetLastError());
 
@@ -195,8 +194,6 @@ static void VersionDwordLong2String(DWORDLONG Version, LPSTR lpszVerString)
     d = (WORD)(Version & 0xffff);
 
     sprintf(lpszVerString, "%d.%d.%d.%d", a, b, c, d);
-
-    return;
 }
 
 static void test_info(void)
@@ -207,7 +204,7 @@ static void test_info(void)
     VS_FIXEDFILEINFO *pFixedVersionInfo;
     UINT uiLength;
     char VersionString[MAX_PATH];
-    static CHAR backslash[] = "\\";
+    static const char backslash[] = "\\";
     DWORDLONG dwlVersion;
 
     hdl = 0x55555555;
@@ -341,12 +338,14 @@ static void test_32bit_win(void)
         retvalW = GetFileVersionInfoSizeW( mypathW, &hdlW);
         pVersionInfoW = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, retvalW );
         retW = GetFileVersionInfoW( mypathW, 0, retvalW, pVersionInfoW );
+        ok(retW, "GetFileVersionInfo failed: GetLastError = %u\n", GetLastError());
     }
 
     GetModuleFileNameA(NULL, mypathA, MAX_PATH);
     retvalA = GetFileVersionInfoSizeA( mypathA, &hdlA);
     pVersionInfoA = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, retvalA );
     retA = GetFileVersionInfoA( mypathA, 0, retvalA, pVersionInfoA );
+    ok(retA, "GetFileVersionInfo failed: GetLastError = %u\n", GetLastError());
 
     if (is_unicode_enabled)
     { 
@@ -411,7 +410,7 @@ static void test_32bit_win(void)
 
         retW = VerQueryValueW( pVersionInfoW, rootW, (LPVOID *)&pBufW, &uiLengthW );
         ok (retW, "VerQueryValueW failed: GetLastError = %u\n", GetLastError());
-        ok ( uiLengthA == sizeof(VS_FIXEDFILEINFO), "Size (%d) doesn't match the size of the VS_FIXEDFILEINFO struct\n", uiLengthA);
+        ok ( uiLengthW == sizeof(VS_FIXEDFILEINFO), "Size (%d) doesn't match the size of the VS_FIXEDFILEINFO struct\n", uiLengthW );
 
         ok( uiLengthA == uiLengthW, "The size of VS_FIXEDFILEINFO should be the same for both A/W calls, it is (%d) vs. (%d)\n",
                                     uiLengthA, uiLengthW);
@@ -458,7 +457,7 @@ static void test_32bit_win(void)
         HeapFree( GetProcessHeap(), 0, pVersionInfoW);
 }
 
-static void test_VerQueryValue(void)
+static void test_VerQueryValueA(void)
 {
     static const char * const value_name[] = {
         "Product", "CompanyName", "FileDescription", "Internal",
@@ -469,24 +468,24 @@ static void test_VerQueryValue(void)
     UINT len, ret, translation, i;
     char buf[MAX_PATH];
 
-    ret = GetModuleFileName(NULL, buf, sizeof(buf));
+    ret = GetModuleFileNameA(NULL, buf, sizeof(buf));
     assert(ret);
 
     SetLastError(0xdeadbeef);
-    len = GetFileVersionInfoSize(buf, NULL);
-    ok(len, "GetFileVersionInfoSize(%s) error %u\n", buf, GetLastError());
+    len = GetFileVersionInfoSizeA(buf, NULL);
+    ok(len, "GetFileVersionInfoSizeA(%s) error %u\n", buf, GetLastError());
 
     ver = HeapAlloc(GetProcessHeap(), 0, len);
     assert(ver);
 
     SetLastError(0xdeadbeef);
-    ret = GetFileVersionInfo(buf, 0, len, ver);
-    ok(ret, "GetFileVersionInfo error %u\n", GetLastError());
+    ret = GetFileVersionInfoA(buf, 0, len, ver);
+    ok(ret, "GetFileVersionInfoA error %u\n", GetLastError());
 
     p = (char *)0xdeadbeef;
     len = 0xdeadbeef;
     SetLastError(0xdeadbeef);
-    ret = VerQueryValue(ver, "\\VarFileInfo\\Translation", (LPVOID*)&p, &len);
+    ret = VerQueryValueA(ver, "\\VarFileInfo\\Translation", (LPVOID*)&p, &len);
     ok(ret, "VerQueryValue error %u\n", GetLastError());
     ok(len == 4, "VerQueryValue returned %u, expected 4\n", len);
 
@@ -496,55 +495,53 @@ static void test_VerQueryValue(void)
     p = (char *)0xdeadbeef;
     len = 0xdeadbeef;
     SetLastError(0xdeadbeef);
-    ret = VerQueryValue(ver, "String", (LPVOID*)&p, &len);
+    ret = VerQueryValueA(ver, "String", (LPVOID*)&p, &len);
     ok(!ret, "VerQueryValue should fail\n");
     ok(GetLastError() == ERROR_RESOURCE_TYPE_NOT_FOUND ||
-       GetLastError() == 0xdeadbeef /* Win9x, NT4, W2K */,
+       GetLastError() == 0xdeadbeef /* NT4, W2K */,
        "VerQueryValue returned %u\n", GetLastError());
     ok(p == (char *)0xdeadbeef, "expected 0xdeadbeef got %p\n", p);
-    ok(len == 0 ||
-       len == 0xbeef, /* win9x */
-       "expected 0 got %x\n", len);
+    ok(len == 0, "expected 0 got %x\n", len);
 
     p = (char *)0xdeadbeef;
     len = 0xdeadbeef;
     SetLastError(0xdeadbeef);
-    ret = VerQueryValue(ver, "StringFileInfo", (LPVOID*)&p, &len);
+    ret = VerQueryValueA(ver, "StringFileInfo", (LPVOID*)&p, &len);
     ok(ret, "VerQueryValue error %u\n", GetLastError());
-todo_wine ok(len == 0, "VerQueryValue returned %u, expected 0\n", len);
+    ok(len == 0, "VerQueryValue returned %u, expected 0\n", len);
     ok(p != (char *)0xdeadbeef, "not expected 0xdeadbeef\n");
 
     p = (char *)0xdeadbeef;
     len = 0xdeadbeef;
     SetLastError(0xdeadbeef);
-    ret = VerQueryValue(ver, "\\StringFileInfo", (LPVOID*)&p, &len);
+    ret = VerQueryValueA(ver, "\\StringFileInfo", (LPVOID*)&p, &len);
     ok(ret, "VerQueryValue error %u\n", GetLastError());
-todo_wine ok(len == 0, "VerQueryValue returned %u, expected 0\n", len);
+    ok(len == 0, "VerQueryValue returned %u, expected 0\n", len);
     ok(p != (char *)0xdeadbeef, "not expected 0xdeadbeef\n");
 
     p = (char *)0xdeadbeef;
     len = 0xdeadbeef;
     SetLastError(0xdeadbeef);
-    ret = VerQueryValue(ver, "\\\\StringFileInfo", (LPVOID*)&p, &len);
+    ret = VerQueryValueA(ver, "\\\\StringFileInfo", (LPVOID*)&p, &len);
     ok(ret, "VerQueryValue error %u\n", GetLastError());
-todo_wine ok(len == 0, "VerQueryValue returned %u, expected 0\n", len);
+    ok(len == 0, "VerQueryValue returned %u, expected 0\n", len);
     ok(p != (char *)0xdeadbeef, "not expected 0xdeadbeef\n");
 
     p = (char *)0xdeadbeef;
     len = 0xdeadbeef;
     SetLastError(0xdeadbeef);
-    ret = VerQueryValue(ver, "\\StringFileInfo\\\\", (LPVOID*)&p, &len);
+    ret = VerQueryValueA(ver, "\\StringFileInfo\\\\", (LPVOID*)&p, &len);
     ok(ret, "VerQueryValue error %u\n", GetLastError());
-todo_wine ok(len == 0, "VerQueryValue returned %u, expected 0\n", len);
+    ok(len == 0, "VerQueryValue returned %u, expected 0\n", len);
     ok(p != (char *)0xdeadbeef, "not expected 0xdeadbeef\n");
 
     sprintf(buf, "\\StringFileInfo\\%08x", translation);
     p = (char *)0xdeadbeef;
     len = 0xdeadbeef;
     SetLastError(0xdeadbeef);
-    ret = VerQueryValue(ver, buf, (LPVOID*)&p, &len);
+    ret = VerQueryValueA(ver, buf, (LPVOID*)&p, &len);
     ok(ret, "VerQueryValue error %u\n", GetLastError());
-todo_wine ok(len == 0, "VerQueryValue returned %u, expected 0\n", len);
+    ok(len == 0, "VerQueryValue returned %u, expected 0\n", len);
     ok(p != (char *)0xdeadbeef, "not expected 0xdeadbeef\n");
 
     for (i = 0; i < sizeof(value_name)/sizeof(value_name[0]); i++)
@@ -553,28 +550,202 @@ todo_wine ok(len == 0, "VerQueryValue returned %u, expected 0\n", len);
         p = (char *)0xdeadbeef;
         len = 0xdeadbeef;
         SetLastError(0xdeadbeef);
-        ret = VerQueryValue(ver, buf, (LPVOID*)&p, &len);
-        ok(ret, "VerQueryValue(%s) error %u\n", buf, GetLastError());
+        ret = VerQueryValueA(ver, buf, (LPVOID*)&p, &len);
+        ok(ret, "VerQueryValueA(%s) error %u\n", buf, GetLastError());
         ok(len == strlen(value_name[i]) + 1, "VerQueryValue returned %u\n", len);
         ok(!strcmp(value_name[i], p), "expected \"%s\", got \"%s\"\n",
            value_name[i], p);
 
         /* test partial value names */
-        len = lstrlen(buf);
+        len = lstrlenA(buf);
         buf[len - 2] = 0;
         p = (char *)0xdeadbeef;
         len = 0xdeadbeef;
         SetLastError(0xdeadbeef);
-        ret = VerQueryValue(ver, buf, (LPVOID*)&p, &len);
-        ok(!ret, "VerQueryValue(%s) succeeded\n", buf);
+        ret = VerQueryValueA(ver, buf, (LPVOID*)&p, &len);
+        ok(!ret, "VerQueryValueA(%s) succeeded\n", buf);
         ok(GetLastError() == ERROR_RESOURCE_TYPE_NOT_FOUND ||
-           GetLastError() == 0xdeadbeef /* Win9x, NT4, W2K */,
+           GetLastError() == 0xdeadbeef /* NT4, W2K */,
            "VerQueryValue returned %u\n", GetLastError());
         ok(p == (char *)0xdeadbeef, "expected 0xdeadbeef got %p\n", p);
-        ok(len == 0 ||
-           len == 0xbeef, /* win9x */
-           "expected 0 or 0xbeef, got %x\n", len);
+        ok(len == 0, "expected 0 or 0xbeef, got %x\n", len);
     }
+
+    HeapFree(GetProcessHeap(), 0, ver);
+}
+
+static void test_VerQueryValue_InvalidLength(void)
+{
+    /* this buffer is created with the reactos resource compiler from this resource:
+#include "winver.h"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION    1,0,0,0
+PRODUCTVERSION 1,0,0,0
+FILEFLAGSMASK  63
+FILEFLAGS      0
+FILEOS         VOS_UNKNOWN
+FILETYPE       VFT_APP
+FILESUBTYPE    VFT2_UNKNOWN
+{
+    BLOCK "StringFileInfo"
+    {
+    }
+}
+*/
+    char preparedbuffer[] = {
+        /* VS_VERSION_INFO_STRUCT32 */
+        0x80, 0x00,     /* wLength */
+        0x34, 0x00,     /* wValueLength */
+        0x00, 0x00,     /* wType */
+        /* L"VS_VERSION_INFO" + DWORD alignment */
+        0x56, 0x00, 0x53, 0x00, 0x5f, 0x00, 0x56, 0x00, 0x45, 0x00, 0x52, 0x00, 0x53, 0x00, 0x49, 0x00, 0x4f,
+        0x00, 0x4e, 0x00, 0x5f, 0x00, 0x49, 0x00, 0x4e, 0x00, 0x46, 0x00, 0x4f, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+        /* VS_FIXEDFILEINFO */
+        0xbd, 0x04, 0xef, 0xfe,     /* dwSignature */
+        0x00, 0x00, 0x01, 0x00,     /* dwStrucVersion */
+        0x00, 0x00, 0x01, 0x00,     /* dwFileVersionMS */
+        0x00, 0x00, 0x00, 0x00,     /* dwFileVersionLS */
+        0x00, 0x00, 0x01, 0x00,     /* dwProductVersionMS */
+        0x00, 0x00, 0x00, 0x00,     /* dwProductVersionLS */
+        0x3f, 0x00, 0x00, 0x00,     /* dwFileFlagsMask */
+        0x00, 0x00, 0x00, 0x00,     /* dwFileFlags */
+        0x00, 0x00, 0x00, 0x00,     /* dwFileOS */
+        0x01, 0x00, 0x00, 0x00,     /* dwFileType */
+        0x00, 0x00, 0x00, 0x00,     /* dwFileSubtype */
+        0x00, 0x00, 0x00, 0x00,     /* dwFileDateMS */
+        0x00, 0x00, 0x00, 0x00,     /* dwFileDateLS */
+
+        /* first child: */
+            0x24, 0x00,     /* wLength */
+            0x00, 0x00,     /* wValueLength */
+            0x01, 0x00,     /* wType */
+            /* L"StringFileInfo" + DWORD alignment */
+            0x53, 0x00, 0x74, 0x00, 0x72, 0x00, 0x69, 0x00, 0x6e, 0x00, 0x67, 0x00, 0x46, 0x00, 0x69, 0x00,
+            0x6c, 0x00, 0x65, 0x00, 0x49, 0x00, 0x6e, 0x00, 0x66, 0x00, 0x6f, 0x00, 0x00, 0x00,
+            /* "FE2X" */
+            0x46, 0x45, 0x32, 0x58,
+
+            /* Extra bytes allocated for W->A conversions. */
+            0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba,
+            0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba,
+            0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba,
+            0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba,
+            0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba,
+            0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba,
+            0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba,
+            0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba, 0x0d, 0xf0, 0xad, 0xba,
+    };
+    char *p;
+    UINT len, ret;
+    WCHAR FileDescriptionW[] = { '\\', '\\', 'S', 't', 'r', 'i', 'n', 'g', 'F', 'i', 'l', 'e', 'I', 'n', 'f', 'o', 0 };
+
+    p = (char *)0xdeadbeef;
+    len = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = VerQueryValueA(preparedbuffer, "StringFileInfo", (LPVOID *)&p, &len);
+    ok(ret, "VerQueryValueA error %u\n", GetLastError());
+    todo_wine
+    ok(len == 0, "VerQueryValueA returned %u, expected 0\n", len);
+    todo_wine
+    ok(p == preparedbuffer + 0x7e, "p was %p, expected %p\n", p, preparedbuffer + 0x7e);
+
+    p = (char *)0xdeadbeef;
+    len = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = VerQueryValueA(preparedbuffer, "\\StringFileInfo", (LPVOID *)&p, &len);
+    ok(ret, "VerQueryValueA error %u\n", GetLastError());
+    todo_wine
+    ok(len == 0, "VerQueryValueA returned %u, expected 0\n", len);
+    todo_wine
+    ok(p == preparedbuffer + 0x7e, "p was %p, expected %p\n", p, preparedbuffer + 0x7e);
+
+    p = (char *)0xdeadbeef;
+    len = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = VerQueryValueA(preparedbuffer, "\\\\StringFileInfo", (LPVOID *)&p, &len);
+    ok(ret, "VerQueryValueA error %u\n", GetLastError());
+    todo_wine
+    ok(len == 0, "VerQueryValueA returned %u, expected 0\n", len);
+    todo_wine
+    ok(p == preparedbuffer + 0x7e, "p was %p, expected %p\n", p, preparedbuffer + 0x7e);
+
+    /* also test the W versions. */
+    p = (char *)0xdeadbeef;
+    len = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = VerQueryValueW(preparedbuffer, FileDescriptionW + 2, (LPVOID *)&p, &len);
+    ok(ret, "VerQueryValueW error %u\n", GetLastError());
+    ok(len == 0, "VerQueryValueW returned %u, expected 0\n", len);
+    todo_wine
+    ok(p == preparedbuffer + 0x7e, "p was %p, expected %p\n", p, preparedbuffer + 0x7e);
+
+    p = (char *)0xdeadbeef;
+    len = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = VerQueryValueW(preparedbuffer, FileDescriptionW + 1, (LPVOID *)&p, &len);
+    ok(ret, "VerQueryValueW error %u\n", GetLastError());
+    ok(len == 0, "VerQueryValueW returned %u, expected 0\n", len);
+    todo_wine
+    ok(p == preparedbuffer + 0x7e, "p was %p, expected %p\n", p, preparedbuffer + 0x7e);
+
+    p = (char *)0xdeadbeef;
+    len = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = VerQueryValueW(preparedbuffer, FileDescriptionW, (LPVOID *)&p, &len);
+    ok(ret, "VerQueryValueW error %u\n", GetLastError());
+    ok(len == 0, "VerQueryValueW returned %u, expected 0\n", len);
+    todo_wine
+    ok(p == preparedbuffer + 0x7e, "p was %p, expected %p\n", p, preparedbuffer + 0x7e);
+}
+
+static void test_extra_block(void)
+{
+    WORD extra_block[] = {
+        72, 0, 0, 'W', 'i', 'n', 'e', 'T', 'e', 's', 't', '\0',
+        24, 4, 0, 'B', 'i', 'n', 'a', 'r', 'y', '\0', 0xbeef, 0xdead,
+        24, 4, 1, 'T', 'e', 'x', 't', '\0', 'B', '-', ')', '\0',
+    };
+    char buf[MAX_PATH];
+    UINT len, ret;
+    ULONG w;
+    char *ver, *p;
+    WORD *length;
+
+    ret = GetModuleFileNameA(NULL, buf, sizeof(buf));
+    ok(ret, "GetModuleFileNameA failed\n");
+
+    len = GetFileVersionInfoSizeA(buf, NULL);
+    ok(len, "GetFileVersionInfoSizeA(%s) error %u\n", buf, GetLastError());
+
+    ver = HeapAlloc(GetProcessHeap(), 0, len + sizeof(extra_block) * 2);
+    ok(ver != NULL, "Can't allocate memory\n");
+
+    ret = GetFileVersionInfoA(buf, 0, len, ver);
+    ok(ret, "GetFileVersionInfoA error %u\n", GetLastError());
+
+    /* forge the string table, as windres dislike an extra block */
+    length = (WORD *)ver; /* see VS_VERSION_INFO_STRUCT32 for details */
+    memcpy(ver + *length, extra_block, sizeof(extra_block));
+    *length += sizeof(extra_block);
+
+    p = (char *)0xdeadbeef;
+    len = 0xdeadbeef;
+    w = 0xdeadbeef;
+    ret = VerQueryValueA(ver, "WineTest\\Binary", (LPVOID*)&p, &len);
+    ok(ret, "VerQueryValue error %u\n", GetLastError());
+    ok(len == 4, "VerQueryValue returned %u, expected 4\n", len);
+    ok(p != (char *)0xdeadbeef, "not expected 0xdeadbeef\n");
+    ok(memcmp(p, &w, sizeof(w)) == 0, "got 0x%08x, expected 0x%08x\n", *(PULONG)p, w);
+
+    p = (char *)0xdeadbeef;
+    len = 0xdeadbeef;
+    ret = VerQueryValueA(ver, "WineTest\\Text", (LPVOID*)&p, &len);
+    ok(ret, "VerQueryValue error %u\n", GetLastError());
+    ok(len == 4, "VerQueryValue returned %u, expected 4\n", len);
+    ok(p != (char *)0xdeadbeef, "not expected 0xdeadbeef\n");
+    ok(strcmp(p, "B-)") == 0, "got '%s', expected '%s'\n", p, "B-)");
 
     HeapFree(GetProcessHeap(), 0, ver);
 }
@@ -584,5 +755,7 @@ START_TEST(info)
     test_info_size();
     test_info();
     test_32bit_win();
-    test_VerQueryValue();
+    test_VerQueryValueA();
+    test_VerQueryValue_InvalidLength();
+    test_extra_block();
 }

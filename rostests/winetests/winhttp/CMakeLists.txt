@@ -1,16 +1,14 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+add_definitions(-DUSE_WINE_TODOS)
 
 list(APPEND SOURCE
     notification.c
-    testlist.c
     url.c
-    winhttp.c)
+    winhttp.c
+    testlist.c)
 
 add_executable(winhttp_winetest ${SOURCE})
-target_link_libraries(winhttp_winetest wine)
+target_link_libraries(winhttp_winetest uuid)
 set_module_type(winhttp_winetest win32cui)
-add_importlibs(winhttp_winetest winhttp crypt32 ws2_32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(winhttp_winetest winhttp oleaut32 ole32 crypt32 advapi32 ws2_32 msvcrt kernel32)
 add_cd_file(TARGET winhttp_winetest DESTINATION reactos/bin FOR all)

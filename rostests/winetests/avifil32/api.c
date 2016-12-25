@@ -19,17 +19,21 @@
  *
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wingdi.h"
-#include "vfw.h"
-#include "wine/test.h"
+#define COBJMACROS
+#define CONST_VTABLE
+
+#include <wine/test.h>
+#include <initguid.h>
+#include <wingdi.h>
+#include <vfw.h>
 
 /* ########################### */
 
+DEFINE_AVIGUID(CLSID_WAVFile,   0x00020003, 0, 0);
 static const CHAR winetest0[] = "winetest0";
 static const CHAR winetest1[] = "winetest1";
 static const CHAR testfilename[]  = "wine_avifil32_test.avi";
@@ -194,11 +198,11 @@ static void test_AVISaveOptions(void)
 
     SetLastError(0xdeadbeef);
     hres = EditStreamSetNameA(streams[0], winetest0);
-    todo_wine ok(hres == AVIERR_OK, "0: got 0x%x (expected AVIERR_OK)\n", hres);
+    ok(hres == AVIERR_OK, "0: got 0x%x (expected AVIERR_OK)\n", hres);
 
     SetLastError(0xdeadbeef);
     hres = EditStreamSetNameA(streams[1], winetest1);
-    todo_wine ok(hres == AVIERR_OK, "1: got 0x%x (expected AVIERR_OK)\n", hres);
+    ok(hres == AVIERR_OK, "1: got 0x%x (expected AVIERR_OK)\n", hres);
 
     if (winetest_interactive) {
         SetLastError(0xdeadbeef);
@@ -223,6 +227,102 @@ static void test_AVISaveOptions(void)
 
 /* ########################### */
 
+static void test_EditStreamSetInfo(void)
+{
+    PAVISTREAM stream = NULL;
+    HRESULT hres;
+    AVISTREAMINFOA info, info2;
+
+    hres = CreateEditableStream(&stream, NULL);
+    ok(hres == AVIERR_OK, "got 0x%08X, expected AVIERR_OK\n", hres);
+
+    /* Size parameter is somehow checked (notice the crash with size=-1 below) */
+    hres = EditStreamSetInfoA(stream, NULL, 0);
+    ok( hres == AVIERR_BADSIZE, "got 0x%08X, expected AVIERR_BADSIZE\n", hres);
+
+    hres = EditStreamSetInfoA(stream, NULL, sizeof(AVISTREAMINFOA)-1 );
+    ok( hres == AVIERR_BADSIZE, "got 0x%08X, expected AVIERR_BADSIZE\n", hres);
+
+    if(0)
+    {   
+        /* Crashing - first parameter not checked */
+        EditStreamSetInfoA(NULL, &info, sizeof(info) );
+
+        /* Crashing - second parameter not checked */
+        EditStreamSetInfoA(stream, NULL, sizeof(AVISTREAMINFOA) );
+
+        EditStreamSetInfoA(stream, NULL, -1);
+    }
+
+    hres = AVIStreamInfoA(stream, &info, sizeof(info) );
+    ok( hres == 0, "got 0x%08X, expected 0\n", hres);
+
+             /* Does the function check what's it's updating ? */
+
+#define IS_INFO_UPDATED(m) do { \
+    hres = EditStreamSetInfoA(stream, &info, sizeof(info) ); \
+    ok( hres == 0, "got 0x%08X, expected 0\n", hres); \
+    hres = AVIStreamInfoA(stream, &info2, sizeof(info2) ); \
+    ok( hres == 0, "got 0x%08X, expected 0\n", hres); \
+    ok( info2.m == info.m, "EditStreamSetInfo did not update "#m" parameter\n" ); \
+    } while(0)
+
+    info.dwStart++;
+    IS_INFO_UPDATED(dwStart);
+    info.dwStart = 0;
+    IS_INFO_UPDATED(dwStart);
+
+    info.wPriority++;
+    IS_INFO_UPDATED(wPriority);
+    info.wPriority = 0;
+    IS_INFO_UPDATED(wPriority);
+
+    info.wLanguage++;
+    IS_INFO_UPDATED(wLanguage);
+    info.wLanguage = 0;
+    IS_INFO_UPDATED(wLanguage);
+
+    info.dwScale++;
+    IS_INFO_UPDATED(dwScale);
+    info.dwScale = 0;
+    IS_INFO_UPDATED(dwScale);
+
+    info.dwRate++;
+    IS_INFO_UPDATED(dwRate);
+    info.dwRate = 0;
+    IS_INFO_UPDATED(dwRate);
+
+    info.dwQuality++;
+    IS_INFO_UPDATED(dwQuality);
+    info.dwQuality = 0;
+    IS_INFO_UPDATED(dwQuality);
+    info.dwQuality = -2;
+    IS_INFO_UPDATED(dwQuality);
+    info.dwQuality = ICQUALITY_HIGH+1;
+    IS_INFO_UPDATED(dwQuality);
+
+    info.rcFrame.left = 0;
+    IS_INFO_UPDATED(rcFrame.left);
+    info.rcFrame.top = 0;
+    IS_INFO_UPDATED(rcFrame.top);
+    info.rcFrame.right = 0;
+    IS_INFO_UPDATED(rcFrame.right);
+    info.rcFrame.bottom = 0;
+    IS_INFO_UPDATED(rcFrame.bottom);
+
+    info.rcFrame.left = -1;
+    IS_INFO_UPDATED(rcFrame.left);
+    info.rcFrame.top = -1;
+    IS_INFO_UPDATED(rcFrame.top);
+    info.rcFrame.right = -1;
+    IS_INFO_UPDATED(rcFrame.right);
+    info.rcFrame.bottom = -1;
+    IS_INFO_UPDATED(rcFrame.bottom);
+    AVIStreamRelease(stream);
+#undef IS_INFO_UPDATED
+}
+
+
 static void init_test_struct(COMMON_AVI_HEADERS *cah)
 {
     memcpy(cah->fh, deffh, sizeof(deffh));
@@ -237,7 +337,7 @@ static void create_avi_file(const COMMON_AVI_HEADERS *cah, char *filename)
     HANDLE hFile;
     DWORD written;
 
-    hFile = CreateFile(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     ok(hFile != INVALID_HANDLE_VALUE, "Couldn't create file\n");
 
@@ -265,23 +365,22 @@ static void test_default_data(void)
     LONG lSize;
     PAVISTREAM pStream0;
     PAVISTREAM pStream1;
-    AVISTREAMINFO asi0;
-    AVISTREAMINFO asi1;
+    AVISTREAMINFOA asi0, asi1;
     WAVEFORMATEX wfx;
 
-    GetTempPath(MAX_PATH, filename);
+    GetTempPathA(MAX_PATH, filename);
     strcpy(filename+strlen(filename), testfilename);
 
     init_test_struct(&cah);
     create_avi_file(&cah, filename);
 
-    res = AVIFileOpen(&pFile, filename, OF_SHARE_DENY_WRITE, 0L);
-    ok(res != AVIERR_BADFORMAT, "Unable to open file: error1=%u\n", AVIERR_BADFORMAT);
-    ok(res != AVIERR_MEMORY, "Unable to open file: error2=%u\n", AVIERR_MEMORY);
-    ok(res != AVIERR_FILEREAD, "Unable to open file: error3=%u\n", AVIERR_FILEREAD);
-    ok(res != AVIERR_FILEOPEN, "Unable to open file: error4=%u\n", AVIERR_FILEOPEN);
-    ok(res != REGDB_E_CLASSNOTREG, "Unable to open file: error5=%u\n", REGDB_E_CLASSNOTREG);
+    res = AVIFileOpenA(&pFile, filename, OF_SHARE_DENY_WRITE, 0L);
     ok(res == 0, "Unable to open file: error=%u\n", res);
+
+    pStream0 = (void *)0xdeadbeef;
+    res = AVIFileGetStream(pFile, &pStream0, ~0, 0);
+    ok(res == AVIERR_NODATA, "expected AVIERR_NODATA, got %#x\n", res);
+    ok(pStream0 == NULL, "AVIFileGetStream should set stream to NULL\n");
 
     res = AVIFileGetStream(pFile, &pStream0, 0, 0);
     ok(res == 0, "Unable to open video stream: error=%u\n", res);
@@ -289,10 +388,10 @@ static void test_default_data(void)
     res = AVIFileGetStream(pFile, &pStream1, 0, 1);
     ok(res == 0, "Unable to open audio stream: error=%u\n", res);
 
-    res = AVIStreamInfo(pStream0, &asi0, sizeof(AVISTREAMINFO));
+    res = AVIStreamInfoA(pStream0, &asi0, sizeof(asi0));
     ok(res == 0, "Unable to read stream info: error=%u\n", res);
 
-    res = AVIStreamInfo(pStream1, &asi1, sizeof(AVISTREAMINFO));
+    res = AVIStreamInfoA(pStream1, &asi1, sizeof(asi1));
     ok(res == 0, "Unable to read stream info: error=%u\n", res);
 
     res = AVIStreamReadFormat(pStream0, AVIStreamStart(pStream1), NULL, &lSize);
@@ -351,7 +450,7 @@ static void test_default_data(void)
     AVIStreamRelease(pStream0);
     AVIStreamRelease(pStream1);
     AVIFileRelease(pFile);
-    ok(DeleteFile(filename) !=0, "Deleting file %s failed\n", filename);
+    ok(DeleteFileA(filename) !=0, "Deleting file %s failed\n", filename);
 }
 
 static void test_amh_corruption(void)
@@ -361,7 +460,7 @@ static void test_amh_corruption(void)
     PAVIFILE pFile;
     int res;
 
-    GetTempPath(MAX_PATH, filename);
+    GetTempPathA(MAX_PATH, filename);
     strcpy(filename+strlen(filename), testfilename);
 
     /* Make sure only AVI files with the proper headers will be loaded */
@@ -369,10 +468,10 @@ static void test_amh_corruption(void)
     cah.fh[3] = mmioFOURCC('A', 'V', 'i', ' ');
 
     create_avi_file(&cah, filename);
-    res = AVIFileOpen(&pFile, filename, OF_SHARE_DENY_WRITE, 0L);
+    res = AVIFileOpenA(&pFile, filename, OF_SHARE_DENY_WRITE, 0L);
     ok(res != 0, "Able to open file: error=%u\n", res);
 
-    ok(DeleteFile(filename) !=0, "Deleting file %s failed\n", filename);
+    ok(DeleteFileA(filename) !=0, "Deleting file %s failed\n", filename);
 }
 
 static void test_ash1_corruption(void)
@@ -382,9 +481,9 @@ static void test_ash1_corruption(void)
     PAVIFILE pFile;
     int res;
     PAVISTREAM pStream1;
-    AVISTREAMINFO asi1;
+    AVISTREAMINFOA asi1;
 
-    GetTempPath(MAX_PATH, filename);
+    GetTempPathA(MAX_PATH, filename);
     strcpy(filename+strlen(filename), testfilename);
 
     /* Corrupt the sample size in the audio stream header */
@@ -393,13 +492,13 @@ static void test_ash1_corruption(void)
 
     create_avi_file(&cah, filename);
 
-    res = AVIFileOpen(&pFile, filename, OF_SHARE_DENY_WRITE, 0L);
+    res = AVIFileOpenA(&pFile, filename, OF_SHARE_DENY_WRITE, 0L);
     ok(res == 0, "Unable to open file: error=%u\n", res);
 
     res = AVIFileGetStream(pFile, &pStream1, 0, 1);
     ok(res == 0, "Unable to open audio stream: error=%u\n", res);
 
-    res = AVIStreamInfo(pStream1, &asi1, sizeof(AVISTREAMINFO));
+    res = AVIStreamInfoA(pStream1, &asi1, sizeof(asi1));
     ok(res == 0, "Unable to read stream info: error=%u\n", res);
 
     /* The result will still be 2, because the value is dynamically replaced with the nBlockAlign
@@ -408,7 +507,7 @@ static void test_ash1_corruption(void)
 
     AVIStreamRelease(pStream1);
     AVIFileRelease(pFile);
-    ok(DeleteFile(filename) !=0, "Deleting file %s failed\n", filename);
+    ok(DeleteFileA(filename) !=0, "Deleting file %s failed\n", filename);
 }
 
 static void test_ash1_corruption2(void)
@@ -418,9 +517,9 @@ static void test_ash1_corruption2(void)
     PAVIFILE pFile;
     int res;
     PAVISTREAM pStream1;
-    AVISTREAMINFO asi1;
+    AVISTREAMINFOA asi1;
 
-    GetTempPath(MAX_PATH, filename);
+    GetTempPathA(MAX_PATH, filename);
     strcpy(filename+strlen(filename), testfilename);
 
     /* Corrupt the block alignment in the audio format header */
@@ -429,33 +528,234 @@ static void test_ash1_corruption2(void)
 
     create_avi_file(&cah, filename);
 
-    res = AVIFileOpen(&pFile, filename, OF_SHARE_DENY_WRITE, 0L);
+    res = AVIFileOpenA(&pFile, filename, OF_SHARE_DENY_WRITE, 0L);
     ok(res == 0, "Unable to open file: error=%u\n", res);
 
     res = AVIFileGetStream(pFile, &pStream1, 0, 1);
     ok(res == 0, "Unable to open audio stream: error=%u\n", res);
 
-    ok(AVIStreamInfo(pStream1, &asi1, sizeof(AVISTREAMINFO)) == 0, "Unable to read stream info\n");
+    ok(AVIStreamInfoA(pStream1, &asi1, sizeof(asi1)) == 0, "Unable to read stream info\n");
 
     /* The result will also be the corrupt value, as explained above. */
     ok(asi1.dwSampleSize == 0xdead, "got 0x%x (expected 0xdead)\n", asi1.dwSampleSize);
 
     AVIStreamRelease(pStream1);
     AVIFileRelease(pFile);
-    ok(DeleteFile(filename) !=0, "Deleting file %s failed\n", filename);
+    ok(DeleteFileA(filename) !=0, "Deleting file %s failed\n", filename);
 }
 
-/* ########################### */
+/* Outer IUnknown for COM aggregation tests */
+struct unk_impl {
+    IUnknown IUnknown_iface;
+    LONG ref;
+    IUnknown *inner_unk;
+};
+
+static inline struct unk_impl *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, struct unk_impl, IUnknown_iface);
+}
+
+static HRESULT WINAPI unk_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
+{
+    struct unk_impl *This = impl_from_IUnknown(iface);
+    LONG ref = This->ref;
+    HRESULT hr;
+
+    if (IsEqualGUID(riid, &IID_IUnknown))
+    {
+        *ppv = iface;
+        IUnknown_AddRef(iface);
+        return S_OK;
+    }
+
+    hr = IUnknown_QueryInterface(This->inner_unk, riid, ppv);
+    if (hr == S_OK)
+    {
+        trace("Working around COM aggregation ref counting bug\n");
+        ok(ref == This->ref, "Outer ref count expected %d got %d\n", ref, This->ref);
+        IUnknown_AddRef((IUnknown*)*ppv);
+        ref = IUnknown_Release(This->inner_unk);
+        ok(ref == 1, "Inner ref count expected 1 got %d\n", ref);
+    }
+
+    return hr;
+}
+
+static ULONG WINAPI unk_AddRef(IUnknown *iface)
+{
+    struct unk_impl *This = impl_from_IUnknown(iface);
+
+    return InterlockedIncrement(&This->ref);
+}
+
+static ULONG WINAPI unk_Release(IUnknown *iface)
+{
+    struct unk_impl *This = impl_from_IUnknown(iface);
+
+    return InterlockedDecrement(&This->ref);
+}
+
+static const IUnknownVtbl unk_vtbl =
+{
+    unk_QueryInterface,
+    unk_AddRef,
+    unk_Release
+};
+
+static void test_COM(void)
+{
+    struct unk_impl unk_obj = {{&unk_vtbl}, 19, NULL};
+    IAVIFile *avif = NULL;
+    IPersistFile *pf;
+    IUnknown *unk;
+    LONG refcount;
+    HRESULT hr;
+
+    /* COM aggregation */
+    hr = CoCreateInstance(&CLSID_AVIFile, &unk_obj.IUnknown_iface, CLSCTX_INPROC_SERVER,
+            &IID_IUnknown, (void**)&unk_obj.inner_unk);
+    ok(hr == S_OK, "COM aggregation failed: %08x, expected S_OK\n", hr);
+    hr = IUnknown_QueryInterface(&unk_obj.IUnknown_iface, &IID_IAVIFile, (void**)&avif);
+    ok(hr == S_OK, "QueryInterface for IID_IAVIFile failed: %08x\n", hr);
+    refcount = IAVIFile_AddRef(avif);
+    ok(refcount == unk_obj.ref, "AVIFile just pretends to support COM aggregation\n");
+    refcount = IAVIFile_Release(avif);
+    ok(refcount == unk_obj.ref, "AVIFile just pretends to support COM aggregation\n");
+    hr = IAVIFile_QueryInterface(avif, &IID_IPersistFile, (void**)&pf);
+    ok(hr == S_OK, "QueryInterface for IID_IPersistFile failed: %08x\n", hr);
+    refcount = IPersistFile_Release(pf);
+    ok(refcount == unk_obj.ref, "AVIFile just pretends to support COM aggregation\n");
+    refcount = IAVIFile_Release(avif);
+    ok(refcount == 19, "Outer ref count should be back at 19 but is %d\n", refcount);
+    refcount = IUnknown_Release(unk_obj.inner_unk);
+    ok(refcount == 0, "Inner ref count should be 0 but is %u\n", refcount);
+
+    /* Invalid RIID */
+    hr = CoCreateInstance(&CLSID_AVIFile, NULL, CLSCTX_INPROC_SERVER, &IID_IAVIStream,
+            (void**)&avif);
+    ok(hr == E_NOINTERFACE, "AVIFile create failed: %08x, expected E_NOINTERFACE\n", hr);
+
+    /* Same refcount */
+    hr = CoCreateInstance(&CLSID_AVIFile, NULL, CLSCTX_INPROC_SERVER, &IID_IAVIFile, (void**)&avif);
+    ok(hr == S_OK, "AVIFile create failed: %08x, expected S_OK\n", hr);
+    refcount = IAVIFile_AddRef(avif);
+    ok(refcount == 2, "refcount == %u, expected 2\n", refcount);
+    hr = IAVIFile_QueryInterface(avif, &IID_IUnknown, (void**)&unk);
+    ok(hr == S_OK, "QueryInterface for IID_IUnknown failed: %08x\n", hr);
+    refcount = IUnknown_AddRef(unk);
+    ok(refcount == 4, "refcount == %u, expected 4\n", refcount);
+    hr = IAVIFile_QueryInterface(avif, &IID_IPersistFile, (void**)&pf);
+    ok(hr == S_OK, "QueryInterface for IID_IPersistFile failed: %08x\n", hr);
+    refcount = IPersistFile_AddRef(pf);
+    ok(refcount == 6, "refcount == %u, expected 6\n", refcount);
+
+    while (IAVIFile_Release(avif));
+}
+
+static void test_COM_wavfile(void)
+{
+    struct unk_impl unk_obj = {{&unk_vtbl}, 19, NULL};
+    IAVIFile *avif = NULL;
+    IPersistFile *pf;
+    IAVIStream *avis;
+    IUnknown *unk;
+    ULONG refcount;
+    HRESULT hr;
+
+    /* COM aggregation */
+    hr = CoCreateInstance(&CLSID_WAVFile, &unk_obj.IUnknown_iface, CLSCTX_INPROC_SERVER,
+            &IID_IUnknown, (void**)&unk_obj.inner_unk);
+    ok(hr == S_OK, "COM aggregation failed: %08x, expected S_OK\n", hr);
+    hr = IUnknown_QueryInterface(&unk_obj.IUnknown_iface, &IID_IAVIFile, (void**)&avif);
+    ok(hr == S_OK, "QueryInterface for IID_IAVIFile failed: %08x\n", hr);
+    refcount = IAVIFile_AddRef(avif);
+    ok(refcount == unk_obj.ref, "WAVFile just pretends to support COM aggregation\n");
+    refcount = IAVIFile_Release(avif);
+    ok(refcount == unk_obj.ref, "WAVFile just pretends to support COM aggregation\n");
+    hr = IAVIFile_QueryInterface(avif, &IID_IPersistFile, (void**)&pf);
+    ok(hr == S_OK, "QueryInterface for IID_IPersistFile failed: %08x\n", hr);
+    refcount = IPersistFile_Release(pf);
+    ok(refcount == unk_obj.ref, "WAVFile just pretends to support COM aggregation\n");
+    refcount = IAVIFile_Release(avif);
+    ok(refcount == 19, "Outer ref count should be back at 19 but is %d\n", refcount);
+    refcount = IUnknown_Release(unk_obj.inner_unk);
+    ok(refcount == 0, "Inner ref count should be 0 but is %u\n", refcount);
+
+    /* Invalid RIID */
+    hr = CoCreateInstance(&CLSID_WAVFile, NULL, CLSCTX_INPROC_SERVER, &IID_IAVIStreaming,
+            (void**)&avif);
+    ok(hr == E_NOINTERFACE, "WAVFile create failed: %08x, expected E_NOINTERFACE\n", hr);
+
+    /* Same refcount for all WAVFile interfaces */
+    hr = CoCreateInstance(&CLSID_WAVFile, NULL, CLSCTX_INPROC_SERVER, &IID_IAVIFile, (void**)&avif);
+    ok(hr == S_OK, "WAVFile create failed: %08x, expected S_OK\n", hr);
+    refcount = IAVIFile_AddRef(avif);
+    ok(refcount == 2, "refcount == %u, expected 2\n", refcount);
+
+    hr = IAVIFile_QueryInterface(avif, &IID_IPersistFile, (void**)&pf);
+    ok(hr == S_OK, "QueryInterface for IID_IPersistFile failed: %08x\n", hr);
+    refcount = IPersistFile_AddRef(pf);
+    ok(refcount == 4, "refcount == %u, expected 4\n", refcount);
+    refcount = IPersistFile_Release(pf);
+
+    hr = IAVIFile_QueryInterface(avif, &IID_IAVIStream, (void**)&avis);
+    ok(hr == S_OK, "QueryInterface for IID_IAVIStream failed: %08x\n", hr);
+    refcount = IAVIStream_AddRef(avis);
+    ok(refcount == 5, "refcount == %u, expected 5\n", refcount);
+    refcount = IAVIStream_Release(avis);
+
+    hr = IAVIFile_QueryInterface(avif, &IID_IUnknown, (void**)&unk);
+    ok(hr == S_OK, "QueryInterface for IID_IUnknown failed: %08x\n", hr);
+    refcount = IUnknown_AddRef(unk);
+    ok(refcount == 6, "refcount == %u, expected 6\n", refcount);
+    refcount = IUnknown_Release(unk);
+
+    while (IAVIFile_Release(avif));
+}
+
+static void test_COM_editstream(void)
+{
+    IAVIEditStream *edit;
+    IAVIStream *stream;
+    IUnknown *unk;
+    ULONG refcount;
+    HRESULT hr;
+
+    /* Same refcount for all AVIEditStream interfaces */
+    hr = CreateEditableStream(&stream, NULL);
+    ok(hr == S_OK, "AVIEditStream create failed: %08x, expected S_OK\n", hr);
+    refcount = IAVIStream_AddRef(stream);
+    ok(refcount == 2, "refcount == %u, expected 2\n", refcount);
+
+    hr = IAVIStream_QueryInterface(stream, &IID_IAVIEditStream, (void**)&edit);
+    ok(hr == S_OK, "QueryInterface for IID_IAVIEditStream failed: %08x\n", hr);
+    refcount = IAVIEditStream_AddRef(edit);
+    ok(refcount == 4, "refcount == %u, expected 4\n", refcount);
+    refcount = IAVIEditStream_Release(edit);
+
+    hr = IAVIEditStream_QueryInterface(edit, &IID_IUnknown, (void**)&unk);
+    ok(hr == S_OK, "QueryInterface for IID_IUnknown failed: %08x\n", hr);
+    refcount = IUnknown_AddRef(unk);
+    ok(refcount == 5, "refcount == %u, expected 5\n", refcount);
+    IUnknown_Release(unk);
+
+    while (IAVIEditStream_Release(edit));
+}
 
 START_TEST(api)
 {
 
     AVIFileInit();
+    test_EditStreamSetInfo();
     test_AVISaveOptions();
     test_default_data();
     test_amh_corruption();
     test_ash1_corruption();
     test_ash1_corruption2();
+    test_COM();
+    test_COM_wavfile();
+    test_COM_editstream();
     AVIFileExit();
 
 }

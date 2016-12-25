@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * reactos/apps/lpc/dumpinfo.c
  *
  * ReactOS Operating System

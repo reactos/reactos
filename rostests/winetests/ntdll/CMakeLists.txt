@@ -1,7 +1,7 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
+add_definitions(-D__WINESRC__)
 
 list(APPEND SOURCE
     atom.c
@@ -16,10 +16,11 @@ list(APPEND SOURCE
     large_int.c
     om.c
     path.c
+    pipe.c
     port.c
     reg.c
-    rtlbitmap.c
     rtl.c
+    rtlbitmap.c
     rtlstr.c
     string.c
     time.c
@@ -27,5 +28,9 @@ list(APPEND SOURCE
 
 add_executable(ntdll_winetest ${SOURCE})
 set_module_type(ntdll_winetest win32cui)
-add_importlibs(ntdll_winetest user32 msvcrt kernel32 ntdll)
+add_importlibs(ntdll_winetest user32 ole32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET ntdll_winetest DESTINATION reactos/bin FOR all)
+
+if(NOT MSVC)
+    add_target_compile_flags(ntdll_winetest "-Wno-format")
+endif()

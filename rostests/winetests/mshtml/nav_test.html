@@ -1,0 +1,92 @@
+<html>
+<head>
+<script>
+function ok(b,m) {
+    return external.ok(b, m);
+}
+
+function nav_parent_test() {
+    external.trace("Running _parent navigation tests...");
+
+    var iframe = document.getElementById("testframe");
+    var subframe = iframe.contentWindow.document.createElement("iframe");
+
+    subframe.onload = function() {
+        var doc = subframe.contentWindow.document;
+        doc.body.innerHTML = '<a href="blank2.html" id="aid" target="_parent">test</a>';
+        doc.getElementById("aid").click();
+    }
+
+    iframe.onload = function() {
+        iframe.onload = null;
+        var href = iframe.contentWindow.location.href;
+	ok(/.*blank2.html/.test(href), "Unexpected href " + href);
+	next_test();
+    }
+
+    iframe.contentWindow.document.body.appendChild(subframe);
+    subframe.src = "blank.html";
+}
+
+function window_navigate_test() {
+    external.trace("Running window.navigate() tests...");
+
+    var iframe = document.getElementById("testframe");
+
+    iframe.onload = function() {
+        iframe.onload = null;
+        var href = iframe.contentWindow.location.href;
+	ok(href === "about:blank", "Unexpected href " + href);
+	next_test();
+    }
+
+    iframe.contentWindow.navigate("about:blank");
+}
+
+function window_open_self_test() {
+    external.trace("Running window.open(_self) tests...");
+
+    var iframe = document.getElementById("testframe");
+    var iframe_window = iframe.contentWindow;
+
+    iframe.onload = function() {
+        iframe.onload = null;
+        var href = iframe.contentWindow.location.href;
+        ok(/.*blank.html\?window_open_self/.test(href), "Unexpected href " + href);
+        ok(iframe.contentWindow === iframe_window, "iframe.contentWindow !== iframe_window");
+	next_test();
+    }
+
+    iframe_window.open("blank.html?window_open_self", "_self");
+}
+
+function detached_src_test() {
+    var iframe = document.createElement("iframe");
+    var onload_called = false;
+
+    iframe.onload = function() {
+        onload_called = true;
+        next_test();
+    }
+
+    iframe.src = "blank.html";
+    document.body.appendChild(iframe);
+    ok(onload_called === false, "called onload too early?");
+}
+
+var tests = [
+    nav_parent_test,
+    window_navigate_test,
+    window_open_self_test,
+    detached_src_test,
+    function() { external.reportSuccess(); }
+];
+
+function next_test() {
+   window.setTimeout(tests.shift(), 0);
+}
+</script>
+<body onload="next_test()">
+<iframe src="about:blank" id="testframe"></iframe>
+</body>
+</html>

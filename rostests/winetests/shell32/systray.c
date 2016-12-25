@@ -17,7 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #define _WIN32_IE 0x600
-#include <assert.h>
 #include <stdarg.h>
 
 #include <windows.h>
@@ -42,22 +41,19 @@ static void test_cbsize(void)
         nidW.hWnd = hMainWnd;
         nidW.uID = 1;
         nidW.uFlags = NIF_ICON|NIF_MESSAGE;
-        nidW.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+        nidW.hIcon = LoadIconA(NULL, (LPSTR)IDI_APPLICATION);
         nidW.uCallbackMessage = WM_USER+17;
         ret = pShell_NotifyIconW(NIM_ADD, &nidW);
-        if (ret)
-        {
-            /* using an invalid cbSize does work */
-            nidW.cbSize = 3;
-            nidW.hWnd = hMainWnd;
-            nidW.uID = 1;
-            ret = pShell_NotifyIconW(NIM_DELETE, &nidW);
-            ok( ret || broken(!ret), /* nt4 */ "NIM_DELETE failed!\n");
-            /* as icon doesn't exist anymore - now there will be an error */
-            nidW.cbSize = sizeof(nidW);
-            ok(!pShell_NotifyIconW(NIM_DELETE, &nidW) != !ret, "The icon was not deleted\n");
-        }
-        else win_skip( "Shell_NotifyIconW not working\n" );  /* win9x */
+        ok(ret, "NIM_ADD failed!\n");
+        /* using an invalid cbSize does work */
+        nidW.cbSize = 3;
+        nidW.hWnd = hMainWnd;
+        nidW.uID = 1;
+        ret = pShell_NotifyIconW(NIM_DELETE, &nidW);
+        ok( ret || broken(!ret), /* nt4 */ "NIM_DELETE failed!\n");
+        /* as icon doesn't exist anymore - now there will be an error */
+        nidW.cbSize = sizeof(nidW);
+        ok(!pShell_NotifyIconW(NIM_DELETE, &nidW) != !ret, "The icon was not deleted\n");
     }
 
     /* same for Shell_NotifyIconA */
@@ -66,7 +62,7 @@ static void test_cbsize(void)
     nidA.hWnd = hMainWnd;
     nidA.uID = 1;
     nidA.uFlags = NIF_ICON|NIF_MESSAGE;
-    nidA.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    nidA.hIcon = LoadIconA(NULL, (LPSTR)IDI_APPLICATION);
     nidA.uCallbackMessage = WM_USER+17;
     ok(Shell_NotifyIconA(NIM_ADD, &nidA), "NIM_ADD failed!\n");
 
@@ -75,7 +71,7 @@ static void test_cbsize(void)
     nidA.hWnd = hMainWnd;
     nidA.uID = 1;
     ret = Shell_NotifyIconA(NIM_DELETE, &nidA);
-    ok( ret || broken(!ret),  /* win9x */ "NIM_DELETE failed!\n");
+    ok(ret, "NIM_DELETE failed!\n");
     /* as icon doesn't exist anymore - now there will be an error */
     nidA.cbSize = sizeof(nidA);
     ok(!Shell_NotifyIconA(NIM_DELETE, &nidA) != !ret, "The icon was not deleted\n");
@@ -96,11 +92,11 @@ START_TEST(systray)
     wc.cbWndExtra = 0;
     wc.hInstance = GetModuleHandleA(NULL);
     wc.hIcon = NULL;
-    wc.hCursor = LoadCursorA(NULL, IDC_IBEAM);
+    wc.hCursor = LoadCursorA(NULL, (LPSTR)IDC_IBEAM);
     wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
     wc.lpszMenuName = NULL;
     wc.lpszClassName = "MyTestWnd";
-    wc.lpfnWndProc = DefWindowProc;
+    wc.lpfnWndProc = DefWindowProcA;
     RegisterClassA(&wc);
 
     hMainWnd = CreateWindowExA(0, "MyTestWnd", "Blah", WS_OVERLAPPEDWINDOW,

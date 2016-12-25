@@ -25,7 +25,7 @@
  * configured. This is documented at http://www.virtualplastic.net/html/ui_shell.html
  * You can also google for a tool called "ShellObjectEditor" by "Tropical 
  * Technologies". This mechanism would be cool for wine, since we could 
- * map Gnome's virtual devices to FolderShortcuts and have them appear in the
+ * map GNOME's virtual devices to FolderShortcuts and have them appear in the
  * file dialogs. These unit tests are meant to document how this mechanism
  * works on windows.
  *
@@ -34,18 +34,23 @@
 
 #include <stdarg.h>
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
 
-#include "shlobj.h"
-#include "shobjidl.h"
-#include "shlguid.h"
-#include "ole2.h"
+//#include "initguid.h"
+#include <shlobj.h>
+//#include "shobjidl.h"
+//#include "shlguid.h"
+//#include "ole2.h"
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 /* The following definitions and helper functions are meant to make the de-/registration
  * of the various necessary registry keys easier. */
@@ -205,7 +210,7 @@ static void test_ShortcutFolder(void) {
     IShellFolder_Release(pWineTestFolder);
     if (FAILED(hr)) goto cleanup;
 
-    /* The resulting folder object has the FolderShortcut CLSID, instead of it's own. */
+    /* The resulting folder object has the FolderShortcut CLSID, instead of its own. */
     hr = IPersistFolder3_GetClassID(pWineTestPersistFolder, &clsid);
     ok (SUCCEEDED(hr), "IPersist::GetClassID failed! hr = %08x\n", hr);
     ok (IsEqualCLSID(&CLSID_FolderShortcut, &clsid), "GetClassId returned wrong CLSID!\n"); 

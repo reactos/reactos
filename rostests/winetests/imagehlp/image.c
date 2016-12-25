@@ -31,6 +31,12 @@
 static HMODULE hImageHlp;
 
 static BOOL (WINAPI *pImageGetDigestStream)(HANDLE, DWORD, DIGEST_FUNCTION, DIGEST_HANDLE);
+static BOOL (WINAPI *pBindImageEx)(DWORD Flags, const char *ImageName, const char *DllPath,
+                                   const char *SymbolPath, PIMAGEHLP_STATUS_ROUTINE StatusRoutine);
+static DWORD (WINAPI* pGetImageUnusedHeaderBytes)(PLOADED_IMAGE, LPDWORD);
+static PLOADED_IMAGE (WINAPI* pImageLoad)(PCSTR, PCSTR);
+static BOOL (WINAPI* pImageUnload)(PLOADED_IMAGE);
+
 
 /* minimal PE file image */
 #define VA_START 0x400000
@@ -54,7 +60,7 @@ struct Imports {
     } ibn;
     char dllname[0x10];
 };
-#define EXIT_PROCESS (VA_START+RVA_IDATA+FIELD_OFFSET(struct Imports, thunks[0]))
+#define EXIT_PROCESS (VA_START+RVA_IDATA+FIELD_OFFSET(struct Imports, thunks))
 
 static struct _PeImage {
     IMAGE_DOS_HEADER dos_header;
@@ -68,9 +74,9 @@ static struct _PeImage {
     char __alignment3[FILE_TOTAL-FILE_IDATA-sizeof(struct Imports)];
 } bin = {
     /* dos header */
-    {IMAGE_DOS_SIGNATURE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, 0, 0, {}, FILE_PE_START},
+    {IMAGE_DOS_SIGNATURE, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0}, 0, 0, {0}, FILE_PE_START},
     /* alignment before PE header */
-    {},
+    {0},
     /* nt headers */
     {IMAGE_NT_SIGNATURE,
         /* basic headers - 3 sections, no symbols, EXE file */
@@ -97,7 +103,7 @@ static struct _PeImage {
             0, 0, 0, IMAGE_SCN_CNT_INITIALIZED_DATA | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE}
     },
     /* alignment before first section */
-    {},
+    {0},
     /* .text section */
     {
         0x31, 0xC0, /* xor eax, eax */
@@ -120,7 +126,7 @@ static struct _PeImage {
         "KERNEL32.DLL"
     },
     /* final alignment */
-    {}
+    {0}
 };
 #include <poppack.h>
 
@@ -148,6 +154,9 @@ struct expected_update_accum
     const struct expected_blob *updates;
     BOOL  todo;
 };
+
+static int status_routine_called[BindSymbolsNotUpdated+1];
+
 
 static BOOL WINAPI accumulating_stream_output(DIGEST_HANDLE handle, BYTE *pb,
  DWORD cb)
@@ -181,10 +190,7 @@ static void check_updates(LPCSTR header, const struct expected_update_accum *exp
 {
     DWORD i;
 
-    if (expected->todo)
-        todo_wine ok(expected->cUpdates == got->cUpdates, "%s: expected %d updates, got %d\n",
-            header, expected->cUpdates, got->cUpdates);
-    else
+    todo_wine_if (expected->todo)
         ok(expected->cUpdates == got->cUpdates, "%s: expected %d updates, got %d\n",
             header, expected->cUpdates, got->cUpdates);
     for (i = 0; i < min(expected->cUpdates, got->cUpdates); i++)
@@ -217,7 +223,8 @@ static const struct expected_blob b1[] = {
     {FILE_IDATA-FILE_TEXT, &bin.text_section},
     {sizeof(bin.idata_section.descriptors[0].u.OriginalFirstThunk),
         &bin.idata_section.descriptors[0].u.OriginalFirstThunk},
-    {FIELD_OFFSET(struct Imports, thunks)-FIELD_OFFSET(struct Imports, descriptors[0].Name),
+    {FIELD_OFFSET(struct Imports, thunks)-
+        (FIELD_OFFSET(struct Imports, descriptors)+FIELD_OFFSET(IMAGE_IMPORT_DESCRIPTOR, Name)),
         &bin.idata_section.descriptors[0].Name},
     {FILE_TOTAL-FILE_IDATA-FIELD_OFFSET(struct Imports, ibn),
         &bin.idata_section.ibn}
@@ -273,6 +280,40 @@ static void update_checksum(void)
     bin.nt_headers.OptionalHeader.CheckSum = sum;
 }
 
+static BOOL CALLBACK testing_status_routine(IMAGEHLP_STATUS_REASON reason, const char *ImageName,
+                                            const char *DllName, ULONG_PTR Va, ULONG_PTR Parameter)
+{
+    char kernel32_path[MAX_PATH];
+
+    if (0 <= (int)reason && reason <= BindSymbolsNotUpdated)
+      status_routine_called[reason]++;
+    else
+      ok(0, "expected reason between 0 and %d, got %d\n", BindSymbolsNotUpdated+1, reason);
+
+    switch(reason)
+    {
+        case BindImportModule:
+            ok(!strcmp(DllName, "KERNEL32.DLL"), "expected DllName to be KERNEL32.DLL, got %s\n",
+               DllName);
+            break;
+
+        case BindImportProcedure:
+        case BindForwarderNOT:
+            GetSystemDirectoryA(kernel32_path, MAX_PATH);
+            strcat(kernel32_path, "\\KERNEL32.DLL");
+            ok(!lstrcmpiA(DllName, kernel32_path), "expected DllName to be %s, got %s\n",
+               kernel32_path, DllName);
+            ok(!strcmp((char *)Parameter, "ExitProcess"),
+               "expected Parameter to be ExitProcess, got %s\n", (char *)Parameter);
+            break;
+
+        default:
+            ok(0, "got unexpected reason %d\n", reason);
+            break;
+    }
+    return TRUE;
+}
+
 static void test_get_digest_stream(void)
 {
     BOOL ret;
@@ -281,6 +322,11 @@ static void test_get_digest_stream(void)
     DWORD count;
     struct update_accum accum = { 0, NULL };
 
+    if (!pImageGetDigestStream)
+    {
+        win_skip("ImageGetDigestStream function is not available\n");
+        return;
+    }
     SetLastError(0xdeadbeef);
     ret = pImageGetDigestStream(NULL, 0, NULL, NULL);
     ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER,
@@ -329,6 +375,149 @@ static void test_get_digest_stream(void)
     DeleteFileA(temp_file);
 }
 
+static void test_bind_image_ex(void)
+{
+    BOOL ret;
+    HANDLE file;
+    char temp_file[MAX_PATH];
+    DWORD count;
+
+    if (!pBindImageEx)
+    {
+        win_skip("BindImageEx function is not available\n");
+        return;
+    }
+
+    /* call with a non-existent file */
+    SetLastError(0xdeadbeef);
+    ret = pBindImageEx(BIND_NO_BOUND_IMPORTS | BIND_NO_UPDATE | BIND_ALL_IMAGES, "nonexistent.dll", 0, 0,
+                       testing_status_routine);
+    ok(!ret && ((GetLastError() == ERROR_FILE_NOT_FOUND) ||
+       (GetLastError() == ERROR_INVALID_PARAMETER)),
+       "expected ERROR_FILE_NOT_FOUND or ERROR_INVALID_PARAMETER, got %d\n",
+       GetLastError());
+
+    file = create_temp_file(temp_file);
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        skip("couldn't create temp file\n");
+        return;
+    }
+
+    WriteFile(file, &bin, sizeof(bin), &count, NULL);
+    CloseHandle(file);
+
+    /* call with a proper PE file, but with StatusRoutine set to NULL */
+    ret = pBindImageEx(BIND_NO_BOUND_IMPORTS | BIND_NO_UPDATE | BIND_ALL_IMAGES, temp_file, 0, 0,
+                       NULL);
+    ok(ret, "BindImageEx failed: %d\n", GetLastError());
+
+    /* call with a proper PE file and StatusRoutine */
+    ret = pBindImageEx(BIND_NO_BOUND_IMPORTS | BIND_NO_UPDATE | BIND_ALL_IMAGES, temp_file, 0, 0,
+                       testing_status_routine);
+    ok(ret, "BindImageEx failed: %d\n", GetLastError());
+
+    ok(status_routine_called[BindImportModule] == 1,
+       "StatusRoutine was called %d times\n", status_routine_called[BindImportModule]);
+
+    ok((status_routine_called[BindImportProcedure] == 1)
+#if defined(_WIN64)
+       || broken(status_routine_called[BindImportProcedure] == 0) /* < Win8 */
+#endif
+       , "StatusRoutine was called %d times\n", status_routine_called[BindImportProcedure]);
+
+    DeleteFileA(temp_file);
+}
+
+static void test_image_load(void)
+{
+    char temp_file[MAX_PATH];
+    PLOADED_IMAGE img;
+    DWORD ret, count;
+    HANDLE file;
+
+    if (!pImageLoad || !pImageUnload)
+    {
+        win_skip("ImageLoad or ImageUnload function is not available\n");
+        return;
+    }
+    if (!pGetImageUnusedHeaderBytes)
+    {
+        win_skip("GetImageUnusedHeaderBytes function is not available\n");
+        return;
+    }
+
+    file = create_temp_file(temp_file);
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        skip("couldn't create temp file\n");
+        return;
+    }
+
+    WriteFile(file, &bin, sizeof(bin), &count, NULL);
+    CloseHandle(file);
+
+    img = pImageLoad(temp_file, NULL);
+    ok(img != NULL, "ImageLoad unexpectedly failed\n");
+
+    if (img)
+    {
+        ok(!strcmp(img->ModuleName, temp_file),
+           "unexpected ModuleName, got %s instead of %s\n", img->ModuleName, temp_file);
+        ok(img->MappedAddress != NULL, "MappedAddress != NULL\n");
+        if (img->MappedAddress)
+        {
+            ok(!memcmp(img->MappedAddress, &bin.dos_header, sizeof(bin.dos_header)),
+               "MappedAddress doesn't point to IMAGE_DOS_HEADER\n");
+        }
+        ok(img->FileHeader != NULL, "FileHeader != NULL\n");
+        if (img->FileHeader)
+        {
+            ok(!memcmp(img->FileHeader, &bin.nt_headers, sizeof(bin.nt_headers)),
+                "FileHeader doesn't point to IMAGE_NT_HEADERS32\n");
+        }
+        ok(img->NumberOfSections == 3,
+           "unexpected NumberOfSections, got %d instead of 3\n", img->NumberOfSections);
+        if (img->NumberOfSections >= 3)
+        {
+            ok(!strcmp((const char *)img->Sections[0].Name, ".text"),
+               "unexpected name for section 0, expected .text, got %s\n",
+               (const char *)img->Sections[0].Name);
+            ok(!strcmp((const char *)img->Sections[1].Name, ".bss"),
+               "unexpected name for section 1, expected .bss, got %s\n",
+               (const char *)img->Sections[1].Name);
+            ok(!strcmp((const char *)img->Sections[2].Name, ".idata"),
+               "unexpected name for section 2, expected .idata, got %s\n",
+               (const char *)img->Sections[2].Name);
+        }
+        ok(img->Characteristics == 0x102,
+           "unexpected Characteristics, got 0x%x instead of 0x102\n", img->Characteristics);
+        ok(img->fSystemImage == 0,
+           "unexpected fSystemImage, got %d instead of 0\n", img->fSystemImage);
+        ok(img->fDOSImage == 0,
+           "unexpected fDOSImage, got %d instead of 0\n", img->fDOSImage);
+        todo_wine
+        ok(img->fReadOnly == 1 || broken(!img->fReadOnly) /* <= WinXP */,
+           "unexpected fReadOnly, got %d instead of 1\n", img->fReadOnly);
+        todo_wine
+        ok(img->Version == 1 || broken(!img->Version) /* <= WinXP */,
+           "unexpected Version, got %d instead of 1\n", img->Version);
+        ok(img->SizeOfImage == 0x600,
+           "unexpected SizeOfImage, got 0x%x instead of 0x600\n", img->SizeOfImage);
+
+        count = 0xdeadbeef;
+        ret = pGetImageUnusedHeaderBytes(img, &count);
+        todo_wine
+        ok(ret == 448, "GetImageUnusedHeaderBytes returned %u instead of 448\n", ret);
+        todo_wine
+        ok(count == 64, "unexpected size for unused header bytes, got %u instead of 64\n", count);
+
+        pImageUnload(img);
+    }
+
+    DeleteFileA(temp_file);
+}
+
 START_TEST(image)
 {
     hImageHlp = LoadLibraryA("imagehlp.dll");
@@ -340,14 +529,14 @@ START_TEST(image)
     }
 
     pImageGetDigestStream = (void *) GetProcAddress(hImageHlp, "ImageGetDigestStream");
+    pBindImageEx = (void *) GetProcAddress(hImageHlp, "BindImageEx");
+    pGetImageUnusedHeaderBytes = (void *) GetProcAddress(hImageHlp, "GetImageUnusedHeaderBytes");
+    pImageLoad = (void *) GetProcAddress(hImageHlp, "ImageLoad");
+    pImageUnload = (void *) GetProcAddress(hImageHlp, "ImageUnload");
 
-    if (!pImageGetDigestStream)
-    {
-        win_skip("ImageGetDigestStream function is not available\n");
-    } else
-    {
-        test_get_digest_stream();
-    }
+    test_get_digest_stream();
+    test_bind_image_ex();
+    test_image_load();
 
     FreeLibrary(hImageHlp);
 }

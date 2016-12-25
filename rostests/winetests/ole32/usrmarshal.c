@@ -18,16 +18,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 #define CONST_VTABLE
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "objbase.h"
-#include "objidl.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <ole2.h>
+//#include "objbase.h"
+//#include "objidl.h"
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 ULONG __RPC_USER HMETAFILE_UserSize(ULONG *, ULONG, HMETAFILE *);
 unsigned char * __RPC_USER HMETAFILE_UserMarshal(ULONG *, unsigned char *, HMETAFILE *);
@@ -44,13 +50,22 @@ unsigned char * __RPC_USER HMETAFILEPICT_UserMarshal  (ULONG *, unsigned char *,
 unsigned char * __RPC_USER HMETAFILEPICT_UserUnmarshal(ULONG *, unsigned char *, HMETAFILEPICT *);
 void __RPC_USER HMETAFILEPICT_UserFree(ULONG *, HMETAFILEPICT *);
 
+ULONG __RPC_USER HBRUSH_UserSize(ULONG *, ULONG, HBRUSH *);
+unsigned char * __RPC_USER HBRUSH_UserMarshal(ULONG *, unsigned char *, HBRUSH *);
+unsigned char * __RPC_USER HBRUSH_UserUnmarshal(ULONG *, unsigned char *, HBRUSH *);
+void __RPC_USER HBRUSH_UserFree(ULONG *, HBRUSH *);
+
+static BOOL g_expect_user_alloc;
 static void * WINAPI user_allocate(SIZE_T size)
 {
+    ok(g_expect_user_alloc, "unexpected user_allocate call\n");
     return CoTaskMemAlloc(size);
 }
 
+static BOOL g_expect_user_free;
 static void WINAPI user_free(void *p)
 {
+    ok(g_expect_user_free, "unexpected user_free call\n");
     CoTaskMemFree(p);
 }
 
@@ -74,6 +89,91 @@ static void init_user_marshal_cb(USER_MARSHAL_CB *umcb,
     umcb->pStubMsg = stub_msg;
     umcb->Signature = USER_MARSHAL_CB_SIGNATURE;
     umcb->CBType = buffer ? USER_MARSHAL_CB_UNMARSHALL : USER_MARSHAL_CB_BUFFER_SIZE;
+}
+
+#define RELEASEMARSHALDATA WM_USER
+
+struct host_object_data
+{
+    IStream *stream;
+    IID iid;
+    IUnknown *object;
+    MSHLFLAGS marshal_flags;
+    HANDLE marshal_event;
+    IMessageFilter *filter;
+};
+
+static DWORD CALLBACK host_object_proc(LPVOID p)
+{
+    struct host_object_data *data = p;
+    HRESULT hr;
+    MSG msg;
+
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
+    if (data->filter)
+    {
+        IMessageFilter * prev_filter = NULL;
+        hr = CoRegisterMessageFilter(data->filter, &prev_filter);
+        if (prev_filter) IMessageFilter_Release(prev_filter);
+        ok(hr == S_OK, "got %08x\n", hr);
+    }
+
+    hr = CoMarshalInterface(data->stream, &data->iid, data->object, MSHCTX_INPROC, NULL, data->marshal_flags);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    /* force the message queue to be created before signaling parent thread */
+    PeekMessageA(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
+
+    SetEvent(data->marshal_event);
+
+    while (GetMessageA(&msg, NULL, 0, 0))
+    {
+        if (msg.hwnd == NULL && msg.message == RELEASEMARSHALDATA)
+        {
+            CoReleaseMarshalData(data->stream);
+            SetEvent((HANDLE)msg.lParam);
+        }
+        else
+            DispatchMessageA(&msg);
+    }
+
+    HeapFree(GetProcessHeap(), 0, data);
+
+    CoUninitialize();
+
+    return hr;
+}
+
+static DWORD start_host_object2(IStream *stream, REFIID riid, IUnknown *object, MSHLFLAGS marshal_flags, IMessageFilter *filter, HANDLE *thread)
+{
+    DWORD tid = 0;
+    HANDLE marshal_event = CreateEventA(NULL, FALSE, FALSE, NULL);
+    struct host_object_data *data = HeapAlloc(GetProcessHeap(), 0, sizeof(*data));
+
+    data->stream = stream;
+    data->iid = *riid;
+    data->object = object;
+    data->marshal_flags = marshal_flags;
+    data->marshal_event = marshal_event;
+    data->filter = filter;
+
+    *thread = CreateThread(NULL, 0, host_object_proc, data, 0, &tid);
+
+    /* wait for marshaling to complete before returning */
+    ok( !WaitForSingleObject(marshal_event, 10000), "wait timed out\n" );
+    CloseHandle(marshal_event);
+
+    return tid;
+}
+
+static void end_host_object(DWORD tid, HANDLE thread)
+{
+    BOOL ret = PostThreadMessageA(tid, WM_QUIT, 0, 0);
+    ok(ret, "PostThreadMessage failed with error %d\n", GetLastError());
+    /* be careful of races - don't return until hosting thread has terminated */
+    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
+    CloseHandle(thread);
 }
 
 static const char cf_marshaled[] =
@@ -182,6 +282,7 @@ static void test_marshal_HGLOBAL(void)
     wirehglobal += sizeof(ULONG);
     ok(*(ULONG *)wirehglobal == 0, "buffer+4 should be HGLOBAL\n");
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_LOCAL);
+    hglobal2 = NULL;
     HGLOBAL_UserUnmarshal(&umcb.Flags, buffer, &hglobal2);
     ok(hglobal2 == hglobal, "Didn't unmarshal properly\n");
     HeapFree(GetProcessHeap(), 0, buffer);
@@ -200,7 +301,6 @@ static void test_marshal_HGLOBAL(void)
         GlobalUnlock(hglobal);
         actual_size = GlobalSize(hglobal);
         expected_size = actual_size + 5 * sizeof(DWORD);
-        trace("%d: actual size %d\n", block_size, actual_size);
         init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_LOCAL);
         size = HGLOBAL_UserSize(&umcb.Flags, 0, &hglobal);
         /* native is poorly programmed and allocates 4/8 bytes more than it needs to
@@ -227,6 +327,7 @@ static void test_marshal_HGLOBAL(void)
             ok(wirehglobal[i] == i, "buffer+0x%x should be %d\n", 0x10 + i, i);
 
         init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_LOCAL);
+        hglobal2 = NULL;
         HGLOBAL_UserUnmarshal(&umcb.Flags, buffer, &hglobal2);
         ok(hglobal2 != NULL, "Didn't unmarshal properly\n");
         HeapFree(GetProcessHeap(), 0, buffer);
@@ -239,8 +340,8 @@ static void test_marshal_HGLOBAL(void)
 static HENHMETAFILE create_emf(void)
 {
     const RECT rect = {0, 0, 100, 100};
-    HDC hdc = CreateEnhMetaFile(NULL, NULL, &rect, "HENHMETAFILE Marshaling Test\0Test\0\0");
-    ExtTextOut(hdc, 0, 0, ETO_OPAQUE, &rect, "Test String", strlen("Test String"), NULL);
+    HDC hdc = CreateEnhMetaFileA(NULL, NULL, &rect, "HENHMETAFILE Marshaling Test\0Test\0\0");
+    ExtTextOutA(hdc, 0, 0, ETO_OPAQUE, &rect, "Test String", strlen("Test String"), NULL);
     return CloseEnhMetaFile(hdc);
 }
 
@@ -273,7 +374,6 @@ static void test_marshal_HENHMETAFILE(void)
     ok(*(DWORD *)wirehemf == (size - 0x10), "wirestgm + 0xc should be size - 0x10 instead of 0x%08x\n", *(DWORD *)wirehemf);
     wirehemf += sizeof(DWORD);
     ok(*(DWORD *)wirehemf == EMR_HEADER, "wirestgm + 0x10 should be EMR_HEADER instead of %d\n", *(DWORD *)wirehemf);
-    wirehemf += sizeof(DWORD);
     /* ... rest of data not tested - refer to tests for GetEnhMetaFileBits
      * at this point */
 
@@ -298,7 +398,6 @@ static void test_marshal_HENHMETAFILE(void)
     ok(*(DWORD *)wirehemf == WDT_REMOTE_CALL, "wirestgm + 0x0 should be WDT_REMOTE_CALL instead of 0x%08x\n", *(DWORD *)wirehemf);
     wirehemf += sizeof(DWORD);
     ok(*(DWORD *)wirehemf == (DWORD)(DWORD_PTR)hemf, "wirestgm + 0x4 should be hemf instead of 0x%08x\n", *(DWORD *)wirehemf);
-    wirehemf += sizeof(DWORD);
 
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
     HENHMETAFILE_UserUnmarshal(&umcb.Flags, buffer, &hemf2);
@@ -311,8 +410,8 @@ static void test_marshal_HENHMETAFILE(void)
 static HMETAFILE create_mf(void)
 {
     RECT rect = {0, 0, 100, 100};
-    HDC hdc = CreateMetaFile(NULL);
-    ExtTextOut(hdc, 0, 0, ETO_OPAQUE, &rect, "Test String", strlen("Test String"), NULL);
+    HDC hdc = CreateMetaFileA(NULL);
+    ExtTextOutA(hdc, 0, 0, ETO_OPAQUE, &rect, "Test String", strlen("Test String"), NULL);
     return CloseMetaFile(hdc);
 }
 
@@ -404,7 +503,6 @@ static void test_marshal_HMETAFILEPICT(void)
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     size = HMETAFILEPICT_UserSize(&umcb.Flags, 0, &hmfp);
     ok(size > 20, "size should be at least 20 bytes, not %d\n", size);
-    trace("size is %d\n", size);
     buffer = HeapAlloc(GetProcessHeap(), 0, size);
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
     buffer_end = HMETAFILEPICT_UserMarshal(&umcb.Flags, buffer, &hmfp);
@@ -434,7 +532,6 @@ static void test_marshal_HMETAFILEPICT(void)
     ok(*(DWORD *)wirehmfp == (buffer_end - buffer - 0x28), "wirestgm + 0x24 should be size - 0x34 instead of 0x%08x\n", *(DWORD *)wirehmfp);
     wirehmfp += sizeof(DWORD);
     ok(*(WORD *)wirehmfp == 1, "wirehmfp + 0x28 should be 1 instead of 0x%08x\n", *(DWORD *)wirehmfp);
-    wirehmfp += sizeof(DWORD);
     /* ... rest of data not tested - refer to tests for GetMetaFileBits
      * at this point */
 
@@ -473,6 +570,17 @@ static void test_marshal_HMETAFILEPICT(void)
     HMETAFILEPICT_UserFree(&umcb.Flags, &hmfp2);
 }
 
+typedef struct
+{
+    IUnknown IUnknown_iface;
+    LONG refs;
+} TestUnknown;
+
+static inline TestUnknown *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, TestUnknown, IUnknown_iface);
+}
+
 static HRESULT WINAPI Test_IUnknown_QueryInterface(
                                                    LPUNKNOWN iface,
                                                    REFIID riid,
@@ -493,12 +601,14 @@ static HRESULT WINAPI Test_IUnknown_QueryInterface(
 
 static ULONG WINAPI Test_IUnknown_AddRef(LPUNKNOWN iface)
 {
-    return 2; /* non-heap-based object */
+    TestUnknown *This = impl_from_IUnknown(iface);
+    return InterlockedIncrement(&This->refs);
 }
 
 static ULONG WINAPI Test_IUnknown_Release(LPUNKNOWN iface)
 {
-    return 1; /* non-heap-based object */
+    TestUnknown *This = impl_from_IUnknown(iface);
+    return InterlockedDecrement(&This->refs);
 }
 
 static const IUnknownVtbl TestUnknown_Vtbl =
@@ -507,6 +617,17 @@ static const IUnknownVtbl TestUnknown_Vtbl =
     Test_IUnknown_AddRef,
     Test_IUnknown_Release,
 };
+
+struct test_stream
+{
+    IStream IStream_iface;
+    LONG refs;
+};
+
+static inline struct test_stream *impl_from_IStream(IStream *iface)
+{
+    return CONTAINING_RECORD(iface, struct test_stream, IStream_iface);
+}
 
 static HRESULT WINAPI Test_IStream_QueryInterface(IStream *iface,
                                                   REFIID riid, LPVOID *ppvObj)
@@ -527,12 +648,14 @@ static HRESULT WINAPI Test_IStream_QueryInterface(IStream *iface,
 
 static ULONG WINAPI Test_IStream_AddRef(IStream *iface)
 {
-    return 2; /* non-heap-based object */
+    struct test_stream *This = impl_from_IStream(iface);
+    return InterlockedIncrement(&This->refs);
 }
 
 static ULONG WINAPI Test_IStream_Release(IStream *iface)
 {
-    return 1; /* non-heap-based object */
+    struct test_stream *This = impl_from_IStream(iface);
+    return InterlockedDecrement(&This->refs);
 }
 
 static const IStreamVtbl TestStream_Vtbl =
@@ -543,15 +666,16 @@ static const IStreamVtbl TestStream_Vtbl =
     /* the rest can be NULLs */
 };
 
-static IUnknown Test_Unknown = { &TestUnknown_Vtbl };
-static IStream Test_Stream = { &TestStream_Vtbl };
+static TestUnknown Test_Unknown = { {&TestUnknown_Vtbl}, 1 };
+static TestUnknown Test_Unknown2 = { {&TestUnknown_Vtbl}, 1 };
+static struct test_stream Test_Stream = { {&TestStream_Vtbl}, 1 };
+static struct test_stream Test_Stream2 = { {&TestStream_Vtbl}, 1 };
 
 ULONG __RPC_USER WdtpInterfacePointer_UserSize(ULONG *, ULONG, ULONG, IUnknown *, REFIID);
 unsigned char * __RPC_USER WdtpInterfacePointer_UserMarshal(ULONG *, ULONG, unsigned char *, IUnknown *, REFIID);
 unsigned char * __RPC_USER WdtpInterfacePointer_UserUnmarshal(ULONG *, unsigned char *, IUnknown **, REFIID);
-void __RPC_USER WdtpInterfacePointer_UserFree(IUnknown *);
 
-static void marshal_WdtpInterfacePointer(DWORD umcb_ctx, DWORD ctx)
+static void marshal_WdtpInterfacePointer(DWORD umcb_ctx, DWORD ctx, BOOL client, BOOL in, BOOL out)
 {
     USER_MARSHAL_CB umcb;
     MIDL_STUB_MESSAGE stub_msg;
@@ -578,13 +702,14 @@ static void marshal_WdtpInterfacePointer(DWORD umcb_ctx, DWORD ctx)
     ok(size == 0, "size should be 0 bytes, not %d\n", size);
     buffer = HeapAlloc(GetProcessHeap(), 0, size);
     buffer_end = WdtpInterfacePointer_UserMarshal(&umcb.Flags, ctx, buffer, unk, &IID_IUnknown);
-    wireip = buffer;
+    ok(buffer_end == buffer, "buffer_end %p buffer %p\n", buffer_end, buffer);
     HeapFree(GetProcessHeap(), 0, buffer);
 
     /* Now for a non-NULL pointer. The marshalled data are two size DWORDS and then
        the result of CoMarshalInterface called with the LOWORD of the ctx */
 
-    unk = &Test_Unknown;
+    unk = &Test_Unknown.IUnknown_iface;
+    Test_Unknown.refs = 1;
 
     CreateStreamOnHGlobal(h, TRUE, &stm);
     CoMarshalInterface(stm, &IID_IUnknown, unk, LOWORD(ctx), NULL, MSHLFLAGS_NORMAL);
@@ -592,15 +717,17 @@ static void marshal_WdtpInterfacePointer(DWORD umcb_ctx, DWORD ctx)
     IStream_Seek(stm, zero, STREAM_SEEK_CUR, &pos);
     marshal_size = pos.u.LowPart;
     marshal_data = GlobalLock(h);
-    trace("marshal_size %x\n", marshal_size);
+todo_wine
+    ok(Test_Unknown.refs == 2, "got %d\n", Test_Unknown.refs);
 
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, umcb_ctx);
     size = WdtpInterfacePointer_UserSize(&umcb.Flags, ctx, 0, unk, &IID_IUnknown);
     ok(size >= marshal_size + 2 * sizeof(DWORD), "marshal size %x got %x\n", marshal_size, size);
-    trace("WdtpInterfacePointer_UserSize returned %x\n", size);
     buffer = HeapAlloc(GetProcessHeap(), 0, size);
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, umcb_ctx);
     buffer_end = WdtpInterfacePointer_UserMarshal(&umcb.Flags, ctx, buffer, unk, &IID_IUnknown);
+todo_wine
+    ok(Test_Unknown.refs == 2, "got %d\n", Test_Unknown.refs);
     wireip = buffer;
 
     ok(buffer_end == buffer + marshal_size + 2 * sizeof(DWORD), "buffer_end %p buffer %p\n", buffer_end, buffer);
@@ -617,13 +744,20 @@ static void marshal_WdtpInterfacePointer(DWORD umcb_ctx, DWORD ctx)
     CoReleaseMarshalData(stm);
     IStream_Release(stm);
 
-    unk2 = NULL;
+    Test_Unknown2.refs = 1;
+    unk2 = &Test_Unknown2.IUnknown_iface;
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, umcb_ctx);
+    umcb.pStubMsg->IsClient = client;
+    umcb.pStubMsg->fIsIn = in;
+    umcb.pStubMsg->fIsOut = out;
+
     WdtpInterfacePointer_UserUnmarshal(&umcb.Flags, buffer, &unk2, &IID_IUnknown);
     ok(unk2 != NULL, "IUnknown object didn't unmarshal properly\n");
+    ok(Test_Unknown.refs == 2, "got %d\n", Test_Unknown.refs);
+    ok(Test_Unknown2.refs == 0, "got %d\n", Test_Unknown2.refs);
     HeapFree(GetProcessHeap(), 0, buffer);
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_INPROC);
-    WdtpInterfacePointer_UserFree(unk2);
+    IUnknown_Release(unk2);
 }
 
 static void test_marshal_WdtpInterfacePointer(void)
@@ -635,17 +769,26 @@ static void test_marshal_WdtpInterfacePointer(void)
      */
 
     /* All three are marshalled as inproc */
-    marshal_WdtpInterfacePointer(MSHCTX_INPROC, MSHCTX_INPROC);
-    marshal_WdtpInterfacePointer(MSHCTX_DIFFERENTMACHINE, MSHCTX_INPROC);
-    marshal_WdtpInterfacePointer(MSHCTX_INPROC, MAKELONG(MSHCTX_INPROC, 0xffff));
+    marshal_WdtpInterfacePointer(MSHCTX_INPROC, MSHCTX_INPROC, 0,0,0);
+    marshal_WdtpInterfacePointer(MSHCTX_DIFFERENTMACHINE, MSHCTX_INPROC,0,0,0);
+    marshal_WdtpInterfacePointer(MSHCTX_INPROC, MAKELONG(MSHCTX_INPROC, 0xffff),0,0,0);
 
     /* All three are marshalled as remote */
-    marshal_WdtpInterfacePointer(MSHCTX_INPROC, MSHCTX_DIFFERENTMACHINE);
-    marshal_WdtpInterfacePointer(MSHCTX_DIFFERENTMACHINE, MSHCTX_DIFFERENTMACHINE);
-    marshal_WdtpInterfacePointer(MSHCTX_INPROC, MAKELONG(MSHCTX_DIFFERENTMACHINE, 0xffff));
+    marshal_WdtpInterfacePointer(MSHCTX_INPROC, MSHCTX_DIFFERENTMACHINE,0,0,0);
+    marshal_WdtpInterfacePointer(MSHCTX_DIFFERENTMACHINE, MSHCTX_DIFFERENTMACHINE,0,0,0);
+    marshal_WdtpInterfacePointer(MSHCTX_INPROC, MAKELONG(MSHCTX_DIFFERENTMACHINE, 0xffff),0,0,0);
+
+    /* Test different combinations of client, in and out */
+    marshal_WdtpInterfacePointer(MSHCTX_INPROC, MSHCTX_DIFFERENTMACHINE,0,0,1);
+    marshal_WdtpInterfacePointer(MSHCTX_INPROC, MSHCTX_DIFFERENTMACHINE,0,1,0);
+    marshal_WdtpInterfacePointer(MSHCTX_INPROC, MSHCTX_DIFFERENTMACHINE,0,1,1);
+    marshal_WdtpInterfacePointer(MSHCTX_INPROC, MSHCTX_DIFFERENTMACHINE,1,0,0);
+    marshal_WdtpInterfacePointer(MSHCTX_INPROC, MSHCTX_DIFFERENTMACHINE,1,0,1);
+    marshal_WdtpInterfacePointer(MSHCTX_INPROC, MSHCTX_DIFFERENTMACHINE,1,1,0);
+    marshal_WdtpInterfacePointer(MSHCTX_INPROC, MSHCTX_DIFFERENTMACHINE,1,1,1);
 }
 
-static void test_marshal_STGMEDIUM(void)
+static void marshal_STGMEDIUM(BOOL client, BOOL in, BOOL out)
 {
     USER_MARSHAL_CB umcb;
     MIDL_STUB_MESSAGE stub_msg;
@@ -653,14 +796,18 @@ static void test_marshal_STGMEDIUM(void)
     unsigned char *buffer, *buffer_end, *expect_buffer, *expect_buffer_end;
     ULONG size, expect_size;
     STGMEDIUM med, med2;
-    IUnknown *unk = &Test_Unknown;
-    IStream *stm = &Test_Stream;
+    IUnknown *unk = &Test_Unknown.IUnknown_iface;
+    IStream *stm = &Test_Stream.IStream_iface;
 
     /* TYMED_NULL with pUnkForRelease */
+
+    Test_Unknown.refs = 1;
 
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     expect_size = WdtpInterfacePointer_UserSize(&umcb.Flags, umcb.Flags, 2 * sizeof(DWORD), unk, &IID_IUnknown);
     expect_buffer = HeapAlloc(GetProcessHeap(), 0, expect_size);
+    *(DWORD*)expect_buffer = TYMED_NULL;
+    *((DWORD*)expect_buffer + 1) = 0xdeadbeef;
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, expect_buffer, expect_size, MSHCTX_DIFFERENTMACHINE);
     expect_buffer_end = WdtpInterfacePointer_UserMarshal(&umcb.Flags, umcb.Flags, expect_buffer + 2 * sizeof(DWORD), unk, &IID_IUnknown);
 
@@ -681,25 +828,41 @@ static void test_marshal_STGMEDIUM(void)
     ok(!memcmp(buffer+8, expect_buffer + 8, expect_buffer_end - expect_buffer - 8), "buffer mismatch\n");
 
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
+    umcb.pStubMsg->IsClient = client;
+    umcb.pStubMsg->fIsIn = in;
+    umcb.pStubMsg->fIsOut = out;
 
-    /* native crashes if this is uninitialised, presumably because it
-       tries to release it */
+    Test_Unknown2.refs = 1;
     med2.tymed = TYMED_NULL;
     U(med2).pstm = NULL;
-    med2.pUnkForRelease = NULL;
+    med2.pUnkForRelease = &Test_Unknown2.IUnknown_iface;
 
     STGMEDIUM_UserUnmarshal(&umcb.Flags, buffer, &med2);
 
     ok(med2.tymed == TYMED_NULL, "got tymed %x\n", med2.tymed);
     ok(med2.pUnkForRelease != NULL, "Incorrectly unmarshalled\n");
+    ok(Test_Unknown2.refs == 0, "got %d\n", Test_Unknown2.refs);
 
     HeapFree(GetProcessHeap(), 0, buffer);
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     STGMEDIUM_UserFree(&umcb.Flags, &med2);
 
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, expect_buffer, expect_size, MSHCTX_DIFFERENTMACHINE);
+    med2.tymed = TYMED_NULL;
+    U(med2).pstm = NULL;
+    med2.pUnkForRelease = NULL;
+    STGMEDIUM_UserUnmarshal(&umcb.Flags, expect_buffer, &med2);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
+    STGMEDIUM_UserFree(&umcb.Flags, &med2);
+
+    ok(Test_Unknown.refs == 1, "got %d\n", Test_Unknown.refs);
+
     HeapFree(GetProcessHeap(), 0, expect_buffer);
 
     /* TYMED_ISTREAM with pUnkForRelease */
+
+    Test_Unknown.refs = 1;
+    Test_Stream.refs = 1;
 
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     expect_size = WdtpInterfacePointer_UserSize(&umcb.Flags, umcb.Flags, 3 * sizeof(DWORD), (IUnknown*)stm, &IID_IStream);
@@ -708,6 +871,9 @@ static void test_marshal_STGMEDIUM(void)
     expect_buffer = HeapAlloc(GetProcessHeap(), 0, expect_size);
     /* There may be a hole between the two interfaces so init the buffer to something */
     memset(expect_buffer, 0xcc, expect_size);
+    *(DWORD*)expect_buffer = TYMED_ISTREAM;
+    *((DWORD*)expect_buffer + 1) = 0xdeadbeef;
+    *((DWORD*)expect_buffer + 2) = 0xcafe;
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, expect_buffer, expect_size, MSHCTX_DIFFERENTMACHINE);
     expect_buffer_end = WdtpInterfacePointer_UserMarshal(&umcb.Flags, umcb.Flags, expect_buffer + 3 * sizeof(DWORD), (IUnknown*)stm, &IID_IStream);
     expect_buffer_end = WdtpInterfacePointer_UserMarshal(&umcb.Flags, umcb.Flags, expect_buffer_end, unk, &IID_IUnknown);
@@ -731,29 +897,455 @@ static void test_marshal_STGMEDIUM(void)
     ok(!memcmp(buffer + 12, expect_buffer + 12, (buffer_end - buffer) - 12), "buffer mismatch\n");
 
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
+    umcb.pStubMsg->IsClient = client;
+    umcb.pStubMsg->fIsIn = in;
+    umcb.pStubMsg->fIsOut = out;
 
-    /* native crashes if this is uninitialised, presumably because it
-       tries to release it */
-    med2.tymed = TYMED_NULL;
-    U(med2).pstm = NULL;
-    med2.pUnkForRelease = NULL;
+    Test_Stream2.refs = 1;
+    Test_Unknown2.refs = 1;
+    med2.tymed = TYMED_ISTREAM;
+    U(med2).pstm = &Test_Stream2.IStream_iface;
+    med2.pUnkForRelease = &Test_Unknown2.IUnknown_iface;
 
     STGMEDIUM_UserUnmarshal(&umcb.Flags, buffer, &med2);
 
     ok(med2.tymed == TYMED_ISTREAM, "got tymed %x\n", med2.tymed);
     ok(U(med2).pstm != NULL, "Incorrectly unmarshalled\n");
     ok(med2.pUnkForRelease != NULL, "Incorrectly unmarshalled\n");
+    ok(Test_Stream2.refs == 0, "got %d\n", Test_Stream2.refs);
+    ok(Test_Unknown2.refs == 0, "got %d\n", Test_Unknown2.refs);
 
     HeapFree(GetProcessHeap(), 0, buffer);
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
     STGMEDIUM_UserFree(&umcb.Flags, &med2);
 
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, expect_buffer, expect_size, MSHCTX_DIFFERENTMACHINE);
+    med2.tymed = TYMED_NULL;
+    U(med2).pstm = NULL;
+    med2.pUnkForRelease = NULL;
+    STGMEDIUM_UserUnmarshal(&umcb.Flags, expect_buffer, &med2);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
+    STGMEDIUM_UserFree(&umcb.Flags, &med2);
+
+    ok(Test_Unknown.refs == 1, "got %d\n", Test_Unknown.refs);
+    ok(Test_Stream.refs == 1, "got %d\n", Test_Stream.refs);
+
     HeapFree(GetProcessHeap(), 0, expect_buffer);
+
+    /* TYMED_ISTREAM = NULL with pUnkForRelease = NULL */
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
+    expect_size = 3 * sizeof(DWORD);
+
+    med.tymed = TYMED_ISTREAM;
+    U(med).pstm = NULL;
+    med.pUnkForRelease = NULL;
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
+    size = STGMEDIUM_UserSize(&umcb.Flags, 0, &med);
+    ok(size == expect_size, "size %d should be %d bytes\n", size, expect_size);
+
+    buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    memset(buffer, 0xcc, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
+    buffer_end = STGMEDIUM_UserMarshal(&umcb.Flags, buffer, &med);
+    ok(buffer_end - buffer == expect_size, "buffer size mismatch\n");
+    ok(*(DWORD*)buffer == TYMED_ISTREAM, "got %08x\n", *(DWORD*)buffer);
+    ok(*((DWORD*)buffer+1) == 0, "got %08x\n", *((DWORD*)buffer+1));
+    ok(*((DWORD*)buffer+2) == 0, "got %08x\n", *((DWORD*)buffer+2));
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_DIFFERENTMACHINE);
+    umcb.pStubMsg->IsClient = client;
+    umcb.pStubMsg->fIsIn = in;
+    umcb.pStubMsg->fIsOut = out;
+
+    Test_Stream2.refs = 1;
+    Test_Unknown2.refs = 1;
+    med2.tymed = TYMED_ISTREAM;
+    U(med2).pstm = &Test_Stream2.IStream_iface;
+    med2.pUnkForRelease = &Test_Unknown2.IUnknown_iface;
+
+    STGMEDIUM_UserUnmarshal(&umcb.Flags, buffer, &med2);
+
+    ok(med2.tymed == TYMED_ISTREAM, "got tymed %x\n", med2.tymed);
+    ok(U(med2).pstm == NULL, "Incorrectly unmarshalled\n");
+    ok(med2.pUnkForRelease == &Test_Unknown2.IUnknown_iface, "Incorrectly unmarshalled\n");
+    ok(Test_Stream2.refs == 0, "got %d\n", Test_Stream2.refs);
+    ok(Test_Unknown2.refs == 1, "got %d\n", Test_Unknown2.refs);
+
+    HeapFree(GetProcessHeap(), 0, buffer);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_DIFFERENTMACHINE);
+    STGMEDIUM_UserFree(&umcb.Flags, &med2);
+}
+
+static void test_marshal_STGMEDIUM(void)
+{
+    marshal_STGMEDIUM(0, 0, 0);
+    marshal_STGMEDIUM(0, 0, 1);
+    marshal_STGMEDIUM(0, 1, 0);
+    marshal_STGMEDIUM(0, 1, 1);
+    /* For Windows versions post 2003, client side, non-[in,out] STGMEDIUMs get zero-initialised.
+       However since inline stubs don't set fIsIn or fIsOut this behaviour would break
+       ref counting in GetDataHere_Proxy for example, as we'd end up not releasing the original
+       interface.  For simplicity we don't test or implement this. */
+    marshal_STGMEDIUM(1, 1, 1);
+}
+
+static void test_marshal_SNB(void)
+{
+    static const WCHAR str1W[] = {'s','t','r','i','n','g','1',0};
+    static const WCHAR str2W[] = {'s','t','r','2',0};
+    unsigned char *buffer, *src, *mbuf;
+    MIDL_STUB_MESSAGE stub_msg;
+    WCHAR **ptrW, *dataW;
+    USER_MARSHAL_CB umcb;
+    RPC_MESSAGE rpc_msg;
+    RemSNB *wiresnb;
+    SNB snb, snb2;
+    ULONG size;
+
+    /* 4 bytes alignment */
+    snb = NULL;
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_LOCAL);
+    size = SNB_UserSize(&umcb.Flags, 3, &snb);
+    ok(size == 16, "Size should be 16, instead of %d\n", size);
+
+    /* NULL block */
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_LOCAL);
+    size = SNB_UserSize(&umcb.Flags, 0, &snb);
+    ok(size == 12, "Size should be 12, instead of %d\n", size);
+
+    buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_LOCAL);
+    mbuf = SNB_UserMarshal(&umcb.Flags, buffer, &snb);
+    ok(mbuf == buffer + size, "got %p, %p\n", mbuf, buffer + size);
+
+    wiresnb = (RemSNB*)buffer;
+    ok(wiresnb->ulCntStr == 0, "got %u\n", wiresnb->ulCntStr);
+    ok(wiresnb->ulCntChar == 0, "got %u\n", wiresnb->ulCntChar);
+    ok(*(ULONG*)wiresnb->rgString == 0, "got %u\n", *(ULONG*)wiresnb->rgString);
+
+    snb2 = NULL;
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_LOCAL);
+    SNB_UserUnmarshal(&umcb.Flags, buffer, &snb2);
+    ok(snb2 == NULL, "got %p\n", snb2);
+
+    HeapFree(GetProcessHeap(), 0, buffer);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_LOCAL);
+    SNB_UserFree(&umcb.Flags, &snb2);
+
+    /* block with actual data */
+
+    /* allocate source block, n+1 pointers first, then data */
+    src = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR*)*3 + sizeof(str1W) + sizeof(str2W));
+    ptrW = (WCHAR**)src;
+    dataW = *ptrW = (WCHAR*)(src + 3*sizeof(WCHAR*));
+    ptrW++;
+    *ptrW = (WCHAR*)(src + 3*sizeof(WCHAR*) + sizeof(str1W));
+    ptrW++;
+    *ptrW = NULL;
+    lstrcpyW(dataW, str1W);
+    dataW += lstrlenW(str1W) + 1;
+    lstrcpyW(dataW, str2W);
+
+    snb = (SNB)src;
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_LOCAL);
+    size = SNB_UserSize(&umcb.Flags, 0, &snb);
+    ok(size == 38, "Size should be 38, instead of %d\n", size);
+
+    buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_LOCAL);
+    SNB_UserMarshal(&umcb.Flags, buffer, &snb);
+
+    wiresnb = (RemSNB*)buffer;
+    ok(wiresnb->ulCntStr == 13, "got %u\n", wiresnb->ulCntStr);
+    ok(wiresnb->ulCntChar == 2, "got %u\n", wiresnb->ulCntChar);
+    /* payload length is stored one more time, as ULONG */
+    ok(*(ULONG*)wiresnb->rgString == wiresnb->ulCntStr, "got %u\n", *(ULONG*)wiresnb->rgString);
+    dataW = &wiresnb->rgString[2];
+    ok(!lstrcmpW(dataW, str1W), "marshalled string 0: %s\n", wine_dbgstr_w(dataW));
+    dataW += sizeof(str1W)/sizeof(WCHAR);
+    ok(!lstrcmpW(dataW, str2W), "marshalled string 1: %s\n", wine_dbgstr_w(dataW));
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_LOCAL);
+
+    g_expect_user_alloc = TRUE;
+    snb2 = NULL;
+    SNB_UserUnmarshal(&umcb.Flags, buffer, &snb2);
+    g_expect_user_alloc = FALSE;
+
+    ptrW = snb2;
+    ok(!lstrcmpW(*ptrW, str1W), "unmarshalled string 0: %s\n", wine_dbgstr_w(*ptrW));
+    ptrW++;
+    ok(!lstrcmpW(*ptrW, str2W), "unmarshalled string 1: %s\n", wine_dbgstr_w(*ptrW));
+    ptrW++;
+    ok(*ptrW == NULL, "expected terminating NULL ptr, got %p, start %p\n", *ptrW, snb2);
+
+    HeapFree(GetProcessHeap(), 0, buffer);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_LOCAL);
+
+    g_expect_user_free = TRUE;
+    SNB_UserFree(&umcb.Flags, &snb2);
+    g_expect_user_free = FALSE;
+
+    HeapFree(GetProcessHeap(), 0, src);
+}
+
+static void test_marshal_HDC(void)
+{
+    MIDL_STUB_MESSAGE stub_msg;
+    HDC hdc = GetDC(0), hdc2;
+    USER_MARSHAL_CB umcb;
+    RPC_MESSAGE rpc_msg;
+    unsigned char *buffer;
+    wireHDC wirehdc;
+    ULONG size;
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_LOCAL);
+    size = HDC_UserSize(&umcb.Flags, 0, &hdc);
+    ok(size == sizeof(*wirehdc), "Wrong size %d\n", size);
+
+    buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_LOCAL);
+    HDC_UserMarshal(&umcb.Flags, buffer, &hdc);
+    wirehdc = (wireHDC)buffer;
+    ok(wirehdc->fContext == WDT_INPROC_CALL, "Context should be WDT_INPROC_CALL instead of 0x%08x\n", wirehdc->fContext);
+    ok(wirehdc->u.hInproc == (LONG_PTR)hdc, "Marshaled value should be %p instead of %x\n", hdc, wirehdc->u.hRemote);
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_LOCAL);
+    HDC_UserUnmarshal(&umcb.Flags, buffer, &hdc2);
+    ok(hdc == hdc2, "Didn't unmarshal properly\n");
+    HeapFree(GetProcessHeap(), 0, buffer);
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_LOCAL);
+    HDC_UserFree(&umcb.Flags, &hdc2);
+    ReleaseDC(0, hdc);
+}
+
+static void test_marshal_HICON(void)
+{
+    static const BYTE bmp_bits[1024];
+    MIDL_STUB_MESSAGE stub_msg;
+    HICON hIcon, hIcon2;
+    USER_MARSHAL_CB umcb;
+    RPC_MESSAGE rpc_msg;
+    unsigned char *buffer;
+    wireHICON wirehicon;
+    ULONG size;
+
+    hIcon = CreateIcon(0, 16, 16, 1, 1, bmp_bits, bmp_bits);
+    ok(hIcon != 0, "CreateIcon failed\n");
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_LOCAL);
+    size = HICON_UserSize(&umcb.Flags, 0, &hIcon);
+    ok(size == sizeof(*wirehicon), "Wrong size %d\n", size);
+
+    buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_LOCAL);
+    HICON_UserMarshal(&umcb.Flags, buffer, &hIcon);
+    wirehicon = (wireHICON)buffer;
+    ok(wirehicon->fContext == WDT_INPROC_CALL, "Context should be WDT_INPROC_CALL instead of 0x%08x\n", wirehicon->fContext);
+    ok(wirehicon->u.hInproc == (LONG_PTR)hIcon, "Marshaled value should be %p instead of %x\n", hIcon, wirehicon->u.hRemote);
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_LOCAL);
+    HICON_UserUnmarshal(&umcb.Flags, buffer, &hIcon2);
+    ok(hIcon == hIcon2, "Didn't unmarshal properly\n");
+    HeapFree(GetProcessHeap(), 0, buffer);
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_LOCAL);
+    HICON_UserFree(&umcb.Flags, &hIcon2);
+    DestroyIcon(hIcon);
+}
+
+static void test_marshal_HBRUSH(void)
+{
+    MIDL_STUB_MESSAGE stub_msg;
+    HBRUSH hBrush, hBrush2;
+    USER_MARSHAL_CB umcb;
+    RPC_MESSAGE rpc_msg;
+    unsigned char *buffer;
+    LOGBRUSH logbrush;
+    wireHBRUSH wirehbrush;
+    ULONG size;
+
+    logbrush.lbStyle = BS_SOLID;
+    logbrush.lbColor = RGB(0, 0, 0);
+    logbrush.lbHatch = 0;
+
+    hBrush = CreateBrushIndirect(&logbrush);
+    ok(hBrush != 0, "CreateBrushIndirect failed\n");
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_LOCAL);
+    size = HBRUSH_UserSize(&umcb.Flags, 0, &hBrush);
+    ok(size == sizeof(*wirehbrush), "Wrong size %d\n", size);
+
+    buffer = HeapAlloc(GetProcessHeap(), 0, size);
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_LOCAL);
+    HBRUSH_UserMarshal(&umcb.Flags, buffer, &hBrush);
+    wirehbrush = (wireHBRUSH)buffer;
+    ok(wirehbrush->fContext == WDT_INPROC_CALL, "Context should be WDT_INPROC_CALL instead of 0x%08x\n", wirehbrush->fContext);
+    ok(wirehbrush->u.hInproc == (LONG_PTR)hBrush, "Marshaled value should be %p instead of %x\n", hBrush, wirehbrush->u.hRemote);
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_LOCAL);
+    HBRUSH_UserUnmarshal(&umcb.Flags, buffer, &hBrush2);
+    ok(hBrush == hBrush2, "Didn't unmarshal properly\n");
+    HeapFree(GetProcessHeap(), 0, buffer);
+
+    init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_LOCAL);
+    HBRUSH_UserFree(&umcb.Flags, &hBrush2);
+    DeleteObject(hBrush);
+}
+
+struct obj
+{
+    IDataObject IDataObject_iface;
+};
+
+static HRESULT WINAPI obj_QueryInterface(IDataObject *iface, REFIID iid, void **obj)
+{
+    *obj = NULL;
+
+    if (IsEqualGUID(iid, &IID_IUnknown) ||
+        IsEqualGUID(iid, &IID_IDataObject))
+        *obj = iface;
+
+    if (*obj)
+    {
+        IDataObject_AddRef(iface);
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI obj_AddRef(IDataObject *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI obj_Release(IDataObject *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI obj_DO_GetDataHere(IDataObject *iface, FORMATETC *fmt,
+                                         STGMEDIUM *med)
+{
+    ok( med->pUnkForRelease == NULL, "got %p\n", med->pUnkForRelease );
+
+    if (fmt->cfFormat == 2)
+    {
+        IStream_Release(U(med)->pstm);
+        U(med)->pstm = &Test_Stream2.IStream_iface;
+    }
+
+    return S_OK;
+}
+
+static const IDataObjectVtbl obj_data_object_vtbl =
+{
+    obj_QueryInterface,
+    obj_AddRef,
+    obj_Release,
+    NULL, /* GetData */
+    obj_DO_GetDataHere,
+    NULL, /* QueryGetData */
+    NULL, /* GetCanonicalFormatEtc */
+    NULL, /* SetData */
+    NULL, /* EnumFormatEtc */
+    NULL, /* DAdvise */
+    NULL, /* DUnadvise */
+    NULL  /* EnumDAdvise */
+};
+
+static struct obj obj =
+{
+    {&obj_data_object_vtbl}
+};
+
+static void test_GetDataHere_Proxy(void)
+{
+    HRESULT hr;
+    IStream *stm;
+    HANDLE thread;
+    DWORD tid;
+    static const LARGE_INTEGER zero;
+    IDataObject *data;
+    FORMATETC fmt;
+    STGMEDIUM med;
+
+    hr = CreateStreamOnHGlobal( NULL, TRUE, &stm );
+    ok( hr == S_OK, "got %08x\n", hr );
+    tid = start_host_object2( stm, &IID_IDataObject, (IUnknown *)&obj.IDataObject_iface, MSHLFLAGS_NORMAL, NULL, &thread );
+
+    IStream_Seek( stm, zero, STREAM_SEEK_SET, NULL );
+    hr = CoUnmarshalInterface( stm, &IID_IDataObject, (void **)&data );
+    ok( hr == S_OK, "got %08x\n", hr );
+    IStream_Release( stm );
+
+    Test_Stream.refs = 1;
+    Test_Stream2.refs = 1;
+    Test_Unknown.refs = 1;
+
+    fmt.cfFormat = 1;
+    fmt.ptd = NULL;
+    fmt.dwAspect = DVASPECT_CONTENT;
+    fmt.lindex = -1;
+    U(med).pstm = NULL;
+    med.pUnkForRelease = &Test_Unknown.IUnknown_iface;
+
+    fmt.tymed = med.tymed = TYMED_NULL;
+    hr = IDataObject_GetDataHere( data, &fmt, &med );
+    ok( hr == DV_E_TYMED, "got %08x\n", hr );
+
+    for (fmt.tymed = TYMED_HGLOBAL; fmt.tymed <= TYMED_ENHMF; fmt.tymed <<= 1)
+    {
+        med.tymed = fmt.tymed;
+        hr = IDataObject_GetDataHere( data, &fmt, &med );
+        ok( hr == (fmt.tymed <= TYMED_ISTORAGE ? S_OK : DV_E_TYMED), "got %08x for tymed %d\n", hr, fmt.tymed );
+        ok( Test_Unknown.refs == 1, "got %d\n", Test_Unknown.refs );
+    }
+
+    fmt.tymed = TYMED_ISTREAM;
+    med.tymed = TYMED_ISTORAGE;
+    hr = IDataObject_GetDataHere( data, &fmt, &med );
+    ok( hr == DV_E_TYMED, "got %08x\n", hr );
+
+    fmt.tymed = med.tymed = TYMED_ISTREAM;
+    U(med).pstm = &Test_Stream.IStream_iface;
+    med.pUnkForRelease = &Test_Unknown.IUnknown_iface;
+
+    hr = IDataObject_GetDataHere( data, &fmt, &med );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+    ok( U(med).pstm == &Test_Stream.IStream_iface, "stm changed\n" );
+    ok( med.pUnkForRelease == &Test_Unknown.IUnknown_iface, "punk changed\n" );
+
+    ok( Test_Stream.refs == 1, "got %d\n", Test_Stream.refs );
+    ok( Test_Unknown.refs == 1, "got %d\n", Test_Unknown.refs );
+
+    fmt.cfFormat = 2;
+    fmt.tymed = med.tymed = TYMED_ISTREAM;
+    U(med).pstm = &Test_Stream.IStream_iface;
+    med.pUnkForRelease = &Test_Unknown.IUnknown_iface;
+
+    hr = IDataObject_GetDataHere( data, &fmt, &med );
+    ok( hr == S_OK, "got %08x\n", hr );
+
+    ok( U(med).pstm == &Test_Stream.IStream_iface, "stm changed\n" );
+    ok( med.pUnkForRelease == &Test_Unknown.IUnknown_iface, "punk changed\n" );
+
+    ok( Test_Stream.refs == 1, "got %d\n", Test_Stream.refs );
+    ok( Test_Unknown.refs == 1, "got %d\n", Test_Unknown.refs );
+    ok( Test_Stream2.refs == 0, "got %d\n", Test_Stream2.refs );
+
+    IDataObject_Release( data );
+    end_host_object( tid, thread );
 }
 
 START_TEST(usrmarshal)
 {
-    CoInitialize(NULL);
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
     test_marshal_CLIPFORMAT();
     test_marshal_HWND();
@@ -763,6 +1355,12 @@ START_TEST(usrmarshal)
     test_marshal_HMETAFILEPICT();
     test_marshal_WdtpInterfacePointer();
     test_marshal_STGMEDIUM();
+    test_marshal_SNB();
+    test_marshal_HDC();
+    test_marshal_HICON();
+    test_marshal_HBRUSH();
+
+    test_GetDataHere_Proxy();
 
     CoUninitialize();
 }

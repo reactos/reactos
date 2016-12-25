@@ -18,12 +18,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
+//#include <stdio.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
 #define COBJMACROS
 
-#include "wine/test.h"
-#include "bits.h"
+#include <wine/test.h>
+#include <objbase.h>
+#include <bits.h>
 
 /* Globals used by many tests */
 static const WCHAR test_displayNameA[] = {'T','e','s','t','A', 0};
@@ -113,19 +118,9 @@ static void test_GetCount(void)
 
     hres = IEnumBackgroundCopyJobs_GetCount(test_enumJobsA, &jobCountA);
     ok(hres == S_OK, "GetCount failed: %08x\n", hres);
-    if(hres != S_OK)
-    {
-        skip("Couldn't get job count\n");
-        return;
-    }
 
     hres = IEnumBackgroundCopyJobs_GetCount(test_enumJobsB, &jobCountB);
     ok(hres == S_OK, "GetCount failed: %08x\n", hres);
-    if(hres != S_OK)
-    {
-        skip("Couldn't get job count\n");
-        return;
-    }
 
     ok(jobCountB == jobCountA + 1, "Got incorrect count\n");
 }
@@ -142,11 +137,6 @@ static void test_Next_walkListNull(void)
     {
         hres = IEnumBackgroundCopyJobs_Next(test_enumJobsB, 1, &job, NULL);
         ok(hres == S_OK, "Next failed: %08x\n", hres);
-        if(hres != S_OK)
-        {
-            skip("Unable to get job from Next\n");
-            return;
-        }
         IBackgroundCopyJob_Release(job);
     }
 
@@ -169,11 +159,6 @@ static void test_Next_walkList_1(void)
         fetched = 0;
         hres = IEnumBackgroundCopyJobs_Next(test_enumJobsB, 1, &job, &fetched);
         ok(hres == S_OK, "Next failed: %08x\n", hres);
-        if(hres != S_OK)
-        {
-            skip("Unable to get job from Next\n");
-            return;
-        }
         ok(fetched == 1, "Next returned the incorrect number of jobs: %08x\n", hres);
         IBackgroundCopyJob_Release(job);
     }
@@ -194,31 +179,19 @@ static void test_Next_walkList_2(void)
     ULONG i;
 
     jobs = HeapAlloc(GetProcessHeap(), 0, test_jobCountB * sizeof *jobs);
-    if (!jobs)
-    {
-        skip("Couldn't allocate memory\n");
-        return;
-    }
-
     for (i = 0; i < test_jobCountB; i++)
         jobs[i] = NULL;
 
     fetched = 0;
     hres = IEnumBackgroundCopyJobs_Next(test_enumJobsB, test_jobCountB, jobs, &fetched);
     ok(hres == S_OK, "Next failed: %08x\n", hres);
-    if(hres != S_OK)
-    {
-        skip("Unable to get file from test_enumJobs\n");
-        HeapFree(GetProcessHeap(), 0, jobs);
-        return;
-    }
     ok(fetched == test_jobCountB, "Next returned the incorrect number of jobs: %08x\n", hres);
 
     for (i = 0; i < test_jobCountB; i++)
     {
         ok(jobs[i] != NULL, "Next returned NULL\n");
         if (jobs[i])
-            IBackgroundCopyFile_Release(jobs[i]);
+            IBackgroundCopyJob_Release(jobs[i]);
     }
 
     HeapFree(GetProcessHeap(), 0, jobs);
@@ -245,11 +218,6 @@ static void test_Skip_walkList(void)
     {
         hres = IEnumBackgroundCopyJobs_Skip(test_enumJobsB, 1);
         ok(hres == S_OK, "Skip failed: %08x\n", hres);
-        if(hres != S_OK)
-        {
-            skip("Unable to propely Skip jobs\n");
-            return;
-        }
     }
 
     hres = IEnumBackgroundCopyJobs_Skip(test_enumJobsB, 1);
@@ -272,19 +240,9 @@ static void test_Reset(void)
 
     hres = IEnumBackgroundCopyJobs_Skip(test_enumJobsB, test_jobCountB);
     ok(hres == S_OK, "Skip failed: %08x\n", hres);
-    if (hres != S_OK)
-    {
-        skip("Skip failed\n");
-        return;
-    }
 
     hres = IEnumBackgroundCopyJobs_Reset(test_enumJobsB);
     ok(hres == S_OK, "Reset failed: %08x\n", hres);
-    if(hres != S_OK)
-    {
-        skip("Unable to Reset enumerator\n");
-        return;
-    }
 
     hres = IEnumBackgroundCopyJobs_Skip(test_enumJobsB, test_jobCountB);
     ok(hres == S_OK, "Reset failed: %08x\n", hres);
@@ -306,15 +264,16 @@ START_TEST(enum_jobs)
         0
     };
     const test_t *test;
+    int i;
 
     CoInitialize(NULL);
-    for (test = tests; *test; ++test)
+    for (test = tests, i = 0; *test; ++test, ++i)
     {
         /* Keep state separate between tests */
         if (!setup())
         {
             teardown();
-            skip("Unable to setup test\n");
+            ok(0, "tests:%d: Unable to setup test\n", i);
             break;
         }
         (*test)();

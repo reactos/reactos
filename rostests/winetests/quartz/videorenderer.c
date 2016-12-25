@@ -28,7 +28,7 @@
     ok(ppv != NULL, "Pointer is NULL\n");
 
 #define RELEASE_EXPECT(iface, num) if (iface) { \
-    hr = IUnknown_Release(iface); \
+    hr = IUnknown_Release((IUnknown*)iface); \
     ok(hr == num, "IUnknown_Release should return %d, got %d\n", num, hr); \
 }
 
@@ -70,18 +70,18 @@ static void test_query_interface(void)
     RELEASE_EXPECT(pBasicVideo, 1);
     QI_SUCCEED(pVideoRenderer, IID_IMediaSeeking, pMediaSeeking);
     RELEASE_EXPECT(pMediaSeeking, 1);
+    QI_SUCCEED(pVideoRenderer, IID_IQualityControl, pQualityControl);
+    RELEASE_EXPECT(pQualityControl, 1);
     todo_wine {
     QI_SUCCEED(pVideoRenderer, IID_IDirectDrawVideo, pDirectDrawVideo);
     RELEASE_EXPECT(pDirectDrawVideo, 1);
     QI_SUCCEED(pVideoRenderer, IID_IKsPropertySet, pKsPropertySet);
     RELEASE_EXPECT(pKsPropertySet, 1);
-    QI_SUCCEED(pVideoRenderer, IID_IMediaPosition, pMediaPosition);
-    RELEASE_EXPECT(pMediaPosition, 1);
-    QI_SUCCEED(pVideoRenderer, IID_IQualityControl, pQualityControl);
-    RELEASE_EXPECT(pQualityControl, 1);
     QI_SUCCEED(pVideoRenderer, IID_IQualProp, pQualProp);
     RELEASE_EXPECT(pQualProp, 1);
     }
+    QI_SUCCEED(pVideoRenderer, IID_IMediaPosition, pMediaPosition);
+    RELEASE_EXPECT(pMediaPosition, 1);
     QI_SUCCEED(pVideoRenderer, IID_IVideoWindow, pVideoWindow);
     RELEASE_EXPECT(pVideoWindow, 1);
 }
@@ -110,7 +110,7 @@ static void test_basefilter(void)
     ULONG ref;
     HRESULT hr;
 
-    IUnknown_QueryInterface(pVideoRenderer, &IID_IBaseFilter, (void *)&base);
+    IUnknown_QueryInterface(pVideoRenderer, &IID_IBaseFilter, (void **)&base);
     if (base == NULL)
     {
         /* test_query_interface handles this case */

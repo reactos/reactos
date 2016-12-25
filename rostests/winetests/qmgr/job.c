@@ -18,75 +18,63 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
+//#include <stdio.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
 #define COBJMACROS
 
-#include "wine/test.h"
-#include "bits.h"
-#include "initguid.h"
+#include <wine/test.h>
+#include <objbase.h>
+#include <bits.h>
+#include <initguid.h>
+#include <bits2_0.h>
+#include <bits2_5.h>
 
 /* Globals used by many tests */
 static const WCHAR test_displayName[] = {'T', 'e', 's', 't', 0};
-static const WCHAR test_remoteNameA[] = {'r','e','m','o','t','e','A', 0};
-static const WCHAR test_remoteNameB[] = {'r','e','m','o','t','e','B', 0};
-static const WCHAR test_localNameA[] = {'l','o','c','a','l','A', 0};
-static const WCHAR test_localNameB[] = {'l','o','c','a','l','B', 0};
-static WCHAR *test_currentDir;
-static WCHAR *test_remotePathA;
-static WCHAR *test_remotePathB;
-static WCHAR *test_localPathA;
-static WCHAR *test_localPathB;
+static WCHAR test_remotePathA[MAX_PATH];
+static WCHAR test_remotePathB[MAX_PATH];
+static WCHAR test_localPathA[MAX_PATH];
+static WCHAR test_localPathB[MAX_PATH];
 static IBackgroundCopyManager *test_manager;
 static IBackgroundCopyJob *test_job;
 static GUID test_jobId;
 static BG_JOB_TYPE test_type;
 
-static BOOL init_paths(void)
+static HRESULT test_create_manager(void)
 {
-    static const WCHAR format[] = {'%','s','\\','%','s', 0};
-    DWORD n;
+    HRESULT hres;
+    IBackgroundCopyManager *manager = NULL;
 
-    n = GetCurrentDirectoryW(0, NULL);
-    if (n == 0)
-    {
-        skip("Couldn't get current directory size\n");
-        return FALSE;
+    /* Creating BITS instance */
+    hres = CoCreateInstance(&CLSID_BackgroundCopyManager, NULL, CLSCTX_LOCAL_SERVER,
+                            &IID_IBackgroundCopyManager, (void **) &manager);
+
+    if(hres == HRESULT_FROM_WIN32(ERROR_SERVICE_DISABLED)) {
+        win_skip("Needed Service is disabled\n");
+        return hres;
     }
 
-    test_currentDir = HeapAlloc(GetProcessHeap(), 0, n * sizeof(WCHAR));
-    test_localPathA
-        = HeapAlloc(GetProcessHeap(), 0,
-                    (n + 1 + lstrlenW(test_localNameA)) * sizeof(WCHAR));
-    test_localPathB
-        = HeapAlloc(GetProcessHeap(), 0,
-                    (n + 1 + lstrlenW(test_localNameB)) * sizeof(WCHAR));
-    test_remotePathA
-        = HeapAlloc(GetProcessHeap(), 0,
-                    (n + 1 + lstrlenW(test_remoteNameA)) * sizeof(WCHAR));
-    test_remotePathB
-        = HeapAlloc(GetProcessHeap(), 0,
-                    (n + 1 + lstrlenW(test_remoteNameB)) * sizeof(WCHAR));
+    if (hres == S_OK)
+        IBackgroundCopyManager_Release(manager);
 
-    if (!test_currentDir || !test_localPathA || !test_localPathB
-        || !test_remotePathA || !test_remotePathB)
-    {
-        skip("Couldn't allocate memory for full paths\n");
-        return FALSE;
-    }
+    return hres;
+}
 
-    if (GetCurrentDirectoryW(n, test_currentDir) != n - 1)
-    {
-        skip("Couldn't get current directory\n");
-        return FALSE;
-    }
+static void init_paths(void)
+{
+    WCHAR tmpDir[MAX_PATH];
+    WCHAR prefix[] = {'q', 'm', 'g', 'r', 0};
 
-    wsprintfW(test_localPathA, format, test_currentDir, test_localNameA);
-    wsprintfW(test_localPathB, format, test_currentDir, test_localNameB);
-    wsprintfW(test_remotePathA, format, test_currentDir, test_remoteNameA);
-    wsprintfW(test_remotePathB, format, test_currentDir, test_remoteNameB);
+    GetTempPathW(MAX_PATH, tmpDir);
 
-    return TRUE;
+    GetTempFileNameW(tmpDir, prefix, 0, test_localPathA);
+    GetTempFileNameW(tmpDir, prefix, 0, test_localPathB);
+    GetTempFileNameW(tmpDir, prefix, 0, test_remotePathA);
+    GetTempFileNameW(tmpDir, prefix, 0, test_remotePathB);
 }
 
 /* Generic test setup */
@@ -120,51 +108,74 @@ static BOOL setup(void)
 /* Generic test cleanup */
 static void teardown(void)
 {
+    IBackgroundCopyJob_Cancel(test_job);
     IBackgroundCopyJob_Release(test_job);
     IBackgroundCopyManager_Release(test_manager);
 }
-
-/* FIXME: Remove when Wine has implemented this */
-DEFINE_GUID(CLSID_BackgroundCopyManager2_0, 0x6d18ad12, 0xbde3, 0x4393, 0xb3,0x11, 0x09,0x9c,0x34,0x6e,0x6d,0xf9);
 
 static BOOL check_bits20(void)
 {
     HRESULT hres;
     IBackgroundCopyManager *manager;
-    BOOL ret = TRUE;
+    IBackgroundCopyJob *job, *job3;
 
-    hres = CoCreateInstance(&CLSID_BackgroundCopyManager2_0, NULL,
-                            CLSCTX_LOCAL_SERVER,
-                            &IID_IBackgroundCopyManager,
-                            (void **) &manager);
+    hres = CoCreateInstance(&CLSID_BackgroundCopyManager, NULL,
+                            CLSCTX_LOCAL_SERVER, &IID_IBackgroundCopyManager,
+                            (void **)&manager);
+    if (hres != S_OK) return FALSE;
 
-    if (hres == REGDB_E_CLASSNOTREG)
+    hres = IBackgroundCopyManager_CreateJob(manager, test_displayName, test_type, &test_jobId, &job);
+    if (hres != S_OK)
     {
-        ret = FALSE;
-
-        /* FIXME: Wine implements 2.0 functionality but doesn't advertise 2.0
-         *
-         * Remove when Wine is fixed
-         */
-        if (setup())
-        {
-            HRESULT hres2;
-
-            hres2 = IBackgroundCopyJob_AddFile(test_job, test_remotePathA,
-                                               test_localPathA);
-            if (hres2 == S_OK)
-            {
-                trace("Running on Wine, claim 2.0 is present\n");
-                ret = TRUE;
-            }
-            teardown();
-        }
+        IBackgroundCopyManager_Release(manager);
+        return FALSE;
     }
 
-    if (manager)
+    hres = IBackgroundCopyJob_QueryInterface(job, &IID_IBackgroundCopyJob3, (void **)&job3);
+    IBackgroundCopyJob_Cancel(job);
+    IBackgroundCopyJob_Release(job);
+    if (hres != S_OK)
+    {
         IBackgroundCopyManager_Release(manager);
+        return FALSE;
+    }
 
-    return ret;
+    IBackgroundCopyJob_Release(job3);
+    IBackgroundCopyManager_Release(manager);
+    return TRUE;
+}
+
+static BOOL check_bits25(void)
+{
+    HRESULT hres;
+    IBackgroundCopyManager *manager;
+    IBackgroundCopyJob *job;
+    IBackgroundCopyJobHttpOptions *options;
+
+    hres = CoCreateInstance(&CLSID_BackgroundCopyManager, NULL,
+                            CLSCTX_LOCAL_SERVER, &IID_IBackgroundCopyManager,
+                            (void **)&manager);
+    if (hres != S_OK) return FALSE;
+
+    hres = IBackgroundCopyManager_CreateJob(manager, test_displayName, test_type, &test_jobId, &job);
+    if (hres != S_OK)
+    {
+        IBackgroundCopyManager_Release(manager);
+        return FALSE;
+    }
+
+    hres = IBackgroundCopyJob_QueryInterface(job, &IID_IBackgroundCopyJobHttpOptions, (void **)&options);
+    IBackgroundCopyJob_Cancel(job);
+    IBackgroundCopyJob_Release(job);
+    if (hres != S_OK)
+    {
+        IBackgroundCopyManager_Release(manager);
+        return FALSE;
+    }
+
+    IBackgroundCopyJobHttpOptions_Release(options);
+    IBackgroundCopyManager_Release(manager);
+    return TRUE;
 }
 
 /* Test that the jobId is properly set */
@@ -175,11 +186,6 @@ static void test_GetId(void)
 
     hres = IBackgroundCopyJob_GetId(test_job, &tmpId);
     ok(hres == S_OK, "GetId failed: %08x\n", hres);
-    if(hres != S_OK)
-    {
-        skip("Unable to get ID of test_job.\n");
-        return;
-    }
     ok(memcmp(&tmpId, &test_jobId, sizeof tmpId) == 0, "Got incorrect GUID\n");
 }
 
@@ -191,11 +197,6 @@ static void test_GetType(void)
 
     hres = IBackgroundCopyJob_GetType(test_job, &type);
     ok(hres == S_OK, "GetType failed: %08x\n", hres);
-    if(hres != S_OK)
-    {
-        skip("Unable to get type of test_job.\n");
-        return;
-    }
     ok(type == test_type, "Got incorrect type\n");
 }
 
@@ -207,11 +208,6 @@ static void test_GetName(void)
 
     hres = IBackgroundCopyJob_GetDisplayName(test_job, &displayName);
     ok(hres == S_OK, "GetName failed: %08x\n", hres);
-    if(hres != S_OK)
-    {
-        skip("Unable to get display name of test_job.\n");
-        return;
-    }
     ok(lstrcmpW(displayName, test_displayName) == 0, "Got incorrect type\n");
     CoTaskMemFree(displayName);
 }
@@ -224,11 +220,6 @@ static void test_AddFile(void)
     hres = IBackgroundCopyJob_AddFile(test_job, test_remotePathA,
                                       test_localPathA);
     ok(hres == S_OK, "First call to AddFile failed: 0x%08x\n", hres);
-    if (hres != S_OK)
-    {
-        skip("Unable to add first file to job\n");
-        return;
-    }
 
     hres = IBackgroundCopyJob_AddFile(test_job, test_remotePathB,
                                       test_localPathB);
@@ -257,19 +248,10 @@ static void test_EnumFiles(void)
 
     hres = IBackgroundCopyJob_AddFile(test_job, test_remotePathA,
                                       test_localPathA);
-    if (hres != S_OK)
-    {
-        skip("Unable to add file to job\n");
-        return;
-    }
+    ok(hres == S_OK, "got 0x%08x\n", hres);
 
     hres = IBackgroundCopyJob_EnumFiles(test_job, &enumFiles);
     ok(hres == S_OK, "EnumFiles failed: 0x%08x\n", hres);
-    if(hres != S_OK)
-    {
-        skip("Unable to create file enumerator.\n");
-        return;
-    }
 
     res = IEnumBackgroundCopyFiles_Release(enumFiles);
     ok(res == 0, "Bad ref count on release: %u\n", res);
@@ -283,12 +265,6 @@ static void test_GetProgress_preTransfer(void)
 
     hres = IBackgroundCopyJob_GetProgress(test_job, &progress);
     ok(hres == S_OK, "GetProgress failed: 0x%08x\n", hres);
-    if (hres != S_OK)
-    {
-        skip("Unable to get job progress\n");
-        teardown();
-        return;
-    }
 
     ok(progress.BytesTotal == 0, "Incorrect BytesTotal: %x%08x\n",
        (DWORD)(progress.BytesTotal >> 32), (DWORD)progress.BytesTotal);
@@ -307,11 +283,6 @@ static void test_GetState(void)
     state = BG_JOB_STATE_ERROR;
     hres = IBackgroundCopyJob_GetState(test_job, &state);
     ok(hres == S_OK, "GetState failed: 0x%08x\n", hres);
-    if (hres != S_OK)
-    {
-        skip("Unable to get job state\n");
-        return;
-    }
     ok(state == BG_JOB_STATE_SUSPENDED, "Incorrect job state: %d\n", state);
 }
 
@@ -323,19 +294,10 @@ static void test_ResumeEmpty(void)
 
     hres = IBackgroundCopyJob_Resume(test_job);
     ok(hres == BG_E_EMPTY, "Resume failed to return BG_E_EMPTY error: 0x%08x\n", hres);
-    if (hres != BG_E_EMPTY)
-    {
-        skip("Failed calling resume job\n");
-        return;
-    }
 
     state = BG_JOB_STATE_ERROR;
     hres = IBackgroundCopyJob_GetState(test_job, &state);
-    if (hres != S_OK)
-    {
-        skip("Unable to get job state\n");
-        return;
-    }
+    ok(hres == S_OK, "got 0x%08x\n", hres);
     ok(state == BG_JOB_STATE_SUSPENDED, "Incorrect job state: %d\n", state);
 }
 
@@ -393,19 +355,11 @@ static void test_CompleteLocal(void)
 
     hres = IBackgroundCopyJob_AddFile(test_job, test_remotePathA,
                                       test_localPathA);
-    if (hres != S_OK)
-    {
-        skip("Unable to add file to job\n");
-        return;
-    }
+    ok(hres == S_OK, "got 0x%08x\n", hres);
 
     hres = IBackgroundCopyJob_AddFile(test_job, test_remotePathB,
                                       test_localPathB);
-    if (hres != S_OK)
-    {
-        skip("Unable to add file to job\n");
-        return;
-    }
+    ok(hres == S_OK, "got 0x%08x\n", hres);
 
     hres = IBackgroundCopyJob_Resume(test_job);
     ok(hres == S_OK, "IBackgroundCopyJob_Resume\n");
@@ -471,22 +425,10 @@ static void test_CompleteLocalURL(void)
     lstrcatW(urlB, test_remotePathB);
 
     hres = IBackgroundCopyJob_AddFile(test_job, urlA, test_localPathA);
-    if (hres != S_OK)
-    {
-        skip("Unable to add file to job\n");
-        HeapFree(GetProcessHeap(), 0, urlA);
-        HeapFree(GetProcessHeap(), 0, urlB);
-        return;
-    }
+    ok(hres == S_OK, "got 0x%08x\n", hres);
 
     hres = IBackgroundCopyJob_AddFile(test_job, urlB, test_localPathB);
-    if (hres != S_OK)
-    {
-        skip("Unable to add file to job\n");
-        HeapFree(GetProcessHeap(), 0, urlA);
-        HeapFree(GetProcessHeap(), 0, urlB);
-        return;
-    }
+    ok(hres == S_OK, "got 0x%08x\n", hres);
 
     hres = IBackgroundCopyJob_Resume(test_job);
     ok(hres == S_OK, "IBackgroundCopyJob_Resume\n");
@@ -522,6 +464,174 @@ static void test_CompleteLocalURL(void)
     HeapFree(GetProcessHeap(), 0, urlB);
 }
 
+static void test_NotifyFlags(void)
+{
+    ULONG flags;
+    HRESULT hr;
+
+    /* check default flags */
+    flags = 0;
+    hr = IBackgroundCopyJob_GetNotifyFlags(test_job, &flags);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(flags == (BG_NOTIFY_JOB_ERROR | BG_NOTIFY_JOB_TRANSFERRED), "flags 0x%08x\n", flags);
+}
+
+static void test_NotifyInterface(void)
+{
+    HRESULT hr;
+    IUnknown *unk;
+
+    unk = (IUnknown*)0xdeadbeef;
+    hr = IBackgroundCopyJob_GetNotifyInterface(test_job, &unk);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(unk == NULL, "got %p\n", unk);
+}
+
+static void test_Cancel(void)
+{
+    HRESULT hr;
+    BG_JOB_STATE state;
+
+    state = BG_JOB_STATE_ERROR;
+    hr = IBackgroundCopyJob_GetState(test_job, &state);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(state != BG_JOB_STATE_CANCELLED, "got %u\n", state);
+
+    hr = IBackgroundCopyJob_Cancel(test_job);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    state = BG_JOB_STATE_ERROR;
+    hr = IBackgroundCopyJob_GetState(test_job, &state);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(state == BG_JOB_STATE_CANCELLED, "got %u\n", state);
+
+    hr = IBackgroundCopyJob_Cancel(test_job);
+    ok(hr == BG_E_INVALID_STATE, "got 0x%08x\n", hr);
+}
+
+static void test_HttpOptions(void)
+{
+    static const WCHAR urlW[] =
+        {'h','t','t','p','s',':','/','/','t','e','s','t','.','w','i','n','e','h','q','.','o','r','g','/',0};
+    static const WCHAR winetestW[] =
+        {'W','i','n','e',':',' ','t','e','s','t','\r','\n',0};
+    static const unsigned int timeout = 30;
+    HRESULT hr;
+    IBackgroundCopyJobHttpOptions *options;
+    IBackgroundCopyError *error;
+    BG_JOB_STATE state;
+    unsigned int i;
+    WCHAR *headers;
+    ULONG flags, orig_flags;
+
+    DeleteFileW(test_localPathA);
+    hr = IBackgroundCopyJob_AddFile(test_job, urlW, test_localPathA);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IBackgroundCopyJob_QueryInterface(test_job, &IID_IBackgroundCopyJobHttpOptions, (void **)&options);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    if (options)
+    {
+        headers = (WCHAR *)0xdeadbeef;
+        hr = IBackgroundCopyJobHttpOptions_GetCustomHeaders(options, &headers);
+        ok(hr == S_FALSE, "got 0x%08x\n", hr);
+        ok(headers == NULL, "got %p\n", headers);
+
+        hr = IBackgroundCopyJobHttpOptions_SetCustomHeaders(options, winetestW);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        headers = (WCHAR *)0xdeadbeef;
+        hr = IBackgroundCopyJobHttpOptions_GetCustomHeaders(options, &headers);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        if (hr == S_OK)
+        {
+            ok(!lstrcmpW(headers, winetestW), "got %s\n", wine_dbgstr_w(headers));
+            CoTaskMemFree(headers);
+        }
+
+        hr = IBackgroundCopyJobHttpOptions_SetCustomHeaders(options, NULL);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        headers = (WCHAR *)0xdeadbeef;
+        hr = IBackgroundCopyJobHttpOptions_GetCustomHeaders(options, &headers);
+        ok(hr == S_FALSE, "got 0x%08x\n", hr);
+        ok(headers == NULL, "got %p\n", headers);
+
+        orig_flags = 0xdeadbeef;
+        hr = IBackgroundCopyJobHttpOptions_GetSecurityFlags(options, &orig_flags);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(!orig_flags, "got 0x%08x\n", orig_flags);
+
+        hr = IBackgroundCopyJobHttpOptions_SetSecurityFlags(options, 0);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        flags = 0xdeadbeef;
+        hr = IBackgroundCopyJobHttpOptions_GetSecurityFlags(options, &flags);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(!flags, "got 0x%08x\n", flags);
+    }
+
+    hr = IBackgroundCopyJob_Resume(test_job);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    for (i = 0; i < timeout; i++)
+    {
+        hr = IBackgroundCopyJob_GetState(test_job, &state);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        ok(state == BG_JOB_STATE_QUEUED ||
+           state == BG_JOB_STATE_CONNECTING ||
+           state == BG_JOB_STATE_TRANSFERRING ||
+           state == BG_JOB_STATE_TRANSFERRED, "unexpected state: %u\n", state);
+
+        if (state == BG_JOB_STATE_TRANSFERRED) break;
+        Sleep(1000);
+    }
+    ok(i < timeout, "BITS job timed out\n");
+    if (i < timeout)
+    {
+        hr = IBackgroundCopyJob_GetError(test_job, &error);
+        ok(hr == BG_E_ERROR_INFORMATION_UNAVAILABLE, "got 0x%08x\n", hr);
+    }
+
+    if (options)
+    {
+        headers = (WCHAR *)0xdeadbeef;
+        hr = IBackgroundCopyJobHttpOptions_GetCustomHeaders(options, &headers);
+        ok(hr == S_FALSE, "got 0x%08x\n", hr);
+        ok(headers == NULL, "got %p\n", headers);
+
+        hr = IBackgroundCopyJobHttpOptions_SetCustomHeaders(options, NULL);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        hr = IBackgroundCopyJobHttpOptions_GetCustomHeaders(options, &headers);
+        ok(hr == S_FALSE, "got 0x%08x\n", hr);
+
+        flags = 0xdeadbeef;
+        hr = IBackgroundCopyJobHttpOptions_GetSecurityFlags(options, &flags);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+        ok(!flags, "got 0x%08x\n", flags);
+
+        hr = IBackgroundCopyJobHttpOptions_SetSecurityFlags(options, orig_flags);
+        ok(hr == S_OK, "got 0x%08x\n", hr);
+
+        IBackgroundCopyJobHttpOptions_Release(options);
+    }
+
+    hr = IBackgroundCopyJob_Complete(test_job);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IBackgroundCopyJob_GetState(test_job, &state);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok(state == BG_JOB_STATE_ACKNOWLEDGED, "unexpected state: %u\n", state);
+
+    hr = IBackgroundCopyJob_Complete(test_job);
+    ok(hr == BG_E_INVALID_STATE, "got 0x%08x\n", hr);
+
+    DeleteFileW(test_localPathA);
+}
+
 typedef void (*test_t)(void);
 
 START_TEST(job)
@@ -533,6 +643,8 @@ START_TEST(job)
         test_GetProgress_preTransfer,
         test_GetState,
         test_ResumeEmpty,
+        test_NotifyFlags,
+        test_NotifyInterface,
         0
     };
     static const test_t tests_bits20[] = {
@@ -541,21 +653,33 @@ START_TEST(job)
         test_EnumFiles,
         test_CompleteLocal,
         test_CompleteLocalURL,
+        test_Cancel, /* must be last */
+        0
+    };
+    static const test_t tests_bits25[] = {
+        test_HttpOptions,
         0
     };
     const test_t *test;
+    int i;
 
-    if (!init_paths())
-        return;
+    init_paths();
 
     CoInitialize(NULL);
 
-    for (test = tests; *test; ++test)
+    if (FAILED(test_create_manager()))
+    {
+        CoUninitialize();
+        win_skip("Failed to create Manager instance, skipping tests\n");
+        return;
+    }
+
+    for (test = tests, i = 0; *test; ++test, ++i)
     {
         /* Keep state separate between tests. */
         if (!setup())
         {
-            skip("Unable to setup test\n");
+            ok(0, "tests:%d: Unable to setup test\n", i);
             break;
         }
         (*test)();
@@ -564,12 +688,12 @@ START_TEST(job)
 
     if (check_bits20())
     {
-        for (test = tests_bits20; *test; ++test)
+        for (test = tests_bits20, i = 0; *test; ++test, ++i)
         {
             /* Keep state separate between tests. */
             if (!setup())
             {
-                skip("Unable to setup test\n");
+                ok(0, "tests_bits20:%d: Unable to setup test\n", i);
                 break;
             }
             (*test)();
@@ -579,6 +703,25 @@ START_TEST(job)
     else
     {
         win_skip("Tests need BITS 2.0 or higher\n");
+    }
+
+    if (check_bits25())
+    {
+        for (test = tests_bits25, i = 0; *test; ++test, ++i)
+        {
+            /* Keep state separate between tests. */
+            if (!setup())
+            {
+                ok(0, "tests_bits25:%d: Unable to setup test\n", i);
+                break;
+            }
+            (*test)();
+            teardown();
+        }
+    }
+    else
+    {
+        win_skip("Tests need BITS 2.5 or higher\n");
     }
 
     CoUninitialize();

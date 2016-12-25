@@ -18,9 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windows.h"
-#include "gdiplus.h"
-#include "wine/test.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include "windows.h"
+#include <wine/test.h>
+#include <wingdi.h>
+#include <objbase.h>
+#include <gdiplus.h>
 #include <math.h>
 
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
@@ -87,10 +93,7 @@ static void ok_path(GpPath* path, const path_test_t *expected, INT expected_size
         return;
     }
 
-    if(todo_size) todo_wine
-        ok(size == expected_size, "Path size %d does not match expected size %d\n",
-            size, expected_size);
-    else
+    todo_wine_if (todo_size)
         ok(size == expected_size, "Path size %d does not match expected size %d\n",
             size, expected_size);
 
@@ -113,11 +116,7 @@ static void ok_path(GpPath* path, const path_test_t *expected, INT expected_size
         stringify_point_type(expected[eidx].type, ename);
         stringify_point_type(types[idx], name);
 
-        if (expected[eidx].todo || numskip) todo_wine
-            ok(match, "Expected #%d: %s (%.1f,%.1f) but got %s (%.1f,%.1f)\n", eidx,
-               ename, expected[eidx].X, expected[eidx].Y,
-               name, points[idx].X, points[idx].Y);
-        else
+        todo_wine_if (expected[eidx].todo || numskip)
             ok(match, "Expected #%d: %s (%.1f,%.1f) but got %s (%.1f,%.1f)\n", eidx,
                ename, expected[eidx].X, expected[eidx].Y,
                name, points[idx].X, points[idx].Y);
@@ -156,15 +155,16 @@ static void test_getpathdata(void)
     GpStatus status;
     INT count;
 
-    GdipCreatePath(FillModeAlternate, &path);
+    status = GdipCreatePath(FillModeAlternate, &path);
+    expect(Ok, status);
     status = GdipAddPathLine(path, 5.0, 5.0, 100.0, 50.0);
     expect(Ok, status);
 
-    /* Prepare storage. Made by wrapper class. */
     status = GdipGetPointCount(path, &count);
     expect(Ok, status);
+    expect(2, count);
 
-    data.Count  = 2;
+    data.Count  = count;
     data.Types  = GdipAlloc(sizeof(BYTE) * count);
     data.Points = GdipAlloc(sizeof(PointF) * count);
 
@@ -1018,6 +1018,9 @@ static void test_flatten(void)
     status = GdipFlattenPath(path, NULL, 1.0);
     expect(Ok, status);
 
+    status = GdipTransformPath(path, 0);
+    expect(Ok, status);
+
     status = GdipAddPathEllipse(path, 0.0, 0.0, 100.0, 50.0);
     expect(Ok, status);
 
@@ -1051,6 +1054,173 @@ static void test_flatten(void)
     ok_path(path, flattenquater_path, sizeof(flattenquater_path)/sizeof(path_test_t), FALSE);
 
     GdipDeleteMatrix(m);
+    GdipDeletePath(path);
+}
+
+static path_test_t widenline_path[] = {
+    {5.0, 5.0,   PathPointTypeStart, 0, 0}, /*0*/
+    {50.0, 5.0,  PathPointTypeLine,  0, 0}, /*1*/
+    {50.0, 15.0, PathPointTypeLine,  0, 0}, /*2*/
+    {5.0, 15.0,  PathPointTypeLine|PathPointTypeCloseSubpath,  0, 0} /*3*/
+    };
+
+static path_test_t widenline_wide_path[] = {
+    {5.0, 0.0,   PathPointTypeStart, 0, 0}, /*0*/
+    {50.0, 0.0,  PathPointTypeLine,  0, 0}, /*1*/
+    {50.0, 20.0, PathPointTypeLine,  0, 0}, /*2*/
+    {5.0, 20.0,  PathPointTypeLine|PathPointTypeCloseSubpath,  0, 0} /*3*/
+    };
+
+static void test_widen(void)
+{
+    GpStatus status;
+    GpPath *path;
+    GpPen *pen;
+    GpMatrix *m;
+    INT count=-1;
+
+    status = GdipCreatePath(FillModeAlternate, &path);
+    expect(Ok, status);
+    status = GdipCreatePen1(0xffffffff, 10.0, UnitPixel, &pen);
+    expect(Ok, status);
+    status = GdipCreateMatrix(&m);
+    expect(Ok, status);
+
+    /* NULL arguments */
+    status = GdipAddPathLine(path, 5.0, 10.0, 50.0, 10.0);
+    expect(Ok, status);
+    status = GdipWidenPath(NULL, NULL, NULL, 0.0);
+    expect(InvalidParameter, status);
+    status = GdipWidenPath(path, pen, m, 0.0);
+    expect(Ok, status);
+    status = GdipWidenPath(path, pen, NULL, 1.0);
+    expect(Ok, status);
+    status = GdipWidenPath(path, NULL, m, 1.0);
+    expect(InvalidParameter, status);
+    status = GdipWidenPath(NULL, pen, m, 1.0);
+    expect(InvalidParameter, status);
+
+    /* widen empty path */
+    status = GdipResetPath(path);
+    expect(Ok, status);
+    status = GdipWidenPath(path, pen, m, 1.0);
+    expect(OutOfMemory, status);
+
+    /* horizontal line */
+    status = GdipResetPath(path);
+    expect(Ok, status);
+    status = GdipAddPathLine(path, 5.0, 10.0, 50.0, 10.0);
+    expect(Ok, status);
+
+    status = GdipWidenPath(path, pen, m, 1.0);
+    expect(Ok, status);
+    ok_path(path, widenline_path, sizeof(widenline_path)/sizeof(path_test_t), FALSE);
+
+    /* horizontal 2x stretch */
+    status = GdipResetPath(path);
+    expect(Ok, status);
+    status = GdipAddPathLine(path, 2.5, 10.0, 25.0, 10.0);
+    expect(Ok, status);
+
+    status = GdipScaleMatrix(m, 2.0, 1.0, MatrixOrderAppend);
+    expect(Ok, status);
+
+    status = GdipWidenPath(path, pen, m, 1.0);
+    expect(Ok, status);
+    ok_path(path, widenline_path, sizeof(widenline_path)/sizeof(path_test_t), FALSE);
+
+    /* vertical 2x stretch */
+    status = GdipResetPath(path);
+    expect(Ok, status);
+    status = GdipAddPathLine(path, 5.0, 5.0, 50.0, 5.0);
+    expect(Ok, status);
+
+    status = GdipScaleMatrix(m, 0.5, 2.0, MatrixOrderAppend);
+    expect(Ok, status);
+
+    status = GdipWidenPath(path, pen, m, 1.0);
+    expect(Ok, status);
+    ok_path(path, widenline_path, sizeof(widenline_path)/sizeof(path_test_t), FALSE);
+
+    status = GdipScaleMatrix(m, 1.0, 0.5, MatrixOrderAppend);
+    expect(Ok, status);
+
+    /* pen width in UnitWorld */
+    GdipDeletePen(pen);
+    status = GdipCreatePen1(0xffffffff, 10.0, UnitWorld, &pen);
+    expect(Ok, status);
+
+    status = GdipResetPath(path);
+    expect(Ok, status);
+    status = GdipAddPathLine(path, 5.0, 10.0, 50.0, 10.0);
+    expect(Ok, status);
+
+    status = GdipWidenPath(path, pen, m, 1.0);
+    expect(Ok, status);
+    ok_path(path, widenline_path, sizeof(widenline_path)/sizeof(path_test_t), FALSE);
+
+    /* horizontal 2x stretch */
+    status = GdipResetPath(path);
+    expect(Ok, status);
+    status = GdipAddPathLine(path, 2.5, 10.0, 25.0, 10.0);
+    expect(Ok, status);
+
+    status = GdipScaleMatrix(m, 2.0, 1.0, MatrixOrderAppend);
+    expect(Ok, status);
+
+    status = GdipWidenPath(path, pen, m, 1.0);
+    expect(Ok, status);
+    ok_path(path, widenline_path, sizeof(widenline_path)/sizeof(path_test_t), FALSE);
+
+    /* vertical 2x stretch */
+    status = GdipResetPath(path);
+    expect(Ok, status);
+    status = GdipAddPathLine(path, 5.0, 5.0, 50.0, 5.0);
+    expect(Ok, status);
+
+    status = GdipScaleMatrix(m, 0.5, 2.0, MatrixOrderAppend);
+    expect(Ok, status);
+
+    status = GdipWidenPath(path, pen, m, 1.0);
+    expect(Ok, status);
+    ok_path(path, widenline_wide_path, sizeof(widenline_wide_path)/sizeof(path_test_t), FALSE);
+
+    status = GdipScaleMatrix(m, 1.0, 0.5, MatrixOrderAppend);
+    expect(Ok, status);
+
+    /* pen width in UnitInch */
+    GdipDeletePen(pen);
+    status = GdipCreatePen1(0xffffffff, 10.0, UnitWorld, &pen);
+    expect(Ok, status);
+
+    status = GdipResetPath(path);
+    expect(Ok, status);
+    status = GdipAddPathLine(path, 5.0, 10.0, 50.0, 10.0);
+    expect(Ok, status);
+
+    status = GdipWidenPath(path, pen, m, 1.0);
+    expect(Ok, status);
+    ok_path(path, widenline_path, sizeof(widenline_path)/sizeof(path_test_t), FALSE);
+
+    /* pen width = 0 pixels - native fails to widen but can draw with this pen */
+    GdipDeletePen(pen);
+    status = GdipCreatePen1(0xffffffff, 0.0, UnitPixel, &pen);
+    expect(Ok, status);
+
+    status = GdipResetPath(path);
+    expect(Ok, status);
+    status = GdipAddPathLine(path, 5.0, 10.0, 50.0, 10.0);
+    expect(Ok, status);
+
+    status = GdipWidenPath(path, pen, m, 1.0);
+    expect(Ok, status);
+
+    status = GdipGetPointCount(path, &count);
+    expect(Ok, status);
+    todo_wine expect(0, count);
+
+    GdipDeleteMatrix(m);
+    GdipDeletePen(pen);
     GdipDeletePath(path);
 }
 
@@ -1106,6 +1276,34 @@ static void test_isvisible(void)
     ReleaseDC(0, hdc);
 }
 
+static void test_empty_rect(void)
+{
+    GpPath *path;
+    GpStatus status;
+    BOOL result;
+
+    status = GdipCreatePath(FillModeAlternate, &path);
+    expect(Ok, status);
+
+    status = GdipAddPathRectangle(path, 0.0, 0.0, -5.0, 5.0);
+    expect(Ok, status);
+
+    status = GdipIsVisiblePathPoint(path, -2.0, 2.0, NULL, &result);
+    expect(Ok, status);
+    expect(FALSE, status);
+
+    status = GdipAddPathRectangle(path, 0.0, 0.0, 5.0, -5.0);
+    expect(Ok, status);
+
+    status = GdipAddPathRectangle(path, 0.0, 0.0, 0.0, 5.0);
+    expect(Ok, status);
+
+    status = GdipAddPathRectangle(path, 0.0, 0.0, 5.0, 0.0);
+    expect(Ok, status);
+
+    GdipDeletePath(path);
+}
+
 START_TEST(graphicspath)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -1134,7 +1332,9 @@ START_TEST(graphicspath)
     test_reverse();
     test_addpie();
     test_flatten();
+    test_widen();
     test_isvisible();
+    test_empty_rect();
 
     GdiplusShutdown(gdiplusToken);
 }

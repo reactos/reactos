@@ -42,6 +42,8 @@ static SECURITY_STATUS (SEC_ENTRY * pFreeContextBuffer)(PVOID pv);
 static SECURITY_STATUS (SEC_ENTRY * pQuerySecurityPackageInfoA)(SEC_CHAR*, PSecPkgInfoA*);
 static SECURITY_STATUS (SEC_ENTRY * pAcquireCredentialsHandleA)(SEC_CHAR*, SEC_CHAR*,
                             ULONG, PLUID, PVOID, SEC_GET_KEY_FN, PVOID, PCredHandle, PTimeStamp);
+static SECURITY_STATUS (SEC_ENTRY * pAcquireCredentialsHandleW)(SEC_CHAR*, SEC_WCHAR*,
+                            ULONG, PLUID, void*, SEC_GET_KEY_FN, void*, CredHandle*, TimeStamp*);
 static SECURITY_STATUS (SEC_ENTRY * pInitializeSecurityContextA)(PCredHandle, PCtxtHandle,
                             SEC_CHAR*, ULONG, ULONG, ULONG, PSecBufferDesc, ULONG, 
                             PCtxtHandle, PSecBufferDesc, PULONG, PTimeStamp);
@@ -67,7 +69,7 @@ typedef struct _SspiData {
     CtxtHandle ctxt;
     PSecBufferDesc in_buf;
     PSecBufferDesc out_buf;
-    PSEC_WINNT_AUTH_IDENTITY id;
+    PSEC_WINNT_AUTH_IDENTITY_A id;
     ULONG max_token;
 } SspiData;
 
@@ -113,7 +115,7 @@ static BYTE message_binary[] =
    {0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x77, 0x6f, 0x72,
     0x6c, 0x64, 0x21};
 
-static char message[] = "Hello, world!";
+static const char message[] = "Hello, world!";
 
 static char message_header[] = "Header Test";
 
@@ -149,6 +151,11 @@ static BYTE crypt_message_server2[] =
    {0xc8, 0xf2, 0x39, 0x7f, 0x0c, 0xaf, 0xf5, 0x5d, 0xef, 0x0c,
     0x8b, 0x5f, 0x82};
 
+static char test_user[] = "testuser",
+            workgroup[] = "WORKGROUP",
+            test_pass[] = "testpass",
+            sec_pkg_name[] = "NTLM";
+
 static void InitFunctionPtrs(void)
 {
     secdll = LoadLibraryA("secur32.dll");
@@ -160,6 +167,7 @@ static void InitFunctionPtrs(void)
         pFreeContextBuffer = (PVOID)GetProcAddress(secdll, "FreeContextBuffer");
         pQuerySecurityPackageInfoA = (PVOID)GetProcAddress(secdll, "QuerySecurityPackageInfoA");
         pAcquireCredentialsHandleA = (PVOID)GetProcAddress(secdll, "AcquireCredentialsHandleA");
+        pAcquireCredentialsHandleW = (void*)GetProcAddress(secdll, "AcquireCredentialsHandleW");
         pInitializeSecurityContextA = (PVOID)GetProcAddress(secdll, "InitializeSecurityContextA");
         pCompleteAuthToken = (PVOID)GetProcAddress(secdll, "CompleteAuthToken");
         pAcceptSecurityContext = (PVOID)GetProcAddress(secdll, "AcceptSecurityContext");
@@ -327,7 +335,7 @@ static SECURITY_STATUS setupClient(SspiData *sspi_data, SEC_CHAR *provider)
         trace("AcquireCredentialsHandle() returned %s\n", getSecError(ret));
     }
 
-    ok(ret == SEC_E_OK, "AcquireCredentialsHande() returned %s\n", 
+    ok(ret == SEC_E_OK, "AcquireCredentialsHandle() returned %s\n",
             getSecError(ret));
 
     return ret;
@@ -355,7 +363,7 @@ static SECURITY_STATUS setupServer(SspiData *sspi_data, SEC_CHAR *provider)
         trace("AcquireCredentialsHandle() returned %s\n", getSecError(ret));
     }
 
-    ok(ret == SEC_E_OK, "AcquireCredentialsHande() returned %s\n",
+    ok(ret == SEC_E_OK, "AcquireCredentialsHandle() returned %s\n",
             getSecError(ret));
 
     return ret;
@@ -565,20 +573,16 @@ static void communicate(SspiData *from, SspiData *to)
 static void testInitializeSecurityContextFlags(void)
 {
     SECURITY_STATUS         sec_status;
-    PSecPkgInfo             pkg_info = NULL;
+    PSecPkgInfoA            pkg_info = NULL;
     SspiData                client;
-    SEC_WINNT_AUTH_IDENTITY id;
-    static char             sec_pkg_name[] = "NTLM",
-                            test_user[]    = "testuser",
-                            workgroup[]    = "WORKGROUP",
-                            test_pass[]    = "testpass";
+    SEC_WINNT_AUTH_IDENTITY_A id;
     ULONG                   req_attr, ctxt_attr;
     TimeStamp               ttl;
     PBYTE                   packet;
 
     if(pQuerySecurityPackageInfoA( sec_pkg_name, &pkg_info) != SEC_E_OK)
     {
-        skip("Package not installed, skipping test!\n");
+        ok(0, "NTLM package not installed, skipping test.\n");
         return;
     }
 
@@ -788,19 +792,15 @@ static void testAuth(ULONG data_rep, BOOL fake)
     SECURITY_STATUS         client_stat = SEC_I_CONTINUE_NEEDED;
     SECURITY_STATUS         server_stat = SEC_I_CONTINUE_NEEDED;
     SECURITY_STATUS         sec_status;
-    PSecPkgInfo             pkg_info = NULL;
+    PSecPkgInfoA            pkg_info = NULL;
     BOOL                    first = TRUE;
     SspiData                client, server;
-    SEC_WINNT_AUTH_IDENTITY id;
+    SEC_WINNT_AUTH_IDENTITY_A id;
     SecPkgContext_Sizes     ctxt_sizes;
-    static char             sec_pkg_name[] = "NTLM",
-                            test_user[] = "testuser",
-                            workgroup[] = "WORKGROUP",
-                            test_pass[] = "testpass";
 
     if(pQuerySecurityPackageInfoA( sec_pkg_name, &pkg_info)!= SEC_E_OK)
     {
-        skip("Package not installed, skipping test.\n");
+        ok(0, "NTLM package not installed, skipping test.\n");
         return;
     }
 
@@ -921,18 +921,15 @@ static void testSignSeal(void)
     SECURITY_STATUS         client_stat = SEC_I_CONTINUE_NEEDED;
     SECURITY_STATUS         server_stat = SEC_I_CONTINUE_NEEDED;
     SECURITY_STATUS         sec_status;
-    PSecPkgInfo             pkg_info = NULL;
+    PSecPkgInfoA            pkg_info = NULL;
     BOOL                    first = TRUE;
     SspiData                client, server;
-    SEC_WINNT_AUTH_IDENTITY id;
+    SEC_WINNT_AUTH_IDENTITY_A id;
     static char             sec_pkg_name[] = "NTLM";
     SecBufferDesc           crypt;
     SecBuffer               data[2], fake_data[2], complex_data[4];
-    ULONG                   qop = 0;
+    ULONG                   qop = 0xdeadbeef;
     SecPkgContext_Sizes     ctxt_sizes;
-    static char             test_user[] = "testuser",
-                            workgroup[] = "WORKGROUP",
-                            test_pass[] = "testpass";
 
     complex_data[1].pvBuffer = complex_data[3].pvBuffer = NULL;
 
@@ -942,7 +939,7 @@ static void testSignSeal(void)
      */
     if(pQuerySecurityPackageInfoA( sec_pkg_name, &pkg_info) != SEC_E_OK)
     {
-        skip("Package not installed, skipping test.\n");
+        ok(0, "NTLM package not installed, skipping test.\n");
         return;
     }
 
@@ -968,6 +965,7 @@ static void testSignSeal(void)
     }
 
     sec_status = setupFakeServer(&server, sec_pkg_name);
+    ok(sec_status == SEC_E_OK, "setupFakeServer returned %s\n", getSecError(sec_status));
 
     while(client_stat == SEC_I_CONTINUE_NEEDED && server_stat == SEC_I_CONTINUE_NEEDED)
     {
@@ -1003,7 +1001,7 @@ static void testSignSeal(void)
     fake_data[0].pvBuffer = HeapAlloc(GetProcessHeap(), 0, fake_data[0].cbBuffer);
 
     fake_data[1].BufferType = SECBUFFER_DATA;
-    fake_data[1].cbBuffer = lstrlen(message);
+    fake_data[1].cbBuffer = lstrlenA(message);
     fake_data[1].pvBuffer = HeapAlloc(GetProcessHeap(), 0, fake_data[1].cbBuffer);
 
     sec_status = pMakeSignature(&client.ctxt, 0, &crypt, 0);
@@ -1018,7 +1016,7 @@ static void testSignSeal(void)
     data[0].pvBuffer = HeapAlloc(GetProcessHeap(), 0, data[0].cbBuffer);
 
     data[1].BufferType = SECBUFFER_DATA;
-    data[1].cbBuffer = lstrlen(message);
+    data[1].cbBuffer = lstrlenA(message);
     data[1].pvBuffer = HeapAlloc(GetProcessHeap(), 0, data[1].cbBuffer);
     memcpy(data[1].pvBuffer, message, data[1].cbBuffer);
 
@@ -1040,12 +1038,13 @@ static void testSignSeal(void)
     ok(sec_status == SEC_E_MESSAGE_ALTERED,
             "VerifySignature returned %s, not SEC_E_MESSAGE_ALTERED.\n",
             getSecError(sec_status));
+    ok(qop == 0xdeadbeef, "qop changed to %u\n", qop);
 
     memcpy(data[0].pvBuffer, message_signature, data[0].cbBuffer);
-
     sec_status = pVerifySignature(&client.ctxt, &crypt, 0, &qop);
     ok(sec_status == SEC_E_OK, "VerifySignature returned %s, not SEC_E_OK.\n",
             getSecError(sec_status));
+    ok(qop == 0xdeadbeef, "qop changed to %u\n", qop);
 
     sec_status = pEncryptMessage(&client.ctxt, 0, &crypt, 0);
     if (sec_status == SEC_E_UNSUPPORTED_FUNCTION)
@@ -1057,47 +1056,44 @@ static void testSignSeal(void)
     ok(sec_status == SEC_E_OK, "EncryptMessage returned %s, not SEC_E_OK.\n",
             getSecError(sec_status));
 
-    ok(!memcmp(crypt.pBuffers[0].pvBuffer, crypt_trailer_client,
-               crypt.pBuffers[0].cbBuffer), "Crypt trailer not as expected.\n");
-    if (memcmp(crypt.pBuffers[0].pvBuffer, crypt_trailer_client,
-               crypt.pBuffers[0].cbBuffer))
+    /* first 8 bytes must always be the same */
+    ok(!memcmp(crypt.pBuffers[0].pvBuffer, crypt_trailer_client, 8), "Crypt trailer not as expected.\n");
+
+    /* the rest depends on the session key */
+    if (!memcmp(crypt.pBuffers[0].pvBuffer, crypt_trailer_client, crypt.pBuffers[0].cbBuffer))
     {
-        int i;
-        for (i = 0; i < crypt.pBuffers[0].cbBuffer; i++)
+        ok(!memcmp(crypt.pBuffers[0].pvBuffer, crypt_trailer_client,
+                   crypt.pBuffers[0].cbBuffer), "Crypt trailer not as expected.\n");
+        ok(!memcmp(crypt.pBuffers[1].pvBuffer, crypt_message_client,
+                   crypt.pBuffers[1].cbBuffer), "Crypt message not as expected.\n");
+        if (memcmp(crypt.pBuffers[1].pvBuffer, crypt_message_client,
+                   crypt.pBuffers[1].cbBuffer))
         {
-            if (i % 8 == 0) printf("     ");
-            printf("0x%02x,", ((unsigned char *)crypt.pBuffers[0].pvBuffer)[i]);
-            if (i % 8 == 7) printf("\n");
+            int i;
+            for (i = 0; i < crypt.pBuffers[1].cbBuffer; i++)
+            {
+                if (i % 8 == 0) printf("     ");
+                printf("0x%02x,", ((unsigned char *)crypt.pBuffers[1].pvBuffer)[i]);
+                if (i % 8 == 7) printf("\n");
+            }
+            printf("\n");
         }
-        printf("\n");
+
+        data[0].cbBuffer = sizeof(crypt_trailer_server);
+        data[1].cbBuffer = sizeof(crypt_message_server);
+        memcpy(data[0].pvBuffer, crypt_trailer_server, data[0].cbBuffer);
+        memcpy(data[1].pvBuffer, crypt_message_server, data[1].cbBuffer);
+
+        sec_status = pDecryptMessage(&client.ctxt, &crypt, 0, &qop);
+
+        ok(sec_status == SEC_E_OK, "DecryptMessage returned %s, not SEC_E_OK.\n",
+           getSecError(sec_status));
+        ok(!memcmp(crypt.pBuffers[1].pvBuffer, message_binary,
+                   crypt.pBuffers[1].cbBuffer),
+           "Failed to decrypt message correctly.\n");
+        ok(qop == 0xdeadbeef, "qop changed to %u\n", qop);
     }
-    ok(!memcmp(crypt.pBuffers[1].pvBuffer, crypt_message_client,
-               crypt.pBuffers[1].cbBuffer), "Crypt message not as expected.\n");
-    if (memcmp(crypt.pBuffers[1].pvBuffer, crypt_message_client,
-               crypt.pBuffers[1].cbBuffer))
-    {
-        int i;
-        for (i = 0; i < crypt.pBuffers[1].cbBuffer; i++)
-        {
-            if (i % 8 == 0) printf("     ");
-            printf("0x%02x,", ((unsigned char *)crypt.pBuffers[1].pvBuffer)[i]);
-            if (i % 8 == 7) printf("\n");
-        }
-        printf("\n");
-    }
-
-    data[0].cbBuffer = sizeof(crypt_trailer_server);
-    data[1].cbBuffer = sizeof(crypt_message_server);
-    memcpy(data[0].pvBuffer, crypt_trailer_server, data[0].cbBuffer);
-    memcpy(data[1].pvBuffer, crypt_message_server, data[1].cbBuffer);
-
-    sec_status = pDecryptMessage(&client.ctxt, &crypt, 0, &qop);
-
-    ok(sec_status == SEC_E_OK, "DecryptMessage returned %s, not SEC_E_OK.\n",
-            getSecError(sec_status));
-    ok(!memcmp(crypt.pBuffers[1].pvBuffer, message_binary,
-               crypt.pBuffers[1].cbBuffer),
-            "Failed to decrypt message correctly.\n");
+    else trace( "A different session key is being used\n" );
 
     trace("Testing with more than one buffer.\n");
 
@@ -1109,7 +1105,7 @@ static void testSignSeal(void)
     complex_data[0].pvBuffer = message_header;
 
     complex_data[1].BufferType = SECBUFFER_DATA;
-    complex_data[1].cbBuffer = lstrlen(message);
+    complex_data[1].cbBuffer = lstrlenA(message);
     complex_data[1].pvBuffer = HeapAlloc(GetProcessHeap(), 0, data[1].cbBuffer);
     memcpy(complex_data[1].pvBuffer, message, complex_data[1].cbBuffer);
 
@@ -1133,25 +1129,16 @@ static void testSignSeal(void)
     sec_status = pVerifySignature(&client.ctxt, &crypt, 0, &qop);
     ok(sec_status == SEC_E_OK, "VerifySignature returned %s, not SEC_E_OK\n",
             getSecError(sec_status));
+    ok(qop == 0xdeadbeef, "qop changed to %u\n", qop);
 
     sec_status = pEncryptMessage(&client.ctxt, 0, &crypt, 0);
     ok(sec_status == SEC_E_OK, "EncryptMessage returned %s, not SEC_E_OK.\n",
             getSecError(sec_status));
 
-    ok(!memcmp(crypt.pBuffers[3].pvBuffer, crypt_trailer_client2,
-               crypt.pBuffers[3].cbBuffer), "Crypt trailer not as expected.\n");
+    ok(!memcmp(crypt.pBuffers[3].pvBuffer, crypt_trailer_client2, 8), "Crypt trailer not as expected.\n");
+
     if (memcmp(crypt.pBuffers[3].pvBuffer, crypt_trailer_client2,
-               crypt.pBuffers[3].cbBuffer))
-    {
-        int i;
-        for (i = 0; i < crypt.pBuffers[3].cbBuffer; i++)
-        {
-            if (i % 8 == 0) printf("     ");
-            printf("0x%02x,", ((unsigned char *)crypt.pBuffers[3].pvBuffer)[i]);
-            if (i % 8 == 7) printf("\n");
-        }
-        printf("\n");
-    }
+               crypt.pBuffers[3].cbBuffer)) goto end;
 
     ok(!memcmp(crypt.pBuffers[1].pvBuffer, crypt_message_client2,
                crypt.pBuffers[1].cbBuffer), "Crypt message not as expected.\n");
@@ -1174,6 +1161,7 @@ static void testSignSeal(void)
     sec_status = pDecryptMessage(&client.ctxt, &crypt, 0, &qop);
     ok(sec_status == SEC_E_OK, "DecryptMessage returned %s, not SEC_E_OK.\n",
             getSecError(sec_status));
+    ok(qop == 0xdeadbeef, "qop changed to %u\n", qop);
 
 
 end:
@@ -1191,22 +1179,18 @@ end:
     HeapFree(GetProcessHeap(), 0, complex_data[3].pvBuffer);
 }
 
-static void testAcquireCredentialsHandle(void)
+static BOOL testAcquireCredentialsHandle(void)
 {
     CredHandle cred;
     TimeStamp ttl;
-    static char test_user[] = "testuser",
-                workgroup[] = "WORKGROUP",
-                test_pass[] = "testpass",
-                sec_pkg_name[] = "NTLM";
     SECURITY_STATUS ret;
-    SEC_WINNT_AUTH_IDENTITY id;
-    PSecPkgInfo             pkg_info = NULL;
+    SEC_WINNT_AUTH_IDENTITY_A id;
+    PSecPkgInfoA pkg_info = NULL;
 
     if(pQuerySecurityPackageInfoA(sec_pkg_name, &pkg_info) != SEC_E_OK)
     {
-        skip("NTLM package not installed, skipping test\n");
-        return;
+        ok(0, "NTLM package not installed, skipping test\n");
+        return FALSE;
     }
     pFreeContextBuffer(pkg_info);
 
@@ -1220,21 +1204,21 @@ static void testAcquireCredentialsHandle(void)
 
     ret = pAcquireCredentialsHandleA(NULL, sec_pkg_name, SECPKG_CRED_OUTBOUND,
             NULL, &id, NULL, NULL, &cred, &ttl);
-    ok(ret == SEC_E_OK, "AcquireCredentialsHande() returned %s\n",
+    ok(ret == SEC_E_OK, "AcquireCredentialsHandle() returned %s\n",
             getSecError(ret));
     pFreeCredentialsHandle(&cred);
 
     id.DomainLength = 0;
     ret = pAcquireCredentialsHandleA(NULL, sec_pkg_name, SECPKG_CRED_OUTBOUND,
             NULL, &id, NULL, NULL, &cred, &ttl);
-    ok(ret == SEC_E_OK, "AcquireCredentialsHande() returned %s\n",
+    ok(ret == SEC_E_OK, "AcquireCredentialsHandle() returned %s\n",
             getSecError(ret));
     pFreeCredentialsHandle(&cred);
 
     id.Domain = NULL;
     ret = pAcquireCredentialsHandleA(NULL, sec_pkg_name, SECPKG_CRED_OUTBOUND,
             NULL, &id, NULL, NULL, &cred, &ttl);
-    ok(ret == SEC_E_OK, "AcquireCredentialsHande() returned %s\n",
+    ok(ret == SEC_E_OK, "AcquireCredentialsHandle() returned %s\n",
             getSecError(ret));
     pFreeCredentialsHandle(&cred);
 
@@ -1244,7 +1228,7 @@ static void testAcquireCredentialsHandle(void)
     id.User = NULL;
     ret = pAcquireCredentialsHandleA(NULL, sec_pkg_name, SECPKG_CRED_OUTBOUND,
             NULL, &id, NULL, NULL, &cred, &ttl);
-    ok(ret == SEC_E_OK, "AcquireCredentialsHande() returned %s\n",
+    ok(ret == SEC_E_OK, "AcquireCredentialsHandle() returned %s\n",
             getSecError(ret));
     pFreeCredentialsHandle(&cred);
 
@@ -1254,20 +1238,107 @@ static void testAcquireCredentialsHandle(void)
     id.PasswordLength = 0;
     ret = pAcquireCredentialsHandleA(NULL, sec_pkg_name, SECPKG_CRED_OUTBOUND,
             NULL, &id, NULL, NULL, &cred, &ttl);
-    ok(ret == SEC_E_OK, "AcquireCredentialsHande() returned %s\n",
+    ok(ret == SEC_E_OK, "AcquireCredentialsHandle() returned %s\n",
+            getSecError(ret));
+    pFreeCredentialsHandle(&cred);
+    return TRUE;
+}
+
+static void testAcquireCredentialsHandleW(void)
+{
+    CredHandle cred;
+    TimeStamp ttl;
+    static WCHAR sec_pkg_nameW[] = {'N','T','L','M',0 };
+    static WCHAR test_userW[]    = {'t','e','s','t','u','s','e','r',0 };
+    static WCHAR workgroupW[]    = {'W','O','R','K','G','R','O','U','P',0};
+    static WCHAR test_passW[]    = {'t','e','s','t','p','a','s','s',0};
+    SECURITY_STATUS ret;
+    SEC_WINNT_AUTH_IDENTITY_A idA;
+    SEC_WINNT_AUTH_IDENTITY_W id;
+    PSecPkgInfoA pkg_info = NULL;
+
+    if(!pAcquireCredentialsHandleW)
+    {
+        win_skip("AcquireCredentialsHandleW not available\n");
+        return;
+    }
+
+    if(pQuerySecurityPackageInfoA(sec_pkg_name, &pkg_info) != SEC_E_OK)
+    {
+        ok(0, "NTLM package not installed, skipping test\n");
+        return;
+    }
+    pFreeContextBuffer(pkg_info);
+
+    id.User = test_userW;
+    id.UserLength = lstrlenW(test_userW);
+    id.Domain = workgroupW;
+    id.DomainLength = lstrlenW(workgroupW);
+    id.Password = test_passW;
+    id.PasswordLength = lstrlenW(test_passW);
+    id.Flags = SEC_WINNT_AUTH_IDENTITY_UNICODE;
+
+    ret = pAcquireCredentialsHandleW(NULL, sec_pkg_nameW, SECPKG_CRED_OUTBOUND,
+            NULL, &id, NULL, NULL, &cred, &ttl);
+    ok(ret == SEC_E_OK, "AcquireCredentialsHandeW() returned %s\n",
+            getSecError(ret));
+    pFreeCredentialsHandle(&cred);
+
+    id.DomainLength = 0;
+    ret = pAcquireCredentialsHandleW(NULL, sec_pkg_nameW, SECPKG_CRED_OUTBOUND,
+            NULL, &id, NULL, NULL, &cred, &ttl);
+    ok(ret == SEC_E_OK, "AcquireCredentialsHandeW() returned %s\n",
+            getSecError(ret));
+    pFreeCredentialsHandle(&cred);
+
+    id.Domain = NULL;
+    ret = pAcquireCredentialsHandleW(NULL, sec_pkg_nameW, SECPKG_CRED_OUTBOUND,
+            NULL, &id, NULL, NULL, &cred, &ttl);
+    ok(ret == SEC_E_OK, "AcquireCredentialsHandeW() returned %s\n",
+            getSecError(ret));
+    pFreeCredentialsHandle(&cred);
+
+    id.Domain = workgroupW;
+    id.DomainLength = lstrlenW(workgroupW);
+    id.UserLength = 0;
+    id.User = NULL;
+    ret = pAcquireCredentialsHandleW(NULL, sec_pkg_nameW, SECPKG_CRED_OUTBOUND,
+            NULL, &id, NULL, NULL, &cred, &ttl);
+    ok(ret == SEC_E_OK, "AcquireCredentialsHandeW() returned %s\n",
+            getSecError(ret));
+    pFreeCredentialsHandle(&cred);
+
+    id.User = test_userW;
+    id.UserLength = lstrlenW(test_userW);
+    id.Password = test_passW;    /* NULL string causes a crash. */
+    id.PasswordLength = 0;
+    ret = pAcquireCredentialsHandleW(NULL, sec_pkg_nameW, SECPKG_CRED_OUTBOUND,
+            NULL, &id, NULL, NULL, &cred, &ttl);
+    ok(ret == SEC_E_OK, "AcquireCredentialsHandeW() returned %s\n",
+            getSecError(ret));
+    pFreeCredentialsHandle(&cred);
+
+    /* Test using the ASCII structure. */
+    idA.User = (unsigned char*) test_user;
+    idA.UserLength = strlen(test_user);
+    idA.Domain = (unsigned char *) workgroup;
+    idA.DomainLength = strlen(workgroup);
+    idA.Password = (unsigned char*) test_pass;
+    idA.PasswordLength = strlen(test_pass);
+    idA.Flags = SEC_WINNT_AUTH_IDENTITY_ANSI;
+
+    ret = pAcquireCredentialsHandleW(NULL, sec_pkg_nameW, SECPKG_CRED_OUTBOUND,
+            NULL, &idA, NULL, NULL, &cred, &ttl);
+    ok(ret == SEC_E_OK, "AcquireCredentialsHandeW() returned %s\n",
             getSecError(ret));
     pFreeCredentialsHandle(&cred);
 }
 
 static void test_cred_multiple_use(void)
 {
-    static char test_user[] = "testuser",
-                workgroup[] = "WORKGROUP",
-                test_pass[] = "testpass",
-                sec_pkg_name[] = "NTLM";
     SECURITY_STATUS ret;
-    SEC_WINNT_AUTH_IDENTITY id;
-    PSecPkgInfo             pkg_info = NULL;
+    SEC_WINNT_AUTH_IDENTITY_A id;
+    PSecPkgInfoA            pkg_info = NULL;
     CredHandle              cred;
     CtxtHandle              ctxt1;
     CtxtHandle              ctxt2;
@@ -1278,7 +1349,7 @@ static void test_cred_multiple_use(void)
 
     if(pQuerySecurityPackageInfoA(sec_pkg_name, &pkg_info) != SEC_E_OK)
     {
-        skip("NTLM package not installed, skipping test\n");
+        ok(0, "NTLM package not installed, skipping test\n");
         return;
     }
     buffers[0].cbBuffer = pkg_info->cbMaxToken;
@@ -1297,7 +1368,7 @@ static void test_cred_multiple_use(void)
 
     ret = pAcquireCredentialsHandleA(NULL, sec_pkg_name, SECPKG_CRED_OUTBOUND,
             NULL, &id, NULL, NULL, &cred, &ttl);
-    ok(ret == SEC_E_OK, "AcquireCredentialsHande() returned %s\n",
+    ok(ret == SEC_E_OK, "AcquireCredentialsHandle() returned %s\n",
             getSecError(ret));
 
     buffer_desc.ulVersion = SECBUFFER_VERSION;
@@ -1327,7 +1398,7 @@ static void test_cred_multiple_use(void)
 static void test_null_auth_data(void)
 {
     SECURITY_STATUS status;
-    PSecPkgInfo info;
+    PSecPkgInfoA info;
     CredHandle cred;
     CtxtHandle ctx;
     SecBufferDesc buffer_desc;
@@ -1339,13 +1410,13 @@ static void test_null_auth_data(void)
 
     if(pQuerySecurityPackageInfoA((SEC_CHAR *)"NTLM", &info) != SEC_E_OK)
     {
-        skip("NTLM package not installed, skipping test\n");
+        ok(0, "NTLM package not installed, skipping test\n");
         return;
     }
 
     status = pAcquireCredentialsHandleA(NULL, (SEC_CHAR *)"NTLM", SECPKG_CRED_OUTBOUND,
                                         NULL, NULL, NULL, NULL, &cred, &ttl);
-    ok(status == SEC_E_OK, "AcquireCredentialsHande() failed %s\n", getSecError(status));
+    ok(status == SEC_E_OK, "AcquireCredentialsHandle() failed %s\n", getSecError(status));
 
     buffers[0].cbBuffer = info->cbMaxToken;
     buffers[0].BufferType = SECBUFFER_TOKEN;
@@ -1378,11 +1449,13 @@ START_TEST(ntlm)
     InitFunctionPtrs();
 
     if(pFreeCredentialsHandle && pDeleteSecurityContext &&
-       pDeleteSecurityContext && pAcquireCredentialsHandleA &&
-       pInitializeSecurityContextA && pCompleteAuthToken &&
-       pQuerySecurityPackageInfoA)
+       pAcquireCredentialsHandleA && pInitializeSecurityContextA &&
+       pCompleteAuthToken && pQuerySecurityPackageInfoA)
     {
-        testAcquireCredentialsHandle();
+        testAcquireCredentialsHandleW();
+
+        if(!testAcquireCredentialsHandle())
+            goto cleanup;
         testInitializeSecurityContextFlags();
         if(pAcceptSecurityContext)
         {
@@ -1401,6 +1474,7 @@ START_TEST(ntlm)
     else
         win_skip("Needed functions are not available\n");
 
+cleanup:
     if(secdll)
         FreeLibrary(secdll);
 }

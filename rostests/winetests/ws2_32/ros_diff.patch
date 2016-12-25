@@ -1,0 +1,160 @@
+diff -pudN --strip-trailing-cr e:\wine\dlls\ws2_32\tests/sock.c e:\reactos\modules\rostests\winetests\ws2_32/sock.c
+--- e:\wine\dlls\ws2_32\tests/sock.c	2016-07-11 10:09:27 +0100
++++ e:\reactos\modules\rostests\winetests\ws2_32/sock.c	2016-07-18 11:38:16 +0100
+@@ -3746,6 +3752,7 @@ static void test_select(void)
+     ok(FD_ISSET(fdWrite, &readfds), "fdWrite socket is not in the set\n");
+     ok(FD_ISSET(fdRead, &readfds), "fdRead socket is not in the set\n");
+ 
++#if ROSTESTS_233_IS_FIXED
+     while(1) {
+         FD_ZERO(&writefds);
+         FD_SET(fdWrite, &writefds);
+@@ -3753,6 +3760,8 @@ static void test_select(void)
+         if(!ret) break;
+         ok(send(fdWrite, tmp_buf, sizeof(tmp_buf), 0) > 0, "failed to send data\n");
+     }
++#endif /* ROSTESTS_233_IS_FIXED */
++
+     FD_ZERO(&readfds);
+     FD_SET(fdWrite, &readfds);
+     FD_SET(fdRead, &readfds);
+@@ -3925,6 +3934,8 @@ todo_wine
+     ok(exceptfds.fd_count == 2, "expected 2, got %d\n", exceptfds.fd_count);
+     closesocket(fdWrite);
+ 
++#if ROSTESTS_233_IS_FIXED
++
+     /* Close the socket currently being selected in a thread - bug 38399 */
+     ok(!tcp_socketpair(&fdRead, &fdWrite), "creating socket pair failed\n");
+     thread_handle = CreateThread(NULL, 0, SelectCloseThread, &fdWrite, 0, &id);
+@@ -3951,6 +3962,8 @@ todo_wine
+     WaitForSingleObject (thread_handle, 1000);
+     closesocket(fdRead);
+ 
++#endif /* ROSTESTS_233_IS_FIXED */
++
+     /* test UDP behavior of unbound sockets */
+     select_timeout.tv_sec = 0;
+     select_timeout.tv_usec = 250000;
+@@ -4467,10 +4480,12 @@ static void test_dns(void)
+        "hostent->h_addr_list[0] should be in %p, it is in %p\n", addr.mem, h->h_addr_list[0]);
+ }
+ 
++#ifndef __REACTOS__
+ /* Our winsock headers don't define gethostname because it conflicts with the
+  * definition in unistd.h. Define it here to get rid of the warning. */
+ 
+ int WINAPI gethostname(char *name, int namelen);
++#endif
+ 
+ static void test_gethostbyname(void)
+ {
+@@ -4489,17 +4504,24 @@ static void test_gethostbyname(void)
+ 
+     he = gethostbyname(name);
+     ok(he != NULL, "gethostbyname(\"%s\") failed: %d\n", name, WSAGetLastError());
+-    addr_list = (struct in_addr **)he->h_addr_list;
+-    strcpy(first_ip, inet_ntoa(*addr_list[0]));
+-
+-    trace("List of local IPs:\n");
+-    for(count = 0; addr_list[count] != NULL; count++)
++#ifdef __REACTOS__ /* ROSTESTS-233 */
++    if (he != NULL)
+     {
+-        char *ip = inet_ntoa(*addr_list[count]);
+-        if (!strcmp(ip, "127.0.0.1"))
+-            local_ip = TRUE;
+-        trace("%s\n", ip);
++#endif
++        addr_list = (struct in_addr **)he->h_addr_list;
++        strcpy(first_ip, inet_ntoa(*addr_list[0]));
++
++        trace("List of local IPs:\n");
++        for(count = 0; addr_list[count] != NULL; count++)
++        {
++            char *ip = inet_ntoa(*addr_list[count]);
++            if (!strcmp(ip, "127.0.0.1"))
++                local_ip = TRUE;
++            trace("%s\n", ip);
++        }
++#ifdef __REACTOS__ /* ROSTESTS-233 */
+     }
++#endif
+ 
+     if (local_ip)
+     {
+@@ -6839,7 +6861,7 @@ static void test_GetAddrInfoW(void)
+ 
+     ret = pGetAddrInfoW(empty, NULL, NULL, &result2);
+     ok(!ret, "GetAddrInfoW failed with %d\n", WSAGetLastError());
+-    ok(result != NULL, "GetAddrInfoW failed\n");
++    ok(result2 != NULL, "GetAddrInfoW failed\n");
+     compare_addrinfow(result, result2);
+     pFreeAddrInfoW(result);
+     pFreeAddrInfoW(result2);
+@@ -6850,7 +6872,7 @@ static void test_GetAddrInfoW(void)
+ 
+     ret = pGetAddrInfoW(empty, empty, NULL, &result2);
+     ok(!ret, "GetAddrInfoW failed with %d\n", WSAGetLastError());
+-    ok(result != NULL, "GetAddrInfoW failed\n");
++    ok(result2 != NULL, "GetAddrInfoW failed\n");
+     compare_addrinfow(result, result2);
+     pFreeAddrInfoW(result);
+     pFreeAddrInfoW(result2);
+@@ -7025,22 +7047,22 @@ static void test_getaddrinfo(void)
+      * as if requesting with an empty host name. */
+     ret = pgetaddrinfo(name, NULL, NULL, &result);
+     ok(!ret, "getaddrinfo failed with %d\n", WSAGetLastError());
+-    ok(result != NULL, "GetAddrInfoW failed\n");
++    ok(result != NULL, "getaddrinfo failed\n");
+ 
+     ret = pgetaddrinfo("", NULL, NULL, &result2);
+     ok(!ret, "getaddrinfo failed with %d\n", WSAGetLastError());
+-    ok(result != NULL, "GetAddrInfoW failed\n");
++    ok(result2 != NULL, "getaddrinfo failed\n");
+     compare_addrinfo(result, result2);
+     pfreeaddrinfo(result);
+     pfreeaddrinfo(result2);
+ 
+     ret = pgetaddrinfo(name, "", NULL, &result);
+     ok(!ret, "getaddrinfo failed with %d\n", WSAGetLastError());
+-    ok(result != NULL, "GetAddrInfoW failed\n");
++    ok(result != NULL, "getaddrinfo failed\n");
+ 
+     ret = pgetaddrinfo("", "", NULL, &result2);
+     ok(!ret, "getaddrinfo failed with %d\n", WSAGetLastError());
+-    ok(result != NULL, "GetAddrInfoW failed\n");
++    ok(result2 != NULL, "getaddrinfo failed\n");
+     compare_addrinfo(result, result2);
+     pfreeaddrinfo(result);
+     pfreeaddrinfo(result2);
+@@ -9539,6 +9561,14 @@ todo_wine
+ todo_wine
+     ok(error == WSAEFAULT, "Expected 10014, got %u\n", error);
+ 
++#ifdef __REACTOS__ /* ROSTESTS-233 */
++    if (!blen)
++    {
++        skip("Failed to get length needed for name space providers.\n");
++        return;
++    }
++#endif
++
+     name = HeapAlloc(GetProcessHeap(), 0, blen);
+     if (!name)
+     {
+@@ -9616,6 +9646,14 @@ todo_wine
+ todo_wine
+     ok(error == WSAEFAULT, "Expected 10014, got %u\n", error);
+ 
++#ifdef __REACTOS__ /* ROSTESTS-233 */
++    if (!blen)
++    {
++        skip("Failed to get length needed for name space providers.\n");
++        return;
++    }
++#endif
++
+     name = HeapAlloc(GetProcessHeap(), 0, blen);
+     if (!name)
+     {

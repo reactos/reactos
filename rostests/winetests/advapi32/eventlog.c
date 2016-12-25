@@ -49,17 +49,27 @@ static void init_function_pointers(void)
     pWow64RevertWow64FsRedirection = (void*)GetProcAddress(hkernel32, "Wow64RevertWow64FsRedirection");
 }
 
-static void create_backup(const char *filename)
+static BOOL create_backup(const char *filename)
 {
     HANDLE handle;
+    DWORD rc, attribs;
 
     DeleteFileA(filename);
     handle = OpenEventLogA(NULL, "Application");
-    BackupEventLogA(handle, filename);
+    rc = BackupEventLogA(handle, filename);
+    if (!rc && GetLastError() == ERROR_PRIVILEGE_NOT_HELD)
+    {
+        skip("insufficient privileges to backup the eventlog\n");
+        CloseEventLog(handle);
+        return FALSE;
+    }
+    ok(rc, "BackupEventLogA failed, le=%u\n", GetLastError());
     CloseEventLog(handle);
 
+    attribs = GetFileAttributesA(filename);
     todo_wine
-    ok(GetFileAttributesA(filename) != INVALID_FILE_ATTRIBUTES, "Expected a backup file\n");
+    ok(attribs != INVALID_FILE_ATTRIBUTES, "Expected a backup file attribs=%#x le=%u\n", attribs, GetLastError());
+    return TRUE;
 }
 
 static void test_open_close(void)
@@ -120,7 +130,8 @@ static void test_info(void)
     HANDLE handle;
     BOOL ret;
     DWORD needed;
-    EVENTLOG_FULL_INFORMATION efi;
+    BYTE buffer[2 * sizeof(EVENTLOG_FULL_INFORMATION)];
+    EVENTLOG_FULL_INFORMATION *efi = (void *)buffer;
 
     if (!pGetEventLogInformation)
     {
@@ -151,26 +162,26 @@ static void test_info(void)
     ok(GetLastError() == RPC_X_NULL_REF_POINTER, "Expected RPC_X_NULL_REF_POINTER, got %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    ret = pGetEventLogInformation(handle, EVENTLOG_FULL_INFO, (LPVOID)&efi, 0, NULL);
+    ret = pGetEventLogInformation(handle, EVENTLOG_FULL_INFO, efi, 0, NULL);
     ok(!ret, "Expected failure\n");
     ok(GetLastError() == RPC_X_NULL_REF_POINTER, "Expected RPC_X_NULL_REF_POINTER, got %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     needed = 0xdeadbeef;
-    efi.dwFull = 0xdeadbeef;
-    ret = pGetEventLogInformation(handle, EVENTLOG_FULL_INFO, (LPVOID)&efi, 0, &needed);
+    efi->dwFull = 0xdeadbeef;
+    ret = pGetEventLogInformation(handle, EVENTLOG_FULL_INFO, efi, 0, &needed);
     ok(!ret, "Expected failure\n");
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
     ok(needed == sizeof(EVENTLOG_FULL_INFORMATION), "Expected sizeof(EVENTLOG_FULL_INFORMATION), got %d\n", needed);
-    ok(efi.dwFull == 0xdeadbeef, "Expected no change to the dwFull member\n");
+    ok(efi->dwFull == 0xdeadbeef, "Expected no change to the dwFull member\n");
 
     /* Not that we care, but on success last error is set to ERROR_IO_PENDING */
-    efi.dwFull = 0xdeadbeef;
-    needed *= 2;
-    ret = pGetEventLogInformation(handle, EVENTLOG_FULL_INFO, (LPVOID)&efi, needed, &needed);
+    efi->dwFull = 0xdeadbeef;
+    needed = sizeof(buffer);
+    ret = pGetEventLogInformation(handle, EVENTLOG_FULL_INFO, efi, needed, &needed);
     ok(ret, "Expected success\n");
     ok(needed == sizeof(EVENTLOG_FULL_INFORMATION), "Expected sizeof(EVENTLOG_FULL_INFORMATION), got %d\n", needed);
-    ok(efi.dwFull == 0 || efi.dwFull == 1, "Expected 0 (not full) or 1 (full), got %d\n", efi.dwFull);
+    ok(efi->dwFull == 0 || efi->dwFull == 1, "Expected 0 (not full) or 1 (full), got %d\n", efi->dwFull);
 
     CloseEventLog(handle);
 }
@@ -209,23 +220,24 @@ static void test_count(void)
     CloseEventLog(handle);
 
     /* Make a backup eventlog to work with */
-    create_backup(backup);
-
-    handle = OpenBackupEventLogA(NULL, backup);
-    todo_wine
-    ok(handle != NULL, "Expected a handle\n");
-
-    /* Does GetNumberOfEventLogRecords work with backup eventlogs? */
-    count = 0xdeadbeef;
-    ret = GetNumberOfEventLogRecords(handle, &count);
-    todo_wine
+    if (create_backup(backup))
     {
-    ok(ret, "Expected success\n");
-    ok(count != 0xdeadbeef, "Expected the number of records\n");
-    }
+        handle = OpenBackupEventLogA(NULL, backup);
+        todo_wine
+        ok(handle != NULL, "Expected a handle, le=%d\n", GetLastError());
 
-    CloseEventLog(handle);
-    DeleteFileA(backup);
+        /* Does GetNumberOfEventLogRecords work with backup eventlogs? */
+        count = 0xdeadbeef;
+        ret = GetNumberOfEventLogRecords(handle, &count);
+        todo_wine
+        {
+        ok(ret, "Expected success\n");
+        ok(count != 0xdeadbeef, "Expected the number of records\n");
+        }
+
+        CloseEventLog(handle);
+        DeleteFileA(backup);
+    }
 }
 
 static void test_oldest(void)
@@ -262,23 +274,24 @@ static void test_oldest(void)
     CloseEventLog(handle);
 
     /* Make a backup eventlog to work with */
-    create_backup(backup);
-
-    handle = OpenBackupEventLogA(NULL, backup);
-    todo_wine
-    ok(handle != NULL, "Expected a handle\n");
-
-    /* Does GetOldestEventLogRecord work with backup eventlogs? */
-    oldest = 0xdeadbeef;
-    ret = GetOldestEventLogRecord(handle, &oldest);
-    todo_wine
+    if (create_backup(backup))
     {
-    ok(ret, "Expected success\n");
-    ok(oldest != 0xdeadbeef, "Expected the number of the oldest record\n");
-    }
+        handle = OpenBackupEventLogA(NULL, backup);
+        todo_wine
+        ok(handle != NULL, "Expected a handle\n");
 
-    CloseEventLog(handle);
-    DeleteFileA(backup);
+        /* Does GetOldestEventLogRecord work with backup eventlogs? */
+        oldest = 0xdeadbeef;
+        ret = GetOldestEventLogRecord(handle, &oldest);
+        todo_wine
+        {
+        ok(ret, "Expected success\n");
+        ok(oldest != 0xdeadbeef, "Expected the number of the oldest record\n");
+        }
+
+        CloseEventLog(handle);
+        DeleteFileA(backup);
+    }
 }
 
 static void test_backup(void)
@@ -306,6 +319,12 @@ static void test_backup(void)
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
     ret = BackupEventLogA(handle, backup);
+    if (!ret && GetLastError() == ERROR_PRIVILEGE_NOT_HELD)
+    {
+        skip("insufficient privileges for backup tests\n");
+        CloseEventLog(handle);
+        return;
+    }
     ok(ret, "Expected success\n");
     todo_wine
     ok(GetFileAttributesA(backup) != INVALID_FILE_ATTRIBUTES, "Expected a backup file\n");
@@ -468,7 +487,7 @@ static void test_read(void)
     ok(!ret, "Expected failure\n");
     ok(read == 0, "Expected no bytes read\n");
     ok(needed > sizeof(EVENTLOGRECORD), "Expected the needed buffersize to be bigger than sizeof(EVENTLOGRECORD)\n");
-    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "Expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
 
     /* Read the first record */
     toread = needed;
@@ -516,38 +535,39 @@ static void test_openbackup(void)
        "Expected RPC_S_SERVER_UNAVAILABLE, got %d\n", GetLastError());
 
     /* Make a backup eventlog to work with */
-    create_backup(backup);
-
-    /* FIXME: Wine stops here */
-    if (GetFileAttributesA(backup) == INVALID_FILE_ATTRIBUTES)
+    if (create_backup(backup))
     {
-        skip("We don't have a backup eventlog to work with\n");
-        return;
+        /* FIXME: Wine stops here */
+        if (GetFileAttributesA(backup) == INVALID_FILE_ATTRIBUTES)
+        {
+            skip("We don't have a backup eventlog to work with\n");
+            return;
+        }
+
+        SetLastError(0xdeadbeef);
+        handle = OpenBackupEventLogA("IDontExist", backup);
+        ok(handle == NULL, "Didn't expect a handle\n");
+        ok(GetLastError() == RPC_S_SERVER_UNAVAILABLE ||
+           GetLastError() == RPC_S_INVALID_NET_ADDR, /* Some Vista and Win7 */
+           "Expected RPC_S_SERVER_UNAVAILABLE, got %d\n", GetLastError());
+
+        /* Empty servername should be read as local server */
+        handle = OpenBackupEventLogA("", backup);
+        ok(handle != NULL, "Expected a handle\n");
+        CloseEventLog(handle);
+
+        handle = OpenBackupEventLogA(NULL, backup);
+        ok(handle != NULL, "Expected a handle\n");
+
+        /* Can we open that same backup eventlog more than once? */
+        handle2 = OpenBackupEventLogA(NULL, backup);
+        ok(handle2 != NULL, "Expected a handle\n");
+        ok(handle2 != handle, "Didn't expect the same handle\n");
+        CloseEventLog(handle2);
+
+        CloseEventLog(handle);
+        DeleteFileA(backup);
     }
-
-    SetLastError(0xdeadbeef);
-    handle = OpenBackupEventLogA("IDontExist", backup);
-    ok(handle == NULL, "Didn't expect a handle\n");
-    ok(GetLastError() == RPC_S_SERVER_UNAVAILABLE ||
-       GetLastError() == RPC_S_INVALID_NET_ADDR, /* Some Vista and Win7 */
-       "Expected RPC_S_SERVER_UNAVAILABLE, got %d\n", GetLastError());
-
-    /* Empty servername should be read as local server */
-    handle = OpenBackupEventLogA("", backup);
-    ok(handle != NULL, "Expected a handle\n");
-    CloseEventLog(handle);
-
-    handle = OpenBackupEventLogA(NULL, backup);
-    ok(handle != NULL, "Expected a handle\n");
-
-    /* Can we open that same backup eventlog more than once? */
-    handle2 = OpenBackupEventLogA(NULL, backup);
-    ok(handle2 != NULL, "Expected a handle\n");
-    ok(handle2 != handle, "Didn't expect the same handle\n");
-    CloseEventLog(handle2);
-
-    CloseEventLog(handle);
-    DeleteFileA(backup);
 
     /* Is there any content checking done? */
     file = CreateFileA(backup, GENERIC_WRITE, 0, NULL, CREATE_NEW, 0, NULL);
@@ -585,7 +605,8 @@ static void test_clear(void)
     ok(GetLastError() == ERROR_INVALID_HANDLE, "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
 
     /* Make a backup eventlog to work with */
-    create_backup(backup);
+    if (!create_backup(backup))
+        return;
 
     SetLastError(0xdeadbeef);
     ret = ClearEventLogA(NULL, backup);
@@ -633,11 +654,10 @@ static BOOL create_new_eventlog(void)
     HKEY key, eventkey;
     BOOL bret = FALSE;
     LONG lret;
-    int i;
+    DWORD i;
 
     /* First create our eventlog */
     lret = RegOpenKeyA(HKEY_LOCAL_MACHINE, eventlogsvc, &key);
-     /* FIXME: Wine stops here */
     if (lret != ERROR_SUCCESS)
     {
         skip("Could not open the EventLog service registry key\n");
@@ -711,7 +731,7 @@ static void test_readwrite(void)
     DWORD sidsize, count;
     BOOL ret, sidavailable;
     BOOL on_vista = FALSE; /* Used to indicate Vista, W2K8 or Win7 */
-    int i;
+    DWORD i;
     char *localcomputer = NULL;
     DWORD size;
 
@@ -762,11 +782,11 @@ static void test_readwrite(void)
     }
 
     SetLastError(0xdeadbeef);
-    ret = ReportEvent(handle, 0x20, 0, 0, NULL, 0, 0, NULL, NULL);
+    ret = ReportEventA(handle, 0x20, 0, 0, NULL, 0, 0, NULL, NULL);
     if (!ret && GetLastError() == ERROR_CRC)
     {
         win_skip("Win7 fails when using incorrect event types\n");
-        ret = ReportEvent(handle, 0, 0, 0, NULL, 0, 0, NULL, NULL);
+        ret = ReportEventA(handle, 0, 0, 0, NULL, 0, 0, NULL, NULL);
         ok(ret, "Expected success : %d\n", GetLastError());
     }
     else
@@ -823,24 +843,29 @@ static void test_readwrite(void)
         ok(handle != NULL, "Expected a handle\n");
 
         SetLastError(0xdeadbeef);
-        ret = ReportEvent(handle, read_write[i].evt_type, read_write[i].evt_cat,
-                          read_write[i].evt_id, run_sidtests ? user : NULL,
-                          read_write[i].evt_numstrings, 0, read_write[i].evt_strings, NULL);
+        ret = ReportEventA(handle, read_write[i].evt_type, read_write[i].evt_cat,
+                           read_write[i].evt_id, run_sidtests ? user : NULL,
+                           read_write[i].evt_numstrings, 0, read_write[i].evt_strings, NULL);
+        ok(ret, "Expected ReportEvent success : %d\n", GetLastError());
 
         count = 0xdeadbeef;
+        SetLastError(0xdeadbeef);
         ret = GetNumberOfEventLogRecords(handle, &count);
-        ok(ret, "Expected success\n");
+        ok(ret, "Expected GetNumberOfEventLogRecords success : %d\n", GetLastError());
+        todo_wine
         ok(count == (i + 1), "Expected %d records, got %d\n", i + 1, count);
 
         oldest = 0xdeadbeef;
         ret = GetOldestEventLogRecord(handle, &oldest);
-        ok(ret, "Expected success\n");
+        ok(ret, "Expected GetOldestEventLogRecord success : %d\n", GetLastError());
+        todo_wine
         ok(oldest == 1 ||
            (oldest > 1 && oldest != 0xdeadbeef), /* Vista SP1+, W2K8 and Win7 */
            "Expected oldest to be 1 or higher, got %d\n", oldest);
         if (oldest > 1 && oldest != 0xdeadbeef)
             on_vista = TRUE;
 
+        SetLastError(0xdeadbeef);
         if (i % 2)
             ret = CloseEventLog(handle);
         else
@@ -852,6 +877,7 @@ static void test_readwrite(void)
     count = 0xdeadbeef;
     ret = GetNumberOfEventLogRecords(handle, &count);
     ok(ret, "Expected success\n");
+    todo_wine
     ok(count == i, "Expected %d records, got %d\n", i, count);
     CloseEventLog(handle);
 
@@ -1080,6 +1106,7 @@ static void test_autocreation(void)
         lstrcatA(eventlogfile, ".evtx");
     }
 
+    todo_wine
     ok(GetFileAttributesA(eventlogfile) != INVALID_FILE_ATTRIBUTES,
        "Expected an eventlog file\n");
 
@@ -1092,7 +1119,7 @@ static void cleanup_eventlog(void)
     BOOL bret;
     LONG lret;
     HKEY key;
-    int i;
+    DWORD i;
     char winesvc[MAX_PATH];
 
     /* Delete the registry tree */
@@ -1106,14 +1133,12 @@ static void cleanup_eventlog(void)
     RegDeleteValueA(key, "Sources");
     RegCloseKey(key);
     lret = RegDeleteKeyA(HKEY_LOCAL_MACHINE, winesvc);
-    todo_wine
     ok(lret == ERROR_SUCCESS, "Could not delete the registry tree : %d\n", lret);
 
     /* A handle to the eventlog is locked by services.exe. We can only
      * delete the eventlog file after reboot.
      */
     bret = MoveFileExA(eventlogfile, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
-    todo_wine
     ok(bret, "Expected MoveFileEx to succeed: %d\n", GetLastError());
 }
 
@@ -1144,6 +1169,6 @@ START_TEST(eventlog)
     {
         test_readwrite();
         test_autocreation();
+        cleanup_eventlog();
     }
-    cleanup_eventlog();
 }

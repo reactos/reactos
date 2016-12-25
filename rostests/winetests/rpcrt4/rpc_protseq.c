@@ -55,24 +55,24 @@ static void test_RpcServerUseProtseq(void)
 
     /* show that RpcServerUseProtseqEp(..., NULL, ...) is the same as
      * RpcServerUseProtseq(...) */
-    status = RpcServerUseProtseqEp(ncalrpc, 0, NULL, NULL);
+    status = RpcServerUseProtseqEpA(ncalrpc, 0, NULL, NULL);
     ok(status == RPC_S_OK || broken(status == RPC_S_INVALID_ENDPOINT_FORMAT),
        "RpcServerUseProtseqEp with NULL endpoint failed with status %d\n",
        status);
 
     /* register protocol sequences without explicit endpoints */
-    status = RpcServerUseProtseq(np, 0, NULL);
+    status = RpcServerUseProtseqA(np, 0, NULL);
     if (status == RPC_S_PROTSEQ_NOT_SUPPORTED)
         win_skip("ncacn_np not supported\n");
     else
         ok(status == RPC_S_OK, "RpcServerUseProtseq(ncacn_np) failed with status %d\n", status);
     if (status == RPC_S_OK) endpoints_registered++;
 
-    status = RpcServerUseProtseq(iptcp, 0, NULL);
+    status = RpcServerUseProtseqA(iptcp, 0, NULL);
     ok(status == RPC_S_OK, "RpcServerUseProtseq(ncacn_ip_tcp) failed with status %d\n", status);
     if (status == RPC_S_OK) endpoints_registered++;
 
-    status = RpcServerUseProtseq(ncalrpc, 0, NULL);
+    status = RpcServerUseProtseqA(ncalrpc, 0, NULL);
     ok(status == RPC_S_OK, "RpcServerUseProtseqEp(ncalrpc) failed with status %d\n", status);
     if (status == RPC_S_OK) endpoints_registered++;
 
@@ -85,24 +85,24 @@ static void test_RpcServerUseProtseq(void)
     for (i = 0; i < bindings->Count; i++)
     {
         RPC_CSTR str_bind;
-        status = RpcBindingToStringBinding(bindings->BindingH[i], &str_bind);
+        status = RpcBindingToStringBindingA(bindings->BindingH[i], &str_bind);
         ok(status == RPC_S_OK, "RpcBindingToStringBinding failed with status %d\n", status);
         trace("string binding: %s\n", str_bind);
-        RpcStringFree(&str_bind);
+        RpcStringFreeA(&str_bind);
     }
     RpcBindingVectorFree(&bindings);
 
     /* re-register - endpoints should be reused */
-    status = RpcServerUseProtseq(np, 0, NULL);
+    status = RpcServerUseProtseqA(np, 0, NULL);
     if (status == RPC_S_PROTSEQ_NOT_SUPPORTED)
         win_skip("ncacn_np not supported\n");
     else
         ok(status == RPC_S_OK, "RpcServerUseProtseq(ncacn_np) failed with status %d\n", status);
 
-    status = RpcServerUseProtseq(iptcp, 0, NULL);
+    status = RpcServerUseProtseqA(iptcp, 0, NULL);
     ok(status == RPC_S_OK, "RpcServerUseProtseq(ncacn_ip_tcp) failed with status %d\n", status);
 
-    status = RpcServerUseProtseq(ncalrpc, 0, NULL);
+    status = RpcServerUseProtseqA(ncalrpc, 0, NULL);
     ok(status == RPC_S_OK, "RpcServerUseProtseqEp(ncalrpc) failed with status %d\n", status);
 
     status = RpcServerInqBindings(&bindings);
@@ -161,14 +161,14 @@ static void test_endpoint_mapper(RPC_CSTR protseq, RPC_CSTR address)
     status = RpcEpRegisterA(IFoo_v0_0_s_ifspec, binding_vector, NULL, NULL);
     ok(status == RPC_S_OK, "%s: RpcEpRegisterA failed with error %u\n", protseq, status);
 
-    status = RpcStringBindingCompose(NULL, protseq, address,
+    status = RpcStringBindingComposeA(NULL, protseq, address,
                                      NULL, NULL, &binding);
     ok(status == RPC_S_OK, "%s: RpcStringBindingCompose failed (%u)\n", protseq, status);
 
-    status = RpcBindingFromStringBinding(binding, &handle);
+    status = RpcBindingFromStringBindingA(binding, &handle);
     ok(status == RPC_S_OK, "%s: RpcBindingFromStringBinding failed (%u)\n", protseq, status);
 
-    RpcStringFree(&binding);
+    RpcStringFreeA(&binding);
 
     status = RpcBindingReset(handle);
     ok(status == RPC_S_OK, "%s: RpcBindingReset failed with error %u\n", protseq, status);

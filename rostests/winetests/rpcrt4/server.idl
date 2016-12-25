@@ -18,6 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma makedep client
+#pragma makedep server
+
 #include "server_defines.h"
 
 typedef struct tag_vector
@@ -31,9 +34,7 @@ typedef int fnprintf(const char *format, ...);
 
 [
   uuid(00000000-4114-0704-2301-000000000000),
-#ifndef __midl
   implicit_handle(handle_t IServer_IfHandle)
-#endif
 ]
 interface IServer
 {
@@ -81,6 +82,13 @@ cpp_quote("#endif")
   int int_return(void);
   int square(int x);
   int sum(int x, int y);
+  signed char sum_char(signed char x, signed char y);
+  short sum_short(short x, short y);
+  int sum_float(float x, float y);
+  int sum_double_int(int x, double y);
+  hyper sum_hyper(hyper x, hyper y);
+  int sum_hyper_int(hyper x, hyper y);
+  int sum_char_hyper(signed char x, hyper y);
   void square_out(int x, [out] int *y);
   void square_ref([in, out] int *x);
   int str_length([string] const char *s);
@@ -157,7 +165,8 @@ cpp_quote("#endif")
   int sum_cs(cs_t *cs);
   int sum_cps(cps_t *cps);
   int sum_cpsc(cpsc_t *cpsc);
-  int sum_complex_array(int n, refpint_t pi[n]);
+  int get_cpsc(int n, [out] cpsc_t *cpsc );
+  int sum_complex_array(int n, [size_is(n)] refpint_t pi[]);
 
   typedef [wire_marshal(int)] void *puint_t;
   int square_puint(puint_t p);
@@ -311,13 +320,18 @@ cpp_quote("#endif")
   typedef [unique] user_bstr_t *wire_bstr_t;
   typedef [wire_marshal(wire_bstr_t)] short *bstr_t;
   unsigned hash_bstr(bstr_t s);
-
+  void get_a_bstr([out]bstr_t *s);
   typedef struct
   {
     [string, size_is(size)] char *name;
     unsigned int size;
   } name_t;
   void get_name([in,out] name_t *name);
+
+  typedef char **str_array_t;
+  void get_names([out] int *n, [out, string, size_is(,*n)] str_array_t *names);
+  typedef WCHAR **wstr_array_t;
+  void get_namesw([out] int *n, [out, string, size_is(,*n)] wstr_array_t *names);
 
   int sum_pcarr2(int n, [size_is(, n)] int **pa);
   int sum_L1_norms(int n, [size_is(n)] vector_t *vs);
@@ -357,7 +371,8 @@ cpp_quote("#endif")
   const int RE_MAX = RE3;
   typedef [range(RE_MIN, RE_MAX)] enum renum renum_t;
   typedef [range(0, 100)] int rint_t;
-  rint_t echo_ranged_int([range(0, 100)] int n);
+  rint_t echo_ranged_int([range(0, 10)] int i, [range(0, 20)] int j, [range(0, 100)] int k);
+  rint_t echo_ranged_int2([range(0, 40)] int i);
   void get_ranged_enum([out] renum_t *re);
 
   void context_handle_test(void);

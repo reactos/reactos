@@ -23,8 +23,8 @@
 #include <setupapi.h>
 #include "wine/test.h"
 
-CHAR CURR_DIR[MAX_PATH];
-CHAR WIN_DIR[MAX_PATH];
+static CHAR CURR_DIR[MAX_PATH];
+static CHAR WIN_DIR[MAX_PATH];
 
 static void get_directories(void)
 {
@@ -102,8 +102,8 @@ static const char inf_data6[] =
 static void create_inf_file(LPSTR filename, const char *data, DWORD size)
 {
     DWORD dwNumberOfBytesWritten;
-    HANDLE hf = CreateFile(filename, GENERIC_WRITE, 0, NULL,
-                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hf = CreateFileA(filename, GENERIC_WRITE, 0, NULL,
+                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     WriteFile(hf, data, size, &dwNumberOfBytesWritten, NULL);
     CloseHandle(hf);
 }

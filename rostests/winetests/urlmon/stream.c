@@ -16,18 +16,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 #define CONST_VTABLE
 
 #include <wine/test.h>
-#include <stdarg.h>
-#include <stddef.h>
+//#include <stdarg.h>
+//#include <stddef.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "ole2.h"
-#include "urlmon.h"
-#include "wininet.h"
+//#include "windef.h"
+//#include "winbase.h"
+#include <winnls.h>
+#include <ole2.h>
+//#include "urlmon.h"
+#include <wininet.h>
 
 #define DEFINE_EXPECT(func) \
     static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
@@ -77,7 +82,6 @@ DEFINE_EXPECT(OnDataAvailable);
 DEFINE_EXPECT(GetBindInfo);
 
 static const CHAR wszIndexHtmlA[] = "index.html";
-static const WCHAR wszIndexHtml[] = {'i','n','d','e','x','.','h','t','m','l',0};
 static WCHAR INDEX_HTML[MAX_PATH];
 static const char szHtmlDoc[] = "<HTML></HTML>";
 
@@ -329,6 +333,21 @@ static void test_URLOpenBlockingStreamW(void)
     ok(pStream != NULL, "pStream is NULL\n");
     if(pStream)
     {
+        buffer[0] = 0;
+        hr = IStream_Read(pStream, buffer, sizeof(buffer), NULL);
+        ok(hr == S_OK, "IStream_Read failed with error 0x%08x\n", hr);
+        ok(!memcmp(buffer, szHtmlDoc, sizeof(szHtmlDoc)-1), "read data differs from file\n");
+
+        IStream_Release(pStream);
+    }
+
+    hr = URLOpenBlockingStreamW(NULL, INDEX_HTML, &pStream, 0, NULL);
+    ok(hr == S_OK, "URLOpenBlockingStreamW failed with error 0x%08x\n", hr);
+
+    ok(pStream != NULL, "pStream is NULL\n");
+    if(pStream)
+    {
+        buffer[0] = 0;
         hr = IStream_Read(pStream, buffer, sizeof(buffer), NULL);
         ok(hr == S_OK, "IStream_Read failed with error 0x%08x\n", hr);
         ok(!memcmp(buffer, szHtmlDoc, sizeof(szHtmlDoc)-1), "read data differs from file\n");
@@ -366,6 +385,9 @@ static void test_URLOpenStreamW(void)
     CHECK_CALLED(OnProgress_ENDDOWNLOADDATA);
     CHECK_CALLED(OnDataAvailable);
     CHECK_CALLED(OnStopBinding);
+
+    hr = URLOpenStreamW(NULL, INDEX_HTML, 0, NULL);
+    ok(hr == S_OK, "URLOpenStreamW failed with error 0x%08x\n", hr);
 }
 
 START_TEST(stream)

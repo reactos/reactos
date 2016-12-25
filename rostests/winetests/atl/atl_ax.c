@@ -18,37 +18,50 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include <stdarg.h>
+//#include <stdio.h>
 
 #define COBJMACROS
 
 #include <wine/test.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
-#include <wingdi.h>
-#include <winnls.h>
-#include <winerror.h>
-#include <winnt.h>
-#include <wtypes.h>
-#include <olectl.h>
-#include <ocidl.h>
+//#include <windef.h>
+//#include <winbase.h>
+//#include <winuser.h>
+//#include <wingdi.h>
+//#include <winnls.h>
+//#include <winerror.h>
+//#include <winnt.h>
+//#include <wtypes.h>
+#include <objbase.h>
+//#include <olectl.h>
+//#include <ocidl.h>
 #include <exdisp.h>
+#include <wine/atlbase.h>
 
-HRESULT WINAPI AtlAxAttachControl(IUnknown *, HWND, IUnknown **);
+static HRESULT (WINAPI *pAtlAxAttachControl)(IUnknown *, HWND, IUnknown **);
+
+static void init_function_pointers(void)
+{
+    HMODULE hatl = GetModuleHandleA("atl.dll");
+
+    pAtlAxAttachControl = (void *)GetProcAddress(hatl, "AtlAxAttachControl");
+}
 
 static ATOM register_class(void)
 {
     WNDCLASSA wndclassA;
 
     wndclassA.style = 0;
-    wndclassA.lpfnWndProc = DefWindowProc;
+    wndclassA.lpfnWndProc = DefWindowProcA;
     wndclassA.cbClsExtra = 0;
     wndclassA.cbWndExtra = 0;
     wndclassA.hInstance = GetModuleHandleA(NULL);
     wndclassA.hIcon = NULL;
-    wndclassA.hCursor = LoadCursorA(NULL, IDC_ARROW);
+    wndclassA.hCursor = LoadCursorA(NULL, (LPSTR)IDC_ARROW);
     wndclassA.hbrBackground = (HBRUSH)(COLOR_BTNFACE+1);
     wndclassA.lpszMenuName = NULL;
     wndclassA.lpszClassName = "WineAtlTestClass";
@@ -64,16 +77,16 @@ static void test_AtlAxAttachControl(void)
     HRESULT hr;
     IUnknown *pObj, *pContainer;
 
-    hr = AtlAxAttachControl(NULL, NULL, NULL);
+    hr = pAtlAxAttachControl(NULL, NULL, NULL);
     ok(hr == E_INVALIDARG, "Expected AtlAxAttachControl to return E_INVALIDARG, got 0x%08x\n", hr);
 
     pContainer = (IUnknown *)0xdeadbeef;
-    hr = AtlAxAttachControl(NULL, NULL, &pContainer);
+    hr = pAtlAxAttachControl(NULL, NULL, &pContainer);
     ok(hr == E_INVALIDARG, "Expected AtlAxAttachControl to return E_INVALIDARG, got 0x%08x\n", hr);
     ok(pContainer == (IUnknown *)0xdeadbeef,
        "Expected the output container pointer to be untouched, got %p\n", pContainer);
 
-    hr = AtlAxAttachControl(NULL, hwnd, NULL);
+    hr = pAtlAxAttachControl(NULL, hwnd, NULL);
     ok(hr == E_INVALIDARG, "Expected AtlAxAttachControl to return E_INVALIDARG, got 0x%08x\n", hr);
 
     hr = CoCreateInstance(&CLSID_WebBrowser, NULL, CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER,
@@ -86,22 +99,16 @@ static void test_AtlAxAttachControl(void)
         return;
     }
 
-    hr = AtlAxAttachControl(pObj, NULL, NULL);
-    todo_wine
+    hr = pAtlAxAttachControl(pObj, NULL, NULL);
     ok(hr == S_FALSE, "Expected AtlAxAttachControl to return S_FALSE, got 0x%08x\n", hr);
 
-    pContainer = (IUnknown *)0xdeadbeef;
-    hr = AtlAxAttachControl(pObj, NULL, &pContainer);
-    todo_wine
+    pContainer = NULL;
+    hr = pAtlAxAttachControl(pObj, NULL, &pContainer);
     ok(hr == S_FALSE, "Expected AtlAxAttachControl to return S_FALSE, got 0x%08x\n", hr);
-    ok(pContainer != (IUnknown *)0xdeadbeef &&
-       pContainer != NULL,
-       "Expected the output container pointer to be initialized to non-NULL, got %p\n", pContainer);
+    ok(pContainer != NULL, "got %p\n", pContainer);
+    IUnknown_Release(pContainer);
 
-    if (pContainer != (IUnknown *)0xdeadbeef && pContainer != NULL)
-        IUnknown_Release(pContainer);
-
-    hr = AtlAxAttachControl(pObj, hwnd, NULL);
+    hr = pAtlAxAttachControl(pObj, hwnd, NULL);
     ok(hr == S_OK, "Expected AtlAxAttachControl to return S_OK, got 0x%08x\n", hr);
 
     IUnknown_Release(pObj);
@@ -109,14 +116,39 @@ static void test_AtlAxAttachControl(void)
     DestroyWindow(hwnd);
 }
 
+static void test_ax_win(void)
+{
+    BOOL ret;
+    WNDCLASSEXW wcex;
+    static const WCHAR AtlAxWin[] = {'A','t','l','A','x','W','i','n',0};
+    static HMODULE hinstance = 0;
+
+    ret = AtlAxWinInit();
+    ok(ret, "AtlAxWinInit failed\n");
+
+    hinstance = GetModuleHandleA(NULL);
+    memset(&wcex, 0, sizeof(wcex));
+    wcex.cbSize = sizeof(wcex);
+    ret = GetClassInfoExW(hinstance, AtlAxWin, &wcex);
+    ok(ret, "AtlAxWin has not registered\n");
+    ok(wcex.style == CS_GLOBALCLASS, "wcex.style %08x\n", wcex.style);
+}
+
 START_TEST(atl_ax)
 {
+    init_function_pointers();
+
     if (!register_class())
         return;
 
     CoInitialize(NULL);
 
-    test_AtlAxAttachControl();
+    if (pAtlAxAttachControl)
+        test_AtlAxAttachControl();
+    else
+        win_skip("AtlAxAttachControl is not available\n");
+
+    test_ax_win();
 
     CoUninitialize();
 }

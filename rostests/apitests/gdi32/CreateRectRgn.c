@@ -5,9 +5,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <apitest.h>
 
 void Test_CreateRectRgn()
 {

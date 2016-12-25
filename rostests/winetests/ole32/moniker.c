@@ -18,21 +18,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define _WIN32_DCOM
 #define COBJMACROS
 #define CONST_VTABLE
 
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <stdio.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "objbase.h"
-#include "initguid.h"
-#include "comcat.h"
-#include "olectl.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <ole2.h>
+//#include "objbase.h"
+//#include "ocidl.h"
+//#include "initguid.h"
+#include <comcat.h>
+#include <olectl.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 #define ok_more_than_one_lock() ok(cLocks > 0, "Number of locks should be > 0, but actually is %d\n", cLocks)
 #define ok_no_locks() ok(cLocks == 0, "Number of locks should be 0, but actually is %d\n", cLocks)
@@ -54,14 +61,6 @@ do { \
 static char const * const *expected_method_list;
 static const WCHAR wszFileName1[] = {'c',':','\\','w','i','n','d','o','w','s','\\','t','e','s','t','1','.','d','o','c',0};
 static const WCHAR wszFileName2[] = {'c',':','\\','w','i','n','d','o','w','s','\\','t','e','s','t','2','.','d','o','c',0};
-
-static const CLSID CLSID_WineTest =
-{ /* 9474ba1a-258b-490b-bc13-516e9239ace0 */
-    0x9474ba1a,
-    0x258b,
-    0x490b,
-    {0xbc, 0x13, 0x51, 0x6e, 0x92, 0x39, 0xac, 0xe0}
-};
 
 static const CLSID CLSID_TestMoniker =
 { /* b306bfbc-496e-4f53-b93e-2ff9c83223d7 */
@@ -96,6 +95,55 @@ static SIZE_T round_global_size(SIZE_T size)
     return ((size + global_size_alignment - 1) & ~(global_size_alignment - 1));
 }
 
+static DWORD external_connections;
+
+static HRESULT WINAPI ExternalConnection_QueryInterface(IExternalConnection *iface, REFIID riid, void **ppv)
+{
+    ok(0, "unexpected call\n");
+    *ppv = NULL;
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI ExternalConnection_AddRef(IExternalConnection *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI ExternalConnection_Release(IExternalConnection *iface)
+{
+    return 1;
+}
+
+static DWORD WINAPI ExternalConnection_AddConnection(IExternalConnection *iface, DWORD extconn, DWORD reserved)
+{
+    trace("add connection\n");
+
+    ok(extconn == EXTCONN_STRONG, "extconn = %d\n", extconn);
+    ok(!reserved, "reserved = %x\n", reserved);
+    return ++external_connections;
+}
+
+static DWORD WINAPI ExternalConnection_ReleaseConnection(IExternalConnection *iface, DWORD extconn,
+        DWORD reserved, BOOL fLastReleaseCloses)
+{
+    trace("release connection\n");
+
+    ok(extconn == EXTCONN_STRONG, "extconn = %d\n", extconn);
+    ok(!reserved, "reserved = %x\n", reserved);
+
+    return --external_connections;
+}
+
+static const IExternalConnectionVtbl ExternalConnectionVtbl = {
+    ExternalConnection_QueryInterface,
+    ExternalConnection_AddRef,
+    ExternalConnection_Release,
+    ExternalConnection_AddConnection,
+    ExternalConnection_ReleaseConnection
+};
+
+static IExternalConnection ExternalConnection = { &ExternalConnectionVtbl };
+
 static HRESULT WINAPI Test_IClassFactory_QueryInterface(
     LPCLASSFACTORY iface,
     REFIID riid,
@@ -108,6 +156,11 @@ static HRESULT WINAPI Test_IClassFactory_QueryInterface(
     {
         *ppvObj = iface;
         IClassFactory_AddRef(iface);
+        return S_OK;
+    }
+
+    if(IsEqualGUID(riid, &IID_IExternalConnection)) {
+        *ppvObj = &ExternalConnection;
         return S_OK;
     }
 
@@ -156,9 +209,14 @@ static IClassFactory Test_ClassFactory = { &TestClassFactory_Vtbl };
 
 typedef struct
 {
-    const IUnknownVtbl *lpVtbl;
+    IUnknown IUnknown_iface;
     ULONG refs;
 } HeapUnknown;
+
+static inline HeapUnknown *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, HeapUnknown, IUnknown_iface);
+}
 
 static HRESULT WINAPI HeapUnknown_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
 {
@@ -174,13 +232,13 @@ static HRESULT WINAPI HeapUnknown_QueryInterface(IUnknown *iface, REFIID riid, v
 
 static ULONG WINAPI HeapUnknown_AddRef(IUnknown *iface)
 {
-    HeapUnknown *This = (HeapUnknown *)iface;
+    HeapUnknown *This = impl_from_IUnknown(iface);
     return InterlockedIncrement((LONG*)&This->refs);
 }
 
 static ULONG WINAPI HeapUnknown_Release(IUnknown *iface)
 {
-    HeapUnknown *This = (HeapUnknown *)iface;
+    HeapUnknown *This = impl_from_IUnknown(iface);
     ULONG refs = InterlockedDecrement((LONG*)&This->refs);
     if (!refs) HeapFree(GetProcessHeap(), 0, This);
     return refs;
@@ -582,11 +640,13 @@ static void test_ROT(void)
     ok_ole_success(hr, GetRunningObjectTable);
 
     expected_method_list = methods_register_no_ROTData;
+    external_connections = 0;
     /* try with our own moniker that doesn't support IROTData */
     hr = IRunningObjectTable_Register(pROT, ROTFLAGS_REGISTRATIONKEEPSALIVE,
         (IUnknown*)&Test_ClassFactory, &MonikerNoROTData, &dwCookie);
     ok_ole_success(hr, IRunningObjectTable_Register);
     ok(!*expected_method_list, "Method sequence starting from %s not called\n", *expected_method_list);
+    ok(external_connections == 1, "external_connections = %d\n", external_connections);
 
     ok_more_than_one_lock();
 
@@ -597,6 +657,7 @@ static void test_ROT(void)
 
     hr = IRunningObjectTable_Revoke(pROT, dwCookie);
     ok_ole_success(hr, IRunningObjectTable_Revoke);
+    ok(external_connections == 0, "external_connections = %d\n", external_connections);
 
     ok_no_locks();
 
@@ -623,9 +684,11 @@ static void test_ROT(void)
     ok_ole_success(hr, CreateClassMoniker);
 
     /* test flags: 0 */
+    external_connections = 0;
     hr = IRunningObjectTable_Register(pROT, 0, (IUnknown*)&Test_ClassFactory,
                                       pMoniker, &dwCookie);
     ok_ole_success(hr, IRunningObjectTable_Register);
+    ok(external_connections == 0, "external_connections = %d\n", external_connections);
 
     ok_more_than_one_lock();
 
@@ -717,7 +780,7 @@ static HRESULT WINAPI ParseDisplayName_QueryInterface(IParseDisplayName *iface, 
         IsEqualIID(riid, &IID_IParseDisplayName))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IParseDisplayName_AddRef(iface);
         return S_OK;
     }
     *ppv = NULL;
@@ -1007,7 +1070,6 @@ static void test_MkParseDisplayName(void)
     hr = IEnumMoniker_QueryInterface(spEM1, &IID_IUnknown, (void*) &lpEM1);
     /* Register a couple of Monikers and check is ok */
     ok(hr==0, "IEnumMoniker_QueryInterface hr %08x %p\n", hr, lpEM1);
-    hr = MK_E_NOOBJECT;
     
     matchCnt = count_moniker_matches(pbc, spEM1);
     trace("Number of matches is %i\n", matchCnt);
@@ -1271,6 +1333,7 @@ static void test_moniker(
     IROTData_Release(rotdata);
   
     hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    ok_ole_success(hr, CreateStreamOnHGlobal);
   
     /* Saving */
 
@@ -1451,6 +1514,7 @@ static void test_file_moniker(WCHAR* path)
     ok_ole_success(hr, CreateFileMoniker); 
 
     hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    ok_ole_success(hr, CreateStreamOnHGlobal);
 
     /* Marshal */
     hr = CoMarshalInterface(stream, &IID_IMoniker, (IUnknown *)moniker1, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
@@ -1522,11 +1586,11 @@ static void test_item_moniker(void)
     IBindCtx *bindctx;
     IMoniker *inverse;
     IUnknown *unknown;
-    static const WCHAR wszDelimeter[] = {'!',0};
+    static const WCHAR wszDelimiter[] = {'!',0};
     static const WCHAR wszObjectName[] = {'T','e','s','t',0};
     static const WCHAR expected_display_name[] = { '!','T','e','s','t',0 };
 
-    hr = CreateItemMoniker(wszDelimeter, wszObjectName, &moniker);
+    hr = CreateItemMoniker(wszDelimiter, wszObjectName, &moniker);
     ok_ole_success(hr, CreateItemMoniker);
 
     test_moniker("item moniker", moniker, 
@@ -1651,15 +1715,15 @@ static void test_generic_composite_moniker(void)
     FILETIME filetime;
     IMoniker *inverse;
     IUnknown *unknown;
-    static const WCHAR wszDelimeter1[] = {'!',0};
+    static const WCHAR wszDelimiter1[] = {'!',0};
     static const WCHAR wszObjectName1[] = {'T','e','s','t',0};
-    static const WCHAR wszDelimeter2[] = {'#',0};
+    static const WCHAR wszDelimiter2[] = {'#',0};
     static const WCHAR wszObjectName2[] = {'W','i','n','e',0};
     static const WCHAR expected_display_name[] = { '!','T','e','s','t','#','W','i','n','e',0 };
 
-    hr = CreateItemMoniker(wszDelimeter1, wszObjectName1, &moniker1);
+    hr = CreateItemMoniker(wszDelimiter1, wszObjectName1, &moniker1);
     ok_ole_success(hr, CreateItemMoniker);
-    hr = CreateItemMoniker(wszDelimeter2, wszObjectName2, &moniker2);
+    hr = CreateItemMoniker(wszDelimiter2, wszObjectName2, &moniker2);
     ok_ole_success(hr, CreateItemMoniker);
     hr = CreateGenericComposite(moniker1, moniker2, &moniker);
     ok_ole_success(hr, CreateGenericComposite);
@@ -1774,9 +1838,9 @@ static void test_pointer_moniker(void)
     /* Hashing */
     hr = IMoniker_Hash(moniker, &hash);
     ok_ole_success(hr, IMoniker_Hash);
-    ok(hash == (DWORD)&Test_ClassFactory,
+    ok(hash == PtrToUlong(&Test_ClassFactory),
         "Hash value should have been 0x%08x, instead of 0x%08x\n",
-        (DWORD)&Test_ClassFactory, hash);
+        PtrToUlong(&Test_ClassFactory), hash);
 
     /* IsSystemMoniker test */
     hr = IMoniker_IsSystemMoniker(moniker, &moniker_type);
@@ -1880,9 +1944,9 @@ static void test_bind_context(void)
     ok(hr == E_INVALIDARG, "IBindCtx_RegisterObjectParam should have returned E_INVALIDARG instead of 0x%08x\n", hr);
 
     unknown = HeapAlloc(GetProcessHeap(), 0, sizeof(*unknown));
-    unknown->lpVtbl = &HeapUnknown_Vtbl;
+    unknown->IUnknown_iface.lpVtbl = &HeapUnknown_Vtbl;
     unknown->refs = 1;
-    hr = IBindCtx_RegisterObjectParam(pBindCtx, (WCHAR *)wszParamName, (IUnknown *)&unknown->lpVtbl);
+    hr = IBindCtx_RegisterObjectParam(pBindCtx, (WCHAR *)wszParamName, &unknown->IUnknown_iface);
     ok_ole_success(hr, "IBindCtx_RegisterObjectParam");
 
     hr = IBindCtx_GetObjectParam(pBindCtx, (WCHAR *)wszParamName, &param_obj);
@@ -1907,23 +1971,23 @@ static void test_bind_context(void)
     ok(hr == E_INVALIDARG, "IBindCtx_RevokeObjectBound(NULL) should have return E_INVALIDARG instead of 0x%08x\n", hr);
 
     unknown2 = HeapAlloc(GetProcessHeap(), 0, sizeof(*unknown));
-    unknown2->lpVtbl = &HeapUnknown_Vtbl;
+    unknown2->IUnknown_iface.lpVtbl = &HeapUnknown_Vtbl;
     unknown2->refs = 1;
-    hr = IBindCtx_RegisterObjectBound(pBindCtx, (IUnknown *)&unknown2->lpVtbl);
+    hr = IBindCtx_RegisterObjectBound(pBindCtx, &unknown2->IUnknown_iface);
     ok_ole_success(hr, "IBindCtx_RegisterObjectBound");
 
-    hr = IBindCtx_RevokeObjectBound(pBindCtx, (IUnknown *)&unknown2->lpVtbl);
+    hr = IBindCtx_RevokeObjectBound(pBindCtx, &unknown2->IUnknown_iface);
     ok_ole_success(hr, "IBindCtx_RevokeObjectBound");
 
-    hr = IBindCtx_RevokeObjectBound(pBindCtx, (IUnknown *)&unknown2->lpVtbl);
+    hr = IBindCtx_RevokeObjectBound(pBindCtx, &unknown2->IUnknown_iface);
     ok(hr == MK_E_NOTBOUND, "IBindCtx_RevokeObjectBound with not bound object should have returned MK_E_NOTBOUND instead of 0x%08x\n", hr);
 
     IBindCtx_Release(pBindCtx);
 
-    refs = IUnknown_Release((IUnknown *)&unknown->lpVtbl);
+    refs = IUnknown_Release(&unknown->IUnknown_iface);
     ok(!refs, "object param should have been destroyed, instead of having %d refs\n", refs);
 
-    refs = IUnknown_Release((IUnknown *)&unknown2->lpVtbl);
+    refs = IUnknown_Release(&unknown2->IUnknown_iface);
     ok(!refs, "bound object should have been destroyed, instead of having %d refs\n", refs);
 }
 
@@ -1956,9 +2020,7 @@ static void test_save_load_filemoniker(void)
 
     hr = IMoniker_Save(pMk, pStm, TRUE);
     ok_ole_success(hr, "IMoniker_Save");
-
-    hr = IMoniker_Release(pMk);
-    ok_ole_success(hr, "IMoniker_Release");
+    IMoniker_Release(pMk);
 
     /* overwrite the constants with various values */
     hr = IStream_Seek(pStm, zero_pos, STREAM_SEEK_SET, NULL);
@@ -1989,15 +2051,17 @@ static void test_save_load_filemoniker(void)
     hr = IMoniker_Load(pMk, pStm);
     ok_ole_success(hr, "IMoniker_Load");
 
-    hr = IMoniker_Release(pMk);
-    ok_ole_success(hr, "IMoniker_Release");
-
-    hr = IStream_Release(pStm);
-    ok_ole_success(hr, "IStream_Release");
+    IMoniker_Release(pMk);
+    IStream_Release(pStm);
 }
 
 START_TEST(moniker)
 {
+    if (!GetProcAddress(GetModuleHandleA("ole32.dll"), "CoRegisterSurrogateEx")) {
+        win_skip("skipping test on win9x\n");
+        return;
+    }
+
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
     test_ROT();

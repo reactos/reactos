@@ -1,0 +1,13 @@
+#include <windef.h>
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_TEST1 "Test string one."
+    IDS_TEST2 "I am a happy BSTR"
+END
+
+IDB_ANT BITMAP "ant.bmp"
+IDB_CROSS BITMAP "cross.bmp"

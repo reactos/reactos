@@ -1,7 +1,5 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+add_definitions(-DUSE_WINE_TODOS)
 
 list(APPEND SOURCE
     base64.c
@@ -22,7 +20,6 @@ list(APPEND SOURCE
     testlist.c)
 
 add_executable(crypt32_winetest ${SOURCE})
-target_link_libraries(crypt32_winetest wine)
 set_module_type(crypt32_winetest win32cui)
-add_importlibs(crypt32_winetest crypt32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(crypt32_winetest crypt32 advapi32 user32 shlwapi shell32 msvcrt kernel32)
 add_cd_file(TARGET crypt32_winetest DESTINATION reactos/bin FOR all)

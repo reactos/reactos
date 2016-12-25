@@ -5,12 +5,12 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <apitest.h>
+
+#include <wingdi.h>
 #include <winddi.h>
-#include <reactos/win32k/ntgdityp.h>
-#include <reactos/win32k/ntgdihdl.h>
+#include <include/ntgdityp.h>
+#include <include/ntgdihdl.h>
 
 #define TEST(x) ok(x, #x"\n")
 #define RTEST(x) ok(x, #x"\n")

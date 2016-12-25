@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Automatic Testing Utility
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Class implementing functions for handling Wine tests
- * COPYRIGHT:   Copyright 2009 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2009-2015 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -13,22 +13,25 @@ static const DWORD ListTimeout = 10000;
  * Constructs a CWineTest object.
  */
 CWineTest::CWineTest()
+    : m_hFind(NULL), m_ListBuffer(NULL)
 {
-    WCHAR WindowsDirectory[MAX_PATH];
-
-    /* Zero-initialize variables */
-    m_hFind = NULL;
-    m_hReadPipe = NULL;
-    m_hWritePipe = NULL;
-    m_ListBuffer = NULL;
-    memset(&m_StartupInfo, 0, sizeof(m_StartupInfo));
+    WCHAR wszDirectory[MAX_PATH];
 
     /* Set up m_TestPath */
-    if(!GetWindowsDirectoryW(WindowsDirectory, MAX_PATH))
-        FATAL("GetWindowsDirectoryW failed");
+    if (GetEnvironmentVariableW(L"ROSAUTOTEST_DIR", wszDirectory, MAX_PATH))
+    {
+        m_TestPath = wszDirectory;
+        if (*m_TestPath.rbegin() != L'\\')
+            m_TestPath += L'\\';
+    }
+    else
+    {
+        if (!GetWindowsDirectoryW(wszDirectory, MAX_PATH))
+            FATAL("GetWindowsDirectoryW failed");
 
-    m_TestPath = WindowsDirectory;
-    m_TestPath += L"\\bin\\";
+        m_TestPath = wszDirectory;
+        m_TestPath += L"\\bin\\";
+    }
 }
 
 /**
@@ -38,12 +41,6 @@ CWineTest::~CWineTest()
 {
     if(m_hFind)
         FindClose(m_hFind);
-
-    if(m_hReadPipe)
-        CloseHandle(m_hReadPipe);
-
-    if(m_hWritePipe)
-        CloseHandle(m_hWritePipe);
 
     if(m_ListBuffer)
         delete m_ListBuffer;
@@ -111,6 +108,7 @@ CWineTest::DoListCommand()
     DWORD BytesAvailable;
     DWORD Temp;
     wstring CommandLine;
+    CPipe Pipe;
 
     /* Build the command line */
     CommandLine = m_TestPath;
@@ -119,16 +117,16 @@ CWineTest::DoListCommand()
 
     {
         /* Start the process for getting all available tests */
-        CProcess Process(CommandLine, &m_StartupInfo);
+        CPipedProcess Process(CommandLine, Pipe);
 
         /* Wait till this process ended */
         if(WaitForSingleObject(Process.GetProcessHandle(), ListTimeout) == WAIT_FAILED)
-            FATAL("WaitForSingleObject failed for the test list\n");
+            TESTEXCEPTION("WaitForSingleObject failed for the test list\n");
     }
 
     /* Read the output data into a buffer */
-    if(!PeekNamedPipe(m_hReadPipe, NULL, 0, NULL, &BytesAvailable, NULL))
-        FATAL("PeekNamedPipe failed for the test list\n");
+    if(!Pipe.Peek(NULL, 0, NULL, &BytesAvailable))
+        TESTEXCEPTION("CPipe::Peek failed for the test list\n");
 
     /* Check if we got any */
     if(!BytesAvailable)
@@ -136,14 +134,14 @@ CWineTest::DoListCommand()
         stringstream ss;
 
         ss << "The --list command did not return any data for " << UnicodeToAscii(m_CurrentFile) << endl;
-        SSEXCEPTION;
+        TESTEXCEPTION(ss.str());
     }
 
     /* Read the data */
     m_ListBuffer = new char[BytesAvailable];
 
-    if(!ReadFile(m_hReadPipe, m_ListBuffer, BytesAvailable, &Temp, NULL))
-        FATAL("ReadPipe failed\n");
+    if(!Pipe.Read(m_ListBuffer, BytesAvailable, &Temp))
+        TESTEXCEPTION("CPipe::Read failed\n");
 
     return BytesAvailable;
 }
@@ -178,7 +176,7 @@ CWineTest::GetNextTest()
         m_CurrentFile.clear();
 
         /* Also free the memory for the list buffer */
-        delete m_ListBuffer;
+        delete[] m_ListBuffer;
         m_ListBuffer = NULL;
 
         return false;
@@ -210,40 +208,54 @@ CWineTest::GetNextTestInfo()
 {
     while(!m_CurrentFile.empty() || GetNextFile())
     {
-        while(GetNextTest())
+        try
         {
-            /* If the user specified a test through the command line, check this here */
-            if(!Configuration.GetTest().empty() && Configuration.GetTest() != m_CurrentTest)
-                continue;
-
+            while(GetNextTest())
             {
-                auto_ptr<CTestInfo> TestInfo(new CTestInfo());
-                size_t UnderscorePosition;
+                /* If the user specified a test through the command line, check this here */
+                if(!Configuration.GetTest().empty() && Configuration.GetTest() != m_CurrentTest)
+                    continue;
 
-                /* Build the command line */
-                TestInfo->CommandLine = m_TestPath;
-                TestInfo->CommandLine += m_CurrentFile;
-                TestInfo->CommandLine += ' ';
-                TestInfo->CommandLine += AsciiToUnicode(m_CurrentTest);
-
-                /* Store the Module name */
-                UnderscorePosition = m_CurrentFile.find_last_of('_');
-
-                if(UnderscorePosition == m_CurrentFile.npos)
                 {
-                    stringstream ss;
+                    auto_ptr<CTestInfo> TestInfo(new CTestInfo());
+                    size_t UnderscorePosition;
 
-                    ss << "Invalid test file name: " << UnicodeToAscii(m_CurrentFile) << endl;
-                    SSEXCEPTION;
+                    /* Build the command line */
+                    TestInfo->CommandLine = m_TestPath;
+                    TestInfo->CommandLine += m_CurrentFile;
+                    TestInfo->CommandLine += ' ';
+                    TestInfo->CommandLine += AsciiToUnicode(m_CurrentTest);
+
+                    /* Store the Module name */
+                    UnderscorePosition = m_CurrentFile.find_last_of('_');
+
+                    if(UnderscorePosition == m_CurrentFile.npos)
+                    {
+                        stringstream ss;
+
+                        ss << "Invalid test file name: " << UnicodeToAscii(m_CurrentFile) << endl;
+                        SSEXCEPTION;
+                    }
+
+                    TestInfo->Module = UnicodeToAscii(m_CurrentFile.substr(0, UnderscorePosition));
+
+                    /* Store the test */
+                    TestInfo->Test = m_CurrentTest;
+
+                    return TestInfo.release();
                 }
-
-                TestInfo->Module = UnicodeToAscii(m_CurrentFile.substr(0, UnderscorePosition));
-
-                /* Store the test */
-                TestInfo->Test = m_CurrentTest;
-
-                return TestInfo.release();
             }
+        }
+        catch(CTestException& e)
+        {
+            stringstream ss;
+
+            ss << "An exception occurred trying to list tests for: " << UnicodeToAscii(m_CurrentFile) << endl;
+            StringOut(ss.str());
+            StringOut(e.GetMessage());
+            StringOut("\n");
+            m_CurrentFile.clear();
+            delete[] m_ListBuffer;
         }
     }
 
@@ -260,51 +272,55 @@ CWineTest::GetNextTestInfo()
 void
 CWineTest::RunTest(CTestInfo* TestInfo)
 {
-    bool BreakLoop = false;
     DWORD BytesAvailable;
-    DWORD Temp;
-    stringstream ss;
+    stringstream ss, ssFinish;
+    DWORD StartTime;
+    float TotalTime;
+    string tailString;
+    CPipe Pipe;
+    char Buffer[1024];
 
     ss << "Running Wine Test, Module: " << TestInfo->Module << ", Test: " << TestInfo->Test << endl;
     StringOut(ss.str());
 
+    StartTime = GetTickCount();
+
+    try
     {
         /* Execute the test */
-        CProcess Process(TestInfo->CommandLine, &m_StartupInfo);
+        CPipedProcess Process(TestInfo->CommandLine, Pipe);
 
         /* Receive all the data from the pipe */
-        do
+        while(Pipe.Read(Buffer, sizeof(Buffer) - 1, &BytesAvailable) && BytesAvailable)
         {
-            /* When the application finished, make sure that we peek the pipe one more time, so that we get all data.
-               If the following condition would be the while() condition, we might hit a race condition:
-                  - We check for data with PeekNamedPipe -> no data available
-                  - The application outputs its data and finishes
-                  - WaitForSingleObject reports that the application has finished and we break the loop without receiving any data
-            */
-            if(WaitForSingleObject(Process.GetProcessHandle(), 0) != WAIT_TIMEOUT)
-                BreakLoop = true;
+            /* Output text through StringOut, even while the test is still running */
+            Buffer[BytesAvailable] = 0;
+            tailString = StringOut(tailString.append(string(Buffer)), false);
 
-            if(!PeekNamedPipe(m_hReadPipe, NULL, 0, NULL, &BytesAvailable, NULL))
-                FATAL("PeekNamedPipe failed for the test run\n");
-
-            if(BytesAvailable)
-            {
-                /* There is data, so get it and output it */
-                auto_array_ptr<char> Buffer(new char[BytesAvailable + 1]);
-
-                if(!ReadFile(m_hReadPipe, Buffer, BytesAvailable, &Temp, NULL))
-                    FATAL("ReadFile failed for the test run\n");
-
-                /* Output all test output through StringOut, even while the test is still running */
-                Buffer[BytesAvailable] = 0;
-                StringOut(string(Buffer));
-
-                if(Configuration.DoSubmit())
-                    TestInfo->Log += Buffer;
-            }
+            if(Configuration.DoSubmit())
+                TestInfo->Log += Buffer;
         }
-        while(!BreakLoop);
+        if(GetLastError() != ERROR_BROKEN_PIPE)
+            TESTEXCEPTION("CPipe::Read failed for the test run\n");
     }
+    catch(CTestException& e)
+    {
+        if(!tailString.empty())
+            StringOut(tailString);
+        tailString.clear();
+        StringOut(e.GetMessage());
+        TestInfo->Log += e.GetMessage();
+    }
+
+    /* Print what's left */
+    if(!tailString.empty())
+        StringOut(tailString);
+
+    TotalTime = ((float)GetTickCount() - StartTime)/1000;
+    ssFinish << "Test " << TestInfo->Test << " completed in ";
+    ssFinish << setprecision(2) << fixed << TotalTime << " seconds." << endl;
+    StringOut(ssFinish.str());
+    TestInfo->Log += ssFinish.str();
 }
 
 /**
@@ -316,19 +332,7 @@ CWineTest::Run()
     auto_ptr<CTestList> TestList;
     auto_ptr<CWebService> WebService;
     CTestInfo* TestInfo;
-    SECURITY_ATTRIBUTES SecurityAttributes;
-
-    /* Create a pipe for getting the output of the tests */
-    SecurityAttributes.nLength = sizeof(SecurityAttributes);
-    SecurityAttributes.bInheritHandle = TRUE;
-    SecurityAttributes.lpSecurityDescriptor = NULL;
-
-    if(!CreatePipe(&m_hReadPipe, &m_hWritePipe, &SecurityAttributes, 0))
-        FATAL("CreatePipe failed\n");
-
-    m_StartupInfo.cb = sizeof(m_StartupInfo);
-    m_StartupInfo.dwFlags = STARTF_USESTDHANDLES;
-    m_StartupInfo.hStdOutput = m_hWritePipe;
+    DWORD ErrorMode;
 
     /* The virtual test list is of course faster, so it should be preferred over
        the journaled one.
@@ -351,6 +355,10 @@ CWineTest::Run()
     if(Configuration.DoSubmit())
         WebService.reset(new CWebService());
 
+    /* Disable error dialogs if we're running in non-interactive mode */
+    if(!Configuration.IsInteractive())
+        ErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);
+
     /* Get information for each test to run */
     while((TestInfo = TestList->GetNextTestInfo()) != 0)
     {
@@ -363,4 +371,12 @@ CWineTest::Run()
 
         StringOut("\n\n");
     }
+
+    /* We're done with all tests. Finish this run */
+    if(Configuration.DoSubmit())
+        WebService->Finish("wine");
+
+    /* Restore the original error mode */
+    if(!Configuration.IsInteractive())
+        SetErrorMode(ErrorMode);
 }

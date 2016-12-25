@@ -23,7 +23,7 @@
 
 #include "wine/test.h"
 
-static UINT (WINAPI *pPrivateExtractIconsA)(LPCTSTR, int, int, int, HICON *, UINT *, UINT, UINT) = NULL;
+static UINT (WINAPI *pPrivateExtractIconsA)(LPCSTR, int, int, int, HICON *, UINT *, UINT, UINT) = NULL;
 
 static void init_function_pointers(void) 
 {
@@ -33,7 +33,7 @@ static void init_function_pointers(void)
 
 static void test_LoadStringW(void)
 {
-    HINSTANCE hInst = GetModuleHandle(NULL);
+    HINSTANCE hInst = GetModuleHandleA(NULL);
     WCHAR copiedstringw[128], returnedstringw[128], *resourcepointer = NULL;
     char copiedstring[128], returnedstring[128];
     int length1, length2, retvalue;
@@ -79,7 +79,7 @@ static void test_LoadStringW(void)
 
 static void test_LoadStringA (void)
 {
-    HINSTANCE hInst = GetModuleHandle (NULL);
+    HINSTANCE hInst = GetModuleHandleA(NULL);
     static const char str[] = "String resource"; /* same in resource.rc */
     char buf[128];
     struct string_test {
@@ -90,7 +90,7 @@ static void test_LoadStringA (void)
                                   {sizeof str, sizeof str - 1},
                                   {sizeof str - 1, sizeof str - 2}};
     unsigned int i;
-    int ret;
+    int ret, ret2;
 
     assert (sizeof str < sizeof buf);
     for (i = 0; i < sizeof tests / sizeof tests[0]; i++) {
@@ -110,22 +110,29 @@ static void test_LoadStringA (void)
 
     ret = LoadStringA(hInst, 1, buf, sizeof(buf) );
     ok( ret > 0, "LoadString failed: ret %d err %d\n", ret, GetLastError());
-    ok( LoadStringA( hInst, MAKELONG( 1, 0x8000 ), buf, sizeof(buf)) == ret,
-        "LoadString failed: ret %d err %d\n", ret, GetLastError());
-    ok( LoadStringA( hInst, MAKELONG( 1, 0xffff ), buf, sizeof(buf)) == ret,
-        "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ret2 = LoadStringA( hInst, MAKELONG( 1, 0x8000 ), buf, sizeof(buf));
+    ok( ret2 == ret, "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ret2 = LoadStringA( hInst, MAKELONG( 1, 0xffff ), buf, sizeof(buf));
+    ok( ret2 == ret, "LoadString failed: ret %d err %d\n", ret, GetLastError());
 
     ret = LoadStringA(hInst, 65534, buf, sizeof(buf) );
     ok( ret > 0, "LoadString failed: ret %d err %d\n", ret, GetLastError());
-    ok( LoadStringA( hInst, MAKELONG( 65534, 0x8000 ), buf, sizeof(buf)) == ret,
-        "LoadString failed: ret %d err %d\n", ret, GetLastError());
-    ok( LoadStringA( hInst, MAKELONG( 65534, 0xffff ), buf, sizeof(buf)) == ret,
-        "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ret2 = LoadStringA( hInst, MAKELONG( 65534, 0x8000 ), buf, sizeof(buf));
+    ok( ret2 == ret, "LoadString failed: ret %d err %d\n", ret, GetLastError());
+    ret2 = LoadStringA( hInst, MAKELONG( 65534, 0xffff ), buf, sizeof(buf));
+    ok( ret2 == ret, "LoadString failed: ret %d err %d\n", ret, GetLastError());
 
     ret = LoadStringA(hInst, 0, buf, 0);
     ok( ret == -1 || broken(ret == 0),
         "LoadStringA did not return -1 when called with buflen = 0, got %d, err %d\n",
         ret, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    buf[0] = 'a';
+    ret = LoadStringA(hInst, 1, buf, 1);
+    ok( !ret, "LoadString returned %d\n", ret);
+    ok( buf[0] == 0, "buf[0] = %c (%x)\n", buf[0], buf[0]);
+    ok( GetLastError() == 0xdeadbeef, "GetLastError() = %d\n", GetLastError());
 }
 
 static void test_accel1(void)
@@ -148,7 +155,7 @@ static void test_accel1(void)
     ac[n].key = 0;
     ac[n++].fVirt = 0;
 
-    hAccel = CreateAcceleratorTable( &ac[0], n );
+    hAccel = CreateAcceleratorTableA( &ac[0], n );
     ok( hAccel != NULL, "create accelerator table\n");
 
     r = DestroyAcceleratorTable( hAccel );
@@ -170,22 +177,20 @@ static void test_accel1(void)
 
     ac[n].cmd = 0xfff0;
     ac[n].key = 0xffff;
-    ac[n++].fVirt = (SHORT) 0x0000;
+    ac[n++].fVirt = 0x0000;
 
     ac[n].cmd = 0xfff0;
     ac[n].key = 0xffff;
-    ac[n++].fVirt = (SHORT) 0x0001;
+    ac[n++].fVirt = 0x0001;
 
-    hAccel = CreateAcceleratorTable( &ac[0], n );
+    hAccel = CreateAcceleratorTableA( &ac[0], n );
     ok( hAccel != NULL, "create accelerator table\n");
 
-    r = CopyAcceleratorTable( hAccel, NULL, 0 );
-    ok( r == n || broken(r == 2), /* win9x */
-        "two entries in table %u/%u\n", r, n);
+    r = CopyAcceleratorTableA( hAccel, NULL, 0 );
+    ok( r == n, "two entries in table %u/%u\n", r, n);
 
-    r = CopyAcceleratorTable( hAccel, &ac[0], n );
-    ok( r == n || broken(r == 2), /* win9x */
-        "still should be two entries in table %u/%u\n", r, n);
+    r = CopyAcceleratorTableA( hAccel, &ac[0], n );
+    ok( r == n, "still should be two entries in table %u/%u\n", r, n);
 
     n=0;
     ok( ac[n].cmd == 1000, "cmd 0 not preserved got %x\n", ac[n].cmd);
@@ -215,7 +220,7 @@ done:
     r = DestroyAcceleratorTable( hAccel );
     ok( r, "destroy accelerator table\n");
 
-    hAccel = CreateAcceleratorTable( &ac[0], 0 );
+    hAccel = CreateAcceleratorTableA( &ac[0], 0 );
     ok( !hAccel || broken(hAccel != NULL), /* nt4 */ "zero elements should fail\n");
 
     /* these will on crash win2k
@@ -248,36 +253,36 @@ static void test_accel2(void)
      */
 
     /* try a zero count */
-    hac = CreateAcceleratorTable( &ac[0], 0 );
+    hac = CreateAcceleratorTableA( &ac[0], 0 );
     ok( !hac || broken(hac != NULL), /* nt4 */ "fail\n");
     if (!hac) ok( !DestroyAcceleratorTable( hac ), "destroy failed\n");
 
     /* creating one accelerator should work */
-    hac = CreateAcceleratorTable( &ac[0], 1 );
+    hac = CreateAcceleratorTableA( &ac[0], 1 );
     ok( hac != NULL , "fail\n");
-    ok( 1 == CopyAcceleratorTable( hac, out, 1 ), "copy failed\n");
+    ok( 1 == CopyAcceleratorTableA( hac, out, 1 ), "copy failed\n");
     ok( DestroyAcceleratorTable( hac ), "destroy failed\n");
 
     /* how about two of the same type? */
-    hac = CreateAcceleratorTable( &ac[0], 2);
+    hac = CreateAcceleratorTableA( &ac[0], 2);
     ok( hac != NULL , "fail\n");
-    res = CopyAcceleratorTable( hac, NULL, 100 );
-    ok( res == 2 || broken(res == 0), /* win9x */ "copy null failed %d\n", res);
-    res = CopyAcceleratorTable( hac, NULL, 0 );
+    res = CopyAcceleratorTableA( hac, NULL, 100 );
     ok( res == 2, "copy null failed %d\n", res);
-    res = CopyAcceleratorTable( hac, NULL, 1 );
-    ok( res == 2 || broken(res == 0), /* win9x */ "copy null failed %d\n", res);
-    ok( 1 == CopyAcceleratorTable( hac, out, 1 ), "copy 1 failed\n");
-    ok( 2 == CopyAcceleratorTable( hac, out, 2 ), "copy 2 failed\n");
+    res = CopyAcceleratorTableA( hac, NULL, 0 );
+    ok( res == 2, "copy null failed %d\n", res);
+    res = CopyAcceleratorTableA( hac, NULL, 1 );
+    ok( res == 2, "copy null failed %d\n", res);
+    ok( 1 == CopyAcceleratorTableA( hac, out, 1 ), "copy 1 failed\n");
+    ok( 2 == CopyAcceleratorTableA( hac, out, 2 ), "copy 2 failed\n");
     ok( DestroyAcceleratorTable( hac ), "destroy failed\n");
     /* ok( !memcmp( ac, out, sizeof ac ), "tables different\n"); */
 
     /* how about two of the same type with a non-zero key? */
     ac[0].key = 0x20;
     ac[1].key = 0x20;
-    hac = CreateAcceleratorTable( &ac[0], 2);
+    hac = CreateAcceleratorTableA( &ac[0], 2);
     ok( hac != NULL , "fail\n");
-    ok( 2 == CopyAcceleratorTable( hac, out, 2 ), "copy 2 failed\n");
+    ok( 2 == CopyAcceleratorTableA( hac, out, 2 ), "copy 2 failed\n");
     ok( DestroyAcceleratorTable( hac ), "destroy failed\n");
     /* ok( !memcmp( ac, out, sizeof ac ), "tables different\n"); */
 
@@ -286,17 +291,17 @@ static void test_accel2(void)
     ac[0].key = 0x40;
     ac[1].fVirt = FVIRTKEY;
     ac[1].key = 0x40;
-    hac = CreateAcceleratorTable( &ac[0], 2);
+    hac = CreateAcceleratorTableA( &ac[0], 2);
     ok( hac != NULL , "fail\n");
-    ok( 2 == CopyAcceleratorTable( hac, out, 2 ), "copy 2 failed\n");
+    ok( 2 == CopyAcceleratorTableA( hac, out, 2 ), "copy 2 failed\n");
     /* ok( !memcmp( ac, out, sizeof ac ), "tables different\n"); */
     ok( DestroyAcceleratorTable( hac ), "destroy failed\n");
 
     /* how virtual key codes */
     ac[0].fVirt = FVIRTKEY;
-    hac = CreateAcceleratorTable( &ac[0], 1);
+    hac = CreateAcceleratorTableA( &ac[0], 1);
     ok( hac != NULL , "fail\n");
-    ok( 1 == CopyAcceleratorTable( hac, out, 2 ), "copy 2 failed\n");
+    ok( 1 == CopyAcceleratorTableA( hac, out, 2 ), "copy 2 failed\n");
     /* ok( !memcmp( ac, out, sizeof ac/2 ), "tables different\n"); */
     ok( DestroyAcceleratorTable( hac ), "destroy failed\n");
 
@@ -304,9 +309,9 @@ static void test_accel2(void)
     ac[0].cmd   = 0xffff;
     ac[0].fVirt = 0xff;
     ac[0].key   = 0xffff;
-    hac = CreateAcceleratorTable( &ac[0], 1);
+    hac = CreateAcceleratorTableA( &ac[0], 1);
     ok( hac != NULL , "fail\n");
-    ok( 1 == CopyAcceleratorTable( hac, out, 1 ), "copy 1 failed\n");
+    ok( 1 == CopyAcceleratorTableA( hac, out, 1 ), "copy 1 failed\n");
     /* ok( memcmp( ac, out, sizeof ac/2 ), "tables not different\n"); */
     ok( out[0].cmd == ac[0].cmd, "cmd modified\n");
     ok( out[0].fVirt == (ac[0].fVirt&0x7f), "fVirt not modified\n");
@@ -315,10 +320,10 @@ static void test_accel2(void)
 
     /* how turning on all bits? */
     memset( ac, 0xff, sizeof ac );
-    hac = CreateAcceleratorTable( &ac[0], 2);
+    hac = CreateAcceleratorTableA( &ac[0], 2);
     ok( hac != NULL , "fail\n");
-    res = CopyAcceleratorTable( hac, out, 2 );
-    ok( res == 2 || broken(res == 1), /* win9x */ "copy 2 failed %d\n", res);
+    res = CopyAcceleratorTableA( hac, out, 2 );
+    ok( res == 2, "copy 2 failed %d\n", res);
     /* ok( memcmp( ac, out, sizeof ac ), "tables not different\n"); */
     ok( out[0].cmd == ac[0].cmd, "cmd modified\n");
     ok( out[0].fVirt == (ac[0].fVirt&0x7f), "fVirt not modified\n");
@@ -333,13 +338,32 @@ static void test_accel2(void)
 }
 
 static void test_PrivateExtractIcons(void) {
-    CONST CHAR szShell32Dll[] = "shell32.dll";
+    const CHAR szShell32Dll[] = "shell32.dll";
     HICON ahIcon[256];
-    UINT aIconId[256];
-    UINT cIcons, cIcons2;
+    UINT i, aIconId[256], cIcons, cIcons2;
 
     if (!pPrivateExtractIconsA) return;
-    
+
+    cIcons = pPrivateExtractIconsA("", 0, 16, 16, ahIcon, aIconId, 1, 0);
+    ok(cIcons == ~0u, "got %u\n", cIcons);
+
+    cIcons = pPrivateExtractIconsA("notepad.exe", 0, 16, 16, NULL, NULL, 1, 0);
+    ok(cIcons == 1 || broken(cIcons == 2) /* win2k */, "got %u\n", cIcons);
+
+    ahIcon[0] = (HICON)0xdeadbeef;
+    cIcons = pPrivateExtractIconsA("notepad.exe", 0, 16, 16, ahIcon, NULL, 1, 0);
+    ok(cIcons == 1, "got %u\n", cIcons);
+    ok(ahIcon[0] != (HICON)0xdeadbeef, "icon not set\n");
+    DestroyIcon(ahIcon[0]);
+
+    ahIcon[0] = (HICON)0xdeadbeef;
+    aIconId[0] = 0xdeadbeef;
+    cIcons = pPrivateExtractIconsA("notepad.exe", 0, 16, 16, ahIcon, aIconId, 1, 0);
+    ok(cIcons == 1, "got %u\n", cIcons);
+    ok(ahIcon[0] != (HICON)0xdeadbeef, "icon not set\n");
+    ok(aIconId[0] != 0xdeadbeef, "id not set\n");
+    DestroyIcon(ahIcon[0]);
+
     cIcons = pPrivateExtractIconsA(szShell32Dll, 0, 16, 16, NULL, NULL, 0, 0);
     cIcons2 = pPrivateExtractIconsA(szShell32Dll, 4, MAKELONG(32,16), MAKELONG(32,16), 
                                    NULL, NULL, 256, 0);
@@ -352,14 +376,18 @@ static void test_PrivateExtractIcons(void) {
 
     cIcons = pPrivateExtractIconsA(szShell32Dll, 0, 16, 16, ahIcon, aIconId, 3, 0);
     ok(cIcons == 3, "Three icons requested got cIcons=%d\n", cIcons);
+    for (i = 0; i < cIcons; i++) DestroyIcon(ahIcon[i]);
 
     /* count must be a multiple of two when getting two sizes */
     cIcons = pPrivateExtractIconsA(szShell32Dll, 0, MAKELONG(16,32), MAKELONG(16,32),
                                    ahIcon, aIconId, 3, 0);
     ok(cIcons == 0 /* vista */ || cIcons == 4, "Three icons requested got cIcons=%d\n", cIcons);
+    for (i = 0; i < cIcons; i++) DestroyIcon(ahIcon[i]);
+
     cIcons = pPrivateExtractIconsA(szShell32Dll, 0, MAKELONG(16,32), MAKELONG(16,32),
                                    ahIcon, aIconId, 4, 0);
     ok(cIcons == 4, "Four icons requested got cIcons=%d\n", cIcons);
+    for (i = 0; i < cIcons; i++) DestroyIcon(ahIcon[i]);
 }
 
 static void test_LoadImage(void)
@@ -367,14 +395,14 @@ static void test_LoadImage(void)
     HBITMAP bmp;
     HRSRC hres;
 
-    bmp = LoadBitmapA(GetModuleHandle(NULL), MAKEINTRESOURCE(100));
+    bmp = LoadBitmapA(GetModuleHandleA(NULL), MAKEINTRESOURCEA(100));
     ok(bmp != NULL, "Could not load a bitmap resource\n");
     if (bmp) DeleteObject(bmp);
 
-    hres = FindResource(GetModuleHandle(NULL), "#100", RT_BITMAP);
+    hres = FindResourceA(GetModuleHandleA(NULL), "#100", (LPCSTR)RT_BITMAP);
     ok(hres != NULL, "Could not find a bitmap resource with a numeric string\n");
 
-    bmp = LoadBitmapA(GetModuleHandle(NULL), "#100");
+    bmp = LoadBitmapA(GetModuleHandleA(NULL), "#100");
     ok(bmp != NULL, "Could not load a bitmap resource with a numeric string\n");
     if (bmp) DeleteObject(bmp);
 }

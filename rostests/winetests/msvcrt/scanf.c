@@ -27,9 +27,11 @@ static void test_sscanf( void )
     char buffer[100], buffer1[100];
     char format[20];
     int result, ret;
+    LONGLONG result64;
     char c;
     void *ptr;
     float res1= -82.6267f, res2= 27.76f, res11, res12;
+    double double_res;
     static const char pname[]=" St. Petersburg, Florida\n";
     int hour=21,min=59,sec=20;
     int  number,number_so_far;
@@ -93,11 +95,30 @@ static void test_sscanf( void )
 
     /* Check float */
     ret = sprintf(buffer,"%f %f",res1, res2);
+    ok( ret == 20, "expected 20, got %u\n", ret);
     ret = sscanf(buffer,"%f%f",&res11, &res12);
+    ok( ret == 2, "expected 2, got %u\n", ret);
     ok( (res11 == res1) && (res12 == res2), "Error reading floats\n");
+
+    /* Check double */
+    ret = sprintf(buffer, "%lf", 32.715);
+    ok(ret == 9, "expected 9, got %u\n", ret);
+    ret = sscanf(buffer, "%lf", &double_res);
+    ok(ret == 1, "expected 1, got %u\n", ret);
+    ok(double_res == 32.715, "Got %lf, expected %lf\n", double_res, 32.715);
+    ret = sscanf(buffer, "%Lf", &double_res);
+    ok(ret == 1, "expected 1, got %u\n", ret);
+    ok(double_res == 32.715, "Got %lf, expected %lf\n", double_res, 32.715);
+
+    strcpy(buffer, "1.1e-30");
+    ret = sscanf(buffer, "%lf", &double_res);
+    ok(ret == 1, "expected 1, got %u\n", ret);
+    ok(double_res >= 1.1e-30-1e-45 && double_res <= 1.1e-30+1e-45,
+            "Got %.18le, expected %.18le\n", double_res, 1.1e-30);
 
     /* check strings */
     ret = sprintf(buffer," %s", pname);
+    ok( ret == 26, "expected 26, got %u\n", ret);
     ret = sscanf(buffer,"%*c%[^\n]",buffer1);
     ok( ret == 1, "Error with format \"%s\"\n","%*c%[^\n]");
     ok( strncmp(pname,buffer1,strlen(buffer1)) == 0, "Error with \"%s\" \"%s\"\n",pname, buffer1);
@@ -110,8 +131,16 @@ static void test_sscanf( void )
     ok( ret == 1, "Error with format \"%s\"\n","%*[a-cd-dg-e]%c");
     ok( buffer[0] == 'h', "Error with \"abcefgdh\" \"%c\"\n", buffer[0]);
 
+    buffer1[0] = 'b';
+    ret = sscanf("a","%s%s", buffer, buffer1);
+    ok( ret == 1, "expected 1, got %u\n", ret);
+    ok( buffer[0] == 'a', "buffer[0] = '%c'\n", buffer[0]);
+    ok( buffer[1] == '\0', "buffer[1] = '%c'\n", buffer[1]);
+    ok( buffer1[0] == 'b', "buffer1[0] = '%c'\n", buffer1[0]);
+
     /* check digits */
     ret = sprintf(buffer,"%d:%d:%d",hour,min,sec);
+    ok( ret == 8, "expected 8, got %u\n", ret);
     ret = sscanf(buffer,"%d%n",&number,&number_so_far);
     ok(ret == 1 , "problem with format arg \"%%d%%n\"\n");
     ok(number == hour,"Read wrong arg %d instead of %d\n",number, hour);
@@ -120,6 +149,25 @@ static void test_sscanf( void )
     ret = sscanf(buffer+2,"%*c%n",&number_so_far);
     ok(ret == 0 , "problem with format arg \"%%*c%%n\"\n");
     ok(number_so_far == 1,"Read wrong arg for \"%%n\" %d instead of 2\n",number_so_far);
+
+    result = 0xdeadbeef;
+    strcpy(buffer,"12345678");
+    ret = sscanf(buffer, "%hd", &result);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ok(result == 0xdead614e, "Wrong number read (%x)\n", result);
+
+    result = 0xdeadbeef;
+    ret = sscanf(buffer, "%hhd", &result);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ok(result == 0xbc614e, "Wrong number read (%x)\n", result);
+
+    strcpy(buffer,"12345678901234");
+    ret = sscanf(buffer, "%lld", &result64);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ret = sprintf(buffer1, "%lld", result64);
+    ok(ret==14 || broken(ret==10), "sprintf returned %d\n", ret);
+    if(ret == 14)
+        ok(!strcmp(buffer, buffer1), "got %s, expected %s\n", buffer1, buffer);
 
     /* Check %i according to bug 1878 */
     strcpy(buffer,"123");
@@ -196,6 +244,13 @@ static void test_sscanf( void )
     ret = sscanf(buffer, "%d:%d%n", &hour, &min, &number_so_far);
     ok(ret == 2, "Wrong number of arguments read: %d\n", ret);
     ok(number_so_far == 4, "%%n yielded wrong result: %d\n", number_so_far);
+
+    buffer[0] = 0;
+    buffer1[0] = 0;
+    ret = sscanf("test=value\xda", "%[^=] = %[^;]", buffer, buffer1);
+    ok(ret == 2, "got %d\n", ret);
+    ok(!strcmp(buffer, "test"), "buf %s\n", buffer);
+    ok(!strcmp(buffer1, "value\xda"), "buf %s\n", buffer1);
 }
 
 static void test_sscanf_s(void)
@@ -239,8 +294,25 @@ static void test_sscanf_s(void)
     ok(i==123, "i = %d\n", i);
 }
 
+static void test_swscanf( void )
+{
+    wchar_t buffer[100];
+    int result, ret;
+    static const WCHAR formatd[] = {'%','d',0};
+
+    /* check WEOF */
+    /* WEOF is an unsigned short -1 but swscanf returns int
+       so it should be sign-extended */
+    buffer[0] = 0;
+    ret = swscanf(buffer, formatd, &result);
+    /* msvcrt returns 0 but should return -1 (later versions do) */
+    ok( ret == (short)WEOF || broken(ret == 0),
+        "swscanf returns %x instead of %x\n", ret, WEOF );
+}
+
 START_TEST(scanf)
 {
     test_sscanf();
     test_sscanf_s();
+    test_swscanf();
 }

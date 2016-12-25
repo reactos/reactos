@@ -81,6 +81,14 @@ static void test_gdi_objects(void)
         "GetObject(NULL obj), expected 0, NO_ERROR, got %d, %u\n",
 	i, GetLastError());
 
+    /* GetObject expects ERROR_NOACCESS when passed an invalid buffer */
+    hp = SelectObject(hdc, GetStockObject(BLACK_PEN));
+    SetLastError(0);
+    i = GetObjectA(hp, (INT_PTR)buff, (LPVOID)sizeof(buff));
+    ok (!i && (GetLastError() == 0 || GetLastError() == ERROR_NOACCESS),
+        "GetObject(invalid buff), expected 0, ERROR_NOACCESS, got %d, %u\n",
+    i, GetLastError());
+
     /* GetObjectType does SetLastError() on a null object */
     SetLastError(0);
     i = GetObjectType(NULL);
@@ -110,9 +118,10 @@ struct hgdiobj_event
 static DWORD WINAPI thread_proc(void *param)
 {
     LOGPEN lp;
+    DWORD status;
     struct hgdiobj_event *hgdiobj_event = param;
 
-    hgdiobj_event->hdc = CreateDC("display", NULL, NULL, NULL);
+    hgdiobj_event->hdc = CreateDCA("display", NULL, NULL, NULL);
     ok(hgdiobj_event->hdc != NULL, "CreateDC error %u\n", GetLastError());
 
     hgdiobj_event->hgdiobj1 = CreatePen(PS_DASHDOTDOT, 17, RGB(1, 2, 3));
@@ -122,10 +131,10 @@ static DWORD WINAPI thread_proc(void *param)
     ok(hgdiobj_event->hgdiobj2 != 0, "Failed to create pen\n");
 
     SetEvent(hgdiobj_event->ready_event);
-    ok(WaitForSingleObject(hgdiobj_event->stop_event, INFINITE) == WAIT_OBJECT_0,
-       "WaitForSingleObject error %u\n", GetLastError());
+    status = WaitForSingleObject(hgdiobj_event->stop_event, INFINITE);
+    ok(status == WAIT_OBJECT_0, "WaitForSingleObject error %u\n", GetLastError());
 
-    ok(!GetObject(hgdiobj_event->hgdiobj1, sizeof(lp), &lp), "GetObject should fail\n");
+    ok(!GetObjectA(hgdiobj_event->hgdiobj1, sizeof(lp), &lp), "GetObject should fail\n");
 
     ok(!GetDeviceCaps(hgdiobj_event->hdc, TECHNOLOGY), "GetDeviceCaps(TECHNOLOGY) should fail\n");
 
@@ -139,20 +148,22 @@ static void test_thread_objects(void)
     HANDLE hthread;
     struct hgdiobj_event hgdiobj_event;
     INT ret;
+    DWORD status;
+    BOOL bRet;
 
-    hgdiobj_event.stop_event = CreateEvent(NULL, 0, 0, NULL);
+    hgdiobj_event.stop_event = CreateEventA(NULL, 0, 0, NULL);
     ok(hgdiobj_event.stop_event != NULL, "CreateEvent error %u\n", GetLastError());
-    hgdiobj_event.ready_event = CreateEvent(NULL, 0, 0, NULL);
+    hgdiobj_event.ready_event = CreateEventA(NULL, 0, 0, NULL);
     ok(hgdiobj_event.ready_event != NULL, "CreateEvent error %u\n", GetLastError());
 
     hthread = CreateThread(NULL, 0, thread_proc, &hgdiobj_event, 0, &tid);
     ok(hthread != NULL, "CreateThread error %u\n", GetLastError());
 
-    ok(WaitForSingleObject(hgdiobj_event.ready_event, INFINITE) == WAIT_OBJECT_0,
-       "WaitForSingleObject error %u\n", GetLastError());
+    status = WaitForSingleObject(hgdiobj_event.ready_event, INFINITE);
+    ok(status == WAIT_OBJECT_0, "WaitForSingleObject error %u\n", GetLastError());
 
-    ok(GetObject(hgdiobj_event.hgdiobj1, sizeof(lp), &lp) == sizeof(lp),
-       "GetObject error %u\n", GetLastError());
+    ret = GetObjectA(hgdiobj_event.hgdiobj1, sizeof(lp), &lp);
+    ok(ret == sizeof(lp), "GetObject error %u\n", GetLastError());
     ok(lp.lopnStyle == PS_DASHDOTDOT, "wrong pen style %d\n", lp.lopnStyle);
     ok(lp.lopnWidth.x == 17, "wrong pen width.y %d\n", lp.lopnWidth.x);
     ok(lp.lopnWidth.y == 0, "wrong pen width.y %d\n", lp.lopnWidth.y);
@@ -161,20 +172,23 @@ static void test_thread_objects(void)
     ret = GetDeviceCaps(hgdiobj_event.hdc, TECHNOLOGY);
     ok(ret == DT_RASDISPLAY, "GetDeviceCaps(TECHNOLOGY) should return DT_RASDISPLAY not %d\n", ret);
 
-    ok(DeleteObject(hgdiobj_event.hgdiobj1), "DeleteObject error %u\n", GetLastError());
-    ok(DeleteDC(hgdiobj_event.hdc), "DeleteDC error %u\n", GetLastError());
+    bRet = DeleteObject(hgdiobj_event.hgdiobj1);
+    ok(bRet, "DeleteObject error %u\n", GetLastError());
+    bRet = DeleteDC(hgdiobj_event.hdc);
+    ok(bRet, "DeleteDC error %u\n", GetLastError());
 
     type = GetObjectType(hgdiobj_event.hgdiobj2);
     ok(type == OBJ_REGION, "GetObjectType returned %u\n", type);
 
     SetEvent(hgdiobj_event.stop_event);
-    ok(WaitForSingleObject(hthread, INFINITE) == WAIT_OBJECT_0,
-       "WaitForSingleObject error %u\n", GetLastError());
+    status = WaitForSingleObject(hthread, INFINITE);
+    ok(status == WAIT_OBJECT_0, "WaitForSingleObject error %u\n", GetLastError());
     CloseHandle(hthread);
 
     type = GetObjectType(hgdiobj_event.hgdiobj2);
     ok(type == OBJ_REGION, "GetObjectType returned %u\n", type);
-    ok(DeleteObject(hgdiobj_event.hgdiobj2), "DeleteObject error %u\n", GetLastError());
+    bRet = DeleteObject(hgdiobj_event.hgdiobj2);
+    ok(bRet, "DeleteObject error %u\n", GetLastError());
 
     CloseHandle(hgdiobj_event.stop_event);
     CloseHandle(hgdiobj_event.ready_event);
@@ -207,7 +221,7 @@ static void test_GetCurrentObject(void)
     hobj = GetCurrentObject(hdc, OBJ_PEN);
     ok(hobj == hpen, "OBJ_PEN is wrong: %p\n", hobj);
     hobj = GetCurrentObject(hdc, OBJ_EXTPEN);
-    ok(hobj == hpen || broken(hobj == 0) /* win9x */, "OBJ_EXTPEN is wrong: %p\n", hobj);
+    ok(hobj == hpen, "OBJ_EXTPEN is wrong: %p\n", hobj);
 
     hbrush = CreateSolidBrush(RGB(10, 20, 30));
     assert(hbrush != 0);
@@ -235,7 +249,7 @@ static void test_GetCurrentObject(void)
     hobj = GetCurrentObject(hdc, OBJ_BITMAP);
     ok(hobj == hbmp, "OBJ_BITMAP is wrong: %p\n", hobj);
 
-    assert(GetObject(hbrush, sizeof(lb), &lb) == sizeof(lb));
+    assert(GetObjectA(hbrush, sizeof(lb), &lb) == sizeof(lb));
     hpen = ExtCreatePen(PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_SQUARE | PS_JOIN_BEVEL,
                         10, &lb, 0, NULL);
     assert(hpen != 0);
@@ -243,7 +257,7 @@ static void test_GetCurrentObject(void)
     hobj = GetCurrentObject(hdc, OBJ_PEN);
     ok(hobj == hpen, "OBJ_PEN is wrong: %p\n", hobj);
     hobj = GetCurrentObject(hdc, OBJ_EXTPEN);
-    ok(hobj == hpen || broken(hobj == 0) /* win9x */, "OBJ_EXTPEN is wrong: %p\n", hobj);
+    ok(hobj == hpen, "OBJ_EXTPEN is wrong: %p\n", hobj);
 
     hcs = GetColorSpace(hdc);
     if (hcs)
@@ -254,7 +268,7 @@ static void test_GetCurrentObject(void)
         ok(hcs != 0, "CreateColorSpace failed\n");
         SelectObject(hdc, hcs);
         hobj = GetCurrentObject(hdc, OBJ_COLORSPACE);
-        ok(hobj == hcs || broken(hobj == 0) /* win9x */, "OBJ_COLORSPACE is wrong: %p\n", hobj);
+        ok(hobj == hcs, "OBJ_COLORSPACE is wrong: %p\n", hobj);
     }
 
     hrgn = CreateRectRgn(1, 1, 100, 100);
@@ -305,10 +319,54 @@ static void test_region(void)
     DeleteObject(hrgn);
 }
 
+static void test_handles_on_win64(void)
+{
+    int i;
+    BOOL ret;
+    DWORD type;
+    HRGN hrgn, hrgn_test;
+
+    static const struct
+    {
+        ULONG high;
+        ULONG low;
+        BOOL  ret;
+    } cases[] =
+    {
+        { 0x00000000, 0x00000000, TRUE  },
+        { 0x00000000, 0x0000ffe0, FALSE }, /* just over MAX_LARGE_HANDLES */
+        { 0x00000000, 0x0000ffb0, FALSE }, /* just under MAX_LARGE_HANDLES */
+        { 0xffffffff, 0xffff0000, FALSE },
+        { 0xffffffff, 0x00000000, TRUE  },
+        { 0xdeadbeef, 0x00000000, TRUE  },
+        { 0xcccccccc, 0xcccccccc, FALSE }
+    };
+
+    if (sizeof(void*) != 8)
+        return;
+
+    for (i = 0; i < sizeof(cases)/sizeof(cases[0]); i++)
+    {
+        hrgn = CreateRectRgn(10, 10, 20, 20);
+        hrgn_test = (HRGN)(ULONG_PTR)((ULONG_PTR)hrgn | ((ULONGLONG)cases[i].high << 32) | cases[i].low);
+        type = GetObjectType( hrgn_test );
+        if (cases[i].ret)
+            ok( type == OBJ_REGION, "wrong type %u\n", type );
+        else
+            ok( type == 0, "wrong type %u\n", type );
+        ret = DeleteObject(hrgn_test);
+        ok( cases[i].ret == ret, "DeleteObject should return %s (%p)\n",
+            cases[i].ret ? "TRUE" : "FALSE", hrgn_test);
+        /* actually free it if above is expected to fail */
+        if (!ret) DeleteObject(hrgn);
+    }
+}
+
 START_TEST(gdiobj)
 {
     test_gdi_objects();
     test_thread_objects();
     test_GetCurrentObject();
     test_region();
+    test_handles_on_win64();
 }

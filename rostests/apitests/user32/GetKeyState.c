@@ -5,13 +5,12 @@
  * PROGRAMMERS:     Giannis Adamopoulos
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <apitest.h>
+
+#include <winuser.h>
 #include <assert.h>
 
 HHOOK hKbdHook, hKbdLLHook;
-	
 
 LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam,  LPARAM lParam)
 {

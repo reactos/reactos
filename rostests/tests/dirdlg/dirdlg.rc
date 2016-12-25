@@ -1,7 +1,7 @@
 #include <windows.h>
 #include "resource.h"
 
-IDD_MAIN DIALOG DISCARDABLE 20, 20, 220, 140
+IDD_MAIN DIALOG 20, 20, 220, 140
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Sans Serif"
 CAPTION "Select a file"

@@ -17,32 +17,36 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "wine/test.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winreg.h"
-#include "winuser.h"
-#include "shlwapi.h"
+//#include <stdarg.h>
+//#include <stdio.h>
+
+#include <wine/test.h>
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winerror.h"
+#include <winreg.h>
+//#include "winuser.h"
+#include <shlwapi.h>
 
 /* Keys used for testing */
 #define REG_TEST_KEY        "Software\\Wine\\Test"
 #define REG_CURRENT_VERSION "Software\\Microsoft\\Windows\\CurrentVersion\\explorer"
 
 static HMODULE hshlwapi;
-typedef DWORD (WINAPI *SHCopyKeyA_func)(HKEY,LPCSTR,HKEY,DWORD);
-static SHCopyKeyA_func pSHCopyKeyA;
-typedef DWORD (WINAPI *SHRegGetPathA_func)(HKEY,LPCSTR,LPCSTR,LPSTR,DWORD);
-static SHRegGetPathA_func pSHRegGetPathA;
-typedef LSTATUS (WINAPI *SHRegGetValueA_func)(HKEY,LPCSTR,LPCSTR,SRRF,LPDWORD,LPVOID,LPDWORD);
-static SHRegGetValueA_func pSHRegGetValueA;
 
-static char sTestpath1[] = "%LONGSYSTEMVAR%\\subdir1";
-static char sTestpath2[] = "%FOO%\\subdir1";
+static DWORD (WINAPI *pSHCopyKeyA)(HKEY,LPCSTR,HKEY,DWORD);
+static DWORD (WINAPI *pSHRegGetPathA)(HKEY,LPCSTR,LPCSTR,LPSTR,DWORD);
+static LSTATUS (WINAPI *pSHRegGetValueA)(HKEY,LPCSTR,LPCSTR,SRRF,LPDWORD,LPVOID,LPDWORD);
+static LSTATUS (WINAPI *pSHRegCreateUSKeyW)(LPCWSTR,REGSAM,HUSKEY,PHUSKEY,DWORD);
+static LSTATUS (WINAPI *pSHRegOpenUSKeyW)(LPCWSTR,REGSAM,HUSKEY,PHUSKEY,BOOL);
+static LSTATUS (WINAPI *pSHRegCloseUSKey)(HUSKEY);
+
+static const char sTestpath1[] = "%LONGSYSTEMVAR%\\subdir1";
+static const char sTestpath2[] = "%FOO%\\subdir1";
 
 static const char * sEnvvar1 = "bar";
 static const char * sEnvvar2 = "ImARatherLongButIndeedNeededString";
@@ -192,7 +196,7 @@ static void test_SHGetRegPath(void)
 	ok( 0 == strcmp(sExpTestpath1, buf) , "Comparing (%s) with (%s) failed\n", buf, sExpTestpath1);
 }
 
-static void test_SHQUeryValueEx(void)
+static void test_SHQueryValueEx(void)
 {
 	HKEY hKey;
 	DWORD dwSize;
@@ -410,15 +414,15 @@ static void test_SHDeleteKey(void)
 
     if (!RegOpenKeyA(HKEY_CURRENT_USER, REG_TEST_KEY, &hKeyTest))
     {
-        if (!RegCreateKey(hKeyTest, "ODBC", &hKeyS))
+        if (!RegCreateKeyA(hKeyTest, "ODBC", &hKeyS))
         {
             HKEY hKeyO;
 
-            if (!RegCreateKey(hKeyS, "ODBC.INI", &hKeyO))
+            if (!RegCreateKeyA(hKeyS, "ODBC.INI", &hKeyO))
             {
                 RegCloseKey (hKeyO);
 
-                if (!RegCreateKey(hKeyS, "ODBCINST.INI", &hKeyO))
+                if (!RegCreateKeyA(hKeyS, "ODBCINST.INI", &hKeyO))
                 {
                     RegCloseKey (hKeyO);
                     sysfail = 0;
@@ -445,21 +449,79 @@ static void test_SHDeleteKey(void)
         ok( 0, "Could not set up SHDeleteKey test\n");
 }
 
+static void test_SHRegCreateUSKeyW(void)
+{
+    static const WCHAR subkeyW[] = {'s','u','b','k','e','y',0};
+    LONG ret;
+
+    if (!pSHRegCreateUSKeyW)
+    {
+        win_skip("SHRegCreateUSKeyW not available\n");
+        return;
+    }
+
+    ret = pSHRegCreateUSKeyW(subkeyW, KEY_ALL_ACCESS, NULL, NULL, SHREGSET_FORCE_HKCU);
+    ok(ret == ERROR_INVALID_PARAMETER, "got %d\n", ret);
+}
+
+static void test_SHRegCloseUSKey(void)
+{
+    static const WCHAR localW[] = {'S','o','f','t','w','a','r','e',0};
+    LONG ret;
+    HUSKEY key;
+
+    if (!pSHRegOpenUSKeyW || !pSHRegCloseUSKey)
+    {
+        win_skip("SHRegOpenUSKeyW or SHRegCloseUSKey not available\n");
+        return;
+    }
+
+    ret = pSHRegCloseUSKey(NULL);
+    ok(ret == ERROR_INVALID_PARAMETER, "got %d\n", ret);
+
+    ret = pSHRegOpenUSKeyW(localW, KEY_ALL_ACCESS, NULL, &key, FALSE);
+    ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+
+    ret = pSHRegCloseUSKey(key);
+    ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+
+    /* Test with limited rights, specially without KEY_SET_VALUE */
+    ret = pSHRegOpenUSKeyW(localW, KEY_QUERY_VALUE, NULL, &key, FALSE);
+    ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+
+    ret = pSHRegCloseUSKey(key);
+    ok(ret == ERROR_SUCCESS, "got %d\n", ret);
+}
+
 START_TEST(shreg)
 {
-	HKEY hkey = create_test_entries();
+    HKEY hkey = create_test_entries();
 
-        if (!hkey) return;
+    if (!hkey) return;
 
-	hshlwapi = GetModuleHandleA("shlwapi.dll");
-        pSHCopyKeyA=(SHCopyKeyA_func)GetProcAddress(hshlwapi,"SHCopyKeyA");
-        pSHRegGetPathA=(SHRegGetPathA_func)GetProcAddress(hshlwapi,"SHRegGetPathA");
-        pSHRegGetValueA=(SHRegGetValueA_func)GetProcAddress(hshlwapi,"SHRegGetValueA");
-	test_SHGetValue();
-        test_SHRegGetValue();
-	test_SHQUeryValueEx();
-	test_SHGetRegPath();
-	test_SHCopyKey();
-        test_SHDeleteKey();
-        delete_key( hkey, "Software\\Wine", "Test" );
+    hshlwapi = GetModuleHandleA("shlwapi.dll");
+
+    /* SHCreateStreamOnFileEx was introduced in shlwapi v6.0 */
+    if(!GetProcAddress(hshlwapi, "SHCreateStreamOnFileEx")){
+        win_skip("Too old shlwapi version\n");
+        return;
+    }
+
+    pSHCopyKeyA = (void*)GetProcAddress(hshlwapi,"SHCopyKeyA");
+    pSHRegGetPathA = (void*)GetProcAddress(hshlwapi,"SHRegGetPathA");
+    pSHRegGetValueA = (void*)GetProcAddress(hshlwapi,"SHRegGetValueA");
+    pSHRegCreateUSKeyW = (void*)GetProcAddress(hshlwapi, "SHRegCreateUSKeyW");
+    pSHRegOpenUSKeyW = (void*)GetProcAddress(hshlwapi, "SHRegOpenUSKeyW");
+    pSHRegCloseUSKey = (void*)GetProcAddress(hshlwapi, "SHRegCloseUSKey");
+
+    test_SHGetValue();
+    test_SHRegGetValue();
+    test_SHQueryValueEx();
+    test_SHGetRegPath();
+    test_SHCopyKey();
+    test_SHDeleteKey();
+    test_SHRegCreateUSKeyW();
+    test_SHRegCloseUSKey();
+
+    delete_key( hkey, "Software\\Wine", "Test" );
 }

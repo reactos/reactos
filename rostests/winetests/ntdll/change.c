@@ -22,18 +22,16 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #include <winnt.h>
-#include <winternl.h>
+#include <wine/winternl.h>
 #include <winerror.h>
 #include <stdio.h>
 #include "wine/test.h"
 
-typedef NTSTATUS (WINAPI *fnNtNotifyChangeDirectoryFile)(
+static NTSTATUS (WINAPI *pNtNotifyChangeDirectoryFile)(
                           HANDLE,HANDLE,PIO_APC_ROUTINE,PVOID,
                           PIO_STATUS_BLOCK,PVOID,ULONG,ULONG,BOOLEAN);
-fnNtNotifyChangeDirectoryFile pNtNotifyChangeDirectoryFile;
 
-typedef NTSTATUS (WINAPI *fnNtCancelIoFile)(HANDLE,PIO_STATUS_BLOCK);
-fnNtCancelIoFile pNtCancelIoFile;
+static NTSTATUS (WINAPI *pNtCancelIoFile)(HANDLE,PIO_STATUS_BLOCK);
 
 
 static void test_ntncdf(void)
@@ -71,7 +69,7 @@ static void test_ntncdf(void)
                         OPEN_EXISTING, fflags, NULL);
     ok( hdir != INVALID_HANDLE_VALUE, "failed to open directory\n");
 
-    hEvent = CreateEvent( NULL, 0, 0, NULL );
+    hEvent = CreateEventA( NULL, 0, 0, NULL );
 
     r = pNtNotifyChangeDirectoryFile(hdir,NULL,NULL,NULL,&iosb,NULL,0,0,0);
     ok(r==STATUS_INVALID_PARAMETER, "should return invalid parameter\n");
@@ -101,19 +99,19 @@ static void test_ntncdf(void)
     r = pNtNotifyChangeDirectoryFile(hdir,hEvent,NULL,NULL,&iosb,buffer,sizeof buffer,filter,0);
     ok(r==STATUS_PENDING, "should return status pending\n");
 
-    r = WaitForSingleObject( hEvent, 0 );
+    r = WaitForSingleObject( hEvent, 100 );
     ok( r == STATUS_TIMEOUT, "should timeout\n" );
 
-    r = WaitForSingleObject( hdir, 0 );
+    r = WaitForSingleObject( hdir, 100 );
     ok( r == STATUS_TIMEOUT, "should timeout\n" );
 
     r = CreateDirectoryW( subdir, NULL );
     ok( r == TRUE, "failed to create directory\n");
 
-    r = WaitForSingleObject( hdir, 0 );
+    r = WaitForSingleObject( hdir, 100 );
     ok( r == STATUS_TIMEOUT, "should timeout\n" );
 
-    r = WaitForSingleObject( hEvent, 0 );
+    r = WaitForSingleObject( hEvent, 100 );
     ok( r == WAIT_OBJECT_0, "event should be ready\n" );
 
     ok( U(iosb).Status == STATUS_SUCCESS, "information wrong\n");
@@ -199,7 +197,7 @@ static void test_ntncdf_async(void)
                         OPEN_EXISTING, fflags, NULL);
     ok( hdir != INVALID_HANDLE_VALUE, "failed to open directory\n");
 
-    hEvent = CreateEvent( NULL, 0, 0, NULL );
+    hEvent = CreateEventA( NULL, 0, 0, NULL );
 
     filter = FILE_NOTIFY_CHANGE_FILE_NAME;
     filter |= FILE_NOTIFY_CHANGE_DIR_NAME;
@@ -301,7 +299,7 @@ static void test_ntncdf_async(void)
     CloseHandle(hdir);
 
     ok(U(iosb).Status == STATUS_SUCCESS, "status wrong\n");
-    todo_wine ok(U(iosb2).Status == STATUS_CANCELLED, "status wrong\n");
+    ok(U(iosb2).Status == STATUS_CANCELLED, "status wrong %x\n",U(iosb2).Status);
 
     ok(iosb.Information == 0, "info wrong\n");
     ok(iosb2.Information == 0, "info wrong\n");
@@ -314,17 +312,15 @@ static void test_ntncdf_async(void)
 
 START_TEST(change)
 {
-    HMODULE hntdll = GetModuleHandle("ntdll");
+    HMODULE hntdll = GetModuleHandleA("ntdll");
     if (!hntdll)
     {
         win_skip("not running on NT, skipping test\n");
         return;
     }
 
-    pNtNotifyChangeDirectoryFile = (fnNtNotifyChangeDirectoryFile) 
-        GetProcAddress(hntdll, "NtNotifyChangeDirectoryFile");
-    pNtCancelIoFile = (fnNtCancelIoFile)
-        GetProcAddress(hntdll, "NtCancelIoFile");
+    pNtNotifyChangeDirectoryFile = (void *)GetProcAddress(hntdll, "NtNotifyChangeDirectoryFile");
+    pNtCancelIoFile = (void *)GetProcAddress(hntdll, "NtCancelIoFile");
 
     if (!pNtNotifyChangeDirectoryFile || !pNtCancelIoFile)
     {

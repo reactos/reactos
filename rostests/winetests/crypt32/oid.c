@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #include <stdio.h>
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
-#include <winerror.h>
+//#include <winerror.h>
 #include <wincrypt.h>
 #include <winreg.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 
 static BOOL (WINAPI *pCryptEnumOIDInfo)(DWORD,DWORD,void*,PFN_CRYPT_ENUM_OID_INFO);
@@ -451,6 +451,7 @@ static void test_registerDefaultOIDFunction(void)
     /* Repeat a few tests on the normal encoding type */
     ret = CryptRegisterDefaultOIDFunction(X509_ASN_ENCODING,
      "CertDllOpenStoreProv", 0, bogusDll);
+    ok(ret, "CryptRegisterDefaultOIDFunction failed\n");
     ret = CryptUnregisterDefaultOIDFunction(X509_ASN_ENCODING,
      "CertDllOpenStoreProv", bogusDll);
     ok(ret, "CryptUnregisterDefaultOIDFunction failed\n");

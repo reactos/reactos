@@ -19,12 +19,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-#include <windows.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "wine/test.h"
-#include "dsound.h"
-#include "dsconf.h"
+#define COBJMACROS
+//#include <windows.h>
+
+#include <wine/test.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <mmreg.h>
+#include <dsound.h>
+#include <dsconf.h>
 
 #include "dsound_test.h"
 
@@ -553,6 +560,8 @@ static void propset_private_tests(void)
     IKsPropertySet_Release(pps);
 }
 
+static unsigned driver_count = 0;
+
 static BOOL WINAPI dsenum_callback(LPGUID lpGuid, LPCSTR lpcstrDescription,
                                    LPCSTR lpcstrModule, LPVOID lpContext)
 {
@@ -564,6 +573,7 @@ static BOOL WINAPI dsenum_callback(LPGUID lpGuid, LPCSTR lpcstrDescription,
     int ref;
 
     trace("*** Testing %s - %s ***\n",lpcstrDescription,lpcstrModule);
+    driver_count++;
 
     rc=pDirectSoundCreate(lpGuid,&dso,NULL);
     ok(rc==DS_OK||rc==DSERR_NODRIVER||rc==DSERR_ALLOCATED||rc==E_FAIL,
@@ -616,8 +626,8 @@ static BOOL WINAPI dsenum_callback(LPGUID lpGuid, LPCSTR lpcstrDescription,
         trace("  Testing a secondary buffer at %dx%dx%d\n",
             wfx.nSamplesPerSec,wfx.wBitsPerSample,wfx.nChannels);
         rc=IDirectSound_CreateSoundBuffer(dso,&bufdesc,&secondary,NULL);
-        ok(rc==DS_OK&&secondary!=NULL,"IDirectSound_CreateSoundBuffer() "
-           "failed to create a secondary buffer: %08x\n",rc);
+        ok((rc==DS_OK && secondary!=NULL) || broken(rc == DSERR_CONTROLUNAVAIL), /* vmware drivers on w2k */
+           "IDirectSound_CreateSoundBuffer() failed to create a secondary buffer: %08x\n",rc);
         if (rc==DS_OK&&secondary!=NULL) {
             IKsPropertySet * pPropertySet=NULL;
             rc=IDirectSoundBuffer_QueryInterface(secondary,
@@ -710,6 +720,7 @@ static void propset_buffer_tests(void)
     HRESULT rc;
     rc=pDirectSoundEnumerateA(&dsenum_callback,NULL);
     ok(rc==DS_OK,"DirectSoundEnumerateA() failed: %08x\n",rc);
+    trace("tested %u DirectSound drivers\n", driver_count);
 }
 
 START_TEST(propset)
@@ -743,7 +754,7 @@ START_TEST(propset)
         FreeLibrary(hDsound);
     }
     else
-        skip("dsound.dll not found!\n");
+        skip("dsound.dll not found - skipping all tests\n");
 
     CoUninitialize();
 }

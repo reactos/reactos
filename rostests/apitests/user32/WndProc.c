@@ -5,9 +5,10 @@
  * PROGRAMMERS:
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <apitest.h>
+
+#include <wingdi.h>
+#include <winuser.h>
 
 /* Used wine Redraw test for proof in principle. */
 
@@ -32,7 +33,7 @@ static LRESULT WINAPI redraw_window_procA(HWND hwnd, UINT msg, WPARAM wparam, LP
         {
             PAINTSTRUCT ps;
             BeginPaint(hwnd, &ps);
-            EndPaint(hwnd, &ps);  
+            EndPaint(hwnd, &ps);
             return 1;
         }
    /*
@@ -43,7 +44,7 @@ static LRESULT WINAPI redraw_window_procA(HWND hwnd, UINT msg, WPARAM wparam, LP
         asm ("movl $0, %eax\n\t"
              "leave\n\t"
              "ret");
-#else
+#elif defined(_M_IX86)
 //#ifdef _MSC_VER
         __asm
           {
@@ -51,6 +52,8 @@ static LRESULT WINAPI redraw_window_procA(HWND hwnd, UINT msg, WPARAM wparam, LP
              leave
              ret
           }
+#else
+        trace("unimplemented\n");
 #endif
     }
     return DefWindowProc(hwnd, msg, wparam, lparam);
@@ -64,7 +67,7 @@ static void test_wndproc(void)
    cls.style = CS_DBLCLKS;
    cls.lpfnWndProc = (WNDPROC)redraw_window_procA;
    cls.cbClsExtra = 0;
-   cls.cbWndExtra = 0;  
+   cls.cbWndExtra = 0;
    cls.hInstance = GetModuleHandleA(0);
    cls.hIcon = 0;
    cls.hCursor = LoadCursorA(0, IDC_ARROW);
@@ -96,5 +99,9 @@ static void test_wndproc(void)
 
 START_TEST(WndProc)
 {
+#ifdef __RUNTIME_CHECKS__
+    skip("This test breaks MSVC runtime checks!");
+    return;
+#endif /* __RUNTIME_CHECKS__ */
    test_wndproc();
 }

@@ -44,6 +44,7 @@ static GUID IID_if1 = {0x12345678, 1234, 5678, {12,34,56,78,90,0xab,0xcd,0xef}};
 static GUID IID_if2 = {0x12345679, 1234, 5678, {12,34,56,78,90,0xab,0xcd,0xef}};
 static GUID IID_if3 = {0x1234567a, 1234, 5678, {12,34,56,78,90,0xab,0xcd,0xef}};
 static GUID IID_if4 = {0x1234567b, 1234, 5678, {12,34,56,78,90,0xab,0xcd,0xef}};
+static CLSID CLSID_psfact = {0x1234567c, 1234, 5678, {12,34,56,78,90,0xab,0xcd,0xef}};
 
 static int my_alloc_called;
 static int my_free_called;
@@ -288,12 +289,6 @@ static const MIDL_SERVER_INFO if3_server_info =
     0,
     0};
 
-
-static const PRPC_STUB_FUNCTION if3_table[] =
-{
-    if1_fn1_Stub
-};
-
 static CInterfaceStubVtbl if3_stub_vtbl =
 {
     {
@@ -337,15 +332,6 @@ static const MIDL_SERVER_INFO if4_server_info =
     0,
     0,
     0};
-
-
-static const PRPC_STUB_FUNCTION if4_table[] =
-{
-    STUB_FORWARDING_FUNCTION,
-    STUB_FORWARDING_FUNCTION,
-    STUB_FORWARDING_FUNCTION,
-    STUB_FORWARDING_FUNCTION,
-};
 
 static CInterfaceStubVtbl if4_stub_vtbl =
 {
@@ -412,6 +398,8 @@ static BOOL check_address(void *actual, void *expected)
 {
     static void *ole32_start = NULL;
     static void *ole32_end = NULL;
+    static void *combase_start = NULL;
+    static void *combase_end = NULL;
 
     if (actual == expected)
         return TRUE;
@@ -427,7 +415,21 @@ static BOOL check_address(void *actual, void *expected)
         ole32_end = (void *)((char *) ole32_start + nt_headers->OptionalHeader.SizeOfImage);
     }
 
-    return ole32_start <= actual && actual < ole32_end;
+    if (ole32_start <= actual && actual < ole32_end)
+        return TRUE;
+
+    /* On Win8, actual can be located inside combase.dll */
+    if (combase_start == NULL || combase_end == NULL)
+    {
+        PIMAGE_NT_HEADERS nt_headers;
+        combase_start = (void *) GetModuleHandleA("combase.dll");
+        if (combase_start == NULL)
+            return FALSE;
+        nt_headers = (PIMAGE_NT_HEADERS)((char *) combase_start + ((PIMAGE_DOS_HEADER) combase_start)->e_lfanew);
+        combase_end = (void *)((char *) combase_start + nt_headers->OptionalHeader.SizeOfImage);
+    }
+
+    return (combase_start <= actual && actual < combase_end);
 }
 
 static const ExtendedProxyFileInfo my_proxy_file_info =
@@ -457,7 +459,6 @@ static IPSFactoryBuffer *test_NdrDllGetClassObject(void)
     IPSFactoryBuffer *ppsf = NULL;
     const PCInterfaceProxyVtblList* proxy_vtbl;
     const PCInterfaceStubVtblList* stub_vtbl;
-    const CLSID PSDispatch = {0x20420, 0, 0, {0xc0, 0, 0, 0, 0, 0, 0, 0x46}};
     const CLSID CLSID_Unknown = {0x45678, 0x1234, 0x6666, {0xff, 0x67, 0x45, 0x98, 0x76, 0x12, 0x34, 0x56}};
     static const GUID * const interfaces[] = { &IID_if1, &IID_if2, &IID_if3, &IID_if4 };
     UINT i;
@@ -474,13 +475,13 @@ static IPSFactoryBuffer *test_NdrDllGetClassObject(void)
     void *CStd_DebugServerQueryInterface = GetProcAddress(hmod, "CStdStubBuffer_DebugServerQueryInterface");
     void *CStd_DebugServerRelease = GetProcAddress(hmod, "CStdStubBuffer_DebugServerRelease");
 
-    r = NdrDllGetClassObject(&PSDispatch, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
-                             &CLSID_Unknown, &PSFactoryBuffer);
+    r = NdrDllGetClassObject(&CLSID_Unknown, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
+                             &CLSID_psfact, &PSFactoryBuffer);
     ok(r == CLASS_E_CLASSNOTAVAILABLE, "NdrDllGetClassObject with unknown clsid should have returned CLASS_E_CLASSNOTAVAILABLE instead of 0x%x\n", r);
     ok(ppsf == NULL, "NdrDllGetClassObject should have set ppsf to NULL on failure\n");
 
-    r = NdrDllGetClassObject(&PSDispatch, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
-                         &PSDispatch, &PSFactoryBuffer);
+    r = NdrDllGetClassObject(&CLSID_psfact, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
+                             &CLSID_psfact, &PSFactoryBuffer);
 
     ok(r == S_OK, "ret %08x\n", r);
     ok(ppsf != NULL, "ppsf == NULL\n");
@@ -602,10 +603,42 @@ static IPSFactoryBuffer *test_NdrDllGetClassObject(void)
     ok(PSFactoryBuffer.RefCount == 1, "ref count %d\n", PSFactoryBuffer.RefCount);
     IPSFactoryBuffer_Release(ppsf);
 
+    /* One can also search by IID */
+    r = NdrDllGetClassObject(&IID_if3, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
+                             &CLSID_psfact, &PSFactoryBuffer);
+    ok(r == S_OK, "ret %08x\n", r);
+    ok(ppsf != NULL, "ppsf == NULL\n");
+    IPSFactoryBuffer_Release(ppsf);
+
     r = NdrDllGetClassObject(&IID_if3, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
                              NULL, &PSFactoryBuffer);
     ok(r == S_OK, "ret %08x\n", r);
     ok(ppsf != NULL, "ppsf == NULL\n");
+    IPSFactoryBuffer_Release(ppsf);
+
+    /* but only if the PS factory implements it */
+    r = NdrDllGetClassObject(&IID_IDispatch, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
+                             &CLSID_psfact, &PSFactoryBuffer);
+    ok(r == CLASS_E_CLASSNOTAVAILABLE, "ret %08x\n", r);
+
+    /* Create it again to return */
+    r = NdrDllGetClassObject(&CLSID_psfact, &IID_IPSFactoryBuffer, (void**)&ppsf, proxy_file_list,
+                             &CLSID_psfact, &PSFactoryBuffer);
+    ok(r == S_OK, "ret %08x\n", r);
+    ok(ppsf != NULL, "ppsf == NULL\n");
+
+    /* Because this PS factory is not loaded as a dll in the normal way, Windows 8 / 10
+       get confused and will crash when one of the proxies for the delegated ifaces is created.
+       Registering the ifaces fixes this (in fact calling CoRegisterPSClsid() with any IID / CLSID is enough). */
+
+    r = CoRegisterPSClsid(&IID_if1, &CLSID_psfact);
+    ok(r == S_OK, "ret %08x\n", r);
+    r = CoRegisterPSClsid(&IID_if2, &CLSID_psfact);
+    ok(r == S_OK, "ret %08x\n", r);
+    r = CoRegisterPSClsid(&IID_if3, &CLSID_psfact);
+    ok(r == S_OK, "ret %08x\n", r);
+    r = CoRegisterPSClsid(&IID_if4, &CLSID_psfact);
+    ok(r == S_OK, "ret %08x\n", r);
 
     return ppsf;
 }
@@ -691,9 +724,14 @@ static IUnknownVtbl create_stub_test_fail_vtbl =
 
 struct dummy_unknown
 {
-    const IUnknownVtbl *vtbl;
+    IUnknown IUnknown_iface;
     LONG ref;
 };
+
+static inline struct dummy_unknown *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, struct dummy_unknown, IUnknown_iface);
+}
 
 static HRESULT WINAPI dummy_QueryInterface(IUnknown *This, REFIID iid, void **ppv)
 {
@@ -703,13 +741,13 @@ static HRESULT WINAPI dummy_QueryInterface(IUnknown *This, REFIID iid, void **pp
 
 static ULONG WINAPI dummy_AddRef(LPUNKNOWN iface)
 {
-    struct dummy_unknown *this = (struct dummy_unknown *)iface;
+    struct dummy_unknown *this = impl_from_IUnknown(iface);
     return InterlockedIncrement( &this->ref );
 }
 
 static ULONG WINAPI dummy_Release(LPUNKNOWN iface)
 {
-    struct dummy_unknown *this = (struct dummy_unknown *)iface;
+    struct dummy_unknown *this = impl_from_IUnknown(iface);
     return InterlockedDecrement( &this->ref );
 }
 
@@ -719,7 +757,7 @@ static IUnknownVtbl dummy_unknown_vtbl =
     dummy_AddRef,
     dummy_Release
 };
-static struct dummy_unknown dummy_unknown = { &dummy_unknown_vtbl, 0 };
+static struct dummy_unknown dummy_unknown = { { &dummy_unknown_vtbl }, 0 };
 
 static void create_proxy_test( IPSFactoryBuffer *ppsf, REFIID iid, const void *expected_vtbl )
 {
@@ -737,7 +775,8 @@ static void create_proxy_test( IPSFactoryBuffer *ppsf, REFIID iid, const void *e
     ok( count == 0, "wrong refcount %u\n", count );
 
     dummy_unknown.ref = 4;
-    r = IPSFactoryBuffer_CreateProxy(ppsf, (IUnknown *)&dummy_unknown, iid, &proxy, (void **)&iface);
+    r = IPSFactoryBuffer_CreateProxy(ppsf, &dummy_unknown.IUnknown_iface, iid, &proxy,
+            (void **)&iface);
     ok( r == S_OK, "IPSFactoryBuffer_CreateProxy failed %x\n", r );
     ok( dummy_unknown.ref == 5, "wrong refcount %u\n", dummy_unknown.ref );
     ok( *(void **)iface == expected_vtbl, "wrong iface pointer %p/%p\n", *(void **)iface, expected_vtbl );
@@ -775,6 +814,7 @@ static void test_CreateStub(IPSFactoryBuffer *ppsf)
 
     vtbl = &create_stub_test_fail_vtbl;
     pstub = create_stub(ppsf, &IID_if1, obj, E_NOINTERFACE);
+    ok(pstub == S_OK, "create_stub failed: %u\n", GetLastError());
 
 }
 
@@ -892,6 +932,7 @@ static void test_Connect(IPSFactoryBuffer *ppsf)
 
     obj = (IUnknown*)&new_vtbl;
     r = IRpcStubBuffer_Connect(pstub, obj);
+    ok(r == S_OK, "r %08x\n", r);
     ok(connect_test_base_Connect_called == 1, "connect_test_bsae_Connect called %d times\n",
        connect_test_base_Connect_called);
     ok(connect_test_orig_release_called == 3, "release called %d\n", connect_test_orig_release_called);

@@ -18,21 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
+#define _WIN32_WINNT  0x0500
 #define NTDDI_WIN2K   0x05000000
 #define NTDDI_VERSION NTDDI_WIN2K /* for some MIDL_STUB_MESSAGE fields */
+
+#include <stdarg.h>
 
 #include "wine/test.h"
 #include <windef.h>
 #include <winbase.h>
 #include <winnt.h>
 #include <winerror.h>
+#include <ole2.h>
 
 #include "rpc.h"
 #include "rpcdce.h"
 #include "rpcproxy.h"
-
+#include "midles.h"
 
 static int my_alloc_called;
 static int my_free_called;
@@ -963,7 +965,7 @@ static void test_simple_struct(void)
     s1.c = 0xa5;
     s1.l1 = 0xdeadbeef;
     s1.l2 = 0xcafebabe;
-    s1.ll = ((LONGLONG) 0xbadefeed << 32) | 0x2468ace0;
+    s1.ll = ((ULONGLONG) 0xbadefeed << 32) | 0x2468ace0;
 
     wiredatalen = 24;
     memcpy(wiredata, &s1, wiredatalen); 
@@ -1318,9 +1320,9 @@ todo_wine
     ok(stubMsg.ReuseBuffer == 0 ||
        broken(stubMsg.ReuseBuffer == 1), /* win2k */
        "stubMsg.ReuseBuffer should have been set to zero instead of %d\n", stubMsg.ReuseBuffer);
-    ok(stubMsg.CorrDespIncrement == 0xcc ||
-       stubMsg.CorrDespIncrement == 0,
-       "CorrDespIncrement should have been unset instead of 0x%x\n", stubMsg.CorrDespIncrement);
+    ok(stubMsg.CorrDespIncrement == 0 ||
+       broken(stubMsg.CorrDespIncrement == 0xcc), /* <= Win 2003 */
+       "CorrDespIncrement should have been set to zero instead of 0x%x\n", stubMsg.CorrDespIncrement);
     ok(stubMsg.FullPtrXlatTables == 0, "stubMsg.BufferLength should have been 0 instead of %p\n", stubMsg.FullPtrXlatTables);
 }
 
@@ -1543,6 +1545,9 @@ static void test_conformant_string(void)
     my_alloc_called = 0;
     StubMsg.Buffer = StubMsg.BufferStart;
     mem = mem_orig = HeapAlloc(GetProcessHeap(), 0, sizeof(memsrc));
+    /* Windows apparently checks string length on the output buffer to determine its size... */
+    memset( mem, 'x', sizeof(memsrc) - 1 );
+    mem[sizeof(memsrc) - 1] = 0;
     NdrPointerUnmarshall( &StubMsg, &mem, fmtstr_conf_str, 0);
     ok(mem == mem_orig, "mem not alloced\n");
     ok(my_alloc_called == 0, "alloc called %d\n", my_alloc_called);
@@ -1554,6 +1559,11 @@ todo_wine {
     ok(mem == mem_orig, "mem not alloced\n");
     ok(my_alloc_called == 0, "alloc called %d\n", my_alloc_called);
 }
+
+    /* Prevent a memory leak when running with Wine.
+       Remove once the todo_wine block above is fixed. */
+    if (mem != mem_orig)
+        HeapFree(GetProcessHeap(), 0, mem_orig);
 
     my_free_called = 0;
     StubMsg.Buffer = StubMsg.BufferStart;
@@ -2088,7 +2098,7 @@ static void test_ndr_buffer(void)
 
     StubDesc.RpcInterfaceInformation = (void *)&IFoo___RpcServerInterface;
 
-    status = RpcServerUseProtseqEp(ncalrpc, 20, endpoint, NULL);
+    status = RpcServerUseProtseqEpA(ncalrpc, 20, endpoint, NULL);
     ok(RPC_S_OK == status, "RpcServerUseProtseqEp failed with status %u\n", status);
     status = RpcServerRegisterIf(IFoo_v0_0_s_ifspec, NULL, NULL);
     ok(RPC_S_OK == status, "RpcServerRegisterIf failed with status %u\n", status);
@@ -2100,12 +2110,12 @@ static void test_ndr_buffer(void)
         return;
     }
 
-    status = RpcStringBindingCompose(NULL, ncalrpc, NULL, endpoint, NULL, &binding);
+    status = RpcStringBindingComposeA(NULL, ncalrpc, NULL, endpoint, NULL, &binding);
     ok(status == RPC_S_OK, "RpcStringBindingCompose failed (%u)\n", status);
 
-    status = RpcBindingFromStringBinding(binding, &Handle);
+    status = RpcBindingFromStringBindingA(binding, &Handle);
     ok(status == RPC_S_OK, "RpcBindingFromStringBinding failed (%u)\n", status);
-    RpcStringFree(&binding);
+    RpcStringFreeA(&binding);
 
     NdrClientInitializeNew(&RpcMessage, &StubMsg, &StubDesc, 5);
 
@@ -2204,7 +2214,7 @@ static void test_NdrGetUserMarshalInfo(void)
     RPC_MESSAGE rpc_msg;
     RPC_STATUS (RPC_ENTRY *pNdrGetUserMarshalInfo)(ULONG *,ULONG,NDR_USER_MARSHAL_INFO *);
 
-    pNdrGetUserMarshalInfo = (void *)GetProcAddress(GetModuleHandle("rpcrt4.dll"), "NdrGetUserMarshalInfo");
+    pNdrGetUserMarshalInfo = (void *)GetProcAddress(GetModuleHandleA("rpcrt4.dll"), "NdrGetUserMarshalInfo");
     if (!pNdrGetUserMarshalInfo)
     {
         skip("NdrGetUserMarshalInfo not exported\n");
@@ -2400,6 +2410,85 @@ static void test_NdrGetUserMarshalInfo(void)
         "NdrGetUserMarshalInfo should have failed with RPC_S_INVALID_ARG instead of %d\n", status);
 }
 
+static void test_MesEncodeFixedBufferHandleCreate(void)
+{
+    ULONG encoded_size;
+    RPC_STATUS status;
+    handle_t handle;
+    char *buffer;
+
+    status = MesEncodeFixedBufferHandleCreate(NULL, 0, NULL, NULL);
+    ok(status == RPC_S_INVALID_ARG, "got %d\n", status);
+
+    status = MesEncodeFixedBufferHandleCreate(NULL, 0, NULL, &handle);
+    ok(status == RPC_S_INVALID_ARG, "got %d\n", status);
+
+    status = MesEncodeFixedBufferHandleCreate((char*)0xdeadbeef, 0, NULL, &handle);
+    ok(status == RPC_X_INVALID_BUFFER, "got %d\n", status);
+
+    buffer = (void*)((0xdeadbeef + 7) & ~7);
+    status = MesEncodeFixedBufferHandleCreate(buffer, 0, NULL, &handle);
+    ok(status == RPC_S_INVALID_ARG, "got %d\n", status);
+
+    status = MesEncodeFixedBufferHandleCreate(buffer, 0, &encoded_size, &handle);
+todo_wine
+    ok(status == RPC_S_INVALID_ARG, "got %d\n", status);
+if (status == RPC_S_OK) {
+    MesHandleFree(handle);
+}
+    status = MesEncodeFixedBufferHandleCreate(buffer, 32, NULL, &handle);
+    ok(status == RPC_S_INVALID_ARG, "got %d\n", status);
+
+    status = MesEncodeFixedBufferHandleCreate(buffer, 32, &encoded_size, &handle);
+    ok(status == RPC_S_OK, "got %d\n", status);
+
+    status = MesBufferHandleReset(NULL, MES_DYNAMIC_BUFFER_HANDLE, MES_ENCODE,
+        &buffer, 32, &encoded_size);
+    ok(status == RPC_S_INVALID_ARG, "got %d\n", status);
+
+    /* convert to dynamic buffer handle */
+    status = MesBufferHandleReset(handle, MES_DYNAMIC_BUFFER_HANDLE, MES_ENCODE,
+        &buffer, 32, &encoded_size);
+    ok(status == RPC_S_OK, "got %d\n", status);
+
+    status = MesBufferHandleReset(handle, MES_DYNAMIC_BUFFER_HANDLE, MES_ENCODE,
+        NULL, 32, &encoded_size);
+    ok(status == RPC_S_INVALID_ARG, "got %d\n", status);
+
+    status = MesBufferHandleReset(handle, MES_DYNAMIC_BUFFER_HANDLE, MES_ENCODE,
+        &buffer, 32, NULL);
+    ok(status == RPC_S_INVALID_ARG, "got %d\n", status);
+
+    /* invalid handle type */
+    status = MesBufferHandleReset(handle, MES_DYNAMIC_BUFFER_HANDLE+1, MES_ENCODE,
+        &buffer, 32, &encoded_size);
+    ok(status == RPC_S_INVALID_ARG, "got %d\n", status);
+
+    status = MesHandleFree(handle);
+    ok(status == RPC_S_OK, "got %d\n", status);
+}
+
+static void test_NdrCorrelationInitialize(void)
+{
+    MIDL_STUB_MESSAGE stub_msg;
+    BYTE buf[256];
+
+    memset( &stub_msg, 0, sizeof(stub_msg) );
+    memset( buf, 0, sizeof(buf) );
+
+    NdrCorrelationInitialize( &stub_msg, buf, sizeof(buf), 0 );
+    ok( stub_msg.CorrDespIncrement == 2 ||
+        broken(stub_msg.CorrDespIncrement == 0), /* <= Win 2003 */
+        "got %d\n", stub_msg.CorrDespIncrement );
+
+    memset( &stub_msg, 0, sizeof(stub_msg) );
+    memset( buf, 0, sizeof(buf) );
+
+    stub_msg.CorrDespIncrement = 1;
+    NdrCorrelationInitialize( &stub_msg, buf, sizeof(buf), 0 );
+    ok( stub_msg.CorrDespIncrement == 1, "got %d\n", stub_msg.CorrDespIncrement );
+}
+
 START_TEST( ndr_marshall )
 {
     determine_pointer_marshalling_style();
@@ -2420,4 +2509,6 @@ START_TEST( ndr_marshall )
     test_ndr_buffer();
     test_NdrMapCommAndFaultStatus();
     test_NdrGetUserMarshalInfo();
+    test_MesEncodeFixedBufferHandleCreate();
+    test_NdrCorrelationInitialize();
 }

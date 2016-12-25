@@ -34,16 +34,16 @@ IoCheckEaBufferValidityROS(IN PFILE_FULL_EA_INFORMATION EaBuffer,
    ULONG NextEaBufferOffset;
    UINT IntEaLength;
 
-   /* Lenght of the rest. Inital equal to EaLength */
+   /* Length of the rest. Initialize it to EaLength */
    IntEaLength = EaLength;
-   /* Inital EaBuffer equal to EaBuffer */
+   /* Initialize EaBuffer to EaBuffer */
    EaBufferEnd = EaBuffer;
 
    /* The rest length of the buffer */
    /* 8 = sizeof(ULONG) + sizeof(UCHAR) + sizeof(UCHAR) + sizeof(USHORT) */
    while (IntEaLength >= 8)
    {
-      /* rest of buffer must greater then the sizeof(FILE_FULL_EA_INFORMATION) + buffer */
+      /* The rest of the buffer must be greater than sizeof(FILE_FULL_EA_INFORMATION) + buffer */
       NextEaBufferOffset = EaBufferEnd->EaNameLength+EaBufferEnd->EaValueLength + 9;
       if (IntEaLength >= NextEaBufferOffset)
       {
@@ -63,14 +63,14 @@ IoCheckEaBufferValidityROS(IN PFILE_FULL_EA_INFORMATION EaBuffer,
             else
             {
                /*
-                  From the MSDN (http://msdn2.microsoft.com/en-us/library/ms795740.aspx).
+                  From MSDN (http://msdn2.microsoft.com/en-us/library/ms795740.aspx).
                   For all entries except the last, the value of NextEntryOffset must be greater
                   than zero and must fall on a ULONG boundary.
                */
                NextEaBufferOffset = ((NextEaBufferOffset + 3) & 0xFFFFFFFC);
                if ((EaBufferEnd->NextEntryOffset == NextEaBufferOffset) && (EaBufferEnd->NextEntryOffset>0))
                {
-                  /* rest of buffer must be greater then the next offset */
+                  /* The rest of the buffer must be greater than the next offset */
                   IntEaLength = IntEaLength - EaBufferEnd->NextEntryOffset;
                   if (IntEaLength>=0)
                   {
@@ -86,7 +86,7 @@ IoCheckEaBufferValidityROS(IN PFILE_FULL_EA_INFORMATION EaBuffer,
 
    if (ErrorOffset != NULL)
    {
-      /* calculate the error offset. Or in */
+      /* calculate the error offset. */
       *ErrorOffset = (ULONG)((ULONG_PTR)EaBufferEnd - (ULONG_PTR)EaBuffer);
    }
 
@@ -179,7 +179,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
          printf("2.) Test : *********************\n");
 
-         /* Here all zero but EaBuffer::EaName is set : will allways end in STATUS_EA_LIST_INCONSISTENT */
+         /* Here all zero but EaBuffer::EaName is set : will always end in STATUS_EA_LIST_INCONSISTENT */
          /* There must a link to EaBuffer::EaName */
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
@@ -318,7 +318,7 @@ int _tmain(int argc, _TCHAR* argv[])
          printf("7.) Test : *********************\n");
 
          /* The same test like 6.) but wrong strlen */
-         /* Here EaBuffer::EaName is set and EaBuffer::EaNameLength is strlen(EaBuffer::EaName) EaBuffer::EaValueLength is strlen(EaBuffer::EaName)+1. EaLength is count: will allways end in STATUS_EA_LIST_INCONSISTENT */
+         /* Here EaBuffer::EaName is set and EaBuffer::EaNameLength is strlen(EaBuffer::EaName) EaBuffer::EaValueLength is strlen(EaBuffer::EaName)+1. EaLength is count: will always end in STATUS_EA_LIST_INCONSISTENT */
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
             TestEaLength = i;
@@ -474,7 +474,7 @@ int _tmain(int argc, _TCHAR* argv[])
             ROSEaBuffer->EaValueLength = (UCHAR)strlen(ROSEaBuffer->EaName);
             ulROSError = RANDOM_INIT_ERROR;
             ROSEaBuffer->Flags = TestEaBufferFlags;
-            ROSEaBuffer->NextEntryOffset = ((ROSEaBuffer->EaNameLength+ROSEaBuffer->EaNameLength+9)+3)&0xFFFFFFFC;;
+            ROSEaBuffer->NextEntryOffset = ((ROSEaBuffer->EaNameLength+ROSEaBuffer->EaNameLength+9)+3)&0xFFFFFFFC;
             ROSStatus = IoCheckEaBufferValidityROS(ROSEaBuffer,TestEaLength,&ulROSError);
 
             printf("%i-",ROSEaBuffer->NextEntryOffset);

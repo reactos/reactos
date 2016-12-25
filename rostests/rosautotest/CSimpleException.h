@@ -11,7 +11,7 @@ private:
     string m_Message;
 
 public:
-    CSimpleException(const char* Message);
+    CSimpleException(const string& Message);
 
     const string& GetMessage() const { return m_Message; }
 };

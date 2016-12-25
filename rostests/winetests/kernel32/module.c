@@ -20,6 +20,15 @@
 
 #include "wine/test.h"
 #include <windows.h>
+#include <psapi.h>
+
+static DWORD (WINAPI *pGetDllDirectoryA)(DWORD,LPSTR);
+static DWORD (WINAPI *pGetDllDirectoryW)(DWORD,LPWSTR);
+static BOOL (WINAPI *pSetDllDirectoryA)(LPCSTR);
+static BOOL (WINAPI *pGetModuleHandleExA)(DWORD,LPCSTR,HMODULE*);
+static BOOL (WINAPI *pGetModuleHandleExW)(DWORD,LPCWSTR,HMODULE*);
+static BOOL (WINAPI *pK32GetModuleInformation)(HANDLE process, HMODULE module,
+                                               MODULEINFO *modinfo, DWORD cb);
 
 static BOOL is_unicode_enabled = TRUE;
 
@@ -40,17 +49,25 @@ static void testGetModuleFileName(const char* name)
     WCHAR       bufW[MAX_PATH];
     DWORD       len1A, len1W = 0, len2A, len2W = 0;
 
-    hMod = (name) ? GetModuleHandle(name) : NULL;
+    hMod = (name) ? GetModuleHandleA(name) : NULL;
 
     /* first test, with enough space in buffer */
     memset(bufA, '-', sizeof(bufA));
+    SetLastError(0xdeadbeef);
     len1A = GetModuleFileNameA(hMod, bufA, sizeof(bufA));
+    ok(GetLastError() == ERROR_SUCCESS ||
+       broken(GetLastError() == 0xdeadbeef), /* <= XP SP3 */
+       "LastError was not reset: %u\n", GetLastError());
     ok(len1A > 0, "Getting module filename for handle %p\n", hMod);
 
     if (is_unicode_enabled)
     {
         memset(bufW, '-', sizeof(bufW));
+        SetLastError(0xdeadbeef);
         len1W = GetModuleFileNameW(hMod, bufW, sizeof(bufW) / sizeof(WCHAR));
+        ok(GetLastError() == ERROR_SUCCESS ||
+           broken(GetLastError() == 0xdeadbeef), /* <= XP SP3 */
+           "LastError was not reset: %u\n", GetLastError());
         ok(len1W > 0, "Getting module filename for handle %p\n", hMod);
     }
 
@@ -143,7 +160,7 @@ static void testNestedLoadLibraryA(void)
      * - it must not already be loaded
      * - it must not have a 16-bit counterpart
      */
-    GetWindowsDirectory(path1, sizeof(path1));
+    GetWindowsDirectoryA(path1, sizeof(path1));
     strcat(path1, "\\system\\");
     strcat(path1, dllname);
     hModule1 = LoadLibraryA(path1);
@@ -153,7 +170,7 @@ static void testNestedLoadLibraryA(void)
         return;
     }
 
-    GetWindowsDirectory(path2, sizeof(path2));
+    GetWindowsDirectoryA(path2, sizeof(path2));
     strcat(path2, "\\system32\\");
     strcat(path2, dllname);
     hModule2 = LoadLibraryA(path2);
@@ -175,7 +192,7 @@ static void testNestedLoadLibraryA(void)
     ok(FreeLibrary(hModule3), "FreeLibrary() failed\n");
     ok(FreeLibrary(hModule2), "FreeLibrary() failed\n");
     ok(FreeLibrary(hModule1), "FreeLibrary() failed\n");
-    ok(GetModuleHandle(dllname) == NULL, "%s was not fully unloaded\n", dllname);
+    ok(GetModuleHandleA(dllname) == NULL, "%s was not fully unloaded\n", dllname);
 
     /* Try to load the dll again, if refcounting is ok, this should work */
     hModule1 = LoadLibraryA(path1);
@@ -221,6 +238,7 @@ static void testLoadLibraryEx(void)
     CHAR path[MAX_PATH];
     HMODULE hmodule;
     HANDLE hfile;
+    BOOL ret;
 
     hfile = CreateFileA("testfile.dll", GENERIC_READ | GENERIC_WRITE,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -246,7 +264,8 @@ static void testLoadLibraryEx(void)
     hmodule = LoadLibraryExA("", NULL, 0);
     ok(hmodule == 0, "Expected 0, got %p\n", hmodule);
     ok(GetLastError() == ERROR_MOD_NOT_FOUND ||
-       GetLastError() == ERROR_DLL_NOT_FOUND, /* win9x */
+       GetLastError() == ERROR_DLL_NOT_FOUND /* win9x */ ||
+       GetLastError() == ERROR_INVALID_PARAMETER /* win8 */,
        "Expected ERROR_MOD_NOT_FOUND or ERROR_DLL_NOT_FOUND, got %d\n",
        GetLastError());
 
@@ -332,7 +351,7 @@ static void testLoadLibraryEx(void)
     if (!hmodule)  /* succeeds on xp and older */
         ok(GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError());
 
-    CloseHandle(hmodule);
+    FreeLibrary(hmodule);
 
     /* load kernel32.dll with no path */
     SetLastError(0xdeadbeef);
@@ -342,7 +361,7 @@ static void testLoadLibraryEx(void)
        GetLastError() == ERROR_SUCCESS, /* win9x */
        "Expected 0xdeadbeef or ERROR_SUCCESS, got %d\n", GetLastError());
 
-    CloseHandle(hmodule);
+    FreeLibrary(hmodule);
 
     GetCurrentDirectoryA(MAX_PATH, path);
     if (path[lstrlenA(path) - 1] != '\\')
@@ -360,23 +379,364 @@ static void testLoadLibraryEx(void)
        broken(GetLastError() == ERROR_INVALID_HANDLE),  /* nt4 */
        "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
 
-    /* Free the loaded dll when its the first time this dll is loaded
+    /* Free the loaded dll when it's the first time this dll is loaded
        in process - First time should pass, second fail */
     SetLastError(0xdeadbeef);
     hmodule = LoadLibraryExA("comctl32.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
     ok(hmodule != 0, "Expected valid module handle\n");
 
     SetLastError(0xdeadbeef);
-    ok(FreeLibrary(hmodule),
-       "Expected to be able to free the module, failed with %d\n",
-       GetLastError());
+    ret = FreeLibrary(hmodule);
+    ok(ret, "Expected to be able to free the module, failed with %d\n", GetLastError());
     SetLastError(0xdeadbeef);
-    ok(!FreeLibrary(hmodule),
-       "Unexpected ability to free the module, failed with %d\n",
-       GetLastError());
+    ret = FreeLibrary(hmodule);
+    ok(!ret, "Unexpected ability to free the module, failed with %d\n", GetLastError());
 
-    CloseHandle(hmodule);
+    /* load with full path, name without extension */
+    GetSystemDirectoryA(path, MAX_PATH);
+    if (path[lstrlenA(path) - 1] != '\\')
+        lstrcatA(path, "\\");
+    lstrcatA(path, "kernel32");
+    hmodule = LoadLibraryExA(path, NULL, 0);
+    ok(hmodule != NULL, "got %p\n", hmodule);
+    FreeLibrary(hmodule);
 
+    /* same with alterate search path */
+    hmodule = LoadLibraryExA(path, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+    ok(hmodule != NULL, "got %p\n", hmodule);
+    FreeLibrary(hmodule);
+}
+
+static void testGetDllDirectory(void)
+{
+    CHAR bufferA[MAX_PATH];
+    WCHAR bufferW[MAX_PATH];
+    DWORD length, ret;
+    int i;
+    static const char *dll_directories[] =
+    {
+        "",
+        "C:\\Some\\Path",
+        "C:\\Some\\Path\\",
+        "Q:\\A\\Long\\Path with spaces that\\probably\\doesn't exist!",
+    };
+    const int test_count = sizeof(dll_directories) / sizeof(dll_directories[0]);
+
+    if (!pGetDllDirectoryA || !pGetDllDirectoryW)
+    {
+        win_skip("GetDllDirectory not available\n");
+        return;
+    }
+    if (!pSetDllDirectoryA)
+    {
+        win_skip("SetDllDirectoryA not available\n");
+        return;
+    }
+
+    for (i = 0; i < test_count; i++)
+    {
+        length = strlen(dll_directories[i]);
+        if (!pSetDllDirectoryA(dll_directories[i]))
+        {
+            skip("i=%d, SetDllDirectoryA failed\n", i);
+            continue;
+        }
+
+        /* no buffer, determine length */
+        ret = pGetDllDirectoryA(0, NULL);
+        ok(ret == length + 1, "Expected %u, got %u\n", length + 1, ret);
+
+        ret = pGetDllDirectoryW(0, NULL);
+        ok(ret == length + 1, "Expected %u, got %u\n", length + 1, ret);
+
+        /* buffer of exactly the right size */
+        bufferA[length] = 'A';
+        bufferA[length + 1] = 'A';
+        ret = pGetDllDirectoryA(length + 1, bufferA);
+        ok(ret == length || broken(ret + 1 == length) /* win8 */,
+           "i=%d, Expected %u(+1), got %u\n", i, length, ret);
+        ok(bufferA[length + 1] == 'A', "i=%d, Buffer overflow\n", i);
+        ok(strcmp(bufferA, dll_directories[i]) == 0, "i=%d, Wrong path returned: '%s'\n", i, bufferA);
+
+        bufferW[length] = 'A';
+        bufferW[length + 1] = 'A';
+        ret = pGetDllDirectoryW(length + 1, bufferW);
+        ok(ret == length, "i=%d, Expected %u, got %u\n", i, length, ret);
+        ok(bufferW[length + 1] == 'A', "i=%d, Buffer overflow\n", i);
+        ok(cmpStrAW(dll_directories[i], bufferW, length, length),
+           "i=%d, Wrong path returned: %s\n", i, wine_dbgstr_w(bufferW));
+
+        /* Zero size buffer. The buffer may or may not be terminated depending
+         * on the Windows version and whether the A or W API is called. */
+        bufferA[0] = 'A';
+        ret = pGetDllDirectoryA(0, bufferA);
+        ok(ret == length + 1, "i=%d, Expected %u, got %u\n", i, length + 1, ret);
+
+        bufferW[0] = 'A';
+        ret = pGetDllDirectoryW(0, bufferW);
+        ok(ret == length + 1, "i=%d, Expected %u, got %u\n", i, length + 1, ret);
+        ok(bufferW[0] == 0 || /* XP, 2003 */
+           broken(bufferW[0] == 'A'), "i=%d, Buffer overflow\n", i);
+
+        /* buffer just one too short */
+        bufferA[0] = 'A';
+        ret = pGetDllDirectoryA(length, bufferA);
+        ok(ret == length + 1, "i=%d, Expected %u, got %u\n", i, length + 1, ret);
+        if (length != 0)
+            ok(bufferA[0] == 0, "i=%d, Buffer not null terminated\n", i);
+
+        bufferW[0] = 'A';
+        ret = pGetDllDirectoryW(length, bufferW);
+        ok(ret == length + 1, "i=%d, Expected %u, got %u\n", i, length + 1, ret);
+        ok(bufferW[0] == 0 || /* XP, 2003 */
+           broken(bufferW[0] == 'A'), "i=%d, Buffer overflow\n", i);
+
+        if (0)
+        {
+            /* crashes on win8 */
+            /* no buffer, but too short length */
+            ret = pGetDllDirectoryA(length, NULL);
+            ok(ret == length + 1, "i=%d, Expected %u, got %u\n", i, length + 1, ret);
+
+            ret = pGetDllDirectoryW(length, NULL);
+            ok(ret == length + 1, "i=%d, Expected %u, got %u\n", i, length + 1, ret);
+        }
+    }
+
+    /* unset whatever we did so following tests won't be affected */
+    pSetDllDirectoryA(NULL);
+}
+
+static void init_pointers(void)
+{
+    HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+
+#define MAKEFUNC(f) (p##f = (void*)GetProcAddress(hKernel32, #f))
+    MAKEFUNC(GetDllDirectoryA);
+    MAKEFUNC(GetDllDirectoryW);
+    MAKEFUNC(SetDllDirectoryA);
+    MAKEFUNC(GetModuleHandleExA);
+    MAKEFUNC(GetModuleHandleExW);
+    MAKEFUNC(K32GetModuleInformation);
+#undef MAKEFUNC
+
+    /* not all Windows versions export this in kernel32 */
+    if (!pK32GetModuleInformation)
+    {
+        HMODULE hPsapi = LoadLibraryA("psapi.dll");
+        if (hPsapi)
+        {
+            pK32GetModuleInformation = (void *)GetProcAddress(hPsapi, "GetModuleInformation");
+            if (!pK32GetModuleInformation) FreeLibrary(hPsapi);
+        }
+    }
+
+}
+
+static void testGetModuleHandleEx(void)
+{
+    static const WCHAR kernel32W[] = {'k','e','r','n','e','l','3','2',0};
+    static const WCHAR nosuchmodW[] = {'n','o','s','u','c','h','m','o','d',0};
+    BOOL ret;
+    DWORD error;
+    HMODULE mod, mod_kernel32;
+
+    if (!pGetModuleHandleExA || !pGetModuleHandleExW)
+    {
+        win_skip( "GetModuleHandleEx not available\n" );
+        return;
+    }
+
+    SetLastError( 0xdeadbeef );
+    ret = pGetModuleHandleExA( 0, NULL, NULL );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+
+    SetLastError( 0xdeadbeef );
+    ret = pGetModuleHandleExA( 0, "kernel32", NULL );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+
+    SetLastError( 0xdeadbeef );
+    mod = (HMODULE)0xdeadbeef;
+    ret = pGetModuleHandleExA( 0, "kernel32", &mod );
+    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( mod != (HMODULE)0xdeadbeef, "got %p\n", mod );
+    FreeLibrary( mod );
+
+    SetLastError( 0xdeadbeef );
+    mod = (HMODULE)0xdeadbeef;
+    ret = pGetModuleHandleExA( 0, "nosuchmod", &mod );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_MOD_NOT_FOUND, "got %u\n", error );
+    ok( mod == NULL, "got %p\n", mod );
+
+    SetLastError( 0xdeadbeef );
+    ret = pGetModuleHandleExW( 0, NULL, NULL );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+
+    SetLastError( 0xdeadbeef );
+    ret = pGetModuleHandleExW( 0, kernel32W, NULL );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+
+    SetLastError( 0xdeadbeef );
+    mod = (HMODULE)0xdeadbeef;
+    ret = pGetModuleHandleExW( 0, kernel32W, &mod );
+    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( mod != (HMODULE)0xdeadbeef, "got %p\n", mod );
+    FreeLibrary( mod );
+
+    SetLastError( 0xdeadbeef );
+    mod = (HMODULE)0xdeadbeef;
+    ret = pGetModuleHandleExW( 0, nosuchmodW, &mod );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_MOD_NOT_FOUND, "got %u\n", error );
+    ok( mod == NULL, "got %p\n", mod );
+
+    SetLastError( 0xdeadbeef );
+    ret = pGetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, NULL, NULL );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+
+    SetLastError( 0xdeadbeef );
+    ret = pGetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, "kernel32", NULL );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+
+    SetLastError( 0xdeadbeef );
+    mod = (HMODULE)0xdeadbeef;
+    ret = pGetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, "kernel32", &mod );
+    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( mod != (HMODULE)0xdeadbeef, "got %p\n", mod );
+
+    SetLastError( 0xdeadbeef );
+    mod = (HMODULE)0xdeadbeef;
+    ret = pGetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, "nosuchmod", &mod );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_MOD_NOT_FOUND, "got %u\n", error );
+    ok( mod == NULL, "got %p\n", mod );
+
+    SetLastError( 0xdeadbeef );
+    ret = pGetModuleHandleExW( GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, NULL, NULL );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+
+    SetLastError( 0xdeadbeef );
+    ret = pGetModuleHandleExW( GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, kernel32W, NULL );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+
+    SetLastError( 0xdeadbeef );
+    mod = (HMODULE)0xdeadbeef;
+    ret = pGetModuleHandleExW( GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, kernel32W, &mod );
+    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( mod != (HMODULE)0xdeadbeef, "got %p\n", mod );
+
+    SetLastError( 0xdeadbeef );
+    mod = (HMODULE)0xdeadbeef;
+    ret = pGetModuleHandleExW( GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, nosuchmodW, &mod );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_MOD_NOT_FOUND, "got %u\n", error );
+    ok( mod == NULL, "got %p\n", mod );
+
+    mod_kernel32 = LoadLibraryA( "kernel32" );
+
+    SetLastError( 0xdeadbeef );
+    ret = pGetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, NULL, NULL );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+
+    SetLastError( 0xdeadbeef );
+    ret = pGetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCSTR)mod_kernel32, NULL );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+
+    SetLastError( 0xdeadbeef );
+    mod = (HMODULE)0xdeadbeef;
+    ret = pGetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCSTR)mod_kernel32, &mod );
+    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( mod == mod_kernel32, "got %p\n", mod );
+    FreeLibrary( mod );
+
+    SetLastError( 0xdeadbeef );
+    mod = (HMODULE)0xdeadbeef;
+    ret = pGetModuleHandleExA( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCSTR)0xbeefdead, &mod );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_MOD_NOT_FOUND, "got %u\n", error );
+    ok( mod == NULL, "got %p\n", mod );
+
+    SetLastError( 0xdeadbeef );
+    ret = pGetModuleHandleExW( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, NULL, NULL );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+
+    SetLastError( 0xdeadbeef );
+    ret = pGetModuleHandleExW( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)mod_kernel32, NULL );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
+
+    SetLastError( 0xdeadbeef );
+    mod = (HMODULE)0xdeadbeef;
+    ret = pGetModuleHandleExW( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)mod_kernel32, &mod );
+    ok( ret, "unexpected failure %u\n", GetLastError() );
+    ok( mod == mod_kernel32, "got %p\n", mod );
+    FreeLibrary( mod );
+
+    SetLastError( 0xdeadbeef );
+    mod = (HMODULE)0xdeadbeef;
+    ret = pGetModuleHandleExW( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)0xbeefdead, &mod );
+    error = GetLastError();
+    ok( !ret, "unexpected success\n" );
+    ok( error == ERROR_MOD_NOT_FOUND, "got %u\n", error );
+    ok( mod == NULL, "got %p\n", mod );
+
+    FreeLibrary( mod_kernel32 );
+}
+
+static void testK32GetModuleInformation(void)
+{
+    MODULEINFO info;
+    HMODULE mod;
+    BOOL ret;
+
+    if (!pK32GetModuleInformation)
+    {
+        win_skip("K32GetModuleInformation not available\n");
+        return;
+    }
+
+    mod = GetModuleHandleA(NULL);
+    memset(&info, 0xAA, sizeof(info));
+    ret = pK32GetModuleInformation(GetCurrentProcess(), mod, &info, sizeof(info));
+    ok(ret, "K32GetModuleInformation failed for main module\n");
+    ok(info.lpBaseOfDll == mod, "Wrong info.lpBaseOfDll = %p, expected %p\n", info.lpBaseOfDll, mod);
+    ok(info.EntryPoint != NULL, "Expected nonzero entrypoint\n");
+
+    mod = GetModuleHandleA("kernel32.dll");
+    memset(&info, 0xAA, sizeof(info));
+    ret = pK32GetModuleInformation(GetCurrentProcess(), mod, &info, sizeof(info));
+    ok(ret, "K32GetModuleInformation failed for kernel32 module\n");
+    ok(info.lpBaseOfDll == mod, "Wrong info.lpBaseOfDll = %p, expected %p\n", info.lpBaseOfDll, mod);
+    ok(info.EntryPoint != NULL, "Expected nonzero entrypoint\n");
 }
 
 START_TEST(module)
@@ -393,13 +753,19 @@ START_TEST(module)
         is_unicode_enabled = FALSE;
     }
 
+    init_pointers();
+
     testGetModuleFileName(NULL);
     testGetModuleFileName("kernel32.dll");
     testGetModuleFileName_Wrong();
+
+    testGetDllDirectory();
 
     testLoadLibraryA();
     testNestedLoadLibraryA();
     testLoadLibraryA_Wrong();
     testGetProcAddress_Wrong();
     testLoadLibraryEx();
+    testGetModuleHandleEx();
+    testK32GetModuleInformation();
 }

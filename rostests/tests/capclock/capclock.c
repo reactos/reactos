@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * DESCRIPTION: Simple Win32 Caption Clock
  * PROJECT    : ReactOS (test applications)
  * AUTHOR     : Emanuele Aliberti

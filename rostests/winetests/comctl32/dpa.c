@@ -19,17 +19,22 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "commctrl.h"
-#include "objidl.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <commctrl.h>
+#include <objbase.h>
+//#include "objidl.h"
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 #define expect(expected, got) ok(got == expected, "Expected %d, got %d\n", expected, got)
 
@@ -40,24 +45,24 @@ typedef struct _STREAMDATA
     DWORD dwItems;
 } STREAMDATA, *PSTREAMDATA;
 
-static HDPA    (WINAPI *pDPA_Clone)(const HDPA,const HDPA);
+static HDPA    (WINAPI *pDPA_Clone)(const HDPA,HDPA);
 static HDPA    (WINAPI *pDPA_Create)(INT);
 static HDPA    (WINAPI *pDPA_CreateEx)(INT,HANDLE);
-static PVOID   (WINAPI *pDPA_DeleteAllPtrs)(const HDPA);
-static PVOID   (WINAPI *pDPA_DeletePtr)(const HDPA,INT);
-static BOOL    (WINAPI *pDPA_Destroy)(const HDPA);
+static PVOID   (WINAPI *pDPA_DeleteAllPtrs)(HDPA);
+static PVOID   (WINAPI *pDPA_DeletePtr)(HDPA,INT);
+static BOOL    (WINAPI *pDPA_Destroy)(HDPA);
 static VOID    (WINAPI *pDPA_DestroyCallback)(HDPA,PFNDPAENUMCALLBACK,PVOID);
 static VOID    (WINAPI *pDPA_EnumCallback)(HDPA,PFNDPAENUMCALLBACK,PVOID); 
-static INT     (WINAPI *pDPA_GetPtr)(const HDPA,INT);
-static INT     (WINAPI *pDPA_GetPtrIndex)(const HDPA,PVOID);
+static INT     (WINAPI *pDPA_GetPtr)(HDPA,INT);
+static INT     (WINAPI *pDPA_GetPtrIndex)(HDPA,PVOID);
 static BOOL    (WINAPI *pDPA_Grow)(HDPA,INT);
-static INT     (WINAPI *pDPA_InsertPtr)(const HDPA,INT,PVOID);
+static INT     (WINAPI *pDPA_InsertPtr)(HDPA,INT,PVOID);
 static HRESULT (WINAPI *pDPA_LoadStream)(HDPA*,PFNDPASTREAM,IStream*,LPVOID);
-static BOOL    (WINAPI *pDPA_Merge)(const HDPA,const HDPA,DWORD,PFNDPACOMPARE,PFNDPAMERGE,LPARAM);
+static BOOL    (WINAPI *pDPA_Merge)(HDPA,HDPA,DWORD,PFNDPACOMPARE,PFNDPAMERGE,LPARAM);
 static HRESULT (WINAPI *pDPA_SaveStream)(HDPA,PFNDPASTREAM,IStream*,LPVOID);
 static INT     (WINAPI *pDPA_Search)(HDPA,PVOID,INT,PFNDPACOMPARE,LPARAM,UINT);
-static BOOL    (WINAPI *pDPA_SetPtr)(const HDPA,INT,PVOID);
-static BOOL    (WINAPI *pDPA_Sort)(const HDPA,PFNDPACOMPARE,LPARAM);
+static BOOL    (WINAPI *pDPA_SetPtr)(HDPA,INT,PVOID);
+static BOOL    (WINAPI *pDPA_Sort)(HDPA,PFNDPACOMPARE,LPARAM);
 
 #define COMCTL32_GET_PROC(func, ord) \
   ((p ## func = (PVOID)GetProcAddress(hcomctl32,(LPCSTR)ord)) ? 1 \
@@ -96,13 +101,13 @@ static BOOL InitFunctionPtrs(HMODULE hcomctl32)
 /* Callbacks */
 static INT CALLBACK CB_CmpLT(PVOID p1, PVOID p2, LPARAM lp)
 {
-    ok(lp == 0xdeadbeef, "lp=%ld\n", lp);
+    ok(lp == 0x1abe11ed, "lp=%ld\n", lp);
     return p1 < p2 ? -1 : p1 > p2 ? 1 : 0;
 }
 
 static INT CALLBACK CB_CmpGT(PVOID p1, PVOID p2, LPARAM lp)
 {
-    ok(lp == 0xdeadbeef, "lp=%ld\n", lp);
+    ok(lp == 0x1abe11ed, "lp=%ld\n", lp);
     return p1 > p2 ? -1 : p1 < p2 ? 1 : 0;
 }
 
@@ -115,14 +120,14 @@ static INT nMessages[4];
 static PVOID CALLBACK CB_MergeInsertSrc(UINT op, PVOID p1, PVOID p2, LPARAM lp)
 {
     nMessages[op]++;
-    ok(lp == 0xdeadbeef, "lp=%ld\n", lp);
+    ok(lp == 0x1abe11ed, "lp=%ld\n", lp);
     return p1;
 }        
 
 static PVOID CALLBACK CB_MergeDeleteOddSrc(UINT op, PVOID p1, PVOID p2, LPARAM lp)
 {
     nMessages[op]++;
-    ok(lp == 0xdeadbeef, "lp=%ld\n", lp);
+    ok(lp == 0x1abe11ed, "lp=%ld\n", lp);
     return ((PCHAR)p2)+1;
 }
 
@@ -247,12 +252,12 @@ static void test_dpa(void)
         INT j, k;
         k = pDPA_GetPtrIndex(dpa, (PVOID)(INT_PTR)i);
         /* Linear searches should work on unsorted DPAs */
-        j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, 0, CB_CmpLT, 0xdeadbeef, 0);
+        j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, 0, CB_CmpLT, 0x1abe11ed, 0);
         ok(j == k, "j=%d k=%d\n", j, k);
     }
 
     /* Sort DPA */
-    ok(pDPA_Sort(dpa, CB_CmpGT, 0xdeadbeef), "\n");
+    ok(pDPA_Sort(dpa, CB_CmpGT, 0x1abe11ed), "\n");
     rc=CheckDPA(dpa, 0x654321, &dw);
     ok(rc, "dw=0x%x\n", dw);
     
@@ -262,7 +267,7 @@ static void test_dpa(void)
     /* The old data should have been preserved */
     rc=CheckDPA(dpa2, 0x654321, &dw2);
     ok(rc, "dw=0x%x\n", dw2);
-    ok(pDPA_Sort(dpa, CB_CmpLT, 0xdeadbeef), "\n");
+    ok(pDPA_Sort(dpa, CB_CmpLT, 0x1abe11ed), "\n");
     
     /* Test if the DPA itself was really copied */
     rc=CheckDPA(dpa,  0x123456, &dw);
@@ -271,7 +276,7 @@ static void test_dpa(void)
     ok(rc, "dw2=0x%x\n", dw2);
 
     /* Clone into an old DPA */
-    p = NULL; SetLastError(ERROR_SUCCESS);
+    SetLastError(ERROR_SUCCESS);
     p = pDPA_Clone(dpa, dpa3);
     ok(p == dpa3, "p=%p\n", p);
     rc=CheckDPA(dpa3, 0x123456, &dw3);
@@ -284,14 +289,14 @@ static void test_dpa(void)
         /* The array is in order so ptr == index+1 */
         j = pDPA_GetPtrIndex(dpa, (PVOID)(INT_PTR)i);
         ok(j+1 == i, "j=%d i=%d\n", j, i);
-        j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, 0, CB_CmpLT, 0xdeadbeef, DPAS_SORTED);
+        j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, 0, CB_CmpLT, 0x1abe11ed, DPAS_SORTED);
         ok(j+1 == i, "j=%d i=%d\n", j, i);
 
         /* Linear searches respect iStart ... */
-        j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, i+1, CB_CmpLT, 0xdeadbeef, 0);
+        j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, i+1, CB_CmpLT, 0x1abe11ed, 0);
         ok(j == DPA_ERR, "j=%d\n", j);
         /* ... but for a binary search it's ignored */
-        j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, i+1, CB_CmpLT, 0xdeadbeef, DPAS_SORTED);
+        j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, i+1, CB_CmpLT, 0x1abe11ed, DPAS_SORTED);
         ok(j+1 == i, "j=%d i=%d\n", j, i);
     }
 
@@ -313,15 +318,15 @@ static void test_dpa(void)
 
     /* Check where to re-insert the deleted item */
     i = pDPA_Search(dpa, (PVOID)3, 0, 
-                    CB_CmpLT, 0xdeadbeef, DPAS_SORTED|DPAS_INSERTAFTER);
+                    CB_CmpLT, 0x1abe11ed, DPAS_SORTED|DPAS_INSERTAFTER);
     ok(i == 2, "i=%d\n", i);
     /* DPAS_INSERTBEFORE works just like DPAS_INSERTAFTER */
     i = pDPA_Search(dpa, (PVOID)3, 0,
-                    CB_CmpLT, 0xdeadbeef, DPAS_SORTED|DPAS_INSERTBEFORE);
+                    CB_CmpLT, 0x1abe11ed, DPAS_SORTED|DPAS_INSERTBEFORE);
     ok(i == 2, "i=%d\n", i);
     /* without DPAS_INSERTBEFORE/AFTER */
     i = pDPA_Search(dpa, (PVOID)3, 0,
-                    CB_CmpLT, 0xdeadbeef, DPAS_SORTED);
+                    CB_CmpLT, 0x1abe11ed, DPAS_SORTED);
     ok(i == -1, "i=%d\n", i);
 
     /* Re-insert the item */
@@ -334,7 +339,7 @@ static void test_dpa(void)
      * should be bogus */
     for(i = 0; i < 6; i++)
     {
-        INT j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, 0, CB_CmpGT, 0xdeadbeef,
+        INT j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, 0, CB_CmpGT, 0x1abe11ed,
                             DPAS_SORTED|DPAS_INSERTBEFORE);
         ok(j != i, "i=%d\n", i);
     }
@@ -396,7 +401,7 @@ static void test_DPA_Merge(void)
     /* Delete all odd entries from dpa2 */
     memset(nMessages, 0, sizeof(nMessages));
     pDPA_Merge(dpa2, dpa, DPAM_INTERSECT,
-               CB_CmpLT, CB_MergeDeleteOddSrc, 0xdeadbeef);
+               CB_CmpLT, CB_MergeDeleteOddSrc, 0x1abe11ed);
     rc = CheckDPA(dpa2, 0x246, &dw);
     ok(rc, "dw=0x%x\n", dw);
 
@@ -413,7 +418,7 @@ static void test_DPA_Merge(void)
     /* DPAM_INTERSECT - returning source while merging */
     memset(nMessages, 0, sizeof(nMessages));
     pDPA_Merge(dpa2, dpa, DPAM_INTERSECT,
-               CB_CmpLT, CB_MergeInsertSrc, 0xdeadbeef);
+               CB_CmpLT, CB_MergeInsertSrc, 0x1abe11ed);
     rc = CheckDPA(dpa2, 0x135, &dw);
     ok(rc, "dw=0x%x\n", dw);
 
@@ -433,7 +438,7 @@ static void test_DPA_Merge(void)
 
     memset(nMessages, 0, sizeof(nMessages));
     pDPA_Merge(dpa2, dpa, DPAM_UNION,
-               CB_CmpLT, CB_MergeInsertSrc, 0xdeadbeef);
+               CB_CmpLT, CB_MergeInsertSrc, 0x1abe11ed);
     rc = CheckDPA(dpa2, 0x123456, &dw);
     ok(rc ||
        broken(!rc && dw == 0x23456), /* 4.7x */
@@ -448,7 +453,7 @@ static void test_DPA_Merge(void)
     /* Merge dpa3 into dpa2 and dpa */
     memset(nMessages, 0, sizeof(nMessages));
     pDPA_Merge(dpa, dpa3, DPAM_UNION|DPAM_SORTED,
-               CB_CmpLT, CB_MergeInsertSrc, 0xdeadbeef);
+               CB_CmpLT, CB_MergeInsertSrc, 0x1abe11ed);
     expect(3, nMessages[DPAMM_MERGE]);
     expect(0, nMessages[DPAMM_DELETE]);
     expect(3, nMessages[DPAMM_INSERT]);
@@ -461,7 +466,7 @@ static void test_DPA_Merge(void)
 
     memset(nMessages, 0, sizeof(nMessages));
     pDPA_Merge(dpa2, dpa3, DPAM_UNION|DPAM_SORTED,
-               CB_CmpLT, CB_MergeInsertSrc, 0xdeadbeef);
+               CB_CmpLT, CB_MergeInsertSrc, 0x1abe11ed);
     expect(3, nMessages[DPAMM_MERGE]);
     expect(0, nMessages[DPAMM_DELETE]);
     ok(nMessages[DPAMM_INSERT] == 3 ||
@@ -667,7 +672,7 @@ static void test_DPA_SaveStream(void)
     IStream* pStm = NULL;
     DWORD dwMode, dw;
     HRESULT hRes;
-    ULONG ret;
+    INT ret;
     INT i;
     BOOL rc;
     LARGE_INTEGER liZero;

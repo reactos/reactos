@@ -5,9 +5,9 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <apitest.h>
+
+#include <wingdi.h>
 
 HRGN WINAPI GdiConvertRegion(HRGN);
 

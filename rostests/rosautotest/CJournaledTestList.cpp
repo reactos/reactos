@@ -64,7 +64,15 @@ CJournaledTestList::~CJournaledTestList()
 void
 CJournaledTestList::OpenJournal(DWORD DesiredAccess, bool CreateNew)
 {
-    m_hJournal = CreateFileW(m_JournalFile.c_str(), DesiredAccess, 0, NULL, (CreateNew ? CREATE_ALWAYS : OPEN_EXISTING), FILE_ATTRIBUTE_NORMAL, NULL);
+    m_hJournal = CreateFileW(
+        m_JournalFile.c_str(),
+        DesiredAccess,
+        0,
+        NULL,
+        (CreateNew ? CREATE_ALWAYS : OPEN_EXISTING),
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING | FILE_FLAG_WRITE_THROUGH,
+        NULL
+    );
 
     if(m_hJournal == INVALID_HANDLE_VALUE)
         FATAL("CreateFileW failed\n");
@@ -83,6 +91,7 @@ CJournaledTestList::SerializeIntoJournal(const string& String)
 {
     DWORD BytesWritten;
     WriteFile(m_hJournal, String.c_str(), String.size() + 1, &BytesWritten, NULL);
+    FlushFileBuffers(m_hJournal);
 }
 
 /**
@@ -98,6 +107,7 @@ CJournaledTestList::SerializeIntoJournal(const wstring& String)
 {
     DWORD BytesWritten;
     WriteFile(m_hJournal, String.c_str(), (String.size() + 1) * sizeof(WCHAR), &BytesWritten, NULL);
+    FlushFileBuffers(m_hJournal);
 }
 
 /**
@@ -169,6 +179,7 @@ CJournaledTestList::WriteInitialJournalFile()
     }
 
     WriteFile(m_hJournal, &TerminatingNull, sizeof(TerminatingNull), &BytesWritten, NULL);
+    FlushFileBuffers(m_hJournal);
 
     CloseHandle(m_hJournal);
     m_hJournal = INVALID_HANDLE_VALUE;
@@ -248,6 +259,7 @@ CJournaledTestList::UpdateJournal()
     SetFilePointer(m_hJournal, sizeof(szJournalHeader), NULL, FILE_CURRENT);
 
     WriteFile(m_hJournal, &m_ListIterator, sizeof(m_ListIterator), &BytesWritten, NULL);
+    FlushFileBuffers(m_hJournal);
 
     CloseHandle(m_hJournal);
     m_hJournal = NULL;

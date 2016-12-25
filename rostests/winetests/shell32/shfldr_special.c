@@ -77,6 +77,7 @@ static void test_parse_for_entire_network(void)
     attr = ~0;
 
     hr = IShellFolder_ParseDisplayName(psfDesktop, NULL, NULL, entire_network_path, &eaten, &pidl, &attr);
+    IShellFolder_Release(psfDesktop);
     if (hr == HRESULT_FROM_WIN32(ERROR_BAD_NET_NAME) ||
         hr == HRESULT_FROM_WIN32(ERROR_NO_NET_OR_BAD_PATH) ||
         hr == HRESULT_FROM_WIN32(ERROR_INVALID_PARAMETER))
@@ -125,6 +126,7 @@ static void test_parse_for_control_panel(void)
        "Unexpected attributes : %08x\n", attr);
 
     ILFree(pidl);
+    IShellFolder_Release(psfDesktop);
 }
 
 static void test_printers_folder(void)
@@ -150,9 +152,9 @@ static void test_printers_folder(void)
 if (0)
 {
     /* crashes on XP */
-    hr = IShellFolder2_GetDetailsOf(folder, NULL, 0, NULL);
-    hr = IShellFolder2_GetDefaultColumnState(folder, 0, NULL);
-    hr = IPersistFolder2_GetCurFolder(pf, NULL);
+    IShellFolder2_GetDetailsOf(folder, NULL, 0, NULL);
+    IShellFolder2_GetDefaultColumnState(folder, 0, NULL);
+    IPersistFolder2_GetCurFolder(pf, NULL);
 }
 
     /* 5 columns defined */
@@ -162,8 +164,11 @@ if (0)
     hr = IShellFolder2_GetDefaultColumnState(folder, 6, &state);
     ok(broken(hr == E_NOTIMPL) || hr == E_INVALIDARG /* Win7 */, "got 0x%08x\n", hr);
 
+    details.str.u.pOleStr = NULL;
     hr = IShellFolder2_GetDetailsOf(folder, NULL, 0, &details);
     ok(hr == S_OK || broken(E_NOTIMPL) /* W2K */, "got 0x%08x\n", hr);
+    if (SHELL_OsIsUnicode()) SHFree(details.str.u.pOleStr);
+
     /* test every column if method is implemented */
     if (hr == S_OK)
     {
@@ -219,9 +224,24 @@ if (0)
     CoUninitialize();
 }
 
+static void test_desktop_folder(void)
+{
+    IShellFolder *psf;
+    HRESULT hr;
+
+    hr = SHGetDesktopFolder(&psf);
+    ok(hr == S_OK, "Got %x\n", hr);
+
+    hr = IShellFolder_QueryInterface(psf, &IID_IShellFolder, NULL);
+    ok(hr == E_POINTER, "Got %x\n", hr);
+
+    IShellFolder_Release(psf);
+}
+
 START_TEST(shfldr_special)
 {
     test_parse_for_entire_network();
     test_parse_for_control_panel();
     test_printers_folder();
+    test_desktop_folder();
 }

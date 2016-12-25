@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
    if (FileHandle == INVALID_HANDLE_VALUE)
      {
 
-  printf("Open failed last err 0x%lu\n",GetLastError());
+  printf("Open failed last err 0x%lx\n",GetLastError());
 	return 0;
      }
 
@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 
    if (!NT_SUCCESS(Status))
      {
-	printf("Read failed status 0x%lu\n",Status);
+	printf("Read failed status 0x%lx\n",Status);
      }
    printf("Waiting\n");
    WaitForSingleObjectEx(EventHandle, INFINITE, TRUE);

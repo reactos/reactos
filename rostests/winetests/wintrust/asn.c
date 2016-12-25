@@ -150,7 +150,7 @@ static void test_encodeSPCLink(void)
      CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(!ret &&
      (GetLastError() == CRYPT_E_INVALID_IA5_STRING ||
-     GetLastError() == OSS_BAD_PTR /* Win9x */),
+     GetLastError() == OSS_BAD_PTR /* WinNT */),
      "Expected CRYPT_E_INVALID_IA5_STRING, got %08x\n", GetLastError());
     /* Unlike the crypt32 string encoding routines, size is not set to the
      * index of the first invalid character.
@@ -298,15 +298,13 @@ static void test_decodeSPCLink(void)
      NULL, &buf, &size);
     ok(!ret &&
      (GetLastError() == CRYPT_E_BAD_ENCODE ||
-     GetLastError() == OSS_DATA_ERROR /* Win9x */),
+     GetLastError() == OSS_DATA_ERROR /* WinNT */),
      "Expected CRYPT_E_BAD_ENCODE, got %08x\n", GetLastError());
 }
 
 static const BYTE emptySequence[] = { 0x30,0x00 };
 static BYTE flags[] = { 1 };
 static const BYTE onlyFlagsPEImage[] = { 0x30,0x04,0x03,0x02,0x00,0x01 };
-static const BYTE moreFlagsPEImage[] = {
-0x30,0x06,0x03,0x04,0x04,0xff,0x80,0x10 };
 static const BYTE onlyEmptyFilePEImage[] = {
 0x30,0x06,0xa0,0x04,0xa2,0x02,0x80,0x00 };
 static const BYTE flagsAndEmptyFilePEImage[] = {

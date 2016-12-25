@@ -18,9 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windows.h"
-#include "gdiplus.h"
-#include "wine/test.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include "windows.h"
+#include <wine/test.h>
+#include <wingdi.h>
+#include <objbase.h>
+#include <gdiplus.h>
 #include <math.h>
 
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
@@ -286,9 +292,14 @@ static void test_texturewrap(void)
 static void test_gradientgetrect(void)
 {
     GpLineGradient *brush;
+    GpMatrix *transform;
+    REAL elements[6];
     GpRectF rectf;
     GpStatus status;
     GpPointF pt1, pt2;
+
+    status = GdipCreateMatrix(&transform);
+    expect(Ok, status);
 
     pt1.X = pt1.Y = 1.0;
     pt2.X = pt2.Y = 100.0;
@@ -301,7 +312,21 @@ static void test_gradientgetrect(void)
     expectf(1.0, rectf.Y);
     expectf(99.0, rectf.Width);
     expectf(99.0, rectf.Height);
+    status = GdipGetLineTransform(brush, transform);
+    todo_wine expect(Ok, status);
+    if (status == Ok)
+    {
+        status = GdipGetMatrixElements(transform, elements);
+        expect(Ok, status);
+        expectf(1.0, elements[0]);
+        expectf(1.0, elements[1]);
+        expectf(-1.0, elements[2]);
+        expectf(1.0, elements[3]);
+        expectf(50.50, elements[4]);
+        expectf(-50.50, elements[5]);
+    }
     status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok, status);
     /* vertical gradient */
     pt1.X = pt1.Y = pt2.X = 0.0;
     pt2.Y = 10.0;
@@ -314,7 +339,21 @@ static void test_gradientgetrect(void)
     expectf(0.0, rectf.Y);
     expectf(10.0, rectf.Width);
     expectf(10.0, rectf.Height);
+    status = GdipGetLineTransform(brush, transform);
+    todo_wine expect(Ok, status);
+    if (status == Ok)
+    {
+        status = GdipGetMatrixElements(transform, elements);
+        expect(Ok, status);
+        expectf(0.0, elements[0]);
+        expectf(1.0, elements[1]);
+        expectf(-1.0, elements[2]);
+        expectf(0.0, elements[3]);
+        expectf(5.0, elements[4]);
+        expectf(5.0, elements[5]);
+    }
     status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok, status);
     /* horizontal gradient */
     pt1.X = pt1.Y = pt2.Y = 0.0;
     pt2.X = 10.0;
@@ -327,7 +366,21 @@ static void test_gradientgetrect(void)
     expectf(-5.0, rectf.Y);
     expectf(10.0, rectf.Width);
     expectf(10.0, rectf.Height);
+    status = GdipGetLineTransform(brush, transform);
+    todo_wine expect(Ok, status);
+    if (status == Ok)
+    {
+        status = GdipGetMatrixElements(transform, elements);
+        expect(Ok, status);
+        expectf(1.0, elements[0]);
+        expectf(0.0, elements[1]);
+        expectf(0.0, elements[2]);
+        expectf(1.0, elements[3]);
+        expectf(0.0, elements[4]);
+        expectf(0.0, elements[5]);
+    }
     status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok, status);
     /* slope = -1 */
     pt1.X = pt1.Y = 0.0;
     pt2.X = 20.0;
@@ -341,7 +394,21 @@ static void test_gradientgetrect(void)
     expectf(-20.0, rectf.Y);
     expectf(20.0, rectf.Width);
     expectf(20.0, rectf.Height);
+    status = GdipGetLineTransform(brush, transform);
+    todo_wine expect(Ok, status);
+    if (status == Ok)
+    {
+        status = GdipGetMatrixElements(transform, elements);
+        expect(Ok, status);
+        expectf(1.0, elements[0]);
+        expectf(-1.0, elements[1]);
+        expectf(1.0, elements[2]);
+        expectf(1.0, elements[3]);
+        expectf(10.0, elements[4]);
+        expectf(10.0, elements[5]);
+    }
     status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok, status);
     /* slope = 1/100 */
     pt1.X = pt1.Y = 0.0;
     pt2.X = 100.0;
@@ -355,7 +422,35 @@ static void test_gradientgetrect(void)
     expectf(0.0, rectf.Y);
     expectf(100.0, rectf.Width);
     expectf(1.0, rectf.Height);
+    status = GdipGetLineTransform(brush, transform);
+    todo_wine expect(Ok, status);
+    if (status == Ok)
+    {
+        status = GdipGetMatrixElements(transform, elements);
+        expect(Ok,status);
+        expectf(1.0, elements[0]);
+        expectf(0.01, elements[1]);
+        expectf(-0.02, elements[2]);
+        /* expectf(2.0, elements[3]); */
+        expectf(0.01, elements[4]);
+        /* expectf(-1.0, elements[5]); */
+    }
     status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok,status);
+    /* zero height rect */
+    rectf.X = rectf.Y = 10.0;
+    rectf.Width = 100.0;
+    rectf.Height = 0.0;
+    status = GdipCreateLineBrushFromRect(&rectf, 0, 0, LinearGradientModeVertical,
+        WrapModeTile, &brush);
+    expect(OutOfMemory, status);
+    /* zero width rect */
+    rectf.X = rectf.Y = 10.0;
+    rectf.Width = 0.0;
+    rectf.Height = 100.0;
+    status = GdipCreateLineBrushFromRect(&rectf, 0, 0, LinearGradientModeHorizontal,
+        WrapModeTile, &brush);
+    expect(OutOfMemory, status);
     /* from rect with LinearGradientModeHorizontal */
     rectf.X = rectf.Y = 10.0;
     rectf.Width = rectf.Height = 100.0;
@@ -369,7 +464,21 @@ static void test_gradientgetrect(void)
     expectf(10.0, rectf.Y);
     expectf(100.0, rectf.Width);
     expectf(100.0, rectf.Height);
+    status = GdipGetLineTransform(brush, transform);
+    todo_wine expect(Ok, status);
+    if (status == Ok)
+    {
+        status = GdipGetMatrixElements(transform, elements);
+        expect(Ok,status);
+        expectf(1.0, elements[0]);
+        expectf(0.0, elements[1]);
+        expectf(0.0, elements[2]);
+        expectf(1.0, elements[3]);
+        expectf(0.0, elements[4]);
+        expectf(0.0, elements[5]);
+    }
     status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok,status);
     /* passing negative Width/Height to LinearGradientModeHorizontal */
     rectf.X = rectf.Y = 10.0;
     rectf.Width = rectf.Height = -100.0;
@@ -383,7 +492,23 @@ static void test_gradientgetrect(void)
     expectf(10.0, rectf.Y);
     expectf(-100.0, rectf.Width);
     expectf(-100.0, rectf.Height);
+    status = GdipGetLineTransform(brush, transform);
+    todo_wine expect(Ok, status);
+    if (status == Ok)
+    {
+        status = GdipGetMatrixElements(transform, elements);
+        expect(Ok,status);
+        expectf(1.0, elements[0]);
+        expectf(0.0, elements[1]);
+        expectf(0.0, elements[2]);
+        expectf(1.0, elements[3]);
+        expectf(0.0, elements[4]);
+        expectf(0.0, elements[5]);
+    }
     status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok,status);
+
+    GdipDeleteMatrix(transform);
 }
 
 static void test_lineblend(void)
@@ -400,6 +525,10 @@ static void test_lineblend(void)
     REAL res_factors[6] = {0.3f, 0.0f, 0.0f, 0.0f, 0.0f};
     REAL res_positions[6] = {0.3f, 0.0f, 0.0f, 0.0f, 0.0f};
     ARGB res_colors[6] = {0xdeadbeef, 0, 0, 0, 0};
+
+    pt1.X = pt1.Y = pt2.Y = pt2.X = 1.0;
+    status = GdipCreateLineBrush(&pt1, &pt2, 0, 0, WrapModeTile, &brush);
+    expect(OutOfMemory, status);
 
     pt1.X = pt1.Y = 1.0;
     pt2.X = pt2.Y = 100.0;
@@ -650,21 +779,58 @@ static void test_gradientsurroundcolorcount(void)
 {
     GpStatus status;
     GpPathGradient *grad;
-    ARGB *color;
-    INT count = 3;
+    ARGB color[3];
+    INT count;
 
     status = GdipCreatePathGradient(blendcount_ptf, 2, WrapModeClamp, &grad);
     expect(Ok, status);
 
-    color = GdipAlloc(sizeof(ARGB[3]));
+    count = 0;
+    status = GdipGetPathGradientSurroundColorCount(grad, &count);
+    expect(Ok, status);
+    expect(2, count);
 
+    color[0] = color[1] = color[2] = 0xdeadbeef;
+    count = 3;
+    status = GdipGetPathGradientSurroundColorsWithCount(grad, color, &count);
+    expect(Ok, status);
+    expect(1, count);
+    expect(0xffffffff, color[0]);
+    expect(0xffffffff, color[1]);
+    expect(0xdeadbeef, color[2]);
+
+    color[0] = color[1] = color[2] = 0xdeadbeef;
+    count = 2;
+    status = GdipGetPathGradientSurroundColorsWithCount(grad, color, &count);
+    expect(Ok, status);
+    expect(1, count);
+    expect(0xffffffff, color[0]);
+    expect(0xffffffff, color[1]);
+    expect(0xdeadbeef, color[2]);
+
+    color[0] = color[1] = color[2] = 0xdeadbeef;
+    count = 1;
+    status = GdipGetPathGradientSurroundColorsWithCount(grad, color, &count);
+    expect(InvalidParameter, status);
+    expect(1, count);
+    expect(0xdeadbeef, color[0]);
+    expect(0xdeadbeef, color[1]);
+    expect(0xdeadbeef, color[2]);
+
+    color[0] = color[1] = color[2] = 0xdeadbeef;
+    count = 0;
+    status = GdipGetPathGradientSurroundColorsWithCount(grad, color, &count);
+    expect(InvalidParameter, status);
+    expect(0, count);
+    expect(0xdeadbeef, color[0]);
+    expect(0xdeadbeef, color[1]);
+    expect(0xdeadbeef, color[2]);
+
+    count = 3;
     status = GdipSetPathGradientSurroundColorsWithCount(grad, color, &count);
     expect(InvalidParameter, status);
-    GdipFree(color);
 
     count = 2;
-
-    color = GdipAlloc(sizeof(ARGB[2]));
 
     color[0] = 0x00ff0000;
     color[1] = 0x0000ff00;
@@ -683,7 +849,7 @@ static void test_gradientsurroundcolorcount(void)
     }
 
     status = GdipSetPathGradientSurroundColorsWithCount(grad, color, &count);
-    todo_wine expect(Ok, status);
+    expect(Ok, status);
     expect(2, count);
 
     status = GdipGetPathGradientSurroundColorCount(NULL, &count);
@@ -694,11 +860,418 @@ static void test_gradientsurroundcolorcount(void)
 
     count = 0;
     status = GdipGetPathGradientSurroundColorCount(grad, &count);
-    todo_wine expect(Ok, status);
-    todo_wine expect(2, count);
+    expect(Ok, status);
+    expect(2, count);
 
-    GdipFree(color);
+    color[0] = color[1] = color[2] = 0xdeadbeef;
+    count = 2;
+    status = GdipGetPathGradientSurroundColorsWithCount(grad, color, &count);
+    expect(Ok, status);
+    expect(2, count);
+    expect(0x00ff0000, color[0]);
+    expect(0x0000ff00, color[1]);
+    expect(0xdeadbeef, color[2]);
+
+    count = 1;
+    status = GdipSetPathGradientSurroundColorsWithCount(grad, color, &count);
+    expect(Ok, status);
+    expect(1, count);
+
+    count = 0;
+    status = GdipGetPathGradientSurroundColorCount(grad, &count);
+    expect(Ok, status);
+    expect(2, count);
+
+    /* If all colors are the same, count is set to 1. */
+    color[0] = color[1] = 0;
+    count = 2;
+    status = GdipSetPathGradientSurroundColorsWithCount(grad, color, &count);
+    expect(Ok, status);
+    expect(2, count);
+
+    color[0] = color[1] = color[2] = 0xdeadbeef;
+    count = 2;
+    status = GdipGetPathGradientSurroundColorsWithCount(grad, color, &count);
+    expect(Ok, status);
+    expect(1, count);
+    expect(0x00000000, color[0]);
+    expect(0x00000000, color[1]);
+    expect(0xdeadbeef, color[2]);
+
+    color[0] = color[1] = 0xff00ff00;
+    count = 2;
+    status = GdipSetPathGradientSurroundColorsWithCount(grad, color, &count);
+    expect(Ok, status);
+    expect(2, count);
+
+    color[0] = color[1] = color[2] = 0xdeadbeef;
+    count = 2;
+    status = GdipGetPathGradientSurroundColorsWithCount(grad, color, &count);
+    expect(Ok, status);
+    expect(1, count);
+    expect(0xff00ff00, color[0]);
+    expect(0xff00ff00, color[1]);
+    expect(0xdeadbeef, color[2]);
+
+    count = 0;
+    status = GdipSetPathGradientSurroundColorsWithCount(grad, color, &count);
+    expect(InvalidParameter, status);
+    expect(0, count);
+
     GdipDeleteBrush((GpBrush*)grad);
+
+    status = GdipCreatePathGradient(getbounds_ptf, 3, WrapModeClamp, &grad);
+    expect(Ok, status);
+
+    color[0] = color[1] = color[2] = 0xdeadbeef;
+    count = 3;
+    status = GdipGetPathGradientSurroundColorsWithCount(grad, color, &count);
+    expect(Ok, status);
+    expect(1, count);
+    expect(0xffffffff, color[0]);
+    expect(0xffffffff, color[1]);
+    expect(0xffffffff, color[2]);
+
+    color[0] = color[1] = color[2] = 0xdeadbeef;
+    count = 2;
+    status = GdipGetPathGradientSurroundColorsWithCount(grad, color, &count);
+    expect(InvalidParameter, status);
+    expect(2, count);
+    expect(0xdeadbeef, color[0]);
+    expect(0xdeadbeef, color[1]);
+    expect(0xdeadbeef, color[2]);
+
+    count = 0;
+    status = GdipGetPathGradientSurroundColorCount(grad, &count);
+    expect(Ok, status);
+    expect(3, count);
+
+    GdipDeleteBrush((GpBrush*)grad);
+}
+
+static void test_pathgradientpath(void)
+{
+    GpStatus status;
+    GpPath *path=NULL;
+    GpPathGradient *grad=NULL;
+
+    status = GdipCreatePathGradient(blendcount_ptf, 2, WrapModeClamp, &grad);
+    expect(Ok, status);
+
+    status = GdipGetPathGradientPath(grad, NULL);
+    expect(NotImplemented, status);
+
+    status = GdipCreatePath(FillModeWinding, &path);
+    expect(Ok, status);
+
+    status = GdipGetPathGradientPath(NULL, path);
+    expect(NotImplemented, status);
+
+    status = GdipGetPathGradientPath(grad, path);
+    expect(NotImplemented, status);
+
+    status = GdipDeletePath(path);
+    expect(Ok, status);
+
+    status = GdipDeleteBrush((GpBrush*)grad);
+    expect(Ok, status);
+}
+
+static void test_pathgradientcenterpoint(void)
+{
+    static const GpPointF path_points[] = {{0,0}, {3,0}, {0,4}};
+    GpStatus status;
+    GpPathGradient *grad;
+    GpPointF point;
+
+    status = GdipCreatePathGradient(path_points+1, 2, WrapModeClamp, &grad);
+    expect(Ok, status);
+
+    status = GdipGetPathGradientCenterPoint(NULL, &point);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientCenterPoint(grad, NULL);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientCenterPoint(grad, &point);
+    expect(Ok, status);
+    expectf(1.5, point.X);
+    expectf(2.0, point.Y);
+
+    status = GdipSetPathGradientCenterPoint(NULL, &point);
+    expect(InvalidParameter, status);
+
+    status = GdipSetPathGradientCenterPoint(grad, NULL);
+    expect(InvalidParameter, status);
+
+    point.X = 10.0;
+    point.Y = 15.0;
+    status = GdipSetPathGradientCenterPoint(grad, &point);
+    expect(Ok, status);
+
+    point.X = point.Y = -1;
+    status = GdipGetPathGradientCenterPoint(grad, &point);
+    expect(Ok, status);
+    expectf(10.0, point.X);
+    expectf(15.0, point.Y);
+
+    status = GdipDeleteBrush((GpBrush*)grad);
+    expect(Ok, status);
+
+    status = GdipCreatePathGradient(path_points, 3, WrapModeClamp, &grad);
+    expect(Ok, status);
+
+    status = GdipGetPathGradientCenterPoint(grad, &point);
+    expect(Ok, status);
+    todo_wine expectf(1.0, point.X);
+    todo_wine expectf(4.0/3.0, point.Y);
+
+    status = GdipDeleteBrush((GpBrush*)grad);
+    expect(Ok, status);
+}
+
+static void test_pathgradientpresetblend(void)
+{
+    static const GpPointF path_points[] = {{0,0}, {3,0}, {0,4}};
+    GpStatus status;
+    GpPathGradient *grad;
+    INT count;
+    int i;
+    const REAL positions[5] = {0.0f, 0.2f, 0.5f, 0.8f, 1.0f};
+    const REAL two_positions[2] = {0.0f, 1.0f};
+    const ARGB colors[5] = {0xff0000ff, 0xff00ff00, 0xff00ffff, 0xffff0000, 0xffffffff};
+    REAL res_positions[6] = {0.3f, 0.0f, 0.0f, 0.0f, 0.0f};
+    ARGB res_colors[6] = {0xdeadbeef, 0, 0, 0, 0};
+
+    status = GdipCreatePathGradient(path_points+1, 2, WrapModeClamp, &grad);
+    expect(Ok, status);
+
+    status = GdipGetPathGradientPresetBlendCount(NULL, &count);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientPresetBlendCount(grad, NULL);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientPresetBlendCount(grad, &count);
+    expect(Ok, status);
+    expect(0, count);
+
+    status = GdipGetPathGradientPresetBlend(NULL, res_colors, res_positions, 1);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientPresetBlend(grad, NULL, res_positions, 1);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientPresetBlend(grad, res_colors, NULL, 1);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientPresetBlend(grad, res_colors, res_positions, 0);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientPresetBlend(grad, res_colors, res_positions, -1);
+    expect(OutOfMemory, status);
+
+    status = GdipGetPathGradientPresetBlend(grad, res_colors, res_positions, 1);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientPresetBlend(grad, res_colors, res_positions, 2);
+    expect(GenericError, status);
+
+    status = GdipSetPathGradientPresetBlend(NULL, colors, positions, 5);
+    expect(InvalidParameter, status);
+
+    status = GdipSetPathGradientPresetBlend(grad, NULL, positions, 5);
+    expect(InvalidParameter, status);
+
+    if (0)
+    {
+        /* crashes on windows xp */
+        status = GdipSetPathGradientPresetBlend(grad, colors, NULL, 5);
+        expect(InvalidParameter, status);
+    }
+
+    status = GdipSetPathGradientPresetBlend(grad, colors, positions, 0);
+    expect(InvalidParameter, status);
+
+    status = GdipSetPathGradientPresetBlend(grad, colors, positions, -1);
+    expect(InvalidParameter, status);
+
+    status = GdipSetPathGradientPresetBlend(grad, colors, positions, 1);
+    expect(InvalidParameter, status);
+
+    /* leave off the 0.0 position */
+    status = GdipSetPathGradientPresetBlend(grad, &colors[1], &positions[1], 4);
+    expect(InvalidParameter, status);
+
+    /* leave off the 1.0 position */
+    status = GdipSetPathGradientPresetBlend(grad, colors, positions, 4);
+    expect(InvalidParameter, status);
+
+    status = GdipSetPathGradientPresetBlend(grad, colors, positions, 5);
+    expect(Ok, status);
+
+    status = GdipGetPathGradientPresetBlendCount(grad, &count);
+    expect(Ok, status);
+    expect(5, count);
+
+    if (0)
+    {
+        /* Native GdipGetPathGradientPresetBlend seems to copy starting from
+         * the end of each array and do no bounds checking. This is so braindead
+         * I'm not going to copy it. */
+
+        res_colors[0] = 0xdeadbeef;
+        res_positions[0] = 0.3;
+
+        status = GdipGetPathGradientPresetBlend(grad, &res_colors[1], &res_positions[1], 4);
+        expect(Ok, status);
+
+        expect(0xdeadbeef, res_colors[0]);
+        expectf(0.3, res_positions[0]);
+
+        for (i=1; i<5; i++)
+        {
+            expect(colors[i], res_colors[i]);
+            expectf(positions[i], res_positions[i]);
+        }
+
+        status = GdipGetPathGradientPresetBlend(grad, res_colors, res_positions, 6);
+        expect(Ok, status);
+
+        for (i=0; i<5; i++)
+        {
+            expect(colors[i], res_colors[i+1]);
+            expectf(positions[i], res_positions[i+1]);
+        }
+    }
+
+    status = GdipGetPathGradientPresetBlend(grad, res_colors, res_positions, 5);
+    expect(Ok, status);
+
+    for (i=0; i<5; i++)
+    {
+        expect(colors[i], res_colors[i]);
+        expectf(positions[i], res_positions[i]);
+    }
+
+    status = GdipGetPathGradientPresetBlend(grad, res_colors, res_positions, 0);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientPresetBlend(grad, res_colors, res_positions, -1);
+    expect(OutOfMemory, status);
+
+    status = GdipGetPathGradientPresetBlend(grad, res_colors, res_positions, 1);
+    expect(InvalidParameter, status);
+
+    status = GdipSetPathGradientPresetBlend(grad, colors, two_positions, 2);
+    expect(Ok, status);
+
+    status = GdipDeleteBrush((GpBrush*)grad);
+    expect(Ok, status);
+}
+
+static void test_pathgradientblend(void)
+{
+    static const GpPointF path_points[] = {{0,0}, {3,0}, {0,4}};
+    GpPathGradient *brush;
+    GpStatus status;
+    INT count, i;
+    const REAL factors[5] = {0.0f, 0.1f, 0.5f, 0.9f, 1.0f};
+    const REAL positions[5] = {0.0f, 0.2f, 0.5f, 0.8f, 1.0f};
+    REAL res_factors[6] = {0.3f, 0.0f, 0.0f, 0.0f, 0.0f};
+    REAL res_positions[6] = {0.3f, 0.0f, 0.0f, 0.0f, 0.0f};
+
+    status = GdipCreatePathGradient(path_points, 3, WrapModeClamp, &brush);
+    expect(Ok, status);
+
+    status = GdipGetPathGradientBlendCount(NULL, &count);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientBlendCount(brush, NULL);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientBlendCount(brush, &count);
+    expect(Ok, status);
+    expect(1, count);
+
+    status = GdipGetPathGradientBlend(NULL, res_factors, res_positions, 1);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientBlend(brush, NULL, res_positions, 1);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientBlend(brush, res_factors, NULL, 1);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientBlend(brush, res_factors, res_positions, 0);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientBlend(brush, res_factors, res_positions, -1);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientBlend(brush, res_factors, res_positions, 1);
+    expect(Ok, status);
+
+    status = GdipGetPathGradientBlend(brush, res_factors, res_positions, 2);
+    expect(Ok, status);
+
+    status = GdipSetPathGradientBlend(NULL, factors, positions, 5);
+    expect(InvalidParameter, status);
+
+    status = GdipSetPathGradientBlend(brush, NULL, positions, 5);
+    expect(InvalidParameter, status);
+
+    status = GdipSetPathGradientBlend(brush, factors, NULL, 5);
+    expect(InvalidParameter, status);
+
+    status = GdipSetPathGradientBlend(brush, factors, positions, 0);
+    expect(InvalidParameter, status);
+
+    status = GdipSetPathGradientBlend(brush, factors, positions, -1);
+    expect(InvalidParameter, status);
+
+    /* leave off the 0.0 position */
+    status = GdipSetPathGradientBlend(brush, &factors[1], &positions[1], 4);
+    expect(InvalidParameter, status);
+
+    /* leave off the 1.0 position */
+    status = GdipSetPathGradientBlend(brush, factors, positions, 4);
+    expect(InvalidParameter, status);
+
+    status = GdipSetPathGradientBlend(brush, factors, positions, 5);
+    expect(Ok, status);
+
+    status = GdipGetPathGradientBlendCount(brush, &count);
+    expect(Ok, status);
+    expect(5, count);
+
+    status = GdipGetPathGradientBlend(brush, res_factors, res_positions, 4);
+    expect(InsufficientBuffer, status);
+
+    status = GdipGetPathGradientBlend(brush, res_factors, res_positions, 5);
+    expect(Ok, status);
+
+    for (i=0; i<5; i++)
+    {
+        expectf(factors[i], res_factors[i]);
+        expectf(positions[i], res_positions[i]);
+    }
+
+    status = GdipGetPathGradientBlend(brush, res_factors, res_positions, 6);
+    expect(Ok, status);
+
+    status = GdipSetPathGradientBlend(brush, factors, positions, 1);
+    expect(Ok, status);
+
+    status = GdipGetPathGradientBlendCount(brush, &count);
+    expect(Ok, status);
+    expect(1, count);
+
+    status = GdipGetPathGradientBlend(brush, res_factors, res_positions, 1);
+    expect(Ok, status);
+
+    status = GdipDeleteBrush((GpBrush*)brush);
+    expect(Ok, status);
 }
 
 START_TEST(brush)
@@ -725,6 +1298,10 @@ START_TEST(brush)
     test_lineblend();
     test_linelinearblend();
     test_gradientsurroundcolorcount();
+    test_pathgradientpath();
+    test_pathgradientcenterpoint();
+    test_pathgradientpresetblend();
+    test_pathgradientblend();
 
     GdiplusShutdown(gdiplusToken);
 }

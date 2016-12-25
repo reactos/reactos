@@ -20,16 +20,19 @@
  */
 
 #include "ntdll_test.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 #include "stdio.h"
 #include "winnt.h"
 #include "stdlib.h"
 
 static HANDLE   (WINAPI *pCreateWaitableTimerA)(SECURITY_ATTRIBUTES*, BOOL, LPCSTR);
-static NTSTATUS (WINAPI *pRtlCreateUnicodeStringFromAsciiz)(PUNICODE_STRING, LPCSTR);
+static BOOLEAN  (WINAPI *pRtlCreateUnicodeStringFromAsciiz)(PUNICODE_STRING, LPCSTR);
 static VOID     (WINAPI *pRtlInitUnicodeString)( PUNICODE_STRING, LPCWSTR );
 static VOID     (WINAPI *pRtlFreeUnicodeString)(PUNICODE_STRING);
 static NTSTATUS (WINAPI *pNtCreateEvent) ( PHANDLE, ACCESS_MASK, const POBJECT_ATTRIBUTES, BOOLEAN, BOOLEAN);
+static NTSTATUS (WINAPI *pNtOpenEvent)   ( PHANDLE, ACCESS_MASK, const POBJECT_ATTRIBUTES);
+static NTSTATUS (WINAPI *pNtPulseEvent)  ( HANDLE, PULONG );
+static NTSTATUS (WINAPI *pNtQueryEvent)  ( HANDLE, EVENT_INFORMATION_CLASS, PVOID, ULONG, PULONG );
 static NTSTATUS (WINAPI *pNtCreateMutant)( PHANDLE, ACCESS_MASK, const POBJECT_ATTRIBUTES, BOOLEAN );
 static NTSTATUS (WINAPI *pNtOpenMutant)  ( PHANDLE, ACCESS_MASK, const POBJECT_ATTRIBUTES );
 static NTSTATUS (WINAPI *pNtCreateSemaphore)( PHANDLE, ACCESS_MASK,const POBJECT_ATTRIBUTES,LONG,LONG );
@@ -46,7 +49,16 @@ static NTSTATUS (WINAPI *pNtOpenSymbolicLinkObject)(PHANDLE, ACCESS_MASK, POBJEC
 static NTSTATUS (WINAPI *pNtCreateSymbolicLinkObject)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PUNICODE_STRING);
 static NTSTATUS (WINAPI *pNtQuerySymbolicLinkObject)(HANDLE,PUNICODE_STRING,PULONG);
 static NTSTATUS (WINAPI *pNtQueryObject)(HANDLE,OBJECT_INFORMATION_CLASS,PVOID,ULONG,PULONG);
+static NTSTATUS (WINAPI *pNtReleaseSemaphore)(HANDLE, ULONG, PULONG);
+static NTSTATUS (WINAPI *pNtCreateKeyedEvent)( HANDLE *, ACCESS_MASK, const OBJECT_ATTRIBUTES *, ULONG );
+static NTSTATUS (WINAPI *pNtOpenKeyedEvent)( HANDLE *, ACCESS_MASK, const OBJECT_ATTRIBUTES * );
+static NTSTATUS (WINAPI *pNtWaitForKeyedEvent)( HANDLE, const void *, BOOLEAN, const LARGE_INTEGER * );
+static NTSTATUS (WINAPI *pNtReleaseKeyedEvent)( HANDLE, const void *, BOOLEAN, const LARGE_INTEGER * );
+static NTSTATUS (WINAPI *pNtCreateIoCompletion)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, ULONG);
 
+#define KEYEDEVENT_WAIT       0x0001
+#define KEYEDEVENT_WAKE       0x0002
+#define KEYEDEVENT_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x0003)
 
 static void test_case_sensitive (void)
 {
@@ -139,15 +151,16 @@ static void test_namespace_pipe(void)
 
     pRtlInitUnicodeString(&str, buffer3);
     InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
-    status = pNtOpenFile(&h, GENERIC_READ, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE, FILE_OPEN);
+    status = pNtOpenFile(&h, GENERIC_READ, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE, 0);
     ok(status == STATUS_OBJECT_PATH_NOT_FOUND ||
        status == STATUS_PIPE_NOT_AVAILABLE ||
-       status == STATUS_OBJECT_NAME_INVALID, /* vista */
+       status == STATUS_OBJECT_NAME_INVALID || /* vista */
+       status == STATUS_OBJECT_NAME_NOT_FOUND, /* win8 */
         "NtOpenFile should have failed with STATUS_OBJECT_PATH_NOT_FOUND got(%08x)\n", status);
 
     pRtlInitUnicodeString(&str, buffer4);
     InitializeObjectAttributes(&attr, &str, OBJ_CASE_INSENSITIVE, 0, NULL);
-    status = pNtOpenFile(&h, GENERIC_READ, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE, FILE_OPEN);
+    status = pNtOpenFile(&h, GENERIC_READ, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE, 0);
     ok(status == STATUS_OBJECT_NAME_NOT_FOUND ||
        status == STATUS_OBJECT_NAME_INVALID, /* vista */
         "NtOpenFile should have failed with STATUS_OBJECT_NAME_NOT_FOUND got(%08x)\n", status);
@@ -419,9 +432,12 @@ static void test_directory(void)
         memset( buffer, 0xaa, sizeof(buffer) );
         status = pNtQuerySymbolicLinkObject( dir, &str, &len );
         ok( status == STATUS_SUCCESS, "NtQuerySymbolicLinkObject failed %08x\n", status );
+        if (status != STATUS_SUCCESS)
+            goto error;
         full_len = str.Length + sizeof(WCHAR);
         ok( len == full_len, "bad length %u/%u\n", len, full_len );
-        ok( buffer[len / sizeof(WCHAR) - 1] == 0, "no terminating null\n" );
+        if (len == full_len)
+            ok( buffer[len / sizeof(WCHAR) - 1] == 0, "no terminating null\n" );
 
         str.MaximumLength = str.Length;
         len = 0xdeadbeef;
@@ -441,6 +457,7 @@ static void test_directory(void)
         ok( status == STATUS_SUCCESS, "NtQuerySymbolicLinkObject failed %08x\n", status );
         ok( len == full_len, "bad length %u/%u\n", len, full_len );
 
+error:
         pNtClose(dir);
     }
 
@@ -641,8 +658,10 @@ static void test_symboliclink(void)
     pRtlFreeUnicodeString(&target);
 
     pRtlCreateUnicodeStringFromAsciiz(&str, "test-link\\NUL");
-    status = pNtOpenFile(&h, GENERIC_READ, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE, FILE_OPEN);
-    todo_wine ok(status == STATUS_SUCCESS, "Failed to open NUL device(%08x)\n", status);
+    status = pNtOpenFile(&h, GENERIC_READ, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE, 0);
+    ok(status == STATUS_SUCCESS, "Failed to open NUL device(%08x)\n", status);
+    status = pNtOpenFile(&h, GENERIC_READ, &attr, &iosb, FILE_SHARE_READ|FILE_SHARE_WRITE, FILE_DIRECTORY_FILE);
+    ok(status == STATUS_SUCCESS, "Failed to open NUL device(%08x)\n", status);
     pRtlFreeUnicodeString(&str);
 
     pNtClose(h);
@@ -654,12 +673,18 @@ static void test_query_object(void)
 {
     static const WCHAR name[] = {'\\','B','a','s','e','N','a','m','e','d','O','b','j','e','c','t','s',
                                  '\\','t','e','s','t','_','e','v','e','n','t'};
+    static const WCHAR type_event[] = {'E','v','e','n','t'};
+    static const WCHAR type_file[] = {'F','i','l','e'};
+    static const WCHAR type_iocompletion[] = {'I','o','C','o','m','p','l','e','t','i','o','n'};
+    static const WCHAR type_directory[] = {'D','i','r','e','c','t','o','r','y'};
+    static const WCHAR type_section[] = {'S','e','c','t','i','o','n'};
     HANDLE handle;
     char buffer[1024];
     NTSTATUS status;
-    ULONG len;
+    ULONG len, expected_len;
     UNICODE_STRING *str;
-    char dir[MAX_PATH];
+    char dir[MAX_PATH], tmp_path[MAX_PATH], file1[MAX_PATH + 16];
+    LARGE_INTEGER size;
 
     handle = CreateEventA( NULL, FALSE, FALSE, "test_event" );
 
@@ -669,9 +694,19 @@ static void test_query_object(void)
     ok( len >= sizeof(UNICODE_STRING) + sizeof(name) + sizeof(WCHAR), "unexpected len %u\n", len );
 
     len = 0;
+    status = pNtQueryObject( handle, ObjectTypeInformation, buffer, 0, &len );
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "NtQueryObject failed %x\n", status );
+    ok( len >= sizeof(OBJECT_TYPE_INFORMATION) + sizeof(type_event) + sizeof(WCHAR), "unexpected len %u\n", len );
+
+    len = 0;
     status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(UNICODE_STRING), &len );
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "NtQueryObject failed %x\n", status );
     ok( len >= sizeof(UNICODE_STRING) + sizeof(name) + sizeof(WCHAR), "unexpected len %u\n", len );
+
+    len = 0;
+    status = pNtQueryObject( handle, ObjectTypeInformation, buffer, sizeof(OBJECT_TYPE_INFORMATION), &len );
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "NtQueryObject failed %x\n", status );
+    ok( len >= sizeof(OBJECT_TYPE_INFORMATION) + sizeof(type_event) + sizeof(WCHAR), "unexpected len %u\n", len );
 
     len = 0;
     status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(buffer), &len );
@@ -688,6 +723,21 @@ static void test_query_object(void)
     status = pNtQueryObject( handle, ObjectNameInformation, buffer, len, &len );
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "NtQueryObject failed %x\n", status );
     ok( len >= sizeof(UNICODE_STRING) + sizeof(name) + sizeof(WCHAR), "unexpected len %u\n", len );
+
+    len = 0;
+    memset( buffer, 0, sizeof(buffer) );
+    status = pNtQueryObject( handle, ObjectTypeInformation, buffer, sizeof(buffer), &len );
+    ok( status == STATUS_SUCCESS, "NtQueryObject failed %x\n", status );
+    ok( len > sizeof(OBJECT_TYPE_INFORMATION), "unexpected len %u\n", len );
+    str = (UNICODE_STRING *)buffer;
+    ok( len >= sizeof(OBJECT_TYPE_INFORMATION) + str->Length + sizeof(WCHAR), "unexpected len %u\n", len );
+    ok( str->Buffer && !memcmp( str->Buffer, type_event, sizeof(type_event) ),
+                  "wrong/bad type name %s (%p)\n", wine_dbgstr_w(str->Buffer), str->Buffer );
+
+    len -= sizeof(WCHAR);
+    status = pNtQueryObject( handle, ObjectTypeInformation, buffer, len, &len );
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "NtQueryObject failed %x\n", status );
+    ok( len >= sizeof(OBJECT_TYPE_INFORMATION) + sizeof(type_event) + sizeof(WCHAR), "unexpected len %u\n", len );
 
     pNtClose( handle );
 
@@ -709,11 +759,435 @@ static void test_query_object(void)
     ok( status == STATUS_SUCCESS, "NtQueryObject failed %x\n", status );
     ok( len > sizeof(UNICODE_STRING), "unexpected len %u\n", len );
     str = (UNICODE_STRING *)buffer;
-    ok( sizeof(UNICODE_STRING) + str->Length + sizeof(WCHAR) == len ||
-        broken(sizeof(UNICODE_STRING) + str->Length == len), /* NT4 */
+    expected_len = sizeof(UNICODE_STRING) + str->Length + sizeof(WCHAR);
+    ok( len == expected_len || broken(len == expected_len - sizeof(WCHAR)), /* NT4 */
         "unexpected len %u\n", len );
     trace( "got %s len %u\n", wine_dbgstr_w(str->Buffer), len );
+
+    len = 0;
+    status = pNtQueryObject( handle, ObjectNameInformation, buffer, 0, &len );
+    ok( status == STATUS_INFO_LENGTH_MISMATCH || broken(status == STATUS_INSUFFICIENT_RESOURCES),
+        "NtQueryObject failed %x\n", status );
+    ok( len == expected_len || broken(!len || len == sizeof(UNICODE_STRING)),
+        "unexpected len %u\n", len );
+
+    len = 0;
+    status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(UNICODE_STRING), &len );
+    ok( status == STATUS_BUFFER_OVERFLOW || broken(status == STATUS_INSUFFICIENT_RESOURCES
+            || status == STATUS_INFO_LENGTH_MISMATCH),
+        "NtQueryObject failed %x\n", status );
+    ok( len == expected_len || broken(!len),
+        "unexpected len %u\n", len );
+
+    len = 0;
+    memset( buffer, 0, sizeof(buffer) );
+    status = pNtQueryObject( handle, ObjectTypeInformation, buffer, sizeof(buffer), &len );
+    ok( status == STATUS_SUCCESS, "NtQueryObject failed %x\n", status );
+    ok( len > sizeof(OBJECT_TYPE_INFORMATION), "unexpected len %u\n", len );
+    str = (UNICODE_STRING *)buffer;
+    expected_len = sizeof(OBJECT_TYPE_INFORMATION) + str->Length + sizeof(WCHAR);
+    ok( len >= expected_len, "unexpected len %u\n", len );
+    ok( str->Buffer && !memcmp( str->Buffer, type_file, sizeof(type_file) ),
+                  "wrong/bad type name %s (%p)\n", wine_dbgstr_w(str->Buffer), str->Buffer );
+
     pNtClose( handle );
+
+    GetTempPathA(MAX_PATH, tmp_path);
+    GetTempFileNameA(tmp_path, "foo", 0, file1);
+    handle = CreateFileA(file1, GENERIC_WRITE | DELETE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    len = 0;
+    memset( buffer, 0, sizeof(buffer) );
+    status = pNtQueryObject( handle, ObjectTypeInformation, buffer, sizeof(buffer), &len );
+    ok( status == STATUS_SUCCESS, "NtQueryObject failed %x\n", status );
+    ok( len > sizeof(OBJECT_TYPE_INFORMATION), "unexpected len %u\n", len );
+    str = (UNICODE_STRING *)buffer;
+    expected_len = sizeof(OBJECT_TYPE_INFORMATION) + str->Length + sizeof(WCHAR);
+    ok( len >= expected_len, "unexpected len %u\n", len );
+    ok( str->Buffer && !memcmp( str->Buffer, type_file, sizeof(type_file) ),
+                  "wrong/bad type name %s (%p)\n", wine_dbgstr_w(str->Buffer), str->Buffer );
+    DeleteFileA( file1 );
+    pNtClose( handle );
+
+    status = pNtCreateIoCompletion( &handle, IO_COMPLETION_ALL_ACCESS, NULL, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateIoCompletion failed %x\n", status);
+    len = 0;
+    memset( buffer, 0, sizeof(buffer) );
+    status = pNtQueryObject( handle, ObjectTypeInformation, buffer, sizeof(buffer), &len );
+    ok( status == STATUS_SUCCESS, "NtQueryObject failed %x\n", status );
+    ok( len > sizeof(OBJECT_TYPE_INFORMATION), "unexpected len %u\n", len );
+    str = (UNICODE_STRING *)buffer;
+    expected_len = sizeof(OBJECT_TYPE_INFORMATION) + str->Length + sizeof(WCHAR);
+    ok( len >= expected_len, "unexpected len %u\n", len );
+    ok( str->Buffer && !memcmp( str->Buffer, type_iocompletion, sizeof(type_iocompletion) ),
+                  "wrong/bad type name %s (%p)\n", wine_dbgstr_w(str->Buffer), str->Buffer );
+    pNtClose( handle );
+
+    status = pNtCreateDirectoryObject( &handle, DIRECTORY_QUERY, NULL );
+    ok(status == STATUS_SUCCESS, "Failed to create Directory %08x\n", status);
+    len = 0;
+    memset( buffer, 0, sizeof(buffer) );
+    status = pNtQueryObject( handle, ObjectTypeInformation, buffer, sizeof(buffer), &len );
+    ok( status == STATUS_SUCCESS, "NtQueryObject failed %x\n", status );
+    ok( len > sizeof(OBJECT_TYPE_INFORMATION), "unexpected len %u\n", len );
+    str = (UNICODE_STRING *)buffer;
+    expected_len = sizeof(OBJECT_TYPE_INFORMATION) + str->Length + sizeof(WCHAR);
+    ok( len >= expected_len, "unexpected len %u\n", len );
+    ok( str->Buffer && !memcmp( str->Buffer, type_directory, sizeof(type_directory) ),
+                  "wrong/bad type name %s (%p)\n", wine_dbgstr_w(str->Buffer), str->Buffer );
+    pNtClose( handle );
+
+    size.u.LowPart = 256;
+    size.u.HighPart = 0;
+    status = pNtCreateSection( &handle, SECTION_MAP_WRITE, NULL, &size, PAGE_READWRITE, SEC_COMMIT, 0 );
+    ok( status == STATUS_SUCCESS , "NtCreateSection returned %x\n", status );
+    len = 0;
+    memset( buffer, 0, sizeof(buffer) );
+    status = pNtQueryObject( handle, ObjectTypeInformation, buffer, sizeof(buffer), &len );
+    ok( status == STATUS_SUCCESS, "NtQueryObject failed %x\n", status );
+    ok( len > sizeof(OBJECT_TYPE_INFORMATION), "unexpected len %u\n", len );
+    str = (UNICODE_STRING *)buffer;
+    expected_len = sizeof(OBJECT_TYPE_INFORMATION) + str->Length + sizeof(WCHAR);
+    ok( len >= expected_len, "unexpected len %u\n", len );
+    ok( str->Buffer && !memcmp( str->Buffer, type_section, sizeof(type_section) ),
+                  "wrong/bad type name %s (%p)\n", wine_dbgstr_w(str->Buffer), str->Buffer );
+    pNtClose( handle );
+}
+
+static void test_type_mismatch(void)
+{
+    HANDLE h;
+    NTSTATUS res;
+    OBJECT_ATTRIBUTES attr;
+
+    attr.Length                   = sizeof(attr);
+    attr.RootDirectory            = 0;
+    attr.ObjectName               = NULL;
+    attr.Attributes               = 0;
+    attr.SecurityDescriptor       = NULL;
+    attr.SecurityQualityOfService = NULL;
+
+    res = pNtCreateEvent( &h, 0, &attr, 0, 0 );
+    ok(!res, "can't create event: %x\n", res);
+
+    res = pNtReleaseSemaphore( h, 30, NULL );
+    ok(res == STATUS_OBJECT_TYPE_MISMATCH, "expected 0xc0000024, got %x\n", res);
+
+    pNtClose( h );
+}
+
+static void test_event(void)
+{
+    HANDLE Event;
+    HANDLE Event2;
+    NTSTATUS status;
+    UNICODE_STRING str;
+    OBJECT_ATTRIBUTES attr;
+    EVENT_BASIC_INFORMATION info;
+    static const WCHAR eventName[] = {'\\','B','a','s','e','N','a','m','e','d','O','b','j','e','c','t','s','\\','t','e','s','t','E','v','e','n','t',0};
+
+    pRtlInitUnicodeString(&str, eventName);
+    InitializeObjectAttributes(&attr, &str, 0, 0, NULL);
+
+    status = pNtCreateEvent(&Event, GENERIC_ALL, &attr, 1, 0);
+    ok( status == STATUS_SUCCESS, "NtCreateEvent failed %08x\n", status );
+
+    status = pNtPulseEvent(Event, NULL);
+    ok( status == STATUS_SUCCESS, "NtPulseEvent failed %08x\n", status );
+
+    status = pNtQueryEvent(Event, EventBasicInformation, &info, sizeof(info), NULL);
+    ok( status == STATUS_SUCCESS, "NtQueryEvent failed %08x\n", status );
+    ok( info.EventType == 1 && info.EventState == 0,
+        "NtQueryEvent failed, expected 1 0, got %d %d\n", info.EventType, info.EventState );
+
+    status = pNtOpenEvent(&Event2, GENERIC_ALL, &attr);
+    ok( status == STATUS_SUCCESS, "NtOpenEvent failed %08x\n", status );
+
+    pNtClose(Event);
+
+    status = pNtQueryEvent(Event2, EventBasicInformation, &info, sizeof(info), NULL);
+    ok( status == STATUS_SUCCESS, "NtQueryEvent failed %08x\n", status );
+    ok( info.EventType == 1 && info.EventState == 0,
+        "NtQueryEvent failed, expected 1 0, got %d %d\n", info.EventType, info.EventState );
+
+    pNtClose(Event2);
+}
+
+static const WCHAR keyed_nameW[] = {'\\','B','a','s','e','N','a','m','e','d','O','b','j','e','c','t','s',
+                                    '\\','W','i','n','e','T','e','s','t','E','v','e','n','t',0};
+
+static DWORD WINAPI keyed_event_thread( void *arg )
+{
+    HANDLE handle;
+    NTSTATUS status;
+    LARGE_INTEGER timeout;
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING str;
+    ULONG_PTR i;
+
+    attr.Length                   = sizeof(attr);
+    attr.RootDirectory            = 0;
+    attr.ObjectName               = &str;
+    attr.Attributes               = 0;
+    attr.SecurityDescriptor       = NULL;
+    attr.SecurityQualityOfService = NULL;
+    RtlInitUnicodeString( &str, keyed_nameW );
+
+    status = pNtOpenKeyedEvent( &handle, KEYEDEVENT_ALL_ACCESS, &attr );
+    ok( !status, "NtOpenKeyedEvent failed %x\n", status );
+
+    for (i = 0; i < 20; i++)
+    {
+        if (i & 1)
+            status = pNtWaitForKeyedEvent( handle, (void *)(i * 2), 0, NULL );
+        else
+            status = pNtReleaseKeyedEvent( handle, (void *)(i * 2), 0, NULL );
+        ok( status == STATUS_SUCCESS, "%li: failed %x\n", i, status );
+        Sleep( 20 - i );
+    }
+
+    status = pNtReleaseKeyedEvent( handle, (void *)0x1234, 0, NULL );
+    ok( status == STATUS_SUCCESS, "NtReleaseKeyedEvent %x\n", status );
+
+    timeout.QuadPart = -10000;
+    status = pNtWaitForKeyedEvent( handle, (void *)0x5678, 0, &timeout );
+    ok( status == STATUS_TIMEOUT, "NtWaitForKeyedEvent %x\n", status );
+    status = pNtReleaseKeyedEvent( handle, (void *)0x9abc, 0, &timeout );
+    ok( status == STATUS_TIMEOUT, "NtReleaseKeyedEvent %x\n", status );
+
+    NtClose( handle );
+    return 0;
+}
+
+static void test_keyed_events(void)
+{
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING str;
+    HANDLE handle, event, thread;
+    NTSTATUS status;
+    LARGE_INTEGER timeout;
+    ULONG_PTR i;
+
+    if (!pNtCreateKeyedEvent)
+    {
+        win_skip( "Keyed events not supported\n" );
+        return;
+    }
+
+    attr.Length                   = sizeof(attr);
+    attr.RootDirectory            = 0;
+    attr.ObjectName               = &str;
+    attr.Attributes               = 0;
+    attr.SecurityDescriptor       = NULL;
+    attr.SecurityQualityOfService = NULL;
+    RtlInitUnicodeString( &str, keyed_nameW );
+
+    status = pNtCreateKeyedEvent( &handle, KEYEDEVENT_ALL_ACCESS | SYNCHRONIZE, &attr, 0 );
+    ok( !status, "NtCreateKeyedEvent failed %x\n", status );
+
+    status = WaitForSingleObject( handle, 1000 );
+    ok( status == 0, "WaitForSingleObject %x\n", status );
+
+    timeout.QuadPart = -100000;
+    status = pNtWaitForKeyedEvent( handle, (void *)255, 0, &timeout );
+    ok( status == STATUS_INVALID_PARAMETER_1, "NtWaitForKeyedEvent %x\n", status );
+    status = pNtReleaseKeyedEvent( handle, (void *)255, 0, &timeout );
+    ok( status == STATUS_INVALID_PARAMETER_1, "NtReleaseKeyedEvent %x\n", status );
+
+    status = pNtWaitForKeyedEvent( handle, (void *)254, 0, &timeout );
+    ok( status == STATUS_TIMEOUT, "NtWaitForKeyedEvent %x\n", status );
+    status = pNtReleaseKeyedEvent( handle, (void *)254, 0, &timeout );
+    ok( status == STATUS_TIMEOUT, "NtReleaseKeyedEvent %x\n", status );
+
+    status = pNtWaitForKeyedEvent( handle, NULL, 0, &timeout );
+    ok( status == STATUS_TIMEOUT, "NtWaitForKeyedEvent %x\n", status );
+    status = pNtReleaseKeyedEvent( handle, NULL, 0, &timeout );
+    ok( status == STATUS_TIMEOUT, "NtReleaseKeyedEvent %x\n", status );
+
+    status = pNtWaitForKeyedEvent( (HANDLE)0xdeadbeef, (void *)9, 0, &timeout );
+    ok( status == STATUS_INVALID_PARAMETER_1, "NtWaitForKeyedEvent %x\n", status );
+    status = pNtReleaseKeyedEvent( (HANDLE)0xdeadbeef, (void *)9, 0, &timeout );
+    ok( status == STATUS_INVALID_PARAMETER_1, "NtReleaseKeyedEvent %x\n", status );
+
+    status = pNtWaitForKeyedEvent( (HANDLE)0xdeadbeef, (void *)8, 0, &timeout );
+    ok( status == STATUS_INVALID_HANDLE, "NtWaitForKeyedEvent %x\n", status );
+    status = pNtReleaseKeyedEvent( (HANDLE)0xdeadbeef, (void *)8, 0, &timeout );
+    ok( status == STATUS_INVALID_HANDLE, "NtReleaseKeyedEvent %x\n", status );
+
+    thread = CreateThread( NULL, 0, keyed_event_thread, 0, 0, NULL );
+    for (i = 0; i < 20; i++)
+    {
+        if (i & 1)
+            status = pNtReleaseKeyedEvent( handle, (void *)(i * 2), 0, NULL );
+        else
+            status = pNtWaitForKeyedEvent( handle, (void *)(i * 2), 0, NULL );
+        ok( status == STATUS_SUCCESS, "%li: failed %x\n", i, status );
+        Sleep( i );
+    }
+    status = pNtWaitForKeyedEvent( handle, (void *)0x1234, 0, &timeout );
+    ok( status == STATUS_SUCCESS, "NtWaitForKeyedEvent %x\n", status );
+    status = pNtWaitForKeyedEvent( handle, (void *)0x5678, 0, &timeout );
+    ok( status == STATUS_TIMEOUT, "NtWaitForKeyedEvent %x\n", status );
+    status = pNtReleaseKeyedEvent( handle, (void *)0x9abc, 0, &timeout );
+    ok( status == STATUS_TIMEOUT, "NtReleaseKeyedEvent %x\n", status );
+
+    ok( WaitForSingleObject( thread, 30000 ) == 0, "wait failed\n" );
+
+    NtClose( handle );
+
+    /* test access rights */
+
+    status = pNtCreateKeyedEvent( &handle, KEYEDEVENT_WAIT, &attr, 0 );
+    ok( !status, "NtCreateKeyedEvent failed %x\n", status );
+    status = pNtWaitForKeyedEvent( handle, (void *)8, 0, &timeout );
+    ok( status == STATUS_TIMEOUT, "NtWaitForKeyedEvent %x\n", status );
+    status = pNtReleaseKeyedEvent( handle, (void *)8, 0, &timeout );
+    ok( status == STATUS_ACCESS_DENIED, "NtReleaseKeyedEvent %x\n", status );
+    NtClose( handle );
+
+    status = pNtCreateKeyedEvent( &handle, KEYEDEVENT_WAKE, &attr, 0 );
+    ok( !status, "NtCreateKeyedEvent failed %x\n", status );
+    status = pNtWaitForKeyedEvent( handle, (void *)8, 0, &timeout );
+    ok( status == STATUS_ACCESS_DENIED, "NtWaitForKeyedEvent %x\n", status );
+    status = pNtReleaseKeyedEvent( handle, (void *)8, 0, &timeout );
+    ok( status == STATUS_TIMEOUT, "NtReleaseKeyedEvent %x\n", status );
+    NtClose( handle );
+
+    status = pNtCreateKeyedEvent( &handle, KEYEDEVENT_ALL_ACCESS, &attr, 0 );
+    ok( !status, "NtCreateKeyedEvent failed %x\n", status );
+    status = WaitForSingleObject( handle, 1000 );
+    ok( status == WAIT_FAILED && GetLastError() == ERROR_ACCESS_DENIED,
+        "WaitForSingleObject %x err %u\n", status, GetLastError() );
+    status = pNtWaitForKeyedEvent( handle, (void *)8, 0, &timeout );
+    ok( status == STATUS_TIMEOUT, "NtWaitForKeyedEvent %x\n", status );
+    status = pNtReleaseKeyedEvent( handle, (void *)8, 0, &timeout );
+    ok( status == STATUS_TIMEOUT, "NtReleaseKeyedEvent %x\n", status );
+    NtClose( handle );
+
+    /* GENERIC_READ gives wait access */
+    status = pNtCreateKeyedEvent( &handle, GENERIC_READ, &attr, 0 );
+    ok( !status, "NtCreateKeyedEvent failed %x\n", status );
+    status = pNtWaitForKeyedEvent( handle, (void *)8, 0, &timeout );
+    ok( status == STATUS_TIMEOUT, "NtWaitForKeyedEvent %x\n", status );
+    status = pNtReleaseKeyedEvent( handle, (void *)8, 0, &timeout );
+    ok( status == STATUS_ACCESS_DENIED, "NtReleaseKeyedEvent %x\n", status );
+    NtClose( handle );
+
+    /* GENERIC_WRITE gives wake access */
+    status = pNtCreateKeyedEvent( &handle, GENERIC_WRITE, &attr, 0 );
+    ok( !status, "NtCreateKeyedEvent failed %x\n", status );
+    status = pNtWaitForKeyedEvent( handle, (void *)8, 0, &timeout );
+    ok( status == STATUS_ACCESS_DENIED, "NtWaitForKeyedEvent %x\n", status );
+    status = pNtReleaseKeyedEvent( handle, (void *)8, 0, &timeout );
+    ok( status == STATUS_TIMEOUT, "NtReleaseKeyedEvent %x\n", status );
+
+    /* it's not an event */
+    status = pNtPulseEvent( handle, NULL );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "NtPulseEvent %x\n", status );
+
+    status = pNtCreateEvent( &event, GENERIC_ALL, &attr, FALSE, FALSE );
+    ok( status == STATUS_OBJECT_NAME_COLLISION || status == STATUS_OBJECT_TYPE_MISMATCH,
+        "CreateEvent %x\n", status );
+
+    NtClose( handle );
+
+    status = pNtCreateEvent( &event, GENERIC_ALL, &attr, FALSE, FALSE );
+    ok( status == 0, "CreateEvent %x\n", status );
+    status = pNtWaitForKeyedEvent( event, (void *)8, 0, &timeout );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "NtWaitForKeyedEvent %x\n", status );
+    status = pNtReleaseKeyedEvent( event, (void *)8, 0, &timeout );
+    ok( status == STATUS_OBJECT_TYPE_MISMATCH, "NtReleaseKeyedEvent %x\n", status );
+    NtClose( event );
+}
+
+static void test_null_device(void)
+{
+    OBJECT_ATTRIBUTES attr;
+    IO_STATUS_BLOCK iosb;
+    UNICODE_STRING str;
+    NTSTATUS status;
+    DWORD num_bytes;
+    OVERLAPPED ov;
+    char buf[64];
+    HANDLE null;
+    BOOL ret;
+
+    memset(buf, 0xAA, sizeof(buf));
+    memset(&ov, 0, sizeof(ov));
+    ov.hEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
+
+    pRtlCreateUnicodeStringFromAsciiz(&str, "\\Device\\Null");
+    InitializeObjectAttributes(&attr, &str, OBJ_CASE_INSENSITIVE, 0, NULL);
+    status = pNtOpenSymbolicLinkObject(&null, SYMBOLIC_LINK_QUERY, &attr);
+    ok(status == STATUS_OBJECT_TYPE_MISMATCH,
+       "expected STATUS_OBJECT_TYPE_MISMATCH, got %08x\n", status);
+
+    status = pNtOpenFile(&null, GENERIC_READ | GENERIC_WRITE, &attr, &iosb,
+                         FILE_SHARE_READ | FILE_SHARE_WRITE, 0);
+    ok(status == STATUS_SUCCESS,
+       "expected STATUS_SUCCESS, got %08x\n", status);
+
+    SetLastError(0xdeadbeef);
+    ret = WriteFile(null, buf, sizeof(buf), &num_bytes, NULL);
+    ok(!ret, "WriteFile unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "expected ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = ReadFile(null, buf, sizeof(buf), &num_bytes, NULL);
+    ok(!ret, "ReadFile unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "expected ERROR_INVALID_PARAMETER, got %u\n", GetLastError());
+
+    num_bytes = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = WriteFile(null, buf, sizeof(buf), &num_bytes, &ov);
+    if (ret || GetLastError() != ERROR_IO_PENDING)
+    {
+        ok(ret, "WriteFile failed with error %u\n", GetLastError());
+    }
+    else
+    {
+        num_bytes = 0xdeadbeef;
+        ret = GetOverlappedResult(null, &ov, &num_bytes, TRUE);
+        ok(ret, "GetOverlappedResult failed with error %u\n", GetLastError());
+    }
+    ok(num_bytes == sizeof(buf), "expected num_bytes = %u, got %u\n",
+       (DWORD)sizeof(buf), num_bytes);
+
+    num_bytes = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = ReadFile(null, buf, sizeof(buf), &num_bytes, &ov);
+    if (ret || GetLastError() != ERROR_IO_PENDING)
+    {
+        ok(!ret, "ReadFile unexpectedly succeeded\n");
+    }
+    else
+    {
+        num_bytes = 0xdeadbeef;
+        ret = GetOverlappedResult(null, &ov, &num_bytes, TRUE);
+        ok(!ret, "GetOverlappedResult unexpectedly succeeded\n");
+    }
+    ok(GetLastError() == ERROR_HANDLE_EOF,
+       "expected ERROR_HANDLE_EOF, got %u\n", GetLastError());
+
+    pNtClose(null);
+
+    null = CreateFileA("\\\\.\\Null", GENERIC_READ | GENERIC_WRITE,
+                       FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+                       OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(null == INVALID_HANDLE_VALUE, "CreateFileA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND,
+       "expected ERROR_FILE_NOT_FOUND, got %u\n", GetLastError());
+
+    null = CreateFileA("\\\\.\\Device\\Null", GENERIC_READ | GENERIC_WRITE,
+                       FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+                       OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(null == INVALID_HANDLE_VALUE, "CreateFileA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_PATH_NOT_FOUND,
+       "expected ERROR_PATH_NOT_FOUND, got %u\n", GetLastError());
+
+    pRtlFreeUnicodeString(&str);
+    CloseHandle(ov.hEvent);
 }
 
 START_TEST(om)
@@ -733,6 +1207,9 @@ START_TEST(om)
     pRtlFreeUnicodeString   = (void *)GetProcAddress(hntdll, "RtlFreeUnicodeString");
     pNtCreateEvent          = (void *)GetProcAddress(hntdll, "NtCreateEvent");
     pNtCreateMutant         = (void *)GetProcAddress(hntdll, "NtCreateMutant");
+    pNtOpenEvent            = (void *)GetProcAddress(hntdll, "NtOpenEvent");
+    pNtQueryEvent           = (void *)GetProcAddress(hntdll, "NtQueryEvent");
+    pNtPulseEvent           = (void *)GetProcAddress(hntdll, "NtPulseEvent");
     pNtOpenMutant           = (void *)GetProcAddress(hntdll, "NtOpenMutant");
     pNtOpenFile             = (void *)GetProcAddress(hntdll, "NtOpenFile");
     pNtClose                = (void *)GetProcAddress(hntdll, "NtClose");
@@ -747,6 +1224,12 @@ START_TEST(om)
     pNtCreateTimer          =  (void *)GetProcAddress(hntdll, "NtCreateTimer");
     pNtCreateSection        =  (void *)GetProcAddress(hntdll, "NtCreateSection");
     pNtQueryObject          =  (void *)GetProcAddress(hntdll, "NtQueryObject");
+    pNtReleaseSemaphore     =  (void *)GetProcAddress(hntdll, "NtReleaseSemaphore");
+    pNtCreateKeyedEvent     =  (void *)GetProcAddress(hntdll, "NtCreateKeyedEvent");
+    pNtOpenKeyedEvent       =  (void *)GetProcAddress(hntdll, "NtOpenKeyedEvent");
+    pNtWaitForKeyedEvent    =  (void *)GetProcAddress(hntdll, "NtWaitForKeyedEvent");
+    pNtReleaseKeyedEvent    =  (void *)GetProcAddress(hntdll, "NtReleaseKeyedEvent");
+    pNtCreateIoCompletion   =  (void *)GetProcAddress(hntdll, "NtCreateIoCompletion");
 
     test_case_sensitive();
     test_namespace_pipe();
@@ -754,4 +1237,8 @@ START_TEST(om)
     test_directory();
     test_symboliclink();
     test_query_object();
+    test_type_mismatch();
+    test_event();
+    test_keyed_events();
+    test_null_device();
 }

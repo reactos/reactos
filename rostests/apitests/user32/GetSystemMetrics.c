@@ -5,9 +5,10 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <apitest.h>
+
+#include <wingdi.h>
+#include <winuser.h>
 
 void Test_GetSystemMetrics()
 {
@@ -21,22 +22,22 @@ void Test_GetSystemMetrics()
     hDC = GetDC(0);
 
     ret = GetSystemMetrics(0);
-    ok(ret > 0, "ret = %d", ret);
+    ok(ret > 0, "ret = %d\n", ret);
 
     ret = GetSystemMetrics(64);
-    ok(ret == 0, "ret = %d", ret);
+    ok(ret == 0, "ret = %d\n", ret);
     ret = GetSystemMetrics(65);
-    ok(ret == 0, "ret = %d", ret);
+    ok(ret == 0, "ret = %d\n", ret);
     ret = GetSystemMetrics(66);
-    ok(ret == 0, "ret = %d", ret);
+    ok(ret == 0, "ret = %d\n", ret);
 
 
     ret = GetSystemMetrics(SM_CXSCREEN);
-    ok(ret == GetDeviceCaps(hDC, HORZRES), "ret = %d", ret);
+    ok(ret == GetDeviceCaps(hDC, HORZRES), "ret = %d\n", ret);
     ok(GetLastError() == 0, "GetLastError() = %ld\n", GetLastError());
 
     ret = GetSystemMetrics(SM_CYSCREEN);
-    ok(ret == GetDeviceCaps(hDC, VERTRES), "ret = %d", ret);
+    ok(ret == GetDeviceCaps(hDC, VERTRES), "ret = %d\n", ret);
     ok(GetLastError() == 0, "GetLastError() = %ld\n", GetLastError());
 
     ret = GetSystemMetrics(SM_CXVSCROLL);
@@ -53,12 +54,12 @@ void Test_GetSystemMetrics()
 
     ret = GetSystemMetrics(SM_CXBORDER);
     SystemParametersInfoW(SPI_GETFOCUSBORDERWIDTH, 0, &UintVal, 0);
-    ok(ret == UintVal, "ret = %d", ret);
+    ok(ret == UintVal, "ret = %d\n", ret);
     ok(GetLastError() == 0, "GetLastError() = %ld\n", GetLastError());
 
     ret = GetSystemMetrics(SM_CYBORDER);
     SystemParametersInfoW(SPI_GETFOCUSBORDERHEIGHT, 0, &UintVal, 0);
-    ok(ret == UintVal, "ret = %d", ret);
+    ok(ret == UintVal, "ret = %d\n", ret);
     ok(GetLastError() == 0, "GetLastError() = %ld\n", GetLastError());
 
     ret = GetSystemMetrics(SM_CXDLGFRAME);
@@ -99,11 +100,11 @@ void Test_GetSystemMetrics()
 
     SystemParametersInfoW(SPI_GETWORKAREA, 0, &rect, 0);
     ret = GetSystemMetrics(SM_CXFULLSCREEN);
-    ok(ret == rect.right, "ret = %d", ret);
+    ok(ret == rect.right, "ret = %d\n", ret);
     ok(GetLastError() == 0, "GetLastError() = %ld\n", GetLastError());
 
     ret = GetSystemMetrics(SM_CYFULLSCREEN);
-    ok(ret == rect.bottom - rect.top - GetSystemMetrics(SM_CYCAPTION), "ret = %d", ret);
+    ok(ret == rect.bottom - rect.top - GetSystemMetrics(SM_CYCAPTION), "ret = %d\n", ret);
     ok(GetLastError() == 0, "GetLastError() = %ld\n", GetLastError());
 
     ret = GetSystemMetrics(SM_CYKANJIWINDOW);
@@ -305,7 +306,7 @@ void Test_GetSystemMetrics()
 
     ret = GetSystemMetrics(SM_SHOWSOUNDS);
     SystemParametersInfoW(SPI_GETSHOWSOUNDS, 0, &BoolVal, 0);
-    ok(ret == BoolVal, "ret = %d", ret);
+    ok(ret == BoolVal, "ret = %d\n", ret);
     ok(GetLastError() == 0, "GetLastError() = %ld\n", GetLastError());
 
     ret = GetSystemMetrics(SM_CXMENUCHECK);
@@ -366,12 +367,12 @@ void Test_GetSystemMetrics()
 #if(_WIN32_WINNT >= 0x0501)
     ret = GetSystemMetrics(SM_CXFOCUSBORDER);
     SystemParametersInfoW(SPI_GETFOCUSBORDERWIDTH, 0, &UintVal, 0);
-    ok(ret == UintVal, "ret = %d", ret);
+    ok(ret == UintVal, "ret = %d\n", ret);
     ok(GetLastError() == 0, "GetLastError() = %ld\n", GetLastError());
 
     ret = GetSystemMetrics(SM_CYFOCUSBORDER);
     SystemParametersInfoW(SPI_GETFOCUSBORDERHEIGHT, 0, &UintVal, 0);
-    ok(ret == UintVal, "ret = %d", ret);
+    ok(ret == UintVal, "ret = %d\n", ret);
     ok(GetLastError() == 0, "GetLastError() = %ld\n", GetLastError());
 
     ret = GetSystemMetrics(SM_TABLETPC);

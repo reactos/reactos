@@ -23,38 +23,63 @@
 
 #include "wine/test.h"
 
-static HMODULE inetmib1;
+static BOOL (WINAPI *pSnmpExtensionInit)(DWORD, HANDLE*, AsnObjectIdentifier*);
+static BOOL (WINAPI *pSnmpExtensionQuery)(BYTE, SnmpVarBindList*, AsnInteger32*, AsnInteger32*);
+
+static HMODULE init_test_functions(void)
+{
+    HMODULE mod = LoadLibraryA("inetmib1");
+
+    ok(mod != NULL, "failed to load inetmib1.dll\n");
+
+    if (!mod) return NULL;
+
+    pSnmpExtensionInit = (void *)GetProcAddress(mod, "SnmpExtensionInit");
+    pSnmpExtensionQuery = (void *)GetProcAddress(mod, "SnmpExtensionQuery");
+
+    return mod;
+}
+
+static void uninit_test_functions(HMODULE mod)
+{
+    FreeLibrary(mod);
+}
 
 static void testInit(void)
 {
-    BOOL (WINAPI *pInit)(DWORD, HANDLE *, AsnObjectIdentifier *);
     BOOL ret;
     HANDLE event;
     AsnObjectIdentifier oid;
 
-    pInit = (void *)GetProcAddress(inetmib1, "SnmpExtensionInit");
-    if (!pInit)
+    if (!pSnmpExtensionInit)
     {
         win_skip("no SnmpExtensionInit\n");
         return;
     }
-    /* Crash
-    ret = pInit(0, NULL, NULL);
-    ret = pInit(0, NULL, &oid);
-    ret = pInit(0, &event, NULL);
-     */
-    ret = pInit(0, &event, &oid);
+
+if (0) /* crashes on native */
+{
+    ret = pSnmpExtensionInit(0, NULL, NULL);
+    ret = pSnmpExtensionInit(0, NULL, &oid);
+    ret = pSnmpExtensionInit(0, &event, NULL);
+}
+
+    ret = pSnmpExtensionInit(0, &event, &oid);
     ok(ret, "SnmpExtensionInit failed: %d\n", GetLastError());
     ok(!strcmp("1.3.6.1.2.1.1", SnmpUtilOidToA(&oid)),
         "Expected 1.3.6.1.2.1.1, got %s\n", SnmpUtilOidToA(&oid));
 
+
+if (0)
+{
+    /* Fails when called on win8, documentation suggests that
+       extension itself is responsible for freeing this oid */
     SnmpUtilOidFree(&oid);
+}
 }
 
 static void testQuery(void)
 {
-    BOOL (WINAPI *pQuery)(BYTE, SnmpVarBindList *, AsnInteger32 *,
-        AsnInteger32 *);
     BOOL ret, moreData, noChange;
     SnmpVarBindList list;
     AsnInteger32 error, index;
@@ -71,25 +96,25 @@ static void testQuery(void)
     SnmpVarBind vars[3], vars2[3], vars3[3];
     UINT entry;
 
-    pQuery = (void *)GetProcAddress(inetmib1, "SnmpExtensionQuery");
-    if (!pQuery)
+    if (!pSnmpExtensionQuery)
     {
         win_skip("couldn't find SnmpExtensionQuery\n");
         return;
     }
-    /* Crash
-    ret = pQuery(0, NULL, NULL, NULL);
-    ret = pQuery(0, NULL, &error, NULL);
-    ret = pQuery(0, NULL, NULL, &index);
-    ret = pQuery(0, &list, NULL, NULL);
-    ret = pQuery(0, &list, &error, NULL);
-     */
 
+if (0) /* crashes on native */
+{
+    ret = pSnmpExtensionQuery(0, NULL, NULL, NULL);
+    ret = pSnmpExtensionQuery(0, NULL, &error, NULL);
+    ret = pSnmpExtensionQuery(0, NULL, NULL, &index);
+    ret = pSnmpExtensionQuery(0, &list, NULL, NULL);
+    ret = pSnmpExtensionQuery(0, &list, &error, NULL);
+}
     /* An empty list succeeds */
     list.len = 0;
     error = 0xdeadbeef;
     index = 0xdeadbeef;
-    ret = pQuery(SNMP_PDU_GET, &list, &error, &index);
+    ret = pSnmpExtensionQuery(SNMP_PDU_GET, &list, &error, &index);
     ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
     ok(error == SNMP_ERRORSTATUS_NOERROR,
         "expected SNMP_ERRORSTATUS_NOERROR, got %d\n", error);
@@ -106,10 +131,10 @@ static void testQuery(void)
     SetLastError(0xdeadbeef);
     error = 0xdeadbeef;
     index = 0xdeadbeef;
-    ret = pQuery(SNMP_PDU_GET, &list, &error, &index);
+    ret = pSnmpExtensionQuery(SNMP_PDU_GET, &list, &error, &index);
     ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
     ok(error == SNMP_ERRORSTATUS_NOERROR ||
-        error == ERROR_FILE_NOT_FOUND /* Win9x */,
+        broken(error == ERROR_FILE_NOT_FOUND) /* NT4 */,
         "expected SNMP_ERRORSTATUS_NOERROR or ERROR_FILE_NOT_FOUND, got %d\n",
         error);
     if (error == SNMP_ERRORSTATUS_NOERROR)
@@ -126,7 +151,7 @@ static void testQuery(void)
     SetLastError(0xdeadbeef);
     error = 0xdeadbeef;
     index = 0xdeadbeef;
-    ret = pQuery(SNMP_PDU_GET, &list, &error, &index);
+    ret = pSnmpExtensionQuery(SNMP_PDU_GET, &list, &error, &index);
     ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
     ok(error == SNMP_ERRORSTATUS_NOSUCHNAME,
         "expected SNMP_ERRORSTATUS_NOSUCHNAME, got %d\n", error);
@@ -148,7 +173,7 @@ static void testQuery(void)
     SetLastError(0xdeadbeef);
     error = 0xdeadbeef;
     index = 0xdeadbeef;
-    ret = pQuery(SNMP_PDU_GET, &list, &error, &index);
+    ret = pSnmpExtensionQuery(SNMP_PDU_GET, &list, &error, &index);
     ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
     ok(error == SNMP_ERRORSTATUS_NOSUCHNAME,
         "expected SNMP_ERRORSTATUS_NOSUCHNAME, got %d\n", error);
@@ -170,7 +195,7 @@ static void testQuery(void)
         SetLastError(0xdeadbeef);
         error = 0xdeadbeef;
         index = 0xdeadbeef;
-        ret = pQuery(SNMP_PDU_GETNEXT, &list, &error, &index);
+        ret = pSnmpExtensionQuery(SNMP_PDU_GETNEXT, &list, &error, &index);
         ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
         ok(error == SNMP_ERRORSTATUS_NOERROR,
             "expected SNMP_ERRORSTATUS_NOERROR, got %d\n", error);
@@ -251,9 +276,8 @@ static void testQuery(void)
     vars2[0].value.asnType = 0;
     list.len = 1;
     list.list = vars2;
-    moreData = TRUE;
     noChange = FALSE;
-    ret = pQuery(SNMP_PDU_GETNEXT, &list, &error, &index);
+    ret = pSnmpExtensionQuery(SNMP_PDU_GETNEXT, &list, &error, &index);
     ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
     ok(error == SNMP_ERRORSTATUS_NOERROR,
         "expected SNMP_ERRORSTATUS_NOERROR, got %d\n", error);
@@ -275,7 +299,7 @@ static void testQuery(void)
     list.list = vars2;
     moreData = TRUE;
     do {
-        ret = pQuery(SNMP_PDU_GETNEXT, &list, &error, &index);
+        ret = pSnmpExtensionQuery(SNMP_PDU_GETNEXT, &list, &error, &index);
         ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
         ok(error == SNMP_ERRORSTATUS_NOERROR,
             "expected SNMP_ERRORSTATUS_NOERROR, got %d\n", error);
@@ -341,7 +365,7 @@ static void testQuery(void)
     moreData = TRUE;
     noChange = FALSE;
     do {
-        ret = pQuery(SNMP_PDU_GETNEXT, &list, &error, &index);
+        ret = pSnmpExtensionQuery(SNMP_PDU_GETNEXT, &list, &error, &index);
         ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
         ok(error == SNMP_ERRORSTATUS_NOERROR,
             "expected SNMP_ERRORSTATUS_NOERROR, got %d\n", error);
@@ -407,7 +431,7 @@ static void testQuery(void)
     moreData = TRUE;
     noChange = FALSE;
     do {
-        ret = pQuery(SNMP_PDU_GETNEXT, &list, &error, &index);
+        ret = pSnmpExtensionQuery(SNMP_PDU_GETNEXT, &list, &error, &index);
         ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
         /* FIXME:  error and index aren't checked here because the UDP table is
          * the last OID currently supported by Wine, so the last GetNext fails.
@@ -472,8 +496,13 @@ static void testQuery(void)
 
 START_TEST(main)
 {
-    inetmib1 = LoadLibraryA("inetmib1");
+    HMODULE mod;
+
+    if (!(mod = init_test_functions()))
+        return;
+
     testInit();
     testQuery();
-    FreeLibrary(inetmib1);
+
+    uninit_test_functions(mod);
 }

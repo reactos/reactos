@@ -37,9 +37,33 @@ static PDH_STATUS   (WINAPI *pPdhValidatePathExW)(PDH_HLOG, LPCWSTR);
 
 #define GETFUNCPTR(func) p##func = (void *)GetProcAddress( pdh, #func );
 
+
+/* Returns true if the user interface is in English. Note that this does not
+ * presume of the formatting of dates, numbers, etc.
+ */
+static BOOL is_lang_english(void)
+{
+    static HMODULE hkernel32 = NULL;
+    static LANGID (WINAPI *pGetThreadUILanguage)(void) = NULL;
+    static LANGID (WINAPI *pGetUserDefaultUILanguage)(void) = NULL;
+
+    if (!hkernel32)
+    {
+        hkernel32 = GetModuleHandleA("kernel32.dll");
+        pGetThreadUILanguage = (void*)GetProcAddress(hkernel32, "GetThreadUILanguage");
+        pGetUserDefaultUILanguage = (void*)GetProcAddress(hkernel32, "GetUserDefaultUILanguage");
+    }
+    if (pGetThreadUILanguage)
+        return PRIMARYLANGID(pGetThreadUILanguage()) == LANG_ENGLISH;
+    if (pGetUserDefaultUILanguage)
+        return PRIMARYLANGID(pGetUserDefaultUILanguage()) == LANG_ENGLISH;
+
+    return PRIMARYLANGID(GetUserDefaultLangID()) == LANG_ENGLISH;
+}
+
 static void init_function_ptrs( void )
 {
-    pdh = GetModuleHandle( "pdh" );
+    pdh = GetModuleHandleA( "pdh" );
     GETFUNCPTR( PdhAddEnglishCounterA )
     GETFUNCPTR( PdhAddEnglishCounterW )
     GETFUNCPTR( PdhCollectQueryDataWithTime )
@@ -54,7 +78,7 @@ static const WCHAR uptime[] =
 
 static const WCHAR system_uptime[] =
     {'\\','S','y','s','t','e','m','\\','S','y','s','t','e','m',' ','U','p',' ','T','i','m','e',0};
-static const WCHAR system_downtime[] = /* does not exist */
+static const WCHAR nonexistent_counter[] =
     {'\\','S','y','s','t','e','m','\\','S','y','s','t','e','m',' ','D','o','w','n',' ','T','i','m','e',0};
 static const WCHAR percentage_processor_time[] =
     {'\\','P','r','o','c','e','s','s','o','r','(','_','T','o','t','a','l',')',
@@ -129,8 +153,10 @@ static void test_PdhAddCounterA( void )
     ret = PdhAddCounterA( query, "\\System\\System Up Time", 0, NULL );
     ok(ret == PDH_INVALID_ARGUMENT, "PdhAddCounterA failed 0x%08x\n", ret);
 
-    ret = PdhAddCounterA( query, "\\System\\System Down Time", 0, &counter );
-    ok(ret == PDH_CSTATUS_NO_COUNTER, "PdhAddCounterA failed 0x%08x\n", ret);
+    ret = PdhAddCounterA( query, "\\System\\Nonexistent Counter", 0, &counter );
+    ok(ret == PDH_CSTATUS_NO_COUNTER ||
+       broken(ret == PDH_INVALID_PATH), /* Win2K */
+       "PdhAddCounterA failed 0x%08x\n", ret);
     ok(!counter, "PdhAddCounterA failed %p\n", counter);
 
     ret = PdhAddCounterA( query, "\\System\\System Up Time", 0, &counter );
@@ -176,8 +202,10 @@ static void test_PdhAddCounterW( void )
     ret = PdhAddCounterW( query, percentage_processor_time, 0, NULL );
     ok(ret == PDH_INVALID_ARGUMENT, "PdhAddCounterW failed 0x%08x\n", ret);
 
-    ret = PdhAddCounterW( query, system_downtime, 0, &counter );
-    ok(ret == PDH_CSTATUS_NO_COUNTER, "PdhAddCounterW failed 0x%08x\n", ret);
+    ret = PdhAddCounterW( query, nonexistent_counter, 0, &counter );
+    ok(ret == PDH_CSTATUS_NO_COUNTER ||
+       broken(ret == PDH_INVALID_PATH), /* Win2K */
+       "PdhAddCounterW failed 0x%08x\n", ret);
     ok(!counter, "PdhAddCounterW failed %p\n", counter);
 
     ret = PdhAddCounterW( query, percentage_processor_time, 0, &counter );
@@ -267,7 +295,7 @@ static void test_PdhAddEnglishCounterW( void )
     ret = pPdhAddEnglishCounterW( query, system_uptime, 0, NULL );
     ok(ret == PDH_INVALID_ARGUMENT, "PdhAddEnglishCounterW failed 0x%08x\n", ret);
 
-    ret = pPdhAddEnglishCounterW( query, system_downtime, 0, &counter );
+    ret = pPdhAddEnglishCounterW( query, nonexistent_counter, 0, &counter );
     ok(ret == PDH_CSTATUS_NO_COUNTER, "PdhAddEnglishCounterW failed 0x%08x\n", ret);
     ok(!counter, "PdhAddEnglishCounterA failed %p\n", counter);
 
@@ -705,7 +733,7 @@ static void test_PdhValidatePathA( void )
     ret = PdhValidatePathA( "System Up Time" );
     ok(ret == PDH_CSTATUS_BAD_COUNTERNAME, "PdhValidatePathA failed 0x%08x\n", ret);
 
-    ret = PdhValidatePathA( "\\System\\System Down Time" );
+    ret = PdhValidatePathA( "\\System\\Nonexistent Counter" );
     ok(ret == PDH_CSTATUS_NO_COUNTER, "PdhValidatePathA failed 0x%08x\n", ret);
 
     ret = PdhValidatePathA( "\\System\\System Up Time" );
@@ -731,7 +759,7 @@ static void test_PdhValidatePathW( void )
     ret = PdhValidatePathW( uptime );
     ok(ret == PDH_CSTATUS_BAD_COUNTERNAME, "PdhValidatePathW failed 0x%08x\n", ret);
 
-    ret = PdhValidatePathW( system_downtime );
+    ret = PdhValidatePathW( nonexistent_counter );
     ok(ret == PDH_CSTATUS_NO_COUNTER, "PdhValidatePathW failed 0x%08x\n", ret);
 
     ret = PdhValidatePathW( system_uptime );
@@ -780,7 +808,7 @@ static void test_PdhValidatePathExW( void )
     ret = pPdhValidatePathExW( NULL, uptime );
     ok(ret == PDH_CSTATUS_BAD_COUNTERNAME, "PdhValidatePathExW failed 0x%08x\n", ret);
 
-    ret = pPdhValidatePathExW( NULL, system_downtime );
+    ret = pPdhValidatePathExW( NULL, nonexistent_counter );
     ok(ret == PDH_CSTATUS_NO_COUNTER, "PdhValidatePathExW failed 0x%08x\n", ret);
 
     ret = pPdhValidatePathExW( NULL, system_uptime );
@@ -958,9 +986,9 @@ static void test_PdhGetDllVersion(void)
 
 START_TEST(pdh)
 {
-    if (PRIMARYLANGID(LANGIDFROMLCID(GetThreadLocale())) != LANG_ENGLISH)
+    if (!is_lang_english())
     {
-        skip("non-english locale\n");
+        skip("An English UI is needed for the pdh tests\n");
         return;
     }
     init_function_ptrs();

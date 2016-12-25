@@ -5,17 +5,17 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
+#include <apitest.h>
+
 #include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <wingdi.h>
 #include <winddi.h>
-#include <reactos/win32k/ntgdityp.h>
-#include <reactos/win32k/ntgdihdl.h>
+#include <winuser.h>
+#include <include/ntgdityp.h>
+#include <include/ntgdihdl.h>
 
 #define TEST(x) ok(x, #x"\n")
 #define RTEST(x) ok(x, #x"\n")
-
-#define ok_err(dwErr) ok(GetLastError() == dwErr, "Wrong LastError, expected %d, got %ld\n", dwErr, GetLastError())
 
 HDC hdc1, hdc2;
 
@@ -121,6 +121,12 @@ Test_SelectObject()
 	/* Test EMF */
 
 	/* test METAFILE */
+	SetLastError(ERROR_SUCCESS);
+	hNewObj = CreateMetaFile(NULL);
+	ok(hNewObj != 0, "failed to create a meta dc\n");
+	hOldObj = SelectObject(hdc1, hNewObj);
+	RTEST(hOldObj == NULL);
+	ok_err(ERROR_SUCCESS);
 
 	/* Test ENHMETAFILE */
 

@@ -299,6 +299,7 @@ static void test_RegPolicyFlags(void)
     ok(ret, "WintrustSetRegPolicyFlags failed: %d\n", GetLastError());
     size = sizeof(flags1);
     r = RegQueryValueExA(key, State, NULL, NULL, (LPBYTE)&flags1, &size);
+    ok(!r, "RegQueryValueEx failed: %d\n", r);
     ok(flags1 == flags3, "Got %08x flags instead of %08x\n", flags1, flags3);
 
     pWintrustSetRegPolicyFlags(flags2);

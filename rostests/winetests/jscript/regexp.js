@@ -41,8 +41,17 @@ ok(m.index === 1, "m.index = " + m.index);
 ok(m.input === " aabaaa", "m.input = " + m.input);
 ok(m.length === 1, "m.length = " + m.length);
 ok(m[0] === "aa", "m[0] = " + m[0]);
+ok(m.propertyIsEnumerable("0"), "m.0 is not enumerable");
+ok(m.propertyIsEnumerable("input"), "m.input is not enumerable");
+ok(m.propertyIsEnumerable("index"), "m.index is not enumerable");
+ok(m.propertyIsEnumerable("lastIndex"), "m.lastIndex is not enumerable");
+ok(m.propertyIsEnumerable("length") === false, "m.length is not enumerable");
 ok(RegExp.leftContext === " ", "RegExp.leftContext = " + RegExp.leftContext);
 ok(RegExp.rightContext === "baaa", "RegExp.rightContext = " + RegExp.rightContext);
+
+m = /^[^<]*(<(.|\s)+>)[^>]*$|^#(\w+)$/.exec(
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+ok(m === null, "m is not null");
 
 re = /a+/g;
 ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex);
@@ -50,6 +59,7 @@ ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex);
 m = re.exec(" aabaaa");
 ok(re.lastIndex === 3, "re.lastIndex = " + re.lastIndex);
 ok(m.index === 1, "m.index = " + m.index);
+ok(m.lastIndex == 3, "m.lastIndex = " + m.lastIndex);
 ok(m.input === " aabaaa", "m.input = " + m.input);
 ok(m.length === 1, "m.length = " + m.length);
 ok(m[0] === "aa", "m[0] = " + m[0]);
@@ -194,6 +204,9 @@ ok(typeof(m) === "object", "typeof m is not object");
 ok(m.length === 2, "m.length is not 2");
 ok(m["0"] === "ab", "m[0] is not \"ab\"");
 ok(m["1"] === "ab", "m[1] is not \"ab\"");
+ok(m.index === 3, "m.index = " + m.index);
+ok(m.input === "abcabc", "m.input = " + m.input);
+ok(m.lastIndex === 5, "m.lastIndex = " + m.lastIndex);
 
 m = "abcabcg".match("ab", "g");
 ok(typeof(m) === "object", "typeof m is not object");
@@ -370,6 +383,19 @@ ok(r[2] === "3", "r[2] = " + r[2]);
 ok(RegExp.leftContext === "1,,2", "RegExp.leftContext = " + RegExp.leftContext);
 ok(RegExp.rightContext === "3", "RegExp.rightContext = " + RegExp.rightContext);
 
+r = "1,,2,3".split(/,+/g, 2);
+ok(r.length === 2, "r.length = " + r.length);
+ok(r[0] === "1", "r[0] = " + r[0]);
+ok(r[1] === "2", "r[1] = " + r[1]);
+ok(RegExp.leftContext === "1,,2", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "3", "RegExp.rightContext = " + RegExp.rightContext);
+
+r = "1,,2,3".split(/,+/g, 1);
+ok(r.length === 1, "r.length = " + r.length);
+ok(r[0] === "1", "r[0] = " + r[0]);
+ok(RegExp.leftContext === "1", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "2,3", "RegExp.rightContext = " + RegExp.rightContext);
+
 r = "1,,2,3".split(/,+/);
 ok(r.length === 3, "r.length = " + r.length);
 ok(r[0] === "1", "r[0] = " + r[0]);
@@ -402,6 +428,15 @@ ok(re.lastIndex === 6, "re.lastIndex = " + re.lastIndex);
 r = "123".split(re = /\s+/).join(";");
 ok(r === "123", "r = " + r);
 ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex);
+
+r = "1ab2aab3".split(/(a+)b/);
+ok(r.length === 3, "r.length = " + r.length);
+ok(r[0] === "1", "r[0] = " + r[0]);
+ok(r[1] === "2", "r[1] = " + r[1]);
+ok(r[2] === "3", "r[2] = " + r[2]);
+
+r = "A<B>bold</B>and<CODE>coded</CODE>".split(/<(\/)?([^<>]+)>/) ;
+ok(r.length === 4, "r.length = " + r.length);
 
 /* another standard violation */
 r = "1 12 \t3".split(re = /(\s)+/g).join(";");
@@ -571,5 +606,75 @@ ok(i === 1, "String.prototype.seatch.apply(obj, 'b') = " + i);
 
 i = " undefined ".search();
 ok(i === null, "' undefined '.search() = " + i);
+
+tmp = "=)".replace(/=/, "?");
+ok(tmp === "?)", "'=)'.replace(/=/, '?') = " + tmp);
+
+tmp = "   ".replace(/^\s*|\s*$/g, "y");
+ok(tmp === "yy", '"   ".replace(/^\s*|\s*$/g, "y") = ' + tmp);
+
+tmp = "xxx".replace(/^\s*|\s*$/g, "");
+ok(tmp === "xxx", '"xxx".replace(/^\s*|\s*$/g, "y") = ' + tmp);
+
+tmp = "xxx".replace(/^\s*|\s*$/g, "y");
+ok(tmp === "yxxxy", '"xxx".replace(/^\s*|\s*$/g, "y") = ' + tmp);
+
+tmp = "x/y".replace(/[/]/, "*");
+ok(tmp === "x*y", '"x/y".replace(/[/]/, "*") = ' + tmp);
+
+tmp = "x/y".replace(/[xy/]/g, "*");
+ok(tmp === "***", '"x/y".replace(/[xy/]/, "*") = ' + tmp);
+
+/(b)/.exec("abc");
+ok(RegExp.$1 === "b", "RegExp.$1 = " + RegExp.$1);
+ok("$2" in RegExp, "RegExp.$2 doesn't exist");
+ok(RegExp.$2 === "", "RegExp.$2 = " + RegExp.$2);
+ok(RegExp.$9 === "", "RegExp.$9 = " + RegExp.$9);
+ok(!("$10" in RegExp), "RegExp.$10 exists");
+
+/(b)(b)(b)(b)(b)(b)(b)(b)(b)(b)(b)/.exec("abbbbbbbbbbbc");
+ok(RegExp.$1 === "b", "RegExp.$1 = " + RegExp.$1);
+ok(RegExp.$2 === "b", "[2] RegExp.$2 = " + RegExp.$2);
+ok(RegExp.$9 === "b", "RegExp.$9 = " + RegExp.$9);
+ok(!("$10" in RegExp), "RegExp.$10 exists");
+
+/(b)/.exec("abc");
+ok(RegExp.$1 === "b", "RegExp.$1 = " + RegExp.$1);
+ok("$2" in RegExp, "RegExp.$2 doesn't exist");
+ok(RegExp.$2 === "", "RegExp.$2 = " + RegExp.$2);
+ok(RegExp.$9 === "", "RegExp.$9 = " + RegExp.$9);
+ok(!("$10" in RegExp), "RegExp.$10 exists");
+
+RegExp.$1 = "a";
+ok(RegExp.$1 === "b", "RegExp.$1 = " + RegExp.$1);
+
+ok(/abc/.toString() === "/abc/", "/abc/.toString() = " + /abc/.toString());
+ok(/\//.toString() === "/\\//", "/\//.toString() = " + /\//.toString());
+tmp = new RegExp("abc/");
+ok(tmp.toString() === "/abc//", "(new RegExp(\"abc/\")).toString() = " + tmp.toString());
+ok(/abc/g.toString() === "/abc/g", "/abc/g.toString() = " + /abc/g.toString());
+ok(/abc/i.toString() === "/abc/i", "/abc/i.toString() = " + /abc/i.toString());
+ok(/abc/ig.toString() === "/abc/ig", "/abc/ig.toString() = " + /abc/ig.toString());
+ok(/abc/mgi.toString() === "/abc/igm", "/abc/mgi.toString() = " + /abc/mgi.toString());
+tmp = new RegExp("abc/", "mgi");
+ok(tmp.toString() === "/abc//igm", "(new RegExp(\"abc/\")).toString() = " + tmp.toString());
+ok(/abc/.toString(1, false, "3") === "/abc/", "/abc/.toString(1, false, \"3\") = " + /abc/.toString());
+
+re = /x/;
+ok(re.ignoreCase === false, "re.ignoreCase = " + re.ignoreCase);
+ok(re.multiline === false, "re.multiline = " + re.multiline);
+ok(re.global === false, "re.global = " + re.global);
+re = /x/i;
+ok(re.ignoreCase === true, "re.ignoreCase = " + re.ignoreCase);
+ok(re.multiline === false, "re.multiline = " + re.multiline);
+ok(re.global === false, "re.global = " + re.global);
+re = new RegExp("xxx", "gi");
+ok(re.ignoreCase === true, "re.ignoreCase = " + re.ignoreCase);
+ok(re.multiline === false, "re.multiline = " + re.multiline);
+ok(re.global === true, "re.global = " + re.global);
+re = /x/mg;
+ok(re.ignoreCase === false, "re.ignoreCase = " + re.ignoreCase);
+ok(re.multiline === true, "re.multiline = " + re.multiline);
+ok(re.global === true, "re.global = " + re.global);
 
 reportSuccess();

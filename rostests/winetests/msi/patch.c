@@ -35,9 +35,14 @@ static UINT (WINAPI *pMsiGetPatchInfoExA)( LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCON
                                            LPCSTR, LPSTR, DWORD * );
 static UINT (WINAPI *pMsiEnumPatchesExA)( LPCSTR, LPCSTR, DWORD, DWORD, DWORD, LPSTR,
                                           LPSTR, MSIINSTALLCONTEXT *, LPSTR, LPDWORD );
+static BOOL (WINAPI *pOpenProcessToken)( HANDLE, DWORD, PHANDLE );
 
 static const char *msifile = "winetest-patch.msi";
 static const char *mspfile = "winetest-patch.msp";
+static const WCHAR msifileW[] =
+    {'w','i','n','e','t','e','s','t','-','p','a','t','c','h','.','m','s','i',0};
+static const WCHAR mspfileW[] =
+    {'w','i','n','e','t','e','s','t','-','p','a','t','c','h','.','m','s','p',0};
 
 static char CURR_DIR[MAX_PATH];
 static char PROG_FILES_DIR[MAX_PATH];
@@ -55,7 +60,8 @@ static const char property_dat[] =
     "ProductLanguage\t1033\n"
     "ProductName\tmsitest\n"
     "ProductVersion\t1.1.1\n"
-    "PATCHNEWSUMMARYSUBJECT\tInstaller Database\n";
+    "PATCHNEWSUMMARYSUBJECT\tInstaller Database\n"
+    "MSIFASTINSTALL\t1\n";
 
 static const char media_dat[] =
     "DiskId\tLastSequence\tDiskPrompt\tCabinet\tVolumeLabel\tSource\n"
@@ -138,6 +144,7 @@ static const struct msi_table tables[] =
 static void init_function_pointers( void )
 {
     HMODULE hmsi = GetModuleHandleA( "msi.dll" );
+    HMODULE hadvapi32 = GetModuleHandleA( "advapi32.dll" );
 
 #define GET_PROC( mod, func ) \
     p ## func = (void *)GetProcAddress( mod, #func ); \
@@ -147,7 +154,28 @@ static void init_function_pointers( void )
     GET_PROC( hmsi, MsiApplyPatchA );
     GET_PROC( hmsi, MsiGetPatchInfoExA );
     GET_PROC( hmsi, MsiEnumPatchesExA );
+
+    GET_PROC( hadvapi32, OpenProcessToken );
 #undef GET_PROC
+}
+
+static BOOL is_process_limited(void)
+{
+    HANDLE token;
+
+    if (!pOpenProcessToken) return FALSE;
+
+    if (pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+    {
+        BOOL ret;
+        TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
+        DWORD size;
+
+        ret = GetTokenInformation(token, TokenElevationType, &type, sizeof(type), &size);
+        CloseHandle(token);
+        return (ret && type == TokenElevationTypeLimited);
+    }
+    return FALSE;
 }
 
 static BOOL get_program_files_dir( char *buf, char *buf2 )
@@ -155,7 +183,7 @@ static BOOL get_program_files_dir( char *buf, char *buf2 )
     HKEY hkey;
     DWORD type, size;
 
-    if (RegOpenKey( HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion", &hkey ))
+    if (RegOpenKeyA( HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion", &hkey ))
         return FALSE;
 
     size = MAX_PATH;
@@ -231,42 +259,42 @@ static DWORD get_pf_file_size( const char *filename )
 static void write_file( const char *filename, const char *data, DWORD data_size )
 {
     DWORD size;
-    HANDLE file = CreateFile( filename, GENERIC_WRITE, 0, NULL,
-                              CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+    HANDLE file = CreateFileA( filename, GENERIC_WRITE, 0, NULL,
+                               CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
     WriteFile( file, data, data_size, &size, NULL );
     CloseHandle( file );
 }
 
-static void set_suminfo( const char *filename )
+static void set_suminfo( const WCHAR *filename )
 {
     UINT r;
     MSIHANDLE hsi, hdb;
 
-    r = MsiOpenDatabaseA( filename, MSIDBOPEN_DIRECT, &hdb );
+    r = MsiOpenDatabaseW( filename, MSIDBOPEN_DIRECT, &hdb );
     ok( r == ERROR_SUCCESS, "failed to open database %u\n", r );
 
-    r = MsiGetSummaryInformation( hdb, NULL, 7, &hsi );
+    r = MsiGetSummaryInformationA( hdb, NULL, 7, &hsi );
     ok( r == ERROR_SUCCESS, "failed to open summaryinfo %u\n", r );
 
-    r = MsiSummaryInfoSetProperty( hsi, 2, VT_LPSTR, 0, NULL, "Installation Database" );
+    r = MsiSummaryInfoSetPropertyA( hsi, 2, VT_LPSTR, 0, NULL, "Installation Database" );
     ok( r == ERROR_SUCCESS, "failed to set summary info %u\n", r );
 
-    r = MsiSummaryInfoSetProperty( hsi, 3, VT_LPSTR, 0, NULL, "Installation Database" );
+    r = MsiSummaryInfoSetPropertyA( hsi, 3, VT_LPSTR, 0, NULL, "Installation Database" );
     ok( r == ERROR_SUCCESS, "failed to set summary info %u\n", r );
 
-    r = MsiSummaryInfoSetProperty( hsi, 4, VT_LPSTR, 0, NULL, "WineHQ" );
+    r = MsiSummaryInfoSetPropertyA( hsi, 4, VT_LPSTR, 0, NULL, "WineHQ" );
     ok( r == ERROR_SUCCESS, "failed to set summary info %u\n", r );
 
-    r = MsiSummaryInfoSetProperty( hsi, 7, VT_LPSTR, 0, NULL, ";1033" );
+    r = MsiSummaryInfoSetPropertyA( hsi, 7, VT_LPSTR, 0, NULL, ";1033" );
     ok( r == ERROR_SUCCESS, "failed to set summary info %u\n", r );
 
-    r = MsiSummaryInfoSetProperty( hsi, 9, VT_LPSTR, 0, NULL, "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}" );
+    r = MsiSummaryInfoSetPropertyA( hsi, 9, VT_LPSTR, 0, NULL, "{E528DDD6-4801-4BEC-BBB6-C5EE0FD097E9}" );
     ok( r == ERROR_SUCCESS, "failed to set summary info %u\n", r );
 
-    r = MsiSummaryInfoSetProperty( hsi, 14, VT_I4, 100, NULL, NULL );
+    r = MsiSummaryInfoSetPropertyA( hsi, 14, VT_I4, 100, NULL, NULL );
     ok( r == ERROR_SUCCESS, "failed to set summary info %u\n", r );
 
-    r = MsiSummaryInfoSetProperty( hsi, 15, VT_I4, 0, NULL, NULL );
+    r = MsiSummaryInfoSetPropertyA( hsi, 15, VT_I4, 0, NULL, NULL );
     ok( r == ERROR_SUCCESS, "failed to set summary info %u\n", r );
 
     r = MsiSummaryInfoPersist( hsi );
@@ -283,8 +311,14 @@ static void create_database( const char *filename, const struct msi_table *table
 {
     MSIHANDLE hdb;
     UINT r, i;
+    WCHAR *filenameW;
+    int len;
 
-    r = MsiOpenDatabaseA( filename, MSIDBOPEN_CREATE, &hdb );
+    len = MultiByteToWideChar( CP_ACP, 0, filename, -1, NULL, 0 );
+    if (!(filenameW = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return;
+    MultiByteToWideChar( CP_ACP, 0, filename, -1, filenameW, len );
+
+    r = MsiOpenDatabaseW( filenameW, MSIDBOPEN_CREATE, &hdb );
     ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
 
     /* import the tables into the database */
@@ -304,7 +338,8 @@ static void create_database( const char *filename, const struct msi_table *table
     ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
 
     MsiCloseHandle( hdb );
-    set_suminfo( filename );
+    set_suminfo( filenameW );
+    HeapFree( GetProcessHeap(), 0, filenameW );
 }
 
 /* data for generating a patch */
@@ -435,16 +470,16 @@ static const char t1_data3[] = { /* SummaryInformation */
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0xe0, 0x85, 0x9f, 0xf2, 0xf9,
     0x4f, 0x68, 0x10, 0xab, 0x91, 0x08, 0x00, 0x2b, 0x27, 0xb3, 0xd9,
-    0x30, 0x00, 0x00, 0x00, 0x9c, 0x01, 0x00, 0x00, 0x0c, 0x00, 0x00,
+    0x30, 0x00, 0x00, 0x00, 0x9f, 0x01, 0x00, 0x00, 0x0c, 0x00, 0x00,
     0x00, 0x02, 0x00, 0x00, 0x00, 0x68, 0x00, 0x00, 0x00, 0x03, 0x00,
     0x00, 0x00, 0x88, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0xa8,
     0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0xb8, 0x00, 0x00, 0x00,
     0x06, 0x00, 0x00, 0x00, 0xc4, 0x00, 0x00, 0x00, 0x12, 0x00, 0x00,
     0x00, 0xd0, 0x00, 0x00, 0x00, 0x13, 0x00, 0x00, 0x00, 0xdc, 0x00,
     0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0xe4, 0x00, 0x00, 0x00, 0x08,
-    0x00, 0x00, 0x00, 0xf4, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00,
-    0x04, 0x01, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00, 0x8c, 0x01, 0x00,
-    0x00, 0x10, 0x00, 0x00, 0x00, 0x94, 0x01, 0x00, 0x00, 0x1e, 0x00,
+    0x00, 0x00, 0x00, 0xf7, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00,
+    0x07, 0x01, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00, 0x8f, 0x01, 0x00,
+    0x00, 0x10, 0x00, 0x00, 0x00, 0x97, 0x01, 0x00, 0x00, 0x1e, 0x00,
     0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x49, 0x6e, 0x73, 0x74, 0x61,
     0x6c, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x20, 0x44, 0x61, 0x74,
     0x61, 0x62, 0x61, 0x73, 0x65, 0x00, 0x00, 0x00, 0x1e, 0x00, 0x00,
@@ -456,23 +491,24 @@ static const char t1_data3[] = { /* SummaryInformation */
     0x00, 0x00, 0x1e, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x1e, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x1e, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x3b, 0x31,
-    0x30, 0x33, 0x33, 0x00, 0x00, 0x00, 0x1e, 0x00, 0x00, 0x00, 0x06,
-    0x00, 0x00, 0x00, 0x3b, 0x31, 0x30, 0x33, 0x33, 0x00, 0x00, 0x00,
-    0x1e, 0x00, 0x00, 0x00, 0x7f, 0x00, 0x00, 0x00, 0x7b, 0x39, 0x31,
-    0x33, 0x42, 0x38, 0x44, 0x31, 0x38, 0x2d, 0x46, 0x42, 0x42, 0x36,
-    0x2d, 0x34, 0x43, 0x41, 0x43, 0x2d, 0x41, 0x32, 0x33, 0x39, 0x2d,
-    0x43, 0x37, 0x34, 0x43, 0x31, 0x31, 0x45, 0x33, 0x46, 0x41, 0x37,
-    0x34, 0x7d, 0x31, 0x2e, 0x31, 0x2e, 0x31, 0x3b, 0x7b, 0x39, 0x31,
-    0x33, 0x42, 0x38, 0x44, 0x31, 0x38, 0x2d, 0x46, 0x42, 0x42, 0x36,
-    0x2d, 0x34, 0x43, 0x41, 0x43, 0x2d, 0x41, 0x32, 0x33, 0x39, 0x2d,
-    0x43, 0x37, 0x34, 0x43, 0x31, 0x31, 0x45, 0x33, 0x46, 0x41, 0x37,
-    0x34, 0x7d, 0x31, 0x2e, 0x31, 0x2e, 0x31, 0x3b, 0x7b, 0x41, 0x32,
-    0x45, 0x33, 0x44, 0x36, 0x34, 0x33, 0x2d, 0x34, 0x45, 0x32, 0x43,
-    0x2d, 0x34, 0x37, 0x37, 0x46, 0x2d, 0x41, 0x33, 0x30, 0x39, 0x2d,
-    0x46, 0x37, 0x36, 0x46, 0x35, 0x35, 0x32, 0x44, 0x35, 0x46, 0x34,
-    0x33, 0x7d, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x64, 0x00, 0x00,
-    0x00, 0x03, 0x00, 0x00, 0x00, 0x17, 0x00, 0x22, 0x09
+    0x00, 0x1e, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x78, 0x38,
+    0x36, 0x3b, 0x31, 0x30, 0x33, 0x33, 0x00, 0x00, 0x00, 0x1e, 0x00,
+    0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x3b, 0x31, 0x30, 0x33, 0x33,
+    0x00, 0x00, 0x00, 0x1e, 0x00, 0x00, 0x00, 0x7f, 0x00, 0x00, 0x00,
+    0x7b, 0x39, 0x31, 0x33, 0x42, 0x38, 0x44, 0x31, 0x38, 0x2d, 0x46,
+    0x42, 0x42, 0x36, 0x2d, 0x34, 0x43, 0x41, 0x43, 0x2d, 0x41, 0x32,
+    0x33, 0x39, 0x2d, 0x43, 0x37, 0x34, 0x43, 0x31, 0x31, 0x45, 0x33,
+    0x46, 0x41, 0x37, 0x34, 0x7d, 0x31, 0x2e, 0x31, 0x2e, 0x31, 0x3b,
+    0x7b, 0x39, 0x31, 0x33, 0x42, 0x38, 0x44, 0x31, 0x38, 0x2d, 0x46,
+    0x42, 0x42, 0x36, 0x2d, 0x34, 0x43, 0x41, 0x43, 0x2d, 0x41, 0x32,
+    0x33, 0x39, 0x2d, 0x43, 0x37, 0x34, 0x43, 0x31, 0x31, 0x45, 0x33,
+    0x46, 0x41, 0x37, 0x34, 0x7d, 0x31, 0x2e, 0x31, 0x2e, 0x31, 0x3b,
+    0x7b, 0x41, 0x32, 0x45, 0x33, 0x44, 0x36, 0x34, 0x33, 0x2d, 0x34,
+    0x45, 0x32, 0x43, 0x2d, 0x34, 0x37, 0x37, 0x46, 0x2d, 0x41, 0x33,
+    0x30, 0x39, 0x2d, 0x46, 0x37, 0x36, 0x46, 0x35, 0x35, 0x32, 0x44,
+    0x35, 0x46, 0x34, 0x33, 0x7d, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00,
+    0x64, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x17, 0x00, 0x22,
+    0x09
 };
 
 static const struct table_data table_transform1_data[] = {
@@ -681,13 +717,19 @@ static void test_simple_patch( void )
 {
     UINT r;
     DWORD size;
-    char path[MAX_PATH], install_source[MAX_PATH];
+    char path[MAX_PATH], install_source[MAX_PATH], buffer[32];
     const char *query;
+    WCHAR pathW[MAX_PATH];
     MSIHANDLE hpackage, hdb, hview, hrec;
 
     if (!pMsiApplyPatchA)
     {
         win_skip("MsiApplyPatchA is not available\n");
+        return;
+    }
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
         return;
     }
 
@@ -700,7 +742,11 @@ static void test_simple_patch( void )
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
 
     r = MsiInstallProductA( msifile, NULL );
-    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+    if (r != ERROR_SUCCESS)
+    {
+        skip("Product installation failed with error code %u\n", r);
+        goto cleanup;
+    }
 
     size = get_pf_file_size( "msitest\\patch.txt" );
     ok( size == 1000, "expected 1000, got %u\n", size );
@@ -721,7 +767,7 @@ static void test_simple_patch( void )
     ok( hdb, "failed to get database handle\n" );
 
     query = "SELECT * FROM `Property` where `Property` = 'PATCHNEWPACKAGECODE'";
-    r = MsiDatabaseOpenView( hdb, query, &hview );
+    r = MsiDatabaseOpenViewA( hdb, query, &hview );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
     r = MsiViewExecute( hview, 0 );
@@ -736,7 +782,7 @@ static void test_simple_patch( void )
 
     query = "SELECT * FROM `Property` WHERE `Property` = 'PATCHNEWSUMMARYSUBJECT' "
             "AND `Value` = 'Installer Database'";
-    r = MsiDatabaseOpenView( hdb, query, &hview );
+    r = MsiDatabaseOpenViewA( hdb, query, &hview );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
     r = MsiViewExecute( hview, 0 );
@@ -749,6 +795,12 @@ static void test_simple_patch( void )
     MsiViewClose( hview );
     MsiCloseHandle( hview );
 
+    buffer[0] = 0;
+    size = sizeof(buffer);
+    r = MsiGetPropertyA( hpackage, "PATCHNEWSUMMARYSUBJECT", buffer, &size );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+    ok( !strcmp( buffer, "Installer Database" ), "expected \'Installer Database\', got \'%s\'\n", buffer );
+
     MsiCloseHandle( hdb );
     MsiCloseHandle( hpackage );
 
@@ -759,7 +811,7 @@ static void test_simple_patch( void )
     if (r == ERROR_PATCH_PACKAGE_INVALID)
     {
         win_skip("Windows Installer < 3.0 detected\n");
-        return;
+        goto uninstall;
     }
 
     size = get_pf_file_size( "msitest\\patch.txt" );
@@ -773,7 +825,7 @@ static void test_simple_patch( void )
     ok( hdb, "failed to get database handle\n" );
 
     query = "SELECT * FROM `Property` where `Property` = 'PATCHNEWPACKAGECODE'";
-    r = MsiDatabaseOpenView( hdb, query, &hview );
+    r = MsiDatabaseOpenViewA( hdb, query, &hview );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
     r = MsiViewExecute( hview, 0 );
@@ -788,7 +840,7 @@ static void test_simple_patch( void )
 
     query = "SELECT * FROM `Property` WHERE `Property` = 'PATCHNEWSUMMARYSUBJECT' "
             "AND `Value` = 'Installation Database'";
-    r = MsiDatabaseOpenView( hdb, query, &hview );
+    r = MsiDatabaseOpenViewA( hdb, query, &hview );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
     r = MsiViewExecute( hview, 0 );
@@ -801,6 +853,12 @@ static void test_simple_patch( void )
     MsiViewClose( hview );
     MsiCloseHandle( hview );
 
+    buffer[0] = 0;
+    size = sizeof(buffer);
+    r = MsiGetPropertyA( hpackage, "PATCHNEWSUMMARYSUBJECT", buffer, &size );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+    ok( !strcmp( buffer, "Installation Database" ), "expected \'Installation Database\', got \'%s\'\n", buffer );
+
     MsiCloseHandle( hdb );
     MsiCloseHandle( hpackage );
 
@@ -810,10 +868,11 @@ static void test_simple_patch( void )
                             "LocalPackage", path, &size );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
-    r = MsiOpenDatabaseA( path, MSIDBOPEN_READONLY, &hdb );
+    MultiByteToWideChar( CP_ACP, 0, path, -1, pathW, MAX_PATH );
+    r = MsiOpenDatabaseW( pathW, MSIDBOPEN_READONLY, &hdb );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
-    r = MsiDatabaseOpenView( hdb, query, &hview );
+    r = MsiDatabaseOpenViewA( hdb, query, &hview );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
     r = MsiViewExecute( hview, 0 );
@@ -827,6 +886,7 @@ static void test_simple_patch( void )
     MsiCloseHandle( hview );
     MsiCloseHandle( hdb );
 
+uninstall:
     size = sizeof(path);
     r = MsiGetProductInfoA( "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
                             "InstallSource", path, &size );
@@ -839,8 +899,10 @@ static void test_simple_patch( void )
     ok( !delete_pf( "msitest\\patch.txt", TRUE ), "file not removed\n" );
     ok( !delete_pf( "msitest", FALSE ), "directory not removed\n" );
 
+cleanup:
     DeleteFileA( msifile );
     DeleteFileA( mspfile );
+    DeleteFileA( "msitest\\patch.txt" );
     RemoveDirectoryA( "msitest" );
 }
 
@@ -849,25 +911,25 @@ static void test_MsiOpenDatabase( void )
     UINT r;
     MSIHANDLE hdb;
 
-    r = MsiOpenDatabase( mspfile, MSIDBOPEN_CREATE, &hdb );
+    r = MsiOpenDatabaseW( mspfileW, MSIDBOPEN_CREATE, &hdb );
     ok(r == ERROR_SUCCESS, "failed to open database %u\n", r);
 
     r = MsiDatabaseCommit( hdb );
     ok(r == ERROR_SUCCESS, "failed to commit database %u\n", r);
     MsiCloseHandle( hdb );
 
-    r = MsiOpenDatabase( mspfile, MSIDBOPEN_READONLY + MSIDBOPEN_PATCHFILE, &hdb );
+    r = MsiOpenDatabaseW( mspfileW, MSIDBOPEN_READONLY + MSIDBOPEN_PATCHFILE, &hdb );
     ok(r == ERROR_OPEN_FAILED, "expected ERROR_OPEN_FAILED, got %u\n", r);
     DeleteFileA( mspfile );
 
-    r = MsiOpenDatabase( mspfile, MSIDBOPEN_CREATE + MSIDBOPEN_PATCHFILE, &hdb );
+    r = MsiOpenDatabaseW( mspfileW, MSIDBOPEN_CREATE + MSIDBOPEN_PATCHFILE, &hdb );
     ok(r == ERROR_SUCCESS , "failed to open database %u\n", r);
 
     r = MsiDatabaseCommit( hdb );
     ok(r == ERROR_SUCCESS, "failed to commit database %u\n", r);
     MsiCloseHandle( hdb );
 
-    r = MsiOpenDatabase( mspfile, MSIDBOPEN_READONLY + MSIDBOPEN_PATCHFILE, &hdb );
+    r = MsiOpenDatabaseW( mspfileW, MSIDBOPEN_READONLY + MSIDBOPEN_PATCHFILE, &hdb );
     ok(r == ERROR_SUCCESS, "failed to open database %u\n", r);
     MsiCloseHandle( hdb );
     DeleteFileA( mspfile );
@@ -875,10 +937,10 @@ static void test_MsiOpenDatabase( void )
     create_database( msifile, tables, sizeof(tables) / sizeof(struct msi_table) );
     create_patch( mspfile );
 
-    r = MsiOpenDatabase( msifile, MSIDBOPEN_READONLY + MSIDBOPEN_PATCHFILE, &hdb );
+    r = MsiOpenDatabaseW( msifileW, MSIDBOPEN_READONLY + MSIDBOPEN_PATCHFILE, &hdb );
     ok(r == ERROR_OPEN_FAILED, "failed to open database %u\n", r );
 
-    r = MsiOpenDatabase( mspfile, MSIDBOPEN_READONLY + MSIDBOPEN_PATCHFILE, &hdb );
+    r = MsiOpenDatabaseW( mspfileW, MSIDBOPEN_READONLY + MSIDBOPEN_PATCHFILE, &hdb );
     ok(r == ERROR_SUCCESS, "failed to open database %u\n", r );
     MsiCloseHandle( hdb );
 
@@ -888,13 +950,13 @@ static void test_MsiOpenDatabase( void )
 
 static UINT find_entry( MSIHANDLE hdb, const char *table, const char *entry )
 {
-    static char fmt[] = "SELECT * FROM `%s` WHERE `Name` = '%s'";
+    static const char fmt[] = "SELECT * FROM `%s` WHERE `Name` = '%s'";
     char query[0x100];
     UINT r;
     MSIHANDLE hview, hrec;
 
     sprintf( query, fmt, table, entry );
-    r = MsiDatabaseOpenView( hdb, query, &hview );
+    r = MsiDatabaseOpenViewA( hdb, query, &hview );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
     r = MsiViewExecute( hview, 0 );
@@ -907,15 +969,108 @@ static UINT find_entry( MSIHANDLE hdb, const char *table, const char *entry )
     return r;
 }
 
-static void test_system_tables( void )
+static UINT find_entryW( MSIHANDLE hdb, const WCHAR *table, const WCHAR *entry )
+{
+    static const WCHAR fmt[] =
+        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','%','s','`',' ',
+         'W','H','E','R','E',' ','`','N','a','m','e','`',' ','=',' ','\'','%','s','\'',0};
+    WCHAR query[0x100];
+    MSIHANDLE hview, hrec;
+    UINT r;
+
+    wsprintfW( query, fmt, table, entry );
+    r = MsiDatabaseOpenViewW( hdb, query, &hview );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+
+    r = MsiViewExecute( hview, 0 );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+
+    r = MsiViewFetch( hview, &hrec );
+    MsiViewClose( hview );
+    MsiCloseHandle( hview );
+    MsiCloseHandle( hrec );
+    return r;
+}
+
+static INT get_integer( MSIHANDLE hdb, UINT field, const char *query)
 {
     UINT r;
+    INT ret = -1;
+    MSIHANDLE hview, hrec;
+
+    r = MsiDatabaseOpenViewA( hdb, query, &hview );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+
+    r = MsiViewExecute( hview, 0 );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+
+    r = MsiViewFetch( hview, &hrec );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+    if (r == ERROR_SUCCESS)
+    {
+        UINT r_tmp;
+        ret = MsiRecordGetInteger( hrec, field );
+        MsiCloseHandle( hrec );
+
+        r_tmp = MsiViewFetch( hview, &hrec );
+        ok( r_tmp == ERROR_NO_MORE_ITEMS, "expected ERROR_NO_MORE_ITEMS, got %u\n", r);
+    }
+
+    MsiViewClose( hview );
+    MsiCloseHandle( hview );
+    return ret;
+}
+
+static char *get_string( MSIHANDLE hdb, UINT field, const char *query)
+{
+    UINT r;
+    static char ret[MAX_PATH];
+    MSIHANDLE hview, hrec;
+
+    ret[0] = '\0';
+
+    r = MsiDatabaseOpenViewA( hdb, query, &hview );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+
+    r = MsiViewExecute( hview, 0 );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+
+    r = MsiViewFetch( hview, &hrec );
+    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+    if (r == ERROR_SUCCESS)
+    {
+        UINT size = MAX_PATH;
+        r = MsiRecordGetStringA( hrec, field, ret, &size );
+        ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r);
+        MsiCloseHandle( hrec );
+
+        r = MsiViewFetch( hview, &hrec );
+        ok( r == ERROR_NO_MORE_ITEMS, "expected ERROR_NO_MORE_ITEMS, got %u\n", r);
+    }
+
+    MsiViewClose( hview );
+    MsiCloseHandle( hview );
+    return ret;
+}
+
+static void test_system_tables( void )
+{
+    static const char patchsource[] = "MSPSRC0F96CDC04CDF4304B2837B9264889EF7";
+    static const WCHAR streamsW[] = {'_','S','t','r','e','a','m','s',0};
+    static const WCHAR CAB_msitest_encodedW[] = {0x3a8c,0x47cb,0x45b0,0x45ec,0x45a8,0x4837,0};
+    UINT r;
+    char *cr;
     const char *query;
     MSIHANDLE hproduct, hdb, hview, hrec;
 
     if (!pMsiApplyPatchA)
     {
         win_skip("MsiApplyPatchA is not available\n");
+        return;
+    }
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
         return;
     }
 
@@ -928,7 +1083,11 @@ static void test_system_tables( void )
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
 
     r = MsiInstallProductA( msifile, NULL );
-    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+    if (r != ERROR_SUCCESS)
+    {
+        skip("Product installation failed with error code %d\n", r);
+        goto cleanup;
+    }
 
     r = MsiOpenProductA( "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}", &hproduct );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
@@ -940,7 +1099,7 @@ static void test_system_tables( void )
     ok( r == ERROR_SUCCESS, "failed to find entry %u\n", r );
 
     query = "SELECT * FROM `_Storages`";
-    r = MsiDatabaseOpenView( hdb, query, &hview );
+    r = MsiDatabaseOpenViewA( hdb, query, &hview );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
     r = MsiViewExecute( hview, 0 );
@@ -973,6 +1132,9 @@ static void test_system_tables( void )
     r = find_entry( hdb, "_Tables", "Media" );
     ok( r == ERROR_SUCCESS, "failed to find entry %u\n", r );
 
+    r = get_integer( hdb, 1, "SELECT * FROM `Media` WHERE `VolumeLabel`=\'DISK1\'");
+    ok( r == 1, "Got %u\n", r );
+
     r = find_entry( hdb, "_Tables", "_Property" );
     ok( r == ERROR_SUCCESS, "failed to find entry %u\n", r );
 
@@ -989,7 +1151,7 @@ static void test_system_tables( void )
     if (r == ERROR_PATCH_PACKAGE_INVALID)
     {
         win_skip("Windows Installer < 3.0 detected\n");
-        return;
+        goto uninstall;
     }
 
     r = MsiOpenProductA( "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}", &hproduct );
@@ -1001,8 +1163,11 @@ static void test_system_tables( void )
     r = find_entry( hdb, "_Streams", "\5SummaryInformation" );
     ok( r == ERROR_SUCCESS, "failed to find entry %u\n", r );
 
+    r = find_entryW( hdb, streamsW, CAB_msitest_encodedW );
+    ok( r == ERROR_NO_MORE_ITEMS, "failed to find entry %u\n", r );
+
     query = "SELECT * FROM `_Storages`";
-    r = MsiDatabaseOpenView( hdb, query, &hview );
+    r = MsiDatabaseOpenViewA( hdb, query, &hview );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
     r = MsiViewExecute( hview, 0 );
@@ -1047,17 +1212,38 @@ static void test_system_tables( void )
     r = find_entry( hdb, "_Tables", "PatchPackage" );
     ok( r == ERROR_SUCCESS, "failed to find entry %u\n", r );
 
+    cr = get_string( hdb, 6, "SELECT * FROM `Media` WHERE `Source` IS NOT NULL");
+    todo_wine ok( !strcmp(cr, patchsource), "Expected \"%s\", got \"%s\"\n", patchsource, cr );
+
+    r = get_integer( hdb, 1, "SELECT * FROM `Media` WHERE `Source` IS NOT NULL");
+    todo_wine ok( r == 100, "Got %u\n", r );
+
+    r = get_integer( hdb, 2, "SELECT * FROM `Media` WHERE `Source` IS NOT NULL");
+    todo_wine ok( r == 10000, "Got %u\n", r );
+
+    r = get_integer( hdb, 1, "SELECT * FROM `Media` WHERE `VolumeLabel`=\'DISK1\'");
+    ok( r == 1, "Got %u\n", r );
+
+    cr = get_string( hdb, 4, "SELECT * FROM `Media` WHERE `Source` IS NOT NULL");
+    ok( !strcmp(cr, "#CAB_msitest"), "Expected \"#CAB_msitest\", got \"%s\"\n", cr );
+
+    r = get_integer( hdb, 8, "SELECT * FROM `File` WHERE `File` = 'patch.txt'");
+    ok( r == 10000, "Got %u\n", r );
+
     MsiCloseHandle( hrec );
     MsiViewClose( hview );
     MsiCloseHandle( hview );
     MsiCloseHandle( hdb );
     MsiCloseHandle( hproduct );
 
+uninstall:
     r = MsiInstallProductA( msifile, "REMOVE=ALL" );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
+cleanup:
     DeleteFileA( msifile );
     DeleteFileA( mspfile );
+    DeleteFileA( "msitest\\patch.txt" );
     RemoveDirectoryA( "msitest" );
 }
 
@@ -1071,6 +1257,11 @@ static void test_patch_registration( void )
         win_skip("required functions not available\n");
         return;
     }
+    if (is_process_limited())
+    {
+        skip("process is limited\n");
+        return;
+    }
 
     CreateDirectoryA( "msitest", NULL );
     create_file( "msitest\\patch.txt", 1000 );
@@ -1081,7 +1272,11 @@ static void test_patch_registration( void )
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
 
     r = MsiInstallProductA( msifile, NULL );
-    ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
+    if (r != ERROR_SUCCESS)
+    {
+        skip("Product installation failed with error code %d\n", r);
+        goto cleanup;
+    }
 
     r = MsiApplyPatchA( mspfile, NULL, INSTALLTYPE_DEFAULT, NULL );
     ok( r == ERROR_SUCCESS || broken( r == ERROR_PATCH_PACKAGE_INVALID ), /* version 2.0 */
@@ -1090,7 +1285,7 @@ static void test_patch_registration( void )
     if (r == ERROR_PATCH_PACKAGE_INVALID)
     {
         win_skip("Windows Installer < 3.0 detected\n");
-        return;
+        goto uninstall;
     }
 
     buffer[0] = 0;
@@ -1098,7 +1293,7 @@ static void test_patch_registration( void )
     r = pMsiGetPatchInfoExA( "{0F96CDC0-4CDF-4304-B283-7B9264889EF7}",
                              "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
                               NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
-                              INSTALLPROPERTY_LOCALPACKAGE, buffer, &size );
+                              INSTALLPROPERTY_LOCALPACKAGEA, buffer, &size );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
     ok( buffer[0], "buffer empty\n" );
 
@@ -1107,7 +1302,7 @@ static void test_patch_registration( void )
     r = pMsiGetPatchInfoExA( "{0F96CDC0-4CDF-4304-B283-7B9264889EF7}",
                              "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
                              NULL, MSIINSTALLCONTEXT_MACHINE,
-                             INSTALLPROPERTY_LOCALPACKAGE, buffer, &size );
+                             INSTALLPROPERTY_LOCALPACKAGEA, buffer, &size );
     ok( r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT, got %u\n", r );
 
     buffer[0] = 0;
@@ -1115,7 +1310,7 @@ static void test_patch_registration( void )
     r = pMsiGetPatchInfoExA( "{0F96CDC0-4CDF-4304-B283-7B9264889EF7}",
                              "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
                              NULL, MSIINSTALLCONTEXT_USERMANAGED,
-                             INSTALLPROPERTY_LOCALPACKAGE, buffer, &size );
+                             INSTALLPROPERTY_LOCALPACKAGEA, buffer, &size );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
     ok( !buffer[0], "got %s\n", buffer );
 
@@ -1135,6 +1330,7 @@ static void test_patch_registration( void )
                            0, patch_code, NULL, NULL, NULL, NULL );
     ok( r == ERROR_NO_MORE_ITEMS, "expected ERROR_NO_MORE_ITEMS, got %u\n", r );
 
+uninstall:
     r = MsiInstallProductA( msifile, "REMOVE=ALL" );
     ok( r == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", r );
 
@@ -1143,11 +1339,13 @@ static void test_patch_registration( void )
     r = pMsiGetPatchInfoExA( "{0F96CDC0-4CDF-4304-B283-7B9264889EF7}",
                              "{913B8D18-FBB6-4CAC-A239-C74C11E3FA74}",
                               NULL, MSIINSTALLCONTEXT_USERUNMANAGED,
-                              INSTALLPROPERTY_LOCALPACKAGE, buffer, &size );
+                              INSTALLPROPERTY_LOCALPACKAGEA, buffer, &size );
     ok( r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT, got %u\n", r );
 
+cleanup:
     DeleteFileA( msifile );
     DeleteFileA( mspfile );
+    DeleteFileA( "msitest\\patch.txt" );
     RemoveDirectoryA( "msitest" );
 }
 
@@ -1159,7 +1357,7 @@ START_TEST(patch)
     init_function_pointers();
 
     GetCurrentDirectoryA( MAX_PATH, prev_path );
-    GetTempPath( MAX_PATH, temp_path );
+    GetTempPathA( MAX_PATH, temp_path );
     SetCurrentDirectoryA( temp_path );
 
     strcpy( CURR_DIR, temp_path );

@@ -20,25 +20,30 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <math.h>
-#include <float.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include <stdarg.h>
+//#include <stdio.h>
+//#include <math.h>
+//#include <float.h>
 
 #define COBJMACROS
 
 #include <wine/test.h>
-#include <windef.h>
-#include <winbase.h>
-#include <winuser.h>
+//#include <windef.h>
+//#include <winbase.h>
+//#include <winuser.h>
 #include <wingdi.h>
-#include <winnls.h>
-#include <winerror.h>
-#include <winnt.h>
-#include <initguid.h>
-#include <wtypes.h>
+//#include <winnls.h>
+//#include <winerror.h>
+//#include <winnt.h>
+//#include <initguid.h>
+//#include <wtypes.h>
+#include <ole2.h>
 #include <olectl.h>
-#include <ocidl.h>
+//#include <ocidl.h>
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
@@ -51,34 +56,33 @@ static HMODULE hOleaut32;
 
 static HRESULT (WINAPI *pOleCreateFontIndirect)(LPFONTDESC,REFIID,LPVOID*);
 
-#define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
+#define EXPECT_HR(hr,hr_exp) \
+    ok(hr == hr_exp, "got 0x%08x, expected 0x%08x\n", hr, hr_exp)
 
 /* Create a font with cySize given by lo_size, hi_size,  */
 /* SetRatio to ratio_logical, ratio_himetric,            */
 /* check that resulting hfont has height hfont_height.   */
 /* Various checks along the way.                         */
-
-static void test_ifont_sizes(LONG lo_size, LONG hi_size,
-	LONG ratio_logical, LONG ratio_himetric,
-	LONG hfont_height, const char * test_name)
+static void test_ifont_size(LONGLONG size, LONG ratio_logical, LONG ratio_himetric,
+                            LONG hfont_height, const char * test_name)
 {
 	FONTDESC fd;
 	LPVOID pvObj = NULL;
 	IFont* ifnt = NULL;
 	HFONT hfont;
-	LOGFONT lf;
+	LOGFONTA lf;
 	CY psize;
 	HRESULT hres;
+        DWORD rtnval;
 
 	fd.cbSizeofstruct = sizeof(FONTDESC);
-	fd.lpstrName      = system_font;
-	S(fd.cySize).Lo   = lo_size;
-	S(fd.cySize).Hi   = hi_size;
+	fd.lpstrName      = arial_font; /* using scalable instead of bitmap font reduces errors due to font realization */
+	fd.cySize.int64   = size;
 	fd.sWeight        = 0;
 	fd.sCharset       = 0;
-	fd.fItalic        = 0;
-	fd.fUnderline     = 0;
-	fd.fStrikethrough = 0;
+        fd.fItalic        = FALSE;
+        fd.fUnderline     = FALSE;
+        fd.fStrikethrough = FALSE;
 
 	/* Create font, test that it worked. */
 	hres = pOleCreateFontIndirect(&fd, &IID_IFont, &pvObj);
@@ -87,32 +91,30 @@ static void test_ifont_sizes(LONG lo_size, LONG hi_size,
 		test_name, hres);
 	ok(pvObj != NULL,"%s: OCFI returns NULL.\n", test_name);
 
-	/* Read back size.  Hi part was ignored. */
+        /* Change the scaling ratio */
+        hres = IFont_SetRatio(ifnt, ratio_logical, ratio_himetric);
+        ok((ratio_logical && ratio_himetric) ? hres == S_OK : hres == E_FAIL,
+           "%s: IFont_SetRatio unexpectedly returned 0x%08x.\n", test_name, hres);
+
+	/* Read back size. */
 	hres = IFont_get_Size(ifnt, &psize);
 	ok(hres == S_OK,"%s: IFont_get_size returns 0x%08x instead of S_OK.\n",
 		test_name, hres);
-	ok(S(psize).Lo == lo_size && S(psize).Hi == 0,
-		"%s: get_Size: Lo=%d, Hi=%d; expected Lo=%d, Hi=0.\n",
-		test_name, S(psize).Lo, S(psize).Hi, lo_size);
 
-	/* Change ratio, check size unchanged.  Standard is 72, 2540. */
-	hres = IFont_SetRatio(ifnt, ratio_logical, ratio_himetric);
-	ok(hres == S_OK,"%s: IFont_SR returns 0x%08x instead of S_OK.\n",
-		test_name, hres);
-	hres = IFont_get_Size(ifnt, &psize);
-	ok(hres == S_OK,"%s: IFont_get_size returns 0x%08x instead of S_OK.\n",
-                test_name, hres);
-	ok(S(psize).Lo == lo_size && S(psize).Hi == 0,
-		"%s: gS after SR: Lo=%d, Hi=%d; expected Lo=%d, Hi=0.\n",
-		test_name, S(psize).Lo, S(psize).Hi, lo_size);
+        /* Check returned size - allow for errors due to rounding & font realization. */
+	ok((psize.int64 - size) < 10000 && (psize.int64 - size) > -10000,
+		"%s: IFont_get_Size: Lo=%d, Hi=%d; expected Lo=%d, Hi=%d.\n",
+		test_name, S(psize).Lo, S(psize).Hi, fd.cySize.Lo, fd.cySize.Hi);
 
-	/* Check hFont size with this ratio.  This tests an important 	*/
-	/* conversion for which MSDN is very wrong.			*/
+	/* Check hFont size. */
 	hres = IFont_get_hFont (ifnt, &hfont);
 	ok(hres == S_OK, "%s: IFont_get_hFont returns 0x%08x instead of S_OK.\n",
 		test_name, hres);
-	hres = GetObject (hfont, sizeof(LOGFONT), &lf);
-	ok(lf.lfHeight == hfont_height,
+	rtnval = GetObjectA(hfont, sizeof(LOGFONTA), &lf);
+        ok(rtnval > 0, "GetObject(hfont) failed\n");
+
+        /* Since font scaling may encounter rounding errors, allow 1 pixel deviation. */
+	ok(abs(lf.lfHeight - hfont_height) <= 1,
 		"%s: hFont has lf.lfHeight=%d, expected %d.\n",
 		test_name, lf.lfHeight, hfont_height);
 
@@ -120,35 +122,103 @@ static void test_ifont_sizes(LONG lo_size, LONG hi_size,
 	IFont_Release(ifnt);
 }
 
+static void test_ifont_sizes(void)
+{
+  /* Test various size operations and conversions. */
+  /* Add more as needed. */
+
+  /* Results of first 2 tests depend on display resolution. */
+  HDC hdc = GetDC(0);
+  LONG dpi = GetDeviceCaps(hdc, LOGPIXELSY); /* expected results depend on display DPI */
+  ReleaseDC(0, hdc);
+  if(dpi == 96) /* normal resolution display */
+  {
+    test_ifont_size(180000, 0, 0, -24, "default");     /* normal font */
+    test_ifont_size(186000, 0, 0, -25, "rounding");    /* test rounding */
+  } else if(dpi == 72) /* low resolution display */
+  {
+    test_ifont_size(180000, 0, 0, -18, "default");     /* normal font */
+    test_ifont_size(186000, 0, 0, -19, "rounding");    /* test rounding */
+  } else if(dpi == 120) /* high resolution display */
+  {
+    test_ifont_size(180000, 0, 0, -30, "default");     /* normal font */
+    test_ifont_size(186000, 0, 0, -31, "rounding");    /* test rounding */
+  } else
+    skip("Skipping resolution dependent font size tests - display resolution is %d\n", dpi);
+
+  /* Next 4 tests specify a scaling ratio, so display resolution is not a factor. */
+    test_ifont_size(180000, 72,  2540, -18, "ratio1");  /* change ratio */
+    test_ifont_size(180000, 144, 2540, -36, "ratio2");  /* another ratio */
+    test_ifont_size(180000, 72,  1270, -36, "ratio3");  /* yet another ratio */
+    test_ifont_size(186000, 72,  2540, -19, "rounding+ratio"); /* test rounding with ratio */
+
+    /* test various combinations of logical == himetric */
+    test_ifont_size(180000, 10, 10, -635, "identical ratio 1");
+    test_ifont_size(240000, 10, 10, -848, "identical ratio 2");
+    test_ifont_size(300000, 10, 10, -1058, "identical ratio 3");
+
+    /* test various combinations of logical and himetric both set to 1 */
+    test_ifont_size(180000, 1, 1, -24, "1:1 ratio 1");
+    test_ifont_size(240000, 1, 1, -32, "1:1 ratio 2");
+    test_ifont_size(300000, 1, 1, -40, "1:1 ratio 3");
+
+    /* test various combinations of logical set to 1 */
+    test_ifont_size(180000, 1, 0, -24, "1:0 ratio 1");
+    test_ifont_size(240000, 1, 0, -32, "1:0 ratio 2");
+    test_ifont_size(300000, 1, 0, -40, "1:0 ratio 3");
+
+    /* test various combinations of himetric set to 1 */
+    test_ifont_size(180000, 0, 1, -24, "0:1 ratio 1");
+    test_ifont_size(240000, 0, 1, -32, "0:1 ratio 2");
+    test_ifont_size(300000, 0, 1, -40, "0:1 ratio 3");
+
+    /* test various combinations of 2:1 logical:himetric */
+    test_ifont_size(180000, 2, 1, -1270, "2:1 ratio 1");
+    test_ifont_size(240000, 2, 1, -1694, "2:1 ratio 2");
+    test_ifont_size(300000, 2, 1, -2117, "2:1 ratio 3");
+
+    /* test various combinations of 1:2 logical:himetric */
+    test_ifont_size(180000, 1, 2, -318, "1:2 ratio 1");
+    test_ifont_size(240000, 1, 2, -424, "1:2 ratio 2");
+    test_ifont_size(300000, 1, 2, -529, "1:2 ratio 3");
+
+    /* test various combinations of logical and himetric both set to 2 */
+    test_ifont_size(180000, 2, 2, -635, "2:2 ratio 1");
+    test_ifont_size(240000, 2, 2, -848, "2:2 ratio 2");
+    test_ifont_size(300000, 2, 2, -1058, "2:2 ratio 3");
+}
+
 static void test_QueryInterface(void)
 {
-        LPVOID pvObj = NULL;
-        HRESULT hres;
-        IFont*  font = NULL;
-        LONG ret;
+    LPVOID pvObj = NULL;
+    HRESULT hr;
+    IFont*  font = NULL;
+    LONG ref;
 
-        hres = pOleCreateFontIndirect(NULL, &IID_IFont, &pvObj);
-        font = pvObj;
+    hr = pOleCreateFontIndirect(NULL, &IID_IFont, NULL);
+    EXPECT_HR(hr, E_POINTER);
 
-        ok(hres == S_OK,"OCFI (NULL,..) does not return 0, but 0x%08x\n",hres);
-        ok(font != NULL,"OCFI (NULL,..) returns NULL, instead of !NULL\n");
+    hr = pOleCreateFontIndirect(NULL, &IID_IFont, &pvObj);
+    font = pvObj;
 
-        pvObj = NULL;
-        hres = IFont_QueryInterface( font, &IID_IFont, &pvObj);
+    EXPECT_HR(hr, S_OK);
+    ok(font != NULL,"OCFI (NULL,..) returns NULL, instead of !NULL\n");
 
-        /* Test if QueryInterface increments ref counter for IFONTs */
-        ret = IFont_AddRef(font);
-        ok(ret == 3 ||
-           broken(ret == 1), /* win95 */
-           "IFont_QI expected ref value 3 but instead got %d\n",ret);
-        IFont_Release(font);
+    pvObj = NULL;
+    hr = IFont_QueryInterface( font, &IID_IFont, &pvObj);
+    EXPECT_HR(hr, S_OK);
 
-        ok(hres == S_OK,"IFont_QI does not return S_OK, but 0x%08x\n", hres);
-        ok(pvObj != NULL,"IFont_QI does return NULL, instead of a ptr\n");
+    /* Test if QueryInterface increments ref counter for IFONTs */
+    ref = IFont_AddRef(font);
+    ok(ref == 3 ||
+       broken(ref == 1), /* win95 */
+           "IFont_QI expected ref value 3 but instead got %d\n", ref);
+    IFont_Release(font);
 
-        /* Original ref and QueryInterface ref both have to be released */
-        IFont_Release(font);
-        IFont_Release(font);
+    ok(pvObj != NULL,"IFont_QI does return NULL, instead of a ptr\n");
+
+    IFont_Release(font);
+    IFont_Release(font);
 }
 
 static void test_type_info(void)
@@ -194,14 +264,11 @@ static void test_type_info(void)
 	IFontDisp_Release(fontdisp);
 }
 
-static HRESULT WINAPI FontEventsDisp_QueryInterface(
-        IFontEventsDisp *iface,
-    /* [in] */ REFIID riid,
-    /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject)
+static HRESULT WINAPI FontEventsDisp_QueryInterface(IFontEventsDisp *iface, REFIID riid, void **ppvObject)
 {
     if (IsEqualIID(riid, &IID_IFontEventsDisp) || IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IDispatch))
     {
-        IUnknown_AddRef(iface);
+        IFontEventsDisp_AddRef(iface);
         *ppvObject = iface;
         return S_OK;
     }
@@ -224,26 +291,48 @@ static ULONG WINAPI FontEventsDisp_Release(
     return 1;
 }
 
-static int fonteventsdisp_invoke_called = 0;
+static HRESULT WINAPI FontEventsDisp_GetTypeInfoCount(IFontEventsDisp *iface, UINT *pctinfo)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI FontEventsDisp_GetTypeInfo(IFontEventsDisp *iface, UINT itinfo, LCID lcid, ITypeInfo **pptinfo)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI FontEventsDisp_GetIDsOfNames(IFontEventsDisp *iface, REFIID riid, LPOLESTR *names, UINT cNames, LCID lcid,
+    DISPID *dispid)
+{
+    ok(0, "unexpected call\n");
+    return E_NOTIMPL;
+}
+
+static int fonteventsdisp_invoke_called;
+static BSTR fonteventsdisp_invoke_arg0;
 
 static HRESULT WINAPI FontEventsDisp_Invoke(
-        IFontEventsDisp __RPC_FAR * iface,
-    /* [in] */ DISPID dispIdMember,
-    /* [in] */ REFIID riid,
-    /* [in] */ LCID lcid,
-    /* [in] */ WORD wFlags,
-    /* [out][in] */ DISPPARAMS __RPC_FAR *pDispParams,
-    /* [out] */ VARIANT __RPC_FAR *pVarResult,
-    /* [out] */ EXCEPINFO __RPC_FAR *pExcepInfo,
-    /* [out] */ UINT __RPC_FAR *puArgErr)
+        IFontEventsDisp *iface,
+        DISPID dispid,
+        REFIID riid,
+        LCID lcid,
+        WORD wFlags,
+        DISPPARAMS *pDispParams,
+        VARIANT *pVarResult,
+        EXCEPINFO *pExcepInfo,
+        UINT *puArgErr)
 {
-    static const WCHAR wszBold[] = {'B','o','l','d',0};
-    ok(wFlags == INVOKE_FUNC, "invoke flags should have been INVOKE_FUNC instead of 0x%x\n", wFlags);
-    ok(dispIdMember == DISPID_FONT_CHANGED, "dispIdMember should have been DISPID_FONT_CHANGED instead of 0x%x\n", dispIdMember);
-    ok(pDispParams->cArgs == 1, "pDispParams->cArgs should have been 1 instead of %d\n", pDispParams->cArgs);
-    ok(V_VT(&pDispParams->rgvarg[0]) == VT_BSTR, "VT of first param should have been VT_BSTR instead of %d\n", V_VT(&pDispParams->rgvarg[0]));
-    ok(!lstrcmpW(V_BSTR(&pDispParams->rgvarg[0]), wszBold), "String in first param should have been \"Bold\"\n");
+    VARIANTARG *arg0 = &pDispParams->rgvarg[0];
 
+    ok(dispid == DISPID_FONT_CHANGED, "expected DISPID_FONT_CHANGED instead of 0x%x\n", dispid);
+    ok(IsEqualGUID(riid, &GUID_NULL), "got riid %s\n", wine_dbgstr_guid(riid));
+    ok(wFlags == INVOKE_FUNC, "expected INVOKE_FUNC instead of 0x%x\n", wFlags);
+    ok(pDispParams->cArgs == 1, "expected arg count 1, got %d\n", pDispParams->cArgs);
+    ok(V_VT(arg0) == VT_BSTR, "expected VT_BSTR, got %d\n", V_VT(arg0));
+
+    fonteventsdisp_invoke_arg0 = SysAllocString(V_BSTR(arg0));
     fonteventsdisp_invoke_called++;
     return S_OK;
 }
@@ -253,16 +342,43 @@ static IFontEventsDispVtbl FontEventsDisp_Vtbl =
     FontEventsDisp_QueryInterface,
     FontEventsDisp_AddRef,
     FontEventsDisp_Release,
-    NULL,
-    NULL,
-    NULL,
+    FontEventsDisp_GetTypeInfoCount,
+    FontEventsDisp_GetTypeInfo,
+    FontEventsDisp_GetIDsOfNames,
     FontEventsDisp_Invoke
 };
 
 static IFontEventsDisp FontEventsDisp = { &FontEventsDisp_Vtbl };
 
+    struct font_dispid
+    {
+        DISPID dispid;
+        const WCHAR *name;
+    };
+
 static void test_font_events_disp(void)
 {
+    static const WCHAR nameW[] = {'N','a','m','e',0};
+    static const WCHAR sizeW[] = {'S','i','z','e',0};
+    static const WCHAR boldW[] = {'B','o','l','d',0};
+    static const WCHAR italicW[] = {'I','t','a','l','i','c',0};
+    static const WCHAR underlineW[] = {'U','n','d','e','r','l','i','n','e',0};
+    static const WCHAR strikeW[] = {'S','t','r','i','k','e','t','h','r','o','u','g','h',0};
+    static const WCHAR weightW[] = {'W','e','i','g','h','t',0};
+    static const WCHAR charsetW[] = {'C','h','a','r','s','e','t',0};
+
+    static const struct font_dispid font_dispids[] =
+    {
+        { DISPID_FONT_NAME, nameW },
+        { DISPID_FONT_SIZE, sizeW },
+        { DISPID_FONT_BOLD, boldW },
+        { DISPID_FONT_ITALIC, italicW },
+        { DISPID_FONT_UNDER, underlineW },
+        { DISPID_FONT_STRIKE, strikeW },
+        { DISPID_FONT_WEIGHT, weightW },
+        { DISPID_FONT_CHARSET, charsetW }
+    };
+
     IFont *pFont;
     IFont *pFont2;
     IConnectionPointContainer *pCPC;
@@ -273,6 +389,7 @@ static void test_font_events_disp(void)
     IFontDisp *pFontDisp;
     DISPPARAMS dispparams;
     VARIANTARG vararg;
+    INT i;
 
     fontdesc.cbSizeofstruct = sizeof(fontdesc);
     fontdesc.lpstrName = MSSansSerif_font;
@@ -284,50 +401,97 @@ static void test_font_events_disp(void)
     fontdesc.fStrikethrough = FALSE;
 
     hr = pOleCreateFontIndirect(&fontdesc, &IID_IFont, (void **)&pFont);
-    ok_ole_success(hr, "OleCreateFontIndirect");
+    EXPECT_HR(hr, S_OK);
 
     hr = IFont_QueryInterface(pFont, &IID_IConnectionPointContainer, (void **)&pCPC);
-    ok_ole_success(hr, "IFont_QueryInterface");
+    EXPECT_HR(hr, S_OK);
 
     hr = IConnectionPointContainer_FindConnectionPoint(pCPC, &IID_IFontEventsDisp, &pCP);
-    ok_ole_success(hr, "IConnectionPointContainer_FindConnectionPoint");
+    EXPECT_HR(hr, S_OK);
     IConnectionPointContainer_Release(pCPC);
 
     hr = IConnectionPoint_Advise(pCP, (IUnknown *)&FontEventsDisp, &dwCookie);
-    ok_ole_success(hr, "IConnectionPoint_Advise");
+    EXPECT_HR(hr, S_OK);
     IConnectionPoint_Release(pCP);
 
+    fonteventsdisp_invoke_called = 0;
+    fonteventsdisp_invoke_arg0 = NULL;
     hr = IFont_put_Bold(pFont, TRUE);
-    ok_ole_success(hr, "IFont_put_Bold");
+    EXPECT_HR(hr, S_OK);
 
     ok(fonteventsdisp_invoke_called == 1, "IFontEventDisp::Invoke wasn't called once\n");
+    SysFreeString(fonteventsdisp_invoke_arg0);
 
     hr = IFont_QueryInterface(pFont, &IID_IFontDisp, (void **)&pFontDisp);
-    ok_ole_success(hr, "IFont_QueryInterface");
+    EXPECT_HR(hr, S_OK);
 
-    V_VT(&vararg) = VT_BOOL;
-    V_BOOL(&vararg) = VARIANT_FALSE;
-    dispparams.cNamedArgs = 0;
-    dispparams.rgdispidNamedArgs = NULL;
-    dispparams.cArgs = 1;
-    dispparams.rgvarg = &vararg;
-    hr = IFontDisp_Invoke(pFontDisp, DISPID_FONT_BOLD, &IID_NULL, 0, DISPATCH_PROPERTYPUT, &dispparams, NULL, NULL, NULL);
+    for (i = 0; i < sizeof(font_dispids)/sizeof(font_dispids[0]); i++)
+    {
+        switch (font_dispids[i].dispid)
+        {
+        case DISPID_FONT_NAME:
+        {
+            static const WCHAR arialW[] = {'A','r','i','a','l',0};
+            V_VT(&vararg) = VT_BSTR;
+            V_BSTR(&vararg) = SysAllocString(arialW);
+            break;
+        }
+        case DISPID_FONT_SIZE:
+            V_VT(&vararg) = VT_CY;
+            S(V_CY(&vararg)).Lo = 25;
+            S(V_CY(&vararg)).Hi = 0;
+            break;
+        case DISPID_FONT_BOLD:
+            V_VT(&vararg) = VT_BOOL;
+            V_BOOL(&vararg) = VARIANT_FALSE;
+            break;
+        case DISPID_FONT_ITALIC:
+        case DISPID_FONT_UNDER:
+        case DISPID_FONT_STRIKE:
+            V_VT(&vararg) = VT_BOOL;
+            V_BOOL(&vararg) = VARIANT_TRUE;
+            break;
+        case DISPID_FONT_WEIGHT:
+            V_VT(&vararg) = VT_I2;
+            V_I2(&vararg) = FW_BLACK;
+            break;
+        case DISPID_FONT_CHARSET:
+            V_VT(&vararg) = VT_I2;
+            V_I2(&vararg) = 1;
+            break;
+        default:
+            ;
+        }
+
+        dispparams.cNamedArgs = 0;
+        dispparams.rgdispidNamedArgs = NULL;
+        dispparams.cArgs = 1;
+        dispparams.rgvarg = &vararg;
+        fonteventsdisp_invoke_called = 0;
+        hr = IFontDisp_Invoke(pFontDisp, font_dispids[i].dispid, &IID_NULL, 0, DISPATCH_PROPERTYPUT, &dispparams, NULL, NULL, NULL);
+        ok(hr == S_OK, "dispid=%d, got 0x%08x\n", font_dispids[i].dispid, hr);
+        ok(fonteventsdisp_invoke_called == 1, "dispid=%d, DISPID_FONT_CHANGED not called, got %d\n", font_dispids[i].dispid,
+            fonteventsdisp_invoke_called);
+        if (hr == S_OK)
+        {
+            ok(!lstrcmpW(font_dispids[i].name, fonteventsdisp_invoke_arg0), "dispid=%d, got %s, expected %s\n",
+                font_dispids[i].dispid, wine_dbgstr_w(fonteventsdisp_invoke_arg0), wine_dbgstr_w(font_dispids[i].name));
+            SysFreeString(fonteventsdisp_invoke_arg0);
+        }
+        VariantClear(&vararg);
+    }
 
     IFontDisp_Release(pFontDisp);
 
-    ok(fonteventsdisp_invoke_called == 2, "IFontEventDisp::Invoke was called %d times instead of twice\n",
-        fonteventsdisp_invoke_called);
-
     hr = IFont_Clone(pFont, &pFont2);
-    ok_ole_success(hr, "IFont_Clone");
+    EXPECT_HR(hr, S_OK);
     IFont_Release(pFont);
 
-    hr = IFont_put_Bold(pFont2, FALSE);
-    ok_ole_success(hr, "IFont_put_Bold");
-
     /* this test shows that the notification routine isn't called again */
-    ok(fonteventsdisp_invoke_called == 2, "IFontEventDisp::Invoke was called %d times instead of twice\n",
-        fonteventsdisp_invoke_called);
+    fonteventsdisp_invoke_called = 0;
+    hr = IFont_put_Bold(pFont2, FALSE);
+    EXPECT_HR(hr, S_OK);
+    ok(fonteventsdisp_invoke_called == 0, "got %d\n", fonteventsdisp_invoke_called);
 
     IFont_Release(pFont2);
 }
@@ -450,7 +614,7 @@ static void test_Invoke(void)
     VARIANT varresult;
 
     hr = pOleCreateFontIndirect(NULL, &IID_IFontDisp, (void **)&fontdisp);
-    ok_ole_success(hr, "OleCreateFontIndirect");
+    EXPECT_HR(hr, S_OK);
 
     V_VT(&vararg) = VT_BOOL;
     V_BOOL(&vararg) = VARIANT_FALSE;
@@ -459,32 +623,32 @@ static void test_Invoke(void)
     dispparams.cArgs = 1;
     dispparams.rgvarg = &vararg;
     hr = IFontDisp_Invoke(fontdisp, DISPID_FONT_BOLD, &IID_IFontDisp, 0, DISPATCH_PROPERTYPUT, &dispparams, NULL, NULL, NULL);
-    ok(hr == DISP_E_UNKNOWNINTERFACE, "IFontDisp_Invoke should have returned DISP_E_UNKNOWNINTERFACE instead of 0x%08x\n", hr);
+    EXPECT_HR(hr, DISP_E_UNKNOWNINTERFACE);
 
     dispparams.cArgs = 0;
     dispparams.rgvarg = NULL;
     hr = IFontDisp_Invoke(fontdisp, DISPID_FONT_BOLD, &IID_NULL, 0, DISPATCH_PROPERTYPUT, &dispparams, NULL, NULL, NULL);
-    ok(hr == DISP_E_BADPARAMCOUNT, "IFontDisp_Invoke should have returned DISP_E_BADPARAMCOUNT instead of 0x%08x\n", hr);
+    EXPECT_HR(hr, DISP_E_BADPARAMCOUNT);
 
     hr = IFontDisp_Invoke(fontdisp, DISPID_FONT_BOLD, &IID_NULL, 0, DISPATCH_PROPERTYPUT, NULL, NULL, NULL, NULL);
-    ok(hr == DISP_E_PARAMNOTOPTIONAL, "IFontDisp_Invoke should have returned DISP_E_PARAMNOTOPTIONAL instead of 0x%08x\n", hr);
+    EXPECT_HR(hr, DISP_E_PARAMNOTOPTIONAL);
 
     hr = IFontDisp_Invoke(fontdisp, DISPID_FONT_BOLD, &IID_NULL, 0, DISPATCH_PROPERTYGET, NULL, NULL, NULL, NULL);
-    ok(hr == DISP_E_PARAMNOTOPTIONAL, "IFontDisp_Invoke should have returned DISP_E_PARAMNOTOPTIONAL instead of 0x%08x\n", hr);
+    EXPECT_HR(hr, DISP_E_PARAMNOTOPTIONAL);
 
     hr = IFontDisp_Invoke(fontdisp, DISPID_FONT_BOLD, &IID_NULL, 0, DISPATCH_PROPERTYGET, NULL, &varresult, NULL, NULL);
-    ok_ole_success(hr, "IFontDisp_Invoke");
+    EXPECT_HR(hr, S_OK);
 
     hr = IFontDisp_Invoke(fontdisp, DISPID_FONT_BOLD, &IID_NULL, 0, DISPATCH_METHOD, NULL, &varresult, NULL, NULL);
-    ok(hr == DISP_E_MEMBERNOTFOUND, "IFontDisp_Invoke should have returned DISP_E_MEMBERNOTFOUND instead of 0x%08x\n", hr);
+    EXPECT_HR(hr, DISP_E_MEMBERNOTFOUND);
 
     hr = IFontDisp_Invoke(fontdisp, 0xdeadbeef, &IID_NULL, 0, DISPATCH_PROPERTYGET, NULL, &varresult, NULL, NULL);
-    ok(hr == DISP_E_MEMBERNOTFOUND, "IFontDisp_Invoke should have returned DISP_E_MEMBERNOTFOUND instead of 0x%08x\n", hr);
+    EXPECT_HR(hr, DISP_E_MEMBERNOTFOUND);
 
     dispparams.cArgs = 1;
     dispparams.rgvarg = &vararg;
     hr = IFontDisp_Invoke(fontdisp, DISPID_FONT_BOLD, &IID_NULL, 0, DISPATCH_PROPERTYGET, &dispparams, &varresult, NULL, NULL);
-    ok_ole_success(hr, "IFontDisp_Invoke");
+    EXPECT_HR(hr, S_OK);
 
     IFontDisp_Release(fontdisp);
 }
@@ -503,9 +667,9 @@ static void test_IsEqual(void)
     S(fd.cySize).Hi   = 100;
     fd.sWeight        = 0;
     fd.sCharset       = 0;
-    fd.fItalic        = 0;
-    fd.fUnderline     = 0;
-    fd.fStrikethrough = 0;
+    fd.fItalic        = FALSE;
+    fd.fUnderline     = FALSE;
+    fd.fStrikethrough = FALSE;
 
     /* Create font */
     pOleCreateFontIndirect(&fd, &IID_IFont, (void **)&ifnt);
@@ -568,30 +732,30 @@ static void test_IsEqual(void)
     IFont_Release(ifnt2);
 
     /* Test italic setting */
-    fd.fItalic = 1;
+    fd.fItalic = TRUE;
     pOleCreateFontIndirect(&fd, &IID_IFont, (void **)&ifnt2);
     hres = IFont_IsEqual(ifnt,ifnt2);
     ok(hres == S_FALSE,
         "IFont_IsEqual: (Italic) Expected S_FALSE but got 0x%08x\n",hres);
-    fd.fItalic = 0;
+    fd.fItalic = FALSE;
     IFont_Release(ifnt2);
 
     /* Test underline setting */
-    fd.fUnderline = 1;
+    fd.fUnderline = TRUE;
     pOleCreateFontIndirect(&fd, &IID_IFont, (void **)&ifnt2);
     hres = IFont_IsEqual(ifnt,ifnt2);
     ok(hres == S_FALSE,
         "IFont_IsEqual: (Underline) Expected S_FALSE but got 0x%08x\n",hres);
-    fd.fUnderline = 0;
+    fd.fUnderline = FALSE;
     IFont_Release(ifnt2);
 
     /* Test strikethrough setting */
-    fd.fStrikethrough = 1;
+    fd.fStrikethrough = TRUE;
     pOleCreateFontIndirect(&fd, &IID_IFont, (void **)&ifnt2);
     hres = IFont_IsEqual(ifnt,ifnt2);
     ok(hres == S_FALSE,
         "IFont_IsEqual: (Strikethrough) Expected S_FALSE but got 0x%08x\n",hres);
-    fd.fStrikethrough = 0;
+    fd.fStrikethrough = FALSE;
     IFont_Release(ifnt2);
 
     /* Free IFont. */
@@ -616,9 +780,9 @@ static void test_ReleaseHfont(void)
     S(fd.cySize).Hi   = 100;
     fd.sWeight        = 0;
     fd.sCharset       = 0;
-    fd.fItalic        = 0;
-    fd.fUnderline     = 0;
-    fd.fStrikethrough = 0;
+    fd.fItalic        = FALSE;
+    fd.fUnderline     = FALSE;
+    fd.fStrikethrough = FALSE;
 
     /* Create HFONTs and IFONTs */
     pOleCreateFontIndirect(&fd, &IID_IFont, &pvObj1);
@@ -686,9 +850,9 @@ static void test_AddRefHfont(void)
     S(fd.cySize).Hi   = 100;
     fd.sWeight        = 0;
     fd.sCharset       = 0;
-    fd.fItalic        = 0;
-    fd.fUnderline     = 0;
-    fd.fStrikethrough = 0;
+    fd.fItalic        = FALSE;
+    fd.fUnderline     = FALSE;
+    fd.fStrikethrough = FALSE;
 
     /* Create HFONTs and IFONTs */
     pOleCreateFontIndirect(&fd, &IID_IFont, (void **)&ifnt1);
@@ -777,7 +941,7 @@ static void test_AddRefHfont(void)
     IFont_Release(ifnt2);
 
     /* Need to make a new IFONT for testing */
-    fd.fUnderline = 1;
+    fd.fUnderline = TRUE;
     pOleCreateFontIndirect(&fd, &IID_IFont, (void **)&ifnt3);
     IFont_get_hFont(ifnt3,&hfnt3);
 
@@ -812,27 +976,19 @@ static void test_returns(void)
     fontdesc.fStrikethrough = FALSE;
 
     hr = pOleCreateFontIndirect(&fontdesc, &IID_IFont, (void **)&pFont);
-    ok_ole_success(hr, "OleCreateFontIndirect");
+    EXPECT_HR(hr, S_OK);
 
     hr = IFont_put_Name(pFont, NULL);
-    ok(hr == CTL_E_INVALIDPROPERTYVALUE,
-       "IFont::put_Name: Expected CTL_E_INVALIDPROPERTYVALUE got 0x%08x\n",
-       hr);
+    EXPECT_HR(hr, CTL_E_INVALIDPROPERTYVALUE);
 
     hr = IFont_get_Name(pFont, NULL);
-    ok(hr == E_POINTER,
-       "IFont::get_Name: Expected E_POINTER got 0x%08x\n",
-       hr);
+    EXPECT_HR(hr, E_POINTER);
 
     hr = IFont_get_Size(pFont, NULL);
-    ok(hr == E_POINTER,
-       "IFont::get_Size: Expected E_POINTER got 0x%08x\n",
-       hr);
+    EXPECT_HR(hr, E_POINTER);
 
     hr = IFont_get_Bold(pFont, NULL);
-    ok(hr == E_POINTER,
-       "IFont::get_Bold: Expected E_POINTER got 0x%08x\n",
-       hr);
+    EXPECT_HR(hr, E_POINTER);
 
     IFont_Release(pFont);
 }
@@ -857,10 +1013,10 @@ static void test_hfont_lifetime(void)
     fontdesc.fStrikethrough = FALSE;
 
     hr = pOleCreateFontIndirect(&fontdesc, &IID_IFont, (void **)&font);
-    ok_ole_success(hr, "OleCreateFontIndirect");
+    EXPECT_HR(hr, S_OK);
 
     hr = IFont_get_hFont(font, &hfont);
-    ok_ole_success(hr, "get_hFont");
+    EXPECT_HR(hr, S_OK);
 
     /* show that if the font is updated the old hfont is deleted when the
        new font is realized */
@@ -874,14 +1030,14 @@ static void test_hfont_lifetime(void)
         ok(obj_type == OBJ_FONT, "got obj type %d\n", obj_type);
 
         hr = IFont_put_Size(font, size);
-        ok_ole_success(hr, "put_Size");
+        EXPECT_HR(hr, S_OK);
 
         /* put_Size doesn't cause the new font to be realized */
         obj_type = GetObjectType(last_hfont);
         ok(obj_type == OBJ_FONT, "got obj type %d\n", obj_type);
 
         hr = IFont_get_hFont(font, &hfont);
-        ok_ole_success(hr, "get_hFont");
+        EXPECT_HR(hr, S_OK);
 
         obj_type = GetObjectType(last_hfont);
         ok(obj_type == 0, "%d: got obj type %d\n", i, obj_type);
@@ -891,20 +1047,19 @@ static void test_hfont_lifetime(void)
        until the font object is released */
     for(i = 0; i < 100; i++)
     {
-
         size.int64 = (i + 10) * 20000;
 
         obj_type = GetObjectType(hfont);
         ok(obj_type == OBJ_FONT, "got obj type %d\n", obj_type);
 
         hr = IFont_put_Size(font, size);
-        ok_ole_success(hr, "put_Size");
+        EXPECT_HR(hr, S_OK);
 
         hr = IFont_get_hFont(font, &hfont);
-        ok_ole_success(hr, "get_hFont");
+        EXPECT_HR(hr, S_OK);
 
         hr = IFont_AddRefHfont(font, hfont);
-        ok_ole_success(hr, "AddRefHfont");
+        EXPECT_HR(hr, S_OK);
 
         if(i == 0) first_hfont = hfont;
         obj_type = GetObjectType(first_hfont);
@@ -920,10 +1075,10 @@ static void test_hfont_lifetime(void)
        through re-realization */
 
     hr = pOleCreateFontIndirect(&fontdesc, &IID_IFont, (void **)&font);
-    ok_ole_success(hr, "OleCreateFontIndirect");
+    EXPECT_HR(hr, S_OK);
 
     hr = IFont_get_hFont(font, &hfont);
-    ok_ole_success(hr, "get_hFont");
+    EXPECT_HR(hr, S_OK);
 
     for(i = 0; i < 100; i++)
     {
@@ -935,20 +1090,20 @@ static void test_hfont_lifetime(void)
         ok(obj_type == OBJ_FONT, "got obj type %d\n", obj_type);
 
         hr = IFont_put_Size(font, size);
-        ok_ole_success(hr, "put_Size");
+        EXPECT_HR(hr, S_OK);
 
         /* put_Size doesn't cause the new font to be realized */
         obj_type = GetObjectType(last_hfont);
         ok(obj_type == OBJ_FONT, "got obj type %d\n", obj_type);
 
         hr = IFont_get_hFont(font, &hfont);
-        ok_ole_success(hr, "get_hFont");
+        EXPECT_HR(hr, S_OK);
 
         hr = IFont_AddRefHfont(font, hfont);
-        ok_ole_success(hr, "AddRefHfont");
+        EXPECT_HR(hr, S_OK);
 
         hr = IFont_ReleaseHfont(font, hfont);
-        ok_ole_success(hr, "ReleaseHfont");
+        EXPECT_HR(hr, S_OK);
 
         obj_type = GetObjectType(last_hfont);
         ok(obj_type == 0, "%d: got obj type %d\n", i, obj_type);
@@ -965,13 +1120,13 @@ static void test_hfont_lifetime(void)
         ok(obj_type == OBJ_FONT, "got obj type %d\n", obj_type);
 
         hr = IFont_put_Size(font, size);
-        ok_ole_success(hr, "put_Size");
+        EXPECT_HR(hr, S_OK);
 
         hr = IFont_get_hFont(font, &hfont);
-        ok_ole_success(hr, "get_hFont");
+        EXPECT_HR(hr, S_OK);
 
         hr = IFont_ReleaseHfont(font, hfont);
-        ok_ole_success(hr, "ReleaseHfont");
+        EXPECT_HR(hr, S_OK);
 
         if(i == 0) first_hfont = hfont;
         obj_type = GetObjectType(first_hfont);
@@ -988,23 +1143,23 @@ static void test_hfont_lifetime(void)
        that includes internal and external references */
 
     hr = pOleCreateFontIndirect(&fontdesc, &IID_IFont, (void **)&font);
-    ok_ole_success(hr, "OleCreateFontIndirect");
+    EXPECT_HR(hr, S_OK);
     hr = pOleCreateFontIndirect(&fontdesc, &IID_IFont, (void **)&font2);
-    ok_ole_success(hr, "OleCreateFontIndirect");
+    EXPECT_HR(hr, S_OK);
 
     hr = IFont_get_hFont(font, &hfont);
-    ok_ole_success(hr, "get_hFont");
+    EXPECT_HR(hr, S_OK);
     hr = IFont_get_hFont(font2, &first_hfont);
-    ok_ole_success(hr, "get_hFont");
+    EXPECT_HR(hr, S_OK);
 todo_wine
     ok(hfont == first_hfont, "fonts differ\n");
     hr = IFont_ReleaseHfont(font, hfont);
-    ok(hr == S_OK, "got %08x\n", hr);
+    EXPECT_HR(hr, S_OK);
     hr = IFont_ReleaseHfont(font, hfont);
 todo_wine
-    ok(hr == S_OK, "got %08x\n", hr);
+    EXPECT_HR(hr, S_OK);
     hr = IFont_ReleaseHfont(font, hfont);
-    ok(hr == S_FALSE, "got %08x\n", hr);
+    EXPECT_HR(hr, S_FALSE);
 
     obj_type = GetObjectType(hfont);
     ok(obj_type == OBJ_FONT, "got obj type %d\n", obj_type);
@@ -1041,10 +1196,10 @@ static void test_realization(void)
     fontdesc.fStrikethrough = FALSE;
 
     hr = pOleCreateFontIndirect(&fontdesc, &IID_IFont, (void **)&font);
-    ok_ole_success(hr, "OleCreateFontIndirect");
+    EXPECT_HR(hr, S_OK);
 
     hr = IFont_get_Charset(font, &cs);
-    ok_ole_success(hr, "get_Charset");
+    EXPECT_HR(hr, S_OK);
     ok(cs == ANSI_CHARSET, "got charset %d\n", cs);
 
     IFont_Release(font);
@@ -1054,62 +1209,101 @@ static void test_realization(void)
     fontdesc.lpstrName = arial_font;
 
     hr = pOleCreateFontIndirect(&fontdesc, &IID_IFont, (void **)&font);
-    ok_ole_success(hr, "OleCreateFontIndirect");
+    EXPECT_HR(hr, S_OK);
 
     hr = IFont_get_Charset(font, &cs);
-    ok_ole_success(hr, "get_Charset");
+    EXPECT_HR(hr, S_OK);
     ok(cs == ANSI_CHARSET, "got charset %d\n", cs);
 
     name = SysAllocString(marlett_font);
     hr = IFont_put_Name(font, name);
-    ok_ole_success(hr, "put_Name");
+    EXPECT_HR(hr, S_OK);
     SysFreeString(name);
 
     hr = IFont_get_Name(font, &name);
-    ok_ole_success(hr, "get_Name");
+    EXPECT_HR(hr, S_OK);
     ok(!lstrcmpiW(name, marlett_font), "got name %s\n", wine_dbgstr_w(name));
     SysFreeString(name);
 
     hr = IFont_get_Charset(font, &cs);
-    ok_ole_success(hr, "get_Charset");
+    EXPECT_HR(hr, S_OK);
     ok(cs == SYMBOL_CHARSET, "got charset %d\n", cs);
 
     IFont_Release(font);
 }
 
+static void test_OleCreateFontIndirect(void)
+{
+    FONTDESC fontdesc;
+    IUnknown *unk, *unk2;
+    IFont *font;
+    HRESULT hr;
+
+    fontdesc.cbSizeofstruct = sizeof(fontdesc);
+    fontdesc.lpstrName = arial_font;
+    fontdesc.cySize.int64 = 12 * 10000; /* 12 pt */
+    fontdesc.sWeight = FW_NORMAL;
+    fontdesc.sCharset = ANSI_CHARSET;
+    fontdesc.fItalic = FALSE;
+    fontdesc.fUnderline = FALSE;
+    fontdesc.fStrikethrough = FALSE;
+
+    hr = pOleCreateFontIndirect(&fontdesc, &IID_IFont, (void**)&font);
+    EXPECT_HR(hr, S_OK);
+    IFont_Release(font);
+
+    /* play with cbSizeofstruct value */
+    fontdesc.cbSizeofstruct = sizeof(fontdesc)-1;
+    hr = pOleCreateFontIndirect(&fontdesc, &IID_IFont, (void**)&font);
+    EXPECT_HR(hr, S_OK);
+    IFont_Release(font);
+
+    fontdesc.cbSizeofstruct = sizeof(fontdesc)+1;
+    hr = pOleCreateFontIndirect(&fontdesc, &IID_IFont, (void**)&font);
+    EXPECT_HR(hr, S_OK);
+    IFont_Release(font);
+
+    fontdesc.cbSizeofstruct = 0;
+    hr = pOleCreateFontIndirect(&fontdesc, &IID_IFont, (void**)&font);
+    EXPECT_HR(hr, S_OK);
+    IFont_Release(font);
+
+    hr = OleInitialize(NULL);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = CoGetClassObject(&CLSID_StdFont, CLSCTX_INPROC_SERVER, NULL, &IID_IClassFactory, (void**)&unk);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    hr = IUnknown_QueryInterface(unk, &IID_IUnknown, (void**)&unk2);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    IUnknown_Release(unk);
+    IUnknown_Release(unk2);
+
+    OleUninitialize();
+}
+
 START_TEST(olefont)
 {
-	hOleaut32 = GetModuleHandleA("oleaut32.dll");
-	pOleCreateFontIndirect = (void*)GetProcAddress(hOleaut32, "OleCreateFontIndirect");
-	if (!pOleCreateFontIndirect)
-	{
-	    win_skip("OleCreateFontIndirect not available\n");
-	    return;
-	}
+    hOleaut32 = GetModuleHandleA("oleaut32.dll");
+    pOleCreateFontIndirect = (void*)GetProcAddress(hOleaut32, "OleCreateFontIndirect");
+    if (!pOleCreateFontIndirect)
+    {
+        win_skip("OleCreateFontIndirect not available\n");
+        return;
+    }
 
-	test_QueryInterface();
-	test_type_info();
-
-	/* Test various size operations and conversions. */
-	/* Add more as needed. */
-	if (0) /* FIXME: failing tests */
-	{
-	    test_ifont_sizes(180000, 0, 72, 2540, -18, "default");
-	    test_ifont_sizes(180000, 0, 144, 2540, -36, "ratio1");		/* change ratio */
-	    test_ifont_sizes(180000, 0, 72, 1270, -36, "ratio2");		/* 2nd part of ratio */
-
-	    /* These depend on details of how IFont rounds sizes internally. */
-	    test_ifont_sizes(0, 0, 72, 2540, 0, "zero size");          /* zero size */
-	    test_ifont_sizes(186000, 0, 72, 2540, -19, "rounding");   /* test rounding */
-	}
-
-	test_font_events_disp();
-	test_GetIDsOfNames();
-	test_Invoke();
-	test_IsEqual();
-	test_ReleaseHfont();
-	test_AddRefHfont();
-	test_returns();
-        test_hfont_lifetime();
-        test_realization();
+    test_QueryInterface();
+    test_type_info();
+    test_ifont_sizes();
+    test_font_events_disp();
+    test_GetIDsOfNames();
+    test_Invoke();
+    test_IsEqual();
+    test_ReleaseHfont();
+    test_AddRefHfont();
+    test_returns();
+    test_hfont_lifetime();
+    test_realization();
+    test_OleCreateFontIndirect();
 }

@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * DESCRIPTION: Simple LPC Client
  * PROGRAMMER:  David Welch
  */

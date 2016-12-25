@@ -5,9 +5,10 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <apitest.h>
+
+#include <wingdi.h>
+#include <winuser.h>
 
 #define TEST(x) ok(x, #x"\n")
 
@@ -26,21 +27,21 @@ void Test_SetSysColors()
 		nElements[i] = i;
 		crOldColors[i] = GetSysColor(i);
 	}
-	
+
 	for (i = 0; i < NUM_SYSCOLORS+1; i++)
 		crColors[i] = RGB(i, 255-i, i*3);
 	nElements[NUM_SYSCOLORS] = nElements[0];
-	
+
 	SetLastError(0xdeadbeef);
 	ok(SetSysColors(-1, nElements, crColors) == FALSE, "Expected FALSE, got TRUE\n");
-	ok(GetLastError() == ERROR_NOACCESS, "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
+	ok(GetLastError() == ERROR_NOACCESS, "Expected ERROR_NOACCESS, got %ld\n", GetLastError());
 	ok(SetSysColors(0, nElements, crColors) == TRUE, "Expected TRUE, got FALSE\n");
 	ok(SetSysColors(0, NULL, crColors) == TRUE, "Expected TRUE, got FALSE\n");
 	ok(SetSysColors(0, nElements, NULL) == TRUE, "Expected TRUE, got FALSE\n");
 	ok(SetSysColors(1, NULL, crColors) == FALSE, "Expected FALSE, got TRUE\n");
-	ok(GetLastError() == ERROR_NOACCESS, "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
+	ok(GetLastError() == ERROR_NOACCESS, "Expected ERROR_NOACCESS, got %ld\n", GetLastError());
 	ok(SetSysColors(1, nElements, NULL) == FALSE, "Expected FALSE, got TRUE\n");
-	ok(GetLastError() == ERROR_NOACCESS, "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
+	ok(GetLastError() == ERROR_NOACCESS, "Expected ERROR_NOACCESS, got %ld\n", GetLastError());
 	ok(SetSysColors(1, nElements, crColors) == TRUE, "Expected TRUE, got FALSE\n");
 	ok(SetSysColors(NUM_SYSCOLORS, nElements, crColors) == TRUE, "Expected TRUE, got FALSE\n");
 	for (i = 0; i < NUM_SYSCOLORS; i++)

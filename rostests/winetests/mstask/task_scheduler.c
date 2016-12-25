@@ -28,6 +28,8 @@
 
 static ITaskScheduler *test_task_scheduler;
 
+static const WCHAR does_not_existW[] = {'\\','\\','d','o','e','s','_','n','o','t','_','e','x','i','s','t',0};
+
 static void test_NewWorkItem(void)
 {
     HRESULT hres;
@@ -102,10 +104,134 @@ static void test_Activate(void)
     return;
 }
 
+static void test_GetTargetComputer(void)
+{
+    HRESULT hres;
+    WCHAR *oldname;
+
+    /* Create TaskScheduler */
+    hres = CoCreateInstance(&CLSID_CTaskScheduler, NULL, CLSCTX_INPROC_SERVER,
+            &IID_ITaskScheduler, (void **) &test_task_scheduler);
+    ok(hres == S_OK, "CTaskScheduler CoCreateInstance failed: %08x\n", hres);
+    if (hres != S_OK)
+    {
+        skip("Failed to create task scheduler.\n");
+        return;
+    }
+
+    if (0)
+    {
+        /* This crashes on w2k */
+        hres = ITaskScheduler_GetTargetComputer(test_task_scheduler, NULL);
+        ok(hres == E_INVALIDARG, "got 0x%x (expected E_INVALIDARG)\n", hres);
+    }
+
+    hres = ITaskScheduler_GetTargetComputer(test_task_scheduler, &oldname);
+    ok((hres == S_OK) && oldname && oldname[0] == '\\' && oldname[1] == '\\' && oldname[2],
+        "got 0x%x and %s (expected S_OK and an unc name)\n", hres, wine_dbgstr_w(oldname));
+
+    CoTaskMemFree(oldname);
+
+    ITaskScheduler_Release(test_task_scheduler);
+    return;
+}
+
+static void test_SetTargetComputer(void)
+{
+    WCHAR buffer[MAX_COMPUTERNAME_LENGTH + 3];  /* extra space for two '\' and a zero */
+    DWORD len = MAX_COMPUTERNAME_LENGTH + 1;    /* extra space for a zero */
+    WCHAR *oldname = NULL;
+    WCHAR *name = NULL;
+    HRESULT hres;
+
+
+    buffer[0] = '\\';
+    buffer[1] = '\\';
+    if (!GetComputerNameW(buffer + 2, &len))
+        return;
+
+    /* Create TaskScheduler */
+    hres = CoCreateInstance(&CLSID_CTaskScheduler, NULL, CLSCTX_INPROC_SERVER,
+            &IID_ITaskScheduler, (void **) &test_task_scheduler);
+    ok(hres == S_OK, "CTaskScheduler CoCreateInstance failed: %08x\n", hres);
+    if (hres != S_OK)
+    {
+        skip("Failed to create task scheduler.  Skipping tests.\n");
+        return;
+    }
+
+    hres = ITaskScheduler_GetTargetComputer(test_task_scheduler, &oldname);
+    ok(hres == S_OK, "got 0x%x and %s (expected S_OK)\n", hres, wine_dbgstr_w(oldname));
+
+    /* NULL is an alias for the local computer */
+    hres = ITaskScheduler_SetTargetComputer(test_task_scheduler, NULL);
+    ok(hres == S_OK, "got 0x%x (expected S_OK)\n", hres);
+    hres = ITaskScheduler_GetTargetComputer(test_task_scheduler, &name);
+    ok((hres == S_OK && !lstrcmpiW(name, buffer)),
+        "got 0x%x with %s (expected S_OK and %s)\n",
+        hres, wine_dbgstr_w(name), wine_dbgstr_w(buffer));
+    CoTaskMemFree(name);
+
+    /* The name must be valid */
+    hres = ITaskScheduler_SetTargetComputer(test_task_scheduler, does_not_existW);
+    ok(hres == HRESULT_FROM_WIN32(ERROR_BAD_NETPATH), "got 0x%x (expected 0x80070035)\n", hres);
+    /* the name of the target computer is unchanged */
+    hres = ITaskScheduler_GetTargetComputer(test_task_scheduler, &name);
+    ok((hres == S_OK && !lstrcmpiW(name, buffer)),
+        "got 0x%x with %s (expected S_OK and %s)\n",
+        hres, wine_dbgstr_w(name), wine_dbgstr_w(buffer));
+    CoTaskMemFree(name);
+
+    /* the two backslashes are optional */
+    hres = ITaskScheduler_SetTargetComputer(test_task_scheduler, oldname + 2);
+    ok(hres == S_OK, "got 0x%x (expected S_OK)\n", hres);
+
+    /* the case is ignored */
+    CharUpperW(buffer);
+    hres = ITaskScheduler_SetTargetComputer(test_task_scheduler, buffer);
+    ok(hres == S_OK, "got 0x%x (expected S_OK)\n", hres);
+    CharLowerW(buffer);
+    hres = ITaskScheduler_SetTargetComputer(test_task_scheduler, buffer);
+    ok(hres == S_OK, "got 0x%x (expected S_OK)\n", hres);
+
+    /* cleanup */
+    hres = ITaskScheduler_SetTargetComputer(test_task_scheduler, oldname);
+    ok(hres == S_OK, "got 0x%x (expected S_OK)\n", hres);
+
+    CoTaskMemFree(oldname);
+    ITaskScheduler_Release(test_task_scheduler);
+    return;
+}
+
+static void test_Enum(void)
+{
+    ITaskScheduler *scheduler;
+    IEnumWorkItems *tasks;
+    HRESULT hr;
+
+    hr = CoCreateInstance(&CLSID_CTaskScheduler, NULL, CLSCTX_INPROC_SERVER,
+            &IID_ITaskScheduler, (void **)&scheduler);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+if (0) { /* crashes on win2k */
+    hr = ITaskScheduler_Enum(scheduler, NULL);
+    ok(hr == E_INVALIDARG, "got 0x%08x\n", hr);
+}
+
+    hr = ITaskScheduler_Enum(scheduler, &tasks);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    IEnumWorkItems_Release(tasks);
+
+    ITaskScheduler_Release(scheduler);
+}
+
 START_TEST(task_scheduler)
 {
     CoInitialize(NULL);
     test_NewWorkItem();
     test_Activate();
+    test_GetTargetComputer();
+    test_SetTargetComputer();
+    test_Enum();
     CoUninitialize();
 }

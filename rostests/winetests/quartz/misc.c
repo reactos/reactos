@@ -69,6 +69,11 @@ static void test_aggregation(const CLSID clsidOuter, const CLSID clsidInner,
     /* for aggregation, we should only be able to request IUnknown */
     hr = CoCreateInstance(&clsidInner, pUnkOuter, CLSCTX_INPROC_SERVER,
                           &iidInner, (LPVOID*)&pUnkInnerFail);
+    if (hr == REGDB_E_CLASSNOTREG)
+    {
+        skip("Class not registered\n");
+        return;
+    }
     ok(hr == E_NOINTERFACE, "CoCreateInstance returned %x\n", hr);
     ok(pUnkInnerFail == NULL, "pUnkInnerFail is not NULL\n");
 
@@ -157,6 +162,19 @@ static void test_aggregation(const CLSID clsidOuter, const CLSID clsidInner,
     } while (refCount);
 }
 
+static void test_null_renderer_aggregations(void)
+{
+    const IID * iids[] = {
+        &IID_IMediaFilter, &IID_IBaseFilter
+    };
+    int i;
+
+    for (i = 0; i < sizeof(iids) / sizeof(iids[0]); i++)
+    {
+        test_aggregation(CLSID_SystemClock, CLSID_NullRenderer, IID_IReferenceClock, *iids[i]);
+    }
+}
+
 static void test_video_renderer_aggregations(void)
 {
     const IID * iids[] = {
@@ -206,6 +224,7 @@ START_TEST(misc)
 {
     CoInitialize(NULL);
 
+    test_null_renderer_aggregations();
     test_video_renderer_aggregations();
     test_filter_graph_aggregations();
     test_filter_mapper_aggregations();

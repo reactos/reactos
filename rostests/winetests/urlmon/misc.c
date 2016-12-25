@@ -16,20 +16,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 #define CONST_VTABLE
 #define NONAMELESSUNION
 
 #include <wine/test.h>
-#include <stdarg.h>
-#include <stddef.h>
+//#include <stdarg.h>
+//#include <stddef.h>
+#include <stdio.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "ole2.h"
-#include "urlmon.h"
+//#include "windef.h"
+//#include "winbase.h"
+#include <winreg.h>
+#include <winnls.h>
+#include <ole2.h>
+//#include "urlmon.h"
 
-#include "initguid.h"
+#include <initguid.h>
 
 DEFINE_GUID(CLSID_AboutProtocol, 0x3050F406, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 
@@ -69,6 +76,7 @@ static HRESULT (WINAPI *pCoInternetGetSession)(DWORD, IInternetSession **, DWORD
 static HRESULT (WINAPI *pCoInternetParseUrl)(LPCWSTR, PARSEACTION, DWORD, LPWSTR, DWORD, DWORD *, DWORD);
 static HRESULT (WINAPI *pCoInternetQueryInfo)(LPCWSTR, QUERYOPTION, DWORD, LPVOID, DWORD, DWORD *, DWORD);
 static HRESULT (WINAPI *pCopyStgMedium)(const STGMEDIUM *, STGMEDIUM *);
+static HRESULT (WINAPI *pCopyBindInfo)(const BINDINFO *, BINDINFO *);
 static HRESULT (WINAPI *pFindMimeFromData)(LPBC, LPCWSTR, LPVOID, DWORD, LPCWSTR,
                         DWORD, LPWSTR*, DWORD);
 static HRESULT (WINAPI *pObtainUserAgentString)(DWORD, LPSTR, DWORD*);
@@ -78,6 +86,33 @@ static HRESULT (WINAPI *pCompareSecurityIds)(BYTE*,DWORD,BYTE*,DWORD,DWORD);
 static HRESULT (WINAPI *pCoInternetIsFeatureEnabled)(INTERNETFEATURELIST,DWORD);
 static HRESULT (WINAPI *pCoInternetSetFeatureEnabled)(INTERNETFEATURELIST,DWORD,BOOL);
 static HRESULT (WINAPI *pIEInstallScope)(DWORD*);
+
+static int strcmp_wa(const WCHAR *strw, const char *stra)
+{
+    WCHAR buf[512];
+    MultiByteToWideChar(CP_ACP, 0, stra, -1, buf, sizeof(buf)/sizeof(WCHAR));
+    return lstrcmpW(strw, buf);
+}
+
+static void heap_free(void *mem)
+{
+    HeapFree(GetProcessHeap(), 0, mem);
+}
+
+static WCHAR *a2w(const char *str)
+{
+    WCHAR *ret;
+    int len;
+
+    if(!str)
+        return NULL;
+
+    len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+    ret = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
+
+    return ret;
+}
 
 static void test_CreateFormatEnum(void)
 {
@@ -255,7 +290,6 @@ static void test_RegisterFormatEnumerator(void)
     IEnumFORMATETC_Release(format);
     IBindCtx_Release(bctx);
 }
-
 static const WCHAR url1[] = {'r','e','s',':','/','/','m','s','h','t','m','l','.','d','l','l',
         '/','b','l','a','n','k','.','h','t','m',0};
 static const WCHAR url2[] = {'i','n','d','e','x','.','h','t','m',0};
@@ -271,9 +305,7 @@ static const WCHAR url8[] = {'t','e','s','t',':','1','2','3','a','b','c',0};
 static const WCHAR url9[] =
     {'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q','.','o','r','g',
      '/','s','i','t','e','/','a','b','o','u','t',0};
-static const WCHAR url10[] = {'f','i','l','e',':','/','/','s','o','m','e','%','2','0','f','i','l','e',
-        '.','j','p','g',0};
-static const WCHAR url11[] = {'h','t','t','p',':','/','/','g','o','o','g','l','e','.','*','.',
+static const WCHAR url10[] = {'h','t','t','p',':','/','/','g','o','o','g','l','e','.','*','.',
         'c','o','m',0};
 static const WCHAR url4e[] = {'f','i','l','e',':','s','o','m','e',' ','f','i','l','e',
         '.','j','p','g',0};
@@ -314,7 +346,7 @@ static const struct parse_test parse_tests[] = {
     {url4, E_FAIL, url4e, S_OK, path4,        wszFile, wszEmpty, S_OK, NULL, E_FAIL},
     {url5, E_FAIL, url5,  E_INVALIDARG, NULL, wszHttp, wszWineHQ, S_OK, wszHttpWineHQ, S_OK},
     {url6, S_OK,   url6,  E_INVALIDARG, NULL, wszAbout, NULL, E_FAIL, NULL, E_FAIL},
-    {url11, E_FAIL, url11, E_INVALIDARG,        NULL, wszHttp, wszGoogle, S_OK, wszHttpGoogle, S_OK}
+    {url10, E_FAIL, url10, E_INVALIDARG,NULL, wszHttp, wszGoogle, S_OK, wszHttpGoogle, S_OK}
 };
 
 static void test_CoInternetParseUrl(void)
@@ -436,45 +468,23 @@ static void test_CoInternetQueryInfo(void)
     }
 }
 
-static const WCHAR mimeTextHtml[] = {'t','e','x','t','/','h','t','m','l',0};
-static const WCHAR mimeTextPlain[] = {'t','e','x','t','/','p','l','a','i','n',0};
-static const WCHAR mimeTextRichtext[] = {'t','e','x','t','/','r','i','c','h','t','e','x','t',0};
-static const WCHAR mimeAppOctetStream[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-    'o','c','t','e','t','-','s','t','r','e','a','m',0};
-static const WCHAR mimeImagePjpeg[] = {'i','m','a','g','e','/','p','j','p','e','g',0};
-static const WCHAR mimeImageGif[] = {'i','m','a','g','e','/','g','i','f',0};
-static const WCHAR mimeImageBmp[] = {'i','m','a','g','e','/','b','m','p',0};
-static const WCHAR mimeImageXPng[] = {'i','m','a','g','e','/','x','-','p','n','g',0};
-static const WCHAR mimeImageTiff[] = {'i','m','a','g','e','/','t','i','f','f',0};
-static const WCHAR mimeVideoAvi[] = {'v','i','d','e','o','/','a','v','i',0};
-static const WCHAR mimeVideoMpeg[] = {'v','i','d','e','o','/','m','p','e','g',0};
-static const WCHAR mimeAppPostscript[] =
-    {'a','p','p','l','i','c','a','t','i','o','n','/','p','o','s','t','s','c','r','i','p','t',0};
-static const WCHAR mimeAppXCompressed[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-                                    'x','-','c','o','m','p','r','e','s','s','e','d',0};
-static const WCHAR mimeAppXZip[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-                                    'x','-','z','i','p','-','c','o','m','p','r','e','s','s','e','d',0};
-static const WCHAR mimeAppXGzip[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
-                                    'x','-','g','z','i','p','-','c','o','m','p','r','e','s','s','e','d',0};
-static const WCHAR mimeAppJava[] = {'a','p','p','l','i','c','a','t','i','o','n','/','j','a','v','a',0};
-static const WCHAR mimeAppPdf[] = {'a','p','p','l','i','c','a','t','i','o','n','/','p','d','f',0};
-static const WCHAR mimeAppXMSDownload[] =
-    {'a','p','p','l','i','c','a','t','i','o','n','/','x','-','m','s','d','o','w','n','l','o','a','d',0};
-static const WCHAR mimeAudioWav[] = {'a','u','d','i','o','/','w','a','v',0};
-static const WCHAR mimeAudioBasic[] = {'a','u','d','i','o','/','b','a','s','i','c',0};
-
 static const struct {
-    LPCWSTR url;
-    LPCWSTR mime;
+    const char *url;
+    const char *mime;
     HRESULT hres;
+    BOOL broken_failure;
+    const char *broken_mime;
 } mime_tests[] = {
-    {url1, mimeTextHtml, S_OK},
-    {url2, mimeTextHtml, S_OK},
-    {url3, mimeTextHtml, S_OK},
-    {url4, NULL, E_FAIL},
-    {url5, NULL, __HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)},
-    {url6, NULL, E_FAIL},
-    {url7, NULL, __HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)}
+    {"res://mshtml.dll/blank.htm", "text/html", S_OK},
+    {"index.htm", "text/html", S_OK},
+    {"file://c:\\Index.htm", "text/html", S_OK},
+    {"file://c:\\Index.htm?q=test", "text/html", S_OK, TRUE},
+    {"file://c:\\Index.htm#hash_part", "text/html", S_OK, TRUE},
+    {"file://c:\\Index.htm#hash_part.txt", "text/html", S_OK, FALSE, "text/plain"},
+    {"file://some%20file%2ejpg", NULL, E_FAIL},
+    {"http://www.winehq.org", NULL, __HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)},
+    {"about:blank", NULL, E_FAIL},
+    {"ftp://winehq.org/file.test", NULL, __HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)}
 };
 
 static BYTE data1[] = "test data\n";
@@ -515,7 +525,7 @@ static BYTE data35[] = {0x89,'P','N','G',0x0d,0x0a,0x1a,0x0a,'x','x','x','x',0};
 static BYTE data36[] = {0x89,'P','N','G',0x0d,0x0a,0x1a,'x','x'};
 static BYTE data37[] = {0x89,'P','N','G',0x0d,0x0a,0x1a,0x0a,'<','h','t','m','l','>'};
 static BYTE data38[] = {0x00,0x89,'P','N','G',0x0d,0x0a,0x1a,0x0a,'x'};
-static BYTE data39[] = {0x4d,0x4d,0x00,0x2a};
+static BYTE data39[] = {0x4d,0x4d,0x00,0x2a,0xff};
 static BYTE data40[] = {0x4d,0x4d,0x00,0x2a,'<','h','t','m','l','>',0};
 static BYTE data41[] = {0x4d,0x4d,0xff};
 static BYTE data42[] = {0x4d,0x4d};
@@ -562,112 +572,165 @@ static BYTE data82[] = {'.','s','n','d',0};
 static BYTE data83[] = {'.','s','n','d'};
 static BYTE data84[] = {'.','s','n','d',0,'<','h','t','m','l','>',1,1};
 static BYTE data85[] = {'.','S','N','D',0};
+static BYTE data86[] = {0x49,0x49,0x2a,0xff};
+static BYTE data87[] = {' ','<','h','e','a','d'};
+static BYTE data88[] = {' ','<','h','e','a','d','>'};
+static BYTE data89[] = {'\t','\r','<','h','e','a','d','>'};
+static BYTE data90[] = {'<','H','e','A','d',' '};
+static BYTE data91[] = {'<','?','x','m','l',' ',0};
+static BYTE data92[] = {'a','b','c','<','?','x','m','l',' ',' '};
+static BYTE data93[] = {'<','?','x','m','l',' ',' ','<','h','t','m','l','>'};
+static BYTE data94[] = {'<','h','t','m','l','>','<','?','x','m','l',' ',' '};
+static BYTE data95[] = {'{','\\','r','t','f','<','?','x','m','l',' ',' '};
+static BYTE data96[] = {'<','?','x','m','l',' '};
+static BYTE data97[] = "<body";
+static BYTE data98[] = "blah<BoDyblahblah";
 
 static const struct {
     BYTE *data;
     DWORD size;
-    LPCWSTR mime, mime_alt;
+    const char *mime;
+    const char *mime_pjpeg;
+    const char *broken_mime;
+    const char *url;
+    const char *proposed_mime;
 } mime_tests2[] = {
-    {data1, sizeof(data1), mimeTextPlain},
-    {data2, sizeof(data2), mimeAppOctetStream},
-    {data3, sizeof(data3), mimeAppOctetStream},
-    {data4, sizeof(data4), mimeAppOctetStream},
-    {data5, sizeof(data5), mimeTextPlain},
-    {data6, sizeof(data6), mimeTextPlain},
-    {data7, sizeof(data7), mimeTextHtml, mimeTextPlain /* IE8 */},
-    {data8, sizeof(data8), mimeTextHtml, mimeTextPlain /* IE8 */},
-    {data9, sizeof(data9), mimeTextHtml, mimeImagePjpeg /* IE8 */},
-    {data10, sizeof(data10), mimeTextHtml, mimeTextPlain /* IE8 */},
-    {data11, sizeof(data11), mimeTextHtml, mimeTextPlain /* IE8 */},
-    {data12, sizeof(data12), mimeTextHtml, mimeTextPlain /* IE8 */},
-    {data13, sizeof(data13), mimeTextPlain},
-    {data14, sizeof(data14), mimeTextPlain},
-    {data15, sizeof(data15), mimeTextPlain},
-    {data16, sizeof(data16), mimeImagePjpeg},
-    {data17, sizeof(data17), mimeAppOctetStream},
-    {data18, sizeof(data18), mimeTextHtml},
-    {data19, sizeof(data19), mimeImageGif},
-    {data20, sizeof(data20), mimeImageGif},
-    {data21, sizeof(data21), mimeTextPlain},
-    {data22, sizeof(data22), mimeImageGif},
-    {data23, sizeof(data23), mimeTextPlain},
-    {data24, sizeof(data24), mimeImageGif},
-    {data25, sizeof(data25), mimeImageGif},
-    {data26, sizeof(data26), mimeTextHtml, mimeImageGif /* IE8 */},
-    {data27, sizeof(data27), mimeTextPlain},
-    {data28, sizeof(data28), mimeImageBmp},
-    {data29, sizeof(data29), mimeImageBmp},
-    {data30, sizeof(data30), mimeAppOctetStream},
-    {data31, sizeof(data31), mimeTextHtml, mimeImageBmp /* IE8 */},
-    {data32, sizeof(data32), mimeAppOctetStream},
-    {data33, sizeof(data33), mimeAppOctetStream},
-    {data34, sizeof(data34), mimeImageXPng},
-    {data35, sizeof(data35), mimeImageXPng},
-    {data36, sizeof(data36), mimeAppOctetStream},
-    {data37, sizeof(data37), mimeTextHtml, mimeImageXPng /* IE8 */},
-    {data38, sizeof(data38), mimeAppOctetStream},
-    {data39, sizeof(data39), mimeImageTiff},
-    {data40, sizeof(data40), mimeTextHtml, mimeImageTiff /* IE8 */},
-    {data41, sizeof(data41), mimeImageTiff},
-    {data42, sizeof(data42), mimeTextPlain},
-    {data43, sizeof(data43), mimeAppOctetStream},
-    {data44, sizeof(data44), mimeVideoAvi},
-    {data45, sizeof(data45), mimeTextPlain},
-    {data46, sizeof(data46), mimeTextPlain},
-    {data47, sizeof(data47), mimeTextPlain},
-    {data48, sizeof(data48), mimeTextHtml, mimeVideoAvi /* IE8 */},
-    {data49, sizeof(data49), mimeVideoAvi},
-    {data50, sizeof(data50), mimeVideoMpeg},
-    {data51, sizeof(data51), mimeVideoMpeg},
-    {data52, sizeof(data52), mimeAppOctetStream},
-    {data53, sizeof(data53), mimeAppOctetStream},
-    {data54, sizeof(data54), mimeTextHtml, mimeVideoMpeg /* IE8 */},
-    {data55, sizeof(data55), mimeAppXGzip},
-    {data56, sizeof(data56), mimeTextPlain},
-    {data57, sizeof(data57), mimeTextHtml, mimeAppXGzip /* IE8 */},
-    {data58, sizeof(data58), mimeAppOctetStream},
-    {data59, sizeof(data59), mimeAppXZip},
-    {data60, sizeof(data60), mimeTextPlain},
-    {data61, sizeof(data61), mimeTextHtml, mimeAppXZip /* IE8 */},
-    {data62, sizeof(data62), mimeAppJava},
-    {data63, sizeof(data63), mimeTextPlain},
-    {data64, sizeof(data64), mimeTextHtml, mimeAppJava /* IE8 */},
-    {data65, sizeof(data65), mimeAppPdf},
-    {data66, sizeof(data66), mimeTextPlain},
-    {data67, sizeof(data67), mimeTextHtml, mimeAppPdf /* IE8 */},
-    {data68, sizeof(data68), mimeAppXMSDownload},
-    {data69, sizeof(data69), mimeTextPlain},
-    {data70, sizeof(data70), mimeTextHtml, mimeAppXMSDownload /* IE8 */},
-    {data71, sizeof(data71), mimeTextRichtext},
-    {data72, sizeof(data72), mimeTextPlain},
-    {data73, sizeof(data73), mimeTextPlain},
-    {data74, sizeof(data74), mimeTextHtml, mimeTextRichtext /* IE8 */},
-    {data75, sizeof(data75), mimeAudioWav},
-    {data76, sizeof(data76), mimeTextPlain},
-    {data77, sizeof(data77), mimeTextPlain},
-    {data78, sizeof(data78), mimeTextHtml, mimeTextPlain /* IE8 */},
-    {data79, sizeof(data79), mimeAppPostscript},
-    {data80, sizeof(data80), mimeTextPlain},
-    {data81, sizeof(data81), mimeTextHtml, mimeAppPostscript /* IE8 */},
-    {data82, sizeof(data82), mimeAudioBasic},
-    {data83, sizeof(data83), mimeTextPlain},
-    {data84, sizeof(data84), mimeTextHtml, mimeAudioBasic /* IE8 */},
-    {data85, sizeof(data85), mimeTextPlain}
+    {data1, sizeof(data1), "text/plain"},
+    {data2, sizeof(data2), "application/octet-stream", "image/pjpeg"},
+    {data3, sizeof(data3), "application/octet-stream", "image/pjpeg"},
+    {data4, sizeof(data4), "application/octet-stream", "image/pjpeg"},
+    {data5, sizeof(data5), "text/plain"},
+    {data6, sizeof(data6), "text/plain"},
+    {data7, sizeof(data7), "text/html", "text/plain"},
+    {data8, sizeof(data8), "text/html", "text/plain"},
+    {data9, sizeof(data9), "text/html", "image/pjpeg"},
+    {data10, sizeof(data10), "text/html", "text/plain"},
+    {data11, sizeof(data11), "text/html", "text/plain"},
+    {data12, sizeof(data12), "text/html", "text/plain"},
+    {data13, sizeof(data13), "text/plain"},
+    {data14, sizeof(data14), "text/plain"},
+    {data15, sizeof(data15), "text/plain"},
+    {data16, sizeof(data16), "image/pjpeg"},
+    {data17, sizeof(data17), "application/octet-stream", "image/pjpeg"},
+    {data18, sizeof(data18), "text/html", "image/pjpeg"},
+    {data19, sizeof(data19), "image/gif"},
+    {data20, sizeof(data20), "image/gif"},
+    {data21, sizeof(data21), "text/plain"},
+    {data22, sizeof(data22), "image/gif"},
+    {data23, sizeof(data23), "text/plain"},
+    {data24, sizeof(data24), "image/gif"},
+    {data25, sizeof(data25), "image/gif"},
+    {data26, sizeof(data26), "text/html", "image/gif"},
+    {data27, sizeof(data27), "text/plain"},
+    {data28, sizeof(data28), "image/bmp"},
+    {data29, sizeof(data29), "image/bmp"},
+    {data30, sizeof(data30), "application/octet-stream", "image/pjpeg"},
+    {data31, sizeof(data31), "text/html", "image/bmp"},
+    {data32, sizeof(data32), "application/octet-stream", "image/pjpeg"},
+    {data33, sizeof(data33), "application/octet-stream", "image/pjpeg"},
+    {data34, sizeof(data34), "image/x-png"},
+    {data35, sizeof(data35), "image/x-png"},
+    {data36, sizeof(data36), "application/octet-stream", "image/pjpeg"},
+    {data37, sizeof(data37), "text/html", "image/x-png"},
+    {data38, sizeof(data38), "application/octet-stream", "image/pjpeg"},
+    {data39, sizeof(data39), "image/tiff"},
+    {data40, sizeof(data40), "text/html", "image/tiff"},
+    {data41, sizeof(data41), "text/plain", NULL, "image/tiff"},
+    {data42, sizeof(data42), "text/plain"},
+    {data43, sizeof(data43), "application/octet-stream", "image/pjpeg"},
+    {data44, sizeof(data44), "video/avi"},
+    {data45, sizeof(data45), "text/plain"},
+    {data46, sizeof(data46), "text/plain"},
+    {data47, sizeof(data47), "text/plain"},
+    {data48, sizeof(data48), "text/html", "video/avi"},
+    {data49, sizeof(data49), "video/avi"},
+    {data50, sizeof(data50), "video/mpeg"},
+    {data51, sizeof(data51), "video/mpeg"},
+    {data52, sizeof(data52), "application/octet-stream", "image/pjpeg"},
+    {data53, sizeof(data53), "application/octet-stream", "image/pjpeg", "image/x-icon"},
+    {data54, sizeof(data54), "text/html", "video/mpeg"},
+    {data55, sizeof(data55), "application/x-gzip-compressed"},
+    {data56, sizeof(data56), "text/plain"},
+    {data57, sizeof(data57), "text/html", "application/x-gzip-compressed"},
+    {data58, sizeof(data58), "application/octet-stream", "image/pjpeg"},
+    {data59, sizeof(data59), "application/x-zip-compressed"},
+    {data60, sizeof(data60), "text/plain"},
+    {data61, sizeof(data61), "text/html", "application/x-zip-compressed"},
+    {data62, sizeof(data62), "application/java"},
+    {data63, sizeof(data63), "text/plain"},
+    {data64, sizeof(data64), "text/html", "application/java"},
+    {data65, sizeof(data65), "application/pdf"},
+    {data66, sizeof(data66), "text/plain"},
+    {data67, sizeof(data67), "text/html", "application/pdf"},
+    {data68, sizeof(data68), "application/x-msdownload"},
+    {data69, sizeof(data69), "text/plain"},
+    {data70, sizeof(data70), "text/html", "application/x-msdownload"},
+    {data71, sizeof(data71), "text/richtext"},
+    {data72, sizeof(data72), "text/plain"},
+    {data73, sizeof(data73), "text/plain"},
+    {data74, sizeof(data74), "text/html", "text/richtext"},
+    {data75, sizeof(data75), "audio/wav"},
+    {data76, sizeof(data76), "text/plain"},
+    {data77, sizeof(data77), "text/plain"},
+    {data78, sizeof(data78), "text/html", "text/plain"},
+    {data79, sizeof(data79), "application/postscript"},
+    {data80, sizeof(data80), "text/plain"},
+    {data81, sizeof(data81), "text/html", "application/postscript"},
+    {data82, sizeof(data82), "audio/basic"},
+    {data83, sizeof(data83), "text/plain"},
+    {data84, sizeof(data84), "text/html", "audio/basic"},
+    {data85, sizeof(data85), "text/plain"},
+    {data86, sizeof(data86), "image/tiff", NULL, "text/plain"},
+    {data87, sizeof(data87), "text/plain"},
+    {data88, sizeof(data88), "text/html", "text/plain"},
+    {data89, sizeof(data89), "text/html", "text/plain"},
+    {data90, sizeof(data90), "text/html", "text/plain"},
+    {data91, sizeof(data91), "text/xml", "text/plain"},
+    {data92, sizeof(data92), "text/xml", "text/plain"},
+    {data93, sizeof(data93), "text/xml", "text/plain"},
+    {data94, sizeof(data94), "text/html", "text/plain"},
+    {data95, sizeof(data95), "text/xml", "text/richtext"},
+    {data96, sizeof(data96), "text/plain"},
+    {data97, sizeof(data97), "text/html", "text/plain"},
+    {data98, sizeof(data98), "text/html", "text/plain"},
+    {data1, sizeof(data1), "text/plain", NULL, NULL, "res://mshtml.dll/blank.htm"},
+    {NULL, 0, "text/html", NULL, NULL, "res://mshtml.dll/blank.htm"},
+    {data1, sizeof(data1), "text/plain", NULL, NULL, "res://mshtml.dll/blank.htm", "application/octet-stream"},
+    {data1, sizeof(data1), "text/plain", NULL, NULL, "file:some%20file%2ejpg", "application/octet-stream"},
+    {NULL, sizeof(data1), "text/html", NULL, NULL, "res://mshtml.dll/blank.htm"},
+    {data1, sizeof(data1), "text/css", NULL, NULL, "http://www.winehq.org/test.css"},
+    {data2, sizeof(data2), "text/css", NULL, NULL, "http://www.winehq.org/test.css"},
+    {data10, sizeof(data10), "text/html", NULL, NULL, "http://www.winehq.org/test.css"},
+    {data1, sizeof(data1), "text/css", NULL, NULL, "http://www.winehq.org/test.css", "text/plain"},
+    {data1, sizeof(data1), "text/css", NULL, NULL, "http://www.winehq.org/test.css", "application/octet-stream"},
+    {data1, sizeof(data1), "text/test", NULL, NULL, "http://www.winehq.org/test.css", "text/test"}
 };
 
 static void test_FindMimeFromData(void)
 {
+    WCHAR *mime, *proposed_mime, *url;
     HRESULT hres;
-    LPWSTR mime;
+    BYTE b;
     int i;
+
+    static const WCHAR app_octet_streamW[] =
+        {'a','p','p','l','i','c','a','t','i','o','n','/','o','c','t','e','t','-','s','t','r','e','a','m',0};
+    static const WCHAR image_pjpegW[] = {'i','m','a','g','e','/','p','j','p','e','g',0};
+    static const WCHAR text_htmlW[] = {'t','e','x','t','/','h','t','m','l',0};
+    static const WCHAR text_plainW[] = {'t','e','x','t','/','p','l','a','i','n',0};
 
     for(i=0; i<sizeof(mime_tests)/sizeof(mime_tests[0]); i++) {
         mime = (LPWSTR)0xf0f0f0f0;
-        hres = pFindMimeFromData(NULL, mime_tests[i].url, NULL, 0, NULL, 0, &mime, 0);
+        url = a2w(mime_tests[i].url);
+        hres = pFindMimeFromData(NULL, url, NULL, 0, NULL, 0, &mime, 0);
         if(mime_tests[i].mime) {
-            ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
-            ok(!lstrcmpW(mime, mime_tests[i].mime), "[%d] wrong mime\n", i);
-            CoTaskMemFree(mime);
+            ok(hres == S_OK || broken(mime_tests[i].broken_failure), "[%d] FindMimeFromData failed: %08x\n", i, hres);
+            if(hres == S_OK) {
+                ok(!strcmp_wa(mime, mime_tests[i].mime)
+                   || broken(mime_tests[i].broken_mime && !strcmp_wa(mime, mime_tests[i].broken_mime)),
+                   "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
+                CoTaskMemFree(mime);
+            }
         }else {
             ok(hres == E_FAIL || hres == mime_tests[i].hres,
                "[%d] FindMimeFromData failed: %08x, expected %08x\n",
@@ -676,67 +739,73 @@ static void test_FindMimeFromData(void)
         }
 
         mime = (LPWSTR)0xf0f0f0f0;
-        hres = pFindMimeFromData(NULL, mime_tests[i].url, NULL, 0, mimeTextPlain, 0, &mime, 0);
+        hres = pFindMimeFromData(NULL, url, NULL, 0, text_plainW, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
-        ok(!lstrcmpW(mime, mimeTextPlain), "[%d] wrong mime\n", i);
+        ok(!strcmp_wa(mime, "text/plain"), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
         CoTaskMemFree(mime);
 
         mime = (LPWSTR)0xf0f0f0f0;
-        hres = pFindMimeFromData(NULL, mime_tests[i].url, NULL, 0, mimeAppOctetStream, 0, &mime, 0);
+        hres = pFindMimeFromData(NULL, url, NULL, 0, app_octet_streamW, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
-        ok(!lstrcmpW(mime, mimeAppOctetStream), "[%d] wrong mime\n", i);
+        ok(!strcmp_wa(mime, "application/octet-stream"), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
         CoTaskMemFree(mime);
+        heap_free(url);
     }
 
     for(i=0; i < sizeof(mime_tests2)/sizeof(mime_tests2[0]); i++) {
-        hres = pFindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
-                NULL, 0, &mime, 0);
+        url = a2w(mime_tests2[i].url);
+        proposed_mime = a2w(mime_tests2[i].proposed_mime);
+        hres = pFindMimeFromData(NULL, url, mime_tests2[i].data, mime_tests2[i].size,
+                proposed_mime, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
-        ok(!lstrcmpW(mime, mime_tests2[i].mime), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
+        b = !strcmp_wa(mime, mime_tests2[i].mime);
+        ok(b || broken(mime_tests2[i].broken_mime && !strcmp_wa(mime, mime_tests2[i].broken_mime)),
+            "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
+        heap_free(proposed_mime);
+        heap_free(url);
+        CoTaskMemFree(mime);
+        if(!b || url || proposed_mime)
+            continue;
+
+        hres = pFindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
+                app_octet_streamW, 0, &mime, 0);
+        ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
+        ok(!strcmp_wa(mime, mime_tests2[i].mime) || broken(mime_tests2[i].broken_mime
+                        && !strcmp_wa(mime, mime_tests2[i].broken_mime)),
+                    "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
         CoTaskMemFree(mime);
 
         hres = pFindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
-                mimeTextHtml, 0, &mime, 0);
+                text_plainW, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
-        if(!lstrcmpW(mimeAppOctetStream, mime_tests2[i].mime)
-           || !lstrcmpW(mimeTextPlain, mime_tests2[i].mime))
-            ok(!lstrcmpW(mime, mimeTextHtml), "[%d] wrong mime\n", i);
-        else
-            ok(!lstrcmpW(mime, mime_tests2[i].mime), "[%d] wrong mime\n", i);
+        ok(!strcmp_wa(mime, mime_tests2[i].mime) || broken(mime_tests2[i].broken_mime
+                    && !strcmp_wa(mime, mime_tests2[i].broken_mime)),
+                "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
         CoTaskMemFree(mime);
 
         hres = pFindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
-                mimeImagePjpeg, 0, &mime, 0);
+                text_htmlW, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
-        if(!lstrcmpW(mimeAppOctetStream, mime_tests2[i].mime) || i == 17)
-            ok(!lstrcmpW(mime, mimeImagePjpeg), "[%d] wrong mime\n", i);
+        if(!strcmp("application/octet-stream", mime_tests2[i].mime)
+           || !strcmp("text/plain", mime_tests2[i].mime) || i==92)
+            ok(!strcmp_wa(mime, "text/html"), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
         else
-            ok(!lstrcmpW(mime, mime_tests2[i].mime) ||
-                    (mime_tests2[i].mime_alt && !lstrcmpW(mime, mime_tests2[i].mime_alt)),
-                    "[%d] wrong mime, got %s\n", i, wine_dbgstr_w(mime));
+            ok(!strcmp_wa(mime, mime_tests2[i].mime), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
+        CoTaskMemFree(mime);
 
+        hres = pFindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
+                image_pjpegW, 0, &mime, 0);
+        ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
+        ok(!strcmp_wa(mime, mime_tests2[i].mime_pjpeg ? mime_tests2[i].mime_pjpeg : mime_tests2[i].mime)
+           || broken(!strcmp_wa(mime, mime_tests2[i].mime)),
+           "[%d] wrong mime, got %s\n", i, wine_dbgstr_w(mime));
         CoTaskMemFree(mime);
     }
 
-    hres = pFindMimeFromData(NULL, url1, data1, sizeof(data1), NULL, 0, &mime, 0);
-    ok(hres == S_OK, "FindMimeFromData failed: %08x\n", hres);
-    ok(!lstrcmpW(mime, mimeTextPlain), "wrong mime\n");
-    CoTaskMemFree(mime);
-
-    hres = pFindMimeFromData(NULL, url1, data1, sizeof(data1), mimeAppOctetStream, 0, &mime, 0);
-    ok(hres == S_OK, "FindMimeFromData failed: %08x\n", hres);
-    ok(!lstrcmpW(mime, mimeTextPlain), "wrong mime\n");
-    CoTaskMemFree(mime);
-
-    hres = pFindMimeFromData(NULL, url4, data1, sizeof(data1), mimeAppOctetStream, 0, &mime, 0);
-    ok(hres == S_OK, "FindMimeFromData failed: %08x\n", hres);
-    ok(!lstrcmpW(mime, mimeTextPlain), "wrong mime\n");
-    CoTaskMemFree(mime);
-
     hres = pFindMimeFromData(NULL, NULL, NULL, 0, NULL, 0, &mime, 0);
-    ok(hres == E_INVALIDARG, "FindMimeFromData failed: %08x, excepted E_INVALIDARG\n", hres);
+    ok(hres == E_INVALIDARG, "FindMimeFromData failed: %08x, expected E_INVALIDARG\n", hres);
 
-    hres = pFindMimeFromData(NULL, NULL, NULL, 0, mimeTextPlain, 0, &mime, 0);
+    hres = pFindMimeFromData(NULL, NULL, NULL, 0, text_plainW, 0, &mime, 0);
     ok(hres == E_INVALIDARG, "FindMimeFromData failed: %08x, expected E_INVALIDARG\n", hres);
 
     hres = pFindMimeFromData(NULL, NULL, data1, 0, NULL, 0, &mime, 0);
@@ -745,12 +814,12 @@ static void test_FindMimeFromData(void)
     hres = pFindMimeFromData(NULL, url1, data1, 0, NULL, 0, &mime, 0);
     ok(hres == E_FAIL, "FindMimeFromData failed: %08x, expected E_FAIL\n", hres);
 
-    hres = pFindMimeFromData(NULL, NULL, data1, 0, mimeTextPlain, 0, &mime, 0);
+    hres = pFindMimeFromData(NULL, NULL, data1, 0, text_plainW, 0, &mime, 0);
     ok(hres == S_OK, "FindMimeFromData failed: %08x\n", hres);
-    ok(!lstrcmpW(mime, mimeTextPlain), "wrong mime\n");
+    ok(!strcmp_wa(mime, "text/plain"), "wrong mime: %s\n", wine_dbgstr_w(mime));
     CoTaskMemFree(mime);
 
-    hres = pFindMimeFromData(NULL, NULL, data1, 0, mimeTextPlain, 0, NULL, 0);
+    hres = pFindMimeFromData(NULL, NULL, data1, 0, text_plainW, 0, NULL, 0);
     ok(hres == E_INVALIDARG, "FindMimeFromData failed: %08x, expected E_INVALIDARG\n", hres);
 }
 
@@ -769,7 +838,7 @@ static void register_protocols(void)
 
     hres = CoGetClassObject(&CLSID_AboutProtocol, CLSCTX_INPROC_SERVER, NULL,
             &IID_IClassFactory, (void**)&factory);
-    ok(hres == S_OK, "Coud not get AboutProtocol factory: %08x\n", hres);
+    ok(hres == S_OK, "Could not get AboutProtocol factory: %08x\n", hres);
     if(FAILED(hres))
         return;
 
@@ -1154,8 +1223,10 @@ static void test_ReleaseBindInfo(void)
 static void test_CopyStgMedium(void)
 {
     STGMEDIUM src, dst;
-    HGLOBAL empty;
+    HGLOBAL empty, hg;
+    char *ptr1, *ptr2;
     HRESULT hres;
+    int size;
 
     static WCHAR fileW[] = {'f','i','l','e',0};
 
@@ -1192,10 +1263,150 @@ static void test_CopyStgMedium(void)
     ok(!dst.pUnkForRelease, "pUnkForRelease=%p, expected NULL\n", dst.pUnkForRelease);
     ReleaseStgMedium(&dst);
 
+    /* TYMED_HGLOBAL */
+    hg = GlobalAlloc(GMEM_MOVEABLE, 10);
+    ptr1 = GlobalLock(hg);
+    memset(ptr1, 0xfa, 10);
+    memset(&dst, 0xe0, sizeof(dst));
+    src.tymed = TYMED_HGLOBAL;
+    src.u.hGlobal = hg;
+    hres = pCopyStgMedium(&src, &dst);
+    ok(hres == S_OK, "CopyStgMedium failed: %08x\n", hres);
+    ok(dst.tymed == TYMED_HGLOBAL, "tymed=%d\n", dst.tymed);
+    ok(dst.u.hGlobal != hg, "got %p, %p\n", dst.u.hGlobal, hg);
+    size = GlobalSize(dst.u.hGlobal);
+    ok(size == 10, "got size %d\n", size);
+    /* compare contents */
+    ptr2 = GlobalLock(dst.u.hGlobal);
+    ok(!memcmp(ptr1, ptr2, 10), "got wrong data\n");
+    GlobalUnlock(ptr2);
+    GlobalUnlock(ptr1);
+    ok(GlobalFlags(dst.u.hGlobal) == 0, "got 0x%08x\n", GlobalFlags(dst.u.hGlobal));
+    GlobalFree(hg);
+    ReleaseStgMedium(&dst);
+
+    memset(&dst, 0xe0, sizeof(dst));
+    src.tymed = TYMED_HGLOBAL;
+    src.u.hGlobal = NULL;
+    hres = pCopyStgMedium(&src, &dst);
+    ok(hres == S_OK, "CopyStgMedium failed: %08x\n", hres);
+    ok(dst.u.hGlobal == NULL, "got %p\n", dst.u.hGlobal);
+
     hres = pCopyStgMedium(&src, NULL);
     ok(hres == E_POINTER, "CopyStgMedium failed: %08x, expected E_POINTER\n", hres);
     hres = pCopyStgMedium(NULL, &dst);
     ok(hres == E_POINTER, "CopyStgMedium failed: %08x, expected E_POINTER\n", hres);
+}
+
+static void test_CopyBindInfo(void)
+{
+    BINDINFO src[2], dest[2];
+    SECURITY_DESCRIPTOR sec_desc;
+    HRESULT hres;
+    int i;
+
+    hres = pCopyBindInfo(NULL, NULL);
+    ok(hres == E_POINTER, "CopyBindInfo returned %08x, expected E_POINTER\n", hres);
+
+    memset(src, 0, sizeof(BINDINFO[2]));
+    memset(dest, 0xde, sizeof(BINDINFO[2]));
+    hres = pCopyBindInfo(src, dest);
+    ok(hres == E_INVALIDARG, "CopyBindInfo returned: %08x, expected E_INVALIDARG\n", hres);
+
+    memset(src, 0, sizeof(BINDINFO[2]));
+    memset(dest, 0xde, sizeof(BINDINFO[2]));
+    src[0].cbSize = sizeof(BINDINFO);
+    dest[0].cbSize = 0;
+    hres = pCopyBindInfo(src, dest);
+    ok(hres == E_INVALIDARG, "CopyBindInfo returned: %08x, expected E_INVALIDARG\n", hres);
+
+    memset(src, 0, sizeof(BINDINFO[2]));
+    memset(dest, 0xde, sizeof(BINDINFO[2]));
+    src[0].cbSize = 1;
+    dest[0].cbSize = sizeof(BINDINFO)+sizeof(DWORD);
+    hres = pCopyBindInfo(src, dest);
+    ok(hres == S_OK, "CopyBindInfo failed: %08x\n", hres);
+    ok(dest[0].cbSize == sizeof(BINDINFO)+sizeof(DWORD), "incorrect cbSize: %d\n", dest[0].cbSize);
+    for(i=1; i<dest[0].cbSize/sizeof(int); i++)
+        ok(((int*)dest)[i] == 0, "unset values should be set to 0, got %d on %d\n", ((int*)dest)[i], i);
+
+    memset(src, 0, sizeof(BINDINFO[2]));
+    memset(dest, 0xde, sizeof(BINDINFO[2]));
+    src[0].cbSize = sizeof(BINDINFO)+2*sizeof(DWORD);
+    dest[0].cbSize = sizeof(BINDINFO)+sizeof(DWORD);
+    hres = pCopyBindInfo(src, dest);
+    ok(hres == S_OK, "CopyBindInfo failed: %08x\n", hres);
+    ok(dest[1].cbSize == src[1].cbSize, "additional data should be copied\n");
+    ok(dest[1].szExtraInfo != src[1].szExtraInfo,
+            "data not fitting in destination buffer should not be copied\n");
+
+    memset(src, 0xf0, sizeof(BINDINFO[2]));
+    memset(dest, 0xde, sizeof(BINDINFO[2]));
+    src[0].cbSize = sizeof(BINDINFO);
+    src[0].szExtraInfo = CoTaskMemAlloc(sizeof(WCHAR));
+    src[0].szExtraInfo[0] = 0;
+    src[0].szCustomVerb = NULL;
+    src[0].pUnk = NULL;
+    src[0].stgmedData.tymed = TYMED_NULL;
+    src[0].stgmedData.pUnkForRelease = NULL;
+    dest[0].cbSize = sizeof(BINDINFO);
+    hres = pCopyBindInfo(src, dest);
+    ok(hres == S_OK, "CopyBindInfo failed: %08x\n", hres);
+
+    ok(dest[0].cbSize == sizeof(BINDINFO), "incorrect cbSize: %d\n", dest[0].cbSize);
+    ok(dest[0].szExtraInfo && !dest[0].szExtraInfo[0] && dest[0].szExtraInfo!=src[0].szExtraInfo,
+            "incorrect szExtraInfo: (%p!=%p) %d\n", dest[0].szExtraInfo,
+            src[0].szExtraInfo, dest[0].szExtraInfo[0]);
+    ok(!memcmp(&dest[0].stgmedData, &src[0].stgmedData, sizeof(STGMEDIUM)),
+            "incorrect stgmedData value\n");
+    ok(src[0].grfBindInfoF == dest[0].grfBindInfoF, "grfBindInfoF = %x, expected %x\n",
+            dest[0].grfBindInfoF, src[0].grfBindInfoF);
+    ok(src[0].dwBindVerb == dest[0].dwBindVerb, "dwBindVerb = %x, expected %x\n",
+            dest[0].dwBindVerb, src[0].dwBindVerb);
+    ok(!dest[0].szCustomVerb, "szCustmoVerb != NULL\n");
+    ok(src[0].cbstgmedData == dest[0].cbstgmedData, "cbstgmedData = %x, expected %x\n",
+            dest[0].cbstgmedData, src[0].cbstgmedData);
+    ok(src[0].dwOptions == dest[0].dwOptions, "dwOptions = %x, expected %x\n",
+            dest[0].dwOptions, src[0].dwOptions);
+    ok(src[0].dwOptionsFlags == dest[0].dwOptionsFlags, "dwOptionsFlags = %x, expected %x\n",
+            dest[0].dwOptionsFlags, src[0].dwOptionsFlags);
+    ok(src[0].dwCodePage == dest[0].dwCodePage, "dwCodePage = %x, expected %x\n",
+            dest[0].dwCodePage, src[0].dwCodePage);
+    ok(!dest[0].securityAttributes.nLength,
+            "unexpected securityAttributes.nLength value: %d\n",
+            dest[0].securityAttributes.nLength);
+    ok(!dest[0].securityAttributes.lpSecurityDescriptor,
+            "unexpected securityAttributes.lpSecurityDescriptor value: %p\n",
+            dest[0].securityAttributes.lpSecurityDescriptor);
+    ok(!dest[0].securityAttributes.bInheritHandle,
+            "unexpected securityAttributes.bInheritHandle value: %d\n",
+            dest[0].securityAttributes.bInheritHandle);
+    ok(!memcmp(&dest[0].iid, &src[0].iid, sizeof(IID)),
+            "incorrect iid value\n");
+    ok(!dest[0].pUnk, "pUnk != NULL\n");
+    ok(src[0].dwReserved == dest[0].dwReserved, "dwReserved = %x, expected %x\n",
+            dest[0].dwReserved, src[0].dwReserved);
+
+    CoTaskMemFree(src[0].szExtraInfo);
+    CoTaskMemFree(dest[0].szExtraInfo);
+
+    src[0].szExtraInfo = NULL;
+    src[0].securityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+    ok(InitializeSecurityDescriptor(&sec_desc, SECURITY_DESCRIPTOR_REVISION),
+            "InitializeSecurityDescriptor failed\n");
+    src[0].securityAttributes.lpSecurityDescriptor = (void*)&sec_desc;
+    src[0].securityAttributes.bInheritHandle = TRUE;
+    hres = pCopyBindInfo(src, dest);
+    ok(hres == S_OK, "CopyBindInfo failed: %08x\n", hres);
+    ok(!dest[0].securityAttributes.nLength,
+            "unexpected securityAttributes.nLength value: %d\n",
+            dest[0].securityAttributes.nLength);
+    ok(!dest[0].securityAttributes.lpSecurityDescriptor,
+            "unexpected securityAttributes.lpSecurityDescriptor value: %p\n",
+            dest[0].securityAttributes.lpSecurityDescriptor);
+    ok(!dest[0].securityAttributes.bInheritHandle,
+            "unexpected securityAttributes.bInheritHandle value: %d\n",
+            dest[0].securityAttributes.bInheritHandle);
 }
 
 static void test_UrlMkGetSessionOption(void)
@@ -1431,7 +1642,7 @@ static void test_MkParseDisplayNameEx(void)
     ok(mon != NULL, "mon == NULL\n");
 
     hres = IMoniker_GetDisplayName(mon, NULL, 0, &name);
-    ok(hres == S_OK, "GetDiasplayName failed: %08x\n", hres);
+    ok(hres == S_OK, "GetDisplayName failed: %08x\n", hres);
     ok(!lstrcmpW(name, url9), "wrong display name %s\n", wine_dbgstr_w(name));
     CoTaskMemFree(name);
 
@@ -1519,14 +1730,9 @@ static void test_internet_feature_defaults(void) {
 
     for(i = 0; i < sizeof(default_feature_tests)/sizeof(default_feature_tests[0]); ++i) {
         hres = pCoInternetIsFeatureEnabled(default_feature_tests[i].feature, default_feature_tests[i].get_flags);
-        if(default_feature_tests[i].todo) {
-            todo_wine
+        todo_wine_if (default_feature_tests[i].todo)
             ok(hres == default_feature_tests[i].expected, "CoInternetIsFeatureEnabled returned %08x, expected %08x on test %d\n",
                 hres, default_feature_tests[i].expected, i);
-        } else {
-            ok(hres == default_feature_tests[i].expected, "CoInternetIsFeatureEnabled returned %08x, expected %08x on test %d\n",
-                hres, default_feature_tests[i].expected, i);
-        }
     }
 }
 
@@ -1538,6 +1744,8 @@ static void test_internet_feature_defaults(void) {
  * call hasn't already been made for the specified Feature). Because of
  * this we skip these tests on IE 7 and earlier.
  */
+static const char* szFeatureControlKey = "Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl";
+
 static void test_internet_features_registry(void) {
     HRESULT hres;
     DWORD res;
@@ -1546,10 +1754,9 @@ static void test_internet_features_registry(void) {
     HKEY feature_control;
     HKEY feature;
     DWORD value;
+    BOOL skip_zone;
     BOOL delete_feature_key = TRUE;
-    BOOL delete_feature_control_key = FALSE;
 
-    static const char* szFeatureControlKey = "Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl";
     static const char* szFeatureBehaviorsKey = "FEATURE_BEHAVIORS";
     static const char* szFeatureZoneElevationKey = "FEATURE_ZONE_ELEVATION";
 
@@ -1565,17 +1772,13 @@ static void test_internet_features_registry(void) {
 
     /* Some Windows machines don't have a FeatureControl key in HKCU. */
     res = RegOpenKeyA(HKEY_CURRENT_USER, szFeatureControlKey, &feature_control);
-    if(res != ERROR_SUCCESS) {
-        res = RegCreateKeyA(HKEY_CURRENT_USER, szFeatureControlKey, &feature_control);
-        ok(res == ERROR_SUCCESS, "RegCreateKey failed: %d\n", res);
-        delete_feature_control_key = TRUE;
-    }
+    ok(res == ERROR_SUCCESS, "RegCreateKey failed: %d\n", res);
 
     res = RegOpenKeyA(feature_control, szFeatureBehaviorsKey, &feature);
-    if(res == ERROR_SUCCESS)
+    if(res == ERROR_SUCCESS) {
         /* FEATURE_BEHAVIORS already existed, so don't delete it when we're done. */
         delete_feature_key = FALSE;
-    else {
+    }else {
         res = RegCreateKeyA(feature_control, szFeatureBehaviorsKey, &feature);
         ok(res == ERROR_SUCCESS, "RegCreateKey failed: %d\n", res);
     }
@@ -1591,7 +1794,7 @@ static void test_internet_features_registry(void) {
         RegCloseKey(feature);
         RegDeleteKeyA(feature_control, szFeatureBehaviorsKey);
     } else {
-        RegDeleteValue(feature, name);
+        RegDeleteValueA(feature, name);
         RegCloseKey(feature);
     }
 
@@ -1604,8 +1807,6 @@ static void test_internet_features_registry(void) {
     ok(hres == S_OK, "CoInternetSetFeatureEnabled failed: %08x\n", hres);
 
     RegCloseKey(feature_control);
-    if(delete_feature_control_key)
-        RegDeleteKeyA(HKEY_CURRENT_USER, szFeatureControlKey);
 
     res = RegOpenKeyA(HKEY_LOCAL_MACHINE, szFeatureControlKey, &feature_control);
     ok(res == ERROR_SUCCESS, "RegOpenKey failed: %d\n", res);
@@ -1615,21 +1816,32 @@ static void test_internet_features_registry(void) {
 
     value = 1;
     res = RegSetValueExA(feature, "*", 0, REG_DWORD, (BYTE*)&value, sizeof(DWORD));
-    ok(res == ERROR_SUCCESS, "RegSetValueEx failed: %d\n", res);
+    if (res == ERROR_ACCESS_DENIED)
+    {
+        skip("Not allowed to modify zone elevation\n");
+        skip_zone = TRUE;
+    }
+    else
+    {
+        skip_zone = FALSE;
+        ok(res == ERROR_SUCCESS, "RegSetValueEx failed: %d\n", res);
 
-    hres = pCoInternetIsFeatureEnabled(FEATURE_ZONE_ELEVATION, GET_FEATURE_FROM_PROCESS);
-    ok(hres == S_OK, "CoInternetIsFeatureEnabled returned %08x, expected S_OK\n", hres);
-
+        hres = pCoInternetIsFeatureEnabled(FEATURE_ZONE_ELEVATION, GET_FEATURE_FROM_PROCESS);
+        ok(hres == S_OK, "CoInternetIsFeatureEnabled returned %08x, expected S_OK\n", hres);
+    }
     RegDeleteValueA(feature, "*");
     RegCloseKey(feature);
     RegCloseKey(feature_control);
 
     /* Value is still cached from last time. */
-    hres = pCoInternetIsFeatureEnabled(FEATURE_ZONE_ELEVATION, GET_FEATURE_FROM_PROCESS);
-    ok(hres == S_OK, "CoInternetIsFeatureEnabled returned %08x, expected S_OK\n", hres);
+    if (!skip_zone)
+    {
+        hres = pCoInternetIsFeatureEnabled(FEATURE_ZONE_ELEVATION, GET_FEATURE_FROM_PROCESS);
+        ok(hres == S_OK, "CoInternetIsFeatureEnabled returned %08x, expected S_OK\n", hres);
 
-    hres = pCoInternetSetFeatureEnabled(FEATURE_ZONE_ELEVATION, SET_FEATURE_ON_PROCESS, FALSE);
-    ok(hres == S_OK, "CoInternetSetFeatureEnabled failed: %08x\n", hres);
+        hres = pCoInternetSetFeatureEnabled(FEATURE_ZONE_ELEVATION, SET_FEATURE_ON_PROCESS, FALSE);
+        ok(hres == S_OK, "CoInternetSetFeatureEnabled failed: %08x\n", hres);
+    }
 
     test_internet_feature_defaults();
 }
@@ -1666,30 +1878,50 @@ static void test_CoInternetSetFeatureEnabled(void) {
     for(i = 0; i < sizeof(internet_feature_tests)/sizeof(internet_feature_tests[0]); ++i) {
         hres = pCoInternetSetFeatureEnabled(internet_feature_tests[i].feature, internet_feature_tests[i].set_flags,
                                             internet_feature_tests[i].enable);
-        if(internet_feature_tests[i].set_todo) {
-            todo_wine
+        todo_wine_if (internet_feature_tests[i].set_todo)
             ok(hres == internet_feature_tests[i].set_expected, "CoInternetSetFeatureEnabled returned %08x, expected %08x on test %d\n",
                 hres, internet_feature_tests[i].set_expected, i);
-        } else {
-            ok(hres == internet_feature_tests[i].set_expected, "CoInternetSetFeatureEnabled returned %08x, expected %08x on test %d\n",
-                hres, internet_feature_tests[i].set_expected, i);
-        }
 
         hres = pCoInternetIsFeatureEnabled(internet_feature_tests[i].feature, internet_feature_tests[i].set_flags);
-        if(internet_feature_tests[i].get_todo) {
-            todo_wine
+        todo_wine_if (internet_feature_tests[i].get_todo)
             ok(hres == internet_feature_tests[i].get_expected, "CoInternetIsFeatureEnabled returned %08x, expected %08x on test %d\n",
                 hres, internet_feature_tests[i].get_expected, i);
-        } else {
-            ok(hres == internet_feature_tests[i].get_expected, "CoInternetIsFeatureEnabled returned %08x, expected %08x on test %d\n",
-                hres, internet_feature_tests[i].get_expected, i);
-        }
+
     }
 }
 
 static void test_internet_features(void) {
+    HKEY key;
+    DWORD res;
+
     if(!pCoInternetIsFeatureEnabled || !pCoInternetSetFeatureEnabled) {
         win_skip("Skipping internet feature tests, IE is too old\n");
+        return;
+    }
+
+    /* IE10 takes FeatureControl key into account only if it's available upon process start. */
+    res = RegOpenKeyA(HKEY_CURRENT_USER, szFeatureControlKey, &key);
+    if(res != ERROR_SUCCESS) {
+        PROCESS_INFORMATION pi;
+        STARTUPINFOA si = { 0 };
+        char cmdline[MAX_PATH];
+        char **argv;
+        BOOL ret;
+
+        res = RegCreateKeyA(HKEY_CURRENT_USER, szFeatureControlKey, &key);
+        ok(res == ERROR_SUCCESS, "RegCreateKey failed: %d\n", res);
+
+        trace("Running features tests in a separated process.\n");
+
+        winetest_get_mainargs( &argv );
+        sprintf(cmdline, "\"%s\" %s internet_features", argv[0], argv[1]);
+        ret = CreateProcessA(argv[0], cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+        ok(ret, "Could not create process: %u\n", GetLastError());
+        winetest_wait_child_process( pi.hProcess );
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+
+        RegDeleteKeyA(HKEY_CURRENT_USER, szFeatureControlKey);
         return;
     }
 
@@ -1701,14 +1933,19 @@ static void test_internet_features(void) {
 START_TEST(misc)
 {
     HMODULE hurlmon;
+    int argc;
+    char **argv;
 
-    hurlmon = GetModuleHandle("urlmon.dll");
+    argc = winetest_get_mainargs(&argv);
+
+    hurlmon = GetModuleHandleA("urlmon.dll");
     pCoInternetCompareUrl = (void *) GetProcAddress(hurlmon, "CoInternetCompareUrl");
     pCoInternetGetSecurityUrl = (void*) GetProcAddress(hurlmon, "CoInternetGetSecurityUrl");
     pCoInternetGetSession = (void*) GetProcAddress(hurlmon, "CoInternetGetSession");
     pCoInternetParseUrl = (void*) GetProcAddress(hurlmon, "CoInternetParseUrl");
     pCoInternetQueryInfo = (void*) GetProcAddress(hurlmon, "CoInternetQueryInfo");
     pCopyStgMedium = (void*) GetProcAddress(hurlmon, "CopyStgMedium");
+    pCopyBindInfo = (void*) GetProcAddress(hurlmon, "CopyBindInfo");
     pFindMimeFromData = (void*) GetProcAddress(hurlmon, "FindMimeFromData");
     pObtainUserAgentString = (void*) GetProcAddress(hurlmon, "ObtainUserAgentString");
     pReleaseBindInfo = (void*) GetProcAddress(hurlmon, "ReleaseBindInfo");
@@ -1726,22 +1963,26 @@ START_TEST(misc)
 
     OleInitialize(NULL);
 
-    register_protocols();
+    if(argc <= 2 || strcmp(argv[2], "internet_features")) {
+        register_protocols();
 
-    test_CreateFormatEnum();
-    test_RegisterFormatEnumerator();
-    test_CoInternetParseUrl();
-    test_CoInternetCompareUrl();
-    test_CoInternetQueryInfo();
-    test_FindMimeFromData();
-    test_NameSpace();
-    test_MimeFilter();
-    test_ReleaseBindInfo();
-    test_CopyStgMedium();
-    test_UrlMkGetSessionOption();
-    test_user_agent();
-    test_MkParseDisplayNameEx();
-    test_IsValidURL();
+        test_CreateFormatEnum();
+        test_RegisterFormatEnumerator();
+        test_CoInternetParseUrl();
+        test_CoInternetCompareUrl();
+        test_CoInternetQueryInfo();
+        test_FindMimeFromData();
+        test_NameSpace();
+        test_MimeFilter();
+        test_ReleaseBindInfo();
+        test_CopyStgMedium();
+        test_CopyBindInfo();
+        test_UrlMkGetSessionOption();
+        test_user_agent();
+        test_MkParseDisplayNameEx();
+        test_IsValidURL();
+    }
+
     test_internet_features();
 
     OleUninitialize();

@@ -18,7 +18,7 @@
  *
  */
 #include <stdarg.h>
-#include <assert.h>
+
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
@@ -33,20 +33,22 @@ static DSMENTRYPROC pDSM_Entry;
 static BOOL dsm_RegisterWindowClasses(void)
 {
     WNDCLASSA cls;
+    BOOL rc;
 
     cls.style = 0;
-    cls.lpfnWndProc = DefWindowProc;
+    cls.lpfnWndProc = DefWindowProcA;
     cls.cbClsExtra = 0;
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleA(0);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, IDC_ARROW);
+    cls.hCursor = LoadCursorA(0, (LPCSTR)IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "TWAIN_dsm_class";
-    if (!RegisterClassA(&cls)) return FALSE;
 
-    return TRUE;
+    rc = RegisterClassA(&cls);
+    ok(rc, "RegisterClassA failed: le=%u\n", GetLastError());
+    return rc;
 }
 
 
@@ -69,6 +71,8 @@ static BOOL get_onevalue(TW_HANDLE hcontainer, TW_UINT32 *ret, TW_UINT16 *type)
         GlobalUnlock(hcontainer);
         return TRUE;
     }
+    else
+        *ret = 0;
     return FALSE;
 }
 
@@ -832,7 +836,11 @@ START_TEST(dsm)
     HANDLE hwnd;
     HMODULE htwain;
 
-    if (!dsm_RegisterWindowClasses()) assert(0);
+    if (!dsm_RegisterWindowClasses())
+    {
+        skip("Could not register the test class, skipping tests\n");
+        return;
+    }
 
     htwain = LoadLibraryA("twain_32.dll");
     if (! htwain)
@@ -855,9 +863,8 @@ START_TEST(dsm)
     appid.ProtocolMinor = TWON_PROTOCOLMINOR;
     appid.SupportedGroups = DG_CONTROL | DG_IMAGE;
 
-    hwnd = CreateWindow("TWAIN_dsm_class", "Twain Test", 0,
-                        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                        NULL, NULL, GetModuleHandleA(0), NULL);
+    hwnd = CreateWindowA("TWAIN_dsm_class", "Twain Test", 0, CW_USEDEFAULT, CW_USEDEFAULT,
+                         CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, GetModuleHandleA(NULL), NULL);
 
     rc = pDSM_Entry(&appid, NULL, DG_CONTROL, DAT_PARENT, MSG_OPENDSM, (TW_MEMREF) &hwnd);
     ok(rc == TWRC_SUCCESS, "MSG_OPENDSM returned %d\n", rc);

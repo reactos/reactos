@@ -63,10 +63,12 @@ static BOOL (WINAPI *pSetupGetInfFileListW)(PCWSTR, DWORD, PWSTR, DWORD, PDWORD)
 static void create_inf_file(LPCSTR filename, const char *data)
 {
     DWORD res;
-    HANDLE handle = CreateFile(filename, GENERIC_WRITE, 0, NULL,
+    BOOL ret;
+    HANDLE handle = CreateFileA(filename, GENERIC_WRITE, 0, NULL,
                            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     assert(handle != INVALID_HANDLE_VALUE);
-    assert(WriteFile(handle, data, strlen(data), &res, NULL));
+    ret = WriteFile(handle, data, strlen(data), &res, NULL);
+    assert(ret != 0);
     CloseHandle(handle);
 }
 
@@ -107,7 +109,7 @@ static void ok_registry(BOOL expectsuccess)
     LONG ret;
 
     /* Functional tests for success of install and clean up */
-    ret = RegDeleteKey(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest");
+    ret = RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest");
     ok((expectsuccess && ret == ERROR_SUCCESS) ||
        (!expectsuccess && ret == ERROR_FILE_NOT_FOUND),
        "Expected registry key Software\\Wine\\setupapitest to %s, RegDeleteKey returned %d\n",
@@ -120,12 +122,14 @@ static void test_cmdline(void)
 {
     static const char infwithspaces[] = "test file.inf";
     char path[MAX_PATH];
+    BOOL ret;
 
     create_inf_file(inffile, cmdline_inf);
     sprintf(path, "%s\\%s", CURR_DIR, inffile);
     run_cmdline("DefaultInstall", 128, path);
     ok_registry(TRUE);
-    ok(DeleteFile(inffile), "Expected source inf to exist, last error was %d\n", GetLastError());
+    ret = DeleteFileA(inffile);
+    ok(ret, "Expected source inf to exist, last error was %d\n", GetLastError());
 
     /* Test handling of spaces in path, unquoted and quoted */
     create_inf_file(infwithspaces, cmdline_inf);
@@ -138,7 +142,8 @@ static void test_cmdline(void)
     run_cmdline("DefaultInstall", 128, path);
     ok_registry(FALSE);
 
-    ok(DeleteFile(infwithspaces), "Expected source inf to exist, last error was %d\n", GetLastError());
+    ret = DeleteFileA(infwithspaces);
+    ok(ret, "Expected source inf to exist, last error was %d\n", GetLastError());
 }
 
 static const char *cmdline_inf_reg = "[Version]\n"
@@ -153,6 +158,7 @@ static void test_registry(void)
     HKEY key;
     LONG res;
     char path[MAX_PATH];
+    BOOL ret;
 
     /* First create a registry structure we would like to be deleted */
     ok(!RegCreateKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest\\setupapitest", &key),
@@ -168,7 +174,6 @@ static void test_registry(void)
 
     /* Check if the registry key is recursively deleted */
     res = RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest", &key);
-    todo_wine
     ok(res == ERROR_FILE_NOT_FOUND, "Didn't expect the registry key to exist\n");
     /* Just in case */
     if (res == ERROR_SUCCESS)
@@ -176,7 +181,8 @@ static void test_registry(void)
         RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest\\setupapitest");
         RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest");
     }
-    ok(DeleteFile(inffile), "Expected source inf to exist, last error was %d\n", GetLastError());
+    ret = DeleteFileA(inffile);
+    ok(ret, "Expected source inf to exist, last error was %d\n", GetLastError());
 }
 
 static void test_install_svc_from(void)
@@ -211,7 +217,7 @@ static void test_install_svc_from(void)
     ok(GetLastError() == ERROR_SECTION_NOT_FOUND,
         "Expected ERROR_SECTION_NOT_FOUND, got %08x\n", GetLastError());
     SetupCloseInfFile(infhandle);
-    DeleteFile(inffile);
+    DeleteFileA(inffile);
 
     /* Add the section */
     strcat(inf, "[Winetest.Services]\n");
@@ -223,7 +229,7 @@ static void test_install_svc_from(void)
     ok(GetLastError() == ERROR_SECTION_NOT_FOUND,
         "Expected ERROR_SECTION_NOT_FOUND, got %08x\n", GetLastError());
     SetupCloseInfFile(infhandle);
-    DeleteFile(inffile);
+    DeleteFileA(inffile);
 
     /* Add a reference */
     strcat(inf, "AddService=Winetest,,Winetest.Service\n");
@@ -235,7 +241,7 @@ static void test_install_svc_from(void)
     ok(GetLastError() == ERROR_BAD_SERVICE_INSTALLSECT,
         "Expected ERROR_BAD_SERVICE_INSTALLSECT, got %08x\n", GetLastError());
     SetupCloseInfFile(infhandle);
-    DeleteFile(inffile);
+    DeleteFileA(inffile);
 
     /* Add the section */
     strcat(inf, "[Winetest.Service]\n");
@@ -247,7 +253,7 @@ static void test_install_svc_from(void)
     ok(GetLastError() == ERROR_BAD_SERVICE_INSTALLSECT,
         "Expected ERROR_BAD_SERVICE_INSTALLSECT, got %08x\n", GetLastError());
     SetupCloseInfFile(infhandle);
-    DeleteFile(inffile);
+    DeleteFileA(inffile);
 
     /* Just the ServiceBinary */
     strcat(inf, "ServiceBinary=%12%\\winetest.sys\n");
@@ -259,7 +265,7 @@ static void test_install_svc_from(void)
     ok(GetLastError() == ERROR_BAD_SERVICE_INSTALLSECT,
         "Expected ERROR_BAD_SERVICE_INSTALLSECT, got %08x\n", GetLastError());
     SetupCloseInfFile(infhandle);
-    DeleteFile(inffile);
+    DeleteFileA(inffile);
 
     /* Add the ServiceType */
     strcat(inf, "ServiceType=1\n");
@@ -271,7 +277,7 @@ static void test_install_svc_from(void)
     ok(GetLastError() == ERROR_BAD_SERVICE_INSTALLSECT,
         "Expected ERROR_BAD_SERVICE_INSTALLSECT, got %08x\n", GetLastError());
     SetupCloseInfFile(infhandle);
-    DeleteFile(inffile);
+    DeleteFileA(inffile);
 
     /* Add the StartType */
     strcat(inf, "StartType=4\n");
@@ -283,7 +289,7 @@ static void test_install_svc_from(void)
     ok(GetLastError() == ERROR_BAD_SERVICE_INSTALLSECT,
         "Expected ERROR_BAD_SERVICE_INSTALLSECT, got %08x\n", GetLastError());
     SetupCloseInfFile(infhandle);
-    DeleteFile(inffile);
+    DeleteFileA(inffile);
 
     /* This should be it, the minimal entries to install a service */
     strcat(inf, "ErrorControl=1");
@@ -295,14 +301,14 @@ static void test_install_svc_from(void)
     {
         skip("Not enough rights to install the service\n");
         SetupCloseInfFile(infhandle);
-        DeleteFile(inffile);
+        DeleteFileA(inffile);
         return;
     }
     ok(ret, "Expected success\n");
     ok(GetLastError() == ERROR_SUCCESS,
         "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
     SetupCloseInfFile(infhandle);
-    DeleteFile(inffile);
+    DeleteFileA(inffile);
 
     scm_handle = OpenSCManagerA(NULL, NULL, GENERIC_ALL);
 
@@ -316,6 +322,20 @@ static void test_install_svc_from(void)
 
     CloseServiceHandle(svc_handle);
     CloseServiceHandle(scm_handle);
+
+    strcpy(inf, "[Version]\nSignature=\"$Chicago$\"\n");
+    strcat(inf, "[XSP.InstallPerVer]\n");
+    strcat(inf, "AddReg=AspEventlogMsg.Reg,Perf.Reg,AspVersions.Reg,FreeADO.Reg,IndexServer.Reg\n");
+    create_inf_file(inffile, inf);
+    sprintf(path, "%s\\%s", CURR_DIR, inffile);
+    infhandle = SetupOpenInfFileA(path, NULL, INF_STYLE_WIN4, NULL);
+
+    SetLastError(0xdeadbeef);
+    ret = SetupInstallServicesFromInfSectionA(infhandle, "XSP.InstallPerVer", 0);
+    ok(ret, "Expected success\n");
+    ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %08x\n", GetLastError());
+    SetupCloseInfFile(infhandle);
+    DeleteFileA(inffile);
 
     /* TODO: Test the Flags */
 }
@@ -376,7 +396,7 @@ static void test_driver_install(void)
     run_cmdline("DefaultInstall", 128, path);
 
     /* Driver should have been installed */
-    attrs = GetFileAttributes(driver);
+    attrs = GetFileAttributesA(driver);
     ok(attrs != INVALID_FILE_ATTRIBUTES, "Expected driver to exist\n");
 
     scm_handle = OpenSCManagerA(NULL, NULL, GENERIC_ALL);
@@ -393,9 +413,9 @@ static void test_driver_install(void)
     CloseServiceHandle(scm_handle);
 
     /* File cleanup */
-    DeleteFile(inffile);
-    DeleteFile("winetest.sys");
-    DeleteFile(driver);
+    DeleteFileA(inffile);
+    DeleteFileA("winetest.sys");
+    DeleteFileA(driver);
 }
 
 static void test_profile_items(void)
@@ -439,34 +459,34 @@ static void test_profile_items(void)
     run_cmdline("DefaultInstall", 128, path);
 
     snprintf(path, MAX_PATH, "%s\\TestItem.lnk", commonprogs);
-    if (INVALID_FILE_ATTRIBUTES == GetFileAttributes(path))
+    if (INVALID_FILE_ATTRIBUTES == GetFileAttributesA(path))
     {
         win_skip("ProfileItems not implemented on this system\n");
     }
     else
     {
         snprintf(path, MAX_PATH, "%s\\TestDir", commonprogs);
-        ok(INVALID_FILE_ATTRIBUTES != GetFileAttributes(path), "directory not created\n");
+        ok(INVALID_FILE_ATTRIBUTES != GetFileAttributesA(path), "directory not created\n");
         snprintf(path, MAX_PATH, "%s\\TestDir\\TestItem2.lnk", commonprogs);
-        ok(INVALID_FILE_ATTRIBUTES != GetFileAttributes(path), "link not created\n");
+        ok(INVALID_FILE_ATTRIBUTES != GetFileAttributesA(path), "link not created\n");
         snprintf(path, MAX_PATH, "%s\\TestGroup", commonprogs);
-        ok(INVALID_FILE_ATTRIBUTES != GetFileAttributes(path), "group not created\n");
+        ok(INVALID_FILE_ATTRIBUTES != GetFileAttributesA(path), "group not created\n");
     }
 
     snprintf(path, MAX_PATH, "%s\\TestItem.lnk", commonprogs);
-    DeleteFile(path);
+    DeleteFileA(path);
     snprintf(path, MAX_PATH, "%s\\TestDir\\TestItem2.lnk", commonprogs);
-    DeleteFile(path);
+    DeleteFileA(path);
     snprintf(path, MAX_PATH, "%s\\TestItem2.lnk", commonprogs);
-    DeleteFile(path);
+    DeleteFileA(path);
     snprintf(path, MAX_PATH, "%s\\TestDir", commonprogs);
-    RemoveDirectory(path);
+    RemoveDirectoryA(path);
     snprintf(path, MAX_PATH, "%s\\TestGroup", commonprogs);
-    RemoveDirectory(path);
+    RemoveDirectoryA(path);
 
 cleanup:
     if (hShell32) FreeLibrary(hShell32);
-    DeleteFile(inffile);
+    DeleteFileA(inffile);
 }
 
 static void test_inffilelistA(void)
@@ -522,8 +542,8 @@ static void test_inffilelistA(void)
         ok(!lstrcmpA(p,inffile2) || !lstrcmpA(p,inffile),
             "unexpected filename %s\n",p);
 
-    DeleteFile(inffile);
-    DeleteFile(inffile2);
+    DeleteFileA(inffile);
+    DeleteFileA(inffile2);
     SetCurrentDirectoryA(CURR_DIR);
     RemoveDirectoryA(dir);
 }
@@ -635,7 +655,7 @@ static void test_inffilelist(void)
     ok(ERROR_DIRECTORY == GetLastError(),
        "expected error ERROR_DIRECTORY, got %d\n", GetLastError());
 
-    /* now check the buffer content of a vaild call
+    /* now check the buffer contents of a valid call
      */
     *ptr = 0;
     expected = 3 + strlen(inffile) + strlen(inffile2);
@@ -692,22 +712,80 @@ static void test_inffilelist(void)
         ok(!lstrcmpW(p,inffile2W) || !lstrcmpW(p,inffileW) || !lstrcmpW(p,invalid_infW),
             "unexpected filename %s\n",wine_dbgstr_w(p));
 
-    DeleteFile(inffile);
-    DeleteFile(inffile2);
-    DeleteFile(invalid_inf);
+    DeleteFileA(inffile);
+    DeleteFileA(inffile2);
+    DeleteFileA(invalid_inf);
     SetCurrentDirectoryA(CURR_DIR);
     RemoveDirectoryA(dirA);
 }
 
+static const char dirid_inf[] = "[Version]\n"
+    "Signature=\"$Chicago$\"\n"
+    "[DefaultInstall]\n"
+    "AddReg=Add.Settings\n"
+    "[Add.Settings]\n"
+    "HKCU,Software\\Wine\\setupapitest,dirid,,%%%i%%\n";
+
+static void check_dirid(int dirid, LPCSTR expected)
+{
+    char buffer[sizeof(dirid_inf)+11];
+    char path[MAX_PATH], actual[MAX_PATH];
+    LONG ret;
+    DWORD size, type;
+    HKEY key;
+
+    sprintf(buffer, dirid_inf, dirid);
+
+    create_inf_file(inffile, buffer);
+
+    sprintf(path, "%s\\%s", CURR_DIR, inffile);
+    run_cmdline("DefaultInstall", 128, path);
+
+    size = sizeof(actual);
+    actual[0] = '\0';
+    ret = RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest", &key);
+    if (ret == ERROR_SUCCESS)
+    {
+        ret = RegQueryValueExA(key, "dirid", NULL, &type, (BYTE*)&actual, &size);
+        RegCloseKey(key);
+        if (type != REG_SZ)
+            ret = ERROR_FILE_NOT_FOUND;
+    }
+
+    ok(ret == ERROR_SUCCESS, "Failed getting value for dirid %i, err=%d\n", dirid, ret);
+    ok(!strcmp(actual, expected), "Expected path for dirid %i was \"%s\", got \"%s\"\n", dirid, expected, actual);
+
+    ok_registry(TRUE);
+    ret = DeleteFileA(inffile);
+    ok(ret, "Expected source inf to exist, last error was %d\n", GetLastError());
+}
+
+/* Test dirid values */
+static void test_dirid(void)
+{
+    char expected[MAX_PATH];
+
+    check_dirid(DIRID_NULL, "");
+
+    GetWindowsDirectoryA(expected, MAX_PATH);
+    check_dirid(DIRID_WINDOWS, expected);
+
+    GetSystemDirectoryA(expected, MAX_PATH);
+    check_dirid(DIRID_SYSTEM, expected);
+
+    strcat(expected, "\\unknown");
+    check_dirid(40, expected);
+}
+
 START_TEST(install)
 {
-    HMODULE hsetupapi = GetModuleHandle("setupapi.dll");
+    HMODULE hsetupapi = GetModuleHandleA("setupapi.dll");
     char temp_path[MAX_PATH], prev_path[MAX_PATH];
     DWORD len;
 
-    GetCurrentDirectory(MAX_PATH, prev_path);
-    GetTempPath(MAX_PATH, temp_path);
-    SetCurrentDirectory(temp_path);
+    GetCurrentDirectoryA(MAX_PATH, prev_path);
+    GetTempPathA(MAX_PATH, temp_path);
+    SetCurrentDirectoryA(temp_path);
 
     strcpy(CURR_DIR, temp_path);
     len = strlen(CURR_DIR);
@@ -724,6 +802,7 @@ START_TEST(install)
         /* Check if pInstallHinfSectionA sets last error or is a stub (as on WinXP) */
         static const char *minimal_inf = "[Version]\nSignature=\"$Chicago$\"\n";
         char cmdline[MAX_PATH*2];
+        BOOL ret;
         create_inf_file(inffile, minimal_inf);
         sprintf(cmdline, "DefaultInstall 128 %s\\%s", CURR_DIR, inffile);
         SetLastError(0xdeadbeef);
@@ -733,7 +812,8 @@ START_TEST(install)
             skip("InstallHinfSectionA is broken (stub)\n");
             pInstallHinfSectionA = NULL;
         }
-        ok(DeleteFile(inffile), "Expected source inf to exist, last error was %d\n", GetLastError());
+        ret = DeleteFileA(inffile);
+        ok(ret, "Expected source inf to exist, last error was %d\n", GetLastError());
     }
     if (!pInstallHinfSectionW && !pInstallHinfSectionA)
         win_skip("InstallHinfSectionA and InstallHinfSectionW are not available\n");
@@ -747,6 +827,7 @@ START_TEST(install)
         test_registry();
         test_install_svc_from();
         test_driver_install();
+        test_dirid();
 
         UnhookWindowsHookEx(hhook);
 
@@ -758,5 +839,5 @@ START_TEST(install)
     test_inffilelist();
     test_inffilelistA();
 
-    SetCurrentDirectory(prev_path);
+    SetCurrentDirectoryA(prev_path);
 }

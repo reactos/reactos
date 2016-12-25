@@ -690,11 +690,11 @@ static void test_PpropFindProp(void)
 
         pRet = pPpropFindProp(&pvProp, 1u, ptTypes[i]);
         ok(pRet == &pvProp,
-           "PpropFindProp[%d]: Didn't find existing propery\n",
+           "PpropFindProp[%d]: Didn't find existing property\n",
            ptTypes[i]);
 
         pRet = pPpropFindProp(&pvProp, 1u, i ? ptTypes[i-1] : ptTypes[i+1]);
-        ok(pRet == NULL, "PpropFindProp[%d]: Found nonexistent propery\n",
+        ok(pRet == NULL, "PpropFindProp[%d]: Found nonexistent property\n",
            ptTypes[i]);
     }
 
@@ -716,7 +716,7 @@ static void test_ScCountProps(void)
     GUID iids[4], *iid = iids;
     SCODE res;
     ULONG pt, exp, ulRet;
-    int success = 1;
+    BOOL success = TRUE;
 
     if (!pScCountProps)
     {
@@ -929,20 +929,20 @@ static void test_LpValFindProp(void)
 
         pRet = pLpValFindProp(PROP_TAG(ptTypes[i], 1u), 1u, &pvProp);
         ok(pRet == &pvProp,
-           "LpValFindProp[%d]: Didn't find existing propery id/type\n",
+           "LpValFindProp[%d]: Didn't find existing property id/type\n",
            ptTypes[i]);
 
         pRet = pLpValFindProp(PROP_TAG(ptTypes[i], 0u), 1u, &pvProp);
-        ok(pRet == NULL, "LpValFindProp[%d]: Found nonexistent propery id\n",
+        ok(pRet == NULL, "LpValFindProp[%d]: Found nonexistent property id\n",
            ptTypes[i]);
 
         pRet = pLpValFindProp(PROP_TAG(PT_NULL, 0u), 1u, &pvProp);
-        ok(pRet == NULL, "LpValFindProp[%d]: Found nonexistent propery id/type\n",
+        ok(pRet == NULL, "LpValFindProp[%d]: Found nonexistent property id/type\n",
            ptTypes[i]);
 
         pRet = pLpValFindProp(PROP_TAG(PT_NULL, 1u), 1u, &pvProp);
         ok(pRet == &pvProp,
-           "LpValFindProp[%d]: Didn't find existing propery id\n",
+           "LpValFindProp[%d]: Didn't find existing property id\n",
            ptTypes[i]);
     }
 }
@@ -1232,7 +1232,7 @@ static void test_IProp(void)
 
     /* GetLastError - No errors set */
     lpError = NULL;
-    IPropData_GetLastError(lpIProp, E_INVALIDARG, 0, &lpError);
+    sc = IPropData_GetLastError(lpIProp, E_INVALIDARG, 0, &lpError);
     ok(sc == S_OK && !lpError,
        "GetLastError: Expected S_OK, null, got 0x%08X,%p\n", sc, lpError);
 
@@ -1302,7 +1302,7 @@ static void test_IProp(void)
 
     /* Set access to read and write */
     sc = IPropData_HrSetObjAccess(lpIProp, IPROP_READWRITE);
-    ok(sc == S_OK, "SetObjAcess(WRITE): Expected S_OK got 0x%08X\n", sc);
+    ok(sc == S_OK, "SetObjAccess(WRITE): Expected S_OK got 0x%08X\n", sc);
 
     tags.cValues = 1;
     tags.aulPropTag[0] = PR_IMPORTANCE;
@@ -1311,31 +1311,31 @@ static void test_IProp(void)
     access[0] = 0;
     sc = IPropData_HrSetPropAccess(lpIProp, (LPSPropTagArray)&tags, access);
     ok(sc == MAPI_E_INVALID_PARAMETER,
-       "SetPropAcess(0): Expected INVALID_PARAMETER got 0x%08X\n",sc);
+       "SetPropAccess(0): Expected INVALID_PARAMETER got 0x%08X\n",sc);
     access[0] = IPROP_READWRITE;
     sc = IPropData_HrSetPropAccess(lpIProp, (LPSPropTagArray)&tags, access);
     ok(sc == MAPI_E_INVALID_PARAMETER,
-       "SetPropAcess(RW): Expected INVALID_PARAMETER got 0x%08X\n",sc);
+       "SetPropAccess(RW): Expected INVALID_PARAMETER got 0x%08X\n",sc);
     access[0] = IPROP_CLEAN;
     sc = IPropData_HrSetPropAccess(lpIProp, (LPSPropTagArray)&tags, access);
     ok(sc == MAPI_E_INVALID_PARAMETER,
-       "SetPropAcess(C): Expected INVALID_PARAMETER got 0x%08X\n",sc);
+       "SetPropAccess(C): Expected INVALID_PARAMETER got 0x%08X\n",sc);
 
     /* Set item access to read/write/clean */
     tags.cValues = 1;
     tags.aulPropTag[0] = PR_IMPORTANCE;
     access[0] = IPROP_READWRITE|IPROP_CLEAN;
     sc = IPropData_HrSetPropAccess(lpIProp, (LPSPropTagArray)&tags, access);
-    ok(sc == S_OK, "SetPropAcess(RW/C): Expected S_OK got 0x%08X\n",sc);
+    ok(sc == S_OK, "SetPropAccess(RW/C): Expected S_OK got 0x%08X\n",sc);
 
     /* Set object access to read only */
     sc = IPropData_HrSetObjAccess(lpIProp, IPROP_READONLY);
-    ok(sc == S_OK, "SetObjAcess(READ): Expected S_OK got 0x%08X\n", sc);
+    ok(sc == S_OK, "SetObjAccess(READ): Expected S_OK got 0x%08X\n", sc);
 
     /* Set item access to read/write/dirty - doesn't care about RO object */
     access[0] = IPROP_READONLY|IPROP_DIRTY;
     sc = IPropData_HrSetPropAccess(lpIProp, (LPSPropTagArray)&tags, access);
-    ok(sc == S_OK, "SetPropAcess(WRITE): Expected S_OK got 0x%08X\n", sc);
+    ok(sc == S_OK, "SetPropAccess(WRITE): Expected S_OK got 0x%08X\n", sc);
 
     /* Delete any item when set to read only - Error */
     lpProbs = NULL;
@@ -1347,7 +1347,7 @@ static void test_IProp(void)
 
     /* Set access to read and write */
     sc = IPropData_HrSetObjAccess(lpIProp, IPROP_READWRITE);
-    ok(sc == S_OK, "SetObjAcess(WRITE): Expected S_OK got 0x%08X\n", sc);
+    ok(sc == S_OK, "SetObjAccess(WRITE): Expected S_OK got 0x%08X\n", sc);
 
     /* Delete nonexistent item - No error */
     lpProbs = NULL;
@@ -1401,7 +1401,7 @@ static void test_IProp(void)
     /* Set item to r/w again */
     access[0] = IPROP_READWRITE|IPROP_DIRTY;
     sc = IPropData_HrSetPropAccess(lpIProp, (LPSPropTagArray)&tags, access);
-    ok(sc == S_OK, "SetPropAcess(WRITE): Expected S_OK got 0x%08X\n", sc);
+    ok(sc == S_OK, "SetPropAccess(WRITE): Expected S_OK got 0x%08X\n", sc);
 
     /* Delete existing item (r/w) - No error, no problems */
     lpProbs = NULL;

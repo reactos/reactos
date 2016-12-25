@@ -326,7 +326,7 @@ static void one_RtlInt64ToUnicodeString_test(int test_num, const largeint2str_t 
 	/* the string would have (which can be larger than the MaximumLength). */
 	/* To allow all this in the tests we do the following: */
 	if (expected_unicode_string.Length >= 64) {
-	    /* The value is too large to convert only triggerd when testing native */
+	    /* The value is too large to convert only triggered when testing native */
 	    /* Length is not filled with the expected string length (garbage?) */
 	    expected_unicode_string.Length = unicode_string.Length;
 	} /* if */

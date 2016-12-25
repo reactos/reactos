@@ -23,6 +23,7 @@ IntPrintUsage()
          << "    /c <comment> - Specifies the comment to be submitted to the Web Service." << endl
          << "                   Skips the comment set in the configuration file (if any)." << endl
          << "                   Only has an effect when /w is also used." << endl
+         << "    /n           - Do not print test output to console" << endl
          << "    /r           - Maintain information to resume from ReactOS crashes" << endl
          << "                   Can only be run under ReactOS and relies on sysreg2," << endl
          << "                   so incompatible with /w" << endl
@@ -51,10 +52,28 @@ wmain(int argc, wchar_t* argv[])
 
     try
     {
+        stringstream ss;
+
         /* Set up the configuration */
         Configuration.ParseParameters(argc, argv);
         Configuration.GetSystemInformation();
         Configuration.GetConfigurationFromFile();
+
+        ss << "\n\nSystem uptime " << setprecision(2) << fixed ;
+        ss << ((float)GetTickCount()/1000) << " seconds\n";
+        StringOut(ss.str());
+        
+        /* Report tests startup */
+        InitLogs();
+        ReportEventW(hLog,
+                      EVENTLOG_INFORMATION_TYPE,
+                      0,
+                      MSG_TESTS_STARTED,
+                      NULL,
+                      0,
+                      0,
+                      NULL,
+                      NULL);
 
         /* Run the tests */
         WineTest.Run();
@@ -87,6 +106,18 @@ wmain(int argc, wchar_t* argv[])
     /* For sysreg2 to notice if rosautotest itself failed */
     if(ReturnValue == 1)
         DbgPrint("SYSREG_ROSAUTOTEST_FAILURE\n");
+
+    /* Report successful end of tests */
+    ReportEventW(hLog,
+                  EVENTLOG_SUCCESS,
+                  0,
+                  MSG_TESTS_SUCCESSFUL,
+                  NULL,
+                  0,
+                  0,
+                  NULL,
+                  NULL);
+    FreeLogs();
 
     /* Shut down the system if requested, also in case of an exception above */
     if(Configuration.DoShutdown() && !ShutdownSystem())

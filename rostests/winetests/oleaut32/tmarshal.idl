@@ -17,12 +17,15 @@
  *
  */
 
+#pragma makedep ident
+#pragma makedep typelib
+
 #include "tmarshal_dispids.h"
 import "ocidl.idl";
 
 [
   uuid(d96d8a3e-78b6-4c8d-8f27-059db959be8a),
-  version(1.0),
+  version(2.5),
   helpstring("Test Typelib")
 ]
 library TestTypelib
@@ -39,6 +42,7 @@ library TestTypelib
     {
         INT field1;
         ULONGLONG field2;
+        UINT uarr[8];
     } MYSTRUCT;
 
     coclass ApplicationObject2;
@@ -59,6 +63,26 @@ library TestTypelib
         uuid(3f7e06fe-0bce-46f0-8b7d-3a68393c7967)
     ]
     interface ItestDual : IDispatch
+    {
+        HRESULT test();
+    }
+
+    [
+        odl,
+        uuid(3f7e06fe-0bce-46f0-8b7d-3a68393c7968)
+    ]
+    interface ITestSecondIface : IUnknown
+    {
+        HRESULT test();
+    }
+
+    [
+        odl,
+        oleautomation,
+        dual,
+        uuid(3f7e06fe-0bce-46f0-8b7d-3a68393c7969)
+    ]
+    interface ITestSecondDisp : IDispatch
     {
         HRESULT test();
     }
@@ -111,6 +135,9 @@ library TestTypelib
         [id(DISPID_TM_VARARRAYPTR)]
         HRESULT VariantArrayPtr([in] SAFEARRAY(VARIANT) *values);
 
+        [id(DISPID_TM_VARCARRAY)]
+        HRESULT VariantCArray([in] ULONG count, [in, out] VARIANT values[2]);
+
         [id(DISPID_TM_VARIANT)]
         HRESULT Variant([in] VARIANT var);
 
@@ -146,6 +173,21 @@ library TestTypelib
 
         [id(DISPID_TM_PROP_REQ_ARG), propput]
         HRESULT prop_req_arg([in] INT req, [in] INT i);
+
+        [id(DISPID_TM_RESTRICTED), restricted]
+        HRESULT pos_restrict([out, retval] INT *i);
+
+        [id(DISPID_TM_NEG_RESTRICTED), restricted]
+        HRESULT neg_restrict([out, retval] INT *i);
+
+        [id(DISPID_TM_VARARG_RUN), vararg]
+        HRESULT VarArg_Run([in] BSTR name, [in] SAFEARRAY(VARIANT) params, [out, retval] VARIANT *result);
+
+        [id(DISPID_TM_VARARG_REF_RUN), vararg]
+        HRESULT VarArg_Ref_Run([in] BSTR name, [in] SAFEARRAY(VARIANT) *params, [out, retval] VARIANT *result);
+
+        [id(DISPID_TM_COCLASS)]
+        HRESULT Coclass([in] ApplicationObject2 *param);
     }
 
     [
@@ -158,6 +200,9 @@ library TestTypelib
     {
         [id(DISPID_TM_TESTDUAL)]
         HRESULT TestDual([in] ItestDual *p);
+
+        [id(DISPID_TM_TESTSECONDIFACE)]
+        HRESULT TestSecondIface([in] ITestSecondIface *p);
     }
 
     [

@@ -36,7 +36,7 @@
 #include "winnls.h"
 #include "winuser.h"
 #include "wine/test.h"
-#include "winternl.h"
+#include "wine/winternl.h"
 
 #ifndef __WINE_WINTERNL_H
 typedef unsigned short RTL_ATOM, *PRTL_ATOM;
@@ -110,7 +110,7 @@ static DWORD WINAPI RtlAtomTestThread(LPVOID Table)
 
     Len = 64;
     res = pRtlQueryAtomInAtomTable(AtomTable, Atom, &RefCount, &PinCount, Name, &Len);
-    ok(!res, "Failed with longenough buffer, retval: %x\n", res);
+    ok(!res, "Failed with long enough buffer, retval: %x\n", res);
     ok(RefCount == 1, "Refcount was not 1 but %x\n", RefCount);
     ok(PinCount == 1, "Pincount was not 1 but %x\n", PinCount);
     ok(!lstrcmpW(Name, testAtom2), "We found wrong atom!!\n");
@@ -432,9 +432,9 @@ static void test_Global(void)
 {
     NTSTATUS    res;
     RTL_ATOM    atom;
-    char        ptr[sizeof(ATOM_BASIC_INFORMATION) + 255 * sizeof(WCHAR)];
+    ULONG       ptr[(sizeof(ATOM_BASIC_INFORMATION) + 255 * sizeof(WCHAR)) / sizeof(ULONG)];
     ATOM_BASIC_INFORMATION*     abi = (ATOM_BASIC_INFORMATION*)ptr;
-    ULONG       ptr_size = sizeof(ATOM_BASIC_INFORMATION) + 255 * sizeof(WCHAR);
+    ULONG       ptr_size = sizeof(ptr);
 
     if (pNtAddAtomNT4)
         res = pNtAddAtomNT4(testAtom1, &atom);
@@ -443,7 +443,7 @@ static void test_Global(void)
 
     ok(!res, "Added atom (%x)\n", res);
 
-    memset(abi->Name, 0xcc, 255 * sizeof(WCHAR));
+    memset( ptr, 0xcc, sizeof(ptr) );
     res = pNtQueryInformationAtom( atom, AtomBasicInformation, (void*)ptr, ptr_size, NULL );
     ok(!res, "atom lookup\n");
     ok(!lstrcmpW(abi->Name, testAtom1), "ok strings\n");
@@ -457,7 +457,7 @@ static void test_Global(void)
     ok(abi->NameLength == lstrlenW(testAtom1) * sizeof(WCHAR) || broken(abi->NameLength == sizeof(WCHAR)), /* nt4 */
        "string length %u\n",abi->NameLength);
 
-    memset(abi->Name, 0xcc, lstrlenW(testAtom1) * sizeof(WCHAR));
+    memset( ptr, 0xcc, sizeof(ptr) );
     ptr_size = sizeof(ATOM_BASIC_INFORMATION) + lstrlenW(testAtom1) * sizeof(WCHAR);
     res = pNtQueryInformationAtom( atom, AtomBasicInformation, (void*)ptr, ptr_size, NULL );
     ok(!res, "atom lookup %x\n", res);
@@ -466,8 +466,8 @@ static void test_Global(void)
     ok(abi->Name[lstrlenW(testAtom1)] == 0, "buffer overwrite %x\n", abi->Name[lstrlenW(testAtom1)]);
     ok(abi->Name[lstrlenW(testAtom1) + 1] == 0xcccc, "buffer overwrite %x\n", abi->Name[lstrlenW(testAtom1) + 1]);
 
+    memset( ptr, 0xcc, sizeof(ptr) );
     ptr_size = sizeof(ATOM_BASIC_INFORMATION) + 4 * sizeof(WCHAR);
-    abi->Name[0] = abi->Name[1] = abi->Name[2] = abi->Name[3] = '\0';
     res = pNtQueryInformationAtom( atom, AtomBasicInformation, (void*)ptr, ptr_size, NULL );
     ok(!res, "couldn't find atom\n");
     ok(abi->NameLength == 8, "wrong string length %u\n", abi->NameLength);

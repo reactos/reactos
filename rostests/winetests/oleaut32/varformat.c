@@ -19,39 +19,41 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <math.h>
-#include <float.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "windef.h"
-#include "winbase.h"
-#include "winsock.h"
-#include "wine/test.h"
-#include "winuser.h"
-#include "wingdi.h"
-#include "winnls.h"
-#include "winerror.h"
-#include "winnt.h"
+//#include <stdarg.h>
+//#include <stdio.h>
+//#include <math.h>
+//#include <float.h>
 
-#include "wtypes.h"
-#include "oleauto.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winsock.h"
+#include <wine/test.h>
+//#include "winuser.h"
+//#include "wingdi.h"
+#include <winnls.h>
+//#include "winerror.h"
+//#include "winnt.h"
+#include <objbase.h>
+//#include "wtypes.h"
+#include <oleauto.h>
 
 static HMODULE hOleaut32;
 
+static HRESULT (WINAPI *pVarBstrCmp)(BSTR,BSTR,LCID,ULONG);
 static HRESULT (WINAPI *pVarFormatNumber)(LPVARIANT,int,int,int,int,ULONG,BSTR*);
 static HRESULT (WINAPI *pVarFormat)(LPVARIANT,LPOLESTR,int,int,ULONG,BSTR*);
 static HRESULT (WINAPI *pVarWeekdayName)(int,int,int,ULONG,BSTR*);
 
-/* Have I8/UI8 data type? */
-#define HAVE_OLEAUT32_I8      HAVE_FUNC(VarI8FromI1)
-
-/* Is a given function exported from oleaut32? */
-#define HAVE_FUNC(func) ((void*)GetProcAddress(hOleaut32, #func) != NULL)
+/* Has I8/UI8 data type? */
+static BOOL has_i8;
 
 /* Get a conversion function ptr, return if function not available */
 #define CHECKPTR(func) p##func = (void*)GetProcAddress(hOleaut32, #func); \
-  if (!p##func) { trace("function " # func " not available, not testing it\n"); return; }
+  if (!p##func) { win_skip("function " # func " not available, not testing it\n"); return; }
 
 static inline int strcmpW( const WCHAR *str1, const WCHAR *str2 )
 {
@@ -95,7 +97,7 @@ static void test_VarFormatNumber(void)
   FMT_NUMBER(VT_UI2, V_UI2);
   FMT_NUMBER(VT_I4, V_I4);
   FMT_NUMBER(VT_UI4, V_UI4);
-  if (HAVE_OLEAUT32_I8)
+  if (has_i8)
   {
     FMT_NUMBER(VT_I8, V_I8);
     FMT_NUMBER(VT_UI8, V_UI8);
@@ -212,7 +214,17 @@ static const FMTDATERES VarFormat_date_results[] =
   { 2.525, "hh :mm:mm", "12 :36:01" },
   { 2.525, "dd :mm:mm", "01 :01:01" },
   { 2.525, "dd :mm:nn", "01 :01:36" },
-  { 2.725, "hh:nn:ss A/P", "05:24:00 P" }
+  { 2.725, "hh:nn:ss A/P", "05:24:00 P" },
+  { 40531.0, "dddd", "Sunday" },
+  { 40531.0, "ddd", "Sun" }
+};
+
+/* The following tests require that the time separator is a colon (:) */
+static const FMTDATERES VarFormat_namedtime_results[] =
+{
+  { 2.525, "short time", "12:36" },
+  { 2.525, "medium time", "12:36 PM" },
+  { 2.525, "long time", "12:36:00 PM" }
 };
 
 #define VNUMFMT(vt,v) \
@@ -245,7 +257,7 @@ static void test_VarFormat(void)
 
   if (PRIMARYLANGID(LANGIDFROMLCID(GetUserDefaultLCID())) != LANG_ENGLISH)
   {
-    skip("Skipping VarFormat tests for non english language\n");
+    skip("Skipping VarFormat tests for non English language\n");
     return;
   }
   GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, buff, sizeof(buff)/sizeof(char));
@@ -267,7 +279,7 @@ static void test_VarFormat(void)
   VNUMFMT(VT_I1,V_I1);
   VNUMFMT(VT_I2,V_I2);
   VNUMFMT(VT_I4,V_I4);
-  if (HAVE_OLEAUT32_I8)
+  if (has_i8)
   {
     VNUMFMT(VT_I8,V_I8);
   }
@@ -275,7 +287,7 @@ static void test_VarFormat(void)
   VNUMFMT(VT_UI1,V_UI1);
   VNUMFMT(VT_UI2,V_UI2);
   VNUMFMT(VT_UI4,V_UI4);
-  if (HAVE_OLEAUT32_I8)
+  if (has_i8)
   {
     VNUMFMT(VT_UI8,V_UI8);
   }
@@ -297,6 +309,23 @@ static void test_VarFormat(void)
     VARFMT(VT_DATE,V_DATE,VarFormat_date_results[i].val,
            VarFormat_date_results[i].fmt,S_OK,
            VarFormat_date_results[i].res);
+  }
+
+  /* Named time formats */
+  GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_STIMEFORMAT, buff, sizeof(buff)/sizeof(char));
+  if (strcmp(buff, "h:mm:ss tt"))
+  {
+    skip("Skipping named time tests as time format is '%s'\n", buff);
+  }
+  else
+  {
+    for (i = 0; i < sizeof(VarFormat_namedtime_results)/sizeof(FMTDATERES); i++)
+    {
+      fd = 0;
+      VARFMT(VT_DATE,V_DATE,VarFormat_namedtime_results[i].val,
+             VarFormat_namedtime_results[i].fmt,S_OK,
+             VarFormat_namedtime_results[i].res);
+    }
   }
 
   /* Strings */
@@ -498,28 +527,30 @@ static void test_VarWeekdayName(void)
      "Null pointer: expected E_INVALIDARG, got 0x%08x\n", hres);
 
   /* Check all combinations */
-  for (iWeekday = 1; iWeekday <= 7; ++iWeekday)
-  {
-    for (fAbbrev = 0; fAbbrev <= 1; ++fAbbrev)
+  pVarBstrCmp = (void*)GetProcAddress(hOleaut32, "VarBstrCmp");
+  if (pVarBstrCmp)
+    for (iWeekday = 1; iWeekday <= 7; ++iWeekday)
     {
-      /* 0 = Default, 1 = Sunday, 2 = Monday, .. */
-      for (iFirstDay = 0; iFirstDay <= 7; ++iFirstDay)
+      for (fAbbrev = 0; fAbbrev <= 1; ++fAbbrev)
       {
-        VARWDN_O(iWeekday, fAbbrev, iFirstDay, 0);
-        if (iFirstDay == 0)
-          firstDay = defaultFirstDay;
-        else
-          /* Translate from 0=Sunday to 0=Monday in the modulo 7 space */
-          firstDay = iFirstDay - 2;
-        day = (7 + iWeekday - 1 + firstDay) % 7;
-        ok(VARCMP_EQ == VarBstrCmp(out, dayNames[day][fAbbrev],
-                                   LOCALE_USER_DEFAULT, 0),
-           "VarWeekdayName(%d,%d,%d): got wrong dayname: '%s'\n",
-           iWeekday, fAbbrev, iFirstDay, buff);
-        SysFreeString(out);
+        /* 0 = Default, 1 = Sunday, 2 = Monday, .. */
+        for (iFirstDay = 0; iFirstDay <= 7; ++iFirstDay)
+        {
+          VARWDN_O(iWeekday, fAbbrev, iFirstDay, 0);
+          if (iFirstDay == 0)
+            firstDay = defaultFirstDay;
+          else
+            /* Translate from 0=Sunday to 0=Monday in the modulo 7 space */
+            firstDay = iFirstDay - 2;
+          day = (7 + iWeekday - 1 + firstDay) % 7;
+          ok(VARCMP_EQ == pVarBstrCmp(out, dayNames[day][fAbbrev],
+                                      LOCALE_USER_DEFAULT, 0),
+             "VarWeekdayName(%d,%d,%d): got wrong dayname: '%s'\n",
+             iWeekday, fAbbrev, iFirstDay, buff);
+          SysFreeString(out);
+        }
       }
     }
-  }
 
   /* Cleanup */
   for (day = 0; day <= 6; ++day)
@@ -531,11 +562,96 @@ static void test_VarWeekdayName(void)
   }
 }
 
+static void test_VarFormatFromTokens(void)
+{
+    static WCHAR number_fmt[] = {'#','#','#',',','#','#','0','.','0','0',0};
+    static const WCHAR number[] = {'6',',','9','0',0};
+    static const WCHAR number_us[] = {'6','9','0','.','0','0',0};
+
+    static WCHAR date_fmt[] = {'d','d','-','m','m',0};
+    static const WCHAR date[] = {'1','2','-','1','1',0};
+    static const WCHAR date_us[] = {'1','1','-','1','2',0};
+
+    static WCHAR string_fmt[] = {'@',0};
+    static const WCHAR string_de[] = {'1',',','5',0};
+    static const WCHAR string_us[] = {'1','.','5',0};
+
+    BYTE buff[256];
+    LCID lcid;
+    VARIANT var;
+    BSTR bstr;
+    HRESULT hres;
+
+    V_VT(&var) = VT_BSTR;
+    V_BSTR(&var) = SysAllocString(number);
+
+    lcid = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
+    hres = VarTokenizeFormatString(number_fmt, buff, sizeof(buff), 1, 1, lcid, NULL);
+    ok(hres == S_OK, "VarTokenizeFormatString failed: %x\n", hres);
+    hres = VarFormatFromTokens(&var, number_fmt, buff, 0, &bstr, lcid);
+    ok(hres == S_OK, "VarFormatFromTokens failed: %x\n", hres);
+    ok(!strcmpW(bstr, number_us), "incorrectly formatted number: %s\n", wine_dbgstr_w(bstr));
+    SysFreeString(bstr);
+
+    lcid = MAKELCID(MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN), SORT_DEFAULT);
+    hres = VarTokenizeFormatString(number_fmt, buff, sizeof(buff), 1, 1, lcid, NULL);
+    ok(hres == S_OK, "VarTokenizeFormatString failed: %x\n", hres);
+    hres = VarFormatFromTokens(&var, number_fmt, buff, 0, &bstr, lcid);
+    ok(hres == S_OK, "VarFormatFromTokens failed: %x\n", hres);
+    ok(!strcmpW(bstr, number), "incorrectly formatted number: %s\n", wine_dbgstr_w(bstr));
+    SysFreeString(bstr);
+
+    VariantClear(&var);
+
+    V_VT(&var) = VT_BSTR;
+    V_BSTR(&var) = SysAllocString(date);
+
+    lcid = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
+    hres = VarTokenizeFormatString(date_fmt, buff, sizeof(buff), 1, 1, lcid, NULL);
+    ok(hres == S_OK, "VarTokenizeFormatString failed: %x\n", hres);
+    hres = VarFormatFromTokens(&var, date_fmt, buff, 0, &bstr, lcid);
+    ok(hres == S_OK, "VarFormatFromTokens failed: %x\n", hres);
+    ok(!strcmpW(bstr, date_us), "incorrectly formatted date: %s\n", wine_dbgstr_w(bstr));
+    SysFreeString(bstr);
+
+    lcid = MAKELCID(MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN), SORT_DEFAULT);
+    hres = VarTokenizeFormatString(date_fmt, buff, sizeof(buff), 1, 1, lcid, NULL);
+    ok(hres == S_OK, "VarTokenizeFormatString failed: %x\n", hres);
+    hres = VarFormatFromTokens(&var, date_fmt, buff, 0, &bstr, lcid);
+    ok(hres == S_OK, "VarFormatFromTokens failed: %x\n", hres);
+    ok(!strcmpW(bstr, date), "incorrectly formatted date: %s\n", wine_dbgstr_w(bstr));
+    SysFreeString(bstr);
+
+    VariantClear(&var);
+
+    V_VT(&var) = VT_R4;
+    V_R4(&var) = 1.5;
+
+    lcid = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
+    hres = VarTokenizeFormatString(string_fmt, buff, sizeof(buff), 1, 1, lcid, NULL);
+    ok(hres == S_OK, "VarTokenizeFormatString failed: %x\n", hres);
+    hres = VarFormatFromTokens(&var, string_fmt, buff, 0, &bstr, lcid);
+    ok(hres == S_OK, "VarFormatFromTokens failed: %x\n", hres);
+    ok(!strcmpW(bstr, string_us), "incorrectly formatted string: %s\n", wine_dbgstr_w(bstr));
+    SysFreeString(bstr);
+
+    lcid = MAKELCID(MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN), SORT_DEFAULT);
+    hres = VarTokenizeFormatString(string_fmt, buff, sizeof(buff), 1, 1, lcid, NULL);
+    ok(hres == S_OK, "VarTokenizeFormatString failed: %x\n", hres);
+    hres = VarFormatFromTokens(&var, string_fmt, buff, 0, &bstr, lcid);
+    ok(hres == S_OK, "VarFormatFromTokens failed: %x\n", hres);
+    ok(!strcmpW(bstr, string_de), "incorrectly formatted string: %s\n", wine_dbgstr_w(bstr));
+    SysFreeString(bstr);
+}
+
 START_TEST(varformat)
 {
   hOleaut32 = GetModuleHandleA("oleaut32.dll");
 
+  has_i8 = GetProcAddress(hOleaut32, "VarI8FromI1") != NULL;
+
   test_VarFormatNumber();
   test_VarFormat();
   test_VarWeekdayName();
+  test_VarFormatFromTokens();
 }

@@ -1,10 +1,4 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
-
-set_rc_compiler()
-
 list(APPEND SOURCE
     broadcast.c
     class.c
@@ -14,7 +8,7 @@ list(APPEND SOURCE
     dce.c
     dde.c
     dialog.c
-    edit.c
+    edit.c    
     generated.c
     input.c
     listbox.c
@@ -30,11 +24,10 @@ list(APPEND SOURCE
     win.c
     winstation.c
     wsprintf.c
-    testlist.c
-    resource.rc)
+    testlist.c)
 
-add_executable(user32_winetest ${SOURCE})
-target_link_libraries(user32_winetest wine)
-set_module_type(user32_winetest win32cui)
-add_importlibs(user32_winetest user32 gdi32 advapi32 msvcrt kernel32 ntdll)
+add_executable(user32_winetest ${SOURCE} resource.rc)
+# some tests need to be run from an app compiled as GUI
+set_module_type(user32_winetest win32gui)
+add_importlibs(user32_winetest user32 gdi32 advapi32 msvcrt kernel32)
 add_cd_file(TARGET user32_winetest DESTINATION reactos/bin FOR all)

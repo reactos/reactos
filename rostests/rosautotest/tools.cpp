@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Automatic Testing Utility
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Various helper functions
- * COPYRIGHT:   Copyright 2008-2009 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2008-2015 Colin Finck <colin@reactos.org>
  */
 
 #include "precomp.h"
@@ -92,11 +92,11 @@ IsNumber(const char* Input)
  * @param String
  * The std::string to output
  */
-void
-StringOut(const string& String)
+string
+StringOut(const string& String, bool forcePrint)
 {
     char DbgString[DBGPRINT_BUFSIZE + 1];
-    size_t i;
+    size_t i, start = 0, last_newline = 0, size = 0, curr_pos = 0;
     string NewString;
 
     /* Unify the line endings (the piped output of the tests may use CRLF) */
@@ -113,26 +113,59 @@ StringOut(const string& String)
             /* Otherwise copy the string */
             NewString += String[i];
         }
+
+        curr_pos = NewString.size();
+
+        /* Try to print whole lines but obey the 512 bytes chunk size limit*/
+        if(NewString[curr_pos - 1] == '\n' || (curr_pos - start) == DBGPRINT_BUFSIZE)
+        {
+            if((curr_pos - start) >= DBGPRINT_BUFSIZE)
+            {
+                /* No newlines so far, or the string just fits */
+                if(last_newline <= start || ((curr_pos - start == DBGPRINT_BUFSIZE) && NewString[curr_pos - 1] == '\n'))
+                {
+                    size = curr_pos - start;
+                    memcpy(DbgString, NewString.c_str() + start, size);
+                    start = curr_pos;
+                }
+                else
+                {
+                    size = last_newline - start;
+                    memcpy(DbgString, NewString.c_str() + start, size);
+                    start = last_newline;
+                }
+
+                DbgString[size] = 0;
+                DbgPrint("%s", DbgString);
+            }
+
+            last_newline = curr_pos;
+        }
     }
 
-    /* Output the string.
-       For DbgPrint, this must be done in chunks of 512 bytes. */
-    cout << NewString;
+    size = curr_pos - start;
 
-    for(i = 0; i < NewString.size(); i += DBGPRINT_BUFSIZE)
+    /* Only print if forced to or if the rest is a whole line */
+    if(forcePrint == true || NewString[curr_pos - 1] == '\n')
     {
-        size_t BytesToCopy;
+        /* Output the whole string */
+        if(Configuration.DoPrint())
+            cout << NewString << flush;
 
-        if(NewString.size() - i > DBGPRINT_BUFSIZE)
-            BytesToCopy = DBGPRINT_BUFSIZE;
-        else
-            BytesToCopy = NewString.size() - i;
+        memcpy(DbgString, NewString.c_str() + start, size);
+        DbgString[size] = 0;
+        DbgPrint("%s", DbgString);
 
-        memcpy(DbgString, NewString.c_str() + i, BytesToCopy);
-        DbgString[BytesToCopy] = 0;
-
-        DbgPrint(DbgString);
+        NewString.clear();
+        return NewString;
     }
+
+    /* Output full lines only */
+    if(Configuration.DoPrint())
+        cout << NewString.substr(0, start) << flush;
+
+    /* Return the remaining chunk */
+    return NewString.substr(start, size);
 }
 
 /**
@@ -168,7 +201,7 @@ GetINIValue(PCWCH AppName, PCWCH KeyName, PCWCH FileName)
         WideCharToMultiByte(CP_ACP, 0, Buffer, Length + 1, AsciiBuffer, Length + 1, NULL, NULL);
 
         ReturnedString = AsciiBuffer;
-        delete AsciiBuffer;
+        delete[] AsciiBuffer;
     }
 
     return ReturnedString;

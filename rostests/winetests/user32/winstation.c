@@ -23,6 +23,9 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "winnls.h"
+#include "wine/winternl.h"
+
+static NTSTATUS (WINAPI *pNtQueryObject)(HANDLE, OBJECT_INFORMATION_CLASS, PVOID, ULONG, PULONG);
 
 #define DESKTOP_ALL_ACCESS 0x01ff
 
@@ -53,7 +56,7 @@ static void register_class(void)
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleA(0);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, IDC_ARROW);
+    cls.hCursor = LoadCursorA(0, (LPCSTR)IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "WinStationClass";
@@ -79,7 +82,7 @@ static DWORD CALLBACK thread( LPVOID arg )
     ok( GetLastError() == ERROR_BUSY || broken(GetLastError() == 0xdeadbeef), /* wow64 */
         "bad last error %d\n", GetLastError() );
     print_object( d1 );
-    d2 = CreateDesktop( "foobar2", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL );
+    d2 = CreateDesktopA( "foobar2", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL );
     trace( "created desktop %p\n", d2 );
     ok( d2 != 0, "CreateDesktop failed\n" );
 
@@ -108,9 +111,11 @@ static void test_handles(void)
     HWINSTA w1, w2, w3;
     HDESK d1, d2, d3;
     HANDLE hthread;
-    DWORD id, flags;
+    DWORD id, flags, le;
     ATOM atom;
     char buffer[20];
+    DWORD size;
+    BOOL ret;
 
     /* win stations */
 
@@ -136,60 +141,105 @@ static void test_handles(void)
                          TRUE, DUPLICATE_SAME_ACCESS ), "DuplicateHandle failed\n" );
     ok( CloseHandle(w2), "closing dup win station handle failed\n" );
 
-    w2 = CreateWindowStation("WinSta0", 0, WINSTA_ALL_ACCESS, NULL );
-    ok( w2 != 0, "CreateWindowStation failed\n" );
-    ok( w2 != w1, "CreateWindowStation returned default handle\n" );
-    SetLastError( 0xdeadbeef );
-    ok( !CloseDesktop( (HDESK)w2 ), "CloseDesktop succeeded on win station\n" );
-    ok( GetLastError() == ERROR_INVALID_HANDLE || broken(GetLastError() == 0xdeadbeef), /* wow64 */
-        "bad last error %d\n", GetLastError() );
-    ok( CloseWindowStation( w2 ), "CloseWindowStation failed\n" );
+    w2 = CreateWindowStationA("WinSta0", 0, WINSTA_ALL_ACCESS, NULL );
+    le = GetLastError();
+    ok( w2 != 0 || le == ERROR_ACCESS_DENIED, "CreateWindowStation failed (%u)\n", le );
+    if (w2 != 0)
+    {
+        ok( w2 != w1, "CreateWindowStation returned default handle\n" );
+        SetLastError( 0xdeadbeef );
+        ok( !CloseDesktop( (HDESK)w2 ), "CloseDesktop succeeded on win station\n" );
+        ok( GetLastError() == ERROR_INVALID_HANDLE || broken(GetLastError() == 0xdeadbeef), /* wow64 */
+            "bad last error %d\n", GetLastError() );
+        ok( CloseWindowStation( w2 ), "CloseWindowStation failed\n" );
 
-    w2 = CreateWindowStation("WinSta0", 0, WINSTA_ALL_ACCESS, NULL );
-    ok( CloseHandle( w2 ), "CloseHandle failed\n" );
+        w2 = CreateWindowStationA("WinSta0", 0, WINSTA_ALL_ACCESS, NULL );
+        ok( CloseHandle( w2 ), "CloseHandle failed\n" );
+    }
+    else if (le == ERROR_ACCESS_DENIED)
+        win_skip( "Not enough privileges for CreateWindowStation\n" );
 
-    w2 = OpenWindowStation("winsta0", TRUE, WINSTA_ALL_ACCESS );
+    w2 = OpenWindowStationA("winsta0", TRUE, WINSTA_ALL_ACCESS );
     ok( w2 != 0, "OpenWindowStation failed\n" );
     ok( w2 != w1, "OpenWindowStation returned default handle\n" );
     ok( CloseWindowStation( w2 ), "CloseWindowStation failed\n" );
 
-    w2 = OpenWindowStation("dummy name", TRUE, WINSTA_ALL_ACCESS );
+    w2 = OpenWindowStationA("dummy name", TRUE, WINSTA_ALL_ACCESS );
     ok( !w2, "open dummy win station succeeded\n" );
 
     CreateMutexA( NULL, 0, "foobar" );
-    w2 = CreateWindowStation("foobar", 0, WINSTA_ALL_ACCESS, NULL );
-    ok( w2 != 0, "create foobar station failed\n" );
+    w2 = CreateWindowStationA("foobar", 0, WINSTA_ALL_ACCESS, NULL );
+    le = GetLastError();
+    ok( w2 != 0 || le == ERROR_ACCESS_DENIED, "create foobar station failed (%u)\n", le );
 
-    w3 = OpenWindowStation("foobar", TRUE, WINSTA_ALL_ACCESS );
-    ok( w3 != 0, "open foobar station failed\n" );
-    ok( w3 != w2, "open foobar station returned same handle\n" );
-    ok( CloseWindowStation( w2 ), "CloseWindowStation failed\n" );
-    ok( CloseWindowStation( w3 ), "CloseWindowStation failed\n" );
+    if (w2 != 0)
+    {
+        w3 = OpenWindowStationA("foobar", TRUE, WINSTA_ALL_ACCESS );
+        ok( w3 != 0, "open foobar station failed\n" );
+        ok( w3 != w2, "open foobar station returned same handle\n" );
+        ok( CloseWindowStation( w2 ), "CloseWindowStation failed\n" );
+        ok( CloseWindowStation( w3 ), "CloseWindowStation failed\n" );
 
-    w3 = OpenWindowStation("foobar", TRUE, WINSTA_ALL_ACCESS );
-    ok( !w3, "open foobar station succeeded\n" );
+        w3 = OpenWindowStationA("foobar", TRUE, WINSTA_ALL_ACCESS );
+        ok( !w3, "open foobar station succeeded\n" );
 
-    w2 = CreateWindowStation("foobar1", 0, WINSTA_ALL_ACCESS, NULL );
-    ok( w2 != 0, "create foobar station failed\n" );
-    w3 = CreateWindowStation("foobar2", 0, WINSTA_ALL_ACCESS, NULL );
-    ok( w3 != 0, "create foobar station failed\n" );
-    ok( GetHandleInformation( w2, &flags ), "GetHandleInformation failed\n" );
-    ok( GetHandleInformation( w3, &flags ), "GetHandleInformation failed\n" );
+        w2 = CreateWindowStationA("foobar1", 0, WINSTA_ALL_ACCESS, NULL );
+        ok( w2 != 0, "create foobar station failed\n" );
+        w3 = CreateWindowStationA("foobar2", 0, WINSTA_ALL_ACCESS, NULL );
+        ok( w3 != 0, "create foobar station failed\n" );
+        ok( GetHandleInformation( w2, &flags ), "GetHandleInformation failed\n" );
+        ok( GetHandleInformation( w3, &flags ), "GetHandleInformation failed\n" );
 
-    SetProcessWindowStation( w2 );
-    register_class();
-    atom = GlobalAddAtomA("foo");
-    ok( GlobalGetAtomNameA( atom, buffer, sizeof(buffer) ) == 3, "GlobalGetAtomName failed\n" );
-    ok( !lstrcmpiA( buffer, "foo" ), "bad atom value %s\n", buffer );
+        SetProcessWindowStation( w2 );
+        atom = GlobalAddAtomA("foo");
+        ok( GlobalGetAtomNameA( atom, buffer, sizeof(buffer) ) == 3, "GlobalGetAtomName failed\n" );
+        ok( !lstrcmpiA( buffer, "foo" ), "bad atom value %s\n", buffer );
 
-    ok( !CloseWindowStation( w2 ), "CloseWindowStation succeeded\n" );
-    ok( GetHandleInformation( w2, &flags ), "GetHandleInformation failed\n" );
+        ok( !CloseWindowStation( w2 ), "CloseWindowStation succeeded\n" );
+        ok( GetHandleInformation( w2, &flags ), "GetHandleInformation failed\n" );
 
-    SetProcessWindowStation( w3 );
-    ok( GetHandleInformation( w2, &flags ), "GetHandleInformation failed\n" );
-    ok( CloseWindowStation( w2 ), "CloseWindowStation failed\n" );
-    ok( GlobalGetAtomNameA( atom, buffer, sizeof(buffer) ) == 3, "GlobalGetAtomName failed\n" );
-    ok( !lstrcmpiA( buffer, "foo" ), "bad atom value %s\n", buffer );
+        SetProcessWindowStation( w3 );
+        ok( GetHandleInformation( w2, &flags ), "GetHandleInformation failed\n" );
+        ok( CloseWindowStation( w2 ), "CloseWindowStation failed\n" );
+        ok( GlobalGetAtomNameA( atom, buffer, sizeof(buffer) ) == 3, "GlobalGetAtomName failed\n" );
+        ok( !lstrcmpiA( buffer, "foo" ), "bad atom value %s\n", buffer );
+    }
+    else if (le == ERROR_ACCESS_DENIED)
+        win_skip( "Not enough privileges for CreateWindowStation\n" );
+
+    SetLastError( 0xdeadbeef );
+    w2 = OpenWindowStationA( "", TRUE, WINSTA_ALL_ACCESS );
+    ok( !w2, "open station succeeded\n" );
+    todo_wine
+    ok( GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    w2 = CreateWindowStationA( "", 0, WINSTA_ALL_ACCESS, NULL );
+    ok( w2 != 0, "create station failed err %u\n", GetLastError() );
+
+    memset( buffer, 0, sizeof(buffer) );
+    ret = GetUserObjectInformationA( w2, UOI_NAME, buffer, sizeof(buffer), &size );
+    ok( ret, "GetUserObjectInformationA failed with error %u\n", GetLastError() );
+    ok( !memcmp(buffer, "Service-0x0-", 12), "unexpected window station name '%s'\n", buffer );
+    ok( buffer[strlen(buffer) - 1] == '$', "unexpected window station name '%s'\n", buffer );
+
+    SetLastError( 0xdeadbeef );
+    w3 = OpenWindowStationA( "", TRUE, WINSTA_ALL_ACCESS );
+    todo_wine
+    ok( w3 != 0, "open station failed err %u\n", GetLastError() );
+    CloseWindowStation( w3 );
+    CloseWindowStation( w2 );
+
+    SetLastError( 0xdeadbeef );
+    w2 = CreateWindowStationA( "foo\\bar", 0, WINSTA_ALL_ACCESS, NULL );
+    ok( !w2, "create station succeeded\n" );
+    ok( GetLastError() == ERROR_PATH_NOT_FOUND || GetLastError() == ERROR_ACCESS_DENIED,
+        "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    w2 = OpenWindowStationA( "foo\\bar", TRUE, WINSTA_ALL_ACCESS );
+    ok( !w2, "create station succeeded\n" );
+    ok( GetLastError() == ERROR_PATH_NOT_FOUND, "wrong error %u\n", GetLastError() );
 
     /* desktops */
     d1 = GetThreadDesktop(GetCurrentThreadId());
@@ -222,10 +272,32 @@ static void test_handles(void)
                          TRUE, DUPLICATE_SAME_ACCESS ), "DuplicateHandle failed\n" );
     ok( CloseHandle(d2), "closing dup desktop handle failed\n" );
 
-    d2 = OpenDesktop( "dummy name", 0, TRUE, DESKTOP_ALL_ACCESS );
+    d2 = OpenDesktopA( "dummy name", 0, TRUE, DESKTOP_ALL_ACCESS );
     ok( !d2, "open dummy desktop succeeded\n" );
 
-    d2 = CreateDesktop( "foobar", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL );
+    SetLastError( 0xdeadbeef );
+    d2 = CreateDesktopA( "", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL );
+    todo_wine
+    ok( !d2, "create empty desktop succeeded\n" );
+    todo_wine
+    ok( GetLastError() == ERROR_INVALID_HANDLE, "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    d2 = OpenDesktopA( "", 0, TRUE, DESKTOP_ALL_ACCESS );
+    ok( !d2, "open empty desktop succeeded\n" );
+    ok( GetLastError() == ERROR_INVALID_HANDLE, "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    d2 = CreateDesktopA( "foo\\bar", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL );
+    ok( !d2, "create desktop succeeded\n" );
+    ok( GetLastError() == ERROR_BAD_PATHNAME, "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    d2 = OpenDesktopA( "foo\\bar", 0, TRUE, DESKTOP_ALL_ACCESS );
+    ok( !d2, "open desktop succeeded\n" );
+    ok( GetLastError() == ERROR_BAD_PATHNAME, "wrong error %u\n", GetLastError() );
+
+    d2 = CreateDesktopA( "foobar", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL );
     ok( d2 != 0, "create foobar desktop failed\n" );
     SetLastError( 0xdeadbeef );
     ok( !CloseWindowStation( (HWINSTA)d2 ), "CloseWindowStation succeeded on desktop\n" );
@@ -233,24 +305,25 @@ static void test_handles(void)
         "bad last error %d\n", GetLastError() );
 
     SetLastError( 0xdeadbeef );
-    d3 = CreateDesktop( "foobar", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL );
+    d3 = CreateDesktopA( "foobar", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL );
     ok( d3 != 0, "create foobar desktop again failed\n" );
     ok( GetLastError() == 0xdeadbeef, "bad last error %d\n", GetLastError() );
     ok( CloseDesktop( d3 ), "CloseDesktop failed\n" );
 
-    d3 = OpenDesktop( "foobar", 0, TRUE, DESKTOP_ALL_ACCESS );
+    d3 = OpenDesktopA( "foobar", 0, TRUE, DESKTOP_ALL_ACCESS );
     ok( d3 != 0, "open foobar desktop failed\n" );
     ok( d3 != d2, "open foobar desktop returned same handle\n" );
     ok( CloseDesktop( d2 ), "CloseDesktop failed\n" );
     ok( CloseDesktop( d3 ), "CloseDesktop failed\n" );
 
-    d3 = OpenDesktop( "foobar", 0, TRUE, DESKTOP_ALL_ACCESS );
+    d3 = OpenDesktopA( "foobar", 0, TRUE, DESKTOP_ALL_ACCESS );
     ok( !d3, "open foobar desktop succeeded\n" );
 
     ok( !CloseHandle(d1), "closing thread desktop handle succeeded\n" );
     d2 = GetThreadDesktop(GetCurrentThreadId());
     ok( d1 == d2, "got different handles after close\n" );
 
+    register_class();
     trace( "thread 1 desktop: %p\n", d1 );
     print_object( d1 );
     hthread = CreateThread( NULL, 0, thread, (LPVOID)2, 0, &id );
@@ -258,6 +331,9 @@ static void test_handles(void)
     trace( "get other thread desktop: %p\n", GetThreadDesktop(id) );
     WaitForSingleObject( hthread, INFINITE );
     CloseHandle( hthread );
+
+    /* clean side effect */
+    SetProcessWindowStation( w1 );
 }
 
 /* Enumeration tests */
@@ -282,7 +358,8 @@ static BOOL CALLBACK open_window_station_callbackA(LPSTR winsta, LPARAM lp)
 
 static void test_enumstations(void)
 {
-    BOOL ret;
+    DWORD ret;
+    HWINSTA hwinsta;
 
     if (0) /* Crashes instead */
     {
@@ -290,6 +367,15 @@ static void test_enumstations(void)
         ret = EnumWindowStationsA(NULL, 0);
         ok(!ret, "EnumWindowStationsA returned successfully!\n");
         ok(GetLastError() == ERROR_INVALID_PARAMETER, "LastError is set to %08x\n", GetLastError());
+    }
+
+    hwinsta = CreateWindowStationA("winsta_test", 0, WINSTA_ALL_ACCESS, NULL);
+    ret = GetLastError();
+    ok(hwinsta != NULL || ret == ERROR_ACCESS_DENIED, "CreateWindowStation failed (%u)\n", ret);
+    if (!hwinsta)
+    {
+        win_skip("Not enough privileges for CreateWindowStation\n");
+        return;
     }
 
     SetLastError(0xdeadbeef);
@@ -359,19 +445,578 @@ static void test_enumdesktops(void)
     ok(GetLastError() == 0xdeadbeef, "LastError is set to %08x\n", GetLastError());
 }
 
+/* Miscellaneous tests */
+
+static void test_getuserobjectinformation(void)
+{
+    WCHAR foobarTestW[] = {'\\','f','o','o','b','a','r','T','e','s','t',0};
+    WCHAR DesktopW[] = {'D','e','s','k','t','o','p',0};
+    OBJECT_NAME_INFORMATION *name_info;
+    WCHAR bufferW[20];
+    char buffer[64];
+    NTSTATUS status;
+    DWORD size;
+    HDESK desk;
+    BOOL ret;
+
+    desk = CreateDesktopA("foobarTest", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL);
+    ok(desk != 0, "open foobarTest desktop failed\n");
+
+    strcpy(buffer, "blahblah");
+
+    /** Tests for UOI_NAME **/
+
+    /* Get size, test size and return value/error code */
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = GetUserObjectInformationA(desk, UOI_NAME, NULL, 0, &size);
+
+    ok(!ret, "GetUserObjectInformationA returned %x\n", ret);
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "LastError is set to %08x\n", GetLastError());
+    ok(size == 22, "size is set to %d\n", size); /* Windows returns Unicode length (11*2) */
+
+    /* Get string */
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = GetUserObjectInformationA(desk, UOI_NAME, buffer, sizeof(buffer), &size);
+
+    ok(ret, "GetUserObjectInformationA returned %x\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "LastError is set to %08x\n", GetLastError());
+
+    ok(strcmp(buffer, "foobarTest") == 0, "Buffer is set to '%s'\n", buffer);
+    ok(size == 11, "size is set to %d\n", size); /* 11 bytes in 'foobarTest\0' */
+
+    /* Get size, test size and return value/error code (Unicode) */
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = GetUserObjectInformationW(desk, UOI_NAME, NULL, 0, &size);
+
+    ok(!ret, "GetUserObjectInformationW returned %x\n", ret);
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "LastError is set to %08x\n", GetLastError());
+    ok(size == 22, "size is set to %d\n", size);  /* 22 bytes in 'foobarTest\0' in Unicode */
+
+    /* Get string (Unicode) */
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = GetUserObjectInformationW(desk, UOI_NAME, bufferW, sizeof(bufferW), &size);
+
+    ok(ret, "GetUserObjectInformationW returned %x\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "LastError is set to %08x\n", GetLastError());
+
+    ok(lstrcmpW(bufferW, foobarTestW + 1) == 0, "Buffer is not set to 'foobarTest'\n");
+    ok(size == 22, "size is set to %d\n", size);  /* 22 bytes in 'foobarTest\0' in Unicode */
+
+    /* ObjectNameInformation does not return the full desktop name */
+    name_info = (OBJECT_NAME_INFORMATION *)buffer;
+    status = pNtQueryObject(desk, ObjectNameInformation, name_info, sizeof(buffer), NULL);
+    ok(!status, "expected STATUS_SUCCESS, got %08x\n", status);
+    ok(lstrcmpW(name_info->Name.Buffer, foobarTestW) == 0,
+       "expected '\\foobarTest', got %s\n", wine_dbgstr_w(name_info->Name.Buffer));
+
+    /** Tests for UOI_TYPE **/
+
+    /* Get size, test size and return value/error code */
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = GetUserObjectInformationA(desk, UOI_TYPE, NULL, 0, &size);
+
+    ok(!ret, "GetUserObjectInformationA returned %x\n", ret);
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "LastError is set to %08x\n", GetLastError());
+    ok(size == 16, "size is set to %d\n", size); /* Windows returns Unicode length (8*2) */
+
+    /* Get string */
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = GetUserObjectInformationA(desk, UOI_TYPE, buffer, sizeof(buffer), &size);
+
+    ok(ret, "GetUserObjectInformationA returned %x\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "LastError is set to %08x\n", GetLastError());
+
+    ok(strcmp(buffer, "Desktop") == 0, "Buffer is set to '%s'\n", buffer);
+    ok(size == 8, "size is set to %d\n", size); /* 8 bytes in 'Desktop\0' */
+
+    /* Get size, test size and return value/error code (Unicode) */
+    size = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = GetUserObjectInformationW(desk, UOI_TYPE, NULL, 0, &size);
+
+    ok(!ret, "GetUserObjectInformationW returned %x\n", ret);
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "LastError is set to %08x\n", GetLastError());
+    ok(size == 16, "size is set to %d\n", size);  /* 16 bytes in 'Desktop\0' in Unicode */
+
+    /* Get string (Unicode) */
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = GetUserObjectInformationW(desk, UOI_TYPE, bufferW, sizeof(bufferW), &size);
+
+    ok(ret, "GetUserObjectInformationW returned %x\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "LastError is set to %08x\n", GetLastError());
+
+    ok(lstrcmpW(bufferW, DesktopW) == 0, "Buffer is not set to 'Desktop'\n");
+    ok(size == 16, "size is set to %d\n", size);  /* 16 bytes in 'Desktop\0' in Unicode */
+
+    ok(CloseDesktop(desk), "CloseDesktop failed\n");
+}
+
+static void test_inputdesktop(void)
+{
+    HDESK input_desk, old_input_desk, thread_desk, old_thread_desk, new_desk;
+    DWORD ret;
+    CHAR name[1024];
+    INPUT inputs[1];
+
+    inputs[0].type = INPUT_KEYBOARD;
+    U(inputs[0]).ki.wVk = 0;
+    U(inputs[0]).ki.wScan = 0x3c0;
+    U(inputs[0]).ki.dwFlags = KEYEVENTF_UNICODE;
+
+    /* OpenInputDesktop creates new handles for each calls */
+    old_input_desk = OpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
+    ok(old_input_desk != NULL, "OpenInputDesktop failed!\n");
+    memset(name, 0, sizeof(name));
+    ret = GetUserObjectInformationA(old_input_desk, UOI_NAME, name, 1024, NULL);
+    ok(ret, "GetUserObjectInformation failed!\n");
+    ok(!strcmp(name, "Default"), "unexpected desktop %s\n", name);
+
+    input_desk = OpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
+    ok(input_desk != NULL, "OpenInputDesktop failed!\n");
+    memset(name, 0, sizeof(name));
+    ret = GetUserObjectInformationA(input_desk, UOI_NAME, name, 1024, NULL);
+    ok(ret, "GetUserObjectInformation failed!\n");
+    ok(!strcmp(name, "Default"), "unexpected desktop %s\n", name);
+
+    ok(old_input_desk != input_desk, "returned the same handle!\n");
+    ret = CloseDesktop(input_desk);
+    ok(ret, "CloseDesktop failed!\n");
+
+    /* by default, GetThreadDesktop is the input desktop, SendInput should succeed. */
+    old_thread_desk = GetThreadDesktop(GetCurrentThreadId());
+    ok(old_thread_desk != NULL, "GetThreadDesktop faile!\n");
+    memset(name, 0, sizeof(name));
+    ret = GetUserObjectInformationA(old_thread_desk, UOI_NAME, name, 1024, NULL);
+    ok(!strcmp(name, "Default"), "unexpected desktop %s\n", name);
+
+    SetLastError(0xdeadbeef);
+    ret = SendInput(1, inputs, sizeof(INPUT));
+    ok(GetLastError() == 0xdeadbeef, "unexpected last error %08x\n", GetLastError());
+    ok(ret == 1, "unexpected return count %d\n", ret);
+
+    /* Set thread desktop to the new desktop, SendInput should fail. */
+    new_desk = CreateDesktopA("new_desk", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL);
+    ok(new_desk != NULL, "CreateDesktop failed!\n");
+    ret = SetThreadDesktop(new_desk);
+    ok(ret, "SetThreadDesktop failed!\n");
+    thread_desk = GetThreadDesktop(GetCurrentThreadId());
+    ok(thread_desk == new_desk, "thread desktop doesn't match!\n");
+    memset(name, 0, sizeof(name));
+    ret = GetUserObjectInformationA(thread_desk, UOI_NAME, name, 1024, NULL);
+    ok(!strcmp(name, "new_desk"), "unexpected desktop %s\n", name);
+
+    SetLastError(0xdeadbeef);
+    ret = SendInput(1, inputs, sizeof(INPUT));
+    if(broken(GetLastError() == 0xdeadbeef))
+    {
+        SetThreadDesktop(old_thread_desk);
+        CloseDesktop(old_input_desk);
+        CloseDesktop(input_desk);
+        CloseDesktop(new_desk);
+        win_skip("Skip tests on NT4\n");
+        return;
+    }
+todo_wine
+    ok(GetLastError() == ERROR_ACCESS_DENIED, "unexpected last error %08x\n", GetLastError());
+    ok(ret == 1 || broken(ret == 0) /* Win64 */, "unexpected return count %d\n", ret);
+
+    /* Set thread desktop back to the old thread desktop, SendInput should success. */
+    ret = SetThreadDesktop(old_thread_desk);
+    ok(ret, "SetThreadDesktop failed!\n");
+    thread_desk = GetThreadDesktop(GetCurrentThreadId());
+    ok(thread_desk == old_thread_desk, "thread desktop doesn't match!\n");
+    memset(name, 0, sizeof(name));
+    ret = GetUserObjectInformationA(thread_desk, UOI_NAME, name, 1024, NULL);
+    ok(!strcmp(name, "Default"), "unexpected desktop %s\n", name);
+
+    SetLastError(0xdeadbeef);
+    ret = SendInput(1, inputs, sizeof(INPUT));
+    ok(GetLastError() == 0xdeadbeef, "unexpected last error %08x\n", GetLastError());
+    ok(ret == 1, "unexpected return count %d\n", ret);
+
+    /* Set thread desktop to the input desktop, SendInput should success. */
+    ret = SetThreadDesktop(old_input_desk);
+    ok(ret, "SetThreadDesktop failed!\n");
+    thread_desk = GetThreadDesktop(GetCurrentThreadId());
+    ok(thread_desk == old_input_desk, "thread desktop doesn't match!\n");
+    memset(name, 0, sizeof(name));
+    ret = GetUserObjectInformationA(thread_desk, UOI_NAME, name, 1024, NULL);
+    ok(!strcmp(name, "Default"), "unexpected desktop %s\n", name);
+
+    SetLastError(0xdeadbeef);
+    ret = SendInput(1, inputs, sizeof(INPUT));
+    ok(GetLastError() == 0xdeadbeef, "unexpected last error %08x\n", GetLastError());
+    ok(ret == 1, "unexpected return count %d\n", ret);
+
+    /* Switch input desktop to the new desktop, SendInput should fail. */
+    ret = SwitchDesktop(new_desk);
+    ok(ret, "SwitchDesktop failed!\n");
+    input_desk = OpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
+    ok(input_desk != NULL, "OpenInputDesktop failed!\n");
+    ok(input_desk != new_desk, "returned the same handle!\n");
+    memset(name, 0, sizeof(name));
+    ret = GetUserObjectInformationA(input_desk, UOI_NAME, name, 1024, NULL);
+    ok(ret, "GetUserObjectInformation failed!\n");
+todo_wine
+    ok(!strcmp(name, "new_desk"), "unexpected desktop %s\n", name);
+    ret = CloseDesktop(input_desk);
+    ok(ret, "CloseDesktop failed!\n");
+
+    SetLastError(0xdeadbeef);
+    ret = SendInput(1, inputs, sizeof(INPUT));
+todo_wine
+    ok(GetLastError() == ERROR_ACCESS_DENIED, "unexpected last error %08x\n", GetLastError());
+    ok(ret == 1 || broken(ret == 0) /* Win64 */, "unexpected return count %d\n", ret);
+
+    /* Set thread desktop to the new desktop, SendInput should success. */
+    ret = SetThreadDesktop(new_desk);
+    ok(ret, "SetThreadDesktop failed!\n");
+    thread_desk = GetThreadDesktop(GetCurrentThreadId());
+    ok(thread_desk == new_desk, "thread desktop doesn't match!\n");
+    memset(name, 0, sizeof(name));
+    ret = GetUserObjectInformationA(thread_desk, UOI_NAME, name, 1024, NULL);
+    ok(!strcmp(name, "new_desk"), "unexpected desktop %s\n", name);
+
+    SetLastError(0xdeadbeef);
+    ret = SendInput(1, inputs, sizeof(INPUT));
+    ok(GetLastError() == 0xdeadbeef, "unexpected last error %08x\n", GetLastError());
+    ok(ret == 1, "unexpected return count %d\n", ret);
+
+    /* Switch input desktop to the old input desktop, set thread desktop to the old
+     * thread desktop, clean side effects. SendInput should success. */
+    ret = SwitchDesktop(old_input_desk);
+    input_desk = OpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
+    ok(input_desk != NULL, "OpenInputDesktop failed!\n");
+    ok(input_desk != old_input_desk, "returned the same handle!\n");
+    memset(name, 0, sizeof(name));
+    ret = GetUserObjectInformationA(input_desk, UOI_NAME, name, 1024, NULL);
+    ok(ret, "GetUserObjectInformation failed!\n");
+    ok(!strcmp(name, "Default"), "unexpected desktop %s\n", name);
+
+    ret = SetThreadDesktop(old_thread_desk);
+    ok(ret, "SetThreadDesktop failed!\n");
+    thread_desk = GetThreadDesktop(GetCurrentThreadId());
+    ok(thread_desk == old_thread_desk, "thread desktop doesn't match!\n");
+    memset(name, 0, sizeof(name));
+    ret = GetUserObjectInformationA(thread_desk, UOI_NAME, name, 1024, NULL);
+    ok(!strcmp(name, "Default"), "unexpected desktop %s\n", name);
+
+    SetLastError(0xdeadbeef);
+    ret = SendInput(1, inputs, sizeof(INPUT));
+    ok(GetLastError() == 0xdeadbeef, "unexpected last error %08x\n", GetLastError());
+    ok(ret == 1, "unexpected return count %d\n", ret);
+
+    /* free resources */
+    ret = CloseDesktop(input_desk);
+    ok(ret, "CloseDesktop failed!\n");
+    ret = CloseDesktop(old_input_desk);
+    ok(ret, "CloseDesktop failed!\n");
+    ret = CloseDesktop(new_desk);
+    ok(ret, "CloseDesktop failed!\n");
+}
+
+static void test_inputdesktop2(void)
+{
+    HWINSTA w1, w2;
+    HDESK thread_desk, new_desk, input_desk, hdesk;
+    DWORD ret;
+
+    thread_desk = GetThreadDesktop(GetCurrentThreadId());
+    ok(thread_desk != NULL, "GetThreadDesktop failed!\n");
+    w1 = GetProcessWindowStation();
+    ok(w1 != NULL, "GetProcessWindowStation failed!\n");
+    SetLastError(0xdeadbeef);
+    w2 = CreateWindowStationA("winsta_test", 0, WINSTA_ALL_ACCESS, NULL);
+    ret = GetLastError();
+    ok(w2 != NULL || ret == ERROR_ACCESS_DENIED, "CreateWindowStation failed (%u)\n", ret);
+    if (!w2)
+    {
+        win_skip("Not enough privileges for CreateWindowStation\n");
+        return;
+    }
+
+    ret = EnumDesktopsA(GetProcessWindowStation(), desktop_callbackA, 0);
+    ok(!ret, "EnumDesktopsA failed!\n");
+    input_desk = OpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
+    ok(input_desk != NULL, "OpenInputDesktop failed!\n");
+    ret = CloseDesktop(input_desk);
+    ok(ret, "CloseDesktop failed!\n");
+
+    ret = SetProcessWindowStation(w2);
+    ok(ret, "SetProcessWindowStation failed!\n");
+    hdesk = GetThreadDesktop(GetCurrentThreadId());
+    ok(hdesk != NULL, "GetThreadDesktop failed!\n");
+    ok(hdesk == thread_desk, "thread desktop should not change after winstation changed!\n");
+    ret = EnumDesktopsA(GetProcessWindowStation(), desktop_callbackA, 0);
+
+    new_desk = CreateDesktopA("desk_test", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL);
+    ok(new_desk != NULL, "CreateDesktop failed!\n");
+    ret = EnumDesktopsA(GetProcessWindowStation(), desktop_callbackA, 0);
+    ok(!ret, "EnumDesktopsA failed!\n");
+    SetLastError(0xdeadbeef);
+    input_desk = OpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
+    ok(input_desk == NULL, "OpenInputDesktop should fail on non default winstation!\n");
+    ok(GetLastError() == ERROR_INVALID_FUNCTION || broken(GetLastError() == 0xdeadbeef), "last error %08x\n", GetLastError());
+
+    hdesk = OpenDesktopA("desk_test", 0, TRUE, DESKTOP_ALL_ACCESS);
+    ok(hdesk != NULL, "OpenDesktop failed!\n");
+    SetLastError(0xdeadbeef);
+    ret = SwitchDesktop(hdesk);
+todo_wine
+    ok(!ret, "Switch to desktop belong to non default winstation should fail!\n");
+todo_wine
+    ok(GetLastError() == ERROR_ACCESS_DENIED || broken(GetLastError() == 0xdeadbeef), "last error %08x\n", GetLastError());
+    ret = SetThreadDesktop(hdesk);
+    ok(ret, "SetThreadDesktop failed!\n");
+
+    /* clean side effect */
+    ret = SetThreadDesktop(thread_desk);
+todo_wine
+    ok(ret, "SetThreadDesktop should success even desktop is not belong to process winstation!\n");
+    ret = SetProcessWindowStation(w1);
+    ok(ret, "SetProcessWindowStation failed!\n");
+    ret = SetThreadDesktop(thread_desk);
+    ok(ret, "SetThreadDesktop failed!\n");
+    ret = CloseWindowStation(w2);
+    ok(ret, "CloseWindowStation failed!\n");
+    ret = CloseDesktop(new_desk);
+    ok(ret, "CloseDesktop failed!\n");
+    ret = CloseDesktop(hdesk);
+    ok(ret, "CloseDesktop failed!\n");
+}
+
+static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    if (msg == WM_DESTROY)
+    {
+        trace("destroying hwnd %p\n", hWnd);
+        PostQuitMessage(0);
+        return 0;
+    }
+    return DefWindowProcA( hWnd, msg, wParam, lParam );
+}
+
+typedef struct tag_wnd_param
+{
+    const char *wnd_name;
+    HWND hwnd;
+    HDESK hdesk;
+    HANDLE hevent;
+} wnd_param;
+
+static DWORD WINAPI create_window(LPVOID param)
+{
+    wnd_param *param1 = param;
+    DWORD ret;
+    MSG msg;
+
+    ret = SetThreadDesktop(param1->hdesk);
+    ok(ret, "SetThreadDesktop failed!\n");
+    param1->hwnd = CreateWindowA("test_class", param1->wnd_name, WS_POPUP, 0, 0, 100, 100, NULL, NULL, NULL, NULL);
+    ok(param1->hwnd != 0, "CreateWindowA failed!\n");
+    ret = SetEvent(param1->hevent);
+    ok(ret, "SetEvent failed!\n");
+
+    while (GetMessageA(&msg, 0, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+    }
+
+    return 0;
+}
+
+static DWORD set_foreground(HWND hwnd)
+{
+    HWND hwnd_fore;
+    DWORD set_id, fore_id, ret;
+    char win_text[1024];
+
+    hwnd_fore = GetForegroundWindow();
+    GetWindowTextA(hwnd_fore, win_text, 1024);
+    set_id = GetWindowThreadProcessId(hwnd, NULL);
+    fore_id = GetWindowThreadProcessId(hwnd_fore, NULL);
+    trace("\"%s\" %p %08x hwnd %p %08x\n", win_text, hwnd_fore, fore_id, hwnd, set_id);
+    ret = AttachThreadInput(set_id, fore_id, TRUE);
+    trace("AttachThreadInput returned %08x\n", ret);
+    ret = ShowWindow(hwnd, SW_SHOWNORMAL);
+    trace("ShowWindow returned %08x\n", ret);
+    ret = SetWindowPos(hwnd, HWND_TOPMOST, 0,0,0,0, SWP_NOSIZE|SWP_NOMOVE);
+    trace("set topmost returned %08x\n", ret);
+    ret = SetWindowPos(hwnd, HWND_NOTOPMOST, 0,0,0,0, SWP_NOSIZE|SWP_NOMOVE);
+    trace("set notopmost returned %08x\n", ret);
+    ret = SetForegroundWindow(hwnd);
+    trace("SetForegroundWindow returned %08x\n", ret);
+    Sleep(250);
+    AttachThreadInput(set_id, fore_id, FALSE);
+    return ret;
+}
+
+static void test_foregroundwindow(void)
+{
+    HWND hwnd, hwnd_test, partners[2], hwnds[2];
+    HDESK hdesks[2];
+    int thread_desk_id, input_desk_id, hwnd_id;
+    WNDCLASSA wclass;
+    wnd_param param;
+    DWORD ret, timeout, timeout_old;
+    char win_text[1024];
+
+#define DESKTOPS 2
+
+    memset( &wclass, 0, sizeof(wclass) );
+    wclass.lpszClassName = "test_class";
+    wclass.lpfnWndProc   = WndProc;
+    RegisterClassA(&wclass);
+    param.wnd_name = "win_name";
+
+    hdesks[0] = GetThreadDesktop(GetCurrentThreadId());
+    ok(hdesks[0] != NULL, "OpenDesktop failed!\n");
+    SetLastError(0xdeadbeef);
+    hdesks[1] = CreateDesktopA("desk2", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL);
+    ret = GetLastError();
+    ok(hdesks[1] != NULL || ret == ERROR_ACCESS_DENIED, "CreateDesktop failed (%u)\n", ret);
+    if(!hdesks[1])
+    {
+        win_skip("Not enough privileges for CreateDesktop\n");
+        return;
+    }
+
+    ret = SystemParametersInfoA(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &timeout_old, 0);
+    if(!ret)
+    {
+        win_skip("Skip tests on NT4\n");
+        CloseDesktop(hdesks[1]);
+        return;
+    }
+    trace("old timeout %d\n", timeout_old);
+    timeout = 0;
+    ret = SystemParametersInfoA(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+    ok(ret, "set foreground lock timeout failed!\n");
+    ret = SystemParametersInfoA(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &timeout, 0);
+    ok(ret, "get foreground lock timeout failed!\n");
+    ok(timeout == 0, "unexpected timeout %d\n", timeout);
+
+    for (thread_desk_id = 0; thread_desk_id < DESKTOPS; thread_desk_id++)
+    {
+        param.hdesk = hdesks[thread_desk_id];
+        param.hevent = CreateEventA(NULL, TRUE, FALSE, NULL);
+        CreateThread(NULL, 0, create_window, &param, 0, NULL);
+        ret = WaitForSingleObject(param.hevent, INFINITE);
+        ok(ret == WAIT_OBJECT_0, "wait failed!\n");
+        hwnds[thread_desk_id] = param.hwnd;
+    }
+
+    for (thread_desk_id = 0; thread_desk_id < DESKTOPS; thread_desk_id++)
+    {
+        param.hdesk = hdesks[thread_desk_id];
+        param.hevent = CreateEventA(NULL, TRUE, FALSE, NULL);
+        CreateThread(NULL, 0, create_window, &param, 0, NULL);
+        ret = WaitForSingleObject(param.hevent, INFINITE);
+        ok(ret == WAIT_OBJECT_0, "wait failed!\n");
+        partners[thread_desk_id] = param.hwnd;
+    }
+
+    trace("hwnd0 %p hwnd1 %p partner0 %p partner1 %p\n", hwnds[0], hwnds[1], partners[0], partners[1]);
+
+    for (hwnd_id = 0; hwnd_id < DESKTOPS; hwnd_id++)
+        for (thread_desk_id = 0; thread_desk_id < DESKTOPS; thread_desk_id++)
+            for (input_desk_id = 0; input_desk_id < DESKTOPS; input_desk_id++)
+            {
+                trace("testing thread_desk %d input_desk %d hwnd %d\n",
+                        thread_desk_id, input_desk_id, hwnd_id);
+                hwnd_test = hwnds[hwnd_id];
+                ret = SetThreadDesktop(hdesks[thread_desk_id]);
+                ok(ret, "set thread desktop failed!\n");
+                ret = SwitchDesktop(hdesks[input_desk_id]);
+                ok(ret, "switch desktop failed!\n");
+                set_foreground(partners[0]);
+                set_foreground(partners[1]);
+                hwnd = GetForegroundWindow();
+                ok(hwnd != hwnd_test, "unexpected foreground window %p\n", hwnd);
+                ret = set_foreground(hwnd_test);
+                hwnd = GetForegroundWindow();
+                GetWindowTextA(hwnd, win_text, 1024);
+                trace("hwnd %p name %s\n", hwnd, win_text);
+                if (input_desk_id == hwnd_id)
+                {
+                    if (input_desk_id == thread_desk_id)
+                    {
+                        ok(ret, "SetForegroundWindow failed!\n");
+                        todo_wine_if (!hwnd)
+                            ok(hwnd == hwnd_test , "unexpected foreground window %p\n", hwnd);
+                    }
+                    else
+                    {
+                        todo_wine ok(ret, "SetForegroundWindow failed!\n");
+                        todo_wine ok(hwnd == 0, "unexpected foreground window %p\n", hwnd);
+                    }
+                }
+                else
+                {
+                    if (input_desk_id == thread_desk_id)
+                    {
+                        ok(!ret, "SetForegroundWindow should fail!\n");
+                        todo_wine_if (!hwnd)
+                            ok(hwnd == partners[input_desk_id] , "unexpected foreground window %p\n", hwnd);
+                    }
+                    else
+                    {
+                        todo_wine ok(!ret, "SetForegroundWindow should fail!\n");
+                        todo_wine_if (hwnd)
+                            ok(hwnd == 0, "unexpected foreground window %p\n", hwnd);
+                    }
+                }
+            }
+
+    /* Clean up */
+
+    for (thread_desk_id = DESKTOPS - 1; thread_desk_id >= 0; thread_desk_id--)
+    {
+        ret = SetThreadDesktop(hdesks[thread_desk_id]);
+        ok(ret, "set thread desktop failed!\n");
+        SendMessageA(hwnds[thread_desk_id], WM_DESTROY, 0, 0);
+        SendMessageA(partners[thread_desk_id], WM_DESTROY, 0, 0);
+    }
+
+    ret = SwitchDesktop(hdesks[0]);
+    ok(ret, "switch desktop failed!\n");
+    CloseDesktop(hdesks[1]);
+
+    ret = SystemParametersInfoA(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, UlongToPtr(timeout_old), SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
+    ok(ret, "set foreground lock timeout failed!\n");
+    ret = SystemParametersInfoA(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &timeout, 0);
+    ok(ret, "get foreground lock timeout failed!\n");
+    ok(timeout == timeout_old, "unexpected timeout %d\n", timeout);
+}
+
 START_TEST(winstation)
 {
+    HMODULE hntdll = GetModuleHandleA("ntdll.dll");
+    pNtQueryObject = (void *)GetProcAddress(hntdll, "NtQueryObject");
+
     /* Check whether this platform supports WindowStation calls */
 
     SetLastError( 0xdeadbeef );
     GetProcessWindowStation();
     if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
     {
-        skip("WindowStation calls not supported on this platform\n");
+        win_skip("WindowStation calls not supported on this platform\n");
         return;
     }
 
+    test_inputdesktop();
+    test_inputdesktop2();
     test_enumstations();
     test_enumdesktops();
     test_handles();
+    test_getuserobjectinformation();
+    test_foregroundwindow();
 }

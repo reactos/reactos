@@ -19,7 +19,6 @@
  */
 
 #include <stdarg.h>
-#include <assert.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -53,7 +52,7 @@ static void test_DIB_PAL_COLORS(void) {
     COLORREF setColor, chkColor, getColor;
     int i;
 
-    /* Initalize the logical palette with a few colours */
+    /* Initialize the logical palette with a few colours */
     logpalette->palVersion = 0x300;
     logpalette->palNumEntries = 8;
     memcpy( logpalette->palPalEntry, logpalettedata, sizeof(logpalettedata) );
@@ -97,7 +96,7 @@ static void test_DIB_PAL_COLORS(void) {
     getColor = GetPixel( memhdc, 0, 0 );
     ok( getColor == chkColor, "getColor=%08X\n", (UINT)getColor );
 
-    /* Test with a invalid DIBINDEX to DIB_PAL_COLORS */
+    /* Test with an invalid DIBINDEX to DIB_PAL_COLORS */
     setColor = DIBINDEX( 12 );
     SetPixel( memhdc, 0, 0, setColor );
     chkColor = RGB( 0, 0, 0 );
@@ -110,9 +109,7 @@ static void test_DIB_PAL_COLORS(void) {
     SetPixel( memhdc, 0, 0, setColor );
     chkColor = RGB( logpalettedata[3].peRed, logpalettedata[3].peGreen, logpalettedata[3].peBlue );
     getColor = GetPixel( memhdc, 0, 0 );
-    ok( getColor == chkColor ||
-        broken(getColor == 0), /* win9x */
-        "getColor=%08X\n", (UINT)getColor );
+    ok( getColor == chkColor, "getColor=%08X\n", (UINT)getColor );
 
     SelectPalette( memhdc, hpalOld, FALSE );
     DeleteObject( hpal );
@@ -131,7 +128,7 @@ static void test_palette_entries(void)
     PALETTEENTRY palEntry = { 0x1, 0x2, 0x3, 0xff };
     PALETTEENTRY getEntryResult;
 
-    /* Initalize the logical palette with a few colours */
+    /* Initialize the logical palette with a few colours */
     logpalette->palVersion = 0x300;
     logpalette->palNumEntries = 8;
     memcpy( logpalette->palPalEntry, logpalettedata, sizeof(logpalettedata) );
@@ -147,8 +144,182 @@ static void test_palette_entries(void)
     ok( palEntry.peFlags == getEntryResult.peFlags, "palEntry.peFlags (%#x) != getEntryResult.peFlags (%#x)\n", palEntry.peFlags, getEntryResult.peFlags );
 }
 
+static void test_halftone_palette(void)
+{
+    HDC hdc;
+    HPALETTE pal;
+    PALETTEENTRY entries[256];
+    PALETTEENTRY defpal[20];
+    int i, count;
+
+    hdc = GetDC(0);
+
+    count = GetPaletteEntries( GetStockObject(DEFAULT_PALETTE), 0, 20, defpal );
+    ok( count == 20, "wrong size %u\n", count );
+
+    pal = CreateHalftonePalette( hdc );
+    count = GetPaletteEntries( pal, 0, 256, entries );
+    ok( count == 256 || broken(count <= 20), /* nt 4 */
+        "wrong size %u\n", count );
+
+    /* first and last 8 match the default palette */
+    if (count >= 20)
+    {
+        for (i = 0; i < 8; i++)
+        {
+            ok( entries[i].peRed   == defpal[i].peRed &&
+                entries[i].peGreen == defpal[i].peGreen &&
+                entries[i].peBlue  == defpal[i].peBlue &&
+                !entries[i].peFlags,
+                "%u: wrong color %02x,%02x,%02x,%02x instead of %02x,%02x,%02x\n", i,
+                entries[i].peRed, entries[i].peGreen, entries[i].peBlue, entries[i].peFlags,
+                defpal[i].peRed, defpal[i].peGreen, defpal[i].peBlue );
+        }
+        for (i = count - 8; i < count; i++)
+        {
+            int idx = i - count + 20;
+            ok( entries[i].peRed   == defpal[idx].peRed &&
+                entries[i].peGreen == defpal[idx].peGreen &&
+                entries[i].peBlue  == defpal[idx].peBlue &&
+                !entries[i].peFlags,
+                "%u: wrong color %02x,%02x,%02x,%02x instead of %02x,%02x,%02x\n", i,
+                entries[i].peRed, entries[i].peGreen, entries[i].peBlue, entries[i].peFlags,
+                defpal[idx].peRed, defpal[idx].peGreen, defpal[idx].peBlue );
+        }
+    }
+    DeleteObject( pal );
+    ReleaseDC( 0, hdc );
+}
+
+static void check_system_palette_entries(HDC hdc)
+{
+    PALETTEENTRY entries[256];
+    PALETTEENTRY defpal[20];
+    int i, count;
+
+    memset( defpal, 0xaa, sizeof(defpal) );
+    count = GetPaletteEntries( GetStockObject(DEFAULT_PALETTE), 0, 20, defpal );
+    ok( count == 20, "wrong size %u\n", count );
+
+    memset( entries, 0x55, sizeof(entries) );
+    count = GetSystemPaletteEntries( hdc, 0, 256, entries );
+    ok( count == 0, "wrong size %u\n", count);
+    for (i = 0; i < 10; i++)
+    {
+        ok( entries[i].peRed   == defpal[i].peRed &&
+            entries[i].peGreen == defpal[i].peGreen &&
+            entries[i].peBlue  == defpal[i].peBlue &&
+            !entries[i].peFlags,
+            "%u: wrong color %02x,%02x,%02x,%02x instead of %02x,%02x,%02x\n", i,
+            entries[i].peRed, entries[i].peGreen, entries[i].peBlue, entries[i].peFlags,
+            defpal[i].peRed, defpal[i].peGreen, defpal[i].peBlue );
+    }
+    for (i = 10; i < 246; ++i)
+    {
+        ok( !entries[i].peRed   &&
+            !entries[i].peGreen &&
+            !entries[i].peBlue  &&
+            !entries[i].peFlags,
+            "%u: wrong color %02x,%02x,%02x,%02x instead of 0,0,0\n", i,
+            entries[i].peRed, entries[i].peGreen, entries[i].peBlue, entries[i].peFlags);
+    }
+    for (i = 246; i < 256; i++)
+    {
+        int idx = i - 246 + 10;
+        ok( entries[i].peRed   == defpal[idx].peRed &&
+            entries[i].peGreen == defpal[idx].peGreen &&
+            entries[i].peBlue  == defpal[idx].peBlue &&
+            !entries[i].peFlags,
+            "%u: wrong color %02x,%02x,%02x,%02x instead of %02x,%02x,%02x\n", i,
+            entries[i].peRed, entries[i].peGreen, entries[i].peBlue, entries[i].peFlags,
+            defpal[idx].peRed, defpal[idx].peGreen, defpal[idx].peBlue );
+    }
+
+    memset( entries, 0x55, sizeof(entries) );
+    count = GetSystemPaletteEntries( hdc, 0, 10, entries );
+    ok( count == 0, "wrong size %u\n", count);
+    for (i = 0; i < 10; i++)
+    {
+        ok( entries[i].peRed   == defpal[i].peRed &&
+            entries[i].peGreen == defpal[i].peGreen &&
+            entries[i].peBlue  == defpal[i].peBlue &&
+            !entries[i].peFlags,
+            "%u: wrong color %02x,%02x,%02x,%02x instead of %02x,%02x,%02x\n", i,
+            entries[i].peRed, entries[i].peGreen, entries[i].peBlue, entries[i].peFlags,
+            defpal[i].peRed, defpal[i].peGreen, defpal[i].peBlue );
+    }
+
+    memset( entries, 0x55, sizeof(entries) );
+    count = GetSystemPaletteEntries( hdc, 10, 246, entries );
+    ok( count == 0, "wrong size %u\n", count);
+    for (i = 0; i < 236; ++i)
+    {
+        ok( !entries[i].peRed   &&
+            !entries[i].peGreen &&
+            !entries[i].peBlue  &&
+            !entries[i].peFlags,
+            "%u: wrong color %02x,%02x,%02x,%02x instead of 0,0,0\n", i,
+            entries[i].peRed, entries[i].peGreen, entries[i].peBlue, entries[i].peFlags);
+    }
+    for (i = 236; i < 246; i++)
+    {
+        int idx = i - 236 + 10;
+        ok( entries[i].peRed   == defpal[idx].peRed &&
+            entries[i].peGreen == defpal[idx].peGreen &&
+            entries[i].peBlue  == defpal[idx].peBlue &&
+            !entries[i].peFlags,
+            "%u: wrong color %02x,%02x,%02x,%02x instead of %02x,%02x,%02x\n", i,
+            entries[i].peRed, entries[i].peGreen, entries[i].peBlue, entries[i].peFlags,
+            defpal[idx].peRed, defpal[idx].peGreen, defpal[idx].peBlue );
+    }
+
+    memset( entries, 0x55, sizeof(entries) );
+    count = GetSystemPaletteEntries( hdc, 246, 10, entries );
+    ok( count == 0, "wrong size %u\n", count);
+    for (i = 0; i < 10; i++)
+    {
+        int idx = i + 10;
+        ok( entries[i].peRed   == defpal[idx].peRed &&
+            entries[i].peGreen == defpal[idx].peGreen &&
+            entries[i].peBlue  == defpal[idx].peBlue &&
+            !entries[i].peFlags,
+            "%u: wrong color %02x,%02x,%02x,%02x instead of %02x,%02x,%02x\n", i,
+            entries[i].peRed, entries[i].peGreen, entries[i].peBlue, entries[i].peFlags,
+            defpal[idx].peRed, defpal[idx].peGreen, defpal[idx].peBlue );
+    }
+}
+
+static void test_system_palette_entries(void)
+{
+    HDC hdc;
+    HDC metafile_dc;
+    HMETAFILE metafile;
+
+    hdc = GetDC(0);
+
+    if (!(GetDeviceCaps( hdc, RASTERCAPS ) & RC_PALETTE))
+    {
+        check_system_palette_entries(hdc);
+    }
+    else
+    {
+        skip( "device is palette-based, skipping test\n" );
+    }
+
+    ReleaseDC( 0, hdc );
+
+    metafile_dc = CreateMetaFileA(NULL);
+
+    check_system_palette_entries(metafile_dc);
+
+    metafile = CloseMetaFile(metafile_dc);
+    DeleteMetaFile(metafile);
+}
+
 START_TEST(palette)
 {
     test_DIB_PAL_COLORS();
     test_palette_entries();
+    test_halftone_palette();
+    test_system_palette_entries();
 }

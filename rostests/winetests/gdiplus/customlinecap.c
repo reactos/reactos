@@ -18,9 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windows.h"
-#include "gdiplus.h"
-#include "wine/test.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include "windows.h"
+#include <wine/test.h>
+#include <wingdi.h>
+#include <objbase.h>
+#include <gdiplus.h>
 
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
 #define expectf(expected, got) ok(got == expected, "Expected %.2f, got %.2f\n", expected, got)
@@ -174,11 +180,44 @@ static void test_scale(void)
     expect(InvalidParameter, stat);
     stat = GdipGetCustomLineCapWidthScale(custom, NULL);
     expect(InvalidParameter, stat);
-    /* valid args */
+
+    stat = GdipSetCustomLineCapWidthScale(NULL, 2.0);
+    expect(InvalidParameter, stat);
+
+    /* valid args: read default */
     scale = (REAL)0xdeadbeef;
     stat = GdipGetCustomLineCapWidthScale(custom, &scale);
     expect(Ok, stat);
     expectf(1.0, scale);
+
+    /* set and read back some scale values: there is no limit for the scale */
+    stat = GdipSetCustomLineCapWidthScale(custom, 2.5);
+    expect(Ok, stat);
+    scale = (REAL)0xdeadbeef;
+    stat = GdipGetCustomLineCapWidthScale(custom, &scale);
+    expect(Ok, stat);
+    expectf(2.5, scale);
+
+    stat = GdipSetCustomLineCapWidthScale(custom, 42.0);
+    expect(Ok, stat);
+    scale = (REAL)0xdeadbeef;
+    stat = GdipGetCustomLineCapWidthScale(custom, &scale);
+    expect(Ok, stat);
+    expectf(42.0, scale);
+
+    stat = GdipSetCustomLineCapWidthScale(custom, 3000.0);
+    expect(Ok, stat);
+    scale = (REAL)0xdeadbeef;
+    stat = GdipGetCustomLineCapWidthScale(custom, &scale);
+    expect(Ok, stat);
+    expectf(3000.0, scale);
+
+    stat = GdipSetCustomLineCapWidthScale(custom, 0.0);
+    expect(Ok, stat);
+    scale = (REAL)0xdeadbeef;
+    stat = GdipGetCustomLineCapWidthScale(custom, &scale);
+    expect(Ok, stat);
+    expectf(0.0, scale);
 
     GdipDeleteCustomLineCap(custom);
     GdipDeletePath(path);

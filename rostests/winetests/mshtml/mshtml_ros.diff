@@ -1,0 +1,62 @@
++Index: htmldoc.c
++===================================================================
++--- htmldoc.c	(revision 57539)
+++++ htmldoc.c	(working copy)
++@@ -23,6 +23,8 @@
++ #include <stdarg.h>
++ #include <stdio.h>
++ 
+++#if ROSTESTS_81_IS_FIXED
+++
++ #include "windef.h"
++ #include "winbase.h"
++ #include "initguid.h"
++@@ -5272,8 +5274,11 @@
++     ok(ref == 0, "ref=%d, expected 0\n", ref);
++ }
++ 
+++#endif /* ROSTESTS_81_IS_FIXED*/
+++
++ START_TEST(htmldoc)
++ {
+++#if ROSTESTS_81_IS_FIXED
++     CoInitialize(NULL);
++     container_hwnd = create_container_window();
++     register_protocol();
++@@ -5299,4 +5304,5 @@
++ 
++     DestroyWindow(container_hwnd);
++     CoUninitialize();
+++#endif /* ROSTESTS_81_IS_FIXED*/
++ }
+Index: htmldoc.c
+===================================================================
+--- htmldoc.c	(revision 57027)
++++ htmldoc.c	(revision 57542)
+@@ -23,6 +23,8 @@
+ #include <stdarg.h>
+ #include <stdio.h>
+ 
++#if ROSTESTS_81_IS_FIXED
++
+ #include "windef.h"
+ #include "winbase.h"
+ #include "initguid.h"
+@@ -5272,8 +5274,11 @@
+     ok(ref == 0, "ref=%d, expected 0\n", ref);
+ }
+ 
++#endif /* ROSTESTS_81_IS_FIXED*/
++
+ START_TEST(htmldoc)
+ {
++#if ROSTESTS_81_IS_FIXED
+     CoInitialize(NULL);
+     container_hwnd = create_container_window();
+     register_protocol();
+@@ -5299,4 +5304,5 @@
+ 
+     DestroyWindow(container_hwnd);
+     CoUninitialize();
++#endif /* ROSTESTS_81_IS_FIXED*/
+ }

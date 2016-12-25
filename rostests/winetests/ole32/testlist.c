@@ -1,10 +1,7 @@
 /* Automatically generated file; DO NOT EDIT!! */
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 #define STANDALONE
-#include "wine/test.h"
+#include <wine/test.h>
 
 extern void func_clipboard(void);
 extern void func_compobj(void);
@@ -15,6 +12,7 @@ extern void func_hglobalstream(void);
 extern void func_marshal(void);
 extern void func_moniker(void);
 extern void func_ole2(void);
+extern void func_ole_server(void);
 extern void func_propvariant(void);
 extern void func_stg_prop(void);
 extern void func_storage32(void);
@@ -31,6 +29,7 @@ const struct test winetest_testlist[] =
     { "marshal", func_marshal },
     { "moniker", func_moniker },
     { "ole2", func_ole2 },
+    { "ole_server", func_ole_server },
     { "propvariant", func_propvariant },
     { "stg_prop", func_stg_prop },
     { "storage32", func_storage32 },

@@ -21,16 +21,16 @@
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wingdi.h"
-#include "winreg.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
+#include <wingdi.h>
+#include <winreg.h>
 
-#include "winspool.h"
-#include "ddk/winsplp.h"
+#include <winspool.h>
+#include <ddk/winsplp.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 
 /* ##### */
@@ -67,16 +67,16 @@ static const WCHAR cmd_AddPortW[] = {'A','d','d','P','o','r','t',0};
 static const WCHAR cmd_ConfigureLPTPortCommandOKW[] = {'C','o','n','f','i','g','u','r','e',
                                     'L','P','T','P','o','r','t',
                                     'C','o','m','m','a','n','d','O','K',0};
-static WCHAR cmd_DeletePortW[] = {'D','e','l','e','t','e','P','o','r','t',0};
-static WCHAR cmd_GetTransmissionRetryTimeoutW[] = {'G','e','t',
+static const WCHAR cmd_DeletePortW[] = {'D','e','l','e','t','e','P','o','r','t',0};
+static const WCHAR cmd_GetTransmissionRetryTimeoutW[] = {'G','e','t',
                                     'T','r','a','n','s','m','i','s','s','i','o','n',
                                     'R','e','t','r','y','T','i','m','e','o','u','t',0};
 
-static WCHAR cmd_MonitorUIW[] = {'M','o','n','i','t','o','r','U','I',0};
-static WCHAR cmd_MonitorUI_lcaseW[] = {'m','o','n','i','t','o','r','u','i',0};
-static WCHAR cmd_PortIsValidW[] = {'P','o','r','t','I','s','V','a','l','i','d',0};
+static const WCHAR cmd_MonitorUIW[] = {'M','o','n','i','t','o','r','U','I',0};
+static const WCHAR cmd_MonitorUI_lcaseW[] = {'m','o','n','i','t','o','r','u','i',0};
+static const WCHAR cmd_PortIsValidW[] = {'P','o','r','t','I','s','V','a','l','i','d',0};
 static WCHAR does_not_existW[] = {'d','o','e','s','_','n','o','t','_','e','x','i','s','t',0};
-static CHAR  emptyA[] = "";
+static const CHAR emptyA[] = "";
 static WCHAR emptyW[] = {0};
 static WCHAR LocalPortW[] = {'L','o','c','a','l',' ','P','o','r','t',0};
 static WCHAR Monitors_LocalPortW[] = {
@@ -87,32 +87,32 @@ static WCHAR Monitors_LocalPortW[] = {
                                 'M','o','n','i','t','o','r','s','\\',
                                 'L','o','c','a','l',' ','P','o','r','t',0};
 
-static CHAR  num_0A[] = "0";
+static const CHAR num_0A[] = "0";
 static WCHAR num_0W[] = {'0',0};
-static CHAR  num_1A[] = "1";
+static const CHAR num_1A[] = "1";
 static WCHAR num_1W[] = {'1',0};
-static CHAR  num_999999A[] = "999999";
+static const CHAR num_999999A[] = "999999";
 static WCHAR num_999999W[] = {'9','9','9','9','9','9',0};
-static CHAR  num_1000000A[] = "1000000";
+static const CHAR num_1000000A[] = "1000000";
 static WCHAR num_1000000W[] = {'1','0','0','0','0','0','0',0};
 
-static WCHAR portname_comW[]  = {'C','O','M',0};
+static const WCHAR portname_comW[]  = {'C','O','M',0};
 static WCHAR portname_com1W[] = {'C','O','M','1',':',0};
 static WCHAR portname_com2W[] = {'C','O','M','2',':',0};
 static WCHAR portname_fileW[] = {'F','I','L','E',':',0};
-static WCHAR portname_lptW[]  = {'L','P','T',0};
+static const WCHAR portname_lptW[]  = {'L','P','T',0};
 static WCHAR portname_lpt1W[] = {'L','P','T','1',':',0};
 static WCHAR portname_lpt2W[] = {'L','P','T','2',':',0};
 static WCHAR server_does_not_existW[] = {'\\','\\','d','o','e','s','_','n','o','t','_','e','x','i','s','t',0};
 
-static CHAR  TransmissionRetryTimeoutA[] = {'T','r','a','n','s','m','i','s','s','i','o','n',
+static const CHAR TransmissionRetryTimeoutA[] = {'T','r','a','n','s','m','i','s','s','i','o','n',
                                     'R','e','t','r','y','T','i','m','e','o','u','t',0};
 
-static CHAR  WinNT_CV_WindowsA[] = {'S','o','f','t','w','a','r','e','\\',
-                                    'M','i','c','r','o','s','o','f','t','\\',
-                                    'W','i','n','d','o','w','s',' ','N','T','\\',
-                                    'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-                                    'W','i','n','d','o','w','s',0};
+static const CHAR WinNT_CV_WindowsA[] = {'S','o','f','t','w','a','r','e','\\',
+                                         'M','i','c','r','o','s','o','f','t','\\',
+                                         'W','i','n','d','o','w','s',' ','N','T','\\',
+                                         'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+                                         'W','i','n','d','o','w','s',0};
 static WCHAR wineW[] = {'W','i','n','e',0};
 
 static WCHAR tempdirW[MAX_PATH];
@@ -208,8 +208,8 @@ static void test_AddPort(void)
 
     if (0)
     {
-    /* NT4 crash on this test */
-    res = pAddPort(NULL, 0, NULL);
+        /* NT4 crash on this test */
+        pAddPort(NULL, 0, NULL);
     }
 
     /*  Testing-Results (localmon.dll from NT4.0):
@@ -445,8 +445,8 @@ static void test_ConfigurePort(void)
 
     if (0)
     {
-    /* NT4 crash on this test */
-    res = pConfigurePort(NULL, 0, NULL);
+        /* NT4 crash on this test */
+        pConfigurePort(NULL, 0, NULL);
     }
 
     /*  Testing-Results (localmon.dll from NT4.0):
@@ -486,8 +486,8 @@ static void test_DeletePort(void)
 
     if (0)
     {
-    /* NT4 crash on this test */
-    res = pDeletePort(NULL, 0, NULL);
+        /* NT4 crash on this test */
+        pDeletePort(NULL, 0, NULL);
     }
 
     /*  Testing-Results (localmon.dll from NT4.0):
@@ -573,10 +573,10 @@ static void test_EnumPorts(void)
 
         if (0)
         {
-        /* The following tests crash this app with native localmon/localspl */
-        res = pEnumPorts(NULL, level, NULL, cbBuf, &pcbNeeded, &pcReturned);
-        res = pEnumPorts(NULL, level, buffer, cbBuf, NULL, &pcReturned);
-        res = pEnumPorts(NULL, level, buffer, cbBuf, &pcbNeeded, NULL);
+            /* The following tests crash this app with native localmon/localspl */
+            pEnumPorts(NULL, level, NULL, cbBuf, &pcbNeeded, &pcReturned);
+            pEnumPorts(NULL, level, buffer, cbBuf, NULL, &pcReturned);
+            pEnumPorts(NULL, level, buffer, cbBuf, &pcbNeeded, NULL);
         }
 
         /* The Servername is ignored */
@@ -747,9 +747,9 @@ static void test_XcvClosePort(void)
 
     if (0)
     {
-    /* crash with native localspl.dll (w2k+xp) */
-    res = pXcvClosePort(NULL);
-    res = pXcvClosePort(INVALID_HANDLE_VALUE);
+        /* crash with native localspl.dll (w2k+xp) */
+        pXcvClosePort(NULL);
+        pXcvClosePort(INVALID_HANDLE_VALUE);
     }
 
 
@@ -761,12 +761,12 @@ static void test_XcvClosePort(void)
     if (res) {
         SetLastError(0xdeadbeef);
         res = pXcvClosePort(hXcv2);
-        ok( res, "returned %d with %u (expected '!= 0')\n", res, GetLastError());
+        ok(res, "returned %d with %u (expected '!= 0')\n", res, GetLastError());
 
         if (0)
         {
-        /* test for "Double Free": crash with native localspl.dll (w2k+xp) */
-        res = pXcvClosePort(hXcv2);
+            /* test for "Double Free": crash with native localspl.dll (w2k+xp) */
+            pXcvClosePort(hXcv2);
         }
     }
 }
@@ -1001,6 +1001,7 @@ static void test_XcvDataPort_GetTransmissionRetryTimeout(void)
 
     /* the default timeout is returned, when the value is empty */
     res = RegSetValueExA(hroot, TransmissionRetryTimeoutA, 0, REG_SZ, (PBYTE)emptyA, 1);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", GetLastError());
     needed = (DWORD) 0xdeadbeef;
     buffer[0] = 0xdeadbeef;
     SetLastError(0xdeadbeef);
@@ -1011,6 +1012,7 @@ static void test_XcvDataPort_GetTransmissionRetryTimeout(void)
 
     /* the dialog is limited (1 - 999999), but that is done somewhere else */
     res = RegSetValueExA(hroot, TransmissionRetryTimeoutA, 0, REG_SZ, (PBYTE)num_0A, lstrlenA(num_0A)+1);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", GetLastError());
     needed = (DWORD) 0xdeadbeef;
     buffer[0] = 0xdeadbeef;
     SetLastError(0xdeadbeef);
@@ -1021,6 +1023,7 @@ static void test_XcvDataPort_GetTransmissionRetryTimeout(void)
 
 
     res = RegSetValueExA(hroot, TransmissionRetryTimeoutA, 0, REG_SZ, (PBYTE)num_1A, lstrlenA(num_1A)+1);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", GetLastError());
     needed = (DWORD) 0xdeadbeef;
     buffer[0] = 0xdeadbeef;
     SetLastError(0xdeadbeef);
@@ -1030,6 +1033,7 @@ static void test_XcvDataPort_GetTransmissionRetryTimeout(void)
         "for '1')\n", res, GetLastError(), needed, buffer[0]);
 
     res = RegSetValueExA(hroot, TransmissionRetryTimeoutA, 0, REG_SZ, (PBYTE)num_999999A, lstrlenA(num_999999A)+1);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", GetLastError());
     needed = (DWORD) 0xdeadbeef;
     buffer[0] = 0xdeadbeef;
     SetLastError(0xdeadbeef);
@@ -1040,6 +1044,7 @@ static void test_XcvDataPort_GetTransmissionRetryTimeout(void)
 
 
     res = RegSetValueExA(hroot, TransmissionRetryTimeoutA, 0, REG_SZ, (PBYTE)num_1000000A, lstrlenA(num_1000000A)+1);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %u\n", GetLastError());
     needed = (DWORD) 0xdeadbeef;
     buffer[0] = 0xdeadbeef;
     SetLastError(0xdeadbeef);
@@ -1094,10 +1099,10 @@ static void test_XcvDataPort_MonitorUI(void)
         "(expected 'ERROR_INVALID_PARAMETER')\n", res, GetLastError(), needed);
 
     if (0) {
-    /* crash with native localspl.dll (w2k+xp) */
-    res = pXcvDataPort(hXcv, NULL, NULL, 0, buffer, MAX_PATH, &needed);
-    res = pXcvDataPort(hXcv, cmd_MonitorUIW, NULL, 0, NULL, len, &needed);
-    res = pXcvDataPort(hXcv, cmd_MonitorUIW, NULL, 0, buffer, len, NULL);
+        /* crash with native localspl.dll (w2k+xp) */
+        pXcvDataPort(hXcv, NULL, NULL, 0, buffer, MAX_PATH, &needed);
+        pXcvDataPort(hXcv, cmd_MonitorUIW, NULL, 0, NULL, len, &needed);
+        pXcvDataPort(hXcv, cmd_MonitorUIW, NULL, 0, buffer, len, NULL);
     }
 
 
@@ -1173,8 +1178,8 @@ static void test_XcvDataPort_PortIsValid(void)
 
 
     if (0) {
-    /* crash with native localspl.dll (w2k+xp) */
-    res = pXcvDataPort(hXcv, cmd_PortIsValidW, NULL, 0, NULL, 0, &needed);
+        /* crash with native localspl.dll (w2k+xp) */
+        pXcvDataPort(hXcv, cmd_PortIsValidW, NULL, 0, NULL, 0, &needed);
     }
 
 
@@ -1304,9 +1309,9 @@ static void test_XcvOpenPort(void)
 
     if (0)
     {
-    /* crash with native localspl.dll (w2k+xp) */
-    res = pXcvOpenPort(NULL, SERVER_ACCESS_ADMINISTER, &hXcv2);
-    res = pXcvOpenPort(emptyW, SERVER_ACCESS_ADMINISTER, NULL);
+        /* crash with native localspl.dll (w2k+xp) */
+        pXcvOpenPort(NULL, SERVER_ACCESS_ADMINISTER, &hXcv2);
+        pXcvOpenPort(emptyW, SERVER_ACCESS_ADMINISTER, NULL);
     }
 
 

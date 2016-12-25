@@ -18,16 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdarg.h>
+
 #include <windef.h>
 #include <winbase.h>
-#include <winreg.h>
-#include <winerror.h>
+//#include <winreg.h>
+//#include <winerror.h>
 #include <wincrypt.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 
 static const BYTE bigCert[] = { 0x30, 0x7a, 0x02, 0x01, 0x01, 0x30, 0x02, 0x06,
@@ -102,7 +102,6 @@ static void testCreateCRL(void)
     ok(!context && (GLE == CRYPT_E_ASN1_EOD || GLE == OSS_MORE_INPUT),
      "Expected CRYPT_E_ASN1_EOD or OSS_MORE_INPUT, got %08x\n", GLE);
     context = CertCreateCRLContext(X509_ASN_ENCODING, bigCert, sizeof(bigCert));
-    GLE = GetLastError();
     ok(!context, "Expected failure\n");
     context = CertCreateCRLContext(X509_ASN_ENCODING, signedCRL,
      sizeof(signedCRL) - 1);
@@ -121,6 +120,7 @@ static void testCreateCRL(void)
 static void testDupCRL(void)
 {
     PCCRL_CONTEXT context, dupContext;
+    BOOL res;
 
     context = CertDuplicateCRLContext(NULL);
     ok(context == NULL, "expected NULL\n");
@@ -129,15 +129,22 @@ static void testDupCRL(void)
     dupContext = CertDuplicateCRLContext(context);
     ok(dupContext != NULL, "expected a context\n");
     ok(dupContext == context, "expected identical context addresses\n");
-    CertFreeCRLContext(dupContext);
-    CertFreeCRLContext(context);
+
+    res = CertFreeCRLContext(dupContext);
+    ok(res, "CertFreeCRLContext failed\n");
+
+    res = CertFreeCRLContext(context);
+    ok(res, "CertFreeCRLContext failed\n");
+
+    res = CertFreeCRLContext(NULL);
+    ok(res, "CertFreeCRLContext failed\n");
 }
 
 static void testAddCRL(void)
 {
     HCERTSTORE store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
      CERT_STORE_CREATE_NEW_FLAG, NULL);
-    PCCRL_CONTEXT context;
+    PCCRL_CONTEXT context, context2;
     BOOL ret;
     DWORD GLE;
 
@@ -205,6 +212,7 @@ static void testAddCRL(void)
     /* Normal cases: a "signed" CRL is okay.. */
     ret = CertAddEncodedCRLToStore(store, X509_ASN_ENCODING, signedCRL,
      sizeof(signedCRL), CERT_STORE_ADD_ALWAYS, NULL);
+    ok(ret, "CertAddEncodedCRLToStore failed: %08x\n", GetLastError());
     /* and an unsigned one is too. */
     ret = CertAddEncodedCRLToStore(store, X509_ASN_ENCODING, CRL, sizeof(CRL),
      CERT_STORE_ADD_ALWAYS, NULL);
@@ -220,6 +228,24 @@ static void testAddCRL(void)
      sizeof(newerCRL), CERT_STORE_ADD_NEWER, NULL);
     ok(ret, "CertAddEncodedCRLToStore failed: %08x\n", GetLastError());
 
+    CertCloseStore(store, 0);
+
+    store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, CERT_STORE_CREATE_NEW_FLAG, NULL);
+    ok(store != NULL, "CertOpenStore failed\n");
+
+    context = CertCreateCRLContext(X509_ASN_ENCODING, CRL, sizeof(CRL));
+    ok(context != NULL, "CertCreateCRLContext failed\n");
+
+    ret = CertAddCRLContextToStore(store, context, CERT_STORE_ADD_NEW, &context2);
+    ok(ret, "CertAddCRLContextToStore failed\n");
+    ok(context2 != NULL && context2 != context, "unexpected context2\n");
+
+    ok(context->pbCrlEncoded != context2->pbCrlEncoded, "Unexpected pbCrlEncoded\n");
+    ok(context->cbCrlEncoded == context2->cbCrlEncoded, "Unexpected cbCrlEncoded\n");
+    ok(context->pCrlInfo != context2->pCrlInfo, "Unexpected pCrlInfo\n");
+
+    CertFreeCRLContext(context2);
+    CertFreeCRLContext(context);
     CertCloseStore(store, 0);
 }
 
@@ -408,9 +434,9 @@ static void testFindCRL(void)
     BOOL ret;
 
     if (!store) return;
-    if (!pCertFindCRLInStore)
+    if (!pCertFindCRLInStore || !pCertFindCertificateInCRL)
     {
-        win_skip("CertFindCRLInStore() is not available\n");
+        win_skip("CertFindCRLInStore or CertFindCertificateInCRL not available\n");
         return;
     }
 
@@ -477,9 +503,9 @@ static void testFindCRL(void)
     if (0)
     {
         /* Crash or return NULL/STATUS_ACCESS_VIOLATION */
-        context = pCertFindCRLInStore(store, 0, 0, CRL_FIND_ISSUED_FOR, NULL,
+        pCertFindCRLInStore(store, 0, 0, CRL_FIND_ISSUED_FOR, NULL,
          NULL);
-        context = pCertFindCRLInStore(store, 0, 0, CRL_FIND_ISSUED_FOR,
+        pCertFindCRLInStore(store, 0, 0, CRL_FIND_ISSUED_FOR,
          &issuedForPara, NULL);
     }
     /* Test whether the cert matches the CRL in the store */
@@ -521,7 +547,7 @@ static void testFindCRL(void)
             PCRL_ENTRY entry;
 
             count++;
-            if (CertFindCertificateInCRL(cert, context, 0, NULL, &entry) &&
+            if (pCertFindCertificateInCRL(cert, context, 0, NULL, &entry) &&
              entry)
                 revoked_count++;
         }
@@ -557,7 +583,7 @@ static void testFindCRL(void)
             PCRL_ENTRY entry;
 
             count++;
-            if (CertFindCertificateInCRL(cert, context, 0, NULL, &entry) &&
+            if (pCertFindCertificateInCRL(cert, context, 0, NULL, &entry) &&
              entry)
                 revoked_count++;
         }
@@ -586,7 +612,7 @@ static void testFindCRL(void)
             PCRL_ENTRY entry;
 
             count++;
-            if (CertFindCertificateInCRL(cert, context, 0, NULL, &entry) &&
+            if (pCertFindCertificateInCRL(cert, context, 0, NULL, &entry) &&
              entry)
                 revoked_count++;
         }
@@ -626,7 +652,7 @@ static void testFindCRL(void)
             PCRL_ENTRY entry;
 
             count++;
-            if (CertFindCertificateInCRL(endCert, context, 0, NULL, &entry) &&
+            if (pCertFindCertificateInCRL(endCert, context, 0, NULL, &entry) &&
              entry)
                 revoked_count++;
         }
@@ -646,7 +672,7 @@ static void testFindCRL(void)
             PCRL_ENTRY entry;
 
             count++;
-            if (CertFindCertificateInCRL(endCert, context, 0, NULL, &entry) &&
+            if (pCertFindCertificateInCRL(endCert, context, 0, NULL, &entry) &&
              entry)
                 revoked_count++;
         }
@@ -663,7 +689,7 @@ static void testFindCRL(void)
             PCRL_ENTRY entry;
 
             count++;
-            if (CertFindCertificateInCRL(endCert, context, 0, NULL, &entry) &&
+            if (pCertFindCertificateInCRL(endCert, context, 0, NULL, &entry) &&
              entry)
                 revoked_count++;
         }
@@ -680,7 +706,7 @@ static void testFindCRL(void)
             PCRL_ENTRY entry;
 
             count++;
-            if (CertFindCertificateInCRL(endCert, context, 0, NULL, &entry) &&
+            if (pCertFindCertificateInCRL(endCert, context, 0, NULL, &entry) &&
              entry)
                 revoked_count++;
         }
@@ -697,7 +723,7 @@ static void testFindCRL(void)
             PCRL_ENTRY entry;
 
             count++;
-            if (CertFindCertificateInCRL(rootCert, context, 0, NULL, &entry) &&
+            if (pCertFindCertificateInCRL(rootCert, context, 0, NULL, &entry) &&
              entry)
                 revoked_count++;
         }
@@ -716,7 +742,7 @@ static void testFindCRL(void)
             PCRL_ENTRY entry;
 
             count++;
-            if (CertFindCertificateInCRL(endCert, context, 0, NULL, &entry) &&
+            if (pCertFindCertificateInCRL(endCert, context, 0, NULL, &entry) &&
              entry)
                 revoked_count++;
         }
@@ -734,7 +760,7 @@ static void testFindCRL(void)
             PCRL_ENTRY entry;
 
             count++;
-            if (CertFindCertificateInCRL(endCert, context, 0, NULL, &entry) &&
+            if (pCertFindCertificateInCRL(endCert, context, 0, NULL, &entry) &&
              entry)
                 revoked_count++;
         }
@@ -906,6 +932,7 @@ static void testCRLProperties(void)
         size = sizeof(hashProperty);
         ret = CertGetCRLContextProperty(context, CERT_HASH_PROP_ID,
          hashProperty, &size);
+        ok(ret, "CertSetCRLContextProperty failed: %08x\n", GetLastError());
         ok(!memcmp(hashProperty, hash, sizeof(hash)), "Unexpected hash\n");
         /* Delete the (bogus) hash, and get the real one */
         ret = CertSetCRLContextProperty(context, CERT_HASH_PROP_ID, 0, NULL);

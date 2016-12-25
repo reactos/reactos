@@ -26,6 +26,7 @@
 #define _CRT_NON_CONFORMING_SWPRINTFS
  
 #include <stdio.h>
+#include <errno.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -33,11 +34,49 @@
 
 #include "wine/test.h"
 
+static inline float __port_infinity(void)
+{
+    static const unsigned __inf_bytes = 0x7f800000;
+    return *(const float *)&__inf_bytes;
+}
+#define INFINITY __port_infinity()
+
+static inline float __port_nan(void)
+{
+    static const unsigned __nan_bytes = 0x7fc00000;
+    return *(const float *)&__nan_bytes;
+}
+#define NAN __port_nan()
+
+static inline float __port_ind(void)
+{
+    static const unsigned __ind_bytes = 0xffc00000;
+    return *(const float *)&__ind_bytes;
+}
+#define IND __port_ind()
+
 static int (__cdecl *p__vscprintf)(const char *format, __ms_va_list valist);
 static int (__cdecl *p__vscwprintf)(const wchar_t *format, __ms_va_list valist);
 static int (__cdecl *p__vsnwprintf_s)(wchar_t *str, size_t sizeOfBuffer,
                                       size_t count, const wchar_t *format,
                                       __ms_va_list valist);
+static int (__cdecl *p__ecvt_s)(char *buffer, size_t length, double number,
+                                int ndigits, int *decpt, int *sign);
+static int (__cdecl *p__fcvt_s)(char *buffer, size_t length, double number,
+                                int ndigits, int *decpt, int *sign);
+static unsigned int (__cdecl *p__get_output_format)(void);
+static unsigned int (__cdecl *p__set_output_format)(unsigned int);
+static int (__cdecl *p__vsprintf_p)(char*, size_t, const char*, __ms_va_list);
+static int (__cdecl *p_vswprintf)(wchar_t *str, const wchar_t *format, __ms_va_list valist);
+static int (__cdecl *p__vswprintf)(wchar_t *str, const wchar_t *format, __ms_va_list valist);
+static int (__cdecl *p__vswprintf_l)(wchar_t *str, const wchar_t *format,
+                                     void *locale, __ms_va_list valist);
+static int (__cdecl *p__vswprintf_c)(wchar_t *str, size_t size, const wchar_t *format,
+                                     __ms_va_list valist);
+static int (__cdecl *p__vswprintf_c_l)(wchar_t *str, size_t size, const wchar_t *format,
+                                       void *locale, __ms_va_list valist);
+static int (__cdecl *p__vswprintf_p_l)(wchar_t *str, size_t size, const wchar_t *format,
+                                       void *locale, __ms_va_list valist);
 
 static void init( void )
 {
@@ -46,6 +85,17 @@ static void init( void )
     p__vscprintf = (void *)GetProcAddress(hmod, "_vscprintf");
     p__vscwprintf = (void *)GetProcAddress(hmod, "_vscwprintf");
     p__vsnwprintf_s = (void *)GetProcAddress(hmod, "_vsnwprintf_s");
+    p__ecvt_s = (void *)GetProcAddress(hmod, "_ecvt_s");
+    p__fcvt_s = (void *)GetProcAddress(hmod, "_fcvt_s");
+    p__get_output_format = (void *)GetProcAddress(hmod, "_get_output_format");
+    p__set_output_format = (void *)GetProcAddress(hmod, "_set_output_format");
+    p__vsprintf_p = (void*)GetProcAddress(hmod, "_vsprintf_p");
+    p_vswprintf = (void*)GetProcAddress(hmod, "vswprintf");
+    p__vswprintf = (void*)GetProcAddress(hmod, "_vswprintf");
+    p__vswprintf_l = (void*)GetProcAddress(hmod, "_vswprintf_l");
+    p__vswprintf_c = (void*)GetProcAddress(hmod, "_vswprintf_c");
+    p__vswprintf_c_l = (void*)GetProcAddress(hmod, "_vswprintf_c_l");
+    p__vswprintf_p_l = (void*)GetProcAddress(hmod, "_vswprintf_p_l");
 }
 
 static void test_sprintf( void )
@@ -271,6 +321,11 @@ static void test_sprintf( void )
     ok(!strcmp(buffer,"D"),"I64D failed: %s\n",buffer);
     ok( r==1, "return count wrong\n");
 
+    format = "%zx";
+    r = sprintf(buffer,format,1);
+    ok(!strcmp(buffer, "zx"), "Problem with \"z\" interpretation\n");
+    ok( r==2, "return count wrong\n");
+
     format = "% d";
     r = sprintf(buffer,format,1);
     ok(!strcmp(buffer, " 1"),"Problem with sign place-holder: '%s'\n",buffer);
@@ -296,6 +351,56 @@ static void test_sprintf( void )
     ok(!strcmp(buffer,"1   "),"Character zero-padded and/or not left-adjusted \"%s\"\n",buffer);
     ok( r==4, "return count wrong\n");
 
+    format = "%#012x";
+    r = sprintf(buffer,format,1);
+    ok(!strcmp(buffer,"0x0000000001"),"Hexadecimal zero-padded \"%s\"\n",buffer);
+    ok( r==12, "return count wrong\n");
+
+    r = sprintf(buffer,format,0);
+    ok(!strcmp(buffer,"000000000000"),"Hexadecimal zero-padded \"%s\"\n",buffer);
+    ok( r==12, "return count wrong\n");
+
+    format = "%#04.8x";
+    r = sprintf(buffer,format,1);
+    ok(!strcmp(buffer,"0x00000001"), "Hexadecimal zero-padded precision \"%s\"\n",buffer);
+    ok( r==10, "return count wrong\n");
+
+    r = sprintf(buffer,format,0);
+    ok(!strcmp(buffer,"00000000"), "Hexadecimal zero-padded precision \"%s\"\n",buffer);
+    ok( r==8, "return count wrong\n");
+
+    format = "%#-08.2x";
+    r = sprintf(buffer,format,1);
+    ok(!strcmp(buffer,"0x01    "), "Hexadecimal zero-padded not left-adjusted \"%s\"\n",buffer);
+    ok( r==8, "return count wrong\n");
+
+    r = sprintf(buffer,format,0);
+    ok(!strcmp(buffer,"00      "), "Hexadecimal zero-padded not left-adjusted \"%s\"\n",buffer);
+    ok( r==8, "return count wrong\n");
+
+    format = "%#.0x";
+    r = sprintf(buffer,format,1);
+    ok(!strcmp(buffer,"0x1"), "Hexadecimal zero-padded zero-precision \"%s\"\n",buffer);
+    ok( r==3, "return count wrong\n");
+
+    r = sprintf(buffer,format,0);
+    ok(!strcmp(buffer,""), "Hexadecimal zero-padded zero-precision \"%s\"\n",buffer);
+    ok( r==0, "return count wrong\n");
+
+    format = "%#08o";
+    r = sprintf(buffer,format,1);
+    ok(!strcmp(buffer,"00000001"), "Octal zero-padded \"%s\"\n",buffer);
+    ok( r==8, "return count wrong\n");
+
+    format = "%#o";
+    r = sprintf(buffer,format,1);
+    ok(!strcmp(buffer,"01"), "Octal zero-padded \"%s\"\n",buffer);
+    ok( r==2, "return count wrong\n");
+
+    r = sprintf(buffer,format,0);
+    ok(!strcmp(buffer,"0"), "Octal zero-padded \"%s\"\n",buffer);
+    ok( r==1, "return count wrong\n");
+
     if (sizeof(void *) == 8)
     {
         format = "%p";
@@ -313,10 +418,20 @@ static void test_sprintf( void )
         ok(!strcmp(buffer,"0000000000000039"),"Pointer formatted incorrectly \"%s\"\n",buffer);
         ok( r==16, "return count wrong\n");
 
+        format = "%Np";
+        r = sprintf(buffer,format,(void *)57);
+        ok(!strcmp(buffer,"0000000000000039"),"Pointer formatted incorrectly \"%s\"\n",buffer);
+        ok( r==16, "return count wrong\n");
+
         format = "%#-020p";
         r = sprintf(buffer,format,(void *)57);
         ok(!strcmp(buffer,"0X0000000000000039  "),"Pointer formatted incorrectly\n");
         ok( r==20, "return count wrong\n");
+
+        format = "%Ix %d";
+        r = sprintf(buffer,format,(size_t)0x12345678123456,1);
+        ok(!strcmp(buffer,"12345678123456 1"),"buffer = %s\n",buffer);
+        ok( r==16, "return count wrong\n");
     }
     else
     {
@@ -335,10 +450,20 @@ static void test_sprintf( void )
         ok(!strcmp(buffer,"00000039"),"Pointer formatted incorrectly \"%s\"\n",buffer);
         ok( r==8, "return count wrong\n");
 
+        format = "%Np";
+        r = sprintf(buffer,format,(void *)57);
+        ok(!strcmp(buffer,"00000039"),"Pointer formatted incorrectly \"%s\"\n",buffer);
+        ok( r==8, "return count wrong\n");
+
         format = "%#-012p";
         r = sprintf(buffer,format,(void *)57);
         ok(!strcmp(buffer,"0X00000039  "),"Pointer formatted incorrectly\n");
         ok( r==12, "return count wrong\n");
+
+        format = "%Ix %d";
+        r = sprintf(buffer,format,0x123456,1);
+        ok(!strcmp(buffer,"123456 1"),"buffer = %s\n",buffer);
+        ok( r==8, "return count wrong\n");
     }
 
     format = "%04s";
@@ -472,6 +597,26 @@ static void test_sprintf( void )
     ok(!strcmp(buffer,"8.6000e+000"), "failed\n");
     ok( r==11, "return count wrong\n");
 
+    format = "% 2.4e";
+    r = sprintf(buffer, format,8.6);
+    ok(!strcmp(buffer," 8.6000e+000"), "failed: %s\n", buffer);
+    ok( r==12, "return count wrong\n");
+
+    format = "% 014.4e";
+    r = sprintf(buffer, format,8.6);
+    ok(!strcmp(buffer," 008.6000e+000"), "failed: %s\n", buffer);
+    ok( r==14, "return count wrong\n");
+
+    format = "% 2.4e";
+    r = sprintf(buffer, format,-8.6);
+    ok(!strcmp(buffer,"-8.6000e+000"), "failed: %s\n", buffer);
+    ok( r==12, "return count wrong\n");
+
+    format = "%+2.4e";
+    r = sprintf(buffer, format,8.6);
+    ok(!strcmp(buffer,"+8.6000e+000"), "failed: %s\n", buffer);
+    ok( r==12, "return count wrong\n");
+
     format = "%2.4g";
     r = sprintf(buffer, format,8.6);
     ok(!strcmp(buffer,"8.6"), "failed\n");
@@ -550,6 +695,11 @@ static void test_sprintf( void )
     ok(!strcmp(buffer,""), "failed\n");
     ok( r==0, "return count wrong\n");
 
+    format = "%N";
+    r = sprintf(buffer, format,-1);
+    ok(!strcmp(buffer,""), "failed\n");
+    ok( r==0, "return count wrong\n");
+
     format = "%H";
     r = sprintf(buffer, format,-1);
     ok(!strcmp(buffer,"H"), "failed\n");
@@ -564,6 +714,60 @@ static void test_sprintf( void )
     r = sprintf(buffer, format);
     ok(!strcmp(buffer,"%0"), "failed: \"%s\"\n", buffer);
     ok( r==2, "return count wrong\n");
+
+    format = "%hx";
+    r = sprintf(buffer, format, 0x12345);
+    ok(!strcmp(buffer,"2345"), "failed \"%s\"\n", buffer);
+
+    format = "%hhx";
+    r = sprintf(buffer, format, 0x123);
+    ok(!strcmp(buffer,"123"), "failed: \"%s\"\n", buffer);
+    r = sprintf(buffer, format, 0x12345);
+    ok(!strcmp(buffer,"2345"), "failed \"%s\"\n", buffer);
+
+    format = "%lf";
+    r = sprintf(buffer, format, IND);
+    ok(r==9, "r = %d\n", r);
+    ok(!strcmp(buffer, "-1.#IND00"), "failed: \"%s\"\n", buffer);
+    r = sprintf(buffer, format, NAN);
+    ok(r==8, "r = %d\n", r);
+    ok(!strcmp(buffer, "1.#QNAN0"), "failed: \"%s\"\n", buffer);
+    r = sprintf(buffer, format, INFINITY);
+    ok(r==8, "r = %d\n", r);
+    ok(!strcmp(buffer, "1.#INF00"), "failed: \"%s\"\n", buffer);
+
+    format = "%le";
+    r = sprintf(buffer, format, IND);
+    ok(r==14, "r = %d\n", r);
+    ok(!strcmp(buffer, "-1.#IND00e+000"), "failed: \"%s\"\n", buffer);
+    r = sprintf(buffer, format, NAN);
+    ok(r==13, "r = %d\n", r);
+    ok(!strcmp(buffer, "1.#QNAN0e+000"), "failed: \"%s\"\n", buffer);
+    r = sprintf(buffer, format, INFINITY);
+    ok(r==13, "r = %d\n", r);
+    ok(!strcmp(buffer, "1.#INF00e+000"), "failed: \"%s\"\n", buffer);
+
+    format = "%lg";
+    r = sprintf(buffer, format, IND);
+    ok(r==7, "r = %d\n", r);
+    ok(!strcmp(buffer, "-1.#IND"), "failed: \"%s\"\n", buffer);
+    r = sprintf(buffer, format, NAN);
+    ok(r==7, "r = %d\n", r);
+    ok(!strcmp(buffer, "1.#QNAN"), "failed: \"%s\"\n", buffer);
+    r = sprintf(buffer, format, INFINITY);
+    ok(r==6, "r = %d\n", r);
+    ok(!strcmp(buffer, "1.#INF"), "failed: \"%s\"\n", buffer);
+
+    format = "%010.2lf";
+    r = sprintf(buffer, format, IND);
+    ok(r==10, "r = %d\n", r);
+    ok(!strcmp(buffer, "-000001.#J"), "failed: \"%s\"\n", buffer);
+    r = sprintf(buffer, format, NAN);
+    ok(r==10, "r = %d\n", r);
+    ok(!strcmp(buffer, "0000001.#R"), "failed: \"%s\"\n", buffer);
+    r = sprintf(buffer, format, INFINITY);
+    ok(r==10, "r = %d\n", r);
+    ok(!strcmp(buffer, "0000001.#J"), "failed: \"%s\"\n", buffer);
 }
 
 static void test_swprintf( void )
@@ -613,7 +817,94 @@ static void test_snprintf (void)
             fmt, expect, n);
         ok (!memcmp (fmt, buffer, valid),
             "\"%s\": rendered \"%.*s\"\n", fmt, valid, buffer);
-    };
+    }
+}
+
+static void test_fprintf(void)
+{
+    static const char file_name[] = "fprintf.tst";
+    static const WCHAR utf16_test[] = {'u','n','i','c','o','d','e','\n',0};
+
+    FILE *fp = fopen(file_name, "wb");
+    char buf[1024];
+    int ret;
+
+    ret = fprintf(fp, "simple test\n");
+    ok(ret == 12, "ret = %d\n", ret);
+    ret = ftell(fp);
+    ok(ret == 12, "ftell returned %d\n", ret);
+
+    ret = fprintf(fp, "contains%cnull\n", '\0');
+    ok(ret == 14, "ret = %d\n", ret);
+    ret = ftell(fp);
+    ok(ret == 26, "ftell returned %d\n", ret);
+
+    ret = fwprintf(fp, utf16_test);
+    ok(ret == 8, "ret = %d\n", ret);
+    ret = ftell(fp);
+    ok(ret == 42, "ftell returned %d\n", ret);
+
+    fclose(fp);
+
+    fp = fopen(file_name, "rb");
+    ret = fscanf(fp, "%[^\n] ", buf);
+    ok(ret == 1, "ret = %d\n", ret);
+    ret = ftell(fp);
+    ok(ret == 12, "ftell returned %d\n", ret);
+    ok(!strcmp(buf, "simple test"), "buf = %s\n", buf);
+
+    fgets(buf, sizeof(buf), fp);
+    ret = ftell(fp);
+    ok(ret == 26, "ret = %d\n", ret);
+    ok(!memcmp(buf, "contains\0null\n", 14), "buf = %s\n", buf);
+
+    memset(buf, 0, sizeof(buf));
+    fgets(buf, sizeof(buf), fp);
+    ret = ftell(fp);
+    ok(ret == 41, "ret =  %d\n", ret);
+    ok(!memcmp(buf, utf16_test, sizeof(utf16_test)),
+            "buf = %s\n", wine_dbgstr_w((WCHAR*)buf));
+
+    fclose(fp);
+
+    fp = fopen(file_name, "wt");
+
+    ret = fprintf(fp, "simple test\n");
+    ok(ret == 12, "ret = %d\n", ret);
+    ret = ftell(fp);
+    ok(ret == 13, "ftell returned %d\n", ret);
+
+    ret = fprintf(fp, "contains%cnull\n", '\0');
+    ok(ret == 14, "ret = %d\n", ret);
+    ret = ftell(fp);
+    ok(ret == 28, "ftell returned %d\n", ret);
+
+    ret = fwprintf(fp, utf16_test);
+    ok(ret == 8, "ret = %d\n", ret);
+    ret = ftell(fp);
+    ok(ret == 37, "ftell returned %d\n", ret);
+
+    fclose(fp);
+
+    fp = fopen(file_name, "rb");
+    ret = fscanf(fp, "%[^\n] ", buf);
+    ok(ret == 1, "ret = %d\n", ret);
+    ret = ftell(fp);
+    ok(ret == 13, "ftell returned %d\n", ret);
+    ok(!strcmp(buf, "simple test\r"), "buf = %s\n", buf);
+
+    fgets(buf, sizeof(buf), fp);
+    ret = ftell(fp);
+    ok(ret == 28, "ret = %d\n", ret);
+    ok(!memcmp(buf, "contains\0null\r\n", 15), "buf = %s\n", buf);
+
+    fgets(buf, sizeof(buf), fp);
+    ret = ftell(fp);
+    ok(ret == 37, "ret =  %d\n", ret);
+    ok(!strcmp(buf, "unicode\r\n"), "buf = %s\n", buf);
+
+    fclose(fp);
+    unlink(file_name);
 }
 
 static void test_fcvt(void)
@@ -713,6 +1004,8 @@ static void test_fcvt(void)
     ok( 0 == sign, "sign wrong\n");
 }
 
+/* Don't test nrdigits < 0, msvcrt on Win9x and NT4 will corrupt memory by
+ * writing outside allocated memory */
 static struct {
     double value;
     int nrdigits;
@@ -725,7 +1018,6 @@ static struct {
     {          45.0,   2,        "45",           "4500",          2,      2,      0 },
     /* Numbers less than 1.0 with different precisions */
     {        0.0001,   1,         "1",               "",         -3,     -3,     0 },
-    {        0.0001, -10,          "",               "",         -3,     -3,     0 },
     {        0.0001,  10,"1000000000",        "1000000",         -3,     -3,     0 },
     /* Basic sign test */
     {     -111.0001,   5,     "11100",       "11100010",          3,      3,     1 },
@@ -753,7 +1045,7 @@ static struct {
     {           0.4,   0,          "",               "",          0,      0,     0 },
     {          0.49,   0,          "",               "",          0,      0,     0 },
     {          0.51,   0,          "",              "1",          1,      1,     0 },
-    /* ask ridiculous amunt of precision, ruin formatting this table */
+    /* ask for ridiculous precision, ruin formatting this table */
     {           1.0,  30, "100000000000000000000000000000",
                       "1000000000000000000000000000000",          1,      1,      0},
     {           123456789012345678901.0,  30, "123456789012345680000000000000",
@@ -765,7 +1057,8 @@ static struct {
 static void test_xcvt(void)
 {
     char *str;
-    int i, decpt, sign;
+    int i, decpt, sign, err;
+
     for( i = 0; strcmp( test_cvt_testcases[i].expstr_e, "END"); i++){
         decpt = sign = 100;
         str = _ecvt( test_cvt_testcases[i].value,
@@ -778,6 +1071,9 @@ static void test_xcvt(void)
         ok( decpt == test_cvt_testcases[i].expdecpt_e,
                 "_ecvt() decimal point wrong, got %d expected %d\n", decpt,
                 test_cvt_testcases[i].expdecpt_e);
+        ok( sign == test_cvt_testcases[i].expsign,
+                "_ecvt() sign wrong, got %d expected %d\n", sign,
+                test_cvt_testcases[i].expsign);
     }
     for( i = 0; strcmp( test_cvt_testcases[i].expstr_e, "END"); i++){
         decpt = sign = 100;
@@ -792,9 +1088,76 @@ static void test_xcvt(void)
                 "_fcvt() decimal point wrong, got %d expected %d\n", decpt,
                 test_cvt_testcases[i].expdecpt_f);
         ok( sign == test_cvt_testcases[i].expsign,
-                "_ecvt() sign wrong, got %d expected %d\n", sign,
+                "_fcvt() sign wrong, got %d expected %d\n", sign,
                 test_cvt_testcases[i].expsign);
     }
+
+    if (p__ecvt_s)
+    {
+        str = malloc(1024);
+        for( i = 0; strcmp( test_cvt_testcases[i].expstr_e, "END"); i++){
+            decpt = sign = 100;
+            err = p__ecvt_s(str, 1024, test_cvt_testcases[i].value, test_cvt_testcases[i].nrdigits, &decpt, &sign);
+            ok(err == 0, "_ecvt_s() failed with error code %d\n", err);
+            ok( 0 == strncmp( str, test_cvt_testcases[i].expstr_e, 15),
+                   "_ecvt_s() bad return, got \n'%s' expected \n'%s'\n", str,
+                  test_cvt_testcases[i].expstr_e);
+            ok( decpt == test_cvt_testcases[i].expdecpt_e,
+                    "_ecvt_s() decimal point wrong, got %d expected %d\n", decpt,
+                    test_cvt_testcases[i].expdecpt_e);
+            ok( sign == test_cvt_testcases[i].expsign,
+                    "_ecvt_s() sign wrong, got %d expected %d\n", sign,
+                    test_cvt_testcases[i].expsign);
+        }
+        free(str);
+    }
+    else
+        win_skip("_ecvt_s not available\n");
+
+    if (p__fcvt_s)
+    {
+        int i;
+
+        str = malloc(1024);
+
+        /* invalid arguments */
+        err = p__fcvt_s(NULL, 0, 0.0, 0, &i, &i);
+        ok(err == EINVAL, "got %d, expected EINVAL\n", err);
+
+        err = p__fcvt_s(str, 0, 0.0, 0, &i, &i);
+        ok(err == EINVAL, "got %d, expected EINVAL\n", err);
+
+        str[0] = ' ';
+        str[1] = 0;
+        err = p__fcvt_s(str, -1, 0.0, 0, &i, &i);
+        ok(err == 0, "got %d, expected 0\n", err);
+        ok(str[0] == 0, "got %c, expected 0\n", str[0]);
+        ok(str[1] == 0, "got %c, expected 0\n", str[1]);
+
+        err = p__fcvt_s(str, 1, 0.0, 0, NULL, &i);
+        ok(err == EINVAL, "got %d, expected EINVAL\n", err);
+
+        err = p__fcvt_s(str, 1, 0.0, 0, &i, NULL);
+        ok(err == EINVAL, "got %d, expected EINVAL\n", err);
+
+        for( i = 0; strcmp( test_cvt_testcases[i].expstr_e, "END"); i++){
+            decpt = sign = 100;
+            err = p__fcvt_s(str, 1024, test_cvt_testcases[i].value, test_cvt_testcases[i].nrdigits, &decpt, &sign);
+            ok(err == 0, "_fcvt_s() failed with error code %d\n", err);
+            ok( 0 == strncmp( str, test_cvt_testcases[i].expstr_f, 15),
+                   "_fcvt_s() bad return, got '%s' expected '%s'. test %d\n", str,
+                  test_cvt_testcases[i].expstr_f, i);
+            ok( decpt == test_cvt_testcases[i].expdecpt_f,
+                    "_fcvt_s() decimal point wrong, got %d expected %d\n", decpt,
+                    test_cvt_testcases[i].expdecpt_f);
+            ok( sign == test_cvt_testcases[i].expsign,
+                    "_fcvt_s() sign wrong, got %d expected %d\n", sign,
+                    test_cvt_testcases[i].expsign);
+        }
+        free(str);
+    }
+    else
+        win_skip("_fcvt_s not available\n");
 }
 
 static int __cdecl _vsnwprintf_wrapper(wchar_t *str, size_t len, const wchar_t *format, ...)
@@ -823,6 +1186,118 @@ static void test_vsnwprintf(void)
     ok( ret == 11, "got %d expected 11\n", ret );
     WideCharToMultiByte( CP_ACP, 0, str, -1, buf, sizeof(buf), NULL, NULL );
     ok( !strcmp(buf, "onetwothree"), "got %s expected 'onetwothree'\n", buf );
+
+    ret = _vsnwprintf_wrapper( str, 0, format, one, two, three );
+    ok( ret == -1, "got %d, expected -1\n", ret );
+
+    ret = _vsnwprintf_wrapper( NULL, 0, format, one, two, three );
+    ok( ret == 11 || broken(ret == -1 /* Win2k */), "got %d, expected 11\n", ret );
+}
+
+static int __cdecl vswprintf_wrapper(wchar_t *str, const wchar_t *format, ...)
+{
+    int ret;
+    __ms_va_list valist;
+    __ms_va_start(valist, format);
+    ret = p_vswprintf(str, format, valist);
+    __ms_va_end(valist);
+    return ret;
+}
+
+static int __cdecl _vswprintf_wrapper(wchar_t *str, const wchar_t *format, ...)
+{
+    int ret;
+    __ms_va_list valist;
+    __ms_va_start(valist, format);
+    ret = p__vswprintf(str, format, valist);
+    __ms_va_end(valist);
+    return ret;
+}
+
+static int __cdecl _vswprintf_l_wrapper(wchar_t *str, const wchar_t *format, void *locale, ...)
+{
+    int ret;
+    __ms_va_list valist;
+    __ms_va_start(valist, locale);
+    ret = p__vswprintf_l(str, format, locale, valist);
+    __ms_va_end(valist);
+    return ret;
+}
+
+static int __cdecl _vswprintf_c_wrapper(wchar_t *str, size_t size, const wchar_t *format, ...)
+{
+    int ret;
+    __ms_va_list valist;
+    __ms_va_start(valist, format);
+    ret = p__vswprintf_c(str, size, format, valist);
+    __ms_va_end(valist);
+    return ret;
+}
+
+static int __cdecl _vswprintf_c_l_wrapper(wchar_t *str, size_t size, const wchar_t *format, void *locale, ...)
+{
+    int ret;
+    __ms_va_list valist;
+    __ms_va_start(valist, locale);
+    ret = p__vswprintf_c_l(str, size, format, locale, valist);
+    __ms_va_end(valist);
+    return ret;
+}
+
+static int __cdecl _vswprintf_p_l_wrapper(wchar_t *str, size_t size, const wchar_t *format, void *locale, ...)
+{
+    int ret;
+    __ms_va_list valist;
+    __ms_va_start(valist, locale);
+    ret = p__vswprintf_p_l(str, size, format, locale, valist);
+    __ms_va_end(valist);
+    return ret;
+}
+
+static void test_vswprintf(void)
+{
+    const wchar_t format[] = {'%','s',' ','%','d',0};
+    const wchar_t number[] = {'n','u','m','b','e','r',0};
+    const wchar_t out[] = {'n','u','m','b','e','r',' ','1','2','3',0};
+    wchar_t buf[20];
+
+    int ret;
+
+    if (!p_vswprintf || !p__vswprintf || !p__vswprintf_l ||!p__vswprintf_c
+            || !p__vswprintf_c_l || !p__vswprintf_p_l)
+    {
+        win_skip("_vswprintf or vswprintf not available\n");
+        return;
+    }
+
+    ret = vswprintf_wrapper(buf, format, number, 123);
+    ok(ret == 10, "got %d, expected 10\n", ret);
+    ok(!memcmp(buf, out, sizeof(out)), "buf = %s\n", wine_dbgstr_w(buf));
+
+    memset(buf, 0, sizeof(buf));
+    ret = _vswprintf_wrapper(buf, format, number, 123);
+    ok(ret == 10, "got %d, expected 10\n", ret);
+    ok(!memcmp(buf, out, sizeof(out)), "buf = %s\n", wine_dbgstr_w(buf));
+
+    memset(buf, 0, sizeof(buf));
+    ret = _vswprintf_l_wrapper(buf, format, NULL, number, 123);
+    ok(ret == 10, "got %d, expected 10\n", ret);
+    ok(!memcmp(buf, out, sizeof(out)), "buf = %s\n", wine_dbgstr_w(buf));
+
+    memset(buf, 0, sizeof(buf));
+    ret = _vswprintf_c_wrapper(buf, 20, format, number, 123);
+    ok(ret == 10, "got %d, expected 10\n", ret);
+    ok(!memcmp(buf, out, sizeof(out)), "buf = %s\n", wine_dbgstr_w(buf));
+
+    memset(buf, 0, sizeof(buf));
+    ret = _vswprintf_c_l_wrapper(buf, 20, format, NULL, number, 123);
+    ok(ret == 10, "got %d, expected 10\n", ret);
+    ok(!memcmp(buf, out, sizeof(out)), "buf = %s\n", wine_dbgstr_w(buf));
+
+    memset(buf, 0, sizeof(buf));
+    ret = _vswprintf_p_l_wrapper(buf, 20, format, NULL, number, 123);
+    ok(ret == 10, "got %d, expected 10\n", ret);
+    ok(!memcmp(buf, out, sizeof(out)), "buf = %s\n", wine_dbgstr_w(buf));
 }
 
 static int __cdecl _vscprintf_wrapper(const char *format, ...)
@@ -934,6 +1409,80 @@ static void test_vsnwprintf_s(void)
     ok( !wcscmp(out1, buffer), "buffer wrong, got=%s\n", wine_dbgstr_w(buffer));
 }
 
+static int __cdecl _vsprintf_p_wrapper(char *str, size_t sizeOfBuffer,
+                                 const char *format, ...)
+{
+    int ret;
+    __ms_va_list valist;
+    __ms_va_start(valist, format);
+    ret = p__vsprintf_p(str, sizeOfBuffer, format, valist);
+    __ms_va_end(valist);
+    return ret;
+}
+
+static void test_vsprintf_p(void)
+{
+    char buf[1024];
+    int ret;
+
+    if(!p__vsprintf_p) {
+        win_skip("vsprintf_p not available\n");
+        return;
+    }
+
+    ret = _vsprintf_p_wrapper(buf, sizeof(buf), "%s %d", "test", 1234);
+    ok(ret == 9, "ret = %d\n", ret);
+    ok(!memcmp(buf, "test 1234", 10), "buf = %s\n", buf);
+
+    ret = _vsprintf_p_wrapper(buf, sizeof(buf), "%1$d", 1234, "additional param");
+    ok(ret == 4, "ret = %d\n", ret);
+    ok(!memcmp(buf, "1234", 5), "buf = %s\n", buf);
+
+    ret = _vsprintf_p_wrapper(buf, sizeof(buf), "%2$s %1$d", 1234, "test");
+    ok(ret == 9, "ret = %d\n", ret);
+    ok(!memcmp(buf, "test 1234", 10), "buf = %s\n", buf);
+
+    ret = _vsprintf_p_wrapper(buf, sizeof(buf), "%2$*3$s %2$.*1$s", 2, "test", 3);
+    ok(ret == 7, "ret = %d\n", ret);
+    ok(!memcmp(buf, "test te", 8), "buf = %s\n", buf);
+
+    /* Following test invokes invalid parameter handler */
+    /* ret = _vsprintf_p_wrapper(buf, sizeof(buf), "%d %1$d", 1234); */
+}
+
+static void test__get_output_format(void)
+{
+    unsigned int ret;
+    char buf[64];
+    int c;
+
+    if (!p__get_output_format || !p__set_output_format)
+    {
+        win_skip("_get_output_format or _set_output_format is not available\n");
+        return;
+    }
+
+    ret = p__get_output_format();
+    ok(ret == 0, "got %d\n", ret);
+
+    c = sprintf(buf, "%E", 1.23);
+    ok(c == 13, "c = %d\n", c);
+    ok(!strcmp(buf, "1.230000E+000"), "buf = %s\n", buf);
+
+    ret = p__set_output_format(_TWO_DIGIT_EXPONENT);
+    ok(ret == 0, "got %d\n", ret);
+
+    c = sprintf(buf, "%E", 1.23);
+    ok(c == 12, "c = %d\n", c);
+    ok(!strcmp(buf, "1.230000E+00"), "buf = %s\n", buf);
+
+    ret = p__get_output_format();
+    ok(ret == _TWO_DIGIT_EXPONENT, "got %d\n", ret);
+
+    ret = p__set_output_format(_TWO_DIGIT_EXPONENT);
+    ok(ret == _TWO_DIGIT_EXPONENT, "got %d\n", ret);
+}
+
 START_TEST(printf)
 {
     init();
@@ -941,10 +1490,14 @@ START_TEST(printf)
     test_sprintf();
     test_swprintf();
     test_snprintf();
+    test_fprintf();
     test_fcvt();
     test_xcvt();
     test_vsnwprintf();
     test_vscprintf();
     test_vscwprintf();
+    test_vswprintf();
     test_vsnwprintf_s();
+    test_vsprintf_p();
+    test__get_output_format();
 }

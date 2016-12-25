@@ -16,30 +16,54 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 #define CONST_VTABLE
 
+#include <stdarg.h>
+
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
 #include <initguid.h>
 #include <ole2.h>
 #include <activscp.h>
 #include <objsafe.h>
 #include <dispex.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
+
+#ifdef _WIN64
+
+#define IActiveScriptParse_QueryInterface IActiveScriptParse64_QueryInterface
+#define IActiveScriptParse_Release IActiveScriptParse64_Release
+#define IActiveScriptParse_InitNew IActiveScriptParse64_InitNew
+#define IActiveScriptParse_ParseScriptText IActiveScriptParse64_ParseScriptText
+
+#else
+
+#define IActiveScriptParse_QueryInterface IActiveScriptParse32_QueryInterface
+#define IActiveScriptParse_Release IActiveScriptParse32_Release
+#define IActiveScriptParse_InitNew IActiveScriptParse32_InitNew
+#define IActiveScriptParse_ParseScriptText IActiveScriptParse32_ParseScriptText
+
+#endif
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 static const CLSID CLSID_JScript =
     {0xf414c260,0x6ac0,0x11cf,{0xb6,0xd1,0x00,0xaa,0x00,0xbb,0xbb,0x58}};
+static const CLSID CLSID_JScriptEncode =
+    {0xf414c262,0x6ac0,0x11cf,{0xb6,0xd1,0x00,0xaa,0x00,0xbb,0xbb,0x58}};
 
 #define DEFINE_EXPECT(func) \
     static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
 
 #define SET_EXPECT(func) \
     expect_ ## func = TRUE
-
-#define SET_CALLED(func) \
-    called_ ## func = TRUE
 
 #define CHECK_EXPECT2(func) \
     do { \
@@ -60,6 +84,7 @@ static const CLSID CLSID_JScript =
     }while(0)
 
 DEFINE_EXPECT(GetLCID);
+DEFINE_EXPECT(OnStateChange_UNINITIALIZED);
 DEFINE_EXPECT(OnStateChange_STARTED);
 DEFINE_EXPECT(OnStateChange_CONNECTED);
 DEFINE_EXPECT(OnStateChange_DISCONNECTED);
@@ -67,6 +92,8 @@ DEFINE_EXPECT(OnStateChange_CLOSED);
 DEFINE_EXPECT(OnStateChange_INITIALIZED);
 DEFINE_EXPECT(OnEnterScript);
 DEFINE_EXPECT(OnLeaveScript);
+
+static const CLSID *engine_clsid = &CLSID_JScript;
 
 static BSTR a2bstr(const char *str)
 {
@@ -145,6 +172,9 @@ static HRESULT WINAPI ActiveScriptSite_OnScriptTerminate(IActiveScriptSite *ifac
 static HRESULT WINAPI ActiveScriptSite_OnStateChange(IActiveScriptSite *iface, SCRIPTSTATE ssScriptState)
 {
     switch(ssScriptState) {
+    case SCRIPTSTATE_UNINITIALIZED:
+        CHECK_EXPECT(OnStateChange_UNINITIALIZED);
+        return S_OK;
     case SCRIPTSTATE_STARTED:
         CHECK_EXPECT(OnStateChange_STARTED);
         return S_OK;
@@ -184,8 +214,6 @@ static HRESULT WINAPI ActiveScriptSite_OnLeaveScript(IActiveScriptSite *iface)
     CHECK_EXPECT(OnLeaveScript);
     return S_OK;
 }
-
-#undef ACTSCPSITE_THIS
 
 static const IActiveScriptSiteVtbl ActiveScriptSiteVtbl = {
     ActiveScriptSite_QueryInterface,
@@ -252,7 +280,7 @@ static IDispatchEx *get_script_dispatch(IActiveScript *script)
     hres = IActiveScript_GetScriptDispatch(script, NULL, &disp);
     ok(hres == S_OK, "GetScriptDispatch failed: %08x\n", hres);
 
-    IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
+    hres = IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
     IDispatch_Release(disp);
     ok(hres == S_OK, "Could not get IDispatch iface: %08x\n", hres);
     return dispex;
@@ -325,6 +353,38 @@ static void test_safety(IUnknown *unk)
     ok(enabled == (INTERFACESAFE_FOR_UNTRUSTED_DATA|INTERFACE_USES_DISPEX|INTERFACE_USES_SECURITY_MANAGER),
        "enabled=%x\n", enabled);
 
+    hres = IObjectSafety_SetInterfaceSafetyOptions(safety, &IID_IActiveScriptParse, INTERFACESAFE_FOR_UNTRUSTED_DATA, 0);
+    ok(hres == S_OK, "SetInterfaceSafetyOptions failed: %08x\n", hres);
+
+    supported = enabled = 0xdeadbeef;
+    hres = IObjectSafety_GetInterfaceSafetyOptions(safety, &IID_IActiveScriptParse, &supported, &enabled);
+    ok(hres == S_OK, "GetInterfaceSafetyOptions failed: %08x\n", hres);
+    ok(supported == (INTERFACESAFE_FOR_UNTRUSTED_DATA|INTERFACE_USES_DISPEX|INTERFACE_USES_SECURITY_MANAGER),
+       "supported=%x\n", supported);
+    ok(enabled == (INTERFACE_USES_DISPEX|INTERFACE_USES_SECURITY_MANAGER), "enabled=%x\n", enabled);
+
+    hres = IObjectSafety_SetInterfaceSafetyOptions(safety, &IID_IActiveScriptParse,
+            INTERFACESAFE_FOR_UNTRUSTED_DATA|INTERFACE_USES_DISPEX|INTERFACE_USES_SECURITY_MANAGER, 0);
+    ok(hres == S_OK, "SetInterfaceSafetyOptions failed: %08x\n", hres);
+
+    supported = enabled = 0xdeadbeef;
+    hres = IObjectSafety_GetInterfaceSafetyOptions(safety, &IID_IActiveScriptParse, &supported, &enabled);
+    ok(hres == S_OK, "GetInterfaceSafetyOptions failed: %08x\n", hres);
+    ok(supported == (INTERFACESAFE_FOR_UNTRUSTED_DATA|INTERFACE_USES_DISPEX|INTERFACE_USES_SECURITY_MANAGER),
+       "supported=%x\n", supported);
+    ok(enabled == INTERFACE_USES_DISPEX, "enabled=%x\n", enabled);
+
+    hres = IObjectSafety_SetInterfaceSafetyOptions(safety, &IID_IActiveScriptParse,
+            INTERFACE_USES_DISPEX, 0);
+    ok(hres == S_OK, "SetInterfaceSafetyOptions failed: %08x\n", hres);
+
+    supported = enabled = 0xdeadbeef;
+    hres = IObjectSafety_GetInterfaceSafetyOptions(safety, &IID_IActiveScriptParse, &supported, &enabled);
+    ok(hres == S_OK, "GetInterfaceSafetyOptions failed: %08x\n", hres);
+    ok(supported == (INTERFACESAFE_FOR_UNTRUSTED_DATA|INTERFACE_USES_DISPEX|INTERFACE_USES_SECURITY_MANAGER),
+       "supported=%x\n", supported);
+    ok(enabled == INTERFACE_USES_DISPEX, "enabled=%x\n", enabled);
+
     IObjectSafety_Release(safety);
 }
 
@@ -335,7 +395,9 @@ static HRESULT set_script_prop(IActiveScript *engine, DWORD property, VARIANT *v
 
     hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptProperty,
             (void**)&script_prop);
-    ok(hres == S_OK, "Could not get IActiveScriptProperty iface: %08x\n", hres);
+    ok(hres == S_OK, "Could not get IActiveScriptProperty: %08x\n", hres);
+    if(FAILED(hres))
+        return hres;
 
     hres = IActiveScriptProperty_SetProperty(script_prop, property, NULL, val);
     IActiveScriptProperty_Release(script_prop);
@@ -371,40 +433,39 @@ static void test_invoke_versioning(IActiveScript *script)
     ok(hres == S_OK, "SetProperty(SCRIPTPROP_INVOKEVERSIONING) failed: %08x\n", hres);
 }
 
+static IActiveScript *create_jscript(void)
+{
+    IActiveScript *ret;
+    HRESULT hres;
+
+    hres = CoCreateInstance(engine_clsid, NULL, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
+            &IID_IActiveScript, (void**)&ret);
+    ok(hres == S_OK, "CoCreateInstance failed: %08x\n", hres);
+
+    return ret;
+}
+
 static void test_jscript(void)
 {
     IActiveScriptParse *parse;
     IActiveScript *script;
     IDispatchEx *dispex;
-    IUnknown *unk;
     ULONG ref;
     HRESULT hres;
 
-    hres = CoCreateInstance(&CLSID_JScript, NULL, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
-            &IID_IUnknown, (void**)&unk);
-    ok(hres == S_OK, "CoCreateInstance failed: %08x\n", hres);
-    if(FAILED(hres))
-        return;
+    script = create_jscript();
 
-    hres = IUnknown_QueryInterface(unk, &IID_IActiveScript, (void**)&script);
-    ok(hres == S_OK, "Could not get IActiveScript: %08x\n", hres);
-
-    hres = IUnknown_QueryInterface(unk, &IID_IActiveScriptParse, (void**)&parse);
+    hres = IActiveScript_QueryInterface(script, &IID_IActiveScriptParse, (void**)&parse);
     ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
-    if (FAILED(hres))
-    {
-        IActiveScript_Release(script);
-        return;
-    }
 
     test_state(script, SCRIPTSTATE_UNINITIALIZED);
-    test_safety(unk);
+    test_safety((IUnknown*)script);
     test_invoke_versioning(script);
 
-    hres = IActiveScriptParse64_InitNew(parse);
+    hres = IActiveScriptParse_InitNew(parse);
     ok(hres == S_OK, "InitNew failed: %08x\n", hres);
 
-    hres = IActiveScriptParse64_InitNew(parse);
+    hres = IActiveScriptParse_InitNew(parse);
     ok(hres == E_UNEXPECTED, "InitNew failed: %08x, expected E_UNEXPECTED\n", hres);
 
     hres = IActiveScript_SetScriptSite(script, NULL);
@@ -445,10 +506,9 @@ static void test_jscript(void)
     test_script_dispatch(dispex);
     IDispatchEx_Release(dispex);
 
-    IUnknown_Release(parse);
-    IActiveScript_Release(script);
+    IActiveScriptParse_Release(parse);
 
-    ref = IUnknown_Release(unk);
+    ref = IActiveScript_Release(script);
     ok(!ref, "ref = %d\n", ref);
 }
 
@@ -456,26 +516,13 @@ static void test_jscript2(void)
 {
     IActiveScriptParse *parse;
     IActiveScript *script;
-    IUnknown *unk;
     ULONG ref;
     HRESULT hres;
 
-    hres = CoCreateInstance(&CLSID_JScript, NULL, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
-            &IID_IUnknown, (void**)&unk);
-    ok(hres == S_OK, "CoCreateInstance failed: %08x\n", hres);
-    if(FAILED(hres))
-        return;
+    script = create_jscript();
 
-    hres = IUnknown_QueryInterface(unk, &IID_IActiveScript, (void**)&script);
-    ok(hres == S_OK, "Could not get IActiveScript: %08x\n", hres);
-
-    hres = IUnknown_QueryInterface(unk, &IID_IActiveScriptParse, (void**)&parse);
+    hres = IActiveScript_QueryInterface(script, &IID_IActiveScriptParse, (void**)&parse);
     ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
-    if (FAILED(hres))
-    {
-        IActiveScript_Release(script);
-        return;
-    }
 
     test_state(script, SCRIPTSTATE_UNINITIALIZED);
 
@@ -487,11 +534,11 @@ static void test_jscript2(void)
     test_state(script, SCRIPTSTATE_UNINITIALIZED);
 
     SET_EXPECT(OnStateChange_INITIALIZED);
-    hres = IActiveScriptParse64_InitNew(parse);
+    hres = IActiveScriptParse_InitNew(parse);
     ok(hres == S_OK, "InitNew failed: %08x\n", hres);
     CHECK_CALLED(OnStateChange_INITIALIZED);
 
-    hres = IActiveScriptParse64_InitNew(parse);
+    hres = IActiveScriptParse_InitNew(parse);
     ok(hres == E_UNEXPECTED, "InitNew failed: %08x, expected E_UNEXPECTED\n", hres);
 
     SET_EXPECT(OnStateChange_CONNECTED);
@@ -513,19 +560,149 @@ static void test_jscript2(void)
     test_state(script, SCRIPTSTATE_CLOSED);
     test_no_script_dispatch(script);
 
-    IUnknown_Release(parse);
-    IActiveScript_Release(script);
+    IActiveScriptParse_Release(parse);
 
-    ref = IUnknown_Release(unk);
+    ref = IActiveScript_Release(script);
     ok(!ref, "ref = %d\n", ref);
+}
+
+static void test_jscript_uninitializing(void)
+{
+    IActiveScriptParse *parse;
+    IActiveScript *script;
+    IDispatchEx *dispex;
+    ULONG ref;
+    HRESULT hres;
+
+    static const WCHAR script_textW[] =
+        {'f','u','n','c','t','i','o','n',' ','f','(',')',' ','{','}',0};
+
+    script = create_jscript();
+
+    hres = IActiveScript_QueryInterface(script, &IID_IActiveScriptParse, (void**)&parse);
+    ok(hres == S_OK, "Could not get IActiveScriptParse: %08x\n", hres);
+
+    test_state(script, SCRIPTSTATE_UNINITIALIZED);
+
+    hres = IActiveScriptParse_InitNew(parse);
+    ok(hres == S_OK, "InitNew failed: %08x\n", hres);
+
+    SET_EXPECT(GetLCID);
+    SET_EXPECT(OnStateChange_INITIALIZED);
+    hres = IActiveScript_SetScriptSite(script, &ActiveScriptSite);
+    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
+    CHECK_CALLED(GetLCID);
+    CHECK_CALLED(OnStateChange_INITIALIZED);
+
+    test_state(script, SCRIPTSTATE_INITIALIZED);
+
+    hres = IActiveScriptParse_ParseScriptText(parse, script_textW, NULL, NULL, NULL, 0, 1, 0x42, NULL, NULL);
+    ok(hres == S_OK, "ParseScriptText failed: %08x\n", hres);
+
+    hres = IActiveScript_SetScriptSite(script, &ActiveScriptSite);
+    ok(hres == E_UNEXPECTED, "SetScriptSite failed: %08x, expected E_UNEXPECTED\n", hres);
+
+    SET_EXPECT(OnStateChange_UNINITIALIZED);
+    hres = IActiveScript_SetScriptState(script, SCRIPTSTATE_UNINITIALIZED);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_UNINITIALIZED) failed: %08x\n", hres);
+    CHECK_CALLED(OnStateChange_UNINITIALIZED);
+
+    test_state(script, SCRIPTSTATE_UNINITIALIZED);
+
+    hres = IActiveScript_SetScriptState(script, SCRIPTSTATE_UNINITIALIZED);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_UNINITIALIZED) failed: %08x\n", hres);
+
+    SET_EXPECT(GetLCID);
+    SET_EXPECT(OnStateChange_INITIALIZED);
+    hres = IActiveScript_SetScriptSite(script, &ActiveScriptSite);
+    ok(hres == S_OK, "SetScriptSite failed: %08x\n", hres);
+    CHECK_CALLED(GetLCID);
+    CHECK_CALLED(OnStateChange_INITIALIZED);
+
+    SET_EXPECT(OnStateChange_CONNECTED);
+    SET_EXPECT(OnEnterScript);
+    SET_EXPECT(OnLeaveScript);
+    hres = IActiveScript_SetScriptState(script, SCRIPTSTATE_CONNECTED);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_CONNECTED) failed: %08x\n", hres);
+    CHECK_CALLED(OnStateChange_CONNECTED);
+    CHECK_CALLED(OnEnterScript);
+    CHECK_CALLED(OnLeaveScript);
+
+    test_state(script, SCRIPTSTATE_CONNECTED);
+
+    dispex = get_script_dispatch(script);
+    ok(dispex != NULL, "dispex == NULL\n");
+    IDispatchEx_Release(dispex);
+
+    SET_EXPECT(OnStateChange_DISCONNECTED);
+    SET_EXPECT(OnStateChange_INITIALIZED);
+    SET_EXPECT(OnStateChange_UNINITIALIZED);
+    hres = IActiveScript_SetScriptState(script, SCRIPTSTATE_UNINITIALIZED);
+    ok(hres == S_OK, "SetScriptState(SCRIPTSTATE_UNINITIALIZED) failed: %08x\n", hres);
+    CHECK_CALLED(OnStateChange_DISCONNECTED);
+    CHECK_CALLED(OnStateChange_INITIALIZED);
+    CHECK_CALLED(OnStateChange_UNINITIALIZED);
+
+    test_state(script, SCRIPTSTATE_UNINITIALIZED);
+
+    hres = IActiveScript_Close(script);
+    ok(hres == S_OK, "Close failed: %08x\n", hres);
+
+    test_state(script, SCRIPTSTATE_CLOSED);
+
+    hres = IActiveScript_SetScriptState(script, SCRIPTSTATE_UNINITIALIZED);
+    ok(hres == E_UNEXPECTED, "SetScriptState(SCRIPTSTATE_UNINITIALIZED) failed: %08x, expected E_UNEXPECTED\n", hres);
+
+    test_state(script, SCRIPTSTATE_CLOSED);
+
+    IActiveScriptParse_Release(parse);
+
+    ref = IActiveScript_Release(script);
+    ok(!ref, "ref = %d\n", ref);
+}
+
+static void test_aggregation(void)
+{
+    IUnknown *unk = (IUnknown*)0xdeadbeef;
+    HRESULT hres;
+
+    hres = CoCreateInstance(&CLSID_JScript, (IUnknown*)0xdeadbeef, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
+            &IID_IUnknown, (void**)&unk);
+    ok(hres == CLASS_E_NOAGGREGATION,
+       "CoCreateInstance failed: %08x, expected CLASS_E_NOAGGREGATION\n", hres);
+    ok(!unk || broken(unk != NULL), "unk = %p\n", unk);
+}
+
+static BOOL check_jscript(void)
+{
+    IActiveScriptProperty *script_prop;
+    HRESULT hres;
+
+    hres = CoCreateInstance(&CLSID_JScript, NULL, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
+            &IID_IActiveScriptProperty, (void**)&script_prop);
+    if(SUCCEEDED(hres))
+        IActiveScriptProperty_Release(script_prop);
+
+    return hres == S_OK;
 }
 
 START_TEST(jscript)
 {
     CoInitialize(NULL);
 
-    test_jscript();
-    test_jscript2();
+    if(check_jscript()) {
+        trace("Testing JScript object...\n");
+        test_jscript();
+        test_jscript2();
+        test_jscript_uninitializing();
+        test_aggregation();
+
+        trace("Testing JScriptEncode object...\n");
+        engine_clsid = &CLSID_JScriptEncode;
+        test_jscript();
+    }else {
+        win_skip("Broken engine, probably too old\n");
+    }
 
     CoUninitialize();
 }

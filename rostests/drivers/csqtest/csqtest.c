@@ -194,9 +194,9 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING Registry
 													 CsqAcquireLock, CsqReleaseLock, CsqCompleteCancelledIrp);
 
 	if(Status != STATUS_SUCCESS)
-		KdPrint(("csqtest: IoCsqInitalize failed: 0x%x\n", Status));
+		KdPrint(("csqtest: IoCsqInitialize failed: 0x%x\n", Status));
 	else
-		KdPrint(("csqtest: IoCsqInitalize succeeded\n"));
+		KdPrint(("csqtest: IoCsqInitialize succeeded\n"));
 
 	InitializeListHead(&IrpQueue);
 	KeInitializeSpinLock(&IrpQueueLock);

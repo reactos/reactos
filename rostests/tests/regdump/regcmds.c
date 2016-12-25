@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  ReactOS regedit
  *
  *  regcmds.c

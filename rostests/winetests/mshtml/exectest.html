@@ -1,0 +1,139 @@
+<html>
+<body>
+Script execution test
+<div id="b1"></div>
+<div id="b2"></div>
+<div id="b3"></div>
+<script id="emptyscript"></script>
+<script id="put_text_script">2+2</script>
+<script>
+function ok(b, msg) {
+    return external.ok(b, msg);
+}
+
+var executed = false;
+var extern_cnt = 0;
+var exec_cnt;
+
+function testWriteScript() {
+    var len = document.getElementsByTagName('div').length;
+    ok(len === 3, "init length = " + len);
+
+    document.write("<script>"
+        + "var len = document.getElementsByTagName('div').length;"
+        + "ok(len === 3, 'unexpected length ' + len);"
+        + "executed = true;"
+        + "<" + "/script>");
+
+    len = document.getElementsByTagName('script').length;
+    ok(len === 4, "script col length = " + len);
+    ok(executed, "written script not executed");
+}
+
+function testPutSrc() {
+    var elem = document.getElementById("emptyscript");
+
+    ok(extern_cnt === 0, "extern_cnt = " + extern_cnt + " expected 0");
+    elem.src = "externscr.js";
+    ok(extern_cnt === 0, "extern_cnt = " + extern_cnt + " expected 0");
+}
+
+function testPutText() {
+    var elem = document.getElementById("put_text_script");
+
+    exec_cnt = 0;
+    elem.text = "exec_cnt++;";
+    ok(exec_cnt === 1, "put_text_script exec_cnt " + exec_cnt);
+
+    exec_cnt = 0;
+    elem.text = "exec_cnt++;";
+    ok(exec_cnt === 1, "put_text_script exec_cnt " + exec_cnt);
+}
+
+try {
+    testWriteScript();
+    testPutSrc();
+    testPutText();
+}catch(e) {
+    ok(false, "Got an exception " + e.message);
+}
+
+function testPutSrc2() {
+    var elem, elem2;
+
+    elem = document.createElement("script");
+    elem.src = "externscr.js";
+    ok(extern_cnt === 1, "extern_cnt = " + extern_cnt + " expected 1");
+    document.body.appendChild(elem);
+    ok(extern_cnt === 2, "extern_cnt = " + extern_cnt + " expected 2");
+
+    elem = document.createElement("script");
+    document.body.appendChild(elem);
+    ok(extern_cnt === 2, "extern_cnt = " + extern_cnt + " expected 2");
+    elem.src = "externscr.js";
+    ok(extern_cnt === 3, "extern_cnt = " + extern_cnt + " expected 3");
+
+    elem2 = document.createElement("div");
+    elem = document.createElement("script");
+    elem.src = "externscr.js";
+    ok(extern_cnt === 3, "extern_cnt = " + extern_cnt + " expected 3");
+    elem2.appendChild(elem);
+    document.body.appendChild(elem2);
+    ok(extern_cnt === 4, "extern_cnt = " + extern_cnt + " expected 4");
+}
+
+function testPutText2() {
+    var elem;
+
+    elem = document.createElement("script");
+    exec_cnt = 0;
+    elem.text = "exec_cnt++;";
+    ok(exec_cnt === 0, "script exec_cnt " + exec_cnt);
+
+    document.body.appendChild(elem);
+    ok(exec_cnt === 1, "script exec_cnt " + exec_cnt);
+    exec_cnt = 0;
+    elem.text = "exec_cnt++;";
+    ok(exec_cnt === 1, "script exec_cnt " + exec_cnt);
+
+    elem.src = "externscr.js";
+    ok(extern_cnt === 5, "extern_cnt = " + extern_cnt + " expected 5");
+
+    exec_cnt = 0;
+    ok(extern_cnt === 5, "> extern_cnt = " + extern_cnt + " expected 5");
+    elem.text = "exec_cnt++;"; /* forces evaluation, but src will be executed */
+    ok(exec_cnt === 0, "script exec_cnt " + exec_cnt);
+    ok(extern_cnt === 6, "< extern_cnt = " + extern_cnt + " expected 6");
+
+    elem = document.createElement("script");
+    exec_cnt = 0;
+    elem.text = "exec_cnt++;";
+    ok(exec_cnt === 0, "script exec_cnt " + exec_cnt);
+    elem.src = "externscr.js";
+    ok(extern_cnt === 6, "extern_cnt = " + extern_cnt + " expected 6");
+
+    document.body.appendChild(elem);
+    ok(exec_cnt === 0, "script exec_cnt " + exec_cnt);
+    ok(extern_cnt === 7, "extern_cnt = " + extern_cnt + " expected 7");
+}
+
+document.body.onload = function() {
+    ok(extern_cnt === 1, "extern_cnt = " + extern_cnt);
+    try {
+        testPutSrc2();
+        testPutText2();
+    }catch(e) {
+        ok(false, "got an exception " + e.message);
+    }
+
+    external.reportSuccess();
+}
+</script>
+<script>
+    ok(extern_cnt === 1, "extern_cnt = " + extern_cnt);
+</script>
+<div id="a1"></div>
+<div id="a2"></div>
+<div id="b3"></div>
+</body>
+</html>

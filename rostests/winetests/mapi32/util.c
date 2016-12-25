@@ -147,7 +147,7 @@ static void test_UFromSz(void)
     ok(pUFromSz("105679") == 105679u,
        "UFromSz: expected 105679, got %d\n", pUFromSz("105679"));
 
-    ok(pUFromSz(" 4") == 0, "UFromSz: exected 0. got %d\n",
+    ok(pUFromSz(" 4") == 0, "UFromSz: expected 0. got %d\n",
        pUFromSz(" 4"));
 }
 
@@ -162,7 +162,7 @@ static void test_UlFromSzHex(void)
     ok(pUlFromSzHex("fF") == 0xffu,
        "UlFromSzHex: expected 0xff, got 0x%x\n", pUlFromSzHex("fF"));
 
-    ok(pUlFromSzHex(" c") == 0, "UlFromSzHex: exected 0x0. got 0x%x\n",
+    ok(pUlFromSzHex(" c") == 0, "UlFromSzHex: expected 0x0. got 0x%x\n",
        pUlFromSzHex(" c"));
 }
 

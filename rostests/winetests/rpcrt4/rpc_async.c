@@ -25,8 +25,8 @@
 #include <rpc.h>
 #include <rpcasync.h>
 
-RPC_STATUS (RPC_ENTRY *pRpcAsyncInitializeHandle)(PRPC_ASYNC_STATE,unsigned int);
-RPC_STATUS (RPC_ENTRY *pRpcAsyncGetCallStatus)(PRPC_ASYNC_STATE);
+static RPC_STATUS (RPC_ENTRY *pRpcAsyncInitializeHandle)(PRPC_ASYNC_STATE,unsigned int);
+static RPC_STATUS (RPC_ENTRY *pRpcAsyncGetCallStatus)(PRPC_ASYNC_STATE);
 
 static void test_RpcAsyncInitializeHandle(void)
 {
@@ -80,7 +80,7 @@ static void test_RpcAsyncGetCallStatus(void)
 
 START_TEST( rpc_async )
 {
-    HMODULE hRpcRt4 = GetModuleHandle("rpcrt4.dll");
+    HMODULE hRpcRt4 = GetModuleHandleA("rpcrt4.dll");
     pRpcAsyncInitializeHandle = (void *)GetProcAddress(hRpcRt4, "RpcAsyncInitializeHandle");
     pRpcAsyncGetCallStatus = (void *)GetProcAddress(hRpcRt4, "RpcAsyncGetCallStatus");
     if (!pRpcAsyncInitializeHandle || !pRpcAsyncGetCallStatus)

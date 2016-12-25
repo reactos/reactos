@@ -1,7 +1,7 @@
 /*
  * Unit test suite for shell32 functions
  *
- * Copyright 2005 Francois Gougett for CodeWeavers
+ * Copyright 2005 Francois Gouget for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

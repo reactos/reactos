@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-
 #define COBJMACROS
 
 #include "wine/test.h"
@@ -32,17 +30,19 @@ static void test_IReferenceClock_query_interface(const char * clockdesc, IRefere
     HRESULT hr;
     IUnknown *pF;
 
-    hr = IReferenceClock_QueryInterface(pClock, &IID_IUnknown, (LPVOID *)&pF);
+    hr = IReferenceClock_QueryInterface(pClock, &IID_IUnknown, (void**)&pF);
     ok(hr == S_OK, "IReferenceClock_QueryInterface returned %x\n", hr);
     ok(pF != NULL, "pF is NULL\n");
+    if (SUCCEEDED(hr)) IUnknown_Release(pF);
 
-    hr = IReferenceClock_QueryInterface(pClock, &IID_IDirectDraw, (LPVOID *)&pF);
+    hr = IReferenceClock_QueryInterface(pClock, &IID_IDirectDraw, (void**)&pF);
     ok(hr == E_NOINTERFACE, "IReferenceClock_QueryInterface returned %x\n", hr);
     ok(pF == NULL, "pF is not NULL\n");
 
-    hr = IReferenceClock_QueryInterface(pClock, &IID_IReferenceClock, (LPVOID *)&pF);
+    hr = IReferenceClock_QueryInterface(pClock, &IID_IReferenceClock, (void**)&pF);
     ok(hr == S_OK, "IReferenceClock_QueryInterface returned %x\n", hr);
     ok(pF != NULL, "pF is NULL\n");
+    if (SUCCEEDED(hr)) IUnknown_Release(pF);
 }
 
 /* The following method expects a reference clock that will keep ticking for

@@ -19,19 +19,21 @@
  *
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wingdi.h"
-#include "winspool.h"
-#include "winuser.h"
-#include "objbase.h"
+#include <wine/test.h>
 
-#include "commdlg.h"
+//#include <stdarg.h>
 
-#include "wine/test.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winerror.h"
+#include <wingdi.h>
+#include <winspool.h>
+#include <winuser.h>
+//#include "objbase.h"
+
+#include <commdlg.h>
 
 static int get_dpiy(void)
 {
@@ -138,7 +140,8 @@ static void test_ChooseFontA(void)
         ok(cfa.iPointSize == expected_pointsize, "Expected %i, got %i\n", expected_pointsize, cfa.iPointSize);
         ok(lfa.lfHeight == expected_lfheight, "Expected %i, got %i\n", expected_lfheight, lfa.lfHeight);
         ok(lfa.lfWeight == FW_NORMAL, "Expected FW_NORMAL, got %i\n", lfa.lfWeight);
-        ok(strcmp(lfa.lfFaceName, "Symbol") == 0, "Expected Symbol, got %s\n", lfa.lfFaceName);
+        ok((strcmp(lfa.lfFaceName, "Symbol") == 0) ||
+            broken(*lfa.lfFaceName == 0), "Expected Symbol, got %s\n", lfa.lfFaceName);
 
         DeleteDC(printer_ic);
     }

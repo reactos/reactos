@@ -1,7 +1,5 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+add_definitions(-DUSE_WINE_TODOS)
 
 list(APPEND SOURCE
     brush.c
@@ -11,6 +9,7 @@ list(APPEND SOURCE
     graphicspath.c
     image.c
     matrix.c
+    metafile.c
     pathiterator.c
     pen.c
     region.c
@@ -18,7 +17,6 @@ list(APPEND SOURCE
     testlist.c)
 
 add_executable(gdiplus_winetest ${SOURCE})
-target_link_libraries(gdiplus_winetest wine)
 set_module_type(gdiplus_winetest win32cui)
-add_importlibs(gdiplus_winetest gdiplus user32 gdi32 ole32 msvcrt kernel32 ntdll)
+add_importlibs(gdiplus_winetest gdiplus user32 gdi32 ole32 msvcrt kernel32)
 add_cd_file(TARGET gdiplus_winetest DESTINATION reactos/bin FOR all)

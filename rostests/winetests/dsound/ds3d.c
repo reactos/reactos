@@ -23,13 +23,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <wine/test.h>
+
+//#include <windows.h>
 
 #include <math.h>
-
-#include "wine/test.h"
-#include "dsound.h"
-#include "mmreg.h"
+#include <wingdi.h>
+#include <mmsystem.h>
+#include <dsound.h>
+#include <mmreg.h>
+#include "ks.h"
+#include "ksmedia.h"
 #include "dsound_test.h"
 
 #define PI 3.14159265358979323846
@@ -39,7 +47,7 @@ static HRESULT (WINAPI *pDirectSoundEnumerateA)(LPDSENUMCALLBACKA,LPVOID)=NULL;
 static HRESULT (WINAPI *pDirectSoundCreate)(LPCGUID,LPDIRECTSOUND*,
     LPUNKNOWN)=NULL;
 
-char* wave_generate_la(WAVEFORMATEX* wfx, double duration, DWORD* size)
+char* wave_generate_la(WAVEFORMATEX* wfx, double duration, DWORD* size, BOOL ieee)
 {
     int i;
     int nb_samples;
@@ -52,12 +60,12 @@ char* wave_generate_la(WAVEFORMATEX* wfx, double duration, DWORD* size)
     for (i=0;i<nb_samples;i++) {
         double y=sin(440.0*2*PI*i/wfx->nSamplesPerSec);
         if (wfx->wBitsPerSample==8) {
-            unsigned char sample=(unsigned char)((double)127.5*(y+1.0));
+            unsigned char sample=127.5*(y+1.0);
             *b++=sample;
             if (wfx->nChannels==2)
                 *b++=sample;
         } else if (wfx->wBitsPerSample == 16) {
-            signed short sample=(signed short)((double)32767.5*y-0.5);
+            signed short sample=32767.5*y-0.5;
             b[0]=sample & 0xff;
             b[1]=sample >> 8;
             b+=2;
@@ -67,7 +75,7 @@ char* wave_generate_la(WAVEFORMATEX* wfx, double duration, DWORD* size)
                 b+=2;
             }
         } else if (wfx->wBitsPerSample == 24) {
-            signed int sample=(signed int)((double)8388607.5*y-0.5);
+            signed int sample=8388607.5*y-0.5;
             b[0]=sample & 0xff;
             b[1]=(sample >> 8)&0xff;
             b[2]=sample >> 16;
@@ -79,18 +87,31 @@ char* wave_generate_la(WAVEFORMATEX* wfx, double duration, DWORD* size)
                 b+=3;
             }
         } else if (wfx->wBitsPerSample == 32) {
-            signed int sample=(signed int)((double)2147483647.5*y-0.5);
-            b[0]=sample & 0xff;
-            b[1]=(sample >> 8)&0xff;
-            b[2]=(sample >> 16)&0xff;
-            b[3]=sample >> 24;
-            b+=4;
-            if (wfx->nChannels==2) {
+            if (ieee) {
+                float *ptr = (float *) b;
+                *ptr = y;
+
+                ptr++;
+                b+=4;
+
+                if (wfx->nChannels==2) {
+                    *ptr = y;
+                    b+=4;
+                }
+            } else {
+                signed int sample=2147483647.5*y-0.5;
                 b[0]=sample & 0xff;
                 b[1]=(sample >> 8)&0xff;
                 b[2]=(sample >> 16)&0xff;
                 b[3]=sample >> 24;
                 b+=4;
+                if (wfx->nChannels==2) {
+                    b[0]=sample & 0xff;
+                    b[1]=(sample >> 8)&0xff;
+                    b[2]=(sample >> 16)&0xff;
+                    b[3]=sample >> 24;
+                    b+=4;
+                }
             }
         }
     }
@@ -317,6 +338,7 @@ void test_buffer(LPDIRECTSOUND dso, LPDIRECTSOUNDBUFFER *dsbo,
     DSBCAPS dsbcaps;
     WAVEFORMATEX wfx,wfx2;
     DWORD size,status,freq;
+    BOOL ieee = FALSE;
     int ref;
 
     if (set_frequency) {
@@ -358,12 +380,16 @@ void test_buffer(LPDIRECTSOUND dso, LPDIRECTSOUNDBUFFER *dsbo,
 
     if (size == sizeof(WAVEFORMATEX)) {
         rc=IDirectSoundBuffer_GetFormat(*dsbo,&wfx,size,NULL);
+        ieee = (wfx.wFormatTag == WAVE_FORMAT_IEEE_FLOAT);
     }
     else if (size == sizeof(WAVEFORMATEXTENSIBLE)) {
         WAVEFORMATEXTENSIBLE wfxe;
         rc=IDirectSoundBuffer_GetFormat(*dsbo,(WAVEFORMATEX*)&wfxe,size,NULL);
         wfx = wfxe.Format;
-    }
+        ieee = IsEqualGUID(&wfxe.SubFormat, &KSDATAFORMAT_SUBTYPE_IEEE_FLOAT);
+    } else
+        return;
+
     ok(rc==DS_OK,
         "IDirectSoundBuffer_GetFormat() failed: %08x\n", rc);
     if (rc==DS_OK && winetest_debug > 1) {
@@ -600,9 +626,9 @@ void test_buffer(LPDIRECTSOUND dso, LPDIRECTSOUNDBUFFER *dsbo,
            "returned DSERR_INVALIDPARAM, returned %08x\n", rc);
 
         if (set_frequency)
-            state.wave=wave_generate_la(&wfx,(duration*frequency)/wfx.nSamplesPerSec,&state.wave_len);
+            state.wave=wave_generate_la(&wfx,(duration*frequency)/wfx.nSamplesPerSec,&state.wave_len,ieee);
         else
-            state.wave=wave_generate_la(&wfx,duration,&state.wave_len);
+            state.wave=wave_generate_la(&wfx,duration,&state.wave_len,ieee);
 
         state.dsbo=*dsbo;
         state.wfx=&wfx;
@@ -783,7 +809,7 @@ static HRESULT test_secondary(LPGUID lpGuid, int play,
         ZeroMemory(&bufdesc, sizeof(bufdesc));
         bufdesc.dwSize=sizeof(bufdesc);
         bufdesc.dwFlags=DSBCAPS_GETCURRENTPOSITION2;
-        if (has_3d)
+        if (has_3dbuffer)
             bufdesc.dwFlags|=DSBCAPS_CTRL3D;
         else
             bufdesc.dwFlags|=
@@ -805,8 +831,8 @@ static HRESULT test_secondary(LPGUID lpGuid, int play,
                   wfx1.nSamplesPerSec,wfx1.wBitsPerSample,wfx1.nChannels);
         }
         rc=IDirectSound_CreateSoundBuffer(dso,&bufdesc,&secondary,NULL);
-        ok(rc==DS_OK && secondary!=NULL,"IDirectSound_CreateSoundBuffer() "
-           "failed to create a %s%ssecondary buffer %s%s%s%sat %dx%dx%d (%s): %08x\n",
+        ok((rc==DS_OK && secondary!=NULL) || broken(rc == DSERR_CONTROLUNAVAIL), /* vmware drivers on w2k */
+           "IDirectSound_CreateSoundBuffer() failed to create a %s%ssecondary buffer %s%s%s%sat %dx%dx%d (%s): %08x\n",
            has_3dbuffer?"3D ":"", has_duplicate?"duplicated ":"",
            listener!=NULL||move_sound?"with ":"", move_listener?"moving ":"",
            listener!=NULL?"listener ":"",
@@ -815,6 +841,14 @@ static HRESULT test_secondary(LPGUID lpGuid, int play,
            wfx.nSamplesPerSec,wfx.wBitsPerSample,wfx.nChannels,
            getDSBCAPS(bufdesc.dwFlags),rc);
         if (rc==DS_OK && secondary!=NULL) {
+            IDirectSound3DBuffer *ds3d;
+
+            rc=IDirectSoundBuffer_QueryInterface(secondary, &IID_IDirectSound3DBuffer, (void**)&ds3d);
+            ok((has_3dbuffer && rc==DS_OK) || (!has_3dbuffer && rc==E_NOINTERFACE),
+                    "Wrong return trying to get 3D buffer on %s3D secondary interface: %08x\n", has_3dbuffer ? "" : "non-", rc);
+            if(rc==DS_OK)
+                IDirectSound3DBuffer_Release(ds3d);
+
             if (!has_3d) {
                 LONG refvol,vol,refpan,pan;
 
@@ -1195,15 +1229,13 @@ static HRESULT test_primary_3d_with_listener(LPGUID lpGuid)
                             !(dscaps.dwFlags & DSCAPS_EMULDRIVER),1.0,0,
                             listener,0,0,FALSE,0);
 
-                todo_wine {
-                    temp_buffer = NULL;
-                    rc=IDirectSound3DListener_QueryInterface(listener,
-                    &IID_IKsPropertySet,(LPVOID *)&temp_buffer);
-                    ok(rc==DS_OK && temp_buffer!=NULL,
-                    "IDirectSound3DListener_QueryInterface didn't handle IKsPropertySet: ret = %08x\n", rc);
-                    if(temp_buffer)
-                        IKsPropertySet_Release(temp_buffer);
-                }
+                temp_buffer = NULL;
+                rc = IDirectSound3DListener_QueryInterface(listener, &IID_IKsPropertySet,
+                        (void **)&temp_buffer);
+                ok(rc==DS_OK && temp_buffer!=NULL,
+                        "IDirectSound3DListener_QueryInterface didn't handle IKsPropertySet: ret = %08x\n", rc);
+                if(temp_buffer)
+                    IKsPropertySet_Release(temp_buffer);
             }
 
             /* Testing the reference counting */
@@ -1212,15 +1244,12 @@ static HRESULT test_primary_3d_with_listener(LPGUID lpGuid)
                "references, should have 0\n",ref);
         }
 
-        todo_wine {
-            temp_buffer = NULL;
-            rc=IDirectSoundBuffer_QueryInterface(primary,
-            &IID_IKsPropertySet,(LPVOID *)&temp_buffer);
-            ok(rc==DS_OK && temp_buffer!=NULL,
-            "IDirectSoundBuffer_QueryInterface didn't handle IKsPropertySet on primary buffer: ret = %08x\n", rc);
-            if(temp_buffer)
-                IKsPropertySet_Release(temp_buffer);
-        }
+        temp_buffer = NULL;
+        rc = IDirectSoundBuffer_QueryInterface(primary, &IID_IKsPropertySet, (void **)&temp_buffer);
+        ok(rc==DS_OK && temp_buffer!=NULL,
+                "IDirectSoundBuffer_QueryInterface didn't handle IKsPropertySet on primary buffer: ret = %08x\n", rc);
+        if(temp_buffer)
+            IKsPropertySet_Release(temp_buffer);
 
         /* Testing the reference counting */
         ref=IDirectSoundBuffer_Release(primary);
@@ -1237,11 +1266,14 @@ return DSERR_GENERIC;
     return rc;
 }
 
+static unsigned driver_count = 0;
+
 static BOOL WINAPI dsenum_callback(LPGUID lpGuid, LPCSTR lpcstrDescription,
                                    LPCSTR lpcstrModule, LPVOID lpContext)
 {
     HRESULT rc;
     trace("*** Testing %s - %s ***\n",lpcstrDescription,lpcstrModule);
+    driver_count++;
 
     rc = test_for_driver(lpGuid);
     if (rc == DSERR_NODRIVER) {
@@ -1288,6 +1320,7 @@ static void ds3d_tests(void)
     HRESULT rc;
     rc=pDirectSoundEnumerateA(&dsenum_callback,NULL);
     ok(rc==DS_OK,"DirectSoundEnumerateA() failed: %08x\n",rc);
+    trace("tested %u DirectSound drivers\n", driver_count);
 }
 
 START_TEST(ds3d)
@@ -1310,7 +1343,7 @@ START_TEST(ds3d)
         FreeLibrary(hDsound);
     }
     else
-        skip("dsound.dll not found!\n");
+        skip("dsound.dll not found - skipping all tests\n");
 
     CoUninitialize();
 }

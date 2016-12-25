@@ -18,6 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#pragma makedep ident
+#pragma makedep typelib
+
 import "oaidl.idl"; /* needed by widl */
 
 [
@@ -127,4 +130,26 @@ library register_test
         interface Iole_from_disp;
     }
 
+    [
+        uuid(f1b68c3b-02a3-4110-bc4c-cf9bc7e7f177)
+    ]
+    interface IInvokeTest : IDispatch
+    {
+        [propget, id(DISPID_VALUE)]
+        LONG test([in] LONG i);
+        [propputref, id(1)]
+        LONG testprop([in] LONG *i);
+        [propputref, id(2)]
+        LONG testprop2([in] IUnknown *i);
+        [id(3)]
+        HRESULT testfunc([in] int i, [out, retval] int *p);
+    }
+
+    /* uuid is same as for test_struct2 in test_tlb.idl, fields are different */
+    [uuid(4029f190-ca4a-4611-aeb9-673983cb96de)]
+    struct test_struct3
+    {
+        UINT32 field;
+        HRESULT hr;
+    };
 }

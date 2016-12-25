@@ -5,14 +5,15 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <apitest.h>
+
+#include <wingdi.h>
+#include <winuser.h>
 
 void Test_SetDCPenColor()
 {
 	HDC hScreenDC, hDC;
-	HBITMAP hbmp;
+	HBITMAP hbmp, hbmpOld;
 
 	// Test an incorrect DC
 	SetLastError(ERROR_SUCCESS);
@@ -49,15 +50,18 @@ void Test_SetDCPenColor()
 	hbmp = CreateBitmap(10, 10, 1, 32, NULL);
 	ok(hbmp != 0, "CreateBitmap failed, skipping tests\n");
 	if (!hbmp) return;
-
-	SelectObject(hDC, hbmp);
+	hbmpOld = SelectObject(hDC, hbmp);
+#if 0 // this only works on 32 bpp screen resolution
+	ok(hbmpOld != NULL, "\n");
 	SelectObject(hDC, GetStockObject(DC_PEN));
 	SetDCPenColor(hDC, 0x123456);
 	MoveToEx(hDC, 0, 0, NULL);
 	LineTo(hDC, 10, 0);
 	ok(GetPixel(hDC, 5, 0) == 0x123456, "\n");
+#endif
 
 	// Delete the DC
+	SelectObject(hDC, hbmpOld);
 	DeleteDC(hDC);
 }
 

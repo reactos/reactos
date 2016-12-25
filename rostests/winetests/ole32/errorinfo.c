@@ -18,16 +18,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 #define CONST_VTABLE
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "objbase.h"
+#include <windef.h>
+#include <winbase.h>
+#include <ole2.h>
+//#include "objbase.h"
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 #define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
 
@@ -47,9 +52,14 @@ static void test_error_info(void)
     static WCHAR wszDescription[] = {'F','a','i','l','e','d',' ','S','p','r','o','c','k','e','t',0};
     static WCHAR wszHelpFile[] = {'s','p','r','o','c','k','e','t','.','h','l','p',0};
     static WCHAR wszSource[] = {'s','p','r','o','c','k','e','t',0};
+    IUnknown *unk;
 
     hr = CreateErrorInfo(&pCreateErrorInfo);
     ok_ole_success(hr, "CreateErrorInfo");
+
+    hr = ICreateErrorInfo_QueryInterface(pCreateErrorInfo, &IID_IUnknown, (void**)&unk);
+    ok_ole_success(hr, "QI");
+    IUnknown_Release(unk);
 
     hr = ICreateErrorInfo_SetDescription(pCreateErrorInfo, NULL);
     ok_ole_success(hr, "ICreateErrorInfo_SetDescription");
@@ -77,6 +87,10 @@ static void test_error_info(void)
 
     hr = ICreateErrorInfo_QueryInterface(pCreateErrorInfo, &IID_IErrorInfo, (void **)&pErrorInfo);
     ok_ole_success(hr, "ICreateErrorInfo_QueryInterface");
+
+    hr = IErrorInfo_QueryInterface(pErrorInfo, &IID_IUnknown, (void**)&unk);
+    ok_ole_success(hr, "QI");
+    IUnknown_Release(unk);
 
     ICreateErrorInfo_Release(pCreateErrorInfo);
 

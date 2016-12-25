@@ -1,13 +1,12 @@
 
-add_definitions(-D__ROS_LONG64__)
+add_definitions(-DUSE_WINE_TODOS)
 
-add_executable(xmllite_winetest reader.c testlist.c)
-target_link_libraries(xmllite_winetest wine)
+list(APPEND SOURCE
+    reader.c
+    writer.c
+    testlist.c)
 
-if(MSVC)
-    target_link_libraries(xmllite_winetest uuid)
-endif()
-
+add_executable(xmllite_winetest ${SOURCE})
 set_module_type(xmllite_winetest win32cui)
-add_importlibs(xmllite_winetest xmllite ole32 msvcrt kernel32 ntdll)
+add_importlibs(xmllite_winetest xmllite ole32 msvcrt kernel32)
 add_cd_file(TARGET xmllite_winetest DESTINATION reactos/bin FOR all)

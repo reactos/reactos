@@ -34,13 +34,59 @@ static CHAR string[MAX_PATH];
 
 static BOOL (WINAPI *pGetComputerNameExA)(COMPUTER_NAME_FORMAT,LPSTR,LPDWORD);
 static BOOL (WINAPI *pGetComputerNameExW)(COMPUTER_NAME_FORMAT,LPWSTR,LPDWORD);
+static BOOL (WINAPI *pOpenProcessToken)(HANDLE,DWORD,PHANDLE);
+static BOOL (WINAPI *pGetUserProfileDirectoryA)(HANDLE,LPSTR,LPDWORD);
 
 static void init_functionpointers(void)
 {
     HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
+    HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
+    HMODULE huserenv = LoadLibraryA("userenv.dll");
 
     pGetComputerNameExA = (void *)GetProcAddress(hkernel32, "GetComputerNameExA");
     pGetComputerNameExW = (void *)GetProcAddress(hkernel32, "GetComputerNameExW");
+    pOpenProcessToken = (void *)GetProcAddress(hadvapi32, "OpenProcessToken");
+    pGetUserProfileDirectoryA = (void *)GetProcAddress(huserenv,
+                                                       "GetUserProfileDirectoryA");
+}
+
+static void test_Predefined(void)
+{
+    char Data[1024];
+    DWORD DataSize;
+    char Env[sizeof(Data)];
+    DWORD EnvSize;
+    HANDLE Token;
+    BOOL NoErr;
+
+    /*
+     * Check value of %USERPROFILE%, should be same as GetUserProfileDirectory()
+     * If this fails, your test environment is probably not set up
+     */
+    if (pOpenProcessToken == NULL || pGetUserProfileDirectoryA == NULL)
+    {
+        skip("Skipping USERPROFILE check\n");
+        return;
+    }
+    NoErr = pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &Token);
+    ok(NoErr, "Failed to open token, error %u\n", GetLastError());
+    DataSize = sizeof(Data);
+    NoErr = pGetUserProfileDirectoryA(Token, Data, &DataSize);
+    ok(NoErr, "Failed to get user profile dir, error %u\n", GetLastError());
+    if (NoErr)
+    {
+        EnvSize = GetEnvironmentVariableA("USERPROFILE", Env, sizeof(Env));
+        ok(EnvSize != 0 && EnvSize <= sizeof(Env),
+           "Failed to retrieve environment variable USERPROFILE, error %u\n",
+           GetLastError());
+        ok(strcmp(Data, Env) == 0,
+           "USERPROFILE env var %s doesn't match GetUserProfileDirectory %s\n",
+           Env, Data);
+    }
+    else
+        skip("Skipping USERPROFILE check, can't get user profile dir\n");
+    NoErr = CloseHandle(Token);
+    ok(NoErr, "Failed to close token, error %u\n", GetLastError());
 }
 
 static void test_GetSetEnvironmentVariableA(void)
@@ -311,7 +357,7 @@ static void test_ExpandEnvironmentStringsA(void)
     ret_size = ExpandEnvironmentStringsA(buf, buf1, sizeof(buf1));
     ok(ret_size == strlen(buf2)+1 ||
        ret_size == (strlen(buf2)+1)*2 /* NT4 */,
-       "ExpandEnvironmentStrings returned %d instead of %d\n", ret_size, lstrlen(buf2)+1);
+       "ExpandEnvironmentStrings returned %d instead of %d\n", ret_size, lstrlenA(buf2)+1);
     ok(!strcmp(buf1, buf2), "ExpandEnvironmentStrings returned [%s]\n", buf1);
     SetEnvironmentVariableA("IndirectVar", NULL);
 
@@ -330,7 +376,6 @@ static void test_GetComputerName(void)
     size = 0;
     ret = GetComputerNameA((LPSTR)0xdeadbeef, &size);
     error = GetLastError();
-    todo_wine
     ok(!ret && error == ERROR_BUFFER_OVERFLOW, "GetComputerNameA should have failed with ERROR_BUFFER_OVERFLOW instead of %d\n", error);
 
     /* Only Vista returns the computer name length as documented in the MSDN */
@@ -362,7 +407,6 @@ static void test_GetComputerName(void)
         win_skip("GetComputerNameW is not implemented\n");
     else
     {
-        todo_wine
         ok(!ret && error == ERROR_BUFFER_OVERFLOW, "GetComputerNameW should have failed with ERROR_BUFFER_OVERFLOW instead of %d\n", error);
         size++; /* nul terminating character */
         nameW = HeapAlloc(GetProcessHeap(), 0, size * sizeof(nameW[0]));
@@ -514,6 +558,7 @@ START_TEST(environ)
 {
     init_functionpointers();
 
+    test_Predefined();
     test_GetSetEnvironmentVariableA();
     test_GetSetEnvironmentVariableW();
     test_ExpandEnvironmentStringsA();

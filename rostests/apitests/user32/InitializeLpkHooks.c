@@ -5,10 +5,9 @@
  * PROGRAMMERS:     Magnus Olsen
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <apitest.h>
 
+#include <winuser.h>
 
 typedef struct _LPK_LPEDITCONTROL_LIST
 {
@@ -58,19 +57,19 @@ DWORD myLpkDrawTextEx(LPVOID x1,LPVOID x2,LPVOID x3,LPVOID x4,LPVOID x5, LPVOID 
 }
 
 
-typedef struct _USER32_INTERN_INITALIZEHOOKS
+typedef struct _USER32_INTERN_INITIALIZEHOOKS
 {
     PVOID fpLpkTabbedTextOut;
     PVOID fpLpkPSMTextOut;
     PVOID fpLpkDrawTextEx;
     PLPK_LPEDITCONTROL_LIST fpListLpkEditControl;
-} USER32_INTERN_INITALIZEHOOKS, *PUSER32_INTERN_INITALIZEHOOKS;
+} USER32_INTERN_INITIALIZEHOOKS, *PUSER32_INTERN_INITIALIZEHOOKS;
 
-VOID WINAPI InitializeLpkHooks (PUSER32_INTERN_INITALIZEHOOKS);
+VOID WINAPI InitializeLpkHooks (PUSER32_INTERN_INITIALIZEHOOKS);
 
 void Test_InitializeLpkHooks()
 {
-    USER32_INTERN_INITALIZEHOOKS setup;
+    USER32_INTERN_INITIALIZEHOOKS setup;
     HMODULE lib = LoadLibrary("LPK.DLL");
 
     ok(lib != NULL, "lib = 0\n");

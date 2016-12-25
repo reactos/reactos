@@ -18,16 +18,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 
-#include <stdio.h>
-#include <initguid.h>
-#include <windows.h>
+#include <wine/test.h>
 
-#include "objbase.h"
-#include "comcat.h"
-
-#include "wine/test.h"
+//#include <stdio.h>
+//#include <initguid.h>
+//#include <windows.h>
+#include <winreg.h>
+//#include "objbase.h"
+#include <ole2.h>
+#include <comcat.h>
 
 #define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
 
@@ -65,15 +70,15 @@ static void do_enum(void)
 	GUID the_cat[1];
 	GUID wanted_guid;
 	ULONG fetched = -1;
-	
-	static WCHAR szCatID[] = {
+
+        static const WCHAR szCatID[] = {
 			'{',
 			'd','e','a','d','c','a','f','e',
 			'-','0','0','0','0','-','0','0','0','0',
 			'-','0','0','0','0',
 			'-','0','0','0','0','0','0','0','0','0','0','0','0',
 			'}',0};
-	static WCHAR szGuid[] = {
+        static const WCHAR szGuid[] = {
 			'{',
 			'd','e','a','d','c','a','f','e','-',
 			'b','e','e','d','-',
@@ -104,6 +109,7 @@ static void do_enum(void)
 	ok_ole_success(hr,"ICatInformation_EnumClassesOfCategories");
 
 	hr = IEnumGUID_Next(pIEnum,1,the_guid, &fetched);
+	ok (hr == S_FALSE,"Expected S_FALSE, got 0x%08x\n", hr);
 	ok (fetched == 0,"Fetched wrong number of guids %u\n",fetched);
 	IEnumGUID_Release(pIEnum);
 
@@ -113,6 +119,7 @@ static void do_enum(void)
             ok_ole_success(hr,"ICatInformation_EnumClassesOfCategories");
 
             hr = IEnumGUID_Next(pIEnum,1,the_guid, &fetched);
+            ok (hr == S_OK,"Expected S_OK, got 0x%08x\n", hr);
             ok (fetched == 1,"Fetched wrong number of guids %u\n",fetched);
             ok (IsEqualGUID(the_guid,&wanted_guid),"Guids do not match\n");
 

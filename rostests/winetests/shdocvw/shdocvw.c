@@ -21,13 +21,13 @@
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wininet.h"
-#include "winnls.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wininet.h>
+#include <winnls.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 /* ################ */
 
@@ -36,13 +36,13 @@ static HRESULT (WINAPI *pURLSubRegQueryA)(LPCSTR, LPCSTR, DWORD, LPVOID, DWORD, 
 static DWORD (WINAPI *pParseURLFromOutsideSourceA)(LPCSTR, LPSTR, LPDWORD, LPDWORD);
 static DWORD (WINAPI *pParseURLFromOutsideSourceW)(LPCWSTR, LPWSTR, LPDWORD, LPDWORD);
 
-static CHAR appdata[] = "AppData";
-static CHAR common_appdata[] = "Common AppData";
-static CHAR default_page_url[] = "Default_Page_URL";
-static CHAR does_not_exist[] = "does_not_exist";
-static CHAR regpath_iemain[] = "Software\\Microsoft\\Internet Explorer\\Main";
-static CHAR regpath_shellfolders[] = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
-static CHAR start_page[] = "Start Page";
+static const char appdata[] = "AppData";
+static const char common_appdata[] = "Common AppData";
+static const char default_page_url[] = "Default_Page_URL";
+static const char does_not_exist[] = "does_not_exist";
+static const char regpath_iemain[] = "Software\\Microsoft\\Internet Explorer\\Main";
+static const char regpath_shellfolders[] = "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+static const char start_page[] = "Start Page";
 
 /* ################ */
 
@@ -133,7 +133,7 @@ static void test_URLSubRegQueryA(void)
             "got 0x%x and %d (expected S_OK and %d)\n", hr, used, len - 2);
     }
 
-    /* only space for the terminating 0: function still succeded */
+    /* only space for the terminating 0: function still succeeded */
     memset(buffer, '#', sizeof(buffer)-1);
     buffer[sizeof(buffer)-1] = '\0';
     hr = pURLSubRegQueryA(regpath_iemain, start_page, REG_SZ, buffer, 1, -1);
@@ -212,13 +212,13 @@ static void test_ParseURLFromOutsideSourceA(void)
         buffer[sizeof(buffer)-1] = '\0';
         len = sizeof(buffer);
         dummy = 0;
-        /* on success, len+1 is returned. No idea, if someone depend on this */
+        /* on success, string size including terminating 0 is returned for ansi version */
         res = pParseURLFromOutsideSourceA(ParseURL_table[i].url, buffer, &len, &dummy);
         /* len does not include the terminating 0, when buffer is large enough */
-        ok( res != 0 && len == ParseURL_table[i].len &&
+        ok( res == (ParseURL_table[i].len+1) && len == ParseURL_table[i].len &&
             !lstrcmpA(buffer, ParseURL_table[i].newurl),
-            "#%d: got %d and %d with '%s' (expected '!=0' and %d with '%s')\n",
-            i, res, len, buffer, ParseURL_table[i].len, ParseURL_table[i].newurl);
+            "#%d: got %d and %d with '%s' (expected %d and %d with '%s')\n",
+            i, res, len, buffer, ParseURL_table[i].len+1, ParseURL_table[i].len, ParseURL_table[i].newurl);
 
 
         /* use the size test only for the first examples */
@@ -268,7 +268,7 @@ static void test_ParseURLFromOutsideSourceA(void)
 
         if (0) {
             /* that test crash on native shdocvw */
-            res = pParseURLFromOutsideSourceA(ParseURL_table[i].url, buffer, NULL, &dummy);
+            pParseURLFromOutsideSourceA(ParseURL_table[i].url, buffer, NULL, &dummy);
         }
 
         memset(buffer, '#', sizeof(buffer)-1);
@@ -308,11 +308,12 @@ static void test_ParseURLFromOutsideSourceW(void)
     /* len is in characters */
     len = sizeof(bufferW)/sizeof(bufferW[0]);
     dummy = 0;
+    /* on success, 1 is returned for unicode version */
     res = pParseURLFromOutsideSourceW(urlW, bufferW, &len, &dummy);
     WideCharToMultiByte(CP_ACP, 0, bufferW, -1, bufferA, sizeof(bufferA), NULL, NULL);
-    ok( res != 0 && len == ParseURL_table[0].len &&
+    ok( res == 1 && len == ParseURL_table[0].len &&
         !lstrcmpA(bufferA, ParseURL_table[0].newurl),
-        "got %d and %d with '%s' (expected '!=0' and %d with '%s')\n",
+        "got %d and %d with '%s' (expected 1 and %d with '%s')\n",
         res, len, bufferA, ParseURL_table[0].len, ParseURL_table[0].newurl);
 
 

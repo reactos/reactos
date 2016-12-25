@@ -44,12 +44,14 @@
  *   - more stuff to test
  */
 
-#include <assert.h>
-#include <windows.h>
+#include <wine/test.h>
+
+//#include <windows.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <commctrl.h>
 #include <stdio.h>
 
-#include "wine/test.h"
 #include "msg.h"
 
 #define expect(EXPECTED,GOT) ok((GOT)==(EXPECTED), "Expected %d, got %d\n", (EXPECTED), (GOT))
@@ -180,13 +182,12 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
         message != WM_GETICON &&
         message != WM_DEVICECHANGE)
     {
-        trace("parent: %p, %04x, %08lx, %08lx\n", hwnd, message, wParam, lParam);
-
         msg.message = message;
         msg.flags = sent|wparam|lparam;
         if (defwndproc_counter) msg.flags |= defwinproc;
         msg.wParam = wParam;
         msg.lParam = lParam;
+        msg.id = 0;
         add_message(sequences, PARENT_SEQ_INDEX, &msg);
     }
 
@@ -207,7 +208,7 @@ static BOOL register_parent_wnd_class(void)
     cls.cbWndExtra = 0;
     cls.hInstance = GetModuleHandleA(NULL);
     cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, IDC_ARROW);
+    cls.hCursor = LoadCursorA(0, (LPCSTR)IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "Up-Down test parent class";
@@ -219,7 +220,7 @@ static HWND create_parent_window(void)
     if (!register_parent_wnd_class())
         return NULL;
 
-    return CreateWindowEx(0, "Up-Down test parent class",
+    return CreateWindowExA(0, "Up-Down test parent class",
                           "Up-Down test parent window",
                           WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX |
                           WS_MAXIMIZEBOX | WS_VISIBLE,
@@ -233,8 +234,6 @@ static LRESULT WINAPI edit_subclass_proc(HWND hwnd, UINT message, WPARAM wParam,
     static LONG defwndproc_counter = 0;
     LRESULT ret;
     struct message msg;
-
-    trace("edit: %p, %04x, %08lx, %08lx\n", hwnd, message, wParam, lParam);
 
     msg.message = message;
     msg.flags = sent|wparam|lparam;
@@ -275,8 +274,6 @@ static LRESULT WINAPI updown_subclass_proc(HWND hwnd, UINT message, WPARAM wPara
     static LONG defwndproc_counter = 0;
     LRESULT ret;
     struct message msg;
-
-    trace("updown: %p, %04x, %08lx, %08lx\n", hwnd, message, wParam, lParam);
 
     msg.message = message;
     msg.flags = sent|wparam|lparam;
@@ -322,48 +319,48 @@ static void test_updown_pos(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     /* Set Range from 0 to 100 */
-    SendMessage(updown, UDM_SETRANGE, 0 , MAKELONG(100,0) );
-    r = SendMessage(updown, UDM_GETRANGE, 0,0);
+    SendMessageA(updown, UDM_SETRANGE, 0 , MAKELONG(100,0) );
+    r = SendMessageA(updown, UDM_GETRANGE, 0,0);
     expect(100,LOWORD(r));
     expect(0,HIWORD(r));
 
     /* Set the position to 5, return is not checked as it was set before func call */
-    SendMessage(updown, UDM_SETPOS, 0 , MAKELONG(5,0) );
+    SendMessageA(updown, UDM_SETPOS, 0 , MAKELONG(5,0) );
     /* Since UDM_SETBUDDYINT was not set at creation HIWORD(r) will always be 1 as a return from UDM_GETPOS */
     /* Get the position, which should be 5 */
-    r = SendMessage(updown, UDM_GETPOS, 0 , 0 );
+    r = SendMessageA(updown, UDM_GETPOS, 0 , 0 );
     expect(5,LOWORD(r));
     expect(1,HIWORD(r));
 
     /* Set the position to 0, return should be 5 */
-    r = SendMessage(updown, UDM_SETPOS, 0 , MAKELONG(0,0) );
+    r = SendMessageA(updown, UDM_SETPOS, 0 , MAKELONG(0,0) );
     expect(5,r);
     /* Get the position, which should be 0 */
-    r = SendMessage(updown, UDM_GETPOS, 0 , 0 );
+    r = SendMessageA(updown, UDM_GETPOS, 0 , 0 );
     expect(0,LOWORD(r));
     expect(1,HIWORD(r));
 
     /* Set the position to -1, return should be 0 */
-    r = SendMessage(updown, UDM_SETPOS, 0 , MAKELONG(-1,0) );
+    r = SendMessageA(updown, UDM_SETPOS, 0 , MAKELONG(-1,0) );
     expect(0,r);
     /* Get the position, which should be 0 */
-    r = SendMessage(updown, UDM_GETPOS, 0 , 0 );
+    r = SendMessageA(updown, UDM_GETPOS, 0 , 0 );
     expect(0,LOWORD(r));
     expect(1,HIWORD(r));
 
     /* Set the position to 100, return should be 0 */
-    r = SendMessage(updown, UDM_SETPOS, 0 , MAKELONG(100,0) );
+    r = SendMessageA(updown, UDM_SETPOS, 0 , MAKELONG(100,0) );
     expect(0,r);
     /* Get the position, which should be 100 */
-    r = SendMessage(updown, UDM_GETPOS, 0 , 0 );
+    r = SendMessageA(updown, UDM_GETPOS, 0 , 0 );
     expect(100,LOWORD(r));
     expect(1,HIWORD(r));
 
     /* Set the position to 101, return should be 100 */
-    r = SendMessage(updown, UDM_SETPOS, 0 , MAKELONG(101,0) );
+    r = SendMessageA(updown, UDM_SETPOS, 0 , MAKELONG(101,0) );
     expect(100,r);
     /* Get the position, which should be 100 */
-    r = SendMessage(updown, UDM_GETPOS, 0 , 0 );
+    r = SendMessageA(updown, UDM_GETPOS, 0 , 0 );
     expect(100,LOWORD(r));
     expect(1,HIWORD(r));
 
@@ -373,19 +370,61 @@ static void test_updown_pos(void)
 
     /* there's no attempt to update buddy Edit if text didn't change */
     SetWindowTextA(g_edit, "50");
-    updown = create_updown_control(UDS_ALIGNRIGHT | UDS_SETBUDDYINT, g_edit);
+    updown = create_updown_control(UDS_ALIGNRIGHT | UDS_SETBUDDYINT | UDS_ARROWKEYS, g_edit);
 
     /* test sequence only on 5.8x versions */
-    r = SendMessage(updown, UDM_GETPOS32, 0, 0);
+    r = SendMessageA(updown, UDM_GETPOS32, 0, 0);
     if (r)
     {
+        UDACCEL accel;
+
         flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
-        r = SendMessage(updown, UDM_SETPOS, 0, 50);
+        r = SendMessageA(updown, UDM_SETPOS, 0, 50);
         expect(50,r);
 
         ok_sequence(sequences, EDIT_SEQ_INDEX, test_updown_pos_nochange_seq,
                     "test updown pos, no change", FALSE);
+
+        SendMessageA(updown, UDM_SETRANGE, 0, MAKELONG(1, 40));
+        r = SendMessageA(updown, UDM_GETRANGE, 0, 0);
+        expect(1, LOWORD(r));
+        expect(40, HIWORD(r));
+
+        accel.nSec = 0;
+        accel.nInc = 5;
+        r = SendMessageA(updown, UDM_SETACCEL, 1, (LPARAM)&accel);
+        expect(TRUE, r);
+
+        r = SendMessageA(updown, UDM_GETPOS, 0, 0);
+        expect(40, LOWORD(r));
+        expect(1, HIWORD(r));
+
+        r = SendMessageA(updown, UDM_SETPOS, 0, MAKELONG(0, 0));
+        expect(40, LOWORD(r));
+        expect(0, HIWORD(r));
+
+        r = SendMessageA(updown, UDM_GETPOS, 0, 0);
+        expect(1, LOWORD(r));
+        expect(0, HIWORD(r));
+
+        r = SendMessageA(updown, UDM_SETPOS, 0, MAKELONG(2, 0));
+        expect(1, LOWORD(r));
+        expect(0, HIWORD(r));
+
+        r = SendMessageA(g_edit, WM_KEYDOWN, VK_UP, 0);
+        expect(0, r);
+        r = SendMessageA(updown, UDM_GETPOS, 0, 0);
+        expect(1, LOWORD(r));
+        expect(0, HIWORD(r));
+
+        r = SendMessageA(updown, UDM_SETPOS, 0, MAKELONG(50, 0));
+        expect(1, LOWORD(r));
+        expect(0, HIWORD(r));
+
+        r = SendMessageA(updown, UDM_GETPOS, 0, 0);
+        expect(40, LOWORD(r));
+        expect(0, HIWORD(r));
     }
 
     DestroyWindow(updown);
@@ -402,10 +441,11 @@ static void test_updown_pos32(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     /* Set the position to 0 to 1000 */
-    SendMessage(updown, UDM_SETRANGE32, 0 , 1000 );
+    SendMessageA(updown, UDM_SETRANGE32, 0 , 1000 );
 
     low = high = -1;
-    r = SendMessage(updown, UDM_GETRANGE32, (WPARAM) &low , (LPARAM) &high );
+    r = SendMessageA(updown, UDM_GETRANGE32, (WPARAM) &low , (LPARAM) &high );
+    expect(0,r);
     if (low == -1)
     {
         win_skip("UDM_SETRANGE32/UDM_GETRANGE32 not available\n");
@@ -417,7 +457,7 @@ static void test_updown_pos32(void)
     expect(1000,high);
 
     /* Set position to 500 */
-    r = SendMessage(updown, UDM_SETPOS32, 0 , 500 );
+    r = SendMessageA(updown, UDM_SETPOS32, 0 , 500 );
     if (!r)
     {
         win_skip("UDM_SETPOS32 and UDM_GETPOS32 need 5.80\n");
@@ -428,35 +468,35 @@ static void test_updown_pos32(void)
 
     /* Since UDM_SETBUDDYINT was not set at creation bRet will always be true as a return from UDM_GETPOS32 */
 
-    r = SendMessage(updown, UDM_GETPOS32, 0 , (LPARAM) &high );
+    r = SendMessageA(updown, UDM_GETPOS32, 0 , (LPARAM) &high );
     expect(500,r);
     expect(1,high);
 
     /* Set position to 0, return should be 500 */
-    r = SendMessage(updown, UDM_SETPOS32, 0 , 0 );
+    r = SendMessageA(updown, UDM_SETPOS32, 0 , 0 );
     expect(500,r);
-    r = SendMessage(updown, UDM_GETPOS32, 0 , (LPARAM) &high );
+    r = SendMessageA(updown, UDM_GETPOS32, 0 , (LPARAM) &high );
     expect(0,r);
     expect(1,high);
 
     /* Set position to -1 which should become 0, return should be 0 */
-    r = SendMessage(updown, UDM_SETPOS32, 0 , -1 );
+    r = SendMessageA(updown, UDM_SETPOS32, 0 , -1 );
     expect(0,r);
-    r = SendMessage(updown, UDM_GETPOS32, 0 , (LPARAM) &high );
+    r = SendMessageA(updown, UDM_GETPOS32, 0 , (LPARAM) &high );
     expect(0,r);
     expect(1,high);
 
     /* Set position to 1000, return should be 0 */
-    r = SendMessage(updown, UDM_SETPOS32, 0 , 1000 );
+    r = SendMessageA(updown, UDM_SETPOS32, 0 , 1000 );
     expect(0,r);
-    r = SendMessage(updown, UDM_GETPOS32, 0 , (LPARAM) &high );
+    r = SendMessageA(updown, UDM_GETPOS32, 0 , (LPARAM) &high );
     expect(1000,r);
     expect(1,high);
 
     /* Set position to 1001 which should become 1000, return should be 1000 */
-    r = SendMessage(updown, UDM_SETPOS32, 0 , 1001 );
+    r = SendMessageA(updown, UDM_SETPOS32, 0 , 1001 );
     expect(1000,r);
-    r = SendMessage(updown, UDM_GETPOS32, 0 , (LPARAM) &high );
+    r = SendMessageA(updown, UDM_GETPOS32, 0 , (LPARAM) &high );
     expect(1000,r);
     expect(1,high);
 
@@ -470,7 +510,7 @@ static void test_updown_pos32(void)
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
-    r = SendMessage(updown, UDM_SETPOS32, 0, 50);
+    r = SendMessageA(updown, UDM_SETPOS32, 0, 50);
     expect(50,r);
     ok_sequence(sequences, EDIT_SEQ_INDEX, test_updown_pos_nochange_seq,
                 "test updown pos, no change", FALSE);
@@ -488,13 +528,13 @@ static void test_updown_buddy(void)
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
-    buddyReturn = (HWND)SendMessage(updown, UDM_GETBUDDY, 0 , 0 );
+    buddyReturn = (HWND)SendMessageA(updown, UDM_GETBUDDY, 0 , 0 );
     ok(buddyReturn == g_edit, "Expected edit handle\n");
 
-    buddyReturn = (HWND)SendMessage(updown, UDM_SETBUDDY, (WPARAM) g_edit, 0);
+    buddyReturn = (HWND)SendMessageA(updown, UDM_SETBUDDY, (WPARAM) g_edit, 0);
     ok(buddyReturn == g_edit, "Expected edit handle\n");
 
-    buddyReturn = (HWND)SendMessage(updown, UDM_GETBUDDY, 0 , 0 );
+    buddyReturn = (HWND)SendMessageA(updown, UDM_GETBUDDY, 0 , 0 );
     ok(buddyReturn == g_edit, "Expected edit handle\n");
 
     ok_sequence(sequences, UPDOWN_SEQ_INDEX, test_updown_buddy_seq, "test updown buddy", TRUE);
@@ -541,32 +581,32 @@ static void test_updown_base(void)
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
-    SendMessage(updown, UDM_SETBASE, 10 , 0);
-    r = SendMessage(updown, UDM_GETBASE, 0 , 0);
+    SendMessageA(updown, UDM_SETBASE, 10 , 0);
+    r = SendMessageA(updown, UDM_GETBASE, 0 , 0);
     expect(10,r);
 
     /* Set base to an invalid value, should return 0 and stay at 10 */
-    r = SendMessage(updown, UDM_SETBASE, 80 , 0);
+    r = SendMessageA(updown, UDM_SETBASE, 80 , 0);
     expect(0,r);
-    r = SendMessage(updown, UDM_GETBASE, 0 , 0);
+    r = SendMessageA(updown, UDM_GETBASE, 0 , 0);
     expect(10,r);
 
     /* Set base to 16 now, should get 16 as the return */
-    r = SendMessage(updown, UDM_SETBASE, 16 , 0);
+    r = SendMessageA(updown, UDM_SETBASE, 16 , 0);
     expect(10,r);
-    r = SendMessage(updown, UDM_GETBASE, 0 , 0);
+    r = SendMessageA(updown, UDM_GETBASE, 0 , 0);
     expect(16,r);
 
     /* Set base to an invalid value, should return 0 and stay at 16 */
-    r = SendMessage(updown, UDM_SETBASE, 80 , 0);
+    r = SendMessageA(updown, UDM_SETBASE, 80 , 0);
     expect(0,r);
-    r = SendMessage(updown, UDM_GETBASE, 0 , 0);
+    r = SendMessageA(updown, UDM_GETBASE, 0 , 0);
     expect(16,r);
 
     /* Set base back to 10, return should be 16 */
-    r = SendMessage(updown, UDM_SETBASE, 10 , 0);
+    r = SendMessageA(updown, UDM_SETBASE, 10 , 0);
     expect(16,r);
-    r = SendMessage(updown, UDM_GETBASE, 0 , 0);
+    r = SendMessageA(updown, UDM_GETBASE, 0 , 0);
     expect(10,r);
 
     ok_sequence(sequences, UPDOWN_SEQ_INDEX, test_updown_base_seq, "test updown base", FALSE);
@@ -576,13 +616,13 @@ static void test_updown_base(void)
     /* switch base with buddy attached */
     updown = create_updown_control(UDS_SETBUDDYINT | UDS_ALIGNRIGHT, g_edit);
 
-    r = SendMessage(updown, UDM_SETPOS, 0, 10);
+    r = SendMessageA(updown, UDM_SETPOS, 0, 10);
     expect(50, r);
 
     GetWindowTextA(g_edit, text, sizeof(text)/sizeof(CHAR));
     ok(lstrcmpA(text, "10") == 0, "Expected '10', got '%s'\n", text);
 
-    r = SendMessage(updown, UDM_SETBASE, 16, 0);
+    r = SendMessageA(updown, UDM_SETBASE, 16, 0);
     expect(10, r);
 
     GetWindowTextA(g_edit, text, sizeof(text)/sizeof(CHAR));
@@ -603,14 +643,14 @@ static void test_updown_unicode(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     /* Set it to ANSI, don't check return as we don't know previous state */
-    SendMessage(updown, UDM_SETUNICODEFORMAT, 0 , 0);
-    r = SendMessage(updown, UDM_GETUNICODEFORMAT, 0 , 0);
+    SendMessageA(updown, UDM_SETUNICODEFORMAT, 0 , 0);
+    r = SendMessageA(updown, UDM_GETUNICODEFORMAT, 0 , 0);
     expect(0,r);
 
     /* Now set it to Unicode format */
-    r = SendMessage(updown, UDM_SETUNICODEFORMAT, 1 , 0);
+    r = SendMessageA(updown, UDM_SETUNICODEFORMAT, 1 , 0);
     expect(0,r);
-    r = SendMessage(updown, UDM_GETUNICODEFORMAT, 0 , 0);
+    r = SendMessageA(updown, UDM_GETUNICODEFORMAT, 0 , 0);
     if (!r)
     {
         win_skip("UDM_SETUNICODEFORMAT not available\n");
@@ -620,9 +660,9 @@ static void test_updown_unicode(void)
     expect(1,r);
 
     /* And now set it back to ANSI */
-    r = SendMessage(updown, UDM_SETUNICODEFORMAT, 0 , 0);
+    r = SendMessageA(updown, UDM_SETUNICODEFORMAT, 0 , 0);
     expect(1,r);
-    r = SendMessage(updown, UDM_GETUNICODEFORMAT, 0 , 0);
+    r = SendMessageA(updown, UDM_GETUNICODEFORMAT, 0 , 0);
     expect(0,r);
 
     ok_sequence(sequences, UPDOWN_SEQ_INDEX, test_updown_unicode_seq, "test updown unicode", FALSE);
@@ -718,7 +758,7 @@ static void test_UDS_SETBUDDYINT(void)
     SetWindowLongA(updown, GWL_STYLE, style | UDS_SETBUDDYINT);
     style = GetWindowLongA(updown, GWL_STYLE);
     ok(style & UDS_SETBUDDYINT, "Expected UDS_SETBUDDY to be set\n");
-    SendMessage(updown, UDM_SETPOS, 0, 20);
+    SendMessageA(updown, UDM_SETPOS, 0, 20);
     GetWindowTextA(g_edit, text, sizeof(text)/sizeof(CHAR));
     ok(lstrlenA(text) == 0, "Expected empty string\n");
     DestroyWindow(updown);
@@ -731,7 +771,7 @@ static void test_UDS_SETBUDDYINT(void)
     /* now remove style flag */
     style = GetWindowLongA(updown, GWL_STYLE);
     SetWindowLongA(updown, GWL_STYLE, style & ~UDS_SETBUDDYINT);
-    SendMessage(updown, UDM_SETPOS, 0, 20);
+    SendMessageA(updown, UDM_SETPOS, 0, 20);
     GetWindowTextA(g_edit, text, sizeof(text)/sizeof(CHAR));
     ok(lstrcmpA(text, "20") == 0, "Expected '20', got '%s'\n", text);
     /* set edit text directly, check position */
@@ -753,7 +793,7 @@ static void test_UDS_SETBUDDYINT(void)
     /* set style back */
     style = GetWindowLongA(updown, GWL_STYLE);
     SetWindowLongA(updown, GWL_STYLE, style | UDS_SETBUDDYINT);
-    SendMessage(updown, UDM_SETPOS, 0, 30);
+    SendMessageA(updown, UDM_SETPOS, 0, 30);
     GetWindowTextA(g_edit, text, sizeof(text)/sizeof(CHAR));
     ok(lstrcmpA(text, "30") == 0, "Expected '30', got '%s'\n", text);
     DestroyWindow(updown);

@@ -1,4 +1,3 @@
-/* $Id$ */
 #define UNICODE
 #define _UNICODE
 #include <windows.h>

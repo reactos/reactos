@@ -5,10 +5,9 @@
  * PROGRAMMERS:     Jérôme Gardou
  */
 
-#include <stdio.h>
-#include <wine/test.h>
-#include <windows.h>
+#include <apitest.h>
 
+#include <wingdi.h>
 
 void Test_GetPixel_1bpp()
 {
@@ -23,6 +22,20 @@ void Test_GetPixel_1bpp()
     hbmp = SelectObject(hdc, hbmp);
     ok(hbmp != NULL, "Could not select the bitmap into the DC.\n");
 
+    color = GetPixel(hdc, 0, 0);
+    ok(color == 0xFFFFFF, "Wrong color at 0,0 : 0x%08x\n", (UINT)color);
+    color = GetPixel(hdc, 1, 0);
+    ok(color == 0, "Wrong color at 1,0 : 0x%08x\n", (UINT)color);
+
+    SetBkColor(hdc, 0x0000FF);
+    SetTextColor(hdc, 0x00FF00);
+    color = GetPixel(hdc, 0, 0);
+    ok(color == 0xFFFFFF, "Wrong color at 0,0 : 0x%08x\n", (UINT)color);
+    color = GetPixel(hdc, 1, 0);
+    ok(color == 0, "Wrong color at 1,0 : 0x%08x\n", (UINT)color);
+
+    SetBkColor(hdc, 0x12345678);
+    SetTextColor(hdc, 0x87654321);
     color = GetPixel(hdc, 0, 0);
     ok(color == 0xFFFFFF, "Wrong color at 0,0 : 0x%08x\n", (UINT)color);
     color = GetPixel(hdc, 1, 0);

@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
-#include <winerror.h>
+//#include <winerror.h>
 #include <wincrypt.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 static BOOL (WINAPI *pCryptProtectData)(DATA_BLOB*,LPCWSTR,DATA_BLOB*,PVOID,CRYPTPROTECT_PROMPTSTRUCT*,DWORD,DATA_BLOB*);
 static BOOL (WINAPI *pCryptUnprotectData)(DATA_BLOB*,LPWSTR*,DATA_BLOB*,PVOID,CRYPTPROTECT_PROMPTSTRUCT*,DWORD,DATA_BLOB*);
@@ -244,7 +244,6 @@ static void test_simpleroundtrip(const char *plaintext)
 START_TEST(protectdata)
 {
     HMODULE hCrypt32 = GetModuleHandleA("crypt32.dll");
-    hCrypt32 = GetModuleHandleA("crypt32.dll");
     pCryptProtectData = (void*)GetProcAddress(hCrypt32, "CryptProtectData");
     pCryptUnprotectData = (void*)GetProcAddress(hCrypt32, "CryptUnprotectData");
     if (!pCryptProtectData || !pCryptUnprotectData)

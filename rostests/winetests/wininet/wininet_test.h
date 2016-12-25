@@ -24,7 +24,7 @@
  * between the A and W versions, we just define a set of macros so the
  * generated tests work anyway.
  */
-#ifndef GOPHER_ABSTRACT_ATTRIBUTE_TYPE
+#ifndef __WINESRC__
 #define GOPHER_ABSTRACT_ATTRIBUTE_TYPEA GOPHER_ABSTRACT_ATTRIBUTE_TYPE
 #define GOPHER_ABSTRACT_ATTRIBUTE_TYPEW GOPHER_ABSTRACT_ATTRIBUTE_TYPE
 

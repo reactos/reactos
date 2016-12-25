@@ -76,7 +76,7 @@ static void test_get(void)
 
 START_TEST(ds)
 {
-    HMODULE hnetapi32 = LoadLibrary("netapi32.dll");
+    HMODULE hnetapi32 = LoadLibraryA("netapi32.dll");
 
     pDsRoleGetPrimaryDomainInformation=(void*)GetProcAddress(hnetapi32,"DsRoleGetPrimaryDomainInformation");
     if (pDsRoleGetPrimaryDomainInformation)

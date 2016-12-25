@@ -22,7 +22,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
-#include <assert.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <sspi.h>
@@ -108,7 +108,7 @@ static const char* getSecError(SECURITY_STATUS status)
 /* Helper for testQuerySecurityPagageInfo */
 
 static SECURITY_STATUS setupPackageA(SEC_CHAR *p_package_name, 
-        PSecPkgInfo *p_pkg_info)
+        PSecPkgInfoA *p_pkg_info)
 {
     SECURITY_STATUS ret;
     
@@ -121,7 +121,7 @@ static SECURITY_STATUS setupPackageA(SEC_CHAR *p_package_name,
 
 static void testInitSecurityInterface(void)
 {
-    PSecurityFunctionTable sec_fun_table = NULL;
+    PSecurityFunctionTableA sec_fun_table = NULL;
 
     sec_fun_table = pInitSecurityInterfaceA();
     ok(sec_fun_table != NULL, "InitSecurityInterface() returned NULL.\n");
@@ -133,7 +133,7 @@ static void testEnumerateSecurityPackages(void)
 
     SECURITY_STATUS sec_status;
     ULONG           num_packages, i;
-    PSecPkgInfo     pkg_info = NULL;
+    PSecPkgInfoA    pkg_info = NULL;
 
     trace("Running testEnumerateSecurityPackages\n");
     
@@ -162,30 +162,35 @@ static void testEnumerateSecurityPackages(void)
     for(i = 0; i < num_packages; ++i){
         trace("%d: Package \"%s\"\n", i, pkg_info[i].Name);
         trace("Supported flags:\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_INTEGRITY)
-            trace("\tSECPKG_FLAG_INTEGRITY\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_PRIVACY)
-            trace("\tSECPKG_FLAG_PRIVACY\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_TOKEN_ONLY)
-            trace("\tSECPKG_FLAG_TOKEN_ONLY\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_DATAGRAM)
-            trace("\tSECPKG_FLAG_DATAGRAM\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_CONNECTION)
-            trace("\tSECPKG_FLAG_CONNECTION\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_MULTI_REQUIRED)
-            trace("\tSECPKG_FLAG_MULTI_REQUIRED\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_CLIENT_ONLY)
-            trace("\tSECPKG_FLAG_CLIENT_ONLY\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_EXTENDED_ERROR)
-            trace("\tSECPKG_FLAG_EXTENDED_ERROR\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_IMPERSONATION)
-            trace("\tSECPKG_FLAG_IMPERSONATION\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_ACCEPT_WIN32_NAME)
-            trace("\tSECPKG_FLAG_ACCEPT_WIN32_NAME\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_STREAM)
-            trace("\tSECPKG_FLAG_STREAM\n");
-        if(pkg_info[i].fCapabilities & SECPKG_FLAG_READONLY_WITH_CHECKSUM)
-            trace("\tSECPKG_FLAG_READONLY_WITH_CHECKSUM\n");
+#define X(flag) \
+        if(pkg_info[i].fCapabilities & flag) \
+            trace("\t" #flag "\n")
+
+        X(SECPKG_FLAG_INTEGRITY);
+        X(SECPKG_FLAG_PRIVACY);
+        X(SECPKG_FLAG_TOKEN_ONLY);
+        X(SECPKG_FLAG_DATAGRAM);
+        X(SECPKG_FLAG_CONNECTION);
+        X(SECPKG_FLAG_MULTI_REQUIRED);
+        X(SECPKG_FLAG_CLIENT_ONLY);
+        X(SECPKG_FLAG_EXTENDED_ERROR);
+        X(SECPKG_FLAG_IMPERSONATION);
+        X(SECPKG_FLAG_ACCEPT_WIN32_NAME);
+        X(SECPKG_FLAG_STREAM);
+        X(SECPKG_FLAG_NEGOTIABLE);
+        X(SECPKG_FLAG_GSS_COMPATIBLE);
+        X(SECPKG_FLAG_LOGON);
+        X(SECPKG_FLAG_ASCII_BUFFERS);
+        X(SECPKG_FLAG_FRAGMENT);
+        X(SECPKG_FLAG_MUTUAL_AUTH);
+        X(SECPKG_FLAG_DELEGATION);
+        X(SECPKG_FLAG_READONLY_WITH_CHECKSUM);
+        X(SECPKG_FLAG_RESTRICTED_TOKENS);
+        X(SECPKG_FLAG_NEGO_EXTENDER);
+        X(SECPKG_FLAG_NEGOTIABLE2);
+        X(SECPKG_FLAG_APPCONTAINER_PASSTHROUGH);
+        X(SECPKG_FLAG_APPCONTAINER_CHECKS);
+#undef X
         trace("Comment: %s\n", pkg_info[i].Comment);
         trace("\n");
     }
@@ -197,7 +202,7 @@ static void testEnumerateSecurityPackages(void)
 static void testQuerySecurityPackageInfo(void)
 {
     SECURITY_STATUS     sec_status;
-    PSecPkgInfo         pkg_info;
+    PSecPkgInfoA        pkg_info;
     static SEC_CHAR     ntlm[]     = "NTLM",
                         winetest[] = "Winetest";
 

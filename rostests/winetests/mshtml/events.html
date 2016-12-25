@@ -1,0 +1,262 @@
+<html>
+<head>
+<script>
+var testevent_divid2_called = false, testevent_document_called = false, cnt=0;
+
+function ok(b,m) {
+    return external.ok(b, m);
+}
+
+function broken(expr) {
+    return external.broken(expr);
+}
+
+function ondataavailable_test() {
+    var evobj, div, b = false;
+
+    div = document.getElementById("divid");
+
+    function ondataavailableHandler() {
+        b = true;
+        ok(window.event === evobj, "window.event != evobj");
+
+        ok(evobj.srcElement === div, "evobj.srcElement = " + evobj.srcElement);
+        ok(evobj.fromElement === null, "evobj.srcElement = " + evobj.fromElement);
+        ok(evobj.toElement === null, "evobj.srcElement = " + evobj.toElement);
+        ok(evobj.type === "dataavailable", "evobj.type = " + evobj.type);
+    }
+
+    function ondataavailableDocHandler() {
+        b = true;
+        ok(window.event === evobj, "window.event != evobj");
+
+        ok(evobj.srcElement === null, "evobj.srcElement = " + evobj.srcElement);
+        ok(evobj.fromElement === null, "evobj.srcElement = " + evobj.fromElement);
+        ok(evobj.toElement === null, "evobj.srcElement = " + evobj.toElement);
+        ok(evobj.type === "dataavailable", "evobj.type = " + evobj.type);
+    }
+
+    div.attachEvent("ondataavailable", ondataavailableHandler);
+
+    evobj = document.createEventObject();
+    ok(evobj.srcElement === null, "evobj.srcElement = " + evobj.srcElement);
+    ok(evobj.fromElement === null, "evobj.srcElement = " + evobj.fromElement);
+    ok(evobj.toElement === null, "evobj.srcElement = " + evobj.toElement);
+    ok(evobj.type === "", "evobj.type = " + evobj.type);
+
+    div.fireEvent("ondataavailable", evobj);
+    ok(b, "ondataavailable handler not called?");
+
+    ok(evobj.srcElement === div, "evobj.srcElement = " + evobj.srcElement);
+    ok(evobj.type === "dataavailable", "evobj.type = " + evobj.type);
+
+    div.detachEvent("ondataavailable", ondataavailableHandler);
+
+    b = false;
+    div.fireEvent("ondataavailable", evobj);
+    ok(!b, "ondataavailable handler called?");
+
+    ok(evobj.srcElement === div, "evobj.srcElement = " + evobj.srcElement);
+    ok(evobj.type === "dataavailable", "evobj.type = " + evobj.type);
+
+    document.attachEvent("ondataavailable", ondataavailableDocHandler);
+
+    evobj = document.createEventObject();
+
+    document.fireEvent("ondataavailable", evobj);
+    ok(b, "ondataavailable handler not called?");
+
+    ok(evobj.srcElement === null, "evobj.srcElement = " + evobj.srcElement);
+    ok(evobj.type === "dataavailable", "evobj.type = " + evobj.type);
+}
+
+function test_scriptfor() {
+    var div = document.getElementById("divid2");
+    ok("onclick" in div, "testevent not in div");
+    ok(typeof(div.onclick) === "function", "typeof(div.onclick) = " + typeof(div.onclick));
+    ok(testevent_divid2_called === false, "testevent_divid2_called = " + testevent_divid2_called);
+    ok(typeof(document.onclick) === "function", "typeof(document.onclick) = " + typeof(document.onclick));
+    ok(testevent_document_called === false, "testevent_document_called = " + testevent_document_called);
+    div.click();
+    ok(testevent_divid2_called === true, "testevent_divid2_called = " + testevent_divid2_called);
+    ok(testevent_document_called === true, "testevent_document_called = " + testevent_document_called);
+
+    ok(!("ontest" in div), "testevent in div");
+    ok(typeof(div.ontest) === "undefined", "typeof(div.ontest) = " + typeof(div.ontest));
+}
+
+function test_handler_this() {
+    document.body.innerHTML = '<div id="d1"><div id="d2"></div></div>';
+
+    var div1 = document.getElementById("d1");
+    var div2 = document.getElementById("d2");
+    var calls = new Array();
+
+    function createHandler(name, node) {
+        return function() {
+            ok(this === node, "this !== node");
+            calls.push(name);
+        }
+    }
+
+    function registerHandler(name, target) {
+        var b = target.attachEvent("onclick", function() {
+            ok(this === window, "this !== window");
+            calls.push(name+"*");
+        });
+        ok(b, "attachEvent failed");
+    }
+
+    registerHandler("div1", div1);
+    registerHandler("div2", div2);
+    registerHandler("body", document.body);
+    div1.onclick = createHandler("div1", div1);
+    div2.onclick = createHandler("div2", div2);
+    document.body.onclick = createHandler("body", document.body);
+
+    div2.click();
+    ok(calls == "div2,div2*,div1,div1*,body,body*", "calls = " + calls);
+}
+
+function test_insert_script() {
+    var e = document.createElement("script");
+
+    extern_cnt = 0;
+    e.src = "externscr.js";
+
+    var readystatechange_log = "";
+    e.onreadystatechange = function() {
+        readystatechange_log += "," + e.readyState;
+        ok(extern_cnt === 1, "extern_cnt = " + extern_cnt);
+        if(e.readyState === "complete") {
+            ok(readystatechange_log === "append,complete", "readystatechange_log = " + readystatechange_log);
+            external.reportSuccess();
+        }
+    }
+
+    document.body.appendChild(e);
+    ok(extern_cnt === 1, "extern_cnt = " + extern_cnt);
+    readystatechange_log = "append";
+}
+
+var string_handler_called = false;
+
+function test_string_event_handler() {
+    var e = document.createElement("div");
+    var event_str = "string_handler_called = true;";
+
+    document.body.appendChild(e);
+    e.onclick = event_str;
+    ok(e.onclick === event_str, "e.onclick = " + e.onclick);
+    e.click();
+    ok(string_handler_called === false, "string handler called");
+
+    e.setAttribute("onclick", event_str);
+    ok(e.onclick === event_str, "e.onclick = " + e.onclick);
+    e.click();
+    ok(string_handler_called === false, "string handler called");
+}
+
+window.onload = function() {
+    try {
+        ok(inlscr_complete_called, "onreadystatechange not fired");
+        ok(extern_res_script_rs === "eval,complete1,",
+            "extern_res_script_rs = " + extern_res_script_rs + " expected eval,complete1,");
+        ok(extern_http_script_rs === "loading,loaded,complete,",
+            "extern_http_script_rs = " + extern_http_script_rs + " expected loading,loaded,complete,");
+
+        ok(cnt == 1, "cnt=" + cnt + " exception during loading?");
+        ok(this === window, "this !== window");
+
+        ok(typeof(window.onload) === "function", "typeof(window.onload) = " + typeof(window.onload));
+        ok(document.body.onload === window.onload, "document.body.onload !== window.onload");
+
+        ok(img_onload_called, "img.onload not called before window.onload");
+
+        test_scriptfor();
+        ondataavailable_test();
+        test_handler_this();
+        test_insert_script();
+        test_string_event_handler();
+    }catch(e) {
+        ok(false, "Got an exception: " + e.message);
+    }
+}
+</script>
+<script>
+var img = document.createElement("img");
+img.src = "http://test.winehq.org/tests/winehq_snapshot/index_files/winehq_logo_glass.png";
+
+var img_onload_called = false;
+img.onload = function() {
+    external.trace("img.onload");
+    img_onload_called = true;
+}
+</script>
+</head>
+<body>
+<div id="divid"></div>
+<div id="divid2"></div>
+<script event="onclick" for="divid2">
+    testevent_divid2_called = true;
+</script>
+<script event="onclick" for="document">
+    testevent_document_called = true;
+</script>
+<script event="ontest" for="divid2">
+    ok(false, "unexpected ontest");
+</script>
+<script>
+(function() {
+    var div = document.getElementById("divid2");
+    ok(div.onclick === null, "div.onclick = null");
+    cnt++;
+})();
+</script>
+<script>
+var inlscr_complete_called = false, extern_res_script_rs = "", extern_http_script_rs = "";
+var extern_cnt = 0;
+
+function expect_inlscr_complete() {
+    var elem = document.getElementById("inlscr");
+    ok(elem.readyState === "complete" || broken(elem.readyState === "loading"), "expect_inlscr_complete: elem.readyState = " + elem.readyState);
+    if(elem.readyState === "complete")
+        inlscr_complete_called = true;
+}
+
+function extern_res_script_readystatechange() {
+    var elem = document.getElementById("extscr");
+    if(elem.readyState != "loading")
+        extern_res_script_rs += elem.readyState + extern_cnt + ",";
+    else
+        external.trace("Got loading readyState from external res script.");
+}
+
+function http_script_readystatechange() {
+    var elem = document.getElementById("httpscr");
+    extern_http_script_rs += elem.readyState + ",";
+}
+
+function on_externscr() {
+    var elem = document.getElementById("extscr");
+    ok(elem.readyState === "interactive" || broken(elem.readyState === "loading"),
+        "on_externscr: elem.readyState = " + elem.readyState);
+    extern_res_script_rs += "eval,";
+}
+
+</script>
+<script id="inlscr" onreadystatechange="expect_inlscr_complete();">
+(function() {
+    ok(inlscr_complete_called === false || broken(inlscr_complete_called), "onreadystatechange fired too early");
+
+    var elem = document.getElementById("inlscr");
+    ok(elem.readyState === "interactive", "inlscr: elem.readyState = " + elem.readyState);
+})();
+</script>
+<script id="extscr" onreadystatechange="extern_res_script_readystatechange()" src="externscr.js"></script>
+<script id="httpscr" onreadystatechange="http_script_readystatechange()" src="https://test.winehq.org/tests/empty.js?123456"></script>
+<script>
+document.body.appendChild(img);
+</script>
+</body>
+</html>
