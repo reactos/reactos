@@ -979,6 +979,18 @@ RtlUnicodeStringToAnsiString(
   _In_ BOOLEAN AllocateDestinationString);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeStringToAnsiString(
+  _When_(AllocateDestinationString, _Out_ _At_(DestinationString->Buffer, __drv_allocatesMem(Mem)))
+  _When_(!AllocateDestinationString, _Inout_)
+    PANSI_STRING DestinationString,
+  _In_ PCUNICODE_STRING SourceString,
+  _In_ BOOLEAN AllocateDestinationString);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 ULONG
 NTAPI
