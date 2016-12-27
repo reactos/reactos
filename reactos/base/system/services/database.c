@@ -191,11 +191,12 @@ ScmLogonService(
     IN PSERVICE pService,
     IN PSERVICE_IMAGE pImage)
 {
+#if 0
     PWSTR pUserName = NULL;
     PWSTR pDomainName = NULL;
     PWSTR ptr;
     DWORD dwError = ERROR_SUCCESS;
-
+#endif
     DPRINT("ScmLogonService()\n");
 
     DPRINT("Service %S\n", pService->lpServiceName);
