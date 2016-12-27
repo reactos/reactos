@@ -123,6 +123,178 @@ ShutdownHandlerRoutine(DWORD dwCtrlType)
 }
 
 
+/*** HACK CORE-12541: Special service accounts initialization HACK ************/
+
+#include <ndk/setypes.h>
+#include <sddl.h>
+#include <userenv.h>
+#include <strsafe.h>
+
+/* Inspired from userenv.dll's CreateUserProfileExW and LoadUserProfileW APIs */
+static
+BOOL
+ScmLogAccountHack(IN LPCWSTR pszAccountName,
+                  IN LPCWSTR pszSid,
+                  OUT PHKEY phProfile)
+{
+    BOOL Success = FALSE;
+    LONG Error;
+    NTSTATUS Status;
+    BOOLEAN WasPriv1Set = FALSE, WasPriv2Set = FALSE;
+    PSID pSid;
+    DWORD dwLength;
+    WCHAR szUserHivePath[MAX_PATH];
+
+    DPRINT1("ScmLogAccountsHack(%S, %S)\n", pszAccountName, pszSid);
+    if (!pszAccountName || !pszSid || !phProfile)
+        return ERROR_INVALID_PARAMETER;
+
+    /* Convert the SID string into a SID. NOTE: No RTL equivalent. */
+    if (!ConvertStringSidToSidW(pszSid, &pSid))
+    {
+        DPRINT1("ConvertStringSidToSidW() failed (error %lu)\n", GetLastError());
+        return FALSE;
+    }
+
+    /* Determine a suitable profile path */
+    dwLength = ARRAYSIZE(szUserHivePath);
+    if (!GetProfilesDirectoryW(szUserHivePath, &dwLength))
+    {
+        DPRINT1("GetProfilesDirectoryW() failed (error %lu)\n", GetLastError());
+        goto Quit;
+    }
+
+    /* Create user hive name */
+    StringCbCatW(szUserHivePath, sizeof(szUserHivePath), L"\\");
+    StringCbCatW(szUserHivePath, sizeof(szUserHivePath), pszAccountName);
+    StringCbCatW(szUserHivePath, sizeof(szUserHivePath), L"\\ntuser.dat");
+    DPRINT("szUserHivePath: %S\n", szUserHivePath);
+
+    /* Magic #1: Create the special user profile if needed */
+    if (GetFileAttributesW(szUserHivePath) == INVALID_FILE_ATTRIBUTES)
+    {
+        if (!CreateUserProfileW(pSid, pszAccountName))
+        {
+            DPRINT1("CreateUserProfileW() failed (error %lu)\n", GetLastError());
+            goto Quit;
+        }
+    }
+
+    /*
+     * Now Da Magiks #2: Manually mount the user profile registry hive
+     * aka. manually do what LoadUserProfile does!! But we don't require
+     * a security token!
+     */
+
+    /* Acquire restore privilege */
+    Status = RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE, TRUE, FALSE, &WasPriv1Set);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE) failed (Error 0x%08lx)\n", Status);
+        goto Quit;
+    }
+
+    /* Acquire backup privilege */
+    Status = RtlAdjustPrivilege(SE_BACKUP_PRIVILEGE, TRUE, FALSE, &WasPriv2Set);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlAdjustPrivilege(SE_BACKUP_PRIVILEGE) failed (Error 0x%08lx)\n", Status);
+        RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE, WasPriv1Set, FALSE, &WasPriv1Set);
+        goto Quit;
+    }
+
+    /* Load user registry hive */
+    Error = RegLoadKeyW(HKEY_USERS, pszSid, szUserHivePath);
+
+    /* Remove restore and backup privileges */
+    RtlAdjustPrivilege(SE_BACKUP_PRIVILEGE, WasPriv2Set, FALSE, &WasPriv2Set);
+    RtlAdjustPrivilege(SE_RESTORE_PRIVILEGE, WasPriv1Set, FALSE, &WasPriv1Set);
+
+    /* HACK: Do not fail if the profile has already been loaded! */
+    if (Error == ERROR_SHARING_VIOLATION)
+        Error = ERROR_SUCCESS;
+
+    if (Error != ERROR_SUCCESS)
+    {
+        DPRINT1("RegLoadKeyW() failed (Error %ld)\n", Error);
+        goto Quit;
+    }
+
+    /* Open future HKEY_CURRENT_USER */
+    Error = RegOpenKeyExW(HKEY_USERS,
+                          pszSid,
+                          0,
+                          MAXIMUM_ALLOWED,
+                          phProfile);
+    if (Error != ERROR_SUCCESS)
+    {
+        DPRINT1("RegOpenKeyExW() failed (Error %ld)\n", Error);
+        goto Quit;
+    }
+
+    Success = TRUE;
+
+Quit:
+    LocalFree(pSid);
+
+    DPRINT1("ScmLogAccountsHack(%S) returned %s\n",
+            pszAccountName, Success ? "success" : "failure");
+
+    return Success;
+}
+
+static struct
+{
+    LPCWSTR pszAccountName;
+    LPCWSTR pszSid;
+    HKEY    hProfile;
+} AccountHandles[] = {
+//  {L"LocalSystem"   , L"S-1-5-18", NULL},
+    {L"LocalService"  , L"S-1-5-19", NULL}, // L"NT AUTHORITY\\LocalService"
+    {L"NetworkService", L"S-1-5-20", NULL}, // L"NT AUTHORITY\\NetworkService"
+};
+
+static VOID
+ScmCleanupServiceAccountsHack(VOID)
+{
+    UINT i;
+
+    DPRINT1("ScmCleanupServiceAccountsHack()\n");
+
+    for (i = 0; i < ARRAYSIZE(AccountHandles); ++i)
+    {
+        if (AccountHandles[i].hProfile)
+        {
+            RegCloseKey(AccountHandles[i].hProfile);
+            AccountHandles[i].hProfile = NULL;
+        }
+    }
+}
+
+static BOOL
+ScmApplyServiceAccountsHack(VOID)
+{
+    UINT i;
+
+    DPRINT1("ScmApplyServiceAccountsHack()\n");
+
+    for (i = 0; i < ARRAYSIZE(AccountHandles); ++i)
+    {
+        if (!ScmLogAccountHack( AccountHandles[i].pszAccountName,
+                                AccountHandles[i].pszSid,
+                               &AccountHandles[i].hProfile))
+        {
+            ScmCleanupServiceAccountsHack();
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+/*************************** END OF HACK CORE-12541 ***************************/
+
+
 int WINAPI
 wWinMain(HINSTANCE hInstance,
          HINSTANCE hPrevInstance,
@@ -235,6 +407,9 @@ wWinMain(HINSTANCE hInstance,
      */
     SetProcessShutdownParameters(480, SHUTDOWN_NORETRY);
 
+    /*** HACK CORE-12541: Apply service accounts HACK ***/
+    ScmApplyServiceAccountsHack();
+
     /* Start auto-start services */
     ScmAutoStartServices();
 
@@ -253,6 +428,9 @@ wWinMain(HINSTANCE hInstance,
 
     /* Wait until the shutdown event gets signaled */
     WaitForSingleObject(hScmShutdownEvent, INFINITE);
+
+    /*** HACK CORE-12541: Cleanup service accounts HACK ***/
+    ScmCleanupServiceAccountsHack();
 
 done:
     ScmShutdownSecurity();
