@@ -203,10 +203,14 @@ ScmLogonService(
     if (ScmIsLocalSystemAccount(pImage->pszAccountName))
         return ERROR_SUCCESS;
 
+    // FIXME: Always assume LocalSystem
+    return ERROR_SUCCESS;
+
+#if 0
     ptr = wcschr(pImage->pszAccountName, L'\\');
     if (ptr != NULL)
     {
-        *ptr = 0;
+        *ptr = L'\0';
 
         pUserName = ptr + 1;
         pDomainName = pImage->pszAccountName;
@@ -224,11 +228,11 @@ ScmLogonService(
 
     DPRINT("Domain: %S  User: %S\n", pDomainName, pUserName);
 
-    /* FIXME */
-#if 0
+    /* Logon the user */
+    // FIXME: Use the password!!
     if (!LogonUserW(pUserName,
                     pDomainName,
-                    L"", // lpszPassword,
+                    L"", // FIXME: lpszPassword,
                     LOGON32_LOGON_SERVICE,
                     LOGON32_PROVIDER_DEFAULT,
                     &pImage->hToken))
@@ -236,12 +240,12 @@ ScmLogonService(
         dwError = GetLastError();
         DPRINT1("LogonUserW() failed (Error %lu)\n", dwError);
     }
-#endif
 
     if (ptr != NULL)
         *ptr = L'\\';
 
     return dwError;
+#endif
 }
 
 
