@@ -97,8 +97,8 @@ IsShimInfrastructureDisabled(VOID)
                                                      KeyValuePartialInformation,
                                                      &KeyInfo,
                                                      sizeof(KeyInfo),
-                                                     &ResultLength),
-                                                     NtClose(KeyHandle);
+                                                     &ResultLength);
+                            NtClose(KeyHandle);
                             if ((NT_SUCCESS(Status)) &&
                                 (KeyInfo.Type == REG_DWORD) &&
                                 (KeyInfo.DataLength == sizeof(ULONG)) &&
