@@ -125,22 +125,35 @@ AcquireRemoveRestorePrivilege(IN BOOL bAcquire)
 
 BOOL
 WINAPI
-CreateUserProfileA(PSID Sid,
-                   LPCSTR lpUserName)
+CreateUserProfileA(
+    _In_ PSID pSid,
+    _In_ LPCSTR lpUserName)
 {
-    UNICODE_STRING UserName;
+    LPWSTR pUserNameW = NULL;
+    INT nLength;
     BOOL bResult;
 
-    if (!RtlCreateUnicodeStringFromAsciiz(&UserName,
-                                          (LPSTR)lpUserName))
+    DPRINT("CreateUserProfileA(%p %s)\n", pSid, lpUserName);
+
+    /* Convert lpUserName to Unicode */
+    nLength = MultiByteToWideChar(CP_ACP, 0, lpUserName, -1, NULL, 0);
+    pUserNameW = HeapAlloc(GetProcessHeap(), 0, nLength * sizeof(WCHAR));
+    if (pUserNameW == NULL)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
+    MultiByteToWideChar(CP_ACP, 0, lpUserName, -1, pUserNameW, nLength);
 
-    bResult = CreateUserProfileW(Sid, UserName.Buffer);
+    /* Call the Ex function */
+    bResult = CreateUserProfileExW(pSid,
+                                   pUserNameW,
+                                   NULL,
+                                   NULL,
+                                   0,
+                                   FALSE);
 
-    RtlFreeUnicodeString(&UserName);
+    HeapFree(GetProcessHeap(), 0, pUserNameW);
 
     return bResult;
 }
@@ -148,8 +161,120 @@ CreateUserProfileA(PSID Sid,
 
 BOOL
 WINAPI
-CreateUserProfileW(PSID Sid,
-                   LPCWSTR lpUserName)
+CreateUserProfileW(
+    _In_ PSID pSid,
+    _In_ LPCWSTR lpUserName)
+{
+    DPRINT("CreateUserProfileW(%p %S)\n", pSid, lpUserName);
+
+    /* Call the Ex function */
+    return CreateUserProfileExW(pSid,
+                                lpUserName,
+                                NULL,
+                                NULL,
+                                0,
+                                FALSE);
+}
+
+
+BOOL
+WINAPI
+CreateUserProfileExA(
+    _In_ PSID pSid,
+    _In_ LPCSTR lpUserName,
+    _In_opt_ LPCSTR lpUserHive,
+    _Out_opt_ LPSTR lpProfileDir,
+    _In_ DWORD dwDirSize,
+    _In_ BOOL bWin9xUpg)
+{
+    LPWSTR pUserNameW = NULL;
+    LPWSTR pUserHiveW = NULL;
+    LPWSTR pProfileDirW = NULL;
+    INT nLength;
+    BOOL bResult = FALSE;
+
+    DPRINT("CreateUserProfileExA(%p %s %s %p %lu %d)\n",
+           pSid, lpUserName, lpUserHive, lpProfileDir, dwDirSize, bWin9xUpg);
+
+    /* Check the parameters */
+    if (lpProfileDir != NULL && dwDirSize == 0)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Convert lpUserName to Unicode */
+    nLength = MultiByteToWideChar(CP_ACP, 0, lpUserName, -1, NULL, 0);
+    pUserNameW = HeapAlloc(GetProcessHeap(), 0, nLength * sizeof(WCHAR));
+    if (pUserNameW == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto done;
+    }
+    MultiByteToWideChar(CP_ACP, 0, lpUserName, -1, pUserNameW, nLength);
+
+    /* Convert lpUserHive to Unicode */
+    if (lpUserHive != NULL)
+    {
+        nLength = MultiByteToWideChar(CP_ACP, 0, lpUserHive, -1, NULL, 0);
+        pUserHiveW = HeapAlloc(GetProcessHeap(), 0, nLength * sizeof(WCHAR));
+        if (pUserHiveW == NULL)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto done;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpUserHive, -1, pUserHiveW, nLength);
+    }
+
+    /* Allocate a Unicode buffer for lpProfileDir */
+    if (lpProfileDir != NULL)
+    {
+        pProfileDirW = HeapAlloc(GetProcessHeap(), 0, dwDirSize * sizeof(WCHAR));
+        if (pProfileDirW == NULL)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto done;
+        }
+    }
+
+    /* Call the Unicode function */
+    bResult = CreateUserProfileExW(pSid,
+                                   (LPCWSTR)pUserNameW,
+                                   (LPCWSTR)pUserHiveW,
+                                   pProfileDirW,
+                                   dwDirSize,
+                                   bWin9xUpg);
+
+    /* Convert the profile path to ANSI */
+    if (bResult && lpProfileDir != NULL)
+    {
+        WideCharToMultiByte(CP_ACP, 0, pProfileDirW, -1, lpProfileDir, dwDirSize, NULL, NULL);
+    }
+
+done:
+    /* Free the buffers */
+    if (pProfileDirW != NULL)
+        HeapFree(GetProcessHeap(), 0, pProfileDirW);
+
+    if (pUserHiveW != NULL)
+        HeapFree(GetProcessHeap(), 0, pUserHiveW);
+
+    if (pUserNameW != NULL)
+        HeapFree(GetProcessHeap(), 0, pUserNameW);
+
+    return bResult;
+}
+
+
+BOOL
+WINAPI
+CreateUserProfileExW(
+    _In_ PSID pSid,
+    _In_ LPCWSTR lpUserName,
+    _In_opt_ LPCWSTR lpUserHive,
+    _Out_opt_ LPWSTR lpProfileDir,
+    _In_ DWORD dwDirSize,
+    _In_ BOOL bWin9xUpg)
 {
     WCHAR szRawProfilesPath[MAX_PATH];
     WCHAR szProfilesPath[MAX_PATH];
@@ -165,7 +290,14 @@ CreateUserProfileW(PSID Sid,
     BOOL bRet = TRUE;
     LONG Error;
 
-    DPRINT("CreateUserProfileW() called\n");
+    DPRINT("CreateUserProfileExW(%p %S %S %p %lu %d)\n",
+           pSid, lpUserName, lpUserHive, lpProfileDir, dwDirSize, bWin9xUpg);
+
+    /*
+     * TODO:
+     *  - Add support for lpUserHive, lpProfileDir.
+     *  - bWin9xUpg is obsolete. Don't waste your time implementing this.
+     */
 
     Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
@@ -279,7 +411,7 @@ CreateUserProfileW(PSID Sid,
     }
 
     /* Add profile to profile list */
-    if (!ConvertSidToStringSidW(Sid,
+    if (!ConvertSidToStringSidW(pSid,
                                 &SidString))
     {
         DPRINT1("Error: %lu\n", GetLastError());
@@ -304,7 +436,7 @@ CreateUserProfileW(PSID Sid,
     {
         DPRINT1("Error: %lu\n", Error);
         bRet = FALSE;
-        goto Done;
+        goto done;
     }
 
     /* Create non-expanded user profile path */
@@ -324,7 +456,7 @@ CreateUserProfileW(PSID Sid,
         DPRINT1("Error: %lu\n", Error);
         RegCloseKey(hKey);
         bRet = FALSE;
-        goto Done;
+        goto done;
     }
 
     /* Set 'Sid' value */
@@ -332,14 +464,14 @@ CreateUserProfileW(PSID Sid,
                            L"Sid",
                            0,
                            REG_BINARY,
-                           Sid,
-                           GetLengthSid(Sid));
+                           pSid,
+                           GetLengthSid(pSid));
     if (Error != ERROR_SUCCESS)
     {
         DPRINT1("Error: %lu\n", Error);
         RegCloseKey(hKey);
         bRet = FALSE;
-        goto Done;
+        goto done;
     }
 
     RegCloseKey(hKey);
@@ -354,7 +486,7 @@ CreateUserProfileW(PSID Sid,
         Error = GetLastError();
         DPRINT1("Error: %lu\n", Error);
         bRet = FALSE;
-        goto Done;
+        goto done;
     }
 
     /* Create new user hive */
@@ -366,7 +498,7 @@ CreateUserProfileW(PSID Sid,
     {
         DPRINT1("Error: %lu\n", Error);
         bRet = FALSE;
-        goto Done;
+        goto done;
     }
 
     /* Initialize user hive */
@@ -382,41 +514,13 @@ CreateUserProfileW(PSID Sid,
     RegUnLoadKeyW(HKEY_USERS, SidString);
     AcquireRemoveRestorePrivilege(FALSE);
 
-Done:
+done:
     LocalFree((HLOCAL)SidString);
     SetLastError((DWORD)Error);
 
     DPRINT("CreateUserProfileW() done\n");
 
     return bRet;
-}
-
-
-BOOL
-WINAPI
-CreateUserProfileExA(IN PSID pSid,
-                     IN LPCSTR lpUserName,
-                     IN LPCSTR lpUserHive OPTIONAL,
-                     OUT LPSTR lpProfileDir OPTIONAL,
-                     IN DWORD dwDirSize,
-                     IN BOOL bWin9xUpg)
-{
-    DPRINT1("CreateUserProfileExA() not implemented!\n");
-    return FALSE;
-}
-
-
-BOOL
-WINAPI
-CreateUserProfileExW(IN PSID pSid,
-                     IN LPCWSTR lpUserName,
-                     IN LPCWSTR lpUserHive OPTIONAL,
-                     OUT LPWSTR lpProfileDir OPTIONAL,
-                     IN DWORD dwDirSize,
-                     IN BOOL bWin9xUpg)
-{
-    DPRINT1("CreateUserProfileExW() not implemented!\n");
-    return FALSE;
 }
 
 
