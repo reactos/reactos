@@ -596,7 +596,7 @@ LsaEnumeratePrivilegesOfAccount(IN LSA_HANDLE AccountHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -606,19 +606,45 @@ LsaEnumerateTrustedDomains(IN LSA_HANDLE PolicyHandle,
                            IN ULONG PreferedMaximumLength,
                            OUT PULONG CountReturned)
 {
-    FIXME("LsaEnumerateTrustedDomains(%p %p %p %lu %p) stub\n",
+    LSAPR_TRUSTED_ENUM_BUFFER TrustedEnumBuffer;
+    NTSTATUS Status;
+
+    TRACE("LsaEnumerateTrustedDomains(%p %p %p %lu %p)\n",
           PolicyHandle, EnumerationContext, Buffer,
           PreferedMaximumLength, CountReturned);
 
-    if (CountReturned)
-        *CountReturned = 0;
+    if (Buffer == NULL)
+        return STATUS_INVALID_PARAMETER;
 
-    return STATUS_SUCCESS;
+    TrustedEnumBuffer.EntriesRead = 0;
+    TrustedEnumBuffer.Information = NULL;
+
+    RpcTryExcept
+    {
+        Status = LsarEnumerateTrustedDomains((LSAPR_HANDLE)PolicyHandle,
+                                             EnumerationContext,
+                                             &TrustedEnumBuffer,
+                                             PreferedMaximumLength);
+
+        *Buffer = TrustedEnumBuffer.Information;
+        *CountReturned = TrustedEnumBuffer.EntriesRead;
+
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (TrustedEnumBuffer.Information != NULL)
+            MIDL_user_free(TrustedEnumBuffer.Information);
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -628,14 +654,40 @@ LsaEnumerateTrustedDomainsEx(IN LSA_HANDLE PolicyHandle,
                              IN ULONG PreferedMaximumLength,
                              OUT PULONG CountReturned)
 {
-    FIXME("LsaEnumerateTrustedDomainsEx(%p %p %p %lu %p) stub\n",
+    LSAPR_TRUSTED_ENUM_BUFFER_EX TrustedEnumBuffer;
+    NTSTATUS Status;
+
+    TRACE("LsaEnumerateTrustedDomainsEx(%p %p %p %lu %p)\n",
           PolicyHandle, EnumerationContext, Buffer,
           PreferedMaximumLength, CountReturned);
 
-    if (CountReturned)
-        *CountReturned = 0;
+    if (Buffer == NULL)
+        return STATUS_INVALID_PARAMETER;
 
-    return STATUS_SUCCESS;
+    TrustedEnumBuffer.EntriesRead = 0;
+    TrustedEnumBuffer.EnumerationBuffer = NULL;
+
+    RpcTryExcept
+    {
+        Status = LsarEnumerateTrustedDomainsEx((LSAPR_HANDLE)PolicyHandle,
+                                               EnumerationContext,
+                                               &TrustedEnumBuffer,
+                                               PreferedMaximumLength);
+
+        *Buffer = TrustedEnumBuffer.EnumerationBuffer;
+        *CountReturned = TrustedEnumBuffer.EntriesRead;
+
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (TrustedEnumBuffer.EnumerationBuffer != NULL)
+            MIDL_user_free(TrustedEnumBuffer.EnumerationBuffer);
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
@@ -680,7 +732,7 @@ LsaGetQuotasForAccount(IN LSA_HANDLE AccountHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -899,7 +951,7 @@ LsaLookupNames2(IN LSA_HANDLE PolicyHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
