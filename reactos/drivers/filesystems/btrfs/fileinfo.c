@@ -54,10 +54,11 @@ static NTSTATUS STDCALL set_basic_information(device_extension* Vcb, PIRP Irp, P
         goto end;
     }
     
-    // FIXME - what if FCB is volume or root?
-    // FIXME - what about subvol roots?
-    
-    // FIXME - link FILE_ATTRIBUTE_READONLY to st_mode
+    if (fcb->inode == SUBVOL_ROOT_INODE && fcb->subvol->root_item.flags & BTRFS_SUBVOL_READONLY &&
+        (fbi->FileAttributes == 0 || fbi->FileAttributes & FILE_ATTRIBUTE_READONLY)) {
+        Status = STATUS_ACCESS_DENIED;
+        goto end;
+    }
     
     if (fbi->CreationTime.QuadPart == -1)
         ccb->user_set_creation_time = TRUE;
@@ -129,6 +130,13 @@ static NTSTATUS STDCALL set_basic_information(device_extension* Vcb, PIRP Irp, P
         
         fcb->subvol->root_item.ctransid = Vcb->superblock.generation;
         fcb->subvol->root_item.ctime = now;
+        
+        if (fcb->inode == SUBVOL_ROOT_INODE) {
+            if (fbi->FileAttributes & FILE_ATTRIBUTE_READONLY)
+                fcb->subvol->root_item.flags |= BTRFS_SUBVOL_READONLY;
+            else
+                fcb->subvol->root_item.flags &= ~BTRFS_SUBVOL_READONLY;
+        }
         
         inode_item_changed = TRUE;
         
@@ -270,11 +278,7 @@ static NTSTATUS duplicate_fcb(fcb* oldfcb, fcb** pfcb) {
             
             if (!fcb->adsxattr.Buffer) {
                 ERR("out of memory\n");
-                
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
                 free_fcb(fcb);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
-                
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
             
@@ -288,11 +292,7 @@ static NTSTATUS duplicate_fcb(fcb* oldfcb, fcb** pfcb) {
             
             if (!fcb->adsdata.Buffer) {
                 ERR("out of memory\n");
-                
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
                 free_fcb(fcb);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
-                
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
             
@@ -309,11 +309,7 @@ static NTSTATUS duplicate_fcb(fcb* oldfcb, fcb** pfcb) {
         fcb->sd = ExAllocatePoolWithTag(PagedPool, RtlLengthSecurityDescriptor(oldfcb->sd), ALLOC_TAG);
         if (!fcb->sd) {
             ERR("out of memory\n");
-            
-            ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
             free_fcb(fcb);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
-            
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         
@@ -331,11 +327,7 @@ static NTSTATUS duplicate_fcb(fcb* oldfcb, fcb** pfcb) {
             
             if (!ext2) {
                 ERR("out of memory\n");
-                
-                ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
                 free_fcb(fcb);
-                ExReleaseResourceLite(&Vcb->fcb_lock);
-                
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
             
@@ -347,11 +339,7 @@ static NTSTATUS duplicate_fcb(fcb* oldfcb, fcb** pfcb) {
                 
                 if (!ext2->data) {
                     ERR("out of memory\n");
-                    
-                    ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
                     free_fcb(fcb);
-                    ExReleaseResourceLite(&Vcb->fcb_lock);
-                    
                     return STATUS_INSUFFICIENT_RESOURCES;
                 }
                 
@@ -361,6 +349,29 @@ static NTSTATUS duplicate_fcb(fcb* oldfcb, fcb** pfcb) {
             
             ext2->unique = FALSE;
             ext2->ignore = FALSE;
+            ext2->inserted = TRUE;
+            
+            if (ext->csum) {
+                ULONG len;
+                EXTENT_DATA2* ed2 = (EXTENT_DATA2*)ext->data->data;
+                
+                if (ext->data->compression == BTRFS_COMPRESSION_NONE)
+                    len = ed2->num_bytes;
+                else
+                    len = ed2->size;
+                
+                len = len * sizeof(UINT32) / Vcb->superblock.sector_size;
+                
+                ext2->csum = ExAllocatePoolWithTag(PagedPool, len, ALLOC_TAG);
+                if (!ext2->csum) {
+                    ERR("out of memory\n");
+                    free_fcb(fcb);
+                    return STATUS_INSUFFICIENT_RESOURCES;
+                }
+                
+                RtlCopyMemory(ext2->csum, ext->csum, len);
+            } else
+                ext2->csum = NULL;
 
             InsertTailList(&fcb->extents, &ext2->list_entry);
         }
@@ -376,11 +387,7 @@ static NTSTATUS duplicate_fcb(fcb* oldfcb, fcb** pfcb) {
         
         if (!hl2) {
             ERR("out of memory\n");
-            
-            ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
             free_fcb(fcb);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
-            
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         
@@ -393,11 +400,7 @@ static NTSTATUS duplicate_fcb(fcb* oldfcb, fcb** pfcb) {
         if (!hl2->name.Buffer) {
             ERR("out of memory\n");
             ExFreePool(hl2);
-            
-            ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
             free_fcb(fcb);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
-            
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         
@@ -410,11 +413,7 @@ static NTSTATUS duplicate_fcb(fcb* oldfcb, fcb** pfcb) {
             ERR("out of memory\n");
             ExFreePool(hl2->name.Buffer);
             ExFreePool(hl2);
-            
-            ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
             free_fcb(fcb);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
-            
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         
@@ -433,11 +432,7 @@ static NTSTATUS duplicate_fcb(fcb* oldfcb, fcb** pfcb) {
         fcb->reparse_xattr.Buffer = ExAllocatePoolWithTag(PagedPool, fcb->reparse_xattr.MaximumLength, ALLOC_TAG);
         if (!fcb->reparse_xattr.Buffer) {
             ERR("out of memory\n");
-            
-            ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
             free_fcb(fcb);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
-            
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         
@@ -450,11 +445,7 @@ static NTSTATUS duplicate_fcb(fcb* oldfcb, fcb** pfcb) {
         fcb->ea_xattr.Buffer = ExAllocatePoolWithTag(PagedPool, fcb->ea_xattr.MaximumLength, ALLOC_TAG);
         if (!fcb->ea_xattr.Buffer) {
             ERR("out of memory\n");
-            
-            ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
             free_fcb(fcb);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
-            
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         
@@ -585,10 +576,8 @@ static NTSTATUS add_children_to_move_list(move_entry* me, PIRP Irp) {
                         RtlCopyMemory(xattr.Buffer, xa->name, xa->n);
                         xattr.Buffer[xa->n] = 0;
                         
-                        ExAcquireResourceExclusiveLite(&me->fileref->fcb->Vcb->fcb_lock, TRUE);
                         Status = open_fcb_stream(me->fileref->fcb->Vcb, me->fileref->fcb->subvol, me->fileref->fcb->inode, &xattr,
                                                  tp.item->key.offset, me->fileref->fcb, &fcb, Irp);
-                        ExReleaseResourceLite(&me->fileref->fcb->Vcb->fcb_lock);
                         
                         if (!NT_SUCCESS(Status)) {
                             ERR("open_fcb_stream returned %08x\n", Status);
@@ -599,11 +588,7 @@ static NTSTATUS add_children_to_move_list(move_entry* me, PIRP Irp) {
                         fr = create_fileref();
                         if (!fr) {
                             ERR("out of memory\n");
-                            
-                            ExAcquireResourceExclusiveLite(&me->fileref->fcb->Vcb->fcb_lock, TRUE);
                             free_fcb(fcb);
-                            ExReleaseResourceLite(&me->fileref->fcb->Vcb->fcb_lock);
-                            
                             Status = STATUS_INSUFFICIENT_RESOURCES;
                             goto end;
                         }
@@ -613,11 +598,7 @@ static NTSTATUS add_children_to_move_list(move_entry* me, PIRP Irp) {
                         Status = RtlUTF8ToUnicodeN(NULL, 0, &stringlen, &xa->name[xapreflen], xa->n - xapreflen);
                         if (!NT_SUCCESS(Status)) {
                             ERR("RtlUTF8ToUnicodeN 1 returned %08x\n", Status);
-                            
-                            ExAcquireResourceExclusiveLite(&me->fileref->fcb->Vcb->fcb_lock, TRUE);
                             free_fileref(fr);
-                            ExReleaseResourceLite(&me->fileref->fcb->Vcb->fcb_lock);
-                            
                             goto end;
                         }
                         
@@ -625,22 +606,14 @@ static NTSTATUS add_children_to_move_list(move_entry* me, PIRP Irp) {
                         if (!fr->filepart.Buffer) {
                             ERR("out of memory\n");
                             Status = STATUS_INSUFFICIENT_RESOURCES;
-                            
-                            ExAcquireResourceExclusiveLite(&me->fileref->fcb->Vcb->fcb_lock, TRUE);
                             free_fileref(fr);
-                            ExReleaseResourceLite(&me->fileref->fcb->Vcb->fcb_lock);
-                            
                             goto end;
                         }
                         
                         Status = RtlUTF8ToUnicodeN(fr->filepart.Buffer, stringlen, &stringlen, &xa->name[xapreflen], xa->n - xapreflen);
                         if (!NT_SUCCESS(Status)) {
                             ERR("RtlUTF8ToUnicodeN 2 returned %08x\n", Status);
-                            
-                            ExAcquireResourceExclusiveLite(&me->fileref->fcb->Vcb->fcb_lock, TRUE);
                             free_fileref(fr);
-                            ExReleaseResourceLite(&me->fileref->fcb->Vcb->fcb_lock);
-                            
                             goto end;
                         }
                         
@@ -649,11 +622,7 @@ static NTSTATUS add_children_to_move_list(move_entry* me, PIRP Irp) {
                         Status = RtlUpcaseUnicodeString(&fr->filepart_uc, &fr->filepart, TRUE);
                         if (!NT_SUCCESS(Status)) {
                             ERR("RtlUpcaseUnicodeString returned %08x\n", Status);
-                            
-                            ExAcquireResourceExclusiveLite(&me->fileref->fcb->Vcb->fcb_lock, TRUE);
                             free_fileref(fr);
-                            ExReleaseResourceLite(&me->fileref->fcb->Vcb->fcb_lock);
-                            
                             goto end;
                         }
 
@@ -666,11 +635,7 @@ static NTSTATUS add_children_to_move_list(move_entry* me, PIRP Irp) {
                         if (!me2) {
                             ERR("out of memory\n");
                             Status = STATUS_INSUFFICIENT_RESOURCES;
-                            
-                            ExAcquireResourceExclusiveLite(&me->fileref->fcb->Vcb->fcb_lock, TRUE);
                             free_fileref(fr);
-                            ExReleaseResourceLite(&me->fileref->fcb->Vcb->fcb_lock);
-                            
                             goto end;
                         }
                         
@@ -762,6 +727,7 @@ static NTSTATUS add_children_to_move_list(move_entry* me, PIRP Irp) {
                         ULONG stringlen;
                         root* subvol;
                         UINT64 inode;
+                        dir_child* dc = NULL;
                         
                         utf8.Length = utf8.MaximumLength = di->n;
                         utf8.Buffer = ExAllocatePoolWithTag(PagedPool, utf8.MaximumLength, ALLOC_TAG);
@@ -802,9 +768,7 @@ static NTSTATUS add_children_to_move_list(move_entry* me, PIRP Irp) {
                             inode = di->key.obj_id;
                         }
                         
-                        ExAcquireResourceExclusiveLite(&me->fileref->fcb->Vcb->fcb_lock, TRUE);
                         Status = open_fcb(me->fileref->fcb->Vcb, subvol, inode, di->type, &utf8, me->fileref->fcb, &fcb, PagedPool, Irp);
-                        ExReleaseResourceLite(&me->fileref->fcb->Vcb->fcb_lock);
                         
                         if (!NT_SUCCESS(Status)) {
                             ERR("open_fcb returned %08x\n", Status);
@@ -817,11 +781,7 @@ static NTSTATUS add_children_to_move_list(move_entry* me, PIRP Irp) {
                             ERR("out of memory\n");
                             Status = STATUS_INSUFFICIENT_RESOURCES;
                             ExFreePool(utf8.Buffer);
-                            
-                            ExAcquireResourceExclusiveLite(&me->fileref->fcb->Vcb->fcb_lock, TRUE);
                             free_fcb(fcb);
-                            ExReleaseResourceLite(&me->fileref->fcb->Vcb->fcb_lock);
-                            
                             goto end;
                         }
                         
@@ -831,11 +791,7 @@ static NTSTATUS add_children_to_move_list(move_entry* me, PIRP Irp) {
                         Status = RtlUTF8ToUnicodeN(NULL, 0, &stringlen, utf8.Buffer, utf8.Length);
                         if (!NT_SUCCESS(Status)) {
                             ERR("RtlUTF8ToUnicodeN 1 returned %08x\n", Status);
-                            
-                            ExAcquireResourceExclusiveLite(&me->fileref->fcb->Vcb->fcb_lock, TRUE);
                             free_fileref(fr);
-                            ExReleaseResourceLite(&me->fileref->fcb->Vcb->fcb_lock);
-                            
                             goto end;
                         }
                         
@@ -843,11 +799,7 @@ static NTSTATUS add_children_to_move_list(move_entry* me, PIRP Irp) {
                         if (!fr->filepart.Buffer) {
                             ERR("out of memory\n");
                             Status = STATUS_INSUFFICIENT_RESOURCES;
-                            
-                            ExAcquireResourceExclusiveLite(&me->fileref->fcb->Vcb->fcb_lock, TRUE);
                             free_fileref(fr);
-                            ExReleaseResourceLite(&me->fileref->fcb->Vcb->fcb_lock);
-                            
                             goto end;
                         }
                         
@@ -855,11 +807,7 @@ static NTSTATUS add_children_to_move_list(move_entry* me, PIRP Irp) {
                         
                         if (!NT_SUCCESS(Status)) {
                             ERR("RtlUTF8ToUnicodeN 2 returned %08x\n", Status);
-                            
-                            ExAcquireResourceExclusiveLite(&me->fileref->fcb->Vcb->fcb_lock, TRUE);
                             free_fileref(fr);
-                            ExReleaseResourceLite(&me->fileref->fcb->Vcb->fcb_lock);
-                            
                             goto end;
                         }
                         
@@ -869,11 +817,7 @@ static NTSTATUS add_children_to_move_list(move_entry* me, PIRP Irp) {
                         
                         if (!NT_SUCCESS(Status)) {
                             ERR("RtlUpcaseUnicodeString returned %08x\n", Status);
-                            
-                            ExAcquireResourceExclusiveLite(&me->fileref->fcb->Vcb->fcb_lock, TRUE);
                             free_fileref(fr);
-                            ExReleaseResourceLite(&me->fileref->fcb->Vcb->fcb_lock);
-                            
                             goto end;
                         }
                         
@@ -881,6 +825,14 @@ static NTSTATUS add_children_to_move_list(move_entry* me, PIRP Irp) {
 
                         fr->index = tp.item->key.offset;
                         increase_fileref_refcount(me->fileref);
+                        
+                        Status = add_dir_child(me->fileref->fcb, di->key.obj_type == TYPE_ROOT_ITEM ? subvol->id : fr->fcb->inode,
+                                               di->key.obj_type == TYPE_ROOT_ITEM ? TRUE : FALSE, fr->index, &utf8, &fr->filepart, &fr->filepart_uc, BTRFS_TYPE_DIRECTORY, &dc);
+                        if (!NT_SUCCESS(Status))
+                            WARN("add_dir_child returned %08x\n", Status);
+                        
+                        fr->dc = dc;
+                        dc->fileref = fr;
                         
                         insert_fileref_child(fr->parent, fr, FALSE);
                         
@@ -891,11 +843,7 @@ static NTSTATUS add_children_to_move_list(move_entry* me, PIRP Irp) {
                         if (!me2) {
                             ERR("out of memory\n");
                             Status = STATUS_INSUFFICIENT_RESOURCES;
-                            
-                            ExAcquireResourceExclusiveLite(&me->fileref->fcb->Vcb->fcb_lock, TRUE);
                             free_fileref(fr);
-                            ExReleaseResourceLite(&me->fileref->fcb->Vcb->fcb_lock);
-                            
                             goto end;
                         }
                         
@@ -929,6 +877,44 @@ end:
     ExReleaseResourceLite(&me->fileref->nonpaged->children_lock);
     
     return Status;
+}
+
+void remove_dir_child_from_hash_lists(fcb* fcb, dir_child* dc) {
+    UINT8 c;
+    
+    c = dc->hash >> 24;
+    
+    if (fcb->hash_ptrs[c] == &dc->list_entry_hash) {
+        if (dc->list_entry_hash.Flink == &fcb->dir_children_hash)
+            fcb->hash_ptrs[c] = NULL;
+        else {
+            dir_child* dc2 = CONTAINING_RECORD(dc->list_entry_hash.Flink, dir_child, list_entry_hash);
+            
+            if (dc2->hash >> 24 == c)
+                fcb->hash_ptrs[c] = &dc2->list_entry_hash;
+            else
+                fcb->hash_ptrs[c] = NULL;
+        }
+    }
+    
+    RemoveEntryList(&dc->list_entry_hash);
+    
+    c = dc->hash_uc >> 24;
+    
+    if (fcb->hash_ptrs_uc[c] == &dc->list_entry_hash_uc) {
+        if (dc->list_entry_hash_uc.Flink == &fcb->dir_children_hash_uc)
+            fcb->hash_ptrs_uc[c] = NULL;
+        else {
+            dir_child* dc2 = CONTAINING_RECORD(dc->list_entry_hash_uc.Flink, dir_child, list_entry_hash_uc);
+            
+            if (dc2->hash_uc >> 24 == c)
+                fcb->hash_ptrs_uc[c] = &dc2->list_entry_hash_uc;
+            else
+                fcb->hash_ptrs_uc[c] = NULL;
+        }
+    }
+    
+    RemoveEntryList(&dc->list_entry_hash_uc);
 }
 
 static NTSTATUS move_across_subvols(file_ref* fileref, file_ref* destdir, PANSI_STRING utf8, PUNICODE_STRING fnus, PIRP Irp, LIST_ENTRY* rollback) {
@@ -988,6 +974,8 @@ static NTSTATUS move_across_subvols(file_ref* fileref, file_ref* destdir, PANSI_
         if (me->fileref->fcb->inode != SUBVOL_ROOT_INODE) {
             if (!me->dummyfcb) {
                 ULONG defda;
+                BOOL inserted = FALSE;
+                LIST_ENTRY* le;
                 
                 ExAcquireResourceExclusiveLite(me->fileref->fcb->Header.Resource, TRUE);
                 
@@ -1070,7 +1058,21 @@ static NTSTATUS move_across_subvols(file_ref* fileref, file_ref* destdir, PANSI_
                 InsertHeadList(&me->fileref->fcb->list_entry, &me->dummyfcb->list_entry);
                 RemoveEntryList(&me->fileref->fcb->list_entry);
                 
-                InsertTailList(&destdir->fcb->subvol->fcbs, &me->fileref->fcb->list_entry);
+                le = destdir->fcb->subvol->fcbs.Flink;
+                while (le != &destdir->fcb->subvol->fcbs) {
+                    fcb* fcb = CONTAINING_RECORD(le, struct _fcb, list_entry);
+                    
+                    if (fcb->inode > me->fileref->fcb->inode) {
+                        InsertHeadList(le->Blink, &me->fileref->fcb->list_entry);
+                        inserted = TRUE;
+                        break;
+                    }
+                    
+                    le = le->Flink;
+                }
+                
+                if (!inserted)
+                    InsertTailList(&destdir->fcb->subvol->fcbs, &me->fileref->fcb->list_entry);
                 
                 InsertTailList(&me->fileref->fcb->Vcb->all_fcbs, &me->dummyfcb->list_entry_all);
                 
@@ -1128,6 +1130,7 @@ static NTSTATUS move_across_subvols(file_ref* fileref, file_ref* destdir, PANSI_
     le = move_list.Flink;
     while (le != &move_list) {
         hardlink* hl;
+        BOOL name_changed = FALSE;
         
         me = CONTAINING_RECORD(le, move_entry, list_entry);
         
@@ -1150,7 +1153,7 @@ static NTSTATUS move_across_subvols(file_ref* fileref, file_ref* destdir, PANSI_
         if (le == move_list.Flink) // first item
             me->fileref->filepart.Length = me->fileref->filepart.MaximumLength = fnus->Length;
         else
-            me->fileref->filepart.MaximumLength = me->fileref->filepart.MaximumLength;
+            me->fileref->filepart.MaximumLength = me->fileref->filepart.Length;
         
         me->fileref->filepart.Buffer = ExAllocatePoolWithTag(PagedPool, me->fileref->filepart.MaximumLength, ALLOC_TAG);
         
@@ -1171,9 +1174,12 @@ static NTSTATUS move_across_subvols(file_ref* fileref, file_ref* destdir, PANSI_
         me->dummyfileref->utf8 = me->fileref->utf8;
         me->dummyfileref->oldutf8 = me->fileref->oldutf8;
         
-        if (le == move_list.Flink)
+        if (le == move_list.Flink) {
+            if (me->fileref->utf8.Length != utf8->Length || RtlCompareMemory(me->fileref->utf8.Buffer, utf8->Buffer, utf8->Length) != utf8->Length)
+                name_changed = TRUE;
+            
             me->fileref->utf8.Length = me->fileref->utf8.MaximumLength = utf8->Length;
-        else
+        } else
             me->fileref->utf8.MaximumLength = me->fileref->utf8.Length;
         
         if (me->fileref->utf8.MaximumLength > 0) {
@@ -1209,19 +1215,70 @@ static NTSTATUS move_across_subvols(file_ref* fileref, file_ref* destdir, PANSI_
         if (!me->parent) {
             RemoveEntryList(&me->fileref->list_entry);
             
-            ExAcquireResourceExclusiveLite(&me->fileref->fcb->Vcb->fcb_lock, TRUE);
             free_fileref(me->fileref->parent);
-            ExReleaseResourceLite(&me->fileref->fcb->Vcb->fcb_lock);
-            
-            me->fileref->parent = destdir;
             
             increase_fileref_refcount(destdir);
             
-            Status = fcb_get_last_dir_index(me->fileref->parent->fcb, &me->fileref->index, Irp);
+            Status = fcb_get_last_dir_index(destdir->fcb, &me->fileref->index, Irp);
             if (!NT_SUCCESS(Status)) {
                 ERR("fcb_get_last_dir_index returned %08x\n", Status);
                 goto end;
             }
+            
+            if (me->fileref->dc) {
+                // remove from old parent
+                ExAcquireResourceExclusiveLite(&me->fileref->parent->fcb->nonpaged->dir_children_lock, TRUE);
+                RemoveEntryList(&me->fileref->dc->list_entry_index);
+                remove_dir_child_from_hash_lists(me->fileref->parent->fcb, me->fileref->dc);
+                ExReleaseResourceLite(&me->fileref->parent->fcb->nonpaged->dir_children_lock);
+                
+                if (name_changed) {
+                    ExFreePool(me->fileref->dc->utf8.Buffer);
+                    ExFreePool(me->fileref->dc->name.Buffer);
+                    ExFreePool(me->fileref->dc->name_uc.Buffer);
+                    
+                    me->fileref->dc->utf8.Buffer = ExAllocatePoolWithTag(PagedPool, utf8->Length, ALLOC_TAG);
+                    if (!me->fileref->dc->utf8.Buffer) {
+                        ERR("out of memory\n");
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+                        goto end;
+                    }
+                    
+                    me->fileref->dc->name.Buffer = ExAllocatePoolWithTag(PagedPool, me->fileref->filepart.Length, ALLOC_TAG);
+                    if (!me->fileref->dc->name.Buffer) {
+                        ERR("out of memory\n");
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+                        goto end;
+                    }
+                    
+                    me->fileref->dc->name_uc.Buffer = ExAllocatePoolWithTag(PagedPool, me->fileref->filepart_uc.Length, ALLOC_TAG);
+                    if (!me->fileref->dc->name_uc.Buffer) {
+                        ERR("out of memory\n");
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+                        goto end;
+                    }
+                    
+                    me->fileref->dc->utf8.Length = me->fileref->dc->utf8.MaximumLength = utf8->Length;
+                    RtlCopyMemory(me->fileref->dc->utf8.Buffer, utf8->Buffer, utf8->Length);
+                    
+                    me->fileref->dc->name.Length = me->fileref->dc->name.MaximumLength = me->fileref->filepart.Length;
+                    RtlCopyMemory(me->fileref->dc->name.Buffer, me->fileref->filepart.Buffer, me->fileref->filepart.Length);
+                    
+                    me->fileref->dc->name_uc.Length = me->fileref->dc->name_uc.MaximumLength = me->fileref->filepart_uc.Length;
+                    RtlCopyMemory(me->fileref->dc->name_uc.Buffer, me->fileref->filepart_uc.Buffer, me->fileref->filepart_uc.Length);
+                    
+                    me->fileref->dc->hash = calc_crc32c(0xffffffff, (UINT8*)me->fileref->dc->name.Buffer, me->fileref->dc->name.Length);
+                    me->fileref->dc->hash_uc = calc_crc32c(0xffffffff, (UINT8*)me->fileref->dc->name_uc.Buffer, me->fileref->dc->name_uc.Length);
+                }
+                
+                // add to new parent
+                ExAcquireResourceExclusiveLite(&destdir->fcb->nonpaged->dir_children_lock, TRUE);
+                InsertTailList(&destdir->fcb->dir_children_index, &me->fileref->dc->list_entry_index);
+                insert_dir_child_into_hash_lists(destdir->fcb, me->fileref->dc);
+                ExReleaseResourceLite(&destdir->fcb->nonpaged->dir_children_lock);
+            }
+            
+            me->fileref->parent = destdir;
             
             insert_fileref_child(me->fileref->parent, me->fileref, TRUE);
             
@@ -1247,40 +1304,42 @@ static NTSTATUS move_across_subvols(file_ref* fileref, file_ref* destdir, PANSI_
             }
         }
         
-        hl = ExAllocatePoolWithTag(PagedPool, sizeof(hardlink), ALLOC_TAG);
-        if (!hl) {
-            ERR("out of memory\n");
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto end;
+        if (me->fileref->fcb->inode_item.st_nlink > 1) {
+            hl = ExAllocatePoolWithTag(PagedPool, sizeof(hardlink), ALLOC_TAG);
+            if (!hl) {
+                ERR("out of memory\n");
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto end;
+            }
+            
+            hl->parent = me->fileref->parent->fcb->inode;
+            hl->index = me->fileref->index;
+            
+            hl->utf8.Length = hl->utf8.MaximumLength = me->fileref->utf8.Length;
+            hl->utf8.Buffer = ExAllocatePoolWithTag(PagedPool, hl->utf8.MaximumLength, ALLOC_TAG);
+            if (!hl->utf8.Buffer) {
+                ERR("out of memory\n");
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                ExFreePool(hl);
+                goto end;
+            }
+            
+            RtlCopyMemory(hl->utf8.Buffer, me->fileref->utf8.Buffer, me->fileref->utf8.Length);
+            
+            hl->name.Length = hl->name.MaximumLength = me->fileref->filepart.Length;
+            hl->name.Buffer = ExAllocatePoolWithTag(PagedPool, hl->name.MaximumLength, ALLOC_TAG);
+            if (!hl->name.Buffer) {
+                ERR("out of memory\n");
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                ExFreePool(hl->utf8.Buffer);
+                ExFreePool(hl);
+                goto end;
+            }
+            
+            RtlCopyMemory(hl->name.Buffer, me->fileref->filepart.Buffer, me->fileref->filepart.Length);
+            
+            InsertTailList(&me->fileref->fcb->hardlinks, &hl->list_entry);
         }
-        
-        hl->parent = me->fileref->parent->fcb->inode;
-        hl->index = me->fileref->index;
-        
-        hl->utf8.Length = hl->utf8.MaximumLength = me->fileref->utf8.Length;
-        hl->utf8.Buffer = ExAllocatePoolWithTag(PagedPool, hl->utf8.MaximumLength, ALLOC_TAG);
-        if (!hl->utf8.Buffer) {
-            ERR("out of memory\n");
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            ExFreePool(hl);
-            goto end;
-        }
-        
-        RtlCopyMemory(hl->utf8.Buffer, me->fileref->utf8.Buffer, me->fileref->utf8.Length);
-        
-        hl->name.Length = hl->name.MaximumLength = me->fileref->filepart.Length;
-        hl->name.Buffer = ExAllocatePoolWithTag(PagedPool, hl->name.MaximumLength, ALLOC_TAG);
-        if (!hl->name.Buffer) {
-            ERR("out of memory\n");
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            ExFreePool(hl->utf8.Buffer);
-            ExFreePool(hl);
-            goto end;
-        }
-        
-        RtlCopyMemory(hl->name.Buffer, me->fileref->filepart.Buffer, me->fileref->filepart.Length);
-        
-        InsertTailList(&me->fileref->fcb->hardlinks, &hl->list_entry);
         
         mark_fileref_dirty(me->fileref);
         
@@ -1317,32 +1376,109 @@ static NTSTATUS move_across_subvols(file_ref* fileref, file_ref* destdir, PANSI_
     
 end:
     while (!IsListEmpty(&move_list)) {
-        device_extension* Vcb;
-        
         le = RemoveHeadList(&move_list);
         me = CONTAINING_RECORD(le, move_entry, list_entry);
-        Vcb = me->fileref->fcb->Vcb;
         
-        if (me->dummyfcb) {
-            ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+        if (me->dummyfcb)
             free_fcb(me->dummyfcb);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
-        }
         
-        if (me->dummyfileref) {
-            ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+        if (me->dummyfileref)
             free_fileref(me->dummyfileref);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
-        }
         
-        ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
         free_fileref(me->fileref);
-        ExReleaseResourceLite(&Vcb->fcb_lock);
         
         ExFreePool(me);
     }
     
     return Status;
+}
+
+void insert_dir_child_into_hash_lists(fcb* fcb, dir_child* dc) {
+    BOOL inserted;
+    LIST_ENTRY* le;
+    UINT8 c, d;
+    
+    c = dc->hash >> 24;
+    
+    inserted = FALSE;
+    
+    d = c;
+    do {
+        le = fcb->hash_ptrs[d];
+        
+        if (d == 0)
+            break;
+        
+        d--;
+    } while (!le);
+    
+    if (!le)
+        le = fcb->dir_children_hash.Flink;
+    
+    while (le != &fcb->dir_children_hash) {
+        dir_child* dc2 = CONTAINING_RECORD(le, dir_child, list_entry_hash);
+        
+        if (dc2->hash > dc->hash) {
+            InsertHeadList(le->Blink, &dc->list_entry_hash);
+            inserted = TRUE;
+            break;
+        }
+        
+        le = le->Flink;
+    }
+    
+    if (!inserted)
+        InsertTailList(&fcb->dir_children_hash, &dc->list_entry_hash);
+    
+    if (!fcb->hash_ptrs[c])
+        fcb->hash_ptrs[c] = &dc->list_entry_hash;
+    else {
+        dir_child* dc2 = CONTAINING_RECORD(fcb->hash_ptrs[c], dir_child, list_entry_hash);
+        
+        if (dc2->hash > dc->hash)
+            fcb->hash_ptrs[c] = &dc->list_entry_hash;
+    }
+    
+    c = dc->hash_uc >> 24;
+    
+    inserted = FALSE;
+    
+    d = c;
+    do {
+        le = fcb->hash_ptrs_uc[d];
+        
+        if (d == 0)
+            break;
+        
+        d--;
+    } while (!le);
+    
+    if (!le)
+        le = fcb->dir_children_hash_uc.Flink;
+    
+    while (le != &fcb->dir_children_hash_uc) {
+        dir_child* dc2 = CONTAINING_RECORD(le, dir_child, list_entry_hash_uc);
+        
+        if (dc2->hash_uc > dc->hash_uc) {
+            InsertHeadList(le->Blink, &dc->list_entry_hash_uc);
+            inserted = TRUE;
+            break;
+        }
+        
+        le = le->Flink;
+    }
+    
+    if (!inserted)
+        InsertTailList(&fcb->dir_children_hash_uc, &dc->list_entry_hash_uc);
+    
+    if (!fcb->hash_ptrs_uc[c])
+        fcb->hash_ptrs_uc[c] = &dc->list_entry_hash_uc;
+    else {
+        dir_child* dc2 = CONTAINING_RECORD(fcb->hash_ptrs_uc[c], dir_child, list_entry_hash_uc);
+        
+        if (dc2->hash_uc > dc->hash_uc)
+            fcb->hash_ptrs_uc[c] = &dc->list_entry_hash_uc;
+    }
 }
 
 static NTSTATUS STDCALL set_rename_information(device_extension* Vcb, PIRP Irp, PFILE_OBJECT FileObject, PFILE_OBJECT tfo) {
@@ -1396,6 +1532,7 @@ static NTSTATUS STDCALL set_rename_information(device_extension* Vcb, PIRP Irp, 
     }
     
     ExAcquireResourceSharedLite(&Vcb->tree_lock, TRUE);
+    ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
     ExAcquireResourceExclusiveLite(fcb->Header.Resource, TRUE);
     
     if (fcb->ads) {
@@ -1435,9 +1572,7 @@ static NTSTATUS STDCALL set_rename_information(device_extension* Vcb, PIRP Irp, 
         increase_fileref_refcount(related);
     }
 
-    ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
     Status = open_fileref(Vcb, &oldfileref, &fnus, related, FALSE, NULL, NULL, PagedPool, ccb->case_sensitive,  Irp);
-    ExReleaseResourceLite(&Vcb->fcb_lock);
 
     if (NT_SUCCESS(Status)) {
         TRACE("destination file %S already exists\n", file_desc_fileref(oldfileref));
@@ -1460,17 +1595,13 @@ static NTSTATUS STDCALL set_rename_information(device_extension* Vcb, PIRP Irp, 
         }
         
         if (fileref == oldfileref || oldfileref->deleted) {
-            ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
             free_fileref(oldfileref);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
             oldfileref = NULL;
         }
     }
     
     if (!related) {
-        ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
         Status = open_fileref(Vcb, &related, &fnus, NULL, TRUE, NULL, NULL, PagedPool, ccb->case_sensitive, Irp);
-        ExReleaseResourceLite(&Vcb->fcb_lock);
 
         if (!NT_SUCCESS(Status)) {
             ERR("open_fileref returned %08x\n", Status);
@@ -1567,6 +1698,56 @@ static NTSTATUS STDCALL set_rename_information(device_extension* Vcb, PIRP Irp, 
         
         mark_fileref_dirty(fileref);
         
+        if (fileref->dc) {
+            ExAcquireResourceExclusiveLite(&fileref->parent->fcb->nonpaged->dir_children_lock, TRUE);
+            
+            ExFreePool(fileref->dc->utf8.Buffer);
+            ExFreePool(fileref->dc->name.Buffer);
+            ExFreePool(fileref->dc->name_uc.Buffer);
+            
+            fileref->dc->utf8.Buffer = ExAllocatePoolWithTag(PagedPool, utf8.Length, ALLOC_TAG);
+            if (!fileref->dc->utf8.Buffer) {
+                ERR("out of memory\n");
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                ExReleaseResourceLite(&fileref->parent->fcb->nonpaged->dir_children_lock);
+                goto end;
+            }
+            
+            fileref->dc->name.Buffer = ExAllocatePoolWithTag(PagedPool, fileref->filepart.Length, ALLOC_TAG);
+            if (!fileref->dc->name.Buffer) {
+                ERR("out of memory\n");
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                ExReleaseResourceLite(&fileref->parent->fcb->nonpaged->dir_children_lock);
+                goto end;
+            }
+            
+            fileref->dc->name_uc.Buffer = ExAllocatePoolWithTag(PagedPool, fileref->filepart_uc.Length, ALLOC_TAG);
+            if (!fileref->dc->name_uc.Buffer) {
+                ERR("out of memory\n");
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                ExReleaseResourceLite(&fileref->parent->fcb->nonpaged->dir_children_lock);
+                goto end;
+            }
+            
+            fileref->dc->utf8.Length = fileref->dc->utf8.MaximumLength = utf8.Length;
+            RtlCopyMemory(fileref->dc->utf8.Buffer, utf8.Buffer, utf8.Length);
+            
+            fileref->dc->name.Length = fileref->dc->name.MaximumLength = fileref->filepart.Length;
+            RtlCopyMemory(fileref->dc->name.Buffer, fileref->filepart.Buffer, fileref->filepart.Length);
+            
+            fileref->dc->name_uc.Length = fileref->dc->name_uc.MaximumLength = fileref->filepart_uc.Length;
+            RtlCopyMemory(fileref->dc->name_uc.Buffer, fileref->filepart_uc.Buffer, fileref->filepart_uc.Length);
+            
+            remove_dir_child_from_hash_lists(fileref->parent->fcb, fileref->dc);
+            
+            fileref->dc->hash = calc_crc32c(0xffffffff, (UINT8*)fileref->dc->name.Buffer, fileref->dc->name.Length);
+            fileref->dc->hash_uc = calc_crc32c(0xffffffff, (UINT8*)fileref->dc->name_uc.Buffer, fileref->dc->name_uc.Length);
+            
+            insert_dir_child_into_hash_lists(fileref->parent->fcb, fileref->dc);
+            
+            ExReleaseResourceLite(&fileref->parent->fcb->nonpaged->dir_children_lock);
+        }
+        
         KeQuerySystemTime(&time);
         win_time_to_unix(time, &now);
         
@@ -1622,6 +1803,7 @@ static NTSTATUS STDCALL set_rename_information(device_extension* Vcb, PIRP Irp, 
     fr2->deleted = TRUE;
     fr2->created = fileref->created;
     fr2->parent = fileref->parent;
+    fr2->dc = NULL;
     
     if (fr2->fcb->type == BTRFS_TYPE_DIRECTORY)
         fr2->fcb->fileref = fr2;
@@ -1665,45 +1847,102 @@ static NTSTATUS STDCALL set_rename_information(device_extension* Vcb, PIRP Irp, 
     mark_fileref_dirty(fr2);
     mark_fileref_dirty(fileref);
     
-    // add new hardlink entry to fcb
-    
-    hl = ExAllocatePoolWithTag(PagedPool, sizeof(hardlink), ALLOC_TAG);
-    if (!hl) {
-        ERR("out of memory\n");
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto end;
+    if (fileref->dc) {
+        // remove from old parent
+        ExAcquireResourceExclusiveLite(&fr2->parent->fcb->nonpaged->dir_children_lock, TRUE);
+        RemoveEntryList(&fileref->dc->list_entry_index);
+        remove_dir_child_from_hash_lists(fr2->parent->fcb, fileref->dc);
+        ExReleaseResourceLite(&fr2->parent->fcb->nonpaged->dir_children_lock);
+        
+        if (fileref->utf8.Length != fr2->utf8.Length || RtlCompareMemory(fileref->utf8.Buffer, fr2->utf8.Buffer, fr2->utf8.Length) != fr2->utf8.Length) {
+            // handle changed name
+            
+            ExFreePool(fileref->dc->utf8.Buffer);
+            ExFreePool(fileref->dc->name.Buffer);
+            ExFreePool(fileref->dc->name_uc.Buffer);
+            
+            fileref->dc->utf8.Buffer = ExAllocatePoolWithTag(PagedPool, utf8.Length, ALLOC_TAG);
+            if (!fileref->dc->utf8.Buffer) {
+                ERR("out of memory\n");
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto end;
+            }
+            
+            fileref->dc->name.Buffer = ExAllocatePoolWithTag(PagedPool, fileref->filepart.Length, ALLOC_TAG);
+            if (!fileref->dc->name.Buffer) {
+                ERR("out of memory\n");
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto end;
+            }
+            
+            fileref->dc->name_uc.Buffer = ExAllocatePoolWithTag(PagedPool, fileref->filepart_uc.Length, ALLOC_TAG);
+            if (!fileref->dc->name_uc.Buffer) {
+                ERR("out of memory\n");
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto end;
+            }
+            
+            fileref->dc->utf8.Length = fileref->dc->utf8.MaximumLength = utf8.Length;
+            RtlCopyMemory(fileref->dc->utf8.Buffer, utf8.Buffer, utf8.Length);
+            
+            fileref->dc->name.Length = fileref->dc->name.MaximumLength = fileref->filepart.Length;
+            RtlCopyMemory(fileref->dc->name.Buffer, fileref->filepart.Buffer, fileref->filepart.Length);
+            
+            fileref->dc->name_uc.Length = fileref->dc->name_uc.MaximumLength = fileref->filepart_uc.Length;
+            RtlCopyMemory(fileref->dc->name_uc.Buffer, fileref->filepart_uc.Buffer, fileref->filepart_uc.Length);
+            
+            fileref->dc->hash = calc_crc32c(0xffffffff, (UINT8*)fileref->dc->name.Buffer, fileref->dc->name.Length);
+            fileref->dc->hash_uc = calc_crc32c(0xffffffff, (UINT8*)fileref->dc->name_uc.Buffer, fileref->dc->name_uc.Length);
+        }
+        
+        // add to new parent
+        ExAcquireResourceExclusiveLite(&related->fcb->nonpaged->dir_children_lock, TRUE);
+        InsertTailList(&related->fcb->dir_children_index, &fileref->dc->list_entry_index);
+        insert_dir_child_into_hash_lists(related->fcb, fileref->dc);
+        ExReleaseResourceLite(&related->fcb->nonpaged->dir_children_lock);
     }
     
-    hl->parent = related->fcb->inode;
-    hl->index = index;
-    
-    hl->name.Length = hl->name.MaximumLength = fileref->filepart.Length;
-    hl->name.Buffer = ExAllocatePoolWithTag(PagedPool, hl->name.MaximumLength, ALLOC_TAG);
-    
-    if (!hl->name.Buffer) {
-        ERR("out of memory\n");
-        ExFreePool(hl);
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto end;
+    if (fcb->inode_item.st_nlink > 1) {
+        // add new hardlink entry to fcb
+        
+        hl = ExAllocatePoolWithTag(PagedPool, sizeof(hardlink), ALLOC_TAG);
+        if (!hl) {
+            ERR("out of memory\n");
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto end;
+        }
+        
+        hl->parent = related->fcb->inode;
+        hl->index = index;
+        
+        hl->name.Length = hl->name.MaximumLength = fileref->filepart.Length;
+        hl->name.Buffer = ExAllocatePoolWithTag(PagedPool, hl->name.MaximumLength, ALLOC_TAG);
+        
+        if (!hl->name.Buffer) {
+            ERR("out of memory\n");
+            ExFreePool(hl);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto end;
+        }
+        
+        RtlCopyMemory(hl->name.Buffer, fileref->filepart.Buffer, fileref->filepart.Length);
+        
+        hl->utf8.Length = hl->utf8.MaximumLength = fileref->utf8.Length;
+        hl->utf8.Buffer = ExAllocatePoolWithTag(PagedPool, hl->utf8.MaximumLength, ALLOC_TAG);
+        
+        if (!hl->utf8.Buffer) {
+            ERR("out of memory\n");
+            ExFreePool(hl->name.Buffer);
+            ExFreePool(hl);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto end;
+        }
+        
+        RtlCopyMemory(hl->utf8.Buffer, fileref->utf8.Buffer, fileref->utf8.Length);
+        
+        InsertTailList(&fcb->hardlinks, &hl->list_entry);
     }
-    
-    RtlCopyMemory(hl->name.Buffer, fileref->filepart.Buffer, fileref->filepart.Length);
-    
-    hl->utf8.Length = hl->utf8.MaximumLength = fileref->utf8.Length;
-    hl->utf8.Buffer = ExAllocatePoolWithTag(PagedPool, hl->utf8.MaximumLength, ALLOC_TAG);
-    
-    if (!hl->utf8.Buffer) {
-        ERR("out of memory\n");
-        ExFreePool(hl->name.Buffer);
-        ExFreePool(hl);
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto end;
-    }
-    
-    RtlCopyMemory(hl->utf8.Buffer, fileref->utf8.Buffer, fileref->utf8.Length);
-    
-    InsertTailList(&fcb->hardlinks, &hl->list_entry);
-    
+        
     // delete old hardlink entry from fcb
     
     le = fcb->hardlinks.Flink;
@@ -1763,9 +2002,7 @@ static NTSTATUS STDCALL set_rename_information(device_extension* Vcb, PIRP Irp, 
     fr2->parent->fcb->inode_item.st_ctime = now;
     fr2->parent->fcb->inode_item.st_mtime = now;
     
-    ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
     free_fileref(fr2);
-    ExReleaseResourceLite(&Vcb->fcb_lock);
     
     fr2->parent->fcb->inode_item_changed = TRUE;
     mark_fcb_dirty(fr2->parent->fcb);
@@ -1776,25 +2013,16 @@ static NTSTATUS STDCALL set_rename_information(device_extension* Vcb, PIRP Irp, 
     send_notification_fileref(fr2->parent, FILE_NOTIFY_CHANGE_LAST_WRITE, FILE_ACTION_MODIFIED);
 
     Status = STATUS_SUCCESS;
-    
+
 end:
-    if (oldfileref) {
-        ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+    if (oldfileref)
         free_fileref(oldfileref);
-        ExReleaseResourceLite(&Vcb->fcb_lock);
-    }
     
-    if (!NT_SUCCESS(Status) && related) {
-        ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+    if (!NT_SUCCESS(Status) && related)
         free_fileref(related);
-        ExReleaseResourceLite(&Vcb->fcb_lock);
-    }
     
-    if (!NT_SUCCESS(Status) && fr2) {
-        ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+    if (!NT_SUCCESS(Status) && fr2)
         free_fileref(fr2);
-        ExReleaseResourceLite(&Vcb->fcb_lock);
-    }
     
     if (NT_SUCCESS(Status))
         clear_rollback(Vcb, &rollback);
@@ -1802,6 +2030,7 @@ end:
         do_rollback(Vcb, &rollback);
 
     ExReleaseResourceLite(fcb->Header.Resource);
+    ExReleaseResourceLite(&Vcb->fcb_lock);
     ExReleaseResourceLite(&Vcb->tree_lock);
     
     return Status;
@@ -1895,6 +2124,7 @@ static NTSTATUS STDCALL set_end_of_file_information(device_extension* Vcb, PIRP 
     LARGE_INTEGER time;
     CC_FILE_SIZES ccfs;
     LIST_ENTRY rollback;
+    BOOL set_size = FALSE;
     
     if (!fileref) {
         ERR("fileref is NULL\n");
@@ -1936,6 +2166,11 @@ static NTSTATUS STDCALL set_end_of_file_information(device_extension* Vcb, PIRP 
         
         TRACE("truncating file to %llx bytes\n", feofi->EndOfFile.QuadPart);
         
+        if (!MmCanFileBeTruncated(&fcb->nonpaged->segment_object, &feofi->EndOfFile)) {
+            Status = STATUS_USER_MAPPED_FILE;
+            goto end;
+        }
+        
         Status = truncate_file(fcb, feofi->EndOfFile.QuadPart, Irp, &rollback);
         if (!NT_SUCCESS(Status)) {
             ERR("error - truncate_file failed\n");
@@ -1960,9 +2195,7 @@ static NTSTATUS STDCALL set_end_of_file_information(device_extension* Vcb, PIRP 
     ccfs.AllocationSize = fcb->Header.AllocationSize;
     ccfs.FileSize = fcb->Header.FileSize;
     ccfs.ValidDataLength = fcb->Header.ValidDataLength;
-
-    CcSetFileSizes(FileObject, &ccfs);
-    TRACE("setting FileSize for %S to %llx\n", file_desc(FileObject), ccfs.FileSize);
+    set_size = TRUE;
     
     if (!ccb->user_set_write_time) {
         KeQuerySystemTime(&time);
@@ -1982,6 +2215,9 @@ end:
         do_rollback(Vcb, &rollback);
 
     ExReleaseResourceLite(fcb->Header.Resource);
+    
+    if (set_size)
+        CcSetFileSizes(FileObject, &ccfs);
     
     ExReleaseResourceLite(&Vcb->tree_lock);
     
@@ -2028,6 +2264,7 @@ static NTSTATUS STDCALL set_link_information(device_extension* Vcb, PIRP Irp, PF
     hardlink* hl;
     ACCESS_MASK access;
     SECURITY_SUBJECT_CONTEXT subjcont;
+    dir_child* dc = NULL;
     
     InitializeListHead(&rollback);
     
@@ -2072,6 +2309,7 @@ static NTSTATUS STDCALL set_link_information(device_extension* Vcb, PIRP Irp, PF
     }
     
     ExAcquireResourceSharedLite(&Vcb->tree_lock, TRUE);
+    ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
     ExAcquireResourceExclusiveLite(fcb->Header.Resource, TRUE);
     
     if (fcb->type == BTRFS_TYPE_DIRECTORY) {
@@ -2114,9 +2352,7 @@ static NTSTATUS STDCALL set_link_information(device_extension* Vcb, PIRP Irp, PF
         increase_fileref_refcount(related);
     }
 
-    ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
     Status = open_fileref(Vcb, &oldfileref, &fnus, related, FALSE, NULL, NULL, PagedPool, ccb->case_sensitive, Irp);
-    ExReleaseResourceLite(&Vcb->fcb_lock);
 
     if (NT_SUCCESS(Status)) {
         if (!oldfileref->deleted) {
@@ -2140,17 +2376,13 @@ static NTSTATUS STDCALL set_link_information(device_extension* Vcb, PIRP Irp, PF
                 goto end;
             }
         } else {
-            ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
             free_fileref(oldfileref);
-            ExReleaseResourceLite(&Vcb->fcb_lock);
             oldfileref = NULL;
         }
     }
     
     if (!related) {
-        ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
         Status = open_fileref(Vcb, &related, &fnus, NULL, TRUE, NULL, NULL, PagedPool, ccb->case_sensitive, Irp);
-        ExReleaseResourceLite(&Vcb->fcb_lock);
 
         if (!NT_SUCCESS(Status)) {
             ERR("open_fileref returned %08x\n", Status);
@@ -2228,6 +2460,53 @@ static NTSTATUS STDCALL set_link_information(device_extension* Vcb, PIRP Irp, PF
       
     insert_fileref_child(related, fr2, TRUE);
     
+    Status = add_dir_child(related->fcb, fcb->inode, FALSE, index, &utf8, &fr2->filepart, &fr2->filepart_uc, fcb->type, &dc);
+    if (!NT_SUCCESS(Status))
+        WARN("add_dir_child returned %08x\n", Status);
+    
+    fr2->dc = dc;
+    dc->fileref = fr2;
+
+    // add hardlink for existing fileref, if it's not there already
+    if (IsListEmpty(&fcb->hardlinks)) {
+        hl = ExAllocatePoolWithTag(PagedPool, sizeof(hardlink), ALLOC_TAG);
+        if (!hl) {
+            ERR("out of memory\n");
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto end;
+        }
+        
+        hl->parent = fileref->parent->fcb->inode;
+        hl->index = fileref->index;
+        
+        hl->name.Length = hl->name.MaximumLength = fileref->filepart.Length;
+        hl->name.Buffer = ExAllocatePoolWithTag(PagedPool, hl->name.MaximumLength, ALLOC_TAG);
+        
+        if (!hl->name.Buffer) {
+            ERR("out of memory\n");
+            ExFreePool(hl);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto end;
+        }
+        
+        RtlCopyMemory(hl->name.Buffer, fileref->filepart.Buffer, fileref->filepart.Length);
+        
+        hl->utf8.Length = hl->utf8.MaximumLength = fileref->utf8.Length;
+        hl->utf8.Buffer = ExAllocatePoolWithTag(PagedPool, hl->utf8.MaximumLength, ALLOC_TAG);
+        
+        if (!hl->utf8.Buffer) {
+            ERR("out of memory\n");
+            ExFreePool(hl->name.Buffer);
+            ExFreePool(hl);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto end;
+        }
+        
+        RtlCopyMemory(hl->utf8.Buffer, fileref->utf8.Buffer, fileref->utf8.Length);
+        
+        InsertTailList(&fcb->hardlinks, &hl->list_entry);
+    }
+    
     hl = ExAllocatePoolWithTag(PagedPool, sizeof(hardlink), ALLOC_TAG);
     if (!hl) {
         ERR("out of memory\n");
@@ -2300,23 +2579,14 @@ static NTSTATUS STDCALL set_link_information(device_extension* Vcb, PIRP Irp, PF
     Status = STATUS_SUCCESS;
     
 end:
-    if (oldfileref) {
-        ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+    if (oldfileref)
         free_fileref(oldfileref);
-        ExReleaseResourceLite(&Vcb->fcb_lock);
-    }
     
-    if (!NT_SUCCESS(Status) && related) {
-        ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+    if (!NT_SUCCESS(Status) && related)
         free_fileref(related);
-        ExReleaseResourceLite(&Vcb->fcb_lock);
-    }
     
-    if (!NT_SUCCESS(Status) && fr2) {
-        ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+    if (!NT_SUCCESS(Status) && fr2)
         free_fileref(fr2);
-        ExReleaseResourceLite(&Vcb->fcb_lock);
-    }
     
     if (NT_SUCCESS(Status))
         clear_rollback(Vcb, &rollback);
@@ -2324,6 +2594,7 @@ end:
         do_rollback(Vcb, &rollback);
 
     ExReleaseResourceLite(fcb->Header.Resource);
+    ExReleaseResourceLite(&Vcb->fcb_lock);
     ExReleaseResourceLite(&Vcb->tree_lock);
     
     return Status;
@@ -2368,7 +2639,8 @@ NTSTATUS STDCALL drv_set_information(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp
         goto end;
     }
     
-    if (fcb->subvol->root_item.flags & BTRFS_SUBVOL_READONLY && IrpSp->Parameters.SetFile.FileInformationClass != FilePositionInformation) {
+    if (fcb->subvol->root_item.flags & BTRFS_SUBVOL_READONLY && IrpSp->Parameters.SetFile.FileInformationClass != FilePositionInformation &&
+        (fcb->inode != SUBVOL_ROOT_INODE || IrpSp->Parameters.SetFile.FileInformationClass != FileBasicInformation)) {
         Status = STATUS_ACCESS_DENIED;
         goto end;
     }
@@ -2656,7 +2928,7 @@ static NTSTATUS STDCALL fill_in_file_alignment_information(FILE_ALIGNMENT_INFORM
     
     *length -= sizeof(FILE_ALIGNMENT_INFORMATION);
     
-    fai->AlignmentRequirement = Vcb->devices[0].devobj->AlignmentRequirement;
+    fai->AlignmentRequirement = first_device(Vcb)->devobj->AlignmentRequirement;
     
     return STATUS_SUCCESS;
 }
@@ -2683,6 +2955,10 @@ NTSTATUS fileref_get_filename(file_ref* fileref, PUNICODE_STRING fn, USHORT* nam
         
         fn->Length = fn->MaximumLength = sizeof(WCHAR);
         fn->Buffer[0] = '\\';
+
+        if (name_offset)
+            *name_offset = 0;
+
         return STATUS_SUCCESS;
     }
     
@@ -3423,6 +3699,7 @@ NTSTATUS open_fileref_by_inode(device_extension* Vcb, root* subvol, UINT64 inode
     fcb* fcb;
     hardlink* hl;
     file_ref *parfr, *fr;
+    dir_child* dc = NULL;
     
     Status = open_fcb(Vcb, subvol, inode, 0, NULL, NULL, &fcb, PagedPool, Irp);
     if (!NT_SUCCESS(Status)) {
@@ -3434,6 +3711,140 @@ NTSTATUS open_fileref_by_inode(device_extension* Vcb, root* subvol, UINT64 inode
         *pfr = fcb->fileref;
         increase_fileref_refcount(fcb->fileref);
         return STATUS_SUCCESS;
+    }
+    
+    // find hardlink if fcb doesn't have any loaded
+    if (IsListEmpty(&fcb->hardlinks)) {
+        KEY searchkey;
+        traverse_ptr tp;
+        
+        searchkey.obj_id = fcb->inode;
+        searchkey.obj_type = TYPE_INODE_EXTREF;
+        searchkey.offset = 0xffffffffffffffff;
+        
+        Status = find_item(Vcb, fcb->subvol, &tp, &searchkey, FALSE, Irp);
+        if (!NT_SUCCESS(Status)) {
+            ERR("find_item returned %08x\n", Status);
+            free_fcb(fcb);
+            return Status;
+        }
+        
+        if (tp.item->key.obj_id == fcb->inode) {
+            if (tp.item->key.obj_type == TYPE_INODE_REF) {
+                INODE_REF* ir;
+                ULONG stringlen;
+
+                ir = (INODE_REF*)tp.item->data;
+
+                hl = ExAllocatePoolWithTag(PagedPool, sizeof(hardlink), ALLOC_TAG);
+                if (!hl) {
+                    ERR("out of memory\n");
+                    free_fcb(fcb);
+                    return STATUS_INSUFFICIENT_RESOURCES;
+                }
+                
+                hl->parent = tp.item->key.offset;
+                hl->index = ir->index;
+                
+                hl->utf8.Length = hl->utf8.MaximumLength = ir->n;
+                
+                if (hl->utf8.Length > 0) {
+                    hl->utf8.Buffer = ExAllocatePoolWithTag(PagedPool, hl->utf8.MaximumLength, ALLOC_TAG);
+                    RtlCopyMemory(hl->utf8.Buffer, ir->name, ir->n);
+                }
+                
+                Status = RtlUTF8ToUnicodeN(NULL, 0, &stringlen, ir->name, ir->n);
+                if (!NT_SUCCESS(Status)) {
+                    ERR("RtlUTF8ToUnicodeN 1 returned %08x\n", Status);
+                    ExFreePool(hl);
+                    free_fcb(fcb);
+                    return Status;
+                }
+                
+                hl->name.Length = hl->name.MaximumLength = stringlen;
+                
+                if (stringlen == 0)
+                    hl->name.Buffer = NULL;
+                else {
+                    hl->name.Buffer = ExAllocatePoolWithTag(PagedPool, hl->name.MaximumLength, ALLOC_TAG);
+                    
+                    if (!hl->name.Buffer) {
+                        ERR("out of memory\n");
+                        ExFreePool(hl);
+                        free_fcb(fcb);
+                        return STATUS_INSUFFICIENT_RESOURCES;
+                    }
+                    
+                    Status = RtlUTF8ToUnicodeN(hl->name.Buffer, stringlen, &stringlen, ir->name, ir->n);
+                    if (!NT_SUCCESS(Status)) {
+                        ERR("RtlUTF8ToUnicodeN 2 returned %08x\n", Status);
+                        ExFreePool(hl->name.Buffer);
+                        ExFreePool(hl);
+                        free_fcb(fcb);
+                        return Status;
+                    }
+                }
+                    
+                InsertTailList(&fcb->hardlinks, &hl->list_entry);
+            } else if (tp.item->key.obj_type == TYPE_INODE_EXTREF) {
+                INODE_EXTREF* ier;
+                hardlink* hl;
+                ULONG stringlen;
+
+                ier = (INODE_EXTREF*)tp.item->data;
+                
+                hl = ExAllocatePoolWithTag(PagedPool, sizeof(hardlink), ALLOC_TAG);
+                if (!hl) {
+                    ERR("out of memory\n");
+                    free_fcb(fcb);
+                    return STATUS_INSUFFICIENT_RESOURCES;
+                }
+                
+                hl->parent = ier->dir;
+                hl->index = ier->index;
+                
+                hl->utf8.Length = hl->utf8.MaximumLength = ier->n;
+                
+                if (hl->utf8.Length > 0) {
+                    hl->utf8.Buffer = ExAllocatePoolWithTag(PagedPool, hl->utf8.MaximumLength, ALLOC_TAG);
+                    RtlCopyMemory(hl->utf8.Buffer, ier->name, ier->n);
+                }
+                
+                Status = RtlUTF8ToUnicodeN(NULL, 0, &stringlen, ier->name, ier->n);
+                if (!NT_SUCCESS(Status)) {
+                    ERR("RtlUTF8ToUnicodeN 1 returned %08x\n", Status);
+                    ExFreePool(hl);
+                    free_fcb(fcb);
+                    return Status;
+                }
+                
+                hl->name.Length = hl->name.MaximumLength = stringlen;
+                
+                if (stringlen == 0)
+                    hl->name.Buffer = NULL;
+                else {
+                    hl->name.Buffer = ExAllocatePoolWithTag(PagedPool, hl->name.MaximumLength, ALLOC_TAG);
+                    
+                    if (!hl->name.Buffer) {
+                        ERR("out of memory\n");
+                        ExFreePool(hl);
+                        free_fcb(fcb);
+                        return STATUS_INSUFFICIENT_RESOURCES;
+                    }
+                    
+                    Status = RtlUTF8ToUnicodeN(hl->name.Buffer, stringlen, &stringlen, ier->name, ier->n);
+                    if (!NT_SUCCESS(Status)) {
+                        ERR("RtlUTF8ToUnicodeN 2 returned %08x\n", Status);
+                        ExFreePool(hl->name.Buffer);
+                        ExFreePool(hl);
+                        free_fcb(fcb);
+                        return Status;
+                    }
+                }
+                
+                InsertTailList(&fcb->hardlinks, &hl->list_entry);
+            }
+        }
     }
     
     if (IsListEmpty(&fcb->hardlinks)) {
@@ -3504,6 +3915,14 @@ NTSTATUS open_fileref_by_inode(device_extension* Vcb, root* subvol, UINT64 inode
     
     fr->parent = parfr;
     
+    Status = add_dir_child(parfr->fcb, fr->fcb->inode == SUBVOL_ROOT_INODE ? fr->fcb->subvol->id : fr->fcb->inode, fr->fcb->inode == SUBVOL_ROOT_INODE,
+                           fr->index, &fr->utf8, &fr->filepart, &fr->filepart_uc, fr->fcb->type, &dc);
+    if (!NT_SUCCESS(Status))
+        WARN("add_dir_child returned %08x\n", Status);
+    
+    fr->dc = dc;
+    dc->fileref = fr;
+    
     insert_fileref_child(parfr, fr, TRUE);
 
     *pfr = fr;
@@ -3569,75 +3988,95 @@ static NTSTATUS STDCALL fill_in_hard_link_information(FILE_LINKS_INFORMATION* fl
     } else {
         ExAcquireResourceExclusiveLite(&fcb->Vcb->fcb_lock, TRUE);
     
-        le = fcb->hardlinks.Flink;
-        while (le != &fcb->hardlinks) {
-            hardlink* hl = CONTAINING_RECORD(le, hardlink, list_entry);
-            file_ref* parfr;
+        if (IsListEmpty(&fcb->hardlinks)) {
+            bytes_needed += sizeof(FILE_LINK_ENTRY_INFORMATION) + fileref->filepart.Length - sizeof(WCHAR);
             
-            TRACE("parent %llx, index %llx, name %.*S\n", hl->parent, hl->index, hl->name.Length / sizeof(WCHAR), hl->name.Buffer);
+            if (bytes_needed > *length)
+                overflow = TRUE;
             
-            Status = open_fileref_by_inode(fcb->Vcb, fcb->subvol, hl->parent, &parfr, Irp);
-            
-            if (!NT_SUCCESS(Status)) {
-                ERR("open_fileref_by_inode returned %08x\n", Status);
-            } else if (!parfr->deleted) {
-                LIST_ENTRY* le2;
-                BOOL found = FALSE, deleted = FALSE;
-                UNICODE_STRING* fn;
+            if (!overflow) {
+                feli = &fli->Entry;
+
+                feli->NextEntryOffset = 0;
+                feli->ParentFileId = fileref->parent->fcb->inode;
+                feli->FileNameLength = fileref->filepart.Length / sizeof(WCHAR);
+                RtlCopyMemory(feli->FileName, fileref->filepart.Buffer, fileref->filepart.Length);
                 
-                le2 = parfr->children.Flink;
-                while (le2 != &parfr->children) {
-                    file_ref* fr2 = CONTAINING_RECORD(le2, file_ref, list_entry);
-                    
-                    if (fr2->index == hl->index) {
-                        found = TRUE;
-                        deleted = fr2->deleted;
-                        
-                        if (!deleted)
-                            fn = &fr2->filepart;
-                        
-                        break;
-                    }
-                    
-                    le2 = le2->Flink;
-                }
+                fli->EntriesReturned++;
                 
-                if (!found)
-                    fn = &hl->name;
-                
-                if (!deleted) {
-                    TRACE("fn = %.*S (found = %u)\n", fn->Length / sizeof(WCHAR), fn->Buffer, found);
-                    
-                    if (feli)
-                        bytes_needed = sector_align(bytes_needed, 8);
-                    
-                    bytes_needed += sizeof(FILE_LINK_ENTRY_INFORMATION) + fn->Length - sizeof(WCHAR);
-                    
-                    if (bytes_needed > *length)
-                        overflow = TRUE;
-                    
-                    if (!overflow) {
-                        if (feli) {
-                            feli->NextEntryOffset = sector_align(sizeof(FILE_LINK_ENTRY_INFORMATION) + ((feli->FileNameLength - 1) * sizeof(WCHAR)), 8);
-                            feli = (FILE_LINK_ENTRY_INFORMATION*)((UINT8*)feli + feli->NextEntryOffset);
-                        } else
-                            feli = &fli->Entry;
-                        
-                        feli->NextEntryOffset = 0;
-                        feli->ParentFileId = parfr->fcb->inode;
-                        feli->FileNameLength = fn->Length / sizeof(WCHAR);
-                        RtlCopyMemory(feli->FileName, fn->Buffer, fn->Length);
-                        
-                        fli->EntriesReturned++;
-                        
-                        len = bytes_needed;
-                    }
-                }
-                
-                free_fileref(parfr);
+                len = bytes_needed;
             }
-            
-            le = le->Flink;
+        } else {
+            le = fcb->hardlinks.Flink;
+            while (le != &fcb->hardlinks) {
+                hardlink* hl = CONTAINING_RECORD(le, hardlink, list_entry);
+                file_ref* parfr;
+                
+                TRACE("parent %llx, index %llx, name %.*S\n", hl->parent, hl->index, hl->name.Length / sizeof(WCHAR), hl->name.Buffer);
+                
+                Status = open_fileref_by_inode(fcb->Vcb, fcb->subvol, hl->parent, &parfr, Irp);
+                
+                if (!NT_SUCCESS(Status)) {
+                    ERR("open_fileref_by_inode returned %08x\n", Status);
+                } else if (!parfr->deleted) {
+                    LIST_ENTRY* le2;
+                    BOOL found = FALSE, deleted = FALSE;
+                    UNICODE_STRING* fn;
+                    
+                    le2 = parfr->children.Flink;
+                    while (le2 != &parfr->children) {
+                        file_ref* fr2 = CONTAINING_RECORD(le2, file_ref, list_entry);
+                        
+                        if (fr2->index == hl->index) {
+                            found = TRUE;
+                            deleted = fr2->deleted;
+                            
+                            if (!deleted)
+                                fn = &fr2->filepart;
+                            
+                            break;
+                        }
+                        
+                        le2 = le2->Flink;
+                    }
+                    
+                    if (!found)
+                        fn = &hl->name;
+                    
+                    if (!deleted) {
+                        TRACE("fn = %.*S (found = %u)\n", fn->Length / sizeof(WCHAR), fn->Buffer, found);
+                        
+                        if (feli)
+                            bytes_needed = sector_align(bytes_needed, 8);
+                        
+                        bytes_needed += sizeof(FILE_LINK_ENTRY_INFORMATION) + fn->Length - sizeof(WCHAR);
+                        
+                        if (bytes_needed > *length)
+                            overflow = TRUE;
+                        
+                        if (!overflow) {
+                            if (feli) {
+                                feli->NextEntryOffset = sector_align(sizeof(FILE_LINK_ENTRY_INFORMATION) + ((feli->FileNameLength - 1) * sizeof(WCHAR)), 8);
+                                feli = (FILE_LINK_ENTRY_INFORMATION*)((UINT8*)feli + feli->NextEntryOffset);
+                            } else
+                                feli = &fli->Entry;
+                            
+                            feli->NextEntryOffset = 0;
+                            feli->ParentFileId = parfr->fcb->inode;
+                            feli->FileNameLength = fn->Length / sizeof(WCHAR);
+                            RtlCopyMemory(feli->FileName, fn->Buffer, fn->Length);
+                            
+                            fli->EntriesReturned++;
+                            
+                            len = bytes_needed;
+                        }
+                    }
+                    
+                    free_fileref(parfr);
+                }
+                
+                le = le->Flink;
+            }
         }
         
         ExReleaseResourceLite(&fcb->Vcb->fcb_lock);
@@ -4039,9 +4478,6 @@ NTSTATUS STDCALL drv_query_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     ccb* ccb;
     FILE_FULL_EA_INFORMATION* ffei;
     ULONG retlen = 0;
-#ifdef __REACTOS__
-    Status = STATUS_INTERNAL_ERROR;
-#endif
     
     TRACE("(%p, %p)\n", DeviceObject, Irp);
 
@@ -4090,6 +4526,8 @@ NTSTATUS STDCALL drv_query_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     }
     
     ExAcquireResourceSharedLite(fcb->Header.Resource, TRUE);
+    
+    Status = STATUS_SUCCESS;
     
     if (fcb->ea_xattr.Length == 0)
         goto end2;
@@ -4231,8 +4669,6 @@ NTSTATUS STDCALL drv_query_ea(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
             ea = (FILE_FULL_EA_INFORMATION*)(((UINT8*)ea) + ea->NextEntryOffset);
         } while (TRUE);
     }
-    
-    Status = STATUS_SUCCESS;
     
 end2:
     ExReleaseResourceLite(fcb->Header.Resource);

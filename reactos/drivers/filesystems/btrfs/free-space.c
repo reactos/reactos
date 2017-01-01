@@ -88,10 +88,8 @@ NTSTATUS clear_free_space_cache(device_extension* Vcb, LIST_ENTRY* batchlist, PI
                     
                     Status = remove_free_space_inode(Vcb, fsi->key.obj_id, batchlist, Irp, &rollback);
                     
-                    if (!NT_SUCCESS(Status)) {
+                    if (!NT_SUCCESS(Status))
                         ERR("remove_free_space_inode for (%llx,%x,%llx) returned %08x\n", fsi->key.obj_id, fsi->key.obj_type, fsi->key.offset, Status);
-                        goto end;
-                    }
                     
                     le = Vcb->chunks.Flink;
                     while (le != &Vcb->chunks) {
@@ -116,7 +114,6 @@ NTSTATUS clear_free_space_cache(device_extension* Vcb, LIST_ENTRY* batchlist, PI
     
     Status = STATUS_SUCCESS;
     
-end:
     if (NT_SUCCESS(Status))
         clear_rollback(Vcb, &rollback);
     else
@@ -251,30 +248,44 @@ typedef struct {
     LIST_ENTRY list_entry;
 } superblock_stripe;
 
-static void add_superblock_stripe(LIST_ENTRY* stripes, UINT64 off, UINT64 len) {
+static NTSTATUS add_superblock_stripe(LIST_ENTRY* stripes, UINT64 off, UINT64 len) {
     UINT64 i;
     
     for (i = 0; i < len; i++) {
         LIST_ENTRY* le;
         superblock_stripe* ss;
+        BOOL ignore = FALSE;
         
         le = stripes->Flink;
         while (le != stripes) {
             ss = CONTAINING_RECORD(le, superblock_stripe, list_entry);
             
-            if (ss->stripe == off + i)
-                continue;
+            if (ss->stripe == off + i) {
+                ignore = TRUE;
+                break;
+            }
             
             le = le->Flink;
         }
         
+        if (ignore)
+            continue;
+        
         ss = ExAllocatePoolWithTag(PagedPool, sizeof(superblock_stripe), ALLOC_TAG);
+        if (!ss) {
+            ERR("out of memory\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        
         ss->stripe = off + i;
         InsertTailList(stripes, &ss->list_entry);
     }
+    
+    return STATUS_SUCCESS;
 }
 
-static UINT64 get_superblock_size(chunk* c) {
+static NTSTATUS get_superblock_size(chunk* c, UINT64* size) {
+    NTSTATUS Status;
     CHUNK_ITEM* ci = c->chunk_item;
     CHUNK_ITEM_STRIPE* cis = (CHUNK_ITEM_STRIPE*)&ci[1];
     UINT64 off_start, off_end, space;
@@ -296,7 +307,11 @@ static UINT64 get_superblock_size(chunk* c) {
 
                     off_end = off_start + ci->stripe_length;
                     
-                    add_superblock_stripe(&stripes, off_start / ci->stripe_length, 1);
+                    Status = add_superblock_stripe(&stripes, off_start / ci->stripe_length, 1);
+                    if (!NT_SUCCESS(Status)) {
+                        ERR("add_superblock_stripe returned %08x\n", Status);
+                        goto end;
+                    }
                 }
             }
         } else if (ci->type & BLOCK_FLAG_RAID5) {
@@ -310,7 +325,11 @@ static UINT64 get_superblock_size(chunk* c) {
 
                     off_end = off_start + (ci->stripe_length * (ci->num_stripes - 1));
 
-                    add_superblock_stripe(&stripes, off_start / ci->stripe_length, (off_end - off_start) / ci->stripe_length);
+                    Status = add_superblock_stripe(&stripes, off_start / ci->stripe_length, (off_end - off_start) / ci->stripe_length);
+                    if (!NT_SUCCESS(Status)) {
+                        ERR("add_superblock_stripe returned %08x\n", Status);
+                        goto end;
+                    }
                 }
             }
         } else if (ci->type & BLOCK_FLAG_RAID6) {
@@ -324,7 +343,11 @@ static UINT64 get_superblock_size(chunk* c) {
 
                     off_end = off_start + (ci->stripe_length * (ci->num_stripes - 2));
 
-                    add_superblock_stripe(&stripes, off_start / ci->stripe_length, (off_end - off_start) / ci->stripe_length);
+                    Status = add_superblock_stripe(&stripes, off_start / ci->stripe_length, (off_end - off_start) / ci->stripe_length);
+                    if (!NT_SUCCESS(Status)) {
+                        ERR("add_superblock_stripe returned %08x\n", Status);
+                        goto end;
+                    }
                 }
             }
         } else { // SINGLE, DUPLICATE, RAID1
@@ -333,7 +356,11 @@ static UINT64 get_superblock_size(chunk* c) {
                     off_start = ((superblock_addrs[i] - cis[j].offset) / c->chunk_item->stripe_length) * c->chunk_item->stripe_length;
                     off_end = sector_align(superblock_addrs[i] - cis[j].offset + sizeof(superblock), c->chunk_item->stripe_length);
                     
-                    add_superblock_stripe(&stripes, off_start / ci->stripe_length, (off_end - off_start) / ci->stripe_length);
+                    Status = add_superblock_stripe(&stripes, off_start / ci->stripe_length, (off_end - off_start) / ci->stripe_length);
+                    if (!NT_SUCCESS(Status)) {
+                        ERR("add_superblock_stripe returned %08x\n", Status);
+                        goto end;
+                    }
                 }
             }
         }
@@ -343,6 +370,9 @@ static UINT64 get_superblock_size(chunk* c) {
     
     space = 0;
     
+    Status = STATUS_SUCCESS;
+    
+end:
     while (!IsListEmpty(&stripes)) {
         LIST_ENTRY* le = RemoveHeadList(&stripes);
         superblock_stripe* ss = CONTAINING_RECORD(le, superblock_stripe, list_entry);
@@ -352,7 +382,10 @@ static UINT64 get_superblock_size(chunk* c) {
         ExFreePool(ss);
     }
     
-    return space * ci->stripe_length;
+    if (NT_SUCCESS(Status))
+        *size = space * ci->stripe_length;
+    
+    return Status;
 }
 
 static NTSTATUS load_stored_free_space_cache(device_extension* Vcb, chunk* c, PIRP Irp) {
@@ -368,7 +401,6 @@ static NTSTATUS load_stored_free_space_cache(device_extension* Vcb, chunk* c, PI
     LIST_ENTRY *le, rollback;
     
     // FIXME - does this break if Vcb->superblock.sector_size is not 4096?
-    // FIXME - remove INODE_ITEM etc. if cache invalid for whatever reason
     
     TRACE("(%p, %llx)\n", Vcb, c->offset);
     
@@ -432,7 +464,7 @@ static NTSTATUS load_stored_free_space_cache(device_extension* Vcb, chunk* c, PI
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     
-    Status = read_file(c->cache, data, 0, c->cache->inode_item.st_size, NULL, NULL);
+    Status = read_file(c->cache, data, 0, c->cache->inode_item.st_size, NULL, NULL, FALSE);
     if (!NT_SUCCESS(Status)) {
         ERR("read_file returned %08x\n", Status);
         ExFreePool(data);
@@ -529,7 +561,13 @@ static NTSTATUS load_stored_free_space_cache(device_extension* Vcb, chunk* c, PI
     
     // do sanity check
 
-    superblock_size = get_superblock_size(c);
+    Status = get_superblock_size(c, &superblock_size);
+    if (!NT_SUCCESS(Status)) {
+        ERR("get_superblock_size returned %08x\n", Status);
+        ExFreePool(data);
+        return Status;
+    }
+    
     if (c->chunk_item->size - c->used != total_space + superblock_size) {
         WARN("invalidating cache for chunk %llx: space was %llx, expected %llx\n", c->offset, total_space + superblock_size, c->chunk_item->size - c->used);
         goto clearcache;
@@ -568,6 +606,8 @@ clearcache:
     ExFreePool(data);
     
     InitializeListHead(&rollback);
+    
+    delete_tree_item(Vcb, &tp, &rollback);
     
     Status = excise_extents(Vcb, c->cache, 0, c->cache->inode_item.st_size, Irp, &rollback);
     if (!NT_SUCCESS(Status)) {
@@ -696,11 +736,11 @@ static NTSTATUS insert_cache_extent(fcb* fcb, UINT64 start, UINT64 length, LIST_
     while (le != &fcb->Vcb->chunks) {
         c = CONTAINING_RECORD(le, chunk, list_entry);
         
-        if (!c->readonly) {
+        if (!c->readonly && !c->reloc) {
             ExAcquireResourceExclusiveLite(&c->lock, TRUE);
             
             if (c->chunk_item->type == flags && (c->chunk_item->size - c->used) >= length) {
-                if (insert_extent_chunk(fcb->Vcb, fcb, c, start, length, FALSE, NULL, NULL, NULL, rollback, BTRFS_COMPRESSION_NONE, length)) {
+                if (insert_extent_chunk(fcb->Vcb, fcb, c, start, length, FALSE, NULL, NULL, rollback, BTRFS_COMPRESSION_NONE, length)) {
                     ExReleaseResourceLite(&fcb->Vcb->chunk_lock);
                     return STATUS_SUCCESS;
                 }
@@ -722,7 +762,7 @@ static NTSTATUS insert_cache_extent(fcb* fcb, UINT64 start, UINT64 length, LIST_
         ExAcquireResourceExclusiveLite(&c->lock, TRUE);
         
         if (c->chunk_item->type == flags && (c->chunk_item->size - c->used) >= length) {
-            if (insert_extent_chunk(fcb->Vcb, fcb, c, start, length, FALSE, NULL, NULL, NULL, rollback, BTRFS_COMPRESSION_NONE, length))
+            if (insert_extent_chunk(fcb->Vcb, fcb, c, start, length, FALSE, NULL, NULL, rollback, BTRFS_COMPRESSION_NONE, length))
                 return STATUS_SUCCESS;
         }
         
@@ -740,6 +780,7 @@ static NTSTATUS allocate_cache_chunk(device_extension* Vcb, chunk* c, BOOL* chan
     NTSTATUS Status;
     UINT64 num_entries, new_cache_size, i;
     UINT32 num_sectors;
+    BOOL realloc_extents = FALSE;
     
     // FIXME - also do bitmaps
     // FIXME - make sure this works when sector_size is not 4096
@@ -787,6 +828,33 @@ static NTSTATUS allocate_cache_chunk(device_extension* Vcb, chunk* c, BOOL* chan
     new_cache_size = sector_align(new_cache_size, CACHE_INCREMENTS * Vcb->superblock.sector_size);
     
     TRACE("chunk %llx: cache_size = %llx, new_cache_size = %llx\n", c->offset, c->cache ? c->cache->inode_item.st_size : 0, new_cache_size);
+    
+    if (c->cache) {
+        if (new_cache_size > c->cache->inode_item.st_size)
+            realloc_extents = TRUE;
+        else {
+            le = c->cache->extents.Flink;
+            
+            while (le != &c->cache->extents) {
+                extent* ext = CONTAINING_RECORD(le, extent, list_entry);
+                
+                if (!ext->ignore && (ext->data->type == EXTENT_TYPE_REGULAR || ext->data->type == EXTENT_TYPE_PREALLOC)) {
+                    EXTENT_DATA2* ed2 = (EXTENT_DATA2*)&ext->data->data[0];
+                    
+                    if (ed2->size != 0) {
+                        chunk* c2 = get_chunk_from_address(Vcb, ed2->address);
+                        
+                        if (c2 && (c2->readonly || c2->reloc)) {
+                            realloc_extents = TRUE;
+                            break;
+                        }
+                    }
+                }
+                
+                le = le->Flink;
+            }
+        }
+    }
     
     if (!c->cache) {
         FREE_SPACE_ITEM* fsi;
@@ -869,19 +937,17 @@ static NTSTATUS allocate_cache_chunk(device_extension* Vcb, chunk* c, BOOL* chan
         }
         
         c->cache->extents_changed = TRUE;
+        InsertTailList(&Vcb->all_fcbs, &c->cache->list_entry_all);
         
         flush_fcb(c->cache, TRUE, batchlist, Irp, rollback);
         
         *changed = TRUE;
-    } else if (new_cache_size > c->cache->inode_item.st_size) {
+    } else if (realloc_extents) {
         KEY searchkey;
         traverse_ptr tp;
         
-        ERR("extending existing inode\n");
+        TRACE("reallocating extents\n");
         
-        // FIXME - try to extend existing extent first of all
-        // Or ditch all existing extents and replace with one new one?
-
         // add free_space entry to tree cache
         
         searchkey.obj_id = FREE_SPACE_CACHE_ID;
@@ -906,9 +972,38 @@ static NTSTATUS allocate_cache_chunk(device_extension* Vcb, chunk* c, BOOL* chan
         
         tp.tree->write = TRUE;
 
+        // remove existing extents
+        
+        if (c->cache->inode_item.st_size > 0) {
+            le = c->cache->extents.Flink;
+            
+            while (le != &c->cache->extents) {
+                extent* ext = CONTAINING_RECORD(le, extent, list_entry);
+                
+                if (!ext->ignore && (ext->data->type == EXTENT_TYPE_REGULAR || ext->data->type == EXTENT_TYPE_PREALLOC)) {
+                    EXTENT_DATA2* ed2 = (EXTENT_DATA2*)&ext->data->data[0];
+                    
+                    if (ed2->size != 0) {
+                        chunk* c2 = get_chunk_from_address(Vcb, ed2->address);
+                        
+                        if (!c2->list_entry_changed.Flink)
+                            InsertTailList(&Vcb->chunks_changed, &c2->list_entry_changed);
+                    }
+                }
+                
+                le = le->Flink;
+            }
+            
+            Status = excise_extents(Vcb, c->cache, 0, c->cache->inode_item.st_size, Irp, rollback);
+            if (!NT_SUCCESS(Status)) {
+                ERR("excise_extents returned %08x\n", Status);
+                return Status;
+            }
+        }
+        
         // add new extent
         
-        Status = insert_cache_extent(c->cache, c->cache->inode_item.st_size, new_cache_size - c->cache->inode_item.st_size, rollback);
+        Status = insert_cache_extent(c->cache, 0, new_cache_size, rollback);
         if (!NT_SUCCESS(Status)) {
             ERR("insert_cache_extent returned %08x\n", Status);
             return Status;
@@ -1372,7 +1467,7 @@ static NTSTATUS update_chunk_cache(device_extension* Vcb, chunk* c, BTRFS_TIME* 
     
     // write cache
     
-    Status = do_write_file(c->cache, 0, c->cache->inode_item.st_size, data, NULL, NULL, rollback);
+    Status = do_write_file(c->cache, 0, c->cache->inode_item.st_size, data, NULL, rollback);
     if (!NT_SUCCESS(Status)) {
         ERR("do_write_file returned %08x\n", Status);
         return Status;

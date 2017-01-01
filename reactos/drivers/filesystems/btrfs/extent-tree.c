@@ -84,7 +84,7 @@ static __inline UINT64 get_extent_data_refcount(UINT8 type, void* data) {
     }
 }
 
-static UINT64 get_extent_data_ref_hash2(UINT64 root, UINT64 objid, UINT64 offset) {
+UINT64 get_extent_data_ref_hash2(UINT64 root, UINT64 objid, UINT64 offset) {
     UINT32 high_crc = 0xffffffff, low_crc = 0xffffffff;
 
     high_crc = calc_crc32c(high_crc, (UINT8*)&root, sizeof(UINT64));
@@ -474,7 +474,7 @@ NTSTATUS increase_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
         UINT8* ptr;
         
         eisize = sizeof(EXTENT_ITEM);
-        if (is_tree) eisize += sizeof(EXTENT_ITEM2);
+        if (is_tree && !(Vcb->superblock.incompat_flags & BTRFS_INCOMPAT_FLAGS_SKINNY_METADATA)) eisize += sizeof(EXTENT_ITEM2);
         eisize += sizeof(UINT8);
         eisize += datalen;
         
@@ -590,7 +590,6 @@ NTSTATUS increase_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
                     
                     RtlCopyMemory(newei, tp.item->data, tp.item->size);
                     
-                    newei->generation = Vcb->superblock.generation;
                     newei->refcount += rc;
                     
                     sectedr2 = (EXTENT_DATA_REF*)((UINT8*)newei + ((UINT8*)sectedr - tp.item->data));
@@ -635,7 +634,6 @@ NTSTATUS increase_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
                     
                     RtlCopyMemory(newei, tp.item->data, tp.item->size);
                     
-                    newei->generation = Vcb->superblock.generation;
                     newei->refcount += rc;
                     
                     sectsdr2 = (SHARED_DATA_REF*)((UINT8*)newei + ((UINT8*)sectsdr - tp.item->data));
@@ -697,7 +695,6 @@ NTSTATUS increase_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
         newei = ExAllocatePoolWithTag(PagedPool, tp.item->size + sizeof(UINT8) + datalen, ALLOC_TAG);
         RtlCopyMemory(newei, tp.item->data, ptr - tp.item->data);
         
-        newei->generation = Vcb->superblock.generation;
         newei->refcount += get_extent_data_refcount(type, data);
         
         if (len > 0)
@@ -733,9 +730,9 @@ NTSTATUS increase_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
             return Status;
         }
         
-        if (!keycmp(tp.item->key, searchkey)) {
-            if (tp.item->size < datalen) {
-                ERR("(%llx,%x,%llx) was %x bytes, expecting %x\n", tp2.item->key.obj_id, tp2.item->key.obj_type, tp2.item->key.offset, tp.item->size, datalen);
+        if (!keycmp(tp2.item->key, searchkey)) {
+            if (tp2.item->size < datalen) {
+                ERR("(%llx,%x,%llx) was %x bytes, expecting %x\n", tp2.item->key.obj_id, tp2.item->key.obj_type, tp2.item->key.offset, tp2.item->size, datalen);
                 return STATUS_INTERNAL_ERROR;
             }
             
@@ -770,7 +767,6 @@ NTSTATUS increase_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
             newei = ExAllocatePoolWithTag(PagedPool, tp.item->size, ALLOC_TAG);
             RtlCopyMemory(newei, tp.item->data, tp.item->size);
             
-            newei->generation = Vcb->superblock.generation;
             newei->refcount += get_extent_data_refcount(type, data);
             
             delete_tree_item(Vcb, &tp, rollback);
@@ -797,7 +793,6 @@ NTSTATUS increase_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
     newei = ExAllocatePoolWithTag(PagedPool, tp.item->size, ALLOC_TAG);
     RtlCopyMemory(newei, tp.item->data, tp.item->size);
     
-    newei->generation = Vcb->superblock.generation;
     newei->refcount += get_extent_data_refcount(type, data);
     
     delete_tree_item(Vcb, &tp, rollback);
@@ -828,7 +823,7 @@ void decrease_chunk_usage(chunk* c, UINT64 delta) {
 }
 
 NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 size, UINT8 type, void* data, KEY* firstitem,
-                                  UINT8 level, UINT64 parent, PIRP Irp, LIST_ENTRY* rollback) {
+                                  UINT8 level, UINT64 parent, BOOL superseded, PIRP Irp, LIST_ENTRY* rollback) {
     KEY searchkey;
     NTSTATUS Status;
     traverse_ptr tp, tp2;
@@ -884,7 +879,7 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
                 return Status;
             }
 
-            return decrease_extent_refcount(Vcb, address, size, type, data, firstitem, level, parent, Irp, rollback);
+            return decrease_extent_refcount(Vcb, address, size, type, data, firstitem, level, parent, superseded, Irp, rollback);
         }
     }
     
@@ -944,6 +939,10 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
                 if (sectedr->root == edr->root && sectedr->objid == edr->objid && sectedr->offset == edr->offset) {
                     if (ei->refcount == edr->count) {
                         delete_tree_item(Vcb, &tp, rollback);
+                        
+                        if (!superseded)
+                            add_checksum_entry(Vcb, address, size / Vcb->superblock.sector_size, NULL, Irp, rollback);
+                        
                         return STATUS_SUCCESS;
                     }
                     
@@ -976,7 +975,6 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
                             RtlCopyMemory((UINT8*)newei + (ptr - tp.item->data), ptr + sectlen + sizeof(UINT8), len - sectlen);
                     }
                     
-                    newei->generation = Vcb->superblock.generation;
                     newei->refcount -= rc;
                     
                     delete_tree_item(Vcb, &tp, rollback);
@@ -995,14 +993,24 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
                 EXTENT_ITEM* newei;
                 
                 if (sectsdr->offset == sdr->offset) {
-                    // We ignore sdr->count, and assume that we want to remove the whole bit
-                    
                     if (ei->refcount == sectsdr->count) {
                         delete_tree_item(Vcb, &tp, rollback);
+                        
+                        if (!superseded)
+                            add_checksum_entry(Vcb, address, size / Vcb->superblock.sector_size, NULL, Irp, rollback);
+                        
                         return STATUS_SUCCESS;
                     }
                     
-                    neweilen = tp.item->size - sizeof(UINT8) - sectlen;
+                    if (sectsdr->count < sdr->count) {
+                        ERR("error - SHARED_DATA_REF has refcount %x, trying to reduce by %x\n", sectsdr->count, sdr->count);
+                        return STATUS_INTERNAL_ERROR;
+                    }
+                    
+                    if (sectsdr->count > sdr->count)    // reduce section refcount
+                        neweilen = tp.item->size;
+                    else                                // remove section entirely
+                        neweilen = tp.item->size - sizeof(UINT8) - sectlen;
                     
                     newei = ExAllocatePoolWithTag(PagedPool, neweilen, ALLOC_TAG);
                     if (!newei) {
@@ -1010,12 +1018,19 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
                         return STATUS_INSUFFICIENT_RESOURCES;
                     }
                     
-                    RtlCopyMemory(newei, ei, ptr - tp.item->data);
-                    
-                    if (len > sectlen)
-                        RtlCopyMemory((UINT8*)newei + (ptr - tp.item->data), ptr + sectlen + sizeof(UINT8), len - sectlen);
-                    
-                    newei->generation = Vcb->superblock.generation;
+                    if (sectsdr->count > sdr->count) {
+                        SHARED_DATA_REF* newsdr = (SHARED_DATA_REF*)((UINT8*)newei + ((UINT8*)sectsdr - tp.item->data));
+                        
+                        RtlCopyMemory(newei, ei, neweilen);
+                        
+                        newsdr->count -= rc;
+                    } else {
+                        RtlCopyMemory(newei, ei, ptr - tp.item->data);
+                        
+                        if (len > sectlen)
+                            RtlCopyMemory((UINT8*)newei + (ptr - tp.item->data), ptr + sectlen + sizeof(UINT8), len - sectlen);
+                    }
+
                     newei->refcount -= rc;
                     
                     delete_tree_item(Vcb, &tp, rollback);
@@ -1052,7 +1067,6 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
                     if (len > sectlen)
                         RtlCopyMemory((UINT8*)newei + (ptr - tp.item->data), ptr + sectlen + sizeof(UINT8), len - sectlen);
                     
-                    newei->generation = Vcb->superblock.generation;
                     newei->refcount--;
                     
                     delete_tree_item(Vcb, &tp, rollback);
@@ -1089,7 +1103,6 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
                     if (len > sectlen)
                         RtlCopyMemory((UINT8*)newei + (ptr - tp.item->data), ptr + sectlen + sizeof(UINT8), len - sectlen);
                     
-                    newei->generation = Vcb->superblock.generation;
                     newei->refcount--;
                     
                     delete_tree_item(Vcb, &tp, rollback);
@@ -1146,6 +1159,10 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
             if (ei->refcount == edr->count) {
                 delete_tree_item(Vcb, &tp, rollback);
                 delete_tree_item(Vcb, &tp2, rollback);
+                
+                if (!superseded)
+                    add_checksum_entry(Vcb, address, size / Vcb->superblock.sector_size, NULL, Irp, rollback);
+                
                 return STATUS_SUCCESS;
             }
             
@@ -1182,7 +1199,6 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
             
             RtlCopyMemory(newei, tp.item->data, tp.item->size);
 
-            newei->generation = Vcb->superblock.generation;
             newei->refcount -= rc;
             
             delete_tree_item(Vcb, &tp, rollback);
@@ -1203,15 +1219,40 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
         EXTENT_ITEM* newei;
         
         if (sectsdr->offset == sdr->offset) {
-            // As above, we assume that we want to remove the whole shared data ref
-            
-            if (ei->refcount == sectsdr->count) {
+            if (ei->refcount == sdr->count) {
                 delete_tree_item(Vcb, &tp, rollback);
                 delete_tree_item(Vcb, &tp2, rollback);
+                
+                if (!superseded)
+                    add_checksum_entry(Vcb, address, size / Vcb->superblock.sector_size, NULL, Irp, rollback);
+                
                 return STATUS_SUCCESS;
             }
             
+            if (sectsdr->count < sdr->count) {
+                ERR("error - extent section has refcount %x, trying to reduce by %x\n", sectsdr->count, sdr->count);
+                return STATUS_INTERNAL_ERROR;
+            }
+            
             delete_tree_item(Vcb, &tp2, rollback);
+            
+            if (sectsdr->count > sdr->count) {
+                SHARED_DATA_REF* newsdr = ExAllocatePoolWithTag(PagedPool, tp2.item->size, ALLOC_TAG);
+                
+                if (!newsdr) {
+                    ERR("out of memory\n");
+                    return STATUS_INSUFFICIENT_RESOURCES;
+                }
+                
+                RtlCopyMemory(newsdr, sectsdr, tp2.item->size);
+                
+                newsdr->count -= sdr->count;
+                
+                if (!insert_tree_item(Vcb, Vcb->extent_root, tp2.item->key.obj_id, tp2.item->key.obj_type, tp2.item->key.offset, newsdr, tp2.item->size, NULL, Irp, rollback)) {
+                    ERR("insert_tree_item failed\n");
+                    return STATUS_INTERNAL_ERROR;
+                }
+            }
             
             newei = ExAllocatePoolWithTag(PagedPool, tp.item->size, ALLOC_TAG);
             if (!newei) {
@@ -1221,7 +1262,6 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
             
             RtlCopyMemory(newei, tp.item->data, tp.item->size);
 
-            newei->generation = Vcb->superblock.generation;
             newei->refcount -= rc;
             
             delete_tree_item(Vcb, &tp, rollback);
@@ -1258,7 +1298,6 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
             
             RtlCopyMemory(newei, tp.item->data, tp.item->size);
 
-            newei->generation = Vcb->superblock.generation;
             newei->refcount -= rc;
             
             delete_tree_item(Vcb, &tp, rollback);
@@ -1295,7 +1334,6 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
             
             RtlCopyMemory(newei, tp.item->data, tp.item->size);
 
-            newei->generation = Vcb->superblock.generation;
             newei->refcount -= rc;
             
             delete_tree_item(Vcb, &tp, rollback);
@@ -1317,6 +1355,10 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
         if (ei->refcount == erv0->count) {
             delete_tree_item(Vcb, &tp, rollback);
             delete_tree_item(Vcb, &tp2, rollback);
+            
+            if (!superseded)
+                add_checksum_entry(Vcb, address, size / Vcb->superblock.sector_size, NULL, Irp, rollback);
+            
             return STATUS_SUCCESS;
         }
         
@@ -1330,7 +1372,6 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
         
         RtlCopyMemory(newei, tp.item->data, tp.item->size);
 
-        newei->generation = Vcb->superblock.generation;
         newei->refcount -= rc;
         
         delete_tree_item(Vcb, &tp, rollback);
@@ -1348,7 +1389,7 @@ NTSTATUS decrease_extent_refcount(device_extension* Vcb, UINT64 address, UINT64 
 }
 
 NTSTATUS decrease_extent_refcount_data(device_extension* Vcb, UINT64 address, UINT64 size, UINT64 root, UINT64 inode,
-                                       UINT64 offset, UINT32 refcount, PIRP Irp, LIST_ENTRY* rollback) {
+                                       UINT64 offset, UINT32 refcount, BOOL superseded, PIRP Irp, LIST_ENTRY* rollback) {
     EXTENT_DATA_REF edr;
     
     edr.root = root;
@@ -1356,7 +1397,7 @@ NTSTATUS decrease_extent_refcount_data(device_extension* Vcb, UINT64 address, UI
     edr.offset = offset;
     edr.count = refcount;
     
-    return decrease_extent_refcount(Vcb, address, size, TYPE_EXTENT_DATA_REF, &edr, NULL, 0, 0, Irp, rollback);
+    return decrease_extent_refcount(Vcb, address, size, TYPE_EXTENT_DATA_REF, &edr, NULL, 0, 0, superseded, Irp, rollback);
 }
 
 NTSTATUS decrease_extent_refcount_tree(device_extension* Vcb, UINT64 address, UINT64 size, UINT64 root,
@@ -1365,7 +1406,7 @@ NTSTATUS decrease_extent_refcount_tree(device_extension* Vcb, UINT64 address, UI
     
     tbr.offset = root;
     
-    return decrease_extent_refcount(Vcb, address, size, TYPE_TREE_BLOCK_REF, &tbr, NULL/*FIXME*/, level, 0, Irp, rollback);
+    return decrease_extent_refcount(Vcb, address, size, TYPE_TREE_BLOCK_REF, &tbr, NULL/*FIXME*/, level, 0, FALSE, Irp, rollback);
 }
 
 static UINT64 find_extent_data_refcount(device_extension* Vcb, UINT64 address, UINT64 size, UINT64 root, UINT64 objid, UINT64 offset, PIRP Irp) {

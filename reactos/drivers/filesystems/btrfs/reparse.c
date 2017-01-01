@@ -56,7 +56,7 @@ NTSTATUS get_reparse_point(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject,
             }
             
             TRACE("data = %p, size = %x\n", data, fcb->inode_item.st_size);
-            Status = read_file(fcb, (UINT8*)data, 0, fcb->inode_item.st_size, NULL, NULL);
+            Status = read_file(fcb, (UINT8*)data, 0, fcb->inode_item.st_size, NULL, NULL, TRUE);
             
             if (!NT_SUCCESS(Status)) {
                 ERR("read_file returned %08x\n", Status);
@@ -119,7 +119,7 @@ NTSTATUS get_reparse_point(PDEVICE_OBJECT DeviceObject, PFILE_OBJECT FileObject,
         if (fcb->type == BTRFS_TYPE_FILE) {
             ULONG len;
             
-            Status = read_file(fcb, buffer, 0, buflen, &len, NULL);
+            Status = read_file(fcb, buffer, 0, buflen, &len, NULL, TRUE);
             
             if (!NT_SUCCESS(Status)) {
                 ERR("read_file returned %08x\n", Status);
@@ -176,6 +176,9 @@ static NTSTATUS set_symlink(PIRP Irp, file_ref* fileref, ccb* ccb, REPARSE_DATA_
     fileref->fcb->type = BTRFS_TYPE_SYMLINK;
     
     fileref->fcb->inode_item.st_mode |= __S_IFLNK;
+    
+    if (fileref->dc)
+        fileref->dc->type = fileref->fcb->type;
     
     if (write) {
         Status = truncate_file(fileref->fcb, 0, Irp, rollback);
@@ -484,6 +487,9 @@ NTSTATUS delete_reparse_point(PDEVICE_OBJECT DeviceObject, PIRP Irp) {
             fileref->fcb->inode_item.st_mtime = now;
         
         fileref->fcb->atts &= ~FILE_ATTRIBUTE_REPARSE_POINT;
+        
+        if (fileref->dc)
+            fileref->dc->type = fileref->fcb->type;
         
         mark_fileref_dirty(fileref);
         

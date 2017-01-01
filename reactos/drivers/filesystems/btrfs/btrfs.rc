@@ -70,12 +70,12 @@ BEGIN
         BLOCK "080904b0"
         BEGIN
             VALUE "FileDescription", "WinBtrfs"
-            VALUE "FileVersion", "0.7"
+            VALUE "FileVersion", "0.8"
             VALUE "InternalName", "btrfs"
             VALUE "LegalCopyright", "Copyright (c) Mark Harmstone 2016"
             VALUE "OriginalFilename", "btrfs.sys"
             VALUE "ProductName", "WinBtrfs"
-            VALUE "ProductVersion", "0.7"
+            VALUE "ProductVersion", "0.8"
         END
     END
     BLOCK "VarFileInfo"

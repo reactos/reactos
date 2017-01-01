@@ -23,6 +23,9 @@
 #include <initguid.h>
 #include <diskguid.h>
 
+extern LIST_ENTRY VcbList;
+extern ERESOURCE global_loading_lock;
+
 static NTSTATUS part0_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     NTSTATUS Status;
     part0_device_extension* p0de = DeviceObject->DeviceExtension;
@@ -79,7 +82,7 @@ static NTSTATUS part0_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp
             name = Irp->AssociatedIrp.SystemBuffer;
             name->NameLength = p0de->name.Length;
 
-            if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(MOUNTDEV_NAME) - 1 + name->NameLength) {
+            if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength < offsetof(MOUNTDEV_NAME, Name[0]) + name->NameLength) {
                 Status = STATUS_BUFFER_OVERFLOW;
                 Irp->IoStatus.Status = Status;
                 Irp->IoStatus.Information = sizeof(MOUNTDEV_NAME);
@@ -91,7 +94,7 @@ static NTSTATUS part0_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp
 
             Status = STATUS_SUCCESS;
             Irp->IoStatus.Status = Status;
-            Irp->IoStatus.Information = sizeof(MOUNTDEV_NAME) - 1 + name->NameLength;
+            Irp->IoStatus.Information = offsetof(MOUNTDEV_NAME, Name[0]) + name->NameLength;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             
             return Status;
@@ -130,7 +133,7 @@ static NTSTATUS get_partition_info_ex(device_extension* Vcb, PIRP Irp) {
     
     TRACE("IOCTL_DISK_GET_PARTITION_INFO_EX\n");
     
-    Status = dev_ioctl(Vcb->devices[0].devobj, IOCTL_DISK_GET_PARTITION_INFO_EX, NULL, 0,
+    Status = dev_ioctl(Vcb->Vpb->RealDevice, IOCTL_DISK_GET_PARTITION_INFO_EX, NULL, 0,
                        Irp->UserBuffer, IrpSp->Parameters.DeviceIoControl.OutputBufferLength, TRUE, &Irp->IoStatus);
     if (!NT_SUCCESS(Status))
         return Status;
@@ -153,6 +156,132 @@ static NTSTATUS is_writable(device_extension* Vcb, PIRP Irp) {
     return Vcb->readonly ? STATUS_MEDIA_WRITE_PROTECTED : STATUS_SUCCESS;
 }
 
+static NTSTATUS query_filesystems(void* data, ULONG length) {
+    NTSTATUS Status;
+    LIST_ENTRY *le, *le2;
+    btrfs_filesystem* bfs = NULL;
+    ULONG itemsize;
+    
+    ExAcquireResourceSharedLite(&global_loading_lock, TRUE);
+    
+    if (IsListEmpty(&VcbList)) {
+        if (length < sizeof(btrfs_filesystem)) {
+            Status = STATUS_BUFFER_OVERFLOW;
+            goto end;
+        } else {
+            RtlZeroMemory(data, sizeof(btrfs_filesystem));
+            Status = STATUS_SUCCESS;
+            goto end;
+        }
+    }
+
+    le = VcbList.Flink;
+    
+    while (le != &VcbList) {
+        device_extension* Vcb = CONTAINING_RECORD(le, device_extension, list_entry);
+        btrfs_filesystem_device* bfd;
+        
+        if (bfs) {
+            bfs->next_entry = itemsize;
+            bfs = (btrfs_filesystem*)((UINT8*)bfs + itemsize);
+        } else
+            bfs = data;
+        
+        if (length < offsetof(btrfs_filesystem, device)) {
+            Status = STATUS_BUFFER_OVERFLOW;
+            goto end;
+        }
+        
+        itemsize = offsetof(btrfs_filesystem, device);
+        length -= offsetof(btrfs_filesystem, device);
+        
+        bfs->next_entry = 0;
+        RtlCopyMemory(&bfs->uuid, &Vcb->superblock.uuid, sizeof(BTRFS_UUID));
+        
+        ExAcquireResourceSharedLite(&Vcb->tree_lock, TRUE);
+        
+        bfs->num_devices = Vcb->superblock.num_devices;
+        
+        bfd = NULL;
+        
+        le2 = Vcb->devices.Flink;
+        while (le2 != &Vcb->devices) {
+            device* dev = CONTAINING_RECORD(le2, device, list_entry);
+            MOUNTDEV_NAME mdn;
+            
+            if (bfd)
+                bfd = (btrfs_filesystem_device*)((UINT8*)bfd + offsetof(btrfs_filesystem_device, name[0]) + bfd->name_length);
+            else
+                bfd = &bfs->device;
+            
+            if (length < offsetof(btrfs_filesystem_device, name[0])) {
+                ExReleaseResourceLite(&Vcb->tree_lock);
+                Status = STATUS_BUFFER_OVERFLOW;
+                goto end;
+            }
+            
+            itemsize += offsetof(btrfs_filesystem_device, name[0]);
+            length -= offsetof(btrfs_filesystem_device, name[0]);
+            
+            RtlCopyMemory(&bfd->uuid, &dev->devitem.device_uuid, sizeof(BTRFS_UUID));
+            
+            Status = dev_ioctl(dev->devobj, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, &mdn, sizeof(MOUNTDEV_NAME), TRUE, NULL);
+            if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
+                ExReleaseResourceLite(&Vcb->tree_lock);
+                ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
+                goto end;
+            }
+            
+            if (mdn.NameLength > length) {
+                ExReleaseResourceLite(&Vcb->tree_lock);
+                Status = STATUS_BUFFER_OVERFLOW;
+                goto end;
+            }
+            
+            Status = dev_ioctl(dev->devobj, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, &bfd->name_length, offsetof(MOUNTDEV_NAME, Name[0]) + mdn.NameLength, TRUE, NULL);
+            if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
+                ExReleaseResourceLite(&Vcb->tree_lock);
+                ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
+                goto end;
+            }
+            
+            itemsize += bfd->name_length;
+            length -= bfd->name_length;
+            
+            le2 = le2->Flink;
+        }
+        
+        ExReleaseResourceLite(&Vcb->tree_lock);
+        
+        le = le->Flink;
+    }
+    
+    Status = STATUS_SUCCESS;
+    
+end:
+    ExReleaseResourceLite(&global_loading_lock);
+    
+    return Status;
+}
+
+static NTSTATUS control_ioctl(PIRP Irp) {
+    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    NTSTATUS Status;
+    
+    switch (IrpSp->Parameters.DeviceIoControl.IoControlCode) {
+        case IOCTL_BTRFS_QUERY_FILESYSTEMS:
+            Status = query_filesystems(map_user_buffer(Irp), IrpSp->Parameters.FileSystemControl.OutputBufferLength);
+            break;
+            
+        default:
+            TRACE("unhandled ioctl %x\n", IrpSp->Parameters.DeviceIoControl.IoControlCode);
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+    }
+    
+    return Status;
+}
+
 NTSTATUS STDCALL drv_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     NTSTATUS Status;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -165,9 +294,22 @@ NTSTATUS STDCALL drv_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     
     Irp->IoStatus.Information = 0;
     
-    if (Vcb && Vcb->type == VCB_TYPE_PARTITION0) {
-        Status = part0_device_control(DeviceObject, Irp);
-        goto end2;
+    if (Vcb) {
+        if (Vcb->type == VCB_TYPE_PARTITION0) {
+            Status = part0_device_control(DeviceObject, Irp);
+            goto end2;
+        } else if (Vcb->type == VCB_TYPE_CONTROL) {
+            Status = control_ioctl(Irp);
+            goto end;
+        }
+    } else {
+        Status = STATUS_INVALID_PARAMETER;
+        goto end;
+    }
+    
+    if (!IrpSp->FileObject || IrpSp->FileObject->FsContext != Vcb->volume_fcb) {
+        Status = STATUS_INVALID_PARAMETER;
+        goto end;
     }
     
     switch (IrpSp->Parameters.DeviceIoControl.IoControlCode) {
@@ -190,7 +332,7 @@ NTSTATUS STDCALL drv_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     
     IoSkipCurrentIrpStackLocation(Irp);
     
-    Status = IoCallDriver(Vcb->devices[0].devobj, Irp);
+    Status = IoCallDriver(Vcb->Vpb->RealDevice, Irp);
     
     goto end2;
     

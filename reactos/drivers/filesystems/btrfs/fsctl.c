@@ -32,6 +32,7 @@
 extern LIST_ENTRY VcbList;
 extern ERESOURCE global_loading_lock;
 extern LIST_ENTRY volumes;
+extern ERESOURCE volumes_lock;
 
 static NTSTATUS get_file_ids(PFILE_OBJECT FileObject, void* data, ULONG length) {
     btrfs_get_file_ids* bgfi;
@@ -71,7 +72,7 @@ static void get_uuid(BTRFS_UUID* uuid) {
     }
 }
 
-static NTSTATUS snapshot_tree_copy(device_extension* Vcb, UINT64 addr, root* subvol, UINT64 dupflags, UINT64* newaddr, PIRP Irp, LIST_ENTRY* rollback) {
+static NTSTATUS snapshot_tree_copy(device_extension* Vcb, UINT64 addr, root* subvol, UINT64* newaddr, PIRP Irp, LIST_ENTRY* rollback) {
     UINT8* buf;
     NTSTATUS Status;
     write_data_context* wtc;
@@ -93,7 +94,7 @@ static NTSTATUS snapshot_tree_copy(device_extension* Vcb, UINT64 addr, root* sub
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     
-    Status = read_data(Vcb, addr, Vcb->superblock.node_size, NULL, TRUE, buf, NULL, NULL, Irp);
+    Status = read_data(Vcb, addr, Vcb->superblock.node_size, NULL, TRUE, buf, NULL, NULL, Irp, FALSE);
     if (!NT_SUCCESS(Status)) {
         ERR("read_data returned %08x\n", Status);
         goto end;
@@ -102,7 +103,6 @@ static NTSTATUS snapshot_tree_copy(device_extension* Vcb, UINT64 addr, root* sub
     th = (tree_header*)buf;
     
     RtlZeroMemory(&t, sizeof(tree));
-    t.flags = dupflags;
     t.root = subvol;
     t.header.level = th->level;
     t.header.tree_id = t.root->id;
@@ -259,6 +259,7 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
     ccb* ccb = parent->FsContext2;
     LIST_ENTRY* le;
     file_ref *fileref, *fr;
+    dir_child* dc = NULL;
     
     if (!ccb) {
         ERR("error - ccb was NULL\n");
@@ -354,7 +355,7 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
         goto end;
     }
     
-    Status = snapshot_tree_copy(Vcb, subvol->root_item.block_number, r, tp.tree->flags, &address, Irp, &rollback);
+    Status = snapshot_tree_copy(Vcb, subvol->root_item.block_number, r, &address, Irp, &rollback);
     if (!NT_SUCCESS(Status)) {
         ERR("snapshot_tree_copy returned %08x\n", Status);
         goto end;
@@ -468,6 +469,13 @@ static NTSTATUS do_create_snapshot(device_extension* Vcb, PFILE_OBJECT parent, f
     
     fr->parent = fileref;
     
+    Status = add_dir_child(fileref->fcb, r->id, TRUE, dirpos, utf8, &fr->filepart, &fr->filepart_uc, BTRFS_TYPE_DIRECTORY, &dc);
+    if (!NT_SUCCESS(Status))
+        WARN("add_dir_child returned %08x\n", Status);
+    
+    fr->dc = dc;
+    dc->fileref = fr;
+    
     insert_fileref_child(fileref, fr, TRUE);
     increase_fileref_refcount(fileref);
     
@@ -574,6 +582,9 @@ static NTSTATUS create_snapshot(device_extension* Vcb, PFILE_OBJECT FileObject, 
         return STATUS_ACCESS_DENIED;
     }
     
+    if (fcb->subvol->root_item.flags & BTRFS_SUBVOL_READONLY)
+        return STATUS_ACCESS_DENIED;
+    
     nameus.Buffer = bcs->name;
     nameus.Length = nameus.MaximumLength = bcs->namelen;
     
@@ -664,8 +675,6 @@ static NTSTATUS create_snapshot(device_extension* Vcb, PFILE_OBJECT FileObject, 
             struct _fcb* openfcb = CONTAINING_RECORD(le, struct _fcb, list_entry);
             LIST_ENTRY* le2;
             
-            ExAcquireResourceExclusiveLite(openfcb->Header.Resource, TRUE);
-            
             le2 = openfcb->extents.Flink;
             
             while (le2 != &openfcb->extents) {
@@ -675,8 +684,6 @@ static NTSTATUS create_snapshot(device_extension* Vcb, PFILE_OBJECT FileObject, 
                 
                 le2 = le2->Flink;
             }
-            
-            ExReleaseResourceLite(openfcb->Header.Resource);
             
             le = le->Flink;
         }
@@ -732,6 +739,7 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, WC
     BOOLEAN defaulted;
     UINT64* root_num;
     file_ref *fr = NULL, *fr2;
+    dir_child* dc = NULL;
     
     fcb = FileObject->FsContext;
     if (!fcb) {
@@ -766,6 +774,9 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, WC
         WARN("insufficient privileges\n");
         return STATUS_ACCESS_DENIED;
     }
+    
+    if (fcb->subvol->root_item.flags & BTRFS_SUBVOL_READONLY)
+        return STATUS_ACCESS_DENIED;
     
     nameus.Length = nameus.MaximumLength = length;
     nameus.Buffer = name;
@@ -1029,6 +1040,37 @@ static NTSTATUS create_subvol(device_extension* Vcb, PFILE_OBJECT FileObject, WC
     
     fr->parent = fileref;
     
+    Status = add_dir_child(fileref->fcb, r->id, TRUE, dirpos, &utf8, &fr->filepart, &fr->filepart_uc, BTRFS_TYPE_DIRECTORY, &dc);
+    if (!NT_SUCCESS(Status))
+        WARN("add_dir_child returned %08x\n", Status);
+    
+    fr->dc = dc;
+    dc->fileref = fr;
+    
+    fr->fcb->hash_ptrs = ExAllocatePoolWithTag(PagedPool, sizeof(LIST_ENTRY*) * 256, ALLOC_TAG);
+    if (!fr->fcb->hash_ptrs) {
+        ERR("out of memory\n");
+        ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+        free_fileref(fr);
+        ExReleaseResourceLite(&Vcb->fcb_lock);
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto end;
+    }
+    
+    RtlZeroMemory(fr->fcb->hash_ptrs, sizeof(LIST_ENTRY*) * 256);
+    
+    fr->fcb->hash_ptrs_uc = ExAllocatePoolWithTag(PagedPool, sizeof(LIST_ENTRY*) * 256, ALLOC_TAG);
+    if (!fcb->hash_ptrs_uc) {
+        ERR("out of memory\n");
+        ExAcquireResourceExclusiveLite(&Vcb->fcb_lock, TRUE);
+        free_fileref(fr);
+        ExReleaseResourceLite(&Vcb->fcb_lock);
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto end;
+    }
+    
+    RtlZeroMemory(fr->fcb->hash_ptrs_uc, sizeof(LIST_ENTRY*) * 256);
+    
     insert_fileref_child(fileref, fr, TRUE);
     increase_fileref_refcount(fileref);
     
@@ -1278,36 +1320,227 @@ end:
     return Status;
 }
 
+static NTSTATUS get_devices(device_extension* Vcb, void* data, ULONG length) {
+    btrfs_device* dev = NULL;
+    NTSTATUS Status;
+    LIST_ENTRY* le;
+    
+    ExAcquireResourceSharedLite(&Vcb->tree_lock, TRUE);
+    
+    le = Vcb->devices.Flink;
+    while (le != &Vcb->devices) {
+        device* dev2 = CONTAINING_RECORD(le, device, list_entry);
+        ULONG structlen;
+        
+        if (length < sizeof(btrfs_device) - sizeof(WCHAR)) {
+            Status = STATUS_BUFFER_OVERFLOW;
+            goto end;
+        }
+        
+        if (!dev)
+            dev = data;
+        else {
+            dev->next_entry = sizeof(btrfs_device) - sizeof(WCHAR) + dev->namelen;
+            dev = (btrfs_device*)((UINT8*)dev + dev->next_entry);
+        }
+        
+        structlen = length - offsetof(btrfs_device, namelen);
+        
+        Status = dev_ioctl(dev2->devobj, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0, &dev->namelen, structlen, TRUE, NULL);
+        if (!NT_SUCCESS(Status))
+            goto end;
+        
+        dev->next_entry = 0;
+        dev->dev_id = dev2->devitem.dev_id;
+        dev->size = dev2->length;
+        dev->readonly = (Vcb->readonly || dev2->readonly) ? TRUE : FALSE;
+        dev->device_number = dev2->disk_num;
+        dev->partition_number = dev2->part_num;
+        
+        length -= sizeof(btrfs_device) - sizeof(WCHAR) + dev->namelen;
+        
+        le = le->Flink;
+    }
+
+end:
+    ExReleaseResourceLite(&Vcb->tree_lock);
+    
+    return Status;
+}
+
+static NTSTATUS get_usage(device_extension* Vcb, void* data, ULONG length) {
+    btrfs_usage* usage = (btrfs_usage*)data;
+    btrfs_usage* lastbue = NULL;
+    NTSTATUS Status;
+    LIST_ENTRY* le;
+    
+    if (length < sizeof(btrfs_usage))
+        return STATUS_BUFFER_OVERFLOW;
+    
+    length -= offsetof(btrfs_usage, devices);
+    
+    ExAcquireResourceSharedLite(&Vcb->chunk_lock, TRUE);
+    
+    le = Vcb->chunks.Flink;
+    while (le != &Vcb->chunks) {
+        BOOL addnew = FALSE;
+        
+        chunk* c = CONTAINING_RECORD(le, chunk, list_entry);
+        
+        if (!lastbue) // first entry
+            addnew = TRUE;
+        else {
+            btrfs_usage* bue = usage;
+            
+            addnew = TRUE;
+            
+            while (TRUE) {
+                if (bue->type == c->chunk_item->type) {
+                    addnew = FALSE;
+                    break;
+                }
+                
+                if (bue->next_entry == 0)
+                    break;
+                else
+                    bue = (btrfs_usage*)((UINT8*)bue + bue->next_entry);
+            }
+        }
+        
+        if (addnew) {
+            btrfs_usage* bue;
+            LIST_ENTRY* le2;
+            UINT64 factor;
+            
+            if (!lastbue) {
+                bue = usage;
+            } else {
+                if (length < offsetof(btrfs_usage, devices)) {
+                    Status = STATUS_BUFFER_OVERFLOW;
+                    goto end;
+                }
+                
+                length -= offsetof(btrfs_usage, devices);
+                
+                lastbue->next_entry = offsetof(btrfs_usage, devices) + (lastbue->num_devices * sizeof(btrfs_usage_device));
+                
+                bue = (btrfs_usage*)((UINT8*)lastbue + lastbue->next_entry);
+            }
+            
+            bue->next_entry = 0;
+            bue->type = c->chunk_item->type;
+            bue->size = 0;
+            bue->used = 0;
+            bue->num_devices = 0;
+            
+            if (c->chunk_item->type & BLOCK_FLAG_RAID0)
+                factor = c->chunk_item->num_stripes;
+            else if (c->chunk_item->type & BLOCK_FLAG_RAID10)
+                factor = c->chunk_item->num_stripes / c->chunk_item->sub_stripes;
+            else if (c->chunk_item->type & BLOCK_FLAG_RAID5)
+                factor = c->chunk_item->num_stripes - 1;
+            else if (c->chunk_item->type & BLOCK_FLAG_RAID6)
+                factor = c->chunk_item->num_stripes - 2;
+            else
+                factor = 1;
+            
+            le2 = le;
+            while (le2 != &Vcb->chunks) {
+                chunk* c2 = CONTAINING_RECORD(le2, chunk, list_entry);
+                
+                if (c2->chunk_item->type == c->chunk_item->type) {
+                    UINT16 i;
+                    CHUNK_ITEM_STRIPE* cis = (CHUNK_ITEM_STRIPE*)&c2->chunk_item[1];
+                    UINT64 stripesize;
+                    
+                    bue->size += c2->chunk_item->size;
+                    bue->used += c2->used;
+                    
+                    stripesize = c2->chunk_item->size / factor;
+                    
+                    for (i = 0; i < c2->chunk_item->num_stripes; i++) {
+                        UINT64 j;
+                        BOOL found = FALSE;
+                        
+                        for (j = 0; j < bue->num_devices; j++) {
+                            if (bue->devices[j].dev_id == cis[i].dev_id) {
+                                bue->devices[j].alloc += stripesize;
+                                found = TRUE;
+                                break;
+                            }
+                        }
+                        
+                        if (!found) {
+                            if (length < sizeof(btrfs_usage_device)) {
+                                Status = STATUS_BUFFER_OVERFLOW;
+                                goto end;
+                            }
+                            
+                            length -= sizeof(btrfs_usage_device);
+                            
+                            bue->devices[bue->num_devices].dev_id = cis[i].dev_id;
+                            bue->devices[bue->num_devices].alloc = stripesize;
+                            bue->num_devices++;
+                        }
+                    }
+                }
+                
+                le2 = le2->Flink;
+            }
+            
+            lastbue = bue;
+        }
+
+        le = le->Flink;
+    }
+    
+    Status = STATUS_SUCCESS;
+    
+end:
+    ExReleaseResourceLite(&Vcb->chunk_lock);
+      
+    return Status;
+}
+
 static NTSTATUS is_volume_mounted(device_extension* Vcb, PIRP Irp) {
-    UINT64 i, num_devices;
     NTSTATUS Status;
     ULONG cc;
     IO_STATUS_BLOCK iosb;
     BOOL verify = FALSE;
+    LIST_ENTRY* le;
     
-    num_devices = Vcb->superblock.num_devices;
-    for (i = 0; i < num_devices; i++) {
-        if (Vcb->devices[i].devobj && Vcb->devices[i].removable) {
-            Status = dev_ioctl(Vcb->devices[i].devobj, IOCTL_STORAGE_CHECK_VERIFY, NULL, 0, &cc, sizeof(ULONG), FALSE, &iosb);
+    ExAcquireResourceSharedLite(&Vcb->tree_lock, TRUE);
+    
+    le = Vcb->devices.Flink;
+    while (le != &Vcb->devices) {
+        device* dev = CONTAINING_RECORD(le, device, list_entry);
+        
+        if (dev->devobj && dev->removable) {
+            Status = dev_ioctl(dev->devobj, IOCTL_STORAGE_CHECK_VERIFY, NULL, 0, &cc, sizeof(ULONG), FALSE, &iosb);
             
             if (iosb.Information != sizeof(ULONG))
                 cc = 0;
             
-            if (Status == STATUS_VERIFY_REQUIRED || (NT_SUCCESS(Status) && cc != Vcb->devices[i].change_count)) {
-                Vcb->devices[i].devobj->Flags |= DO_VERIFY_VOLUME;
+            if (Status == STATUS_VERIFY_REQUIRED || (NT_SUCCESS(Status) && cc != dev->change_count)) {
+                dev->devobj->Flags |= DO_VERIFY_VOLUME;
                 verify = TRUE;
             }
             
             if (NT_SUCCESS(Status) && iosb.Information == sizeof(ULONG))
-                Vcb->devices[i].change_count = cc;
+                dev->change_count = cc;
             
             if (!NT_SUCCESS(Status) || verify) {
-                IoSetHardErrorOrVerifyDevice(Irp, Vcb->devices[i].devobj);
+                IoSetHardErrorOrVerifyDevice(Irp, dev->devobj);
+                ExReleaseResourceLite(&Vcb->tree_lock);
                 
                 return verify ? STATUS_VERIFY_REQUIRED : Status;
             }
         }
+        
+        le = le->Flink;
     }
+    
+    ExReleaseResourceLite(&Vcb->tree_lock);
     
     return STATUS_SUCCESS;
 }
@@ -1413,7 +1646,7 @@ end:
     return Status;
 }
 
-static NTSTATUS zero_data(device_extension* Vcb, fcb* fcb, UINT64 start, UINT64 length, LIST_ENTRY* changed_sector_list, PIRP Irp, LIST_ENTRY* rollback) {
+static NTSTATUS zero_data(device_extension* Vcb, fcb* fcb, UINT64 start, UINT64 length, PIRP Irp, LIST_ENTRY* rollback) {
     NTSTATUS Status;
     BOOL compress = write_fcb_compressed(fcb);
     UINT64 start_data, end_data;
@@ -1437,7 +1670,7 @@ static NTSTATUS zero_data(device_extension* Vcb, fcb* fcb, UINT64 start, UINT64 
     RtlZeroMemory(data, end_data - start_data);
     
     if (start > start_data || start + length < end_data) {
-        Status = read_file(fcb, data, start_data, end_data - start_data, NULL, Irp);
+        Status = read_file(fcb, data, start_data, end_data - start_data, NULL, Irp, TRUE);
         
         if (!NT_SUCCESS(Status)) {
             ERR("read_file returned %08x\n", Status);
@@ -1449,7 +1682,7 @@ static NTSTATUS zero_data(device_extension* Vcb, fcb* fcb, UINT64 start, UINT64 
     RtlZeroMemory(data + start - start_data, length);
     
     if (compress) {
-        Status = write_compressed(fcb, start_data, end_data, data, changed_sector_list, Irp, rollback);
+        Status = write_compressed(fcb, start_data, end_data, data, Irp, rollback);
         
         ExFreePool(data);
         
@@ -1458,7 +1691,7 @@ static NTSTATUS zero_data(device_extension* Vcb, fcb* fcb, UINT64 start, UINT64 
             return Status;
         }
     } else {
-        Status = do_write_file(fcb, start_data, end_data, data, changed_sector_list, Irp, rollback);
+        Status = do_write_file(fcb, start_data, end_data, data, Irp, rollback);
         
         ExFreePool(data);
         
@@ -1477,12 +1710,11 @@ static NTSTATUS set_zero_data(device_extension* Vcb, PFILE_OBJECT FileObject, vo
     fcb* fcb;
     ccb* ccb;
     file_ref* fileref;
-    LIST_ENTRY rollback, changed_sector_list, *le;
+    LIST_ENTRY rollback, *le;
     LARGE_INTEGER time;
     BTRFS_TIME now;
     UINT64 start, end;
     extent* ext;
-    BOOL nocsum;
     IO_STATUS_BLOCK iosb;
     
     if (!data || length < sizeof(FILE_ZERO_DATA_INFORMATION))
@@ -1566,13 +1798,8 @@ static NTSTATUS set_zero_data(device_extension* Vcb, PFILE_OBJECT FileObject, vo
         goto end;
     }
     
-    nocsum = fcb->inode_item.flags & BTRFS_INODE_NODATASUM;
-    
-    if (!nocsum)
-        InitializeListHead(&changed_sector_list);
-    
     if (ext->datalen >= sizeof(EXTENT_DATA) && ext->data->type == EXTENT_TYPE_INLINE) {
-        Status = zero_data(Vcb, fcb, fzdi->FileOffset.QuadPart, fzdi->BeyondFinalZero.QuadPart - fzdi->FileOffset.QuadPart, nocsum ? NULL : &changed_sector_list, Irp, &rollback);
+        Status = zero_data(Vcb, fcb, fzdi->FileOffset.QuadPart, fzdi->BeyondFinalZero.QuadPart - fzdi->FileOffset.QuadPart, Irp, &rollback);
         if (!NT_SUCCESS(Status)) {
             ERR("zero_data returned %08x\n", Status);
             goto end;
@@ -1586,14 +1813,14 @@ static NTSTATUS set_zero_data(device_extension* Vcb, PFILE_OBJECT FileObject, vo
             end = (fzdi->BeyondFinalZero.QuadPart / Vcb->superblock.sector_size) * Vcb->superblock.sector_size;
         
         if (end <= start) {
-            Status = zero_data(Vcb, fcb, fzdi->FileOffset.QuadPart, fzdi->BeyondFinalZero.QuadPart - fzdi->FileOffset.QuadPart, nocsum ? NULL : &changed_sector_list, Irp, &rollback);
+            Status = zero_data(Vcb, fcb, fzdi->FileOffset.QuadPart, fzdi->BeyondFinalZero.QuadPart - fzdi->FileOffset.QuadPart, Irp, &rollback);
             if (!NT_SUCCESS(Status)) {
                 ERR("zero_data returned %08x\n", Status);
                 goto end;
             }
         } else {
             if (start > fzdi->FileOffset.QuadPart) {
-                Status = zero_data(Vcb, fcb, fzdi->FileOffset.QuadPart, start - fzdi->FileOffset.QuadPart, nocsum ? NULL : &changed_sector_list, Irp, &rollback);
+                Status = zero_data(Vcb, fcb, fzdi->FileOffset.QuadPart, start - fzdi->FileOffset.QuadPart, Irp, &rollback);
                 if (!NT_SUCCESS(Status)) {
                     ERR("zero_data returned %08x\n", Status);
                     goto end;
@@ -1601,7 +1828,7 @@ static NTSTATUS set_zero_data(device_extension* Vcb, PFILE_OBJECT FileObject, vo
             }
             
             if (end < fzdi->BeyondFinalZero.QuadPart) {
-                Status = zero_data(Vcb, fcb, end, fzdi->BeyondFinalZero.QuadPart - end, nocsum ? NULL : &changed_sector_list, Irp, &rollback);
+                Status = zero_data(Vcb, fcb, end, fzdi->BeyondFinalZero.QuadPart - end, Irp, &rollback);
                 if (!NT_SUCCESS(Status)) {
                     ERR("zero_data returned %08x\n", Status);
                     goto end;
@@ -1642,12 +1869,6 @@ static NTSTATUS set_zero_data(device_extension* Vcb, PFILE_OBJECT FileObject, vo
     fcb->subvol->root_item.ctime = now;
 
     Status = STATUS_SUCCESS;
-    
-    if (!nocsum) {
-        ExAcquireResourceExclusiveLite(&Vcb->checksum_lock, TRUE);
-        commit_checksum_changes(Vcb, &changed_sector_list);
-        ExReleaseResourceLite(&Vcb->checksum_lock);
-    }
     
 end:
     if (!NT_SUCCESS(Status))
@@ -1814,6 +2035,7 @@ static NTSTATUS lock_volume(device_extension* Vcb, PIRP Irp) {
     NTSTATUS Status;
     LIST_ENTRY rollback;
     KIRQL irql;
+    BOOL lock_paused_balance = FALSE;
     
     TRACE("FSCTL_LOCK_VOLUME\n");
     
@@ -1832,11 +2054,17 @@ static NTSTATUS lock_volume(device_extension* Vcb, PIRP Irp) {
         goto end;
     }
     
-    Vcb->locked = TRUE;
-    
     ExReleaseResourceLite(&Vcb->fcb_lock);
     
     InitializeListHead(&rollback);
+    
+    if (Vcb->balance.thread && KeReadStateEvent(&Vcb->balance.event)) {
+        ExAcquireResourceExclusiveLite(&Vcb->tree_lock, TRUE);
+        KeClearEvent(&Vcb->balance.event);
+        ExReleaseResourceLite(&Vcb->tree_lock);
+        
+        lock_paused_balance = TRUE;
+    }
     
     ExAcquireResourceExclusiveLite(&Vcb->tree_lock, TRUE);
     
@@ -1855,10 +2083,16 @@ static NTSTATUS lock_volume(device_extension* Vcb, PIRP Irp) {
 
     if (!(Vcb->Vpb->Flags & VPB_LOCKED)) { 
         Vcb->Vpb->Flags |= VPB_LOCKED;
+        Vcb->locked = TRUE;
         Vcb->locked_fileobj = IrpSp->FileObject;
+        Vcb->lock_paused_balance = lock_paused_balance;
     } else {
         Status = STATUS_ACCESS_DENIED;
         IoReleaseVpbSpinLock(irql);
+        
+        if (lock_paused_balance)
+            KeSetEvent(&Vcb->balance.event, 0, FALSE);
+        
         goto end;
     }
 
@@ -1883,6 +2117,9 @@ void do_unlock_volume(device_extension* Vcb) {
     Vcb->locked_fileobj = NULL;
 
     IoReleaseVpbSpinLock(irql);
+    
+    if (Vcb->lock_paused_balance)
+        KeSetEvent(&Vcb->balance.event, 0, FALSE);
 }
 
 static NTSTATUS unlock_volume(device_extension* Vcb, PIRP Irp) {
@@ -2082,24 +2319,37 @@ static NTSTATUS get_compression(device_extension* Vcb, PIRP Irp) {
 }
 
 static void update_volumes(device_extension* Vcb) {
-    LIST_ENTRY* le = volumes.Flink;
+    LIST_ENTRY* le;
+    
+    ExAcquireResourceSharedLite(&Vcb->tree_lock, TRUE);
+    ExAcquireResourceExclusiveLite(&volumes_lock, TRUE);
+    
+    le = volumes.Flink;
         
     while (le != &volumes) {
         volume* v = CONTAINING_RECORD(le, volume, list_entry);
         
         if (RtlCompareMemory(&Vcb->superblock.uuid, &v->fsuuid, sizeof(BTRFS_UUID)) == sizeof(BTRFS_UUID)) {
-            UINT64 i;
+            LIST_ENTRY* le;
             
-            for (i = 0; i < Vcb->superblock.num_devices; i++) {
-                if (RtlCompareMemory(&Vcb->devices[i].devitem.device_uuid, &v->devuuid, sizeof(BTRFS_UUID)) == sizeof(BTRFS_UUID)) {
+            le = Vcb->devices.Flink;
+            while (le != &Vcb->devices) {
+                device* dev = CONTAINING_RECORD(le, device, list_entry);
+                
+                if (RtlCompareMemory(&dev->devitem.device_uuid, &v->devuuid, sizeof(BTRFS_UUID)) == sizeof(BTRFS_UUID)) {
                     v->gen1 = v->gen2 = Vcb->superblock.generation - 1;
                     break;
                 }
+                
+                le = le->Flink;
             }
         }
         
         le = le->Flink;
     }
+    
+    ExReleaseResourceLite(&volumes_lock);
+    ExReleaseResourceLite(&Vcb->tree_lock);
 }
 
 static NTSTATUS dismount_volume(device_extension* Vcb, PIRP Irp) {
@@ -2148,6 +2398,456 @@ static NTSTATUS dismount_volume(device_extension* Vcb, PIRP Irp) {
     return STATUS_SUCCESS;
 }
 
+static NTSTATUS is_device_part_of_mounted_btrfs_raid(PDEVICE_OBJECT devobj) {
+    NTSTATUS Status;
+    ULONG to_read;
+    superblock* sb;
+    UINT32 crc32;
+    BTRFS_UUID fsuuid, devuuid;
+    LIST_ENTRY* le;
+    
+    to_read = devobj->SectorSize == 0 ? sizeof(superblock) : sector_align(sizeof(superblock), devobj->SectorSize);
+    
+    sb = ExAllocatePoolWithTag(PagedPool, to_read, ALLOC_TAG);
+    if (!sb) {
+        ERR("out of memory\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    
+    Status = sync_read_phys(devobj, superblock_addrs[0], to_read, (UINT8*)sb, TRUE);
+    if (!NT_SUCCESS(Status)) {
+        ERR("sync_read_phys returned %08x\n", Status);
+        ExFreePool(sb);
+        return Status;
+    }
+    
+    if (sb->magic != BTRFS_MAGIC) {
+        TRACE("device is not Btrfs\n");
+        ExFreePool(sb);
+        return STATUS_SUCCESS;
+    }
+    
+    crc32 = ~calc_crc32c(0xffffffff, (UINT8*)&sb->uuid, (ULONG)sizeof(superblock) - sizeof(sb->checksum));
+
+    if (crc32 != *((UINT32*)sb->checksum)) {
+        TRACE("device has Btrfs magic, but invalid superblock checksum\n");
+        ExFreePool(sb);
+        return STATUS_SUCCESS;
+    }
+    
+    fsuuid = sb->uuid;
+    devuuid = sb->dev_item.device_uuid;
+    
+    ExFreePool(sb);
+    
+    ExAcquireResourceSharedLite(&global_loading_lock, TRUE);
+    
+    le = VcbList.Flink;
+    
+    while (le != &VcbList) {
+        device_extension* Vcb = CONTAINING_RECORD(le, device_extension, list_entry);
+        
+        if (RtlCompareMemory(&Vcb->superblock.uuid, &fsuuid, sizeof(BTRFS_UUID)) == sizeof(BTRFS_UUID)) {
+            LIST_ENTRY* le2;
+            
+            ExAcquireResourceSharedLite(&Vcb->tree_lock, TRUE);
+            
+            if (Vcb->superblock.num_devices > 1) {
+                le2 = Vcb->devices.Flink;
+                while (le2 != &Vcb->devices) {
+                    device* dev = CONTAINING_RECORD(le2, device, list_entry);
+                    
+                    if (RtlCompareMemory(&dev->devitem.device_uuid, &devuuid, sizeof(BTRFS_UUID)) == sizeof(BTRFS_UUID)) {
+                        ExReleaseResourceLite(&Vcb->tree_lock);
+                        ExReleaseResourceLite(&global_loading_lock);
+                        return STATUS_DEVICE_NOT_READY;
+                    }
+                    
+                    le2 = le2->Flink;
+                }
+            }
+            
+            ExReleaseResourceLite(&Vcb->tree_lock);
+            ExReleaseResourceLite(&global_loading_lock);
+            return STATUS_SUCCESS;
+        }
+        
+        le = le->Flink;
+    }
+    
+    ExReleaseResourceLite(&global_loading_lock);
+    
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS add_device(device_extension* Vcb, PIRP Irp, void* data, ULONG length, KPROCESSOR_MODE processor_mode) {
+    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+    NTSTATUS Status;
+    PFILE_OBJECT fileobj, mountmgrfo;
+    HANDLE h;
+    LIST_ENTRY rollback, *le;
+    GET_LENGTH_INFORMATION gli;
+    device* dev;
+    DEV_ITEM* di;
+    UINT64 dev_id;
+    UINT8* mb;
+    UINT64* stats;
+    MOUNTDEV_NAME mdn1, *mdn2;
+    UNICODE_STRING volname, mmdevpath;
+    volume* v;
+    PDEVICE_OBJECT mountmgr;
+    KEY searchkey;
+    traverse_ptr tp;
+    STORAGE_DEVICE_NUMBER sdn;
+    
+    volname.Buffer = NULL;
+    
+    if (!SeSinglePrivilegeCheck(RtlConvertLongToLuid(SE_MANAGE_VOLUME_PRIVILEGE), processor_mode))
+        return STATUS_PRIVILEGE_NOT_HELD;
+    
+    if (Vcb->readonly) // FIXME - handle adding R/W device to seeding device
+        return STATUS_MEDIA_WRITE_PROTECTED;
+    
+#if defined(_WIN64)
+    if (IoIs32bitProcess(Irp)) {
+        if (IrpSp->Parameters.FileSystemControl.InputBufferLength != sizeof(UINT32))
+            return STATUS_INVALID_PARAMETER;
+
+        h = (HANDLE)LongToHandle((*(PUINT32)Irp->AssociatedIrp.SystemBuffer));
+    } else {
+#endif
+        if (IrpSp->Parameters.FileSystemControl.InputBufferLength != sizeof(HANDLE))
+            return STATUS_INVALID_PARAMETER;
+
+        h = *(PHANDLE)Irp->AssociatedIrp.SystemBuffer;
+#if defined(_WIN64)
+    }
+#endif
+
+    Status = ObReferenceObjectByHandle(h, 0, *IoFileObjectType, Irp->RequestorMode, (void**)&fileobj, NULL);
+
+    if (!NT_SUCCESS(Status)) {
+        ERR("ObReferenceObjectByHandle returned %08x\n", Status);
+        return Status;
+    }
+    
+    Status = is_device_part_of_mounted_btrfs_raid(fileobj->DeviceObject);
+    if (!NT_SUCCESS(Status)) {
+        ERR("is_device_part_of_mounted_btrfs_raid returned %08x\n", Status);
+        ObDereferenceObject(fileobj);
+        return Status;
+    }
+    
+    Status = dev_ioctl(fileobj->DeviceObject, IOCTL_DISK_IS_WRITABLE, NULL, 0, NULL, 0, TRUE, NULL);
+    if (!NT_SUCCESS(Status)) {
+        ERR("IOCTL_DISK_IS_WRITABLE returned %08x\n", Status);
+        ObDereferenceObject(fileobj);
+        return Status;
+    }
+    
+    Status = dev_ioctl(fileobj->DeviceObject, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0,
+                       &gli, sizeof(gli), TRUE, NULL);
+    if (!NT_SUCCESS(Status)) {
+        ERR("error reading length information: %08x\n", Status);
+        ObDereferenceObject(fileobj);
+        return Status;
+    }
+    
+    if (gli.Length.QuadPart < 0x100000) {
+        ERR("device was not large enough to hold FS (%llx bytes, need at least 1 MB)\n", gli.Length.QuadPart);
+        ObDereferenceObject(fileobj);
+        return STATUS_INTERNAL_ERROR;
+    }
+    
+    Status = dev_ioctl(fileobj->DeviceObject, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0,
+                       &mdn1, sizeof(MOUNTDEV_NAME), TRUE, NULL);
+    if (Status == STATUS_BUFFER_OVERFLOW) {
+        mdn2 = ExAllocatePoolWithTag(PagedPool, offsetof(MOUNTDEV_NAME, Name[0]) + mdn1.NameLength, ALLOC_TAG);
+        if (!mdn2) {
+            ERR("out of memory\n");
+            ObDereferenceObject(fileobj);
+            return STATUS_INTERNAL_ERROR;
+        }
+        
+        Status = dev_ioctl(fileobj->DeviceObject, IOCTL_MOUNTDEV_QUERY_DEVICE_NAME, NULL, 0,
+                           mdn2, offsetof(MOUNTDEV_NAME, Name[0]) + mdn1.NameLength, TRUE, NULL);
+        
+        if (!NT_SUCCESS(Status)) {
+            ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
+            ObDereferenceObject(fileobj);
+            return Status;
+        }
+    } else if (NT_SUCCESS(Status)) {
+        mdn2 = ExAllocatePoolWithTag(PagedPool, sizeof(MOUNTDEV_NAME), ALLOC_TAG);
+        if (!mdn2) {
+            ERR("out of memory\n");
+            ObDereferenceObject(fileobj);
+            return STATUS_INTERNAL_ERROR;
+        }
+        
+        RtlCopyMemory(mdn2, &mdn1, sizeof(MOUNTDEV_NAME));
+    } else {
+        ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned %08x\n", Status);
+        ObDereferenceObject(fileobj);
+        return Status;
+    }
+    
+    if (mdn2->NameLength == 0) {
+        ERR("IOCTL_MOUNTDEV_QUERY_DEVICE_NAME returned zero-length name\n");
+        ObDereferenceObject(fileobj);
+        ExFreePool(mdn2);
+        return STATUS_INTERNAL_ERROR;
+    }
+    
+    volname.Length = volname.MaximumLength = mdn2->NameLength;
+    volname.Buffer = ExAllocatePoolWithTag(PagedPool, volname.MaximumLength, ALLOC_TAG);
+    if (!volname.Buffer) {
+        ERR("out of memory\n");
+        ObDereferenceObject(fileobj);
+        ExFreePool(mdn2);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    
+    RtlCopyMemory(volname.Buffer, mdn2->Name, volname.Length);
+    ExFreePool(mdn2);
+    
+    InitializeListHead(&rollback);
+    
+    ExAcquireResourceExclusiveLite(&Vcb->tree_lock, TRUE);
+        
+    if (Vcb->need_write) {
+        Status = do_write(Vcb, Irp, &rollback);
+        if (!NT_SUCCESS(Status)) {
+            ERR("do_write returned %08x\n", Status);
+            do_rollback(Vcb, &rollback);
+            goto end;
+        }
+    }
+    
+    free_trees(Vcb);
+    
+    clear_rollback(Vcb, &rollback);
+    
+    dev = ExAllocatePoolWithTag(NonPagedPool, sizeof(device), ALLOC_TAG);
+    if (!dev) {
+        ERR("out of memory\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto end;
+    }
+    
+    RtlZeroMemory(dev, sizeof(device));
+
+    dev->devobj = fileobj->DeviceObject;
+    dev->seeding = FALSE;
+    dev->length = gli.Length.QuadPart;
+    init_device(Vcb, dev, FALSE, TRUE);
+    
+    InitializeListHead(&dev->space);
+    
+    if (gli.Length.QuadPart > 0x100000) { // add disk hole - the first MB is marked as used
+        Status = add_space_entry(&dev->space, NULL, 0x100000, gli.Length.QuadPart - 0x100000);
+        if (!NT_SUCCESS(Status)) {
+            ERR("add_space_entry returned %08x\n", Status);
+            Status = STATUS_INTERNAL_ERROR;
+            goto end;
+        }
+    }
+    
+    dev_id = 0;
+    
+    le = Vcb->devices.Flink;
+    while (le != &Vcb->devices) {
+        device* dev = CONTAINING_RECORD(le, device, list_entry);
+        
+        if (dev->devitem.dev_id > dev_id)
+            dev_id = dev->devitem.dev_id;
+        
+        le = le->Flink;
+    }
+    
+    dev_id++;
+    
+    dev->devitem.dev_id = dev_id;
+    dev->devitem.num_bytes = gli.Length.QuadPart;
+    dev->devitem.bytes_used = 0;
+    dev->devitem.optimal_io_align = Vcb->superblock.sector_size;
+    dev->devitem.optimal_io_width = Vcb->superblock.sector_size;
+    dev->devitem.minimal_io_size = Vcb->superblock.sector_size;
+    dev->devitem.type = 0;
+    dev->devitem.generation = 0;
+    dev->devitem.start_offset = 0;
+    dev->devitem.dev_group = 0;
+    dev->devitem.seek_speed = 0;
+    dev->devitem.bandwidth = 0;
+    get_uuid(&dev->devitem.device_uuid);
+    dev->devitem.fs_uuid = Vcb->superblock.uuid;
+    
+    di = ExAllocatePoolWithTag(PagedPool, sizeof(DEV_ITEM), ALLOC_TAG);
+    if (!di) {
+        ERR("out of memory\n");
+        goto end;
+    }
+    
+    RtlCopyMemory(di, &dev->devitem, sizeof(DEV_ITEM));
+    
+    if (!insert_tree_item(Vcb, Vcb->chunk_root, 1, TYPE_DEV_ITEM, di->dev_id, di, sizeof(DEV_ITEM), NULL, Irp, &rollback)) {
+        ERR("insert_tree_item failed\n");
+        ExFreePool(di);
+        Status = STATUS_INTERNAL_ERROR;
+        goto end;
+    }
+    
+    // add stats entry to dev tree
+    stats = ExAllocatePoolWithTag(PagedPool, sizeof(UINT64) * 5, ALLOC_TAG);
+    if (!stats) {
+        ERR("out of memory\n");
+        Status = STATUS_INTERNAL_ERROR;
+        goto end;
+    }
+    
+    RtlZeroMemory(stats, sizeof(UINT64) * 5);
+    
+    searchkey.obj_id = 0;
+    searchkey.obj_type = TYPE_DEV_STATS;
+    searchkey.offset = di->dev_id;
+    
+    Status = find_item(Vcb, Vcb->dev_root, &tp, &searchkey, FALSE, Irp);
+    if (!NT_SUCCESS(Status)) {
+        ERR("error - find_item returned %08x\n", Status);
+        goto end;
+    }
+    
+    if (!keycmp(tp.item->key, searchkey))
+        delete_tree_item(Vcb, &tp, &rollback);
+    
+    if (!insert_tree_item(Vcb, Vcb->dev_root, 0, TYPE_DEV_STATS, di->dev_id, stats, sizeof(UINT64) * 5, NULL, Irp, &rollback)) {
+        ERR("insert_tree_item failed\n");
+        ExFreePool(stats);
+        Status = STATUS_INTERNAL_ERROR;
+        goto end;
+    }
+    
+    // We clear the first megabyte of the device, so Windows doesn't identify it as another FS
+    mb = ExAllocatePoolWithTag(PagedPool, 0x100000, ALLOC_TAG);
+    if (!mb) {
+        ERR("out of memory\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto end;
+    }
+    
+    RtlZeroMemory(mb, 0x100000);
+    
+    Status = write_data_phys(fileobj->DeviceObject, 0, mb, 0x100000);
+    if (!NT_SUCCESS(Status)) {
+        ERR("write_data_phys returned %08x\n", Status);
+        goto end;
+    }
+    
+    ExFreePool(mb);
+    
+    v = ExAllocatePoolWithTag(PagedPool, sizeof(volume), ALLOC_TAG);
+    if (!v) {
+        ERR("out of memory\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto end;
+    }
+    
+    v->fsuuid = Vcb->superblock.uuid;
+    v->devuuid = dev->devitem.device_uuid;
+    v->devnum = dev_id;
+    v->devpath = volname;
+    v->length = gli.Length.QuadPart;
+    v->gen1 = v->gen2 = Vcb->superblock.generation;
+    v->seeding = FALSE;
+    v->processed = TRUE;
+    
+    ExAcquireResourceExclusiveLite(&volumes_lock, TRUE);
+    InsertTailList(&volumes, &v->list_entry);
+    ExReleaseResourceLite(&volumes_lock);
+    
+    volname.Buffer = NULL;
+    
+    Status = dev_ioctl(fileobj->DeviceObject, IOCTL_STORAGE_GET_DEVICE_NUMBER, NULL, 0,
+                       &sdn, sizeof(STORAGE_DEVICE_NUMBER), TRUE, NULL);
+    if (!NT_SUCCESS(Status)) {
+        WARN("IOCTL_STORAGE_GET_DEVICE_NUMBER returned %08x\n", Status);
+        v->disk_num = 0;
+        v->part_num = 0;
+    } else {
+        v->disk_num = sdn.DeviceNumber;
+        v->part_num = sdn.PartitionNumber;
+    }
+    
+    RtlInitUnicodeString(&mmdevpath, MOUNTMGR_DEVICE_NAME);
+    Status = IoGetDeviceObjectPointer(&mmdevpath, FILE_READ_ATTRIBUTES, &mountmgrfo, &mountmgr);
+    if (!NT_SUCCESS(Status))
+        ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
+    else {
+        remove_drive_letter(mountmgr, v);
+        
+        ObDereferenceObject(mountmgrfo);
+    }
+    
+    Vcb->superblock.num_devices++;
+    Vcb->superblock.total_bytes += gli.Length.QuadPart;
+    Vcb->devices_loaded++;
+    InsertTailList(&Vcb->devices, &dev->list_entry);
+    
+    ObReferenceObject(fileobj->DeviceObject);
+    
+    do_write(Vcb, Irp, &rollback);
+
+    free_trees(Vcb);
+    
+    clear_rollback(Vcb, &rollback);
+    
+    Status = STATUS_SUCCESS;
+    
+end:
+    ExReleaseResourceLite(&Vcb->tree_lock);
+    ObDereferenceObject(fileobj);
+    
+    if (volname.Buffer)
+        ExFreePool(volname.Buffer);
+    
+    return Status;
+}
+
+static NTSTATUS allow_extended_dasd_io(device_extension* Vcb, PFILE_OBJECT FileObject) {
+    fcb* fcb;
+    ccb* ccb;
+    
+    TRACE("FSCTL_ALLOW_EXTENDED_DASD_IO\n");
+    
+    if (!FileObject)
+        return STATUS_INVALID_PARAMETER;
+    
+    fcb = FileObject->FsContext;
+    ccb = FileObject->FsContext2;
+    
+    if (!fcb)
+        return STATUS_INVALID_PARAMETER;
+    
+    if (fcb != Vcb->volume_fcb)
+        return STATUS_INVALID_PARAMETER;
+    
+    if (!ccb)
+        return STATUS_INVALID_PARAMETER;
+    
+    ccb->allow_extended_dasd_io = TRUE;
+    
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS query_uuid(device_extension* Vcb, void* data, ULONG length) {
+    if (length < sizeof(BTRFS_UUID))
+        return STATUS_BUFFER_OVERFLOW;
+    
+    RtlCopyMemory(data, &Vcb->superblock.uuid, sizeof(BTRFS_UUID));
+    
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL user) {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS Status;
@@ -2155,32 +2855,32 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL 
     switch (type) {
         case FSCTL_REQUEST_OPLOCK_LEVEL_1:
             WARN("STUB: FSCTL_REQUEST_OPLOCK_LEVEL_1\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_REQUEST_OPLOCK_LEVEL_2:
             WARN("STUB: FSCTL_REQUEST_OPLOCK_LEVEL_2\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_REQUEST_BATCH_OPLOCK:
             WARN("STUB: FSCTL_REQUEST_BATCH_OPLOCK\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_OPLOCK_BREAK_ACKNOWLEDGE:
             WARN("STUB: FSCTL_OPLOCK_BREAK_ACKNOWLEDGE\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_OPBATCH_ACK_CLOSE_PENDING:
             WARN("STUB: FSCTL_OPBATCH_ACK_CLOSE_PENDING\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_OPLOCK_BREAK_NOTIFY:
             WARN("STUB: FSCTL_OPLOCK_BREAK_NOTIFY\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_LOCK_VOLUME:
@@ -2201,17 +2901,17 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL 
 
         case FSCTL_IS_PATHNAME_VALID:
             WARN("STUB: FSCTL_IS_PATHNAME_VALID\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_MARK_VOLUME_DIRTY:
             WARN("STUB: FSCTL_MARK_VOLUME_DIRTY\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_QUERY_RETRIEVAL_POINTERS:
             WARN("STUB: FSCTL_QUERY_RETRIEVAL_POINTERS\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_GET_COMPRESSION:
@@ -2220,17 +2920,17 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL 
 
         case FSCTL_SET_COMPRESSION:
             WARN("STUB: FSCTL_SET_COMPRESSION\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_SET_BOOTLOADER_ACCESSED:
             WARN("STUB: FSCTL_SET_BOOTLOADER_ACCESSED\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_OPLOCK_BREAK_ACK_NO_2:
             WARN("STUB: FSCTL_OPLOCK_BREAK_ACK_NO_2\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_INVALIDATE_VOLUMES:
@@ -2239,12 +2939,12 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL 
 
         case FSCTL_QUERY_FAT_BPB:
             WARN("STUB: FSCTL_QUERY_FAT_BPB\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_REQUEST_FILTER_OPLOCK:
             WARN("STUB: FSCTL_REQUEST_FILTER_OPLOCK\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_FILESYSTEM_GET_STATISTICS:
@@ -2254,27 +2954,27 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL 
 
         case FSCTL_GET_NTFS_VOLUME_DATA:
             WARN("STUB: FSCTL_GET_NTFS_VOLUME_DATA\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_GET_NTFS_FILE_RECORD:
             WARN("STUB: FSCTL_GET_NTFS_FILE_RECORD\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_GET_VOLUME_BITMAP:
             WARN("STUB: FSCTL_GET_VOLUME_BITMAP\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_GET_RETRIEVAL_POINTERS:
             WARN("STUB: FSCTL_GET_RETRIEVAL_POINTERS\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_MOVE_FILE:
             WARN("STUB: FSCTL_MOVE_FILE\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_IS_VOLUME_DIRTY:
@@ -2282,18 +2982,17 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL 
             break;
 
         case FSCTL_ALLOW_EXTENDED_DASD_IO:
-            WARN("STUB: FSCTL_ALLOW_EXTENDED_DASD_IO\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = allow_extended_dasd_io(DeviceObject->DeviceExtension, IrpSp->FileObject);
             break;
 
         case FSCTL_FIND_FILES_BY_SID:
             WARN("STUB: FSCTL_FIND_FILES_BY_SID\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_SET_OBJECT_ID:
             WARN("STUB: FSCTL_SET_OBJECT_ID\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_GET_OBJECT_ID:
@@ -2303,7 +3002,7 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL 
 
         case FSCTL_DELETE_OBJECT_ID:
             WARN("STUB: FSCTL_DELETE_OBJECT_ID\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_SET_REPARSE_POINT:
@@ -2321,22 +3020,22 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL 
 
         case FSCTL_ENUM_USN_DATA:
             WARN("STUB: FSCTL_ENUM_USN_DATA\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_SECURITY_ID_CHECK:
             WARN("STUB: FSCTL_SECURITY_ID_CHECK\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_READ_USN_JOURNAL:
             WARN("STUB: FSCTL_READ_USN_JOURNAL\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_SET_OBJECT_ID_EXTENDED:
             WARN("STUB: FSCTL_SET_OBJECT_ID_EXTENDED\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_CREATE_OR_GET_OBJECT_ID:
@@ -2362,258 +3061,258 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL 
 
         case FSCTL_ENABLE_UPGRADE:
             WARN("STUB: FSCTL_ENABLE_UPGRADE\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_SET_ENCRYPTION:
             WARN("STUB: FSCTL_SET_ENCRYPTION\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_ENCRYPTION_FSCTL_IO:
             WARN("STUB: FSCTL_ENCRYPTION_FSCTL_IO\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_WRITE_RAW_ENCRYPTED:
             WARN("STUB: FSCTL_WRITE_RAW_ENCRYPTED\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_READ_RAW_ENCRYPTED:
             WARN("STUB: FSCTL_READ_RAW_ENCRYPTED\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_CREATE_USN_JOURNAL:
             WARN("STUB: FSCTL_CREATE_USN_JOURNAL\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_READ_FILE_USN_DATA:
             WARN("STUB: FSCTL_READ_FILE_USN_DATA\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_WRITE_USN_CLOSE_RECORD:
             WARN("STUB: FSCTL_WRITE_USN_CLOSE_RECORD\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_EXTEND_VOLUME:
             WARN("STUB: FSCTL_EXTEND_VOLUME\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_QUERY_USN_JOURNAL:
             WARN("STUB: FSCTL_QUERY_USN_JOURNAL\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_DELETE_USN_JOURNAL:
             WARN("STUB: FSCTL_DELETE_USN_JOURNAL\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_MARK_HANDLE:
             WARN("STUB: FSCTL_MARK_HANDLE\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_SIS_COPYFILE:
             WARN("STUB: FSCTL_SIS_COPYFILE\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_SIS_LINK_FILES:
             WARN("STUB: FSCTL_SIS_LINK_FILES\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_RECALL_FILE:
             WARN("STUB: FSCTL_RECALL_FILE\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_READ_FROM_PLEX:
             WARN("STUB: FSCTL_READ_FROM_PLEX\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_FILE_PREFETCH:
             WARN("STUB: FSCTL_FILE_PREFETCH\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
 #if WIN32_WINNT >= 0x0600
         case FSCTL_MAKE_MEDIA_COMPATIBLE:
             WARN("STUB: FSCTL_MAKE_MEDIA_COMPATIBLE\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_SET_DEFECT_MANAGEMENT:
             WARN("STUB: FSCTL_SET_DEFECT_MANAGEMENT\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_QUERY_SPARING_INFO:
             WARN("STUB: FSCTL_QUERY_SPARING_INFO\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_QUERY_ON_DISK_VOLUME_INFO:
             WARN("STUB: FSCTL_QUERY_ON_DISK_VOLUME_INFO\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_SET_VOLUME_COMPRESSION_STATE:
             WARN("STUB: FSCTL_SET_VOLUME_COMPRESSION_STATE\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_MODIFY_RM:
             WARN("STUB: FSCTL_TXFS_MODIFY_RM\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_QUERY_RM_INFORMATION:
             WARN("STUB: FSCTL_TXFS_QUERY_RM_INFORMATION\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_ROLLFORWARD_REDO:
             WARN("STUB: FSCTL_TXFS_ROLLFORWARD_REDO\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_ROLLFORWARD_UNDO:
             WARN("STUB: FSCTL_TXFS_ROLLFORWARD_UNDO\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_START_RM:
             WARN("STUB: FSCTL_TXFS_START_RM\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_SHUTDOWN_RM:
             WARN("STUB: FSCTL_TXFS_SHUTDOWN_RM\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_READ_BACKUP_INFORMATION:
             WARN("STUB: FSCTL_TXFS_READ_BACKUP_INFORMATION\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_WRITE_BACKUP_INFORMATION:
             WARN("STUB: FSCTL_TXFS_WRITE_BACKUP_INFORMATION\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_CREATE_SECONDARY_RM:
             WARN("STUB: FSCTL_TXFS_CREATE_SECONDARY_RM\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_GET_METADATA_INFO:
             WARN("STUB: FSCTL_TXFS_GET_METADATA_INFO\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_GET_TRANSACTED_VERSION:
             WARN("STUB: FSCTL_TXFS_GET_TRANSACTED_VERSION\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_SAVEPOINT_INFORMATION:
             WARN("STUB: FSCTL_TXFS_SAVEPOINT_INFORMATION\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_CREATE_MINIVERSION:
             WARN("STUB: FSCTL_TXFS_CREATE_MINIVERSION\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_TRANSACTION_ACTIVE:
             WARN("STUB: FSCTL_TXFS_TRANSACTION_ACTIVE\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_SET_ZERO_ON_DEALLOCATION:
             WARN("STUB: FSCTL_SET_ZERO_ON_DEALLOCATION\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_SET_REPAIR:
             WARN("STUB: FSCTL_SET_REPAIR\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_GET_REPAIR:
             WARN("STUB: FSCTL_GET_REPAIR\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_WAIT_FOR_REPAIR:
             WARN("STUB: FSCTL_WAIT_FOR_REPAIR\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_INITIATE_REPAIR:
             WARN("STUB: FSCTL_INITIATE_REPAIR\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_CSC_INTERNAL:
             WARN("STUB: FSCTL_CSC_INTERNAL\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_SHRINK_VOLUME:
             WARN("STUB: FSCTL_SHRINK_VOLUME\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_SET_SHORT_NAME_BEHAVIOR:
             WARN("STUB: FSCTL_SET_SHORT_NAME_BEHAVIOR\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_DFSR_SET_GHOST_HANDLE_STATE:
             WARN("STUB: FSCTL_DFSR_SET_GHOST_HANDLE_STATE\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_LIST_TRANSACTION_LOCKED_FILES:
             WARN("STUB: FSCTL_TXFS_LIST_TRANSACTION_LOCKED_FILES\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_LIST_TRANSACTIONS:
             WARN("STUB: FSCTL_TXFS_LIST_TRANSACTIONS\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_QUERY_PAGEFILE_ENCRYPTION:
             WARN("STUB: FSCTL_QUERY_PAGEFILE_ENCRYPTION\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_RESET_VOLUME_ALLOCATION_HINTS:
             WARN("STUB: FSCTL_RESET_VOLUME_ALLOCATION_HINTS\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 
         case FSCTL_TXFS_READ_BACKUP_INFORMATION2:
             WARN("STUB: FSCTL_TXFS_READ_BACKUP_INFORMATION2\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
             
         case FSCTL_CSV_CONTROL:
             WARN("STUB: FSCTL_CSV_CONTROL\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
 #endif
         case FSCTL_BTRFS_GET_FILE_IDS:
@@ -2635,13 +3334,53 @@ NTSTATUS fsctl_request(PDEVICE_OBJECT DeviceObject, PIRP Irp, UINT32 type, BOOL 
         case FSCTL_BTRFS_SET_INODE_INFO:
             Status = set_inode_info(IrpSp->FileObject, map_user_buffer(Irp), IrpSp->Parameters.FileSystemControl.OutputBufferLength);
             break;
+            
+        case FSCTL_BTRFS_GET_DEVICES:
+            Status = get_devices(DeviceObject->DeviceExtension, map_user_buffer(Irp), IrpSp->Parameters.FileSystemControl.OutputBufferLength);
+            break;
+            
+        case FSCTL_BTRFS_GET_USAGE:
+            Status = get_usage(DeviceObject->DeviceExtension, map_user_buffer(Irp), IrpSp->Parameters.FileSystemControl.OutputBufferLength);
+            break;
+            
+        case FSCTL_BTRFS_START_BALANCE:
+            Status = start_balance(DeviceObject->DeviceExtension, Irp->AssociatedIrp.SystemBuffer, IrpSp->Parameters.FileSystemControl.InputBufferLength, Irp->RequestorMode);
+            break;
+            
+        case FSCTL_BTRFS_QUERY_BALANCE:
+            Status = query_balance(DeviceObject->DeviceExtension, map_user_buffer(Irp), IrpSp->Parameters.FileSystemControl.OutputBufferLength);
+            break;
+
+        case FSCTL_BTRFS_PAUSE_BALANCE:
+            Status = pause_balance(DeviceObject->DeviceExtension, Irp->RequestorMode);
+            break;
+
+        case FSCTL_BTRFS_RESUME_BALANCE:
+            Status = resume_balance(DeviceObject->DeviceExtension, Irp->RequestorMode);
+            break;
+            
+        case FSCTL_BTRFS_STOP_BALANCE:
+            Status = stop_balance(DeviceObject->DeviceExtension, Irp->RequestorMode);
+            break;
+            
+        case FSCTL_BTRFS_ADD_DEVICE:
+            Status = add_device(DeviceObject->DeviceExtension, Irp, Irp->AssociatedIrp.SystemBuffer, IrpSp->Parameters.FileSystemControl.InputBufferLength, Irp->RequestorMode);
+            break;
+            
+        case FSCTL_BTRFS_REMOVE_DEVICE:
+            Status = remove_device(DeviceObject->DeviceExtension, Irp->AssociatedIrp.SystemBuffer, IrpSp->Parameters.FileSystemControl.InputBufferLength, Irp->RequestorMode);
+        break;
+        
+        case FSCTL_BTRFS_GET_UUID:
+            Status = query_uuid(DeviceObject->DeviceExtension, map_user_buffer(Irp), IrpSp->Parameters.FileSystemControl.OutputBufferLength);
+        break;
 
         default:
             TRACE("unknown control code %x (DeviceType = %x, Access = %x, Function = %x, Method = %x)\n",
                           IrpSp->Parameters.FileSystemControl.FsControlCode, (IrpSp->Parameters.FileSystemControl.FsControlCode & 0xff0000) >> 16,
                           (IrpSp->Parameters.FileSystemControl.FsControlCode & 0xc000) >> 14, (IrpSp->Parameters.FileSystemControl.FsControlCode & 0x3ffc) >> 2,
                           IrpSp->Parameters.FileSystemControl.FsControlCode & 0x3);
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
     }
     
