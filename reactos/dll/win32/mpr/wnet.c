@@ -209,7 +209,7 @@ static void _tryLoadProvider(PCWSTR provider)
                         if (connectCap & WNNC_CON_ADDCONNECTION)
                             provider->addConnection = MPR_GETPROC(NPAddConnection);
                         if (connectCap & WNNC_CON_ADDCONNECTION3)
-                        provider->addConnection3 = MPR_GETPROC(NPAddConnection3);
+                            provider->addConnection3 = MPR_GETPROC(NPAddConnection3);
                         if (connectCap & WNNC_CON_CANCELCONNECTION)
                             provider->cancelConnection = MPR_GETPROC(NPCancelConnection);
 #ifdef __REACTOS__

@@ -59,10 +59,10 @@ Index: wnet.c
  } WNetProvider, *PWNetProvider;
  
  typedef struct _WNetProviderTable
-@@ -214,6 +207,9 @@
-                         provider->addConnection = MPR_GETPROC(NPAddConnection);
-                         provider->addConnection3 = MPR_GETPROC(NPAddConnection3);
-                         provider->cancelConnection = MPR_GETPROC(NPCancelConnection);
+@@ -219,6 +212,10 @@
+                             provider->addConnection3 = MPR_GETPROC(NPAddConnection3);
+                         if (connectCap & WNNC_CON_CANCELCONNECTION)
+                             provider->cancelConnection = MPR_GETPROC(NPCancelConnection);
 +#ifdef __REACTOS__
 +                        if (connectCap & WNNC_CON_GETCONNECTIONS)
 +                            provider->getConnection = MPR_GETPROC(NPGetConnection);
@@ -70,7 +70,7 @@ Index: wnet.c
                          TRACE("NPAddConnection %p\n", provider->addConnection);
                          TRACE("NPAddConnection3 %p\n", provider->addConnection3);
                          TRACE("NPCancelConnection %p\n", provider->cancelConnection);
-@@ -251,6 +247,85 @@
+@@ -256,6 +253,85 @@
           debugstr_w(provider));
  }
  
@@ -156,7 +156,7 @@ Index: wnet.c
  void wnetInit(HINSTANCE hInstDll)
  {
      static const WCHAR providerOrderKey[] = { 'S','y','s','t','e','m','\\',
-@@ -329,6 +404,64 @@
+@@ -334,6 +410,64 @@
          }
          RegCloseKey(hKey);
      }
@@ -221,7 +221,7 @@ Index: wnet.c
  }
  
  void wnetFree(void)
-@@ -1870,6 +2003,43 @@
+@@ -1875,6 +2009,43 @@
          }
      }
  
@@ -265,7 +265,7 @@ Index: wnet.c
      return ret;
  }
  
-@@ -2061,6 +2231,37 @@
+@@ -2066,6 +2237,37 @@
              }
          }
      }
@@ -303,7 +303,7 @@ Index: wnet.c
      return ret;
  }
  
-@@ -2188,6 +2389,7 @@
+@@ -2193,6 +2395,7 @@
  /* find the network connection for a given drive; helper for WNetGetConnection */
  static DWORD get_drive_connection( WCHAR letter, LPWSTR remote, LPDWORD size )
  {
@@ -311,7 +311,7 @@ Index: wnet.c
      char buffer[1024];
      struct mountmgr_unix_drive *data = (struct mountmgr_unix_drive *)buffer;
      HANDLE mgr;
-@@ -2230,6 +2432,32 @@
+@@ -2235,6 +2438,32 @@
      }
      CloseHandle( mgr );
      return ret;
