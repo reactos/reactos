@@ -192,12 +192,15 @@ ScmLogonService(
     IN PSERVICE_IMAGE pImage)
 {
 #if 0
-    PWSTR pUserName = NULL;
-    PWSTR pDomainName = NULL;
+    PROFILEINFOW ProfileInfo;
+    PWSTR pszUserName = NULL;
+    PWSTR pszDomainName = NULL;
+    PWSTR pszPassword = NULL;
     PWSTR ptr;
     DWORD dwError = ERROR_SUCCESS;
 #endif
-    DPRINT("ScmLogonService()\n");
+
+    DPRINT("ScmLogonService(%p %p)\n", pService, pImage);
 
     DPRINT("Service %S\n", pService->lpServiceName);
 
@@ -208,39 +211,76 @@ ScmLogonService(
     return ERROR_SUCCESS;
 
 #if 0
+    /* Get the user and domain names */
     ptr = wcschr(pImage->pszAccountName, L'\\');
     if (ptr != NULL)
     {
         *ptr = L'\0';
 
-        pUserName = ptr + 1;
-        pDomainName = pImage->pszAccountName;
+        pszUserName = ptr + 1;
+        pszDomainName = pImage->pszAccountName;
     }
     else
     {
-        pUserName = pImage->pszAccountName;
-        pDomainName = NULL;
+        pszUserName = pImage->pszAccountName;
+        pszDomainName = NULL;
     }
 
-    if (pDomainName == NULL || wcscmp(pDomainName, L".") == 0)
+    /* Build the service 'password' */
+    pszPassword = HeapAlloc(GetProcessHeap(),
+                            HEAP_ZERO_MEMORY,
+                            (wcslen(pService->lpServiceName) + 5) * sizeof(WCHAR));
+    if (pszPassword == NULL)
     {
-        // pDomainName = computer name
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
     }
 
-    DPRINT("Domain: %S  User: %S\n", pDomainName, pUserName);
+    wcscpy(pszPassword, L"_SC_");
+    wcscat(pszPassword, pService->lpServiceName);
 
-    /* Logon the user */
-    // FIXME: Use the password!!
-    if (!LogonUserW(pUserName,
-                    pDomainName,
-                    L"", // FIXME: lpszPassword,
+    DPRINT("Domain: %S  User: %S  Password: %S\n", pszDomainName, pszUserName, pszPassword);
+
+    /* Service logon */
+    if (!LogonUserW(pszUserName,
+                    pszDomainName,
+                    pszPassword,
                     LOGON32_LOGON_SERVICE,
                     LOGON32_PROVIDER_DEFAULT,
                     &pImage->hToken))
     {
         dwError = GetLastError();
         DPRINT1("LogonUserW() failed (Error %lu)\n", dwError);
+        goto done;
     }
+
+    // FIXME: Call LoadUserProfileW to be able to initialize a per-user
+    // environment block, with user-specific environment variables as
+    // %USERNAME%, %USERPROFILE%, and %ALLUSERSPROFILE% correctly initialized!!
+
+    /* Load the user profile, so that the per-user environment variables can be initialized */
+    ZeroMemory(&ProfileInfo, sizeof(ProfileInfo));
+    ProfileInfo.dwSize = sizeof(ProfileInfo);
+    ProfileInfo.dwFlags = PI_NOUI;
+    ProfileInfo.lpUserName = pszUserName;
+    // ProfileInfo.lpProfilePath = NULL;
+    // ProfileInfo.lpDefaultPath = NULL;
+    // ProfileInfo.lpServerName = NULL;
+    // ProfileInfo.lpPolicyPath = NULL;
+    // ProfileInfo.hProfile = NULL;
+
+    if (!LoadUserProfileW(pImage->hToken, &ProfileInfo))
+    {
+        dwError = GetLastError();
+        DPRINT1("LoadUserProfileW() failed (Error %lu)\n", dwError);
+        goto done;
+    }
+
+    pImage->hProfile = ProfileInfo.hProfile;
+
+done:
+    if (pszPassword != NULL)
+        HeapFree(GetProcessHeap(), 0, pszPassword);
 
     if (ptr != NULL)
         *ptr = L'\\';
@@ -348,6 +388,10 @@ ScmCreateOrReferenceServiceImage(PSERVICE pService)
         {
             DPRINT1("ScmCreateNewControlPipe() failed (Error %lu)\n", dwError);
 
+            /* Unload the user profile */
+            if (pServiceImage->hProfile != NULL)
+                UnloadUserProfile(pServiceImage->hToken, pServiceImage->hProfile);
+
             /* Close the logon token */
             if (pServiceImage->hToken != NULL)
                 CloseHandle(pServiceImage->hToken);
@@ -420,6 +464,10 @@ ScmDereferenceServiceImage(PSERVICE_IMAGE pServiceImage)
         /* Close the control pipe */
         if (pServiceImage->hControlPipe != INVALID_HANDLE_VALUE)
             CloseHandle(pServiceImage->hControlPipe);
+
+        /* Unload the user profile */
+        if (pServiceImage->hProfile != NULL)
+            UnloadUserProfile(pServiceImage->hToken, pServiceImage->hProfile);
 
         /* Close the logon token */
         if (pServiceImage->hToken != NULL)

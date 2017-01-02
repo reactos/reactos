@@ -51,6 +51,7 @@ typedef struct _SERVICE_IMAGE
     HANDLE hProcess;
     DWORD dwProcessId;
     HANDLE hToken;
+    HANDLE hProfile;
 } SERVICE_IMAGE, *PSERVICE_IMAGE;
 
 
