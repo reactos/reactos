@@ -22,14 +22,17 @@
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
+#ifdef USE_CRYPTOAPI
 HCRYPTPROV Prov;
+#endif
 PVOID LockedMemoryPtr = NULL;
 ULONG LockedMemorySize = 0;
+
 BOOL
 NtlmInitializeRNG(VOID)
 {
-    BOOL ret;
-
+    BOOL ret = TRUE;
+#ifdef USE_CRYPTOAPI
     /* prevent double initialization */
     if(Prov)
         return TRUE;
@@ -42,27 +45,33 @@ NtlmInitializeRNG(VOID)
 
     if(!ret)
         ERR("CryptAcquireContext failed with %x.\n",GetLastError());
+#endif
     return ret;
 }
 
 VOID
 NtlmTerminateRNG(VOID)
 {
+#ifdef USE_CRYPTOAPI
     if(Prov)
     {
         CryptReleaseContext(Prov,0);
         Prov = 0;
     }
+#endif
 }
 
 NTSTATUS
 NtlmGenerateRandomBits(VOID *Bits, ULONG Size)
 {
+#ifdef USE_CRYPTOAPI
     if(CryptGenRandom(Prov, Size, (BYTE*)Bits))
         return STATUS_SUCCESS;
-
-    //return STATUS_UNSUCCESSFUL;
-    return STATUS_SUCCESS;
+#else
+    if(RtlGenRandom(Bits, Size))
+        return STATUS_SUCCESS;
+#endif
+    return STATUS_UNSUCCESSFUL;
 }
 
 BOOL

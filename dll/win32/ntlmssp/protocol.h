@@ -1,24 +1,24 @@
 /*
- * Copyright 2011 Samuel Serapión
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
- */
+* Copyright 2011 Samuel Serapión
+*
+* This library is free software; you can redistribute it and/or
+* modify it under the terms of the GNU Lesser General Public
+* License as published by the Free Software Foundation; either
+* version 2.1 of the License, or (at your option) any later version.
+*
+* This library is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+* Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public
+* License along with this library; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+*
+*/
 
 /* see "NT LAN Manager (NTLM) Authentication Protocol Specification"
- * [MS-NLMP] — v20110504 for more details */
+* [MS-NLMP] — v20110504 for more details */
 
 /* signature */
 #define NTLMSSP_SIGNATURE "NTLMSSP\0"
@@ -65,6 +65,8 @@
 #define NTLMSSP_REVISION_W2K3 0x0F
 
 /* basic types */
+typedef char const* PCCHAR;
+
 typedef struct _CYPHER_BLOCK
 {
     CHAR data[8];
@@ -111,10 +113,10 @@ typedef struct _NTLM_WINDOWS_VERSION
 }NTLM_WINDOWS_VERSION, *PNTLM_WINDOWS_VERSION;
 
 /*
- * Offset contains the offset from the beginning of the message to the
- * actual value in the payload area. In the event of no data being sent
- * Length and MaxLength should generaly be set to zero and ignored.
- */
+* Offset contains the offset from the beginning of the message to the
+* actual value in the payload area. In the event of no data being sent
+* Length and MaxLength should generaly be set to zero and ignored.
+*/
 //NTLM_UNICODE_STRING_OVER_THE_WIRE
 typedef struct _NTLM_BLOB
 {
@@ -161,7 +163,7 @@ typedef struct _AUTHENTICATE_MESSAGE
     ULONG NegotiateFlags;
     NTLM_WINDOWS_VERSION Version;
     BYTE MIC[16]; //doc says its ommited in nt,2k,xp,2k3
-    /* payload */
+                  /* payload */
 }AUTHENTICATE_MESSAGE, *PAUTHENTICATE_MESSAGE;
 
 typedef struct _MESSAGE_SIGNATURE
@@ -172,18 +174,19 @@ typedef struct _MESSAGE_SIGNATURE
     ULONG Nonce;
 }MESSAGE_SIGNATURE, *PMESSAGE_SIGNATURE;
 
+C_ASSERT(sizeof(MESSAGE_SIGNATURE) == 16);
 /* basic functions */
 
 VOID
 NTOWFv1(
-    const PWCHAR password,
+    LPCWSTR password,
     PUCHAR result);
 
-VOID
+BOOLEAN
 NTOWFv2(
-    const PWCHAR password,
-    const PWCHAR user,
-    const PWCHAR domain,
+    LPCWSTR password,
+    LPCWSTR user,
+    LPCWSTR domain,
     PUCHAR result);
 
 VOID
@@ -191,11 +194,11 @@ LMOWFv1(
     const PCCHAR password,
     PUCHAR result);
 
-VOID
+BOOLEAN
 LMOWFv2(
-    const PWCHAR password,
-    const PWCHAR user,
-    const PWCHAR domain,
+    LPCWSTR password,
+    LPCWSTR user,
+    LPCWSTR domain,
     PUCHAR result);
 
 VOID
@@ -211,20 +214,20 @@ KXKEY(
     const PUCHAR server_challenge,
     PUCHAR key_exchange_key);
 
-VOID
+BOOLEAN
 SIGNKEY(
     const PUCHAR RandomSessionKey,
     BOOLEAN IsClient,
     PUCHAR Result);
 
-VOID
+BOOLEAN
 SEALKEY(
     ULONG flags,
     const PUCHAR  RandomSessionKey,
     BOOLEAN client,
     PUCHAR result);
 
-VOID
+BOOLEAN
 MAC(ULONG flags,
     PCCHAR buf,
     ULONG buf_len,
@@ -282,7 +285,6 @@ SECURITY_STATUS
 NtlmGenerateNegotiateMessage(
     IN ULONG_PTR hContext,
     IN ULONG ContextReq,
-    IN PSecBuffer InputToken,
     OUT PSecBuffer OutputToken);
 
 SECURITY_STATUS
@@ -296,6 +298,14 @@ NtlmHandleNegotiateMessage(
     OUT PSecBuffer OutputToken2,
     OUT PULONG pContextAttr,
     OUT PTimeStamp ptsExpiry);
+
+SECURITY_STATUS
+NtlmGenerateChallengeMessage(
+    IN PNTLMSSP_CONTEXT Context,
+    IN PNTLMSSP_CREDENTIAL Credentials,
+    IN UNICODE_STRING TargetName,
+    IN ULONG MessageFlags,
+    OUT PSecBuffer OutputToken);
 
 SECURITY_STATUS
 NtlmHandleChallengeMessage(

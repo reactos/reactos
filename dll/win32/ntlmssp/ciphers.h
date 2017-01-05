@@ -54,7 +54,7 @@ typedef struct
 }MD5_CTX;
 
 /* advapi32 */
-void WINAPI MD5Init( MD5_CTX *ctx);
+void WINAPI MD5Init(MD5_CTX *ctx);
 void WINAPI MD5Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len);
 void WINAPI MD5Final(MD5_CTX *ctx);
 

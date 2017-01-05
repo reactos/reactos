@@ -25,11 +25,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 /* globals */
 CRITICAL_SECTION GlobalCritSect; /* use to read/write global state */
 
-NTLM_MODE NtlmMode = NtlmUserMode; /* FIXME */
+NTLM_MODE NtlmMode = NtlmUserMode; /* FIXME: No LSA mode support */
 UNICODE_STRING NtlmComputerNameString;
 UNICODE_STRING NtlmDomainNameString;
 UNICODE_STRING NtlmDnsNameString;
-UNICODE_STRING NtlmAvTargetInfo; // contains AV pairs with local info
+UNICODE_STRING NtlmAvTargetInfo;
 OEM_STRING NtlmOemComputerNameString;
 OEM_STRING NtlmOemDomainNameString;
 OEM_STRING NtlmOemDnsNameString;
@@ -41,7 +41,7 @@ NTSTATUS
 NtlmInitializeGlobals(VOID)
 {
     NTSTATUS status = STATUS_SUCCESS;
-    //LPWKSTA_USER_INFO_1 pBuf = NULL;
+    LPWKSTA_USER_INFO_1 pBuf = NULL;
     WCHAR compName[CNLEN + 1], domName[DNLEN+1], dnsName[256];
     ULONG compNamelen = sizeof(compName), dnsNamelen = sizeof(dnsName);
     PMSV1_0_AV_PAIR pAvPairs;
@@ -58,24 +58,24 @@ NtlmInitializeGlobals(VOID)
     if (!GetComputerNameExW(ComputerNameDnsFullyQualified, dnsName, &dnsNamelen))
     {
         dnsName[0] = L'\0';
-        ERR("could not get domain name!\n");
+        ERR("could not get dns name!\n");
     }
     TRACE("%s\n",debugstr_w(dnsName));
 
 	/* FIXME: this still does not match what msv1_0 returns */
-   // if (!(NERR_Success == NetWkstaUserGetInfo(0, 1, (LPBYTE*)&pBuf)))
-    //{
-        wcscpy(domName, L"WORKGROUP\0");
-        FIXME("how to get domain name!?\n");
-    //}
-    //else
-    //{
-    //    wcscpy(domName, pBuf->wkui1_logon_domain);
-    //}
+    if (!(NERR_Success == NetWkstaUserGetInfo(0, 1, (LPBYTE*)&pBuf)))
+    {
+        wcscpy(domName, L"WORKGROUP");
+        ERR("could not get domain name!\n");
+    }
+    else
+    {
+        wcscpy(domName, pBuf->wkui1_logon_domain);
+    }
 
-    //if (pBuf != NULL)
-    //    NetApiBufferFree(pBuf);
-    TRACE("%s\n",debugstr_w(domName));
+    if (pBuf != NULL)
+        NetApiBufferFree(pBuf);
+        ERR("%s\n",debugstr_w(domName));
 
     RtlCreateUnicodeString(&NtlmComputerNameString, compName);
     RtlCreateUnicodeString(&NtlmDnsNameString, dnsName);
@@ -101,9 +101,8 @@ NtlmInitializeGlobals(VOID)
     {
         ERR("could not get process token!!\n");
     }
-
+    //FIX ME: This is broken
     /* init global target AV pairs */
-
     RtlInitUnicodeString(&NtlmAvTargetInfo, NULL);
     AvPairsLen = NtlmDomainNameString.Length + //fix me: domain controller name
            NtlmComputerNameString.Length + //computer name
@@ -126,6 +125,8 @@ NtlmInitializeGlobals(VOID)
     NtlmAvlAdd(pAvPairs, MsvAvDnsComputerName, &NtlmDnsNameString, AvPairsLen);
     NtlmAvTargetInfo.Length = (USHORT)NtlmAvlLen(pAvPairs, AvPairsLen);
 
+    ERR("NtlmAvTargetInfo %S\n", NtlmAvTargetInfo.Buffer);
+    NtlmPrintAvPairs(pAvPairs);
     return status;
 }
 

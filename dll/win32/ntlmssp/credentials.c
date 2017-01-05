@@ -135,18 +135,29 @@ QueryCredentialsAttributesW(PCredHandle phCredential,
                             ULONG ulAttribute,
                             PVOID pBuffer)
 {
+    PNTLMSSP_CREDENTIAL credentials = NULL;
+    PSecPkgContext_NamesW credname;
     SECURITY_STATUS ret;
 
     TRACE("(%p, %lx, %p)\n", phCredential, ulAttribute, pBuffer);
 
-    if(ulAttribute == SECPKG_ATTR_NAMES)
+    credentials = NtlmReferenceCredential(phCredential->dwLower);
+
+    switch(ulAttribute)
     {
-        FIXME("SECPKG_CRED_ATTR_NAMES: stub\n");
+    case SECPKG_ATTR_NAMES:
+        credname = (PSecPkgContext_NamesW) pBuffer;
+        credname->sUserName = _wcsdup(credentials->UserName.Buffer);
+        ret = SEC_E_OK;
+        break;
+    default:
+        FIXME("QueryCredentialsAttributesW(%p, %lx, %p) Unimplemented\n",
+            phCredential, ulAttribute, pBuffer);
         ret = SEC_E_UNSUPPORTED_FUNCTION;
+        break;
     }
-    else
-        ret = SEC_E_UNSUPPORTED_FUNCTION;
-    
+
+    NtlmDereferenceCredential(phCredential->dwLower);
     return ret;
 }
 
@@ -156,18 +167,23 @@ QueryCredentialsAttributesA(IN PCredHandle phCredential,
                             IN ULONG ulAttribute,
                             OUT PVOID pBuffer)
 {
+    //PNTLMSSP_CREDENTIAL credentials = NULL;
     SECURITY_STATUS ret;
 
     TRACE("(%p, %lx, %p)\n", phCredential, ulAttribute, pBuffer);
 
-    if(ulAttribute == SECPKG_ATTR_NAMES)
+    //credentials = NtlmReferenceCredential(phCredential->dwLower);
+
+    switch(ulAttribute)
     {
-        FIXME("SECPKG_CRED_ATTR_NAMES: stub\n");
+    default:
+        FIXME("QueryCredentialsAttributesA(%p, %lx, %p) Unimplemented\n",
+            phCredential, ulAttribute, pBuffer);
         ret = SEC_E_UNSUPPORTED_FUNCTION;
+        break;
     }
-    else
-        ret = SEC_E_UNSUPPORTED_FUNCTION;
-    
+
+    //NtlmDereferenceCredential(phCredential->dwLower);
     return ret;
 }
 
@@ -203,8 +219,7 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
     RtlInitUnicodeString(&domain, NULL);
     RtlInitUnicodeString(&password, NULL);
 
-    //if(fCredentialUse == SECPKG_CRED_OUTBOUND)
-    if(pAuthData)
+    if(fCredentialUse == SECPKG_CRED_OUTBOUND && pAuthData)
     {
         PSEC_WINNT_AUTH_IDENTITY_W auth_data = pAuthData;
 
@@ -265,7 +280,6 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
     /* FIXME: LOOKUP STORED CREDENTIALS!!! */
 
     /* we need to build a credential */
-    /* refactor: move into seperate function */
     if(!foundCred)
     {
         cred = (PNTLMSSP_CREDENTIAL)NtlmAllocate(sizeof(NTLMSSP_CREDENTIAL));
@@ -305,8 +319,8 @@ AcquireCredentialsHandleW(IN OPTIONAL SEC_WCHAR *pszPrincipal,
     phCredential->dwUpper = credFlags;
     phCredential->dwLower = (ULONG_PTR)cred;
 
-    //*ptsExpiry->HighPart = 0x7FFFFF36;
-    //*ptsExpiry->LowPart = 0xD5969FFF;
+    ptsExpiry->HighPart = 0x7FFFFF36;
+    ptsExpiry->LowPart = 0xD5969FFF;
 
 
     /* free strings as we used recycled credentials */
@@ -438,7 +452,7 @@ FreeCredentialsHandle(PCredHandle phCredential)
     if(!phCredential)
         return SEC_E_INVALID_HANDLE;
 
-    NtlmDereferenceCredential((ULONG_PTR)phCredential->dwLower);
+    NtlmDereferenceCredential(phCredential->dwLower);
     phCredential = NULL;
 
     return SEC_E_OK;

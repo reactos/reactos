@@ -280,8 +280,7 @@ NtlmCreateNegoContext(IN ULONG_PTR Credential,
                 goto fail;
             }
         }
-
-    }//end is datagram
+    }
     
     /* generate session key */
     if (context->NegotiateFlags & NTLMSSP_NEGOTIATE_KEY_EXCH)
@@ -329,9 +328,10 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
                            OUT OPTIONAL PTimeStamp ptsExpiry)
 {
     SECURITY_STATUS ret = SEC_E_OK;
-    PSecBuffer InputToken1, InputToken2;
-    PSecBuffer OutputToken1, OutputToken2;
-    ULONG_PTR newContext;
+    PSecBuffer InputToken1, InputToken2 = NULL;
+    PSecBuffer OutputToken1, OutputToken2 = NULL;
+    SecBufferDesc BufferDesc;
+    ULONG_PTR newContext = 0;
     ULONG NegotiateFlags;
     UCHAR sessionKey;
 
@@ -390,14 +390,13 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
 
         ret = NtlmGenerateNegotiateMessage(newContext,
                                            fContextReq,
-                                           InputToken1,
                                            OutputToken1);
 
         /* set result */
         phNewContext->dwUpper = NegotiateFlags;
         phNewContext->dwLower = newContext;
     }
-    else        /* challenge! */
+    else if(phContext)       /* challenge! */
     {
         TRACE("ISC challenged!\n");
         if (fContextReq & ISC_REQ_USE_SUPPLIED_CREDS)
@@ -413,7 +412,6 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
                 return SEC_E_INVALID_TOKEN;
             }
         }
-
         *phNewContext = *phContext;
         ret = NtlmHandleChallengeMessage(phNewContext->dwLower,
                                          fContextReq,
@@ -425,6 +423,11 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
                                          ptsExpiry,
                                          &NegotiateFlags);
     }
+    else
+    {
+        ERR("bad call to InitializeSecurityContext\n");
+        goto fail;
+    }
 
     if(!NT_SUCCESS(ret))
     {
@@ -433,7 +436,6 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
     }
 
     /* build blob with the output message */
-    SecBufferDesc BufferDesc;
     BufferDesc.ulVersion = SECBUFFER_VERSION;
     BufferDesc.cBuffers = 1;
     BufferDesc.pBuffers = OutputToken1;
@@ -441,7 +443,8 @@ InitializeSecurityContextW(IN OPTIONAL PCredHandle phCredential,
     if(fContextReq & ISC_REQ_ALLOCATE_MEMORY)
         *pfContextAttr |= ISC_RET_ALLOCATED_MEMORY;
 
-    *pOutput = BufferDesc;
+    if(pOutput)
+        *pOutput = BufferDesc;
 
     return ret;
 
@@ -455,7 +458,7 @@ fail:
         if(OutputToken1 && OutputToken1->pvBuffer)
             NtlmFree(OutputToken1->pvBuffer);
         if(OutputToken2 && OutputToken2->pvBuffer)
-            NtlmFree(OutputToken1->pvBuffer);
+            NtlmFree(OutputToken2->pvBuffer);
     }
 
     return ret;
@@ -567,8 +570,11 @@ AcceptSecurityContext(IN PCredHandle phCredential,
                       OUT PTimeStamp ptsExpiry)
 {
     SECURITY_STATUS ret = SEC_E_OK;
-    PSecBuffer InputToken1, InputToken2;
-    PSecBuffer OutputToken1, OutputToken2;
+    PSecBuffer InputToken1, InputToken2 = NULL;
+    PSecBuffer OutputToken1, OutputToken2 = NULL;
+    SecBufferDesc BufferDesc;
+    USER_SESSION_KEY sessionKey;
+    ULONG userflags;
 
     TRACE("AcceptSecurityContext %p %p %p %lx %lx %p %p %p %p\n", phCredential, phContext, pInput,
         fContextReq, TargetDataRep, phNewContext, pOutput, pfContextAttr, ptsExpiry);
@@ -591,7 +597,7 @@ AcceptSecurityContext(IN PCredHandle phCredential,
                           FALSE);
     if(!ret)
     {
-        ERR("Failed to get input token!\n");
+        ERR("Failed to get input token 2!\n");
         //return SEC_E_INVALID_TOKEN;
     }
 
@@ -628,8 +634,6 @@ AcceptSecurityContext(IN PCredHandle phCredential,
     else
     {
         *phNewContext = *phContext;
-        USER_SESSION_KEY sessionKey;
-        ULONG userflags;
         TRACE("phNewContext->dwLower %lx\n", phNewContext->dwLower);
         ret = NtlmHandleAuthenticateMessage(phNewContext->dwLower,
                                             fContextReq,
@@ -648,7 +652,6 @@ AcceptSecurityContext(IN PCredHandle phCredential,
     }
 
     /* build blob with the output message */
-    SecBufferDesc BufferDesc;
     BufferDesc.ulVersion = SECBUFFER_VERSION;
     BufferDesc.cBuffers = 1;
     BufferDesc.pBuffers = OutputToken1;
