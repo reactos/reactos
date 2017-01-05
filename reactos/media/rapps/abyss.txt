@@ -1,13 +1,13 @@
 [Section]
 Name = Abyss Web server X1
-Version = 2.11.1
+Version = 2.11.2
 License = Freeware
 Description = Enables you to host your Web sites on your computer. It supports secure SSL/TLS connections (HTTPS) as well as a wide range of Web technologies. It can also run advanced PHP, Perl, Python, ASP, ASP.NET, and Ruby on Rails Web applications, which can be backed by databases such as MySQL, SQLite, MS SQL Server, MS Access, or Oracle.
 Size = 2.0 MiB
 Category = 5
 URLSite = http://www.aprelium.com/
 URLDownload = http://www.aprelium.com/data/abwsx1.exe
-SHA1 = 4df32d02c9393680ae26c530476d9bd23d1a9d56
+SHA1 = cf6acd29bb31a347cd8d2936fbfc7a4939613a8f
 CDPath = none
 
 [Section.0407]

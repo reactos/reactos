@@ -1,13 +1,13 @@
 [Section]
 Name = Resource Hacker
-Version = 4.2.5
+Version = 4.5.30
 License = Freeware
 Description = A freeware utility to view, modify, rename, add, delete and extract resources in 32bit & 64bit Windows executables and resource files (*.res).
 Size = 2.8 MiB
 Category = 7
 URLSite = http://www.angusj.com/resourcehacker/
 URLDownload = http://www.angusj.com/resourcehacker/reshacker_setup.exe
-SHA1 = 926c34069d72f4cb9fa542396f4c4a850e06780c
+SHA1 = 34a3755fc7aaa65c9658805548a089b43c283940
 CDPath = none
 
 [Section.0407]

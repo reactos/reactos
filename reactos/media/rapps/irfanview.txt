@@ -1,19 +1,19 @@
 [Section]
 Name = IrfanView
-Version = 4.42
+Version = 4.44
 License = Freeware (for personal use)
 Description = Viewer for all kinds of graphics/audio files/video files.
-Size = 2.0 MiB
+Size = 2.1 MiB
 Category = 3
 URLSite = http://www.irfanview.com/
-URLDownload = http://www.tucows.com/download/windows/files/iview442_setup.exe
-SHA1 = 91caafe0edca97e6411c0e6586ea23ec4cbd2fe0
+URLDownload = http://www.tucows.com/download/windows/files/iview444_setup.exe
+SHA1 = d9675c2c4fce810134718b74b0c598957c8ebcf4
 CDPath = none
 
 [Section.0407]
 License = Freeware für nichtkommerzielle Nutzung
 Description = Anzeigeprogramm für alle Arten von Grafik-/Audio- oder Video-Dateien.
-Size = 2,0 MiB
+Size = 2,1 MiB
 
 [Section.0a]
 License = Gratuito (para uso personal)
@@ -22,7 +22,7 @@ Description = Visor para toda clase de archivos de imagen, audio y video.
 [Section.040c]
 License = Gratuit (pour un usage personnel)
 Description = Visionneur pour tous les types de fichiers graphiques/audio/vidéo.
-Size = 2,0 Mio
+Size = 2,1 Mio
 
 [Section.0410]
 License = Gratuita (per uso personale)
@@ -39,17 +39,17 @@ Description = Przeglądarka dla bardzo wielu typów obrazów, plików audio oraz
 [Section.0418]
 License = Gratuită (pentru uz personal)
 Description = Lector pentru multiple formaturi de fișiere grafice/audio/video.
-Size = 2,0 Mio
+Size = 2,1 Mio
 
 [Section.0419]
 License = Бесплатно (для личного пользования)
 Description = Программа для просмотра всевозможных графических, звуковых, видео файлов.
-Size = 2,0 МиБ
+Size = 2,1 МиБ
 
 [Section.041f]
 License = Şahsî kullanım için ücretsiz.
 Description = Çizgelerin, ses kütüklerinin, vidyo kütüklerinin tüm türleri için görüntüleyici.
-Size = 2,0 MiB
+Size = 2,1 MiB
 
 [Section.0422]
 License = Freeware (для домашнього використання)

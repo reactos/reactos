@@ -1,26 +1,26 @@
 [Section]
 Name = Precise Calculator
-Version = 2.5
+Version = 2.6.3
 License = GPLv3
 Description = A free and open source scientific calculator for Windows. You will need a ZIP decompression program to install it.
-Size = 181.5 KiB
+Size = 181.7 KiB
 Category = 11
 URLSite = http://preccalc.sourceforge.net
 URLDownload = http://download.sourceforge.net/preccalc/preccalc-32bit.zip
-SHA1 = 40b0927681ee139f8e3ad8764ad5a2530acc18ef
+SHA1 = 8877a4b8c9ac90db8256681c6c5b4583d9610c31
 CDPath = none
 
 [Section.0407]
 Description = Freier und quelloffener wissenschaftlicher Rechner für Windows. Zum extrahieren wird 7-Zip oder ein ähnliches Tool benötigt.
-Size = 181,5 KiB
+Size = 181,7 KiB
 
 [Section.0418]
 Description = Calculatr științific gratuit, cu surse deschise. Este necesar un utilitar ca 7-Zip pentru a-l putea extrage.
-Size = 181,5 Kio
+Size = 181,7 Kio
 
 [Section.0419]
 Description = Бесплатный научный калькулятор с исходным кодом для Windows. Вам потребуется программа распаковки zip для установки.
-Size = 181,5 КиБ
+Size = 181,7 КиБ
 
 [Section.0a]
 Description = Una calculadora científica gratuita y de código abierto. Es necesario un descompresor de archivos zip para abrirlo.
@@ -29,7 +29,7 @@ Description = Una calculadora científica gratuita y de código abierto. Es nece
 Name = Precise Hesap Makinesi
 License = GPL sürüm 3
 Description = Windows için özgür ve açık kaynak bir bilimlik hesap makinesidir. Kurmak için bir ZIP çıkartma izlencesi gerekir.
-Size = 181,5 KiB
+Size = 181,7 KiB
 
 [Section.0804]
 Description = Windows 一个自由和开放源码科学计算器。你将需要一个 ZIP 减压程序来安装它。

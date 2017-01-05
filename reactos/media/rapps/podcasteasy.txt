@@ -16,7 +16,7 @@ Size = 682,5 KiB
 
 [Section.0418]
 Description = Aplicație pentru descărcarea de fișiere audio.
-Size = 0,7 Mio
+Size = 682,5 Kio
 
 [Section.0419]
 License = GNU GPL v3

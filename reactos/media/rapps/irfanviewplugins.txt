@@ -1,19 +1,19 @@
 [Section]
 Name = IrfanView Plugins
-Version = 4.42
+Version = 4.44
 License = Freeware (for personal use)
 Description = Additional Plugins for supporting more file types.
-Size = 15.6 MiB
+Size = 15.5 MiB
 Category = 3
 URLSite = http://www.irfanview.com/
-URLDownload = http://www.tucows.com/download/windows/files/irfanview_plugins_442_setup.exe
-SHA1 = 0ba08abb613a36de9a9369b75a83fde6427734d5
+URLDownload = http://www.tucows.com/download/windows/files/irfanview_plugins_444_setup.exe
+SHA1 = ad5e60a6c807384ac87813c96190c652dbef8f3e
 CDPath = none
 
 [Section.0407]
 License = Freeware für nichtkommerzielle Nutzung
 Description = Zusätzliche Plugins zur Unterstützung von weiteren Dateitypen.
-Size = 15,6 MiB
+Size = 15,5 MiB
 
 [Section.0a]
 License = Gratuito (para uso personal)
@@ -22,7 +22,7 @@ Description = Complementos adicionales para visualizar más formatos.
 [Section.040c]
 License = Gratuit (pour un usage personnel)
 Description = Modules additionnels pour supporter plus de types de fichiers.
-Size = 15,6 Mio
+Size = 15,5 Mio
 
 [Section.0410]
 License = Gratuita (per uso personale)
@@ -39,18 +39,18 @@ Description = Wtyczki otwierające dodatkowe typy plików w Irfanview.
 [Section.0418]
 License = Gratuită (pentru uz personal)
 Description = Extensii adiționale pentru a spori numărul de formate de fișiere recunoscute.
-Size = 15,6 Mio
+Size = 15,5 Mio
 
 [Section.0419]
 License = Бесплатно (для личного пользования)
 Description = Плагины для поддержки дополнительных типов файлов.
-Size = 15,6 МиБ
+Size = 15,5 МиБ
 
 [Section.041f]
 Name = IrfanView Eklentileri
 License = Şahsî kullanım için ücretsiz.
 Description = Daha çok kütük türü desteklemek için eklentiler.
-Size = 15,6 MiB
+Size = 15,5 MiB
 
 [Section.0422]
 License = Freeware (для домашнього використання)
