@@ -20,6 +20,9 @@
 #include "ntlmssp.h"
 #include "protocol.h"
 
+#include "wine/debug.h"
+WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
+
 PMSV1_0_AV_PAIR
 NtlmAvlInit(IN void * pAvList)
 {
@@ -47,7 +50,8 @@ NtlmAvlGet(IN PMSV1_0_AV_PAIR pAvList,
             return NULL;
         pAvPair = (PMSV1_0_AV_PAIR)((PUCHAR)pAvPair + pAvPair->AvLen +
             sizeof(MSV1_0_AV_PAIR));
-    }while(1);
+    }while(pAvPair);
+    return NULL;
 }
 
 ULONG

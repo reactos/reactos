@@ -118,7 +118,7 @@ void NtlmPrintHexDump(PBYTE buffer, DWORD length)
         rgbLine[cbLine++] = 0;
         TRACE("%s\n", rgbLine);
     }
-}  // end PrintHexDump
+}
 
 void
 NtlmPrintAvPairs(const PVOID Buffer)

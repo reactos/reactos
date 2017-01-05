@@ -27,7 +27,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 
 VOID
-NTOWFv1(const PWCHAR password,
+NTOWFv1(LPCWSTR password,
         PUCHAR result)
 {
     ULONG i, len = wcslen(password);
@@ -40,15 +40,18 @@ NTOWFv1(const PWCHAR password,
     MD4((PUCHAR)pass, 14, result);
 }
 
-VOID
-NTOWFv2(const PWCHAR password, const PWCHAR user, const PWCHAR domain, PUCHAR result)
+BOOLEAN
+NTOWFv2(LPCWSTR password,
+        LPCWSTR user,
+        LPCWSTR domain,
+        PUCHAR result)
 {
     UCHAR response_key_nt_v1 [16];
     ULONG len_user = user ? wcslen(user) : 0;
     ULONG len_domain = domain ? wcslen(domain) : 0;
-    WCHAR user_upper[len_user + 1];
     ULONG len_user_u = len_user * sizeof(WCHAR);
     ULONG len_domain_u = len_domain * sizeof(WCHAR);
+    WCHAR user_upper[len_user + 1];
     WCHAR buff[len_user + len_domain];
     ULONG i;
 
@@ -62,10 +65,12 @@ NTOWFv2(const PWCHAR password, const PWCHAR user, const PWCHAR domain, PUCHAR re
 
     NTOWFv1(password, response_key_nt_v1);
     HMAC_MD5(response_key_nt_v1, 16, (PUCHAR)buff, len_user_u + len_domain_u, result);
+
+    return TRUE;
 }
 
 VOID
-LMOWFv1(PCCHAR password, PUCHAR result)
+LMOWFv1(const PCCHAR password, PUCHAR result)
 {
 #if 0
     SystemFunction006(password, result);
@@ -95,14 +100,18 @@ LMOWFv1(PCCHAR password, PUCHAR result)
 #endif
 }
 
-VOID
-LMOWFv2(PWCHAR password, PWCHAR user, PWCHAR domain, PUCHAR result)
+BOOLEAN
+LMOWFv2(LPCWSTR password,
+        LPCWSTR user,
+        LPCWSTR domain,
+        PUCHAR result)
 {
-    NTOWFv2(password, user, domain, result);
+    return NTOWFv2(password, user, domain, result);
 }
 
 VOID
-NONCE(PUCHAR buffer, ULONG num)
+NONCE(PUCHAR buffer,
+      ULONG num)
 {
     NtlmGenerateRandomBits(buffer, num);
 }
@@ -118,21 +127,23 @@ KXKEY(ULONG flags,
     memcpy(key_exchange_key, session_base_key, 16);
 }
 
-VOID
+BOOLEAN
 SIGNKEY(const PUCHAR RandomSessionKey, BOOLEAN IsClient, PUCHAR Result)
 {
     PCHAR magic = IsClient
         ? "session key to client-to-server signing key magic constant"
         : "session key to server-to-client signing key magic constant";
-
     ULONG len = strlen(magic);
-    UCHAR md5_input [16 + len];
+    UCHAR md5_input[16 + len];
+
     memcpy(md5_input, RandomSessionKey, 16);
     memcpy(md5_input + 16, magic, len);
     MD5(md5_input, len + 16, Result);
+
+    return TRUE;
 }
 
-VOID
+BOOLEAN
 SEALKEY(ULONG flags, const PUCHAR RandomSessionKey, BOOLEAN client, PUCHAR result)
 {
     if (flags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
@@ -142,8 +153,15 @@ SEALKEY(ULONG flags, const PUCHAR RandomSessionKey, BOOLEAN client, PUCHAR resul
             : "session key to server-to-client sealing key magic constant";
 
         ULONG len = strlen(magic) + 1;
-        UCHAR md5_input [16 + len];
+        UCHAR* md5_input;
         ULONG key_len;
+
+        md5_input = (UCHAR*)NtlmAllocate(16+len);
+        if(!md5_input)
+        {
+            ERR("Out of memory\n");
+            return FALSE;
+        }
 
         if (flags & NTLMSSP_NEGOTIATE_128) {
             TRACE("NTLM SEALKEY(): 128-bit key (Extended session security)\n");
@@ -179,9 +197,11 @@ SEALKEY(ULONG flags, const PUCHAR RandomSessionKey, BOOLEAN client, PUCHAR resul
         TRACE("NTLM SEALKEY(): 128-bit key\n");
         memcpy(result, RandomSessionKey, 16);
     }
+
+    return TRUE;
 }
 
-VOID
+BOOLEAN
 MAC(ULONG flags,
     PCCHAR buf,
     ULONG buf_len,
@@ -195,7 +215,8 @@ MAC(ULONG flags,
 {
     ULONG *res_ptr;
 
-    if (flags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY) {
+    if (flags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
+    {
         UCHAR seal_key_ [16];
         UCHAR hmac[16];
         UCHAR tmp[4 + buf_len];
@@ -204,7 +225,8 @@ MAC(ULONG flags,
         RC4Init(Handle, SealingKey')
 
         */
-        if (flags & NTLMSSP_NEGOTIATE_DATAGRAM) {
+        if (flags & NTLMSSP_NEGOTIATE_DATAGRAM)
+        {
             UCHAR tmp2 [16+4];
             memcpy(tmp2, seal_key, seal_key_len);
             *((ULONG *)(tmp2+16)) = sequence;
@@ -225,7 +247,8 @@ MAC(ULONG flags,
 
         HMAC_MD5(sign_key, sign_key_len, tmp, 4 + buf_len, hmac);
 
-        if (flags & NTLMSSP_NEGOTIATE_KEY_EXCH) {
+        if (flags & NTLMSSP_NEGOTIATE_KEY_EXCH)
+        {
             TRACE("NTLM MAC(): Key Exchange\n");
             RC4K(seal_key_, seal_key_len, hmac, 8, result+4);
         } else {
@@ -248,6 +271,8 @@ MAC(ULONG flags,
         // Replace the first four bytes of the ciphertext with the random_pad
         res_ptr[1] = random_pad; // 4 bytes
     }
+
+    return TRUE;
 }
 
 VOID
@@ -324,6 +349,9 @@ NtlmChallengeResponse(IN PUNICODE_STRING pUserName,
     pNtResponse->Flags = 0;
     pNtResponse->MsgWord = 0;
 
+    TRACE("%wZ %wZ %wZ %wZ %p %p %p %p %p\n",
+        pUserName, pPassword, pDomainName, pServerName, ChallengeToClient,
+        pNtResponse, pLm2Response, pUserSessionKey, pLmSessionKey);
 
     NtQuerySystemTime((PLARGE_INTEGER)&pNtResponse->TimeStamp);
     NtlmGenerateRandomBits(pNtResponse->ChallengeFromClient, MSV1_0_CHALLENGE_LENGTH);
@@ -360,7 +388,6 @@ NtpLmSessionKeys(IN PUSER_SESSION_KEY NtpUserSessionKey,
                 OUT PLM_SESSION_KEY pLmSessionKey)
 {
     HMAC_MD5_CTX ctx;
-
 
     HMACMD5Init(&ctx, (PUCHAR)NtpUserSessionKey, sizeof(*NtpUserSessionKey));
     HMACMD5Update(&ctx, ChallengeToClient, MSV1_0_CHALLENGE_LENGTH);

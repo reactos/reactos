@@ -194,8 +194,9 @@ NtlmBlobToUnicodeString(IN PSecBuffer InputBuffer,
     }
 
     /* convert blob into a string */
-    OutputStr->MaximumLength = OutputStr->Length = Blob.Length;
+    OutputStr->MaximumLength = Blob.Length;
     OutputStr->Buffer = (PWSTR)((PCHAR)InputBuffer->pvBuffer) + offset;
+    OutputStr->Length = wcslen(OutputStr->Buffer) * sizeof(WCHAR);
 
     return SEC_E_OK;
 }

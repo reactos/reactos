@@ -25,7 +25,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 SECURITY_STATUS
 NtlmGenerateNegotiateMessage(IN ULONG_PTR Context,
                              IN ULONG ContextReq,
-                             IN PSecBuffer InputToken,
                              OUT PSecBuffer OutputToken)
 {
     PNTLMSSP_CONTEXT context = (PNTLMSSP_CONTEXT)Context;
@@ -69,18 +68,18 @@ NtlmGenerateNegotiateMessage(IN ULONG_PTR Context,
             return SEC_E_INSUFFICIENT_MEMORY;
     }
 
-    /* allocate a negotiate message */
-    if(!(message = (PNEGOTIATE_MESSAGE) NtlmAllocate(messageSize)))
-        return SEC_E_INSUFFICIENT_MEMORY;
+    /* use allocated memory */
+    message = (PNEGOTIATE_MESSAGE) OutputToken->pvBuffer;
+    offset = (ULONG_PTR)(message+1);
 
     /* build message */
-    strcpy(message->Signature, NTLMSSP_SIGNATURE);
+    strncpy(message->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
     message->MsgType = NtlmNegotiate;
     message->NegotiateFlags = context->NegotiateFlags;
 
     TRACE("nego message %p size %lu\n", message, messageSize);
-
-    offset = (ULONG_PTR)(message+1);
+    TRACE("context %p context->NegotiateFlags:\n",context);
+    NtlmPrintNegotiateFlags(message->NegotiateFlags);
 
     /* local connection */
     if((!cred->DomainName.Buffer && !cred->UserName.Buffer &&
@@ -108,20 +107,69 @@ NtlmGenerateNegotiateMessage(IN ULONG_PTR Context,
         blobBuffer[1].Offset = offset+1;
     }
 
-    /* zero struct */
+    /* zero version struct */
     memset(&message->Version, 0, sizeof(NTLM_WINDOWS_VERSION));
 
-    /* send it back */
-    memcpy(OutputToken->pvBuffer, message, messageSize);
-    OutputToken->cbBuffer = messageSize;
+    /* set state */
     context->State = NegotiateSent;
+    return SEC_I_CONTINUE_NEEDED;
+}
 
-    TRACE("context %p context->NegotiateFlags:\n",context);
-    NtlmPrintNegotiateFlags(message->NegotiateFlags);
+SECURITY_STATUS
+NtlmGenerateChallengeMessage(IN PNTLMSSP_CONTEXT Context,
+                             IN PNTLMSSP_CREDENTIAL Credentials,
+                             IN UNICODE_STRING TargetName,
+                             IN ULONG MessageFlags,
+                             OUT PSecBuffer OutputToken)
+{
+    PCHALLENGE_MESSAGE chaMessage = NULL;
+    ULONG messageSize, offset;
 
-    /* free resources */
-    NtlmFree(message);
+    /* compute message size */
+    messageSize = sizeof(CHALLENGE_MESSAGE) + NtlmAvTargetInfo.Length;
+    if(TargetName.Length > 0)
+        messageSize += TargetName.Length;
 
+    ERR("generating chaMessage of size %lu\n", messageSize);
+
+    /*
+     * according to tests ntlm does not listen to ASC_REQ_ALLOCATE_MEMORY
+     * or lack thereof, furthermore the buffer size is always NTLM_MAX_BUF
+     */
+    OutputToken->pvBuffer = NtlmAllocate(NTLM_MAX_BUF);
+    OutputToken->cbBuffer = messageSize;
+
+    /* check allocation */
+    if(!OutputToken->pvBuffer)
+        return SEC_E_INSUFFICIENT_MEMORY;
+
+    /* use allocated memory */
+    chaMessage = (PCHALLENGE_MESSAGE)OutputToken->pvBuffer;
+
+    /* build message */
+    strncpy(chaMessage->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
+    chaMessage->MsgType = NtlmChallenge;
+    chaMessage->NegotiateFlags = Context->NegotiateFlags;
+    chaMessage->NegotiateFlags |= NTLMSSP_NEGOTIATE_NTLM;
+
+    /* generate server challenge */
+    NtlmGenerateRandomBits(chaMessage->ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
+    memcpy(Context->Challenge, chaMessage->ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
+
+    /* point to the end of chaMessage */
+    offset = (ULONG_PTR)(chaMessage+messageSize);
+
+    /* set target information */
+    ERR("set target information chaMessage %p to %S, len %d, offset %d\n", chaMessage, TargetName.Buffer, TargetName.Length, &offset);
+    NtlmUnicodeStringToBlob((PVOID)chaMessage, &TargetName, &chaMessage->TargetName, &offset);
+
+    //ERR("set target information %p to avl %S, %d, %d\n", chaMessage, NtlmAvTargetInfo.Buffer, NtlmAvTargetInfo.Length, offset);
+    //NtlmPrintAvPairs(&NtlmAvTargetInfo);
+    //NtlmUnicodeStringToBlob((PVOID)chaMessage, &NtlmAvTargetInfo, &chaMessage->TargetInfo, &offset);
+    chaMessage->NegotiateFlags |= MessageFlags;
+
+    /* set state */
+    Context->State = ChallengeSent;
     return SEC_I_CONTINUE_NEEDED;
 }
 
@@ -142,8 +190,7 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
     PNTLMSSP_CONTEXT context = NULL;
     UNICODE_STRING targetName;
     OEM_STRING OemDomainName, OemWorkstationName;
-    ULONG targetFlags = 0;
-    BOOLEAN isUnicode;
+    ULONG negotiateFlags = 0;
 
     TRACE("NtlmHandleNegotiateMessage hContext %lx\n", hContext);
     if(!(context = NtlmAllocateContext()))
@@ -154,7 +201,6 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
     }
 
     hContext = (ULONG_PTR)context;
-    TRACE("NtlmHandleNegotiateMessage hContext %lx\n", hContext);
 
     /* InputToken should contain a negotiate message */
     if(InputToken->cbBuffer > NTLM_MAX_BUF ||
@@ -259,18 +305,16 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
     if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY ||
         negoMessage->NegotiateFlags & NTLMSSP_REQUEST_TARGET)
     {
-        targetFlags |= NTLMSSP_TARGET_TYPE_SERVER | NTLMSSP_REQUEST_TARGET | NTLMSSP_NEGOTIATE_TARGET_INFO;
+        negotiateFlags |= NTLMSSP_TARGET_TYPE_SERVER | NTLMSSP_REQUEST_TARGET | NTLMSSP_NEGOTIATE_TARGET_INFO;
 
         if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_UNICODE)
         {
-            isUnicode = TRUE;
-            targetFlags |= NTLMSSP_NEGOTIATE_UNICODE;
+            negotiateFlags |= NTLMSSP_NEGOTIATE_UNICODE;
             RtlInitUnicodeString(&targetName, NtlmComputerNameString.Buffer);
         }
         else if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM)
         {
-            isUnicode = FALSE;
-            targetFlags |= NTLMSSP_NEGOTIATE_OEM;
+            negotiateFlags |= NTLMSSP_NEGOTIATE_OEM;
             RtlInitUnicodeString(&targetName, (PWCHAR)&NtlmOemComputerNameString.Buffer);
         }
         else
@@ -281,87 +325,6 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
         }
     }
 
-    /* create a challenge message */
-    PCHALLENGE_MESSAGE chaMessage = NULL;
-    ULONG messageSize = sizeof(CHALLENGE_MESSAGE)+ targetName.Length + 1 + NtlmAvTargetInfo.Length;
-    ULONG offset;
-
-    /* ntlm does not listen to ASC_REQ_ALLOCATE_MEMORY or lack thereof */
-    /* further more the buffer size is always NTLM_MAX_BUF */
-    /* allocate output buffer */
-    OutputToken->pvBuffer = NtlmAllocate(NTLM_MAX_BUF);
-    OutputToken->cbBuffer = messageSize;
-
-    if(!OutputToken->pvBuffer)
-    {
-        ret = SEC_E_INSUFFICIENT_MEMORY;
-        goto exit;
-    }
-
-    /* allocate message */
-    if (!(chaMessage = (PCHALLENGE_MESSAGE)NtlmAllocate(messageSize)))
-    {
-        ret = SEC_E_INSUFFICIENT_MEMORY;
-        goto exit;
-    }
-
-    TRACE("message %p size %lu\n", chaMessage, messageSize);
-
-    /* build message */
-    strcpy(chaMessage->Signature, NTLMSSP_SIGNATURE);
-    chaMessage->MsgType = NtlmChallenge;
-    chaMessage->NegotiateFlags = context->NegotiateFlags;
-    chaMessage->NegotiateFlags |= NTLMSSP_NEGOTIATE_NTLM;
-
-    /* generate challenge */
-    NtlmGenerateRandomBits(chaMessage->ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
-    memcpy(context->Challenge, chaMessage->ServerChallenge, MSV1_0_CHALLENGE_LENGTH);
-
-    offset = (ULONG_PTR)(chaMessage+1);
-
-    if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
-    {
-        negoMessage->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_LM_KEY;
-        chaMessage->NegotiateFlags |= NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
-    }
-    else if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_LM_KEY)
-    {
-        chaMessage->NegotiateFlags |= NTLMSSP_NEGOTIATE_LM_KEY;
-    }
-
-    if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_ALWAYS_SIGN)
-        chaMessage->NegotiateFlags |= NTLMSSP_NEGOTIATE_ALWAYS_SIGN;
-
-    if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_SIGN)
-    {
-        chaMessage->NegotiateFlags |= NTLMSSP_NEGOTIATE_SIGN;
-        *pContextAttr |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
-        context->ContextFlags |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
-    }
-
-    if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_SEAL)
-    {
-        chaMessage->NegotiateFlags |= NTLMSSP_NEGOTIATE_SEAL;
-        *pContextAttr |= ASC_RET_CONFIDENTIALITY;
-        context->ContextFlags |= ASC_RET_CONFIDENTIALITY;
-    }
-
-    if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_KEY_EXCH)
-        chaMessage->NegotiateFlags |= NTLMSSP_NEGOTIATE_KEY_EXCH;
-
-    /* client requested encryption */
-    if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_128)
-        chaMessage->NegotiateFlags |= NTLMSSP_NEGOTIATE_128;
-    else if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_56)
-        chaMessage->NegotiateFlags |= NTLMSSP_NEGOTIATE_56;
-
-    if(negoMessage->NegotiateFlags & NTLMSSP_REQUEST_INIT_RESP)
-    {
-        chaMessage->NegotiateFlags |= NTLMSSP_REQUEST_INIT_RESP;
-        *pContextAttr |= ASC_RET_IDENTIFY;
-        context->ContextFlags |= ASC_RET_IDENTIFY;
-    }
-
     /* check for local call */
     if((negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED) &&
         (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED))
@@ -369,30 +332,70 @@ NtlmHandleNegotiateMessage(IN ULONG_PTR hCredential,
         NtlmBlobToUnicodeString(InputToken, negoMessage->OemDomainName, (PUNICODE_STRING)&OemDomainName);
         NtlmBlobToUnicodeString(InputToken, negoMessage->OemWorkstationName, (PUNICODE_STRING)&OemWorkstationName);
 
-        if (RtlEqualString(&OemWorkstationName, &NtlmOemComputerNameString, FALSE)&&
+        if (RtlEqualString(&OemWorkstationName, &NtlmOemComputerNameString, FALSE) &&
             RtlEqualString(&OemDomainName, &NtlmOemDomainNameString, FALSE))
         {
             TRACE("local negotiate detected!\n");
-            chaMessage->NegotiateFlags |= NTLMSSP_NEGOTIATE_LOCAL_CALL;
+            negotiateFlags |= NTLMSSP_NEGOTIATE_LOCAL_CALL;
         }
     }
 
-    NtlmUnicodeStringToBlob((PVOID)chaMessage, &targetName, &chaMessage->TargetName, &offset);
-    NtlmUnicodeStringToBlob((PVOID)chaMessage, &NtlmAvTargetInfo, &chaMessage->TargetInfo, &offset);
-    chaMessage->NegotiateFlags |= targetFlags;
+    /* compute negotiate message flags */
+    if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY)
+    {
+        negoMessage->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_LM_KEY;
+        negotiateFlags |= NTLMSSP_NEGOTIATE_EXTENDED_SESSIONSECURITY;
+    }
+    else if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_LM_KEY)
+    {
+        negotiateFlags |= NTLMSSP_NEGOTIATE_LM_KEY;
+    }
 
-    memcpy(OutputToken->pvBuffer, chaMessage, messageSize);
-    OutputToken->cbBuffer = messageSize;
-    context->State = ChallengeSent;
-    ret = SEC_I_CONTINUE_NEEDED;
+    if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_ALWAYS_SIGN)
+        negotiateFlags |= NTLMSSP_NEGOTIATE_ALWAYS_SIGN;
+
+    if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_SIGN)
+    {
+        *pContextAttr |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
+        context->ContextFlags |= (ASC_RET_SEQUENCE_DETECT | ASC_RET_REPLAY_DETECT);
+        negotiateFlags |= NTLMSSP_NEGOTIATE_SIGN;
+    }
+
+    if (negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_SEAL)
+    {
+        *pContextAttr |= ASC_RET_CONFIDENTIALITY;
+        context->ContextFlags |= ASC_RET_CONFIDENTIALITY;
+        negotiateFlags |= NTLMSSP_NEGOTIATE_SEAL;
+    }
+
+    if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_KEY_EXCH)
+        negotiateFlags |= NTLMSSP_NEGOTIATE_KEY_EXCH;
+
+    /* client requested encryption */
+    if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_128)
+        negotiateFlags |= NTLMSSP_NEGOTIATE_128;
+    else if(negoMessage->NegotiateFlags & NTLMSSP_NEGOTIATE_56)
+        negotiateFlags |= NTLMSSP_NEGOTIATE_56;
+
+    if(negoMessage->NegotiateFlags & NTLMSSP_REQUEST_INIT_RESP)
+    {
+        *pContextAttr |= ASC_RET_IDENTIFY;
+        context->ContextFlags |= ASC_RET_IDENTIFY;
+        negotiateFlags |= NTLMSSP_REQUEST_INIT_RESP;
+    }
+
+    ret = NtlmGenerateChallengeMessage(context,
+                                       cred,
+                                       targetName,
+                                       negotiateFlags,
+                                       OutputToken);
 
 exit:
-    //if(chaMessage) NtlmFree(chaMessage);
-    //if(negoMessage) NtlmFree(negoMessage);
-    //if(cred) NtlmDereferenceCredential((ULONG_PTR)cred);
-    //if(targetName.Buffer) NtlmFree(targetName.Buffer);
-    //if(OemDomainName.Buffer) NtlmFree(OemDomainName.Buffer);
-    //if(OemWorkstationName.Buffer) NtlmFree(OemWorkstationName.Buffer);
+    if(negoMessage) NtlmFree(negoMessage);
+    if(cred) NtlmDereferenceCredential((ULONG_PTR)cred);
+    if(targetName.Buffer) NtlmFree(targetName.Buffer);
+    if(OemDomainName.Buffer) NtlmFree(OemDomainName.Buffer);
+    if(OemWorkstationName.Buffer) NtlmFree(OemWorkstationName.Buffer);
 
     return ret;
 }
@@ -413,6 +416,19 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
     PCHALLENGE_MESSAGE challenge = NULL;
     PNTLMSSP_CREDENTIAL cred = NULL;
     BOOLEAN isUnicode;
+    UNICODE_STRING ServerName;
+    MSV1_0_NTLM3_RESPONSE NtResponse;
+    LM2_RESPONSE Lm2Response;
+    USER_SESSION_KEY UserSessionKey;
+    LM_SESSION_KEY LmSessionKey;
+
+    PAUTHENTICATE_MESSAGE authmessage = NULL;
+    ULONG_PTR offset;
+    UNICODE_STRING NtResponseString;
+    UNICODE_STRING LmResponseString;
+    UNICODE_STRING UserSessionKeyString;
+    UNICODE_STRING LmSessionKeyString;
+    ULONG messageSize;
 
     TRACE("NtlmHandleChallengeMessage hContext %lx\n", hContext);
     /* get context */
@@ -561,27 +577,32 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
         ERR("NTLMSSP_NEGOTIATE_LOCAL_CALL set!\n");
 
     /* extract target info */
-    UNICODE_STRING ServerName;
-
     if(context->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO)
     {
-        /* wtf? shouldnt this contain AV pairs? */
-        ret = NtlmBlobToUnicodeString(InputToken1,
-                                      challenge->TargetInfo,
-                                      &ServerName);
-        if(!NT_SUCCESS(ret))
-        {
-            ERR("could not get target info!\n");
-            goto fail;
-        }
+        ERR("NTLMSSP_NEGOTIATE_TARGET_INFO\n");
+        //PMSV1_0_AV_PAIR pAvPair;
+        //pAvPair = (PMSV1_0_AV_PAIR)challenge->TargetInfo;
+        
+        //PVOID ptr = ((PUCHAR)InputToken1->pvBuffer + challenge->TargetInfo.Offset);
+        //NtlmPrintAvPairs(ptr);
+        //NtlmPrintHexDump(InputToken1->pvBuffer, InputToken1->cbBuffer);
+
+        //NtlmAvlGet(pAvPair, MsvAvNbDomainName, GetRespRequest->ServerName.Length)
+
+        //if(!NT_SUCCESS(ret))
+        //{
+        //    ERR("could not get target info!\n");
+        //    goto fail;
+        //}
     }
-    else
+    //else
     {
         /* spec: "A server that is a member of a domain returns the domain of which it
          * is a member, and a server that is not a member of a domain returns
          * the server name." how to tell?? */
         ret = NtlmBlobToUnicodeString(InputToken1,
-                                      challenge->TargetName,
+                                      challenge->TargetInfo,
+                                      //challenge->TargetName,
                                       &ServerName);
         if(!NT_SUCCESS(ret))
         {
@@ -592,20 +613,15 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
             FIXME("convert to unicode!\n");
     }
 
-
-    MSV1_0_NTLM3_RESPONSE NtResponse;
-    LM2_RESPONSE Lm2Response;
-    USER_SESSION_KEY UserSessionKey;
-    LM_SESSION_KEY LmSessionKey;
-
     if(!(cred = NtlmReferenceCredential((ULONG_PTR)context->Credential)))
         goto fail;
 
     /* unscramble password */
     NtlmUnProtectMemory(cred->Password.Buffer, cred->Password.Length);
 
-    TRACE("cred: %s %s %s\n", debugstr_w(cred->UserName.Buffer),
-        debugstr_w(cred->Password.Buffer), debugstr_w(cred->DomainName.Buffer));
+    TRACE("cred: %s %s %s %s\n", debugstr_w(cred->UserName.Buffer),
+        debugstr_w(cred->Password.Buffer), debugstr_w(cred->DomainName.Buffer),
+        debugstr_w(ServerName.Buffer));
 
     NtlmChallengeResponse(&cred->UserName,
                           &cred->Password,
@@ -617,32 +633,23 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
                           &UserSessionKey,
                           &LmSessionKey);
 
-    PAUTHENTICATE_MESSAGE authmessage = NULL;
-    ULONG_PTR offset;
-
-    UNICODE_STRING NtResponseString;
-    //UNICODE_STRING LmResponseString;
-    UNICODE_STRING UserSessionKeyString;
-    UNICODE_STRING LmSessionKeyString;
-
-#define InitString(str, input) str.MaximumLength = str.Length = sizeof(input)*sizeof(WCHAR); str.Buffer = (WCHAR*)&input
+#define InitString(str, input) str.MaximumLength = str.Length = sizeof(input); str.Buffer = (WCHAR*)&input
     InitString(NtResponseString, NtResponse);
-    //InitString(LmResponseString, Lm2Response);
+    InitString(LmResponseString, Lm2Response);
     InitString(UserSessionKeyString, UserSessionKey);
     InitString(LmSessionKeyString, LmSessionKey);
 
-    ULONG messageSize = sizeof(AUTHENTICATE_MESSAGE) +
-        ServerName.Length + cred->UserName.Length + cred->DomainName.Length +
-        NtResponseString.Length + UserSessionKeyString.Length + LmSessionKeyString.Length;
-        //LmResponseString.Length;
+    messageSize = sizeof(AUTHENTICATE_MESSAGE) + ServerName.Length +
+        cred->UserName.Length + cred->DomainName.Length + NtResponseString.Length +
+        UserSessionKeyString.Length + LmSessionKeyString.Length + LmResponseString.Length;
 
-    if(!(authmessage = NtlmAllocate(messageSize)))
+    if(!(authmessage = (PAUTHENTICATE_MESSAGE)NtlmAllocate(messageSize)))
     {
         ret = SEC_E_INSUFFICIENT_MEMORY;
         goto fail;
     }
 
-    strcpy(authmessage->Signature, NTLMSSP_SIGNATURE);
+    strncpy(authmessage->Signature, NTLMSSP_SIGNATURE, sizeof(NTLMSSP_SIGNATURE));
     authmessage->MsgType = NtlmAuthenticate;
 
     offset = (ULONG_PTR)(authmessage+1);
@@ -662,11 +669,13 @@ NtlmHandleChallengeMessage(IN ULONG_PTR hContext,
                             &authmessage->WorkstationName,
                             &offset);
 
-    //if(targetinfo)
-    //NtlmUnicodeStringToBlob((PVOID)authmessage,
-    //                        &LmResponseString,
-    //                        &authmessage->LmChallengeResponse,
-    //                        &offset);
+    if (context->NegotiateFlags & NTLMSSP_NEGOTIATE_TARGET_INFO)
+    {
+        NtlmUnicodeStringToBlob((PVOID)authmessage,
+                                &LmResponseString,
+                                &authmessage->LmChallengeResponse,
+                                &offset);
+    }
 
     NtlmUnicodeStringToBlob((PVOID)authmessage,
                             &NtResponseString,
@@ -724,7 +733,9 @@ NtlmHandleAuthenticateMessage(IN ULONG_PTR hContext,
     SECURITY_STATUS ret = SEC_E_OK;
     PNTLMSSP_CONTEXT context = NULL;
     PAUTHENTICATE_MESSAGE authMessage = NULL;
-    BOOLEAN isUnicode;
+    UNICODE_STRING LmChallengeResponse, NtChallengeResponse, SessionKey;
+    UNICODE_STRING UserName, Workstation, DomainName;
+    //BOOLEAN isUnicode;
 
     TRACE("NtlmHandleAuthenticateMessage hContext %x!\n", hContext);
     /* get context */
@@ -735,7 +746,7 @@ NtlmHandleAuthenticateMessage(IN ULONG_PTR hContext,
     }
 
     TRACE("context->State %d\n", context->State);
-    if(context->State != ChallengeSent || context->State != Authenticated)
+    if(context->State != ChallengeSent && context->State != Authenticated)
     {
         ERR("Context not in correct state!\n");
         ret = SEC_E_OUT_OF_SEQUENCE;
@@ -802,12 +813,12 @@ NtlmHandleAuthenticateMessage(IN ULONG_PTR hContext,
     if(context->NegotiateFlags & NTLMSSP_NEGOTIATE_UNICODE)
     {
         context->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_OEM;
-        isUnicode = TRUE;
+        //isUnicode = TRUE;
     }
     else if(context->NegotiateFlags & NTLMSSP_NEGOTIATE_OEM)
     {
         context->NegotiateFlags &= ~NTLMSSP_NEGOTIATE_UNICODE;
-        isUnicode = FALSE;
+        //isUnicode = FALSE;
     }
     else
     {
@@ -816,9 +827,6 @@ NtlmHandleAuthenticateMessage(IN ULONG_PTR hContext,
         ret = SEC_E_INVALID_TOKEN;
         goto fail;
     }
-
-    UNICODE_STRING LmChallengeResponse, NtChallengeResponse, SessionKey;
-    UNICODE_STRING UserName, Workstation, DomainName;
 
     if(!NT_SUCCESS(NtlmBlobToUnicodeString(InputToken,
         authMessage->LmChallengeResponse, &LmChallengeResponse)))

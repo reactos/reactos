@@ -26,21 +26,15 @@ BOOL SetupIsActive(VOID);
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    TRACE("(0x%p, %d, %p)\n",hinstDLL,fdwReason,lpvReserved);
+    TRACE("DllMain(0x%p, %d, %p)\n",hinstDLL,fdwReason,lpvReserved);
 
     switch (fdwReason)
     {
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinstDLL);
         NtlmInitializeGlobals();
-
-        /* rsaehn has still not registered its crypto providers */
-        if(!SetupIsActive())
-        {
-            //REACTOS BUG: even after 2nd stage crypto providers are not available!
-            NtlmInitializeRNG();
-            NtlmInitializeProtectedMemory();
-        }
+        NtlmInitializeRNG();
+        NtlmInitializeProtectedMemory();
         NtlmCredentialInitialize();
         NtlmContextInitialize();
         break;

@@ -110,19 +110,30 @@ typedef enum {
 typedef struct _NTLMSSP_CONTEXT
 {
     LIST_ENTRY Entry;
-    LARGE_INTEGER StartTime;//context creation time
+    LARGE_INTEGER StartTime;
     BOOL isServer;
     BOOL isLocal;
-    ULONG Timeout;//how long context is valid pre-authentication
+    ULONG Timeout;
     ULONG RefCount;
     ULONG NegotiateFlags;
     ULONG ContextFlags;
     NTLMSSP_CONTEXT_STATE State;
     PNTLMSSP_CREDENTIAL Credential;
-    UCHAR Challenge[MSV1_0_CHALLENGE_LENGTH]; //ChallengeSent
-    UCHAR SessionKey[MSV1_0_USER_SESSION_KEY_LENGTH]; //LSA
+    UCHAR Challenge[MSV1_0_CHALLENGE_LENGTH];
+    UCHAR SessionKey[MSV1_0_USER_SESSION_KEY_LENGTH];
     HANDLE ClientToken;
     ULONG ProcId;
+
+    /* message support */
+    int SentSequenceNum;
+    int RecvSequenceNum;
+    struct _rc4_key* SendSealKey;
+    struct _rc4_key* RecvSealKey;
+    UCHAR ClientSigningKey[16];
+    UCHAR ClientSealingKey[16];
+    UCHAR ServerSigningKey[16];
+    UCHAR ServerSealingKey[16];
+    UCHAR MessageIntegrityCheck[16];
 } NTLMSSP_CONTEXT, *PNTLMSSP_CONTEXT;
 
 /* private functions */

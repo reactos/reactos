@@ -27,7 +27,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
 SECURITY_STATUS SEC_ENTRY MakeSignature(PCtxtHandle phContext, ULONG fQOP,
  PSecBufferDesc pMessage, ULONG MessageSeqNo)
 {
-    //int token_idx;
     SECURITY_STATUS ret = SEC_E_UNSUPPORTED_FUNCTION;
 
     TRACE("%p %p %d %p\n", phContext, pMessage, MessageSeqNo, fQOP);
@@ -36,15 +35,6 @@ SECURITY_STATUS SEC_ENTRY MakeSignature(PCtxtHandle phContext, ULONG fQOP,
 
     if(!pMessage || !pMessage->pBuffers || pMessage->cBuffers < 2)
         return SEC_E_INVALID_TOKEN;
-
-    //if((token_idx = GetTokenBufferIndex(pMessage)) == -1)
-    //    return SEC_E_INVALID_TOKEN;
-
-    //if(pMessage->pBuffers[token_idx].cbBuffer < 16)
-    //    return SEC_E_BUFFER_TOO_SMALL;
-
-    if(MessageSeqNo)
-        FIXME("Ignoring MessageSeqNo\n");
 
     FIXME("MakeSignature unimplemented\n");
     return ret;
@@ -57,7 +47,6 @@ SECURITY_STATUS SEC_ENTRY VerifySignature(PCtxtHandle phContext,
  PSecBufferDesc pMessage, ULONG MessageSeqNo, PULONG pfQOP)
 {
     SECURITY_STATUS ret = SEC_E_UNSUPPORTED_FUNCTION;
-    //int token_idx;
 
     TRACE("%p %p %d %p\n", phContext, pMessage, MessageSeqNo, pfQOP);
     if(!phContext)
@@ -65,15 +54,6 @@ SECURITY_STATUS SEC_ENTRY VerifySignature(PCtxtHandle phContext,
 
     if(!pMessage || !pMessage->pBuffers || pMessage->cBuffers < 2)
         return SEC_E_INVALID_TOKEN;
-
-    //if((token_idx = GetTokenBufferIndex(pMessage)) == -1)
-    //    return SEC_E_INVALID_TOKEN;
-
-    //if(pMessage->pBuffers[token_idx].cbBuffer < 16)
-    //    return SEC_E_BUFFER_TOO_SMALL;
-
-    if(MessageSeqNo)
-        FIXME("Ignoring MessageSeqNo\n");
 
     FIXME("VerifySignature unimplemented\n");
     return ret;
