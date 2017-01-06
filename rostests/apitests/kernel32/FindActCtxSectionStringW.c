@@ -272,22 +272,42 @@ START_TEST(FindActCtxSectionStringW)
     
     /* Class redirection tests */
     h = _CreateActCtxFromFile(L"classtest.manifest", __LINE__);
-    _ActivateCtx(h, &cookie, __LINE__);
-    TestClassRedirection(h, L"Button", L"2.2.2.2!Button", L"testlib.dll", 5);
-    _DeactivateCtx(cookie, __LINE__);
+    if (h)
+    {
+        _ActivateCtx(h, &cookie, __LINE__);
+        TestClassRedirection(h, L"Button", L"2.2.2.2!Button", L"testlib.dll", 5);
+        _DeactivateCtx(cookie, __LINE__);
+    }
+    else
+    {
+        skip("Failed to create context for classtest.manifest\n");
+    }
     
     /* Dependency tests */
     h = _CreateActCtxFromFile(L"deptest.manifest", __LINE__);
-    _ActivateCtx(h, &cookie, __LINE__);
-    TestLibDependency(h);
-    _DeactivateCtx(cookie, __LINE__);
+    if (h)
+    {
+        _ActivateCtx(h, &cookie, __LINE__);
+        TestLibDependency(h);
+        _DeactivateCtx(cookie, __LINE__);
+    }
+    else
+    {
+        skip("Failed to create context for deptest.manifest\n");
+    }    
     
     /* Activate a context that depends on comctl32 v6 and run class tests again */
     h = _CreateActCtxFromFile(L"comctl32dep.manifest", __LINE__);
-    _ActivateCtx(h, &cookie, __LINE__);
-    TestClassRedirection(h, L"Button", L"6.0.3790.1830!Button", L"comctl32.dll", 29);
-    ok( GetModuleHandleW(L"comctl32.dll") == NULL, "Expected comctl32 not to be loaded\n");
-    ok( GetModuleHandleW(L"user32.dll") == NULL, "Expected user32 not to be loaded\n");
-    _DeactivateCtx(cookie, __LINE__);
-    
+    if (h)
+    {
+        _ActivateCtx(h, &cookie, __LINE__);
+        TestClassRedirection(h, L"Button", L"6.0.3790.1830!Button", L"comctl32.dll", 29);
+        ok( GetModuleHandleW(L"comctl32.dll") == NULL, "Expected comctl32 not to be loaded\n");
+        ok( GetModuleHandleW(L"user32.dll") == NULL, "Expected user32 not to be loaded\n");
+        _DeactivateCtx(cookie, __LINE__);
+    }
+    else
+    {
+        skip("Failed to create context for comctl32dep.manifest\n");
+    }
 }
