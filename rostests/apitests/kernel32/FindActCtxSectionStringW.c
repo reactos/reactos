@@ -79,8 +79,16 @@ struct assemply_data
 
 HANDLE _CreateActCtxFromFile(LPCWSTR FileName, int line)
 {
-    ACTCTXW ActCtx = {sizeof(ACTCTX), 0, FileName};
+    ACTCTXW ActCtx = {sizeof(ACTCTX)};
     HANDLE h;
+    WCHAR buffer[MAX_PATH] , *separator;
+
+    ok (GetModuleFileNameW(NULL, buffer, MAX_PATH), "GetModuleFileName failed\n");
+    separator = wcsrchr(buffer, L'\\');
+    if (separator)
+        wcscpy(separator + 1, FileName);
+
+    ActCtx.lpSource = buffer;
 
     SetLastError(0xdeaddead);
     h = CreateActCtxW(&ActCtx);
