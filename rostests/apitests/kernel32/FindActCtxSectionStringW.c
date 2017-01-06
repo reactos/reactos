@@ -272,7 +272,7 @@ START_TEST(FindActCtxSectionStringW)
     
     /* Class redirection tests */
     h = _CreateActCtxFromFile(L"classtest.manifest", __LINE__);
-    if (h)
+    if (h != INVALID_HANDLE_VALUE)
     {
         _ActivateCtx(h, &cookie, __LINE__);
         TestClassRedirection(h, L"Button", L"2.2.2.2!Button", L"testlib.dll", 5);
@@ -285,7 +285,7 @@ START_TEST(FindActCtxSectionStringW)
     
     /* Dependency tests */
     h = _CreateActCtxFromFile(L"deptest.manifest", __LINE__);
-    if (h)
+    if (h != INVALID_HANDLE_VALUE)
     {
         _ActivateCtx(h, &cookie, __LINE__);
         TestLibDependency(h);
@@ -298,7 +298,7 @@ START_TEST(FindActCtxSectionStringW)
     
     /* Activate a context that depends on comctl32 v6 and run class tests again */
     h = _CreateActCtxFromFile(L"comctl32dep.manifest", __LINE__);
-    if (h)
+    if (h != INVALID_HANDLE_VALUE)
     {
         _ActivateCtx(h, &cookie, __LINE__);
         TestClassRedirection(h, L"Button", L"6.0.3790.1830!Button", L"comctl32.dll", 29);
