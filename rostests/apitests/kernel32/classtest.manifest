@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <assemblyIdentity type="win32" name="ReactOS-TestLib" version="2.2.2.2" processorArchitecture="x86" publicKeyToken="6595b64144ccf1df"/>
+  <file name="testlib.dll">
+    <windowClass>Button</windowClass>
+    <windowClass>ButtonListBox</windowClass>
+    <windowClass>ComboBoxEx32</windowClass>
+    <windowClass>ComboLBox</windowClass>
+    <windowClass>Combobox</windowClass>
+  </file>
+</assembly>
