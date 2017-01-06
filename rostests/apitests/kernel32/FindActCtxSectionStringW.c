@@ -130,27 +130,34 @@ void TestClassRedirection(HANDLE h, LPCWSTR ClassToTest, LPCWSTR ExpectedClassNa
     ok(res == TRUE, "FindActCtxSectionString failed\n");
     ok(GetLastError() == 0xdeaddead, "Wrong last error. Expected %lu, got %lu\n", (DWORD)(0xdeaddead), GetLastError());
     
-    ok(KeyedData.ulDataFormatVersion == 1, "Wrong format version: %lu", KeyedData.ulDataFormatVersion);
+    ok(KeyedData.ulDataFormatVersion == 1, "Wrong format version: %lu\n", KeyedData.ulDataFormatVersion);
     ok(KeyedData.hActCtx == h, "Wrong handle\n");
     ok(KeyedData.lpSectionBase != NULL, "Expected non null lpSectionBase\n");
     ok(KeyedData.lpData != NULL, "Expected non null lpData\n");
     header = (struct strsection_header*)KeyedData.lpSectionBase;
     classData = (struct wndclass_redirect_data*)KeyedData.lpData;
     
-    ok(header->magic == STRSECTION_MAGIC, "%lu\n", header->magic );
-    ok(header->size == sizeof(*header), "Got %lu instead of %d\n", header->size, sizeof(*header));
-    ok(header->count == ExpectedClassCount, "Expected %lu classes, got %lu\n", ExpectedClassCount, header->count );
-    
-    VersionedClass = (WCHAR*)((BYTE*)classData + classData->name_offset);
-    ClassLib = (WCHAR*)((BYTE*)header + classData->module_offset);
-    data_lenght = classData->size + classData->name_len + classData->module_len + 2*sizeof(WCHAR);
-    ok(KeyedData.ulLength == data_lenght, "Got lenght %lu instead of %d\n", KeyedData.ulLength, data_lenght);
-    ok(classData->size == sizeof(*classData), "Got %lu instead of %d\n", classData->size, sizeof(*classData));
-    ok(classData->res == 0, "Got res %lu\n", classData->res);
-    ok(classData->name_len == wcslen(ExpectedClassName) * 2, "Got name len %lu, expected %d\n", classData->name_len, wcslen(ExpectedClassName) *2);
-    ok(classData->module_len == wcslen(ExpectedModule) * 2, "Got name len %lu, expected %d\n", classData->module_len, wcslen(ExpectedModule) *2);
-    ok(wcscmp(VersionedClass, ExpectedClassName) == 0, "Got %S, expected %S\n", VersionedClass, ExpectedClassName);
-    ok(wcscmp(ClassLib, ExpectedModule) == 0, "Got %S, expected %S\n", ClassLib, ExpectedModule);
+    if(res == FALSE || KeyedData.ulDataFormatVersion != 1 || header == NULL || classData == NULL)
+    {
+        skip("Can't read data for class. Skipping\n");
+    }
+    else
+    {
+        ok(header->magic == STRSECTION_MAGIC, "%lu\n", header->magic );
+        ok(header->size == sizeof(*header), "Got %lu instead of %d\n", header->size, sizeof(*header));
+        ok(header->count == ExpectedClassCount, "Expected %lu classes, got %lu\n", ExpectedClassCount, header->count );
+
+        VersionedClass = (WCHAR*)((BYTE*)classData + classData->name_offset);
+        ClassLib = (WCHAR*)((BYTE*)header + classData->module_offset);
+        data_lenght = classData->size + classData->name_len + classData->module_len + 2*sizeof(WCHAR);
+        ok(KeyedData.ulLength == data_lenght, "Got lenght %lu instead of %d\n", KeyedData.ulLength, data_lenght);
+        ok(classData->size == sizeof(*classData), "Got %lu instead of %d\n", classData->size, sizeof(*classData));
+        ok(classData->res == 0, "Got res %lu\n", classData->res);
+        ok(classData->name_len == wcslen(ExpectedClassName) * 2, "Got name len %lu, expected %d\n", classData->name_len, wcslen(ExpectedClassName) *2);
+        ok(classData->module_len == wcslen(ExpectedModule) * 2, "Got name len %lu, expected %d\n", classData->module_len, wcslen(ExpectedModule) *2);
+        ok(wcscmp(VersionedClass, ExpectedClassName) == 0, "Got %S, expected %S\n", VersionedClass, ExpectedClassName);
+        ok(wcscmp(ClassLib, ExpectedModule) == 0, "Got %S, expected %S\n", ClassLib, ExpectedModule);
+    }
 }
 
 VOID TestLibDependency(HANDLE h)
@@ -178,7 +185,7 @@ VOID TestLibDependency(HANDLE h)
     SectionHeader = (struct strsection_header*)KeyedData.lpSectionBase;
     redirData = (struct dllredirect_data *)KeyedData.lpData;
 
-    if(res == FALSE || KeyedData.ulDataFormatVersion != 1)
+    if(res == FALSE || KeyedData.ulDataFormatVersion != 1 || SectionHeader == NULL || redirData == NULL)
     {
         skip("Can't read data for dep1.dll. Skipping\n");
     }
@@ -206,7 +213,7 @@ VOID TestLibDependency(HANDLE h)
     SectionHeader = (struct strsection_header*)KeyedData.lpSectionBase;
     assemplyData = (struct assemply_data*)KeyedData.lpData;;
 
-    if(res == FALSE || KeyedData.ulDataFormatVersion != 1)
+    if(res == FALSE || KeyedData.ulDataFormatVersion != 1 || SectionHeader == NULL || assemplyData == NULL)
     {
         skip("Can't read data for dep1. Skipping\n");
     }
