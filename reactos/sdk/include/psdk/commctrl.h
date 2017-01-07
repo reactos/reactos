@@ -4615,6 +4615,9 @@ typedef struct {
 #define BCM_GETTEXTMARGIN (BCM_FIRST+0x5)
 #define Button_GetTextMargin(hwnd,pmargin) (BOOL)SNDMSG((hwnd),BCM_GETTEXTMARGIN,0,(LPARAM)(pmargin))
 
+#define BCM_SETSHIELD (BCM_FIRST+0xC)
+#define Button_SetElevationRequiredState(hwnd,frequired) (BOOL)SNDMSG((hwnd),BCM_SETSHIELD,0,(LPARAM)(frequired))
+
   typedef struct tagNMBCHOTITEM {
     NMHDR hdr;
     DWORD dwFlags;
