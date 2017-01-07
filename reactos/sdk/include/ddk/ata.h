@@ -252,4 +252,6 @@ typedef struct _IDENTIFY_DEVICE_DATA {
 } IDENTIFY_DEVICE_DATA, *PIDENTIFY_DEVICE_DATA;
 #include <poppack.h>
 
+#define IDE_COMMAND_IDENTIFY 0xEC
+
 #endif
