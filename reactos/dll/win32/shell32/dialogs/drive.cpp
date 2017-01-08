@@ -229,6 +229,9 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
                 SendMessageW(hDlgCtrl, CB_SETITEMDATA, lIndex, (LPARAM)ClusterSize);
             SendMessageW(hDlgCtrl, CB_SETCURSEL, 0, 0);
         }
+
+        SendMessageW(GetDlgItem(hwndDlg, 28675), BM_SETCHECK, BST_UNCHECKED, 0);
+        EnableWindow(GetDlgItem(hwndDlg, 28675), FALSE);
     }
     else if (!wcsicmp(wszBuf, L"FAT32"))
     {
@@ -248,6 +251,9 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
                 SendMessageW(hDlgCtrl, CB_SETITEMDATA, lIndex, (LPARAM)ClusterSize);
             SendMessageW(hDlgCtrl, CB_SETCURSEL, 0, 0);
         }
+
+        SendMessageW(GetDlgItem(hwndDlg, 28675), BM_SETCHECK, BST_UNCHECKED, 0);
+        EnableWindow(GetDlgItem(hwndDlg, 28675), FALSE);
     }
     else if (!wcsicmp(wszBuf, L"NTFS"))
     {
@@ -279,6 +285,8 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
             }
             ClusterSize *= 2;
         }
+
+        EnableWindow(GetDlgItem(hwndDlg, 28675), TRUE);
     }
     else if (!wcsicmp(wszBuf, L"EXT2"))
     {
@@ -298,6 +306,8 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
                 SendMessageW(hDlgCtrl, CB_SETITEMDATA, lIndex, (LPARAM)ClusterSize);
             SendMessageW(hDlgCtrl, CB_SETCURSEL, 0, 0);
         }
+
+        EnableWindow(GetDlgItem(hwndDlg, 28675), TRUE);
     }
     else
     {
