@@ -96,6 +96,11 @@ GetDefaultClusterSize(LPWSTR szFs, PDWORD pClusterSize, PULARGE_INTEGER TotalNum
         // auto block size calculation
         ClusterSize = 0;
     }
+    else if (!wcsicmp(szFs, L"BtrFS"))
+    {
+        // auto block size calculation
+        ClusterSize = 0;
+    }
     else
         return FALSE;
 
@@ -293,6 +298,27 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
         if (!GetDefaultClusterSize(wszBuf, &ClusterSize, &TotalNumberOfBytes))
         {
             TRACE("EXT2 is not supported on hdd larger than 32T current %lu\n", TotalNumberOfBytes.QuadPart);
+            SendMessageW(hDlgCtrl, CB_DELETESTRING, iSelIndex, 0);
+            return;
+        }
+
+        if (LoadStringW(shell32_hInstance, IDS_DEFAULT_CLUSTER_SIZE, wszBuf, _countof(wszBuf)))
+        {
+            hDlgCtrl = GetDlgItem(hwndDlg, 28680);
+            SendMessageW(hDlgCtrl, CB_RESETCONTENT, 0, 0);
+            lIndex = SendMessageW(hDlgCtrl, CB_ADDSTRING, 0, (LPARAM)wszBuf);
+            if (lIndex != CB_ERR)
+                SendMessageW(hDlgCtrl, CB_SETITEMDATA, lIndex, (LPARAM)ClusterSize);
+            SendMessageW(hDlgCtrl, CB_SETCURSEL, 0, 0);
+        }
+
+        EnableWindow(GetDlgItem(hwndDlg, 28675), TRUE);
+    }
+    else if (!wcsicmp(wszBuf, L"BtrFS"))
+    {
+        if (!GetDefaultClusterSize(wszBuf, &ClusterSize, &TotalNumberOfBytes))
+        {
+            TRACE("BtrFS is not supported on hdd larger than 16E current %lu\n", TotalNumberOfBytes.QuadPart);
             SendMessageW(hDlgCtrl, CB_DELETESTRING, iSelIndex, 0);
             return;
         }
