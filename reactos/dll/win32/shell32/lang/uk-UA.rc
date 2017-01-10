@@ -745,7 +745,7 @@ BEGIN
     IDS_MYPICTURES "Мої малюнки"
     IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
     IDS_COMMON_DOCUMENTS "Загальні документи"
-    IDS_ADMINTOOLS "Start Menu\\Programs\\Administrative Tools"
+    IDS_ADMINTOOLS "Start Menu\\Programs\\Administrative Tools" // "Головне меню\\Програми\\Службові"
     IDS_COMMON_MUSIC "Загальні документи\\Моя музика"
     IDS_COMMON_PICTURES "Загальні документи\\Мої малюнки"
     IDS_COMMON_VIDEO "Загальні документи\\Мої відеозаписи"

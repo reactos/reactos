@@ -745,7 +745,7 @@ BEGIN
     IDS_MYPICTURES "Omat kuvatiedostot"
     IDS_PROGRAM_FILES_COMMON "Ohjelmat\\Yhteiset Tiedostot"
     IDS_COMMON_DOCUMENTS "Dokumentit"
-    IDS_ADMINTOOLS "Käynnistys\\Ohjauspaneeli\\Administrative Tools"
+    IDS_ADMINTOOLS "Käynnistys\\Ohjauspaneeli\\Administrative Tools" // "Käynnistä Valikko\\Kaikki Ohjelmat\\Apuohjelmat"
     IDS_COMMON_MUSIC "Dokumentit\\Omat musiikkitiedostot"
     IDS_COMMON_PICTURES "Dokumentit\\Omat kuvatiedostot"
     IDS_COMMON_VIDEO "Dokumentit\\Omat videotiedostot"

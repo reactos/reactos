@@ -179,3 +179,10 @@ STRINGTABLE
 BEGIN
     IDS_STATUS_INSTALL_DEV "Instaluji zařízení..."
 END
+
+/* ATTENTION: Synchronize the translation of these strings with shell32 */
+STRINGTABLE
+BEGIN
+    IDS_PROGRAMFILES "%SystemDrive%\\Program Files"
+    IDS_COMMONFILES "Common Files"
+END

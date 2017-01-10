@@ -745,7 +745,7 @@ BEGIN
     IDS_MYPICTURES "התמונות שלי"
     IDS_PROGRAM_FILES_COMMON "Program Files\\Common Files"
     IDS_COMMON_DOCUMENTS "מסמכים"
-    IDS_ADMINTOOLS "Start Menu\\Programs\\Administrative Tools"
+    IDS_ADMINTOOLS "Start Menu\\Programs\\Administrative Tools" // "תפריט ההתחלה\\תכניות\\כלי הניהול"
     IDS_COMMON_MUSIC "Documents\\My Music"
     IDS_COMMON_PICTURES "Documents\\My Pictures"
     IDS_COMMON_VIDEO "Documents\\My Videos"

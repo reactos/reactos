@@ -971,6 +971,121 @@ HotkeyThread(LPVOID Parameter)
 
 
 static
+BOOL
+InitializeProgramFilesDir(VOID)
+{
+    LONG Error;
+    HKEY hKey;
+    DWORD dwLength;
+    WCHAR szProgramFilesDirPath[MAX_PATH];
+    WCHAR szCommonFilesDirPath[MAX_PATH];
+    WCHAR szBuffer[MAX_PATH];
+
+    /* Load 'Program Files' location */
+    if (!LoadStringW(hDllInstance,
+                     IDS_PROGRAMFILES,
+                     szBuffer,
+                     ARRAYSIZE(szBuffer)))
+    {
+        DPRINT1("Error: %lu\n", GetLastError());
+        return FALSE;
+    }
+
+    if (!LoadStringW(hDllInstance,
+                     IDS_COMMONFILES,
+                     szCommonFilesDirPath,
+                     ARRAYSIZE(szCommonFilesDirPath)))
+    {
+        DPRINT1("Warning: %lu\n", GetLastError());
+    }
+
+    /* Expand it */
+    if (!ExpandEnvironmentStringsW(szBuffer,
+                                   szProgramFilesDirPath,
+                                   ARRAYSIZE(szProgramFilesDirPath)))
+    {
+        DPRINT1("Error: %lu\n", GetLastError());
+        return FALSE;
+    }
+
+    wcscpy(szBuffer, szProgramFilesDirPath);
+    wcscat(szBuffer, L"\\");
+    wcscat(szBuffer, szCommonFilesDirPath);
+
+    if (!ExpandEnvironmentStringsW(szBuffer,
+                                   szCommonFilesDirPath,
+                                   ARRAYSIZE(szCommonFilesDirPath)))
+    {
+        DPRINT1("Warning: %lu\n", GetLastError());
+    }
+
+    /* Store it */
+    Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion",
+                          0,
+                          KEY_SET_VALUE,
+                          &hKey);
+    if (Error != ERROR_SUCCESS)
+    {
+        DPRINT1("Error: %lu\n", Error);
+        return FALSE;
+    }
+
+    dwLength = (wcslen(szProgramFilesDirPath) + 1) * sizeof(WCHAR);
+    Error = RegSetValueExW(hKey,
+                           L"ProgramFilesDir",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)szProgramFilesDirPath,
+                           dwLength);
+    if (Error != ERROR_SUCCESS)
+    {
+        DPRINT1("Error: %lu\n", Error);
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    dwLength = (wcslen(szCommonFilesDirPath) + 1) * sizeof(WCHAR);
+    Error = RegSetValueExW(hKey,
+                           L"CommonFilesDir",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)szCommonFilesDirPath,
+                           dwLength);
+    if (Error != ERROR_SUCCESS)
+    {
+        DPRINT1("Warning: %lu\n", Error);
+    }
+
+    RegCloseKey(hKey);
+
+    /* Create directory */
+    // FIXME: Security!
+    if (!CreateDirectoryW(szProgramFilesDirPath, NULL))
+    {
+        if (GetLastError() != ERROR_ALREADY_EXISTS)
+        {
+            DPRINT1("Error: %lu\n", GetLastError());
+            return FALSE;
+        }
+    }
+
+    /* Create directory */
+    // FIXME: Security!
+    if (!CreateDirectoryW(szCommonFilesDirPath, NULL))
+    {
+        if (GetLastError() != ERROR_ALREADY_EXISTS)
+        {
+            DPRINT1("Warning: %lu\n", GetLastError());
+            // return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+
+static
 VOID
 InitializeDefaultUserLocale(VOID)
 {
@@ -1093,14 +1208,20 @@ InstallReactOS(HINSTANCE hInstance)
     InitializeSetupActionLog(FALSE);
     LogItem(NULL, L"Installing ReactOS");
 
+    CreateTempDir(L"TEMP");
+    CreateTempDir(L"TMP");
+
+    if (!InitializeProgramFilesDir())
+    {
+        FatalError("InitializeProgramFilesDir() failed");
+        return 0;
+    }
+
     if (!InitializeProfiles())
     {
         FatalError("InitializeProfiles() failed");
         return 0;
     }
-
-    CreateTempDir(L"TEMP");
-    CreateTempDir(L"TMP");
 
     InitializeDefaultUserLocale();
 

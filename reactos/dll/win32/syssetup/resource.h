@@ -114,4 +114,8 @@
 
 #define IDS_STATUS_INSTALL_DEV 3500
 
+/* ATTENTION: Synchronize the translation of these strings with shell32 */
+#define IDS_PROGRAMFILES    3600
+#define IDS_COMMONFILES     3601
+
 #define IDR_GPL 4000
