@@ -814,8 +814,9 @@ cleanup:
     return ret;
 }
 
-DWORD WINAPI
-InstallLiveCD(IN HINSTANCE hInstance)
+static
+DWORD
+InstallLiveCD(VOID)
 {
     STARTUPINFOW StartupInfo;
     PROCESS_INFORMATION ProcessInformation;
@@ -1193,9 +1194,9 @@ done:
 }
 
 
+static
 DWORD
-WINAPI
-InstallReactOS(HINSTANCE hInstance)
+InstallReactOS(VOID)
 {
     WCHAR szBuffer[MAX_PATH];
     HANDLE token;
@@ -1349,6 +1350,39 @@ InstallReactOS(HINSTANCE hInstance)
     }
 
     ExitWindowsEx(EWX_REBOOT, 0);
+    return 0;
+}
+
+
+/*
+ * Standard Windows-compatible export, which dispatches
+ * to either 'InstallReactOS' or 'InstallLiveCD'.
+ */
+INT
+WINAPI
+InstallWindowsNt(INT argc, WCHAR** argv)
+{
+    INT i;
+    PWSTR p;
+
+    for (i = 0; i < argc; ++i)
+    {
+        p = argv[i];
+        if (*p == L'-')
+        {
+            p++;
+
+            // NOTE: On Windows, "mini" means "minimal UI", and can be used
+            // in addition to "newsetup"; these options are not exclusive.
+            if (_wcsicmp(p, L"newsetup") == 0)
+                return (INT)InstallReactOS();
+            else if (_wcsicmp(p, L"mini") == 0)
+                return (INT)InstallLiveCD();
+
+            /* Add support for other switches */
+        }
+    }
+
     return 0;
 }
 

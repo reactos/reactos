@@ -72,11 +72,6 @@ typedef struct _SETUPDATA
 
 /* System setup APIs */
 
-DWORD
-WINAPI
-InstallReactOS(
-    HINSTANCE hInstance);
-
 NTSTATUS
 WINAPI
 SetAccountsDomainSid(
