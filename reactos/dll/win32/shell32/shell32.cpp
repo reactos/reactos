@@ -38,7 +38,7 @@ AddCommasW(DWORD lValue, LPWSTR lpNumber)
     GetLocaleInfoW(LOCALE_USER_DEFAULT,
                    LOCALE_STHOUSAND,
                    szSeparator,
-                   ARRAYSIZE(szSeparator));
+                   _countof(szSeparator));
 
     numFormat.NumDigits     = 0;
     numFormat.LeadingZero   = 0;
