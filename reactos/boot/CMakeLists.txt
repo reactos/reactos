@@ -22,9 +22,7 @@ add_custom_target(efisys
 
 # Create an 'empty' directory (guaranteed to be empty) to be able to add
 # arbitrary empty directories to the ISO image using mkisofs.
-if(USE_MKISOFS)
-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/empty)
-endif()
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/empty)
 
 # Retrieve the full paths to the generated files of the 'isoboot', 'isobtrt' and 'efisys' targets
 set(_isoboot_file ${CMAKE_CURRENT_BINARY_DIR}/freeldr/bootsect/isoboot.bin) # get_target_property(_isoboot_file isoboot LOCATION)
@@ -46,14 +44,12 @@ set(_efisys_file  ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin) # get_target_property(
 # - since its contents are included by mkisofs in the root of the ISO image,
 #   using the empty directory ensures that no extra unwanted files are added.
 #
-if(USE_MKISOFS)
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort "\
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort "\
 ${CMAKE_CURRENT_BINARY_DIR}/empty/boot.catalog 4
 ${_isoboot_file} 3
 ${_isobtrt_file} 2
 ${_efisys_file} 1
 ")
-endif()
 
 # ISO image identificator names
 set(ISO_MANUFACTURER "ReactOS Foundation")  # For both the publisher and the preparer
@@ -62,206 +58,116 @@ set(ISO_VOLNAME      "ReactOS")             # For both the Volume ID and the Vol
 ## BootCD
 # Create the file list
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst "")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
-if(USE_MKISOFS)
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-
-    add_custom_target(bootcd
-        COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/bootcd.iso -iso-level 4
-            -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
-            -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
-            -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
-            -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst
-        DEPENDS native-mkisofs
-        VERBATIM)
-else()
-    add_custom_target(bootcd
-        COMMAND native-cdmake -j -m -bootdata:2\#p0,e,b${_isoboot_file}\#pEF,e,b${_efisys_file} @${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst REACTOS ${REACTOS_BINARY_DIR}/bootcd.iso
-        DEPENDS native-cdmake efisys
-        VERBATIM)
-endif()
+add_custom_target(bootcd
+    COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/bootcd.iso -iso-level 4
+        -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
+        -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
+        -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
+        -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcd.lst
+    DEPENDS native-mkisofs
+    VERBATIM)
 
 ## BootCDRegTest
 # Create the file list
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst "")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
-if(USE_MKISOFS)
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-
-    add_custom_target(bootcdregtest
-        COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/bootcdregtest.iso -iso-level 4
-            -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
-            -eltorito-boot loader/isobtrt.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
-            -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
-            -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst
-        DEPENDS native-mkisofs
-        VERBATIM)
-else()
-    add_custom_target(bootcdregtest
-        COMMAND native-cdmake -j -m -bootdata:2\#p0,e,b${_isobtrt_file}\#pEF,e,b${_efisys_file} @${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst REACTOS ${REACTOS_BINARY_DIR}/bootcdregtest.iso
-        DEPENDS native-cdmake efisys
-        VERBATIM)
-endif()
+add_custom_target(bootcdregtest
+    COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/bootcdregtest.iso -iso-level 4
+        -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
+        -eltorito-boot loader/isobtrt.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
+        -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
+        -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/bootcdregtest.lst
+    DEPENDS native-mkisofs
+    VERBATIM)
 
 ## LiveCD
 # Create the file list
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
-if(USE_MKISOFS)
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+# Create the empty Desktop, Favorites, and Start Menu folders. And many more.
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Application Data=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Documents/My Music=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Documents/My Pictures=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Documents/My Videos=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Favorites=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/My Documents=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Start Menu/Programs/StartUp=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Templates=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Application Data=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Cookies=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Desktop=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Favorites=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Local Settings/Application Data=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Local Settings/History=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Local Settings/Temporary Internet Files=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/My Music=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/My Pictures=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/My Videos=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/NetHood=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/PrintHood=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Recent=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/SendTo=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Start Menu/Programs=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Start Menu/Programs/Administrative Tools=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Start Menu/Programs/StartUp=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Templates=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
-    # Create the empty Desktop, Favorites, and Start Menu folders. And many more.
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Application Data=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Documents/My Music=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Documents/My Pictures=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Documents/My Videos=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Favorites=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/My Documents=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Start Menu/Programs/StartUp=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Templates=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Application Data=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Cookies=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Desktop=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Favorites=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Local Settings/Application Data=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Local Settings/History=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Local Settings/Temporary Internet Files=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/My Music=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/My Pictures=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/My Videos=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/NetHood=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/PrintHood=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Recent=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/SendTo=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Start Menu/Programs=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Start Menu/Programs/Administrative Tools=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Start Menu/Programs/StartUp=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Templates=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-
-    add_custom_target(livecd
-        COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/livecd.iso -iso-level 4
-            -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
-            -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
-            -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
-            -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst
-        DEPENDS native-mkisofs
-        VERBATIM)
-else()
-    # Create the empty Desktop, Favorites, and Start Menu folders. And many more.
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Application Data\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Documents/My Music\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Documents/My Pictures\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Documents/My Videos\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Favorites\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/My Documents\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Start Menu/Programs/StartUp\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/All Users/Templates\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Application Data\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Cookies\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Desktop\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Favorites\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Local Settings/Application Data\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Local Settings/History\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Local Settings/Temporary Internet Files\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/My Music\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/My Pictures\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/My Videos\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/NetHood\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/PrintHood\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Recent\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/SendTo\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Start Menu/Programs\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Start Menu/Programs/Administrative Tools\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Start Menu/Programs/StartUp\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst "Profiles/Default User/Templates\n")
-
-    add_custom_target(livecd
-        COMMAND native-cdmake -j -m -bootdata:2\#p0,e,b${_isoboot_file}\#pEF,e,b${_efisys_file} @${CMAKE_CURRENT_BINARY_DIR}/livecd.lst REACTOS ${REACTOS_BINARY_DIR}/livecd.iso
-        DEPENDS native-cdmake efisys
-        VERBATIM)
-endif()
+add_custom_target(livecd
+    COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/livecd.iso -iso-level 4
+        -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
+        -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
+        -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
+        -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/livecd.lst
+    DEPENDS native-mkisofs
+    VERBATIM)
 
 ## HybridCD
 # Create the file list
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "")
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
-if(USE_MKISOFS)
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+# Create the empty Desktop, Favorites, and Start Menu folders. And many more.
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Application Data=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Documents/My Music=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Documents/My Pictures=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Documents/My Videos=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Favorites=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/My Documents=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Start Menu/Programs/StartUp=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Templates=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Application Data=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Cookies=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Desktop=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Favorites=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Local Settings/Application Data=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Local Settings/History=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Local Settings/Temporary Internet Files=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/My Music=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/My Pictures=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/My Videos=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/NetHood=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/PrintHood=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Recent=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/SendTo=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs/Administrative Tools=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs/StartUp=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Templates=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
 
-    # Create the empty Desktop, Favorites, and Start Menu folders. And many more.
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Application Data=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Documents/My Music=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Documents/My Pictures=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Documents/My Videos=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Favorites=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/My Documents=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Start Menu/Programs/StartUp=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Templates=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Application Data=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Cookies=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Desktop=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Favorites=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Local Settings/Application Data=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Local Settings/History=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Local Settings/Temporary Internet Files=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/My Music=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/My Pictures=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/My Videos=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/NetHood=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/PrintHood=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Recent=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/SendTo=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs/Administrative Tools=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs/StartUp=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Templates=${CMAKE_CURRENT_BINARY_DIR}/empty\n")
+add_custom_target(hybridcd
+    COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/hybridcd.iso -iso-level 4
+        -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
+        -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
+        -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
+        -duplicates-once -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst
+    DEPENDS native-mkisofs bootcd livecd
+    VERBATIM)
 
-    add_custom_target(hybridcd
-        COMMAND native-mkisofs -quiet -o ${REACTOS_BINARY_DIR}/hybridcd.iso -iso-level 4
-            -publisher ${ISO_MANUFACTURER} -preparer ${ISO_MANUFACTURER} -volid ${ISO_VOLNAME} -volset ${ISO_VOLNAME}
-            -eltorito-boot loader/isoboot.bin -no-emul-boot -boot-load-size 4 -eltorito-alt-boot -eltorito-platform efi -eltorito-boot loader/efisys.bin -no-emul-boot -hide boot.catalog
-            -sort ${CMAKE_CURRENT_BINARY_DIR}/bootfiles.sort
-            -duplicates-once -no-cache-inodes -graft-points -path-list ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst
-        DEPENDS native-mkisofs bootcd livecd
-        VERBATIM)
-else()
-    # Create the empty Desktop, Favorites, and Start Menu folders. And many more.
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Application Data\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Documents/My Music\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Documents/My Pictures\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Documents/My Videos\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Favorites\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/My Documents\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Start Menu/Programs/StartUp\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/All Users/Templates\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Application Data\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Cookies\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Desktop\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Favorites\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Local Settings/Application Data\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Local Settings/History\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Local Settings/Temporary Internet Files\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/My Music\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/My Pictures\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/My Videos\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/NetHood\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/PrintHood\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Recent\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/SendTo\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs/Administrative Tools\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Start Menu/Programs/StartUp\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst "livecd/Profiles/Default User/Templates\n")
-
-    add_custom_target(hybridcd
-        COMMAND native-cdmake -j -m -bootdata:2\#p0,e,b${_isoboot_file}\#pEF,e,b${_efisys_file} @${CMAKE_CURRENT_BINARY_DIR}/hybridcd.lst REACTOS ${REACTOS_BINARY_DIR}/hybridcd.iso
-        DEPENDS native-cdmake efisys bootcd livecd
-        VERBATIM)
-endif()
-
-if(USE_MKISOFS)
-    add_cd_file(TARGET efisys FILE ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR bootcd regtest livecd hybridcd)
-endif()
+add_cd_file(TARGET efisys FILE ${CMAKE_CURRENT_BINARY_DIR}/efisys.bin DESTINATION loader NO_CAB NOT_IN_HYBRIDCD FOR bootcd regtest livecd hybridcd)
 
 add_subdirectory(freeldr)
 add_subdirectory(bootdata)

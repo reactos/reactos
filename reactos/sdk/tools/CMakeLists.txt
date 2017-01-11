@@ -25,7 +25,6 @@ endif()
 add_host_tool(utf16le utf16le/utf16le.cpp)
 
 add_subdirectory(cabman)
-add_subdirectory(cdmake)
 add_subdirectory(hhpcomp)
 add_subdirectory(hpp)
 add_subdirectory(kbdtool)
