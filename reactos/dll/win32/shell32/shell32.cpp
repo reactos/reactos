@@ -25,6 +25,45 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+/*
+ * Implemented
+ */
+EXTERN_C LPWSTR
+WINAPI
+AddCommasW(DWORD lValue, LPWSTR lpNumber)
+{
+    WCHAR szValue[MAX_PATH], szSeparator[8 + 1];
+    NUMBERFMTW numFormat;
+
+    GetLocaleInfoW(LOCALE_USER_DEFAULT,
+                   LOCALE_STHOUSAND,
+                   szSeparator,
+                   ARRAYSIZE(szSeparator));
+
+    numFormat.NumDigits     = 0;
+    numFormat.LeadingZero   = 0;
+    numFormat.Grouping      = 0; // FIXME! Use GetLocaleInfoW with LOCALE_SGROUPING and interpret the result.
+    numFormat.lpDecimalSep  = szSeparator;
+    numFormat.lpThousandSep = szSeparator;
+    numFormat.NegativeOrder = 0;
+
+    swprintf(szValue, L"%llu", lValue);
+    //_ultow(lValue, szValue, 10);
+
+    if (GetNumberFormatW(LOCALE_USER_DEFAULT,
+                         0,
+                         szValue,
+                         &numFormat,
+                         lpNumber,
+                         wcslen(lpNumber)) != 0)
+    {
+        return lpNumber;
+    }
+
+    wcscpy(lpNumber, szValue);
+    return lpNumber;
+}
+
 /**************************************************************************
  * Default ClassFactory types
  */

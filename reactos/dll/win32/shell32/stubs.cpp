@@ -19,19 +19,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
  */
 EXTERN_C LPWSTR
 WINAPI
-AddCommasW(DWORD dwUnknown, LPWSTR lpNumber)
-{
-    LPCWSTR lpRetBuf = L"0";
-
-    FIXME("AddCommasW() stub\n");
-    return const_cast<LPWSTR>(lpRetBuf);
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C LPWSTR
-WINAPI
 ShortSizeFormatW(LONGLONG llNumber)
 {
     FIXME("ShortSizeFormatW() stub\n");
