@@ -1,5 +1,6 @@
 
 add_definitions(
+    -DDUPLICATES_ONCE
     -DINS_BASE="\\".\\""
     -DSCHILY_BUILD
     -DSORTING)
@@ -14,6 +15,9 @@ include_directories(
 # Later on, they may still be linked together though.
 #
 # Reference: http://opensource.stackexchange.com/questions/2094
+
+add_library(libmdigest
+    schilytools/libmdigest/sha3.c)
 
 add_library(libschily
     schilytools/libschily/stdio/cvmod.c
@@ -74,7 +78,7 @@ add_host_tool(mkisofs
     schilytools/mkisofs/stream.c
     schilytools/mkisofs/tree.c
     schilytools/mkisofs/write.c)
-target_link_libraries(mkisofs libschily libsiconv)
+target_link_libraries(mkisofs libmdigest libschily libsiconv)
 
 if(MSVC)
     # mkisofs uses K&R-style function definitions to support very old compilers.

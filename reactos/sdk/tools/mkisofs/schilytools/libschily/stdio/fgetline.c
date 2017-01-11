@@ -1,6 +1,6 @@
-/* @(#)fgetline.c	1.13 14/03/27 Copyright 1986, 1996-2014 J. Schilling */
+/* @(#)fgetline.c	1.14 16/11/07 Copyright 1986, 1996-2016 J. Schilling */
 /*
- *	Copyright (c) 1986, 1996-2014 J. Schilling
+ *	Copyright (c) 1986, 1996-2016 J. Schilling
  *
  *	This is an interface that exists in the public since 1982.
  *	The POSIX.1-2008 standard did ignore POSIX rules not to
@@ -24,7 +24,13 @@
 #define	fgetline	__no__fgetline__
 #define	getline		__no__getline__
 
+#define	FAST_GETC_PUTC		/* Will be reset if not possible */
 #include "schilyio.h"
+
+#ifdef	LIB_SHEDIT
+#undef	HAVE_USG_STDIO
+#undef	FAST_GETC_PUTC
+#endif
 
 #ifndef	NO_GETLINE_COMPAT	/* Define to disable backward compatibility */
 #undef	fgetline
@@ -56,15 +62,12 @@ getline(buf, len)
 #endif
 #endif
 
-/*
- * XXX should we check if HAVE_USG_STDIO is defined and
- * XXX use something line memccpy to speed things up ???
- * XXX On Solaris 64 bits, we may use #define FAST_GETC_PUTC
- * XXX and getc_unlocked()
- */
 #if !defined(getc) && defined(USE_FGETS_FOR_FGETLINE)
 #include <schily/string.h>
 
+/*
+ * Warning: this prevents us from being able to have embedded null chars.
+ */
 EXPORT int
 js_fgetline(f, buf, len)
 	register	FILE	*f;
@@ -93,15 +96,61 @@ js_fgetline(f, buf, len)
 			char	*buf;
 	register	int	len;
 {
-	register int	c	= '\0';
 	register char	*bp	= buf;
+#if	defined(HAVE_USG_STDIO) || defined(FAST_GETC_PUTC)
+	register char	*p;
+#else
 	register int	nl	= '\n';
+	register int	c	= '\0';
+#endif
 
 	down2(f, _IOREAD, _IORW);
 
+	if (len <= 0)
+		return (0);
+
+	*bp = '\0';
 	for (;;) {
-		if ((c = getc(f)) < 0)
+#if	defined(HAVE_USG_STDIO) || defined(FAST_GETC_PUTC)
+		size_t	n;
+
+		if ((__c f)->_cnt <= 0) {
+			if (usg_filbuf(f) == EOF) {
+				/*
+				 * If buffer is empty and we hit EOF, return EOF
+				 */
+				if (bp == buf)
+					return (EOF);
+				break;
+			}
+			(__c f)->_cnt++;
+			(__c f)->_ptr--;
+		}
+
+		n = len;
+		if (n > (__c f)->_cnt)
+			n = (__c f)->_cnt;
+		p = movecbytes((__c f)->_ptr, bp, '\n', n);
+		if (p) {
+			n = p - bp;
+		}
+		(__c f)->_ptr += n;
+		(__c f)->_cnt -= n;
+		bp += n;
+		len -= n;
+		if (p != NULL) {
+			bp--;		/* Remove '\n' */
 			break;
+		}
+#else
+		if ((c = getc(f)) < 0) {
+			/*
+			 * If buffer is empty and we hit EOF, return EOF
+			 */
+			if (bp == buf)
+				return (c);
+			break;
+		}
 		if (c == nl)
 			break;
 		if (--len > 0) {
@@ -117,13 +166,9 @@ js_fgetline(f, buf, len)
 #endif
 			break;
 		}
+#endif
 	}
 	*bp = '\0';
-	/*
-	 * If buffer is empty and we hit EOF, return EOF
-	 */
-	if (c < 0 && bp == buf)
-		return (c);
 
 	return (bp - buf);
 }

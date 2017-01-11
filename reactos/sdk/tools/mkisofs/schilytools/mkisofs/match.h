@@ -1,10 +1,10 @@
-/* @(#)match.h	1.15 09/07/10 joerg */
+/* @(#)match.h	1.18 16/12/12 joerg */
 /*
  * 27th March 1996. Added by Jan-Piet Mens for matching regular expressions
  *                  in paths.
  *
  * Conversions to make the code more portable May 2000 .. March 2004
- * Copyright (c) 2000-2009 J. Schilling
+ * Copyright (c) 2000-2016 J. Schilling
  */
 
 #include <schily/fnmatch.h>
@@ -52,10 +52,14 @@ extern void	gen_del_match	__PR((int n));
 
 #ifdef SORTING
 extern int	add_sort_match	__PR((char *fn, int val));
-extern int	add_sort_list	__PR((char *fn));
+extern int	add_sort_list	__PR((const char *fn, void *valp,
+					int *pac, char *const **pav,
+					const char *opt));
 extern int	sort_matches	__PR((char *fn, int val));
 extern void	del_sort	__PR((void));
 #endif /* SORTING */
+
+extern int	match_igncase;
 
 /*
  * The following are for compatiblity with the separate routines - the

@@ -1,4 +1,4 @@
-/* @(#)schily.h	1.120 16/09/28 Copyright 1985-2016 J. Schilling */
+/* @(#)schily.h	1.121 16/11/04 Copyright 1985-2016 J. Schilling */
 /*
  *	Definitions for libschily
  *
@@ -416,6 +416,7 @@ extern	int	printf __PR((const char *, ...)) __printflike__(1, 2);
 #endif
 #ifdef	FOUND_SIZE_T
 extern	char	*movebytes __PR((const void *, void *, ssize_t));
+extern	char	*movecbytes __PR((const void *, void *, int, size_t));
 #endif
 
 extern	void	save_args __PR((int, char **));

@@ -1,8 +1,8 @@
-/* @(#)tree.c	1.136 16/10/23 joerg */
+/* @(#)tree.c	1.137 16/12/13 joerg */
 #include <schily/mconfig.h>
 #ifndef lint
 static	UConst char sccsid[] =
-	"@(#)tree.c	1.136 16/10/23 joerg";
+	"@(#)tree.c	1.137 16/12/13 joerg";
 #endif
 /*
  * File tree.c - scan directory  tree and build memory structures for iso9660
@@ -30,6 +30,8 @@ static	UConst char sccsid[] =
 /* ADD_FILES changes made by Ross Biro biro@yggdrasil.com 2/23/95 */
 
 /* APPLE_HYB James Pearson j.pearson@ge.ucl.ac.uk 23/2/2000 */
+
+/* DUPLICATES_ONCE Alex Kopylov cdrtools@bootcd.ru 19.06.2004 */
 
 #include "mkisofs.h"
 #include "rock.h"
@@ -1818,6 +1820,10 @@ insert_file_entry(this_dir, whole_path, short_name, statp, have_rsrc)
 	s_entry->de_flags = 0;
 	if (S_ISLNK(lstatbuf.st_mode))
 		s_entry->de_flags |= IS_SYMLINK;
+#ifdef	DUPLICATES_ONCE
+	s_entry->digest_fast = NULL;
+	s_entry->digest_full = NULL;
+#endif
 
 	/*
 	 * If the current directory is hidden, then hide all it's members

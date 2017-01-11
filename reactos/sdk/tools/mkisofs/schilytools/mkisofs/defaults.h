@@ -1,9 +1,9 @@
-/* @(#)defaults.h	1.25 13/02/14 joerg */
+/* @(#)defaults.h	1.26 16/12/12 joerg */
 /*
  * Header file defaults.h - assorted default values for character strings in
  * the volume descriptor.
  *
- * Copyright (c) 1999-2013 J. Schilling
+ * Copyright (c) 1999-2016 J. Schilling
  */
 
 #define	PREPARER_DEFAULT 	NULL
@@ -55,13 +55,17 @@
 #define	SYSTEM_ID_DEFAULT	"AIX"
 #endif
 
-#if	defined(_WIN) || defined(__CYGWIN32__) || defined(__CYGWIN__)
-#define	SYSTEM_ID_DEFAULT	"Win32"
-#endif /* _WIN */
+#if	defined(__CYGWIN32__) || defined(__CYGWIN__)
+#define	SYSTEM_ID_DEFAULT	"Win32/Cygwin"
+#endif
 
-#if	!defined(SYSTEM_ID_DEFAULT) && defined(__MINGW32__)
+#if	defined(__MINGW32__)
 #define	SYSTEM_ID_DEFAULT	"Win32/MinGW"
-#endif /* __MINGW32__ */
+#endif
+
+#if	defined(_MSC_VER)
+#define	SYSTEM_ID_DEFAULT	"Win32/MSVC"
+#endif
 
 #ifdef __EMX__
 #define	SYSTEM_ID_DEFAULT	"OS/2"

@@ -1,8 +1,8 @@
-/* @(#)inode.c	1.18 15/12/08 Copyright 2006-2015 J. Schilling */
+/* @(#)inode.c	1.19 16/11/14 Copyright 2006-2016 J. Schilling */
 #include <schily/mconfig.h>
 #ifndef lint
 static	UConst char sccsid[] =
-	"@(#)inode.c	1.18 15/12/08 Copyright 2006-2015 J. Schilling";
+	"@(#)inode.c	1.19 16/11/14 Copyright 2006-2015 J. Schilling";
 #endif
 /*
  *	Inode and link count handling for ISO-9660/RR
@@ -14,7 +14,7 @@ static	UConst char sccsid[] =
  *	of asigning the related number to the "extent" field in the ISO
  *	directory record.
  *
- *	Copyright (c) 2006-2015 J. Schilling
+ *	Copyright (c) 2006-2016 J. Schilling
  */
 /*
  * This program is free software; you can redistribute it and/or modify
@@ -120,7 +120,7 @@ assign_inodes(dpnt)
 		s_entry = dpnt->contents;
 		for (s_entry = dpnt->contents; s_entry; s_entry = s_entry->next) {
 			if (s_entry->starting_block == 0) {
-				s_hash = find_hash(s_entry->dev, s_entry->inode);
+				s_hash = find_hash(s_entry);
 				/* find_directory_hash() ? */
 				if (s_hash)
 					s_entry->starting_block = s_hash->starting_block;
@@ -162,7 +162,7 @@ assign_inodes(dpnt)
 				s_entry->dev = PREV_SESS_DEV;
 				s_entry->inode = null_inodes;
 			}
-			s_hash = find_hash(s_entry->dev, s_entry->inode);
+			s_hash = find_hash(s_entry);
 			if (s_hash) {
 				/*
 				 * Paranoia: Check for hashed files without proper inode #.
@@ -247,12 +247,12 @@ compute_linkcount(dpnt)
 						s_entry->whole_name : s_entry->name);
 				}
 			}
-			s_hash = find_hash(s_entry->dev, s_entry->inode);
+			s_hash = find_hash(s_entry);
 			if (s_hash) {
 				s_hash->nlink++;
 			} else {
 				add_hash(s_entry);
-				s_hash = find_hash(s_entry->dev, s_entry->inode);
+				s_hash = find_hash(s_entry);
 				if (s_hash == NULL) {
 					if (s_entry->dev == UNCACHED_DEVICE &&
 					    s_entry->inode == TABLE_INODE) {
@@ -300,7 +300,7 @@ assign_linkcount(dpnt)
 			if (s_entry->de_flags & RESOURCE_FORK)
 				continue;
 
-			s_hash = find_hash(s_entry->dev, s_entry->inode);
+			s_hash = find_hash(s_entry);
 			if (s_hash) {
 				update_nlink(s_entry, s_hash->nlink);
 			} else {

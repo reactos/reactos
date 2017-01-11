@@ -1,8 +1,8 @@
-/* @(#)write.c	1.144 16/10/10 joerg */
+/* @(#)write.c	1.146 16/12/13 joerg */
 #include <schily/mconfig.h>
 #ifndef lint
 static	UConst char sccsid[] =
-	"@(#)write.c	1.144 16/10/10 joerg";
+	"@(#)write.c	1.146 16/12/13 joerg";
 #endif
 /*
  * Program write.c - dump memory  structures to  file for iso9660 filesystem.
@@ -28,6 +28,8 @@ static	UConst char sccsid[] =
  */
 
 /* APPLE_HYB James Pearson j.pearson@ge.ucl.ac.uk 23/2/2000 */
+
+/* DUPLICATES_ONCE Alex Kopylov cdrtools@bootcd.ru 19.06.2004 */
 
 #include "mkisofs.h"
 #include <schily/time.h>
@@ -952,7 +954,7 @@ reassign_link_addresses(dpnt)
 				continue;
 
 			/* update the start extent */
-			s_hash = find_hash(s_entry->dev, s_entry->inode);
+			s_hash = find_hash(s_entry);
 			if (s_hash) {
 				set_733((char *)s_entry->isorec.extent, s_hash->starting_block);
 				s_entry->starting_block = s_hash->starting_block;
@@ -1135,7 +1137,7 @@ assign_file_addresses(dpnt, isnest)
 			 * If this is a multi-extent file, we get mxpart == 1
 			 * from find_hash().
 			 */
-			s_hash = find_hash(s_entry->dev, s_entry->inode);
+			s_hash = find_hash(s_entry);
 			if (s_hash) {
 				if (verbose > 2) {
 					fprintf(stderr, _("Cache hit for '%s%s%s'\n"),
@@ -1502,6 +1504,19 @@ free_one_directory(dpnt)
 		}
 #endif	/* APPLE_HYB */
 
+#ifdef	DUPLICATES_ONCE
+		if (s_entry_d->digest_fast) {
+
+			if (s_entry_d->digest_full &&
+			    (s_entry_d->digest_full != s_entry_d->digest_fast))
+				free(s_entry_d->digest_full);
+
+			free(s_entry_d->digest_fast);
+
+			s_entry_d->digest_fast = NULL;
+			s_entry_d->digest_full = NULL;
+		}
+#endif
 		free(s_entry_d);
 		s_entry_d = NULL;
 	}
@@ -2887,7 +2902,7 @@ adj_size_other(dpnt)
 			 * find any cached entry and assign new starting
 			 * extent
 			 */
-			s_hash = find_hash(s_entry->dev, s_entry->inode);
+			s_hash = find_hash(s_entry);
 			if (s_hash) {
 				set_733((char *)s_entry->isorec.extent,
 						s_hash->starting_block);

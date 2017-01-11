@@ -1,4 +1,4 @@
-/* @(#)stdio.h	1.12 16/09/11 Copyright 2009-2016 J. Schilling */
+/* @(#)stdio.h	1.14 16/11/06 Copyright 2009-2016 J. Schilling */
 /*
  *	Abstraction from stdio.h
  *
@@ -91,6 +91,9 @@ extern "C" {
  * If you believe you can do this on onther platforms, send a note.
  */
 #if	defined(__SVR4) && defined(__sun) && defined(_LP64)
+#ifndef	_SCHILY_TYPES_H
+#include <schily/types.h>	/* Needed for ssize_t */
+#endif
 
 /*
  * This is how the 64 bit FILE * begins on Solaris.
@@ -102,6 +105,12 @@ struct SCHILY__FILE_TAG {
 	ssize_t		_cnt;	/* number of available characters in buffer */
 };
 
+#define	__getc_unlocked(p)	(--(p)->_cnt < 0 \
+					? __filbuf((FILE *)p) \
+					: (int)*(p)->_ptr++)
+
+#define	getc_unlocked(p)	__getc_unlocked((struct SCHILY__FILE_TAG *)p)
+
 #define	__putc_unlocked(x, p)	(--(p)->_cnt < 0 \
 					? __flsbuf((x), (FILE *)(p)) \
 					: (int)(*(p)->_ptr++ = \
@@ -109,9 +118,12 @@ struct SCHILY__FILE_TAG {
 
 #define	putc_unlocked(x, p)	__putc_unlocked(x, (struct SCHILY__FILE_TAG *)p)
 
+extern int	__filbuf __PR((FILE *));
 extern int	__flsbuf __PR((int, FILE *));
 
-#endif	/* defined(__SVR4) && defined(__sun) && defined(_LP64) */
+#else	/* !defined(__SVR4) && defined(__sun) && defined(_LP64) */
+#undef	FAST_GETC_PUTC
+#endif	/* !defined(__SVR4) && defined(__sun) && defined(_LP64) */
 #endif	/* FAST_GETC_PUTC */
 
 #ifdef __cplusplus

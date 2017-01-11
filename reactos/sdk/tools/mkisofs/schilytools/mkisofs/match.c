@@ -1,8 +1,8 @@
-/* @(#)match.c	1.31 16/10/10 joerg */
+/* @(#)match.c	1.34 16/11/27 joerg */
 #include <schily/mconfig.h>
 #ifndef lint
 static	UConst char sccsid[] =
-	"@(#)match.c	1.31 16/10/10 joerg";
+	"@(#)match.c	1.34 16/11/27 joerg";
 #endif
 /*
  * 27-Mar-96: Jan-Piet Mens <jpm@mens.de>
@@ -31,6 +31,8 @@ struct match {
 };
 
 typedef struct match match;
+
+static BOOL	isort;
 
 static match *mats[MAX_MAT];
 
@@ -87,8 +89,12 @@ add_sort_match(fn, val)
 }
 
 EXPORT int
-add_sort_list(file)
-	char	*file;
+add_sort_list(file, valp, pac, pav, opt)
+	const char	*file;
+	void		*valp;
+	int		*pac;
+	char	*const	**pav;
+	const char	*opt;
 {
 	FILE	*fp;
 	char	name[4096];
@@ -96,6 +102,10 @@ add_sort_list(file)
 	int	val;
 extern	int	do_sort;
 
+	while (*opt == '-')
+		opt++;
+	if (*opt == 'i')
+		isort = TRUE;
 	do_sort++;
 	if ((fp = fopen(file, "r")) == NULL) {
 		comerr(_("Can't open sort file list %s\n"), file);
@@ -136,9 +146,13 @@ sort_matches(fn, val)
 	int	val;
 {
 	register sort_match	*s_mat;
+		int		flags = FNM_PATHNAME;
+
+	if (isort)
+		flags |= FNM_IGNORECASE;
 
 	for (s_mat = s_mats; s_mat; s_mat = s_mat->next) {
-		if (fnmatch(s_mat->name, fn, FNM_PATHNAME) != FNM_NOMATCH) {
+		if (fnmatch(s_mat->name, fn, flags) != FNM_NOMATCH) {
 			return (s_mat->val); /* found sort value */
 		}
 	}
@@ -350,12 +364,17 @@ gen_matches(fn, n)
 	int	n;
 {
 	register match * mat;
+		int		flags = FNM_PATHNAME;
+
 
 	if (n >= MAX_MAT)
 		return (0);
 
+	if (match_igncase)
+		flags |= FNM_IGNORECASE;
+
 	for (mat = mats[n]; mat; mat = mat->next) {
-		if (fnmatch(mat->name, fn, FNM_PATHNAME) != FNM_NOMATCH) {
+		if (fnmatch(mat->name, fn, flags) != FNM_NOMATCH) {
 			return (1);	/* found -> excluded filename */
 		}
 	}

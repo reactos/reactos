@@ -1,8 +1,8 @@
-/* @(#)mkisofs.c	1.284 16/10/23 joerg */
+/* @(#)mkisofs.c	1.288 16/12/13 joerg */
 #include <schily/mconfig.h>
 #ifndef lint
 static	UConst char sccsid[] =
-	"@(#)mkisofs.c	1.284 16/10/23 joerg";
+	"@(#)mkisofs.c	1.288 16/12/13 joerg";
 #endif
 /*
  * Program mkisofs.c - generate iso9660 filesystem  based upon directory
@@ -31,6 +31,8 @@ static	UConst char sccsid[] =
 /* APPLE_HYB James Pearson j.pearson@ge.ucl.ac.uk 22/2/2000 */
 /* MAC UDF images by HELIOS Software GmbH support@helios.de */
 /* HFS+ by HELIOS Software GmbH support@helios.de */
+
+/* DUPLICATES_ONCE Alex Kopylov cdrtools@bootcd.ru 19.06.2004 */
 
 #ifdef	USE_FIND
 #include <schily/walk.h>
@@ -227,6 +229,7 @@ struct eltorito_boot_entry_info *last_boot_entry = NULL;
 struct eltorito_boot_entry_info *current_boot_entry = NULL;
 
 int	use_graft_ptrs;		/* Use graft points */
+int	match_igncase;		/* Ignore case with -exclude-list and -hide* */
 int	jhide_trans_tbl;	/* Hide TRANS.TBL from Joliet tree */
 int	hide_rr_moved;		/* Name RR_MOVED .rr_moved in Rock Ridge tree */
 int	omit_period = 0;	/* Violates iso9660, but these are a pain */
@@ -243,6 +246,7 @@ int	full_iso9660_filenames = 0; /* Full 31 character iso9660 filenames */
 int	nolimitpathtables = 0;	/* Don't limit size of pathtable. Violates iso9660 */
 int	relaxed_filenames = 0;	/* For Amiga.  Disc will not work with DOS */
 int	allow_lowercase = 0;	/* Allow lower case letters */
+int	no_allow_lowercase = 0;	/* Do not allow lower case letters */
 int	allow_multidot = 0;	/* Allow more than on dot in filename */
 int	iso_translate = 1;	/* 1 == enables '#', '-' and '~' removal */
 int	allow_leading_dots = 0;	/* DOS cannot read names with leading dots */
@@ -321,6 +325,10 @@ UInt32_t null_inodes = NULL_INO_MAX;
 BOOL	correct_inodes = TRUE;	/* TRUE: add a "correct inodes" fingerprint */
 BOOL	rrip112 = TRUE;		/* TRUE: create Rock Ridge V 1.12	    */
 BOOL	long_rr_time = FALSE;	/* TRUE: use long (17 Byte) time format	    */
+
+#ifdef	DUPLICATES_ONCE
+int	duplicates_once = 0;	/* encode duplicate files once */
+#endif
 
 siconvt_t	*in_nls = NULL;  /* input UNICODE conversion table */
 siconvt_t	*out_nls = NULL; /* output UNICODE conversion table */
@@ -1104,6 +1112,10 @@ LOCAL const struct mki_option mki_options[] =
 	__("Create old Rock Ridge V 1.10")},
 	{{"rrip112", &rrip112 },
 	__("Create new Rock Ridge V 1.12 (default)")},
+#ifdef	DUPLICATES_ONCE
+	{{"duplicates-once", &duplicates_once},
+	__("Optimize storage by encoding duplicate files once")},
+#endif
 	{{"check-oldnames", &check_oldnames },
 	__("Check all imported ISO9660 names from old session")},
 	{{"check-session*", &check_image },
@@ -1212,6 +1224,12 @@ LOCAL const struct mki_option mki_options[] =
 	__("\1GLOBFILE\1Exclude file name")},
 	{{"exclude-list&", NULL, (getpargfun)add_list},
 	__("\1FILE\1File with list of file names to exclude")},
+
+	{{"hide-ignorecase", &match_igncase },
+	__("Ignore case with -exclude-list and -hide* options")},
+	{{"exclude-ignorecase", &match_igncase },
+	NULL},
+
 	{{"modification-date&", &modification_date, (getpargfun)get_ldate },
 	__("\1DATE\1Set the modification date field of the PVD")},
 	{{"nobak%0", &all_files },
@@ -1264,8 +1282,10 @@ LOCAL const struct mki_option mki_options[] =
 	__("Use short Rock Ridge time format")},
 
 #ifdef SORTING
-	{ {"sort&", NULL, (getpargfun)add_sort_list },
+	{ {"sort&", NULL, add_sort_list },
 	__("\1FILE\1Sort file content locations according to rules in FILE")},
+	{ {"isort&", NULL, add_sort_list },
+	__("\1FILE\1Sort file content locations according to rules in FILE (ignore case)")},
 #endif /* SORTING */
 
 	{{"split-output", &split_output },
@@ -1314,6 +1334,10 @@ LOCAL const struct mki_option mki_options[] =
 	__("Do not translate illegal ISO characters '~', '-' and '#' (violates ISO9660)")},
 	{{"allow-lowercase", &allow_lowercase },
 	__("Allow lower case characters in addition to the current character set (violates ISO9660)")},
+	{{"no-allow-lowercase", &no_allow_lowercase },
+	__("Do not allow lower case characters in addition to the current character set.")},
+	{{"+allow-lowercase", &no_allow_lowercase },
+	NULL},
 	{{"allow-multidot", &allow_multidot },
 	__("Allow more than one dot in filenames (e.g. .tar.gz) (violates ISO9660)")},
 	{{"use-fileversion", &use_fileversion },
@@ -1668,7 +1692,8 @@ const char *
 optend(fmt)
 	const char	*fmt;
 {
-	int	c;
+	int		c;
+	const char	*ofmt = fmt;
 
 	for (; *fmt != '\0'; fmt++) {
 		c = *fmt;
@@ -1678,7 +1703,9 @@ optend(fmt)
 			continue;
 		}
 		if (c == ',' || c == '%' || c == '*' || c == '?' ||
-		    c == '#' || c == '&' || c == '~' || c == '+')
+		    c == '#' || c == '&' || c == '~')
+			break;
+		if (fmt > ofmt && c == '+')
 			break;
 
 	}
@@ -2185,7 +2212,11 @@ Copyright (C) 1997-2016 %s\n"),
 			(Llong)strlen(biblio));
 		}
 	}
+#ifdef	DUPLICATES_ONCE
+	if (!cache_inodes && !duplicates_once) {
+#else
 	if (!cache_inodes) {
+#endif
 		correct_inodes = FALSE;
 		if (use_RockRidge) {
 			errmsgno(EX_BAD,
@@ -2195,6 +2226,14 @@ Copyright (C) 1997-2016 %s\n"),
 			_("Warning: Cannot add inode hints with -no-cache-inodes.\n"));
 		}
 	}
+#if	defined(__MINGW32__)
+	if (cache_inodes) {
+		cache_inodes = 0;
+		correct_inodes = FALSE;
+		errmsgno(EX_BAD,
+		_("Warning: cannot -cache-inodes on this platform - ignoring.\n"));
+	}
+#endif
 	if (!correct_inodes)
 		rrip112 = FALSE;
 	if (check_image) {
@@ -2453,6 +2492,8 @@ Copyright (C) 1997-2016 %s\n"),
 		allow_multidot++;		/* > 1 dots	*/
 		warn_violate++;
 	}
+	if (no_allow_lowercase)
+		allow_lowercase = 0;
 	if (relaxed_filenames && iso9660_level < 4)
 		warn_violate++;
 	if (iso_translate == 0 && iso9660_level < 4)
