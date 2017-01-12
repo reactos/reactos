@@ -28,6 +28,7 @@ list(APPEND SOURCE
     RtlDeleteAce.c
     RtlDetermineDosPathNameType.c
     RtlDoesFileExists.c
+    RtlDosApplyFileIsolationRedirection_Ustr.c
     RtlDosPathNameToNtPathName_U.c
     RtlDosSearchPath_U.c
     RtlDosSearchPath_Ustr.c

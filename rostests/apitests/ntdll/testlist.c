@@ -31,6 +31,7 @@ extern void func_RtlBitmap(void);
 extern void func_RtlCopyMappedMemory(void);
 extern void func_RtlDeleteAce(void);
 extern void func_RtlDetermineDosPathNameType(void);
+extern void func_RtlDosApplyFileIsolationRedirection_Ustr(void);
 extern void func_RtlDoesFileExists(void);
 extern void func_RtlDosPathNameToNtPathName_U(void);
 extern void func_RtlDosSearchPath_U(void);
@@ -81,6 +82,7 @@ const struct test winetest_testlist[] =
     { "RtlCopyMappedMemory",            func_RtlCopyMappedMemory },
     { "RtlDeleteAce",                   func_RtlDeleteAce },
     { "RtlDetermineDosPathNameType",    func_RtlDetermineDosPathNameType },
+    { "RtlDosApplyFileIsolationRedirection_Ustr", func_RtlDosApplyFileIsolationRedirection_Ustr },
     { "RtlDoesFileExists",              func_RtlDoesFileExists },
     { "RtlDosPathNameToNtPathName_U",   func_RtlDosPathNameToNtPathName_U },
     { "RtlDosSearchPath_U",             func_RtlDosSearchPath_U },
