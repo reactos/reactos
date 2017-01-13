@@ -834,5 +834,8 @@ function(add_rostests_file)
     endif()
 
     add_cd_file(FILE ${_ROSTESTS_FILE} DESTINATION "reactos/bin${_ROSTESTS_SUBDIR}" FOR all)
-    install(FILES ${_ROSTESTS_FILE} DESTINATION "$ENV{ROSTESTS_INSTALL}${_ROSTESTS_SUBDIR}" COMPONENT rostests)
+
+    if(DEFINED ENV{ROSTESTS_INSTALL})
+        install(FILES ${_ROSTESTS_FILE} DESTINATION "$ENV{ROSTESTS_INSTALL}${_ROSTESTS_SUBDIR}" COMPONENT rostests)
+    endif()
 endfunction()
