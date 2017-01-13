@@ -383,6 +383,7 @@ IntSendChildNCPaint(PWND pWnd)
              UserDerefObjectCo(Child);
           }
       }
+      ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
    }
 /* FIXME : Use snap shot mode until window death is fixed while surfing menus! Fix CORE-12085 and CORE-12071.
    pWnd = pWnd->spwndChild;
