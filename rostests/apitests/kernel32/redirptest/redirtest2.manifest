@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <assemblyIdentity type="win32" name="redirtest2" version="0.2.2.2" processorArchitecture="x86" />
+  <file name="kernel32test_versioned.dll"/>
+</assembly>
+ 
