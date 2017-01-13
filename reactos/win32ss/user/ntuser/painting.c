@@ -366,6 +366,25 @@ IntSendNCPaint(PWND pWnd, HRGN hRgn)
 VOID FASTCALL
 IntSendChildNCPaint(PWND pWnd)
 {
+   PWND Child;
+   HWND *List, *phWnd;
+
+   List = IntWinListChildren(UserGetDesktopWindow());
+   if ( List )
+   {
+      for (phWnd = List; *phWnd; ++phWnd)
+      {
+          Child = ValidateHwndNoErr(*phWnd);
+          if ( Child && Child->hrgnUpdate == NULL && Child->state & WNDS_SENDNCPAINT)
+          {
+             USER_REFERENCE_ENTRY Ref;
+             UserRefObjectCo(Child, &Ref);
+             IntSendNCPaint(Child, HRGN_WINDOW);
+             UserDerefObjectCo(Child);
+          }
+      }
+   }
+/* FIXME : Use snap shot mode until window death is fixed while surfing menus! Fix CORE-12085 and CORE-12071.
    pWnd = pWnd->spwndChild;
    while(pWnd)
    {
@@ -377,7 +396,7 @@ IntSendChildNCPaint(PWND pWnd)
          UserDerefObjectCo(pWnd);
       }
       pWnd = pWnd->spwndNext;
-   }
+   }*/
 }
 
 /*
