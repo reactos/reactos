@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Local Spooler API Tests Injected DLL
  * LICENSE:     GNU GPLv2 or any later version as published by the Free Software Foundation
  * PURPOSE:     Tests for fpGetPrintProcessorDirectory
- * COPYRIGHT:   Copyright 2016 Colin Finck <colin@reactos.org>
+ * COPYRIGHT:   Copyright 2016-2017 Colin Finck <colin@reactos.org>
  */
 
 #include <apitest.h>
@@ -26,7 +26,7 @@ START_TEST(fpGetPrintProcessorDirectory)
 {
     DWORD cbNeeded;
     DWORD cbTemp;
-    DWORD dwReturned;
+    //DWORD dwReturned;
     PGetPrintProcessorDirectoryW pGetPrintProcessorDirectoryW;
     PRINTPROVIDOR pp;
     PWSTR pwszBuffer;
@@ -48,6 +48,8 @@ START_TEST(fpGetPrintProcessorDirectory)
     ok(!pp.fpGetPrintProcessorDirectory(NULL, L"invalid", 0, NULL, 0, NULL), "fpGetPrintProcessorDirectory returns TRUE!\n");
     ok(GetLastError() == ERROR_INVALID_ENVIRONMENT, "fpGetPrintProcessorDirectory returns error %lu!\n", GetLastError());
 
+	// This test corrupts something inside spoolsv so that it's only runnable once without restarting spoolsv. Therefore it's disabled.
+#if 0
     // Now provide a valid environment and prove that it is checked case-insensitively.
     // In contrast to GetPrintProcessorDirectoryW, the level isn't the next thing checked here, but fpGetPrintProcessorDirectory
     // already tries to access the non-supplied pcbNeeded variable.
@@ -63,6 +65,7 @@ START_TEST(fpGetPrintProcessorDirectory)
     _SEH2_END;
 
     ok(dwReturned == EXCEPTION_ACCESS_VIOLATION, "dwReturned is %lu!\n", dwReturned);
+#endif
 
     // fpGetPrintProcessorDirectory doesn't care about the supplied level at all. Prove this here.
     // With no buffer given, this needs to fail with ERROR_INSUFFICIENT_BUFFER.
@@ -72,6 +75,8 @@ START_TEST(fpGetPrintProcessorDirectory)
     ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "fpGetPrintProcessorDirectory returns error %lu!\n", GetLastError());
     ok(cbNeeded > 0, "cbNeeded is %lu!\n", cbNeeded);
 
+	// This test corrupts something inside spoolsv so that it's only runnable once without restarting spoolsv. Therefore it's disabled.
+#if 0
     // Now provide the demanded size, but no buffer.
     // Unlike GetPrintProcessorDirectoryW, fpGetPrintProcessorDirectory doesn't check for this case and tries to access the buffer.
     _SEH2_TRY
@@ -86,6 +91,7 @@ START_TEST(fpGetPrintProcessorDirectory)
     _SEH2_END;
 
     ok(dwReturned == EXCEPTION_ACCESS_VIOLATION, "dwReturned is %lu!\n", dwReturned);
+#endif
 
     // Prove that this check is implemented in spoolss' GetPrintProcessorDirectoryW instead.
     // In contrast to winspool's GetPrintProcessorDirectoryW, cbTemp is left untouched though. This comes from the fact that RPC isn't involved here.
