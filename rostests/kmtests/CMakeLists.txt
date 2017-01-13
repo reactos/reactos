@@ -141,7 +141,8 @@ add_importlibs(kmtest advapi32 ws2_32 msvcrt kernel32 ntdll)
 add_target_compile_definitions(kmtest KMT_USER_MODE)
 #add_pch(kmtest include/kmt_test.h)
 set_target_properties(kmtest PROPERTIES OUTPUT_NAME "kmtest_")
-add_rostests_file(TARGET kmtest)
+#add_rostests_file(TARGET kmtest)
+add_cd_file(TARGET kmtest DESTINATION reactos/bin FOR all)
 
 #
 # Group targets
