@@ -30,4 +30,4 @@ add_executable(user32_winetest ${SOURCE} resource.rc)
 # some tests need to be run from an app compiled as GUI
 set_module_type(user32_winetest win32gui)
 add_importlibs(user32_winetest user32 gdi32 advapi32 msvcrt kernel32)
-add_cd_file(TARGET user32_winetest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET user32_winetest)

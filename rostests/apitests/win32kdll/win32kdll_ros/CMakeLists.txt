@@ -11,4 +11,4 @@ add_library(win32kdll SHARED
 
 set_module_type(win32kdll module)
 add_dependencies(win32kdll psdk)
-add_cd_file(TARGET win32kdll DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET win32kdll)

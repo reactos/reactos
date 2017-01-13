@@ -8,4 +8,4 @@ list(APPEND SOURCE
 add_executable(mapi32_winetest ${SOURCE})
 set_module_type(mapi32_winetest win32cui)
 add_importlibs(mapi32_winetest advapi32 msvcrt kernel32)
-add_cd_file(TARGET mapi32_winetest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET mapi32_winetest)

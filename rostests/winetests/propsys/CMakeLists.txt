@@ -8,4 +8,4 @@ if(MSVC)
     add_importlibs(propsys_winetest ntdll)
 endif()
 
-add_cd_file(TARGET propsys_winetest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET propsys_winetest)

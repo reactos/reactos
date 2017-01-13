@@ -46,4 +46,4 @@ endif()
 
 set_module_type(kernel32_winetest win32cui)
 add_importlibs(kernel32_winetest user32 advapi32 msvcrt kernel32 ntdll)
-add_cd_file(TARGET kernel32_winetest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET kernel32_winetest)

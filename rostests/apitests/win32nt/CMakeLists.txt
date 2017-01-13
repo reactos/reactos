@@ -78,4 +78,4 @@ add_importlibs(win32knt_apitest
     ntdll)
 
 add_dependencies(win32knt_apitest xdk)
-add_cd_file(TARGET win32knt_apitest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET win32knt_apitest)

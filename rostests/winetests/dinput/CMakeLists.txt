@@ -12,4 +12,4 @@ add_executable(dinput_winetest
 target_link_libraries(dinput_winetest dinput_data_formats)
 set_module_type(dinput_winetest win32cui)
 add_importlibs(dinput_winetest dinput ole32 user32 msvcrt kernel32)
-add_cd_file(TARGET dinput_winetest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET dinput_winetest)

@@ -14,7 +14,7 @@ target_link_libraries(iocreatefile_drv kmtest_printf ${PSEH_LIB})
 add_importlibs(iocreatefile_drv ntoskrnl hal)
 add_target_compile_definitions(iocreatefile_drv KMT_STANDALONE_DRIVER)
 #add_pch(iocreatefile_drv ../include/kmt_test.h)
-add_cd_file(TARGET iocreatefile_drv DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET iocreatefile_drv)
 
 #
 # IoDeviceObject
@@ -29,7 +29,7 @@ target_link_libraries(iodeviceobject_drv kmtest_printf ${PSEH_LIB})
 add_importlibs(iodeviceobject_drv ntoskrnl hal)
 add_target_compile_definitions(iodeviceobject_drv KMT_STANDALONE_DRIVER)
 #add_pch(iodeviceobject_drv ../include/kmt_test.h)
-add_cd_file(TARGET iodeviceobject_drv DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET iodeviceobject_drv)
 
 #
 # IoHelper
@@ -44,7 +44,7 @@ target_link_libraries(iohelper_drv kmtest_printf ${PSEH_LIB})
 add_importlibs(iohelper_drv ntoskrnl hal)
 add_target_compile_definitions(iohelper_drv KMT_STANDALONE_DRIVER)
 #add_pch(iohelper_drv ../include/kmt_test.h)
-add_cd_file(TARGET iohelper_drv DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET iohelper_drv)
 
 #
 # IoReadWrite
@@ -59,4 +59,4 @@ target_link_libraries(ioreadwrite_drv kmtest_printf ${PSEH_LIB})
 add_importlibs(ioreadwrite_drv ntoskrnl hal)
 add_target_compile_definitions(ioreadwrite_drv KMT_STANDALONE_DRIVER)
 #add_pch(ioreadwrite_drv ../include/kmt_test.h)
-add_cd_file(TARGET ioreadwrite_drv DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET ioreadwrite_drv)

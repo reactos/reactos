@@ -21,7 +21,7 @@ add_subdirectory(winetests)
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/testdata/)
     file(GLOB_RECURSE TESTDATA_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/testdata/ ${CMAKE_CURRENT_SOURCE_DIR}/testdata/*)
     foreach(item ${TESTDATA_FILES})
-        add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/testdata/${item} DESTINATION reactos/bin/testdata NAME_ON_CD ${item} FOR all)
+        add_rostests_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/testdata/${item} SUBDIR testdata)
     endforeach(item)
 endif()
 

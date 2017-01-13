@@ -37,4 +37,4 @@ if(MSVC)
 endif()
 
 add_dependencies(oleaut32_winetest stdole2 oleaut32_idlheaders)
-add_cd_file(TARGET oleaut32_winetest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET oleaut32_winetest)

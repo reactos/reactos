@@ -21,4 +21,4 @@ set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS "${jscript_winetes
 add_executable(jscript_winetest ${SOURCE} rsrc.rc)
 set_module_type(jscript_winetest win32cui)
 add_importlibs(jscript_winetest ole32 oleaut32 advapi32 msvcrt kernel32)
-add_cd_file(TARGET jscript_winetest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET jscript_winetest)

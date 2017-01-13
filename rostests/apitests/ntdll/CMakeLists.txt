@@ -63,4 +63,4 @@ if(NOT MSVC)
     set_source_files_properties(RtlGetFullPathName_UstrEx.c PROPERTIES COMPILE_FLAGS "-Wno-format")
 endif()
 
-add_cd_file(TARGET ntdll_apitest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET ntdll_apitest)

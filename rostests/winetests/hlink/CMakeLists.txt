@@ -9,4 +9,4 @@ list(APPEND SOURCE
 add_executable(hlink_winetest ${SOURCE})
 set_module_type(hlink_winetest win32cui)
 add_importlibs(hlink_winetest hlink ole32 msvcrt kernel32)
-add_cd_file(TARGET hlink_winetest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET hlink_winetest)

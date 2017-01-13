@@ -26,4 +26,4 @@ if(MSVC)
     add_importlibs(gdi32_winetest ntdll)
 endif()
 
-add_cd_file(TARGET gdi32_winetest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET gdi32_winetest)

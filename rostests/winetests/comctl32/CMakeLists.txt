@@ -34,7 +34,7 @@ list(APPEND SOURCE
 add_executable(comctl32_winetest ${SOURCE} rsrc.rc)
 set_module_type(comctl32_winetest win32cui)
 add_importlibs(comctl32_winetest comctl32 ole32 user32 gdi32 advapi32 msvcrt kernel32)
-add_cd_file(TARGET comctl32_winetest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET comctl32_winetest)
 
 if(NOT MSVC)
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998

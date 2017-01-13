@@ -29,7 +29,7 @@ list(APPEND SOURCE
 add_executable(ntdll_winetest ${SOURCE})
 set_module_type(ntdll_winetest win32cui)
 add_importlibs(ntdll_winetest user32 ole32 advapi32 msvcrt kernel32 ntdll)
-add_cd_file(TARGET ntdll_winetest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET ntdll_winetest)
 
 if(NOT MSVC)
     add_target_compile_flags(ntdll_winetest "-Wno-format")

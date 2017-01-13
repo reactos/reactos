@@ -14,4 +14,4 @@ if(MSVC)
     add_importlibs(version_winetest ntdll)
 endif()
 
-add_cd_file(TARGET version_winetest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET version_winetest)

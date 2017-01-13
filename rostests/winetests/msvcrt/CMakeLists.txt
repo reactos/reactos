@@ -31,4 +31,4 @@ else()
     add_target_compile_flags(msvcrt_winetest "-Wno-format")
 endif()
 
-add_cd_file(TARGET msvcrt_winetest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET msvcrt_winetest)

@@ -20,4 +20,4 @@ add_executable(atl_apitest
 target_link_libraries(atl_apitest wine uuid)
 set_module_type(atl_apitest win32cui)
 add_importlibs(atl_apitest rpcrt4 ole32 oleaut32 msimg32 gdi32 advapi32 user32 msvcrt kernel32 ntdll)
-add_cd_file(TARGET atl_apitest DESTINATION reactos/bin FOR all)
+add_rostests_file(TARGET atl_apitest)
