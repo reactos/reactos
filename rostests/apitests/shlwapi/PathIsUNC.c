@@ -25,7 +25,7 @@ static BOOL (WINAPI *pPathIsUNC)(PCWSTR);
 #define CALL_ISUNC(exp, str) \
 do { \
     BOOL ret = pPathIsUNC((str)); \
-    ok(ret == (exp), "Expected %ls to be %d, was %d\n", (str), (exp), ret); \
+    ok(ret == (exp), "Expected %s to be %d, was %d\n", wine_dbgstr_w((str)), (exp), ret); \
 } while (0)
 
 START_TEST(isuncpath)
