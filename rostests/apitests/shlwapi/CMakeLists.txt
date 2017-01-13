@@ -1,6 +1,8 @@
 
 list(APPEND SOURCE
     PathIsUNC.c
+    PathIsUNCServer.c
+    PathIsUNCServerShare.c
     PathUnExpandEnvStrings.c
     testlist.c)
 
