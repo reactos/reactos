@@ -85,18 +85,16 @@ static struct _TestShellLinkDef linkTestList[] =
         L"",                      SLGP_SHORTPATH,    ERROR_INVALID_FUNCTION, FALSE,
         L"",                      SLGP_RAWPATH,      ERROR_INVALID_FUNCTION, FALSE
     },
-    { NULL, 0, NULL, 0, 0, NULL, 0, 0 }
 };
-
-static const UINT evVarChLen = 255;
-static WCHAR evVar[evVarChLen];
 
 static
 VOID
-test_checklinkpath(TestShellLinkDef* testDef)
+test_checklinkpath(UINT i, TestShellLinkDef* testDef)
 {
+static WCHAR evVar[MAX_PATH];
+
     HRESULT hr, expectedHr;
-    WCHAR wPathOut[255];
+    WCHAR wPathOut[MAX_PATH];
     bool expandPathOut;
     const WCHAR* expectedPathOut;
     IShellLinkW *psl;
@@ -115,7 +113,7 @@ test_checklinkpath(TestShellLinkDef* testDef)
     }
 
     hr = psl->SetPath(testDef->pathIn);
-    ok(hr == testDef->hrSetPath, "IShellLink::SetPath, got hr = %lx, expected %lx\n", hr, testDef->hrSetPath);
+    ok(hr == testDef->hrSetPath, "IShellLink::SetPath(%lu), got hr = %lx, expected %lx\n", i, hr, testDef->hrSetPath);
 
     expectedPathOut = NULL;
     for (i1 = 0; i1 <= 1; i1++ )
@@ -138,18 +136,18 @@ test_checklinkpath(TestShellLinkDef* testDef)
         /* Patch some variables */
         if (expandPathOut == TRUE)
         {
-            ExpandEnvironmentStringsW(expectedPathOut,evVar,evVarChLen);
+            ExpandEnvironmentStringsW(expectedPathOut, evVar, _countof(evVar));
             DPRINT("** %S **\n",evVar);
             expectedPathOut = evVar;
         }
 
-        hr = psl->GetPath(wPathOut,sizeof(wPathOut),NULL,flags);
+        hr = psl->GetPath(wPathOut, _countof(wPathOut), NULL, flags);
         ok(hr == expectedHr,
-           "IShellLink::GetPath, flags %lx, got hr = %lx, expected %lx\n",
-            flags, hr, expectedHr);
-        ok(wcsicmp(wPathOut,expectedPathOut) == 0,
-           "IShellLink::GetPath, flags %lx, in %S, got %S, expected %S\n",
-           flags,testDef->pathIn,wPathOut,expectedPathOut);
+           "IShellLink::GetPath(%lu), flags %lx, got hr = %lx, expected %lx\n",
+            i, flags, hr, expectedHr);
+        ok(wcsicmp(wPathOut, expectedPathOut) == 0,
+           "IShellLink::GetPath(%lu), flags %lx, in %S, got %S, expected %S\n",
+           i, flags, testDef->pathIn, wPathOut, expectedPathOut);
     }
 
     psl->Release();
@@ -200,31 +198,26 @@ TestDescription(void)
     ok(hr == S_OK, "IShellLink::GetDescription returned hr = %lx\n", hr);
     ok(buffer[0] == 0, "buffer[0] = %x\n", buffer[0]);
     ok(buffer[1] == 0x5555, "buffer[1] = %x\n", buffer[1]);
+
+    psl->Release();
 }
 
 static
 VOID
 TestShellLink(void)
 {
-    TestShellLinkDef *testDef;
-    UINT i1 = 0;
+    UINT i;
 
-    /* needed for test */
-    SetEnvironmentVariableW(L"shell",L"cmd.exe");
+    /* Needed for test */
+    SetEnvironmentVariableW(L"shell", L"cmd.exe");
 
-    testDef = &linkTestList[i1];
-    while (testDef->pathIn != NULL)
+    for (i = 0; i < ARRAYSIZE(linkTestList); ++i)
     {
-
-        DPRINT("IShellLink-Test: %S\n", testDef->pathIn);
-        test_checklinkpath(testDef);
-        i1++;
-        testDef = &linkTestList[i1];
+        DPRINT("IShellLink-Test(%lu): %S\n", i, linkTestList[i].pathIn);
+        test_checklinkpath(i, &linkTestList[i]);
     }
 
     SetEnvironmentVariableW(L"shell",NULL);
-
-    TestDescription();
 }
 
 START_TEST(CShellLink)
@@ -232,4 +225,5 @@ START_TEST(CShellLink)
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
     TestShellLink();
+    TestDescription();
 }
