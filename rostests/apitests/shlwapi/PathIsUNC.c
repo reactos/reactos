@@ -60,7 +60,7 @@ START_TEST(isuncpath)
     CALL_ISUNC(FALSE, L"reactos//path3//path4");
     CALL_ISUNC(TRUE, L"\\\\reactos\\?");
     CALL_ISUNC(TRUE, L"\\\\reactos\\\\");
-    CALL_ISUNC(FALSE, NULL);
+    CALL_ISUNC(FALSE, (wchar_t*)NULL);
     CALL_ISUNC(FALSE, L" ");
 
     /* The test shows TRUE on Windows 2003, but returns FALSE on Windows 7 */
