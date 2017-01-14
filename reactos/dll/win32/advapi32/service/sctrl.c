@@ -183,6 +183,7 @@ ScServiceMainStubA(LPVOID Context)
     return ERROR_SUCCESS;
 }
 
+
 static DWORD WINAPI
 ScServiceMainStubW(LPVOID Context)
 {
@@ -739,6 +740,34 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
     TRACE("RegisterServiceCtrlHandlerEx returning %lu\n", Service->hServiceStatus);
 
     return Service->hServiceStatus;
+}
+
+
+/**********************************************************************
+ *	I_ScPnPGetServiceName
+ *
+ * Undocumented
+ *
+ * @implemented
+ */
+DWORD
+WINAPI
+I_ScPnPGetServiceName(IN SERVICE_STATUS_HANDLE hServiceStatus,
+                      OUT LPWSTR lpServiceName,
+                      IN DWORD cchServiceName)
+{
+    DWORD i;
+
+    for (i = 0; i < dwActiveServiceCount; i++)
+    {
+        if (lpActiveServices[i].hServiceStatus == hServiceStatus)
+        {
+            wcscpy(lpServiceName, lpActiveServices[i].ServiceName.Buffer);
+            return ERROR_SUCCESS;
+        }
+    }
+
+    return ERROR_SERVICE_NOT_IN_EXE;
 }
 
 
