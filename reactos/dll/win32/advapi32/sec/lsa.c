@@ -1423,7 +1423,7 @@ LsaQueryForestTrustInformation(IN LSA_HANDLE PolicyHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -1431,9 +1431,35 @@ LsaQueryInfoTrustedDomain(IN LSA_HANDLE TrustedDomainHandle,
                           IN TRUSTED_INFORMATION_CLASS InformationClass,
                           OUT PVOID *Buffer)
 {
-    FIXME("LsaQueryInfoTrustedDomain(%p %d %p) stub\n",
+    PLSAPR_TRUSTED_DOMAIN_INFO TrustedDomainInformation = NULL;
+    NTSTATUS Status;
+
+    TRACE("LsaQueryInfoTrustedDomain(%p %d %p) stub\n",
           TrustedDomainHandle, InformationClass, Buffer);
-    return STATUS_NOT_IMPLEMENTED;
+
+    if (InformationClass == TrustedDomainAuthInformationInternal ||
+        InformationClass == TrustedDomainFullInformationInternal)
+        return STATUS_INVALID_INFO_CLASS;
+
+    RpcTryExcept
+    {
+        Status = LsarQueryInfoTrustedDomain((LSAPR_HANDLE)TrustedDomainHandle,
+                                            InformationClass,
+                                            &TrustedDomainInformation);
+        *Buffer = TrustedDomainInformation;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (TrustedDomainInformation != NULL)
+            MIDL_user_free(TrustedDomainInformation);
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    TRACE("Done (Status: 0x%08x)\n", Status);
+
+    return Status;
 }
 
 
@@ -1643,7 +1669,7 @@ LsaQuerySecurityObject(IN LSA_HANDLE ObjectHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -1652,9 +1678,29 @@ LsaQueryTrustedDomainInfo(IN LSA_HANDLE PolicyHandle,
                           IN TRUSTED_INFORMATION_CLASS InformationClass,
                           OUT PVOID *Buffer)
 {
-    FIXME("LsaQueryTrustedDomainInfo(%p %p %d %p) stub\n",
+    NTSTATUS Status;
+
+    TRACE("LsaQueryTrustedDomainInfo(%p %p %d %p) stub\n",
           PolicyHandle, TrustedDomainSid, InformationClass, Buffer);
-    return STATUS_OBJECT_NAME_NOT_FOUND;
+
+    if (InformationClass == TrustedDomainAuthInformationInternal ||
+        InformationClass == TrustedDomainFullInformationInternal)
+        return STATUS_INVALID_INFO_CLASS;
+
+    RpcTryExcept
+    {
+        Status = LsarQueryTrustedDomainInfo((LSAPR_HANDLE)PolicyHandle,
+                                            (PRPC_SID)TrustedDomainSid,
+                                            InformationClass,
+                                            (PLSAPR_TRUSTED_DOMAIN_INFO *)Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
