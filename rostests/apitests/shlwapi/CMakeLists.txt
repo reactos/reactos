@@ -4,6 +4,7 @@ list(APPEND SOURCE
     PathIsUNCServer.c
     PathIsUNCServerShare.c
     PathUnExpandEnvStrings.c
+    StrFormatByteSizeW.c
     testlist.c)
 
 add_executable(shlwapi_apitest ${SOURCE})
