@@ -389,8 +389,8 @@ CAPTION "Ouvrir avec"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
-    LTEXT "Choisissez le programme que vous désirez utiliser pour ouvrir ce fichier :", -1, 44, 12, 211, 10
-    LTEXT "Fichier :    ", 14001, 44, 25, 188, 20
+    LTEXT "Choisissez le programme que vous désirez utiliser pour ouvrir ce fichier :", -1, 44, 5, 211, 20
+    LTEXT "Fichier :    ", 14001, 44, 25, 213, 20
     GROUPBOX "&Programmes", -1, 7, 42, 249, 187
     CONTROL "Programmes", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "Toujours utiliser le progr&amme sélectionné pour ouvrir ce type de fichier", 14003, 20, 193, 225, 10
