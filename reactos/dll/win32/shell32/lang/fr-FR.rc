@@ -284,8 +284,8 @@ BEGIN
     LTEXT "Copyright : ", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
     GROUPBOX "Autres informations de version : ", 14006, 6, 70, 222, 115
-    LTEXT "Nom de l'élément : ", 14007, 13, 82, 50, 10
-    LTEXT "Valeur : ", 14008, 112, 82, 45, 10
+    LTEXT "Nom de l'élément : ", 14007, 13, 82, 94, 10
+    LTEXT "Valeur : ", 14008, 112, 82, 94, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
