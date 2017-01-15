@@ -41,7 +41,6 @@ struct test_data Tests[] =
     /* But redirecting gdiplus from a different directory doesn't work */
     {__LINE__, STATUS_SXS_KEY_NOT_FOUND, L"c:\\GDIPLUS.DLL", NULL},
     {__LINE__, STATUS_SXS_KEY_NOT_FOUND, L"c:\\comctl32.DLL", NULL},
-#if 0
     /* Redirection based on .local */
     {__LINE__, STATUS_SUCCESS, L"test", EXPECT_IN_SAME_DIR},
     {__LINE__, STATUS_SUCCESS, L"test.dll", EXPECT_IN_SAME_DIR},
@@ -50,7 +49,6 @@ struct test_data Tests[] =
     {__LINE__, STATUS_SUCCESS, L"shell32", EXPECT_IN_SAME_DIR},
     {__LINE__, STATUS_SUCCESS, L"shell32.dll", EXPECT_IN_SAME_DIR},
     {__LINE__, STATUS_SUCCESS, L"c:\\shell32.dll", EXPECT_IN_SAME_DIR}
-#endif
 };
 
 void TestRedirection(void)
@@ -125,39 +123,33 @@ void TestRedirection(void)
 
 START_TEST(RtlDosApplyFileIsolationRedirection_Ustr)
 {
-#if 0
-    WCHAR TestPath[MAX_PATH];
-    WCHAR* separator;
-    STARTUPINFOW si = { sizeof(si) };
-    PROCESS_INFORMATION pi;
-    BOOL created;
-    HANDLE file;
+    int argc;
+    char **test_argv;
+    argc = winetest_get_mainargs( &test_argv );
+    if (argc >= 3)
+    {
+        TestRedirection();
+    }
+    else
+    {
+        WCHAR TestPath[MAX_PATH];
+        WCHAR* separator;
+        STARTUPINFOW si = { sizeof(si) };
+        PROCESS_INFORMATION pi;
+        BOOL created;
 
-    /* Create .local files */
-    GetModuleFileNameW(NULL, TestPath, MAX_PATH);
-
-    wcscat(TestPath, L".local");
-    file = CreateFileW(TestPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_FLAG_NO_BUFFERING , NULL);
-    CloseHandle(file);
-    separator = wcsrchr(TestPath, L'\\');
-    separator++;
-    wcscpy(separator, L"test.dll");
-    file = CreateFileW(TestPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_FLAG_NO_BUFFERING , NULL);
-    CloseHandle(file);
-    wcscpy(separator, L"shell32.dll");
-    file = CreateFileW(TestPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_FLAG_NO_BUFFERING , NULL);
-    CloseHandle(file);
-    *separator = 0;    
-#endif
-    TestRedirection();
-#if 0
-    /*Cleanup*/
-    wcscpy(separator, L"test.dll");
-    DeleteFileW(TestPath);
-    wcscpy(separator, L"shell32.dll");
-    DeleteFileW(TestPath);
-    GetModuleFileNameW(NULL, TestPath, MAX_PATH);
-    wcscat(TestPath, L".local");
-    DeleteFileW(TestPath);
-#endif
+        GetModuleFileNameW(NULL, TestPath, MAX_PATH);
+        separator = wcsrchr(TestPath, L'\\');
+        separator++;
+        wcscpy(separator, L"testdata\\ntdll_apitest.exe RtlDosApplyFileIsolationRedirection_Ustr DoTest");
+        
+        created = CreateProcessW(NULL, TestPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+        ok(created, "Expected CreateProcess to succeed\n");
+        if (created)
+        {
+            winetest_wait_child_process(pi.hProcess);
+            CloseHandle(pi.hThread);
+            CloseHandle(pi.hProcess);
+        }
+    }
 }
