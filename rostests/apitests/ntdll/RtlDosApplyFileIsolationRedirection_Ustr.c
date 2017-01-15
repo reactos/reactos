@@ -95,8 +95,7 @@ void TestRedirection(void)
                                                           NULL,
                                                           NULL,
                                                           NULL);
-        ok(Status == Tests[i].ExpectedStatus, "Status 0x%lx, expected 0x%lx\n", value, expected)
-        ok_eq_hex(Status, Tests[i].ExpectedStatus);
+        ok(Status == Tests[i].ExpectedStatus, "%d: Status 0x%lx, expected 0x%lx\n", Tests[i].testline, Status, Tests[i].ExpectedStatus);
 
         if (DynamicString.Buffer)
         {
