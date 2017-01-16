@@ -77,6 +77,11 @@ static TEST_SHELL_LINK_DEF linkTestList[] =
         L"%comspec%",             SLGP_RAWPATH,      S_OK,  TRUE
     },
     {
+        L"%systemroot%\\non-existent-file", S_OK,
+        L"%systemroot%\\non-existent-file", SLGP_SHORTPATH, S_OK, TRUE,
+        L"%systemroot%\\non-existent-file", SLGP_RAWPATH,   S_OK, FALSE
+    },
+    {
         L"c:\\non-existent-path\\non-existent-file", S_OK,
         L"c:\\non-existent-path\\non-existent-file", SLGP_SHORTPATH, S_OK, FALSE,
         L"c:\\non-existent-path\\non-existent-file", SLGP_RAWPATH,   S_OK, FALSE
@@ -98,7 +103,7 @@ static WCHAR evVar[MAX_PATH];
     WCHAR wPathOut[MAX_PATH];
     BOOL expandPathOut;
     PCWSTR expectedPathOut;
-    IShellLinkW *psl;
+    CComPtr<IShellLinkW> psl;
     UINT i1;
     DWORD flags;
 
@@ -150,8 +155,6 @@ static WCHAR evVar[MAX_PATH];
            "IShellLink::GetPath(%d), flags 0x%lx, in %S, got %S, expected %S\n",
            i, flags, testDef->pathIn, wPathOut, expectedPathOut);
     }
-
-    psl->Release();
 }
 
 static
@@ -177,7 +180,7 @@ VOID
 TestDescription(void)
 {
     HRESULT hr;
-    IShellLinkW *psl;
+    CComPtr<IShellLinkW> psl;
     WCHAR buffer[64];
     PCWSTR testDescription = L"This is a test description";
 
@@ -217,8 +220,6 @@ TestDescription(void)
     ok(hr == S_OK, "IShellLink::GetDescription returned hr = 0x%lx\n", hr);
     ok(buffer[0] == 0, "buffer[0] = %x\n", buffer[0]);
     ok(buffer[1] == 0x5555, "buffer[1] = %x\n", buffer[1]);
-
-    psl->Release();
 }
 
 
@@ -250,7 +251,9 @@ static TEST_SHELL_ICON ShIconTests[] =
     {L"%SystemRoot%\\system32\\shell32.dll", S_FALSE, E_INVALIDARG,
      S_OK, L"*", GIL_NOTFILENAME | GIL_PERCLASS},
 
-    /* Non-existing file */
+    /* Non-existing files */
+    {L"%SystemRoot%\\non-existent-file.sdf", S_FALSE, E_INVALIDARG,
+     S_OK, L"*", GIL_NOTFILENAME | GIL_PERCLASS},
     {L"c:\\non-existent-path\\non-existent-file.sdf", S_FALSE, E_INVALIDARG,
      S_OK, L"*", GIL_NOTFILENAME | GIL_PERCLASS},
 };
@@ -260,8 +263,8 @@ VOID
 test_iconlocation(UINT i, TEST_SHELL_ICON* testDef)
 {
     HRESULT hr;
-    IShellLinkW *psl;
-    IExtractIconW *pei;
+    CComPtr<IShellLinkW> psl;
+    CComPtr<IExtractIconW> pei;
     INT iIcon;
     UINT wFlags;
     PCWSTR pszExplorer = L"%SystemRoot%\\explorer.exe";
@@ -301,7 +304,6 @@ test_iconlocation(UINT i, TEST_SHELL_ICON* testDef)
     if (!pei)
     {
         win_skip("No IExtractIconW interface\n");
-        psl->Release();
         return;
     }
 
@@ -386,10 +388,6 @@ test_iconlocation(UINT i, TEST_SHELL_ICON* testDef)
     // ok(*szPath == L'\0', "IExtractIcon::GetIconLocation returned '%S'\n", szPath);
     // ok(iIcon == 0, "IExtractIcon::GetIconLocation returned %d\n", iIcon);
     // ok(FALSE, "hr = 0x%lx, szPath = '%S', iIcon = %d, wFlags = %d\n", hr, szPath, iIcon, wFlags);
-
-    /* Release the interfaces */
-    pei->Release();
-    psl->Release();
 }
 
 static
