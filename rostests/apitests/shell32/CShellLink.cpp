@@ -248,11 +248,11 @@ static TEST_SHELL_ICON ShIconTests[] =
 
     /* Existing file */
     {L"%SystemRoot%\\system32\\shell32.dll", S_FALSE, E_INVALIDARG,
-     S_OK, L"%SystemRoot%\\system32\\shell32.dll", GIL_NOTFILENAME | GIL_PERCLASS},
+     S_OK, L"*", GIL_NOTFILENAME | GIL_PERCLASS},
 
     /* Non-existing file */
     {L"c:\\non-existent-path\\non-existent-file.sdf", S_FALSE, E_INVALIDARG,
-     S_OK, L"c:\\non-existent-path\\non-existent-file.sdf", GIL_NOTFILENAME | GIL_PERCLASS},
+     S_OK, L"*", GIL_NOTFILENAME | GIL_PERCLASS},
 };
 
 static
@@ -264,7 +264,9 @@ test_iconlocation(UINT i, TEST_SHELL_ICON* testDef)
     IExtractIconW *pei;
     INT iIcon;
     UINT wFlags;
+    PCWSTR pszExplorer = L"%SystemRoot%\\explorer.exe";
     WCHAR szPath[MAX_PATH];
+    WCHAR szPath2[MAX_PATH];
 
     hr = CoCreateInstance(CLSID_ShellLink,
                           NULL,
@@ -291,7 +293,7 @@ test_iconlocation(UINT i, TEST_SHELL_ICON* testDef)
     hr = psl->GetIconLocation(szPath, _countof(szPath), &iIcon);
     ok(hr == S_OK, "IShellLink::GetIconLocation(%d) failed, hr = 0x%lx\n", i, hr);
     ok(*szPath == L'\0', "IShellLink::GetIconLocation(%d) returned '%S'\n", i, szPath);
-    ok(iIcon == 0, "IShellLink::GetIconLocation(%d) returned %d\n", i, iIcon);
+    ok(iIcon == 0, "IShellLink::GetIconLocation(%d) returned %d, expected %d\n", i, iIcon, 0);
 
     /* Try to grab the IExtractIconW interface */
     hr = psl->QueryInterface(IID_PPV_ARG(IExtractIconW, &pei)); 
@@ -306,23 +308,83 @@ test_iconlocation(UINT i, TEST_SHELL_ICON* testDef)
     iIcon = wFlags = 0xdeadbeef;
     wcscpy(szPath, L"garbage");
     hr = pei->GetIconLocation(GIL_DEFAULTICON, szPath, _countof(szPath), &iIcon, &wFlags);
-    ok(hr == testDef->hrDefIcon, "IShellLink::GetIconLocation(%d) returned hr = 0x%lx, expected 0x%lx\n", i, hr, testDef->hrDefIcon);
-    ok(*szPath == L'\0', "IShellLink::GetIconLocation(%d) returned '%S'\n", i, szPath);
-    // ok(iIcon == 0, "IShellLink::GetIconLocation(%d) returned %d\n", i, iIcon);
+    ok(hr == testDef->hrDefIcon, "IExtractIcon::GetIconLocation(%d) returned hr = 0x%lx, expected 0x%lx\n", i, hr, testDef->hrDefIcon);
+    ok(*szPath == L'\0', "IExtractIcon::GetIconLocation(%d) returned '%S'\n", i, szPath);
+    // ok(iIcon == 0, "IExtractIcon::GetIconLocation(%d) returned %d\n", i, iIcon);
 
     iIcon = wFlags = 0xdeadbeef;
     wcscpy(szPath, L"garbage");
     hr = pei->GetIconLocation(GIL_FORSHORTCUT, szPath, _countof(szPath), &iIcon, &wFlags);
-    ok(hr == testDef->hrForShrt, "IShellLink::GetIconLocation(%d) returned hr = 0x%lx, expected 0x%lx\n", i, hr, testDef->hrForShrt);
+    ok(hr == testDef->hrForShrt, "IExtractIcon::GetIconLocation(%d) returned hr = 0x%lx, expected 0x%lx\n", i, hr, testDef->hrForShrt);
     // Here, both szPath and iIcon are untouched...
 
     iIcon = wFlags = 0xdeadbeef;
     wcscpy(szPath, L"garbage");
     hr = pei->GetIconLocation(GIL_FORSHELL, szPath, _countof(szPath), &iIcon, &wFlags);
-    ok(hr == testDef->hrForShell, "IShellLink::GetIconLocation(%d) returned hr = 0x%lx, expected 0x%lx\n", i, hr, testDef->hrForShell);
-    ok(wFlags == testDef->Flags, "IShellLink::GetIconLocation(%d) returned wFlags = 0x%x, expected 0x%x\n", i, wFlags, testDef->Flags);
-    // ok(*szPath == L'\0', "IShellLink::GetIconLocation returned '%S'\n", szPath);
-    // ok(iIcon == 0, "IShellLink::GetIconLocation returned %d\n", iIcon);
+    ok(hr == testDef->hrForShell, "IExtractIcon::GetIconLocation(%d) returned hr = 0x%lx, expected 0x%lx\n", i, hr, testDef->hrForShell);
+    ok(wFlags == testDef->Flags, "IExtractIcon::GetIconLocation(%d) returned wFlags = 0x%x, expected 0x%x\n", i, wFlags, testDef->Flags);
+    /*
+     * Actually, even if wFlags specifies GIL_NOTFILENAME, a correct file name is returned
+     * for executables only (at least...), otherwise we can get an asterix '*'.
+     */
+    ExpandEnvironmentStringsW(testDef->IconPath, szPath2, _countof(szPath2));
+    ok(_wcsicmp(szPath2, szPath) == 0, "IExtractIcon::GetIconLocation(%d) returned '%S', expected '%S'\n", i, szPath, szPath2);
+
+    // ok(*szPath == L'\0', "IExtractIcon::GetIconLocation returned '%S'\n", szPath);
+    // ok(iIcon == 0, "IExtractIcon::GetIconLocation returned %d\n", iIcon);
+    // ok(FALSE, "hr = 0x%lx, szPath = '%S', iIcon = %d, wFlags = %d\n", hr, szPath, iIcon, wFlags);
+
+
+    /*
+     * Now we test what happens when we explicitly set an icon to the shortcut.
+     * Note that actually, SetIconLocation() does not verify whether the file
+     * really exists.
+     */
+    hr = psl->SetIconLocation(pszExplorer, 1);
+    ok(hr == S_OK, "IShellLink::SetIconLocation(%d) failed, hr = 0x%lx\n", i, hr);
+
+    /*
+     * First, we call IShellLink::GetIconLocation. We retrieve
+     * exactly what we specified with SetIconLocation.
+     */
+    iIcon = 0xdeadbeef;
+    wcscpy(szPath, L"garbage");
+    hr = psl->GetIconLocation(szPath, _countof(szPath), &iIcon);
+    ok(hr == S_OK, "IShellLink::GetIconLocation(%d) failed, hr = 0x%lx\n", i, hr);
+    ok(wcscmp(szPath, pszExplorer) == 0, "IShellLink::GetIconLocation(%d) returned '%S', expected '%S'\n", i, szPath, pszExplorer);
+    ok(iIcon == 1, "IShellLink::GetIconLocation(%d) returned %d, expected %d\n", i, iIcon, 1);
+
+    /*
+     * Now we test what happens with IExtractIcon::GetIconLocation.
+     * We see that it retrieves the icon of the shortcut's underlying file.
+     */
+    iIcon = wFlags = 0xdeadbeef;
+    wcscpy(szPath, L"garbage");
+    hr = pei->GetIconLocation(GIL_DEFAULTICON, szPath, _countof(szPath), &iIcon, &wFlags);
+    ok(hr == testDef->hrDefIcon, "IExtractIcon::GetIconLocation(%d) returned hr = 0x%lx, expected 0x%lx\n", i, hr, testDef->hrDefIcon);
+    ok(*szPath == L'\0', "IExtractIcon::GetIconLocation(%d) returned '%S'\n", i, szPath);
+    // ok(iIcon == 0, "IExtractIcon::GetIconLocation(%d) returned %d\n", i, iIcon);
+
+    iIcon = wFlags = 0xdeadbeef;
+    wcscpy(szPath, L"garbage");
+    hr = pei->GetIconLocation(GIL_FORSHORTCUT, szPath, _countof(szPath), &iIcon, &wFlags);
+    ok(hr == testDef->hrForShrt, "IExtractIcon::GetIconLocation(%d) returned hr = 0x%lx, expected 0x%lx\n", i, hr, testDef->hrForShrt);
+    // Here, both szPath and iIcon are untouched...
+
+    iIcon = wFlags = 0xdeadbeef;
+    wcscpy(szPath, L"garbage");
+    hr = pei->GetIconLocation(GIL_FORSHELL, szPath, _countof(szPath), &iIcon, &wFlags);
+    ok(hr == testDef->hrForShell, "IExtractIcon::GetIconLocation(%d) returned hr = 0x%lx, expected 0x%lx\n", i, hr, testDef->hrForShell);
+    ok(wFlags == testDef->Flags, "IExtractIcon::GetIconLocation(%d) returned wFlags = 0x%x, expected 0x%x\n", i, wFlags, testDef->Flags);
+    /*
+     * Actually, even if wFlags specifies GIL_NOTFILENAME, a correct file name is returned
+     * for executables only (at least...), otherwise we can get an asterix '*'.
+     */
+    ExpandEnvironmentStringsW(testDef->IconPath, szPath2, _countof(szPath2));
+    ok(_wcsicmp(szPath2, szPath) == 0, "IExtractIcon::GetIconLocation(%d) returned '%S', expected '%S'\n", i, szPath, szPath2);
+
+    // ok(*szPath == L'\0', "IExtractIcon::GetIconLocation returned '%S'\n", szPath);
+    // ok(iIcon == 0, "IExtractIcon::GetIconLocation returned %d\n", iIcon);
     // ok(FALSE, "hr = 0x%lx, szPath = '%S', iIcon = %d, wFlags = %d\n", hr, szPath, iIcon, wFlags);
 
     /* Release the interfaces */
@@ -341,6 +403,7 @@ TestIconLocation(void)
         test_iconlocation(i, &ShIconTests[i]);
     }
 }
+
 
 START_TEST(CShellLink)
 {
