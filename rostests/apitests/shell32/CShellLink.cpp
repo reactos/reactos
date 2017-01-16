@@ -320,7 +320,7 @@ test_iconlocation(UINT i, TEST_SHELL_ICON* testDef)
     wcscpy(szPath, L"garbage");
     hr = pei->GetIconLocation(GIL_FORSHELL, szPath, _countof(szPath), &iIcon, &wFlags);
     ok(hr == testDef->hrForShell, "IShellLink::GetIconLocation(%d) returned hr = 0x%lx, expected 0x%lx\n", i, hr, testDef->hrForShell);
-    ok(wFlags == testDef->Flags, "IShellLink::GetIconLocation(%d) returned wFlags = 0x%lx, expected 0x%lx\n", i, wFlags, testDef->Flags);
+    ok(wFlags == testDef->Flags, "IShellLink::GetIconLocation(%d) returned wFlags = 0x%x, expected 0x%x\n", i, wFlags, testDef->Flags);
     // ok(*szPath == L'\0', "IShellLink::GetIconLocation returned '%S'\n", szPath);
     // ok(iIcon == 0, "IShellLink::GetIconLocation returned %d\n", iIcon);
     // ok(FALSE, "hr = 0x%lx, szPath = '%S', iIcon = %d, wFlags = %d\n", hr, szPath, iIcon, wFlags);
