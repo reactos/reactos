@@ -2202,7 +2202,7 @@ BOOL WINAPI PathIsUNCA(LPCSTR lpszPath)
  * considered UNC, while on Windows Vista+ this is not the case anymore.
  */
 // #ifdef __REACTOS__
-#if 0
+#if (WINVER >= _WIN32_WINNT_VISTA)
   if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\') && (lpszPath[2]!='?'))
 #else
   if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\'))
@@ -2225,7 +2225,7 @@ BOOL WINAPI PathIsUNCW(LPCWSTR lpszPath)
  * considered UNC, while on Windows Vista+ this is not the case anymore.
  */
 // #ifdef __REACTOS__
-#if 0
+#if (WINVER >= _WIN32_WINNT_VISTA)
   if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\') && (lpszPath[2]!='?'))
 #else
   if (lpszPath && (lpszPath[0]=='\\') && (lpszPath[1]=='\\'))
