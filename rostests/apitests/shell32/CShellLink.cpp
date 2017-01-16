@@ -15,25 +15,26 @@
 #include <debug.h>
 #include <shellutils.h>
 
-typedef
-struct _TestShellLinkDef
+/* Test IShellLink::SetPath with environment-variables, existing, non-existing, ...*/
+typedef struct
 {
-    const WCHAR* pathIn;
+    PCWSTR pathIn;
     HRESULT hrSetPath;
+
     /* Test 1 - hrGetPathX = IShellLink::GetPath(pathOutX, ... , flagsX); */
-    const WCHAR* pathOut1;
+    PCWSTR pathOut1;
     DWORD flags1;
     HRESULT hrGetPath1;
-    bool expandPathOut1;
+    BOOL expandPathOut1;
+
     /* Test 2 */
-    const WCHAR* pathOut2;
+    PCWSTR pathOut2;
     DWORD flags2;
     HRESULT hrGetPath2;
-    bool expandPathOut2;
-} TestShellLinkDef;
+    BOOL expandPathOut2;
+} TEST_SHELL_LINK_DEF;
 
-/* Test IShellLink::SetPath with environment-variables, existing, non-existing, ...*/
-static struct _TestShellLinkDef linkTestList[] =
+static TEST_SHELL_LINK_DEF linkTestList[] =
 {
     {
         L"%comspec%",                                 S_OK,
@@ -42,8 +43,8 @@ static struct _TestShellLinkDef linkTestList[] =
     },
     {
         L"%anyvar%",                                  E_INVALIDARG,
-        L"",                      SLGP_SHORTPATH,     ERROR_INVALID_FUNCTION, FALSE,
-        L"",                      SLGP_RAWPATH,       ERROR_INVALID_FUNCTION, FALSE
+        L"",                      SLGP_SHORTPATH,     S_FALSE, FALSE,
+        L"",                      SLGP_RAWPATH,       S_FALSE, FALSE
     },
     {
         L"%anyvar%%comspec%",                         S_OK,
@@ -82,21 +83,21 @@ static struct _TestShellLinkDef linkTestList[] =
     },
     {
         L"non-existent-file",                        E_INVALIDARG,
-        L"",                      SLGP_SHORTPATH,    ERROR_INVALID_FUNCTION, FALSE,
-        L"",                      SLGP_RAWPATH,      ERROR_INVALID_FUNCTION, FALSE
+        L"",                      SLGP_SHORTPATH,    S_FALSE, FALSE,
+        L"",                      SLGP_RAWPATH,      S_FALSE, FALSE
     },
 };
 
 static
 VOID
-test_checklinkpath(UINT i, TestShellLinkDef* testDef)
+test_checklinkpath(UINT i, TEST_SHELL_LINK_DEF* testDef)
 {
 static WCHAR evVar[MAX_PATH];
 
     HRESULT hr, expectedHr;
     WCHAR wPathOut[MAX_PATH];
-    bool expandPathOut;
-    const WCHAR* expectedPathOut;
+    BOOL expandPathOut;
+    PCWSTR expectedPathOut;
     IShellLinkW *psl;
     UINT i1;
     DWORD flags;
@@ -105,7 +106,7 @@ static WCHAR evVar[MAX_PATH];
                           NULL,
                           CLSCTX_INPROC_SERVER,
                           IID_PPV_ARG(IShellLinkW, &psl));
-    ok(hr == S_OK, "CoCreateInstance, hr = %lx\n", hr);
+    ok(hr == S_OK, "CoCreateInstance, hr = 0x%lx\n", hr);
     if (FAILED(hr))
     {
         skip("Could not instantiate CShellLink\n");
@@ -113,19 +114,19 @@ static WCHAR evVar[MAX_PATH];
     }
 
     hr = psl->SetPath(testDef->pathIn);
-    ok(hr == testDef->hrSetPath, "IShellLink::SetPath(%d), got hr = %lx, expected %lx\n", i, hr, testDef->hrSetPath);
+    ok(hr == testDef->hrSetPath, "IShellLink::SetPath(%d), got hr = 0x%lx, expected 0x%lx\n", i, hr, testDef->hrSetPath);
 
     expectedPathOut = NULL;
-    for (i1 = 0; i1 <= 1; i1++ )
+    for (i1 = 0; i1 <= 1; i1++)
     {
-        if (i1 == 1)
+        if (i1 == 1) /* Usually SLGP_RAWPATH */
         {
             flags = testDef->flags1;
             expandPathOut = testDef->expandPathOut1;
             expectedPathOut = testDef->pathOut1;
             expectedHr = testDef->hrGetPath1;
         }
-        else
+        else /* Usually SLGP_SHORTPATH */
         {
             flags = testDef->flags2;
             expandPathOut = testDef->expandPathOut2;
@@ -134,7 +135,7 @@ static WCHAR evVar[MAX_PATH];
         }
 
         /* Patch some variables */
-        if (expandPathOut == TRUE)
+        if (expandPathOut)
         {
             ExpandEnvironmentStringsW(expectedPathOut, evVar, _countof(evVar));
             DPRINT("** %S **\n",evVar);
@@ -143,61 +144,12 @@ static WCHAR evVar[MAX_PATH];
 
         hr = psl->GetPath(wPathOut, _countof(wPathOut), NULL, flags);
         ok(hr == expectedHr,
-           "IShellLink::GetPath(%d), flags %lx, got hr = %lx, expected %lx\n",
+           "IShellLink::GetPath(%d), flags 0x%lx, got hr = 0x%lx, expected 0x%lx\n",
             i, flags, hr, expectedHr);
         ok(wcsicmp(wPathOut, expectedPathOut) == 0,
-           "IShellLink::GetPath(%d), flags %lx, in %S, got %S, expected %S\n",
+           "IShellLink::GetPath(%d), flags 0x%lx, in %S, got %S, expected %S\n",
            i, flags, testDef->pathIn, wPathOut, expectedPathOut);
     }
-
-    psl->Release();
-}
-
-static
-VOID
-TestDescription(void)
-{
-    HRESULT hr;
-    IShellLinkW *psl;
-    WCHAR buffer[64];
-    PCWSTR testDescription = L"This is a test description";
-
-    /* Test SetDescription */
-    hr = CoCreateInstance(CLSID_ShellLink,
-                          NULL,
-                          CLSCTX_INPROC_SERVER,
-                          IID_PPV_ARG(IShellLinkW, &psl));
-    ok(hr == S_OK, "CoCreateInstance, hr = %lx\n", hr);
-    if (FAILED(hr))
-    {
-        skip("Could not instantiate CShellLink\n");
-        return;
-    }
-
-    memset(buffer, 0x55, sizeof(buffer));
-    hr = psl->GetDescription(buffer, RTL_NUMBER_OF(buffer));
-    ok(hr == S_OK, "IShellLink::GetDescription returned hr = %lx\n", hr);
-    ok(buffer[0] == 0, "buffer[0] = %x\n", buffer[0]);
-    ok(buffer[1] == 0x5555, "buffer[1] = %x\n", buffer[1]);
-
-    hr = psl->SetDescription(testDescription);
-    ok(hr == S_OK, "IShellLink::SetDescription returned hr = %lx\n", hr);
-
-    memset(buffer, 0x55, sizeof(buffer));
-    hr = psl->GetDescription(buffer, RTL_NUMBER_OF(buffer));
-    ok(hr == S_OK, "IShellLink::GetDescription returned hr = %lx\n", hr);
-    ok(buffer[wcslen(testDescription)] == 0, "buffer[n] = %x\n", buffer[wcslen(testDescription)]);
-    ok(buffer[wcslen(testDescription) + 1] == 0x5555, "buffer[n+1] = %x\n", buffer[wcslen(testDescription) + 1]);
-    ok(!wcscmp(buffer, testDescription), "buffer = '%ls'\n", buffer);
-
-    hr = psl->SetDescription(NULL);
-    ok(hr == S_OK, "IShellLink::SetDescription returned hr = %lx\n", hr);
-
-    memset(buffer, 0x55, sizeof(buffer));
-    hr = psl->GetDescription(buffer, RTL_NUMBER_OF(buffer));
-    ok(hr == S_OK, "IShellLink::GetDescription returned hr = %lx\n", hr);
-    ok(buffer[0] == 0, "buffer[0] = %x\n", buffer[0]);
-    ok(buffer[1] == 0x5555, "buffer[1] = %x\n", buffer[1]);
 
     psl->Release();
 }
@@ -220,10 +172,61 @@ TestShellLink(void)
     SetEnvironmentVariableW(L"shell",NULL);
 }
 
+static
+VOID
+TestDescription(void)
+{
+    HRESULT hr;
+    IShellLinkW *psl;
+    WCHAR buffer[64];
+    PCWSTR testDescription = L"This is a test description";
+
+    /* Test SetDescription */
+    hr = CoCreateInstance(CLSID_ShellLink,
+                          NULL,
+                          CLSCTX_INPROC_SERVER,
+                          IID_PPV_ARG(IShellLinkW, &psl));
+    ok(hr == S_OK, "CoCreateInstance, hr = 0x%lx\n", hr);
+    if (FAILED(hr))
+    {
+        skip("Could not instantiate CShellLink\n");
+        return;
+    }
+
+    memset(buffer, 0x55, sizeof(buffer));
+    hr = psl->GetDescription(buffer, RTL_NUMBER_OF(buffer));
+    ok(hr == S_OK, "IShellLink::GetDescription returned hr = 0x%lx\n", hr);
+    ok(buffer[0] == 0, "buffer[0] = %x\n", buffer[0]);
+    ok(buffer[1] == 0x5555, "buffer[1] = %x\n", buffer[1]);
+
+    hr = psl->SetDescription(testDescription);
+    ok(hr == S_OK, "IShellLink::SetDescription returned hr = 0x%lx\n", hr);
+
+    memset(buffer, 0x55, sizeof(buffer));
+    hr = psl->GetDescription(buffer, RTL_NUMBER_OF(buffer));
+    ok(hr == S_OK, "IShellLink::GetDescription returned hr = 0x%lx\n", hr);
+    ok(buffer[wcslen(testDescription)] == 0, "buffer[n] = %x\n", buffer[wcslen(testDescription)]);
+    ok(buffer[wcslen(testDescription) + 1] == 0x5555, "buffer[n+1] = %x\n", buffer[wcslen(testDescription) + 1]);
+    ok(!wcscmp(buffer, testDescription), "buffer = '%ls'\n", buffer);
+
+    hr = psl->SetDescription(NULL);
+    ok(hr == S_OK, "IShellLink::SetDescription returned hr = 0x%lx\n", hr);
+
+    memset(buffer, 0x55, sizeof(buffer));
+    hr = psl->GetDescription(buffer, RTL_NUMBER_OF(buffer));
+    ok(hr == S_OK, "IShellLink::GetDescription returned hr = 0x%lx\n", hr);
+    ok(buffer[0] == 0, "buffer[0] = %x\n", buffer[0]);
+    ok(buffer[1] == 0x5555, "buffer[1] = %x\n", buffer[1]);
+
+    psl->Release();
+}
+
 START_TEST(CShellLink)
 {
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
     TestShellLink();
     TestDescription();
+
+    CoUninitialize();
 }
