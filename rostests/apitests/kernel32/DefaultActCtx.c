@@ -44,11 +44,19 @@ START_TEST(DefaultActCtx)
                        &buffer, 
                        sizeof(buffer), 
                        NULL);
-    ok(res == TRUE, "\n");
-    ok(info->lpRootManifestPath == NULL, "Expected null lpRootManifestPath, got %S\n", info->lpRootManifestPath);
-    ok(info->lpRootConfigurationPath == NULL, "Expected null lpRootConfigurationPath, got %S\n", info->lpRootConfigurationPath);
-    ok(info->lpAppDirPath == NULL, "Expected null lpAppDirPath, got %S\n", info->lpAppDirPath);
-    ok(info->ulAssemblyCount == 0, "\n");
+    ok(res == TRUE, "Expected success\n");
+    if(res)
+    {
+        ok(info->lpRootManifestPath == NULL, "Expected null lpRootManifestPath, got %S\n", info->lpRootManifestPath);
+        ok(info->lpRootConfigurationPath == NULL, "Expected null lpRootConfigurationPath, got %S\n", info->lpRootConfigurationPath);
+        ok(info->lpAppDirPath == NULL, "Expected null lpAppDirPath, got %S\n", info->lpAppDirPath);
+        ok(info->ulAssemblyCount == 0, "Expected 0 assemblies\n");
+    }
+    else
+    {
+        skip("ActivationContextDetailedInformation failed\n");
+    }
+    
     
     i = 0;
     res = QueryActCtxW(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX, 
@@ -58,12 +66,19 @@ START_TEST(DefaultActCtx)
                        &buffer, 
                        sizeof(buffer), 
                        NULL);
-    ok(res == TRUE, "\n");
-    ok(details->lpAssemblyEncodedAssemblyIdentity == NULL, "Expected null lpAssemblyEncodedAssemblyIdentity, got %S\n", details->lpAssemblyEncodedAssemblyIdentity);
-    ok(details->lpAssemblyManifestPath == NULL, "Expected null lpAssemblyManifestPath, got %S\n", details->lpAssemblyManifestPath);
-    ok(details->lpAssemblyPolicyPath == NULL, "Expected null lpAssemblyPolicyPath, got %S\n", details->lpAssemblyPolicyPath);
-    ok(details->lpAssemblyDirectoryName == NULL, "Expected null lpAssemblyDirectoryName, got %S\n", details->lpAssemblyDirectoryName);
-    
+    ok(res == TRUE, "Expected success\n");
+    if (res)
+    {
+        ok(details->lpAssemblyEncodedAssemblyIdentity == NULL, "Expected null lpAssemblyEncodedAssemblyIdentity, got %S\n", details->lpAssemblyEncodedAssemblyIdentity);
+        ok(details->lpAssemblyManifestPath == NULL, "Expected null lpAssemblyManifestPath, got %S\n", details->lpAssemblyManifestPath);
+        ok(details->lpAssemblyPolicyPath == NULL, "Expected null lpAssemblyPolicyPath, got %S\n", details->lpAssemblyPolicyPath);
+        ok(details->lpAssemblyDirectoryName == NULL, "Expected null lpAssemblyDirectoryName, got %S\n", details->lpAssemblyDirectoryName);
+    }
+    else
+    {
+        skip("AssemblyDetailedInformationInActivationContext failed\n");
+    }
+
     i = 1;
     res = QueryActCtxW(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX, 
                        NULL, 
@@ -72,15 +87,22 @@ START_TEST(DefaultActCtx)
                        &buffer, 
                        sizeof(buffer), 
                        NULL);
-    ok(res == TRUE, "\n"); /* This is FALSE in win10 */
-    ok(details->lpAssemblyEncodedAssemblyIdentity == NULL, "Expected null lpAssemblyEncodedAssemblyIdentity, got %S\n", details->lpAssemblyEncodedAssemblyIdentity);
-    ok(details->lpAssemblyManifestPath == NULL, "Expected null lpAssemblyManifestPath, got %S\n", details->lpAssemblyManifestPath);
-    ok(details->lpAssemblyPolicyPath == NULL, "Expected null lpAssemblyPolicyPath, got %S\n", details->lpAssemblyPolicyPath);
-    ok(details->lpAssemblyDirectoryName == NULL, "Expected null lpAssemblyDirectoryName, got %S\n", details->lpAssemblyDirectoryName);
+    ok(res == TRUE, "Expected success\n"); /* This is FALSE in win10 */
+    if (res)
+    {
+        ok(details->lpAssemblyEncodedAssemblyIdentity == NULL, "Expected null lpAssemblyEncodedAssemblyIdentity, got %S\n", details->lpAssemblyEncodedAssemblyIdentity);
+        ok(details->lpAssemblyManifestPath == NULL, "Expected null lpAssemblyManifestPath, got %S\n", details->lpAssemblyManifestPath);
+        ok(details->lpAssemblyPolicyPath == NULL, "Expected null lpAssemblyPolicyPath, got %S\n", details->lpAssemblyPolicyPath);
+        ok(details->lpAssemblyDirectoryName == NULL, "Expected null lpAssemblyDirectoryName, got %S\n", details->lpAssemblyDirectoryName);
+    }
+    else
+    {
+        skip("AssemblyDetailedInformationInActivationContext failed\n");
+    }
 
     res = GetCurrentActCtx (&h);
-    ok(res == TRUE, "\n");
-    ok(h == NULL, "\n");
+    ok(res == TRUE, "Expected success\n");
+    ok(h == NULL, "Expected null current context\n");
 
     KeyedData.cbSize = sizeof(KeyedData);
     res = FindActCtxSectionStringW(FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX,
@@ -88,7 +110,7 @@ START_TEST(DefaultActCtx)
                                    ACTIVATION_CONTEXT_SECTION_ASSEMBLY_INFORMATION,
                                    L"Microsoft.Windows.SysyemCompatible",
                                    &KeyedData);
-    ok(res == FALSE, "\n");
+    ok(res == FALSE, "Expected failure\n");
 
     KeyedData.cbSize = sizeof(KeyedData);
     res = FindActCtxSectionStringW(FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX,
@@ -96,7 +118,7 @@ START_TEST(DefaultActCtx)
                                    ACTIVATION_CONTEXT_SECTION_ASSEMBLY_INFORMATION,
                                    L"System Default Context",
                                    &KeyedData);
-    ok(res == FALSE, "\n");
+    ok(res == FALSE, "Expected failure\n");
     
     KeyedData.cbSize = sizeof(KeyedData);
     res = FindActCtxSectionStringW(FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX,
@@ -104,9 +126,15 @@ START_TEST(DefaultActCtx)
                                    ACTIVATION_CONTEXT_SECTION_ASSEMBLY_INFORMATION,
                                    L"Microsoft.Windows.Common-Controls",
                                    &KeyedData);
-    ok(res == TRUE, "\n");
-    ok(KeyedData.hActCtx == NULL, "Expected null handle for common control context\n");
-    ok(KeyedData.ulAssemblyRosterIndex != 0, "%lu\n", KeyedData.ulAssemblyRosterIndex);
-    //ok(wcsstr(details-> , L"SystemCompative"
+    ok(res == TRUE, "Expected success\n");
+    if (res)
+    {
+        ok(KeyedData.hActCtx == NULL, "Expected null handle for common control context\n");
+        ok(KeyedData.ulAssemblyRosterIndex != 0, "%lu\n", KeyedData.ulAssemblyRosterIndex);
+    }
+    else
+    {
+        skip("ACTIVATION_CONTEXT_SECTION_ASSEMBLY_INFORMATION failed\n");
+    }
     
 }
