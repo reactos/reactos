@@ -54,6 +54,34 @@ BOOL WINAPI SHIsChildOrSelf(HWND hParent, HWND hChild);
 HRESULT WINAPI SHForwardContextMenuMsg(IUnknown* pUnk, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pResult, BOOL useIContextMenu2);
 
 
+BOOL WINAPI SHAddDataBlock(LPDBLIST* lppList, const DATABLOCK_HEADER *lpNewItem);
+BOOL WINAPI SHRemoveDataBlock(LPDBLIST* lppList, DWORD dwSignature);
+DATABLOCK_HEADER* WINAPI SHFindDataBlock(LPDBLIST lpList, DWORD dwSignature);
+HRESULT WINAPI SHWriteDataBlockList(IStream* lpStream, LPDBLIST lpList);
+HRESULT WINAPI SHReadDataBlockList(IStream* lpStream, LPDBLIST* lppList);
+VOID WINAPI SHFreeDataBlockList(LPDBLIST lpList);
+
+/* Redirected to kernel32.ExpandEnvironmentStringsA/W */
+DWORD WINAPI SHExpandEnvironmentStringsA(LPCSTR,LPSTR,DWORD);
+DWORD WINAPI SHExpandEnvironmentStringsW(LPCWSTR,LPWSTR,DWORD);
+#ifdef UNICODE
+#define SHExpandEnvironmentStrings SHExpandEnvironmentStringsW
+#else
+#define SHExpandEnvironmentStrings SHExpandEnvironmentStringsA
+#endif
+
+/* Redirected to userenv.ExpandEnvironmentStringsForUserA/W */
+#if (WINVER >= 0x0500)
+BOOL WINAPI SHExpandEnvironmentStringsForUserA(HANDLE, LPCSTR, LPSTR, DWORD);
+BOOL WINAPI SHExpandEnvironmentStringsForUserW(HANDLE, LPCWSTR, LPWSTR, DWORD);
+#ifdef UNICODE
+#define SHExpandEnvironmentStringsForUser SHExpandEnvironmentStringsForUserW
+#else
+#define SHExpandEnvironmentStringsForUser SHExpandEnvironmentStringsForUserA
+#endif
+#endif
+
+
 BOOL WINAPI SHIsEmptyStream(IStream*);
 HRESULT WINAPI SHInvokeDefaultCommand(HWND,IShellFolder*,LPCITEMIDLIST);
 HRESULT WINAPI SHPropertyBag_ReadPOINTL(IPropertyBag*,LPCWSTR,POINTL*);
