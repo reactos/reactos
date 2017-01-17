@@ -1,5 +1,8 @@
 
+add_subdirectory(redirptest)
+
 list(APPEND SOURCE
+    DefaultActCtx.c
     dosdev.c
     FindActCtxSectionStringW.c
     FindFiles.c
@@ -8,6 +11,7 @@ list(APPEND SOURCE
     GetDriveType.c
     GetModuleFileName.c
     interlck.c
+    LoadLibraryExW.c
     lstrcpynW.c
     MultiByteToWideChar.c
     PrivMoveFileIdentityW.c

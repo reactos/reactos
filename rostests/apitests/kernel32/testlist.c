@@ -3,6 +3,7 @@
 #define STANDALONE
 #include <apitest.h>
 
+extern void func_DefaultActCtx(void);
 extern void func_dosdev(void);
 extern void func_FindActCtxSectionStringW(void);
 extern void func_FindFiles(void);
@@ -11,6 +12,7 @@ extern void func_GetCurrentDirectory(void);
 extern void func_GetDriveType(void);
 extern void func_GetModuleFileName(void);
 extern void func_interlck(void);
+extern void func_LoadLibraryExW(void);
 extern void func_lstrcpynW(void);
 extern void func_Mailslot(void);
 extern void func_MultiByteToWideChar(void);
@@ -24,6 +26,7 @@ extern void func_WideCharToMultiByte(void);
 
 const struct test winetest_testlist[] =
 {
+    { "DefaultActCtx",               func_DefaultActCtx },
     { "dosdev",                      func_dosdev },
     { "FindActCtxSectionStringW",    func_FindActCtxSectionStringW },
     { "FindFiles",                   func_FindFiles },
@@ -32,6 +35,7 @@ const struct test winetest_testlist[] =
     { "GetDriveType",                func_GetDriveType },
     { "GetModuleFileName",           func_GetModuleFileName },
     { "interlck",                    func_interlck },
+    { "LoadLibraryExW",              func_LoadLibraryExW },
     { "lstrcpynW",                   func_lstrcpynW },
     { "MailslotRead",                func_Mailslot },
     { "MultiByteToWideChar",         func_MultiByteToWideChar },

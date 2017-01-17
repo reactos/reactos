@@ -58,7 +58,11 @@ VOID TestDllRedirection()
     dll1 = LoadLibraryExW(L"kernel32test_versioned.dll",0 , 0);
     ok (dll1 != NULL, "LoadLibraryExW failed\n");
 
-    h = _CreateActCtxFromFile(L"testdata\\redirtest2.manifest", __LINE__);
+    /* redir2dep.manifest defines an assembly with nothing but a dependency on redirtest2 assembly */
+    /* redirtest2.manifest defines an assembly that contains kernel32test_versioned.dll */
+    /* In win10 it is enought to load and activate redirtest2 */
+    /* In win2k3 however the only way to trigger the redirection is to load and activate redir2dep */
+    h = _CreateActCtxFromFile(L"testdata\\redir2dep.manifest", __LINE__);
     _ActivateCtx(h, &cookie, __LINE__);
     dll2 = LoadLibraryExW(L"kernel32test_versioned.dll",0 , 0);
     _DeactivateCtx(cookie, __LINE__);
