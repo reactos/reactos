@@ -4,6 +4,7 @@
  *      Copyright 1998  Juergen Schmied
  *      Copyright 2005  Mike McCormack
  *      Copyright 2009  Andrew Hill
+ *      Copyright 2017  Hermes Belusca-Maito
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,13 +30,21 @@ class CShellLink :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IShellLinkA,
     public IShellLinkW,
-    public IPersistFile,
     public IPersistStream,
-    public IShellLinkDataList,
+    public IPersistFile,
     public IShellExtInit,
-    public IContextMenu,
+    public IContextMenu, // Technically it should be IContextMenu3 (inherits from IContextMenu2 and IContextMenu)
     public IDropTarget,
+//  public IQueryInfo,
+    public IShellLinkDataList,
+    public IExtractIconA,
+    public IExtractIconW,
+//  public IExtractImage2, // Inherits from IExtractImage
+//  public IPersistPropertyBag,
+//  public IServiceProvider,
+//  public IFilter,
     public IObjectWithSite,
+//  public ICustomizeInfoTip,
     public IShellPropSheetExt
 {
 public:
@@ -53,14 +62,8 @@ public:
     #include "poppack.h"
 
 private:
-    /* data structures according to the information in the link */
-    WORD        wHotKey;
-    SYSTEMTIME    time1;
-    SYSTEMTIME    time2;
-    SYSTEMTIME    time3;
-
-    DWORD         iShowCmd;
-    INT           iIcoNdx;
+    /* Cached link header */
+    SHELL_LINK_HEADER m_Header;
 
     /* Cached data set according to m_Header.dwFlags (SHELL_LINK_DATA_FLAGS) */
 
@@ -77,7 +80,9 @@ private:
     LPWSTR        m_sIcoPath;
     BOOL          m_bRunAs;
     BOOL          m_bDirty;
+    LPDBLIST      m_pDBList; /* Optional data block list (in the extra data section) */
 
+    /* Pointers to strings inside Logo3/Darwin info blocks, cached for debug info purposes only */
     LPWSTR sProduct;
     LPWSTR sComponent;
 
@@ -87,10 +92,16 @@ private:
     CComPtr<IUnknown>    m_site;
     CComPtr<IDropTarget> m_DropTarget;
 
+    VOID Reset();
+
+    HRESULT GetAdvertiseInfo(LPWSTR *str, DWORD dwSig);
+    HRESULT SetAdvertiseInfo(LPCWSTR str);
+    HRESULT WriteAdvertiseInfo(LPCWSTR string, DWORD dwSig);
+    HRESULT SetTargetFromPIDLOrPath(LPCITEMIDLIST pidl, LPCWSTR pszFile);
+
 public:
     CShellLink();
     ~CShellLink();
-    HRESULT SetAdvertiseInfo(LPCWSTR str);
     static INT_PTR CALLBACK SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     // IPersistFile
@@ -155,6 +166,14 @@ public:
     virtual HRESULT STDMETHODCALLTYPE GetFlags(DWORD *pdwFlags);
     virtual HRESULT STDMETHODCALLTYPE SetFlags(DWORD dwFlags);
 
+    // IExtractIconA
+    virtual HRESULT STDMETHODCALLTYPE Extract(PCSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
+    virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, PSTR pszIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
+
+    // IExtractIconW
+    virtual HRESULT STDMETHODCALLTYPE Extract(PCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize);
+    virtual HRESULT STDMETHODCALLTYPE GetIconLocation(UINT uFlags, PWSTR pszIconFile, UINT cchMax, int *piIndex, UINT *pwFlags);
+
     // IShellExtInit
     virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
 
@@ -183,17 +202,25 @@ DECLARE_NOT_AGGREGATABLE(CShellLink)
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(CShellLink)
+    COM_INTERFACE_ENTRY_IID(IID_IShellLinkA, IShellLinkA)
+    COM_INTERFACE_ENTRY_IID(IID_IShellLinkW, IShellLinkW)
     COM_INTERFACE_ENTRY2_IID(IID_IPersist, IPersist, IPersistFile)
     COM_INTERFACE_ENTRY_IID(IID_IPersistFile, IPersistFile)
     COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
-    COM_INTERFACE_ENTRY_IID(IID_IShellLinkA, IShellLinkA)
-    COM_INTERFACE_ENTRY_IID(IID_IShellLinkW, IShellLinkW)
-    COM_INTERFACE_ENTRY_IID(IID_IShellLinkDataList, IShellLinkDataList)
     COM_INTERFACE_ENTRY_IID(IID_IShellExtInit, IShellExtInit)
-    COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
+    COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu) // Technically it should be IContextMenu3
     COM_INTERFACE_ENTRY_IID(IID_IDropTarget, IDropTarget)
-    COM_INTERFACE_ENTRY_IID(IID_IShellPropSheetExt, IShellPropSheetExt)
+//  COM_INTERFACE_ENTRY_IID(IID_IQueryInfo, IQueryInfo)
+    COM_INTERFACE_ENTRY_IID(IID_IShellLinkDataList, IShellLinkDataList)
+    COM_INTERFACE_ENTRY_IID(IID_IExtractIconA, IExtractIconA)
+    COM_INTERFACE_ENTRY_IID(IID_IExtractIconW, IExtractIconW)
+//  COM_INTERFACE_ENTRY_IID(IID_IExtractImage2, IExtractImage2)
+//  COM_INTERFACE_ENTRY_IID(IID_IPersistPropertyBag, IPersistPropertyBag)
+//  COM_INTERFACE_ENTRY_IID(IID_IServiceProvider, IServiceProvider)
+//  COM_INTERFACE_ENTRY_IID(IID_IFilter, IFilter)
     COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
+//  COM_INTERFACE_ENTRY_IID(IID_ICustomizeInfoTip, ICustomizeInfoTip)
+    COM_INTERFACE_ENTRY_IID(IID_IShellPropSheetExt, IShellPropSheetExt)
 END_COM_MAP()
 };
 

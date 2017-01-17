@@ -19,6 +19,8 @@
 
 #include "precomp.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
 WCHAR swShell32Name[MAX_PATH];
 
 DWORD NumIconOverlayHandlers = 0;
@@ -267,11 +269,21 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
             {
                 /* extract icon from shell shortcut */
                 CComPtr<IShellLinkW> psl;
+                CComPtr<IExtractIconW> pei;
 
                 HRESULT hr = psf->GetUIObjectOf(NULL, 1, &pidl, IID_NULL_PPV_ARG(IShellLinkW, &psl));
                 if (SUCCEEDED(hr))
                 {
                     hr = psl->GetIconLocation(wTemp, _countof(wTemp), &icon_idx);
+                    if (FAILED(hr) || !*wTemp)
+                    {
+                        /* The icon was not found directly, try to retrieve it from the shell link target */
+                        hr = psl->QueryInterface(IID_PPV_ARG(IExtractIconW, &pei));
+                        if (FAILED(hr) || !pei)
+                            TRACE("No IExtractIconW interface!\n");
+                        else
+                            hr = pei->GetIconLocation(GIL_FORSHELL, wTemp, _countof(wTemp), &icon_idx, &flags);
+                    }
 
                     if (SUCCEEDED(hr) && *wTemp)
                         found = TRUE;
