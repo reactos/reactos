@@ -362,7 +362,7 @@ CFileDefExt::InitFileType(HWND hwndDlg)
         return FALSE;
 
     /* Get file information */
-    SHFILEINFO fi;
+    SHFILEINFOW fi;
     if (!SHGetFileInfoW(m_wszPath, 0, &fi, sizeof(fi), SHGFI_TYPENAME|SHGFI_ICON))
     {
         ERR("SHGetFileInfoW failed for %ls (%lu)\n", m_wszPath, GetLastError());

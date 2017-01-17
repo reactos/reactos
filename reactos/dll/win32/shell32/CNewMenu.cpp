@@ -138,7 +138,7 @@ CNewMenu::SHELLNEW_ITEM *CNewMenu::LoadItem(LPCWSTR pwszExt)
     if (!Types[i].pszName)
         return NULL;
 
-    SHFILEINFO fi;
+    SHFILEINFOW fi;
     if (!SHGetFileInfoW(pwszExt, FILE_ATTRIBUTE_NORMAL, &fi, sizeof(fi), SHGFI_USEFILEATTRIBUTES|SHGFI_TYPENAME|SHGFI_ICON|SHGFI_SMALLICON))
         return NULL;
 
