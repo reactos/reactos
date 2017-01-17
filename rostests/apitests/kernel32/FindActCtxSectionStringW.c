@@ -92,9 +92,9 @@ HANDLE _CreateActCtxFromFile(LPCWSTR FileName, int line)
 
     SetLastError(0xdeaddead);
     h = CreateActCtxW(&ActCtx);
-    ok_(__FILE__, line)(h != INVALID_HANDLE_VALUE, "CreateActCtx failed\n");
+    ok_(__FILE__, line)(h != INVALID_HANDLE_VALUE, "CreateActCtx failed for %S\n", FileName);
     // In win10 last error is unchanged and in win2k3 it is ERROR_BAD_EXE_FORMAT    
-    ok_(__FILE__, line)(GetLastError() == ERROR_BAD_EXE_FORMAT, "Wrong last error. Expected %d, got %lu\n", ERROR_BAD_EXE_FORMAT, GetLastError());
+    ok_(__FILE__, line)(GetLastError() == ERROR_BAD_EXE_FORMAT || GetLastError() == 0xdeaddead, "Wrong last error %lu\n", GetLastError());
 
     return h;
 }
@@ -119,7 +119,7 @@ VOID _DeactivateCtx(ULONG_PTR cookie, int line)
     ok_(__FILE__, line)(GetLastError() == 0xdeaddead, "Wrong last error. Expected %lu, got %lu\n", (DWORD)(0xdeaddead), GetLastError());
 }
 
-void TestClassRedirection(HANDLE h, LPCWSTR ClassToTest, LPCWSTR ExpectedClassName, LPCWSTR ExpectedModule, ULONG ExpectedClassCount)
+void TestClassRedirection(HANDLE h, LPCWSTR ClassToTest, LPCWSTR ExpectedClassPart, LPCWSTR ExpectedModule, ULONG ExpectedClassCount)
 {
     ACTCTX_SECTION_KEYED_DATA KeyedData = { 0 };
     BOOL res;
@@ -161,10 +161,10 @@ void TestClassRedirection(HANDLE h, LPCWSTR ClassToTest, LPCWSTR ExpectedClassNa
         ok(KeyedData.ulLength == data_lenght, "Got lenght %lu instead of %d\n", KeyedData.ulLength, data_lenght);
         ok(classData->size == sizeof(*classData), "Got %lu instead of %d\n", classData->size, sizeof(*classData));
         ok(classData->res == 0, "Got res %lu\n", classData->res);
-        ok(classData->name_len == wcslen(ExpectedClassName) * 2, "Got name len %lu, expected %d\n", classData->name_len, wcslen(ExpectedClassName) *2);
         ok(classData->module_len == wcslen(ExpectedModule) * 2, "Got name len %lu, expected %d\n", classData->module_len, wcslen(ExpectedModule) *2);
-        ok(wcscmp(VersionedClass, ExpectedClassName) == 0, "Got %S, expected %S\n", VersionedClass, ExpectedClassName);
         ok(wcscmp(ClassLib, ExpectedModule) == 0, "Got %S, expected %S\n", ClassLib, ExpectedModule);
+        /* compare only if VersionedClass starts with ExpectedClassPart */
+        ok(memcmp(VersionedClass, ExpectedClassPart, sizeof(WCHAR) * wcslen(ExpectedClassPart)) == 0, "Expected %S to start with %S\n", VersionedClass, ExpectedClassPart);
     }
 }
 
@@ -309,7 +309,7 @@ START_TEST(FindActCtxSectionStringW)
     if (h != INVALID_HANDLE_VALUE)
     {
         _ActivateCtx(h, &cookie, __LINE__);
-        TestClassRedirection(h, L"Button", L"6.0.3790.1830!Button", L"comctl32.dll", 29);
+        TestClassRedirection(h, L"Button", L"6.0.", L"comctl32.dll", 29);
         ok( GetModuleHandleW(L"comctl32.dll") == NULL, "Expected comctl32 not to be loaded\n");
         ok( GetModuleHandleW(L"user32.dll") == NULL, "Expected user32 not to be loaded\n");
         _DeactivateCtx(cookie, __LINE__);
