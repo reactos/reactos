@@ -106,7 +106,7 @@ START_TEST(DefaultActCtx)
                                    &KeyedData);
     ok(res == TRUE, "\n");
     ok(KeyedData.hActCtx == NULL, "Expected null handle for common control context\n");
-    ok(KeyedData.ulAssemblyRosterIndex != 0, "%d\n", KeyedData.ulAssemblyRosterIndex);
+    ok(KeyedData.ulAssemblyRosterIndex != 0, "%lu\n", KeyedData.ulAssemblyRosterIndex);
     //ok(wcsstr(details-> , L"SystemCompative"
     
 }

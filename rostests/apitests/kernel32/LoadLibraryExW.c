@@ -34,7 +34,7 @@ VOID _TestVesion(HANDLE dll, DWORD ExpectedVersion, int line)
 {
     LPGETVERSION proc = (LPGETVERSION)GetProcAddress(dll, "GetVersion");
     DWORD version = proc();
-    ok_(__FILE__, line)(version == ExpectedVersion, "Got version %d, expected %d\n", version, ExpectedVersion);
+    ok_(__FILE__, line)(version == ExpectedVersion, "Got version %lu, expected %lu\n", version, ExpectedVersion);
 }
 
 VOID TestDllRedirection()
