@@ -531,25 +531,20 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
         case SHELLNEW_TYPE_NULLFILE:
         {
             BOOL bSuccess = TRUE;
-            LPWSTR pwszFilename = NULL;
-            size_t cchFilenameMax = 0;
+            WCHAR wszName[MAX_PATH];
+            WCHAR wszNewFile[MAX_PATH];
 
-            /* Build new file name */
-            LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEW, wszBuf, _countof(wszBuf));
-            // FIXME: PathCchAddBackslashExW(wszPath, _countof(wszPath), &pwszFilename, &cchFilenameMax);
-            pwszFilename = PathAddBackslashW(wszPath);
-            cchFilenameMax = _countof(wszBuf) - wcslen(wszPath);
-            StringCchPrintfW(pwszFilename, cchFilenameMax, L"%s %s%s", wszBuf, pItem->pwszDesc, pItem->pwszExt);
+            if (!LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEW, wszBuf, _countof(wszBuf)))
+                return E_FAIL;
 
-            /* Find unique name */
-            for (UINT i = 2; PathFileExistsW(wszPath); ++i)
-            {
-                StringCchPrintfW(pwszFilename, cchFilenameMax, L"%s %s (%u)%s", wszBuf, pItem->pwszDesc, i, pItem->pwszExt);
-                TRACE("New Filename %ls\n", pwszFilename);
-            }
+            StringCchPrintfW(wszNewFile, _countof(wszNewFile), L"%s %s%s", wszBuf, pItem->pwszDesc, pItem->pwszExt);
+
+            /* Create the name of the new file */
+            if (!PathYetAnotherMakeUniqueName(wszName, wszPath, NULL, wszNewFile))
+                return E_FAIL;
 
             /* Create new file */
-            HANDLE hFile = CreateFileW(wszPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+            HANDLE hFile = CreateFileW(wszName, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
             if (hFile != INVALID_HANDLE_VALUE)
             {
                 if (pItem->Type == SHELLNEW_TYPE_DATA)
@@ -570,20 +565,20 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
             if (pItem->Type == SHELLNEW_TYPE_FILENAME)
             {
                 /* Copy file */
-                if (!CopyFileW((LPWSTR)pItem->pData, wszPath, FALSE))
+                if (!CopyFileW((LPWSTR)pItem->pData, wszName, FALSE))
                     ERR("Copy file failed: %ls\n", (LPWSTR)pItem->pData);
             }
 
             /* Show message if we failed */
             if (bSuccess)
             {
-                TRACE("Notifying fs %s\n", debugstr_w(wszPath));
-                SelectNewItem(lpcmi, SHCNE_CREATE, SHCNF_PATHW, wszPath);
+                TRACE("Notifying fs %s\n", debugstr_w(wszName));
+                SelectNewItem(lpcmi, SHCNE_CREATE, SHCNF_PATHW, wszName);
             }
             else
             {
-                StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Cannot create file: %s", pwszFilename);
-                MessageBoxW(NULL, wszBuf, L"Cannot create file", MB_OK|MB_ICONERROR); // FIXME
+                StringCbPrintfW(wszBuf, sizeof(wszBuf), L"Cannot create file: %s", wszName);
+                MessageBoxW(NULL, wszBuf, L"Cannot create file", MB_OK|MB_ICONERROR); // FIXME load localized error msg
             }
             break;
         }
