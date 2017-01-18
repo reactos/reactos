@@ -530,7 +530,9 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
 
             /* Build new file name */
             LoadStringW(shell32_hInstance, FCIDM_SHVIEW_NEW, wszBuf, _countof(wszBuf));
-            StringCchCatExW(wszPath, _countof(wszPath), L"\\", &pwszFilename, &cchFilenameMax, 0);
+            // FIXME: PathCchAddBackslashExW(wszPath, _countof(wszPath), &pwszFilename, &cchFilenameMax);
+            pwszFilename = PathAddBackslashW(wszPath);
+            cchFilenameMax = wcslen(wszPath) + 1;
             StringCchPrintfW(pwszFilename, cchFilenameMax, L"%s %s%s", wszBuf, pItem->pwszDesc, pItem->pwszExt);
 
             /* Find unique name */
