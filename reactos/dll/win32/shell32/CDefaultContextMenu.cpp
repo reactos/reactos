@@ -41,7 +41,7 @@ struct _StaticInvokeCommandMap_
 {
     LPCSTR szStringVerb;
     UINT IntVerb;
-} g_StaticInvokeCmdMap[] = 
+} g_StaticInvokeCmdMap[] =
 {
     { "RunAs", 0 },  // Unimplemented
     { "Print", 0 },  // Unimplemented
@@ -566,7 +566,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
                 LONG res = RegOpenKeyW(pEntry->hkClass, wszKey, &hkVerb);
                 if (res == ERROR_SUCCESS)
                 {
-                    res = RegLoadMUIStringW(hkVerb, 
+                    res = RegLoadMUIStringW(hkVerb,
                                             NULL,
                                             wszVerb,
                                             cbVerb,
@@ -576,7 +576,7 @@ CDefaultContextMenu::AddStaticContextMenusToMenu(
                     if (res == ERROR_SUCCESS)
                     {
                         /* use description for the menu entry */
-                        mii.dwTypeData = wszVerb; 
+                        mii.dwTypeData = wszVerb;
                     }
 
                     RegCloseKey(hkVerb);
@@ -954,7 +954,7 @@ PDynamicShellEntry CDefaultContextMenu::GetDynamicEntry(UINT idCmd)
     return pEntry;
 }
 
-//FIXME: 260 is correct, but should this be part of the SDK or just MAX_PATH?
+// FIXME: 260 is correct, but should this be part of the SDK or just MAX_PATH?
 #define MAX_VERB 260
 
 BOOL
@@ -993,7 +993,7 @@ CDefaultContextMenu::MapVerbToCmdId(PVOID Verb, PUINT idCmd, BOOL IsUnicode)
 HRESULT
 CDefaultContextMenu::DoDynamicShellExtensions(
     LPCMINVOKECOMMANDINFO lpcmi)
-{    
+{
     TRACE("verb %p first %x last %x", lpcmi->lpVerb, m_iIdSHEFirst, m_iIdSHELast);
 
     UINT idCmd = LOWORD(lpcmi->lpVerb);
@@ -1132,9 +1132,9 @@ CDefaultContextMenu::DoStaticShellExtensions(
         /* Check if we need to browse */
         if (wFlags > 0)
         {
-            /* In xp if we have browsed, we don't open any more folders .
+            /* In xp if we have browsed, we don't open any more folders.
              * In win7 we browse to the first folder we find and
-             * open new windows fo for each of the rest of the folders */
+             * open new windows for each of the rest of the folders */
             if (bBrowsed)
                 continue;
 
@@ -1287,12 +1287,12 @@ CDefaultContextMenu::HandleMenuMsg(
     return S_OK;
 }
 
-HRESULT 
-WINAPI 
+HRESULT
+WINAPI
 CDefaultContextMenu::HandleMenuMsg2(
-    UINT uMsg, 
-    WPARAM wParam, 
-    LPARAM lParam, 
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam,
     LRESULT *plResult)
 {
     switch (uMsg)
@@ -1340,8 +1340,8 @@ CDefaultContextMenu::SetSite(IUnknown *pUnkSite)
     return S_OK;
 }
 
-HRESULT 
-WINAPI 
+HRESULT
+WINAPI
 CDefaultContextMenu::GetSite(REFIID riid, void **ppvSite)
 {
     if (!m_site)
