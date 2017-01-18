@@ -751,11 +751,6 @@ HRESULT STDMETHODCALLTYPE CShellLink::Load(IStream *stm)
     else
         m_bRunAs = FALSE;
 
-    DWORD dwZero;
-    hr = stm->Read(&dwZero, sizeof(dwZero), &dwBytesRead);
-    if (FAILED(hr) || dwZero || dwBytesRead != sizeof(dwZero))
-        ERR("Last word was not zero\n");
-
     TRACE("OK\n");
 
     pdump(m_pPidl);
@@ -971,10 +966,6 @@ HRESULT STDMETHODCALLTYPE CShellLink::Save(IStream *stm, BOOL fClearDirty)
     /* Clear the dirty bit if requested */
     if (fClearDirty)
         m_bDirty = FALSE;
-
-    /* The last field is a single zero dword */
-    DWORD dwZero = 0;
-    hr = stm->Write(&dwZero, sizeof(dwZero), &count);
 
     return hr;
 }
@@ -2733,7 +2724,10 @@ LPWSTR SH_GetTargetTypeByPath(LPCWSTR lpcwFullPath)
             StringCchPrintfExW(wszBuf, _countof(wszBuf), &pwszEnd, &cchRemaining, 0, L"%s ", pwszExt + 1);
         }
         else
-            StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s (%s)", fi.szTypeName, pwszExt); /* Update file type */
+        {
+            /* Update file type */
+            StringCbPrintfW(wszBuf, sizeof(wszBuf), L"%s (%s)", fi.szTypeName, pwszExt);
+        }
     }
 
     return wszBuf;
@@ -2768,7 +2762,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
             /* Get file information */
             // FIXME! FIXME! Shouldn't we use pThis->m_sIcoPath, pThis->m_Header.nIconIndex instead???
             SHFILEINFOW fi;
-            if (!SHGetFileInfoW(pThis->m_sLinkPath, 0, &fi, sizeof(fi), SHGFI_TYPENAME|SHGFI_ICON))
+            if (!SHGetFileInfoW(pThis->m_sLinkPath, 0, &fi, sizeof(fi), SHGFI_TYPENAME | SHGFI_ICON))
             {
                 ERR("SHGetFileInfoW failed for %ls (%lu)\n", pThis->m_sLinkPath, GetLastError());
                 fi.szTypeName[0] = L'\0';
@@ -2780,15 +2774,20 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
             else
                 ERR("ExtractIconW failed %ls %u\n", pThis->m_sIcoPath, pThis->m_Header.nIconIndex);
 
-            /* target type */
+            /* Target type */
             if (pThis->m_sPath)
                 SetDlgItemTextW(hwndDlg, 14005, SH_GetTargetTypeByPath(pThis->m_sPath));
 
-            /* target location */
-            if (pThis->m_sWorkDir)
-                SetDlgItemTextW(hwndDlg, 14007, PathFindFileName(pThis->m_sWorkDir));
+            /* Target location */
+            if (pThis->m_sPath)
+            {
+                WCHAR target[MAX_PATH];
+                StringCchCopyW(target, _countof(target), pThis->m_sPath);
+                PathRemoveFileSpecW(target);
+                SetDlgItemTextW(hwndDlg, 14007, PathFindFileNameW(target));
+            }
 
-            /* target path */
+            /* Target path */
             if (pThis->m_sPath)
             {
                 WCHAR newpath[2*MAX_PATH] = L"\0";
@@ -2804,16 +2803,18 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                 }
                 SetDlgItemTextW(hwndDlg, 14009, newpath);
             }
-            /* working dir */
+
+            /* Working dir */
             if (pThis->m_sWorkDir)
                 SetDlgItemTextW(hwndDlg, 14011, pThis->m_sWorkDir);
 
-            /* description */
+            /* Description */
             if (pThis->m_sDescription)
                 SetDlgItemTextW(hwndDlg, 14019, pThis->m_sDescription);
 
             return TRUE;
         }
+
         case WM_NOTIFY:
         {
             LPPSHNOTIFY lppsn = (LPPSHNOTIFY)lParam;
@@ -2849,7 +2850,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
 
                 if (!PathFileExistsW(unquoted))
                 {
-                    //FIXME load localized error msg
+                    // FIXME load localized error msg
                     MessageBoxW(hwndDlg, L"The specified file name in the target box is invalid", L"Error", MB_ICONERROR);
                     SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
                     return TRUE;
@@ -2870,6 +2871,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
             }
             break;
         }
+
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
@@ -2880,6 +2882,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                     /// open target directory
                     ///
                     return TRUE;
+
                 case 14021:
                 {
                     WCHAR wszPath[MAX_PATH] = L"";
@@ -2892,6 +2895,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                         pThis->SetIconLocation(wszPath, IconIndex);
                         ///
                         /// FIXME redraw icon
+                        ///
                     }
                     return TRUE;
                 }
@@ -2914,6 +2918,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
             if (HIWORD(wParam) == EN_CHANGE)
                 PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
             break;
+
         default:
             break;
     }
