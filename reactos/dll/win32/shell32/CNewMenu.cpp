@@ -463,7 +463,7 @@ HRESULT CNewMenu::CreateNewFolder(LPCMINVOKECOMMANDINFO lpici)
         return E_FAIL;
 
     /* Create the new directory and show the appropriate dialog in case of error */
-    if (SHCreateDirectory (lpici->hwnd, wszName) != ERROR_SUCCESS)
+    if (SHCreateDirectory(lpici->hwnd, wszName) != ERROR_SUCCESS)
         return E_FAIL;
 
     /* Show and select the new item in the def view */
@@ -492,7 +492,7 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
             STARTUPINFOW si;
             PROCESS_INFORMATION pi;
 
-            if (!ExpandEnvironmentStringsW((LPWSTR)pItem->pData, wszBuf, MAX_PATH))
+            if (!ExpandEnvironmentStringsW((LPWSTR)pItem->pData, wszBuf, _countof(wszBuf)))
             {
                 TRACE("ExpandEnvironmentStrings failed\n");
                 break;
@@ -502,12 +502,14 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
             Ptr = wcsstr(wszBuf, L"%1");
             if (Ptr)
             {
-                Ptr[1] = 's';
+                Ptr[1] = L's';
                 StringCbPrintfW(wszTemp, sizeof(wszTemp), wszBuf, wszPath);
                 pwszCmd = wszTemp;
             }
             else
+            {
                 pwszCmd = wszBuf;
+            }
 
             /* Create process */
             ZeroMemory(&si, sizeof(si));
@@ -516,10 +518,14 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
             {
                 CloseHandle(pi.hProcess);
                 CloseHandle(pi.hThread);
-            } else
+            }
+            else
+            {
                 ERR("Failed to create process\n");
+            }
             break;
         }
+
         case SHELLNEW_TYPE_DATA:
         case SHELLNEW_TYPE_FILENAME:
         case SHELLNEW_TYPE_NULLFILE:
@@ -555,8 +561,11 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
 
                 /* Close file now */
                 CloseHandle(hFile);
-            } else
+            }
+            else
+            {
                 bSuccess = FALSE;
+            }
 
             if (pItem->Type == SHELLNEW_TYPE_FILENAME)
             {
@@ -578,6 +587,7 @@ HRESULT CNewMenu::CreateNewItem(SHELLNEW_ITEM *pItem, LPCMINVOKECOMMANDINFO lpcm
             }
             break;
         }
+
         case SHELLNEW_TYPE_INVALID:
             ERR("Invalid type\n");
             break;
