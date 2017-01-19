@@ -250,6 +250,9 @@ PickIconDlg(
 #define             SHUpdateImage WINELIB_NAME_AW(SHUpdateImage)
 int          WINAPI RestartDialog(_In_opt_ HWND, _In_opt_ LPCWSTR, DWORD);
 int          WINAPI RestartDialogEx(_In_opt_ HWND, _In_opt_ LPCWSTR, DWORD, DWORD);
+int          WINAPI DriveType(int);
+int          WINAPI RealDriveType(int, BOOL);
+int          WINAPI IsNetDrive(int);
 BOOL         WINAPI IsUserAnAdmin(void);
 
 #define KF_FLAG_DEFAULT_PATH        0x00000400
