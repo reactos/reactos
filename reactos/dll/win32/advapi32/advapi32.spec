@@ -295,7 +295,7 @@
 295 stdcall GetUserNameW(ptr ptr)
 296 stdcall GetWindowsAccountDomainSid(ptr ptr ptr)
 297 stub I_QueryTagInformation
-298 stub I_ScIsSecurityProcess
+298 stdcall I_ScIsSecurityProcess()
 299 stdcall I_ScPnPGetServiceName(ptr wstr long)
 300 stub I_ScSendTSMessage
 301 stdcall I_ScSetServiceBitsA(ptr long long long str)

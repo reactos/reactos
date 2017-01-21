@@ -744,6 +744,20 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
 
 
 /**********************************************************************
+ *	I_ScIsSecurityProcess
+ *
+ * Undocumented
+ *
+ * @unimplemented
+ */
+VOID
+WINAPI
+I_ScIsSecurityProcess(VOID)
+{
+}
+
+
+/**********************************************************************
  *	I_ScPnPGetServiceName
  *
  * Undocumented
