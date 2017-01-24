@@ -22,41 +22,33 @@
  * FILE:        base/setup/welcome/welcome.c
  * PROGRAMMERS: Eric Kohl
  *              Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Hermes Belusca-Maito
  *
  * NOTE:
- *   This utility can be customized by modifying the resources.
- *   Please do NOT change the source code in order to customize this
- *   utility but change the resources!
- *
- * TODO: Use instead a XML file!
+ *   This utility can be customized by using localized INI configuration files.
+ *   The default strings are stored in the utility's resources.
  */
 
 #include <stdarg.h>
+#include <tchar.h>
+
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
+#include <winnls.h>
 #include <winuser.h>
 #include <shellapi.h>
+#include <strsafe.h>
+
 #include <reactos/version.h>
-#include <tchar.h>
-#include <winnls.h>
 
 #include "resource.h"
 
-#define LIGHT_BLUE 0x00F7EFD6
-#define DARK_BLUE  0x008C7B6B
+#define LIGHT_BLUE RGB(214, 239, 247)
+#define DARK_BLUE  RGB(107, 123, 140)
 
 #define TITLE_WIDTH  480
 #define TITLE_HEIGHT  93
-
-#define MAX_NUMBER_TOPICS   10
-#define TOPIC_DESC_LENGTH   1024
-
-/*
- * Disable this define if you want to revert back to the old behaviour, i.e.
- * opening files with CreateProcess. This defines uses ShellExecute instead.
- */
-#define USE_SHELL_EXECUTE
 
 /* GLOBALS ******************************************************************/
 
@@ -70,19 +62,42 @@ HWND hWndDefaultTopic = NULL;
 
 HDC hdcMem = NULL;
 
-int nTopic = -1;
-int nDefaultTopic = -1;
-
 ULONG ulInnerWidth = TITLE_WIDTH;
 ULONG ulInnerHeight = (TITLE_WIDTH * 3) / 4;
 ULONG ulTitleHeight = TITLE_HEIGHT + 3;
 
 HBITMAP hTitleBitmap = NULL;
 HBITMAP hDefaultTopicBitmap = NULL;
-HBITMAP hTopicBitmap[MAX_NUMBER_TOPICS];
-HWND hWndTopicButton[MAX_NUMBER_TOPICS];
 HWND hWndCloseButton = NULL;
 HWND hWndCheckButton = NULL;
+
+/* TODO: Retrieve the preferences from a configuration file */
+BOOL bDisplayCheckBox = FALSE; // FIXME!
+BOOL bDisplayExitBtn  = TRUE;
+
+#define BUFFER_SIZE 1024
+
+#define TOPIC_TITLE_LENGTH  80
+#define TOPIC_DESC_LENGTH   1024
+
+typedef struct _TOPIC
+{
+    HBITMAP hBitmap;
+    HWND hWndButton;
+    TCHAR szText[80];
+    TCHAR szTitle[TOPIC_TITLE_LENGTH];
+    TCHAR szDesc[TOPIC_DESC_LENGTH];
+    TCHAR szAction[512];
+} TOPIC, *PTOPIC;
+
+DWORD dwNumberTopics = 0;
+PTOPIC* pTopics = NULL;
+
+TCHAR szDefaultTitle[TOPIC_TITLE_LENGTH];
+TCHAR szDefaultDesc[TOPIC_DESC_LENGTH];
+
+INT nTopic = -1;        // Active (focused) topic
+INT nDefaultTopic = -1; // Default selected topic
 
 HFONT hFontTopicButton;
 HFONT hFontTopicTitle;
@@ -106,7 +121,280 @@ MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /* FUNCTIONS ****************************************************************/
 
-#ifndef USE_SHELL_EXECUTE
+INT GetLocaleName(LCID Locale, LPTSTR lpLCData, SIZE_T cchData)
+{
+    INT ret, ret2;
+
+    /* Try to retrieve the locale language name (LOCALE_SNAME is supported on Vista+) */
+    ret = GetLocaleInfo(Locale, LOCALE_SNAME, lpLCData, cchData);
+    if (ret || (GetLastError() != ERROR_INVALID_FLAGS))
+        return ret;
+
+    /*
+     * We failed because LOCALE_SNAME was unrecognized, so try to manually build
+     * a language name in the form xx-YY (WARNING: this method has its limitations).
+     */
+    ret = GetLocaleInfo(Locale, LOCALE_SISO639LANGNAME, lpLCData, cchData);
+    if (ret <= 1)
+        return ret;
+
+    lpLCData += (ret - 1);
+    cchData -= (ret - 1);
+    if (cchData <= 1)
+        return ret;
+
+    /* Try to get the second part; we add the '-' separator only if we succeed */
+    ret2 = GetLocaleInfo(Locale, LOCALE_SISO3166CTRYNAME, lpLCData + 1, cchData - 1);
+    if (ret2 <= 1)
+        return ret;
+    ret += ret2; // 'ret' already counts '-'.
+
+    *lpLCData = _T('-');
+
+    return ret;
+}
+
+VOID TranslateEscapes(IN OUT LPTSTR lpString)
+{
+    LPTSTR pEscape = NULL; // Next backslash escape sequence.
+
+    while (lpString && *lpString)
+    {
+        /* Find the next backslash escape sequence */
+        pEscape = _tcschr(lpString, _T('\\'));
+        if (!pEscape)
+            break;
+
+        /* Go past the escape backslash */
+        lpString = pEscape + 1;
+
+        /* Find which sequence it is */
+        switch (*lpString)
+        {
+            case _T('\0'):
+                // *pEscape = _T('\0'); // Enable if one wants to convert \<NULL> into <NULL>.
+                // lpString = pEscape + 1; // Loop will stop at the next iteration.
+                break;
+
+            case _T('n'): case _T('r'):
+            // case _T('\\'): // others?
+            // So far we only need to deal with the newlines.
+            {
+                if (*lpString == _T('n'))
+                    *pEscape = _T('\n');
+                else if (*lpString == _T('r'))
+                    *pEscape = _T('\r');
+
+                memmove(lpString, lpString + 1, (_tcslen(lpString + 1) + 1) * sizeof(TCHAR));
+                break;
+            }
+
+            /* Unknown escape sequence, ignore it */
+            default:
+                lpString++;
+                break;
+        }
+    }
+}
+
+BOOL LoadTopicsFromINI(LCID Locale)
+{
+    DWORD dwRet;
+    DWORD dwSize;
+    TCHAR szBuffer[LOCALE_NAME_MAX_LENGTH];
+    TCHAR szIniPath[MAX_PATH];
+    LPTSTR lpszSections = NULL, lpszSection = NULL;
+    PTOPIC pTopic, *pTopicsTmp;
+
+    /* Retrieve the locale name (on which the INI file name is based) */
+    dwRet = (DWORD)GetLocaleName(Locale, szBuffer, ARRAYSIZE(szBuffer));
+    if (!dwRet)
+    {
+        /* Fall back to english (US) */
+        StringCchCopy(szBuffer, ARRAYSIZE(szBuffer), TEXT("en-US"));
+    }
+
+    /* Build the INI file name */
+    GetCurrentDirectory(ARRAYSIZE(szIniPath), szIniPath);
+    StringCchCat(szIniPath, ARRAYSIZE(szIniPath), TEXT("\\"));
+    StringCchCat(szIniPath, ARRAYSIZE(szIniPath), szBuffer);
+    StringCchCat(szIniPath, ARRAYSIZE(szIniPath), TEXT(".ini"));
+
+    /* Verify that the file exists, otherwise fall back to english (US) */
+    if (GetFileAttributes(szIniPath) == INVALID_FILE_ATTRIBUTES)
+    {
+        StringCchCopy(szBuffer, ARRAYSIZE(szBuffer), TEXT("en-US"));
+
+        GetCurrentDirectory(ARRAYSIZE(szIniPath), szIniPath);
+        StringCchCat(szIniPath, ARRAYSIZE(szIniPath), TEXT("\\"));
+        StringCchCat(szIniPath, ARRAYSIZE(szIniPath), szBuffer);
+        StringCchCat(szIniPath, ARRAYSIZE(szIniPath), TEXT(".ini"));
+    }
+
+    /* Verify that the file exists, otherwise fall back to internal (localized) resource */
+    if (GetFileAttributes(szIniPath) == INVALID_FILE_ATTRIBUTES)
+        return FALSE; // TODO: For localized resource, see the general function.
+
+    /* Try to load the default localized strings */
+    if (!GetPrivateProfileString(TEXT("Defaults"), TEXT("DefaultTopicTitle"), NULL /* default */,
+                                 szDefaultTitle, ARRAYSIZE(szDefaultTitle), szIniPath))
+    {
+        *szDefaultTitle = 0;
+    }
+    if (!GetPrivateProfileString(TEXT("Defaults"), TEXT("DefaultTopicDescription"), NULL /* default */,
+                                 szDefaultDesc, ARRAYSIZE(szDefaultDesc), szIniPath))
+    {
+        *szDefaultDesc = 0;
+    }
+    else
+    {
+        TranslateEscapes(szDefaultDesc);
+    }
+
+    /* Allocate a buffer big enough to hold all the section names */
+    for (dwSize = BUFFER_SIZE; ; dwSize += BUFFER_SIZE)
+    {
+        lpszSections = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(TCHAR));
+        if (!lpszSections)
+            return TRUE; // FIXME!
+        dwRet = GetPrivateProfileSectionNames(lpszSections, dwSize, szIniPath);
+        if (dwRet < dwSize - 2)
+            break;
+        HeapFree(GetProcessHeap(), 0, lpszSections);
+    }
+
+    dwNumberTopics = 0;
+    pTopics = NULL;
+
+    /* Loop over the sections and load the topics */
+    lpszSection = lpszSections;
+    for (; lpszSection && *lpszSection; lpszSection += (_tcslen(lpszSection) + 1))
+    {
+        if (_tcsnicmp(lpszSection, TEXT("Topic"), 5) == 0)
+        {
+            /* Allocate (or reallocate) the list of topics */
+            if (!pTopics)
+                pTopicsTmp = HeapAlloc(GetProcessHeap(), 0, (dwNumberTopics + 1) * sizeof(*pTopics));
+            else
+                pTopicsTmp = HeapReAlloc(GetProcessHeap(), 0, pTopics, (dwNumberTopics + 1) * sizeof(*pTopics));
+            if (!pTopicsTmp)
+                break; // Cannot reallocate more
+            pTopics = pTopicsTmp;
+
+            /* Allocate a new topic */
+            pTopic = HeapAlloc(GetProcessHeap(), 0, sizeof(*pTopic));
+            if (!pTopic)
+                break; // Cannot reallocate more
+            pTopics[dwNumberTopics++] = pTopic;
+
+            /* Retrieve the information */
+            if (!GetPrivateProfileString(lpszSection, TEXT("Button"), NULL /* default */,
+                                         pTopic->szText, ARRAYSIZE(pTopic->szText), szIniPath))
+            {
+                *pTopic->szText = 0;
+            }
+            if (!GetPrivateProfileString(lpszSection, TEXT("Title"), NULL /* default */,
+                                         pTopic->szTitle, ARRAYSIZE(pTopic->szTitle), szIniPath))
+            {
+                *pTopic->szTitle = 0;
+            }
+            if (!GetPrivateProfileString(lpszSection, TEXT("Description"), NULL /* default */,
+                                         pTopic->szDesc, ARRAYSIZE(pTopic->szDesc), szIniPath))
+            {
+                *pTopic->szDesc = 0;
+            }
+            else
+            {
+                TranslateEscapes(pTopic->szDesc);
+            }
+            if (!GetPrivateProfileString(lpszSection, TEXT("Action"), NULL /* default */,
+                                         pTopic->szAction, ARRAYSIZE(pTopic->szAction), szIniPath))
+            {
+                *pTopic->szAction = 0;
+            }
+            else
+            {
+                TranslateEscapes(pTopic->szAction);
+            }
+        }
+    }
+
+    HeapFree(GetProcessHeap(), 0, lpszSections);
+
+    return TRUE;
+}
+
+BOOL LoadTopics(VOID)
+{
+#define MAX_NUMBER_INTERNAL_TOPICS  3
+
+    UINT i;
+    PTOPIC pTopic, *pTopicsTmp;
+
+    dwNumberTopics = 0;
+    pTopics = NULL;
+
+    /*
+     * First, try to load the default internal (localized) strings.
+     * They can be redefined by the localized INI files.
+     */
+    if (!LoadString(hInstance, IDS_DEFAULTTOPICTITLE, szDefaultTitle, ARRAYSIZE(szDefaultTitle)))
+        *szDefaultTitle = 0;
+    if (!LoadString(hInstance, IDS_DEFAULTTOPICDESC, szDefaultDesc, ARRAYSIZE(szDefaultDesc)))
+        *szDefaultDesc = 0;
+
+    /* Try to load the topics from INI file */
+    if (LoadTopicsFromINI(LOCALE_USER_DEFAULT))
+        return TRUE;
+
+    /* We failed, fall back to internal (localized) resource */
+    for (i = 0; i < MAX_NUMBER_INTERNAL_TOPICS; ++i)
+    {
+        /* Allocate (or reallocate) the list of topics */
+        if (!pTopics)
+            pTopicsTmp = HeapAlloc(GetProcessHeap(), 0, (dwNumberTopics + 1) * sizeof(*pTopics));
+        else
+            pTopicsTmp = HeapReAlloc(GetProcessHeap(), 0, pTopics, (dwNumberTopics + 1) * sizeof(*pTopics));
+        if (!pTopicsTmp)
+            break; // Cannot reallocate more
+        pTopics = pTopicsTmp;
+
+        /* Allocate a new topic */
+        pTopic = HeapAlloc(GetProcessHeap(), 0, sizeof(*pTopic));
+        if (!pTopic)
+            break; // Cannot reallocate more
+        pTopics[dwNumberTopics++] = pTopic;
+
+        /* Retrieve the information */
+        if (!LoadString(hInstance, IDS_TOPICBUTTON0 + i, pTopic->szText, ARRAYSIZE(pTopic->szText)))
+            *pTopic->szText = 0;
+        if (!LoadString(hInstance, IDS_TOPICTITLE0 + i, pTopic->szTitle, ARRAYSIZE(pTopic->szTitle)))
+            *pTopic->szTitle = 0;
+        if (!LoadString(hInstance, IDS_TOPICDESC0 + i, pTopic->szDesc, ARRAYSIZE(pTopic->szDesc)))
+            *pTopic->szDesc = 0;
+        if (!LoadString(hInstance, IDS_TOPICACTION0 + i, pTopic->szAction, ARRAYSIZE(pTopic->szAction)))
+            *pTopic->szAction = 0;
+    }
+
+    return TRUE;
+}
+
+VOID FreeTopics(VOID)
+{
+    if (!pTopics)
+        return;
+
+    while (dwNumberTopics--)
+    {
+        if (pTopics[dwNumberTopics])
+            HeapFree(GetProcessHeap(), 0, pTopics[dwNumberTopics]);
+    }
+    HeapFree(GetProcessHeap(), 0, pTopics);
+    pTopics = NULL;
+    dwNumberTopics = 0;
+}
+
+#if 0
 static VOID
 ShowLastWin32Error(HWND hWnd)
 {
@@ -141,10 +429,8 @@ _tWinMain(HINSTANCE hInst,
 {
     WNDCLASSEX wndclass;
     MSG msg;
-    int xPos;
-    int yPos;
-    int xWidth;
-    int yHeight;
+    INT xPos, yPos;
+    INT xWidth, yHeight;
     RECT rcWindow;
     HICON hMainIcon;
     HMENU hSystemMenu;
@@ -224,8 +510,10 @@ _tWinMain(HINSTANCE hInst,
     rcRightPanel.left = rcLeftPanel.right;
     rcRightPanel.right = ulInnerWidth - 1;
 
-    if (!LoadString(hInstance, (UINT_PTR)MAKEINTRESOURCE(IDS_APPTITLE), szAppTitle, ARRAYSIZE(szAppTitle)))
-        _tcscpy(szAppTitle, TEXT("ReactOS Welcome"));
+    if (!LoadString(hInstance, IDS_APPTITLE, szAppTitle, ARRAYSIZE(szAppTitle)))
+        StringCchCopy(szAppTitle, ARRAYSIZE(szAppTitle), TEXT("ReactOS Welcome"));
+
+    LoadTopics();
 
     /* Create main window */
     hWndMain = CreateWindow(szFrameClass,
@@ -241,7 +529,7 @@ _tWinMain(HINSTANCE hInst,
                             NULL);
 
     hSystemMenu = GetSystemMenu(hWndMain, FALSE);
-    if(hSystemMenu)
+    if (hSystemMenu)
     {
         RemoveMenu(hSystemMenu, SC_SIZE, MF_BYCOMMAND);
         RemoveMenu(hSystemMenu, SC_MAXIMIZE, MF_BYCOMMAND);
@@ -255,6 +543,8 @@ _tWinMain(HINSTANCE hInst,
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+
+    FreeTopics();
 
     return msg.wParam;
 }
@@ -281,26 +571,21 @@ ButtonSubclassWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
 static BOOL
-RunApplication(int nTopic)
+RunAction(INT nTopic)
 {
-#ifndef USE_SHELL_EXECUTE
-    PROCESS_INFORMATION ProcessInfo;
-    STARTUPINFO StartupInfo;
-    TCHAR CurrentDir[256];
-#else
+    // TCHAR CurrentDir[MAX_PATH];
     TCHAR Parameters[2];
-#endif
-    TCHAR AppName[512];
-    int nLength;
+    TCHAR AppName[MAX_PATH];
 
     InvalidateRect(hWndMain, NULL, TRUE);
 
-#ifndef USE_SHELL_EXECUTE
-    GetCurrentDirectory(ARRAYSIZE(CurrentDir), CurrentDir);
-#endif
+    if (nTopic < 0)
+        return TRUE;
 
-    nLength = LoadString(hInstance, IDS_TOPICACTION0 + nTopic, AppName, ARRAYSIZE(AppName));
-    if (nLength == 0)
+    // GetCurrentDirectory(ARRAYSIZE(CurrentDir), CurrentDir);
+
+    StringCchCopy(AppName, ARRAYSIZE(AppName), pTopics[nTopic]->szAction);
+    if (!*AppName)
         return TRUE;
 
     if (!_tcsicmp(AppName, TEXT("<exit>")))
@@ -314,39 +599,16 @@ RunApplication(int nTopic)
 
     if (_tcsicmp(AppName, TEXT("explorer.exe")) == 0)
     {
-#ifndef USE_SHELL_EXECUTE
-        _tcscat(AppName, TEXT(" "));
-        _tcscat(AppName, CurrentDir);
-#else
+        // StringCchCat(AppName, ARRAYSIZE(AppName), TEXT(" "));
+        // StringCchCat(AppName, ARRAYSIZE(AppName), CurrentDir);
         _tcscpy(Parameters, TEXT("\\"));
-#endif
     }
-#ifdef USE_SHELL_EXECUTE
     else
     {
         *Parameters = 0;
     }
-#endif
 
-#ifndef USE_SHELL_EXECUTE
-    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
-    StartupInfo.cb = sizeof(StartupInfo);
-    StartupInfo.lpTitle = TEXT("Test");
-    StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
-    StartupInfo.wShowWindow = SW_SHOWNORMAL;
-
-    if (!CreateProcess(NULL, AppName, NULL, NULL, FALSE, CREATE_NEW_CONSOLE,
-                       NULL, CurrentDir, &StartupInfo, &ProcessInfo))
-    {
-        ShowLastWin32Error(hWndMain);
-        return TRUE;
-    }
-
-    CloseHandle(ProcessInfo.hProcess);
-    CloseHandle(ProcessInfo.hThread);
-#else
     ShellExecute(NULL, NULL, AppName, Parameters, NULL, SW_SHOWDEFAULT);
-#endif
 
     return TRUE;
 }
@@ -385,7 +647,8 @@ static LRESULT
 OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     TCHAR szText[80];
-    int i,nLength;
+    UINT i;
+    INT nLength;
     HDC ScreenDC;
     DWORD dwTop;
     DWORD dwHeight = 0;
@@ -395,7 +658,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     hbrLightBlue = CreateSolidBrush(LIGHT_BLUE);
     hbrDarkBlue = CreateSolidBrush(DARK_BLUE);
-    hbrRightPanel = CreateSolidBrush(0x00FFFFFF);
+    hbrRightPanel = CreateSolidBrush(RGB(255, 255, 255));
 
     /* Topic title font */
     hFontTopicTitle = CreateFont(-18, 0, 0, 0, FW_NORMAL,
@@ -433,105 +696,112 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     /* Load topic bitmaps */
     hDefaultTopicBitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_DEFAULTTOPICBITMAP));
-    for (i = 0; i < ARRAYSIZE(hTopicBitmap); i++)
+    for (i = 0; i < dwNumberTopics; i++)
     {
-        hTopicBitmap[i] = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TOPICBITMAP0 + i));
+        // FIXME: Not implemented yet!
+        // pTopics[i]->hBitmap = LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TOPICBITMAP0 + i));
+        pTopics[i]->hBitmap = NULL;
     }
 
     ScreenDC = GetWindowDC(hWnd);
     hdcMem = CreateCompatibleDC(ScreenDC);
     ReleaseDC(hWnd, ScreenDC);
 
-    /* load and create buttons */
+    /* Load and create buttons */
     dwTop = rcLeftPanel.top;
-    for (i = 0; i < ARRAYSIZE(hWndTopicButton); i++)
+    for (i = 0; i < dwNumberTopics; i++)
     {
-        nLength = LoadString(hInstance, IDS_TOPICBUTTON0 + i, szText, ARRAYSIZE(szText));
-        if (nLength > 0)
+        if (*pTopics[i]->szText)
         {
             dwHeight = GetButtonHeight(hdcMem,
                                        hFontTopicButton,
-                                       szText,
+                                       pTopics[i]->szText,
                                        rcLeftPanel.right - rcLeftPanel.left);
 
-            hWndTopicButton[i] = CreateWindow(TEXT("BUTTON"),
-                                              szText,
-                                              WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | BS_MULTILINE | BS_OWNERDRAW,
-                                              rcLeftPanel.left,
-                                              dwTop,
-                                              rcLeftPanel.right - rcLeftPanel.left,
-                                              dwHeight,
-                                              hWnd,
-                                              (HMENU)IntToPtr(i),
-                                              hInstance,
-                                              NULL);
-            hWndDefaultTopic = hWndTopicButton[i];
+            pTopics[i]->hWndButton = CreateWindow(TEXT("BUTTON"),
+                                                  pTopics[i]->szText,
+                                                  WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | BS_MULTILINE | BS_OWNERDRAW,
+                                                  rcLeftPanel.left,
+                                                  dwTop,
+                                                  rcLeftPanel.right - rcLeftPanel.left,
+                                                  dwHeight,
+                                                  hWnd,
+                                                  (HMENU)IntToPtr(i),
+                                                  hInstance,
+                                                  NULL);
+            hWndDefaultTopic = pTopics[i]->hWndButton;
             nDefaultTopic = i;
-            SubclassButton(hWndTopicButton[i]);
-            SendMessage(hWndTopicButton[i], WM_SETFONT, (WPARAM)hFontTopicButton, MAKELPARAM(TRUE, 0));
+            SubclassButton(pTopics[i]->hWndButton);
+            SendMessage(pTopics[i]->hWndButton, WM_SETFONT, (WPARAM)hFontTopicButton, MAKELPARAM(TRUE, 0));
         }
         else
         {
-            hWndTopicButton[i] = NULL;
+            pTopics[i]->hWndButton = NULL;
         }
 
         dwTop += dwHeight;
     }
 
-    /* Create exit button */
-    nLength = LoadString(hInstance, IDS_CLOSETEXT, szText, ARRAYSIZE(szText));
-    if (nLength > 0)
+    /* Create "Exit" button */
+    if (bDisplayExitBtn)
     {
-        hWndCloseButton = CreateWindow(TEXT("BUTTON"),
-                                       szText,
-                                       WS_VISIBLE | WS_CHILD | BS_FLAT,
-                                       rcRightPanel.right - 10 - 57,
-                                       rcRightPanel.bottom - 10 - 21,
-                                       57,
-                                       21,
-                                       hWnd,
-                                       (HMENU)IDC_CLOSEBUTTON,
-                                       hInstance,
-                                       NULL);
-        hWndDefaultTopic = NULL;
-        nDefaultTopic = -1;
-        SendMessage(hWndCloseButton, WM_SETFONT, (WPARAM)hFontTopicButton, MAKELPARAM(TRUE, 0));
-    }
-    else
-    {
-        hWndCloseButton = NULL;
+        nLength = LoadString(hInstance, IDS_CLOSETEXT, szText, ARRAYSIZE(szText));
+        if (nLength > 0)
+        {
+            hWndCloseButton = CreateWindow(TEXT("BUTTON"),
+                                           szText,
+                                           WS_VISIBLE | WS_CHILD | BS_FLAT,
+                                           rcRightPanel.right - 10 - 57,
+                                           rcRightPanel.bottom - 10 - 21,
+                                           57,
+                                           21,
+                                           hWnd,
+                                           (HMENU)IDC_CLOSEBUTTON,
+                                           hInstance,
+                                           NULL);
+            hWndDefaultTopic = NULL;
+            nDefaultTopic = -1;
+            SendMessage(hWndCloseButton, WM_SETFONT, (WPARAM)hFontTopicButton, MAKELPARAM(TRUE, 0));
+        }
+        else
+        {
+            hWndCloseButton = NULL;
+        }
     }
 
     /* Create checkbox */
-    nLength = LoadString(hInstance, IDS_CHECKTEXT, szText, ARRAYSIZE(szText));
-    if (nLength > 0)
+    if (bDisplayCheckBox)
     {
-        hFontCheckButton = CreateFont(-10, 0, 0, 0, FW_THIN,
-                                      FALSE, FALSE, FALSE,
-                                      ANSI_CHARSET,
-                                      OUT_DEFAULT_PRECIS,
-                                      CLIP_DEFAULT_PRECIS,
-                                      DEFAULT_QUALITY,
-                                      FF_DONTCARE,
-                                      TEXT("Tahoma"));
+        nLength = LoadString(hInstance, IDS_CHECKTEXT, szText, ARRAYSIZE(szText));
+        if (nLength > 0)
+        {
+            hFontCheckButton = CreateFont(-10, 0, 0, 0, FW_THIN,
+                                          FALSE, FALSE, FALSE,
+                                          ANSI_CHARSET,
+                                          OUT_DEFAULT_PRECIS,
+                                          CLIP_DEFAULT_PRECIS,
+                                          DEFAULT_QUALITY,
+                                          FF_DONTCARE,
+                                          TEXT("Tahoma"));
 
-        hWndCheckButton = CreateWindow(TEXT("BUTTON"),
-                                       szText,
-                                       WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX,
-                                       rcLeftPanel.left + 8,
-                                       rcLeftPanel.bottom - 8 - 13,
-                                       rcLeftPanel.right - rcLeftPanel.left - 16,
-                                       13,
-                                       hWnd,
-                                       (HMENU)IDC_CHECKBUTTON,
-                                       hInstance,
-                                       NULL);
-        SendMessage(hWndCheckButton, WM_SETFONT, (WPARAM)hFontCheckButton, MAKELPARAM(TRUE, 0));
-    }
-    else
-    {
-        hWndCheckButton = NULL;
-        hFontCheckButton = NULL;
+            hWndCheckButton = CreateWindow(TEXT("BUTTON"),
+                                           szText,
+                                           WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX /**/| BS_FLAT/**/,
+                                           rcLeftPanel.left + 8,
+                                           rcLeftPanel.bottom - 8 - 13,
+                                           rcLeftPanel.right - rcLeftPanel.left - 16,
+                                           13,
+                                           hWnd,
+                                           (HMENU)IDC_CHECKBUTTON,
+                                           hInstance,
+                                           NULL);
+            SendMessage(hWndCheckButton, WM_SETFONT, (WPARAM)hFontCheckButton, MAKELPARAM(TRUE, 0));
+        }
+        else
+        {
+            hFontCheckButton = NULL;
+            hWndCheckButton = NULL;
+        }
     }
 
     return 0;
@@ -547,11 +817,12 @@ OnCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
     {
         DestroyWindow(hWnd);
     }
-    else if ((LOWORD(wParam) < MAX_NUMBER_TOPICS))
+    else if ((LOWORD(wParam) < dwNumberTopics))
     {
-        if (RunApplication(LOWORD(wParam)) == FALSE)
-            DestroyWindow(hWnd);
+        if (RunAction(LOWORD(wParam)) == FALSE)
+            DestroyWindow(hWnd); // Corresponds to a <exit> action.
     }
+
     return 0;
 }
 
@@ -596,11 +867,9 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     HBRUSH hOldBrush;
     HFONT hOldFont;
     RECT rcTitle, rcDescription;
-    TCHAR szTopicTitle[80];
-    TCHAR szTopicDesc[TOPIC_DESC_LENGTH];
-    int nLength;
     BITMAP bmpInfo;
     TCHAR version[50];
+    LPTSTR lpTitle = NULL, lpDesc = NULL;
 
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(lParam);
@@ -653,10 +922,10 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
                0,
                SRCCOPY);
     }
-    else if ((nTopic != -1) && (hTopicBitmap[nTopic] != NULL))
+    else if ((nTopic != -1) && (pTopics[nTopic]->hBitmap != NULL))
     {
-        GetObject(hTopicBitmap[nTopic], sizeof(BITMAP), &bmpInfo);
-        hOldBitmap = (HBITMAP)SelectObject(hdcMem, hTopicBitmap[nTopic]);
+        GetObject(pTopics[nTopic]->hBitmap, sizeof(BITMAP), &bmpInfo);
+        hOldBitmap = (HBITMAP)SelectObject(hdcMem, pTopics[nTopic]->hBitmap);
         BitBlt(hdc,
                rcRightPanel.right - bmpInfo.bmWidth,
                rcRightPanel.bottom - bmpInfo.bmHeight,
@@ -670,24 +939,13 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     if (nTopic == -1)
     {
-        nLength = LoadString(hInstance, IDS_DEFAULTTOPICTITLE, szTopicTitle, ARRAYSIZE(szTopicTitle));
+        lpTitle = szDefaultTitle;
+        lpDesc  = szDefaultDesc;
     }
     else
     {
-        nLength = LoadString(hInstance, IDS_TOPICTITLE0 + nTopic, szTopicTitle, ARRAYSIZE(szTopicTitle));
-        if (nLength == 0)
-            nLength = LoadString(hInstance, IDS_DEFAULTTOPICTITLE, szTopicTitle, ARRAYSIZE(szTopicTitle));
-    }
-
-    if (nTopic == -1)
-    {
-        nLength = LoadString(hInstance, IDS_DEFAULTTOPICDESC, szTopicDesc, ARRAYSIZE(szTopicDesc));
-    }
-    else
-    {
-        nLength = LoadString(hInstance, IDS_TOPICDESC0 + nTopic, szTopicDesc, ARRAYSIZE(szTopicDesc));
-        if (nLength == 0)
-            nLength = LoadString(hInstance, IDS_DEFAULTTOPICDESC, szTopicDesc, ARRAYSIZE(szTopicDesc));
+        lpTitle = pTopics[nTopic]->szTitle;
+        lpDesc  = pTopics[nTopic]->szDesc;
     }
 
     SetBkMode(hdc, TRANSPARENT);
@@ -713,10 +971,10 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     rcTitle.top = rcRightPanel.top + 8;
     rcTitle.bottom = rcTitle.top + 57;
     hOldFont = (HFONT)SelectObject(hdc, hFontTopicTitle);
-    DrawText(hdc, szTopicTitle, -1, &rcTitle, DT_TOP | DT_CALCRECT);
+    DrawText(hdc, lpTitle, -1, &rcTitle, DT_TOP | DT_CALCRECT);
 
     SetTextColor(hdc, DARK_BLUE);
-    DrawText(hdc, szTopicTitle, -1, &rcTitle, DT_TOP);
+    DrawText(hdc, lpTitle, -1, &rcTitle, DT_TOP);
 
     /* Draw topic description */
     rcDescription.left = rcRightPanel.left + 12;
@@ -725,8 +983,8 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
     rcDescription.bottom = rcRightPanel.bottom - 20;
 
     SelectObject(hdc, hFontTopicDescription);
-    SetTextColor(hdc, 0x00000000);
-    DrawText(hdc, szTopicDesc, -1, &rcDescription, DT_TOP | DT_WORDBREAK);
+    SetTextColor(hdc, RGB(0, 0, 0));
+    DrawText(hdc, lpDesc, -1, &rcDescription, DT_TOP | DT_WORDBREAK);
 
     SetBkMode(hdc, OPAQUE);
     SelectObject(hdc, hOldFont);
@@ -746,8 +1004,8 @@ OnDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
     LPDRAWITEMSTRUCT lpDis = (LPDRAWITEMSTRUCT)lParam;
     HPEN hPen, hOldPen;
     HBRUSH hOldBrush;
+    INT iBkMode;
     TCHAR szText[80];
-    int iBkMode;
 
     UNREFERENCED_PARAMETER(hWnd);
     UNREFERENCED_PARAMETER(wParam);
@@ -784,7 +1042,7 @@ OnDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
         InflateRect(&lpDis->rcItem, -10, -4);
         OffsetRect(&lpDis->rcItem, 0, 1);
         GetWindowText(lpDis->hwndItem, szText, ARRAYSIZE(szText));
-        SetTextColor(lpDis->hDC, 0x00000000);
+        SetTextColor(lpDis->hDC, RGB(0, 0, 0));
         iBkMode = SetBkMode(lpDis->hDC, TRANSPARENT);
         DrawText(lpDis->hDC, szText, -1, &lpDis->rcItem, DT_TOP | DT_LEFT | DT_WORDBREAK);
         SetBkMode(lpDis->hDC, iBkMode);
@@ -832,9 +1090,9 @@ OnActivate(HWND hWnd, WPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(hWnd);
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(lParam);
+
     nTopic = -1;
     InvalidateRect(hWndMain, &rcRightPanel, TRUE);
-
     return 0;
 }
 
@@ -842,16 +1100,16 @@ OnActivate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 static LRESULT
 OnDestroy(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-    int i;
+    UINT i;
 
     UNREFERENCED_PARAMETER(hWnd);
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(lParam);
 
-    for (i = 0; i < ARRAYSIZE(hWndTopicButton); i++)
+    for (i = 0; i < dwNumberTopics; i++)
     {
-        if (hWndTopicButton[i] != NULL)
-            DestroyWindow(hWndTopicButton[i]);
+        if (pTopics[i]->hWndButton != NULL)
+            DestroyWindow(pTopics[i]->hWndButton);
     }
 
     if (hWndCloseButton != NULL)
@@ -865,10 +1123,10 @@ OnDestroy(HWND hWnd, WPARAM wParam, LPARAM lParam)
     /* Delete bitmaps */
     DeleteObject(hDefaultTopicBitmap);
     DeleteObject(hTitleBitmap);
-    for (i = 0; i < ARRAYSIZE(hTopicBitmap); i++)
+    for (i = 0; i < dwNumberTopics; i++)
     {
-        if (hTopicBitmap[i] != NULL)
-            DeleteObject(hTopicBitmap[i]);
+        if (pTopics[i]->hBitmap != NULL)
+            DeleteObject(pTopics[i]->hBitmap);
     }
 
     DeleteObject(hFontTopicTitle);

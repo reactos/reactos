@@ -15,20 +15,10 @@ IDI_MAIN ICON "res/welcome.ico"
 /* Bitmaps */
 IDB_TITLEBITMAP BITMAP "res/title.bmp"
 
-/*
-IDB_DEFAULTTOPICBITMAP BITMAP "res/default.bmp"
-
-IDB_TOPICBITMAP0 BITMAP "res/topic0.bmp"
-IDB_TOPICBITMAP1 BITMAP "res/topic1.bmp"
-IDB_TOPICBITMAP2 BITMAP "res/topic2.bmp"
-IDB_TOPICBITMAP3 BITMAP "res/topic3.bmp"
-IDB_TOPICBITMAP4 BITMAP "res/topic4.bmp"
-IDB_TOPICBITMAP5 BITMAP "res/topic5.bmp"
-IDB_TOPICBITMAP6 BITMAP "res/topic6.bmp"
-IDB_TOPICBITMAP7 BITMAP "res/topic7.bmp"
-IDB_TOPICBITMAP8 BITMAP "res/topic8.bmp"
-IDB_TOPICBITMAP9 BITMAP "res/topic9.bmp"
-*/
+// IDB_DEFAULTTOPICBITMAP BITMAP "res/default.bmp"
+// IDB_TOPICBITMAP0 BITMAP "res/topic0.bmp"
+// IDB_TOPICBITMAP1 BITMAP "res/topic1.bmp"
+// IDB_TOPICBITMAP2 BITMAP "res/topic2.bmp"
 
 /* Topic actions */
 STRINGTABLE
@@ -36,15 +26,6 @@ BEGIN
     IDS_TOPICACTION0 "reactos.exe"
     IDS_TOPICACTION1 "explorer.exe"
     IDS_TOPICACTION2 "<exit>"  /* this quits the app */
-/*
-    IDS_TOPICACTION3 "..."
-    IDS_TOPICACTION4 "..."
-    IDS_TOPICACTION5 "..."
-    IDS_TOPICACTION6 "..."
-    IDS_TOPICACTION7 "..."
-    IDS_TOPICACTION8 "..."
-    IDS_TOPICACTION9 "..."
-*/
 END
 
 /* UTF-8 */
