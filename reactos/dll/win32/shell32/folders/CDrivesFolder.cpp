@@ -76,23 +76,23 @@ HRESULT CALLBACK DrivesContextMenuCallback(IShellFolder *psf,
             if (!(dwFlags & FILE_READ_ONLY_VOLUME) && GetDriveTypeA(szDrive) != DRIVE_REMOTE)
             {
                 _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-                _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, 0x7ABC, MFT_STRING, MAKEINTRESOURCEW(IDS_FORMATDRIVE), MFS_ENABLED);
+                _InsertMenuItemW(pqcminfo->hmenu, pqcminfo->indexMenu++, TRUE, pqcminfo->idCmdFirst++, MFT_STRING, MAKEINTRESOURCEW(IDS_FORMATDRIVE), MFS_ENABLED);
             }
         }
     }
     else if (uMsg == DFM_INVOKECOMMAND)
     {
-        if(wParam == 0x7ABC)
-        {
-            SHFormatDrive(hwnd, szDrive[0] - 'A', SHFMT_ID_DEFAULT, 0);
-        }
-        else if (wParam == DFM_CMD_PROPERTIES)
+        if (wParam == DFM_CMD_PROPERTIES)
         {
             WCHAR wszBuf[4];
             wcscpy(wszBuf, L"A:\\");
             wszBuf[0] = (WCHAR)szDrive[0];
             if (!SH_ShowDriveProperties(wszBuf, pidlFolder, apidl))
                 hr = E_FAIL;
+        }
+        else
+        {
+            SHFormatDrive(hwnd, szDrive[0] - 'A', SHFMT_ID_DEFAULT, 0);
         }
     }
 
