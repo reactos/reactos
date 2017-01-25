@@ -35,11 +35,13 @@ char *i386ExceptionDescriptionText[] =
 
 #define SCREEN_ATTR 0x1F    // Bright white on blue background
 
+#if 0
 static void
 i386PrintChar(char chr, ULONG x, ULONG y)
 {
     MachVideoPutChar(chr, SCREEN_ATTR, x, y);
 }
+#endif
 
 /* Used to store the current X and Y position on the screen */
 ULONG i386_ScreenPosX = 0;
