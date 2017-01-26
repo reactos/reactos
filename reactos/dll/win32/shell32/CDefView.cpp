@@ -96,6 +96,7 @@ class CDefView :
         LONG                      m_iDragOverItem;      /* Dragged over item's index, iff m_pCurDropTarget != NULL */
         UINT                      m_cScrollDelay;       /* Send a WM_*SCROLL msg every 250 ms during drag-scroll */
         POINT                     m_ptLastMousePos;     /* Mouse position at last DragOver call */
+        POINT                     m_ptFirstMousePos;    /* Mouse position when the drag operation started */
         //
         CComPtr<IContextMenu>     m_pCM;
 
@@ -1756,6 +1757,8 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     DWORD dwEffect2;
 
                     m_pSourceDataObject = pda;
+                    m_ptFirstMousePos = ((LPNMLISTVIEW)lParam)->ptAction;
+                    ClientToScreen(&m_ptFirstMousePos);
 
                     DoDragDrop(pda, this, dwEffect, &dwEffect2);
 
@@ -2902,7 +2905,6 @@ HRESULT WINAPI CDefView::DragEnter(IDataObject *pDataObject, DWORD grfKeyState, 
 {
     /* Get a hold on the data object for later calls to DragEnter on the sub-folders */
     m_pCurDataObject = pDataObject;
-    pDataObject->AddRef();
 
     return drag_notify_subitem(grfKeyState, pt, pdwEffect);
 }
@@ -2936,11 +2938,22 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
 
     if ((m_iDragOverItem == -1) && 
         (*pdwEffect & DROPEFFECT_MOVE) && 
-        (GetKeyState(VK_LBUTTON) != 0) &&
+        /*(GetKeyState(VK_LBUTTON) != 0) &&*/
         (m_pSourceDataObject.p) && 
         (SHIsSameObject(pDataObject, m_pSourceDataObject)))
     {
-        ERR("Should implement moving items here!\n");
+        /* Reposition the items */
+        int lvIndex = -1;
+        while ((lvIndex = m_ListView.GetNextItem(lvIndex,  LVNI_SELECTED)) > -1)
+        {
+            POINT ptItem;
+            if (m_ListView.GetItemPosition(lvIndex, &ptItem))
+            {
+                ptItem.x += pt.x - m_ptFirstMousePos.x;
+                ptItem.y += pt.y - m_ptFirstMousePos.y;
+                m_ListView.SetItemPosition(lvIndex, &ptItem);
+            }
+        }
 
         if (m_pCurDropTarget)
         {
