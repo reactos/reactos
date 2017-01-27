@@ -27,8 +27,7 @@ static CHAR Hex[] = "0123456789ABCDEF";
 //static unsigned int delay_count = 1;
 
 extern ULONG reactos_disk_count;
-extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
-extern CHAR reactos_arc_strings[32][256];
+extern ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[];
 
 static
 PCM_PARTIAL_RESOURCE_LIST
@@ -249,11 +248,11 @@ GetHarddiskIdentifier(PCHAR Identifier,
                       UCHAR DriveNumber)
 {
     PMASTER_BOOT_RECORD Mbr;
-    ULONG *Buffer;
+    PULONG Buffer;
     ULONG i;
     ULONG Checksum;
     ULONG Signature;
-    CHAR ArcName[256];
+    CHAR ArcName[MAX_PATH];
     PARTITION_TABLE_ENTRY PartitionTableEntry;
 
     /* Read the MBR */
@@ -266,12 +265,12 @@ GetHarddiskIdentifier(PCHAR Identifier,
     Buffer = (ULONG*)DiskReadBuffer;
     Mbr = (PMASTER_BOOT_RECORD)DiskReadBuffer;
 
-    Signature =  Mbr->Signature;
+    Signature = Mbr->Signature;
     TRACE("Signature: %x\n", Signature);
 
     /* Calculate the MBR checksum */
     Checksum = 0;
-    for (i = 0; i < 128; i++)
+    for (i = 0; i < 512 / sizeof(ULONG); i++)
     {
         Checksum += Buffer[i];
     }
@@ -279,12 +278,12 @@ GetHarddiskIdentifier(PCHAR Identifier,
     TRACE("Checksum: %x\n", Checksum);
 
     /* Fill out the ARC disk block */
-    reactos_arc_disk_info[reactos_disk_count].Signature = Signature;
-    reactos_arc_disk_info[reactos_disk_count].CheckSum = Checksum;
+    reactos_arc_disk_info[reactos_disk_count].DiskSignature.Signature = Signature;
+    reactos_arc_disk_info[reactos_disk_count].DiskSignature.CheckSum = Checksum;
     sprintf(ArcName, "multi(0)disk(0)rdisk(%lu)", reactos_disk_count);
-    strcpy(reactos_arc_strings[reactos_disk_count], ArcName);
-    reactos_arc_disk_info[reactos_disk_count].ArcName =
-        reactos_arc_strings[reactos_disk_count];
+    strcpy(reactos_arc_disk_info[reactos_disk_count].ArcName, ArcName);
+    reactos_arc_disk_info[reactos_disk_count].DiskSignature.ArcName =
+        reactos_arc_disk_info[reactos_disk_count].ArcName;
     reactos_disk_count++;
 
     sprintf(ArcName, "multi(0)disk(0)rdisk(%u)partition(0)", DriveNumber - 0x80);

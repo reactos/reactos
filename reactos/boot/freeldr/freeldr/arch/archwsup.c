@@ -17,9 +17,8 @@
 PCONFIGURATION_COMPONENT_DATA FldrArcHwTreeRoot;
 
 // ARC Disk Information
-ARC_DISK_SIGNATURE reactos_arc_disk_info[32];
 ULONG reactos_disk_count = 0;
-CHAR reactos_arc_strings[32][256];
+ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[32];
 
 /* FUNCTIONS ******************************************************************/
 
@@ -30,11 +29,8 @@ PVOID
 NTAPI
 FldrpHwHeapAlloc(IN SIZE_T Size)
 {
-    PVOID Buffer;
-
     /* Allocate memory from generic bootloader heap */
-    Buffer = FrLdrHeapAlloc(Size, 'pHwH');
-    return Buffer;
+    return FrLdrHeapAlloc(Size, 'pHwH');
 }
 
 static VOID

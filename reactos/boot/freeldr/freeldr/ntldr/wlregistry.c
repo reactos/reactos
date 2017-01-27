@@ -179,7 +179,6 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     /* TODO: Load OEM HAL font */
 
-
     return TRUE;
 }
 
