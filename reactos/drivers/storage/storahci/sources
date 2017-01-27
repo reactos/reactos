@@ -1,0 +1,10 @@
+TARGETNAME = storahci
+TARGETTYPE = MINIPORT
+
+MSC_WARNING_LEVEL=/W4
+TARGETLIBS=$(DDK_LIB_PATH)\storport.lib
+
+INCLUDES   = %BUILD%\inc
+LIBS       = %BUILD%\lib
+SOURCES    = storahci.c \
+			 storahci.rc
