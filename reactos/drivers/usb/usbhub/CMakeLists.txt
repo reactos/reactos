@@ -1,5 +1,6 @@
 
 add_definitions(-DDEBUG_MODE)
+add_definitions(-DNTDDI_VERSION=0x05020400)
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
 list(APPEND SOURCE

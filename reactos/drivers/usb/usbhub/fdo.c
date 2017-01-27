@@ -569,6 +569,11 @@ QueryInterface(
     Stack->Parameters.QueryInterface.Interface = Interface;
     Stack->Parameters.QueryInterface.InterfaceSpecificData = NULL;
 
+    //
+    // Initialize the status block before sending the IRP
+    //
+    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+
     Status = IoCallDriver(DeviceObject, Irp);
 
     if (Status == STATUS_PENDING)
@@ -1089,8 +1094,7 @@ DestroyUsbChildDeviceObject(
     PDEVICE_OBJECT ChildDeviceObject = NULL;
     ULONG Index = 0;
 
-    DPRINT("Removing device on port %d (Child index: %d)\n", PortId, Index);
-
+    KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
     for (Index = 0; Index < USB_MAXCHILDREN; Index++)
     {
         if (HubDeviceExtension->ChildDeviceObject[Index])
@@ -1111,11 +1115,16 @@ DestroyUsbChildDeviceObject(
     if (!ChildDeviceObject)
     {
         DPRINT1("Removal request for non-existant device!\n");
+        KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
         return STATUS_UNSUCCESSFUL;
     }
 
+    DPRINT("Removing device on port %d (Child index: %d)\n", PortId, Index);
+
     /* Remove the device from the table */
     HubDeviceExtension->ChildDeviceObject[Index] = NULL;
+
+    KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
 
     /* Invalidate device relations for the root hub */
     IoInvalidateDeviceRelations(HubDeviceExtension->RootHubPhysicalDeviceObject, BusRelations);
@@ -1147,26 +1156,6 @@ CreateUsbChildDeviceObject(
     HubInterface = &HubDeviceExtension->HubInterface;
     RootHubDeviceObject = HubDeviceExtension->RootHubPhysicalDeviceObject;
     HubInterfaceBusContext = HubDeviceExtension->UsbDInterface.BusContext;
-    //
-    // Find an empty slot in the child device array
-    //
-    for (ChildDeviceCount = 0; ChildDeviceCount < USB_MAXCHILDREN; ChildDeviceCount++)
-    {
-        if (HubDeviceExtension->ChildDeviceObject[ChildDeviceCount] == NULL)
-        {
-        DPRINT("Found unused entry at %d\n", ChildDeviceCount);
-            break;
-        }
-    }
-
-    //
-    // Check if the limit has been reached for maximum usb devices
-    //
-    if (ChildDeviceCount == USB_MAXCHILDREN)
-    {
-        DPRINT1("USBHUB: Too many child devices!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
 
     while (TRUE)
     {
@@ -1226,10 +1215,6 @@ CreateUsbChildDeviceObject(
     UsbChildExtension->ParentDeviceObject = UsbHubDeviceObject;
     UsbChildExtension->PortNumber = PortId;
 
-    // copy device interface
-    RtlCopyMemory(&UsbChildExtension->DeviceInterface, &HubDeviceExtension->DeviceInterface, sizeof(USB_BUS_INTERFACE_USBDI_V2));
-
-
     //
     // Create the UsbDeviceObject
     //
@@ -1243,12 +1228,6 @@ CreateUsbChildDeviceObject(
         DPRINT1("USBHUB: CreateUsbDevice failed with status %x\n", Status);
         goto Cleanup;
     }
-
-    // copy device interface
-    RtlCopyMemory(&UsbChildExtension->DeviceInterface, &HubDeviceExtension->DeviceInterface, sizeof(USB_BUS_INTERFACE_USBDI_V2));
-
-    // FIXME replace buscontext
-    UsbChildExtension->DeviceInterface.BusContext = UsbChildExtension->UsbDeviceHandle;
 
     //
     // Initialize UsbDevice
@@ -1339,8 +1318,43 @@ CreateUsbChildDeviceObject(
         goto Cleanup;
     }
 
+    // copy device interface
+    RtlCopyMemory(&UsbChildExtension->DeviceInterface, &HubDeviceExtension->UsbDInterface, sizeof(USB_BUS_INTERFACE_USBDI_V2));
+    UsbChildExtension->DeviceInterface.InterfaceReference(UsbChildExtension->DeviceInterface.BusContext);
+
+    INITIALIZE_PNP_STATE(UsbChildExtension->Common);
+
+    IoInitializeRemoveLock(&UsbChildExtension->Common.RemoveLock, 'pbuH', 0, 0);
+
+    KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
+    //
+    // Find an empty slot in the child device array
+    //
+    for (ChildDeviceCount = 0; ChildDeviceCount < USB_MAXCHILDREN; ChildDeviceCount++)
+    {
+        if (HubDeviceExtension->ChildDeviceObject[ChildDeviceCount] == NULL)
+        {
+            DPRINT("Found unused entry at %d\n", ChildDeviceCount);
+            break;
+        }
+    }
+
+    //
+    // Check if the limit has been reached for maximum usb devices
+    //
+    if (ChildDeviceCount == USB_MAXCHILDREN)
+    {
+        DPRINT1("USBHUB: Too many child devices!\n");
+        Status = STATUS_UNSUCCESSFUL;
+        KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
+        UsbChildExtension->DeviceInterface.InterfaceDereference(UsbChildExtension->DeviceInterface.BusContext);
+        goto Cleanup;
+    }
+
     HubDeviceExtension->ChildDeviceObject[ChildDeviceCount] = NewChildDeviceObject;
     HubDeviceExtension->InstanceCount++;
+    KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
 
     IoInvalidateDeviceRelations(RootHubDeviceObject, BusRelations);
     return STATUS_SUCCESS;
@@ -1384,15 +1398,19 @@ Cleanup:
 NTSTATUS
 USBHUB_FdoQueryBusRelations(
     IN PDEVICE_OBJECT DeviceObject,
+    IN PDEVICE_RELATIONS RelationsFromTop,
     OUT PDEVICE_RELATIONS* pDeviceRelations)
 {
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
     PDEVICE_RELATIONS DeviceRelations;
     ULONG i;
+    ULONG ChildrenFromTop = 0;
     ULONG Children = 0;
     ULONG NeededSize;
 
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
 
     //
     // Count the number of children
@@ -1407,9 +1425,19 @@ USBHUB_FdoQueryBusRelations(
         Children++;
     }
 
-    NeededSize = sizeof(DEVICE_RELATIONS);
-    if (Children > 1)
-        NeededSize += (Children - 1) * sizeof(PDEVICE_OBJECT);
+    if (RelationsFromTop)
+    {
+        ChildrenFromTop = RelationsFromTop->Count;
+        if (!Children)
+        {
+            // We have nothing to add
+            *pDeviceRelations = RelationsFromTop;
+            KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
+            return STATUS_SUCCESS;
+        }
+    }
+
+    NeededSize = sizeof(DEVICE_RELATIONS) + (Children + ChildrenFromTop - 1) * sizeof(PDEVICE_OBJECT);
 
     //
     // Allocate DeviceRelations
@@ -1418,9 +1446,22 @@ USBHUB_FdoQueryBusRelations(
                                                         NeededSize);
 
     if (!DeviceRelations)
-        return STATUS_INSUFFICIENT_RESOURCES;
-    DeviceRelations->Count = Children;
-    Children = 0;
+    {
+        KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
+        if (!RelationsFromTop)
+            return STATUS_INSUFFICIENT_RESOURCES;
+        else
+            return STATUS_NOT_SUPPORTED;
+    }
+    // Copy the objects coming from top
+    if (ChildrenFromTop)
+    {
+        RtlCopyMemory(DeviceRelations->Objects, RelationsFromTop->Objects,
+                      ChildrenFromTop * sizeof(PDEVICE_OBJECT));
+    }
+
+    DeviceRelations->Count = Children + ChildrenFromTop;
+    Children = ChildrenFromTop;
 
     //
     // Fill in return structure
@@ -1429,11 +1470,18 @@ USBHUB_FdoQueryBusRelations(
     {
         if (HubDeviceExtension->ChildDeviceObject[i])
         {
+            // The PnP Manager removes the reference when appropriate.
             ObReferenceObject(HubDeviceExtension->ChildDeviceObject[i]);
             HubDeviceExtension->ChildDeviceObject[i]->Flags &= ~DO_DEVICE_INITIALIZING;
             DeviceRelations->Objects[Children++] = HubDeviceExtension->ChildDeviceObject[i];
         }
     }
+
+    KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
+    // We should do this, because replaced this with our's one
+    if (RelationsFromTop)
+        ExFreePool(RelationsFromTop);
 
     ASSERT(Children == DeviceRelations->Count);
     *pDeviceRelations = DeviceRelations;
@@ -1551,7 +1599,8 @@ USBHUB_FdoStartDevice(
     if (!Urb)
     {
          // no memory
-         return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
     }
 
     // zero urb
@@ -1566,8 +1615,7 @@ USBHUB_FdoStartDevice(
     {
         // failed to obtain hub pdo
         DPRINT1("IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO failed with %x\n", Status);
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     // sanity checks
@@ -1578,14 +1626,13 @@ USBHUB_FdoStartDevice(
     RootHubDeviceObject = HubDeviceExtension->RootHubPhysicalDeviceObject;
 
     // Send the StartDevice to RootHub
-    Status = ForwardIrpAndWait(RootHubDeviceObject, Irp);
+    Status = ForwardIrpAndWait(HubDeviceExtension->LowerDeviceObject, Irp);
 
     if (!NT_SUCCESS(Status))
     {
         // failed to start pdo
         DPRINT1("Failed to start the RootHub PDO\n");
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     // Get the current number of hubs
@@ -1596,8 +1643,7 @@ USBHUB_FdoStartDevice(
     {
         // failed to get number of hubs
         DPRINT1("IOCTL_INTERNAL_USB_GET_HUB_COUNT failed with %x\n", Status);
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     // Get the Hub Interface
@@ -1611,8 +1657,7 @@ USBHUB_FdoStartDevice(
     {
         // failed to get root hub interface
         DPRINT1("Failed to get HUB_GUID interface with status 0x%08lx\n", Status);
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     HubInterfaceBusContext = HubDeviceExtension->HubInterface.BusContext;
@@ -1628,8 +1673,7 @@ USBHUB_FdoStartDevice(
     {
         // failed to get usbdi interface
         DPRINT1("Failed to get USBDI_GUID interface with status 0x%08lx\n", Status);
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     // Get Root Hub Device Handle
@@ -1642,8 +1686,7 @@ USBHUB_FdoStartDevice(
     {
         // failed
         DPRINT1("IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE failed with status 0x%08lx\n", Status);
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     //
@@ -1687,8 +1730,7 @@ USBHUB_FdoStartDevice(
     {
         // failed to get device descriptor of hub
         DPRINT1("Failed to get HubDeviceDescriptor!\n");
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     // build configuration request
@@ -1715,8 +1757,7 @@ USBHUB_FdoStartDevice(
     {
         // failed to get configuration descriptor
         DPRINT1("Failed to get RootHub Configuration with status %x\n", Status);
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     // sanity checks
@@ -1742,16 +1783,15 @@ USBHUB_FdoStartDevice(
     {
         // failed to get hub information
         DPRINT1("Failed to extended hub information. Unable to determine the number of ports!\n");
-        ExFreePool(Urb);
-        return Status;
+        goto cleanup;
     }
 
     if (!HubDeviceExtension->UsbExtHubInfo.NumberOfPorts)
     {
         // bogus port driver
         DPRINT1("Failed to retrieve the number of ports\n");
-        ExFreePool(Urb);
-        return STATUS_UNSUCCESSFUL;
+        Status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
     }
 
     DPRINT("HubDeviceExtension->UsbExtHubInfo.NumberOfPorts %x\n", HubDeviceExtension->UsbExtHubInfo.NumberOfPorts);
@@ -1782,8 +1822,8 @@ USBHUB_FdoStartDevice(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to get Hub Descriptor!\n");
-        ExFreePool(Urb);
-        return STATUS_UNSUCCESSFUL;
+        Status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
     }
 
     // sanity checks
@@ -1811,14 +1851,21 @@ USBHUB_FdoStartDevice(
     {
         // failed to get hub status
         DPRINT1("Failed to get Hub Status!\n");
-        ExFreePool(Urb);
-        return STATUS_UNSUCCESSFUL;
+        Status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
     }
 
     // Allocate memory for PortStatusChange to hold 2 USHORTs for each port on hub
     HubDeviceExtension->PortStatusChange = ExAllocatePoolWithTag(NonPagedPool,
                                                                     sizeof(ULONG) * HubDeviceExtension->UsbExtHubInfo.NumberOfPorts,
                                                                     USB_HUB_TAG);
+
+    if (!HubDeviceExtension->PortStatusChange)
+    {
+        DPRINT1("Failed to allocate pool for PortStatusChange!\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
 
     // Get the first Configuration Descriptor
     Pid = USBD_ParseConfigurationDescriptorEx(&HubDeviceExtension->HubConfigDescriptor,
@@ -1828,8 +1875,8 @@ USBHUB_FdoStartDevice(
     {
         // failed parse hub descriptor
         DPRINT1("Failed to parse configuration descriptor\n");
-        ExFreePool(Urb);
-        return STATUS_UNSUCCESSFUL;
+        Status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
     }
 
     // create configuration request
@@ -1840,8 +1887,8 @@ USBHUB_FdoStartDevice(
     {
         // failed to build urb
         DPRINT1("Failed to allocate urb\n");
-        ExFreePool(Urb);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
     }
 
     // send request
@@ -1853,21 +1900,13 @@ USBHUB_FdoStartDevice(
     {
         // failed to select configuration
         DPRINT1("Failed to select configuration with %x\n", Status);
-        ExFreePool(Urb);
-        ExFreePool(ConfigUrb);
-        return Status;
+        goto cleanup;
     }
 
     // store configuration & pipe handle
     HubDeviceExtension->ConfigurationHandle = ConfigUrb->UrbSelectConfiguration.ConfigurationHandle;
     HubDeviceExtension->PipeHandle = ConfigUrb->UrbSelectConfiguration.Interface.Pipes[0].PipeHandle;
     DPRINT("Configuration Handle %x\n", HubDeviceExtension->ConfigurationHandle);
-
-    FDO_QueryInterface(DeviceObject, &HubDeviceExtension->DeviceInterface);
-
-
-    // free urb
-    ExFreePool(ConfigUrb);
 
     // check if function is available
     if (HubDeviceExtension->UsbDInterface.IsDeviceHighSpeed)
@@ -1908,8 +1947,7 @@ USBHUB_FdoStartDevice(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to set callback\n");
-            ExFreePool(Urb);
-            return Status;
+            goto cleanup;
         }
     }
     else
@@ -1961,7 +1999,29 @@ USBHUB_FdoStartDevice(
     // free urb
     ExFreePool(Urb);
 
+    // free ConfigUrb
+    ExFreePool(ConfigUrb);
+
     // done
+    return Status;
+
+cleanup:
+    if (Urb)
+        ExFreePool(Urb);
+
+    // Dereference interfaces
+    if (HubDeviceExtension->HubInterface.Size)
+        HubDeviceExtension->HubInterface.InterfaceDereference(HubDeviceExtension->HubInterface.BusContext);
+
+    if (HubDeviceExtension->UsbDInterface.Size)
+        HubDeviceExtension->UsbDInterface.InterfaceDereference(HubDeviceExtension->UsbDInterface.BusContext);
+
+    if (HubDeviceExtension->PortStatusChange)
+        ExFreePool(HubDeviceExtension->PortStatusChange);
+
+    if (ConfigUrb)
+        ExFreePool(ConfigUrb);
+
     return Status;
 }
 
@@ -1972,17 +2032,31 @@ USBHUB_FdoHandlePnp(
 {
     PIO_STACK_LOCATION Stack;
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG_PTR Information = 0;
+    PDEVICE_OBJECT ChildDeviceObject;
     PHUB_DEVICE_EXTENSION HubDeviceExtension;
+    PUSB_BUS_INTERFACE_HUB_V5 HubInterface;
+    PHUB_CHILDDEVICE_EXTENSION ChildDeviceExtension;
 
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
 
+    HubInterface = &HubDeviceExtension->HubInterface;
     Stack = IoGetCurrentIrpStackLocation(Irp);
+
+    Status = IoAcquireRemoveLock(&HubDeviceExtension->Common.RemoveLock, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 
     switch (Stack->MinorFunction)
     {
+        int i;
+
         case IRP_MN_START_DEVICE:
         {
+            DPRINT("IRP_MN_START_DEVICE\n");
             if (USBHUB_IsRootHubFDO(DeviceObject))
             {
                 // start root hub fdo
@@ -1992,7 +2066,13 @@ USBHUB_FdoHandlePnp(
             {
                 Status = USBHUB_ParentFDOStartDevice(DeviceObject, Irp);
             }
-            break;
+
+            SET_NEW_PNP_STATE(HubDeviceExtension->Common, Started);
+
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            IoReleaseRemoveLock(&HubDeviceExtension->Common.RemoveLock, Irp);
+            return Status;
         }
 
         case IRP_MN_QUERY_DEVICE_RELATIONS:
@@ -2002,66 +2082,197 @@ USBHUB_FdoHandlePnp(
                 case BusRelations:
                 {
                     PDEVICE_RELATIONS DeviceRelations = NULL;
+                    PDEVICE_RELATIONS RelationsFromTop = (PDEVICE_RELATIONS)Irp->IoStatus.Information;
                     DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
 
-                    Status = USBHUB_FdoQueryBusRelations(DeviceObject, &DeviceRelations);
+                    Status = USBHUB_FdoQueryBusRelations(DeviceObject, RelationsFromTop, &DeviceRelations);
 
-                    Information = (ULONG_PTR)DeviceRelations;
+                    if (!NT_SUCCESS(Status))
+                    {
+                        if (Status == STATUS_NOT_SUPPORTED)
+                        {
+                            // We should process this to not lose relations from top.
+                            Irp->IoStatus.Status = STATUS_SUCCESS;
+                            break;
+                        }
+                        // We should fail an IRP
+                        Irp->IoStatus.Status = Status;
+                        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                        IoReleaseRemoveLock(&HubDeviceExtension->Common.RemoveLock, Irp);
+                        return Status;
+                    }
+
+                    Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
+                    Irp->IoStatus.Status = Status;
                     break;
                 }
                 case RemovalRelations:
                 {
                     DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
-                    return ForwardIrpAndForget(DeviceObject, Irp);
+                    break;
                 }
                 default:
                     DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
                             Stack->Parameters.QueryDeviceRelations.Type);
-                    return ForwardIrpAndForget(DeviceObject, Irp);
+                    break;
             }
             break;
         }
-        case IRP_MN_QUERY_REMOVE_DEVICE:
         case IRP_MN_QUERY_STOP_DEVICE:
         {
+            //
+            // We should fail this request, because we're not handling
+            // IRP_MN_STOP_DEVICE for now.We'll receive this IRP ONLY when
+            // PnP manager rebalances resources.
+            //
+            Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_NOT_SUPPORTED;
+        }
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+        {
+            // No action is required from FDO because it have nothing to free.
+            DPRINT("IRP_MN_QUERY_REMOVE_DEVICE\n");
+
+            SET_NEW_PNP_STATE(HubDeviceExtension->Common, RemovePending);
+
             Irp->IoStatus.Status = STATUS_SUCCESS;
-            return ForwardIrpAndForget(DeviceObject, Irp);
+            break;
+        }
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+        {
+            DPRINT("IRP_MN_CANCEL_REMOVE_DEVICE\n");
+
+            if (HubDeviceExtension->Common.PnPState == RemovePending)
+                RESTORE_PREVIOUS_PNP_STATE(HubDeviceExtension->Common);
+
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            break;
+        }
+        case IRP_MN_SURPRISE_REMOVAL:
+        {
+            //
+            // We'll receive this IRP on HUB unexpected removal, or on USB
+            // controller removal from PCI port. Here we should "let know" all
+            // our children that their parent is removed and on next removal
+            // they also can be removed.
+            //
+            SET_NEW_PNP_STATE(HubDeviceExtension->Common, SurpriseRemovePending);
+
+            KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
+            for (i = 0; i < USB_MAXCHILDREN; i++)
+            {
+                ChildDeviceObject = HubDeviceExtension->ChildDeviceObject[i];
+                if (ChildDeviceObject)
+                {
+                    ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)ChildDeviceObject->DeviceObjectExtension;
+                    ChildDeviceExtension->ParentDeviceObject = NULL;
+                }
+            }
+
+            KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
+            // This IRP can't be failed
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            break;
         }
         case IRP_MN_REMOVE_DEVICE:
         {
+            DPRINT("IRP_MN_REMOVE_DEVICE\n");
+
+            SET_NEW_PNP_STATE(HubDeviceExtension->Common, Deleted);
+
+            IoReleaseRemoveLockAndWait(&HubDeviceExtension->Common.RemoveLock, Irp);
+
+            //
+            // Here we should remove all child PDOs. At this point all children
+            // received and returned from IRP_MN_REMOVE so remove synchronization
+            // isn't needed here
+            //
+
+            KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
+            for (i = 0; i < USB_MAXCHILDREN; i++)
+            {
+                ChildDeviceObject = HubDeviceExtension->ChildDeviceObject[i];
+                if (ChildDeviceObject)
+                {
+                    PHUB_CHILDDEVICE_EXTENSION UsbChildExtension = (PHUB_CHILDDEVICE_EXTENSION)ChildDeviceObject->DeviceExtension;
+
+                    SET_NEW_PNP_STATE(UsbChildExtension->Common, Deleted);
+
+                    // Remove the usb device
+                    if (UsbChildExtension->UsbDeviceHandle)
+                    {
+                        Status = HubInterface->RemoveUsbDevice(HubInterface->BusContext, UsbChildExtension->UsbDeviceHandle, 0);
+                        ASSERT(Status == STATUS_SUCCESS);
+                    }
+
+                    // Free full configuration descriptor
+                    if (UsbChildExtension->FullConfigDesc)
+                        ExFreePool(UsbChildExtension->FullConfigDesc);
+
+                    // Free ID buffers
+                    if (UsbChildExtension->usCompatibleIds.Buffer)
+                        ExFreePool(UsbChildExtension->usCompatibleIds.Buffer);
+
+                    if (UsbChildExtension->usDeviceId.Buffer)
+                        ExFreePool(UsbChildExtension->usDeviceId.Buffer);
+
+                    if (UsbChildExtension->usHardwareIds.Buffer)
+                        ExFreePool(UsbChildExtension->usHardwareIds.Buffer);
+
+                    if (UsbChildExtension->usInstanceId.Buffer)
+                        ExFreePool(UsbChildExtension->usInstanceId.Buffer);
+
+                    DPRINT("Deleting child PDO\n");
+                    IoDeleteDevice(DeviceObject);
+                    ChildDeviceObject = NULL;
+                }
+            }
+
+            KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
+
             Irp->IoStatus.Status = STATUS_SUCCESS;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            Status = ForwardIrpAndForget(DeviceObject, Irp);
 
             IoDetachDevice(HubDeviceExtension->LowerDeviceObject);
+            DPRINT("Deleting FDO 0x%p\n", DeviceObject);
             IoDeleteDevice(DeviceObject);
 
-            return STATUS_SUCCESS;
+            return Status;
         }
         case IRP_MN_QUERY_BUS_INFORMATION:
         {
+            // Function drivers and filter drivers do not handle this IRP.
             DPRINT("IRP_MN_QUERY_BUS_INFORMATION\n");
             break;
         }
         case IRP_MN_QUERY_ID:
         {
             DPRINT("IRP_MN_QUERY_ID\n");
+            // Function drivers and filter drivers do not handle this IRP.
             break;
         }
         case IRP_MN_QUERY_CAPABILITIES:
         {
+            //
+            // If a function or filter driver does not handle this IRP, it
+            // should pass that down.
+            //
             DPRINT("IRP_MN_QUERY_CAPABILITIES\n");
             break;
         }
         default:
         {
             DPRINT(" IRP_MJ_PNP / unknown minor function 0x%lx\n", Stack->MinorFunction);
-            return ForwardIrpAndForget(DeviceObject, Irp);
+            break;
         }
     }
 
-    Irp->IoStatus.Information = Information;
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    Status = ForwardIrpAndForget(DeviceObject, Irp);
+    IoReleaseRemoveLock(&HubDeviceExtension->Common.RemoveLock, Irp);
     return Status;
 }
 
@@ -2085,6 +2296,25 @@ USBHUB_FdoHandleDeviceControl(
 
     // get device extension
     HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
+
+    Status = IoAcquireRemoveLock(&HubDeviceExtension->Common.RemoveLock, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
+    // Prevent handling of control requests in remove pending state
+    if (HubDeviceExtension->Common.PnPState == RemovePending)
+    {
+        DPRINT1("[USBHUB] Request for removed device object %p\n", DeviceObject);
+        Irp->IoStatus.Status = STATUS_DEVICE_NOT_CONNECTED;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoReleaseRemoveLock(&HubDeviceExtension->Common.RemoveLock, Irp);
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
 
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_USB_GET_NODE_INFORMATION)
     {
@@ -2131,6 +2361,7 @@ USBHUB_FdoHandleDeviceControl(
             // sanity checks
             ASSERT(NodeConnectionInfo);
 
+            KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
             for(Index = 0; Index < USB_MAXCHILDREN; Index++)
             {
                 if (HubDeviceExtension->ChildDeviceObject[Index] == NULL)
@@ -2157,6 +2388,7 @@ USBHUB_FdoHandleDeviceControl(
                 }
                 break;
             }
+            KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
             // done
             Irp->IoStatus.Information = sizeof(USB_NODE_INFORMATION);
             Status = STATUS_SUCCESS;
@@ -2177,6 +2409,7 @@ USBHUB_FdoHandleDeviceControl(
             // sanity checks
             ASSERT(NodeKey);
 
+            KeAcquireGuardedMutex(&HubDeviceExtension->HubMutexLock);
             for(Index = 0; Index < USB_MAXCHILDREN; Index++)
             {
                 if (HubDeviceExtension->ChildDeviceObject[Index] == NULL)
@@ -2216,6 +2449,7 @@ USBHUB_FdoHandleDeviceControl(
                 NodeKey->ActualLength = Length + sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME);
                 break;
             }
+            KeReleaseGuardedMutex(&HubDeviceExtension->HubMutexLock);
         }
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_USB_GET_NODE_CONNECTION_NAME)
@@ -2247,6 +2481,7 @@ USBHUB_FdoHandleDeviceControl(
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
+    IoReleaseRemoveLock(&HubDeviceExtension->Common.RemoveLock, Irp);
     return Status;
 }
 
