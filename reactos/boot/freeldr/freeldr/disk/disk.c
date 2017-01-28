@@ -19,29 +19,30 @@
 
 #ifndef _M_ARM
 #include <freeldr.h>
+
+#define NDEBUG
 #include <debug.h>
 
 DBG_DEFAULT_CHANNEL(DISK);
 
 static BOOLEAN bReportError = TRUE;
 
-/////////////////////////////////////////////////////////////////////////////////////////////
-// FUNCTIONS
-/////////////////////////////////////////////////////////////////////////////////////////////
+/* FUNCTIONS *****************************************************************/
 
-VOID DiskReportError (BOOLEAN bError)
+VOID DiskReportError(BOOLEAN bError)
 {
     bReportError = bError;
 }
 
 VOID DiskError(PCSTR ErrorString, ULONG ErrorCode)
 {
-    CHAR    ErrorCodeString[200];
+    CHAR ErrorCodeString[200];
 
     if (bReportError == FALSE)
         return;
 
-    sprintf(ErrorCodeString, "%s\n\nError Code: 0x%lx\nError: %s", ErrorString, ErrorCode, DiskGetErrorCodeString(ErrorCode));
+    sprintf(ErrorCodeString, "%s\n\nError Code: 0x%lx\nError: %s",
+            ErrorString, ErrorCode, DiskGetErrorCodeString(ErrorCode));
 
     TRACE("%s\n", ErrorCodeString);
 
@@ -83,21 +84,17 @@ PCSTR DiskGetErrorCodeString(ULONG ErrorCode)
     }
 }
 
-// This function is in arch/i386/i386disk.c
-//BOOLEAN DiskReadLogicalSectors(ULONG DriveNumber, U64 SectorNumber, ULONG SectorCount, PVOID Buffer)
-
 BOOLEAN DiskIsDriveRemovable(UCHAR DriveNumber)
 {
-    // Hard disks use drive numbers >= 0x80
-    // So if the drive number indicates a hard disk
-    // then return FALSE
-    // 0x49 is our magic ramdisk drive, so return FALSE for that too
+    /*
+     * Hard disks use drive numbers >= 0x80 . So if the drive number
+     * indicates a hard disk then return FALSE.
+     * 0x49 is our magic ramdisk drive, so return FALSE for that too.
+     */
     if ((DriveNumber >= 0x80) || (DriveNumber == 0x49))
-    {
         return FALSE;
-    }
 
-    // Drive is a floppy diskette so return TRUE
+    /* The drive is a floppy diskette so return TRUE */
     return TRUE;
 }
 
@@ -190,11 +187,5 @@ DiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
 
     return TRUE;
 }
-
-// This function is in arch/i386/i386disk.c
-//VOID DiskStopFloppyMotor(VOID)
-
-// This function is in arch/i386/i386disk.c
-//ULONG DiskGetCacheableBlockCount(UCHAR DriveNumber)
 
 #endif

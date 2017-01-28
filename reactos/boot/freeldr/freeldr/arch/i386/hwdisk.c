@@ -39,13 +39,19 @@ extern ULONG reactos_disk_count;
 extern ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[];
 
 static CHAR Hex[] = "0123456789abcdef";
+
 UCHAR PcBiosDiskCount = 0;
-CHAR PcDiskIdentifier[32][20];
+static CHAR PcDiskIdentifier[32][20];
+
 PVOID DiskReadBuffer;
 SIZE_T DiskReadBufferSize;
 
 
-static ARC_STATUS DiskClose(ULONG FileId)
+/* FUNCTIONS *****************************************************************/
+
+// static
+ARC_STATUS
+DiskClose(ULONG FileId)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
 
@@ -53,7 +59,9 @@ static ARC_STATUS DiskClose(ULONG FileId)
     return ESUCCESS;
 }
 
-static ARC_STATUS DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+// static
+ARC_STATUS
+DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
 
@@ -64,7 +72,8 @@ static ARC_STATUS DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Informat
     return ESUCCESS;
 }
 
-static ARC_STATUS DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+static ARC_STATUS
+DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     DISKCONTEXT* Context;
     UCHAR DriveNumber;
@@ -84,9 +93,12 @@ static ARC_STATUS DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     }
     else
     {
-        /* This is either a floppy disk device (DrivePartition == 0) or
-         * a hard disk device (DrivePartition != 0 && DrivePartition != 0xFF) but
-         * it doesn't matter which one because they both have 512 bytes per sector */
+        /*
+         * This is either a floppy disk device (DrivePartition == 0) or
+         * a hard disk device (DrivePartition != 0 && DrivePartition != 0xFF)
+         * but it doesn't matter which one because they both have 512 bytes
+         * per sector.
+         */
         SectorSize = 512;
     }
 
@@ -94,13 +106,21 @@ static ARC_STATUS DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     {
         if (!DiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
             return EINVAL;
+
         SectorOffset = PartitionTableEntry.SectorCountBeforePartition;
         SectorCount = PartitionTableEntry.PartitionSectorCount;
     }
+#if 0 // FIXME: Investigate
+    else
+    {
+        SectorCount = 0; /* FIXME */
+    }
+#endif
 
     Context = FrLdrTempAlloc(sizeof(DISKCONTEXT), TAG_HW_DISK_CONTEXT);
     if (!Context)
         return ENOMEM;
+
     Context->DriveNumber = DriveNumber;
     Context->SectorSize = SectorSize;
     Context->SectorOffset = SectorOffset;
@@ -111,7 +131,9 @@ static ARC_STATUS DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     return ESUCCESS;
 }
 
-static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+// static
+ARC_STATUS
+DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
     UCHAR* Ptr = (UCHAR*)Buffer;
@@ -123,7 +145,7 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     MaxSectors   = DiskReadBufferSize / Context->SectorSize;
     SectorOffset = Context->SectorNumber + Context->SectorOffset;
 
-    ret = 1;
+    ret = TRUE;
 
     while (TotalSectors)
     {
@@ -131,11 +153,10 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         if (ReadSectors > MaxSectors)
             ReadSectors = MaxSectors;
 
-        ret = MachDiskReadLogicalSectors(
-            Context->DriveNumber,
-            SectorOffset,
-            ReadSectors,
-            DiskReadBuffer);
+        ret = MachDiskReadLogicalSectors(Context->DriveNumber,
+                                         SectorOffset,
+                                         ReadSectors,
+                                         DiskReadBuffer);
         if (!ret)
             break;
 
@@ -156,7 +177,9 @@ static ARC_STATUS DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     return (!ret) ? EIO : ESUCCESS;
 }
 
-static ARC_STATUS DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+// static
+ARC_STATUS
+DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
 
@@ -169,13 +192,15 @@ static ARC_STATUS DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekM
     return ESUCCESS;
 }
 
-static const DEVVTBL DiskVtbl = {
+static const DEVVTBL DiskVtbl =
+{
     DiskClose,
     DiskGetFileInformation,
     DiskOpen,
     DiskRead,
     DiskSeek,
 };
+
 
 PCHAR
 GetHarddiskIdentifier(
@@ -264,14 +289,13 @@ GetHarddiskInformation(
     Identifier[15] = Hex[(Signature >> 4) & 0x0F];
     Identifier[16] = Hex[Signature & 0x0F];
     Identifier[17] = '-';
-    Identifier[18] = 'A';
+    Identifier[18] = 'A'; // FIXME: Not always 'A' ...
     Identifier[19] = 0;
     TRACE("Identifier: %s\n", Identifier);
 }
 
-
 BOOLEAN
-HwInitializeBiosDisks(VOID)
+PcInitializeBootDevices(VOID)
 {
     UCHAR DiskCount, DriveNumber;
     ULONG i;
@@ -314,9 +338,11 @@ HwInitializeBiosDisks(VOID)
 
         DiskCount++;
         DriveNumber++;
-        memset(DiskReadBuffer, 0xcd, 512);
+        memset(DiskReadBuffer, 0xcd, DiskReadBufferSize);
     }
     DiskReportError(TRUE);
+    TRACE("BIOS reports %d harddisk%s\n",
+          (int)DiskCount, (DiskCount == 1) ? "" : "s");
 
     /* Get the drive we're booting from */
     MachDiskGetBootPath(BootPath, sizeof(BootPath));
@@ -366,5 +392,5 @@ HwInitializeBiosDisks(VOID)
     TRACE("BIOS reports %d harddisk%s\n",
           (int)DiskCount, (DiskCount == 1) ? "": "s");
 
-    return DiskCount != 0;
+    return (DiskCount != 0);
 }
