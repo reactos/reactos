@@ -2419,7 +2419,7 @@ HRESULT STDMETHODCALLTYPE CDefView::SelectItem(int iItem, DWORD dwFlags)
 
     m_ListView.SetItemState(iItem, lvItem.state, lvItem.stateMask);
 
-    if (dwFlags & SVSI_EDIT)
+    if ((dwFlags & SVSI_EDIT) == SVSI_EDIT)
         m_ListView.EditLabel(iItem);
 
     return S_OK;
@@ -2822,17 +2822,14 @@ HRESULT WINAPI CDefView::Exec(const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCm
 
 HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 {
-    LVHITTESTINFO htinfo;
     LONG lResult;
     HRESULT hr;
     RECT clientRect;
 
     /* Map from global to client coordinates and query the index of the listview-item, which is
      * currently under the mouse cursor. */
-    htinfo.pt.x = pt.x;
-    htinfo.pt.y = pt.y;
-    htinfo.flags = LVHT_ONITEM;
-    ::ScreenToClient(m_ListView, &htinfo.pt);
+    LVHITTESTINFO htinfo  { {pt.x, pt.y}, LVHT_ONITEM};
+    ScreenToClient(&htinfo.pt);
     lResult = m_ListView.HitTest(&htinfo);
 
     /* Send WM_*SCROLL messages every 250 ms during drag-scrolling */
@@ -2865,6 +2862,22 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
 
     m_ptLastMousePos = htinfo.pt;
 
+    /* We need to check if we drag the selection over itself */
+    if (lResult != -1 && m_pSourceDataObject.p != NULL)
+    {
+        PCUITEMID_CHILD pidl = _PidlByItem(lResult);
+
+        for (UINT i = 0; i < m_cidl; i++)
+        {
+            if (pidl == m_apidl[i])
+            {
+                /* The item that is being draged is hovering itself. */
+                lResult = -1;
+                break;
+            }
+        }
+    }
+
     /* If we are still over the previous sub-item, notify it via DragOver and return. */
     if (m_pCurDropTarget && lResult == m_iDragOverItem)
         return m_pCurDropTarget->DragOver(grfKeyState, pt, pdwEffect);
@@ -2872,11 +2885,16 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
     /* We've left the previous sub-item, notify it via DragLeave and Release it. */
     if (m_pCurDropTarget)
     {
+        PCUITEMID_CHILD pidl = _PidlByItem(m_iDragOverItem);
+        if (pidl)
+            SelectItem(pidl, 0);
+
         m_pCurDropTarget->DragLeave();
         m_pCurDropTarget.Release();
     }
 
     m_iDragOverItem = lResult;
+
     if (lResult == -1)
     {
         /* We are not above one of the listview's subitems. Bind to the parent folder's
@@ -2898,7 +2916,14 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
         return hr;
 
     /* Notify the item just entered via DragEnter. */
-    return m_pCurDropTarget->DragEnter(m_pCurDataObject, grfKeyState, pt, pdwEffect);
+    hr = m_pCurDropTarget->DragEnter(m_pCurDataObject, grfKeyState, pt, pdwEffect);
+
+    if (m_iDragOverItem != -1 && pdwEffect != DROPEFFECT_NONE)
+    {
+        SelectItem(m_iDragOverItem, SVSI_SELECT);
+    }
+
+    return hr;
 }
 
 HRESULT WINAPI CDefView::DragEnter(IDataObject *pDataObject, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
@@ -2936,12 +2961,23 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
 {
     ERR("GetKeyState(VK_LBUTTON): %d\n", GetKeyState(VK_LBUTTON));
 
-    if ((m_iDragOverItem == -1) && 
+    if ((m_iDragOverItem == -1 || m_pCurDropTarget == NULL) && 
         (*pdwEffect & DROPEFFECT_MOVE) && 
         /*(GetKeyState(VK_LBUTTON) != 0) &&*/
         (m_pSourceDataObject.p) && 
         (SHIsSameObject(pDataObject, m_pSourceDataObject)))
     {
+        if (m_pCurDropTarget)
+        {
+            m_pCurDropTarget->DragLeave();
+            m_pCurDropTarget.Release();
+        }
+
+        /* Restore the selection */
+        m_ListView.SetItemState(-1, 0, LVIS_SELECTED);
+        for (UINT i = 0 ; i < m_cidl; i++)
+            SelectItem(m_apidl[i], SVSI_SELECT);
+
         /* Reposition the items */
         int lvIndex = -1;
         while ((lvIndex = m_ListView.GetNextItem(lvIndex,  LVNI_SELECTED)) > -1)
@@ -2953,12 +2989,6 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
                 ptItem.y += pt.y - m_ptFirstMousePos.y;
                 m_ListView.SetItemPosition(lvIndex, &ptItem);
             }
-        }
-
-        if (m_pCurDropTarget)
-        {
-            m_pCurDropTarget->DragLeave();
-            m_pCurDropTarget.Release();
         }
     }
     else if (m_pCurDropTarget)
