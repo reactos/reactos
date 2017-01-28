@@ -386,7 +386,7 @@ PcDiskGetCacheableBlockCount(UCHAR DriveNumber)
 }
 
 BOOLEAN
-PcDiskGetBootPath(char *BootPath, unsigned Size)
+PcDiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
 {
     // FIXME: Keep it there, or put it in DiskGetBootPath?
     // Or, abstract the notion of network booting to make

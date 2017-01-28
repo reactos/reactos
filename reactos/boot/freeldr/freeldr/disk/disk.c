@@ -102,7 +102,7 @@ BOOLEAN DiskIsDriveRemovable(UCHAR DriveNumber)
 }
 
 BOOLEAN
-DiskGetBootPath(char *BootPath, unsigned Size)
+DiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
 {
     static char Path[] = "multi(0)disk(0)";
     char Device[4];

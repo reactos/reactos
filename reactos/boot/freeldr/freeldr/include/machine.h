@@ -61,7 +61,7 @@ typedef struct tagMACHVTBL
     FREELDR_MEMORY_DESCRIPTOR* (*GetMemoryDescriptor)(FREELDR_MEMORY_DESCRIPTOR* Current);
     PFREELDR_MEMORY_DESCRIPTOR (*GetMemoryMap)(PULONG MaxMemoryMapSize);
 
-    BOOLEAN (*DiskGetBootPath)(char *BootPath, unsigned Size);
+    BOOLEAN (*DiskGetBootPath)(PCHAR BootPath, ULONG Size);
     BOOLEAN (*DiskReadLogicalSectors)(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
     BOOLEAN (*DiskGetDriveGeometry)(UCHAR DriveNumber, PGEOMETRY DriveGeometry);
     ULONG (*DiskGetCacheableBlockCount)(UCHAR DriveNumber);

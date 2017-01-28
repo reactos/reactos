@@ -97,8 +97,7 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
 }
 
 BOOLEAN
-ArmDiskGetBootPath(OUT PCHAR BootPath,
-                   IN unsigned Size)
+ArmDiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
 {
     PCCH Path = "ramdisk(0)";
 
