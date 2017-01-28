@@ -1037,6 +1037,11 @@ DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
         Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
                sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
+        if (PartialResourceList == NULL)
+        {
+            ERR("Failed to allocate resource descriptor\n");
+            return;
+        }
         memset(PartialResourceList, 0, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
@@ -1577,6 +1582,11 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
         TRACE("Detected PS2 port\n");
 
         PartialResourceList = FrLdrHeapAlloc(sizeof(CM_PARTIAL_RESOURCE_LIST), TAG_HW_RESOURCE_LIST);
+        if (PartialResourceList == NULL)
+        {
+            ERR("Failed to allocate resource descriptor\n");
+            return;
+        }
         memset(PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
 
         /* Initialize resource descriptor */
@@ -1613,6 +1623,11 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
             Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
                    sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
             PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
+            if (PartialResourceList == NULL)
+            {
+                ERR("Failed to allocate resource descriptor\n");
+                return;
+            }
             memset(PartialResourceList, 0, Size);
             PartialResourceList->Version = 1;
             PartialResourceList->Revision = 1;
