@@ -101,7 +101,7 @@ PcGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
-        ERR("Failed to allocate a full resource descriptor\n");
+        ERR("Failed to allocate resource descriptor\n");
         return NULL;
     }
 
@@ -170,6 +170,7 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     ULONG FoundNodeCount;
     int i;
     ULONG PnpBufferSize;
+    ULONG PnpBufferSizeLimit;
     ULONG Size;
     char *Ptr;
 
@@ -204,8 +205,9 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     TRACE("Estimated buffer size %u\n", NodeSize * NodeCount);
 
     /* Set 'Configuration Data' value */
-    Size = sizeof(CM_PARTIAL_RESOURCE_LIST)
-           + sizeof(CM_PNP_BIOS_INSTALLATION_CHECK) + (NodeSize * NodeCount);
+    PnpBufferSizeLimit = sizeof(CM_PNP_BIOS_INSTALLATION_CHECK)
+                         + (NodeSize * NodeCount);
+    Size = sizeof(CM_PARTIAL_RESOURCE_LIST) + PnpBufferSizeLimit;
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
@@ -229,10 +231,10 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     /* Set installation check data */
     memcpy (Ptr, InstData, sizeof(CM_PNP_BIOS_INSTALLATION_CHECK));
     Ptr += sizeof(CM_PNP_BIOS_INSTALLATION_CHECK);
+    PnpBufferSize = sizeof(CM_PNP_BIOS_INSTALLATION_CHECK);
 
     /* Copy device nodes */
     FoundNodeCount = 0;
-    PnpBufferSize = sizeof(CM_PNP_BIOS_INSTALLATION_CHECK);
     for (i = 0; i < 0xFF; i++)
     {
         NodeNumber = (UCHAR)i;
@@ -247,9 +249,9 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                   DeviceNode->Size,
                   DeviceNode->Size);
 
-            if (PnpBufferSize + DeviceNode->Size > Size)
+            if (PnpBufferSize + DeviceNode->Size > PnpBufferSizeLimit)
             {
-                ERR("Buffer too small!\n");
+                ERR("Buffer too small! Ignoring remaining device nodes.\n");
                 break;
             }
 
