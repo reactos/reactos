@@ -17,6 +17,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+// #if defined(__i386__) || defined(_M_AMD64)
+
 #include <freeldr.h>
 
 #define NDEBUG
@@ -25,6 +27,7 @@
 DBG_DEFAULT_CHANNEL(DISK);
 
 #include <pshpack2.h>
+
 typedef struct
 {
     UCHAR       PacketSize;             // 00h - Size of packet (10h or 18h)
@@ -38,6 +41,38 @@ typedef struct
                                         //       Commented since some earlier BIOSes refuse to work with
                                         //       such extended structure
 } I386_DISK_ADDRESS_PACKET, *PI386_DISK_ADDRESS_PACKET;
+
+typedef struct
+{
+    UCHAR   PacketSize;     // 00h - Size of packet in bytes (13h)
+    UCHAR   MediaType;      // 01h - Boot media type (see #00282)
+    UCHAR   DriveNumber;    /* 02h - Drive number:
+                             *   00h Floppy image
+                             *   80h Bootable hard disk
+                             *   81h-FFh Nonbootable or no emulation
+                             */
+    UCHAR   Controller;     // 03h - CD-ROM controller number
+    ULONG   LBAImage;       // 04h - Logical Block Address of disk image to emulate
+    USHORT  DeviceSpec;     /* 08h - Device specification (see also #00282)
+                             * (IDE) Bit 0:
+                             *     Drive is slave instead of master
+                             * (SCSI) Bits 7-0:
+                             *     LUN and PUN
+                             * Bits 15-8:
+                             *     Bus number
+                             */
+    USHORT  Buffer;         // 0Ah - Segment of 3K buffer for caching CD-ROM reads
+    USHORT  LoadSeg;        // 0Ch - Load segment for initial boot image.
+                            //       If 0000h, load at segment 07C0h.
+    USHORT  SectorCount;    // 0Eh - Number of 512-byte virtual sectors to load
+                            //       (only valid for AH=4Ch).
+    UCHAR   CHSGeometry[3]; /* 10h - Low byte of cylinder count (for INT 13/AH=08h)
+                             * 11h - Sector count, high bits of cylinder count (for INT 13/AH=08h)
+                             * 12h - Head count (for INT 13/AH=08h)
+                             */
+    UCHAR   Reserved;
+} I386_CDROM_SPEC_PACKET, *PI386_CDROM_SPEC_PACKET;
+
 #include <poppack.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -540,6 +575,69 @@ PcDiskGetCacheableBlockCount(UCHAR DriveNumber)
     }
 }
 
+
+static BOOLEAN
+FallbackDiskIsCdRomDrive(UCHAR DriveNumber)
+{
+    MASTER_BOOT_RECORD MasterBootRecord;
+
+    TRACE("FallbackDiskIsCdRomDrive(0x%x)\n", DriveNumber);
+
+    /* CD-ROM drive numbers are always > 0x80 */
+    if (DriveNumber <= 0x80)
+        return FALSE;
+
+    /*
+     * We suppose that a CD-ROM does not have a MBR
+     * (not always true: example of the Hybrid USB-ISOs).
+     */
+    return !DiskReadBootRecord(DriveNumber, 0, &MasterBootRecord);
+}
+
+BOOLEAN DiskIsCdRomDrive(UCHAR DriveNumber)
+{
+    REGS RegsIn, RegsOut;
+    PI386_CDROM_SPEC_PACKET Packet = (PI386_CDROM_SPEC_PACKET)(BIOSCALLBUFFER);
+
+    TRACE("DiskIsCdRomDrive(0x%x)\n", DriveNumber);
+
+    /* CD-ROM drive numbers are always > 0x80 */
+    if (DriveNumber <= 0x80)
+        return FALSE;
+
+    /* Setup disk address packet */
+    RtlZeroMemory(Packet, sizeof(*Packet));
+    Packet->PacketSize = sizeof(*Packet);
+
+    /*
+     * BIOS Int 13h, function 4B01h - Bootable CD-ROM - Get Disk Emulation Status
+     * AX = 4B01h
+     * DL = drive number
+     * DS:SI -> empty specification packet
+     * Return:
+     * CF clear if successful
+     * CF set on error
+     * AX = return codes
+     * DS:SI specification packet filled
+     */
+    RegsIn.w.ax = 0x4B01;
+    RegsIn.b.dl = DriveNumber;
+    RegsIn.x.ds = BIOSCALLBUFSEGMENT;   // DS:SI -> specification packet
+    RegsIn.w.si = BIOSCALLBUFOFFSET;
+
+    Int386(0x13, &RegsIn, &RegsOut);
+
+    // return (INT386_SUCCESS(RegsOut) && (Packet->DriveNumber == DriveNumber));
+    /*
+     * If the simple test failed, try to use the fallback code,
+     * but we can be on *very* thin ice.
+     */
+    if (!INT386_SUCCESS(RegsOut) || (Packet->DriveNumber != DriveNumber))
+        return FallbackDiskIsCdRomDrive(DriveNumber);
+    else
+        return TRUE;
+}
+
 BOOLEAN
 PcDiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
 {
@@ -550,6 +648,17 @@ PcDiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
     // we were booting from network (and: PC --> PXE, etc...)
     // and if so, set the correct ARC path. But then this new
     // logic could be moved back to DiskGetBootPath...
+
+    if (*FrldrBootPath)
+    {
+        /* Copy back the buffer */
+        if (Size < strlen(FrldrBootPath) + 1)
+            return FALSE;
+        strncpy(BootPath, FrldrBootPath, Size);
+        return TRUE;
+    }
+
+    // FIXME! FIXME! Do this in some drive recognition procedure!!!!
     if (PxeInit())
     {
         strcpy(BootPath, "net(0)");

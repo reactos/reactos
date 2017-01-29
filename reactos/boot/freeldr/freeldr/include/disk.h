@@ -121,16 +121,21 @@ VOID DiskStopFloppyMotor(VOID);
 // FreeLoader Disk Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-VOID DiskReportError (BOOLEAN bError);
+VOID DiskReportError(BOOLEAN bError);
 VOID DiskError(PCSTR ErrorString, ULONG ErrorCode);
 PCSTR DiskGetErrorCodeString(ULONG ErrorCode);
 BOOLEAN DiskIsDriveRemovable(UCHAR DriveNumber);
-extern UCHAR FrldrBootDrive;
-extern ULONG FrldrBootPartition;
-extern PVOID DiskReadBuffer;
-extern SIZE_T DiskReadBufferSize;
 
 BOOLEAN DiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size);
+/* Platform-specific boot drive and partition numbers */
+extern UCHAR FrldrBootDrive;
+extern ULONG FrldrBootPartition;
+/* ARC path of the boot drive and partition */
+extern CHAR FrldrBootPath[MAX_PATH];
+
+/* Buffer for disk reads */
+extern PVOID DiskReadBuffer;
+extern SIZE_T DiskReadBufferSize;
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
