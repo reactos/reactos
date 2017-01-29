@@ -3,6 +3,11 @@
 
 #define TAG_GDEV 'gdev'
 
+VOID
+NTAPI
+PDEVOBJ_vRefreshModeList(
+    PPDEVOBJ ppdev);
+
 extern PGRAPHICS_DEVICE gpPrimaryGraphicsDevice;
 extern PGRAPHICS_DEVICE gpVgaGraphicsDevice;
 
@@ -27,6 +32,11 @@ EngpRegisterGraphicsDevice(
     _In_ PUNICODE_STRING pustrDeviceName,
     _In_ PUNICODE_STRING pustrDiplayDrivers,
     _In_ PUNICODE_STRING pustrDescription,
+    _In_ PDEVMODEW pdmDefault);
+
+BOOLEAN
+EngpPopulateDeviceModeList(
+    _Inout_ PGRAPHICS_DEVICE pGraphicsDevice,
     _In_ PDEVMODEW pdmDefault);
 
 INIT_FUNCTION
