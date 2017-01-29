@@ -175,7 +175,6 @@ static struct
     (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_DEV_CNTRL), (Data)))
 
 /* IDE_DRIVE_IDENTIFY */
-
 typedef struct _IDE_DRIVE_IDENTIFY
 {
     USHORT   ConfigBits;          /*00*/
@@ -494,8 +493,8 @@ XboxDiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_T
         }
     }
 
-    /* No magic Xbox partitions. Maybe there's a MBR */
-    return DiskGetPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
+    /* No magic Xbox partitions, maybe there's a MBR */
+    return DiskGetMbrPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
 }
 
 BOOLEAN

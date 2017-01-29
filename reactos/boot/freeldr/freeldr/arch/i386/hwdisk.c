@@ -26,6 +26,10 @@
 
 DBG_DEFAULT_CHANNEL(HWDETECT);
 
+/*
+ * This is the common code for harddisk for both the PC and the XBOX.
+ */
+
 typedef struct tagDISKCONTEXT
 {
     UCHAR DriveNumber;
@@ -49,8 +53,7 @@ SIZE_T DiskReadBufferSize;
 
 /* FUNCTIONS *****************************************************************/
 
-// static
-ARC_STATUS
+static ARC_STATUS
 DiskClose(ULONG FileId)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
@@ -59,8 +62,7 @@ DiskClose(ULONG FileId)
     return ESUCCESS;
 }
 
-// static
-ARC_STATUS
+static ARC_STATUS
 DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
@@ -131,8 +133,7 @@ DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     return ESUCCESS;
 }
 
-// static
-ARC_STATUS
+static ARC_STATUS
 DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
@@ -177,8 +178,7 @@ DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
     return (!ret) ? EIO : ESUCCESS;
 }
 
-// static
-ARC_STATUS
+static ARC_STATUS
 DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
@@ -203,15 +203,13 @@ static const DEVVTBL DiskVtbl =
 
 
 PCHAR
-GetHarddiskIdentifier(
-    UCHAR DriveNumber)
+GetHarddiskIdentifier(UCHAR DriveNumber)
 {
     return PcDiskIdentifier[DriveNumber - 0x80];
 }
 
-VOID
-GetHarddiskInformation(
-    UCHAR DriveNumber)
+static VOID
+GetHarddiskInformation(UCHAR DriveNumber)
 {
     PMASTER_BOOT_RECORD Mbr;
     PULONG Buffer;
@@ -330,6 +328,7 @@ PcInitializeBootDevices(VOID)
             break;
         }
 
+        /* Cache the BIOS hard disk information for later use */
         GetHarddiskInformation(DriveNumber);
 
         /* Check if we have seen the boot drive */

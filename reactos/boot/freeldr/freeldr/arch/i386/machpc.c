@@ -78,9 +78,9 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
 #define CONTROLLER_TIMEOUT                              250
 
 
-// NOTE: Similar to xboxhw.c!XboxGetHarddiskConfigurationData(),
+// NOTE: Similar to machxbox.c!XboxGetHarddiskConfigurationData(),
 // but with extended geometry support.
-// static
+static
 PCM_PARTIAL_RESOURCE_LIST
 PcGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
 {
@@ -811,7 +811,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
     TRACE("DetectParallelPorts() done\n");
 }
 
-//static
+// static
 BOOLEAN
 DetectKeyboardDevice(VOID)
 {
@@ -1252,9 +1252,6 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
     }
 }
 
-extern VOID
-DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA BusKey);
-
 static
 VOID
 DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
@@ -1295,7 +1292,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     (*BusNumber)++;
 
     /* Detect ISA/BIOS devices */
-    DetectBiosDisks(BusKey);
+    DetectBiosDisks(SystemKey, BusKey);
     DetectSerialPorts(BusKey);
     DetectParallelPorts(BusKey);
     DetectKeyboardController(BusKey);
@@ -1304,9 +1301,6 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     /* FIXME: Detect more ISA devices */
 }
-
-extern PCONFIGURATION_COMPONENT_DATA
-DetectSystem(VOID);
 
 PCONFIGURATION_COMPONENT_DATA
 PcHwDetect(VOID)
@@ -1317,7 +1311,10 @@ PcHwDetect(VOID)
     TRACE("DetectHardware()\n");
 
     /* Create the 'System' key */
-    SystemKey = DetectSystem();
+    FldrCreateSystemKey(&SystemKey);
+    // TODO: Discover and set the machine type as the Component->Identifier
+
+    GetHarddiskConfigurationData = PcGetHarddiskConfigurationData;
 
     /* Detect buses */
     DetectPciBios(SystemKey, &BusNumber);
@@ -1325,6 +1322,9 @@ PcHwDetect(VOID)
     DetectPnpBios(SystemKey, &BusNumber);
     DetectIsaBios(SystemKey, &BusNumber); // TODO: Detect first EISA or MCA, before ISA
     DetectAcpiBios(SystemKey, &BusNumber);
+
+    // TODO: Collect the ROM blocks from 0xC0000 to 0xF0000 and append their
+    // CM_ROM_BLOCK data into the 'System' key's configuration data.
 
     TRACE("DetectHardware() Done\n");
     return SystemKey;
@@ -1387,6 +1387,8 @@ PcMachInit(const char *CmdLine)
     MachVtbl.InitializeBootDevices = PcInitializeBootDevices;
     MachVtbl.HwDetect = PcHwDetect;
     MachVtbl.HwIdle = PcHwIdle;
+
+    // DiskGetPartitionEntry = DiskGetMbrPartitionEntry; // Default
 }
 
 VOID

@@ -37,12 +37,11 @@ DBG_DEFAULT_CHANNEL(HWDETECT);
 static unsigned int delay_count = 1;
 extern UCHAR PcBiosDiskCount;
 
-PCHAR
-GetHarddiskIdentifier(
-    UCHAR DriveNumber);
+/* This function is slightly different in its PC and XBOX versions */
+GET_HARDDISK_CONFIG_DATA GetHarddiskConfigurationData = NULL;
 
-BOOLEAN
-InitializeBiosDisks(VOID);
+PCHAR
+GetHarddiskIdentifier(UCHAR DriveNumber);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -351,18 +350,28 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
     return ControllerKey;
 }
 
-PCONFIGURATION_COMPONENT_DATA
-DetectSystem(VOID)
+VOID
+DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
+                PCONFIGURATION_COMPONENT_DATA BusKey)
 {
-    PCONFIGURATION_COMPONENT_DATA SystemKey;
+    PCONFIGURATION_COMPONENT_DATA ControllerKey, DiskKey;
     PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCM_INT13_DRIVE_PARAMETER Int13Drives;
     GEOMETRY Geometry;
-    UCHAR DiskCount;
+    UCHAR DiskCount, DriveNumber;
     USHORT i;
     ULONG Size;
 
+    /* The pre-enumeration of the BIOS disks was already done in InitializeBootDevices() */
     DiskCount = PcBiosDiskCount;
+
+    /* Use the floppy disk controller as our controller */
+    ControllerKey = DetectBiosFloppyController(BusKey);
+    if (!ControllerKey)
+    {
+        ERR("Failed to detect BIOS disk controller\n");
+        return;
+    }
 
     /* Allocate resource descriptor */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
@@ -371,7 +380,7 @@ DetectSystem(VOID)
     if (PartialResourceList == NULL)
     {
         ERR("Failed to allocate resource descriptor\n");
-        return NULL;
+        return;
     }
 
     /* Initialize resource descriptor */
@@ -389,16 +398,18 @@ DetectSystem(VOID)
     Int13Drives = (PVOID)(((ULONG_PTR)PartialResourceList) + sizeof(CM_PARTIAL_RESOURCE_LIST));
     for (i = 0; i < DiskCount; i++)
     {
-        if (MachDiskGetDriveGeometry(0x80 + i, &Geometry))
+        DriveNumber = 0x80 + i;
+
+        if (MachDiskGetDriveGeometry(DriveNumber, &Geometry))
         {
-            Int13Drives[i].DriveSelect = 0x80 + i;
+            Int13Drives[i].DriveSelect = DriveNumber;
             Int13Drives[i].MaxCylinders = Geometry.Cylinders - 1;
             Int13Drives[i].SectorsPerTrack = (USHORT)Geometry.Sectors;
             Int13Drives[i].MaxHeads = (USHORT)Geometry.Heads - 1;
             Int13Drives[i].NumberDrives = DiskCount;
 
             TRACE("Disk %x: %u Cylinders  %u Heads  %u Sectors  %u Bytes\n",
-                  0x80 + i,
+                  DriveNumber,
                   Geometry.Cylinders - 1,
                   Geometry.Heads - 1,
                   Geometry.Sectors,
@@ -406,47 +417,15 @@ DetectSystem(VOID)
         }
     }
 
-    FldrCreateComponentKey(NULL,
-                           SystemClass,
-                           MaximumType,
-                           0x0,
-                           0x0,
-                           0xFFFFFFFF,
-                           NULL,
-                           PartialResourceList,
-                           Size,
-                           &SystemKey);
-
-    return SystemKey;
-}
-
-extern PCM_PARTIAL_RESOURCE_LIST
-PcGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize);
-
-#define GetHarddiskConfigurationData PcGetHarddiskConfigurationData
-
-// static
-VOID
-DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA BusKey)
-{
-    PCONFIGURATION_COMPONENT_DATA ControllerKey, DiskKey;
-    ULONG i;
-
-    /* Use the floppy disk controller as our controller */
-    ControllerKey = DetectBiosFloppyController(BusKey);
-    if (!ControllerKey)
-    {
-        ERR("Failed to detect BIOS disk controller\n");
-        return;
-    }
+    /* Update the 'System' key's configuration data with BIOS INT13h information */
+    FldrSetConfigurationData(SystemKey, PartialResourceList, Size);
 
     /* Create and fill subkey for each harddisk */
-    for (i = 0; i < PcBiosDiskCount; i++)
+    for (i = 0; i < DiskCount; i++)
     {
-        PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
-        ULONG Size;
         PCHAR Identifier;
-        UCHAR DriveNumber = 0x80 + (UCHAR)i;
+
+        DriveNumber = 0x80 + i;
 
         /* Get disk values */
         PartialResourceList = GetHarddiskConfigurationData(DriveNumber, &Size);
