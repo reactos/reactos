@@ -2828,7 +2828,7 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
 
     /* Map from global to client coordinates and query the index of the listview-item, which is
      * currently under the mouse cursor. */
-    LVHITTESTINFO htinfo  { {pt.x, pt.y}, LVHT_ONITEM};
+    LVHITTESTINFO htinfo = {{pt.x, pt.y}, LVHT_ONITEM};
     ScreenToClient(&htinfo.pt);
     lResult = m_ListView.HitTest(&htinfo);
 
