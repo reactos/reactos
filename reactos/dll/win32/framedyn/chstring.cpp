@@ -288,7 +288,7 @@ void CHString::AllocBuffer(int nSize) throw (CHeap_Exception)
     }
 
     // Nor too big
-    if (nSize > INT_MAX)
+    if (nSize > (INT_MAX - (int)sizeof(CHStringData)) / (int)sizeof(WCHAR))
     {
         RaiseException(STATUS_INTEGER_OVERFLOW, EXCEPTION_NONCONTINUABLE, 0, 0);
     }
@@ -442,7 +442,7 @@ void CHString::ConcatInPlace(int nSrcLen, LPCWSTR lpszSrcData)
     }
 
     // Ensure we wouldn't overflow with the concat
-    if (GetData()->nDataLength + nSrcLen > INT_MAX)
+    if (GetData()->nDataLength > INT_MAX - nSrcLen)
     {
         RaiseException(STATUS_INTEGER_OVERFLOW, EXCEPTION_NONCONTINUABLE, 0, 0);
     }
@@ -461,7 +461,7 @@ void CHString::ConcatInPlace(int nSrcLen, LPCWSTR lpszSrcData)
     else
     {
         // Ensure we don't overflow
-        if (nSrcLen > INT_MAX)
+        if (nSrcLen > INT_MAX - GetData()->nDataLength)
         {
             RaiseException(STATUS_INTEGER_OVERFLOW, EXCEPTION_NONCONTINUABLE, 0, 0);
         }
