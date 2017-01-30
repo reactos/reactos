@@ -25,8 +25,9 @@ extern unsigned long debug_trace_level;
 #ifdef _MSC_VER
 
 #define DH_DbgPrint(_t_, _x_) \
-    if (((debug_trace_level & NORMAL_MASK) >= _t_) || \
-        ((debug_trace_level & _t_) > NORMAL_MASK)) { \
+    if ((_t_ > NORMAL_MASK) \
+        ? (debug_trace_level & _t_) > NORMAL_MASK \
+        : (debug_trace_level & NORMAL_MASK) >= _t_) { \
         DbgPrint("(%s:%d) ", __FILE__, __LINE__); \
         DbgPrint _x_ ; \
     }
@@ -34,8 +35,9 @@ extern unsigned long debug_trace_level;
 #else /* _MSC_VER */
 
 #define DH_DbgPrint(_t_, _x_) \
-    if (((debug_trace_level & NORMAL_MASK) >= _t_) || \
-        ((debug_trace_level & _t_) > NORMAL_MASK)) { \
+    if ((_t_ > NORMAL_MASK) \
+        ? (debug_trace_level & _t_) > NORMAL_MASK \
+        : (debug_trace_level & NORMAL_MASK) >= _t_) { \
         DbgPrint("(%s:%d)(%s) ", __FILE__, __LINE__, __FUNCTION__); \
         DbgPrint _x_ ; \
     }
