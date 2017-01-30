@@ -1470,8 +1470,8 @@ acpi_bus_remove (
 	if (device->pnp.cid_list)
 		ExFreePoolWithTag(device->pnp.cid_list, 'DpcA');
 
-    if (device->pnp.hardware_id)
-        ExFreePoolWithTag(device->pnp.hardware_id, 'DpcA');
+	if (device->pnp.hardware_id)
+		ExFreePoolWithTag(device->pnp.hardware_id, 'DpcA');
 
 	if (device)
 		ExFreePoolWithTag(device, 'DpcA');
