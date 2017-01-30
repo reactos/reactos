@@ -8,7 +8,7 @@ Header Name:
 
 Abstract:
 
-    Function definitions for the Executive.
+    Function definitions for the Local Procedure Call.
 
 Author:
 
@@ -23,6 +23,7 @@ Author:
 // Dependencies
 //
 #include <umtypes.h>
+#include <lpctypes.h>
 
 //
 // LPC Exports

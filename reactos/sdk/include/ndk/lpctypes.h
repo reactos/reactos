@@ -8,7 +8,7 @@ Header Name:
 
 Abstract:
 
-    Type definitions for the Loader.
+    Type definitions for the Local Procedure Call.
 
 Author:
 
