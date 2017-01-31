@@ -1012,7 +1012,7 @@ BlockIoEfiGetDeviceInformation (
         {
             /* We only support floppy drives */
             AcpiPath = (ACPI_HID_DEVICE_PATH*)LeafNode;
-            if ((AcpiPath->HID == EISA_PNP_ID(0x604)) &&
+            if ((AcpiPath->HID == EISA_PNP_ID(0x604)) ||
                 (AcpiPath->HID == EISA_PNP_ID(0x700)))
             {
                 /* Set the boot library specific device types */
