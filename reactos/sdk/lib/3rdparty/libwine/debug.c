@@ -424,7 +424,7 @@ static int default_dbg_vlog( enum __wine_debug_class cls, struct __wine_debug_ch
     if (cls < sizeof(debug_classes)/sizeof(debug_classes[0]))
         ret += wine_dbg_printf( "%s:", debug_classes[cls] );
 
-	if (file && line)
+    if (file && line)
         ret += wine_dbg_printf ( "(%s:%d) ", file, line );
     else
         ret += wine_dbg_printf( "%s:%s: ", channel->name, func );
