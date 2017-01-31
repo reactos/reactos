@@ -30,8 +30,7 @@ ULONG SecondLevelIcacheSize;
 ULONG SecondLevelIcacheFillSize;
 
 extern ULONG reactos_disk_count;
-extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
-extern CHAR reactos_arc_strings[32][256];
+extern ARC_DISK_SIGNATURE_EX reactos_arc_disk_info[];
 
 ULONG SizeBits[] =
 {
@@ -98,8 +97,7 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
 }
 
 BOOLEAN
-ArmDiskGetBootPath(OUT PCHAR BootPath,
-                   IN unsigned Size)
+ArmDiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size)
 {
     PCCH Path = "ramdisk(0)";
 
@@ -144,11 +142,11 @@ ArmHwDetect(VOID)
     RamDiskInitialize();
 
     /* Fill out the ARC disk block */
-    reactos_arc_disk_info[reactos_disk_count].Signature = 0xBADAB00F;
-    reactos_arc_disk_info[reactos_disk_count].CheckSum = 0xDEADBABE;
-    strcpy(reactos_arc_strings[reactos_disk_count], "ramdisk(0)");
-    reactos_arc_disk_info[reactos_disk_count].ArcName =
-        reactos_arc_strings[reactos_disk_count];
+    reactos_arc_disk_info[reactos_disk_count].DiskSignature.Signature = 0xBADAB00F;
+    reactos_arc_disk_info[reactos_disk_count].DiskSignature.CheckSum = 0xDEADBABE;
+    strcpy(reactos_arc_disk_info[reactos_disk_count].ArcName, "ramdisk(0)");
+    reactos_arc_disk_info[reactos_disk_count].DiskSignature.ArcName =
+        reactos_arc_disk_info[reactos_disk_count].ArcName;
     reactos_disk_count++;
     ASSERT(reactos_disk_count == 1);
 

@@ -36,22 +36,22 @@ DBG_DEFAULT_CHANNEL(DISK);
 
 static struct
 {
-  ULONG SectorCountBeforePartition;
-  ULONG PartitionSectorCount;
-  UCHAR SystemIndicator;
+    ULONG SectorCountBeforePartition;
+    ULONG PartitionSectorCount;
+    UCHAR SystemIndicator;
 } XboxPartitions[] =
 {
-  /* This is in the \Device\Harddisk0\Partition.. order used by the Xbox kernel */
-  { 0x0055F400, 0x0098f800, PARTITION_FAT32  }, /* Store, E: */
-  { 0x00465400, 0x000FA000, PARTITION_FAT_16 }, /* System, C: */
-  { 0x00000400, 0x00177000, PARTITION_FAT_16 }, /* Cache1, X: */
-  { 0x00177400, 0x00177000, PARTITION_FAT_16 }, /* Cache2, Y: */
-  { 0x002EE400, 0x00177000, PARTITION_FAT_16 }  /* Cache3, Z: */
+    /* This is in the \Device\Harddisk0\Partition.. order used by the Xbox kernel */
+    { 0x0055F400, 0x0098f800, PARTITION_FAT32  }, /* Store , E: */
+    { 0x00465400, 0x000FA000, PARTITION_FAT_16 }, /* System, C: */
+    { 0x00000400, 0x00177000, PARTITION_FAT_16 }, /* Cache1, X: */
+    { 0x00177400, 0x00177000, PARTITION_FAT_16 }, /* Cache2, Y: */
+    { 0x002EE400, 0x00177000, PARTITION_FAT_16 }  /* Cache3, Z: */
 };
 
-#define  IDE_SECTOR_BUF_SZ         512
-#define  IDE_MAX_POLL_RETRIES      100000
-#define  IDE_MAX_BUSY_RETRIES      50000
+#define  IDE_SECTOR_BUF_SZ      512
+#define  IDE_MAX_POLL_RETRIES   100000
+#define  IDE_MAX_BUSY_RETRIES   50000
 
 /* Control Block offsets and masks */
 #define  IDE_REG_ALT_STATUS     0x0000
@@ -111,131 +111,130 @@ static struct
  *  Each macro takes an address of the command port block, and data
  */
 #define IDEReadError(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_ERROR)))
+    (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_ERROR)))
 #define IDEWritePrecomp(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_PRECOMP), (Data)))
+    (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_PRECOMP), (Data)))
 #define IDEReadSectorCount(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_CNT)))
+    (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_CNT)))
 #define IDEWriteSectorCount(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_CNT), (Data)))
+    (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_CNT), (Data)))
 #define IDEReadSectorNum(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_NUM)))
+    (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_NUM)))
 #define IDEWriteSectorNum(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_NUM), (Data)))
+    (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_SECTOR_NUM), (Data)))
 #define IDEReadCylinderLow(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_LOW)))
+    (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_LOW)))
 #define IDEWriteCylinderLow(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_LOW), (Data)))
+    (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_LOW), (Data)))
 #define IDEReadCylinderHigh(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_HIGH)))
+    (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_HIGH)))
 #define IDEWriteCylinderHigh(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_HIGH), (Data)))
+    (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_CYL_HIGH), (Data)))
 #define IDEReadDriveHead(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_DRV_HEAD)))
+    (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_DRV_HEAD)))
 #define IDEWriteDriveHead(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_DRV_HEAD), (Data)))
+    (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_DRV_HEAD), (Data)))
 #define IDEReadStatus(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_STATUS)))
+    (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_STATUS)))
 #define IDEWriteCommand(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_COMMAND), (Data)))
+    (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_COMMAND), (Data)))
 #define IDEReadDMACommand(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address))))
+    (READ_PORT_UCHAR((PUCHAR)((Address))))
 #define IDEWriteDMACommand(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address)), (Data)))
+    (WRITE_PORT_UCHAR((PUCHAR)((Address)), (Data)))
 #define IDEReadDMAStatus(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + 2)))
+    (READ_PORT_UCHAR((PUCHAR)((Address) + 2)))
 #define IDEWriteDMAStatus(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + 2), (Data)))
+    (WRITE_PORT_UCHAR((PUCHAR)((Address) + 2), (Data)))
 #define IDEWritePRDTable(Address, Data) \
-  (WRITE_PORT_ULONG((PULONG)((Address) + 4), (Data)))
+    (WRITE_PORT_ULONG((PULONG)((Address) + 4), (Data)))
 
 /*
  *  Data block read and write commands
  */
 #define IDEReadBlock(Address, Buffer, Count) \
-  (READ_PORT_BUFFER_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
+    (READ_PORT_BUFFER_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
 #define IDEWriteBlock(Address, Buffer, Count) \
-  (WRITE_PORT_BUFFER_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
+    (WRITE_PORT_BUFFER_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT), (PUSHORT)(Buffer), (Count) / 2))
 
 #define IDEReadBlock32(Address, Buffer, Count) \
-  (READ_PORT_BUFFER_ULONG((PULONG)((Address) + IDE_REG_DATA_PORT), (PULONG)(Buffer), (Count) / 4))
+    (READ_PORT_BUFFER_ULONG((PULONG)((Address) + IDE_REG_DATA_PORT), (PULONG)(Buffer), (Count) / 4))
 #define IDEWriteBlock32(Address, Buffer, Count) \
-  (WRITE_PORT_BUFFER_ULONG((PULONG)((Address) + IDE_REG_DATA_PORT), (PULONG)(Buffer), (Count) / 4))
+    (WRITE_PORT_BUFFER_ULONG((PULONG)((Address) + IDE_REG_DATA_PORT), (PULONG)(Buffer), (Count) / 4))
 
 #define IDEReadWord(Address) \
-  (READ_PORT_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT)))
+    (READ_PORT_USHORT((PUSHORT)((Address) + IDE_REG_DATA_PORT)))
 
 /*
  *  Access macros for control registers
  *  Each macro takes an address of the control port blank and data
  */
 #define IDEReadAltStatus(Address) \
-  (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_ALT_STATUS)))
+    (READ_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_ALT_STATUS)))
 #define IDEWriteDriveControl(Address, Data) \
-  (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_DEV_CNTRL), (Data)))
+    (WRITE_PORT_UCHAR((PUCHAR)((Address) + IDE_REG_DEV_CNTRL), (Data)))
 
 /* IDE_DRIVE_IDENTIFY */
-
 typedef struct _IDE_DRIVE_IDENTIFY
 {
-  USHORT   ConfigBits;          /*00*/
-  USHORT   LogicalCyls;         /*01*/
-  USHORT   Reserved02;          /*02*/
-  USHORT   LogicalHeads;        /*03*/
-  USHORT   BytesPerTrack;       /*04*/
-  USHORT   BytesPerSector;      /*05*/
-  USHORT   SectorsPerTrack;     /*06*/
-  UCHAR    InterSectorGap;      /*07*/
-  UCHAR    InterSectorGapSize;
-  UCHAR    Reserved08H;         /*08*/
-  UCHAR    BytesInPLO;
-  USHORT   VendorUniqueCnt;     /*09*/
-  char  SerialNumber[20];    /*10*/
-  USHORT   ControllerType;      /*20*/
-  USHORT   BufferSize;          /*21*/
-  USHORT   ECCByteCnt;          /*22*/
-  char  FirmwareRev[8];      /*23*/
-  char  ModelNumber[40];     /*27*/
-  USHORT   RWMultImplemented;   /*47*/
-  USHORT   DWordIo;         /*48*/
-  USHORT   Capabilities;        /*49*/
+    USHORT   ConfigBits;          /*00*/
+    USHORT   LogicalCyls;         /*01*/
+    USHORT   Reserved02;          /*02*/
+    USHORT   LogicalHeads;        /*03*/
+    USHORT   BytesPerTrack;       /*04*/
+    USHORT   BytesPerSector;      /*05*/
+    USHORT   SectorsPerTrack;     /*06*/
+    UCHAR    InterSectorGap;      /*07*/
+    UCHAR    InterSectorGapSize;
+    UCHAR    Reserved08H;         /*08*/
+    UCHAR    BytesInPLO;
+    USHORT   VendorUniqueCnt;     /*09*/
+    UCHAR    SerialNumber[20];    /*10*/
+    USHORT   ControllerType;      /*20*/
+    USHORT   BufferSize;          /*21*/
+    USHORT   ECCByteCnt;          /*22*/
+    UCHAR    FirmwareRev[8];      /*23*/
+    UCHAR    ModelNumber[40];     /*27*/
+    USHORT   RWMultImplemented;   /*47*/
+    USHORT   DWordIo;             /*48*/
+    USHORT   Capabilities;        /*49*/
 #define IDE_DRID_STBY_SUPPORTED   0x2000
 #define IDE_DRID_IORDY_SUPPORTED  0x0800
 #define IDE_DRID_IORDY_DISABLE    0x0400
 #define IDE_DRID_LBA_SUPPORTED    0x0200
 #define IDE_DRID_DMA_SUPPORTED    0x0100
-  USHORT   Reserved50;          /*50*/
-  USHORT   MinPIOTransTime;     /*51*/
-  USHORT   MinDMATransTime;     /*52*/
-  USHORT   TMFieldsValid;       /*53*/
-  USHORT   TMCylinders;         /*54*/
-  USHORT   TMHeads;             /*55*/
-  USHORT   TMSectorsPerTrk;     /*56*/
-  USHORT   TMCapacityLo;        /*57*/
-  USHORT   TMCapacityHi;        /*58*/
-  USHORT   RWMultCurrent;       /*59*/
-  USHORT   TMSectorCountLo;     /*60*/
-  USHORT   TMSectorCountHi;     /*61*/
-  USHORT   DmaModes;            /*62*/
-  USHORT   MultiDmaModes;       /*63*/
-  USHORT   Reserved64[5];       /*64*/
-  USHORT   Reserved69[2];       /*69*/
-  USHORT   Reserved71[4];       /*71*/
-  USHORT   MaxQueueDepth;       /*75*/
-  USHORT   Reserved76[4];       /*76*/
-  USHORT   MajorRevision;       /*80*/
-  USHORT   MinorRevision;       /*81*/
-  USHORT   SupportedFeatures82; /*82*/
-  USHORT   SupportedFeatures83; /*83*/
-  USHORT   SupportedFeatures84; /*84*/
-  USHORT   EnabledFeatures85;   /*85*/
-  USHORT   EnabledFeatures86;   /*86*/
-  USHORT   EnabledFeatures87;   /*87*/
-  USHORT   UltraDmaModes;       /*88*/
-  USHORT   Reserved89[11];      /*89*/
-  USHORT   Max48BitAddress[4];  /*100*/
-  USHORT   Reserved104[151];    /*104*/
-  USHORT   Checksum;            /*255*/
+    USHORT   Reserved50;          /*50*/
+    USHORT   MinPIOTransTime;     /*51*/
+    USHORT   MinDMATransTime;     /*52*/
+    USHORT   TMFieldsValid;       /*53*/
+    USHORT   TMCylinders;         /*54*/
+    USHORT   TMHeads;             /*55*/
+    USHORT   TMSectorsPerTrk;     /*56*/
+    USHORT   TMCapacityLo;        /*57*/
+    USHORT   TMCapacityHi;        /*58*/
+    USHORT   RWMultCurrent;       /*59*/
+    USHORT   TMSectorCountLo;     /*60*/
+    USHORT   TMSectorCountHi;     /*61*/
+    USHORT   DmaModes;            /*62*/
+    USHORT   MultiDmaModes;       /*63*/
+    USHORT   Reserved64[5];       /*64*/
+    USHORT   Reserved69[2];       /*69*/
+    USHORT   Reserved71[4];       /*71*/
+    USHORT   MaxQueueDepth;       /*75*/
+    USHORT   Reserved76[4];       /*76*/
+    USHORT   MajorRevision;       /*80*/
+    USHORT   MinorRevision;       /*81*/
+    USHORT   SupportedFeatures82; /*82*/
+    USHORT   SupportedFeatures83; /*83*/
+    USHORT   SupportedFeatures84; /*84*/
+    USHORT   EnabledFeatures85;   /*85*/
+    USHORT   EnabledFeatures86;   /*86*/
+    USHORT   EnabledFeatures87;   /*87*/
+    USHORT   UltraDmaModes;       /*88*/
+    USHORT   Reserved89[11];      /*89*/
+    USHORT   Max48BitAddress[4];  /*100*/
+    USHORT   Reserved104[151];    /*104*/
+    USHORT   Checksum;            /*255*/
 } IDE_DRIVE_IDENTIFY, *PIDE_DRIVE_IDENTIFY;
 
 /*  XboxDiskPolledRead
@@ -247,21 +246,20 @@ typedef struct _IDE_DRIVE_IDENTIFY
  *    PASSIVE_LEVEL
  *
  *  ARGUMENTS:
- *    ULONG   CommandPort   Address of command port for drive
- *    ULONG   ControlPort   Address of control port for drive
- *    UCHAR    PreComp       Value to write to precomp register
- *    UCHAR    SectorCnt     Value to write to sectorCnt register
- *    UCHAR    SectorNum     Value to write to sectorNum register
- *    UCHAR    CylinderLow   Value to write to CylinderLow register
- *    UCHAR    CylinderHigh  Value to write to CylinderHigh register
- *    UCHAR    DrvHead       Value to write to Drive/Head register
- *    UCHAR    Command       Value to write to Command register
- *    PVOID Buffer        Buffer for output data
+ *    ULONG CommandPort     Address of command port for drive
+ *    ULONG ControlPort     Address of control port for drive
+ *    UCHAR PreComp         Value to write to precomp register
+ *    UCHAR SectorCnt       Value to write to sectorCnt register
+ *    UCHAR SectorNum       Value to write to sectorNum register
+ *    UCHAR CylinderLow     Value to write to CylinderLow register
+ *    UCHAR CylinderHigh    Value to write to CylinderHigh register
+ *    UCHAR DrvHead         Value to write to Drive/Head register
+ *    UCHAR Command         Value to write to Command register
+ *    PVOID Buffer          Buffer for output data
  *
  *  RETURNS:
  *    BOOLEAN: TRUE success, FALSE error
  */
-
 static BOOLEAN
 XboxDiskPolledRead(ULONG CommandPort,
                    ULONG ControlPort,
@@ -274,300 +272,296 @@ XboxDiskPolledRead(ULONG CommandPort,
                    UCHAR Command,
                    PVOID Buffer)
 {
-  ULONG SectorCount = 0;
-  ULONG RetryCount;
-  BOOLEAN Junk = FALSE;
-  UCHAR Status;
+    ULONG SectorCount = 0;
+    ULONG RetryCount;
+    BOOLEAN Junk = FALSE;
+    UCHAR Status;
 
-  /* Wait for BUSY to clear */
-  for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
+    /* Wait for BUSY to clear */
+    for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
     {
-      Status = IDEReadStatus(CommandPort);
-      if (!(Status & IDE_SR_BUSY))
+        Status = IDEReadStatus(CommandPort);
+        if (!(Status & IDE_SR_BUSY))
+            break;
+
+        StallExecutionProcessor(10);
+    }
+    TRACE("status=0x%x\n", Status);
+    TRACE("waited %d usecs for busy to clear\n", RetryCount * 10);
+    if (RetryCount >= IDE_MAX_BUSY_RETRIES)
+    {
+        WARN("Drive is BUSY for too long\n");
+        return FALSE;
+    }
+
+    /* Write Drive/Head to select drive */
+    IDEWriteDriveHead(CommandPort, IDE_DH_FIXED | DrvHead);
+    StallExecutionProcessor(500);
+
+    /* Disable interrupts */
+    IDEWriteDriveControl(ControlPort, IDE_DC_nIEN);
+    StallExecutionProcessor(500);
+
+    /* Issue command to drive */
+    if (DrvHead & IDE_DH_LBA)
+    {
+        TRACE("READ:DRV=%d:LBA=1:BLK=%d:SC=0x%x:CM=0x%x\n",
+              DrvHead & IDE_DH_DRV1 ? 1 : 0,
+              ((DrvHead & 0x0f) << 24) + (CylinderHigh << 16) + (CylinderLow << 8) + SectorNum,
+              SectorCnt,
+              Command);
+    }
+    else
+    {
+        TRACE("READ:DRV=%d:LBA=0:CH=0x%x:CL=0x%x:HD=0x%x:SN=0x%x:SC=0x%x:CM=0x%x\n",
+              DrvHead & IDE_DH_DRV1 ? 1 : 0,
+              CylinderHigh,
+              CylinderLow,
+              DrvHead & 0x0f,
+              SectorNum,
+              SectorCnt,
+              Command);
+    }
+
+    /* Setup command parameters */
+    IDEWritePrecomp(CommandPort, PreComp);
+    IDEWriteSectorCount(CommandPort, SectorCnt);
+    IDEWriteSectorNum(CommandPort, SectorNum);
+    IDEWriteCylinderHigh(CommandPort, CylinderHigh);
+    IDEWriteCylinderLow(CommandPort, CylinderLow);
+    IDEWriteDriveHead(CommandPort, IDE_DH_FIXED | DrvHead);
+
+    /* Issue the command */
+    IDEWriteCommand(CommandPort, Command);
+    StallExecutionProcessor(50);
+
+    /* Wait for DRQ or error */
+    for (RetryCount = 0; RetryCount < IDE_MAX_POLL_RETRIES; RetryCount++)
+    {
+        Status = IDEReadStatus(CommandPort);
+        if (!(Status & IDE_SR_BUSY))
         {
-          break;
-        }
-      StallExecutionProcessor(10);
-    }
-  TRACE("status=0x%x\n", Status);
-  TRACE("waited %d usecs for busy to clear\n", RetryCount * 10);
-  if (RetryCount >= IDE_MAX_BUSY_RETRIES)
-    {
-      WARN("Drive is BUSY for too long\n");
-      return FALSE;
-    }
-
-  /*  Write Drive/Head to select drive  */
-  IDEWriteDriveHead(CommandPort, IDE_DH_FIXED | DrvHead);
-  StallExecutionProcessor(500);
-
-  /* Disable interrupts */
-  IDEWriteDriveControl(ControlPort, IDE_DC_nIEN);
-  StallExecutionProcessor(500);
-
-  /*  Issue command to drive  */
-  if (DrvHead & IDE_DH_LBA)
-    {
-      TRACE("READ:DRV=%d:LBA=1:BLK=%d:SC=0x%x:CM=0x%x\n",
-            DrvHead & IDE_DH_DRV1 ? 1 : 0,
-            ((DrvHead & 0x0f) << 24) + (CylinderHigh << 16) + (CylinderLow << 8) + SectorNum,
-            SectorCnt,
-            Command);
-    }
-  else
-    {
-      TRACE("READ:DRV=%d:LBA=0:CH=0x%x:CL=0x%x:HD=0x%x:SN=0x%x:SC=0x%x:CM=0x%x\n",
-            DrvHead & IDE_DH_DRV1 ? 1 : 0,
-            CylinderHigh,
-            CylinderLow,
-            DrvHead & 0x0f,
-            SectorNum,
-            SectorCnt,
-            Command);
-    }
-
-  /*  Setup command parameters  */
-  IDEWritePrecomp(CommandPort, PreComp);
-  IDEWriteSectorCount(CommandPort, SectorCnt);
-  IDEWriteSectorNum(CommandPort, SectorNum);
-  IDEWriteCylinderHigh(CommandPort, CylinderHigh);
-  IDEWriteCylinderLow(CommandPort, CylinderLow);
-  IDEWriteDriveHead(CommandPort, IDE_DH_FIXED | DrvHead);
-
-  /*  Issue the command  */
-  IDEWriteCommand(CommandPort, Command);
-  StallExecutionProcessor(50);
-
-  /*  wait for DRQ or error  */
-  for (RetryCount = 0; RetryCount < IDE_MAX_POLL_RETRIES; RetryCount++)
-    {
-      Status = IDEReadStatus(CommandPort);
-      if (!(Status & IDE_SR_BUSY))
-    {
-      if (Status & IDE_SR_ERR)
-        {
-          IDEWriteDriveControl(ControlPort, 0);
-          StallExecutionProcessor(50);
-          IDEReadStatus(CommandPort);
-
-          return FALSE;
-        }
-
-      if (Status & IDE_SR_DRQ)
-        {
-          break;
-        }
-      else
-        {
-          IDEWriteDriveControl(ControlPort, 0);
-          StallExecutionProcessor(50);
-          IDEReadStatus(CommandPort);
-
-          return FALSE;
-        }
-    }
-      StallExecutionProcessor(10);
-    }
-
-  /*  timed out  */
-  if (RetryCount >= IDE_MAX_POLL_RETRIES)
-    {
-      IDEWriteDriveControl(ControlPort, 0);
-      StallExecutionProcessor(50);
-      IDEReadStatus(CommandPort);
-
-      return FALSE;
-    }
-
-  while (1)
-    {
-      /*  Read data into buffer  */
-      if (Junk == FALSE)
-    {
-      IDEReadBlock(CommandPort, Buffer, IDE_SECTOR_BUF_SZ);
-      Buffer = (PVOID)((ULONG_PTR)Buffer + IDE_SECTOR_BUF_SZ);
-    }
-      else
-    {
-      UCHAR JunkBuffer[IDE_SECTOR_BUF_SZ];
-      IDEReadBlock(CommandPort, JunkBuffer, IDE_SECTOR_BUF_SZ);
-    }
-      SectorCount++;
-
-      /*  Check for error or more sectors to read  */
-      for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
-    {
-      Status = IDEReadStatus(CommandPort);
-      if (!(Status & IDE_SR_BUSY))
-        {
-          if (Status & IDE_SR_ERR)
-        {
-          IDEWriteDriveControl(ControlPort, 0);
-          StallExecutionProcessor(50);
-          IDEReadStatus(CommandPort);
-
-          return FALSE;
-        }
-          if (Status & IDE_SR_DRQ)
-        {
-          if (SectorCount >= SectorCnt)
+            if (Status & IDE_SR_ERR)
             {
-              TRACE("Buffer size exceeded!\n");
-              Junk = TRUE;
+                IDEWriteDriveControl(ControlPort, 0);
+                StallExecutionProcessor(50);
+                IDEReadStatus(CommandPort);
+                return FALSE;
             }
-          break;
-        }
-          else
-        {
-          if (SectorCount > SectorCnt)
-            {
-              TRACE("Read %lu sectors of junk!\n",
-                    SectorCount - SectorCnt);
-            }
-          IDEWriteDriveControl(ControlPort, 0);
-          StallExecutionProcessor(50);
-          IDEReadStatus(CommandPort);
 
-          return TRUE;
+            if (Status & IDE_SR_DRQ)
+            {
+                break;
+            }
+            else
+            {
+                IDEWriteDriveControl(ControlPort, 0);
+                StallExecutionProcessor(50);
+                IDEReadStatus(CommandPort);
+                return FALSE;
+            }
         }
-        }
+        StallExecutionProcessor(10);
     }
+
+    /* Timed out */
+    if (RetryCount >= IDE_MAX_POLL_RETRIES)
+    {
+        IDEWriteDriveControl(ControlPort, 0);
+        StallExecutionProcessor(50);
+        IDEReadStatus(CommandPort);
+        return FALSE;
+    }
+
+    while (1)
+    {
+        /* Read data into buffer */
+        if (Junk == FALSE)
+        {
+            IDEReadBlock(CommandPort, Buffer, IDE_SECTOR_BUF_SZ);
+            Buffer = (PVOID)((ULONG_PTR)Buffer + IDE_SECTOR_BUF_SZ);
+        }
+        else
+        {
+            UCHAR JunkBuffer[IDE_SECTOR_BUF_SZ];
+            IDEReadBlock(CommandPort, JunkBuffer, IDE_SECTOR_BUF_SZ);
+        }
+        SectorCount++;
+
+        /* Check for error or more sectors to read */
+        for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
+        {
+            Status = IDEReadStatus(CommandPort);
+            if (!(Status & IDE_SR_BUSY))
+            {
+                if (Status & IDE_SR_ERR)
+                {
+                    IDEWriteDriveControl(ControlPort, 0);
+                    StallExecutionProcessor(50);
+                    IDEReadStatus(CommandPort);
+                    return FALSE;
+                }
+                if (Status & IDE_SR_DRQ)
+                {
+                    if (SectorCount >= SectorCnt)
+                    {
+                        TRACE("Buffer size exceeded!\n");
+                        Junk = TRUE;
+                    }
+                    break;
+                }
+                else
+                {
+                    if (SectorCount > SectorCnt)
+                    {
+                        TRACE("Read %lu sectors of junk!\n",
+                              SectorCount - SectorCnt);
+                    }
+
+                    IDEWriteDriveControl(ControlPort, 0);
+                    StallExecutionProcessor(50);
+                    IDEReadStatus(CommandPort);
+                    return TRUE;
+                }
+            }
+        }
     }
 }
 
 BOOLEAN
 XboxDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
-  ULONG StartSector;
-  UCHAR Count;
+    ULONG StartSector;
+    UCHAR Count;
 
-  if (DriveNumber < 0x80 || 2 <= (DriveNumber & 0x0f))
+    if (DriveNumber < 0x80 || 2 <= (DriveNumber & 0x0f))
     {
-      /* Xbox has only 1 IDE controller and no floppy */
-      WARN("Invalid drive number\n");
-      return FALSE;
+        /* Xbox has only 1 IDE controller and no floppy */
+        WARN("Invalid drive number\n");
+        return FALSE;
     }
 
-  if (UINT64_C(0) != ((SectorNumber + SectorCount) & UINT64_C(0xfffffffff0000000)))
+    if (UINT64_C(0) != ((SectorNumber + SectorCount) & UINT64_C(0xfffffffff0000000)))
     {
-      FIXME("48bit LBA required but not implemented\n");
-      return FALSE;
+        FIXME("48bit LBA required but not implemented\n");
+        return FALSE;
     }
 
-  StartSector = (ULONG) SectorNumber;
-  while (0 < SectorCount)
+    StartSector = (ULONG) SectorNumber;
+    while (0 < SectorCount)
     {
-      Count = (SectorCount <= 255 ? (UCHAR)SectorCount : 255);
-      if (! XboxDiskPolledRead(XBOX_IDE_COMMAND_PORT,
-                               XBOX_IDE_CONTROL_PORT,
-                               0, Count,
-                               StartSector & 0xff,
-                               (StartSector >> 8) & 0xff,
-                               (StartSector >> 16) & 0xff,
-                               ((StartSector >> 24) & 0x0f) | IDE_DH_LBA |
-                               (0 == (DriveNumber & 0x0f) ? IDE_DH_DRV0 : IDE_DH_DRV1),
-                               IDE_CMD_READ,
+        Count = (SectorCount <= 255 ? (UCHAR)SectorCount : 255);
+        if (!XboxDiskPolledRead(XBOX_IDE_COMMAND_PORT,
+                                XBOX_IDE_CONTROL_PORT,
+                                0, Count,
+                                StartSector & 0xff,
+                                (StartSector >> 8) & 0xff,
+                                (StartSector >> 16) & 0xff,
+                                ((StartSector >> 24) & 0x0f) | IDE_DH_LBA |
+                                (0 == (DriveNumber & 0x0f) ? IDE_DH_DRV0 : IDE_DH_DRV1),
+                                IDE_CMD_READ,
                                 Buffer))
         {
-          return FALSE;
+            return FALSE;
         }
-      SectorCount -= Count;
-      Buffer = (PVOID) ((PCHAR) Buffer + Count * IDE_SECTOR_BUF_SZ);
+        SectorCount -= Count;
+        Buffer = (PVOID) ((PCHAR) Buffer + Count * IDE_SECTOR_BUF_SZ);
     }
 
-  return TRUE;
+    return TRUE;
 }
 
 BOOLEAN
 XboxDiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
 {
-  UCHAR SectorData[IDE_SECTOR_BUF_SZ];
+    UCHAR SectorData[IDE_SECTOR_BUF_SZ];
 
-  /* This is the Xbox, chances are that there is a Xbox-standard partitionless
-   * disk in it so let's check that first */
-
-  if (1 <= PartitionNumber && PartitionNumber <= sizeof(XboxPartitions) / sizeof(XboxPartitions[0]) &&
-      MachDiskReadLogicalSectors(DriveNumber, XBOX_SIGNATURE_SECTOR, 1, SectorData))
+    /*
+     * This is the Xbox, chances are that there is a Xbox-standard
+     * partitionless disk in it so let's check that first.
+     */
+    if (1 <= PartitionNumber && PartitionNumber <= sizeof(XboxPartitions) / sizeof(XboxPartitions[0]) &&
+        MachDiskReadLogicalSectors(DriveNumber, XBOX_SIGNATURE_SECTOR, 1, SectorData))
     {
-      if (*((PULONG) SectorData) == XBOX_SIGNATURE)
+        if (*((PULONG) SectorData) == XBOX_SIGNATURE)
         {
-          memset(PartitionTableEntry, 0, sizeof(PARTITION_TABLE_ENTRY));
-          PartitionTableEntry->SystemIndicator = XboxPartitions[PartitionNumber - 1].SystemIndicator;
-          PartitionTableEntry->SectorCountBeforePartition = XboxPartitions[PartitionNumber - 1].SectorCountBeforePartition;
-          PartitionTableEntry->PartitionSectorCount = XboxPartitions[PartitionNumber - 1].PartitionSectorCount;
-          return TRUE;
+            memset(PartitionTableEntry, 0, sizeof(PARTITION_TABLE_ENTRY));
+            PartitionTableEntry->SystemIndicator = XboxPartitions[PartitionNumber - 1].SystemIndicator;
+            PartitionTableEntry->SectorCountBeforePartition = XboxPartitions[PartitionNumber - 1].SectorCountBeforePartition;
+            PartitionTableEntry->PartitionSectorCount = XboxPartitions[PartitionNumber - 1].PartitionSectorCount;
+            return TRUE;
         }
     }
 
-  /* No magic Xbox partitions. Maybe there's a MBR */
-  return DiskGetPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
+    /* No magic Xbox partitions, maybe there's a MBR */
+    return DiskGetMbrPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
 }
 
 BOOLEAN
 XboxDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY Geometry)
 {
-  IDE_DRIVE_IDENTIFY DrvParms;
-  ULONG i;
-  BOOLEAN Atapi;
+    IDE_DRIVE_IDENTIFY DrvParms;
+    ULONG i;
+    BOOLEAN Atapi;
 
-  Atapi = FALSE; /* FIXME */
-  /*  Get the Drive Identify block from drive or die  */
-  if (! XboxDiskPolledRead(XBOX_IDE_COMMAND_PORT,
-                           XBOX_IDE_CONTROL_PORT,
-                           0,
-                           1,
-                           0,
-                           0,
-                           0,
-                           (0 == (DriveNumber & 0x0f) ? IDE_DH_DRV0 : IDE_DH_DRV1),
-                           (Atapi ? IDE_CMD_IDENT_ATAPI_DRV : IDE_CMD_IDENT_ATA_DRV),
-                           (PUCHAR) &DrvParms))
+    Atapi = FALSE; /* FIXME */
+    /* Get the Drive Identify block from drive or die */
+    if (!XboxDiskPolledRead(XBOX_IDE_COMMAND_PORT,
+                            XBOX_IDE_CONTROL_PORT,
+                            0,
+                            1,
+                            0,
+                            0,
+                            0,
+                            (0 == (DriveNumber & 0x0f) ? IDE_DH_DRV0 : IDE_DH_DRV1),
+                            (Atapi ? IDE_CMD_IDENT_ATAPI_DRV : IDE_CMD_IDENT_ATA_DRV),
+                            (PUCHAR) &DrvParms))
     {
-      ERR("XboxDiskPolledRead() failed\n");
-      return FALSE;
+        ERR("XboxDiskPolledRead() failed\n");
+        return FALSE;
     }
 
-  Geometry->Cylinders = DrvParms.LogicalCyls;
-  Geometry->Heads = DrvParms.LogicalHeads;
-  Geometry->Sectors = DrvParms.SectorsPerTrack;
+    Geometry->Cylinders = DrvParms.LogicalCyls;
+    Geometry->Heads = DrvParms.LogicalHeads;
+    Geometry->Sectors = DrvParms.SectorsPerTrack;
 
-  if (! Atapi && 0 != (DrvParms.Capabilities & IDE_DRID_LBA_SUPPORTED))
+    if (! Atapi && 0 != (DrvParms.Capabilities & IDE_DRID_LBA_SUPPORTED))
     {
-      /* LBA ATA drives always have a sector size of 512 */
-      Geometry->BytesPerSector = 512;
+        /* LBA ATA drives always have a sector size of 512 */
+        Geometry->BytesPerSector = 512;
     }
-  else
+    else
     {
-      TRACE("BytesPerSector %d\n", DrvParms.BytesPerSector);
-      if (DrvParms.BytesPerSector == 0)
+        TRACE("BytesPerSector %d\n", DrvParms.BytesPerSector);
+        if (DrvParms.BytesPerSector == 0)
         {
-          Geometry->BytesPerSector = 512;
+            Geometry->BytesPerSector = 512;
         }
-      else
+        else
         {
-          for (i = 1 << 15; i; i /= 2)
+            for (i = 1 << 15; i; i /= 2)
             {
-              if (0 != (DrvParms.BytesPerSector & i))
+                if ((DrvParms.BytesPerSector & i) != 0)
                 {
-                  Geometry->BytesPerSector = i;
-                  break;
+                    Geometry->BytesPerSector = i;
+                    break;
                 }
             }
         }
     }
-  TRACE("Cylinders %d\n", Geometry->Cylinders);
-  TRACE("Heads %d\n", Geometry->Heads);
-  TRACE("Sectors %d\n", Geometry->Sectors);
-  TRACE("BytesPerSector %d\n", Geometry->BytesPerSector);
+    TRACE("Cylinders %d\n", Geometry->Cylinders);
+    TRACE("Heads %d\n", Geometry->Heads);
+    TRACE("Sectors %d\n", Geometry->Sectors);
+    TRACE("BytesPerSector %d\n", Geometry->BytesPerSector);
 
-  return TRUE;
+    return TRUE;
 }
 
 ULONG
 XboxDiskGetCacheableBlockCount(UCHAR DriveNumber)
 {
-  /* 64 seems a nice number, it is used by the machpc code for LBA devices */
-  return 64;
+    /* 64 seems a nice number, it is used by the machpc code for LBA devices */
+    return 64;
 }
 
 /* EOF */

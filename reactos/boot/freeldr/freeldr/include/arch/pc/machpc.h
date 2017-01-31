@@ -49,9 +49,11 @@ VOID PcPrepareForReactOS(IN BOOLEAN Setup);
 
 PFREELDR_MEMORY_DESCRIPTOR PcMemGetMemoryMap(ULONG *MemoryMapSize);
 
-BOOLEAN PcDiskGetBootPath(char *BootPath, unsigned Size);
+BOOLEAN DiskResetController(UCHAR DriveNumber);
+BOOLEAN DiskGetExtendedDriveParameters(UCHAR DriveNumber, PVOID Buffer, USHORT BufferSize);
+
+BOOLEAN PcDiskGetBootPath(OUT PCHAR BootPath, IN ULONG Size);
 BOOLEAN PcDiskReadLogicalSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
-BOOLEAN PcDiskGetPartitionEntry(UCHAR DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOLEAN PcDiskGetDriveGeometry(UCHAR DriveNumber, PGEOMETRY DriveGeometry);
 ULONG PcDiskGetCacheableBlockCount(UCHAR DriveNumber);
 
