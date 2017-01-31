@@ -82,7 +82,7 @@ INT cmd_type(LPTSTR param)
 
         hFile = CreateFile(argv[i],
                            GENERIC_READ,
-                           FILE_SHARE_READ, NULL,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
                            OPEN_EXISTING,
                            FILE_ATTRIBUTE_NORMAL, NULL);
 

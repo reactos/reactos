@@ -78,7 +78,14 @@ MmUseSpecialPool(SIZE_T NumberOfBytes, ULONG Tag)
 {
     /* Special pool is not suitable for allocations bigger than 1 page */
     if (NumberOfBytes > (PAGE_SIZE - sizeof(POOL_HEADER)))
+    {
         return FALSE;
+    }
+
+    if (MmSpecialPoolTag == '*')
+    {
+        return TRUE;
+    }
 
     return Tag == MmSpecialPoolTag;
 }
