@@ -1089,7 +1089,7 @@ PcVideoGetPaletteColor(UCHAR Color, UCHAR* Red, UCHAR* Green, UCHAR* Blue)
 VOID
 PcVideoSync(VOID)
 {
-  while (1 == (READ_PORT_UCHAR((UCHAR*)VIDEOPORT_VERTICAL_RETRACE) & 0x08))
+  while ((READ_PORT_UCHAR((UCHAR*)VIDEOPORT_VERTICAL_RETRACE) & 0x08))
     {
       /*
        * Keep reading the port until bit 3 is clear
@@ -1099,7 +1099,7 @@ PcVideoSync(VOID)
        */
     }
 
-  while (0 == (READ_PORT_UCHAR((UCHAR*)VIDEOPORT_VERTICAL_RETRACE) & 0x08))
+  while (!(READ_PORT_UCHAR((UCHAR*)VIDEOPORT_VERTICAL_RETRACE) & 0x08))
     {
       /*
        * Keep reading the port until bit 3 is set

@@ -645,7 +645,7 @@ LRESULT CMainWindow::OnCommand(UINT nMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
             break;
         case IDM_FORMATICONBAR:
             textEditWindow.ShowWindow(textEditWindow.IsWindowVisible() ? SW_HIDE : SW_SHOW);
-
+            break;
         case IDM_VIEWSHOWGRID:
             showGrid = !showGrid;
             imageArea.Invalidate(FALSE);
