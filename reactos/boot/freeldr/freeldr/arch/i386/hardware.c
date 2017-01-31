@@ -1678,6 +1678,18 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
     TRACE("Created key: DisplayController\\0\n");
 
     /* FIXME: Add display peripheral (monitor) data */
+    if (VesaVersion != 0)
+    {
+        if (BiosIsVesaDdcSupported())
+        {
+            TRACE("VESA/DDC supported!\n");
+            if (BiosVesaReadEdid())
+            {
+                TRACE("EDID data read successfully!\n");
+
+            }
+        }
+    }
 }
 
 

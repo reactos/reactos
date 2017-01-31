@@ -3314,7 +3314,7 @@ RtlCheckBit(
 # define NT_ASSERTMSGW NT_ASSERTMSGW_NOASSUME
 #endif /* NT_ASSERT_ALWAYS_ASSUMES */
 
-#if defined(_MSC_VER) && (defined(__REACTOS__) || defined(ASSERT_ALWAYS_NT_ASSERT))
+#if defined(_MSC_VER) && (defined(__REACTOS__) || defined(ASSERT_ALWAYS_NT_ASSERT)) && !defined(_BLDR_)
 #undef ASSERT
 #define ASSERT NT_ASSERT
 #undef ASSERTMSG

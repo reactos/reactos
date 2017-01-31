@@ -250,6 +250,9 @@ PickIconDlg(
 #define             SHUpdateImage WINELIB_NAME_AW(SHUpdateImage)
 int          WINAPI RestartDialog(_In_opt_ HWND, _In_opt_ LPCWSTR, DWORD);
 int          WINAPI RestartDialogEx(_In_opt_ HWND, _In_opt_ LPCWSTR, DWORD, DWORD);
+int          WINAPI DriveType(int);
+int          WINAPI RealDriveType(int, BOOL);
+int          WINAPI IsNetDrive(int);
 BOOL         WINAPI IsUserAnAdmin(void);
 
 #define KF_FLAG_DEFAULT_PATH        0x00000400
@@ -1438,8 +1441,10 @@ typedef enum RESTRICTIONS
 	REST_NORESOLVESEARCH,
 	REST_NORESOLVETRACK,
 	REST_FORCECOPYACLWITHFILE,
-	REST_NOLOGO3CHANNELNOTIFY,
-	REST_NOFORGETSOFTWAREUPDATE,
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+	REST_NOLOGO3CHANNELNOTIFY	= 0x4000001C,
+#endif
+	REST_NOFORGETSOFTWAREUPDATE	= 0x4000001D,
 	REST_NOSETACTIVEDESKTOP,
 	REST_NOUPDATEWINDOWS,
 	REST_NOCHANGESTARMENU,		/* 0x40000020 */
@@ -1629,13 +1634,16 @@ typedef enum {
     SLDF_FORCE_NO_LINKINFO = 0x00000100,
     SLDF_HAS_EXP_SZ = 0x00000200,
     SLDF_RUN_IN_SEPARATE = 0x00000400,
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
     SLDF_HAS_LOGO3ID = 0x00000800,
+#endif
     SLDF_HAS_DARWINID = 0x00001000,
     SLDF_RUNAS_USER = 0x00002000,
     SLDF_HAS_EXP_ICON_SZ = 0x00004000,
     SLDF_NO_PIDL_ALIAS = 0x00008000,
     SLDF_FORCE_UNCNAME = 0x00010000,
     SLDF_RUN_WITH_SHIMLAYER = 0x00020000,
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
     SLDF_FORCE_NO_LINKTRACK = 0x00040000,
     SLDF_ENABLE_TARGET_METADATA = 0x00080000,
     SLDF_DISABLE_LINK_PATH_TRACKING = 0x00100000,
@@ -1655,6 +1663,7 @@ typedef enum {
 #else
     SLDF_VALID = 0x003ff7ff, /* Windows Vista */
 #endif
+#endif
     SLDF_RESERVED = 0x80000000,
 } SHELL_LINK_DATA_FLAGS;
 
@@ -1663,32 +1672,6 @@ typedef struct tagDATABLOCKHEADER
     DWORD cbSize;
     DWORD dwSignature;
 } DATABLOCK_HEADER, *LPDATABLOCK_HEADER, *LPDBLIST;
-
-typedef struct {
-    DATABLOCK_HEADER dbh;
-    CHAR szDarwinID[MAX_PATH];
-    WCHAR szwDarwinID[MAX_PATH];
-} EXP_DARWIN_LINK, *LPEXP_DARWIN_LINK;
-
-typedef struct {
-    DWORD cbSize;
-    DWORD dwSignature;
-    CHAR szTarget[MAX_PATH];
-    WCHAR szwTarget[MAX_PATH];
-} EXP_SZ_LINK, *LPEXP_SZ_LINK;
-
-typedef struct {
-    DWORD cbSize;
-    DWORD dwSignature;
-    DWORD idSpecialFolder;
-    DWORD cbOffset;
-} EXP_SPECIAL_FOLDER, *LPEXP_SPECIAL_FOLDER;
-
-typedef struct {
-    DWORD cbSize;
-    DWORD dwSignature;
-    BYTE abPropertyStorage[1];
-} EXP_PROPERTYSTORAGE;
 
 #ifdef LF_FACESIZE
 typedef struct {
@@ -1721,14 +1704,42 @@ typedef struct {
     UINT uCodePage;
 } NT_FE_CONSOLE_PROPS, *LPNT_FE_CONSOLE_PROPS;
 
-#define EXP_SZ_LINK_SIG         0xa0000001 /* EXP_SZ_LINK */
-#define NT_CONSOLE_PROPS_SIG    0xa0000002 /* NT_CONSOLE_PROPS */
-#define NT_FE_CONSOLE_PROPS_SIG 0xa0000004 /* NT_FE_CONSOLE_PROPS */
-#define EXP_SPECIAL_FOLDER_SIG  0xa0000005 /* EXP_SPECIAL_FOLDER */
-#define EXP_DARWIN_ID_SIG       0xa0000006 /* EXP_DARWIN_LINK */
-#define EXP_SZ_ICON_SIG         0xa0000007 /* EXP_SZ_LINK */
-#define EXP_LOGO3_ID_SIG        EXP_SZ_ICON_SIG /* Old SDKs only */
-#define EXP_PROPERTYSTORAGE_SIG 0xa0000009 /* EXP_PROPERTYSTORAGE */
+typedef struct {
+    DWORD cbSize;
+    DWORD dwSignature;
+    CHAR szTarget[MAX_PATH];
+    WCHAR szwTarget[MAX_PATH];
+} EXP_SZ_LINK, *LPEXP_SZ_LINK;
+
+typedef struct {
+    DATABLOCK_HEADER dbh;
+    CHAR szDarwinID[MAX_PATH];
+    WCHAR szwDarwinID[MAX_PATH];
+} EXP_DARWIN_LINK, *LPEXP_DARWIN_LINK;
+
+typedef struct {
+    DWORD cbSize;
+    DWORD dwSignature;
+    DWORD idSpecialFolder;
+    DWORD cbOffset;
+} EXP_SPECIAL_FOLDER, *LPEXP_SPECIAL_FOLDER;
+
+typedef struct {
+    DWORD cbSize;
+    DWORD dwSignature;
+    BYTE abPropertyStorage[1];
+} EXP_PROPERTYSTORAGE;
+
+#define EXP_SZ_LINK_SIG         0xA0000001 /* EXP_SZ_LINK */
+#define NT_CONSOLE_PROPS_SIG    0xA0000002 /* NT_CONSOLE_PROPS */
+#define NT_FE_CONSOLE_PROPS_SIG 0xA0000004 /* NT_FE_CONSOLE_PROPS */
+#define EXP_SPECIAL_FOLDER_SIG  0xA0000005 /* EXP_SPECIAL_FOLDER */
+#define EXP_DARWIN_ID_SIG       0xA0000006 /* EXP_DARWIN_LINK */
+#if (NTDDI_VERSION < NTDDI_LONGHORN)
+#define EXP_LOGO3_ID_SIG        0xA0000007 /* EXP_DARWIN_LINK, for Logo3 / MS Internet Component Download (MSICD) shortcuts; old SDKs only (deprecated) */
+#endif
+#define EXP_SZ_ICON_SIG         0xA0000007 /* EXP_SZ_LINK */
+#define EXP_PROPERTYSTORAGE_SIG 0xA0000009 /* EXP_PROPERTYSTORAGE */
 
 typedef struct _SHChangeDWORDAsIDList {
     USHORT   cb;
@@ -2056,9 +2067,12 @@ BOOL WINAPI WriteCabinetState(_In_ CABINETSTATE *);
 /* PathResolve flags */
 #define PRF_VERIFYEXISTS         0x01
 #define PRF_EXECUTABLE           0x02
-#define PRF_TRYPROGRAMEXTENSIONS 0x03
+#define PRF_TRYPROGRAMEXTENSIONS (PRF_EXECUTABLE | PRF_VERIFYEXISTS)
 #define PRF_FIRSTDIRDEF          0x04
-#define PRF_DONTFINDLINK         0x08
+#define PRF_DONTFINDLNK          0x08 // Used when PRF_TRYPROGRAMEXTENSIONS is specified
+#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
+#define PRF_REQUIREABSOLUTE      0x10
+#endif
 
 VOID WINAPI PathGetShortPath(_Inout_updates_(MAX_PATH) LPWSTR pszPath);
 

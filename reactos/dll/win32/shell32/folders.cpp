@@ -19,6 +19,8 @@
 
 #include "precomp.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
 WCHAR swShell32Name[MAX_PATH];
 
 DWORD NumIconOverlayHandlers = 0;
@@ -196,12 +198,12 @@ GetIconOverlay(LPCITEMIDLIST pidl, WCHAR * wTemp, int* pIndex)
 
 HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID iid, LPVOID * ppvOut)
 {
-    CComPtr<IDefaultExtractIconInit>    initIcon;
+    CComPtr<IDefaultExtractIconInit> initIcon;
     HRESULT hr;
-    int icon_idx;
-    UINT flags;
-    CHAR sTemp[MAX_PATH];
-    WCHAR wTemp[MAX_PATH];
+    int icon_idx = 0;
+    UINT flags = 0; // FIXME: Use it!
+    CHAR sTemp[MAX_PATH] = "";
+    WCHAR wTemp[MAX_PATH] = L"";
 
     hr = SHCreateDefaultExtractIcon(IID_PPV_ARG(IDefaultExtractIconInit,&initIcon));
     if (FAILED(hr))
@@ -210,7 +212,7 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
     if (_ILIsFolder (pidl))
     {
         if (SUCCEEDED(getIconLocationForFolder(psf, 
-                          pidl, 0, wTemp, MAX_PATH,
+                          pidl, 0, wTemp, _countof(wTemp),
                           &icon_idx,
                           &flags)))
         {
@@ -221,21 +223,21 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
             initIcon->SetShortcutIcon(wTemp, icon_idx);
         }
         if (SUCCEEDED(getIconLocationForFolder(psf, 
-                          pidl, GIL_DEFAULTICON, wTemp, MAX_PATH,
+                          pidl, GIL_DEFAULTICON, wTemp, _countof(wTemp),
                           &icon_idx,
                           &flags)))
         {
             initIcon->SetDefaultIcon(wTemp, icon_idx);
         }
         // if (SUCCEEDED(getIconLocationForFolder(psf, 
-        //                   pidl, GIL_FORSHORTCUT, wTemp, MAX_PATH,
+        //                   pidl, GIL_FORSHORTCUT, wTemp, _countof(wTemp),
         //                   &icon_idx,
         //                   &flags)))
         // {
         //     initIcon->SetShortcutIcon(wTemp, icon_idx);
         // }
         if (SUCCEEDED(getIconLocationForFolder(psf, 
-                          pidl, GIL_OPENICON, wTemp, MAX_PATH,
+                          pidl, GIL_OPENICON, wTemp, _countof(wTemp),
                           &icon_idx,
                           &flags)))
         {
@@ -246,10 +248,10 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
     {
         BOOL found = FALSE;
 
-        if (_ILGetExtension(pidl, sTemp, MAX_PATH))
+        if (_ILGetExtension(pidl, sTemp, _countof(sTemp)))
         {
-            if (HCR_MapTypeToValueA(sTemp, sTemp, MAX_PATH, TRUE)
-                    && HCR_GetIconA(sTemp, sTemp, NULL, MAX_PATH, &icon_idx))
+            if (HCR_MapTypeToValueA(sTemp, sTemp, _countof(sTemp), TRUE)
+                    && HCR_GetIconA(sTemp, sTemp, NULL, _countof(sTemp), &icon_idx))
             {
                 if (!lstrcmpA("%1", sTemp)) /* icon is in the file */
                 {
@@ -258,7 +260,7 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
                 }
                 else
                 {
-                    MultiByteToWideChar(CP_ACP, 0, sTemp, -1, wTemp, MAX_PATH);
+                    MultiByteToWideChar(CP_ACP, 0, sTemp, -1, wTemp, _countof(wTemp));
                 }
 
                 found = TRUE;
@@ -266,21 +268,30 @@ HRESULT CFSExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, RE
             else if (!lstrcmpiA(sTemp, "lnkfile"))
             {
                 /* extract icon from shell shortcut */
-                CComPtr<IShellLinkW>        psl;
+                CComPtr<IShellLinkW> psl;
+                CComPtr<IExtractIconW> pei;
 
                 HRESULT hr = psf->GetUIObjectOf(NULL, 1, &pidl, IID_NULL_PPV_ARG(IShellLinkW, &psl));
-
                 if (SUCCEEDED(hr))
                 {
-                    hr = psl->GetIconLocation(wTemp, MAX_PATH, &icon_idx);
+                    hr = psl->GetIconLocation(wTemp, _countof(wTemp), &icon_idx);
+                    if (FAILED(hr) || !*wTemp)
+                    {
+                        /* The icon was not found directly, try to retrieve it from the shell link target */
+                        hr = psl->QueryInterface(IID_PPV_ARG(IExtractIconW, &pei));
+                        if (FAILED(hr) || !pei)
+                            TRACE("No IExtractIconW interface!\n");
+                        else
+                            hr = pei->GetIconLocation(GIL_FORSHELL, wTemp, _countof(wTemp), &icon_idx, &flags);
+                    }
 
-                    if (SUCCEEDED(hr) && *sTemp)
+                    if (SUCCEEDED(hr) && *wTemp)
                         found = TRUE;
-
                 }
             }
         }
 
+        /* FIXME: We should normally use the correct icon format according to 'flags' */
         if (!found)
             /* default icon */
             initIcon->SetNormalIcon(swShell32Name, 0);

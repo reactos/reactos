@@ -1,22 +1,4 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           System setup
@@ -96,24 +78,16 @@ CreateShellLink(
         hr = IShellLinkW_SetPath(psl, pszCmd);
 
         if (pszArg)
-        {
             hr = IShellLinkW_SetArguments(psl, pszArg);
-        }
 
         if (pszDir)
-        {
             hr = IShellLinkW_SetWorkingDirectory(psl, pszDir);
-        }
 
         if (pszIconPath)
-        {
             hr = IShellLinkW_SetIconLocation(psl, pszIconPath, iIconNr);
-        }
 
         if (pszComment)
-        {
             hr = IShellLinkW_SetDescription(psl, pszComment);
-        }
 
         hr = IShellLinkW_QueryInterface(psl, &IID_IPersistFile, (LPVOID*)&ppf);
 
@@ -139,62 +113,59 @@ CreateShortcut(
     INT iIconNr,
     LPCWSTR pszWorkingDir)
 {
-    WCHAR szPath[MAX_PATH];
-    WCHAR szExeName[MAX_PATH];
-    WCHAR szWorkingDirBuf[MAX_PATH];
+    DWORD dwLen;
     LPWSTR Ptr;
     LPWSTR lpFilePart;
-    DWORD dwLen;
+    WCHAR szPath[MAX_PATH];
+    WCHAR szWorkingDirBuf[MAX_PATH];
 
-    if (ExpandEnvironmentStringsW(pszCommand, szPath, ARRAYSIZE(szPath)) == 0)
+    /* If no working directory is provided, try to compute a default one */
+    if (pszWorkingDir == NULL || pszWorkingDir[0] == L'\0')
     {
-        wcscpy(szPath, pszCommand);
-    }
+        if (ExpandEnvironmentStringsW(pszCommand, szPath, ARRAYSIZE(szPath)) == 0)
+            wcscpy(szPath, pszCommand);
 
-    if (_waccess(szPath, 0) == -1)
-        /* Expected error, don't return FALSE */
-        return TRUE;
-
-    dwLen = GetFullPathNameW(szPath,
-                             ARRAYSIZE(szWorkingDirBuf),
-                             szWorkingDirBuf,
-                             &lpFilePart);
-    if (dwLen != 0 && dwLen <= ARRAYSIZE(szWorkingDirBuf))
-    {
-        /* Since those should only be called with (.exe) files,
-           lpFilePart has not to be NULL */
-        ASSERT(lpFilePart != NULL);
-
-        /* Save the file name */
-        wcscpy(szExeName, lpFilePart);
-
-        if (pszWorkingDir == NULL || pszWorkingDir[0] == L'\0')
+        dwLen = GetFullPathNameW(szPath,
+                                 ARRAYSIZE(szWorkingDirBuf),
+                                 szWorkingDirBuf,
+                                 &lpFilePart);
+        if (dwLen != 0 && dwLen <= ARRAYSIZE(szWorkingDirBuf))
         {
+            /* Since those should only be called with (.exe) files,
+               lpFilePart has not to be NULL */
+            ASSERT(lpFilePart != NULL);
+
             /* We're only interested in the path. Cut the file name off.
                Also remove the trailing backslash unless the working directory
-               is only going to be a drive, ie. C:\ */
+               is only going to be a drive, i.e. C:\ */
             *(lpFilePart--) = L'\0';
-            if (!(lpFilePart - szWorkingDirBuf == 2 && szWorkingDirBuf[1] == L':' &&
-                  szWorkingDirBuf[2] == L'\\'))
+            if (!(lpFilePart - szWorkingDirBuf == 2 &&
+                  szWorkingDirBuf[1] == L':' && szWorkingDirBuf[2] == L'\\'))
             {
                 *lpFilePart = L'\0';
             }
             pszWorkingDir = szWorkingDirBuf;
         }
     }
-    else if (pszWorkingDir && pszWorkingDir[0] == L'\0')
-    {
+
+    /* If we failed to compute a working directory, just do not use one */
+    if (pszWorkingDir && pszWorkingDir[0] == L'\0')
         pszWorkingDir = NULL;
-    }
 
+    /* Build the shortcut file name */
     wcscpy(szPath, pszFolder);
-
     Ptr = PathAddBackslash(szPath);
-
     wcscpy(Ptr, pszName);
 
-    // FIXME: we should pass 'command' straight in here, but shell32 doesn't expand it
-    return SUCCEEDED(CreateShellLink(szPath, szExeName, L"", pszWorkingDir, szExeName, iIconNr, pszDescription));
+    /* Create the shortcut */
+    return SUCCEEDED(CreateShellLink(szPath,
+                                     pszCommand,
+                                     L"",
+                                     pszWorkingDir,
+                                     /* Special value to indicate no icon */
+                                     (iIconNr != -1 ? pszCommand : NULL),
+                                     iIconNr,
+                                     pszDescription));
 }
 
 
@@ -202,11 +173,11 @@ static BOOL CreateShortcutsFromSection(HINF hinf, LPWSTR pszSection, LPCWSTR psz
 {
     INFCONTEXT Context;
     DWORD dwFieldCount;
+    INT iIconNr;
     WCHAR szCommand[MAX_PATH];
     WCHAR szName[MAX_PATH];
     WCHAR szDescription[MAX_PATH];
     WCHAR szDirectory[MAX_PATH];
-    INT iIconNr;
 
     if (!SetupFindFirstLine(hinf, pszSection, NULL, &Context))
         return FALSE;
@@ -214,7 +185,7 @@ static BOOL CreateShortcutsFromSection(HINF hinf, LPWSTR pszSection, LPCWSTR psz
     do
     {
         dwFieldCount = SetupGetFieldCount(&Context);
-        if (dwFieldCount < 4)
+        if (dwFieldCount < 3)
             continue;
 
         if (!SetupGetStringFieldW(&Context, 1, szCommand, ARRAYSIZE(szCommand), NULL))
@@ -226,8 +197,8 @@ static BOOL CreateShortcutsFromSection(HINF hinf, LPWSTR pszSection, LPCWSTR psz
         if (!SetupGetStringFieldW(&Context, 3, szDescription, ARRAYSIZE(szDescription), NULL))
             continue;
 
-        if (!SetupGetIntField(&Context, 4, &iIconNr))
-            continue;
+        if (dwFieldCount < 4 || !SetupGetIntField(&Context, 4, &iIconNr))
+            iIconNr = -1; /* Special value to indicate no icon */
 
         if (dwFieldCount < 5 || !SetupGetStringFieldW(&Context, 5, szDirectory, ARRAYSIZE(szDirectory), NULL))
             szDirectory[0] = L'\0';
@@ -449,7 +420,7 @@ InstallSysSetupInfComponents(VOID)
 
 
 BOOL
-RegisterTypeLibraries (HINF hinf, LPCWSTR szSection)
+RegisterTypeLibraries(HINF hinf, LPCWSTR szSection)
 {
     INFCONTEXT InfContext;
     BOOL res;

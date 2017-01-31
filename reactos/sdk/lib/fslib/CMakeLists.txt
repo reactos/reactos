@@ -1,4 +1,5 @@
 
+add_subdirectory(btrfslib)
 add_subdirectory(ext2lib)
 add_subdirectory(ffslib)
 add_subdirectory(ntfslib)

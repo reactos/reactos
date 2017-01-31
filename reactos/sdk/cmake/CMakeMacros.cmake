@@ -817,3 +817,29 @@ endif()
 function(add_rc_deps _target_rc)
     set_source_files_properties(${_target_rc} PROPERTIES OBJECT_DEPENDS "${ARGN}")
 endfunction()
+
+add_custom_target(rostests_install COMMAND ${CMAKE_COMMAND} -DCOMPONENT=rostests -P ${CMAKE_BINARY_DIR}/cmake_install.cmake)
+function(add_rostests_file)
+    cmake_parse_arguments(_ROSTESTS "" "RENAME;SUBDIR;TARGET" "FILE" ${ARGN})
+    if(NOT (_ROSTESTS_TARGET OR _ROSTESTS_FILE))
+        message(FATAL_ERROR "You must provide a target or a file to install!")
+    endif()
+
+    if(NOT _ROSTESTS_FILE)
+        get_target_property(_ROSTESTS_FILE ${_ROSTESTS_TARGET} LOCATION_${CMAKE_BUILD_TYPE})
+    endif()
+
+    if(NOT _ROSTESTS_RENAME)
+        get_filename_component(_ROSTESTS_RENAME ${_ROSTESTS_FILE} NAME)
+    endif()
+
+    if(_ROSTESTS_SUBDIR)
+        set(_ROSTESTS_SUBDIR "/${_ROSTESTS_SUBDIR}")
+    endif()
+
+    add_cd_file(FILE ${_ROSTESTS_FILE} DESTINATION "reactos/bin${_ROSTESTS_SUBDIR}" NAME_ON_CD ${_ROSTESTS_RENAME} FOR all)
+
+    if(DEFINED ENV{ROSTESTS_INSTALL})
+        install(FILES ${_ROSTESTS_FILE} DESTINATION "$ENV{ROSTESTS_INSTALL}${_ROSTESTS_SUBDIR}" COMPONENT rostests RENAME ${_ROSTESTS_RENAME})
+    endif()
+endfunction()

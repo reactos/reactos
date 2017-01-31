@@ -39,28 +39,22 @@
 
 /* FUNCTIONS ****************************************************************/
 
-static PWCHAR
-CdfsGetNextPathElement(PWCHAR FileName)
+static BOOLEAN
+CdfsGetNextPathElement(PCUNICODE_STRING CurrentElement, PUNICODE_STRING NextElement)
 {
-    if (*FileName == L'\0')
+    *NextElement = *CurrentElement;
+
+    if (NextElement->Length == 0)
+        return FALSE;
+
+    while ((NextElement->Length) && (NextElement->Buffer[0] != L'\\'))
     {
-        return(NULL);
+        NextElement->Buffer++;
+        NextElement->Length -= sizeof(WCHAR);
+        NextElement->MaximumLength -= sizeof(WCHAR);
     }
 
-    while (*FileName != L'\0' && *FileName != L'\\')
-    {
-        FileName++;
-    }
-
-    return(FileName);
-}
-
-
-static VOID
-CdfsWSubString(LPWSTR pTarget, LPCWSTR pSource, size_t pLength)
-{
-    wcsncpy (pTarget, pSource, pLength);
-    pTarget [pLength] = L'\0';
+    return TRUE;
 }
 
 
@@ -607,11 +601,9 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
                   PUNICODE_STRING FileName)
 {
     UNICODE_STRING PathName;
-    UNICODE_STRING ElementName;
+    UNICODE_STRING NextElement;
+    UNICODE_STRING CurrentElement;
     NTSTATUS Status;
-    WCHAR  pathName [MAX_PATH];
-    WCHAR  elementName [MAX_PATH];
-    PWCHAR  currentElement;
     PFCB  FCB;
     PFCB  parentFCB;
 
@@ -622,7 +614,8 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
         FileName);
 
     /* Trivial case, open of the root directory on volume */
-    if (FileName->Buffer[0] == L'\0' || wcscmp(FileName->Buffer, L"\\") == 0)
+    if (FileName->Length == 0 ||
+            ((FileName->Buffer[0] == '\\') && (FileName->Length == sizeof(WCHAR))))
     {
         DPRINT("returning root FCB\n");
 
@@ -634,23 +627,28 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
     }
     else
     {
-        currentElement = &FileName->Buffer[1];
-        wcscpy (pathName, L"\\");
+        /* Start with empty path */
+        PathName = *FileName;
+        PathName.Length = 0;
+        CurrentElement = *FileName;
+
         FCB = CdfsOpenRootFCB (Vcb);
     }
     parentFCB = NULL;
 
     /* Parse filename and check each path element for existence and access */
-    while (CdfsGetNextPathElement(currentElement) != 0)
+    while (CdfsGetNextPathElement(&CurrentElement, &NextElement))
     {
         /*  Skip blank directory levels */
-        if ((CdfsGetNextPathElement(currentElement) - currentElement) == 0)
+        if (CurrentElement.Buffer[0] == L'\\')
         {
-            currentElement++;
+            CurrentElement.Buffer++;
+            CurrentElement.Length -= sizeof(WCHAR);
+            CurrentElement.MaximumLength -= sizeof(WCHAR);
             continue;
         }
 
-        DPRINT("Parsing, currentElement:%S\n", currentElement);
+        DPRINT("Parsing, currentElement:%wZ\n", &CurrentElement);
         DPRINT("  parentFCB:%p FCB:%p\n", parentFCB, FCB);
 
         /* Descend to next directory level */
@@ -674,33 +672,26 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
         }
         parentFCB = FCB;
 
-        /* Extract next directory level into dirName */
-        CdfsWSubString(pathName,
-            FileName->Buffer,
-            CdfsGetNextPathElement(currentElement) - FileName->Buffer);
-        DPRINT("  pathName:%S\n", pathName);
-
-        RtlInitUnicodeString(&PathName, pathName);
+        /* Extract next directory level */
+        PathName.Length = (NextElement.Buffer - FileName->Buffer) * sizeof(WCHAR);
+        DPRINT("  PathName:%wZ\n", &PathName);
 
         FCB = CdfsGrabFCBFromTable(Vcb, &PathName);
         if (FCB == NULL)
         {
-            CdfsWSubString(elementName,
-                currentElement,
-                CdfsGetNextPathElement(currentElement) - currentElement);
-            DPRINT("  elementName:%S\n", elementName);
+            UNICODE_STRING ChildElement = CurrentElement;
+            ChildElement.Length = (NextElement.Buffer - CurrentElement.Buffer) * sizeof(WCHAR);
 
-            RtlInitUnicodeString(&ElementName, elementName);
             Status = CdfsDirFindFile(Vcb,
                 parentFCB,
-                &ElementName,
+                &ChildElement,
                 &FCB);
             if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
             {
                 *pParentFCB = parentFCB;
                 *pFCB = NULL;
-                currentElement = CdfsGetNextPathElement(currentElement);
-                if (*currentElement == L'\0' || CdfsGetNextPathElement(currentElement + 1) == 0)
+
+                if (NextElement.Length == 0)
                 {
                     return(STATUS_OBJECT_NAME_NOT_FOUND);
                 }
@@ -718,7 +709,7 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
                 return(Status);
             }
         }
-        currentElement = CdfsGetNextPathElement(currentElement);
+        CurrentElement = NextElement;
     }
 
     *pParentFCB = parentFCB;

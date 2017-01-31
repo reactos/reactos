@@ -284,8 +284,8 @@ BEGIN
     LTEXT "Copyright : ", 14004, 10, 46, 66, 10
     EDITTEXT 14005, 77, 46, 152, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER
     GROUPBOX "Autres informations de version : ", 14006, 6, 70, 222, 115
-    LTEXT "Nom de l'élément : ", 14007, 13, 82, 50, 10
-    LTEXT "Valeur : ", 14008, 112, 82, 45, 10
+    LTEXT "Nom de l'élément : ", 14007, 13, 82, 94, 10
+    LTEXT "Valeur : ", 14008, 112, 82, 94, 10
     LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
     EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
@@ -389,8 +389,8 @@ CAPTION "Ouvrir avec"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
-    LTEXT "Choisissez le programme que vous désirez utiliser pour ouvrir ce fichier :", -1, 44, 12, 211, 10
-    LTEXT "Fichier :    ", 14001, 44, 25, 188, 20
+    LTEXT "Choisissez le programme que vous désirez utiliser pour ouvrir ce fichier :", -1, 44, 5, 211, 20
+    LTEXT "Fichier :    ", 14001, 44, 25, 213, 20
     GROUPBOX "&Programmes", -1, 7, 42, 249, 187
     CONTROL "Programmes", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
     AUTOCHECKBOX "Toujours utiliser le progr&amme sélectionné pour ouvrir ce type de fichier", 14003, 20, 193, 225, 10

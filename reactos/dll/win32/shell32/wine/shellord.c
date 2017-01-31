@@ -1292,8 +1292,8 @@ BOOL WINAPI WriteCabinetState(CABINETSTATE *cs)
  *
  */
 BOOL WINAPI FileIconInit(BOOL bFullInit)
-{
-    return SIC_Initialize();
+{	FIXME("(%s)\n", bFullInit ? "true" : "false");
+	return FALSE;
 }
 
 /*************************************************************************

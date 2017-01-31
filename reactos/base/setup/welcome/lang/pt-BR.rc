@@ -8,8 +8,9 @@ BEGIN
     IDS_APPTITLE "ReactOS - Bem vindo"
     IDS_DEFAULTTOPICTITLE "ReactOS"
     IDS_DEFAULTTOPICDESC "Bem vindo ao Sistema Operacional ReactOS.\n\nClique em um tópico à esquerda."
-//    IDS_CHECKTEXT "Exibir este diálogo novamente"
-//    IDS_CLOSETEXT "Sair"
+
+    IDS_CHECKTEXT "Exibir este diálogo novamente"
+    IDS_CLOSETEXT "Sair"
 END
 
 /* Topic buttons */
@@ -18,13 +19,6 @@ BEGIN
     IDS_TOPICBUTTON0 "Instalar ReactOS"
     IDS_TOPICBUTTON1 "Examinar este CD"
     IDS_TOPICBUTTON2 "Sair"
-//    IDS_TOPICBUTTON3 "Empty Topic 3"
-//    IDS_TOPICBUTTON4 "Empty Topic 4"
-//    IDS_TOPICBUTTON5 "Empty Topic 5"
-//    IDS_TOPICBUTTON6 "Empty Topic 6"
-//    IDS_TOPICBUTTON7 "Empty Topic 7"
-//    IDS_TOPICBUTTON8 "Empty Topic 8"
-//    IDS_TOPICBUTTON9 "Empty Topic 9"
 END
 
 /* Topic titles */
@@ -33,13 +27,6 @@ BEGIN
     IDS_TOPICTITLE0 "Instalar ReactOS"
     IDS_TOPICTITLE1 "Examinar este CD"
     IDS_TOPICTITLE2 "Sair"
-//    IDS_TOPICTITLE3 "Empty Topic Title 3"
-//    IDS_TOPICTITLE4 "Empty Topic Title 4"
-//    IDS_TOPICTITLE5 "Empty Topic Title 5"
-//    IDS_TOPICTITLE6 "Empty Topic Title 6"
-//    IDS_TOPICTITLE7 "Empty Topic Title 7"
-//    IDS_TOPICTITLE8 "Empty Topic Title 8"
-//    IDS_TOPICTITLE9 "Empty Topic Title 9"
 END
 
 /* Topic descriptions */
@@ -48,11 +35,4 @@ BEGIN
     IDS_TOPICDESC0 "Cria uma nova instalação do ReactOS em seu computador ou atualiza uma instalação já existente."
     IDS_TOPICDESC1 "Exibe os arquivos contidos no CD."
     IDS_TOPICDESC2 "Clique para fechar este aplicativo."
-//    IDS_TOPICDESC3 "Topic description 3.\n\nDescribe topic 3 here."
-//    IDS_TOPICDESC4 "Topic description 4.\n\nDescribe topic 4 here."
-//    IDS_TOPICDESC5 "Topic description 5.\n\nDescribe topic 5 here."
-//    IDS_TOPICDESC6 "Topic description 6.\n\nDescribe topic 6 here."
-//    IDS_TOPICDESC7 "Topic description 7.\n\nDescribe topic 7 here."
-//    IDS_TOPICDESC8 "Topic description 8.\n\nDescribe topic 8 here."
-//    IDS_TOPICDESC9 "Topic description 9.\n\nDescribe topic 9 here."
 END
