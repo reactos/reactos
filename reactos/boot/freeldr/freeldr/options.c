@@ -277,5 +277,9 @@ VOID AppendBootTimeOptions(PCHAR BootOptions)
         strcat(BootOptions, " /BASEVIDEO");
 
     if (DebuggingMode)
+#if 0
         strcat(BootOptions, " /DEBUG");
+#else
+        strcat(BootOptions, " /DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /DEBUGPORT=SCREEN /SOS");
+#endif
 }
