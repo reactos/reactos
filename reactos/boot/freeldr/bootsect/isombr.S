@@ -9,7 +9,7 @@
 .code16
 
 // The "isohybrid" tool patching our ISO will write the LBA of the El Torito BIOS Boot Sector to this address.
-pBootSectorLBA = start+432;
+pBootSectorLBA = start+432
 
 // Our BIOS Boot Sector contains this signature at the specified position and our third-party imported "isohybrid" patching tool checks for it.
 // This is also why it's the same signature ISOLINUX uses.
@@ -96,6 +96,8 @@ die:
     jmp die
 
 // The "isohybrid" tool will add the remaining information, including the infamous 0xAA55 MBR signature.
+.org 431
+    .byte 0
 
 .endcode16
 
