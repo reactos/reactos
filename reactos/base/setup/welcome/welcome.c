@@ -197,7 +197,7 @@ VOID TranslateEscapes(IN OUT LPTSTR lpString)
 }
 
 static BOOL
-LoadTopicsFromINI(LCID Locale, LPTSTR lpResPath)
+LoadLocalizedResourcesFromINI(LCID Locale, LPTSTR lpResPath)
 {
     DWORD dwRet;
     DWORD dwSize;
@@ -236,6 +236,8 @@ LoadTopicsFromINI(LCID Locale, LPTSTR lpResPath)
         return FALSE; // TODO: For localized resource, see the general function.
 
     /* Try to load the default localized strings */
+    GetPrivateProfileString(TEXT("Defaults"), TEXT("AppTitle"), TEXT("ReactOS Welcome") /* default */,
+                            szAppTitle, ARRAYSIZE(szAppTitle), szIniPath);
     if (!GetPrivateProfileString(TEXT("Defaults"), TEXT("DefaultTopicTitle"), NULL /* default */,
                                  szDefaultTitle, ARRAYSIZE(szDefaultTitle), szIniPath))
     {
@@ -325,7 +327,7 @@ LoadTopicsFromINI(LCID Locale, LPTSTR lpResPath)
 }
 
 static BOOL
-LoadTopics(LPTSTR lpResPath)
+LoadLocalizedResources(LPTSTR lpResPath)
 {
 #define MAX_NUMBER_INTERNAL_TOPICS  3
 
@@ -339,13 +341,15 @@ LoadTopics(LPTSTR lpResPath)
      * First, try to load the default internal (localized) strings.
      * They can be redefined by the localized INI files.
      */
+    if (!LoadString(hInstance, IDS_APPTITLE, szAppTitle, ARRAYSIZE(szAppTitle)))
+        StringCchCopy(szAppTitle, ARRAYSIZE(szAppTitle), TEXT("ReactOS Welcome"));
     if (!LoadString(hInstance, IDS_DEFAULTTOPICTITLE, szDefaultTitle, ARRAYSIZE(szDefaultTitle)))
         *szDefaultTitle = 0;
     if (!LoadString(hInstance, IDS_DEFAULTTOPICDESC, szDefaultDesc, ARRAYSIZE(szDefaultDesc)))
         *szDefaultDesc = 0;
 
-    /* Try to load the topics from INI file */
-    if (*lpResPath && LoadTopicsFromINI(LOCALE_USER_DEFAULT, lpResPath))
+    /* Try to load the resources from INI file */
+    if (*lpResPath && LoadLocalizedResourcesFromINI(LOCALE_USER_DEFAULT, lpResPath))
         return TRUE;
 
     /* We failed, fall back to internal (localized) resource */
@@ -381,7 +385,7 @@ LoadTopics(LPTSTR lpResPath)
 }
 
 static VOID
-FreeTopics(VOID)
+FreeResources(VOID)
 {
     if (!pTopics)
         return;
@@ -421,8 +425,8 @@ LoadConfiguration(VOID)
     /* Verify that the file exists, otherwise use the default configuration */
     if (GetFileAttributes(szIniPath) == INVALID_FILE_ATTRIBUTES)
     {
-        /* Use the default configuration and retrieve the default topics */
-        return LoadTopics(TEXT(""));
+        /* Use the default configuration and retrieve the default resources */
+        return LoadLocalizedResources(TEXT(""));
     }
 
     /* Load the settings from the INI configuration file */
@@ -435,9 +439,9 @@ LoadConfiguration(VOID)
         *szResPath = 0;
     }
 
-    /* Set the current directory to the one of this application, and retrieve the topics */
+    /* Set the current directory to the one of this application, and retrieve the resources */
     SetCurrentDirectory(szAppPath);
-    return LoadTopics(szResPath);
+    return LoadLocalizedResources(szResPath);
 }
 
 #if 0
@@ -556,10 +560,7 @@ _tWinMain(HINSTANCE hInst,
     rcRightPanel.left = rcLeftPanel.right;
     rcRightPanel.right = ulInnerWidth - 1;
 
-    if (!LoadString(hInstance, IDS_APPTITLE, szAppTitle, ARRAYSIZE(szAppTitle)))
-        StringCchCopy(szAppTitle, ARRAYSIZE(szAppTitle), TEXT("ReactOS Welcome"));
-
-    /* Load the configuration and the topics */
+    /* Load the configuration and the resources */
     LoadConfiguration();
 
     /* Create main window */
@@ -592,7 +593,7 @@ _tWinMain(HINSTANCE hInst,
     }
 
     /* Cleanup */
-    FreeTopics();
+    FreeResources();
 
     return msg.wParam;
 }
