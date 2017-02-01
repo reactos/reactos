@@ -514,15 +514,6 @@ MiRosCleanupMemoryArea(
     PEPROCESS Process,
     PMMVAD Vad);
 
-NTSTATUS
-NTAPI
-MmFreeMemoryAreaByPtr(
-    PMMSUPPORT AddressSpace,
-    PVOID BaseAddress,
-    PMM_FREE_PAGE_FUNC FreePage,
-    PVOID FreePageContext
-);
-
 PMEMORY_AREA
 NTAPI
 MmLocateMemoryAreaByRegion(
