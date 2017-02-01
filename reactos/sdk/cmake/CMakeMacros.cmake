@@ -290,49 +290,49 @@ function(add_cd_file)
         message(FATAL_ERROR "You must provide a cd name (or \"all\" for all of them) to install the file on!")
     endif()
 
-    #get file if we need to
+    # get file if we need to
     if(NOT _CD_FILE)
         get_target_property(_CD_FILE ${_CD_TARGET} LOCATION_${CMAKE_BUILD_TYPE})
     endif()
 
-    #do we add it to all CDs?
+    # do we add it to all CDs?
     list(FIND _CD_FOR all __cd)
     if(NOT __cd EQUAL -1)
         list(REMOVE_AT _CD_FOR __cd)
         list(INSERT _CD_FOR __cd "bootcd;livecd;regtest")
     endif()
 
-    #do we add it to bootcd?
+    # do we add it to bootcd?
     list(FIND _CD_FOR bootcd __cd)
     if(NOT __cd EQUAL -1)
-        #whether or not we should put it in reactos.cab or directly on cd
+        # whether or not we should put it in reactos.cab or directly on cd
         if(_CD_NO_CAB)
-            #directly on cd
+            # directly on cd
             foreach(item ${_CD_FILE})
                 if(_CD_NAME_ON_CD)
-                    #rename it in the cd tree
+                    # rename it in the cd tree
                     set(__file ${_CD_NAME_ON_CD})
                 else()
                     get_filename_component(__file ${item} NAME)
                 endif()
                 set_property(GLOBAL APPEND PROPERTY BOOTCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
-                #add it also into the hybridcd if not specified otherwise
+                # add it also into the hybridcd if not specified otherwise
                 if(NOT _CD_NOT_IN_HYBRIDCD)
                     set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "bootcd/${_CD_DESTINATION}/${__file}=${item}")
                 endif()
             endforeach()
+            # manage dependency
             if(_CD_TARGET)
-                #manage dependency
                 add_dependencies(bootcd ${_CD_TARGET} registry_inf)
             endif()
         else()
-            #add it in reactos.cab
+            # add it in reactos.cab
             dir_to_num(${_CD_DESTINATION} _num)
             file(RELATIVE_PATH __relative_file ${REACTOS_SOURCE_DIR} ${_CD_FILE})
             file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.dyn "\"${__relative_file}\" ${_num}\n")
             unset(__relative_file)
+            # manage dependency - target level
             if(_CD_TARGET)
-                #manage dependency - target level
                 add_dependencies(reactos_cab_inf ${_CD_TARGET})
             endif()
             # manage dependency - file level
@@ -340,34 +340,38 @@ function(add_cd_file)
         endif()
     endif() #end bootcd
 
-    #do we add it to livecd?
+    # do we add it to livecd?
     list(FIND _CD_FOR livecd __cd)
     if(NOT __cd EQUAL -1)
-        #manage dependency
+        # manage dependency
         if(_CD_TARGET)
             add_dependencies(livecd ${_CD_TARGET} registry_inf)
         endif()
         foreach(item ${_CD_FILE})
             if(_CD_NAME_ON_CD)
-                #rename it in the cd tree
+                # rename it in the cd tree
                 set(__file ${_CD_NAME_ON_CD})
             else()
                 get_filename_component(__file ${item} NAME)
             endif()
             set_property(GLOBAL APPEND PROPERTY LIVECD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
-            #add it also into the hybridcd if not specified otherwise
+            # add it also into the hybridcd if not specified otherwise
             if(NOT _CD_NOT_IN_HYBRIDCD)
                 set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "livecd/${_CD_DESTINATION}/${__file}=${item}")
             endif()
         endforeach()
     endif() #end livecd
 
-    #do we need also to add it to hybridcd?
+    # do we need also to add it to hybridcd?
     list(FIND _CD_FOR hybridcd __cd)
     if(NOT __cd EQUAL -1)
+        # manage dependency
+        if(_CD_TARGET)
+            add_dependencies(hybridcd ${_CD_TARGET})
+        endif()
         foreach(item ${_CD_FILE})
             if(_CD_NAME_ON_CD)
-                #rename it in the cd tree
+                # rename it in the cd tree
                 set(__file ${_CD_NAME_ON_CD})
             else()
                 get_filename_component(__file ${item} NAME)
@@ -376,23 +380,23 @@ function(add_cd_file)
         endforeach()
     endif() #end hybridcd
 
-    #do we add it to regtest?
+    # do we add it to regtest?
     list(FIND _CD_FOR regtest __cd)
     if(NOT __cd EQUAL -1)
-        #whether or not we should put it in reactos.cab or directly on cd
+        # whether or not we should put it in reactos.cab or directly on cd
         if(_CD_NO_CAB)
-            #directly on cd
+            # directly on cd
             foreach(item ${_CD_FILE})
                 if(_CD_NAME_ON_CD)
-                    #rename it in the cd tree
+                    # rename it in the cd tree
                     set(__file ${_CD_NAME_ON_CD})
                 else()
                     get_filename_component(__file ${item} NAME)
                 endif()
                 set_property(GLOBAL APPEND PROPERTY BOOTCDREGTEST_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
             endforeach()
+            # manage dependency
             if(_CD_TARGET)
-                #manage dependency
                 add_dependencies(bootcdregtest ${_CD_TARGET} registry_inf)
             endif()
         else()
