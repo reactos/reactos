@@ -71,8 +71,7 @@ HBITMAP hDefaultTopicBitmap = NULL;
 HWND hWndCloseButton = NULL;
 HWND hWndCheckButton = NULL;
 
-/* TODO: Retrieve the preferences from a configuration file */
-BOOL bDisplayCheckBox = FALSE; // FIXME!
+BOOL bDisplayCheckBox = FALSE; // FIXME: We should also repaint the OS version correctly!
 BOOL bDisplayExitBtn  = TRUE;
 
 #define BUFFER_SIZE 1024
@@ -121,7 +120,7 @@ MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /* FUNCTIONS ****************************************************************/
 
-INT GetLocaleName(LCID Locale, LPTSTR lpLCData, SIZE_T cchData)
+INT GetLocaleName(IN LCID Locale, OUT LPTSTR lpLCData, IN SIZE_T cchData)
 {
     INT ret, ret2;
 
@@ -197,7 +196,8 @@ VOID TranslateEscapes(IN OUT LPTSTR lpString)
     }
 }
 
-BOOL LoadTopicsFromINI(LCID Locale)
+static BOOL
+LoadTopicsFromINI(LCID Locale, LPTSTR lpResPath)
 {
     DWORD dwRet;
     DWORD dwSize;
@@ -215,7 +215,7 @@ BOOL LoadTopicsFromINI(LCID Locale)
     }
 
     /* Build the INI file name */
-    GetCurrentDirectory(ARRAYSIZE(szIniPath), szIniPath);
+    StringCchCopy(szIniPath, ARRAYSIZE(szIniPath), lpResPath);
     StringCchCat(szIniPath, ARRAYSIZE(szIniPath), TEXT("\\"));
     StringCchCat(szIniPath, ARRAYSIZE(szIniPath), szBuffer);
     StringCchCat(szIniPath, ARRAYSIZE(szIniPath), TEXT(".ini"));
@@ -225,7 +225,7 @@ BOOL LoadTopicsFromINI(LCID Locale)
     {
         StringCchCopy(szBuffer, ARRAYSIZE(szBuffer), TEXT("en-US"));
 
-        GetCurrentDirectory(ARRAYSIZE(szIniPath), szIniPath);
+        StringCchCopy(szIniPath, ARRAYSIZE(szIniPath), lpResPath);
         StringCchCat(szIniPath, ARRAYSIZE(szIniPath), TEXT("\\"));
         StringCchCat(szIniPath, ARRAYSIZE(szIniPath), szBuffer);
         StringCchCat(szIniPath, ARRAYSIZE(szIniPath), TEXT(".ini"));
@@ -324,7 +324,8 @@ BOOL LoadTopicsFromINI(LCID Locale)
     return TRUE;
 }
 
-BOOL LoadTopics(VOID)
+static BOOL
+LoadTopics(LPTSTR lpResPath)
 {
 #define MAX_NUMBER_INTERNAL_TOPICS  3
 
@@ -344,7 +345,7 @@ BOOL LoadTopics(VOID)
         *szDefaultDesc = 0;
 
     /* Try to load the topics from INI file */
-    if (LoadTopicsFromINI(LOCALE_USER_DEFAULT))
+    if (*lpResPath && LoadTopicsFromINI(LOCALE_USER_DEFAULT, lpResPath))
         return TRUE;
 
     /* We failed, fall back to internal (localized) resource */
@@ -379,7 +380,8 @@ BOOL LoadTopics(VOID)
     return TRUE;
 }
 
-VOID FreeTopics(VOID)
+static VOID
+FreeTopics(VOID)
 {
     if (!pTopics)
         return;
@@ -392,6 +394,50 @@ VOID FreeTopics(VOID)
     HeapFree(GetProcessHeap(), 0, pTopics);
     pTopics = NULL;
     dwNumberTopics = 0;
+}
+
+static BOOL
+LoadConfiguration(VOID)
+{
+    TCHAR szAppPath[MAX_PATH];
+    TCHAR szIniPath[MAX_PATH];
+    TCHAR szResPath[MAX_PATH];
+
+    /* Retrieve the full path to this application */
+    GetModuleFileName(NULL, szAppPath, ARRAYSIZE(szAppPath));
+    if (*szAppPath)
+    {
+        LPTSTR lpFileName = _tcsrchr(szAppPath, _T('\\'));
+        if (lpFileName)
+            *lpFileName = 0;
+        else
+            *szAppPath = 0;
+    }
+
+    /* Build the full INI file path name */
+    StringCchCopy(szIniPath, ARRAYSIZE(szIniPath), szAppPath);
+    StringCchCat(szIniPath, ARRAYSIZE(szIniPath), TEXT("\\welcome.ini"));
+
+    /* Verify that the file exists, otherwise use the default configuration */
+    if (GetFileAttributes(szIniPath) == INVALID_FILE_ATTRIBUTES)
+    {
+        /* Use the default configuration and retrieve the default topics */
+        return LoadTopics(TEXT(""));
+    }
+
+    /* Load the settings from the INI configuration file */
+    bDisplayCheckBox = !!GetPrivateProfileInt(TEXT("Welcome"), TEXT("DisplayCheckBox"),  FALSE /* default */, szIniPath);
+    bDisplayExitBtn  = !!GetPrivateProfileInt(TEXT("Welcome"), TEXT("DisplayExitButton"), TRUE /* default */, szIniPath);
+
+    if (!GetPrivateProfileString(TEXT("Welcome"), TEXT("ResourceDir"), NULL /* default */,
+                                 szResPath, ARRAYSIZE(szResPath), szIniPath))
+    {
+        *szResPath = 0;
+    }
+
+    /* Set the current directory to the one of this application, and retrieve the topics */
+    SetCurrentDirectory(szAppPath);
+    return LoadTopics(szResPath);
 }
 
 #if 0
@@ -513,7 +559,8 @@ _tWinMain(HINSTANCE hInst,
     if (!LoadString(hInstance, IDS_APPTITLE, szAppTitle, ARRAYSIZE(szAppTitle)))
         StringCchCopy(szAppTitle, ARRAYSIZE(szAppTitle), TEXT("ReactOS Welcome"));
 
-    LoadTopics();
+    /* Load the configuration and the topics */
+    LoadConfiguration();
 
     /* Create main window */
     hWndMain = CreateWindow(szFrameClass,
@@ -544,6 +591,7 @@ _tWinMain(HINSTANCE hInst,
         DispatchMessage(&msg);
     }
 
+    /* Cleanup */
     FreeTopics();
 
     return msg.wParam;
