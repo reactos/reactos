@@ -1769,7 +1769,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     POINT ptItem;
                     m_ListView.GetItemPosition(params->iItem, &ptItem);
 
-                    ImageList_BeginDrag(big_icons, iIcon, m_ptFirstMousePos.x - ptItem.x, m_ptFirstMousePos.y - ptItem.y);
+                    ImageList_BeginDrag(big_icons, iIcon, params->ptAction.x - ptItem.x, params->ptAction.y - ptItem.y);
 
                     DoDragDrop(pda, this, dwEffect, &dwEffect2);
 
@@ -2940,14 +2940,18 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
 
 HRESULT WINAPI CDefView::DragEnter(IDataObject *pDataObject, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 {
-    POINT ptClient = {pt.x, pt.y};
-    ScreenToClient(&ptClient);
-
     /* Get a hold on the data object for later calls to DragEnter on the sub-folders */
     m_pCurDataObject = pDataObject;
 
-    ImageList_DragEnter(m_hWnd, ptClient.x, ptClient.y);
-    return drag_notify_subitem(grfKeyState, pt, pdwEffect);
+    HRESULT hr = drag_notify_subitem(grfKeyState, pt, pdwEffect);    
+    if (SUCCEEDED(hr))
+    {
+        POINT ptClient = {pt.x, pt.y};
+        ScreenToClient(&ptClient);
+        ImageList_DragEnter(m_hWnd, ptClient.x, ptClient.y);
+    }
+
+    return hr;
 }
 
 HRESULT WINAPI CDefView::DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
