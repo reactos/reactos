@@ -686,6 +686,15 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
     {
         hr = m_regFolder->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, &pObj);
     }
+    else if (IsEqualIID (riid, IID_IDropTarget) && (cidl == 1))
+    {
+        CComPtr<IShellFolder> psfChild;
+        hr = this->BindToObject(apidl[0], NULL, IID_PPV_ARG(IShellFolder, &psfChild));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+
+        return psfChild->CreateViewObject(NULL, riid, ppvOut);
+    }
     else
         hr = E_NOINTERFACE;
 
