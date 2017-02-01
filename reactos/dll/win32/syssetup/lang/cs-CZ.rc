@@ -65,7 +65,7 @@ CAPTION "ReactOS Instalátor"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Lokalizace systému by měla souhlasit s jazykem aplikací, které chcete používat. Localizace určí jak budou zobrazena čísla, měny a kalendářní data.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "Lokalizace systému by měla souhlasit s jazykem aplikací, které chcete používat. Localizace určí, jak budou zobrazena čísla, měny a kalendářní data.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pro změnu lokalizace systému klikněte na Změnit.", IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Změnit...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
@@ -148,10 +148,10 @@ BEGIN
     IDS_REACTOS_SETUP "ReactOS Instalátor"
     IDS_UNKNOWN_ERROR "Neznámá chyba"
     IDS_REGISTERING_COMPONENTS "Registruji součásti..."
-    IDS_LOADLIBRARY_FAILED "LoadLibrary failed: "
-    IDS_GETPROCADDR_FAILED "GetProcAddr failed: "
-    IDS_REGSVR_FAILED "DllRegisterServer failed: "
-    IDS_DLLINSTALL_FAILED "DllInstall failed: "
+    IDS_LOADLIBRARY_FAILED "LoadLibrary selhalo: "
+    IDS_GETPROCADDR_FAILED "GetProcAddr selhalo: "
+    IDS_REGSVR_FAILED "DllRegisterServer selhalo: "
+    IDS_DLLINSTALL_FAILED "DllInstall selhalo: "
     IDS_TIMEOUT "Vypršel časový limit registrace"
     IDS_REASON_UNKNOWN ""
     /*

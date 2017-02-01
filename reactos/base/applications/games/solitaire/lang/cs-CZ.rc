@@ -22,7 +22,7 @@ BEGIN
     AUTORADIOBUTTON "&None", IDC_OPT_NOSCORE, 107, 45, 60, 10
     AUTOCHECKBOX "Zobrazit č&as", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP
     AUTOCHECKBOX "Stavový řád&ek", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
-    AUTOCHECKBOX "&Keep Score", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
+    AUTOCHECKBOX "&Ponechat skóre", IDC_OPT_KEEPSCORE, 100, 66, 65, 10, WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON "Storno", IDCANCEL, 101, 97, 50, 14
 END
@@ -57,8 +57,8 @@ BEGIN
     IDS_SOL_QUIT "Ukončit rozehranou hru?"
     IDS_SOL_WIN "Gratulujeme, zvítězili jste!!"
     IDS_SOL_DEAL "Rozdat znova?"
-    IDS_SOL_SCORE "Score: %d"
-    IDS_SOL_TIME "Time: %d"
+    IDS_SOL_SCORE "Skóre: %d"
+    IDS_SOL_TIME "Čas: %d"
 END
 
 /* Menus */

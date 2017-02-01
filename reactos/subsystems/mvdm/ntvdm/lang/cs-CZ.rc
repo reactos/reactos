@@ -8,21 +8,21 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CAPTURE_MOUSE, "&Capture Mouse Pointer"
-    IDS_RELEASE_MOUSE, "&Release Mouse Pointer"
+    IDS_CAPTURE_MOUSE, "&Zachytit ukazatel myši"
+    IDS_RELEASE_MOUSE, "&Uvolnit ukazatel myši"
     IDS_VDM_MENU     , "ReactOS &VDM"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_VDM_DUMPMEM_TXT ,   "Dump Memory (&Text)"
-    IDS_VDM_DUMPMEM_BIN ,   "Dump Memory (&Binary)"
-    IDS_VDM_MOUNT_FLOPPY,   "Insert a floppy in drive %d <%s>..."
-    IDS_VDM_EJECT_FLOPPY,   "Eject floppy from drive %d"
+    IDS_VDM_DUMPMEM_TXT ,   "Výpis paměti (&Text)"
+    IDS_VDM_DUMPMEM_BIN ,   "Výpis paměti (&Binárně)"
+    IDS_VDM_MOUNT_FLOPPY,   "Vložte disketu do jednotky %d <%s>..."
+    IDS_VDM_EJECT_FLOPPY,   "Vyjměte disketu z jednotky %d"
     IDS_VDM_QUIT        ,   "&Ukončit ReactOS VDM"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_NO_MEDIA,   "No media"
+    IDS_NO_MEDIA,   "Žádný disk"
 END

@@ -85,7 +85,7 @@ BEGIN
     PUSHBUTTON "&Přidat...", IDC_DNSADDRADD, 15, 69, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Upravit...", IDC_DNSADDRMOD, 75, 69, 50, 14, WS_TABSTOP
     PUSHBUTTON "&Odebrat", IDC_DNSADDRDEL, 135, 69, 50, 14, WS_TABSTOP
-    LTEXT "Následující tři nastavení jsou aplikována na všechna připojení s povoleným TCP/IP. Při rezoluci nekvalifikovaných jmen:", -1, 5, 90, 220, 24
+    LTEXT "Následující tři nastavení jsou aplikována na všechna připojení s povoleným TCP/IP. Při překladu nekvalifikovaných jmen:", -1, 5, 90, 220, 24
     CONTROL "Připojit p&rimární a připojením dané DNS přípony", IDC_PRIMSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 110, 220, 12
     CHECKBOX "Připojit rodičovské přípony primární DNS přípony", IDC_TOPPRIMSUFFIX, 15, 125, 220, 12, BS_AUTOCHECKBOX | WS_TABSTOP
     CONTROL "Připojit &tyto DNS přípony (v tomto pořadí):", IDC_SELSUFFIX, "BUTTON", BS_AUTORADIOBUTTON, 5, 140, 220, 12

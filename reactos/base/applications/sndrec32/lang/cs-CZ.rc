@@ -30,35 +30,35 @@ BEGIN
         MENUITEM "Otevřít...", ID_FILE_OPEN
         MENUITEM "Uložit", ID_FILE_SAVE, GRAYED
         MENUITEM "Uložit jako...", ID_FILE_SAVEAS, GRAYED
-        MENUITEM "Restore...", ID_FILE_RESTORE, GRAYED
-        MENUITEM "Properties", ID_FILE_PROPERTIES
+        MENUITEM "Obnovit...", ID_FILE_RESTORE, GRAYED
+        MENUITEM "Vlastnosti", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "Konec", ID_FILE_EXIT
     END
-    POPUP "&Edit"
+    POPUP "&Upravit"
     BEGIN
-        MENUITEM "&Copy", ID_EDIT_COPY
-        MENUITEM "&Paste Insert", ID_EDIT_PASTE, GRAYED
-        MENUITEM "Paste Mi&x", ID_EDIT_PASTEMIX, GRAYED
+        MENUITEM "&Kopírovat", ID_EDIT_COPY
+        MENUITEM "&Vložit", ID_EDIT_PASTE, GRAYED
+        MENUITEM "Vložit a &sloučit", ID_EDIT_PASTEMIX, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Insert File...", ID_EDIT_INSERTFILE
-        MENUITEM "&Mix with File...", ID_EDIT_MIXFILE
+        MENUITEM "V&ložit soubor...", ID_EDIT_INSERTFILE
+        MENUITEM "Sl&oučit se souborem...", ID_EDIT_MIXFILE
         MENUITEM SEPARATOR
-        MENUITEM "Delete &Before Current Position",ID_EDIT_DELETEBEFORE, GRAYED
-        MENUITEM "Delete &After Current Position",ID_EDIT_DELETEAFTER, GRAYED
+        MENUITEM "Odstranit &před současnou pozicí",ID_EDIT_DELETEBEFORE, GRAYED
+        MENUITEM "Odstranit &za současnou pozicí",ID_EDIT_DELETEAFTER, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "A&udio Properties", ID_EDIT_AUDIOPROPS
+        MENUITEM "Vlas&tnosti zvuku", ID_EDIT_AUDIOPROPS
     END
-    POPUP "Effect&s"
+    POPUP "&Efekty"
     BEGIN
-        MENUITEM "&Increase Volume (by 25%)", ID_EFFECTS_INCVOL
-        MENUITEM "&Decrease Volume", ID_EFFECTS_DECVOL
+        MENUITEM "&Zvýšit hlasitost (o 25%)", ID_EFFECTS_INCVOL
+        MENUITEM "&Snížit hlasitost", ID_EFFECTS_DECVOL
         MENUITEM SEPARATOR
-        MENUITEM "&Increase Speed (by 100%)", ID_EFFECTS_INCSPD
-        MENUITEM "&Decrease Speed", ID_EFFECTS_DECSPD
+        MENUITEM "Z&rychlit(o 100%)", ID_EFFECTS_INCSPD
+        MENUITEM "Z&pomalit", ID_EFFECTS_DECSPD
         MENUITEM SEPARATOR
-        MENUITEM "&Add Echo", ID_EFFECTS_ECHO
-        MENUITEM "&Reverse", ID_EFFECTS_REVERSE
+        MENUITEM "&Přidat ozvěnu", ID_EFFECTS_ECHO
+        MENUITEM "&Pozpátku", ID_EFFECTS_REVERSE
     END
     POPUP "&?"
     BEGIN
@@ -76,7 +76,7 @@ STRINGTABLE
 BEGIN
     IDS_STRPOS "Pozice: %.2f s"
     IDS_STRDUR "Délka: %.2f s"
-    IDS_STRBUF "Buffer: %.2f kb"
+    IDS_STRBUF "Vyrovnávací paměť: %.2f kb"
     IDS_STRFMT "%.1f kHz %u bitů"
     IDS_STRMONO "mono"
     IDS_STRSTEREO "stereo"

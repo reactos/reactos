@@ -82,7 +82,7 @@ BEGIN
         POPUP "Backgroun&d"
         BEGIN
             MENUITEM "&System\tCtrl+1",         ID_BACK_1
-            MENUITEM "&Pale yellow\tCtrl+2",           ID_BACK_2
+            MENUITEM "&Pale yellow\tCtrl+2",    ID_BACK_2
         END
     END
     POPUP "&Help"

@@ -1,4 +1,4 @@
-/* FILE:       dll/win32/devmgr/lang/cs-CZ.rc
+﻿/* FILE:       dll/win32/devmgr/lang/cs-CZ.rc
  * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * UPDATED:    2013-06-01
  */
@@ -30,12 +30,12 @@ BEGIN
     IDS_NOTAVAILABLE "Není dostupné"
     IDS_NOTDIGITALLYSIGNED "Není digitálně podepsáno"
     IDS_NODRIVERS "Pro toto zařízení nejsou vyžadovány nebo nebyly načteny žádné soubory ovladačů."
-    IDS_RESOURCE_COLUMN "Resource type"
-    IDS_SETTING_COLUMN "Setting"
-    IDS_RESOURCE_MEMORY_RANGE "Memory range"
+    IDS_RESOURCE_COLUMN "Typ prostředku"
+    IDS_SETTING_COLUMN "Nastavení"
+    IDS_RESOURCE_MEMORY_RANGE "Rozsah paměti"
     IDS_RESOURCE_INTERRUPT "IRQ"
     IDS_RESOURCE_DMA "DMA"
-    IDS_RESOURCE_PORT "I/O range"
+    IDS_RESOURCE_PORT "Rozsah I/O"
 END
 
 /* puvodni anglicke error messages prevzaty z: http://www.z123.org/techsupport/medm.htm */
@@ -68,7 +68,7 @@ BEGIN
     IDS_DEV_WILL_BE_REMOVED "ReactOS odstraňuje toto zařízení."
     IDS_DEV_DISABLED "Toto zařízení není spuštěno."
     IDS_DEV_DISABLED2 "Toto zařízení je vypnuto."
-    IDS_DEV_DEVLOADER_NOT_READY "Loadery tohoto zařízení nemohou načíst požadované ovladače."
+    IDS_DEV_DEVLOADER_NOT_READY "Zavaděče tohoto zařízení nemohou načíst požadované ovladače."
     IDS_DEV_DEVLOADER_NOT_READY2 "" /* unused */
     IDS_DEV_DEVLOADER_NOT_READY3 "" /* unused */
     IDS_DEV_DEVICE_NOT_THERE "Zařízení není přítomno, nepracuje správně nebo nemá nainstalované všechny ovladače."
@@ -102,30 +102,30 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROP_DEVICEID "Device Instance ID"
-    IDS_PROP_HARDWAREIDS "Hardware IDs"
-    IDS_PROP_COMPATIBLEIDS "Compatible IDs"
-    IDS_PROP_MATCHINGDEVICEID "Matching Device ID"
-    IDS_PROP_SERVICE "Service"
-    IDS_PROP_ENUMERATOR "Enumerator"
-    IDS_PROP_CAPABILITIES "Capabilities"
-    IDS_PROP_DEVNODEFLAGS "Devnode Flags"
-    IDS_PROP_CONFIGFLAGS "Config Flags"
-    IDS_PROP_CSCONFIGFLAGS "CSConfig Flags"
-    IDS_PROP_EJECTIONRELATIONS "Ejection Relations"
-    IDS_PROP_REMOVALRELATIONS "Removal Relations"
-    IDS_PROP_BUSRELATIONS "Bus Relations"
-    IDS_PROP_DEVUPPERFILTERS "Device Upper Filters"
-    IDS_PROP_DEVLOWERFILTERS "Device Lower Filters"
-    IDS_PROP_CLASSUPPERFILTERS "Class Upper Filters"
-    IDS_PROP_CLASSLOWERFILTERS "Class Lower Filters"
-    IDS_PROP_CLASSINSTALLER "Class Installers"
-    IDS_PROP_CLASSCOINSTALLER "Class Coinstallers"
-    IDS_PROP_DEVICECOINSTALLER "Device Coinstallers"
-    IDS_PROP_FIRMWAREREVISION "Firmware Revision"
-    IDS_PROP_CURRENTPOWERSTATE "Current Power State"
-    IDS_PROP_POWERCAPABILITIES "Power Capabilities"
-    IDS_PROP_POWERSTATEMAPPINGS "Power State Mappings"
+    IDS_PROP_DEVICEID "ID instance zařízení"
+    IDS_PROP_HARDWAREIDS "ID hardwaru"
+    IDS_PROP_COMPATIBLEIDS "Kompatibilní ID"
+    IDS_PROP_MATCHINGDEVICEID "ID souhlasejícího zařízení"
+    IDS_PROP_SERVICE "Služba"
+    IDS_PROP_ENUMERATOR "Výčet"
+    IDS_PROP_CAPABILITIES "Možnosti"
+    IDS_PROP_DEVNODEFLAGS "Devnode atributy"
+    IDS_PROP_CONFIGFLAGS "Config atributy"
+    IDS_PROP_CSCONFIGFLAGS "CSConfig atributy"
+    IDS_PROP_EJECTIONRELATIONS "Vztahy vyjmutí"
+    IDS_PROP_REMOVALRELATIONS "Vztahy odebírání"
+    IDS_PROP_BUSRELATIONS "Vztahy sběrnice"
+    IDS_PROP_DEVUPPERFILTERS "Horní filtry zařízení"
+    IDS_PROP_DEVLOWERFILTERS "Dolní filtry zařízení"
+    IDS_PROP_CLASSUPPERFILTERS "Horní filtry třídy"
+    IDS_PROP_CLASSLOWERFILTERS "Dolní filtry třídy"
+    IDS_PROP_CLASSINSTALLER "Instalátory třídy"
+    IDS_PROP_CLASSCOINSTALLER "Podintalátory třídy"
+    IDS_PROP_DEVICECOINSTALLER "Podinstalátory zařízení"
+    IDS_PROP_FIRMWAREREVISION "Verze firmware"
+    IDS_PROP_CURRENTPOWERSTATE "Současný stav napájení"
+    IDS_PROP_POWERCAPABILITIES "Možnosti napájení"
+    IDS_PROP_POWERSTATEMAPPINGS "Mapování stavu napájení"
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 300, 400
@@ -221,12 +221,12 @@ END
 
 IDD_DEVICERESOURCES DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Resources"
+CAPTION "Prostředky"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
     LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-    LTEXT "Resource settings:", -1, 7, 36, 204, 8
+    LTEXT "Nastavení prostředků:", -1, 7, 36, 204, 8
     CONTROL "", IDC_DRIVERRESOURCES, "SysListView32", LVS_REPORT | 
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 238, 80
@@ -249,79 +249,78 @@ END
 
 IDR_MAINMENU MENU
 BEGIN
-  POPUP "&File"
+  POPUP "&Soubor"
   BEGIN
-    MENUITEM "E&xit",                       IDC_EXIT
+    MENUITEM "U&končit",                       IDC_EXIT
   END
-  MENUITEM "Action",                        IDC_ACTIONMENU
-  POPUP "View"
+  MENUITEM "Akce",                        IDC_ACTIONMENU
+  POPUP "Zobrazit"
   BEGIN
-    MENUITEM "Devices by type",             IDC_DEVBYTYPE
-    MENUITEM "Devices by connection",       IDC_DEVBYCONN
-    MENUITEM "Resources by type",           IDC_RESBYTYPE, GRAYED
-    MENUITEM "Resources by connection",     IDC_RESBYCONN, GRAYED
+    MENUITEM "Zařízení podle typu",             IDC_DEVBYTYPE
+    MENUITEM "Zařízení podle připojení",       IDC_DEVBYCONN
+    MENUITEM "Prostředky podle typu",           IDC_RESBYTYPE, GRAYED
+    MENUITEM "Prostředky podle připojení",     IDC_RESBYCONN, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
+    MENUITEM "SZobrazit skrytá zařízení",         IDC_SHOWHIDDEN
   END
-  POPUP "Help"
+  POPUP "Nápověda"
   BEGIN
-    MENUITEM "About",                       IDC_ABOUT
+    MENUITEM "O programu",                       IDC_ABOUT
   END
 END
 
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME               "ReactOS Device Manager"
-  IDS_CONFIRM_DISABLE       "Disabling this device will cause it to stop functioning.\r\nDo you really want to disable it?"
-  IDS_CONFIRM_UNINSTALL     "Warning: You are about to uninstall this device from your system.\r\nDo you want to continue?"
+  IDS_APPNAME               "Správce zařízení ReactOS"
+  IDS_CONFIRM_DISABLE       "Zakázáním tohoto zařízení dojde k ukončení jeho činnosti.\r\nOpravdu si jej přejete zakázat?"
+  IDS_CONFIRM_UNINSTALL     "Varování: Chystáte se odebrat toto zařízení ze systému.\r\nPřejete si pokračovat?"
 END
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_MENU_UPDATE           "Update driver software..."
-  IDS_MENU_ENABLE           "Enable"
-  IDS_MENU_DISABLE          "Disable"
-  IDS_MENU_UNINSTALL        "Uninstall"
-  IDS_MENU_SCAN             "Scan for hardware changes"
-  IDS_MENU_ADD              "Add hardware"
-  IDS_MENU_PROPERTIES       "Properties"
+  IDS_MENU_UPDATE           "Aktualizovat software ovladače..."
+  IDS_MENU_ENABLE           "Povolit"
+  IDS_MENU_DISABLE          "Zakázat"
+  IDS_MENU_UNINSTALL        "Odinstalovat"
+  IDS_MENU_SCAN             "Vyhledat změny hardwaru"
+  IDS_MENU_ADD              "Přidat hardware"
+  IDS_MENU_PROPERTIES       "Vlastnosti"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROPERTIES    "Properties"
-  IDS_TOOLTIP_SCAN          "Scan for hardware changes"
-  IDS_TOOLTIP_ENABLE        "Enable"
-  IDS_TOOLTIP_DISABLE       "Disable"
-  IDS_TOOLTIP_UPDATE        "Update Driver Software"
-  IDS_TOOLTIP_UNINSTALL     "Uninstall"
+  IDS_TOOLTIP_PROPERTIES    "Vlastnosti"
+  IDS_TOOLTIP_SCAN          "Vyhledat změny hardwaru"
+  IDS_TOOLTIP_ENABLE        "Povolit"
+  IDS_TOOLTIP_DISABLE       "Zakázat"
+  IDS_TOOLTIP_UPDATE        "Aktualizovat software ovladače"
+  IDS_TOOLTIP_UNINSTALL     "Odinstalovat"
 END
 
 /* Hints */
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_HINT_BLANK        " "
-  IDS_HINT_PROPERTIES   " Open property dialog for the current selection."
-  IDS_HINT_SCAN         " Scan for changed or new plug and play devices."
-  IDS_HINT_ENABLE       " Enables the selected device."
-  IDS_HINT_DISABLE      " Disables the selected device."
-  IDS_HINT_UPDATE       " Launches the Update Driver Software wizard for the selected device."
-  IDS_HINT_UNINSTALL    " Uninstalls the driver for the selected device."
-  IDS_HINT_ADD          " Adds a legacy (non-Plug and Play) device to the computer." 
-  IDS_HINT_ABOUT        " About ReactOS Device Manager."
-  IDS_HINT_EXIT         " Exits the program."
+  IDS_HINT_PROPERTIES   " Otevře seznam vlastností pro vybrané zařízení."
+  IDS_HINT_SCAN         " Vyhledá změněná nebo nově přidaná zařízení typu Plug and Play."
+  IDS_HINT_ENABLE       " Povolí vybrané zařízení."
+  IDS_HINT_DISABLE      " Zakáže vybrané zařízení."
+  IDS_HINT_UPDATE       " Spustí průvodce aktualizací softwaru ovladače pro vybrané zařízení."
+  IDS_HINT_UNINSTALL    " Odinstaluje ovladače vybraného zařízení."
+  IDS_HINT_ADD          " Umožní přidat do systému zastaralé zařízení nepodporující Plug and Play."
+  IDS_HINT_ABOUT        " Ukončí program.."
 
-  IDS_HINT_DEV_BY_TYPE  " Displays devices by hardware type."
-  IDS_HINT_DEV_BY_CONN  " Displays devices by connection."
-  IDS_HINT_RES_BY_TYPE  " Displays resources by type."
-  IDS_HINT_RES_BY_CONN  " Displays resources by connection type."
-  IDS_HINT_SHOW_HIDDEN  " Displays legacy devices and devices that are no longer installed."
+  IDS_HINT_DEV_BY_TYPE  " Zobrazí zařízení podle typu hardwaru."
+  IDS_HINT_DEV_BY_CONN  " Zobrazí zařízení podle typu připojení."
+  IDS_HINT_RES_BY_TYPE  " Zobrazí prostředky podle typu."
+  IDS_HINT_RES_BY_CONN  " Zobrazí prostředky podle typu."
+  IDS_HINT_SHOW_HIDDEN  " Zobrazí zastaralá zařízení a zařízení, která již byla odebrána."
 
-  IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
-  IDS_HINT_SYS_MOVE     " Moves this window."
-  IDS_HINT_SYS_SIZE     " Resizes this window."
-  IDS_HINT_SYS_MINIMIZE " Collapses this window to an icon."
-  IDS_HINT_SYS_MAXIMIZE " Expands this window to fill this screen."
-  IDS_HINT_SYS_CLOSE    " Closes this window."
+  IDS_HINT_SYS_RESTORE  " Obnoví velikost okna."
+  IDS_HINT_SYS_MOVE     " Přesune okno."
+  IDS_HINT_SYS_SIZE     " Změní velikost okna."
+  IDS_HINT_SYS_MINIMIZE " Zmenší okno do ikony."
+  IDS_HINT_SYS_MAXIMIZE " Maximalizuje okno na celou obrazovku."
+  IDS_HINT_SYS_CLOSE    " Zavře toto okno."
 END
 

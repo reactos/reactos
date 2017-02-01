@@ -32,7 +32,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Konec", CMD_EXIT
     END
-    POPUP "U&pravit"
+    POPUP "Upr&avit"
     BEGIN
         MENUITEM "&Zpět\tCtrl+Z", CMD_UNDO
         MENUITEM SEPARATOR
@@ -41,15 +41,15 @@ BEGIN
         MENUITEM "&Vložit\tCtrl+V", CMD_PASTE
         MENUITEM "&Smazat\tDel", CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Hledej\tCtrl+F", CMD_SEARCH
-        MENUITEM "&Najdi další\tF3", CMD_SEARCH_NEXT
-        MENUITEM "Replace...\tCtrl+H", CMD_REPLACE
-        MENUITEM "Go To...\tCtrl+G", CMD_GOTO
+        MENUITEM "&Najít\tCtrl+F", CMD_SEARCH
+        MENUITEM "Najít &další\tF3", CMD_SEARCH_NEXT
+        MENUITEM "Na&hradit...\tCtrl+H", CMD_REPLACE
+        MENUITEM "&Přejít...\tCtrl+G", CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Vybrat vš&e\tCtrl+A", CMD_SELECT_ALL
-        MENUITEM "Č&as/Datum\tF5", CMD_TIME_DATE
+        MENUITEM "Vy&brat vše\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "Čas/Dat&um\tF5", CMD_TIME_DATE
     END
-    POPUP "F&ormát"
+    POPUP "&Formát"
     BEGIN
         MENUITEM "Zalo&mit dlouhé řádky", CMD_WRAP
         MENUITEM "&Písmo...", CMD_FONT
@@ -58,12 +58,12 @@ BEGIN
     BEGIN
         MENUITEM "&Stavový řádek", CMD_STATUSBAR
     END
-    POPUP "&Nápověda"
+    POPUP "Nápo&věda"
     BEGIN
-        MENUITEM "O&bsah", CMD_HELP_CONTENTS
+        MENUITEM "Zobrazit &nápovědu", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
         MENUITEM "&O programu...", CMD_ABOUT
-        MENUITEM "In&fo...", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&Informace...", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -71,37 +71,37 @@ END
 DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
 FONT 8, "MS Shell Dlg"
-CAPTION "Page Setup"
+CAPTION "Nastavení stránky"
 BEGIN
-    GROUPBOX "Preview", 0, 240, 6, 120, 153, BS_GROUPBOX
+    GROUPBOX "Náhled", 0, 240, 6, 120, 153, BS_GROUPBOX
     CONTROL "", rct1, "Static", SS_WHITERECT, 260, 42, 80, 80
     CONTROL "", rct2, "Static", SS_GRAYRECT, 340, 46, 4, 80
     CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
-    GROUPBOX "Paper", grp2, 8, 6, 224, 56, BS_GROUPBOX
-    LTEXT "&Size:", stc2, 16, 22, 36, 8
+    GROUPBOX "Papír", grp2, 8, 6, 224, 56, BS_GROUPBOX
+    LTEXT "&Velikost:", stc2, 16, 22, 36, 8
     COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Tray:", stc3, 16, 42, 36, 8
+    LTEXT "&Zásobník:", stc3, 16, 42, 36, 8
     COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
-    GROUPBOX "Orientation", grp1, 8, 66, 64, 56, BS_GROUPBOX
-    AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
-    AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
-    GROUPBOX "Borders", grp4, 80, 66, 152, 56, BS_GROUPBOX
-    LTEXT "L&eft:", stc15, 88, 82, 30, 8
+    GROUPBOX "Otočení", grp1, 8, 66, 64, 56, BS_GROUPBOX
+    AUTORADIOBUTTON "Na &výšku", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
+    AUTORADIOBUTTON "&Na šířku", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
+    GROUPBOX "Ohraničení", grp4, 80, 66, 152, 56, BS_GROUPBOX
+    LTEXT "V&levo:", stc15, 88, 82, 30, 8
     EDITTEXT edt4, 119, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Right:", stc16, 159, 82, 30, 8
+    LTEXT "V&pravo:", stc16, 159, 82, 30, 8
     EDITTEXT edt6, 190, 80, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "T&op:", stc17, 88, 102, 30, 8
+    LTEXT "&Nahoře:", stc17, 88, 102, 30, 8
     EDITTEXT edt5, 119, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Bottom:", stc18, 159, 102, 30, 8
+    LTEXT "&Dole:", stc18, 159, 102, 30, 8
     EDITTEXT edt7, 190, 100, 36, 12, WS_TABSTOP | WS_GROUP | WS_BORDER
-    LTEXT "&Header:", 0x140, 8, 132, 40, 15
+    LTEXT "&Záhlaví:", 0x140, 8, 132, 40, 15
     EDITTEXT 0x141, 58, 130, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Footer:", 0x142, 8, 149, 40, 15
+    LTEXT "Zá&patí:", 0x142, 8, 149, 40, 15
     EDITTEXT 0x143, 58, 147, 173, 12, WS_BORDER | WS_TABSTOP | ES_AUTOHSCROLL
-    PUSHBUTTON "Help", IDHELP, 8, 170, 50, 14
+    PUSHBUTTON "Nápověda", IDHELP, 8, 170, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 198, 170, 50, 14, BS_PUSHBUTTON
-    PUSHBUTTON "Cancel", IDCANCEL, 254, 170, 50, 14
-    PUSHBUTTON "P&rinter...", psh3, 310, 170, 50, 14
+    PUSHBUTTON "Storno", IDCANCEL, 254, 170, 50, 14
+    PUSHBUTTON "&Tiskárna...", psh3, 310, 170, 50, 14
 END
 
 /* Dialog 'Encoding' */
@@ -120,7 +120,7 @@ END
 DIALOG_GOTO DIALOGEX 0, 0, 165, 50
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Jít na řádek"
+CAPTION "Přejít na řádek"
 BEGIN
     EDITTEXT ID_LINENUMBER, 54, 10, 106, 12, WS_CHILD | WS_BORDER | WS_TABSTOP
     LTEXT "Číslo řádku:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
@@ -181,7 +181,7 @@ paměti."
     STRING_LF "Unix (LF)"
     STRING_CR "Mac (CR)"
     STRING_LINE_COLUMN "Řádek %d, sloupec %d"
-    STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
+    STRING_PRINTERROR "Soubor '%s' nebylo možné vytisknout.\n\nZkontrolujte, zda je tiskárna zapnutá a správně nastavená."
 
-    STRING_TEXT_DOCUMENT "Text Document"
+    STRING_TEXT_DOCUMENT "Textový dokument"
 END

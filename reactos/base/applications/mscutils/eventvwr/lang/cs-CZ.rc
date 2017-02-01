@@ -4,28 +4,28 @@ IDM_EVENTVWR MENU
 BEGIN
     POPUP "&Protokol"
     BEGIN
-        MENUITEM "&Open...", IDM_OPEN_EVENTLOG
-        MENUITEM "Save &Event Log as...", IDM_SAVE_EVENTLOG
-        MENUITEM "&Close", IDM_CLOSE_EVENTLOG
+        MENUITEM "&Otevřít...", IDM_OPEN_EVENTLOG
+        MENUITEM "Uložit &Protokol jako...", IDM_SAVE_EVENTLOG
+        MENUITEM "&Zavřít", IDM_CLOSE_EVENTLOG
         MENUITEM SEPARATOR
         MENUITEM "&Odstranit události", IDM_CLEAR_EVENTS
-        MENUITEM "&Rename\tF2", IDM_RENAME_EVENTLOG
-        MENUITEM "Log Se&ttings...", IDM_EVENTLOG_SETTINGS
+        MENUITEM "&Přejmenovat\tF2", IDM_RENAME_EVENTLOG
+        MENUITEM "Nastavení protokolování...", IDM_EVENTLOG_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "&Konec", IDM_EXIT
     END
     POPUP "&Zobrazit"
     BEGIN
-        MENUITEM "&Newest first", IDM_LIST_NEWEST
-        MENUITEM "&Oldest first", IDM_LIST_OLDEST
+        MENUITEM "&Od nejnovějšího", IDM_LIST_NEWEST
+        MENUITEM "Od &nejstaršího", IDM_LIST_OLDEST
         MENUITEM SEPARATOR
-        MENUITEM "&Details...\tEnter", IDM_EVENT_DETAILS
+        MENUITEM "&Podrobnosti...\tEnter", IDM_EVENT_DETAILS
         MENUITEM SEPARATOR
         MENUITEM "&Obnovit\tF5", IDM_REFRESH
     END
     POPUP "&Možnosti"
     BEGIN
-        MENUITEM "&Show event details view", IDM_SHOW_EVENT_DETAILS_VIEW
+        MENUITEM "&Zobrazit podrobnosti", IDM_SHOW_EVENT_DETAILS_VIEW
     END
     POPUP "&Nápověda"
     BEGIN
@@ -73,7 +73,7 @@ BEGIN
     LTEXT "&Uživatel:", IDC_STATIC, 8, 35, 36, 8
     EDITTEXT IDC_EVENTUSERSTATIC, 46, 35, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "P&očítač:", IDC_STATIC, 8, 45, 36, 8
-    EDITTEXT IDC_EVENTCOMPUTERSTATIC, 46, 45, 52, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    EDITTEXT IDC_EVENTCOMPUTERSTATIC, 46, 45, 152, 8, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
 
     PUSHBUTTON "", IDC_PREVIOUS, 230, 5, 28, 14, BS_ICON
     PUSHBUTTON "", IDC_NEXT, 230, 21, 28, 14, BS_ICON
@@ -90,40 +90,40 @@ END
 
 IDD_LOGPROPERTIES_GENERAL DIALOGEX 0, 0, 252, 234
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "Obecné"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Display name:", IDC_STATIC, 7, 9, 60, 8
+    LTEXT "&Zobrazovaný název:", IDC_STATIC, 7, 9, 60, 8
     EDITTEXT IDC_DISPLAYNAME, 67, 7, 178, 12, ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "&Log name:", IDC_STATIC, 7, 25, 60, 8
+    LTEXT "&Název protokolu:", IDC_STATIC, 7, 25, 60, 8
     EDITTEXT IDC_LOGNAME, 67, 23, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Log &file:", IDC_STATIC, 7, 41, 60, 8
+    LTEXT "Soubor &protokolu:", IDC_STATIC, 7, 41, 60, 8
     EDITTEXT IDC_LOGFILE, 67, 39, 178, 12, ES_LEFT | ES_AUTOHSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP
-    LTEXT "Size:", IDC_STATIC, 7, 57, 60, 8
+    LTEXT "Velikost:", IDC_STATIC, 7, 57, 60, 8
     EDITTEXT IDC_SIZE_LABEL, 67, 57, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Created:", IDC_STATIC, 7, 69, 60, 8
+    LTEXT "Vytvořeno:", IDC_STATIC, 7, 69, 60, 8
     EDITTEXT IDC_CREATED_LABEL, 67, 69, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Modified:", IDC_STATIC, 7, 81, 60, 8
+    LTEXT "Změněno:", IDC_STATIC, 7, 81, 60, 8
     EDITTEXT IDC_MODIFIED_LABEL, 67, 81, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Accessed:", IDC_STATIC, 7, 93, 60, 8
+    LTEXT "Poslední přístup:", IDC_STATIC, 7, 93, 60, 8
     EDITTEXT IDC_ACCESSED_LABEL, 67, 93, 178, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    GROUPBOX "Log size", IDC_STATIC, 7, 106, 238, 99
-    LTEXT "&Maximum log size:", IDC_STATIC, 17, 122, 58, 8
+    GROUPBOX "Velikost výpisu", IDC_STATIC, 7, 106, 238, 99
+    LTEXT "&Maximální velikost:", IDC_STATIC, 17, 122, 58, 8
     EDITTEXT IDC_EDIT_MAXLOGSIZE, 80, 119, 40, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_MAXLOGSIZE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 120, 119, 10, 14
     LTEXT "KB", IDC_STATIC, 130, 122, 20, 8
-    LTEXT "When maximum log size is reached:", IDC_STATIC, 17, 140, 219, 8
-    CONTROL "&Overwrite events as needed", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
-    CONTROL "O&verwrite events older than", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
+    LTEXT "Pokud je dosažena maximální velikost:", IDC_STATIC, 17, 140, 219, 8
+    CONTROL "&Přepsat události podle potřeby", IDC_OVERWRITE_AS_NEEDED, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 155, 219, 10
+    CONTROL "Př&epsat události starší než", IDC_OVERWRITE_OLDER_THAN, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 17, 168, 102, 10
     EDITTEXT IDC_EDIT_EVENTS_AGE, 122, 165, 35, 14, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "", IDC_UPDOWN_EVENTS_AGE, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
             UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_GROUP, 157, 165, 10, 14
-    LTEXT "days", IDC_STATIC, 162, 168, 20, 8
-    CONTROL "Do &not overwrite events\n(clear log manually)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
-    PUSHBUTTON "&Restore Defaults", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
-    AUTOCHECKBOX "Using a lo&w-speed connection", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
-    PUSHBUTTON "&Clear Log", ID_CLEARLOG, 195, 213, 50, 14
+    LTEXT "dny", IDC_STATIC, 162, 168, 20, 8
+    CONTROL "&Nepřepisovat události\n(vyčistit protokol ručně)", IDC_NO_OVERWRITE, "Button", BS_AUTORADIOBUTTON | BS_MULTILINE | WS_GROUP | WS_TABSTOP, 17, 180, 143, 20
+    PUSHBUTTON "&Obnovit výchozí", IDC_RESTOREDEFAULTS, 166, 183, 70, 14
+    AUTOCHECKBOX "&Užívá pomalé připojení", IDC_LOW_SPEED_CONNECTION, 7, 217, 167, 10
+    PUSHBUTTON "&Vyčistit", ID_CLEARLOG, 195, 213, 50, 14
 END
 
 STRINGTABLE
@@ -133,10 +133,10 @@ BEGIN
     IDS_APP_TITLE_EX "%s - Protkol %s na \\\\"
     IDS_STATUS_MSG "Počet událostí v protokolu %s: %lu (listed: %lu)"
     IDS_LOADING_WAIT "Načítám protokol událostí. Prosím čekejte..."
-    IDS_NO_ITEMS "There are no items to show in this view." // "No events in this log."
-    IDS_EVENTLOG_SYSTEM "System Logs"
-    IDS_EVENTLOG_APP "Application Logs"
-    IDS_EVENTLOG_USER "User Logs"
+    IDS_NO_ITEMS "Žádné události v tomto výpisu." // "No events in this log."
+    IDS_EVENTLOG_SYSTEM "Systémové protokoly"
+    IDS_EVENTLOG_APP "Protokoly aplikací"
+    IDS_EVENTLOG_USER "Uživatelské protokoly"
     IDS_EVENTSTRINGIDNOTFOUND "Popis ID události ( %lu ) zdroj ( %s ) nebyl nalezen. Místní počítač neobsahuje potřebné informace v registru nebo chybí DLL soubory pro zobrazení zpráv ze vzdáleného počítače.\n\nThe following information is part of the event:\n\n"
     IDS_CLEAREVENTS_MSG "Chcete tento protokol před odstraněním uložit?"
     IDS_SAVE_FILTER "Protokol událostí (*.evt)\0*.evt\0"
@@ -155,7 +155,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BYTES_FORMAT "bytes" // "%s bytes"
+    IDS_BYTES_FORMAT "byty" // "%s bytes"
     // "%1!ls! (%2!ls! bytes)"
 END
 
@@ -173,15 +173,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COPY "Event Type:     %s\r\n\
-Event Source:   %s\r\n\
-Event Category: %s\r\n\
-Event ID:       %s\r\n\
-Date:           %s\r\n\
-Time:           %s\r\n\
-User:           %s\r\n\
-Computer:       %s\r\n\
-Description:\r\n%s"
+    IDS_COPY "Typ události:     %s\r\n\
+Zdroj:     %s\r\n\
+Kategorie: %s\r\n\
+ID:        %s\r\n\
+Datum:     %s\r\n\
+Čas:       %s\r\n\
+Uživatel:  %s\r\n\
+Počítač:   %s\r\n\
+Popis:     \r\n%s"
 END
 
 STRINGTABLE

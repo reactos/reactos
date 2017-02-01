@@ -66,7 +66,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, -1, 7, 59, 20, 20
-    LTEXT "Tento počítač je momentálně používán a byl uzamčen.", IDC_STATIC, 37, 61, 231, 8
+    LTEXT "Tento počítač je momentálně používán a je uzamčen.", IDC_STATIC, 37, 61, 231, 8
     LTEXT "Zpráva", IDC_LOCKMSG, 37, 75, 231, 26
     LTEXT "Stisknutím kláves Ctrl-Alt-Del odemknete počítač.", IDC_STATIC, 37, 106, 231, 8
 END
@@ -78,7 +78,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     CONTROL IDI_ROSLOGO, IDC_ROSLOGO, "Static", SS_BITMAP, 0, 0, 275, 54
     ICON IDI_LOCKICON, -1, 7, 59, 20, 20
-    LTEXT "Tento počítač je momentálně používán a byl uzamčen.", IDC_STATIC, 36, 61, 232, 8
+    LTEXT "Tento počítač je momentálně používán a je uzamčen.", IDC_STATIC, 36, 61, 232, 8
     LTEXT "Zpráva", IDC_LOCKMSG, 36, 75, 232, 26
     LTEXT "Uživatelské jméno:", IDC_STATIC, 36, 107, 40, 8
     EDITTEXT IDC_USERNAME, 84, 104, 119, 14, ES_AUTOHSCROLL
@@ -114,7 +114,7 @@ CAPTION "Odhlásit se ze systému"
 FONT 8, "MS Shell Dlg", 400, 0, 1
 BEGIN
     ICON IDI_LOGOFF, -1, 7, 7, 20, 20
-    LTEXT "Určitě se chcete odhlásit?", IDC_STATIC, 35, 16, 146, 8
+    LTEXT "Opravdu se chcete odhlásit?", IDC_STATIC, 35, 16, 146, 8
     PUSHBUTTON "Ano", IDYES, 41, 39, 50, 14, BS_DEFPUSHBUTTON
     PUSHBUTTON "Ne", IDNO, 95, 39, 50, 14
 END

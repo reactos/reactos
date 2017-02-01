@@ -614,10 +614,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Změnit ikonu"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    LTEXT "Look for icons in this file:", -1, 7, 7, 179, 10
+    LTEXT "Vyhledat ikony v souboru:", -1, 7, 7, 179, 10
     PUSHBUTTON "Procházet...", IDC_BUTTON_PATH, 135, 17, 50, 14
     EDITTEXT IDC_EDIT_PATH, 7, 17, 123, 14, ES_AUTOHSCROLL
-    LTEXT "Select an icon from the list below:", -1, 7, 36, 179, 10
+    LTEXT "Vyberte ikonu z následujícího seznamu:", -1, 7, 36, 179, 10
     LISTBOX IDC_PICKICON_LIST, 7, 47, 181, 120, LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 81, 179, 50, 14
     PUSHBUTTON "Storno", IDCANCEL, 135, 179, 50, 14
@@ -659,7 +659,7 @@ BEGIN
     IDS_SHV_COLUMN_WORKGROUP "Pracovní skupina"
     IDS_SHV_NETWORKLOCATION "Síťové umístění"
     IDS_SHV_COLUMN_DOCUMENTS "Dokumenty"
-    IDS_SHV_COLUMN_STATUS "Status"
+    IDS_SHV_COLUMN_STATUS "Stav"
     IDS_SHV_COLUMN_COMMENTS "Komentáře"
     IDS_SHV_COLUMN_LOCATION "Umístění"
     IDS_SHV_COLUMN_MODEL "Model"
@@ -669,13 +669,13 @@ BEGIN
     IDS_MYCOMPUTER "Tento počítač"
     IDS_RECYCLEBIN_FOLDER_NAME "Koš"
     IDS_CONTROLPANEL "Ovládací panely"
-    IDS_ADMINISTRATIVETOOLS "Nástroje správy"
+    IDS_ADMINISTRATIVETOOLS "Nástroje pro správu"
 
     /* special folders descriptions */
-    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Configure administrative settings for your computer."
-    IDS_FOLDER_OPTIONS_DESCRIPTION "Customize the display of files and folders and change file associations."
-    IDS_FONTS_DESCRIPTION "Add, change, and manage fonts on your computer."
-    IDS_PRINTERS_DESCRIPTION "Shows installed printers and fax printers and helps you add new ones."
+    IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Nástroje pro konfiguraci a správu počítače."
+    IDS_FOLDER_OPTIONS_DESCRIPTION "Přizpůsobení zobrazení souborů a složek a nastavení výchozých programů."
+    IDS_FONTS_DESCRIPTION "Přidá, mění a spravuje soubory písem."
+    IDS_PRINTERS_DESCRIPTION "Zobrazí instalované tiskárny a faxy a pomůže přidat další."
 
     /* context menus */
     IDS_VIEW_LARGE "&Vedle sebe"
@@ -694,8 +694,8 @@ BEGIN
     IDS_RENAME "Přejmenovat"
     IDS_PASTE "Vložit"
 
-    IDS_CREATEFOLDER_DENIED "Unable to create the folder '%1'"
-    IDS_CREATEFOLDER_CAPTION "Unable to create folder"
+    IDS_CREATEFOLDER_DENIED "Složku '%1' nebylo možné vytvořit"
+    IDS_CREATEFOLDER_CAPTION "Složku nebylo možné vytvořit"
     IDS_DELETEITEM_CAPTION "Potvrdit odstranění souboru"
     IDS_DELETEFOLDER_CAPTION "Potvrdit odstranění složky"
     IDS_DELETEITEM_TEXT "Opravdu chcete odstranit '%1'?"
@@ -714,7 +714,7 @@ BEGIN
     IDS_FILEOOP_DELETING "Odstraňování"
     IDS_FILEOOP_FROM_TO "Z %1 do %2"
     IDS_FILEOOP_FROM "Z %1"
-    IDS_FILEOOP_PREFLIGHT "Preflight"
+    IDS_FILEOOP_PREFLIGHT "Příprava"
 
     /* message box strings */
     IDS_RESTART_TITLE "Restartovat"
@@ -761,11 +761,11 @@ BEGIN
     IDS_NEWFOLDER "Nová složka"
 
     IDS_DRIVE_FIXED "Místní disk"
-    IDS_DRIVE_CDROM "CD Drive"
-    IDS_DRIVE_NETWORK "Síťový Disk"
+    IDS_DRIVE_CDROM "Jednotka CD"
+    IDS_DRIVE_NETWORK "Síťový disk"
     IDS_DRIVE_FLOPPY "3.5 Floppy"
-    IDS_DRIVE_REMOVABLE "Removable Disk"
-    IDS_FS_UNKNOWN "Unknown"
+    IDS_DRIVE_REMOVABLE "Vyměnitelný disk"
+    IDS_FS_UNKNOWN "Neznámý"
 
     /* Open With */
     IDS_OPEN_WITH "Otevřít v"
@@ -799,14 +799,14 @@ BEGIN
     IDS_TTF_FILE "Soubor písma TrueType"
     IDS_OTF_FILE "Soubor písma OpenType"
     IDS_HLP_FILE "Soubor nápovědy"
-    IDS_ICO_FILE "Icon"
+    IDS_ICO_FILE "Ikona"
     IDS_INI_FILE "Konfigurační nastavení"
     IDS_LNK_FILE "Zástupce"
     IDS_PIF_FILE "NT VDM Program Information File"
-    IDS_SCR_FILE "Screen Saver"
+    IDS_SCR_FILE "Spořič obrazovky"
     IDS_SYS_FILE "Systémový soubor"
     IDS_VXD_FILE "Virtuální ovladač zařízení"
-    IDS_ANY_FILE "%s-file"
+    IDS_ANY_FILE "Soubor %s"
 	
     IDS_OPEN_VERB "Otevřít"
     IDS_EXPLORE_VERB "Prozkoumat"
@@ -832,13 +832,13 @@ BEGIN
 
     /* As in 'INI File' or 'WAV File', fallback string for no-name extensions
        used in the _File type_ tab of the _Folder Options_ dialog */
-    IDS_FILE_EXT_TYPE "%s File"
+    IDS_FILE_EXT_TYPE "Soubor %s"
 
     IDS_BYTES_FORMAT "bajtů"
     IDS_UNKNOWN_APP "Neznámá aplikace"
     IDS_EXE_DESCRIPTION "Popis:"
 
     IDS_MENU_EMPTY "(Prázdné)"
-    IDS_OBJECTS "%d Objects"
-    IDS_OBJECTS_SELECTED "%d Objects Selected"
+    IDS_OBJECTS "Položek: %d"
+    IDS_OBJECTS_SELECTED "Položek vybráno: %d"
 END

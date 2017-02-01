@@ -11,15 +11,15 @@ CAPTION "ReactOS LiveCD"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "IDB_LOGO", IDC_LOCALELOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 0, 290, 99
-    RTEXT "Language:", IDC_STATIC, 20, 109, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    RTEXT "Jazyk:", IDC_STATIC, 20, 109, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_LANGUAGELIST, 132, 107, 176, 142, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    RTEXT "Keyboard layout:", IDC_STATIC, 20, 132, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    RTEXT "Rozvržení klávesnice:", IDC_STATIC, 20, 132, 106, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_LAYOUTLIST, 132, 130, 176, 81, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Select your language and keyboard layout and click Next to continue.", IDC_STATIC, 7, 152, 300, 8
+    LTEXT "Vyberte si svůj jazyk a rozložení klávesnice a kliknětě na Další.", IDC_STATIC, 7, 152, 300, 8
 
     GROUPBOX "", IDC_STATIC, 0, 165, 317, 1
-    DEFPUSHBUTTON "&Next", IDOK, 205, 172, 50, 14
-    PUSHBUTTON "&Cancel", IDCANCEL, 260, 172, 50, 14
+    DEFPUSHBUTTON "&Další", IDOK, 205, 172, 50, 14
+    PUSHBUTTON "&Storno", IDCANCEL, 260, 172, 50, 14
 END
 
 IDD_STARTPAGE DIALOGEX 0, 0, 317, 193
@@ -28,20 +28,20 @@ CAPTION "ReactOS LiveCD"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "IDB_LOGO", IDC_STARTLOGO, "Static", WS_CHILD | WS_VISIBLE | SS_OWNERDRAW, 18, 0, 290, 99
-    DEFPUSHBUTTON "Run ReactOS &Live CD", IDC_RUN, 71, 102, 175, 21
-    PUSHBUTTON "&Install ReactOS", IDC_INSTALL, 71, 130, 175, 21
+    DEFPUSHBUTTON "Spustit &Live CD ReactOS", IDC_RUN, 71, 102, 175, 21
+    PUSHBUTTON "&Instalovat ReactOS", IDC_INSTALL, 71, 130, 175, 21
 
     LTEXT "", IDC_STATIC, 7, 152, 300, 8
 
     GROUPBOX "", IDC_STATIC, 0, 165, 317, 1
-    PUSHBUTTON "&Previous", IDOK, 205, 172, 50, 14
-    PUSHBUTTON "&Cancel", IDCANCEL, 260, 172, 50, 14
+    PUSHBUTTON "&Předchozí", IDOK, 205, 172, 50, 14
+    PUSHBUTTON "&Storno", IDCANCEL, 260, 172, 50, 14
 END
 
 STRINGTABLE
 BEGIN
     IDS_SHELL_FAIL "Aplikace Userinit selhala při spouštění uživatelského rozhraní!\n"
-    IDS_INSTALLER_FAIL "Userinit failed to start the installer!\n"
+    IDS_INSTALLER_FAIL "Aplikaci Userinit se nepodařilo spustit instalátor!\n"
 END
 
 STRINGTABLE

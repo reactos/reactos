@@ -21,24 +21,24 @@ END
 
 IDPROMPTFORDISK DIALOG 0, 0, 260, 120
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Files Needed"
+CAPTION "Chybějící soubory"
 FONT 8, "MS Shell Dlg"
-BEGIN
-    LTEXT "Insert the manufacturer's installation disk, and then\nmake sure the correct drive is selected below", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
+BEGIN 
+    LTEXT "Vložte instalační disk výrobce a ujistěte se,\n že je níže zvolena správná jednotka.", IDC_FILENEEDED, 10, 10, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "", IDC_INFO, 10, 50, 175, 38, WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Copy manufacturer's files from:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Kopírovat soubory výrobce z:", IDC_COPYFROM, 10, 90, 175, 11, WS_CHILD | WS_VISIBLE | WS_GROUP
     CONTROL "", IDC_PATH, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 10, 100, 175, 14
     DEFPUSHBUTTON "OK", IDOK, 195, 10, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "Cancel", IDCANCEL, 195, 30, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    PUSHBUTTON "Browse...", IDC_RUNDLG_BROWSE, 195, 100, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Storno", IDCANCEL, 195, 30, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "Procházet...", IDC_RUNDLG_BROWSE, 195, 100, 60, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PROMPTDISK   "The file '%1' on %2 is needed"
-    IDS_UNKNOWN      "Unknown"
-    IDS_COPYFROM     "Copy files from:"
-    IDS_INFO         "Type the path where the file is located, and then click OK."
+    IDS_PROMPTDISK   "Je požadován soubor '%1' na %2"
+    IDS_UNKNOWN      "Neznámý"
+    IDS_COPYFROM     "Kopírovat soubory z:"
+    IDS_INFO         "Zadejte cestu k souboru a klikněte na OK."
 END
 
 STRINGTABLE

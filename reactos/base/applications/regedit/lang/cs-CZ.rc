@@ -204,47 +204,47 @@ END
 
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resource List"
+CAPTION "Seznam prostředků"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
     DEFPUSHBUTTON "OK", IDOK, 27, 100, 50, 14
-    PUSHBUTTON "Show...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
+    PUSHBUTTON "Zobrazit...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
 END
 
 IDD_EDIT_RESOURCE DIALOGEX 6, 18, 281, 283
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resources"
+CAPTION "Prostředky"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "DMA:", IDC_STATIC, 10, 5, 20, 8
     CONTROL "", IDC_DMA_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 15, 261, 31
-    LTEXT "Interrupt:", IDC_STATIC, 10, 48, 35, 8
+    LTEXT "Přerušení:", IDC_STATIC, 10, 48, 35, 8
     CONTROL "", IDC_IRQ_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 58, 261, 31
-    LTEXT "Memory:", IDC_STATIC, 10, 91, 32, 8
+    LTEXT "Paměť:", IDC_STATIC, 10, 91, 32, 8
     CONTROL "", IDC_MEMORY_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 101, 261, 31
     LTEXT "Port:", IDC_STATIC, 10, 134, 38, 8
     CONTROL "", IDC_PORT_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 144, 261, 31
-    LTEXT "Device specific data:", IDC_STATIC, 10, 177, 80, 8
+    LTEXT "Data zařízení:", IDC_STATIC, 10, 177, 80, 8
     CONTROL "", IDC_DEVICE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 188, 261, 31
-    GROUPBOX "Usage", IDC_STATIC, 10, 219, 125, 39
-    LTEXT "Undetermined", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
-    LTEXT "Shared", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
-    LTEXT "Device exclusive", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
-    LTEXT "Driver exclusive", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
-    RTEXT "Interface Type:", IDC_STATIC, 144, 220, 58, 8
+    GROUPBOX "Použití", IDC_STATIC, 10, 219, 125, 39
+    LTEXT "Nezjištěno", IDC_UNDETERMINED, 18, 230, 46, 8, WS_DISABLED
+    LTEXT "Sdílené", IDC_SHARED, 18, 240, 48, 8, WS_DISABLED
+    LTEXT "Exkluzivní pro zařízení", IDC_DEVICE_EXCLUSIVE, 72, 230, 58, 8, WS_DISABLED
+    LTEXT "Exkluzivní pro ovladač", IDC_DRIVER_EXCLUSIVE, 72, 240, 54, 8, WS_DISABLED
+    RTEXT "Typ rozhraní:", IDC_STATIC, 144, 220, 58, 8
     LTEXT "", IDC_INTERFACETYPE, 205, 220, 66, 8
-    RTEXT "Bus Nummer:", IDC_STATIC, 151, 230, 51, 8
+    RTEXT "Číslo sběrnice:", IDC_STATIC, 151, 230, 51, 8
     LTEXT "", IDC_BUSNUMBER, 205, 230, 66, 8
-    RTEXT "Version:", IDC_STATIC, 151, 240, 51, 8
+    RTEXT "Verze:", IDC_STATIC, 151, 240, 51, 8
     LTEXT "", IDC_VERSION, 205, 240, 66, 8
-    RTEXT "Revision:", IDC_STATIC, 151, 250, 51, 8
+    RTEXT "Revize:", IDC_STATIC, 151, 250, 51, 8
     LTEXT "", IDC_REVISION, 205, 250, 66, 8
     DEFPUSHBUTTON "OK", IDOK, 92, 263, 40, 14
     PUSHBUTTON "&Data...", IDC_SHOW_RESOURCE_DATA, 148, 263, 40, 14, WS_DISABLED
@@ -285,8 +285,8 @@ BEGIN
     ID_EDIT_NEW_DWORDVALUE "Přidá novou DWORD položku"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importuje textový soubor do registru"
     ID_REGISTRY_EXPORTREGISTRYFILE "Exportuje všechny části registru do textového souboru"
-    ID_REGISTRY_LOADHIVE "Loads a hive file into the registry"
-    ID_REGISTRY_UNLOADHIVE "Unloads a hive from the registry"
+    ID_REGISTRY_LOADHIVE "Načte soubor podregistru"
+    ID_REGISTRY_UNLOADHIVE "Uvolní soubor podregistru"
     ID_REGISTRY_CONNECTNETWORKREGISTRY "Připojí se ke vzdálenému registru jiného počítače"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY "Odpojí se od vzdálenému registru jiného počítače"
     ID_REGISTRY_PRINT "Vytiskne všechny části registru"
@@ -328,8 +328,8 @@ BEGIN
     IDS_ERR_DELETEVALUE "Nelze odstranit všechny vybrané položky!"
     IDS_ERR_RENVAL_CAPTION "Chyba při přejmenování položky"
     IDS_ERR_RENVAL_TOEMPTY "Nelze přejmenovat %s. Vybraná položka je prázdná. Vyzkoušejte jiný název."
-    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
-    IDS_QUERY_IMPORT_HIVE_MSG "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Potvrďte obnovení klíče"
+    IDS_QUERY_IMPORT_HIVE_MSG "Klíč bude obnoven přes současně vybraný klíč.\nVšechny hodnoty a podklíče tohoto klíče budou smazány.\nChcete pokračovat?"
     IDS_NEW_KEY "Nový klíč #%d"
     IDS_NEW_VALUE "Nová hodnota #%d"
 END
@@ -343,8 +343,8 @@ BEGIN
     IDS_MY_COMPUTER "Tento počítač"
     IDS_IMPORT_REG_FILE "Importovat soubor registru"
     IDS_EXPORT_REG_FILE "Exportovat do souboru registru"
-    IDS_LOAD_HIVE "Load Hive"
-    IDS_UNLOAD_HIVE "Unload Hive"
+    IDS_LOAD_HIVE "Načíst podregistr"
+    IDS_UNLOAD_HIVE "Uvolnit podregistr"
     IDS_INVALID_DWORD "(Neplatná hodnota DWORD)"
 END
 
@@ -353,7 +353,7 @@ BEGIN
     IDS_FLT_REGFILE "Soubor registru"
     IDS_FLT_REGFILES "Soubory registru (*.reg)"
     IDS_FLT_REGFILES_FLT "*.reg"
-    IDS_FLT_HIVFILES "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES "Soubory podregistru (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
     IDS_FLT_REGEDIT4 "Soubory registru Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"
@@ -402,40 +402,40 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BUSNUMBER "Bus Number"
-    IDS_INTERFACE "Interface"
-    IDS_DMA_CHANNEL "Channel"
+    IDS_BUSNUMBER "Číslo sběrnice"
+    IDS_INTERFACE "Rozhrání"
+    IDS_DMA_CHANNEL "Kanál"
     IDS_DMA_PORT "Port"
-    IDS_INTERRUPT_VECTOR "Vector"
-    IDS_INTERRUPT_LEVEL "Level"
-    IDS_INTERRUPT_AFFINITY "Affinity"
-    IDS_INTERRUPT_TYPE "Type"
-    IDS_MEMORY_ADDRESS "Physical Address"
-    IDS_MEMORY_LENGTH "Length"
-    IDS_MEMORY_ACCESS "Access"
-    IDS_PORT_ADDRESS "Physical Address"
-    IDS_PORT_LENGTH "Length"
-    IDS_PORT_ACCESS "Access"
-    IDS_SPECIFIC_RESERVED1 "Reserved 1"
-    IDS_SPECIFIC_RESERVED2 "Reserved 2"
-    IDS_SPECIFIC_DATASIZE "Data Size"
+    IDS_INTERRUPT_VECTOR "Vektor"
+    IDS_INTERRUPT_LEVEL "Úroveň"
+    IDS_INTERRUPT_AFFINITY "Afinita"
+    IDS_INTERRUPT_TYPE "Typ"
+    IDS_MEMORY_ADDRESS "Fyzická adresa"
+    IDS_MEMORY_LENGTH "Délka"
+    IDS_MEMORY_ACCESS "Přístup"
+    IDS_PORT_ADDRESS "Fyzická adresa"
+    IDS_PORT_LENGTH "Délka"
+    IDS_PORT_ACCESS "Přístup"
+    IDS_SPECIFIC_RESERVED1 "Rezervováno 1"
+    IDS_SPECIFIC_RESERVED2 "Rezervováno 2"
+    IDS_SPECIFIC_DATASIZE "Velikost dat"
 END
 
 STRINGTABLE
 BEGIN
     IDS_PORT_PORT_IO "Port"
-    IDS_PORT_MEMORY_IO "Memory"
-    IDS_INTERRUPT_EDGE_SENSITIVE "Edge Sensitive"
-    IDS_INTERRUPT_LEVEL_SENSITIVE "Level Sensitive"
-    IDS_MEMORY_READ_ONLY "Read Only"
-    IDS_MEMORY_WRITE_ONLY "Write Only"
-    IDS_MEMORY_READ_WRITE "Read / Write"
+    IDS_PORT_MEMORY_IO "Paměť"
+    IDS_INTERRUPT_EDGE_SENSITIVE "Spouštěné hranou"
+    IDS_INTERRUPT_LEVEL_SENSITIVE "Spouštěné úrovní"
+    IDS_MEMORY_READ_ONLY "Jen pro čtení"
+    IDS_MEMORY_WRITE_ONLY "Jen pro zápis"
+    IDS_MEMORY_READ_WRITE "Čtení / Zápis"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_BUS_UNDEFINED "Undefined"
-    IDS_BUS_INTERNAL "Internal"
+    IDS_BUS_UNDEFINED "Nedefinováno"
+    IDS_BUS_INTERNAL "Vnitřní"
     IDS_BUS_ISA "ISA"
     IDS_BUS_EISA "EISA"
     IDS_BUS_MICROCHANNEL "MicroChannel"
@@ -448,10 +448,10 @@ BEGIN
     IDS_BUS_MPIBUS "MPI-Bus"
     IDS_BUS_MPSABUS "MPSA-Bus"
     IDS_BUS_PROCESSORINTERNAL "Processor Internal"
-    IDS_BUS_INTERNALPOWERBUS "Internal Power Bus"
-    IDS_BUS_PNPISABUS "PnP-ISA Bus"
-    IDS_BUS_PNPBUS "PnP Bus"
-    IDS_BUS_UNKNOWNTYPE "Unknown Interface Type"
+    IDS_BUS_INTERNALPOWERBUS "Vnitřní napájecí sběrnice"
+    IDS_BUS_PNPISABUS "Sběrnice PnP-ISA"
+    IDS_BUS_PNPBUS "Sběrnice PnP"
+    IDS_BUS_UNKNOWNTYPE "Neznámý typ rozhraní"
 END
 
 /*****************************************************************/

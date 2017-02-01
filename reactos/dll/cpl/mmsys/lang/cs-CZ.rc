@@ -140,8 +140,8 @@ BEGIN
     LTEXT "Plná", 8498, 214, 56, 21, 9
     LTEXT "Dobrá", 8499, 128, 123, 21, 10
     LTEXT "Nejlepší", 8500, 214, 123, 23, 9
-    LTEXT "Tento string popisuje hardwarové nastavení pro zachytávací zařízení", 5399, 13, 145, 227, 21
-    LTEXT "Tento string popisuje hardwarové nastavení pro vykreslovací zařízení", 5398, 13, 78, 227, 22
+    LTEXT "Tento řetězec popisuje hardwarové nastavení pro zachytávací zařízení", 5399, 13, 145, 227, 21
+    LTEXT "Tento řetězec popisuje hardwarové nastavení pro přehrávací zařízení", 5398, 13, 78, 227, 22
 END
 
 IDD_PERFORMANCE2 DIALOGEX 0, 0, 257, 218
@@ -161,8 +161,8 @@ BEGIN
     LTEXT "Plná", 8498, 217, 46, 19, 9
     LTEXT "Dobrá", 8499, 125, 103, 24, 10
     LTEXT "Nejlepší", 8500, 217, 103, 19, 9
-    LTEXT "Tento string popisuje hardwarové nastavení pro zachytávací zařízení", 5399, 13, 125, 222, 21
-    LTEXT "Tento string popisuje hardwarové nastavení pro vykreslovací zařízení", 5398, 13, 68, 218, 24
+    LTEXT "Tento řetězec popisuje hardwarové nastavení pro zachytávací zařízení", 5399, 13, 125, 222, 21
+    LTEXT "Tento řetězec popisuje hardwarové nastavení pro přehrávací zařízení", 5398, 13, 68, 218, 24
 END
 
 IDD_SETUP1 DIALOGEX 0, 0, 227, 206

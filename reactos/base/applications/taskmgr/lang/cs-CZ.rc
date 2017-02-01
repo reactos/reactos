@@ -411,7 +411,7 @@ BEGIN
     IDS_TAB_IOREADBYTES "I/O přečtené bajty"
     IDS_TAB_IOWRITESBYTES "I/O zapsané bajty"
     IDS_TAB_IOOTHERBYTES "I/O ostatní bajty"
-    IDS_TAB_COMMANDLINE "Command Line"
+    IDS_TAB_COMMANDLINE "Příkazový řádek"
     IDS_MENU_SELECTCOLUMNS "&Vybrat sloupce..."
     IDS_MENU_16BITTASK "&Zobrazit 16-bitové úlohy"
     IDS_MENU_WINDOWS "&Okna"

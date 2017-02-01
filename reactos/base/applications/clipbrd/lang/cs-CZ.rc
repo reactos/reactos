@@ -1,0 +1,65 @@
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+ID_ACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, CMD_DELETE, VIRTKEY
+END
+
+MAIN_MENU MENU
+BEGIN
+    POPUP "&Soubor"
+    BEGIN
+        MENUITEM "&Otevřít...", CMD_OPEN
+        MENUITEM "&Uložit jako...", CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Konec", CMD_EXIT
+    END
+    POPUP "&Upravit"
+    BEGIN
+        MENUITEM "&Smazat\tDel", CMD_DELETE
+    END
+    POPUP "&Zobrazení"
+    BEGIN
+        MENUITEM "&Automaticky", CMD_AUTOMATIC
+    END
+    POPUP "&Nápověda"
+    BEGIN
+        MENUITEM "&Zobrazit nápovědu", CMD_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&O programu", CMD_ABOUT
+    END
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CLIPBOARD "Prohlížeč schránky"
+    STRING_CLIPFILE  "Prvek schránky"
+    STRING_DELETE_MSG "Vymazat obsah stránky?"
+    STRING_DELETE_TITLE "Vymazat schránku"
+    STRING_FORMAT_NT "Soubory schránky systému ReactOS (*.clp)"
+    STRING_FORMAT_GEN "Soubory schránky (*.clp)"
+END
+
+STRINGTABLE
+BEGIN
+    STRING_CF_UNKNOWN "Neznámý formát"
+    STRING_CF_TEXT "Text"
+    STRING_CF_BITMAP "Bitmapa"
+    STRING_CF_OEMTEXT "Text OEM"
+    STRING_CF_UNICODETEXT "Text Unicode"
+    STRING_CF_DIB "DIB bitmapa"
+    STRING_CF_LOCALE "Data znakové sady"
+    STRING_CF_ENHMETAFILE "Rožířený soubor Metafile"
+    STRING_CF_METAFILEPICT "Metafile"
+    STRING_CF_PALETTE "Barevná paleta"
+    STRING_CF_DIBV5 "DIB bitmapa (Verze 5)"
+    STRING_CF_SYLK "Symbolický odkaz"
+    STRING_CF_DIF "Formát výměny dat"
+    STRING_CF_HDROP "Data přetažení"
+END
+
+STRINGTABLE
+BEGIN
+    ERROR_UNSUPPORTED_FORMAT "Schránka obsahuje data ve formátu, který není možné zobrazit."
+    ERROR_INVALID_FILE_FORMAT "Vybraný soubor není platný soubor schránky."
+END
