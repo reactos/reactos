@@ -1740,6 +1740,8 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
                 if (SUCCEEDED(m_pSFParent->GetUIObjectOf(m_hWnd, m_cidl, m_apidl, IID_NULL_PPV_ARG(IDataObject, &pda))))
                 {
+                    LPNMLISTVIEW params = (LPNMLISTVIEW)lParam;
+
                     if (SUCCEEDED(m_pSFParent->GetAttributesOf(m_cidl, m_apidl, &dwAttributes)))
                     {
                         if (dwAttributes & SFGAO_CANLINK)
@@ -1757,8 +1759,17 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     DWORD dwEffect2;
 
                     m_pSourceDataObject = pda;
-                    m_ptFirstMousePos = ((LPNMLISTVIEW)lParam)->ptAction;
+                    m_ptFirstMousePos = params->ptAction;
                     ClientToScreen(&m_ptFirstMousePos);
+
+                    HIMAGELIST big_icons, small_icons;
+                    Shell_GetImageLists(&big_icons, &small_icons);
+                    PCUITEMID_CHILD pidl = _PidlByItem(params->iItem);
+                    int iIcon = SHMapPIDLToSystemImageListIndex(m_pSFParent, pidl, 0);
+                    POINT ptItem;
+                    m_ListView.GetItemPosition(params->iItem, &ptItem);
+
+                    ImageList_BeginDrag(big_icons, iIcon, m_ptFirstMousePos.x - ptItem.x, m_ptFirstMousePos.y - ptItem.y);
 
                     DoDragDrop(pda, this, dwEffect, &dwEffect2);
 
@@ -2913,34 +2924,44 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
 
     /* If anything failed, m_pCurDropTarget should be NULL now, which ought to be a save state. */
     if (FAILED(hr))
+    {
+        *pdwEffect = DROPEFFECT_NONE;
         return hr;
+    }
 
-    /* Notify the item just entered via DragEnter. */
-    hr = m_pCurDropTarget->DragEnter(m_pCurDataObject, grfKeyState, pt, pdwEffect);
-
-    if (m_iDragOverItem != -1 && pdwEffect != DROPEFFECT_NONE)
+    if (m_iDragOverItem != -1)
     {
         SelectItem(m_iDragOverItem, SVSI_SELECT);
     }
 
-    return hr;
+    /* Notify the item just entered via DragEnter. */
+    return m_pCurDropTarget->DragEnter(m_pCurDataObject, grfKeyState, pt, pdwEffect);
 }
 
 HRESULT WINAPI CDefView::DragEnter(IDataObject *pDataObject, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 {
+    POINT ptClient = {pt.x, pt.y};
+    ScreenToClient(&ptClient);
+
     /* Get a hold on the data object for later calls to DragEnter on the sub-folders */
     m_pCurDataObject = pDataObject;
 
+    ImageList_DragEnter(m_hWnd, ptClient.x, ptClient.y);
     return drag_notify_subitem(grfKeyState, pt, pdwEffect);
 }
 
 HRESULT WINAPI CDefView::DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 {
+    POINT ptClient = {pt.x, pt.y};
+    ScreenToClient(&ptClient);
+    ImageList_DragMove(ptClient.x, ptClient.y);
     return drag_notify_subitem(grfKeyState, pt, pdwEffect);
 }
 
 HRESULT WINAPI CDefView::DragLeave()
 {
+    ImageList_DragLeave(m_hWnd);
+
     if (m_pCurDropTarget)
     {
         m_pCurDropTarget->DragLeave();
@@ -2960,6 +2981,8 @@ HRESULT WINAPI CDefView::DragLeave()
 HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 {
     ERR("GetKeyState(VK_LBUTTON): %d\n", GetKeyState(VK_LBUTTON));
+
+    ImageList_EndDrag();
 
     if ((m_iDragOverItem == -1 || m_pCurDropTarget == NULL) && 
         (*pdwEffect & DROPEFFECT_MOVE) && 
