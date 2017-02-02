@@ -933,15 +933,18 @@ static INT_PTR CALLBACK DlgStatProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
     return FALSE;
 }
 
-static WPARAM idm_2_idc(int idm)
+static BOOL idm_2_idc(int idm, WPARAM *pIdc)
 {
     int x;
 
     for (x=0; x<SIZEOF(upd); x++) {
         if (upd[x].idm == idm)
-            break;
+        {
+            *pIdc = (WPARAM)(upd[x].idc);
+            return TRUE;
+        }
     }
-    return (WPARAM)(upd[x].idc);
+    return FALSE;
 }
 
 static void CopyMemToClipboard(void *ptr)
@@ -1408,8 +1411,15 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         case IDM_VIEW_DWORD:
         case IDM_VIEW_WORD:
         case IDM_VIEW_BYTE:
-            SendMessage(hWnd, WM_COMMAND, idm_2_idc(LOWORD(wp)), 0);
-            return TRUE;
+        {
+            WPARAM idc;
+            if(idm_2_idc(LOWORD(wp), &idc))
+            {
+                SendMessage(hWnd, WM_COMMAND, idc, 0);
+                return TRUE;
+            }
+            return FALSE;
+        }
         case IDM_EDIT_COPY:
             handle_copy_command(hWnd);
             return TRUE;
