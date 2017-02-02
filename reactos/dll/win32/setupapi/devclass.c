@@ -166,10 +166,10 @@ SETUP_CreateDevicesListFromEnumerator(
         if (rc != ERROR_SUCCESS)
             goto cleanup;
 
-        if (FAILED(StringCbCopyW(InstancePath, _countof(InstancePath), Enumerator)) ||
-            FAILED(StringCbCatW(InstancePath, _countof(InstancePath), BackSlash))  ||
-            FAILED(StringCbCatW(InstancePath, _countof(InstancePath), KeyBuffer))  ||
-            FAILED(StringCbCatW(InstancePath, _countof(InstancePath), BackSlash)))
+        if (FAILED(StringCchCopyW(InstancePath, _countof(InstancePath), Enumerator)) ||
+            FAILED(StringCchCatW(InstancePath, _countof(InstancePath), BackSlash))  ||
+            FAILED(StringCchCatW(InstancePath, _countof(InstancePath), KeyBuffer))  ||
+            FAILED(StringCchCatW(InstancePath, _countof(InstancePath), BackSlash)))
         {
             rc = ERROR_GEN_FAILURE;
             goto cleanup;
