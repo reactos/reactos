@@ -23,6 +23,7 @@
 
 #include <wingdi.h>
 #include <shellapi.h>
+#include <strsafe.h>
 
 /* Unicode constants */
 static const WCHAR BackSlash[] = {'\\',0};
@@ -164,10 +165,16 @@ SETUP_CreateDevicesListFromEnumerator(
         rc = RegOpenKeyExW(hEnumeratorKey, KeyBuffer, 0, KEY_ENUMERATE_SUB_KEYS, &hDeviceIdKey);
         if (rc != ERROR_SUCCESS)
             goto cleanup;
-        strcpyW(InstancePath, Enumerator);
-        strcatW(InstancePath, BackSlash);
-        strcatW(InstancePath, KeyBuffer);
-        strcatW(InstancePath, BackSlash);
+
+        if (FAILED(StringCbCopyW(InstancePath, _countof(InstancePath), Enumerator)) ||
+            FAILED(StringCbCatW(InstancePath, _countof(InstancePath), BackSlash))  ||
+            FAILED(StringCbCatW(InstancePath, _countof(InstancePath), KeyBuffer))  ||
+            FAILED(StringCbCatW(InstancePath, _countof(InstancePath), BackSlash)))
+        {
+            rc = ERROR_GEN_FAILURE;
+            goto cleanup;
+        }
+
         pEndOfInstancePath = &InstancePath[strlenW(InstancePath)];
 
         /* Enumerate instance IDs (subkeys of hDeviceIdKey) */
@@ -406,8 +413,6 @@ SetupDiGetClassImageIndex(
         SetLastError(ERROR_INVALID_USER_BUFFER);
     else if (list->magic != SETUP_CLASS_IMAGE_LIST_MAGIC)
         SetLastError(ERROR_INVALID_USER_BUFFER);
-    else if (!ImageIndex)
-        SetLastError(ERROR_INVALID_PARAMETER);
     else
     {
         DWORD i;
@@ -784,13 +789,9 @@ SetupDiLoadClassIcon(
     if (LargeIcon)
     {
         if(!SETUP_GetClassIconInfo(ClassGuid, &iconIndex, &DllName))
-            return FALSE;
+            goto cleanup;
 
-        if (DllName && ExtractIconExW(DllName, -iconIndex, &hIcon, NULL, 1) == 1 && hIcon != NULL)
-        {
-            ret = TRUE;
-        }
-        else
+        if (!DllName || ExtractIconExW(DllName, -iconIndex, &hIcon, NULL, 1) != 1 || hIcon == NULL)
         {
             /* load the default unknown device icon if ExtractIcon failed */
             if(DllName)
@@ -798,16 +799,17 @@ SetupDiLoadClassIcon(
 
             hIcon = LoadImage(hInstance, MAKEINTRESOURCE(iconIndex), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
 
-            if(!LargeIcon)
+            if(!hIcon)
                 goto cleanup;
         }
+
+        *LargeIcon = hIcon;
     }
 
     if (MiniIconIndex)
         *MiniIconIndex = iconIndex;
 
     ret = TRUE;
-    *LargeIcon = hIcon;
 
 cleanup:
 
@@ -1180,9 +1182,12 @@ SetupDiGetClassDevPropertySheetsA(
         PropertySheetHeader, PropertySheetHeaderPageListSize,
         RequiredSize, PropertySheetType);
 
-    psh.dwFlags = PropertySheetHeader->dwFlags;
-    psh.phpage = PropertySheetHeader->phpage;
-    psh.nPages = PropertySheetHeader->nPages;
+    if(PropertySheetHeader)
+    {
+        psh.dwFlags = PropertySheetHeader->dwFlags;
+        psh.phpage = PropertySheetHeader->phpage;
+        psh.nPages = PropertySheetHeader->nPages;
+    }
 
     ret = SetupDiGetClassDevPropertySheetsW(DeviceInfoSet, DeviceInfoData, PropertySheetHeader ? &psh : NULL,
                                             PropertySheetHeaderPageListSize, RequiredSize,
