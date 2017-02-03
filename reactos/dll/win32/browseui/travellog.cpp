@@ -245,7 +245,6 @@ CTravelLog::~CTravelLog()
 
 HRESULT CTravelLog::Initialize()
 {
-    FIXME("CTravelLog::Initialize using hardcoded fMaximumSize.\n");
     fMaximumSize = 1024 * 1024;         // TODO: change to read this from registry
     // Software\Microsoft\Windows\CurrentVersion\Explorer\TravelLog
     // MaxSize
