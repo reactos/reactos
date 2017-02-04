@@ -17,6 +17,14 @@ ULONG IapAllocatedTableEntries;
 ULONG IapTableEntries;
 PVOID* IapImageTable;
 
+KDESCRIPTOR GdtRegister;
+KDESCRIPTOR IdtRegister;
+KDESCRIPTOR BootAppGdtRegister;
+KDESCRIPTOR BootAppIdtRegister;
+PVOID BootApp32EntryRoutine;
+PVOID BootApp32Parameters;
+PVOID BootApp32Stack;
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
@@ -1597,6 +1605,17 @@ BlpPdParseReturnArguments (
 }
 
 NTSTATUS
+ImgpInitializeBootApplicationParameters (
+    _In_ PBL_IMAGE_PARAMETERS ImageParameters,
+    _In_ PBL_APPLICATION_ENTRY AppEntry,
+    _In_ PVOID ImageBase, 
+    _In_ ULONG ImageSize
+    )
+{
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 ImgArchEfiStartBootApplication (
     _In_ PBL_APPLICATION_ENTRY AppEntry,
     _In_ PVOID ImageBase,
@@ -1604,9 +1623,84 @@ ImgArchEfiStartBootApplication (
     _In_ PBL_RETURN_ARGUMENTS ReturnArguments
     )
 {
-    /* Not yet implemented. This is the last step! */
-    EfiPrintf(L"EFI APPLICATION START!!!\r\n");
-    EfiStall(100000000);
+    KDESCRIPTOR Gdt, Idt;
+    ULONG BootSizeNeeded;
+    NTSTATUS Status;
+    PVOID BootData;
+    PIMAGE_NT_HEADERS NtHeaders;
+    PVOID NewStack, NewGdt, NewIdt;
+    BL_IMAGE_PARAMETERS Parameters;
+
+    /* Read the current IDT and GDT */
+    _sgdt(&Gdt.Limit);
+    __sidt(&Idt.Limit);
+
+    /* Allocate space for the IDT, GDT, and 24 pages of stack */
+    BootSizeNeeded = (ULONG)PAGE_ALIGN(Idt.Limit + Gdt.Limit + 1 + 25 * PAGE_SIZE);
+    Status = MmPapAllocatePagesInRange(&BootData,
+                                       BlLoaderArchData,
+                                       BootSizeNeeded >> PAGE_SHIFT,
+                                       0,
+                                       0,
+                                       NULL,
+                                       0);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    RtlZeroMemory(BootData, BootSizeNeeded);
+
+    NewStack = (PVOID)((ULONG_PTR)BootData + (24 * PAGE_SIZE) - 8);
+    NewGdt = (PVOID)((ULONG_PTR)BootData + (24 * PAGE_SIZE));
+    NewIdt = (PVOID)((ULONG_PTR)BootData + (24 * PAGE_SIZE) + Gdt.Limit + 1);
+
+    RtlCopyMemory(NewGdt, (PVOID)Gdt.Base, Gdt.Limit + 1);
+    RtlCopyMemory(NewIdt, (PVOID)Idt.Base, Idt.Limit + 1);
+
+    RtlImageNtHeaderEx(0, ImageBase, ImageSize, &NtHeaders);
+
+    RtlZeroMemory(&Parameters, sizeof(Parameters));
+
+    Status = ImgpInitializeBootApplicationParameters(&Parameters,
+                                                     AppEntry,
+                                                     ImageBase,
+                                                     ImageSize);
+    if (NT_SUCCESS(Status))
+    {
+        BootAppGdtRegister = Gdt;
+        BootAppIdtRegister = Idt;
+
+        BootApp32EntryRoutine = (PVOID)((ULONG_PTR)ImageBase +
+                                        NtHeaders->OptionalHeader.
+                                        AddressOfEntryPoint);
+        BootApp32Parameters = Parameters.Buffer;
+        BootApp32Stack = NewStack;
+
+#if BL_KD_SUPPORT
+        BlBdStop();
+#endif
+        /* Not yet implemented. This is the last step! */
+        EfiPrintf(L"EFI APPLICATION START!!!\r\n");
+        EfiStall(100000000);
+
+        /* Make it so */
+        Archx86TransferTo32BitApplicationAsm();
+
+        /* Not yet implemented. This is the last step! */
+        EfiPrintf(L"EFI APPLICATION RETURNED!!!\r\n");
+        EfiStall(100000000);
+#if BL_KD_SUPPORT
+        BlBdStart();
+#endif
+    }
+
+Quickie:
+    if (BootData)
+    {
+        //MmPapFreePages(bootData, TRUE);
+    }
+
     return STATUS_NOT_IMPLEMENTED;
 }
 

@@ -283,6 +283,7 @@ typedef enum _BL_MEMORY_TYPE
     BlLoaderPageDirectory = 0xD0000006,
     BlLoaderReferencePage = 0xD0000007,
     BlLoaderRamDisk = 0xD0000008,
+    BlLoaderArchData = 0xD0000009,
     BlLoaderData = 0xD000000A,
     BlLoaderRegistry = 0xD000000B,
     BlLoaderBlockMemory = 0xD000000C,
@@ -1180,6 +1181,13 @@ typedef struct _BL_IMAGE_APPLICATION_ENTRY
     ULONG ImageSize;
 } BL_IMAGE_APPLICATION_ENTRY, *PBL_IMAGE_APPLICATION_ENTRY;
 
+typedef struct _BL_IMAGE_PARAMETERS
+{
+    PVOID Buffer;
+    ULONG ActualSize;
+    ULONG BufferSize;
+} BL_IMAGE_PARAMETERS, *PBL_IMAGE_PARAMETERS;
+
 typedef struct _BL_DEFERRED_FONT_FILE
 {
     LIST_ENTRY ListEntry;
@@ -1935,6 +1943,11 @@ BiDereferenceHive (
 VOID
 BlpArchSwitchContext (
     _In_ BL_ARCH_MODE NewMode
+    );
+
+VOID
+Archx86TransferTo32BitApplicationAsm (
+    VOID
     );
 
 /* MEMORY DESCRIPTOR ROUTINES ************************************************/

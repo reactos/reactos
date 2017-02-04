@@ -45,7 +45,7 @@ list(APPEND BOOTLIB_SOURCE
 
 if(ARCH STREQUAL "i386")
     list(APPEND BOOTLIB_ASM_SOURCE
-         #lib/arch/i386/foo.asm
+         lib/arch/i386/transfer.s
          )
     list(APPEND BOOTLIB_SOURCE
          lib/arch/i386/arch.c
