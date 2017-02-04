@@ -728,7 +728,13 @@ vfatMakeFCBFromDirEntry(
     rcFCB->RefCount = 1;
     if (vfatFCBIsDirectory(rcFCB))
     {
-        vfatFCBInitializeCacheFromVolume(vcb, rcFCB);
+        Status = vfatFCBInitializeCacheFromVolume(vcb, rcFCB);
+        if (!NT_SUCCESS(Status))
+        {
+            vfatReleaseFCB(vcb, rcFCB);
+            ExFreePool(NameU.Buffer);
+            return Status;
+        }
     }
     rcFCB->parentFcb = directoryFCB;
     InsertTailList(&directoryFCB->ParentListHead, &rcFCB->ParentListEntry);
