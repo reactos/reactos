@@ -118,7 +118,6 @@ CDMAMemoryManager::Initialize(
     m_PhysicalAddress = PhysicalAddress;
     m_VirtualBase = VirtualBase;
     m_DmaBufferSize = DmaBufferSize;
-    m_BitmapBuffer = m_BitmapBuffer;
     m_Lock = Lock;
     m_BlockSize = DefaultBlockSize;
 
