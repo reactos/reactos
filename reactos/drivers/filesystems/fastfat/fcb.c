@@ -732,7 +732,7 @@ vfatMakeFCBFromDirEntry(
         if (!NT_SUCCESS(Status))
         {
             vfatReleaseFCB(vcb, rcFCB);
-            ExFreePool(NameU.Buffer);
+            ExFreePoolWithTag(NameU.Buffer, TAG_FCB);
             return Status;
         }
     }
@@ -741,7 +741,7 @@ vfatMakeFCBFromDirEntry(
     vfatAddFCBToTable(vcb, rcFCB);
     *fileFCB = rcFCB;
 
-    ExFreePool(NameU.Buffer);
+    ExFreePoolWithTag(NameU.Buffer, TAG_FCB);
     return STATUS_SUCCESS;
 }
 
