@@ -1680,8 +1680,8 @@ MmFwGetMemoryMap (
         Status = MmMdAddDescriptorToList(MemoryMap,
                                          Descriptor,
                                          BL_MM_ADD_DESCRIPTOR_TRUNCATE_FLAG |
-                                         (Flags & BL_MM_FLAG_REQUEST_COALESCING) ?
-                                         BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG : 0);
+                                         ((Flags & BL_MM_FLAG_REQUEST_COALESCING) ?
+                                          BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG : 0));
         if (!NT_SUCCESS(Status))
         {
             EfiPrintf(L"Failed to add full descriptor: %lx\r\n", Status);
