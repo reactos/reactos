@@ -601,7 +601,7 @@ EtfsOpen (
     }
 
     /* Zero it out */
-    RtlZeroMemory(NewFile, sizeof(*EtfsFile));
+    RtlZeroMemory(EtfsFile, sizeof(*EtfsFile));
 
     /* Capture the device ID of the directory */
     NewFile->DeviceId = Directory->DeviceId;
