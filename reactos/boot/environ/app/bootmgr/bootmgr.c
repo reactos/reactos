@@ -2276,7 +2276,7 @@ BmpTransferExecution (
                                            BcdLibraryDevice_ApplicationDevice,
                                            &AppDevice,
                                            NULL);
-            if (NT_SUCCESS(Status))
+            if (!NT_SUCCESS(Status))
             {
                 /* Force re-enumeration */
                 Status = BlFwEnumerateDevice(AppDevice);

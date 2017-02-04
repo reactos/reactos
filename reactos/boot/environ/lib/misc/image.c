@@ -883,7 +883,6 @@ ImgpLoadPEImage (
 
     /* Record our current position (right after the headers) */
     EndOfHeaders = (ULONG_PTR)VirtualAddress + HeaderSize;
-    EfiPrintf(L"here\r\n");
 
     /* Get the first section and iterate through each one */
     Section = IMAGE_FIRST_SECTION(NtHeaders);
@@ -981,17 +980,20 @@ ImgpLoadPEImage (
             if (!First)
             {
                 /* FUCK YOU BINUTILS */
-                if ((*(PULONG)&Section->Name == 'ler.') && (RawSize < AlignSize))
+                if (NtHeaders->OptionalHeader.MajorLinkerVersion < 7)
                 {
-                    /* Piece of shit won't build relocations when you tell it to,
-                     * either by using --emit-relocs or --dynamicbase. People online
-                     * have found out that by using -pie-executable you can get this
-                     * to happen, but then it turns out that the .reloc section is
-                     * incorrectly sized, and results in a corrupt PE. However, they
-                     * still compute the checksum using the correct value. What idiots.
-                     */
-                    WorkaroundForBinutils = AlignSize - RawSize;
-                    AlignSize -= WorkaroundForBinutils;
+                    if ((*(PULONG)&Section->Name == 'ler.') && (RawSize < AlignSize))
+                    {
+                        /* Piece of shit won't build relocations when you tell it to,
+                         * either by using --emit-relocs or --dynamicbase. People online
+                         * have found out that by using -pie-executable you can get this
+                         * to happen, but then it turns out that the .reloc section is
+                         * incorrectly sized, and results in a corrupt PE. However, they
+                         * still compute the checksum using the correct value. What idiots.
+                         */
+                        WorkaroundForBinutils = AlignSize - RawSize;
+                        AlignSize -= WorkaroundForBinutils;
+                    }
                 }
 
                 /* Yes, read the section data */
