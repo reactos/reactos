@@ -327,7 +327,7 @@ DeleteHardwareProfile(
     {
         RtlMoveMemory(&pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex],
                       &pProfileData->pProfiles[pProfileData->dwSelectedProfileIndex + 1],
-                      (pProfileData->dwProfileCount - pProfileData->dwSelectedProfileIndex - 1) * sizeof(PPROFILE));
+                      (pProfileData->dwProfileCount - pProfileData->dwSelectedProfileIndex - 1) * sizeof(PROFILE));
     }
     else
     {
