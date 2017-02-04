@@ -817,7 +817,7 @@ image is successfully loaded.
 
 @retval EFI_SUCCESS           Image was loaded into memory correctly.
 @retval EFI_NOT_FOUND         Both SourceBuffer and DevicePath are NULL.
-@retval EFI_INVALID_PARAMETER One or more parameters are invalid.
+@retval EFI_INVALID_PARAMETER One or more parametes are invalid.
 @retval EFI_UNSUPPORTED       The image type is not supported.
 @retval EFI_OUT_OF_RESOURCES  Image was not loaded due to insufficient resources.
 @retval EFI_LOAD_ERROR        Image was not loaded because the image format was corrupt or not
@@ -969,7 +969,7 @@ typedef enum {
     ///
     /// Used to induce a system-wide reset. This sets all circuitry within the 
     /// system to its initial state.  This type of reset is asynchronous to system
-    /// operation and operates without regard to cycle boundaries.  EfiColdReset 
+    /// operation and operates withgout regard to cycle boundaries.  EfiColdReset 
     /// is tantamount to a system power cycle.
     ///
     EfiResetCold,
@@ -1277,7 +1277,7 @@ protocol interface was returned in Interface.
 @retval EFI_UNSUPPORTED       Handle does not support Protocol.
 @retval EFI_INVALID_PARAMETER One or more parameters are invalid.
 @retval EFI_ACCESS_DENIED     Required attributes can't be supported in current environment.
-@retval EFI_ALREADY_STARTED   Item on the open list already has required attributes whose agent
+@retval EFI_ALREADY_STARTED   Item on the open list already has requierd attributes whose agent
 handle is the same as AgentHandle.
 
 **/
@@ -1637,13 +1637,13 @@ part of the reset process.
 @param  CapsuleHeaderArray    Virtual pointer to an array of virtual pointers to the capsules
 being passed into update capsule.
 @param  CapsuleCount          Number of pointers to EFI_CAPSULE_HEADER in
-CapsuleHeaderArray.
+CaspuleHeaderArray.
 @param  ScatterGatherList     Physical pointer to a set of
 EFI_CAPSULE_BLOCK_DESCRIPTOR that describes the
 location in physical memory of a set of capsules.
 
 @retval EFI_SUCCESS           Valid capsule was passed. If
-CAPSULE_FLAGS_PERSIST_ACROSS_RESET is not set, the
+CAPSULE_FLAGS_PERSIT_ACROSS_RESET is not set, the
 capsule has been successfully processed by the firmware.
 @retval EFI_INVALID_PARAMETER CapsuleSize is NULL, or an incompatible set of flags were
 set in the capsule header.
@@ -1667,8 +1667,8 @@ Returns if the capsule can be supported via UpdateCapsule().
 @param  CapsuleHeaderArray    Virtual pointer to an array of virtual pointers to the capsules
 being passed into update capsule.
 @param  CapsuleCount          Number of pointers to EFI_CAPSULE_HEADER in
-CapsuleHeaderArray.
-@param  MaximumCapsuleSize     On output the maximum size that UpdateCapsule() can
+CaspuleHeaderArray.
+@param  MaxiumCapsuleSize     On output the maximum size that UpdateCapsule() can
 support as an argument to UpdateCapsule() via
 CapsuleHeaderArray and ScatterGatherList.
 @param  ResetType             Returns the type of reset required for the capsule update.

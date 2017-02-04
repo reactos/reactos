@@ -96,7 +96,7 @@ EFI_STATUS
   @retval EFI_WRITE_PROTECTED   The device can not be written to.
   @retval EFI_DEVICE_ERROR      The device reported an error while performing the write.
   @retval EFI_NO_MEDIA          There is no media in the device.
-  @retval EFI_MEDIA_CHANGED     The MediaId does not match the current device.
+  @retval EFI_MEDIA_CHNAGED     The MediaId does not matched the current device.
   @retval EFI_BAD_BUFFER_SIZE   The Buffer was not a multiple of the block size of the device.
   @retval EFI_INVALID_PARAMETER The write request contains LBAs that are not valid, 
                                 or the buffer is not on proper alignment.
@@ -118,7 +118,7 @@ EFI_STATUS
   @param  This              Indicates a pointer to the calling context.
 
   @retval EFI_SUCCESS       All outstanding data was written to the device
-  @retval EFI_DEVICE_ERROR  The device reported an error while writing back the data
+  @retval EFI_DEVICE_ERROR  The device reported an error while writting back the data
   @retval EFI_NO_MEDIA      There is no media in the device.
 
 **/
@@ -133,7 +133,7 @@ EFI_STATUS
 **/
 typedef struct {
   ///
-  /// The current media Id. If the media changes, this value is changed.
+  /// The curent media Id. If the media changes, this value is changed.
   ///
   UINT32  MediaId;         
    
@@ -144,7 +144,7 @@ typedef struct {
   
   ///
   /// TRUE if there is a media currently present in the device;
-  /// otherwise, FALSE. THis field shows the media present status
+  /// othersise, FALSE. THis field shows the media present status
   /// as of the most recent ReadBlocks() or WriteBlocks() call.  
   ///
   BOOLEAN MediaPresent;

@@ -85,7 +85,7 @@ typedef union {
 } EFI_UGA_PIXEL_UNION;
 
 ///
-/// Enumeration value for actions of Blt operations.
+/// Enumration value for actions of Blt operations.
 ///
 typedef enum {
   EfiUgaVideoFill,          ///< Write data from the  BltBuffer pixel (SourceX, SourceY)
@@ -112,8 +112,8 @@ typedef enum {
                             ///< (DestinationX, DestinationY) (DestinationX + Width, DestinationY + Height).
                             ///< The BltBuffer and Delta  are not used in this mode.
                             
-  EfiUgaBltMax              ///< Maximum value for enumeration value of Blt operation. If a Blt operation
-                            ///< larger or equal to this enumeration value, it is invalid.
+  EfiUgaBltMax              ///< Maxmimum value for enumration value of Blt operation. If a Blt operation
+                            ///< larger or equal to this enumration value, it is invalid.
 } EFI_UGA_BLT_OPERATION;
 
 /**
@@ -133,7 +133,7 @@ typedef enum {
 
     @retval EFI_SUCCESS           - The Blt operation completed.
     @retval EFI_INVALID_PARAMETER - BltOperation is not valid.
-    @retval EFI_DEVICE_ERROR      - A hardware error occured writing to the video buffer.
+    @retval EFI_DEVICE_ERROR      - A hardware error occured writting to the video buffer.
 
 **/
 typedef
