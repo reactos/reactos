@@ -1815,6 +1815,11 @@ __INTRIN_INLINE void __sidt(void *Destination)
 	__asm__ __volatile__("sidt %0" : : "m"(*(short*)Destination) : "memory");
 }
 
+__INTRIN_INLINE void _sgdt(void *Destination)
+{
+	__asm__ __volatile__("sgdt %0" : : "m"(*(short*)Destination) : "memory");
+}
+
 /*** Misc operations ***/
 
 __INTRIN_INLINE void _mm_pause(void)

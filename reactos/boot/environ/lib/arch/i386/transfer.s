@@ -11,10 +11,10 @@
 #include <asm.inc>
 #include <ks386.inc>
 
-EXTERN _GdtRegister:DWORD
-EXTERN _IdtRegister:DWORD
-EXTERN _BootAppGdtRegister:DWORD
-EXTERN _BootAppIdtRegister:DWORD
+EXTERN _GdtRegister:FWORD
+EXTERN _IdtRegister:FWORD
+EXTERN _BootAppGdtRegister:FWORD
+EXTERN _BootAppIdtRegister:FWORD
 EXTERN _BootApp32Stack:DWORD
 EXTERN _BootApp32EntryRoutine:DWORD
 EXTERN _BootApp32Parameters:DWORD
@@ -39,10 +39,10 @@ _Archx86TransferTo32BitApplicationAsm:
     mov ebx, esp
 
     /* Save current GDT/IDT, then load new one */
-    sgdt fword ptr _GdtRegister
-    sidt fword ptr _IdtRegister
-    lgdt fword ptr _BootAppGdtRegister
-    lidt fword ptr _BootAppIdtRegister
+    sgdt _GdtRegister
+    sidt _IdtRegister
+    lgdt _BootAppGdtRegister
+    lidt _BootAppIdtRegister
 
     /* Load the new stack */
     xor ebp, ebp
@@ -62,8 +62,8 @@ _Archx86TransferTo32BitApplicationAsm:
     mov esp, ebx
 
     /* Restore old GDT/IDT */
-    lgdt fword ptr _GdtRegister
-    lidt fword ptr _IdtRegister
+    lgdt _GdtRegister
+    lidt _IdtRegister
 
     /* Retore old segments */
     pop ds
@@ -76,6 +76,6 @@ _Archx86TransferTo32BitApplicationAsm:
     pop ebp
 
     /* All done */
-    retn
+    ret
 
 END
