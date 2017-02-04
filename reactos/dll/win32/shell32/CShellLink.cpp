@@ -2139,7 +2139,6 @@ static BOOL HACKISH_PathResolve(
     IN UINT fFlags)
 {
     // FIXME: This is unimplemented!!!
-    FIXME("PathResolve() is UNIMPLEMENTED, using HACKISH_PathResolve() instead!\n");
 #if 0
     return PathResolve(pszPath, dirs, fFlags);
 #else
