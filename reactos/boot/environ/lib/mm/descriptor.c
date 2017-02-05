@@ -253,7 +253,6 @@ MmMdCopyList (
 {
     NTSTATUS Status;
     PULONG Used;
-    BOOLEAN Finished;
     PLIST_ENTRY First, NextEntry;
     PBL_MEMORY_DESCRIPTOR Descriptor;
 
