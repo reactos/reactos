@@ -3,10 +3,9 @@
 void
 isohybrid_error(int eval, const char* fmt, ...)
 {
-    fprintf(stderr, "isohybrid: ");
-
     va_list ap;
     va_start(ap, fmt);
+    fprintf(stderr, "isohybrid: ");
     vfprintf(stderr, fmt, ap);
     va_end(ap);
     exit(eval);
@@ -15,10 +14,9 @@ isohybrid_error(int eval, const char* fmt, ...)
 void
 isohybrid_warning(const char *fmt, ...)
 {
-    fprintf(stderr, "isohybrid: ");
-
     va_list ap;
     va_start(ap, fmt);
+    fprintf(stderr, "isohybrid: ");
     vfprintf(stderr, fmt, ap);
     va_end(ap);
 }
