@@ -31,6 +31,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #else
+#ifdef __REACTOS__
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif /* __REACTOS__ */
 #include <unistd.h>
 #endif
 
@@ -99,6 +103,15 @@ void chmc_pmgl_init(struct chmcPmglChunkNode *node);
 int chmc_pmgi_add_entry(struct chmcFile *chm, const char *name, int pmgl_id);
 void chmc_pmgi_add(struct chmcFile *chm, struct chmcPmgiChunkNode *pmgi);
 void chmc_string_init(struct chmcStringChunk *node);
+
+#ifdef __REACTOS__
+int chmc_uncompressed_done(struct chmcFile *chm);
+int chmc_pmgi_done(struct chmcFile *chm);
+int chmc_write(struct chmcFile *chm);
+int chmc_appendfile(struct chmcFile *chm, const char *filename, void *buf,
+                size_t size );
+int chmc_pmgl_add_entry(struct chmcFile *chm, struct chmcTreeNode *entry);
+#endif /* __REACTOS__ */
 
 struct chmcLzxInfo
 {
