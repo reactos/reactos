@@ -1605,6 +1605,17 @@ BlpPdParseReturnArguments (
 }
 
 NTSTATUS
+BlMmGetMemoryMap (
+    _In_ PLIST_ENTRY MemoryMap,
+    _In_ PBL_IMAGE_PARAMETERS ImageParameters,
+    _In_ ULONG WhichTypes,
+    _In_ ULONG Flags
+    )
+{
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 ImgpInitializeBootApplicationParameters (
     _In_ PBL_IMAGE_PARAMETERS ImageParameters,
     _In_ PBL_APPLICATION_ENTRY AppEntry,
@@ -1612,6 +1623,32 @@ ImgpInitializeBootApplicationParameters (
     _In_ ULONG ImageSize
     )
 {
+    NTSTATUS Status;
+    PIMAGE_NT_HEADERS NtHeaders;
+    BL_IMAGE_PARAMETERS MemoryParameters;
+    LIST_ENTRY MemoryList;
+
+    Status = RtlImageNtHeaderEx(0, ImageBase, ImageSize, &NtHeaders);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    MemoryParameters.BufferSize = 0;
+
+    Status = BlMmGetMemoryMap(&MemoryList,
+                              &MemoryParameters,
+                              BL_MM_INCLUDE_FIRMWARE_MEMORY |
+                              BL_MM_INCLUDE_MAPPED_ALLOCATED |
+                              BL_MM_INCLUDE_MAPPED_UNALLOCATED |
+                              BL_MM_INCLUDE_UNMAPPED_ALLOCATED |
+                              BL_MM_INCLUDE_RESERVED_ALLOCATED,
+                              0);
+    if ((Status != STATUS_BUFFER_TOO_SMALL) && (Status != STATUS_SUCCESS))
+    {
+        return Status;
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -1649,28 +1686,34 @@ ImgArchEfiStartBootApplication (
         goto Quickie;
     }
 
+    /* Zero the boot data */
     RtlZeroMemory(BootData, BootSizeNeeded);
 
+    /* Set the new stack, GDT and IDT */
     NewStack = (PVOID)((ULONG_PTR)BootData + (24 * PAGE_SIZE) - 8);
     NewGdt = (PVOID)((ULONG_PTR)BootData + (24 * PAGE_SIZE));
     NewIdt = (PVOID)((ULONG_PTR)BootData + (24 * PAGE_SIZE) + Gdt.Limit + 1);
 
+    /* Copy the current (firmware) GDT and IDT */
     RtlCopyMemory(NewGdt, (PVOID)Gdt.Base, Gdt.Limit + 1);
     RtlCopyMemory(NewIdt, (PVOID)Idt.Base, Idt.Limit + 1);
 
+    /* Read the NT headers so that we can get the entrypoint later on */
     RtlImageNtHeaderEx(0, ImageBase, ImageSize, &NtHeaders);
 
+    /* Prepare the application parameters */
     RtlZeroMemory(&Parameters, sizeof(Parameters));
-
     Status = ImgpInitializeBootApplicationParameters(&Parameters,
                                                      AppEntry,
                                                      ImageBase,
                                                      ImageSize);
     if (NT_SUCCESS(Status))
     {
+        /* Set the firmware GDT/IDT as the one the application will use */
         BootAppGdtRegister = Gdt;
         BootAppIdtRegister = Idt;
 
+        /* Set the entrypoint, parameters, and stack */
         BootApp32EntryRoutine = (PVOID)((ULONG_PTR)ImageBase +
                                         NtHeaders->OptionalHeader.
                                         AddressOfEntryPoint);
@@ -1678,11 +1721,11 @@ ImgArchEfiStartBootApplication (
         BootApp32Stack = NewStack;
 
 #if BL_KD_SUPPORT
+        /* Disable the kernel debugger */
         BlBdStop();
 #endif
         /* Not yet implemented. This is the last step! */
         EfiPrintf(L"EFI APPLICATION START!!!\r\n");
-        EfiStall(100000000);
 
         /* Make it so */
         Archx86TransferTo32BitApplicationAsm();
@@ -1690,17 +1733,22 @@ ImgArchEfiStartBootApplication (
         /* Not yet implemented. This is the last step! */
         EfiPrintf(L"EFI APPLICATION RETURNED!!!\r\n");
         EfiStall(100000000);
+
 #if BL_KD_SUPPORT
+        /* Re-enable the kernel debugger */
         BlBdStart();
 #endif
     }
 
 Quickie:
+    /* Check if we had boot data allocated */
     if (BootData)
     {
+        /* Free it */
         //MmPapFreePages(bootData, TRUE);
     }
 
+    /* All done */
     return STATUS_NOT_IMPLEMENTED;
 }
 

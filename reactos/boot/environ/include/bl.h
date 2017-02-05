@@ -93,6 +93,16 @@ DEFINE_GUID(BadMemoryGuid, 0x54B8275B, 0xD431, 0x473F, 0xAC, 0xFB, 0xE5, 0x36, 0
 #define BL_MM_ADD_DESCRIPTOR_NEVER_TRUNCATE_FLAG        0x20
 #define BL_MM_ADD_DESCRIPTOR_UPDATE_LIST_POINTER_FLAG   0x2000
 
+#define BL_MM_INCLUDE_MAPPED_ALLOCATED                  0x01
+#define BL_MM_INCLUDE_MAPPED_UNALLOCATED                0x02
+#define BL_MM_INCLUDE_UNMAPPED_ALLOCATED                0x04
+#define BL_MM_INCLUDE_UNMAPPED_UNALLOCATED              0x08
+#define BL_MM_INCLUDE_RESERVED_ALLOCATED                0x10
+#define BL_MM_INCLUDE_BAD_MEMORY                        0x20
+#define BL_MM_INCLUDE_FIRMWARE_MEMORY                   0x40
+#define BL_MM_INCLUDE_TRUNCATED_MEMORY                  0x80
+#define BL_MM_INCLUDE_PERSISTEND_MEMORY                 0x100
+
 #define BL_MM_REQUEST_DEFAULT_TYPE                      1
 #define BL_MM_REQUEST_TOP_DOWN_TYPE                     2
 

@@ -28,8 +28,6 @@ ULONG UtlNextUpdatePercentage;
 BOOLEAN UtlProgressNeedsInfoUpdate;
 PVOID UtlProgressInfo;
 
-
-
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS

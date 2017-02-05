@@ -821,14 +821,15 @@ BlRemoveBootOption (
 NTSTATUS
 BlReplaceBootOptions (
     _In_ PBL_LOADED_APPLICATION_ENTRY AppEntry,
-    _In_ PBL_BCD_OPTION NewOptions
+    _In_ PBL_BCD_OPTION OldOptions
     )
 {
     NTSTATUS Status;
-    ULONG Size;
+    ULONG OptionSize;
+    PBL_BCD_OPTION NewOptions;
 
     /* Make sure there's something to replace with */
-    if (!NewOptions)
+    if (!OldOptions)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -849,17 +850,17 @@ BlReplaceBootOptions (
     AppEntry->BcdData = NULL;
 
     /* Get the size of the new list of options */
-    Size = BlGetBootOptionListSize(NewOptions);
+    OptionSize = BlGetBootOptionListSize(OldOptions);
 
     /* Allocate a copy of the new list */
-    NewOptions = BlMmAllocateHeap(Size);
+    NewOptions = BlMmAllocateHeap(OptionSize);
     if (!NewOptions)
     {
         return STATUS_NO_MEMORY;
     }
 
     /* Copy it in */
-    RtlCopyMemory(NewOptions, NewOptions, Size);
+    RtlCopyMemory(NewOptions, OldOptions, OptionSize);
 
     /* Set it as the new set of options and return */
     AppEntry->Flags |= BL_APPLICATION_ENTRY_BCD_OPTIONS_INTERNAL;
