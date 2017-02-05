@@ -47,8 +47,7 @@ OslMain (
     LibraryParameters.DescriptorCount = 512;
     Status = BlInitializeLibrary(BootParameters, &LibraryParameters);
 
-    //EfiPrintf(L"ReactOS UEFI OS Loader Initializing...\r\n");
-    EfiConOut->OutputString(EfiConOut, L"ReactOS UEFI OS Loader Initializing...\r\n");
+    EfiPrintf(L"ReactOS UEFI OS Loader Initializing...\r\n");
     return Status;
 }
 

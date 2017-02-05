@@ -349,6 +349,7 @@ BlpMmInitialize (
                             LibraryParameters->MinimumAllocationCount);
     if (!NT_SUCCESS(Status))
     {
+        EfiPrintf(L"PA Mm init failed: %lx\r\n", Status);
         goto Quickie;
     }
 
@@ -356,6 +357,7 @@ BlpMmInitialize (
     Status = MmTrInitialize();
     if (!NT_SUCCESS(Status))
     {
+        EfiPrintf(L"TR Mm init failed: %lx\r\n", Status);
         //MmArchDestroy();
         //MmPaDestroy(1);
         goto Quickie;
@@ -380,6 +382,7 @@ BlpMmInitialize (
     if (!NT_SUCCESS(Status))
     {
         /* Kill everything set setup so far */
+        EfiPrintf(L"Phase 1 Mm init failed: %lx\r\n", Status);
         //MmPaDestroy(0);
         //MmTrDestroy();
         //MmArchDestroy();
@@ -415,6 +418,7 @@ BlpMmInitialize (
     if (!NT_SUCCESS(Status))
     {
         /* Go back to static descriptors and kill the heap */
+        EfiPrintf(L"Phase 2 Mm init failed: %lx\r\n", Status);
         //MmMdpSwitchToStaticDescriptors();
         //HapInitializationStatus = 0;
         //++MmDescriptorCallTreeCount;

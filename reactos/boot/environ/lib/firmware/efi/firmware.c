@@ -144,6 +144,11 @@ EfiPrintf (
     else
     {
         /* FIXME: @TODO: Not yet supported */
+        // FIXME: Hack while we are in early rosload mode
+        if (EfiConOut != NULL)
+        {
+            EfiConOut->OutputString(EfiConOut, BlScratchBuffer);
+        }
     }
 
     /* All done */

@@ -2901,7 +2901,6 @@ BmMain (
     {
         NTSTATUS Status;
         PHYSICAL_ADDRESS PhysicalAddress, PhysicalAddress2;
-        PBL_MEMORY_DESCRIPTOR Found;
 
         /* Allocate 1 physical page */
         PhysicalAddress.QuadPart = 0;
@@ -2913,7 +2912,7 @@ BmMain (
         }
 
         /* Write some data */
-        *(PULONG)PhysicalAddress.QuadPart = 0x55555151;
+        *(PULONG)((ULONG_PTR)PhysicalAddress.QuadPart) = 0x55555151;
 
         /* Free it */
         Status = BlMmFreePhysicalPages(PhysicalAddress);
@@ -2940,9 +2939,9 @@ BmMain (
         }
 
         /* The data should still be there, since zero-ing is not on for bootmgr */
-        if (*(PULONG)PhysicalAddress2.QuadPart != 0x55555151)
+        if (*(PULONG)((ULONG_PTR)PhysicalAddress2.QuadPart) != 0x55555151)
         {
-            EfiPrintf(L"FAIL: Non-matching data: %lx %lx\r\n", 0x55555151, *(PULONG)PhysicalAddress2.QuadPart);
+            EfiPrintf(L"FAIL: Non-matching data: %lx %lx\r\n", 0x55555151, *(PULONG)((ULONG_PTR)PhysicalAddress2.QuadPart));
             EfiStall(100000000);
         }
 
