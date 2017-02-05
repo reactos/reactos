@@ -610,14 +610,24 @@ BlMmAllocatePhysicalPages(
 }
 
 NTSTATUS
+MmPapFreePhysicalPages (
+    _In_ ULONG WhichList,
+    _In_ ULONGLONG PageCount,
+    _In_ PHYSICAL_ADDRESS Address
+    )
+{
+    /* TBD */
+    EfiPrintf(L"Leaking memory: %p!\r\n", Address.QuadPart);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 BlMmFreePhysicalPages (
     _In_ PHYSICAL_ADDRESS Address
     )
 {
     /* Call the physical allocator */
-    EfiPrintf(L"Leaking memory: %p!\r\n", Address.QuadPart);
-    return STATUS_SUCCESS;
-    //return MmPapFreePhysicalPages(4, 0, Address);
+    return MmPapFreePhysicalPages(BL_MM_INCLUDE_UNMAPPED_ALLOCATED, 0, Address);
 }
 
 NTSTATUS
@@ -626,8 +636,24 @@ MmPapFreePages (
     _In_ ULONG WhichList
     )
 {
-    EfiPrintf(L"Leaking memory: %p!\r\n", Address);
-    return STATUS_SUCCESS;
+    PHYSICAL_ADDRESS PhysicalAddress;
+
+    /* Handle virtual memory scenario */
+    if (MmTranslationType != BlNone)
+    {
+        EfiPrintf(L"Unimplemented virtual path\r\n");
+        return STATUS_SUCCESS;
+    }
+
+    /* Physical memory should be in the unmapped allocated list */
+    if (WhichList != BL_MM_INCLUDE_PERSISTENT_MEMORY)
+    {
+        WhichList = BL_MM_INCLUDE_UNMAPPED_ALLOCATED;
+    }
+
+    /* Free it from there */
+    PhysicalAddress.QuadPart = (ULONGLONG)Address;
+    return MmPapFreePhysicalPages(WhichList, 0, PhysicalAddress);
 }
 
 NTSTATUS

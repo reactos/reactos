@@ -670,7 +670,6 @@ NTSTATUS
     VOID
     );
 
-
 /* DATA STRUCTURES ***********************************************************/
 
 typedef struct _BL_LIBRARY_PARAMETERS

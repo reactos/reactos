@@ -779,6 +779,204 @@ Quickie:
     return Status;
 }
 
+PBL_MEMORY_DESCRIPTOR
+MmMdFindDescriptorFromMdl (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList, 
+    _In_ ULONG Flags, 
+    _In_ ULONGLONG Page
+    )
+{
+    BOOLEAN IsVirtual;
+    PLIST_ENTRY NextEntry, ListHead;
+    PBL_MEMORY_DESCRIPTOR Current;
+    ULONGLONG BasePage;
+
+    /* Assume physical */
+    IsVirtual = FALSE;
+
+    /* Check if the caller wants physical memory */
+    if (!(Flags & BL_MM_REMOVE_VIRTUAL_REGION_FLAG))
+    {
+        /* Check if this is a virtual memory list */
+        if (MdList->Type == BlMdVirtual)
+        {
+            /* We won't find anything */
+            return NULL;
+        }
+    }
+    else if (MdList->Type == BlMdPhysical)
+    {
+        /* Otherwise, caller wants virtual, but this is a physical list */
+        IsVirtual = TRUE;
+        NextEntry = MdList->First->Flink;
+    }
+    
+    /* Check if this is a physical search */
+    if (!IsVirtual)
+    {
+        /* Check if we can use the current pointer */
+        NextEntry = MdList->This;
+        if (!NextEntry)
+        {
+            /* We can't -- start at the beginning */
+            NextEntry = MdList->First->Flink;
+        }
+        else
+        {
+            /* If the page is below the current pointer, restart */
+            Current = CONTAINING_RECORD(NextEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+            if (Page < Current->BasePage)
+            {
+                NextEntry = MdList->First->Flink;
+            }
+        }
+    }
+
+    /* Loop the list of descriptors */
+    ListHead = MdList->First;
+    while (NextEntry != ListHead)
+    {
+        /* Get the current one */
+        Current = CONTAINING_RECORD(NextEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+
+        /* Check if we are looking for virtual memory */
+        if (IsVirtual)
+        {
+            /* Use the base address */
+            BasePage = Current->VirtualPage;
+        }
+        else
+        {
+            /* Use the page */
+            BasePage = Current->BasePage;
+        }
+
+        /* If this is a virtual descriptor, make sure it has a base address */
+        if ((!(IsVirtual) || (BasePage)) &&
+            (BasePage <= Page) &&
+            (Page < (BasePage + Current->PageCount)))
+        {
+            /* The descriptor fits the page being requested */
+            break;
+        }
+
+        /* Try the next one */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Nothing found if we're here */
+    return NULL;
+}
+
+PBL_MEMORY_DESCRIPTOR
+MmMdFindDescriptor (
+    _In_ ULONG WhichList, 
+    _In_ ULONG Flags,
+    _In_ ULONGLONG Page
+    )
+{
+    PBL_MEMORY_DESCRIPTOR FoundDescriptor;
+
+    /* Check if the caller is looking for mapped, allocated memory */
+    if (WhichList & BL_MM_INCLUDE_MAPPED_ALLOCATED)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlMappedAllocated, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Check if the caller is looking for mapped, unallocated memory */
+    if (WhichList & BL_MM_INCLUDE_MAPPED_UNALLOCATED)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlMappedUnallocated, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Check if the caller is looking for unmapped, allocated memory */
+    if (WhichList & BL_MM_INCLUDE_UNMAPPED_ALLOCATED)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlUnmappedAllocated, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Check if the caller is looking for unmapped, unallocated memory */
+    if (WhichList & BL_MM_INCLUDE_UNMAPPED_UNALLOCATED)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlUnmappedUnallocated, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Check if the caller is looking for reserved, allocated memory */
+    if (WhichList & BL_MM_INCLUDE_RESERVED_ALLOCATED)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlReservedAllocated, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Check if the caller is looking for bad memory */
+    if (WhichList & BL_MM_INCLUDE_BAD_MEMORY)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlBadMemory, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Check if the caller is looking for truncated memory */
+    if (WhichList & BL_MM_INCLUDE_TRUNCATED_MEMORY)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlTruncatedMemory, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Check if the caller is looking for persistent memory */
+    if (WhichList & BL_MM_INCLUDE_PERSISTENT_MEMORY)
+    {
+        /* Find a descriptor in that list */
+        FoundDescriptor = MmMdFindDescriptorFromMdl(&MmMdlPersistentMemory, Flags, Page);
+        if (FoundDescriptor)
+        {
+            /* Got it */
+            return FoundDescriptor;
+        }
+    }
+
+    /* Nothing if we got here */
+    return NULL;
+}
+
 BOOLEAN
 MmMdFindSatisfyingRegion (
     _In_ PBL_MEMORY_DESCRIPTOR Descriptor,

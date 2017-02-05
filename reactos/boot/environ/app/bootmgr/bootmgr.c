@@ -2895,6 +2895,31 @@ BmMain (
         }
     }
 
+
+    /* TEST MODE */
+    EfiPrintf(L"Performing memory allocator tests...\r\n");
+    {
+        NTSTATUS Status;
+        PHYSICAL_ADDRESS PhysicalAddress;
+        PBL_MEMORY_DESCRIPTOR Found;
+        PBL_MEMORY_DESCRIPTOR
+            MmMdFindDescriptor (
+                _In_ ULONG WhichList,
+                _In_ ULONG Flags,
+                _In_ ULONGLONG Page
+            );
+
+        /* Allocate 1 physical page */
+        PhysicalAddress.QuadPart = 0;
+        Status = BlMmAllocatePhysicalPages(&PhysicalAddress, BlLoaderData, 1, 0, 1);
+        EfiPrintf(L"Allocation status: %lx at address: %llx\r\n", Status, PhysicalAddress.QuadPart);
+        EfiStall(10000);
+
+        Found = MmMdFindDescriptor(BL_MM_INCLUDE_UNMAPPED_ALLOCATED, 0, PhysicalAddress.QuadPart);
+        EfiPrintf(L"Found descriptor: %p %llx\r\n", Found, Found->BasePage);
+    }
+
+
     /* Write out the first XML tag */
     BlXmiWrite(L"<bootmgr/>");
 
