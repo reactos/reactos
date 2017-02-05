@@ -284,6 +284,7 @@ BlMmUnmapVirtualAddressEx (
         if ((NT_SUCCESS(Status)) && (MmTranslationType != BlNone))
         {
             /* TODO */
+            EfiPrintf(L"unhandled virtual path\r\n");
             Status = STATUS_NOT_IMPLEMENTED;
         }
     }
@@ -297,6 +298,23 @@ BlMmUnmapVirtualAddressEx (
     MmMdFreeGlobalDescriptors();
     --MmDescriptorCallTreeCount;
     return Status;
+}
+
+BOOLEAN
+BlMmTranslateVirtualAddress (
+    _In_ PVOID VirtualAddress,
+    _Out_ PPHYSICAL_ADDRESS PhysicalAddress
+    )
+{
+    /* Make sure arguments are present */
+    if (!(VirtualAddress) || !(PhysicalAddress))
+    {
+        return FALSE;
+    }
+
+    EfiPrintf(L"Unhandled virtual path\r\n");
+    return FALSE;
+    //return MmArchTranslateVirtualAddress(VirtualAddress, PhysicalAddress, NULL);
 }
 
 NTSTATUS

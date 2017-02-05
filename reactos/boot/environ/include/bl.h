@@ -2093,6 +2093,12 @@ BlMmFreePhysicalPages (
     );
 
 NTSTATUS
+MmPapFreePages (
+    _In_ PVOID Address,
+    _In_ ULONG WhichList
+    );
+
+NTSTATUS
 MmPapAllocatePagesInRange (
     _Inout_ PVOID* PhysicalAddress,
     _In_ BL_MEMORY_TYPE MemoryType,
@@ -2141,6 +2147,12 @@ NTSTATUS
 BlMmUnmapVirtualAddressEx (
     _In_ PVOID VirtualAddress,
     _In_ ULONGLONG Size
+    );
+
+BOOLEAN
+BlMmTranslateVirtualAddress (
+    _In_ PVOID VirtualAddress,
+    _Out_ PPHYSICAL_ADDRESS PhysicalAddress
     );
 
 /* BLOCK ALLOCATOR ROUTINES **************************************************/

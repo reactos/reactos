@@ -195,7 +195,6 @@ MmPapAllocateRegionFromMdl (
     /* Does the memory we received not exactly fall onto the beginning of its descriptor? */
     if (LocalDescriptor.BasePage != FoundDescriptor->BasePage)
     {
-        EfiPrintf(L"Local Page: %08I64X Found Page: %08I64X\r\n", LocalDescriptor.BasePage, FoundDescriptor->BasePage);
         TempDescriptor = MmMdInitByteGranularDescriptor(FoundDescriptor->Flags,
                                                         FoundDescriptor->Type,
                                                         FoundDescriptor->BasePage,
@@ -216,7 +215,6 @@ MmPapAllocateRegionFromMdl (
                           LocalDescriptor.VirtualPage + LocalDescriptor.PageCount : 0;
     if (LocalEndPage != FoundEndPage)
     {
-        EfiPrintf(L"Local Page: %08I64X Found Page: %08I64X\r\n", LocalEndPage, FoundEndPage);
         TempDescriptor = MmMdInitByteGranularDescriptor(FoundDescriptor->Flags,
                                                         FoundDescriptor->Type,
                                                         LocalEndPage,
@@ -617,9 +615,19 @@ BlMmFreePhysicalPages (
     )
 {
     /* Call the physical allocator */
-    EfiPrintf(L"Leaking memory!\r\n");
+    EfiPrintf(L"Leaking memory: %p!\r\n", Address.QuadPart);
     return STATUS_SUCCESS;
     //return MmPapFreePhysicalPages(4, 0, Address);
+}
+
+NTSTATUS
+MmPapFreePages (
+    _In_ PVOID Address,
+    _In_ ULONG WhichList
+    )
+{
+    EfiPrintf(L"Leaking memory: %p!\r\n", Address);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

@@ -163,8 +163,7 @@ BiCloseKey (
             }
 
             /* Unmap the hive */
-            //MmPapFreePages(KeyHive->ImageBase, 1);
-            EfiPrintf(L"Leaking hive memory\r\n");
+            MmPapFreePages(KeyHive->BaseBlock, BL_MM_INCLUDE_MAPPED_ALLOCATED);
 
             /* Free the hive and hive path */
             BlMmFreeHeap(KeyHive->FilePath);
@@ -516,8 +515,7 @@ BiLoadHive (
         RtlCopyMemory(NewBaseBlock, BaseBlock, HiveSize);
 
         /* Free the old data */
-        EfiPrintf(L"Leaking old hive buffer\r\n");
-        //MmPapFreePages(BaseBlock, 1);
+        MmPapFreePages(BaseBlock, BL_MM_INCLUDE_MAPPED_ALLOCATED);
 
         /* Update our pointers */
         BaseBlock = NewBaseBlock;
@@ -607,8 +605,7 @@ Quickie:
     /* If we had logging data, free it */
     if (LogData)
     {
-        EfiPrintf(L"Leaking log buffer\r\n");
-        //MmPapFreePages(LogData, 1);
+        MmPapFreePages(LogData, BL_MM_INCLUDE_MAPPED_ALLOCATED);
     }
 
     /* Check if this is the failure path */
@@ -617,8 +614,7 @@ Quickie:
         /* If we mapped the hive, free it */
         if (BaseBlock)
         {
-            EfiPrintf(L"Leaking base block on failure\r\n");
-            //MmPapFreePages(BaseBlock, 1u);
+            MmPapFreePages(BaseBlock, BL_MM_INCLUDE_MAPPED_ALLOCATED);
         }
 
         /* If we opened the device, close it */

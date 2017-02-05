@@ -214,9 +214,7 @@ BlockIopFreeAlignedBuffer (
 
     if (*BufferSize)
     {
-        EfiPrintf(L"Aligned free not yet implemented\r\n");
-        Status = STATUS_NOT_IMPLEMENTED;
-        //Status = MmPapFreePages(*Buffer, 1);
+        Status = MmPapFreePages(*Buffer, BL_MM_INCLUDE_MAPPED_ALLOCATED);
 
         *Buffer = NULL;
         *BufferSize = 0;
@@ -1881,8 +1879,7 @@ BlockIopInitialize (
         /* Free the prefetch buffer is one was allocated */
         if (BlockIopPrefetchBuffer)
         {
-            EfiPrintf(L"Failure path not implemented %lx\r\n", Status);
-            //MmPapFreePages(BlockIopPrefetchBuffer, 1);
+            MmPapFreePages(BlockIopPrefetchBuffer, BL_MM_INCLUDE_MAPPED_ALLOCATED);
         }
     }
 

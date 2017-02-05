@@ -194,8 +194,7 @@ ImgpCloseFile (
         if (File->Flags & BL_IMG_REMOTE_FILE)
         {
             /* Then only free the memory in that scenario */
-            EfiPrintf(L"TODO\r\n");
-            //return MmPapFreePages(File->BaseAddress, TRUE);
+            return MmPapFreePages(File->BaseAddress, BL_MM_INCLUDE_MAPPED_ALLOCATED);
         }
     }
 
@@ -210,8 +209,37 @@ BlImgUnallocateImageBuffer (
     _In_ ULONG ImageFlags
     )
 {
-    EfiPrintf(L"leaking the shit out of %p\r\n", ImageBase);
-    return STATUS_NOT_IMPLEMENTED;
+    PHYSICAL_ADDRESS PhysicalAddress;
+    NTSTATUS Status;
+
+    /* Make sure required parameters are present */
+    if (!(ImageBase) || !(ImageSize))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check if this was a physical allocation */
+    if (!(ImageFlags & BL_LOAD_IMG_VIRTUAL_BUFFER))
+    {
+        return MmPapFreePages(ImageBase, BL_MM_INCLUDE_MAPPED_ALLOCATED);
+    }
+
+    /* It's virtual, so translate it first */
+    if (!BlMmTranslateVirtualAddress(ImageBase, &PhysicalAddress))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Unmap the virtual mapping */
+    Status = BlMmUnmapVirtualAddressEx(ImageBase, ROUND_TO_PAGES(ImageSize));
+    if (NT_SUCCESS(Status))
+    {
+        /* Now free the physical pages */
+        Status = BlMmFreePhysicalPages(PhysicalAddress);
+    }
+
+    /* All done */
+    return Status;
 }
 
 NTSTATUS
@@ -562,8 +590,7 @@ Quickie:
         else
         {
             /* Free the physical buffer */
-            //MmPapFreePages(VirtualAddress, 1);
-            EfiPrintf(L"Leaking memory\r\n");
+            MmPapFreePages(BaseAddress, BL_MM_INCLUDE_MAPPED_ALLOCATED);
         }
     }
 
@@ -1192,8 +1219,7 @@ Quickie:
     if (HashBuffer)
     {
         /* Free it */
-        EfiPrintf(L"Leadking hash: %p\r\n", HashBuffer);
-        //MmPapFreePages(HashBuffer, TRUE);
+        MmPapFreePages(HashBuffer, BL_MM_INCLUDE_MAPPED_ALLOCATED);
     }
 
     /* Check if we have a certificate directory */
@@ -1234,8 +1260,7 @@ Quickie:
             else
             {
                 /* Into a physical buffer -- free it */
-                EfiPrintf(L"Leaking physical pages\r\n");
-               // MmPapFreePages(VirtualAddress, TRUE);
+                MmPapFreePages(VirtualAddress, BL_MM_INCLUDE_MAPPED_ALLOCATED);
             }
         }
     }
@@ -1888,7 +1913,7 @@ Quickie:
     if (BootData)
     {
         /* Free it */
-        //MmPapFreePages(bootData, TRUE);
+        MmPapFreePages(BootData, BL_MM_INCLUDE_MAPPED_ALLOCATED);
     }
 
     /* All done */
