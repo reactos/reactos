@@ -1605,6 +1605,26 @@ BlpPdParseReturnArguments (
 }
 
 NTSTATUS
+ImgpCopyApplicationBootDevice (
+    __in PBL_DEVICE_DESCRIPTOR DestinationDevice,
+    __in PBL_DEVICE_DESCRIPTOR SourceDevice
+    )
+{
+    /* Is this a partition device? */
+    if (SourceDevice->DeviceType != PartitionDevice)
+    {
+        /* It's not -- a simple copy will do */
+        RtlCopyMemory(DestinationDevice, SourceDevice, SourceDevice->Size);
+        return STATUS_SUCCESS;
+    }
+
+    /* TODO */
+    EfiPrintf(L"Partition copy not supported\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+
+}
+
+NTSTATUS
 ImgpInitializeBootApplicationParameters (
     _In_ PBL_IMAGE_PARAMETERS ImageParameters,
     _In_ PBL_APPLICATION_ENTRY AppEntry,
@@ -1616,6 +1636,13 @@ ImgpInitializeBootApplicationParameters (
     PIMAGE_NT_HEADERS NtHeaders;
     BL_IMAGE_PARAMETERS MemoryParameters;
     LIST_ENTRY MemoryList;
+    PBL_FIRMWARE_DESCRIPTOR FirmwareParameters;
+    PBL_DEVICE_DESCRIPTOR BootDevice;
+    PBL_MEMORY_DATA MemoryData;
+    PBL_APPLICATION_ENTRY BootAppEntry;
+    PBL_RETURN_ARGUMENTS ReturnArguments;
+    PBOOT_APPLICATION_PARAMETER_BLOCK ParameterBlock;
+    ULONG EntrySize, BufferSize;
 
     /* Get the image headers and validate it */
     Status = RtlImageNtHeaderEx(0, ImageBase, ImageSize, &NtHeaders);
@@ -1636,10 +1663,138 @@ ImgpInitializeBootApplicationParameters (
                               0);
     if ((Status != STATUS_BUFFER_TOO_SMALL) && (Status != STATUS_SUCCESS))
     {
+        /* We failed due to an unknown reason -- bail out */
         return Status;
     }
 
-    EfiPrintf(L"Memory map needs %lx bytes\n", MemoryParameters.BufferSize);
+    /* Compute the list of the BCD plus the application entry */
+    EntrySize = BlGetBootOptionListSize(&AppEntry->BcdData) +
+                FIELD_OFFSET(BL_APPLICATION_ENTRY, BcdData);
+
+    /* Compute the total size required for the entire structure */
+    BufferSize = EntrySize +
+                 BlpBootDevice->Size +
+                 MemoryParameters.BufferSize +
+                 sizeof(*ReturnArguments) +
+                 sizeof(*MemoryData) + 
+                 sizeof(*FirmwareParameters) + 
+                 sizeof(*ParameterBlock);
+
+    /* Check if this gives us enough space */
+    if (ImageParameters->BufferSize < BufferSize)
+    {
+        /* It does not -- free the existing buffer */
+        if (ImageParameters->BufferSize)
+        {
+            BlMmFreeHeap(ImageParameters->Buffer);
+        }
+
+        /* Allocate a new buffer of sufficient size */
+        ImageParameters->BufferSize = BufferSize;
+        ImageParameters->Buffer = BlMmAllocateHeap(BufferSize);
+        if (!ImageParameters->Buffer)
+        {
+            /* Bail out if we couldn't allocate it */
+            return STATUS_NO_MEMORY;
+        }
+    }
+
+    /* Zero out the parameter block */
+    ParameterBlock = (PBOOT_APPLICATION_PARAMETER_BLOCK)ImageParameters->Buffer;
+    RtlZeroMemory(ParameterBlock, BufferSize);
+
+    /* Initialize it */
+    ParameterBlock->Version = BOOT_APPLICATION_VERSION;
+    ParameterBlock->Size = BufferSize;
+    ParameterBlock->Signature[0] = BOOT_APPLICATION_SIGNATURE_1;
+    ParameterBlock->Signature[1] = BOOT_APPLICATION_SIGNATURE_2;
+    ParameterBlock->MemoryTranslationType = MmTranslationType;
+    ParameterBlock->ImageType = IMAGE_FILE_MACHINE_I386;
+    ParameterBlock->ImageBase = (ULONGLONG)ImageBase;
+    ParameterBlock->ImageSize = NtHeaders->OptionalHeader.SizeOfImage;
+
+    /* Get the offset to the memory data */
+    ParameterBlock->MemoryDataOffset = sizeof(*ParameterBlock);
+
+    /* Fill it out */
+    MemoryData = (PBL_MEMORY_DATA)((ULONG_PTR)ParameterBlock +
+                                   ParameterBlock->MemoryDataOffset);
+    MemoryData->Version = BL_MEMORY_DATA_VERSION;
+    MemoryData->MdListOffset = sizeof(*MemoryData);
+    MemoryData->DescriptorSize = sizeof(BL_MEMORY_DESCRIPTOR);
+    MemoryData->DescriptorOffset = FIELD_OFFSET(BL_MEMORY_DESCRIPTOR, BasePage);
+
+    /* And populate the memory map */
+    MemoryParameters.Buffer = MemoryData + 1;
+    Status = BlMmGetMemoryMap(&MemoryList,
+                              &MemoryParameters,
+                              BL_MM_INCLUDE_PERSISTENT_MEMORY |
+                              BL_MM_INCLUDE_MAPPED_ALLOCATED |
+                              BL_MM_INCLUDE_MAPPED_UNALLOCATED |
+                              BL_MM_INCLUDE_UNMAPPED_ALLOCATED |
+                              BL_MM_INCLUDE_RESERVED_ALLOCATED,
+                              0);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Now that we have the map, indicate the number of descriptors */
+    MemoryData->DescriptorCount = MemoryParameters.ActualSize /
+                                  MemoryData->DescriptorSize;
+
+    /* Get the offset to the application entry */
+    ParameterBlock->AppEntryOffset = ParameterBlock->MemoryDataOffset +
+                                     MemoryData->MdListOffset +
+                                     MemoryParameters.BufferSize;
+
+    /* Fill it out */
+    BootAppEntry = (PBL_APPLICATION_ENTRY)((ULONG_PTR)ParameterBlock +
+                                           ParameterBlock->AppEntryOffset);
+    RtlCopyMemory(BootAppEntry, AppEntry, EntrySize);
+
+    /* Get the offset to the boot device */
+    ParameterBlock->BootDeviceOffset = ParameterBlock->AppEntryOffset +
+                                       EntrySize;
+
+    /* Fill it out */
+    BootDevice = (PBL_DEVICE_DESCRIPTOR)((ULONG_PTR)ParameterBlock +
+                                         ParameterBlock->BootDeviceOffset);
+    Status = ImgpCopyApplicationBootDevice(BootDevice, BlpBootDevice);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Get the offset to the firmware data */
+    ParameterBlock->FirmwareParametersOffset = ParameterBlock->BootDeviceOffset +
+                                               BootDevice->Size;
+
+    /* Fill it out */
+    FirmwareParameters = (PBL_FIRMWARE_DESCRIPTOR)((ULONG_PTR)ParameterBlock +
+                                                   ParameterBlock->
+                                                   FirmwareParametersOffset);
+    Status = BlFwGetParameters(FirmwareParameters);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Get the offset to the return arguments */
+    ParameterBlock->ReturnArgumentsOffset = ParameterBlock->FirmwareParametersOffset +
+                                            sizeof(BL_FIRMWARE_DESCRIPTOR);
+
+    /* Fill them out */
+    ReturnArguments = (PBL_RETURN_ARGUMENTS)((ULONG_PTR)ParameterBlock +
+                                             ParameterBlock->
+                                             ReturnArgumentsOffset);
+    ReturnArguments->Version = BL_RETURN_ARGUMENTS_VERSION;
+    ReturnArguments->DataPage = 0;
+    ReturnArguments->DataSize = 0;
+
+    /* Structure complete */
+    ImageParameters->ActualSize = ParameterBlock->ReturnArgumentsOffset +
+                                  sizeof(*ReturnArguments);
     return STATUS_SUCCESS;
 }
 

@@ -184,7 +184,6 @@ C_ASSERT(BL_MM_INCLUDE_ONLY_FIRMWARE_MEMORY == 0x240);
 #define BL_LOAD_PE_IMG_IGNORE_CHECKSUM_MISMATCH         0x10000
 #define BL_LOAD_PE_IMG_VALIDATE_ORIGINAL_FILENAME       0x400000
 
-
 #define BL_UTL_CHECKSUM_COMPLEMENT                      0x10000
 #define BL_UTL_CHECKSUM_ROTATE                          0x20000
 #define BL_UTL_CHECKSUM_NEGATE                          0x40000
@@ -1402,6 +1401,11 @@ VOID
 EfiPrintf (
     _In_ PWCHAR Format,
     ...
+    );
+
+NTSTATUS
+BlFwGetParameters(
+    _In_ PBL_FIRMWARE_DESCRIPTOR Parameters
     );
 
 NTSTATUS

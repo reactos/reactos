@@ -660,6 +660,9 @@ BlMmGetMemoryMap (
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Initialize the memory map list */
+    InitializeListHead(MemoryMap);
+
     /* Check which types of memory to dump */
     DoFirmware = WhichTypes & BL_MM_INCLUDE_FIRMWARE_MEMORY;
     DoPersistent = WhichTypes & BL_MM_INCLUDE_PERSISTENT_MEMORY;

@@ -290,45 +290,33 @@ MmMdCopyList (
     /* Iterate through the list */
     First = SourceList->First;
     NextEntry = First->Flink;
-    if (First->Flink != First)
+    while ((NextEntry != First) && (NT_SUCCESS(Status)))
     {
-        /* As long as we have success */
-        while (NT_SUCCESS(Status))
+        /* Make sure there's still space */
+        if (Count <= *Used)
         {
-            /* Check if there's still space */
-            if (Count <= *Used)
-            {
-                Status = STATUS_NO_MEMORY;
-                break;
-            }
-
-            /* Get the current descriptor */
-            Descriptor = CONTAINING_RECORD(NextEntry,
-                                           BL_MEMORY_DESCRIPTOR,
-                                           ListEntry);
-
-            /* Copy it into one of the descriptors we have */
-            RtlCopyMemory(&ListDescriptor[*Used],
-                          Descriptor,
-                          sizeof(*Descriptor));
-
-            /* Add it to the list we have */
-            Status = MmMdAddDescriptorToList(DestinationList,
-                                             &ListDescriptor[*Used],
-                                             Flags);
-            ++*Used;
-
-            /* Before moving on, check if we're done */
-            Finished = NextEntry->Flink == SourceList->First;
-
-            /* Move to the next entry */
-            NextEntry = NextEntry->Flink;
-
-            if (Finished)
-            {
-                break;
-            }
+            Status = STATUS_NO_MEMORY;
+            break;
         }
+
+        /* Get the current descriptor */
+        Descriptor = CONTAINING_RECORD(NextEntry,
+                                       BL_MEMORY_DESCRIPTOR,
+                                       ListEntry);
+
+        /* Copy it into one of the descriptors we have */
+        RtlCopyMemory(&ListDescriptor[*Used],
+                      Descriptor,
+                      sizeof(*Descriptor));
+
+        /* Add it to the list we have */
+        Status = MmMdAddDescriptorToList(DestinationList,
+                                         &ListDescriptor[*Used],
+                                         Flags);
+        ++*Used;
+
+        /* Move to the next entry */
+        NextEntry = NextEntry->Flink;
     }
 
     /* Check if the global descriptors were used */

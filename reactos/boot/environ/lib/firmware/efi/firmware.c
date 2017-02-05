@@ -1785,6 +1785,22 @@ BlpFwInitialize (
 }
 
 NTSTATUS
+BlFwGetParameters (
+    _In_ PBL_FIRMWARE_DESCRIPTOR Parameters
+    )
+{
+    /* Make sure we got an argument */
+    if (!Parameters)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Copy the static data */
+    *Parameters = *EfiFirmwareParameters;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 BlFwEnumerateDevice (
     _In_ PBL_DEVICE_DESCRIPTOR Device
     )
