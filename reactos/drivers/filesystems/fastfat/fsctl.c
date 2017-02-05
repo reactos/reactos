@@ -40,7 +40,8 @@ NTSTATUS
 VfatHasFileSystem(
     PDEVICE_OBJECT DeviceToMount,
     PBOOLEAN RecognizedFS,
-    PFATINFO pFatInfo)
+    PFATINFO pFatInfo,
+    BOOLEAN Override)
 {
     NTSTATUS Status;
     PARTITION_INFORMATION PartitionInfo;
@@ -64,7 +65,7 @@ VfatHasFileSystem(
                                       0,
                                       &DiskGeometry,
                                       &Size,
-                                      FALSE);
+                                      Override);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("VfatBlockDeviceIoControl failed (%x)\n", Status);
@@ -82,7 +83,7 @@ VfatHasFileSystem(
                                           0,
                                           &PartitionInfo,
                                           &Size,
-                                          FALSE);
+                                          Override);
         if (!NT_SUCCESS(Status))
         {
             DPRINT("VfatBlockDeviceIoControl failed (%x)\n", Status);
@@ -137,7 +138,7 @@ VfatHasFileSystem(
         Offset.QuadPart = 0;
 
         /* Try to recognize FAT12/FAT16/FAT32 partitions */
-        Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot, FALSE);
+        Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot, Override);
         if (NT_SUCCESS(Status))
         {
             if (Boot->Signatur1 != 0xaa55)
@@ -345,7 +346,7 @@ VfatMountDevice(
 
     DPRINT("Mounting VFAT device...\n");
 
-    Status = VfatHasFileSystem(DeviceToMount, &RecognizedFS, &DeviceExt->FatInfo);
+    Status = VfatHasFileSystem(DeviceToMount, &RecognizedFS, &DeviceExt->FatInfo, FALSE);
     if (!NT_SUCCESS(Status))
     {
         return Status;
@@ -392,7 +393,7 @@ VfatMount(
     DeviceToMount = IrpContext->Stack->Parameters.MountVolume.DeviceObject;
     Vpb = IrpContext->Stack->Parameters.MountVolume.Vpb;
 
-    Status = VfatHasFileSystem(DeviceToMount, &RecognizedFS, &FatInfo);
+    Status = VfatHasFileSystem(DeviceToMount, &RecognizedFS, &FatInfo, FALSE);
     if (!NT_SUCCESS(Status))
     {
         goto ByeBye;
@@ -645,19 +646,19 @@ VfatVerify(
     NTSTATUS Status = STATUS_SUCCESS;
     FATINFO FatInfo;
     BOOLEAN RecognizedFS;
-    PDEVICE_EXTENSION DeviceExt = IrpContext->DeviceExt;
+    PDEVICE_EXTENSION DeviceExt;
 
     DPRINT("VfatVerify(IrpContext %p)\n", IrpContext);
 
     DeviceToVerify = IrpContext->Stack->Parameters.VerifyVolume.DeviceObject;
-    Status = VfatBlockDeviceIoControl(DeviceToVerify,
+    DeviceExt = DeviceToVerify->DeviceExtension;
+    Status = VfatBlockDeviceIoControl(DeviceExt->StorageDevice,
                                       IOCTL_DISK_CHECK_VERIFY,
                                       NULL,
                                       0,
                                       NULL,
                                       0,
                                       TRUE);
-    DeviceToVerify->Flags &= ~DO_VERIFY_VOLUME;
     if (!NT_SUCCESS(Status) && Status != STATUS_VERIFY_REQUIRED)
     {
         DPRINT("VfatBlockDeviceIoControl() failed (Status %lx)\n", Status);
@@ -665,25 +666,33 @@ VfatVerify(
     }
     else
     {
-        Status = VfatHasFileSystem(DeviceToVerify, &RecognizedFS, &FatInfo);
+        Status = VfatHasFileSystem(DeviceExt->StorageDevice, &RecognizedFS, &FatInfo, TRUE);
         if (!NT_SUCCESS(Status) || RecognizedFS == FALSE)
         {
             Status = STATUS_WRONG_VOLUME;
         }
         else if (sizeof(FATINFO) == RtlCompareMemory(&FatInfo, &DeviceExt->FatInfo, sizeof(FATINFO)))
         {
+            DPRINT1("Same volume\n");
             /*
              * FIXME:
              *   Preformatted floppy disks have very often a serial number of 0000:0000.
              *   We should calculate a crc sum over the sectors from the root directory as secondary volume number.
              *   Each write to the root directory must update this crc sum.
              */
+            /* HACK */
+            if (!FatInfo.FixedMedia)
+            {
+                Status = STATUS_WRONG_VOLUME;
+            }
         }
         else
         {
             Status = STATUS_WRONG_VOLUME;
         }
     }
+
+    IrpContext->Stack->Parameters.VerifyVolume.Vpb->RealDevice->Flags &= ~DO_VERIFY_VOLUME;
 
     return Status;
 }
