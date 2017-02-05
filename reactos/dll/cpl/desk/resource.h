@@ -1,15 +1,5 @@
 #pragma once
 
-/* Metrics */
-#define PROPSHEETWIDTH   246
-#define PROPSHEETHEIGHT  228
-#define PROPSHEETPADDING 6
-
-#define SYSTEM_COLUMN (18 * PROPSHEETPADDING)
-#define LABELLINE(x)  (((PROPSHEETPADDING + 2) * x) + (x + 2))
-
-#define ICONSIZE 16
-
 /* ids */
 #define IDC_DESK_ICON  40
 #define IDC_DESK_ICON2 100 /* Needed for theme compatability with Windows. */

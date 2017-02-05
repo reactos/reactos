@@ -1,13 +1,5 @@
 #pragma once
 
-/* Metrics */
-#define PROPSHEETWIDTH   246
-#define PROPSHEETHEIGHT  228
-#define PROPSHEETPADDING 6
-#define SYSTEM_COLUMN    (18 * PROPSHEETPADDING)
-#define LABELLINE(x)     (((PROPSHEETPADDING + 2) * x) + (x + 2))
-#define ICONSIZE         16
-
 /* IDs */
 
 /* Set default to IDI_AC */
