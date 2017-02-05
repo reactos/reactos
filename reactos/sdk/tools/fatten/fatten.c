@@ -14,7 +14,7 @@
 
 static FATFS g_Filesystem;
 static int isMounted = 0;
-static char buff[32768];
+static unsigned char buff[32768];
 
 // tool needed by fatfs
 DWORD get_fattime(void)

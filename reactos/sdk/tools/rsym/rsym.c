@@ -935,7 +935,8 @@ CreateOutputFile(FILE *OutFile, void *InData,
                                                  InSectionHeaders[Section].Name);
         if (InSectionHeaders[Section].Name[0] == '/')
         {
-            StringTableLength = atoi(InSectionHeaders[Section].Name+1) + strlen(SectionName) + 1;
+            StringTableLength = atoi((const char *)InSectionHeaders[Section].Name + 1) +
+                                strlen((const char *)SectionName) + 1;
         }
         if ((StartOfRawData == 0 || InSectionHeaders[Section].PointerToRawData < StartOfRawData)
             && InSectionHeaders[Section].PointerToRawData != 0

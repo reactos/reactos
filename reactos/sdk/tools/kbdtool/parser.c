@@ -189,8 +189,8 @@ getCharacterInfo(IN PCHAR State,
     {
         /* Scan for extended character code entry */
         if ((sscanf(State, "%6x", &CharCode) == 1) &&
-            ((Length == 5) && (State[0] == '0') ||
-             (Length == 6) && ((State[0] == '0') && (State[1] == '0'))))
+            (((Length == 5) && (State[0] == '0')) ||
+             ((Length == 6) && ((State[0] == '0') && (State[1] == '0')))))
         {
             /* Handle a ligature key */
             CharInfo = CHAR_LIGATURE_KEY;
@@ -726,7 +726,8 @@ DoLAYOUT(IN PLAYOUT LayoutData,
     CHAR State[8][8];
     ULONG ScanCodeCount = -1;
     PLAYOUTENTRY Entry;
-    UCHAR CharacterType, LigatureChar;
+    UCHAR CharacterType;
+    CHAR LigatureChar;
 
     /* Zero out the layout */
     memset(LayoutData, 0, sizeof(LAYOUT));
