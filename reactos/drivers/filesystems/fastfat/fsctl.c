@@ -264,7 +264,7 @@ VfatHasFileSystem(
         Offset.QuadPart = 0;
 
         /* Try to recognize FATX16/FATX32 partitions (Xbox) */
-        Status = VfatReadDisk(DeviceToMount, &Offset, sizeof(struct _BootSectorFatX), (PUCHAR) BootFatX, FALSE);
+        Status = VfatReadDisk(DeviceToMount, &Offset, sizeof(struct _BootSectorFatX), (PUCHAR) BootFatX, Override);
         if (NT_SUCCESS(Status))
         {
             *RecognizedFS = TRUE;
