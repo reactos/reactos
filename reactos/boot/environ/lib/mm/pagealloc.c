@@ -888,8 +888,9 @@ BlMmGetMemoryMap (
             /* Free the previous entries, if any */
             MmMdFreeList(&FirmwareMdList);
 
-            /* Get the firmware map */
-            Status = MmFwGetMemoryMap(&FirmwareMdList, 2);
+            /* Get the firmware map, coalesced */
+            Status = MmFwGetMemoryMap(&FirmwareMdList,
+                                      BL_MM_FLAG_REQUEST_COALESCING);
             if (!NT_SUCCESS(Status))
             {
                 goto Quickie;
@@ -905,7 +906,7 @@ BlMmGetMemoryMap (
             /* Free the previous entries, if any */
             MmMdFreeList(&FirmwareMdList);
 
-            /* Get the firmware map */
+            /* Get the firmware map, uncoalesced */
             Status = MmFwGetMemoryMap(&FirmwareMdList, 0);
             if (!NT_SUCCESS(Status))
             {

@@ -143,12 +143,17 @@ EfiPrintf (
     }
     else
     {
-        /* FIXME: @TODO: Not yet supported */
-        // FIXME: Hack while we are in early rosload mode
+        /* Switch to real mode */
+        BlpArchSwitchContext(BlRealMode);
+
+        /* Call EFI directly */
         if (EfiConOut != NULL)
         {
             EfiConOut->OutputString(EfiConOut, BlScratchBuffer);
         }
+
+        /* Switch back to protected mode */
+        BlpArchSwitchContext(BlProtectedMode);
     }
 
     /* All done */
@@ -559,13 +564,27 @@ EfiGetMemoryMap (
 {
     BL_ARCH_MODE OldMode;
     EFI_STATUS EfiStatus;
+    PHYSICAL_ADDRESS MemoryMapSizePhysical, MemoryMapPhysical, MapKeyPhysical;
+    PHYSICAL_ADDRESS DescriptorSizePhysical, DescriptorVersionPhysical;
 
     /* Are we in protected mode? */
     OldMode = CurrentExecutionContext->Mode;
     if (OldMode != BlRealMode)
     {
-        /* FIXME: Not yet implemented */
-        return STATUS_NOT_IMPLEMENTED;
+        /* Convert all of the addresses to physical */
+        BlMmTranslateVirtualAddress(MemoryMapSize, &MemoryMapSizePhysical);
+        MemoryMapSize = (UINTN*)MemoryMapSizePhysical.LowPart;
+        BlMmTranslateVirtualAddress(MemoryMap, &MemoryMapPhysical);
+        MemoryMap = (EFI_MEMORY_DESCRIPTOR*)MemoryMapPhysical.LowPart;
+        BlMmTranslateVirtualAddress(MapKey, &MapKeyPhysical);
+        MapKey = (UINTN*)MapKeyPhysical.LowPart;
+        BlMmTranslateVirtualAddress(DescriptorSize, &DescriptorSizePhysical);
+        DescriptorSize = (UINTN*)DescriptorSizePhysical.LowPart;
+        BlMmTranslateVirtualAddress(DescriptorVersion, &DescriptorVersionPhysical);
+        DescriptorVersion = (UINTN*)DescriptorVersionPhysical.LowPart;
+
+        /* Switch to real mode */
+        BlpArchSwitchContext(BlProtectedMode);
     }
 
     /* Make the EFI call */

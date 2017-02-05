@@ -312,9 +312,8 @@ BlMmTranslateVirtualAddress (
         return FALSE;
     }
 
-    EfiPrintf(L"Unhandled virtual path\r\n");
-    return FALSE;
-    //return MmArchTranslateVirtualAddress(VirtualAddress, PhysicalAddress, NULL);
+    /* Do the architecture-specific translation */
+    return MmArchTranslateVirtualAddress(VirtualAddress, PhysicalAddress, NULL);
 }
 
 NTSTATUS

@@ -78,6 +78,59 @@ Mmx86pMapMemoryRegions (
     return STATUS_NOT_IMPLEMENTED;
 }
 
+BOOLEAN
+Mmx86TranslateVirtualAddress (
+    _In_ PVOID VirtualAddress,
+    _Out_opt_ PPHYSICAL_ADDRESS PhysicalAddress,
+    _Out_opt_ PULONG CachingFlags
+    )
+{
+    EfiPrintf(L"paging  TODO\r\n");
+    return FALSE;
+}
+
+BOOLEAN
+MmArchTranslateVirtualAddress (
+    _In_ PVOID VirtualAddress, 
+    _Out_opt_ PPHYSICAL_ADDRESS PhysicalAddress, 
+    _Out_opt_ PULONG CachingFlags
+    )
+{
+    PBL_MEMORY_DESCRIPTOR Descriptor;
+
+    /* Check if paging is on */
+    if ((CurrentExecutionContext) &&
+        (CurrentExecutionContext->ContextFlags & BL_CONTEXT_PAGING_ON))
+    {
+        /* Yes -- we have to translate this from virtual */
+        return Mmx86TranslateVirtualAddress(VirtualAddress,
+                                            PhysicalAddress,
+                                            CachingFlags);
+    }
+
+    /* Look in all descriptors except truncated and firmware ones */
+    Descriptor = MmMdFindDescriptor(BL_MM_INCLUDE_NO_FIRMWARE_MEMORY &
+                                    ~BL_MM_INCLUDE_TRUNCATED_MEMORY,
+                                    BL_MM_REMOVE_PHYSICAL_REGION_FLAG,
+                                    (ULONG_PTR)VirtualAddress >> PAGE_SHIFT);
+
+    /* Return the virtual address as the physical address */
+    if (PhysicalAddress)
+    {
+        PhysicalAddress->HighPart = 0;
+        PhysicalAddress->LowPart = (ULONG_PTR)VirtualAddress;
+    }
+
+    /* There's no caching on physical memory */
+    if (CachingFlags)
+    {
+        *CachingFlags = 0;
+    }
+
+    /* Success is if we found a descriptor */
+    return Descriptor != NULL;
+}
+
 NTSTATUS
 MmArchInitialize (
     _In_ ULONG Phase,
