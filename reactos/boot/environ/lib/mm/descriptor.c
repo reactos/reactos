@@ -857,7 +857,7 @@ MmMdFindDescriptorFromMdl (
             (Page < (BasePage + Current->PageCount)))
         {
             /* The descriptor fits the page being requested */
-            break;
+            return Current;
         }
 
         /* Try the next one */

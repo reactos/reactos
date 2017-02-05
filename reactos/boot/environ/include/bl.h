@@ -122,6 +122,7 @@ C_ASSERT(BL_MM_INCLUDE_ONLY_FIRMWARE_MEMORY == 0x240);
 #define BL_MM_REQUEST_DEFAULT_TYPE                      1
 #define BL_MM_REQUEST_TOP_DOWN_TYPE                     2
 
+#define BL_MM_REMOVE_PHYSICAL_REGION_FLAG               0x40000000
 #define BL_MM_REMOVE_VIRTUAL_REGION_FLAG                0x80000000
 
 #define BL_LIBRARY_FLAG_NO_DISPLAY                      0x01
@@ -374,9 +375,10 @@ typedef enum _BL_MEMORY_ATTR
     BlMemoryCoalesced =         0x02000000,
     BlMemoryUpdate =            0x04000000,
     BlMemoryNonFirmware =       0x08000000,
+    BlMemoryPersistent =        0x10000000,
     BlMemorySpecial =           0x20000000,
     BlMemoryFirmware =          0x80000000,
-    BlMemoryValidTypeAttributes             = BlMemoryRuntime | BlMemoryCoalesced | BlMemoryUpdate | BlMemoryNonFirmware | BlMemorySpecial | BlMemoryFirmware,
+    BlMemoryValidTypeAttributes             = BlMemoryRuntime | BlMemoryCoalesced | BlMemoryUpdate | BlMemoryNonFirmware | BlMemoryPersistent | BlMemorySpecial | BlMemoryFirmware,
     BlMemoryValidTypeAttributeMask          = 0xFF000000,
 } BL_MEMORY_ATTR;
 
@@ -1541,6 +1543,12 @@ EfipGetRsdt (
     _Out_ PPHYSICAL_ADDRESS FoundRsdt
     );
 
+NTSTATUS
+EfiFreePages (
+    _In_ ULONG Pages,
+    _In_ EFI_PHYSICAL_ADDRESS PhysicalAddress
+    );
+
 /* PLATFORM TIMER ROUTINES ***************************************************/
 
 NTSTATUS
@@ -1709,6 +1717,12 @@ EfiGetNtStatusCode (
 VOID
 BlFwReboot (
     VOID
+    );
+
+NTSTATUS
+MmFwFreePages (
+    _In_ ULONG BasePage,
+    _In_ ULONG PageCount
     );
 
 PGUID
@@ -1987,6 +2001,13 @@ MmMdInitializeList (
     _In_ PBL_MEMORY_DESCRIPTOR_LIST DescriptorList,
     _In_ ULONG Type,
     _In_ PLIST_ENTRY ListHead
+    );
+
+PBL_MEMORY_DESCRIPTOR
+MmMdFindDescriptor (
+    _In_ ULONG WhichList,
+    _In_ ULONG Flags,
+    _In_ ULONGLONG Page
     );
 
 NTSTATUS

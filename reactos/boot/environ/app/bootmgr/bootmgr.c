@@ -2902,12 +2902,6 @@ BmMain (
         NTSTATUS Status;
         PHYSICAL_ADDRESS PhysicalAddress;
         PBL_MEMORY_DESCRIPTOR Found;
-        PBL_MEMORY_DESCRIPTOR
-            MmMdFindDescriptor (
-                _In_ ULONG WhichList,
-                _In_ ULONG Flags,
-                _In_ ULONGLONG Page
-            );
 
         /* Allocate 1 physical page */
         PhysicalAddress.QuadPart = 0;
@@ -2915,8 +2909,11 @@ BmMain (
         EfiPrintf(L"Allocation status: %lx at address: %llx\r\n", Status, PhysicalAddress.QuadPart);
         EfiStall(10000);
 
-        Found = MmMdFindDescriptor(BL_MM_INCLUDE_UNMAPPED_ALLOCATED, 0, PhysicalAddress.QuadPart);
+        Found = MmMdFindDescriptor(BL_MM_INCLUDE_UNMAPPED_ALLOCATED, 0, PhysicalAddress.QuadPart >> PAGE_SHIFT);
         EfiPrintf(L"Found descriptor: %p %llx\r\n", Found, Found->BasePage);
+
+        Status = BlMmFreePhysicalPages(PhysicalAddress);
+        EfiPrintf(L"Memory free status: %lx\r\n", Status);
     }
 
 

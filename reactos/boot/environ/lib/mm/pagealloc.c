@@ -616,6 +616,130 @@ MmPapFreePhysicalPages (
     _In_ PHYSICAL_ADDRESS Address
     )
 {
+    PBL_MEMORY_DESCRIPTOR Descriptor;
+    ULONGLONG Page;
+    ULONG DescriptorFlags, Flags;
+    BOOLEAN DontFree, HasPageData;
+    BL_LIBRARY_PARAMETERS LibraryParameters;
+    NTSTATUS Status;
+
+    /* Set some defaults */
+    Flags = BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG;
+    DontFree = FALSE;
+    HasPageData = FALSE;
+
+    /* Only page-aligned addresses a re accepted */
+    if (Address.QuadPart & (PAGE_SIZE - 1))
+    {
+        EfiPrintf(L"free mem fail 1\r\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Try to find the descriptor containing this address */
+    Page = Address.QuadPart >> PAGE_SHIFT;
+    Descriptor = MmMdFindDescriptor(WhichList,
+                                    BL_MM_REMOVE_PHYSICAL_REGION_FLAG,
+                                    Page);
+    if (!Descriptor)
+    {
+        EfiPrintf(L"free mem fail 2\r\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* If a page count was given, it must match, unless it's coalesced */
+    DescriptorFlags = Descriptor->Flags;
+    if (!(DescriptorFlags & BlMemoryCoalesced) &&
+        (PageCount) && (PageCount != Descriptor->PageCount))
+    {
+        EfiPrintf(L"free mem fail 3\r\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check if this is persistent memory in teardown status */
+    if ((PapInitializationStatus == 2) &&
+        (DescriptorFlags & BlMemoryPersistent))
+    {
+        /* Then we should keep it */
+        DontFree = TRUE;
+    }
+    else
+    {
+        /* Mark it as non-persistent, since we're freeing it */
+        Descriptor->Flags &= ~BlMemoryPersistent;
+    }
+
+    /* Check if this memory contains paging data */
+    if ((Descriptor->Type == BlLoaderPageDirectory) ||
+        (Descriptor->Type == BlLoaderReferencePage))
+    {
+        HasPageData = TRUE;
+    }
+
+    /* Check if a page count was given */
+    if (PageCount)
+    {
+        /* The pages must fit within the descriptor */
+        if ((PageCount + Page - Descriptor->BasePage) > Descriptor->PageCount)
+        {
+            EfiPrintf(L"free mem fail 4\r\n");
+            return STATUS_INVALID_PARAMETER;
+        }
+    }
+    else
+    {
+        /* No page count given, so the address must be at the beginning then */
+        if (Descriptor->BasePage != Page)
+        {
+            EfiPrintf(L"free mem fail 5\r\n");
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* And we'll use the page count in the descriptor */
+        PageCount = Descriptor->PageCount;
+    }
+
+    /* Copy library parameters since we will read them */
+    RtlCopyMemory(&LibraryParameters,
+                  &BlpLibraryParameters,
+                  sizeof(LibraryParameters));
+
+    /* Check if this is teardown */
+    if (PapInitializationStatus == 2)
+    {
+        EfiPrintf(L"Case 2 not yet handled!\r\n");
+        return STATUS_NOT_SUPPORTED;
+    }
+    else if (!DontFree)
+    {
+        /* Caller wants memory to be freed -- should we zero it? */
+        if (!(HasPageData) &
+            (LibraryParameters.LibraryFlags &
+             BL_LIBRARY_FLAG_ZERO_HEAP_ALLOCATIONS_ON_FREE))
+        {
+            EfiPrintf(L"Freeing zero data not yet handled!\r\n");
+            return STATUS_NOT_SUPPORTED;
+        }
+    }
+
+    /* Now call into firmware to actually free the physical pages */
+    Status = MmFwFreePages(Page, PageCount);
+    if (!NT_SUCCESS(Status))
+    {
+        EfiPrintf(L"free mem fail 6\r\n");
+        return Status;
+    }
+
+    /* Remove the firmware flags */
+    Descriptor->Flags &= ~(BlMemoryNonFirmware |
+                           BlMemoryFirmware |
+                           BlMemoryPersistent);
+
+    /* If we're not actually freeing, don't coalesce with anyone nearby */
+    if (DontFree)
+    {
+        Flags |= BL_MM_ADD_DESCRIPTOR_NEVER_COALESCE_FLAG;
+    }
+
     /* TBD */
     EfiPrintf(L"Leaking memory: %p!\r\n", Address.QuadPart);
     return STATUS_SUCCESS;

@@ -24,3 +24,12 @@ BlFwReboot (
     EfiResetSystem(EfiResetCold);
 }
 
+NTSTATUS
+MmFwFreePages (
+    _In_ ULONG BasePage,
+    _In_ ULONG PageCount
+    )
+{
+    /* Free the pages */
+    return EfiFreePages(PageCount, BasePage << PAGE_SHIFT);
+}
