@@ -1758,7 +1758,7 @@ BlpFwInitialize (
             /* FIXME: Not supported */
             Status = STATUS_NOT_SUPPORTED;
         }
-        else if (FirmwareData->Version >= 2)
+        else if (FirmwareData->Version >= BL_FIRMWARE_DESCRIPTOR_VERSION)
         {
             /* Version 2 -- save the data */
             EfiFirmwareData = *FirmwareData;

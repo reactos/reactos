@@ -22,7 +22,7 @@ KDESCRIPTOR IdtRegister;
 KDESCRIPTOR BootAppGdtRegister;
 KDESCRIPTOR BootAppIdtRegister;
 PVOID BootApp32EntryRoutine;
-PVOID BootApp32Parameters;
+PBOOT_APPLICATION_PARAMETER_BLOCK BootApp32Parameters;
 PVOID BootApp32Stack;
 
 /* FUNCTIONS *****************************************************************/
@@ -1710,7 +1710,7 @@ ImgpInitializeBootApplicationParameters (
     ParameterBlock->Signature[1] = BOOT_APPLICATION_SIGNATURE_2;
     ParameterBlock->MemoryTranslationType = MmTranslationType;
     ParameterBlock->ImageType = IMAGE_FILE_MACHINE_I386;
-    ParameterBlock->ImageBase = (ULONGLONG)ImageBase;
+    ParameterBlock->ImageBase = (ULONG_PTR)ImageBase;
     ParameterBlock->ImageSize = NtHeaders->OptionalHeader.SizeOfImage;
 
     /* Get the offset to the memory data */
@@ -1870,9 +1870,6 @@ ImgArchEfiStartBootApplication (
         /* Disable the kernel debugger */
         BlBdStop();
 #endif
-        /* Not yet implemented. This is the last step! */
-        EfiPrintf(L"EFI APPLICATION START!!!\r\n");
-
         /* Make it so */
         Archx86TransferTo32BitApplicationAsm();
 
