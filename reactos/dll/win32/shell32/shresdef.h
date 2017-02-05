@@ -1,5 +1,6 @@
 /*
  * Copyright 2000 Juergen Schmied
+ * Copyright 2017 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -236,6 +237,27 @@
 #define IDS_NETWORKPLACE           9217
 #define IDS_OBJECTS                6466
 #define IDS_OBJECTS_SELECTED       6477
+
+/* Advanced settings */
+#define IDS_ADVANCED_FOLDER                         30498
+#define IDS_ADVANCED_NET_CRAWLER                    30509
+#define IDS_ADVANCED_FOLDER_SIZE_TIP                30514
+#define IDS_ADVANCED_FRIENDLY_TREE                  30511
+#define IDS_ADVANCED_WEB_VIEW_BARRICADE             30510
+#define IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS         30505
+#define IDS_ADVANCED_SHOW_FULL_PATH                 30504
+#define IDS_ADVANCED_DISABLE_THUMB_CACHE            30517
+#define IDS_ADVANCED_HIDDEN                         30499
+#define IDS_ADVANCED_DONT_SHOW_HIDDEN               30501
+#define IDS_ADVANCED_SHOW_HIDDEN                    30500
+#define IDS_ADVANCED_HIDE_FILE_EXT                  30503
+#define IDS_ADVANCED_SUPER_HIDDEN                   30508
+#define IDS_ADVANCED_DESKTOP_PROCESS                30507
+#define IDS_ADVANCED_CLASSIC_VIEW_STATE             30506
+#define IDS_ADVANCED_PERSIST_BROWSERS               30513
+#define IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER   30497
+#define IDS_ADVANCED_SHOW_COMP_COLOR                30512
+#define IDS_ADVANCED_SHOW_INFO_TIP                  30502
 
 /* Dialogs */
 
