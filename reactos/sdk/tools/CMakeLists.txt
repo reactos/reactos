@@ -10,6 +10,7 @@ endfunction()
 
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_compile_flags_language("/EHsc" "CXX")
 endif()
 
 add_host_tool(bin2c bin2c.c)
@@ -19,9 +20,6 @@ add_host_tool(mkshelllink mkshelllink/mkshelllink.c)
 add_host_tool(obj2bin obj2bin/obj2bin.c)
 add_host_tool(spec2def spec2def/spec2def.c)
 
-if(MSVC)
-    set_property(SOURCE utf16le/utf16le.cpp APPEND_STRING PROPERTY COMPILE_FLAGS " /EHsc")
-endif()
 add_host_tool(utf16le utf16le/utf16le.cpp)
 
 add_subdirectory(cabman)
