@@ -1132,9 +1132,9 @@ static BOOL CALLBACK RefreshBrowsersCallback (HWND hWnd, LPARAM msg)
     WCHAR ClassName[100];
     if (GetClassName(hWnd, ClassName, 100))
     {
-        if (wcscmp(ClassName, L"Progman") || 
-            wcscmp(ClassName, L"CabinetWClass") ||
-            wcscmp(ClassName, L"ExploreWClass"))
+        if (!wcscmp(ClassName, L"Progman") || 
+            !wcscmp(ClassName, L"CabinetWClass") ||
+            !wcscmp(ClassName, L"ExploreWClass"))
         {
             PostMessage(hWnd, WM_COMMAND, FCIDM_DESKBROWSER_REFRESH, 0);
         }
