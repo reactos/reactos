@@ -2900,22 +2900,60 @@ BmMain (
     EfiPrintf(L"Performing memory allocator tests...\r\n");
     {
         NTSTATUS Status;
-        PHYSICAL_ADDRESS PhysicalAddress;
+        PHYSICAL_ADDRESS PhysicalAddress, PhysicalAddress2;
         PBL_MEMORY_DESCRIPTOR Found;
 
         /* Allocate 1 physical page */
         PhysicalAddress.QuadPart = 0;
         Status = BlMmAllocatePhysicalPages(&PhysicalAddress, BlLoaderData, 1, 0, 1);
-        EfiPrintf(L"Allocation status: %lx at address: %llx\r\n", Status, PhysicalAddress.QuadPart);
-        EfiStall(10000);
+        if (Status != STATUS_SUCCESS)
+        {
+            EfiPrintf(L"FAIL: Allocation status: %lx at address: %llx\r\n", Status, PhysicalAddress.QuadPart);
+            EfiStall(100000000);
+        }
 
-        Found = MmMdFindDescriptor(BL_MM_INCLUDE_UNMAPPED_ALLOCATED, 0, PhysicalAddress.QuadPart >> PAGE_SHIFT);
-        EfiPrintf(L"Found descriptor: %p %llx\r\n", Found, Found->BasePage);
+        /* Write some data */
+        *(PULONG)PhysicalAddress.QuadPart = 0x55555151;
 
+        /* Free it */
         Status = BlMmFreePhysicalPages(PhysicalAddress);
-        EfiPrintf(L"Memory free status: %lx\r\n", Status);
-    }
+        if (Status != STATUS_SUCCESS)
+        {
+            EfiPrintf(L"FAIL: Memory free status: %lx\r\n", Status);
+            EfiStall(100000000);
+        }
 
+        /* Allocate a page again */
+        PhysicalAddress2.QuadPart = 0;
+        Status = BlMmAllocatePhysicalPages(&PhysicalAddress2, BlLoaderData, 1, 0, 1);
+        if (Status != STATUS_SUCCESS)
+        {
+            EfiPrintf(L"FAIL: Allocation status: %lx at address: %llx\r\n", Status, PhysicalAddress2.QuadPart);
+            EfiStall(100000000);
+        }
+
+        /* It should've given us the same page, since we freed it */
+        if (PhysicalAddress.QuadPart != PhysicalAddress2.QuadPart)
+        {
+            EfiPrintf(L"FAIL: Non-matching addresses: %llx %llx\r\n", PhysicalAddress.QuadPart, PhysicalAddress2.QuadPart);
+            EfiStall(100000000);
+        }
+
+        /* The data should still be there, since zero-ing is not on for bootmgr */
+        if (*(PULONG)PhysicalAddress2.QuadPart != 0x55555151)
+        {
+            EfiPrintf(L"FAIL: Non-matching data: %lx %lx\r\n", 0x55555151, *(PULONG)PhysicalAddress2.QuadPart);
+            EfiStall(100000000);
+        }
+
+        /* And free the second page again */
+        Status = BlMmFreePhysicalPages(PhysicalAddress);
+        if (Status != STATUS_SUCCESS)
+        {
+            EfiPrintf(L"FAIL: Memory free status: %lx\r\n", Status);
+            EfiStall(100000000);
+        }
+    }
 
     /* Write out the first XML tag */
     BlXmiWrite(L"<bootmgr/>");

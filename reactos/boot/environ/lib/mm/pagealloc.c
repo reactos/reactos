@@ -740,9 +740,43 @@ MmPapFreePhysicalPages (
         Flags |= BL_MM_ADD_DESCRIPTOR_NEVER_COALESCE_FLAG;
     }
 
-    /* TBD */
-    EfiPrintf(L"Leaking memory: %p!\r\n", Address.QuadPart);
-    return STATUS_SUCCESS;
+    /* Check if the entire allocation is being free*/
+    if (PageCount == Descriptor->PageCount)
+    {
+        /* Remove the descriptor from the allocated list */
+        MmMdRemoveDescriptorFromList(&MmMdlUnmappedAllocated, Descriptor);
+
+        /* Mark the entire descriptor as free */
+        Descriptor->Type = BlConventionalMemory;
+    }
+    else
+    {
+        /* Init a descriptor for what we're actually freeing */
+        Descriptor = MmMdInitByteGranularDescriptor(Descriptor->Flags,
+                                                    BlConventionalMemory,
+                                                    Page,
+                                                    0,
+                                                    PageCount);
+        if (!Descriptor)
+        {
+            return STATUS_NO_MEMORY;
+        }
+
+        /* Remove the region from the existing descriptor */
+        Status = MmMdRemoveRegionFromMdlEx(&MmMdlUnmappedAllocated,
+                                           BL_MM_REMOVE_PHYSICAL_REGION_FLAG,
+                                           Page,
+                                           PageCount,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+
+    /* Add the new descriptor into in the list (or the old, repurposed one) */
+    Descriptor->Flags &= ~BlMemoryCoalesced;
+    return MmMdAddDescriptorToList(&MmMdlUnmappedUnallocated, Descriptor, Flags);
 }
 
 NTSTATUS
