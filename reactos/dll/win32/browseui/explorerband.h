@@ -53,7 +53,7 @@ private:
     // *** BaseBarSite information ***
     CComPtr<IUnknown> pSite;
     CComPtr<IShellFolder> pDesktop;
-    
+
     // *** tree explorer band stuff ***
     BOOL fVisible;
     BOOL bNavigating;
@@ -62,21 +62,33 @@ private:
     HIMAGELIST hImageList;
     HTREEITEM  hRoot;
     HTREEITEM  oldSelected;
-    
+    LPITEMIDLIST pidlCurrent;
+
     // *** notification cookies ***
     DWORD adviseCookie;
     ULONG shellRegID;
-    
+
+    // *** Drop target information ***
+    CComPtr<IDropTarget> pDropTarget;
+    HTREEITEM childTargetNode;
+    CComPtr<IDataObject> pCurObject;
+
     void InitializeExplorerBand();
     void DestroyExplorerBand();
     HRESULT ExecuteCommand(CComPtr<IContextMenu>& menu, UINT nCmd);
 
+    // *** notifications handling ***
     BOOL OnTreeItemExpanding(LPNMTREEVIEW pnmtv);
     void OnSelectionChanged(LPNMTREEVIEW pnmtv);
+    BOOL OnTreeItemDeleted(LPNMTREEVIEW pnmtv);
+    void OnTreeItemDragging(LPNMTREEVIEW pnmtv, BOOL isRightClick);
 
     // *** ATL event handlers ***
     LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT ContextMenuHack(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnShellEvent(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     // *** Helper functions ***
     NodeInfo* GetNodeInfo(HTREEITEM hItem);
@@ -85,7 +97,13 @@ private:
     HTREEITEM InsertItem(HTREEITEM hParent, LPITEMIDLIST pElt, LPITEMIDLIST pEltRelative, BOOL bSort);
     BOOL InsertSubitems(HTREEITEM hItem, NodeInfo *pNodeInfo); 
     BOOL NavigateToPIDL(LPITEMIDLIST dest, HTREEITEM *item, BOOL bExpand, BOOL bInsert, BOOL bSelect);
+    BOOL DeleteItem(LPITEMIDLIST toDelete);
+    BOOL RenameItem(HTREEITEM toRename, LPITEMIDLIST newPidl);
+    BOOL RefreshTreePidl(HTREEITEM tree, LPITEMIDLIST pidlParent);
     BOOL NavigateToCurrentFolder();
+
+    // *** Tree item sorting callback ***
+    static int CALLBACK CompareTreeItems(LPARAM p1, LPARAM p2, LPARAM p3);
 
 public:
     CExplorerBand();
@@ -181,6 +199,12 @@ public:
 
     BEGIN_MSG_MAP(CExplorerBand)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
+        MESSAGE_HANDLER(WM_USER_SHELLEVENT, OnShellEvent)
         MESSAGE_HANDLER(WM_RBUTTONDOWN, ContextMenuHack)
+        MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
+        // MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
     END_MSG_MAP()
 };
+
+extern "C"
+HRESULT WINAPI CExplorerBand_Constructor(REFIID riid, LPVOID *ppv);
