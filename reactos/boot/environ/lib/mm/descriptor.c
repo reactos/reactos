@@ -15,7 +15,7 @@
 BL_MEMORY_DESCRIPTOR MmStaticMemoryDescriptors[512];
 ULONG MmGlobalMemoryDescriptorCount;
 PBL_MEMORY_DESCRIPTOR MmGlobalMemoryDescriptors;
-BOOLEAN MmGlobalMemoryDescriptorsUsed;
+ULONG MmGlobalMemoryDescriptorsUsed;
 PBL_MEMORY_DESCRIPTOR MmDynamicMemoryDescriptors;
 ULONG MmDynamicMemoryDescriptorCount;
 
@@ -197,6 +197,152 @@ MmMdpSaveCurrentListPointer (
     }
 }
 
+ULONG
+MmMdCountList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList
+    )
+{
+    PLIST_ENTRY First, NextEntry;
+    ULONG Count;
+    
+    /* Iterate the list */
+    for (Count = 0, First = MdList->First, NextEntry = First->Flink;
+         NextEntry != First;
+         NextEntry = NextEntry->Flink, Count++);
+
+    /* Return the count */
+    return Count;
+}
+
+VOID
+MmMdInitializeList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList, 
+    _In_ ULONG Type,
+    _In_ PLIST_ENTRY ListHead
+    )
+{
+    /* Check if a list was specified */
+    if (ListHead)
+    {
+        /* Use it */
+        MdList->First = ListHead;
+    }
+    else
+    {
+        /* Otherwise, use the internal, built-in list */
+        InitializeListHead(&MdList->ListHead);
+        MdList->First = &MdList->ListHead;
+    }
+
+    /* Set the type */
+    MdList->Type = Type;
+
+    /* Initialize current iterator to nothing */
+    MdList->This = NULL;
+}
+
+NTSTATUS
+MmMdCopyList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST DestinationList, 
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST SourceList,
+    _In_opt_ PBL_MEMORY_DESCRIPTOR ListDescriptor,
+    _Out_ PULONG ActualCount, 
+    _In_ ULONG Count,
+    _In_ ULONG Flags
+    )
+{
+    NTSTATUS Status;
+    PULONG Used;
+    BOOLEAN Finished;
+    PLIST_ENTRY First, NextEntry;
+    PBL_MEMORY_DESCRIPTOR Descriptor;
+
+    /* Both parameters must be present */
+    if (!(DestinationList) || !(SourceList))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Assume success */
+    Status = STATUS_SUCCESS;
+
+    /* Check if a descriptor is being used to store the list */
+    if (ListDescriptor)
+    {
+        /* See how big it is */
+        Flags |= BL_MM_ADD_DESCRIPTOR_NEVER_COALESCE_FLAG;
+        Used = ActualCount;
+    }
+    else
+    {
+        /* We are using our internal descriptors instead */
+        Used = &MmGlobalMemoryDescriptorsUsed;
+        ++MmDescriptorCallTreeCount;
+
+        /* Use as many as are available */
+        Count = MmGlobalMemoryDescriptorCount;
+        ListDescriptor = MmGlobalMemoryDescriptors;
+    }
+    
+    /* Never truncate descriptors during a list copy */
+    Flags |= BL_MM_ADD_DESCRIPTOR_NEVER_TRUNCATE_FLAG;
+
+    /* Iterate through the list */
+    First = SourceList->First;
+    NextEntry = First->Flink;
+    if (First->Flink != First)
+    {
+        /* As long as we have success */
+        while (NT_SUCCESS(Status))
+        {
+            /* Check if there's still space */
+            if (Count <= *Used)
+            {
+                Status = STATUS_NO_MEMORY;
+                break;
+            }
+
+            /* Get the current descriptor */
+            Descriptor = CONTAINING_RECORD(NextEntry,
+                                           BL_MEMORY_DESCRIPTOR,
+                                           ListEntry);
+
+            /* Copy it into one of the descriptors we have */
+            RtlCopyMemory(&ListDescriptor[*Used],
+                          Descriptor,
+                          sizeof(*Descriptor));
+
+            /* Add it to the list we have */
+            Status = MmMdAddDescriptorToList(DestinationList,
+                                             &ListDescriptor[*Used],
+                                             Flags);
+            ++*Used;
+
+            /* Before moving on, check if we're done */
+            Finished = NextEntry->Flink == SourceList->First;
+
+            /* Move to the next entry */
+            NextEntry = NextEntry->Flink;
+
+            if (Finished)
+            {
+                break;
+            }
+        }
+    }
+
+    /* Check if the global descriptors were used */
+    if (ListDescriptor == MmGlobalMemoryDescriptors)
+    {
+        /* Unwind our usage */
+        MmMdFreeGlobalDescriptors();
+        --MmDescriptorCallTreeCount;
+    }
+
+    /* Return back to caller */
+    return Status;
+}
+
 VOID
 MmMdRemoveDescriptorFromList (
     _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
@@ -206,7 +352,7 @@ MmMdRemoveDescriptorFromList (
     /* Remove the entry */
     RemoveEntryList(&Entry->ListEntry);
 
-    /*  Check if this was the current link */
+    /* Check if this was the current link */
     if (MdList->This == &Entry->ListEntry)
     {
         /* Remove the current link and set the next one */
@@ -838,6 +984,6 @@ MmMdInitialize (
         MmGlobalMemoryDescriptorCount = RTL_NUMBER_OF(MmStaticMemoryDescriptors);
         MmGlobalMemoryDescriptors = MmStaticMemoryDescriptors;
         RtlZeroMemory(MmStaticMemoryDescriptors, sizeof(MmStaticMemoryDescriptors));
-        MmGlobalMemoryDescriptorsUsed = FALSE;
+        MmGlobalMemoryDescriptorsUsed = 0;
     }
 }

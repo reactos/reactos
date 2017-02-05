@@ -621,3 +621,282 @@ BlMmFreePhysicalPages (
     return STATUS_SUCCESS;
     //return MmPapFreePhysicalPages(4, 0, Address);
 }
+
+NTSTATUS
+BlMmGetMemoryMap (
+    _In_ PLIST_ENTRY MemoryMap,
+    _In_ PBL_IMAGE_PARAMETERS MemoryParameters,
+    _In_ ULONG WhichTypes,
+    _In_ ULONG Flags
+    )
+{
+    BL_MEMORY_DESCRIPTOR_LIST FirmwareMdList, FullMdList;
+    BOOLEAN DoFirmware, DoPersistent, DoTruncated, DoBad;
+    BOOLEAN DoReserved, DoUnmapUnalloc, DoUnmapAlloc;
+    BOOLEAN DoMapAlloc, DoMapUnalloc, DoFirmware2;
+    ULONG LoopCount, MdListCount, MdListSize, Used;
+    NTSTATUS Status;
+
+    /* Initialize the firmware list if we use it */
+    MmMdInitializeListHead(&FirmwareMdList);
+
+    /* Make sure we got our input parameters */
+    if (!(MemoryMap) || !(MemoryParameters))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Either ask for firmware memory, or don't. Not neither */
+    if ((WhichTypes & ~BL_MM_INCLUDE_NO_FIRMWARE_MEMORY) &&
+        (WhichTypes & ~BL_MM_INCLUDE_ONLY_FIRMWARE_MEMORY))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Either ask for firmware memory, or don't. Not both */
+    if ((WhichTypes & BL_MM_INCLUDE_NO_FIRMWARE_MEMORY) &&
+        (WhichTypes & BL_MM_INCLUDE_ONLY_FIRMWARE_MEMORY))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check which types of memory to dump */
+    DoFirmware = WhichTypes & BL_MM_INCLUDE_FIRMWARE_MEMORY;
+    DoPersistent = WhichTypes & BL_MM_INCLUDE_PERSISTENT_MEMORY;
+    DoTruncated = WhichTypes & BL_MM_INCLUDE_TRUNCATED_MEMORY;
+    DoBad = WhichTypes & BL_MM_INCLUDE_BAD_MEMORY;
+    DoReserved = WhichTypes & BL_MM_INCLUDE_RESERVED_ALLOCATED;
+    DoUnmapUnalloc = WhichTypes & BL_MM_INCLUDE_UNMAPPED_UNALLOCATED;
+    DoUnmapAlloc = WhichTypes & BL_MM_INCLUDE_UNMAPPED_ALLOCATED;
+    DoMapAlloc = WhichTypes & BL_MM_INCLUDE_MAPPED_ALLOCATED;
+    DoMapUnalloc = WhichTypes & BL_MM_INCLUDE_MAPPED_UNALLOCATED;
+    DoFirmware2 = WhichTypes & BL_MM_INCLUDE_FIRMWARE_MEMORY_2;
+
+    /* Begin the attempt loop */
+    LoopCount = 0;
+    while (TRUE)
+    {
+        /* Count how many entries we will need */
+        MdListCount = 0;
+        if (DoMapAlloc) MdListCount = MmMdCountList(&MmMdlMappedAllocated);
+        if (DoMapUnalloc) MdListCount += MmMdCountList(&MmMdlMappedUnallocated);
+        if (DoUnmapAlloc) MdListCount += MmMdCountList(&MmMdlUnmappedAllocated);
+        if (DoUnmapUnalloc) MdListCount += MmMdCountList(&MmMdlUnmappedUnallocated);
+        if (DoReserved) MdListCount += MmMdCountList(&MmMdlReservedAllocated);
+        if (DoBad) MdListCount += MmMdCountList(&MmMdlBadMemory);
+        if (DoTruncated) MdListCount += MmMdCountList(&MmMdlTruncatedMemory);
+        if (DoPersistent) MdListCount += MmMdCountList(&MmMdlPersistentMemory);
+
+        /* Plus firmware entries */
+        if (DoFirmware)
+        {
+            /* Free the previous entries, if any */
+            MmMdFreeList(&FirmwareMdList);
+
+            /* Get the firmware map */
+            Status = MmFwGetMemoryMap(&FirmwareMdList, 2);
+            if (!NT_SUCCESS(Status))
+            {
+                goto Quickie;
+            }
+
+            /* We overwrite, since this type is exclusive */
+            MdListCount = MmMdCountList(&FirmwareMdList);
+        }
+
+        /* Plus firmware entries-2 */
+        if (DoFirmware2)
+        {
+            /* Free the previous entries, if any */
+            MmMdFreeList(&FirmwareMdList);
+
+            /* Get the firmware map */
+            Status = MmFwGetMemoryMap(&FirmwareMdList, 0);
+            if (!NT_SUCCESS(Status))
+            {
+                goto Quickie;
+            }
+
+            /* We overwrite, since this type is exclusive */
+            MdListCount = MmMdCountList(&FirmwareMdList);
+        }
+
+        /* If there's no descriptors, we're done */
+        if (!MdListCount)
+        {
+            Status = STATUS_SUCCESS;
+            goto Quickie;
+        }
+
+        /* Check if the buffer we have is big enough */
+        if (MemoryParameters->BufferSize >=
+            (sizeof(BL_MEMORY_DESCRIPTOR) * MdListCount))
+        {
+            break;
+        }
+
+        /* It's not, allocate it, with a slack of 4 extra descriptors */
+        MdListSize = sizeof(BL_MEMORY_DESCRIPTOR) * (MdListCount + 4);
+
+        /* Except if we weren't asked to */
+        if (!(Flags & BL_MM_ADD_DESCRIPTOR_ALLOCATE_FLAG))
+        {
+            MemoryParameters->BufferSize = MdListSize;
+            Status = STATUS_BUFFER_TOO_SMALL;
+            goto Quickie;
+        }
+
+        /* Has it been less than 4 times we've tried this? */
+        if (++LoopCount <= 4)
+        {
+            /* Free the previous attempt, if any */
+            if (MemoryParameters->BufferSize)
+            {
+                BlMmFreeHeap(MemoryParameters->Buffer);
+            }
+
+            /* Allocate a new buffer */
+            MemoryParameters->BufferSize = MdListSize;
+            MemoryParameters->Buffer = BlMmAllocateHeap(MdListSize);
+            if (MemoryParameters->Buffer)
+            {
+                /* Try again */
+                continue;
+            }
+        }
+
+        /* If we got here, we're out of memory after 4 attempts */
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* We should have a buffer by now... */
+    if (MemoryParameters->Buffer)
+    {
+        /* Zero it out */
+        RtlZeroMemory(MemoryParameters->Buffer,
+                      MdListCount * sizeof(BL_MEMORY_DESCRIPTOR));
+    }
+
+    /* Initialize our list of descriptors */
+    MmMdInitializeList(&FullMdList, 0, MemoryMap);
+    Used = 0;
+
+    /* Handle mapped, allocated */
+    if (DoMapAlloc)
+    {
+        Status = MmMdCopyList(&FullMdList,
+                              &MmMdlMappedAllocated,
+                              MemoryParameters->Buffer,
+                              &Used,
+                              MdListCount,
+                              Flags);
+    }
+
+    /* Handle mapped, unallocated */
+    if (DoMapUnalloc)
+    {
+        Status = MmMdCopyList(&FullMdList,
+                              &MmMdlMappedUnallocated,
+                              MemoryParameters->Buffer,
+                              &Used,
+                              MdListCount,
+                              Flags);
+    }
+
+    /* Handle unmapped, allocated */
+    if (DoUnmapAlloc)
+    {
+        Status = MmMdCopyList(&FullMdList,
+                              &MmMdlUnmappedAllocated,
+                              MemoryParameters->Buffer,
+                              &Used,
+                              MdListCount,
+                              Flags);
+    }
+
+    /* Handle unmapped, unallocated */
+    if (DoUnmapUnalloc)
+    {
+        Status = MmMdCopyList(&FullMdList,
+                              &MmMdlUnmappedUnallocated,
+                              MemoryParameters->Buffer,
+                              &Used,
+                              MdListCount,
+                              Flags);
+    }
+
+    /* Handle reserved, allocated */
+    if (DoReserved)
+    {
+        Status = MmMdCopyList(&FullMdList,
+                              &MmMdlReservedAllocated,
+                              MemoryParameters->Buffer,
+                              &Used,
+                              MdListCount,
+                              Flags);
+    }
+
+    /* Handle bad */
+    if (DoBad)
+    {
+        Status = MmMdCopyList(&FullMdList,
+                              &MmMdlBadMemory,
+                              MemoryParameters->Buffer,
+                              &Used,
+                              MdListCount,
+                              Flags);
+    }
+
+    /* Handle truncated */
+    if (DoTruncated)
+    {
+        Status = MmMdCopyList(&FullMdList,
+                              &MmMdlTruncatedMemory,
+                              MemoryParameters->Buffer,
+                              &Used,
+                              MdListCount,
+                              Flags);
+    }
+
+    /* Handle persistent */
+    if (DoPersistent)
+    {
+        Status = MmMdCopyList(&FullMdList,
+                              &MmMdlPersistentMemory,
+                              MemoryParameters->Buffer,
+                              &Used,
+                              MdListCount,
+                              Flags);
+    }
+
+    /* Handle firmware */
+    if (DoFirmware)
+    {
+        Status = MmMdCopyList(&FullMdList,
+                              &FirmwareMdList,
+                              MemoryParameters->Buffer,
+                              &Used,
+                              MdListCount,
+                              Flags);
+    }
+
+    /* Handle firmware2 */
+    if (DoFirmware2)
+    {
+        Status = MmMdCopyList(&FullMdList,
+                              &FirmwareMdList,
+                              MemoryParameters->Buffer,
+                              &Used,
+                              MdListCount,
+                              Flags);
+    }
+
+    /* Add up the final size */
+    Status = RtlULongLongToULong(Used * sizeof(BL_MEMORY_DESCRIPTOR),
+                                 &MemoryParameters->ActualSize);
+
+Quickie:
+    MmMdFreeList(&FirmwareMdList);
+    return Status;
+}

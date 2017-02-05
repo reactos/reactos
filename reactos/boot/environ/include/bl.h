@@ -91,6 +91,7 @@ DEFINE_GUID(BadMemoryGuid, 0x54B8275B, 0xD431, 0x473F, 0xAC, 0xFB, 0xE5, 0x36, 0
 #define BL_MM_ADD_DESCRIPTOR_TRUNCATE_FLAG              0x02
 #define BL_MM_ADD_DESCRIPTOR_NEVER_COALESCE_FLAG        0x10
 #define BL_MM_ADD_DESCRIPTOR_NEVER_TRUNCATE_FLAG        0x20
+#define BL_MM_ADD_DESCRIPTOR_ALLOCATE_FLAG              0x1000
 #define BL_MM_ADD_DESCRIPTOR_UPDATE_LIST_POINTER_FLAG   0x2000
 
 #define BL_MM_INCLUDE_MAPPED_ALLOCATED                  0x01
@@ -101,7 +102,22 @@ DEFINE_GUID(BadMemoryGuid, 0x54B8275B, 0xD431, 0x473F, 0xAC, 0xFB, 0xE5, 0x36, 0
 #define BL_MM_INCLUDE_BAD_MEMORY                        0x20
 #define BL_MM_INCLUDE_FIRMWARE_MEMORY                   0x40
 #define BL_MM_INCLUDE_TRUNCATED_MEMORY                  0x80
-#define BL_MM_INCLUDE_PERSISTEND_MEMORY                 0x100
+#define BL_MM_INCLUDE_PERSISTENT_MEMORY                 0x100
+#define BL_MM_INCLUDE_FIRMWARE_MEMORY_2                 0x200
+
+#define BL_MM_INCLUDE_NO_FIRMWARE_MEMORY                (BL_MM_INCLUDE_PERSISTENT_MEMORY | \
+                                                         BL_MM_INCLUDE_TRUNCATED_MEMORY | \
+                                                         BL_MM_INCLUDE_BAD_MEMORY | \
+                                                         BL_MM_INCLUDE_RESERVED_ALLOCATED | \
+                                                         BL_MM_INCLUDE_UNMAPPED_UNALLOCATED | \
+                                                         BL_MM_INCLUDE_UNMAPPED_ALLOCATED | \
+                                                         BL_MM_INCLUDE_MAPPED_UNALLOCATED | \
+                                                         BL_MM_INCLUDE_MAPPED_ALLOCATED)
+C_ASSERT(BL_MM_INCLUDE_NO_FIRMWARE_MEMORY == 0x1BF);
+
+#define BL_MM_INCLUDE_ONLY_FIRMWARE_MEMORY              (BL_MM_INCLUDE_FIRMWARE_MEMORY_2 | \
+                                                         BL_MM_INCLUDE_FIRMWARE_MEMORY)
+C_ASSERT(BL_MM_INCLUDE_ONLY_FIRMWARE_MEMORY == 0x240);
 
 #define BL_MM_REQUEST_DEFAULT_TYPE                      1
 #define BL_MM_REQUEST_TOP_DOWN_TYPE                     2
@@ -1285,6 +1301,7 @@ MmMdInitializeListHead (
     InitializeListHead(&List->ListHead);
     List->First = &List->ListHead;
     List->This = NULL;
+    List->Type = 0;
 }
 
 /* INITIALIZATION ROUTINES ***************************************************/
@@ -1963,6 +1980,28 @@ Archx86TransferTo32BitApplicationAsm (
 /* MEMORY DESCRIPTOR ROUTINES ************************************************/
 
 VOID
+MmMdInitializeList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST DescriptorList,
+    _In_ ULONG Type,
+    _In_ PLIST_ENTRY ListHead
+    );
+
+NTSTATUS
+MmMdCopyList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST DestinationList,
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST SourceList,
+    _In_opt_ PBL_MEMORY_DESCRIPTOR ListDescriptor,
+    _Out_ PULONG ActualCount,
+    _In_ ULONG Count,
+    _In_ ULONG Flags
+    );
+
+ULONG
+MmMdCountList (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList
+    );
+
+VOID
 MmMdFreeList(
     _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList
     );
@@ -2074,6 +2113,14 @@ BlpMmInitializeConstraints (
 NTSTATUS
 BlMmRemoveBadMemory (
     VOID
+    );
+
+NTSTATUS
+BlMmGetMemoryMap (
+    _In_ PLIST_ENTRY MemoryMap,
+    _In_ PBL_IMAGE_PARAMETERS MemoryParameters,
+    _In_ ULONG WhichTypes,
+    _In_ ULONG Flags
     );
 
 /* VIRTUAL MEMORY ROUTINES ***************************************************/
@@ -2558,7 +2605,18 @@ extern ULONG ConsoleGraphicalResolutionListSize;
 extern PVOID DspRemoteInputConsole;
 extern PVOID DspLocalInputConsole;
 extern WCHAR BlScratchBuffer[8192];
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlMappedAllocated;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlMappedUnallocated;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlFwAllocationTracker;
 extern BL_MEMORY_DESCRIPTOR_LIST MmMdlUnmappedAllocated;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlUnmappedUnallocated;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlReservedAllocated;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlBadMemory;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlTruncatedMemory;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlPersistentMemory;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlCompleteBadMemory;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlFreeVirtual;
+extern BL_MEMORY_DESCRIPTOR_LIST MmMdlMappingTrackers;
 extern ULONGLONG BlpTimePerformanceFrequency;
 extern LIST_ENTRY RegisteredFileSystems;
 

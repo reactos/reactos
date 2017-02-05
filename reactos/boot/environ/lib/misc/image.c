@@ -1605,17 +1605,6 @@ BlpPdParseReturnArguments (
 }
 
 NTSTATUS
-BlMmGetMemoryMap (
-    _In_ PLIST_ENTRY MemoryMap,
-    _In_ PBL_IMAGE_PARAMETERS ImageParameters,
-    _In_ ULONG WhichTypes,
-    _In_ ULONG Flags
-    )
-{
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
 ImgpInitializeBootApplicationParameters (
     _In_ PBL_IMAGE_PARAMETERS ImageParameters,
     _In_ PBL_APPLICATION_ENTRY AppEntry,
@@ -1628,17 +1617,18 @@ ImgpInitializeBootApplicationParameters (
     BL_IMAGE_PARAMETERS MemoryParameters;
     LIST_ENTRY MemoryList;
 
+    /* Get the image headers and validate it */
     Status = RtlImageNtHeaderEx(0, ImageBase, ImageSize, &NtHeaders);
     if (!NT_SUCCESS(Status))
     {
         return Status;
     }
 
+    /* Get the size of the entire non-firmware, allocated, memory map */
     MemoryParameters.BufferSize = 0;
-
     Status = BlMmGetMemoryMap(&MemoryList,
                               &MemoryParameters,
-                              BL_MM_INCLUDE_FIRMWARE_MEMORY |
+                              BL_MM_INCLUDE_PERSISTENT_MEMORY |
                               BL_MM_INCLUDE_MAPPED_ALLOCATED |
                               BL_MM_INCLUDE_MAPPED_UNALLOCATED |
                               BL_MM_INCLUDE_UNMAPPED_ALLOCATED |
@@ -1649,6 +1639,7 @@ ImgpInitializeBootApplicationParameters (
         return Status;
     }
 
+    EfiPrintf(L"Memory map needs %lx bytes\n", MemoryParameters.BufferSize);
     return STATUS_SUCCESS;
 }
 
