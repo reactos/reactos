@@ -612,6 +612,7 @@ public:
     LRESULT OnToggleTextLabels(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnToolbarCustomize(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnGoTravel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnExplorerBar(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     HRESULT OnSearch();
@@ -648,6 +649,7 @@ public:
         COMMAND_ID_HANDLER(IDM_GOTO_HOMEPAGE, OnGoHome)
         COMMAND_ID_HANDLER(IDM_FAVORITES_ORGANIZEFAVORITES, OnOrganizeFavorites)
         COMMAND_ID_HANDLER(IDM_VIEW_STATUSBAR, OnToggleStatusBarVisible)
+        COMMAND_ID_HANDLER(IDM_VIEW_REFRESH, OnRefresh)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_LOCKTOOLBARS, OnToggleToolbarLock)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_STANDARDBUTTONS, OnToggleToolbarBandVisible)
         COMMAND_ID_HANDLER(IDM_TOOLBARS_ADDRESSBAR, OnToggleAddressBandVisible)
@@ -3662,6 +3664,13 @@ LRESULT CShellBrowser::OnToolbarCustomize(WORD wNotifyCode, WORD wID, HWND hWndC
     HRESULT hResult;
     hResult = IUnknown_Exec(fClientBars[BIInternetToolbar].clientBar,
                             CGID_PrivCITCommands, ITID_CUSTOMIZEENABLED, 0, NULL, NULL);
+    return 0;
+}
+
+LRESULT CShellBrowser::OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+{
+    if (fCurrentShellView)
+        fCurrentShellView->Refresh();
     return 0;
 }
 
