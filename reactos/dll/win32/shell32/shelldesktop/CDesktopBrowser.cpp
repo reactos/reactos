@@ -361,6 +361,8 @@ LRESULT CDesktopBrowser::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
             SHFindFiles(NULL, NULL);
             break;
         case FCIDM_DESKBROWSER_REFRESH:
+            if (m_ShellView)
+                m_ShellView->Refresh();
             break;
     }
 
