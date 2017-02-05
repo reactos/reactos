@@ -652,7 +652,7 @@ MmPapFreePages (
     }
 
     /* Free it from there */
-    PhysicalAddress.QuadPart = (ULONGLONG)Address;
+    PhysicalAddress.QuadPart = (ULONG_PTR)Address;
     return MmPapFreePhysicalPages(WhichList, 0, PhysicalAddress);
 }
 
