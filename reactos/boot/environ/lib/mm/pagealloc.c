@@ -712,7 +712,7 @@ MmPapFreePhysicalPages (
     else if (!DontFree)
     {
         /* Caller wants memory to be freed -- should we zero it? */
-        if (!(HasPageData) &
+        if (!(HasPageData) &&
             (LibraryParameters.LibraryFlags &
              BL_LIBRARY_FLAG_ZERO_HEAP_ALLOCATIONS_ON_FREE))
         {
