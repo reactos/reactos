@@ -492,6 +492,8 @@ WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
                     if (!ShellExecuteEx(&shInputDll))
                         MessageBox(hwnd, _T("Can't start input.dll"), NULL, MB_OK | MB_ICONERROR);
+
+                    return 0;
                 }
 
                 default:

@@ -722,7 +722,7 @@ NtUserActivateKeyboardLayout(
     {
         /* Get previous keyboard layout starting with current */
         if (pti->KeyboardLayout)
-            pKl = pti->KeyboardLayout->pklNext;
+            pKl = pti->KeyboardLayout->pklPrev;
     }
     else
         pKl = UserHklToKbl(hKl);
