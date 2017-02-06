@@ -241,6 +241,7 @@ typedef union _DIR_ENTRY DIR_ENTRY, *PDIR_ENTRY;
 typedef struct
 {
     ULONG VolumeID;
+    CHAR VolumeLabel[11];
     ULONG FATStart;
     ULONG FATCount;
     ULONG FATSectors;

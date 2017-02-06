@@ -220,6 +220,7 @@ VfatHasFileSystem(
                     DPRINT("FAT12\n");
                     FatInfo.FatType = FAT12;
                     FatInfo.RootCluster = (FatInfo.rootStart - 1) / FatInfo.SectorsPerCluster;
+                    RtlCopyMemory(&FatInfo.VolumeLabel, &Boot->VolumeLabel, sizeof(FatInfo.VolumeLabel));
                 }
                 else if (FatInfo.NumberOfClusters >= 65525)
                 {
@@ -228,12 +229,14 @@ VfatHasFileSystem(
                     FatInfo.RootCluster = ((struct _BootSector32*) Boot)->RootCluster;
                     FatInfo.rootStart = FatInfo.dataStart + ((FatInfo.RootCluster - 2) * FatInfo.SectorsPerCluster);
                     FatInfo.VolumeID = ((struct _BootSector32*) Boot)->VolumeID;
+                    RtlCopyMemory(&FatInfo.VolumeLabel, &((struct _BootSector32*)Boot)->VolumeLabel, sizeof(FatInfo.VolumeLabel));
                 }
                 else
                 {
                     DPRINT("FAT16\n");
                     FatInfo.FatType = FAT16;
                     FatInfo.RootCluster = FatInfo.rootStart / FatInfo.SectorsPerCluster;
+                    RtlCopyMemory(&FatInfo.VolumeLabel, &Boot->VolumeLabel, sizeof(FatInfo.VolumeLabel));
                 }
 
                 if (PartitionInfoIsValid &&
@@ -653,7 +656,7 @@ VfatVerify(
              *   Each write to the root directory must update this crc sum.
              */
             /* HACK */
-            if (!FatInfo.FixedMedia)
+            if (!FatInfo.FixedMedia && FatInfo.FatType >= FATX16)
             {
                 Status = STATUS_WRONG_VOLUME;
             }
