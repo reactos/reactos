@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    GetProfileDirs.c
     LoadUserProfile.c
     testlist.c)
 
