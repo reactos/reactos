@@ -266,7 +266,7 @@ CreateUserProfileExW(
     WCHAR szUserProfileName[MAX_PATH];
     WCHAR szBuffer[MAX_PATH];
     LPWSTR SidString;
-    DWORD dwLength;
+    DWORD dwType, dwLength;
     DWORD dwDisposition;
     UINT i;
     HKEY hKey;
@@ -276,9 +276,16 @@ CreateUserProfileExW(
     DPRINT("CreateUserProfileExW(%p %S %S %p %lu %d)\n",
            pSid, lpUserName, lpUserHive, lpProfileDir, dwDirSize, bWin9xUpg);
 
+    /* Parameters validation */
+    if (!pSid || !lpUserName)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     /*
      * TODO:
-     *  - Add support for lpUserHive, lpProfileDir.
+     *  - Add support for lpUserHive.
      *  - bWin9xUpg is obsolete. Don't waste your time implementing this.
      */
 
@@ -299,10 +306,10 @@ CreateUserProfileExW(
     Error = RegQueryValueExW(hKey,
                              L"ProfilesDirectory",
                              NULL,
-                             NULL,
+                             &dwType,
                              (LPBYTE)szRawProfilesPath,
                              &dwLength);
-    if (Error != ERROR_SUCCESS)
+    if ((Error != ERROR_SUCCESS) || (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
     {
         DPRINT1("Error: %lu\n", Error);
         RegCloseKey(hKey);
@@ -320,7 +327,8 @@ CreateUserProfileExW(
         return FALSE;
     }
 
-    /* create the profiles directory if it does not yet exist */
+    /* Create the profiles directory if it does not exist yet */
+    // FIXME: Security!
     if (!CreateDirectoryW(szProfilesPath, NULL))
     {
         if (GetLastError() != ERROR_ALREADY_EXISTS)
@@ -335,10 +343,10 @@ CreateUserProfileExW(
     Error = RegQueryValueExW(hKey,
                              L"DefaultUserProfile",
                              NULL,
-                             NULL,
+                             &dwType,
                              (LPBYTE)szBuffer,
                              &dwLength);
-    if (Error != ERROR_SUCCESS)
+    if ((Error != ERROR_SUCCESS) || (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
     {
         DPRINT1("Error: %lu\n", Error);
         RegCloseKey(hKey);
@@ -346,19 +354,17 @@ CreateUserProfileExW(
         return FALSE;
     }
 
-    RegCloseKey (hKey);
+    RegCloseKey(hKey);
 
-    wcscpy(szUserProfileName, lpUserName);
-
-    wcscpy(szUserProfilePath, szProfilesPath);
-    wcscat(szUserProfilePath, L"\\");
-    wcscat(szUserProfilePath, szUserProfileName);
-
-    wcscpy(szDefaultUserPath, szProfilesPath);
-    wcscat(szDefaultUserPath, L"\\");
-    wcscat(szDefaultUserPath, szBuffer);
+    StringCbCopyW(szUserProfileName, sizeof(szUserProfileName), lpUserName);
 
     /* Create user profile directory */
+
+    StringCbCopyW(szUserProfilePath, sizeof(szUserProfilePath), szProfilesPath);
+    StringCbCatW(szUserProfilePath, sizeof(szUserProfilePath), L"\\");
+    StringCbCatW(szUserProfilePath, sizeof(szUserProfilePath), szUserProfileName);
+
+    // FIXME: Security!
     if (!CreateDirectoryW(szUserProfilePath, NULL))
     {
         if (GetLastError() != ERROR_ALREADY_EXISTS)
@@ -371,10 +377,11 @@ CreateUserProfileExW(
         {
             swprintf(szUserProfileName, L"%s.%03u", lpUserName, i);
 
-            wcscpy(szUserProfilePath, szProfilesPath);
-            wcscat(szUserProfilePath, L"\\");
-            wcscat(szUserProfilePath, szUserProfileName);
+            StringCbCopyW(szUserProfilePath, sizeof(szUserProfilePath), szProfilesPath);
+            StringCbCatW(szUserProfilePath, sizeof(szUserProfilePath), L"\\");
+            StringCbCatW(szUserProfilePath, sizeof(szUserProfilePath), szUserProfileName);
 
+            // FIXME: Security!
             if (CreateDirectoryW(szUserProfilePath, NULL))
                 break;
 
@@ -387,6 +394,12 @@ CreateUserProfileExW(
     }
 
     /* Copy default user directory */
+
+    StringCbCopyW(szDefaultUserPath, sizeof(szDefaultUserPath), szProfilesPath);
+    StringCbCatW(szDefaultUserPath, sizeof(szDefaultUserPath), L"\\");
+    StringCbCatW(szDefaultUserPath, sizeof(szDefaultUserPath), szBuffer);
+
+    // FIXME: Security!
     if (!CopyDirectory(szUserProfilePath, szDefaultUserPath))
     {
         DPRINT1("Error: %lu\n", GetLastError());
@@ -401,9 +414,9 @@ CreateUserProfileExW(
         return FALSE;
     }
 
-    wcscpy(szBuffer,
-           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\\");
-    wcscat(szBuffer, SidString);
+    StringCbCopyW(szBuffer, sizeof(szBuffer),
+                  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\\");
+    StringCbCatW(szBuffer, sizeof(szBuffer), SidString);
 
     /* Create user profile key */
     Error = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
@@ -423,9 +436,9 @@ CreateUserProfileExW(
     }
 
     /* Create non-expanded user profile path */
-    wcscpy(szBuffer, szRawProfilesPath);
-    wcscat(szBuffer, L"\\");
-    wcscat(szBuffer, szUserProfileName);
+    StringCbCopyW(szBuffer, sizeof(szBuffer), szRawProfilesPath);
+    StringCbCatW(szBuffer, sizeof(szBuffer), L"\\");
+    StringCbCatW(szBuffer, sizeof(szBuffer), szUserProfileName);
 
     /* Set 'ProfileImagePath' value (non-expanded) */
     Error = RegSetValueExW(hKey,
@@ -459,9 +472,11 @@ CreateUserProfileExW(
 
     RegCloseKey(hKey);
 
-    /* Create user hive name */
-    wcscpy(szBuffer, szUserProfilePath);
-    wcscat(szBuffer, L"\\ntuser.dat");
+    /* Create user hive file */
+
+    /* Use the default hive file name */
+    StringCbCopyW(szBuffer, sizeof(szBuffer), szUserProfilePath);
+    StringCbCatW(szBuffer, sizeof(szBuffer), L"\\ntuser.dat");
 
     /* Acquire restore privilege */
     if (!AcquireRemoveRestorePrivilege(TRUE))
@@ -472,7 +487,7 @@ CreateUserProfileExW(
         goto done;
     }
 
-    /* Create new user hive */
+    /* Load the user hive */
     Error = RegLoadKeyW(HKEY_USERS,
                         SidString,
                         szBuffer);
@@ -497,6 +512,13 @@ CreateUserProfileExW(
     RegUnLoadKeyW(HKEY_USERS, SidString);
     AcquireRemoveRestorePrivilege(FALSE);
 
+    /*
+     * If the caller wants to retrieve the user profile path,
+     * give it now. 'dwDirSize' is the number of characters.
+     */
+    if (lpProfileDir && dwDirSize)
+        StringCchCopyW(lpProfileDir, dwDirSize, szUserProfilePath);
+
 done:
     LocalFree((HLOCAL)SidString);
     SetLastError((DWORD)Error);
@@ -516,6 +538,12 @@ GetAllUsersProfileDirectoryA(
     LPWSTR lpBuffer;
     BOOL bResult;
 
+    if (!lpcchSize)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     lpBuffer = GlobalAlloc(GMEM_FIXED,
                            *lpcchSize * sizeof(WCHAR));
     if (lpBuffer == NULL)
@@ -523,16 +551,16 @@ GetAllUsersProfileDirectoryA(
 
     bResult = GetAllUsersProfileDirectoryW(lpBuffer,
                                            lpcchSize);
-    if (bResult)
+    if (bResult && lpProfileDir)
     {
-        WideCharToMultiByte(CP_ACP,
-                            0,
-                            lpBuffer,
-                            -1,
-                            lpProfileDir,
-                            *lpcchSize,
-                            NULL,
-                            NULL);
+        bResult = WideCharToMultiByte(CP_ACP,
+                                      0,
+                                      lpBuffer,
+                                      -1,
+                                      lpProfileDir,
+                                      *lpcchSize,
+                                      NULL,
+                                      NULL);
     }
 
     GlobalFree(lpBuffer);
@@ -549,7 +577,7 @@ GetAllUsersProfileDirectoryW(
 {
     WCHAR szProfilePath[MAX_PATH];
     WCHAR szBuffer[MAX_PATH];
-    DWORD dwLength;
+    DWORD dwType, dwLength;
     HKEY hKey;
     LONG Error;
 
@@ -576,10 +604,10 @@ GetAllUsersProfileDirectoryW(
     Error = RegQueryValueExW(hKey,
                              L"ProfilesDirectory",
                              NULL,
-                             NULL,
+                             &dwType,
                              (LPBYTE)szBuffer,
                              &dwLength);
-    if (Error != ERROR_SUCCESS)
+    if ((Error != ERROR_SUCCESS) || (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
     {
         DPRINT1("Error: %lu\n", Error);
         RegCloseKey(hKey);
@@ -590,10 +618,10 @@ GetAllUsersProfileDirectoryW(
     /* Expand it */
     if (!ExpandEnvironmentStringsW(szBuffer,
                                    szProfilePath,
-                                   MAX_PATH))
+                                   ARRAYSIZE(szProfilePath)))
     {
         DPRINT1("Error: %lu\n", GetLastError());
-        RegCloseKey (hKey);
+        RegCloseKey(hKey);
         return FALSE;
     }
 
@@ -602,10 +630,10 @@ GetAllUsersProfileDirectoryW(
     Error = RegQueryValueExW(hKey,
                              L"AllUsersProfile",
                              NULL,
-                             NULL,
+                             &dwType,
                              (LPBYTE)szBuffer,
                              &dwLength);
-    if (Error != ERROR_SUCCESS)
+    if ((Error != ERROR_SUCCESS) || (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
     {
         DPRINT1("Error: %lu\n", Error);
         RegCloseKey(hKey);
@@ -613,27 +641,24 @@ GetAllUsersProfileDirectoryW(
         return FALSE;
     }
 
-    RegCloseKey (hKey);
+    RegCloseKey(hKey);
 
-    wcscat(szProfilePath, L"\\");
-    wcscat(szProfilePath, szBuffer);
+    StringCbCatW(szProfilePath, sizeof(szProfilePath), L"\\");
+    StringCbCatW(szProfilePath, sizeof(szProfilePath), szBuffer);
 
     dwLength = wcslen(szProfilePath) + 1;
-    if (lpProfileDir != NULL)
+    if (lpProfileDir && (*lpcchSize >= dwLength))
     {
-        if (*lpcchSize < dwLength)
-        {
-            *lpcchSize = dwLength;
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-            return FALSE;
-        }
-
-            wcscpy(lpProfileDir, szProfilePath);
-        }
-
-    *lpcchSize = dwLength;
-
-    return TRUE;
+        StringCchCopyW(lpProfileDir, *lpcchSize, szProfilePath);
+        *lpcchSize = dwLength;
+        return TRUE;
+    }
+    else // if (!lpProfileDir || (*lpcchSize < dwLength))
+    {
+        *lpcchSize = dwLength;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
 }
 
 
@@ -646,6 +671,12 @@ GetDefaultUserProfileDirectoryA(
     LPWSTR lpBuffer;
     BOOL bResult;
 
+    if (!lpcchSize)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     lpBuffer = GlobalAlloc(GMEM_FIXED,
                            *lpcchSize * sizeof(WCHAR));
     if (lpBuffer == NULL)
@@ -653,16 +684,16 @@ GetDefaultUserProfileDirectoryA(
 
     bResult = GetDefaultUserProfileDirectoryW(lpBuffer,
                                               lpcchSize);
-    if (bResult)
+    if (bResult && lpProfileDir)
     {
-        WideCharToMultiByte(CP_ACP,
-                            0,
-                            lpBuffer,
-                            -1,
-                            lpProfileDir,
-                            *lpcchSize,
-                            NULL,
-                            NULL);
+        bResult = WideCharToMultiByte(CP_ACP,
+                                      0,
+                                      lpBuffer,
+                                      -1,
+                                      lpProfileDir,
+                                      *lpcchSize,
+                                      NULL,
+                                      NULL);
     }
 
     GlobalFree(lpBuffer);
@@ -679,7 +710,7 @@ GetDefaultUserProfileDirectoryW(
 {
     WCHAR szProfilePath[MAX_PATH];
     WCHAR szBuffer[MAX_PATH];
-    DWORD dwLength;
+    DWORD dwType, dwLength;
     HKEY hKey;
     LONG Error;
 
@@ -706,10 +737,10 @@ GetDefaultUserProfileDirectoryW(
     Error = RegQueryValueExW(hKey,
                              L"ProfilesDirectory",
                              NULL,
-                             NULL,
+                             &dwType,
                              (LPBYTE)szBuffer,
                              &dwLength);
-    if (Error != ERROR_SUCCESS)
+    if ((Error != ERROR_SUCCESS) || (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
     {
         DPRINT1("Error: %lu\n", Error);
         RegCloseKey(hKey);
@@ -720,7 +751,7 @@ GetDefaultUserProfileDirectoryW(
     /* Expand it */
     if (!ExpandEnvironmentStringsW(szBuffer,
                                    szProfilePath,
-                                   MAX_PATH))
+                                   ARRAYSIZE(szProfilePath)))
     {
         DPRINT1("Error: %lu\n", GetLastError());
         RegCloseKey(hKey);
@@ -732,10 +763,10 @@ GetDefaultUserProfileDirectoryW(
     Error = RegQueryValueExW(hKey,
                              L"DefaultUserProfile",
                              NULL,
-                             NULL,
+                             &dwType,
                              (LPBYTE)szBuffer,
                              &dwLength);
-    if (Error != ERROR_SUCCESS)
+    if ((Error != ERROR_SUCCESS) || (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
     {
         DPRINT1("Error: %lu\n", Error);
         RegCloseKey(hKey);
@@ -745,25 +776,22 @@ GetDefaultUserProfileDirectoryW(
 
     RegCloseKey(hKey);
 
-    wcscat(szProfilePath, L"\\");
-    wcscat(szProfilePath, szBuffer);
+    StringCbCatW(szProfilePath, sizeof(szProfilePath), L"\\");
+    StringCbCatW(szProfilePath, sizeof(szProfilePath), szBuffer);
 
     dwLength = wcslen(szProfilePath) + 1;
-    if (lpProfileDir != NULL)
+    if (lpProfileDir && (*lpcchSize >= dwLength))
     {
-        if (*lpcchSize < dwLength)
-        {
-            *lpcchSize = dwLength;
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-            return FALSE;
-        }
-
-            wcscpy(lpProfileDir, szProfilePath);
-        }
-
-    *lpcchSize = dwLength;
-
-    return TRUE;
+        StringCchCopyW(lpProfileDir, *lpcchSize, szProfilePath);
+        *lpcchSize = dwLength;
+        return TRUE;
+    }
+    else // if (!lpProfileDir || (*lpcchSize < dwLength))
+    {
+        *lpcchSize = dwLength;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
+    }
 }
 
 
@@ -776,7 +804,7 @@ GetProfilesDirectoryA(
     LPWSTR lpBuffer;
     BOOL bResult;
 
-    if (!lpProfileDir || !lpcchSize)
+    if (!lpcchSize)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
@@ -789,7 +817,7 @@ GetProfilesDirectoryA(
 
     bResult = GetProfilesDirectoryW(lpBuffer,
                                     lpcchSize);
-    if (bResult)
+    if (bResult && lpProfileDir)
     {
         bResult = WideCharToMultiByte(CP_ACP,
                                       0,
@@ -815,10 +843,9 @@ GetProfilesDirectoryW(
 {
     WCHAR szProfilesPath[MAX_PATH];
     WCHAR szBuffer[MAX_PATH];
-    DWORD dwLength;
+    DWORD dwType, dwLength;
     HKEY hKey;
     LONG Error;
-    BOOL bRet = FALSE;
 
     if (!lpcchSize)
     {
@@ -843,10 +870,10 @@ GetProfilesDirectoryW(
     Error = RegQueryValueExW(hKey,
                              L"ProfilesDirectory",
                              NULL,
-                             NULL,
+                             &dwType,
                              (LPBYTE)szBuffer,
                              &dwLength);
-    if (Error != ERROR_SUCCESS)
+    if ((Error != ERROR_SUCCESS) || (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
     {
         DPRINT1("Error: %lu\n", Error);
         RegCloseKey(hKey);
@@ -866,26 +893,18 @@ GetProfilesDirectoryW(
     }
 
     dwLength = wcslen(szProfilesPath) + 1;
-    if (lpProfilesDir != NULL)
+    if (lpProfilesDir && (*lpcchSize >= dwLength))
     {
-        if (*lpcchSize < dwLength)
-        {
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        }
-        else
-        {
-            wcscpy(lpProfilesDir, szProfilesPath);
-            bRet = TRUE;
-        }
+        StringCchCopyW(lpProfilesDir, *lpcchSize, szProfilesPath);
+        *lpcchSize = dwLength;
+        return TRUE;
     }
-    else
+    else // if (!lpProfilesDir || (*lpcchSize < dwLength))
     {
+        *lpcchSize = dwLength;
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return FALSE;
     }
-
-    *lpcchSize = dwLength;
-
-    return bRet;
 }
 
 
@@ -899,9 +918,9 @@ GetUserProfileDirectoryA(
     LPWSTR lpBuffer;
     BOOL bResult;
 
-    if (!lpProfileDir || !lpcchSize)
+    if (!lpcchSize)
     {
-        SetLastError( ERROR_INVALID_PARAMETER );
+        SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -913,16 +932,16 @@ GetUserProfileDirectoryA(
     bResult = GetUserProfileDirectoryW(hToken,
                                        lpBuffer,
                                        lpcchSize);
-    if (bResult)
+    if (bResult && lpProfileDir)
     {
-        WideCharToMultiByte(CP_ACP,
-                            0,
-                            lpBuffer,
-                            -1,
-                            lpProfileDir,
-                            *lpcchSize,
-                            NULL,
-                            NULL);
+        bResult = WideCharToMultiByte(CP_ACP,
+                                      0,
+                                      lpBuffer,
+                                      -1,
+                                      lpProfileDir,
+                                      *lpcchSize,
+                                      NULL,
+                                      NULL);
     }
 
     GlobalFree(lpBuffer);
@@ -942,7 +961,7 @@ GetUserProfileDirectoryW(
     WCHAR szKeyName[MAX_PATH];
     WCHAR szRawImagePath[MAX_PATH];
     WCHAR szImagePath[MAX_PATH];
-    DWORD dwLength;
+    DWORD dwType, dwLength;
     HKEY hKey;
     LONG Error;
 
@@ -958,19 +977,18 @@ GetUserProfileDirectoryW(
         return FALSE;
     }
 
-    if (!GetUserSidStringFromToken(hToken,
-                                   &SidString))
+    /* Get the user SID string */
+    if (!GetUserSidStringFromToken(hToken, &SidString))
     {
-        DPRINT1("GetUserSidFromToken() failed\n");
+        DPRINT1("GetUserSidStringFromToken() failed\n");
         return FALSE;
     }
 
     DPRINT("SidString: '%wZ'\n", &SidString);
 
-    wcscpy(szKeyName,
-           L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\\");
-    wcscat(szKeyName,
-           SidString.Buffer);
+    StringCbCopyW(szKeyName, sizeof(szKeyName),
+                  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\\");
+    StringCbCatW(szKeyName, sizeof(szKeyName), SidString.Buffer);
 
     RtlFreeUnicodeString(&SidString);
 
@@ -992,10 +1010,10 @@ GetUserProfileDirectoryW(
     Error = RegQueryValueExW(hKey,
                              L"ProfileImagePath",
                              NULL,
-                             NULL,
+                             &dwType,
                              (LPBYTE)szRawImagePath,
                              &dwLength);
-    if (Error != ERROR_SUCCESS)
+    if ((Error != ERROR_SUCCESS) || (dwType != REG_SZ && dwType != REG_EXPAND_SZ))
     {
         DPRINT1("Error: %lu\n", Error);
         RegCloseKey(hKey);
@@ -1018,18 +1036,19 @@ GetUserProfileDirectoryW(
 
     DPRINT("ImagePath: '%S'\n", szImagePath);
 
-    dwLength = wcslen (szImagePath) + 1;
-    if (*lpcchSize < dwLength)
+    dwLength = wcslen(szImagePath) + 1;
+    if (lpProfileDir && (*lpcchSize >= dwLength))
+    {
+        StringCchCopyW(lpProfileDir, *lpcchSize, szImagePath);
+        *lpcchSize = dwLength;
+        return TRUE;
+    }
+    else // if (!lpProfileDir || (*lpcchSize < dwLength))
     {
         *lpcchSize = dwLength;
         SetLastError(ERROR_INSUFFICIENT_BUFFER);
         return FALSE;
     }
-
-    *lpcchSize = dwLength;
-    wcscpy(lpProfileDir, szImagePath);
-
-    return TRUE;
 }
 
 
@@ -1042,10 +1061,10 @@ CheckForLoadedProfile(HANDLE hToken)
 
     DPRINT("CheckForLoadedProfile() called\n");
 
-    if (!GetUserSidStringFromToken(hToken,
-                                   &SidString))
+    /* Get the user SID string */
+    if (!GetUserSidStringFromToken(hToken, &SidString))
     {
-        DPRINT1("GetUserSidFromToken() failed\n");
+        DPRINT1("GetUserSidStringFromToken() failed\n");
         return FALSE;
     }
 
@@ -1217,7 +1236,8 @@ LoadUserProfileW(
 
     if (lpProfileInfo->lpProfilePath)
     {
-        wcscpy(szUserHivePath, lpProfileInfo->lpProfilePath);
+        /* Use the caller's specified roaming user profile path */
+        StringCbCopyW(szUserHivePath, sizeof(szUserHivePath), lpProfileInfo->lpProfilePath);
     }
     else
     {
@@ -1230,9 +1250,9 @@ LoadUserProfileW(
     }
 
     /* Create user hive name */
-    wcscat(szUserHivePath, L"\\");
-    wcscat(szUserHivePath, lpProfileInfo->lpUserName);
-    wcscat(szUserHivePath, L"\\ntuser.dat");
+    StringCbCatW(szUserHivePath, sizeof(szUserHivePath), L"\\");
+    StringCbCatW(szUserHivePath, sizeof(szUserHivePath), lpProfileInfo->lpUserName);
+    StringCbCatW(szUserHivePath, sizeof(szUserHivePath), L"\\ntuser.dat");
     DPRINT("szUserHivePath: %S\n", szUserHivePath);
 
     /* Create user profile directory if needed */
@@ -1311,11 +1331,11 @@ LoadUserProfileW(
         }
     }
 
-    /* Get user SID string */
+    /* Get the user SID string */
     ret = GetUserSidStringFromToken(hToken, &SidString);
     if (!ret)
     {
-        DPRINT1("GetUserSidFromToken() failed\n");
+        DPRINT1("GetUserSidStringFromToken() failed\n");
         goto cleanup;
     }
     ret = FALSE;
@@ -1390,10 +1410,10 @@ UnloadUserProfile(
 
     RegCloseKey(hProfile);
 
-    if (!GetUserSidStringFromToken(hToken,
-                                   &SidString))
+    /* Get the user SID string */
+    if (!GetUserSidStringFromToken(hToken, &SidString))
     {
-        DPRINT1("GetUserSidFromToken() failed\n");
+        DPRINT1("GetUserSidStringFromToken() failed\n");
         return FALSE;
     }
 
