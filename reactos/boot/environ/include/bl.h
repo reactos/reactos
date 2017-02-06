@@ -223,6 +223,7 @@ typedef enum _BL_MEMORY_DESCRIPTOR_TYPE
 {
     BlMdPhysical,
     BlMdVirtual,
+    BlMdTracker
 } BL_MEMORY_DESCRIPTOR_TYPE;
 
 typedef enum _BL_TRANSLATION_TYPE
@@ -2114,6 +2115,17 @@ MmPapAllocatePhysicalPagesInRange (
     _In_ ULONG RangeType
     );
 
+NTSTATUS
+MmPaReleaseSelfMapPages (
+    _In_ PHYSICAL_ADDRESS Address
+    );
+
+NTSTATUS
+MmPaReserveSelfMapPages (
+    _Inout_ PPHYSICAL_ADDRESS PhysicalAddress,
+    _In_ ULONG Alignment,
+    _In_ ULONG PageCount
+    );
 NTSTATUS
 BlMmFreePhysicalPages (
     _In_ PHYSICAL_ADDRESS Address

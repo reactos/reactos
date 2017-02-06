@@ -680,7 +680,6 @@ MmMdRemoveRegionFromMdlEx (
         FoundPageCount = Descriptor->PageCount;
         FoundEndPage = FoundBasePage + FoundPageCount;
         EndPage = PageCount + BasePage;
-        //EarlyPrint(L"Looking for Region 0x%08I64X-0x%08I64X in 0x%08I64X-0x%08I64X\r\n", BasePage, EndPage, FoundBasePage, FoundEndPage);
 
         /* Make a copy of the original descriptor */
         RtlCopyMemory(&NewDescriptor, NextEntry, sizeof(NewDescriptor));
@@ -694,19 +693,21 @@ MmMdRemoveRegionFromMdlEx (
                 /* Check if the found region starts after the region or ends before the region */
                 if ((FoundBasePage >= BasePage) || (EndPage >= FoundEndPage))
                 {
-                    /* This descriptor doesn't cover any part of the range */
-                    //EarlyPrint(L"No part of this descriptor contains the region\r\n");
+                    /* This descriptor doesn't cover any part of the range -- nothing to do */
+                    NOTHING;
                 }
                 else
                 {
-                    /* This descriptor covers the head of the allocation */
-                    //EarlyPrint(L"Descriptor covers the head of the region\r\n");
+                    /* This descriptor covers the head of the allocation @TODO: FIXME */
+                    EfiPrintf(L"FIXME: Descriptor covers the head of the region\r\n");
+                    EfiStall(1000000);
                 }
             }
             else
             {
-                /* This descriptor contains the entire allocation */
-                //EarlyPrint(L"Descriptor contains the entire region\r\n");
+                /* This descriptor contains the entire allocation @TODO: FIXME */
+                EfiPrintf(L"FIXME: Descriptor contains the entire region\r\n");
+                EfiStall(1000000);
             }
 
             /* Keep going */
@@ -747,7 +748,6 @@ MmMdRemoveRegionFromMdlEx (
             if (!Descriptor->PageCount)
             {
                 /* Remove it */
-                //EarlyPrint(L"Entire descriptor consumed\r\n");
                 MmMdRemoveDescriptorFromList(MdList, Descriptor);
                 MmMdFreeDescriptor(Descriptor);
 

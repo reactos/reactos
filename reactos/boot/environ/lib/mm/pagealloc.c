@@ -628,7 +628,7 @@ MmPapFreePhysicalPages (
     DontFree = FALSE;
     HasPageData = FALSE;
 
-    /* Only page-aligned addresses a re accepted */
+    /* Only page-aligned addresses are accepted */
     if (Address.QuadPart & (PAGE_SIZE - 1))
     {
         EfiPrintf(L"free mem fail 1\r\n");
@@ -1096,3 +1096,124 @@ Quickie:
     MmMdFreeList(&FirmwareMdList);
     return Status;
 }
+
+NTSTATUS
+MmPaReleaseSelfMapPages (
+    _In_ PHYSICAL_ADDRESS Address
+    )
+{
+    PBL_MEMORY_DESCRIPTOR Descriptor;
+    ULONGLONG BasePage;
+    NTSTATUS Status;
+
+    /* Only page-aligned addresses are accepted */
+    if (Address.QuadPart & (PAGE_SIZE - 1))
+    {
+        EfiPrintf(L"free mem fail 1\r\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Get the base page, and find a descriptor that matches */
+    BasePage = Address.QuadPart >> PAGE_SHIFT;
+    Descriptor = MmMdFindDescriptor(BL_MM_INCLUDE_UNMAPPED_UNALLOCATED,
+                                    BL_MM_REMOVE_PHYSICAL_REGION_FLAG,
+                                    BasePage);
+    if (!(Descriptor) || (Descriptor->BasePage != BasePage))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Free the physical pages */
+    Status = MmFwFreePages(BasePage, Descriptor->PageCount);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Remove the firmware flags */
+    Descriptor->Flags &= ~(BlMemoryNonFirmware |
+                           BlMemoryFirmware |
+                           BlMemoryPersistent);
+
+    /* Set it as free memory */
+    Descriptor->Type = BlConventionalMemory;
+
+    /* Create a new descriptor that's free memory, covering the old range */
+    Descriptor = MmMdInitByteGranularDescriptor(0,
+                                                BlConventionalMemory,
+                                                BasePage,
+                                                0,
+                                                Descriptor->PageCount);
+    if (!Descriptor)
+    {
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Insert it into the virtual free list */
+    return MmMdAddDescriptorToList(&MmMdlFreeVirtual,
+                                   Descriptor,
+                                   BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG |
+                                   BL_MM_ADD_DESCRIPTOR_TRUNCATE_FLAG);
+}
+
+NTSTATUS
+MmPaReserveSelfMapPages (
+    _Inout_ PPHYSICAL_ADDRESS PhysicalAddress,
+    _In_ ULONG Alignment, 
+    _In_ ULONG PageCount
+    )
+{
+    NTSTATUS Status;
+    BL_PA_REQUEST Request;
+    BL_MEMORY_DESCRIPTOR Descriptor;
+
+    /* Increment descriptor usage count */
+    ++MmDescriptorCallTreeCount;
+
+    /* Bail if we don't have an address */
+    if (!PhysicalAddress)
+    {
+        Status = STATUS_INVALID_PARAMETER;
+        goto Quickie;
+    }
+
+    /* Make a request for the required number of self-map pages */
+    Request.BaseRange.Minimum = PapMinimumPhysicalPage;
+    Request.BaseRange.Maximum = 0xFFFFFFFF >> PAGE_SHIFT;
+    Request.VirtualRange.Minimum = 0;
+    Request.VirtualRange.Maximum = 0;
+    Request.Pages = PageCount;
+    Request.Alignment = Alignment;
+    Request.Type = BL_MM_REQUEST_DEFAULT_TYPE;
+    Request.Flags = 0;;
+    Status = MmPaAllocatePages(&MmMdlUnmappedUnallocated,
+                               &Descriptor,
+                               &MmMdlUnmappedUnallocated,
+                               &Request,
+                               BlLoaderSelfMap);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Remove this region from free virtual memory */
+    Status = MmMdRemoveRegionFromMdlEx(&MmMdlFreeVirtual,
+                                       BL_MM_REMOVE_VIRTUAL_REGION_FLAG,
+                                       Descriptor.BasePage,
+                                       Descriptor.PageCount,
+                                       0);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Return the physical address */
+    PhysicalAddress->QuadPart = Descriptor.BasePage << PAGE_SHIFT;
+
+Quickie:
+    /* Free global descriptors and reduce the count by one */
+    MmMdFreeGlobalDescriptors();
+    --MmDescriptorCallTreeCount;
+    return Status;
+}
+

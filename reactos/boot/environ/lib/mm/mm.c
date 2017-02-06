@@ -13,7 +13,9 @@
 
 /* DATA VARIABLES ************************************************************/
 
-BL_TRANSLATION_TYPE MmTranslationType, MmOriginalTranslationType;
+/* This is a bug in Windows, but is required for MmTrInitialize to load */
+BL_TRANSLATION_TYPE MmTranslationType = BlMax;
+BL_TRANSLATION_TYPE MmOriginalTranslationType;
 ULONG MmDescriptorCallTreeCount;
 
 /* FUNCTIONS *****************************************************************/
@@ -23,15 +25,70 @@ MmTrInitialize (
     VOID
     )
 {
+    PBL_MEMORY_DESCRIPTOR Descriptor;
+    NTSTATUS Status;
+    PLIST_ENTRY NextEntry;
+
     /* Nothing to track if we're using physical memory */
     if (MmTranslationType == BlNone)
     {
         return STATUS_SUCCESS;
     }
 
-    /* TODO */
-    EfiPrintf(L"Required for protected mode\r\n");
-    return STATUS_NOT_IMPLEMENTED;
+    /* Initialize all the virtual lists */
+    MmMdInitializeListHead(&MmMdlMappingTrackers);
+    MmMdlMappingTrackers.Type = BlMdTracker;
+    MmMdInitializeListHead(&MmMdlFreeVirtual);
+    MmMdlFreeVirtual.Type = BlMdVirtual;
+
+    /* Initialize a 4GB free descriptor */
+    Descriptor = MmMdInitByteGranularDescriptor(0,
+                                                BlConventionalMemory,
+                                                0,
+                                                0,
+                                                ((ULONGLONG)4 * 1024 * 1024 * 1024) >>
+                                                PAGE_SHIFT);
+    if (!Descriptor)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quickie;
+    }
+
+    /* Add this 4GB region to the free virtual address space list */
+    Status = MmMdAddDescriptorToList(&MmMdlFreeVirtual,
+                                     Descriptor,
+                                     BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG);
+    if (!NT_SUCCESS(Status))
+    {
+        RtlZeroMemory(Descriptor, sizeof(*Descriptor));
+        goto Quickie;
+    }
+
+    /* Remove any reserved regions of virtual address space */
+    NextEntry = MmMdlReservedAllocated.First->Flink;
+    while (NextEntry != MmMdlReservedAllocated.First)
+    {
+        /* Grab the descriptor and see if it's mapped */
+        Descriptor = CONTAINING_RECORD(NextEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+        if (Descriptor->VirtualPage)
+        {
+            EfiPrintf(L"Need to handle reserved allocation: %llx %llx\r\n",
+                      Descriptor->VirtualPage, Descriptor->PageCount);
+            EfiStall(100000);
+            Status = STATUS_NOT_IMPLEMENTED;
+            goto Quickie;
+        }
+
+        /* Next entry */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Set success if we made it */
+    Status = STATUS_SUCCESS;
+
+Quickie:
+    /* Return back to caller */
+    return Status;
 }
 
 NTSTATUS
