@@ -146,10 +146,8 @@ MmSelectMappingAddress (
     }
 
     /* We don't support virtual memory yet @TODO */
-#ifdef _MSC_VER // Fuck gcc.
-    EfiPrintf(L"not yet implemented in " __FUNCTION__ "\r\n");
+    EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
     EfiStall(1000000);
-#endif
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -189,10 +187,8 @@ MmMapPhysicalAddress (
     }
 
     /* We don't support virtual memory yet @TODO */
-#ifdef _MSC_VER // Fuck gcc.
-    EfiPrintf(L"not yet implemented in " __FUNCTION__ "\r\n");
+    EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
     EfiStall(1000000);
-#endif
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -281,10 +277,8 @@ BlMmMapPhysicalAddressEx (
     if (MmTranslationType != BlNone)
     {
         /* We don't support virtual memory yet @TODO */
-#ifdef _MSC_VER // Fuck gcc.
-        EfiPrintf(L"not yet implemented in " __FUNCTION__ "\r\n");
+        EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
         EfiStall(1000000);
-#endif
         Status = STATUS_NOT_IMPLEMENTED;
         goto Quickie;
     }
@@ -319,10 +313,8 @@ MmUnmapVirtualAddress (
         else
         {
             /* We don't support virtual memory yet @TODO */
-#ifdef _MSC_VER // Fuck gcc.
-            EfiPrintf(L"not yet implemented in " __FUNCTION__ "\r\n");
+            EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
             EfiStall(1000000);
-#endif
             Status = STATUS_NOT_IMPLEMENTED;
         }
     }
@@ -357,10 +349,8 @@ BlMmUnmapVirtualAddressEx (
         if ((NT_SUCCESS(Status)) && (MmTranslationType != BlNone))
         {
             /* We don't support virtual memory yet @TODO */
-#ifdef _MSC_VER // Fuck gcc.
-            EfiPrintf(L"not yet implemented in " __FUNCTION__ "\r\n");
+            EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
             EfiStall(1000000);
-#endif
             Status = STATUS_NOT_IMPLEMENTED;
         }
     }
