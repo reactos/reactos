@@ -74,8 +74,8 @@ ServiceControlHandler(DWORD dwControl,
     {
         case SERVICE_CONTROL_STOP:
             TRACE("  SERVICE_CONTROL_STOP received\n");
-            UpdateServiceStatus(SERVICE_STOPPED);
             ThemeHooksRemove();
+            UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_PAUSE:

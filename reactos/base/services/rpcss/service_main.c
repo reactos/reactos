@@ -82,9 +82,10 @@ ServiceMain(DWORD argc, LPWSTR argv[])
 
         WaitForSingleObject(exit_event, INFINITE);
 
+        RPCSS_Shutdown();
+
         ServiceStatus.dwCurrentState = SERVICE_STOPPED;
         SetServiceStatus(ServiceStatusHandle, &ServiceStatus);
-        RPCSS_Shutdown();
     }
 }
 

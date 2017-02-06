@@ -46,7 +46,7 @@ LsarStartRpcServer(VOID)
     TRACE("LsarStartRpcServer() called\n");
 
     Status = RpcServerUseProtseqEpW(L"ncacn_np",
-                                    10,
+                                    RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
                                     L"\\pipe\\lsarpc",
                                     NULL);
     if (Status != RPC_S_OK)
