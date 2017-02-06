@@ -348,7 +348,6 @@ BlpMmInitialize (
                             LibraryParameters->MinimumAllocationCount);
     if (!NT_SUCCESS(Status))
     {
-        EfiPrintf(L"PA Mm init failed: %lx\r\n", Status);
         goto Quickie;
     }
 

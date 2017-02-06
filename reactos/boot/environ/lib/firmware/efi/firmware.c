@@ -617,8 +617,8 @@ EfiFreePages (
     OldMode = CurrentExecutionContext->Mode;
     if (OldMode != BlRealMode)
     {
-        /* FIXME: Not yet implemented */
-        return STATUS_NOT_IMPLEMENTED;
+        /* Switch to real mode */
+        BlpArchSwitchContext(BlProtectedMode);
     }
 
     /* Make the EFI call */
@@ -1118,13 +1118,18 @@ EfiAllocatePages (
 {
     BL_ARCH_MODE OldMode;
     EFI_STATUS EfiStatus;
+    PHYSICAL_ADDRESS MemoryPhysical;
 
     /* Are we in protected mode? */
     OldMode = CurrentExecutionContext->Mode;
     if (OldMode != BlRealMode)
     {
-        /* FIXME: Not yet implemented */
-        return STATUS_NOT_IMPLEMENTED;
+        /* Translate output address */
+        BlMmTranslateVirtualAddress(Memory, &MemoryPhysical);
+        Memory = (EFI_PHYSICAL_ADDRESS*)MemoryPhysical.LowPart;
+
+        /* Switch to real mode */
+        BlpArchSwitchContext(BlProtectedMode);
     }
 
     /* Make the EFI call */
@@ -1387,7 +1392,7 @@ MmFwGetMemoryMap (
     BL_LIBRARY_PARAMETERS LibraryParameters = BlpLibraryParameters;
     BOOLEAN UseEfiBuffer, HaveRamDisk;
     NTSTATUS Status;
-    ULONGLONG Pages, StartPage, EndPage;
+    ULONGLONG Pages, StartPage, EndPage, EfiBufferPage;
     UINTN EfiMemoryMapSize, MapKey, DescriptorSize, DescriptorVersion;
     EFI_PHYSICAL_ADDRESS EfiBuffer = 0;
     EFI_MEMORY_DESCRIPTOR* EfiMemoryMap;
@@ -1650,9 +1655,8 @@ MmFwGetMemoryMap (
                 /* Check if this region is currently free RAM */
                 if (Descriptor->Type == BlConventionalMemory)
                 {
-                    /* Set the reserved flag on the descriptor */
-                    EfiPrintf(L"Adding magic flag\r\n");
-                    Descriptor->Flags |= BlMemoryReserved;
+                    /* Set the appropriate flag on the descriptor */
+                    Descriptor->Flags |= BlMemoryBelow1MB;
                 }
 
                 /* Add this descriptor into the list */
@@ -1695,9 +1699,8 @@ MmFwGetMemoryMap (
         /* Check if this region is currently free RAM below 1MB */
         if ((Descriptor->Type == BlConventionalMemory) && (EndPage <= 0x100))
         {
-            /* Set the reserved flag on the descriptor */
-            EfiPrintf(L"Adding magic flag\r\n");
-            Descriptor->Flags |= BlMemoryReserved;
+            /* Set the appropriate flag on the descriptor */
+            Descriptor->Flags |= BlMemoryBelow1MB;
         }
 
         /* Add the descriptor to the list, requesting coalescing as asked */
@@ -1718,8 +1721,66 @@ LoopAgain:
         EfiMemoryMap = (PVOID)((ULONG_PTR)EfiMemoryMap + DescriptorSize);
     }
 
-    /* FIXME: @TODO: Mark the EfiBuffer as free, since we're about to free it */
-    /* For now, just "leak" the 1-2 pages... */
+    /* Check if we are using the local UEFI buffer */
+    if (!UseEfiBuffer)
+    {
+        goto Quickie;
+    }
+
+    /* Free the EFI buffer */
+    Status = EfiFreePages(Pages, EfiBuffer);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Keep the pages marked 'in use' and fake success */
+        Status = STATUS_SUCCESS;
+        goto Quickie;
+    }
+
+    /* Get the base page of the EFI buffer */
+    EfiBufferPage = EfiBuffer >> PAGE_SHIFT;
+    Pages = (EfiBufferPage + Pages) - EfiBufferPage;
+
+    /* Don't try freeing below */
+    EfiBuffer = 0;
+
+    /* Find the current descriptor for the allocation */
+    Descriptor = MmMdFindDescriptorFromMdl(MemoryMap,
+                                           BL_MM_REMOVE_PHYSICAL_REGION_FLAG,
+                                           EfiBufferPage);
+    if (!Descriptor)
+    {
+        Status = STATUS_UNSUCCESSFUL;
+        goto Quickie;
+    }
+
+    /* Convert it to a free descriptor */
+    Descriptor = MmMdInitByteGranularDescriptor(Descriptor->Flags,
+                                                BlConventionalMemory,
+                                                EfiBufferPage,
+                                                0,
+                                                Pages);
+    if (!Descriptor)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quickie;
+    }
+
+    /* Remove the region from the memory map */
+    Status = MmMdRemoveRegionFromMdlEx(MemoryMap,
+                                       BL_MM_REMOVE_PHYSICAL_REGION_FLAG,
+                                       EfiBufferPage,
+                                       Pages,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        MmMdFreeDescriptor(Descriptor);
+        goto Quickie;
+    }
+    
+    /* Add it back as free memory */
+    Status = MmMdAddDescriptorToList(MemoryMap,
+                                     Descriptor,
+                                     BL_MM_ADD_DESCRIPTOR_COALESCE_FLAG);
 
 Quickie:
     /* Free the EFI buffer, if we had one */

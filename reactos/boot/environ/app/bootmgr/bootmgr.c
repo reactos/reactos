@@ -1035,11 +1035,11 @@ BmFwMemoryInitialize (
     AddressRange.Maximum = 0xFFFFF;
     AddressRange.Minimum = 0;
 
-    /* Allocate one reserved page with the "reserved" attribute */
+    /* Allocate one reserved page with the "below 1MB" attribute */
     Status = MmPapAllocatePhysicalPagesInRange(&PhysicalAddress,
                                                BlApplicationReserved,
                                                1,
-                                               BlMemoryReserved,
+                                               BlMemoryBelow1MB,
                                                0,
                                                &MmMdlUnmappedAllocated,
                                                &AddressRange,

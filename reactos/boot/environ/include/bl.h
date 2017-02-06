@@ -364,8 +364,8 @@ typedef enum _BL_MEMORY_ATTR
     BlMemoryUnknown =           0x00010000,
     BlMemoryNonFixed =          0x00020000,
     BlMemoryFixed =             0x00040000,
-    BlMemoryReserved =          0x00080000,
-    BlMemoryValidAllocationAttributes       = BlMemoryNonFixed | BlMemoryFixed | BlMemoryReserved | BlMemoryUnknown,
+    BlMemoryBelow1MB =          0x00080000,
+    BlMemoryValidAllocationAttributes       = BlMemoryNonFixed | BlMemoryFixed | BlMemoryBelow1MB | BlMemoryUnknown,
     BlMemoryValidAllocationAttributeMask    = 0x00FF0000,
 
     //
@@ -2006,6 +2006,13 @@ MmMdInitializeList (
 PBL_MEMORY_DESCRIPTOR
 MmMdFindDescriptor (
     _In_ ULONG WhichList,
+    _In_ ULONG Flags,
+    _In_ ULONGLONG Page
+    );
+
+PBL_MEMORY_DESCRIPTOR
+MmMdFindDescriptorFromMdl (
+    _In_ PBL_MEMORY_DESCRIPTOR_LIST MdList,
     _In_ ULONG Flags,
     _In_ ULONGLONG Page
     );

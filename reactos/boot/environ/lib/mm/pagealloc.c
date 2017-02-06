@@ -543,7 +543,7 @@ MmPaInitialize (
         {
             /* Remove this region from our free memory MDL */
             Status = MmMdRemoveRegionFromMdlEx(&MmMdlUnmappedUnallocated,
-                                               0x40000000,
+                                               BL_MM_REMOVE_PHYSICAL_REGION_FLAG,
                                                Descriptor->BasePage,
                                                Descriptor->PageCount,
                                                NULL);
