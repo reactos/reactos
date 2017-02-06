@@ -188,7 +188,10 @@ MmPapAllocateRegionFromMdl (
     /* Are we allocating from the virtual memory list? */
     if (CurrentList == &MmMdlMappedUnallocated)
     {
-        EfiPrintf(L"Virtual memory not yet supported\r\n");
+#ifdef _MSC_VER // Fuck gcc.
+        EfiPrintf(L"not yet implemented in " __FUNCTION__ "\r\n");
+        EfiStall(1000000);
+#endif
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -439,7 +442,11 @@ MmPapAllocatePagesInRange (
     /* What translation mode are we using? */
     if (MmTranslationType != BlNone)
     {
-        /* We don't support virtual memory yet */
+        /* We don't support virtual memory yet @TODO */
+#ifdef _MSC_VER // Fuck gcc.
+        EfiPrintf(L"not yet implemented in " __FUNCTION__ "\r\n");
+        EfiStall(1000000);
+#endif
         Status = STATUS_NOT_IMPLEMENTED;
         goto Exit;
     }

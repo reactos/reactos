@@ -10,6 +10,7 @@
 
 #include "bl.h"
 #include "bcd.h"
+#include "../../../../../ntoskrnl/include/internal/i386/mm.h"
 
 /* DATA VARIABLES ************************************************************/
 
@@ -20,9 +21,10 @@ BL_ADDRESS_RANGE MmArchKsegAddressRange;
 ULONG_PTR MmArchTopOfApplicationAddressSpace;
 PHYSICAL_ADDRESS Mmx86SelfMapBase;
 ULONG MmDeferredMappingCount;
-PVOID MmPdpt;
-PVOID MmArchReferencePage;
+PMMPTE MmPdpt;
+PULONG MmArchReferencePage;
 PVOID MmPteBase;
+PVOID MmPdeBase;
 ULONG MmArchReferencePageSize;
 
 typedef VOID
@@ -107,8 +109,6 @@ PBL_MM_ZERO_VIRTUAL_ADDRESS_RANGE BlMmZeroVirtualAddressRange;
 
 PBL_MM_FLUSH_TLB Mmx86FlushTlb;
 
-#define PTE_BASE (PVOID)0xC0000000
-
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -125,7 +125,7 @@ MmDefRelocateSelfMap (
     VOID
     )
 {
-    if (MmPteBase != PTE_BASE)
+    if (MmPteBase != (PVOID)PTE_BASE)
     {
         EfiPrintf(L"Supposed to relocate CR3\r\n");
     }
@@ -299,6 +299,118 @@ MmDefpTranslateVirtualAddress (
 }
 
 NTSTATUS
+Mmx86MapInitStructure (
+    _In_ PVOID VirtualAddress,
+    _In_ ULONGLONG Size,
+    _In_ PHYSICAL_ADDRESS PhysicalAddress
+    )
+{
+    NTSTATUS Status;
+    
+    /* Make a virtual mapping for this physical address */
+    Status = MmMapPhysicalAddress(&PhysicalAddress, &VirtualAddress, &Size, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Nothing else to do if we're not in paging mode */
+    if (MmTranslationType == BlNone)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    /* Otherwise, remove this region from the list of free virtual ranges */
+    Status = MmMdRemoveRegionFromMdlEx(&MmMdlFreeVirtual,
+                                       BL_MM_REMOVE_VIRTUAL_REGION_FLAG,
+                                       (ULONG_PTR)VirtualAddress >> PAGE_SHIFT,
+                                       Size >> PAGE_SHIFT,
+                                       0);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Unmap the address if that failed */
+        MmUnmapVirtualAddress(&VirtualAddress, &Size);
+    }
+
+    /* Return back to caller */
+    return Status;
+}
+
+NTSTATUS
+Mmx86InitializeMemoryMap (
+    _In_ ULONG Phase,
+    _In_ PBL_MEMORY_DATA MemoryData
+    )
+{
+    ULONG ImageSize;
+    PVOID ImageBase;
+    KDESCRIPTOR Gdt, Idt;
+    NTSTATUS Status;
+    PHYSICAL_ADDRESS PhysicalAddress;
+
+    /* If this is phase 2, map the memory regions */
+    if (Phase != 1)
+    {
+        return Mmx86pMapMemoryRegions(Phase, MemoryData);
+    }
+
+    /* Get the application image base/size */
+    Status = BlGetApplicationBaseAndSize(&ImageBase, &ImageSize);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Map the image back at the same place */
+    PhysicalAddress.QuadPart = (ULONG_PTR)ImageBase;
+    Status = Mmx86MapInitStructure(ImageBase, ImageSize, PhysicalAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Map the first 4MB of memory */
+    PhysicalAddress.QuadPart = 0;
+    Status = Mmx86MapInitStructure(NULL, 4 * 1024 * 1024, PhysicalAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Map the GDT */
+    _sgdt(&Gdt.Limit);
+    PhysicalAddress.QuadPart = Gdt.Base;
+    Status = Mmx86MapInitStructure((PVOID)Gdt.Base, Gdt.Limit + 1, PhysicalAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Map the IDT */
+    __sidt(&Idt.Limit);
+    PhysicalAddress.QuadPart = Idt.Base;
+    Status = Mmx86MapInitStructure((PVOID)Idt.Base, Idt.Limit + 1, PhysicalAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Map the reference page */
+    PhysicalAddress.QuadPart = (ULONG_PTR)MmArchReferencePage;
+    Status = Mmx86MapInitStructure(MmArchReferencePage,
+                                   MmArchReferencePageSize,
+                                   PhysicalAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* More to do */
+    EfiPrintf(L"VM more work\r\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
 MmDefInitializeTranslation (
     _In_ PBL_MEMORY_DATA MemoryData,
     _In_ BL_TRANSLATION_TYPE TranslationType
@@ -306,6 +418,7 @@ MmDefInitializeTranslation (
 {
     NTSTATUS Status;
     PHYSICAL_ADDRESS PhysicalAddress;
+    ULONG PdeIndex;
 
     /* Set the global function pointers for memory translation */
     Mmx86TranslateVirtualAddress = MmDefpTranslateVirtualAddress;
@@ -394,12 +507,51 @@ MmDefInitializeTranslation (
 
     /* Zero them out */
     RtlZeroMemory((PVOID)Mmx86SelfMapBase.LowPart, 4 * 1024 * 1024);
-    
     EfiPrintf(L"PDPT at 0x%p Reference Page at 0x%p Self-map at 0x%p\r\n",
               MmPdpt, MmArchReferencePage, Mmx86SelfMapBase.LowPart);
-    Status = STATUS_NOT_IMPLEMENTED;
 
-    //MmPteBase = Mmx86SelfMapBase.LowPart & 0xFFC00000;
+    /* Align PTE base to 4MB region */
+    MmPteBase = (PVOID)(Mmx86SelfMapBase.LowPart & ~0x3FFFFF);
+
+    /* The PDE is the PTE of the PTE base */
+    MmPdeBase = MiAddressToPte(MmPteBase);
+    PdeIndex = MiGetPdeOffset(MmPdeBase);
+    MmPdpt[PdeIndex].u.Hard.Valid = 1;
+    MmPdpt[PdeIndex].u.Hard.Write = 1;
+    MmPdpt[PdeIndex].u.Hard.PageFrameNumber = (ULONG_PTR)MmPdpt >> PAGE_SHIFT;
+    MmArchReferencePage[PdeIndex]++;
+
+    /* Remove PTE_BASE from free virtual memory */
+    Status = MmMdRemoveRegionFromMdlEx(&MmMdlFreeVirtual,
+                                       BL_MM_REMOVE_VIRTUAL_REGION_FLAG,
+                                       PTE_BASE >> PAGE_SHIFT,
+                                       (4 * 1024 * 1024) >> PAGE_SHIFT,
+                                       0);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Remove HAL_HEAP from free virtual memory */
+    Status = MmMdRemoveRegionFromMdlEx(&MmMdlFreeVirtual,
+                                       BL_MM_REMOVE_VIRTUAL_REGION_FLAG,
+                                       MM_HAL_VA_START >> PAGE_SHIFT,
+                                       (4 * 1024 * 1024) >> PAGE_SHIFT,
+                                       0);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    /* Initialize the virtual->physical memory mappings */
+    Status = Mmx86InitializeMemoryMap(1, MemoryData);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quickie;
+    }
+
+    EfiPrintf(L"Ready to turn on motherfucking paging, brah!\r\n");
+    Status = STATUS_NOT_IMPLEMENTED;
 
 Quickie:
     /* Free reference page if we allocated it */

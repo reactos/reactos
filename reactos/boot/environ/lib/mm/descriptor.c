@@ -698,16 +698,47 @@ MmMdRemoveRegionFromMdlEx (
                 }
                 else
                 {
-                    /* This descriptor covers the head of the allocation @TODO: FIXME */
-                    EfiPrintf(L"FIXME: Descriptor covers the head of the region\r\n");
-                    EfiStall(1000000);
+                    /* This descriptor fully covers the entire allocation */
+                    FoundBasePage = Descriptor->BasePage;
+                    FoundPageCount = BasePage - FoundBasePage;
+
+                    /* This is how many pages we will eat away from the descriptor */
+                    RegionSize = FoundPageCount + PageCount;
+
+                    /* Update the descriptor to account for the consumed pages */
+                    Descriptor->BasePage += RegionSize;
+                    Descriptor->PageCount -= RegionSize;
+                    if (Descriptor->VirtualPage)
+                    {
+                        Descriptor->VirtualPage += RegionSize;
+                    }
+                    
+                    /* Initialize a descriptor for the start of the region */
+                    Descriptor = MmMdInitByteGranularDescriptor(Descriptor->Flags,
+                                                                Descriptor->Type,
+                                                                FoundBasePage,
+                                                                Descriptor->VirtualPage,
+                                                                FoundPageCount);
+                    if (!Descriptor)
+                    {
+                        Status = STATUS_NO_MEMORY;
+                        goto Quickie;
+                    }
+
+                    /* Add it into the list */
+                    Status = MmMdAddDescriptorToList(MdList, Descriptor, Flags);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        Status = STATUS_NO_MEMORY;
+                        goto Quickie;
+                    }
                 }
             }
             else
             {
-                /* This descriptor contains the entire allocation @TODO: FIXME */
-                EfiPrintf(L"FIXME: Descriptor contains the entire region\r\n");
-                EfiStall(1000000);
+                /* This descriptor contains the entire allocation */
+                RegionSize = FoundEndPage - BasePage;
+                Descriptor->PageCount -= RegionSize;
             }
 
             /* Keep going */
@@ -724,14 +755,14 @@ MmMdRemoveRegionFromMdlEx (
              *
              * So first, figure out if we cover the entire end or not
              */
-            if (EndPage > FoundEndPage)
+            if (EndPage < FoundEndPage)
             {
                 /* The allocation goes past the end of this descriptor */
-                EndPage = FoundEndPage;
+                FoundEndPage = EndPage;
             }
 
             /* This is how many pages we will eat away from the descriptor */
-            RegionSize = EndPage - FoundBasePage;
+            RegionSize = FoundEndPage - FoundBasePage;
 
             /* Update the descriptor to account for the consumed pages */
             Descriptor->BasePage += RegionSize;

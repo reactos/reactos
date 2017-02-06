@@ -145,8 +145,11 @@ MmSelectMappingAddress (
         return STATUS_SUCCESS;
     }
 
-    /* Have to allocate physical pages */
-    EfiPrintf(L"VM Todo\r\n");
+    /* We don't support virtual memory yet @TODO */
+#ifdef _MSC_VER // Fuck gcc.
+    EfiPrintf(L"not yet implemented in " __FUNCTION__ "\r\n");
+    EfiStall(1000000);
+#endif
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -185,7 +188,11 @@ MmMapPhysicalAddress (
         return STATUS_UNSUCCESSFUL;
     }
 
-    EfiPrintf(L"VM todo\r\n");
+    /* We don't support virtual memory yet @TODO */
+#ifdef _MSC_VER // Fuck gcc.
+    EfiPrintf(L"not yet implemented in " __FUNCTION__ "\r\n");
+    EfiStall(1000000);
+#endif
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -273,8 +280,11 @@ BlMmMapPhysicalAddressEx (
     /* Check if we're in physical or virtual mode */
     if (MmTranslationType != BlNone)
     {
-        /* For virtual memory, there's more to do */
-        EfiPrintf(L"VM not supported for mapping\r\n");
+        /* We don't support virtual memory yet @TODO */
+#ifdef _MSC_VER // Fuck gcc.
+        EfiPrintf(L"not yet implemented in " __FUNCTION__ "\r\n");
+        EfiStall(1000000);
+#endif
         Status = STATUS_NOT_IMPLEMENTED;
         goto Quickie;
     }
@@ -306,9 +316,15 @@ MmUnmapVirtualAddress (
         {
             Status = STATUS_SUCCESS;
         }
-
-        /* TODO */
-        Status = STATUS_NOT_IMPLEMENTED;
+        else
+        {
+            /* We don't support virtual memory yet @TODO */
+#ifdef _MSC_VER // Fuck gcc.
+            EfiPrintf(L"not yet implemented in " __FUNCTION__ "\r\n");
+            EfiStall(1000000);
+#endif
+            Status = STATUS_NOT_IMPLEMENTED;
+        }
     }
     else
     {
@@ -340,8 +356,11 @@ BlMmUnmapVirtualAddressEx (
         /* Check if we actually had a virtual mapping active */
         if ((NT_SUCCESS(Status)) && (MmTranslationType != BlNone))
         {
-            /* TODO */
-            EfiPrintf(L"unhandled virtual path\r\n");
+            /* We don't support virtual memory yet @TODO */
+#ifdef _MSC_VER // Fuck gcc.
+            EfiPrintf(L"not yet implemented in " __FUNCTION__ "\r\n");
+            EfiStall(1000000);
+#endif
             Status = STATUS_NOT_IMPLEMENTED;
         }
     }

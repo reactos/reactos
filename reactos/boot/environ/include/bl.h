@@ -2192,6 +2192,20 @@ BlMmGetMemoryMap (
 /* VIRTUAL MEMORY ROUTINES ***************************************************/
 
 NTSTATUS
+MmMapPhysicalAddress (
+    _Inout_ PPHYSICAL_ADDRESS PhysicalAddress,
+    _Out_ PVOID VirtualAddress,
+    _Inout_ PULONGLONG Size,
+    _In_ ULONG CacheAttributes
+    );
+
+NTSTATUS
+MmUnmapVirtualAddress (
+    _Inout_ PVOID* VirtualAddress,
+    _Inout_ PULONGLONG Size
+    );
+
+NTSTATUS
 BlMmMapPhysicalAddressEx (
     _In_ PVOID* VirtualAddress,
     _In_ ULONG Attributes,
