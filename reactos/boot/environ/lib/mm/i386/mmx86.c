@@ -299,6 +299,152 @@ MmDefpTranslateVirtualAddress (
 }
 
 NTSTATUS
+MmSelectMappingAddress (
+    _Out_ PVOID* MappingAddress,
+    _In_ ULONGLONG Size,
+    _In_ ULONG AllocationAttributes,
+    _In_ ULONG Flags,
+    _In_ PHYSICAL_ADDRESS PhysicalAddress
+    )
+{
+    /* Are we in physical mode? */
+    if (MmTranslationType == BlNone)
+    {
+        /* Just return the physical address as the mapping address */
+        *MappingAddress = (PVOID)PhysicalAddress.LowPart;
+        return STATUS_SUCCESS;
+    }
+
+    /* We don't support virtual memory yet @TODO */
+#ifdef _MSC_VER // Fuck gcc.
+    EfiPrintf(L"not yet implemented in " __FUNCTION__ "\r\n");
+    EfiStall(1000000);
+#endif
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+BOOLEAN
+BlMmIsTranslationEnabled (
+    VOID
+    )
+{
+    /* Return if paging is on */
+    return ((CurrentExecutionContext) &&
+            (CurrentExecutionContext->Mode & BL_CONTEXT_PAGING_ON));
+}
+
+NTSTATUS
+MmMapPhysicalAddress (
+    _Inout_ PPHYSICAL_ADDRESS PhysicalAddressPtr,
+    _Inout_ PVOID* VirtualAddressPtr,
+    _Inout_ PULONGLONG SizePtr,
+    _In_ ULONG CacheAttributes
+    )
+{
+    ULONGLONG Size, TotalSize;
+    ULONGLONG PhysicalAddress;
+    PVOID VirtualAddress;
+    PHYSICAL_ADDRESS TranslatedAddress;
+    ULONG_PTR CurrentAddress, VirtualAddressEnd;
+    NTSTATUS Status;
+
+    /* Fail if any parameters are missing */
+    if (!(PhysicalAddressPtr) || !(VirtualAddressPtr) || !(SizePtr))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Fail if the size is over 32-bits */
+    Size = *SizePtr;
+    if (Size > 0xFFFFFFFF)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Nothing to do if we're in physical mode */
+    if (MmTranslationType == BlNone)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    /* Can't use virtual memory in real mode */
+    if (CurrentExecutionContext->Mode == BlRealMode)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Capture the current virtual and physical addresses */
+    VirtualAddress = *VirtualAddressPtr;
+    PhysicalAddress = PhysicalAddressPtr->QuadPart;
+
+    /* Check if a physical address was requested */
+    if (PhysicalAddress != 0xFFFFFFFF)
+    {
+        /* Round down the base addresses */
+        PhysicalAddress = PAGE_ROUND_DOWN(PhysicalAddress);
+        VirtualAddress = (PVOID)PAGE_ROUND_DOWN(VirtualAddress);
+
+        /* Round up the size */
+        TotalSize = ROUND_TO_PAGES(PhysicalAddressPtr->QuadPart -
+                                   PhysicalAddress +
+                                   Size);
+
+        /* Loop every virtual page */
+        CurrentAddress = (ULONG_PTR)VirtualAddress;
+        VirtualAddressEnd = CurrentAddress + TotalSize - 1;
+        while (CurrentAddress < VirtualAddressEnd)
+        {
+            /* Get the physical page of this virtual page */
+            if (MmArchTranslateVirtualAddress((PVOID)CurrentAddress,
+                                              &TranslatedAddress,
+                                              &CacheAttributes))
+            {
+                /* Make sure the physical page of the virtual page, matches our page */
+                if (TranslatedAddress.QuadPart !=
+                    (PhysicalAddress +
+                     (CurrentAddress - (ULONG_PTR)VirtualAddress)))
+                {
+                    /* There is an existing virtual mapping for a different address */
+                    EfiPrintf(L"Existing mapping exists: %lx vs %lx\r\n",
+                              TranslatedAddress.QuadPart,
+                              PhysicalAddress + (CurrentAddress - (ULONG_PTR)VirtualAddress));
+                    return STATUS_INVALID_PARAMETER;
+                }
+            }
+
+            /* Try the next one */
+            CurrentAddress += PAGE_SIZE;
+        }
+    }
+
+    /* Aactually do the mapping */
+    TranslatedAddress.QuadPart = PhysicalAddress;
+    Status = Mmx86MapPhysicalAddress(&TranslatedAddress,
+                                     VirtualAddress,
+                                     Size,
+                                     CacheAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        EfiPrintf(L"Failed to map!: %lx\r\n", Status);
+        return Status;
+    }
+
+    /* Return aligned/fixed up output parameters */
+    PhysicalAddressPtr->QuadPart = PhysicalAddress;
+    *VirtualAddressPtr = VirtualAddress;
+    *SizePtr = Size;
+    
+    /* Flush the TLB if paging is enabled */
+    if (BlMmIsTranslationEnabled())
+    {
+        Mmx86FlushTlb();
+    }
+
+    /* All good! */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
 Mmx86MapInitStructure (
     _In_ PVOID VirtualAddress,
     _In_ ULONGLONG Size,
