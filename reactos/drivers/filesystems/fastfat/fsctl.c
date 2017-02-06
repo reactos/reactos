@@ -332,30 +332,6 @@ VfatHasFileSystem(
     return Status;
 }
 
-/*
- * FUNCTION: Mounts the device
- */
-static
-NTSTATUS
-VfatMountDevice(
-    PDEVICE_EXTENSION DeviceExt,
-    PDEVICE_OBJECT DeviceToMount)
-{
-    NTSTATUS Status;
-    BOOLEAN RecognizedFS;
-
-    DPRINT("Mounting VFAT device...\n");
-
-    Status = VfatHasFileSystem(DeviceToMount, &RecognizedFS, &DeviceExt->FatInfo, FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-    DPRINT("MountVfatdev %u, PAGE_SIZE = %d\n", DeviceExt->FatInfo.BytesPerCluster, PAGE_SIZE);
-
-    return STATUS_SUCCESS;
-}
-
 
 /*
  * FUNCTION: Mount the filesystem
@@ -443,11 +419,7 @@ VfatMount(
     DeviceObject->Vpb = Vpb;
     DeviceToMount->Vpb = Vpb;
 
-    Status = VfatMountDevice(DeviceExt, DeviceToMount);
-    if (!NT_SUCCESS(Status))
-    {
-        goto ByeBye;
-    }
+    RtlCopyMemory(&DeviceExt->FatInfo, &FatInfo, sizeof(FATINFO));
 
     DPRINT("BytesPerSector:     %u\n", DeviceExt->FatInfo.BytesPerSector);
     DPRINT("SectorsPerCluster:  %u\n", DeviceExt->FatInfo.SectorsPerCluster);
