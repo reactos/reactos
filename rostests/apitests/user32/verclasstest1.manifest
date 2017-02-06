@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <assemblyIdentity type="win32" name="verclasstest1" version="2.2.2.2" processorArchitecture="x86"/>
+  <file name="user32_apitest.dll">
+    <windowClass>VersionTestClass1</windowClass>
+    <windowClass>VersionTestClass2</windowClass>
+    <windowClass>VersionTestClass4</windowClass>
+  </file>
+</assembly>
