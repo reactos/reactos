@@ -1562,6 +1562,11 @@ BlTimeQueryPerformanceCounter (
     _Out_opt_ PLARGE_INTEGER Frequency
     );
 
+ULONGLONG
+BlArchGetPerformanceCounter (
+    VOID
+    );
+
 /* RESOURCE LOCALE INTERNATIONALIZATION ROUTINES *****************************/
 
 NTSTATUS
@@ -1654,6 +1659,18 @@ BlStatusError (
     );
 
 /* UTILITY ROUTINES **********************************************************/
+
+VOID
+BlArchCpuId (
+    _In_ ULONG Function,
+    _In_ ULONG SubFunction,
+    _Out_ INT* Result
+    );
+
+BOOLEAN
+BlArchIsCpuIdFunctionSupported (
+    _In_ ULONG Function
+    );
 
 VOID
 BlUtlUpdateProgress (
