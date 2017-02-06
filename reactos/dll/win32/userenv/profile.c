@@ -1,21 +1,4 @@
 /*
- *  ReactOS kernel
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/userenv/profile.c
@@ -59,7 +42,7 @@ AppendSystemPostfix(LPWSTR lpName,
     while (*lpszPtr != (WCHAR)0)
     {
         if (*lpszPtr == L'\\')
-            *lpszPtr = '_';
+            *lpszPtr = L'_';
         lpszPtr++;
     }
 
@@ -518,7 +501,7 @@ done:
     LocalFree((HLOCAL)SidString);
     SetLastError((DWORD)Error);
 
-    DPRINT("CreateUserProfileW() done\n");
+    DPRINT("CreateUserProfileExW() done\n");
 
     return bRet;
 }
@@ -526,8 +509,9 @@ done:
 
 BOOL
 WINAPI
-GetAllUsersProfileDirectoryA(LPSTR lpProfileDir,
-                             LPDWORD lpcchSize)
+GetAllUsersProfileDirectoryA(
+    _Out_opt_ LPSTR lpProfileDir,
+    _Inout_ LPDWORD lpcchSize)
 {
     LPWSTR lpBuffer;
     BOOL bResult;
@@ -559,8 +543,9 @@ GetAllUsersProfileDirectoryA(LPSTR lpProfileDir,
 
 BOOL
 WINAPI
-GetAllUsersProfileDirectoryW(LPWSTR lpProfileDir,
-                             LPDWORD lpcchSize)
+GetAllUsersProfileDirectoryW(
+    _Out_opt_ LPWSTR lpProfileDir,
+    _Inout_ LPDWORD lpcchSize)
 {
     WCHAR szProfilePath[MAX_PATH];
     WCHAR szBuffer[MAX_PATH];
@@ -654,8 +639,9 @@ GetAllUsersProfileDirectoryW(LPWSTR lpProfileDir,
 
 BOOL
 WINAPI
-GetDefaultUserProfileDirectoryA(LPSTR lpProfileDir,
-                                LPDWORD lpcchSize)
+GetDefaultUserProfileDirectoryA(
+    _Out_opt_ LPSTR lpProfileDir,
+    _Inout_ LPDWORD lpcchSize)
 {
     LPWSTR lpBuffer;
     BOOL bResult;
@@ -687,8 +673,9 @@ GetDefaultUserProfileDirectoryA(LPSTR lpProfileDir,
 
 BOOL
 WINAPI
-GetDefaultUserProfileDirectoryW(LPWSTR lpProfileDir,
-                                LPDWORD lpcchSize)
+GetDefaultUserProfileDirectoryW(
+    _Out_opt_ LPWSTR lpProfileDir,
+    _Inout_ LPDWORD lpcchSize)
 {
     WCHAR szProfilePath[MAX_PATH];
     WCHAR szBuffer[MAX_PATH];
@@ -782,8 +769,9 @@ GetDefaultUserProfileDirectoryW(LPWSTR lpProfileDir,
 
 BOOL
 WINAPI
-GetProfilesDirectoryA(LPSTR lpProfileDir,
-                      LPDWORD lpcchSize)
+GetProfilesDirectoryA(
+    _Out_ LPSTR lpProfileDir, // _Out_opt_
+    _Inout_ LPDWORD lpcchSize)
 {
     LPWSTR lpBuffer;
     BOOL bResult;
@@ -821,8 +809,9 @@ GetProfilesDirectoryA(LPSTR lpProfileDir,
 
 BOOL
 WINAPI
-GetProfilesDirectoryW(LPWSTR lpProfilesDir,
-                      LPDWORD lpcchSize)
+GetProfilesDirectoryW(
+    _Out_ LPWSTR lpProfilesDir, // _Out_opt_
+    _Inout_ LPDWORD lpcchSize)
 {
     WCHAR szProfilesPath[MAX_PATH];
     WCHAR szBuffer[MAX_PATH];
@@ -902,9 +891,10 @@ GetProfilesDirectoryW(LPWSTR lpProfilesDir,
 
 BOOL
 WINAPI
-GetUserProfileDirectoryA(HANDLE hToken,
-                         LPSTR lpProfileDir,
-                         LPDWORD lpcchSize)
+GetUserProfileDirectoryA(
+    _In_ HANDLE hToken,
+    _Out_opt_ LPSTR lpProfileDir,
+    _Inout_ LPDWORD lpcchSize)
 {
     LPWSTR lpBuffer;
     BOOL bResult;
@@ -943,9 +933,10 @@ GetUserProfileDirectoryA(HANDLE hToken,
 
 BOOL
 WINAPI
-GetUserProfileDirectoryW(HANDLE hToken,
-                         LPWSTR lpProfileDir,
-                         LPDWORD lpcchSize)
+GetUserProfileDirectoryW(
+    _In_ HANDLE hToken,
+    _Out_opt_ LPWSTR lpProfileDir,
+    _Inout_ LPDWORD lpcchSize)
 {
     UNICODE_STRING SidString;
     WCHAR szKeyName[MAX_PATH];
@@ -1081,8 +1072,9 @@ CheckForLoadedProfile(HANDLE hToken)
 
 BOOL
 WINAPI
-LoadUserProfileA(IN HANDLE hToken,
-                 IN OUT LPPROFILEINFOA lpProfileInfo)
+LoadUserProfileA(
+    _In_ HANDLE hToken,
+    _Inout_ LPPROFILEINFOA lpProfileInfo)
 {
     BOOL bResult = FALSE;
     PROFILEINFOW ProfileInfoW = {0};
@@ -1191,8 +1183,9 @@ cleanup:
 
 BOOL
 WINAPI
-LoadUserProfileW(IN HANDLE hToken,
-                 IN OUT LPPROFILEINFOW lpProfileInfo)
+LoadUserProfileW(
+    _In_ HANDLE hToken,
+    _Inout_ LPPROFILEINFOW lpProfileInfo)
 {
     WCHAR szUserHivePath[MAX_PATH];
     LPWSTR UserName = NULL, Domain = NULL;
@@ -1379,8 +1372,9 @@ cleanup:
 
 BOOL
 WINAPI
-UnloadUserProfile(HANDLE hToken,
-                  HANDLE hProfile)
+UnloadUserProfile(
+    _In_ HANDLE hToken,
+    _In_ HANDLE hProfile)
 {
     UNICODE_STRING SidString;
     LONG Error;
@@ -1457,9 +1451,10 @@ UnloadUserProfile(HANDLE hToken,
 
 BOOL
 WINAPI
-DeleteProfileW(LPCWSTR lpSidString,
-               LPCWSTR lpProfilePath,
-               LPCWSTR lpComputerName)
+DeleteProfileW(
+    _In_ LPCWSTR lpSidString,
+    _In_opt_ LPCWSTR lpProfilePath,
+    _In_opt_ LPCWSTR lpComputerName)
 {
     DPRINT1("DeleteProfileW() not implemented!\n");
     return FALSE;
@@ -1468,9 +1463,10 @@ DeleteProfileW(LPCWSTR lpSidString,
 
 BOOL
 WINAPI
-DeleteProfileA(LPCSTR lpSidString,
-               LPCSTR lpProfilePath,
-               LPCSTR lpComputerName)
+DeleteProfileA(
+    _In_ LPCSTR lpSidString,
+    _In_opt_ LPCSTR lpProfilePath,
+    _In_opt_ LPCSTR lpComputerName)
 {
     BOOL bResult;
     UNICODE_STRING SidString, ProfilePath, ComputerName;
@@ -1511,7 +1507,7 @@ DeleteProfileA(LPCSTR lpSidString,
 
 BOOL
 WINAPI
-GetProfileType(OUT PDWORD pdwFlags)
+GetProfileType(_Out_ PDWORD pdwFlags)
 {
     DPRINT1("GetProfileType() not implemented!\n");
     return FALSE;
