@@ -702,7 +702,7 @@ NTSTATUS
 USBCCGP_EnumWithUnionFunctionDescriptors(
     IN PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 

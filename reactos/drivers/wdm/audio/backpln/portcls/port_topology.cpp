@@ -104,7 +104,7 @@ NTAPI
 CPortTopology::AddEventToEventList(
     IN PKSEVENT_ENTRY EventEntry)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 void
@@ -117,7 +117,7 @@ CPortTopology::GenerateEventList(
     IN  BOOL NodeEvent,
     IN  ULONG NodeId)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 

@@ -455,7 +455,7 @@ NTSTATUS
 NTAPI
 CPortPinWavePci::TerminatePacket()
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
     return STATUS_SUCCESS;
 }
@@ -488,7 +488,7 @@ CPortPinWavePci::NewIrpTarget(
     IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
@@ -597,7 +597,7 @@ CPortPinWavePci::DeviceIoControl(
        return HandleKsStream(Irp);
     }
 
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;

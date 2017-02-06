@@ -23,7 +23,7 @@ ArcFilterDprIndicateReceive(
     IN  PUCHAR      pData,
     IN  UINT        Length)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -35,7 +35,7 @@ EXPORT
 ArcFilterDprIndicateReceiveComplete(
     IN  PARC_FILTER Filter)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -55,7 +55,7 @@ FddiFilterDprIndicateReceive(
     IN  UINT            LookaheadBufferSize,
     IN  UINT            PacketSize)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -67,7 +67,7 @@ EXPORT
 FddiFilterDprIndicateReceiveComplete(
     IN  PFDDI_FILTER    Filter)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -81,7 +81,7 @@ NdisReadBindingInformation (
     OUT PNDIS_STRING    * Binding,
     IN  NDIS_HANDLE     ConfigurationHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -98,7 +98,7 @@ TrFilterDprIndicateReceive(
     IN  UINT        LookaheadBufferSize,
     IN  UINT        PacketSize)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -110,7 +110,7 @@ EXPORT
 TrFilterDprIndicateReceiveComplete(
     IN  PTR_FILTER  Filter)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /* EOF */

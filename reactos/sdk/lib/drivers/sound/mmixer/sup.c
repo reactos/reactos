@@ -117,7 +117,7 @@ MMixerFreeMixerInfo(
     IN PMIXER_CONTEXT MixerContext,
     IN LPMIXER_INFO MixerInfo)
 {
-    /* UNIMPLEMENTED
+    /* UNIMPLEMENTED;
      * FIXME
      * free all lines
      */

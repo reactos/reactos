@@ -606,7 +606,7 @@ KspPinPropertyHandler(
             }
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength != sizeof(KSDATAFORMAT_WAVEFORMATEX))
             {
-                UNIMPLEMENTED
+                UNIMPLEMENTED;
                 Status = STATUS_NOT_IMPLEMENTED;
                 Irp->IoStatus.Information = 0;
                 break;
@@ -624,7 +624,7 @@ KspPinPropertyHandler(
             {
                 if (WaveFormatOut[Index]->DataRange.FormatSize != sizeof(KSDATARANGE_AUDIO))
                 {
-                    UNIMPLEMENTED
+                    UNIMPLEMENTED;
                     continue;
                 }
 

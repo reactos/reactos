@@ -472,7 +472,7 @@ Pin_fnRead(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -486,7 +486,7 @@ Pin_fnWrite(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -500,7 +500,7 @@ Pin_fnFlush(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -514,7 +514,7 @@ Pin_fnClose(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -528,7 +528,7 @@ Pin_fnQuerySecurity(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -543,7 +543,7 @@ Pin_fnSetSecurity(
     PIRP Irp)
 {
 
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     Irp->IoStatus.Information = 0;
@@ -564,7 +564,7 @@ Pin_fnFastDeviceIoControl(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
 
     return FALSE;
@@ -583,7 +583,7 @@ Pin_fnFastRead(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return FALSE;
 
 }

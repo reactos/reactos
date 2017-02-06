@@ -134,7 +134,7 @@ CPortWavePci::GenerateEventList(
     IN  BOOL NodeEvent,
     IN  ULONG NodeId)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 //---------------------------------------------------------------
 // IServiceSink
@@ -464,7 +464,7 @@ NTSTATUS
 NTAPI
 CPortWavePci::ReleaseChildren()
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 

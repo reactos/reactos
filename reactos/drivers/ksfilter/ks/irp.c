@@ -2151,7 +2151,7 @@ NTAPI
 KsGetNodeIdFromIrp(
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return KSFILTER_NODE;
 }
 

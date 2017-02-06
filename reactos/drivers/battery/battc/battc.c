@@ -51,7 +51,7 @@ BatteryClassSystemControl(PVOID ClassData,
                           PIRP Irp,
                           PVOID Disposition)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 
   return STATUS_WMI_GUID_NOT_FOUND;
 }
@@ -67,7 +67,7 @@ BatteryClassQueryWmiDataBlock(PVOID ClassData,
                               ULONG OutBufferSize,
                               PUCHAR Buffer)
 {
-  UNIMPLEMENTED
+  UNIMPLEMENTED;
 
   return STATUS_WMI_GUID_NOT_FOUND;
 }

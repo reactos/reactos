@@ -844,7 +844,7 @@ USBAudioPinClose(
     _In_ PKSPIN Pin,
     _In_ PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1290,7 +1290,7 @@ NTAPI
 USBAudioPinReset(
     _In_ PKSPIN Pin)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -1305,7 +1305,7 @@ USBAudioPinSetDataFormat(
     if (OldFormat == NULL)
     {
         /* TODO: verify connection format */
-        UNIMPLEMENTED
+        UNIMPLEMENTED;
         return STATUS_SUCCESS;
     }
 
@@ -1403,7 +1403,7 @@ USBAudioPinSetDeviceState(
     }
     else
     {
-        UNIMPLEMENTED
+        UNIMPLEMENTED;
         Status = STATUS_SUCCESS;
     }
 

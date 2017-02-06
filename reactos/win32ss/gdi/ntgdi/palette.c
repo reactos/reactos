@@ -545,7 +545,7 @@ NtGdiCreateHalftonePalette(HDC  hDC)
     if (ppal && (ppal->flFlags & PAL_INDEXED))
     {
         /* FIXME: optimize the palette for the current palette */
-        UNIMPLEMENTED
+        UNIMPLEMENTED;
     }
     else
     {

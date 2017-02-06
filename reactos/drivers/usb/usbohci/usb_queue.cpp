@@ -918,7 +918,7 @@ CUSBQueue::AbortDevicePipe(
         // IMPLEMENT me
         //
         ASSERT(Type == USB_ENDPOINT_TYPE_ISOCHRONOUS);
-        UNIMPLEMENTED
+        UNIMPLEMENTED;
         return STATUS_NOT_IMPLEMENTED;
     }
 

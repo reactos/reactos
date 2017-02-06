@@ -499,7 +499,7 @@ NTSTATUS
 STDMETHODCALLTYPE
 CUSBHardwareDevice::PnpStop(void)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1223,7 +1223,7 @@ ULONG
 STDMETHODCALLTYPE
 CUSBHardwareDevice::GetPeriodicListRegister()
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return NULL;
 }
 

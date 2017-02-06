@@ -121,7 +121,7 @@ IKsPin_PinStreamAllocator(
     IN PKSIDENTIFIER Request,
     IN OUT PVOID Data)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -245,7 +245,7 @@ IKsPin_PinPipeId(
     IN PKSIDENTIFIER Request,
     IN OUT PVOID Data)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -547,7 +547,7 @@ IKsPin_fnTransferKsIrp(
     IN PIRP Irp,
     IN IKsTransport **OutTransport)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -558,7 +558,7 @@ IKsPin_fnDiscardKsIrp(
     IN PIRP Irp,
     IN IKsTransport * *OutTransport)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -571,7 +571,7 @@ IKsPin_fnConnect(
     OUT IKsTransport * *OutTransportOut,
     IN KSPIN_DATAFLOW DataFlow)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -583,7 +583,7 @@ IKsPin_fnSetDeviceState(
     IN KSSTATE NewState,
     IN IKsTransport * *OutTransport)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -594,7 +594,7 @@ IKsPin_fnSetResetState(
     IN KSRESET ResetState,
     OUT IKsTransport * * OutTransportOut)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -605,7 +605,7 @@ IKsPin_fnGetTransportConfig(
     OUT IKsTransport ** OutTransportIn,
     OUT IKsTransport ** OutTransportOut)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -617,7 +617,7 @@ IKsPin_fnSetTransportConfig(
     OUT IKsTransport ** OutTransportIn,
     OUT IKsTransport ** OutTransportOut)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -628,7 +628,7 @@ IKsPin_fnResetTransportConfig(
     OUT IKsTransport ** OutTransportIn,
     OUT IKsTransport ** OutTransportOut)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -637,7 +637,7 @@ NTAPI
 IKsPin_fnGetStruct(
     IN IKsPin *iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return NULL;
 }
 
@@ -646,7 +646,7 @@ NTAPI
 IKsPin_fnGetProcessPin(
     IN IKsPin *iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return NULL;
 }
 
@@ -655,7 +655,7 @@ NTAPI
 IKsPin_fnAttemptBypass(
     IN IKsPin *iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -664,7 +664,7 @@ NTAPI
 IKsPin_fnAttemptUnbypass(
     IN IKsPin *iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -674,7 +674,7 @@ IKsPin_fnGenerateConnectionEvents(
     IN IKsPin *iface,
     IN ULONG EventMask)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -684,7 +684,7 @@ IKsPin_fnClientSetDeviceState(
     IN KSSTATE StateIn,
     IN KSSTATE StateOut)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -996,7 +996,7 @@ KsPinAttemptProcessing(
 {
     DPRINT("KsPinAttemptProcessing\n");
     DbgBreakPoint();
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -1009,7 +1009,7 @@ KsPinGetAvailableByteCount(
     OUT PLONG  InputDataBytes OPTIONAL,
     OUT PLONG  OutputBufferBytes OPTIONAL)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1023,7 +1023,7 @@ KsPinGetConnectedFilterInterface(
     IN const GUID*  InterfaceId,
     OUT PVOID*  Interface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1035,7 +1035,7 @@ NTAPI
 KsPinGetConnectedPinDeviceObject(
     IN PKSPIN Pin)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return NULL;
 }
 
@@ -1047,7 +1047,7 @@ NTAPI
 KsPinGetConnectedPinFileObject(
     IN PKSPIN Pin)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return NULL;
 }
 
@@ -1061,7 +1061,7 @@ KsPinGetConnectedPinInterface(
     IN const GUID*  InterfaceId,
     OUT PVOID*  Interface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1075,7 +1075,7 @@ KsPinGetCopyRelationships(
     OUT PKSPIN* CopySource,
     OUT PKSPIN* DelegateBranch)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -1245,7 +1245,7 @@ KsPinSetPinClockTime(
     IN PKSPIN  Pin,
     IN LONGLONG  Time)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -1260,7 +1260,7 @@ KsPinSubmitFrame(
     IN PKSSTREAM_HEADER  StreamHeader  OPTIONAL,
     IN PVOID  Context  OPTIONAL)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -1276,7 +1276,7 @@ KsPinSubmitFrameMdl(
     IN PKSSTREAM_HEADER  StreamHeader  OPTIONAL,
     IN PVOID  Context  OPTIONAL)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -1289,7 +1289,7 @@ NTAPI
 KsProcessPinUpdate(
     IN PKSPROCESSPIN  ProcessPin)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -1423,7 +1423,7 @@ KsPinGetTrailingEdgeStreamPointer(
     IN PKSPIN Pin,
     IN KSSTREAM_POINTER_STATE State)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return NULL;
 }
 
@@ -1437,7 +1437,7 @@ KsStreamPointerSetStatusCode(
     IN PKSSTREAM_POINTER StreamPointer,
     IN NTSTATUS Status)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -1450,7 +1450,7 @@ NTAPI
 KsStreamPointerLock(
     IN PKSSTREAM_POINTER StreamPointer)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -1485,7 +1485,7 @@ KsStreamPointerAdvanceOffsetsAndUnlock(
 {
     DPRINT1("KsStreamPointerAdvanceOffsets InUsed %lu OutUsed %lu Eject %lu\n", InUsed, OutUsed, Eject);
     DbgBreakPoint();
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -1688,7 +1688,7 @@ NTAPI
 KsStreamPointerAdvance(
     IN PKSSTREAM_POINTER StreamPointer)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     DbgBreakPoint();
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -1702,7 +1702,7 @@ NTAPI
 KsStreamPointerGetMdl(
     IN PKSSTREAM_POINTER StreamPointer)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return NULL;
 }
 
@@ -1717,7 +1717,7 @@ KsStreamPointerGetIrp(
     OUT PBOOLEAN FirstFrameInIrp OPTIONAL,
     OUT PBOOLEAN LastFrameInIrp OPTIONAL)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return NULL;
 }
 

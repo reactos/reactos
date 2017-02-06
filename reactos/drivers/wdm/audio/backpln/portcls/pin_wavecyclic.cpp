@@ -860,7 +860,7 @@ CPortPinWaveCyclic::NewIrpTarget(
     IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 

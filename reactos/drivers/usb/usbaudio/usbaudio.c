@@ -358,7 +358,7 @@ USBAudioPnPStop(
   _In_ PIRP      Irp)
 {
     /* TODO: stop device */
-	UNIMPLEMENTED
+	UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -388,7 +388,7 @@ USBAudioPnPRemove(
   _In_ PIRP      Irp)
 {
     /* TODO: stop device */
-	UNIMPLEMENTED
+	UNIMPLEMENTED;
 }
 
 NTSTATUS
@@ -399,7 +399,7 @@ USBAudioPnPQueryCapabilities(
   _Inout_ PDEVICE_CAPABILITIES Capabilities)
 {
     /* TODO: set caps */
-	UNIMPLEMENTED
+	UNIMPLEMENTED;
 	return STATUS_SUCCESS;
 }
 
@@ -410,7 +410,7 @@ USBAudioPnPSurpriseRemoval(
   _In_ PIRP      Irp)
 {
     /* TODO: stop streams */
-	UNIMPLEMENTED
+	UNIMPLEMENTED;
 }  
   
 NTSTATUS
@@ -437,7 +437,7 @@ USBAudioPnPSetPower(
   _In_ DEVICE_POWER_STATE From)
 {
     /* TODO: stop streams */
-	UNIMPLEMENTED
+	UNIMPLEMENTED;
 }
 
 NTSTATUS

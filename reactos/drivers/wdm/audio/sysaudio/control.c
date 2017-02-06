@@ -206,7 +206,7 @@ ComputeCompatibleFormat(
     {
         if (AudioRange->DataRange.FormatSize != sizeof(KSDATARANGE_AUDIO))
         {
-            UNIMPLEMENTED
+            UNIMPLEMENTED;
             AudioRange = (PKSDATARANGE_AUDIO)((PUCHAR)AudioRange + AudioRange->DataRange.FormatSize);
             continue;
         }

@@ -466,7 +466,7 @@ NTAPI
 IKsFilter_fnDoAllNecessaryPinsExist(
     IKsFilter * iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -478,7 +478,7 @@ IKsFilter_fnCreateNode(
     IN IKsPin * Pin,
     IN PLIST_ENTRY ListEntry)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -492,7 +492,7 @@ IKsFilter_fnBindProcessPinsToPipeSection(
     OUT IKsPin **Pin,
     OUT PKSGATE *OutGate)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -502,7 +502,7 @@ IKsFilter_fnUnbindProcessPinsFromPipeSection(
     IKsFilter * iface,
     IN struct KSPROCESSPIPESECTION *Section)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -596,7 +596,7 @@ IKsFilter_fnReprepareProcessPipeSection(
     IN struct KSPROCESSPIPESECTION *PipeSection,
     IN PULONG Data)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -607,7 +607,7 @@ IKsFilter_fnDeliverResetState(
     IN struct KSPROCESSPIPESECTION *PipeSection,
     IN KSRESET ResetState)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 BOOL
@@ -615,7 +615,7 @@ NTAPI
 IKsFilter_fnIsFrameHolding(
     IKsFilter * iface)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return FALSE;
 }
 
@@ -626,7 +626,7 @@ IKsFilter_fnRegisterForCopyCallbacks(
     IKsQueue *Queue,
     BOOL Register)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 PKSPROCESSPIN_INDEXENTRY
@@ -996,7 +996,7 @@ FilterPinPropertyHandler(
             Status = KspHandleDataIntersection(Irp, &Irp->IoStatus, Request, Data, IoStack->Parameters.DeviceIoControl.OutputBufferLength, This);
             break;
         default:
-            UNIMPLEMENTED
+            UNIMPLEMENTED;
             Status = STATUS_NOT_FOUND;
     }
     DPRINT("KspPinPropertyHandler Pins %lu Request->Id %lu Status %lx\n", This->Filter.Descriptor->PinDescriptorsCount, Request->Id, Status);
@@ -1502,7 +1502,7 @@ IKsFilter_DispatchCreateNode(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     CompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_UNSUCCESSFUL;
@@ -1943,7 +1943,7 @@ KsFilterCreateNode (
     IN const KSNODE_DESCRIPTOR *const NodeDescriptor,
     OUT PULONG NodeID)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 

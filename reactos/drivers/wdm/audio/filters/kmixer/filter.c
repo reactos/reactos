@@ -19,7 +19,7 @@ Dispatch_fnDeviceIoControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     DbgBreakPoint();
 
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
@@ -34,7 +34,7 @@ Dispatch_fnClose(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;

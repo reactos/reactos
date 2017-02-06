@@ -287,7 +287,7 @@ CUSBDevice::GetType()
 ULONG
 CUSBDevice::GetState()
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return FALSE;
 }
 

@@ -291,7 +291,7 @@ USBSTOR_ScanConfigurationDescriptor(
                  //
                  // interrupt endpoint type
                  //
-                 UNIMPLEMENTED
+                 UNIMPLEMENTED;
             }
         }
 

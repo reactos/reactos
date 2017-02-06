@@ -447,7 +447,7 @@ USBHUB_PdoStartDevice(
 
     SET_NEW_PNP_STATE(ChildDeviceExtension->Common, Started);
 
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_SUCCESS;
 }
 

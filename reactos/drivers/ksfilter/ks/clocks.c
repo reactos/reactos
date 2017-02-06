@@ -63,7 +63,7 @@ FASTCALL
 ClockGetPhysicalTime(
     IN PFILE_OBJECT FileObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 
@@ -73,7 +73,7 @@ ClockGetCorrelatedTime(
     IN PFILE_OBJECT FileObject,
     OUT PLONGLONG SystemTime)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 
@@ -82,7 +82,7 @@ FASTCALL
 ClockGetTime(
     IN PFILE_OBJECT FileObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 
@@ -92,7 +92,7 @@ ClockGetCorrelatedPhysicalTime(
     IN PFILE_OBJECT FileObject,
     OUT PLONGLONG SystemTime)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 
@@ -352,7 +352,7 @@ IKsClock_DispatchClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     CompleteRequest(Irp, IO_NO_INCREMENT);

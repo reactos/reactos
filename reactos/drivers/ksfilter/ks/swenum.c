@@ -1291,7 +1291,7 @@ KspRemoveBusInterface(
      * open device key and delete the keys
      */
 
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     /* set status */
     Context->Status = STATUS_NOT_IMPLEMENTED;

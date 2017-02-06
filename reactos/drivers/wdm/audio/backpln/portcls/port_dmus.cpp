@@ -434,7 +434,7 @@ NTSTATUS
 NTAPI
 CPortDMus::ReleaseChildren()
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 

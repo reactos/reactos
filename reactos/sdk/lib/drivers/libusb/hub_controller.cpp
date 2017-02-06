@@ -1391,7 +1391,7 @@ CHubController::HandleClassDevice(
                         //
                         // FIXME: implement support for real hubs
                         //
-                        UNIMPLEMENTED
+                        UNIMPLEMENTED;
                         Status = STATUS_NOT_IMPLEMENTED;
                     }
                     break;
@@ -3248,7 +3248,7 @@ USBHI_ControllerSelectiveSuspend(
     PVOID BusContext,
     BOOLEAN Enable)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -3352,7 +3352,7 @@ USBHI_GetRootHubSymbolicName(
     ULONG HubSymNameBufferLength,
     PULONG HubSymNameActualLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -3362,7 +3362,7 @@ USBHI_GetDeviceBusContext(
     PVOID HubBusContext,
     PVOID DeviceHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return NULL;
 }
 
@@ -3459,7 +3459,7 @@ USBHI_FlushTransfers(
     PVOID BusContext,
     PVOID DeviceHandle)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 VOID
@@ -3582,7 +3582,7 @@ USBDI_QueryBusTime(
     PVOID BusContext,
     PULONG CurrentFrame)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -3592,7 +3592,7 @@ USBDI_SubmitIsoOutUrb(
     PVOID BusContext,
     PURB Urb)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -3605,7 +3605,7 @@ USBDI_QueryBusInformation(
     PULONG BusInformationBufferLength,
     PULONG BusInformationActualLength)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -3652,7 +3652,7 @@ USBDI_EnumLogEntry(
     ULONG P1,
     ULONG P2)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 

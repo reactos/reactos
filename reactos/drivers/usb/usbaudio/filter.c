@@ -393,7 +393,7 @@ CountTopologyComponents(
                     }
                     else
                     {
-                        UNIMPLEMENTED
+                        UNIMPLEMENTED;
                     }
                     CommonDescriptor = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)CommonDescriptor + CommonDescriptor->bLength);
                     if ((ULONG_PTR)CommonDescriptor >= ((ULONG_PTR)InterfaceHeaderDescriptor + InterfaceHeaderDescriptor->wTotalLength))
@@ -745,7 +745,7 @@ BuildUSBAudioFilterTopology(
                     }
                     else
                     {
-                        UNIMPLEMENTED
+                        UNIMPLEMENTED;
                     }
                     CommonDescriptor = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)CommonDescriptor + CommonDescriptor->bLength);
                     if ((ULONG_PTR)CommonDescriptor >= ((ULONG_PTR)InterfaceHeaderDescriptor + InterfaceHeaderDescriptor->wTotalLength))
@@ -909,7 +909,7 @@ BuildUSBAudioFilterTopology(
                     }
                     else
                     {
-                        UNIMPLEMENTED
+                        UNIMPLEMENTED;
                     }
                     CommonDescriptor = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)CommonDescriptor + CommonDescriptor->bLength);
                     if ((ULONG_PTR)CommonDescriptor >= ((ULONG_PTR)InterfaceHeaderDescriptor + InterfaceHeaderDescriptor->wTotalLength))
@@ -1010,7 +1010,7 @@ CountTerminalUnits(
         }
         else if (Descriptor->bInterfaceSubClass == 0x03) /* MIDI_STREAMING */
         {
-            UNIMPLEMENTED
+            UNIMPLEMENTED;
         }
     }
     *NonStreamingTerminalDescriptorCount = NonStreamingTerminalCount;

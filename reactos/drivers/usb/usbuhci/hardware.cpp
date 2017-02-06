@@ -393,7 +393,7 @@ CUSBHardwareDevice::PnpStart(
 NTSTATUS
 CUSBHardwareDevice::PnpStop(void)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 

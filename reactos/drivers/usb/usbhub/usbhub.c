@@ -269,7 +269,7 @@ NTAPI
 USBHUB_Unload(
     IN PDRIVER_OBJECT DriverObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 

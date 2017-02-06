@@ -974,7 +974,7 @@ KspObjectFreeCreateItems(
     IN  KSDEVICE_HEADER Header,
     IN  PKSOBJECT_CREATE_ITEM CreateItem)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1196,7 +1196,7 @@ KsUnserializeObjectPropertiesFromRegistry(
     IN HANDLE ParentKey OPTIONAL,
     IN PUNICODE_STRING RegistryPath OPTIONAL)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1412,7 +1412,7 @@ KopDispatchCreate(
      * call the standard create handler
      */
 
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     IoStack->FileObject->FsContext2 = (PVOID)Header;
 
@@ -1720,7 +1720,7 @@ KsCompletePendingRequest(
      * delete object / device header
      * remove dead pin / filter instance
      */
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
 }
 
@@ -2573,7 +2573,7 @@ KsRegisterFilterWithNoKSPins(
     }
 
     /* FIXME generate filter data blob */
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     /* get symbolic link list */
     Status = IoGetDeviceInterfaces(InterfaceClassGUID, DeviceObject, DEVICE_INTERFACE_INCLUDE_NONACTIVE, &SymbolicLinkList);

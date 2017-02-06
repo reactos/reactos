@@ -119,7 +119,7 @@ CPortPinWaveRT::NewIrpTarget(
     IN PIRP Irp,
     IN KSOBJECT_CREATE *CreateObject)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -333,7 +333,7 @@ CPortPinWaveRT::DeviceIoControl(
         return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
     }
 
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;

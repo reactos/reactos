@@ -1089,7 +1089,7 @@ USBSTOR_SendModeSense(
     // MODE_PARAMETER_BLOCK
     //
     //
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 
     //
     // send csw

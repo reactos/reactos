@@ -101,7 +101,7 @@ USBD_Debug_LogEntry(PCHAR Name, ULONG_PTR Info1, ULONG_PTR Info2,
 PVOID NTAPI
 USBD_AllocateDeviceName(ULONG Unknown)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return NULL;
 }
 
@@ -139,7 +139,7 @@ USBD_CalculateUsbBandwidth(
 ULONG NTAPI
 USBD_Dispatch(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3, ULONG Unknown4)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 1;
 }
 
@@ -149,7 +149,7 @@ USBD_Dispatch(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3, ULONG Unknown4)
 VOID NTAPI
 USBD_FreeDeviceMutex(PVOID Unknown)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -158,7 +158,7 @@ USBD_FreeDeviceMutex(PVOID Unknown)
 VOID NTAPI
 USBD_FreeDeviceName(PVOID Unknown)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -167,7 +167,7 @@ USBD_FreeDeviceName(PVOID Unknown)
 VOID NTAPI
 USBD_WaitDeviceMutex(PVOID Unknown)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -176,7 +176,7 @@ USBD_WaitDeviceMutex(PVOID Unknown)
 ULONG NTAPI
 USBD_GetSuspendPowerState(ULONG Unknown1)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return 0;
 }
 
@@ -187,7 +187,7 @@ NTSTATUS NTAPI
 USBD_InitializeDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3,
     ULONG Unknown4, ULONG Unknown5, ULONG Unknown6)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -199,7 +199,7 @@ USBD_RegisterHostController(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3,
     ULONG Unknown4, ULONG Unknown5, ULONG Unknown6, ULONG Unknown7,
     ULONG Unknown8, ULONG Unknown9, ULONG Unknown10)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -209,7 +209,7 @@ USBD_RegisterHostController(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3,
 NTSTATUS NTAPI
 USBD_GetDeviceInformation(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -220,7 +220,7 @@ NTSTATUS NTAPI
 USBD_CreateDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3,
     ULONG Unknown4, ULONG Unknown5)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -230,7 +230,7 @@ USBD_CreateDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3,
 NTSTATUS NTAPI
 USBD_RemoveDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -240,7 +240,7 @@ USBD_RemoveDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 VOID NTAPI
 USBD_CompleteRequest(ULONG Unknown1, ULONG Unknown2)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -252,7 +252,7 @@ USBD_RegisterHcFilter(
     PDEVICE_OBJECT FilterDeviceObject
     )
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -261,7 +261,7 @@ USBD_RegisterHcFilter(
 VOID NTAPI
 USBD_SetSuspendPowerState(ULONG Unknown1, ULONG Unknown2)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*
@@ -270,7 +270,7 @@ USBD_SetSuspendPowerState(ULONG Unknown1, ULONG Unknown2)
 NTSTATUS NTAPI
 USBD_MakePdoName(ULONG Unknown1, ULONG Unknown2)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -283,7 +283,7 @@ USBD_QueryBusTime(
     PULONG CurrentFrame
     )
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -308,7 +308,7 @@ USBD_GetUSBDIVersion(
 NTSTATUS NTAPI
 USBD_RestoreDevice(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -319,7 +319,7 @@ VOID NTAPI
 USBD_RegisterHcDeviceCapabilities(ULONG Unknown1, ULONG Unknown2,
     ULONG Unknown3)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 /*

@@ -161,7 +161,7 @@ IKsAllocator_fnDeviceIoControl(
     if (IoStack->Parameters.DeviceIoControl.IoControlCode  != IOCTL_KS_PROPERTY)
     {
         /* only KSPROPERTY requests are supported */
-        UNIMPLEMENTED
+        UNIMPLEMENTED;
 
         /* complete and forget irps */
         Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;

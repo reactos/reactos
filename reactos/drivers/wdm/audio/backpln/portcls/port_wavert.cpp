@@ -112,7 +112,7 @@ NTAPI
 CPortWaveRT::AddEventToEventList(
     IN PKSEVENT_ENTRY EventEntry)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 
@@ -126,7 +126,7 @@ CPortWaveRT::GenerateEventList(
     IN  BOOL NodeEvent,
     IN  ULONG NodeId)
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
 }
 
 //---------------------------------------------------------------
@@ -386,7 +386,7 @@ NTSTATUS
 NTAPI
 CPortWaveRT::ReleaseChildren()
 {
-    UNIMPLEMENTED
+    UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
 

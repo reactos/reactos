@@ -295,11 +295,11 @@ PinPropertyHandler(
             Status = HandlePhysicalConnection(&Irp->IoStatus, Request, IoStack->Parameters.DeviceIoControl.InputBufferLength, Data, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Descriptor);
             break;
         case KSPROPERTY_PIN_CONSTRAINEDDATARANGES:
-            UNIMPLEMENTED
+            UNIMPLEMENTED;
             Status = STATUS_NOT_IMPLEMENTED;
             break;
         default:
-            UNIMPLEMENTED
+            UNIMPLEMENTED;
             Status = STATUS_UNSUCCESSFUL;
     }
 
