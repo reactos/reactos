@@ -124,7 +124,6 @@ VOID FreeLogFilterList(VOID);
 
 ATOM MyRegisterClass(HINSTANCE);
 BOOL InitInstance(HINSTANCE, int);
-VOID ExitInstance(HINSTANCE);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR EventLogProperties(HINSTANCE, HWND, PEVENTLOGFILTER);
 INT_PTR CALLBACK EventDetails(HWND, UINT, WPARAM, LPARAM);
@@ -226,8 +225,6 @@ Cleanup:
         CloseHandle(hStartEnumEvent);
     if (hStartStopEnumEvent)
         CloseHandle(hStartStopEnumEvent);
-
-    ExitInstance(hInstance);
 
 Quit:
     FreeLibrary(hRichEdit);
@@ -1091,9 +1088,10 @@ Quit:
     if (!Success)
     {
         if (pevlr->EventCategory != 0)
+        {
             StringCchPrintfW(CategoryName, MAX_PATH, L"(%lu)", pevlr->EventCategory);
-        else
-            LoadStringW(hInst, IDS_NONE, CategoryName, MAX_PATH);
+            Success = TRUE;
+        }
     }
 
     return Success;
@@ -1263,18 +1261,30 @@ GetEventType(IN WORD dwEventType,
 
 BOOL
 GetEventUserName(IN PEVENTLOGRECORD pelr,
+                 IN OUT PSID pLastSid,
                  OUT PWCHAR pszUser) // TODO: Add IN DWORD BufLen
 {
-    PSID pSid;
+    PSID pCurrentSid;
     PWSTR StringSid;
     WCHAR szName[1024];
     WCHAR szDomain[1024];
     SID_NAME_USE peUse;
     DWORD cchName = ARRAYSIZE(szName);
     DWORD cchDomain = ARRAYSIZE(szDomain);
+    BOOL Success;
 
     /* Point to the SID */
-    pSid = (PSID)((LPBYTE)pelr + pelr->UserSidOffset);
+    pCurrentSid = (PSID)((LPBYTE)pelr + pelr->UserSidOffset);
+
+    if (!IsValidSid(pCurrentSid))
+    {
+        pLastSid = NULL;
+        return FALSE;
+    }
+    else if (pLastSid && EqualSid(pLastSid, pCurrentSid))
+    {
+        return TRUE;
+    }
 
     /* User SID */
     if (pelr->UserSidLength > 0)
@@ -1286,7 +1296,7 @@ GetEventUserName(IN PEVENTLOGRECORD pelr,
          * 'pszUser', otherwise we return an error.
          */
         if (LookupAccountSidW(NULL, // FIXME: Use computer name? From the particular event?
-                              pSid,
+                              pCurrentSid,
                               szName,
                               &cchName,
                               szDomain,
@@ -1294,13 +1304,11 @@ GetEventUserName(IN PEVENTLOGRECORD pelr,
                               &peUse))
         {
             StringCchCopyW(pszUser, MAX_PATH, szName);
-            return TRUE;
+            Success = TRUE;
         }
-        else if (ConvertSidToStringSidW(pSid, &StringSid))
+        else if (ConvertSidToStringSidW(pCurrentSid, &StringSid))
         {
-            BOOL Success;
-
-            /* Copy the string only if the user-provided buffer is small enough */
+            /* Copy the string only if the user-provided buffer is big enough */
             if (wcslen(StringSid) + 1 <= MAX_PATH) // + 1 for NULL-terminator
             {
                 StringCchCopyW(pszUser, MAX_PATH, StringSid);
@@ -1314,12 +1322,12 @@ GetEventUserName(IN PEVENTLOGRECORD pelr,
 
             /* Free the allocated buffer */
             LocalFree(StringSid);
-
-            return Success;
         }
     }
 
-    return FALSE;
+    pLastSid = Success ? pCurrentSid : NULL;
+
+    return Success;
 }
 
 
@@ -1422,14 +1430,18 @@ EnumEventsThread(IN LPVOID lpParameter)
 
     ULONG LogIndex;
     HANDLE hEventLog;
-    PEVENTLOGRECORD pevlr, pevlrTmp = NULL;
-    DWORD dwRead, dwNeeded; // , dwThisRecord;
+    PEVENTLOGRECORD pEvlr;
+    PBYTE pEvlrEnd;
+    PBYTE pEvlrBuffer;
+    DWORD dwWanted, dwRead, dwNeeded, dwStatus = ERROR_SUCCESS;
     DWORD dwTotalRecords = 0, dwCurrentRecord = 0;
     DWORD dwFlags, dwMaxLength;
     size_t cchRemaining;
     LPWSTR lpszSourceName;
     LPWSTR lpszComputerName;
     BOOL bResult = TRUE; /* Read succeeded */
+    HANDLE hProcessHeap = GetProcessHeap();
+    PSID pLastSid = NULL;
 
     UINT uStep = 0, uStepAt = 0, uPos = 0;
 
@@ -1441,7 +1453,9 @@ EnumEventsThread(IN LPVOID lpParameter)
     WCHAR szEventTypeText[MAX_LOADSTRING];
     WCHAR szCategoryID[MAX_PATH];
     WCHAR szUsername[MAX_PATH];
+    WCHAR szNoUsername[MAX_PATH];
     WCHAR szCategory[MAX_PATH];
+    WCHAR szNoCategory[MAX_PATH];
     PWCHAR lpTitleTemplateEnd;
 
     SYSTEMTIME time;
@@ -1500,131 +1514,119 @@ EnumEventsThread(IN LPVOID lpParameter)
     }
 
     /* Set up the event records cache */
-    g_RecordPtrs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwTotalRecords * sizeof(*g_RecordPtrs));
+    g_RecordPtrs = HeapAlloc(hProcessHeap, HEAP_ZERO_MEMORY, dwTotalRecords * sizeof(*g_RecordPtrs));
     if (!g_RecordPtrs)
     {
         // ShowLastWin32Error();
-        goto Cleanup;
+        goto Quit;
     }
     g_TotalRecords = dwTotalRecords;
 
     if (WaitForSingleObject(hStopEnumEvent, 0) == WAIT_OBJECT_0)
         goto Quit;
 
+    LoadStringW(hInst, IDS_NOT_AVAILABLE, szNoUsername, ARRAYSIZE(szNoUsername));
+    LoadStringW(hInst, IDS_NONE, szNoCategory, ARRAYSIZE(szNoCategory));
+
     ProgressBar_SetRange(hwndStatusProgress, MAKELPARAM(0, 100));
     uStepAt = (dwTotalRecords / 100) + 1;
 
-    dwFlags = EVENTLOG_SEQUENTIAL_READ |
-             (NewestEventsFirst ? EVENTLOG_FORWARDS_READ
-                                : EVENTLOG_BACKWARDS_READ);
+    dwFlags = EVENTLOG_SEQUENTIAL_READ | (NewestEventsFirst ? EVENTLOG_FORWARDS_READ : EVENTLOG_BACKWARDS_READ);
 
-    while (dwCurrentRecord < dwTotalRecords)
+    /* 0x7ffff is the maximum buffer size ReadEventLog will accept */
+    dwWanted = 0x7ffff;
+    pEvlr = HeapAlloc(hProcessHeap, 0, dwWanted);
+
+    if (!pEvlr)
+        goto Quit;
+
+    while (dwStatus == ERROR_SUCCESS)
     {
-        //
-        // NOTE: We always allocate the minimum size for 1 record, and if
-        // the ReadEventLog call fails (it always will anyway), we reallocate
-        // the record pointer to be able to hold just 1 record, and then we
-        // redo that for each event.
-        // This is obviously not at all efficient (in terms of numbers of
-        // ReadEventLog calls), since ReadEventLog can fill the buffer with
-        // as many records they can fit completely in the buffer.
-        //
+        bResult =  ReadEventLogW(hEventLog, dwFlags, 0, pEvlr, dwWanted, &dwRead, &dwNeeded);
+        dwStatus = GetLastError();
 
-        pevlr = HeapAlloc(GetProcessHeap(), 0, sizeof(*pevlr));
-        if (!pevlr)
+        if (!bResult && dwStatus == ERROR_INSUFFICIENT_BUFFER)
         {
-            /* Cannot allocate, just skip the event */
+            pEvlr = HeapReAlloc(hProcessHeap, 0, pEvlr, dwNeeded);
+            dwWanted = dwNeeded;
+
+            if (!pEvlr)
+                break;
+
+            bResult =  ReadEventLogW(hEventLog, dwFlags, 0, pEvlr, dwNeeded, &dwRead, &dwNeeded);
+
+            if (!bResult)
+                break;
+        }
+        else if (!bResult)
+        {
+            /* exit on other errors (ERROR_HANDLE_EOF) */
+            break;
+        }
+
+        pEvlrBuffer = (LPBYTE)pEvlr;
+        pEvlrEnd = pEvlrBuffer + dwRead;
+
+        while (pEvlrBuffer < pEvlrEnd)
+        {
+            PEVENTLOGRECORD pEvlrTmp = (PEVENTLOGRECORD)pEvlrBuffer;
+            PWSTR lpszUsername, lpszCategoryName;
             g_RecordPtrs[dwCurrentRecord] = NULL;
-            // --dwTotalRecords;
-            continue;
-        }
-        g_RecordPtrs[dwCurrentRecord] = pevlr;
 
-        bResult = ReadEventLogW(hEventLog,  // Event log handle
-                                dwFlags,    // Sequential read
-                                0,          // Ignored for sequential read
-                                pevlr,      // Pointer to buffer
-                                sizeof(*pevlr),   // Size of buffer
-                                &dwRead,    // Number of bytes read
-                                &dwNeeded); // Bytes in the next record
-        if (!bResult && (GetLastError () == ERROR_INSUFFICIENT_BUFFER))
-        {
-            pevlrTmp = HeapReAlloc(GetProcessHeap(), 0, pevlr, dwNeeded);
-            if (!pevlrTmp)
-            {
-                /* Cannot reallocate, just skip the event */
-                HeapFree(GetProcessHeap(), 0, pevlr);
-                g_RecordPtrs[dwCurrentRecord] = NULL;
-                // --dwTotalRecords;
-                continue;
-            }
-            pevlr = pevlrTmp;
-            g_RecordPtrs[dwCurrentRecord] = pevlr;
-
-            ReadEventLogW(hEventLog,  // event log handle
-                          dwFlags,    // read flags
-                          0,          // offset; default is 0
-                          pevlr,      // pointer to buffer
-                          dwNeeded,   // size of buffer
-                          &dwRead,    // number of bytes read
-                          &dwNeeded); // bytes in next record
-        }
-
-        while (dwRead > 0)
-        {
             // ProgressBar_StepIt(hwndStatusProgress);
             uStep++;
-            if(uStep % uStepAt == 0)
+            if (uStep % uStepAt == 0)
             {
                 ++uPos;
                 ProgressBar_SetPos(hwndStatusProgress, uPos);
             }
 
-            if (WaitForSingleObject(hStopEnumEvent, 0) == WAIT_OBJECT_0)
+           if (WaitForSingleObject(hStopEnumEvent, 0) == WAIT_OBJECT_0)
                 goto Quit;
 
             /* Filter by event type */
-            if (!FilterByType(EventLogFilter, pevlr))
+            if (!FilterByType(EventLogFilter, pEvlrTmp))
                 goto SkipEvent;
 
             /* Get the event source name and filter it */
-            lpszSourceName = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD));
+            lpszSourceName = (LPWSTR)(pEvlrBuffer + sizeof(EVENTLOGRECORD));
             if (!FilterByString(EventLogFilter->Sources, lpszSourceName))
                 goto SkipEvent;
 
             /* Get the computer name and filter it */
-            lpszComputerName = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD) + (wcslen(lpszSourceName) + 1) * sizeof(WCHAR));
+            lpszComputerName = (LPWSTR)((LPBYTE)pEvlrBuffer + sizeof(EVENTLOGRECORD) + (wcslen(lpszSourceName) + 1) * sizeof(WCHAR));
             if (!FilterByString(EventLogFilter->ComputerNames, lpszComputerName))
                 goto SkipEvent;
 
             /* Compute the event time */
-            EventTimeToSystemTime(pevlr->TimeWritten, &time);
+            EventTimeToSystemTime(pEvlrTmp->TimeWritten, &time);
             GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &time, NULL, szLocalDate, ARRAYSIZE(szLocalDate));
             GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &time, NULL, szLocalTime, ARRAYSIZE(szLocalTime));
 
-            LoadStringW(hInst, IDS_NOT_AVAILABLE, szUsername, ARRAYSIZE(szUsername));
-            LoadStringW(hInst, IDS_NONE, szCategory, ARRAYSIZE(szCategory));
-
             /* Get the username that generated the event, and filter it */
-            GetEventUserName(pevlr, szUsername);
-            if (!FilterByString(EventLogFilter->Users, szUsername))
+            lpszUsername = GetEventUserName(pEvlrTmp, pLastSid, szUsername) ? szUsername : szNoUsername;
+
+            if (!FilterByString(EventLogFilter->Users, lpszUsername))
                 goto SkipEvent;
 
             // TODO: Filter by event ID and category
+            GetEventType(pEvlrTmp->EventType, szEventTypeText);
 
-            GetEventType(pevlr->EventType, szEventTypeText);
-            GetEventCategory(EventLog->LogName, lpszSourceName, pevlr, szCategory);
+            lpszCategoryName = GetEventCategory(EventLog->LogName, lpszSourceName, pEvlrTmp, szCategory) ? szCategory : szNoCategory;
 
-            StringCbPrintfW(szEventID, sizeof(szEventID), L"%u", (pevlr->EventID & 0xFFFF));
-            StringCbPrintfW(szCategoryID, sizeof(szCategoryID), L"%u", pevlr->EventCategory);
+            StringCbPrintfW(szEventID, sizeof(szEventID), L"%u", (pEvlrTmp->EventID & 0xFFFF));
+            StringCbPrintfW(szCategoryID, sizeof(szCategoryID), L"%u", pEvlrTmp->EventCategory);
+
+            g_RecordPtrs[dwCurrentRecord] = HeapAlloc(hProcessHeap, 0, pEvlrTmp->Length);
+            RtlCopyMemory(g_RecordPtrs[dwCurrentRecord], pEvlrTmp, pEvlrTmp->Length);
 
             lviEventItem.mask = LVIF_IMAGE | LVIF_TEXT | LVIF_PARAM;
             lviEventItem.iItem = 0;
             lviEventItem.iSubItem = 0;
-            lviEventItem.lParam = (LPARAM)pevlr;
+            lviEventItem.lParam = (LPARAM)g_RecordPtrs[dwCurrentRecord];
             lviEventItem.pszText = szEventTypeText;
 
-            switch (pevlr->EventType)
+            switch (pEvlrTmp->EventType)
             {
                 case EVENTLOG_SUCCESS:
                 case EVENTLOG_INFORMATION_TYPE:
@@ -1653,20 +1655,21 @@ EnumEventsThread(IN LPVOID lpParameter)
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 1, szLocalDate);
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 2, szLocalTime);
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 3, lpszSourceName);
-            ListView_SetItemText(hwndListView, lviEventItem.iItem, 4, szCategory);
+            ListView_SetItemText(hwndListView, lviEventItem.iItem, 4, lpszCategoryName);
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 5, szEventID);
-            ListView_SetItemText(hwndListView, lviEventItem.iItem, 6, szUsername);
+            ListView_SetItemText(hwndListView, lviEventItem.iItem, 6, lpszUsername);
             ListView_SetItemText(hwndListView, lviEventItem.iItem, 7, lpszComputerName);
 
 SkipEvent:
-            dwRead -= pevlr->Length;
-            pevlr = (PEVENTLOGRECORD)((LPBYTE) pevlr + pevlr->Length);
+            pEvlrBuffer += pEvlrTmp->Length;
+            dwCurrentRecord++;
         }
-
-        dwCurrentRecord++;
     }
 
 Quit:
+
+    if (pEvlr)
+        HeapFree(hProcessHeap, 0, pEvlr);
 
     /* Close the event log */
     CloseEventLog(hEventLog);
@@ -2405,135 +2408,6 @@ FreeLogFilterList(VOID)
     return;
 }
 
-
-/*
- * ListView subclassing to handle WM_PAINT messages before and after they are
- * handled by the ListView window itself. We cannot use at this level the
- * custom-drawn notifications that are more suitable for drawing elements
- * inside the ListView.
- */
-static WNDPROC orgListViewWndProc = NULL;
-static BOOL IsLoading = FALSE;
-
-LRESULT CALLBACK
-ListViewWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch (uMsg)
-    {
-        case LVM_PROGRESS:
-        {
-            /* TRUE: Create the dialog; FALSE: Destroy the dialog */
-            IsLoading = !!(BOOL)lParam;
-            return IsLoading;
-        }
-
-        case WM_PAINT:
-        {
-            /* This code is adapted from: http://www.codeproject.com/Articles/216/Indicating-an-empty-ListView */
-
-            int nItemCount;
-
-            PAINTSTRUCT ps;
-            HDC hDC;
-            HWND hwndHeader;
-            RECT rc, rcH;
-            COLORREF crTextOld, crTextBkOld;
-            NONCLIENTMETRICSW ncm;
-            HFONT hFont, hFontOld;
-            LPWSTR lpszString;
-
-            nItemCount = ListView_GetItemCount(hWnd);
-            if (!IsLoading && nItemCount > 0)
-                break;
-
-            /*
-             * NOTE:
-             * We could have used lpNMCustomDraw->nmcd.rc for the rectangle,
-             * but this one actually holds the rectangle of the list view
-             * that is being currently repainted, so that it can be smaller
-             * than the list view proper. This is especially true when using
-             * COMCTL32.DLL version <= 6.0 .
-             */
-
-            GetClientRect(hWnd, &rc);
-            hwndHeader = ListView_GetHeader(hWnd);
-            if (hwndHeader)
-            {
-                /* Note that we could also use Header_GetItemRect() */
-                GetClientRect(hwndHeader, &rcH);
-                rc.top += rcH.bottom;
-            }
-
-            /* Add some space between the top of the list view and the text */
-            rc.top += 10;
-
-            BeginPaint(hWnd, &ps);
-            /*
-             * NOTE: Using a secondary hDC (and not the ps.hdc) gives the strange
-             * property that the text is always recentered on the current view of
-             * the window, instead of being scrolled together with the contents of
-             * the list view...
-             */
-            // hDC = ps.hdc;
-            hDC = GetDC(hWnd);
-
-            /*
-             * NOTE: We could have kept lpNMCustomDraw->clrText and
-             * lpNMCustomDraw->clrTextBk, but they usually do not contain
-             * the correct default colors for the items / default text.
-             */
-            crTextOld =
-                SetTextColor(hDC, GetSysColor(COLOR_WINDOWTEXT));
-            crTextBkOld =
-                SetBkColor(hDC, GetSysColor(COLOR_WINDOW));
-
-            // FIXME: Cache the font?
-            ncm.cbSize = sizeof(ncm);
-            hFont = NULL;
-            if (SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
-                                      sizeof(ncm), &ncm, 0))
-            {
-                hFont = CreateFontIndirectW(&ncm.lfMessageFont);
-            }
-            if (!hFont)
-                hFont = GetStockFont(DEFAULT_GUI_FONT);
-
-            hFontOld = (HFONT)SelectObject(hDC, hFont);
-
-            FillRect(hDC, &rc, GetSysColorBrush(COLOR_WINDOW));
-
-            if (nItemCount <= 0)
-                lpszString = szEmptyList;
-            else // if (IsLoading)
-                lpszString = szLoadingWait;
-
-            DrawTextW(hDC,
-                      lpszString,
-                      -1,
-                      &rc,
-                      DT_CENTER | DT_WORDBREAK | DT_NOPREFIX | DT_NOCLIP);
-
-            SelectObject(hDC, hFontOld);
-            if (hFont)
-                DeleteObject(hFont);
-
-            SetBkColor(hDC, crTextBkOld);
-            SetTextColor(hDC, crTextOld);
-
-            ReleaseDC(hWnd, hDC);
-            EndPaint(hWnd, &ps);
-
-            break;
-        }
-
-        // case WM_ERASEBKGND:
-        //     break;
-    }
-
-    /* Continue with default message processing */
-    return CallWindowProcW(orgListViewWndProc, hWnd, uMsg, wParam, lParam);
-}
-
 BOOL
 InitInstance(HINSTANCE hInstance,
              int nCmdShow)
@@ -2748,11 +2622,6 @@ InitInstance(HINSTANCE hInstance,
     lvc.pszText = szTemp;
     ListView_InsertColumn(hwndListView, 7, &lvc);
 
-    /* Subclass the ListView */
-    // orgListViewWndProc = SubclassWindow(hwndListView, ListViewWndProc);
-    orgListViewWndProc = (WNDPROC)(LONG_PTR)GetWindowLongPtrW(hwndListView, GWLP_WNDPROC);
-    SetWindowLongPtrW(hwndListView, GWLP_WNDPROC, (LONG_PTR)ListViewWndProc);
-
     /* Initialize the save Dialog */
     ZeroMemory(&sfn, sizeof(sfn));
     ZeroMemory(szSaveFilter, sizeof(szSaveFilter));
@@ -2771,15 +2640,6 @@ InitInstance(HINSTANCE hInstance,
     UpdateWindow(hwndMainWindow);
 
     return TRUE;
-}
-
-VOID
-ExitInstance(HINSTANCE hInstance)
-{
-    /* Restore the original ListView WndProc */
-    // SubclassWindow(hwndListView, orgListViewWndProc);
-    SetWindowLongPtrW(hwndListView, GWLP_WNDPROC, (LONG_PTR)orgListViewWndProc);
-    orgListViewWndProc = NULL;
 }
 
 VOID ResizeWnd(INT cx, INT cy)
