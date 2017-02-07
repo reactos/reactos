@@ -95,7 +95,7 @@ MmPapAllocateRegionFromMdl (
     ULONGLONG LocalEndPage, FoundEndPage, LocalVirtualEndPage;
 
     /* Check if any parameters were not passed in correctly */
-    if ( !(CurrentList) || !(Request) || (!(NewList) && !(Descriptor)))
+    if (!(CurrentList) || !(Request) || (!(NewList) && !(Descriptor)))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -298,8 +298,15 @@ MmPaAllocatePages (
         return Status;
     }
 
-    /* Nope, we have to hunt for it elsewhere */
-    EfiPrintf(L"TODO\r\n");
+    /* Are we failing due to some attributes? */
+    if (Request->Flags & BlMemoryValidAllocationAttributeMask)
+    {
+        EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
+        EfiStall(1000000);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* Nope, just fail the entire call */
     return Status;
 }
 
@@ -424,9 +431,15 @@ MmPapAllocatePagesInRange (
 {
     NTSTATUS Status;
     PHYSICAL_ADDRESS BaseAddress;
+    BL_PA_REQUEST Request;
+    PBL_MEMORY_DESCRIPTOR_LIST List;
+    BL_MEMORY_DESCRIPTOR Descriptor;
 
     /* Increment nesting depth */
     ++MmDescriptorCallTreeCount;
+
+    /* Default list */
+    List = &MmMdlMappedAllocated;
 
     /* Check for missing parameters or invalid range */
     if (!(PhysicalAddress) ||
@@ -440,11 +453,93 @@ MmPapAllocatePagesInRange (
     /* What translation mode are we using? */
     if (MmTranslationType != BlNone)
     {
-        /* We don't support virtual memory yet @TODO */
-        EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
-        EfiStall(1000000);
-        Status = STATUS_NOT_IMPLEMENTED;
-        goto Exit;
+        /* Use 1 page alignment if none was requested */
+        if (!Alignment)
+        {
+            Alignment = 1;
+        }
+
+        /* Check if we got a range */
+        if (Range)
+        {
+            /* We don't support virtual memory yet @TODO */
+            EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
+            EfiStall(1000000);
+            Status = STATUS_NOT_IMPLEMENTED;
+            goto Exit;
+        }
+        else
+        {
+            Request.BaseRange.Minimum = PapMinimumPhysicalPage;
+            Request.BaseRange.Maximum = (4 * 1024 * 1024) >> PAGE_SHIFT;
+        }
+
+        /* Check if a fixed allocation was requested */
+        if (Attributes & BlMemoryFixed)
+        {
+            /* We don't support virtual memory yet @TODO */
+            EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
+            EfiStall(1000000);
+            Status = STATUS_NOT_IMPLEMENTED;
+            goto Exit;
+        }
+        else
+        {
+            /* Check if non-fixed was specifically requested */
+            if (Attributes & BlMemoryNonFixed)
+            {
+                /* We don't support virtual memory yet @TODO */
+                EfiPrintf(L"not yet implemented in %S\r\n", __FUNCTION__);
+                EfiStall(1000000);
+                Status = STATUS_NOT_IMPLEMENTED;
+                goto Exit;
+            }
+
+            /* Set the virtual address range */
+            Request.VirtualRange.Minimum = 0;
+            Request.VirtualRange.Maximum = (4 * 1024 * 1024) >> PAGE_SHIFT;
+        }
+
+        /* Check what type of allocation was requested */
+        if (Type)
+        {
+            /* Save it */
+            Request.Type = Type;
+
+            /* If it was invalid, set the default */
+            if (Type & ~(BL_MM_REQUEST_DEFAULT_TYPE | BL_MM_REQUEST_TOP_DOWN_TYPE))
+            {
+                Request.Type = BL_MM_REQUEST_DEFAULT_TYPE;
+            }
+        }
+        else
+        {
+            /* Set the default */
+            Request.Type = BL_MM_REQUEST_DEFAULT_TYPE;
+        }
+
+        /* Fill out the request of the request */
+        Request.Flags = Attributes;
+        Request.Alignment = Alignment;
+        Request.Pages = Pages;
+
+        /* Try to allocate the pages */
+        Status = MmPaAllocatePages(List,
+                                   &Descriptor,
+                                   &MmMdlMappedUnallocated,
+                                   &Request,
+                                   MemoryType);
+        if (!NT_SUCCESS(Status))
+        {
+            /* We don't support virtual memory yet @TODO */
+            EfiPrintf(L"Need to extend PA allocator\r\n");
+            EfiStall(1000000);
+            Status = STATUS_NOT_IMPLEMENTED;
+            goto Exit;
+        }
+
+        /* Return the allocated address */
+        *PhysicalAddress = (PVOID)((ULONG_PTR)Descriptor.VirtualPage << PAGE_SHIFT);
     }
     else
     {

@@ -1402,6 +1402,7 @@ MmFwGetMemoryMap (
     BL_MEMORY_TYPE MemoryType;
     PBL_MEMORY_DESCRIPTOR Descriptor;
     BL_MEMORY_ATTR Attribute;
+    PVOID LibraryBuffer;
 
     /* Initialize EFI memory map attributes */
     EfiMemoryMapSize = MapKey = DescriptorSize = DescriptorVersion = 0;
@@ -1435,7 +1436,6 @@ MmFwGetMemoryMap (
     if (Status != STATUS_BUFFER_TOO_SMALL)
     {
         /* This should've failed because our buffer was too small, nothing else */
-        EfiPrintf(L"Got strange EFI status for memory map: %lx\r\n", Status);
         if (NT_SUCCESS(Status))
         {
             Status = STATUS_UNSUCCESSFUL;
@@ -1512,8 +1512,30 @@ MmFwGetMemoryMap (
     }
     else
     {
-        /* We don't support this path yet */
-        Status = STATUS_NOT_IMPLEMENTED;
+        /* Round the map to pages */
+        Pages = BYTES_TO_PAGES(EfiMemoryMapSize);
+
+        /* Allocate a large enough buffer */
+        Status = MmPapAllocatePagesInRange(&LibraryBuffer,
+                                           BlLoaderData,
+                                           Pages,
+                                           0,
+                                           0,
+                                           0,
+                                           0);
+        if (!NT_SUCCESS(Status))
+        {
+            EfiPrintf(L"Failed to allocate mapped VM for EFI map: %lx\r\n", Status);
+            goto Quickie;
+        }
+
+        /* Call EFI to get the memory map */
+        EfiMemoryMap = LibraryBuffer;
+        Status = EfiGetMemoryMap(&EfiMemoryMapSize,
+                                 LibraryBuffer,
+                                 &MapKey,
+                                 &DescriptorSize,
+                                 &DescriptorVersion);
     }
 
     /* So far so good? */
@@ -1786,6 +1808,12 @@ Quickie:
     if (EfiBuffer != 0)
     {
         EfiFreePages(Pages, EfiBuffer);
+    }
+
+    /* Free the library-allocated buffer, if we had one */
+    if (LibraryBuffer != 0)
+    {
+        MmPapFreePages(LibraryBuffer, BL_MM_INCLUDE_MAPPED_ALLOCATED);
     }
 
     /* On failure, free the memory map if one was passed in */

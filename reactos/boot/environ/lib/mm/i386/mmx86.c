@@ -680,9 +680,10 @@ Mmx86pMapMemoryRegions (
     BL_MEMORY_DESCRIPTOR_LIST FirmwareMdl;
     PLIST_ENTRY Head, NextEntry;
 
-    /* In phase 1 we don't initialize deferred mappings*/
+    /* Check which phase this is */
     if (Phase == 1)
     {
+        /* In phase 1 we don't initialize deferred mappings */
         DoDeferred = FALSE;
     }
     else
@@ -693,6 +694,7 @@ Mmx86pMapMemoryRegions (
             return STATUS_SUCCESS;
         }
 
+        /* We'll do deferred descriptors in phase 2 */
         DoDeferred = TRUE;
     }
 
