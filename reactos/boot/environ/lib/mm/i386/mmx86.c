@@ -677,6 +677,8 @@ Mmx86pMapMemoryRegions (
     ULONGLONG Size;
     NTSTATUS Status;
     PVOID VirtualAddress;
+    BL_MEMORY_DESCRIPTOR_LIST FirmwareMdl;
+    PLIST_ENTRY Head, NextEntry;
 
     /* In phase 1 we don't initialize deferred mappings*/
     if (Phase == 1)
@@ -756,10 +758,59 @@ Mmx86pMapMemoryRegions (
     /* In phase 1, also do UEFI mappings */
     if (Phase != 2)
     {
-        EfiPrintf(L"Phase 1 TODO UEFI mappings \r\n");
+        /* Get the memory map */
+        MmMdInitializeListHead(&FirmwareMdl);
+        Status = MmFwGetMemoryMap(&FirmwareMdl, BL_MM_FLAG_REQUEST_COALESCING);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        /* Iterate over it */
+        Head = FirmwareMdl.First;
+        NextEntry = Head->Flink;
+        while (NextEntry != Head)
+        {
+            /* Check if this is a UEFI-related descriptor, unless it's the self-map page */
+            Descriptor = CONTAINING_RECORD(NextEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+            if (((Descriptor->Type == BlEfiBootMemory) ||
+                 (Descriptor->Type == BlEfiRuntimeMemory) ||
+                 (Descriptor->Type == BlLoaderMemory)) &&
+                ((Descriptor->BasePage << PAGE_SHIFT) != Mmx86SelfMapBase.QuadPart))
+            {
+                /* Identity-map it */
+                PhysicalAddress.QuadPart = Descriptor->BasePage << PAGE_SHIFT;
+                Status = Mmx86MapInitStructure((PVOID)((ULONG_PTR)Descriptor->BasePage << PAGE_SHIFT),
+                                               Descriptor->PageCount << PAGE_SHIFT,
+                                               PhysicalAddress);
+                if (!NT_SUCCESS(Status))
+                {
+                    return Status;
+                }
+            }
+
+            /* Move to the next descriptor */
+            NextEntry = NextEntry->Flink;
+        }
+
+        /* Reset */
+        NextEntry = Head->Flink;
+        while (NextEntry != Head)
+        {
+            /* Get the descriptor */
+            Descriptor = CONTAINING_RECORD(NextEntry, BL_MEMORY_DESCRIPTOR, ListEntry);
+
+            /* Skip to the next entry before we free */
+            NextEntry = NextEntry->Flink;
+
+            /* Remove and free it */
+            MmMdRemoveDescriptorFromList(&FirmwareMdl, Descriptor);
+            MmMdFreeDescriptor(Descriptor);
+        }
     }
 
-    return STATUS_NOT_IMPLEMENTED;
+    /* All library mappings identity mapped now */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -1114,14 +1165,17 @@ MmArchInitialize (
 
         case BlPae:
 
+            /* We don't support PAE */
             Status = STATUS_NOT_SUPPORTED;
             break;
 
         default:
+
+            /* Invalid architecture type*/
             Status = STATUS_INVALID_PARAMETER;
             break;
     }
 
+    /* Back to caller */
     return Status;
-
 }
