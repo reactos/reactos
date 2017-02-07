@@ -545,6 +545,7 @@ MmPaInitialize (
         while (ExistingDescriptors != 0)
         {
             /* Remove this region from our free memory MDL */
+            //EfiPrintf(L"Handling existing descriptor: %llx %llx\r\n", Descriptor->BasePage, Descriptor->PageCount);
             Status = MmMdRemoveRegionFromMdlEx(&MmMdlUnmappedUnallocated,
                                                BL_MM_REMOVE_PHYSICAL_REGION_FLAG,
                                                Descriptor->BasePage,
@@ -743,7 +744,7 @@ MmPapFreePhysicalPages (
         Flags |= BL_MM_ADD_DESCRIPTOR_NEVER_COALESCE_FLAG;
     }
 
-    /* Check if the entire allocation is being free*/
+    /* Check if the entire allocation is being freed */
     if (PageCount == Descriptor->PageCount)
     {
         /* Remove the descriptor from the allocated list */

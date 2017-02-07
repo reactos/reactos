@@ -10,7 +10,16 @@
 
 #include "bl.h"
 #include "bcd.h"
-#include "../../../../../ntoskrnl/include/internal/i386/mm.h"
+
+#define PTE_BASE                0xC0000000
+
+//
+// Specific PDE/PTE macros to be used inside the boot library environment
+//
+#define MiAddressToPte(x)       ((PMMPTE)(((((ULONG)(x)) >> 12) << 2) + (ULONG_PTR)MmPteBase))
+#define MiAddressToPde(x)       ((PMMPDE)(((((ULONG)(x)) >> 22) << 2) + (ULONG_PTR)MmPdeBase))
+#define MiAddressToPteOffset(x) ((((ULONG)(x)) << 10) >> 22)
+#define MiAddressToPdeOffset(x) (((ULONG)(x)) / (1024 * PAGE_SIZE))
 
 /* DATA VARIABLES ************************************************************/
 
@@ -81,7 +90,7 @@ typedef NTSTATUS
 
 typedef NTSTATUS
 (*PBL_MM_MAP_PHYSICAL_ADDRESS) (
-    _In_ PPHYSICAL_ADDRESS PhysicalAddress,
+    _In_ PHYSICAL_ADDRESS PhysicalAddress,
     _Out_ PVOID VirtualAddress,
     _In_ ULONG Size,
     _In_ ULONG CacheAttributes
@@ -110,6 +119,16 @@ PBL_MM_ZERO_VIRTUAL_ADDRESS_RANGE BlMmZeroVirtualAddressRange;
 PBL_MM_FLUSH_TLB Mmx86FlushTlb;
 
 /* FUNCTIONS *****************************************************************/
+
+BOOLEAN
+BlMmIsTranslationEnabled (
+    VOID
+    )
+{
+    /* Return if paging is on */
+    return ((CurrentExecutionContext) &&
+            (CurrentExecutionContext->Mode & BL_CONTEXT_PAGING_ON));
+}
 
 VOID
 MmArchNullFunction (
@@ -277,14 +296,152 @@ MmDefpRemapVirtualAddress (
 
 NTSTATUS
 MmDefpMapPhysicalAddress (
-    _In_ PPHYSICAL_ADDRESS PhysicalAddress,
-    _Out_ PVOID VirtualAddress,
+    _In_ PHYSICAL_ADDRESS PhysicalAddress,
+    _In_ PVOID VirtualAddress,
     _In_ ULONG Size,
     _In_ ULONG CacheAttributes
     )
 {
-    EfiPrintf(L"No map\r\n");
-    return STATUS_NOT_IMPLEMENTED;
+    BOOLEAN Enabled;
+    ULONG i, PageCount, PdeOffset;
+    ULONGLONG CurrentAddress;
+    PMMPDE Pde;
+    PMMPTE Pte;
+    PMMPTE PageTable;
+    PHYSICAL_ADDRESS PageTableAddress;
+    NTSTATUS Status;
+
+    /* Check if paging is on yet */
+    Enabled = BlMmIsTranslationEnabled();
+
+    /* Get the physical address aligned */
+    CurrentAddress = (PhysicalAddress.QuadPart >> PAGE_SHIFT) << PAGE_SHIFT;
+
+    /* Get the number of pages and loop through each one */
+    PageCount = Size >> PAGE_SHIFT;
+    for (i = 0; i < PageCount; i++)
+    {
+        /* Check if translation already exists for this page */
+        if (Mmx86TranslateVirtualAddress(VirtualAddress, NULL, NULL))
+        {
+            /* Ignore it and move to the next one */
+            VirtualAddress = (PVOID)((ULONG_PTR)VirtualAddress + PAGE_SIZE);
+            CurrentAddress += PAGE_SIZE;
+            continue;
+        }
+
+        /* Get the PDE offset */
+        PdeOffset = MiAddressToPdeOffset(VirtualAddress);
+
+        /* Check if paging is actually turned on */
+        if (Enabled)
+        {
+            /* Get the PDE entry using the self-map */
+            Pde = MiAddressToPde(VirtualAddress);
+        }
+        else
+        {
+            /* Get it using our physical mappings */
+            Pde = &MmPdpt[PdeOffset];
+            PageTable = (PMMPDE)(Pde->u.Hard.PageFrameNumber << PAGE_SHIFT);
+        }
+
+        /* Check if we don't yet have a PDE */
+        if (!Pde->u.Hard.Valid)
+        {
+            /* Allocate a page table */
+            Status = MmPapAllocatePhysicalPagesInRange(&PageTableAddress,
+                                                       BlLoaderPageDirectory,
+                                                       1,
+                                                       0,
+                                                       0,
+                                                       &MmMdlUnmappedAllocated,
+                                                       0,
+                                                       0);
+            if (!NT_SUCCESS(Status))
+            {
+                return STATUS_NO_MEMORY;
+            }
+
+            /* This is our page table */
+            PageTable = (PVOID)(ULONG_PTR)PageTableAddress.QuadPart;
+
+            /* Build the PDE for it */
+            Pde->u.Hard.PageFrameNumber = PageTableAddress.QuadPart >> PAGE_SHIFT;
+            Pde->u.Hard.Write = 1;
+            Pde->u.Hard.CacheDisable = 1;
+            Pde->u.Hard.WriteThrough = 1;
+            Pde->u.Hard.Valid = 1;
+
+            /* Check if paging is enabled */
+            if (Enabled)
+            {
+                /* Then actually, get the page table's virtual address */
+                PageTable = (PVOID)PAGE_ROUND_DOWN(MiAddressToPte(VirtualAddress));
+
+                /* Flush the TLB */
+                Mmx86FlushTlb();
+            }
+
+            /* Zero out the page table */
+            RtlZeroMemory(PageTable, PAGE_SIZE);
+
+            /* Reset caching attributes now */
+            Pde->u.Hard.CacheDisable = 0;
+            Pde->u.Hard.WriteThrough = 0;
+
+            /* Check for paging again */
+            if (Enabled)
+            {
+                /* Flush the TLB entry for the page table only */
+                Mmx86FlushTlbEntry(PageTable);
+            }
+        }
+
+        /* Add a reference to this page table */
+        MmArchReferencePage[PdeOffset]++;
+
+        /* Check if a physical address was given */
+        if (PhysicalAddress.QuadPart != -1)
+        {
+            /* Check if paging is turned on */
+            if (Enabled)
+            {
+                /* Get the PTE using the self-map */
+                Pte = MiAddressToPte(VirtualAddress);
+            }
+            else
+            {
+                /* Get the PTE using physical addressing */
+                Pte = &PageTable[MiAddressToPteOffset(VirtualAddress)];
+            }
+
+            /* Build a valid PTE for it */
+            Pte->u.Hard.PageFrameNumber = CurrentAddress >> PAGE_SHIFT;
+            Pte->u.Hard.Write = 1;
+            Pte->u.Hard.Valid = 1;
+
+            /* Check if this is uncached */
+            if (CacheAttributes == BlMemoryUncached)
+            {
+                /* Set the flags */
+                Pte->u.Hard.CacheDisable = 1;
+                Pte->u.Hard.WriteThrough = 1;
+            }
+            else if (CacheAttributes == BlMemoryWriteThrough)
+            {
+                /* It's write-through, set the flag */
+                Pte->u.Hard.WriteThrough = 1;
+            }
+        }
+
+        /* Move to the next physical/virtual address */
+        VirtualAddress = (PVOID)((ULONG_PTR)VirtualAddress + PAGE_SIZE);
+        CurrentAddress += PAGE_SIZE;
+    }
+
+    /* All done! */
+    return STATUS_SUCCESS;
 }
 
 BOOLEAN
@@ -294,8 +451,75 @@ MmDefpTranslateVirtualAddress (
     _Out_opt_ PULONG CacheAttributes
     )
 {
-    EfiPrintf(L"No translate\r\n");
-    return FALSE;
+    PMMPDE Pde;
+    PMMPTE Pte;
+    PMMPTE PageTable;
+    BOOLEAN Enabled;
+
+    /* Is there no page directory yet? */
+    if (!MmPdpt)
+    {
+        return FALSE;
+    }
+
+    /* Is paging enabled? */
+    Enabled = BlMmIsTranslationEnabled();
+
+    /* Check if paging is actually turned on */
+    if (Enabled)
+    {
+        /* Get the PDE entry using the self-map */
+        Pde = MiAddressToPde(VirtualAddress);
+    }
+    else
+    {
+        /* Get it using our physical mappings */
+        Pde = &MmPdpt[MiAddressToPdeOffset(VirtualAddress)];
+    }
+
+    /* Is the PDE valid? */
+    if (!Pde->u.Hard.Valid)
+    {
+        return FALSE;
+    }
+
+    /* Check if paging is turned on */
+    if (Enabled)
+    {
+        /* Get the PTE using the self-map */
+        Pte = MiAddressToPte(VirtualAddress);
+    }
+    else
+    {
+        /* Get the PTE using physical addressing */
+        PageTable = (PMMPTE)(Pde->u.Hard.PageFrameNumber << PAGE_SHIFT);
+        Pte = &PageTable[MiAddressToPteOffset(VirtualAddress)];
+    }
+
+    /* Is the PTE valid? */
+    if (!Pte->u.Hard.Valid)
+    {
+        return FALSE;
+    }
+
+    /* Does caller want the physical address?  */
+    if (PhysicalAddress)
+    {
+        /* Return it */
+        PhysicalAddress->QuadPart = (Pte->u.Hard.PageFrameNumber << PAGE_SHIFT) +
+                                     BYTE_OFFSET(VirtualAddress);
+    }
+
+    /* Does caller want cache attributes? */
+    if (CacheAttributes)
+    {
+        /* Not yet -- lie and say it's cached */
+        EfiPrintf(L"Cache checking not yet enabled\r\n");
+        *CacheAttributes = BlMemoryWriteBack;
+    }
+
+    /* It exists! */
+    return TRUE;
 }
 
 NTSTATUS
@@ -321,16 +545,6 @@ MmSelectMappingAddress (
     EfiStall(1000000);
 #endif
     return STATUS_NOT_IMPLEMENTED;
-}
-
-BOOLEAN
-BlMmIsTranslationEnabled (
-    VOID
-    )
-{
-    /* Return if paging is on */
-    return ((CurrentExecutionContext) &&
-            (CurrentExecutionContext->Mode & BL_CONTEXT_PAGING_ON));
 }
 
 NTSTATUS
@@ -419,7 +633,7 @@ MmMapPhysicalAddress (
 
     /* Aactually do the mapping */
     TranslatedAddress.QuadPart = PhysicalAddress;
-    Status = Mmx86MapPhysicalAddress(&TranslatedAddress,
+    Status = Mmx86MapPhysicalAddress(TranslatedAddress,
                                      VirtualAddress,
                                      Size,
                                      CacheAttributes);
@@ -661,7 +875,7 @@ MmDefInitializeTranslation (
 
     /* The PDE is the PTE of the PTE base */
     MmPdeBase = MiAddressToPte(MmPteBase);
-    PdeIndex = MiGetPdeOffset(MmPdeBase);
+    PdeIndex = MiAddressToPdeOffset(MmPdeBase);
     MmPdpt[PdeIndex].u.Hard.Valid = 1;
     MmPdpt[PdeIndex].u.Hard.Write = 1;
     MmPdpt[PdeIndex].u.Hard.PageFrameNumber = (ULONG_PTR)MmPdpt >> PAGE_SHIFT;

@@ -1446,7 +1446,6 @@ MmFwGetMemoryMap (
     /* Add 4 more descriptors just in case things changed */
     EfiMemoryMapSize += (4 * DescriptorSize);
     Pages = BYTES_TO_PAGES(EfiMemoryMapSize);
-    EfiPrintf(L"Memory map size: %lx bytes, %d pages\r\n", EfiMemoryMapSize, Pages);
 
     /* Should we use EFI to grab memory? */
     if (UseEfiBuffer)
