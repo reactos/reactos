@@ -28,6 +28,7 @@ void
 ok_argsA_imp(const char* input_args, const char* arg1, const char* arg2, const char* arg3)
 {
     int argc = 0, mode = 0;
+    int expect_count = arg3 == NULL ? (arg2 == NULL ? 2 : 3) : 4;
     char** argv, **env;
 
     /* Remove cached argv, setup our input as program argument. */
@@ -37,20 +38,25 @@ ok_argsA_imp(const char* input_args, const char* arg1, const char* arg2, const c
     /* Process the commandline stored in _acmdln */
     __getmainargs(&argc, &argv, &env, 0, &mode);
 
-    winetest_ok(argc == 4, "Wrong value for argc, expected: 4, got: %d\n", argc);
-    if(argc != 4)
+    winetest_ok(argc == expect_count, "Wrong value for argc, expected: %d, got: %d\n", expect_count, argc);
+    if(argc != expect_count)
         return;
 
     winetest_ok_str(argv[0], "test.exe");
     winetest_ok_str(argv[1], arg1);
-    winetest_ok_str(argv[2], arg2);
-    winetest_ok_str(argv[3], arg3);
+    if (expect_count > 2)
+    {
+        winetest_ok_str(argv[2], arg2);
+        if (expect_count > 3)
+            winetest_ok_str(argv[3], arg3);
+    }
 }
 
 void
 ok_argsW_imp(const wchar_t* input_args, const wchar_t* arg1, const wchar_t* arg2, const wchar_t* arg3)
 {
     int argc = 0, mode = 0;
+    int expect_count = arg3 == NULL ? (arg2 == NULL ? 2 : 3) : 4;
     wchar_t** argv, **env;
 
     /* Remove cached wargv, setup our input as program argument. */
@@ -60,14 +66,18 @@ ok_argsW_imp(const wchar_t* input_args, const wchar_t* arg1, const wchar_t* arg2
     /* Process the commandline stored in _wcmdln */
     __wgetmainargs(&argc, &argv, &env, 0, &mode);
 
-    winetest_ok(argc == 4, "Wrong value for argc, expected: 4, got: %d\n", argc);
-    if(argc != 4)
+    winetest_ok(argc == expect_count, "Wrong value for argc, expected: %d, got: %d\n", expect_count, argc);
+    if(argc != expect_count)
         return;
 
     winetest_ok_wstr(argv[0], L"test.exe");
     winetest_ok_wstr(argv[1], arg1);
-    winetest_ok_wstr(argv[2], arg2);
-    winetest_ok_wstr(argv[3], arg3);
+    if (expect_count > 2)
+    {
+        winetest_ok_wstr(argv[2], arg2);
+        if (expect_count > 3)
+            winetest_ok_wstr(argv[3], arg3);
+    }
 }
 
 START_TEST(__getmainargs)
@@ -85,6 +95,7 @@ START_TEST(__getmainargs)
     ok_argsA("test.exe a  \"b\\  \"\"\"  c\" d", "a", "b\\  \"  c", "d");
     ok_argsA("test.exe a  \"b\\  \"\"\"  \"c  \"\"\"\" d", "a", "b\\  \"  c", "\" d");
     ok_argsA("test.exe a b c  ", "a", "b", "c");
+    ok_argsA("test.exe \"a b c\"", "a b c", NULL, NULL);
 
     ok_argsW(L"test.exe \"a b c\" d e", L"a b c", L"d", L"e");
     ok_argsW(L"test.exe \"ab\\\"c\" \"\\\\\" d", L"ab\"c", L"\\", L"d");
@@ -99,4 +110,5 @@ START_TEST(__getmainargs)
     ok_argsW(L"test.exe a  \"b\\  \"\"\"  c\" d", L"a", L"b\\  \"  c", L"d");
     ok_argsW(L"test.exe a  \"b\\  \"\"\"  \"c  \"\"\"\" d", L"a", L"b\\  \"  c", L"\" d");
     ok_argsW(L"test.exe a b c  ", L"a", L"b", L"c");
+    ok_argsW(L"test.exe \"a b c\"", L"a b c", NULL, NULL);
 }
