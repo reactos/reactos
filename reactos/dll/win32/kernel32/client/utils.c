@@ -942,7 +942,7 @@ BasepCheckWinSaferRestrictions(IN HANDLE UserToken,
         if ((InJob) && (NewToken) && (JobHandle))
         {
             /* Do the work (one day...) */
-            UNIMPLEMENTED;
+            DPRINT("BasepCheckWinSaferRestrictions is UNIMPLEMENTED\n");
             Status = STATUS_SUCCESS;
         }
         else
