@@ -171,39 +171,6 @@ MmDefZeroVirtualAddressRange (
     return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS
-Mmx86pMapMemoryRegions (
-    _In_ ULONG Phase,
-    _In_ PBL_MEMORY_DATA MemoryData
-    )
-{
-    BOOLEAN DoDeferred;
-
-    /* In phase 1 we don't initialize deferred mappings*/
-    if (Phase == 1)
-    {
-        DoDeferred = 0;
-    }
-    else
-    {
-        /* Don't do anything if there's nothing to initialize */
-        if (!MmDeferredMappingCount)
-        {
-            return STATUS_SUCCESS;
-        }
-
-        DoDeferred = 1;
-    }
-
-    if (DoDeferred)
-    {
-        EfiPrintf(L"Deferred todo\r\n");
-    }
-
-    EfiPrintf(L"Phase 1 TODO\r\n");
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 BOOLEAN
 MmArchTranslateVirtualAddress (
     _In_ PVOID VirtualAddress, 
@@ -697,6 +664,105 @@ Mmx86MapInitStructure (
 }
 
 NTSTATUS
+Mmx86pMapMemoryRegions (
+    _In_ ULONG Phase,
+    _In_ PBL_MEMORY_DATA MemoryData
+    )
+{
+    BOOLEAN DoDeferred;
+    ULONG DescriptorCount;
+    PBL_MEMORY_DESCRIPTOR Descriptor;
+    ULONG FinalOffset;
+    PHYSICAL_ADDRESS PhysicalAddress;
+    ULONGLONG Size;
+    NTSTATUS Status;
+    PVOID VirtualAddress;
+
+    /* In phase 1 we don't initialize deferred mappings*/
+    if (Phase == 1)
+    {
+        DoDeferred = FALSE;
+    }
+    else
+    {
+        /* Don't do anything if there's nothing to initialize */
+        if (!MmDeferredMappingCount)
+        {
+            return STATUS_SUCCESS;
+        }
+
+        DoDeferred = TRUE;
+    }
+
+    /*
+    * Because BL supports cross x86-x64 application launches and a LIST_ENTRY
+    * is of variable size, care must be taken here to ensure that we see a
+    * consistent view of descriptors. BL uses some offset magic to figure out
+    * where the data actually starts, since everything is ULONGLONG past the
+    * LIST_ENTRY itself
+    */
+    FinalOffset = MemoryData->MdListOffset + MemoryData->DescriptorOffset;
+    Descriptor = (PBL_MEMORY_DESCRIPTOR)((ULONG_PTR)MemoryData + FinalOffset -
+                                         FIELD_OFFSET(BL_MEMORY_DESCRIPTOR, BasePage));
+
+    /* Scan all of them */
+    DescriptorCount = MemoryData->DescriptorCount;
+    while (DescriptorCount != 0)
+    {
+        /* Ignore application data */
+        if (Descriptor->Type != BlApplicationData)
+        {
+            /* If this is a ramdisk, do it in phase 2 */
+            if ((Descriptor->Type == BlLoaderRamDisk) == DoDeferred)
+            {
+                /* Get the current physical address and size */
+                PhysicalAddress.QuadPart = Descriptor->BasePage << PAGE_SHIFT;
+                Size = Descriptor->PageCount << PAGE_SHIFT;
+
+                /* Check if it was already mapped */
+                if (Descriptor->VirtualPage)
+                {
+                    /* Use the existing address */
+                    VirtualAddress = (PVOID)(ULONG_PTR)(Descriptor->VirtualPage << PAGE_SHIFT);
+                }
+                else
+                {
+                    /* Use the physical address */
+                    VirtualAddress = (PVOID)(ULONG_PTR)PhysicalAddress.QuadPart;
+                }
+
+                /* Crete the mapping */
+                Status = Mmx86MapInitStructure(VirtualAddress,
+                                               Size,
+                                               PhysicalAddress);
+                if (!NT_SUCCESS(Status))
+                {
+                    return Status;
+                }
+            }
+
+            /* Check if we're in phase 1 and deferring RAM disk */
+            if ((Phase == 1) && (Descriptor->Type == BlLoaderRamDisk))
+            {
+                MmDeferredMappingCount++;
+            }
+        }
+
+        /* Move on to the next descriptor */
+        DescriptorCount--;
+        Descriptor = (PBL_MEMORY_DESCRIPTOR)((ULONG_PTR)Descriptor + MemoryData->DescriptorSize);
+    }
+
+    /* In phase 1, also do UEFI mappings */
+    if (Phase != 2)
+    {
+        EfiPrintf(L"Phase 1 TODO UEFI mappings \r\n");
+    }
+
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
 Mmx86InitializeMemoryMap (
     _In_ ULONG Phase,
     _In_ PBL_MEMORY_DATA MemoryData
@@ -766,8 +832,7 @@ Mmx86InitializeMemoryMap (
     }
 
     /* More to do */
-    EfiPrintf(L"VM more work\r\n");
-    return STATUS_NOT_IMPLEMENTED;
+    return Mmx86pMapMemoryRegions(Phase, MemoryData);
 }
 
 NTSTATUS
